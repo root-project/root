@@ -100,5 +100,43 @@ class TestDefinePerSample:
             assert count.GetValue() == 10, f"{count.GetValue()=}"
 
 
+    def test_redefinepersample_simple(self, payload):
+        """
+        Test RedefinePerSample operation on three samples using a predefined
+        string of operations.
+        """
+
+        connection, _ = payload
+        df = ROOT.RDataFrame(self.maintreename, self.filenames, executor=connection)
+
+        # Associate a number to each sample
+        definepersample_code = """
+        if(rdfsampleinfo_.Contains(\"{}\")) return 1;
+        else if (rdfsampleinfo_.Contains(\"{}\")) return 2;
+        else if (rdfsampleinfo_.Contains(\"{}\")) return 3;
+        else return 0;
+        """.format(*self.samples)
+
+        # Redefine the values with the same column name
+        redefinepersample_code = """
+        if(rdfsampleinfo_.Contains(\"{}\")) return 11;
+        else if (rdfsampleinfo_.Contains(\"{}\")) return 22;
+        else if (rdfsampleinfo_.Contains(\"{}\")) return 33;
+        else return 0;
+        """.format(*self.samples)
+
+        df1 = (
+            df.DefinePerSample("sampleid", definepersample_code)
+              .RedefinePerSample("sampleid", redefinepersample_code)
+        )
+
+        # Filter by the sample number. Each filtered dataframe should contain
+        # 10 entries, equal to the number of entries per sample
+        samplescounts = [df1.Filter("sampleid == {}".format(id)).Count() for id in [11, 22, 33]]
+
+        for count in samplescounts:
+            assert count.GetValue() == 10, f"{count.GetValue()=}"
+
+
 if __name__ == "__main__":
     pytest.main(args=[__file__])
