@@ -7,8 +7,7 @@ class TestDefinePerSample:
     """Check the working of merge operations in the reducer function."""
 
     samples = ["sample1", "sample2", "sample3"]
-    filenames = [
-        f"../data/ttree/distrdf_roottest_definepersample_{sample}.root" for sample in samples]
+    filenames = [f"../data/ttree/distrdf_roottest_definepersample_{sample}.root" for sample in samples]
     maintreename = "Events"
 
     def test_definepersample_simple(self, payload):
@@ -47,7 +46,7 @@ class TestDefinePerSample:
         # needed functions available
         def declare_definepersample_code():
             ROOT.gInterpreter.Declare(
-                '''
+                """
             #ifndef distrdf_test_definepersample_withinitialization
             #define distrdf_test_definepersample_withinitialization
             float sample1_weight(){
@@ -77,28 +76,30 @@ class TestDefinePerSample:
                 return id.AsString();
             }
             #endif // distrdf_test_definepersample_withinitialization
-            ''')
+            """
+            )
 
         ROOT._distrdf.initialize(declare_definepersample_code)
         connection, _ = payload
         df = ROOT.RDataFrame(self.maintreename, self.filenames, executor=connection)
-        df1 = df.DefinePerSample("sample_weight", "samples_weights(rdfslot_, rdfsampleinfo_)")\
-                .DefinePerSample("sample_name", "samples_names(rdfslot_, rdfsampleinfo_)")
+        df1 = df.DefinePerSample("sample_weight", "samples_weights(rdfslot_, rdfsampleinfo_)").DefinePerSample(
+            "sample_name", "samples_names(rdfslot_, rdfsampleinfo_)"
+        )
 
         # Filter by the two defined columns per sample: a weight and the sample string representation
         # Each filtered dataset should have 10 entries, equal to the number of entries per sample
         weightsandnames = [
             ("1.0f", f"{self.filenames[0]}/{self.maintreename}"),
             ("2.0f", f"{self.filenames[1]}/{self.maintreename}"),
-            ("3.0f", f"{self.filenames[2]}/{self.maintreename}")
+            ("3.0f", f"{self.filenames[2]}/{self.maintreename}"),
         ]
         samplescounts = [
-            df1.Filter("sample_weight == {} && sample_name == \"{}\"".format(weight, name)).Count()
-            for (weight, name) in weightsandnames]
+            df1.Filter('sample_weight == {} && sample_name == "{}"'.format(weight, name)).Count()
+            for (weight, name) in weightsandnames
+        ]
 
         for count in samplescounts:
             assert count.GetValue() == 10, f"{count.GetValue()=}"
-
 
     def test_redefinepersample_simple(self, payload):
         """
@@ -125,10 +126,7 @@ class TestDefinePerSample:
         else return 0;
         """.format(*self.samples)
 
-        df1 = (
-            df.DefinePerSample("sampleid", definepersample_code)
-              .RedefinePerSample("sampleid", redefinepersample_code)
-        )
+        df1 = df.DefinePerSample("sampleid", definepersample_code).RedefinePerSample("sampleid", redefinepersample_code)
 
         # Filter by the sample number. Each filtered dataframe should contain
         # 10 entries, equal to the number of entries per sample
