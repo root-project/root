@@ -210,6 +210,8 @@ namespace Experimental {
 /// \note Currently, producing variations for the results of \ref ROOT::RDF::RInterface::Display() "Display",
 ///       \ref ROOT::RDF::RInterface::Report() "Report" and \ref ROOT::RDF::RInterface::Snapshot() "Snapshot"
 ///       actions is not supported.
+///
+/// \note The varied values are constructed by copying the value held by the RResultPtr \p resPtr.
 //
 // An overview of how systematic variations work internally. Given N variations (including the nominal):
 //

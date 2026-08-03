@@ -1344,6 +1344,13 @@ all_hs.GetKeys(); // returns {"nominal", "pt:down", "pt:up", "eta:0", "eta:1"}
 Note how we passed the integer `2` instead of a list of variation tags to the second Vary() invocation: this is a
 shorthand that automatically generates tags 0 to N-1 (in this case 0 and 1).
 
+#### Note on memory management of objects corresponding to variations
+
+When calling \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()", the nominal value held by the input
+RResultPtr is copied N times (one per variation) to create the corresponding varied values. As a consequence, if the
+action being run takes an input user value which may be modified in place, e.g.
+\ref Hist(std::shared_ptr<ROOT::Experimental::RHistEngine<BinContentType>>, const ColumnNames_t &),
+the nominal value will be the user-provided one, whereas the varied values will be fresh copies.
 
 \anchor rnode
 ### RDataFrame objects as function arguments and return values
