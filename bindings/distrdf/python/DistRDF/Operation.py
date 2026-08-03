@@ -27,6 +27,7 @@ class Operation:
 
 class Action(Operation):
     """An action attached to a distributed RDataFrame graph node."""
+
     pass
 
 
@@ -65,7 +66,8 @@ class Histo(Action):
                     "Creating a histogram without a model is not supported in distributed mode. Please make sure to "
                     "specify the histogram model when rerunning the distributed RDataFrame application. For example:\n\n"
                     "\tHisto1D('mycolumn') --> Histo1D(('myhist', 'myhist', 100, 0, 10), 'mycolumn')\n\n"
-                    "See the RDataFrame documentation for more details.")
+                    "See the RDataFrame documentation for more details."
+                )
                 raise ValueError(message)
 
 
@@ -74,26 +76,31 @@ class VariationsFor(Action):
     DistRDF.VariationsFor creates a specific node in the distributed
     RDataFrame graph. This acts as an action node.
     """
+
     pass
 
 
 class InstantAction(Operation):
     """An instant action attached to a distributed RDataFrame graph node."""
+
     pass
 
 
 class AsNumpy(InstantAction):
     """An 'AsNumpy' instant action attached to a distributed RDataFrame graph node."""
+
     pass
 
 
 class Snapshot(InstantAction):
     """A 'Snapshot' instant action attached to a distributed RDataFrame graph node."""
+
     pass
 
 
 class Transformation(Operation):
     """A trasformation attached to a distributed RDataFrame graph node."""
+
     pass
 
 
@@ -136,5 +143,7 @@ def create_op(name: str, *args, **kwargs) -> Union[Action, InstantAction, Transf
     try:
         return SUPPORTED_OPERATIONS[name](name, *args, **kwargs)
     except KeyError as e:
-        raise ValueError(f"Operation '{name}' is either invalid or not supported in distributed mode. "
-                         "See the documentation for a list of supported operations.") from e
+        raise ValueError(
+            f"Operation '{name}' is either invalid or not supported in distributed mode. "
+            "See the documentation for a list of supported operations."
+        ) from e
