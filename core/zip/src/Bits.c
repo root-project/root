@@ -289,23 +289,27 @@ int R__seekable()
  * The values are stored in little-endian order on all machines.
  * This function returns the byte size of the compressed output, including
  * the first six bytes (method and crc).
+ * In case of error function returns 0.
  */
 
 ulg R__memcompress(char *tgt, ulg tgtsize, const char *src, ulg srcsize)
-/* char *tgt, *src;        target and source buffers */
-/* ulg tgtsize, srcsize;   target and source sizes */
 {
     ush att      = (ush)UNKNOWN;
     ush flags    = 0;
     ulg crc      = 0;
     int method   = Z_DEFLATED;
+
+    if (tgtsize <= 6L) {
+        R__error("target buffer too small");
+        return 0L;
+    }
+
     bits_internal_state *state = (bits_internal_state *) malloc(sizeof(bits_internal_state));
     if (!state) {
         R__error("fail to allocate bits_internal_state struct");
         return 0L;
     }
 
-    if (tgtsize <= 6L) { R__error("target buffer too small"); /* errorflag = 1; */ }
 #if 0
     crc = updcrc((char *)NULL, 0);
     crc = updcrc(src, (extent) srcsize);
