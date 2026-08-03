@@ -160,6 +160,22 @@ public:
    /// @param up New error definition value.
    void SetErrorDef(double up) override { fUp = up; }
 
+   /// Indicate whether the second order derivative with respect to parameters
+   /// i and j is always zero, forwarding to the user-provided predicate if set.
+   bool VanishingSecondDerivative(int i, int j) const override
+   {
+      return fVanishingSecondDerivFunc ? fVanishingSecondDerivFunc(i, j) : false;
+   }
+
+   /// Set the predicate advertising which mixed second derivatives always vanish.
+   ///
+   /// @param f Function taking two parameter indices and returning `true` if the
+   ///          corresponding second derivative is always zero.
+   void SetVanishingSecondDerivativeFunc(std::function<bool(int, int)> f)
+   {
+      fVanishingSecondDerivFunc = std::move(f);
+   }
+
 private:
    using Function = std::function<double(double const *)>;
    using GradFunction = std::function<void(double const *, double *)>;
@@ -173,6 +189,7 @@ private:
    GradFunction fGradFunc;               ///< Optional gradient function.
    G2Function fG2Func;                   ///< Optional diagonal second-derivative function.
    mutable HessianFunction fHessianFunc; ///< Optional Hessian function.
+   std::function<bool(int, int)> fVanishingSecondDerivFunc; ///< Optional vanishing second-derivative predicate.
 };
 
 } // namespace ROOT::Minuit2
