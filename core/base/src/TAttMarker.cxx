@@ -405,16 +405,36 @@ void TAttMarker::SetMarkerSize(Size_t msize)
 /// Return marker shape.
 /// Depending from configured marker style different marker shapes are returned
 /// For simple shape like circle just size is assigned, for other points vector is filled as well
+/// For special applications (like GL) one can create set of triangles instead of complex filled shapes
+/// This is required while GL not always able to correctly fill closed shape
 
-TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoint> &shape, Float_t scale) const
+TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoint> &shape, Float_t scale, Bool_t prefer_triangles) const
 {
    Int_t markerStyle = GetMarkerStyleBase(GetMarkerStyle());
    Int_t markerLineWidth = GetMarkerLineWidth(GetMarkerStyle());
 
    Float_t markerSizeReduced = scale * (GetMarkerSize() - std::floor(markerLineWidth/2.)/4.);
-   Int_t im = Int_t(4*markerSizeReduced + 0.5);
+   const auto im = std::round(4*markerSizeReduced);
+   const auto im2 = std::round(2*markerSizeReduced);
+
+   auto addTriangle = [&shape](Int_t x1, Int_t y1, Int_t x2, Int_t y2, Int_t x3 = 0, Int_t y3 = 0) {
+      shape.emplace_back(x1, y1);
+      shape.emplace_back(x2, y2);
+      shape.emplace_back(x3, y3);
+   };
+
+   auto addSquare = [&shape](Int_t x1, Int_t y1, Int_t x2, Int_t y2) {
+      shape.emplace_back(x1, y1);
+      shape.emplace_back(x1, y2);
+      shape.emplace_back(x2, y2);
+
+      shape.emplace_back(x1, y1);
+      shape.emplace_back(x2, y2);
+      shape.emplace_back(x2, y1);
+   };
 
    sz = 0;
+   shape.clear();
 
    switch (markerStyle) {
       case kDot:
@@ -427,30 +447,32 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          shape[3].fX =   0;  shape[3].fY =  im;
          return kShapeSegments;
       case kStar:
-      case kStar2:
+      case kStar2: {
+         const auto imx = std::round(0.707*4*markerSizeReduced);
          shape.resize(8);
          shape[0].fX = -im;  shape[0].fY = 0;
          shape[1].fX =  im;  shape[1].fY = 0;
          shape[2].fX = 0  ;  shape[2].fY = -im;
          shape[3].fX = 0  ;  shape[3].fY = im;
-         im = Int_t(0.707*im + 0.5);
-         shape[4].fX = -im;  shape[4].fY = -im;
-         shape[5].fX =  im;  shape[5].fY = im;
-         shape[6].fX = -im;  shape[6].fY = im;
-         shape[7].fX =  im;  shape[7].fY = -im;
+         shape[4].fX = -imx;  shape[4].fY = -imx;
+         shape[5].fX =  imx;  shape[5].fY = imx;
+         shape[6].fX = -imx;  shape[6].fY = imx;
+         shape[7].fX =  imx;  shape[7].fY = -imx;
          return kShapeSegments;
+      }
       case kCircle:
       case kOpenCircle:
          sz = im * 2;
          return kShapeCircle;
-      case kMultiply:
-         shape.resize(4);
-         im = Int_t(0.707*im + 0.5);
-         shape[0].fX = -im;  shape[0].fY = -im;
-         shape[1].fX =  im;  shape[1].fY = im;
-         shape[2].fX = -im;  shape[2].fY = im;
-         shape[3].fX =  im;  shape[3].fY = -im;
+      case kMultiply: {
+         const auto imx = std::round(0.707*4*markerSizeReduced);
+         shape.reserve(4);
+         shape.emplace_back(-imx, -imx);
+         shape.emplace_back( imx,  imx);
+         shape.emplace_back(-imx,  imx);
+         shape.emplace_back( imx, -imx);
          return kShapeSegments;
+      }
       case kFullDotSmall:
          shape.resize(4);
          shape[0].fX = -1;  shape[0].fY = 0;
@@ -505,7 +527,7 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
       case kOpenDiamond:
       case kFullDiamond: {
          shape.resize(5);
-         Int_t imx = Int_t(2.66*markerSizeReduced + 0.5);
+         const auto imx = std::round(2.66*markerSizeReduced);
          shape[0].fX =-imx;  shape[0].fY = 0;
          shape[1].fX =   0;  shape[1].fY = -im;
          shape[2].fX = imx;  shape[2].fY = 0;
@@ -513,10 +535,18 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          shape[4].fX =-imx;  shape[4].fY = 0;
          return markerStyle == kFullDiamond ? kShapeFilledArea : kShapePolyLine;
       }
-      case kOpenCross:
-      case kFullCross: {
+      case kFullCross:
+         if (prefer_triangles) {
+            const auto imx = std::round(1.33*markerSizeReduced);
+            shape.reserve(3 * 6);
+            addSquare( -im, -imx,  -imx, imx);
+            addSquare(-imx,  -im,   imx,  im);
+            addSquare( imx, -imx,    im, imx);
+            return kShapeTriangles;
+         }
+      case kOpenCross: {
          shape.resize(13);
-         Int_t imx = Int_t(1.33*markerSizeReduced + 0.5);
+         const auto imx = std::round(1.33*markerSizeReduced);
          shape[0].fX = -im;  shape[0].fY =-imx;
          shape[1].fX =-imx;  shape[1].fY =-imx;
          shape[2].fX =-imx;  shape[2].fY = -im;
@@ -533,12 +563,27 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          return markerStyle == kFullCross ? kShapeFilledArea : kShapePolyLine;
       }
       case kFullStar:
+         if (prefer_triangles) {
+            const auto im1 = std::round(0.66*markerSizeReduced);
+            const auto im3 = std::round(2.66*markerSizeReduced);
+            const auto im4 = std::round(1.33*markerSizeReduced);
+            shape.reserve(8 * 3);
+
+            addTriangle( -im,  im4,  -im2, -im1,  -im4,  im4);
+            addTriangle(-im2, -im1,  -im3,  -im,     0, -im2);
+            addTriangle(   0, -im2,   im3,  -im,   im2, -im1);
+            addTriangle( im2, -im1,    im,  im4,   im4,  im4);
+            addTriangle( im4,  im4,     0,   im,  -im4,  im4);
+            addTriangle(-im4,  im4,  -im2, -im1,     0, -im2);
+            addTriangle(-im4,  im4,     0, -im2,   im2, -im1);
+            addTriangle(-im4,  im4,   im2, -im1,   im4,  im4);
+            return kShapeTriangles;
+         }
       case kOpenStar: {
+         const auto im1 = std::round(0.66*markerSizeReduced);
+         const auto im3 = std::round(2.66*markerSizeReduced);
+         const auto im4 = std::round(1.33*markerSizeReduced);
          shape.resize(11);
-         Int_t im1 = Int_t(0.66*markerSizeReduced + 0.5);
-         Int_t im2 = Int_t(2.00*markerSizeReduced + 0.5);
-         Int_t im3 = Int_t(2.66*markerSizeReduced + 0.5);
-         Int_t im4 = Int_t(1.33*markerSizeReduced + 0.5);
          shape[0].fX = -im;  shape[0].fY = im4;
          shape[1].fX =-im2;  shape[1].fY =-im1;
          shape[2].fX =-im3;  shape[2].fY = -im;
@@ -574,9 +619,8 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          shape[6].fX = -im;  shape[6].fY = im;
          shape[7].fX =  im;  shape[7].fY = -im;
          return kShapePolyLine;
-      case kOpenThreeTriangles: {
+      case kOpenThreeTriangles:
          shape.resize(10);
-         Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
          shape[0].fX =   0;  shape[0].fY =   0;
          shape[1].fX =-im2;  shape[1].fY =  im;
          shape[2].fX = im2;  shape[2].fY =  im;
@@ -588,10 +632,8 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          shape[8].fX = im2;  shape[8].fY =  -im;
          shape[9].fX =   0;  shape[9].fY =   0;
          return kShapePolyLine;
-      }
-      case kOctagonCross: {
+      case kOctagonCross:
          shape.resize(15);
-         Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
          shape[0].fX = -im;  shape[0].fY = 0;
          shape[1].fX = -im;  shape[1].fY =-im2;
          shape[2].fX =-im2;  shape[2].fY = -im;
@@ -608,11 +650,15 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          shape[13].fX =  0;  shape[13].fY = im;
          shape[14].fX =  0;  shape[14].fY = 0;
          return kShapePolyLine;
-      }
-      case kFullThreeTriangles: {
-         // FIXME: check why first and last point do not match
+      case kFullThreeTriangles:
+         if (prefer_triangles) {
+            shape.reserve(3 * 3);
+            addTriangle( -im,   0,  -im2, im);
+            addTriangle( im2,  im,    im,  0);
+            addTriangle( im2, -im,  -im2, -im);
+            return kShapeTriangles;
+         }
          shape.resize(9);
-         Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
          shape[0].fX =   0;  shape[0].fY =   0;
          shape[1].fX =-im2;  shape[1].fY =  im;
          shape[2].fX = im2;  shape[2].fY =  im;
@@ -621,13 +667,19 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          shape[5].fX = -im;  shape[5].fY =   0;
          shape[6].fX =   0;  shape[6].fY =   0;
          shape[7].fX =  im;  shape[7].fY =   0;
-         shape[8].fX = im2;  shape[8].fY =  -im;
+         shape[8].fX = im2;  shape[8].fY = -im;
          return kShapeFilledArea;
-      }
-      case kOpenFourTrianglesX:
-      case kFullFourTrianglesX: {
+      case kFullFourTrianglesX:
+         if (prefer_triangles) {
+            shape.reserve(4 * 3);
+            addTriangle( -im,  im2,  -im2,   im);
+            addTriangle( im2,   im,    im,  im2);
+            addTriangle(  im, -im2,   im2,  -im);
+            addTriangle(-im2,  -im,  -im,  -im2);
+            return kShapeTriangles;
+         }
+      case kOpenFourTrianglesX: {
          shape.resize(13);
-         Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
          shape[0].fX =     0;  shape[0].fY =    0;
          shape[1].fX =   im2;  shape[1].fY =   im;
          shape[2].fX =    im;  shape[2].fY =  im2;
@@ -643,24 +695,36 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          shape[12].fX =     0;  shape[12].fY =  0;
          return markerStyle == kFullFourTrianglesX ? kShapeFilledArea : kShapePolyLine;
       }
-      case kOpenDoubleDiamond:
-      case kFullDoubleDiamond: {
+      case kFullDoubleDiamond:
+         if (prefer_triangles) {
+            const auto im4 = std::round(markerSizeReduced);
+            shape.reserve(8 * 3);
+            addTriangle(   0,   im,   -im4,  im4);
+            addTriangle(-im4,  im4,    -im,    0);
+            addTriangle( -im,    0,   -im4, -im4);
+            addTriangle(-im4, -im4,      0,  -im);
+            addTriangle(   0,  -im,    im4, -im4);
+            addTriangle( im4, -im4,     im,    0);
+            addTriangle(  im,    0,    im4,  im4);
+            addTriangle( im4,  im4,      0,   im);
+            return kShapeTriangles;
+         }
+      case kOpenDoubleDiamond: {
+         const auto im4 = std::round(markerSizeReduced);
          shape.resize(9);
-         Int_t imx = Int_t(markerSizeReduced + 0.5);
          shape[0].fX=     0;   shape[0].fY= im;
-         shape[1].fX=  -imx;   shape[1].fY= imx;
+         shape[1].fX=  -im4;   shape[1].fY= im4;
          shape[2].fX  = -im;   shape[2].fY = 0;
-         shape[3].fX = -imx;   shape[3].fY = -imx;
+         shape[3].fX = -im4;   shape[3].fY = -im4;
          shape[4].fX =    0;   shape[4].fY = -im;
-         shape[5].fX =  imx;   shape[5].fY = -imx;
+         shape[5].fX =  im4;   shape[5].fY = -im4;
          shape[6].fX =   im;   shape[6].fY = 0;
-         shape[7].fX=   imx;   shape[7].fY= imx;
+         shape[7].fX=   im4;   shape[7].fY= im4;
          shape[8].fX=     0;   shape[8].fY= im;
          return markerStyle == kFullDoubleDiamond ? kShapeFilledArea : kShapePolyLine;
       }
-      case kOpenFourTrianglesPlus: {
+      case kOpenFourTrianglesPlus:
          shape.resize(11);
-         Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
          shape[0].fX =    0;  shape[0].fY =    0;
          shape[1].fX =  im2;  shape[1].fY =   im;
          shape[2].fX = -im2;  shape[2].fY =   im;
@@ -673,11 +737,17 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          shape[9].fX =  -im;  shape[9].fY = -im2;
          shape[10].fX =    0; shape[10].fY =   0;
          return kShapePolyLine;
-      }
       case kFullFourTrianglesPlus: {
+         if (prefer_triangles) {
+            shape.reserve(4 * 3);
+            addTriangle(-im2,   im,   im2,   im);
+            addTriangle(  im,  im2,    im, -im2);
+            addTriangle( im2,  -im,  -im2,  -im);
+            addTriangle( -im, -im2,   -im,  im2);
+            return kShapeTriangles;
+         }
+         const auto im0 = std::round(0.4*markerSizeReduced);
          shape.resize(13);
-         Int_t im0 = Int_t(0.4*markerSizeReduced + 0.5);
-         Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
          shape[0].fX =  im0;  shape[0].fY =  im0;
          shape[1].fX =  im2;  shape[1].fY =   im;
          shape[2].fX = -im2;  shape[2].fY =   im;
@@ -693,10 +763,19 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          shape[12].fX =  im0;  shape[12].fY =  im0;
          return kShapeFilledArea;
       }
+      case kFullCrossX:
+         if (prefer_triangles) {
+            shape.reserve(6 * 3);
+            addTriangle(-im2,   0,  -im,  im2,   -im2,  im);
+            addTriangle(-im2,   0, -im2,   im,      0, im2);
+            addTriangle(-im2, -im,  -im, -im2,    im2,  im);
+            addTriangle(-im2, -im,  im2,   im,     im, im2);
+            addTriangle( im2, -im,    0, -im2,    im2,   0);
+            addTriangle( im2, -im,  im2,    0,     im,-im2);
+            return kShapeTriangles;
+         }
       case kOpenCrossX:
-      case kFullCrossX: {
          shape.resize(13);
-         Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
          shape[0].fX =    0;  shape[0].fY =  im2;
          shape[1].fX = -im2;  shape[1].fY =   im;
          shape[2].fX =  -im;  shape[2].fY =  im2;
@@ -711,11 +790,21 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          shape[11].fX = im2;  shape[11].fY =  im;
          shape[12].fX =   0;  shape[12].fY = im2;
          return markerStyle == kFullCrossX ? kShapeFilledArea : kShapePolyLine;
-      }
-      case kFourSquaresX: {
+      case kFourSquaresX:
+         if (prefer_triangles) {
+            shape.reserve(8 * 3);
+            addTriangle(  -im2,   0,   -im,  im2,   -im2,   im);
+            addTriangle(  -im2,   0,  -im2,   im,      0,  im2);
+            addTriangle(   im2,   0,     0,  im2,    im2,   im);
+            addTriangle(   im2,   0,   im2,   im,     im,  im2);
+            addTriangle(  -im2, -im,   -im, -im2,   -im2,    0);
+            addTriangle(  -im2, -im,  -im2,    0,      0, -im2);
+            addTriangle(   im2, -im,     0, -im2,    im2,    0);
+            addTriangle(   im2, -im,   im2,    0,     im, -im2);
+            return kShapeTriangles;
+         }
          shape.resize(17);
-         Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
-         shape[0].fX =    0;  shape[0].fY =  im2*1.005;
+         shape[0].fX =    0;  shape[0].fY =  im2;
          shape[1].fX = -im2;  shape[1].fY =   im;
          shape[2].fX =  -im;  shape[2].fY =  im2;
          shape[3].fX = -im2;  shape[3].fY =    0;
@@ -727,17 +816,24 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          shape[9].fX =  im2;  shape[9].fY =    0;
          shape[10].fX =  im;  shape[10].fY = im2;
          shape[11].fX = im2;  shape[11].fY =  im;
-         shape[12].fX =   0;  shape[12].fY = im2*0.995;
-         shape[13].fX =  im2*0.995;  shape[13].fY =    0;
-         shape[14].fX =    0;  shape[14].fY = -im2*0.995;
-         shape[15].fX = -im2*0.995;  shape[15].fY =    0;
-         shape[16].fX =    0;  shape[16].fY =  im2*0.995;
+         shape[12].fX =   0;  shape[12].fY = im2;
+         shape[13].fX =  im2; shape[13].fY =   0;
+         shape[14].fX =    0; shape[14].fY =-im2;
+         shape[15].fX = -im2; shape[15].fY =   0;
+         shape[16].fX =    0; shape[16].fY = im2;
          return kShapeFilledArea;
-      }
       case kFourSquaresPlus: {
+         const auto imx = std::round(1.33*markerSizeReduced);
+         if (prefer_triangles) {
+            shape.reserve(4 * 2 * 3);
+            addSquare(-imx,  imx, imx,   im);
+            addSquare( imx, -imx,  im,  imx);
+            addSquare( -im, -imx,-imx,  imx);
+            addSquare(-imx,  -im, imx, -imx);
+            return kShapeTriangles;
+         }
          shape.resize(17);
-         Int_t imx = Int_t(1.33*markerSizeReduced + 0.5);
-         shape[0].fX =-imx;  shape[0].fY =-imx*1.005;
+         shape[0].fX =-imx;  shape[0].fY =-imx;
          shape[1].fX =-imx;  shape[1].fY = -im;
          shape[2].fX = imx;  shape[2].fY = -im;
          shape[3].fX = imx;  shape[3].fY =-imx;
@@ -749,11 +845,11 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          shape[9].fX =-imx;  shape[9].fY = imx;
          shape[10].fX = -im;  shape[10].fY = imx;
          shape[11].fX = -im;  shape[11].fY =-imx;
-         shape[12].fX =-imx;  shape[12].fY =-imx*0.995;
+         shape[12].fX =-imx;  shape[12].fY =-imx;
          shape[13].fX =-imx;  shape[13].fY = imx;
          shape[14].fX = imx;  shape[14].fY = imx;
          shape[15].fX = imx;  shape[15].fY =-imx;
-         shape[16].fX =-imx;  shape[16].fY =-imx*1.005;
+         shape[16].fX =-imx;  shape[16].fY =-imx;
          return kShapeFilledArea;
       }
    }
