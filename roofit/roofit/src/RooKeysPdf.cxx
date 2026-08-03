@@ -21,13 +21,20 @@
 Class RooKeysPdf implements a one-dimensional kernel estimation p.d.f which model the distribution
 of an arbitrary input dataset as a superposition of Gaussian kernels, one for each data point,
 each contributing 1/N to the total integral of the pdf.
+It was inspired by Kyle Cranmer's KEYS package, see
+[the original web page](https://web.archive.org/web/20020705034344/https://www-wisconsin.cern.ch/~cranmer/keys.html).
+
+\note KEYS stands for Kernel Estimating Your Shapes, see
+[the KEYS write-up](https://web.archive.org/web/20010604031632/http://www-wisconsin.cern.ch/~cranmer/KEYS.pdf).
+
 If the 'adaptive mode' is enabled, the width of the Gaussian is adaptively calculated from the
 local density of events, i.e. narrow for regions with high event density to preserve details and
 wide for regions with low event density to promote smoothness. The details of the general algorithm
 are described in the following paper:
 
 Cranmer KS, Kernel Estimation in High-Energy Physics.
-            Computer Physics Communications 136:198-207,2001 - e-Print Archive: hep ex/0011057
+            Computer Physics Communications 136:198-207,2001 - e-Print Archive: hep ex/0011057,
+            [doi:10.1016/S0010-4655(00)00243-5](https://doi.org/10.1016/S0010-4655(00)00243-5)
 
 The `rho` parameter (default 1) is an overall scale factor for the width of the
 kernels. Values larger than 1 make the kernels wider and give a smoother
@@ -241,6 +248,11 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
   double sigmav=std::sqrt(x2/x0-meanv*meanv);
   double h=std::pow(double(4)/double(3),0.2)*std::pow(_sumWgt,-0.2)*_rho;
   double hmin=h*sigmav*std::sqrt(2.)/10;
+  // The 2*sqrt(3) factor comes from the standard deviation of a uniform
+  // distribution, sqrt(12)/2. This accounts for the case where the input is a
+  // finely binned histogram: entries spread uniformly over a bin get collapsed
+  // into a single sample with no variance, so the bin width is treated as the
+  // spread of that sample.
   double norm=h*std::sqrt(sigmav * _sumWgt)/(2.0*std::sqrt(3.0));
 
   _weights=new double[_nEvents];

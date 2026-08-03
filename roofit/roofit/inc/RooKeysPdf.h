@@ -4,7 +4,8 @@
  *    File: $Id: RooKeysPdf.h,v 1.10 2007/05/11 09:13:07 verkerke Exp $
  * Authors:                                                                  *
  *   GR, Gerhard Raven,   UC San Diego,        raven@slac.stanford.edu       *
- *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 * WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *                                                                           *
  * Copyright (c) 2000-2005, Regents of the University of California          *
  *                          and Stanford University. All rights reserved.    *
