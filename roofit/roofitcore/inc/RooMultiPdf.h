@@ -34,6 +34,9 @@ public:
 
    void getParametersHook(const RooArgSet *nset, RooArgSet *list, bool stripDisconnected) const override;
 
+   RooAbsGenContext *genContext(const RooArgSet &vars, const RooDataSet *prototype = nullptr,
+                                 const RooArgSet *auxProto = nullptr, bool verbose = false) const override;
+
 protected:
    RooListProxy c;
    RooListProxy corr;
