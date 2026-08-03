@@ -289,6 +289,50 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsComplete) {
   EXPECT_FALSE(Cpp::IsComplete(nullptr));
 }
 
+TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetOrForceDefinition) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    class Complete { int x; };
+    struct Fwd;
+    enum EnumC : int { A, B };
+    int gVar = 5;
+    void func() {}
+    namespace NS {}
+    template <typename T> struct TS { T y; };
+    TS<int> makeTS() { return {}; }
+    extern int extVar;
+    void fwdFunc();
+  )";
+  GetAllTopLevelDecls(code, Decls);
+
+  // Null in -> null out.
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(nullptr) == nullptr);
+  // Complete class -> its (complete) definition.
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[0]) != nullptr);
+  EXPECT_TRUE(Cpp::IsComplete(Cpp::GetOrForceDefinition(Decls[0])));
+  // Pure forward declaration with no definition available -> null, still incomplete.
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[1]) == nullptr);
+  EXPECT_FALSE(Cpp::IsComplete(Decls[1]));
+  // Enum with a definition -> non-null.
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[2]) != nullptr);
+  // Defined variable -> its defining declaration.
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[3]) != nullptr);
+  // Function with a body -> its definition.
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[4]) != nullptr);
+  // Namespace has no getDefinition() concept -> null.
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[5]) == nullptr);
+  // Template specialization reached via the function return type is instantiated
+  // and completed on demand.
+  Cpp::TypeRef retTy = Cpp::GetFunctionReturnType(Decls[7]);
+  auto tsDef = Cpp::GetOrForceDefinition(Cpp::GetScopeFromType(retTy));
+  EXPECT_TRUE(tsDef != nullptr);
+  EXPECT_TRUE(Cpp::IsComplete(tsDef));
+  // Declared-but-not-defined entities return null: getDefinition() yields nullptr,
+  // not the declaration itself.
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[8]) == nullptr);  // extern int extVar;
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[9]) == nullptr);  // void fwdFunc();
+}
+
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_SizeOf) {
   std::vector<Decl*> Decls;
   std::string code = R"(namespace N {} class C{}; int I; struct S;

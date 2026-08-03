@@ -660,6 +660,43 @@ bool IsComplete(ConstDeclRef DRef) {
   return INTEROP_RETURN(true);
 }
 
+DeclRef GetOrForceDefinition(DeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  if (!DRef)
+    return INTEROP_RETURN(nullptr);
+
+  auto* D = unwrap<clang::Decl>(DRef);
+
+  // Tag (class/struct/union/enum): complete through Sema, which drives ROOT's
+  // on-demand header autoparsing and template instantiation. isCompleteType is
+  // the diagnostic-suppressing form of RequireCompleteType (cf. IsComplete).
+  if (auto* TD = dyn_cast<TagDecl>(D)) {
+    if (!TD->getDefinition()) {
+      clang::Sema& S = getSema();
+      QualType QT = QualType::getFromOpaquePtr(GetTypeFromScope(DRef).data);
+      SourceLocation fakeLoc = GetValidSLoc(S);
+      compat::SynthesizingCodeRAII RAII(&getInterp());
+      S.isCompleteType(fakeLoc, QT);
+    }
+    return INTEROP_RETURN(TD->getDefinition());
+  }
+
+  // Function: instantiate the body of an un-instantiated template specialization;
+  // a plain forward declaration has no definition to force.
+  if (auto* FD = dyn_cast<FunctionDecl>(D)) {
+    if (!FD->getDefinition() && FD->isTemplateInstantiation())
+      InstantiateFunctionDefinition(D);
+    return INTEROP_RETURN(FD->getDefinition());
+  }
+
+  // Variable: resolve to its defining declaration.
+  if (auto* VD = dyn_cast<VarDecl>(D))
+    return INTEROP_RETURN(VD->getDefinition());
+
+  // No getDefinition() concept for this decl kind.
+  return INTEROP_RETURN(nullptr);
+}
+
 size_t SizeOf(ConstDeclRef DRef) {
   INTEROP_TRACE(DRef);
   assert(DRef);
