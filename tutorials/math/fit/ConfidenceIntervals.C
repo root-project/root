@@ -85,6 +85,7 @@ void ConfidenceIntervals()
    double z, rnd, e=0.3;
    TGraph2D *gr2 = new TGraph2D(ngr2);
    gr2->SetName("Graph2DNoError");
+   gr2->SetDirectory(gDirectory); // Because it is never drawn, register the graph, so it shows up in the Fit Panel
    TF2  *f2 = new TF2("f2",
       "1000*(([0]*sin(x)/x)*([1]*sin(y)/y))+250",-6,6,-6,6);
    f2->SetParameters(1,1);
