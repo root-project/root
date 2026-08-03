@@ -556,6 +556,22 @@ template instantiation if necessary.}];
   ];
 }
 
+def GetOrForceDefinition : CppInterOpAPI {
+  let Doc = [{Returns the definition of the entity referenced by \p DRef,
+forcing it into the AST if only a declaration is currently loaded. Dispatches
+on the entity kind using its getDefinition() accessor: a tag (class/struct/
+union/enum) is completed through Sema, which drives on-demand header parsing
+and template instantiation; a function has its body instantiated; a variable
+resolves to its defining declaration. Returns null when the entity has no
+definition available (e.g. a forward declaration whose header is absent) or
+has no definition concept.}];
+
+  let ReturnType = "DeclRef";
+  let Args = [
+    Arg<"DeclRef", "DRef">
+  ];
+}
+
 def Allocate : CppInterOpAPI {
   let Doc = [{Allocates memory required by an object of a given class
 \param[in] scope Given class for which to allocate memory for
