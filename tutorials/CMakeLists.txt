@@ -656,6 +656,7 @@ set (machine_learning-TMVACrossValidationRegression-depends tutorial-machine_lea
 set (machine_learning-TMVACrossValidationApplication-depends tutorial-machine_learning-TMVACrossValidation)
 set (machine_learning-tmva101_Training-depends tutorial-machine_learning-tmva100_DataPreparation-py)
 set (machine_learning-tmva102_Testing-depends tutorial-machine_learning-tmva101_Training-py)
+set (machine_learning-tmva103_Application-depends tutorial-machine_learning-tmva101_Training-py)
 set (machine_learning-tmva003_RReader-depends tutorial-machine_learning-TMVAClassification)
 set (machine_learning-tmva004_RStandardScaler-depends tutorial-machine_learning-tmva003_RReader)
 set (machine_learning-pytorch-ApplicationClassificationPyTorch-depends tutorial-machine_learning-pytorch-ClassificationPyTorch-py)
