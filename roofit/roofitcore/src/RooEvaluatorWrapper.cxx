@@ -36,6 +36,91 @@ Wraps a RooFit::Evaluator that evaluates a RooAbsReal back into a RooAbsReal.
 
 #include <fstream>
 
+namespace {
+
+// Throws an exception if any value in `span` is outside of the (default,
+// unnamed) range of `var`. The `obsName` is used only for the error message,
+// because it might differ from `var.GetName()` (e.g. the per-channel prefix
+// that RooSimultaneous adds is stripped for readability).
+void checkObservableSpanInRange(RooRealVar const &var, std::string const &obsName, std::string const &datasetName,
+                                std::span<const double> span)
+{
+   for (double val : span) {
+      if (!var.inRange(val, nullptr)) {
+         const double lo = var.getMin();
+         const double hi = var.getMax();
+         std::stringstream errMsg;
+         errMsg << "RooAbsPdf::fitTo/createNLL: cannot evaluate the likelihood because dataset \"" << datasetName
+                << "\" has an entry for observable \"" << obsName << "\" with value " << val
+                << ", which is outside of its range [" << lo << ", " << hi << "]. The probability density is "
+                << "normalized over exactly that range, so events outside of it would silently bias the fit. If "
+                << "you want to fit only a subset of the data, define a named range and use it in the fit, for example:\n"
+                << "    " << obsName << ".setRange(\"fitRange\", " << lo << ", " << hi << ");\n"
+                << "    pdf.fitTo(data, RooFit::Range(\"fitRange\"));\n"
+                << "This way, only the events inside \"fitRange\" enter the likelihood, consistent with how the "
+                << "pdf is normalized.";
+         oocoutE(nullptr, InputArguments) << errMsg.str() << std::endl;
+         throw std::runtime_error(errMsg.str());
+      }
+   }
+}
+
+// Validates that no dataset entry lies outside of the range of the
+// corresponding observable, for every real-valued observable of `pdf`. This
+// check is skipped when a range name was explicitly given to the fit,
+// because in that case out-of-range events are intentionally and
+// consistently dropped by RooFit::BatchModeDataHelpers::getDataSpans().
+void validateObservableRanges(RooAbsPdf const *pdf, RooAbsData const &data,
+                              std::map<RooFit::Detail::DataKey, std::span<const double>> const &dataSpans)
+{
+   if (!pdf)
+      return;
+
+   if (auto const *simPdf = dynamic_cast<RooSimultaneous const *>(pdf)) {
+      // The per-channel pdfs coming out of RooSimultaneous::compileForNormSet()
+      // have their observables cloned and renamed with a "_<channel>_" prefix
+      // (and tagged with the "__obs__" attribute), so that the shared data map
+      // can hold independent columns for each channel. We look those up the
+      // same way, and strip the prefix again for a readable error message.
+      for (auto const &nameIdx : simPdf->indexCat()) {
+         RooAbsPdf *channelPdf = simPdf->getPdf(nameIdx.first);
+         if (!channelPdf)
+            continue;
+         const std::string prefix = "_" + nameIdx.first + "_";
+         std::unique_ptr<RooArgSet> vars{channelPdf->getVariables()};
+         std::unique_ptr<RooArgSet> obs{vars->selectByAttrib("__obs__", true)};
+         for (RooAbsArg *arg : *obs) {
+            auto *realVar = dynamic_cast<RooRealVar *>(arg);
+            if (!realVar)
+               continue;
+            auto it = dataSpans.find(RooFit::Detail::DataKey(realVar));
+            if (it == dataSpans.end())
+               continue;
+            std::string obsName = realVar->GetName();
+            if (obsName.rfind(prefix, 0) == 0) {
+               obsName = obsName.substr(prefix.size());
+            }
+            checkObservableSpanInRange(*realVar, obsName, data.GetName(), it->second);
+         }
+      }
+      return;
+   }
+
+   RooArgSet obs;
+   pdf->getObservables(data.get(), obs);
+   for (RooAbsArg *arg : obs) {
+      auto *realVar = dynamic_cast<RooRealVar *>(arg);
+      if (!realVar)
+         continue;
+      auto it = dataSpans.find(RooFit::Detail::DataKey(realVar));
+      if (it == dataSpans.end())
+         continue;
+      checkObservableSpanInRange(*realVar, realVar->GetName(), data.GetName(), it->second);
+   }
+}
+
+} // namespace
+
 namespace RooFit::Experimental {
 
 RooEvaluatorWrapper::RooEvaluatorWrapper(RooAbsReal &topNode, RooAbsData *data, bool useGPU,
@@ -669,6 +754,9 @@ bool RooEvaluatorWrapper::setData(RooAbsData &data, bool /*cloneData*/)
    auto simPdf = dynamic_cast<RooSimultaneous const *>(_pdf);
    _dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(*_data, _rangeName, simPdf, skipZeroWeights,
                                                            _takeGlobalObservablesFromData, _vectorBuffers);
+   if (_rangeName.empty()) {
+      validateObservableRanges(_pdf, *_data, _dataSpans);
+   }
    if (!isInitializing && _dataSpans.size() != oldSize) {
       coutE(DataHandling) << errMsg << std::endl;
       throw std::runtime_error(errMsg);
