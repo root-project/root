@@ -18,6 +18,7 @@
 
 #include <cstdio>
 #include <cassert>
+#include <memory>
 
 // The size of the ROOT block framing headers for compression:
 // - 3 bytes to identify the compression algorithm and version.
@@ -115,7 +116,6 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, const char *src, int *tg
 static void R__zipOld(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep)
 {
     int method   = Z_DEFLATED;
-    bits_internal_state state;
     ush att      = (ush)UNKNOWN;
     ush flags    = 0;
     if (cxlevel > 9) cxlevel = 9;
@@ -132,45 +132,49 @@ static void R__zipOld(int cxlevel, int *srcsize, const char *src, int *tgtsize, 
        return;
     }
 
+    auto state = std::make_unique<bits_internal_state>();
+    if (!state) {
+       R__error("fail to allocate bits_internal_state struct");
+       return;
+    }
+
 #ifdef DYN_ALLOC
-    state.R__window = 0;
-    state.R__prev = 0;
+    state->R__window = 0;
+    state->R__prev = 0;
 #endif
 
-    state.in_buf    = src;
-    state.in_size   = (unsigned) (*srcsize);
-    state.in_offset = 0;
+    state->in_buf    = src;
+    state->in_size   = (unsigned) (*srcsize);
+    state->in_offset = 0;
 
-    state.out_buf     = tgt;
-    state.out_size    = (unsigned) (*tgtsize);
-    state.out_offset  = HDRSIZE;
-    state.R__window_size = 0L;
+    state->out_buf     = tgt;
+    state->out_size    = (unsigned) (*tgtsize);
+    state->out_offset  = HDRSIZE;
+    state->R__window_size = 0L;
 
-    if (0 != R__bi_init(&state) ) return;       /* initialize bit routines */
-    state.t_state = R__get_thread_tree_state();
-    if (0 != R__ct_init(state.t_state,&att, &method)) return; /* initialize tree routines */
-    if (0 != R__lm_init(&state, gCompressionLevel, &flags)) return; /* initialize compression */
-    R__Deflate(&state,&state.error_flag);                  /* compress data */
-    if (state.error_flag != 0) return;
+    if (0 != R__bi_init(state.get())) return;       /* initialize bit routines */
+    state->t_state = R__get_thread_tree_state();
+    if (0 != R__ct_init(state->t_state,&att, &method)) return; /* initialize tree routines */
+    if (0 != R__lm_init(state.get(), gCompressionLevel, &flags)) return; /* initialize compression */
+    R__Deflate(state.get(), &(state->error_flag));                  /* compress data */
+    if (state->error_flag != 0) return;
 
     tgt[0] = 'C';               /* Signature 'C'-Chernyaev, 'S'-Smirnov */
     tgt[1] = 'S';
     tgt[2] = (char) method;
 
-    state.out_size  = state.out_offset - HDRSIZE;         /* compressed size */
-    tgt[3] = (char)(state.out_size & 0xff);
-    tgt[4] = (char)((state.out_size >> 8) & 0xff);
-    tgt[5] = (char)((state.out_size >> 16) & 0xff);
+    state->out_size  = state->out_offset - HDRSIZE;         /* compressed size */
+    tgt[3] = (char)(state->out_size & 0xff);
+    tgt[4] = (char)((state->out_size >> 8) & 0xff);
+    tgt[5] = (char)((state->out_size >> 16) & 0xff);
 
-    tgt[6] = (char)(state.in_size & 0xff);         /* decompressed size */
-    tgt[7] = (char)((state.in_size >> 8) & 0xff);
-    tgt[8] = (char)((state.in_size >> 16) & 0xff);
+    tgt[6] = (char)(state->in_size & 0xff);         /* decompressed size */
+    tgt[7] = (char)((state->in_size >> 8) & 0xff);
+    tgt[8] = (char)((state->in_size >> 16) & 0xff);
 
-    *irep     = state.out_offset;
+    *irep     = state->out_offset;
 
-    R__lm_free(&state);
-
-    return;
+    R__lm_free(state.get());
 }
 
 /**
