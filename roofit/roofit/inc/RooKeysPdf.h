@@ -23,10 +23,21 @@ class RooRealVar;
 
 class RooKeysPdf : public RooAbsPdf {
 public:
-  enum Mirror { NoMirror, MirrorLeft, MirrorRight, MirrorBoth,
-      MirrorAsymLeft, MirrorAsymLeftRight,
-      MirrorAsymRight, MirrorLeftAsymRight,
-      MirrorAsymBoth };
+  /// Boundary correction obtained by reflecting the data across the lower
+  /// and/or upper edge of the observable range. Symmetric mirroring adds the
+  /// reflected events (density flat at the boundary), asymmetric mirroring
+  /// subtracts them (density vanishing at the boundary).
+  enum Mirror {
+     NoMirror,            ///< No boundary correction
+     MirrorLeft,          ///< Symmetric mirror at the lower edge
+     MirrorRight,         ///< Symmetric mirror at the upper edge
+     MirrorBoth,          ///< Symmetric mirror at both edges
+     MirrorAsymLeft,      ///< Asymmetric mirror at the lower edge
+     MirrorAsymLeftRight, ///< Asymmetric mirror at the lower edge, symmetric mirror at the upper edge
+     MirrorAsymRight,     ///< Asymmetric mirror at the upper edge
+     MirrorLeftAsymRight, ///< Symmetric mirror at the lower edge, asymmetric mirror at the upper edge
+     MirrorAsymBoth       ///< Asymmetric mirror at both edges
+  };
   RooKeysPdf() ;
   RooKeysPdf(const char *name, const char *title,
              RooAbsReal& x, RooDataSet& data, Mirror mirror= NoMirror,

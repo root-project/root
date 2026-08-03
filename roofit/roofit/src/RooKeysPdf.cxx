@@ -28,6 +28,24 @@ are described in the following paper:
 
 Cranmer KS, Kernel Estimation in High-Energy Physics.
             Computer Physics Communications 136:198-207,2001 - e-Print Archive: hep ex/0011057
+
+The `rho` parameter (default 1) is an overall scale factor for the width of the
+kernels. Values larger than 1 make the kernels wider and give a smoother
+estimate, while values smaller than 1 make them narrower and keep more detail.
+The default corresponds to the usual normal-reference ("rule of thumb")
+bandwidth.
+
+Close to the edges of the observable range the estimate is biased: the kernels
+of events near an edge have no data on the other side to balance them, so the
+density "leaks" out of the range. The `mirror` parameter selects an optional
+boundary correction that reflects the data across an edge. Symmetric mirroring
+adds the reflected events, which is appropriate when the true density is flat at
+the boundary (the estimate keeps a non-zero slope there). Asymmetric mirroring
+subtracts the reflected events, which is appropriate when the true density is
+expected to vanish at the boundary. See the RooKeysPdf::Mirror enum for the list
+of options.
+
+For a multi-dimensional version of this pdf, see RooNDKeysPdf.
 **/
 
 #include <limits>
@@ -57,7 +75,19 @@ RooKeysPdf::RooKeysPdf()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// cache stuff about x
+/// Construct a kernel estimation pdf of the observable `x` from its
+/// distribution in `data`.
+///
+/// \param[in] name   Name of the pdf.
+/// \param[in] title  Title of the pdf, used for plotting.
+/// \param[in] x      Observable the pdf is defined in. Its range sets the
+///                   boundaries used for the mirror correction and for the
+///                   internal binned lookup table.
+/// \param[in] data   Dataset whose distribution of `x` is modelled. The width
+///                   of each kernel is adapted to the local event density.
+/// \param[in] mirror Optional boundary correction, see the Mirror enum.
+/// \param[in] rho    Overall scale factor for the kernel width (default 1);
+///                   larger values give a smoother estimate.
 
 RooKeysPdf::RooKeysPdf(const char *name, const char *title, RooAbsReal &x, RooDataSet &data, Mirror mirror, double rho)
    : RooKeysPdf(name, title, x, static_cast<RooRealVar &>(x), data, mirror, rho)
@@ -65,7 +95,19 @@ RooKeysPdf::RooKeysPdf(const char *name, const char *title, RooAbsReal &x, RooDa
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// cache stuff about x
+/// As above, but reading the input values from a dataset variable `xdata` that
+/// can be different from the observable `xpdf` the pdf depends on.
+///
+/// \param[in] name   Name of the pdf.
+/// \param[in] title  Title of the pdf, used for plotting.
+/// \param[in] xpdf   Observable the pdf is defined in.
+/// \param[in] xdata  Variable in `data` whose distribution is modelled. Its
+///                   range sets the boundaries used for the mirror correction
+///                   and for the internal binned lookup table.
+/// \param[in] data   Dataset holding the values of `xdata` to model.
+/// \param[in] mirror Optional boundary correction, see the Mirror enum.
+/// \param[in] rho    Overall scale factor for the kernel width (default 1);
+///                   larger values give a smoother estimate.
 
 RooKeysPdf::RooKeysPdf(const char *name, const char *title, RooAbsReal &xpdf, RooRealVar &xdata, RooDataSet &data,
                        Mirror mirror, double rho)
