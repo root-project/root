@@ -72,8 +72,8 @@ data = model.generate(x, 10000)
 # If the fitted domain is a subset of `FULL`, though, the expected event count is divided by
 # \f[
 #   \mathrm{frac} = \frac{
-#     \int_{\mathrm{Fit range}} \mathrm{model}(x)  \; \mathrm{d}x }{
-#     \int_{\mathrm{Full range}} \mathrm{model}(x) \; \mathrm{d}x }.
+#     \int_{\mathrm{Full range}} \mathrm{model}(x)  \; \mathrm{d}x }{
+#     \int_{\mathrm{Fit range}} \mathrm{model}(x) \; \mathrm{d}x }.
 # \f]
 # `N` will therefore return the count extrapolated to the full range instead of the fit range.
 #
@@ -152,10 +152,9 @@ modelsum = ROOT.RooAddPdf("modelsum", "NSig*signal + NBkg*background", [sig, mod
 # This model will automatically insert the correction factor for the
 # reinterpretation of Nsig and Nnbkg in the full ranges.
 #
-# When this happens, it reports this with lines like the following:
+# When this happens, it reports this with a line like the following:
 # ```
-# [#1] INFO:Fitting -- RooAbsOptTestStatistic::ctor(nll_modelsum_modelsumData_LEFT) fixing interpretation of coefficients of any RooAddPdf to full domain of observables
-# [#1] INFO:Fitting -- RooAbsOptTestStatistic::ctor(nll_modelsum_modelsumData_RIGHT) fixing interpretation of coefficients of any RooAddPdf to full domain of observables
+# [#1] INFO:Fitting -- RooAbsPdf::fitTo(modelsum) fixing normalization set for coefficient determination to observables in data
 # ```
 
 r3 = modelsum.fitTo(data, Range="LEFT,RIGHT", PrintLevel=-1, Save=True)
