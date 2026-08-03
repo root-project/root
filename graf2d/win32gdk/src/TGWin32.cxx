@@ -159,9 +159,9 @@ struct XWindow_t {
    Int_t      fillFasi = -1;         ///< fasi parameter for fill pattern
    GdkPixmap *fillPattern = nullptr; ///< current fill pattern
    TAttMarker fAttMarker = { -1, -1, -1 }; ///< current marker attribute
-   Int_t     markerType = 0;          ///< 4 differen kinds of marker
+   TAttMarker::EMarkerShape markerType = TAttMarker::kShapeDot; ///< 5 differen kinds of marker
    Int_t     markerSize = 0;          ///< size of simple markers
-   std::vector<GdkPoint> markerShape; ///< marker shape points
+   std::vector<TPoint> markerShape;   ///< marker shape points
    Int_t markerLineWidth = 0;         ///< line width used for marker
    TAttText fAttText;                 ///< current text attributes
    EAlign textAlign = kAlignNone;     ///< selected text align
@@ -1778,7 +1778,7 @@ void TGWin32::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xyt)
    auto ctxt = (XWindow_t *) wctxt;
    if (!ctxt) return;
 
-   if ((ctxt->markerShape.size() == 0) && (ctxt->markerSize <= 0)) {
+   if (ctxt->markerType == TAttMarker::kShapeDot) {
       std::vector<GdkPoint> xy(n);
       for (int i = 0; i < n; i++) {
          xy[i].x = xyt[i].fX;
@@ -1786,51 +1786,49 @@ void TGWin32::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xyt)
       }
 
       gdk_win32_draw_points(ctxt->drawing, ctxt->fGClist[kGCmark], xy.data(), n);
-   } else {
-      int r = ctxt->markerSize / 2;
-      auto &shape = ctxt->markerShape;
+      return;
+   }
+   int r = ctxt->markerSize / 2;
+   auto &shape0 = ctxt->markerShape;
+   std::vector<GdkPoint> shape(shape0.size());
 
-      for (int m = 0; m < n; m++) {
-         int hollow = 0;
-         switch (ctxt->markerType) {
-         case 0:               // hollow circle
+   for (int m = 0; m < n; m++) {
+      for (size_t i = 0; i < shape.size(); i++) {
+         shape[i].x = xyt[m].fX + shape0[i].fX;
+         shape[i].y = xyt[m].fY + shape0[i].fY;
+      }
+      switch(ctxt->markerType) {
+         case TAttMarker::kShapeDot:
+            // handled before
+            break;
+         case TAttMarker::kShapeCircle:
+            // hollow circle
             gdk_win32_draw_arc(ctxt->drawing, ctxt->fGClist[kGCmark], kFALSE, xyt[m].fX - r, xyt[m].fY - r,
                               ctxt->markerSize, ctxt->markerSize, 0, 23040);
             break;
-
-         case 1:               // filled circle
+         case TAttMarker::kShapeFilledCircle:
+            // filled circle
             gdk_win32_draw_arc(ctxt->drawing, ctxt->fGClist[kGCmark], kTRUE, xyt[m].fX - r, xyt[m].fY - r,
-                              ctxt->markerSize, ctxt->markerSize, 0, 23040);
+                                 ctxt->markerSize, ctxt->markerSize, 0, 23040);
             break;
-
-         case 2:               // hollow polygon
-            hollow = 1;
-         case 3:               // filled polygon
-            for (size_t i = 0; i < shape.size(); i++) {
-               shape[i].x += xyt[m].fX;
-               shape[i].y += xyt[m].fY;
-            }
-            if (hollow) {
-               gdk_win32_draw_lines(ctxt->drawing, ctxt->fGClist[kGCmark], shape.data(), shape.size());
-            } else {
-               gdk_win32_draw_polygon(ctxt->drawing, ctxt->fGClist[kGCmark], 1, shape.data(), shape.size());
-            }
-            for (size_t i = 0; i < shape.size(); i++) {
-               shape[i].x -= xyt[m].fX;
-               shape[i].y -= xyt[m].fY;
-            }
+         case TAttMarker::kShapePolyLine:
+            // hollow polygon
+            gdk_win32_draw_lines(ctxt->drawing, ctxt->fGClist[kGCmark], shape.data(), shape.size());
             break;
-
-         case 4: // segmented line
-            for (size_t i = 0; i < shape.size(); i += 2) {
+         case TAttMarker::kShapeFilledArea:
+            // fillded area
+            gdk_win32_draw_polygon(ctxt->drawing, ctxt->fGClist[kGCmark], 1, shape.data(), shape.size());
+            break;
+         case TAttMarker::kShapeSegments:
+            for (std::size_t i = 0; i < shape.size(); i += 2)
                gdk_draw_line(ctxt->drawing, ctxt->fGClist[kGCmark],
-                             xyt[m].fX + shape[i].x,
-                             xyt[m].fY + shape[i].y,
-                             xyt[m].fX + shape[i+1].x,
-                             xyt[m].fY + shape[i+1].y);
-            }
+                              shape[i].x, shape[i].y, shape[i+1].x, shape[i+1].y);
             break;
-         }
+         case TAttMarker::kShapeTriangles:
+            // filled triangles
+            for (std::size_t t = 0; t < shape.size(); t += 3)
+               gdk_win32_draw_polygon(ctxt->drawing, ctxt->fGClist[kGCmark], 1, shape.data() + t, 3);
+            break;
       }
    }
 }
@@ -3341,573 +3339,17 @@ void TGWin32::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
    if (!changed)
       return;
 
-   auto markerstyle = TAttMarker::GetMarkerStyleBase(att.GetMarkerStyle());
    ctxt->markerLineWidth = TAttMarker::GetMarkerLineWidth(att.GetMarkerStyle());
+   ctxt->markerType = att.GetMarkerShape(ctxt->markerSize, ctxt->markerShape);
 
    // The fast pixel markers need to be treated separately
-   if (markerstyle == 1 || markerstyle == 6 || markerstyle == 7) {
-      gdk_gc_set_line_attributes(ctxt->fGClist[kGCmark], 0, GDK_LINE_SOLID, GDK_CAP_BUTT, GDK_JOIN_MITER);
+   if (ctxt->markerType == TAttMarker::kShapeSegments) {
+      gdk_gc_set_line_attributes(ctxt->fGClist[kGCmark], ctxt->markerLineWidth, GDK_LINE_SOLID, GDK_CAP_BUTT, GDK_JOIN_MITER);
    } else {
       gdk_gc_set_line_attributes(ctxt->fGClist[kGCmark], ctxt->markerLineWidth,
                                  (GdkLineStyle) gMarkerLineStyle,
                                  (GdkCapStyle)  gMarkerCapStyle,
                                  (GdkJoinStyle) gMarkerJoinStyle);
-   }
-
-   Float_t markerSizeReduced = att.GetMarkerSize() - TMath::Floor(ctxt->markerLineWidth/2.)/4.;
-   Int_t im = Int_t(4 * markerSizeReduced + 0.5);
-
-   auto& shape = ctxt->markerShape;
-   ctxt->markerSize = 0;
-   ctxt->markerType = 0;
-
-   if (markerstyle == 2) {
-      // + shaped marker
-      shape.resize(4);
-      shape[0].x = -im;
-      shape[0].y = 0;
-      shape[1].x = im;
-      shape[1].y = 0;
-      shape[2].x = 0;
-      shape[2].y = -im;
-      shape[3].x = 0;
-      shape[3].y = im;
-      ctxt->markerType = 4;
-   } else if (markerstyle == 3 || markerstyle == 31) {
-      // * shaped marker
-      shape.resize(8);
-      shape[0].x = -im;
-      shape[0].y = 0;
-      shape[1].x = im;
-      shape[1].y = 0;
-      shape[2].x = 0;
-      shape[2].y = -im;
-      shape[3].x = 0;
-      shape[3].y = im;
-      im = Int_t(0.707 * Float_t(im) + 0.5);
-      shape[4].x = -im;
-      shape[4].y = -im;
-      shape[5].x = im;
-      shape[5].y = im;
-      shape[6].x = -im;
-      shape[6].y = im;
-      shape[7].x = im;
-      shape[7].y = -im;
-      ctxt->markerType = 4;
-   } else if (markerstyle == 4 || markerstyle == 24) {
-      // O shaped marker
-      shape.resize(0);
-      ctxt->markerType = 0;
-      ctxt->markerSize = im * 2;
-   } else if (markerstyle == 5) {
-      // X shaped marker
-      im = Int_t(0.707 * Float_t(im) + 0.5);
-      shape.resize(4);
-      shape[0].x = -im;
-      shape[0].y = -im;
-      shape[1].x = im;
-      shape[1].y = im;
-      shape[2].x = -im;
-      shape[2].y = im;
-      shape[3].x = im;
-      shape[3].y = -im;
-      ctxt->markerType = 4;
-   } else if (markerstyle == 6) {
-      // + shaped marker (with 1 pixel)
-      shape.resize(4);
-      shape[0].x = -1;
-      shape[0].y = 0;
-      shape[1].x = 1;
-      shape[1].y = 0;
-      shape[2].x = 0;
-      shape[2].y = -1;
-      shape[3].x = 0;
-      shape[3].y = 1;
-      ctxt->markerType = 4;
-   } else if (markerstyle == 7) {
-      // . shaped marker (with 9 pixel)
-      shape.resize(6);
-      shape[0].x = -1;
-      shape[0].y = 1;
-      shape[1].x = 1;
-      shape[1].y = 1;
-      shape[2].x = -1;
-      shape[2].y = 0;
-      shape[3].x = 1;
-      shape[3].y = 0;
-      shape[4].x = -1;
-      shape[4].y = -1;
-      shape[5].x = 1;
-      shape[5].y = -1;
-      ctxt->markerType = 4;
-   } else if (markerstyle == 8 || markerstyle == 20) {
-      // O shaped marker (filled)
-      shape.resize(0);
-      ctxt->markerType = 0;
-      ctxt->markerSize = im * 2;
-   } else if (markerstyle == 21) {
-      // full square
-      shape.resize(5);
-      shape[0].x = -im;
-      shape[0].y = -im;
-      shape[1].x = im;
-      shape[1].y = -im;
-      shape[2].x = im;
-      shape[2].y = im;
-      shape[3].x = -im;
-      shape[3].y = im;
-      shape[4].x = -im;
-      shape[4].y = -im;
-      ctxt->markerType = 3;
-   } else if (markerstyle == 22) {
-      // full triangle up
-      shape.resize(4);
-      shape[0].x = -im;
-      shape[0].y = im;
-      shape[1].x = im;
-      shape[1].y = im;
-      shape[2].x = 0;
-      shape[2].y = -im;
-      shape[3].x = -im;
-      shape[3].y = im;
-      ctxt->markerType = 3;
-   } else if (markerstyle == 23) {
-      // full triangle down
-      shape.resize(4);
-      shape[0].x = 0;
-      shape[0].y = im;
-      shape[1].x = im;
-      shape[1].y = -im;
-      shape[2].x = -im;
-      shape[2].y = -im;
-      shape[3].x = 0;
-      shape[3].y = im;
-      ctxt->markerType = 3;
-   } else if (markerstyle == 25) {
-      // open square
-      shape.resize(5);
-      shape[0].x = -im;
-      shape[0].y = -im;
-      shape[1].x = im;
-      shape[1].y = -im;
-      shape[2].x = im;
-      shape[2].y = im;
-      shape[3].x = -im;
-      shape[3].y = im;
-      shape[4].x = -im;
-      shape[4].y = -im;
-      ctxt->markerType = 2;
-   } else if (markerstyle == 26) {
-      // open triangle up
-      shape.resize(4);
-      shape[0].x = -im;
-      shape[0].y = im;
-      shape[1].x = im;
-      shape[1].y = im;
-      shape[2].x = 0;
-      shape[2].y = -im;
-      shape[3].x = -im;
-      shape[3].y = im;
-      ctxt->markerType = 2;
-   } else if (markerstyle == 27) {
-      // open losange
-      Int_t imx = Int_t(2.66 * markerSizeReduced + 0.5);
-      shape.resize(5);
-      shape[0].x = -imx;
-      shape[0].y = 0;
-      shape[1].x = 0;
-      shape[1].y = -im;
-      shape[2].x = imx;
-      shape[2].y = 0;
-      shape[3].x = 0;
-      shape[3].y = im;
-      shape[4].x = -imx;
-      shape[4].y = 0;
-      ctxt->markerType = 2;
-   } else if (markerstyle == 28) {
-      // open cross
-      Int_t imx = Int_t(1.33 * markerSizeReduced + 0.5);
-      shape.resize(13);
-      shape[0].x = -im;
-      shape[0].y = -imx;
-      shape[1].x = -imx;
-      shape[1].y = -imx;
-      shape[2].x = -imx;
-      shape[2].y = -im;
-      shape[3].x = imx;
-      shape[3].y = -im;
-      shape[4].x = imx;
-      shape[4].y = -imx;
-      shape[5].x = im;
-      shape[5].y = -imx;
-      shape[6].x = im;
-      shape[6].y = imx;
-      shape[7].x = imx;
-      shape[7].y = imx;
-      shape[8].x = imx;
-      shape[8].y = im;
-      shape[9].x = -imx;
-      shape[9].y = im;
-      shape[10].x = -imx;
-      shape[10].y = imx;
-      shape[11].x = -im;
-      shape[11].y = imx;
-      shape[12].x = -im;
-      shape[12].y = -imx;
-      ctxt->markerType = 2;
-   } else if (markerstyle == 29) {
-      // full star pentagone
-      Int_t im1 = Int_t(0.66 * markerSizeReduced + 0.5);
-      Int_t im2 = Int_t(2.00 * markerSizeReduced + 0.5);
-      Int_t im3 = Int_t(2.66 * markerSizeReduced + 0.5);
-      Int_t im4 = Int_t(1.33 * markerSizeReduced + 0.5);
-      shape.resize(11);
-      shape[0].x = -im;
-      shape[0].y = im4;
-      shape[1].x = -im2;
-      shape[1].y = -im1;
-      shape[2].x = -im3;
-      shape[2].y = -im;
-      shape[3].x = 0;
-      shape[3].y = -im2;
-      shape[4].x = im3;
-      shape[4].y = -im;
-      shape[5].x = im2;
-      shape[5].y = -im1;
-      shape[6].x = im;
-      shape[6].y = im4;
-      shape[7].x = im4;
-      shape[7].y = im4;
-      shape[8].x = 0;
-      shape[8].y = im;
-      shape[9].x = -im4;
-      shape[9].y = im4;
-      shape[10].x = -im;
-      shape[10].y = im4;
-      ctxt->markerType = 3;
-   } else if (markerstyle == 30) {
-      // open star pentagone
-      Int_t im1 = Int_t(0.66 * markerSizeReduced + 0.5);
-      Int_t im2 = Int_t(2.00 * markerSizeReduced + 0.5);
-      Int_t im3 = Int_t(2.66 * markerSizeReduced + 0.5);
-      Int_t im4 = Int_t(1.33 * markerSizeReduced + 0.5);
-      shape.resize(11);
-      shape[0].x = -im;
-      shape[0].y = im4;
-      shape[1].x = -im2;
-      shape[1].y = -im1;
-      shape[2].x = -im3;
-      shape[2].y = -im;
-      shape[3].x = 0;
-      shape[3].y = -im2;
-      shape[4].x = im3;
-      shape[4].y = -im;
-      shape[5].x = im2;
-      shape[5].y = -im1;
-      shape[6].x = im;
-      shape[6].y = im4;
-      shape[7].x = im4;
-      shape[7].y = im4;
-      shape[8].x = 0;
-      shape[8].y = im;
-      shape[9].x = -im4;
-      shape[9].y = im4;
-      shape[10].x = -im;
-      shape[10].y = im4;
-      ctxt->markerType = 2;
-   } else if (markerstyle == 32) {
-      // open triangle down
-      shape.resize(4);
-      shape[0].x =   0;  shape[0].y = im;
-      shape[1].x =  im;  shape[1].y = -im;
-      shape[2].x = -im;  shape[2].y = -im;
-      shape[3].x =   0;  shape[3].y = im;
-      ctxt->markerType = 2;
-   } else if (markerstyle == 33) {
-      // full losange
-      Int_t imx = Int_t(2.66*markerSizeReduced + 0.5);
-      shape.resize(5);
-      shape[0].x =-imx;  shape[0].y = 0;
-      shape[1].x =   0;  shape[1].y = -im;
-      shape[2].x = imx;  shape[2].y = 0;
-      shape[3].x =   0;  shape[3].y = im;
-      shape[4].x =-imx;  shape[4].y = 0;
-      ctxt->markerType = 3;
-   } else if (markerstyle == 34) {
-      // full cross
-      Int_t imx = Int_t(1.33*markerSizeReduced + 0.5);
-      shape.resize(13);
-      shape[0].x = -im;  shape[0].y =-imx;
-      shape[1].x =-imx;  shape[1].y =-imx;
-      shape[2].x =-imx;  shape[2].y = -im;
-      shape[3].x = imx;  shape[3].y = -im;
-      shape[4].x = imx;  shape[4].y =-imx;
-      shape[5].x =  im;  shape[5].y =-imx;
-      shape[6].x =  im;  shape[6].y = imx;
-      shape[7].x = imx;  shape[7].y = imx;
-      shape[8].x = imx;  shape[8].y = im;
-      shape[9].x =-imx;  shape[9].y = im;
-      shape[10].x=-imx;  shape[10].y= imx;
-      shape[11].x= -im;  shape[11].y= imx;
-      shape[12].x= -im;  shape[12].y=-imx;
-      ctxt->markerType = 3;
-   } else if (markerstyle == 35) {
-      // square with diagonal cross
-      shape.resize(8);
-      shape[0].x = -im;  shape[0].y = -im;
-      shape[1].x =  im;  shape[1].y = -im;
-      shape[2].x =  im;  shape[2].y = im;
-      shape[3].x = -im;  shape[3].y = im;
-      shape[4].x = -im;  shape[4].y = -im;
-      shape[5].x =  im;  shape[5].y = im;
-      shape[6].x = -im;  shape[6].y = im;
-      shape[7].x =  im;  shape[7].y = -im;
-      ctxt->markerType = 2;
-   } else if (markerstyle == 36) {
-      // diamond with cross
-      shape.resize(8);
-      shape[0].x =-im;  shape[0].y = 0;
-      shape[1].x =  0;  shape[1].y = -im;
-      shape[2].x = im;  shape[2].y = 0;
-      shape[3].x =  0;  shape[3].y = im;
-      shape[4].x =-im;  shape[4].y = 0;
-      shape[5].x = im;  shape[5].y = 0;
-      shape[6].x =  0;  shape[6].y = im;
-      shape[7].x =  0;  shape[7].y =-im;
-      ctxt->markerType = 2;
-   } else if (markerstyle == 37) {
-      // open three triangles
-      Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
-      shape.resize(10);
-      shape[0].x =   0;  shape[0].y =   0;
-      shape[1].x =-im2;  shape[1].y =  im;
-      shape[2].x = -im;  shape[2].y =   0;
-      shape[3].x =   0;  shape[3].y =   0;
-      shape[4].x =-im2;  shape[4].y = -im;
-      shape[5].x = im2;  shape[5].y = -im;
-      shape[6].x =   0;  shape[6].y =   0;
-      shape[7].x =  im;  shape[7].y =   0;
-      shape[8].x = im2;  shape[8].y =  im;
-      shape[9].x =   0;  shape[9].y =   0;
-      ctxt->markerType = 2;
-   } else if (markerstyle == 38) {
-      // + shaped marker with octagon
-      Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
-      shape.resize(15);
-      shape[0].x = -im;  shape[0].y = 0;
-      shape[1].x = -im;  shape[1].y =-im2;
-      shape[2].x =-im2;  shape[2].y =-im;
-      shape[3].x = im2;  shape[3].y = -im;
-      shape[4].x =  im;  shape[4].y =-im2;
-      shape[5].x =  im;  shape[5].y = im2;
-      shape[6].x = im2;  shape[6].y = im;
-      shape[7].x =-im2;  shape[7].y = im;
-      shape[8].x = -im;  shape[8].y = im2;
-      shape[9].x = -im;  shape[9].y = 0;
-      shape[10].x = im;  shape[10].y = 0;
-      shape[11].x =  0;  shape[11].y = 0;
-      shape[12].x =  0;  shape[12].y = -im;
-      shape[13].x =  0;  shape[13].y = im;
-      shape[14].x =  0;  shape[14].y = 0;
-      ctxt->markerType = 2;
-   } else if (markerstyle == 39) {
-      // filled three triangles
-      Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
-      shape.resize(9);
-      shape[0].x =   0;  shape[0].y =   0;
-      shape[1].x =-im2;  shape[1].y =  im;
-      shape[2].x = -im;  shape[2].y =   0;
-      shape[3].x =   0;  shape[3].y =   0;
-      shape[4].x =-im2;  shape[4].y = -im;
-      shape[5].x = im2;  shape[5].y = -im;
-      shape[6].x =   0;  shape[6].y =   0;
-      shape[7].x =  im;  shape[7].y =   0;
-      shape[8].x = im2;  shape[8].y =  im;
-      ctxt->markerType = 3;
-   } else if (markerstyle == 40) {
-      // four open triangles X
-      Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
-      shape.resize(13);
-      shape[0].x =     0;  shape[0].y =    0;
-      shape[1].x =   im2;  shape[1].y =   im;
-      shape[2].x =    im;  shape[2].y =  im2;
-      shape[3].x =     0;  shape[3].y =    0;
-      shape[4].x =    im;  shape[4].y = -im2;
-      shape[5].x =   im2;  shape[5].y =  -im;
-      shape[6].x =     0;  shape[6].y =    0;
-      shape[7].x =  -im2;  shape[7].y =  -im;
-      shape[8].x =   -im;  shape[8].y = -im2;
-      shape[9].x =     0;  shape[9].y =    0;
-      shape[10].x =   -im;  shape[10].y =  im2;
-      shape[11].x =  -im2;  shape[11].y =   im;
-      shape[12].x =     0;  shape[12].y =  0;
-      ctxt->markerType = 2;
-   } else if (markerstyle == 41) {
-      // four filled triangles X
-      Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
-      shape.resize(13);
-      shape[0].x =     0;  shape[0].y =    0;
-      shape[1].x =   im2;  shape[1].y =   im;
-      shape[2].x =    im;  shape[2].y =  im2;
-      shape[3].x =     0;  shape[3].y =    0;
-      shape[4].x =    im;  shape[4].y = -im2;
-      shape[5].x =   im2;  shape[5].y =  -im;
-      shape[6].x =     0;  shape[6].y =    0;
-      shape[7].x =  -im2;  shape[7].y =  -im;
-      shape[8].x =   -im;  shape[8].y = -im2;
-      shape[9].x =     0;  shape[9].y =    0;
-      shape[10].x =   -im;  shape[10].y =  im2;
-      shape[11].x =  -im2;  shape[11].y =   im;
-      shape[12].x =     0;  shape[12].y =  0;
-      ctxt->markerType = 3;
-   } else if (markerstyle == 42) {
-      // open double diamonds
-      Int_t imx = Int_t(markerSizeReduced + 0.5);
-      shape.resize(9);
-      shape[0].x=     0;   shape[0].y= im;
-      shape[1].x=  -imx;   shape[1].y= imx;
-      shape[2].x  = -im;   shape[2].y = 0;
-      shape[3].x = -imx;   shape[3].y = -imx;
-      shape[4].x =    0;   shape[4].y = -im;
-      shape[5].x =  imx;   shape[5].y = -imx;
-      shape[6].x =   im;   shape[6].y = 0;
-      shape[7].x=   imx;   shape[7].y= imx;
-      shape[8].x=     0;   shape[8].y= im;
-      ctxt->markerType = 2;
-   } else if (markerstyle == 43) {
-      // filled double diamonds
-      Int_t imx = Int_t(markerSizeReduced + 0.5);
-      shape.resize(9);
-      shape[0].x =    0;   shape[0].y =   im;
-      shape[1].x = -imx;   shape[1].y =  imx;
-      shape[2].x =  -im;   shape[2].y =    0;
-      shape[3].x = -imx;   shape[3].y = -imx;
-      shape[4].x =    0;   shape[4].y =  -im;
-      shape[5].x =  imx;   shape[5].y = -imx;
-      shape[6].x =   im;   shape[6].y =    0;
-      shape[7].x =  imx;   shape[7].y =  imx;
-      shape[8].x =    0;   shape[8].y =   im;
-      ctxt->markerType = 3;
-   } else if (markerstyle == 44) {
-      // open four triangles plus
-      Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
-      shape.resize(11);
-      shape[0].x =    0;  shape[0].y =    0;
-      shape[1].x =  im2;  shape[1].y =   im;
-      shape[2].x = -im2;  shape[2].y =   im;
-      shape[3].x =  im2;  shape[3].y =  -im;
-      shape[4].x = -im2;  shape[4].y =  -im;
-      shape[5].x =    0;  shape[5].y =    0;
-      shape[6].x =   im;  shape[6].y =  im2;
-      shape[7].x =   im;  shape[7].y = -im2;
-      shape[8].x =  -im;  shape[8].y =  im2;
-      shape[9].x =  -im;  shape[9].y = -im2;
-      shape[10].x =    0;  shape[10].y =    0;
-      ctxt->markerType = 2;
-   } else if (markerstyle == 45) {
-      // filled four triangles plus
-      Int_t im0 = Int_t(0.4*markerSizeReduced + 0.5);
-      Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
-      shape.resize(13);
-      shape[0].x =  im0;  shape[0].y =  im0;
-      shape[1].x =  im2;  shape[1].y =   im;
-      shape[2].x = -im2;  shape[2].y =   im;
-      shape[3].x = -im0;  shape[3].y =  im0;
-      shape[4].x =  -im;  shape[4].y =  im2;
-      shape[5].x =  -im;  shape[5].y = -im2;
-      shape[6].x = -im0;  shape[6].y = -im0;
-      shape[7].x = -im2;  shape[7].y =  -im;
-      shape[8].x =  im2;  shape[8].y =  -im;
-      shape[9].x =  im0;  shape[9].y = -im0;
-      shape[10].x =   im;  shape[10].y = -im2;
-      shape[11].x =   im;  shape[11].y =  im2;
-      shape[12].x =  im0;  shape[12].y =  im0;
-      ctxt->markerType = 3;
-   } else if (markerstyle == 46) {
-      // open four triangles X
-      Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
-      shape.resize(13);
-      shape[0].x =    0;  shape[0].y =  im2;
-      shape[1].x = -im2;  shape[1].y =   im;
-      shape[2].x =  -im;  shape[2].y =  im2;
-      shape[3].x = -im2;  shape[3].y =    0;
-      shape[4].x =  -im;  shape[4].y = -im2;
-      shape[5].x = -im2;  shape[5].y =  -im;
-      shape[6].x =    0;  shape[6].y = -im2;
-      shape[7].x =  im2;  shape[7].y =  -im;
-      shape[8].x =   im;  shape[8].y = -im2;
-      shape[9].x =  im2;  shape[9].y =    0;
-      shape[10].x =  im;  shape[10].y = im2;
-      shape[11].x = im2;  shape[11].y =  im;
-      shape[12].x =   0;  shape[12].y = im2;
-      ctxt->markerType = 2;
-   } else if (markerstyle == 47) {
-      // filled four triangles X
-      Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
-      shape.resize(13);
-      shape[0].x =    0;  shape[0].y =  im2;
-      shape[1].x = -im2;  shape[1].y =   im;
-      shape[2].x =  -im;  shape[2].y =  im2;
-      shape[3].x = -im2;  shape[3].y =    0;
-      shape[4].x =  -im;  shape[4].y = -im2;
-      shape[5].x = -im2;  shape[5].y =  -im;
-      shape[6].x =    0;  shape[6].y = -im2;
-      shape[7].x =  im2;  shape[7].y =  -im;
-      shape[8].x =   im;  shape[8].y = -im2;
-      shape[9].x =  im2;  shape[9].y =    0;
-      shape[10].x =  im;  shape[10].y = im2;
-      shape[11].x = im2;  shape[11].y =  im;
-      shape[12].x =   0;  shape[12].y = im2;
-      ctxt->markerType = 3;
-   } else if (markerstyle == 48) {
-      // four filled squares X
-      Int_t im2 = Int_t(2.0*markerSizeReduced + 0.5);
-      shape.resize(17);
-      shape[0].x =    0;  shape[0].y =  im2*1.005;
-      shape[1].x = -im2;  shape[1].y =   im;
-      shape[2].x =  -im;  shape[2].y =  im2;
-      shape[3].x = -im2;  shape[3].y =    0;
-      shape[4].x =  -im;  shape[4].y = -im2;
-      shape[5].x = -im2;  shape[5].y =  -im;
-      shape[6].x =    0;  shape[6].y = -im2;
-      shape[7].x =  im2;  shape[7].y =  -im;
-      shape[8].x =   im;  shape[8].y = -im2;
-      shape[9].x =  im2;  shape[9].y =    0;
-      shape[10].x =  im;  shape[10].y = im2;
-      shape[11].x = im2;  shape[11].y =  im;
-      shape[12].x =   0;  shape[12].y = im2*0.995;
-      shape[13].x =  im2*0.995;  shape[13].y =    0;
-      shape[14].x =    0;  shape[14].y = -im2*0.995;
-      shape[15].x = -im2*0.995;  shape[15].y =    0;
-      shape[16].x =    0;  shape[16].y =  im2*0.995;
-      ctxt->markerType = 3;
-   } else if (markerstyle == 49) {
-      // four filled squares plus
-      Int_t imx = Int_t(1.33*markerSizeReduced + 0.5);
-      shape.resize(17);
-      shape[0].x =-imx;  shape[0].y =-imx*1.005;
-      shape[1].x =-imx;  shape[1].y = -im;
-      shape[2].x = imx;  shape[2].y = -im;
-      shape[3].x = imx;  shape[3].y =-imx;
-      shape[4].x =  im;  shape[4].y =-imx;
-      shape[5].x =  im;  shape[5].y = imx;
-      shape[6].x = imx;  shape[6].y = imx;
-      shape[7].x = imx;  shape[7].y = im;
-      shape[8].x =-imx;  shape[8].y = im;
-      shape[9].x =-imx;  shape[9].y = imx;
-      shape[10].x = -im;  shape[10].y = imx;
-      shape[11].x = -im;  shape[11].y =-imx;
-      shape[12].x =-imx;  shape[12].y =-imx*0.995;
-      shape[13].x =-imx;  shape[13].y = imx;
-      shape[14].x = imx;  shape[14].y = imx;
-      shape[15].x = imx;  shape[15].y =-imx;
-      shape[16].x =-imx;  shape[16].y =-imx*1.005;
-      ctxt->markerType = 3;
-   } else {
-      // single dot
-      shape.resize(0);
-      ctxt->markerType = 0;
-      ctxt->markerSize = 0;
    }
 }
 
