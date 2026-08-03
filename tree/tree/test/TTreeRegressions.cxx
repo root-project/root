@@ -1,11 +1,16 @@
-#include "TMemFile.h"
-#include "TLeaf.h"
-#include "TTree.h"
-#include "TInterpreter.h"
-#include "TSystem.h"
-#include "TLeafObject.h"
+#include "TBranch.h"
+#include "TClonesArray.h"
 #include "TH1F.h"
+#include "TInterpreter.h"
+#include "TLeaf.h"
+#include "TLeafObject.h"
+#include "TMemFile.h"
+#include "TNamed.h"
+#include "TProcessID.h"
 #include "TROOT.h"
+#include "TRefArray.h"
+#include "TSystem.h"
+#include "TTree.h"
 
 #include "gtest/gtest.h"
 
@@ -321,4 +326,55 @@ TEST(TTreeRegressions, DrawAutoBinning)
    EXPECT_EQ(h->GetEntries(), h->GetEffectiveEntries());
    delete h;
    delete gROOT->FindObject("c1");
+}
+
+// https://its.cern.ch/jira/browse/ROOT-3594
+// TRefArray::At must query the TRefTable (loading the referenced branch for
+// the current entry) before looking up the TProcessID, like TRef::GetObject
+// does; otherwise it returns a stale object from a previously read entry.
+TEST(TTreeRegressions, TRefArrayReadsCurrentEntry)
+{
+   TMemFile f("tree_trefarraycurrententry.root", "recreate");
+   {
+      TTree t("t", "t");
+      t.BranchRef();
+      auto *hits = new TClonesArray("TNamed");
+      auto *refs = new TRefArray;
+      t.Branch("hits", &hits);
+      t.Branch("refs", &refs);
+      for (int ev = 0; ev < 2; ++ev) {
+         const auto objcount = TProcessID::GetObjectCount();
+         hits->Clear();
+         refs->Clear();
+         for (int i = 0; i < 2; ++i) {
+            auto *h = new ((*hits)[i]) TNamed(TString::Format("ev%d_hit%d", ev, i).Data(), "");
+            refs->Add(h);
+         }
+         t.Fill();
+         TProcessID::SetObjectCount(objcount);
+      }
+      t.Write();
+      delete hits;
+      delete refs;
+   }
+
+   auto &t = *f.Get<TTree>("t");
+   TClonesArray *hits = nullptr;
+   TRefArray *refs = nullptr;
+   t.SetBranchAddress("hits", &hits);
+   t.SetBranchAddress("refs", &refs);
+
+   // Fully load entry 0: its hits get registered in the TProcessID.
+   t.GetEntry(0);
+   ASSERT_NE(refs->At(0), nullptr);
+   EXPECT_STREQ(refs->At(0)->GetName(), "ev0_hit0");
+
+   // Emulate TTree::Draw: move to entry 1 but only read the refs branch. The
+   // TRefTable must load the hits branch for entry 1 when dereferencing.
+   t.LoadTree(1);
+   t.GetBranch("refs")->GetEntry(1);
+   ASSERT_NE(refs->At(0), nullptr);
+   EXPECT_STREQ(refs->At(0)->GetName(), "ev1_hit0");
+   ASSERT_NE(refs->At(1), nullptr);
+   EXPECT_STREQ(refs->At(1)->GetName(), "ev1_hit1");
 }
