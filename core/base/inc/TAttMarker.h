@@ -45,9 +45,9 @@ public:
    virtual void     SetMarkerStyle(Style_t mstyle = 1);
    virtual void     SetMarkerSize(Size_t msize = 1);
 
-   enum EMarkerShape { kShapeDot, kShapeCircle, kShapeFilledCircle, kShapePolyLine, kShapeFilledArea, kShapeSegments };
+   enum EMarkerShape { kShapeDot, kShapeCircle, kShapeFilledCircle, kShapePolyLine, kShapeFilledArea, kShapeSegments, kShapeTriangles };
 
-      EMarkerShape GetMarkerShape(Int_t &sz, std::vector<TPoint> &points, Float_t scale = 1.) const;
+      EMarkerShape GetMarkerShape(Int_t &sz, std::vector<TPoint> &points, Float_t scale = 1., Bool_t prefer_triangles = kFALSE) const;
 
    static  Style_t  GetMarkerStyleBase(Style_t style);
    static  Width_t  GetMarkerLineWidth(Style_t style);
