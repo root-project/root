@@ -275,9 +275,8 @@ class RFile final {
    void PutUntyped(std::string_view path, const std::type_info &type, const void *obj, std::uint32_t flags,
                    std::string_view title);
 
-   /// \see Put
    template <typename T>
-   void PutInternal(std::string_view path, const T &obj, std::uint32_t flags, std::string_view title = "")
+   void PutInternal(std::string_view path, const T &obj, std::uint32_t flags, std::string_view title)
    {
       PutUntyped(path, typeid(T), &obj, flags, title);
    }
@@ -337,7 +336,7 @@ public:
       return std::unique_ptr<T>(static_cast<T *>(obj));
    }
 
-   /// Puts object `obj` into the file, optionally giving it a title.
+   /// Puts object `obj` into the file and gives it a title.
    /// The object will be effectively copied into the file, so any further modifications won't be seen by the object
    /// inside the file.
    /// Note that the object is not necessarily written to storage until the RFile is closed or `Flush()` is called.
@@ -348,9 +347,21 @@ public:
    /// \throws ROOT::RException if `path` already identifies a valid object or directory.
    /// \throws ROOT::RException if the file was opened in read-only mode.
    template <typename T>
-   void Put(std::string_view path, const T &obj, std::string_view title = "")
+   void Put(std::string_view path, const T &obj, std::string_view title)
    {
       PutInternal(path, obj, /* flags = */ 0, title);
+   }
+
+   /// For any objects not inheriting from TNamed, same as Put(path, obj, /* title= */ "").
+   /// For objects inheriting from TNamed, same as Put(path, obj, obj.GetTitle()).
+   template <typename T>
+   void Put(std::string_view path, const T &obj)
+   {
+      std::string_view title = "";
+      if constexpr (std::is_base_of_v<class TNamed, T>) {
+         title = obj.GetTitle();
+      }
+      Put(path, obj, title);
    }
 
    /// Puts an object into the file, overwriting any previously-existing object at that path.

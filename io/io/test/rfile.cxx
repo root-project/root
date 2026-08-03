@@ -841,3 +841,28 @@ TEST(RFile, Compression)
       EXPECT_EQ(file->GetCompressionSettings(), 0);
    }
 }
+
+TEST(RFile, ImplicitTitleTNamed)
+{
+   FileRaii fileGuard("test_rfile_implicittitle_tnamed.root");
+
+   {
+      TNamed named1("named1", "title 1"), named2("named2", "title 2");
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      file->Put(named1.GetName(), named1);
+      // Save `named2` with no title
+      file->Put(named2.GetName(), named2, "");
+   }
+
+   {
+      auto file = RFile::Open(fileGuard.GetPath());
+      auto named1 = file->Get<TNamed>("named1");
+      auto named2 = file->Get<TNamed>("named2");
+      EXPECT_STREQ(named1->GetTitle(), "title 1");
+      EXPECT_STREQ(named2->GetTitle(), "title 2");
+      auto key1 = file->GetKeyInfo("named1").value();
+      auto key2 = file->GetKeyInfo("named2").value();
+      EXPECT_EQ(key1.GetTitle(), "title 1");
+      EXPECT_EQ(key2.GetTitle(), "");
+   }
+}
