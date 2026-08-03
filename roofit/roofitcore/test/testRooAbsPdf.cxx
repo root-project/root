@@ -437,6 +437,65 @@ TEST_P(FitTest, PdfAsFunctionInFormulaVar)
    EXPECT_FLOAT_EQ(nll->getVal(), ref);
 }
 
+// If an observable's range is shrunk after a dataset was already filled, the
+// dataset still contains entries that are now outside of the range over which
+// the pdf is normalized. Evaluating the likelihood anyway would silently bias
+// the fit. The vectorizing evaluation backends must detect this and throw a
+// descriptive error, while the correct workaround (a named range) keeps
+// working for all backends. Covers GitHub issue #22740.
+TEST_P(FitTest, OutOfRangeDataThrows)
+{
+   using namespace RooFit;
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::gauss(x[0, 5], mean[0.5, -10, 10], sigma[1.0, 0.1, 10.0])");
+
+   auto &x = *ws.var("x");
+   auto &mean = *ws.var("mean");
+   RooAbsPdf &gauss = *ws.pdf("gauss");
+
+   // Fill a dataset with entries at 1, 2 and 3 while the range is still [0, 5].
+   RooDataSet data{"data", "data", x};
+   for (double val : {1.0, 2.0, 3.0}) {
+      x.setVal(val);
+      for (int i = 0; i < 50; ++i) {
+         data.add(x);
+      }
+   }
+
+   // Shrink the range so that the entries at 3 are now out of range, while the
+   // dataset's internal clone of the observable still remembers [0, 5].
+   x.setMax(2.5);
+
+   const bool isLegacy = _evalBackend == EvalBackend::Legacy();
+
+   {
+      // Normalizing over [0, 2.5] while still evaluating the entries at 3 would
+      // bias the fit, so the vectorizing backends throw. The legacy backend is
+      // not affected by this check and keeps its historical behavior.
+      RooHelpers::HijackMessageStream hijack(RooFit::ERROR, RooFit::InputArguments);
+      auto doFit = [&]() {
+         std::unique_ptr<RooFitResult>{gauss.fitTo(data, _evalBackend, Save(), PrintLevel(-1))};
+      };
+      if (isLegacy) {
+         EXPECT_NO_THROW(doFit());
+      } else {
+         EXPECT_THROW(doFit(), std::runtime_error);
+      }
+   }
+
+   // Restricting the fit with a named range is the correct approach: the
+   // out-of-range entries at 3 are dropped consistently for both normalization
+   // and evaluation. This must work for every backend and recover a mean close
+   // to the mean of the clipped data (50 entries at 1 and 50 at 2).
+   mean.setVal(0.5);
+   x.setRange("fitRange", 0, 2.5);
+   std::unique_ptr<RooFitResult> result{gauss.fitTo(data, _evalBackend, Range("fitRange"), Save(), PrintLevel(-1))};
+   ASSERT_NE(result, nullptr);
+   EXPECT_EQ(result->status(), 0);
+   EXPECT_NEAR(mean.getVal(), 1.5, 0.2);
+}
+
 // Verifies that a server pdf gets correctly reevaluated when the normalization
 // set is changed.
 TEST(RooAbsPdf, NormSetChange)
