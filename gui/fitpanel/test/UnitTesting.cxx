@@ -20,6 +20,7 @@
 #include "Math/PdfFuncMathCore.h"
 
 #include <iostream>
+#include <fstream>
 #include <exception>
 #include <stdexcept>
 #include <cmath>
@@ -49,6 +50,10 @@ int equals(Double_t n1, Double_t n2, double ERRORLIMIT = 1.E-4)
 int SelectEntry(TGComboBox* cb, const char* name)
 {
    TGTextLBEntry* findEntry = static_cast<TGTextLBEntry*>( cb->FindEntry(name) );
+   if (!findEntry) {
+      fprintf(stderr, "*****\nError: Did not find entry %s in combo box %s\n", name, cb->GetName());
+      throw std::runtime_error("Did not find the requested entry in a combo box.");
+   }
    cb->Select(findEntry->EntryId());
 
    return findEntry->EntryId();
@@ -450,13 +455,20 @@ public:
    {
       RedirectHandle_t gRH;
 
-      gSystem->RedirectOutput("outputUnitTesting.txt", first ? "w" : "a", &gRH);
+      constexpr auto logfile = "outputUnitTesting.txt";
+
+      gSystem->RedirectOutput(logfile, first ? "w" : "a", &gRH);
 
       fprintf(stdout, "\n***** %s *****\n", str);
 
-      int status = (this->*func)();
-
-      gSystem->RedirectOutput(0, 0, &gRH);
+      int status = 1;
+      try {
+         status = (this->*func)();
+         gSystem->RedirectOutput(0, 0, &gRH);
+      } catch (std::exception &ex) {
+         gSystem->RedirectOutput(0, 0, &gRH);
+         fprintf(stderr, "Caught exception with message '%s'\n Check %s below.\n", ex.what(), logfile);
+      }
 
       fprintf(stdout, "%s..........%s\n", str, status == 0 ? "OK" : "FAILED");
 
@@ -496,8 +508,16 @@ public:
       // TODO: reenable once fit results are fixed
       // result += MakeTest("TestTreeND.........", &FitEditorUnitTesting::TestTreeND);
 
-      fprintf(stdout, "\nRemember to also check outputUnitTesting.txt for "
-                      "more detailed information\n\n");
+      if (result == 0) {
+         fprintf(stdout, "\nRemember to also check outputUnitTesting.txt for "
+                         "more detailed information\n\n");
+      } else {
+         std::cout << "\n\nContents of outputUnitTesting.txt:\n\n";
+         std::ifstream file("outputUnitTesting.txt");
+         std::string line;
+         while (std::getline(file, line))
+            std::cout << "\t" << line << "\n";
+      }
 
       return result;
    }
