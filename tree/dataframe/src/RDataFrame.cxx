@@ -748,6 +748,7 @@ parts of the RDataFrame API currently work with this package. The subset that is
 - Min
 - Profile[1,2,3]D
 - Redefine
+- RedefinePerSample
 - Snapshot
 - Stats
 - StdDev
