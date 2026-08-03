@@ -300,6 +300,10 @@ ulg R__memcompress(char *tgt, ulg tgtsize, const char *src, ulg srcsize)
     ulg crc      = 0;
     int method   = Z_DEFLATED;
     bits_internal_state *state = (bits_internal_state *) malloc(sizeof(bits_internal_state));
+    if (!state) {
+        R__error("fail to allocate bits_internal_state struct");
+        return 0L;
+    }
 
     if (tgtsize <= 6L) { R__error("target buffer too small"); /* errorflag = 1; */ }
 #if 0
