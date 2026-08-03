@@ -964,8 +964,10 @@ namespace cling {
         // All the symbols are already flagged as exported. 
         // We cannot really ignore symbols based on flags as we do on unix.
         StringRef Name;
-        if (I->getSymbolName(Name))
+        if (Error E = I->getSymbolName(Name)) {
+          consumeError(std::move(E));
           continue;
+        }
         if (Name.empty())
           continue;
 
