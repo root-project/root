@@ -843,6 +843,10 @@ Int_t TBufferJSON::ExportToFile(const char *filename, const TObject *obj, const 
 
       // R__memcompress fills first 6 bytes with own header, therefore just overwrite them
       unsigned long ziplen = R__memcompress(bufcur - 6, objlen + 6, (char *)objbuf, objlen);
+      if (!ziplen) {
+         free(buffer);
+         return 0;
+      }
 
       memcpy(bufcur - 6, dummy, 6);
 
