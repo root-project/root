@@ -22,6 +22,7 @@
 class TGLPadPainter;//For friend declarations.
 class TAttFill;
 class TAttLine;
+class TAttMarker;
 /*
 
 All code here and in corresponding *.cxx file is only
@@ -160,6 +161,8 @@ public:
    void DrawFullCrossX(UInt_t n, const TPoint *xy)const;
    void DrawFourSquaresX(UInt_t n, const TPoint *xy)const;
    void DrawFourSquaresPlus(UInt_t n, const TPoint *xy)const;
+
+   void DrawMarkers(UInt_t n, const TPoint *xy, const TAttMarker &attr) const;
 };
 
 //
