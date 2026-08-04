@@ -249,7 +249,7 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
   double h=std::pow(double(4)/double(3),0.2)*std::pow(_sumWgt,-0.2)*_rho;
   double hmin=h*sigmav*std::sqrt(2.)/10;
   // The 2*sqrt(3) factor comes from the standard deviation of a uniform
-  // distribution, sqrt(12)/2. This accounts for the case where the input is a
+  // distribution, 1/sqrt(12). This accounts for the case where the input is a
   // finely binned histogram: entries spread uniformly over a bin get collapsed
   // into a single sample with no variance, so the bin width is treated as the
   // spread of that sample.
