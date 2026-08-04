@@ -45,11 +45,6 @@
 #include <utility>
 #include <vector>
 
-#ifdef R__HAS_VDT
-#include <vdt/vdtMath.h>
-#endif
-
-
 namespace ROOT {
 
 namespace VecOps {
@@ -1866,26 +1861,24 @@ RVEC_STD_UNARY_FUNCTION(tgamma)
 ///@{
 
 #ifdef R__HAS_VDT
-#define RVEC_VDT_UNARY_FUNCTION(F) RVEC_UNARY_FUNCTION(F, vdt::F)
 
-RVEC_VDT_UNARY_FUNCTION(fast_expf)
-RVEC_VDT_UNARY_FUNCTION(fast_logf)
-RVEC_VDT_UNARY_FUNCTION(fast_sinf)
-RVEC_VDT_UNARY_FUNCTION(fast_cosf)
-RVEC_VDT_UNARY_FUNCTION(fast_tanf)
-RVEC_VDT_UNARY_FUNCTION(fast_asinf)
-RVEC_VDT_UNARY_FUNCTION(fast_acosf)
-RVEC_VDT_UNARY_FUNCTION(fast_atanf)
+RVec<float> fast_expf(const RVec<float> &v);
+RVec<float> fast_logf(const RVec<float> &v);
+RVec<float> fast_sinf(const RVec<float> &v);
+RVec<float> fast_cosf(const RVec<float> &v);
+RVec<float> fast_tanf(const RVec<float> &v);
+RVec<float> fast_asinf(const RVec<float> &v);
+RVec<float> fast_acosf(const RVec<float> &v);
+RVec<float> fast_atanf(const RVec<float> &v);
 
-RVEC_VDT_UNARY_FUNCTION(fast_exp)
-RVEC_VDT_UNARY_FUNCTION(fast_log)
-RVEC_VDT_UNARY_FUNCTION(fast_sin)
-RVEC_VDT_UNARY_FUNCTION(fast_cos)
-RVEC_VDT_UNARY_FUNCTION(fast_tan)
-RVEC_VDT_UNARY_FUNCTION(fast_asin)
-RVEC_VDT_UNARY_FUNCTION(fast_acos)
-RVEC_VDT_UNARY_FUNCTION(fast_atan)
-#undef RVEC_VDT_UNARY_FUNCTION
+RVec<double> fast_exp(const RVec<double> &v);
+RVec<double> fast_log(const RVec<double> &v);
+RVec<double> fast_sin(const RVec<double> &v);
+RVec<double> fast_cos(const RVec<double> &v);
+RVec<double> fast_tan(const RVec<double> &v);
+RVec<double> fast_asin(const RVec<double> &v);
+RVec<double> fast_acos(const RVec<double> &v);
+RVec<double> fast_atan(const RVec<double> &v);
 
 #endif // R__HAS_VDT
 
@@ -3740,30 +3733,6 @@ RVEC_EXTERN_STD_FUNCTIONS(double)
 #undef RVEC_EXTERN_STD_UNARY_FUNCTION
 #undef RVEC_EXTERN_STD_BINARY_FUNCTION
 #undef RVEC_EXTERN_STD_UNARY_FUNCTIONS
-
-#ifdef R__HAS_VDT
-
-#define RVEC_EXTERN_VDT_UNARY_FUNCTION(T, F) RVEC_EXTERN_UNARY_FUNCTION(T, F, vdt::F)
-
-RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_expf)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_logf)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_sinf)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_cosf)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_tanf)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_asinf)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_acosf)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(float, fast_atanf)
-
-RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_exp)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_log)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_sin)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_cos)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_tan)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_asin)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_acos)
-RVEC_EXTERN_VDT_UNARY_FUNCTION(double, fast_atan)
-
-#endif // R__HAS_VDT
 
 #endif // _VECOPS_USE_EXTERN_TEMPLATES
 
