@@ -728,6 +728,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   #---call rootcling------------------------------------------
+  # use CMP0116 NEW locally so CMake normalises the depfile
+  # target for the active generator regardless of the global OLD setting.
+  cmake_policy(PUSH)
+  cmake_policy(SET CMP0116 NEW)
   add_custom_command(
     OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file}
     COMMAND ${command} -v2 -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
@@ -750,6 +754,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
             ${cxx_std_stamp}
     COMMAND_EXPAND_LISTS
   )
+  cmake_policy(POP)
 
   # If we are adding to an existing target and it's not the dictionary itself,
   # we make an object library and add its output object file as source to the target.
