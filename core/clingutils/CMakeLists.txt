@@ -51,7 +51,7 @@ set_target_properties(ClingUtils PROPERTIES
 
 ROOT_INSTALL_HEADERS()
 
-#### STL dictionary (replacement for cintdlls)##############################
+#### STL dictionary (replacement for historical cintdlls)##############################
 
 set(stldicts
     vector
