@@ -370,13 +370,13 @@ endif()
 
 #---Removed options------------------------------------------------------------
 # Please notify SPI when adding to this list
-foreach(opt afdsmgrd afs alien bonjour builtin_afterimage builtin_davix castor chirp
-        compression_default cxx11 cxx14 cxx17 cxxmodules exceptions
+foreach(opt afdsmgrd afs alien bonjour builtin_afterimage builtin_davix builtin_vc builtin_veccore
+        castor chirp compression_default cxx11 cxx14 cxx17 cxxmodules exceptions
         geocad gfal glite globus gsl_shared hdfs html ios jemalloc krb5
         ldap memstat minuit2 monalisa oracle proof pyroot-python2 pyroot_legacy
         pythia6 pythia6_nolink python qt qtgsi qt5web rfio ruby sapdb srp table
         tcmalloc vmc xproofd mysql odbc pgsql builtin_cppzmq builtin_zeromq
-        r tmva-rmva)
+        r rpath tmva-rmva vc veccore)
   if(${opt})
     message(FATAL_ERROR ">>> '${opt}' is no longer part of ROOT ${ROOT_VERSION} build options.")
   endif()
@@ -386,22 +386,6 @@ endforeach()
 foreach(opt r)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
-  endif()
-endforeach()
-
-if(DEFINED rpath)
-  message(DEPRECATION ">>> Option 'rpath' is deprecated and without effect."
-      " Relative RPATHs to the main ROOT libraries are unconditionally appended to all ROOT"
-      " executables and libraries."
-      " Using this option will result in configuration errors in ROOT 6.42."
-      "") # empty line at the end to make the deprecation message more visible
-endif()
-
-foreach(opt vc builtin_vc veccore builtin_veccore)
-  if(${opt})
-    message(DEPRECATION ">>> Option '${opt}' is deprecated and ignored."
-        "ROOT now uses std::experimental::simd for the vectorized TFormula and TMath classes when available (on Linux when compiling with C++20 or higher)."
-        "Using this option will result in configuration errors in ROOT 6.42.")
   endif()
 endforeach()
 
