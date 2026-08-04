@@ -41,7 +41,6 @@ davix=ON
 dcache=OFF
 dev=OFF
 distcc=OFF
-fail-on-missing=ON
 fcgi=OFF
 fftw3=ON
 fitsio=ON

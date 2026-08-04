@@ -186,7 +186,6 @@ ROOT_BUILD_OPTION(xrootd ON "Enable support for XRootD file server and client")
 
 option(all "Enable all optional components by default" OFF)
 option(clingtest "Enable cling tests (Note: that this makes llvm/clang symbols visible in libCling)" OFF)
-option(fail-on-missing "Fail at configure time if a required package cannot be found" OFF)
 option(gminimal "Enable only required options by default, but include X11/Cocoa" OFF)
 option(minimal "Enable only required options by default" OFF)
 option(rootbench "Build rootbench if rootbench exists in root or if it is a sibling directory (implies testing=ON)" OFF)
@@ -388,6 +387,13 @@ foreach(opt r)
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()
 endforeach()
+
+if(DEFINED fail-on-missing)
+  message(DEPRECATION ">>> Option 'fail-on-missing' is deprecated and ignored."
+      " ROOT now behaves as if fail-on-missing was always ON."
+      " Using this option will result in configuration errors in ROOT 6.44."
+      "") # empty line at the end to make the deprecation message more visible
+endif()
 
 foreach(opt minuit2_mpi)
   if(${opt})
