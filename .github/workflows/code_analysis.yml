@@ -23,7 +23,7 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
-      TRAVIS_BRANCH: ${{ github.base_ref }} 
+      TRAVIS_BRANCH: ${{ github.base_ref }}
       TRAVIS_PULL_REQUEST_REPO: ${{ github.event.pull_request.head.repo.html_url }}
       TRAVIS_PULL_REQUEST_BRANCH: ${{ github.head_ref }}
       BASE_COMMIT: ${{ github.event.pull_request.base.sha }}
@@ -47,6 +47,55 @@ jobs:
       run: |
         PATH=/usr/lib/llvm-20/bin:${PATH}
         .ci/format_script.sh
+
+  clang-tidy:
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] is written in the title.
+    if: |
+       (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+       (github.event_name == 'pull_request' && !(
+         contains(github.event.pull_request.title, '[skip-ci]') ||
+         contains(github.event.pull_request.labels.*.name, 'skip ci') ||
+         contains(github.event.pull_request.labels.*.name, 'skip code analysis')
+       ))
+
+    runs-on:
+       - self-hosted
+       - linux
+       - x64
+
+    container:
+      image: registry.cern.ch/root-ci/alma10:buildready
+      options: '--security-opt label=disable --rm'
+      env:
+        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+        OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+        OS_AUTH_TYPE: 'v3applicationcredential'
+        OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+        OS_IDENTITY_API_VERSION: 3
+        OS_INTERFACE: 'public'
+        OS_REGION_NAME: 'cern'
+        PYTHONUNBUFFERED: true
+
+    env:
+       TRAVIS_BRANCH: ${{ github.base_ref }}
+       TRAVIS_PULL_REQUEST_REPO: ${{ github.event.pull_request.head.repo.html_url }}
+       TRAVIS_PULL_REQUEST_BRANCH: ${{ github.head_ref }}
+       BASE_COMMIT: ${{ github.event.pull_request.base.sha }}
+
+    steps:
+       - uses: actions/checkout@v6
+         with:
+            fetch-depth: 1
+            ref: ${{ github.event.pull_request.head.sha }}
+            path: ROOT-CI/src
+       - name: Fetch base sha
+         run: cd ROOT-CI/src && git fetch --depth=1 origin +${{github.event.pull_request.base.sha}}:origin/base_sha
+       - name: Determine merge base
+         run: echo "MERGE_BASE=$(cd ROOT-CI/src && git merge-base ${{ github.event.pull_request.base.sha }} HEAD)" >> $GITHUB_ENV
+       - name: run clang-tidy script
+         run: |
+            ROOT-CI/src/.ci/tidy_script.sh
 
   ruff:
     if: |

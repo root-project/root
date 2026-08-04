@@ -270,4 +270,8 @@ void Fatal(const char *location, const char *fmt, ...)
    va_start(ap, fmt);
    ErrorHandler(kFatal, location, fmt, ap);
    va_end(ap);
+#ifdef __clang_analyzer__
+   // Under clang-tidy, Fatal() is [[noreturn]]
+   abort();
+#endif
 }
