@@ -1434,6 +1434,23 @@ namespace {
 #endif
     // Add host specific includes, -resource-dir if necessary, and -isysroot
     std::string ClingBin = GetExecutablePath(argv[0]);
+#ifdef __linux__
+    // On Linux GetExecutablePath() resolves /proc/self/exe, i.e. the path of
+    // the *embedding* application rather than of ROOT/cling itself. clang's
+    // driver derives its installed-dir (and hence its GCC-installation and
+    // C-system-header sysroot detection) from this path. When libCore is loaded
+    // by an executable that does not live next to the ROOT installation, the
+    // sysroot is misdetected and the interpreter fails to find the C system
+    // headers (e.g. assert.h) even though they are present in the installation.
+    // Anchor the driver on $ROOTSYS/bin instead, mirroring how -resource-dir is
+    // already made ROOTSYS-relative below. LLVMDir is $ROOTSYS/etc/cling.
+    if (LLVMDir) {
+      llvm::SmallString<512> rootDriver(LLVMDir);
+      llvm::sys::path::append(rootDriver, "..", "..", "bin", "rootcling");
+      llvm::sys::path::remove_dots(rootDriver, /*remove_dot_dot=*/true);
+      ClingBin.assign(rootDriver.data(), rootDriver.size());
+    }
+#endif
     AddHostArguments(ClingBin, argvCompile, LLVMDir, COpts);
 
     // Be explicit about the stdlib on OS X
