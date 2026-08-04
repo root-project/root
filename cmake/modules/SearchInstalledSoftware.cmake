@@ -536,9 +536,9 @@ if(http AND NOT builtin_civetweb)
   message(STATUS "Looking for civetweb")
    # one could also use ROOT_FIND_REQUIRED_DEP but it has less info / deals less with special cases
   if(fail-on-missing)
-    find_package(civetweb 1.16 REQUIRED)
+    find_package(civetweb 1.15 REQUIRED)
   else()
-    find_package(civetweb 1.16 QUIET)
+    find_package(civetweb 1.15 QUIET)
     if(civetweb_FOUND)
       message(STATUS "Found civetweb version ${civetweb_VERSION}")
     else()
@@ -547,6 +547,16 @@ if(http AND NOT builtin_civetweb)
   endif()
   if(civetweb_FOUND)
     get_target_property(CIVETWEB_IMPORTED_LOCATION civetweb::civetweb IMPORTED_LOCATION_NONE)
+    # Fall-back solution for some OS such as opensuse16 with different IMPORTED_LOCATION_xxxx config choice
+    if(NOT CIVETWEB_IMPORTED_LOCATION OR CIVETWEB_IMPORTED_LOCATION MATCHES "NOTFOUND")
+      get_target_property(CIVETWEB_IMPORTED_LOCATION civetweb::civetweb IMPORTED_LOCATION_RELEASE)
+      if(NOT CIVETWEB_IMPORTED_LOCATION OR CIVETWEB_IMPORTED_LOCATION MATCHES "NOTFOUND")
+        get_target_property(CIVETWEB_IMPORTED_LOCATION civetweb::civetweb IMPORTED_LOCATION_RELWITHDEBINFO)
+        if(NOT CIVETWEB_IMPORTED_LOCATION OR CIVETWEB_IMPORTED_LOCATION MATCHES "NOTFOUND")
+          get_target_property(CIVETWEB_IMPORTED_LOCATION civetweb::civetweb IMPORTED_LOCATION_DEBUG)
+        endif()
+      endif()
+    endif()
     try_compile(CIVETWEB_FEATURE_API
       SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/civetweb_check_features.c"
       CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${civetweb_INCLUDE_DIR}"
