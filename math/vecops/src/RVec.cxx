@@ -13,6 +13,10 @@
 #include "ROOT/RVec.hxx"
 using namespace ROOT::VecOps;
 
+#ifdef R__HAS_VDT
+#include "vdt/vdtMath.h"
+#endif
+
 // Check that no bytes are wasted and everything is well-aligned.
 namespace {
 struct Struct16B {
@@ -236,26 +240,33 @@ RVEC_DECLARE_STD_FUNCTIONS(double)
 
 #ifdef R__HAS_VDT
 
-#define RVEC_DECLARE_VDT_UNARY_FUNCTION(T, F)    \
-   RVEC_DECLARE_UNARY_FUNCTION(T, F, vdt::F)
+#define RVEC_IMPLEMENT_VDT_UNARY_FUNCTION(FP, FUNC)  \
+   RVec<FP> FUNC(RVec<FP> const &in)                 \
+   {                                                 \
+      RVec<FP> out(in.size());                       \
+      for (unsigned int i = 0; i < in.size(); ++i) { \
+         out[i] = vdt::FUNC(in[i]);                  \
+      }                                              \
+      return out;                                    \
+   }
 
-RVEC_DECLARE_VDT_UNARY_FUNCTION(float, fast_expf)
-RVEC_DECLARE_VDT_UNARY_FUNCTION(float, fast_logf)
-RVEC_DECLARE_VDT_UNARY_FUNCTION(float, fast_sinf)
-RVEC_DECLARE_VDT_UNARY_FUNCTION(float, fast_cosf)
-RVEC_DECLARE_VDT_UNARY_FUNCTION(float, fast_tanf)
-RVEC_DECLARE_VDT_UNARY_FUNCTION(float, fast_asinf)
-RVEC_DECLARE_VDT_UNARY_FUNCTION(float, fast_acosf)
-RVEC_DECLARE_VDT_UNARY_FUNCTION(float, fast_atanf)
+RVEC_IMPLEMENT_VDT_UNARY_FUNCTION(float, fast_expf)
+RVEC_IMPLEMENT_VDT_UNARY_FUNCTION(float, fast_logf)
+RVEC_IMPLEMENT_VDT_UNARY_FUNCTION(float, fast_sinf)
+RVEC_IMPLEMENT_VDT_UNARY_FUNCTION(float, fast_cosf)
+RVEC_IMPLEMENT_VDT_UNARY_FUNCTION(float, fast_tanf)
+RVEC_IMPLEMENT_VDT_UNARY_FUNCTION(float, fast_asinf)
+RVEC_IMPLEMENT_VDT_UNARY_FUNCTION(float, fast_acosf)
+RVEC_IMPLEMENT_VDT_UNARY_FUNCTION(float, fast_atanf)
 
-RVEC_DECLARE_VDT_UNARY_FUNCTION(double, fast_exp)
-RVEC_DECLARE_VDT_UNARY_FUNCTION(double, fast_log)
-RVEC_DECLARE_VDT_UNARY_FUNCTION(double, fast_sin)
-RVEC_DECLARE_VDT_UNARY_FUNCTION(double, fast_cos)
-RVEC_DECLARE_VDT_UNARY_FUNCTION(double, fast_tan)
-RVEC_DECLARE_VDT_UNARY_FUNCTION(double, fast_asin)
-RVEC_DECLARE_VDT_UNARY_FUNCTION(double, fast_acos)
-RVEC_DECLARE_VDT_UNARY_FUNCTION(double, fast_atan)
+RVEC_IMPLEMENT_VDT_UNARY_FUNCTION(double, fast_exp)
+RVEC_IMPLEMENT_VDT_UNARY_FUNCTION(double, fast_log)
+RVEC_IMPLEMENT_VDT_UNARY_FUNCTION(double, fast_sin)
+RVEC_IMPLEMENT_VDT_UNARY_FUNCTION(double, fast_cos)
+RVEC_IMPLEMENT_VDT_UNARY_FUNCTION(double, fast_tan)
+RVEC_IMPLEMENT_VDT_UNARY_FUNCTION(double, fast_asin)
+RVEC_IMPLEMENT_VDT_UNARY_FUNCTION(double, fast_acos)
+RVEC_IMPLEMENT_VDT_UNARY_FUNCTION(double, fast_atan)
 
 #endif // R__HAS_VDT
 

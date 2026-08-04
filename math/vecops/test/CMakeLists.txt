@@ -5,3 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ROOT_ADD_GTEST(vecops_rvec vecops_rvec.cxx LIBRARIES Physics ROOTVecOps GenVector RIO Tree)
+
+if(TARGET VDT::VDT)
+  target_link_libraries(vecops_rvec PRIVATE VDT::VDT)
+endif()
