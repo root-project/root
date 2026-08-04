@@ -63,14 +63,11 @@ protected:
   friend class RooAbsTestStatistic ;
 
   virtual bool allowFunctionCache() { return true ;  }
-  void constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt=true) override ;
 
   bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
   void printCompactTreeHook(std::ostream& os, const char* indent="") override ;
   virtual RooArgSet requiredExtraObservables() const { return RooArgSet() ; }
   void optimizeCaching() ;
-  void optimizeConstantTerms(bool,bool=true) ;
-  void runRecalculateCache(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override;
 
   RooArgSet*  _normSet = nullptr;           ///< Pointer to set with observables used for normalization
   RooArgSet*  _funcCloneSet = nullptr;      ///< Set owning all components of internal clone of input function

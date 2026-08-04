@@ -228,7 +228,6 @@ int calcSumW2CorrectedCovariance(RooAbsReal const &pdf, RooMinimizer &minimizer,
 /// that also should be taken as the default values for RooAbsPdf::fitTo.
 struct MinimizerConfig {
    double recoverFromNaN = 10.;
-   int optConst = 0;
    int verbose = 0;
    int doSave = 0;
    int doTimer = 0;
@@ -520,7 +519,6 @@ void defineMinimizationOptions(RooCmdConfig &pc)
    MinimizerConfig minimizerDefaults;
 
    pc.defineDouble("RecoverFromUndefinedRegions", "RecoverFromUndefinedRegions", 0, minimizerDefaults.recoverFromNaN);
-   pc.defineInt("optConst", "Optimize", 0, minimizerDefaults.optConst);
    pc.defineInt("verbose", "Verbose", 0, minimizerDefaults.verbose);
    pc.defineInt("doSave", "Save", 0, minimizerDefaults.doSave);
    pc.defineInt("doTimer", "Timer", 0, minimizerDefaults.doTimer);
@@ -560,7 +558,6 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
 {
    MinimizerConfig cfg;
    cfg.recoverFromNaN = pc.getDouble("RecoverFromUndefinedRegions");
-   cfg.optConst = pc.getInt("optConst");
    cfg.verbose = pc.getInt("verbose");
    cfg.doSave = pc.getInt("doSave");
    cfg.doTimer = pc.getInt("doTimer");
@@ -643,8 +640,6 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
       m.setMaxFunctionCalls(cfg.maxCalls);
    if (cfg.printLevel != 1)
       m.setPrintLevel(cfg.printLevel);
-   if (cfg.optConst)
-      m.optimizeConst(cfg.optConst); // Activate constant term optimization
    if (cfg.verbose)
       m.setVerbose(true); // Activate verbose options
    if (cfg.doTimer)
@@ -679,8 +674,6 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
          ret->setCovQual(corrCovQual);
    }
 
-   if (cfg.optConst)
-      m.optimizeConst(0);
    return ret;
 }
 
@@ -705,7 +698,6 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
    pc.defineInt("numcpu", "NumCPU", 0, 1);
    pc.defineInt("interleave", "NumCPU", 1, 0);
    pc.defineInt("verbose", "Verbose", 0, 0);
-   pc.defineInt("optConst", "Optimize", 0, 0);
    pc.defineInt("cloneData", "CloneData", 0, 2);
    pc.defineSet("projDepSet", "ProjectedObservables", 0, nullptr);
    pc.defineSet("cPars", "Constrain", 0, nullptr);
@@ -767,13 +759,12 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
    const bool ext = interpretExtendedCmdArg(pdf, pc.getInt("ext"));
 
    int splitRange = pc.getInt("splitRange");
-   int optConst = pc.getInt("optConst");
    int cloneData = pc.getInt("cloneData");
    auto offset = static_cast<RooFit::OffsetMode>(pc.getInt("doOffset"));
 
-   // If no explicit cloneData command is specified, cloneData is set to true if optimization is activated
+   // Ignored
    if (cloneData == 2) {
-      cloneData = optConst;
+      cloneData = 0;
    }
 
    if (pc.hasProcessed("Range")) {
@@ -961,10 +952,6 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
       nll = std::make_unique<RooAddition>((baseName + "_with_constr").c_str(), "nllWithCons",
                                           RooArgSet(*orignll, *constraintTerm));
       nll->addOwnedComponents(std::move(orignll), std::move(constraintTerm));
-   }
-
-   if (optConst) {
-      nll->constOptimizeTestStatistic(RooAbsArg::Activate, optConst > 1);
    }
 
    if (offset == RooFit::OffsetMode::Initial) {
@@ -1174,7 +1161,7 @@ std::unique_ptr<RooFitResult> fitTo(RooAbsReal &real, RooAbsData &data, const Ro
          nllCmdListString += ",OffsetLikelihood";
       }
    } else {
-      auto createChi2DataHistCmdArgs = "Range,RangeWithName,NumCPU,Optimize,IntegrateBins,ProjectedObservables,"
+      auto createChi2DataHistCmdArgs = "Range,RangeWithName,NumCPU,IntegrateBins,ProjectedObservables,"
                                        "AddCoefRange,SplitRange,DataError,Extended,EvalBackend";
       auto createChi2DataSetCmdArgs = "YVar,Integrate,RangeWithName,NumCPU,Verbose";
       nllCmdListString += isDataHist ? createChi2DataHistCmdArgs : createChi2DataSetCmdArgs;
