@@ -467,6 +467,15 @@ if(MSVC)
 endif()
 
 if(runtime_cxxmodules)
+  if(NOT ROOT_CONFIGURED_FROM_CACHE)
+    # When using cmake --fresh (or changing the toolchain), remove possibly stale pcms that are not tracked by CMake
+    set(ROOT_CONFIGURED_FROM_CACHE True CACHE BOOL "Shows if ROOT is configured from an existing CMake cache")
+    mark_as_advanced(ROOT_CONFIGURED_FROM_CACHE)
+    file(GLOB_RECURSE left_over_pcms ${CMAKE_BINARY_DIR}/*.pcm)
+    if(left_over_pcms)
+      file(REMOVE ${left_over_pcms})
+    endif()
+  endif()
   # Dummy target that does nothing, we don't need a PCH for modules.
   # Onepcm target has all dependencies needed for allDict.cxx.pch, which allow
   # to test hsimple.C after all C++ modules are updated.
