@@ -5,8 +5,8 @@
 template <typename T>
 struct Wrapper
 {
-   bool present = true;
    T obj;
+   bool present = true; // after obj, to avoid different padding issues in Windows
 };
 
 struct MatchedCSCSegment

@@ -7,8 +7,8 @@
 template <typename T>
 struct Wrapper
 {
-   bool present = true;
    T obj;
+   bool present = true;
 };
 
 struct MatchedCSCSegment
