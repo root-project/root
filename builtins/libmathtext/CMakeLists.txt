@@ -4,9 +4,11 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-ROOT_LINKER_LIBRARY(mathtext
+add_library(mathtext STATIC
   fontembed.cc
+  fontembedpdf.cc
   fontembedps.cc
+  geometry.cc
   mathrender.cc
   mathrenderstyle.cc
   mathrendertoken.cc
@@ -14,13 +16,11 @@ ROOT_LINKER_LIBRARY(mathtext
   mathtextencode.cc
   mathtextparse.cc
   mathtextview.cc
-  TYPE
-    STATIC
-  NOINSTALL
 )
+target_include_directories(mathtext PUBLIC ./)
 
 check_cxx_compiler_flag(-Wbidi-chars=none GCC_HAS_BIDI_CHARS_FLAG)
 if(GCC_HAS_BIDI_CHARS_FLAG)
-    set_source_files_properties(src/fontembed.cc COMPILE_FLAGS "-Wbidi-chars=none")
+    set_source_files_properties(fontembed.cc COMPILE_FLAGS "-Wbidi-chars=none")
 endif()
 set_property(TARGET mathtext PROPERTY POSITION_INDEPENDENT_CODE ON)
