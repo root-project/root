@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_tree
+/// \ingroup tutorial_tree_legacy
 /// Display the Tree data structures
 ///
 /// \macro_image
