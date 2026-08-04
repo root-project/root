@@ -659,9 +659,6 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
     cmake/modules/RootMacros.cmake
     cmake/modules/RootTestDriver.cmake
     DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
-  install(FILES
-    "cmake/modules/FindVdt.cmake"
-    DESTINATION "${CMAKE_INSTALL_CMAKEDIR}/modules")
 endif()
 
 #---Add configuration files for kernel and jupyter----------------------------------------------
