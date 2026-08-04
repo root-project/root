@@ -30,7 +30,6 @@ class TGLPadPainter : public TPadPainterBase {
 private:
    Rgl::Pad::PolygonStippleSet fSSet;
    Rgl::Pad::Tesselator        fTess;
-   Rgl::Pad::MarkerPainter     fMarker;
    Rgl::Pad::GLLimits          fLimits;
 
    WinContext_t   fWinContext; // context of selected drawable

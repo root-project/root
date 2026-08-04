@@ -651,7 +651,7 @@ void TGLPadPainter::DrawPolyMarkerHelper(Int_t n, const ValueType *x, const Valu
    const Width_t w = TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(GetAttMarker().GetMarkerStyle())));
    glLineWidth(w > fLimits.GetMaxLineWidth() ? fLimits.GetMaxLineWidth() : !w ? 1.f : w);
 
-   fMarker.DrawMarkers(n, poly.data(), GetAttMarker());
+   Rgl::Pad::MarkerPainter::DrawMarkers(n, poly.data(), GetAttMarker());
 
    RestoreProjectionMatrix();
    glMatrixMode(GL_MODELVIEW);
