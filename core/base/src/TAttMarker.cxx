@@ -651,34 +651,12 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          shape[14].fX =  0;  shape[14].fY = 0;
          return kShapePolyLine;
       case kFullThreeTriangles:
-         if (prefer_triangles) {
-            shape.reserve(3 * 3);
-            addTriangle( -im,   0,  -im2, im);
-            addTriangle( im2,  im,    im,  0);
-            addTriangle( im2, -im,  -im2, -im);
-            return kShapeTriangles;
-         }
-         shape.resize(9);
-         shape[0].fX =   0;  shape[0].fY =   0;
-         shape[1].fX =-im2;  shape[1].fY =  im;
-         shape[2].fX = im2;  shape[2].fY =  im;
-         shape[3].fX =   0;  shape[3].fY =   0;
-         shape[4].fX =-im2;  shape[4].fY = -im;
-         shape[5].fX = -im;  shape[5].fY =   0;
-         shape[6].fX =   0;  shape[6].fY =   0;
-         shape[7].fX =  im;  shape[7].fY =   0;
-         shape[8].fX = im2;  shape[8].fY = -im;
-         return kShapeFilledArea;
-      case kFullFourTrianglesX:
-         if (prefer_triangles) {
-            shape.reserve(4 * 3);
-            addTriangle( -im,  im2,  -im2,   im);
-            addTriangle( im2,   im,    im,  im2);
-            addTriangle(  im, -im2,   im2,  -im);
-            addTriangle(-im2,  -im,  -im,  -im2);
-            return kShapeTriangles;
-         }
-      case kOpenFourTrianglesX: {
+         shape.reserve(3 * 3);
+         addTriangle( -im,   0,  -im2, im);
+         addTriangle( im2,  im,    im,  0);
+         addTriangle( im2, -im,  -im2, -im);
+         return kShapeTriangles;
+      case kOpenFourTrianglesX:
          shape.resize(13);
          shape[0].fX =     0;  shape[0].fY =    0;
          shape[1].fX =   im2;  shape[1].fY =   im;
@@ -693,8 +671,14 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          shape[10].fX =   -im;  shape[10].fY =  im2;
          shape[11].fX =  -im2;  shape[11].fY =   im;
          shape[12].fX =     0;  shape[12].fY =  0;
-         return markerStyle == kFullFourTrianglesX ? kShapeFilledArea : kShapePolyLine;
-      }
+         return kShapePolyLine;
+      case kFullFourTrianglesX:
+         shape.reserve(4 * 3);
+         addTriangle( -im,  im2,  -im2,   im);
+         addTriangle( im2,   im,    im,  im2);
+         addTriangle(  im, -im2,   im2,  -im);
+         addTriangle(-im2,  -im,  -im,  -im2);
+         return kShapeTriangles;
       case kFullDoubleDiamond:
          if (prefer_triangles) {
             const auto im4 = std::round(markerSizeReduced);
@@ -737,32 +721,13 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          shape[9].fX =  -im;  shape[9].fY = -im2;
          shape[10].fX =    0; shape[10].fY =   0;
          return kShapePolyLine;
-      case kFullFourTrianglesPlus: {
-         if (prefer_triangles) {
-            shape.reserve(4 * 3);
-            addTriangle(-im2,   im,   im2,   im);
-            addTriangle(  im,  im2,    im, -im2);
-            addTriangle( im2,  -im,  -im2,  -im);
-            addTriangle( -im, -im2,   -im,  im2);
-            return kShapeTriangles;
-         }
-         const auto im0 = std::round(0.4*markerSizeReduced);
-         shape.resize(13);
-         shape[0].fX =  im0;  shape[0].fY =  im0;
-         shape[1].fX =  im2;  shape[1].fY =   im;
-         shape[2].fX = -im2;  shape[2].fY =   im;
-         shape[3].fX = -im0;  shape[3].fY =  im0;
-         shape[4].fX =  -im;  shape[4].fY =  im2;
-         shape[5].fX =  -im;  shape[5].fY = -im2;
-         shape[6].fX = -im0;  shape[6].fY = -im0;
-         shape[7].fX = -im2;  shape[7].fY =  -im;
-         shape[8].fX =  im2;  shape[8].fY =  -im;
-         shape[9].fX =  im0;  shape[9].fY = -im0;
-         shape[10].fX =   im;  shape[10].fY = -im2;
-         shape[11].fX =   im;  shape[11].fY =  im2;
-         shape[12].fX =  im0;  shape[12].fY =  im0;
-         return kShapeFilledArea;
-      }
+      case kFullFourTrianglesPlus:
+         shape.reserve(4 * 3);
+         addTriangle(-im2,   im,   im2,   im);
+         addTriangle(  im,  im2,    im, -im2);
+         addTriangle( im2,  -im,  -im2,  -im);
+         addTriangle( -im, -im2,   -im,  im2);
+         return kShapeTriangles;
       case kFullCrossX:
          if (prefer_triangles) {
             shape.reserve(6 * 3);
@@ -791,66 +756,24 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          shape[12].fX =   0;  shape[12].fY = im2;
          return markerStyle == kFullCrossX ? kShapeFilledArea : kShapePolyLine;
       case kFourSquaresX:
-         if (prefer_triangles) {
-            shape.reserve(8 * 3);
-            addTriangle(  -im2,   0,   -im,  im2,   -im2,   im);
-            addTriangle(  -im2,   0,  -im2,   im,      0,  im2);
-            addTriangle(   im2,   0,     0,  im2,    im2,   im);
-            addTriangle(   im2,   0,   im2,   im,     im,  im2);
-            addTriangle(  -im2, -im,   -im, -im2,   -im2,    0);
-            addTriangle(  -im2, -im,  -im2,    0,      0, -im2);
-            addTriangle(   im2, -im,     0, -im2,    im2,    0);
-            addTriangle(   im2, -im,   im2,    0,     im, -im2);
-            return kShapeTriangles;
-         }
-         shape.resize(17);
-         shape[0].fX =    0;  shape[0].fY =  im2;
-         shape[1].fX = -im2;  shape[1].fY =   im;
-         shape[2].fX =  -im;  shape[2].fY =  im2;
-         shape[3].fX = -im2;  shape[3].fY =    0;
-         shape[4].fX =  -im;  shape[4].fY = -im2;
-         shape[5].fX = -im2;  shape[5].fY =  -im;
-         shape[6].fX =    0;  shape[6].fY = -im2;
-         shape[7].fX =  im2;  shape[7].fY =  -im;
-         shape[8].fX =   im;  shape[8].fY = -im2;
-         shape[9].fX =  im2;  shape[9].fY =    0;
-         shape[10].fX =  im;  shape[10].fY = im2;
-         shape[11].fX = im2;  shape[11].fY =  im;
-         shape[12].fX =   0;  shape[12].fY = im2;
-         shape[13].fX =  im2; shape[13].fY =   0;
-         shape[14].fX =    0; shape[14].fY =-im2;
-         shape[15].fX = -im2; shape[15].fY =   0;
-         shape[16].fX =    0; shape[16].fY = im2;
-         return kShapeFilledArea;
+         shape.reserve(8 * 3);
+         addTriangle(  -im2,   0,   -im,  im2,   -im2,   im);
+         addTriangle(  -im2,   0,  -im2,   im,      0,  im2);
+         addTriangle(   im2,   0,     0,  im2,    im2,   im);
+         addTriangle(   im2,   0,   im2,   im,     im,  im2);
+         addTriangle(  -im2, -im,   -im, -im2,   -im2,    0);
+         addTriangle(  -im2, -im,  -im2,    0,      0, -im2);
+         addTriangle(   im2, -im,     0, -im2,    im2,    0);
+         addTriangle(   im2, -im,   im2,    0,     im, -im2);
+         return kShapeTriangles;
       case kFourSquaresPlus: {
          const auto imx = std::round(1.33*markerSizeReduced);
-         if (prefer_triangles) {
-            shape.reserve(4 * 2 * 3);
-            addSquare(-imx,  imx, imx,   im);
-            addSquare( imx, -imx,  im,  imx);
-            addSquare( -im, -imx,-imx,  imx);
-            addSquare(-imx,  -im, imx, -imx);
-            return kShapeTriangles;
-         }
-         shape.resize(17);
-         shape[0].fX =-imx;  shape[0].fY =-imx;
-         shape[1].fX =-imx;  shape[1].fY = -im;
-         shape[2].fX = imx;  shape[2].fY = -im;
-         shape[3].fX = imx;  shape[3].fY =-imx;
-         shape[4].fX =  im;  shape[4].fY =-imx;
-         shape[5].fX =  im;  shape[5].fY = imx;
-         shape[6].fX = imx;  shape[6].fY = imx;
-         shape[7].fX = imx;  shape[7].fY = im;
-         shape[8].fX =-imx;  shape[8].fY = im;
-         shape[9].fX =-imx;  shape[9].fY = imx;
-         shape[10].fX = -im;  shape[10].fY = imx;
-         shape[11].fX = -im;  shape[11].fY =-imx;
-         shape[12].fX =-imx;  shape[12].fY =-imx;
-         shape[13].fX =-imx;  shape[13].fY = imx;
-         shape[14].fX = imx;  shape[14].fY = imx;
-         shape[15].fX = imx;  shape[15].fY =-imx;
-         shape[16].fX =-imx;  shape[16].fY =-imx;
-         return kShapeFilledArea;
+         shape.reserve(4 * 2 * 3);
+         addSquare(-imx,  imx, imx,   im);
+         addSquare( imx, -imx,  im,  imx);
+         addSquare( -im, -imx,-imx,  imx);
+         addSquare(-imx,  -im, imx, -imx);
+         return kShapeTriangles;
       }
    }
 
