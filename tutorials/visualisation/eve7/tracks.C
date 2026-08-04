@@ -4,6 +4,7 @@
 ///
 /// \macro_code
 ///
+/// \author Matevz Tadel
 
 #include "TRandom.h"
 #include "TParticle.h"

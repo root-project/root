@@ -3,6 +3,8 @@
 ///
 /// \macro_code
 ///
+/// \author Matevz Tadel
+
 #include <ROOT/REveElement.hxx>
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveViewer.hxx>

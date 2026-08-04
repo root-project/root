@@ -1,4 +1,9 @@
-
+/// \file
+/// \ingroup tutorial_eve_7
+///
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 #include "TRandom.h"
 #include <ROOT/REveElement.hxx>

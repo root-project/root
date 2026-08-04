@@ -4,6 +4,7 @@
 ///
 /// \macro_code
 ///
+/// \author Matevz Tadel
 
 #include <sstream>
 #include <iostream>

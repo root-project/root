@@ -3,6 +3,8 @@
 ///
 /// \macro_code
 ///
+/// \author Matevz Tadel
+
 #include <ROOT/REveGeoTopNode.hxx>
 #include <ROOT/REveManager.hxx>
 
