@@ -36,9 +36,8 @@
 #include <iterator> // for std::make_move_iterator
 #include <limits> // for numeric_limits
 #include <memory> // uninitialized_value_construct
-#include <new>
 #include <numeric> // for inner_product
-#include <sstream>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
