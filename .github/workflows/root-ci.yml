@@ -235,11 +235,11 @@ jobs:
         env:
           BUILD_DIR: ${{ env.HOME }}/ROOT-CI/build
           INSTALL_DIR: ${{ env.HOME }}/ROOT-CI/install
-        if: ${{ !cancelled() && !matrix.is_special }}
+        if: ${{ success() && !matrix.is_special }}
         run: "cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.INSTALL_DIR }}"
 
       - name: Build post-install test project
-        if: ${{ !cancelled() && !matrix.is_special }}
+        if: ${{ success() && !matrix.is_special }}
         env:
           SOURCE_DIR: ${{ env.HOME }}/ROOT-CI/src/test/PostInstall/
           INSTALL_DIR: ${{ env.HOME }}/ROOT-CI/install
@@ -249,7 +249,7 @@ jobs:
           cmake --build ${{ env.POST_INSTALL_DIR }};
 
       - name: CTest in post-install test project
-        if: ${{ !cancelled() && !matrix.is_special }}
+        if: ${{ success() && !matrix.is_special }}
         env:
           POST_INSTALL_DIR: ${{ env.HOME }}/ROOT-CI/PostInstall
         working-directory: ${{ env.POST_INSTALL_DIR }}
@@ -621,17 +621,17 @@ jobs:
           ccache -s || true
 
       - name: Install
-        if: ${{ !cancelled() && !matrix.is_special }}
+        if: ${{ success() && !matrix.is_special }}
         run: "cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.INSTALL_DIR }}"
 
       - name: Build post-install test project
-        if: ${{ !cancelled() && !matrix.is_special }}
+        if: ${{ success() && !matrix.is_special }}
         run: |
           cmake -S test/PostInstall/ -B ${{ env.POST_INSTALL_DIR }} -DCMAKE_PREFIX_PATH=${{ env.INSTALL_DIR }};
           cmake --build ${{ env.POST_INSTALL_DIR }};
 
       - name: CTest in post-install test project
-        if: ${{ !cancelled() && !matrix.is_special }}
+        if: ${{ success() && !matrix.is_special }}
         working-directory: ${{ env.POST_INSTALL_DIR }}
         run: ctest --output-on-failure -j $(nproc)
 
