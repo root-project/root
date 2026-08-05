@@ -757,6 +757,9 @@ void TGX11::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy)
             pnt.fY += xyp[m].y;
          }
          switch(ctxt->markerType) {
+            case TAttMarker::kShapeDot:
+               // dot - handled before
+               break;
             case TAttMarker::kShapeCircle:
                // hollow circle
                XDrawArc((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCmark],
