@@ -478,7 +478,7 @@ if(gviz)
   message(STATUS "Looking for Graphviz")
   find_package(Graphviz)
   if(NOT GRAPHVIZ_FOUND)
-    message(SEND_ERROR "Graphviz package not found and gviz option required")
+    message(SEND_ERROR "Graphviz libraries not found and they are required (gviz option enabled)")
   endif()
 endif()
 
