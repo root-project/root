@@ -41,6 +41,8 @@ The following people have contributed to this new version:
 
 * The build options `vc`, `veccore`, `builtin_vc`, `builtin_veccore` and `rpath` that were deprecated are now removed and will result in configuration errors if used.
 * The option `fail-on-missing=OFF` is no longer honored for CMake ROOT opt-in build options such as `arrow`, `cocoa`, `daos`, `daos_mock`, `dcache`, `experimental_adaptivecpp`, `fcgi`, `fortran`, `gviz`, `mpi`, `pythia8`, `qt6web`, `tmva-cudnn`, `tmva-pymva`, `tmva-sofie`, `uring` or `vecgeom`, for which there are no builtin backups. If the respective associated package dependency is not installed, ROOT will always raise a configuration error independent on the value `fail-on-missing`, and the associated option e.g. `arrow` will not be automatically disabled; the user has to take action by either installing it system-wide or manually disabling that option via `-Darrow=OFF`.
+  Note that `all=ON` enables several of these options, so building with `-Dall=ON` now requires all of their dependencies to be installed, or the unwanted ones to be disabled explicitly.
+  Build options that are enabled by default, such as `pyroot`, are not affected: they are still disabled automatically when their dependencies are missing.
 * The method `RooRealVar::removeRange()` and the corresponding method in `RooErrorVar` that were deprecated in ROOT 6.40 are now removed.
 * The overloads of `RooAbsReal::createChi2()` and `RooAbsReal::chi2FitTo()` that take unbinned **RooDataSet** data objects were deprecated in ROOT 6.40 and are now removed.
 * The **RooStats::HybridPlot** class and the related **HybridResult::GetPlot** method were deprecated in ROOT 6.40 and are now removed.
