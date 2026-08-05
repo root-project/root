@@ -220,6 +220,7 @@ RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
      _funcMode{other._funcMode},
      _chi2ErrorType{other._chi2ErrorType},
      _simCount{other._simCount},
+     _logSimCount{other._logSimCount},
      _prefix{other._prefix},
      _binw{other._binw}
 {
@@ -456,7 +457,7 @@ void RooNLLVarNew::finalizeResult(RooFit::EvalContext &ctx, ROOT::Math::KahanSum
    // If we do bin-by bin offsetting, we don't do this because it cancels out.
    // The correction is specific to NLL; it has no meaning for chi2.
    if (_statistic == Statistic::NLL && !_doBinOffset && _simCount > 1) {
-      result += weightSum * std::log(static_cast<double>(_simCount));
+      result += weightSum * _logSimCount;
    }
 
    // Check if value offset flag is set.
