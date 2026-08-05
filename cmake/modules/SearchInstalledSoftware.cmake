@@ -726,8 +726,7 @@ if(dcache)
   find_package(DCAP)
   if(NOT DCAP_FOUND)
     message(SEND_ERROR "dCap library not found and is required (dcache option enabled)."
-      " Set variable DCAP_DIR to point to your dCache installation. Or disable option 'dcache'.")
-    endif()
+      " Set variable DCAP_ROOT to point to your dCache installation. Or disable option 'dcache'.")
   endif()
 endif()
 
