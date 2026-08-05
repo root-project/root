@@ -3,7 +3,7 @@
 ///
 /// \macro_code
 ///
-/// \author Matevz Tadel
+/// \author Alja Mrak-Tadel
 
 #include <ROOT/REveGeoTopNode.hxx>
 #include <ROOT/REveManager.hxx>

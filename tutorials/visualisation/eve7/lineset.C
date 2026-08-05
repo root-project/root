@@ -6,7 +6,7 @@
 ///
 /// \macro_code
 ///
-/// \author Matevz Tadel
+/// \author Alja Mrak-Tadel
 
 #include "TRandom.h"
 

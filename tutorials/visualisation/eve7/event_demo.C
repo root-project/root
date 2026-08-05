@@ -4,7 +4,7 @@
 ///
 /// \macro_code
 ///
-/// \author Matevz Tadel
+/// \author Alja Mrak-Tadel
 
 #include <vector>
 #include <string>
