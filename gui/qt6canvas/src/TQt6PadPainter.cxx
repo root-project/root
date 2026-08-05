@@ -15,6 +15,7 @@
 #include "TEnv.h"
 #include "TMath.h"
 #include "TPad.h"
+#include "TPoint.h"
 #include "TROOT.h"
 #include "TColor.h"
 #include "RStipples.h"
@@ -277,29 +278,85 @@ void TQt6PadPainter::DrawPolyLineNDC(Int_t nPoints, const Double_t *u, const Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Helper function to paint markers
+
+template<typename T>
+void drawMarkersHelper(Int_t nPoints, const T *x, const T *y,
+                       const TAttMarker &attr, const QColor &col, QPainter *painter)
+{
+   if (!painter || nPoints < 1)
+      return;
+
+   auto markerLineWidth = TAttMarker::GetMarkerLineWidth(attr.GetMarkerStyle());
+   Int_t markerSize = 0;              ///< size of simple markers
+   std::vector<TPoint> markerShape;   ///< marker shape points
+   auto markerType = attr.GetMarkerShape(markerSize, markerShape);
+
+   painter->setRenderHint(QPainter::Antialiasing);
+
+   if ((markerType == TAttMarker::kShapeDot) || (markerLineWidth > 0)) {
+      QPen customPen;
+      customPen.setColor(col);
+      customPen.setWidth(markerLineWidth);
+      customPen.setStyle(Qt::SolidLine);
+      painter->setPen(customPen);
+      painter->setBrush(Qt::NoBrush);
+   } else {
+      QBrush customBrush(col);
+      painter->setBrush(customBrush);
+      painter->setPen(Qt::NoPen);
+   }
+
+   for (Int_t n = 0; n < nPoints; ++n) {
+      Int_t px = gPad->XtoAbsPixel(x[n]);
+      Int_t py = gPad->YtoAbsPixel(y[n]);
+
+      QList<QPointF> points;
+      for (auto &pnt : markerShape)
+         points.push_back({(qreal) (px + pnt.fX), (qreal) (py + pnt.fY)});
+
+      switch(markerType) {
+         case TAttMarker::kShapeDot:
+            painter->drawPoint(px, py);
+            break;
+         case TAttMarker::kShapeCircle:
+         case TAttMarker::kShapeFilledCircle:
+            // hollow or filled circle
+            painter->drawEllipse({px, py}, markerSize / 2, markerSize / 2);
+            break;
+         case TAttMarker::kShapePolyLine:
+            // hollow polygon
+            painter->drawPolyline(points);
+            break;
+         case TAttMarker::kShapeFilledArea:
+            // filled polygon
+            painter->drawPolygon(points);
+            break;
+         case TAttMarker::kShapeSegments:
+            // segmented line
+            painter->drawLines(points);
+            break;
+         case TAttMarker::kShapeTriangles:
+            // filled triangles
+            for (int i = 0; i < points.size(); i += 3) {
+               // Construct a temporary triangle polygon
+               QPolygonF triangle;
+               triangle << points[i] << points[i + 1] << points[i + 2];
+               // Draw and fill the triangle
+               painter->drawPolygon(triangle);
+            }
+            break;
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Paint polymarker.
 
 void TQt6PadPainter::DrawPolyMarker(Int_t nPoints, const Double_t *x, const Double_t *y)
 {
-   auto painter = fPaintWidget->getPainter();
-
-   if (!painter || nPoints < 1)
-      return;
-
-   painter->setRenderHint(QPainter::Antialiasing);
-   painter->setPen(Qt::NoPen);
-   painter->setBrush(QBrush(GetQColor(GetAttMarker().GetMarkerColor())));
-
-   Int_t radius = GetAttMarker().GetMarkerSize();
-   if (radius < 2)
-      radius = 2;
-
-   // TODO: implement all markers types - once method exists
-   for (Int_t n = 0; n < nPoints; ++n) {
-      Int_t px = gPad->XtoAbsPixel(x[n]);
-      Int_t py = gPad->YtoAbsPixel(y[n]);
-      painter->drawEllipse({px, py}, radius, radius);
-   }
+   drawMarkersHelper<Double_t>(nPoints, x, y,
+                              GetAttMarker(), GetQColor(GetAttMarker().GetMarkerColor()), fPaintWidget->getPainter());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -307,25 +364,8 @@ void TQt6PadPainter::DrawPolyMarker(Int_t nPoints, const Double_t *x, const Doub
 
 void TQt6PadPainter::DrawPolyMarker(Int_t nPoints, const Float_t *x, const Float_t *y)
 {
-   auto painter = fPaintWidget->getPainter();
-
-   if (!painter || nPoints < 1)
-      return;
-
-   painter->setRenderHint(QPainter::Antialiasing);
-   painter->setPen(Qt::NoPen);
-   painter->setBrush(QBrush(GetQColor(GetAttMarker().GetMarkerColor())));
-
-   Int_t radius = GetAttMarker().GetMarkerSize();
-   if (radius < 2)
-      radius = 2;
-
-   // TODO: implement all markers types - once method exists
-   for (Int_t n = 0; n < nPoints; ++n) {
-      Int_t px = gPad->XtoAbsPixel(x[n]);
-      Int_t py = gPad->YtoAbsPixel(y[n]);
-      painter->drawEllipse({px, py}, radius, radius);
-   }
+   drawMarkersHelper<Float_t>(nPoints, x, y,
+                              GetAttMarker(), GetQColor(GetAttMarker().GetMarkerColor()), fPaintWidget->getPainter());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
