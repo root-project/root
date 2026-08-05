@@ -34,10 +34,10 @@ public:
       fSigLin(siglin), fSigCorr(sigcorr),
       fTime(time) { };
 
-   SEIdAltLItem(const SEIdAltLItem& that) // copy ctor
-      { *this = that; }
+   SEIdAltLItem(const SEIdAltLItem &) = default;
+   SEIdAltLItem &operator=(const SEIdAltLItem &) = default;
 
-   virtual ~SEIdAltLItem() { ; } // dtor
+   virtual ~SEIdAltLItem() = default;
 
    Int_t          GetSEId() const { return fStripEndId; }
    Float_t        GetWeight() const { return fWeight; }
