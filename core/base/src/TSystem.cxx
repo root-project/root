@@ -2593,38 +2593,44 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
    // standard include directories,
 
    bool needToUnlinkTempFile = false;
-#ifndef WIN32
-   const char * stderrfile = "/dev/null";
-#else
+   TString devnullfile = "/dev/null";
+#ifdef WIN32
    // Determine the null device based on the shell in use.
    // COMSPEC unset or pointing to cmd.exe -> NUL
    // COMSPEC pointing to powershell       -> $null
    // Anything else (e.g. bash/sh on Windows) -> `depfilename`.stderr.tmp
-   TString stderrfile;
    const char *comspec = gSystem->Getenv("COMSPEC");
    if (!comspec || !comspec[0]) {
-      stderrfile = "NUL";
+      devnullfile = "NUL";
    } else {
       TString comspecStr(comspec);
       comspecStr.ToLower();
       if (comspecStr.EndsWith("cmd.exe")) {
-         stderrfile = "NUL";
+         devnullfile = "NUL";
       } else if (comspecStr.Contains("powershell.exe")) {
-         stderrfile = "$null";
+         devnullfile = "$null";
       } else {
          needToUnlinkTempFile = true;
-         stderrfile = depfilename + ".stderr.tmp";
-         gSystem->PrependPathName(build_loc, stderrfile);
+         devnullfile = depfilename + ".stderr.tmp";
+         gSystem->PrependPathName(build_loc, devnullfile);
       }
    }
 #endif
    TString bakdepfilename = depfilename + ".bak";
 
-#ifdef WIN32
-   TString touch = "echo # > "; touch += "\"" + depfilename + "\"";
-#else
-   TString touch = "echo > "; touch += "\"" + depfilename + "\"";
-#endif
+   struct Defer {
+      bool fNeedToUnlinkTempFile;
+      const TString &fDevNullFile, &fBakdepfilename;
+      ~Defer()
+      {
+         if (fNeedToUnlinkTempFile) {
+            // Remove the temporary stderr file if it was created.
+            gSystem->Unlink(fDevNullFile);
+         }
+         gSystem->Unlink(fBakdepfilename);
+      }
+   } deferGuard{needToUnlinkTempFile, devnullfile, bakdepfilename};
+
    TString builddep = "rmkdepend";
    gSystem->PrependPathName(TROOT::GetBinDir(), builddep);
    builddep += " \"-f";
@@ -2675,10 +2681,10 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
    builddep += "-t";
    R__AddPath(builddep, targetname);
    builddep += "\" > ";
-   builddep += stderrfile;
+   builddep += devnullfile;
    builddep += " 2>&1 ";
 
-   TString adddictdep = "echo ";
+   TString adddictdep;
    R__AddPath(adddictdep,targetname);
    adddictdep += ": ";
 #if defined(R__HAS_CLING_DICTVERSION)
@@ -2694,19 +2700,27 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
    }
 #endif
    {
-     const char *dictHeaders[] = { "RVersion.h", "ROOT/RConfig.hxx", "TClass.h",
-       "TDictAttributeMap.h","TInterpreter.h","TROOT.h","TBuffer.h",
-       "TMemberInspector.h","TError.h","RtypesImp.h","TIsAProxy.h",
-       "TFileMergeInfo.h","TCollectionProxyInfo.h"};
+      constexpr const char *dictHeaders[] = {"RVersion.h",
+                                             "ROOT/RConfig.hxx",
+                                             "TClass.h",
+                                             "TDictAttributeMap.h",
+                                             "TInterpreter.h",
+                                             "TROOT.h",
+                                             "TBuffer.h",
+                                             "TMemberInspector.h",
+                                             "TError.h",
+                                             "RtypesImp.h",
+                                             "TIsAProxy.h",
+                                             "TFileMergeInfo.h",
+                                             "TCollectionProxyInfo.h"};
 
-      for (unsigned int h=0; h < sizeof(dictHeaders)/sizeof(dictHeaders[0]); ++h)
-      {
-         char *rootVersion = gSystem->Which(incPath,dictHeaders[h]);
+      for (const char *header : dictHeaders) {
+         char *rootVersion = gSystem->Which(incPath, header);
          if (rootVersion) {
             R__AddPath(adddictdep,rootVersion);
             delete [] rootVersion;
          } else {
-            R__AddPath(adddictdep,rootsysInclude + "/" + dictHeaders[h]);
+            R__AddPath(adddictdep, rootsysInclude + "/" + header);
          }
          adddictdep += " ";
       }
@@ -2720,32 +2734,36 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
          delete [] rootCling;
       }
    }
-   adddictdep += " >> \""+depfilename+"\"";
 
-   TString addversiondep( "echo ");
-   addversiondep += libname + version_var_prefix + " \"" + ROOT_RELEASE + "\" >> \""+depfilename+"\"";
+   {
+      std::ofstream depFile(depfilename, std::ios::out | std::ios::trunc);
+      if (!depFile) {
+         ::Warning("ACLiC", "Failed to open dependency file %s for %s", depfilename.Data(), library.Data());
+         return;
+      }
+#ifdef WIN32
+      depFile << "#\n";
+#endif
+   }
 
-   if (gDebug > 4)  {
-      ::Info("ACLiC", "%s", touch.Data());
+   if (gDebug > 4) {
       ::Info("ACLiC", "%s", builddep.Data());
       ::Info("ACLiC", "%s", adddictdep.Data());
    }
-
-   Int_t depbuilt = !gSystem->Exec(touch);
-   if (depbuilt) depbuilt = !gSystem->Exec(builddep);
-   if (depbuilt) depbuilt = !gSystem->Exec(adddictdep);
-   if (depbuilt) depbuilt = !gSystem->Exec(addversiondep);
-
-   if (!depbuilt) {
-      ::Warning("ACLiC","Failed to generate the dependency file for %s",
-                library.Data());
-   } else {
-      if (needToUnlinkTempFile) {
-         // Remove the temporary stderr file if it was created.
-         gSystem->Unlink(stderrfile);
-      }
-      gSystem->Unlink(bakdepfilename);
+   bool depbuiltOk = !gSystem->Exec(builddep);
+   if (!depbuiltOk) {
+      ::Warning("ACLiC", "Failed to run rmkdepend for %s", library.Data());
+      return;
    }
+
+   std::ofstream depFile(depfilename, std::ios::out | std::ios::app);
+   if (!depFile) {
+      ::Warning("ACLiC", "Failed to open dependency file %s for %s after running rmkdepend", depfilename.Data(),
+                library.Data());
+      return;
+   }
+   depFile << adddictdep << "\n";
+   depFile << libname << version_var_prefix << " \"" << ROOT_RELEASE << "\"\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
