@@ -42,4 +42,8 @@ if (Python3_VERSION VERSION_GREATER_EQUAL "3.10")
   endif()
 endif()
 
+if(MSVC)
+  target_link_options(ROOTTPython PRIVATE "-ignore:4197")
+endif()
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
