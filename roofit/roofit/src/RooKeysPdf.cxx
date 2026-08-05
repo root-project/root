@@ -21,13 +21,38 @@
 Class RooKeysPdf implements a one-dimensional kernel estimation p.d.f which model the distribution
 of an arbitrary input dataset as a superposition of Gaussian kernels, one for each data point,
 each contributing 1/N to the total integral of the pdf.
+It was inspired by Kyle Cranmer's KEYS package, see
+[the original web page](https://web.archive.org/web/20020705034344/https://www-wisconsin.cern.ch/~cranmer/keys.html).
+
+\note KEYS stands for Kernel Estimating Your Shapes, see
+[the KEYS write-up](https://web.archive.org/web/20010604031632/http://www-wisconsin.cern.ch/~cranmer/KEYS.pdf).
+
 If the 'adaptive mode' is enabled, the width of the Gaussian is adaptively calculated from the
 local density of events, i.e. narrow for regions with high event density to preserve details and
 wide for regions with low event density to promote smoothness. The details of the general algorithm
 are described in the following paper:
 
 Cranmer KS, Kernel Estimation in High-Energy Physics.
-            Computer Physics Communications 136:198-207,2001 - e-Print Archive: hep ex/0011057
+            Computer Physics Communications 136:198-207,2001 - e-Print Archive: hep-ex/0011057,
+            [doi:10.1016/S0010-4655(00)00243-5](https://doi.org/10.1016/S0010-4655(00)00243-5)
+
+The `rho` parameter (default 1) is an overall scale factor for the width of the
+kernels. Values larger than 1 make the kernels wider and give a smoother
+estimate, while values smaller than 1 make them narrower and keep more detail.
+The default corresponds to the usual normal-reference ("rule of thumb")
+bandwidth.
+
+Close to the edges of the observable range the estimate is biased: the kernels
+of events near an edge have no data on the other side to balance them, so the
+density "leaks" out of the range. The `mirror` parameter selects an optional
+boundary correction that reflects the data across an edge. Symmetric mirroring
+adds the reflected events, which is appropriate when the true density is flat at
+the boundary (the estimate keeps a non-zero value there, with zero slope). Asymmetric mirroring
+subtracts the reflected events, which is appropriate when the true density is
+expected to vanish at the boundary. See the RooKeysPdf::Mirror enum for the list
+of options.
+
+For a multi-dimensional version of this pdf, see RooNDKeysPdf.
 **/
 
 #include <limits>
@@ -55,15 +80,39 @@ RooKeysPdf::RooKeysPdf()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// cache stuff about x
+/// Construct a kernel estimation pdf of the observable `xpdf` from its
+/// distribution in `data`.
+///
+/// \param[in] name   Name of the pdf.
+/// \param[in] title  Title of the pdf, used for plotting.
+/// \param[in] xpdf   Observable the pdf is defined in. Its range sets the
+///                   boundaries used for the mirror correction and for the
+///                   internal binned lookup table.
+/// \param[in] data   Dataset whose distribution of `xpdf` is modelled. The width
+///                   of each kernel is adapted to the local event density.
+/// \param[in] mirror Optional boundary correction, see the Mirror enum.
+/// \param[in] rho    Overall scale factor for the kernel width (default 1);
+///                   larger values give a smoother estimate.
 
-RooKeysPdf::RooKeysPdf(const char *name, const char *title, RooAbsReal &x, RooDataSet &data, Mirror mirror, double rho)
-   : RooKeysPdf(name, title, x, static_cast<RooRealVar &>(x), data, mirror, rho)
+RooKeysPdf::RooKeysPdf(const char *name, const char *title, RooAbsReal &xpdf, RooDataSet &data, Mirror mirror, double rho)
+   : RooKeysPdf(name, title, xpdf, static_cast<RooRealVar &>(xpdf), data, mirror, rho)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// cache stuff about x
+/// As above, but reading the input values from a dataset variable `xdata` that
+/// can be different from the observable `xpdf` the pdf depends on.
+///
+/// \param[in] name   Name of the pdf.
+/// \param[in] title  Title of the pdf, used for plotting.
+/// \param[in] xpdf   Observable the pdf is defined in.
+/// \param[in] xdata  Variable in `data` whose distribution is modelled. Its
+///                   range sets the boundaries used for the mirror correction
+///                   and for the internal binned lookup table.
+/// \param[in] data   Dataset holding the values of `xdata` to model.
+/// \param[in] mirror Optional boundary correction, see the Mirror enum.
+/// \param[in] rho    Overall scale factor for the kernel width (default 1);
+///                   larger values give a smoother estimate.
 
 RooKeysPdf::RooKeysPdf(const char *name, const char *title, RooAbsReal &xpdf, RooRealVar &xdata, RooDataSet &data,
                        Mirror mirror, double rho)
@@ -194,6 +243,16 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
   double sigmav=std::sqrt(x2/x0-meanv*meanv);
   double h=std::pow(double(4)/double(3),0.2)*std::pow(_sumWgt,-0.2)*_rho;
   double hmin=h*sigmav*std::sqrt(2.)/10;
+  // Dividing by 2*sqrt(3) = sqrt(12) turns a width into the standard deviation
+  // of a uniform distribution of that width. Per the original author, this goes
+  // back to inputs that were finely binned histograms rather than unbinned data:
+  // entries spread uniformly over a bin get aggregated into a single sample with
+  // no variance, so the bin width was taken as the spread of that sample.
+  //
+  // Beware that no bin width enters the expression below, so that rationale does
+  // not map onto the code as it stands: what remains is an extra factor of
+  // sqrt(12) with respect to hep-ex/0011057, kept for backwards compatibility.
+  // The same factor appears in RooNDKeysPdf::calculateBandWidth().
   double norm=h*std::sqrt(sigmav * _sumWgt)/(2.0*std::sqrt(3.0));
 
   _weights=new double[_nEvents];
