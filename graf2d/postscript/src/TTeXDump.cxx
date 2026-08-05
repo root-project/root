@@ -393,15 +393,13 @@ void TTeXDump::DrawPolyMarker(Int_t, Float_t *, Float_t *)
 
 void TTeXDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 {
-   Float_t x, y;
-
-   SetColor(fMarkerColor);
+   SetColor(GetMarkerColor());
 
    PrintStr("@");
    PrintStr("\\foreach \\P in {");
 
-   x = XtoTeX(xw[0]);
-   y = YtoTeX(yw[0]);
+   Float_t x = XtoTeX(xw[0]);
+   Float_t y = YtoTeX(yw[0]);
 
    PrintStr("(");
    WriteReal(x, kFALSE);
@@ -409,7 +407,7 @@ void TTeXDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    WriteReal(y, kFALSE);
    PrintStr(")");
 
-   for (Int_t i=1;i<n;i++) {
+   for (Int_t i = 1; i < n; i++) {
       x = XtoTeX(xw[i]);
       y = YtoTeX(yw[i]);
       PrintFast(3,", (");
@@ -426,71 +424,76 @@ void TTeXDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       WriteReal(fCurrentAlpha, kFALSE);
    }
 
-   if (TAttMarker::GetMarkerStyleBase(fMarkerStyle) == 23 || TAttMarker::GetMarkerStyleBase(fMarkerStyle) == 32) PrintStr(",rotate=180");
+   auto markerStyle = TAttMarker::GetMarkerStyleBase(GetMarkerStyle());
+   auto markerLineWidth = TAttMarker::GetMarkerLineWidth(GetMarkerStyle());
 
-   PrintStr(TString::Format("},mark size=%fpt", 8./3.33*(fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.)));
-   PrintStr(TString::Format(", line width=%fpt", 4./3.33*TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)));
+   if (markerStyle == kFullTriangleDown || markerStyle == kOpenTriangleDown)
+      PrintStr(",rotate=180");
+
+   PrintStr(TString::Format("},mark size=%fpt", 8./3.33*(GetMarkerSize() - TMath::Floor(markerLineWidth/2.)/4.)));
+   PrintStr(TString::Format(", line width=%fpt", 4./3.33*TMath::Floor(markerLineWidth/2.)));
    PrintStr(", mark=");
-   switch (TAttMarker::GetMarkerStyleBase(fMarkerStyle)) {
-   case 1 :
+
+   switch (markerStyle) {
+   case kDot :
       PrintStr("*");
       PrintStr(",mark size=1pt");
       break;
-   case 2 :
+   case kPlus :
       PrintStr("+");
       break;
-   case 3 :
+   case kStar :
       PrintStr("asterisk");
       break;
-   case 4 :
+   case kCircle :
       PrintStr("o");
       break;
-   case 5 :
+   case kMultiply :
       PrintStr("x");
       break;
-   case 20 :
+   case kFullCircle :
       PrintStr("*");
       break;
-   case 21 :
+   case kFullSquare :
       PrintStr("square*");
       break;
-   case 22 :
+   case kFullTriangleUp :
       PrintStr("triangle*");
       break;
-   case 23 :
+   case kFullTriangleDown :
       PrintStr("triangle*");
       break;
-   case 24 :
+   case kOpenCircle :
       PrintStr("o");
       break;
-   case 25 :
+   case kOpenSquare :
       PrintStr("square");
       break;
-   case 26 :
+   case kOpenTriangleUp :
       PrintStr("triangle");
       break;
-   case 27 :
+   case kOpenDiamond :
       PrintStr("diamond");
       break;
-   case 28 :
+   case kOpenCross :
       PrintStr("cross");
       break;
-   case 29 :
+   case kFullStar :
       PrintStr("newstar*");
       break;
-   case 30 :
+   case kOpenStar :
       PrintStr("newstar");
       break;
-   case 31 :
+   case kStar2 :
       PrintStr("10-pointed star");
       break;
-   case 32 :
+   case kOpenTriangleDown :
       PrintStr("triangle");
       break;
-   case 33 :
+   case kFullDiamond :
       PrintStr("diamond*");
       break;
-   case 34 :
+   case kFullCross :
       PrintStr("cross*");
       break;
    }
