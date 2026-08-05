@@ -5,7 +5,7 @@
 /// \image html eve_box.png
 /// \macro_code
 ///
-/// \author Alja Mrak-Tadel
+/// \author Matevz Tadel
 
 #include <ROOT/REveBox.hxx>
 #include <ROOT/REveScene.hxx>

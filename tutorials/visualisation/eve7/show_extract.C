@@ -6,7 +6,7 @@
 /// \image html eve_show_extract.png
 /// \macro_code
 ///
-/// \author Alja Mrak-Tadel
+/// \author Matevz Tadel
 
 #include "TFile.h"
 #include "TKey.h"

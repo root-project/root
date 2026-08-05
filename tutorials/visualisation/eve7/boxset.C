@@ -5,7 +5,7 @@
 /// \image html eve_boxset.png
 /// \macro_code
 ///
-/// \author Alja Mrak-Tadel
+/// \author Matevz Tadel
 
 #include "TRandom.h"
 #include <ROOT/REveElement.hxx>

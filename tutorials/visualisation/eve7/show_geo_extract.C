@@ -4,7 +4,7 @@
 /// The test macro how to create the shapes is in file write_geo_extract.C
 /// \macro_code
 ///
-/// \author Alja Mrak-Tadel
+/// \author Matevz Tadel
 
 void show_geo_extract(const char *file = "testShapeExtract.root")
 {
