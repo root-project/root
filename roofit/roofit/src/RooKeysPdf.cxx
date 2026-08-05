@@ -33,7 +33,7 @@ wide for regions with low event density to promote smoothness. The details of th
 are described in the following paper:
 
 Cranmer KS, Kernel Estimation in High-Energy Physics.
-            Computer Physics Communications 136:198-207,2001 - e-Print Archive: hep ex/0011057,
+            Computer Physics Communications 136:198-207,2001 - e-Print Archive: hep-ex/0011057,
             [doi:10.1016/S0010-4655(00)00243-5](https://doi.org/10.1016/S0010-4655(00)00243-5)
 
 The `rho` parameter (default 1) is an overall scale factor for the width of the
@@ -47,7 +47,7 @@ of events near an edge have no data on the other side to balance them, so the
 density "leaks" out of the range. The `mirror` parameter selects an optional
 boundary correction that reflects the data across an edge. Symmetric mirroring
 adds the reflected events, which is appropriate when the true density is flat at
-the boundary (the estimate keeps a non-zero slope there). Asymmetric mirroring
+the boundary (the estimate keeps a non-zero value there, with zero slope). Asymmetric mirroring
 subtracts the reflected events, which is appropriate when the true density is
 expected to vanish at the boundary. See the RooKeysPdf::Mirror enum for the list
 of options.
@@ -82,22 +82,22 @@ RooKeysPdf::RooKeysPdf()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construct a kernel estimation pdf of the observable `x` from its
+/// Construct a kernel estimation pdf of the observable `xpdf` from its
 /// distribution in `data`.
 ///
 /// \param[in] name   Name of the pdf.
 /// \param[in] title  Title of the pdf, used for plotting.
-/// \param[in] x      Observable the pdf is defined in. Its range sets the
+/// \param[in] xpdf   Observable the pdf is defined in. Its range sets the
 ///                   boundaries used for the mirror correction and for the
 ///                   internal binned lookup table.
-/// \param[in] data   Dataset whose distribution of `x` is modelled. The width
+/// \param[in] data   Dataset whose distribution of `xpdf` is modelled. The width
 ///                   of each kernel is adapted to the local event density.
 /// \param[in] mirror Optional boundary correction, see the Mirror enum.
 /// \param[in] rho    Overall scale factor for the kernel width (default 1);
 ///                   larger values give a smoother estimate.
 
-RooKeysPdf::RooKeysPdf(const char *name, const char *title, RooAbsReal &x, RooDataSet &data, Mirror mirror, double rho)
-   : RooKeysPdf(name, title, x, static_cast<RooRealVar &>(x), data, mirror, rho)
+RooKeysPdf::RooKeysPdf(const char *name, const char *title, RooAbsReal &xpdf, RooDataSet &data, Mirror mirror, double rho)
+   : RooKeysPdf(name, title, xpdf, static_cast<RooRealVar &>(xpdf), data, mirror, rho)
 {
 }
 
@@ -248,11 +248,16 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
   double sigmav=std::sqrt(x2/x0-meanv*meanv);
   double h=std::pow(double(4)/double(3),0.2)*std::pow(_sumWgt,-0.2)*_rho;
   double hmin=h*sigmav*std::sqrt(2.)/10;
-  // The 2*sqrt(3) factor comes from the standard deviation of a uniform
-  // distribution, 1/sqrt(12). This accounts for the case where the input is a
-  // finely binned histogram: entries spread uniformly over a bin get collapsed
-  // into a single sample with no variance, so the bin width is treated as the
-  // spread of that sample.
+  // Dividing by 2*sqrt(3) = sqrt(12) turns a width into the standard deviation
+  // of a uniform distribution of that width. Per the original author, this goes
+  // back to inputs that were finely binned histograms rather than unbinned data:
+  // entries spread uniformly over a bin get aggregated into a single sample with
+  // no variance, so the bin width was taken as the spread of that sample.
+  //
+  // Beware that no bin width enters the expression below, so that rationale does
+  // not map onto the code as it stands: what remains is an extra factor of
+  // sqrt(12) with respect to hep-ex/0011057, kept for backwards compatibility.
+  // The same factor appears in RooNDKeysPdf::calculateBandWidth().
   double norm=h*std::sqrt(sigmav * _sumWgt)/(2.0*std::sqrt(3.0));
 
   _weights=new double[_nEvents];

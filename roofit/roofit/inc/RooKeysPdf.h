@@ -41,7 +41,7 @@ public:
   };
   RooKeysPdf() ;
   RooKeysPdf(const char *name, const char *title,
-             RooAbsReal& x, RooDataSet& data, Mirror mirror= NoMirror,
+             RooAbsReal& xpdf, RooDataSet& data, Mirror mirror= NoMirror,
         double rho=1);
   RooKeysPdf(const char *name, const char *title,
              RooAbsReal& x, RooRealVar& xdata, RooDataSet& data, Mirror mirror= NoMirror,
