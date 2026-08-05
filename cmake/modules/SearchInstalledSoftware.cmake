@@ -715,7 +715,7 @@ endif()
 if(arrow)
   find_package(Arrow)
   if(NOT ARROW_FOUND)
-    message(SEND_ERROR "Apache Arrow not found but is required. Please set ARROW_HOME to point to your Arrow installation, "
+    message(SEND_ERROR "Apache Arrow not found but is required. Please set ARROW_ROOT to point to your Arrow installation, "
                           "or include the installation of Arrow in the CMAKE_PREFIX_PATH. Or disable option 'arrow'.")
   endif()
 
