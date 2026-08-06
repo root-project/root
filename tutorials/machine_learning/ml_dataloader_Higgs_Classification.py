@@ -142,7 +142,7 @@ test = ROOT.Experimental.ML.RDataLoader(
 
 # num_features must be calculated manually since the train.training_columns includes condensed vector columns.
 # Vector columns are lazily expanded while receiving batches, unless eager_loading is enabled.
-num_features = sum(max_vec_sizes.values()) + len([0 for i in train.train_columns if i not in max_vec_sizes])
+num_features = sum(max_vec_sizes.values()) + len([0 for i in train.feature_columns if i not in max_vec_sizes])
 
 torch.manual_seed(set_seed)
 hidden_layers = [60, 60]
