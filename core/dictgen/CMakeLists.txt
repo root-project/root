@@ -44,6 +44,7 @@ endif()
 target_include_directories(Dictgen PRIVATE
   ${CMAKE_SOURCE_DIR}/core/dictgen/src
   ${CMAKE_SOURCE_DIR}/core/dictgen/res
+  ${CMAKE_SOURCE_DIR}/builtins/optionparser
   ${CMAKE_SOURCE_DIR}/core/foundation/res
   ${CMAKE_SOURCE_DIR}/core/clingutils/res
   ${CMAKE_SOURCE_DIR}/core/base/inc
