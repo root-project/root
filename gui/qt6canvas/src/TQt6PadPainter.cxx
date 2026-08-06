@@ -21,6 +21,7 @@
 #include "RStipples.h"
 
 #include <memory>
+#include <map>
 
 #include "QPaintWidget.h"
 
@@ -338,7 +339,7 @@ void drawMarkersHelper(Int_t nPoints, const T *x, const T *y,
             break;
          case TAttMarker::kShapeTriangles:
             // filled triangles
-            for (int i = 0; i < points.size(); i += 3) {
+            for (int i = 0; i < points.size() - 2; i += 3) {
                // Construct a temporary triangle polygon
                QPolygonF triangle;
                triangle << points[i] << points[i + 1] << points[i + 2];

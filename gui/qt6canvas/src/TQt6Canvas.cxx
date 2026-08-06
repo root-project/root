@@ -21,11 +21,8 @@
 
 #include <cstdio>
 #include <cstring>
-#include <fstream>
 #include <iostream>
 #include <memory>
-#include <sstream>
-#include <vector>
 
 #include "QCanvasWidget.h"
 
@@ -238,7 +235,7 @@ UInt_t TQt6Canvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 
 Bool_t TQt6Canvas::PerformUpdate(Bool_t /* async */)
 {
-   if (Canvas()->IsModified())
+   if (Canvas()->IsModified() && fPaintWidget)
       fPaintWidget->update();
    return kTRUE;
 }
@@ -272,7 +269,8 @@ TCanvasImp *TQt6Canvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
    imp->fCanvasWidget = widget;
    imp->fPaintWidget = widget->GetPaintWidget();
 
-   imp->fPaintWidget->SetCanvas(c);
+   if (imp->fPaintWidget)
+      imp->fPaintWidget->SetCanvas(c);
 
    // set all internal dimensions
    c->Resize();

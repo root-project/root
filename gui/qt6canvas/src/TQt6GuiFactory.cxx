@@ -23,8 +23,6 @@ For Qt6 it provides specialization for TCanvasImp and TContextMenuImp classes
 #include "TQt6Application.h"
 #include "QRootContextMenu.h"
 
-#include <iostream>
-
 using namespace ROOT::Experimental;
 
 ////////////////////////////////////////////////////////////////////////////////
