@@ -21,4 +21,21 @@ target_compile_definitions(RooFitZMQ PUBLIC ZMQ_BUILD_DRAFT_API)
 # to avoid leaking symbols
 target_compile_definitions(RooFitZMQ PUBLIC ZMQ_NO_EXPORT)
 
+if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
+  target_sources(
+      RooFitZMQ
+      PRIVATE
+      FILE_SET private_header_files
+      TYPE HEADERS
+      BASE_DIRS res/
+      FILES
+          res/RooFit_ZMQ/ppoll.h
+          res/RooFit_ZMQ/Utility.h
+          res/RooFit_ZMQ/ZeroMQSvc.h
+          res/RooFit_ZMQ/ZeroMQPoller.h
+          res/RooFit_ZMQ/functions.h
+  )
+endif()
+
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)

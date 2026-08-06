@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT rootfit package
+# CMakeLists.txt file for building ROOT RooFit package
 # @author Pere Mato, CERN
 ############################################################################
 
@@ -14,74 +14,78 @@ if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
 endif()
 
+set(ROOFIT_HEADERS
+  Roo2DKeysPdf.h
+  RooArgusBG.h
+  RooBCPEffDecay.h
+  RooBCPGenDecay.h
+  RooBDecay.h
+  RooBMixDecay.h
+  RooBernstein.h
+  RooBifurGauss.h
+  RooBlindTools.h
+  RooBreitWigner.h
+  RooBukinPdf.h
+  RooCBShape.h
+  RooCFunction1Binding.h
+  RooCFunction2Binding.h
+  RooCFunction3Binding.h
+  RooCFunction4Binding.h
+  RooChebychev.h
+  RooChi2MCSModule.h
+  RooChiSquarePdf.h
+  RooCrystalBall.h
+  RooDecay.h
+  RooDstD0BG.h
+  RooExponential.h
+  RooFunctor1DBinding.h
+  RooFunctorBinding.h
+  RooGExpModel.h
+  RooGamma.h
+  RooGaussExpTails.h
+  RooGaussModel.h
+  RooGaussian.h
+  RooHistConstraint.h
+  RooIntegralMorph.h
+  RooJeffreysPrior.h
+  RooJohnson.h
+  RooKeysPdf.h
+  RooLagrangianMorphFunc.h
+  RooLandau.h
+  RooLegacyExpPoly.h
+  RooLognormal.h
+  RooMathCoreReg.h
+  RooMomentMorph.h
+  RooMomentMorphFunc.h
+  RooMomentMorphFuncND.h
+  RooMultiBinomial.h
+  RooNDKeysPdf.h
+  RooNonCPEigenDecay.h
+  RooNovosibirsk.h
+  RooONNXFunc.h
+  RooParamHistFunc.h
+  RooParametricStepFunction.h
+  RooPoisson.h
+  RooPolynomial.h
+  RooPowerSum.h
+  RooPyBind.h
+  RooSpline.h
+  RooStepFunction.h
+  RooStudentT.h
+  RooTFnBinding.h
+  RooTFnPdfBinding.h
+  RooTMathReg.h
+  RooUnblindCPAsymVar.h
+  RooUnblindOffset.h
+  RooUnblindPrecision.h
+  RooUnblindUniform.h
+  RooUniform.h
+  RooVoigtian.h
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
   HEADERS
-    Roo2DKeysPdf.h
-    RooArgusBG.h
-    RooBCPEffDecay.h
-    RooBCPGenDecay.h
-    RooBDecay.h
-    RooBMixDecay.h
-    RooBernstein.h
-    RooBifurGauss.h
-    RooBlindTools.h
-    RooBreitWigner.h
-    RooBukinPdf.h
-    RooCBShape.h
-    RooCFunction1Binding.h
-    RooCFunction2Binding.h
-    RooCFunction3Binding.h
-    RooCFunction4Binding.h
-    RooChebychev.h
-    RooChi2MCSModule.h
-    RooChiSquarePdf.h
-    RooCrystalBall.h
-    RooDecay.h
-    RooDstD0BG.h
-    RooExponential.h
-    RooFunctor1DBinding.h
-    RooFunctorBinding.h
-    RooGExpModel.h
-    RooGamma.h
-    RooGaussExpTails.h
-    RooGaussModel.h
-    RooGaussian.h
-    RooHistConstraint.h
-    RooIntegralMorph.h
-    RooJeffreysPrior.h
-    RooJohnson.h
-    RooKeysPdf.h
-    RooLagrangianMorphFunc.h
-    RooLandau.h
-    RooLegacyExpPoly.h
-    RooLognormal.h
-    RooMathCoreReg.h
-    RooMomentMorph.h
-    RooMomentMorphFunc.h
-    RooMomentMorphFuncND.h
-    RooMultiBinomial.h
-    RooNDKeysPdf.h
-    RooNonCPEigenDecay.h
-    RooNovosibirsk.h
-    RooONNXFunc.h
-    RooParamHistFunc.h
-    RooParametricStepFunction.h
-    RooPoisson.h
-    RooPolynomial.h
-    RooPowerSum.h
-    RooPyBind.h
-    RooSpline.h
-    RooStepFunction.h
-    RooStudentT.h
-    RooTFnBinding.h
-    RooTFnPdfBinding.h
-    RooTMathReg.h
-    RooUnblindCPAsymVar.h
-    RooUnblindOffset.h
-    RooUnblindPrecision.h
-    RooUnblindUniform.h
-    RooUniform.h
-    RooVoigtian.h
+    ${ROOFIT_HEADERS}
   SOURCES
     src/Roo2DKeysPdf.cxx
     src/RooArgusBG.cxx
@@ -166,6 +170,22 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
 # In RooFit, the errno side effect is not needed, anyway:
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   target_compile_options(RooFit PUBLIC -fno-math-errno)
+endif()
+
+set(RELATIVE_INC_HEADERS ${ROOFIT_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
+  target_sources(
+      RooFit
+      PRIVATE
+      FILE_SET private_header_files
+      TYPE HEADERS
+      BASE_DIRS inc/ src/
+      FILES
+          ${RELATIVE_INC_HEADERS}
+          inc/LinkDef1.h
+          src/RooFit/Detail/Algorithms.h
+  )
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
