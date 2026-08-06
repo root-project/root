@@ -57,7 +57,7 @@ def load_data():
 
     loader = ROOT.Experimental.ML.RDataLoader(
         [rdf_sig, rdf_bkg],
-        columns=variables + ["label", "weight"],
+        columns=variables,
         target="label",
         weights="weight",
         batch_size=num_all,  # Load all data in one batch
