@@ -38,8 +38,9 @@
  */
 
 /*
-Danio Piparo - Since we import this parser from tan external source, we keep
-track of the changes:
+Danio Piparo - Since we import this parser from tan external source,
+specifically https://sourceforge.net/projects/optionparser/ at version 1.3,
+we keep track of the changes:
 
 New Features 6-7-12:
  o Added FullArg class from the examples in the header
