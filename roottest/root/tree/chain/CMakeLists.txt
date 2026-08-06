@@ -33,6 +33,9 @@ ROOTTEST_ADD_TEST(TChainCleanup
                   MACRO execTChainCleanup.cxx+
                   OUTREF execTChainCleanup.ref)
 
+ROOTTEST_ADD_TEST(TChainAddOtherChainGetEntries
+                  MACRO chain_add_getentries.C+)
+
 # to avoid copying of ROOT files - just run from source directory
 ROOTTEST_ADD_TEST(subdir
                   MACRO runsubdir.C
