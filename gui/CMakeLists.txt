@@ -12,6 +12,8 @@ add_subdirectory(guihtml)
 add_subdirectory(recorder)
 add_subdirectory(treemap)
 
+add_subdirectory(raylibcanvas)
+
 if(webgui)
    if(cefweb)
       add_subdirectory(cefdisplay)
