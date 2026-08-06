@@ -26,35 +26,56 @@
 
 using namespace ROOT::Experimental;
 
-
-class TRaylibEventsTimer : public TTimer {
-public:
-   TRaylibEventsTimer(Long_t milliSec, Bool_t mode) :
-      TTimer(milliSec, mode) {}
-
-   /// used to send control messages to clients
-   void Timeout() override
-   {
-      // Process input events
-      PollInputEvents();
-   }
-};
-
-
 // ─── Shared window state ──────────────────────────────────────────────
 
 std::atomic<bool> TRaylibCanvas::sWindowReady{false};
 std::atomic<int> TRaylibCanvas::sActiveCanvasCount{0};
-
-static TRaylibEventsTimer *sTimer = nullptr;
 
 static bool sRaylibInitialized = false;
 static int sWindowWidth = 0;
 static int sWindowHeight = 0;
 
 
+class TRaylibEventsTimer : public TTimer {
+
+    Int_t fModifiedCounter = 0;
+public:
+   TRaylibEventsTimer(Long_t milliSec, Bool_t mode) : TTimer(milliSec, mode) {}
+
+   /// used to send control messages to clients
+   void Timeout() override
+   {
+      if (!::IsWindowReady())
+         return;
+
+      // Process input events
+      ::PollInputEvents();
+
+      TCanvas *canv = gPad ? gPad->GetCanvas() : nullptr;
 
 
+      if (::WindowShouldClose() && canv) {
+         ::CloseWindow();
+         return;
+      }
+
+      if (::IsWindowResized() && canv) {
+         canv->Resize();
+         canv->Modified();
+         fModifiedCounter = 0;
+      }
+
+      if (canv && canv->IsModified()) {
+        if (fModifiedCounter++ > 3) {
+           fModifiedCounter = 0;
+           canv->Update();
+        }
+      } else
+         fModifiedCounter = 0;
+   }
+};
+
+static TRaylibEventsTimer *sTimer = nullptr;
 
 /*
 static std::mutex sRaylibInitMutex;
@@ -160,7 +181,8 @@ void TRaylibCanvas::Close()
 
 void TRaylibCanvas::Show()
 {
-    // not implemented yet
+   if (!IsWindowReady() && Canvas())
+      ::InitWindow(Canvas()->GetWw(), Canvas()->GetWh(), Canvas()->GetTitle());
 }
 
 // ─── Geometry ─────────────────────────────────────────────────────────
@@ -266,7 +288,7 @@ void TRaylibCanvas::RaiseWindow()
 
 Bool_t TRaylibCanvas::PerformUpdate(Bool_t /*async*/)
 {
-   if (!Canvas() || !Canvas()->IsModified())
+   if (!Canvas() || !Canvas()->IsModified() || !IsWindowReady())
       return kFALSE;
 
    // One can make painting directly
