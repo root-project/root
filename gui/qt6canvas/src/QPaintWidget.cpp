@@ -180,13 +180,7 @@ void QPaintWidget::mousePressEvent(QMouseEvent *e)
 
 void QPaintWidget::mouseMoveEvent(QMouseEvent *e)
 {
-   static ulong lastprocesstime = 0;
-   static ulong delta = 100;
-   ulong timestamp = e->timestamp();
    e->accept();
-   if(timestamp - delta < lastprocesstime)
-      return;
-   lastprocesstime = timestamp;
 
    if (fCanvas) {
       QPoint pnt = scaledMousePoint(e);
