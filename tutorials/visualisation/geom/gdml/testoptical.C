@@ -6,13 +6,23 @@
 /// stored by TGeoManager class. Optical surfaces do not store property arrays but point
 /// to GDML matrices describing such properties. One can get the data for such property
 /// like:
+///
+/// ~~~{.cpp}
 ///   TGeoOpticalSurface *surf = geom->GetOpticalSurface("surf1");
 ///   const char *property = surf=>GetPropertyRef("REFLECTIVITY");
 ///   TGeoGDMLMatrix *m = geom->GetGDMLMatrix(property);
+/// ~~~
+///
 /// Skin surfaces and border surfaces can be retrieved from the TGeoManager object by using:
+///
+/// ~~~{.cpp}
 ///   TObjArray *skin_array = geom->GetListOfSkinSurfaces();
 ///   TObjArra8 *border_array = geom->GetListOfBorderSurfaces();
+/// ~~~
+///
 /// Alternatively accessors by name can also be used: GetSkinSurface(name)/GetBorderSurface(name)
+///
+/// \macro_code
 ///
 /// \author Andrei Gheata
 
