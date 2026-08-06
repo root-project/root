@@ -6,6 +6,7 @@
 /// \macro_code
 ///
 /// \author Matevz Tadel
+
 #include <ROOT/REveBox.hxx>
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveManager.hxx>

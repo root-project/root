@@ -3,6 +3,7 @@
 ///
 /// \macro_code
 ///
+/// \author Alja Mrak-Tadel
 
 #include <sstream>
 #include <iostream>

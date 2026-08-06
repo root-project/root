@@ -5,6 +5,7 @@
 /// with REveDataCollection and REveDataProxyBuilders.
 /// \macro_code
 ///
+/// \author Alja Mrak-Tadel
 
 #include "ROOT/REveDataTable.hxx"
 #include "ROOT/REveDataSimpleProxyBuilderTemplate.hxx"

@@ -3,6 +3,8 @@
 ///
 /// \macro_code
 ///
+/// \author Alja Mrak-Tadel
+
 #include "TRandom.h"
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveScene.hxx>
