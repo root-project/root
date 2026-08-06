@@ -1271,10 +1271,19 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       LoadModules(FIXMEModules, clingInterp);
 
       GlobalModuleIndex *GlobalIndex = nullptr;
-      loadGlobalModuleIndex(clingInterp);
-      // FIXME: The ASTReader still calls loadGlobalIndex and loads the file
-      // We should investigate how to suppress it completely.
-      GlobalIndex = CI.getASTReader()->getGlobalIndex();
+
+      bool useGMI = true;
+      std::optional<std::string> envUseGMI = llvm::sys::Process::GetEnv("ROOT_USE_GMI");
+      if (envUseGMI.has_value())
+         if (!envUseGMI->empty() && !ROOT::FoundationUtils::ConvertEnvValueToBool(*envUseGMI))
+            useGMI = false;
+
+      if (useGMI) {
+         loadGlobalModuleIndex(clingInterp);
+         // FIXME: The ASTReader still calls loadGlobalIndex and loads the file
+         // We should investigate how to suppress it completely.
+         GlobalIndex = CI.getASTReader()->getGlobalIndex();
+      }
 
       llvm::StringSet<> KnownModuleFileNames;
       if (GlobalIndex)
