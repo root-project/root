@@ -149,7 +149,7 @@ if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
       BASE_DIRS inc/
       FILES
           ${RELATIVE_INC_HEADERS}
-          inc/LinkDef.h # seemingly this is not being used in ROOT_STL_PACKAGE call
+          inc/LinkDef.h # seemingly this is not being used in ROOT_STANDARD_LIBRARY_PACKAGE call
   )
 endif()
 

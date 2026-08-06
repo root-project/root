@@ -48,7 +48,7 @@ if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
       BASE_DIRS inc/ src/
       FILES
           ${RELATIVE_INC_HEADERS}
-          # LinkDef.h # seemingly not being used by ROOT_STL_PACKAGE call
+          # LinkDef.h # seemingly not being used by ROOT_STANDARD_LIBRARY_PACKAGE call
           src/Domains.h
           src/JSONIOUtils.h
           src/static_execute.h

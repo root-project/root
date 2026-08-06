@@ -108,7 +108,7 @@ if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
       BASE_DIRS inc/
       FILES
           ${RELATIVE_INC_HEADERS}
-          inc/LinkDef.h # seemingly not being used by ROOT_STL_PACKAGE call
+          inc/LinkDef.h # seemingly not being used by ROOT_STANDARD_LIBRARY_PACKAGE call
           inc/HFMsgService.h # not part of list above
   )
 endif()

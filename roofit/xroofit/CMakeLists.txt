@@ -51,6 +51,7 @@ if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
           ${RELATIVE_INC_HEADERS}
           inc/LinkDef.h
           inc/RooFit/xRooFit/Config.h # was not part of XROOFIT_HEADERS
+          src/PythonInterface.h
           src/coutCapture.h
           src/xRooFitVersion.h
   )

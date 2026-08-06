@@ -44,7 +44,6 @@ if(roofit_legacy_eval_backend)
     src/RooChi2Var.h
     src/RooNLLVar.h
     src/RooRealMPFE.h
-    src/RooXYChi2Var.h
   )
 endif()
 

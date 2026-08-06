@@ -44,6 +44,7 @@ set(ROOFIT_HEADERS
   RooGamma.h
   RooGaussExpTails.h
   RooGaussModel.h
+  RooGaussian.h
   RooHistConstraint.h
   RooIntegralMorph.h
   RooJeffreysPrior.h
