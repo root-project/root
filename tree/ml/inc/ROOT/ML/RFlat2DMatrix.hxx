@@ -23,6 +23,13 @@ struct RFlat2DMatrix {
 
    const float *GetData() const { return fRVec.data(); }
 
+   ROOT::RVecF ReleaseData()
+   {
+      fRows = 0;
+      fCols = 0;
+      return std::move(fRVec);
+   }
+
    // Used in the pythonization
    std::pair<std::size_t, std::size_t> GetShape() const { return {fRows, fCols}; }
 

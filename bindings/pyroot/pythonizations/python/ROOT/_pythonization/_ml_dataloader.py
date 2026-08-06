@@ -26,11 +26,29 @@ if TYPE_CHECKING:
     import ROOT
 
 
+def _normalize_target(target: str | list[str] | None) -> list[str]:
+    """`target` can be a string, list of strings, or None. Normalize to a list of strings
+    to be consistent with `columns`."""
+    if target is None or target == "":
+        return []
+    if isinstance(target, str):
+        return [target]
+    return list(target)
+
+
+def _exclude_target_and_weights(columns: list[str], target_columns: list[str], weights_column: str) -> list[str]:
+    """Drop any target/weights column names that also appear in `columns`."""
+    excluded = set(target_columns) | ({weights_column} if weights_column else set())
+    return [str(f) for f in columns if str(f) not in excluded]
+
+
 class _RDataLoader:
-    def get_template(
+    def _resolve_columns(
         self,
         x_rdf: ROOT.RDF.RNode,
-        columns: list[str] | None = None,
+        columns: list[str] | None,
+        target_columns: list[str],
+        weights_column: str,
         max_vec_sizes: dict[str, int] | None = None,
     ) -> Tuple[str, list[int]]:
         """
@@ -39,9 +57,11 @@ class _RDataLoader:
 
         Args:
             x_rdf (RNode): RDataFrame or RNode object.
-            columns (list[str], optional): Columns that should be loaded.
-                                 Defaults to loading all columns
-                                 in the given RDataFrame
+            columns (list[str], optional): Feature columns to load.
+                                 Defaults to all columns in the RDataFrame,
+                                 except for target_columns and weights_column.
+            target_columns (list[str]): Name(s) of target column(s).
+            weights_column (str): Name of the weight column, or "" for none.
             max_vec_sizes (dict[str, int], optional):
                                  Mapping from vector column name
                                  to the maximum size of the vector.
@@ -50,10 +70,16 @@ class _RDataLoader:
         Returns:
             Tuple[str, list[int]]: Template string for the DataLoader and list of max vector sizes
         """
-        if not columns:
-            columns = x_rdf.GetColumnNames()
         if max_vec_sizes is None:
             max_vec_sizes = {}
+
+        if columns:
+            columns = _exclude_target_and_weights(columns, target_columns, weights_column)
+        else:
+            rdf_column_names = [str(c) for c in x_rdf.GetColumnNames()]
+            columns = _exclude_target_and_weights(rdf_column_names, target_columns, weights_column)
+
+        ordered_columns = columns + target_columns + ([weights_column] if weights_column else [])
 
         template_string = ""
 
@@ -61,8 +87,10 @@ class _RDataLoader:
         self.all_columns = []
 
         max_vec_sizes_list = []
+        num_feature_expanded = 0
+        num_target_expanded = 0
 
-        for name in columns:
+        for i, name in enumerate(ordered_columns):
             name_str = str(name)
             self.given_columns.append(name_str)
             column_type = x_rdf.GetColumnType(name_str)
@@ -72,8 +100,9 @@ class _RDataLoader:
                 # Add column for each element if column is a vector
                 if name_str in max_vec_sizes:
                     max_vec_sizes_list.append(max_vec_sizes[name_str])
-                    for i in range(max_vec_sizes[name_str]):
-                        self.all_columns.append(f"{name_str}_{i}")
+                    for j in range(max_vec_sizes[name_str]):
+                        self.all_columns.append(f"{name_str}_{j}")
+                    n_added = max_vec_sizes[name_str]
 
                 else:
                     raise ValueError(
@@ -83,6 +112,16 @@ class _RDataLoader:
 
             else:
                 self.all_columns.append(name_str)
+                n_added = 1
+
+            if i < len(columns):
+                num_feature_expanded += n_added
+            elif i < len(columns) + len(target_columns):
+                num_target_expanded += n_added
+
+        self.train_slice = slice(0, num_feature_expanded)
+        self.target_slice = slice(num_feature_expanded, num_feature_expanded + num_target_expanded)
+        self.feature_columns = self.all_columns[self.train_slice]
 
         return template_string[:-1], max_vec_sizes_list
 
@@ -117,7 +156,7 @@ class _RDataLoader:
                 the same time. Higher value results in faster loading, but
                 also higher memory usage. Defaults to 1.
             columns (list[str] | None):
-                Names of columns to load. If not given, all columns are used.
+                Names of feature columns to load. If not given, all columns are used.
             max_vec_sizes (dict[str, int] | None):
                 Mapping from vector column name to the maximum size of the vector.
                 Required when using vector based columns.
@@ -164,62 +203,29 @@ class _RDataLoader:
 
         if rdataframes is None:
             rdataframes = []
-        if columns is None:
-            columns = []
-        if max_vec_sizes is None:
-            max_vec_sizes = {}
-        if target is None or target == "":
-            target = []
 
         if not hasattr(rdataframes, "__iter__"):
             rdataframes = [rdataframes]
         self.noded_rdfs = [RDF.AsRNode(rdf) for rdf in rdataframes]
 
-        if isinstance(target, str):
-            target = [target]
-
-        self.target_columns = target
+        self.target_columns = _normalize_target(target)
         self.weights_column = weights
+        self.target_given = len(self.target_columns) > 0
+        self.weights_given = len(self.weights_column) > 0
 
-        template, max_vec_sizes_list = self.get_template(self.noded_rdfs[0], columns, max_vec_sizes)
+        if self.weights_given and not self.target_given:
+            raise ValueError("Weights can only be used when a target is provided")
+
+        template, max_vec_sizes_list = self._resolve_columns(
+            self.noded_rdfs[0], columns, self.target_columns, self.weights_column, max_vec_sizes
+        )
 
         self.num_columns = len(self.all_columns)
         self.batch_size = batch_size
 
-        # Handle target
-        self.target_given = len(self.target_columns) > 0
-        self.weights_given = len(self.weights_column) > 0
-        if self.target_given:
-            for target in self.target_columns:
-                if target not in self.all_columns:
-                    raise ValueError(
-                        f"Provided target not in given columns: \ntarget => \
-                            {target}\ncolumns => {self.all_columns}"
-                    )
-
-            self.target_indices = [self.all_columns.index(target) for target in self.target_columns]
-
-            # Handle weights
-            if self.weights_given:
-                if weights in self.all_columns:
-                    self.weights_index = self.all_columns.index(self.weights_column)
-                    self.train_indices = [
-                        c for c in range(len(self.all_columns)) if c not in self.target_indices + [self.weights_index]
-                    ]
-                else:
-                    raise ValueError(
-                        f"Provided weights not in given columns: \nweights => \
-                            {weights}\ncolumns => {self.all_columns}"
-                    )
-            else:
-                self.train_indices = [c for c in range(len(self.all_columns)) if c not in self.target_indices]
-
-        elif self.weights_given:
-            raise ValueError("Weights can only be used when a target is provided")
-        else:
-            self.train_indices = [c for c in range(len(self.all_columns))]
-
-        self.train_columns = [c for c in self.all_columns if c not in self.target_columns + [self.weights_column]]
+        if self.weights_given:
+            # The weight column is always the single column right after the target(s)
+            self.weights_index = self.target_slice.stop
 
         import ROOT
 
@@ -324,24 +330,25 @@ class _RDataLoader:
         if not self.target_given:
             return np.zeros((self.batch_size, self.num_columns))
 
+        num_feature_columns = self.train_slice.stop - self.train_slice.start
+        num_target_columns = self.target_slice.stop - self.target_slice.start
+
         if not self.weights_given:
-            if len(self.target_indices) == 1:
-                return np.zeros((self.batch_size, self.num_columns - 1)), np.zeros((self.batch_size)).reshape(-1, 1)
+            if num_target_columns == 1:
+                return np.zeros((self.batch_size, num_feature_columns)), np.zeros((self.batch_size)).reshape(-1, 1)
 
-            return np.zeros((self.batch_size, self.num_columns - 1)), np.zeros(
-                (self.batch_size, len(self.target_indices))
-            )
+            return np.zeros((self.batch_size, num_feature_columns)), np.zeros((self.batch_size, num_target_columns))
 
-        if len(self.target_indices) == 1:
+        if num_target_columns == 1:
             return (
-                np.zeros((self.batch_size, self.num_columns - 2)),
+                np.zeros((self.batch_size, num_feature_columns)),
                 np.zeros((self.batch_size)).reshape(-1, 1),
                 np.zeros((self.batch_size)).reshape(-1, 1),
             )
 
         return (
-            np.zeros((self.batch_size, self.num_columns - 2)),
-            np.zeros((self.batch_size, len(self.target_indices))),
+            np.zeros((self.batch_size, num_feature_columns)),
+            np.zeros((self.batch_size, num_target_columns)),
             np.zeros((self.batch_size)).reshape(-1, 1),
         )
 
@@ -351,30 +358,28 @@ class _RDataLoader:
         except ImportError:
             raise ImportError("Failed to import numpy needed for the ML dataloader")
 
-        data = batch.GetData()
         batch_size, num_columns = tuple(batch.GetShape())
-        data.reshape((batch_size * num_columns,))
-
-        return np.asarray(data).reshape(batch_size, num_columns)
+        rvec = batch.ReleaseData()
+        return np.asarray(rvec).reshape(batch_size, num_columns)
 
     def _split_target_and_weights(
         self, data: np.ndarray
     ) -> np.ndarray | Tuple[np.ndarray, np.ndarray] | Tuple[np.ndarray, np.ndarray, np.ndarray]:
         # Splice target column from the data if target is given
         if self.target_given:
-            train_data = data[:, self.train_indices]
-            target_data = data[:, self.target_indices]
+            train_data = data[:, self.train_slice]
+            target_data = data[:, self.target_slice]
 
             # Splice weight column from the data if weight is given
             if self.weights_given:
                 weights_data = data[:, self.weights_index]
 
-                if len(self.target_indices) == 1:
+                if self.target_slice.stop - self.target_slice.start == 1:
                     return train_data, target_data.reshape(-1, 1), weights_data.reshape(-1, 1)
 
                 return train_data, target_data, weights_data.reshape(-1, 1)
 
-            if len(self.target_indices) == 1:
+            if self.target_slice.stop - self.target_slice.start == 1:
                 return train_data, target_data.reshape(-1, 1)
 
             return train_data, target_data
@@ -429,14 +434,14 @@ class _RDataLoader:
         if batch_size != self.batch_size:
             return_data = tf.pad(return_data, tf.constant([[0, self.batch_size - batch_size], [0, 0]]))
 
-        # Splice target column from the data if weight is given
+        # Splice target column from the data if target is given
         if self.target_given:
-            train_data = tf.gather(return_data, indices=self.train_indices, axis=1)
-            target_data = tf.gather(return_data, indices=self.target_indices, axis=1)
+            train_data = return_data[:, self.train_slice]
+            target_data = return_data[:, self.target_slice]
 
             # Splice weight column from the data if weight is given
             if self.weights_given:
-                weights_data = tf.gather(return_data, indices=[self.weights_index], axis=1)
+                weights_data = return_data[:, self.weights_index : self.weights_index + 1]
 
                 return train_data, target_data, weights_data
 
@@ -606,7 +611,7 @@ class RDataLoader:
                 boundaries at the cost of higher memory usage. Acts as a soft
                 cap: the buffer may temporarily exceed this. Defaults to 10.
             columns:
-                Names of columns to load. If not given, all columns are used.
+                Names of feature columns to load. If not given, all columns are used.
             max_vec_sizes:
                 Maximum size per vector column. Required for RVec columns.
             vec_padding:
@@ -743,24 +748,24 @@ class RDataLoader:
         self._ensure_created()
 
         batch_size = self._internal.batch_size
-        num_train_columns = len(self._internal.train_columns)
+        num_feature_columns = len(self._internal.feature_columns)
         num_target_columns = len(self._internal.target_columns)
 
         # No target and weights given
         if not self._internal.target_given:
-            batch_signature = tf.TensorSpec(shape=(batch_size, num_train_columns), dtype=tf.float32)
+            batch_signature = tf.TensorSpec(shape=(batch_size, num_feature_columns), dtype=tf.float32)
 
         # Target given, no weights given
         elif not self._internal.weights_given:
             batch_signature = (
-                tf.TensorSpec(shape=(batch_size, num_train_columns), dtype=tf.float32),
+                tf.TensorSpec(shape=(batch_size, num_feature_columns), dtype=tf.float32),
                 tf.TensorSpec(shape=(batch_size, num_target_columns), dtype=tf.float32),
             )
 
         # Target and weights given
         else:
             batch_signature = (
-                tf.TensorSpec(shape=(batch_size, num_train_columns), dtype=tf.float32),
+                tf.TensorSpec(shape=(batch_size, num_feature_columns), dtype=tf.float32),
                 tf.TensorSpec(shape=(batch_size, num_target_columns), dtype=tf.float32),
                 tf.TensorSpec(shape=(batch_size, 1), dtype=tf.float32),
             )
@@ -793,20 +798,22 @@ class RDataLoader:
         All column names as they appear in each batch tensor.
         """
         if self._internal is None:
-            return self._params["columns"]
+            columns = _exclude_target_and_weights(
+                self._params["columns"] or [], self.target_columns, self.weights_column
+            )
+            weights = self.weights_column
+            return columns + self.target_columns + ([weights] if weights else [])
         return self._internal.all_columns
 
     @property
-    def train_columns(self) -> list[str]:
+    def feature_columns(self) -> list[str]:
         r"""
         \ingroup Py_ML
         Feature column names (columns minus target and weights).
         """
         if self._internal is None:
-            target = self._params["target"] if self._params["target"] is not None else []
-            weights = self._params["weights"] if self._params["weights"] is not None else []
-            return [col for col in self._params["columns"] if col not in target and col not in weights]
-        return self._internal.train_columns
+            return _exclude_target_and_weights(self._params["columns"] or [], self.target_columns, self.weights_column)
+        return self._internal.feature_columns
 
     @property
     def target_columns(self) -> list[str]:
@@ -815,7 +822,7 @@ class RDataLoader:
         Target column names.
         """
         if self._internal is None:
-            return self._params["target"] if self._params["target"] is not None else []
+            return _normalize_target(self._params["target"])
         return self._internal.target_columns
 
     @property
