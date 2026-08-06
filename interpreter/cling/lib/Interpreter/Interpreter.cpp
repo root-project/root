@@ -625,11 +625,9 @@ namespace cling {
           CI->resetAndLeakPreprocessor();
           CI->resetAndLeakSourceManager();
           CI->resetAndLeakFileManager();
-        } else {
-          CI->setPreprocessor(nullptr);
-          CI->setSourceManager(nullptr);
-          CI->setFileManager(nullptr);
         }
+        // ~CompilerInstance destroys the Preprocessor, SourceManager and
+        // FileManager in the right order.
       }
 
       LO.setCompilingModule(clang::LangOptions::CMK_None);
