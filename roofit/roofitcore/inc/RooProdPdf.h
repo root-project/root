@@ -19,7 +19,6 @@
 #include "RooAbsPdf.h"
 #include "RooListProxy.h"
 #include "RooLinkedList.h"
-#include "RooAICRegistry.h"
 #include "RooObjCacheManager.h"
 #include "RooCmdArg.h"
 
@@ -185,7 +184,7 @@ private:
                                   const RooArgSet *auxProto=nullptr, bool verbose= false) const override ;
 
 
-  mutable RooAICRegistry _genCode ; ///<! Registry of composite direct generator codes
+  mutable std::vector<std::vector<int>> _genCode; ///<! Registry of composite direct generator codes
 
   double _cutOff = 0.0;       ///<  Cutoff parameter for running product
   RooListProxy _pdfList ;  ///<  List of PDF components

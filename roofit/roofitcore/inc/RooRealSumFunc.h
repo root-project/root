@@ -18,7 +18,6 @@
 
 #include "RooAbsPdf.h"
 #include "RooListProxy.h"
-#include "RooAICRegistry.h"
 #include "RooObjCacheManager.h"
 
 #include <list>
