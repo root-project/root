@@ -117,7 +117,12 @@ namespace textinput {
         // redirected, so only the output of the executed code follows the
         // redirection, as expected.
         fTTYOutputID = ::open("/dev/tty", O_WRONLY);
-        if (fTTYOutputID != -1)
+        // If stdout was already redirected at startup (e.g. "root > file"),
+        // the line-editing output goes to /dev/tty, which is a terminal, so
+        // force tty-mode on. If stdout is a terminal, IsInteractive() alone
+        // decides whether we drive it interactively, as before.
+        const bool stdoutRedirected = !::isatty(STDOUT_FILENO);
+        if (fTTYOutputID != -1 && stdoutRedirected)
            SetIsTTY(true);
      }
 
@@ -149,9 +154,10 @@ namespace textinput {
   TerminalDisplayUnix::HandleResizeSignal() {
 #ifdef TIOCGWINSZ
     struct winsize sz;
-    // Query the terminal for its size: use the controlling terminal if we have
-    // it, as stdout may be redirected to a file (which has no window size).
-    int sizeFD = (fTTYOutputID != -1) ? fTTYOutputID : STDOUT_FILENO;
+    // Query the terminal we actually write to for its size. That is stdout
+    // whenever it is a terminal; only once it is redirected (e.g. to a file,
+    // which has no window size) fall back to the controlling terminal.
+    int sizeFD = ::isatty(STDOUT_FILENO) ? STDOUT_FILENO : (fTTYOutputID != -1 ? fTTYOutputID : STDOUT_FILENO);
     int ret = ioctl(sizeFD, TIOCGWINSZ, (char*)&sz);
     if (!ret && sz.ws_col) {
       SetWidth(sz.ws_col);
