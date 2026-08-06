@@ -359,7 +359,7 @@ void TAttMarker::SetMarkerAttributes()
 /// Set a transparent marker color.
 /// \param mcolor defines the marker color
 /// \param malpha defines the percentage of opacity from 0. (fully transparent) to 1. (fully opaque).
-/// \note malpha is ignored (treated as 1) if the TCanvas has no GL support activated.
+/// \note malpha is used only on the [supported platforms](\ref col_trans_available).
 
 void TAttMarker::SetMarkerColorAlpha(Color_t mcolor, Float_t malpha)
 {
