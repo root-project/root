@@ -216,8 +216,6 @@ Browser.AutoThumbnail:       yes
 # Set the ExpandDirectories option to "no" to prevent expanding
 # the parent directory tree (for example on nfs)
 Browser.ExpandDirectories    yes
-# Start URL for the TRootBrowser embedded HTML renderer
-Browser.StartUrl:            http://root.cern.ch/root/html/ClassIndex.html
 
 # Type of tree viewer: TTreeViewer or RTreeViewer
 TreeViewer.Name:             @root_treeviewer_class@
