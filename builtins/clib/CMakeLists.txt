@@ -41,7 +41,7 @@ target_include_directories(Clib
   PRIVATE
     ${CMAKE_BINARY_DIR}/ginclude
     ${CMAKE_CURRENT_SOURCE_DIR}/res
-    ${CMAKE_CURRENT_SOURCE_DIR}/../core/foundation/inc # for RConfig.hxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../core/foundation/inc # for RConfig.hxx
 )
 
 target_include_directories(Core
