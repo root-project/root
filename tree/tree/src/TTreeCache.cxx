@@ -1267,6 +1267,8 @@ bool TTreeCache::FillBuffer()
    if (showMore || gDebug > 6)
       Info("FillBuffer", "Looking at cluster spanning from %lld to %lld", fEntryCurrent, fEntryNext);
 
+   if (0 <= fNextClusterStart && fEntryCurrent < fNextClusterStart && !(fEntryCurrent < fNextClusterStart))
+      fEntryCurrent = fNextClusterStart;
    if (fEntryCurrent < fEntryMin) fEntryCurrent = fEntryMin;
    if (fEntryMax <= 0) fEntryMax = tree->GetEntries();
    if (fEntryNext > fEntryMax) fEntryNext = fEntryMax;
