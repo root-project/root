@@ -240,8 +240,6 @@ WebGui.HttpPortMin:         8800
 WebGui.HttpPortMax:         9800
 # Exact IP iddress to bind bind http server (default - empty)
 WebGui.HttpBind:
-# Use only loopback address to bind http server (default - yes)
-WebGui.HttpLoopback:        yes
 # Require unique single-time token (key) for connecting with widget (default - yes)
 WebGui.OnetimeKey:          yes
 # Only single connection allowed to any web widget
