@@ -43,75 +43,7 @@ implementations for Boolean nodes are:
   - TGeoIntersection - representing the Boolean intersection of two positioned shapes
 */
 
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-TGeoBoolNode::ThreadData_t::ThreadData_t() : fSelected(0) {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
-
-TGeoBoolNode::ThreadData_t::~ThreadData_t() {}
-
-////////////////////////////////////////////////////////////////////////////////
-
-TGeoBoolNode::ThreadData_t &TGeoBoolNode::GetThreadData() const
-{
-   Int_t tid = TGeoManager::ThreadId();
-   /*
-      std::lock_guard<std::mutex> guard(fMutex);
-      if (tid >= fThreadSize) {
-         Error("GetThreadData", "Thread id=%d bigger than maximum declared thread number %d. \nUse
-      TGeoManager::SetMaxThreads properly !!!", tid, fThreadSize);
-      }
-      if (tid >= fThreadSize)
-      {
-         fThreadData.resize(tid + 1);
-         fThreadSize = tid + 1;
-      }
-      if (fThreadData[tid] == 0)
-      {
-      if (fThreadData[tid] == 0)
-         fThreadData[tid] = new ThreadData_t;
-      }
-   */
-   return *fThreadData[tid];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TGeoBoolNode::ClearThreadData() const
-{
-   std::lock_guard<std::mutex> guard(fMutex);
-   std::vector<ThreadData_t *>::iterator i = fThreadData.begin();
-   while (i != fThreadData.end()) {
-      delete *i;
-      ++i;
-   }
-   fThreadData.clear();
-   fThreadSize = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Create thread data for n threads max.
-
-void TGeoBoolNode::CreateThreadData(Int_t nthreads)
-{
-   std::lock_guard<std::mutex> guard(fMutex);
-   fThreadData.resize(nthreads);
-   fThreadSize = nthreads;
-   for (Int_t tid = 0; tid < nthreads; tid++) {
-      if (fThreadData[tid] == nullptr) {
-         fThreadData[tid] = new ThreadData_t;
-      }
-   }
-   // Propagate to components
-   if (fLeft)
-      fLeft->CreateThreadData(nthreads);
-   if (fRight)
-      fRight->CreateThreadData(nthreads);
-}
-
+std::atomic<UInt_t> TGeoBoolNode::fgInstanceCount{0};
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the selected branch.
 
@@ -131,8 +63,6 @@ TGeoBoolNode::TGeoBoolNode()
    fRightMat = nullptr;
    fNpoints = 0;
    fPoints = nullptr;
-   fThreadSize = 0;
-   CreateThreadData(1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -146,8 +76,6 @@ TGeoBoolNode::TGeoBoolNode(const char *expr1, const char *expr2)
    fRightMat = nullptr;
    fNpoints = 0;
    fPoints = nullptr;
-   fThreadSize = 0;
-   CreateThreadData(1);
    if (!MakeBranch(expr1, kTRUE)) {
       return;
    }
@@ -166,8 +94,6 @@ TGeoBoolNode::TGeoBoolNode(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, 
    fLeftMat = lmat;
    fNpoints = 0;
    fPoints = nullptr;
-   fThreadSize = 0;
-   CreateThreadData(1);
    if (!fLeftMat)
       fLeftMat = gGeoIdentity;
    else
@@ -195,7 +121,6 @@ TGeoBoolNode::~TGeoBoolNode()
 {
    if (fPoints)
       delete[] fPoints;
-   ClearThreadData();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
