@@ -108,6 +108,7 @@ protected:
   double evaluate() const override;
   void doEval(RooFit::EvalContext &) const override;
   friend class RooAbsCachedReal ;
+  friend class RooWorkspace ;
 
   void ioStreamerPass2() override ;
 
