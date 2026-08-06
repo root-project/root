@@ -33,7 +33,7 @@ dl = ROOT.Experimental.ML.RDataLoader(
 gen_train, gen_validation = dl.train_test_split(test_size=0.3)
 
 # Get a list of the columns used for training
-input_columns = gen_train.train_columns
+input_columns = gen_train.feature_columns
 num_features = len(input_columns)
 
 

@@ -46,7 +46,7 @@ train_batches_per_epoch = ds_train.num_batches
 validation_batches_per_epoch = ds_valid.num_batches
 
 # Get a list of the columns used for training
-input_columns = ds_train.train_columns
+input_columns = ds_train.feature_columns
 num_features = len(input_columns)
 
 ##############################################################################
