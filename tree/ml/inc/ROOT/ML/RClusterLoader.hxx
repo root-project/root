@@ -172,6 +172,7 @@ private:
    bool fIsFiltered{false};
    bool fSplitDiscovered{false};
    std::size_t fAccumulatedFilteredForTrain{0};
+   std::size_t fAccumulatedFilteredForVal{0};
 
 public:
    RClusterLoader(std::vector<ROOT::RDF::RNode> &rdfs, const std::vector<std::string> &cols,
@@ -232,9 +233,19 @@ public:
          std::mt19937 g(fSetSeed);
          std::uniform_int_distribution<int> coin(0, 1);
 
+         std::size_t cumulativeEntries = 0;
+         std::size_t currentCumulativeTrain = 0;
+         // We iterate over clusters and accumulate the entry counts to assign training and validation sizes
+         // proportionally to the cluster size. Filtered clusters have varying sizes, so instead of calculating
+         // the training size as a fraction of each cluster's size independently, we take into account
+         // the cumulative counts of previous clusters in each calculation.
          for (const RClusterRange &c : fAllClusters) {
             const std::size_t sz = c.GetNumEntries();
-            const std::size_t trainSz = static_cast<std::size_t>((1.0f - fValidationSplit) * sz);
+            cumulativeEntries += sz;
+            const std::size_t targetCumulativeTrain =
+               static_cast<std::size_t>(cumulativeEntries * (1.0f - fValidationSplit));
+            const std::size_t trainSz = targetCumulativeTrain - currentCumulativeTrain;
+            currentCumulativeTrain = targetCumulativeTrain;
             const std::size_t valSz = sz - trainSz;
 
             // Randomly assign prefix or suffix to training
@@ -369,25 +380,11 @@ public:
 
          ROOT::RDF::RNode &rdf = fRdfs[rdfIdx];
 
-         // Fill data and collect raw entry indices that pass the filter
          std::vector<ULong64_t> rdfEntries;
          rdfEntries.reserve(endRow - startRow);
 
-         RClusterLoaderFunctor<Args...> loader(dest, fNumChunkCols, fVecSizes, fVecPadding, 0, rowOffset);
          ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, startRow, endRow);
-
-         std::vector<std::string> colsWithEntry;
-         colsWithEntry.reserve(fCols.size() + 1);
-         colsWithEntry.push_back("rdfentry_");
-         colsWithEntry.insert(colsWithEntry.end(), fCols.begin(), fCols.end());
-
-         rdf.Foreach(
-            [&](ULong64_t entry, const Args &...cols) {
-               rdfEntries.push_back(entry);
-               loader(cols...);
-            },
-            colsWithEntry);
-
+         rdf.Foreach([&](ULong64_t entry) { rdfEntries.push_back(entry); }, {"rdfentry_"});
          ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, 0, fRdfSizes[rdfIdx]);
 
          const std::size_t totalFiltered = rdfEntries.size();
@@ -396,9 +393,11 @@ public:
          }
          std::sort(rdfEntries.begin(), rdfEntries.end());
 
-         const std::size_t trainRemaining = fNumTrainingEntries - fAccumulatedFilteredForTrain;
-         const std::size_t trainCount =
-            std::min(static_cast<std::size_t>(totalFiltered * (1.0f - fValidationSplit)), trainRemaining);
+         const std::size_t cumulativeFiltered =
+            fAccumulatedFilteredForTrain + fAccumulatedFilteredForVal + totalFiltered;
+         const std::size_t targetCumulativeTrain =
+            std::min(static_cast<std::size_t>(cumulativeFiltered * (1.0f - fValidationSplit)), fNumTrainingEntries);
+         const std::size_t trainCount = targetCumulativeTrain - fAccumulatedFilteredForTrain;
          const std::size_t valCount = totalFiltered - trainCount;
 
          bool trainIsPrefix = true;
@@ -436,6 +435,11 @@ public:
             fValidationClusters.push_back({rdfIdx, valStart, valEnd, valCount});
 
          fAccumulatedFilteredForTrain += trainCount;
+         fAccumulatedFilteredForVal += valCount;
+
+         if (trainCount > 0)
+            LoadClusterInto(dest, rdfIdx, trainStart, trainEnd, rowOffset);
+
          return trainCount;
       }
 
