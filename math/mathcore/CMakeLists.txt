@@ -190,4 +190,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
 
 target_link_libraries(MathCore PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 
+# Force remove FMA on RISC-V
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "riscv64|riscv")
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(MathCore PRIVATE -ffp-contract=off)
+  endif()
+endif()
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
