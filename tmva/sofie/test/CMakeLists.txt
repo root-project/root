@@ -73,11 +73,8 @@ if (ONNX_MODELS_DIR)
   configure_file(EmitFromONNX.cxx.in EmitFromONNX_all.cxx @ONLY)
 
   ROOTTEST_GENERATE_EXECUTABLE(emitFromONNX EmitFromONNX_all.cxx
-                               LIBRARIES protobuf::libprotobuf ROOTTMVASofie ROOTTMVASofieParser
+                               LIBRARIES ROOTTMVASofie ROOTTMVASofieParser
                                FIXTURES_SETUP sofie-compile-models-onnx-build)
-
-  # silence protobuf warnings seen in version 3.0 and 3.6. Not needed from protobuf version 3.17
-  target_compile_options(emitFromONNX PRIVATE -Wno-unused-parameter -Wno-array-bounds)
 
   set(compile_models_fixtures sofie-compile-models-onnx-build)
   if (generate_onnx_models)

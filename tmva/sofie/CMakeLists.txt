@@ -9,7 +9,6 @@
 ############################################################################
 #Author: Sitong An, Lorenzo Moneta 10/03/2021
 
-#sofie is built only if protobuf is found
 
 set(sofie_root_support ON CACHE BOOL "" FORCE)
 
@@ -110,7 +109,7 @@ if(sofie_root_support)
   target_compile_definitions(ROOTTMVASofie PRIVATE SOFIE_SUPPORT_ROOT_BINARY)
 endif()
 
-# The building of the tests requires protobuf (available only when tmva-sofie is ON)
-if (tmva-sofie)
-   ROOT_ADD_TEST_SUBDIRECTORY(test)
+# Tests are not enabled unconditionally because they require BLAS
+if(test_tmva_sofie)
+  ROOT_ADD_TEST_SUBDIRECTORY(test)
 endif()

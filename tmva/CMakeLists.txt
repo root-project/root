@@ -15,8 +15,4 @@ if(tmva-pymva)
 endif()
 
 add_subdirectory(sofie)
-#parser depends on protobuf 
-#found if flag tmva-sofie is on
-if (tmva-sofie)
-   add_subdirectory(sofie_parsers)
-endif()
+add_subdirectory(sofie_parsers)
