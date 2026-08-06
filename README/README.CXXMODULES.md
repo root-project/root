@@ -306,7 +306,7 @@ different. There are several differences which can be noticed:
   specific location. This way we 'mount' `/usr/include/module.modulemap`
   non-invasively. The reasons why we need to extend the C++ modules support
   beyond ROOT is described bellow.
-  * rootcling -cxxmodule creates a single artifact *Name.pcm* after the library
+  * rootcling --cxxmodule creates a single artifact *Name.pcm* after the library
   name. At a final stage, ROOT might be able to integrate the Name.pcm with the
   shared library itself.
   * Improved correctness in number of cases -- in a few cases ROOT is more
@@ -347,7 +347,7 @@ different. There are several differences which can be noticed:
   This command concatenates `header.h` twice before compiling it to make sure
   it has proper include protectors.
   * Enable it in `rootcling` -- rootcling can produce a C++ Modules-aware
-  dictionary when it is invoked with `-cxxmodule` flag.
+  dictionary when it is invoked with `--cxxmodule` flag.
   * Modularization of external dependencies -- if a header file is not explicitly
   nominated as part of a module and it is transitively included in two modules,
   both modules contain that header file content. In other words, the header is

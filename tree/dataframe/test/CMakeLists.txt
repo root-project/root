@@ -29,7 +29,7 @@ endif()
 
 ROOT_ADD_GTEST(dataframe_splitcoll_arrayview dataframe_splitcoll_arrayview.cxx LIBRARIES ROOTDataFrame)
 target_include_directories(dataframe_splitcoll_arrayview PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-ROOT_GENERATE_DICTIONARY(TwoFloatsDict ${CMAKE_CURRENT_SOURCE_DIR}/TwoFloats.h MODULE dataframe_splitcoll_arrayview LINKDEF TwoFloatsLinkDef.h OPTIONS -inlineInputHeader DEPENDENCIES RIO)
+ROOT_GENERATE_DICTIONARY(TwoFloatsDict ${CMAKE_CURRENT_SOURCE_DIR}/TwoFloats.h MODULE dataframe_splitcoll_arrayview LINKDEF TwoFloatsLinkDef.h OPTIONS --inlineInputHeader DEPENDENCIES RIO)
 
 ROOT_ADD_GTEST(dataframe_redefine dataframe_redefine.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_definepersample dataframe_definepersample.cxx LIBRARIES ROOTDataFrame)
@@ -38,7 +38,7 @@ if(NOT MSVC OR win_broken_tests)
   ROOT_ADD_GTEST(dataframe_simple dataframe_simple.cxx LIBRARIES ROOTDataFrame GenVector)
   target_include_directories(dataframe_simple PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
   ROOT_GENERATE_DICTIONARY(DataFrameSimpleDict ${CMAKE_CURRENT_SOURCE_DIR}/MaxSlotHelper.h ${CMAKE_CURRENT_SOURCE_DIR}/SimpleFiller.h MODULE dataframe_simple
-                           LINKDEF DataFrameSimpleLinkDef.h OPTIONS -inlineInputHeader DEPENDENCIES ROOTDataFrame Hist)
+                           LINKDEF DataFrameSimpleLinkDef.h OPTIONS --inlineInputHeader DEPENDENCIES ROOTDataFrame Hist)
 endif()
 ROOT_ADD_GTEST(dataframe_vecops dataframe_vecops.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_helpers dataframe_helpers.cxx LIBRARIES ROOTDataFrame)
@@ -50,18 +50,18 @@ endif()
 
 ROOT_ADD_GTEST(dataframe_snapshot dataframe_snapshot.cxx LIBRARIES ROOTDataFrame GenVector)
 ROOT_GENERATE_DICTIONARY(DataFrameSnapshotUtils ${CMAKE_CURRENT_SOURCE_DIR}/DataFrameSnapshotUtils.hxx
-  MODULE dataframe_snapshot LINKDEF DataFrameSnapshotUtilsLinkDef.hxx OPTIONS -inlineInputHeader)
+  MODULE dataframe_snapshot LINKDEF DataFrameSnapshotUtilsLinkDef.hxx OPTIONS --inlineInputHeader)
 
 ROOT_ADD_GTEST(dataframe_snapshot_emptyoutput dataframe_snapshot_emptyoutput.cxx LIBRARIES ROOTDataFrame GenVector)
 ROOT_GENERATE_DICTIONARY(DummyDict ${CMAKE_CURRENT_SOURCE_DIR}/DummyHeader.hxx
-                         MODULE dataframe_snapshot_emptyoutput LINKDEF DummyHeaderLinkDef.hxx OPTIONS -inlineInputHeader
+                         MODULE dataframe_snapshot_emptyoutput LINKDEF DummyHeaderLinkDef.hxx OPTIONS --inlineInputHeader
                          DEPENDENCIES ROOTVecOps GenVector)
 ROOT_ADD_GTEST(dataframe_snapshot_ntuple dataframe_snapshot_ntuple.cxx LIBRARIES ROOTDataFrame ROOTNTuple NTupleStruct)
 ROOT_ADD_GTEST(dataframe_snapshotWithVariations dataframe_snapshotWithVariations.cxx LIBRARIES ROOTDataFrame)
 ROOT_GENERATE_DICTIONARY(TwoFloats_SnapshotDict ${CMAKE_CURRENT_SOURCE_DIR}/TwoFloats_Snapshot.h
     LINKDEF TwoFloats_SnapshotLinkDef.h
     MODULE dataframe_snapshotWithVariations
-    OPTIONS -inlineInputHeader
+    OPTIONS --inlineInputHeader
     DEPENDENCIES RIO)
 
 ROOT_ADD_GTEST(dataframe_datasetspec dataframe_datasetspec.cxx LIBRARIES ROOTDataFrame)
@@ -109,7 +109,7 @@ ROOT_GENERATE_DICTIONARY(ClassWithNestedSameNameDict
                          ${CMAKE_CURRENT_SOURCE_DIR}/ClassWithNestedSameName.hxx
                          MODULE datasource_tree
                          LINKDEF ClassWithNestedSameNameLinkDef.hxx
-                         OPTIONS -inlineInputHeader
+                         OPTIONS --inlineInputHeader
                          DEPENDENCIES RIO)
 
 ROOT_ADD_GTEST(datasource_ntuple datasource_ntuple.cxx LIBRARIES ROOTDataFrame)
@@ -131,7 +131,7 @@ if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
                                       ${CMAKE_CURRENT_BINARY_DIR}/libNTupleStruct.dll)
 endif()
 ROOT_GENERATE_DICTIONARY(ClassWithArraysDict ${CMAKE_CURRENT_SOURCE_DIR}/ClassWithArrays.h
-                          MODULE datasource_ntuple LINKDEF ClassWithArraysLinkDef.h OPTIONS -inlineInputHeader
+                          MODULE datasource_ntuple LINKDEF ClassWithArraysLinkDef.h OPTIONS --inlineInputHeader
                           DEPENDENCIES ROOTVecOps)
 
 #### TESTS REQUIRING EXTRA ROOT FEATURES ####
