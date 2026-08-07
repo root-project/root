@@ -282,6 +282,9 @@ using RNTupleAtomicTimer = RNTupleTimer<RNTupleAtomicCounter, RNTupleTickCounter
 \brief A collection of Counter objects with a name, a unit, and a description.
 
 The class owns the counters.
+
+If the environment variable `ROOT_EXPORT_RNTUPLE_METRICS` is set, metrics are automatically enabled on
+construction, and any counter added afterwards through MakeCounter() is enabled as well.
 */
 // clang-format on
 class RNTupleMetrics {
@@ -297,7 +300,12 @@ private:
    bool Contains(const std::string &name) const;
 
 public:
-   explicit RNTupleMetrics(const std::string &name) : fName(name) {}
+   explicit RNTupleMetrics(const std::string &name) : fName(name)
+   {
+      // TODO: Use the value of `GetMetricsExportPath` to save the contents of the metrics in a `.root` file
+      if (!GetMetricsExportPath().empty())
+         Enable();
+   }
    RNTupleMetrics(const RNTupleMetrics &other) = delete;
    RNTupleMetrics & operator=(const RNTupleMetrics &other) = delete;
    RNTupleMetrics(RNTupleMetrics &&other) = default;
@@ -324,6 +332,7 @@ public:
    const RNTuplePerfCounter *GetCounter(std::string_view name) const;
 
    void ObserveMetrics(RNTupleMetrics &observee);
+   static const std::string &GetMetricsExportPath();
 
    void Print(std::ostream &output, const std::string &prefix = "") const;
    void Enable();
