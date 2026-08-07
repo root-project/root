@@ -657,7 +657,11 @@ class NumbaDeclareInferred(unittest.TestCase):
             def is_even(x):
                 return x % 2 == 0
 
-            df = df.Define("is_even_x_1", is_even, ["x"])
+            # The next line is the first that triggers implicit numba JIT, so
+            # we expect it to trigger the FutureWarning about numba. Remove
+            # this context when warning is no longer present.
+            with self.assertWarnsRegex(FutureWarning, "RDataFrame is implicitly calling numba"):
+                df = df.Define("is_even_x_1", is_even, ["x"])
             results = df.Take["bool"]("is_even_x_1").GetValue()[0]
             self.assertEqual(results, True)
 

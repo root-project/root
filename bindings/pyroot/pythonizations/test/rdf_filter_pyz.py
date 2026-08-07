@@ -98,7 +98,11 @@ class PyFilter(unittest.TestCase):
         def x_greater_than_y(x):
             return x > y
 
-        fil1 = rdf.Filter(x_greater_than_y, "x is greater than 2")
+        # This is the test with the first name, alphabetically, so it's the
+        # first test that gets run; we expect it to trigger the FutureWarning
+        # about numba. Remove this context when warning is no longer present.
+        with self.assertWarnsRegex(FutureWarning, "RDataFrame is implicitly calling numba"):
+            fil1 = rdf.Filter(x_greater_than_y, "x is greater than 2")
         self.assertTrue(np.array_equal(fil1.AsNumpy()["x"], np.array([3, 4])))
 
     def test_cpp_functor(self):
