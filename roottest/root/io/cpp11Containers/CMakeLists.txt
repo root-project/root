@@ -10,6 +10,19 @@ ROOTTEST_ADD_TEST(unorderedMap
                   FIXTURES_SETUP root-io-cpp11Containers-unorderedMap-fixture
                   LABELS longtest)
 
+# Copy of the test above, written as a compiled C++ program based on gtest. Useful for more fine-grained view on
+# potential test failures
+ROOTTEST_GENERATE_EXECUTABLE(
+    unorderedMapUnitTests
+    unorderedMapUnitTests.cxx
+    LIBRARIES Core RIO Tree TreePlayer Hist GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main ROOT::TestSupport
+    FIXTURES_REQUIRED root-io-cpp11Containers-unorderedMapDict-fixture
+    FIXTURES_SETUP root-io-cpp11Containers-unorderedMapUnitTests-fixture)
+
+ROOTTEST_ADD_TEST(unorderedMapUnitTests
+    EXEC ${CMAKE_CURRENT_BINARY_DIR}/unorderedMapUnitTests
+    FIXTURES_REQUIRED root-io-cpp11Containers-unorderedMapUnitTests-fixture)
+
 if(NOT 32BIT AND NOT MSVC)
    ROOTTEST_GENERATE_REFLEX_DICTIONARY(forwardList
                                        forwardList.h
