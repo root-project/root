@@ -1777,6 +1777,7 @@ function(ROOT_ADD_TEST test)
     list(FILTER theCommand INCLUDE REGEX "^-DCMD=.*python[0-9.]*[\\^]")
     if((theCommand AND
         NOT (_command MATCHES XMLParsing/parseXMLs.py OR
+             _command MATCHES roottest/root/rint/driveRedirect.py OR
              _command MATCHES roottest/root/rint/driveTabCom.py))
        OR (_command MATCHES roottest/python/cmdLineUtils AND
            NOT _command MATCHES MakeNameCyclesRootmvInput))
