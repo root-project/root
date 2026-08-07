@@ -204,10 +204,11 @@ class TCanvasOwnership(unittest.TestCase):
         held_reference = c_old  # noqa: F841
 
         # Creating a new canvas with the same name causes the C++ constructor
-        # to delete the previous canvas. With the fix, c_old does not own the
-        # underlying object and so will not double-delete it when it is finally
-        # garbage-collected.
-        c_new = ROOT.TCanvas(canvas_name, canvas_title, 100, 100)
+        # to delete the previous canvas, which ROOT reports as a warning. With
+        # the fix, c_old does not own the underlying object and so will not
+        # double-delete it when it is finally garbage-collected.
+        with self.assertWarnsRegex(RuntimeWarning, "Deleting canvas with same name"):
+            c_new = ROOT.TCanvas(canvas_name, canvas_title, 100, 100)
 
         # Used to cause double-deletes.
         del c_old
@@ -217,7 +218,8 @@ class TCanvasOwnership(unittest.TestCase):
         # Force another rebinding to exercise the cell re-running path that was
         # the original reproducer, i.g. assign the new canvas to the same
         # Python variable name.
-        c_new = ROOT.TCanvas(canvas_name, canvas_title, 100, 100)  # noqa: F841
+        with self.assertWarnsRegex(RuntimeWarning, "Deleting canvas with same name"):
+            c_new = ROOT.TCanvas(canvas_name, canvas_title, 100, 100)  # noqa: F841
 
         # Sanity check: there should be exactly one canvas with this name.
         canvases = [c.GetName() for c in ROOT.gROOT.GetListOfCanvases() if c.GetName() == canvas_name]

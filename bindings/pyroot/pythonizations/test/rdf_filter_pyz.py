@@ -98,7 +98,11 @@ class PyFilter(unittest.TestCase):
         def x_greater_than_y(x):
             return x > y
 
-        fil1 = rdf.Filter(x_greater_than_y, "x is greater than 2")
+        # This is the test with the first name, alphabetically, so it's the
+        # first test that gets run; we expect it to trigger the FutureWarning
+        # about numba. Remove this context when warning is no longer present.
+        with self.assertWarnsRegex(FutureWarning, "RDataFrame is implicitly calling numba"):
+            fil1 = rdf.Filter(x_greater_than_y, "x is greater than 2")
         self.assertTrue(np.array_equal(fil1.AsNumpy()["x"], np.array([3, 4])))
 
     def test_cpp_functor(self):
@@ -130,12 +134,12 @@ class PyFilter(unittest.TestCase):
 
         ROOT.gInterpreter.Declare(
             """
-        std::function<bool(ULong64_t)> myfun = [](ULong64_t l) { return l == 0; };
+        std::function<bool(ULong64_t)> myfun_1 = [](ULong64_t l) { return l == 0; };
         """
         )
 
         rdf = ROOT.RDataFrame(5)
-        c = rdf.Filter(ROOT.myfun, ["rdfentry_"]).Count().GetValue()
+        c = rdf.Filter(ROOT.myfun_1, ["rdfentry_"]).Count().GetValue()
 
         self.assertEqual(c, 1)
 
@@ -147,12 +151,12 @@ class PyFilter(unittest.TestCase):
 
         ROOT.gInterpreter.Declare(
             """
-        bool myfun(ULong64_t l) { return l == 0; }
+        bool myfun_2(ULong64_t l) { return l == 0; }
         """
         )
 
         rdf = ROOT.RDataFrame(5)
-        c = rdf.Filter(ROOT.myfun, ["rdfentry_"]).Count().GetValue()
+        c = rdf.Filter(ROOT.myfun_2, ["rdfentry_"]).Count().GetValue()
 
         self.assertEqual(c, 1)
 
@@ -164,13 +168,13 @@ class PyFilter(unittest.TestCase):
 
         ROOT.gInterpreter.Declare(
             """
-        bool myfun(ULong64_t l) { return l == 0; }
-        bool myfun(int l) { return true; }
+        bool myfun_3(ULong64_t l) { return l == 0; }
+        bool myfun_3(int l) { return true; }
         """
         )
 
         rdf = ROOT.RDataFrame(5)
-        c = rdf.Filter(ROOT.myfun, ["rdfentry_"]).Count().GetValue()
+        c = rdf.Filter(ROOT.myfun_3, ["rdfentry_"]).Count().GetValue()
 
         self.assertEqual(c, 1)
 

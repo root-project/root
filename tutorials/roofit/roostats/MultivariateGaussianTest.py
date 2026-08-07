@@ -36,7 +36,7 @@ t.Start()
 
 xVec = []
 muVec = []
-poi = set()
+poi = []
 
 # make the observable and means
 for i in range(dim):
@@ -50,7 +50,7 @@ for i in range(dim):
 
 # put them into the list of parameters of interest
 for i in range(nPOI):
-    poi.add(muVec[i])
+    poi.append(muVec[i])
 
 # make a covariance matrix that is all 1's
 cov = ROOT.TMatrixDSym(dim)

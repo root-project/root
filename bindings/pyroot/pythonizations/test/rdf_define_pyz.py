@@ -72,7 +72,11 @@ class PyDefine(unittest.TestCase):
 
     def test_arrays(self):
         rdf = ROOT.RDataFrame(5).Define("x", "rdfentry_")
-        rdf = rdf.Define("x_arr", lambda x: np.array([x, x]))
+        # This is the test with the first name, alphabetically, so it's the
+        # first test that gets run; we expect it to trigger the FutureWarning
+        # about numba. Remove this context when warning is no longer present.
+        with self.assertWarnsRegex(FutureWarning, "RDataFrame is implicitly calling numba"):
+            rdf = rdf.Define("x_arr", lambda x: np.array([x, x]))
 
         def norm(x_arr):
             return np.sqrt(x_arr[0] ** 2 + x_arr[1] ** 2)
