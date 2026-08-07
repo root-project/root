@@ -595,7 +595,6 @@ set(returncode_1 math/fit/fit2a.C
 set(analysis-unfold-testUnfold5d-depends tutorial-analysis-unfold-testUnfold5c)
 set(analysis-unfold-testUnfold5c-depends tutorial-analysis-unfold-testUnfold5b)
 set(analysis-unfold-testUnfold5b-depends tutorial-analysis-unfold-testUnfold5a)
-set(analysis-unfold-testUnfold7d-depends tutorial-analysis-unfold-testUnfold7c)
 set(analysis-unfold-testUnfold7c-depends tutorial-analysis-unfold-testUnfold7b)
 set(analysis-unfold-testUnfold7b-depends tutorial-analysis-unfold-testUnfold7a)
 set(io-xml-xmlmodifyfile-depends tutorial-io-xml-xmlnewfile)
@@ -611,17 +610,6 @@ set(math-foam-foam_demopers-depends tutorial-math-foam-foam_demo)
 set(io-tree-tree502_staff-depends  tutorial-io-tree-tree500_cernbuild)
 set(io-tree-tree501_cernstaff-depends  tutorial-io-tree-tree500_cernbuild)
 set(hist-hist006_TH1_bar_charts-depends  tutorial-io-tree-tree500_cernbuild)
-set(benchmarks-depends tutorial-hsimple
-                       tutorial-math-fit-fit1
-                       tutorial-math-fit-myfit
-                       tutorial-hist-hist015_TH1_read_and_draw
-                       tutorial-hist-hist056_TPolyMarker_contour
-                       tutorial-legacy-g3d-na49view
-                       tutorial-io-tree-tree120_ntuple.C
-                       tutorial-io-tree-spider
-                       tutorial-io-hadd
-                       tutorial-io-loopdir
-                       tutorial-io-copyFiles)
 set(legacy-g3d-na49view-depends tutorial-legacy-g3d-geometry)
 set(io-tree-mt_readNtuplesFillHistosAndFit-depends tutorial-io-tree-mt_fillNtuples)
 set(io-tree-mp_readNtuplesFillHistosAndFit-depends tutorial-io-tree-mp_fillNtuples)
@@ -855,10 +843,6 @@ if(pyroot)
     list(APPEND pyveto ${tmva_veto_py})
   endif()
 
-  if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND)
-    set (machine_learning-TMVA_SOFIE_RDataFrame-py-depends tutorial-machine_learning-TMVA_SOFIE_PyTorch_HiggsModel)
-  endif()
-
   if(NOT tmva-pymva)
     file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/pytorch/*.py)
     list(APPEND pyveto ${tmva_veto_py})
@@ -884,11 +868,6 @@ if(pyroot)
   #---Python tutorials dependencies--------------------------------------
   set(io-tree-ntuple1-depends tutorial-hsimple-py)
   set(hist-hist015_TH1_read_and_draw-depends tutorial-hsimple-py)
-  set(pyroot-benchmarks-depends tutorial-hsimple-py
-                                tutorial-math-fit-fit1-py
-                                tutorial-legacy-g3d-na49view-py
-                                tutorial-hist-hist015_TH1_read_and_draw-py
-                                tutorial-io-tree-ntuple1-py)
   set(hist-hist015_TH1_read_and_draw_uhi-depends tutorial-hsimple-py)
   set(math-fit-fit1-depends tutorial-hist-hist001_TH1_fillrandom-py)
   set(legacy-g3d-na49view-depends tutorial-legacy-g3d-geometry-py)
