@@ -375,6 +375,40 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
 {
    // Expand the container
    size_t i;
+
+   // The underlying storage is a std::vector of raw, aligned bytes.  When it
+   // has to grow beyond its capacity it relocates the existing elements with a
+   // raw memory copy.  That is fine for trivially relocatable content, but it
+   // corrupts emulated objects that hold a pointer into themselves -- most
+   // notably std::string (and TString) using the small-string optimization,
+   // whose internal data pointer would keep pointing into the old, now freed,
+   // buffer.  Such a corrupted object crashes later on when it is destroyed,
+   // freeing an invalid pointer (https://github.com/root-project/root/issues/20882).
+   //
+   // TClass::Move (used just below) does not actually move the data for emulated
+   // classes, so we cannot rely on it to fix up the relocated objects.  Expand
+   // is however only ever called while preparing the collection to be entirely
+   // overwritten by a member-wise read, so rather than relocating the existing
+   // non-trivially-relocatable elements we destroy them here -- while they are
+   // still valid -- and let the code below reconstruct all of them at the new
+   // location.
+   auto isNonTriviallyRelocatable = [](const Value *v) {
+      return v && !(v->fCase & kIsPointer) && ((v->fCase & kIsClass) || (v->fCase & kBIT_ISSTRING));
+   };
+   if (nCurr > 0 && (isNonTriviallyRelocatable(fVal) || isNonTriviallyRelocatable(fKey))) {
+      bool willReallocate = false;
+      WithCont(fEnv->fObject, [&](auto *c, std::size_t alignmentElemSize) {
+         willReallocate = (left * fValDiff / alignmentElemSize) > c->capacity();
+      });
+      if (willReallocate) {
+         // Destroys the current elements in place and resizes the buffer to 0
+         // (keeping its capacity); the buffer will grow again right below, this
+         // time without any live object to relocate.
+         Shrink(nCurr, 0, kTRUE);
+         nCurr = 0;
+      }
+   }
+
    void *oldstart = fEnv->fStart;
    WithCont(fEnv->fObject, [&](auto *c, std::size_t alignmentElemSize) {
       assert(fValDiff % alignmentElemSize == 0);
