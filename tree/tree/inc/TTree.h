@@ -218,6 +218,12 @@ protected:
    virtual Int_t SetBranchAddress(const char *bname, void *add, TBranch **ptr, TClass *realClass, EDataType datatype,
                                   bool isptr, bool suppressMissingBranchError);
 
+   TBranch *FindBranchFromSelf(const char *branchName);
+   TBranch *FindBranchFromFriends(const char *branchName);
+
+   TLeaf *GetLeafFromSelf(const char *branchName, const char *leafName);
+   TLeaf *GetLeafFromFriends(const char *branchName, const char *leafName);
+
    class TFriendLock {
       // Helper class to prevent infinite recursion in the
       // usage of TTree Friends. Implemented in TTree.cxx.
