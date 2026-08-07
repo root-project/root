@@ -174,18 +174,16 @@ endif()
 
 set(RELATIVE_INC_HEADERS ${ROOFIT_HEADERS})
 list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
-if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
-  target_sources(
-      RooFit
-      PRIVATE
-      FILE_SET private_header_files
-      TYPE HEADERS
-      BASE_DIRS inc/ src/
-      FILES
-          ${RELATIVE_INC_HEADERS}
-          inc/LinkDef1.h
-          src/RooFit/Detail/Algorithms.h
-  )
-endif()
+target_sources(
+    RooFit
+    PRIVATE
+    FILE_SET private_header_files
+    TYPE HEADERS
+    BASE_DIRS inc/ src/
+    FILES
+        ${RELATIVE_INC_HEADERS}
+        inc/LinkDef1.h
+        src/RooFit/Detail/Algorithms.h
+)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
