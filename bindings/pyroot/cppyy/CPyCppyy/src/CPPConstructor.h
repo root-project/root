@@ -22,6 +22,7 @@ public:
 
 protected:
     bool InitExecutor_(Executor*&, CallContext* ctxt = nullptr) override;
+    bool ResultIsPyObject() const override { return false; }
 };
 
 
