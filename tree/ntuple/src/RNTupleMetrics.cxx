@@ -14,6 +14,8 @@
 
 #include <ROOT/RNTupleMetrics.hxx>
 
+#include <TSystem.h>
+
 #include <ostream>
 
 #include <iostream>
@@ -89,4 +91,14 @@ void ROOT::Experimental::Detail::RNTupleMetrics::Enable()
 void ROOT::Experimental::Detail::RNTupleMetrics::ObserveMetrics(RNTupleMetrics &observee)
 {
    fObservedMetrics.push_back(&observee);
+}
+
+const std::string &ROOT::Experimental::Detail::RNTupleMetrics::GetMetricsExportPath()
+{
+   static const std::string path = []() -> std::string {
+      if (const char *env = gSystem->Getenv("ROOT_EXPORT_RNTUPLE_METRICS"); env && *env)
+         return env;
+      return "";
+   }();
+   return path;
 }
