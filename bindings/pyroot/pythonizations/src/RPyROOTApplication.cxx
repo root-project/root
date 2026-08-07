@@ -123,9 +123,26 @@ static void ErrMsgHandler(int level, Bool_t abort, const char *location, const c
       // So if ROOT is in MT mode, use ROOT's error handler that doesn't take
       // the GIL.
       if (!gGlobalMutex) {
-         // Either printout or raise exception, depending on user settings
+         // Report as a Python warning, so that it is subject to the warnings
+         // filters, and fall back to a plain printout when that is not possible.
+         //
+         // This handler must never return with the Python error indicator set.
+         // It is called from arbitrary C++ that has already done its work and
+         // cannot unwind, and it returns void, so there is nothing to propagate
+         // an exception to. A left-over exception surfaces later as a
+         // "returned a result with an exception set" SystemError that blames an
+         // unrelated call. That means a warning turned into an error (`-W error`)
+         // cannot be made fatal here; it is reported the regular ROOT way instead.
          auto state = PyGILState_Ensure();
-         PyErr_WarnExplicit(NULL, (char *)msg, (char *)location, 0, (char *)"ROOT", NULL);
+         if (PyErr_Occurred()) {
+            // An exception is already in flight: ROOT emits warnings from
+            // destructors and other cleanup code that can run while a Python
+            // error propagates, and PyErr_WarnExplicit() would clobber it.
+            ::DefaultErrorHandler(level, abort, location, msg);
+         } else if (PyErr_WarnExplicit(NULL, (char *)msg, (char *)location, 0, (char *)"ROOT", NULL) < 0) {
+            PyErr_Clear();
+            ::DefaultErrorHandler(level, abort, location, msg);
+         }
          PyGILState_Release(state);
       } else {
          ::DefaultErrorHandler(level, abort, location, msg);
