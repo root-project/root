@@ -130,12 +130,12 @@ class PyFilter(unittest.TestCase):
 
         ROOT.gInterpreter.Declare(
             """
-        std::function<bool(ULong64_t)> myfun = [](ULong64_t l) { return l == 0; };
+        std::function<bool(ULong64_t)> myfun_1 = [](ULong64_t l) { return l == 0; };
         """
         )
 
         rdf = ROOT.RDataFrame(5)
-        c = rdf.Filter(ROOT.myfun, ["rdfentry_"]).Count().GetValue()
+        c = rdf.Filter(ROOT.myfun_1, ["rdfentry_"]).Count().GetValue()
 
         self.assertEqual(c, 1)
 
@@ -147,12 +147,12 @@ class PyFilter(unittest.TestCase):
 
         ROOT.gInterpreter.Declare(
             """
-        bool myfun(ULong64_t l) { return l == 0; }
+        bool myfun_2(ULong64_t l) { return l == 0; }
         """
         )
 
         rdf = ROOT.RDataFrame(5)
-        c = rdf.Filter(ROOT.myfun, ["rdfentry_"]).Count().GetValue()
+        c = rdf.Filter(ROOT.myfun_2, ["rdfentry_"]).Count().GetValue()
 
         self.assertEqual(c, 1)
 
@@ -164,13 +164,13 @@ class PyFilter(unittest.TestCase):
 
         ROOT.gInterpreter.Declare(
             """
-        bool myfun(ULong64_t l) { return l == 0; }
-        bool myfun(int l) { return true; }
+        bool myfun_3(ULong64_t l) { return l == 0; }
+        bool myfun_3(int l) { return true; }
         """
         )
 
         rdf = ROOT.RDataFrame(5)
-        c = rdf.Filter(ROOT.myfun, ["rdfentry_"]).Count().GetValue()
+        c = rdf.Filter(ROOT.myfun_3, ["rdfentry_"]).Count().GetValue()
 
         self.assertEqual(c, 1)
 
