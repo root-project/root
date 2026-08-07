@@ -176,7 +176,12 @@ inline PyObject* CPyCppyy::CPPMethod::ExecuteFast(
 // instead leaves the error be
 #ifdef _WIN32
     if (PyErr_Occurred()) {
-        Py_XDECREF(result);
+    // only drop a reference if there is one to drop: ConstructorExecutor hands
+    // back the address of the new object cast to PyObject*, and decref'ing that
+    // corrupts the heap. Letting it go leaks the object, but this is the error
+    // path of a call that is about to be reported as failed anyway.
+        if (ResultIsPyObject())
+            Py_XDECREF(result);
         result = nullptr;
     }
 #endif
