@@ -312,6 +312,8 @@ public:
       auto counter = std::make_unique<std::remove_pointer_t<CounterPtrT>>(name, std::forward<Args>(args)...);
       auto ptrCounter = counter.get();
       fCounters.emplace_back(std::move(counter));
+      if (fIsEnabled)
+         ptrCounter->Enable();
       return ptrCounter;
    }
 
