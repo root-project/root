@@ -60,7 +60,7 @@ namespace cling {
       ///\param [out] vpSVR - The Value that is created.
       ///
       CLING_LIB_EXPORT
-      void setValueNoAlloc(void* vpI, void* vpSVR, void* vpQT, char vpOn);
+      void setValueNoAlloc(void* vpI, void* vpSVR, void* vpQT);
 
       ///\brief Set the value of the GenericValue for the expression
       /// evaluated at the prompt.
@@ -72,7 +72,7 @@ namespace cling {
       ///\param [out] vpSVR - The Value that is created.
       ///
       CLING_LIB_EXPORT
-      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, char vpOn,
+      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT,
                            float value);
 
       ///\brief Set the value of the GenericValue for the expression
@@ -85,7 +85,7 @@ namespace cling {
       ///\param [out] vpSVR - The Value that is created.
       ///
       CLING_LIB_EXPORT
-      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, char vpOn,
+      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT,
                            double value);
 
       ///\brief Set the value of the GenericValue for the expression
@@ -99,7 +99,7 @@ namespace cling {
       ///\param [out] vpSVR - The Value that is created.
       ///
       CLING_LIB_EXPORT
-      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, char vpOn,
+      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT,
                            long double value);
 
       ///\brief Set the value of the GenericValue for the expression
@@ -114,7 +114,7 @@ namespace cling {
       ///\param [out] vpSVR - The Value that is created.
       ///
       CLING_LIB_EXPORT
-      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, char vpOn,
+      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT,
                            unsigned long long value);
 
       ///\brief Set the value of the GenericValue for the expression
@@ -127,7 +127,7 @@ namespace cling {
       ///\param [out] vpV - The Value that is created.
       ///
       CLING_LIB_EXPORT
-      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, char vpOn,
+      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT,
                            const void* value);
 
       ///\brief Set the value of the Generic value and return the address
@@ -140,7 +140,7 @@ namespace cling {
       ///\returns the address where the value should be put.
       ///
       CLING_LIB_EXPORT
-      void* setValueWithAlloc(void* vpI, void* vpV, void* vpQT, char vpOn);
+      void* setValueWithAlloc(void* vpI, void* vpV, void* vpQT);
 
       ///\brief Placement new doesn't work for arrays. It needs to be called on
       /// each element. For non-PODs we also need to call the *structors. This
