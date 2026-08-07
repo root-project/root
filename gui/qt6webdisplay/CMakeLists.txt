@@ -11,13 +11,7 @@
 find_package(Qt6 COMPONENTS Core WebEngineCore WebEngineWidgets CONFIG)
 
 if(NOT Qt6_FOUND)
-  if(fail-on-missing)
-    message(FATAL_ERROR "Could NOT find Qt6 (WebEngineCore, WebEngineWidgets)")
-  else()
-    message(WARNING "Qt6 (WebEngineCore, WebEngineWidgets) not found, disabling option 'qt6web'")
-    set(qt6web OFF CACHE BOOL "Disabled because Qt6 not found" FORCE)
-    return()
-  endif()
+  message(FATAL_ERROR "Could NOT find Qt6 (WebEngineCore, WebEngineWidgets), install missing packages on the system or disable option 'qt6web'")
 endif()
 
 set(CMAKE_AUTOMOC ON)
