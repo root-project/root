@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT core/macosx package
+# CMakeLists.txt file for building ROOT core/os/macosx package
 ############################################################################
 
 if(NOT APPLE)

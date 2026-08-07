@@ -5,13 +5,19 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT core/lzma package
+# CMakeLists.txt file for building ROOT core/os/unix package
 ############################################################################
 
-target_sources(Core PRIVATE src/ZipLZMA.c)
+if(NOT UNIX)
+  return()
+endif()
 
-target_link_libraries(Core PRIVATE LibLZMA::LibLZMA)
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS TUnixSystem.h)
+target_sources(Core PRIVATE src/TUnixSystem.cxx)
+target_include_directories(Core PRIVATE inc ../clib/res)
 
-target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
+if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
+  target_link_libraries(Core PRIVATE execinfo util)
+endif()
 
 ROOT_INSTALL_HEADERS()

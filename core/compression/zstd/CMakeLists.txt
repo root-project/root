@@ -1,5 +1,5 @@
 ############################################################################
-# CMakeLists.txt file for building ROOT core/zstd package
+# CMakeLists.txt file for building ROOT core/compression/zstd package
 ############################################################################
 
 target_sources(Core PRIVATE src/ZipZSTD.cxx)
