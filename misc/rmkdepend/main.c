@@ -634,7 +634,7 @@ char *rgetline(register struct filepointer *filep)
          bol = p + 1;
       }
    }
-   if (*bol != '#')
+   if (bol >= eof || *bol != '#')
       bol = NULL;
 done:
    filep->f_p = p;
