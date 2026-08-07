@@ -527,45 +527,43 @@ endif()
 
 set(RELATIVE_INC_HEADERS ${ROOFITCORE_HEADERS})
 list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
-if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
-  target_sources(
-      RooFitCore
-      PRIVATE
-      FILE_SET private_header_files
-      TYPE HEADERS
-      BASE_DIRS inc/ res/ src/
-      FILES
-          ${RELATIVE_INC_HEADERS}
-          inc/LinkDef.h
-          inc/RooFit/UniqueId.h # Was not being included in ROOT_STL_PACKAGE call
-          src/RooConvIntegrandBinding.h
-          src/RooFormula.h
-          src/RooFitLegacy/RooAbsCategoryLegacyIterator.h
-          src/RooMCIntegrator.h
-          src/RooFoamGenerator.h
-          src/RooAbsMinimizerFcn.h
-          src/RooSentinel.h
-          src/RooAcceptReject.h
-          src/TreeReadBuffer.h
-          src/ConstraintHelpers.h
-          src/RooRombergIntegrator.h
-          src/RooBinIntegrator.h
-          ${RooFitMPTestStatisticsHeaders}
-          ${LegacyEvalBackendHeaders}
-          src/RooFit/BatchModeDataHelpers.h
-          src/RooMinimizerFcn.h
-          src/RooAbsNumGenerator.h
-          src/FitHelpers.h
-          src/RooGenProdProj.h
-          src/RooNumGenFactory.h
-          src/RooGrid.h
-          src/RooAddHelpers.h
-          src/RooAdaptiveIntegratorND.h
-          src/ValueChecking.h
-          src/RooImproperIntegrator1D.h
-          res/RooFitImplHelpers.h
-          res/RooUnitTest.h
-  )
-endif()
+target_sources(
+    RooFitCore
+    PRIVATE
+    FILE_SET private_header_files
+    TYPE HEADERS
+    BASE_DIRS inc/ res/ src/
+    FILES
+        ${RELATIVE_INC_HEADERS}
+        inc/LinkDef.h
+        inc/RooFit/UniqueId.h # Was not being included in ROOT_STL_PACKAGE call
+        src/RooConvIntegrandBinding.h
+        src/RooFormula.h
+        src/RooFitLegacy/RooAbsCategoryLegacyIterator.h
+        src/RooMCIntegrator.h
+        src/RooFoamGenerator.h
+        src/RooAbsMinimizerFcn.h
+        src/RooSentinel.h
+        src/RooAcceptReject.h
+        src/TreeReadBuffer.h
+        src/ConstraintHelpers.h
+        src/RooRombergIntegrator.h
+        src/RooBinIntegrator.h
+        ${RooFitMPTestStatisticsHeaders}
+        ${LegacyEvalBackendHeaders}
+        src/RooFit/BatchModeDataHelpers.h
+        src/RooMinimizerFcn.h
+        src/RooAbsNumGenerator.h
+        src/FitHelpers.h
+        src/RooGenProdProj.h
+        src/RooNumGenFactory.h
+        src/RooGrid.h
+        src/RooAddHelpers.h
+        src/RooAdaptiveIntegratorND.h
+        src/ValueChecking.h
+        src/RooImproperIntegrator1D.h
+        res/RooFitImplHelpers.h
+        res/RooUnitTest.h
+)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
