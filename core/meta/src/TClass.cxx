@@ -261,8 +261,18 @@ TClass::InsertTClassInRegistryRAII::~InsertTClassInRegistryRAII() {
       }
    }
 
-// Initialise the global member of TClass
-TClass::TDeclNameRegistry TClass::fNoInfoOrEmuOrFwdDeclNameRegistry;
+// Accessor for the registry of decl names of the forward and no-info
+// instances. The underlying object is intentionally leaked (function-local
+// static pointer, never deleted): it must outlive every other static object,
+// because the TGenericClassInfo destructors run at exit() during
+// __cxa_finalize and reach this registry through RemoveClass()/SetUnloaded().
+// Making it a plain static object triggered a use-after-destruction segfault
+// on platforms (e.g. FreeBSD/libc++) where it was torn down first. See #13200.
+TClass::TDeclNameRegistry &TClass::GetNoInfoOrEmuOrFwdDeclNameRegistry()
+{
+   static TDeclNameRegistry *reg = new TDeclNameRegistry(gDebug);
+   return *reg;
+}
 
 //Intent of why/how TClass::New() is called
 //[Not a static data member because MacOS does not support static thread local data member ... who knows why]
@@ -1375,7 +1385,7 @@ void TClass::Init(const char *name, Version_t cversion,
 
    TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(fName.Data());
 
-   InsertTClassInRegistryRAII insertRAII(fState,fName,fNoInfoOrEmuOrFwdDeclNameRegistry);
+   InsertTClassInRegistryRAII insertRAII(fState,fName,GetNoInfoOrEmuOrFwdDeclNameRegistry());
 
    if (oldcl && oldcl->TestBit(kLoading)) {
       // Do not recreate a class while it is already being created!
@@ -3458,7 +3468,7 @@ TClass *TClass::GetClass(ClassInfo_t *info, Bool_t load, Bool_t silent)
 ////////////////////////////////////////////////////////////////////////////////
 
 Bool_t TClass::HasNoInfoOrEmuOrFwdDeclaredDecl(const char* name){
-   return fNoInfoOrEmuOrFwdDeclNameRegistry.HasDeclName(name);
+   return GetNoInfoOrEmuOrFwdDeclNameRegistry().HasDeclName(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4239,7 +4249,7 @@ void TClass::ResetClassInfo()
 {
    R__LOCKGUARD(gInterpreterMutex);
 
-   InsertTClassInRegistryRAII insertRAII(fState,fName,fNoInfoOrEmuOrFwdDeclNameRegistry);
+   InsertTClassInRegistryRAII insertRAII(fState,fName,GetNoInfoOrEmuOrFwdDeclNameRegistry());
 
    if (fClassInfo) {
       TClass::RemoveClassDeclId(gInterpreter->GetDeclId(fClassInfo));
@@ -6431,7 +6441,7 @@ void TClass::SetUnloaded()
             GetName(),(int)fState);
    }
 
-   InsertTClassInRegistryRAII insertRAII(fState, fName, fNoInfoOrEmuOrFwdDeclNameRegistry);
+   InsertTClassInRegistryRAII insertRAII(fState, fName, GetNoInfoOrEmuOrFwdDeclNameRegistry());
 
    // Make sure SetClassInfo, re-calculated the state.
    fState = kForwardDeclared;
