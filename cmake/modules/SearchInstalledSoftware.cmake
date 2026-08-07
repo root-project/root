@@ -546,28 +546,15 @@ if(http AND NOT builtin_civetweb)
     endif()
   endif()
   if(civetweb_FOUND)
-    get_target_property(CIVETWEB_IMPORTED_LOCATION civetweb::civetweb IMPORTED_LOCATION_NONE)
-    # Fall-back solution for some OS such as opensuse16 with different IMPORTED_LOCATION_xxxx config choice
-    if(NOT CIVETWEB_IMPORTED_LOCATION OR CIVETWEB_IMPORTED_LOCATION MATCHES "NOTFOUND")
-      get_target_property(CIVETWEB_IMPORTED_LOCATION civetweb::civetweb IMPORTED_LOCATION_RELEASE)
-      if(NOT CIVETWEB_IMPORTED_LOCATION OR CIVETWEB_IMPORTED_LOCATION MATCHES "NOTFOUND")
-        get_target_property(CIVETWEB_IMPORTED_LOCATION civetweb::civetweb IMPORTED_LOCATION_RELWITHDEBINFO)
-        if(NOT CIVETWEB_IMPORTED_LOCATION OR CIVETWEB_IMPORTED_LOCATION MATCHES "NOTFOUND")
-          get_target_property(CIVETWEB_IMPORTED_LOCATION civetweb::civetweb IMPORTED_LOCATION_DEBUG)
-        endif()
-      endif()
-    endif()
     try_compile(CIVETWEB_FEATURE_API
       SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/civetweb_check_features.c"
-      CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${civetweb_INCLUDE_DIR}"
-      LINK_LIBRARIES ${CIVETWEB_IMPORTED_LOCATION}
+      LINK_LIBRARIES civetweb::civetweb
       OUTPUT_VARIABLE CIVETWEB_FEATURE_API_LOG
     )
     if (CIVETWEB_FEATURE_API)
       try_run(RUN_RESULT COMPILE_RESULT
         SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/civetweb_check_features.c"
-        CMAKE_FLAGS "-DINCLUDE_DIRECTORIES=${civetweb_INCLUDE_DIR}"
-        LINK_LIBRARIES ${CIVETWEB_IMPORTED_LOCATION}
+        LINK_LIBRARIES civetweb::civetweb
         COMPILE_OUTPUT_VARIABLE BUILD_LOG
         RUN_OUTPUT_VARIABLE CIVETWEB_FEATURES
       )
