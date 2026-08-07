@@ -5,21 +5,27 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT core/textinput package
+# CMakeLists.txt file for building textinput package for ROOT
 ############################################################################
 
-set_property(TARGET Core APPEND PROPERTY DICT_HEADERS Getline.h)
-
 target_sources(Core PRIVATE
-  src/Getline_color.cxx
-  src/Getline.cxx
+  Editor.cpp
+  History.cpp
+  KeyBinding.cpp
+  Range.cpp
+  SignalHandler.cpp
+  StreamReader.cpp
+  StreamReaderUnix.cpp
+  StreamReaderWin.cpp
+  TerminalConfigUnix.cpp
+  TerminalDisplay.cpp
+  TerminalDisplayUnix.cpp
+  TerminalDisplayWin.cpp
+  TextInputContext.cpp
+  TextInput.cpp
 )
 
 target_include_directories(Core
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
   PRIVATE
-    src
+    ../ # to be able to call #include "textinput/header.h" from ROOT core files
 )
-
-ROOT_INSTALL_HEADERS()

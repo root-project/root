@@ -1084,7 +1084,7 @@ EXCLUDE                = ../../interpreter/ \
     ../../core/clib/ \
     ../../core/lzma/ \
     ../../core/newdelete/ \
-    ../../core/textinput/ \
+    ../../builtins/textinput/ \
     ../../builtins/mathtext/ \
     ../../graf3d/ftgl/ \
     ../../graf3d/x3d/ \
