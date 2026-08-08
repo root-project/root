@@ -216,8 +216,6 @@ Browser.AutoThumbnail:       yes
 # Set the ExpandDirectories option to "no" to prevent expanding
 # the parent directory tree (for example on nfs)
 Browser.ExpandDirectories    yes
-# Start URL for the TRootBrowser embedded HTML renderer
-Browser.StartUrl:            http://root.cern.ch/root/html/ClassIndex.html
 
 # Type of tree viewer: TTreeViewer or RTreeViewer
 TreeViewer.Name:             @root_treeviewer_class@
@@ -240,8 +238,6 @@ WebGui.HttpPortMin:         8800
 WebGui.HttpPortMax:         9800
 # Exact IP iddress to bind bind http server (default - empty)
 WebGui.HttpBind:
-# Use only loopback address to bind http server (default - yes)
-WebGui.HttpLoopback:        yes
 # Require unique single-time token (key) for connecting with widget (default - yes)
 WebGui.OnetimeKey:          yes
 # Only single connection allowed to any web widget
@@ -249,8 +245,6 @@ WebGui.SingleConnMode:      yes
 # Use https protocol for the http server (default - no)
 WebGui.UseHttps:            no
 WebGui.ServerCert:          rootserver.pem
-# default timeout (in seconds) for synchronous actions like producing images on clients
-WebGui.WaitForTmout:        100.0
 # name of executable for firefox and chrome
 WebGui.Chrome:             @chromeexe@
 WebGui.ChromeVersion:      @chromemajor@
