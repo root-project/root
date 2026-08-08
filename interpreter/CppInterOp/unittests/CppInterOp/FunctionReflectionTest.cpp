@@ -100,7 +100,11 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetClassMethods) {
   std::vector<Cpp::FuncRef> methods3;
   Cpp::GetClassMethods(Decls[4], methods3);
 
-  EXPECT_EQ(methods3.size(), 9);
+  // the parameterless default/copy/move constructors of B, though nominally
+  // inherited by the using declaration, are not exposed: C's own special
+  // members are authoritative (and the call layer refuses to invoke special
+  // members injected by a using declaration)
+  EXPECT_EQ(methods3.size(), 7);
   EXPECT_EQ(get_method_name(methods3[0]), "inline C::C()");
   EXPECT_EQ(get_method_name(methods3[1]), "inline constexpr C::C(const C &)");
   EXPECT_EQ(get_method_name(methods3[2]), "inline constexpr C::C(C &&)");
@@ -108,7 +112,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetClassMethods) {
   EXPECT_EQ(get_method_name(methods3[4]), "inline C &C::operator=(C &&)");
   EXPECT_EQ(get_method_name(methods3[5]), "inline C::~C()");
   EXPECT_EQ(get_method_name(methods3[6]), "inline C::B(int)");
-  EXPECT_EQ(get_method_name(methods3[7]), "inline constexpr C::B(const B &)");
 
   // Should not crash.
   std::vector<Cpp::FuncRef> methods4;
@@ -1616,6 +1619,40 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE,
+           FunctionReflection_TemplatedOperatorArrow) {
+  // Model of MSVC's std::shared_ptr::operator->, which is a member template
+  // with a defaulted template parameter (SFINAE-constrained on the element
+  // type). Smart-pointer detection has to instantiate it with no call
+  // arguments to determine the pointee type.
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    struct TheData { int fData; };
+    template <class T> struct SmartLike {
+      T* ptr;
+      template <class U = T> U* operator->() { return ptr; }
+    };
+    SmartLike<TheData> gSmart{nullptr};
+  )";
+  GetAllTopLevelDecls(code, Decls);
+
+  Cpp::DeclRef Scope =
+      Cpp::GetScopeFromType(Cpp::GetVariableType(Cpp::GetNamed("gSmart")));
+  ASSERT_TRUE(Scope.data);
+
+  std::vector<Cpp::FuncRef> ops;
+  Cpp::GetOperator(Scope, Cpp::Operator::OP_Arrow, ops);
+  ASSERT_EQ(ops.size(), 1);
+  EXPECT_TRUE(Cpp::IsTemplatedFunction(ops[0]));
+
+  Cpp::FuncRef Deref = Cpp::BestOverloadFunctionMatch(ops, {}, {});
+  ASSERT_TRUE(Deref);
+  // The match is an instantiation with the defaulted template parameter, not
+  // the template pattern itself: its return type is concrete.
+  EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetFunctionReturnType(Deref)),
+            "TheData *");
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE,
            FunctionReflection_BestOverloadFunctionMatch4) {
   std::vector<Decl*> Decls, SubDecls;
   std::string code = R"(
@@ -2930,6 +2967,79 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_Construct) {
   auto construct_fail = Cpp::Construct(Decls[2], where);
   EXPECT_FALSE(construct_fail);
   Cpp::Deallocate(scope, where);
+}
+
+// The wrappers behind Construct and by-value returns placement-new into a
+// caller-provided buffer. A class-scope operator new with no placement form
+// hides the global `operator new(size_t, void*)`, so those wrappers only
+// compile if they spell it `::new (buf) C(...)`.
+TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_ConstructClassScopeNew) {
+#ifdef _WIN32
+  GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
+#endif
+#ifdef EMSCRIPTEN
+#if CLANG_VERSION_MAJOR > 21
+  GTEST_SKIP() << "Test fails for Emscipten builds using LLVM 22";
+#endif
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+  std::vector<Decl*> Decls;
+
+  std::string code = R"(
+    class WithClassNew {
+    public:
+      int x;
+      WithClassNew() : x(42) {}
+      static void* operator new(__SIZE_TYPE__ sz) { return ::operator new(sz); }
+      static void* operator new[](__SIZE_TYPE__ sz) {
+        return ::operator new[](sz);
+      }
+      static void operator delete(void* p) { ::operator delete(p); }
+      static void operator delete[](void* p) { ::operator delete[](p); }
+    };
+    WithClassNew MakeWithClassNew() { return WithClassNew(); }
+    )";
+
+  GetAllTopLevelDecls(code, Decls, false, interpreter_args);
+  Cpp::DeclRef scope = Cpp::GetNamed("WithClassNew");
+  ASSERT_TRUE(scope);
+
+  // Heap construction; the non-arena branch of the wrapper must keep using
+  // the unqualified `new` so it picks up the class-scope operator new.
+  Cpp::ObjectRef object = Cpp::Construct(scope);
+  ASSERT_TRUE(object);
+  EXPECT_EQ(*static_cast<int*>(object.data), 42);
+  Cpp::Destruct(object, scope, /*withFree=*/true, /*count=*/0);
+
+  // Placement construction into an arena.
+  void* where = Cpp::Allocate(scope).data;
+  ASSERT_TRUE(where);
+  EXPECT_TRUE(where == Cpp::Construct(scope, where).data);
+  EXPECT_EQ(*static_cast<int*>(where), 42);
+  Cpp::Destruct(where, scope, /*withFree=*/false, /*count=*/0);
+  Cpp::Deallocate(scope, where);
+
+  // Placement construction of an array (the wrapper's `nary > 1` branch).
+  constexpr size_t count = 3;
+  const size_t size = Cpp::SizeOf(scope);
+  where = Cpp::Allocate(scope, count).data;
+  ASSERT_TRUE(where);
+  EXPECT_TRUE(where == Cpp::Construct(scope, where, count).data);
+  for (size_t i = 0; i < count; ++i)
+    EXPECT_EQ(*reinterpret_cast<int*>(static_cast<char*>(where) + (i * size)), 42);
+  Cpp::Destruct(where, scope, /*withFree=*/false, count);
+  Cpp::Deallocate(scope, where, count);
+
+  // A by-value return placement-news the result into `ret`
+  // (make_narg_call_with_return); this must also bypass the class-scope
+  // operator new.
+  Cpp::JitCall JC = Cpp::MakeFunctionCallable(Decls[1]);
+  ASSERT_TRUE(JC.getKind() == Cpp::JitCall::kGenericCall);
+  int result = 0; // WithClassNew's layout is a single int
+  JC.Invoke(&result);
+  EXPECT_EQ(result, 42);
 }
 
 // Test zero initialization of PODs and default initialization cases

@@ -289,6 +289,50 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsComplete) {
   EXPECT_FALSE(Cpp::IsComplete(nullptr));
 }
 
+TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetOrForceDefinition) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    class Complete { int x; };
+    struct Fwd;
+    enum EnumC : int { A, B };
+    int gVar = 5;
+    void func() {}
+    namespace NS {}
+    template <typename T> struct TS { T y; };
+    TS<int> makeTS() { return {}; }
+    extern int extVar;
+    void fwdFunc();
+  )";
+  GetAllTopLevelDecls(code, Decls);
+
+  // Null in -> null out.
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(nullptr) == nullptr);
+  // Complete class -> its (complete) definition.
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[0]) != nullptr);
+  EXPECT_TRUE(Cpp::IsComplete(Cpp::GetOrForceDefinition(Decls[0])));
+  // Pure forward declaration with no definition available -> null, still incomplete.
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[1]) == nullptr);
+  EXPECT_FALSE(Cpp::IsComplete(Decls[1]));
+  // Enum with a definition -> non-null.
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[2]) != nullptr);
+  // Defined variable -> its defining declaration.
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[3]) != nullptr);
+  // Function with a body -> its definition.
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[4]) != nullptr);
+  // Namespace has no getDefinition() concept -> null.
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[5]) == nullptr);
+  // Template specialization reached via the function return type is instantiated
+  // and completed on demand.
+  Cpp::TypeRef retTy = Cpp::GetFunctionReturnType(Decls[7]);
+  auto tsDef = Cpp::GetOrForceDefinition(Cpp::GetScopeFromType(retTy));
+  EXPECT_TRUE(tsDef != nullptr);
+  EXPECT_TRUE(Cpp::IsComplete(tsDef));
+  // Declared-but-not-defined entities return null: getDefinition() yields nullptr,
+  // not the declaration itself.
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[8]) == nullptr);  // extern int extVar;
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[9]) == nullptr);  // void fwdFunc();
+}
+
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_SizeOf) {
   std::vector<Decl*> Decls;
   std::string code = R"(namespace N {} class C{}; int I; struct S;
@@ -825,6 +869,24 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetParentScope) {
   EXPECT_EQ(Cpp::GetQualifiedName(Cpp::GetParentScope(en_E)), "N1::N2::C");
   EXPECT_EQ(Cpp::GetQualifiedName(Cpp::GetParentScope(en_A)), "N1::N2::C::E");
   EXPECT_EQ(Cpp::GetQualifiedName(Cpp::GetParentScope(en_B)), "N1::N2::C::E");
+
+  // A linkage spec is a transparent context, not a scope: the parent must be
+  // the enclosing scope. This is the shape of namespace std in the MSVC CRT
+  // headers, whose canonical declaration sits inside `extern "C++" { ... }`.
+  Interp->declare(R"(
+    extern "C++" { namespace NLnk { } }
+    namespace NLnk { class InLnk {}; }
+    extern "C" { namespace NC { class InC {}; } }
+  )");
+  Cpp::DeclRef ns_NLnk = Cpp::GetNamed("NLnk");
+  Cpp::DeclRef cl_InLnk = Cpp::GetNamed("InLnk", ns_NLnk);
+  Cpp::DeclRef ns_NC = Cpp::GetNamed("NC");
+  EXPECT_EQ(Cpp::GetQualifiedName(Cpp::GetParentScope(cl_InLnk)), "NLnk");
+  EXPECT_EQ(Cpp::GetParentScope(ns_NLnk).data,
+            Cpp::GetParentScope(ns_N1).data)
+      << "parent of a namespace declared in a linkage spec should be the TU";
+  EXPECT_EQ(Cpp::GetParentScope(ns_NC).data, Cpp::GetParentScope(ns_N1).data)
+      << "parent of a namespace declared in extern \"C\" should be the TU";
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetScopeFromType) {
@@ -1312,6 +1374,14 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 
   Cpp::GetClassTemplateInstantiationArgs(v3_class, instance_types);
   EXPECT_TRUE(instance_types.size() == 0);
+
+  // Null or non-specialization decls must degrade to "no args", not crash
+  // (a silently-failed trampoline instantiation reaches here with null).
+  instance_types.clear();
+  Cpp::GetClassTemplateInstantiationArgs(nullptr, instance_types);
+  EXPECT_TRUE(instance_types.empty());
+  Cpp::GetClassTemplateInstantiationArgs(v1, instance_types); // a VarDecl
+  EXPECT_TRUE(instance_types.empty());
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IncludeVector) {

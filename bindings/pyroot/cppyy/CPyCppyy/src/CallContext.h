@@ -1,8 +1,12 @@
 #ifndef CPYCPPYY_CALLCONTEXT_H
 #define CPYCPPYY_CALLCONTEXT_H
 
+#include "Python.h"
+#include "Cppyy.h"
+
 // Standard
 #include <vector>
+#include <cstdint>
 
 #include <sys/types.h>
 
@@ -50,7 +54,7 @@ struct Parameter {
 
 // extra call information
 struct CallContext {
-    CallContext() : fCurScope(0), fPyContext(nullptr), fFlags(0),
+    CallContext() : fCurScope(nullptr), fPyContext(nullptr), fFlags(0),
         fArgsVec(nullptr), fNArgs(0), fTemps(nullptr) {}
     CallContext(const CallContext&) = delete;
     CallContext& operator=(const CallContext&) = delete;
@@ -149,6 +153,16 @@ inline bool ReleasesGIL(CallContext* ctxt) {
 inline bool UseStrictOwnership() {
     using CC = CPyCppyy::CallContext;
     return !(CC::GlobalPolicyFlags() & CC::kUseHeuristics);
+}
+
+// kImplicitSmartPtrConversion is a global policy (set through
+// cppyy.SetImplicitSmartPointerConversion), but it can also be requested for a
+// single call through the call context, so check both words - as is done for
+// kProtected in CPPMethod::Execute.
+inline bool AllowImplicitSmartPtrConversion(CallContext* ctxt) {
+    using CC = CPyCppyy::CallContext;
+    return (CC::GlobalPolicyFlags() & CC::kImplicitSmartPtrConversion) ||
+           (ctxt && (ctxt->fFlags & CC::kImplicitSmartPtrConversion));
 }
 
 template<CallContext::ECallFlags F>

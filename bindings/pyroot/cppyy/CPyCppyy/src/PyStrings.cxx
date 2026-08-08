@@ -60,6 +60,7 @@ PyObject* CPyCppyy::PyStrings::gTemplate         = nullptr;
 PyObject* CPyCppyy::PyStrings::gVectorAt         = nullptr;
 PyObject* CPyCppyy::PyStrings::gInsert           = nullptr;
 PyObject* CPyCppyy::PyStrings::gValueType        = nullptr;
+PyObject* CPyCppyy::PyStrings::gValueTypePtr     = nullptr;
 PyObject* CPyCppyy::PyStrings::gValueSize        = nullptr;
 
 PyObject* CPyCppyy::PyStrings::gCppReal          = nullptr;
@@ -91,11 +92,7 @@ bool CPyCppyy::CreatePyStrings() {
     CPPYY_INITIALIZE_STRING(gBase,           __base__);
     CPPYY_INITIALIZE_STRING(gContains,       contains);
     CPPYY_INITIALIZE_STRING(gCopy,           copy);
-#if PY_VERSION_HEX < 0x03000000
-    CPPYY_INITIALIZE_STRING(gCppBool,        __cpp_nonzero__);
-#else
     CPPYY_INITIALIZE_STRING(gCppBool,        __cpp_bool__);
-#endif
     CPPYY_INITIALIZE_STRING(gCppName,        __cpp_name__);
     CPPYY_INITIALIZE_STRING(gAnnotations,    __annotations__);
     CPPYY_INITIALIZE_STRING(gCastCpp,        __cast_cpp__);
@@ -147,6 +144,7 @@ bool CPyCppyy::CreatePyStrings() {
     CPPYY_INITIALIZE_STRING(gVectorAt,       _vector__at);
     CPPYY_INITIALIZE_STRING(gInsert,         insert);
     CPPYY_INITIALIZE_STRING(gValueType,      value_type);
+    CPPYY_INITIALIZE_STRING(gValueTypePtr,   _value_type);
     CPPYY_INITIALIZE_STRING(gValueSize,      value_size);
 
     CPPYY_INITIALIZE_STRING(gCppReal,        __cpp_real);
@@ -221,6 +219,7 @@ PyObject* CPyCppyy::DestroyPyStrings() {
     Py_DECREF(PyStrings::gVectorAt);    PyStrings::gVectorAt    = nullptr;
     Py_DECREF(PyStrings::gInsert);      PyStrings::gInsert      = nullptr;
     Py_DECREF(PyStrings::gValueType);   PyStrings::gValueType   = nullptr;
+    Py_DECREF(PyStrings::gValueTypePtr);PyStrings::gValueTypePtr= nullptr;
     Py_DECREF(PyStrings::gValueSize);   PyStrings::gValueSize   = nullptr;
 
     Py_DECREF(PyStrings::gCppReal);     PyStrings::gCppReal     = nullptr;
