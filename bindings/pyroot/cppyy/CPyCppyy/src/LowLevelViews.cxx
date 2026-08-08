@@ -765,28 +765,31 @@ static PyObject* ll_reshape(CPyCppyy::LowLevelView* self, PyObject* shape)
 
     Py_buffer& view = self->fBufInfo;
 
-// verify size match
-    Py_ssize_t oldsz = 0;
+// verify size match (the number of elements is the product of the dimensions)
+    Py_ssize_t oldsz = 1;
     for (Py_ssize_t idim = 0; idim < view.ndim; ++idim) {
         Py_ssize_t nlen = view.shape[idim];
         if (nlen == CPyCppyy::UNKNOWN_SIZE || nlen == INT_MAX/view.itemsize /* fake 'max' */) {
             oldsz = -1;      // meaning, unable to check size match
             break;
         }
-        oldsz += view.shape[idim];
+        oldsz *= view.shape[idim];
     }
 
-    if (0 < oldsz) {
-        Py_ssize_t newsz = 0;
-        for (Py_ssize_t idim = 0; idim < PyTuple_GET_SIZE(shape); ++idim)
-            newsz += PyInt_AsSsize_t(PyTuple_GET_ITEM(shape, idim));
-        if (oldsz != newsz) {
-            PyObject* tas = PyObject_Str(shape);
-            PyErr_Format(PyExc_ValueError,
-                "cannot reshape array of size %ld into shape %s", (long)oldsz, CPyCppyy_PyText_AsString(tas));
-            Py_DECREF(tas);
+    Py_ssize_t newsz = 1;
+    for (Py_ssize_t idim = 0; idim < PyTuple_GET_SIZE(shape); ++idim) {
+        Py_ssize_t nlen = PyInt_AsSsize_t(PyTuple_GET_ITEM(shape, idim));
+        if (nlen == -1 && PyErr_Occurred())
             return nullptr;
-        }
+        newsz *= nlen;
+    }
+
+    if (0 < oldsz && oldsz != newsz) {
+        PyObject* tas = PyObject_Str(shape);
+        PyErr_Format(PyExc_ValueError,
+            "cannot reshape array of size %ld into shape %s", (long)oldsz, CPyCppyy_PyText_AsString(tas));
+        Py_DECREF(tas);
+        return nullptr;
     }
 
 // reshape
