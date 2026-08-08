@@ -17,7 +17,7 @@ class CPYCPPYY_CLASS_EXPORT Dimensions {
     dim_t* fDims;
 
 public:
-    Dimensions(dim_t ndim = 0, dim_t* dims = nullptr) : fDims(nullptr) {
+    Dimensions(dim_t ndim = 0, const dim_t* dims = nullptr) : fDims(nullptr) {
         if (ndim && ndim != UNKNOWN_SIZE) {
             fDims = new dim_t[ndim+1];
             fDims[0] = ndim;
