@@ -7,6 +7,7 @@
 
 // Standard
 #include <map>
+#include <vector>
 #include <assert.h>
 #include <string.h>
 #include <limits.h>
@@ -792,6 +793,64 @@ static PyObject* ll_reshape(CPyCppyy::LowLevelView* self, PyObject* shape)
         return nullptr;
     }
 
+// A multi-dimensional view is not simply a Py_buffer with more entries in its
+// shape: element access projects sub-views through a dedicated converter that
+// is chosen when the view is created. Adding dimensions to a one-dimensional
+// view therefore requires re-creating it through the same creator that made
+// it, rather than patching up the Py_buffer in place.
+//
+// Only rank-1 views can be grown this way: their data is by construction a
+// flat block. A view that is already multi-dimensional carries a layout that
+// the shape alone does not describe (T** data, for example, is an array of
+// row pointers, not a contiguous block), so for those the dimensions are
+// merely filled in below, leaving the layout as it was.
+    if (view.ndim == 1 && 1 < PyTuple_GET_SIZE(shape)) {
+        if (!self->fCreator) {
+            PyErr_SetString(PyExc_TypeError,
+                "this low level view does not support multi-dimensional reshaping");
+            return nullptr;
+        }
+
+        std::vector<CPyCppyy::dim_t> dims;
+        dims.reserve(PyTuple_GET_SIZE(shape));
+        for (Py_ssize_t idim = 0; idim < PyTuple_GET_SIZE(shape); ++idim)
+            dims.push_back((CPyCppyy::dim_t)PyInt_AsSsize_t(PyTuple_GET_ITEM(shape, idim)));
+
+    // the creator takes the address the view was originally created from: the
+    // address of the data pointer if there is one, the data itself otherwise
+        CPyCppyy::LowLevelView* llnew = self->fCreator(
+            self->fBuf ? (void*)self->fBuf : view.buf,
+            CPyCppyy::Dimensions((CPyCppyy::dim_t)dims.size(), dims.data()));
+        if (!llnew)
+            return nullptr;
+
+    // ownership of the data (if any) stays with self, so keep that flag and
+    // make sure llnew does not free anything that is now ours
+        intptr_t owner = (intptr_t)view.internal & CPyCppyy::LowLevelView::kIsOwner;
+
+        PyMem_Free(view.shape);
+        PyMem_Free(view.strides);
+        if (self->fElemCnv != self->fConverter && self->fElemCnv && self->fElemCnv->HasState())
+            delete self->fElemCnv;
+        if (self->fConverter && self->fConverter->HasState())
+            delete self->fConverter;
+
+        self->fBufInfo   = llnew->fBufInfo;
+        self->fBuf       = llnew->fBuf;
+        self->fConverter = llnew->fConverter;
+        self->fElemCnv   = llnew->fElemCnv;
+        (intptr_t&)self->fBufInfo.internal |= owner;
+
+        llnew->fBufInfo.shape   = nullptr;
+        llnew->fBufInfo.strides = nullptr;
+        (intptr_t&)llnew->fBufInfo.internal &= ~CPyCppyy::LowLevelView::kIsOwner;
+        llnew->fConverter = nullptr;
+        llnew->fElemCnv   = nullptr;
+        Py_DECREF((PyObject*)llnew);
+
+        Py_RETURN_NONE;
+    }
+
 // reshape
     size_t itemsize = view.strides[view.ndim-1];
     if (view.ndim != PyTuple_GET_SIZE(shape)) {
@@ -814,6 +873,14 @@ static PyObject* ll_reshape(CPyCppyy::LowLevelView* self, PyObject* shape)
     }
 
     set_strides(view, itemsize, false /* by definition not fixed */);
+
+// a rank-1 view hands out elements rather than sub-views, so drop any
+// projecting converter that a previous, higher-rank shape installed
+    if (view.ndim == 1 && self->fConverter != self->fElemCnv) {
+        if (self->fConverter && self->fConverter->HasState())
+            delete self->fConverter;
+        self->fConverter = self->fElemCnv;
+    }
 
     Py_RETURN_NONE;
 }
