@@ -379,27 +379,41 @@ namespace cling {
     }
   }
 
+
+// Temporary teardown tracing for the Windows CI crash in rootcling
+// (PR #23045). Remove before merge.
+#define CLING_TEARDOWN_TRACE(POINT)                                            \
+  do {                                                                         \
+    fprintf(stderr, "### CLING-TEARDOWN-TRACE: %s\n", POINT);                 \
+    fflush(stderr);                                                            \
+  } while (0)
   Interpreter::~Interpreter() {
+    CLING_TEARDOWN_TRACE("~Interpreter enter");
     // Do this first so m_StoredStates will be ignored if Interpreter::unload
     // is called later on.
     for (size_t i = 0, e = m_StoredStates.size(); i != e; ++i)
       delete m_StoredStates[i];
     m_StoredStates.clear();
+    CLING_TEARDOWN_TRACE("stored states cleared");
 
     if (m_Executor)
       m_Executor->shuttingDown();
+    CLING_TEARDOWN_TRACE("executor shuttingDown done");
 
     // LookupHelper's ~Parser needs the PP from IncrParser's CI, so do this
     // first:
     m_LookupHelper.reset();
+    CLING_TEARDOWN_TRACE("LookupHelper reset done");
 
     ShutDown();
+    CLING_TEARDOWN_TRACE("ShutDown returned");
 
     // We want to keep the callback alive during the shutdown of Sema, CodeGen
     // and the ASTContext. For that to happen we shut down the IncrementalParser
     // explicitly, before the implicit destruction (through the unique_ptr) of
     // the callbacks.
     m_IncrParser.reset(nullptr);
+    CLING_TEARDOWN_TRACE("IncrementalParser reset done; ~Interpreter body end");
   }
 
   Transaction* Interpreter::Initialize(bool NoRuntime, bool SyntaxOnly) {
@@ -587,12 +601,15 @@ namespace cling {
   }
 
   void Interpreter::ShutDown() {
+    CLING_TEARDOWN_TRACE("ShutDown enter");
     // Model the shutdown actions done in FrontendAction::EndSourceFile
     if (CompilerInstance* CI = getCIOrNull()) {
       CI->getDiagnostics().getClient()->EndSourceFile();
+      CLING_TEARDOWN_TRACE("diag client EndSourceFile done");
 
       if (CI->hasPreprocessor())
         CI->getPreprocessor().EndSourceFile();
+      CLING_TEARDOWN_TRACE("PP EndSourceFile done");
 
       bool DisableFree = CI->getFrontendOpts().DisableFree;
       if (DisableFree) {
@@ -600,9 +617,13 @@ namespace cling {
         CI->resetAndLeakASTContext();
         llvm::BuryPointer(CI->takeASTConsumer().get());
       } else {
+        CLING_TEARDOWN_TRACE("before setSema(nullptr)");
         CI->setSema(nullptr);
+        CLING_TEARDOWN_TRACE("before setASTContext(nullptr)");
         CI->setASTContext(nullptr);
+        CLING_TEARDOWN_TRACE("before setASTConsumer(nullptr)");
         CI->setASTConsumer(nullptr);
+        CLING_TEARDOWN_TRACE("frontend freed");
       }
 
       if (CI->getFrontendOpts().ShowStats) {
@@ -617,7 +638,9 @@ namespace cling {
       // Cleanup the output streams, and erase the output files if instructed by
       // the FrontendAction.
       bool shouldEraseOutputFiles = CI->getDiagnostics().hasErrorOccurred();
+      CLING_TEARDOWN_TRACE("before clearOutputFiles");
       CI->clearOutputFiles(/*EraseFiles=*/shouldEraseOutputFiles);
+      CLING_TEARDOWN_TRACE("clearOutputFiles done");
 
       LangOptions& LO = CI->getLangOpts();
       if (LO.getCompilingModule() != clang::LangOptions::CMK_None) {
@@ -631,6 +654,7 @@ namespace cling {
       }
 
       LO.setCompilingModule(clang::LangOptions::CMK_None);
+      CLING_TEARDOWN_TRACE("ShutDown exit");
     }
   }
 
