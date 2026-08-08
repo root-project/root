@@ -10296,3 +10296,13 @@ TBranch *ROOT::Internal::TreeUtils::CallBranchImp(TTree &tree, const char *branc
 {
    return tree.BranchImp(branchname, ptrClass, addobj, bufsize, splitlevel);
 }
+
+Longptr_t ROOT::Internal::TreeUtils::GetBranchAddress(TBranch *branch)
+{
+   return reinterpret_cast<Longptr_t>(branch->GetAddress());
+}
+
+Longptr_t ROOT::Internal::TreeUtils::GetBranchElementObject(TBranchElement *branch)
+{
+   return reinterpret_cast<Longptr_t>(branch->GetObject());
+}
