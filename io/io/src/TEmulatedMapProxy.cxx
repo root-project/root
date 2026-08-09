@@ -71,7 +71,7 @@ void* TEmulatedMapProxy::At(UInt_t idx)
    // Return the address of the value at index 'idx'.
    if ( fEnv && fEnv->fObject )   {
       PCont_t c = PCont_t(fEnv->fObject);
-      return (idx<(c->size() / fValDiff)) ? (c->data() + idx * fValDiff) : 0;
+      return (idx < (c->size() / fValDiff)) ? (c->data() + ElementOffset(idx)) : 0;
    }
    Fatal("TEmulatedMapProxy","At> Logic error - no proxy object set.");
    return 0;
@@ -100,7 +100,7 @@ void TEmulatedMapProxy::ReadMap(UInt_t nElements, TBuffer &b)
    char* addr = 0;
    char* temp = (char*)At(0);
    for ( idx = 0; idx < nElements; ++idx )  {
-      addr = temp + idx*fValDiff;
+      addr = temp + ElementOffset(idx);
       for ( loop=0; loop<2; loop++)  {
          addr += off[loop];
          helper = (StreamHelper*)addr;
@@ -161,7 +161,7 @@ void TEmulatedMapProxy::WriteMap(UInt_t nElements, TBuffer &b)
    char* addr = 0;
    char* temp = (char*)At(0);
    for (UInt_t loop, idx = 0; idx < nElements; ++idx )  {
-      addr = temp + idx*fValDiff;
+      addr = temp + ElementOffset(idx);
       for ( loop = 0; loop<2; ++loop )  {
          addr += off[loop];
          i = (StreamHelper*)addr;
