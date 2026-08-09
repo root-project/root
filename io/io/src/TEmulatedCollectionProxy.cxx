@@ -270,13 +270,13 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
    // Shrink the container
 
    typedef std::string String_t;
-   char* addr  = ((char*)fEnv->fStart) + fValDiff*left;
+   char *addr = ((char *)fEnv->fStart) + ElementOffset(left);
    size_t i;
 
    switch ( fSTL_type )  {
       case ROOT::kSTLmap:
       case ROOT::kSTLmultimap:
-         addr = ((char*)fEnv->fStart) + fValDiff*left;
+         addr = ((char *)fEnv->fStart) + ElementOffset(left);
          switch(fKey->fCase)  {
             case kIsFundamental:  // Only handle primitives this way
             case kIsEnum:
@@ -319,7 +319,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
                }
                break;
          }
-         addr = ((char*)fEnv->fStart)+fValOffset+fValDiff*left;
+         addr = ((char *)fEnv->fStart) + fValOffset + ElementOffset(left);
          // DO NOT break; just continue
 
          // General case for all values
@@ -366,7 +366,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
    }
    WithCont(fEnv->fObject, [&](auto *c, std::size_t alignmentElemSize) {
       assert(fValDiff % alignmentElemSize == 0);
-      c->resize(left * fValDiff / alignmentElemSize);
+      c->resize(ElementOffset(left) / alignmentElemSize);
       fEnv->fStart = left > 0 ? c->data() : nullptr;
    });
    return;
@@ -405,7 +405,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left, Bool_t force)
       // Only worth asking about the type if the buffer actually reallocates.
       bool willReallocate = false;
       WithCont(fEnv->fObject, [&](auto *c, std::size_t alignmentElemSize) {
-         willReallocate = (left * fValDiff / alignmentElemSize) > c->capacity();
+         willReallocate = (ElementOffset(left) / alignmentElemSize) > c->capacity();
       });
       if (willReallocate && (needsRealMove(fVal) || needsRealMove(fKey))) {
          // Destroys the elements in place and resizes to 0, keeping the capacity;
@@ -419,11 +419,11 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left, Bool_t force)
    void *oldstart = fEnv->fStart;
    WithCont(fEnv->fObject, [&](auto *c, std::size_t alignmentElemSize) {
       assert(fValDiff % alignmentElemSize == 0);
-      c->resize(left * fValDiff / alignmentElemSize);
+      c->resize(ElementOffset(left) / alignmentElemSize);
       fEnv->fStart = left > 0 ? c->data() : nullptr;
    });
 
-   char* addr = ((char*)fEnv->fStart) + fValDiff*nCurr;
+   char *addr = ((char *)fEnv->fStart) + ElementOffset(nCurr);
    switch ( fSTL_type )  {
       case ROOT::kSTLmap:
       case ROOT::kSTLmultimap:
@@ -455,7 +455,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left, Bool_t force)
                   *(void**)addr = 0;
                break;
          }
-         addr = ((char*)fEnv->fStart)+fValOffset+fValDiff*nCurr;
+         addr = ((char *)fEnv->fStart) + fValOffset + ElementOffset(nCurr);
          // DO NOT break; just continue
 
          // General case for all values
@@ -525,7 +525,7 @@ void* TEmulatedCollectionProxy::At(UInt_t idx)
       if ( idx >= (s/fValDiff) )  {
          return 0;
       }
-      return idx < (s / fValDiff) ? c->data() + idx * fValDiff : 0;
+      return idx < (s / fValDiff) ? c->data() + ElementOffset(idx) : 0;
    }
    Fatal("TEmulatedCollectionProxy","At> Logic error - no proxy object set.");
    return 0;
@@ -583,7 +583,9 @@ void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)
          }
          break;
 
-#define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
+         // clang-format off
+#define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + ElementOffset(idx)); { x ;} ++idx;} break;}
+         // clang-format on
 
       case kIsClass:
          DOLOOP( b.StreamObject(i,fVal->fType) );
@@ -631,7 +633,9 @@ void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)
                Error("TEmulatedCollectionProxy","fType %d is not supported yet!\n",fVal->fKind);
          }
          break;
-#define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
+         // clang-format off
+#define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + ElementOffset(idx)); { x ;} ++idx;} break;}
+         // clang-format on
       case kIsClass:
          DOLOOP( b.StreamObject(i,fVal->fType) );
       case kBIT_ISSTRING:
