@@ -141,31 +141,35 @@ public:
    }
 
    template <typename ColType>
-   auto GetValueChecked(unsigned int slot, unsigned int varIdx, std::size_t readerIdx, Long64_t entry) -> ColType &
+   auto GetValueChecked(unsigned int slot, unsigned int varIdx, std::size_t readerIdx, std::size_t idx) -> ColType &
    {
-      if (auto *val = fInputValues[slot][varIdx][readerIdx]->template TryGet<ColType>(entry))
+      if (auto *val = fInputValues[slot][varIdx][readerIdx]->template TryGet<ColType>(idx))
          return *val;
 
       throw std::out_of_range{"RDataFrame: Varied action (" + fHelpers[0].GetActionName() +
                               ") could not retrieve value for column '" + fColumnNames[readerIdx] + "' for entry " +
-                              std::to_string(entry) +
+                              std::to_string(idx) +
                               ". You can use the DefaultValueFor operation to provide a default value, or "
                               "FilterAvailable/FilterMissing to discard/keep entries with missing values instead."};
    }
 
    template <typename... ColTypes, std::size_t... ReaderIdxs>
-   void CallExec(unsigned int slot, unsigned int varIdx, Long64_t entry, TypeList<ColTypes...>,
+   void CallExec(unsigned int slot, unsigned int varIdx, std::size_t idx, TypeList<ColTypes...>,
                  std::index_sequence<ReaderIdxs...>)
    {
-      fHelpers[varIdx].Exec(slot, GetValueChecked<ColTypes>(slot, varIdx, ReaderIdxs, entry)...);
-      (void)entry;
+      fHelpers[varIdx].Exec(slot, GetValueChecked<ColTypes>(slot, varIdx, ReaderIdxs, idx)...);
+      (void)idx;
    }
 
    void Run(unsigned int slot, Long64_t entry) final
    {
       for (auto varIdx = 0u; varIdx < GetVariations().size(); ++varIdx) {
-         if (fPrevNodes[varIdx]->CheckFilters(slot, entry))
-            CallExec(slot, varIdx, entry, ColumnTypes_t{}, TypeInd_t{});
+         const auto mask = fPrevNodes[varIdx]->CheckFilters(slot, entry);
+         std::for_each(fInputValues[slot][varIdx].begin(), fInputValues[slot][varIdx].end(),
+                       [entry, mask](auto *v) { v->Load(entry, mask); });
+
+         if (mask)
+            CallExec(slot, varIdx, /*idx=*/0u, ColumnTypes_t{}, TypeInd_t{});
       }
    }
 
