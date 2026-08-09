@@ -434,7 +434,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left, Bool_t force)
             case kIsClass:
                if (oldstart && oldstart != fEnv->fStart) {
                   Long_t offset = 0;
-                  for( i=0; i<=nCurr; ++i, offset += fValDiff ) {
+                  for (i = 0; i < nCurr; ++i, offset += fValDiff) {
                      // For now 'Move' only register the change of location
                      // so per se this is wrong since the object are copied via memcpy
                      // rather than a copy (or move) constructor.
@@ -466,8 +466,10 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left, Bool_t force)
                break;
             case kIsClass:
                if (oldstart && oldstart != fEnv->fStart) {
-                  Long_t offset = 0;
-                  for( i=0; i<=nCurr; ++i, offset += fValDiff ) {
+                  // fValOffset locates the value inside the element, as it does
+                  // for the New() loop below; for a map it is past the key.
+                  Long_t offset = fValOffset;
+                  for (i = 0; i < nCurr; ++i, offset += fValDiff) {
                      // For now 'Move' only register the change of location
                      // so per se this is wrong since the object are copied via memcpy
                      // rather than a copy (or move) constructor.
