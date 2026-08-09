@@ -318,6 +318,14 @@ protected:
    EnvironBase_t*fEnv;       ///< Address of the currently proxied object
    int           fValOffset; ///< Offset from key to value (in maps)
    int           fValDiff;   ///< Offset between two consecutive value_types (memory layout).
+
+   /// Byte offset of the n-th element. fValDiff is an int and the element counts
+   /// are UInt_t, so a plain product would be computed in 32 bits and wrap once
+   /// the collection data grows past 4 GiB -- which is reached well within the
+   /// UInt_t element counts this interface supports whenever the elements are
+   /// bigger than one byte.
+   std::size_t ElementOffset(std::size_t n) const { return n * static_cast<std::size_t>(fValDiff); }
+
    Proxies_t     fProxyList; ///< Stack of recursive proxies
    Proxies_t     fProxyKept; ///< Optimization: Keep proxies once they were created
    Staged_t      fStaged;    ///< Optimization: Keep staged array once they were created

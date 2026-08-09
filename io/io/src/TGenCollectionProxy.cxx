@@ -56,7 +56,7 @@ public:
             return fEnv->fStart = fFirst.invoke(fEnv);
          default:
             if (! fEnv->fStart ) fEnv->fStart = fFirst.invoke(fEnv);
-            return ((char*)fEnv->fStart) + fValDiff*idx;
+            return ((char *)fEnv->fStart) + ElementOffset(idx);
          }
       }
       Fatal("TGenVectorProxy","At> Logic error - no proxy object set.");
@@ -244,7 +244,7 @@ public:
    {
       if ( fEnv && fEnv->fObject ) {
          if ( fEnv->fUseTemp ) {
-            return (((char*)fEnv->fTemp)+idx*fValDiff);
+            return (((char *)fEnv->fTemp) + ElementOffset(idx));
          }
          switch( idx ) {
          case 0:
@@ -1084,7 +1084,7 @@ void* TGenCollectionProxy::At(UInt_t idx)
             return fEnv->fStart = fFirst.invoke(fEnv);
          default:
             if (! fEnv->fStart ) fEnv->fStart = fFirst.invoke(fEnv);
-            return ((char*)fEnv->fStart) + fValDiff*idx;
+            return ((char *)fEnv->fStart) + ElementOffset(idx);
          }
       case ROOT::kSTLbitset: {
          switch (idx) {
@@ -1112,7 +1112,7 @@ void* TGenCollectionProxy::At(UInt_t idx)
       case ROOT::kSTLmultimap:
       case ROOT::kSTLunorderedmultimap:
          if ( fEnv->fUseTemp ) {
-            return (((char*)fEnv->fTemp)+idx*fValDiff);
+            return (((char *)fEnv->fTemp) + ElementOffset(idx));
          }
          // Intentional fall through.
       default:
