@@ -88,6 +88,30 @@ static void TaskRecv(TServerSocket *serverSocket, std::string *request)
    sock->Close();
 }
 
+/// Accept an HTTP request, then reply with the given raw HTTP response.
+static void TaskSend(TServerSocket *serverSocket, std::string *request, const std::string *response)
+{
+   request->clear();
+   auto sock = serverSocket->Accept();
+
+   const char *eof = "\r\n\r\n";
+   const std::size_t eofLen = strlen(eof);
+   std::size_t nextInEof = 0;
+   char c;
+   while (sock->RecvRaw(&c, 1)) {
+      request->push_back(c);
+      if (c == eof[nextInEof]) {
+         if (++nextInEof == eofLen)
+            break;
+      } else {
+         nextInEof = 0;
+      }
+   }
+
+   sock->SendRaw(response->data(), response->size());
+   sock->Close();
+}
+
 TEST(RCurlConnection, Cred)
 {
    TServerSocket sock(0, false, TServerSocket::kDefaultBacklog, -1, ESocketBindOption::kInaddrLoopback);
@@ -240,6 +264,46 @@ TEST(RCurlConnection, GetAfterPut)
    EXPECT_EQ(expectedBody.size(), range.fNBytesRecv);
    std::string received(reinterpret_cast<char *>(readBuf.data()), range.fNBytesRecv);
    EXPECT_EQ(expectedBody, received);
+}
+
+TEST(RCurlConnection, RejectMultipartPartSpanningRangeGap)
+{
+   TServerSocket sock(0, false, TServerSocket::kDefaultBacklog, -1, ESocketBindOption::kInaddrLoopback);
+   const std::string url =
+      std::string("http://") + sock.GetLocalInetAddress().GetHostAddress() + ":" + std::to_string(sock.GetLocalPort());
+
+   // This response claims that one multipart part covers bytes 0 through 19, even though the request has a gap
+   // between bytes 9 and 100.  The response must fail rather than writing bytes 10 through 19 into the second buffer.
+   const std::string body = "--ROOTBOUNDARY\r\n"
+                            "Content-Range: bytes 0-19/200\r\n"
+                            "\r\n"
+                            "ABCDEFGHIJKLMNOPQRST\r\n"
+                            "--ROOTBOUNDARY--\r\n";
+   const std::string response = "HTTP/1.1 206 Partial Content\r\n"
+                                "Content-Type: multipart/byteranges; boundary=ROOTBOUNDARY\r\n"
+                                "Content-Length: " +
+                                std::to_string(body.size()) + "\r\n\r\n" + body;
+
+   std::string request;
+   std::thread threadRecv(TaskSend, &sock, &request, &response);
+
+   std::vector<unsigned char> firstRange(10, 0);
+   std::vector<unsigned char> secondRange(10, 0);
+   ROOT::Internal::RCurlConnection::RUserRange ranges[2];
+   ranges[0].fDestination = firstRange.data();
+   ranges[0].fLength = firstRange.size();
+   ranges[1].fDestination = secondRange.data();
+   ranges[1].fOffset = 100;
+   ranges[1].fLength = secondRange.size();
+
+   ROOT::Internal::RCurlConnection conn(url);
+   const auto status = conn.SendRangesReq(2, ranges);
+
+   threadRecv.join();
+   EXPECT_FALSE(static_cast<bool>(status));
+   EXPECT_NE(std::string::npos, status.fStatusMsg.find("non-adjacent ranges"));
+   EXPECT_EQ("ABCDEFGHIJ", std::string(firstRange.begin(), firstRange.end()));
+   EXPECT_EQ(0u, ranges[1].fNBytesRecv);
 }
 
 /// PUT with a payload larger than libcurl's internal Expect: 100-continue threshold (1 MB since curl 7.69).

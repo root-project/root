@@ -254,9 +254,14 @@ std::size_t ProcessMultipartData(char *data, std::size_t nbytes, RTransferState 
          transfer->fInPartHeader = true;
       } else if (range.fNBytesRecv == range.fLength) {
          // coalesced adjacent ranges, move on to the next range in the sorted array
+         const auto nextOffset = range.fOffset + range.fLength;
          transfer->AdvanceRange();
          if (transfer->fCurrentRange == transfer->GetNRanges()) {
             transfer->fExtraMsg = std::string("received range too long");
+            return 0;
+         }
+         if (transfer->GetCurrentRange().fOffset != nextOffset) {
+            transfer->fExtraMsg = std::string("multipart response part spans non-adjacent ranges");
             return 0;
          }
       }
