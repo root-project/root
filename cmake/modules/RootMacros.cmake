@@ -289,10 +289,50 @@ function(ROOT_REPLACE_BUILD_INTERFACE include_dir_var include_dir)
 endfunction(ROOT_REPLACE_BUILD_INTERFACE)
 
 #---------------------------------------------------------------------------------------------------
+#---ROOT_GENERATE_TARGET_DICTIONARY( target OPTIONS opt1 opt2 ...)
+#
+# Creates the dictionary of a predefined CMake target
+# <target> is the CMake target on which header file sets and link libraries have been defined
+# The output dictionary will be another CMake target called G__<target> prepended.;
+# the macro creates (among other files) the dictionary source as G__<target>.cxx
+#---------------------------------------------------------------------------------------------------
+function(ROOT_GENERATE_TARGET_DICTIONARY target )
+  CMAKE_PARSE_ARGUMENTS(ARG "OPTIONS" ${ARGN})
+  # Check if OPTIONS start with a dash.
+  if (ARG_OPTIONS)
+    foreach(ARG_O ${ARG_OPTIONS})
+      if (NOT ARG_O MATCHES "^-*")
+        message(FATAL_ERROR "Wrong rootcling option: ${ARG_OPTIONS}")
+      endif()
+    endforeach()
+  endif(ARG_OPTIONS)
+
+  get_target_property(type ${target} TYPE)
+  if(NOT ${type} STREQUAL "INTERFACE_LIBRARY")
+    get_target_property(SrcList ${target} SOURCES)
+    get_target_property(SrcDir ${target} SOURCE_DIR)
+    list(TRANSFORM SrcList PREPEND ${SrcDir}/)
+  endif()
+  get_target_property(HeaderList ${target} HEADER_SET)
+  get_target_property(LinkdefList ${target} HEADER_SET_linkDefs)
+  # get_target_property(ModuleList ${target} CXX_MODULE_SET) needs 3.28
+  if("HeaderList-NOTFOUND" IN_LIST HeaderList)
+    message(SEND_ERROR "ROOT_GENERATE_TARGET_DICTIONARY: Missing header file set in ${target}")
+  endif()
+  if("LinkdefList-NOTFOUND" IN_LIST LinkdefList)
+    message(SEND_ERROR "ROOT_GENERATE_TARGET_DICTIONARY: Missing Linkdef file set in ${target}")
+  endif()
+  get_target_property(LinkedLibraries ${target} LINK_LIBRARIES)
+  ROOT_GENERATE_DICTIONARY(G__${target} ${HeaderList} LINKDEF ${LinkdefList} DEPENDENCIES ${LinkedLibraries} OPTIONS ${ARG_OPTIONS})
+  # TODO: Probably one could directly call rootcling without all the shenanigan inside ROOT_GENERATE_DICTIONARY with include dirs, now that file_sets are used
+endfunction(ROOT_GENERATE_TARGET_DICTIONARY)
+
+#---------------------------------------------------------------------------------------------------
 #---ROOT_GENERATE_DICTIONARY( dictionary headerfiles NODEPHEADERS ghdr1 ghdr2 ...
 #                                                    MODULE module DEPENDENCIES dep1 dep2
+#                                                    EXTRA_DEPENDENCIES
 #                                                    BUILTINS dep1 dep2
-#                                                    STAGE1 LINKDEF linkdef OPTIONS opt1 opt2 ...)
+#                                                    STAGE1 LINKDEF linkdef OPTIONS opt1 opt2 ... NO_CXXMODULE MULTIDICT NOINSTALL)
 #
 # <dictionary> is the dictionary stem; the macro creates (among other files) the dictionary source as
 #   <dictionary>.cxx
