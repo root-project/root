@@ -15,8 +15,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(CustomStruct
 configure_file(CustomStruct.hxx . COPYONLY)
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET CustomStruct POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libCustomStruct.dll
-                                     ${CMAKE_CURRENT_BINARY_DIR}/libCustomStruct.dll)
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libCustomStruct.dll
+                                                  ${CMAKE_CURRENT_BINARY_DIR}/libCustomStruct.dll)
 endif()
 
 ROOT_ADD_GTEST(ntuple_attributes ntuple_attributes.cxx ntuple_test.cxx LIBRARIES ROOTNTuple xxHash::xxHash)
@@ -135,9 +135,9 @@ target_compile_features(StreamerFieldXMLDict PRIVATE $<TARGET_PROPERTY:rfield_st
 target_include_directories(StreamerFieldXMLDict PRIVATE $<TARGET_PROPERTY:rfield_streamer,INCLUDE_DIRECTORIES>)
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET rfield_streamer POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/librfield_streamer_rdict.pcm
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/librfield_streamer_rdict.pcm
                              ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/librfield_streamer_rdict.pcm
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/StreamerFieldXMLDict_rdict.pcm
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/StreamerFieldXMLDict_rdict.pcm
                              ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/StreamerFieldXMLDict_rdict.pcm)
 endif()
 
@@ -155,9 +155,9 @@ target_compile_features(SoAFieldXMLDict PRIVATE $<TARGET_PROPERTY:ntuple_soa,COM
 target_include_directories(SoAFieldXMLDict PRIVATE $<TARGET_PROPERTY:ntuple_soa,INCLUDE_DIRECTORIES>)
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET ntuple_soa POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/libntuple_soa_rdict.pcm
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/libntuple_soa_rdict.pcm
                              ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libntuple_soa_rdict.pcm
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/SoAFieldXMLDict_rdict.pcm
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/SoAFieldXMLDict_rdict.pcm
                              ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/SoAFieldXMLDict_rdict.pcm)
 endif()
 
