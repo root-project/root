@@ -1545,6 +1545,26 @@ namespace utils {
       }
     }
 
+    // Part of the normalization is to remove the elaborated type keyword
+    // ('typename', 'struct', ...); it is pure syntax and must never show up in
+    // a normalized type name.  The keyword of the *input* type is taken care of
+    // at the top of this function, but desugaring can expose a new one, as in
+    //    typedef typename std::vector<T*> seq_type;
+    // where the keyword sits on the TemplateSpecializationType that the typedef
+    // resolves to.
+    if (const auto* TST =
+            dyn_cast<TemplateSpecializationType>(QT.getTypePtr())) {
+      if (TST->getKeyword() != ElaboratedTypeKeyword::None) {
+        Qualifiers quals = QT.getLocalQualifiers();
+        QT = Ctx.getTemplateSpecializationType(ElaboratedTypeKeyword::None,
+                                               TST->getTemplateName(),
+                                               TST->template_arguments(),
+                                               /*CanonicalArgs=*/{},
+                                               TST->getCanonicalTypeInternal());
+        QT = Ctx.getQualifiedType(QT, quals);
+      }
+    }
+
     // If we have a reference, array or pointer we still need to
     // desugar what they point to.
     if (isa<PointerType>(QT.getTypePtr()) ||

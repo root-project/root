@@ -252,3 +252,37 @@ TEST(TClingDataMemberInfo, Offset)
    EXPECT_EQ(-1L, (ptrdiff_t)GeoManagerInfo->GetAddress());
 #endif // R__USE_CXXMODULES and R__HAS_GEOM
 }
+
+// https://github.com/root-project/root/issues/23055
+// The 'typename' of a dependent alias is part of the spelling of the type, not
+// of its identity: it must not end up in the normalized type name, which is
+// what the I/O uses to match a member against the on-file description.
+TEST(TClingDataMemberInfo, TypenameKeyword)
+{
+   gInterpreter->Declare(R"CODE(
+#include <vector>
+namespace ROOT23055 {
+struct Track {
+   int value = 0;
+};
+template <class T>
+struct Container {
+   typedef typename std::vector<T *> seq_type;
+   seq_type fSequential;
+   std::vector<typename std::vector<T *>::value_type> fNested;
+};
+}
+)CODE");
+
+   TClass *cl = TClass::GetClass("ROOT23055::Container<ROOT23055::Track>");
+   ASSERT_NE(cl, nullptr);
+   auto *members = cl->GetListOfDataMembers();
+
+   auto *sequential = (TDataMember *)members->FindObject("fSequential");
+   ASSERT_NE(sequential, nullptr);
+   EXPECT_STREQ(sequential->GetTrueTypeName(), "vector<ROOT23055::Track*>");
+
+   auto *nested = (TDataMember *)members->FindObject("fNested");
+   ASSERT_NE(nested, nullptr);
+   EXPECT_STREQ(nested->GetTrueTypeName(), "vector<ROOT23055::Track*>");
+}
