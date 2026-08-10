@@ -84,7 +84,7 @@ else()
       FitPanel
   )
   ROOT_GENERATE_TARGET_DICTIONARY(RooFitXRooFit
-    DICTIONARY_OPTIONS "-writeEmptyRootPCM")
+    OPTIONS "-writeEmptyRootPCM")
   install(TARGETS RooFitXRooFit
     EXPORT ${CMAKE_PROJECT_NAME}Exports
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
