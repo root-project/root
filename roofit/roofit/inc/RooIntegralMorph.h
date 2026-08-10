@@ -65,7 +65,7 @@ public:
       void interpolateGap(Int_t ixlo, Int_t ixhi);
 
       RooIntegralMorph *_self; //
-      std::unique_ptr<RooArgSet> _nset;
+      std::unique_ptr<RooArgSet> _nargset;
       RooAbsPdf *_pdf1;                         // PDF1
       RooAbsPdf *_pdf2;                         // PDF2
       RooRealVar *_x;                           // X
