@@ -378,7 +378,7 @@ bool RWebWindowsManager::InformListener(const std::string &msg)
 ///      WebGui.UnixSocket: /path/to/unix/socket
 ///      WebGui.UnixSocketMode: 0700
 ///
-/// Typically one use unix sockets together with server mode like `root --web=server:/tmp/root.socket` and
+/// Typically one uses unix sockets together with server mode like `root --web=server:/tmp/root.socket` and
 /// then redirect it via ssh tunnel (e.g. using `rootssh`) to client node
 ///
 /// All incoming requests processed in THttpServer in timer handler with 10 ms timeout.
