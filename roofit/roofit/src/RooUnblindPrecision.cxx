@@ -41,7 +41,7 @@ RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
                 double scale, RooAbsReal& value,
                 bool sin2betaMode)
   : RooAbsHiddenReal(name,title),
-  _value("value","Precision blinded value",this,value),
+  _proxyValue("value","Precision blinded value",this,value),
   _blindEngine(blindString,RooBlindTools::full,centralValue,scale,sin2betaMode)
 {
 }
@@ -54,7 +54,7 @@ RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
                 double scale, RooAbsReal& value, RooAbsCategory& blindState,
                 bool sin2betaMode)
   : RooAbsHiddenReal(name,title,blindState),
-  _value("value","Precision blinded value",this,value),
+  _proxyValue("value","Precision blinded value",this,value),
   _blindEngine(blindString,RooBlindTools::full,centralValue,scale,sin2betaMode)
 {
 }
@@ -64,7 +64,7 @@ RooUnblindPrecision::RooUnblindPrecision(const char *name, const char *title,
 
 RooUnblindPrecision::RooUnblindPrecision(const RooUnblindPrecision& other, const char* name) :
   RooAbsHiddenReal(other, name),
-  _value("asym",this,other._value),
+  _proxyValue("asym",this,other._proxyValue),
   _blindEngine(other._blindEngine)
 {
 }
@@ -76,9 +76,9 @@ double RooUnblindPrecision::evaluate() const
 {
   if (isHidden()) {
     // Blinding active for this event
-    return _blindEngine.UnHidePrecision(_value);
+    return _blindEngine.UnHidePrecision(_proxyValue);
   } else {
     // Blinding not active for this event
-    return _value ;
+    return _proxyValue ;
   }
 }

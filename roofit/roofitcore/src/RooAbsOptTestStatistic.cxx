@@ -39,18 +39,14 @@ parallelized calculation of test statistics.
 
 #include "RooAbsOptTestStatistic.h"
 
-#include "Riostream.h"
-#include "TClass.h"
 #include <cstring>
 
 #include "RooAbsData.h"
 #include "RooAbsDataStore.h"
 #include "RooAbsPdf.h"
-#include "RooAddPdf.h"
 #include "RooArgSet.h"
 #include "RooBinSamplingPdf.h"
 #include "RooBinning.h"
-#include "RooCategory.h"
 #include "RooDataHist.h"
 #include "RooDataSet.h"
 #include "RooErrorHandler.h"
@@ -59,7 +55,6 @@ parallelized calculation of test statistics.
 #include "RooMsgService.h"
 #include "RooProdPdf.h"
 #include "RooProduct.h"
-#include "RooRealSumPdf.h"
 #include "RooRealVar.h"
 #include "RooVectorDataStore.h"
 
@@ -126,7 +121,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic &oth
       return;
    }
 
-   initSlave(*other._funcClone, *other._dataClone, other._projDeps ? *other._projDeps : RooArgSet(),
+   initSlave(*other._funcClone, *other._dataClone, other._projDepsOpt ? *other._projDepsOpt : RooArgSet(),
              other._rangeName.c_str(), other._addCoefRangeName.c_str());
 }
 
@@ -297,16 +292,16 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // Remove projected dependents from normalization set
   if (!projDeps.empty()) {
 
-    _projDeps = new RooArgSet;
-    projDeps.snapshot(*_projDeps, false) ;
+     _projDepsOpt = new RooArgSet;
+     projDeps.snapshot(*_projDepsOpt, false);
 
-    //RooArgSet* tobedel = (RooArgSet*) _normSet->selectCommon(*_projDeps) ;
-    _normSet->remove(*_projDeps,true,true) ;
+     // RooArgSet* tobedel = (RooArgSet*) _normSet->selectCommon(*_projDeps) ;
+     _normSet->remove(*_projDepsOpt, true, true);
 
-    // Mark all projected dependents as such
-    RooArgSet projDataDeps;
-    _funcObsSet->selectCommon(*_projDeps, projDataDeps);
-    projDataDeps.setAttribAll("projectedDependent") ;
+     // Mark all projected dependents as such
+     RooArgSet projDataDeps;
+     _funcObsSet->selectCommon(*_projDepsOpt, projDataDeps);
+     projDataDeps.setAttribAll("projectedDependent");
   }
 
 
@@ -344,8 +339,8 @@ RooAbsOptTestStatistic::~RooAbsOptTestStatistic()
   if (operMode()==Slave) {
     delete _funcClone ;
     delete _funcObsSet ;
-    if (_projDeps) {
-      delete _projDeps ;
+    if (_projDepsOpt) {
+       delete _projDepsOpt;
     }
     if (_ownData) {
       delete _dataClone ;
@@ -769,7 +764,7 @@ const char* RooAbsOptTestStatistic::cacheUniqueSuffix() const {
 
 void RooAbsOptTestStatistic::runRecalculateCache(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
 {
-   _dataClone->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, _skipZeroWeights);
+   _dataClone->store()->recalculateCache(_projDepsOpt, firstEvent, lastEvent, stepSize, _skipZeroWeights);
 }
 
 /// \endcond

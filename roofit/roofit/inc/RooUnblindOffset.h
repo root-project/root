@@ -37,10 +37,10 @@ protected:
   // Function evaluation
   double evaluate() const override ;
 
-  RooRealProxy _value ;
+  RooRealProxy _proxyValue;
   RooBlindTools _blindEngine ;
 
-  ClassDefOverride(RooUnblindOffset,1) // Offset unblinding transformation
+  ClassDefOverride(RooUnblindOffset, 2) // Offset unblinding transformation
 };
 
 #endif

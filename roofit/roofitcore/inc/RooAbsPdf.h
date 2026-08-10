@@ -329,8 +329,6 @@ protected:
   mutable Int_t _traceCount = 0; ///< Number of traces remaining to print
   mutable Int_t _negCount = 0;   ///< Number of negative probabilities remaining to print
 
-  bool _selectComp = false; ///< Component selection flag for RooAbsPdf::plotCompOn
-
   std::unique_ptr<RooNumGenConfig> _specGeneratorConfig ; ///<! MC generator configuration specific for this object
 
   TString _normRange ; ///< Normalization range

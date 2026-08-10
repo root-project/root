@@ -248,12 +248,12 @@ RooIntegralMorph::MorphCacheElem::MorphCacheElem(RooIntegralMorph &self, const R
 {
   // Mark in base class that normalization of cached pdf is invariant under pdf parameters
 
-  _nset = std::make_unique<RooArgSet>(*_x);
+  _nargset = std::make_unique<RooArgSet>(*_x);
 
   _c1 = std::unique_ptr<RooAbsReal>{_pdf1->createCdf(*_x)};
   _c2 = std::unique_ptr<RooAbsReal>{_pdf2->createCdf(*_x)};
-  _cb1 = std::unique_ptr<RooAbsFunc>{_c1->bindVars(*_x,_nset.get())};
-  _cb2 = std::unique_ptr<RooAbsFunc>{_c2->bindVars(*_x,_nset.get())};
+  _cb1 = std::unique_ptr<RooAbsFunc>{_c1->bindVars(*_x,_nargset.get())};
+  _cb2 = std::unique_ptr<RooAbsFunc>{_c2->bindVars(*_x,_nargset.get())};
 
   _rf1 = std::make_unique<RooBrentRootFinder>(*_cb1);
   _rf2 = std::make_unique<RooBrentRootFinder>(*_cb2);
@@ -414,9 +414,9 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
     _rf2->findRoot(x2,x2,xMax,y) ;
 
     _x->setVal(x1);
-    double f1x1 = _pdf1->getVal(_nset.get());
+    double f1x1 = _pdf1->getVal(_nargset.get());
     _x->setVal(x2);
-    double f2x2 = _pdf2->getVal(_nset.get());
+    double f2x2 = _pdf2->getVal(_nargset.get());
     double fbarX = f1x1*f2x2 / ( _alpha->getVal()*f2x2 + (1-_alpha->getVal())*f1x1 ) ;
 
     dIter->Next() ;
