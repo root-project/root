@@ -1,8 +1,10 @@
+CMAKE_GENERATOR=Ninja
 builtin_civetweb=ON
 builtin_gtest=ON
 builtin_nlohmannjson=ON
 builtin_tbb=ON
 builtin_vdt=ON
 curl=OFF
+fortran=OFF
 pythia8=ON
 use_gsl_cblas=ON
