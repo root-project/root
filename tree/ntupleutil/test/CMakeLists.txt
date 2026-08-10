@@ -15,8 +15,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(CustomStructUtil
 configure_file(CustomStructUtil.hxx . COPYONLY)
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET CustomStructUtil POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libCustomStructUtil.dll
-                                     ${CMAKE_CURRENT_BINARY_DIR}/libCustomStructUtil.dll)
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libCustomStructUtil.dll
+                                                  ${CMAKE_CURRENT_BINARY_DIR}/libCustomStructUtil.dll)
 endif()
 
 ROOT_ADD_GTEST(ntuple_importer ntuple_importer.cxx LIBRARIES ROOTNTupleUtil CustomStructUtil)

@@ -23,16 +23,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Event
                               DEPENDENCIES Hist MathCore)
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET Event POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libEvent.dll
-                                     ${CMAKE_CURRENT_BINARY_DIR}/libEvent.dll)
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libEvent.dll
+                                                  ${CMAKE_CURRENT_BINARY_DIR}/libEvent.dll)
   if(NOT runtime_cxxmodules)
     add_custom_command(TARGET Event POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/libEvent_rdict.pcm
-                                       ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libEvent_rdict.pcm)
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/libEvent_rdict.pcm
+                                                    ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libEvent_rdict.pcm)
   else()
     add_custom_command(TARGET Event POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/Event.pcm
-                                     ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/Event.pcm)
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/Event.pcm
+                                                  ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/Event.pcm)
   endif()
 endif()
 ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree TreePlayer Hist Net)
@@ -256,8 +256,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreDict
                               DEPENDENCIES Core MathCore RIO GenVector Smatrix)
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET TrackMathCoreDict POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTrackMathCoreDict.dll
-                                     ${CMAKE_CURRENT_BINARY_DIR}/libTrackMathCoreDict.dll)
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTrackMathCoreDict.dll
+                                                  ${CMAKE_CURRENT_BINARY_DIR}/libTrackMathCoreDict.dll)
 endif()
 ROOT_EXECUTABLE(stressMathCore stressMathCore.cxx LIBRARIES MathCore Hist RIO Tree GenVector Smatrix)
 ROOT_ADD_TEST(test-stressmathcore COMMAND stressMathCore FAILREGEX "FAILED|Error in" LABELS longtest)

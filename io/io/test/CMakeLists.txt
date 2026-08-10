@@ -27,8 +27,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RFileTestIncludes
 configure_file(RFileTestIncludes.hxx . COPYONLY)
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET RFileTestIncludes POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libRFileTestIncludes.dll
-                                     ${CMAKE_CURRENT_BINARY_DIR}/libRFileTestIncludes.dll)
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libRFileTestIncludes.dll
+                                                  ${CMAKE_CURRENT_BINARY_DIR}/libRFileTestIncludes.dll)
 endif()
 ROOT_ADD_GTEST(rfile rfile.cxx LIBRARIES RIO Hist ROOTNTuple Tree RFileTestIncludes)
 if(pyroot)
