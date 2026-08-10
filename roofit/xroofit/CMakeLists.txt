@@ -85,6 +85,18 @@ else()
   )
   ROOT_GENERATE_TARGET_DICTIONARY(RooFitXRooFit
     DICTIONARY_OPTIONS "-writeEmptyRootPCM")
+  install(TARGETS RooFitXRooFit
+    EXPORT ${CMAKE_PROJECT_NAME}Exports
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    COMPONENT applications
+
+    # with this we no longer need the moveheader target etc
+    FILE_SET HEADERS 
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # add /ROOT to make Debian happy
+
+    FILE_SET linkDefs
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # add /ROOT to make Debian happy
+  )
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
