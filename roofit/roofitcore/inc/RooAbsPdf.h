@@ -340,7 +340,7 @@ private:
   friend class RooAbsReal;
   friend class RooChi2Var;
 
-  ClassDefOverride(RooAbsPdf,5) // Abstract PDF with normalization support
+  ClassDefOverride(RooAbsPdf,6) // Abstract PDF with normalization support
 };
 
 
