@@ -93,7 +93,6 @@ public:
    };
 
 private:
-   std::string fName = "";                  // Surface name
    ESurfaceType fType = kTdielectric_metal; // Surface type
    ESurfaceModel fModel = kMglisur;         // Surface model
    ESurfaceFinish fFinish = kFpolished;     // Surface finish
@@ -162,7 +161,7 @@ public:
    static ESurfaceFinish StringToFinish(const char *finish);
    static const char *FinishToString(ESurfaceFinish finish);
 
-   ClassDefOverride(TGeoOpticalSurface, 2) // Class representing an optical surface
+   ClassDefOverride(TGeoOpticalSurface, 3) // Class representing an optical surface
 };
 
 ////////////////////////////////////////////////////////////////////////////

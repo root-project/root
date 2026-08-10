@@ -2302,8 +2302,8 @@ TGeoPatternHoneycomb::TGeoPatternHoneycomb()
 {
    fNrows = 0;
    fAxisOnRows = 0;
-   fNdivisions = nullptr;
-   fStart = nullptr;
+   fNdivs = nullptr;
+   fRowStart = nullptr;
    CreateThreadData(1);
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -2313,8 +2313,8 @@ TGeoPatternHoneycomb::TGeoPatternHoneycomb(TGeoVolume *vol, Int_t nrows) : TGeoP
 {
    fNrows = nrows;
    fAxisOnRows = 0;
-   fNdivisions = nullptr;
-   fStart = nullptr;
+   fNdivs = nullptr;
+   fRowStart = nullptr;
    CreateThreadData(1);
    // compute everything else
 }
@@ -2325,8 +2325,8 @@ TGeoPatternHoneycomb::TGeoPatternHoneycomb(const TGeoPatternHoneycomb &pfh)
    : TGeoPatternFinder(pfh),
      fNrows(pfh.fNrows),
      fAxisOnRows(pfh.fAxisOnRows),
-     fNdivisions(pfh.fNdivisions),
-     fStart(pfh.fStart)
+     fNdivs(pfh.fNdivs),
+     fRowStart(pfh.fRowStart)
 {
    CreateThreadData(1);
 }
@@ -2340,8 +2340,8 @@ TGeoPatternHoneycomb &TGeoPatternHoneycomb::operator=(const TGeoPatternHoneycomb
       TGeoPatternFinder::operator=(pfh);
       fNrows = pfh.fNrows;
       fAxisOnRows = pfh.fAxisOnRows;
-      fNdivisions = pfh.fNdivisions;
-      fStart = pfh.fStart;
+      fNdivs = pfh.fNdivs;
+      fRowStart = pfh.fRowStart;
       CreateThreadData(1);
    }
    return *this;
