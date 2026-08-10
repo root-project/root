@@ -1371,10 +1371,20 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
     set(NO_CXXMODULE_FLAG "NO_CXXMODULE")
   endif()
 
+  set(dummy_source)
   if(ARG_NO_SOURCES)
     # Workaround bug in CMake by adding a dummy source file if all sources are generated, since
     # in that case the initial call to add_library() may not list any sources and CMake complains.
-    add_custom_command(OUTPUT dummy.cxx COMMAND ${CMAKE_COMMAND} -E touch dummy.cxx)
+    #
+    # The file is written here at configure time rather than by a custom command on purpose: all
+    # the packages of one directory share it, and listing one custom command output in several
+    # independent targets that build in parallel is not supported. With MSBuild the touch ran
+    # again on every build, so the 15 STL dictionaries of core/clingutils kept recompiling and
+    # relinking, while Ninja and Make happened to get away with it.
+    set(dummy_source ${CMAKE_CURRENT_BINARY_DIR}/dummy.cxx)
+    if(NOT EXISTS ${dummy_source})
+      file(WRITE ${dummy_source} "")
+    endif()
   endif()
 
   if(runtime_cxxmodules)
@@ -1390,16 +1400,14 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   endif()
 
   if (ARG_OBJECT_LIBRARY)
-    ROOT_OBJECT_LIBRARY(${libname}Objs ${ARG_SOURCES}
-                        $<$<BOOL:${ARG_NO_SOURCES}>:dummy.cxx>)
+    ROOT_OBJECT_LIBRARY(${libname}Objs ${ARG_SOURCES} ${dummy_source})
     ROOT_LINKER_LIBRARY(${libname} $<TARGET_OBJECTS:${libname}Objs>
                         LIBRARIES ${ARG_LIBRARIES}
                         DEPENDENCIES ${ARG_DEPENDENCIES}
                         BUILTINS ${ARG_BUILTINS}
                        )
   else(ARG_OBJECT_LIBRARY)
-    ROOT_LINKER_LIBRARY(${libname} ${ARG_SOURCES}
-                        $<$<BOOL:${ARG_NO_SOURCES}>:dummy.cxx>
+    ROOT_LINKER_LIBRARY(${libname} ${ARG_SOURCES} ${dummy_source}
                         LIBRARIES ${ARG_LIBRARIES}
                         DEPENDENCIES ${ARG_DEPENDENCIES}
                         BUILTINS ${ARG_BUILTINS}
