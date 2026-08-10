@@ -24,6 +24,7 @@ import tarfile
 import time
 
 import build_utils
+import null_build_check
 from build_utils import (
     calc_options_hash,
     die,
@@ -174,6 +175,10 @@ def main():
 
     build(options, args.buildtype)
 
+    # Done before anything else touches the build tree, and reported only at the
+    # very end so that a spurious rebuild does not cost us the test results.
+    null_build_ok = check_for_spurious_rebuilds(args.buildtype)
+
     # Build artifacts should only be uploaded for full builds, and only for
     # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
     # We also want to upload any successful build, even if it fails testing
@@ -200,6 +205,12 @@ def main():
 
     if testing and ctest_returncode != 0:
         handle_test_failure(ctest_returncode)
+
+    if not null_build_ok:
+        die(
+            msg="Building an already built ROOT rebuilt files it should not have; "
+            'see the "Check for spurious rebuilds" step above'
+        )
 
     print_trace()
 
@@ -443,18 +454,48 @@ def dump_requested_config(options):
     print(f"\nBUILD OPTIONS: {options}")
 
 
-@github_log_group("Build")
-def cmake_build(buildtype):
+def cmake_build_command(buildtype) -> str:
     generator_flags = "-- '-verbosity:minimal' '-consoleloggerparameters:summary'" if WINDOWS else ""
     parallel_jobs = "4" if WINDOWS else str(os.cpu_count())
 
     builddir = os.path.join(WORKDIR, "build")
-    result = subprocess_with_log(f"""
+
+    return f"""
         cmake --build '{builddir}' --config '{buildtype}' --parallel '{parallel_jobs}' {generator_flags}
-    """)
+    """
+
+
+@github_log_group("Build")
+def cmake_build(buildtype):
+    result = subprocess_with_log(cmake_build_command(buildtype))
 
     if result != 0:
         die(result, "Failed to build")
+
+
+@github_log_group("Check for spurious rebuilds")
+def check_for_spurious_rebuilds(buildtype) -> bool:
+    """Build a second time and check that there was nothing left to do.
+
+    Returns whether the build tree was already up to date, i.e. whether the
+    second build wrote nothing but the files listed in null_build_check.py.
+    """
+    builddir = os.path.join(WORKDIR, "build")
+
+    def rebuild() -> int:
+        # Use `subprocess_with_capture` to exclude the redo/second build from the list of reproducing steps.
+        return subprocess_with_capture(cmake_build_command(buildtype)).returncode
+
+    try:
+        touched = null_build_check.check_null_build(builddir, rebuild)
+    except RuntimeError as err:
+        # Not a spurious rebuild, but something we still want to know about.
+        build_utils.print_warning(f"Could not check for spurious rebuilds: {err}")
+        return True
+
+    null_build_check.report(builddir, touched)
+
+    return not touched
 
 
 def build(options, buildtype):
