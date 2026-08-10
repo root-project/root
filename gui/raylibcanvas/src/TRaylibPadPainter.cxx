@@ -26,6 +26,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include "earcut.hpp"
 
 using namespace ROOT::Experimental;
 
@@ -304,25 +305,64 @@ void TRaylibPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t 
 
 // ======================== DrawFillArea ==================================
 
+
+void drawTriangleSafe(const Vector2 &a, const Vector2 &b, const Vector2 &c, Color color)
+{
+   // Ensure raylib reads it correctly regardless of your point layout orientation
+   // (Uses the cross-product check logic)
+   float cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
+   if (cross < 0.0f) {
+      DrawTriangle(a, b, c, color);
+   } else {
+      DrawTriangle(a, c, b, color);
+   }
+}
+
+namespace mapbox {
+namespace util {
+template <>
+struct nth<0, Vector2> { inline static float get(const Vector2& t) { return t.x; }; };
+template <>
+struct nth<1, Vector2> { inline static float get(const Vector2& t) { return t.y; }; };
+}
+}
+
+void drawFilledPolygon(const std::vector<Vector2>& points, Color color)
+{
+   if (points.size() < 3) return; // A polygon must have at least 3 points
+
+   // Earcut expects a nested vector where the first element is the main outline,
+   // and subsequent elements are optional interior holes.
+   std::vector<std::vector<Vector2>> polygon;
+   polygon.push_back(points);
+
+   // Run triangulation -> returns an array of indices (grouped by 3s for triangles)
+   std::vector<uint32_t> indices = mapbox::earcut<uint32_t>(polygon);
+
+   // Loop through the indices and draw each triangle
+   for (size_t i = 0; i < indices.size(); i += 3)
+      drawTriangleSafe(points[indices[i]], points[indices[i + 1]], points[indices[i + 2]], color);
+}
+
+
 void TRaylibPadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Double_t *ys)
 {
    if (nPoints < 3 || GetAttFill().GetFillStyle() <= 0)
       return;
 
    Color col = GetRaylibColor(GetAttFill().GetFillColor());
-   float alpha = GetCurrentAlpha();
 
    std::vector<Vector2> verts((size_t)nPoints);
    for (Int_t n = 0; n < nPoints; ++n) {
       verts[(size_t)n] = {(float)gPad->XtoAbsPixel(xs[n]), (float)gPad->YtoAbsPixel(ys[n])};
    }
 
-   if (alpha < 1.0f) {
+   if (col.a < 255) {
       BeginBlendMode(BLEND_ALPHA_PREMULTIPLY);
-      DrawTriangleFan(verts.data(), nPoints, Fade(col, alpha));
+      drawFilledPolygon(verts, col);
       EndBlendMode();
    } else {
-      DrawTriangleFan(verts.data(), nPoints, col);
+      drawFilledPolygon(verts, col);
    }
 }
 
@@ -332,19 +372,17 @@ void TRaylibPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Flo
       return;
 
    Color col = GetRaylibColor(GetAttFill().GetFillColor());
-   float alpha = GetCurrentAlpha();
 
    std::vector<Vector2> verts((size_t)nPoints);
-   for (Int_t n = 0; n < nPoints; ++n) {
+   for (Int_t n = 0; n < nPoints; ++n)
       verts[(size_t)n] = {(float)gPad->XtoAbsPixel(xs[n]), (float)gPad->YtoAbsPixel(ys[n])};
-   }
 
-   if (alpha < 1.0f) {
+   if (col.a < 255) {
       BeginBlendMode(BLEND_ALPHA_PREMULTIPLY);
-      DrawTriangleFan(verts.data(), nPoints, Fade(col, alpha));
+      drawFilledPolygon(verts, col);
       EndBlendMode();
    } else {
-      DrawTriangleFan(verts.data(), nPoints, col);
+      drawFilledPolygon(verts, col);
    }
 }
 
@@ -456,8 +494,7 @@ void drawPolyMarkerImpl(Int_t nPoints, const T *x, const T *y, const TAttMarker 
             std::vector<Vector2> verts(markerShape.size());
             for (size_t j = 0; j < markerShape.size(); ++j)
                verts[j] = {(float)(px + markerShape[j].fX), (float)(py + markerShape[j].fY)};
-            if (verts.size() >= 3)
-               DrawTriangleFan(verts.data(), (int)verts.size(), col);
+            drawFilledPolygon(verts, col);
             break;
          }
 
@@ -475,7 +512,7 @@ void drawPolyMarkerImpl(Int_t nPoints, const T *x, const T *y, const TAttMarker 
                Vector2 t1 = {(float)(px + markerShape[j].fX),   (float)(py + markerShape[j].fY)};
                Vector2 t2 = {(float)(px + markerShape[j+1].fX), (float)(py + markerShape[j+1].fY)};
                Vector2 t3 = {(float)(px + markerShape[j+2].fX), (float)(py + markerShape[j+2].fY)};
-               DrawTriangle(t1, t2, t3, col);
+               drawTriangleSafe(t1, t2, t3, col);
             }
             break;
          }
