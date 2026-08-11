@@ -3,6 +3,7 @@
 ///
 /// \macro_code
 ///
+/// \author Alja Mrak-Tadel
 
 #include <ROOT/REveGeoTopNode.hxx>
 #include <ROOT/REveGeoPolyShape.hxx>
