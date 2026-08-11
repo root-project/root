@@ -19,6 +19,12 @@
 #include <ROOT/RResultHandle.hxx> // users of RunGraphs might rely on this transitive include
 #include <ROOT/TypeTraits.hxx>
 
+#include "RConfigure.h" // for R__HAS_ROOT7
+#ifdef R__HAS_ROOT7
+#include <ROOT/RHist.hxx>
+#include <ROOT/RHistEngine.hxx>
+#endif
+
 #include <array>
 #include <chrono>
 #include <fstream>
@@ -80,6 +86,7 @@ std::shared_ptr<T> CopyForVariations(const T &obj)
    return std::make_shared<T>(obj);
 }
 
+#ifdef R__HAS_ROOT7
 /// \brief Specialization of CopyForVariations for ROOT::Experimental::RHist objects, which are not copyable but
 /// clonable.
 template <typename B>
@@ -95,6 +102,7 @@ std::shared_ptr<ROOT::Experimental::RHistEngine<B>> CopyForVariations(const ROOT
 {
    return std::make_shared<ROOT::Experimental::RHistEngine<B>>(obj.Clone());
 }
+#endif
 
 } // namespace RDF
 } // namespace Internal
