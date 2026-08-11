@@ -357,8 +357,8 @@ void ProgressHelper::PrintStatsFinal() const
 {
    auto &stream = std::cout;
    RestoreStreamState restore(stream);
-   const auto elapsedSeconds =
-      std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - fBeginTime);
+   const std::chrono::duration<double> elapsed = std::chrono::system_clock::now() - fBeginTime;
+   const auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(elapsed);
    const auto totalEvents = ComputeTotalEvents();
 
    // The next line resets the current line output in the terminal.
@@ -385,7 +385,9 @@ void ProgressHelper::PrintStatsFinal() const
    if (fUseShellColours)
       stream << "\033[0m";
 
-   stream << "  " << std::scientific << std::setprecision(2) << (double)totalEvents / elapsedSeconds.count()
+   // Divide by the full-precision duration rather than by `elapsedSeconds`: the latter is truncated
+   // to whole seconds, so it is zero for any event loop shorter than a second.
+   stream << "  " << std::scientific << std::setprecision(2) << (double)totalEvents / elapsed.count()
           << " evt/s";
 
    stream << "]\n";
