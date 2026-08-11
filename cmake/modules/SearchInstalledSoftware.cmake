@@ -87,7 +87,7 @@ string(REPLACE "-Werror " "" ROOT_EXTERNAL_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 # ROOT_FIND_REQUIRED_DEP(PACKAGE_NAME BUILTIN_CONFIG_OPTION [MIN_REQUIRED_VERSION])
 # Search for a required dependency, unless it's meant to be a built-in.
 # A list of all missing required packages will be printed in case they could
-# not be found.
+# not be found as well as a hotfix to turn builtins ON.
 macro(ROOT_FIND_REQUIRED_DEP PACKAGE_NAME BUILTIN_CONFIG_OPTION)
   if(NOT ${BUILTIN_CONFIG_OPTION})
     set(MIN_REQUIRED_VERSION "")
@@ -120,10 +120,13 @@ ROOT_FIND_REQUIRED_DEP(LibLZMA builtin_lzma)
 ROOT_FIND_REQUIRED_DEP(ZLIB builtin_zlib)
 ROOT_FIND_REQUIRED_DEP(ZSTD builtin_zstd 1.0.0)
 ROOT_FIND_REQUIRED_DEP(xxHash builtin_xxhash)
+if(builtin_zlib) # We advance the builtin ZLIB creation to avoid error later in PNG/TIFF
+  add_subdirectory(builtins/zlib)
+endif()
 if(asimage)
   ROOT_FIND_REQUIRED_DEP(GIF builtin_gif)
   ROOT_FIND_REQUIRED_DEP(JPEG builtin_jpeg)
-  # PNG/TIFF must go after ZLIB search
+  # PNG/TIFF must go after ZLIB builtin
   ROOT_FIND_REQUIRED_DEP(PNG builtin_png)
   ROOT_FIND_REQUIRED_DEP(TIFF builtin_tiff)
 endif()
@@ -298,7 +301,7 @@ endif()
 
 #---Check for Zlib ------------------------------------------------------------------
 if(builtin_zlib)
-  add_subdirectory(builtins/zlib)
+  # add_subdirectory(builtins/zlib) Already done above to prevent conflicts
 else()
   # If not built-in, check if this is zlib-ng
   set(CMAKE_REQUIRED_INCLUDES ${ZLIB_INCLUDE_DIRS})
