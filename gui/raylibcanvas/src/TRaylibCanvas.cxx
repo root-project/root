@@ -18,6 +18,7 @@
 #include "TClass.h"
 #include "TError.h"
 #include "TTimer.h"
+#include "TApplication.h"
 
 #include <raylib.h>
 #include <raymath.h>
@@ -31,22 +32,13 @@ using namespace ROOT::Experimental;
 
 // ─── Shared window state ──────────────────────────────────────────────
 
-std::atomic<bool> TRaylibCanvas::sWindowReady{false};
-std::atomic<int> TRaylibCanvas::sActiveCanvasCount{0};
 
 static bool sRaylibInitialized = false;
-static int sWindowWidth = 0;
-static int sWindowHeight = 0;
+RenderTexture2D persistentCanvas;
+Bool_t hasPersistentCanvas = false;
 
-RenderTexture2D persistentCanvas; // = LoadRenderTexture(canvasWidth, canvasHeight);
-
-const float menuBarHeight = 32.0f;
-const float statusBarHeight = 24.0f;
-
-// UI Interaction Tracking variables
-bool fileDropdownOpen = false;
-int fileMenuSelection = 0; // Keeps track of active dropdown choices
-const char* statusMessage = "System Status: Ready";
+const int menuBarHeight = 28;
+const int statusBarHeight = 24;
 
 class TRaylibEventsTimer : public TTimer {
 
@@ -63,107 +55,14 @@ public:
       ::PollInputEvents();
 
       TCanvas *canv = gPad ? gPad->GetCanvas() : nullptr;
+      TRaylibCanvas *imp = canv ? dynamic_cast<TRaylibCanvas *>(canv->GetCanvasImp()) : nullptr;
 
-      if (::WindowShouldClose() && canv) {
-         ::CloseWindow();
-         return;
-      }
-
-      if (::IsWindowResized() && canv) {
-         sWindowWidth = GetScreenWidth();
-         sWindowHeight = GetScreenHeight();
-         canv->Resize();
-         UnloadRenderTexture(persistentCanvas);
-         persistentCanvas = LoadRenderTexture(sWindowWidth, sWindowHeight - menuBarHeight - statusBarHeight);
-         canv->ModifiedUpdate();
-      }
-
-      ::BeginDrawing();
-      ::ClearBackground(RAYWHITE);
-
-      Rectangle sourceRect = { 0, 0, (float)persistentCanvas.texture.width, -(float)persistentCanvas.texture.height };
-      Vector2 targetPos = { 0, menuBarHeight }; // Place below our top menu layout border line
-      DrawTextureRec(persistentCanvas.texture, sourceRect, targetPos, WHITE);
-
-      // Draw top layout border frame
-      GuiPanel((Rectangle){ 0, 0, (float)sWindowWidth, menuBarHeight }, "");
-
-      // Draw bottom status layout bar
-      // GuiStatusBar is a native control built for standard message layouts
-      GuiStatusBar((Rectangle){ 0, (float)sWindowHeight - statusBarHeight, (float)sWindowWidth, statusBarHeight }, statusMessage);
-
-      // RENDER LAYER C: Interactive UI Components
-      // Top Left Menu Text/Label Button
-      //if (GuiLabelButton((Rectangle){ 10, 4, 60, 24 }, "#01# File")) {
-      //   fileDropdownOpen = true; // Toggle dropdown view state
-      //}
-
-      // Secondary Menu Bar buttons can go here horizontally
-      if (GuiLabelButton((Rectangle){ 80, 4, 60, 24 }, "#11# Edit")) {
-         statusMessage = "Status: Edit Menu Activated";
-      }
-      if (GuiLabelButton((Rectangle){ 150, 4, 60, 24 }, "#195# Help")) {
-         statusMessage = "Status: Showing Help Manual";
-      }
-
-      const char* dropdownOptions = "File;New;Open;Save;Exit";
-      // GuiDropdownBox tracks focus selections and updates internal states
-      if (GuiDropdownBox( (Rectangle){ 10, 4, 90, 20 }, dropdownOptions, &fileMenuSelection, fileDropdownOpen)) {
-         fileDropdownOpen = !fileDropdownOpen; // Hide dropdown overlay on action complete
-         switch (fileMenuSelection) {
-            case 0: statusMessage = "Action: Creating New Project..."; break;
-            case 1: statusMessage = "Action: Loading Project Files..."; break;
-            case 2: statusMessage = "Action: Changes Saved Successfully!"; break;
-            case 3: statusMessage = "Action: Exit ROOT!"; break;
-         }
-         fileMenuSelection = 0;
-      }
-
-      ::EndDrawing();
-
+      if (imp)
+         imp->RunRaylib();
    }
 };
 
 static TRaylibEventsTimer *sTimer = nullptr;
-
-/*
-static std::mutex sRaylibInitMutex;
-
-// Timer callback for render loop
-static void raylib_render_timer_callback(void *)
-{
-   // Process input events
-   PollInputEvents();
-
-   // Check if any canvas needs redrawing
-   if (sRaylibInitialized && IsWindowReady()) {
-      BeginDrawing();
-      ClearBackground(RAYWHITE);
-
-      // Paint all modified canvases
-      auto *list = gROOT->GetListOfCanvases();
-      if (list) {
-         TIter next(list);
-         TCanvas *canv;
-         while ((canv = static_cast<TCanvas *>(next()))) {
-            if (canv->IsModified() && canv->GetCanvasImp()) {
-               canv->Paint();
-               canv->ResetModified();
-            }
-         }
-      }
-
-      EndDrawing();
-   }
-
-   // Check window close
-   if (WindowShouldClose()) {
-      if (gApplication)
-         gApplication->Terminate();
-   }
-}
-
-*/
 
 // ─── Initialize raylib window ─────────────────────────────────────────
 
@@ -177,12 +76,7 @@ void TRaylibCanvas::EnsureRaylibInitialized(int width, int height)
       ::InitWindow(width > 0 ? width : 1200, height > 0 ? height : 800, "ROOT Canvas");
       SetTargetFPS(30);
       // SetRenderHint(RENDER_HINT_ANTIALIASED_LINES, true);
-      sWindowWidth = GetScreenWidth();
-      sWindowHeight = GetScreenHeight();
       sRaylibInitialized = true;
-      sWindowReady.store(::IsWindowReady());
-
-      persistentCanvas = LoadRenderTexture(sWindowWidth, sWindowHeight - menuBarHeight - statusBarHeight);
 
       // enable timer for the raylib events processing
       sTimer = new TRaylibEventsTimer(10, kTRUE);
@@ -199,21 +93,10 @@ TRaylibCanvas::TRaylibCanvas(TCanvas *c, const char *name, Int_t x, Int_t y,
      fWindowWidth(width), fWindowHeight(height),
      fPosX(x), fPosY(y)
 {
-//   sActiveCanvasCount.fetch_add(1);
 }
 
 TRaylibCanvas::~TRaylibCanvas()
 {
-   /*
-   sActiveCanvasCount.fetch_sub(1);
-
-   // If last canvas, optionally close raylib window
-   if (sActiveCanvasCount.load() <= 0 && sRaylibInitialized) {
-      CloseWindow();
-      sRaylibInitialized = false;
-      sWindowReady.store(false);
-   }
-   */
 }
 
 // ─── Window Lifecycle ─────────────────────────────────────────────────
@@ -240,35 +123,21 @@ void TRaylibCanvas::Show()
 
 UInt_t TRaylibCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 {
-   if (sRaylibInitialized && IsWindowReady()) {
-      sWindowWidth = GetScreenWidth();
-      sWindowHeight = GetScreenHeight();
-
-      Vector2 pos = GetWindowPosition();
-      x = (int)pos.x;
-      y = (int)pos.y;
-      w = (UInt_t)sWindowWidth;
-      h = (UInt_t)(sWindowHeight - menuBarHeight - statusBarHeight);
-   } else {
-      x = fPosX;
-      y = fPosY;
-      w = (UInt_t)fWindowWidth;
-      h = (UInt_t)fWindowHeight;
-   }
+   x = fPosX;
+   y = fPosY;
+   w = (UInt_t)fWindowWidth;
+   h = (UInt_t)fWindowHeight;
    return 0;
 }
 
 void TRaylibCanvas::GetCanvasGeometry(Int_t /*wid*/, UInt_t &w, UInt_t &h)
 {
-   if (sRaylibInitialized && IsWindowReady()) {
-      sWindowWidth = GetScreenWidth();
-      sWindowHeight = GetScreenHeight();
-      w = (UInt_t)sWindowWidth;
-      h = (UInt_t)sWindowHeight - menuBarHeight - statusBarHeight;
-   } else {
-      w = (UInt_t)fWindowWidth;
-      h = (UInt_t)fWindowHeight;
-   }
+   w = (UInt_t)fWindowWidth;
+   h = (UInt_t)fWindowHeight;
+   if (fMenuBar)
+      h -= menuBarHeight;
+   if (fStatusBar)
+      h -= statusBarHeight;
 }
 
 void TRaylibCanvas::ResizeCanvasWindow(Int_t /*wid*/)
@@ -305,9 +174,10 @@ void TRaylibCanvas::SetWindowSize(UInt_t w, UInt_t h)
    fWindowWidth = (int)w;
    fWindowHeight = (int)h;
    if (sRaylibInitialized && IsWindowReady()) {
-      ::SetWindowSize((int)w, (int)h);
-      sWindowWidth = GetScreenWidth();
-      sWindowHeight = GetScreenHeight();
+      ::SetWindowSize((int)fWindowWidth, (int)fWindowHeight);
+      fWindowWidth = GetScreenWidth();
+      fWindowHeight = GetScreenHeight();
+      fResized = kTRUE;
    }
 }
 
@@ -319,10 +189,13 @@ void TRaylibCanvas::SetWindowTitle(const char *newTitle)
    }
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Method used to set fixed canvas size with scrolliing, not supported with raylib
+
 void TRaylibCanvas::SetCanvasSize(UInt_t cw, UInt_t ch)
 {
-   fWindowWidth = (int)cw;
-   fWindowHeight = (int)ch;
+   // fWindowWidth = (int)cw;
+   // fWindowHeight = (int)ch;
 }
 
 void TRaylibCanvas::Iconify()
@@ -345,7 +218,7 @@ void TRaylibCanvas::RaiseWindow()
 
 Bool_t TRaylibCanvas::PerformUpdate(Bool_t /*async*/)
 {
-   if (!Canvas() || !Canvas()->IsModified() || !IsWindowReady())
+   if (!Canvas() || !Canvas()->IsModified() || !IsWindowReady() || !hasPersistentCanvas)
       return kFALSE;
 
    // One can make painting directly
@@ -368,6 +241,87 @@ TVirtualPadPainter *TRaylibCanvas::CreatePadPainter()
 {
    return new TRaylibPadPainter();
 }
+
+///////////////////////////////////////////////////////
+/// Central method to run raylib/raygui functionality
+
+void TRaylibCanvas::RunRaylib()
+{
+   if (::WindowShouldClose()) {
+      ::CloseWindow();
+      return;
+   }
+
+   Vector2 winPos = GetWindowPosition();
+   fPosX = (Int_t) winPos.x;
+   fPosY = (Int_t) winPos.y;
+
+   if (::IsWindowResized() || fResized || !hasPersistentCanvas) {
+      fWindowWidth = GetScreenWidth();
+      fWindowHeight = GetScreenHeight();
+      Canvas()->Resize();
+      if (hasPersistentCanvas)
+         UnloadRenderTexture(persistentCanvas);
+      int canvh = fWindowHeight;
+      if (fMenuBar) canvh -= menuBarHeight;
+      if (fStatusBar) canvh -= statusBarHeight;
+      persistentCanvas = LoadRenderTexture(fWindowWidth, canvh);
+      hasPersistentCanvas = kTRUE;
+
+      Canvas()->ModifiedUpdate();
+      fResized = kFALSE;
+   }
+
+   ::BeginDrawing();
+   ::ClearBackground(RAYWHITE);
+
+   Rectangle sourceRect = { 0, 0, (float)persistentCanvas.texture.width, -(float)persistentCanvas.texture.height };
+   Vector2 targetPos = { 0, fMenuBar ? menuBarHeight : 0 }; // Place below our top menu layout border line
+   DrawTextureRec(persistentCanvas.texture, sourceRect, targetPos, WHITE);
+
+   // Draw top layout border frame
+   // GuiPanel((Rectangle){ 0, 0, (float)fWindowWidth, menuBarHeight }, "");
+
+   // Draw bottom status layout bar
+   // GuiStatusBar is a native control built for standard message layouts
+   if (fStatusBar)
+      GuiStatusBar((Rectangle){ 0, (float)fWindowHeight - statusBarHeight, (float)fWindowWidth, statusBarHeight }, fStatusMessage.Data());
+
+   if (!fMenuBar) {
+      ::EndDrawing();
+      return;
+   }
+
+   // GuiDropdownBox tracks focus selections and updates internal states
+   if (GuiDropdownBox( (Rectangle){ 10, 4, 80, 24 }, "File;New canvas;Open;Save;Save as ...;Close canvas;Print;Quit ROOT", &fFileMenuSelection, fFileDropdownOpen)) {
+      fFileDropdownOpen = !fFileDropdownOpen; // Hide dropdown overlay on action complete
+      switch (fFileMenuSelection) {
+         case 0: fStatusMessage = "Action: Select file"; break;
+         case 1: fStatusMessage = "Action: New canvas"; break;
+         case 2: fStatusMessage = "Action: Open ROOT file"; break;
+         case 3: fStatusMessage = "Action: Save canvas"; break;
+         case 4: fStatusMessage = "Action: Save as canvas"; break;
+         case 5: fStatusMessage = "Action: Close canvas"; break;
+         case 6: fStatusMessage = "Action: Print canvas"; break;
+         case 7:
+            fStatusMessage = "Action: Quit ROOT";
+            gApplication->Terminate(0);
+            break;
+      }
+      fFileMenuSelection = 0;
+   }
+
+   // Secondary Menu Bar buttons can go here horizontally
+   if (GuiLabelButton((Rectangle){ 100, 4, 60, 24 }, "#11# Edit")) {
+      fStatusMessage = "Status: Edit Menu Activated";
+   }
+   if (GuiLabelButton((Rectangle){ 150, 4, 60, 24 }, "#195# Help")) {
+      fStatusMessage = "Status: Showing Help Manual";
+   }
+
+   ::EndDrawing();
+}
+
 
 // ─── Static Factory: NewCanvas (plugin entry point) ───────────────────
 

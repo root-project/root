@@ -12,7 +12,7 @@
 #define ROOT_TRaylibCanvas
 
 #include "TCanvasImp.h"
-#include <atomic>
+#include "TString.h"
 #include <string>
 
 class TTimer;
@@ -35,16 +35,19 @@ class TRaylibPadPainter;
 class TRaylibCanvas : public TCanvasImp {
 
 protected:
-   int fWindowWidth = 0;        ///<! configured window width
-   int fWindowHeight = 0;       ///<! configured window height
-   int fPosX = 0;               ///<! window x position
-   int fPosY = 0;               ///<! window y position
+   Int_t fWindowWidth = 0;      ///<! window width
+   Int_t fWindowHeight = 0;     ///<! window height
+   Int_t fPosX = 0;             ///<! window x position
+   Int_t fPosY = 0;             ///<! window y position
+   Bool_t fResized = kTRUE;     ///<! if window was resized
+   Bool_t fMenuBar = kTRUE;     ///<! use of menu bar
+   Bool_t fStatusBar = kTRUE;   ///<! use of status bar
 
    std::string fWindowTitle;    ///<! current window title
 
-   // Shared window state (static because raylib = single window)
-   static std::atomic<bool> sWindowReady;
-   static std::atomic<int> sActiveCanvasCount;
+   TString fStatusMessage;
+   int fFileMenuSelection = 0;
+   bool fFileDropdownOpen = false;
 
    static void EnsureRaylibInitialized(int width, int height);
 
@@ -67,8 +70,8 @@ public:
    void UpdateDisplay(Int_t = 0, Bool_t = kFALSE) override;
 
    // UI elements (noop — raylib draws them manually if needed)
-   void ShowMenuBar(Bool_t = kTRUE) override {}
-   void ShowStatusBar(Bool_t = kTRUE) override {}
+   void ShowMenuBar(Bool_t on = kTRUE) override { fMenuBar = on; fResized = kTRUE; }
+   void ShowStatusBar(Bool_t on = kTRUE) override { fStatusBar = on; fResized = kTRUE; }
    void ShowEditor(Bool_t = kTRUE) override {}
    void ShowToolBar(Bool_t = kTRUE) override {}
    void ShowToolTips(Bool_t = kTRUE) override {}
@@ -83,10 +86,12 @@ public:
    void RaiseWindow() override;
 
    Bool_t HasEditor() const override { return kFALSE; }
-   Bool_t HasMenuBar() const override { return kFALSE; }
-   Bool_t HasStatusBar() const override { return kFALSE; }
+   Bool_t HasMenuBar() const override { return fMenuBar; }
+   Bool_t HasStatusBar() const override { return fStatusBar; }
    Bool_t HasToolBar() const override { return kFALSE; }
    Bool_t HasToolTips() const override { return kFALSE; }
+
+   void RunRaylib();
 
    // Static factory
    static TCanvasImp *NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y,
