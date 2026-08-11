@@ -100,6 +100,7 @@ macro(ROOT_FIND_REQUIRED_DEP PACKAGE_NAME BUILTIN_CONFIG_OPTION)
       "Please install it in the system (preferred), set the corresponding CMake search variable, "
       "or opt in to downloading it using '-D${BUILTIN_CONFIG_OPTION}=ON'.")
       list(APPEND MISSING_PACKAGES ${PACKAGE_NAME})
+      list(APPEND MISSING_BUILTINS '-D${BUILTIN_CONFIG_OPTION}=ON')
     endif()
   endif()
 endmacro()
@@ -134,7 +135,8 @@ if (testing OR testsupport)
 endif()
 
 if(NOT "${MISSING_PACKAGES}" STREQUAL "")
-  message(FATAL_ERROR "The following packages need to be installed or enabled to build ROOT: ${MISSING_PACKAGES}")
+  message(SEND_ERROR "The following packages need to be installed system-wide to build ROOT: ${MISSING_PACKAGES}")
+  message(FATAL_ERROR "Alternatively, a hotfix would be to add these flags to your CMake call: ${MISSING_BUILTINS}")
 endif()
 
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
