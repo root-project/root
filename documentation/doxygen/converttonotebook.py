@@ -423,7 +423,7 @@ def findBracedBlock(text, startpos, openingBraceChar):
 
 
 def findStuffBeforeFunc(text, searchStart, searchEnd):
-    beforeFunctionRe = re.compile("(;|}|//[^\n]*)\s*$", flags = re.MULTILINE)
+    beforeFunctionRe = re.compile("(;|}|//[^\n]*)\\s*$", flags = re.MULTILINE)
     try:
         # Find the last '}' or comment line etc before function definition:
         lastMatchBeforeFunc = [thisMatch for thisMatch in beforeFunctionRe.finditer(text, searchStart, searchEnd)][-1]
@@ -622,7 +622,7 @@ def roofitRemoveSpacesComments(code):
         matchString = matchString.replace("THISISASPACE" , " ")
         return matchString
 
-    newcode = re.sub("#\s\s?\w\s[\w-]\s\w.*", changeString , code)
+    newcode = re.sub(r"#\s\s?\w\s[\w-]\s\w.*", changeString , code)
     return newcode
 
 def declareNamespace(code):

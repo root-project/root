@@ -78,6 +78,9 @@ doxygen: filter pyzdoc htmlfooter
 	$(call MkDir,$(DOXYGEN_EXAMPLE_PATH))
 	$(call MkDir,$(DOXYGEN_NOTEBOOK_PATH))
 	./makeinput.sh
+	echo "*** Diff of config file with default template:"
+	doxygen -x
+	echo "*** Run doxygen"
 	doxygen
 	bash ./CleanNamespaces.sh
 	gzip $(DOXYGEN_IMAGE_PATH)/ROOT.tag
