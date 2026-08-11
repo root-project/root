@@ -98,9 +98,9 @@ macro(ROOT_FIND_REQUIRED_DEP PACKAGE_NAME BUILTIN_CONFIG_OPTION)
     if(NOT ${PACKAGE_NAME}_FOUND)
       message(SEND_ERROR "The required package ${PACKAGE_NAME} was not found. "
       "Please install it in the system (preferred), set the corresponding CMake search variable, "
-      "or opt in to downloading it using '-D${BUILTIN_CONFIG_OPTION}=ON'.")
+      "or opt in to downloading and auto-build it from externally provided source tarball using '-D${BUILTIN_CONFIG_OPTION}=ON'.")
       list(APPEND MISSING_PACKAGES ${PACKAGE_NAME})
-      list(APPEND MISSING_BUILTINS '-D${BUILTIN_CONFIG_OPTION}=ON')
+      list(APPEND HOTFIX_BUILD_FLAGS '-D${BUILTIN_CONFIG_OPTION}=ON')
     endif()
   endif()
 endmacro()
@@ -115,28 +115,172 @@ endforeach()
 
 # Request explicit user opt-in for required "easy to self-install" dependencies
 # This purposely ignores the fail-on-missing=OFF behavior
-if(asimage)
-  ROOT_FIND_REQUIRED_DEP(GIF builtin_gif)
-  ROOT_FIND_REQUIRED_DEP(JPEG builtin_jpeg)
-  # We cannot PNG/TIFF here because while searching, CMake will also find ZLIB.
-  # If found, CMake will define the default variables and target:
-  # see https://cmake.org/cmake/help/latest/module/FindZLIB.html).
-  # For this reason, the check has to be put below, after ZLIB is searched for.
-  #ROOT_FIND_REQUIRED_DEP(PNG builtin_png)
-  #ROOT_FIND_REQUIRED_DEP(TIFF builtin_tiff)
-endif()
 ROOT_FIND_REQUIRED_DEP(LZ4 builtin_lz4)
 ROOT_FIND_REQUIRED_DEP(LibLZMA builtin_lzma)
 ROOT_FIND_REQUIRED_DEP(ZLIB builtin_zlib)
-ROOT_FIND_REQUIRED_DEP(ZSTD builtin_zstd)
+ROOT_FIND_REQUIRED_DEP(ZSTD builtin_zstd 1.0.0)
 ROOT_FIND_REQUIRED_DEP(xxHash builtin_xxhash)
+if(asimage)
+  ROOT_FIND_REQUIRED_DEP(GIF builtin_gif)
+  ROOT_FIND_REQUIRED_DEP(JPEG builtin_jpeg)
+  # PNG/TIFF must go after ZLIB search
+  ROOT_FIND_REQUIRED_DEP(PNG builtin_png)
+  ROOT_FIND_REQUIRED_DEP(TIFF builtin_tiff)
+endif()
 if (testing OR testsupport)
   ROOT_FIND_REQUIRED_DEP(GTest builtin_gtest 1.10)
 endif()
+ROOT_FIND_REQUIRED_DEP(nlohmann_json builtin_nlohmannjson 3.9)
+if(unuran)
+  ROOT_FIND_REQUIRED_DEP(Unuran builtin_unuran)
+endif()
+ROOT_FIND_REQUIRED_DEP(Freetype builtin_freetype) # needed for asimage, but also outside of it (for "graf" target)
+if(opengl)
+  ROOT_FIND_REQUIRED_DEP(gl2ps builtin_gl2ps)
+  ROOT_FIND_REQUIRED_DEP(FTGL builtin_ftgl)
+elseif(builtin_ftgl)
+  message(SEND_ERROR "FTGL features enabled with \"builtin_ftgl=ON\" require \"opengl=ON\"")
+  list(APPEND HOTFIX_BUILD_FLAGS '-Dopengl=ON')
+endif()
+foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES VERSION)
+  unset(OPENSSL_${suffix} CACHE)
+endforeach()
+if(ssl)
+  if (APPLE) # builtin OpenSSL is only supported on macOS
+    ROOT_FIND_REQUIRED_DEP(OpenSSL builtin_openssl)
+    if (NOT builtin_openssl)
+      find_package(OpenSSL COMPONENTS SSL) # extra search for components not done before
+      if(NOT OPENSSL_FOUND)
+        message(SEND_ERROR "OpenSSL found but missing required component SSL. Install it on the system (preferred), or explicitly request the builtin version. Or turn off ssl option.")
+        list(APPEND MISSING_PACKAGES 'OpenSSL')
+        list(APPEND HOTFIX_BUILD_FLAGS '-Dssl=OFF')
+      endif()
+    else()
+      ROOT_CHECK_CONNECTION("builtin_openssl=OFF")
+      if(NO_CONNECTION)
+        message(SEND_ERROR "No internet connection, disable the 'ssl' and 'builtin_openssl' options")
+        list(APPEND MISSING_PACKAGES 'OpenSSL')
+        list(APPEND HOTFIX_BUILD_FLAGS '-Dssl=OFF')
+        list(APPEND HOTFIX_BUILD_FLAGS '-Dbuiltin_openssl=OFF')
+      endif()
+    endif()
+  else()
+    find_package(OpenSSL COMPONENTS SSL)
+    if(NOT OPENSSL_FOUND)
+      message(SEND_ERROR "OpenSSL found but missing required component SSL. Install it on the system (preferred), or explicitly request the builtin version. Or turn off ssl option.")
+      list(APPEND MISSING_PACKAGES 'OpenSSL')
+      list(APPEND HOTFIX_BUILD_FLAGS '-Dssl=OFF')
+    endif()
+  endif()
+endif()
+if(http) # Must go after SSL
+  ROOT_FIND_REQUIRED_DEP(civetweb builtin_civetweb 1.15)
+endif()
+if(fftw3)
+  ROOT_FIND_REQUIRED_DEP(FFTW builtin_fftw3)
+endif()
+if(vdt)
+  ROOT_FIND_REQUIRED_DEP(Vdt builtin_vdt 0.4)
+endif()
+if(fitsio)
+  ROOT_FIND_REQUIRED_DEP(CFITSIO builtin_cfitsio)
+endif()
+if(xrootd) # Must go after SSL
+  foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
+    unset(XROOTD_${suffix} CACHE)
+  endforeach()
+  ROOT_FIND_REQUIRED_DEP(XRootD builtin_xrootd)
+  if(NOT builtin_xrootd)
+    if(NOT XROOTD_FOUND)
+       message(SEND_ERROR "You can also set environment variable XRDSYS to point to your XROOTD installation, "
+                          "or include the installation of XROOTD in the CMAKE_PREFIX_PATH. Or turn off xrootd.")
+    else()
+      # XROOTD was found. Check now for required components
+      foreach (component CLIENT UTILS) # ROOT requires XrdCl and XrdUtils
+        if("${XROOTD_${component}_LIBRARIES}" STREQUAL "XROOTD_${component}_LIBRARIES-NOTFOUND")
+          message(SEND_ERROR "XROOTD found but missing component ${component}. Install missing package on your system (preferred). "
+                             "Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD internally; or turn off xrootd.")
+          list(APPEND HOTFIX_BUILD_FLAGS '-Dxrootd=OFF')
+        endif()
+      endforeach()
+    endif()
+  endif()
+endif()
+if(builtin_xrootd)
+  if(NOT ssl AND NOT builtin_openssl)
+    message(SEND_ERROR "Building XRootD ('builtin_xrootd'=On) requires ssl support.")
+    list(APPEND HOTFIX_BUILD_FLAGS '-Dssl=ON')
+  endif()
+endif()
+if(xrootd AND NOT builtin_xrootd AND builtin_openssl)
+  message(SEND_ERROR "Non-builtin XROOTD must not be used with builtin OpenSSL. If you want to use non-builtin XROOTD, please use the system OpenSSL")
+  list(APPEND HOTFIX_BUILD_FLAGS '-Dxrootd=OFF')
+endif()
+if(imt)
+  ROOT_FIND_REQUIRED_DEP(TBB builtin_tbb 2020)
+  # Check that the found TBB does not use captured exceptions. If the header
+  # <tbb/tbb_config.h> does not exist, assume that we have oneTBB newer than
+  # version 2021, which does not have captured exceptions anyway.
+  if(TBB_FOUND AND EXISTS "${TBB_INCLUDE_DIRS}/tbb/tbb_config.h")
+    set(CMAKE_REQUIRED_INCLUDES "${TBB_INCLUDE_DIRS}")
+    check_cxx_source_compiles("
+#include <tbb/tbb_config.h>
+#if TBB_USE_CAPTURED_EXCEPTION == 1
+#error TBB uses tbb::captured_exception, not suitable for ROOT!
+#endif
+int main() { return 0; }" tbb_exception_result)
+    if(NOT tbb_exception_result)
+      message(SEND_ERROR "Found TBB uses tbb::captured_exception, not suitable for ROOT!, enable 'builtin_tbb' option or turn off 'imt'")
+      list(APPEND HOTFIX_BUILD_FLAGS '-Dbuiltin_tbb=ON')
+    endif()
+  endif()
+elseif(builtin_tbb)
+  message(SEND_ERROR "TBB features enabled with \"builtin_tbb=ON\" require \"imt=ON\"")
+  list(APPEND HOTFIX_BUILD_FLAGS '-Dimt=ON')
+endif()
+
+# Double package name call, needs special manual treatment, cannot call ROOT_FIND_REQUIRED_DEP:
+if(NOT builtin_pcre)
+  message(STATUS "Looking for PCRE")
+  # Clear cache before calling find_package(PCRE),
+  # necessary to be able to toggle builtin_pcre and
+  # not have find_package(PCRE) find builtin pcre.
+  foreach(suffix FOUND INCLUDE_DIR PCRE_LIBRARY)
+    unset(PCRE_${suffix} CACHE)
+  endforeach()
+  find_package(PCRE2)
+  if(NOT PCRE2_FOUND)
+    find_package(PCRE)
+    if(NOT PCRE_FOUND)
+      message(SEND_ERROR "The required package PCRE2 was not found. "
+      "Please install it in the system (preferred), set the corresponding CMake search variable, "
+      "or opt in to downloading and auto-build it from externally provided source tarball using '-Dbuiltin_pcre=ON'.")
+      list(APPEND MISSING_PACKAGES PCRE2)
+      list(APPEND HOTFIX_BUILD_FLAGS '-Dbuiltin_pcre=ON')
+    endif()
+  endif()
+endif()
+if(mathmore OR (tmva-cpu AND use_gsl_cblas))
+  if(builtin_gsl)
+    ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("builtin_gsl")
+  endif()
+  message(STATUS "Looking for GSL")
+  ROOT_FIND_REQUIRED_DEP(GSL builtin_gsl 1.10)
+  if(NOT builtin_gsl)
+    if(NOT GSL_FOUND)
+      message(SEND_ERROR "GSL package not found and 'mathmore' or 'tmva-cpu' and 'use_gsl_cblas' component is required. Either disable those, or enable the option 'builtin_gsl'")
+    endif()
+  endif()
+endif()
+
 
 if(NOT "${MISSING_PACKAGES}" STREQUAL "")
+  list(REMOVE_DUPLICATES MISSING_PACKAGES)
   message(SEND_ERROR "The following packages need to be installed system-wide to build ROOT: ${MISSING_PACKAGES}")
-  message(FATAL_ERROR "Alternatively, a hotfix would be to add these flags to your CMake call: ${MISSING_BUILTINS}")
+endif()
+if(NOT "${HOTFIX_BUILD_FLAGS}" STREQUAL "")
+  list(REMOVE_DUPLICATES HOTFIX_BUILD_FLAGS)
+  message(FATAL_ERROR "Alternatively, a hotfix would be to add these flags to your CMake call: ${HOTFIX_BUILD_FLAGS}")
 endif()
 
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
@@ -174,17 +318,8 @@ else()
   message(STATUS "Zlib detected")
 endif()
 
-if(asimage)
-  # This check can be added only now because of the reasons explained above, where all
-  # other required dependencies are checked.
-  ROOT_FIND_REQUIRED_DEP(PNG builtin_png)
-  ROOT_FIND_REQUIRED_DEP(TIFF builtin_tiff)
-endif()
-
 #---Check for nlohmann/json.hpp---------------------------------------------------------
 if(NOT builtin_nlohmannjson)
-  ROOT_FIND_REQUIRED_DEP(nlohmann_json builtin_nlohmannjson 3.9)
-
   # ROOTEve wants to know if it comes with json_fwd.hpp:
   if(TARGET nlohmann_json::nlohmann_json)
     get_target_property(inc_dirs nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
@@ -194,22 +329,16 @@ if(NOT builtin_nlohmannjson)
       endif()
     endforeach()
   endif()
-endif()
-
-if(builtin_nlohmannjson)
+else()
   add_subdirectory(builtins/nlohmann)
 endif()
 
 #---Check for Unuran ------------------------------------------------------------------
-if(unuran AND NOT builtin_unuran)
-  ROOT_FIND_REQUIRED_DEP(Unuran builtin_unuran)
-endif()
 if (builtin_unuran)
   add_subdirectory(builtins/unuran)
 endif()
 
 #---Check for Freetype---------------------------------------------------------------
-ROOT_FIND_REQUIRED_DEP(Freetype builtin_freetype) # needed for asimage, but also outside of it (for "graf" target)
 if(builtin_freetype)
   add_subdirectory(builtins/freetype)
 elseif(NOT Freetype_VERSION AND FREETYPE_VERSION_STRING)
@@ -231,23 +360,6 @@ if(cocoa)
 endif()
 
 #---Check for PCRE-------------------------------------------------------------------
-if(NOT builtin_pcre)
-  message(STATUS "Looking for PCRE")
-  # Clear cache before calling find_package(PCRE),
-  # necessary to be able to toggle builtin_pcre and
-  # not have find_package(PCRE) find builtin pcre.
-  foreach(suffix FOUND INCLUDE_DIR PCRE_LIBRARY)
-    unset(PCRE_${suffix} CACHE)
-  endforeach()
-  find_package(PCRE2)
-  if(NOT PCRE2_FOUND)
-    find_package(PCRE)
-    if(NOT PCRE_FOUND)
-      message(SEND_ERROR "PCRE2 required but not found. Install it on the system (preferred), or explicitly request the builtin version.")
-    endif()
-  endif()
-endif()
-
 if(builtin_pcre)
   add_subdirectory(builtins/pcre)
 endif()
@@ -263,10 +375,6 @@ if(builtin_xxhash)
 endif()
 
 #---Check for ZSTD-------------------------------------------------------------------
-if(ZSTD_FOUND AND ZSTD_VERSION VERSION_LESS 1.0.0)
-  message(FATAL "Version of installed ZSTD is too old: ${ZSTD_VERSION}. Please install newer version (>1.0.0)")
-endif()
-
 if(builtin_zstd)
   add_subdirectory(builtins/zstd)
 endif()
@@ -337,9 +445,7 @@ if(asimage)
 endif()
 
 #---Check for Python installation-------------------------------------------------------
-
 message(STATUS "Looking for Python")
-
 # On macOS, prefer user-provided Pythons.
 set(Python3_FIND_FRAMEWORK LAST)
 
@@ -423,13 +529,8 @@ if(opengl AND NOT asimage)
 endif()
 
 #---Check for gl2ps ------------------------------------------------------------------
-if(opengl)
-  ROOT_FIND_REQUIRED_DEP(gl2ps builtin_gl2ps)
-  if (builtin_gl2ps)
-    add_subdirectory(builtins/gl2ps)
-  endif()
-elseif(builtin_gl2ps)
-  message(SEND_ERROR "gl2ps features enabled with \"builtin_gl2ps=ON\" require \"opengl=ON\"")
+if(opengl AND builtin_gl2ps)
+  add_subdirectory(builtins/gl2ps)
 endif()
 
 #---Check for Graphviz installation-------------------------------------------------------
@@ -456,41 +557,8 @@ if(xml)
 endif()
 
 #---Check for OpenSSL------------------------------------------------------------------
-foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES VERSION)
-  unset(OPENSSL_${suffix} CACHE)
-endforeach()
-
-if(ssl AND NOT builtin_openssl)
-  if(fail-on-missing)
-    find_package(OpenSSL REQUIRED)
-  else()
-    find_package(OpenSSL COMPONENTS SSL)
-    if(NOT OPENSSL_FOUND)
-      if(NOT APPLE) # builtin OpenSSL is only supported on macOS
-        message(STATUS "Switching OFF 'ssl' option.")
-        set(ssl OFF CACHE BOOL "Disabled because OpenSSL not found and builtin version only works on macOS (${ssl_description})" FORCE)
-      else()
-        ROOT_CHECK_CONNECTION("ssl=OFF")
-        if(NO_CONNECTION)
-          message(STATUS "OpenSSL not found, and no internet connection. Disabling the 'ssl' option.")
-          set(ssl OFF CACHE BOOL "Disabled because ssl requested and OpenSSL not found (${builtin_openssl_description}) and there is no internet connection" FORCE)
-        else()
-          message(SEND_ERROR "OpenSSL required but not found. Install it on the system (preferred), or explicitly request the builtin version.")
-        endif()
-      endif()
-    endif()
-  endif()
-endif()
-
 if(builtin_openssl)
-  ROOT_CHECK_CONNECTION("builtin_openssl=OFF")
-  if(NO_CONNECTION)
-    message(STATUS "No internet connection, disabling the 'ssl' and 'builtin_openssl' options")
-    set(builtin_openssl OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-    set(ssl OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-  else()
-    add_subdirectory(builtins/openssl)
-  endif()
+  add_subdirectory(builtins/openssl)
 endif()
 
 #---Check for FastCGI-----------------------------------------------------------
@@ -504,8 +572,6 @@ endif()
 
 #--- Check for civetweb - (has to go after SSL) ---------------------------------------
 if(http AND NOT builtin_civetweb)
-  message(STATUS "Looking for civetweb")
-  ROOT_FIND_REQUIRED_DEP(civetweb builtin_civetweb 1.15)
   if(civetweb_FOUND)
     try_compile(CIVETWEB_FEATURE_API
       SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/civetweb_check_features.c"
@@ -569,13 +635,9 @@ if(pythia8)
   endif()
 endif()
 
+#---Check for FFTW3-------------------------------------------------------------------
 if(builtin_fftw3)
   ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("builtin_fftw3")
-endif()
-
-#---Check for FFTW3-------------------------------------------------------------------
-if(fftw3)
-  ROOT_FIND_REQUIRED_DEP(FFTW builtin_fftw3)
 endif()
 if(builtin_fftw3)
   add_subdirectory(builtins/fftw3)
@@ -590,9 +652,9 @@ if(fitsio OR builtin_cfitsio)
   if(builtin_cfitsio)
     add_library(CFITSIO::CFITSIO STATIC IMPORTED GLOBAL)
     add_subdirectory(builtins/cfitsio)
-    set(fitsio ON CACHE BOOL "Enabled because builtin_cfitsio requested (${fitsio_description})" FORCE)
-  else()
-    ROOT_FIND_REQUIRED_DEP(CFITSIO builtin_cfitsio)
+    if(NOT fitsio)
+      set(fitsio ON CACHE BOOL "Enabled because builtin_cfitsio requested (${fitsio_description})" FORCE)
+    endif()
   endif()
 endif()
 
@@ -607,28 +669,7 @@ if(shadowpw)
 endif()
 
 #---Configure Xrootd support---------------------------------------------------------
-
-foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
-  unset(XROOTD_${suffix} CACHE)
-endforeach()
-
 if(xrootd AND NOT builtin_xrootd)
-  message(STATUS "Looking for XROOTD")
-  find_package(XRootD)
-  if(NOT XROOTD_FOUND)
-     message(SEND_ERROR "XROOTD not found. Set environment variable XRDSYS to point to your XROOTD installation, "
-                        "or include the installation of XROOTD in the CMAKE_PREFIX_PATH. Or turn off xrootd."
-                        "Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD internally")
-  else()
-    # XROOTD was found. Check now for required components
-    foreach (component CLIENT UTILS) # ROOT requires XrdCl and XrdUtils
-      if("${XROOTD_${component}_LIBRARIES}" STREQUAL "XROOTD_${component}_LIBRARIES-NOTFOUND")
-        message(SEND_ERROR "XROOTD found but missing component ${component}. Install missing package on your system (preferred). "
-                           "Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD internally; or turn off xrootd.")
-      endif()
-    endforeach()
-  endif()
-
   if(XRootD_VERSION VERSION_LESS 5.8.4)
     # Remove -D from XRootD's exported compile definitions. https://github.com/xrootd/xrootd/issues/2543
     foreach(XRDTarget XRootD::XrdCl XRootD::XrdUtils)
@@ -646,9 +687,6 @@ if(builtin_xrootd)
   if(NO_CONNECTION)
     message(SEND_ERROR "No internet connection. Please check your connection, or disable the 'builtin_xrootd'"
       " option")
-  endif()
-  if(NOT ssl AND NOT builtin_openssl)
-    message(SEND_ERROR "Building XRootD ('builtin_xrootd'=On) requires ssl support.")
   endif()
   add_subdirectory(builtins/xrootd)
   set(xrootd ON CACHE BOOL "Enabled because builtin_xrootd requested (${xrootd_description})" FORCE)
@@ -670,16 +708,6 @@ if(xrootd AND NOT TARGET XRootD::XrdCl)
   set_target_properties(XRootD::XrdUtils PROPERTIES IMPORTED_LOCATION ${XROOTD_UTILS_LIBRARIES})
 endif()
 
-#---make sure non-builtin xrootd is not using builtin_openssl-----------
-if(xrootd AND NOT builtin_xrootd AND builtin_openssl)
-  if(fail-on-missing)
-    message(SEND_ERROR "Non-builtin XROOTD must not be used with builtin OpenSSL. If you want to use non-builtin XROOTD, please use the system OpenSSL")
-  else()
-    message(STATUS "Non-builtin XROOTD must not be used with builtin OpenSSL. Disabling the 'xrootd' option.")
-    set(xrootd OFF CACHE BOOL "Disabled because non-builtin xrootd cannot be used with builtin OpenSSL" FORCE)
-  endif()
-endif()
-
 #---Check for Apache Arrow
 if(arrow)
   find_package(Arrow)
@@ -687,7 +715,6 @@ if(arrow)
     message(SEND_ERROR "Apache Arrow not found but is required. Please set ARROW_ROOT to point to your Arrow installation, "
                           "or include the installation of Arrow in the CMAKE_PREFIX_PATH. Or disable option 'arrow'.")
   endif()
-
 endif()
 
 #---Check for dCache-------------------------------------------------------------------
@@ -700,17 +727,11 @@ if(dcache)
 endif()
 
 #---Check for ftgl if needed----------------------------------------------------------
-if(opengl)
-  ROOT_FIND_REQUIRED_DEP(FTGL builtin_ftgl)
-  if (builtin_ftgl)
-    add_subdirectory(builtins/ftgl)
-  endif()
-elseif(builtin_ftgl)
-  message(SEND_ERROR "FTGL features enabled with \"builtin_ftgl=ON\" require \"opengl=ON\"")
+if(opengl AND builtin_ftgl)
+  add_subdirectory(builtins/ftgl)
 endif()
 
 #---Check for Davix library-----------------------------------------------------------
-
 foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
   unset(DAVIX_${suffix} CACHE)
 endforeach()
@@ -797,33 +818,6 @@ endif()
 
 #---Check for TBB---------------------------------------------------------------------
 if(imt AND NOT builtin_tbb)
-  message(STATUS "Looking for TBB")
-  if(fail-on-missing)
-    find_package(TBB 2020 REQUIRED)
-  else()
-    find_package(TBB 2020)
-    if(NOT TBB_FOUND)
-      message(STATUS "TBB not found, enabling 'builtin_tbb' option")
-      set(builtin_tbb ON CACHE BOOL "Enabled because imt is enabled, but TBB was not found" FORCE)
-    endif()
-  endif()
-
-  # Check that the found TBB does not use captured exceptions. If the header
-  # <tbb/tbb_config.h> does not exist, assume that we have oneTBB newer than
-  # version 2021, which does not have captured exceptions anyway.
-  if(TBB_FOUND AND EXISTS "${TBB_INCLUDE_DIRS}/tbb/tbb_config.h")
-    set(CMAKE_REQUIRED_INCLUDES "${TBB_INCLUDE_DIRS}")
-    check_cxx_source_compiles("
-#include <tbb/tbb_config.h>
-#if TBB_USE_CAPTURED_EXCEPTION == 1
-#error TBB uses tbb::captured_exception, not suitable for ROOT!
-#endif
-int main() { return 0; }" tbb_exception_result)
-    if(NOT tbb_exception_result)
-      message(SEND_ERROR "Found TBB uses tbb::captured_exception, not suitable for ROOT!, enable 'builtin_tbb' option or turn off 'imt'")
-    endif()
-  endif()
-
   if(MSVC)
     set(TBB_CXXFLAGS "-D__TBB_NO_IMPLICIT_LINKAGE=1 -DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
   else()
@@ -850,10 +844,6 @@ endif()
 
 #---Check for Vdt--------------------------------------------------------------------
 if(vdt OR builtin_vdt)
-  if(NOT builtin_vdt)
-    message(STATUS "Looking for VDT")
-    ROOT_FIND_REQUIRED_DEP(Vdt builtin_vdt 0.4)
-  endif()
   if(builtin_vdt)
     add_subdirectory(builtins/vdt)
   endif()
@@ -945,16 +935,8 @@ if(mathmore OR builtin_gsl OR (tmva-cpu AND use_gsl_cblas))
   if(builtin_gsl)
     ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("builtin_gsl")
   endif()
-  message(STATUS "Looking for GSL")
-  if(NOT builtin_gsl)
-    find_package(GSL 1.10)
-    if(NOT GSL_FOUND)
-      message(SEND_ERROR "GSL package not found and 'mathmore' component is required. "
-                         "Alternatively, you can enable the option 'builtin_gsl' to build the GSL libraries internally. Or disable 'mathmore' and 'tmva-cpu' and 'use_gsl_cblas'")
-    endif()
-  else()
+  if(builtin_gsl)
     add_subdirectory(builtins/gsl)
-    set(mathmore ON CACHE BOOL "Enabled because builtin_gsl requested (${mathmore_description})" FORCE)
   endif()
 endif()
 
