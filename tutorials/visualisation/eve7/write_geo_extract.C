@@ -1,3 +1,10 @@
+/// \file
+/// \ingroup tutorial_eve_7
+/// Helper script to create REveGeoShapeExtract fro TGeo geometry
+/// One can rely on GeoTable to access paths
+/// \macro_code
+///
+/// \author Alja Mrak Tadel
 
 #include <ROOT/REveGeoTopNode.hxx>
 #include <ROOT/REveGeoPolyShape.hxx>
@@ -7,15 +14,6 @@
 #include <set>
 #include <vector>
 #include <iostream>
-
-
-/// \file
-/// \ingroup tutorial_eve_7
-/// Helper script to create REveGeoShapeExtract fro TGeo geometry
-/// One can rely on GeoTable to access paths
-/// \macro_code
-///
-/// \author Alja Mrak Tadel
 
 using namespace ROOT::Experimental;
 

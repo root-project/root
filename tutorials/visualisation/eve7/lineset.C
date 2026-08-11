@@ -6,6 +6,7 @@
 ///
 /// \macro_code
 ///
+/// \author Alja Mrak-Tadel
 
 #include "TRandom.h"
 
