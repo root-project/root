@@ -71,7 +71,7 @@ if (DEFINED CLAD_SOURCE_DIR)
   list(APPEND _clad_extra_settings SOURCE_DIR ${CLAD_SOURCE_DIR})
 else()
   list(APPEND _clad_extra_settings GIT_REPOSITORY https://github.com/vgvassilev/clad.git)
-  list(APPEND _clad_extra_settings GIT_TAG v2.4)
+  list(APPEND _clad_extra_settings GIT_TAG master)
 endif()
 
 # list(APPEND _clad_patches_list "patch1.patch" "patch2.patch")
@@ -86,7 +86,7 @@ set(_clad_patch_command
 ExternalProject_Add(
   clad
   UPDATE_COMMAND ""
-  PATCH_COMMAND ${_clad_patch_command}
+  # PATCH_COMMAND ${_clad_patch_command}
   CMAKE_ARGS -G ${CMAKE_GENERATOR}
              -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
              -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
