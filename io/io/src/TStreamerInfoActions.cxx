@@ -234,7 +234,8 @@ namespace TStreamerInfoActions
       Int_t fCounterOffset = 0; // Offset of the '//[n]' counter, relative to the streamed object.
 
       TConfStreamerLoop(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset, bool isPtrPtr)
-         : TConfiguration(info, id, compinfo, offset), fIsPtrPtr(isPtrPtr),
+         : TConfiguration(info, id, compinfo, offset),
+           fIsPtrPtr(isPtrPtr),
            fCounterOffset(static_cast<Int_t>(compinfo->fMethod))
       {
       }
@@ -1583,7 +1584,8 @@ namespace TStreamerInfoActions
          UInt_t ioffset = actionConfig->fOffset;
          // Get any private streamer which was set for the data member.
          TMemberStreamer* pstreamer = actionConfig->fCompInfo->fStreamer;
-         Int_t* counter = (Int_t*) ((char *) addr /*entry pointer*/ + ((const TConfStreamerLoop*)actionConfig)->fCounterOffset /*counter offset*/);
+         Int_t *counter = (Int_t *)((char *)addr /*entry pointer*/ +
+                                    ((const TConfStreamerLoop *)actionConfig)->fCounterOffset /*counter offset*/);
          // And call the private streamer, passing it the buffer, the object, and the counter.
          (*pstreamer)(buf, (char *) addr /*entry pointer*/ + ioffset /*object offset*/, *counter);
          return 0;
@@ -1597,7 +1599,8 @@ namespace TStreamerInfoActions
          bool isPtrPtr = ((TConfStreamerLoop*)config)->fIsPtrPtr;
 
          // Get the counter for the varying length array.
-         Int_t vlen = *((Int_t*) ((char *) addr /*entry pointer*/ + ((const TConfStreamerLoop*)config)->fCounterOffset /*counter offset*/));
+         Int_t vlen = *((Int_t *)((char *)addr /*entry pointer*/ +
+                                  ((const TConfStreamerLoop *)config)->fCounterOffset /*counter offset*/));
 
          //b << vlen;
          if (vlen) {
@@ -1640,7 +1643,8 @@ namespace TStreamerInfoActions
          bool isPtrPtr = ((TConfStreamerLoop*)config)->fIsPtrPtr;
 
          // Get the counter for the varying length array.
-         Int_t vlen = *((Int_t*) ((char *) addr /*entry pointer*/ + ((const TConfStreamerLoop*)config)->fCounterOffset /*counter offset*/));
+         Int_t vlen = *((Int_t *)((char *)addr /*entry pointer*/ +
+                                  ((const TConfStreamerLoop *)config)->fCounterOffset /*counter offset*/));
          //b << vlen;
          if (vlen) {
             // Get a pointer to the array of pointers.
@@ -1734,7 +1738,7 @@ namespace TStreamerInfoActions
 
          // Get the counter for the varying length array.
          Int_t vlen = *((Int_t *)((char *)addr /*entry pointer*/ +
-                                 ((const TConfStreamerLoop*)config)->fCounterOffset /*counter offset*/));
+                                  ((const TConfStreamerLoop *)config)->fCounterOffset /*counter offset*/));
          // Int_t realLen;
          // b >> realLen;
          // if (realLen != vlen) {
@@ -1832,7 +1836,7 @@ namespace TStreamerInfoActions
 
          // Get the counter for the varying length array.
          Int_t vlen = *((Int_t *)((char *)addr /*entry pointer*/ +
-                                 ((const TConfStreamerLoop*)config)->fCounterOffset /*counter offset*/));
+                                  ((const TConfStreamerLoop *)config)->fCounterOffset /*counter offset*/));
          // Int_t realLen;
          // b >> realLen;
          // if (realLen != vlen) {
