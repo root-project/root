@@ -590,7 +590,7 @@ void codegenImpl(RooLandau &arg, CodegenContext &ctx)
 
 void codegenImpl(RooLognormal &arg, CodegenContext &ctx)
 {
-   std::string funcName = arg.useStandardParametrization() ? "logNormalEvaluateStandard" : "logNormal";
+   std::string funcName = arg.useStandardParametrization() ? "logNormalStandard" : "logNormal";
    ctx.addResult(&arg, ctx.buildCall(mathFunc(funcName), arg.getX(), arg.getShapeK(), arg.getMedian()));
 }
 
