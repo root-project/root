@@ -825,7 +825,11 @@ double bernsteinIntegral(double xlo, double xhi, double xmin, double xmax, Doubl
          double binCoefs = binomial(degree, j) * binomial(j, i);
          double oneOverJPlusOne = 1. / (j + 1.);
          double powDiff = std::pow(xhiScaled, j + 1.) - std::pow(xloScaled, j + 1.);
-         temp += std::pow(-1., j - i) * binCoefs * powDiff * oneOverJPlusOne;
+         // The exponent is cast to double on purpose. Clad generates only one
+         // pullback for std::pow per session, so mixing an integral exponent
+         // with the floating-point one above makes clad::hessian() fail with an
+         // int*/double* mismatch on the exponent adjoint.
+         temp += std::pow(-1., static_cast<double>(j - i)) * binCoefs * powDiff * oneOverJPlusOne;
       }
       temp *= coefs[i]; // include coeff
       norm += temp;     // add this basis's contribution to total
