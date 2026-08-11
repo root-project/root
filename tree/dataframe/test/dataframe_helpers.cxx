@@ -998,6 +998,28 @@ TEST(RDFHelpers, ProgressBarRestorePrecision)
    }
 }
 
+// Regression test for the final statistics line of the RDF progress bar. The events/s figure was
+// computed by dividing the event count by a duration that had already been truncated to whole
+// seconds, so an event loop shorter than one second divided by zero and printed `inf evt/s`.
+TEST(RDFHelpers, ProgressBarFinalRateIsFinite)
+{
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   {
+      auto d_write = ROOT::RDataFrame(100).Define("x", ret42).Snapshot("tree", "fh_rate.root", {"x"});
+      ROOT::RDF::RNode d = ROOT::RDataFrame("tree", {"fh_rate.root"});
+      ROOT::RDF::Experimental::AddProgressBar(d);
+      d.Count().GetValue();
+   }
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   const std::string out = strCout.str();
+   ASSERT_NE(out.find("evt/s"), std::string::npos) << "no final statistics line was printed";
+   EXPECT_EQ(out.find("inf"), std::string::npos) << "the events/s figure is not finite: " << out;
+   EXPECT_EQ(out.find("nan"), std::string::npos) << "the events/s figure is not a number: " << out;
+}
+
 // The code below is a unit test for a function called `ProgressHelper_Existence_MT` in the `RDFHelpers` class.
 
 #ifdef R__USE_IMT
