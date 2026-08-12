@@ -19,7 +19,7 @@ set(CEF_root $ENV{CEF_ROOT})
 # ensure bin directory is exists where CEF files should be copied
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-if(ROOT_ARCHITECTURE MATCHES macosx)
+if(APPLE)
    set(CEF_platform src/gui_handler_mac.mm)
    set(CEF_RELEASE_DIR ${CEF_root}/Release/Chromium\ Embedded\ Framework.framework)
    set(CEF_LIBRARY ${CEF_RELEASE_DIR}/Chromium\ Embedded\ Framework)
@@ -67,7 +67,7 @@ target_compile_definitions(${libname} PRIVATE NDEBUG)
 
 ROOT_EXECUTABLE(cef_main ${CEF_MAIN} LIBRARIES ${CEF_LIBRARY} ${CEF_DLL_WRAPPER} CMAKENOEXPORT)
 
-if(ROOT_ARCHITECTURE MATCHES macosx)
+if(APPLE)
   set_property(TARGET ${libname} APPEND PROPERTY BUILD_RPATH "@loader_path/../Frameworks/Chromium\ Embedded\ Framework.framework/Libraries")
   set_property(TARGET cef_main APPEND PROPERTY BUILD_RPATH "@executable_path/../Frameworks/Chromium\ Embedded\ Framework.framework/Libraries")
 endif()
