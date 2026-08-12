@@ -1416,6 +1416,26 @@ void RModel::GenerateSessionCode()
       }
 
       fGC += "}\n\n";
+
+      // Used to build the tangent Session objects needed to differentiate the
+      // generated code with Clad: the derivatives of the (constant) weights
+      // are zero, but a default-constructed Session holds the actual values.
+      fGC += "// Set all weight and constant tensors to zero. This is useful to create\n"
+             "// the tangent Session objects needed to differentiate the generated code\n"
+             "// with Clad.\n"
+             "void SetWeightsToZero() {\n";
+      for (auto &i : fInitializedTensors) {
+         // IsNotWritable tensors have no emitted fTensor_ member, and integer
+         // tensors are structural (indices, shapes) that carry no tangent.
+         if (i.second.IsNotWritable() ||
+             (i.second.type() != ETensorType::FLOAT && i.second.type() != ETensorType::DOUBLE))
+            continue;
+         fGC += "   for (auto &v : fTensor_" + i.first + ") v = 0;\n";
+      }
+      for (auto &graph : fSubGraphs) {
+         fGC += "   fSession_" + graph->fName + ".SetWeightsToZero();\n";
+      }
+      fGC += "}\n\n";
    }
 
    // generate the inference overload that returns an output struct

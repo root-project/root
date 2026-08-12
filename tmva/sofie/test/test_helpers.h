@@ -107,6 +107,27 @@ void expectNear(std::vector<std::vector<T>> const &output, std::vector<std::vect
    }
 }
 
+/// Element-wise |actual - expected| <= tolerance over raw arrays, printing at
+/// most maxPrint failing elements followed by a count of the suppressed rest
+inline void
+expectNearCapped(const float *actual, const float *expected, std::size_t n, double tolerance, std::size_t maxPrint = 10)
+{
+   std::size_t mismatchCount = 0;
+   for (std::size_t i = 0; i < n; ++i) {
+      const double diff = std::abs(static_cast<double>(actual[i]) - static_cast<double>(expected[i]));
+      if (diff > tolerance) {
+         if (mismatchCount < maxPrint) {
+            ADD_FAILURE() << "Mismatch at index " << i << " actual=" << actual[i] << " expected=" << expected[i]
+                          << " diff=" << diff;
+         }
+         ++mismatchCount;
+      }
+   }
+   if (mismatchCount > maxPrint) {
+      ADD_FAILURE() << "Further mismatches suppressed (total mismatches: " << mismatchCount << ")";
+   }
+}
+
 /// Element-wise exact equality
 template <typename T, typename U>
 void expectEqual(std::vector<T> const &output, std::vector<U> const &expected)
