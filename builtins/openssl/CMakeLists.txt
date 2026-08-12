@@ -25,7 +25,7 @@ foreach(lib ssl crypto)
 endforeach()
 
 if(APPLE)
-  if(${ROOT_ARCHITECTURE} MATCHES "macosxarm64")
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES arm64)
     set(OPENSSL_CONFIG_CMD ./Configure darwin64-arm64-cc)
   else()
     set(OPENSSL_CONFIG_CMD ./Configure darwin64-x86_64-cc)
