@@ -435,6 +435,67 @@ void functorCodegenImpl(RooArg_t &arg, RooArgList const &variables, CodegenConte
               "}\n"
               "} // namespace clad::custom_derivatives\n";
 
+      // If the functor also provides second derivatives, emit the
+      // forward-mode derivative and its pullback, which Clad needs to
+      // generate second derivatives of code calling the wrapper (it
+      // implements Hessians as forward-mode derivatives that are then
+      // differentiated in reverse mode).
+      if (arg.function()->HasHessian()) {
+         code += "#include <plugins/include/clad/Differentiator/BuiltinDerivatives.h>\n"
+                 "namespace clad::custom_derivatives {\n\n"
+                 "clad::ValueAndPushforward<double, double> " +
+                 wrapperName +
+                 "_pushforward(double const *x, double const *d_x) {\n"
+                 "   double grad[" +
+                 nStr +
+                 "]{};\n"
+                 "   " +
+                 funcAddrCasted +
+                 "->Gradient(x, grad);\n"
+                 "   double dot = 0.;\n"
+                 "   for (int i = 0; i < " +
+                 nStr +
+                 "; ++i) {\n"
+                 "      dot += grad[i] * d_x[i];\n"
+                 "   }\n"
+                 "   return {" +
+                 funcAddrCasted +
+                 "->operator()(x), dot};\n"
+                 "}\n\n"
+                 "void " +
+                 wrapperName +
+                 "_pushforward_pullback(double const *x, double const *d_x, clad::ValueAndPushforward<double, "
+                 "double> d_y, double *d_out_x, double *d_out_d_x) {\n"
+                 "   double grad[" +
+                 nStr +
+                 "]{};\n"
+                 "   " +
+                 funcAddrCasted +
+                 "->Gradient(x, grad);\n"
+                 "   double hess[" +
+                 nStr + " * " + nStr +
+                 "]{};\n"
+                 "   " +
+                 funcAddrCasted +
+                 "->Hessian(x, hess);\n"
+                 "   for (int i = 0; i < " +
+                 nStr +
+                 "; ++i) {\n"
+                 "      double hdot = 0.;\n"
+                 "      for (int j = 0; j < " +
+                 nStr +
+                 "; ++j) {\n"
+                 "         hdot += hess[i * " +
+                 nStr +
+                 " + j] * d_x[j];\n"
+                 "      }\n"
+                 "      d_out_x[i] += d_y.value * grad[i] + d_y.pushforward * hdot;\n"
+                 "      d_out_d_x[i] += d_y.pushforward * grad[i];\n"
+                 "   }\n"
+                 "}\n"
+                 "} // namespace clad::custom_derivatives\n";
+      }
+
       gInterpreter->Declare(code.c_str());
    }
 
