@@ -24,6 +24,9 @@
 
 #include <plugins/include/clad/Differentiator/Differentiator.h>
 #include "TMath.h"
+#include "Math/PdfFuncMathCore.h"
+#include "Math/ProbFuncMathCore.h"
+#include "Math/SpecFuncMathCore.h"
 
 #include <stdexcept>
 
@@ -1059,6 +1062,124 @@ inline void inc_gamma_c_pullback(double a, double x, double _d_y, double *_d_a, 
                                  a)); // numerical_diff::forward_central_difference(::std::lgamma, a, 0, 0, a);
       _d_ax = 0.;
    }
+}
+
+/// Derivative of the normalized lower incomplete gamma function P(a, x) with
+/// respect to x. This is the integrand of P(a, x), i.e. the gamma
+/// distribution density: x^(a-1) * exp(-x) / Gamma(a).
+inline double inc_gamma_dx(double a, double x)
+{
+   if (a <= 0 || x <= 0)
+      return 0.;
+   return ::std::exp((a - 1.) * ::std::log(x) - x - ::std::lgamma(a));
+}
+
+/// Pullback of inc_gamma_dx(), using the closed forms of the second
+/// derivatives of P(a, x):
+///
+///    d2P/dx2  = inc_gamma_dx(a, x) * ((a - 1) / x - 1)
+///    d2P/dxda = inc_gamma_dx(a, x) * (log(x) - digamma(a))
+inline void inc_gamma_dx_pullback(double a, double x, double _d_y, double *_d_a, double *_d_x)
+{
+   if (a <= 0 || x <= 0)
+      return;
+   const double g = inc_gamma_dx(a, x);
+   *_d_a += _d_y * g * (::std::log(x) - ::clad::custom_derivatives::std::clad_digamma(a));
+   *_d_x += _d_y * g * ((a - 1.) / x - 1.);
+}
+
+/// Derivative of the normalized lower incomplete gamma function P(a, x) with
+/// respect to a. It has no closed form, but inc_gamma_pullback() computes it
+/// exactly by differentiating through the algorithm that evaluates P(a, x).
+inline double inc_gamma_da(double a, double x)
+{
+   double da = 0.;
+   double dx = 0.;
+   inc_gamma_pullback(a, x, 1., &da, &dx);
+   return da;
+}
+
+/// Pullback of inc_gamma_da(). The mixed second derivative is known in
+/// closed form (it is the same as the a-derivative of inc_gamma_dx(), see
+/// inc_gamma_dx_pullback()). For d2P/da2 there is no closed form, so it is
+/// approximated by a central difference of the exact first derivative.
+inline void inc_gamma_da_pullback(double a, double x, double _d_y, double *_d_a, double *_d_x)
+{
+   if (a <= 0 || x <= 0)
+      return;
+   *_d_x += _d_y * inc_gamma_dx(a, x) * (::std::log(x) - ::clad::custom_derivatives::std::clad_digamma(a));
+   // A first-order central difference of the exact derivative is much more
+   // accurate than a second-order finite difference of P(a, x) itself. The
+   // step size balances truncation and roundoff error (~ cbrt of the machine
+   // epsilon).
+   const double h = 6e-6 * ::std::max(1., ::std::abs(a));
+   *_d_a += _d_y * (inc_gamma_da(a + h, x) - inc_gamma_da(a - h, x)) / (2. * h);
+}
+
+/// Pushforward of ROOT::Math::inc_gamma. Besides forward-mode differentiation,
+/// this enables second derivatives (e.g. clad::hessian): clad differentiates
+/// this function in reverse mode, and all derivatives it needs for that are
+/// provided by custom pullbacks.
+inline clad::ValueAndPushforward<double, double> inc_gamma_pushforward(double a, double x, double d_a, double d_x)
+{
+   return {::ROOT::Math::inc_gamma(a, x), inc_gamma_da(a, x) * d_a + inc_gamma_dx(a, x) * d_x};
+}
+
+/// Pushforward of ROOT::Math::inc_gamma_c, which is 1 - inc_gamma. See
+/// inc_gamma_pushforward().
+inline clad::ValueAndPushforward<double, double> inc_gamma_c_pushforward(double a, double x, double d_a, double d_x)
+{
+   return {::ROOT::Math::inc_gamma_c(a, x), -inc_gamma_da(a, x) * d_a - inc_gamma_dx(a, x) * d_x};
+}
+
+/// First derivative of the standardized Landau density (i.e.
+/// ROOT::Math::landau_pdf(v) with xi = 1 and x0 = 0) with respect to v. It
+/// has no closed form, but landau_pdf_pullback() computes it exactly by
+/// differentiating through the algorithm that evaluates the density.
+inline double landau_pdf_dv(double v)
+{
+   double dv = 0.;
+   double dxi = 0.;
+   double dx0 = 0.;
+   landau_pdf_pullback(v, 1., 0., 1., &dv, &dxi, &dx0);
+   return dv;
+}
+
+/// Pullback of landau_pdf_dv(). The second derivative of the standardized
+/// Landau density has no closed form, so it is approximated by a central
+/// difference of the exact first derivative (see also inc_gamma_da_pullback()).
+inline void landau_pdf_dv_pullback(double v, double _d_y, double *_d_v)
+{
+   const double h = 6e-6 * ::std::max(1., ::std::abs(v));
+   *_d_v += _d_y * (landau_pdf_dv(v + h) - landau_pdf_dv(v - h)) / (2. * h);
+}
+
+/// Pushforward of ROOT::Math::landau_pdf, which is p((x - x0) / xi) / xi in
+/// terms of the standardized Landau density p. Like for
+/// inc_gamma_pushforward(), all derivatives that clad needs to differentiate
+/// this function in reverse mode (e.g. for clad::hessian) are provided by
+/// custom pullbacks.
+inline clad::ValueAndPushforward<double, double>
+landau_pdf_pushforward(double x, double xi, double x0, double d_x, double d_xi, double d_x0)
+{
+   if (xi <= 0.)
+      return {0., 0.};
+   const double v = (x - x0) / xi;
+   const double p = ::ROOT::Math::landau_pdf(v);
+   const double vDot = (d_x - d_x0 - v * d_xi) / xi;
+   return {p / xi, landau_pdf_dv(v) * vDot / xi - p / (xi * xi) * d_xi};
+}
+
+/// Pushforward of ROOT::Math::landau_cdf, which is the cumulative
+/// distribution function of the standardized Landau density evaluated at
+/// (x - x0) / xi. Its derivative in x is landau_pdf, so unlike for the
+/// density itself, all second derivatives are known in closed form.
+inline clad::ValueAndPushforward<double, double>
+landau_cdf_pushforward(double x, double xi, double x0, double d_x, double d_xi, double d_x0)
+{
+   const double v = (x - x0) / xi;
+   const double vDot = (d_x - d_x0 - v * d_xi) / xi;
+   return {::ROOT::Math::landau_cdf(x, xi, x0), ::ROOT::Math::landau_pdf(v) * vDot};
 }
 
 } // namespace Math
