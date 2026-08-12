@@ -26,7 +26,7 @@ jobs:
     steps:
       - name: Display Update Log - Visual Studio Preview
         shell: cmd
-        run: "type C:\\ROOT-CI\\VS-Update.log"
+        run: type C:\ROOT-CI\VS-Update.log || echo VS update log not found.
 
       - name: Checkout
         if: ${{ always() }}
