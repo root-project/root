@@ -460,6 +460,88 @@ inline void Relu_pullback(float *output, const float *input, int size, float *_d
 }
 )SOFIE";
 
+// Custom Clad forward-mode pushforwards for the same helpers, following
+// clad's convention for void functions: the original parameters followed by
+// same-type tangent clones of every parameter. Clad computes Hessians as
+// reverse-mode derivatives of forward-mode code, so the bodies below are
+// themselves reverse-differentiated and must consist of plain loops and of
+// calls with custom pullbacks only (for the namespace alias on the
+// Gemm_Call calls, see the comment at the emission site). Note that
+// Gemm_Call_pullback silently bails out for alpha != 1 (see the TODO there),
+// so Hessians inherit that restriction.
+constexpr const char *kGemmCallPushforward = R"SOFIE(
+inline void Gemm_Call_pushforward(float *output, bool transa, bool transb, int m, int n, int k, float alpha,
+                                  const float *A, const float *B, float beta, const float *C, float *_d_output, bool,
+                                  bool, int, int, int, float _d_alpha, const float *_d_A, const float *_d_B,
+                                  float _d_beta, const float *_d_C)
+{
+   // Primal: output = alpha * op(A) op(B) + beta * C, where a null C means
+   // "accumulate onto the existing output" (see Gemm_Call).
+   // Tangent:
+   //   d_output = alpha * (op(dA) op(B) + op(A) op(dB)) + beta * dC
+   //            + d_alpha * op(A) op(B) + d_beta * C
+   // with (C, dC) read as (output, d_output) in accumulate mode. The tangent
+   // is therefore computed first, while output and d_output still hold the
+   // values the primal call overwrites. The pointer null-checks are hoisted
+   // into bools: with a pointer-typed ternary condition, Clad's reverse pass
+   // (as of v2.4) hoists and tapes the condition with the const qualifier
+   // dropped, generating code that does not compile.
+   const bool hasC = C != nullptr;
+   const bool hasdC = _d_C != nullptr;
+   SOFIE_MODEL_NS::Gemm_Call(_d_output, transa, transb, m, n, k, alpha, _d_A, B, (hasC && !hasdC) ? 0.0f : beta, _d_C);
+   SOFIE_MODEL_NS::Gemm_Call(_d_output, transa, transb, m, n, k, alpha, A, _d_B, 1.0f, nullptr);
+   if (_d_alpha != 0.0f) {
+      SOFIE_MODEL_NS::Gemm_Call(_d_output, transa, transb, m, n, k, _d_alpha, A, B, 1.0f, nullptr);
+   }
+   if (_d_beta != 0.0f) {
+      if (hasC) {
+         for (int i = 0; i < m * n; ++i) {
+            _d_output[i] += _d_beta * C[i];
+         }
+      } else {
+         for (int i = 0; i < m * n; ++i) {
+            _d_output[i] += _d_beta * output[i];
+         }
+      }
+   }
+   SOFIE_MODEL_NS::Gemm_Call(output, transa, transb, m, n, k, alpha, A, B, beta, C);
+}
+)SOFIE";
+
+constexpr const char *kCopyPushforward = R"SOFIE(
+inline void Copy_pushforward(float *output, const float *input, int size, float *_d_output, const float *_d_input,
+                             int)
+{
+   for (int i = 0; i < size; i++) {
+      output[i] = input[i];
+      _d_output[i] = _d_input[i];
+   }
+}
+)SOFIE";
+
+constexpr const char *kFillPushforward = R"SOFIE(
+inline void Fill_pushforward(float *output, float value, int size, float *_d_output, float _d_value, int)
+{
+   for (int i = 0; i < size; i++) {
+      output[i] = value;
+      _d_output[i] = _d_value;
+   }
+}
+)SOFIE";
+
+constexpr const char *kReluPushforward = R"SOFIE(
+inline void Relu_pushforward(float *output, float const *input, int size, float *_d_output, float const *_d_input,
+                             int)
+{
+   // Tangent first: the generated code applies Relu in place, so input/output
+   // (and their tangents) may alias.
+   for (int i = 0; i < size; i++) {
+      _d_output[i] = (input[i] > 0.0f) ? _d_input[i] : 0.0f;
+      output[i] = (input[i] > 0.0f) ? input[i] : 0.0f;
+   }
+}
+)SOFIE";
+
 constexpr const char *kRelu = R"SOFIE(
 inline void Relu(float *output, float const *input, int size)
 {
@@ -797,29 +879,43 @@ HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &nee
 
    defs += "// --- End of SOFIE inference helper functions ---\n\n";
 
-   // ---- Clad custom derivatives (pullbacks) -------------------------------
+   // ---- Clad custom derivatives (pullbacks and pushforwards) --------------
    // Some helpers cannot be differentiated automatically by Clad (Gemm_Call
    // calls the bodyless BLAS routine sgemm_). For those we emit a hand-written
-   // pullback. Clad looks up custom derivatives in
-   // clad::custom_derivatives::<function-namespace>, so the pullback is placed
+   // pullback (reverse mode) and pushforward (forward mode). Clad looks up
+   // custom derivatives in
+   // clad::custom_derivatives::<function-namespace>, so they are placed
    // there (mirroring the generated model namespace) rather than next to the
    // function. The definitions reference the model's own helpers via a using
-   // declaration, so no Clad header is pulled in and a user who never
-   // differentiates the model simply carries an unused inline function.
+   // declaration / namespace alias, so no Clad header is pulled in and a user
+   // who never differentiates the model simply carries unused inline
+   // functions.
    std::string cladDefs;
    if (gemm || copy || fill || relu) {
       cladDefs += "\nnamespace clad {\nnamespace custom_derivatives {\nnamespace " + modelNamespace + " {\n";
       if (gemm) {
-         // Gemm_Call_pullback calls Gemm_Call, so bring it into scope.
+         // Gemm_Call_pullback calls Gemm_Call, so bring it into scope. The
+         // pushforward uses the SOFIE_MODEL_NS alias instead: its body gets
+         // reverse-differentiated by Clad for Hessians, and Clad resolves the
+         // custom Gemm_Call_pullback for the inner calls only when they do
+         // not go through a using-declaration.
          cladDefs += "using ::" + modelNamespace + "::Gemm_Call;\n";
+         cladDefs += "namespace SOFIE_MODEL_NS = ::" + modelNamespace + ";\n";
          cladDefs += kGemmCallPullback;
+         cladDefs += kGemmCallPushforward;
       }
-      if (copy)
+      if (copy) {
          cladDefs += kCopyPullback;
-      if (fill)
+         cladDefs += kCopyPushforward;
+      }
+      if (fill) {
          cladDefs += kFillPullback;
-      if (relu)
+         cladDefs += kFillPushforward;
+      }
+      if (relu) {
          cladDefs += kReluPullback;
+         cladDefs += kReluPushforward;
+      }
       cladDefs += "} // namespace " + modelNamespace + "\n} // namespace custom_derivatives\n} // namespace clad\n";
    }
 
