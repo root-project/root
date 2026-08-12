@@ -416,6 +416,127 @@ std::string _RooONNXFunc_onnxToCppWithSofie(std::uint8_t const *onnxBytes, std::
             << "       d_input" << i << "[i] += d_inputFlt" << i << "[i];\n"
             << "    }\n";
       }
+      ss << "}\n\n";
+
+      // Custom derivatives for Clad Hessians, which are implemented in clad
+      // as forward-mode derivatives that are then differentiated in reverse
+      // mode: the forward pass needs a "pushforward" for the opaque
+      // roo_outer_wrapper call, and the reverse pass over it needs the
+      // matching "pushforward_pullback".
+
+      // Comma-separated parameter helper for the emitted code.
+      std::string tangentDoubleParams; // "double const *d_input0, ..."
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         std::string istr = std::to_string(i);
+         if (i > 0) {
+            tangentDoubleParams += ", ";
+         }
+         tangentDoubleParams += "double const *d_input" + istr;
+      }
+
+      // Emits "roo_outer_wrapper_pullback(<prefix>0, ..., 1., <gradPrefix>0, ...);".
+      auto emitGradCall = [&](std::string const &prefix, std::string const &gradPrefix) {
+         ss << "    roo_outer_wrapper_pullback(";
+         for (std::size_t i = 0; i < nInputTensors; ++i) {
+            ss << prefix << i << ", ";
+         }
+         ss << "1., ";
+         for (std::size_t i = 0; i < nInputTensors; ++i) {
+            ss << gradPrefix << i << (i != nInputTensors - 1 ? ", " : "");
+         }
+         ss << ");\n";
+      };
+
+      // Emits zero-initialized double buffers named <prefix>0, ... with the
+      // per-tensor sizes.
+      auto emitBuffers = [&](std::string const &prefix) {
+         for (std::size_t i = 0; i < nInputTensors; ++i) {
+            ss << "    double " << prefix << i << "[inputTensorDims[" << i << "].total_size()] = {};\n";
+         }
+      };
+
+      // The pushforward evaluates the function value together with the
+      // directional derivative grad . d_input, both exactly via the custom
+      // pullback above.
+      ss << "clad::ValueAndPushforward<double, double> roo_outer_wrapper_pushforward(" << outerDoubleParams << ", "
+         << tangentDoubleParams << ") {\n"
+         << "    using namespace ::" << namespaceName << ";\n";
+      emitBuffers("grad");
+      emitGradCall("input", "grad");
+      ss << "    double dot = 0.;\n";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << "    for (::std::size_t i = 0; i < ::std::size(grad" << i << "); ++i) {\n"
+            << "       dot += grad" << i << "[i] * d_input" << i << "[i];\n"
+            << "    }\n";
+      }
+      ss << "    return {::" << namespaceName << "::roo_outer_wrapper(" << innerArgs << "), dot};\n"
+         << "}\n\n";
+
+      // The pullback of the pushforward needs second derivatives only in the
+      // form of the Hessian-vector product H . d_input. SOFIE emits no
+      // forward-mode (pushforward) support for its operators, so instead of
+      // differentiating the model code again, the product is evaluated as a
+      // central finite difference of the *exact* generated gradient along the
+      // tangent direction. The step size (~cbrt of the float machine
+      // epsilon) balances the float-precision noise of the SOFIE gradient
+      // against the truncation error, giving ~1e-4 relative accuracy.
+      ss << "void roo_outer_wrapper_pushforward_pullback(" << outerDoubleParams << ", " << tangentDoubleParams
+         << ", clad::ValueAndPushforward<double, double> d_y";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << ", double *d_out_input" << i;
+      }
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << ", double *d_out_d_input" << i;
+      }
+      ss << ") {\n"
+         << "    using namespace ::" << namespaceName << ";\n";
+      emitBuffers("grad");
+      emitGradCall("input", "grad");
+      ss << "    double scale = 1.;\n"
+         << "    double norm = 0.;\n";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << "    for (::std::size_t i = 0; i < ::std::size(grad" << i << "); ++i) {\n"
+            << "       scale = ::std::max(scale, ::std::abs(input" << i << "[i]));\n"
+            << "       norm = ::std::max(norm, ::std::abs(d_input" << i << "[i]));\n"
+            << "    }\n";
+      }
+      ss << "    if (norm != 0.) {\n"
+         << "       const double h = 6.7e-3 * scale;\n";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << "       double inputP" << i << "[inputTensorDims[" << i << "].total_size()];\n"
+            << "       double inputM" << i << "[inputTensorDims[" << i << "].total_size()];\n"
+            << "       for (::std::size_t i = 0; i < ::std::size(inputP" << i << "); ++i) {\n"
+            << "          const double step = h * d_input" << i << "[i] / norm;\n"
+            << "          inputP" << i << "[i] = input" << i << "[i] + step;\n"
+            << "          inputM" << i << "[i] = input" << i << "[i] - step;\n"
+            << "       }\n";
+      }
+      ss << "   ";
+      emitBuffers("gradP");
+      ss << "   ";
+      emitGradCall("inputP", "gradP");
+      ss << "   ";
+      emitBuffers("gradM");
+      ss << "   ";
+      emitGradCall("inputM", "gradM");
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << "       for (::std::size_t i = 0; i < ::std::size(grad" << i << "); ++i) {\n"
+            << "          d_out_input" << i << "[i] += d_y.value * grad" << i << "[i]\n"
+            << "             + d_y.pushforward * norm * (gradP" << i << "[i] - gradM" << i << "[i]) / (2. * h);\n"
+            << "       }\n";
+      }
+      ss << "    } else {\n";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << "       for (::std::size_t i = 0; i < ::std::size(grad" << i << "); ++i) {\n"
+            << "          d_out_input" << i << "[i] += d_y.value * grad" << i << "[i];\n"
+            << "       }\n";
+      }
+      ss << "    }\n";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << "    for (::std::size_t i = 0; i < ::std::size(grad" << i << "); ++i) {\n"
+            << "       d_out_d_input" << i << "[i] += d_y.pushforward * grad" << i << "[i];\n"
+            << "    }\n";
+      }
       ss << "}\n\n"
          << "} // namespace " << namespaceName << "\n"
          << "} // namespace clad::custom_derivatives\n";
