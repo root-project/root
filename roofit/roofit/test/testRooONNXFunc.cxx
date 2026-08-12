@@ -234,14 +234,13 @@ TEST(RooONNXFunc, CodegenHessian)
 
    roo_final.generateHessian();
 
-   // The second derivatives are Hessian-vector products evaluated via finite
-   // differences of the exact gradient, which is itself limited by the float
-   // precision of the SOFIE computation. Hence the looser tolerance compared
-   // to the gradient checks.
+   // The second derivatives are exact Hessian-vector products (reverse-mode
+   // derivatives of the forward-mode derivative of the generated code), so
+   // they merit the same tolerance as the gradient checks.
    std::vector<double> hess(n * n);
    roo_final.hessian(hess.data());
    for (std::size_t i = 0; i < n * n; ++i) {
-      EXPECT_NEAR(hess[i], refHess[i], 1e-3);
+      EXPECT_NEAR(hess[i], refHess[i], 1e-5);
    }
 }
 
@@ -273,7 +272,7 @@ TEST(RooONNXFunc, CodegenHessian_2Tensors)
    std::vector<double> hess(nTotal * nTotal);
    roo_final.hessian(hess.data());
    for (std::size_t i = 0; i < nTotal * nTotal; ++i) {
-      EXPECT_NEAR(hess[i], refHess[i], 1e-3);
+      EXPECT_NEAR(hess[i], refHess[i], 1e-5);
    }
 }
 
@@ -310,7 +309,7 @@ TEST(RooONNXFunc, CodegenHessianCompound)
    for (std::size_t i = 0; i < n; ++i) {
       for (std::size_t j = 0; j < n; ++j) {
          const double ref = 2. * (refPred * refHess[i * n + j] + refGrad[i] * refGrad[j]);
-         EXPECT_NEAR(hess[i * n + j], ref, 1e-3);
+         EXPECT_NEAR(hess[i * n + j], ref, 1e-5);
       }
    }
 }
