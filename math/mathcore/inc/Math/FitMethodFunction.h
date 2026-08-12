@@ -73,12 +73,13 @@ public:
    virtual double DataElement(const double *x, unsigned int i, double *g = nullptr, double *h = nullptr, bool fullHessian = false) const = 0;
 
    // flag to indicate if full Hessian computation is supported
-   virtual bool HasHessian() const { return false;}
+   bool HasHessian() const override { return false; }
 
    /**
     * Computes the full Hessian. Return false if Hessian is not supported
     */
-   virtual bool Hessian(const double * x, double * hess) const {
+   bool Hessian(const double *x, double *hess) const override
+   {
       //return full Hessian of  the objective function which is Sum(F(i))
       unsigned int np = NPoints();
       unsigned int ndim = NDim();
