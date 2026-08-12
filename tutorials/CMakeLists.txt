@@ -738,20 +738,13 @@ foreach(t ${tutorials})
     list(APPEND labels needs_network)
   endif()
 
-   # These tests on ARM64 need much more than 20 minutes - increase the timeout
-   if(ROOT_ARCHITECTURE MATCHES arm64 OR ROOT_ARCHITECTURE MATCHES ppc64)
-     set(thisTestTimeout 3000) # 50m
-   else()
-     set(thisTestTimeout 1200) # 20m
-   endif()
-
   ROOT_ADD_TEST(tutorial-${tname}
                 COMMAND ${ROOT_root_CMD} -b -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
                 PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED" "warning: Failed to call"
                 LABELS ${labels}
                 DEPENDS tutorial-hsimple ${${tname}-depends}
                 ENVIRONMENT ${TUTORIAL_ENV} ${ROOT_MAX_THREADS}
-                TIMEOUT ${thisTestTimeout})
+                TIMEOUT 1200) # 20m
 
   if(${t} IN_LIST multithreaded)
     set_tests_properties(tutorial-${tname} PROPERTIES PROCESSORS ${NProcessors})
@@ -769,20 +762,13 @@ foreach(t ${mpi_tutorials})
   string(REPLACE ".C" "" tname ${t})
   string(REPLACE "/" "-" tname ${tname})
 
-   # These tests on ARM64 need much more than 20 minutes - increase the timeout
-   if(ROOT_ARCHITECTURE MATCHES arm64 OR ROOT_ARCHITECTURE MATCHES ppc64)
-     set(thisTestTimeout 3000) # 50m
-   else()
-     set(thisTestTimeout 1200) # 20m
-   endif()
-
   ROOT_ADD_TEST(tutorial-${tname}
     COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${ROOT_root_CMD} -b -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
                 PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED" "warning: Failed to call"
                 LABELS tutorial
                 DEPENDS tutorial-hsimple ${${tname}-depends}
                 ENVIRONMENT ${TUTORIAL_ENV}
-                TIMEOUT ${thisTestTimeout})
+                TIMEOUT 1200) # 20m
 endforeach()
 
 #---Python tutorials-----------------------------------------------------
