@@ -16,6 +16,11 @@ runs:
       env:
         CIBW_BUILD: ${{ inputs.build-tag }}
 
+    - name: Setup Python for stripping pcms
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
+
     - name: Strip pre-built pcms
       shell: bash
       run: |
