@@ -4,6 +4,9 @@ inputs:
   build-tag:
     description: 'The tag for this build'
     required: true
+  artifact-name:
+    description: 'The name of the artifact to upload'
+    required: true
 
 runs:
   using: "composite"
@@ -13,8 +16,19 @@ runs:
       env:
         CIBW_BUILD: ${{ inputs.build-tag }}
 
+    - name: Setup Python for stripping pcms
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
+
+    - name: Strip pre-built pcms
+      shell: bash
+      run: |
+        python -m pip install --quiet wheel
+        python .github/workflows/utilities/strip_wheel_pcms.py wheelhouse
+
     - name: Upload wheel
       uses: actions/upload-artifact@v6
       with:
-        name: ${{ inputs.build-tag }}
+        name: ${{ inputs.artifact-name }}
         path: wheelhouse/*

@@ -2276,6 +2276,11 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
 
    static TRegexp separator("[^ \\t\\s]+");
    static TRegexp dynload("/lib-dynload/");
+   // Skip libffi, it is a private library used by the system. This is visible in the stub .tbd file:
+   // allowable-clients:
+   //     clients:         [ '!' ]
+   // See https://github.com/Homebrew/homebrew-core/issues/272324#issuecomment-5119880493 for more info
+   static TRegexp libffiMatch("/usr/lib/libffi");
 
    Ssiz_t start, index, end;
    start = index = end = 0;
@@ -2284,7 +2289,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
       index = libs2.Index(separator, &end, start);
       if (index >= 0) {
          TString s = libs2(index, end);
-         if (s.Index(dynload) == kNPOS) {
+         if (s.Index(dynload) == kNPOS && s.Index(libffiMatch) == kNPOS) {
             if (!maclibs.IsNull()) maclibs.Append(" ");
             maclibs.Append(s);
          }

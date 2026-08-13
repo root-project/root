@@ -213,6 +213,12 @@ try:
 except PackageNotFoundError:
     pass
 
+# Build every C++ module once per installation
+# needed for the wheels, in other cases this is done in the CMake build step, so we skip it here
+from . import _pcm_warmup
+
+_pcm_warmup.warmup(_root_facade)
+
 
 def _cleanup():
     # Delete TBrowser instances while the GUI event loop is still alive,
