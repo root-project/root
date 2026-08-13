@@ -1412,10 +1412,9 @@ ROOT::Internal::RNTupleLink ROOT::Internal::RNTupleFileWriter::Commit(int compre
       auto &fileSimple = std::get<RImplSimple>(fFile);
       auto &shared = *fileSimple.fShared;
 
-      RTFNTuple ntupleOnDisk(fNTupleAnchor);
-      anchorInfo.fLocator.SetPosition(shared.fControlBlock->fSeekNTuple);
-
       if (fIsBare) {
+         RTFNTuple ntupleOnDisk(fNTupleAnchor);
+
          // Compute the checksum
          std::uint64_t checksum = XXH3_64bits(ntupleOnDisk.GetPtrCkData(), ntupleOnDisk.GetSizeCkData());
          memcpy(shared.fHeaderBlock + shared.fControlBlock->fSeekNTuple, &ntupleOnDisk, ntupleOnDisk.GetSize());
@@ -1423,23 +1422,24 @@ ROOT::Internal::RNTupleLink ROOT::Internal::RNTupleFileWriter::Commit(int compre
                 sizeof(checksum));
          fileSimple.Flush();
 
+         anchorInfo.fLocator.SetPosition(shared.fControlBlock->fSeekNTuple);
          anchorInfo.fLocator.SetNBytesOnStorage(ntupleOnDisk.GetSize());
       } else {
-         auto anchorSize = WriteTFileNTupleKey(compression);
-         WriteTFileKeysList(anchorSize); // NOTE: this is written uncompressed
-         WriteTFileStreamerInfo(compression);
-         WriteTFileFreeList(); // NOTE: this is written uncompressed
+         anchorInfo = WriteTFileNTupleKey(compression);
+         if (!fIsHidden) {
+            WriteTFileKeysList(anchorInfo.fLocator.GetNBytesOnStorage()); // NOTE: this is written uncompressed
+            WriteTFileStreamerInfo(compression);
+            WriteTFileFreeList(); // NOTE: this is written uncompressed
 
-         // Update header and TFile record
-         memcpy(shared.fHeaderBlock, &shared.fControlBlock->fHeader, shared.fControlBlock->fHeader.GetSize());
-         R__ASSERT(shared.fControlBlock->fSeekFileRecord + shared.fControlBlock->fFileRecord.GetSize() <
-                   RImplSimple::kHeaderBlockSize);
-         memcpy(shared.fHeaderBlock + shared.fControlBlock->fSeekFileRecord, &shared.fControlBlock->fFileRecord,
-                shared.fControlBlock->fFileRecord.GetSize());
+            // Update header and TFile record
+            memcpy(shared.fHeaderBlock, &shared.fControlBlock->fHeader, shared.fControlBlock->fHeader.GetSize());
+            R__ASSERT(shared.fControlBlock->fSeekFileRecord + shared.fControlBlock->fFileRecord.GetSize() <
+                      RImplSimple::kHeaderBlockSize);
+            memcpy(shared.fHeaderBlock + shared.fControlBlock->fSeekFileRecord, &shared.fControlBlock->fFileRecord,
+                   shared.fControlBlock->fFileRecord.GetSize());
+         }
 
          fileSimple.Flush();
-
-         anchorInfo.fLocator.SetNBytesOnStorage(anchorSize);
       }
    }
 
@@ -1677,7 +1677,7 @@ void ROOT::Internal::RNTupleFileWriter::WriteTFileFreeList()
    fileSimple.fShared->fControlBlock->fHeader.SetEnd(fileShared.fFilePos);
 }
 
-std::uint64_t ROOT::Internal::RNTupleFileWriter::WriteTFileNTupleKey(int compression)
+ROOT::Internal::RNTupleLink ROOT::Internal::RNTupleFileWriter::WriteTFileNTupleKey(int compression)
 {
    RTFString strRNTupleClass{"ROOT::RNTuple"};
    RTFString strRNTupleName{fNTupleName};
@@ -1698,9 +1698,16 @@ std::uint64_t ROOT::Internal::RNTupleFileWriter::WriteTFileNTupleKey(int compres
    char zipAnchor[RTFNTuple::GetSizePlusChecksum()];
    auto szZipAnchor = RNTupleCompressor::Zip(keyBuf, sizeAnchor, compression, zipAnchor);
 
-   fileSimple.WriteKey(zipAnchor, szZipAnchor, sizeof(keyBuf), fileSimple.fShared->fControlBlock->fSeekNTuple,
-                       RTFHeader::kBEGIN, "ROOT::RNTuple", fNTupleName, "");
-   return szZipAnchor;
+   ROOT::Internal::RNTupleLink anchorLink;
+   auto anchorOffset =
+      fileSimple.WriteKey(zipAnchor, szZipAnchor, sizeof(keyBuf), fileSimple.fShared->fControlBlock->fSeekNTuple,
+                          RTFHeader::kBEGIN, "ROOT::RNTuple", fNTupleName, "");
+
+   assert(szZipAnchor < std::numeric_limits<decltype(anchorLink.fLength)>::max());
+   anchorLink.fLength = sizeof(keyBuf);
+   anchorLink.fLocator.SetPosition(anchorOffset);
+   anchorLink.fLocator.SetNBytesOnStorage(szZipAnchor);
+   return anchorLink;
 }
 
 void ROOT::Internal::RNTupleFileWriter::WriteTFileSkeleton(int defaultCompression)

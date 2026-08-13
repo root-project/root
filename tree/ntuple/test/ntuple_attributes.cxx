@@ -76,6 +76,102 @@ TEST(RNTupleAttributes, AttributeSetDuplicateName)
 TEST(RNTupleAttributes, BasicReadingWriting)
 {
    FileRaii fileGuard("ntuple_attr_basic_readwriting.root");
+   fileGuard.PreserveFile();
+
+   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
+   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
+
+   /// Writing
+   {
+      auto model = RNTupleModel::Create();
+      auto pInt = model->MakeField<int>("int");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+
+      auto attrModel = RNTupleModel::Create();
+      auto pAttr = attrModel->MakeField<std::string>("attr");
+      auto attrSetWriter = writer->CreateAttributeSet(std::move(attrModel), "AttrSet1");
+
+      auto attrRange = attrSetWriter->BeginRange();
+      *pAttr = "My Attribute";
+      for (int i = 0; i < 100; ++i) {
+         *pInt = i;
+         writer->Fill();
+      }
+      attrSetWriter->CommitRange(std::move(attrRange));
+      writer.reset();
+
+      // Cannot create new ranges after closing the main writer
+      EXPECT_THROW((attrRange = attrSetWriter->BeginRange()), ROOT::RException);
+   }
+
+   // Cannot directly fetch the attribute RNTuple from the TFile
+   {
+      auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+      auto ntuple = tfile->Get<ROOT::RNTuple>("AttrSet1");
+      EXPECT_EQ(ntuple, nullptr);
+   }
+
+   /// Reading
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(reader->GetDescriptor().GetNAttributeSets(), 1);
+   for (const auto &attrSetIt : reader->GetDescriptor().GetAttrSetIterable()) {
+      EXPECT_EQ(attrSetIt.GetName(), "AttrSet1");
+   }
+
+   auto attrSetReader = reader->OpenAttributeSet("AttrSet1");
+   EXPECT_EQ(attrSetReader->GetNEntries(), 1);
+   auto pAttr = attrSetReader->GetModel().GetDefaultEntry().GetPtr<std::string>("attr");
+   {
+      int nAttrs = 0;
+      // iterate all attributes
+      for (auto idx : attrSetReader->GetAttributes()) {
+         attrSetReader->LoadEntry(idx);
+         EXPECT_EQ(*pAttr, "My Attribute");
+         nAttrs += 1;
+      }
+      EXPECT_EQ(nAttrs, 1);
+   }
+   {
+      int nAttrs = 0;
+      // attributes containing entry 99
+      for (auto idx : attrSetReader->GetAttributes(99)) {
+         attrSetReader->LoadEntry(idx);
+         EXPECT_EQ(*pAttr, "My Attribute");
+         nAttrs += 1;
+      }
+      EXPECT_EQ(nAttrs, 1);
+   }
+   {
+      // attributes containing entry 100 (no entry)
+      auto iter = attrSetReader->GetAttributes(100);
+      EXPECT_EQ(iter.begin(), iter.end());
+   }
+   {
+      // attributes contained in entry range 50-200 (no entry)
+      auto iter = attrSetReader->GetAttributesInRange(50, 200);
+      EXPECT_EQ(iter.begin(), iter.end());
+   }
+   {
+      int nAttrs = 0;
+      // attributes contained in entry range 0-1000
+      for (auto idx : attrSetReader->GetAttributesInRange(0, 1000)) {
+         attrSetReader->LoadEntry(idx);
+         EXPECT_EQ(*pAttr, "My Attribute");
+         nAttrs += 1;
+      }
+      EXPECT_EQ(nAttrs, 1);
+   }
+   {
+      // attributes containing entry range 200-300 (no entry)
+      auto iter = attrSetReader->GetAttributesContainingRange(200, 300);
+      EXPECT_EQ(iter.begin(), iter.end());
+   }
+}
+
+TEST(RNTupleAttributes, BasicReadingWritingTFile)
+{
+   FileRaii fileGuard("ntuple_attr_basic_readwriting_tfile.root");
+   fileGuard.PreserveFile();
 
    ROOT::TestSupport::CheckDiagsRAII diagsRaii;
    diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
