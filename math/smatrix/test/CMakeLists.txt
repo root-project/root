@@ -57,7 +57,7 @@ foreach(file ${TestSource})
 endforeach()
 
 ROOT_EXECUTABLE(testReadKalman kalman.C LIBRARIES ${Libraries})
-ROOT_ADD_TEST(smatrix-testReadKalman COMMAND testReadKalman slc3_ia32_gcc323 LABELS ${testReadKalman_LABELS} COPY_TO_BUILD_DIR kalman_slc3_ia32_gcc323.root)
+ROOT_ADD_TEST(smatrix-testReadKalman COMMAND testReadKalman slc3_ia32_gcc323 LABELS ${testReadKalman_LABELS} COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/kalman_slc3_ia32_gcc323.root)
 
 ROOT_EXECUTABLE(testMatrixOperations matrixOperations.C LIBRARIES ${Libraries})
-ROOT_ADD_TEST(smatrix-testMatrixOperations COMMAND testMatrixOperations slc3_ia32_gcc323 LABELS ${testMatrixOperations_LABELS} COPY_TO_BUILD_DIR testOperations_slc3_ia32_gcc323.root)
+ROOT_ADD_TEST(smatrix-testMatrixOperations COMMAND testMatrixOperations slc3_ia32_gcc323 LABELS ${testMatrixOperations_LABELS} COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/testOperations_slc3_ia32_gcc323.root)
