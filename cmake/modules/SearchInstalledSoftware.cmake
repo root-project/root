@@ -283,7 +283,8 @@ if(NOT "${MISSING_PACKAGES}" STREQUAL "")
 endif()
 if(NOT "${HOTFIX_BUILD_FLAGS}" STREQUAL "")
   list(REMOVE_DUPLICATES HOTFIX_BUILD_FLAGS)
-  message(FATAL_ERROR "Alternatively, a hotfix would be to add these flags to your CMake call: ${HOTFIX_BUILD_FLAGS}")
+  list(JOIN HOTFIX_BUILD_FLAGS " " HOTFIX_BUILD_FLAGS_MESSAGE)
+  message(FATAL_ERROR "Alternatively, a hotfix would be to add these flags to your CMake call: ${HOTFIX_BUILD_FLAGS_MESSAGE}")
 endif()
 
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
