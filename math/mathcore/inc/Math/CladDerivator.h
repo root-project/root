@@ -1103,6 +1103,11 @@ inline double inc_gamma_da(double a, double x)
 /// closed form (it is the same as the a-derivative of inc_gamma_dx(), see
 /// inc_gamma_dx_pullback()). For d2P/da2 there is no closed form, so it is
 /// approximated by a central difference of the exact first derivative.
+///
+/// For a <= h, the lower stencil point leaves the domain (inc_gamma_da()
+/// returns zero for non-positive a), so d2P/da2 is unreliable there. This is
+/// acceptable because RooFit never differentiates with respect to a, which is
+/// data there.
 inline void inc_gamma_da_pullback(double a, double x, double _d_y, double *_d_a, double *_d_x)
 {
    if (a <= 0 || x <= 0)
@@ -1148,10 +1153,34 @@ inline double landau_pdf_dv(double v)
 /// Pullback of landau_pdf_dv(). The second derivative of the standardized
 /// Landau density has no closed form, so it is approximated by a central
 /// difference of the exact first derivative (see also inc_gamma_da_pullback()).
+///
+/// The CERNLIB DENLAN approximation of the density is piecewise rational, and
+/// its first derivative has small jumps at the branch boundaries. Dividing
+/// such a jump by the step size would ruin the difference quotient (up to
+/// ~50 % error right at v = 1), so when the stencil would straddle a boundary
+/// it is shifted sideways to keep both points on the branch that contains v.
+/// The off-center evaluation costs one order in h, which is insignificant at
+/// this step size.
 inline void landau_pdf_dv_pullback(double v, double _d_y, double *_d_v)
 {
    const double h = 6e-6 * ::std::max(1., ::std::abs(v));
-   *_d_v += _d_y * (landau_pdf_dv(v + h) - landau_pdf_dv(v - h)) / (2. * h);
+   double lo = v - h;
+   double hi = v + h;
+   // Branch boundaries of landau_pdf(); each branch covers v < seam.
+   constexpr double seams[] = {-5.5, -1., 1., 5., 12., 50., 300.};
+   for (double seam : seams) {
+      if (lo < seam && seam <= hi) {
+         if (v < seam) {
+            lo -= h;
+            hi -= h;
+         } else {
+            lo += h;
+            hi += h;
+         }
+         break;
+      }
+   }
+   *_d_v += _d_y * (landau_pdf_dv(hi) - landau_pdf_dv(lo)) / (2. * h);
 }
 
 /// Pushforward of ROOT::Math::landau_pdf, which is p((x - x0) / xi) / xi in
@@ -1174,6 +1203,13 @@ landau_pdf_pushforward(double x, double xi, double x0, double d_x, double d_xi, 
 /// distribution function of the standardized Landau density evaluated at
 /// (x - x0) / xi. Its derivative in x is landau_pdf, so unlike for the
 /// density itself, all second derivatives are known in closed form.
+///
+/// That identity is exact only for the mathematical Landau distribution: ROOT
+/// implements the cdf (CERNLIB DISLAN) and the density (CERNLIB DENLAN) as
+/// independent rational approximations that are consistent with each other to
+/// about 1e-7 relative. The derivatives returned here therefore differ at
+/// that level both from the exact derivative of the implemented cdf and from
+/// landau_cdf_pullback(), which differentiates the DISLAN algorithm itself.
 inline clad::ValueAndPushforward<double, double>
 landau_cdf_pushforward(double x, double xi, double x0, double d_x, double d_xi, double d_x0)
 {
