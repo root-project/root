@@ -86,7 +86,7 @@ if (ONNX_MODELS_DIR)
   endif()
 
   ROOTTEST_ADD_TEST(SofieCompileModels_ONNX
-    COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX
+    COMMAND ./emitFromONNX
     FIXTURES_REQUIRED ${compile_models_fixtures}
     FIXTURES_SETUP sofie-compile-models-onnx
   )
