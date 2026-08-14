@@ -29,6 +29,8 @@
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RRawFile.hxx>
+#include <ROOT/RNTupleAttrWriting.hxx>
+#include <ROOT/RNTupleAttrReading.hxx>
 #include <ROOT/TestSupport.hxx>
 
 #include <RZip.h>
