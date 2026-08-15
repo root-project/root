@@ -105,6 +105,18 @@ TEST(RDataFrameCloning, Mean)
    EXPECT_EQ(df.GetNRuns(), 1);
 }
 
+TEST(RDataFrameCloning, Median)
+{
+   ROOT::RDataFrame df{5};
+   // 1, 1, 1, 100, 100 -> median 1, mean 40.6
+   auto col1 = df.Define("x", [](ULong64_t e) { return e < 3 ? 1. : 100.; }, {"rdfentry_"});
+   auto median = col1.Median<double>("x");
+   auto clone = CloneResultAndAction(median);
+   EXPECT_DOUBLE_EQ(*median, 1.);
+   EXPECT_DOUBLE_EQ(*clone, 1.);
+   EXPECT_EQ(df.GetNRuns(), 1);
+}
+
 TEST(RDataFrameCloning, Histo1DNoModel)
 {
    ROOT::RDataFrame df{100};

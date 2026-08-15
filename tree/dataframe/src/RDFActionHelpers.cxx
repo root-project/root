@@ -13,6 +13,8 @@
 #include "ROOT/RDF/Utils.hxx" // CacheLineStep
 
 #include <RtypesCore.h>
+#include <cmath>
+#include <cstddef>
 #include <TStatistic.h>
 
 namespace ROOT {
@@ -218,6 +220,46 @@ void StdDevHelper::Finalize()
 
    variance = variance / (totalElements - 1);
    *fResultStdDev = std::sqrt(variance);
+}
+
+MedianHelper::MedianHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots)
+   : fResult(meanVPtr), fBuffers(nSlots, std::vector<double>())
+{
+}
+
+void MedianHelper::Exec(unsigned int slot, double v)
+{
+   fBuffers[slot].push_back(v);
+}
+
+void MedianHelper::Finalize()
+{
+   std::vector<double> fullBuffer;
+   std::size_t fullBufferSize = 0;
+   for (const auto &buffer : fBuffers) {
+      fullBufferSize += buffer.size();
+   }
+
+   if (fullBufferSize == 0) {
+      *fResult = std::numeric_limits<double>::signaling_NaN();
+      return;
+   }
+
+   fullBuffer.reserve(fullBufferSize);
+
+   for (const auto &buffer : fBuffers)
+      fullBuffer.insert(fullBuffer.end(), buffer.begin(), buffer.end());
+
+   const std::size_t k = fullBufferSize / 2;
+   std::nth_element(fullBuffer.begin(), fullBuffer.begin() + k, fullBuffer.end());
+   const double upper = fullBuffer[k];
+
+   if (fullBuffer.size() % 2) {
+      *fResult = upper;
+   } else {
+      const double lower = *std::max_element(fullBuffer.begin(), fullBuffer.begin() + k);
+      *fResult = 0.5 * (lower + upper);
+   }
 }
 
 // External templates are disabled for gcc5 since this version wrongly omits the C++11 ABI attribute

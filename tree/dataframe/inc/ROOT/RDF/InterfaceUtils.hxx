@@ -103,6 +103,7 @@ struct Sum{};
 struct Mean{};
 struct Fill{};
 struct StdDev{};
+struct Median{};
 struct Display{};
 struct Snapshot{};
 struct Book{};
@@ -297,6 +298,17 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviation
    using Helper_t = StdDevHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
    return std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode, colRegister);
+}
+
+// Median action
+template <typename ColType, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, const unsigned int nSlots,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Median, const RColumnRegister &colRegister)
+{
+   using Helper_t = MedianHelper;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
+   return std::make_unique<Action_t>(Helper_t(meanV, nSlots), bl, std::move(prevNode), colRegister);
 }
 
 using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<ROOT::RDF::RDisplay>>;
