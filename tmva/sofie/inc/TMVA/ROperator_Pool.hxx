@@ -247,27 +247,6 @@ public:
    }
 
    // generate code for Session data members (e.g. internal vectors)
-   virtual std::string GenerateSessionMembersCode(std::string opName) override {
-      opName = "op_" + opName;
-      std::stringstream out;
-      // input matrix padded with zero
-      if(fDim == 1){
-          out << "std::vector<" << fType << "> fVec_" << opName << "_xpad = std::vector<" << fType << ">("
-          << fShapeX[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) << ");\n";
-      }
-      else if(fDim == 2){
-          out << "std::vector<" << fType << "> fVec_" << opName << "_xpad = std::vector<" << fType << ">("
-          << fShapeX[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) * (fShapeX[3] + fAttrPads[1] + fAttrPads[3])
-          << ");\n";
-      }
-      else{ //dim is 3D
-          out << "std::vector<" << fType << "> fVec_" << opName << "_xpad = std::vector<" << fType << ">("
-          << fShapeX[1] * (fShapeX[2] + fAttrPads[0] + fAttrPads[2]) * (fShapeX[3] + fAttrPads[1] + fAttrPads[3]) *
-          (fShapeX[4] + fAttrPads[2] + fAttrPads[4]) << ");\n";
-      }
-
-      return out.str();
-   }
 
    std::string Generate(std::string OpName) override {
       OpName = "op_" + OpName;
