@@ -30,6 +30,9 @@
 #include "TObject.h"
 #include "ROOT/RDF/RActionImpl.hxx"
 #include "ROOT/RDF/RMergeableValue.hxx"
+#include <cmath>
+#include <cstddef>
+#include <cstdio>
 
 #include "RConfigure.h" // for R__HAS_ROOT7
 #ifdef R__HAS_ROOT7
@@ -1490,6 +1493,41 @@ public:
    {
       auto &result = *static_cast<std::shared_ptr<double> *>(newResult);
       return StdDevHelper(result, fCounts.size());
+   }
+};
+
+class R__CLING_PTRCHECK(off) MedianHelper : public RActionImpl<MedianHelper> {
+   std::shared_ptr<double> fResult;
+   std::vector<std::vector<double>> fBuffers;
+
+public:
+   MedianHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots);
+   MedianHelper(MedianHelper &&) = default;
+   MedianHelper(const MedianHelper &) = delete;
+   void InitTask(TTreeReader *, unsigned int) {}
+   void Exec(unsigned int slot, double v);
+
+   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
+   void Exec(unsigned int slot, const T &vs)
+   {
+      fBuffers[slot].insert(fBuffers[slot].end(), std::begin(vs), std::end(vs));
+   }
+
+   void Initialize() { /* noop */ }
+
+   void Finalize();
+
+   // Helper functions for RMergeableValue
+   // std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final;
+
+   std::string GetActionName() { return "Median"; }
+
+   std::shared_ptr<double> GetResultPtr() const { return fResult; }
+
+   MedianHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
+   {
+      auto &result = *static_cast<std::shared_ptr<double> *>(newResult);
+      return MedianHelper(result, fBuffers.size());
    }
 };
 
