@@ -365,10 +365,9 @@ namespace cling {
   }
 
   Interpreter::CompilationResult
-  MetaProcessor::readInputFromFile(llvm::StringRef filename,
-                                   Value* result,
-                                   size_t posOpenCurly,
-                                   bool lineByLine) {
+  MetaProcessor::readInputFromFile(llvm::StringRef filename, Value* result,
+                                   size_t posOpenCurly, bool lineByLine,
+                                   size_t posCloseCurly) {
 
     // FIXME: This will fail for Unicode BOMs (and seems really weird)
     {
@@ -424,7 +423,6 @@ namespace cling {
     if (in.fail())
       return reportIOErr(filename, "read");
 
-    static const char whitespace[] = " \t\r\n";
     if (content.length() > 2 && content[0] == '#' && content[1] == '!') {
       // Convert shebang line to comment. That's nice because it doesn't
       // change the content size, leaving posOpenCurly untouched.
@@ -433,48 +431,18 @@ namespace cling {
     }
 
     if (posOpenCurly != (size_t)-1 && !content.empty()) {
-      assert(content[posOpenCurly] == '{'
-             && "No curly at claimed position of opening curly!");
+      assert(posOpenCurly < content.length() && content[posOpenCurly] == '{' &&
+             "No curly at claimed position of opening curly!");
       // hide the curly brace:
       content[posOpenCurly] = ' ';
-      // and the matching closing '}'
-      size_t posCloseCurly = content.find_last_not_of(whitespace);
-      if (posCloseCurly != std::string::npos) {
-        if (content[posCloseCurly] == ';' && content[posCloseCurly-1] == '}') {
-          content[posCloseCurly--] = ' '; // replace ';' and enter next if
-        }
-        if (content[posCloseCurly] == '}') {
-          content[posCloseCurly] = ' '; // replace '}'
-        } else {
-          std::string::size_type posBlockClose = content.find_last_of('}');
-          if (posBlockClose != std::string::npos) {
-            content[posBlockClose] = ' '; // replace '}'
-          }
-          std::string::size_type posComment
-            = content.find_first_not_of(whitespace, posBlockClose);
-          if (posComment != std::string::npos
-              && content[posComment] == '/' && content[posComment+1] == '/') {
-            // More text (comments) are okay after the last '}', but
-            // we can not easily find it to remove it (so we need to upgrade
-            // this code to better handle the case with comments or
-            // preprocessor code before and after the leading { and
-            // trailing })
-            while (posComment <= posCloseCurly) {
-              content[posComment++] = ' '; // replace '}' and comment
-            }
-          } else {
-            content[posCloseCurly] = '{';
-            // By putting the '{' back, we keep the code as consistent as
-            // the user wrote it ... but we should still warn that we not
-            // goint to treat this file an unamed macro.
-            cling::errs()
-              << "Warning in cling::MetaProcessor: can not find the closing '}', "
-              << llvm::sys::path::filename(filename)
-              << " is not handled as an unamed script!\n";
-          } // did not find "//"
-        } // remove comments after the trailing '}'
-      } // find '}'
-    } // ignore outermost block
+    }
+    if (posCloseCurly != (size_t)-1 && !content.empty()) {
+      assert(posCloseCurly < content.length() &&
+             content[posCloseCurly] == '}' &&
+             "No curly at claimed position of closing curly!");
+      // hide the curly brace:
+      content[posCloseCurly] = ' ';
+    }
 
     m_CurrentlyExecutingFile = filename;
     bool topmost = !m_TopExecutingFile.data();
