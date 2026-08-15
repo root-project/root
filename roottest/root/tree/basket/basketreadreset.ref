@@ -1,0 +1,4 @@
+Processing test_basket_readreset.C...
+Initial buffer size: 500000
+Post-reset buffer size is smaller than initial: YES
+Post-reset buffer satisfies safety floor requirement: YES
