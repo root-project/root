@@ -42,7 +42,7 @@ namespace textinput {
   }
 
   Editor::Command
-  KeyBinding::ToCommandCtrl(char In,
+  KeyBinding::ToCommandCtrl(char32_t In,
                             bool HadEscPending) {
     // Control was pressed and In was hit. Convert to command.
     typedef Editor::Command C;
@@ -96,10 +96,12 @@ namespace textinput {
   }
 
   Editor::Command
-  KeyBinding::ToCommandEsc(char In) {
+  KeyBinding::ToCommandEsc(char32_t In) {
     // ESC was entered, followed by In. Convert to command.
+    // The Esc-prefixed bindings are all ASCII; anything else falls through to
+    // the error case below.
     typedef Editor::Command C;
-    switch (toupper(In)) {
+    switch (In <= 0x7F ? toupper(static_cast<int>(In)) : static_cast<int>(In)) {
       case 'B': return C(Editor::kMovePrevWord);
       case 'C': return C(Editor::kCmdToUpperMoveNextWord);
       case 'D': return C(Editor::kCmdCutNextWord);

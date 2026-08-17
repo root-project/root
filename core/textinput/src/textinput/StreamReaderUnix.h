@@ -17,8 +17,9 @@
 #define TEXTINPUT_STREAMREADERUNIX_H
 
 #include "textinput/StreamReader.h"
+#include "textinput/UTF8.h"
 #include <cstddef>
-#include <queue>
+#include <deque>
 
 namespace textinput {
   class InputData;
@@ -38,12 +39,17 @@ namespace textinput {
 
     bool IsFromTTY() override { return fIsTTY; }
   private:
-    int ReadRawCharacter();
+    // Read one byte; -1 on EOF. Bytes are returned unsigned (0..255) so that
+    // a 0xFF byte of a UTF-8 sequence cannot be mistaken for EOF.
+    int ReadRawByte();
     bool ProcessCSI(InputData& in);
+    // Read the continuation bytes of a UTF-8 sequence started by Lead and
+    // store the character in in.
+    void ReadUTF8Rest(unsigned char Lead, InputData& in);
 
     bool fHaveInputFocus; // whether we configured the tty
     bool fIsTTY; // whether input FD is a tty
-    std::queue<char> fReadAheadBuffer; // input chars we read too much (CSI)
+    std::deque<unsigned char> fReadAheadBuffer; // input bytes we read too much (CSI)
   };
 }
 

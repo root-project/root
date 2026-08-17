@@ -30,12 +30,14 @@
 #include <cstring>
 #include <map>
 #include <list>
+#include <queue>
 #include <utility>
 
 #include "textinput/InputData.h"
 #include "textinput/KeyBinding.h"
 #include "textinput/TerminalConfigUnix.h"
 #include "textinput/TextInputContext.h"
+#include "textinput/UTF8.h"
 
 namespace {
   using namespace textinput;
@@ -43,23 +45,23 @@ namespace {
 
   class Rewind {
   public:
-    Rewind(std::queue<char>& rab, InputData::EExtendedInput& ret):
+    Rewind(std::deque<unsigned char>& rab, InputData::EExtendedInput& ret):
     RAB(rab), Ret(ret) {}
 
     ~Rewind() {
       if (Ret != InputData::kEIUninitialized) return;
       // RAB.push(0x1b); already handled by ProcessCSI returning false.
       while (!Q.empty()) {
-        RAB.push(Q.front());
+        RAB.push_back(Q.front());
         Q.pop();
       }
     }
 
-    void push(char C) { Q.push(C); }
+    void push(unsigned char C) { Q.push(C); }
 
   private:
-    std::queue<char> Q;
-    std::queue<char>& RAB;
+    std::queue<unsigned char> Q;
+    std::deque<unsigned char>& RAB;
     InputData::EExtendedInput& Ret;
   };
 
@@ -250,9 +252,15 @@ namespace textinput {
         mod = EKM->getMod();
         EKM = nullptr;
       } else {
-        char c1 = ReadRawCharacter();
-        rwd.push(c1);
-        EKM = EKM->find(c1);
+        int c1 = ReadRawByte();
+        if (c1 == -1) {
+          EKM = nullptr;
+          break;
+        }
+        rwd.push(static_cast<unsigned char>(c1));
+        // The escape sequences are ASCII; a byte above it cannot match and
+        // gets pushed back by Rewind.
+        EKM = c1 < 0x80 ? EKM->find(static_cast<char>(c1)) : nullptr;
       }
     }
     in.SetExtended(ret);
@@ -261,15 +269,49 @@ namespace textinput {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  /// Read one char from stdin. Converts the read char to InputData
+  /// Read the continuation bytes of the UTF-8 sequence started by Lead and
+  /// store the resulting character in in.
+  ///
+  /// A byte that is not a continuation byte is pushed back: it may well be the
+  /// start of the next character, or an ESC introducing a key sequence, and
+  /// swallowing it would turn one mistyped character into a lost keypress.
+  ///
+  /// \param[in] Lead the lead byte, already read
+  /// \param[in] in input data to be filled out
+  void
+  StreamReaderUnix::ReadUTF8Rest(unsigned char Lead, InputData& in) {
+    UTF8Decoder Dec;
+    char32_t Ch = 0;
+    bool Reprocess = false;
+    UTF8Decoder::EResult Res = Dec.Push(Lead, Ch, Reprocess);
+    while (Res == UTF8Decoder::kNeedMore) {
+      int b = ReadRawByte();
+      if (b == -1) { // stream ended mid-character
+        Ch = kInvalidChar;
+        break;
+      }
+      Res = Dec.Push(static_cast<unsigned char>(b), Ch, Reprocess);
+      if (Res == UTF8Decoder::kInvalid && Reprocess) {
+        fReadAheadBuffer.push_front(static_cast<unsigned char>(b));
+        break;
+      }
+    }
+    in.SetRaw(Ch);
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Read one character from stdin. Converts the read character to InputData.
+  ///
+  /// One character can be several bytes: a UTF-8 sequence is assembled here, so
+  /// that everything above sees whole characters and nRead counts characters.
   ///
   /// \param[in] nRead number of already read characters. Increment after reading
   /// \param[in] in input char / data to be filled out
   bool
   StreamReaderUnix::ReadInput(size_t& nRead, InputData& in) {
-    int c = ReadRawCharacter();
+    int c = ReadRawByte();
     in.SetModifier(InputData::kModNone);
-    if (c == -1) { // non-character value, EOF negative
+    if (c == -1) { // EOF
       in.SetExtended(InputData::kEIEOF);
     } else if (c == 0x1b) { // ESC
       // Only try to process CSI if Esc does not have a meaning by itself.
@@ -278,9 +320,11 @@ namespace textinput {
           || !ProcessCSI(in)) {
         in.SetExtended(InputData::kEIEsc);
       }
+    } else if (c >= 0x80) { // start of a multi-byte UTF-8 sequence
+      ReadUTF8Rest(static_cast<unsigned char>(c), in);
     } else if (isprint(c)) { // c >= 0x20(32) && c < 0x7f(127)
       in.SetRaw(c);
-    } else if (c < 32 || c == (char)127 /* ^?, DEL on MacOS */) { // non-printable
+    } else if (c < 32 || c == 127 /* ^?, DEL on MacOS */) { // non-printable
       if (c == 13) { // 0x0d CR (INLCR - NL converted to CR)
         in.SetExtended(InputData::kEIEnter);
       } else { // mark CTRL pressed if other non-print char
@@ -296,13 +340,13 @@ namespace textinput {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
-  /// Read one character from stdin. Block if not available.
+  /// Read one byte from stdin. Block if not available. Returns -1 on EOF.
   int
-  StreamReaderUnix::ReadRawCharacter() {
-    char buf;
+  StreamReaderUnix::ReadRawByte() {
+    unsigned char buf;
     if (!fReadAheadBuffer.empty()) {
       buf = fReadAheadBuffer.front();
-      fReadAheadBuffer.pop();
+      fReadAheadBuffer.pop_front();
     } else {
       ssize_t ret = read(fileno(stdin), &buf, 1);
 #ifdef __APPLE__

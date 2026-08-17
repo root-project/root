@@ -69,21 +69,23 @@ namespace textinput {
     };
 
     InputData(): fExt(kEIUninitialized), fMod(0) {}
-    InputData(int ch, char mod = 0): fRaw(ch), fMod(mod | kIsRaw) {}
+    InputData(char32_t ch, char mod = 0): fRaw(ch), fMod(mod | kIsRaw) {}
 
     bool IsRaw() const { return (fMod & kIsRaw) != 0; }
-    int GetRaw() const { return fRaw; }
+    char32_t GetRaw() const { return fRaw; }
 
     EExtendedInput GetExtendedInput() const { return fExt; }
     unsigned char GetModifier() const { return fMod & ~kIsRaw; }
 
-    void SetRaw(char R) { fRaw = R; fMod |= kIsRaw; }
+    void SetRaw(char32_t R) { fRaw = R; fMod |= kIsRaw; }
     void SetExtended(EExtendedInput E) { fExt = E;  fMod &= ~kIsRaw; }
     void SetModifier(char M) { fMod = M | (fMod & kIsRaw); }
 
   private:
     union {
-      char fRaw; // raw input character, if kIsRaw & fMod
+      // A whole character, not a byte: the readers assemble multi-byte input
+      // (UTF-8 on Unix, UTF-16 surrogate pairs on Windows) before getting here.
+      char32_t fRaw; // raw input character, if kIsRaw & fMod
       EExtendedInput fExt; // non-character input
     };
     unsigned char fMod; // Modifiers, also stores union descriminator (kIsRaw)

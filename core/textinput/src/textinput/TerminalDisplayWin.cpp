@@ -16,8 +16,32 @@
 #ifdef _WIN32
 #include "textinput/TerminalDisplayWin.h"
 #include "textinput/Color.h"
+#include "textinput/UTF8.h"
 
 #include <cassert>
+#include <string>
+
+namespace {
+  // The console API speaks UTF-16; textinput hands out UTF-8. Converting here
+  // and writing with WriteConsoleW keeps the output correct whatever code page
+  // the console happens to be set to - which is why SetConsoleOutputCP(65001)
+  // is not needed (it used to break line wrapping on Windows 10).
+  std::wstring ToUTF16(const char* Text, size_t Len) {
+    const std::u32string U32 = textinput::UTF8ToUTF32(Text, Len);
+    std::wstring Ret;
+    Ret.reserve(U32.length());
+    for (char32_t C : U32) {
+      if (C < 0x10000) {
+        Ret += static_cast<wchar_t>(C);
+      } else {
+        const char32_t V = C - 0x10000;
+        Ret += static_cast<wchar_t>(0xD800 + (V >> 10));
+        Ret += static_cast<wchar_t>(0xDC00 + (V & 0x3FF));
+      }
+    }
+    return Ret;
+  }
+}
 
 #ifdef UNICODE
 #define filename L"CONOUT$"
@@ -186,12 +210,18 @@ namespace textinput {
   TerminalDisplayWin::WriteRawString(const char *text, size_t len) {
     DWORD NumWritten = 0;
     if (IsTTY()) {
-      WriteConsole(fOut, text, (DWORD) len, &NumWritten, NULL);
+      const std::wstring WText = ToUTF16(text, len);
+      WriteConsoleW(fOut, WText.c_str(), (DWORD) WText.length(), &NumWritten,
+                    NULL);
+      if (NumWritten != WText.length()) {
+        ShowError("writing to output");
+      }
     } else {
+      // Redirected: pass the UTF-8 bytes through unchanged.
       WriteFile(fOut, text, (DWORD) len, &NumWritten, NULL);
-    }
-    if (NumWritten != len) {
-      ShowError("writing to output");
+      if (NumWritten != len) {
+        ShowError("writing to output");
+      }
     }
   }
 

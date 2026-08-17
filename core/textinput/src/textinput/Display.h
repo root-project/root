@@ -35,6 +35,8 @@ namespace textinput {
 
       bool operator==(const Pos& O) const {
         return fCol == O.fCol && fLine == O.fLine; }
+      bool operator<(const Pos& O) const {
+        return fLine != O.fLine ? fLine < O.fLine : fCol < O.fCol; }
 
       size_t fCol;
       size_t fLine;

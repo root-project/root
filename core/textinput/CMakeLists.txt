@@ -27,6 +27,7 @@ target_sources(Core PRIVATE
   src/textinput/TerminalDisplayWin.cpp
   src/textinput/TextInputContext.cpp
   src/textinput/TextInput.cpp
+  src/textinput/UTF8.cpp
 )
 
 target_include_directories(Core

@@ -103,13 +103,13 @@ namespace textinput {
     public:
       Command(ECommandID C): fKind(kCKCommand), fCmd(C) {}
       Command(EMoveID M): fKind(kCKMove), fMove(M) {}
-      Command(char C, ECommandKind k = kCKChar): fKind(k), fChar(C) {}
+      Command(char32_t C, ECommandKind k = kCKChar): fKind(k), fChar(C) {}
 
       ECommandKind GetKind() const { return fKind; }
 
       ECommandID GetCommandID() const { return fCmd;}
       EMoveID GetMoveID() const { return fMove;}
-      char GetChar() const { return fChar;}
+      char32_t GetChar() const { return fChar;}
 
       bool isCtrlD() const { return fKind == kCKControl
                                     && (fChar == 'd'-0x60); }
@@ -118,7 +118,7 @@ namespace textinput {
       union {
         ECommandID fCmd; // editor command value
         EMoveID fMove; // move value
-        char fChar; // character input value
+        char32_t fChar; // character input value
       };
     };
 
@@ -136,14 +136,14 @@ namespace textinput {
     void CancelAndRevertSpecialInputMode(EditorRange& R);
 
   private:
-    EProcessResult ProcessChar(char C, EditorRange& R);
+    EProcessResult ProcessChar(char32_t C, EditorRange& R);
     EProcessResult ProcessMove(EMoveID M, EditorRange& R);
     EProcessResult ProcessCommand(ECommandID M, EditorRange& R);
     size_t FindWordBoundary(int Direction);
     void PushUndo();
 
-    void AddToPasteBuf(int Dir, const std::string& T);
-    void AddToPasteBuf(int Dir, char T);
+    void AddToPasteBuf(int Dir, const std::u32string& T);
+    void AddToPasteBuf(int Dir, char32_t T);
     void ClearPasteBuf() { fCutDirection = 0; }
     void SetHistSearchModePrompt(Range& RDisplay);
     bool UpdateHistSearch(EditorRange& R);
@@ -159,9 +159,9 @@ namespace textinput {
 
     TextInputContext* fContext; // Context object
     Text fEditorPrompt; // for special modes, e.g. reverse search
-    std::string fLineNotInHist; // current input line, not pushed to hist yet
-    std::string fPasteBuf; // cut strings that can be pasted
-    std::string fSearch; // for forward / backward hist search
+    std::string fLineNotInHist; // current input line (UTF-8), not pushed to hist yet
+    std::u32string fPasteBuf; // cut strings that can be pasted
+    std::u32string fSearch; // for forward / backward hist search
     size_t fCurHistEntry; // the current line stems from a hist entry, -1 if not
     size_t fReplayHistEntry; // set next line to this hist entry, kCmdHistReplay
     EEditMode fMode; // current input mode

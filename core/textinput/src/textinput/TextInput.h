@@ -67,7 +67,9 @@ namespace textinput {
     // Read interface
     EReadResult ReadInput();
     EReadResult GetReadState() const { return fLastReadResult; }
-    char GetLastKey() const { return fLastKey; }
+    // The most recent key as a character, not a byte: a multi-byte UTF-8
+    // sequence is reported once, as the code point it encodes.
+    char32_t GetLastKey() const { return fLastKey; }
     const std::string& GetInput();
     void TakeInput(std::string& input, bool force = false); // Take and reset input
     bool AtEOL() const { return fLastReadResult == kRRReadEOLDelimiter || AtEOF(); }
@@ -91,13 +93,13 @@ namespace textinput {
     void AddHistoryLine(const char* line);
 
   private:
-    void HandleControl(char c, EditorRange& r);
+    void HandleControl(char32_t c, EditorRange& r);
     void ProcessNewInput(const InputData& in, EditorRange& r);
     void DisplayNewInput(EditorRange& r, size_t& oldCursorPos);
 
     bool fMasked; // whether input should be shown
     bool fAutoHistAdd; // whether input should be added to history
-    char fLastKey; // most recently read key
+    char32_t fLastKey; // most recently read key
     size_t fMaxChars; // Num chars to read; 0 for blocking, -1 for all available
     EReadResult fLastReadResult; // current input state
     TextInputContext* fContext; // context object
