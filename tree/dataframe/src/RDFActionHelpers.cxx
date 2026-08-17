@@ -237,7 +237,7 @@ void MedianHelper::Finalize()
       fullBuffer.insert(fullBuffer.end(), buffer.begin(), buffer.end());
 
    if (fullBuffer.empty()) {
-      *fResult = 0.0;
+      *fResult = NAN;
       return;
    }
 
