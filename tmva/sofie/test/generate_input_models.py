@@ -695,6 +695,35 @@ def make_ConvTranspose2d():
     return _model(graph, opset=17, ir_version=8)
 
 
+def make_ConvTranspose2dOutputShape():
+    """Ops: ConvTranspose"""
+    nodes = [
+        helper.make_node(
+            'ConvTranspose',
+            ['X', 'W'],
+            ['Y'],
+            kernel_shape=[3, 3],
+            strides=[2, 2],
+            output_shape=[6, 6]
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'ConvTranspose2dOutputShape',
+        inputs=[
+            _vi('X', FLOAT, [1, 1, 3, 3]),
+            _vi('W', FLOAT, [1, 1, 3, 3]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [1, 1, 6, 6]),
+        ],
+        initializer=[
+            _tensor('W', FLOAT, [1, 1, 3, 3], [1.0] * 9),
+        ],
+    )
+    return _model(graph, opset=17, ir_version=8)
+
+
 def make_ConvTransposeBias2d():
     """Ops: ConvTranspose"""
     nodes = [
@@ -5092,6 +5121,7 @@ MODELS = {
     'ConvAddRelu': make_ConvAddRelu,
     'ConvTranspose1d': make_ConvTranspose1d,
     'ConvTranspose2d': make_ConvTranspose2d,
+    'ConvTranspose2dOutputShape': make_ConvTranspose2dOutputShape,
     'ConvTransposeBias2d': make_ConvTransposeBias2d,
     'ConvTransposeBias2dBatched': make_ConvTransposeBias2dBatched,
     'ConvWithAsymmetricPadding': make_ConvWithAsymmetricPadding,
@@ -5307,6 +5337,7 @@ TEST_INPUTS = {
     'ConvAddRelu': [f32(np.arange(-7.0, 9.0), (1, 1, 4, 4))],
     'ConvTranspose1d': [f32(np.arange(0.0, 3.0), (1, 1, 3))],
     'ConvTranspose2d': [f32(np.arange(0.0, 9.0), (1, 1, 3, 3))],
+    'ConvTranspose2dOutputShape': [f32(np.arange(0.0, 9.0), (1, 1, 3, 3))],
     'ConvTransposeBias2d': [f32(np.arange(0.0, 9.0), (1, 1, 3, 3))],
     'ConvTransposeBias2dBatched': [f32(np.arange(0.0, 18.0), (2, 1, 3, 3))],
     'ConvWithAsymmetricPadding': [f32(np.arange(0.0, 35.0), (1, 1, 7, 5))],
@@ -5631,6 +5662,29 @@ def _mean_reference(model, feeds):
     return [np.mean(np.broadcast_arrays(*feeds.values()), axis=0, dtype=np.float32)]
 
 
+def _convtranspose_outputshape_reference(model, feeds):
+    """The ReferenceEvaluator crashes if output_shape is set but pads is not.
+    We temporarily add the correct inferred pads to evaluate it, then remove
+    them so the saved model strictly tests SOFIE's inference logic."""
+    from onnx import helper
+
+    for node in model.graph.node:
+        if node.op_type == "ConvTranspose" and "pads" not in [a.name for a in node.attribute]:
+            node.attribute.extend([helper.make_attribute("pads", [1, 1, 0, 0])])
+
+    from onnx.reference import ReferenceEvaluator
+
+    outputs = ReferenceEvaluator(model).run(None, feeds)
+
+    for node in model.graph.node:
+        if node.op_type == "ConvTranspose":
+            for i, attr in enumerate(node.attribute):
+                if attr.name == "pads":
+                    del node.attribute[i]
+                    break
+    return outputs
+
+
 # Models whose expected outputs the ReferenceEvaluator cannot compute.
 EXPECTED_OVERRIDES = {
     "GRUBidirectional": _recurrent_reference,
@@ -5641,6 +5695,7 @@ EXPECTED_OVERRIDES = {
     "RNNSequenceBatchwise": _recurrent_reference,
     "MaxPool2d_AsymPad": _maxpool2d_reference,
     "MeanMultidirectionalBroadcast": _mean_reference,
+    "ConvTranspose2dOutputShape": _convtranspose_outputshape_reference,
 }
 
 
