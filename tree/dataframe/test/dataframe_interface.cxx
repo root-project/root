@@ -3,9 +3,11 @@
 
 #include "ROOT/RCsvDS.hxx"
 #include "ROOT/RDataFrame.hxx"
+#include <cmath>
 #include <string_view>
 #include "ROOT/RTrivialDS.hxx"
 #include "ROOT/TestSupport.hxx"
+#include "RtypesCore.h"
 #include "TMemFile.h"
 #include "TSystem.h"
 #include "TTree.h"
@@ -532,7 +534,7 @@ TEST(RDataFrameInterface, ColumnWithSimpleStruct)
 }
 
 // Issue #6435
-TEST(RDataFrameInterface, MinMaxSumMeanStdDevOfScalar)
+TEST(RDataFrameInterface, MinMaxSumMeanStdDevMedianOfScalar)
 {
    auto df = ROOT::RDataFrame(4).Range(1, 0).Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"});
    auto max = df.Max<int>("x");
@@ -545,6 +547,8 @@ TEST(RDataFrameInterface, MinMaxSumMeanStdDevOfScalar)
    auto jit_mean = df.Mean("x");
    auto stddev = df.StdDev<int>("x");
    auto jit_stddev = df.StdDev("x");
+   auto median = df.Median<int>("x");
+   auto jit_median = df.Median("x");
 
    EXPECT_EQ(*max, 3);
    EXPECT_DOUBLE_EQ(*jit_max, 3.f);
@@ -556,9 +560,11 @@ TEST(RDataFrameInterface, MinMaxSumMeanStdDevOfScalar)
    EXPECT_DOUBLE_EQ(*jit_mean, 2);
    EXPECT_DOUBLE_EQ(*stddev, 1.f);
    EXPECT_DOUBLE_EQ(*jit_stddev, 1.f);
+   EXPECT_DOUBLE_EQ(*median, 2);
+   EXPECT_DOUBLE_EQ(*jit_median, 2.f);
 }
 
-TEST(RDataFrameInterface, MinMaxSumMeanStdDevOfRVec)
+TEST(RDataFrameInterface, MinMaxSumMeanStdDevMedianOfRVec)
 {
    auto df = ROOT::RDataFrame(1).Define("x", [] { return ROOT::RVec<int>{1,2,3}; });
    auto max = df.Max<ROOT::RVec<int>>("x");
@@ -571,6 +577,8 @@ TEST(RDataFrameInterface, MinMaxSumMeanStdDevOfRVec)
    auto jit_mean = df.Mean("x");
    auto stddev = df.StdDev<ROOT::RVec<int>>("x");
    auto jit_stddev = df.StdDev("x");
+   auto median = df.Median<ROOT::RVec<int>>("x");
+   auto jit_median = df.Median("x");
 
    EXPECT_EQ(*max, 3);
    EXPECT_DOUBLE_EQ(*jit_max, 3.f);
@@ -582,6 +590,44 @@ TEST(RDataFrameInterface, MinMaxSumMeanStdDevOfRVec)
    EXPECT_DOUBLE_EQ(*jit_mean, 2);
    EXPECT_DOUBLE_EQ(*stddev, 1.f);
    EXPECT_DOUBLE_EQ(*jit_stddev, 1.f);
+   EXPECT_DOUBLE_EQ(*median, 2);
+   EXPECT_DOUBLE_EQ(*jit_median, 2);
+}
+
+TEST(RDataFrameInterface, MedianOfScalarAndEvenNumberOfEntries)
+{
+   // 1, 1, 2, 100 -> two middle values are 1 and 2, so median is 1.5
+   auto df = ROOT::RDataFrame(4).Define("x",
+                                        [](ULong64_t e) {
+                                           if (e == 2)
+                                              return 2;
+                                           if (e == 3)
+                                              return 100;
+                                           return 1;
+                                        },
+                                        {"rdfentry_"});
+   EXPECT_DOUBLE_EQ(*df.Median<int>("x"), 1.5);
+   EXPECT_DOUBLE_EQ(*df.Median("x"), 1.5);
+}
+
+TEST(RDataFrameInterface, MedianOfOddNumberOfEntries)
+{
+   // 1, 1, 1, 100, 100 -> median 1, mean 40.6
+   auto df = ROOT::RDataFrame(5).Define("x", [](ULong64_t e) { return e < 3 ? 1 : 100; }, {"rdfentry_"});
+   EXPECT_DOUBLE_EQ(*df.Median<int>("x"), 1.);
+   EXPECT_DOUBLE_EQ(*df.Median("x"), 1.);
+}
+
+TEST(RDataFrameInterface, MedianOfEmptyDataFrameScalar)
+{
+   auto df = ROOT::RDataFrame(0).Define("x", "1.0");
+   EXPECT_TRUE(std::isnan(*df.Median("x")));
+}
+
+TEST(RDataFrameInterface, MedianOfEmptyDataFrameRVec)
+{
+   auto df = ROOT::RDataFrame(0).Define("x", [] { return ROOT::RVec<int>{}; });
+   EXPECT_TRUE(std::isnan(*df.Median("x")));
 }
 
 class Product {

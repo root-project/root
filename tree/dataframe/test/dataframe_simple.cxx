@@ -189,6 +189,13 @@ TEST_P(RDFSimpleTests, Define_jitted)
    EXPECT_DOUBLE_EQ(1., *m);
 }
 
+TEST_P(RDFSimpleTests, Median)
+{
+   // 80% ones, 20% hundreds -> median 1, mean 20.8
+   auto df = ROOT::RDataFrame(100000).Define("x", [](ULong64_t e) { return e < 80000 ? 1. : 100.; }, {"rdfentry_"});
+   EXPECT_DOUBLE_EQ(df.Median<double>("x").GetValue(), 1.);
+}
+
 struct RFoo {};
 
 TEST_P(RDFSimpleTests, Define_jitted_type_unknown_to_interpreter)
