@@ -663,9 +663,16 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(tru
    bool use_normal = (fChromeVersion < 119) || (fChromeVersion > 131);
 #endif
    if (use_normal) {
+      TString extra_arg;
+      // in starting from version 151 one have to allow use of unsafe swiftshader
+      if (fChromeVersion > 150)
+         extra_arg = "--enable-unsafe-swiftshader";
+      // in docker disable shared memory usage because of limited resources
+      if (!gSystem->AccessPathName("/.dockerenv", kFileExists))
+         extra_arg.Append(" --disable-dev-shm-usage");
       // old or newest browser with standard headless mode
-      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "fork:--headless --no-sandbox --disable-extensions --disable-audio-output $geometry --dump-dom $url");
-      fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "fork:--headless --no-sandbox --disable-extensions --disable-audio-output $geometry $url");
+      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), TString::Format("fork:--headless --no-sandbox --disable-extensions --disable-audio-output %s $geometry --dump-dom $url", extra_arg.Data()).Data());
+      fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), TString::Format("fork:--headless --no-sandbox --disable-extensions --disable-audio-output %s $geometry $url", extra_arg.Data()).Data());
    } else {
       // newer version with headless=new mode
       fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "fork:--headless=new --no-sandbox --disable-extensions --disable-audio-output $geometry --dump-dom $url");
