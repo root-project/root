@@ -397,9 +397,15 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       _valid= false;
     }
     if (!function.dependsOn(*arg)) {
-      std::unique_ptr<RooAbsArg> argClone{static_cast<RooAbsArg*>(arg->Clone())};
-      _facList.add(*argClone);
-      addOwnedComponents(std::move(argClone));
+      // Note that the factorizing observable itself is added, and not a clone
+      // of it. A clone would be a second node with the same name in the
+      // computation graph, and such duplicates can't be resolved by name
+      // anymore, for example when the observables of a compiled computation
+      // graph are connected to the dataset columns. Since the factorizing
+      // observables are only shape servers, the integral is not recomputed
+      // when their value changes, but only when their range changes, which is
+      // what we want.
+      _facList.add(*arg);
     }
   }
 

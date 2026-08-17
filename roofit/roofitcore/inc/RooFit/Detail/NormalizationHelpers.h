@@ -44,6 +44,8 @@ public:
    void markAsCompiled(RooAbsArg &arg) const;
    void markSubtreeAsCompiled(RooAbsArg &arg) const;
 
+   void redirectToCompiledServers(RooAbsArg &topNode) const;
+
    // This information is used for the binned likelihood optimization.
    void setLikelihoodMode(bool flag) { _likelihoodMode = flag; }
    bool likelihoodMode() const { return _likelihoodMode; }
@@ -71,7 +73,9 @@ template <class T>
 std::unique_ptr<T> compileForNormSet(T const &arg, RooArgSet const &normSet)
 {
    RooFit::Detail::CompileContext ctx{normSet};
-   return std::unique_ptr<T>{static_cast<T *>(arg.compileForNormSet(normSet, ctx).release())};
+   std::unique_ptr<T> out{static_cast<T *>(arg.compileForNormSet(normSet, ctx).release())};
+   ctx.redirectToCompiledServers(*out);
+   return out;
 }
 
 } // namespace Detail
