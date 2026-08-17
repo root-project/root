@@ -6,7 +6,7 @@
 // Classes for the regression test of member-wise streaming of a variable-size
 // array (`//[n]`, a TStreamerLoop element) that lives in a base class at a
 // non-zero offset. See io/io/src/TStreamerInfoActions.cxx
-// (TConfStreamerLoop::fCounterOffset) and TStreamerLoopMemberwise.cxx.
+// (TConfStreamerLoop::fCounterOffset) and runStreamerLoopMemberwise.cxx.
 
 namespace ROOTTest {
 namespace StreamerLoopMemberwise {
