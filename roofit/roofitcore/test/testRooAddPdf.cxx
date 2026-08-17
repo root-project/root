@@ -16,6 +16,7 @@
 #include <RooMsgService.h>
 #include <RooPolynomial.h>
 #include <RooProdPdf.h>
+#include <RooRandom.h>
 #include <RooRealIntegral.h>
 #include <RooRealSumPdf.h>
 #include <RooUniform.h>
@@ -25,6 +26,7 @@
 
 #include "gtest_wrapper.h"
 
+#include <cmath>
 #include <memory>
 
 /// Verify that sPlot does work with a RooAddPdf. This reproduces GitHub issue
@@ -766,4 +768,74 @@ TEST(RooAddPdf, ExpectedEventsWithNormRange)
    // which is 60 % of the full range for these uniform pdfs.
    model.setNormRange("sub");
    EXPECT_FLOAT_EQ(model.expectedEvents(&nsetX), 600.0);
+}
+
+/// The evaluation backends must agree on the likelihood of a conditional fit,
+/// also if the coefficients of a RooAddPdf are defined in a normalization set
+/// that includes the conditional observables. Covers the case where the
+/// compiled computation graph contained a leftover reference to the original
+/// observable, such that the pdf didn't depend on the fit observable at all,
+/// and the case where the extended term went missing in the new backends.
+TEST(RooAddPdf, ConditionalLikelihoodBackendConsistency)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0, 10};
+   RooRealVar y{"y", "y", 0, 1};
+
+   RooArgSet nsetXY{x, y};
+
+   // The signal depends on the conditional observable y, the background
+   // doesn't. Like this, the coefficient projection is not trivial.
+   RooRealVar mean{"mean", "", 5.0};
+   RooRealVar sigma{"sigma", "", 1.0};
+   RooGaussian gx{"gx", "", x, mean, sigma};
+   RooRealVar cy{"cy", "", -3.0};
+   RooExponential ey{"ey", "", y, cy};
+   RooProdPdf sig{"sig", "", {gx, ey}};
+
+   RooRealVar cx{"cx", "", -0.2};
+   RooExponential ex{"ex", "", x, cx};
+   RooPolynomial uy{"uy", "", y};
+   RooProdPdf bkg{"bkg", "", {ex, uy}};
+
+   RooRealVar nsig{"nsig", "", 300., 0., 100000.};
+   RooRealVar nbkg{"nbkg", "", 700., 0., 100000.};
+   RooAddPdf model{"model", "", {sig, bkg}, {nsig, nbkg}};
+   model.fixCoefNormalization(nsetXY);
+
+   RooRandom::randomGenerator()->SetSeed(42);
+   std::unique_ptr<RooAbsData> data{model.generate(nsetXY, 500)};
+
+   // Reference values, computed event by event with the plain RooFit
+   // interfaces: the conditional pdf is the joint pdf divided by its integral
+   // over the non-conditional observables.
+   std::unique_ptr<RooAbsReal> denom{model.createIntegral(RooArgSet{x}, nsetXY)};
+   double refNll = 0.0;
+   for (int i = 0; i < data->numEntries(); ++i) {
+      RooArgSet const &row = *data->get(i);
+      x.setVal(row.getRealValue("x"));
+      y.setVal(row.getRealValue("y"));
+      const double pdfVal = model.getVal(nsetXY);
+      x.setVal(row.getRealValue("x"));
+      y.setVal(row.getRealValue("y"));
+      refNll -= std::log(pdfVal / denom->getVal());
+   }
+   // The extended term is the one of the full model, like in the legacy
+   // evaluation backend, where the expected number of events is evaluated in
+   // the full set of dataset observables.
+   const double nExpected = nsig.getVal() + nbkg.getVal();
+   const double refNllExt = refNll + nExpected - data->sumEntries() * std::log(nExpected);
+
+   for (auto backend : {RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu()}) {
+      for (bool extended : {false, true}) {
+         nsig.setVal(300.);
+         nbkg.setVal(700.);
+         std::unique_ptr<RooAbsReal> nll{
+            model.createNLL(*data, RooFit::ConditionalObservables(y), RooFit::Extended(extended), backend)};
+         const double ref = extended ? refNllExt : refNll;
+         EXPECT_NEAR(nll->getVal(), ref, 1e-8 * std::abs(ref))
+            << "backend " << backend.name() << ", extended " << extended;
+      }
+   }
 }

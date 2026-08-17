@@ -337,10 +337,15 @@ void Evaluator::updateOutputSizes()
 
 Evaluator::~Evaluator()
 {
+   // Also the variables need to have their data tokens reset. They get a token
+   // in setInput(), and they are not necessarily owned by the computation graph
+   // that this Evaluator was created for: the conditional observables of a
+   // likelihood, for example, are not cloned when the computation graph is
+   // compiled. If we would leave the token set, creating a second Evaluator
+   // for such a graph would wrongly complain that the same object is evaluated
+   // by multiple Evaluator instances.
    for (auto &info : _nodes) {
-      if (!info.isVariable) {
-         info.absArg->resetDataToken();
-      }
+      info.absArg->resetDataToken();
    }
 }
 

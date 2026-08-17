@@ -464,6 +464,7 @@ std::unique_ptr<RooAbsPdf> compilePdfForFit(RooAbsPdf &pdf, RooArgSet const &nor
    RooFit::Detail::CompileContext ctx{normSet};
    ctx.setLikelihoodMode(likelihoodMode);
    std::unique_ptr<RooAbsArg> head = pdf.compileForNormSet(normSet, ctx);
+   ctx.redirectToCompiledServers(*head);
    std::unique_ptr<RooAbsPdf> pdfClone{&dynamic_cast<RooAbsPdf &>(*head.release())};
 
    if (addCoefRangeName && *addCoefRangeName) {

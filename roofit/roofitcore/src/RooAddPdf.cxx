@@ -69,6 +69,7 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include <RooAddition.h>
 #include <RooBatchCompute.h>
 #include <RooDataSet.h>
+#include <RooExtendPdf.h>
 #include <RooGenericPdf.h>
 #include <RooGlobalFunc.h>
 #include <RooProdPdf.h>
@@ -1090,14 +1091,34 @@ RooAddPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileCo
    // this here in compileForNormSet(), we don't invoke the old RooAddPdf
    // projection caches (note that no conditional pdfs are on the right hand
    // side of the equation).
-   std::string finalName = std::string(GetName()) + "_conditional";
+   std::string condName = std::string(GetName()) + "_conditional";
    std::unique_ptr<RooAbsReal> denom{newArg->createIntegral(normSet, _refCoefNorm)};
-   auto finalArg = std::make_unique<RooGenericPdf>(finalName.c_str(), "@0/@1", RooArgList{*newArg, *denom});
+   auto condArg = std::make_unique<RooGenericPdf>(condName.c_str(), "@0/@1", RooArgList{*newArg, *denom});
    ctx.compileServers(*denom, _refCoefNorm);
    ctx.markAsCompiled(*denom);
-   ctx.markAsCompiled(*finalArg);
+   ctx.markAsCompiled(*condArg);
    ctx.compileServers(*newArg, _refCoefNorm);
-   finalArg->addOwnedComponents(std::move(newArg));
-   finalArg->addOwnedComponents(std::move(denom));
+   condArg->addOwnedComponents(std::move(newArg));
+   condArg->addOwnedComponents(std::move(denom));
+
+   if (!canBeExtended()) {
+      return condArg;
+   }
+
+   // The conditional pdf that we just created is a plain RooGenericPdf that
+   // doesn't know anything about the expected number of events anymore. To not
+   // silently lose the extended term of the likelihood, we wrap it in a
+   // RooExtendPdf. Like RooAbsPdf::extendedTerm() in the legacy evaluation
+   // backend, the expected number of events is evaluated in the reference
+   // normalization set of the coefficients, i.e., including the conditional
+   // observables.
+   std::unique_ptr<RooAbsReal> nExpected{createExpectedEventsFunc(&_refCoefNorm)};
+   std::string finalName = condName + "_extended";
+   auto finalArg = std::make_unique<RooExtendPdf>(finalName.c_str(), finalName.c_str(), *condArg, *nExpected);
+   ctx.compileServers(*nExpected, _refCoefNorm);
+   ctx.markAsCompiled(*nExpected);
+   ctx.markAsCompiled(*finalArg);
+   finalArg->addOwnedComponents(std::move(condArg));
+   finalArg->addOwnedComponents(std::move(nExpected));
    return finalArg;
 }
