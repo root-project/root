@@ -2877,6 +2877,14 @@ public:
       return CreateAction<RDFInternal::ActionTags::StdDev, T>(userColumns, stdDeviationV, stdDeviationV, fProxiedPtr);
    }
 
+   template <typename T = RDFDetail::RInferredType>
+   RResultPtr<double> Median(std::string_view columnName = "")
+   {
+      const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
+      auto medianV = std::make_shared<double>(0);
+      return CreateAction<RDFInternal::ActionTags::Median, T>(userColumns, medianV, medianV, fProxiedPtr);
+   }
+
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the sum of processed column values (*lazy action*).
