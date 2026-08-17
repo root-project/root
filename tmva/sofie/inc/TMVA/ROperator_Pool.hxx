@@ -246,7 +246,6 @@ public:
       return out.str();
    }
 
-   // generate code for Session data members (e.g. internal vectors)
 
    std::string Generate(std::string OpName) override {
       OpName = "op_" + OpName;
