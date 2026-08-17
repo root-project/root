@@ -236,10 +236,12 @@ namespace textinput {
   }
 
   void
-  TextInput::HandleControl(char C, EditorRange& R) {
+  TextInput::HandleControl(char32_t C, EditorRange& R) {
     if (C == 3) { // Control+C
       std::string input = fContext->GetLine().GetText();
-      size_t length = input.size();
+      // Ranges count characters, so this must not be input.size(), which
+      // counts the bytes of the UTF-8 encoding.
+      size_t length = fContext->GetLine().length();
       fContext->SetLine(input + "^C");
       UpdateDisplay(EditorRange(Range(length), Range::AllText()));
       TakeInput(input, true);
