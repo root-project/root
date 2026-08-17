@@ -46,9 +46,39 @@ namespace textinput {
   TerminalDisplay::NotifyTextChange(Range r) {
     if (!IsTTY()) return;
     Attach();
+    ExtendRangeForCombiningChars(r);
     WriteWrapped(r.fPromptUpdate, GetContext()->GetTextInput()->IsInputMasked(),
       r.fStart, r.fLength);
     Move(GetCursor());
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Move the start of r back to the character whose terminal cell the change
+  /// really affects.
+  ///
+  /// A zero-width character - a combining accent, say - is not drawn into a
+  /// cell of its own but into the cell of the character it follows. So
+  /// redrawing from the mark would leave the base character behind, and
+  /// redrawing from just past a mark that was deleted would leave the mark
+  /// itself on the screen. Both are fixed by starting one character earlier
+  /// and then skipping back over any further marks.
+  ///
+  /// \param[in,out] r range to redraw, in characters of the input line
+  void
+  TerminalDisplay::ExtendRangeForCombiningChars(Range& r) const {
+    if (r.fStart == 0) return;
+    const Text& Line = GetContext()->GetLine();
+    if (r.fStart > Line.length()) return;
+
+    size_t Start = r.fStart;
+    do {
+      --Start;
+    } while (Start > 0 && Line.GetWidthOfChar(Start) == 0);
+
+    if (r.fLength != Range::End()) {
+      r.fLength += r.fStart - Start;
+    }
+    r.fStart = Start;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +98,7 @@ namespace textinput {
     if (IsTTY()) {
       WriteRawString("\n", 1);
     }
-    fWriteLen = 0;
+    fWriteEnd = Pos();
     fWritePos = Pos();
   }
 
@@ -95,7 +125,9 @@ namespace textinput {
     WriteRawString("\n", 1);
     for (size_t i = 0, n = Options.size(); i < n; ++i) {
       Text t(Options[i], infoColIdx);
-      WriteWrappedTextPart(t, 0, 0, (size_t) -1);
+      // Each option starts on a line of its own.
+      fWritePos.fCol = 0;
+      WriteWrappedTextPart(t, 0, (size_t) -1);
       WriteRawString("\n", 1);
     }
     // Reset position
@@ -109,7 +141,7 @@ namespace textinput {
   void
   TerminalDisplay::Detach() {
     fWritePos = Pos();
-    fWriteLen = 0;
+    fWriteEnd = Pos();
     if (GetContext()->GetColorizer()) {
       Color DefaultColor;
       GetContext()->GetColorizer()->GetColor(0, DefaultColor);
@@ -120,15 +152,60 @@ namespace textinput {
   }
 
   ////////////////////////////////////////////////////////////////////////////////
+  /// Width in terminal columns of character idx of the concatenation of the
+  /// prompt, the editor prompt and the input line.
+  size_t
+  TerminalDisplay::WidthOfDisplayChar(size_t idx) const {
+    const Text& Prompt = GetContext()->GetPrompt();
+    if (idx < Prompt.length()) return Prompt.GetWidthOfChar(idx);
+    idx -= Prompt.length();
+
+    const Text& EditPrompt = GetContext()->GetEditor()->GetEditorPrompt();
+    if (idx < EditPrompt.length()) return EditPrompt.GetWidthOfChar(idx);
+    idx -= EditPrompt.length();
+
+    const Text& Line = GetContext()->GetLine();
+    if (idx < Line.length()) {
+      // Masked input is echoed as '*', whatever was actually typed.
+      if (GetContext()->GetTextInput()->IsInputMasked()) return 1;
+      return Line.GetWidthOfChar(idx);
+    }
+    return 1; // past the end of the text: the cursor itself
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Where the idx'th character of the displayed text ends up on the terminal.
+  Display::Pos
+  TerminalDisplay::IndexToPos(size_t idx) const {
+    Pos P;
+    for (size_t i = 0; i < idx; ++i) {
+      AdvancePos(P, WidthOfDisplayChar(i));
+    }
+    return P;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Write n spaces.
+  void
+  TerminalDisplay::WriteBlanks(size_t n) {
+    if (!n || !IsTTY()) return;
+    const std::string Blanks(n, ' ');
+    WriteRawString(Blanks.c_str(), Blanks.length());
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
   /// Write out wrapped text to the display. Used in WriteWrapped and DisplayInfo
+  ///
+  /// Writing starts at fWritePos, which the caller must have moved to the right
+  /// place; the position is advanced by the width of what is written, so that
+  /// it stays in step with where the terminal's cursor actually is.
   ///
   /// \param[in] text text to write out
   /// \param[in] TextOffset where to begin writing out text from
-  /// \param[in] WriteOffset where to begin writing out text at the display
   /// \param[in] NumRequested number of text characters requested for output
   size_t
   TerminalDisplay::WriteWrappedTextPart(const Text &text, size_t TextOffset,
-                                        size_t WriteOffset, size_t NumRequested) {
+                                        size_t NumRequested) {
     size_t Start = TextOffset;
     size_t NumRemaining = NumRequested; // optimistic
 
@@ -145,22 +222,38 @@ namespace textinput {
       }
 
       while (NumRemaining > 0) {
-        // How much can this line hold?
-        size_t numToEOL = GetWidth() - ((Start + WriteOffset) % GetWidth());
-        if (numToEOL == 0) { // we are at EOL, move down
-          MoveDown();
-          ++fWritePos.fLine;
-          MoveFront();
-          fWritePos.fCol = 0;
-          numToEOL = GetWidth();
+        // How many columns can this line still hold?
+        size_t numToEOL = GetWidth() - fWritePos.fCol;
+
+        // How many characters fit into them? Not the same number, as soon as
+        // the text contains anything but plain single-width characters.
+        size_t numThisLine = 0;
+        size_t colsThisLine = 0;
+        while (numThisLine < NumRemaining) {
+          size_t w = text.GetWidthOfChar(Start + numThisLine);
+          if (colsThisLine + w > numToEOL) break;
+          colsThisLine += w;
+          ++numThisLine;
         }
 
-        // How much of our text can we fit in this line?
-        size_t numThisLine;
-        if (NumRemaining > numToEOL) {
-          numThisLine = numToEOL;
-        } else {
-          numThisLine = NumRemaining;
+        if (numThisLine == 0) {
+          if (fWritePos.fCol == 0) {
+            // The character is wider than the whole terminal. Nothing is
+            // gained by wrapping again, and looping would never end, so write
+            // it and let the terminal cope.
+            numThisLine = 1;
+            colsThisLine = numToEOL;
+          } else {
+            // A double-width character does not fit into what is left of this
+            // line. Blank those columns out and put the character at the start
+            // of the next line - splitting it across the margin would leave
+            // the terminal and us disagreeing about where the cursor is.
+            WriteBlanks(numToEOL);
+            ActOnEOL();
+            fWritePos.fCol = 0;
+            ++fWritePos.fLine;
+            continue;
+          }
         }
 
         // If there is a Colorizer, we only write same-colored chunks.
@@ -172,7 +265,10 @@ namespace textinput {
           while (numSameColor < numThisLine
                  && ThisColor == Colors[Start + numSameColor])
             ++numSameColor;
-          numThisLine = numSameColor;
+          if (numSameColor < numThisLine) {
+            numThisLine = numSameColor;
+            colsThisLine = text.GetWidth(Start, Start + numThisLine);
+          }
 
           if (ThisColor != fPrevColor) {
             Color C;
@@ -182,11 +278,16 @@ namespace textinput {
           }
         }
 
-        // Write out the line and update the write position
-        WriteRawString(text.GetText().c_str() + Start, numThisLine);
-        fWritePos = IndexToPos(PosToIndex(fWritePos) + numThisLine);
-        if (numThisLine == numToEOL) { // If we hit EOL, wrap around
+        // Write out the characters and update the write position. The terminal
+        // wants bytes, so translate the character range into a byte range.
+        const size_t ByteStart = text.GetByteOffset(Start);
+        const size_t ByteEnd = text.GetByteOffset(Start + numThisLine);
+        WriteRawString(text.GetText().c_str() + ByteStart, ByteEnd - ByteStart);
+        fWritePos.fCol += colsThisLine;
+        if (fWritePos.fCol >= GetWidth()) { // If we hit EOL, wrap around
           ActOnEOL();
+          fWritePos.fCol = 0;
+          ++fWritePos.fLine;
         }
 
         Start += numThisLine;
@@ -196,13 +297,11 @@ namespace textinput {
 
     // If we have processed the characters we have requested
     if (NumRequested == NumAvailable) {
-      size_t NumPrevLines = fWriteLen / GetWidth();
-      size_t LenWrote = WriteOffset + TextOffset + NumRequested;
-      size_t NumWroteLines = LenWrote / GetWidth();
-      size_t NumToEOL = GetWidth() - (LenWrote % GetWidth());
-      if (LenWrote < fWriteLen && NumToEOL > 0) {
-        // If we wrote less than previously and not at EOL
-        // Erase the rest of the current line
+      const size_t NumWroteLines = fWritePos.fLine;
+      const size_t NumPrevLines = fWriteEnd.fLine;
+      if (fWritePos < fWriteEnd) {
+        // If we wrote less than previously,
+        // erase the rest of the current line
         EraseToRight();
       }
       if (NumWroteLines < NumPrevLines) {
@@ -242,14 +341,14 @@ namespace textinput {
     if (PromptUpdate & Range::kUpdatePrompt) {
       // Writing from front means we write the prompt, too
       Move(Pos());
-      WriteWrappedTextPart(Prompt, 0, 0, PromptLen);
+      WriteWrappedTextPart(Prompt, 0, PromptLen);
     }
     // If updating any prompt
     if (PromptUpdate != Range::kNoPromptUpdate) {
       // Any prompt update means we'll have to re-write the editor prompt
       Move(IndexToPos(PromptLen));
       if (EditorPromptLen) {
-        WriteWrappedTextPart(EditPrompt, 0, PromptLen, EditorPromptLen);
+        WriteWrappedTextPart(EditPrompt, 0, EditorPromptLen);
       }
       // Any prompt update means we'll have to re-write the text
       Offset = 0;
@@ -259,14 +358,13 @@ namespace textinput {
 
     size_t avail = 0;
     if (masked) {
-      Text mask(std::string(GetContext()->GetLine().length(), '*'), 0);
-      avail = WriteWrappedTextPart(mask, Offset,
-                                   PromptLen + EditorPromptLen, Requested);
+      Text mask(std::u32string(GetContext()->GetLine().length(), U'*'), 0);
+      avail = WriteWrappedTextPart(mask, Offset, Requested);
     } else {
-      avail = WriteWrappedTextPart(GetContext()->GetLine(), Offset,
-                                   PromptLen + EditorPromptLen, Requested);
+      avail = WriteWrappedTextPart(GetContext()->GetLine(), Offset, Requested);
     }
-    fWriteLen = PromptLen + EditorPromptLen + GetContext()->GetLine().length();
+    fWriteEnd = IndexToPos(PromptLen + EditorPromptLen
+                           + GetContext()->GetLine().length());
     return avail;
   }
 

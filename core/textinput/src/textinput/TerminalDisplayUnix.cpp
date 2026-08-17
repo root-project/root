@@ -310,7 +310,7 @@ namespace textinput {
     SYNC_OUT(STDOUT_FILENO);
     TerminalConfigUnix::Get().Attach();
     fWritePos = Pos();
-    fWriteLen = 0;
+    fWriteEnd = Pos();
     fIsAttached = true;
   }
 

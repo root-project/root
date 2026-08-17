@@ -16,6 +16,7 @@
 #define TEXTINPUT_STREAMREADERWIN_H
 
 #include "textinput/StreamReader.h"
+#include "textinput/UTF8.h"
 #include <Windows.h>
 
 namespace textinput {
@@ -35,13 +36,21 @@ namespace textinput {
 
   private:
     void HandleError(const char* Where) const;
-    void HandleKeyEvent(unsigned char C, InputData& in);
+    void HandleKeyEvent(char32_t C, InputData& in);
+    // Turn a UTF-16 code unit from the console into a code point. Returns
+    // false while waiting for the second half of a surrogate pair, i.e. when
+    // there is no character to report yet.
+    bool DecodeUTF16(wchar_t U, char32_t& Out);
+    // Read one character's worth of UTF-8 from a redirected (non-console)
+    // input. Returns false on EOF.
+    bool ReadPipeChar(char32_t& Out);
 
     bool fHaveInputFocus; // whether the console is configured
     bool fIsConsole; // whether the input is a console or file
     HANDLE fIn; // input handle
     DWORD fOldMode; // configuration before grabbing input device
     DWORD fMyMode; // configuration while active
+    wchar_t fPendingSurrogate; // high surrogate awaiting its low half
   };
 }
 
