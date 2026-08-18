@@ -8,12 +8,6 @@
 # CMakeLists.txt file for building ROOT gui/qt6webdisplay package
 ############################################################################
 
-find_package(Qt6 COMPONENTS Core WebEngineCore WebEngineWidgets CONFIG)
-
-if(NOT Qt6_FOUND)
-  message(SEND_ERROR "Could NOT find Qt6 (WebEngineCore, WebEngineWidgets), install missing packages on the system or disable option 'qt6web'")
-endif()
-
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
