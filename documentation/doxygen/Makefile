@@ -50,7 +50,7 @@ preview: htmlfooter
 	echo "Your preview is in $(DOXYGEN_OUTPUT_DIRECTORY). Browse it at file://$(DOXYGEN_OUTPUT_DIRECTORY)/html/index.html"
 
 filter:
-	`root-config --cxx` -o filter filter.cxx -std=c++14 -O2
+	`root-config --cxx` -o filter filter.cxx -O2
 
 mathjax:
 	$(call MkDir,$(DOXYGEN_IMAGE_PATH))
