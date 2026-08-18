@@ -61,7 +61,6 @@ echo "        ../../math/                      \\" >> Doxyfile_INPUT
 echo "        ../../montecarlo/                \\" >> Doxyfile_INPUT
 echo "        ../../net/doc/                   \\" >> Doxyfile_INPUT
 echo "        ../../net/auth/                  \\" >> Doxyfile_INPUT
-echo "        ../../net/davix/                 \\" >> Doxyfile_INPUT
 echo "        ../../net/http/                  \\" >> Doxyfile_INPUT
 echo "        ../../net/net/                   \\" >> Doxyfile_INPUT
 echo "        ../../net/netxng/                \\" >> Doxyfile_INPUT
@@ -74,15 +73,11 @@ echo "        ../../tutorials/                 \\" >> Doxyfile_INPUT
 echo "        ../../bindings/tpython/          \\" >> Doxyfile_INPUT
 echo "        ../../bindings/pyroot/           \\" >> Doxyfile_INPUT
 echo "        ../../bindings/pyroot/pythonizations/python/ROOT/_pythonization/          \\" >> Doxyfile_INPUT
-echo "        ../../bindings/r/                \\" >> Doxyfile_INPUT
 
 # echo "        ../../core/clib/                 \\" >> Doxyfile_INPUT
 # echo "        ../../core/lzma/                 \\" >> Doxyfile_INPUT
 # echo "        ../../core/newdelete/            \\" >> Doxyfile_INPUT
 # echo "        ../../core/textinput/            \\" >> Doxyfile_INPUT
 # echo "        ../../builtins/mathtext/           \\" >> Doxyfile_INPUT
-# echo "        ../../graf3d/ftgl/               \\" >> Doxyfile_INPUT
 # echo "        ../../graf3d/x3d/                \\" >> Doxyfile_INPUT
-# echo "        ../../net/rootd/                 \\" >> Doxyfile_INPUT
-# echo "        ../../net/rpdutils/              \\" >> Doxyfile_INPUT
 
