@@ -99,9 +99,14 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name, b
                              &type, intantiateTemplate);
       }
    }
+   // The lookup finds the decl if the name corresponds to a namespace or a fully defined
+   // class; just a type in presence of a forward declaration of a class.
+   // This code identifies that case and prevents that a class type is found if the name
+   // of a constructor is passed (see ROOT-10311).
    if (!decl && type) {
-      if (const auto *TD = type->getAsTagDecl()) {
-         decl = TD;
+      const auto *CXXRD = type->getAsCXXRecordDecl();
+      if (CXXRD && !CXXRD->hasDefinition()) {
+         decl = CXXRD;
       }
    }
    SetDecl(decl);
