@@ -312,7 +312,7 @@ void TAttLine::SetLineAttributes()
 /// Set a transparent line color.
 /// \param lcolor defines the line color
 /// \param lalpha defines the percentage of opacity from 0. (fully transparent) to 1. (fully opaque).
-/// \note lalpha is ignored (treated as 1) if the TCanvas has no GL support activated.
+/// \note lalpha is used only on the [supported platforms](\ref col_trans_available).
 
 void TAttLine::SetLineColorAlpha(Color_t lcolor, Float_t lalpha)
 {

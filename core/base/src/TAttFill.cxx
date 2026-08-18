@@ -258,7 +258,7 @@ void TAttFill::SetFillAttributes()
 /// Set a transparent fill color.
 /// \param fcolor defines the fill color
 /// \param falpha defines the percentage of opacity from 0. (fully transparent) to 1. (fully opaque).
-/// \note falpha is ignored (treated as 1) if the TCanvas has no GL support activated.
+/// \note falpha is used only on the [supported platforms](\ref col_trans_available).
 
 void TAttFill::SetFillColorAlpha(Color_t fcolor, Float_t falpha)
 {
