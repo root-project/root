@@ -342,6 +342,11 @@ if(testing)
   set(testsupport ON CACHE BOOL "" FORCE)
 endif()
 
+#---ensure that the cuda option is sound
+if(cuda AND NOT CMAKE_CUDA_COMPILER)
+  message(FATAL_ERROR "Option cuda=On, but CMAKE_CUDA_COMPILER='${CMAKE_CUDA_COMPILER}'")
+endif()
+
 #---running HS3 test suite requires both testing and pyroot, but testing globally disables tests
 if(testing AND test_roofit_hs3testsuite AND NOT pyroot)
   message(FATAL_ERROR "-Dtest_roofit_hs3testsuite=ON requires both -Dtesting=ON and -Dpyroot=ON)")
