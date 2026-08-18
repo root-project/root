@@ -10,7 +10,6 @@
 ///
 /// \authors  Timur Pocheptsov, Sergey Linev
 
-// Includes for ACLiC (cling does not need them).
 #include "TColorGradient.h"
 #include "TCanvas.h"
 #include "TError.h"

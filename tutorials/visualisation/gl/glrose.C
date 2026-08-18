@@ -9,7 +9,7 @@
 ///
 /// \author  Timur Pocheptsov
 
-void glrose()
+void glrose(bool gl = true)
 {
    const Int_t paletteSize = 10;
    Float_t rgb[paletteSize * 3] = {0.80f, 0.55f, 0.40f, 0.85f, 0.60f, 0.45f, 0.90f, 0.65f, 0.50f, 0.95f,
@@ -23,8 +23,12 @@ void glrose()
 
    gStyle->SetPalette(paletteSize, palette);
 
-   gStyle->SetCanvasPreferGL(1);
+   gStyle->SetCanvasPreferGL(gl);
    TCanvas *cnv = new TCanvas("glc", "Surface sample", 200, 10, 600, 550);
+
+   if (!cnv->UseGL() && !cnv->IsWeb())
+      ::Warning("glrose",
+                "To use glsurf draw option, you need either OpenGL or Web rendering enabled");
 
    TPaveLabel *title = new TPaveLabel(0.04, 0.86, 0.96, 0.98, "\"glsurf2pol\" option + user defined palette.");
    title->SetFillColor(32);

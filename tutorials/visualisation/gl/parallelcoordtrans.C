@@ -10,8 +10,6 @@
 ///
 /// \authors Timur Pocheptsov, Olivier Couet
 
-// All these includes are (only) to make the macro
-// ACLiCable.
 #include <cassert>
 
 #include "TParallelCoordVar.h"
@@ -49,7 +47,7 @@ void generate_random(Int_t i)
 } // namespace GLTutorials
 } // namespace ROOT
 
-void parallelcoordtrans()
+void parallelcoordtrans(bool gl = true)
 {
    // This macro shows how to use parallel coords and semi-transparent lines
    //(the system color is updated with alpha == 0.01 (1% opaque).
@@ -60,8 +58,12 @@ void parallelcoordtrans()
    Double_t s2x = 0., s2y = 0., s2z = 0.;
    Double_t s3x = 0., s3y = 0., s3z = 0.;
 
-   gStyle->SetCanvasPreferGL(kTRUE);
+   gStyle->SetCanvasPreferGL(gl);
    TCanvas *c1 = new TCanvas("parallel coors", "parallel coords", 0, 0, 900, 1000);
+
+   if (!c1->UseGL() && !c1->IsWeb() && !gVirtualX->InheritsFrom("TGCocoa"))
+      ::Warning("parallelcoordtrans",
+                "To have real transparency in a canvas graphics, you need either OpenGL or Mac/Cocoa or Web rendering enabled");
 
    TNtuple *const nt = new TNtuple("nt", "Demo ntuple", "x:y:z:u:v:w:a:b:c");
 

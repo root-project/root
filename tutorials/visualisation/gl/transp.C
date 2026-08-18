@@ -7,7 +7,6 @@
 ///
 /// \authors Timur Pocheptsov, Sergey Linev
 
-// Includes for ACLiC (cling does not need them).
 #include "TCanvas.h"
 #include "TColor.h"
 #include "TError.h"
@@ -19,8 +18,11 @@ void transp(bool gl = true)
    auto redIndex = TColor::GetColor((Float_t)1., 0., 0., 0.85);
    auto greeIndex = TColor::GetColor((Float_t)0., 1., 0., 0.5);
 
-   gStyle->SetCanvasPreferGL(kTRUE);
+   gStyle->SetCanvasPreferGL(gl);
    auto cnv = new TCanvas("trasnparency", "transparency demo", 600, 400);
+   if (!cnv->UseGL() && !cnv->IsWeb() && !gVirtualX->InheritsFrom("TGCocoa"))
+      ::Warning("transp",
+                "To have real transparency in a canvas graphics, you need either OpenGL or Mac/Cocoa or Web rendering enabled");
 
    auto hist = new TH1F("a5", "b5", 10, -2., 3.);
    auto hist2 = new TH1F("c6", "d6", 10, -3., 3.);
