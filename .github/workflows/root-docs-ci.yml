@@ -98,7 +98,7 @@ jobs:
 
     - name: Apply option overrides
       env:
-        OVERRIDES: "testing=Off roottest=Off daos_mock=Off"
+        OVERRIDES: "testing=Off testsupport=OFF roottest=Off daos_mock=Off"
         CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/alma9.txt'
       shell: bash
       run: |
