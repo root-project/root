@@ -34,8 +34,8 @@ protected:
    void PrintPath(Bool_t convert, Int_t n, Double_t *xs, Double_t *ys, Bool_t close_path = kTRUE);
    void PrintLineStyleOnEndOfPath();
    void PrintLineJointAttributes();
-   template<class T>
-   void PrintPolyMarker(Int_t n, T *x, T* y);
+   template<typename T>
+   void PrintPolyMarkerShape(Int_t n, T *x, T* y);
 
 public:
    TSVG();
