@@ -36,6 +36,7 @@ coverage=OFF
 cuda=OFF
 curl=ON
 daos=OFF
+daos_mock=ON
 dataframe=ON
 davix=ON
 dcache=OFF
