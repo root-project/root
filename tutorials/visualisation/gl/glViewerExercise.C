@@ -86,7 +86,7 @@ void AnimateCamera()
 
 void glViewerExercise()
 {
-   gROOT->ProcessLine(".x nucleus.C");
+   gROOT->ProcessLine(TString::Format(".x %s/visualisation/gl/nucleus.C", gROOT->GetTutorialsDir()));
    TGLViewer *v = gPad ? (TGLViewer *)gPad->GetViewer3D() : nullptr;
    if (!v) return;
 

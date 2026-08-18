@@ -61,7 +61,7 @@ Double_t my_transfer_function(const Double_t *x, const Double_t * /*param*/)
 
 } // namespace
 
-void glvox2()
+void glvox2(bool gl = true)
 {
    // Create and fill TH3.
    const UInt_t nX = 30;
@@ -98,7 +98,7 @@ void glvox2()
       lf->Add(tf);
    }
 
-   gStyle->SetCanvasPreferGL(true);
+   gStyle->SetCanvasPreferGL(gl);
 
    hist->Draw("glcol");
 }

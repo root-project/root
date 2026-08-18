@@ -9,7 +9,6 @@
 ///
 /// \authors  Timur Pocheptsov, Sergey Linev
 
-// Includes for ACLiC:
 #include "TColorGradient.h"
 #include "TCanvas.h"
 #include "TError.h"
