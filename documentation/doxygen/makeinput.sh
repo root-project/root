@@ -79,7 +79,7 @@ echo "        ../../bindings/r/                \\" >> Doxyfile_INPUT
 # echo "        ../../core/clib/                 \\" >> Doxyfile_INPUT
 # echo "        ../../core/lzma/                 \\" >> Doxyfile_INPUT
 # echo "        ../../core/newdelete/            \\" >> Doxyfile_INPUT
-# echo "        ../../core/textinput/            \\" >> Doxyfile_INPUT
+# echo "        ../../builtins/textinput/            \\" >> Doxyfile_INPUT
 # echo "        ../../builtins/mathtext/           \\" >> Doxyfile_INPUT
 # echo "        ../../graf3d/ftgl/               \\" >> Doxyfile_INPUT
 # echo "        ../../graf3d/x3d/                \\" >> Doxyfile_INPUT
