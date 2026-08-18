@@ -953,6 +953,13 @@ if(experimental_adaptivecpp)
   endif()
 endif()
 
+#---ensure that the cuda option is sound
+if(cuda AND NOT CMAKE_CUDA_COMPILER)
+  message(SEND_ERROR "-Dcuda=ON can't be built because CMAKE_CUDA_COMPILER='${CMAKE_CUDA_COMPILER}'! Install compiler or disable cuda option")
+  list(APPEND MISSING_PACKAGES 'CUDA')
+  list(APPEND HOTFIX_BUILD_FLAGS '-Dcuda=OFF')
+endif()
+
 #---Check for optional TMVA-SOFIE testing dependency (BLAS)-------------------------------
 # SOFIE itself has no external dependencies: ONNX models are read with a small
 # self-contained protobuf wire-format decoder (tmva/sofie_parsers/src/onnx.hxx).
