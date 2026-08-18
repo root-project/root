@@ -2135,14 +2135,6 @@ Token ASTReader::ReadToken(ModuleFile &M, const RecordDataImpl &Record,
     if (IdentifierInfo *II = getLocalIdentifier(M, Record[Idx++]))
       Tok.setIdentifierInfo(II);
   }
-
-  if (Tok.isLiteral()) {
-    const RecordData& RD = reinterpret_cast<const RecordData&>(Record);
-    std::string* Lit = new std::string(ReadString(RD, Idx));
-    TokenLiteralDataLoaded.push_back(Lit);
-    Tok.setLiteralData(Lit->c_str());
-  }
-
   return Tok;
 }
 
@@ -11276,9 +11268,6 @@ ASTReader::ASTReader(Preprocessor &PP, ModuleCache &ModCache,
 ASTReader::~ASTReader() {
   if (OwnsDeserializationListener)
     delete DeserializationListener;
-  for (auto PStr: TokenLiteralDataLoaded) {
-     delete PStr;
-  }
 }
 
 IdentifierResolver &ASTReader::getIdResolver() {
