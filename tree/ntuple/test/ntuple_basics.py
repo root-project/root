@@ -14,32 +14,36 @@ class RNTupleBasics(unittest.TestCase):
         model.MakeField["int"]("f")
         model.MakeField["std::string"]("mystr")
 
+        nentries = 2
         with ROOT.RNTupleWriter.Recreate(model, "ntpl", "test_ntuple_py_write_read.root") as writer:
             entry = writer.CreateEntry()
-            entry["f"] = 42
-            entry["mystr"] = "string stored in RNTuple"
-            writer.Fill(entry)
-        # The model should not have been destroyed (a clone has been used).
-        self.assertFalse(model.IsFrozen())
+            for i in range(nentries):
+                entry["f"] = i
+                entry["mystr"] = f"{i} string stored in RNTuple"
+                writer.Fill(entry)
+        self.assertFalse(model.IsFrozen(),
+                         msg="The model should not have been destroyed (a clone has been used).")
 
-        # Accessing the writer after the context manager is an error
-        with self.assertRaisesRegex(RuntimeError, "cannot access RNTupleWriter after"):
+        with self.assertRaisesRegex(ReferenceError, "attempt to access a null-pointer",
+                                    msg="Upon exiting the context, the writer is destructed."):
             writer.GetNEntries()
 
         with ROOT.RNTupleReader.Open("ntpl", "test_ntuple_py_write_read.root") as reader:
-            self.assertEqual(reader.GetNEntries(), 1)
+            self.assertEqual(reader.GetNEntries(), nentries)
             entry = reader.CreateEntry()
-            reader.LoadEntry(0, entry)
-            self.assertEqual(entry["f"], 42)
-            self.assertEqual(entry["mystr"], "string stored in RNTuple")
+            for i in reader:
+                reader.LoadEntry(i, entry)
+                with self.subTest(i=i):
+                    self.assertEqual(entry["f"], i)
+                    self.assertEqual(entry["mystr"], f"{i} string stored in RNTuple")
 
-        # Entry values are still accessible after the reader is gone
-        self.assertEqual(entry["f"], 42)
-        self.assertEqual(entry["mystr"], "string stored in RNTuple")
-
-        # Accessing the reader after the context manager is an error
-        with self.assertRaisesRegex(RuntimeError, "cannot access RNTupleReader after"):
+        with self.assertRaisesRegex(ReferenceError, "attempt to access a null-pointer",
+                                    msg="Upon exiting the context, the reader is destructed."):
             reader.GetNEntries()
+
+        msg = "Last entry values are still accessible after the reader is destructed."
+        self.assertEqual(entry["f"], nentries - 1, msg=msg)
+        self.assertEqual(entry["mystr"], f"{nentries - 1} string stored in RNTuple", msg=msg)
 
     def test_write_fields(self):
         """Can create writer with on-the-fly model"""
@@ -69,18 +73,19 @@ class RNTupleBasics(unittest.TestCase):
                 entry["f"] = 42
                 writer.Fill(entry)
 
-        # The model should not have been destroyed (a clone has been used).
-        self.assertFalse(model.IsFrozen())
+        self.assertFalse(model.IsFrozen(),
+                         msg="The model should not have been destroyed (a clone has been used).")
 
         with ROOT.TFile.Open("test_ntuple_py_append.root") as f:
-            reader = ROOT.RNTupleReader.Open(f["ntpl"])
-            self.assertEqual(reader.GetNEntries(), 1)
-            entry = reader.CreateEntry()
-            reader.LoadEntry(0, entry)
-            self.assertEqual(entry["f"], 42)
+            with ROOT.RNTupleReader.Open(f["ntpl"]) as reader:
+                self.assertEqual(reader.GetNEntries(), 1)
+                entry = reader.CreateEntry()
+                reader.LoadEntry(0, entry)
+                self.assertEqual(entry["f"], 42)
 
-        # Entry values are still accessible after the reader is gone
-        self.assertEqual(entry["f"], 42)
+        with self.subTest(repr(reader)):
+            self.assertFalse(reader, "RNTupleReader destructed")
+        self.assertEqual(entry["f"], 42, "Entry values still accessible")
 
     def test_read_model(self):
         """Can impose a model when reading."""
@@ -100,8 +105,7 @@ class RNTupleBasics(unittest.TestCase):
             entry = reader.CreateEntry()
             if not platform.system() == "Windows":
                 # TODO: re-enable it on Windows once the exception handling is fixed
-                with self.assertRaises(Exception):
-                    # Field f2 does not exist in imposed model
+                with self.assertRaises(ROOT.RException, msg="Field f2 does not exist in imposed model"):
                     entry["f2"] = 42
 
     def test_forbid_writing_wrong_type(self):
@@ -117,59 +121,45 @@ class RNTupleBasics(unittest.TestCase):
             with self.assertRaises(TypeError):
                 entry["mystr"] = WrongClass()
 
-    def test_nested_ctxmanager(self):
-        """Nesting context managers of the same object is an error"""
+    def test_singleuse_ctxmanager(self):
+        """RNTupleReader/RNTupleWriter context managers are single use context managers.
+
+        Upon exiting the context, they are destructed.
+        They are not reentrant - cannot be used in nested 'with' statements,
+        or are not reusable - cannot be used multiple times."""
 
         try:
-            fileName = "test_ntuple_nested_ctxmanager_py.root"
+            fileName = "test_singleuse_ctxmanager_py.root"
             model = ROOT.RNTupleModel.Create()
             model.MakeField["int"]("f")
             writer = ROOT.RNTupleWriter.Recreate(model, "ntpl", fileName)
             with writer as w1:
                 entry1 = w1.CreateEntry()
-                with self.assertRaisesRegex(RuntimeError, "cannot nest `with`"):
-                    with writer as w2:
-                        entry2 = w2.CreateEntry()
-                        entry1["f"] = 2
-                        entry2["f"] = 4
-                        w2.Fill(entry2)
-                w1.Fill(entry1)
+                entry1["f"] = 2
+                with writer as w2:
+                    entry2 = w2.CreateEntry()
+                    entry2["f"] = 4
+                    w2.Fill(entry2)
+                with self.assertRaisesRegex((ReferenceError, TypeError), "attempt to access a null-pointer"):
+                    w1.Fill(entry1)
+
+            with self.assertRaisesRegex(ValueError, "I/O operation on destructed 'RNTupleWriter'"):
+                with writer as w:
+                    entry = w.CreateEntry()
+                    entry["f"] = 8
+                    w.Fill(entry)
 
             reader = ROOT.RNTupleReader.Open("ntpl", fileName)
             with reader as r1:
-                with self.assertRaisesRegex(RuntimeError, "cannot nest `with`"):
-                    with reader as r2:
-                        print(r2.GetNEntries())
-                print(r1.GetNEntries())
+                with reader as r2:
+                    print(r2.GetNEntries())
+                with self.assertRaisesRegex(ReferenceError, "attempt to access a null-pointer"):
+                    print(r1.GetNEntries())
+
+            with self.assertRaisesRegex(ValueError, "I/O operation on destructed 'RNTupleReader'"):
+                with reader as r:
+                    print(r.GetNEntries())
 
         finally:
             import os
             os.remove(fileName)
-
-    def test_weird_ctxmanager(self):
-        """Using an existing object with a context manager"""
-
-        try:
-            fileName = "test_ntuple_weird_ctxmanager_py.root"
-            model = ROOT.RNTupleModel.Create()
-            model.MakeField["int"]("f")
-            writer = ROOT.RNTupleWriter.Recreate(model, "ntpl", fileName)
-            entry = writer.CreateEntry()
-            with writer as w1:
-                w1.Fill(entry)
-
-            with self.assertRaisesRegex(RuntimeError, "after the `with` statement"):
-                writer.Fill(entry)
-
-            reader = ROOT.RNTupleReader.Open("ntpl", fileName)
-            with reader as r1:
-                with self.assertRaisesRegex(RuntimeError, "cannot nest `with`"):
-                    with reader as r2:
-                        print(r2.GetNEntries())
-                print(r1.GetNEntries())
-
-        finally:
-            import os
-            os.remove(fileName)
-                    
-            
