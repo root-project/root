@@ -7,7 +7,7 @@
 ///
 /// \author  Timur Pocheptsov
 
-void glvox1()
+void glvox1(bool gl = true)
 {
    // Create and fill TH3.
    const UInt_t nX = 30;
@@ -37,7 +37,7 @@ void glvox1()
       }
    }
 
-   gStyle->SetCanvasPreferGL(1);
+   gStyle->SetCanvasPreferGL(gl);
 
    hist->Draw("glcol");
 }
