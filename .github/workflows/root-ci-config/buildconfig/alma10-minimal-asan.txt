@@ -9,5 +9,6 @@ fail-on-missing=ON
 minimal=ON
 roottest=ON
 testing=ON
+testsupport=ON
 LSAN_OPTIONS=verbosity=1:log_threads=1
 ROOT_CTEST_CUSTOM_FLAGS="-E \(cppinterop-CppInterOpTest\|roottest-cling-specialobj-runf02$\|roottest-root-collection-DeleteWarning$\|roottest-root-io-evolution-fixarr2$\|roottest-root-meta-rlibmap$\|roottest-root-treeproxy-vectorint-vectorint$\)"
