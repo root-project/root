@@ -333,45 +333,54 @@ endif()
 #---Define at moment the options with the selected default values------------------------------
 ROOT_APPLY_OPTIONS()
 
-#---roottest option implies testing
+#---roottest/rootbench options require testing and testsupport
 if(roottest OR rootbench)
-  set(testing ON CACHE BOOL "" FORCE)
+  if (NOT testing OR NOT testsupport)
+    message(SEND_ERROR "-Droottest=ON or -Drootbench=ON requires -Dtesting=ON -Dtestsupport=ON)")
+    list(APPEND HOTFIX_BUILD_FLAGS '-Dtesting=ON')
+    list(APPEND HOTFIX_BUILD_FLAGS '-Dtestsupport=ON')
+  endif()
 endif()
 
-#---testing implies testsupport
+#---testing requires testsupport
 if(testing)
-  set(testsupport ON CACHE BOOL "" FORCE)
-endif()
-
-#---ensure that the cuda option is sound
-if(cuda AND NOT CMAKE_CUDA_COMPILER)
-  message(FATAL_ERROR "Option cuda=On, but CMAKE_CUDA_COMPILER='${CMAKE_CUDA_COMPILER}'")
+    message(SEND_ERROR "-Dtesting=ON requires -Dtestsupport=ON)")
+    list(APPEND HOTFIX_BUILD_FLAGS '-Dtestsupport=ON')
 endif()
 
 #---running HS3 test suite requires both testing and pyroot, but testing globally disables tests
 if(testing AND test_roofit_hs3testsuite AND NOT pyroot)
-  message(FATAL_ERROR "-Dtest_roofit_hs3testsuite=ON requires both -Dtesting=ON and -Dpyroot=ON)")
+  message(SEND_ERROR "-Dtest_roofit_hs3testsuite=ON requires both -Dtesting=ON and -Dpyroot=ON)")
+  list(APPEND HOTFIX_BUILD_FLAGS '-Dpyroot=ON')
 endif()
 
 if(unfold AND NOT xml)
-  message(STATUS "Cannot enable unfold without enabling xml: unfold is disabled.")
-  set(unfold OFF)
+  message(SEND_ERROR "Cannot enable unfold without enabling -Dxml=ON.")
+  list(APPEND HOTFIX_BUILD_FLAGS '-Dxml=ON')
 endif()
 
 if (NOT builtin_cling)
   if (builtin_clang OR builtin_llvm)
     message(WARNING "No need to build internal llvm or clang. Consider turning builtin_clang=Off and builtin_llvm=Off")
+    list(APPEND HOTFIX_BUILD_FLAGS '-Dbuiltin_clang=OFF')
+    list(APPEND HOTFIX_BUILD_FLAGS '-Dbuiltin_llvm=OFF')
   endif()
 endif(NOT builtin_cling)
 
 if(NOT http AND webgui)
-   message(WARNING "Cannot build WebGui components without HTTP: webgui is disabled.")
-   set(webgui OFF)
+   message(SEND_ERROR "Cannot build WebGui components without HTTP: enable -Dhttp=ON or set -Dwebgui=OFF.")
+   list(APPEND HOTFIX_BUILD_FLAGS '-Dwebgui=OFF')
 endif()
 
 if(NOT webgui)
-   set(qt6web OFF CACHE BOOL "Disabled because webgui not build" FORCE)
-   set(cefweb OFF CACHE BOOL "Disabled because webgui not build" FORCE)
+    if(qt6web)
+        message(SEND_ERROR "Cannot build qt6web without webgui and http: enable -Dwebgui=ON -Dhttp=ON or set -Dqt6web=OFF.")
+        list(APPEND HOTFIX_BUILD_FLAGS '-Dqt6web=OFF')
+    endif()
+    if(qt6web)
+        message(SEND_ERROR "Cannot build cefweb without webgui and http: enable -Dwebgui=ON -Dhttp=ON or set -Dcefweb=OFF.")
+        list(APPEND HOTFIX_BUILD_FLAGS '-Dcefweb=OFF')
+    endif()
 endif()
 
 #---Removed options------------------------------------------------------------
