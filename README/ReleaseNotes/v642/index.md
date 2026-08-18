@@ -60,6 +60,14 @@ The following people have contributed to this new version:
 * The **RooStats::DebuggingSampler** and **RooStats::DebuggingTestStat** classes are removed. They were mock implementations of the `TestStatSampler` and `TestStatistic` interfaces that returned uniform random numbers independent of the data, only meant for debugging the RooStats framework itself during its initial development.
 * The `RooTrace` class is deprecated and will be removed in ROOT 6.44. It was a RooFit-specific memory tracer whose instrumentation hooks are compiled out by default, so it has been inert and untested for years. For memory debugging, please use general-purpose tools such as AddressSanitizer or Valgrind instead.
 
+## Build System
+
+### Moving from builtin dependencies to system-provided packages
+
+* The general direction of the ROOT project is to become more and more reliant on system packages. It is *recommended* to make the packages required by ROOT available on the system, e.g. via a package manager, and not with the builtin mechanism. This allows for timely updates and reduces the size of the installed binaries.
+* The previously vendored builtins `ftgl`, `gl2ps`, `gtest`, `nlohmann_json`, `unuran`, `civetweb`, `xxhash`, `pcre2`, should be installed in the system if possible (e.g. via `apt-get` or `homebrew` package managers). ROOT will not automatically fall-back to their builtin versions if these are not found: the user is informed of that with a helpful message. If installing these dependencies in the system is not possible, the CMake option `-Dbuiltin_XYZ=ON` has to be consciously chosen by the user.
+* For the builtin versions of `ftgl`, `gl2ps`, `gtest`, `nlohmann_json`, `unuran`, `civetweb`, `xxhash`, `pcre2`, the source tarballs are now fetched from [SPI](https://spi.web.cern.ch)'s [website](https://lcgpackages.web.cern.ch/), as for the vast majority of ROOT's builtins.
+
 ## Python Interface
 
 ## I/O
