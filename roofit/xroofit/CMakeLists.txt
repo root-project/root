@@ -54,10 +54,8 @@ else()
     PUBLIC
       FILE_SET HEADERS
         TYPE HEADERS
-        BASE_DIRS inc/
+        BASE_DIRS inc/RooFit
         FILES
-          inc/RooBrowser.h
-          inc/XRooFit.h
           inc/RooFit/xRooFit/xRooFit.h
           inc/RooFit/xRooFit/xRooNode.h
           inc/RooFit/xRooFit/xRooNLLVar.h
@@ -65,6 +63,12 @@ else()
           inc/RooFit/xRooFit/xRooBrowser.h
           inc/RooFit/xRooFit/Config.h # was not part of XROOFIT_HEADERS earlier
     PUBLIC
+      FILE_SET extraHEADERS
+        TYPE HEADERS
+        BASE_DIRS inc/
+        FILES
+          inc/RooBrowser.h
+          inc/XRooFit.h
       FILE_SET linkDefs
         TYPE HEADERS
         BASE_DIRS inc/
@@ -83,8 +87,7 @@ else()
       RooFitCore
       FitPanel
   )
-  ROOT_GENERATE_TARGET_DICTIONARY(RooFitXRooFit
-    OPTIONS "-writeEmptyRootPCM")
+  ROOT_GENERATE_TARGET_DICTIONARY(RooFitXRooFit "-writeEmptyRootPCM")
   install(TARGETS RooFitXRooFit
     EXPORT ${CMAKE_PROJECT_NAME}Exports
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -92,7 +95,10 @@ else()
     COMPONENT applications
 
     # with this we no longer need the moveheader target etc
-    FILE_SET HEADERS 
+    FILE_SET HEADERS
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # add /ROOT to make Debian happy
+
+    FILE_SET extraHEADERS
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # add /ROOT to make Debian happy
 
     FILE_SET linkDefs

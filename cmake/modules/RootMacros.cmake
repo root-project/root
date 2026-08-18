@@ -296,16 +296,15 @@ endfunction(ROOT_REPLACE_BUILD_INTERFACE)
 # The output dictionary will be another CMake target called G__<target> prepended.;
 # the macro creates (among other files) the dictionary source as G__<target>.cxx
 #---------------------------------------------------------------------------------------------------
-function(ROOT_GENERATE_TARGET_DICTIONARY target )
-  CMAKE_PARSE_ARGUMENTS(ARG "OPTIONS" ${ARGN})
+function(ROOT_GENERATE_TARGET_DICTIONARY target options)
   # Check if OPTIONS start with a dash.
-  if (ARG_OPTIONS)
-    foreach(ARG_O ${ARG_OPTIONS})
+  if (options)
+    foreach(ARG_O ${options})
       if (NOT ARG_O MATCHES "^-*")
-        message(FATAL_ERROR "Wrong rootcling option: ${ARG_OPTIONS}")
+        message(FATAL_ERROR "Wrong rootcling option: ${options}")
       endif()
     endforeach()
-  endif(ARG_OPTIONS)
+  endif(options)
 
   get_target_property(type ${target} TYPE)
   if(NOT ${type} STREQUAL "INTERFACE_LIBRARY")
@@ -323,7 +322,7 @@ function(ROOT_GENERATE_TARGET_DICTIONARY target )
     message(SEND_ERROR "ROOT_GENERATE_TARGET_DICTIONARY: Missing Linkdef file set in ${target}")
   endif()
   get_target_property(LinkedLibraries ${target} LINK_LIBRARIES)
-  ROOT_GENERATE_DICTIONARY(G__${target} ${HeaderList} LINKDEF ${LinkdefList} DEPENDENCIES ${LinkedLibraries} OPTIONS ${ARG_OPTIONS})
+  ROOT_GENERATE_DICTIONARY(G__${target} ${HeaderList} LINKDEF ${LinkdefList} DEPENDENCIES ${LinkedLibraries} OPTIONS ${options})
   # TODO: Probably one could directly call rootcling without all the shenanigan inside ROOT_GENERATE_DICTIONARY with include dirs, now that file_sets are used
 endfunction(ROOT_GENERATE_TARGET_DICTIONARY)
 
