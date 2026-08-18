@@ -426,7 +426,7 @@ void TAttText::SetTextAttributes()
 /// Set a transparent text color.
 /// \param tcolor defines the text color
 /// \param talpha defines the percentage of opacity from 0. (fully transparent) to 1. (fully opaque).
-/// \note talpha is ignored (treated as 1) if the TCanvas has no GL support activated.
+/// \note talpha is used only on the [supported platforms](\ref col_trans_available).
 
 void TAttText::SetTextColorAlpha(Color_t tcolor, Float_t talpha)
 {

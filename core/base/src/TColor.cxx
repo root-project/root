@@ -1046,9 +1046,22 @@ is set to blue with an opacity of 35% (i.e. a transparency of 65%).
    histo->SetFillColorAlpha(kBlue, 0.35);
 ~~~
 
-The transparency is available on all platforms when the flag `OpenGL.CanvasPreferGL` is set to `1`
-in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file output
-it is visible with PDF, PNG, Gif, JPEG, SVG, TeX ... but not PostScript.
+\anchor col_trans_available
+
+#### Note:
+
+Transparency is supported by the following graphics backends:
+
+- OpenGL
+- Cocoa/Quartz (macOS)
+- SVG
+- PDF
+- TeX
+- PNG, GIF, and JPEG
+- TWebCanvas
+- Future `TCanvasImp` implementations, such as `qt6canvas`
+
+Transparency is **not** supported by the X11 and PostScript backends.
 
 Alternatively, you can call at the top of your script `gStyle->SetCanvasPreferGL();`.
 Or if you prefer to activate GL for a single canvas `c`, then use `c->SetSupportGL(true);`.
