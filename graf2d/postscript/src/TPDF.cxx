@@ -62,6 +62,7 @@ the table of contents.
 #include "TDatime.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
+#include "TPoint.h"
 #include "TPoints.h"
 #include "TPDF.h"
 #include "TStyle.h"
@@ -709,320 +710,100 @@ void TPDF::DrawPolyLineNDC(Int_t nn, TPoints *xy)
    SetLineWidth(linewidthsav);
 }
 
+template<typename T>
+void TPDF::PrintPolyMarkerShape(Int_t n, T *xw, T* yw)
+{
+   Style_t linestylesav = GetLineStyle();
+   Width_t linewidthsav = GetLineWidth();
+
+
+   SetLineStyle(1);
+   SetLineWidth(TMath::Max(1, Int_t(GetMarkerLineWidth(GetMarkerStyle()))));
+   SetColor(Int_t(GetMarkerColor()));
+
+   // use extra scaling to avoid rounding effects for complex shapes
+   const Float_t sf = GetMarkerStyle() > 10 ? 0.01 : 1;
+
+   Float_t s2x = 1. / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
+   // Rescale size of marker on SVG coordinates
+   Float_t scale = UtoPDF(s2x) - UtoPDF(0);
+
+   Int_t markerSize = 0;
+   std::vector<TPoint> points;
+   auto shape = GetMarkerShape(markerSize, points, scale / sf);
+
+   for (Int_t k = 0; k < n; k++) {
+      Double_t ix = XtoPDF(xw[k]);
+      Double_t iy = YtoPDF(yw[k]);
+      switch(shape) {
+         case kShapeDot:
+            MoveTo(ix-1, iy);
+            LineTo(ix  , iy);
+            PrintFast(2," S");
+            break;
+         case kShapeCircle:
+         case kShapeFilledCircle: {
+            Double_t m2 = sf * markerSize * 0.5;
+            Double_t m4 = m2 * 1.333333333333;
+
+            MoveTo(ix-m2, iy);
+            WriteReal(ix-m2); WriteReal(iy+m4);
+            WriteReal(ix+m2); WriteReal(iy+m4);
+            WriteReal(ix+m2); WriteReal(iy)   ; PrintFast(2," c");
+            WriteReal(ix+m2); WriteReal(iy-m4);
+            WriteReal(ix-m2); WriteReal(iy-m4);
+            WriteReal(ix-m2); WriteReal(iy)   ; PrintFast(4," c h");
+            if (shape == kShapeCircle)
+               PrintFast(2," S");
+            else
+               PrintFast(2," f");
+            break;
+         }
+         case kShapePolyLine:
+         case kShapeFilledArea:
+            MoveTo(ix + sf*points[0].fX, iy + sf*points[0].fY);
+
+            for (std::size_t i = 1; i < points.size(); i++)
+               LineTo(ix + sf*points[i].fX, iy + sf*points[i].fY);
+
+            if (shape == kShapePolyLine) {
+               if (points.front() == points.back())
+                  PrintFast(2," h");
+               PrintFast(2," S");
+            }
+            else {
+               // close line and fill
+               PrintFast(4," h f");
+            }
+            break;
+         case kShapeSegments:
+            for (std::size_t i = 0; i + 1 < points.size(); i += 2) {
+               MoveTo(ix + sf*points[i].fX, iy + sf*points[i].fY);
+               LineTo(ix + sf*points[i+1].fX, iy + sf*points[i+1].fY);
+            }
+            PrintFast(2," S");
+            break;
+         case kShapeTriangles:
+            for (std::size_t i = 0; i + 2 < points.size(); i += 3) {
+               MoveTo(ix + sf*points[i].fX, iy + sf*points[i].fY);
+               LineTo(ix + sf*points[i+1].fX, iy + sf*points[i+1].fY);
+               LineTo(ix + sf*points[i+2].fX, iy + sf*points[i+2].fY);
+               PrintFast(4," h f");
+            }
+            break;
+      }
+   }
+   SetLineStyle(linestylesav);
+   SetLineWidth(linewidthsav);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw markers at the n WC points xw, yw
 
 void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 {
-   fMarkerStyle = TMath::Abs(fMarkerStyle);
-   Style_t linestylesav = fLineStyle;
-   Width_t linewidthsav = fLineWidth;
-   SetLineStyle(1);
-   SetLineWidth(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))));
-   SetColor(Int_t(fMarkerColor));
-   Int_t ms = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
-
-   if (ms == 4)
-      ms = 24;
-   else if (ms >= 6 && ms <= 8)
-      ms = 20;
-   else if (ms >= 9 && ms <= 19)
-      ms = 1;
-
-   // Define the marker size
-   Float_t msize  = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.*fLineScale;
-   if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) {
-     msize = 1.;
-   } else if (fMarkerStyle == 6) {
-     msize = 1.;
-   } else if (fMarkerStyle == 7) {
-     msize = 1.5;
-   } else {
-      const Int_t kBASEMARKER = 8;
-      Float_t sbase = msize*kBASEMARKER;
-      Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
-      msize = this->UtoPDF(s2x) - this->UtoPDF(0);
-   }
-
-   Double_t m  = msize;
-   Double_t m2 = m/2;
-   Double_t m3 = m/3;
-   Double_t m4 = m2*1.333333333333;
-   Double_t m6 = m/6;
-   Double_t m0 = m/10.;
-   Double_t m8 = m/4;
-   Double_t m9 = m/8;
-
-   // Draw the marker according to the type
-   Double_t ix,iy;
-   for (Int_t i=0;i<n;i++) {
-      ix = XtoPDF(xw[i]);
-      iy = YtoPDF(yw[i]);
-      // Dot (.)
-      if (ms == 1) {
-         MoveTo(ix-1, iy);
-         LineTo(ix  , iy);
-      // Plus (+)
-      } else if (ms == 2) {
-         MoveTo(ix-m2, iy);
-         LineTo(ix+m2, iy);
-         MoveTo(ix   , iy-m2);
-         LineTo(ix   , iy+m2);
-      // X shape (X)
-      } else if (ms == 5) {
-         MoveTo(ix-m2*0.707, iy-m2*0.707);
-         LineTo(ix+m2*0.707, iy+m2*0.707);
-         MoveTo(ix-m2*0.707, iy+m2*0.707);
-         LineTo(ix+m2*0.707, iy-m2*0.707);
-      // Asterisk shape (*)
-      } else if (ms == 3 || ms == 31) {
-         MoveTo(ix-m2, iy);
-         LineTo(ix+m2, iy);
-         MoveTo(ix   , iy-m2);
-         LineTo(ix   , iy+m2);
-         MoveTo(ix-m2*0.707, iy-m2*0.707);
-         LineTo(ix+m2*0.707, iy+m2*0.707);
-         MoveTo(ix-m2*0.707, iy+m2*0.707);
-         LineTo(ix+m2*0.707, iy-m2*0.707);
-      // Circle
-      } else if (ms == 24 || ms == 20) {
-         MoveTo(ix-m2, iy);
-         WriteReal(ix-m2); WriteReal(iy+m4);
-         WriteReal(ix+m2); WriteReal(iy+m4);
-         WriteReal(ix+m2); WriteReal(iy)   ; PrintFast(2," c");
-         WriteReal(ix+m2); WriteReal(iy-m4);
-         WriteReal(ix-m2); WriteReal(iy-m4);
-         WriteReal(ix-m2); WriteReal(iy)   ; PrintFast(4," c h");
-      // Square
-      } else if (ms == 25 || ms == 21) {
-         WriteReal(ix-m2); WriteReal(iy-m2);
-         WriteReal(m)    ; WriteReal(m)    ; PrintFast(3," re");
-      // Down triangle
-      } else if (ms == 23 || ms == 32) {
-         MoveTo(ix   , iy-m2);
-         LineTo(ix+m2, iy+m2);
-         LineTo(ix-m2, iy+m2);
-         PrintFast(2," h");
-      // Up triangle
-      } else if (ms == 26 || ms == 22) {
-         MoveTo(ix-m2, iy-m2);
-         LineTo(ix+m2, iy-m2);
-         LineTo(ix   , iy+m2);
-         PrintFast(2," h");
-      } else if (ms == 27 || ms == 33) {
-         MoveTo(ix   , iy-m2);
-         LineTo(ix+m3, iy);
-         LineTo(ix   , iy+m2);
-         LineTo(ix-m3, iy)   ;
-         PrintFast(2," h");
-      } else if (ms == 28 || ms == 34) {
-         MoveTo(ix-m6, iy-m6);
-         LineTo(ix-m6, iy-m2);
-         LineTo(ix+m6, iy-m2);
-         LineTo(ix+m6, iy-m6);
-         LineTo(ix+m2, iy-m6);
-         LineTo(ix+m2, iy+m6);
-         LineTo(ix+m6, iy+m6);
-         LineTo(ix+m6, iy+m2);
-         LineTo(ix-m6, iy+m2);
-         LineTo(ix-m6, iy+m6);
-         LineTo(ix-m2, iy+m6);
-         LineTo(ix-m2, iy-m6);
-         PrintFast(2," h");
-      } else if (ms == 29 || ms == 30) {
-         MoveTo(ix           , iy+m2);
-         LineTo(ix+0.112255*m, iy+0.15451*m);
-         LineTo(ix+0.47552*m , iy+0.15451*m);
-         LineTo(ix+0.181635*m, iy-0.05902*m);
-         LineTo(ix+0.29389*m , iy-0.40451*m);
-         LineTo(ix           , iy-0.19098*m);
-         LineTo(ix-0.29389*m , iy-0.40451*m);
-         LineTo(ix-0.181635*m, iy-0.05902*m);
-         LineTo(ix-0.47552*m , iy+0.15451*m);
-         LineTo(ix-0.112255*m, iy+0.15451*m);
-         PrintFast(2," h");
-      } else if (ms == 35 ) {
-      // diamond with cross
-         MoveTo(ix-m2, iy   );
-         LineTo(ix   , iy-m2);
-         LineTo(ix+m2, iy   );
-         LineTo(ix   , iy+m2);
-         LineTo(ix-m2, iy   );
-         LineTo(ix+m2, iy   );
-         LineTo(ix   , iy+m2);
-         LineTo(ix   , iy-m2);
-         PrintFast(2," h");
-      } else if (ms == 36 ) {
-      // square with diagonal cross
-         MoveTo(ix-m2, iy-m2);
-         LineTo(ix+m2, iy-m2);
-         LineTo(ix+m2, iy+m2);
-         LineTo(ix-m2, iy+m2);
-         LineTo(ix-m2, iy-m2);
-         LineTo(ix+m2, iy+m2);
-         LineTo(ix-m2, iy+m2);
-         LineTo(ix+m2, iy-m2);
-         PrintFast(2," h");
-      } else if (ms == 37 || ms == 39 ) {
-      // square with cross
-         MoveTo(ix   , iy   );
-         LineTo(ix-m8, iy+m2);
-         LineTo(ix-m2, iy   );
-         LineTo(ix   , iy   );
-         LineTo(ix-m8, iy-m2);
-         LineTo(ix+m8, iy-m2);
-         LineTo(ix   , iy   );
-         LineTo(ix+m2, iy   );
-         LineTo(ix+m8, iy+m2);
-         LineTo(ix   , iy   );
-         PrintFast(2," h");
-      } else if (ms == 38 ) {
-      // + shaped marker with octagon
-         MoveTo(ix-m2, iy   );
-         LineTo(ix-m2, iy-m8);
-         LineTo(ix-m8, iy-m2);
-         LineTo(ix+m8, iy-m2);
-         LineTo(ix+m2, iy-m8);
-         LineTo(ix+m2, iy+m8);
-         LineTo(ix+m8, iy+m2);
-         LineTo(ix-m8, iy+m2);
-         LineTo(ix-m2, iy+m8);
-         LineTo(ix-m2, iy   );
-         LineTo(ix+m2, iy   );
-         LineTo(ix   , iy   );
-         LineTo(ix   , iy-m2);
-         LineTo(ix   , iy+m2);
-         LineTo(ix   , iy);
-         PrintFast(2," h");
-      } else if (ms == 40 || ms == 41 ) {
-       // four triangles X
-         MoveTo(ix   , iy   );
-         LineTo(ix+m8, iy+m2);
-         LineTo(ix+m2, iy+m8);
-         LineTo(ix   , iy   );
-         LineTo(ix+m2, iy-m8);
-         LineTo(ix+m8, iy-m2);
-         LineTo(ix   , iy   );
-         LineTo(ix-m8, iy-m2);
-         LineTo(ix-m2, iy-m8);
-         LineTo(ix   , iy   );
-         LineTo(ix-m2, iy+m8);
-         LineTo(ix-m8, iy+m2);
-         LineTo(ix   , iy   );
-         PrintFast(2," h");
-      } else if (ms == 42 || ms == 43 ) {
-      // double diamonds
-         MoveTo(ix   , iy+m2);
-         LineTo(ix-m9, iy+m9);
-         LineTo(ix-m2, iy   );
-         LineTo(ix-m9, iy-m9);
-         LineTo(ix   , iy-m2);
-         LineTo(ix+m9, iy-m9);
-         LineTo(ix+m2, iy   );
-         LineTo(ix+m9, iy+m9);
-         LineTo(ix   , iy+m2);
-         PrintFast(2," h");
-      } else if (ms == 44 ) {
-      // open four triangles plus
-         MoveTo(ix   , iy   );
-         LineTo(ix+m8, iy+m2);
-         LineTo(ix-m8, iy+m2);
-         LineTo(ix+m8, iy-m2);
-         LineTo(ix-m8, iy-m2);
-         LineTo(ix   , iy   );
-         LineTo(ix+m2, iy+m8);
-         LineTo(ix+m2, iy-m8);
-         LineTo(ix-m2, iy+m8);
-         LineTo(ix-m2, iy-m8);
-         LineTo(ix   , iy   );
-         PrintFast(2," h");
-      } else if (ms == 45 ) {
-      // filled four triangles plus
-         MoveTo(ix+m0, iy+m0);
-         LineTo(ix+m8, iy+m2);
-         LineTo(ix-m8, iy+m2);
-         LineTo(ix-m0, iy+m0);
-         LineTo(ix-m2, iy+m8);
-         LineTo(ix-m2, iy-m8);
-         LineTo(ix-m0, iy-m0);
-         LineTo(ix-m8, iy-m2);
-         LineTo(ix+m8, iy-m2);
-         LineTo(ix+m0, iy-m0);
-         LineTo(ix+m2, iy-m8);
-         LineTo(ix+m2, iy+m8);
-         LineTo(ix+m0, iy+m0);
-         PrintFast(2," h");
-      } else if (ms == 46 || ms == 47 ) {
-      // four triangles X
-         MoveTo(ix   , iy+m8);
-         LineTo(ix-m8, iy+m2);
-         LineTo(ix-m2, iy+m8);
-         LineTo(ix-m8, iy   );
-         LineTo(ix-m2, iy-m8);
-         LineTo(ix-m8, iy-m2);
-         LineTo(ix   , iy-m8);
-         LineTo(ix+m8, iy-m2);
-         LineTo(ix+m2, iy-m8);
-         LineTo(ix+m8, iy   );
-         LineTo(ix+m2, iy+m8);
-         LineTo(ix+m8, iy+m2);
-         LineTo(ix   , iy+m8);
-         PrintFast(2," h");
-      } else if (ms == 48 ) {
-      // four filled squares X
-         MoveTo(ix   , iy+m8*1.01);
-         LineTo(ix-m8, iy+m2);
-         LineTo(ix-m2, iy+m8);
-         LineTo(ix-m8, iy   );
-         LineTo(ix-m2, iy-m8);
-         LineTo(ix-m8, iy-m2);
-         LineTo(ix   , iy-m8);
-         LineTo(ix+m8, iy-m2);
-         LineTo(ix+m2, iy-m8);
-         LineTo(ix+m8, iy   );
-         LineTo(ix+m2, iy+m8);
-         LineTo(ix+m8, iy+m2);
-         LineTo(ix   , iy+m8*0.99);
-         LineTo(ix+m8*0.99, iy   );
-         LineTo(ix   , iy-m8*0.99);
-         LineTo(ix-m8*0.99, iy   );
-         LineTo(ix   , iy+m8*0.99);
-         PrintFast(2," h");
-      } else if (ms == 49 ) {
-      // four filled squares plus
-         MoveTo(ix-m6, iy-m6*1.01);
-         LineTo(ix-m6, iy-m2);
-         LineTo(ix+m6, iy-m2);
-         LineTo(ix+m6, iy-m6);
-         LineTo(ix+m2, iy-m6);
-         LineTo(ix+m2, iy+m6);
-         LineTo(ix+m6, iy+m6);
-         LineTo(ix+m6, iy+m2);
-         LineTo(ix-m6, iy+m2);
-         LineTo(ix-m6, iy+m6);
-         LineTo(ix-m2, iy+m6);
-         LineTo(ix-m2, iy-m6);
-         LineTo(ix-m6, iy-m6*0.99);
-         LineTo(ix-m6, iy+m6);
-         LineTo(ix+m6, iy+m6);
-         LineTo(ix+m6, iy-m6);
-         PrintFast(2," h");
-      } else {
-         MoveTo(ix-m6, iy-m6);
-         LineTo(ix-m6, iy-m2);
-      }
-
-      if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||
-          ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
-          ms == 47 || ms == 48 || ms == 49) {
-         PrintFast(2," f");
-      } else {
-         PrintFast(2," S");
-      }
-   }
-
-   SetLineStyle(linestylesav);
-   SetLineWidth(linewidthsav);
+   PrintPolyMarkerShape<Float_t>(n, xw, yw);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1030,303 +811,7 @@ void TPDF::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 
 void TPDF::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 {
-   fMarkerStyle = TMath::Abs(fMarkerStyle);
-   Style_t linestylesav = fLineStyle;
-   Width_t linewidthsav = fLineWidth;
-   SetLineStyle(1);
-   SetLineWidth(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))));
-   SetColor(Int_t(fMarkerColor));
-   Int_t ms = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
-
-   if (ms == 4)
-      ms = 24;
-   else if (ms >= 6 && ms <= 8)
-      ms = 20;
-   else if (ms >= 9 && ms <= 19)
-      ms = 1;
-
-   // Define the marker size
-   Float_t msize  = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.*fLineScale;
-   if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) {
-     msize = 1.;
-   } else if (fMarkerStyle == 6) {
-     msize = 1.5;
-   } else if (fMarkerStyle == 7) {
-     msize = 3.;
-   } else {
-      const Int_t kBASEMARKER = 8;
-      Float_t sbase = msize*kBASEMARKER;
-      Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
-      msize = this->UtoPDF(s2x) - this->UtoPDF(0);
-   }
-
-   Double_t m  = msize;
-   Double_t m2 = m/2;
-   Double_t m3 = m/3;
-   Double_t m4 = m2*1.333333333333;
-   Double_t m6 = m/6;
-   Double_t m8 = m/4;
-   Double_t m9 = m/8;
-
-   // Draw the marker according to the type
-   Double_t ix,iy;
-   for (Int_t i=0;i<n;i++) {
-      ix = XtoPDF(xw[i]);
-      iy = YtoPDF(yw[i]);
-      // Dot (.)
-      if (ms == 1) {
-         MoveTo(ix-1, iy);
-         LineTo(ix  , iy);
-      // Plus (+)
-      } else if (ms == 2) {
-         MoveTo(ix-m2, iy);
-         LineTo(ix+m2, iy);
-         MoveTo(ix   , iy-m2);
-         LineTo(ix   , iy+m2);
-      // X shape (X)
-      } else if (ms == 5) {
-         MoveTo(ix-m2*0.707, iy-m2*0.707);
-         LineTo(ix+m2*0.707, iy+m2*0.707);
-         MoveTo(ix-m2*0.707, iy+m2*0.707);
-         LineTo(ix+m2*0.707, iy-m2*0.707);
-      // Asterisk shape (*)
-      } else if (ms == 3 || ms == 31) {
-         MoveTo(ix-m2, iy);
-         LineTo(ix+m2, iy);
-         MoveTo(ix   , iy-m2);
-         LineTo(ix   , iy+m2);
-         MoveTo(ix-m2*0.707, iy-m2*0.707);
-         LineTo(ix+m2*0.707, iy+m2*0.707);
-         MoveTo(ix-m2*0.707, iy+m2*0.707);
-         LineTo(ix+m2*0.707, iy-m2*0.707);
-      // Circle
-      } else if (ms == 24 || ms == 20) {
-         MoveTo(ix-m2, iy);
-         WriteReal(ix-m2); WriteReal(iy+m4);
-         WriteReal(ix+m2); WriteReal(iy+m4);
-         WriteReal(ix+m2); WriteReal(iy)   ; PrintFast(2," c");
-         WriteReal(ix+m2); WriteReal(iy-m4);
-         WriteReal(ix-m2); WriteReal(iy-m4);
-         WriteReal(ix-m2); WriteReal(iy)   ; PrintFast(4," c h");
-      // Square
-      } else if (ms == 25 || ms == 21) {
-         WriteReal(ix-m2); WriteReal(iy-m2);
-         WriteReal(m)    ; WriteReal(m)    ; PrintFast(3," re");
-      // Down triangle
-      } else if (ms == 23 || ms == 32) {
-         MoveTo(ix   , iy-m2);
-         LineTo(ix+m2, iy+m2);
-         LineTo(ix-m2, iy+m2);
-         PrintFast(2," h");
-      // Up triangle
-      } else if (ms == 26 || ms == 22) {
-         MoveTo(ix-m2, iy-m2);
-         LineTo(ix+m2, iy-m2);
-         LineTo(ix   , iy+m2);
-         PrintFast(2," h");
-      } else if (ms == 27 || ms == 33) {
-         MoveTo(ix   , iy-m2);
-         LineTo(ix+m3, iy);
-         LineTo(ix   , iy+m2);
-         LineTo(ix-m3, iy)   ;
-         PrintFast(2," h");
-      } else if (ms == 28 || ms == 34) {
-         MoveTo(ix-m6, iy-m6);
-         LineTo(ix-m6, iy-m2);
-         LineTo(ix+m6, iy-m2);
-         LineTo(ix+m6, iy-m6);
-         LineTo(ix+m2, iy-m6);
-         LineTo(ix+m2, iy+m6);
-         LineTo(ix+m6, iy+m6);
-         LineTo(ix+m6, iy+m2);
-         LineTo(ix-m6, iy+m2);
-         LineTo(ix-m6, iy+m6);
-         LineTo(ix-m2, iy+m6);
-         LineTo(ix-m2, iy-m6);
-         PrintFast(2," h");
-      } else if (ms == 29 || ms == 30) {
-         MoveTo(ix           , iy-m2);
-         LineTo(ix-0.112255*m, iy-0.15451*m);
-         LineTo(ix-0.47552*m , iy-0.15451*m);
-         LineTo(ix-0.181635*m, iy+0.05902*m);
-         LineTo(ix-0.29389*m , iy+0.40451*m);
-         LineTo(ix           , iy+0.19098*m);
-         LineTo(ix+0.29389*m , iy+0.40451*m);
-         LineTo(ix+0.181635*m, iy+0.05902*m);
-         LineTo(ix+0.47552*m , iy-0.15451*m);
-         LineTo(ix+0.112255*m, iy-0.15451*m);
-         PrintFast(2," h");
-      } else if (ms == 35 ) {
-         MoveTo(ix-m2, iy   );
-         LineTo(ix   , iy-m2);
-         LineTo(ix+m2, iy   );
-         LineTo(ix   , iy+m2);
-         LineTo(ix-m2, iy   );
-         LineTo(ix+m2, iy   );
-         LineTo(ix   , iy+m2);
-         LineTo(ix   , iy-m2);
-         PrintFast(2," h");
-      } else if (ms == 36 ) {
-         MoveTo(ix-m2, iy-m2);
-         LineTo(ix+m2, iy-m2);
-         LineTo(ix+m2, iy+m2);
-         LineTo(ix-m2, iy+m2);
-         LineTo(ix-m2, iy-m2);
-         LineTo(ix+m2, iy+m2);
-         LineTo(ix-m2, iy+m2);
-         LineTo(ix+m2, iy-m2);
-         PrintFast(2," h");
-      } else if (ms == 37 || ms == 39 ) {
-         MoveTo(ix   , iy   );
-         LineTo(ix-m8, iy+m2);
-         LineTo(ix-m2, iy   );
-         LineTo(ix   , iy   );
-         LineTo(ix-m8, iy-m2);
-         LineTo(ix+m8, iy-m2);
-         LineTo(ix   , iy   );
-         LineTo(ix+m2, iy   );
-         LineTo(ix+m8, iy+m2);
-         LineTo(ix   , iy   );
-         PrintFast(2," h");
-      } else if (ms == 38 ) {
-         MoveTo(ix-m2, iy   );
-         LineTo(ix-m2, iy-m8);
-         LineTo(ix-m8, iy-m2);
-         LineTo(ix+m8, iy-m2);
-         LineTo(ix+m2, iy-m8);
-         LineTo(ix+m2, iy+m8);
-         LineTo(ix+m8, iy+m2);
-         LineTo(ix-m8, iy+m2);
-         LineTo(ix-m2, iy+m8);
-         LineTo(ix-m2, iy   );
-         LineTo(ix+m2, iy   );
-         LineTo(ix   , iy   );
-         LineTo(ix   , iy-m2);
-         LineTo(ix   , iy+m2);
-         LineTo(ix   , iy   );
-         PrintFast(2," h");
-      } else if (ms == 40 || ms == 41 ) {
-         MoveTo(ix   , iy   );
-         LineTo(ix+m8, iy+m2);
-         LineTo(ix+m2, iy+m8);
-         LineTo(ix   , iy   );
-         LineTo(ix+m2, iy-m8);
-         LineTo(ix+m8, iy-m2);
-         LineTo(ix   , iy   );
-         LineTo(ix-m8, iy-m2);
-         LineTo(ix-m2, iy-m8);
-         LineTo(ix   , iy   );
-         LineTo(ix-m2, iy+m8);
-         LineTo(ix-m8, iy+m2);
-         LineTo(ix   , iy   );
-         PrintFast(2," h");
-      } else if (ms == 42 || ms == 43 ) {
-         MoveTo(ix   , iy+m2);
-         LineTo(ix-m9, iy+m9);
-         LineTo(ix-m2, iy   );
-         LineTo(ix-m9, iy-m9);
-         LineTo(ix   , iy-m2);
-         LineTo(ix+m9, iy-m9);
-         LineTo(ix+m2, iy   );
-         LineTo(ix+m9, iy+m9);
-         LineTo(ix   , iy+m2);
-         PrintFast(2," h");
-      } else if (ms == 44 ) {
-         MoveTo(ix   , iy   );
-         LineTo(ix+m8, iy+m2);
-         LineTo(ix-m8, iy+m2);
-         LineTo(ix+m8, iy-m2);
-         LineTo(ix-m8, iy-m2);
-         LineTo(ix   , iy   );
-         LineTo(ix+m2, iy+m8);
-         LineTo(ix+m2, iy-m8);
-         LineTo(ix-m2, iy+m8);
-         LineTo(ix-m2, iy-m8);
-         LineTo(ix   , iy   );
-         PrintFast(2," h");
-      } else if (ms == 45 ) {
-         MoveTo(ix+m6/2., iy+m6/2.);
-         LineTo(ix+m8, iy+m2);
-         LineTo(ix-m8, iy+m2);
-         LineTo(ix-m6/2., iy+m6/2.);
-         LineTo(ix-m2, iy+m8);
-         LineTo(ix-m2, iy-m8);
-         LineTo(ix-m6/2., iy-m6/2.);
-         LineTo(ix-m8, iy-m2);
-         LineTo(ix+m8, iy-m2);
-         LineTo(ix+m6/2., iy-m6/2.);
-         LineTo(ix+m2, iy-m8);
-         LineTo(ix+m2, iy+m8);
-         LineTo(ix+m6/2., iy+m6/2.);
-         PrintFast(2," h");
-      } else if (ms == 46 || ms == 47 ) {
-         MoveTo(ix   , iy+m8);
-         LineTo(ix-m8, iy+m2);
-         LineTo(ix-m2, iy+m8);
-         LineTo(ix-m8, iy   );
-         LineTo(ix-m2, iy-m8);
-         LineTo(ix-m8, iy-m2);
-         LineTo(ix   , iy-m8);
-         LineTo(ix+m8, iy-m2);
-         LineTo(ix+m2, iy-m8);
-         LineTo(ix+m8, iy   );
-         LineTo(ix+m2, iy+m8);
-         LineTo(ix+m8, iy+m2);
-         LineTo(ix   , iy+m8);
-         PrintFast(2," h");
-      } else if (ms == 48 ) {
-         MoveTo(ix   , iy+m8*1.005);
-         LineTo(ix-m8, iy+m2);
-         LineTo(ix-m2, iy+m8);
-         LineTo(ix-m8, iy   );
-         LineTo(ix-m2, iy-m8);
-         LineTo(ix-m8, iy-m2);
-         LineTo(ix   , iy-m8);
-         LineTo(ix+m8, iy-m2);
-         LineTo(ix+m2, iy-m8);
-         LineTo(ix+m8, iy   );
-         LineTo(ix+m2, iy+m8);
-         LineTo(ix+m8, iy+m2);
-         LineTo(ix   , iy+m8*0.995);
-         LineTo(ix+m8*0.995, iy   );
-         LineTo(ix   , iy-m8*0.995);
-         LineTo(ix-m8*0.995, iy   );
-         LineTo(ix   , iy+m8*0.995);
-         PrintFast(2," h");
-      } else if (ms == 49 ) {
-         MoveTo(ix-m6, iy-m6*1.01);
-         LineTo(ix-m6, iy-m2);
-         LineTo(ix+m6, iy-m2);
-         LineTo(ix+m6, iy-m6);
-         LineTo(ix+m2, iy-m6);
-         LineTo(ix+m2, iy+m6);
-         LineTo(ix+m6, iy+m6);
-         LineTo(ix+m6, iy+m2);
-         LineTo(ix-m6, iy+m2);
-         LineTo(ix-m6, iy+m6);
-         LineTo(ix-m2, iy+m6);
-         LineTo(ix-m2, iy-m6);
-         LineTo(ix-m6, iy-m6*0.99);
-         LineTo(ix-m6, iy+m6);
-         LineTo(ix+m6, iy+m6);
-         LineTo(ix+m6, iy-m6);
-         MoveTo(ix-m6, iy-m6*1.01);
-         PrintFast(2," h");
-      } else {
-         MoveTo(ix-1, iy);
-         LineTo(ix  , iy);
-      }
-      if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||
-          ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
-          ms == 47 || ms == 48 || ms == 49) {
-         PrintFast(2," f");
-      } else {
-         PrintFast(2," S");
-      }
-   }
-
-   SetLineStyle(linestylesav);
-   SetLineWidth(linewidthsav);
+   PrintPolyMarkerShape<Double_t>(n, xw, yw);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
