@@ -347,6 +347,10 @@ if(testing)
   set(testsupport ON CACHE BOOL "" FORCE)
 endif()
 
+#---ensure that the cuda option is sound
+if(cuda AND NOT CMAKE_CUDA_COMPILER)
+  message(FATAL_ERROR "Option cuda=On, but CMAKE_CUDA_COMPILER='${CMAKE_CUDA_COMPILER}'")
+endif()
 
 if(unfold AND NOT xml)
   message(STATUS "Cannot enable unfold without enabling xml: unfold is disabled.")
