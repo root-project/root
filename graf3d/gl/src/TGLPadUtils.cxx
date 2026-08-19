@@ -239,7 +239,7 @@ void MarkerPainter::DrawMarkers(UInt_t n, const TPoint *xy, const TAttMarker &at
 {
    Int_t markerSize = 0;
    std::vector<TPoint> markerShape;
-   auto markerType = attr.GetMarkerShape(markerSize, markerShape, 1., kTRUE);
+   auto markerType = attr.GetMarkerShape(markerSize, markerShape, 1., TAttMarker::kPreferTriangles | TAttMarker::kDotAsLines);
 
    auto masrkerStyle = TAttMarker::GetMarkerStyleBase(attr.GetMarkerStyle());
    Bool_t changePolygonMode = (masrkerStyle == kOpenSquare) || (masrkerStyle == kOpenTriangleUp);

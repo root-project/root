@@ -3340,7 +3340,7 @@ void TGWin32::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
       return;
 
    ctxt->markerLineWidth = TAttMarker::GetMarkerLineWidth(att.GetMarkerStyle());
-   ctxt->markerType = att.GetMarkerShape(ctxt->markerSize, ctxt->markerShape);
+   ctxt->markerType = att.GetMarkerShape(ctxt->markerSize, ctxt->markerShape, 1., TAttMarker::kDotAsLines);
 
    // The fast pixel markers need to be treated separately
    if (ctxt->markerType == TAttMarker::kShapeSegments) {
