@@ -275,7 +275,9 @@ if(mathmore OR (tmva-cpu AND use_gsl_cblas))
     endif()
   endif()
 endif()
-
+if(webgui)
+  ROOT_FIND_REQUIRED_DEP(MathJax builtin_mathjax)
+endif()
 
 if(NOT "${MISSING_PACKAGES}" STREQUAL "")
   list(REMOVE_DUPLICATES MISSING_PACKAGES)
@@ -1134,7 +1136,9 @@ if(webgui)
     add_subdirectory(builtins/openui5)
   endif()
   add_subdirectory(builtins/rendercore)
-  add_subdirectory(builtins/mathjax)
+  if (builtin_mathjax)
+    add_subdirectory(builtins/mathjax)
+  endif()
 endif()
 
 #------------------------------------------------------------------------------------
