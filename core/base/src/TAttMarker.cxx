@@ -622,27 +622,35 @@ TAttMarker::EMarkerShape TAttMarker::GetMarkerShape(Int_t &sz, std::vector<TPoin
          return markerStyle == kFullStar ? kShapeFilledArea : kShapePolyLine;
       }
       case kOpenDiamondCross:
-         shape.resize(8);
+         shape.resize(12);
          shape[0].fX =-im;  shape[0].fY = 0;
          shape[1].fX =  0;  shape[1].fY = -im;
-         shape[2].fX = im;  shape[2].fY = 0;
-         shape[3].fX =  0;  shape[3].fY = im;
-         shape[4].fX =-im;  shape[4].fY = 0;
-         shape[5].fX = im;  shape[5].fY = 0;
+         shape[2].fX =  0;  shape[2].fY = -im;
+         shape[3].fX = im;  shape[3].fY = 0;
+         shape[4].fX = im;  shape[4].fY = 0;
+         shape[5].fX =  0;  shape[5].fY = im;
          shape[6].fX =  0;  shape[6].fY = im;
-         shape[7].fX =  0;  shape[7].fY =-im;
-         return kShapePolyLine;
+         shape[7].fX =-im;  shape[7].fY = 0;
+         shape[8].fX =-im;  shape[8].fY = 0;
+         shape[9].fX = im;  shape[9].fY = 0;
+         shape[10].fX =  0; shape[10].fY = im;
+         shape[11].fX =  0; shape[11].fY =-im;
+         return kShapeSegments;
       case kOpenSquareDiagonal:
-         shape.resize(8);
+         shape.resize(12);
          shape[0].fX = -im;  shape[0].fY = -im;
          shape[1].fX =  im;  shape[1].fY = -im;
-         shape[2].fX =  im;  shape[2].fY = im;
-         shape[3].fX = -im;  shape[3].fY = im;
-         shape[4].fX = -im;  shape[4].fY = -im;
-         shape[5].fX =  im;  shape[5].fY = im;
+         shape[2].fX =  im;  shape[2].fY = -im;
+         shape[3].fX =  im;  shape[3].fY = im;
+         shape[4].fX =  im;  shape[4].fY = im;
+         shape[5].fX = -im;  shape[5].fY = im;
          shape[6].fX = -im;  shape[6].fY = im;
-         shape[7].fX =  im;  shape[7].fY = -im;
-         return kShapePolyLine;
+         shape[7].fX = -im;  shape[7].fY = -im;
+         shape[8].fX = -im;  shape[8].fY = -im;
+         shape[9].fX =  im;  shape[9].fY = im;
+         shape[10].fX = -im;  shape[10].fY = im;
+         shape[11].fX =  im;  shape[11].fY = -im;
+         return kShapeSegments;
       case kOpenThreeTriangles:
          shape.resize(10);
          shape[0].fX =   0;  shape[0].fY =   0;
