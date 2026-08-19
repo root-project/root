@@ -153,7 +153,7 @@ void ROOT::RNTupleReader::InitPageSource(bool enableMetrics)
 ROOT::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::RNTupleModel> model,
                                    std::unique_ptr<ROOT::Internal::RPageSource> source,
                                    const ROOT::RNTupleReadOptions &options)
-   : fSource(std::move(source)), fModel(std::move(model)), fMetrics("RNTupleReader")
+   : fSource(std::move(source)), fModel(std::move(model)), fMetrics("RNTupleReader", fSource->GetNTupleName())
 {
    // TODO(jblomer): properly support projected fields
    auto &projectedFields = ROOT::Internal::GetProjectedFieldsOfModel(*fModel);
@@ -167,7 +167,7 @@ ROOT::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::RNTupleModel> model,
 
 ROOT::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Internal::RPageSource> source,
                                    const ROOT::RNTupleReadOptions &options)
-   : fSource(std::move(source)), fModel(nullptr), fMetrics("RNTupleReader")
+   : fSource(std::move(source)), fModel(nullptr), fMetrics("RNTupleReader", fSource->GetNTupleName())
 {
    InitPageSource(options.GetEnableMetrics());
 }

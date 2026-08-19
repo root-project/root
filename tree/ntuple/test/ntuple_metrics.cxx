@@ -1,3 +1,6 @@
+#include "TEnv.h"
+#include "TKey.h"
+#include "TSystem.h"
 #include "ntuple_test.hxx"
 
 #include <cmath>
@@ -153,4 +156,98 @@ TEST(Metrics, IOMetrics)
       EXPECT_GE(szSkip->GetValueAsInt(), 0);
       EXPECT_GT(szFile->GetValueAsInt(), 0);
    }
+}
+
+namespace {
+
+void WriteDummyEntries(std::string_view fileName, std::string_view ntupleName)
+{
+   auto model = RNTupleModel::Create();
+   auto pt = model->MakeField<float>("float_field");
+
+   auto writer = RNTupleWriter::Recreate(std::move(model), ntupleName, fileName);
+
+   *pt = 1.0;
+   writer->Fill();
+   writer->CommitDataset();
+}
+
+void ReadMetrics(const std::string fileName, std::ostream &output)
+{
+   TFile file(fileName.c_str());
+
+   std::set<std::string> ntupleNames;
+   for (auto *keyObject : *file.GetListOfKeys()) {
+      auto *key = static_cast<TKey *>(keyObject);
+      if (std::string(key->GetClassName()) == "ROOT::RNTuple")
+         ntupleNames.insert(key->GetName());
+   }
+
+   for (const auto &ntupleName : ntupleNames) {
+      auto reader = ROOT::RNTupleReader::Open(ntupleName, fileName);
+      const auto &descriptor = reader->GetDescriptor();
+
+      output << ntupleName << "\n\n";
+      for (auto counterId : descriptor.GetFieldZero().GetLinkIds()) {
+         std::string fieldName = descriptor.GetFieldDescriptor(counterId).GetFieldName();
+         std::string type = descriptor.GetFieldDescriptor(counterId).GetTypeName();
+
+         output << std::string(8, ' ') << fieldName << " (" << type << ")\n";
+      }
+      output << "\n";
+   }
+}
+} // namespace
+
+TEST(Metrics, EnvironmentVariableExport)
+{
+   FileRaii fileGuard("test_environment_variable_export_export.root");
+
+   const std::string metricsFileName = "environment_variable_export_metrics.root";
+
+   gSystem->Setenv("ROOT_EXPERIMENTAL_EXPORT_RNTUPLE_METRICS", metricsFileName.c_str());
+
+   WriteDummyEntries(fileGuard.GetPath().c_str(), "rntuple_name_1");
+   WriteDummyEntries(fileGuard.GetPath().c_str(), "rntuple_name_1");
+   WriteDummyEntries(fileGuard.GetPath().c_str(), "rntuple_name_2");
+
+   gSystem->Unsetenv("ROOT_EXPERIMENTAL_EXPORT_RNTUPLE_METRICS");
+
+   std::stringstream printedMetricsStream;
+   ReadMetrics(metricsFileName, printedMetricsStream);
+
+   const std::string printedMetricsString = std::move(printedMetricsStream).str();
+   const std::string expected = R"(rntuple_name_1
+
+        RNTupleWriter_RPageSinkBuf_ParallelZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_timeWallZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_timeWallCriticalSection (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_timeCpuZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_timeCpuCriticalSection (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_nPageCommitted (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_szWritePayload (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_szZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_timeWallWrite (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_timeWallZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_timeCpuWrite (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_timeCpuZip (std::int64_t)
+
+rntuple_name_2
+
+        RNTupleWriter_RPageSinkBuf_ParallelZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_timeWallZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_timeWallCriticalSection (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_timeCpuZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_timeCpuCriticalSection (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_nPageCommitted (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_szWritePayload (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_szZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_timeWallWrite (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_timeWallZip (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_timeCpuWrite (std::int64_t)
+        RNTupleWriter_RPageSinkBuf_RPageSinkFile_timeCpuZip (std::int64_t)
+
+)";
+
+   EXPECT_EQ(printedMetricsString, expected);
 }
