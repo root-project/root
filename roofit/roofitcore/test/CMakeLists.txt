@@ -25,7 +25,6 @@ ROOT_ADD_GTEST(testRooFitCore
     testGenericPdf.cxx
     testGlobalObservables.cxx
     testRooAbsCollection.cxx
-    testRooBinSamplingPdf.cxx
     testRooCacheManager.cxx
     testRooCategory.cxx
     testRooCollectionProxy.cxx
@@ -58,6 +57,7 @@ ROOT_ADD_GTEST(testRooFitCore
     ${CMAKE_CURRENT_SOURCE_DIR}/data/rf502_workspace_v6.14.root
 )
 
+ROOT_ADD_GTEST(testRooBinSamplingPdf testRooBinSamplingPdf.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooAddPdf testRooAddPdf.cxx LIBRARIES RooFitCore RooFit RooStats)
 ROOT_ADD_GTEST(testRooAbsPdf testRooAbsPdf.cxx LIBRARIES RooFitCore RooFit)
 
