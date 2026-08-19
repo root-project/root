@@ -1,6 +1,7 @@
 // Author: Jonas Rembser, CERN  01/2025
 
 #include "RooDataSet.h"
+#include "RooFitResult.h"
 #include "RooMultiVarGaussian.h"
 #include "RooRealVar.h"
 #include "RooWorkspace.h"
@@ -9,6 +10,7 @@
 #include "RooStats/ModelConfig.h"
 
 #include "Math/ProbFuncMathCore.h"
+#include "ROOT/TestSupport.hxx"
 
 #include "gtest/gtest.h"
 
@@ -146,4 +148,84 @@ TEST(AsymptoticCalculator, CountingAsimovDataSetFloatingParams)
    // silently set the observable to the value of the sigma parameter.
    ws.var("mean")->setConstant(true);
    checkAsimov("gauss1", 20.0);
+}
+
+// Check that the fit results of the fits performed in Initialize() and
+// GetHypoTest() are stored and can be accessed by the user (JIRA ROOT-10066).
+TEST(AsymptoticCalculator, StoredFitResults)
+{
+   using namespace RooStats;
+
+   // On/off Poisson counting model: signal region with s + b expected events,
+   // control region constraining the background via tau * b.
+   RooWorkspace ws;
+   ws.factory("Poisson::px(x[150, 0, 500], sum::splusb(s[0, 0, 100], b[100, 0, 300]))");
+   ws.factory("Poisson::py(y[100, 0, 500], prod::taub(tau[1.0], b))");
+   ws.factory("PROD::model(px, py)");
+
+   RooRealVar &s = *ws.var("s");
+   RooArgSet obs{*ws.var("x"), *ws.var("y")};
+
+   RooDataSet data{"data", "data", obs};
+   data.add(obs);
+
+   ModelConfig sbModel{"sbModel", &ws};
+   sbModel.SetPdf(*ws.pdf("model"));
+   sbModel.SetObservables(obs);
+   sbModel.SetParametersOfInterest(RooArgSet{s});
+   sbModel.SetNuisanceParameters(RooArgSet{*ws.var("b")});
+   s.setVal(50.0);
+   sbModel.SetSnapshot(RooArgSet{s});
+
+   std::unique_ptr<ModelConfig> bModel{static_cast<ModelConfig *>(sbModel.Clone("bModel"))};
+   s.setVal(0.0);
+   bModel->SetSnapshot(RooArgSet{s});
+
+   // Some of the fits start at parameter values that already correspond to the
+   // minimum, in which case Minuit2 emits a harmless line-search warning.
+   ROOT::TestSupport::CheckDiagsRAII checkDiag;
+   checkDiag.optionalDiag(kWarning, "Minuit2", "VariableMetricBuilder No improvement in line search", false);
+
+   AsymptoticCalculator calc{data, *bModel, sbModel};
+   calc.SetOneSided(true);
+
+   // Before running the hypothesis test, no fit results are available.
+   EXPECT_EQ(calc.GetFitResultCondObs(), nullptr);
+   EXPECT_EQ(calc.GetFitResultCondAsimov(), nullptr);
+
+   std::unique_ptr<HypoTestResult> result{calc.GetHypoTest()};
+   ASSERT_NE(result, nullptr);
+
+   const RooFitResult *uncondObs = calc.GetFitResultUncondObs();
+   const RooFitResult *condObs = calc.GetFitResultCondObs();
+   const RooFitResult *uncondAsimov = calc.GetFitResultUncondAsimov();
+   const RooFitResult *condAsimov = calc.GetFitResultCondAsimov();
+
+   ASSERT_NE(uncondObs, nullptr);
+   ASSERT_NE(condObs, nullptr);
+   ASSERT_NE(uncondAsimov, nullptr);
+   ASSERT_NE(condAsimov, nullptr);
+
+   EXPECT_EQ(uncondObs->status(), 0);
+   EXPECT_EQ(condObs->status(), 0);
+   EXPECT_EQ(uncondAsimov->status(), 0);
+   EXPECT_EQ(condAsimov->status(), 0);
+
+   // The best-fit POI value from the unconditional fit result must be
+   // consistent with the one stored by the calculator.
+   auto *sFitUncond = static_cast<RooRealVar *>(uncondObs->floatParsFinal().find("s"));
+   ASSERT_NE(sFitUncond, nullptr);
+   EXPECT_DOUBLE_EQ(sFitUncond->getVal(), calc.GetMuHat()->getVal());
+
+   // In the conditional fits the POI is fixed to the tested value from the
+   // null-model snapshot, so it appears in the constant parameter list.
+   auto *sFitCond = static_cast<RooRealVar *>(condObs->constPars().find("s"));
+   ASSERT_NE(sFitCond, nullptr);
+   EXPECT_DOUBLE_EQ(sFitCond->getVal(), 50.0);
+
+   // The profile likelihood ratio test statistic reconstructed from the stored
+   // fit results must be non-negative, up to the same numerical tolerance that
+   // the calculator itself uses for qmu.
+   EXPECT_GE(condObs->minNll() - uncondObs->minNll(), -1.e-3);
+   EXPECT_GE(condAsimov->minNll() - uncondAsimov->minNll(), -1.e-3);
 }

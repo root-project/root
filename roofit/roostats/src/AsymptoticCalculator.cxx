@@ -35,8 +35,18 @@ If more than one POI exists, only the first one is used.
 The calculator can generate Asimov datasets from two kinds of PDFs:
 - "Counting" distributions: RooPoisson, RooGaussian, or products of RooPoissons.
 - Extended, *i.e.* number of events can be read off from extended likelihood term.
-*/
 
+The fits performed by the calculator can be steered with the global default
+minimizer options, *e.g.* via ROOT::Math::MinimizerOptions::SetDefaultStrategy()
+and ROOT::Math::MinimizerOptions::SetDefaultTolerance() (the tolerance is
+clamped to a minimum value of 1). The RooFitResult objects of the fits are
+retrievable after calling GetHypoTest() via GetFitResultUncondObs(),
+GetFitResultCondObs(), GetFitResultUncondAsimov() and GetFitResultCondAsimov(),
+so quantities like the minimizer status or the EDM at the minimum can be
+inspected, for example to cross-check a fit that did not converge. Note that
+when the calculator is driven by the HypoTestInverter, the stored conditional
+fit results correspond to the last scanned point.
+*/
 
 #include "RooStats/AsymptoticCalculator.h"
 #include "RooStats/ModelConfig.h"
@@ -84,7 +94,8 @@ int &fgPrintLevel()
 }
 
 // Forward declaration.
-double EvaluateNLL(RooStats::ModelConfig const &modelConfig, RooAbsData &data, const RooArgSet *poiSet = nullptr);
+double EvaluateNLL(RooStats::ModelConfig const &modelConfig, RooAbsData &data, const RooArgSet *poiSet = nullptr,
+                   std::unique_ptr<RooFitResult> *fitResult = nullptr);
 
 } // namespace
 
@@ -196,11 +207,19 @@ bool AsymptoticCalculator::Initialize() const {
    fBestFitPoi.removeAll();
    fBestFitParams.removeAll();
    fAsimovGlobObs.removeAll();
+   fFitResultUncondObs.reset();
+   fFitResultCondObs.reset();
+   fFitResultUncondAsimov.reset();
+   fFitResultCondAsimov.reset();
 
    // evaluate the unconditional nll for the full model on the  observed data
    if (verbose >= 0)
       oocoutP(nullptr,Eval) << "AsymptoticCalculator::Initialize - Find  best unconditional NLL on observed data" << std::endl;
-   fNLLObs = EvaluateNLL(*GetNullModel(), data);
+   fNLLObs = EvaluateNLL(*GetNullModel(), data, nullptr, &fFitResultUncondObs);
+   if (fFitResultUncondObs) {
+      fFitResultUncondObs->SetName("fitResultUncondObs");
+      fFitResultUncondObs->SetTitle("Unconditional fit to observed data");
+   }
    // fill also snapshot of best poi
    poi->snapshot(fBestFitPoi);
    RooRealVar * muBest = dynamic_cast<RooRealVar*>(fBestFitPoi.first());
@@ -283,7 +302,11 @@ bool AsymptoticCalculator::Initialize() const {
          << muAlt->GetName() << " ) = " << muAlt->getVal() << std::endl;
    }
 
-   fNLLAsimov =  EvaluateNLL(*GetNullModel(), *fAsimovData, &poiAlt );
+   fNLLAsimov = EvaluateNLL(*GetNullModel(), *fAsimovData, &poiAlt, &fFitResultUncondAsimov);
+   if (fFitResultUncondAsimov) {
+      fFitResultUncondAsimov->SetName("fitResultUncondAsimov");
+      fFitResultUncondAsimov->SetTitle("Fit to Asimov data with POI fixed to the alt-model snapshot");
+   }
    // for unconditional fit
    //fNLLAsimov =  EvaluateNLL( *nullPdf, *fAsimovData);
    //poi->Print("v");
@@ -300,9 +323,13 @@ bool AsymptoticCalculator::Initialize() const {
 
 namespace {
 
-double EvaluateNLL(RooStats::ModelConfig const& modelConfig, RooAbsData& data, const RooArgSet *poiSet)
+double EvaluateNLL(RooStats::ModelConfig const &modelConfig, RooAbsData &data, const RooArgSet *poiSet,
+                   std::unique_ptr<RooFitResult> *fitResult)
 {
     int verbose = fgPrintLevel();
+
+    if (fitResult)
+       fitResult->reset();
 
     RooAbsPdf &pdf = *modelConfig.GetPdf();
 
@@ -415,13 +442,12 @@ double EvaluateNLL(RooStats::ModelConfig const& modelConfig, RooAbsData& data, c
           }
        }
 
-       std::unique_ptr<RooFitResult> result;
+       // save the fit result also in case of failure, so that the status of a
+       // non-converged fit can be inspected by the user
+       std::unique_ptr<RooFitResult> result{minim.save()};
 
        // ignore errors in Hesse or in Improve and also when matrix was made pos def (status returned = 1)
-       if (status >= 0) {
-          result = std::unique_ptr<RooFitResult>{minim.save()};
-       }
-       if (result){
+       if (status >= 0 && result) {
           if (RooStats::NLLOffsetMode() != "initial") {
              val = result->minNll();
           } else {
@@ -431,11 +457,13 @@ double EvaluateNLL(RooStats::ModelConfig const& modelConfig, RooAbsData& data, c
              if (!previous)  RooAbsReal::setHideOffset(false) ;
           }
 
-       }
-       else {
+       } else {
           oocoutE(nullptr,Fitting) << "FIT FAILED !- return a NaN NLL " << std::endl;
           val =  TMath::QuietNaN();
        }
+
+       if (fitResult)
+          *fitResult = std::move(result);
 
        minim.optimizeConst(false);
     }
@@ -528,7 +556,12 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    }
 
    // evaluate the conditional NLL on the observed data for the snapshot value
-   double condNLL = EvaluateNLL(*GetNullModel(), const_cast<RooAbsData&>(*GetData()), &poiTest);
+   double condNLL = EvaluateNLL(*GetNullModel(), const_cast<RooAbsData &>(*GetData()), &poiTest, &fFitResultCondObs);
+   if (fFitResultCondObs) {
+      fFitResultCondObs->SetName("fitResultCondObs");
+      fFitResultCondObs->SetTitle(
+         TString::Format("Conditional fit to observed data for %s = %g", muTest->GetName(), muTest->getVal()));
+   }
 
    double qmu = 2.*(condNLL - fNLLObs);
 
@@ -550,7 +583,8 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
             << "AsymptoticCalculator:  unconditional fit failed before - retry to do it now " << std::endl;
       }
 
-      double nll = EvaluateNLL(*GetNullModel(), const_cast<RooAbsData&>(*GetData()));
+      std::unique_ptr<RooFitResult> refitResult;
+      double nll = EvaluateNLL(*GetNullModel(), const_cast<RooAbsData &>(*GetData()), nullptr, &refitResult);
 
       if (nll < fNLLObs || (TMath::IsNaN(fNLLObs) && !TMath::IsNaN(nll) ) ) {
          oocoutW(nullptr,Minimization) << "AsymptoticCalculator:  Found a better unconditional minimum "
@@ -558,6 +592,11 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
          // update values
          fNLLObs = nll;
+         if (refitResult) {
+            fFitResultUncondObs = std::move(refitResult);
+            fFitResultUncondObs->SetName("fitResultUncondObs");
+            fFitResultUncondObs->SetTitle("Unconditional fit to observed data");
+         }
          const RooArgSet * poi = GetNullModel()->GetParametersOfInterest();
          assert(poi);
          fBestFitPoi.removeAll();
@@ -612,8 +651,12 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
    if (verbose > 0) oocoutP(nullptr,Eval) << "AsymptoticCalculator::GetHypoTest -- Find  best conditional NLL on ASIMOV data set .... " << std::endl;
 
-   double condNLL_A = EvaluateNLL(*GetNullModel(), *fAsimovData, &poiTest);
-
+   double condNLL_A = EvaluateNLL(*GetNullModel(), *fAsimovData, &poiTest, &fFitResultCondAsimov);
+   if (fFitResultCondAsimov) {
+      fFitResultCondAsimov->SetName("fitResultCondAsimov");
+      fFitResultCondAsimov->SetTitle(
+         TString::Format("Conditional fit to Asimov data for %s = %g", muTest->GetName(), muTest->getVal()));
+   }
 
    double qmu_A = 2.*(condNLL_A - fNLLAsimov  );
 
@@ -632,7 +675,8 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
            << std::endl;
       }
 
-      double nll = EvaluateNLL(*GetNullModel(), *fAsimovData);
+      std::unique_ptr<RooFitResult> refitResult;
+      double nll = EvaluateNLL(*GetNullModel(), *fAsimovData, nullptr, &refitResult);
 
       if (nll < fNLLAsimov || (TMath::IsNaN(fNLLAsimov) && !TMath::IsNaN(nll) )) {
          oocoutW(nullptr,Minimization) << "AsymptoticCalculator:  Found a better unconditional minimum for Asimov data set"
@@ -640,6 +684,11 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
          // update values
          fNLLAsimov = nll;
+         if (refitResult) {
+            fFitResultUncondAsimov = std::move(refitResult);
+            fFitResultUncondAsimov->SetName("fitResultUncondAsimov");
+            fFitResultUncondAsimov->SetTitle("Unconditional fit to Asimov data");
+         }
 
          oocoutW(nullptr,Minimization) << "AsymptoticCalculator:  New minimum  found for                       "
                                            << "    NLL = " << fNLLAsimov << std::endl;
