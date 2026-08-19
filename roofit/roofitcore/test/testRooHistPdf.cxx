@@ -12,6 +12,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cmath>
 #include <memory>
 
@@ -37,6 +38,54 @@ TEST(RooHistPdf, AnalyticIntWithRooLinearVar)
 
    EXPECT_DOUBLE_EQ(integ.getVal(), 90.);
    EXPECT_EQ(integ.anaIntVars().size(), 1);
+}
+
+// A RooHistPdf clamps negative bin contents to zero when evaluating, but the
+// normalization used to be based on the raw sum of weights including the
+// negative ones, so the pdf did not integrate to unity and extended fits were
+// silently biased (ROOT-10825). Now, negative bins are zeroed in an
+// internally-owned clone of the histogram at construction time, making the
+// shape and the normalization consistent.
+TEST(RooHistPdf, NegativeBinsAreClampedConsistently)
+{
+   RooRealVar x{"x", "x", 0, 4};
+   x.setBins(4);
+
+   RooDataHist dataHist{"dataHist", "dataHist", x};
+   double const contents[4] = {4., 3., -2., 5.};
+   double const sumClamped = 12.;
+   for (int i = 0; i < x.numBins(); ++i) {
+      dataHist.set(i, contents[i], 1.0);
+   }
+
+   RooHelpers::HijackMessageStream hijack{RooFit::WARNING, RooFit::InputArguments, "pdf"};
+   RooHistPdf pdf{"pdf", "pdf", x, dataHist};
+   EXPECT_FALSE(hijack.str().empty()) << "constructing from a histogram with negative bins should warn";
+
+   // The negative bin is dropped from both the pdf value and the
+   // normalization, so the pdf values are max(w, 0) / sum(max(w, 0)) and the
+   // pdf integrates to unity.
+   RooArgSet normSet{x};
+   double integral = 0.;
+   for (int i = 0; i < x.numBins(); ++i) {
+      x.setBin(i);
+      EXPECT_DOUBLE_EQ(pdf.getVal(normSet), std::max(contents[i], 0.) / sumClamped) << "wrong value in bin " << i;
+      integral += pdf.getVal(normSet) * x.getBinWidth(i);
+   }
+   EXPECT_DOUBLE_EQ(integral, 1.);
+
+   // The input histogram must not be modified.
+   for (int i = 0; i < x.numBins(); ++i) {
+      EXPECT_DOUBLE_EQ(dataHist.weight(i), contents[i]) << "input histogram was modified in bin " << i;
+   }
+
+   // Same behavior for the constructor where the RooHistPdf takes ownership
+   // of the input histogram.
+   RooHistPdf pdf2{"pdf2", "pdf2", x, std::make_unique<RooDataHist>(dataHist, "dataHist2")};
+   for (int i = 0; i < x.numBins(); ++i) {
+      x.setBin(i);
+      EXPECT_DOUBLE_EQ(pdf2.getVal(normSet), std::max(contents[i], 0.) / sumClamped) << "wrong value in bin " << i;
+   }
 }
 
 namespace {

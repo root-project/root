@@ -145,8 +145,15 @@ private:
 
   inline void initializeOwnedDataHist(std::unique_ptr<RooDataHist> &&dataHist)
   {
-     _ownedDataHist = std::move(dataHist);
+     // The constructor may already have taken ownership of a sanitized clone
+     // of the input histogram (see clampNegativeBins()). In that case, the
+     // clone stays and the original histogram can be disposed of.
+     if (!_ownedDataHist) {
+        _ownedDataHist = std::move(dataHist);
+     }
   }
+
+  void clampNegativeBins();
 
   ClassDefOverride(RooHistPdf,4) // Histogram based PDF
 };
