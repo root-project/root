@@ -109,3 +109,41 @@ TEST(AsymptoticCalculator, SignedTestStatistic)
    std::unique_ptr<HypoTestResult> resRightSideCapped{calc.GetHypoTest()};
    EXPECT_NEAR(resRightSideCapped->NullPValue(), resRightSide->NullPValue(), 1e-6);
 }
+
+// Check that counting Asimov datasets can be generated no matter which
+// parameters are floating and even if the mean or width of a Gaussian are
+// derived quantities (covers JIRA ROOT-10096).
+TEST(AsymptoticCalculator, CountingAsimovDataSetFloatingParams)
+{
+   RooWorkspace ws;
+   ws.factory("obs[10.0, 0.0, 1000.0]");
+   ws.factory("Poisson::poisson(obs, mean[20.0, 0.0, 1000.0])");
+   ws.factory("Gaussian::gauss1(obs, mean, sigma[3.0, 1.0, 10.0])");
+   ws.factory("expr::sqrt_mean('sqrt(@0)', mean)");
+   ws.factory("Gaussian::gauss2(obs, mean, sqrt_mean)");
+   ws.factory("expr::mean2('2 * @0', mean)");
+   ws.factory("expr::sqrt_mean2('sqrt(@0)', mean2)");
+   ws.factory("Gaussian::gauss3(obs, mean2, sqrt_mean2)");
+
+   RooArgSet observables{*ws.var("obs")};
+
+   auto checkAsimov = [&](const char *pdfName, double expectedObsVal) {
+      std::unique_ptr<RooAbsData> data{
+         RooStats::AsymptoticCalculator::GenerateAsimovData(*ws.pdf(pdfName), observables)};
+      ASSERT_NE(data, nullptr) << pdfName;
+      ASSERT_EQ(data->numEntries(), 1) << pdfName;
+      EXPECT_DOUBLE_EQ(data->get(0)->getRealValue("obs"), expectedObsVal) << pdfName;
+   };
+
+   checkAsimov("poisson", 20.0);
+   // Both mean and sigma floating: used to fail with "Has two non-const arguments".
+   checkAsimov("gauss1", 20.0);
+   // Width derived from the mean: also used to fail, with no workaround for gauss3.
+   checkAsimov("gauss2", 20.0);
+   checkAsimov("gauss3", 40.0);
+
+   // With a constant mean and a floating sigma, the old server-based heuristic
+   // silently set the observable to the value of the sigma parameter.
+   ws.var("mean")->setConstant(true);
+   checkAsimov("gauss1", 20.0);
+}
