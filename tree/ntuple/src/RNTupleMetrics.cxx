@@ -93,12 +93,10 @@ void ROOT::Experimental::Detail::RNTupleMetrics::ObserveMetrics(RNTupleMetrics &
    fObservedMetrics.push_back(&observee);
 }
 
-const std::string &ROOT::Experimental::Detail::RNTupleMetrics::GetMetricsExportPath()
+std::string ROOT::Experimental::Detail::RNTupleMetrics::GetMetricsExportPath()
 {
-   static const std::string path = []() -> std::string {
-      if (const char *env = gSystem->Getenv("ROOT_EXPERIMENTAL_EXPORT_RNTUPLE_METRICS"); env && *env)
-         return env;
-      return "";
-   }();
-   return path;
+   if (const char *env = gSystem->Getenv("ROOT_EXPERIMENTAL_EXPORT_RNTUPLE_METRICS"); env && *env)
+      return env;
+
+   return {};
 }
