@@ -968,6 +968,9 @@ END:
 template<typename T>
 void TPostScript::DrawPolyMarkerShape(Int_t n, T *x, T *y)
 {
+   if (GetMarkerSize() <= 0)
+      return;
+
    auto linestylesav = GetLineStyle();
    auto linewidthsav = GetLineWidth();
 
@@ -979,70 +982,82 @@ void TPostScript::DrawPolyMarkerShape(Int_t n, T *x, T *y)
    std::vector<TPoint> points;
 
    auto shape = GetMarkerShape(markerSize, points, scale, kUsePSWidthScale);
+   auto markerLineWidth = GetMarkerLineWidth(GetMarkerStyle());
 
-   PrintStr("/custom_marker { gsave translate newpath");
-   switch(shape) {
-      case TAttMarker::kShapeDot:
-         markerSize = TMath::Max(4, markerSize*4); // circe diameter
-         // no break, handle as filled circle
-      case TAttMarker::kShapeFilledCircle:
-      case TAttMarker::kShapeCircle:
-         PrintStr(" 0 0");
-         WriteInteger(markerSize/2);
-         PrintStr(" 0 360 arc");
-         if (shape != TAttMarker::kShapeCircle)
-            PrintStr(" fill");
-         else
-            PrintStr(" stroke");
-         break;
-      case TAttMarker::kShapePolyLine:
-      case TAttMarker::kShapeFilledArea:
-         for (std::size_t i = 0; i < points.size(); ++i) {
-            WriteInteger(points[i].fX);
-            WriteInteger(-points[i].fY);
-            PrintStr(i == 0 ? " moveto" : " lineto");
-         }
-         if (points.front() == points.back())
-            PrintStr(" closepath");
-         if (shape == TAttMarker::kShapeFilledArea)
-            PrintStr(" fill");
-         else
-            PrintStr(" stroke");
-         break;
-      case TAttMarker::kShapeSegments:
-         for (std::size_t i = 0; i < points.size(); ++i) {
-            WriteInteger(points[i].fX);
-            WriteInteger(-points[i].fY);
-            PrintStr(i % 2 == 0 ? " moveto" : " lineto stroke");
-         }
-         break;
-      case TAttMarker::kShapeTriangles:
-         for (std::size_t i = 0; i < points.size(); ++i) {
-            WriteInteger(points[i].fX);
-            WriteInteger(-points[i].fY);
-            PrintStr(i % 3 == 0 ? " moveto" : " lineto");
-            if (i % 3 == 2)
-               PrintStr(" closepath fill");
-         }
-         break;
+   Int_t szindx = (Int_t) (GetMarkerSize()*100.);
+
+   TString name = szindx == 100 ? TString::Format("m%d", (Int_t) GetMarkerStyle())
+                                : TString::Format("m%d_sz%d", (Int_t) GetMarkerStyle(), szindx);
+
+   if (!fMarkers[name.Data()]) {
+      // create marker definition only once
+      PrintStr("@/");
+      PrintStr(name.Data());
+      PrintStr(" { gsave translate newpath");
+      switch(shape) {
+         case TAttMarker::kShapeDot:
+            markerSize = TMath::Max(4, markerSize*4); // circe diameter
+            // no break, handle as filled circle
+         case TAttMarker::kShapeFilledCircle:
+         case TAttMarker::kShapeCircle:
+            PrintStr(" 0 0");
+            WriteInteger(markerSize/2);
+            PrintStr(" 0 360 arc");
+            if (shape != TAttMarker::kShapeCircle)
+               PrintStr(" fill");
+            else
+               PrintStr(" stroke");
+            break;
+         case TAttMarker::kShapePolyLine:
+         case TAttMarker::kShapeFilledArea:
+            for (std::size_t i = 0; i < points.size(); ++i) {
+               WriteInteger(points[i].fX);
+               WriteInteger(-points[i].fY);
+               PrintStr(i == 0 ? " moveto" : " lineto");
+            }
+            if (points.front() == points.back())
+               PrintStr(" closepath");
+            if (shape == TAttMarker::kShapeFilledArea)
+               PrintStr(" fill");
+            else
+               PrintStr(" stroke");
+            break;
+         case TAttMarker::kShapeSegments:
+            for (std::size_t i = 0; i < points.size(); ++i) {
+               WriteInteger(points[i].fX);
+               WriteInteger(-points[i].fY);
+               PrintStr(i % 2 == 0 ? " moveto" : " lineto stroke");
+            }
+            break;
+         case TAttMarker::kShapeTriangles:
+            for (std::size_t i = 0; i < points.size(); ++i) {
+               WriteInteger(points[i].fX);
+               WriteInteger(-points[i].fY);
+               PrintStr(i % 3 == 0 ? " moveto" : " lineto");
+               if (i % 3 == 2)
+                  PrintStr(" closepath fill");
+            }
+            break;
+      }
+      PrintStr(" grestore } def@");
+      fMarkers[name.Data()] = true;
    }
 
-   PrintStr(" grestore } def@");
-
    SetStyle(1);
-   SetWidth(TMath::Max(1, GetMarkerLineWidth(GetMarkerStyle())));
+   SetWidth((markerLineWidth > 1) ? markerLineWidth : 1);
    SetColor(GetMarkerColor());
 
    for (Int_t k = 0; k < n; ++k) {
       WriteInteger(XtoPS(x[k]));
       WriteInteger(YtoPS(y[k]));
-      PrintStr(" custom_marker@");
+      PrintStr(" ");
+      PrintStr(name.Data());
    }
+   PrintStr("@");
 
    SetLineStyle(linestylesav);
    SetLineWidth(linewidthsav);
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1619,13 +1634,16 @@ void TPostScript::Initialize()
    PrintStr(t.AsString());
    PrintStr("@");
 
-   if ( fMode == 1 || fMode == 4) PrintStr("%%Orientation: Portrait@");
-   if ( fMode == 2 || fMode == 5) PrintStr("%%Orientation: Landscape@");
+   if (fMode == 1 || fMode == 4)
+      PrintStr("%%Orientation: Portrait@");
+   if (fMode == 2 || fMode == 5)
+      PrintStr("%%Orientation: Landscape@");
 
    PrintStr("%%EndComments@");
    PrintStr("%%BeginProlog@");
 
-   if( fMode == 3)PrintStr("80 dict begin@");
+   if(fMode == 3)
+      PrintStr("80 dict begin@");
 
    // Initialisation of PostScript procedures
    PrintStr("/s {stroke} def /l {lineto} def /m {moveto} def /t {translate} def@");
@@ -1639,9 +1657,9 @@ void TPostScript::Initialize()
    PrintStr("/cl {closepath} def /sf {scalefont setfont} def /lw {setlinewidth} def@");
    PrintStr("/box {m dup 0 exch d exch 0 d 0 exch neg d cl} def@");
    PrintStr("/NC{systemdict begin initclip end}def/C{NC box clip newpath}def@");
-   PrintStr("/bl {box s} def /bf {gsave box gsave f grestore 1 lw [] 0 sd s grestore} def /Y { 0 exch d} def /X { 0 d} def @");
+   PrintStr("/bl {box s} def /bf {gsave box gsave f grestore 1 lw [] 0 sd s grestore} def /Y { 0 exch d} def /X { 0 d} def@");
    PrintStr("/K {{pop pop 0 moveto} exch kshow} bind def@");
-   PrintStr("/ita {/ang 15 def gsave [1 0 ang dup sin exch cos div 1 0 0] concat} def @");
+   PrintStr("/ita {/ang 15 def gsave [1 0 ang dup sin exch cos div 1 0 0] concat} def@");
 
    FontEncode();
 

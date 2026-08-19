@@ -15,6 +15,9 @@
 
 #include "TVirtualPS.h"
 
+#include <map>
+#include <string>
+
 class TPoints;
 
 class TPostScript : public TVirtualPS {
@@ -78,6 +81,7 @@ protected:
    TString fFileName;             ///< PS file name
    Bool_t  fFontEmbed = kFALSE;   ///< True is FontEmbed has been called
    Bool_t  fMustEmbed[29];        ///< flag to embed font
+   std::map<std::string,bool> fMarkers; ///<! array of already defined markers
 
    static Int_t fgLineJoin;       ///< Appearance of joining lines
    static Int_t fgLineCap;        ///< Appearance of line caps
