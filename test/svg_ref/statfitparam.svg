@@ -14,10 +14,7 @@ statfitparam.svg
 <path d="M24,149l 1.000, -1.000h 140v -127l 1.000, -1.000v 129h -142z" fill="#a9a9a9"/>
 <rect x="24" y="19" width="142" height="129" fill="none" stroke="black"/>
 <path d="M59,143v -59M59,84v -59M24,84h 36M59,84h 36M131,91v -6.5M131,84v -6.5M95,84h 36M131,84h 36" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<line x1="58" y1="84" x2="59" y2="84"/>
-<line x1="130" y1="84" x2="131" y2="84"/>
-</g>
+<path stroke="black" stroke-width="1" fill="none" d="M58,84h1 M130,84h1"/>
 <path d="M25,84h 70" fill="none" stroke="black" stroke-width="3.0"/>
 <path d="M94,84h 70" fill="none" stroke="black" stroke-width="3.0"/>
 <path d="M164,84h 1.4" fill="none" stroke="black" stroke-width="3.0"/>
@@ -143,10 +140,7 @@ statfitparam.svg
 <path d="M213,149l 1.000, -1.000h 140v -127l 1.000, -1.000v 129h -142z" fill="#a9a9a9"/>
 <rect x="213" y="19" width="142" height="129" fill="none" stroke="black"/>
 <path d="M248,147v -61M248,86v -61M213,86h 36M248,86h 36M319,87v -0.006M319,86v -0.006M284,86h 36M319,86h 36" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<line x1="247" y1="86" x2="248" y2="86"/>
-<line x1="318" y1="86" x2="319" y2="86"/>
-</g>
+<path stroke="black" stroke-width="1" fill="none" d="M247,86h1 M318,86h1"/>
 <path d="M214,86h 70" fill="none" stroke="black" stroke-width="3.0"/>
 <path d="M283,86h 70" fill="none" stroke="black" stroke-width="3.0"/>
 <path d="M353,86h 1.4" fill="none" stroke="black" stroke-width="3.0"/>
@@ -265,10 +259,7 @@ statfitparam.svg
 <path d="M402,149l 1.000, -1.000h 140v -127l 1.000, -1.000v 129h -142z" fill="#a9a9a9"/>
 <rect x="402" y="19" width="142" height="129" fill="none" stroke="black"/>
 <path d="M437,84v -0.006M437,84v -0.006M402,84h 36M437,84h 36M508,143v -59M508,84v -59M473,84h 36M508,84h 36" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<line x1="436" y1="84" x2="437" y2="84"/>
-<line x1="507" y1="84" x2="508" y2="84"/>
-</g>
+<path stroke="black" stroke-width="1" fill="none" d="M436,84h1 M507,84h1"/>
 <path d="M403,84h 70" fill="none" stroke="black" stroke-width="3.0"/>
 <path d="M472,84h 70" fill="none" stroke="black" stroke-width="3.0"/>
 <path d="M542,84h 1.4" fill="none" stroke="black" stroke-width="3.0"/>
@@ -399,10 +390,7 @@ statfitparam.svg
 <path d="M24,317l 1.000, -1.000h 140v -127l 1.000, -1.000v 129h -142z" fill="#a9a9a9"/>
 <rect x="24" y="188" width="142" height="129" fill="none" stroke="black"/>
 <path d="M59,311v -59M59,252v -59M24,252h 36M59,252h 36M131,272v -20M131,252v -20M95,252h 36M131,252h 36" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<line x1="58" y1="252" x2="59" y2="252"/>
-<line x1="130" y1="252" x2="131" y2="252"/>
-</g>
+<path stroke="black" stroke-width="1" fill="none" d="M58,252h1 M130,252h1"/>
 <path d="M25,252h 70" fill="none" stroke="black" stroke-width="3.0"/>
 <path d="M94,252h 70" fill="none" stroke="black" stroke-width="3.0"/>
 <path d="M164,252h 1.4" fill="none" stroke="black" stroke-width="3.0"/>
@@ -513,10 +501,7 @@ statfitparam.svg
 <path d="M213,317l 1.000, -1.000h 140v -127l 1.000, -1.000v 129h -142z" fill="#a9a9a9"/>
 <rect x="213" y="188" width="142" height="129" fill="none" stroke="black"/>
 <path d="M248,311v -59M248,252v -59M213,252h 36M248,252h 36M319,259v -6.5M319,252v -6.5M284,252h 36M319,252h 36" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<line x1="247" y1="252" x2="248" y2="252"/>
-<line x1="318" y1="252" x2="319" y2="252"/>
-</g>
+<path stroke="black" stroke-width="1" fill="none" d="M247,252h1 M318,252h1"/>
 <path d="M214,252h 70" fill="none" stroke="black" stroke-width="3.0"/>
 <path d="M283,252h 70" fill="none" stroke="black" stroke-width="3.0"/>
 <path d="M353,252h 1.4" fill="none" stroke="black" stroke-width="3.0"/>

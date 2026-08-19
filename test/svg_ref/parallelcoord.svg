@@ -26757,8 +26757,8 @@ parallelcoord.svg
 <path d="M99,385v -1.8" fill="none" stroke="black" stroke-dasharray=" 5.0, 5.0"/>
 <rect x="82" y="385" width="33" height="0.611" fill="none" stroke="black"/>
 <path d="M82,386h 33" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="99" cy="386" r="2.8"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="99" cy="386" r="3"/>
 </g>
 <text xml:space="preserve" x="95" y="467" fill="black" font-size="6.8" font-family="Helvetica" font-weight="bold">px
 </text>
@@ -26968,8 +26968,8 @@ parallelcoord.svg
 <path d="M191,385v -1.6" fill="none" stroke="black" stroke-dasharray=" 5.0, 5.0"/>
 <rect x="175" y="385" width="33" height="0.613" fill="none" stroke="black"/>
 <path d="M175,386h 33" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="191" cy="386" r="2.8"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="191" cy="386" r="3"/>
 </g>
 <text xml:space="preserve" x="187" y="467" fill="black" font-size="6.8" font-family="Helvetica" font-weight="bold">py
 </text>
@@ -27179,8 +27179,8 @@ parallelcoord.svg
 <path d="M284,384v -10" fill="none" stroke="black" stroke-dasharray=" 5.0, 5.0"/>
 <rect x="267" y="384" width="33" height="1.0" fill="none" stroke="black"/>
 <path d="M267,385h 33" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="284" cy="385" r="2.8"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="284" cy="385" r="3"/>
 </g>
 <text xml:space="preserve" x="280" y="467" fill="black" font-size="6.8" font-family="Helvetica" font-weight="bold">pz
 </text>
@@ -27390,8 +27390,8 @@ parallelcoord.svg
 <path d="M377,385v -0.114" fill="none" stroke="black" stroke-dasharray=" 5.0, 5.0"/>
 <rect x="360" y="385" width="33" height="0.224" fill="none" stroke="black"/>
 <path d="M360,385h 33" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="377" cy="385" r="2.8"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="377" cy="385" r="3"/>
 </g>
 <text xml:space="preserve" x="365" y="467" fill="black" font-size="6.8" font-family="Helvetica" font-weight="bold">random
 </text>
@@ -27601,8 +27601,8 @@ parallelcoord.svg
 <path d="M469,385v -118" fill="none" stroke="black" stroke-dasharray=" 5.0, 5.0"/>
 <rect x="452" y="385" width="33" height="0.433" fill="none" stroke="black"/>
 <path d="M452,386h 33" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="469" cy="386" r="2.8"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="469" cy="386" r="3"/>
 </g>
 <text xml:space="preserve" x="456" y="467" fill="black" font-size="6.8" font-family="Helvetica" font-weight="bold">px*py*pz
 </text>

@@ -116,29 +116,29 @@ tspline.svg
  -6.5" fill="none" stroke="#00ff00" stroke-width="3.0"/>
 <path d="M484,215l 4.1, -5.8" fill="none" stroke="#00ff00" stroke-width="3.0"/>
 <g fill="#0000ff">
-<circle cx="78" cy="200" r="4.3"/>
-<circle cx="118" cy="184" r="4.3"/>
-<circle cx="146" cy="272" r="4.3"/>
-<circle cx="170" cy="178" r="4.3"/>
-<circle cx="193" cy="103" r="4.3"/>
-<circle cx="214" cy="258" r="4.3"/>
-<circle cx="233" cy="330" r="4.3"/>
-<circle cx="252" cy="164" r="4.3"/>
-<circle cx="271" cy="56" r="4.3"/>
-<circle cx="289" cy="190" r="4.3"/>
-<circle cx="306" cy="345" r="4.3"/>
-<circle cx="323" cy="289" r="4.3"/>
-<circle cx="340" cy="120" r="4.3"/>
-<circle cx="356" cy="78" r="4.3"/>
-<circle cx="372" cy="198" r="4.3"/>
-<circle cx="387" cy="305" r="4.3"/>
-<circle cx="403" cy="276" r="4.3"/>
-<circle cx="418" cy="177" r="4.3"/>
-<circle cx="433" cy="135" r="4.3"/>
-<circle cx="447" cy="175" r="4.3"/>
-<circle cx="462" cy="224" r="4.3"/>
-<circle cx="476" cy="226" r="4.3"/>
-<circle cx="490" cy="207" r="4.3"/>
+<circle cx="78" cy="200" r="4"/>
+<circle cx="118" cy="184" r="4"/>
+<circle cx="146" cy="272" r="4"/>
+<circle cx="170" cy="178" r="4"/>
+<circle cx="193" cy="103" r="4"/>
+<circle cx="214" cy="258" r="4"/>
+<circle cx="233" cy="330" r="4"/>
+<circle cx="252" cy="164" r="4"/>
+<circle cx="271" cy="56" r="4"/>
+<circle cx="289" cy="190" r="4"/>
+<circle cx="306" cy="345" r="4"/>
+<circle cx="323" cy="289" r="4"/>
+<circle cx="340" cy="120" r="4"/>
+<circle cx="356" cy="78" r="4"/>
+<circle cx="372" cy="198" r="4"/>
+<circle cx="387" cy="305" r="4"/>
+<circle cx="403" cy="276" r="4"/>
+<circle cx="418" cy="177" r="4"/>
+<circle cx="433" cy="135" r="4"/>
+<circle cx="447" cy="175" r="4"/>
+<circle cx="462" cy="224" r="4"/>
+<circle cx="476" cy="226" r="4"/>
+<circle cx="490" cy="207" r="4"/>
 </g>
 <rect x="341" y="49" width="159" height="73" fill="white"/>
 <path d="M345,122v 2.8h 157v -72h -2.8v 69z" fill="black"/>
@@ -147,22 +147,18 @@ tspline.svg
 </text>
 <path d="M347,70h 28v -17h -28z" fill="none" stroke="#f2f2f2"/>
 <path d="M347,61h 28" fill="none" stroke="black" stroke-width="3.0"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<line x1="360" y1="61" x2="361" y2="61"/>
-</g>
+<path stroke="black" stroke-width="1" fill="none" d="M360,61h1"/>
 <text xml:space="preserve" x="380" y="91" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Spline5
 </text>
 <path d="M347,94h 28v -17h -28z" fill="none" stroke="white"/>
 <path d="M347,86h 28" fill="none" stroke="#ff0000" stroke-width="3.0"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<line x1="360" y1="86" x2="361" y2="86"/>
-</g>
+<path stroke="black" stroke-width="1" fill="none" d="M360,86h1"/>
 <text xml:space="preserve" x="380" y="115" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Spline3
 </text>
 <path d="M347,119h 28v -17h -28z" fill="none" stroke="white"/>
 <path d="M347,110h 28" fill="none" stroke="#00ff00" stroke-width="3.0"/>
 <g fill="#0000ff">
-<circle cx="361" cy="110" r="4.3"/>
+<circle cx="361" cy="110" r="4"/>
 </g>
 <rect x="6.2" y="2.0" width="147" height="23" fill="#f2f2f2"/>
 <path d="M4.7,4.2v 22h 147v -1.4h -145v -21z" fill="black"/>
