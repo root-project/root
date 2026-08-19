@@ -64,6 +64,13 @@ namespace RooStats {
       /// set the test statistics for one-sided discovery
       void SetOneSidedDiscovery(bool on) { fOneSidedDiscovery = on; }
 
+      /// use the signed (uncapped) profile likelihood test statistic.
+      /// When using a one-sided test statistic, the value is not set to zero when the best fit value of the
+      /// POI is beyond the tested value, but the sign of the test statistic is flipped instead
+      /// (see also ProfileLikelihoodTestStat::SetSigned).
+      /// It has no effect for the two-sided test statistics.
+      void SetSigned(bool on = true) { fSigned = on; }
+
       /// re-implementation of  setters since they are needed to re-initialize the calculator
       void SetNullModel(const ModelConfig &nullModel) override {
          HypoTestCalculatorGeneric::SetNullModel(nullModel);
@@ -98,6 +105,7 @@ namespace RooStats {
    private:
       bool fOneSided;                     ///< for one sided PL test statistic (upper limits)
       mutable bool fOneSidedDiscovery;    ///< for one sided PL test statistic (for discovery)
+      bool fSigned = false;               ///< use signed (uncapped) PL test statistic
       bool fNominalAsimov;                ///< make Asimov at nominal parameter values
       mutable bool fIsInitialized;        ///<! flag to check if calculator is initialized
       mutable int fUseQTilde;             ///< flag to indicate if using qtilde or not (-1 (default based on RooRealVar)), 0 false, 1 (true)
