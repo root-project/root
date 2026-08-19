@@ -1134,7 +1134,12 @@ if(webgui)
     add_subdirectory(builtins/openui5)
   endif()
   add_subdirectory(builtins/rendercore)
-  add_subdirectory(builtins/mathjax)
+  ROOT_CHECK_CONNECTION("builtin_mathjax=ON")
+  if(NO_CONNECTION)
+    message(WARNING "No internet connection, jsroot/webgui will not be able to use the optional mathjax engine for rendering")
+  else()
+    add_subdirectory(builtins/mathjax)
+  endif()
 endif()
 
 #------------------------------------------------------------------------------------
