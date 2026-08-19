@@ -295,22 +295,28 @@ private:
    std::vector<std::unique_ptr<RNTuplePerfCounter>> fCounters;
    std::vector<RNTupleMetrics *> fObservedMetrics;
    std::string fName;
+   std::string fNTupleName;
+   std::string fExportPath;
    bool fIsEnabled = false;
+   bool fHasAttemptedToExport = false;
 
    bool Contains(const std::string &name) const;
+   void CollectCounters(std::vector<std::pair<std::string, const RNTuplePerfCounter *>> &counters) const;
+   void ExportToRootFile();
 
 public:
-   explicit RNTupleMetrics(const std::string &name) : fName(name)
+   explicit RNTupleMetrics(const std::string &name) : RNTupleMetrics(name, "") {}
+   RNTupleMetrics(const std::string &name, const std::string &ntupleName)
+      : fName(name), fNTupleName(ntupleName), fExportPath(GetMetricsExportPath())
    {
-      // TODO: Use the value of `GetMetricsExportPath` to save the contents of the metrics in a `.root` file
-      if (!GetMetricsExportPath().empty())
+      if (!fExportPath.empty())
          Enable();
    }
    RNTupleMetrics(const RNTupleMetrics &other) = delete;
    RNTupleMetrics & operator=(const RNTupleMetrics &other) = delete;
    RNTupleMetrics(RNTupleMetrics &&other) = default;
    RNTupleMetrics & operator=(RNTupleMetrics &&other) = default;
-   ~RNTupleMetrics() = default;
+   ~RNTupleMetrics();
 
    // TODO(jblomer): return a reference
    template <typename CounterPtrT, class... Args>

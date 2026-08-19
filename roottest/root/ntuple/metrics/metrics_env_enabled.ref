@@ -1,3 +1,4 @@
 Processing test_rntuple_metrics_env.C...
 Metrics enabled: true
 nPageCommitted: 1
+Warning in <TFileMerger::MergeRecursive>: Merging RNTuples is experimental

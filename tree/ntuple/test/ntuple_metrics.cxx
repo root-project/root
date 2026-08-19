@@ -1,3 +1,6 @@
+#include "TEnv.h"
+#include "TKey.h"
+#include "TSystem.h"
 #include "ntuple_test.hxx"
 
 #include <cmath>
@@ -153,4 +156,101 @@ TEST(Metrics, IOMetrics)
       EXPECT_GE(szSkip->GetValueAsInt(), 0);
       EXPECT_GT(szFile->GetValueAsInt(), 0);
    }
+}
+
+namespace {
+
+void writeDummyEntries(std::string_view fileName, std::string_view rNTupleName)
+{
+   constexpr std::size_t kNEntries = 1000;
+   auto model = RNTupleModel::Create();
+   auto pt = model->MakeField<float>("float_field");
+
+   auto writer = RNTupleWriter::Recreate(std::move(model), rNTupleName, fileName);
+
+   for (std::size_t i = 0; i < kNEntries; ++i) {
+      *pt = static_cast<float>(i);
+      writer->Fill();
+   }
+   writer->CommitDataset();
+}
+
+void readMetrics(const std::string fileName, std::ostream &output)
+{
+   TFile file(fileName.c_str());
+
+   std::set<std::string> ntupleNames;
+   for (auto *keyObject : *file.GetListOfKeys()) {
+      auto *key = static_cast<TKey *>(keyObject);
+      if (std::string(key->GetClassName()) == "ROOT::RNTuple")
+         ntupleNames.insert(key->GetName());
+   }
+
+   for (const auto &ntupleName : ntupleNames) {
+      auto reader = ROOT::RNTupleReader::Open(ntupleName, fileName);
+      const auto &descriptor = reader->GetDescriptor();
+
+      output << ntupleName << "\n\n";
+      for (auto counterId : descriptor.GetFieldZero().GetLinkIds()) {
+         std::string fieldName = descriptor.GetFieldDescriptor(counterId).GetFieldName();
+         std::string type = descriptor.GetFieldDescriptor(counterId).GetTypeName();
+
+         output << std::string(8, ' ') << fieldName << "\n";
+      }
+      output << "\n";
+   }
+}
+} // namespace
+
+TEST(Metrics, EnvironmentVariableExport)
+{
+   FileRaii fileGuard("test_environment_variable_export_export.root");
+
+   const std::string metricsFileName = "environment_variable_export_metrics.root";
+
+   gSystem->Setenv("ROOT_EXPERIMENTAL_EXPORT_RNTUPLE_METRICS", metricsFileName.c_str());
+
+   writeDummyEntries(fileGuard.GetPath().c_str(), "rntuple_name_1");
+   writeDummyEntries(fileGuard.GetPath().c_str(), "rntuple_name_1");
+   writeDummyEntries(fileGuard.GetPath().c_str(), "rntuple_name_2");
+
+   gSystem->Unsetenv("ROOT_EXPERIMENTAL_EXPORT_RNTUPLE_METRICS");
+
+   std::stringstream printedMetricsStream;
+   readMetrics(metricsFileName, printedMetricsStream);
+
+   const std::string printedMetricsString = std::move(printedMetricsStream).str();
+   const std::string expected = R"(rntuple_name_1
+
+        RPageSinkBuf_ParallelZip
+        RPageSinkBuf_timeWallZip
+        RPageSinkBuf_timeWallCriticalSection
+        RPageSinkBuf_timeCpuZip
+        RPageSinkBuf_timeCpuCriticalSection
+        RPageSinkFile_nPageCommitted
+        RPageSinkFile_szWritePayload
+        RPageSinkFile_szZip
+        RPageSinkFile_timeWallWrite
+        RPageSinkFile_timeWallZip
+        RPageSinkFile_timeCpuWrite
+        RPageSinkFile_timeCpuZip
+
+rntuple_name_2
+
+        RPageSinkBuf_ParallelZip
+        RPageSinkBuf_timeWallZip
+        RPageSinkBuf_timeWallCriticalSection
+        RPageSinkBuf_timeCpuZip
+        RPageSinkBuf_timeCpuCriticalSection
+        RPageSinkFile_nPageCommitted
+        RPageSinkFile_szWritePayload
+        RPageSinkFile_szZip
+        RPageSinkFile_timeWallWrite
+        RPageSinkFile_timeWallZip
+        RPageSinkFile_timeCpuWrite
+        RPageSinkFile_timeCpuZip
+
+)";
+
+   EXPECT_EQ(printedMetricsString, expected);
 }
