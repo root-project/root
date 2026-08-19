@@ -20,7 +20,7 @@ make -j8
 ```
 
 ## Usage
-SOFIE works in a parser-generator working architecture. With SOFIE, the user gets an [ONNX](https://github.com/root-project/root/tree/master/tmva/sofie_parsers), [Keras](https://github.com/root-project/root/blob/master/tmva/pymva/src/RModelParser_Keras.cxx) and a [PyTorch](https://github.com/root-project/root/blob/master/tmva/pymva/src/RModelParser_PyTorch.cxx) parser for translating models in respective formats into SOFIE's internal representation.
+SOFIE works in a parser-generator working architecture. With SOFIE, the user gets an [ONNX](https://github.com/root-project/root/tree/master/tmva/sofie_parsers), [Keras](https://github.com/root-project/root/blob/master/bindings/pyroot/pythonizations/python/ROOT/_pythonization/_tmva/_sofie/_parser/_keras/parser.py) and a [PyTorch](https://github.com/root-project/root/blob/master/bindings/pyroot/pythonizations/python/ROOT/_pythonization/_tmva/_sofie/_parser/_pytorch/parser.py) parser for translating models in respective formats into SOFIE's internal representation.
 
 From ROOT command line, or in a ROOT macro, we can proceed with an ONNX model:
 
@@ -175,7 +175,7 @@ parser.CheckModel("example_model.ONNX");
 
 - **Tutorials**
     - [TMVA_SOFIE_Inference](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_Inference.py)
-    - [TMVA_SOFIE_Keras](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_Keras.C)
+    - [TMVA_SOFIE_Keras](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_Keras.py)
     - [TMVA_SOFIE_ONNX](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_ONNX.C)
     - [TMVA_SOFIE_PyTorch](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_PyTorch.py)
     - [TMVA_SOFIE_PyTorch_HiggsModel](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_PyTorch_HiggsModel.py)
