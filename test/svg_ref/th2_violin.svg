@@ -18,16 +18,16 @@ th2_violin.svg
 <path d="M175,240v -0.012h 5.4v 0.024h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M180,240h -1.4" fill="none" stroke="#0000ff"/>
 <path d="M176,240h -1.4" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="178" cy="240" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="178" cy="240" r="3"/>
 </g>
 <path d="M33,230h 218" fill="none" stroke="#cccccc"/>
 <path d="M120,230v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v 0.024h -5.4v -0.012h -5.4v 0.012h -5.4v -0.012z" fill="#cccccc"/>
 <path d="M120,230v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v 0.024h -5.4v -0.012h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M137,230h -2.7" fill="none" stroke="#0000ff"/>
 <path d="M123,230h -2.7" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="129" cy="230" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="129" cy="230" r="3"/>
 </g>
 <path d="M33,225h 218" fill="none" stroke="#cccccc"/>
 <path d="M88,225v -0.024h 5.4v 0.012h 5.4v 0.012h 27v -0.012h 5.4v 0.012h 11v -0.012h 11v 0.012h 5.4v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v 0.024h -5.4v -0.012h -5.4v 0.012h -5.4v -0.012h -5.4v 0.012h -11v -0.012h -11v 0.012h -5.4v -0.012h -27v
@@ -36,8 +36,8 @@ th2_violin.svg
  0.012h -5.4v 0.012h -5.4v -0.024z" fill="none" stroke="#cccccc"/>
 <path d="M175,225h -19" fill="none" stroke="#0000ff"/>
 <path d="M91,225h -2.7" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="129" cy="225" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="129" cy="225" r="3"/>
 </g>
 <path d="M33,219h 218" fill="none" stroke="#cccccc"/>
 <path d="M88,219v -0.012h 5.4v 0.012h 5.4v -0.024h 5.4v 0.012h 11v -0.037h 5.4v 0.037h 5.4v 0.012h 22v -0.024h 5.4v 0.024h 11v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v 0.012h 5.4v -0.012h 11v 0.012h 16v -0.012h 5.4v 0.024h -5.4v -0.012h -16v 0.012h -11v
@@ -46,8 +46,8 @@ th2_violin.svg
  -0.012h -5.4v 0.012h -5.4v -0.012h -5.4v 0.012h -5.4v -0.012h -11v 0.024h -5.4v -0.024h -22v 0.012h -5.4v 0.037h -5.4v -0.037h -11v 0.012h -5.4v -0.024h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M218,219h -50" fill="none" stroke="#0000ff"/>
 <path d="M111,219h -23" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="138" cy="219" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="138" cy="219" r="3"/>
 </g>
 <path d="M33,214h 218" fill="none" stroke="#cccccc"/>
 <path d="M99,214v -0.037h 5.4v 0.024h 5.4v -0.012h 5.4v 0.012h 11v -0.024h 5.4v -0.012h 5.4v 0.024h 5.4v -0.012h 11v 0.024h 22v -0.024h 5.4v 0.037h 5.4v -0.012h 5.4v 0.012h 16v -0.012h 5.4v 0.024h -5.4v -0.012h -16v 0.012h -5.4v -0.012h -5.4v 0.037h
@@ -56,8 +56,8 @@ th2_violin.svg
  -5.4v -0.024h -22v 0.024h -11v -0.012h -5.4v 0.024h -5.4v -0.012h -5.4v -0.024h -11v 0.012h -5.4v -0.012h -5.4v 0.024h -5.4v -0.037z" fill="none" stroke="#cccccc"/>
 <path d="M213,214h -57" fill="none" stroke="#0000ff"/>
 <path d="M123,214h -24" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="142" cy="214" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="142" cy="214" r="3"/>
 </g>
 <path d="M33,209h 218" fill="none" stroke="#cccccc"/>
 <path d="M88,209v -0.012h 16v 0.012h 5.4v -0.024h 5.4v -0.012h 5.4v -0.037h 5.4v 0.037h 16v -0.012h 16v 0.012h 5.4v -0.037h 5.4v 0.073h 5.4v -0.024h 5.4v 0.012h 11v 0.012h 5.4v -0.012h 5.4v 0.024h -5.4v -0.012h -5.4v 0.012h -11v 0.012h -5.4v -0.024h
@@ -66,8 +66,8 @@ th2_violin.svg
  -5.4v 0.073h -5.4v -0.037h -5.4v 0.012h -16v -0.012h -16v 0.037h -5.4v -0.037h -5.4v -0.012h -5.4v -0.024h -5.4v 0.012h -16v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M202,209h -40" fill="none" stroke="#0000ff"/>
 <path d="M124,209h -37" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="143" cy="209" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="143" cy="209" r="3"/>
 </g>
 <path d="M33,203h 218" fill="none" stroke="#cccccc"/>
 <path d="M82,203v -0.024h 5.4v 0.012h 11v -0.012h 5.4v 0.024h 5.4v -0.049h 11v -0.061h 5.4v 0.037h 5.4v -0.037h 5.4v 0.037h 5.4v -0.061h 5.4v 0.012h 5.4v 0.073h 11v -0.037h 5.4v 0.061h 5.4v -0.012h 5.4v 0.024h 5.4v -0.037h 5.4v 0.024h 5.4v 0.012h 16v
@@ -78,8 +78,8 @@ th2_violin.svg
  -5.4v -0.024z" fill="none" stroke="#cccccc"/>
 <path d="M213,203h -51" fill="none" stroke="#0000ff"/>
 <path d="M127,203h -44" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="145" cy="203" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="145" cy="203" r="3"/>
 </g>
 <path d="M33,198h 218" fill="none" stroke="#cccccc"/>
 <path d="M77,198v -0.012h 5.4v 0.012h 5.4v -0.024h 5.4v -0.012h 11v -0.073h 5.4v 0.037h 5.4v -0.012h 5.4v -0.012h 5.4v 0.012h 11v -0.085h 5.4v 0.037h 5.4v 0.037h 5.4v -0.037h 5.4v 0.012h 5.4v 0.024h 11v 0.073h 5.4v -0.012h 5.4v 0.012h 11v 0.024h 11v
@@ -90,8 +90,8 @@ th2_violin.svg
  -0.024h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M213,198h -53" fill="none" stroke="#0000ff"/>
 <path d="M122,198h -45" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="142" cy="198" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="142" cy="198" r="3"/>
 </g>
 <path d="M33,193h 218" fill="none" stroke="#cccccc"/>
 <path d="M50,193v -0.012h 5.4v 0.012h 11v -0.037h 5.4v 0.012h 5.4v 0.024h 5.4v -0.037h 16v -0.024h 5.4v -0.037h 5.4v -0.073h 5.4v 0.061h 5.4v -0.073h 5.4v -0.049h 5.4v 0.061h 5.4v -0.073h 5.4v -0.037h 5.4v 0.049h 5.4v 0.024h 5.4v 0.061h 5.4v -0.049h
@@ -104,8 +104,8 @@ th2_violin.svg
  -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M229,193h -69" fill="none" stroke="#0000ff"/>
 <path d="M124,193h -74" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="142" cy="193" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="142" cy="193" r="3"/>
 </g>
 <path d="M33,188h 218" fill="none" stroke="#cccccc"/>
 <path d="M61,188v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v -0.024h 5.4v 0.024h 5.4v -0.037h 5.4v -0.012h 11v -0.134h 5.4v -0.024h 5.4v -0.037h 5.4v -0.110h 5.4v -0.098h 5.4v 0.098h 5.4v 0.024h 5.4v 0.049h 5.4v -0.024h 5.4v 0.085h 5.4v -0.049h 5.4v
@@ -117,8 +117,8 @@ th2_violin.svg
  stroke="#cccccc"/>
 <path d="M224,188h -67" fill="none" stroke="#0000ff"/>
 <path d="M123,188h -62" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="140" cy="188" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="140" cy="188" r="3"/>
 </g>
 <path d="M33,182h 218" fill="none" stroke="#cccccc"/>
 <path d="M50,182v -0.012h 11v 0.012h 5.4v -0.024h 11v 0.012h 5.4v -0.073h 5.4v 0.012h 5.4v -0.110h 5.4v 0.024h 5.4v -0.061h 5.4v -0.037h 5.4v -0.085h 5.4v -0.085h 5.4v 0.049h 5.4v -0.146h 5.4v 0.146h 5.4v -0.110h 11v 0.012h 5.4v -0.024h 5.4v 0.232h
@@ -131,8 +131,8 @@ th2_violin.svg
  -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M218,182h -57" fill="none" stroke="#0000ff"/>
 <path d="M123,182h -73" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="142" cy="182" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="142" cy="182" r="3"/>
 </g>
 <path d="M33,177h 218" fill="none" stroke="#cccccc"/>
 <path d="M50,177v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v -0.049h 5.4v 0.012h 5.4v -0.012h 5.4v -0.037h 5.4v -0.012h 5.4v -0.012h 5.4v -0.134h 5.4v 0.012h 5.4v -0.134h 5.4v -0.037h 5.4v -0.073h 5.4v -0.012h 5.4v -0.232h 5.4v 0.049h 5.4v 0.012h 5.4v
@@ -145,8 +145,8 @@ th2_violin.svg
  0.012h -5.4v -0.134h -5.4v -0.012h -5.4v -0.012h -5.4v -0.037h -5.4v -0.012h -5.4v 0.012h -5.4v -0.049h -5.4v -0.012h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M235,177h -77" fill="none" stroke="#0000ff"/>
 <path d="M123,177h -73" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="140" cy="177" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="140" cy="177" r="3"/>
 </g>
 <path d="M33,172h 218" fill="none" stroke="#cccccc"/>
 <path d="M50,172v -0.012h 22v -0.024h 5.4v 0.012h 5.4v -0.073h 5.4v -0.073h 5.4v 0.024h 5.4v -0.146h 5.4v -0.195h 5.4v 0.024h 5.4v -0.085h 5.4v -0.232h 5.4v 0.122h 5.4v -0.085h 5.4v -0.146h 5.4v 0.037h 5.4v 0.024h 5.4v -0.098h 5.4v 0.317h 5.4v 0.037h
@@ -159,8 +159,8 @@ th2_violin.svg
  fill="none" stroke="#cccccc"/>
 <path d="M229,172h -70" fill="none" stroke="#0000ff"/>
 <path d="M123,172h -73" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="141" cy="172" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="141" cy="172" r="3"/>
 </g>
 <path d="M33,166h 218" fill="none" stroke="#cccccc"/>
 <path d="M50,166v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v -0.037h 5.4v 0.012h 5.4v -0.037h 5.4v -0.061h 5.4v 0.012h 5.4v -0.061h 5.4v -0.146h 5.4v -0.195h 11v -0.146h 5.4v -0.195h 5.4v -0.085h 5.4v -0.024h 5.4v -0.098h 5.4v 0.024h 5.4v -0.012h 5.4v
@@ -173,8 +173,8 @@ th2_violin.svg
  -0.061h -5.4v 0.012h -5.4v -0.061h -5.4v -0.037h -5.4v 0.012h -5.4v -0.037h -5.4v -0.012h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M235,166h -75" fill="none" stroke="#0000ff"/>
 <path d="M124,166h -74" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="142" cy="166" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="142" cy="166" r="3"/>
 </g>
 <path d="M33,161h 218" fill="none" stroke="#cccccc"/>
 <path d="M55,161v -0.012h 11v -0.037h 5.4v 0.024h 5.4v -0.098h 5.4v -0.037h 5.4v -0.085h 5.4v -0.024h 5.4v -0.171h 5.4v -0.195h 5.4v -0.146h 5.4v -0.122h 5.4v 0.085h 5.4v -0.366h 5.4v -0.256h 5.4v 0.159h 5.4v 0.134h 5.4v -0.037h 5.4v 0.110h 5.4v
@@ -187,8 +187,8 @@ th2_violin.svg
  -5.4v -0.037h -11v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M235,161h -74" fill="none" stroke="#0000ff"/>
 <path d="M123,161h -68" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="142" cy="161" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="142" cy="161" r="3"/>
 </g>
 <path d="M33,156h 218" fill="none" stroke="#cccccc"/>
 <path d="M33,156v -0.012h 5.4v 0.012h 11v -0.012h 11v 0.012h 5.4v -0.024h 5.4v -0.061h 5.4v -0.024h 5.4v -0.085h 5.4v -0.024h 5.4v -0.220h 5.4v -0.024h 5.4v -0.159h 5.4v -0.220h 5.4v -0.134h 5.4v 0.134h 5.4v -0.671h 5.4v 0.171h 5.4v -0.098h 5.4v
@@ -201,8 +201,8 @@ th2_violin.svg
  -0.134h -5.4v -0.220h -5.4v -0.159h -5.4v -0.024h -5.4v -0.220h -5.4v -0.024h -5.4v -0.085h -5.4v -0.024h -5.4v -0.061h -5.4v -0.024h -5.4v 0.012h -11v -0.012h -11v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M246,156h -85" fill="none" stroke="#0000ff"/>
 <path d="M124,156h -90" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="142" cy="156" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="142" cy="156" r="3"/>
 </g>
 <path d="M33,151h 218" fill="none" stroke="#cccccc"/>
 <path d="M50,151v -0.012h 5.4v 0.012h 5.4v -0.012h 11v -0.110h 11v -0.073h 5.4v -0.037h 5.4v -0.012h 5.4v -0.330h 5.4v -0.220h 5.4v 0.012h 5.4v -0.403h 5.4v -0.146h 5.4v 0.098h 5.4v -0.305h 5.4v -0.049h 5.4v -0.098h 5.4v -0.061h 5.4v 0.378h 5.4v
@@ -215,8 +215,8 @@ th2_violin.svg
  -0.012h -5.4v -0.037h -5.4v -0.073h -11v -0.110h -11v -0.012h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M240,151h -79" fill="none" stroke="#0000ff"/>
 <path d="M124,151h -74" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="143" cy="151" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="143" cy="151" r="3"/>
 </g>
 <path d="M33,145h 218" fill="none" stroke="#cccccc"/>
 <path d="M61,145v -0.012h 5.4v -0.073h 5.4v 0.024h 5.4v -0.049h 5.4v -0.134h 11v -0.256h 5.4v 0.037h 5.4v -0.342h 5.4v -0.195h 5.4v -0.061h 5.4v -0.476h 5.4v -0.183h 5.4v -0.207h 5.4v 0.159h 5.4v -0.049h 5.4v 0.012h 5.4v 0.195h 5.4v 0.220h 5.4v
@@ -229,8 +229,8 @@ th2_violin.svg
  -5.4v -0.049h -5.4v 0.024h -5.4v -0.073h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M235,145h -72" fill="none" stroke="#0000ff"/>
 <path d="M125,145h -65" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="144" cy="145" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="144" cy="145" r="3"/>
 </g>
 <path d="M33,140h 218" fill="none" stroke="#cccccc"/>
 <path d="M39,140v -0.012h 5.4v 0.012h 16v -0.012h 5.4v -0.012h 5.4v -0.012h 5.4v -0.110h 5.4v -0.037h 5.4v -0.232h 5.4v 0.110h 5.4v -0.244h 5.4v -0.342h 5.4v -0.061h 5.4v -0.439h 5.4v -0.244h 5.4v -0.061h 5.4v -0.281h 5.4v -0.085h 5.4v -0.049h 5.4v
@@ -243,8 +243,8 @@ th2_violin.svg
  -0.244h -5.4v 0.110h -5.4v -0.232h -5.4v -0.037h -5.4v -0.110h -5.4v -0.012h -5.4v -0.012h -5.4v -0.012h -16v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M246,140h -85" fill="none" stroke="#0000ff"/>
 <path d="M125,140h -86" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="143" cy="140" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="143" cy="140" r="3"/>
 </g>
 <path d="M33,135h 218" fill="none" stroke="#cccccc"/>
 <path d="M50,135v -0.012h 11v -0.037h 5.4v 0.012h 5.4v -0.024h 5.4v -0.037h 5.4v -0.122h 5.4v -0.171h 5.4v -0.012h 5.4v -0.134h 5.4v -0.330h 5.4v -0.098h 5.4v -0.683h 5.4v 0.134h 5.4v -0.146h 5.4v 0.024h 5.4v -0.439h 5.4v 0.293h 5.4v 0.122h 5.4v
@@ -257,8 +257,8 @@ th2_violin.svg
  -5.4v -0.146h -5.4v 0.134h -5.4v -0.683h -5.4v -0.098h -5.4v -0.330h -5.4v -0.134h -5.4v -0.012h -5.4v -0.171h -5.4v -0.122h -5.4v -0.037h -5.4v -0.024h -5.4v 0.012h -5.4v -0.037h -11v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M246,135h -85" fill="none" stroke="#0000ff"/>
 <path d="M123,135h -73" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="142" cy="135" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="142" cy="135" r="3"/>
 </g>
 <path d="M33,130h 218" fill="none" stroke="#cccccc"/>
 <path d="M44,130v -0.012h 16v -0.012h 11v -0.061h 5.4v -0.098h 5.4v -0.012h 5.4v -0.134h 5.4v -0.073h 5.4v -0.098h 5.4v -0.366h 5.4v -0.342h 5.4v -0.012h 5.4v -0.098h 5.4v -0.293h 5.4v 0.134h 5.4v -0.403h 5.4v -0.024h 5.4v -0.171h 11v 0.708h 5.4v
@@ -271,8 +271,8 @@ th2_violin.svg
  -0.012h -5.4v -0.098h -5.4v -0.061h -11v -0.012h -16v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M240,130h -81" fill="none" stroke="#0000ff"/>
 <path d="M124,130h -80" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="142" cy="130" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="142" cy="130" r="3"/>
 </g>
 <path d="M33,124h 218" fill="none" stroke="#cccccc"/>
 <path d="M44,124v -0.012h 5.4v 0.012h 5.4v -0.024h 5.4v -0.012h 5.4v -0.024h 5.4v -0.024h 5.4v 0.024h 5.4v -0.110h 5.4v -0.134h 5.4v -0.134h 5.4v -0.085h 5.4v -0.256h 5.4v -0.232h 5.4v -0.293h 5.4v -0.183h 5.4v -0.024h 11v -0.122h 5.4v 0.159h 5.4v
@@ -285,8 +285,8 @@ th2_violin.svg
  -0.110h -5.4v 0.024h -5.4v -0.024h -5.4v -0.024h -5.4v -0.012h -5.4v -0.024h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M235,124h -75" fill="none" stroke="#0000ff"/>
 <path d="M122,124h -78" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="141" cy="124" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="141" cy="124" r="3"/>
 </g>
 <path d="M33,119h 218" fill="none" stroke="#cccccc"/>
 <path d="M55,119v -0.012h 5.4v 0.012h 5.4v -0.024h 5.4v -0.061h 5.4v -0.024h 5.4v -0.061h 5.4v -0.085h 5.4v -0.183h 5.4v -0.061h 5.4v -0.220h 5.4v -0.122h 5.4v -0.146h 5.4v -0.244h 5.4v -0.037h 5.4v -0.159h 5.4v -0.134h 5.4v 0.012h 5.4v 0.146h 5.4v
@@ -299,8 +299,8 @@ th2_violin.svg
  -5.4v -0.146h -5.4v -0.122h -5.4v -0.220h -5.4v -0.061h -5.4v -0.183h -5.4v -0.085h -5.4v -0.061h -5.4v -0.024h -5.4v -0.061h -5.4v -0.024h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M251,119h -92" fill="none" stroke="#0000ff"/>
 <path d="M123,119h -68" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="141" cy="119" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="141" cy="119" r="3"/>
 </g>
 <path d="M33,114h 218" fill="none" stroke="#cccccc"/>
 <path d="M33,114v -0.012h 5.4v 0.012h 5.4v -0.012h 11v 0.012h 5.4v -0.037h 5.4v -0.049h 5.4v 0.037h 5.4v -0.049h 5.4v -0.012h 5.4v -0.146h 5.4v -0.085h 11v -0.330h 5.4v 0.049h 5.4v -0.391h 5.4v 0.317h 5.4v -0.574h 5.4v -0.024h 5.4v 0.012h 11v 0.073h
@@ -313,8 +313,8 @@ th2_violin.svg
  -0.049h -5.4v 0.037h -5.4v -0.049h -5.4v -0.037h -5.4v 0.012h -11v -0.012h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M224,114h -61" fill="none" stroke="#0000ff"/>
 <path d="M124,114h -91" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="143" cy="114" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="143" cy="114" r="3"/>
 </g>
 <path d="M33,108h 218" fill="none" stroke="#cccccc"/>
 <path d="M50,108v -0.012h 11v -0.024h 5.4v 0.024h 5.4v -0.037h 5.4v -0.012h 5.4v -0.061h 5.4v -0.037h 5.4v -0.146h 5.4v -0.195h 5.4v 0.171h 5.4v -0.281h 5.4v -0.122h 5.4v 0.037h 5.4v -0.073h 5.4v 0.073h 5.4v -0.317h 5.4v -0.061h 5.4v 0.195h 5.4v
@@ -327,8 +327,8 @@ th2_violin.svg
  -5.4v -0.061h -5.4v -0.012h -5.4v -0.037h -5.4v 0.024h -5.4v -0.024h -11v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M235,108h -72" fill="none" stroke="#0000ff"/>
 <path d="M123,108h -73" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="143" cy="108" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="143" cy="108" r="3"/>
 </g>
 <path d="M33,103h 218" fill="none" stroke="#cccccc"/>
 <path d="M44,103v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v -0.024h 11v -0.037h 5.4v -0.024h 5.4v 0.024h 5.4v -0.085h 5.4v 0.098h 5.4v -0.220h 5.4v -0.085h 5.4v -0.122h 5.4v -0.012h 5.4v -0.146h 5.4v -0.012h 5.4v -0.293h 5.4v -0.024h 5.4v 0.085h 5.4v
@@ -341,8 +341,8 @@ th2_violin.svg
  0.024h -5.4v -0.024h -5.4v -0.037h -11v -0.024h -5.4v -0.012h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M235,103h -76" fill="none" stroke="#0000ff"/>
 <path d="M125,103h -80" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="142" cy="103" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="142" cy="103" r="3"/>
 </g>
 <path d="M33,98h 218" fill="none" stroke="#cccccc"/>
 <path d="M61,98v -0.012h 5.4v -0.012h 5.4v -0.012h 5.4v -0.037h 5.4v 0.024h 5.4v -0.073h 5.4v 0.012h 5.4v -0.073h 5.4v -0.024h 5.4v -0.098h 5.4v -0.061h 5.4v -0.061h 5.4v -0.134h 5.4v 0.012h 5.4v 0.085h 5.4v -0.110h 5.4v -0.134h 5.4v 0.024h 5.4v
@@ -355,8 +355,8 @@ th2_violin.svg
  -0.012h -5.4v -0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M240,98h -80" fill="none" stroke="#0000ff"/>
 <path d="M125,98h -65" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="143" cy="98" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="143" cy="98" r="3"/>
 </g>
 <path d="M33,93h 218" fill="none" stroke="#cccccc"/>
 <path d="M33,93v -0.012h 5.4v 0.012h 11v -0.012h 5.4v 0.012h 16v -0.012h 5.4v -0.037h 5.4v -0.061h 5.4v 0.098h 5.4v -0.122h 11v -0.146h 5.4v -0.024h 5.4v -0.024h 5.4v -0.098h 5.4v 0.061h 5.4v -0.110h 5.4v 0.037h 5.4v -0.110h 5.4v 0.122h 5.4v 0.037h
@@ -369,8 +369,8 @@ th2_violin.svg
  -5.4v -0.037h -5.4v -0.012h -16v 0.012h -5.4v -0.012h -11v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M229,93h -71" fill="none" stroke="#0000ff"/>
 <path d="M122,93h -88" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="140" cy="93" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="140" cy="93" r="3"/>
 </g>
 <path d="M33,87h 218" fill="none" stroke="#cccccc"/>
 <path d="M71,87v -0.024h 5.4v -0.012h 5.4v -0.049h 5.4v 0.061h 5.4v -0.085h 5.4v -0.024h 5.4v 0.049h 5.4v -0.171h 5.4v 0.037h 5.4v 0.049h 5.4v -0.122h 5.4v -0.073h 5.4v 0.061h 5.4v -0.024h 11v 0.037h 5.4v 0.098h 5.4v -0.122h 5.4v 0.122h 11v 0.073h
@@ -381,8 +381,8 @@ th2_violin.svg
  -5.4v 0.049h -5.4v -0.024h -5.4v -0.085h -5.4v 0.061h -5.4v -0.049h -5.4v -0.012h -5.4v -0.024z" fill="none" stroke="#cccccc"/>
 <path d="M208,87h -44" fill="none" stroke="#0000ff"/>
 <path d="M124,87h -52" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="142" cy="87" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="142" cy="87" r="3"/>
 </g>
 <path d="M33,82h 218" fill="none" stroke="#cccccc"/>
 <path d="M66,82v -0.012h 5.4v -0.024h 5.4v 0.024h 5.4v -0.024h 5.4v -0.012h 5.4v -0.024h 5.4v 0.012h 11v -0.098h 5.4v 0.061h 5.4v -0.037h 5.4v -0.110h 5.4v -0.037h 5.4v 0.110h 5.4v -0.061h 5.4v 0.037h 5.4v 0.098h 5.4v -0.110h 5.4v 0.134h 5.4v -0.073h
@@ -393,8 +393,8 @@ th2_violin.svg
  0.110h -5.4v -0.037h -5.4v -0.110h -5.4v -0.037h -5.4v 0.061h -5.4v -0.098h -11v 0.012h -5.4v -0.024h -5.4v -0.012h -5.4v -0.024h -5.4v 0.024h -5.4v -0.024h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M218,82h -59" fill="none" stroke="#0000ff"/>
 <path d="M123,82h -57" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="140" cy="82" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="140" cy="82" r="3"/>
 </g>
 <path d="M33,77h 218" fill="none" stroke="#cccccc"/>
 <path d="M71,77v -0.012h 11v 0.012h 5.4v -0.024h 5.4v 0.012h 11v -0.024h 5.4v -0.061h 5.4v -0.012h 5.4v 0.024h 5.4v 0.012h 5.4v -0.061h 5.4v 0.049h 5.4v -0.073h 5.4v 0.073h 11v -0.037h 5.4v 0.024h 5.4v 0.024h 5.4v 0.012h 5.4v 0.024h 11v 0.024h 11v
@@ -405,8 +405,8 @@ th2_violin.svg
  -0.024h -11v 0.012h -5.4v -0.024h -5.4v 0.012h -11v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M213,77h -50" fill="none" stroke="#0000ff"/>
 <path d="M124,77h -53" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="144" cy="77" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="144" cy="77" r="3"/>
 </g>
 <path d="M33,71h 218" fill="none" stroke="#cccccc"/>
 <path d="M82,71v -0.012h 5.4v 0.012h 11v -0.037h 5.4v -0.012h 5.4v -0.012h 5.4v 0.012h 5.4v -0.037h 5.4v 0.024h 5.4v -0.037h 11v 0.012h 5.4v 0.024h 5.4v -0.024h 5.4v 0.024h 5.4v -0.024h 5.4v -0.024h 5.4v 0.049h 5.4v 0.037h 5.4v 0.012h 5.4v -0.012h
@@ -417,8 +417,8 @@ th2_violin.svg
  -5.4v -0.012h -5.4v -0.012h -5.4v -0.037h -11v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M218,71h -52" fill="none" stroke="#0000ff"/>
 <path d="M126,71h -44" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="146" cy="71" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="146" cy="71" r="3"/>
 </g>
 <path d="M33,66h 218" fill="none" stroke="#cccccc"/>
 <path d="M71,66v -0.012h 5.4v 0.012h 5.4v -0.024h 5.4v 0.024h 5.4v -0.012h 5.4v 0.012h 5.4v -0.024h 5.4v -0.012h 5.4v 0.024h 5.4v -0.012h 11v -0.049h 5.4v -0.024h 5.4v 0.024h 5.4v 0.024h 22v 0.024h 11v 0.024h 5.4v -0.024h 11v 0.024h 5.4v -0.012h 11v
@@ -429,8 +429,8 @@ th2_violin.svg
  -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M213,66h -50" fill="none" stroke="#0000ff"/>
 <path d="M132,66h -61" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="145" cy="66" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="145" cy="66" r="3"/>
 </g>
 <path d="M33,61h 218" fill="none" stroke="#cccccc"/>
 <path d="M99,61v -0.037h 5.4v 0.012h 11v 0.012h 5.4v -0.012h 5.4v -0.024h 5.4v 0.037h 5.4v -0.049h 5.4v 0.049h 5.4v -0.012h 11v 0.012h 5.4v 0.012h 11v -0.049h 5.4v 0.049h 11v -0.024h 5.4v 0.024h 5.4v -0.012h 5.4v 0.024h -5.4v -0.012h -5.4v 0.024h
@@ -439,8 +439,8 @@ th2_violin.svg
  -5.4v -0.024h -11v 0.049h -5.4v -0.049h -11v 0.012h -5.4v 0.012h -11v -0.012h -5.4v 0.049h -5.4v -0.049h -5.4v 0.037h -5.4v -0.024h -5.4v -0.012h -5.4v 0.012h -11v 0.012h -5.4v -0.037z" fill="none" stroke="#cccccc"/>
 <path d="M208,61h -50" fill="none" stroke="#0000ff"/>
 <path d="M121,61h -22" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="142" cy="61" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="142" cy="61" r="3"/>
 </g>
 <path d="M33,56h 218" fill="none" stroke="#cccccc"/>
 <path d="M131,56v -0.024h 5.4v -0.012h 5.4v 0.012h 5.4v 0.012h 5.4v 0.012h 5.4v -0.024h 5.4v 0.024h 5.4v -0.049h 5.4v 0.049h 5.4v -0.012h 5.4v 0.024h -5.4v -0.012h -5.4v 0.049h -5.4v -0.049h -5.4v 0.024h -5.4v -0.024h -5.4v 0.012h -5.4v 0.012h -5.4v
@@ -449,8 +449,8 @@ th2_violin.svg
  0.012h -5.4v -0.012h -5.4v -0.024z" fill="none" stroke="#cccccc"/>
 <path d="M186,56h -15" fill="none" stroke="#0000ff"/>
 <path d="M140,56h -8.6" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="155" cy="56" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="155" cy="56" r="3"/>
 </g>
 <path d="M33,50h 218" fill="none" stroke="#cccccc"/>
 <path d="M104,50v -0.012h 5.4v 0.012h 11v -0.012h 5.4v 0.012h 11v -0.012h 11v 0.012h 11v -0.012h 22v 0.012h 49v -0.012h 5.4v 0.024h -5.4v -0.012h -49v 0.012h -22v -0.012h -11v 0.012h -11v -0.012h -11v 0.012h -5.4v -0.012h -11v 0.012h -5.4v -0.012z"
@@ -459,8 +459,8 @@ th2_violin.svg
  fill="none" stroke="#cccccc"/>
 <path d="M235,50h -61" fill="none" stroke="#0000ff"/>
 <path d="M138,50h -34" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="158" cy="50" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="158" cy="50" r="3"/>
 </g>
 <path d="M33,45h 218" fill="none" stroke="#cccccc"/>
 <path d="M93,45v -0.012h 5.4v 0.012h 22v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v 0.012h 5.4v -0.024h 5.4v 0.024h 49v -0.012h 5.4v 0.024h -5.4v -0.012h -49v 0.024h -5.4v -0.024h -5.4v 0.012h -5.4v -0.012h -5.4v 0.012h -5.4v -0.012h -22v 0.012h -5.4v
@@ -469,24 +469,24 @@ th2_violin.svg
  -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M202,45h -56" fill="none" stroke="#0000ff"/>
 <path d="M123,45h -30" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="140" cy="45" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="140" cy="45" r="3"/>
 </g>
 <path d="M33,40h 218" fill="none" stroke="#cccccc"/>
 <path d="M148,40v -0.012h 5.4v 0.024h -5.4v -0.012z" fill="#cccccc"/>
 <path d="M148,40v -0.012h 5.4v 0.024h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M153,40h -1.4" fill="none" stroke="#0000ff"/>
 <path d="M149,40h -1.4" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="150" cy="40" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="150" cy="40" r="3"/>
 </g>
 <path d="M33,35h 218" fill="none" stroke="#cccccc"/>
 <path d="M120,35v -0.012h 5.4v 0.012h 11v -0.012h 5.4v 0.024h -5.4v -0.012h -11v 0.012h -5.4v -0.012z" fill="#cccccc"/>
 <path d="M120,35v -0.012h 5.4v 0.012h 11v -0.012h 5.4v 0.024h -5.4v -0.012h -11v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M142,35h -2.7" fill="none" stroke="#0000ff"/>
 <path d="M123,35h -2.7" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="131" cy="35" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="131" cy="35" r="3"/>
 </g>
 <rect x="8.9" y="6.8" width="141" height="15" fill="#f2f2f2"/>
 <path d="M7.5,9.0v 14h 140v -1.4h -139v -12z" fill="black"/>
@@ -604,16 +604,16 @@ th2_violin.svg
 <path d="M458,240v -0.012h 5.4v 0.024h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M464,240h -1.4" fill="none" stroke="#0000ff"/>
 <path d="M460,240h -1.4" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="461" cy="240" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="461" cy="240" r="3"/>
 </g>
 <path d="M317,230h 218" fill="none" stroke="#cccccc"/>
 <path d="M404,230v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v 0.024h -5.4v -0.012h -5.4v 0.012h -5.4v -0.012z" fill="#cccccc"/>
 <path d="M404,230v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v 0.024h -5.4v -0.012h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M420,230h -2.7" fill="none" stroke="#0000ff"/>
 <path d="M407,230h -2.7" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="412" cy="230" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="412" cy="230" r="3"/>
 </g>
 <path d="M317,225h 218" fill="none" stroke="#cccccc"/>
 <path d="M371,225v -0.024h 5.4v 0.012h 5.4v 0.012h 27v -0.012h 5.4v 0.012h 11v -0.012h 11v 0.012h 5.4v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v 0.024h -5.4v -0.012h -5.4v 0.012h -5.4v -0.012h -5.4v 0.012h -11v -0.012h -11v 0.012h -5.4v -0.012h -27v
@@ -622,8 +622,8 @@ th2_violin.svg
  0.012h -5.4v 0.012h -5.4v -0.024z" fill="none" stroke="#cccccc"/>
 <path d="M458,225h -19" fill="none" stroke="#0000ff"/>
 <path d="M374,225h -2.7" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="413" cy="225" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="413" cy="225" r="3"/>
 </g>
 <path d="M317,219h 218" fill="none" stroke="#cccccc"/>
 <path d="M371,219v -0.012h 5.4v 0.012h 5.4v -0.024h 5.4v 0.012h 11v -0.037h 5.4v 0.037h 5.4v 0.012h 22v -0.024h 5.4v 0.024h 11v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v 0.012h 5.4v -0.012h 11v 0.012h 16v -0.012h 5.4v 0.024h -5.4v -0.012h -16v 0.012h
@@ -632,8 +632,8 @@ th2_violin.svg
  -11v -0.012h -5.4v 0.012h -5.4v -0.012h -5.4v 0.012h -5.4v -0.012h -11v 0.024h -5.4v -0.024h -22v 0.012h -5.4v 0.037h -5.4v -0.037h -11v 0.012h -5.4v -0.024h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M502,219h -50" fill="none" stroke="#0000ff"/>
 <path d="M394,219h -23" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="422" cy="219" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="422" cy="219" r="3"/>
 </g>
 <path d="M317,214h 218" fill="none" stroke="#cccccc"/>
 <path d="M382,214v -0.037h 5.4v 0.024h 5.4v -0.012h 5.4v 0.012h 11v -0.024h 5.4v -0.012h 5.4v 0.024h 5.4v -0.012h 11v 0.024h 22v -0.024h 5.4v 0.037h 5.4v -0.012h 5.4v 0.012h 16v -0.012h 5.4v 0.024h -5.4v -0.012h -16v 0.012h -5.4v -0.012h -5.4v 0.037h
@@ -642,12 +642,10 @@ th2_violin.svg
  -5.4v -0.024h -22v 0.024h -11v -0.012h -5.4v 0.024h -5.4v -0.012h -5.4v -0.024h -11v 0.012h -5.4v -0.012h -5.4v 0.024h -5.4v -0.037z" fill="none" stroke="#cccccc"/>
 <path d="M475,214h -35" fill="none" stroke="#0000ff"/>
 <path d="M407,214h -24" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="426" cy="214" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="426" cy="214" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="492" y1="212" x2="496" y2="216"/><line x1="492" y1="216" x2="496" y2="212"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M492,212l4,4M492,216l4,-4"/>
 <path d="M317,209h 218" fill="none" stroke="#cccccc"/>
 <path d="M371,209v -0.012h 16v 0.012h 5.4v -0.024h 5.4v -0.012h 5.4v -0.037h 5.4v 0.037h 16v -0.012h 16v 0.012h 5.4v -0.037h 5.4v 0.073h 5.4v -0.024h 5.4v 0.012h 11v 0.012h 5.4v -0.012h 5.4v 0.024h -5.4v -0.012h -5.4v 0.012h -11v 0.012h -5.4v -0.024h
  -5.4v 0.073h -5.4v -0.037h -5.4v 0.012h -16v -0.012h -16v 0.037h -5.4v -0.037h -5.4v -0.012h -5.4v -0.024h -5.4v 0.012h -16v -0.012z" fill="#cccccc"/>
@@ -655,8 +653,8 @@ th2_violin.svg
  -5.4v 0.073h -5.4v -0.037h -5.4v 0.012h -16v -0.012h -16v 0.037h -5.4v -0.037h -5.4v -0.012h -5.4v -0.024h -5.4v 0.012h -16v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M486,209h -40" fill="none" stroke="#0000ff"/>
 <path d="M408,209h -37" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="427" cy="209" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="427" cy="209" r="3"/>
 </g>
 <path d="M317,203h 218" fill="none" stroke="#cccccc"/>
 <path d="M366,203v -0.024h 5.4v 0.012h 11v -0.012h 5.4v 0.024h 5.4v -0.049h 11v -0.061h 5.4v 0.037h 5.4v -0.037h 5.4v 0.037h 5.4v -0.061h 5.4v 0.012h 5.4v 0.073h 11v -0.037h 5.4v 0.061h 5.4v -0.012h 5.4v 0.024h 5.4v -0.037h 5.4v 0.024h 5.4v 0.012h
@@ -667,8 +665,8 @@ th2_violin.svg
  -5.4v -0.024z" fill="none" stroke="#cccccc"/>
 <path d="M496,203h -51" fill="none" stroke="#0000ff"/>
 <path d="M410,203h -44" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="428" cy="203" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="428" cy="203" r="3"/>
 </g>
 <path d="M317,198h 218" fill="none" stroke="#cccccc"/>
 <path d="M360,198v -0.012h 5.4v 0.012h 5.4v -0.024h 5.4v -0.012h 11v -0.073h 5.4v 0.037h 5.4v -0.012h 5.4v -0.012h 5.4v 0.012h 11v -0.085h 5.4v 0.037h 5.4v 0.037h 5.4v -0.037h 5.4v 0.012h 5.4v 0.024h 11v 0.073h 5.4v -0.012h 5.4v 0.012h 11v 0.024h 11v
@@ -679,8 +677,8 @@ th2_violin.svg
  -0.024h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M496,198h -53" fill="none" stroke="#0000ff"/>
 <path d="M406,198h -45" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="425" cy="198" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="425" cy="198" r="3"/>
 </g>
 <path d="M317,193h 218" fill="none" stroke="#cccccc"/>
 <path d="M333,193v -0.012h 5.4v 0.012h 11v -0.037h 5.4v 0.012h 5.4v 0.024h 5.4v -0.037h 16v -0.024h 5.4v -0.037h 5.4v -0.073h 5.4v 0.061h 5.4v -0.073h 5.4v -0.049h 5.4v 0.061h 5.4v -0.073h 5.4v -0.037h 5.4v 0.049h 5.4v 0.024h 5.4v 0.061h 5.4v -0.049h
@@ -693,13 +691,10 @@ th2_violin.svg
  -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M502,193h -58" fill="none" stroke="#0000ff"/>
 <path d="M407,193h -58" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="425" cy="193" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="425" cy="193" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="334" y1="191" x2="338" y2="195"/><line x1="334" y1="195" x2="338" y2="191"/>
-<line x1="508" y1="191" x2="512" y2="195"/><line x1="508" y1="195" x2="512" y2="191"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M334,191l4,4M334,195l4,-4 M508,191l4,4M508,195l4,-4"/>
 <path d="M317,188h 218" fill="none" stroke="#cccccc"/>
 <path d="M344,188v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v -0.024h 5.4v 0.024h 5.4v -0.037h 5.4v -0.012h 11v -0.134h 5.4v -0.024h 5.4v -0.037h 5.4v -0.110h 5.4v -0.098h 5.4v 0.098h 5.4v 0.024h 5.4v 0.049h 5.4v -0.024h 5.4v 0.085h 5.4v -0.049h 5.4v
  0.049h 5.4v 0.110h 5.4v 0.037h 5.4v 0.012h 5.4v 0.012h 5.4v 0.012h 5.4v 0.012h 11v 0.037h 5.4v -0.012h 11v 0.024h -11v -0.012h -5.4v 0.037h -11v 0.012h -5.4v 0.012h -5.4v 0.012h -5.4v 0.012h -5.4v 0.037h -5.4v 0.110h -5.4v 0.049h -5.4v -0.049h -5.4v
@@ -710,14 +705,10 @@ th2_violin.svg
  stroke="#cccccc"/>
 <path d="M491,188h -51" fill="none" stroke="#0000ff"/>
 <path d="M406,188h -51" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="423" cy="188" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="423" cy="188" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="345" y1="186" x2="349" y2="190"/><line x1="345" y1="190" x2="349" y2="186"/>
-<line x1="497" y1="186" x2="501" y2="190"/><line x1="497" y1="190" x2="501" y2="186"/>
-<line x1="503" y1="186" x2="507" y2="190"/><line x1="503" y1="190" x2="507" y2="186"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M345,186l4,4M345,190l4,-4 M497,186l4,4M497,190l4,-4 M503,186l4,4M503,190l4,-4"/>
 <path d="M317,182h 218" fill="none" stroke="#cccccc"/>
 <path d="M333,182v -0.012h 11v 0.012h 5.4v -0.024h 11v 0.012h 5.4v -0.073h 5.4v 0.012h 5.4v -0.110h 5.4v 0.024h 5.4v -0.061h 5.4v -0.037h 5.4v -0.085h 5.4v -0.085h 5.4v 0.049h 5.4v -0.146h 5.4v 0.146h 5.4v -0.110h 11v 0.012h 5.4v -0.024h 5.4v 0.232h
  5.4v 0.012h 5.4v -0.085h 5.4v 0.232h 5.4v -0.037h 5.4v 0.049h 5.4v -0.012h 5.4v 0.098h 5.4v -0.012h 5.4v 0.012h 5.4v 0.024h -5.4v 0.012h -5.4v -0.012h -5.4v 0.098h -5.4v -0.012h -5.4v 0.049h -5.4v -0.037h -5.4v 0.232h -5.4v -0.085h -5.4v 0.012h
@@ -729,13 +720,10 @@ th2_violin.svg
  -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M502,182h -57" fill="none" stroke="#0000ff"/>
 <path d="M407,182h -57" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="426" cy="182" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="426" cy="182" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="334" y1="180" x2="338" y2="184"/><line x1="334" y1="184" x2="338" y2="180"/>
-<line x1="339" y1="180" x2="343" y2="184"/><line x1="339" y1="184" x2="343" y2="180"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M334,180l4,4M334,184l4,-4 M339,180l4,4M339,184l4,-4"/>
 <path d="M317,177h 218" fill="none" stroke="#cccccc"/>
 <path d="M333,177v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v -0.049h 5.4v 0.012h 5.4v -0.012h 5.4v -0.037h 5.4v -0.012h 5.4v -0.012h 5.4v -0.134h 5.4v 0.012h 5.4v -0.134h 5.4v -0.037h 5.4v -0.073h 5.4v -0.012h 5.4v -0.232h 5.4v 0.049h 5.4v 0.012h 5.4v
  0.110h 5.4v -0.073h 5.4v 0.207h 5.4v -0.037h 5.4v 0.134h 5.4v 0.134h 5.4v 0.085h 5.4v -0.098h 5.4v 0.122h 5.4v 0.037h 5.4v -0.024h 5.4v 0.073h 5.4v -0.012h 11v 0.012h 5.4v -0.012h 5.4v 0.024h -5.4v -0.012h -5.4v 0.012h -11v -0.012h -5.4v 0.073h
@@ -747,16 +735,10 @@ th2_violin.svg
  0.012h -5.4v -0.134h -5.4v -0.012h -5.4v -0.012h -5.4v -0.037h -5.4v -0.012h -5.4v 0.012h -5.4v -0.049h -5.4v -0.012h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M491,177h -49" fill="none" stroke="#0000ff"/>
 <path d="M406,177h -57" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="424" cy="177" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="424" cy="177" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="334" y1="175" x2="338" y2="179"/><line x1="334" y1="179" x2="338" y2="175"/>
-<line x1="345" y1="175" x2="349" y2="179"/><line x1="345" y1="179" x2="349" y2="175"/>
-<line x1="497" y1="175" x2="501" y2="179"/><line x1="497" y1="179" x2="501" y2="175"/>
-<line x1="503" y1="175" x2="507" y2="179"/><line x1="503" y1="179" x2="507" y2="175"/>
-<line x1="513" y1="175" x2="518" y2="179"/><line x1="513" y1="179" x2="518" y2="175"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M334,175l4,4M334,179l4,-4 M345,175l4,4M345,179l4,-4 M497,175l4,4M497,179l4,-4 M503,175l4,4M503,179l4,-4 M513,175l4,4M513,179l4,-4"/>
 <path d="M317,172h 218" fill="none" stroke="#cccccc"/>
 <path d="M333,172v -0.012h 22v -0.024h 5.4v 0.012h 5.4v -0.073h 5.4v -0.073h 5.4v 0.024h 5.4v -0.146h 5.4v -0.195h 5.4v 0.024h 5.4v -0.085h 5.4v -0.232h 5.4v 0.122h 5.4v -0.085h 5.4v -0.146h 5.4v 0.037h 5.4v 0.024h 5.4v -0.098h 5.4v 0.317h 5.4v
  0.037h 5.4v 0.012h 5.4v 0.268h 5.4v 0.037h 5.4v 0.073h 5.4v 0.085h 5.4v 0.024h 5.4v 0.049h 11v 0.024h 11v -0.012h 5.4v 0.024h -5.4v -0.012h -11v 0.024h -11v 0.049h -5.4v 0.024h -5.4v 0.085h -5.4v 0.073h -5.4v 0.037h -5.4v 0.268h -5.4v 0.012h -5.4v
@@ -768,15 +750,10 @@ th2_violin.svg
  -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M496,172h -54" fill="none" stroke="#0000ff"/>
 <path d="M406,172h -57" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="425" cy="172" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="425" cy="172" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="334" y1="170" x2="338" y2="174"/><line x1="334" y1="174" x2="338" y2="170"/>
-<line x1="339" y1="170" x2="343" y2="174"/><line x1="339" y1="174" x2="343" y2="170"/>
-<line x1="345" y1="170" x2="349" y2="174"/><line x1="345" y1="174" x2="349" y2="170"/>
-<line x1="508" y1="170" x2="512" y2="174"/><line x1="508" y1="174" x2="512" y2="170"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M334,170l4,4M334,174l4,-4 M339,170l4,4M339,174l4,-4 M345,170l4,4M345,174l4,-4 M508,170l4,4M508,174l4,-4"/>
 <path d="M317,166h 218" fill="none" stroke="#cccccc"/>
 <path d="M333,166v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v -0.037h 5.4v 0.012h 5.4v -0.037h 5.4v -0.061h 5.4v 0.012h 5.4v -0.061h 5.4v -0.146h 5.4v -0.195h 11v -0.146h 5.4v -0.195h 5.4v -0.085h 5.4v -0.024h 5.4v -0.098h 5.4v 0.024h 5.4v -0.012h 5.4v
  0.146h 5.4v 0.024h 5.4v 0.330h 5.4v -0.085h 5.4v 0.220h 5.4v 0.098h 5.4v 0.061h 5.4v 0.183h 11v -0.012h 5.4v 0.049h 5.4v 0.037h 5.4v -0.012h 5.4v 0.024h 5.4v -0.012h 5.4v 0.024h -5.4v -0.012h -5.4v 0.024h -5.4v -0.012h -5.4v 0.037h -5.4v 0.049h
@@ -788,15 +765,10 @@ th2_violin.svg
  -0.061h -5.4v 0.012h -5.4v -0.061h -5.4v -0.037h -5.4v 0.012h -5.4v -0.037h -5.4v -0.012h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M502,166h -58" fill="none" stroke="#0000ff"/>
 <path d="M408,166h -58" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="426" cy="166" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="426" cy="166" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="334" y1="164" x2="338" y2="169"/><line x1="334" y1="169" x2="338" y2="164"/>
-<line x1="345" y1="164" x2="349" y2="169"/><line x1="345" y1="169" x2="349" y2="164"/>
-<line x1="503" y1="164" x2="507" y2="169"/><line x1="503" y1="169" x2="507" y2="164"/>
-<line x1="513" y1="164" x2="518" y2="169"/><line x1="513" y1="169" x2="518" y2="164"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M334,164l4,4M334,168l4,-4 M345,164l4,4M345,168l4,-4 M503,164l4,4M503,168l4,-4 M513,164l4,4M513,168l4,-4"/>
 <path d="M317,161h 218" fill="none" stroke="#cccccc"/>
 <path d="M339,161v -0.012h 11v -0.037h 5.4v 0.024h 5.4v -0.098h 5.4v -0.037h 5.4v -0.085h 5.4v -0.024h 5.4v -0.171h 5.4v -0.195h 5.4v -0.146h 5.4v -0.122h 5.4v 0.085h 5.4v -0.366h 5.4v -0.256h 5.4v 0.159h 5.4v 0.134h 5.4v -0.037h 5.4v 0.110h 5.4v
  0.110h 5.4v 0.110h 5.4v 0.098h 5.4v 0.281h 5.4v 0.110h 11v 0.146h 5.4v 0.110h 11v 0.061h 5.4v 0.012h 5.4v 0.012h 5.4v 0.012h 11v 0.024h -11v 0.012h -5.4v 0.012h -5.4v 0.012h -5.4v 0.061h -11v 0.110h -5.4v 0.146h -11v 0.110h -5.4v 0.281h -5.4v 0.098h
@@ -808,16 +780,10 @@ th2_violin.svg
  -5.4v -0.037h -11v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M502,161h -58" fill="none" stroke="#0000ff"/>
 <path d="M406,161h -57" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="425" cy="161" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="425" cy="161" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="339" y1="159" x2="343" y2="163"/><line x1="339" y1="163" x2="343" y2="159"/>
-<line x1="345" y1="159" x2="349" y2="163"/><line x1="345" y1="163" x2="349" y2="159"/>
-<line x1="503" y1="159" x2="507" y2="163"/><line x1="503" y1="163" x2="507" y2="159"/>
-<line x1="508" y1="159" x2="512" y2="163"/><line x1="508" y1="163" x2="512" y2="159"/>
-<line x1="513" y1="159" x2="518" y2="163"/><line x1="513" y1="163" x2="518" y2="159"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M339,159l4,4M339,163l4,-4 M345,159l4,4M345,163l4,-4 M503,159l4,4M503,163l4,-4 M508,159l4,4M508,163l4,-4 M513,159l4,4M513,163l4,-4"/>
 <path d="M317,156h 218" fill="none" stroke="#cccccc"/>
 <path d="M317,156v -0.012h 5.4v 0.012h 11v -0.012h 11v 0.012h 5.4v -0.024h 5.4v -0.061h 5.4v -0.024h 5.4v -0.085h 5.4v -0.024h 5.4v -0.220h 5.4v -0.024h 5.4v -0.159h 5.4v -0.220h 5.4v -0.134h 5.4v 0.134h 5.4v -0.671h 5.4v 0.171h 5.4v -0.098h 5.4v
  0.195h 5.4v -0.244h 5.4v 0.244h 5.4v 0.098h 5.4v 0.171h 5.4v 0.330h 5.4v -0.037h 5.4v 0.220h 5.4v 0.098h 5.4v 0.049h 5.4v 0.122h 5.4v 0.110h 5.4v 0.024h 5.4v 0.024h 5.4v 0.024h 11v 0.012h 11v -0.012h 5.4v 0.024h -5.4v -0.012h -11v 0.012h -11v 0.024h
@@ -829,17 +795,10 @@ th2_violin.svg
  -0.134h -5.4v -0.220h -5.4v -0.159h -5.4v -0.024h -5.4v -0.220h -5.4v -0.024h -5.4v -0.085h -5.4v -0.024h -5.4v -0.061h -5.4v -0.024h -5.4v 0.012h -11v -0.012h -11v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M502,156h -58" fill="none" stroke="#0000ff"/>
 <path d="M407,156h -58" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="426" cy="156" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="426" cy="156" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="318" y1="154" x2="322" y2="158"/><line x1="318" y1="158" x2="322" y2="154"/>
-<line x1="334" y1="154" x2="338" y2="158"/><line x1="334" y1="158" x2="338" y2="154"/>
-<line x1="339" y1="154" x2="343" y2="158"/><line x1="339" y1="158" x2="343" y2="154"/>
-<line x1="503" y1="154" x2="507" y2="158"/><line x1="503" y1="158" x2="507" y2="154"/>
-<line x1="508" y1="154" x2="512" y2="158"/><line x1="508" y1="158" x2="512" y2="154"/>
-<line x1="524" y1="154" x2="528" y2="158"/><line x1="524" y1="158" x2="528" y2="154"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M318,154l4,4M318,158l4,-4 M334,154l4,4M334,158l4,-4 M339,154l4,4M339,158l4,-4 M503,154l4,4M503,158l4,-4 M508,154l4,4M508,158l4,-4 M524,154l4,4M524,158l4,-4"/>
 <path d="M317,151h 218" fill="none" stroke="#cccccc"/>
 <path d="M333,151v -0.012h 5.4v 0.012h 5.4v -0.012h 11v -0.110h 11v -0.073h 5.4v -0.037h 5.4v -0.012h 5.4v -0.330h 5.4v -0.220h 5.4v 0.012h 5.4v -0.403h 5.4v -0.146h 5.4v 0.098h 5.4v -0.305h 5.4v -0.049h 5.4v -0.098h 5.4v -0.061h 5.4v 0.378h 5.4v
  -0.061h 5.4v 0.378h 5.4v 0.122h 5.4v 0.317h 5.4v 0.085h 5.4v 0.134h 5.4v 0.037h 5.4v 0.159h 5.4v 0.073h 5.4v 0.085h 11v 0.024h 5.4v 0.012h 5.4v -0.012h 11v 0.024h -11v -0.012h -5.4v 0.012h -5.4v 0.024h -11v 0.085h -5.4v 0.073h -5.4v 0.159h -5.4v
@@ -851,16 +810,10 @@ th2_violin.svg
  -0.012h -5.4v -0.037h -5.4v -0.073h -11v -0.110h -11v -0.012h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M502,151h -58" fill="none" stroke="#0000ff"/>
 <path d="M407,151h -58" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="426" cy="151" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="426" cy="151" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="334" y1="149" x2="338" y2="153"/><line x1="334" y1="153" x2="338" y2="149"/>
-<line x1="345" y1="149" x2="349" y2="153"/><line x1="345" y1="153" x2="349" y2="149"/>
-<line x1="503" y1="149" x2="507" y2="153"/><line x1="503" y1="153" x2="507" y2="149"/>
-<line x1="513" y1="149" x2="518" y2="153"/><line x1="513" y1="153" x2="518" y2="149"/>
-<line x1="519" y1="149" x2="523" y2="153"/><line x1="519" y1="153" x2="523" y2="149"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M334,149l4,4M334,153l4,-4 M345,149l4,4M345,153l4,-4 M503,149l4,4M503,153l4,-4 M513,149l4,4M513,153l4,-4 M519,149l4,4M519,153l4,-4"/>
 <path d="M317,145h 218" fill="none" stroke="#cccccc"/>
 <path d="M344,145v -0.012h 5.4v -0.073h 5.4v 0.024h 5.4v -0.049h 5.4v -0.134h 11v -0.256h 5.4v 0.037h 5.4v -0.342h 5.4v -0.195h 5.4v -0.061h 5.4v -0.476h 5.4v -0.183h 5.4v -0.207h 5.4v 0.159h 5.4v -0.049h 5.4v 0.012h 5.4v 0.195h 5.4v 0.220h 5.4v
  -0.085h 5.4v 0.427h 5.4v 0.244h 5.4v 0.171h 5.4v 0.012h 5.4v 0.330h 5.4v 0.049h 5.4v 0.073h 5.4v 0.073h 11v 0.061h 5.4v 0.037h 5.4v -0.024h 5.4v 0.049h -5.4v -0.024h -5.4v 0.037h -5.4v 0.061h -11v 0.073h -5.4v 0.073h -5.4v 0.049h -5.4v 0.330h -5.4v
@@ -872,13 +825,10 @@ th2_violin.svg
  -5.4v -0.049h -5.4v 0.024h -5.4v -0.073h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M507,145h -61" fill="none" stroke="#0000ff"/>
 <path d="M409,145h -59" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="427" cy="145" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="427" cy="145" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="345" y1="143" x2="349" y2="147"/><line x1="345" y1="147" x2="349" y2="143"/>
-<line x1="513" y1="143" x2="518" y2="147"/><line x1="513" y1="147" x2="518" y2="143"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M345,143l4,4M345,147l4,-4 M513,143l4,4M513,147l4,-4"/>
 <path d="M317,140h 218" fill="none" stroke="#cccccc"/>
 <path d="M322,140v -0.012h 5.4v 0.012h 16v -0.012h 5.4v -0.012h 5.4v -0.012h 5.4v -0.110h 5.4v -0.037h 5.4v -0.232h 5.4v 0.110h 5.4v -0.244h 5.4v -0.342h 5.4v -0.061h 5.4v -0.439h 5.4v -0.244h 5.4v -0.061h 5.4v -0.281h 5.4v -0.085h 5.4v -0.049h 5.4v
  0.171h 5.4v 0.146h 5.4v 0.317h 5.4v 0.268h 5.4v 0.159h 5.4v 0.256h 11v 0.220h 5.4v 0.256h 5.4v 0.195h 11v 0.049h 5.4v 0.024h 5.4v 0.024h 5.4v 0.012h 5.4v 0.012h 11v -0.024h 5.4v 0.049h -5.4v -0.024h -11v 0.012h -5.4v 0.012h -5.4v 0.024h -5.4v 0.024h
@@ -890,16 +840,10 @@ th2_violin.svg
  -0.244h -5.4v 0.110h -5.4v -0.232h -5.4v -0.037h -5.4v -0.110h -5.4v -0.012h -5.4v -0.012h -5.4v -0.012h -16v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M502,140h -58" fill="none" stroke="#0000ff"/>
 <path d="M408,140h -59" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="426" cy="140" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="426" cy="140" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="323" y1="138" x2="327" y2="142"/><line x1="323" y1="142" x2="327" y2="138"/>
-<line x1="345" y1="138" x2="349" y2="142"/><line x1="345" y1="142" x2="349" y2="138"/>
-<line x1="503" y1="138" x2="507" y2="142"/><line x1="503" y1="142" x2="507" y2="138"/>
-<line x1="508" y1="138" x2="512" y2="142"/><line x1="508" y1="142" x2="512" y2="138"/>
-<line x1="524" y1="138" x2="528" y2="142"/><line x1="524" y1="142" x2="528" y2="138"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M323,138l4,4M323,142l4,-4 M345,138l4,4M345,142l4,-4 M503,138l4,4M503,142l4,-4 M508,138l4,4M508,142l4,-4 M524,138l4,4M524,142l4,-4"/>
 <path d="M317,135h 218" fill="none" stroke="#cccccc"/>
 <path d="M333,135v -0.012h 11v -0.037h 5.4v 0.012h 5.4v -0.024h 5.4v -0.037h 5.4v -0.122h 5.4v -0.171h 5.4v -0.012h 5.4v -0.134h 5.4v -0.330h 5.4v -0.098h 5.4v -0.683h 5.4v 0.134h 5.4v -0.146h 5.4v 0.024h 5.4v -0.439h 5.4v 0.293h 5.4v 0.122h 5.4v
  -0.061h 5.4v 0.134h 5.4v 0.220h 5.4v 0.317h 5.4v 0.183h 5.4v 0.378h 5.4v 0.146h 5.4v 0.085h 5.4v 0.073h 5.4v 0.098h 5.4v -0.012h 5.4v 0.061h 5.4v 0.037h 5.4v -0.024h 5.4v 0.024h 5.4v -0.012h 5.4v -0.012h 5.4v 0.049h -5.4v -0.012h -5.4v -0.012h -5.4v
@@ -911,18 +855,10 @@ th2_violin.svg
  -5.4v -0.146h -5.4v 0.134h -5.4v -0.683h -5.4v -0.098h -5.4v -0.330h -5.4v -0.134h -5.4v -0.012h -5.4v -0.171h -5.4v -0.122h -5.4v -0.037h -5.4v -0.024h -5.4v 0.012h -5.4v -0.037h -11v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M502,135h -58" fill="none" stroke="#0000ff"/>
 <path d="M406,135h -57" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="425" cy="135" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="425" cy="135" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="334" y1="133" x2="338" y2="137"/><line x1="334" y1="137" x2="338" y2="133"/>
-<line x1="339" y1="133" x2="343" y2="137"/><line x1="339" y1="137" x2="343" y2="133"/>
-<line x1="343" y1="133" x2="347" y2="137"/><line x1="343" y1="137" x2="347" y2="133"/>
-<line x1="347" y1="133" x2="351" y2="137"/><line x1="347" y1="137" x2="351" y2="133"/>
-<line x1="508" y1="133" x2="512" y2="137"/><line x1="508" y1="137" x2="512" y2="133"/>
-<line x1="519" y1="133" x2="523" y2="137"/><line x1="519" y1="137" x2="523" y2="133"/>
-<line x1="524" y1="133" x2="528" y2="137"/><line x1="524" y1="137" x2="528" y2="133"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M334,133l4,4M334,137l4,-4 M339,133l4,4M339,137l4,-4 M343,133l4,4M343,137l4,-4 M347,133l4,4M347,137l4,-4 M508,133l4,4M508,137l4,-4 M519,133l4,4M519,137l4,-4 M524,133l4,4M524,137l4,-4"/>
 <path d="M317,130h 218" fill="none" stroke="#cccccc"/>
 <path d="M328,130v -0.012h 16v -0.012h 11v -0.061h 5.4v -0.098h 5.4v -0.012h 5.4v -0.134h 5.4v -0.073h 5.4v -0.098h 5.4v -0.366h 5.4v -0.342h 5.4v -0.012h 5.4v -0.098h 5.4v -0.293h 5.4v 0.134h 5.4v -0.403h 5.4v -0.024h 5.4v -0.171h 11v 0.708h 5.4v
  0.134h 5.4v 0.146h 5.4v 0.452h 5.4v -0.024h 5.4v 0.256h 5.4v 0.146h 5.4v 0.024h 5.4v 0.134h 5.4v 0.024h 5.4v 0.024h 5.4v 0.049h 11v -0.012h 11v 0.024h -11v -0.012h -11v 0.049h -5.4v 0.024h -5.4v 0.024h -5.4v 0.134h -5.4v 0.024h -5.4v 0.146h -5.4v
@@ -934,17 +870,10 @@ th2_violin.svg
  -0.012h -5.4v -0.098h -5.4v -0.061h -11v -0.012h -16v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M502,130h -59" fill="none" stroke="#0000ff"/>
 <path d="M407,130h -58" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="426" cy="130" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="426" cy="130" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="328" y1="128" x2="332" y2="132"/><line x1="328" y1="132" x2="332" y2="128"/>
-<line x1="334" y1="128" x2="338" y2="132"/><line x1="334" y1="132" x2="338" y2="128"/>
-<line x1="339" y1="128" x2="343" y2="132"/><line x1="339" y1="132" x2="343" y2="128"/>
-<line x1="345" y1="128" x2="349" y2="132"/><line x1="345" y1="132" x2="349" y2="128"/>
-<line x1="513" y1="128" x2="518" y2="132"/><line x1="513" y1="132" x2="518" y2="128"/>
-<line x1="519" y1="128" x2="523" y2="132"/><line x1="519" y1="132" x2="523" y2="128"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M328,128l4,4M328,132l4,-4 M334,128l4,4M334,132l4,-4 M339,128l4,4M339,132l4,-4 M345,128l4,4M345,132l4,-4 M513,128l4,4M513,132l4,-4 M519,128l4,4M519,132l4,-4"/>
 <path d="M317,124h 218" fill="none" stroke="#cccccc"/>
 <path d="M328,124v -0.012h 5.4v 0.012h 5.4v -0.024h 5.4v -0.012h 5.4v -0.024h 5.4v -0.024h 5.4v 0.024h 5.4v -0.110h 5.4v -0.134h 5.4v -0.134h 5.4v -0.085h 5.4v -0.256h 5.4v -0.232h 5.4v -0.293h 5.4v -0.183h 5.4v -0.024h 11v -0.122h 5.4v 0.159h 5.4v
  -0.134h 5.4v 0.098h 5.4v 0.244h 5.4v 0.281h 5.4v 0.098h 5.4v 0.098h 5.4v 0.232h 5.4v 0.098h 5.4v 0.207h 5.4v 0.098h 5.4v 0.085h 11v 0.012h 5.4v 0.012h 5.4v 0.037h 11v 0.024h -11v 0.037h -5.4v 0.012h -5.4v 0.012h -11v 0.085h -5.4v 0.098h -5.4v 0.207h
@@ -956,17 +885,10 @@ th2_violin.svg
  -0.110h -5.4v 0.024h -5.4v -0.024h -5.4v -0.024h -5.4v -0.012h -5.4v -0.024h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M502,124h -58" fill="none" stroke="#0000ff"/>
 <path d="M406,124h -62" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="425" cy="124" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="425" cy="124" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="328" y1="122" x2="332" y2="126"/><line x1="328" y1="126" x2="332" y2="122"/>
-<line x1="339" y1="122" x2="343" y2="126"/><line x1="339" y1="126" x2="343" y2="122"/>
-<line x1="501" y1="122" x2="505" y2="126"/><line x1="501" y1="126" x2="505" y2="122"/>
-<line x1="505" y1="122" x2="509" y2="126"/><line x1="505" y1="126" x2="509" y2="122"/>
-<line x1="508" y1="122" x2="512" y2="126"/><line x1="508" y1="126" x2="512" y2="122"/>
-<line x1="513" y1="122" x2="518" y2="126"/><line x1="513" y1="126" x2="518" y2="122"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M328,122l4,4M328,126l4,-4 M339,122l4,4M339,126l4,-4 M501,122l4,4M501,126l4,-4 M505,122l4,4M505,126l4,-4 M508,122l4,4M508,126l4,-4 M513,122l4,4M513,126l4,-4"/>
 <path d="M317,119h 218" fill="none" stroke="#cccccc"/>
 <path d="M339,119v -0.012h 5.4v 0.012h 5.4v -0.024h 5.4v -0.061h 5.4v -0.024h 5.4v -0.061h 5.4v -0.085h 5.4v -0.183h 5.4v -0.061h 5.4v -0.220h 5.4v -0.122h 5.4v -0.146h 5.4v -0.244h 5.4v -0.037h 5.4v -0.159h 5.4v -0.134h 5.4v 0.012h 5.4v 0.146h 5.4v
  0.073h 5.4v 0.110h 5.4v 0.391h 5.4v 0.085h 5.4v 0.146h 5.4v 0.024h 5.4v 0.232h 5.4v 0.146h 5.4v 0.073h 5.4v -0.012h 5.4v 0.098h 5.4v 0.024h 5.4v -0.024h 5.4v 0.024h 5.4v 0.012h 16v -0.012h 5.4v 0.024h -5.4v -0.012h -16v 0.012h -5.4v 0.024h -5.4v
@@ -978,14 +900,10 @@ th2_violin.svg
  -5.4v -0.146h -5.4v -0.122h -5.4v -0.220h -5.4v -0.061h -5.4v -0.183h -5.4v -0.085h -5.4v -0.061h -5.4v -0.024h -5.4v -0.061h -5.4v -0.024h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M502,119h -59" fill="none" stroke="#0000ff"/>
 <path d="M406,119h -57" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="425" cy="119" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="425" cy="119" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="339" y1="117" x2="343" y2="121"/><line x1="339" y1="121" x2="343" y2="117"/>
-<line x1="503" y1="117" x2="507" y2="121"/><line x1="503" y1="121" x2="507" y2="117"/>
-<line x1="508" y1="117" x2="512" y2="121"/><line x1="508" y1="121" x2="512" y2="117"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M339,117l4,4M339,121l4,-4 M503,117l4,4M503,121l4,-4 M508,117l4,4M508,121l4,-4"/>
 <path d="M317,114h 218" fill="none" stroke="#cccccc"/>
 <path d="M317,114v -0.012h 5.4v 0.012h 5.4v -0.012h 11v 0.012h 5.4v -0.037h 5.4v -0.049h 5.4v 0.037h 5.4v -0.049h 5.4v -0.012h 5.4v -0.146h 5.4v -0.085h 11v -0.330h 5.4v 0.049h 5.4v -0.391h 5.4v 0.317h 5.4v -0.574h 5.4v -0.024h 5.4v 0.012h 11v 0.073h
  5.4v 0.183h 5.4v 0.146h 5.4v -0.061h 5.4v 0.171h 5.4v 0.183h 5.4v 0.024h 5.4v 0.232h 5.4v 0.073h 5.4v 0.049h 5.4v 0.134h 5.4v -0.049h 5.4v 0.061h 5.4v 0.049h 5.4v 0.024h -5.4v 0.049h -5.4v 0.061h -5.4v -0.049h -5.4v 0.134h -5.4v 0.049h -5.4v 0.073h
@@ -997,16 +915,10 @@ th2_violin.svg
  -0.049h -5.4v 0.037h -5.4v -0.049h -5.4v -0.037h -5.4v 0.012h -11v -0.012h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M507,114h -61" fill="none" stroke="#0000ff"/>
 <path d="M408,114h -58" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="426" cy="114" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="426" cy="114" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="318" y1="112" x2="322" y2="116"/><line x1="318" y1="116" x2="322" y2="112"/>
-<line x1="328" y1="112" x2="332" y2="116"/><line x1="328" y1="116" x2="332" y2="112"/>
-<line x1="334" y1="112" x2="338" y2="116"/><line x1="334" y1="116" x2="338" y2="112"/>
-<line x1="343" y1="112" x2="347" y2="116"/><line x1="343" y1="116" x2="347" y2="112"/>
-<line x1="347" y1="112" x2="351" y2="116"/><line x1="347" y1="116" x2="351" y2="112"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M318,112l4,4M318,116l4,-4 M328,112l4,4M328,116l4,-4 M334,112l4,4M334,116l4,-4 M343,112l4,4M343,116l4,-4 M347,112l4,4M347,116l4,-4"/>
 <path d="M317,108h 218" fill="none" stroke="#cccccc"/>
 <path d="M333,108v -0.012h 11v -0.024h 5.4v 0.024h 5.4v -0.037h 5.4v -0.012h 5.4v -0.061h 5.4v -0.037h 5.4v -0.146h 5.4v -0.195h 5.4v 0.171h 5.4v -0.281h 5.4v -0.122h 5.4v 0.037h 5.4v -0.073h 5.4v 0.073h 5.4v -0.317h 5.4v -0.061h 5.4v 0.195h 5.4v
  -0.122h 5.4v 0.146h 5.4v 0.183h 11v 0.281h 5.4v 0.049h 5.4v 0.049h 11v 0.159h 5.4v 0.073h 5.4v 0.012h 5.4v 0.024h 5.4v -0.012h 5.4v 0.012h 5.4v 0.012h 5.4v 0.024h -5.4v 0.012h -5.4v 0.012h -5.4v -0.012h -5.4v 0.024h -5.4v 0.012h -5.4v 0.073h -5.4v
@@ -1018,15 +930,10 @@ th2_violin.svg
  -5.4v -0.061h -5.4v -0.012h -5.4v -0.037h -5.4v 0.024h -5.4v -0.024h -11v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M507,108h -61" fill="none" stroke="#0000ff"/>
 <path d="M406,108h -62" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="427" cy="108" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="427" cy="108" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="334" y1="106" x2="338" y2="110"/><line x1="334" y1="110" x2="338" y2="106"/>
-<line x1="339" y1="106" x2="343" y2="110"/><line x1="339" y1="110" x2="343" y2="106"/>
-<line x1="508" y1="106" x2="512" y2="110"/><line x1="508" y1="110" x2="512" y2="106"/>
-<line x1="513" y1="106" x2="518" y2="110"/><line x1="513" y1="110" x2="518" y2="106"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M334,106l4,4M334,110l4,-4 M339,106l4,4M339,110l4,-4 M508,106l4,4M508,110l4,-4 M513,106l4,4M513,110l4,-4"/>
 <path d="M317,103h 218" fill="none" stroke="#cccccc"/>
 <path d="M328,103v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v -0.024h 11v -0.037h 5.4v -0.024h 5.4v 0.024h 5.4v -0.085h 5.4v 0.098h 5.4v -0.220h 5.4v -0.085h 5.4v -0.122h 5.4v -0.012h 5.4v -0.146h 5.4v -0.012h 5.4v -0.293h 5.4v -0.024h 5.4v 0.085h 5.4v
  -0.049h 5.4v 0.098h 5.4v 0.305h 5.4v 0.049h 5.4v -0.037h 5.4v 0.195h 5.4v 0.024h 5.4v 0.098h 5.4v 0.122h 5.4v 0.024h 11v 0.024h 5.4v 0.037h 5.4v -0.012h 16v 0.024h -16v -0.012h -5.4v 0.037h -5.4v 0.024h -11v 0.024h -5.4v 0.122h -5.4v 0.098h -5.4v
@@ -1038,22 +945,11 @@ th2_violin.svg
  0.024h -5.4v -0.024h -5.4v -0.037h -11v -0.024h -5.4v -0.012h -5.4v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M496,103h -55" fill="none" stroke="#0000ff"/>
 <path d="M408,103h -53" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="425" cy="103" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="425" cy="103" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="328" y1="101" x2="332" y2="105"/><line x1="328" y1="105" x2="332" y2="101"/>
-<line x1="339" y1="101" x2="343" y2="105"/><line x1="339" y1="105" x2="343" y2="101"/>
-<line x1="343" y1="101" x2="347" y2="105"/><line x1="343" y1="105" x2="347" y2="101"/>
-<line x1="347" y1="101" x2="351" y2="105"/><line x1="347" y1="105" x2="351" y2="101"/>
-<line x1="345" y1="101" x2="349" y2="105"/><line x1="345" y1="105" x2="349" y2="101"/>
-<line x1="348" y1="101" x2="352" y2="105"/><line x1="348" y1="105" x2="352" y2="101"/>
-<line x1="349" y1="101" x2="353" y2="105"/><line x1="349" y1="105" x2="353" y2="101"/>
-<line x1="350" y1="101" x2="354" y2="105"/><line x1="350" y1="105" x2="354" y2="101"/>
-<line x1="503" y1="101" x2="507" y2="105"/><line x1="503" y1="105" x2="507" y2="101"/>
-<line x1="508" y1="101" x2="512" y2="105"/><line x1="508" y1="105" x2="512" y2="101"/>
-<line x1="513" y1="101" x2="518" y2="105"/><line x1="513" y1="105" x2="518" y2="101"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M328,101l4,4M328,105l4,-4 M339,101l4,4M339,105l4,-4 M343,101l4,4M343,105l4,-4 M347,101l4,4M347,105l4,-4 M345,101l4,4M345,105l4,-4 M348,101l4,4M348,105l4,-4 M349,101l4,4M349,105l4,-4
+ M350,101l4,4M350,105l4,-4 M503,101l4,4M503,105l4,-4 M508,101l4,4M508,105l4,-4 M513,101l4,4M513,105l4,-4"/>
 <path d="M317,98h 218" fill="none" stroke="#cccccc"/>
 <path d="M344,98v -0.012h 5.4v -0.012h 5.4v -0.012h 5.4v -0.037h 5.4v 0.024h 5.4v -0.073h 5.4v 0.012h 5.4v -0.073h 5.4v -0.024h 5.4v -0.098h 5.4v -0.061h 5.4v -0.061h 5.4v -0.134h 5.4v 0.012h 5.4v 0.085h 5.4v -0.110h 5.4v -0.134h 5.4v 0.024h 5.4v
  0.159h 5.4v 0.171h 5.4v -0.073h 5.4v 0.256h 5.4v 0.024h 11v 0.073h 5.4v -0.049h 5.4v 0.122h 5.4v -0.012h 11v 0.012h 11v -0.012h 11v 0.024h -11v -0.012h -11v 0.012h -11v -0.012h -5.4v 0.122h -5.4v -0.049h -5.4v 0.073h -11v 0.024h -5.4v 0.256h -5.4v
@@ -1065,17 +961,10 @@ th2_violin.svg
  -0.012h -5.4v -0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M496,98h -53" fill="none" stroke="#0000ff"/>
 <path d="M409,98h -54" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="426" cy="98" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="426" cy="98" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="345" y1="96" x2="349" y2="100"/><line x1="345" y1="100" x2="349" y2="96"/>
-<line x1="349" y1="96" x2="353" y2="100"/><line x1="349" y1="100" x2="353" y2="96"/>
-<line x1="353" y1="96" x2="357" y2="100"/><line x1="353" y1="100" x2="357" y2="96"/>
-<line x1="497" y1="96" x2="501" y2="100"/><line x1="497" y1="100" x2="501" y2="96"/>
-<line x1="513" y1="96" x2="518" y2="100"/><line x1="513" y1="100" x2="518" y2="96"/>
-<line x1="519" y1="96" x2="523" y2="100"/><line x1="519" y1="100" x2="523" y2="96"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M345,96l4,4M345,100l4,-4 M349,96l4,4M349,100l4,-4 M353,96l4,4M353,100l4,-4 M497,96l4,4M497,100l4,-4 M513,96l4,4M513,100l4,-4 M519,96l4,4M519,100l4,-4"/>
 <path d="M317,93h 218" fill="none" stroke="#cccccc"/>
 <path d="M317,93v -0.012h 5.4v 0.012h 11v -0.012h 5.4v 0.012h 16v -0.012h 5.4v -0.037h 5.4v -0.061h 5.4v 0.098h 5.4v -0.122h 11v -0.146h 5.4v -0.024h 5.4v -0.024h 5.4v -0.098h 5.4v 0.061h 5.4v -0.110h 5.4v 0.037h 5.4v -0.110h 5.4v 0.122h 5.4v 0.037h
  5.4v 0.146h 5.4v -0.171h 5.4v 0.232h 11v 0.073h 5.4v -0.024h 5.4v 0.061h 5.4v 0.024h 5.4v 0.037h 5.4v -0.012h 5.4v 0.012h 5.4v 0.012h 5.4v -0.024h 5.4v 0.049h -5.4v -0.024h -5.4v 0.012h -5.4v 0.012h -5.4v -0.012h -5.4v 0.037h -5.4v 0.024h -5.4v
@@ -1087,15 +976,10 @@ th2_violin.svg
  -5.4v -0.037h -5.4v -0.012h -16v 0.012h -5.4v -0.012h -11v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M502,93h -60" fill="none" stroke="#0000ff"/>
 <path d="M405,93h -50" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="424" cy="93" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="424" cy="93" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="318" y1="91" x2="322" y2="95"/><line x1="318" y1="95" x2="322" y2="91"/>
-<line x1="334" y1="91" x2="338" y2="95"/><line x1="334" y1="95" x2="338" y2="91"/>
-<line x1="506" y1="91" x2="510" y2="95"/><line x1="506" y1="95" x2="510" y2="91"/>
-<line x1="510" y1="91" x2="515" y2="95"/><line x1="510" y1="95" x2="515" y2="91"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M318,91l4,4M318,95l4,-4 M334,91l4,4M334,95l4,-4 M506,91l4,4M506,95l4,-4 M511,91l4,4M511,95l4,-4"/>
 <path d="M317,87h 218" fill="none" stroke="#cccccc"/>
 <path d="M355,87v -0.024h 5.4v -0.012h 5.4v -0.049h 5.4v 0.061h 5.4v -0.085h 5.4v -0.024h 5.4v 0.049h 5.4v -0.171h 5.4v 0.037h 5.4v 0.049h 5.4v -0.122h 5.4v -0.073h 5.4v 0.061h 5.4v -0.024h 11v 0.037h 5.4v 0.098h 5.4v -0.122h 5.4v 0.122h 11v 0.073h
  5.4v 0.037h 5.4v -0.012h 5.4v 0.073h 11v 0.049h -11v 0.073h -5.4v -0.012h -5.4v 0.037h -5.4v 0.073h -11v 0.122h -5.4v -0.122h -5.4v 0.098h -5.4v 0.037h -11v -0.024h -5.4v 0.061h -5.4v -0.073h -5.4v -0.122h -5.4v 0.049h -5.4v 0.037h -5.4v -0.171h
@@ -1105,8 +989,8 @@ th2_violin.svg
  -5.4v 0.049h -5.4v -0.024h -5.4v -0.085h -5.4v 0.061h -5.4v -0.049h -5.4v -0.012h -5.4v -0.024z" fill="none" stroke="#cccccc"/>
 <path d="M491,87h -44" fill="none" stroke="#0000ff"/>
 <path d="M407,87h -52" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="426" cy="87" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="426" cy="87" r="3"/>
 </g>
 <path d="M317,82h 218" fill="none" stroke="#cccccc"/>
 <path d="M350,82v -0.012h 5.4v -0.024h 5.4v 0.024h 5.4v -0.024h 5.4v -0.012h 5.4v -0.024h 5.4v 0.012h 11v -0.098h 5.4v 0.061h 5.4v -0.037h 5.4v -0.110h 5.4v -0.037h 5.4v 0.110h 5.4v -0.061h 5.4v 0.037h 5.4v 0.098h 5.4v -0.110h 5.4v 0.134h 5.4v
@@ -1117,8 +1001,8 @@ th2_violin.svg
  -0.061h -5.4v 0.110h -5.4v -0.037h -5.4v -0.110h -5.4v -0.037h -5.4v 0.061h -5.4v -0.098h -11v 0.012h -5.4v -0.024h -5.4v -0.012h -5.4v -0.024h -5.4v 0.024h -5.4v -0.024h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M502,82h -59" fill="none" stroke="#0000ff"/>
 <path d="M407,82h -57" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="423" cy="82" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="423" cy="82" r="3"/>
 </g>
 <path d="M317,77h 218" fill="none" stroke="#cccccc"/>
 <path d="M355,77v -0.012h 11v 0.012h 5.4v -0.024h 5.4v 0.012h 11v -0.024h 5.4v -0.061h 5.4v -0.012h 5.4v 0.024h 5.4v 0.012h 5.4v -0.061h 5.4v 0.049h 5.4v -0.073h 5.4v 0.073h 11v -0.037h 5.4v 0.024h 5.4v 0.024h 5.4v 0.012h 5.4v 0.024h 11v 0.024h 11v
@@ -1129,8 +1013,8 @@ th2_violin.svg
  -0.024h -11v 0.012h -5.4v -0.024h -5.4v 0.012h -11v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M496,77h -50" fill="none" stroke="#0000ff"/>
 <path d="M408,77h -53" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="428" cy="77" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="428" cy="77" r="3"/>
 </g>
 <path d="M317,71h 218" fill="none" stroke="#cccccc"/>
 <path d="M366,71v -0.012h 5.4v 0.012h 11v -0.037h 5.4v -0.012h 5.4v -0.012h 5.4v 0.012h 5.4v -0.037h 5.4v 0.024h 5.4v -0.037h 11v 0.012h 5.4v 0.024h 5.4v -0.024h 5.4v 0.024h 5.4v -0.024h 5.4v -0.024h 5.4v 0.049h 5.4v 0.037h 5.4v 0.012h 5.4v -0.012h
@@ -1141,8 +1025,8 @@ th2_violin.svg
  -5.4v -0.012h -5.4v -0.012h -5.4v -0.037h -11v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M502,71h -52" fill="none" stroke="#0000ff"/>
 <path d="M410,71h -44" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="430" cy="71" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="430" cy="71" r="3"/>
 </g>
 <path d="M317,66h 218" fill="none" stroke="#cccccc"/>
 <path d="M355,66v -0.012h 5.4v 0.012h 5.4v -0.024h 5.4v 0.024h 5.4v -0.012h 5.4v 0.012h 5.4v -0.024h 5.4v -0.012h 5.4v 0.024h 5.4v -0.012h 11v -0.049h 5.4v -0.024h 5.4v 0.024h 5.4v 0.024h 22v 0.024h 11v 0.024h 5.4v -0.024h 11v 0.024h 5.4v -0.012h 11v
@@ -1153,12 +1037,10 @@ th2_violin.svg
  -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M496,66h -50" fill="none" stroke="#0000ff"/>
 <path d="M416,66h -50" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="429" cy="66" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="429" cy="66" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="356" y1="64" x2="360" y2="68"/><line x1="356" y1="68" x2="360" y2="64"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M356,64l4,4M356,68l4,-4"/>
 <path d="M317,61h 218" fill="none" stroke="#cccccc"/>
 <path d="M382,61v -0.037h 5.4v 0.012h 11v 0.012h 5.4v -0.012h 5.4v -0.024h 5.4v 0.037h 5.4v -0.049h 5.4v 0.049h 5.4v -0.012h 11v 0.012h 5.4v 0.012h 11v -0.049h 5.4v 0.049h 11v -0.024h 5.4v 0.024h 5.4v -0.012h 5.4v 0.024h -5.4v -0.012h -5.4v 0.024h
  -5.4v -0.024h -11v 0.049h -5.4v -0.049h -11v 0.012h -5.4v 0.012h -11v -0.012h -5.4v 0.049h -5.4v -0.049h -5.4v 0.037h -5.4v -0.024h -5.4v -0.012h -5.4v 0.012h -11v 0.012h -5.4v -0.037z" fill="#cccccc"/>
@@ -1166,8 +1048,8 @@ th2_violin.svg
  -5.4v -0.024h -11v 0.049h -5.4v -0.049h -11v 0.012h -5.4v 0.012h -11v -0.012h -5.4v 0.049h -5.4v -0.049h -5.4v 0.037h -5.4v -0.024h -5.4v -0.012h -5.4v 0.012h -11v 0.012h -5.4v -0.037z" fill="none" stroke="#cccccc"/>
 <path d="M491,61h -50" fill="none" stroke="#0000ff"/>
 <path d="M405,61h -22" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="425" cy="61" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="425" cy="61" r="3"/>
 </g>
 <path d="M317,56h 218" fill="none" stroke="#cccccc"/>
 <path d="M415,56v -0.024h 5.4v -0.012h 5.4v 0.012h 5.4v 0.012h 5.4v 0.012h 5.4v -0.024h 5.4v 0.024h 5.4v -0.049h 5.4v 0.049h 5.4v -0.012h 5.4v 0.024h -5.4v -0.012h -5.4v 0.049h -5.4v -0.049h -5.4v 0.024h -5.4v -0.024h -5.4v 0.012h -5.4v 0.012h -5.4v
@@ -1176,8 +1058,8 @@ th2_violin.svg
  0.012h -5.4v -0.012h -5.4v -0.024z" fill="none" stroke="#cccccc"/>
 <path d="M469,56h -15" fill="none" stroke="#0000ff"/>
 <path d="M423,56h -8.6" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="438" cy="56" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="438" cy="56" r="3"/>
 </g>
 <path d="M317,50h 218" fill="none" stroke="#cccccc"/>
 <path d="M388,50v -0.012h 5.4v 0.012h 11v -0.012h 5.4v 0.012h 11v -0.012h 11v 0.012h 11v -0.012h 22v 0.012h 49v -0.012h 5.4v 0.024h -5.4v -0.012h -49v 0.012h -22v -0.012h -11v 0.012h -11v -0.012h -11v 0.012h -5.4v -0.012h -11v 0.012h -5.4v -0.012z"
@@ -1186,12 +1068,10 @@ th2_violin.svg
  fill="none" stroke="#cccccc"/>
 <path d="M464,50h -6.8" fill="none" stroke="#0000ff"/>
 <path d="M422,50h -34" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="442" cy="50" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="442" cy="50" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="513" y1="48" x2="518" y2="52"/><line x1="513" y1="52" x2="518" y2="48"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M513,48l4,4M513,52l4,-4"/>
 <path d="M317,45h 218" fill="none" stroke="#cccccc"/>
 <path d="M377,45v -0.012h 5.4v 0.012h 22v -0.012h 5.4v 0.012h 5.4v -0.012h 5.4v 0.012h 5.4v -0.024h 5.4v 0.024h 49v -0.012h 5.4v 0.024h -5.4v -0.012h -49v 0.024h -5.4v -0.024h -5.4v 0.012h -5.4v -0.012h -5.4v 0.012h -5.4v -0.012h -22v 0.012h -5.4v
  -0.012z" fill="#cccccc"/>
@@ -1199,27 +1079,25 @@ th2_violin.svg
  -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M431,45h -1.4" fill="none" stroke="#0000ff"/>
 <path d="M407,45h -30" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="424" cy="45" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="424" cy="45" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="481" y1="43" x2="485" y2="47"/><line x1="481" y1="47" x2="485" y2="43"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M481,43l4,4M481,47l4,-4"/>
 <path d="M317,40h 218" fill="none" stroke="#cccccc"/>
 <path d="M431,40v -0.012h 5.4v 0.024h -5.4v -0.012z" fill="#cccccc"/>
 <path d="M431,40v -0.012h 5.4v 0.024h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M437,40h -1.4" fill="none" stroke="#0000ff"/>
 <path d="M433,40h -1.4" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="434" cy="40" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="434" cy="40" r="3"/>
 </g>
 <path d="M317,35h 218" fill="none" stroke="#cccccc"/>
 <path d="M404,35v -0.012h 5.4v 0.012h 11v -0.012h 5.4v 0.024h -5.4v -0.012h -11v 0.012h -5.4v -0.012z" fill="#cccccc"/>
 <path d="M404,35v -0.012h 5.4v 0.012h 11v -0.012h 5.4v 0.024h -5.4v -0.012h -11v 0.012h -5.4v -0.012z" fill="none" stroke="#cccccc"/>
 <path d="M426,35h -2.7" fill="none" stroke="#0000ff"/>
 <path d="M407,35h -2.7" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="415" cy="35" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="415" cy="35" r="3"/>
 </g>
 <rect x="292" y="6.8" width="141" height="15" fill="#f2f2f2"/>
 <path d="M291,9.0v 14h 140v -1.4h -139v -12z" fill="black"/>
@@ -1337,24 +1215,24 @@ th2_violin.svg
 <path d="M36,433h 0.013v -5.3h -0.013v -37h 0.013v -5.3h -0.013v -16h 0.013v -5.3h -0.025v 5.3h 0.013v 16h -0.013v 5.3h 0.013v 37h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M36,365v 4.0" fill="none" stroke="#0000ff"/>
 <path d="M36,430v 4.0" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="36" cy="396" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="36" cy="396" r="3"/>
 </g>
 <path d="M42,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M42,418h 0.013v -5.3h -0.025v 5.3h 0.013z" fill="#cccccc"/>
 <path d="M42,418h 0.013v -5.3h -0.025v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M42,412v 1.3" fill="none" stroke="#0000ff"/>
 <path d="M42,416v 1.3" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="42" cy="415" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="42" cy="415" r="3"/>
 </g>
 <path d="M47,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M47,407h 0.013v -11h -0.013v -5.3h 0.013v -5.3h -0.013v -5.3h 0.013v -5.3h -0.025v 5.3h 0.013v 5.3h -0.013v 5.3h 0.013v 5.3h -0.013v 11h 0.013z" fill="#cccccc"/>
 <path d="M47,407h 0.013v -11h -0.013v -5.3h 0.013v -5.3h -0.013v -5.3h 0.013v -5.3h -0.025v 5.3h 0.013v 5.3h -0.013v 5.3h 0.013v 5.3h -0.013v 11h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M47,375v 7.9" fill="none" stroke="#0000ff"/>
 <path d="M47,404v 2.6" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="47" cy="393" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="47" cy="393" r="3"/>
 </g>
 <path d="M52,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M52,470h 0.013v -5.3h -0.013v -5.3h 0.013v -21h -0.013v -5.3h 0.013v -11h -0.013v -11h 0.013v -11h -0.013v -11h 0.013v -11h -0.013v -11h 0.013v -5.3h -0.025v 5.3h 0.013v 11h -0.013v 11h 0.013v 11h -0.013v 11h 0.013v 11h -0.013v 11h 0.013v
@@ -1363,8 +1241,8 @@ th2_violin.svg
  5.3h -0.013v 21h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M52,365v 32" fill="none" stroke="#0000ff"/>
 <path d="M52,452v 18" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="52" cy="423" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="52" cy="423" r="3"/>
 </g>
 <path d="M58,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M58,460h 0.013v -5.3h -0.013v -5.3h 0.013v -5.3h -0.013v -5.3h 0.013v -11h -0.013v -16h 0.013v -11h 0.013v -5.3h -0.013v -5.3h -0.013v -5.3h 0.013v -11h -0.025v 11h 0.013v 5.3h -0.013v 5.3h -0.013v 5.3h 0.013v 11h 0.013v 16h -0.013v 11h
@@ -1373,8 +1251,8 @@ th2_violin.svg
  0.013v 5.3h -0.013v 5.3h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M58,375v 20" fill="none" stroke="#0000ff"/>
 <path d="M58,435v 25" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="58" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="58" cy="413" r="3"/>
 </g>
 <path d="M63,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M63,465h 0.013v -5.3h -0.013v -5.3h 0.013v -21h -0.013v -5.3h 0.013v -16h 0.038v -5.3h -0.025v -5.3h 0.013v -5.3h -0.038v -5.3h 0.038v -16h -0.025v -5.3h -0.025v 5.3h -0.025v 16h 0.038v 5.3h -0.038v 5.3h 0.013v 5.3h -0.025v 5.3h 0.038v 16h
@@ -1383,8 +1261,8 @@ th2_violin.svg
  0.013v 5.3h -0.013v 21h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M63,370v 15" fill="none" stroke="#0000ff"/>
 <path d="M63,419v 46" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="63" cy="406" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="63" cy="406" r="3"/>
 </g>
 <path d="M69,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M69,470h 0.038v -5.3h -0.038v -5.3h 0.025v -5.3h 0.038v -5.3h -0.050v -5.3h 0.038v -11h -0.025v -5.3h -0.013v -5.3h 0.076v -5.3h -0.063v -5.3h 0.013v -5.3h -0.013v -5.3h 0.038v -5.3h -0.038v -5.3h 0.063v -5.3h -0.076v -5.3h 0.025v -5.3h
@@ -1395,8 +1273,8 @@ th2_violin.svg
  5.3h 0.038v 5.3h 0.025v 5.3h -0.038v 5.3h 0.038z" fill="none" stroke="#cccccc"/>
 <path d="M69,354v 38" fill="none" stroke="#0000ff"/>
 <path d="M69,440v 31" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="69" cy="417" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="69" cy="417" r="3"/>
 </g>
 <path d="M74,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M74,470h 0.025v -5.3h -0.013v -5.3h 0.013v -5.3h 0.025v -5.3h -0.013v -11h -0.013v -5.3h 0.063v -5.3h 0.038v -5.3h -0.063v -5.3h -0.025v -5.3h 0.025v -5.3h 0.025v -16h -0.038v -11h 0.025v -5.3h -0.038v -5.3h -0.025v -5.3h 0.013v -5.3h 0.013v
@@ -1407,8 +1285,8 @@ th2_violin.svg
  -0.013v 11h -0.013v 5.3h 0.025v 5.3h 0.013v 5.3h -0.013v 5.3h 0.025z" fill="none" stroke="#cccccc"/>
 <path d="M74,338v 50" fill="none" stroke="#0000ff"/>
 <path d="M74,429v 42" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="74" cy="409" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="74" cy="409" r="3"/>
 </g>
 <path d="M80,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M80,476h 0.013v -5.3h -0.013v -5.3h 0.038v -5.3h -0.025v -5.3h 0.050v -5.3h -0.038v -5.3h 0.050v -5.3h 0.050v -5.3h -0.013v -5.3h 0.013v -5.3h -0.013v -5.3h 0.038v -5.3h -0.050v -5.3h 0.088v -5.3h -0.126v -5.3h 0.050v -5.3h -0.013v -5.3h
@@ -1419,8 +1297,8 @@ th2_violin.svg
  -0.013v 5.3h 0.013v 5.3h -0.013v 5.3h 0.050v 5.3h 0.050v 5.3h -0.038v 5.3h 0.050v 5.3h -0.025v 5.3h 0.038v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M80,349v 42" fill="none" stroke="#0000ff"/>
 <path d="M80,429v 46" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="80" cy="410" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="80" cy="410" r="3"/>
 </g>
 <path d="M85,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M85,481h 0.025v -5.3h -0.025v -5.3h 0.038v -5.3h -0.025v -5.3h 0.076v -5.3h 0.013v -11h 0.038v -5.3h 0.025v -5.3h 0.038v -11h 0.050v -5.3h -0.063v -5.3h 0.038v -5.3h -0.025v -5.3h -0.025v -11h -0.063v -5.3h 0.013v -5.3h -0.050v -5.3h -0.025v
@@ -1431,8 +1309,8 @@ th2_violin.svg
  5.3h 0.038v 5.3h -0.063v 5.3h 0.050v 11h 0.038v 5.3h 0.025v 5.3h 0.038v 11h 0.013v 5.3h 0.076v 5.3h -0.025v 5.3h 0.038v 5.3h -0.025v 5.3h 0.025z" fill="none" stroke="#cccccc"/>
 <path d="M85,338v 56" fill="none" stroke="#0000ff"/>
 <path d="M85,432v 49" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="85" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="85" cy="412" r="3"/>
 </g>
 <path d="M91,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M91,502h 0.025v -5.3h -0.013v -5.3h -0.013v -5.3h 0.013v -11h 0.013v -5.3h 0.013v -5.3h 0.013v -5.3h 0.025v -5.3h 0.038v -5.3h 0.063v -5.3h -0.050v -5.3h 0.126v -5.3h -0.025v -5.3h 0.013v -5.3h 0.013v -5.3h 0.176v -5.3h -0.025v -5.3h -0.063v
@@ -1443,8 +1321,8 @@ th2_violin.svg
  5.3h 0.176v 5.3h 0.013v 5.3h 0.013v 5.3h -0.025v 5.3h 0.126v 5.3h -0.050v 5.3h 0.063v 5.3h 0.038v 5.3h 0.025v 5.3h 0.013v 5.3h 0.013v 5.3h 0.013v 11h 0.013v 5.3h -0.013v 5.3h -0.013v 5.3h 0.025z" fill="none" stroke="#cccccc"/>
 <path d="M91,349v 47" fill="none" stroke="#0000ff"/>
 <path d="M91,430v 72" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="91" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="91" cy="413" r="3"/>
 </g>
 <path d="M96,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M96,502h 0.013v -5.3h -0.013v -11h 0.013v -11h 0.025v -11h 0.025v -5.3h 0.126v -5.3h -0.063v -5.3h 0.025v -5.3h 0.038v -5.3h 0.088v -5.3h 0.176v -5.3h -0.201v -5.3h 0.264v -5.3h -0.201v -5.3h 0.101v -11h 0.038v -11h -0.101v -5.3h -0.038v
@@ -1457,8 +1335,8 @@ th2_violin.svg
  fill="none" stroke="#cccccc"/>
 <path d="M96,317v 76" fill="none" stroke="#0000ff"/>
 <path d="M96,430v 72" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="96" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="96" cy="412" r="3"/>
 </g>
 <path d="M101,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M101,497h 0.025v -5.3h 0.013v -5.3h -0.025v -5.3h 0.013v -5.3h 0.013v -5.3h 0.025v -11h 0.101v -5.3h 0.101v -5.3h 0.038v -5.3h 0.038v -5.3h 0.113v -5.3h 0.025v -5.3h 0.113v -5.3h -0.113v -5.3h 0.088v -5.3h -0.013v -5.3h -0.038v -5.3h 0.025v
@@ -1471,8 +1349,8 @@ th2_violin.svg
  -0.025v 5.3h 0.013v 5.3h 0.025z" fill="none" stroke="#cccccc"/>
 <path d="M101,333v 60" fill="none" stroke="#0000ff"/>
 <path d="M101,432v 65" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="101" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="101" cy="413" r="3"/>
 </g>
 <path d="M107,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M107,497h 0.013v -11h -0.013v -11h 0.113v -5.3h -0.013v -5.3h 0.101v -5.3h 0.025v -5.3h 0.025v -5.3h 0.252v -5.3h 0.038v -5.3h 0.113v -5.3h -0.013v -5.3h 0.176v -5.3h 0.013v -5.3h 0.088v -5.3h -0.025v -11h -0.088v -5.3h -0.063v -5.3h -0.050v
@@ -1485,8 +1363,8 @@ th2_violin.svg
  0.113v 11h -0.013v 11h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M107,323v 73" fill="none" stroke="#0000ff"/>
 <path d="M107,432v 65" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="107" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="107" cy="413" r="3"/>
 </g>
 <path d="M112,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M112,497h 0.013v -5.3h 0.013v -11h 0.025v -5.3h 0.025v -5.3h 0.101v -5.3h 0.050v -5.3h 0.038v -5.3h 0.126v -5.3h 0.088v -5.3h 0.063v -5.3h 0.264v -5.3h 0.063v -5.3h -0.063v -5.3h 0.227v -5.3h -0.050v -5.3h 0.013v -5.3h 0.252v -5.3h -0.201v
@@ -1499,8 +1377,8 @@ th2_violin.svg
  0.025v 11h 0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M112,333v 61" fill="none" stroke="#0000ff"/>
 <path d="M112,431v 66" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="112" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="112" cy="412" r="3"/>
 </g>
 <path d="M118,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M118,497h 0.050v -5.3h -0.038v -5.3h 0.025v -5.3h 0.013v -5.3h 0.038v -5.3h 0.025v -5.3h 0.151v -5.3h 0.088v -5.3h 0.076v -5.3h 0.138v -5.3h 0.126v -5.3h 0.239v -5.3h 0.076v -5.3h 0.214v -5.3h -0.126v -5.3h 0.340v -5.3h 0.264v -5.3h -0.440v
@@ -1513,8 +1391,8 @@ th2_violin.svg
  0.038v 5.3h 0.013v 5.3h 0.025v 5.3h -0.038v 5.3h 0.050z" fill="none" stroke="#cccccc"/>
 <path d="M118,333v 62" fill="none" stroke="#0000ff"/>
 <path d="M118,430v 67" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="118" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="118" cy="413" r="3"/>
 </g>
 <path d="M123,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M123,507h 0.013v -5.3h -0.013v -5.3h 0.013v -11h 0.063v -5.3h 0.038v -5.3h -0.013v -5.3h 0.088v -5.3h 0.189v -5.3h 0.063v -5.3h 0.063v -5.3h 0.302v -5.3h 0.088v -5.3h -0.050v -5.3h 0.025v -5.3h 0.503v -5.3h 0.214v -5.3h 0.101v -5.3h -0.126v
@@ -1527,8 +1405,8 @@ th2_violin.svg
  0.063v 5.3h 0.189v 5.3h 0.088v 5.3h -0.013v 5.3h 0.038v 5.3h 0.063v 11h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M123,307v 90" fill="none" stroke="#0000ff"/>
 <path d="M123,431v 76" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="123" cy="414" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="123" cy="414" r="3"/>
 </g>
 <path d="M129,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M129,502h 0.013v -5.3h -0.013v -5.3h 0.038v -11h 0.038v -5.3h 0.013v -5.3h 0.151v -5.3h 0.239v -5.3h -0.088v -5.3h 0.126v -5.3h 0.164v -5.3h 0.302v -5.3h 0.239v -5.3h 0.340v -5.3h -0.289v -5.3h 0.503v -5.3h -0.025v -5.3h -0.038v -5.3h
@@ -1541,8 +1419,8 @@ th2_violin.svg
  5.3h 0.151v 5.3h 0.013v 5.3h 0.038v 11h 0.038v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M129,333v 62" fill="none" stroke="#0000ff"/>
 <path d="M129,431v 71" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="129" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="129" cy="413" r="3"/>
 </g>
 <path d="M134,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M134,507h 0.013v -5.3h -0.013v -11h 0.050v -5.3h -0.013v -5.3h 0.076v -5.3h -0.025v -5.3h 0.088v -5.3h 0.201v -5.3h 0.164v -5.3h 0.214v -5.3h 0.013v -5.3h 0.239v -5.3h 0.478v -5.3h -0.101v -5.3h 0.201v -5.3h 0.403v -5.3h 0.050v -5.3h -0.352v
@@ -1555,8 +1433,8 @@ th2_violin.svg
  0.403v 5.3h 0.201v 5.3h -0.101v 5.3h 0.478v 5.3h 0.239v 5.3h 0.013v 5.3h 0.214v 5.3h 0.164v 5.3h 0.201v 5.3h 0.088v 5.3h -0.025v 5.3h 0.076v 5.3h -0.013v 5.3h 0.050v 11h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M134,317v 77" fill="none" stroke="#0000ff"/>
 <path d="M134,431v 76" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="134" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="134" cy="413" r="3"/>
 </g>
 <path d="M140,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M140,492h 0.025v -5.3h 0.013v -5.3h 0.038v -5.3h 0.101v -5.3h 0.076v -5.3h 0.101v -5.3h 0.038v -5.3h 0.315v -5.3h 0.214v -5.3h 0.189v -5.3h 0.214v -5.3h 0.164v -5.3h 0.151v -5.3h 0.189v -5.3h 0.302v -5.3h 0.013v -5.3h -0.201v -5.3h -0.252v
@@ -1569,8 +1447,8 @@ th2_violin.svg
  5.3h 0.214v 5.3h 0.189v 5.3h 0.214v 5.3h 0.315v 5.3h 0.038v 5.3h 0.101v 5.3h 0.076v 5.3h 0.101v 5.3h 0.038v 5.3h 0.013v 5.3h 0.025z" fill="none" stroke="#cccccc"/>
 <path d="M140,307v 88" fill="none" stroke="#0000ff"/>
 <path d="M140,430v 61" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="140" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="140" cy="412" r="3"/>
 </g>
 <path d="M145,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M145,502h 0.013v -5.3h -0.013v -5.3h 0.038v -5.3h 0.013v -5.3h 0.088v -11h 0.151v -5.3h 0.013v -5.3h 0.201v -5.3h 0.189v -5.3h 0.189v -5.3h 0.201v -5.3h 0.101v -5.3h 0.101v -5.3h 0.453v -5.3h 0.138v -5.3h 0.302v -5.3h -0.340v -5.3h 0.126v
@@ -1583,8 +1461,8 @@ th2_violin.svg
  0.453v 5.3h 0.101v 5.3h 0.101v 5.3h 0.201v 5.3h 0.189v 5.3h 0.189v 5.3h 0.201v 5.3h 0.013v 5.3h 0.151v 11h 0.088v 5.3h 0.013v 5.3h 0.038v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M145,317v 76" fill="none" stroke="#0000ff"/>
 <path d="M145,430v 72" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="145" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="145" cy="412" r="3"/>
 </g>
 <path d="M150,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M150,502h 0.013v -5.3h 0.013v -5.3h 0.013v -5.3h 0.013v -5.3h 0.076v -5.3h -0.025v -5.3h 0.138v -5.3h 0.088v -5.3h 0.176v -5.3h 0.076v -5.3h 0.277v -5.3h 0.239v -5.3h 0.126v -5.3h 0.315v -5.3h 0.264v -5.3h 0.063v -5.3h 0.138v -5.3h -0.289v
@@ -1597,8 +1475,8 @@ th2_violin.svg
  0.063v 5.3h 0.264v 5.3h 0.315v 5.3h 0.126v 5.3h 0.239v 5.3h 0.277v 5.3h 0.076v 5.3h 0.176v 5.3h 0.088v 5.3h 0.138v 5.3h -0.025v 5.3h 0.076v 5.3h 0.013v 5.3h 0.013v 5.3h 0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M150,312v 83" fill="none" stroke="#0000ff"/>
 <path d="M150,430v 72" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="150" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="150" cy="413" r="3"/>
 </g>
 <path d="M156,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M156,492h 0.013v -5.3h 0.038v -11h 0.088v -5.3h 0.076v -5.3h 0.025v -5.3h 0.252v -5.3h 0.164v -5.3h 0.302v -5.3h -0.013v -5.3h 0.164v -5.3h 0.176v -5.3h 0.126v -5.3h 0.252v -5.3h 0.189v -5.3h -0.076v -5.3h 0.365v -5.3h -0.579v -5.3h -0.189v
@@ -1611,8 +1489,8 @@ th2_violin.svg
  0.013z" fill="none" stroke="#cccccc"/>
 <path d="M156,333v 62" fill="none" stroke="#0000ff"/>
 <path d="M156,430v 61" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="156" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="156" cy="412" r="3"/>
 </g>
 <path d="M161,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M161,502h 0.013v -5.3h -0.013v -5.3h 0.013v -5.3h 0.025v -5.3h 0.013v -5.3h 0.076v -5.3h 0.025v -5.3h 0.138v -5.3h 0.227v -5.3h -0.076v -5.3h 0.189v -5.3h 0.289v -5.3h 0.076v -5.3h 0.189v -5.3h 0.289v -5.3h -0.038v -5.3h 0.088v -5.3h 0.113v
@@ -1625,8 +1503,8 @@ th2_violin.svg
  0.189v 5.3h 0.076v 5.3h 0.289v 5.3h 0.189v 5.3h -0.076v 5.3h 0.227v 5.3h 0.138v 5.3h 0.025v 5.3h 0.076v 5.3h 0.013v 5.3h 0.025v 5.3h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M161,323v 73" fill="none" stroke="#0000ff"/>
 <path d="M161,431v 71" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="161" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="161" cy="413" r="3"/>
 </g>
 <path d="M167,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M167,497h 0.013v -11h 0.063v -5.3h 0.013v -5.3h 0.013v -5.3h 0.101v -5.3h 0.038v -5.3h 0.038v -5.3h 0.201v -5.3h 0.113v -5.3h -0.013v -5.3h 0.302v -5.3h 0.126v -5.3h 0.076v -5.3h 0.440v -5.3h -0.277v -5.3h 0.164v -5.3h -0.138v -5.3h -0.252v
@@ -1639,8 +1517,8 @@ th2_violin.svg
  0.038v 5.3h 0.038v 5.3h 0.101v 5.3h 0.013v 5.3h 0.013v 5.3h 0.063v 11h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M167,323v 72" fill="none" stroke="#0000ff"/>
 <path d="M167,430v 67" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="167" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="167" cy="413" r="3"/>
 </g>
 <path d="M172,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M172,502h 0.013v -5.3h -0.013v -5.3h 0.013v -5.3h -0.013v -5.3h 0.025v -5.3h 0.076v -5.3h 0.013v -5.3h 0.013v -5.3h 0.138v -5.3h 0.076v -5.3h 0.239v -5.3h 0.088v -5.3h 0.113v -5.3h -0.113v -5.3h 0.289v -5.3h 0.126v -16h 0.038v -5.3h -0.201v
@@ -1653,8 +1531,8 @@ th2_violin.svg
  0.138v 5.3h 0.013v 5.3h 0.013v 5.3h 0.076v 5.3h 0.025v 5.3h -0.013v 5.3h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M172,323v 70" fill="none" stroke="#0000ff"/>
 <path d="M172,430v 72" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="172" cy="411" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="172" cy="411" r="3"/>
 </g>
 <path d="M178,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M178,518h 0.013v -5.3h -0.013v -16h 0.013v -5.3h 0.025v -5.3h -0.013v -5.3h 0.013v -5.3h -0.013v -5.3h 0.101v -5.3h -0.038v -5.3h 0.264v -5.3h -0.151v -5.3h 0.101v -5.3h 0.138v -5.3h 0.050v -5.3h 0.214v -5.3h -0.076v -5.3h 0.201v -5.3h
@@ -1667,8 +1545,8 @@ th2_violin.svg
  5.3h 0.050v 5.3h 0.138v 5.3h 0.101v 5.3h -0.151v 5.3h 0.264v 5.3h -0.038v 5.3h 0.101v 5.3h -0.013v 5.3h 0.013v 5.3h -0.013v 5.3h 0.025v 5.3h 0.013v 16h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M178,323v 72" fill="none" stroke="#0000ff"/>
 <path d="M178,430v 88" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="178" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="178" cy="412" r="3"/>
 </g>
 <path d="M183,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M183,486h 0.013v -11h 0.025v -5.3h 0.038v -11h 0.038v -11h 0.151v -5.3h 0.076v -5.3h 0.038v -5.3h 0.101v -5.3h 0.063v -5.3h 0.113v -5.3h 0.164v -5.3h -0.315v -5.3h 0.176v -5.3h -0.101v -5.3h 0.013v -5.3h -0.013v -5.3h -0.227v -5.3h -0.038v
@@ -1679,8 +1557,8 @@ th2_violin.svg
  5.3h -0.013v 5.3h 0.013v 5.3h -0.101v 5.3h 0.176v 5.3h -0.315v 5.3h 0.164v 5.3h 0.113v 5.3h 0.063v 5.3h 0.101v 5.3h 0.038v 5.3h 0.076v 5.3h 0.151v 11h 0.038v 11h 0.038v 5.3h 0.025v 11h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M183,328v 65" fill="none" stroke="#0000ff"/>
 <path d="M183,427v 59" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="183" cy="411" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="183" cy="411" r="3"/>
 </g>
 <path d="M188,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M188,497h 0.013v -16h 0.038v -5.3h -0.025v -5.3h 0.050v -5.3h -0.013v -5.3h 0.088v -5.3h 0.063v -5.3h -0.025v -5.3h 0.088v -5.3h 0.101v -11h 0.025v -5.3h 0.239v -5.3h -0.050v -5.3h -0.239v -5.3h 0.063v -5.3h 0.063v -5.3h -0.126v -5.3h
@@ -1691,8 +1569,8 @@ th2_violin.svg
  5.3h -0.126v 5.3h 0.063v 5.3h 0.063v 5.3h -0.239v 5.3h -0.050v 5.3h 0.239v 5.3h 0.025v 11h 0.101v 5.3h 0.088v 5.3h -0.025v 5.3h 0.063v 5.3h 0.088v 5.3h -0.013v 5.3h 0.050v 5.3h -0.025v 5.3h 0.038v 16h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M188,338v 57" fill="none" stroke="#0000ff"/>
 <path d="M188,431v 65" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="188" cy="414" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="188" cy="414" r="3"/>
 </g>
 <path d="M194,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M194,497h 0.013v -5.3h -0.013v -11h 0.025v -16h 0.025v -5.3h 0.050v -5.3h -0.013v -5.3h 0.013v -5.3h -0.013v -5.3h 0.138v -5.3h 0.101v -5.3h 0.038v -5.3h -0.063v -5.3h 0.025v -5.3h -0.063v -16h -0.063v -5.3h 0.063v -5.3h 0.038v -5.3h -0.214v
@@ -1703,8 +1581,8 @@ th2_violin.svg
  0.101v 5.3h 0.138v 5.3h -0.013v 5.3h 0.013v 5.3h -0.013v 5.3h 0.050v 5.3h 0.025v 16h 0.025v 11h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M194,333v 58" fill="none" stroke="#0000ff"/>
 <path d="M194,429v 68" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="194" cy="411" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="194" cy="411" r="3"/>
 </g>
 <path d="M199,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M199,486h 0.013v -11h -0.013v -5.3h 0.013v -5.3h 0.025v -5.3h 0.076v -5.3h -0.063v -5.3h 0.025v -5.3h 0.013v -5.3h 0.025v -5.3h 0.088v -11h 0.050v -5.3h -0.126v -5.3h 0.063v -5.3h 0.050v -5.3h -0.076v -5.3h -0.038v -5.3h 0.088v -5.3h -0.076v
@@ -1715,8 +1593,8 @@ th2_violin.svg
  5.3h 0.050v 5.3h 0.063v 5.3h -0.126v 5.3h 0.050v 11h 0.088v 5.3h 0.025v 5.3h 0.013v 5.3h 0.025v 5.3h -0.063v 5.3h 0.076v 5.3h 0.025v 5.3h 0.013v 5.3h -0.013v 11h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M199,317v 74" fill="none" stroke="#0000ff"/>
 <path d="M199,429v 57" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="199" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="199" cy="412" r="3"/>
 </g>
 <path d="M205,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M205,481h 0.013v -5.3h -0.013v -11h 0.038v -5.3h -0.025v -5.3h 0.063v -5.3h -0.050v -5.3h 0.076v -5.3h 0.013v -5.3h -0.025v -5.3h 0.038v -5.3h 0.050v -5.3h -0.050v -5.3h -0.038v -5.3h 0.013v -5.3h -0.025v -5.3h 0.063v -5.3h -0.063v -5.3h
@@ -1727,8 +1605,8 @@ th2_violin.svg
  5.3h 0.038v 5.3h -0.025v 5.3h 0.013v 5.3h 0.076v 5.3h -0.050v 5.3h 0.063v 5.3h -0.025v 5.3h 0.038v 11h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M205,333v 63" fill="none" stroke="#0000ff"/>
 <path d="M205,433v 48" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="205" cy="415" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="205" cy="415" r="3"/>
 </g>
 <path d="M210,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M210,492h 0.013v -5.3h -0.013v -5.3h 0.013v -5.3h 0.013v -5.3h -0.025v -11h 0.025v -5.3h -0.025v -5.3h 0.025v -5.3h 0.025v -11h 0.013v -5.3h -0.025v -5.3h 0.063v -5.3h -0.025v -5.3h 0.025v -5.3h -0.025v -11h -0.038v -5.3h 0.088v -5.3h
@@ -1739,8 +1617,8 @@ th2_violin.svg
  -0.025v 5.3h 0.063v 5.3h -0.025v 5.3h 0.013v 11h 0.025v 5.3h 0.025v 5.3h -0.025v 5.3h 0.025v 11h -0.025v 5.3h 0.013v 5.3h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M210,338v 51" fill="none" stroke="#0000ff"/>
 <path d="M210,428v 64" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="210" cy="410" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="210" cy="410" r="3"/>
 </g>
 <path d="M216,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M216,497h 0.013v -5.3h -0.013v -21h 0.025v -5.3h -0.013v -16h -0.013v -5.3h 0.013v -5.3h 0.025v -16h 0.063v -5.3h -0.050v -5.3h -0.013v -5.3h 0.013v -5.3h 0.013v -5.3h -0.050v -5.3h 0.050v -5.3h -0.038v -5.3h -0.025v -5.3h 0.013v -11h
@@ -1751,8 +1629,8 @@ th2_violin.svg
  5.3h 0.013v 5.3h -0.013v 16h -0.013v 5.3h 0.025v 21h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M216,344v 54" fill="none" stroke="#0000ff"/>
 <path d="M216,431v 66" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="216" cy="414" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="216" cy="414" r="3"/>
 </g>
 <path d="M221,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M221,465h 0.013v -5.3h -0.013v -5.3h 0.013v -5.3h -0.013v -5.3h 0.025v -11h -0.013v -11h 0.025v -5.3h -0.013v -5.3h -0.025v -11h 0.050v -5.3h -0.013v -5.3h -0.025v -5.3h 0.025v -5.3h -0.025v -5.3h -0.025v 5.3h -0.025v 5.3h 0.025v 5.3h
@@ -1761,8 +1639,8 @@ th2_violin.svg
  -0.025v 5.3h -0.013v 5.3h 0.050v 11h -0.025v 5.3h -0.013v 5.3h 0.025v 11h -0.013v 11h 0.025v 5.3h -0.013v 5.3h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M221,375v 18" fill="none" stroke="#0000ff"/>
 <path d="M221,432v 33" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="221" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="221" cy="412" r="3"/>
 </g>
 <path d="M227,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M227,470h 0.013v -5.3h -0.013v -16h 0.013v -5.3h -0.013v -5.3h 0.013v -11h -0.013v -11h 0.013v -5.3h 0.013v -5.3h -0.025v -5.3h 0.013v -11h -0.013v -5.3h 0.025v -5.3h -0.013v -5.3h -0.013v -5.3h 0.025v -5.3h -0.050v 5.3h 0.025v 5.3h -0.013v
@@ -1771,8 +1649,8 @@ th2_violin.svg
  5.3h -0.013v 5.3h 0.025v 5.3h -0.013v 11h 0.013v 5.3h -0.025v 5.3h 0.013v 5.3h 0.013v 11h -0.013v 11h 0.013v 5.3h -0.013v 5.3h 0.013v 16h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M227,365v 17" fill="none" stroke="#0000ff"/>
 <path d="M227,431v 40" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="227" cy="406" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="227" cy="406" r="3"/>
 </g>
 <path d="M232,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M232,455h 0.013v -5.3h -0.013v -5.3h 0.013v -11h -0.013v -5.3h 0.013v -5.3h 0.013v -5.3h -0.025v -11h 0.013v -11h -0.013v -11h 0.013v -16h -0.013v -42h 0.013v -5.3h -0.025v 5.3h 0.013v 42h -0.013v 16h 0.013v 11h -0.013v 11h 0.013v 11h
@@ -1781,32 +1659,32 @@ th2_violin.svg
  -0.025v 5.3h 0.013v 5.3h 0.013v 5.3h -0.013v 11h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M232,323v 61" fill="none" stroke="#0000ff"/>
 <path d="M232,431v 24" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="232" cy="405" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="232" cy="405" r="3"/>
 </g>
 <path d="M237,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M237,428h 0.013v -5.3h -0.013v -11h 0.013v -11h -0.013v -26h 0.013v -5.3h -0.025v 5.3h 0.013v 26h -0.013v 11h 0.013v 11h -0.013v 5.3h 0.013z" fill="#cccccc"/>
 <path d="M237,428h 0.013v -5.3h -0.013v -11h 0.013v -11h -0.013v -26h 0.013v -5.3h -0.025v 5.3h 0.013v 26h -0.013v 11h 0.013v 11h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M237,370v 18" fill="none" stroke="#0000ff"/>
 <path d="M237,418v 11" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="237" cy="403" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="237" cy="403" r="3"/>
 </g>
 <path d="M243,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M243,433h 0.013v -5.3h -0.013v -11h 0.025v -11h -0.050v 11h 0.025v 11h -0.013v 5.3h 0.013z" fill="#cccccc"/>
 <path d="M243,433h 0.013v -5.3h -0.013v -11h 0.025v -11h -0.050v 11h 0.025v 11h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M243,407v 3.3" fill="none" stroke="#0000ff"/>
 <path d="M243,417v 16" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="243" cy="416" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="243" cy="416" r="3"/>
 </g>
 <path d="M248,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M248,397h 0.013v -5.3h -0.025v 5.3h 0.013z" fill="#cccccc"/>
 <path d="M248,397h 0.013v -5.3h -0.025v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M248,391v 1.3" fill="none" stroke="#0000ff"/>
 <path d="M248,395v 1.3" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="248" cy="394" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="248" cy="394" r="3"/>
 </g>
 <rect x="8.9" y="282" width="125" height="15" fill="#f2f2f2"/>
 <path d="M7.5,284v 14h 124v -1.4h -123v -12z" fill="black"/>
@@ -1924,24 +1802,24 @@ th2_violin.svg
 <path d="M320,433h 0.013v -5.3h -0.013v -37h 0.013v -5.3h -0.013v -16h 0.013v -5.3h -0.025v 5.3h 0.013v 16h -0.013v 5.3h 0.013v 37h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M320,365v 4.0" fill="none" stroke="#0000ff"/>
 <path d="M320,430v 4.0" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="320" cy="396" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="320" cy="396" r="3"/>
 </g>
 <path d="M325,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M325,418h 0.013v -5.3h -0.025v 5.3h 0.013z" fill="#cccccc"/>
 <path d="M325,418h 0.013v -5.3h -0.025v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M325,412v 1.3" fill="none" stroke="#0000ff"/>
 <path d="M325,416v 1.3" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="325" cy="415" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="325" cy="415" r="3"/>
 </g>
 <path d="M330,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M330,407h 0.013v -11h -0.013v -5.3h 0.013v -5.3h -0.013v -5.3h 0.013v -5.3h -0.025v 5.3h 0.013v 5.3h -0.013v 5.3h 0.013v 5.3h -0.013v 11h 0.013z" fill="#cccccc"/>
 <path d="M330,407h 0.013v -11h -0.013v -5.3h 0.013v -5.3h -0.013v -5.3h 0.013v -5.3h -0.025v 5.3h 0.013v 5.3h -0.013v 5.3h 0.013v 5.3h -0.013v 11h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M330,375v 7.9" fill="none" stroke="#0000ff"/>
 <path d="M330,404v 2.6" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="330" cy="393" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="330" cy="393" r="3"/>
 </g>
 <path d="M336,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M336,470h 0.013v -5.3h -0.013v -5.3h 0.013v -21h -0.013v -5.3h 0.013v -11h -0.013v -11h 0.013v -11h -0.013v -11h 0.013v -11h -0.013v -11h 0.013v -5.3h -0.025v 5.3h 0.013v 11h -0.013v 11h 0.013v 11h -0.013v 11h 0.013v 11h -0.013v 11h 0.013v
@@ -1950,8 +1828,8 @@ th2_violin.svg
  5.3h -0.013v 21h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M336,365v 32" fill="none" stroke="#0000ff"/>
 <path d="M336,452v 18" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="336" cy="423" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="336" cy="423" r="3"/>
 </g>
 <path d="M341,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M341,460h 0.013v -5.3h -0.013v -5.3h 0.013v -5.3h -0.013v -5.3h 0.013v -11h -0.013v -16h 0.013v -11h 0.013v -5.3h -0.013v -5.3h -0.013v -5.3h 0.013v -11h -0.025v 11h 0.013v 5.3h -0.013v 5.3h -0.013v 5.3h 0.013v 11h 0.013v 16h -0.013v 11h
@@ -1960,8 +1838,8 @@ th2_violin.svg
  0.013v 5.3h -0.013v 5.3h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M341,375v 20" fill="none" stroke="#0000ff"/>
 <path d="M341,435v 25" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="341" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="341" cy="413" r="3"/>
 </g>
 <path d="M347,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M347,465h 0.013v -5.3h -0.013v -5.3h 0.013v -21h -0.013v -5.3h 0.013v -16h 0.038v -5.3h -0.025v -5.3h 0.013v -5.3h -0.038v -5.3h 0.038v -16h -0.025v -5.3h -0.025v 5.3h -0.025v 16h 0.038v 5.3h -0.038v 5.3h 0.013v 5.3h -0.025v 5.3h 0.038v 16h
@@ -1970,8 +1848,8 @@ th2_violin.svg
  0.013v 5.3h -0.013v 21h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M347,370v 15" fill="none" stroke="#0000ff"/>
 <path d="M347,419v 46" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="347" cy="406" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="347" cy="406" r="3"/>
 </g>
 <path d="M352,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M352,470h 0.038v -5.3h -0.038v -5.3h 0.025v -5.3h 0.038v -5.3h -0.050v -5.3h 0.038v -11h -0.025v -5.3h -0.013v -5.3h 0.076v -5.3h -0.063v -5.3h 0.013v -5.3h -0.013v -5.3h 0.038v -5.3h -0.038v -5.3h 0.063v -5.3h -0.076v -5.3h 0.025v -5.3h
@@ -1982,8 +1860,8 @@ th2_violin.svg
  5.3h 0.038v 5.3h 0.025v 5.3h -0.038v 5.3h 0.038z" fill="none" stroke="#cccccc"/>
 <path d="M352,354v 38" fill="none" stroke="#0000ff"/>
 <path d="M352,440v 31" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="352" cy="417" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="352" cy="417" r="3"/>
 </g>
 <path d="M358,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M358,470h 0.025v -5.3h -0.013v -5.3h 0.013v -5.3h 0.025v -5.3h -0.013v -11h -0.013v -5.3h 0.063v -5.3h 0.038v -5.3h -0.063v -5.3h -0.025v -5.3h 0.025v -5.3h 0.025v -16h -0.038v -11h 0.025v -5.3h -0.038v -5.3h -0.025v -5.3h 0.013v -5.3h
@@ -1994,8 +1872,8 @@ th2_violin.svg
  5.3h -0.013v 11h -0.013v 5.3h 0.025v 5.3h 0.013v 5.3h -0.013v 5.3h 0.025z" fill="none" stroke="#cccccc"/>
 <path d="M358,338v 50" fill="none" stroke="#0000ff"/>
 <path d="M358,429v 42" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="358" cy="409" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="358" cy="409" r="3"/>
 </g>
 <path d="M363,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M363,476h 0.013v -5.3h -0.013v -5.3h 0.038v -5.3h -0.025v -5.3h 0.050v -5.3h -0.038v -5.3h 0.050v -5.3h 0.050v -5.3h -0.013v -5.3h 0.013v -5.3h -0.013v -5.3h 0.038v -5.3h -0.050v -5.3h 0.088v -5.3h -0.126v -5.3h 0.050v -5.3h -0.013v -5.3h
@@ -2006,8 +1884,8 @@ th2_violin.svg
  -0.013v 5.3h 0.013v 5.3h -0.013v 5.3h 0.050v 5.3h 0.050v 5.3h -0.038v 5.3h 0.050v 5.3h -0.025v 5.3h 0.038v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M363,349v 42" fill="none" stroke="#0000ff"/>
 <path d="M363,429v 46" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="363" cy="410" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="363" cy="410" r="3"/>
 </g>
 <path d="M369,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M369,481h 0.025v -5.3h -0.025v -5.3h 0.038v -5.3h -0.025v -5.3h 0.076v -5.3h 0.013v -11h 0.038v -5.3h 0.025v -5.3h 0.038v -11h 0.050v -5.3h -0.063v -5.3h 0.038v -5.3h -0.025v -5.3h -0.025v -11h -0.063v -5.3h 0.013v -5.3h -0.050v -5.3h
@@ -2018,8 +1896,8 @@ th2_violin.svg
  -0.025v 5.3h 0.038v 5.3h -0.063v 5.3h 0.050v 11h 0.038v 5.3h 0.025v 5.3h 0.038v 11h 0.013v 5.3h 0.076v 5.3h -0.025v 5.3h 0.038v 5.3h -0.025v 5.3h 0.025z" fill="none" stroke="#cccccc"/>
 <path d="M369,338v 56" fill="none" stroke="#0000ff"/>
 <path d="M369,432v 49" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="369" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="369" cy="412" r="3"/>
 </g>
 <path d="M374,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M374,502h 0.025v -5.3h -0.013v -5.3h -0.013v -5.3h 0.013v -11h 0.013v -5.3h 0.013v -5.3h 0.013v -5.3h 0.025v -5.3h 0.038v -5.3h 0.063v -5.3h -0.050v -5.3h 0.126v -5.3h -0.025v -5.3h 0.013v -5.3h 0.013v -5.3h 0.176v -5.3h -0.025v -5.3h
@@ -2030,14 +1908,10 @@ th2_violin.svg
  -0.025v 5.3h 0.176v 5.3h 0.013v 5.3h 0.013v 5.3h -0.025v 5.3h 0.126v 5.3h -0.050v 5.3h 0.063v 5.3h 0.038v 5.3h 0.025v 5.3h 0.013v 5.3h 0.013v 5.3h 0.013v 11h 0.013v 5.3h -0.013v 5.3h -0.013v 5.3h 0.025z" fill="none" stroke="#cccccc"/>
 <path d="M374,349v 47" fill="none" stroke="#0000ff"/>
 <path d="M374,430v 56" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="374" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="374" cy="413" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="372" y1="499" x2="376" y2="503"/><line x1="372" y1="503" x2="376" y2="499"/>
-<line x1="372" y1="495" x2="376" y2="499"/><line x1="372" y1="499" x2="376" y2="495"/>
-<line x1="372" y1="492" x2="376" y2="496"/><line x1="372" y1="496" x2="376" y2="492"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M372,499l4,4M372,503l4,-4 M372,495l4,4M372,499l4,-4 M372,492l4,4M372,496l4,-4"/>
 <path d="M379,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M379,502h 0.013v -5.3h -0.013v -11h 0.013v -11h 0.025v -11h 0.025v -5.3h 0.126v -5.3h -0.063v -5.3h 0.025v -5.3h 0.038v -5.3h 0.088v -5.3h 0.176v -5.3h -0.201v -5.3h 0.264v -5.3h -0.201v -5.3h 0.101v -11h 0.038v -11h -0.101v -5.3h -0.038v
  -5.3h -0.252v -5.3h 0.050v -5.3h 0.025v -5.3h -0.025v -5.3h -0.038v -5.3h -0.063v -5.3h -0.013v -5.3h 0.013v -5.3h -0.013v -16h 0.013v -5.3h -0.025v 5.3h 0.013v 16h -0.013v 5.3h 0.013v 5.3h -0.013v 5.3h -0.063v 5.3h -0.038v 5.3h -0.025v 5.3h 0.025v
@@ -2049,13 +1923,10 @@ th2_violin.svg
  fill="none" stroke="#cccccc"/>
 <path d="M379,338v 55" fill="none" stroke="#0000ff"/>
 <path d="M379,430v 56" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="379" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="379" cy="412" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="377" y1="497" x2="381" y2="501"/><line x1="377" y1="501" x2="381" y2="497"/>
-<line x1="377" y1="318" x2="381" y2="322"/><line x1="377" y1="322" x2="381" y2="318"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M377,497l4,4M377,501l4,-4 M377,318l4,4M377,322l4,-4"/>
 <path d="M385,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M385,497h 0.025v -5.3h 0.013v -5.3h -0.025v -5.3h 0.013v -5.3h 0.013v -5.3h 0.025v -11h 0.101v -5.3h 0.101v -5.3h 0.038v -5.3h 0.038v -5.3h 0.113v -5.3h 0.025v -5.3h 0.113v -5.3h -0.113v -5.3h 0.088v -5.3h -0.013v -5.3h -0.038v -5.3h 0.025v
  -5.3h -0.025v -5.3h -0.164v -5.3h 0.164v -5.3h -0.227v -5.3h -0.101v -5.3h -0.050v -11h -0.076v -5.3h -0.050v -5.3h 0.025v -5.3h -0.038v -5.3h 0.038v -5.3h -0.076v 5.3h 0.038v 5.3h -0.038v 5.3h 0.025v 5.3h -0.050v 5.3h -0.076v 11h -0.050v 5.3h
@@ -2067,13 +1938,10 @@ th2_violin.svg
  -0.025v 5.3h 0.013v 5.3h 0.025z" fill="none" stroke="#cccccc"/>
 <path d="M385,333v 60" fill="none" stroke="#0000ff"/>
 <path d="M385,432v 60" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="385" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="385" cy="413" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="383" y1="494" x2="387" y2="498"/><line x1="383" y1="498" x2="387" y2="494"/>
-<line x1="383" y1="490" x2="387" y2="494"/><line x1="383" y1="494" x2="387" y2="490"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M383,494l4,4M383,498l4,-4 M383,490l4,4M383,494l4,-4"/>
 <path d="M390,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M390,497h 0.013v -11h -0.013v -11h 0.113v -5.3h -0.013v -5.3h 0.101v -5.3h 0.025v -5.3h 0.025v -5.3h 0.252v -5.3h 0.038v -5.3h 0.113v -5.3h -0.013v -5.3h 0.176v -5.3h 0.013v -5.3h 0.088v -5.3h -0.025v -11h -0.088v -5.3h -0.063v -5.3h -0.050v
  -5.3h -0.352v -5.3h 0.038v -5.3h -0.164v -5.3h 0.076v -5.3h -0.201v -5.3h -0.025v -5.3h -0.025v -5.3h 0.013v -5.3h -0.025v -11h -0.025v -5.3h 0.013v -5.3h -0.025v 5.3h 0.013v 5.3h -0.025v 11h -0.025v 5.3h 0.013v 5.3h -0.025v 5.3h -0.025v 5.3h
@@ -2085,16 +1953,10 @@ th2_violin.svg
  0.113v 11h -0.013v 11h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M390,338v 57" fill="none" stroke="#0000ff"/>
 <path d="M390,432v 44" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="390" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="390" cy="413" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="388" y1="492" x2="392" y2="496"/><line x1="388" y1="496" x2="392" y2="492"/>
-<line x1="388" y1="487" x2="392" y2="491"/><line x1="388" y1="491" x2="392" y2="487"/>
-<line x1="388" y1="335" x2="392" y2="340"/><line x1="388" y1="340" x2="392" y2="335"/>
-<line x1="388" y1="331" x2="392" y2="335"/><line x1="388" y1="335" x2="392" y2="331"/>
-<line x1="388" y1="323" x2="392" y2="327"/><line x1="388" y1="327" x2="392" y2="323"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M388,492l4,4M388,496l4,-4 M388,487l4,4M388,491l4,-4 M388,335l4,4M388,339l4,-4 M388,331l4,4M388,335l4,-4 M388,323l4,4M388,327l4,-4"/>
 <path d="M396,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M396,497h 0.013v -5.3h 0.013v -11h 0.025v -5.3h 0.025v -5.3h 0.101v -5.3h 0.050v -5.3h 0.038v -5.3h 0.126v -5.3h 0.088v -5.3h 0.063v -5.3h 0.264v -5.3h 0.063v -5.3h -0.063v -5.3h 0.227v -5.3h -0.050v -5.3h 0.013v -5.3h 0.252v -5.3h -0.201v
  -5.3h -0.176v -5.3h -0.227v -5.3h -0.013v -5.3h -0.126v -5.3h -0.189v -11h -0.050v -5.3h -0.101v -5.3h -0.063v -5.3h -0.038v -5.3h -0.025v -5.3h -0.013v -5.3h -0.050v 5.3h -0.013v 5.3h -0.025v 5.3h -0.038v 5.3h -0.063v 5.3h -0.101v 5.3h -0.050v 11h
@@ -2106,12 +1968,10 @@ th2_violin.svg
  0.025v 11h 0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M396,333v 61" fill="none" stroke="#0000ff"/>
 <path d="M396,431v 61" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="396" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="396" cy="412" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="394" y1="492" x2="398" y2="496"/><line x1="394" y1="496" x2="398" y2="492"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M394,492l4,4M394,496l4,-4"/>
 <path d="M401,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M401,497h 0.050v -5.3h -0.038v -5.3h 0.025v -5.3h 0.013v -5.3h 0.038v -5.3h 0.025v -5.3h 0.151v -5.3h 0.088v -5.3h 0.076v -5.3h 0.138v -5.3h 0.126v -5.3h 0.239v -5.3h 0.076v -5.3h 0.214v -5.3h -0.126v -5.3h 0.340v -5.3h 0.264v -5.3h -0.440v
  -5.3h 0.088v -5.3h -0.327v -5.3h 0.025v -5.3h -0.289v -5.3h -0.239v -5.3h -0.138v -5.3h -0.038v -5.3h -0.113v -5.3h -0.126v -5.3h 0.013v -5.3h -0.063v -5.3h -0.038v -11h -0.025v 11h -0.038v 5.3h -0.063v 5.3h 0.013v 5.3h -0.126v 5.3h -0.113v 5.3h
@@ -2123,15 +1983,10 @@ th2_violin.svg
  0.038v 5.3h 0.013v 5.3h 0.025v 5.3h -0.038v 5.3h 0.050z" fill="none" stroke="#cccccc"/>
 <path d="M401,338v 57" fill="none" stroke="#0000ff"/>
 <path d="M401,430v 57" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="401" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="401" cy="413" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="399" y1="494" x2="403" y2="498"/><line x1="399" y1="498" x2="403" y2="494"/>
-<line x1="399" y1="490" x2="403" y2="494"/><line x1="399" y1="494" x2="403" y2="490"/>
-<line x1="399" y1="487" x2="403" y2="491"/><line x1="399" y1="491" x2="403" y2="487"/>
-<line x1="399" y1="334" x2="403" y2="338"/><line x1="399" y1="338" x2="403" y2="334"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M399,494l4,4M399,498l4,-4 M399,490l4,4M399,494l4,-4 M399,487l4,4M399,491l4,-4 M399,334l4,4M399,338l4,-4"/>
 <path d="M407,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M407,507h 0.013v -5.3h -0.013v -5.3h 0.013v -11h 0.063v -5.3h 0.038v -5.3h -0.013v -5.3h 0.088v -5.3h 0.189v -5.3h 0.063v -5.3h 0.063v -5.3h 0.302v -5.3h 0.088v -5.3h -0.050v -5.3h 0.025v -5.3h 0.503v -5.3h 0.214v -5.3h 0.101v -5.3h -0.126v
  -5.3h -0.201v -5.3h 0.176v -5.3h -0.264v -5.3h -0.554v -11h -0.050v -5.3h -0.227v -11h -0.264v -5.3h -0.038v -5.3h -0.050v -11h -0.063v -11h -0.025v -5.3h 0.013v -11h -0.013v -5.3h 0.013v -5.3h -0.025v 5.3h 0.013v 5.3h -0.013v 11h 0.013v 5.3h
@@ -2143,18 +1998,10 @@ th2_violin.svg
  0.063v 5.3h 0.189v 5.3h 0.088v 5.3h -0.013v 5.3h 0.038v 5.3h 0.063v 11h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M407,344v 53" fill="none" stroke="#0000ff"/>
 <path d="M407,431v 55" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="407" cy="414" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="407" cy="414" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="405" y1="503" x2="409" y2="507"/><line x1="405" y1="507" x2="409" y2="503"/>
-<line x1="405" y1="492" x2="409" y2="496"/><line x1="405" y1="496" x2="409" y2="492"/>
-<line x1="405" y1="487" x2="409" y2="491"/><line x1="405" y1="491" x2="409" y2="487"/>
-<line x1="405" y1="339" x2="409" y2="343"/><line x1="405" y1="343" x2="409" y2="339"/>
-<line x1="405" y1="334" x2="409" y2="338"/><line x1="405" y1="338" x2="409" y2="334"/>
-<line x1="405" y1="323" x2="409" y2="327"/><line x1="405" y1="327" x2="409" y2="323"/>
-<line x1="405" y1="318" x2="409" y2="322"/><line x1="405" y1="322" x2="409" y2="318"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M405,503l4,4M405,507l4,-4 M405,492l4,4M405,496l4,-4 M405,487l4,4M405,491l4,-4 M405,339l4,4M405,343l4,-4 M405,334l4,4M405,338l4,-4 M405,323l4,4M405,327l4,-4 M405,318l4,4M405,322l4,-4"/>
 <path d="M412,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M412,502h 0.013v -5.3h -0.013v -5.3h 0.038v -11h 0.038v -5.3h 0.013v -5.3h 0.151v -5.3h 0.239v -5.3h -0.088v -5.3h 0.126v -5.3h 0.164v -5.3h 0.302v -5.3h 0.239v -5.3h 0.340v -5.3h -0.289v -5.3h 0.503v -5.3h -0.025v -5.3h -0.038v -5.3h
  -0.050v -5.3h -0.101v -5.3h -0.252v -11h -0.516v -5.3h -0.113v -5.3h -0.101v -5.3h -0.201v -5.3h -0.076v -5.3h -0.050v -5.3h -0.176v -5.3h -0.013v -5.3h -0.038v -5.3h 0.025v -5.3h -0.101v 5.3h 0.025v 5.3h -0.038v 5.3h -0.013v 5.3h -0.176v 5.3h
@@ -2166,15 +2013,10 @@ th2_violin.svg
  5.3h 0.151v 5.3h 0.013v 5.3h 0.038v 11h 0.038v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M412,338v 57" fill="none" stroke="#0000ff"/>
 <path d="M412,431v 55" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="412" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="412" cy="413" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="410" y1="497" x2="414" y2="501"/><line x1="410" y1="501" x2="414" y2="497"/>
-<line x1="410" y1="487" x2="414" y2="491"/><line x1="410" y1="491" x2="414" y2="487"/>
-<line x1="410" y1="335" x2="414" y2="340"/><line x1="410" y1="340" x2="414" y2="335"/>
-<line x1="410" y1="331" x2="414" y2="335"/><line x1="410" y1="335" x2="414" y2="331"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M410,497l4,4M410,501l4,-4 M410,487l4,4M410,491l4,-4 M410,335l4,4M410,339l4,-4 M410,331l4,4M410,335l4,-4"/>
 <path d="M418,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M418,507h 0.013v -5.3h -0.013v -11h 0.050v -5.3h -0.013v -5.3h 0.076v -5.3h -0.025v -5.3h 0.088v -5.3h 0.201v -5.3h 0.164v -5.3h 0.214v -5.3h 0.013v -5.3h 0.239v -5.3h 0.478v -5.3h -0.101v -5.3h 0.201v -5.3h 0.403v -5.3h 0.050v -5.3h -0.352v
  -5.3h -0.164v -5.3h 0.038v -5.3h -0.088v -5.3h -0.138v -5.3h -0.617v -5.3h 0.264v -5.3h -0.415v -5.3h -0.076v -5.3h -0.113v -5.3h -0.088v -5.3h -0.151v -5.3h -0.038v -5.3h -0.025v -5.3h -0.063v -5.3h 0.013v -5.3h -0.025v -5.3h 0.013v -5.3h -0.025v
@@ -2186,14 +2028,10 @@ th2_violin.svg
  0.403v 5.3h 0.201v 5.3h -0.101v 5.3h 0.478v 5.3h 0.239v 5.3h 0.013v 5.3h 0.214v 5.3h 0.164v 5.3h 0.201v 5.3h 0.088v 5.3h -0.025v 5.3h 0.076v 5.3h -0.013v 5.3h 0.050v 11h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M418,333v 61" fill="none" stroke="#0000ff"/>
 <path d="M418,431v 60" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="418" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="418" cy="413" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="416" y1="503" x2="420" y2="507"/><line x1="416" y1="507" x2="420" y2="503"/>
-<line x1="416" y1="329" x2="420" y2="333"/><line x1="416" y1="333" x2="420" y2="329"/>
-<line x1="416" y1="318" x2="420" y2="322"/><line x1="416" y1="322" x2="420" y2="318"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M416,503l4,4M416,507l4,-4 M416,329l4,4M416,333l4,-4 M416,318l4,4M416,322l4,-4"/>
 <path d="M423,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M423,492h 0.025v -5.3h 0.013v -5.3h 0.038v -5.3h 0.101v -5.3h 0.076v -5.3h 0.101v -5.3h 0.038v -5.3h 0.315v -5.3h 0.214v -5.3h 0.189v -5.3h 0.214v -5.3h 0.164v -5.3h 0.151v -5.3h 0.189v -5.3h 0.302v -5.3h 0.013v -5.3h -0.201v -5.3h -0.252v
  -5.3h -0.076v -5.3h -0.289v -5.3h -0.277v -5.3h -0.038v -5.3h -0.529v -5.3h -0.025v -5.3h -0.138v -5.3h -0.138v -5.3h -0.088v -5.3h 0.013v -11h -0.038v -5.3h -0.025v -5.3h -0.025v -5.3h -0.013v -11h 0.013v -5.3h -0.025v 5.3h 0.013v 11h -0.013v 5.3h
@@ -2205,16 +2043,10 @@ th2_violin.svg
  5.3h 0.214v 5.3h 0.189v 5.3h 0.214v 5.3h 0.315v 5.3h 0.038v 5.3h 0.101v 5.3h 0.076v 5.3h 0.101v 5.3h 0.038v 5.3h 0.013v 5.3h 0.025z" fill="none" stroke="#cccccc"/>
 <path d="M423,338v 56" fill="none" stroke="#0000ff"/>
 <path d="M423,430v 56" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="423" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="423" cy="412" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="421" y1="487" x2="425" y2="491"/><line x1="421" y1="491" x2="425" y2="487"/>
-<line x1="421" y1="335" x2="425" y2="340"/><line x1="421" y1="340" x2="425" y2="335"/>
-<line x1="421" y1="331" x2="425" y2="335"/><line x1="421" y1="335" x2="425" y2="331"/>
-<line x1="421" y1="329" x2="425" y2="333"/><line x1="421" y1="333" x2="425" y2="329"/>
-<line x1="421" y1="323" x2="425" y2="327"/><line x1="421" y1="327" x2="425" y2="323"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M421,487l4,4M421,491l4,-4 M421,335l4,4M421,339l4,-4 M421,331l4,4M421,335l4,-4 M421,329l4,4M421,333l4,-4 M421,323l4,4M421,327l4,-4"/>
 <path d="M428,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M428,502h 0.013v -5.3h -0.013v -5.3h 0.038v -5.3h 0.013v -5.3h 0.088v -11h 0.151v -5.3h 0.013v -5.3h 0.201v -5.3h 0.189v -5.3h 0.189v -5.3h 0.201v -5.3h 0.101v -5.3h 0.101v -5.3h 0.453v -5.3h 0.138v -5.3h 0.302v -5.3h -0.340v -5.3h 0.126v
  -5.3h -0.440v -5.3h 0.076v -5.3h -0.277v -5.3h -0.214v -5.3h -0.189v -5.3h -0.327v -5.3h -0.025v -5.3h -0.227v -5.3h -0.101v -5.3h -0.076v -5.3h -0.076v -5.3h -0.013v -5.3h -0.063v -5.3h 0.013v -5.3h -0.013v -5.3h 0.013v -5.3h -0.050v 5.3h 0.013v
@@ -2226,17 +2058,10 @@ th2_violin.svg
  0.453v 5.3h 0.101v 5.3h 0.101v 5.3h 0.201v 5.3h 0.189v 5.3h 0.189v 5.3h 0.201v 5.3h 0.013v 5.3h 0.151v 11h 0.088v 5.3h 0.013v 5.3h 0.038v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M428,338v 55" fill="none" stroke="#0000ff"/>
 <path d="M428,430v 56" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="428" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="428" cy="412" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="426" y1="497" x2="430" y2="501"/><line x1="426" y1="501" x2="430" y2="497"/>
-<line x1="426" y1="487" x2="430" y2="491"/><line x1="426" y1="491" x2="430" y2="487"/>
-<line x1="426" y1="334" x2="430" y2="338"/><line x1="426" y1="338" x2="430" y2="334"/>
-<line x1="426" y1="329" x2="430" y2="333"/><line x1="426" y1="333" x2="430" y2="329"/>
-<line x1="426" y1="323" x2="430" y2="327"/><line x1="426" y1="327" x2="430" y2="323"/>
-<line x1="426" y1="318" x2="430" y2="322"/><line x1="426" y1="322" x2="430" y2="318"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M426,497l4,4M426,501l4,-4 M426,487l4,4M426,491l4,-4 M426,334l4,4M426,338l4,-4 M426,329l4,4M426,333l4,-4 M426,323l4,4M426,327l4,-4 M426,318l4,4M426,322l4,-4"/>
 <path d="M434,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M434,502h 0.013v -5.3h 0.013v -5.3h 0.013v -5.3h 0.013v -5.3h 0.076v -5.3h -0.025v -5.3h 0.138v -5.3h 0.088v -5.3h 0.176v -5.3h 0.076v -5.3h 0.277v -5.3h 0.239v -5.3h 0.126v -5.3h 0.315v -5.3h 0.264v -5.3h 0.063v -5.3h 0.138v -5.3h -0.289v
  -5.3h 0.428v -5.3h -0.478v -5.3h -0.214v -5.3h -0.201v -5.3h -0.340v -5.3h 0.063v -5.3h -0.239v -5.3h -0.289v -5.3h -0.101v -5.3h -0.138v -5.3h -0.113v -5.3h -0.025v -5.3h -0.013v -5.3h -0.025v -5.3h -0.013v -5.3h -0.013v -11h 0.013v -5.3h -0.025v
@@ -2248,17 +2073,10 @@ th2_violin.svg
  0.063v 5.3h 0.264v 5.3h 0.315v 5.3h 0.126v 5.3h 0.239v 5.3h 0.277v 5.3h 0.076v 5.3h 0.176v 5.3h 0.088v 5.3h 0.138v 5.3h -0.025v 5.3h 0.076v 5.3h 0.013v 5.3h 0.013v 5.3h 0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M434,338v 57" fill="none" stroke="#0000ff"/>
 <path d="M434,430v 56" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="434" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="434" cy="413" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="432" y1="497" x2="436" y2="501"/><line x1="432" y1="501" x2="436" y2="497"/>
-<line x1="432" y1="492" x2="436" y2="496"/><line x1="432" y1="496" x2="436" y2="492"/>
-<line x1="432" y1="487" x2="436" y2="491"/><line x1="432" y1="491" x2="436" y2="487"/>
-<line x1="432" y1="334" x2="436" y2="338"/><line x1="432" y1="338" x2="436" y2="334"/>
-<line x1="432" y1="329" x2="436" y2="333"/><line x1="432" y1="333" x2="436" y2="329"/>
-<line x1="432" y1="313" x2="436" y2="317"/><line x1="432" y1="317" x2="436" y2="313"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M432,497l4,4M432,501l4,-4 M432,492l4,4M432,496l4,-4 M432,487l4,4M432,491l4,-4 M432,334l4,4M432,338l4,-4 M432,329l4,4M432,333l4,-4 M432,313l4,4M432,317l4,-4"/>
 <path d="M439,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M439,492h 0.013v -5.3h 0.038v -11h 0.088v -5.3h 0.076v -5.3h 0.025v -5.3h 0.252v -5.3h 0.164v -5.3h 0.302v -5.3h -0.013v -5.3h 0.164v -5.3h 0.176v -5.3h 0.126v -5.3h 0.252v -5.3h 0.189v -5.3h -0.076v -5.3h 0.365v -5.3h -0.579v -5.3h -0.189v
  -5.3h -0.315v -5.3h -0.025v -5.3h -0.164v -5.3h -0.164v -5.3h -0.302v -5.3h -0.101v -5.3h -0.201v -5.3h -0.013v -11h -0.038v -5.3h -0.025v -5.3h -0.050v 5.3h -0.025v 5.3h -0.038v 11h -0.013v 5.3h -0.201v 5.3h -0.101v 5.3h -0.302v 5.3h -0.164v 5.3h
@@ -2270,13 +2088,10 @@ th2_violin.svg
  0.013z" fill="none" stroke="#cccccc"/>
 <path d="M439,338v 56" fill="none" stroke="#0000ff"/>
 <path d="M439,430v 56" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="439" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="439" cy="412" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="437" y1="487" x2="441" y2="491"/><line x1="437" y1="491" x2="441" y2="487"/>
-<line x1="437" y1="334" x2="441" y2="338"/><line x1="437" y1="338" x2="441" y2="334"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M437,487l4,4M437,491l4,-4 M437,334l4,4M437,338l4,-4"/>
 <path d="M445,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M445,502h 0.013v -5.3h -0.013v -5.3h 0.013v -5.3h 0.025v -5.3h 0.013v -5.3h 0.076v -5.3h 0.025v -5.3h 0.138v -5.3h 0.227v -5.3h -0.076v -5.3h 0.189v -5.3h 0.289v -5.3h 0.076v -5.3h 0.189v -5.3h 0.289v -5.3h -0.038v -5.3h 0.088v -5.3h 0.113v
  -5.3h -0.227v -5.3h -0.101v -5.3h -0.050v -5.3h -0.352v -5.3h -0.025v -5.3h -0.327v -5.3h -0.013v -5.3h -0.289v -5.3h -0.050v -5.3h 0.013v -5.3h -0.088v -5.3h -0.063v -5.3h -0.013v -5.3h -0.038v -5.3h 0.013v -5.3h -0.013v -5.3h -0.025v 5.3h -0.013v
@@ -2288,16 +2103,10 @@ th2_violin.svg
  0.189v 5.3h 0.076v 5.3h 0.289v 5.3h 0.189v 5.3h -0.076v 5.3h 0.227v 5.3h 0.138v 5.3h 0.025v 5.3h 0.076v 5.3h 0.013v 5.3h 0.025v 5.3h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M445,338v 57" fill="none" stroke="#0000ff"/>
 <path d="M445,431v 56" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="445" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="445" cy="413" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="443" y1="497" x2="447" y2="501"/><line x1="443" y1="501" x2="447" y2="497"/>
-<line x1="443" y1="487" x2="447" y2="491"/><line x1="443" y1="491" x2="447" y2="487"/>
-<line x1="443" y1="334" x2="447" y2="338"/><line x1="443" y1="338" x2="447" y2="334"/>
-<line x1="443" y1="329" x2="447" y2="333"/><line x1="443" y1="333" x2="447" y2="329"/>
-<line x1="443" y1="323" x2="447" y2="327"/><line x1="443" y1="327" x2="447" y2="323"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M443,497l4,4M443,501l4,-4 M443,487l4,4M443,491l4,-4 M443,334l4,4M443,338l4,-4 M443,329l4,4M443,333l4,-4 M443,323l4,4M443,327l4,-4"/>
 <path d="M450,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M450,497h 0.013v -11h 0.063v -5.3h 0.013v -5.3h 0.013v -5.3h 0.101v -5.3h 0.038v -5.3h 0.038v -5.3h 0.201v -5.3h 0.113v -5.3h -0.013v -5.3h 0.302v -5.3h 0.126v -5.3h 0.076v -5.3h 0.440v -5.3h -0.277v -5.3h 0.164v -5.3h -0.138v -5.3h -0.252v
  -5.3h -0.164v -5.3h 0.113v -5.3h -0.277v -5.3h -0.189v -5.3h -0.138v -5.3h 0.063v -5.3h -0.101v -5.3h -0.252v -5.3h 0.025v -5.3h -0.013v -5.3h -0.038v -5.3h -0.050v -11h 0.013v -5.3h -0.025v 5.3h 0.013v 11h -0.050v 5.3h -0.038v 5.3h -0.013v 5.3h
@@ -2309,14 +2118,10 @@ th2_violin.svg
  0.038v 5.3h 0.038v 5.3h 0.101v 5.3h 0.013v 5.3h 0.013v 5.3h 0.063v 11h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M450,338v 56" fill="none" stroke="#0000ff"/>
 <path d="M450,430v 56" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="450" cy="413" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="450" cy="413" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="448" y1="492" x2="452" y2="496"/><line x1="448" y1="496" x2="452" y2="492"/>
-<line x1="448" y1="487" x2="452" y2="491"/><line x1="448" y1="491" x2="452" y2="487"/>
-<line x1="448" y1="323" x2="452" y2="327"/><line x1="448" y1="327" x2="452" y2="323"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M448,492l4,4M448,496l4,-4 M448,487l4,4M448,491l4,-4 M448,323l4,4M448,327l4,-4"/>
 <path d="M456,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M456,502h 0.013v -5.3h -0.013v -5.3h 0.013v -5.3h -0.013v -5.3h 0.025v -5.3h 0.076v -5.3h 0.013v -5.3h 0.013v -5.3h 0.138v -5.3h 0.076v -5.3h 0.239v -5.3h 0.088v -5.3h 0.113v -5.3h -0.113v -5.3h 0.289v -5.3h 0.126v -16h 0.038v -5.3h -0.201v
  -5.3h -0.151v -5.3h 0.025v -5.3h -0.101v -5.3h -0.151v -5.3h -0.101v -5.3h -0.252v -5.3h 0.013v -5.3h -0.050v -5.3h -0.076v -5.3h 0.038v -5.3h -0.088v -5.3h -0.025v -5.3h 0.050v -5.3h -0.038v -5.3h -0.025v 5.3h -0.038v 5.3h 0.050v 5.3h -0.025v 5.3h
@@ -2328,17 +2133,10 @@ th2_violin.svg
  0.138v 5.3h 0.013v 5.3h 0.013v 5.3h 0.076v 5.3h 0.025v 5.3h -0.013v 5.3h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M456,338v 54" fill="none" stroke="#0000ff"/>
 <path d="M456,430v 51" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="456" cy="411" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="456" cy="411" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="454" y1="497" x2="458" y2="501"/><line x1="454" y1="501" x2="458" y2="497"/>
-<line x1="454" y1="487" x2="458" y2="491"/><line x1="454" y1="491" x2="458" y2="487"/>
-<line x1="454" y1="330" x2="458" y2="334"/><line x1="454" y1="334" x2="458" y2="330"/>
-<line x1="454" y1="326" x2="458" y2="330"/><line x1="454" y1="330" x2="458" y2="326"/>
-<line x1="454" y1="328" x2="458" y2="332"/><line x1="454" y1="332" x2="458" y2="328"/>
-<line x1="454" y1="323" x2="458" y2="327"/><line x1="454" y1="327" x2="458" y2="323"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M454,497l4,4M454,501l4,-4 M454,487l4,4M454,491l4,-4 M454,330l4,4M454,334l4,-4 M454,326l4,4M454,330l4,-4 M454,328l4,4M454,332l4,-4 M454,323l4,4M454,327l4,-4"/>
 <path d="M461,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M461,518h 0.013v -5.3h -0.013v -16h 0.013v -5.3h 0.025v -5.3h -0.013v -5.3h 0.013v -5.3h -0.013v -5.3h 0.101v -5.3h -0.038v -5.3h 0.264v -5.3h -0.151v -5.3h 0.101v -5.3h 0.138v -5.3h 0.050v -5.3h 0.214v -5.3h -0.076v -5.3h 0.201v -5.3h
  -0.013v -5.3h 0.076v -5.3h -0.239v -5.3h 0.164v -5.3h -0.201v -5.3h -0.013v -5.3h -0.201v -5.3h -0.063v -5.3h -0.164v -5.3h 0.013v -5.3h 0.013v -5.3h -0.126v -5.3h -0.013v -11h -0.038v -5.3h 0.025v -5.3h -0.050v -5.3h 0.013v -5.3h -0.025v 5.3h
@@ -2350,21 +2148,11 @@ th2_violin.svg
  5.3h 0.050v 5.3h 0.138v 5.3h 0.101v 5.3h -0.151v 5.3h 0.264v 5.3h -0.038v 5.3h 0.101v 5.3h -0.013v 5.3h 0.013v 5.3h -0.013v 5.3h 0.025v 5.3h 0.013v 16h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M461,338v 56" fill="none" stroke="#0000ff"/>
 <path d="M461,430v 56" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="461" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="461" cy="412" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="459" y1="513" x2="463" y2="517"/><line x1="459" y1="517" x2="463" y2="513"/>
-<line x1="459" y1="492" x2="463" y2="496"/><line x1="459" y1="496" x2="463" y2="492"/>
-<line x1="459" y1="489" x2="463" y2="493"/><line x1="459" y1="493" x2="463" y2="489"/>
-<line x1="459" y1="485" x2="463" y2="489"/><line x1="459" y1="489" x2="463" y2="485"/>
-<line x1="459" y1="487" x2="463" y2="491"/><line x1="459" y1="491" x2="463" y2="487"/>
-<line x1="459" y1="336" x2="463" y2="340"/><line x1="459" y1="340" x2="463" y2="336"/>
-<line x1="459" y1="335" x2="463" y2="339"/><line x1="459" y1="339" x2="463" y2="335"/>
-<line x1="459" y1="334" x2="463" y2="338"/><line x1="459" y1="338" x2="463" y2="334"/>
-<line x1="459" y1="336" x2="463" y2="340"/><line x1="459" y1="340" x2="463" y2="336"/>
-<line x1="459" y1="323" x2="463" y2="327"/><line x1="459" y1="327" x2="463" y2="323"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M459,513l4,4M459,517l4,-4 M459,492l4,4M459,496l4,-4 M459,489l4,4M459,493l4,-4 M459,485l4,4M459,489l4,-4 M459,487l4,4M459,491l4,-4 M459,336l4,4M459,340l4,-4 M459,335l4,4M459,339l4,-4
+ M459,334l4,4M459,338l4,-4 M459,336l4,4M459,340l4,-4 M459,323l4,4M459,327l4,-4"/>
 <path d="M467,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M467,486h 0.013v -11h 0.025v -5.3h 0.038v -11h 0.038v -11h 0.151v -5.3h 0.076v -5.3h 0.038v -5.3h 0.101v -5.3h 0.063v -5.3h 0.113v -5.3h 0.164v -5.3h -0.315v -5.3h 0.176v -5.3h -0.101v -5.3h 0.013v -5.3h -0.013v -5.3h -0.227v -5.3h -0.038v
  -5.3h -0.164v -5.3h -0.038v -5.3h 0.013v -5.3h -0.038v -5.3h -0.050v -5.3h -0.013v -5.3h -0.025v -11h 0.013v -5.3h -0.025v 5.3h 0.013v 11h -0.025v 5.3h -0.013v 5.3h -0.050v 5.3h -0.038v 5.3h 0.013v 5.3h -0.038v 5.3h -0.164v 5.3h -0.038v 5.3h -0.227v
@@ -2374,13 +2162,10 @@ th2_violin.svg
  5.3h -0.013v 5.3h 0.013v 5.3h -0.101v 5.3h 0.176v 5.3h -0.315v 5.3h 0.164v 5.3h 0.113v 5.3h 0.063v 5.3h 0.101v 5.3h 0.038v 5.3h 0.076v 5.3h 0.151v 11h 0.038v 11h 0.038v 5.3h 0.025v 11h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M467,344v 49" fill="none" stroke="#0000ff"/>
 <path d="M467,427v 54" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="467" cy="411" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="467" cy="411" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="465" y1="482" x2="469" y2="486"/><line x1="465" y1="486" x2="469" y2="482"/>
-<line x1="465" y1="329" x2="469" y2="333"/><line x1="465" y1="333" x2="469" y2="329"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M465,482l4,4M465,486l4,-4 M465,329l4,4M465,333l4,-4"/>
 <path d="M472,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M472,497h 0.013v -16h 0.038v -5.3h -0.025v -5.3h 0.050v -5.3h -0.013v -5.3h 0.088v -5.3h 0.063v -5.3h -0.025v -5.3h 0.088v -5.3h 0.101v -11h 0.025v -5.3h 0.239v -5.3h -0.050v -5.3h -0.239v -5.3h 0.063v -5.3h 0.063v -5.3h -0.126v -5.3h
  -0.013v -5.3h -0.038v -5.3h -0.088v -5.3h -0.063v -5.3h -0.013v -5.3h -0.050v -5.3h -0.050v -11h -0.025v -5.3h 0.013v -5.3h -0.050v 5.3h 0.013v 5.3h -0.025v 11h -0.050v 5.3h -0.050v 5.3h -0.013v 5.3h -0.063v 5.3h -0.088v 5.3h -0.038v 5.3h -0.013v
@@ -2390,13 +2175,10 @@ th2_violin.svg
  5.3h -0.126v 5.3h 0.063v 5.3h 0.063v 5.3h -0.239v 5.3h -0.050v 5.3h 0.239v 5.3h 0.025v 11h 0.101v 5.3h 0.088v 5.3h -0.025v 5.3h 0.063v 5.3h 0.088v 5.3h -0.013v 5.3h 0.050v 5.3h -0.025v 5.3h 0.038v 16h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M472,338v 57" fill="none" stroke="#0000ff"/>
 <path d="M472,431v 55" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="472" cy="414" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="472" cy="414" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="470" y1="492" x2="474" y2="496"/><line x1="470" y1="496" x2="474" y2="492"/>
-<line x1="470" y1="487" x2="474" y2="491"/><line x1="470" y1="491" x2="474" y2="487"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M470,492l4,4M470,496l4,-4 M470,487l4,4M470,491l4,-4"/>
 <path d="M477,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M477,497h 0.013v -5.3h -0.013v -11h 0.025v -16h 0.025v -5.3h 0.050v -5.3h -0.013v -5.3h 0.013v -5.3h -0.013v -5.3h 0.138v -5.3h 0.101v -5.3h 0.038v -5.3h -0.063v -5.3h 0.025v -5.3h -0.063v -16h -0.063v -5.3h 0.063v -5.3h 0.038v -5.3h -0.214v
  -5.3h -0.013v -11h 0.025v -5.3h -0.063v -5.3h -0.025v -5.3h 0.013v -16h -0.050v 16h 0.013v 5.3h -0.025v 5.3h -0.063v 5.3h 0.025v 11h -0.013v 5.3h -0.214v 5.3h 0.038v 5.3h 0.063v 5.3h -0.063v 16h -0.063v 5.3h 0.025v 5.3h -0.063v 5.3h 0.038v 5.3h
@@ -2406,12 +2188,10 @@ th2_violin.svg
  0.101v 5.3h 0.138v 5.3h -0.013v 5.3h 0.013v 5.3h -0.013v 5.3h 0.050v 5.3h 0.025v 16h 0.025v 11h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M477,333v 58" fill="none" stroke="#0000ff"/>
 <path d="M477,429v 52" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="477" cy="411" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="477" cy="411" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="475" y1="492" x2="479" y2="496"/><line x1="475" y1="496" x2="479" y2="492"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M475,492l4,4M475,496l4,-4"/>
 <path d="M483,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M483,486h 0.013v -11h -0.013v -5.3h 0.013v -5.3h 0.025v -5.3h 0.076v -5.3h -0.063v -5.3h 0.025v -5.3h 0.013v -5.3h 0.025v -5.3h 0.088v -11h 0.050v -5.3h -0.126v -5.3h 0.063v -5.3h 0.050v -5.3h -0.076v -5.3h -0.038v -5.3h 0.088v -5.3h -0.076v
  -5.3h -0.076v -5.3h 0.063v -5.3h -0.076v -5.3h -0.025v -11h -0.013v -5.3h -0.013v -26h 0.013v -5.3h -0.025v 5.3h 0.013v 26h -0.013v 5.3h -0.013v 11h -0.025v 5.3h -0.076v 5.3h 0.063v 5.3h -0.076v 5.3h -0.076v 5.3h 0.088v 5.3h -0.038v 5.3h -0.076v
@@ -2421,12 +2201,10 @@ th2_violin.svg
  5.3h 0.050v 5.3h 0.063v 5.3h -0.126v 5.3h 0.050v 11h 0.088v 5.3h 0.025v 5.3h 0.013v 5.3h 0.025v 5.3h -0.063v 5.3h 0.076v 5.3h 0.025v 5.3h 0.013v 5.3h -0.013v 11h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M483,349v 42" fill="none" stroke="#0000ff"/>
 <path d="M483,429v 57" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="483" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="483" cy="412" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="481" y1="318" x2="485" y2="322"/><line x1="481" y1="322" x2="485" y2="318"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M481,318l4,4M481,322l4,-4"/>
 <path d="M488,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M488,481h 0.013v -5.3h -0.013v -11h 0.038v -5.3h -0.025v -5.3h 0.063v -5.3h -0.050v -5.3h 0.076v -5.3h 0.013v -5.3h -0.025v -5.3h 0.038v -5.3h 0.050v -5.3h -0.050v -5.3h -0.038v -5.3h 0.013v -5.3h -0.025v -5.3h 0.063v -5.3h -0.063v -5.3h
  -0.013v -11h -0.063v -5.3h 0.013v -5.3h 0.013v -5.3h -0.025v -16h 0.013v -11h -0.025v 11h 0.013v 16h -0.025v 5.3h 0.013v 5.3h 0.013v 5.3h -0.063v 11h -0.013v 5.3h -0.063v 5.3h 0.063v 5.3h -0.025v 5.3h 0.013v 5.3h -0.038v 5.3h -0.050v 5.3h 0.050v
@@ -2436,12 +2214,10 @@ th2_violin.svg
  5.3h 0.038v 5.3h -0.025v 5.3h 0.013v 5.3h 0.076v 5.3h -0.050v 5.3h 0.063v 5.3h -0.025v 5.3h 0.038v 11h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M488,338v 58" fill="none" stroke="#0000ff"/>
 <path d="M488,433v 48" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="488" cy="415" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="488" cy="415" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="486" y1="334" x2="490" y2="338"/><line x1="486" y1="338" x2="490" y2="334"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M486,334l4,4M486,338l4,-4"/>
 <path d="M494,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M494,492h 0.013v -5.3h -0.013v -5.3h 0.013v -5.3h 0.013v -5.3h -0.025v -11h 0.025v -5.3h -0.025v -5.3h 0.025v -5.3h 0.025v -11h 0.013v -5.3h -0.025v -5.3h 0.063v -5.3h -0.025v -5.3h 0.025v -5.3h -0.025v -11h -0.038v -5.3h 0.088v -5.3h
  -0.076v -5.3h -0.013v -5.3h -0.025v -5.3h 0.013v -5.3h -0.025v -11h 0.025v -5.3h -0.013v -11h -0.025v 11h -0.013v 5.3h 0.025v 11h -0.025v 5.3h 0.013v 5.3h -0.025v 5.3h -0.013v 5.3h -0.076v 5.3h 0.088v 5.3h -0.038v 11h -0.025v 5.3h 0.025v 5.3h
@@ -2451,12 +2227,10 @@ th2_violin.svg
  -0.025v 5.3h 0.063v 5.3h -0.025v 5.3h 0.013v 11h 0.025v 5.3h 0.025v 5.3h -0.025v 5.3h 0.025v 11h -0.025v 5.3h 0.013v 5.3h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M494,338v 51" fill="none" stroke="#0000ff"/>
 <path d="M494,428v 53" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="494" cy="410" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="494" cy="410" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="492" y1="487" x2="496" y2="491"/><line x1="492" y1="491" x2="496" y2="487"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M492,487l4,4M492,491l4,-4"/>
 <path d="M499,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M499,497h 0.013v -5.3h -0.013v -21h 0.025v -5.3h -0.013v -16h -0.013v -5.3h 0.013v -5.3h 0.025v -16h 0.063v -5.3h -0.050v -5.3h -0.013v -5.3h 0.013v -5.3h 0.013v -5.3h -0.050v -5.3h 0.050v -5.3h -0.038v -5.3h -0.025v -5.3h 0.013v -11h
  -0.013v -5.3h 0.013v -5.3h -0.013v -5.3h 0.013v -5.3h -0.025v 5.3h 0.013v 5.3h -0.013v 5.3h 0.013v 5.3h -0.013v 11h 0.013v 5.3h -0.025v 5.3h -0.038v 5.3h 0.050v 5.3h -0.050v 5.3h 0.013v 5.3h 0.013v 5.3h -0.013v 5.3h -0.050v 5.3h 0.063v 16h 0.025v
@@ -2466,12 +2240,10 @@ th2_violin.svg
  5.3h 0.013v 5.3h -0.013v 16h -0.013v 5.3h 0.025v 21h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M499,344v 54" fill="none" stroke="#0000ff"/>
 <path d="M499,431v 40" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="499" cy="414" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="499" cy="414" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="497" y1="492" x2="501" y2="496"/><line x1="497" y1="496" x2="501" y2="492"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M497,492l4,4M497,496l4,-4"/>
 <path d="M505,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M505,465h 0.013v -5.3h -0.013v -5.3h 0.013v -5.3h -0.013v -5.3h 0.025v -11h -0.013v -11h 0.025v -5.3h -0.013v -5.3h -0.025v -11h 0.050v -5.3h -0.013v -5.3h -0.025v -5.3h 0.025v -5.3h -0.025v -5.3h -0.025v 5.3h -0.025v 5.3h 0.025v 5.3h
  -0.025v 5.3h -0.013v 5.3h 0.050v 11h -0.025v 5.3h -0.013v 5.3h 0.025v 11h -0.013v 11h 0.025v 5.3h -0.013v 5.3h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="#cccccc"/>
@@ -2479,8 +2251,8 @@ th2_violin.svg
  -0.025v 5.3h -0.013v 5.3h 0.050v 11h -0.025v 5.3h -0.013v 5.3h 0.025v 11h -0.013v 11h 0.025v 5.3h -0.013v 5.3h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M505,375v 18" fill="none" stroke="#0000ff"/>
 <path d="M505,432v 33" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="505" cy="412" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="505" cy="412" r="3"/>
 </g>
 <path d="M510,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M510,470h 0.013v -5.3h -0.013v -16h 0.013v -5.3h -0.013v -5.3h 0.013v -11h -0.013v -11h 0.013v -5.3h 0.013v -5.3h -0.025v -5.3h 0.013v -11h -0.013v -5.3h 0.025v -5.3h -0.013v -5.3h -0.013v -5.3h 0.025v -5.3h -0.050v 5.3h 0.025v 5.3h -0.013v
@@ -2489,8 +2261,8 @@ th2_violin.svg
  5.3h -0.013v 5.3h 0.025v 5.3h -0.013v 11h 0.013v 5.3h -0.025v 5.3h 0.013v 5.3h 0.013v 11h -0.013v 11h 0.013v 5.3h -0.013v 5.3h 0.013v 16h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M510,365v 17" fill="none" stroke="#0000ff"/>
 <path d="M510,431v 40" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="510" cy="406" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="510" cy="406" r="3"/>
 </g>
 <path d="M515,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M515,455h 0.013v -5.3h -0.013v -5.3h 0.013v -11h -0.013v -5.3h 0.013v -5.3h 0.013v -5.3h -0.025v -11h 0.013v -11h -0.013v -11h 0.013v -16h -0.013v -42h 0.013v -5.3h -0.025v 5.3h 0.013v 42h -0.013v 16h 0.013v 11h -0.013v 11h 0.013v 11h
@@ -2499,35 +2271,33 @@ th2_violin.svg
  -0.025v 5.3h 0.013v 5.3h 0.013v 5.3h -0.013v 11h 0.013v 5.3h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M515,323v 61" fill="none" stroke="#0000ff"/>
 <path d="M515,431v 24" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="515" cy="405" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="515" cy="405" r="3"/>
 </g>
 <path d="M521,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M521,428h 0.013v -5.3h -0.013v -11h 0.013v -11h -0.013v -26h 0.013v -5.3h -0.025v 5.3h 0.013v 26h -0.013v 11h 0.013v 11h -0.013v 5.3h 0.013z" fill="#cccccc"/>
 <path d="M521,428h 0.013v -5.3h -0.013v -11h 0.013v -11h -0.013v -26h 0.013v -5.3h -0.025v 5.3h 0.013v 26h -0.013v 11h 0.013v 11h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M521,370v 18" fill="none" stroke="#0000ff"/>
 <path d="M521,418v 11" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="521" cy="403" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="521" cy="403" r="3"/>
 </g>
 <path d="M526,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M526,433h 0.013v -5.3h -0.013v -11h 0.025v -11h -0.050v 11h 0.025v 11h -0.013v 5.3h 0.013z" fill="#cccccc"/>
 <path d="M526,433h 0.013v -5.3h -0.013v -11h 0.025v -11h -0.050v 11h 0.025v 11h -0.013v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M526,407v 3.3" fill="none" stroke="#0000ff"/>
 <path d="M526,417v 0.660" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="526" cy="416" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="526" cy="416" r="3"/>
 </g>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<line x1="524" y1="429" x2="528" y2="433"/><line x1="524" y1="433" x2="528" y2="429"/>
-</g>
+<path stroke="#0000ff" stroke-width="1" fill="none" d="M524,429l4,4M524,433l4,-4"/>
 <path d="M532,518v -211" fill="none" stroke="#cccccc"/>
 <path d="M532,397h 0.013v -5.3h -0.025v 5.3h 0.013z" fill="#cccccc"/>
 <path d="M532,397h 0.013v -5.3h -0.025v 5.3h 0.013z" fill="none" stroke="#cccccc"/>
 <path d="M532,391v 1.3" fill="none" stroke="#0000ff"/>
 <path d="M532,395v 1.3" fill="none" stroke="#0000ff"/>
-<g stroke="#0000ff" stroke-width="1.000" fill="none">
-<circle cx="532" cy="394" r="2.8"/>
+<g stroke="#0000ff" stroke-width="1" fill="none">
+<circle cx="532" cy="394" r="3"/>
 </g>
 <rect x="292" y="282" width="125" height="15" fill="#f2f2f2"/>
 <path d="M291,284v 14h 124v -1.4h -123v -12z" fill="black"/>
