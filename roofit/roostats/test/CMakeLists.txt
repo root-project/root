@@ -1,4 +1,4 @@
-ROOT_ADD_GTEST(testAsymptoticCalculator testAsymptoticCalculator.cxx LIBRARIES RooStats)
+ROOT_ADD_GTEST(testAsymptoticCalculator testAsymptoticCalculator.cxx LIBRARIES RooStats ROOT::TestSupport)
 ROOT_ADD_GTEST(testBayesianCalculator testBayesianCalculator.cxx LIBRARIES RooStats)
 ROOT_ADD_GTEST(testHypoTestInvResult testHypoTestInvResult.cxx
   LIBRARIES RooStats

@@ -15,8 +15,11 @@
 #include "RooArgSet.h"
 #include "Rtypes.h"
 
+#include <memory>
+
 class RooArgList;
 class RooCategory;
+class RooFitResult;
 class RooRealVar;
 class RooPoisson;
 class RooProdPdf;
@@ -100,6 +103,29 @@ namespace RooStats {
       /// return best fit value for all parameters
       const RooArgSet & GetBestFitParams() const { return fBestFitPoi; }
 
+      /// Result of the unconditional fit to the observed data, performed by
+      /// Initialize() (updated if GetHypoTest() finds a better minimum).
+      /// Returns nullptr if the fit was skipped or has not been run yet.
+      /// The calculator keeps ownership of the returned object.
+      const RooFitResult *GetFitResultUncondObs() const { return fFitResultUncondObs.get(); }
+      /// Result of the conditional fit to the observed data with the POI fixed
+      /// to the tested value, from the last call to GetHypoTest().
+      /// Returns nullptr if the fit was skipped or has not been run yet.
+      /// The calculator keeps ownership of the returned object.
+      const RooFitResult *GetFitResultCondObs() const { return fFitResultCondObs.get(); }
+      /// Result of the fit to the Asimov data set with the POI fixed to the
+      /// value of the alternate-model snapshot, performed by Initialize(). Since
+      /// the Asimov data set is generated at that POI value, this corresponds to
+      /// the unconditional minimum (updated if GetHypoTest() finds a better
+      /// minimum). Returns nullptr if the fit was skipped or has not been run
+      /// yet. The calculator keeps ownership of the returned object.
+      const RooFitResult *GetFitResultUncondAsimov() const { return fFitResultUncondAsimov.get(); }
+      /// Result of the conditional fit to the Asimov data set with the POI
+      /// fixed to the tested value, from the last call to GetHypoTest().
+      /// Returns nullptr if the fit was skipped or has not been run yet.
+      /// The calculator keeps ownership of the returned object.
+      const RooFitResult *GetFitResultCondAsimov() const { return fFitResultCondAsimov.get(); }
+
       static void SetPrintLevel(int level);
 
    private:
@@ -116,6 +142,11 @@ namespace RooStats {
       mutable RooArgSet  fAsimovGlobObs;  ///< snapshot of Asimov global observables
       mutable RooArgSet  fBestFitPoi;     ///< snapshot of best fitted POI values
       mutable RooArgSet  fBestFitParams;  ///< snapshot of all best fitted Parameter values
+
+      mutable std::unique_ptr<RooFitResult> fFitResultUncondObs;    ///<! result of unconditional fit to observed data
+      mutable std::unique_ptr<RooFitResult> fFitResultCondObs;      ///<! result of conditional fit to observed data
+      mutable std::unique_ptr<RooFitResult> fFitResultUncondAsimov; ///<! result of fit to Asimov data at the alt POI
+      mutable std::unique_ptr<RooFitResult> fFitResultCondAsimov;   ///<! result of conditional fit to Asimov data
 
       ClassDefOverride(AsymptoticCalculator,0)
    };
