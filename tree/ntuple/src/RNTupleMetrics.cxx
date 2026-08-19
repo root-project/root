@@ -96,7 +96,7 @@ void ROOT::Experimental::Detail::RNTupleMetrics::ObserveMetrics(RNTupleMetrics &
 const std::string &ROOT::Experimental::Detail::RNTupleMetrics::GetMetricsExportPath()
 {
    static const std::string path = []() -> std::string {
-      if (const char *env = gSystem->Getenv("ROOT_EXPORT_RNTUPLE_METRICS"); env && *env)
+      if (const char *env = gSystem->Getenv("ROOT_EXPERIMENTAL_EXPORT_RNTUPLE_METRICS"); env && *env)
          return env;
       return "";
    }();
