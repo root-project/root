@@ -30,6 +30,7 @@ if(imt)
 endif()
 ROOT_ADD_GTEST(testTChainSaveAsCxx TChainSaveAsCxx.cxx LIBRARIES RIO Tree)
 ROOT_ADD_GTEST(testTChainRegressions TChainRegressions.cxx LIBRARIES RIO Tree)
+ROOT_ADD_GTEST(testTTreeOverwrite TTreeOverwrite.cxx LIBRARIES RIO Tree)
 ROOT_ADD_GTEST(testTTreeTruncatedDatatypes TTreeTruncatedDatatypes.cxx LIBRARIES RIO Tree)
 ROOT_ADD_GTEST(testTTreeRegressions TTreeRegressions.cxx LIBRARIES RIO Tree Hist)
 ROOT_ADD_GTEST(entrylist_addsublist entrylist_addsublist.cxx LIBRARIES RIO Tree)
@@ -44,4 +45,3 @@ ROOT_GENERATE_DICTIONARY(EvolutionStruct ${CMAKE_CURRENT_SOURCE_DIR}/EvolutionSt
                          LINKDEF EvolutionStructLinkDef.h
                          OPTIONS -inlineInputHeader
                          DEPENDENCIES RIO)
-
