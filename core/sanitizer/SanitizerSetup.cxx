@@ -32,7 +32,7 @@ const char* __asan_default_options() {
          ":alloc_dealloc_mismatch=0"
          DETECT_LEAKS
          ":verify_asan_link_order=0"
-         ":halt_on_error=0";
+         ":detect_odr_violation=0";
 }
 
 /// Default options when leak sanitizer starts up in ROOT executables.
