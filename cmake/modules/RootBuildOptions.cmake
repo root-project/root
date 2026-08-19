@@ -334,11 +334,13 @@ endif()
 ROOT_APPLY_OPTIONS()
 
 #---roottest/rootbench options require testing
-if(roottest OR rootbench)
-  if (NOT testing)
-    message(SEND_ERROR "-Droottest=ON or -Drootbench=ON requires -Dtesting=ON")
-    list(APPEND HOTFIX_BUILD_FLAGS -Dtesting=ON)
-  endif()
+if (roottest AND NOT testing)
+  message(SEND_ERROR "-Droottest=ON requires -Dtesting=ON")
+  list(APPEND HOTFIX_BUILD_FLAGS -Dtesting=ON)
+endif()
+if (rootbench AND NOT testing)
+  message(SEND_ERROR "-Drootbench=ON requires -Dtesting=ON")
+  list(APPEND HOTFIX_BUILD_FLAGS -Dtesting=ON)
 endif()
 
 #---running HS3 test suite requires both testing and pyroot, but testing globally disables tests
