@@ -332,7 +332,7 @@ public:
    const RNTuplePerfCounter *GetCounter(std::string_view name) const;
 
    void ObserveMetrics(RNTupleMetrics &observee);
-   static const std::string &GetMetricsExportPath();
+   static std::string GetMetricsExportPath();
 
    void Print(std::ostream &output, const std::string &prefix = "") const;
    void Enable();
