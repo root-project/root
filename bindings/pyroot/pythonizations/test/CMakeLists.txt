@@ -46,6 +46,9 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py PYTHON_DEPS numpy)
 # TColor-related pythonizations (regression_20018 lives in tcolor.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tcolor tcolor.py)
 
+# TQObject::Connect with Python callables
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tqobject_connect tqobject_connect.py)
+
 # TH1 and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1 th1.py)
 # The above tests a deadlock. It should complete in about 1s. If we don't reduce the timeout, we need to wait 1500 s.

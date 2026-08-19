@@ -520,25 +520,21 @@ class ModelInspectorGUI(ROOT.TGMainFrame):
 
         self.fHframe2 = ROOT.TGHorizontalFrame(self, 0, 0, 0)
 
-        dp_DoFit = ROOT.TPyDispatcher(self.DoFit)
         self.fFitButton = ROOT.TGTextButton(self.fHframe2, "&Fit")
         self.fFitButton.SetFont("Helvetica")
-        self.fFitButton.Connect("Clicked()", "TPyDispatcher", dp_DoFit, "Dispatch()")
+        self.fFitButton.Connect("Clicked()", self.DoFit)
 
-        dp_DoExit = ROOT.TPyDispatcher(self.DoExit)
         self.fExitButton = ROOT.TGTextButton(self.fHframe2, "&Exit")
         self.fExitButton.SetFont("Helvetica")
-        # self.fExitButton.Connect( "Clicked()", "TPyDispatcher", dp_DoExit , "Dispatch()")
+        # self.fExitButton.Connect("Clicked()", self.DoExit)
         # doesn't work properly. Break segmentation violation. Full crash.
         self.fExitButton.SetCommand('TPython::Exec( "raise SystemExit" )')
 
-        # dp_CloseWindow = TPyDispatcher( self.CloseWindow)
-        # self.Connect("CloseWindow()", "TPyDispatcher", dp_CloseWindow, "Dispatch()")
+        # self.Connect("CloseWindow()", self.CloseWindow)
         self.DontCallClose()
 
-        dp_HandleButtons = ROOT.TPyDispatcher(self.HandleButtons)
-        self.fCheck1.Connect("Clicked()", "TPyDispatcher", dp_HandleButtons, "Dispatch()")
-        self.fCheck2.Connect("Clicked()", "TPyDispatcher", dp_HandleButtons, "Dispatch()")
+        self.fCheck1.Connect("Clicked()", self.HandleButtons)
+        self.fCheck2.Connect("Clicked()", self.HandleButtons)
 
         self.fHframe2.Resize(100, 25)
 
@@ -593,9 +589,8 @@ class ModelInspectorGUI(ROOT.TGMainFrame):
                 False,
             )
 
-            dp_DoSlider = ROOT.TPyDispatcher(self.DoSlider)
-            hsliderk.Connect("PointerPositionChanged()", "TPyDispatcher", dp_DoSlider, "Dispatch()")
-            hsliderk.Connect("PositionChanged()", "TPyDispatcher", dp_DoSlider, "Dispatch()")
+            hsliderk.Connect("PointerPositionChanged()", self.DoSlider)
+            hsliderk.Connect("PositionChanged()", self.DoSlider)
             hsliderk.SetRange(param.getMin(), param.getMax())
 
             hframek.Resize(200, 25)

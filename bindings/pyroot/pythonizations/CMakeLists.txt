@@ -8,9 +8,6 @@
 # CMakeLists.txt file for building ROOT pythonizations libraries
 ################################################################
 
-list(APPEND PYROOT_EXTRA_HEADERS
-     inc/TPyDispatcher.h)
-
 set(cpp_sources
     src/PyROOTModule.cxx
     src/RPyROOTApplication.cxx
@@ -18,14 +15,7 @@ set(cpp_sources
     src/TClassPyz.cxx
     src/TTreePyz.cxx
     src/CPPInstancePyz.cxx
-    src/TPyDispatcher.cxx
-    inc/TPyDispatcher.h
 )
-
-set(ROOT_headers_dir inc)
-
-# Copy headers inside build_dir/include/ROOT
-file(COPY ${ROOT_headers_dir}/ DESTINATION ${CMAKE_BINARY_DIR}/include/ROOT)
 
 set(libname ROOTPythonizations)
 
@@ -55,9 +45,6 @@ elseif(APPLE)
 else()
   target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all)
 endif()
-
-target_include_directories(${libname}
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
 
 # Disables warnings caused by Py_RETURN_TRUE/Py_RETURN_FALSE
 if(NOT MSVC)
@@ -98,11 +85,6 @@ install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
                             RUNTIME DESTINATION ${pymoduledir_install} COMPONENT libraries
                             LIBRARY DESTINATION ${pymoduledir_install}  COMPONENT libraries
                             ARCHIVE DESTINATION ${pymoduledir_install} COMPONENT libraries)
-
-# Install headers required by pythonizations
-install(FILES ${PYROOT_EXTRA_HEADERS}
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ROOT
-        COMPONENT headers)
 
 # For the ROOT Python package
 add_subdirectory(python)

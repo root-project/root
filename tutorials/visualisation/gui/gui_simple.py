@@ -32,9 +32,6 @@ def MyDraw():
       tpygaus.Draw()
       ROOT.gPad.Update()
 
-m = ROOT.TPyDispatcher( MyDraw )
-
-
 class pMainFrame( ROOT.TGMainFrame ):
    def __init__( self, parent, width, height ):
        ROOT.TGMainFrame.__init__( self, parent, width, height )
@@ -44,7 +41,7 @@ class pMainFrame( ROOT.TGMainFrame ):
        self.ButtonsFrame = ROOT.TGHorizontalFrame( self, 200, 40 )
 
        self.DrawButton   = ROOT.TGTextButton( self.ButtonsFrame, '&Draw', 10 )
-       self.DrawButton.Connect( 'Clicked()', "TPyDispatcher", m, 'Dispatch()' )
+       self.DrawButton.Connect( 'Clicked()', MyDraw )
        self.ButtonsFrame.AddFrame( self.DrawButton, ROOT.TGLayoutHints() )
 
        self.ExitButton   = ROOT.TGTextButton( self.ButtonsFrame, '&Exit', 20 )
