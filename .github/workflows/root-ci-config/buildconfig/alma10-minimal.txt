@@ -6,4 +6,3 @@ fail-on-missing=ON
 minimal=ON
 roottest=ON
 testing=ON
-testsupport=ON
