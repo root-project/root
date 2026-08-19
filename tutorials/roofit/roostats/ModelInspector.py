@@ -40,9 +40,9 @@
 # \author Kyle Cranmer (C++ version), and P. P. (Python translation)
 
 import sys
-import ROOT
-
 from enum import Enum
+
+import ROOT
 
 
 class ETestCommandIdentifiers(Enum):
@@ -482,13 +482,13 @@ class ModelInspectorGUI(ROOT.TGMainFrame):
         numCats = 1
         # if (strcmp(fMC.GetPdf().ClassName(), "RooSimultaneous") == 0) : non-pythonic syntax
         if self.fMC.GetPdf().ClassName() == "RooSimultaneous":  # simple, pythonic syntax
-            print(f"Is a simultaneous PDF")
+            print("Is a simultaneous PDF")
             simPdf = self.fMC.GetPdf()
             channelCat = simPdf.indexCat()
             print(f" with {channelCat.numTypes()} categories")
             numCats = channelCat.numTypes()
         else:
-            print(f"Is not a simultaneous PDF")
+            print("Is not a simultaneous PDF")
 
         self.fFitRes = ROOT.nullptr
         self.SetCleanup(ROOT.kDeepCleanup)
@@ -574,7 +574,7 @@ class ModelInspectorGUI(ROOT.TGMainFrame):
 
         # while (param := it.Next()): #unnecessary
         for param in parameters:
-            print(f"Adding Slider for ", param.GetName())
+            print("Adding Slider for ", param.GetName())
             hframek = ROOT.TGHorizontalFrame(self.fVFrame, 0, 0, 0)
 
             hlabel = ROOT.TGLabel(
@@ -640,12 +640,12 @@ def ModelInspector(infile="", workspaceName="combined", modelConfigName="ModelCo
         # if file does not exists generate with histfactory
         if not fileExist:
             # Normally this would be run on the command line
-            print(f"will run standard hist2workspace example")
+            print("will run standard hist2workspace example")
             ROOT.gROOT.ProcessLine(".! prepareHistFactory .")
             ROOT.gROOT.ProcessLine(".! hist2workspace config/example.xml")
-            print(f"\n\n---------------------")
-            print(f"Done creating example input")
-            print(f"---------------------\n\n")
+            print("\n\n---------------------")
+            print("Done creating example input")
+            print("---------------------\n\n")
 
     else:
         filename = infile
@@ -653,12 +653,10 @@ def ModelInspector(infile="", workspaceName="combined", modelConfigName="ModelCo
     # Bad behaviour of variable, workspace, modelconfig. They get unset after its first call(being whatever)
     # if we declare pointer to the file, workspace, modelconfig, so everything seems to work-out fine.
     Declare = ROOT.gInterpreter.Declare
-    Declare(
-        """using namespace std;
+    Declare("""using namespace std;
               using namespace RooFit;
               using namespace RooStats;
-              """
-    )
+              """)
     ##################################################
     # Try to open the file:
     # Not to use: file = TFile.Open(filename, "READ" )
