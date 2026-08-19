@@ -1,6 +1,6 @@
 ExternalProject_Add(
    MATHJAX
-   URL https://root.cern/download/MathJax-3.2.0.tar.gz
+   URL ${lcgpackages}/mathjax-3.2.0.tar.gz
    URL_HASH SHA256=6847f1cfdd980afbe31b466474da301a56ab859a67d8035442b052dd4ac2fa03
    CONFIGURE_COMMAND ""
    BUILD_COMMAND ""
