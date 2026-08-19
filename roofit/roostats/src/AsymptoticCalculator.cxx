@@ -69,8 +69,6 @@ The calculator can generate Asimov datasets from two kinds of PDFs:
 
 #include "TStopwatch.h"
 
-#include <ROOT/RSpan.hxx>
-
 using namespace RooStats;
 using std::string, std::unique_ptr;
 
@@ -939,41 +937,31 @@ void FillBins(const RooAbsPdf & pdf, const RooArgList &obs, RooAbsData & data, i
 
 }
 
-bool setObsToExpected(std::span<RooAbsArg *> servers, const RooArgSet &obs, std::string const &errPrefix)
+bool setObsToExpected(RooAbsArg &x, RooAbsArg &mean, const RooArgSet &obs, std::string const &errPrefix)
 {
-   RooRealVar *myobs = nullptr;
-   RooAbsReal *myexp = nullptr;
-   for (RooAbsArg *a : servers) {
-      if (obs.contains(*a)) {
-         if (myobs != nullptr) {
-            oocoutF(nullptr,Generation) << errPrefix << "Has two observables ?? " << std::endl;
-            return false;
-         }
-         myobs = dynamic_cast<RooRealVar *>(a);
-         if (myobs == nullptr) {
-            oocoutF(nullptr,Generation) << errPrefix << "Observable is not a RooRealVar??" << std::endl;
-            return false;
-         }
-      } else {
-         if (!a->isConstant() ) {
-            if (myexp != nullptr) {
-               oocoutE(nullptr,Generation) << errPrefix << "Has two non-const arguments  " << std::endl;
-               return false;
-            }
-            myexp = dynamic_cast<RooAbsReal *>(a);
-            if (myexp == nullptr) {
-               oocoutF(nullptr,Generation) << errPrefix << "Expected is not a RooAbsReal??" << std::endl;
-               return false;
-            }
-         }
-      }
+   // Figure out which of the two arguments is the observable that should be
+   // set to the expected value given by the other one. Usually the observable
+   // is "x", but also the mean parameter can be the observable: this happens
+   // for example in constraint terms, where the global observable takes the
+   // role of the mean.
+   const bool xIsObs = obs.contains(x);
+   const bool meanIsObs = obs.contains(mean);
+   if (xIsObs && meanIsObs) {
+      oocoutF(nullptr, Generation) << errPrefix << "Has two observables ?? " << std::endl;
+      return false;
    }
-   if (myobs == nullptr)  {
-      oocoutF(nullptr,Generation) << errPrefix << "No observable?" << std::endl;
+   if (!xIsObs && !meanIsObs) {
+      oocoutF(nullptr, Generation) << errPrefix << "No observable?" << std::endl;
+      return false;
+   }
+   auto *myobs = dynamic_cast<RooRealVar *>(xIsObs ? &x : &mean);
+   auto *myexp = dynamic_cast<RooAbsReal *>(xIsObs ? &mean : &x);
+   if (myobs == nullptr) {
+      oocoutF(nullptr, Generation) << errPrefix << "Observable is not a RooRealVar??" << std::endl;
       return false;
    }
    if (myexp == nullptr) {
-      oocoutF(nullptr,Generation) << errPrefix << "No observable?" << std::endl;
+      oocoutF(nullptr, Generation) << errPrefix << "Expected is not a RooAbsReal??" << std::endl;
       return false;
    }
 
@@ -989,33 +977,34 @@ bool setObsToExpected(std::span<RooAbsArg *> servers, const RooArgSet &obs, std:
 ////////////////////////////////////////////////////////////////////////////////
 /// set observed value to the expected one
 /// works for Gaussian, Poisson or LogNormal
-/// assumes mean parameter value is the argument not constant and not depending on observables
-/// (if more than two arguments are not constant will use first one but print a warning !)
 /// need to iterate on the components of the Poisson to get n and nu (nu can be a RooAbsReal)
 /// (code from G. Petrucciani and extended by L.M.)
 
-bool SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs)
+bool SetObsToExpected(RooGaussian &pdf, const RooArgSet &obs)
 {
    std::string const &errPrefix = "AsymptoticCalculator::SetObsExpected( " + std::string{pdf.ClassName()} + " ) : ";
-   std::vector<RooAbsArg *> servers;
-   for (RooAbsArg *a : pdf.servers()) {
-      servers.emplace_back(a);
-   }
-   return setObsToExpected(servers, obs, errPrefix);
+   return setObsToExpected(const_cast<RooAbsReal &>(pdf.getX()), const_cast<RooAbsReal &>(pdf.getMean()), obs,
+                           errPrefix);
+}
+
+bool SetObsToExpected(RooPoisson &pdf, const RooArgSet &obs)
+{
+   std::string const &errPrefix = "AsymptoticCalculator::SetObsExpected( " + std::string{pdf.ClassName()} + " ) : ";
+   return setObsToExpected(const_cast<RooAbsReal &>(pdf.getX()), const_cast<RooAbsReal &>(pdf.getMean()), obs,
+                           errPrefix);
 }
 
 bool setObsToExpectedMultiVarGauss(RooMultiVarGaussian &mvgauss, const RooArgSet &obs)
 {
    // In the case of the multi-variate Gaussian, we need to iterate over the
-   // dimensions and treat the servers for each dimension separately.
+   // dimensions and treat the observable and mean for each dimension
+   // separately.
 
    std::string const &errPrefix = "AsymptoticCalculator::SetObsExpected( " + std::string{mvgauss.ClassName()} + " ) : ";
-   std::vector<RooAbsArg *> servers{nullptr, nullptr};
    bool ret = true;
    for (std::size_t iDim = 0; iDim < mvgauss.xVec().size(); ++iDim) {
-      servers[0] = &mvgauss.xVec()[iDim];
-      servers[1] = &mvgauss.muVec()[iDim];
-      ret &= setObsToExpected(servers, obs, errPrefix + " : dim " + std::to_string(iDim) + " ");
+      ret &= setObsToExpected(mvgauss.xVec()[iDim], mvgauss.muVec()[iDim], obs,
+                              errPrefix + " : dim " + std::to_string(iDim) + " ");
    }
    return ret;
 }
