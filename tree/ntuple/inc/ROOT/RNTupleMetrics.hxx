@@ -283,8 +283,8 @@ using RNTupleAtomicTimer = RNTupleTimer<RNTupleAtomicCounter, RNTupleTickCounter
 
 The class owns the counters.
 
-If the environment variable `ROOT_EXPORT_RNTUPLE_METRICS` is set, metrics are automatically enabled on
-construction, and any counter added afterwards through MakeCounter() is enabled as well.
+If the environment variable `ROOT_EXPERIMENTAL_EXPORT_RNTUPLE_METRICS` is set, metrics are automatically enabled
+on construction, and any counter added afterwards through MakeCounter() is enabled as well.
 */
 // clang-format on
 class RNTupleMetrics {
