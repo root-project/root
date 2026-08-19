@@ -340,9 +340,6 @@ public:
    bool findConstantNodes(const RooArgSet &observables, RooArgSet &cacheList);
    bool findConstantNodes(const RooArgSet &observables, RooArgSet &cacheList, RooLinkedList &processedNodes);
 
-   // constant term optimization
-   virtual void constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt = true);
-
    virtual CacheMode canNodeBeCached() const { return Always; }
    virtual void setCacheAndTrackHints(RooArgSet & /*trackNodes*/) {};
 

@@ -169,7 +169,6 @@ RooFit::OwningPtr<RooFitResult> ProfileLikelihoodCalculator::DoMinimizeNLL(RooAb
    minim.setStrategy(strategy);
    minim.setEps(tolerance);
    minim.setPrintLevel(level);
-   minim.optimizeConst(2); // to optimize likelihood calculations
    minim.setEvalErrorWall(config.useEvalErrorWall);
 
    oocoutP(nullptr,Minimization) << "ProfileLikelihoodCalcultor::DoMinimizeNLL - using " << minim.minimizerType()

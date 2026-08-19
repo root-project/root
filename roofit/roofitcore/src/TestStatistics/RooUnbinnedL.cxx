@@ -206,7 +206,6 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
       std::tie(result, sumWeight) =
          computeBatchFunc(probas, data_.get(), apply_weight_squared, 1, events.begin(N_events_), events.end(N_events_));
    } else {
-      data_->store()->recalculateCache(nullptr, events.begin(N_events_), events.end(N_events_), 1, true);
       std::tie(result, sumWeight) = computeScalarFunc(pdf_.get(), data_.get(), normSet_.get(), apply_weight_squared, 1,
                                                       events.begin(N_events_), events.end(N_events_));
    }

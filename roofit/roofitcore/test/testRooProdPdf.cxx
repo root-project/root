@@ -22,57 +22,6 @@
 #include <sstream>
 #include <string>
 
-class TestProdPdf : public ::testing::TestWithParam<std::tuple<int, RooFit::EvalBackend>> {
-public:
-   TestProdPdf() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
-
-private:
-   void SetUp() override
-   {
-      RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
-
-      datap = std::unique_ptr<RooDataSet>{prod.generate(x, 1000)};
-      a.setConstant(true);
-
-      _optimize = std::get<0>(GetParam());
-      _evalBackend = std::get<1>(GetParam());
-   }
-
-protected:
-   constexpr static double bTruth = -0.5;
-
-   RooRealVar x{"x", "x", 2., 0., 5.};
-   RooRealVar a{"a", "a", -0.2, -5., 0.};
-   RooRealVar b{"b", "b", bTruth, -5., 0.};
-
-   RooGenericPdf c1{"c1", "exp(x[0]*x[1])", {x, a}};
-   RooGenericPdf c2{"c2", "exp(x[0]*x[1])", {x, b}};
-   RooProdPdf prod{"mypdf", "mypdf", {c1, c2}};
-   std::unique_ptr<RooDataSet> datap;
-
-   int _optimize = 0;
-   RooFit::EvalBackend _evalBackend;
-};
-
-TEST_P(TestProdPdf, CachingOpt)
-{
-   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
-
-   using namespace RooFit;
-   prod.fitTo(*datap, Optimize(_optimize), PrintLevel(-1), _evalBackend);
-   EXPECT_LT(std::abs(b.getVal() - bTruth), b.getError() * 2.5) // 2.5-sigma compatibility check
-      << "b=" << b.getVal() << " +- " << b.getError() << " doesn't match truth value with O" << _optimize << ".";
-}
-
-INSTANTIATE_TEST_SUITE_P(RooProdPdf, TestProdPdf,
-                         testing::Combine(testing::Values(0, 1, 2),
-                                          testing::Values(ROOFIT_EVAL_BACKENDS)),
-                         [](testing::TestParamInfo<TestProdPdf::ParamType> const &paramInfo) {
-                            std::stringstream ss;
-                            ss << "opt" << std::get<0>(paramInfo.param) << std::get<1>(paramInfo.param).name();
-                            return ss.str();
-                         });
-
 TEST(RooProdPdf, TestGetPartIntList)
 {
    RooHelpers::LocalChangeMsgLevel chmsglvl1{RooFit::ERROR, 0u, RooFit::InputArguments, true};
