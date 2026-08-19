@@ -73,6 +73,22 @@ Users are encouraged to export their models to ONNX and use the retained ONNX pa
 
 ## Python Interface
 
+### Connecting Python callables to signals
+
+`TQObject::Connect()` now directly accepts a Python callable as the slot, for
+example `button.Connect("Clicked()", on_clicked)`. The arguments emitted by the
+signal are forwarded to the callable, as far as its signature accepts them, and
+the connection keeps the callable alive. Use `Disconnect(signal, callable)` to
+undo the connection. Signals of any signature are supported, no longer only
+those covered by the `TPyDispatcher::Dispatch()` overloads.
+
+The `TPyDispatcher` class and its `ROOT/TPyDispatcher.h` header are removed:
+it required the user to create and keep alive a dispatcher object manually,
+and it was broken in recent releases anyway, since the interpreter could not
+resolve its symbols from the `libROOTPythonizations` Python extension module.
+Replace `obj.Connect(signal, "TPyDispatcher", disp, "Dispatch()")` with
+`obj.Connect(signal, callable)`.
+
 ## I/O
 
 ## Core
