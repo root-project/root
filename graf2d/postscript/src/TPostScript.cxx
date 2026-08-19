@@ -440,7 +440,8 @@ void TPostScript::Close(Option_t *)
       while (fgets(line, 255, sg)) {
          if (strstr(line,"EndComments")) PrintStr("%%DocumentNeededResources: ProcSet (FontSetInit)@");
          fStream->write(line,strlen(line));
-         if (!fFontEmbed && strstr(line,"m5")) {
+         // insert font after end of generic defines
+         if (!fFontEmbed && strstr(line,"/ita")) {
             FontEmbed();
             PrintStr("@");
          }
@@ -979,61 +980,63 @@ void TPostScript::DrawPolyMarkerShape(Int_t n, T *x, T *y)
 
    auto shape = GetMarkerShape(markerSize, points, scale, kUsePSWidthScale);
 
+   PrintStr("/custom_marker { gsave translate newpath");
+   switch(shape) {
+      case TAttMarker::kShapeDot:
+         markerSize = TMath::Max(4, markerSize*4); // circe diameter
+         // no break, handle as filled circle
+      case TAttMarker::kShapeFilledCircle:
+      case TAttMarker::kShapeCircle:
+         PrintStr(" 0 0");
+         WriteInteger(markerSize/2);
+         PrintStr(" 0 360 arc");
+         if (shape != TAttMarker::kShapeCircle)
+            PrintStr(" fill");
+         else
+            PrintStr(" stroke");
+         break;
+      case TAttMarker::kShapePolyLine:
+      case TAttMarker::kShapeFilledArea:
+         for (std::size_t i = 0; i < points.size(); ++i) {
+            WriteInteger(points[i].fX);
+            WriteInteger(-points[i].fY);
+            PrintStr(i == 0 ? " moveto" : " lineto");
+         }
+         if (points.front() == points.back())
+            PrintStr(" closepath");
+         if (shape == TAttMarker::kShapeFilledArea)
+            PrintStr(" fill");
+         else
+            PrintStr(" stroke");
+         break;
+      case TAttMarker::kShapeSegments:
+         for (std::size_t i = 0; i < points.size(); ++i) {
+            WriteInteger(points[i].fX);
+            WriteInteger(-points[i].fY);
+            PrintStr(i % 2 == 0 ? " moveto" : " lineto stroke");
+         }
+         break;
+      case TAttMarker::kShapeTriangles:
+         for (std::size_t i = 0; i < points.size(); ++i) {
+            WriteInteger(points[i].fX);
+            WriteInteger(-points[i].fY);
+            PrintStr(i % 3 == 0 ? " moveto" : " lineto");
+            if (i % 3 == 2)
+               PrintStr(" closepath fill");
+         }
+         break;
+   }
+
+   PrintStr(" grestore } def@");
+
    SetStyle(1);
    SetWidth(TMath::Max(1, GetMarkerLineWidth(GetMarkerStyle())));
    SetColor(GetMarkerColor());
 
    for (Int_t k = 0; k < n; ++k) {
-      auto px = XtoPS(x[k]);
-      auto py = YtoPS(y[k]);
-      switch(shape) {
-         case TAttMarker::kShapeDot:
-            markerSize = TMath::Max(2, markerSize*2); // circe diameter
-            // no break, handle as filled circle
-         case TAttMarker::kShapeFilledCircle:
-         case TAttMarker::kShapeCircle:
-            PrintStr(" newpath");
-            WriteInteger(px);
-            WriteInteger(py);
-            WriteInteger(markerSize/2);
-            PrintStr(" 0 360 arc");
-            if (shape != TAttMarker::kShapeCircle)
-               PrintStr(" fill");
-            else
-               PrintStr(" stroke");
-            break;
-         case TAttMarker::kShapePolyLine:
-         case TAttMarker::kShapeFilledArea:
-            for (std::size_t i = 0; i < points.size(); ++i) {
-               WriteInteger(px + points[i].fX);
-               WriteInteger(py - points[i].fY);
-               PrintStr(i == 0 ? " moveto" : " lineto");
-            }
-            if (points.front() == points.back())
-               PrintStr(" closepath");
-            if (shape == TAttMarker::kShapeFilledArea)
-               PrintStr(" fill");
-            else
-               PrintStr(" stroke");
-            break;
-         case TAttMarker::kShapeSegments:
-            for (std::size_t i = 0; i < points.size(); ++i) {
-               WriteInteger(px + points[i].fX);
-               WriteInteger(py - points[i].fY);
-               PrintStr(i % 2 == 0 ? " moveto" : " lineto stroke");
-            }
-            break;
-         case TAttMarker::kShapeTriangles:
-            for (std::size_t i = 0; i < points.size(); ++i) {
-               WriteInteger(px + points[i].fX);
-               WriteInteger(py - points[i].fY);
-               PrintStr(i % 3 == 0 ? " moveto" : " lineto");
-               if (i % 3 == 2)
-                  PrintStr(" closepath fill");
-            }
-            break;
-      }
-      PrintStr("@");
+      WriteInteger(XtoPS(x[k]));
+      WriteInteger(YtoPS(y[k]));
+      PrintStr(" custom_marker@");
    }
 
    SetLineStyle(linestylesav);
