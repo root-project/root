@@ -1,3 +1,17 @@
+# Find MathJax v3, and if not there, fall back to finding v2
+# MathJax_ROOT or MathJax_DIR can be set as hints for the search
+# The script first searchs for es5/tex-mml-chtml.js and es5/tex-svg.js files
+# which are required by ROOT doxygen and jsroot/webgui respectively, for MathJax v3.
+# If not found, it then searches for MathJax.js for MathJax v2
+# The following variables are then set
+#
+# ``MathJax_FOUND``
+#   True if MathJax v3 or v2 were found.
+# ``MathJax_DIR``
+#   The base directory of the MathJax v3 or v2 installations. (not the es5 subdirectory)
+#   or MathJax_DIR-NOTFOUND if nothing found
+# ``MathJax_VERSION``
+#   3 or 2, or MathJax_VERSION-NOTFOUND if nothing found
 
 find_path(MathJax3_PATH
   NAMES
