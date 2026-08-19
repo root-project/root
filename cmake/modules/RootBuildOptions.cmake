@@ -163,7 +163,7 @@ ROOT_BUILD_OPTION(sqlite ON "Enable support for SQLite")
 ROOT_BUILD_OPTION(ssl ON "Enable support for SSL encryption via OpenSSL")
 ROOT_BUILD_OPTION(test_distrdf_dask OFF "Enable distributed RDataFrame tests that use dask")
 ROOT_BUILD_OPTION(test_distrdf_pyspark OFF "Enable distributed RDataFrame tests that use pyspark")
-ROOT_BUILD_OPTION(testsupport OFF "Build the ROOT::TestSupport library required to use all features of ROOT_ADD_GTEST and similar macros (requires gtest at build time)")
+ROOT_BUILD_OPTION(testsupport OFF "Build the ROOT::TestSupport library required to use all features of ROOT_ADD_GTEST and similar macros (requires gtest at build time). If OFF, this library is still built if testing=ON")
 ROOT_BUILD_OPTION(thisroot_scripts ON "Build scripts like thisroot.{sh, fish, etc.} that set environment paths for using ROOT. Usually not needed when building ROOT for the distribution with a package manager.")
 ROOT_BUILD_OPTION(tmva ON "Build TMVA multi variate analysis library")
 ROOT_BUILD_OPTION(tmva-cpu ON "Build TMVA with CPU support for deep learning (requires BLAS)")
@@ -333,20 +333,11 @@ endif()
 #---Define at moment the options with the selected default values------------------------------
 ROOT_APPLY_OPTIONS()
 
-#---roottest/rootbench options require testing and testsupport
+#---roottest/rootbench options require testing
 if(roottest OR rootbench)
-  if (NOT testing OR NOT testsupport)
-    message(SEND_ERROR "-Droottest=ON or -Drootbench=ON requires -Dtesting=ON -Dtestsupport=ON")
+  if (NOT testing)
+    message(SEND_ERROR "-Droottest=ON or -Drootbench=ON requires -Dtesting=ON")
     list(APPEND HOTFIX_BUILD_FLAGS -Dtesting=ON)
-    list(APPEND HOTFIX_BUILD_FLAGS -Dtestsupport=ON)
-  endif()
-endif()
-
-#---testing requires testsupport
-if(testing)
-  if (NOT testsupport)
-    message(SEND_ERROR "-Dtesting=ON requires -Dtestsupport=ON")
-    list(APPEND HOTFIX_BUILD_FLAGS -Dtestsupport=ON)
   endif()
 endif()
 
