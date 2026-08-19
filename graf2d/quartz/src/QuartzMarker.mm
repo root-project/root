@@ -26,7 +26,7 @@ void DrawPolyMarker(CGContextRef ctx, unsigned nPoints, const TPoint *xy,
    Int_t markerSize = 0;
    std::vector<TPoint> markerShape;
 
-   auto markerType = attmark.GetMarkerShape(markerSize, markerShape, scaleFactor);
+   auto markerType = attmark.GetMarkerShape(markerSize, markerShape, scaleFactor, TAttMarker::kDotAsLines);
    auto markerLineWidth = TAttMarker::GetMarkerLineWidth(attmark.GetMarkerStyle());
 
    if (!Quartz::SetFillColor(ctx, attmark.GetMarkerColor()))
