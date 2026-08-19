@@ -4,9 +4,11 @@
 #include "TH2.h"
 #include "TH3.h"
 #include "TH1F.h"
+#include "TH2Poly.h"
 #include "THLimitsFinder.h"
 #include "TDirectory.h"
 #include "TList.h"
+#include "TRandom3.h"
 #include "TROOT.h"
 
 #include <cmath>
@@ -561,4 +563,147 @@ TEST(TH1, GetCumulativeErrors)
                << "bin (" << ix << ", " << iy << ")";
          }
    }
+}
+
+namespace {
+
+class TH1DIntegralAccess : public TH1D {
+public:
+   using TH1D::TH1D;
+   bool HasCachedIntegral() const { return fIntegral != nullptr; }
+};
+
+} // namespace
+
+TEST(TH1, GetRandomNegativeBin)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TH1D::ComputeIntegral", "Bin content is negative - return a NaN value");
+
+   TH1DIntegralAccess h("hNegRandom", "", 2, 0., 2.);
+   h.SetBinContent(1, 1.);
+   h.SetBinContent(2, -0.25);
+
+   TRandom3 rng(1);
+   TRandom3 referenceRng(1);
+   EXPECT_TRUE(std::isnan(h.GetRandom(&rng)));
+   EXPECT_FALSE(h.HasCachedIntegral());
+   EXPECT_DOUBLE_EQ(rng.Rndm(), referenceRng.Rndm());
+}
+
+TEST(TH2, GetRandom2NegativeBin)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TH2D::ComputeIntegral", "Bin content is negative - return a NaN value");
+
+   TH2D h("hNegRandom2", "", 2, 0., 2., 2, 0., 2.);
+   h.SetBinContent(1, 1, 1.);
+   h.SetBinContent(2, 1, -0.25);
+   h.SetBinContent(1, 2, 1.);
+   h.SetBinContent(2, 2, 1.);
+
+   TRandom3 rng(1);
+   TRandom3 referenceRng(1);
+   double x = 0., y = 0.;
+   h.GetRandom2(x, y, &rng);
+   EXPECT_TRUE(std::isnan(x));
+   EXPECT_TRUE(std::isnan(y));
+   EXPECT_DOUBLE_EQ(rng.Rndm(), referenceRng.Rndm());
+}
+
+TEST(TH3, GetRandom3NegativeBin)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TH3D::ComputeIntegral", "Bin content is negative - return a NaN value");
+
+   TH3D h("hNegRandom3", "", 2, 0., 2., 2, 0., 2., 2, 0., 2.);
+   h.SetBinContent(1, 1, 1, 1.);
+   h.SetBinContent(2, 2, 2, -0.25);
+
+   TRandom3 rng(1);
+   TRandom3 referenceRng(1);
+   double x = 0., y = 0., z = 0.;
+   h.GetRandom3(x, y, z, &rng);
+   EXPECT_TRUE(std::isnan(x));
+   EXPECT_TRUE(std::isnan(y));
+   EXPECT_TRUE(std::isnan(z));
+   EXPECT_DOUBLE_EQ(rng.Rndm(), referenceRng.Rndm());
+}
+
+TEST(TH2, FillRandomNegativeBin)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TH2D::ComputeIntegral", "Bin content is negative - return a NaN value");
+   diags.requiredDiag(kError, "TH2D::FillRandom",
+                      "Histograms contains negative bins, does not represent probabilities");
+
+   TH2D src("hFillRandom2Src", "", 2, 0., 2., 2, 0., 2.);
+   src.SetBinContent(1, 1, 1.);
+   src.SetBinContent(2, 1, -0.25);
+   src.SetBinContent(1, 2, 1.);
+   src.SetBinContent(2, 2, 1.);
+
+   TH2D dest("hFillRandom2Dest", "", 2, 0., 2., 2, 0., 2.);
+   TRandom3 rng(1);
+   dest.FillRandom(&src, 1, &rng);
+   EXPECT_EQ(dest.GetEntries(), 0.);
+}
+
+TEST(TH3, FillRandomNegativeBin)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TH3D::ComputeIntegral", "Bin content is negative - return a NaN value");
+   diags.requiredDiag(kError, "TH3D::FillRandom",
+                      "Histograms contains negative bins, does not represent probabilities");
+
+   TH3D src("hFillRandom3Src", "", 2, 0., 2., 2, 0., 2., 2, 0., 2.);
+   src.SetBinContent(1, 1, 1, 1.);
+   src.SetBinContent(2, 2, 2, -0.25);
+
+   TH3D dest("hFillRandom3Dest", "", 2, 0., 2., 2, 0., 2., 2, 0., 2.);
+   TRandom3 rng(1);
+   dest.FillRandom(&src, 1, &rng);
+   EXPECT_EQ(dest.GetEntries(), 0.);
+}
+
+TEST(TH2, FillRandomPositiveBins)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   TRandom3 rng(1);
+
+   TH2D src("hFillRandom2PositiveSrc", "", 1, 0., 1., 1, 0., 1.);
+   src.SetBinContent(1, 1, 1.);
+   TH2D dest("hFillRandom2PositiveDest", "", 1, 0., 1., 1, 0., 1.);
+   dest.FillRandom(&src, 1, &rng);
+   EXPECT_EQ(dest.GetEntries(), 1.);
+   EXPECT_EQ(dest.Integral(), 1.);
+}
+
+TEST(TH3, FillRandomPositiveBins)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   TRandom3 rng(1);
+
+   TH3D src("hFillRandom3PositiveSrc", "", 1, 0., 1., 1, 0., 1., 1, 0., 1.);
+   src.SetBinContent(1, 1, 1, 1.);
+   TH3D dest("hFillRandom3PositiveDest", "", 1, 0., 1., 1, 0., 1., 1, 0., 1.);
+   dest.FillRandom(&src, 1, &rng);
+   EXPECT_EQ(dest.GetEntries(), 1.);
+   EXPECT_EQ(dest.Integral(), 1.);
+}
+
+TEST(TH2Poly, GetRandom2NotImplemented)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TH2Poly::ComputeIntegral", "Not implemented for TH2Poly");
+
+   TH2Poly h("hPolyRandom", "", 0., 2., 0., 2.);
+   h.AddBin(0., 0., 1., 1.);
+   h.AddBin(1., 1., 2., 2.);
+
+   TRandom3 rng(1);
+   double x = 0., y = 0.;
+   h.GetRandom2(x, y, &rng);
+   EXPECT_TRUE(std::isnan(x));
+   EXPECT_TRUE(std::isnan(y));
 }
