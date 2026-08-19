@@ -55,6 +55,7 @@ namespace RooFit {
 namespace Experimental {
 class CodegenContext;
 }
+struct VariableGroups;
 } // namespace RooFit
 
 class RooRefArray : public TObjArray {
@@ -251,6 +252,8 @@ public:
    void printTree(std::ostream &os, TString indent = "") const override;
 
    Int_t defaultPrintContents(Option_t *opt) const override;
+
+   virtual void fillVariableGroups(RooFit::VariableGroups &out) const;
 
    // Accessors to attributes
    void setAttribute(const Text_t *name, bool value = true);

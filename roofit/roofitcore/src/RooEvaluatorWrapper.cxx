@@ -841,6 +841,11 @@ std::unique_ptr<ChangeOperModeRAII> RooEvaluatorWrapper::setOperModes(RooAbsArg:
    return _evaluator->setOperModes(opMode);
 }
 
+void RooEvaluatorWrapper::fillVariableGroups(RooFit::VariableGroups &out) const
+{
+   _topNode->fillVariableGroups(out);
+}
+
 } // namespace RooFit::Experimental
 
 /// \endcond
