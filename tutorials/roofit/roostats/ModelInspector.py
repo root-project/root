@@ -567,6 +567,11 @@ class ModelInspectorGUI(ROOT.TGMainFrame):
         # And that's it!
         # Obviously, the parent of other subframes is now fVFrame instead of "self"...
 
+        # The C++ containers below (TList, std::map) store only raw pointers,
+        # so keep the Python proxies of the per-parameter widgets referenced:
+        # otherwise Python garbage-collects them and deletes the C++ widgets
+        self.fWidgets = []
+
         # while (param := it.Next()): #unnecessary
         for param in parameters:
             print(f"Adding Slider for ", param.GetName())
@@ -589,8 +594,6 @@ class ModelInspectorGUI(ROOT.TGMainFrame):
                 False,
             )
 
-            hsliderk.Connect("PointerPositionChanged()", self.DoSlider)
-            hsliderk.Connect("PositionChanged()", self.DoSlider)
             hsliderk.SetRange(param.getMin(), param.getMax())
 
             hframek.Resize(200, 25)
@@ -600,11 +603,18 @@ class ModelInspectorGUI(ROOT.TGMainFrame):
             hsliderk.SetPosition(param.getVal() - param.getError(), param.getVal() + param.getError())
             hsliderk.SetPointerPosition(param.getVal())
 
+            # Connect only after initializing the slider: setting the position
+            # emits the signals, and DoSlider must not run on the
+            # half-constructed GUI
+            hsliderk.Connect("PointerPositionChanged()", self.DoSlider)
+            hsliderk.Connect("PositionChanged()", self.DoSlider)
+
             hframek.AddFrame(hlabel, self.fBly)  #
             hframek.AddFrame(hsliderk, self.fBly)  #
             self.fVFrame.AddFrame(hframek, self.fBly)
             self.fSliderMap[hsliderk] = param.GetName()
             self.fLabelMap[hsliderk] = hlabel
+            self.fWidgets += [hframek, hlabel, hsliderk]
 
         # Set main frame name, map sub windows (buttons), initialize layout
         # algorithm via Resize() and map main frame
