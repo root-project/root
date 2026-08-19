@@ -54,7 +54,6 @@ filter:
 
 mathjax:
 	$(call MkDir,$(DOXYGEN_IMAGE_PATH))
-	curl -o mathjax.tar.gz https://root.cern/download/MathJax-3.2.0.tar.gz
 	tar xfz mathjax.tar.gz -C $(DOXYGEN_IMAGE_PATH)
 
 js:
