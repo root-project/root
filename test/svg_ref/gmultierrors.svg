@@ -52,11 +52,11 @@ gmultierrors.svg
 <text xml:space="preserve" x="17" y="18" fill="black" font-size="17" font-family="Helvetica" font-weight="bold">TGraphMultiErrors Example
 </text>
 <g fill="black">
-<circle cx="120" cy="275" r="3.3"/>
-<circle cx="202" cy="183" r="3.3"/>
-<circle cx="284" cy="92" r="3.3"/>
-<circle cx="366" cy="229" r="3.3"/>
-<circle cx="448" cy="137" r="3.3"/>
+<circle cx="120" cy="275" r="3"/>
+<circle cx="202" cy="183" r="3"/>
+<circle cx="284" cy="92" r="3"/>
+<circle cx="366" cy="229" r="3"/>
+<circle cx="448" cy="137" r="3"/>
 </g>
 <path d="M120,278v 43" fill="none" stroke="#ff0000"/>
 <path d="M120,271v -20" fill="none" stroke="#ff0000"/>

@@ -70,18 +70,7 @@ tgraph4.svg
 <text xml:space="preserve" x="16" y="35" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">10
 </text>
 <path d="M88,235l 37, -23l 26, -23l 20, -23l 17, -23l 14, -23l 12, -23l 11, -23l 9.6, -23l 8.7, -23" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<line x1="87" y1="235" x2="88" y2="235"/>
-<line x1="124" y1="212" x2="125" y2="212"/>
-<line x1="150" y1="190" x2="151" y2="190"/>
-<line x1="171" y1="167" x2="172" y2="167"/>
-<line x1="187" y1="144" x2="188" y2="144"/>
-<line x1="202" y1="121" x2="203" y2="121"/>
-<line x1="214" y1="98" x2="215" y2="98"/>
-<line x1="225" y1="75" x2="226" y2="75"/>
-<line x1="234" y1="52" x2="235" y2="52"/>
-<line x1="243" y1="30" x2="244" y2="30"/>
-</g>
+<path stroke="black" stroke-width="1" fill="none" d="M87,235h1 M124,212h1 M150,190h1 M171,167h1 M187,144h1 M202,121h1 M214,98h1 M225,75h1 M234,52h1 M243,30h1"/>
 <rect x="8.9" y="3.9" width="190" height="15" fill="#f2f2f2"/>
 <path d="M7.5,6.1v 14h 190v -1.4h -188v -12z" fill="black"/>
 <path d="M8.9,18v -15h 190v 15h -190z" fill="none" stroke="black"/>
@@ -151,15 +140,4 @@ tgraph4.svg
 <text xml:space="preserve" x="300" y="35" fill="black" font-size="10" font-family="Helvetica" font-weight="bold">10
 </text>
 <path d="M372,235l 37, -23l 26, -23l 20, -23l 17, -23l 14, -23l 12, -23l 11, -23l 9.6, -23l 8.7, -23" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<line x1="371" y1="235" x2="372" y2="235"/>
-<line x1="408" y1="212" x2="409" y2="212"/>
-<line x1="434" y1="190" x2="435" y2="190"/>
-<line x1="454" y1="167" x2="455" y2="167"/>
-<line x1="471" y1="144" x2="472" y2="144"/>
-<line x1="485" y1="121" x2="486" y2="121"/>
-<line x1="497" y1="98" x2="498" y2="98"/>
-<line x1="508" y1="75" x2="509" y2="75"/>
-<line x1="518" y1="52" x2="519" y2="52"/>
-<line x1="526" y1="30" x2="527" y2="30"/>
-</g></svg>
+<path stroke="black" stroke-width="1" fill="none" d="M371,235h1 M408,212h1 M434,190h1 M454,167h1 M471,144h1 M485,121h1 M497,98h1 M508,75h1 M518,52h1 M526,30h1"/></svg>

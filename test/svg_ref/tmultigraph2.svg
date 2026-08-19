@@ -51,29 +51,19 @@ tmultigraph2.svg
  -2.9l 5.2, -4.7l 3.6, -3.0l 2.6, -1.6l 1.9, -0.737l 1.7, -0.224l 1.9, 0.300l 1.8, 0.870l 2.0, 1.5l 2.0, 2.0l 2.7, 3.3l 5.4, 7.3l 2.3, 2.7l 3.8, 3.7l 3.9, 3.7l 2.0, 2.3l 1.7, 2.4l 1.7, 2.8l 1.5, 3.1l 1.4, 3.4l 1.5, 4.3l 1.2, 3.9l 1.2, 4.3l 0.801,
  3.2l 1.5, 6.6l 1.7, 8.1l 1.7, 8.9l 1.2, 6.4l 1.7, 9.6l 1.7, 10l 1.9, 12l 1.6, 11l 1.7, 12l 0.573, 4.1" fill="none" stroke="black"/>
 <g fill="#0000ff">
-<circle cx="71" cy="233" r="2.8"/>
-<circle cx="94" cy="169" r="2.8"/>
-<circle cx="125" cy="124" r="2.8"/>
-<circle cx="140" cy="94" r="2.8"/>
-<circle cx="163" cy="67" r="2.8"/>
-<circle cx="180" cy="57" r="2.8"/>
-<circle cx="194" cy="72" r="2.8"/>
-<circle cx="217" cy="112" r="2.8"/>
-<circle cx="223" cy="142" r="2.8"/>
-<circle cx="232" cy="200" r="2.8"/>
+<circle cx="71" cy="233" r="3"/>
+<circle cx="94" cy="169" r="3"/>
+<circle cx="125" cy="124" r="3"/>
+<circle cx="140" cy="94" r="3"/>
+<circle cx="163" cy="67" r="3"/>
+<circle cx="180" cy="57" r="3"/>
+<circle cx="194" cy="72" r="3"/>
+<circle cx="217" cy="112" r="3"/>
+<circle cx="223" cy="142" r="3"/>
+<circle cx="232" cy="200" r="3"/>
 </g>
-<g fill="#ff0000">
-<polygon points=" 40, 179 46, 179 43, 185"/>
-<polygon points=" 84, 150 90, 150 87, 156"/>
-<polygon points=" 113, 98 118, 98 115, 103"/>
-<polygon points=" 128, 64 134, 64 131, 70"/>
-<polygon points=" 152, 48 158, 48 155, 53"/>
-<polygon points=" 169, 39 175, 39 172, 44"/>
-<polygon points=" 183, 54 189, 54 186, 59"/>
-<polygon points=" 206, 93 212, 93 209, 99"/>
-<polygon points=" 221, 124 227, 124 224, 130"/>
-<polygon points=" 238, 181 244, 181 241, 186"/>
-</g>
+<path fill="#ff0000" d="M43,185l3,-6l-6,0l3,6z M87,156l3,-6l-6,0l3,6z M115,103l3,-6l-6,0l3,6z M131,70l3,-6l-6,0l3,6z M155,54l3,-6l-6,0l3,6z M172,44l3,-6l-6,0l3,6z M186,60l3,-6l-6,0l3,6z M209,99l3,-6l-6,0l3,6z M224,130l3,-6l-6,0l3,6z
+ M241,187l3,-6l-6,0l3,6z"/>
 <text xml:space="preserve" x="40" y="51" fill="black" font-size="13" font-family="Helvetica" font-weight="bold">TGraph
 </text>
 <rect x="290" y="5.5" width="272" height="264" fill="#f2f2f2"/>
@@ -202,18 +192,8 @@ tmultigraph2.svg
 <path d="M509,179h 2.8" fill="none" stroke="black"/>
 <path d="M509,203h 2.8" fill="none" stroke="black"/>
 <path d="M359,221l 22, -59l 29, -41l 14, -27l 22, -24l 16, -9.1l 13, 14l 22, 36l 5.8, 27l 8.7, 53" fill="none" stroke="black"/>
-<g fill="#0000cc">
-<rect x="356" y="218" width="5.7" height="5.7"/>
-<rect x="377" y="159" width="5.7" height="5.7"/>
-<rect x="406" y="118" width="5.7" height="5.7"/>
-<rect x="421" y="91" width="5.7" height="5.7"/>
-<rect x="442" y="67" width="5.7" height="5.7"/>
-<rect x="458" y="58" width="5.7" height="5.7"/>
-<rect x="471" y="71" width="5.7" height="5.7"/>
-<rect x="493" y="108" width="5.7" height="5.7"/>
-<rect x="499" y="135" width="5.7" height="5.7"/>
-<rect x="507" y="188" width="5.7" height="5.7"/>
-</g>
+<path fill="#0000cc" d="M356,218l6,0l0,6l-6,0l0,-6z M377,159l6,0l0,6l-6,0l0,-6z M406,118l6,0l0,6l-6,0l0,-6z M421,91l6,0l0,6l-6,0l0,-6z M442,67l6,0l0,6l-6,0l0,-6z M458,57l6,0l0,6l-6,0l0,-6z M471,71l6,0l0,6l-6,0l0,-6z M493,108l6,0l0,6l-6,0l0,-6z
+ M499,135l6,0l0,6l-6,0l0,-6z M507,188l6,0l0,6l-6,0l0,-6z"/>
 <path d="M330,174h -2.9" fill="none" stroke="black"/>
 <path d="M335,174h 2.9" fill="none" stroke="black"/>
 <path d="M327,176v -2.8" fill="none" stroke="black"/>
@@ -295,16 +275,16 @@ tmultigraph2.svg
 <path d="M517,165h 2.8" fill="none" stroke="black"/>
 <path d="M517,186h 2.8" fill="none" stroke="black"/>
 <g fill="#cc0000">
-<circle cx="333" cy="174" r="2.8"/>
-<circle cx="374" cy="148" r="2.8"/>
-<circle cx="400" cy="100" r="2.8"/>
-<circle cx="415" cy="70" r="2.8"/>
-<circle cx="438" cy="54" r="2.8"/>
-<circle cx="454" cy="46" r="2.8"/>
-<circle cx="467" cy="60" r="2.8"/>
-<circle cx="489" cy="96" r="2.8"/>
-<circle cx="503" cy="124" r="2.8"/>
-<circle cx="519" cy="176" r="2.8"/>
+<circle cx="333" cy="174" r="3"/>
+<circle cx="374" cy="148" r="3"/>
+<circle cx="400" cy="100" r="3"/>
+<circle cx="415" cy="70" r="3"/>
+<circle cx="438" cy="54" r="3"/>
+<circle cx="454" cy="46" r="3"/>
+<circle cx="467" cy="60" r="3"/>
+<circle cx="489" cy="96" r="3"/>
+<circle cx="503" cy="124" r="3"/>
+<circle cx="519" cy="176" r="3"/>
 </g>
 <path d="M318,182l 2.4, -0.170l 2.4, -0.407l 2.4, -0.636l 2.4, -0.856l 2.4, -1.1l 2.4, -1.3l 2.4, -1.5l 2.4, -1.6l 2.4, -1.8l 2.4, -2.0l 2.4, -2.1l 2.4, -2.3l 2.4, -2.4l 2.4, -2.6l 2.4, -2.7l 2.4, -2.8l 2.4, -2.9l 2.4, -3.0l 2.4, -3.1l 2.4, -3.2l
  2.4, -3.3l 2.4, -3.3l 2.4, -3.4l 2.4, -3.4l 2.4, -3.4l 2.4, -3.5l 2.4, -3.5l 2.4, -3.5l 2.4, -3.5l 2.4, -3.5l 2.4, -3.5l 2.4, -3.5l 2.4, -3.4l 2.4, -3.4l 2.4, -3.3l 2.4, -3.3l 2.4, -3.2l 2.4, -3.1l 2.4, -3.0l 2.4, -2.9l 2.4, -2.8l 2.4, -2.7l 2.4,
@@ -486,18 +466,8 @@ tmultigraph2.svg
 <path d="M227,456h 2.8" fill="none" stroke="black"/>
 <path d="M227,478h 2.8" fill="none" stroke="black"/>
 <path d="M75,496l 22, -60l 29, -41l 15, -28l 22, -24l 16, -9.2l 13, 14l 22, 37l 5.8, 28l 8.7, 54" fill="none" stroke="black"/>
-<g fill="#333366">
-<rect x="72" y="493" width="5.7" height="5.7"/>
-<rect x="94" y="434" width="5.7" height="5.7"/>
-<rect x="123" y="392" width="5.7" height="5.7"/>
-<rect x="138" y="365" width="5.7" height="5.7"/>
-<rect x="160" y="340" width="5.7" height="5.7"/>
-<rect x="176" y="331" width="5.7" height="5.7"/>
-<rect x="189" y="345" width="5.7" height="5.7"/>
-<rect x="211" y="382" width="5.7" height="5.7"/>
-<rect x="217" y="409" width="5.7" height="5.7"/>
-<rect x="225" y="463" width="5.7" height="5.7"/>
-</g>
+<path fill="#333366" d="M72,493l6,0l0,6l-6,0l0,-6z M94,433l6,0l0,6l-6,0l0,-6z M123,392l6,0l0,6l-6,0l0,-6z M138,365l6,0l0,6l-6,0l0,-6z M160,340l6,0l0,6l-6,0l0,-6z M176,331l6,0l0,6l-6,0l0,-6z M189,345l6,0l0,6l-6,0l0,-6z M211,381l6,0l0,6l-6,0l0,-6z
+ M216,409l6,0l0,6l-6,0l0,-6z M225,463l6,0l0,6l-6,0l0,-6z"/>
 <path d="M46,449h -3.0" fill="none" stroke="black"/>
 <path d="M52,449h 0.062" fill="none" stroke="black"/>
 <path d="M43,450v -2.8" fill="none" stroke="black"/>
@@ -579,16 +549,16 @@ tmultigraph2.svg
 <path d="M235,441h 2.8" fill="none" stroke="black"/>
 <path d="M235,461h 2.8" fill="none" stroke="black"/>
 <g fill="#663333">
-<circle cx="49" cy="449" r="2.8"/>
-<circle cx="91" cy="422" r="2.8"/>
-<circle cx="117" cy="374" r="2.8"/>
-<circle cx="132" cy="343" r="2.8"/>
-<circle cx="155" cy="328" r="2.8"/>
-<circle cx="171" cy="319" r="2.8"/>
-<circle cx="184" cy="333" r="2.8"/>
-<circle cx="206" cy="370" r="2.8"/>
-<circle cx="221" cy="398" r="2.8"/>
-<circle cx="237" cy="450" r="2.8"/>
+<circle cx="49" cy="449" r="3"/>
+<circle cx="91" cy="422" r="3"/>
+<circle cx="117" cy="374" r="3"/>
+<circle cx="132" cy="343" r="3"/>
+<circle cx="155" cy="328" r="3"/>
+<circle cx="171" cy="319" r="3"/>
+<circle cx="184" cy="333" r="3"/>
+<circle cx="206" cy="370" r="3"/>
+<circle cx="221" cy="398" r="3"/>
+<circle cx="237" cy="450" r="3"/>
 </g>
 <path d="M34,420l 2.4, 6.7l 2.4, 5.8l 2.4, 5.0l 2.4, 4.3l 2.4, 3.6l 2.4, 2.9l 2.4, 2.2l 2.4, 1.6l 2.4, 1.1l 2.4, 0.514l 2.4, 0.00115851l 2.4, -0.480l 2.4, -0.930l 2.4, -1.3l 2.4, -1.7l 2.4, -2.1l 2.4, -2.4l 2.4, -2.7l 2.4, -3.0l 2.4, -3.3l 2.4, -3.5l
  2.4, -3.7l 2.4, -3.9l 2.4, -4.0l 2.4, -4.1l 2.4, -4.3l 2.4, -4.3l 2.4, -4.4l 2.4, -4.4l 2.4, -4.5l 2.4, -4.5l 2.4, -4.4l 2.4, -4.4l 2.4, -4.3l 2.4, -4.3l 2.4, -4.2l 2.4, -4.1l 2.4, -4.0l 2.4, -3.8l 2.4, -3.7l 2.4, -3.5l 2.4, -3.3l 2.4, -3.2l 2.4,
@@ -781,18 +751,8 @@ tmultigraph2.svg
 <path d="M359,496l 3.3, -11l 2.8, -8.7l 3.1, -9.0l 3.1, -8.4l 3.2, -8.4l 2.9, -7.1l 3.3, -7.4l 2.3, -4.8l 2.2, -4.0l 2.5, -4.0l 22, -29l 2.6, -4.7l 4.1, -8.2l 4.1, -8.0l 2.4, -4.4l 1.4, -2.3l 3.4, -5.0l 2.9, -3.9l 3.5, -4.2l 4.3, -4.6l 4.6, -4.2l
  3.2, -2.6l 4.9, -4.3l 3.4, -2.8l 2.4, -1.5l 1.8, -0.678l 1.6, -0.206l 1.8, 0.276l 1.7, 0.801l 1.9, 1.4l 1.9, 1.8l 2.6, 3.1l 5.1, 6.7l 2.2, 2.5l 3.6, 3.4l 3.7, 3.4l 1.9, 2.2l 1.6, 2.2l 1.6, 2.6l 1.5, 2.9l 1.3, 3.1l 1.4, 3.9l 1.1, 3.6l 1.1, 4.0l
  0.760, 3.0l 1.4, 6.1l 1.6, 7.4l 1.6, 8.2l 1.1, 5.9l 1.6, 8.8l 1.6, 9.3l 1.8, 11l 1.5, 9.8l 1.6, 11l 0.544, 3.8" fill="none" stroke="black"/>
-<g fill="#00ff00">
-<rect x="356" y="493" width="5.7" height="5.7"/>
-<rect x="378" y="434" width="5.7" height="5.7"/>
-<rect x="407" y="392" width="5.7" height="5.7"/>
-<rect x="421" y="365" width="5.7" height="5.7"/>
-<rect x="443" y="340" width="5.7" height="5.7"/>
-<rect x="459" y="331" width="5.7" height="5.7"/>
-<rect x="472" y="345" width="5.7" height="5.7"/>
-<rect x="494" y="382" width="5.7" height="5.7"/>
-<rect x="500" y="409" width="5.7" height="5.7"/>
-<rect x="509" y="463" width="5.7" height="5.7"/>
-</g>
+<path fill="#00ff00" d="M356,493l6,0l0,6l-6,0l0,-6z M378,433l6,0l0,6l-6,0l0,-6z M407,392l6,0l0,6l-6,0l0,-6z M421,365l6,0l0,6l-6,0l0,-6z M443,340l6,0l0,6l-6,0l0,-6z M459,331l6,0l0,6l-6,0l0,-6z M472,345l6,0l0,6l-6,0l0,-6z M494,381l6,0l0,6l-6,0l0,-6z
+ M500,409l6,0l0,6l-6,0l0,-6z M509,463l6,0l0,6l-6,0l0,-6z"/>
 <path d="M330,449h -3.0" fill="none" stroke="black"/>
 <path d="M335,449h 0.062" fill="none" stroke="black"/>
 <path d="M327,450v -2.8" fill="none" stroke="black"/>
@@ -874,16 +834,16 @@ tmultigraph2.svg
 <path d="M519,441h 2.8" fill="none" stroke="black"/>
 <path d="M519,461h 2.8" fill="none" stroke="black"/>
 <g fill="#cc00ff">
-<circle cx="333" cy="449" r="2.8"/>
-<circle cx="374" cy="422" r="2.8"/>
-<circle cx="401" cy="374" r="2.8"/>
-<circle cx="416" cy="343" r="2.8"/>
-<circle cx="439" cy="328" r="2.8"/>
-<circle cx="455" cy="319" r="2.8"/>
-<circle cx="468" cy="333" r="2.8"/>
-<circle cx="490" cy="370" r="2.8"/>
-<circle cx="504" cy="398" r="2.8"/>
-<circle cx="520" cy="450" r="2.8"/>
+<circle cx="333" cy="449" r="3"/>
+<circle cx="374" cy="422" r="3"/>
+<circle cx="401" cy="374" r="3"/>
+<circle cx="416" cy="343" r="3"/>
+<circle cx="439" cy="328" r="3"/>
+<circle cx="455" cy="319" r="3"/>
+<circle cx="468" cy="333" r="3"/>
+<circle cx="490" cy="370" r="3"/>
+<circle cx="504" cy="398" r="3"/>
+<circle cx="520" cy="450" r="3"/>
 </g>
 <path d="M318,418l 2.4, 7.0l 2.4, 6.2l 2.4, 5.3l 2.4, 4.5l 2.4, 3.8l 2.4, 3.1l 2.4, 2.4l 2.4, 1.8l 2.4, 1.2l 2.4, 0.595l 2.4, 0.062l 2.4, -0.438l 2.4, -0.904l 2.4, -1.3l 2.4, -1.7l 2.4, -2.1l 2.4, -2.5l 2.4, -2.8l 2.4, -3.0l 2.4, -3.3l 2.4, -3.5l
  2.4, -3.7l 2.4, -3.9l 2.4, -4.1l 2.4, -4.2l 2.4, -4.3l 2.4, -4.4l 2.4, -4.4l 2.4, -4.5l 2.4, -4.5l 2.4, -4.5l 2.4, -4.5l 2.4, -4.4l 2.4, -4.4l 2.4, -4.3l 2.4, -4.2l 2.4, -4.1l 2.4, -4.0l 2.4, -3.8l 2.4, -3.7l 2.4, -3.5l 2.4, -3.3l 2.4, -3.1l 2.4,

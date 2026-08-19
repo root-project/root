@@ -18,99 +18,99 @@ th1_palette.svg
  -4.6M350,243v -4.0M350,234v -4.0M354,241v -4.1M354,231v -4.1M359,250v -3.8M359,240v -3.8M363,260v -3.5M363,251v -3.5M368,278v -3.0M368,270v -3.0M372,290v -2.6M372,281v -2.6M377,295v -2.4M377,287v -2.4M381,303v -2.1M381,296v -2.1M386,315v
  -1.6M386,307v -1.6M391,326v -1.1M391,320v -1.1M395,328v -1.1M395,321v -1.1M400,332v -0.881M400,325v -0.881M404,338v -0.537M404,332v -0.537M409,346v -0.089M409,340v -0.089" fill="none" stroke="#352a86"/>
 <g fill="#352a86">
-<circle cx="73" cy="366" r="2.8"/>
-<circle cx="78" cy="366" r="2.8"/>
-<circle cx="82" cy="366" r="2.8"/>
-<circle cx="87" cy="365" r="2.8"/>
-<circle cx="91" cy="365" r="2.8"/>
-<circle cx="96" cy="365" r="2.8"/>
-<circle cx="100" cy="366" r="2.8"/>
-<circle cx="105" cy="365" r="2.8"/>
-<circle cx="109" cy="365" r="2.8"/>
-<circle cx="114" cy="364" r="2.8"/>
-<circle cx="118" cy="363" r="2.8"/>
-<circle cx="123" cy="360" r="2.8"/>
-<circle cx="127" cy="361" r="2.8"/>
-<circle cx="132" cy="359" r="2.8"/>
-<circle cx="137" cy="359" r="2.8"/>
-<circle cx="141" cy="354" r="2.8"/>
-<circle cx="146" cy="353" r="2.8"/>
-<circle cx="150" cy="349" r="2.8"/>
-<circle cx="155" cy="344" r="2.8"/>
-<circle cx="159" cy="342" r="2.8"/>
-<circle cx="164" cy="334" r="2.8"/>
-<circle cx="168" cy="328" r="2.8"/>
-<circle cx="173" cy="323" r="2.8"/>
-<circle cx="177" cy="314" r="2.8"/>
-<circle cx="182" cy="321" r="2.8"/>
-<circle cx="186" cy="308" r="2.8"/>
-<circle cx="191" cy="296" r="2.8"/>
-<circle cx="196" cy="279" r="2.8"/>
-<circle cx="200" cy="268" r="2.8"/>
-<circle cx="205" cy="256" r="2.8"/>
-<circle cx="209" cy="251" r="2.8"/>
-<circle cx="214" cy="236" r="2.8"/>
-<circle cx="218" cy="223" r="2.8"/>
-<circle cx="223" cy="192" r="2.8"/>
-<circle cx="227" cy="193" r="2.8"/>
-<circle cx="232" cy="175" r="2.8"/>
-<circle cx="236" cy="156" r="2.8"/>
-<circle cx="241" cy="155" r="2.8"/>
-<circle cx="245" cy="153" r="2.8"/>
-<circle cx="250" cy="132" r="2.8"/>
-<circle cx="254" cy="112" r="2.8"/>
-<circle cx="259" cy="115" r="2.8"/>
-<circle cx="264" cy="99" r="2.8"/>
-<circle cx="268" cy="100" r="2.8"/>
-<circle cx="273" cy="79" r="2.8"/>
-<circle cx="277" cy="73" r="2.8"/>
-<circle cx="282" cy="77" r="2.8"/>
-<circle cx="286" cy="86" r="2.8"/>
-<circle cx="291" cy="67" r="2.8"/>
-<circle cx="295" cy="74" r="2.8"/>
-<circle cx="300" cy="86" r="2.8"/>
-<circle cx="304" cy="102" r="2.8"/>
-<circle cx="309" cy="103" r="2.8"/>
-<circle cx="313" cy="117" r="2.8"/>
-<circle cx="318" cy="131" r="2.8"/>
-<circle cx="323" cy="142" r="2.8"/>
-<circle cx="327" cy="152" r="2.8"/>
-<circle cx="332" cy="169" r="2.8"/>
-<circle cx="336" cy="190" r="2.8"/>
-<circle cx="341" cy="190" r="2.8"/>
-<circle cx="345" cy="210" r="2.8"/>
-<circle cx="350" cy="236" r="2.8"/>
-<circle cx="354" cy="234" r="2.8"/>
-<circle cx="359" cy="243" r="2.8"/>
-<circle cx="363" cy="254" r="2.8"/>
-<circle cx="368" cy="273" r="2.8"/>
-<circle cx="372" cy="284" r="2.8"/>
-<circle cx="377" cy="290" r="2.8"/>
-<circle cx="381" cy="298" r="2.8"/>
-<circle cx="386" cy="310" r="2.8"/>
-<circle cx="391" cy="323" r="2.8"/>
-<circle cx="395" cy="324" r="2.8"/>
-<circle cx="400" cy="328" r="2.8"/>
-<circle cx="404" cy="335" r="2.8"/>
-<circle cx="409" cy="343" r="2.8"/>
-<circle cx="413" cy="346" r="2.8"/>
-<circle cx="418" cy="351" r="2.8"/>
-<circle cx="422" cy="351" r="2.8"/>
-<circle cx="427" cy="358" r="2.8"/>
-<circle cx="431" cy="356" r="2.8"/>
-<circle cx="436" cy="358" r="2.8"/>
-<circle cx="440" cy="362" r="2.8"/>
-<circle cx="445" cy="362" r="2.8"/>
-<circle cx="450" cy="363" r="2.8"/>
-<circle cx="454" cy="365" r="2.8"/>
-<circle cx="459" cy="364" r="2.8"/>
-<circle cx="463" cy="366" r="2.8"/>
-<circle cx="468" cy="364" r="2.8"/>
-<circle cx="472" cy="364" r="2.8"/>
-<circle cx="477" cy="365" r="2.8"/>
-<circle cx="481" cy="366" r="2.8"/>
-<circle cx="486" cy="366" r="2.8"/>
-<circle cx="490" cy="366" r="2.8"/>
+<circle cx="73" cy="366" r="3"/>
+<circle cx="78" cy="366" r="3"/>
+<circle cx="82" cy="366" r="3"/>
+<circle cx="87" cy="365" r="3"/>
+<circle cx="91" cy="365" r="3"/>
+<circle cx="96" cy="365" r="3"/>
+<circle cx="100" cy="366" r="3"/>
+<circle cx="105" cy="365" r="3"/>
+<circle cx="109" cy="365" r="3"/>
+<circle cx="114" cy="364" r="3"/>
+<circle cx="118" cy="363" r="3"/>
+<circle cx="123" cy="360" r="3"/>
+<circle cx="127" cy="361" r="3"/>
+<circle cx="132" cy="359" r="3"/>
+<circle cx="137" cy="359" r="3"/>
+<circle cx="141" cy="354" r="3"/>
+<circle cx="146" cy="353" r="3"/>
+<circle cx="150" cy="349" r="3"/>
+<circle cx="155" cy="344" r="3"/>
+<circle cx="159" cy="342" r="3"/>
+<circle cx="164" cy="334" r="3"/>
+<circle cx="168" cy="328" r="3"/>
+<circle cx="173" cy="323" r="3"/>
+<circle cx="177" cy="314" r="3"/>
+<circle cx="182" cy="321" r="3"/>
+<circle cx="186" cy="308" r="3"/>
+<circle cx="191" cy="296" r="3"/>
+<circle cx="196" cy="279" r="3"/>
+<circle cx="200" cy="268" r="3"/>
+<circle cx="205" cy="256" r="3"/>
+<circle cx="209" cy="251" r="3"/>
+<circle cx="214" cy="236" r="3"/>
+<circle cx="218" cy="223" r="3"/>
+<circle cx="223" cy="192" r="3"/>
+<circle cx="227" cy="193" r="3"/>
+<circle cx="232" cy="175" r="3"/>
+<circle cx="236" cy="156" r="3"/>
+<circle cx="241" cy="155" r="3"/>
+<circle cx="245" cy="153" r="3"/>
+<circle cx="250" cy="132" r="3"/>
+<circle cx="254" cy="112" r="3"/>
+<circle cx="259" cy="115" r="3"/>
+<circle cx="264" cy="99" r="3"/>
+<circle cx="268" cy="100" r="3"/>
+<circle cx="273" cy="79" r="3"/>
+<circle cx="277" cy="73" r="3"/>
+<circle cx="282" cy="77" r="3"/>
+<circle cx="286" cy="86" r="3"/>
+<circle cx="291" cy="67" r="3"/>
+<circle cx="295" cy="74" r="3"/>
+<circle cx="300" cy="86" r="3"/>
+<circle cx="304" cy="102" r="3"/>
+<circle cx="309" cy="103" r="3"/>
+<circle cx="313" cy="117" r="3"/>
+<circle cx="318" cy="131" r="3"/>
+<circle cx="323" cy="142" r="3"/>
+<circle cx="327" cy="152" r="3"/>
+<circle cx="332" cy="169" r="3"/>
+<circle cx="336" cy="190" r="3"/>
+<circle cx="341" cy="190" r="3"/>
+<circle cx="345" cy="210" r="3"/>
+<circle cx="350" cy="236" r="3"/>
+<circle cx="354" cy="234" r="3"/>
+<circle cx="359" cy="243" r="3"/>
+<circle cx="363" cy="254" r="3"/>
+<circle cx="368" cy="273" r="3"/>
+<circle cx="372" cy="284" r="3"/>
+<circle cx="377" cy="290" r="3"/>
+<circle cx="381" cy="298" r="3"/>
+<circle cx="386" cy="310" r="3"/>
+<circle cx="391" cy="323" r="3"/>
+<circle cx="395" cy="324" r="3"/>
+<circle cx="400" cy="328" r="3"/>
+<circle cx="404" cy="335" r="3"/>
+<circle cx="409" cy="343" r="3"/>
+<circle cx="413" cy="346" r="3"/>
+<circle cx="418" cy="351" r="3"/>
+<circle cx="422" cy="351" r="3"/>
+<circle cx="427" cy="358" r="3"/>
+<circle cx="431" cy="356" r="3"/>
+<circle cx="436" cy="358" r="3"/>
+<circle cx="440" cy="362" r="3"/>
+<circle cx="445" cy="362" r="3"/>
+<circle cx="450" cy="363" r="3"/>
+<circle cx="454" cy="365" r="3"/>
+<circle cx="459" cy="364" r="3"/>
+<circle cx="463" cy="366" r="3"/>
+<circle cx="468" cy="364" r="3"/>
+<circle cx="472" cy="364" r="3"/>
+<circle cx="477" cy="365" r="3"/>
+<circle cx="481" cy="366" r="3"/>
+<circle cx="486" cy="366" r="3"/>
+<circle cx="490" cy="366" r="3"/>
 </g>
 <path d="M57,367h 454" fill="none" stroke="black"/>
 <path d="M57,357v 9.8M69,362v 4.9M80,362v 4.9M91,362v 4.9M103,362v 4.9M114,357v 9.8M125,362v 4.9M137,362v 4.9M148,362v 4.9M159,362v 4.9M171,357v 9.8M182,362v 4.9M193,362v 4.9M205,362v 4.9M216,362v 4.9M227,357v 9.8M239,362v 4.9M250,362v 4.9M261,362v
@@ -173,101 +173,18 @@ th1_palette.svg
  -4.5M318,175v -4.5M323,194v -4.3M323,184v -4.3M327,202v -4.2M327,192v -4.2M332,215v -3.9M332,206v -3.9M336,231v -3.5M336,222v -3.5M341,231v -3.5M341,222v -3.5M345,247v -3.1M345,239v -3.1M350,268v -2.6M350,260v -2.6M354,266v -2.7M354,258v
  -2.7M359,273v -2.5M359,265v -2.5M363,282v -2.2M363,274v -2.2M368,296v -1.8M368,289v -1.8M372,305v -1.5M372,298v -1.5M377,310v -1.3M377,303v -1.3M381,316v -1.1M381,309v -1.1M386,325v -0.748M386,319v -0.748M391,335v -0.335M391,328v -0.335M395,336v
  -0.283M395,330v -0.283M400,339v -0.135M400,333v -0.135" fill="none" stroke="#1380d5"/>
-<g fill="#1380d5">
-<rect x="70" y="363" width="5.7" height="5.7"/>
-<rect x="75" y="364" width="5.7" height="5.7"/>
-<rect x="79" y="364" width="5.7" height="5.7"/>
-<rect x="84" y="362" width="5.7" height="5.7"/>
-<rect x="88" y="362" width="5.7" height="5.7"/>
-<rect x="93" y="363" width="5.7" height="5.7"/>
-<rect x="97" y="364" width="5.7" height="5.7"/>
-<rect x="102" y="362" width="5.7" height="5.7"/>
-<rect x="107" y="362" width="5.7" height="5.7"/>
-<rect x="111" y="362" width="5.7" height="5.7"/>
-<rect x="116" y="361" width="5.7" height="5.7"/>
-<rect x="120" y="358" width="5.7" height="5.7"/>
-<rect x="125" y="359" width="5.7" height="5.7"/>
-<rect x="129" y="357" width="5.7" height="5.7"/>
-<rect x="134" y="358" width="5.7" height="5.7"/>
-<rect x="138" y="354" width="5.7" height="5.7"/>
-<rect x="143" y="353" width="5.7" height="5.7"/>
-<rect x="147" y="350" width="5.7" height="5.7"/>
-<rect x="152" y="345" width="5.7" height="5.7"/>
-<rect x="156" y="344" width="5.7" height="5.7"/>
-<rect x="161" y="338" width="5.7" height="5.7"/>
-<rect x="165" y="333" width="5.7" height="5.7"/>
-<rect x="170" y="329" width="5.7" height="5.7"/>
-<rect x="175" y="321" width="5.7" height="5.7"/>
-<rect x="179" y="327" width="5.7" height="5.7"/>
-<rect x="184" y="317" width="5.7" height="5.7"/>
-<rect x="188" y="307" width="5.7" height="5.7"/>
-<rect x="193" y="293" width="5.7" height="5.7"/>
-<rect x="197" y="285" width="5.7" height="5.7"/>
-<rect x="202" y="275" width="5.7" height="5.7"/>
-<rect x="206" y="271" width="5.7" height="5.7"/>
-<rect x="211" y="259" width="5.7" height="5.7"/>
-<rect x="215" y="249" width="5.7" height="5.7"/>
-<rect x="220" y="224" width="5.7" height="5.7"/>
-<rect x="224" y="225" width="5.7" height="5.7"/>
-<rect x="229" y="211" width="5.7" height="5.7"/>
-<rect x="233" y="196" width="5.7" height="5.7"/>
-<rect x="238" y="194" width="5.7" height="5.7"/>
-<rect x="243" y="193" width="5.7" height="5.7"/>
-<rect x="247" y="176" width="5.7" height="5.7"/>
-<rect x="252" y="160" width="5.7" height="5.7"/>
-<rect x="256" y="163" width="5.7" height="5.7"/>
-<rect x="261" y="150" width="5.7" height="5.7"/>
-<rect x="265" y="150" width="5.7" height="5.7"/>
-<rect x="270" y="134" width="5.7" height="5.7"/>
-<rect x="274" y="129" width="5.7" height="5.7"/>
-<rect x="279" y="132" width="5.7" height="5.7"/>
-<rect x="283" y="139" width="5.7" height="5.7"/>
-<rect x="288" y="124" width="5.7" height="5.7"/>
-<rect x="292" y="130" width="5.7" height="5.7"/>
-<rect x="297" y="139" width="5.7" height="5.7"/>
-<rect x="302" y="152" width="5.7" height="5.7"/>
-<rect x="306" y="152" width="5.7" height="5.7"/>
-<rect x="311" y="164" width="5.7" height="5.7"/>
-<rect x="315" y="175" width="5.7" height="5.7"/>
-<rect x="320" y="184" width="5.7" height="5.7"/>
-<rect x="324" y="192" width="5.7" height="5.7"/>
-<rect x="329" y="206" width="5.7" height="5.7"/>
-<rect x="333" y="222" width="5.7" height="5.7"/>
-<rect x="338" y="222" width="5.7" height="5.7"/>
-<rect x="342" y="239" width="5.7" height="5.7"/>
-<rect x="347" y="260" width="5.7" height="5.7"/>
-<rect x="351" y="258" width="5.7" height="5.7"/>
-<rect x="356" y="265" width="5.7" height="5.7"/>
-<rect x="360" y="274" width="5.7" height="5.7"/>
-<rect x="365" y="289" width="5.7" height="5.7"/>
-<rect x="370" y="298" width="5.7" height="5.7"/>
-<rect x="374" y="303" width="5.7" height="5.7"/>
-<rect x="379" y="309" width="5.7" height="5.7"/>
-<rect x="383" y="319" width="5.7" height="5.7"/>
-<rect x="388" y="328" width="5.7" height="5.7"/>
-<rect x="392" y="330" width="5.7" height="5.7"/>
-<rect x="397" y="333" width="5.7" height="5.7"/>
-<rect x="401" y="338" width="5.7" height="5.7"/>
-<rect x="406" y="345" width="5.7" height="5.7"/>
-<rect x="410" y="347" width="5.7" height="5.7"/>
-<rect x="415" y="351" width="5.7" height="5.7"/>
-<rect x="419" y="351" width="5.7" height="5.7"/>
-<rect x="424" y="357" width="5.7" height="5.7"/>
-<rect x="429" y="355" width="5.7" height="5.7"/>
-<rect x="433" y="357" width="5.7" height="5.7"/>
-<rect x="438" y="360" width="5.7" height="5.7"/>
-<rect x="442" y="360" width="5.7" height="5.7"/>
-<rect x="447" y="361" width="5.7" height="5.7"/>
-<rect x="451" y="362" width="5.7" height="5.7"/>
-<rect x="456" y="362" width="5.7" height="5.7"/>
-<rect x="460" y="363" width="5.7" height="5.7"/>
-<rect x="465" y="362" width="5.7" height="5.7"/>
-<rect x="469" y="362" width="5.7" height="5.7"/>
-<rect x="474" y="363" width="5.7" height="5.7"/>
-<rect x="478" y="363" width="5.7" height="5.7"/>
-<rect x="483" y="363" width="5.7" height="5.7"/>
-<rect x="487" y="363" width="5.7" height="5.7"/>
-</g>
+<path fill="#1380d5" d="M70,363l6,0l0,6l-6,0l0,-6z M75,363l6,0l0,6l-6,0l0,-6z M79,363l6,0l0,6l-6,0l0,-6z M84,362l6,0l0,6l-6,0l0,-6z M88,362l6,0l0,6l-6,0l0,-6z M93,363l6,0l0,6l-6,0l0,-6z M97,363l6,0l0,6l-6,0l0,-6z M102,362l6,0l0,6l-6,0l0,-6z
+ M106,362l6,0l0,6l-6,0l0,-6z M111,362l6,0l0,6l-6,0l0,-6z M115,361l6,0l0,6l-6,0l0,-6z M120,358l6,0l0,6l-6,0l0,-6z M124,359l6,0l0,6l-6,0l0,-6z M129,357l6,0l0,6l-6,0l0,-6z M134,358l6,0l0,6l-6,0l0,-6z M138,354l6,0l0,6l-6,0l0,-6z
+ M143,352l6,0l0,6l-6,0l0,-6z M147,350l6,0l0,6l-6,0l0,-6z M152,345l6,0l0,6l-6,0l0,-6z M156,344l6,0l0,6l-6,0l0,-6z M161,338l6,0l0,6l-6,0l0,-6z M165,333l6,0l0,6l-6,0l0,-6z M170,329l6,0l0,6l-6,0l0,-6z M174,321l6,0l0,6l-6,0l0,-6z
+ M179,327l6,0l0,6l-6,0l0,-6z M183,317l6,0l0,6l-6,0l0,-6z M188,307l6,0l0,6l-6,0l0,-6z M193,293l6,0l0,6l-6,0l0,-6z M197,285l6,0l0,6l-6,0l0,-6z M202,275l6,0l0,6l-6,0l0,-6z M206,271l6,0l0,6l-6,0l0,-6z M211,259l6,0l0,6l-6,0l0,-6z
+ M215,249l6,0l0,6l-6,0l0,-6z M220,224l6,0l0,6l-6,0l0,-6z M224,225l6,0l0,6l-6,0l0,-6z M229,211l6,0l0,6l-6,0l0,-6z M233,195l6,0l0,6l-6,0l0,-6z M238,194l6,0l0,6l-6,0l0,-6z M242,193l6,0l0,6l-6,0l0,-6z M247,176l6,0l0,6l-6,0l0,-6z
+ M251,160l6,0l0,6l-6,0l0,-6z M256,163l6,0l0,6l-6,0l0,-6z M261,149l6,0l0,6l-6,0l0,-6z M265,150l6,0l0,6l-6,0l0,-6z M270,133l6,0l0,6l-6,0l0,-6z M274,129l6,0l0,6l-6,0l0,-6z M279,132l6,0l0,6l-6,0l0,-6z M283,139l6,0l0,6l-6,0l0,-6z
+ M288,124l6,0l0,6l-6,0l0,-6z M292,129l6,0l0,6l-6,0l0,-6z M297,139l6,0l0,6l-6,0l0,-6z M301,152l6,0l0,6l-6,0l0,-6z M306,152l6,0l0,6l-6,0l0,-6z M310,164l6,0l0,6l-6,0l0,-6z M315,175l6,0l0,6l-6,0l0,-6z M320,184l6,0l0,6l-6,0l0,-6z
+ M324,192l6,0l0,6l-6,0l0,-6z M329,206l6,0l0,6l-6,0l0,-6z M333,222l6,0l0,6l-6,0l0,-6z M338,222l6,0l0,6l-6,0l0,-6z M342,238l6,0l0,6l-6,0l0,-6z M347,259l6,0l0,6l-6,0l0,-6z M351,257l6,0l0,6l-6,0l0,-6z M356,265l6,0l0,6l-6,0l0,-6z
+ M360,274l6,0l0,6l-6,0l0,-6z M365,288l6,0l0,6l-6,0l0,-6z M369,298l6,0l0,6l-6,0l0,-6z M374,303l6,0l0,6l-6,0l0,-6z M378,309l6,0l0,6l-6,0l0,-6z M383,319l6,0l0,6l-6,0l0,-6z M388,328l6,0l0,6l-6,0l0,-6z M392,329l6,0l0,6l-6,0l0,-6z
+ M397,333l6,0l0,6l-6,0l0,-6z M401,338l6,0l0,6l-6,0l0,-6z M406,344l6,0l0,6l-6,0l0,-6z M410,347l6,0l0,6l-6,0l0,-6z M415,351l6,0l0,6l-6,0l0,-6z M419,351l6,0l0,6l-6,0l0,-6z M424,356l6,0l0,6l-6,0l0,-6z M428,355l6,0l0,6l-6,0l0,-6z
+ M433,356l6,0l0,6l-6,0l0,-6z M437,360l6,0l0,6l-6,0l0,-6z M442,360l6,0l0,6l-6,0l0,-6z M447,360l6,0l0,6l-6,0l0,-6z M451,362l6,0l0,6l-6,0l0,-6z M456,362l6,0l0,6l-6,0l0,-6z M460,363l6,0l0,6l-6,0l0,-6z M465,361l6,0l0,6l-6,0l0,-6z
+ M469,362l6,0l0,6l-6,0l0,-6z M474,363l6,0l0,6l-6,0l0,-6z M478,363l6,0l0,6l-6,0l0,-6z M483,363l6,0l0,6l-6,0l0,-6z M487,363l6,0l0,6l-6,0l0,-6z"/>
 <path d="M71,366h 0.843M74,366h 0.843M75,366h 0.843M79,366h 0.843M80,366h 0.843M84,366h 0.843M84,366h 0.843M88,366h 0.843M89,366h 0.843M93,366h 0.843M93,366h 0.843M97,366h 0.843M98,366h 0.843M102,366h 0.843M103,366h 0.843M106,366h 0.843M107,366h
  0.843M111,366h 0.843M112,365h 0.843M115,365h 0.843M116,364h 0.843M120,364h 0.843M121,363h 0.843M124,363h 0.843M125,363h 0.843M129,363h 0.843M130,362h 0.843M133,362h 0.843M134,362h 0.843M138,362h 0.843M139,359h 0.843M143,359h 0.843M143,358h
  0.843M147,358h 0.843M148,356h 0.843M152,356h 0.843M152,353h 0.843M156,353h 0.843M157,352h 0.843M161,352h 0.843M162,347h 0.843M165,347h 0.843M166,344h 0.843M170,344h 0.843M171,340h 0.843M174,340h 0.843M175,335h 0.843M179,335h 0.843M180,339h
@@ -285,101 +202,16 @@ th1_palette.svg
  0.843M406,347h 0.843M406,352h 0.843M410,352h 0.843M411,354h 0.843M415,354h 0.843M415,357h 0.843M419,357h 0.843M420,357h 0.843M424,357h 0.843M425,361h 0.843M428,361h 0.843M429,360h 0.843M433,360h 0.843M434,361h 0.843M437,361h 0.843M438,364h
  0.843M442,364h 0.843M443,364h 0.843M446,364h 0.843M447,364h 0.843M451,364h 0.843M452,366h 0.843M455,366h 0.843M456,365h 0.843M460,365h 0.843M461,366h 0.843M465,366h 0.843M465,365h 0.843M469,365h 0.843M470,365h 0.843M474,365h 0.843M474,366h
  0.843M478,366h 0.843M479,366h 0.843M483,366h 0.843M484,366h 0.843M487,366h 0.843M488,366h 0.843M492,366h 0.843" fill="none" stroke="#2cb6a5"/>
-<g fill="#2cb6a5">
-<polygon points=" 73, 363 76, 369 70, 369"/>
-<polygon points=" 78, 364 80, 369 75, 369"/>
-<polygon points=" 82, 364 85, 369 79, 369"/>
-<polygon points=" 87, 363 90, 368 84, 368"/>
-<polygon points=" 91, 363 94, 368 88, 368"/>
-<polygon points=" 96, 363 99, 369 93, 369"/>
-<polygon points=" 100, 364 103, 369 97, 369"/>
-<polygon points=" 105, 363 108, 368 102, 368"/>
-<polygon points=" 109, 363 112, 368 107, 368"/>
-<polygon points=" 114, 362 117, 368 111, 368"/>
-<polygon points=" 118, 362 121, 367 116, 367"/>
-<polygon points=" 123, 360 126, 365 120, 365"/>
-<polygon points=" 127, 360 130, 366 125, 366"/>
-<polygon points=" 132, 359 135, 365 129, 365"/>
-<polygon points=" 137, 359 139, 365 134, 365"/>
-<polygon points=" 141, 356 144, 362 138, 362"/>
-<polygon points=" 146, 355 148, 361 143, 361"/>
-<polygon points=" 150, 353 153, 359 147, 359"/>
-<polygon points=" 155, 350 158, 356 152, 356"/>
-<polygon points=" 159, 349 162, 355 156, 355"/>
-<polygon points=" 164, 344 167, 350 161, 350"/>
-<polygon points=" 168, 341 171, 346 165, 346"/>
-<polygon points=" 173, 338 176, 343 170, 343"/>
-<polygon points=" 177, 332 180, 338 175, 338"/>
-<polygon points=" 182, 336 185, 342 179, 342"/>
-<polygon points=" 186, 328 189, 334 184, 334"/>
-<polygon points=" 191, 321 194, 327 188, 327"/>
-<polygon points=" 196, 311 198, 317 193, 317"/>
-<polygon points=" 200, 305 203, 311 197, 311"/>
-<polygon points=" 205, 297 207, 303 202, 303"/>
-<polygon points=" 209, 294 212, 300 206, 300"/>
-<polygon points=" 214, 285 217, 291 211, 291"/>
-<polygon points=" 218, 278 221, 284 215, 284"/>
-<polygon points=" 223, 259 226, 264 220, 264"/>
-<polygon points=" 227, 260 230, 265 224, 265"/>
-<polygon points=" 232, 249 235, 255 229, 255"/>
-<polygon points=" 236, 238 239, 243 233, 243"/>
-<polygon points=" 241, 237 244, 242 238, 242"/>
-<polygon points=" 245, 235 248, 241 243, 241"/>
-<polygon points=" 250, 223 253, 228 247, 228"/>
-<polygon points=" 254, 211 257, 217 252, 217"/>
-<polygon points=" 259, 213 262, 219 256, 219"/>
-<polygon points=" 264, 203 266, 209 261, 209"/>
-<polygon points=" 268, 204 271, 209 265, 209"/>
-<polygon points=" 273, 191 275, 197 270, 197"/>
-<polygon points=" 277, 188 280, 193 274, 193"/>
-<polygon points=" 282, 190 285, 196 279, 196"/>
-<polygon points=" 286, 195 289, 201 283, 201"/>
-<polygon points=" 291, 184 294, 189 288, 189"/>
-<polygon points=" 295, 188 298, 194 292, 194"/>
-<polygon points=" 300, 195 303, 201 297, 201"/>
-<polygon points=" 304, 205 307, 211 302, 211"/>
-<polygon points=" 309, 205 312, 211 306, 211"/>
-<polygon points=" 313, 214 316, 219 311, 219"/>
-<polygon points=" 318, 222 321, 228 315, 228"/>
-<polygon points=" 323, 229 325, 235 320, 235"/>
-<polygon points=" 327, 235 330, 241 324, 241"/>
-<polygon points=" 332, 245 334, 251 329, 251"/>
-<polygon points=" 336, 258 339, 263 333, 263"/>
-<polygon points=" 341, 258 344, 263 338, 263"/>
-<polygon points=" 345, 270 348, 276 342, 276"/>
-<polygon points=" 350, 286 353, 291 347, 291"/>
-<polygon points=" 354, 284 357, 290 351, 290"/>
-<polygon points=" 359, 290 362, 295 356, 295"/>
-<polygon points=" 363, 296 366, 302 360, 302"/>
-<polygon points=" 368, 307 371, 313 365, 313"/>
-<polygon points=" 372, 314 375, 320 370, 320"/>
-<polygon points=" 377, 318 380, 324 374, 324"/>
-<polygon points=" 381, 323 384, 329 379, 329"/>
-<polygon points=" 386, 330 389, 336 383, 336"/>
-<polygon points=" 391, 337 393, 343 388, 343"/>
-<polygon points=" 395, 338 398, 344 392, 344"/>
-<polygon points=" 400, 341 402, 346 397, 346"/>
-<polygon points=" 404, 345 407, 350 401, 350"/>
-<polygon points=" 409, 349 412, 355 406, 355"/>
-<polygon points=" 413, 351 416, 357 410, 357"/>
-<polygon points=" 418, 354 421, 360 415, 360"/>
-<polygon points=" 422, 354 425, 360 419, 360"/>
-<polygon points=" 427, 358 430, 364 424, 364"/>
-<polygon points=" 431, 357 434, 363 429, 363"/>
-<polygon points=" 436, 358 439, 364 433, 364"/>
-<polygon points=" 440, 361 443, 367 438, 367"/>
-<polygon points=" 445, 361 448, 366 442, 366"/>
-<polygon points=" 450, 361 452, 367 447, 367"/>
-<polygon points=" 454, 363 457, 368 451, 368"/>
-<polygon points=" 459, 362 461, 368 456, 368"/>
-<polygon points=" 463, 363 466, 369 460, 369"/>
-<polygon points=" 468, 362 470, 368 465, 368"/>
-<polygon points=" 472, 362 475, 368 469, 368"/>
-<polygon points=" 477, 363 480, 369 474, 369"/>
-<polygon points=" 481, 363 484, 369 478, 369"/>
-<polygon points=" 486, 363 489, 369 483, 369"/>
-<polygon points=" 490, 363 493, 369 487, 369"/>
-</g>
+<path fill="#2cb6a5" d="M70,369l6,0l-3,-6l-3,6z M75,369l6,0l-3,-6l-3,6z M79,369l6,0l-3,-6l-3,6z M84,369l6,0l-3,-6l-3,6z M88,369l6,0l-3,-6l-3,6z M93,369l6,0l-3,-6l-3,6z M97,369l6,0l-3,-6l-3,6z M102,369l6,0l-3,-6l-3,6z M106,369l6,0l-3,-6l-3,6z
+ M111,368l6,0l-3,-6l-3,6z M115,367l6,0l-3,-6l-3,6z M120,366l6,0l-3,-6l-3,6z M124,366l6,0l-3,-6l-3,6z M129,365l6,0l-3,-6l-3,6z M134,365l6,0l-3,-6l-3,6z M138,362l6,0l-3,-6l-3,6z M143,361l6,0l-3,-6l-3,6z M147,359l6,0l-3,-6l-3,6z M152,356l6,0l-3,-6l-3,6z
+ M156,355l6,0l-3,-6l-3,6z M161,350l6,0l-3,-6l-3,6z M165,347l6,0l-3,-6l-3,6z M170,343l6,0l-3,-6l-3,6z M174,338l6,0l-3,-6l-3,6z M179,342l6,0l-3,-6l-3,6z M183,334l6,0l-3,-6l-3,6z M188,327l6,0l-3,-6l-3,6z M193,317l6,0l-3,-6l-3,6z M197,311l6,0l-3,-6l-3,6z
+ M202,303l6,0l-3,-6l-3,6z M206,300l6,0l-3,-6l-3,6z M211,291l6,0l-3,-6l-3,6z M215,284l6,0l-3,-6l-3,6z M220,265l6,0l-3,-6l-3,6z M224,266l6,0l-3,-6l-3,6z M229,255l6,0l-3,-6l-3,6z M233,243l6,0l-3,-6l-3,6z M238,242l6,0l-3,-6l-3,6z M242,241l6,0l-3,-6l-3,6z
+ M247,229l6,0l-3,-6l-3,6z M251,217l6,0l-3,-6l-3,6z M256,219l6,0l-3,-6l-3,6z M261,209l6,0l-3,-6l-3,6z M265,209l6,0l-3,-6l-3,6z M270,197l6,0l-3,-6l-3,6z M274,194l6,0l-3,-6l-3,6z M279,196l6,0l-3,-6l-3,6z M283,201l6,0l-3,-6l-3,6z M288,190l6,0l-3,-6l-3,6z
+ M292,194l6,0l-3,-6l-3,6z M297,201l6,0l-3,-6l-3,6z M301,211l6,0l-3,-6l-3,6z M306,211l6,0l-3,-6l-3,6z M310,220l6,0l-3,-6l-3,6z M315,228l6,0l-3,-6l-3,6z M320,235l6,0l-3,-6l-3,6z M324,241l6,0l-3,-6l-3,6z M329,251l6,0l-3,-6l-3,6z M333,263l6,0l-3,-6l-3,6z
+ M338,263l6,0l-3,-6l-3,6z M342,276l6,0l-3,-6l-3,6z M347,291l6,0l-3,-6l-3,6z M351,290l6,0l-3,-6l-3,6z M356,295l6,0l-3,-6l-3,6z M360,302l6,0l-3,-6l-3,6z M365,313l6,0l-3,-6l-3,6z M369,320l6,0l-3,-6l-3,6z M374,324l6,0l-3,-6l-3,6z M378,329l6,0l-3,-6l-3,6z
+ M383,336l6,0l-3,-6l-3,6z M388,343l6,0l-3,-6l-3,6z M392,344l6,0l-3,-6l-3,6z M397,346l6,0l-3,-6l-3,6z M401,350l6,0l-3,-6l-3,6z M406,355l6,0l-3,-6l-3,6z M410,357l6,0l-3,-6l-3,6z M415,360l6,0l-3,-6l-3,6z M419,360l6,0l-3,-6l-3,6z M424,364l6,0l-3,-6l-3,6z
+ M428,363l6,0l-3,-6l-3,6z M433,364l6,0l-3,-6l-3,6z M437,367l6,0l-3,-6l-3,6z M442,367l6,0l-3,-6l-3,6z M447,367l6,0l-3,-6l-3,6z M451,369l6,0l-3,-6l-3,6z M456,368l6,0l-3,-6l-3,6z M460,369l6,0l-3,-6l-3,6z M465,368l6,0l-3,-6l-3,6z M469,368l6,0l-3,-6l-3,6z
+ M474,369l6,0l-3,-6l-3,6z M478,369l6,0l-3,-6l-3,6z M483,369l6,0l-3,-6l-3,6z M487,369l6,0l-3,-6l-3,6z"/>
 <path d="M71,366h 0.843M74,366h 0.843M75,367h 0.843M79,367h 0.843M80,367h 0.843M84,367h 0.843M84,366h 0.843M88,366h 0.843M89,366h 0.843M93,366h 0.843M93,366h 0.843M97,366h 0.843M98,367h 0.843M102,367h 0.843M103,366h 0.843M106,366h 0.843M107,366h
  0.843M111,366h 0.843M112,366h 0.843M115,366h 0.843M116,365h 0.843M120,365h 0.843M121,364h 0.843M124,364h 0.843M125,364h 0.843M129,364h 0.843M130,363h 0.843M133,363h 0.843M134,364h 0.843M138,364h 0.843M139,362h 0.843M143,362h 0.843M143,361h
  0.843M147,361h 0.843M148,360h 0.843M152,360h 0.843M152,357h 0.843M156,357h 0.843M157,357h 0.843M161,357h 0.843M162,354h 0.843M165,354h 0.843M166,351h 0.843M170,351h 0.843M171,349h 0.843M174,349h 0.843M175,345h 0.843M179,345h 0.843M180,348h
@@ -396,195 +228,110 @@ th1_palette.svg
  0.843M419,360h 0.843M420,360h 0.843M424,360h 0.843M425,363h 0.843M428,363h 0.843M429,362h 0.843M433,362h 0.843M434,363h 0.843M437,363h 0.843M438,365h 0.843M442,365h 0.843M443,365h 0.843M446,365h 0.843M447,365h 0.843M451,365h 0.843M452,366h
  0.843M455,366h 0.843M456,366h 0.843M460,366h 0.843M461,366h 0.843M465,366h 0.843M465,366h 0.843M469,366h 0.843M470,366h 0.843M474,366h 0.843M474,366h 0.843M478,366h 0.843M479,366h 0.843M483,366h 0.843M484,366h 0.843M487,366h 0.843M488,366h
  0.843M492,366h 0.843" fill="none" stroke="#ccbb5b"/>
-<g fill="#ccbb5b">
-<polygon points=" 70, 364 76, 364 73, 369"/>
-<polygon points=" 75, 364 80, 364 78, 369"/>
-<polygon points=" 79, 364 85, 364 82, 369"/>
-<polygon points=" 84, 363 90, 363 87, 369"/>
-<polygon points=" 88, 363 94, 363 91, 369"/>
-<polygon points=" 93, 363 99, 363 96, 369"/>
-<polygon points=" 97, 364 103, 364 100, 369"/>
-<polygon points=" 102, 363 108, 363 105, 369"/>
-<polygon points=" 107, 363 112, 363 109, 369"/>
-<polygon points=" 111, 363 117, 363 114, 368"/>
-<polygon points=" 116, 362 121, 362 118, 368"/>
-<polygon points=" 120, 361 126, 361 123, 367"/>
-<polygon points=" 125, 361 130, 361 127, 367"/>
-<polygon points=" 129, 361 135, 361 132, 366"/>
-<polygon points=" 134, 361 139, 361 137, 366"/>
-<polygon points=" 138, 359 144, 359 141, 365"/>
-<polygon points=" 143, 358 148, 358 146, 364"/>
-<polygon points=" 147, 357 153, 357 150, 363"/>
-<polygon points=" 152, 355 158, 355 155, 360"/>
-<polygon points=" 156, 354 162, 354 159, 360"/>
-<polygon points=" 161, 351 167, 351 164, 356"/>
-<polygon points=" 165, 348 171, 348 168, 354"/>
-<polygon points=" 170, 346 176, 346 173, 352"/>
-<polygon points=" 175, 343 180, 343 177, 348"/>
-<polygon points=" 179, 345 185, 345 182, 351"/>
-<polygon points=" 184, 340 189, 340 186, 346"/>
-<polygon points=" 188, 336 194, 336 191, 341"/>
-<polygon points=" 193, 329 198, 329 196, 334"/>
-<polygon points=" 197, 324 203, 324 200, 330"/>
-<polygon points=" 202, 319 207, 319 205, 325"/>
-<polygon points=" 206, 318 212, 318 209, 323"/>
-<polygon points=" 211, 311 217, 311 214, 317"/>
-<polygon points=" 215, 307 221, 307 218, 312"/>
-<polygon points=" 220, 294 226, 294 223, 299"/>
-<polygon points=" 224, 294 230, 294 227, 300"/>
-<polygon points=" 229, 287 235, 287 232, 293"/>
-<polygon points=" 233, 280 239, 280 236, 285"/>
-<polygon points=" 238, 279 244, 279 241, 285"/>
-<polygon points=" 243, 278 248, 278 245, 284"/>
-<polygon points=" 247, 270 253, 270 250, 275"/>
-<polygon points=" 252, 262 257, 262 254, 268"/>
-<polygon points=" 256, 263 262, 263 259, 269"/>
-<polygon points=" 261, 257 266, 257 264, 262"/>
-<polygon points=" 265, 257 271, 257 268, 263"/>
-<polygon points=" 270, 249 275, 249 273, 254"/>
-<polygon points=" 274, 246 280, 246 277, 252"/>
-<polygon points=" 279, 248 285, 248 282, 254"/>
-<polygon points=" 283, 252 289, 252 286, 257"/>
-<polygon points=" 288, 244 294, 244 291, 249"/>
-<polygon points=" 292, 247 298, 247 295, 252"/>
-<polygon points=" 297, 252 303, 252 300, 257"/>
-<polygon points=" 302, 258 307, 258 304, 264"/>
-<polygon points=" 306, 258 312, 258 309, 264"/>
-<polygon points=" 311, 264 316, 264 313, 269"/>
-<polygon points=" 315, 269 321, 269 318, 275"/>
-<polygon points=" 320, 274 325, 274 323, 280"/>
-<polygon points=" 324, 278 330, 278 327, 284"/>
-<polygon points=" 329, 285 334, 285 332, 291"/>
-<polygon points=" 333, 293 339, 293 336, 299"/>
-<polygon points=" 338, 293 344, 293 341, 299"/>
-<polygon points=" 342, 301 348, 301 345, 307"/>
-<polygon points=" 347, 312 353, 312 350, 317"/>
-<polygon points=" 351, 311 357, 311 354, 316"/>
-<polygon points=" 356, 314 362, 314 359, 320"/>
-<polygon points=" 360, 319 366, 319 363, 324"/>
-<polygon points=" 365, 326 371, 326 368, 332"/>
-<polygon points=" 370, 331 375, 331 372, 336"/>
-<polygon points=" 374, 333 380, 333 377, 339"/>
-<polygon points=" 379, 337 384, 337 381, 342"/>
-<polygon points=" 383, 341 389, 341 386, 347"/>
-<polygon points=" 388, 346 393, 346 391, 352"/>
-<polygon points=" 392, 347 398, 347 395, 352"/>
-<polygon points=" 397, 348 402, 348 400, 354"/>
-<polygon points=" 401, 351 407, 351 404, 357"/>
-<polygon points=" 406, 354 412, 354 409, 360"/>
-<polygon points=" 410, 355 416, 355 413, 361"/>
-<polygon points=" 415, 357 421, 357 418, 363"/>
-<polygon points=" 419, 357 425, 357 422, 363"/>
-<polygon points=" 424, 360 430, 360 427, 366"/>
-<polygon points=" 429, 359 434, 359 431, 365"/>
-<polygon points=" 433, 360 439, 360 436, 366"/>
-<polygon points=" 438, 362 443, 362 440, 368"/>
-<polygon points=" 442, 362 448, 362 445, 367"/>
-<polygon points=" 447, 362 452, 362 450, 368"/>
-<polygon points=" 451, 363 457, 363 454, 369"/>
-<polygon points=" 456, 363 461, 363 459, 368"/>
-<polygon points=" 460, 363 466, 363 463, 369"/>
-<polygon points=" 465, 363 470, 363 468, 368"/>
-<polygon points=" 469, 363 475, 363 472, 368"/>
-<polygon points=" 474, 363 480, 363 477, 369"/>
-<polygon points=" 478, 364 484, 364 481, 369"/>
-<polygon points=" 483, 364 489, 364 486, 369"/>
-<polygon points=" 487, 364 493, 364 490, 369"/>
-</g>
-<g stroke="#f9f611" stroke-width="1.000" fill="none">
-<circle cx="73" cy="367" r="2.8"/>
-<circle cx="78" cy="367" r="2.8"/>
-<circle cx="82" cy="367" r="2.8"/>
-<circle cx="87" cy="366" r="2.8"/>
-<circle cx="91" cy="366" r="2.8"/>
-<circle cx="96" cy="366" r="2.8"/>
-<circle cx="100" cy="367" r="2.8"/>
-<circle cx="105" cy="366" r="2.8"/>
-<circle cx="109" cy="366" r="2.8"/>
-<circle cx="114" cy="366" r="2.8"/>
-<circle cx="118" cy="366" r="2.8"/>
-<circle cx="123" cy="365" r="2.8"/>
-<circle cx="127" cy="365" r="2.8"/>
-<circle cx="132" cy="365" r="2.8"/>
-<circle cx="137" cy="365" r="2.8"/>
-<circle cx="141" cy="364" r="2.8"/>
-<circle cx="146" cy="364" r="2.8"/>
-<circle cx="150" cy="363" r="2.8"/>
-<circle cx="155" cy="362" r="2.8"/>
-<circle cx="159" cy="362" r="2.8"/>
-<circle cx="164" cy="360" r="2.8"/>
-<circle cx="168" cy="359" r="2.8"/>
-<circle cx="173" cy="358" r="2.8"/>
-<circle cx="177" cy="356" r="2.8"/>
-<circle cx="182" cy="357" r="2.8"/>
-<circle cx="186" cy="355" r="2.8"/>
-<circle cx="191" cy="353" r="2.8"/>
-<circle cx="196" cy="349" r="2.8"/>
-<circle cx="200" cy="347" r="2.8"/>
-<circle cx="205" cy="344" r="2.8"/>
-<circle cx="209" cy="344" r="2.8"/>
-<circle cx="214" cy="340" r="2.8"/>
-<circle cx="218" cy="338" r="2.8"/>
-<circle cx="223" cy="332" r="2.8"/>
-<circle cx="227" cy="332" r="2.8"/>
-<circle cx="232" cy="328" r="2.8"/>
-<circle cx="236" cy="325" r="2.8"/>
-<circle cx="241" cy="324" r="2.8"/>
-<circle cx="245" cy="324" r="2.8"/>
-<circle cx="250" cy="320" r="2.8"/>
-<circle cx="254" cy="316" r="2.8"/>
-<circle cx="259" cy="316" r="2.8"/>
-<circle cx="264" cy="313" r="2.8"/>
-<circle cx="268" cy="313" r="2.8"/>
-<circle cx="273" cy="309" r="2.8"/>
-<circle cx="277" cy="308" r="2.8"/>
-<circle cx="282" cy="309" r="2.8"/>
-<circle cx="286" cy="311" r="2.8"/>
-<circle cx="291" cy="307" r="2.8"/>
-<circle cx="295" cy="308" r="2.8"/>
-<circle cx="300" cy="311" r="2.8"/>
-<circle cx="304" cy="314" r="2.8"/>
-<circle cx="309" cy="314" r="2.8"/>
-<circle cx="313" cy="317" r="2.8"/>
-<circle cx="318" cy="319" r="2.8"/>
-<circle cx="323" cy="322" r="2.8"/>
-<circle cx="327" cy="324" r="2.8"/>
-<circle cx="332" cy="327" r="2.8"/>
-<circle cx="336" cy="331" r="2.8"/>
-<circle cx="341" cy="331" r="2.8"/>
-<circle cx="345" cy="335" r="2.8"/>
-<circle cx="350" cy="341" r="2.8"/>
-<circle cx="354" cy="340" r="2.8"/>
-<circle cx="359" cy="342" r="2.8"/>
-<circle cx="363" cy="344" r="2.8"/>
-<circle cx="368" cy="348" r="2.8"/>
-<circle cx="372" cy="350" r="2.8"/>
-<circle cx="377" cy="351" r="2.8"/>
-<circle cx="381" cy="353" r="2.8"/>
-<circle cx="386" cy="355" r="2.8"/>
-<circle cx="391" cy="358" r="2.8"/>
-<circle cx="395" cy="358" r="2.8"/>
-<circle cx="400" cy="359" r="2.8"/>
-<circle cx="404" cy="360" r="2.8"/>
-<circle cx="409" cy="362" r="2.8"/>
-<circle cx="413" cy="362" r="2.8"/>
-<circle cx="418" cy="363" r="2.8"/>
-<circle cx="422" cy="363" r="2.8"/>
-<circle cx="427" cy="365" r="2.8"/>
-<circle cx="431" cy="364" r="2.8"/>
-<circle cx="436" cy="365" r="2.8"/>
-<circle cx="440" cy="366" r="2.8"/>
-<circle cx="445" cy="366" r="2.8"/>
-<circle cx="450" cy="366" r="2.8"/>
-<circle cx="454" cy="366" r="2.8"/>
-<circle cx="459" cy="366" r="2.8"/>
-<circle cx="463" cy="366" r="2.8"/>
-<circle cx="468" cy="366" r="2.8"/>
-<circle cx="472" cy="366" r="2.8"/>
-<circle cx="477" cy="366" r="2.8"/>
-<circle cx="481" cy="367" r="2.8"/>
-<circle cx="486" cy="367" r="2.8"/>
-<circle cx="490" cy="367" r="2.8"/>
+<path fill="#ccbb5b" d="M73,369l3,-6l-6,0l3,6z M78,370l3,-6l-6,0l3,6z M82,370l3,-6l-6,0l3,6z M87,369l3,-6l-6,0l3,6z M91,369l3,-6l-6,0l3,6z M96,369l3,-6l-6,0l3,6z M100,370l3,-6l-6,0l3,6z M105,369l3,-6l-6,0l3,6z M109,369l3,-6l-6,0l3,6z
+ M114,369l3,-6l-6,0l3,6z M118,368l3,-6l-6,0l3,6z M123,367l3,-6l-6,0l3,6z M127,367l3,-6l-6,0l3,6z M132,366l3,-6l-6,0l3,6z M137,367l3,-6l-6,0l3,6z M141,365l3,-6l-6,0l3,6z M146,364l3,-6l-6,0l3,6z M150,363l3,-6l-6,0l3,6z M155,360l3,-6l-6,0l3,6z
+ M159,360l3,-6l-6,0l3,6z M164,357l3,-6l-6,0l3,6z M168,354l3,-6l-6,0l3,6z M173,352l3,-6l-6,0l3,6z M177,348l3,-6l-6,0l3,6z M182,351l3,-6l-6,0l3,6z M186,346l3,-6l-6,0l3,6z M191,341l3,-6l-6,0l3,6z M196,334l3,-6l-6,0l3,6z M200,330l3,-6l-6,0l3,6z
+ M205,325l3,-6l-6,0l3,6z M209,323l3,-6l-6,0l3,6z M214,317l3,-6l-6,0l3,6z M218,312l3,-6l-6,0l3,6z M223,300l3,-6l-6,0l3,6z M227,300l3,-6l-6,0l3,6z M232,293l3,-6l-6,0l3,6z M236,286l3,-6l-6,0l3,6z M241,285l3,-6l-6,0l3,6z M245,284l3,-6l-6,0l3,6z
+ M250,276l3,-6l-6,0l3,6z M254,268l3,-6l-6,0l3,6z M259,269l3,-6l-6,0l3,6z M264,263l3,-6l-6,0l3,6z M268,263l3,-6l-6,0l3,6z M273,255l3,-6l-6,0l3,6z M277,252l3,-6l-6,0l3,6z M282,254l3,-6l-6,0l3,6z M286,257l3,-6l-6,0l3,6z M291,250l3,-6l-6,0l3,6z
+ M295,253l3,-6l-6,0l3,6z M300,257l3,-6l-6,0l3,6z M304,264l3,-6l-6,0l3,6z M309,264l3,-6l-6,0l3,6z M313,270l3,-6l-6,0l3,6z M318,275l3,-6l-6,0l3,6z M323,280l3,-6l-6,0l3,6z M327,284l3,-6l-6,0l3,6z M332,291l3,-6l-6,0l3,6z M336,299l3,-6l-6,0l3,6z
+ M341,299l3,-6l-6,0l3,6z M345,307l3,-6l-6,0l3,6z M350,318l3,-6l-6,0l3,6z M354,317l3,-6l-6,0l3,6z M359,320l3,-6l-6,0l3,6z M363,325l3,-6l-6,0l3,6z M368,332l3,-6l-6,0l3,6z M372,337l3,-6l-6,0l3,6z M377,339l3,-6l-6,0l3,6z M381,342l3,-6l-6,0l3,6z
+ M386,347l3,-6l-6,0l3,6z M391,352l3,-6l-6,0l3,6z M395,353l3,-6l-6,0l3,6z M400,354l3,-6l-6,0l3,6z M404,357l3,-6l-6,0l3,6z M409,360l3,-6l-6,0l3,6z M413,361l3,-6l-6,0l3,6z M418,363l3,-6l-6,0l3,6z M422,363l3,-6l-6,0l3,6z M427,366l3,-6l-6,0l3,6z
+ M431,365l3,-6l-6,0l3,6z M436,366l3,-6l-6,0l3,6z M440,368l3,-6l-6,0l3,6z M445,368l3,-6l-6,0l3,6z M450,368l3,-6l-6,0l3,6z M454,369l3,-6l-6,0l3,6z M459,369l3,-6l-6,0l3,6z M463,369l3,-6l-6,0l3,6z M468,369l3,-6l-6,0l3,6z M472,369l3,-6l-6,0l3,6z
+ M477,369l3,-6l-6,0l3,6z M481,369l3,-6l-6,0l3,6z M486,369l3,-6l-6,0l3,6z M490,369l3,-6l-6,0l3,6z"/>
+<g stroke="#f9f611" stroke-width="1" fill="none">
+<circle cx="73" cy="367" r="3"/>
+<circle cx="78" cy="367" r="3"/>
+<circle cx="82" cy="367" r="3"/>
+<circle cx="87" cy="366" r="3"/>
+<circle cx="91" cy="366" r="3"/>
+<circle cx="96" cy="366" r="3"/>
+<circle cx="100" cy="367" r="3"/>
+<circle cx="105" cy="366" r="3"/>
+<circle cx="109" cy="366" r="3"/>
+<circle cx="114" cy="366" r="3"/>
+<circle cx="118" cy="366" r="3"/>
+<circle cx="123" cy="365" r="3"/>
+<circle cx="127" cy="365" r="3"/>
+<circle cx="132" cy="365" r="3"/>
+<circle cx="137" cy="365" r="3"/>
+<circle cx="141" cy="364" r="3"/>
+<circle cx="146" cy="364" r="3"/>
+<circle cx="150" cy="363" r="3"/>
+<circle cx="155" cy="362" r="3"/>
+<circle cx="159" cy="362" r="3"/>
+<circle cx="164" cy="360" r="3"/>
+<circle cx="168" cy="359" r="3"/>
+<circle cx="173" cy="358" r="3"/>
+<circle cx="177" cy="356" r="3"/>
+<circle cx="182" cy="357" r="3"/>
+<circle cx="186" cy="355" r="3"/>
+<circle cx="191" cy="353" r="3"/>
+<circle cx="196" cy="349" r="3"/>
+<circle cx="200" cy="347" r="3"/>
+<circle cx="205" cy="344" r="3"/>
+<circle cx="209" cy="344" r="3"/>
+<circle cx="214" cy="340" r="3"/>
+<circle cx="218" cy="338" r="3"/>
+<circle cx="223" cy="332" r="3"/>
+<circle cx="227" cy="332" r="3"/>
+<circle cx="232" cy="328" r="3"/>
+<circle cx="236" cy="325" r="3"/>
+<circle cx="241" cy="324" r="3"/>
+<circle cx="245" cy="324" r="3"/>
+<circle cx="250" cy="320" r="3"/>
+<circle cx="254" cy="316" r="3"/>
+<circle cx="259" cy="316" r="3"/>
+<circle cx="264" cy="313" r="3"/>
+<circle cx="268" cy="313" r="3"/>
+<circle cx="273" cy="309" r="3"/>
+<circle cx="277" cy="308" r="3"/>
+<circle cx="282" cy="309" r="3"/>
+<circle cx="286" cy="311" r="3"/>
+<circle cx="291" cy="307" r="3"/>
+<circle cx="295" cy="308" r="3"/>
+<circle cx="300" cy="311" r="3"/>
+<circle cx="304" cy="314" r="3"/>
+<circle cx="309" cy="314" r="3"/>
+<circle cx="313" cy="317" r="3"/>
+<circle cx="318" cy="319" r="3"/>
+<circle cx="323" cy="322" r="3"/>
+<circle cx="327" cy="324" r="3"/>
+<circle cx="332" cy="327" r="3"/>
+<circle cx="336" cy="331" r="3"/>
+<circle cx="341" cy="331" r="3"/>
+<circle cx="345" cy="335" r="3"/>
+<circle cx="350" cy="341" r="3"/>
+<circle cx="354" cy="340" r="3"/>
+<circle cx="359" cy="342" r="3"/>
+<circle cx="363" cy="344" r="3"/>
+<circle cx="368" cy="348" r="3"/>
+<circle cx="372" cy="350" r="3"/>
+<circle cx="377" cy="351" r="3"/>
+<circle cx="381" cy="353" r="3"/>
+<circle cx="386" cy="355" r="3"/>
+<circle cx="391" cy="358" r="3"/>
+<circle cx="395" cy="358" r="3"/>
+<circle cx="400" cy="359" r="3"/>
+<circle cx="404" cy="360" r="3"/>
+<circle cx="409" cy="362" r="3"/>
+<circle cx="413" cy="362" r="3"/>
+<circle cx="418" cy="363" r="3"/>
+<circle cx="422" cy="363" r="3"/>
+<circle cx="427" cy="365" r="3"/>
+<circle cx="431" cy="364" r="3"/>
+<circle cx="436" cy="365" r="3"/>
+<circle cx="440" cy="366" r="3"/>
+<circle cx="445" cy="366" r="3"/>
+<circle cx="450" cy="366" r="3"/>
+<circle cx="454" cy="366" r="3"/>
+<circle cx="459" cy="366" r="3"/>
+<circle cx="463" cy="366" r="3"/>
+<circle cx="468" cy="366" r="3"/>
+<circle cx="472" cy="366" r="3"/>
+<circle cx="477" cy="366" r="3"/>
+<circle cx="481" cy="367" r="3"/>
+<circle cx="486" cy="367" r="3"/>
+<circle cx="490" cy="367" r="3"/>
 </g>
 <rect x="58" y="100" width="170" height="86" fill="white"/>
 <path d="M62,186v 2.8h 169v -84h -2.8v 81z" fill="black"/>
@@ -594,33 +341,28 @@ th1_palette.svg
 <path d="M64,115h 30v -12h -30z" fill="white"/>
 <path d="M64,109h 30" fill="none" stroke="#352a86"/>
 <g fill="#352a86">
-<circle cx="79" cy="109" r="2.8"/>
+<circle cx="79" cy="109" r="3"/>
 </g>
 <text xml:space="preserve" x="100" y="128" fill="black" font-size="6.5" font-family="Helvetica" font-weight="bold">Histogram drawn with full squares
 </text>
 <path d="M64,132h 30v -12h -30z" fill="white"/>
 <path d="M64,126h 30" fill="none" stroke="#1380d5"/>
-<g fill="#1380d5">
-<rect x="76" y="123" width="5.7" height="5.7"/>
-</g>
+<path fill="#1380d5" d="M76,123l6,0l0,6l-6,0l0,-6z"/>
 <text xml:space="preserve" x="100" y="146" fill="black" font-size="6.5" font-family="Helvetica" font-weight="bold">Histogram drawn with full triangles up
 </text>
 <path d="M64,149h 30v -12h -30z" fill="white"/>
 <path d="M64,143h 30" fill="none" stroke="#2cb6a5"/>
-<g fill="#2cb6a5">
-<polygon points=" 79, 140 82, 146 76, 146"/>
-</g>
+<path fill="#2cb6a5" d="M76,146l6,0l-3,-6l-3,6z"/>
 <text xml:space="preserve" x="100" y="163" fill="black" font-size="6.5" font-family="Helvetica" font-weight="bold">Histogram drawn with full triangles down
 </text>
 <path d="M64,166h 30v -12h -30z" fill="white"/>
 <path d="M64,160h 30" fill="none" stroke="#ccbb5b"/>
-<g fill="#ccbb5b">
-<polygon points=" 76, 157 82, 157 79, 163"/>
-</g>
+<path fill="#ccbb5b" d="M79,163l3,-6l-6,0l3,6z"/>
 <text xml:space="preserve" x="100" y="180" fill="black" font-size="6.5" font-family="Helvetica" font-weight="bold">Histogram drawn with empty circles
 </text>
 <path d="M64,183h 30v -12h -30z" fill="white"/>
 <path d="M64,177h 30" fill="none" stroke="#f9f611"/>
-<g stroke="#f9f611" stroke-width="1.000" fill="none">
-<circle cx="79" cy="177" r="2.8"/>
-</g></svg>
+<g stroke="#f9f611" stroke-width="1" fill="none">
+<circle cx="79" cy="177" r="3"/>
+</g>
+</svg>

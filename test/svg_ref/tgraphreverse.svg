@@ -67,9 +67,9 @@ tgraphreverse.svg
 <text xml:space="preserve" x="16" y="26" fill="black" font-size="6.8" font-family="Helvetica" font-weight="bold">13
 </text>
 <path d="M56,115l 79, -46" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="56" cy="115" r="2.5"/>
-<circle cx="134" cy="69" r="2.5"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="56" cy="115" r="3"/>
+<circle cx="134" cy="69" r="3"/>
 </g>
 <path d="M56,115h -20" fill="none" stroke="black"/>
 <path d="M56,115h 20" fill="none" stroke="black"/>
@@ -170,9 +170,9 @@ tgraphreverse.svg
 <path d="M243,80h 2.5" fill="none" stroke="black"/>
 <path d="M243,150h 2.5" fill="none" stroke="black"/>
 <path d="M323,69l -79, 46" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="323" cy="69" r="2.5"/>
-<circle cx="244" cy="115" r="2.5"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="323" cy="69" r="3"/>
+<circle cx="244" cy="115" r="3"/>
 </g>
 <rect x="384" y="5.5" width="178" height="173" fill="#f2f2f2"/>
 <path d="M384,178l 2.0, -2.0v -169h 174l 2.0, -2.0h -178v 173z" fill="white"/>
@@ -232,9 +232,9 @@ tgraphreverse.svg
 <path d="M421,157h 2.5" fill="none" stroke="black"/>
 <path d="M421,119h 2.5" fill="none" stroke="black"/>
 <path d="M496,110l -73, 32" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="496" cy="110" r="2.5"/>
-<circle cx="422" cy="141" r="2.5"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="496" cy="110" r="3"/>
+<circle cx="422" cy="141" r="3"/>
 </g>
 <rect x="6.2" y="189" width="178" height="173" fill="#f2f2f2"/>
 <path d="M6.2,362l 2.0, -2.0v -169h 174l 2.0, -2.0h -178v 173z" fill="white"/>
@@ -302,9 +302,9 @@ tgraphreverse.svg
 <text xml:space="preserve" x="16" y="210" fill="black" font-size="6.8" font-family="Helvetica" font-weight="bold">13
 </text>
 <path d="M51,299l 59, -46" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="51" cy="299" r="2.5"/>
-<circle cx="110" cy="253" r="2.5"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="51" cy="299" r="3"/>
+<circle cx="110" cy="253" r="3"/>
 </g>
 <path d="M51,299h -15" fill="none" stroke="black"/>
 <path d="M51,299h 44" fill="none" stroke="black"/>
@@ -411,9 +411,9 @@ tgraphreverse.svg
 <path d="M268,287h 2.5" fill="none" stroke="black"/>
 <path d="M268,333h 2.5" fill="none" stroke="black"/>
 <path d="M328,253l -59, 46" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="328" cy="253" r="2.5"/>
-<circle cx="269" cy="299" r="2.5"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="328" cy="253" r="3"/>
+<circle cx="269" cy="299" r="3"/>
 </g>
 <rect x="384" y="189" width="178" height="173" fill="#f2f2f2"/>
 <path d="M384,362l 2.0, -2.0v -169h 174l 2.0, -2.0h -178v 173z" fill="white"/>
@@ -473,9 +473,9 @@ tgraphreverse.svg
 <path d="M437,341h 2.5" fill="none" stroke="black"/>
 <path d="M437,319h 2.5" fill="none" stroke="black"/>
 <path d="M498,294l -60, 32" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="498" cy="294" r="2.5"/>
-<circle cx="438" cy="325" r="2.5"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="498" cy="294" r="3"/>
+<circle cx="438" cy="325" r="3"/>
 </g>
 <rect x="6.2" y="373" width="178" height="173" fill="#f2f2f2"/>
 <path d="M6.2,546l 2.0, -2.0v -169h 174l 2.0, -2.0h -178v 173z" fill="white"/>
@@ -543,9 +543,9 @@ tgraphreverse.svg
 <text xml:space="preserve" x="16" y="393" fill="black" font-size="6.8" font-family="Helvetica" font-weight="bold">13
 </text>
 <path d="M51,483l 59, -46" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="51" cy="483" r="2.5"/>
-<circle cx="110" cy="437" r="2.5"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="51" cy="483" r="3"/>
+<circle cx="110" cy="437" r="3"/>
 </g>
 <path d="M51,483l -15, -5.8" fill="none" stroke="black"/>
 <path d="M51,483l 44, -2.3" fill="none" stroke="black"/>
@@ -652,9 +652,9 @@ tgraphreverse.svg
 <path d="M275,471h 2.5" fill="none" stroke="black"/>
 <path d="M271,517h 2.5" fill="none" stroke="black"/>
 <path d="M328,437l -59, 46" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="328" cy="437" r="2.5"/>
-<circle cx="269" cy="483" r="2.5"/>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="328" cy="437" r="3"/>
+<circle cx="269" cy="483" r="3"/>
 </g>
 <rect x="384" y="373" width="178" height="173" fill="#f2f2f2"/>
 <path d="M384,546l 2.0, -2.0v -169h 174l 2.0, -2.0h -178v 173z" fill="white"/>
@@ -714,7 +714,8 @@ tgraphreverse.svg
 <path d="M439,525h 2.5" fill="none" stroke="black"/>
 <path d="M443,503h 2.5" fill="none" stroke="black"/>
 <path d="M498,477l -60, 32" fill="none" stroke="black"/>
-<g stroke="black" stroke-width="1.000" fill="none">
-<circle cx="498" cy="477" r="2.5"/>
-<circle cx="438" cy="509" r="2.5"/>
-</g></svg>
+<g stroke="black" stroke-width="1" fill="none">
+<circle cx="498" cy="477" r="3"/>
+<circle cx="438" cy="509" r="3"/>
+</g>
+</svg>

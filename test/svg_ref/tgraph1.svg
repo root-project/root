@@ -74,28 +74,9 @@ tgraph1.svg
 </g>
 <path d="M57,320l 22, -31l 18, -25l 3.4, -4.7l 16, -22l 5.5, -7.1l 15, -19l 7.0, -8.6l 14, -16l 8.1, -9.3l 13, -14l 9.1, -9.5l 12, -12l 9.8, -9.2l 11, -10l 10, -8.5l 11, -8.4l 11, -7.5l 11, -6.8l 11, -6.3l 10, -5.2l 11, -4.9l 10, -3.7l 11, -3.3l 10,
  -2.2l 12, -1.7l 10, -0.709l 12, 0.043l 10, 0.789l 12, 1.7l 10, 2.3l 11, 3.4l 10, 3.8l 11, 5.0l 11, 5.4l 11, 6.4l 11, 6.9l 11, 7.8" fill="none" stroke="#ff0000" stroke-width="4.0"/>
-<g fill="#0000ff">
-<rect x="54" y="317" width="6.5" height="6.5"/>
-<rect x="76" y="286" width="6.5" height="6.5"/>
-<rect x="97" y="256" width="6.5" height="6.5"/>
-<rect x="119" y="227" width="6.5" height="6.5"/>
-<rect x="141" y="200" width="6.5" height="6.5"/>
-<rect x="162" y="175" width="6.5" height="6.5"/>
-<rect x="184" y="151" width="6.5" height="6.5"/>
-<rect x="206" y="130" width="6.5" height="6.5"/>
-<rect x="228" y="111" width="6.5" height="6.5"/>
-<rect x="249" y="96" width="6.5" height="6.5"/>
-<rect x="271" y="82" width="6.5" height="6.5"/>
-<rect x="293" y="72" width="6.5" height="6.5"/>
-<rect x="314" y="65" width="6.5" height="6.5"/>
-<rect x="336" y="61" width="6.5" height="6.5"/>
-<rect x="358" y="61" width="6.5" height="6.5"/>
-<rect x="379" y="63" width="6.5" height="6.5"/>
-<rect x="401" y="69" width="6.5" height="6.5"/>
-<rect x="423" y="78" width="6.5" height="6.5"/>
-<rect x="445" y="90" width="6.5" height="6.5"/>
-<rect x="466" y="104" width="6.5" height="6.5"/>
-</g>
+<path fill="#0000ff" d="M54,317l6,0l0,6l-6,0l0,-6z M76,286l6,0l0,6l-6,0l0,-6z M98,256l6,0l0,6l-6,0l0,-6z M119,228l6,0l0,6l-6,0l0,-6z M141,200l6,0l0,6l-6,0l0,-6z M163,175l6,0l0,6l-6,0l0,-6z M184,151l6,0l0,6l-6,0l0,-6z M206,130l6,0l0,6l-6,0l0,-6z
+ M228,112l6,0l0,6l-6,0l0,-6z M249,96l6,0l0,6l-6,0l0,-6z M271,83l6,0l0,6l-6,0l0,-6z M293,73l6,0l0,6l-6,0l0,-6z M315,66l6,0l0,6l-6,0l0,-6z M336,62l6,0l0,6l-6,0l0,-6z M358,61l6,0l0,6l-6,0l0,-6z M380,64l6,0l0,6l-6,0l0,-6z M401,69l6,0l0,6l-6,0l0,-6z
+ M423,78l6,0l0,6l-6,0l0,-6z M445,90l6,0l0,6l-6,0l0,-6z M467,105l6,0l0,6l-6,0l0,-6z"/>
 <rect x="6.2" y="1.9" width="137" height="22" fill="#f2f2f2"/>
 <path d="M4.5,4.4v 21h 136v -1.6h -134v -19z" fill="black"/>
 <path d="M6.2,23v -22h 137v 22h -137z" fill="none" stroke="black"/>
