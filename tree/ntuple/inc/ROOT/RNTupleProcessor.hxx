@@ -64,6 +64,18 @@ public:
    std::unique_ptr<ROOT::Internal::RPageSource> CreatePageSource() const;
 };
 
+class RNTupleProcessorOptions {
+private:
+   /// By default, the processor name is the name of the underlying RNTuple for RNTupleSingleProcessor, the name of the
+   /// first processor for RNTupleChainProcessor, or the name of the primary RNTuple for RNTupleJoinProcessor.
+   std::string fProcessorName = "";
+
+public:
+   const std::string &GetProcessorName() const { return fProcessorName; }
+
+   void SetProcessorName(std::string_view name) { fProcessorName = name; }
+};
+
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleProcessorOptionalPtr<T>
@@ -252,7 +264,8 @@ class RNTupleProcessor {
    friend class RNTupleJoinProcessor;
 
 protected:
-   std::string fProcessorName;
+   RNTupleProcessorOptions fOptions;
+
    std::shared_ptr<Internal::RNTupleProcessorEntry> fEntry = nullptr;
    std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> fFieldIdxs;
 
@@ -337,7 +350,7 @@ protected:
    /// \param[in] processorName Name of the processor. By default, this is the name of the underlying RNTuple for
    /// RNTupleSingleProcessor, the name of the first processor for RNTupleChainProcessor, or the name of the primary
    /// RNTuple for RNTupleJoinProcessor.
-   RNTupleProcessor(std::string_view processorName) : fProcessorName(processorName) {}
+   RNTupleProcessor(const RNTupleProcessorOptions &options) : fOptions(options) {}
 
 public:
    RNTupleProcessor(const RNTupleProcessor &) = delete;
@@ -345,6 +358,10 @@ public:
    RNTupleProcessor &operator=(const RNTupleProcessor &) = delete;
    RNTupleProcessor &operator=(RNTupleProcessor &&) = delete;
    virtual ~RNTupleProcessor() = default;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get the options used for this processor.
+   const RNTupleProcessorOptions &GetOptions() const { return fOptions; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries processed so far.
@@ -359,14 +376,6 @@ public:
    ///
    /// This method is only relevant for the RNTupleChainProcessor. For the other processors, 0 is always returned.
    std::size_t GetCurrentProcessorNumber() const { return fCurrentProcessorNumber; }
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the name of the processor.
-   ///
-   /// Unless this name was explicitly specified during creation of the processor, this is the name of the underlying
-   /// RNTuple for RNTupleSingleProcessor, the name of the first processor for RNTupleChainProcessor, or the name of the
-   /// primary processor for RNTupleJoinProcessor.
-   const std::string &GetProcessorName() const { return fProcessorName; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Request access to a field for reading during processing.
@@ -506,31 +515,32 @@ public:
    /// \brief Create an RNTupleProcessor for a single RNTuple.
    ///
    /// \param[in] ntuple The name and storage location of the RNTuple to process.
-   /// \param[in] processorName The name to give to the processor. If empty, the name of the input RNTuple is used.
+   /// \param[in] opts Options for the processor.
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
-   static std::unique_ptr<RNTupleProcessor> Create(RNTupleOpenSpec ntuple, std::string_view processorName = "");
+   static std::unique_ptr<RNTupleProcessor>
+   Create(RNTupleOpenSpec ntuple, const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleProcessor for a *chain* (i.e., a vertical combination) of RNTuples.
    ///
    /// \param[in] ntuples A list specifying the names and locations of the RNTuples to process.
-   /// \param[in] processorName The name to give to the processor. If empty, the name of the first RNTuple is used.
+   /// \param[in] opts Options for the processor.
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor>
-   CreateChain(std::vector<RNTupleOpenSpec> ntuples, std::string_view processorName = "");
+   CreateChain(std::vector<RNTupleOpenSpec> ntuples, const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleProcessor for a *chain* (i.e., a vertical combination) of other RNTupleProcessors.
    ///
    /// \param[in] innerProcessors A list with the processors to chain.
-   /// \param[in] processorName The name to give to the processor. If empty, the name of the first inner processor is
-   /// used.
+   /// \param[in] opts Options for the processor.
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor>
-   CreateChain(std::vector<std::unique_ptr<RNTupleProcessor>> innerProcessors, std::string_view processorName = "");
+   CreateChain(std::vector<std::unique_ptr<RNTupleProcessor>> innerProcessors,
+               const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleProcessor for a *join* (i.e., a horizontal combination) of RNTuples.
@@ -542,12 +552,12 @@ public:
    /// \param[in] joinFields The names of the fields on which to join, in case the specified RNTuples are unaligned.
    /// The join is made based on the combined join field values, and therefore each field has to be present in each
    /// specified RNTuple. If an empty list is provided, it is assumed that the specified ntuple are fully aligned.
-   /// \param[in] processorName The name to give to the processor. If empty, the name of the primary RNTuple is used.
+   /// \param[in] opts Options for the processor.
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor> CreateJoin(RNTupleOpenSpec primaryNTuple, RNTupleOpenSpec auxNTuple,
                                                        const std::vector<std::string> &joinFields,
-                                                       std::string_view processorName = "");
+                                                       const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleProcessor for a *join* (i.e., a horizontal combination) of RNTuples.
@@ -559,12 +569,13 @@ public:
    /// The join is made based on the combined join field values, and therefore each field has to be present in each
    /// specified processors. If an empty list is provided, it is assumed that the specified processors are fully
    /// aligned.
-   /// \param[in] processorName The name to give to the processor. If empty, the name of the primary processor is used.
+   /// \param[in] opts Options for the processor.
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
-   static std::unique_ptr<RNTupleProcessor>
-   CreateJoin(std::unique_ptr<RNTupleProcessor> primaryProcessor, std::unique_ptr<RNTupleProcessor> auxProcessor,
-              const std::vector<std::string> &joinFields, std::string_view processorName = "");
+   static std::unique_ptr<RNTupleProcessor> CreateJoin(std::unique_ptr<RNTupleProcessor> primaryProcessor,
+                                                       std::unique_ptr<RNTupleProcessor> auxProcessor,
+                                                       const std::vector<std::string> &joinFields,
+                                                       const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
 };
 
 // clang-format off
@@ -650,9 +661,8 @@ private:
    /// \brief Construct a new RNTupleProcessor for processing a single RNTuple.
    ///
    /// \param[in] ntuple The source specification (name and storage location) for the RNTuple to process.
-   /// \param[in] processorName Name of the processor. Unless specified otherwise in RNTupleProcessor::Create, this is
-   /// the name of the underlying RNTuple.
-   RNTupleSingleProcessor(RNTupleOpenSpec ntuple, std::string_view processorName);
+   /// \param[in] opts Options for the processor.
+   RNTupleSingleProcessor(RNTupleOpenSpec ntuple, const RNTupleProcessorOptions &opts);
 
 public:
    RNTupleSingleProcessor(const RNTupleSingleProcessor &) = delete;
@@ -745,11 +755,11 @@ private:
    /// \brief Construct a new RNTupleChainProcessor.
    ///
    /// \param[in] ntuples The source specification (name and storage location) for each RNTuple to process.
-   /// \param[in] processorName Name of the processor. Unless specified otherwise in RNTupleProcessor::CreateChain, this
-   /// is the name of the first inner processor.
+   /// \param[in] opts Options for the processor.
    ///
    /// RNTuples are processed in the order in which they are specified.
-   RNTupleChainProcessor(std::vector<std::unique_ptr<RNTupleProcessor>> processors, std::string_view processorName);
+   RNTupleChainProcessor(std::vector<std::unique_ptr<RNTupleProcessor>> processors,
+                         const RNTupleProcessorOptions &opts);
 
 public:
    RNTupleChainProcessor(const RNTupleChainProcessor &) = delete;
@@ -813,8 +823,8 @@ private:
    bool CanReadFieldFromDisk(std::string_view fieldName) final
    {
       if (!fPrimaryProcessor->CanReadFieldFromDisk(fieldName)) {
-         if (fieldName.find(fAuxiliaryProcessor->GetProcessorName()) == 0)
-            fieldName = fieldName.substr(fAuxiliaryProcessor->GetProcessorName().size() + 1);
+         if (fieldName.find(fAuxiliaryProcessor->fOptions.GetProcessorName()) == 0)
+            fieldName = fieldName.substr(fAuxiliaryProcessor->fOptions.GetProcessorName().size() + 1);
          return fAuxiliaryProcessor->CanReadFieldFromDisk(fieldName);
       }
 
@@ -849,11 +859,10 @@ private:
    /// \param[in] joinFields The names of the fields on which to join, in case the specified processors are unaligned.
    /// The join is made based on the combined join field values, and therefore each field has to be present in each
    /// specified processor. If an empty list is provided, it is assumed that the processors are fully aligned.
-   /// \param[in] processorName Name of the processor. Unless specified otherwise in RNTupleProcessor::CreateJoin, this
-   /// is the name of the primary processor.
+   /// \param[in] opts Options for the processor.
    RNTupleJoinProcessor(std::unique_ptr<RNTupleProcessor> primaryProcessor,
                         std::unique_ptr<RNTupleProcessor> auxProcessor, const std::vector<std::string> &joinFields,
-                        std::string_view processorName);
+                        const RNTupleProcessorOptions &opts);
 
 public:
    RNTupleJoinProcessor(const RNTupleJoinProcessor &) = delete;

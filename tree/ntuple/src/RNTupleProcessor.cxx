@@ -34,13 +34,14 @@ std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Experimental::RNTupleOpenSpec
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::Create(RNTupleOpenSpec ntuple, std::string_view processorName)
+ROOT::Experimental::RNTupleProcessor::Create(RNTupleOpenSpec ntuple, const RNTupleProcessorOptions &options)
 {
-   return std::unique_ptr<RNTupleSingleProcessor>(new RNTupleSingleProcessor(std::move(ntuple), processorName));
+   return std::unique_ptr<RNTupleSingleProcessor>(new RNTupleSingleProcessor(std::move(ntuple), options));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<RNTupleOpenSpec> ntuples, std::string_view processorName)
+ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<RNTupleOpenSpec> ntuples,
+                                                  const RNTupleProcessorOptions &options)
 {
    if (ntuples.empty())
       throw RException(R__FAIL("at least one RNTuple must be provided"));
@@ -52,23 +53,23 @@ ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<RNTupleOpenSpec> n
       innerProcessors.emplace_back(Create(std::move(ntuple)));
    }
 
-   return CreateChain(std::move(innerProcessors), processorName);
+   return CreateChain(std::move(innerProcessors), options);
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
 ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<std::unique_ptr<RNTupleProcessor>> innerProcessors,
-                                                  std::string_view processorName)
+                                                  const RNTupleProcessorOptions &options)
 {
    if (innerProcessors.empty())
       throw RException(R__FAIL("at least one inner processor must be provided"));
 
-   return std::unique_ptr<RNTupleChainProcessor>(new RNTupleChainProcessor(std::move(innerProcessors), processorName));
+   return std::unique_ptr<RNTupleChainProcessor>(new RNTupleChainProcessor(std::move(innerProcessors), options));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
 ROOT::Experimental::RNTupleProcessor::CreateJoin(RNTupleOpenSpec primaryNTuple, RNTupleOpenSpec auxNTuple,
                                                  const std::vector<std::string> &joinFields,
-                                                 std::string_view processorName)
+                                                 const RNTupleProcessorOptions &options)
 {
    if (joinFields.size() > 4) {
       throw RException(R__FAIL("a maximum of four join fields is allowed"));
@@ -78,18 +79,18 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(RNTupleOpenSpec primaryNTuple, 
       throw RException(R__FAIL("join fields must be unique"));
    }
 
-   std::unique_ptr<RNTupleProcessor> primaryProcessor = Create(std::move(primaryNTuple), processorName);
+   std::unique_ptr<RNTupleProcessor> primaryProcessor = Create(std::move(primaryNTuple), options);
 
    std::unique_ptr<RNTupleProcessor> auxProcessor = Create(std::move(auxNTuple));
 
-   return CreateJoin(std::move(primaryProcessor), std::move(auxProcessor), joinFields, processorName);
+   return CreateJoin(std::move(primaryProcessor), std::move(auxProcessor), joinFields, options);
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
 ROOT::Experimental::RNTupleProcessor::CreateJoin(std::unique_ptr<RNTupleProcessor> primaryProcessor,
                                                  std::unique_ptr<RNTupleProcessor> auxProcessor,
                                                  const std::vector<std::string> &joinFields,
-                                                 std::string_view processorName)
+                                                 const RNTupleProcessorOptions &options)
 {
    if (joinFields.size() > 4) {
       throw RException(R__FAIL("a maximum of four join fields is allowed"));
@@ -100,17 +101,17 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(std::unique_ptr<RNTupleProcesso
    }
 
    return std::unique_ptr<RNTupleJoinProcessor>(
-      new RNTupleJoinProcessor(std::move(primaryProcessor), std::move(auxProcessor), joinFields, processorName));
+      new RNTupleJoinProcessor(std::move(primaryProcessor), std::move(auxProcessor), joinFields, options));
 }
 
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(RNTupleOpenSpec ntuple,
-                                                                   std::string_view processorName)
-   : RNTupleProcessor(processorName), fNTupleSpec(std::move(ntuple))
+                                                                   const RNTupleProcessorOptions &options)
+   : RNTupleProcessor(options), fNTupleSpec(std::move(ntuple))
 {
-   if (fProcessorName.empty()) {
-      fProcessorName = fNTupleSpec.fNTupleName;
+   if (fOptions.GetProcessorName().empty()) {
+      fOptions.SetProcessorName(fNTupleSpec.fNTupleName);
    }
 }
 
@@ -278,12 +279,12 @@ void ROOT::Experimental::RNTupleSingleProcessor::PrintStructureImpl(std::ostream
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(
-   std::vector<std::unique_ptr<RNTupleProcessor>> processors, std::string_view processorName)
-   : RNTupleProcessor(processorName), fInnerProcessors(std::move(processors))
+   std::vector<std::unique_ptr<RNTupleProcessor>> processors, const RNTupleProcessorOptions &options)
+   : RNTupleProcessor(options), fInnerProcessors(std::move(processors))
 {
-   if (fProcessorName.empty()) {
+   if (fOptions.GetProcessorName().empty()) {
       // `CreateChain` ensures there is at least one inner processor.
-      fProcessorName = fInnerProcessors[0]->GetProcessorName();
+      fOptions.SetProcessorName(fInnerProcessors[0]->fOptions.GetProcessorName());
    }
 
    fInnerNEntries.assign(fInnerProcessors.size(), kInvalidNTupleIndex);
@@ -411,14 +412,14 @@ void ROOT::Experimental::RNTupleChainProcessor::PrintStructureImpl(std::ostream 
 ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(std::unique_ptr<RNTupleProcessor> primaryProcessor,
                                                                std::unique_ptr<RNTupleProcessor> auxProcessor,
                                                                const std::vector<std::string> &joinFields,
-                                                               std::string_view processorName)
-   : RNTupleProcessor(processorName),
+                                                               const RNTupleProcessorOptions &options)
+   : RNTupleProcessor(options),
      fPrimaryProcessor(std::move(primaryProcessor)),
      fAuxiliaryProcessor(std::move(auxProcessor)),
      fJoinFieldNames(joinFields)
 {
-   if (fProcessorName.empty()) {
-      fProcessorName = fPrimaryProcessor->GetProcessorName();
+   if (fOptions.GetProcessorName().empty()) {
+      fOptions.SetProcessorName(fPrimaryProcessor->fOptions.GetProcessorName());
    }
 }
 
@@ -440,17 +441,17 @@ void ROOT::Experimental::RNTupleJoinProcessor::Initialize(
       for (const auto &joinField : fJoinFieldNames) {
          if (!fPrimaryProcessor->CanReadFieldFromDisk(joinField)) {
             throw RException(R__FAIL("could not find join field \"" + joinField + "\" in primary processor \"" +
-                                     fPrimaryProcessor->GetProcessorName() + "\""));
+                                     fPrimaryProcessor->fOptions.GetProcessorName() + "\""));
          }
          if (!fAuxiliaryProcessor->CanReadFieldFromDisk(joinField)) {
             throw RException(R__FAIL("could not find join field \"" + joinField + "\" in auxiliary processor \"" +
-                                     fAuxiliaryProcessor->GetProcessorName() + "\""));
+                                     fAuxiliaryProcessor->fOptions.GetProcessorName() + "\""));
          }
 
          // We prepend the name of the primary processor in this case to prevent reading from the wrong join field in
          // composed join operations.
-         auto fieldIdx = AddFieldToEntry(fProcessorName + "._join." + joinField, "std::uint64_t", nullptr,
-                                         Internal::RNTupleProcessorProvenance(fProcessorName));
+         auto fieldIdx = AddFieldToEntry(fOptions.GetProcessorName() + "._join." + joinField, "std::uint64_t", nullptr,
+                                         Internal::RNTupleProcessorProvenance(fOptions.GetProcessorName()));
          fJoinFieldIdxs.insert(fieldIdx);
       }
 
@@ -464,7 +465,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::Connect(
 {
    Initialize();
 
-   auto auxProvenance = provenance.Evolve(fAuxiliaryProcessor->GetProcessorName());
+   auto auxProvenance = provenance.Evolve(fAuxiliaryProcessor->fOptions.GetProcessorName());
    for (const auto &fieldIdx : fieldIdxs) {
       const auto &fieldProvenance = fEntry->GetFieldProvenance(fieldIdx);
       if (fieldProvenance.Contains(auxProvenance))
@@ -482,7 +483,7 @@ ROOT::Experimental::RNTupleJoinProcessor::AddFieldToEntry(const std::string &fie
                                                           void *valuePtr,
                                                           const Internal::RNTupleProcessorProvenance &provenance)
 {
-   auto auxProvenance = provenance.Evolve(fAuxiliaryProcessor->GetProcessorName());
+   auto auxProvenance = provenance.Evolve(fAuxiliaryProcessor->fOptions.GetProcessorName());
    if (auxProvenance.IsPresentInFieldName(fieldName)) {
       // If the primaryProcessor has a field with the name of the auxProcessor (either as a "proper" field or because
       // the primary processor itself is a join where its auxProcessor bears the same name as the current auxProcessor),
@@ -490,9 +491,9 @@ ROOT::Experimental::RNTupleJoinProcessor::AddFieldToEntry(const std::string &fie
       if (fPrimaryProcessor->CanReadFieldFromDisk(fieldName)) {
          throw RException(R__FAIL("ambiguous field name: \"" + fieldName +
                                   "\" is present in the primary RNTupleProcessor \"" +
-                                  fPrimaryProcessor->GetProcessorName() +
+                                  fPrimaryProcessor->fOptions.GetProcessorName() +
                                   "\", but may also refer to a field in the auxiliary RNTupleProcessor named \"" +
-                                  fAuxiliaryProcessor->GetProcessorName() +
+                                  fAuxiliaryProcessor->fOptions.GetProcessorName() +
                                   "\". To avoid this ambiguity, rename the auxiliary RNTupleProcessor."));
       }
 
