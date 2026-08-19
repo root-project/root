@@ -46,8 +46,14 @@ public:
    virtual void     SetMarkerSize(Size_t msize = 1);
 
    enum EMarkerShape { kShapeDot, kShapeCircle, kShapeFilledCircle, kShapePolyLine, kShapeFilledArea, kShapeSegments, kShapeTriangles };
+   enum {
+      kPreferTriangles = BIT(0),  // return kShapeTriangles instead of kShapeFilledArea
+      kDotAsLines = BIT(1),       // convert small and medium dot into lines/segments, used in graphics output
+      kDotAsCircle = BIT(2),      // convert small and medium dots into circles
+      kUsePSWidthScale = BIT(3)   // special scaling factor for the marker size calculations
+   };
 
-      EMarkerShape GetMarkerShape(Int_t &sz, std::vector<TPoint> &points, Float_t scale = 1., Bool_t prefer_triangles = kFALSE) const;
+      EMarkerShape GetMarkerShape(Int_t &sz, std::vector<TPoint> &points, Float_t scale = 1., UInt_t flags = 0) const;
 
    static  Style_t  GetMarkerStyleBase(Style_t style);
    static  Width_t  GetMarkerLineWidth(Style_t style);
