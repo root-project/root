@@ -646,9 +646,12 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimary)
    auto primaryProc =
       RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {});
 
-   auto auxProc = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, "ntuple_aux2");
+   RNTupleProcessorOptions opts;
+   opts.SetProcessorName("ntuple_aux2");
+   auto auxProc = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, opts);
 
-   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {"i"}, "joined_ntuple");
+   opts.SetProcessorName("joined_ntuple");
+   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {"i"}, opts);
 
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
@@ -676,7 +679,9 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimaryMissingEntries)
    auto primaryProc =
       RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {});
 
-   auto auxProc = RNTupleProcessor::Create({fNTupleNames[3], fFileNames[3]}, "ntuple_aux2");
+   RNTupleProcessorOptions opts;
+   opts.SetProcessorName("ntuple_aux2");
+   auto auxProc = RNTupleProcessor::Create({fNTupleNames[3], fFileNames[3]}, opts);
 
    auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {"i"});
 
@@ -713,7 +718,9 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliary)
 {
    auto primaryProc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
 
-   auto auxProcIntermediate = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, "ntuple_aux2");
+   RNTupleProcessorOptions opts;
+   opts.SetProcessorName("ntuple_aux2");
+   auto auxProcIntermediate = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, opts);
 
    auto auxProc = RNTupleProcessor::CreateJoin(RNTupleProcessor::Create({fNTupleNames[1], fFileNames[1]}),
                                                std::move(auxProcIntermediate), {"i"});
@@ -746,7 +753,9 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliaryMissingEntries)
 {
    auto primaryProc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
 
-   auto auxProcIntermediate = RNTupleProcessor::Create({fNTupleNames[3], fFileNames[3]}, "ntuple_aux2");
+   RNTupleProcessorOptions opts;
+   opts.SetProcessorName("ntuple_aux2");
+   auto auxProcIntermediate = RNTupleProcessor::Create({fNTupleNames[3], fFileNames[3]}, opts);
 
    auto auxProc = RNTupleProcessor::CreateJoin(RNTupleProcessor::Create({fNTupleNames[1], fFileNames[1]}),
                                                std::move(auxProcIntermediate), {"i"});
@@ -981,11 +990,11 @@ TEST_F(GH16805ProcessorTest, JoinReading)
    std::vector<RNTupleOpenSpec> joinSpecs{
       {"topLevelJoin", fJoinFiles[0]}, {"topLevelJoin", fJoinFiles[1]}, {"topLevelJoin", fJoinFiles[2]}};
 
-   auto stepOneProc = RNTupleProcessor::CreateChain(stepOneSpecs, "stepone");
+   auto stepOneProc = RNTupleProcessor::CreateChain(stepOneSpecs);
 
-   auto stepZeroProc = RNTupleProcessor::CreateChain(stepZeroSpecs, "stepzero");
+   auto stepZeroProc = RNTupleProcessor::CreateChain(stepZeroSpecs);
 
-   auto joinProc = RNTupleProcessor::CreateChain(joinSpecs, "topLevelJoin");
+   auto joinProc = RNTupleProcessor::CreateChain(joinSpecs);
 
    auto joinedWithJoin = RNTupleProcessor::CreateJoin(std::move(stepOneProc), std::move(joinProc), {});
 
@@ -1105,7 +1114,7 @@ protected:
    {
       std::vector<RNTupleOpenSpec> stepZeroSpecs{{"stepzero", fStepZeroFiles[0]}, {"stepzero", fStepZeroFiles[1]}};
 
-      auto stepZeroProc = RNTupleProcessor::CreateChain(stepZeroSpecs, "stepzero");
+      auto stepZeroProc = RNTupleProcessor::CreateChain(stepZeroSpecs);
 
       const auto &[chainStepOne, chainStepTwo, chainStepThree, chainStepFour] = GetParam();
 
