@@ -4,7 +4,7 @@
 # higher than kInfo are issued by tests.
 # Stephan Hageboeck, CERN, 2022
 
-if(NOT testsupport)
+if(NOT testsupport AND NOT testing)
   return()
 endif()
 
