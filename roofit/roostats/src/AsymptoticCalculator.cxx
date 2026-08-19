@@ -701,20 +701,34 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
       useQTilde = fUseQTilde;
    }
 
-
-   //check for one side condition (remember this is valid only for one poi)
+   // check for one side condition (remember this is valid only for one poi)
+   // for a signed (uncapped) test statistic the sign of sqrt(qmu) is flipped instead of setting qmu to zero
+   bool flipSign = false;
    if (fOneSided ) {
       if ( muHat->getVal() > muTest->getVal() ) {
-         oocoutI(nullptr,Eval) << "Using one-sided qmu - setting qmu to zero  muHat = " << muHat->getVal()
+         if (fSigned) {
+            oocoutI(nullptr, Eval) << "Using signed one-sided qmu - flipping the sign of the test statistic  muHat = "
+                                   << muHat->getVal() << " muTest = " << muTest->getVal() << std::endl;
+            flipSign = true;
+         } else {
+            oocoutI(nullptr, Eval) << "Using one-sided qmu - setting qmu to zero  muHat = " << muHat->getVal()
                                    << " muTest = " << muTest->getVal() << std::endl;
-         qmu = 0;
+            qmu = 0;
+         }
       }
    }
    if (fOneSidedDiscovery ) {
       if ( muHat->getVal() < muTest->getVal() ) {
-         oocoutI(nullptr,Eval) << "Using one-sided discovery qmu - setting qmu to zero  muHat = " << muHat->getVal()
+         if (fSigned) {
+            oocoutI(nullptr, Eval)
+               << "Using signed one-sided discovery qmu - flipping the sign of the test statistic  muHat = "
+               << muHat->getVal() << " muTest = " << muTest->getVal() << std::endl;
+            flipSign = true;
+         } else {
+            oocoutI(nullptr, Eval) << "Using one-sided discovery qmu - setting qmu to zero  muHat = " << muHat->getVal()
                                    << " muTest = " << muTest->getVal() << std::endl;
-         qmu = 0;
+            qmu = 0;
+         }
       }
    }
 
@@ -733,7 +747,12 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    // asymptotic formula for pnull (for only one POI)
    // From fact that qmu is a chi2 with ndf=1
 
+   // for the signed test statistic, sqrtqmu becomes negative when the best fit
+   // value is beyond the tested value; the Gaussian asymptotic formulae below
+   // remain valid also in that case
    double sqrtqmu = (qmu > 0) ? std::sqrt(qmu) : 0;
+   if (flipSign)
+      sqrtqmu = -sqrtqmu;
    double sqrtqmu_A = (qmu_A > 0) ? std::sqrt(qmu_A) : 0;
 
 
@@ -758,7 +777,10 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
    }
 
-   if (useQTilde ) {
+   // the qtilde corrections apply when the best fit value is at the boundary
+   // (qmu > qmu_A); they cannot apply when the sign was flipped, because then
+   // the best fit value is on the other side of the tested value
+   if (useQTilde && !flipSign) {
       if (fOneSided) {
          // for bounded one-sided (q_mu_tilde: equations 64,65)
          if ( qmu > qmu_A && (qmu_A > 0 || qmu > tol) ) { // to avoid case 0/0
@@ -779,8 +801,6 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
          }
       }
    }
-
-
 
    // create an HypoTest result but where the sampling distributions are set to zero
    string resultname = "HypoTestAsymptotic_result";
