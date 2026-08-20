@@ -55,6 +55,7 @@
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
 #include <RooRecursiveFraction.h>
+#include <RooSimultaneous.h>
 #include <RooStats/HistFactory/FlexibleInterpVar.h>
 #include <RooStats/HistFactory/ParamHistFunc.h>
 #include <RooStats/HistFactory/PiecewiseInterpolation.h>
@@ -289,6 +290,49 @@ void codegenImpl(RooMultiPdf &arg, CodegenContext &ctx)
       ctx.addResult(&arg, expr);
       std::cout << "Ternary expression call used \n";
    }
+}
+
+void codegenImpl(RooSimultaneous &arg, CodegenContext &ctx)
+{
+   // A RooSimultaneous appears as a node in the compute graph only when its
+   // index category is not an observable (see the "switch mode" in
+   // RooSimultaneous::compileForNormSet()): its value is then the one of the
+   // component selected by the current category state, like for RooMultiPdf.
+   // With an observable index category, the likelihood is decomposed into
+   // per-channel terms and the RooSimultaneous itself is never translated.
+   if (arg.canBeExtended()) {
+      std::stringstream errorMsg;
+      errorMsg << "RooSimultaneous \"" << arg.GetName()
+               << "\" with extendable components and a non-observable index category can't be translated, because the "
+                  "scalar evaluation applies a relative yield weight that code generation does not implement yet.";
+      oocoutE(&arg, Minimization) << errorMsg.str() << std::endl;
+      throw std::runtime_error(errorMsg.str());
+   }
+   if (!arg.indexCat().isFundamental()) {
+      std::stringstream errorMsg;
+      errorMsg << "RooSimultaneous \"" << arg.GetName()
+               << "\" with a derived, non-observable index category can't be translated.";
+      oocoutE(&arg, Minimization) << errorMsg.str() << std::endl;
+      throw std::runtime_error(errorMsg.str());
+   }
+
+   std::string const &indexExpr = ctx.getResult(arg.indexCat());
+
+   // Nested ternary expression that selects the pdf matching the category
+   // state, keyed on the state index numbers.
+   std::string expr;
+   std::size_t numStates = 0;
+   for (auto const &nameIdx : arg.indexCat()) {
+      RooAbsPdf *pdf = arg.getPdf(nameIdx.first.c_str());
+      if (!pdf) {
+         continue;
+      }
+      expr += "(" + indexExpr + " == " + std::to_string(nameIdx.second) + " ? (" + ctx.getResult(*pdf) + ") : ";
+      ++numStates;
+   }
+   expr += "0.0" + std::string(numStates, ')');
+
+   ctx.addResult(&arg, expr);
 }
 
 // RooCategory index added.
