@@ -1284,6 +1284,19 @@ void prefixArgs(RooAbsArg *arg, std::string const &prefix, RooArgSet const &norm
 std::unique_ptr<RooAbsArg>
 RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
 {
+   RooArgSet catsAmongNormSet;
+   normSet.selectCommon(flattenedCatList(), catsAmongNormSet);
+   if (catsAmongNormSet.empty()) {
+      // The index category is not an observable here: the RooSimultaneous
+      // acts as a plain "switch" that evaluates to the component selected by
+      // the current index state, analogous to RooMultiPdf. The channel
+      // observables are then the same as the ones of this pdf, so the
+      // channel-splitting compilation below (which renames the per-channel
+      // observables so they can be filled from split datasets) must not be
+      // used. Compile like an ordinary self-normalized pdf instead.
+      return RooAbsPdf::compileForNormSet(normSet, ctx);
+   }
+
    std::unique_ptr<RooSimultaneous> newSimPdf{static_cast<RooSimultaneous *>(this->Clone())};
 
    const char *rangeName = this->getStringAttribute("RangeName");
