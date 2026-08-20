@@ -829,6 +829,63 @@ TEST(RooSimultaneous, AsymmetryPlot)
    }
 }
 
+/// A RooSimultaneous whose index category is not among the observables acts
+/// as a "switch" that evaluates to the component selected by the current
+/// index state, analogous to RooMultiPdf (see the discussion in GitHub issue
+/// #22916). The batch backends used to silently compute wrong values for such
+/// a pdf nested inside another model, because the compilation for the
+/// likelihood assumed that the dataset can be split by the index category.
+TEST(RooSimultaneous, ParameterIndexSwitchMode)
+{
+   using namespace RooFit;
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+   RooRandom::randomGenerator()->SetSeed(1337ul);
+
+   RooRealVar x("x", "x", 0, 50);
+   RooRealVar lam("lam", "lam", -0.04, -0.1, -0.01);
+   RooExponential expo("expo", "expo", x, lam);
+   RooRealVar c0("c0", "c0", -0.5, -1.0, 1.0);
+   RooRealVar c1("c1", "c1", 0.2, -1.0, 1.0);
+   RooChebychev cheb("cheb", "cheb", x, {c0, c1});
+
+   RooRealVar mean("mean", "mean", 25, 20, 30);
+   RooRealVar sigma("sigma", "sigma", 2, 0.5, 5);
+   RooGaussian gauss("gauss", "gauss", x, mean, sigma);
+   RooRealVar frac("frac", "frac", 0.8, 0.0, 1.0);
+
+   RooCategory cat("cat", "cat", {{"expo", 0}, {"cheb", 1}});
+   RooSimultaneous sim("sim", "sim", cat);
+   sim.addPdf(expo, "expo");
+   sim.addPdf(cheb, "cheb");
+   RooAddPdf model("model", "model", {sim, gauss}, frac);
+
+   // Reference models with the switch resolved by hand.
+   RooAddPdf refModel0("refModel0", "refModel0", {expo, gauss}, frac);
+   RooAddPdf refModel1("refModel1", "refModel1", {cheb, gauss}, frac);
+
+   std::unique_ptr<RooDataSet> data{refModel0.generate(x, 500)};
+
+   std::vector<RooFit::EvalBackend> backends;
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+   backends.push_back(RooFit::EvalBackend::Legacy());
+#endif
+   backends.push_back(RooFit::EvalBackend::Cpu());
+   backends.push_back(RooFit::EvalBackend::CodegenNoGrad());
+
+   for (auto &backend : backends) {
+      cat.setIndex(0);
+      std::unique_ptr<RooAbsReal> nll{model.createNLL(*data, backend)};
+      std::unique_ptr<RooAbsReal> refNll0{refModel0.createNLL(*data, backend)};
+      std::unique_ptr<RooAbsReal> refNll1{refModel1.createNLL(*data, backend)};
+
+      cat.setIndex(0);
+      EXPECT_THAT(nll->getVal(), RelativeNear(refNll0->getVal(), 1e-10)) << backend.name() << ", index 0";
+      cat.setIndex(1);
+      EXPECT_THAT(nll->getVal(), RelativeNear(refNll1->getVal(), 1e-10)) << backend.name() << ", index 1";
+   }
+}
+
 /// Regression test for a value-server link corruption: the index category is
 /// a value server of the RooSimultaneous via the index category proxy, and
 /// fixAddCoefNormalization() additionally stores it in the non-propagating
