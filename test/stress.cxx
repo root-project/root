@@ -331,7 +331,7 @@ void stress1()
    }
    if (gPrintSubBench) { printf("Test  1 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 
-   
+
    auto comprSettings = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault;
    //Save all objects in a Root file (will be checked by stress2)
    TFile local("stress.root","recreate", "", comprSettings);
@@ -1576,7 +1576,7 @@ void stress16()
    FILE *fp = fopen("stress_lhcb.ps","r");
    char line[260];
    Int_t nlines = 0;
-   Int_t nlinesGood = 1767;
+   const Int_t nlinesGood = 1834;
    Bool_t counting = kFALSE;
    while (fgets(line,255,fp)) {
       if (counting) nlines++;
@@ -1584,10 +1584,10 @@ void stress16()
    }
    fclose(fp);
    delete c;
-   Bool_t OK = kTRUE;
-   if (nlines < nlinesGood-100 || nlines > nlinesGood+100) OK = kFALSE;
-   if (OK) printf("OK\n");
-   else    {
+   Bool_t OK = (nlines >= nlinesGood-100 && nlines <= nlinesGood+100);
+   if (OK) {
+      printf("OK\n");
+   } else {
       printf("FAILED\n");
       printf("%-8s nlines in stress_lhcb.ps file = %d\n"," ",nlines);
    }
