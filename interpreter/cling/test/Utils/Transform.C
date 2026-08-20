@@ -184,6 +184,14 @@ namespace NS4 {
 }
 typedef NS4::Inner::ConcreteTypedef GlobalAlias;
 
+namespace NS5 {
+  class Track {};
+  template <typename T> class Container {
+  public:
+    typedef typename std::vector<T> seq_type;
+  };
+}
+
 .rawInput 0
 
 const cling::LookupHelper& lookup = gCling->getLookupHelper();
@@ -537,4 +545,10 @@ if (const clang::RecordDecl *rdecl = llvm::dyn_cast_or_null<clang::RecordDecl>(d
 QT = lookup.findType("const GlobalAlias&", diags);
 std::cout << Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str() << std::endl;
 // CHECK: NS4::Inner::TemplateClass<double> &
+
+// The elaborated type keyword ('typename' here) is part of the spelling of the
+// typedef target and must not survive the normalization.
+QT = lookup.findType("NS5::Container<NS5::Track>::seq_type", diags);
+std::cout << Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str() << std::endl;
+// CHECK: std::vector<NS5::Track>
 
