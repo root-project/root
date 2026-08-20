@@ -1,8 +1,8 @@
 // @(#)root/postscript:$Id$
-// Author: Olivier Couet
+// Author: Olivier Couet, Sergey Linev
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -16,6 +16,8 @@
 #include "TVirtualPS.h"
 
 class TPoints;
+
+#include <map>
 
 class TTeXDump : public TVirtualPS {
 
@@ -32,6 +34,11 @@ protected:
    Float_t      fCurrentAlpha = 1.;    ///< Current Alpha value
    Float_t      fLineScale = 0.;       ///< Line width scale factor
 
+   std::map<Style_t,bool> fMarkers;    ///< map of already defined markers
+
+   template<typename T>
+   void DrawPolyMarkerShape(Int_t n, T *xw, T *yw);
+
 public:
    TTeXDump();
    TTeXDump(const char *filename, Int_t type=-113);
@@ -42,7 +49,6 @@ public:
    void    CellArrayEnd() override;
    void    Close(Option_t *opt="") override;
    Int_t   CMtoTeX(Double_t u) { return Int_t(0.5 + 72*u/2.54); }
-   void    DefineMarkers();
    void    DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2) override;
    void    DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
                      Int_t mode, Int_t border, Int_t dark, Int_t light) override;
