@@ -74,7 +74,7 @@ echo "        ../../bindings/tpython/          \\" >> Doxyfile_INPUT
 echo "        ../../bindings/pyroot/           \\" >> Doxyfile_INPUT
 echo "        ../../bindings/pyroot/pythonizations/python/ROOT/_pythonization/          \\" >> Doxyfile_INPUT
 
-# echo "        ../../core/clib/                 \\" >> Doxyfile_INPUT
+# echo "        ../../builtins/clib/             \\" >> Doxyfile_INPUT
 # echo "        ../../core/lzma/                 \\" >> Doxyfile_INPUT
 # echo "        ../../core/newdelete/            \\" >> Doxyfile_INPUT
 # echo "        ../../core/textinput/            \\" >> Doxyfile_INPUT
