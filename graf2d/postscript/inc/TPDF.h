@@ -157,7 +157,7 @@ public:
    Double_t XtoPDF(Double_t x);
    Double_t YtoPDF(Double_t y);
 
-   ClassDefOverride(TPDF, 1); // PDF driver
+   ClassDefOverride(TPDF, 0); // PDF driver
 };
 
 #endif

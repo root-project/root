@@ -149,7 +149,7 @@ public:
    Int_t YtoPS(Double_t y);
    void  Zone();
 
-   ClassDefOverride(TPostScript,1)  //PostScript driver
+   ClassDefOverride(TPostScript,0)  //PostScript driver
 };
 
 #endif
