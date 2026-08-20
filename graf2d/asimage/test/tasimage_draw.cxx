@@ -37,7 +37,15 @@ void CheckFilledCircleStaysInside(const char *colour)
       EXPECT_EQ(argb[kCorners[i]], before[i]) << "the fill escaped the circle and reached corner " << i;
 
    EXPECT_NE(argb[centre], centreBefore) << "the circle was not filled at all";
+
+   // also check filling status
+   Int_t fillcnt = 0;
+   for (UInt_t i = 0; i < kPixels; i++)
+      if(argb[i] != before[0]) fillcnt++;
+
+   EXPECT_NEAR(fillcnt, 3.1415 * (kSize / 4 + 1) * (kSize / 4 + 1), kSize / 2 * 3.14) << "check number of filled circle points";
 }
+
 
 } // namespace
 
