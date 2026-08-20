@@ -672,15 +672,10 @@ jobs:
         EOS_PATH: /eos/project/r/root-eos/website/download
         EOS_ENDPOINT: root://eosproject-r.cern.ch
         KRB5CCNAME: /tmp/krb5cc
-      working-directory: ${{ env.WORKDIR }}
       run: |
-        echo +++ Content
         ls
-        echo +++ Retrieving the secret
         echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
-        echo +++ Creating the token
         kinit  -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
-        echo +++ Running the copy
         xrdcp --parallel 64 -rf Binaries*/root_v* ${EOS_ENDPOINT}/${EOS_PATH}/
 
 
