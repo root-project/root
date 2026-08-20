@@ -52,6 +52,10 @@ OBJ: TViewPubDataMembers	TViewPubDataMembers	 : 0
  OBJ: TDataMember	kShapeFilledArea	 : 0
  OBJ: TDataMember	kShapeSegments	 : 0
  OBJ: TDataMember	kShapeTriangles	 : 0
+ OBJ: TDataMember	kPreferTriangles	 : 0
+ OBJ: TDataMember	kDotAsLines	 : 0
+ OBJ: TDataMember	kDotAsCircle	 : 0
+ OBJ: TDataMember	kUsePSWidthScale	 : 0
  OBJ: TDataMember	fArray	[fN] Array of fN floats : 0
  OBJ: TDataMember	fN	Number of array elements : 0
 
