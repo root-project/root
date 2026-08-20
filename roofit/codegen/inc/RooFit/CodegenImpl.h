@@ -60,6 +60,7 @@ class RooRealSumFunc;
 class RooRealSumPdf;
 class RooRealVar;
 class RooRecursiveFraction;
+class RooSimultaneous;
 class RooUniform;
 class RooWrapperPdf;
 
@@ -126,6 +127,7 @@ void codegenImpl(RooRealSumFunc &arg, CodegenContext &ctx);
 void codegenImpl(RooRealSumPdf &arg, CodegenContext &ctx);
 void codegenImpl(RooRealVar &arg, CodegenContext &ctx);
 void codegenImpl(RooRecursiveFraction &arg, CodegenContext &ctx);
+void codegenImpl(RooSimultaneous &arg, CodegenContext &ctx);
 void codegenImpl(RooStats::HistFactory::FlexibleInterpVar &arg, CodegenContext &ctx);
 void codegenImpl(RooUniform &arg, CodegenContext &ctx);
 void codegenImpl(RooWrapperPdf &arg, CodegenContext &ctx);
