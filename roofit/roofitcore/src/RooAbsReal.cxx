@@ -662,9 +662,10 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntObj(const RooArgSet& iset2, c
   const char* cacheParamsStr = getStringAttribute("CACHEPARAMINT") ;
   if (cacheParamsStr && strlen(cacheParamsStr)) {
 
-    std::unique_ptr<RooArgSet> intParams{integral->getVariables()};
+    RooArgSet intParams;
+    integral->getParameters(nullptr, intParams);
 
-    RooArgSet cacheParams = RooHelpers::selectFromArgSet(*intParams, cacheParamsStr);
+    RooArgSet cacheParams = RooHelpers::selectFromArgSet(intParams, cacheParamsStr);
 
     if (!cacheParams.empty()) {
       cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams.size()
@@ -1176,7 +1177,8 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSe
 
 TH1* RooAbsReal::createHistogram(RooStringView varNameList, Int_t xbins, Int_t ybins, Int_t zbins) const
 {
-  std::unique_ptr<RooArgSet> vars{getVariables()};
+  RooArgSet vars;
+  getParameters(nullptr, vars);
 
   auto varNames = ROOT::Split(varNameList, ",:");
   std::vector<RooRealVar*> histVars(3, nullptr);
@@ -1189,10 +1191,10 @@ TH1* RooAbsReal::createHistogram(RooStringView varNameList, Int_t xbins, Int_t y
       coutE(Plotting) << errMsg.str() << std::endl;
       throw std::invalid_argument(errMsg.str());
     }
-    auto var = static_cast<RooRealVar*>(vars->find(varNames[iVar].c_str()));
+    auto var = static_cast<RooRealVar*>(vars.find(varNames[iVar].c_str()));
     if(!var) {
       std::stringstream errMsg;
-      errMsg << "RooAbsPdf::createHistogram(" << GetName() << ") ERROR variable " << varNames[iVar] << " does not exist in argset: " << *vars;
+      errMsg << "RooAbsPdf::createHistogram(" << GetName() << ") ERROR variable " << varNames[iVar] << " does not exist in argset: " << vars;
       coutE(Plotting) << errMsg.str() << std::endl;
       throw std::runtime_error(errMsg.str());
     }

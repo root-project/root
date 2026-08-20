@@ -32,7 +32,8 @@ public:
    // Always normalized because each pdf is normalized
    bool selfNormalized() const override { return true; }
 
-   void getParametersHook(const RooArgSet *nset, RooArgSet *list, bool stripDisconnected) const override;
+   void addParameters(RooAbsCollection &params, const RooArgSet *nset,
+                      RooFit::GetParametersPolicy const &policy) const override;
 
 protected:
    RooListProxy c;
