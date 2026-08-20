@@ -45,7 +45,7 @@ CMAKE_INSTALL_TUTDIR = "ROOT/tutorials"
 gminimal="ON"
 asimage="ON"
 opengl="OFF"
-runtime_cxxmodules="ON"
+runtime_cxxmodules="OFF"
 fail-on-missing="ON"
 
 # Prevent CMake from producing its own .dist-info metadata
