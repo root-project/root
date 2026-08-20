@@ -117,7 +117,13 @@ namespace textinput {
         // redirected, so only the output of the executed code follows the
         // redirection, as expected.
         fTTYOutputID = ::open("/dev/tty", O_WRONLY);
-        if (fTTYOutputID != -1)
+        // Only force tty-mode output when stdout is not a terminal itself, i.e.
+        // when it was already redirected at startup (e.g. "root | tee"). If
+        // stdout is a terminal, whether we drive it interactively is decided by
+        // IsInteractive() alone, as before: the mere existence of a controlling
+        // terminal says nothing about the terminal stdout points to, which may
+        // well be a pty we are not the foreground process group of.
+        if (fTTYOutputID != -1 && !::isatty(STDOUT_FILENO))
            SetIsTTY(true);
      }
 
@@ -149,9 +155,10 @@ namespace textinput {
   TerminalDisplayUnix::HandleResizeSignal() {
 #ifdef TIOCGWINSZ
     struct winsize sz;
-    // Query the terminal for its size: use the controlling terminal if we have
-    // it, as stdout may be redirected to a file (which has no window size).
-    int sizeFD = (fTTYOutputID != -1) ? fTTYOutputID : STDOUT_FILENO;
+    // Query the terminal we actually write to for its size. That is stdout
+    // whenever it is a terminal; only once it is redirected (e.g. to a file,
+    // which has no window size) fall back to the controlling terminal.
+    int sizeFD = ::isatty(STDOUT_FILENO) ? STDOUT_FILENO : (fTTYOutputID != -1 ? fTTYOutputID : STDOUT_FILENO);
     int ret = ioctl(sizeFD, TIOCGWINSZ, (char*)&sz);
     if (!ret && sz.ws_col) {
       SetWidth(sz.ws_col);
