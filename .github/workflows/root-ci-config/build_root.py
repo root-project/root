@@ -170,7 +170,7 @@ def main():
         show_node_state()
 
     if args.coverage and args.incremental:
-        # Delete all the .gcda files produces by an artefact.
+        # Delete all the .gcda files produced by an artifact.
         build_utils.remove_file_match_ext(WORKDIR, "gcda")
 
     build(options, args.buildtype)
