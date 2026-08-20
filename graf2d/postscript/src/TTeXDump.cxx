@@ -1,8 +1,8 @@
 // @(#)root/postscript:$Id$
-// Author: Olivier Couet
+// Author: Olivier Couet, Sergey Linev
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -21,6 +21,7 @@
 #include "TROOT.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
+#include "TPoint.h"
 #include "TPoints.h"
 #include "TTeXDump.h"
 #include "TStyle.h"
@@ -52,21 +53,25 @@ LaTeX document (`simple.tex`) in the following way:
 ~~~ {.cpp}
 \documentclass{article}
 \usepackage{tikz}
+\usepackage{changepage}
 \usetikzlibrary{patterns}
 \usetikzlibrary{plotmarks}
 \title{A simple LaTeX example}
-\date{July 2013}
+\date{August 2026}
 \begin{document}
 \maketitle
 The following image as been generated using the TTeXDump class:
 \par
+\begin{adjustwidth}{-4cm}{-4cm}
 \input{hpx.tex}
+\end{adjustwidth}
 \end{document}
 ~~~
 
-Note the three directives needed at the top of the LaTeX file:
+Note the four directives needed at the top of the LaTeX file:
 ~~~ {.cpp}
 \usepackage{tikz}
+\usepackage{changepage}
 \usetikzlibrary{patterns}
 \usetikzlibrary{plotmarks}
 ~~~
@@ -74,7 +79,7 @@ Note the three directives needed at the top of the LaTeX file:
 Then including the picture in the document is done with the
 `\input` directive.
 
- The command `pdflatex simple.tex` will generate the
+The command `pdflatex simple.tex` will generate the
 corresponding pdf file `simple.pdf`.
 */
 
@@ -383,9 +388,113 @@ void TTeXDump::DrawPolyLineNDC(Int_t, TPoints *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint PolyMarker
 
-void TTeXDump::DrawPolyMarker(Int_t, Float_t *, Float_t *)
+template<typename T>
+void TTeXDump::DrawPolyMarkerShape(Int_t n, T *xw, T *yw)
 {
-   Warning("DrawPolyMarker", "not yet implemented");
+   Int_t markerSize = 0;
+   std::vector<TPoint> points;
+   auto shape = GetMarkerShape(markerSize, points, 1., kDotAsCircle | kUsePSWidthScale);
+   if ((shape == kShapeDot) && (markerSize > 1))
+      shape = kShapeFilledCircle;
+   auto markerLineWidth = TAttMarker::GetMarkerLineWidth(GetMarkerStyle());
+   Bool_t do_fill = (shape == kShapeFilledCircle) || (shape == kShapeFilledArea) || (shape == kShapeTriangles);
+
+   TString name = TString::Format("root_marker%d", (Int_t) GetMarkerStyle());
+   if ((shape == kShapeDot) || (shape == kShapeFilledCircle)) {
+      name = "*";
+      fMarkers[GetMarkerStyle()] = true;
+   } else if (shape == kShapeCircle) {
+      name = "o";
+      fMarkers[GetMarkerStyle()] = true;
+   }
+   if (!fMarkers[GetMarkerStyle()]) {
+      // define marker once
+      fMarkers[GetMarkerStyle()] = true;
+      Int_t sz0 = 0;
+      // get shape for normal marker size to avoid rounding problems
+      TAttMarker(1, GetMarkerStyle(), GetMarkerSize() > 2 ? GetMarkerSize() : 2.).GetMarkerShape(sz0, points, 1., kDotAsCircle | kUsePSWidthScale);
+      // select coefficient so that relative movements are -1 .. 1
+      Float_t k = sz0 > 0 ? 2. / sz0 : 0.02;
+
+      PrintStr(TString::Format("@\\pgfdeclareplotmark{%s} {@", name.Data()));
+      switch(shape) {
+         case kShapePolyLine:
+         case kShapeFilledArea:
+            for (std::size_t i = 0; i < points.size(); i++)
+               PrintStr(TString::Format("\\pgfpath%s{\\pgfpoint{%4.2f\\pgfplotmarksize}{%4.2f\\pgfplotmarksize}}@",
+                        i == 0 ? "moveto" : "lineto", k * points[i].fX, -k * points[i].fY ));
+            PrintStr("\\pgfpathclose@");
+
+            if (shape == kShapePolyLine)
+               PrintStr("\\pgfusepathqstroke@");
+            else
+               PrintStr("\\pgfusepathqfillstroke@");
+            break;
+         case kShapeSegments:
+            for (std::size_t i = 0; i < points.size(); i++)
+               PrintStr(TString::Format("\\pgfpath%s{\\pgfpoint{%4.2f\\pgfplotmarksize}{%4.2f\\pgfplotmarksize}}@",
+                        i % 2 == 0 ? "moveto" : "lineto", k * points[i].fX, -k * points[i].fY ));
+            PrintStr("\\pgfpathclose@");
+            PrintStr("\\pgfusepathqstroke@");
+            break;
+         case kShapeTriangles:
+            for (std::size_t i = 0; i < points.size(); i++)
+               PrintStr(TString::Format("\\pgfpath%s{\\pgfpoint{%4.2f\\pgfplotmarksize}{%4.2f\\pgfplotmarksize}}@",
+                        i % 3 == 0 ? "moveto" : "lineto", k * points[i].fX, -k * points[i].fY ));
+            PrintStr("\\pgfpathclose@");
+            PrintStr("\\pgfusepathqfillstroke@");
+            break;
+         default:
+            // all other shapes handled already
+            break;
+      }
+      PrintStr("}@");
+   }
+
+   SetColor(GetMarkerColor());
+
+   PrintStr("@");
+   PrintStr("\\foreach \\P in {");
+
+   for (Int_t i = 0; i < n; i++) {
+      auto x = XtoTeX(xw[i]);
+      auto y = YtoTeX(yw[i]);
+      if (i == 0)
+         PrintFast(1, "(");
+      else
+         PrintFast(3, ", (");
+      WriteReal(x, kFALSE);
+      PrintFast(1, ",");
+      WriteReal(y, kFALSE);
+      PrintFast(1, ")");
+   }
+
+   PrintStr("}{\\draw[mark options={color=c");
+
+   if (do_fill)
+      PrintStr(",fill=c");
+
+   if (fCurrentAlpha != 1.) {
+      PrintStr(",opacity=");
+      WriteReal(fCurrentAlpha, kFALSE);
+   }
+
+   PrintStr(TString::Format("}, mark size=%4.2fpt", 0.3 * markerSize));
+   // intentionally default line width is 0, only large widths scale differently
+   if (!do_fill && (markerLineWidth > 0))
+      PrintStr(TString::Format(", line width=%4.2fpt", markerLineWidth > 1 ? 0.2 * gStyle->GetLineScalePS() * markerLineWidth : 0.));
+   PrintStr(", mark=");
+   PrintStr(name);
+   PrintStr("] plot coordinates {\\P};}");
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint PolyMarker
+
+void TTeXDump::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
+{
+   DrawPolyMarkerShape<Float_t>(n, xw, yw);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -393,111 +502,7 @@ void TTeXDump::DrawPolyMarker(Int_t, Float_t *, Float_t *)
 
 void TTeXDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 {
-   SetColor(GetMarkerColor());
-
-   PrintStr("@");
-   PrintStr("\\foreach \\P in {");
-
-   Float_t x = XtoTeX(xw[0]);
-   Float_t y = YtoTeX(yw[0]);
-
-   PrintStr("(");
-   WriteReal(x, kFALSE);
-   PrintFast(1,",");
-   WriteReal(y, kFALSE);
-   PrintStr(")");
-
-   for (Int_t i = 1; i < n; i++) {
-      x = XtoTeX(xw[i]);
-      y = YtoTeX(yw[i]);
-      PrintFast(3,", (");
-      WriteReal(x, kFALSE);
-      PrintFast(1,",");
-      WriteReal(y, kFALSE);
-      PrintFast(1,")");
-   }
-
-   PrintStr("}{\\draw[mark options={color=c,fill=c");
-
-   if (fCurrentAlpha != 1.) {
-      PrintStr(",opacity=");
-      WriteReal(fCurrentAlpha, kFALSE);
-   }
-
-   auto markerStyle = TAttMarker::GetMarkerStyleBase(GetMarkerStyle());
-   auto markerLineWidth = TAttMarker::GetMarkerLineWidth(GetMarkerStyle());
-
-   if (markerStyle == kFullTriangleDown || markerStyle == kOpenTriangleDown)
-      PrintStr(",rotate=180");
-
-   PrintStr(TString::Format("},mark size=%fpt", 8./3.33*(GetMarkerSize() - TMath::Floor(markerLineWidth/2.)/4.)));
-   PrintStr(TString::Format(", line width=%fpt", 4./3.33*TMath::Floor(markerLineWidth/2.)));
-   PrintStr(", mark=");
-
-   switch (markerStyle) {
-   case kDot :
-      PrintStr("*");
-      PrintStr(",mark size=1pt");
-      break;
-   case kPlus :
-      PrintStr("+");
-      break;
-   case kStar :
-      PrintStr("asterisk");
-      break;
-   case kCircle :
-      PrintStr("o");
-      break;
-   case kMultiply :
-      PrintStr("x");
-      break;
-   case kFullCircle :
-      PrintStr("*");
-      break;
-   case kFullSquare :
-      PrintStr("square*");
-      break;
-   case kFullTriangleUp :
-      PrintStr("triangle*");
-      break;
-   case kFullTriangleDown :
-      PrintStr("triangle*");
-      break;
-   case kOpenCircle :
-      PrintStr("o");
-      break;
-   case kOpenSquare :
-      PrintStr("square");
-      break;
-   case kOpenTriangleUp :
-      PrintStr("triangle");
-      break;
-   case kOpenDiamond :
-      PrintStr("diamond");
-      break;
-   case kOpenCross :
-      PrintStr("cross");
-      break;
-   case kFullStar :
-      PrintStr("newstar*");
-      break;
-   case kOpenStar :
-      PrintStr("newstar");
-      break;
-   case kStar2 :
-      PrintStr("10-pointed star");
-      break;
-   case kOpenTriangleDown :
-      PrintStr("triangle");
-      break;
-   case kFullDiamond :
-      PrintStr("diamond*");
-      break;
-   case kFullCross :
-      PrintStr("cross*");
-      break;
-   }
-   PrintStr("] plot coordinates {\\P};}");
+   DrawPolyMarkerShape<Double_t>(n, xw, yw);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -645,7 +650,6 @@ void TTeXDump::NewPage()
       PrintStr("\\def\\CheckTikzLibraryLoaded#1{ \\ifcsname tikz@library@#1@loaded\\endcsname \\else \\PackageWarning{tikz}{usetikzlibrary{#1} is missing in the preamble.} \\fi }@");
       PrintStr("\\CheckTikzLibraryLoaded{patterns}@");
       PrintStr("\\CheckTikzLibraryLoaded{plotmarks}@");
-      DefineMarkers();
       fBoundingBox = kTRUE;
    }
 }
@@ -919,78 +923,4 @@ void TTeXDump::CellArrayEnd()
 void TTeXDump::DrawPS(Int_t, Float_t *, Float_t *)
 {
    Warning("DrawPS", "not yet implemented");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// add additional pgfplotmarks
-
-void TTeXDump::DefineMarkers()
-{
-  // open cross
-  PrintStr("\\pgfdeclareplotmark{cross} {@");
-  PrintStr("\\pgfpathmoveto{\\pgfpoint{-0.3\\pgfplotmarksize}{\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{+0.3\\pgfplotmarksize}{\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{+0.3\\pgfplotmarksize}{0.3\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{+1\\pgfplotmarksize}{0.3\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{+1\\pgfplotmarksize}{-0.3\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{+0.3\\pgfplotmarksize}{-0.3\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{+0.3\\pgfplotmarksize}{-1.\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{-0.3\\pgfplotmarksize}{-1.\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{-0.3\\pgfplotmarksize}{-0.3\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{-1.\\pgfplotmarksize}{-0.3\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{-1.\\pgfplotmarksize}{0.3\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{-0.3\\pgfplotmarksize}{0.3\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathclose@");
-  PrintStr("\\pgfusepathqstroke@");
-  PrintStr("}@");
-
-  // filled cross
-  PrintStr("\\pgfdeclareplotmark{cross*} {@");
-  PrintStr("\\pgfpathmoveto{\\pgfpoint{-0.3\\pgfplotmarksize}{\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{+0.3\\pgfplotmarksize}{\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{+0.3\\pgfplotmarksize}{0.3\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{+1\\pgfplotmarksize}{0.3\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{+1\\pgfplotmarksize}{-0.3\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{+0.3\\pgfplotmarksize}{-0.3\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{+0.3\\pgfplotmarksize}{-1.\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{-0.3\\pgfplotmarksize}{-1.\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{-0.3\\pgfplotmarksize}{-0.3\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{-1.\\pgfplotmarksize}{-0.3\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{-1.\\pgfplotmarksize}{0.3\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfpoint{-0.3\\pgfplotmarksize}{0.3\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathclose@");
-  PrintStr("\\pgfusepathqfillstroke@");
-  PrintStr("}@");
-
-  // open star
-  PrintStr("\\pgfdeclareplotmark{newstar} {@");
-  PrintStr("\\pgfpathmoveto{\\pgfqpoint{0pt}{\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{44}{0.5\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{18}{\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{-20}{0.5\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{-54}{\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{-90}{0.5\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{234}{\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{198}{0.5\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{162}{\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{134}{0.5\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathclose@");
-  PrintStr("\\pgfusepathqstroke@");
-  PrintStr("}@");
-
-  // filled star
-  PrintStr("\\pgfdeclareplotmark{newstar*} {@");
-  PrintStr("\\pgfpathmoveto{\\pgfqpoint{0pt}{\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{44}{0.5\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{18}{\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{-20}{0.5\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{-54}{\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{-90}{0.5\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{234}{\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{198}{0.5\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{162}{\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathlineto{\\pgfqpointpolar{134}{0.5\\pgfplotmarksize}}@");
-  PrintStr("\\pgfpathclose@");
-  PrintStr("\\pgfusepathqfillstroke@");
-  PrintStr("}@");
 }
