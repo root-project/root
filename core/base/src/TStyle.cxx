@@ -567,6 +567,7 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fCanvasDefW       = fCanvasDefW;
    ((TStyle&)obj).fCanvasDefX       = fCanvasDefX;
    ((TStyle&)obj).fCanvasDefY       = fCanvasDefY;
+   ((TStyle&)obj).fCanvasSizeIsDrawingArea = fCanvasSizeIsDrawingArea;
    ((TStyle&)obj).fPadColor         = fPadColor;
    ((TStyle&)obj).fPadBorderSize    = fPadBorderSize;
    ((TStyle&)obj).fPadBorderMode    = fPadBorderMode;
@@ -713,6 +714,7 @@ void TStyle::Reset(Option_t *opt)
    fCanvasDefW     = 700;
    fCanvasDefX     = 10;
    fCanvasDefY     = 10;
+   fCanvasSizeIsDrawingArea = kFALSE;
    fPadColor       = fCanvasColor;
    fPadBorderSize  = fCanvasBorderSize;
    fPadBorderMode  = fCanvasBorderMode;
@@ -2149,6 +2151,7 @@ void TStyle::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out << prefix << "SetCanvasDefW(" << GetCanvasDefW() << ");\n";
    out << prefix << "SetCanvasDefX(" << GetCanvasDefX() << ");\n";
    out << prefix << "SetCanvasDefY(" << GetCanvasDefY() << ");\n";
+   out << prefix << "SetCanvasSizeIsDrawingArea(" << GetCanvasSizeIsDrawingArea() << ");\n";
    out << prefix << "SetPadColor(" << TColor::SavePrimitiveColor(GetPadColor()) << ");\n";
    out << prefix << "SetPadBorderSize(" << GetPadBorderSize() << ");\n";
    out << prefix << "SetPadBorderMode(" << GetPadBorderMode() << ");\n";
