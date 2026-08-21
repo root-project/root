@@ -18,6 +18,8 @@
 #include "TAttMarker.h"
 #include "TAttText.h"
 
+class TTFhandle;
+
 class TPadPainterBase : public TVirtualPadPainter {
 protected:
    TAttFill   fAttFill;   ///< current fill attributes
@@ -28,6 +30,8 @@ protected:
 
    TAttFill   GetAttFillInternal(Bool_t with_transparency);
    virtual Double_t GetTTFScale() const { return 1.; }
+
+   Bool_t RenderTTF(Int_t x, Int_t y, TTFhandle &ttf, ETextMode mode);
 
 public:
 
@@ -106,11 +110,19 @@ public:
          att.Copy(fAttText);
    }
 
+   virtual void DrawTTFglyphs(Int_t x, Int_t y, TTFhandle &ttf, ETextMode mode);
+
    void GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const char *mess) override;
    void GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const wchar_t *mess) override;
    void GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a, UInt_t &d, const char *mess) override;
    void GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a, UInt_t &d, const wchar_t *mess) override;
    UInt_t GetTextAdvance(Font_t font, Double_t size, const char *text, Bool_t kern) override;
+
+   void DrawText(Double_t x, Double_t y, const char *text, ETextMode mode) override;
+   void DrawText(Double_t x, Double_t y, const wchar_t *text, ETextMode mode) override;
+   void DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode mode) override;
+   void DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, ETextMode mode) override;
+   void DrawTextUrl(Double_t x, Double_t y, const char *text, const char *url) override;
 
    ClassDefOverride(TPadPainterBase, 0)//Pad painter with attributes handling
 };
