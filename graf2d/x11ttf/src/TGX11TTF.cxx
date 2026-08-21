@@ -358,7 +358,7 @@ void TGX11TTF::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angl
    GetWindowSize(cws, xy, xy, width, height);
 
    // If string falls outside window, there is probably no need to draw it.
-   if (x + w <= 0 || x >= (Int_t)width || y + h <= 0 || y >= (Int_t)height)
+   if (x1 + w <= 0 || x1 >= (Int_t)width || y1 + h <= 0 || y1 >= (Int_t)height)
       return;
 
    // If w or h are much larger than the window size, there is probably no need
