@@ -14,11 +14,39 @@
 
 #include <ROOT/RNTupleMetrics.hxx>
 
+#include <ROOT/RConfig.hxx>
+#include <ROOT/RField.hxx>
+#include <ROOT/RLogger.hxx>
+#include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleUtils.hxx>
+#include <ROOT/RNTupleWriter.hxx>
+
+#include <TFile.h>
+#include <TFileMerger.h>
+#include <TMemFile.h>
 #include <TSystem.h>
 
+#include <cstdint>
+#include <mutex>
 #include <ostream>
+#include <vector>
 
-#include <iostream>
+namespace {
+
+std::mutex &GetMetricsExportMutex()
+{
+   static std::mutex mutex;
+   return mutex;
+}
+
+thread_local bool gSuppressMetricsExport = false;
+
+struct RSuppressMetaMetrics {
+   RSuppressMetaMetrics() { gSuppressMetricsExport = true; }
+   ~RSuppressMetaMetrics() { gSuppressMetricsExport = false; }
+};
+
+} // anonymous namespace
 
 ROOT::Experimental::Detail::RNTuplePerfCounter::~RNTuplePerfCounter()
 {
@@ -93,12 +121,95 @@ void ROOT::Experimental::Detail::RNTupleMetrics::ObserveMetrics(RNTupleMetrics &
    fObservedMetrics.push_back(&observee);
 }
 
-const std::string &ROOT::Experimental::Detail::RNTupleMetrics::GetMetricsExportPath()
+std::string ROOT::Experimental::Detail::RNTupleMetrics::GetMetricsExportPath()
 {
-   static const std::string path = []() -> std::string {
-      if (const char *env = gSystem->Getenv("ROOT_EXPORT_RNTUPLE_METRICS"); env && *env)
-         return env;
-      return "";
-   }();
-   return path;
+   if (gSuppressMetricsExport)
+      return {};
+
+   if (const char *env = gSystem->Getenv("ROOT_EXPERIMENTAL_EXPORT_RNTUPLE_METRICS"); env && *env)
+      return env;
+
+   return {};
+}
+
+ROOT::Experimental::Detail::RNTupleMetrics::~RNTupleMetrics()
+{
+   if (R__unlikely(fHasAttemptedToExport)) {
+      R__LOG_INFO(ROOT::Internal::NTupleLog()) << "metrics export was already attempted: not retrying";
+      return;
+   }
+
+   if (!fIsEnabled) {
+      R__LOG_INFO(ROOT::Internal::NTupleLog()) << "metrics disabled";
+      return;
+   }
+
+   if (fNTupleName.empty()) {
+      R__LOG_INFO(ROOT::Internal::NTupleLog()) << "no ntuple name set";
+      return;
+   }
+
+   ExportToRootFile();
+
+   fHasAttemptedToExport = true;
+}
+
+void ROOT::Experimental::Detail::RNTupleMetrics::CollectCounters(
+   std::vector<std::pair<std::string, const RNTuplePerfCounter *>> &counters) const
+{
+   for (const auto &counter : fCounters)
+      counters.emplace_back(fName, counter.get());
+   for (const auto *observed : fObservedMetrics)
+      observed->CollectCounters(counters);
+}
+
+void ROOT::Experimental::Detail::RNTupleMetrics::ExportToRootFile()
+{
+   if (fExportPath.empty()) {
+      R__LOG_INFO(ROOT::Internal::NTupleLog()) << "no export path set";
+      return;
+   }
+
+   std::vector<std::pair<std::string, const RNTuplePerfCounter *>> counters;
+   CollectCounters(counters);
+
+   if (R__unlikely(counters.empty())) {
+      R__LOG_INFO(ROOT::Internal::NTupleLog()) << "no counters to export for '" << fNTupleName << "'";
+      return;
+   }
+
+   // Avoid inifinite recursion (an RNTupleWriter is created to print the metrics)
+   RSuppressMetaMetrics suppressGuard;
+
+   auto model = ROOT::RNTupleModel::Create();
+   for (const auto &[componentName, counter] : counters) {
+      const std::string fieldName = componentName + "_" + counter->GetName();
+      if (const auto *calc = dynamic_cast<const RNTupleCalcPerf *>(counter))
+         *model->MakeField<double>(fieldName) = calc->GetValue();
+      else
+         *model->MakeField<std::int64_t>(fieldName) = counter->GetValueAsInt();
+   }
+
+   TMemFile memoryFile(fNTupleName.c_str(), "RECREATE");
+   {
+      auto writer = ROOT::RNTupleWriter::Append(std::move(model), fNTupleName, memoryFile);
+      writer->Fill();
+      writer->CommitDataset();
+   }
+
+   std::lock_guard<std::mutex> lock(GetMetricsExportMutex());
+
+   TFileMerger merger;
+   merger.SetMergeOptions(std::string_view("rntuple.MergingMode=Union"));
+
+   if (!merger.OutputFile(fExportPath.c_str(), "UPDATE")) {
+      R__LOG_ERROR(ROOT::Internal::NTupleLog()) << "cannot open metrics export file '" << fExportPath << "'";
+      return;
+   }
+
+   if (!merger.AddFile(&memoryFile) || !merger.PartialMerge(TFileMerger::kAll | TFileMerger::kIncremental)) {
+      R__LOG_ERROR(ROOT::Internal::NTupleLog())
+         << "cannot merge metrics for '" << fNTupleName << "' into '" << fExportPath << "'";
+      return;
+   }
 }

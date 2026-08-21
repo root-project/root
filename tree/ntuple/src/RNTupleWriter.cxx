@@ -37,7 +37,7 @@ static bool IsReservedRNTupleAttrSetName(std::string_view name)
 
 ROOT::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model,
                                    std::unique_ptr<ROOT::Internal::RPageSink> sink)
-   : fFillContext(std::move(model), std::move(sink)), fMetrics("RNTupleWriter")
+   : fFillContext(std::move(model), std::move(sink)), fMetrics("RNTupleWriter", fFillContext.fSink->GetNTupleName())
 {
 #ifdef R__USE_IMT
    if (IsImplicitMTEnabled() &&

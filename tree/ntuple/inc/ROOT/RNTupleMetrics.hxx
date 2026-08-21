@@ -283,8 +283,8 @@ using RNTupleAtomicTimer = RNTupleTimer<RNTupleAtomicCounter, RNTupleTickCounter
 
 The class owns the counters.
 
-If the environment variable `ROOT_EXPORT_RNTUPLE_METRICS` is set, metrics are automatically enabled on
-construction, and any counter added afterwards through MakeCounter() is enabled as well.
+If the environment variable `ROOT_EXPERIMENTAL_EXPORT_RNTUPLE_METRICS` is set, metrics are automatically enabled
+on construction, and any counter added afterwards through MakeCounter() is enabled as well.
 */
 // clang-format on
 class RNTupleMetrics {
@@ -295,22 +295,28 @@ private:
    std::vector<std::unique_ptr<RNTuplePerfCounter>> fCounters;
    std::vector<RNTupleMetrics *> fObservedMetrics;
    std::string fName;
+   std::string fNTupleName;
+   std::string fExportPath;
    bool fIsEnabled = false;
+   bool fHasAttemptedToExport = false;
 
    bool Contains(const std::string &name) const;
+   void CollectCounters(std::vector<std::pair<std::string, const RNTuplePerfCounter *>> &counters) const;
+   void ExportToRootFile();
 
 public:
-   explicit RNTupleMetrics(const std::string &name) : fName(name)
+   explicit RNTupleMetrics(const std::string &name) : RNTupleMetrics(name, "") {}
+   RNTupleMetrics(const std::string &name, const std::string &ntupleName)
+      : fName(name), fNTupleName(ntupleName), fExportPath(GetMetricsExportPath())
    {
-      // TODO: Use the value of `GetMetricsExportPath` to save the contents of the metrics in a `.root` file
-      if (!GetMetricsExportPath().empty())
+      if (!fExportPath.empty())
          Enable();
    }
    RNTupleMetrics(const RNTupleMetrics &other) = delete;
    RNTupleMetrics & operator=(const RNTupleMetrics &other) = delete;
    RNTupleMetrics(RNTupleMetrics &&other) = default;
    RNTupleMetrics & operator=(RNTupleMetrics &&other) = default;
-   ~RNTupleMetrics() = default;
+   ~RNTupleMetrics();
 
    // TODO(jblomer): return a reference
    template <typename CounterPtrT, class... Args>
@@ -332,7 +338,7 @@ public:
    const RNTuplePerfCounter *GetCounter(std::string_view name) const;
 
    void ObserveMetrics(RNTupleMetrics &observee);
-   static const std::string &GetMetricsExportPath();
+   static std::string GetMetricsExportPath();
 
    void Print(std::ostream &output, const std::string &prefix = "") const;
    void Enable();
