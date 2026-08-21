@@ -70,8 +70,6 @@ Implement TVirtualPadPainter which abstracts painting operations.
 
 TPadPainter::TPadPainter()
 {
-   fDoubleBuffer = 1;
-   fWinContext = (WinContext_t) 0;
 }
 
 /*
