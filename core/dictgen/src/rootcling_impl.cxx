@@ -1193,9 +1193,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
 
    dictStream << "   namespace ROOTDict {" << std::endl;
 
-#if !defined(R__AIX)
    dictStream << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();" << std::endl;
-#endif
 
    if (!Namespace__HasMethod(cl, "Dictionary", interp))
       dictStream << "      static TClass *" << mappedname.c_str() << "_Dictionary();" << std::endl;
@@ -1203,13 +1201,8 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
 
               << "      // Function generating the singleton type initializer" << std::endl
 
-#if !defined(R__AIX)
               << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance()" << std::endl
               << "      {" << std::endl
-#else
-              << "      ::ROOT::TGenericClassInfo *GenerateInitInstance()" << std::endl
-              << "      {" << std::endl
-#endif
 
               << "         static ::ROOT::TGenericClassInfo " << std::endl
 
