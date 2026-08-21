@@ -915,3 +915,51 @@ TEST(RooSimultaneous, RepeatedFixAddCoefNormalization)
       EXPECT_TRUE(observables.find(sample)) << "after fixAddCoefNormalization() call " << i + 1;
    }
 }
+
+/// A "switch"-mode RooSimultaneous (see the ParameterIndexSwitchMode test
+/// above) must also work as the top-level pdf of a fit: creating the NLL used
+/// to fail on all backends, because the fitting infrastructure unconditionally
+/// tried to split the dataset by the index category. Now the index category is
+/// treated as a parameter of the fit if it is not among the data columns,
+/// making the RooSimultaneous usable in place of RooMultiPdf for the discrete
+/// profiling method.
+TEST(RooSimultaneous, ParameterIndexTopLevelNLL)
+{
+   using namespace RooFit;
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+   RooRandom::randomGenerator()->SetSeed(1337ul);
+
+   RooRealVar x("x", "x", 0, 50);
+   RooRealVar lam("lam", "lam", -0.04, -0.1, -0.01);
+   RooExponential expo("expo", "expo", x, lam);
+   RooRealVar c0("c0", "c0", -0.5, -1.0, 1.0);
+   RooRealVar c1("c1", "c1", 0.2, -1.0, 1.0);
+   RooChebychev cheb("cheb", "cheb", x, {c0, c1});
+
+   RooCategory cat("cat", "cat", {{"expo", 0}, {"cheb", 1}});
+   RooSimultaneous sim("sim", "sim", cat);
+   sim.addPdf(expo, "expo");
+   sim.addPdf(cheb, "cheb");
+
+   std::unique_ptr<RooDataSet> data{expo.generate(x, 500)};
+
+   std::vector<RooFit::EvalBackend> backends;
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+   backends.push_back(RooFit::EvalBackend::Legacy());
+#endif
+   backends.push_back(RooFit::EvalBackend::Cpu());
+   backends.push_back(RooFit::EvalBackend::CodegenNoGrad());
+
+   for (auto &backend : backends) {
+      cat.setIndex(0);
+      std::unique_ptr<RooAbsReal> nll{sim.createNLL(*data, backend)};
+      std::unique_ptr<RooAbsReal> refNll0{expo.createNLL(*data, backend)};
+      std::unique_ptr<RooAbsReal> refNll1{cheb.createNLL(*data, backend)};
+
+      cat.setIndex(0);
+      EXPECT_THAT(nll->getVal(), RelativeNear(refNll0->getVal(), 1e-10)) << backend.name() << ", index 0";
+      cat.setIndex(1);
+      EXPECT_THAT(nll->getVal(), RelativeNear(refNll1->getVal(), 1e-10)) << backend.name() << ", index 1";
+   }
+}

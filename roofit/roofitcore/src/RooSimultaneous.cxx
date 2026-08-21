@@ -1250,6 +1250,22 @@ RooArgSet const& RooSimultaneous::flattenedCatList() const
    return *_indexCatSet;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the index category is among the variables `vars`, matching by
+/// name. For a RooSuperCategory index, any of its input categories counts.
+///
+/// If the index category is not among the observables of a fit, this
+/// RooSimultaneous does not split the data into channels: it acts as a
+/// "switch" that evaluates to the component selected by the current index
+/// state, analogous to RooMultiPdf. Fitting infrastructure uses this check to
+/// decide between the two modes.
+bool RooSimultaneous::indexCatIsObservable(RooArgSet const &vars) const
+{
+   RooArgSet catsAmongVars;
+   vars.selectCommon(flattenedCatList(), catsAmongVars);
+   return !catsAmongVars.empty();
+}
+
 namespace {
 
 void markObs(RooAbsArg *arg, std::string const &prefix, RooArgSet const &normSet)
@@ -1284,9 +1300,7 @@ void prefixArgs(RooAbsArg *arg, std::string const &prefix, RooArgSet const &norm
 std::unique_ptr<RooAbsArg>
 RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
 {
-   RooArgSet catsAmongNormSet;
-   normSet.selectCommon(flattenedCatList(), catsAmongNormSet);
-   if (catsAmongNormSet.empty()) {
+   if (!indexCatIsObservable(normSet)) {
       // The index category is not an observable here: the RooSimultaneous
       // acts as a plain "switch" that evaluates to the component selected by
       // the current index state, analogous to RooMultiPdf. The channel

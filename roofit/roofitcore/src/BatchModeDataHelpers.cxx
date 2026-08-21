@@ -236,6 +236,14 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string c
                                            RooSimultaneous const *simPdf, bool skipZeroWeights,
                                            bool takeGlobalObservablesFromData, std::stack<std::vector<double>> &buffers)
 {
+   // If the index category is not among the data columns, the RooSimultaneous
+   // doesn't split the data into channels but acts as a "switch" selecting the
+   // component given by the current index state (analogous to RooMultiPdf).
+   // The data is then loaded like for any ordinary pdf.
+   if (simPdf && !simPdf->indexCatIsObservable(*data.get())) {
+      simPdf = nullptr;
+   }
+
    std::vector<std::pair<std::string, RooAbsData const *>> datasets;
    std::vector<bool> isBinnedL;
    bool splitRange = false;
