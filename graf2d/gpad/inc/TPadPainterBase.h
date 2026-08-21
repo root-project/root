@@ -18,8 +18,13 @@
 #include "TAttMarker.h"
 #include "TAttText.h"
 
+class TTFhandle;
+
 class TPadPainterBase : public TVirtualPadPainter {
 protected:
+   WinContext_t   fWinContext = (WinContext_t) 0;
+   TVirtualPad   *fPad = nullptr;
+
    TAttFill   fAttFill;   ///< current fill attributes
    TAttLine   fAttLine;   ///< current line attributes
    TAttMarker fAttMarker; ///< current marker attributes
@@ -28,6 +33,8 @@ protected:
 
    TAttFill   GetAttFillInternal(Bool_t with_transparency);
    virtual Double_t GetTTFScale() const { return 1.; }
+
+   void RenderTTF(Int_t x, Int_t y, TTFhandle &ttf, ETextMode mode);
 
 public:
 
@@ -77,6 +84,9 @@ public:
 
   /// _____________________________________________________________________
 
+   void     OnPad(TVirtualPad *pad) override { fPad = pad; }
+
+
    const TAttFill    &GetAttFill() const override { return fAttFill; }
    const TAttLine    &GetAttLine() const override { return fAttLine; }
    const TAttMarker  &GetAttMarker()const override { return fAttMarker; }
@@ -106,11 +116,18 @@ public:
          att.Copy(fAttText);
    }
 
+   virtual void DrawTTFglyphs(Int_t x, Int_t y, TTFhandle &ttf, ETextMode mode);
+
    void GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const char *mess) override;
    void GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const wchar_t *mess) override;
    void GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a, UInt_t &d, const char *mess) override;
    void GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a, UInt_t &d, const wchar_t *mess) override;
    UInt_t GetTextAdvance(Font_t font, Double_t size, const char *text, Bool_t kern) override;
+
+   void DrawText(Double_t x, Double_t y, const char *text, ETextMode mode) override;
+   void DrawText(Double_t x, Double_t y, const wchar_t *text, ETextMode mode) override;
+   void DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode mode) override;
+   void DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, ETextMode mode) override;
 
    ClassDefOverride(TPadPainterBase, 0)//Pad painter with attributes handling
 };
