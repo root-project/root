@@ -76,6 +76,102 @@ TEST(RNTupleAttributes, AttributeSetDuplicateName)
 TEST(RNTupleAttributes, BasicReadingWriting)
 {
    FileRaii fileGuard("ntuple_attr_basic_readwriting.root");
+   fileGuard.PreserveFile();
+
+   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
+   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
+
+   /// Writing
+   {
+      auto model = RNTupleModel::Create();
+      auto pInt = model->MakeField<int>("int");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+
+      auto attrModel = RNTupleModel::Create();
+      auto pAttr = attrModel->MakeField<std::string>("attr");
+      auto attrSetWriter = writer->CreateAttributeSet(std::move(attrModel), "AttrSet1");
+
+      auto attrRange = attrSetWriter->BeginRange();
+      *pAttr = "My Attribute";
+      for (int i = 0; i < 100; ++i) {
+         *pInt = i;
+         writer->Fill();
+      }
+      attrSetWriter->CommitRange(std::move(attrRange));
+      writer.reset();
+
+      // Cannot create new ranges after closing the main writer
+      EXPECT_THROW((attrRange = attrSetWriter->BeginRange()), ROOT::RException);
+   }
+
+   // Cannot directly fetch the attribute RNTuple from the TFile
+   {
+      auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+      auto ntuple = tfile->Get<ROOT::RNTuple>("AttrSet1");
+      EXPECT_EQ(ntuple, nullptr);
+   }
+
+   /// Reading
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(reader->GetDescriptor().GetNAttributeSets(), 1);
+   for (const auto &attrSetIt : reader->GetDescriptor().GetAttrSetIterable()) {
+      EXPECT_EQ(attrSetIt.GetName(), "AttrSet1");
+   }
+
+   auto attrSetReader = reader->OpenAttributeSet("AttrSet1");
+   EXPECT_EQ(attrSetReader->GetNEntries(), 1);
+   auto pAttr = attrSetReader->GetModel().GetDefaultEntry().GetPtr<std::string>("attr");
+   {
+      int nAttrs = 0;
+      // iterate all attributes
+      for (auto idx : attrSetReader->GetAttributes()) {
+         attrSetReader->LoadEntry(idx);
+         EXPECT_EQ(*pAttr, "My Attribute");
+         nAttrs += 1;
+      }
+      EXPECT_EQ(nAttrs, 1);
+   }
+   {
+      int nAttrs = 0;
+      // attributes containing entry 99
+      for (auto idx : attrSetReader->GetAttributes(99)) {
+         attrSetReader->LoadEntry(idx);
+         EXPECT_EQ(*pAttr, "My Attribute");
+         nAttrs += 1;
+      }
+      EXPECT_EQ(nAttrs, 1);
+   }
+   {
+      // attributes containing entry 100 (no entry)
+      auto iter = attrSetReader->GetAttributes(100);
+      EXPECT_EQ(iter.begin(), iter.end());
+   }
+   {
+      // attributes contained in entry range 50-200 (no entry)
+      auto iter = attrSetReader->GetAttributesInRange(50, 200);
+      EXPECT_EQ(iter.begin(), iter.end());
+   }
+   {
+      int nAttrs = 0;
+      // attributes contained in entry range 0-1000
+      for (auto idx : attrSetReader->GetAttributesInRange(0, 1000)) {
+         attrSetReader->LoadEntry(idx);
+         EXPECT_EQ(*pAttr, "My Attribute");
+         nAttrs += 1;
+      }
+      EXPECT_EQ(nAttrs, 1);
+   }
+   {
+      // attributes containing entry range 200-300 (no entry)
+      auto iter = attrSetReader->GetAttributesContainingRange(200, 300);
+      EXPECT_EQ(iter.begin(), iter.end());
+   }
+}
+
+TEST(RNTupleAttributes, BasicReadingWritingTFile)
+{
+   FileRaii fileGuard("ntuple_attr_basic_readwriting_tfile.root");
+   fileGuard.PreserveFile();
 
    ROOT::TestSupport::CheckDiagsRAII diagsRaii;
    diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
@@ -363,6 +459,154 @@ TEST(RNTupleAttributes, MultipleSets)
    {
       auto model = RNTupleModel::Create();
       auto pInt = model->MakeField<int>("int");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      auto attrModel1 = RNTupleModel::Create();
+      auto pInt1 = attrModel1->MakeField<int>("int");
+      auto attrSet1 = writer->CreateAttributeSet(std::move(attrModel1), "MyAttrSet1");
+
+      auto attrModel2 = RNTupleModel::Create();
+      auto pString2 = attrModel2->MakeField<std::string>("string");
+      auto attrOpts2 = ROOT::RNTupleWriteOptions();
+      attrOpts2.SetCompression(404);
+      auto attrSet2 = writer->CreateAttributeSet(std::move(attrModel2), "MyAttrSet2", &attrOpts2);
+
+      auto attrRange2 = attrSet2->BeginRange();
+      for (int i = 0; i < 100; ++i) {
+         auto attrRange1 = attrSet1->BeginRange();
+         *pInt1 = i;
+         *pInt = i;
+         writer->Fill();
+         attrSet1->CommitRange(std::move(attrRange1));
+      }
+      *pString2 = "Run 1";
+      attrSet2->CommitRange(std::move(attrRange2));
+   }
+
+   /// Reading
+   auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+   auto ntpl = tfile->Get<ROOT::RNTuple>("ntpl");
+   auto reader = RNTupleReader::Open(*ntpl);
+   EXPECT_EQ(reader->GetDescriptor().GetNAttributeSets(), 2);
+
+   // Extract the headers' offsets
+   std::uint64_t mainHeaderOff = ntpl->GetSeekHeader();
+   std::uint64_t attrSet1Off = 0, attrSet2Off = 0;
+   int n = 0;
+   for (const auto &attrSetIt : reader->GetDescriptor().GetAttrSetIterable()) {
+      if (attrSetIt.GetName() == "MyAttrSet1")
+         attrSet1Off = attrSetIt.GetAnchorLocator().GetPosition<std::uint64_t>();
+      else if (attrSetIt.GetName() == "MyAttrSet2")
+         attrSet2Off = attrSetIt.GetAnchorLocator().GetPosition<std::uint64_t>();
+      ++n;
+   }
+   EXPECT_EQ(n, 2);
+   EXPECT_NE(attrSet1Off, 0);
+   EXPECT_NE(attrSet2Off, 0);
+
+   auto attrSetReader1 = reader->OpenAttributeSet("MyAttrSet1");
+   EXPECT_EQ(attrSetReader1->GetNEntries(), 100);
+   auto attrSetReader2 = reader->OpenAttributeSet("MyAttrSet2");
+   EXPECT_EQ(attrSetReader2->GetNEntries(), 1);
+
+   // Verify compression
+   auto tkeys = tfile->WalkTKeys();
+   int nHeader = 0;
+   for (const auto &key : tkeys) {
+      if (key.fType != ROOT::Detail::TKeyMapNode::kKey || key.fClassName != "RBlob")
+         continue;
+
+      // Skip any free slots
+      if (key.fKeyLen < 0)
+         continue;
+
+      const auto headerSeek = static_cast<std::uint64_t>(key.fSeekKey + key.fKeyLen);
+
+      // We only care about the headers
+      if (headerSeek != mainHeaderOff && headerSeek != attrSet1Off && headerSeek != attrSet2Off)
+         continue;
+
+      int expectedCompressionAlgo = ROOT::RCompressionSetting::EAlgorithm::kZSTD;
+      if (headerSeek == attrSet2Off)
+         expectedCompressionAlgo = 4; // 2nd attribute set has 404 compression
+
+      // Extract the header's compression
+      tfile->Seek(headerSeek);
+      unsigned char zipHeader[9];
+      bool ok = tfile->ReadBuffer(reinterpret_cast<char *>(zipHeader), sizeof(zipHeader));
+      ASSERT_FALSE(ok);
+
+      const auto realCompressionAlgo = R__getCompressionAlgorithm(zipHeader, sizeof(zipHeader));
+      ASSERT_EQ(realCompressionAlgo, expectedCompressionAlgo);
+
+      if (++nHeader == 3)
+         break;
+   }
+
+   // check attribute ranges
+   auto attrEntry1 = attrSetReader1->CreateEntry();
+   auto pAttrInt = attrEntry1->GetPtr<int>("int");
+   auto attrEntry2 = attrSetReader2->CreateEntry();
+   auto pAttrString = attrEntry2->GetPtr<std::string>("string");
+   {
+      int nAttrs = 0;
+      for (auto idx : attrSetReader1->GetAttributesInRange(0, 1000)) {
+         auto range = attrSetReader1->LoadEntry(idx, *attrEntry1);
+         EXPECT_EQ(*pAttrInt, idx);
+         EXPECT_EQ(range.GetStart(), idx);
+         EXPECT_EQ(range.GetLength(), 1);
+         nAttrs += 1;
+      }
+      EXPECT_EQ(nAttrs, 100);
+   }
+   {
+      int nAttrs = 0;
+      for (auto idx : attrSetReader1->GetAttributes(42)) {
+         auto range = attrSetReader1->LoadEntry(idx, *attrEntry1);
+         EXPECT_EQ(*pAttrInt, 42);
+         EXPECT_EQ(range.GetStart(), 42);
+         EXPECT_EQ(range.GetLength(), 1);
+         nAttrs += 1;
+      }
+      EXPECT_EQ(nAttrs, 1);
+   }
+   {
+      int nAttrs = 0;
+      for (auto idx : attrSetReader2->GetAttributes()) {
+         auto range = attrSetReader2->LoadEntry(idx, *attrEntry2);
+         EXPECT_EQ(*pAttrString, "Run 1");
+         EXPECT_EQ(range.GetStart(), 0);
+         EXPECT_EQ(range.GetLength(), 100);
+         nAttrs += 1;
+      }
+      EXPECT_EQ(nAttrs, 1);
+   }
+   {
+      for (auto idx : attrSetReader2->GetAttributes()) {
+         // Reading into the wrong entry
+         try {
+            attrSetReader2->LoadEntry(idx, *attrEntry1);
+            FAIL() << "reading into an unrelated entry should fail";
+         } catch (const ROOT::RException &ex) {
+            EXPECT_THAT(ex.what(), testing::HasSubstr("mismatch between entry and model"));
+         }
+      }
+   }
+}
+
+TEST(RNTupleAttributes, MultipleSetsTFile)
+{
+   // Create multiple sets and interleave attribute ranges
+   // (Same as MultipleSets but using TFile backend)
+
+   FileRaii fileGuard("test_ntuple_attrs_multiplesets.root");
+   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
+   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
+
+   /// Writing
+   {
+      auto model = RNTupleModel::Create();
+      auto pInt = model->MakeField<int>("int");
       auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
       auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
 
@@ -393,16 +637,21 @@ TEST(RNTupleAttributes, MultipleSets)
    auto ntpl = tfile->Get<ROOT::RNTuple>("ntpl");
    auto reader = RNTupleReader::Open(*ntpl);
    EXPECT_EQ(reader->GetDescriptor().GetNAttributeSets(), 2);
-   int n = 1;
+
+  // Extract the headers' offsets
+   std::uint64_t mainHeaderOff = ntpl->GetSeekHeader();
+   std::uint64_t attrSet1Off = 0, attrSet2Off = 0;
+   int n = 0;
    for (const auto &attrSetIt : reader->GetDescriptor().GetAttrSetIterable()) {
-      EXPECT_EQ(attrSetIt.GetName(), "MyAttrSet" + std::to_string(n));
+      if (attrSetIt.GetName() == "MyAttrSet1")
+         attrSet1Off = attrSetIt.GetAnchorLocator().GetPosition<std::uint64_t>();
+      else if (attrSetIt.GetName() == "MyAttrSet2")
+         attrSet2Off = attrSetIt.GetAnchorLocator().GetPosition<std::uint64_t>();
       ++n;
    }
-
-   auto sets = reader->GetDescriptor().GetAttrSetIterable();
-   // NOTE: there is no guaranteed order in which the attribute sets appear in the iterable
-   EXPECT_NE(std::find_if(sets.begin(), sets.end(), [](auto &&s) { return s.GetName() == "MyAttrSet1"; }), sets.end());
-   EXPECT_NE(std::find_if(sets.begin(), sets.end(), [](auto &&s) { return s.GetName() == "MyAttrSet2"; }), sets.end());
+   EXPECT_EQ(n, 2);
+   EXPECT_NE(attrSet1Off, 0);
+   EXPECT_NE(attrSet2Off, 0);
 
    auto attrSetReader1 = reader->OpenAttributeSet("MyAttrSet1");
    EXPECT_EQ(attrSetReader1->GetNEntries(), 100);
@@ -416,9 +665,19 @@ TEST(RNTupleAttributes, MultipleSets)
       if (key.fType != ROOT::Detail::TKeyMapNode::kKey || key.fClassName != "RBlob")
          continue;
 
-      // The first 3 RBlobs we're gonna find are, in order: the main RNTuple header, MyAttrSet1's header
-      // and MyAttrSet2's header.
-      const auto headerSeek = key.fSeekKey + key.fKeyLen;
+      // Skip any free slots
+      if (key.fKeyLen < 0)
+         continue;
+
+      const auto headerSeek = static_cast<std::uint64_t>(key.fSeekKey + key.fKeyLen);
+
+      // We only care about the headers
+      if (headerSeek != mainHeaderOff && headerSeek != attrSet1Off && headerSeek != attrSet2Off)
+         continue;
+
+      int expectedCompressionAlgo = ROOT::RCompressionSetting::EAlgorithm::kZSTD;
+      if (headerSeek == attrSet2Off)
+         expectedCompressionAlgo = 4; // 2nd attribute set has 404 compression
 
       // Extract the header's compression
       tfile->Seek(headerSeek);
@@ -426,9 +685,8 @@ TEST(RNTupleAttributes, MultipleSets)
       bool ok = tfile->ReadBuffer(reinterpret_cast<char *>(zipHeader), sizeof(zipHeader));
       ASSERT_FALSE(ok);
 
-      const int expectedCompression = nHeader < 2 ? ROOT::RCompressionSetting::EAlgorithm::kZSTD : 4;
-      const auto realCompression = R__getCompressionAlgorithm(zipHeader, sizeof(zipHeader));
-      ASSERT_EQ(realCompression, expectedCompression);
+      const auto realCompressionAlgo = R__getCompressionAlgorithm(zipHeader, sizeof(zipHeader));
+      ASSERT_EQ(realCompressionAlgo, expectedCompressionAlgo);
 
       if (++nHeader == 3)
          break;
