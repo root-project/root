@@ -34,8 +34,3 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GX11
 
 target_include_directories(GX11 PRIVATE ${X11_INCLUDE_DIR})
 target_include_directories(GX11 PRIVATE ../gifencode)
-
-
-if(AIX)
-  target_include_directories(GX11 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-endif()
