@@ -191,8 +191,7 @@ namespace TMVA {
       std::vector<TMVA::VariableTransformBase*> fDefaultTrfs;       ///< list of transformations on default DataSet
 
       // cd to local directory
-      TString                                   fOptions;           ///< option string given by construction (presently only "V")
-      TString                                   fTransformations;   ///< List of transformations to test
+      TString fTransformations;                                     ///< List of transformations to test
       Bool_t                                    fVerbose;           ///< verbose mode
 
       // flag determining the way training and test data are assigned to DataLoader
@@ -210,8 +209,7 @@ namespace TMVA {
       Types::EAnalysisType                      fAnalysisType;      ///<  the training type
 
    protected:
-
-      ClassDefOverride(DataLoader,4);
+      ClassDefOverride(DataLoader, 5);
    };
    void DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src);
 } // namespace TMVA

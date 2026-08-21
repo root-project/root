@@ -457,8 +457,8 @@ private:
    // data members
    Int_t fNrows;       // number of rows
    Int_t fAxisOnRows;  // axis along each row
-   Int_t *fNdivisions; // [fNrows] number of divisions for each row
-   Double_t *fStart;   // [fNrows] starting points for each row
+   Int_t *fNdivs;      // [fNrows] number of divisions for each row
+   Double_t *fRowStart; // [fNrows] starting points for each row
 
 protected:
    TGeoPatternHoneycomb(const TGeoPatternHoneycomb &);
@@ -477,7 +477,7 @@ public:
    TGeoNode *FindNode(Double_t *point, const Double_t *dir = nullptr) override;
    void UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const override;
 
-   ClassDefOverride(TGeoPatternHoneycomb, 1) // pattern for honeycomb divisions
+   ClassDefOverride(TGeoPatternHoneycomb, 2) // pattern for honeycomb divisions
 };
 
 #endif

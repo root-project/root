@@ -39,7 +39,7 @@ of the unblind parameter
 RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
                 const char *blindString, double scale, RooAbsReal& cpasym)
   : RooAbsHiddenReal(name,title),
-  _value("value","Offset blinded value",this,cpasym),
+  _proxyValue("value","Offset blinded value",this,cpasym),
   _blindEngine(blindString,RooBlindTools::full,0.,scale)
 {
 }
@@ -51,7 +51,7 @@ RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
                const char *blindString, double scale, RooAbsReal& cpasym,
                RooAbsCategory& blindState)
   : RooAbsHiddenReal(name,title,blindState),
-    _value("value","Offset blinded value",this,cpasym),
+    _proxyValue("value","Offset blinded value",this,cpasym),
     _blindEngine(blindString,RooBlindTools::full,0.,scale)
 {
 }
@@ -61,7 +61,7 @@ RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
 
 RooUnblindOffset::RooUnblindOffset(const RooUnblindOffset& other, const char* name) :
   RooAbsHiddenReal(other, name),
-  _value("asym",this,other._value),
+  _proxyValue("asym",this,other._proxyValue),
   _blindEngine(other._blindEngine)
 {
 }
@@ -73,9 +73,9 @@ double RooUnblindOffset::evaluate() const
 {
   if (isHidden()) {
     // Blinding is active for this event
-    return _blindEngine.UnHideOffset(_value);
+    return _blindEngine.UnHideOffset(_proxyValue);
   } else {
     // Blinding is not active for this event
-    return _value ;
+    return _proxyValue ;
   }
 }
