@@ -1662,7 +1662,9 @@ namespace {
     for (auto& E : moduleExtensions)
       FrontendOpts.ModuleFileExtensions.push_back(E);
 
-    FrontendOpts.DisableFree = true;
+    // The clang driver adds -disable-free to every cc1 line.
+    // Interpreter::ShutDown() should free the frontend.
+    FrontendOpts.DisableFree = false;
 
     // Set up compiler language and target
     if (!SetupCompiler(CI.get(), COpts, InitLang, InitTarget))
