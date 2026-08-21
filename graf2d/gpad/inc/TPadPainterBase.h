@@ -22,6 +22,9 @@ class TTFhandle;
 
 class TPadPainterBase : public TVirtualPadPainter {
 protected:
+   WinContext_t   fWinContext = (WinContext_t) 0;
+   TVirtualPad   *fPad = nullptr;
+
    TAttFill   fAttFill;   ///< current fill attributes
    TAttLine   fAttLine;   ///< current line attributes
    TAttMarker fAttMarker; ///< current marker attributes
@@ -80,6 +83,9 @@ public:
    void     SetMarkerSize(Size_t msize) override { fAttMarker.SetMarkerSize(msize); SetAttMarker(fAttMarker); }
 
   /// _____________________________________________________________________
+
+   void     OnPad(TVirtualPad *pad) override { fPad = pad; }
+
 
    const TAttFill    &GetAttFill() const override { return fAttFill; }
    const TAttLine    &GetAttLine() const override { return fAttLine; }
