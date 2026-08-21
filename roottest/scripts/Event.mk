@@ -42,12 +42,6 @@ $(EVENTO): %.$(ObjSuf): %.d
 $(MAINEVENTO): MainEvent.d
 
 $(EVENTSO):     $(EVENTO) $(ROOTCORELIBS)
-ifeq ($(ARCH),aix)
-		$(CMDECHO) /usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
-else
-ifeq ($(ARCH),aix5)
-		$(CMDECHO) /usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
-else
 ifeq ($(PLATFORM),win32)
 		$(CMDECHO) bindexplib $* $(EVENTO) > $*.def
 		$(CMDECHO) lib -nologo -MACHINE:IX86 $(EVENTO) -def:$*.def \
@@ -56,8 +50,6 @@ ifeq ($(PLATFORM),win32)
 		   $(OutPutOpt)$@
 else
 		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
-endif
-endif
 endif
 
 $(EVENT):       $(EVENTSO) $(MAINEVENTO) $(ROOTCORELIBS)

@@ -196,11 +196,7 @@ namespace ROOT
            const BinNode*                          FindNode(const point_type& rPoint) const override;
            point_type                              GetBinCenter() const;
            Double_t                                GetBinContent() const {return GetSumw();}
-#ifndef _AIX
            virtual const std::vector<tBoundary>&   GetBoundaries() const {return fBoundaries;}
-#else
-           virtual void GetBoundaries() const { }
-#endif
            Double_t                                GetDensity() const {return GetBinContent()/GetVolume();}
            Double_t                                GetEffectiveEntries() const {return (GetSumw2()) ? std::pow(GetSumw(),2)/GetSumw2() : 0;}
            UInt_t                                  GetEntries() const {return fEntries;}
@@ -244,11 +240,7 @@ namespace ROOT
            virtual ~TerminalNode();
 
            void                                    EmptyBin() override;
-#ifndef _AIX
            const std::vector<tBoundary>&           GetBoundaries() const override;
-#else
-           void GetBoundaries() const override;
-#endif
            void                                    GetClosestPoints(const point_type& rRef,UInt_t nPoints,std::vector<std::pair<const _DataPoint*,Double_t> >& vFoundPoints) const override;
            const std::vector<const point_type*>&   GetPoints() const {return fDataPoints;}
            void                                    GetPointsWithinDist(const point_type& rRef,value_type fDist,std::vector<const _DataPoint*>& vFoundPoints) const override;

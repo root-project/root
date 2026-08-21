@@ -95,27 +95,6 @@ LDFLAGS       = $(OPT2)
 SOFLAGS       = -shared
 endif
 
-ifeq ($(ARCH),aix5)
-# IBM AIX >5.x xlC
-CXX           = xlC
-CXXFLAGS      = $(OPT)
-LD            = xlC
-LDFLAGS       = $(OPT)
-SOFLAGS       =
-DllSuf        = a
-endif
-
-ifeq ($(ARCH),aixgcc)
-# IBM AIX >5.x with GCC
-CXX           = g++
-CXXFLAGS      = $(OPT)
-LD            = g++
-LDFLAGS       = $(OPT)
-SOFLAGS       = -shared
-DllSuf        = a
-EXPLLINKLIBS  = $(ROOTGLIBS)
-endif
-
 ifeq ($(ARCH),solaris)
 # Solaris CC
 CXX           = /opt/SUNWspro/bin/CC

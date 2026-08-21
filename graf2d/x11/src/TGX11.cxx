@@ -58,9 +58,6 @@ by Olivier Couet (package X11INT).
 #include <cstdlib>
 #include <cctype>
 #include <unistd.h>
-#ifdef R__AIX
-#   include <sys/socket.h>
-#endif
 
 #include "gifencode.h"
 #include "gifdecode.h"

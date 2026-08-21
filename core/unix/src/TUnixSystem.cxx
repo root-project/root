@@ -48,7 +48,7 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <sys/types.h>
-#if defined(R__SUN) || defined(R__AIX) || \
+#if defined(R__SUN) || \
     defined(R__LINUX) || defined(R__SOLARIS) || \
     defined(R__FBSD) || defined(R__OBSD) || \
     defined(R__MACOSX) || defined(R__HURD)
@@ -62,12 +62,12 @@
 #if defined(ULTRIX) || defined(R__SUN)
 #   include <sgtty.h>
 #endif
-#if defined(R__AIX) || defined(R__LINUX) || \
+#if defined(R__LINUX) || \
     defined(R__FBSD) || defined(R__OBSD) || \
     defined(R__LYNXOS) || defined(R__MACOSX) || defined(R__HURD)
 #   include <sys/ioctl.h>
 #endif
-#if defined(R__AIX) || defined(R__SOLARIS)
+#if defined(R__SOLARIS)
 #   include <sys/select.h>
 #endif
 #if defined(R__MACOSX)
@@ -108,17 +108,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#if defined(R__AIX)
-#   define _XOPEN_EXTENDED_SOURCE
-#   include <arpa/inet.h>
-#   undef _XOPEN_EXTENDED_SOURCE
-#   if !defined(_AIX41) && !defined(_AIX43)
-    // AIX 3.2 doesn't have it
-#   define HASNOT_INETATON
-#   endif
-#else
-#   include <arpa/inet.h>
-#endif
+#include <arpa/inet.h>
 #include <sys/un.h>
 #include <netdb.h>
 #include <fcntl.h>
@@ -149,7 +139,7 @@
 #   endif
 #endif
 
-#if defined(R__AIX) || defined(R__FBSD) || \
+#if defined(R__FBSD) || \
     defined(R__OBSD) || defined(R__LYNXOS) || \
     (defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_5))
 #   define UTMP_NO_ADDR
@@ -721,7 +711,7 @@ const char *TUnixSystem::GetError()
    if (err == 0 && GetLastErrorString() != "")
       return GetLastErrorString();
 
-#if defined(R__SOLARIS) || defined (R__LINUX) || defined(R__AIX) || \
+#if defined(R__SOLARIS) || defined (R__LINUX) || \
     defined(R__FBSD) || defined(R__OBSD) || defined(R__HURD)
    return strerror(err);
 #else
@@ -1667,11 +1657,7 @@ int TUnixSystem::Link(const char *from, const char *to)
 
 int TUnixSystem::Symlink(const char *from, const char *to)
 {
-#if defined(R__AIX)
-   return ::symlink((char*)from, (char*)to);
-#else
    return ::symlink(from, to);
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1815,18 +1801,9 @@ needshell:
 
    // read first argument
    patbuf0 = "";
-   int cnt = 0;
-#if defined(R__AIX)
-again:
-#endif
    for (ch = fgetc(pf); ch != EOF && ch != ' ' && ch != '\n'; ch = fgetc(pf)) {
       patbuf0.Append(ch);
-      cnt++;
    }
-#if defined(R__AIX)
-   // Work around bug timing problem due to delay in forking a large program
-   if (cnt == 0 && ch == EOF) goto again;
-#endif
 
    // skip rest of pipe
    while (ch != EOF) {
@@ -2324,11 +2301,6 @@ void TUnixSystem::StackTrace()
    delete [] gdb;
    return;
 
-#elif defined(R__AIX)
-   TString script = "procstack ";
-   script += GetPid();
-   Exec(script);
-   return;
 #elif defined(R__SOLARIS)
    char *cppfilt = Which(Getenv("PATH"), "c++filt", kExecutePermission);
    TString script = "pstack ";
@@ -2877,7 +2849,7 @@ const char *TUnixSystem::GetLinkedLibraries()
       ClosePipe(p);
    }
 #endif
-#elif defined(R__LINUX) || defined(R__SOLARIS) || defined(R__AIX)
+#elif defined(R__LINUX) || defined(R__SOLARIS)
 #if defined(R__WINGCC )
    const char *cLDD="cygcheck";
    const char *cSOEXT=".dll";
@@ -2895,13 +2867,8 @@ const char *TUnixSystem::GetLinkedLibraries()
    TRegexp sovers = "\\.so\\.[0-9]+";
 #else
    const char *cLDD="ldd";
-#if defined(R__AIX)
-   const char *cSOEXT=".a";
-   TRegexp sovers = "\\.a\\.[0-9]+";
-#else
    const char *cSOEXT=".so";
    TRegexp sovers = "\\.so\\.[0-9]+";
-#endif
 #endif
    FILE *p = OpenPipe(TString::Format("%s '%s'", cLDD, exe), "r");
    if (p) {
@@ -3282,10 +3249,8 @@ void TUnixSystem::CloseConnection(int sock, Bool_t force)
 {
    if (sock < 0) return;
 
-#if !defined(R__AIX) || defined(_AIX41) || defined(_AIX43)
    if (force)
       ::shutdown(sock, 2);   // will also close connection of parent
-#endif
 
    while (::close(sock) == -1 && GetErrno() == EINTR)
       ResetErrno();
@@ -4639,9 +4604,7 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
          rdynpath = ".:"; rdynpath += TROOT::GetLibDir();
       }
       TString ldpath;
-   #if defined (R__AIX)
-      ldpath = gSystem->Getenv("LIBPATH");
-   #elif defined(R__MACOSX)
+   #if defined(R__MACOSX)
       ldpath = gSystem->Getenv("DYLD_LIBRARY_PATH");
       if (!ldpath.IsNull())
          ldpath += ":";

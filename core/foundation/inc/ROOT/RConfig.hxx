@@ -67,14 +67,6 @@
 #   endif
 #endif
 
-#ifdef _AIX
-#   define R__AIX
-#   define R__UNIX
-#   define ANSICPP
-#   define R__SEEK64
-#   define NEED_STRCASECMP
-#endif
-
 #if defined(__linux) || defined(__linux__)
 #   ifndef linux
 #      define linux
