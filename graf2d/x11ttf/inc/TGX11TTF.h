@@ -48,6 +48,8 @@ public:
    void   DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
                    const wchar_t *text, ETextMode mode) override;
 
+   void   DrawTTFglyphsW(WinContext_t wctxt, Int_t x, Int_t y, TTFhandle &ttf, ETextMode mode) override;
+
 #ifdef R__HAS_XFT
    //---- Methods used text/fonts handling via Xft -----
    //void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
