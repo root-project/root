@@ -42,6 +42,7 @@ R__EXTERN Atom_t gROOT_MESSAGE;
 class TPoint;
 class TString;
 class TGWin32Command;
+class TTFhandle;
 
 class TVirtualX : public TNamed, public TAttLine, public TAttFill, public TAttText, public TAttMarker {
 
@@ -133,6 +134,7 @@ public:
    virtual void      DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy);
    virtual void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode);
    virtual void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text, ETextMode mode);
+   virtual void      DrawTTFglyphsW(WinContext_t wctxt, Int_t x, Int_t y, TTFhandle &handle, ETextMode mode);
    virtual Int_t     WriteGIFW(WinContext_t wctxt, const char *name);
 
    virtual Bool_t    GetTextExtentA(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const char *mess);
