@@ -1216,7 +1216,7 @@ void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
 }
 
 
-template<class CharType>
+template<typename CharType>
 void TGWin32::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle,
                              const CharType *text, ETextMode mode)
 {
@@ -1255,8 +1255,6 @@ void TGWin32::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle
    ctxt->alignVector.x = ctxt->alignVector.x >> 6;
    ctxt->alignVector.y = ctxt->alignVector.y >> 6;
 
-   GdkGCValues gcvals;
-
    // compute the size and position of the XImage that will contain the text
    Int_t Xoff = TMath::Max(0, (Int_t) -ttf.GetBox().xMin);
    Int_t Yoff = TMath::Max(0, (Int_t) -ttf.GetBox().yMin);
@@ -1277,6 +1275,23 @@ void TGWin32::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle
    if (x1 + w <= 0 || x1 >= (Int_t)width || y1 + h <= 0 || y1 >= (Int_t) height)
       return;
 
+   DrawTTFglyphsW(wctxt, x1, y1, ttf, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw TTF glyphs on the specified window context
+
+void TGWin32::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle &ttf, ETextMode mode)
+{
+   auto ctxt = (XWindow_t *) wctxt;
+   if (!ctxt)
+      return;
+
+   Int_t Xoff = TMath::Max(0, (Int_t) -ttf.GetBox().xMin);
+   Int_t Yoff = TMath::Max(0, (Int_t) -ttf.GetBox().yMin);
+   Int_t w    = ttf.GetBox().xMax + Xoff;
+   Int_t h    = ttf.GetBox().yMax + Yoff;
+
    // create the XImage that will contain the text
    UInt_t depth = fDepth;
    GdkImage *xim  = gdk_image_new(GDK_IMAGE_SHARED, gdk_visual_get_best(), w, h);
@@ -1287,6 +1302,7 @@ void TGWin32::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle
 
    ULong_t   pixel;
    ULong_t   bg;
+   GdkGCValues gcvals;
 
    gdk_gc_get_values(ctxt->fGClist[kGCtext], &gcvals);
 
@@ -1295,14 +1311,13 @@ void TGWin32::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle
       // if mode == kClear we need to get an image of the background
       GdkImage *bim = GetBackground(wctxt, x1, y1, w, h);
       if (!bim) {
-         Error("DrawText", "error getting background image");
+         Error("DrawTTFglyphsW", "error getting background image");
          return;
       }
 
       // and copy it into the text image
-      Int_t xo = 0, yo = 0;
-      if (x1 < 0) xo = -x1;
-      if (y1 < 0) yo = -y1;
+      Int_t xo = x1 < 0 ? -x1 : 0;
+      Int_t yo = y1 < 0 ? -y1 : 0;
 
       for (int yp = 0; yp < (int) bim->height; yp++) {
          for (int xp = 0; xp < (int) bim->width; xp++) {
