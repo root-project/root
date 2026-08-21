@@ -78,6 +78,7 @@ namespace cling {
   class CompilationOptions;
   class DynamicLibraryManager;
   class IncrementalCUDADeviceCompiler;
+  class IncrementalAction;
   class IncrementalExecutor;
   class IncrementalParser;
   class InterpreterCallbacks;
@@ -183,6 +184,14 @@ namespace cling {
     ///\brief Thread-safe llvm library state.
     ///
     std::unique_ptr<llvm::orc::ThreadSafeContext> TSCtx;
+
+    ///\brief compiler instance.
+    ///
+    std::unique_ptr<clang::CompilerInstance> m_CI;
+
+    ///\brief The FrontendAction
+    ///
+    std::unique_ptr<IncrementalAction> m_Act;
 
     ///\brief Cling's execution engine - a well wrapped llvm execution engine.
     ///
@@ -387,6 +396,9 @@ namespace cling {
     ///\brief Whether the Interpreter is setup and ready to be used.
     ///
     bool isValid() const;
+
+    /// Generate PCH file.
+    void GeneratePCH();
 
     const InvocationOptions& getOptions() const { return m_Opts; }
     InvocationOptions& getOptions() { return m_Opts; }
