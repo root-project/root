@@ -101,11 +101,9 @@ Double_t y0, Double_t scale);
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TGeoPolygon.h"
+#include "TROOT.h"
 
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
-
-TGeoXtru::ThreadData_t::ThreadData_t() : fSeg(0), fIz(0), fXc(nullptr), fYc(nullptr), fPoly(nullptr) {}
+std::atomic<UInt_t> TGeoXtru::fgInstanceCount{0};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
@@ -114,57 +112,73 @@ TGeoXtru::ThreadData_t::~ThreadData_t()
 {
    delete[] fXc;
    delete[] fYc;
-   delete fPoly;
+   // fPoly is a TObject, so deleting it walks ROOT's cleanup machinery (RecursiveRemove,
+   // TObjArray::Delete). This slot lives in a thread_local vector and can therefore be
+   // destroyed at thread/process exit, possibly after ROOT's globals have been torn down,
+   // where that machinery reads freed state. Only delete while ROOT is still alive -- at
+   // shutdown the OS reclaims this small per-thread buffer anyway. The in-run rebuild path
+   // (move-assignment in InitThreadSlot) always runs while ROOT is up, so this guard only
+   // ever skips the very last teardown, never steady-state churn.
+   // Same "is ROOT still there" test that TDirectory and TGenericClassInfo use.
+   if (fPoly && ROOT::Internal::gROOTLocal)
+      delete fPoly;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Move constructor. Steals the owned resources; the moved-from slot is left empty and
+/// uninitialized (fInitGen = -1). fPoly keeps pointing at fXc/fYc, which are not relocated.
 
-TGeoXtru::ThreadData_t &TGeoXtru::GetThreadData() const
+TGeoXtru::ThreadData_t::ThreadData_t(ThreadData_t &&other) noexcept
+   : fSeg(other.fSeg), fIz(other.fIz), fXc(other.fXc), fYc(other.fYc), fPoly(other.fPoly), fInitGen(other.fInitGen)
 {
-   if (!fThreadSize)
-      ((TGeoXtru *)this)->CreateThreadData(1);
-   Int_t tid = TGeoManager::ThreadId();
-   return *fThreadData[tid];
+   other.fXc = nullptr;
+   other.fYc = nullptr;
+   other.fPoly = nullptr;
+   other.fInitGen = -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Move assignment. Releases the current resources before stealing the source's.
 
-void TGeoXtru::ClearThreadData() const
+TGeoXtru::ThreadData_t &TGeoXtru::ThreadData_t::operator=(ThreadData_t &&other) noexcept
 {
-   std::lock_guard<std::mutex> guard(fMutex);
-   std::vector<ThreadData_t *>::iterator i = fThreadData.begin();
-   while (i != fThreadData.end()) {
-      delete *i;
-      ++i;
+   if (this != &other) {
+      delete[] fXc;
+      delete[] fYc;
+      delete fPoly;
+      fSeg = other.fSeg;
+      fIz = other.fIz;
+      fXc = other.fXc;
+      fYc = other.fYc;
+      fPoly = other.fPoly;
+      fInitGen = other.fInitGen;
+      other.fXc = nullptr;
+      other.fYc = nullptr;
+      other.fPoly = nullptr;
+      other.fInitGen = -1;
    }
-   fThreadData.clear();
-   fThreadSize = 0;
+   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create thread data for n threads max.
+/// (Re)build the per-thread scratch state for this shape into the given slot.
+/// Cold path: runs once per (thread, shape, generation).
 
-void TGeoXtru::CreateThreadData(Int_t nthreads)
+void TGeoXtru::InitThreadSlot(ThreadData_t &td) const
 {
-   std::lock_guard<std::mutex> guard(fMutex);
-   fThreadData.resize(nthreads);
-   fThreadSize = nthreads;
-   for (Int_t tid = 0; tid < nthreads; tid++) {
-      if (fThreadData[tid] == nullptr) {
-         fThreadData[tid] = new ThreadData_t;
-         ThreadData_t &td = *fThreadData[tid];
-         td.fXc = new Double_t[fNvert];
-         td.fYc = new Double_t[fNvert];
-         memcpy(td.fXc, fX, fNvert * sizeof(Double_t));
-         memcpy(td.fYc, fY, fNvert * sizeof(Double_t));
-         td.fPoly = new TGeoPolygon(fNvert);
-         td.fPoly->SetXY(td.fXc, td.fYc); // initialize with current coordinates
-         td.fPoly->FinishPolygon();
-         if (tid == 0 && td.fPoly->IsIllegalCheck()) {
-            Error("DefinePolygon", "Shape %s of type XTRU has an illegal polygon.", GetName());
-         }
-      }
-   }
+   td = ThreadData_t{}; // release anything left from a previous generation
+   td.fXc = new Double_t[fNvert];
+   td.fYc = new Double_t[fNvert];
+   memcpy(td.fXc, fX, fNvert * sizeof(Double_t));
+   memcpy(td.fYc, fY, fNvert * sizeof(Double_t));
+   td.fPoly = new TGeoPolygon(fNvert);
+   td.fPoly->SetXY(td.fXc, td.fYc); // initialize with current coordinates
+   td.fPoly->FinishPolygon();
+   // The polygon is identical in every thread, so report an illegal one exactly once
+   // instead of once per thread (previously: only for thread id 0).
+   if (td.fPoly->IsIllegalCheck() && !fIllegalChecked.exchange(kTRUE, std::memory_order_relaxed))
+      Error("DefinePolygon", "Shape %s of type XTRU has an illegal polygon.", GetName());
+   td.fInitGen = fGeneration.load(std::memory_order_acquire);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -195,9 +209,7 @@ TGeoXtru::TGeoXtru()
      fZ(nullptr),
      fScale(nullptr),
      fX0(nullptr),
-     fY0(nullptr),
-     fThreadData(0),
-     fThreadSize(0)
+     fY0(nullptr)
 {
    SetShapeBit(TGeoShape::kGeoXtru);
 }
@@ -215,9 +227,7 @@ TGeoXtru::TGeoXtru(Int_t nz)
      fZ(new Double_t[nz]),
      fScale(new Double_t[nz]),
      fX0(new Double_t[nz]),
-     fY0(new Double_t[nz]),
-     fThreadData(0),
-     fThreadSize(0)
+     fY0(new Double_t[nz])
 {
    SetShapeBit(TGeoShape::kGeoXtru);
    if (nz < 2) {
@@ -251,9 +261,7 @@ TGeoXtru::TGeoXtru(Double_t *param)
      fZ(nullptr),
      fScale(nullptr),
      fX0(nullptr),
-     fY0(nullptr),
-     fThreadData(0),
-     fThreadSize(0)
+     fY0(nullptr)
 {
    SetShapeBit(TGeoShape::kGeoXtru);
    SetDimensions(param);

@@ -14,28 +14,61 @@
 
 #include "TGeoBBox.h"
 
-#include <mutex>
+#include <algorithm>
+#include <atomic>
 #include <vector>
 
 class TGeoPolygon;
 
 class TGeoXtru : public TGeoBBox {
+   static std::atomic<UInt_t> fgInstanceCount;          //! source of dense per-object indices
+   UInt_t fIndex{fgInstanceCount++};                    //! dense index of this shape into the per-thread vector
+   mutable std::atomic<Int_t> fGeneration{0};           //! bumped whenever the per-thread state must be rebuilt
+   mutable std::atomic<Bool_t> fIllegalChecked{kFALSE}; //! illegal-polygon warning already emitted
+
 public:
    struct ThreadData_t {
-      Int_t fSeg;         // !current segment [0,fNvert-1]
-      Int_t fIz;          // !current z plane [0,fNz-1]
-      Double_t *fXc;      // ![fNvert] current X positions for polygon vertices
-      Double_t *fYc;      // ![fNvert] current Y positions for polygon vertices
-      TGeoPolygon *fPoly; // !polygon defining section shape
+      Int_t fSeg{0};               //! current segment [0,fNvert-1]
+      Int_t fIz{0};                //! current z plane [0,fNz-1]
+      Double_t *fXc{nullptr};      //![fNvert] current X positions for polygon vertices
+      Double_t *fYc{nullptr};      //![fNvert] current Y positions for polygon vertices
+      TGeoPolygon *fPoly{nullptr}; //! polygon defining section shape
+      Int_t fInitGen{-1};          //! generation this slot was last initialized for
 
-      ThreadData_t();
+      ThreadData_t() = default;
       ~ThreadData_t();
+      // Owns fXc/fYc/fPoly: movable so the slot can live in a resizable vector, not copyable.
+      ThreadData_t(ThreadData_t &&other) noexcept;
+      ThreadData_t &operator=(ThreadData_t &&other) noexcept;
+      ThreadData_t(const ThreadData_t &) = delete;
+      ThreadData_t &operator=(const ThreadData_t &) = delete;
    };
-   ThreadData_t &GetThreadData() const;
-   void ClearThreadData() const override;
-   void CreateThreadData(Int_t nthreads) override;
+
+   /// Per-thread scratch state, owned by the calling thread and indexed by this shape.
+   /// Hot path: a TLS read plus an indexed load; the cold rebuild lives in InitThreadSlot().
+   ThreadData_t &GetThreadData() const
+   {
+      thread_local std::vector<ThreadData_t> tdata;
+      if (tdata.size() <= fIndex)
+         tdata.resize(std::max<size_t>(fgInstanceCount.load(std::memory_order_relaxed), fIndex + 1));
+      ThreadData_t &td = tdata[fIndex];
+      if (td.fInitGen != fGeneration.load(std::memory_order_acquire))
+         InitThreadSlot(td);
+      return td;
+   }
+   /// Invalidate the per-thread data. Each thread rebuilds its own slot lazily on next access.
+   void ClearThreadData() const override
+   {
+      fGeneration.fetch_add(1, std::memory_order_release);
+      fIllegalChecked.store(kFALSE, std::memory_order_relaxed);
+   }
+   /// No-op: per-thread data is allocated lazily, so no provisioning for a fixed thread count
+   /// is required and any number of threads works.
+   void CreateThreadData(Int_t) override {}
 
 protected:
+   void InitThreadSlot(ThreadData_t &td) const;
+
    // data members
    Int_t fNvert;       // number of vertices of the 2D polygon (at least 3)
    Int_t fNz;          // number of z planes (at least two)
@@ -46,10 +79,6 @@ protected:
    Double_t *fScale;   //[fNz] array of scale factors (for each Z)
    Double_t *fX0;      //[fNz] array of X offsets (for each Z)
    Double_t *fY0;      //[fNz] array of Y offsets (for each Z)
-
-   mutable std::vector<ThreadData_t *> fThreadData; ///<! Navigation data per thread
-   mutable Int_t fThreadSize;                       ///<! size of thread-specific array
-   mutable std::mutex fMutex;                       ///<! mutex for thread data
 
    TGeoXtru(const TGeoXtru &) = delete;
    TGeoXtru &operator=(const TGeoXtru &) = delete;
