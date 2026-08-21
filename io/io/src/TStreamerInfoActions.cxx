@@ -35,11 +35,7 @@ static const Int_t kRegrouped = TStreamerInfo::kOffsetL;
 
 using namespace TStreamerInfoActions;
 
-#ifdef _AIX
-# define INLINE_TEMPLATE_ARGS
-#else
-# define INLINE_TEMPLATE_ARGS inline
-#endif
+#define INLINE_TEMPLATE_ARGS inline
 
 
 namespace TStreamerInfoActions
@@ -5564,7 +5560,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
    return sequence;
 }
 
-#if !defined(R__WIN32) && !defined(_AIX)
+#if !defined(R__WIN32)
 
 #include <dlfcn.h>
 
@@ -5573,7 +5569,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 typedef void (*voidfunc)();
 static const char *R__GetSymbolName(voidfunc func)
 {
-#if defined(R__WIN32) || defined(__CYGWIN__) || defined(_AIX)
+#if defined(R__WIN32) || defined(__CYGWIN__)
    return "not available on this platform";
 #if 0
    MEMORY_BASIC_INFORMATION mbi;
