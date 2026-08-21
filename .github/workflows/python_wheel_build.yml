@@ -24,28 +24,49 @@ jobs:
        (github.event_name == 'schedule' ||
         github.event_name == 'workflow_dispatch')) ||
       contains(github.event.pull_request.labels.*.name, 'build-python-wheels')
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.config.runner }}
     strategy:
       fail-fast: false
       matrix:
-        target: [cp310-manylinux_x86_64, cp311-manylinux_x86_64, cp312-manylinux_x86_64, cp313-manylinux_x86_64, cp314-manylinux_x86_64]
-    name: ${{ matrix.target }}
+        python: [cp310, cp311, cp312, cp313, cp314]
+        config:
+          - runner: macos-15
+            platform: macosx_arm64
+            deployment_target: "15.0"
+          - runner: macos-26
+            platform: macosx_arm64
+            deployment_target: "26.0"
+          - runner: ubuntu-latest
+            platform: manylinux_x86_64
+            deployment_target: ""
+    name: ${{ matrix.python }}-${{ matrix.config.platform }}-${{ matrix.config.runner }}
     steps:
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.inputs.ref }}
       - uses: ./.github/workflows/cibuildwheel-impl
+        env:
+          MACOSX_DEPLOYMENT_TARGET: ${{ matrix.config.deployment_target }}
         with:
-          build-tag: ${{ matrix.target }}
+          build-tag: ${{ matrix.python }}-${{ matrix.config.platform }}
+          artifact-name: ${{ matrix.python }}-${{ matrix.config.platform }}-${{ matrix.config.runner }}
 
   test-wheels:
     needs: build-wheels
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.test_config.runner }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-    name: test-wheel-cp${{ matrix.python-version }}
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        test_config:
+          # each runner tests the wheel built on it
+          - runner: macos-15
+            wheel_name_pattern: "macosx_15"
+          - runner: macos-26
+            wheel_name_pattern: "macosx_26"
+          - runner: ubuntu-latest
+            wheel_name_pattern: "manylinux"
+    name: test-cp${{ matrix.python }}-${{ matrix.test_config.wheel_name_pattern }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -59,13 +80,13 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.python }}
 
       - name: Install produced wheel
         run: |
           ls -R wheels
           PY_VER=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
-          WHEEL=$(ls wheels/*${PY_VER}*.whl | head -n 1)
+          WHEEL=$(ls wheels/*${PY_VER}*${{ matrix.test_config.wheel_name_pattern }}*.whl | head -n 1)
           echo "Python version: ${PY_VER}, installing wheel: ${WHEEL}"
           pip install "$WHEEL"
 
