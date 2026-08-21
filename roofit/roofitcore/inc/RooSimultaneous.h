@@ -107,6 +107,8 @@ public:
 
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
+  bool indexCatIsObservable(RooArgSet const &vars) const;
+
 protected:
 
   void selectNormalization(const RooArgSet* depSet=nullptr, bool force=false) override ;
