@@ -10,6 +10,7 @@
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Physics
   HEADERS
+    TFANG.h
     TFeldmanCousins.h
     TGenPhaseSpace.h
     TLorentzRotation.h
@@ -20,7 +21,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Physics
     TRotation.h
     TVector2.h
     TVector3.h
-  SOURCES
+    SOURCES
+    src/TFANG.cxx
     src/TFeldmanCousins.cxx
     src/TGenPhaseSpace.cxx
     src/TLorentzRotation.cxx
@@ -32,9 +34,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Physics
     src/TVector2.cxx
     src/TVector3.cxx
   DEPENDENCIES
+    Core
     Matrix
     MathCore
     GenVector
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
 )
+if(testing)
+  add_subdirectory(test)
+endif()
