@@ -299,7 +299,8 @@ public:
 
    void InitTask(TTreeReader *, unsigned int slot);
 
-   void Exec(unsigned int /*slot*/, const std::vector<void *> &values, std::vector<bool> const &filterPassed);
+   void Exec(unsigned int /*slot*/, const std::vector<void *> &values,
+             std::vector<ROOT::Internal::RDF::RMaskedEntryRange> const &filterPassed);
 
    /// Nothing to do. All initialisations run in the constructor or InitTask().
    void Initialize() {}
