@@ -39,6 +39,9 @@ protected:
    void   DrawDashPolyLine(Int_t npoints, TPoint *pt, UInt_t nDash,
                            const char* pDash, const char* col, UInt_t thick);
 
+   template<typename T>
+   void  DrawPolyMarkerShape(Int_t n, T *x, T *y);
+
 public:
    TImageDump();
    TImageDump(const char *filename, Int_t type = -111);
