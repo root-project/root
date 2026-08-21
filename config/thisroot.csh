@@ -219,12 +219,6 @@ else
    setenv SHLIB_PATH @libdir@
 endif
 
-if ($?LIBPATH) then
-   setenv LIBPATH @libdir@:$LIBPATH                      # AIX
-else
-   setenv LIBPATH @libdir@
-endif
-
 if ($?PYTHONPATH) then
    setenv PYTHONPATH @libdir@:$PYTHONPATH
 else

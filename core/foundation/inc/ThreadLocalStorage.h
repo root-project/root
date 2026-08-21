@@ -71,7 +71,7 @@
 #    define R__HAS_PTHREAD
 #  endif
 #endif
-#if defined(R__LINUX) || defined(R__AIX)
+#if defined(R__LINUX)
 #  define R__HAS___THREAD
 #endif
 #if defined(R__SOLARIS) && !defined(R__HAS_PTHREAD)

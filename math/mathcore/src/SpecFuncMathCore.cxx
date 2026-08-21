@@ -8,7 +8,7 @@
  *                                                                    *
  **********************************************************************/
 
-#if defined(__sun) || defined(__sgi) || defined(_WIN32) || defined(_AIX)
+#if defined(__sun) || defined(__sgi) || defined(_WIN32)
 #define NOT_HAVE_TGAMMA
 #endif
 
