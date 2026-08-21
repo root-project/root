@@ -174,7 +174,7 @@ void TPadPainterBase::DrawTTFglyphs([[maybe_unused]] Int_t x, [[maybe_unused]] I
 /// Calculate align position, check boundaries and call DrawTTFglyphs
 /// In derived class only DrawTTFglyphs need to be implemented
 
-Bool_t TPadPainterBase::RenderTTF(Int_t px, Int_t py, TTFhandle &ttf, ETextMode mode)
+void TPadPainterBase::RenderTTF(Int_t px, Int_t py, TTFhandle &ttf, ETextMode mode)
 {
    const TAttText &att = GetAttText();
 
@@ -204,7 +204,7 @@ Bool_t TPadPainterBase::RenderTTF(Int_t px, Int_t py, TTFhandle &ttf, ETextMode 
 
    // If w or h is 0, very likely the string is only blank characters
    if (w <= 0 || h <= 0)
-      return kTRUE;
+      return;
 
    Int_t x1 = px - Xoff - (alignVector.x >> 6);
    Int_t y1 = py + Yoff + (alignVector.y >> 6) - h;
@@ -214,11 +214,11 @@ Bool_t TPadPainterBase::RenderTTF(Int_t px, Int_t py, TTFhandle &ttf, ETextMode 
 
    // If string falls outside window, there is probably no need to draw it.
    if (x1 + w <= 0 || x1 >= width || y1 + h <= 0 || y1 >= height)
-      return kTRUE;
+      return;
 
    // do not draw text, which size is significantly larger than available pad
    if ((w > 10 * width) || (h > 10 * height))
-      return kTRUE;
+      return;
 
    // In derived classes to perform direct glyphs drawing,
    // one need to shift coordinates
@@ -226,7 +226,6 @@ Bool_t TPadPainterBase::RenderTTF(Int_t px, Int_t py, TTFhandle &ttf, ETextMode 
    // y1 += h - Yoff;
 
    DrawTTFglyphs(x1, y1, ttf, mode);
-   return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -234,25 +233,22 @@ Bool_t TPadPainterBase::RenderTTF(Int_t px, Int_t py, TTFhandle &ttf, ETextMode 
 
 void TPadPainterBase::DrawText(Double_t x, Double_t y, const char *text, ETextMode mode)
 {
-   Bool_t res = kFALSE;
+   Int_t px = fPad->XtoAbsPixel(x);
+   Int_t py = fPad->YtoAbsPixel(y);
+   const TAttText &att = GetAttText();
 
    if (HasTTFonts()) {
-      Int_t px = fPad->XtoAbsPixel(x);
-      Int_t py = fPad->YtoAbsPixel(y);
-
-      const TAttText &att = GetAttText();
-
       TTFhandle ttf;
       ttf.SetTextFont(att.GetTextFont());
       ttf.SetTextSize(att.GetTextSizePixels(*fPad));
       ttf.SetRotationMatrix(att.GetTextAngle());
       ttf.PrepareString(text);
       ttf.LayoutGlyphs();
-
-      res = RenderTTF(px, py, ttf, mode);
+      RenderTTF(px, py, ttf, mode);
+   } else if (fWinContext && gVirtualX) {
+      gVirtualX->DrawTextW(fWinContext, px, py, att.GetTextAngle(), GetTextMagnitude(), text,
+                           (TVirtualX::ETextMode)mode);
    }
-   if (!res)
-      ::Error("TPadPainterBase::DrawText(char*)", "Not implemented");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -260,26 +256,22 @@ void TPadPainterBase::DrawText(Double_t x, Double_t y, const char *text, ETextMo
 
 void TPadPainterBase::DrawText(Double_t x, Double_t y, const wchar_t *text, ETextMode mode)
 {
-   Bool_t res = kFALSE;
+   Int_t px = fPad->XtoAbsPixel(x);
+   Int_t py = fPad->YtoAbsPixel(y);
+   const TAttText &att = GetAttText();
 
    if (HasTTFonts()) {
-      Int_t px = fPad->XtoAbsPixel(x);
-      Int_t py = fPad->YtoAbsPixel(y);
-
-      const TAttText &att = GetAttText();
-
       TTFhandle ttf;
       ttf.SetTextFont(att.GetTextFont());
       ttf.SetTextSize(att.GetTextSizePixels(*fPad));
       ttf.SetRotationMatrix(att.GetTextAngle());
       ttf.PrepareString(text);
       ttf.LayoutGlyphs();
-
-      res = RenderTTF(px, py, ttf, mode);
+      RenderTTF(px, py, ttf, mode);
+   } else if (fWinContext && gVirtualX) {
+      gVirtualX->DrawTextW(fWinContext, px, py, att.GetTextAngle(), GetTextMagnitude(), text,
+                           (TVirtualX::ETextMode)mode);
    }
-
-   if (!res)
-      ::Error("TPadPainterBase::DrawText(wchar_t*)", "Not implemented");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -287,26 +279,22 @@ void TPadPainterBase::DrawText(Double_t x, Double_t y, const wchar_t *text, ETex
 
 void TPadPainterBase::DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode mode)
 {
-   Bool_t res = kFALSE;
+   Int_t px = fPad->UtoAbsPixel(u);
+   Int_t py = fPad->VtoAbsPixel(v);
+   const TAttText &att = GetAttText();
 
    if (HasTTFonts()) {
-      Int_t px = fPad->UtoAbsPixel(u);
-      Int_t py = fPad->VtoAbsPixel(v);
-
-      const TAttText &att = GetAttText();
-
       TTFhandle ttf;
       ttf.SetTextFont(att.GetTextFont());
       ttf.SetTextSize(att.GetTextSizePixels(*fPad));
       ttf.SetRotationMatrix(att.GetTextAngle());
       ttf.PrepareString(text);
       ttf.LayoutGlyphs();
-
-      res = RenderTTF(px, py, ttf, mode);
+      RenderTTF(px, py, ttf, mode);
+   } else if (fWinContext && gVirtualX) {
+      gVirtualX->DrawTextW(fWinContext, px, py, att.GetTextAngle(), GetTextMagnitude(), text,
+                           (TVirtualX::ETextMode)mode);
    }
-
-   if (!res)
-      ::Error("TPadPainterBase::DrawTextNDC(char*)", "Not implemented");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -314,51 +302,20 @@ void TPadPainterBase::DrawTextNDC(Double_t u, Double_t v, const char *text, ETex
 
 void TPadPainterBase::DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, ETextMode mode)
 {
-   Bool_t res = kFALSE;
+   Int_t px = fPad->UtoAbsPixel(u);
+   Int_t py = fPad->VtoAbsPixel(v);
+   const TAttText &att = GetAttText();
 
    if (HasTTFonts()) {
-      Int_t px = fPad->UtoAbsPixel(u);
-      Int_t py = fPad->VtoAbsPixel(v);
-
-      const TAttText &att = GetAttText();
-
       TTFhandle ttf;
       ttf.SetTextFont(att.GetTextFont());
       ttf.SetTextSize(att.GetTextSizePixels(*fPad));
       ttf.SetRotationMatrix(att.GetTextAngle());
       ttf.PrepareString(text);
       ttf.LayoutGlyphs();
-
-      res = RenderTTF(px, py, ttf, mode);
+      RenderTTF(px, py, ttf, mode);
+   } else if (fWinContext && gVirtualX) {
+      gVirtualX->DrawTextW(fWinContext, px, py, att.GetTextAngle(), GetTextMagnitude(), text,
+                           (TVirtualX::ETextMode)mode);
    }
-
-   if (!res)
-      ::Error("TPadPainterBase::DrawTextNDC(wchar_t*)", "Not implemented");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Paint text with URL
-
-void TPadPainterBase::DrawTextUrl(Double_t x, Double_t y, const char *text, const char * /*url*/)
-{
-   Bool_t res = kFALSE;
-
-   if (HasTTFonts()) {
-      Int_t px = fPad->XtoAbsPixel(x);
-      Int_t py = fPad->YtoAbsPixel(y);
-
-      const TAttText &att = GetAttText();
-
-      TTFhandle ttf;
-      ttf.SetTextFont(att.GetTextFont());
-      ttf.SetTextSize(att.GetTextSizePixels(*fPad));
-      ttf.SetRotationMatrix(att.GetTextAngle());
-      ttf.PrepareString(text);
-      ttf.LayoutGlyphs();
-
-      res = RenderTTF(px, py, ttf, kOpaque);
-   }
-
-   if (!res)
-      ::Error("TPadPainterBase::DrawTextUrl", "Not implemented");
 }
