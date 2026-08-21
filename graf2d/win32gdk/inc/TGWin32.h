@@ -70,7 +70,7 @@ private:
                        Int_t bx, Int_t by);
    GdkImage *GetBackground(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h);
 
-   template<class CharType>
+   template<typename CharType>
    void      DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle,
                             const CharType *text, ETextMode mode);
 
@@ -227,6 +227,9 @@ public:
                        const char *text, ETextMode mode) override;
    void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
                        const wchar_t *text, ETextMode mode) override;
+   void      DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle &ttf, ETextMode mode) override;
+
+
 
    //---- Methods used for GUI -----
    void         GetWindowAttributes(Window_t id, WindowAttributes_t &attr) override;
