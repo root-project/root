@@ -367,7 +367,21 @@ void TGX11TTF::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angl
    if (((UInt_t) w > 10 * width) || ((UInt_t) h > 10 * height))
       return;
 
-   // create the XImage that will contain the text
+   DrawTTFglyphsW(wctxt, x1, y1, ttf, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw TTF glyphs on the specified window context
+
+void TGX11TTF::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle &ttf, ETextMode mode)
+{
+   Int_t Xoff = TMath::Max(0, (Int_t) -ttf.GetBox().xMin);
+   Int_t Yoff = TMath::Max(0, (Int_t) -ttf.GetBox().yMin);
+   Int_t w    = ttf.GetBox().xMax + Xoff;
+   Int_t h    = ttf.GetBox().yMax + Yoff;
+
+   Window_t cws = GetWindow(wctxt);
+
    UInt_t depth = fDepth;
    XImage *xim = XCreateImage((Display*)fDisplay, fVisual,
                                depth, ZPixmap, 0, nullptr, w, h,
@@ -384,7 +398,7 @@ void TGX11TTF::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angl
    XGCValues values;
    auto gc = (GC *) GetGCW(wctxt, 3);
    if (!gc) {
-      Error("DrawTextW", "error getting Graphics Context");
+      Error("DrawTTFglyphsW", "error getting Graphics Context");
       return;
    }
    XGetGCValues((Display*)fDisplay, *gc, GCForeground | GCBackground, &values);
@@ -394,19 +408,18 @@ void TGX11TTF::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angl
       // if mode == kClear we need to get an image of the background
       XImage *bim = GetBackground(wctxt, x1, y1, w, h);
       if (!bim) {
-         Error("DrawTextW", "error getting background image");
+         Error("DrawTTFglyphsW", "error getting background image");
          return;
       }
 
       // and copy it into the text image
-      Int_t xo = 0, yo = 0;
-      if (x1 < 0) xo = -x1;
-      if (y1 < 0) yo = -y1;
+      Int_t xo = x1 < 0 ? -x1 : 0;
+      Int_t yo = y1 < 0 ? -y1 : 0;
 
       for (int yp = 0; yp < (int) bim->height; yp++) {
          for (int xp = 0; xp < (int) bim->width; xp++) {
             ULong_t pixel = XGetPixel(bim, xp, yp);
-            XPutPixel(xim, xo+xp, yo+yp, pixel);
+            XPutPixel(xim, xo + xp, yo + yp, pixel);
          }
       }
       XDestroyImage(bim);
