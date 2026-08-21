@@ -98,6 +98,7 @@ using RNTupleOpenSpec = ROOT::Experimental::RNTupleOpenSpec;
 using RNTuplePlainCounter = ROOT::Experimental::Detail::RNTuplePlainCounter;
 using RNTuplePlainTimer = ROOT::Experimental::Detail::RNTuplePlainTimer;
 using RNTupleProcessor = ROOT::Experimental::RNTupleProcessor;
+using RNTupleProcessorOptions = ROOT::Experimental::RNTupleProcessorOptions;
 using RNTupleSerializer = ROOT::Internal::RNTupleSerializer;
 using RPage = ROOT::Internal::RPage;
 using RPageAllocatorHeap = ROOT::Internal::RPageAllocatorHeap;
