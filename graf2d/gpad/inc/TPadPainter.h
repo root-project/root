@@ -76,10 +76,7 @@ public:
    void     DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y) override;
    void     DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y) override;
 
-   void     DrawText(Double_t x, Double_t y, const char *text, ETextMode mode) override;
-   void     DrawText(Double_t x, Double_t y, const wchar_t *text, ETextMode mode) override;
-   void     DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode mode) override;
-   void     DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, ETextMode mode) override;
+   void     DrawTTFglyphs(Int_t x, Int_t y, TTFhandle &ttf, ETextMode mode) override;
 
    //jpg, png, bmp, gif output.
    void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const override;
