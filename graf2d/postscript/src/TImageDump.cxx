@@ -294,18 +294,6 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    // prefer to use triangles while image not always correctly fill complex polygon
    auto markerType = GetMarkerShape(markerSize, markerShape, gStyle->GetImageScaling(), TAttMarker::kPreferTriangles | TAttMarker::kDotAsLines);
 
-   // workaround of ASImage error - it is not able to draw circle with transparent color
-   if ((markerType == TAttMarker::kShapeFilledCircle) && (col->GetAlpha() < 1.)) {
-      Double_t r = markerSize / 2;
-      const int pts = 100;
-      const Double_t delta = TMath::TwoPi() / pts;
-      markerShape.reserve(pts + 1);
-      Double_t angle = 0.;
-      for (int i = 0; i <= pts; ++i, angle += delta)
-         markerShape.emplace_back(std::round(r * TMath::Cos(angle)), std::round(r * TMath::Sin(angle)));
-      markerType = TAttMarker::kShapeFilledArea;
-   }
-
    for (Int_t i = 0; i < n; i++) {
       auto ix = XtoPixel(xw[i]);
       auto iy = YtoPixel(yw[i]);
