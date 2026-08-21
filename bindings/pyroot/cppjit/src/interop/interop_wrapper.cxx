@@ -847,6 +847,8 @@ size_t interop::SizeOf(TCppScope_t klass) {
 }
 
 size_t interop::SizeOfType(TCppType_t klass) {
+  if (!klass)
+    return 0;
   std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
   return Cpp::GetSizeOfType(klass);
 }
@@ -1053,7 +1055,15 @@ void interop::CallDestructor(TCppScope_t scope, TCppObject_t self) {
 interop::TCppObject_t interop::CallO(TCppMethod_t method, TCppObject_t self,
                                      size_t nargs, void* args,
                                      TCppType_t result_type) {
-  void* obj = ::operator new(interop::SizeOfType(result_type));
+  size_t size = interop::SizeOfType(result_type);
+  if (size == 0) {
+    fprintf(stderr,
+            "interop::CallO: cannot determine return type size for %s%s\n",
+            interop::GetScopedFinalName(TCppScope_t(method.data)).c_str(),
+            interop::GetMethodSignature(method, false).c_str());
+    return TCppObject_t{};
+  }
+  void* obj = ::operator new(size);
   if (WrapperCall(method, nargs, args, self.data, obj))
     return (TCppObject_t)obj;
   ::operator delete(obj);
