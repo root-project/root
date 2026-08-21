@@ -618,6 +618,9 @@ std::vector<std::uint64_t> ROOT::RNTupleDescriptor::GetFeatureFlags() const
          flags = 0;
          base += 64;
       }
+      // Note that in the following iterations of the outer loop over fFeatureFlags, we can never have the situation
+      // where base is larger than the feature flag, because they are stored ordered in the std::set.
+      assert(f >= base);
       f -= base;
       flags |= std::uint64_t(1) << f;
    }
