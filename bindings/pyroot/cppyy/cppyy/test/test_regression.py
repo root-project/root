@@ -845,9 +845,11 @@ class TestREGRESSION:
 
             def changeCallback(self, b):
                 assert type(b) == type(self.derived)
-                assert b == self.derived
+                # the classes involved have no C++ equality operator, so the
+                # proxies have to be compared by address explicitly
+                assert cppyy.addressof(b) == cppyy.addressof(self.derived)
                 cast = cppyy.gbl.std.addressof[type(b)]
-                assert cast(b) == cast(self.derived)
+                assert cppyy.addressof(cast(b)) == cppyy.addressof(cast(self.derived))
                 self.success = True
 
         g = Glue()

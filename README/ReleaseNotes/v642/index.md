@@ -70,6 +70,53 @@ The following people have contributed to this new version:
 
 ## Python Interface
 
+### Equality comparisons of C++ objects follow C++ semantics
+
+**This is a behavior change that can affect existing code.** Comparing two
+Python proxies of C++ objects with `==` or `!=` now requires the C++ class to
+provide the corresponding operator (if only one of `operator==` and
+`operator!=` is defined, the other one is still derived from it by negation).
+When there is no C++ equality operator for the operands, a `TypeError` is
+raised:
+
+```python
+ROOT.gInterpreter.Declare("class MyClass {};")
+
+a = ROOT.MyClass()
+b = ROOT.MyClass()
+
+a == b  # raises TypeError in ROOT 6.42, was False before
+a == a  # raises TypeError in ROOT 6.42, was True before
+```
+
+Previously, such comparisons silently fell back to comparing the type and the
+address of the wrapped C++ object. That fallback was misleading, since `a == b`
+looked like a comparison by value even though the C++ class did not define one.
+It also produced inconsistent results for classes that define only one of the
+two operators: for example, `v1 == v2` for two **RooRealVar** objects with the
+same value returned `True` via `RooAbsReal::operator==`, while `v1 != v2`
+returned `True` as well, because `!=` fell back to comparing addresses.
+
+If you relied on the old behavior to check whether two proxies refer to the
+same C++ object, compare the addresses explicitly with
+`ROOT.addressof(a) == ROOT.addressof(b)`. If a comparison by value is
+meaningful for your class, define an `operator==` for it in C++, or implement
+`__eq__` and `__ne__` from Python with a custom pythonization.
+
+Two exceptions to the new rule are kept, to avoid changing behavior where the
+old semantics were unambiguous:
+
+  * Proxies of the *same* type are still compared by address if at least one of
+    them wraps a `nullptr`, because a comparison by value is not possible then.
+  * Comparisons with objects that are not C++ proxies are left to Python, so
+    `a == 1` is still `False` and `a != 1` is still `True`.
+
+Related to this, the undocumented `__eq__`/`__ne__` pythonization of
+**TObject**, which forwarded to `TObject::IsEqual()`, is gone. Classes
+inheriting from `TObject` that override `IsEqual()` need to call it explicitly,
+or define a C++ `operator==`. More details can be found in the
+[pythonizations documentation](https://root.cern/doc/master/group__Pythonizations.html).
+
 ## I/O
 
 ## Core
