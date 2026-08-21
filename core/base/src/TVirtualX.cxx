@@ -541,6 +541,15 @@ void TVirtualX::DrawTextW(WinContext_t /* wctxt */, Int_t x, Int_t y, Float_t an
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Draw TTFglyphs on specified window
+/// Will be invoked only if HasTTFonts method returns true
+
+void TVirtualX::DrawTTFglyphsW(WinContext_t /* wctxt */, Int_t /* x */, Int_t /* y */, TTFhandle &/* handle */, ETextMode /* mode */)
+{
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Save specified window as GIF image
 
 Int_t TVirtualX::WriteGIFW(WinContext_t /* wctxt */, const char *name)
