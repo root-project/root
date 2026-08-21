@@ -209,8 +209,8 @@ Bool_t TPadPainterBase::RenderTTF(Int_t px, Int_t py, TTFhandle &ttf, ETextMode 
    Int_t x1 = px - Xoff - (alignVector.x >> 6);
    Int_t y1 = py + Yoff + (alignVector.y >> 6) - h;
 
-   Int_t width = gPad->GetPadWidth();
-   Int_t height = gPad->GetPadHeight();
+   Int_t width = fPad->GetPadWidth();
+   Int_t height = fPad->GetPadHeight();
 
    // If string falls outside window, there is probably no need to draw it.
    if (x1 + w <= 0 || x1 >= width || y1 + h <= 0 || y1 >= height)
@@ -244,7 +244,7 @@ void TPadPainterBase::DrawText(Double_t x, Double_t y, const char *text, ETextMo
 
       TTFhandle ttf;
       ttf.SetTextFont(att.GetTextFont());
-      ttf.SetTextSize(att.GetTextSizePixels(*gPad));
+      ttf.SetTextSize(att.GetTextSizePixels(*fPad));
       ttf.SetRotationMatrix(att.GetTextAngle());
       ttf.PrepareString(text);
       ttf.LayoutGlyphs();
@@ -270,7 +270,7 @@ void TPadPainterBase::DrawText(Double_t x, Double_t y, const wchar_t *text, ETex
 
       TTFhandle ttf;
       ttf.SetTextFont(att.GetTextFont());
-      ttf.SetTextSize(att.GetTextSizePixels(*gPad));
+      ttf.SetTextSize(att.GetTextSizePixels(*fPad));
       ttf.SetRotationMatrix(att.GetTextAngle());
       ttf.PrepareString(text);
       ttf.LayoutGlyphs();
@@ -297,7 +297,7 @@ void TPadPainterBase::DrawTextNDC(Double_t u, Double_t v, const char *text, ETex
 
       TTFhandle ttf;
       ttf.SetTextFont(att.GetTextFont());
-      ttf.SetTextSize(att.GetTextSizePixels(*gPad));
+      ttf.SetTextSize(att.GetTextSizePixels(*fPad));
       ttf.SetRotationMatrix(att.GetTextAngle());
       ttf.PrepareString(text);
       ttf.LayoutGlyphs();
@@ -324,7 +324,7 @@ void TPadPainterBase::DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, E
 
       TTFhandle ttf;
       ttf.SetTextFont(att.GetTextFont());
-      ttf.SetTextSize(att.GetTextSizePixels(*gPad));
+      ttf.SetTextSize(att.GetTextSizePixels(*fPad));
       ttf.SetRotationMatrix(att.GetTextAngle());
       ttf.PrepareString(text);
       ttf.LayoutGlyphs();
@@ -351,7 +351,7 @@ void TPadPainterBase::DrawTextUrl(Double_t x, Double_t y, const char *text, cons
 
       TTFhandle ttf;
       ttf.SetTextFont(att.GetTextFont());
-      ttf.SetTextSize(att.GetTextSizePixels(*gPad));
+      ttf.SetTextSize(att.GetTextSizePixels(*fPad));
       ttf.SetRotationMatrix(att.GetTextAngle());
       ttf.PrepareString(text);
       ttf.LayoutGlyphs();

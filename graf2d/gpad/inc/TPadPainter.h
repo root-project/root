@@ -23,9 +23,8 @@ or gl pad painter.
 class TVirtualPad;
 
 class TPadPainter : public TPadPainterBase {
-   WinContext_t   fWinContext;
-   Int_t          fDoubleBuffer;
-   TVirtualPad   *fPad = nullptr;
+protected:
+   Int_t          fDoubleBuffer = 1;
 
 public:
    TPadPainter();
@@ -84,8 +83,6 @@ public:
 
    //jpg, png, bmp, gif output.
    void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const override;
-
-   void     OnPad(TVirtualPad *pad) override { fPad = pad; }
 
    Bool_t   IsNative() const override { return kTRUE; }
 
