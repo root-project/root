@@ -901,6 +901,15 @@ TEST(ONNX, ConvTranspose2d)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, ConvTranspose2dOutputShape)
+{
+   SofieReference ref = readReference("ConvTranspose2dOutputShape");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvTranspose2dOutputShape", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 /* ConvTranspose3d is not supported yet; a ConvTranspose3d model would have
    to be added to generate_input_models.py to enable this test.
 TEST(ONNX, ConvTranspose3d)

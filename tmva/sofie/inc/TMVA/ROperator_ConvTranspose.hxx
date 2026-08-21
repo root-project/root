@@ -73,13 +73,21 @@ public:
                            std::vector<size_t> kernelShape, std::vector<size_t> outputPadding,
                            std::vector<size_t> outputShape, std::vector<size_t> pads, std::vector<size_t> strides,
                            std::string nameX, std::string nameW, std::string nameB, std::string nameY)
-      : fAttrAutopad(autopad), fAttrDilations(dilations), fAttrGroup(group), fAttrKernelShape(kernelShape),
-        fAttrOutputPadding(outputPadding), fAttrOutputShape(outputShape), fAttrPads(pads), fAttrStrides(strides),
-        fNX(UTILITY::Clean_name(nameX)), fNW(UTILITY::Clean_name(nameW)), fNB(UTILITY::Clean_name(nameB)),
+      : fAttrAutopad(autopad),
+        fAttrDilations(dilations),
+        fAttrGroup(group),
+        fAttrKernelShape(kernelShape),
+        fAttrOutputPadding(outputPadding),
+        fAttrOutputShape(outputShape),
+        fAttrPads(pads),
+        fAttrStrides(strides),
+        fNX(UTILITY::Clean_name(nameX)),
+        fNW(UTILITY::Clean_name(nameW)),
+        fNB(UTILITY::Clean_name(nameB)),
         fNY(UTILITY::Clean_name(nameY))
    {
-      fInputTensorNames = { fNX, fNW };
-      fOutputTensorNames = { fNY };
+      fInputTensorNames = {fNX, fNW};
+      fOutputTensorNames = {fNY};
       if (!fNB.empty()) {
          fInputTensorNames.emplace_back(fNB);
       }
@@ -121,7 +129,7 @@ public:
 
    /*! \brief Returns the blas routines needed to compile the generated code
     */
-   std::vector<std::string> GetBlasRoutines() override { return { std::string("Gemm"), std::string("Axpy") }; }
+   std::vector<std::string> GetBlasRoutines() override { return {std::string("Gemm"), std::string("Axpy")}; }
 };
 
 template <typename T>
@@ -162,30 +170,7 @@ auto ROperator_ConvTranspose<T>::ShapeInference(std::vector<std::vector<size_t>>
    // Generate the padding
    if (fAttrPads.empty()) {
       fAttrPads = std::vector<size_t>(2 * fDim, 0);
-      if (fAttrOutputShape.size() == fDim) {
-         // LM: to be checked...
-         //  for time being not support
-         throw std::runtime_error("ConvTranspose with output_shape explicitly set not yet supported.");
-         /*
-         std::vector<size_t> totalPadding(fDim, 1);
-         for (size_t i = 0; i < fDim; i++) {
-            size_t j = i + 2;
-            totalPadding[i] =
-               fAttrStrides[i] * (fAttrOutputShape[i] - 1) + fAttrOutputPadding[i] + fAttrKernelShape[i] - fShapeX[j];
-         }
 
-         for (size_t i = 0; i < fDim; i++) {
-            size_t end_i = i + fDim;
-            if (fAttrAutopad == "SAME_UPPER") {
-               fAttrPads[i] = totalPadding[i] / 2;
-               fAttrPads[end_i] = totalPadding[i] - fAttrPads[i];
-            } else {
-               fAttrPads[end_i] = totalPadding[i] / 2;
-               fAttrPads[i] = totalPadding[i] - fAttrPads[end_i];
-            }
-         }
-         */
-      }
       if (fAttrAutopad != "NOTSET") {
          throw std::runtime_error("ConvTranspose with padding SAME_UPPER or SMAE_LOWER not supported");
       }
@@ -199,8 +184,29 @@ auto ROperator_ConvTranspose<T>::ShapeInference(std::vector<std::vector<size_t>>
       }
    } else {
       // The shape of the output is explicitly set
-      // TODO Generate the padding from the output shape and the input shape
-      throw std::runtime_error("ConvTranspose with output_shape explicitly set not yet supported.");
+      fAttrPads = std::vector<size_t>(2 * fDim, 0);
+      for (size_t i = 0; i < fDim; ++i) {
+         size_t input_shape = inputShape[i + 2];
+         size_t output_shape = fAttrOutputShape[i];
+         size_t kernel_shape = weightShape[i + 2];
+
+         size_t stride = fAttrStrides[i];
+         size_t dilation = fAttrDilations[i];
+         size_t output_padding = fAttrOutputPadding[i];
+
+         size_t effective_kernel_shape = (kernel_shape - 1) * dilation + 1;
+         size_t expected_shape_without_pad = (input_shape - 1) * stride + output_padding + effective_kernel_shape;
+
+         if (expected_shape_without_pad < output_shape) {
+            throw std::runtime_error("ConvTranspose: explicitly set output_shape is too large for "
+                                     "the given input and kernel shapes.");
+         }
+
+         size_t total_padding = expected_shape_without_pad - output_shape;
+
+         fAttrPads[i + fDim] = total_padding / 2;
+         fAttrPads[i] = total_padding - fAttrPads[i + fDim];
+      }
    }
 
    for (size_t i = 0; i < fDim; i++)
@@ -319,8 +325,8 @@ std::string ROperator_ConvTranspose<T>::GenerateInitCode()
    if (bsize != ysize && !fNBroadcastedB.empty()) {
       // include a separate scope to avoid defining unique operator temp variables
       out << SP << "{\n";
-      out << SP << SP << "float * data = UTILITY::BroadcastConvBias<float>(tensor_" << fNB
-          << ", " << bsize << ", " << ConvertShapeToString(fShapeY) << ");\n";
+      out << SP << SP << "float * data = UTILITY::BroadcastConvBias<float>(tensor_" << fNB << ", " << bsize << ", "
+          << ConvertShapeToString(fShapeY) << ");\n";
       out << SP << SP << "std::copy(data, data + " << ConvertShapeToLength(fShapeY) << ", tensor_" << fNBroadcastedB
           << ");\n";
       out << SP << SP << "delete[] data;\n";
@@ -447,31 +453,6 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
    // trick for speed is using caffe im2col and output a matrix which contains filtered values as rows.
    // By doing this one has consecutive memory reads and writes
    // Resulting matrix op_xcol is (output channels * filter_h * filter_w , output_h * output_w)
-   if (fDim == 1) {
-      if (fAttrPads[0] != fAttrPads[1]) {
-         std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding "
-                   << std::endl;
-         fAttrPads[0] = (fAttrPads[0] + fAttrPads[1]) / 2;
-      }
-      fAttrPads[1] = 0;
-   }
-   if (fDim == 2) {
-      if (fAttrPads[0] != fAttrPads[2] || fAttrPads[1] != fAttrPads[3]) {
-         std::cout << "TMVA SOFIE Operator ConvTranspose:  asymmetric padding not supported. Assume an average padding "
-                   << std::endl;
-         fAttrPads[0] = (fAttrPads[0] + fAttrPads[2]) / 2;
-         fAttrPads[1] = (fAttrPads[1] + fAttrPads[3]) / 2;
-      }
-   }
-   if (fDim == 3) {
-      if (fAttrPads[0] != fAttrPads[3] || fAttrPads[1] != fAttrPads[4] || fAttrPads[2] != fAttrPads[5]) {
-         std::cout << "TMVA SOFIE Operator ConvTranspose:  asymmetric padding not supported. Assume an average padding "
-                   << std::endl;
-         fAttrPads[0] = (fAttrPads[0] + fAttrPads[3]) / 2;
-         fAttrPads[1] = (fAttrPads[1] + fAttrPads[4]) / 2;
-         fAttrPads[2] = (fAttrPads[2] + fAttrPads[5]) / 2;
-      }
-   }
 
    if (fAttrGroup == 1) {
       out << SP << SP << "size_t x_offset = n * " << fShapeX[1] * iDepth * iHeight * iWidth << ";\n";
@@ -492,16 +473,16 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
       if (fDim < 3) {
          out << SP << SP << "UTILITY::col2im<float>(tensor_" << fNX
              << "_xcol,"
-             //  channels, height, width, kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, dilation_h,
-             //  dilation_w,
+             //  channels, height, width, kernel_h, kernel_w, pad_h_begin, pad_h_end, pad_w_begin, pad_w_end,
+             //  stride_h, stride_w, dilation_h, dilation_w,
              << fShapeY[1] << "," << oHeight << "," << oWidth << ",";
          if (fDim == 1)
-            out << "1, " << fAttrKernelShape[0] << ",0," << fAttrPads[0] << ",1," << fAttrStrides[0] << ",1,"
-                << fAttrDilations[0];
+            out << "1, " << fAttrKernelShape[0] << ",0,0," << fAttrPads[0] << "," << fAttrPads[1] << ",1,"
+                << fAttrStrides[0] << ",1," << fAttrDilations[0];
          else // dim ==2
-            out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1]
-                << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
-                << fAttrDilations[1];
+            out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[2]
+                << "," << fAttrPads[1] << "," << fAttrPads[3] << "," << fAttrStrides[0] << "," << fAttrStrides[1] << ","
+                << fAttrDilations[0] << "," << fAttrDilations[1];
          out << ", tensor_" << fNY << " + out_offset);\n\n ";
       } else {
          // 3d : needs a col2im for 3d
@@ -514,9 +495,8 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
              << fShapeX[1] << "," << oDepth << "," << oHeight << "," << oWidth << "," << fAttrKernelShape[0] << ","
              << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << "," << fAttrPads[0] << "," << fAttrPads[3] << ","
              << fAttrPads[1] << "," << fAttrPads[4] << "," << fAttrPads[2] << "," << fAttrPads[5] << ","
-             << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << ","
-             << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << ",tensor_" << fNX
-             << "_xcol);\n\n ";
+             << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << "," << fAttrDilations[0] << ","
+             << fAttrDilations[1] << "," << fAttrDilations[2] << ",tensor_" << fNX << "_xcol);\n\n ";
       }
       // // BLAS
       // out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
@@ -545,16 +525,16 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
       if (fDim < 3) {
          out << SP << SP << "UTILITY::col2im<float>(tensor_" << fNX
              << "_xcol,"
-             //  channels, height, width, kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, dilation_h,
-             //  dilation_w,
+             //  channels, height, width, kernel_h, kernel_w, pad_h_begin, pad_h_end, pad_w_begin, pad_w_end,
+             //  stride_h, stride_w, dilation_h, dilation_w,
              << fShapeY[1] << "," << oHeight << "," << oWidth << ",";
          if (fDim == 1)
-            out << "1, " << fAttrKernelShape[0] << ",0," << fAttrPads[0] << ",1," << fAttrStrides[0] << ",1,"
-                << fAttrDilations[0];
+            out << "1, " << fAttrKernelShape[0] << ",0,0," << fAttrPads[0] << "," << fAttrPads[1] << ",1,"
+                << fAttrStrides[0] << ",1," << fAttrDilations[0];
          else // dim ==2
-            out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1]
-                << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
-                << fAttrDilations[1];
+            out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[2]
+                << "," << fAttrPads[1] << "," << fAttrPads[3] << "," << fAttrStrides[0] << "," << fAttrStrides[1] << ","
+                << fAttrDilations[0] << "," << fAttrDilations[1];
          out << ", tensor_" << fNY << " + out_offset);\n\n ";
       } else {
          // 3d im2col
@@ -568,9 +548,8 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
              << fShapeX[1] << "," << oDepth << "," << oHeight << "," << oWidth << "," << fAttrKernelShape[0] << ","
              << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << "," << fAttrPads[0] << "," << fAttrPads[3] << ","
              << fAttrPads[1] << "," << fAttrPads[4] << "," << fAttrPads[2] << "," << fAttrPads[5] << ","
-             << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << ","
-             << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << "," << "tensor_" << fNX
-             << "_xcol);\n\n ";
+             << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << "," << fAttrDilations[0] << ","
+             << fAttrDilations[1] << "," << fAttrDilations[2] << "," << "tensor_" << fNX << "_xcol);\n\n ";
       }
 
       // // BLAS
