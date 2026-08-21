@@ -370,9 +370,6 @@ double flexibleInterp(unsigned int code, ParamsArray params, unsigned int n, Dou
                       double boundary, double nominal, int doCutoff)
 {
    double total = nominal;
-#if defined(__CLING__) && defined(R__HAS_CLAD)
-#pragma clad checkpoint loop
-#endif
    for (std::size_t i = 0; i < n; ++i) {
       total += flexibleInterpSingle(code, low[i], high[i], boundary, nominal, params[i], total);
    }
