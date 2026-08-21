@@ -24,6 +24,7 @@ the class TEmulatedMapProxy.
 */
 
 #include "TEmulatedCollectionProxy.h"
+#include "TClass.h"
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 #include "TClassEdit.h"
@@ -269,13 +270,13 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
    // Shrink the container
 
    typedef std::string String_t;
-   char* addr  = ((char*)fEnv->fStart) + fValDiff*left;
+   char *addr = ((char *)fEnv->fStart) + ElementOffset(left);
    size_t i;
 
    switch ( fSTL_type )  {
       case ROOT::kSTLmap:
       case ROOT::kSTLmultimap:
-         addr = ((char*)fEnv->fStart) + fValDiff*left;
+         addr = ((char *)fEnv->fStart) + ElementOffset(left);
          switch(fKey->fCase)  {
             case kIsFundamental:  // Only handle primitives this way
             case kIsEnum:
@@ -318,7 +319,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
                }
                break;
          }
-         addr = ((char*)fEnv->fStart)+fValOffset+fValDiff*left;
+         addr = ((char *)fEnv->fStart) + fValOffset + ElementOffset(left);
          // DO NOT break; just continue
 
          // General case for all values
@@ -365,24 +366,64 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
    }
    WithCont(fEnv->fObject, [&](auto *c, std::size_t alignmentElemSize) {
       assert(fValDiff % alignmentElemSize == 0);
-      c->resize(left * fValDiff / alignmentElemSize);
+      c->resize(ElementOffset(left) / alignmentElemSize);
       fEnv->fStart = left > 0 ? c->data() : nullptr;
    });
    return;
 }
 
-void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
+void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left, Bool_t force)
 {
    // Expand the container
    size_t i;
+
+   // The storage is a std::vector of raw, aligned bytes: growing it past its
+   // capacity relocates the elements with a raw memory copy. That corrupts an
+   // object holding a pointer into itself -- notably std::string (and TString)
+   // using the small-string optimization, whose data pointer would keep pointing
+   // into the old, freed, buffer and be freed again from there when the object is
+   // destroyed (https://github.com/root-project/root/issues/20882).
+   //
+   // TClass::Move (used below) does not actually move the data, so it cannot fix
+   // those up. Expand is however only reached while preparing the collection to
+   // be entirely overwritten by a member-wise read, so we destroy such elements
+   // here -- while they are still valid -- and let the code below reconstruct
+   // them at the new location instead of relocating them.
+   auto needsRealMove = [](const Value *v) {
+      if (!v || (v->fCase & kIsPointer))
+         return false; // a pointer relocates fine
+      if (v->fCase & kBIT_ISSTRING)
+         return true; // std::string, see above
+      if (v->fCase & kIsClass) {
+         // TClass is conservative for the types the interpreter does not know.
+         TClass *cl = v->fType.GetClass();
+         return !cl || !cl->CanBeRelocatedWithMemcpy();
+      }
+      return false; // fundamental types and enums
+   };
+   if (nCurr > 0) {
+      // Only worth asking about the type if the buffer actually reallocates.
+      bool willReallocate = false;
+      WithCont(fEnv->fObject, [&](auto *c, std::size_t alignmentElemSize) {
+         willReallocate = (ElementOffset(left) / alignmentElemSize) > c->capacity();
+      });
+      if (willReallocate && (needsRealMove(fVal) || needsRealMove(fKey))) {
+         // Destroys the elements in place and resizes to 0, keeping the capacity;
+         // the buffer grows again right below with no live object to relocate.
+         // 'force' is the caller's: it decides whether pointees are deleted too.
+         Shrink(nCurr, 0, force);
+         nCurr = 0;
+      }
+   }
+
    void *oldstart = fEnv->fStart;
    WithCont(fEnv->fObject, [&](auto *c, std::size_t alignmentElemSize) {
       assert(fValDiff % alignmentElemSize == 0);
-      c->resize(left * fValDiff / alignmentElemSize);
+      c->resize(ElementOffset(left) / alignmentElemSize);
       fEnv->fStart = left > 0 ? c->data() : nullptr;
    });
 
-   char* addr = ((char*)fEnv->fStart) + fValDiff*nCurr;
+   char *addr = ((char *)fEnv->fStart) + ElementOffset(nCurr);
    switch ( fSTL_type )  {
       case ROOT::kSTLmap:
       case ROOT::kSTLmultimap:
@@ -393,7 +434,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
             case kIsClass:
                if (oldstart && oldstart != fEnv->fStart) {
                   Long_t offset = 0;
-                  for( i=0; i<=nCurr; ++i, offset += fValDiff ) {
+                  for (i = 0; i < nCurr; ++i, offset += fValDiff) {
                      // For now 'Move' only register the change of location
                      // so per se this is wrong since the object are copied via memcpy
                      // rather than a copy (or move) constructor.
@@ -414,7 +455,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
                   *(void**)addr = 0;
                break;
          }
-         addr = ((char*)fEnv->fStart)+fValOffset+fValDiff*nCurr;
+         addr = ((char *)fEnv->fStart) + fValOffset + ElementOffset(nCurr);
          // DO NOT break; just continue
 
          // General case for all values
@@ -425,8 +466,10 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
                break;
             case kIsClass:
                if (oldstart && oldstart != fEnv->fStart) {
-                  Long_t offset = 0;
-                  for( i=0; i<=nCurr; ++i, offset += fValDiff ) {
+                  // fValOffset locates the value inside the element, as it does
+                  // for the New() loop below; for a map it is past the key.
+                  Long_t offset = fValOffset;
+                  for (i = 0; i < nCurr; ++i, offset += fValDiff) {
                      // For now 'Move' only register the change of location
                      // so per se this is wrong since the object are copied via memcpy
                      // rather than a copy (or move) constructor.
@@ -467,7 +510,7 @@ void TEmulatedCollectionProxy::Resize(UInt_t left, Bool_t force)
          Shrink(nCurr, left, force);
          return;
       }
-      Expand(nCurr, left);
+      Expand(nCurr, left, force);
       return;
    }
    Fatal("TEmulatedCollectionProxy","Resize> Logic error - no proxy object set.");
@@ -482,7 +525,7 @@ void* TEmulatedCollectionProxy::At(UInt_t idx)
       if ( idx >= (s/fValDiff) )  {
          return 0;
       }
-      return idx < (s / fValDiff) ? c->data() + idx * fValDiff : 0;
+      return idx < (s / fValDiff) ? c->data() + ElementOffset(idx) : 0;
    }
    Fatal("TEmulatedCollectionProxy","At> Logic error - no proxy object set.");
    return 0;
@@ -540,7 +583,9 @@ void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)
          }
          break;
 
-#define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
+         // clang-format off
+#define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + ElementOffset(idx)); { x ;} ++idx;} break;}
+         // clang-format on
 
       case kIsClass:
          DOLOOP( b.StreamObject(i,fVal->fType) );
@@ -588,7 +633,9 @@ void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)
                Error("TEmulatedCollectionProxy","fType %d is not supported yet!\n",fVal->fKind);
          }
          break;
-#define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
+         // clang-format off
+#define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + ElementOffset(idx)); { x ;} ++idx;} break;}
+         // clang-format on
       case kIsClass:
          DOLOOP( b.StreamObject(i,fVal->fType) );
       case kBIT_ISSTRING:
