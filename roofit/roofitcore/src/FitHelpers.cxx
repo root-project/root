@@ -489,7 +489,12 @@ std::unique_ptr<RooAbsReal> createNLLNew(RooAbsPdf &pdf, RooAbsData &data, std::
    RooAbsPdf &finalPdf = applyIntegrateBinsWrapping(pdf, data, integrateOverBinsPrecision, binSamplingPdfs);
 
    RooArgList nllTerms;
-   if (auto *simPdf = dynamic_cast<RooSimultaneous *>(&finalPdf)) {
+   auto *simPdf = dynamic_cast<RooSimultaneous *>(&finalPdf);
+   // A RooSimultaneous whose index category is not among the data columns is
+   // a "switch" pdf selecting the component given by the current index state
+   // (analogous to RooMultiPdf): there are no channels to split the NLL into,
+   // so it is treated like an ordinary pdf.
+   if (simPdf && simPdf->indexCatIsObservable(*data.get())) {
       nllTerms.addOwned(createSimultaneousNLL(*simPdf, isExtended, rangeName, offset));
    } else {
       RooNLLVarNew::Config cfg;
@@ -831,7 +836,8 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
       RooArgSet normSet;
       pdf.getObservables(data.get(), normSet);
 
-      if (dynamic_cast<RooSimultaneous const *>(&pdf)) {
+      auto *simPdfForProjDeps = dynamic_cast<RooSimultaneous const *>(&pdf);
+      if (simPdfForProjDeps && simPdfForProjDeps->indexCatIsObservable(normSet)) {
          for (auto i : projDeps) {
             auto res = normSet.find(i->GetName());
             if (res != nullptr) {
@@ -1088,7 +1094,10 @@ std::unique_ptr<RooAbsReal> createChi2(RooAbsReal &real, RooDataHist &data, cons
             applyIntegrateBinsWrapping(*pdfClone, data, pc.getDouble("integrate_bins"), binSamplingPdfs);
 
          std::unique_ptr<RooAbsReal> chi2;
-         if (auto *simPdfClone = dynamic_cast<RooSimultaneous *>(&finalPdf)) {
+         auto *simPdfClone = dynamic_cast<RooSimultaneous *>(&finalPdf);
+         // Like in createNLLNew(): a "switch"-mode RooSimultaneous (index
+         // category not among the data columns) is treated as an ordinary pdf.
+         if (simPdfClone && simPdfClone->indexCatIsObservable(*data.get())) {
             chi2 = std::unique_ptr<RooAbsReal>{dynamic_cast<RooAbsReal *>(
                createSimultaneousChi2(*simPdfClone, rangeName ? rangeName : "", extended, etype).release())};
          } else {

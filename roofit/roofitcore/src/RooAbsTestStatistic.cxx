@@ -86,6 +86,21 @@ using std::endl, std::ostream;
 ///    ```
 ///    if the categories are called "pi0" and "gamma".
 
+namespace {
+
+/// A RooSimultaneous implies a simultaneous fit over the states of its index
+/// category only if the index category is among the data columns. Otherwise,
+/// it acts as a "switch" pdf that evaluates to the component selected by the
+/// current index state (analogous to RooMultiPdf), and the test statistic has
+/// to treat it like any ordinary pdf instead of splitting the data.
+bool isSimultaneousFit(RooAbsReal &real, RooAbsData &data)
+{
+   auto *simPdf = dynamic_cast<RooSimultaneous *>(&real);
+   return simPdf && simPdf->indexCatIsObservable(*data.get());
+}
+
+} // namespace
+
 RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
                                          const RooArgSet& projDeps, RooAbsTestStatistic::Configuration const& cfg) :
   RooAbsReal(name,title),
@@ -97,8 +112,8 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
   _addCoefRangeName(cfg.addCoefRangeName),
   _splitRange(cfg.splitCutRange),
   _verbose(cfg.verbose),
-  // Determine if RooAbsReal is a RooSimultaneous
-  _gofOpMode{(cfg.nCPU>1 || cfg.nCPU==-1) ? MPMaster : (dynamic_cast<RooSimultaneous*>(_func) ? SimMaster : Slave)},
+  // Determine if RooAbsReal implies a simultaneous fit over channels
+  _gofOpMode{(cfg.nCPU>1 || cfg.nCPU==-1) ? MPMaster : (isSimultaneousFit(real, data) ? SimMaster : Slave)},
   _nEvents{data.numEntries()},
   _nCPU(cfg.nCPU != -1 ? cfg.nCPU : 1),
   _mpinterl(cfg.interleave),
@@ -123,8 +138,9 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
   _addCoefRangeName(other._addCoefRangeName),
   _splitRange(other._splitRange),
   _verbose(other._verbose),
-  // Determine if RooAbsReal is a RooSimultaneous
-  _gofOpMode{(other._nCPU>1 || other._nCPU==-1) ? MPMaster : (dynamic_cast<RooSimultaneous*>(_func) ? SimMaster : Slave)},
+  // Determine if RooAbsReal implies a simultaneous fit over channels
+  _gofOpMode{(other._nCPU>1 || other._nCPU==-1) ? MPMaster
+                                                : (isSimultaneousFit(*other._func, *other._data) ? SimMaster : Slave)},
   _nEvents{_data->numEntries()},
   _nCPU(other._nCPU != -1 ? other._nCPU : 1),
   _mpinterl(other._mpinterl),
