@@ -828,3 +828,33 @@ TEST(RooSimultaneous, AsymmetryPlot)
       EXPECT_NEAR(curve->interpolate(xv), analytic(xv), 1e-6) << "at x = " << xv;
    }
 }
+
+/// Regression test for a value-server link corruption: the index category is
+/// a value server of the RooSimultaneous via the index category proxy, and
+/// fixAddCoefNormalization() additionally stores it in the non-propagating
+/// "!plotCoefNormSet" set proxy. Clearing that set on the second call used to
+/// also remove the value-client entry owned by the index category proxy, so
+/// the index category silently disappeared from getObservables(). This
+/// happened in practice after two createChi2() calls with a non-legacy
+/// backend, which call fixAddCoefNormalization() on the original pdf.
+TEST(RooSimultaneous, RepeatedFixAddCoefNormalization)
+{
+   RooRealVar x("x", "x", 0, 1);
+   RooGenericPdf gaussA("gaussA", "1 + x", x);
+   RooGenericPdf gaussB("gaussB", "1 - x", x);
+
+   RooCategory sample("sample", "sample", {{"A", 0}, {"B", 1}});
+   RooSimultaneous simPdf("simPdf", "simPdf", {{"A", &gaussA}, {"B", &gaussB}}, sample);
+
+   RooArgSet normSet{x, sample};
+
+   for (int i = 0; i < 2; ++i) {
+      simPdf.fixAddCoefNormalization(normSet, false);
+
+      EXPECT_TRUE(sample.isValueServer(simPdf)) << "after fixAddCoefNormalization() call " << i + 1;
+
+      RooArgSet observables;
+      simPdf.getObservables(&normSet, observables);
+      EXPECT_TRUE(observables.find(sample)) << "after fixAddCoefNormalization() call " << i + 1;
+   }
+}

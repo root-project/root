@@ -976,7 +976,18 @@ RooSimultaneous::createAsymmetryComponent(const RooAbsCategoryLValue &asymCat, c
 void RooSimultaneous::selectNormalization(const RooArgSet* normSet, bool /*force*/)
 {
   _plotCoefNormSet.removeAll() ;
-  if (normSet) _plotCoefNormSet.add(*normSet) ;
+  if (normSet) {
+     // The index category must not be stored in the set: it is meaningless for
+     // the coefficient normalization, since it is never an observable of the
+     // component pdfs (RooAddPdf::selectNormalization() would filter it out
+     // again anyway). Worse, it is already registered as a value server via
+     // the index category proxy, and registering the same server a second
+     // time through this non-propagating set proxy corrupts the reference
+     // counts of the server's client lists when the set is cleared again.
+     RooArgSet filteredNormSet{*normSet};
+     filteredNormSet.remove(_indexCat.arg(), true, true);
+     _plotCoefNormSet.add(filteredNormSet);
+  }
 }
 
 
