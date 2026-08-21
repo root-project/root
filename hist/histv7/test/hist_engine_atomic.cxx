@@ -310,7 +310,37 @@ TEST(RHistEngine, SnapshotAtomic)
    EXPECT_EQ(engineB.GetBinContent(RBinIndex::Overflow()), 1);
 }
 
+// Stress calling SnapshotAtomic from multiple threads.
 TEST(RHistEngine, StressSnapshotAtomic)
+{
+   static constexpr std::size_t Bins = 20;
+   static constexpr std::size_t NThreads = 4;
+   static constexpr std::size_t NSnapshotsPerThread = 10000;
+   static constexpr int ExpectedBinContent0 = 1;
+
+   // Create a histogram with some bins that takes a bit of time to snapshot.
+   RHistEngine<int> engine(Bins, {0, Bins});
+   engine.Fill(0.5);
+
+   std::atomic<int> binContent0 = ExpectedBinContent0;
+
+   StressInParallel(NThreads, [&] {
+      for (std::size_t i = 0; i < NSnapshotsPerThread; i++) {
+         auto snapshot = engine.SnapshotAtomic();
+         // compare_exchange wants a non-const reference...
+         int expected = ExpectedBinContent0;
+         int actual = snapshot.GetBinContent(0);
+         if (actual != expected) {
+            binContent0.compare_exchange_strong(expected, actual);
+         }
+      }
+   });
+
+   EXPECT_EQ(binContent0, ExpectedBinContent0);
+}
+
+// Stress calling SnapshotAtomic while other threads call FillAtomic.
+TEST(RHistEngine, StressFillSnapshotAtomic)
 {
    static constexpr std::size_t Bins = 20;
    static constexpr std::size_t NThreads = 4;
@@ -485,7 +515,7 @@ TEST(RHistEngine_RBinWithError, SnapshotAtomic)
    EXPECT_EQ(engineB.GetBinContent(RBinIndex::Overflow()).fSum, 1);
 }
 
-TEST(RHistEngine_RBinWithError, StressSnapshotAtomic)
+TEST(RHistEngine_RBinWithError, StressFillSnapshotAtomic)
 {
    static constexpr std::size_t Bins = 20;
    static constexpr std::size_t NThreads = 4;
