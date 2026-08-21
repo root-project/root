@@ -1032,6 +1032,8 @@ size_t Cppyy::SizeOf(TCppScope_t klass)
 
 size_t Cppyy::SizeOfType(TCppType_t klass)
 {
+    if (!klass)
+        return 0;
     std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
     return Cpp::GetSizeOfType(klass);
 }
