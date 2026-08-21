@@ -264,16 +264,10 @@ void TImageDump::DrawFrame(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// not used
-
-void TImageDump::DrawPolyMarker(Int_t, Float_t *, Float_t *)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// draw polymarker
 
-void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
+template<typename T>
+void TImageDump::DrawPolyMarkerShape(Int_t n, T *xw, T *yw)
 {
    if (!gPad || !fImage)
       return;
@@ -293,18 +287,6 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    std::vector<TPoint> markerShape;   ///< marker shape points
    // prefer to use triangles while image not always correctly fill complex polygon
    auto markerType = GetMarkerShape(markerSize, markerShape, gStyle->GetImageScaling(), TAttMarker::kPreferTriangles | TAttMarker::kDotAsLines);
-
-   // workaround of ASImage error - it is not able to draw circle with transparent color
-   if ((markerType == TAttMarker::kShapeFilledCircle) && (col->GetAlpha() < 1.)) {
-      Double_t r = markerSize / 2;
-      const int pts = 100;
-      const Double_t delta = TMath::TwoPi() / pts;
-      markerShape.reserve(pts + 1);
-      Double_t angle = 0.;
-      for (int i = 0; i <= pts; ++i, angle += delta)
-         markerShape.emplace_back(std::round(r * TMath::Cos(angle)), std::round(r * TMath::Sin(angle)));
-      markerType = TAttMarker::kShapeFilledArea;
-   }
 
    for (Int_t i = 0; i < n; i++) {
       auto ix = XtoPixel(xw[i]);
@@ -349,6 +331,22 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          pnt.fY -= iy;
       }
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// draw polymarker
+
+void TImageDump::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
+{
+   DrawPolyMarkerShape<Float_t>(n, xw, yw);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// draw polymarker
+
+void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
+{
+   DrawPolyMarkerShape<Double_t>(n, xw, yw);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
