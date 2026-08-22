@@ -256,7 +256,7 @@ public:
    void Deregister(RDefineBase *definePtr);
    void Register(RDFInternal::RVariationBase *varPtr);
    void Deregister(RDFInternal::RVariationBase *varPtr);
-   bool CheckFilters(unsigned int, Long64_t) final;
+   ROOT::Internal::RDF::RMaskedEntryRange CheckFilters(unsigned int, Long64_t) final;
    unsigned int GetNSlots() const { return fNSlots; }
    void Report(ROOT::RDF::RCutFlowReport &rep) const final;
    /// End of recursive chain of calls, does nothing
