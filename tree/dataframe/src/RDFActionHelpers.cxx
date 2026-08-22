@@ -220,6 +220,35 @@ void StdDevHelper::Finalize()
    *fResultStdDev = std::sqrt(variance);
 }
 
+MedianHelper::MedianHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots)
+   : fResult(meanVPtr), fBuffers(nSlots, std::vector<double>())
+{
+}
+
+void MedianHelper::Exec(unsigned int slot, double v)
+{
+   fBuffers[slot].push_back(v);
+}
+
+void MedianHelper::Finalize()
+{
+   std::vector<double> fullBuffer;
+   for (std::vector<double> &buffer : fBuffers)
+      fullBuffer.insert(fullBuffer.end(), buffer.begin(), buffer.end());
+
+   if (fullBuffer.empty()) {
+      *fResult = NAN;
+      return;
+   }
+
+   const size_t k = fullBuffer.size() / 2;
+   std::nth_element(fullBuffer.begin(), fullBuffer.begin() + k, fullBuffer.end());
+   const double upper = fullBuffer[k];
+
+   const double lower = *std::max_element(fullBuffer.begin(), fullBuffer.begin() + k);
+   *fResult = (fullBuffer.size() % 2) ? upper : 0.5 * (lower + upper);
+}
+
 // External templates are disabled for gcc5 since this version wrongly omits the C++11 ABI attribute
 #if __GNUC__ > 5
 template class TakeHelper<bool, bool, std::vector<bool>>;

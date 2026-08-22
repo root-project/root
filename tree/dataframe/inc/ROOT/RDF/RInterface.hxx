@@ -2877,6 +2877,42 @@ public:
       return CreateAction<RDFInternal::ActionTags::StdDev, T>(userColumns, stdDeviationV, stdDeviationV, fProxiedPtr);
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Return the median of processed column values (*lazy action*).
+   /// \tparam T The type of the branch/column.
+   /// \param[in] columnName The name of the branch/column to be treated.
+   /// \return the median value of the selected column wrapped in a RResultPtr.
+   ///
+   /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
+   /// template specialization of this method.
+   /// The result is always a double, irrespective of the type of column that is read. For an even
+   /// number of entries, the median is the average of the two middle values.
+   ///
+   /// \note If the column is empty, NaN is returned.
+   ///
+   /// \note Computing the exact median requires all column values to be held in memory at once, so the
+   /// memory used by this action grows with the number of processed entries. Consider this when running
+   /// over large datasets.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column type (this invocation needs jitting internally)
+   /// auto medianVal0 = myDf.Median("values");
+   /// // Explicit column type
+   /// auto medianVal1 = myDf.Median<double>("values");
+   /// ~~~
+   ///
+   template <typename T = RDFDetail::RInferredType>
+   RResultPtr<double> Median(std::string_view columnName = "")
+   {
+      const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
+      auto medianV = std::make_shared<double>(0);
+      return CreateAction<RDFInternal::ActionTags::Median, T>(userColumns, medianV, medianV, fProxiedPtr);
+   }
+
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the sum of processed column values (*lazy action*).

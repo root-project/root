@@ -18,7 +18,6 @@ import ROOT
 
 class Operation:
     """An operation attached to a distributed RDataFrame graph node."""
-
     def __init__(self, name: str, *args, **kwargs):
         self.name = name
         self.args = list(args)
@@ -132,6 +131,7 @@ SUPPORTED_OPERATIONS: Dict[str, Union[Action, InstantAction, Transformation]] = 
     "Snapshot": Snapshot,
     "Stats": Action,
     "StdDev": Action,
+    "Medain": Action,
     "Sum": Action,
     "Report": Action,
     "VariationsFor": VariationsFor,
