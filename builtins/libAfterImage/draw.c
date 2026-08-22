@@ -1523,6 +1523,7 @@ asim_ellips2( ASDrawContext *ctx, int x, int y, int rx, int ry, int angle, Bool 
 		{
 			double d ; 
 			int dx1 = 0, dx2 = 0 ;
+			int fill_edge = -1 ;
 			d = A*(double)x1*(double)x1 + BB +CC*(double)x1;
 #ifdef DEBUG_ELLIPS					 						   
 			fprintf( stderr, "line = %d, d1 = %f", y-line, d ); 
@@ -1634,6 +1635,7 @@ asim_ellips2( ASDrawContext *ctx, int x, int y, int rx, int ry, int angle, Bool 
 						dd += aa ; 
 					}
 					x2 += (dx2>>1)-1 ;
+					fill_edge = 1 ;
 					last_med_dd2 = med_dd ; 
 				}	 
 			}else if( line < yr ) 
@@ -1699,8 +1701,8 @@ asim_ellips2( ASDrawContext *ctx, int x, int y, int rx, int ry, int angle, Bool 
 #endif
 			if( fill ) 
 			{	
-				CTX_FILL_HLINE(ctx,x+(x1-2),y-y1,x+x2-1,255);
-				CTX_FILL_HLINE(ctx,x-x2-1,y+y1,x-(x1-2),255);
+				CTX_FILL_HLINE(ctx,x+(x1-2),y-y1,x+(x2+fill_edge),255);
+				CTX_FILL_HLINE(ctx,x-(x2+fill_edge),y+y1,x-(x1-2),255);
 			}
 			
 			CC -= 2.*C ;
