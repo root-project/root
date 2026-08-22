@@ -169,22 +169,24 @@ TEST(TASImage, FillePolygonLowAlpha)
    CheckFilledShapeStaysInside("#100000FF", 2);
 }
 
-/*
-
-// comment out all ellpse test while they are failing
+// https://github.com/root-project/root/issues/23120
+//
+// asim_ellips2 walks a tilted ellipse one scanline pair at a time and exploits
+// the 180 degree rotational symmetry, so the two spans it fills per iteration
+// must mirror each other. The right edge was one pixel short of its partner,
+// which left unfilled pixels along the tilted boundary. The point checked below
+// sits inside the ellipse and used to stay empty.
 
 TEST(TASImage, FilledEllipsOpaque)
 {
    CheckFilledShapeStaysInside("#FF2277CC", 3);
 }
 
-// Used to leak out of the circle and fill the whole image.
 TEST(TASImage, FilledEllipsHighAlpha)
 {
    CheckFilledShapeStaysInside("#C02277CC", 3);
 }
 
-// Used to hang: the colour from the issue report.
 TEST(TASImage, FilledEllipsSemiTransparent)
 {
    CheckFilledShapeStaysInside("#7F2277CC", 3);
@@ -194,4 +196,3 @@ TEST(TASImage, FilleEllipsLowAlpha)
 {
    CheckFilledShapeStaysInside("#102277CC", 3);
 }
-*/
