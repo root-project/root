@@ -64,7 +64,7 @@ public:
 // access to C++ pointer and type
     void*  GetObject();
     void*& GetObjectRaw() { return IsExtended() ? *(void**) fObject : fObject; }
-    Cppyy::TCppType_t ObjectIsA(bool check_smart = true) const;
+    Cppyy::TCppScope_t ObjectIsA(bool check_smart = true) const;
 
 // memory management: ownership of the underlying C++ object
     void PythonOwns();
@@ -76,8 +76,8 @@ public:
 // smart pointer management
     void SetSmart(PyObject* smart_type);
     void* GetSmartObject() { return GetObjectRaw(); }
-    Cppyy::TCppType_t GetSmartIsA() const;
-    Cppyy::TCppType_t GetSmartUnderlyingType() const;
+    Cppyy::TCppScope_t GetSmartIsA() const;
+    Cppyy::TCppScope_t GetSmartUnderlyingType() const;
 
 // cross-inheritance dispatch
     void SetDispatchPtr(void*);
@@ -90,6 +90,7 @@ public:
 // default but can be re-assigned by libraries that add C++ object
 // serialization support, like ROOT
     static PyCFunction &ReduceMethod();
+
 
 private:
     void  CreateExtension();
@@ -118,16 +119,15 @@ inline void* CPPInstance::GetObject()
         return GetExtendedObject();
 }
 
-//----------------------------------------------------------------------------
 #ifndef Py_LIMITED_API
-inline Cppyy::TCppType_t CPPInstance::ObjectIsA(bool check_smart) const
+//----------------------------------------------------------------------------
+inline Cppyy::TCppScope_t CPPInstance::ObjectIsA(bool check_smart) const
 {
 // Retrieve the C++ type identifier (or raw type if smart).
     if (check_smart || !IsSmart()) return ((CPPClass*)Py_TYPE(this))->fCppType;
     return GetSmartIsA();
 }
 #endif
-
 
 //- object proxy type and type verification ----------------------------------
 // Needs to be extern because the libROOTPythonizations is secretly using it

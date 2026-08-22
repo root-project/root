@@ -15,6 +15,8 @@
 //- data _____________________________________________________________________
 namespace CPyCppyy {
     extern PyObject* gNullPtrObject;
+    void* Instance_AsVoidPtr(PyObject* pyobject);
+    PyObject* Instance_FromVoidPtr(void* addr, Cppyy::TCppScope_t klass_scope, bool python_owns);
 }
 
 
@@ -44,7 +46,7 @@ PyObject* CPyCppyy::CPPConstructor::Reflex(
     if (request == Cppyy::Reflex::RETURN_TYPE) {
         std::string fn = Cppyy::GetScopedFinalName(this->GetScope());
         if (format == Cppyy::Reflex::OPTIMAL || format == Cppyy::Reflex::AS_TYPE)
-            return CreateScopeProxy(fn);
+            return CreateScopeProxy(this->GetScope());
         else if (format == Cppyy::Reflex::AS_STRING)
             return CPyCppyy_PyText_FromString(fn.c_str());
     }
@@ -56,7 +58,6 @@ PyObject* CPyCppyy::CPPConstructor::Reflex(
 PyObject* CPyCppyy::CPPConstructor::Call(CPPInstance*& self,
     CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt)
 {
-
 // setup as necessary
     if (fArgsRequired == -1 && !this->Initialize(ctxt))
         return nullptr;                     // important: 0, not Py_None
@@ -81,11 +82,12 @@ PyObject* CPyCppyy::CPPConstructor::Call(CPPInstance*& self,
     const auto cppScopeFlags = ((CPPScope*)Py_TYPE(self))->fFlags;
 
 // Do nothing if the constructor is explicit and we are in an implicit
-// conversion context. We recognize this by checking the CPPScope::kNoImplicit
-// flag, as further implicit conversions are disabled to prevent infinite
-// recursion. See also the ConvertImplicit() helper in Converters.cxx.
-    if((cppScopeFlags & CPPScope::kNoImplicit) && Cppyy::IsExplicit(GetMethod()))
-        return nullptr;
+// conversion context. See also the ConvertImplicit() helper in Converters.cxx.
+    if((cppScopeFlags & CPPScope::kActiveImplicitCall) && Cppyy::IsExplicit(GetMethod())) {
+        // FIXME: Cases with explicit marked std::complex constructors where we expect implicit conversionss
+        if (Cppyy::GetMethodSignature(GetMethod(), true).find("std::complex") == std::string::npos)
+            return nullptr;
+    }
 
 // self provides the python context for lifelines
     if (!ctxt->fPyContext)
@@ -135,7 +137,7 @@ PyObject* CPyCppyy::CPPConstructor::Call(CPPInstance*& self,
 
     } else {
     // translate the arguments
-        if (cppScopeFlags & CPPScope::kNoImplicit)
+        if (cppScopeFlags & CPPScope::kActiveImplicitCall)
             ctxt->fFlags |= CallContext::kNoImplicit;
         if (!this->ConvertAndSetArgs(cargs.fArgs, cargs.fNArgsf, ctxt))
             return nullptr;
@@ -154,7 +156,7 @@ PyObject* CPyCppyy::CPPConstructor::Call(CPPInstance*& self,
     // mark as actual to prevent needless auto-casting and register on its class
         self->fFlags |= CPPInstance::kIsActual;
         if (!(((CPPClass*)Py_TYPE(self))->fFlags & CPPScope::kIsSmart))
-            MemoryRegulator::RegisterPyObject(self, (Cppyy::TCppObject_t)address);
+            MemoryRegulator::RegisterPyObject(self, Cppyy::TCppObject_t((void*)address));
 
     // handling smart types this way is deeply fugly, but if CPPInstance sets the proper
     // types in op_new first, then the wrong init is called
@@ -181,6 +183,7 @@ PyObject* CPyCppyy::CPPConstructor::Call(CPPInstance*& self,
 // choose a different constructor, which if all fails will throw an exception
     return nullptr;
 }
+
 
 //----------------------------------------------------------------------------
 CPyCppyy::CPPMultiConstructor::CPPMultiConstructor(Cppyy::TCppScope_t scope, Cppyy::TCppMethod_t method) :
@@ -222,7 +225,6 @@ PyObject* CPyCppyy::CPPMultiConstructor::Call(CPPInstance*& self,
 // TODO: this way of forwarding is expensive as the loop is external to this call;
 // it would be more efficient to have the argument handling happen beforehand
 
-#if PY_VERSION_HEX >= 0x03080000
 // fetch self, verify, and put the arguments in usable order (if self is not handled
 // first, arguments can not be reordered with sentinels in place)
     PyCallArgs cargs{self, argsin, nargsf, kwds};
@@ -240,11 +242,6 @@ PyObject* CPyCppyy::CPPMultiConstructor::Call(CPPInstance*& self,
 
 // copy out self as it may have been updated
     self = cargs.fSelf;
-
-#else
-    PyObject* args = argsin;
-    Py_INCREF(args);
-#endif
 
     if (PyTuple_CheckExact(args) && PyTuple_GET_SIZE(args)) {   // case 0. falls through
         Py_ssize_t nArgs = PyTuple_GET_SIZE(args);
@@ -308,20 +305,13 @@ PyObject* CPyCppyy::CPPMultiConstructor::Call(CPPInstance*& self,
         }
     }
 
-#if PY_VERSION_HEX < 0x03080000
-    Py_ssize_t
-#endif
     nargs = PyTuple_GET_SIZE(args);
 
-#if PY_VERSION_HEX >= 0x03080000
 // now unroll the new args tuple into a vector of objects
     auto argsu = std::unique_ptr<PyObject*[]>{new PyObject*[nargs]};
     for (Py_ssize_t i = 0; i < nargs; ++i)
         argsu[i] = PyTuple_GET_ITEM(args, i);
     CPyCppyy_PyArgs_t _args = argsu.get();
-#else
-    CPyCppyy_PyArgs_t _args = args;
-#endif
 
     PyObject* result = CPPConstructor::Call(self, _args, nargs, kwds, ctxt);
     Py_DECREF(args);
@@ -336,11 +326,9 @@ PyObject* CPyCppyy::CPPAbstractClassConstructor::Call(CPPInstance*& self,
 {
 // do not allow instantiation of abstract classes
     if ((self && GetScope() != self->ObjectIsA()
-#if PY_VERSION_HEX >= 0x03080000
         ) || (!self && !(ctxt->fFlags & CallContext::kFromDescr) && \
               CPyCppyy_PyArgs_GET_SIZE(args, nargsf) && CPPInstance_Check(args[0]) && \
               GetScope() != ((CPPInstance*)args[0])->ObjectIsA()
-#endif
         )) {
     // happens if a dispatcher is inserted; allow constructor call
         return CPPConstructor::Call(self, args, nargsf, kwds, ctxt);

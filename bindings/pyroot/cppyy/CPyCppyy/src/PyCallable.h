@@ -6,6 +6,7 @@
 // Bindings
 #include "CPyCppyy/Reflex.h"
 #include "CallContext.h"
+#include "Cppyy.h"
 
 
 namespace CPyCppyy {
@@ -43,6 +44,8 @@ public:
     virtual PyCallable* Clone() = 0;
 
     virtual int GetArgMatchScore(PyObject* /* args_tuple */) { return INT_MAX; }
+
+    virtual bool IsSimilarFnType([[maybe_unused]] Cppyy::TCppType_t fn_type) { return false; }
 
 public:
     virtual PyObject* Call(CPPInstance*& self,

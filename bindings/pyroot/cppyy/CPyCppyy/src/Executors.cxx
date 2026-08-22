@@ -1,5 +1,6 @@
 // Bindings
 #include "CPyCppyy.h"
+#include "Cppyy.h"
 #include "DeclareExecutors.h"
 #include "CPPInstance.h"
 #include "LowLevelViews.h"
@@ -20,7 +21,7 @@
 
 //- data _____________________________________________________________________
 namespace CPyCppyy {
-    typedef std::map<std::string, ef_t> ExecFactories_t;
+    typedef std::unordered_map<std::string, ef_t> ExecFactories_t;
     static ExecFactories_t gExecFactories;
 
     extern PyObject* gNullPtrObject;
@@ -78,20 +79,21 @@ CPPYY_IMPL_GILCALL(PY_LONG_DOUBLE, LD)
 CPPYY_IMPL_GILCALL(void*,          R)
 
 static inline Cppyy::TCppObject_t GILCallO(Cppyy::TCppMethod_t method,
-    Cppyy::TCppObject_t self, CPyCppyy::CallContext* ctxt, Cppyy::TCppType_t klass)
+    Cppyy::TCppObject_t self, CPyCppyy::CallContext* ctxt, Cppyy::TCppScope_t klass)
 {
+    Cppyy::TCppType_t klass_ty = Cppyy::GetTypeFromScope(klass);
 #ifdef WITH_THREAD
     if (!ReleasesGIL(ctxt))
 #endif
-        return Cppyy::CallO(method, self, ctxt->GetEncodedSize(), ctxt->GetArgs(), klass);
+        return Cppyy::CallO(method, self, ctxt->GetEncodedSize(), ctxt->GetArgs(), klass_ty);
 #ifdef WITH_THREAD
     GILControl gc{};
-    return Cppyy::CallO(method, self, ctxt->GetEncodedSize(), ctxt->GetArgs(), klass);
+    return Cppyy::CallO(method, self, ctxt->GetEncodedSize(), ctxt->GetArgs(), klass_ty);
 #endif
 }
 
 static inline Cppyy::TCppObject_t GILCallConstructor(
-    Cppyy::TCppMethod_t method, Cppyy::TCppType_t klass, CPyCppyy::CallContext* ctxt)
+    Cppyy::TCppMethod_t method, Cppyy::TCppScope_t klass, CPyCppyy::CallContext* ctxt)
 {
 #ifdef WITH_THREAD
     if (!ReleasesGIL(ctxt))
@@ -193,6 +195,20 @@ PyObject* CPyCppyy::UCharConstRefExecutor::Execute(
 // execute <method> with argument <self, ctxt>, construct python string return value
 // with the single char from the pointer return
     return CPyCppyy_PyText_FromLong(*((unsigned char*)GILCallR(method, self, ctxt)));
+}
+
+//----------------------------------------------------------------------------
+PyObject *CPyCppyy::Int8ConstRefExecutor::Execute(Cppyy::TCppMethod_t method,
+                                                  Cppyy::TCppObject_t self,
+                                                  CallContext *ctxt) {
+  return PyInt_FromLong(*((int8_t *)GILCallR(method, self, ctxt)));
+}
+
+//----------------------------------------------------------------------------
+PyObject *CPyCppyy::UInt8ConstRefExecutor::Execute(Cppyy::TCppMethod_t method,
+                                                   Cppyy::TCppObject_t self,
+                                                   CallContext *ctxt) {
+  return PyInt_FromLong(*((uint8_t *)GILCallR(method, self, ctxt)));
 }
 
 //----------------------------------------------------------------------------
@@ -537,7 +553,7 @@ PyObject* CPyCppyy::Complex##code##Executor::Execute(                        \
 {                                                                            \
     static Cppyy::TCppScope_t scopeid = Cppyy::GetScope("std::complex<"#type">");\
     std::complex<type>* result =                                             \
-        (std::complex<type>*)GILCallO(method, self, ctxt, scopeid);          \
+        (std::complex<type>*)GILCallO(method, self, ctxt, scopeid).data;     \
     if (!result) {                                                           \
         PyErr_SetString(PyExc_ValueError, "NULL result where temporary expected");\
         return nullptr;                                                      \
@@ -557,8 +573,8 @@ PyObject* CPyCppyy::STLStringExecutor::Execute(
 // execute <method> with argument <self, ctxt>, construct python string return value
 
 // TODO: make use of GILLCallS (?!)
-    static Cppyy::TCppScope_t sSTLStringScope = Cppyy::GetScope("std::string");
-    std::string* result = (std::string*)GILCallO(method, self, ctxt, sSTLStringScope);
+    static Cppyy::TCppScope_t sSTLStringScope = Cppyy::GetFullScope("std::string");
+    std::string* result = (std::string*)GILCallO(method, self, ctxt, sSTLStringScope).data;
     if (!result) {
         Py_INCREF(PyStrings::gEmptyString);
         return PyStrings::gEmptyString;
@@ -576,8 +592,8 @@ PyObject* CPyCppyy::STLWStringExecutor::Execute(
     Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
 {
 // execute <method> with argument <self, ctxt>, construct python string return value
-    static Cppyy::TCppScope_t sSTLWStringScope = Cppyy::GetScope("std::wstring");
-    std::wstring* result = (std::wstring*)GILCallO(method, self, ctxt, sSTLWStringScope);
+    static Cppyy::TCppScope_t sSTLWStringScope = Cppyy::GetFullScope("std::wstring");
+    std::wstring* result = (std::wstring*)GILCallO(method, self, ctxt, sSTLWStringScope).data;
     if (!result) {
         wchar_t w = L'\0';
         return PyUnicode_FromWideChar(&w, 0);
@@ -598,7 +614,7 @@ PyObject* CPyCppyy::InstancePtrExecutor::Execute(
 }
 
 //----------------------------------------------------------------------------
-CPyCppyy::InstanceExecutor::InstanceExecutor(Cppyy::TCppType_t klass) :
+CPyCppyy::InstanceExecutor::InstanceExecutor(Cppyy::TCppScope_t klass) :
     fClass(klass), fFlags(CPPInstance::kIsValue | CPPInstance::kIsOwner)
 {
     /* empty */
@@ -629,7 +645,7 @@ PyObject* CPyCppyy::InstanceExecutor::Execute(
 
 
 //----------------------------------------------------------------------------
-CPyCppyy::IteratorExecutor::IteratorExecutor(Cppyy::TCppType_t klass) :
+CPyCppyy::IteratorExecutor::IteratorExecutor(Cppyy::TCppScope_t klass) :
     InstanceExecutor(klass)
 {
     fFlags |= CPPInstance::kNoMemReg | CPPInstance::kNoWrapConv;     // adds to flags from base class
@@ -749,7 +765,7 @@ PyObject* CPyCppyy::ConstructorExecutor::Execute(
 {
 // package return address in PyObject* for caller to handle appropriately (see
 // CPPConstructor for the actual build of the PyObject)
-    return (PyObject*)GILCallConstructor(method, (Cppyy::TCppType_t)klass, ctxt);
+    return (PyObject*)GILCallConstructor(method, Cppyy::TCppScope_t(klass.data), ctxt).data;
 }
 
 //----------------------------------------------------------------------------
@@ -791,13 +807,16 @@ CPyCppyy::Executor* CPyCppyy::CreateExecutor(const std::string& fullType, cdims_
 //
 // If all fails, void is used, which will cause the return type to be ignored on use
 
+    if (fullType.empty())
+        return nullptr;
+
 // an exactly matching executor is best
     ExecFactories_t::iterator h = gExecFactories.find(fullType);
     if (h != gExecFactories.end())
         return (h->second)(dims);
 
 // resolve typedefs etc.
-    const std::string& resolvedType = Cppyy::ResolveName(fullType);
+    const std::string resolvedType = Cppyy::ResolveName(fullType);
 
 // a full, qualified matching executor is preferred
     if (resolvedType != fullType) {
@@ -841,7 +860,7 @@ CPyCppyy::Executor* CPyCppyy::CreateExecutor(const std::string& fullType, cdims_
 
 // C++ classes and special cases
     Executor* result = 0;
-    if (Cppyy::TCppType_t klass = Cppyy::GetScope(realType)) {
+    if (Cppyy::TCppScope_t klass = Cppyy::GetFullScope(realType)) {
         if (Utility::IsSTLIterator(realType) || gIteratorTypes.find(fullType) != gIteratorTypes.end()) {
             if (cpd == "")
                 return new IteratorExecutor(klass);
@@ -872,6 +891,131 @@ CPyCppyy::Executor* CPyCppyy::CreateExecutor(const std::string& fullType, cdims_
         auto pos3 = resolvedType.rfind(')');
         result = new FunctionPointerExecutor(
             resolvedType.substr(0, pos1), resolvedType.substr(pos2+2, pos3-pos2-1));
+    } else {
+    // unknown: void* may work ("user knows best"), void will fail on use of return value
+        h = (cpd == "") ? gExecFactories.find("void") : gExecFactories.find("void ptr");
+    }
+
+    if (!result && h != gExecFactories.end())
+    // executor factory available, use it to create executor
+        result = (h->second)(dims);
+
+   return result;                  // may still be null
+}
+
+CPyCppyy::Executor* CPyCppyy::CreateExecutor(Cppyy::TCppType_t type, cdims_t dims)
+{
+// The matching of the fulltype to an executor factory goes through up to 4 levels:
+//   1) full, qualified match
+//   2) drop '&' as by ref/full type is often pretty much the same python-wise
+//   3) C++ classes, either by ref/ptr or by value
+//   4) additional special case for enums
+//
+// If all fails, void is used, which will cause the return type to be ignored on use
+
+// an exactly matching executor is best
+    std::string fullType = Cppyy::GetTypeAsString(type);
+    if (fullType.size() >= 2 && fullType.compare(fullType.size() - 2, 2, " &") == 0)
+        fullType = fullType.substr(0, fullType.size() - 2) + "&";
+
+    ExecFactories_t::iterator h = gExecFactories.find(fullType);
+    if (h != gExecFactories.end())
+        return (h->second)(dims);
+
+// resolve typedefs etc.
+    Cppyy::TCppType_t resolvedType = Cppyy::ResolveType(type);
+    {
+        // if resolvedType is a reference to enum
+        // then it should be reduced to reference
+        // to the underlying interger
+        resolvedType = Cppyy::ResolveEnumReferenceType(resolvedType);
+        // similarly for pointers
+        resolvedType = Cppyy::ResolveEnumPointerType(resolvedType);
+    }
+    // FIXME: avoid string comparisons and parsing
+    std::string resolvedTypeStr = Cppyy::GetTypeAsString(resolvedType);
+    if (Cppyy::IsFunctionPointerType(resolvedType)) {
+        resolvedTypeStr.erase(std::remove(resolvedTypeStr.begin(), resolvedTypeStr.end(), ' '), resolvedTypeStr.end());
+        if (resolvedTypeStr.rfind("(void)") != std::string::npos)
+            resolvedTypeStr = resolvedTypeStr.substr(0, resolvedTypeStr.size() - 6) + "()";
+    }
+
+// a full, qualified matching executor is preferred
+    if (resolvedTypeStr != fullType) {
+         h = gExecFactories.find(resolvedTypeStr);
+         if (h != gExecFactories.end())
+              return (h->second)(dims);
+    }
+
+//-- nothing? ok, collect information about the type and possible qualifiers/decorators
+    bool isConst = strncmp(resolvedTypeStr.c_str(), "const", 5)  == 0;
+    const std::string& cpd = TypeManip::compound(resolvedTypeStr);
+    Cppyy::TCppType_t realType = Cppyy::IsFunctionPointerType(resolvedType) ? resolvedType : Cppyy::GetRealType(resolvedType);
+    std::string realTypeStr = Cppyy::IsFunctionPointerType(resolvedType) ? resolvedTypeStr : Cppyy::GetTypeAsString(realType);
+    const std::string compounded = cpd.empty() ? realTypeStr : realTypeStr + cpd;
+
+// accept unqualified type (as python does not know about qualifiers)
+    h = gExecFactories.find(compounded);
+    if (h != gExecFactories.end())
+        return (h->second)(dims);
+
+// drop const, as that is mostly meaningless to python (with the exception
+// of c-strings, but those are specialized in the converter map)
+    if (isConst) {
+        realTypeStr = TypeManip::remove_const(realTypeStr);
+        h = gExecFactories.find(compounded);
+        if (h != gExecFactories.end())
+            return (h->second)(dims);
+    }
+
+// simple array types
+    if (!cpd.empty() && (std::string::size_type)std::count(cpd.begin(), cpd.end(), '*') == cpd.size()) {
+        h = gExecFactories.find(realTypeStr + " ptr");
+        if (h != gExecFactories.end())
+            return (h->second)((!dims || dims.ndim() < (dim_t)cpd.size()) ? dims_t(cpd.size()) : dims);
+    }
+
+//-- still nothing? try pointer instead of array (for builtins)
+    if (cpd == "[]") {
+        h = gExecFactories.find(realTypeStr + "*");
+        if (h != gExecFactories.end())
+            return (h->second)(dims);
+    }
+
+// C++ classes and special cases
+    Executor* result = 0;
+    if (Cppyy::IsClassType(realType)) {
+        Cppyy::TCppScope_t klass = Cppyy::GetScopeFromType(realType);
+        if (resolvedTypeStr.find("iterator") != std::string::npos || gIteratorTypes.find(fullType) != gIteratorTypes.end()) {
+            if (cpd == "")
+                return new IteratorExecutor(klass);
+        }
+
+        if (cpd == "")
+            result = new InstanceExecutor(klass);
+        else if (cpd == "&")
+            result = new InstanceRefExecutor(klass);
+        else if (cpd == "**" || cpd == "*[]" || cpd == "&*")
+            result = new InstancePtrPtrExecutor(klass);
+        else if (cpd == "*&")
+            result = new InstancePtrRefExecutor(klass);
+        else if (cpd == "[]") {
+            Py_ssize_t asize = TypeManip::array_size(resolvedTypeStr);
+            if (0 < asize)
+                result = new InstanceArrayExecutor(klass, asize);
+            else
+                result = new InstancePtrRefExecutor(klass);
+        } else
+            result = new InstancePtrExecutor(klass);
+    } else if (realTypeStr.find("(*)") != std::string::npos ||
+            (realTypeStr.find("::*)") != std::string::npos)) {
+        // this is a function pointer
+        // TODO: find better way of finding the type
+        auto pos1 = realTypeStr.find('(');
+        auto pos2 = realTypeStr.find("*)");
+        auto pos3 = realTypeStr.rfind(')');
+        result = new FunctionPointerExecutor(
+        realTypeStr.substr(0, pos1), realTypeStr.substr(pos2+2, pos3-pos2-1));
     } else {
     // unknown: void* may work ("user knows best"), void will fail on use of return value
         h = (cpd == "") ? gExecFactories.find("void") : gExecFactories.find("void ptr");
@@ -984,10 +1128,16 @@ public:
         gf["char32_t"] =                    (ef_t)+[](cdims_t) { static Char32Executor e{};        return &e; };
         gf["int8_t"] =                      (ef_t)+[](cdims_t) { static Int8Executor e{};          return &e; };
         gf["int8_t&"] =                     (ef_t)+[](cdims_t) { return new Int8RefExecutor{}; };
-        gf["const int8_t&"] =               (ef_t)+[](cdims_t) { static Int8RefExecutor e{};       return &e; };
+        gf["const int8_t&"] = (ef_t) + [](cdims_t) {
+          static Int8ConstRefExecutor e{};
+          return &e;
+        };
         gf["uint8_t"] =                     (ef_t)+[](cdims_t) { static UInt8Executor e{};         return &e; };
         gf["uint8_t&"] =                    (ef_t)+[](cdims_t) { return new UInt8RefExecutor{}; };
-        gf["const uint8_t&"] =              (ef_t)+[](cdims_t) { static UInt8RefExecutor e{};      return &e; };
+        gf["const uint8_t&"] = (ef_t) + [](cdims_t) {
+          static UInt8ConstRefExecutor e{};
+          return &e;
+        };
         gf["short"] =                       (ef_t)+[](cdims_t) { static ShortExecutor e{};         return &e; };
         gf["short&"] =                      (ef_t)+[](cdims_t) { return new ShortRefExecutor{}; };
         gf["int"] =                         (ef_t)+[](cdims_t) { static IntExecutor e{};           return &e; };
@@ -1097,13 +1247,11 @@ public:
         gf["wchar_t*"] =                    (ef_t)+[](cdims_t) { static WCStringExecutor e{};    return &e;};
         gf["char16_t*"] =                   (ef_t)+[](cdims_t) { static CString16Executor e{};   return &e;};
         gf["char32_t*"] =                   (ef_t)+[](cdims_t) { static CString32Executor e{};   return &e;};
-        gf["std::string"] =                 (ef_t)+[](cdims_t) { static STLStringExecutor e{};   return &e; };
-        gf["string"] =                      gf["std::string"];
-        gf["std::string&"] =                (ef_t)+[](cdims_t) { return new STLStringRefExecutor{}; };
-        gf["string&"] =                     gf["std::string&"];
-        gf["std::wstring"] =                (ef_t)+[](cdims_t) { static STLWStringExecutor e{};  return &e; };
-        gf[WSTRING1] =                      gf["std::wstring"];
-        gf[WSTRING2] =                      gf["std::wstring"];
+        gf["std::basic_string<char>"] =     (ef_t)+[](cdims_t) { static STLStringExecutor e{};   return &e; };
+        gf["std::basic_string<char>&"] =    (ef_t)+[](cdims_t) { return new STLStringRefExecutor{}; };
+        gf["std::basic_string<wchar_t>"] =  (ef_t)+[](cdims_t) { static STLWStringExecutor e{};  return &e; };
+        gf[WSTRING1] =                      gf["std::basic_string<wchar_t>"];
+        gf[WSTRING2] =                      gf["std::basic_string<wchar_t>"];
         gf["__init__"] =                    (ef_t)+[](cdims_t) { static ConstructorExecutor e{}; return &e; };
         gf["PyObject*"] =                   (ef_t)+[](cdims_t) { static PyObjectExecutor e{};    return &e; };
         gf["_object*"] =                    gf["PyObject*"];

@@ -63,6 +63,7 @@ namespace PyStrings {
     extern PyObject* gVectorAt;
     extern PyObject* gInsert;
     extern PyObject* gValueType;
+    extern PyObject* gValueTypePtr;
     extern PyObject* gValueSize;
 
     extern PyObject* gCppReal;

@@ -1,6 +1,9 @@
 #ifndef CPYCPPYY_DECLAREEXECUTORS_H
 #define CPYCPPYY_DECLAREEXECUTORS_H
 
+#include "Python.h"
+#include "Cppyy.h"
+
 // Bindings
 #include "Executors.h"
 #include "CallContext.h"
@@ -32,7 +35,9 @@ CPPYY_DECL_EXEC(WChar);
 CPPYY_DECL_EXEC(Char16);
 CPPYY_DECL_EXEC(Char32);
 CPPYY_DECL_EXEC(Int8);
+CPPYY_DECL_EXEC(Int8ConstRef);
 CPPYY_DECL_EXEC(UInt8);
+CPPYY_DECL_EXEC(UInt8ConstRef);
 CPPYY_DECL_EXEC(Short);
 CPPYY_DECL_EXEC(Int);
 CPPYY_DECL_EXEC(Long);
@@ -89,30 +94,30 @@ CPPYY_DECL_EXEC(STLWString);
 
 class InstancePtrExecutor : public Executor {
 public:
-    InstancePtrExecutor(Cppyy::TCppType_t klass) : fClass(klass) {}
+    InstancePtrExecutor(Cppyy::TCppScope_t klass) : fClass(klass) {}
     PyObject* Execute(
         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*) override;
     bool HasState() override { return true; }
 
 protected:
-    Cppyy::TCppType_t fClass;
+    Cppyy::TCppScope_t fClass;
 };
 
 class InstanceExecutor : public Executor {
 public:
-    InstanceExecutor(Cppyy::TCppType_t klass);
+    InstanceExecutor(Cppyy::TCppScope_t klass);
     PyObject* Execute(
         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*) override;
     bool HasState() override { return true; }
 
 protected:
-    Cppyy::TCppType_t fClass;
-    uint32_t          fFlags;
+    Cppyy::TCppScope_t fClass;
+    uint32_t           fFlags;
 };
 
 class IteratorExecutor : public InstanceExecutor {
 public:
-    IteratorExecutor(Cppyy::TCppType_t klass);
+    IteratorExecutor(Cppyy::TCppScope_t klass);
 };
 
 CPPYY_DECL_EXEC(Constructor);
@@ -147,12 +152,12 @@ CPPYY_DECL_REFEXEC(STLString);
 // special cases
 class InstanceRefExecutor : public RefExecutor {
 public:
-    InstanceRefExecutor(Cppyy::TCppType_t klass) : fClass(klass) {}
+    InstanceRefExecutor(Cppyy::TCppScope_t klass) : fClass(klass) {}
     PyObject* Execute(
         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*) override;
 
 protected:
-    Cppyy::TCppType_t fClass;
+    Cppyy::TCppScope_t fClass;
 };
 
 class InstancePtrPtrExecutor : public InstanceRefExecutor {
@@ -171,7 +176,7 @@ public:
 
 class InstanceArrayExecutor : public InstancePtrExecutor {
 public:
-    InstanceArrayExecutor(Cppyy::TCppType_t klass, dim_t array_size)
+    InstanceArrayExecutor(Cppyy::TCppScope_t klass, dim_t array_size)
         : InstancePtrExecutor(klass), fSize(array_size) {}
     PyObject* Execute(
         Cppyy::TCppMethod_t, Cppyy::TCppObject_t, CallContext*) override;
