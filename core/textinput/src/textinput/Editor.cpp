@@ -29,32 +29,52 @@
 
 namespace textinput {
 
-  // Functions to find first/last non alphanumeric ("word-boundaries")
-  size_t find_first_non_alnum(const std::string &str,
-                              std::string::size_type index = 0) {
-    bool atleast_one_alnum = false;
-    std::string::size_type len = str.length();
-    for(; index < len; ++index) {
-      const char c = str[index];
-      bool is_alpha = isalnum(c) || c == '_';
-      if (is_alpha) atleast_one_alnum = true;
-      else if (atleast_one_alnum) return index;
+  namespace {
+    // isalnum() and friends are only defined for values that fit in an
+    // unsigned char, so they cannot be asked about a character outside ASCII.
+    // Treat everything above ASCII as part of a word: a word is what the user
+    // steps over with Alt-F, and stopping inside "Ampère" would be surprising.
+    bool IsWordChar(char32_t c) {
+      if (c > 0x7F) return true;
+      return c == U'_' || isalnum(static_cast<int>(c));
     }
-    return std::string::npos;
+
+    // Case conversion, ASCII only. Mapping the rest correctly needs the full
+    // Unicode case tables, and getting it half right (missing the special
+    // cases where a character's upper case is two characters, say) would be
+    // worse than leaving those characters alone.
+    char32_t ToUpper(char32_t c) {
+      return c <= 0x7F ? static_cast<char32_t>(toupper(static_cast<int>(c))) : c;
+    }
+    char32_t ToLower(char32_t c) {
+      return c <= 0x7F ? static_cast<char32_t>(tolower(static_cast<int>(c))) : c;
+    }
   }
 
-  size_t find_last_non_alnum(const std::string &str,
-                             std::string::size_type index = std::string::npos) {
-    std::string::size_type len = str.length();
-    if (index == std::string::npos) index = len - 1;
+  // Functions to find first/last non alphanumeric ("word-boundaries")
+  size_t find_first_non_alnum(const std::u32string &str,
+                              std::u32string::size_type index = 0) {
     bool atleast_one_alnum = false;
-    for(; index != std::string::npos; --index) {
-      const char c = str[index];
-      bool is_alpha = isalnum(c) || c == '_';
+    std::u32string::size_type len = str.length();
+    for(; index < len; ++index) {
+      bool is_alpha = IsWordChar(str[index]);
       if (is_alpha) atleast_one_alnum = true;
       else if (atleast_one_alnum) return index;
     }
-    return std::string::npos;
+    return std::u32string::npos;
+  }
+
+  size_t find_last_non_alnum(const std::u32string &str,
+                             std::u32string::size_type index = std::u32string::npos) {
+    std::u32string::size_type len = str.length();
+    if (index == std::u32string::npos) index = len - 1;
+    bool atleast_one_alnum = false;
+    for(; index != std::u32string::npos; --index) {
+      bool is_alpha = IsWordChar(str[index]);
+      if (is_alpha) atleast_one_alnum = true;
+      else if (atleast_one_alnum) return index;
+    }
+    return std::u32string::npos;
   }
 
   Editor::EProcessResult
@@ -103,7 +123,7 @@ namespace textinput {
   Editor::SetHistSearchModePrompt(Range& RDisplay) {
     assert(fMode == kHistFwdSearchMode || fMode == kHistRevSearchMode);
     const std::string direction(fMode == kHistFwdSearchMode ? "fwd" : "bkw");
-    SetEditorPrompt(Text("[" + direction + "'" + fSearch + "'] "));
+    SetEditorPrompt(Text("[" + direction + "'" + UTF32ToUTF8(fSearch) + "'] "));
     RDisplay.ExtendPromptUpdate(Range::kUpdateEditorPrompt);
   }
 
@@ -114,6 +134,8 @@ namespace textinput {
     std::ptrdiff_t NewHistEntry = -1;
     if (fSearch.empty())
       return true;
+    // History is kept as UTF-8; search in the same encoding.
+    const std::string SearchUTF8 = UTF32ToUTF8(fSearch);
     std::ptrdiff_t startAt = fCurHistEntry;
     if (startAt == -1) {
       startAt = 0;
@@ -122,7 +144,7 @@ namespace textinput {
                                     ? -1 : static_cast<std::ptrdiff_t>(Hist->GetSize());
     const std::ptrdiff_t step = (fMode == kHistFwdSearchMode ? -1 : 1);
     for (std::ptrdiff_t i = startAt; i != stopAt; i += step) {
-      if (Hist->GetLine(i).find(fSearch) != std::string::npos) {
+      if (Hist->GetLine(i).find(SearchUTF8) != std::string::npos) {
         NewHistEntry = i;
         break;
       }
@@ -168,7 +190,7 @@ namespace textinput {
   }
 
   Editor::EProcessResult
-  Editor::ProcessChar(char C, EditorRange& R) {
+  Editor::ProcessChar(char32_t C, EditorRange& R) {
     if (C < 32) return kPRError;
 
     if (fMode == kHistRevSearchMode || fMode == kHistFwdSearchMode) {
@@ -186,7 +208,7 @@ namespace textinput {
 
     if (fOverwrite) {
       if (Cursor < Line.length()) {
-        Line[Cursor] = C;
+        Line.SetChar(Cursor, C);
       } else {
         Line += C;
       }
@@ -321,7 +343,7 @@ namespace textinput {
         R.fDisplay.Extend(Range(Cursor, Range::End()));
         return kPRSuccess;
       case kCmdCutToEnd:
-        AddToPasteBuf(1, Line.GetText().c_str() + Cursor);
+        AddToPasteBuf(1, Line.substr(Cursor));
         Line.erase(Cursor, Line.length() - Cursor);
         R.fEdit.Extend(Range(Cursor));
         R.fDisplay.Extend(Range(Cursor, Range::End()));
@@ -329,7 +351,7 @@ namespace textinput {
       case kCmdCutNextWord:
       {
         size_t posWord = FindWordBoundary(1);
-        AddToPasteBuf(1, Line.GetText().substr(Cursor, posWord - Cursor));
+        AddToPasteBuf(1, Line.substr(Cursor, posWord - Cursor));
         R.fEdit.Extend(Range(Cursor, posWord));
         R.fDisplay.Extend(Range(Cursor, Range::End()));
         Line.erase(Cursor, posWord - Cursor);
@@ -338,7 +360,7 @@ namespace textinput {
       case kCmdCutPrevWord:
       {
         size_t posWord = FindWordBoundary(-1);
-        AddToPasteBuf(-1, Line.GetText().substr(posWord, Cursor - posWord));
+        AddToPasteBuf(-1, Line.substr(posWord, Cursor - posWord));
         R.fEdit.Extend(Range(posWord, Cursor));
         R.fDisplay.Extend(Range(posWord, Range::End()));
         Line.erase(posWord, Cursor - posWord);
@@ -357,7 +379,7 @@ namespace textinput {
       case kCmdCutToFront:
         R.fEdit.Extend(Range(0, Cursor));
         R.fDisplay.Extend(Range::AllText());
-        AddToPasteBuf(-1, Line.GetText().substr(0, Cursor));
+        AddToPasteBuf(-1, Line.substr(0, Cursor));
         Line.erase(0, Cursor);
         fContext->SetCursor(0);
         return kPRSuccess;
@@ -377,16 +399,16 @@ namespace textinput {
         size_t posSwap = Cursor < Line.length() ? Cursor : Line.length() - 1;
         R.fEdit.Extend(Range(posSwap - 1, posSwap));
         R.fDisplay.Extend(Range(posSwap - 1, Range::End()));
-        char tmp = Line.GetText()[posSwap];
-        Line[posSwap] = Line[posSwap - 1];
-        Line[posSwap - 1] = tmp;
+        char32_t tmp = Line[posSwap];
+        Line.SetChar(posSwap, Line[posSwap - 1]);
+        Line.SetChar(posSwap - 1, tmp);
         ProcessMove(kMoveRight, R);
         return kPRSuccess;
       }
       case kCmdToUpperMoveNextWord:
       {
         if (Cursor >= Line.length()) return kPRError;
-        Line[Cursor] = toupper(Line[Cursor]);
+        Line.SetChar(Cursor, ToUpper(Line[Cursor]));
         R.fEdit.Extend(Range(Cursor));
         R.fDisplay.Extend(Range(Cursor));
         ProcessMove(kMoveNextWord, R);
@@ -398,11 +420,11 @@ namespace textinput {
         size_t posWord = FindWordBoundary(1);
         if (M == kCmdWordToUpper) {
           for (size_t i = Cursor; i < posWord; ++i) {
-            Line[i] =  toupper(Line[i]);
+            Line.SetChar(i, ToUpper(Line[i]));
           }
         } else {
           for (size_t i = Cursor; i < posWord; ++i) {
-            Line[i] =  tolower(Line[i]);
+            Line.SetChar(i, ToLower(Line[i]));
           }
         }
         R.fEdit.Extend(Range(Cursor, posWord));
@@ -519,10 +541,10 @@ namespace textinput {
     if (Direction < 0 && Cursor < 2) return 0;
 
     size_t ret = Direction > 0 ?
-      find_first_non_alnum(Line.GetText(), Cursor + 1)
-    : find_last_non_alnum(Line.GetText(), Cursor - 2);
+      find_first_non_alnum(Line.GetChars(), Cursor + 1)
+    : find_last_non_alnum(Line.GetChars(), Cursor - 2);
 
-    if (ret == std::string::npos) {
+    if (ret == std::u32string::npos) {
       if (Direction > 0) return Line.length();
       else return 0;
     }
@@ -530,7 +552,7 @@ namespace textinput {
     if (Direction < 0)
       ret += 1;
 
-    if (ret == std::string::npos) {
+    if (ret == std::u32string::npos) {
       if (Direction > 0) return Line.length();
       else return 0;
     }
@@ -538,7 +560,7 @@ namespace textinput {
   }
 
   void
-  Editor::AddToPasteBuf(int Dir, std::string const &T) {
+  Editor::AddToPasteBuf(int Dir, std::u32string const &T) {
     if (fCutDirection == Dir) {
       if (Dir < 0) {
         fPasteBuf = T + fPasteBuf;
@@ -552,10 +574,10 @@ namespace textinput {
   }
 
   void
-  Editor::AddToPasteBuf(int Dir, char T) {
+  Editor::AddToPasteBuf(int Dir, char32_t T) {
     if (fCutDirection == Dir) {
       if (Dir < 0) {
-        fPasteBuf = std::string(1, T) + fPasteBuf;
+        fPasteBuf = std::u32string(1, T) + fPasteBuf;
       } else {
         fPasteBuf += T;
       }

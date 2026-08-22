@@ -41,9 +41,17 @@
 #endif
 // End MSVC 7.1 quirks
 
+// winnls.h only defines these for WINVER >= 0x0600.
+#ifndef IS_HIGH_SURROGATE
+# define IS_HIGH_SURROGATE(wch) (((wch) >= 0xD800) && ((wch) <= 0xDBFF))
+#endif
+#ifndef IS_LOW_SURROGATE
+# define IS_LOW_SURROGATE(wch) (((wch) >= 0xDC00) && ((wch) <= 0xDFFF))
+#endif
+
 namespace textinput {
   StreamReaderWin::StreamReaderWin(): fHaveInputFocus(false), fIsConsole(true),
-    fOldMode(0), fMyMode(0) {
+    fOldMode(0), fMyMode(0), fPendingSurrogate(0) {
     fIn = ::GetStdHandle(STD_INPUT_HANDLE);
     bool fIsConsole = ::GetConsoleMode(fIn, &fOldMode) != 0;
     if (fIsConsole) {
@@ -99,10 +107,12 @@ namespace textinput {
   StreamReaderWin::ReadInput(size_t& nRead, InputData& in) {
     DWORD NRead = 0;
     in.SetModifier(InputData::kModNone);
-    char C;
+    char32_t C = 0;
     if (fIsConsole) {
       INPUT_RECORD buf;
-      if (!::ReadConsoleInput(fIn, &buf, 1, &NRead)) {
+      // Read the wide variant: uChar.AsciiChar loses everything the console's
+      // code page cannot represent, which is most of Unicode.
+      if (!::ReadConsoleInputW(fIn, &buf, 1, &NRead)) {
         HandleError("reading console input");
         return false;
       }
@@ -113,6 +123,7 @@ namespace textinput {
         if (!buf.Event.KeyEvent.bKeyDown) return false;
 
         WORD Key = buf.Event.KeyEvent.wVirtualKeyCode;
+        const wchar_t Unicode = buf.Event.KeyEvent.uChar.UnicodeChar;
         if (buf.Event.KeyEvent.dwControlKeyState
           & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) {
           if (buf.Event.KeyEvent.dwControlKeyState
@@ -128,7 +139,8 @@ namespace textinput {
           || (Key >= VK_NUMPAD0 && Key <= VK_DIVIDE)
           || (Key >= VK_OEM_1 && Key <= VK_OEM_102)
           || Key == VK_SPACE) {
-            C = buf.Event.KeyEvent.uChar.AsciiChar;
+            // Half a surrogate pair is not yet a character; wait for the rest.
+            if (!DecodeUTF16(Unicode, C)) return false;
             if (buf.Event.KeyEvent.dwControlKeyState
               & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) {
                // C is already 1..
@@ -161,7 +173,19 @@ namespace textinput {
             case VK_F10:    in.SetExtended(InputData::kEIF10); break;
             case VK_F11:    in.SetExtended(InputData::kEIF11); break;
             case VK_F12:    in.SetExtended(InputData::kEIF12); break;
-            default:        in.SetExtended(InputData::kEIUninitialized); return false;
+            default:
+              // No virtual key code of its own, but it still produced a
+              // character: IME composition, a dead key resolving, or an AltGr
+              // combination on a non-US layout. Those are exactly the keys
+              // that type the non-ASCII characters we are here for.
+              if (Unicode >= 0x20 || IS_HIGH_SURROGATE(Unicode)
+                  || IS_LOW_SURROGATE(Unicode)) {
+                if (!DecodeUTF16(Unicode, C)) return false;
+                HandleKeyEvent(C, in);
+                ++nRead;
+                return true;
+              }
+              in.SetExtended(InputData::kEIUninitialized); return false;
           }
           return true;
         }
@@ -176,9 +200,35 @@ namespace textinput {
         return false;
       }
     } else {
+      if (!ReadPipeChar(C)) {
+        in.SetExtended(InputData::kEIEOF);
+        return true;
+      }
+    }
+    HandleKeyEvent(C, in);
+    ++nRead;
+    return true;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Read one character from redirected input, which is a byte stream and is
+  /// taken to be UTF-8 - the same encoding the rest of ROOT uses for text.
+  ///
+  /// \param[out] Out the character read
+  /// \return false at end of input
+  bool
+  StreamReaderWin::ReadPipeChar(char32_t& Out) {
+    UTF8Decoder Dec;
+    bool Reprocess = false;
+    UTF8Decoder::EResult Res = UTF8Decoder::kNeedMore;
+    bool AnyByteRead = false;
+
+    while (Res == UTF8Decoder::kNeedMore) {
+      unsigned char Byte = 0;
+      DWORD NRead = 0;
       // Testing for the End of a File
       // https://msdn.microsoft.com/en-us/library/windows/desktop/aa365690(v=vs.85).aspx
-      if (!::ReadFile(fIn, &C, 1, &NRead, NULL)) {
+      if (!::ReadFile(fIn, &Byte, 1, &NRead, NULL)) {
         if (NRead != 0) {
           switch (::GetLastError()) {
             default:
@@ -192,12 +242,49 @@ namespace textinput {
         }
       }
       if (NRead == 0) {
-        in.SetExtended(InputData::kEIEOF);
+        // End of input. If it arrived in the middle of a character, report
+        // the truncated character rather than losing it silently.
+        if (!AnyByteRead) return false;
+        Out = kInvalidChar;
         return true;
       }
+      AnyByteRead = true;
+      Res = Dec.Push(Byte, Out, Reprocess);
     }
-    HandleKeyEvent(C, in);
-    ++nRead;
+    return true;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Combine the UTF-16 code units the console hands us into a code point.
+  ///
+  /// wchar_t is 16 bits on Windows, so anything above the basic multilingual
+  /// plane - emoji, most notably - arrives as two events that have to be put
+  /// back together.
+  ///
+  /// \param[in] U the code unit just read
+  /// \param[out] Out the character, when one is complete
+  /// \return false if this was a high surrogate and the low half is still to come
+  bool
+  StreamReaderWin::DecodeUTF16(wchar_t U, char32_t& Out) {
+    if (fPendingSurrogate) {
+      const wchar_t High = fPendingSurrogate;
+      fPendingSurrogate = 0;
+      if (IS_LOW_SURROGATE(U)) {
+        Out = 0x10000 + ((static_cast<char32_t>(High) - 0xD800) << 10)
+                      + (static_cast<char32_t>(U) - 0xDC00);
+        return true;
+      }
+      // The high surrogate was never completed; drop it and carry on with U.
+    }
+    if (IS_HIGH_SURROGATE(U)) {
+      fPendingSurrogate = U;
+      return false;
+    }
+    if (IS_LOW_SURROGATE(U)) { // unpaired
+      Out = kInvalidChar;
+      return true;
+    }
+    Out = U;
     return true;
   }
 
@@ -214,14 +301,14 @@ namespace textinput {
   }
 
   void
-  StreamReaderWin::HandleKeyEvent(unsigned char C, InputData& in) {
-    if (isprint(C)) {
+  StreamReaderWin::HandleKeyEvent(char32_t C, InputData& in) {
+    if (C < 0x80 && isprint(static_cast<int>(C))) {
       in.SetRaw(C);
     } else if (C < 32) {
       in.SetRaw(C);
       in.SetModifier(InputData::kModCtrl);
     } else {
-      // woohoo, what's that?!
+      // Everything else, including every character outside ASCII.
       in.SetRaw(C);
     }
   }
