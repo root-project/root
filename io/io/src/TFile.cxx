@@ -1986,22 +1986,47 @@ Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
 
 void TFile::ReadFree()
 {
-   // Avoid problem with file corruption.
-   if (fNbytesFree < 0 || fNbytesFree > fEND) {
+   // Avoid problems with file corruption.
+   if (fNbytesFree <= 0 || fNbytesFree > fEND) {
       fNbytesFree = 0;
       return;
    }
+
    TKey *headerfree = new TKey(fSeekFree, fNbytesFree, this);
-   headerfree->ReadFile();
-   char *buffer = headerfree->GetBuffer();
-   headerfree->ReadKeyBuffer(buffer);
-   buffer = headerfree->GetBuffer();
-   while (1) {
-      TFree *afree = new TFree();
-      afree->ReadBuffer(buffer);
-      fFree->Add(afree);
-      if (afree->GetLast() > fEND) break;
+   if (!headerfree->ReadFile()) {
+      Error("ReadFree", "failed to read the free segment record");
+      delete headerfree;
+      return;
    }
+
+   char *buffer = headerfree->GetBuffer();
+   char *const bufbegin = buffer;
+   const std::size_t bufsize = static_cast<std::size_t>(fNbytesFree);
+
+   if (!headerfree->ReadKeyBuffer(buffer, bufsize)) {
+      delete headerfree;
+      return;
+   }
+
+   std::size_t remaining = bufsize - static_cast<std::size_t>(buffer - bufbegin);
+
+   while (remaining > 0) {
+      TFree *afree = new TFree();
+      char *const before = buffer;
+
+      if (!afree->ReadBuffer(buffer, remaining)) {
+         delete afree;
+         Error("ReadFree", "truncated free segment list");
+         break;
+      }
+
+      remaining -= static_cast<std::size_t>(buffer - before);
+      fFree->Add(afree);
+
+      if (afree->GetLast() > fEND)
+         break;
+   }
+
    delete headerfree;
 }
 
