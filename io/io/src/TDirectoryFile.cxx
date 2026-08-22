@@ -1440,26 +1440,52 @@ Int_t TDirectoryFile::ReadKeys(Bool_t forceRead)
 
    Int_t nkeys = 0;
    Long64_t fsize = fFile->GetSize();
-   if ( fSeekKeys >  0) {
-      TKey *headerkey    = new TKey(fSeekKeys, fNbytesKeys, this);
-      headerkey->ReadFile();
+   if (fSeekKeys > 0) {
+      if (fNbytesKeys <= 0 || (fsize >= 0 && fNbytesKeys > fsize)) {
+         Error("ReadKeys", "illegal keys record size %d", fNbytesKeys);
+         return 0;
+      }
+      TKey *headerkey = new TKey(fSeekKeys, fNbytesKeys, this);
+      if (!headerkey->ReadFile()) {
+         Error("ReadKeys", "failed to read the keys record");
+         delete headerkey;
+         return 0;
+      }
       buffer = headerkey->GetBuffer();
-      headerkey->ReadKeyBuffer(buffer);
+      char *const bufbegin = buffer;
+      const std::size_t bufsize = static_cast<std::size_t>(headerkey->GetNbytes());
+      if (!headerkey->ReadKeyBuffer(buffer, bufsize)) {
+         delete headerkey;
+         return 0;
+      }
+      std::size_t remaining = bufsize - static_cast<std::size_t>(buffer - bufbegin);
 
-      TKey *key;
+      if (remaining < sizeof(Int_t)) {
+         Error("ReadKeys", "truncated keys list");
+         delete headerkey;
+         return 0;
+      }
       frombuf(buffer, &nkeys);
+      remaining -= sizeof(Int_t);
+
       for (Int_t i = 0; i < nkeys; i++) {
-         key = new TKey(this);
-         key->ReadKeyBuffer(buffer);
+         TKey *key = new TKey(this);
+         char *const before = buffer;
+         if (!key->ReadKeyBuffer(buffer, remaining)) {
+            delete key;
+            nkeys = i;
+            break;
+         }
+         remaining -= static_cast<std::size_t>(buffer - before);
          if (key->GetSeekKey() < 64 || key->GetSeekKey() > fsize) {
-            Error("ReadKeys","reading illegal key, exiting after %d keys",i);
-            fKeys->Remove(key);
+            Error("ReadKeys", "reading illegal key, exiting after %d keys", i);
+            delete key;
             nkeys = i;
             break;
          }
          if (key->GetSeekPdir() < 64 || key->GetSeekPdir() > fsize) {
-            Error("ReadKeys","reading illegal key, exiting after %d keys",i);
-            fKeys->Remove(key);
+            Error("ReadKeys", "reading illegal key, exiting after %d keys", i);
+            delete key;
             nkeys = i;
             break;
          }
