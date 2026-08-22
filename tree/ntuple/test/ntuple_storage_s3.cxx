@@ -1,7 +1,7 @@
 /// \file ntuple_storage_s3.cxx
 /// \author Jas Mehta <jasmehta805@gmail.com>
 /// \date 2026-06-01
-/// \brief Unit tests for the S3 storage backend components (anchor serialization).
+/// \brief Unit tests for the S3 storage backend components (anchor serialization, write and read path).
 
 #include "ntuple_test.hxx"
 #include <ROOT/RPageStorageS3.hxx>
@@ -15,9 +15,12 @@
 #include <xxhash.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
+#include <map>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -820,4 +823,730 @@ TEST(RPageSinkS3Wire, CloneAsHiddenWritesUnderClonePrefix)
       EXPECT_EQ(0u, p.rfind(clonePrefix, 0)) << "clone object escaped the _clone prefix: " << p;
    // The clone's anchor is written last, at exactly the clone's base URL.
    EXPECT_EQ(clonePrefix, paths.back());
+}
+
+// ==================== RPageSourceS3 Wire-Level Tests (mock HTTP server) ====================
+
+// The read path needs a mock that answers HEAD and GET, not just PUT, so these tests use a small
+// in-memory object store: the sink's PUTs populate it and the source's HEAD/GETs read it back. That
+// makes a complete write-then-read round trip possible with no S3 service at all, so it runs in CI.
+namespace {
+
+/// Serve one HTTP request from an accepted socket against the in-memory `store`: PUT stores the body
+/// under the request path, HEAD answers with the stored object's size, and GET returns the stored body.
+/// Unknown paths get a 404, other methods a 405.
+void ServeS3Request(TSocket *sock, std::map<std::string, std::string> &store)
+{
+   // Read up to and including the end-of-headers marker, byte by byte.
+   std::string headers;
+   const char *eof = "\r\n\r\n";
+   const std::size_t eofLen = std::strlen(eof);
+   std::size_t nextInEof = 0;
+   char c;
+   while (sock->RecvRaw(&c, 1) > 0) {
+      headers.push_back(c);
+      if (c == eof[nextInEof]) {
+         if (++nextInEof == eofLen)
+            break;
+      } else {
+         nextInEof = 0;
+      }
+   }
+
+   // The request line is "METHOD /target HTTP/1.1".
+   std::string method, path;
+   if (auto sp1 = headers.find(' '); sp1 != std::string::npos) {
+      method = headers.substr(0, sp1);
+      if (auto sp2 = headers.find(' ', sp1 + 1); sp2 != std::string::npos)
+         path = headers.substr(sp1 + 1, sp2 - sp1 - 1);
+   }
+
+   std::string lower(headers);
+   std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char ch) { return std::tolower(ch); });
+
+   // libcurl uploads with "Expect: 100-continue"; acknowledge before reading the body.
+   if (lower.find("expect: 100-continue") != std::string::npos) {
+      const char *cont = "HTTP/1.1 100 Continue\r\n\r\n";
+      sock->SendRaw(cont, std::strlen(cont));
+   }
+
+   std::string body;
+   if (auto pos = lower.find("content-length: "); pos != std::string::npos) {
+      auto valStart = pos + std::strlen("content-length: ");
+      auto valEnd = lower.find("\r\n", valStart);
+      const auto contentLength = std::stoul(lower.substr(valStart, valEnd - valStart));
+      if (contentLength > 0) {
+         body.resize(contentLength);
+         sock->RecvRaw(&body[0], contentLength);
+      }
+   }
+
+   // Every reply announces "Connection: close" because this mock closes the socket after each request;
+   // curl then opens a fresh connection per request instead of reusing one we already closed. The
+   // source's GETs carry a Range header, which this mock ignores: it always returns the full object,
+   // which RCurlConnection handles as the "server ignored the range" case.
+   std::string response;
+   if (method == "PUT") {
+      store[path] = body;
+      response = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+   } else if (method == "HEAD" || method == "GET") {
+      auto it = store.find(path);
+      if (it == store.end()) {
+         response = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+      } else {
+         response =
+            "HTTP/1.1 200 OK\r\nContent-Length: " + std::to_string(it->second.size()) + "\r\nConnection: close\r\n\r\n";
+         if (method == "GET")
+            response += it->second;
+      }
+   } else {
+      response = "HTTP/1.1 405 Method Not Allowed\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+   }
+
+   sock->SendRaw(response.data(), response.size());
+}
+
+/// Set the credentials the S3 backend reads from the environment. The values are dummies: requests only
+/// ever reach the loopback mock server in these tests, but curl still signs them (SigV4).
+void SetDummyS3Env()
+{
+   gSystem->Setenv("S3_ACCESS_KEY", "dummykey");
+   gSystem->Setenv("S3_SECRET_KEY", "dummysecret");
+   gSystem->Setenv("S3_REGION", "us-east-1");
+}
+
+void UnsetS3Env()
+{
+   gSystem->Unsetenv("S3_ACCESS_KEY");
+   gSystem->Unsetenv("S3_SECRET_KEY");
+   gSystem->Unsetenv("S3_REGION");
+}
+
+/// Serve requests until `done` is set. Accept() blocks, so a caller that sets `done` also has to open a
+/// throw-away connection (see StopMockServer) to wake this loop up.
+void RunMockServer(TServerSocket &server, std::map<std::string, std::string> &store, const std::atomic<bool> &done)
+{
+   while (!done.load()) {
+      TSocket *sock = server.Accept();
+      if (!sock || sock == reinterpret_cast<TSocket *>(-1))
+         break;
+      if (done.load()) {
+         sock->Close();
+         break;
+      }
+      ServeS3Request(sock, store);
+      sock->Close();
+   }
+}
+
+void StopMockServer(std::atomic<bool> &done, std::thread &serverThread, const std::string &host, int port)
+{
+   done.store(true);
+   TSocket dummy(host.c_str(), port);
+   dummy.Close();
+   serverThread.join();
+}
+
+} // anonymous namespace
+
+TEST(RPageSourceS3Wire, RoundTripViaMock)
+{
+   TServerSocket server(0, false, TServerSocket::kDefaultBacklog, -1, ESocketBindOption::kInaddrLoopback);
+   const std::string host = server.GetLocalInetAddress().GetHostAddress();
+   const int port = server.GetLocalPort();
+   const std::string basePath = "/wirebucket/roundtrip";
+   const std::string uri = "ntpl+s3+http://" + host + ":" + std::to_string(port) + basePath;
+
+   SetDummyS3Env();
+
+   // The object store is only touched by the server thread while that thread runs.
+   std::map<std::string, std::string> store;
+   std::atomic<bool> done{false};
+   std::thread serverThread([&] { RunMockServer(server, store, done); });
+
+   {
+      // The sink ctor emits a one-time (std::call_once) experimental warning; allow it (optional
+      // because it only fires on the first sink construction in the process).
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.optionalDiag(kWarning, "[ROOT.NTuple]", "experimental", /*matchFullMessage=*/false);
+
+      // Write phase: header, pages, page list, footer and finally the anchor are PUT into the store.
+      auto model = ROOT::RNTupleModel::Create();
+      auto fldX = model->MakeField<int>("x");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "wire", uri);
+      for (int i = 0; i < 20; ++i) {
+         *fldX = i;
+         writer->Fill();
+      }
+   } // writer destroyed here -> footer + anchor PUTs
+
+   // Read phase: HEAD + GET for the anchor, then GETs for header, footer, page list and pages.
+   {
+      auto reader = ROOT::RNTupleReader::Open("wire", uri);
+      EXPECT_EQ(20u, reader->GetNEntries());
+
+      auto viewX = reader->GetView<int>("x");
+      for (int i = 0; i < 20; ++i)
+         EXPECT_EQ(i, viewX(i));
+   }
+
+   StopMockServer(done, serverThread, host, port);
+   UnsetS3Env();
+}
+
+TEST(RPageSourceS3Wire, RoundTripWithoutClusterCache)
+{
+   TServerSocket server(0, false, TServerSocket::kDefaultBacklog, -1, ESocketBindOption::kInaddrLoopback);
+   const std::string host = server.GetLocalInetAddress().GetHostAddress();
+   const int port = server.GetLocalPort();
+   const std::string basePath = "/wirebucket/nocache";
+   const std::string uri = "ntpl+s3+http://" + host + ":" + std::to_string(port) + basePath;
+
+   SetDummyS3Env();
+
+   std::map<std::string, std::string> store;
+   std::atomic<bool> done{false};
+   std::thread serverThread([&] { RunMockServer(server, store, done); });
+
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.optionalDiag(kWarning, "[ROOT.NTuple]", "experimental", /*matchFullMessage=*/false);
+
+      auto model = ROOT::RNTupleModel::Create();
+      auto fldX = model->MakeField<int>("x");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "nocache", uri);
+      for (int i = 0; i < 20; ++i) {
+         *fldX = i;
+         writer->Fill();
+      }
+   }
+
+   // With the cluster cache off, pages are read one at a time through LoadSealedPageImpl instead of
+   // being prefetched in bulk by LoadClusters, so this covers the direct single-page read path.
+   ROOT::RNTupleReadOptions options;
+   options.SetClusterCache(ROOT::RNTupleReadOptions::EClusterCache::kOff);
+   {
+      auto reader = ROOT::RNTupleReader::Open("nocache", uri, options);
+      EXPECT_EQ(20u, reader->GetNEntries());
+
+      auto viewX = reader->GetView<int>("x");
+      for (int i = 0; i < 20; ++i)
+         EXPECT_EQ(i, viewX(i));
+   }
+
+   StopMockServer(done, serverThread, host, port);
+   UnsetS3Env();
+}
+
+TEST(RPageSourceS3Wire, RoundTripManyPagesPerCluster)
+{
+   TServerSocket server(0, false, TServerSocket::kDefaultBacklog, -1, ESocketBindOption::kInaddrLoopback);
+   const std::string host = server.GetLocalInetAddress().GetHostAddress();
+   const int port = server.GetLocalPort();
+   const std::string uri = "ntpl+s3+http://" + host + ":" + std::to_string(port) + "/wirebucket/manypages";
+
+   SetDummyS3Env();
+
+   std::map<std::string, std::string> store;
+   std::atomic<bool> done{false};
+   std::thread serverThread([&] { RunMockServer(server, store, done); });
+
+   // Cap pages at 256 bytes (64 ints) but leave the cluster size at its default, so one cluster holds
+   // many pages from two interleaved columns. LoadClusters() packs them all into a single cluster buffer
+   // at successive offsets, which is where an off-by-one in the buffer cursor would show up.
+   ROOT::RNTupleWriteOptions writeOptions;
+   writeOptions.SetMaxUnzippedPageSize(256);
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.optionalDiag(kWarning, "[ROOT.NTuple]", "experimental", /*matchFullMessage=*/false);
+
+      auto model = ROOT::RNTupleModel::Create();
+      auto fldX = model->MakeField<int>("x");
+      auto fldY = model->MakeField<int>("y");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "manypages", uri, writeOptions);
+      for (int i = 0; i < 1000; ++i) {
+         *fldX = i;
+         *fldY = -i;
+         writer->Fill();
+      }
+   }
+
+   {
+      auto reader = ROOT::RNTupleReader::Open("manypages", uri);
+      EXPECT_EQ(1000u, reader->GetNEntries());
+
+      // Guard the premise of the test: one cluster, many pages per column.
+      const auto &desc = reader->GetDescriptor();
+      ASSERT_EQ(1u, desc.GetNClusters());
+      const auto columnId = desc.FindPhysicalColumnId(desc.FindFieldId("x"), 0, 0);
+      EXPECT_GT(desc.GetClusterDescriptor(0).GetPageRange(columnId).GetPageInfos().size(), 1u);
+
+      auto viewX = reader->GetView<int>("x");
+      auto viewY = reader->GetView<int>("y");
+      for (int i = 0; i < 1000; ++i) {
+         EXPECT_EQ(i, viewX(i));
+         EXPECT_EQ(-i, viewY(i));
+      }
+   }
+
+   StopMockServer(done, serverThread, host, port);
+   UnsetS3Env();
+}
+
+TEST(RPageSourceS3Wire, RoundTripManyClusters)
+{
+   TServerSocket server(0, false, TServerSocket::kDefaultBacklog, -1, ESocketBindOption::kInaddrLoopback);
+   const std::string host = server.GetLocalInetAddress().GetHostAddress();
+   const int port = server.GetLocalPort();
+   const std::string uri = "ntpl+s3+http://" + host + ":" + std::to_string(port) + "/wirebucket/manyclusters";
+
+   SetDummyS3Env();
+
+   std::map<std::string, std::string> store;
+   std::atomic<bool> done{false};
+   std::thread serverThread([&] { RunMockServer(server, store, done); });
+
+   // A tiny target cluster size produces many clusters, so LoadClusters() iterates over its outer loop
+   // and the base class walks several cluster groups in Attach().
+   ROOT::RNTupleWriteOptions writeOptions;
+   writeOptions.SetApproxZippedClusterSize(1024);
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.optionalDiag(kWarning, "[ROOT.NTuple]", "experimental", /*matchFullMessage=*/false);
+
+      auto model = ROOT::RNTupleModel::Create();
+      auto fldX = model->MakeField<float>("x");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "manyclusters", uri, writeOptions);
+      for (int i = 0; i < 5000; ++i) {
+         *fldX = static_cast<float>(i);
+         writer->Fill();
+      }
+   }
+
+   {
+      auto reader = ROOT::RNTupleReader::Open("manyclusters", uri);
+      EXPECT_EQ(5000u, reader->GetNEntries());
+      ASSERT_GT(reader->GetDescriptor().GetNClusters(), 1u);
+
+      auto viewX = reader->GetView<float>("x");
+      for (int i = 0; i < 5000; ++i)
+         EXPECT_FLOAT_EQ(static_cast<float>(i), viewX(i));
+   }
+
+   StopMockServer(done, serverThread, host, port);
+   UnsetS3Env();
+}
+
+TEST(RPageSourceS3Wire, RoundTripWithoutPageChecksums)
+{
+   TServerSocket server(0, false, TServerSocket::kDefaultBacklog, -1, ESocketBindOption::kInaddrLoopback);
+   const std::string host = server.GetLocalInetAddress().GetHostAddress();
+   const int port = server.GetLocalPort();
+   const std::string uri = "ntpl+s3+http://" + host + ":" + std::to_string(port) + "/wirebucket/nochecksum";
+
+   SetDummyS3Env();
+
+   std::map<std::string, std::string> store;
+   std::atomic<bool> done{false};
+   std::thread serverThread([&] { RunMockServer(server, store, done); });
+
+   // Page buffers are sized as payload + HasChecksum() * kNBytesPageChecksum. Every other test covers
+   // the checksummed case (the default), so this one covers the other branch of that arithmetic.
+   ROOT::RNTupleWriteOptions writeOptions;
+   writeOptions.SetEnablePageChecksums(false);
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.optionalDiag(kWarning, "[ROOT.NTuple]", "experimental", /*matchFullMessage=*/false);
+
+      auto model = ROOT::RNTupleModel::Create();
+      auto fldX = model->MakeField<int>("x");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "nochecksum", uri, writeOptions);
+      for (int i = 0; i < 100; ++i) {
+         *fldX = i * 3;
+         writer->Fill();
+      }
+   }
+
+   {
+      auto reader = ROOT::RNTupleReader::Open("nochecksum", uri);
+      EXPECT_EQ(100u, reader->GetNEntries());
+
+      auto viewX = reader->GetView<int>("x");
+      for (int i = 0; i < 100; ++i)
+         EXPECT_EQ(i * 3, viewX(i));
+   }
+
+   StopMockServer(done, serverThread, host, port);
+   UnsetS3Env();
+}
+
+TEST(RPageSourceS3Wire, CloneReadsFromItsOwnConnection)
+{
+   TServerSocket server(0, false, TServerSocket::kDefaultBacklog, -1, ESocketBindOption::kInaddrLoopback);
+   const std::string host = server.GetLocalInetAddress().GetHostAddress();
+   const int port = server.GetLocalPort();
+   const std::string uri = "ntpl+s3+http://" + host + ":" + std::to_string(port) + "/wirebucket/clone";
+
+   SetDummyS3Env();
+
+   std::map<std::string, std::string> store;
+   std::atomic<bool> done{false};
+   std::thread serverThread([&] { RunMockServer(server, store, done); });
+
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.optionalDiag(kWarning, "[ROOT.NTuple]", "experimental", /*matchFullMessage=*/false);
+
+      auto model = ROOT::RNTupleModel::Create();
+      auto fldX = model->MakeField<int>("x");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "clone", uri);
+      for (int i = 0; i < 50; ++i) {
+         *fldX = i;
+         writer->Fill();
+      }
+   }
+
+   {
+      ROOT::Experimental::Internal::RPageSourceS3 source("clone", uri, ROOT::RNTupleReadOptions());
+      source.Attach();
+      ASSERT_EQ(50u, source.GetNEntries());
+
+      // Clone() copies the descriptor of an attached source, so the clone must come back attached
+      // without re-running LoadStructureImpl(), yet still be able to do I/O over its own connection.
+      auto clone = source.Clone();
+      ASSERT_EQ(50u, clone->GetNEntries());
+
+      ROOT::DescriptorId_t columnId;
+      {
+         auto descGuard = clone->GetSharedDescriptorGuard();
+         columnId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("x"), 0, 0);
+      }
+
+      // A null buffer asks only for the size; the second call transfers and verifies the checksum,
+      // so reaching the end of this block proves the clone read real bytes from the mock.
+      RPageStorage::RSealedPage sealedPage;
+      clone->LoadSealedPage(columnId, ROOT::RNTupleLocalIndex(0, 0), sealedPage);
+      ASSERT_GT(sealedPage.GetBufferSize(), 0u);
+
+      auto buffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
+      sealedPage.SetBuffer(buffer.get());
+      clone->LoadSealedPage(columnId, ROOT::RNTupleLocalIndex(0, 0), sealedPage);
+      EXPECT_EQ(50u, sealedPage.GetNElements());
+   }
+
+   StopMockServer(done, serverThread, host, port);
+   UnsetS3Env();
+}
+
+TEST(RPageSourceS3Wire, HonoursAnchorUrlTemplate)
+{
+   TServerSocket server(0, false, TServerSocket::kDefaultBacklog, -1, ESocketBindOption::kInaddrLoopback);
+   const std::string host = server.GetLocalInetAddress().GetHostAddress();
+   const int port = server.GetLocalPort();
+   const std::string basePath = "/wirebucket/template";
+   const std::string uri = "ntpl+s3+http://" + host + ":" + std::to_string(port) + basePath;
+
+   SetDummyS3Env();
+
+   std::map<std::string, std::string> store;
+   std::atomic<bool> done{false};
+   std::thread serverThread([&] { RunMockServer(server, store, done); });
+
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.optionalDiag(kWarning, "[ROOT.NTuple]", "experimental", /*matchFullMessage=*/false);
+
+      auto model = ROOT::RNTupleModel::Create();
+      auto fldX = model->MakeField<int>("x");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "template", uri);
+      for (int i = 0; i < 30; ++i) {
+         *fldX = i * 7;
+         writer->Fill();
+      }
+   }
+
+   StopMockServer(done, serverThread, host, port);
+
+   // Relocate every data object under a "data/" segment and rewrite the anchor to describe the new
+   // layout. The writer only ever emits the default template, so this is the only way to prove that the
+   // source resolves the stored one instead of assuming "<base>/<objid>".
+   std::map<std::string, std::string> relocated;
+   for (const auto &[key, value] : store) {
+      if (key == basePath)
+         continue; // the anchor itself stays at the base path
+      ASSERT_EQ(0u, key.rfind(basePath + "/", 0));
+      relocated[basePath + "/data/" + key.substr(basePath.size() + 1)] = value;
+   }
+   ASSERT_FALSE(relocated.empty());
+
+   auto jsonAnchor = nlohmann::json::parse(store[basePath]);
+   jsonAnchor.erase("checksum");
+   jsonAnchor["urlTemplate"] = "${baseurl}/data/${objid}";
+   const auto canonicalJson = jsonAnchor.dump(-1);
+   jsonAnchor["checksum"] = XXH3_64bits(canonicalJson.data(), canonicalJson.size());
+
+   relocated[basePath] = jsonAnchor.dump(2);
+   store = std::move(relocated);
+
+   done.store(false);
+   std::thread secondServerThread([&] { RunMockServer(server, store, done); });
+
+   {
+      auto reader = ROOT::RNTupleReader::Open("template", uri);
+      EXPECT_EQ(30u, reader->GetNEntries());
+
+      auto viewX = reader->GetView<int>("x");
+      for (int i = 0; i < 30; ++i)
+         EXPECT_EQ(i * 7, viewX(i));
+   }
+
+   StopMockServer(done, secondServerThread, host, port);
+   UnsetS3Env();
+}
+
+TEST(RPageSourceS3Wire, ChecksNTupleName)
+{
+   TServerSocket server(0, false, TServerSocket::kDefaultBacklog, -1, ESocketBindOption::kInaddrLoopback);
+   const std::string host = server.GetLocalInetAddress().GetHostAddress();
+   const int port = server.GetLocalPort();
+   const std::string uri = "ntpl+s3+http://" + host + ":" + std::to_string(port) + "/wirebucket/named";
+
+   SetDummyS3Env();
+
+   std::map<std::string, std::string> store;
+   std::atomic<bool> done{false};
+   std::thread serverThread([&] { RunMockServer(server, store, done); });
+
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.optionalDiag(kWarning, "[ROOT.NTuple]", "experimental", /*matchFullMessage=*/false);
+
+      auto model = ROOT::RNTupleModel::Create();
+      auto fldX = model->MakeField<int>("x");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "signal", uri);
+      for (int i = 0; i < 10; ++i) {
+         *fldX = i;
+         writer->Fill();
+      }
+   }
+
+   // The name locates nothing in S3, but asking for the wrong one usually means the URL is wrong, so it
+   // is reported rather than ignored.
+   EXPECT_THROW(ROOT::RNTupleReader::Open("background", uri), ROOT::RException);
+
+   // The matching name works, and so does an empty one for a caller that does not know it up front.
+   {
+      auto reader = ROOT::RNTupleReader::Open("signal", uri);
+      EXPECT_EQ(10u, reader->GetNEntries());
+   }
+   {
+      ROOT::Experimental::Internal::RPageSourceS3 source("", uri, ROOT::RNTupleReadOptions());
+      source.Attach();
+      EXPECT_EQ(10u, source.GetNEntries());
+   }
+
+   StopMockServer(done, serverThread, host, port);
+   UnsetS3Env();
+}
+
+TEST(RPageSourceS3Wire, MissingPageObjectFails)
+{
+   TServerSocket server(0, false, TServerSocket::kDefaultBacklog, -1, ESocketBindOption::kInaddrLoopback);
+   const std::string host = server.GetLocalInetAddress().GetHostAddress();
+   const int port = server.GetLocalPort();
+   const std::string basePath = "/wirebucket/lostpage";
+   const std::string uri = "ntpl+s3+http://" + host + ":" + std::to_string(port) + basePath;
+
+   SetDummyS3Env();
+
+   std::map<std::string, std::string> store;
+   std::atomic<bool> done{false};
+   std::thread serverThread([&] { RunMockServer(server, store, done); });
+
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.optionalDiag(kWarning, "[ROOT.NTuple]", "experimental", /*matchFullMessage=*/false);
+
+      auto model = ROOT::RNTupleModel::Create();
+      auto fldX = model->MakeField<int>("x");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "lostpage", uri);
+      for (int i = 0; i < 20; ++i) {
+         *fldX = i;
+         writer->Fill();
+      }
+   }
+
+   // Take the server down before touching the store, so the map is not read and written concurrently.
+   StopMockServer(done, serverThread, host, port);
+
+   // Object 0 is the header and the anchor lives at the base path, so dropping object 1 leaves the
+   // metadata intact: Attach() succeeds and the failure surfaces later, when a page is actually read.
+   ASSERT_EQ(1u, store.erase(basePath + "/1"));
+
+   done.store(false);
+   std::thread secondServerThread([&] { RunMockServer(server, store, done); });
+
+   // The cluster cache is turned off deliberately. With it on, the failing GET happens inside
+   // LoadClusters() on the cluster pool's I/O thread, and RClusterPool::ExecReadClusters() does not
+   // catch exceptions, so the throw would terminate the process instead of reaching the caller. With
+   // the cache off the page is read synchronously and the exception propagates as it should.
+   ROOT::RNTupleReadOptions readOptions;
+   readOptions.SetClusterCache(ROOT::RNTupleReadOptions::EClusterCache::kOff);
+   {
+      auto reader = ROOT::RNTupleReader::Open("lostpage", uri, readOptions);
+      EXPECT_EQ(20u, reader->GetNEntries());
+      auto viewX = reader->GetView<int>("x");
+      EXPECT_THROW(viewX(0), ROOT::RException);
+   }
+
+   StopMockServer(done, secondServerThread, host, port);
+   UnsetS3Env();
+}
+
+TEST(RPageSourceS3Wire, ReadMissingAnchorFails)
+{
+   TServerSocket server(0, false, TServerSocket::kDefaultBacklog, -1, ESocketBindOption::kInaddrLoopback);
+   const std::string host = server.GetLocalInetAddress().GetHostAddress();
+   const std::string uri =
+      "ntpl+s3+http://" + host + ":" + std::to_string(server.GetLocalPort()) + "/wirebucket/missing";
+
+   SetDummyS3Env();
+
+   std::map<std::string, std::string> store; // empty: nothing was ever written under this prefix
+
+   // The source's very first request is the HEAD on the anchor; answering it with a 404 is enough.
+   std::thread serverThread([&] {
+      TSocket *sock = server.Accept();
+      if (sock && sock != reinterpret_cast<TSocket *>(-1)) {
+         ServeS3Request(sock, store);
+         sock->Close();
+      }
+   });
+
+   EXPECT_THROW(ROOT::RNTupleReader::Open("test", uri), ROOT::RException);
+
+   serverThread.join();
+   UnsetS3Env();
+}
+
+// ==================== Integration Tests (credential-gated) ====================
+
+// These run against a real S3 service over https (CERN Ceph, AWS) and are skipped unless S3_ENDPOINT,
+// S3_BUCKET, S3_ACCESS_KEY and S3_SECRET_KEY are all set. S3_ENDPOINT is a bare host, without a scheme.
+class RPageS3IntegrationTest : public ::testing::Test {
+protected:
+   std::string fEndpoint;
+   std::string fBucket;
+
+   void SetUp() override
+   {
+      const char *endpoint = gSystem->Getenv("S3_ENDPOINT");
+      const char *bucket = gSystem->Getenv("S3_BUCKET");
+      const char *accessKey = gSystem->Getenv("S3_ACCESS_KEY");
+      const char *secretKey = gSystem->Getenv("S3_SECRET_KEY");
+      if (!endpoint || !bucket || !accessKey || !secretKey)
+         GTEST_SKIP() << "S3 credentials not set; skipping integration test";
+      fEndpoint = endpoint;
+      fBucket = bucket;
+   }
+
+   std::string MakeUri(const std::string &prefix) const
+   {
+      return "ntpl+s3+https://" + fEndpoint + "/" + fBucket + "/" + prefix;
+   }
+};
+
+TEST_F(RPageS3IntegrationTest, RoundTripSimple)
+{
+   const auto uri = MakeUri("roundtrip_simple");
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.optionalDiag(kWarning, "[ROOT.NTuple]", "experimental", /*matchFullMessage=*/false);
+
+      auto model = ROOT::RNTupleModel::Create();
+      auto fldX = model->MakeField<float>("x");
+      auto fldY = model->MakeField<int>("y");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "test", uri);
+      for (int i = 0; i < 1000; ++i) {
+         *fldX = static_cast<float>(i) * 0.5f;
+         *fldY = i * i;
+         writer->Fill();
+      }
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("test", uri);
+   EXPECT_EQ(1000u, reader->GetNEntries());
+   auto viewX = reader->GetView<float>("x");
+   auto viewY = reader->GetView<int>("y");
+   for (int i = 0; i < 1000; ++i) {
+      EXPECT_FLOAT_EQ(static_cast<float>(i) * 0.5f, viewX(i));
+      EXPECT_EQ(i * i, viewY(i));
+   }
+}
+
+TEST_F(RPageS3IntegrationTest, RoundTripStrings)
+{
+   const auto uri = MakeUri("roundtrip_strings");
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.optionalDiag(kWarning, "[ROOT.NTuple]", "experimental", /*matchFullMessage=*/false);
+
+      auto model = ROOT::RNTupleModel::Create();
+      auto fldName = model->MakeField<std::string>("name");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "strings", uri);
+      for (int i = 0; i < 100; ++i) {
+         *fldName = "entry_" + std::to_string(i);
+         writer->Fill();
+      }
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("strings", uri);
+   EXPECT_EQ(100u, reader->GetNEntries());
+   auto viewName = reader->GetView<std::string>("name");
+   for (int i = 0; i < 100; ++i)
+      EXPECT_EQ("entry_" + std::to_string(i), viewName(i));
+}
+
+TEST_F(RPageS3IntegrationTest, RoundTripEmpty)
+{
+   // No entries means no pages and no cluster groups; the read path has to cope with that.
+   const auto uri = MakeUri("roundtrip_empty");
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.optionalDiag(kWarning, "[ROOT.NTuple]", "experimental", /*matchFullMessage=*/false);
+
+      auto model = ROOT::RNTupleModel::Create();
+      model->MakeField<float>("x");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "empty", uri);
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("empty", uri);
+   EXPECT_EQ(0u, reader->GetNEntries());
+}
+
+TEST_F(RPageS3IntegrationTest, RoundTripMultipleClusters)
+{
+   // A small cluster size forces many clusters, so LoadClusters() runs repeatedly (and from the cluster
+   // pool's background thread) rather than just once.
+   const auto uri = MakeUri("roundtrip_clusters");
+   ROOT::RNTupleWriteOptions opts;
+   opts.SetApproxZippedClusterSize(1024);
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.optionalDiag(kWarning, "[ROOT.NTuple]", "experimental", /*matchFullMessage=*/false);
+
+      auto model = ROOT::RNTupleModel::Create();
+      auto fldX = model->MakeField<float>("x");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "clusters", uri, opts);
+      for (int i = 0; i < 10000; ++i) {
+         *fldX = static_cast<float>(i);
+         writer->Fill();
+      }
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("clusters", uri);
+   EXPECT_EQ(10000u, reader->GetNEntries());
+   auto viewX = reader->GetView<float>("x");
+   for (int i = 0; i < 10000; ++i)
+      EXPECT_FLOAT_EQ(static_cast<float>(i), viewX(i));
 }

@@ -17,11 +17,14 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RSpan.hxx>
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
@@ -114,6 +117,10 @@ RResult<std::string> ParseS3Url(std::string_view uri);
 Currently implements Mode B (one sealed page per S3 object, kTypeObject64 locators).
 Mode A (multiple packed pages per object, kTypeMulti locators) will be added separately.
 
+Prefer calling RNTupleWriter::CommitDataset() explicitly to letting the writer's destructor do it: a
+destructor cannot propagate an exception, so a failed footer or anchor upload is only logged and leaves
+the ntuple without an anchor, i.e. unreadable.
+
 \warning The S3 backend is experimental and under active development.
 */
 // clang-format on
@@ -160,6 +167,80 @@ public:
    std::unique_ptr<ROOT::Internal::RPageSink>
    CloneAsHidden(std::string_view name, const ROOT::RNTupleWriteOptions &opts) const final;
 }; // class RPageSinkS3
+
+// clang-format off
+/**
+\class ROOT::Experimental::Internal::RPageSourceS3
+\ingroup NTuple
+\brief Storage provider that reads ntuple pages from S3-compatible object storage.
+
+Counterpart of RPageSinkS3: implements Mode B reads (one sealed page per S3 object, kTypeObject64
+locators). Pages are fetched one object at a time; batching them into concurrent GETs is left to a
+follow-up.
+
+The anchor is read in a single GET that deliberately asks for more bytes than it holds: its size is not
+known up front, and a range running past the end of an object returns only what exists, so the length of
+the reply is the size of the anchor.
+
+\warning The S3 backend is experimental and under active development.
+*/
+// clang-format on
+class RPageSourceS3 : public ROOT::Internal::RPageSource {
+private:
+   /// HTTP base URL for this ntuple (derived from the s3 scheme URI); never has a trailing slash
+   std::string fBaseUrl;
+   /// Connection used by everything that runs on the calling thread: the anchor, header and footer in
+   /// LoadStructureImpl, the page lists in LoadPageListImpl and single pages in LoadSealedPageImpl.
+   /// Reused across objects so curl keeps it alive instead of re-handshaking per object.
+   ROOT::Internal::RCurlConnection fConnection;
+   /// Connection used exclusively by LoadClusters(), which the cluster pool calls on its own I/O thread.
+   /// A libcurl easy handle carries per-request state and must not be driven by two threads at once, so
+   /// the prefetch path needs a handle of its own rather than sharing fConnection.
+   ROOT::Internal::RCurlConnection fClusterConnection;
+   /// Anchor metadata, fetched and parsed in LoadStructureImpl
+   RNTupleAnchorS3 fAnchor;
+   /// Populated by LoadStructureImpl and AttachImpl, moved out at the end of AttachImpl
+   ROOT::Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
+
+   /// Resolve a numeric object ID to its full HTTP URL through the anchor's URL template
+   std::string MakeObjectUrl(std::uint64_t objId) const;
+   /// Download `size` bytes from `url` into the caller-provided `buffer` via an HTTP GET request.
+   /// The connection is explicit because the caller's thread determines which one may be used.
+   void GetObject(ROOT::Internal::RCurlConnection &connection, const std::string &url, unsigned char *buffer,
+                  std::size_t size);
+   /// Download at most `size` bytes from the start of `url`, returning how many arrived. Used to read an
+   /// object of unknown length, where a short reply is the answer rather than an error.
+   std::size_t GetObjectPrefix(ROOT::Internal::RCurlConnection &connection, const std::string &url,
+                               unsigned char *buffer, std::size_t size);
+
+   /// Tag to select the internal constructor that takes an already-resolved base URL.
+   struct RFromBaseUrl {};
+   /// Internal constructor used by CloneImpl: the public constructor derives the base URL by parsing an
+   /// s3 scheme URI, whereas a clone of an open source already has one and must not re-parse it.
+   RPageSourceS3(std::string_view ntupleName, std::string_view baseUrl, const ROOT::RNTupleReadOptions &options,
+                 RFromBaseUrl);
+
+   void LoadPageListImpl(const RNTupleLocator &locator, unsigned char *buffer) final;
+   void LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage) final;
+
+protected:
+   void LoadStructureImpl() final;
+   ROOT::RNTupleDescriptor AttachImpl() final;
+   /// The cloned page source opens its own pair of HTTP connections to the same base URL.
+   std::unique_ptr<RPageSource> CloneImpl() const final;
+
+public:
+   RPageSourceS3(std::string_view ntupleName, std::string_view uri, const ROOT::RNTupleReadOptions &options);
+   ~RPageSourceS3() override;
+
+   std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
+   LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) final;
+
+   void LoadStreamerInfo() final;
+
+   std::unique_ptr<RPageSource> OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &anchorLink,
+                                                        const ROOT::RNTupleReadOptions &options = {}) final;
+}; // class RPageSourceS3
 
 } // namespace Internal
 } // namespace Experimental
