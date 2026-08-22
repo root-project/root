@@ -468,3 +468,22 @@ using func0_ret_t = typename ROOT::TypeTraits::CallableTraits<decltype(func0)>::
    EXPECT_TRUE(res);
 }
 #endif
+
+// ROOT-10311
+TEST_F(TClingTests, TClassByCtorName)
+{
+   auto res = gInterpreter->Declare("namespace TClassByCtorName{class Foo;};");
+   EXPECT_TRUE(res);
+   {
+      ROOT::TestSupport::CheckDiagsRAII checkDiag;
+      checkDiag.requiredDiag(kWarning, "TClass::Init", "no dictionary for class TClassByCtorName::Foo is available", false);
+      EXPECT_TRUE(nullptr != TClass::GetClass("TClassByCtorName::Foo"));
+   }
+   const auto *wrongName = "TTree::TTree";
+   EXPECT_TRUE(nullptr == TClass::GetClass(wrongName));
+   EXPECT_TRUE(nullptr != TClass::GetClass("TTree"));
+
+   std::string classInterpreterName;
+   gInterpreter->GetInterpreterTypeName(wrongName, classInterpreterName);
+   EXPECT_STREQ(classInterpreterName.c_str(), "");
+}
