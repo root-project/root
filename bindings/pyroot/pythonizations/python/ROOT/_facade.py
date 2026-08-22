@@ -597,14 +597,6 @@ class ROOTFacade(types.ModuleType):
         # Return something as it is a property function
         return self
 
-    # Get TPyDispatcher for programming GUI callbacks
-    @property
-    def TPyDispatcher(self):
-        self._cppyy.include("ROOT/TPyDispatcher.h")
-        tpd = self._cppyy.gbl.TPyDispatcher
-        type(self).TPyDispatcher = tpd
-        return tpd
-
     # Create the uhi namespace
     @property
     def uhi(self):
