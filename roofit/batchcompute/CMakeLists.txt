@@ -88,3 +88,12 @@ if(vdt OR builtin_vdt)
     endif()
   endforeach()
 endif()
+
+# TBB is used for the optional multi-threaded evaluation of large batches.
+if(imt)
+  foreach(library RooBatchCompute_GENERIC RooBatchCompute_SSE4.1 RooBatchCompute_AVX RooBatchCompute_AVX2 RooBatchCompute_AVX512 )
+    if(TARGET ${library})
+      target_link_libraries(${library} PRIVATE TBB::tbb)
+    endif()
+  endforeach()
+endif()
