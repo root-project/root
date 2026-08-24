@@ -22,4 +22,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(X3d
     Gui
 )
 
-target_include_directories(X3d PRIVATE ${X11_INCLUDE_DIR})
+target_include_directories(X3d PRIVATE ${X11_INCLUDE_DIR} ./)
