@@ -1132,6 +1132,61 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsSubclass) {
   EXPECT_FALSE(Cpp::IsSubclass(Decls[4], nullptr));
 }
 
+// IsSubclass deliberately ignores access specifiers so bindings can pass
+// objects across non-public bases - except between two instantiations of the
+// same class template, where non-public derivation is a recursive
+// implementation detail (MSVC's std::tuple derives privately from the tuple
+// of its tail) and acceptance would reinterpret a tuple as its own tail.
+TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsSubclassSameTemplate) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    struct PrivBase { int b; };
+    struct PrivDerived : private PrivBase {};
+
+    template <typename... Ts> struct RTup;
+    template <> struct RTup<> {};
+    template <typename H, typename... Ts>
+    struct RTup<H, Ts...> : private RTup<Ts...> { H head; };
+
+    template <typename... Ts> struct PubTup;
+    template <> struct PubTup<> {};
+    template <typename H, typename... Ts>
+    struct PubTup<H, Ts...> : public PubTup<Ts...> { H head; };
+
+    RTup<double, int, char> rt3;
+    RTup<int, char> rt2;
+    PubTup<double, int> pt2;
+    PubTup<int> pt1;
+  )";
+
+  GetAllTopLevelDecls(code, Decls);
+
+  auto scope_of = [](const char* var) {
+    return Cpp::GetScopeFromType(Cpp::GetVariableType(Cpp::GetNamed(var)));
+  };
+  Cpp::DeclRef rt3 = scope_of("rt3");
+  Cpp::DeclRef rt2 = scope_of("rt2");
+  Cpp::DeclRef pt2 = scope_of("pt2");
+  Cpp::DeclRef pt1 = scope_of("pt1");
+  ASSERT_TRUE(rt3);
+  ASSERT_TRUE(rt2);
+  ASSERT_TRUE(pt2);
+  ASSERT_TRUE(pt1);
+
+  // Distinct classes keep the access-blind behavior.
+  EXPECT_TRUE(Cpp::IsSubclass(Cpp::GetScope("PrivDerived"),
+                              Cpp::GetScope("PrivBase")));
+
+  // Same template, public derivation chain: still a subclass.
+  EXPECT_TRUE(Cpp::IsSubclass(pt2, pt1));
+
+  // Same template, only a private path: a tuple is not its own tail.
+  EXPECT_FALSE(Cpp::IsSubclass(rt3, rt2));
+
+  // Identity between same-template handles is unaffected.
+  EXPECT_TRUE(Cpp::IsSubclass(rt3, rt3));
+}
+
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetBaseClassOffset) {
   std::vector<Decl *> Decls;
 #define Stringify(s) Stringifyx(s)
