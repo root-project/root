@@ -23,9 +23,11 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 #include "Batches.h"
 
 #include <ROOT/RConfig.hxx>
+#include <RConfigure.h>
 
-#ifdef ROOBATCHCOMPUTE_USE_IMT
-#include <ROOT/TExecutor.hxx>
+#ifdef R__USE_IMT
+#include <ROOT/TSeq.hxx>
+#include <ROOT/TThreadExecutor.hxx>
 #endif
 
 #include <Math/Util.h>
@@ -33,6 +35,8 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 #include <algorithm>
 #include <functional>
 #include <map>
+#include <memory>
+#include <mutex>
 #include <queue>
 #include <sstream>
 #include <stdexcept>
@@ -74,6 +78,111 @@ inline void advance(Batches &batches, std::size_t nEvents)
    batches.output += nEvents;
 }
 
+/// Run one compute function over the event range [begin, begin + count).
+/// The `_isVector` flags of the inputs are determined by the total number of
+/// events, such that the same inputs are considered per-event arrays no matter
+/// how the full range is split into sub-ranges.
+void computeRange(void (*computeFn)(Batches &), double *output, std::size_t totalNEvents, VarSpan vars,
+                  ArgSpan extraArgs, std::size_t begin, std::size_t count)
+{
+   std::vector<Batch> arrays(vars.size());
+   Batches batches;
+   fillBatches(batches, output, count, vars.size(), extraArgs);
+   fillArrays(arrays, vars, totalNEvents);
+   batches.args = arrays.data();
+   advance(batches, begin);
+
+   std::size_t events = count;
+   batches.nEvents = bufferSize;
+   while (events > bufferSize) {
+      computeFn(batches);
+      advance(batches, bufferSize);
+      events -= bufferSize;
+   }
+   batches.nEvents = events;
+   computeFn(batches);
+}
+
+#ifdef R__USE_IMT
+
+// The number of events per task when computing multi-threaded. The chunk
+// boundaries must not depend on the number of threads, such that also the
+// results of the multi-threaded reductions are bitwise independent of the
+// requested number of threads.
+constexpr std::size_t parallelChunkSize = 16384;
+
+// Batches with fewer events than this are always evaluated single-threaded,
+// because the scheduling overhead would exceed the gain from parallelization.
+constexpr std::size_t minParallelSize = 2 * parallelChunkSize;
+
+std::size_t numChunks(std::size_t nEvents)
+{
+   return (nEvents + parallelChunkSize - 1) / parallelChunkSize;
+}
+
+/// Get a cached executor for the given number of threads. All executors share
+/// ROOT's global thread pool: the first executor created in the process
+/// determines its size, and requests for a different number of threads later
+/// on print a warning. Sharing one pool makes sure that parallel evaluations
+/// in several fits (or on top of user-level parallelism) running at the same
+/// time don't oversubscribe the machine.
+ROOT::TThreadExecutor &executorFor(int nThreads)
+{
+   static std::mutex mutex;
+   // The map is deliberately leaked: this library is loaded with dlopen(), so
+   // there is no guaranteed destruction order between its statics and the TBB
+   // runtime underlying the executor, and destroying the thread pool after
+   // TBB tore down its scheduler can crash or hang at process exit.
+   static auto &executors = *new std::map<int, std::unique_ptr<ROOT::TThreadExecutor>>;
+   std::lock_guard<std::mutex> lock{mutex};
+   auto &executor = executors[nThreads];
+   if (!executor) {
+      executor = std::make_unique<ROOT::TThreadExecutor>(nThreads);
+   }
+   return *executor;
+}
+
+/// Call func(iChunk) in parallel, using up to nThreads threads, for the
+/// fixed-size event chunks covering [0, nEvents).
+template <class Func>
+void parallelForChunks(int nThreads, std::size_t nEvents, Func &&func)
+{
+   ROOT::TThreadExecutor &executor = executorFor(nThreads);
+   // Usually, the chunks are handed out to the threads dynamically one by one
+   // for optimal load balancing. But if the shared thread pool has more
+   // threads than requested (because something else initialized it with a
+   // higher concurrency before), the loop is instead split statically into at
+   // most nThreads tasks to still honor the requested number of threads.
+   const unsigned int nTasks = executor.GetPoolSize() > static_cast<unsigned int>(nThreads) ? nThreads : 0;
+   const ROOT::TSeq<unsigned int> chunkIndices{0u, static_cast<unsigned int>(numChunks(nEvents))};
+   executor.Foreach([&](unsigned int iChunk) { func(iChunk); }, chunkIndices, nTasks);
+}
+
+/// First event of a given fixed-size chunk.
+std::size_t chunkBegin(std::size_t iChunk)
+{
+   return iChunk * parallelChunkSize;
+}
+
+/// Number of events in a given fixed-size chunk (the last one can be shorter).
+std::size_t chunkSize(std::size_t iChunk, std::size_t nEvents)
+{
+   return std::min(parallelChunkSize, nEvents - chunkBegin(iChunk));
+}
+
+#endif // R__USE_IMT
+
+bool useParallelEvaluation(RooBatchCompute::Config const &cfg, std::size_t nEvents)
+{
+#ifdef R__USE_IMT
+   return cfg.nThreads() > 1 && nEvents >= minParallelSize;
+#else
+   (void)cfg;
+   (void)nEvents;
+   return false;
+#endif
+}
+
 } // namespace
 
 std::vector<void (*)(Batches &)> getFunctions();
@@ -109,117 +218,57 @@ public:
    void synchronizeCudaStream(CudaInterface::CudaStream *) const override { throw std::bad_function_call(); }
 
 private:
-#ifdef ROOBATCHCOMPUTE_USE_IMT
-   void computeIMT(Computer computer, std::span<double> output, VarSpan vars, ArgSpan extraArgs);
-#endif
-
    const std::vector<void (*)(Batches &)> _computeFunctions;
 };
 
-#ifdef ROOBATCHCOMPUTE_USE_IMT
-void RooBatchComputeClass::computeIMT(Computer computer, std::span<double> output, VarSpan vars, ArgSpan extraArgs)
-{
-   std::size_t nEvents = output.size();
-
-   if (nEvents == 0)
-      return;
-   ROOT::Internal::TExecutor ex;
-   std::size_t nThreads = ex.GetPoolSize();
-
-   std::size_t nEventsPerThread = nEvents / nThreads + (nEvents % nThreads > 0);
-
-   // Reset the number of threads to the number we actually need given nEventsPerThread
-   nThreads = nEvents / nEventsPerThread + (nEvents % nEventsPerThread > 0);
-
-   auto task = [&](std::size_t idx) -> int {
-      // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
-      // Then advance every object but the first to split the work between threads
-      Batches batches;
-      std::vector<Batch> arrays(vars.size());
-      fillBatches(batches, output.data(), nEventsPerThread, vars.size(), extraArgs);
-      fillArrays(arrays, vars, nEvents);
-      batches.args = arrays.data();
-      advance(batches, batches.nEvents * idx);
-
-      // Set the number of events of the last Batches object as the remaining events
-      if (idx == nThreads - 1) {
-         batches.nEvents = nEvents - idx * batches.nEvents;
-      }
-
-      std::size_t events = batches.nEvents;
-      batches.nEvents = bufferSize;
-      while (events > bufferSize) {
-         _computeFunctions[computer](batches);
-         advance(batches, bufferSize);
-         events -= bufferSize;
-      }
-      batches.nEvents = events;
-      _computeFunctions[computer](batches);
-      return 0;
-   };
-
-   std::vector<std::size_t> indices(nThreads);
-   for (unsigned int i = 1; i < nThreads; i++) {
-      indices[i] = i;
-   }
-   ex.Map(task, indices);
-}
-#endif
-
 /** Compute multiple values using optimized functions.
 This method creates a Batches object and passes it to the correct compute function.
-In case Implicit Multithreading is enabled, the events to be processed are equally
-divided among the tasks to be generated and computed in parallel.
+If the configuration requests more than one thread and the batch is large
+enough, the events are processed in fixed-size chunks by parallel tasks.
+\param cfg Configuration, steering among other things the number of threads.
 \param computer An enum specifying the compute function to be used.
 \param output The array where the computation results are stored.
 \param vars A std::span containing pointers to the variables involved in the computation.
 \param extraArgs An optional std::span containing extra double values that may participate in the computation. **/
-void RooBatchComputeClass::compute(Config const &, Computer computer, std::span<double> output, VarSpan vars,
+void RooBatchComputeClass::compute(Config const &cfg, Computer computer, std::span<double> output, VarSpan vars,
                                    ArgSpan extraArgs)
 {
-   // In the original implementation of this library, the evaluation was done
-   // multi-threaded in implicit multi-threading was enabled in ROOT with
-   // ROOT::EnableImplicitMT().
-   //
-   // However, this multithreaded mode was not carefully validated and is
-   // therefore not production ready. One would first have to study the
-   // overhead for different numbers of cores, number of events, and model
-   // complexity. The, we should only consider implicit multithreading here if
-   // there is no performance penalty for any scenario, to not surprise the
-   // users with unexpected slowdows!
-   //
-   // Note that the priority of investigating this is not high, because RooFit
-   // R & D efforts currently go in the direction of parallelization at the
-   // level of the gradient components, or achieving single-threaded speedup
-   // with automatic differentiation. Furthermore, the single-threaded
-   // performance of the new CPU evaluation backend with the RooBatchCompute
-   // library, is generally much faster than the legacy evaluation backend
-   // already, even if the latter uses multi-threading.
-#ifdef ROOBATCHCOMPUTE_USE_IMT
-   if (ROOT::IsImplicitMTEnabled()) {
-      computeIMT(computer, output, vars, extraArgs);
+   const std::size_t nEvents = output.size();
+   auto computeFn = _computeFunctions[computer];
+
+#ifdef R__USE_IMT
+   if (useParallelEvaluation(cfg, nEvents)) {
+      const std::size_t nChunks = numChunks(nEvents);
+
+      // Some compute functions use the extra arguments also as scratch space
+      // or as output parameters (e.g. for evaluation error counts), so every
+      // task works on its own copy and the differences to the original values
+      // are merged back afterwards.
+      const std::size_t nExtra = extraArgs.size();
+      std::vector<double> extraCopies(nChunks * nExtra);
+      for (std::size_t iChunk = 0; iChunk < nChunks; ++iChunk) {
+         std::copy(extraArgs.begin(), extraArgs.end(), extraCopies.begin() + iChunk * nExtra);
+      }
+
+      parallelForChunks(cfg.nThreads(), nEvents, [&](std::size_t iChunk) {
+         computeRange(computeFn, output.data(), nEvents, vars, {extraCopies.data() + iChunk * nExtra, nExtra},
+                      chunkBegin(iChunk), chunkSize(iChunk, nEvents));
+      });
+
+      for (std::size_t k = 0; k < nExtra; ++k) {
+         double delta = 0.0;
+         for (std::size_t iChunk = 0; iChunk < nChunks; ++iChunk) {
+            delta += extraCopies[iChunk * nExtra + k] - extraArgs[k];
+         }
+         extraArgs[k] += delta;
+      }
+      return;
    }
+#else
+   (void)cfg;
 #endif
 
-   std::size_t nEvents = output.size();
-
-   // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
-   // Then advance every object but the first to split the work between threads
-   Batches batches;
-   std::vector<Batch> arrays(vars.size());
-   fillBatches(batches, output.data(), nEvents, vars.size(), extraArgs);
-   fillArrays(arrays, vars, nEvents);
-   batches.args = arrays.data();
-
-   std::size_t events = batches.nEvents;
-   batches.nEvents = bufferSize;
-   while (events > bufferSize) {
-      _computeFunctions[computer](batches);
-      advance(batches, bufferSize);
-      events -= bufferSize;
-   }
-   batches.nEvents = events;
-   _computeFunctions[computer](batches);
+   computeRange(computeFn, output.data(), nEvents, vars, extraArgs, 0, nEvents);
 }
 
 namespace {
@@ -245,28 +294,51 @@ inline std::pair<double, double> getLog(double prob, ReduceNLLOutput &out)
 
 } // namespace
 
-double RooBatchComputeClass::reduceSum(Config const &, InputArr input, size_t n)
+double RooBatchComputeClass::reduceSum(Config const &cfg, InputArr input, size_t n)
 {
+#ifdef R__USE_IMT
+   if (useParallelEvaluation(cfg, n)) {
+      const std::size_t nChunks = numChunks(n);
+      std::vector<ROOT::Math::KahanSum<double, 4u>> partials(nChunks);
+      parallelForChunks(cfg.nThreads(), n, [&](std::size_t iChunk) {
+         const std::size_t begin = chunkBegin(iChunk);
+         partials[iChunk] =
+            ROOT::Math::KahanSum<double, 4u>::Accumulate(input + begin, input + begin + chunkSize(iChunk, n));
+      });
+      // Combine the partial sums in fixed chunk order, so that the result
+      // doesn't depend on the number of threads.
+      ROOT::Math::KahanSum<double, 4u> total;
+      for (auto const &partial : partials) {
+         total += partial;
+      }
+      return total.Sum();
+   }
+#else
+   (void)cfg;
+#endif
    return ROOT::Math::KahanSum<double, 4u>::Accumulate(input, input + n).Sum();
 }
 
-ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const &, std::span<const double> probas,
-                                                std::span<const double> weights, std::span<const double> offsetProbas)
-{
-   ReduceNLLOutput out;
+namespace {
 
-   double badness = 0.0;
-
+/// Accumulator for the negative log-likelihood reduction over one event range.
+struct NLLPartialResult {
    ROOT::Math::KahanSum<double> nllSum;
+   double badness = 0.0;
+   ReduceNLLOutput counters;
+};
 
-   for (std::size_t i = 0; i < weights.size(); ++i) {
+void reduceNLLRange(std::span<const double> probas, std::span<const double> weights,
+                    std::span<const double> offsetProbas, std::size_t begin, std::size_t end, NLLPartialResult &result)
+{
+   for (std::size_t i = begin; i < end; ++i) {
 
       if (0. == weights[i])
          continue;
 
-      std::pair<double, double> logOut = getLog(probas.size() == 1 ? probas[0] : probas[i], out);
+      std::pair<double, double> logOut = getLog(probas.size() == 1 ? probas[0] : probas[i], result.counters);
       double term = logOut.first;
-      badness += logOut.second;
+      result.badness += logOut.second;
 
       if (!offsetProbas.empty()) {
          term -= std::log(offsetProbas[i]);
@@ -274,15 +346,50 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const &, std::span<const 
 
       term *= -weights[i];
 
-      nllSum.Add(term);
+      result.nllSum.Add(term);
    }
+}
 
-   out.nllSum = nllSum.Sum();
-   out.nllSumCarry = nllSum.Carry();
+} // namespace
 
-   if (badness != 0.) {
+ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const &cfg, std::span<const double> probas,
+                                                std::span<const double> weights, std::span<const double> offsetProbas)
+{
+   const std::size_t n = weights.size();
+   NLLPartialResult result;
+
+#ifdef R__USE_IMT
+   if (useParallelEvaluation(cfg, n)) {
+      const std::size_t nChunks = numChunks(n);
+      std::vector<NLLPartialResult> partials(nChunks);
+      parallelForChunks(cfg.nThreads(), n, [&](std::size_t iChunk) {
+         const std::size_t begin = chunkBegin(iChunk);
+         reduceNLLRange(probas, weights, offsetProbas, begin, begin + chunkSize(iChunk, n), partials[iChunk]);
+      });
+      // Combine the partial results in fixed chunk order, so that the result
+      // doesn't depend on the number of threads.
+      for (auto const &partial : partials) {
+         result.nllSum += partial.nllSum;
+         result.badness += partial.badness;
+         result.counters.nInfiniteValues += partial.counters.nInfiniteValues;
+         result.counters.nNonPositiveValues += partial.counters.nNonPositiveValues;
+         result.counters.nNaNValues += partial.counters.nNaNValues;
+      }
+   } else {
+      reduceNLLRange(probas, weights, offsetProbas, 0, n, result);
+   }
+#else
+   (void)cfg;
+   reduceNLLRange(probas, weights, offsetProbas, 0, n, result);
+#endif
+
+   ReduceNLLOutput out = result.counters;
+   out.nllSum = result.nllSum.Sum();
+   out.nllSumCarry = result.nllSum.Carry();
+
+   if (result.badness != 0.) {
       // Some events with evaluation errors. Return "badness" of errors.
-      out.nllSum = RooNaNPacker::packFloatIntoNaN(badness);
+      out.nllSum = RooNaNPacker::packFloatIntoNaN(result.badness);
       out.nllSumCarry = 0.0;
    }
 
