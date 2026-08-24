@@ -201,102 +201,8 @@ Bool_t TGX11TTF::Init(void *display)
    return r;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Draw FT_Bitmap bitmap to xim image at position bx,by using specified
-/// foreground color.
 
-void TGX11TTF::DrawFTGlyph(void *_source, ULong_t fore, ULong_t back,
-                           RXImage *xim, Int_t bx, Int_t by)
-{
-   auto source = (FT_Bitmap *) _source;
-   if (!source->width)
-      return;
-
-   UChar_t *s = source->buffer;
-
-   if (TTFhandle::GetSmoothing()) {
-      RXColor col[5];
-
-      // background kClear, i.e. transparent, we take as background color
-      // the average of the rgb values of all pixels covered by this character
-      if (back == (ULong_t) -1) {
-         const UInt_t ndots = TMath::Min((UInt_t) 50000, source->width * source->rows);
-
-         std::vector<RXColor> bcol(ndots);
-         if (!bcol.size())
-            return;
-         UInt_t dotcnt = 0;
-         for (unsigned y = 0; y < source->rows; y++) {
-            for (unsigned x = 0; x < source->width; x++) {
-///               bc->pixel = XGetPixel(xim, bx + x, by - c->TTF::GetAscent() + y);
-               auto &bc = bcol[dotcnt];
-               bc.pixel = XGetPixel(xim, bx + x, by + y);
-               bc.flags = DoRed | DoGreen | DoBlue;
-               if (++dotcnt >= bcol.size()) break;
-            }
-         }
-         QueryColors(fColormap, bcol.data(), bcol.size());
-         ULong_t r = 0, g = 0, b = 0;
-         for (auto &entry : bcol) {
-            r += entry.red;
-            g += entry.green;
-            b += entry.blue;
-         }
-         col[0].red = (UShort_t) (r / bcol.size());
-         col[0].green = (UShort_t) (g / bcol.size());
-         col[0].blue = (UShort_t) (b / bcol.size());
-      } else {
-         // just request rgb value for background color
-         col[0].pixel = back;
-         col[0].flags = DoRed | DoGreen | DoBlue;
-         QueryColors(fColormap, &col[0], 1);
-      }
-
-      // request rgb value for foreground color
-      col[4].pixel = fore;
-      col[4].flags = DoRed | DoGreen | DoBlue;
-      QueryColors(fColormap, &col[4], 1);
-
-      // recalculate the 3 smoothing colors
-      // (interpolation between fore- and background colors)
-      for (int x = 3; x > 0; x--) {
-         col[x].red   = (col[4].red  *x + col[0].red  *(4-x)) /4;
-         col[x].green = (col[4].green*x + col[0].green*(4-x)) /4;
-         col[x].blue  = (col[4].blue *x + col[0].blue *(4-x)) /4;
-         if (!AllocColor(fColormap, &col[x])) {
-            Warning("DrawFTGlyph", "cannot allocate smoothing color");
-            col[x].pixel = col[x+1].pixel;
-         }
-      }
-
-      // put smoothed character, character pixmap values are an index
-      // into the 5 colors used for aliasing (4 = foreground, 0 = background)
-      for (unsigned y = 0; y < source->rows; y++) {
-         for (unsigned x = 0; x < source->width; x++) {
-            UChar_t d = TMath::Min((UChar_t) 4, (UChar_t)((((*s++ & 0xff) + 10) * 5) / 256));
-            if (d > 0)
-               XPutPixel(xim, bx + x, by + y, col[d].pixel);
-         }
-      }
-   } else {
-      // no smoothing, just put character using foreground color
-      UChar_t *row = s;
-      for (unsigned y = 0; y < source->rows; y++) {
-         unsigned n = 0;
-         UChar_t d = 0;
-         s = row;
-         for (unsigned x = 0; x < source->width; x++) {
-            if (n == 0) d = *s++;
-            if (TESTBIT(d,7-n))
-               XPutPixel(xim, bx + x, by + y, fore);
-            if (++n == kBitsPerByte) n = 0;
-         }
-         row += source->pitch;
-      }
-   }
-}
-
-template<class CharType>
+template<typename CharType>
 void TGX11TTF::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
                               const CharType *text, ETextMode mode)
 {
@@ -330,10 +236,8 @@ void TGX11TTF::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angl
 
 void TGX11TTF::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle &ttf, ETextMode mode)
 {
-   Int_t Xoff = TMath::Max(0, (Int_t) -ttf.GetBox().xMin);
-   Int_t Yoff = TMath::Max(0, (Int_t) -ttf.GetBox().yMin);
-   Int_t w    = ttf.GetBox().xMax + Xoff;
-   Int_t h    = ttf.GetBox().yMax + Yoff;
+   Int_t w    = ttf.GetGlyphsWidth();
+   Int_t h    = ttf.GetGlyphsHeight();
 
    Window_t cws = GetWindow(wctxt);
 
@@ -349,7 +253,6 @@ void TGX11TTF::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle 
    xim->data = (char *) malloc(xim->bytes_per_line * h);
    memset(xim->data, 0, xim->bytes_per_line * h);
 
-   ULong_t   bg;
    XGCValues values;
    auto gc = (GC *) GetGCW(wctxt, 3);
    if (!gc) {
@@ -378,19 +281,98 @@ void TGX11TTF::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle 
          }
       }
       XDestroyImage(bim);
-      bg = (ULong_t) -1;
    } else {
       // if mode == kOpaque its simple, we just draw the background
       XAddPixel(xim, values.background);
-      bg = values.background;
    }
 
    // paint the glyphs in the XImage
-   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); n++) {
-      if (auto bitmap = ttf.GetGlyphBitmap(n)) {
-         Int_t bx = bitmap->left + Xoff;
-         Int_t by = h - bitmap->top - Yoff;
-         DrawFTGlyph(&bitmap->bitmap, values.foreground, bg, (RXImage *)xim, bx, by);
+   for (UInt_t nglyph = 0; nglyph < ttf.GetNumGlyphs(); nglyph++) {
+      Int_t bx = 0, by = 0;
+      UChar_t *buffer = nullptr;
+      UInt_t width = 0, rows = 0, pitch = 0;
+      if (!ttf.GetGlyphData(nglyph, bx, by, buffer, width, rows, pitch))
+         continue;
+
+      if (ttf.GetSmoothing()) {
+         RXColor col[5];
+
+         // background kClear, i.e. transparent, we take as background color
+         // the average of the rgb values of all pixels covered by this character
+         if (mode == kClear) {
+            const UInt_t ndots = TMath::Min((UInt_t) 50000, width * rows);
+
+            std::vector<RXColor> bcol(ndots);
+            if (!bcol.size()) {
+               Error("DrawTTFglyphsW", "Allocation failure with bcol vector");
+               return;
+            }
+            for (unsigned y = 0, dotcnt = 0; y < rows; y++) {
+               for (unsigned x = 0; (x < width) && (dotcnt < bcol.size()); x++) {
+                  bcol[dotcnt].pixel = XGetPixel(xim, bx + x, by + y);
+                  bcol[dotcnt].flags = DoRed | DoGreen | DoBlue;
+                  dotcnt++;
+               }
+            }
+            QueryColors(fColormap, bcol.data(), bcol.size());
+            ULong_t r = 0, g = 0, b = 0;
+            for (auto &entry : bcol) {
+               r += entry.red;
+               g += entry.green;
+               b += entry.blue;
+            }
+            col[0].red = (UShort_t) (r / bcol.size());
+            col[0].green = (UShort_t) (g / bcol.size());
+            col[0].blue = (UShort_t) (b / bcol.size());
+         } else {
+            // just request rgb value for background color
+            col[0].pixel = values.background;
+            col[0].flags = DoRed | DoGreen | DoBlue;
+            QueryColors(fColormap, &col[0], 1);
+         }
+
+         // request rgb value for foreground color
+         col[4].pixel = values.foreground;
+         col[4].flags = DoRed | DoGreen | DoBlue;
+         QueryColors(fColormap, &col[4], 1);
+
+         // recalculate the 3 smoothing colors
+         // (interpolation between fore- and background colors)
+         for (int x = 3; x > 0; x--) {
+            col[x].red   = (col[4].red  *x + col[0].red  *(4-x)) /4;
+            col[x].green = (col[4].green*x + col[0].green*(4-x)) /4;
+            col[x].blue  = (col[4].blue *x + col[0].blue *(4-x)) /4;
+            if (!AllocColor(fColormap, &col[x])) {
+               Warning("DrawTTFglyphsW", "cannot allocate smoothing color");
+               col[x].pixel = col[x+1].pixel;
+            }
+         }
+
+         UChar_t *s = buffer;
+         // put smoothed character, character pixmap values are an index
+         // into the 5 colors used for aliasing (4 = foreground, 0 = background)
+         for (unsigned y = 0; y < rows; y++) {
+            for (unsigned x = 0; x < width; x++) {
+               UChar_t d = TMath::Min((UChar_t) 4, (UChar_t)((((*s++ & 0xff) + 10) * 5) / 256));
+               if (d > 0)
+                  XPutPixel(xim, bx + x, by + y, col[d].pixel);
+            }
+         }
+      } else {
+         // no smoothing, just put character using foreground color
+         UChar_t *row = buffer;
+         for (unsigned y = 0; y < rows; y++) {
+            unsigned n = 0;
+            UChar_t d = 0;
+            UChar_t *s = row;
+            for (unsigned x = 0; x < width; x++) {
+               if (n == 0) d = *s++;
+               if (TESTBIT(d,7-n))
+                  XPutPixel(xim, bx + x, by + y, values.foreground);
+               if (++n == kBitsPerByte) n = 0;
+            }
+            row += pitch;
+         }
       }
    }
 
