@@ -48,7 +48,7 @@ implemented using the container denoted by RooAbsCollection::Storage_t.
 #include <iostream>
 #include <fstream>
 #include <memory>
-
+#include <unordered_set>
 
 namespace RooFit {
 namespace Detail {
@@ -1559,28 +1559,87 @@ void RooAbsCollection::sort(bool reverse) {
 /// that RooAbsArg in the collection.
 
 void RooAbsCollection::sortTopologically() {
+   // Depth-first post-order traversal over the server edges, seeded with the
+   // args in collection order. Like in the original insertion-based
+   // implementation, servers are matched to collection members by name, with
+   // an encountered server instance standing in for a same-name member.
+   // Every arg and server link is visited only once.
+   std::unordered_set<TNamed const *> memberNames;
+   memberNames.reserve(_list.size());
+   bool hasDuplicates = false;
+   for (RooAbsArg *arg : _list) {
+      hasDuplicates |= !memberNames.insert(arg->namePtr()).second;
+   }
+
+   // The traversal emits each name once, which would shrink a collection
+   // with multiple same-name entries (allowed in a RooArgList). Fall back to
+   // the original algorithm in that case.
+   if (hasDuplicates) {
+      std::unordered_set<TNamed const *> seenArgsLegacy;
+      for (std::size_t iArg = 0; iArg < _list.size(); ++iArg) {
+         RooAbsArg *arg = _list[iArg];
+         bool movedArg = false;
+         for (RooAbsArg *server : arg->servers()) {
+            if (seenArgsLegacy.find(server->namePtr()) == seenArgsLegacy.end()) {
+               auto found = std::find_if(_list.begin(), _list.end(),
+                                         [server](RooAbsArg *elem) { return elem->namePtr() == server->namePtr(); });
+               if (found != _list.end()) {
+                  _list.erase(found);
+                  _list.insert(_list.begin() + iArg, server);
+                  movedArg = true;
+                  break;
+               }
+            }
+         }
+         if (movedArg) {
+            --iArg;
+            continue;
+         }
+         seenArgsLegacy.insert(arg->namePtr());
+      }
+      return;
+   }
+
+   Storage_t sorted;
+   sorted.reserve(_list.size());
    std::unordered_set<TNamed const *> seenArgs;
-   for (std::size_t iArg = 0; iArg < _list.size(); ++iArg) {
-      RooAbsArg *arg = _list[iArg];
-      bool movedArg = false;
-      for (RooAbsArg *server : arg->servers()) {
-         if (seenArgs.find(server->namePtr()) == seenArgs.end()) {
-            auto found = std::find_if(_list.begin(), _list.end(),
-                                      [server](RooAbsArg *elem) { return elem->namePtr() == server->namePtr(); });
-            if (found != _list.end()) {
-               _list.erase(found);
-               _list.insert(_list.begin() + iArg, server);
-               movedArg = true;
+   seenArgs.reserve(_list.size());
+   // Names on the current traversal path, to skip cyclic server edges
+   // instead of looping forever.
+   std::unordered_set<TNamed const *> onStack;
+
+   // Pairs of the arg to process and the index of the next of its servers to look at
+   std::vector<std::pair<RooAbsArg *, std::size_t>> stack;
+   for (RooAbsArg *arg : _list) {
+      if (seenArgs.count(arg->namePtr()))
+         continue;
+      stack.emplace_back(arg, 0);
+      onStack.insert(arg->namePtr());
+      while (!stack.empty()) {
+         RooAbsArg *node = stack.back().first;
+         bool descended = false;
+         auto const &servers = node->servers();
+         while (stack.back().second < servers.size()) {
+            RooAbsArg *server = servers[stack.back().second++];
+            TNamed const *serverName = server->namePtr();
+            if (memberNames.count(serverName) && !seenArgs.count(serverName) && !onStack.count(serverName)) {
+               stack.emplace_back(server, 0);
+               onStack.insert(serverName);
+               descended = true;
                break;
             }
          }
+         if (descended)
+            continue;
+         if (seenArgs.insert(node->namePtr()).second) {
+            sorted.push_back(node);
+         }
+         onStack.erase(node->namePtr());
+         stack.pop_back();
       }
-      if (movedArg) {
-         --iArg;
-         continue;
-      }
-      seenArgs.insert(arg->namePtr());
    }
+
+   _list = std::move(sorted);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
