@@ -7,3 +7,8 @@ ROOTTEST_ADD_TEST(testSparse
 ROOT_ADD_GTEST(gh15874 test_gh15874.cxx
                COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/test_gh15874.root
                LIBRARIES ROOT::Core ROOT::Hist ROOT::RIO)
+               
+ROOTTEST_ADD_TEST(testNaN
+                  MACRO testNaN.cxx
+                  OUTREF testNaN.ref)
+
