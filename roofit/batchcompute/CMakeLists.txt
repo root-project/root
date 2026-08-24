@@ -203,7 +203,7 @@ if (cuda)
   endif()
 endif()
 
-if(vdt OR builtin_vdt)
+if(vdt AND builtin_vdt)
   foreach(library RooBatchCompute_GENERIC RooBatchCompute_SSE4.1 RooBatchCompute_AVX RooBatchCompute_AVX2 RooBatchCompute_AVX512 )
     if(TARGET ${library})
       target_link_libraries(${library} PRIVATE VDT::VDT)
