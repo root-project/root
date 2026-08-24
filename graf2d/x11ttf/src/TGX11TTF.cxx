@@ -21,16 +21,14 @@ shared library containing this class is loaded the global gVirtualX
 is redirected to point to this class.
 */
 
-#include <cstdlib>
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
 #include "TGX11TTF.h"
-#include "TEnv.h"
-#include "TTF.h"
-#include "TMathBase.h"
 
+#ifdef R__HAS_XFT
+#include "THashTable.h"
+#include "TRefCnt.h"
+#include <X11/Xft/Xft.h>
+#endif
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -39,15 +37,19 @@ is redirected to point to this class.
 #include <X11/keysym.h>
 #include <X11/xpm.h>
 
+
+#include <cstdlib>
+
+#include "TEnv.h"
+#include "TTF.h"
+#include "TMathBase.h"
+
+
 struct RXColor:XColor{};
 struct RVisual:Visual{};
 struct RXImage:XImage{};
 
 #ifdef R__HAS_XFT
-
-#include "THashTable.h"
-#include "TRefCnt.h"
-#include <X11/Xft/Xft.h>
 
 /////////////////////////  xft font data //////////////////////////////////////
 class TXftFontData : public TNamed, public TRefCnt {
