@@ -166,8 +166,11 @@ class TTFhandle {
       void           PrepareString(const char *string);
       void           PrepareString(const wchar_t *string);
       void           SetRotationMatrix(Float_t angle);
-      void           CleanupGlyphs();
+      Int_t          GetGlyphsWidth() const;
+      Int_t          GetGlyphsHeight() const;
       Bool_t         ApplyAlignRotate(Int_t &px, Int_t &py, Int_t align, Int_t pad_width, Int_t pad_height);
+      Bool_t         GetGlyphData(UInt_t n, Int_t &offx, Int_t &offy, UChar_t *&buffer, UInt_t &width, UInt_t &rows, UInt_t &pitch);
+      void           CleanupGlyphs();
 
       void           GetTextExtent(UInt_t &w, UInt_t &h, const char *text);
       void           GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text);
