@@ -333,6 +333,48 @@ Bool_t TTFhandle::ApplyAlignRotate(Int_t &px, Int_t &py, Int_t align, Int_t pad_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns width of all glyphs
+
+Int_t TTFhandle::GetGlyphsWidth() const
+{
+   return GetBox().xMax + TMath::Max(0, (Int_t) -GetBox().xMin);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns height of all glyphs
+
+Int_t TTFhandle::GetGlyphsHeight() const
+{
+   return GetBox().yMax + TMath::Max(0, (Int_t) -GetBox().yMin);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns data for glyph bitmap
+/// Instead direct access to FT_BitmapGlyph one can obtain all relevant fields
+/// Thus one do not requires work with TrueType classes directly
+/// Return kFALSE when glyph not exists or if it width is zero
+
+Bool_t TTFhandle::GetGlyphData(UInt_t n, Int_t &offx, Int_t &offy, UChar_t *&buffer, UInt_t &width, UInt_t &rows, UInt_t &pitch)
+{
+   auto glyph = GetGlyphBitmap(n);
+   if (!glyph)
+      return kFALSE;
+
+   auto &bmp = glyph->bitmap;
+   if (!bmp.width)
+      return kFALSE;
+
+   offx = TMath::Max(0, (Int_t) -GetBox().xMin) + glyph->left;
+   offy = GetBox().yMax - glyph->top;
+
+   buffer = bmp.buffer;
+   width = bmp.width;
+   rows = bmp.rows;
+   pitch = bmp.pitch;
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Remove temporary data created by LayoutGlyphs
 
 void TTFhandle::CleanupGlyphs()
