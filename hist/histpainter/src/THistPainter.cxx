@@ -7338,6 +7338,8 @@ Int_t THistPainter::PaintInit()
    TIter   next(fFunctions);
    for (i=first; i<=last;i++) {
       c1 = fH->GetBinContent(i);
+      if (std::isnan(c1) || std::isinf(c1))
+        continue;
       ymax = TMath::Max(ymax,c1);
       if (Hoption.Logy) {
          if (c1 > 0) ymin = TMath::Min(ymin,c1);
