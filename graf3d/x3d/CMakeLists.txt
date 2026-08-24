@@ -13,7 +13,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(X3d
     TViewerX3D.h
     TX3DFrame.h
   SOURCES
-    src/x3d.c
     src/TViewerX3D.cxx
     src/TX3DFrame.cxx
   LIBRARIES
