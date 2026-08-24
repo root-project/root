@@ -382,6 +382,30 @@ if (builtin_openssl AND NOT ssl)
   message(SEND_ERROR "-Dbuiltin_openssl=ON requires -Dssl=ON")
   list(APPEND HOTFIX_BUILD_FLAGS -Dssl=ON)
 endif()
+# On Linux, OpenGL should be working only with x11
+if(NOT WIN32 AND NOT APPLE)
+  if(opengl AND NOT x11)
+    message(SEND_ERROR "OpenGL requires x11 on Linux, either disable opengl or set -Dx11=ON")
+    list(APPEND HOTFIX_BUILD_FLAGS -Dopengl=OFF)
+  endif()
+endif()
+#---Check for Cocoa/Quartz graphics backend (MacOS X only)---------------------------
+# Note that this check happens *after* the above check for FreeType because that
+# library is needed for builds on Apple with Cocoa graphics
+if(cocoa)
+  if(APPLE)
+    if (x11)
+      message(SEND_ERROR "x11 (${x11_description}) and cocoa cannot be enabled simultaneously. Set -Dcocoa=OFF")
+      list(APPEND HOTFIX_BUILD_FLAGS -Dcocoa=OFF)
+    endif()
+  else()
+    message(SEND_ERROR "Cocoa option can only be enabled on MacOSX platform. Set -Dcocoa=OFF")
+    list(APPEND HOTFIX_BUILD_FLAGS -Dcocoa=OFF)
+  endif()
+elseif(asimage AND NOT x11 AND NOT WIN32)
+  message(SEND_ERROR "asimage on Unix requires x11, either disable asimage or set -Dx11=ON")
+  list(APPEND HOTFIX_BUILD_FLAGS -Dasimage=OFF)
+endif()
 
 #---roottest/rootbench options require testing
 if (roottest AND NOT testing)

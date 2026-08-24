@@ -335,21 +335,6 @@ elseif(NOT Freetype_VERSION AND FREETYPE_VERSION_STRING)
   set(Freetype_VERSION ${FREETYPE_VERSION_STRING})
 endif()
 
-#---Check for Cocoa/Quartz graphics backend (MacOS X only)---------------------------
-# Note that this check happens *after* the above check for FreeType because that
-# library is needed for builds on Apple with Cocoa graphics
-if(cocoa)
-  if(APPLE)
-    if (x11)
-      message(SEND_ERROR "x11 (${x11_description}) and cocoa cannot be enabled simultaneously. Set -Dx11=OFF")
-      list(APPEND HOTFIX_BUILD_FLAGS -Dx11=OFF)
-    endif()
-  else()
-    message(SEND_ERROR "Cocoa option can only be enabled on MacOSX platform. Set -Dcocoa=OFF")
-    list(APPEND HOTFIX_BUILD_FLAGS -Dcocoa=OFF)
-  endif()
-endif()
-
 #---Check for PCRE-------------------------------------------------------------------
 if(builtin_pcre)
   add_subdirectory(builtins/pcre)
@@ -396,12 +381,6 @@ if(x11)
 endif()
 
 #---Check for all kind of graphics includes needed by libAfterImage--------------------
-if(asimage)
-  if(NOT x11 AND NOT cocoa AND NOT WIN32)
-    message(SEND_ERROR "'asimage' needs either 'x11' or 'cocoa' enabled. Set -Dasimage=OFF")
-    list(APPEND HOTFIX_BUILD_FLAGS -Dasimage=OFF)
-  endif()
-endif()
 if(asimage)
 
   if(builtin_gif)
@@ -503,14 +482,7 @@ if(opengl OR cocoa)
     endif()
   endif()
 endif()
-# OpenGL should be working only with x11 (Linux),
-# in case when -Dall=ON -Dx11=OFF, we will just disable opengl.
-if(NOT WIN32 AND NOT APPLE)
-  if(opengl AND NOT x11)
-    message(SEND_ERROR "OpenGL requires x11 on Linux, either disable opengl or set -Dx11=ON")
-    list(APPEND HOTFIX_BUILD_FLAGS -Dx11=ON)
-  endif()
-endif()
+
 # The opengl flag enables the graf3d features that depend on OpenGL, and these
 # features also depend on asimage. Therefore, the configuration will fail if
 # asimage is off. See also: https://github.com/root-project/root/issues/16250
