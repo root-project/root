@@ -274,30 +274,8 @@ if(mathmore OR (tmva-cpu AND use_gsl_cblas))
       message(SEND_ERROR "GSL package not found and 'mathmore' or 'tmva-cpu' and 'use_gsl_cblas' component requires it. Either disable those, or enable the option 'builtin_gsl'")
   endif()
 endif()
+
 ROOT_FIND_REQUIRED_DEP(mathtext builtin_mathtext)
-
-if(NOT "${MISSING_PACKAGES}" STREQUAL "")
-  list(REMOVE_DUPLICATES MISSING_PACKAGES)
-  message(SEND_ERROR "The following packages need to be installed system-wide to build ROOT: ${MISSING_PACKAGES}")
-endif()
-if(NOT "${HOTFIX_BUILD_FLAGS}" STREQUAL "")
-  list(REMOVE_DUPLICATES HOTFIX_BUILD_FLAGS)
-  set(HOTFIX_BUILD_FLAGS_MESSAGE "Alternatively, a hotfix would be to add these flags to your CMake call:\n")
-
-  foreach(_item IN LISTS HOTFIX_BUILD_FLAGS)
-    string(APPEND HOTFIX_BUILD_FLAGS_MESSAGE "  ${_item} \\\n")
-  endforeach()
-
-  # Remove final trailing backslash and newline
-  string(REGEX REPLACE "\\\\\n$" "" HOTFIX_BUILD_FLAGS_MESSAGE "${HOTFIX_BUILD_FLAGS_MESSAGE}")
-
-  message(FATAL_ERROR "${HOTFIX_BUILD_FLAGS_MESSAGE}")
-endif()
-
-# Now that builtins have passed this synchronization point, let's collect in a second pass
-# additional error messages that can appear when using contradictory flags
-unset(MISSING_PACKAGES)
-unset(HOTFIX_BUILD_FLAGS_MESSAGE)
 
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
 set(CMAKE_FIND_FRAMEWORK LAST)
@@ -1274,7 +1252,7 @@ if(NOT "${MISSING_PACKAGES}" STREQUAL "")
 endif()
 if(NOT "${HOTFIX_BUILD_FLAGS}" STREQUAL "")
   list(REMOVE_DUPLICATES HOTFIX_BUILD_FLAGS)
-  set(HOTFIX_BUILD_FLAGS_MESSAGE "Alternatively, a hotfix would be to add these flags to your CMake call:\n")
+  set(HOTFIX_BUILD_FLAGS_MESSAGE "Alternatively, especially if  you don't have Internet connection or admin rights, a hotfix would be to add these flags to your CMake call:\n")
 
   foreach(_item IN LISTS HOTFIX_BUILD_FLAGS)
     string(APPEND HOTFIX_BUILD_FLAGS_MESSAGE "  ${_item} \\\n")
