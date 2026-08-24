@@ -308,8 +308,12 @@ void TGX11TTF::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angl
    if (!wctxt)
       return;
 
+   Window_t cws = GetWindow(wctxt);
+   UInt_t width, height;
+   Int_t xy;
+   GetWindowSize(cws, xy, xy, width, height);
+
    auto &att = GetTextAttW(wctxt);
-   auto align = GetTextAlignW(wctxt);
 
    TTFhandle ttf;
    ttf.SetTextFont(att.GetTextFont());
@@ -317,57 +321,8 @@ void TGX11TTF::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angl
    ttf.SetRotationMatrix(angle);
    ttf.PrepareString(text);
    ttf.LayoutGlyphs();
-
-   FT_Vector   align_vect;                 ///< alignment vector
-   // vertical alignment
-   if (align == kTLeft || align == kTCenter || align == kTRight) {
-      align_vect.y = ttf.GetAscent();
-   } else if (align == kMLeft || align == kMCenter || align == kMRight) {
-      align_vect.y = ttf.GetAscent() / 2;
-   } else {
-      align_vect.y = 0;
-   }
-
-   // horizontal alignment
-   if (align == kTRight || align == kMRight || align == kBRight) {
-      align_vect.x = ttf.GetWidth();
-   } else if (align == kTCenter || align == kMCenter || align == kBCenter) {
-      align_vect.x = ttf.GetWidth() / 2;
-   } else {
-      align_vect.x = 0;
-   }
-
-   FT_Vector_Transform(&align_vect, ttf.GetRotMatrix());
-   align_vect.x = align_vect.x >> 6;
-   align_vect.y = align_vect.y >> 6;
-
-   Int_t Xoff = TMath::Max(0, (Int_t) -ttf.GetBox().xMin);
-   Int_t Yoff = TMath::Max(0, (Int_t) -ttf.GetBox().yMin);
-   Int_t w    = ttf.GetBox().xMax + Xoff;
-   Int_t h    = ttf.GetBox().yMax + Yoff;
-   // If w or h is 0, very likely the string is only blank characters
-   if (w <= 0 || h <= 0)
-      return;
-
-   Int_t x1   = x - Xoff - align_vect.x;
-   Int_t y1   = y + Yoff + align_vect.y - h;
-
-   Window_t cws = GetWindow(wctxt);
-   UInt_t width, height;
-   Int_t xy;
-   GetWindowSize(cws, xy, xy, width, height);
-
-   // If string falls outside window, there is probably no need to draw it.
-   if (x1 + w <= 0 || x1 >= (Int_t)width || y1 + h <= 0 || y1 >= (Int_t)height)
-      return;
-
-   // If w or h are much larger than the window size, there is probably no need
-   // to draw it. Moreover a to large text size may produce a Seg Fault in
-   // malloc in DrawTextW.
-   if (((UInt_t) w > 10 * width) || ((UInt_t) h > 10 * height))
-      return;
-
-   DrawTTFglyphsW(wctxt, x1, y1, ttf, mode);
+   if (ttf.ApplyAlignRotate(x, y, att.GetTextAlign(), width, height))
+      DrawTTFglyphsW(wctxt, x, y, ttf, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
