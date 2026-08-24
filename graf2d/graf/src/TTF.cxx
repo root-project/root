@@ -281,6 +281,58 @@ FT_BitmapGlyph TTFhandle::GetGlyphBitmap(UInt_t n, Bool_t smooth)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Apply align and configured rotation matrix to text position
+/// px and py will be shifted to the place where glyph drawing can be started
+/// Method returns false when glyphs not need to be drawn
+/// while position is outside of specified pad dimentsions
+
+Bool_t TTFhandle::ApplyAlignRotate(Int_t &px, Int_t &py, Int_t align, Int_t pad_width, Int_t pad_height)
+{
+   Int_t txalh = align / 10;
+   Int_t txalv = align % 10;
+
+   FT_Vector alignVector;
+
+   switch (txalh) {
+      case 2: alignVector.x = GetWidth() / 2; break; //center
+      case 3: alignVector.x = GetWidth(); break; //right
+      default: alignVector.x = 0; break; // left
+   }
+
+   switch (txalv) {
+      case 2: alignVector.y = GetAscent() / 2; break; // middle
+      case 3: alignVector.y = GetAscent(); break; //top
+      default: alignVector.y = 0; break; //bottom
+   }
+
+   FT_Vector_Transform(&alignVector, GetRotMatrix());
+
+   Int_t Xoff = TMath::Max(0, (Int_t) -GetBox().xMin);
+   Int_t Yoff = TMath::Max(0, (Int_t) -GetBox().yMin);
+   Int_t w    = GetBox().xMax + Xoff;
+   Int_t h    = GetBox().yMax + Yoff;
+
+   // If w or h is 0, very likely the string is only blank characters
+   if (w <= 0 || h <= 0)
+      return kFALSE;
+
+   Int_t x1 = px - Xoff - (alignVector.x >> 6);
+   Int_t y1 = py + Yoff + (alignVector.y >> 6) - h;
+
+   // If string falls outside window, there is probably no need to draw it.
+   if (x1 + w <= 0 || x1 >= pad_width || y1 + h <= 0 || y1 >= pad_height)
+      return kFALSE;
+
+   // do not draw text, which size is significantly larger than available pad
+   if ((w > 10 * pad_width) || (h > 10 * pad_height))
+      return kFALSE;
+
+   px = x1;
+   py = y1;
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Remove temporary data created by LayoutGlyphs
 
 void TTFhandle::CleanupGlyphs()
