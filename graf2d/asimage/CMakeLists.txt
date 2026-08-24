@@ -24,7 +24,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
     -writeEmptyRootPCM
   LIBRARIES
     libAfterImage
-    Freetype::Freetype
   DEPENDENCIES
     Core
     Graf
