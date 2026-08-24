@@ -547,3 +547,104 @@ TEST(RooWorkspace, ImportRenamingModes)
       expectSelfContained(ws);
    }
 }
+
+/// Importing with RecycleConflictNodes() has to connect the imported nodes to
+/// the same-name nodes already in the workspace instead of duplicating them.
+/// This mode is used heavily when building workspaces incrementally, like in
+/// HistFactory, so it takes a shortcut that skips cloning the already-imported
+/// parts of the computation graph. Check that the resulting workspace is
+/// correctly wired in the scenarios that shortcut has to handle.
+TEST(RooWorkspace, ImportRecycleConflictNodes)
+{
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::ERROR};
+
+   // Incremental build: import components first, then a top-level pdf reusing
+   // them. Only the top-level node is new.
+   {
+      ImportTestModel m;
+      RooWorkspace ws{"ws", "ws"};
+      ws.import(m.gauss, RooFit::Silence());
+      ws.import(m.expo, RooFit::Silence());
+      ws.import(m.model, RooFit::RecycleConflictNodes(), RooFit::Silence());
+
+      ASSERT_NE(ws.pdf("model"), nullptr);
+      EXPECT_TRUE(hasServer(*ws.pdf("model"), *ws.pdf("gauss")));
+      EXPECT_TRUE(hasServer(*ws.pdf("model"), *ws.pdf("expo")));
+      EXPECT_DOUBLE_EQ(ws.pdf("model")->getVal(), m.model.getVal());
+      expectSelfContained(ws);
+   }
+
+   // Re-importing an already existing graph must be a no-op.
+   {
+      ImportTestModel m;
+      RooWorkspace ws{"ws", "ws"};
+      ws.import(m.model, RooFit::Silence());
+      RooAbsPdf *modelBefore = ws.pdf("model");
+      const std::size_t nComponents = ws.components().size();
+      EXPECT_FALSE(ws.import(m.model, RooFit::RecycleConflictNodes(), RooFit::Silence()));
+
+      EXPECT_EQ(ws.pdf("model"), modelBefore);
+      EXPECT_EQ(ws.components().size(), nComponents);
+      expectSelfContained(ws);
+   }
+
+   // The values of recycled nodes must come from the workspace copies, not
+   // from the incoming objects.
+   {
+      ImportTestModel m;
+      RooWorkspace ws{"ws", "ws"};
+      ws.import(m.gauss, RooFit::Silence());
+      m.mean.setVal(7.); // changed after the import: the workspace copy stays at 5
+      ws.import(m.model, RooFit::RecycleConflictNodes(), RooFit::Silence());
+
+      EXPECT_DOUBLE_EQ(ws.var("mean")->getVal(), 5.);
+      expectSelfContained(ws);
+   }
+
+   // When a same-name node conflicts, the workspace copy wins and keeps its
+   // own structure, but new nodes below the conflicting node are still
+   // imported (as unreferenced nodes), like in the general import code path.
+   {
+      RooWorkspace ws{"ws", "ws"};
+      {
+         RooRealVar x{"x", "x", 0., 10.};
+         RooRealVar mean{"mean", "mean", 5., 0., 10.};
+         RooRealVar sigma{"sigma", "sigma", 1.0, 0.1, 5.0};
+         RooGaussian sub{"sub", "sub", x, mean, sigma};
+         ws.import(sub, RooFit::Silence());
+      }
+      RooRealVar x{"x", "x", 0., 10.};
+      RooRealVar theta{"theta", "theta", -0.1, -1.0, 0.0};
+      RooExponential sub{"sub", "sub", x, theta}; // same name, different structure
+      RooRealVar f{"f", "f", 0.4, 0.0, 1.0};
+      RooGaussian other{"other", "other", x, 1.0, 2.0};
+      RooAddPdf top{"top", "top", RooArgList{sub, other}, f};
+      ws.import(top, RooFit::RecycleConflictNodes(), RooFit::Silence());
+
+      // The workspace copy of "sub" keeps its structure ...
+      EXPECT_NE(ws.var("mean"), nullptr);
+      EXPECT_TRUE(hasServer(*ws.pdf("top"), *ws.pdf("sub")));
+      EXPECT_TRUE(hasServer(*ws.pdf("sub"), *ws.var("mean")));
+      // ... and the new parameter below the conflicting node is imported
+      EXPECT_NE(ws.var("theta"), nullptr);
+      expectSelfContained(ws);
+   }
+
+   // A deeper boundary: the top-level pdf of the previous import becomes an
+   // intermediate node of the newly imported graph.
+   {
+      ImportTestModel m;
+      RooWorkspace ws{"ws", "ws"};
+      ws.import(m.model, RooFit::Silence());
+      RooRealVar y{"y", "y", 1.0, 0.0, 10.0};
+      RooGaussian gaussy{"gaussy", "gaussy", y, m.mean, m.sigma};
+      RooProdPdf prod{"prod", "prod", RooArgList{m.model, gaussy}};
+      ws.import(prod, RooFit::RecycleConflictNodes(), RooFit::Silence());
+
+      ASSERT_NE(ws.pdf("prod"), nullptr);
+      EXPECT_TRUE(hasServer(*ws.pdf("prod"), *ws.pdf("model")));
+      ASSERT_NE(ws.pdf("gaussy"), nullptr);
+      EXPECT_TRUE(hasServer(*ws.pdf("gaussy"), *ws.var("mean")));
+      expectSelfContained(ws);
+   }
+}
