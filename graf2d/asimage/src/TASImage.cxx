@@ -57,10 +57,6 @@ Several examples showing how to use this class are available in the
 ROOT tutorials: `$ROOTSYS/tutorials/visualisation/image/`
 */
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
-
 #include "RConfigure.h"
 #include "TArrayD.h"
 #include "TArrayL.h"
@@ -5604,56 +5600,10 @@ void TASImage::DrawWideLine(UInt_t x1, UInt_t y1, UInt_t x2, UInt_t y2,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw glyph bitmap.
+/// Draw TTF glyphs .
 
-void TASImage::DrawFTGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by, TVirtualPad *clippad, Int_t offx, Int_t offy)
+void TASImage::DrawFTGlyphs(TTFhandle &ttf, UInt_t color, Int_t px, Int_t py, TVirtualPad *clippad, Int_t offx, Int_t offy)
 {
-   UInt_t col[5];
-   Bool_t has_alpha = (color & 0xff000000) != 0xff000000;
-
-   FT_Bitmap *source = (FT_Bitmap *) bitmap;
-
-   auto ndots = source->width * source->rows;
-   ULong_t r = 0, g = 0, b = 0;
-
-   const Int_t y0 = by > 0 ? by * fImage->width : 0;
-   Int_t yy = y0;
-   for (UInt_t y = 0; y < source->rows; y++) {
-      Int_t byy = by + y;
-      if ((byy >= (Int_t) fImage->height) || (byy < 0)) continue;
-
-      for (UInt_t x = 0; x < source->width; x++) {
-         Int_t bxx = bx + x;
-         if ((bxx >= (Int_t) fImage->width) || (bxx < 0)) continue;
-
-         auto idx = Idx(bxx + yy);
-         r += ((fImage->alt.argb32[idx] & 0xff0000) >> 16);
-         g += ((fImage->alt.argb32[idx] & 0x00ff00) >> 8);
-         b += (fImage->alt.argb32[idx] & 0x0000ff);
-      }
-      yy += fImage->width;
-   }
-   if (ndots > 0) {
-      r /= ndots;
-      g /= ndots;
-      b /= ndots;
-   }
-
-   col[0] = (r << 16) + (g << 8) + b;
-   col[4] = color;
-   Int_t col4r = (col[4] & 0xff0000) >> 16;
-   Int_t col4g = (col[4] & 0x00ff00) >> 8;
-   Int_t col4b = (col[4] & 0x0000ff);
-
-   // interpolate between fore and background colors
-   for (Int_t x = 3; x > 0; x--) {
-      Int_t xx = 4 - x;
-      Int_t colxr = (col4r*x + r*xx) >> 2;
-      Int_t colxg = (col4g*x + g*xx) >> 2;
-      Int_t colxb = (col4b*x + b*xx) >> 2;
-      col[x] = (colxr << 16) + (colxg << 8) + colxb;
-   }
-
    Int_t clipx1 = 0, clipx2 = 0, clipy1 = 0, clipy2 = 0;
    Bool_t noClip = kTRUE;
 
@@ -5666,34 +5616,99 @@ void TASImage::DrawFTGlyph(void *bitmap, UInt_t color, Int_t bx, Int_t by, TVirt
       noClip = kFALSE;
    }
 
-   yy = y0;
-   UChar_t *s = source->buffer;
+   UInt_t col[5];
+   Bool_t has_alpha = (color & 0xff000000) != 0xff000000;
 
-   for (UInt_t y = 0; y < source->rows; y++) {
-      Int_t byy = by + y;
+   Bool_t had_smoothing = ttf.GetSmoothing();
+   ttf.SetSmoothing(kTRUE);
 
-      for (UInt_t x = 0; x < source->width; x++) {
-         Int_t bxx = bx + x;
+   for (UInt_t nglyph = 0; nglyph < ttf.GetNumGlyphs(); nglyph++) {
+      Int_t bx = 0, by = 0;
+      UChar_t *buffer = nullptr;
+      UInt_t width = 0, rows = 0, pitch = 0;
+      if (!ttf.GetGlyphData(nglyph, bx, by, buffer, width, rows, pitch))
+         continue;
 
-         UChar_t d = *s++ & 0xff;
-         d = ((d + 10) * 5) >> 8;
-         if (d > 4) d = 4;
+      bx += px;
+      by += py;
 
-         if (d > 0) {
-            if (noClip || ((bxx <  clipx2) && (bxx >= clipx1) &&
-                           (byy >= clipy2) && (byy <  clipy1))) {
-               auto idx = Idx(bxx + yy);
-               auto acolor = (ARGB32) col[d];
-               if (has_alpha) {
-                  _alphaBlend(&fImage->alt.argb32[idx], &acolor);
-               } else {
-                  fImage->alt.argb32[idx] = acolor;
+      auto ndots = width * rows;
+      ULong_t r = 0, g = 0, b = 0;
+
+      const Int_t y0 = by > 0 ? by * fImage->width : 0;
+      Int_t yy = y0;
+      for (UInt_t y = 0; y < rows; y++) {
+         Int_t byy = by + y;
+         if ((byy >= (Int_t) fImage->height) || (byy < 0)) continue;
+
+         for (UInt_t x = 0; x < width; x++) {
+            Int_t bxx = bx + x;
+            if ((bxx >= (Int_t) fImage->width) || (bxx < 0)) continue;
+
+            auto idx = Idx(bxx + yy);
+            r += ((fImage->alt.argb32[idx] & 0xff0000) >> 16);
+            g += ((fImage->alt.argb32[idx] & 0x00ff00) >> 8);
+            b += (fImage->alt.argb32[idx] & 0x0000ff);
+         }
+         yy += fImage->width;
+      }
+      if (ndots > 0) {
+         r /= ndots;
+         g /= ndots;
+         b /= ndots;
+      }
+
+      col[0] = (r << 16) + (g << 8) + b;
+      col[4] = color;
+      Int_t col4r = (col[4] & 0xff0000) >> 16;
+      Int_t col4g = (col[4] & 0x00ff00) >> 8;
+      Int_t col4b = (col[4] & 0x0000ff);
+
+      // interpolate between fore and background colors
+      for (Int_t x = 3; x > 0; x--) {
+         Int_t xx = 4 - x;
+         Int_t colxr = (col4r*x + r*xx) >> 2;
+         Int_t colxg = (col4g*x + g*xx) >> 2;
+         Int_t colxb = (col4b*x + b*xx) >> 2;
+         col[x] = (colxr << 16) + (colxg << 8) + colxb;
+      }
+
+      yy = y0;
+
+      for (UInt_t y = 0; y < rows; y++) {
+         Int_t byy = by + y;
+
+         UChar_t *s = buffer;
+
+         for (UInt_t x = 0; x < width; x++) {
+            Int_t bxx = bx + x;
+
+            UChar_t d = *s++ & 0xff;
+            d = ((d + 10) * 5) >> 8;
+            if (d > 4) d = 4;
+
+            if (d > 0) {
+               if (noClip || ((bxx <  clipx2) && (bxx >= clipx1) &&
+                              (byy >= clipy2) && (byy <  clipy1))) {
+                  auto idx = Idx(bxx + yy);
+                  auto acolor = (ARGB32) col[d];
+                  if (has_alpha) {
+                     _alphaBlend(&fImage->alt.argb32[idx], &acolor);
+                  } else {
+                     fImage->alt.argb32[idx] = acolor;
+                  }
                }
             }
          }
+
+         // ttf has own alignment for rows
+         buffer += pitch;
+
+         yy += fImage->width;
       }
-      yy += fImage->width;
    }
+
+   ttf.SetSmoothing(had_smoothing);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5705,27 +5720,20 @@ void TASImage::DrawText(TText *text, Int_t x, Int_t y)
       DrawTextOnPad(text, x, y, gPad, 0, 0);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw text at the pixel position (x,y) checking clip on pad.
 
 void TASImage::DrawTextOnPad(TText *text, Int_t x, Int_t y, TVirtualPad *pad, Int_t offx, Int_t  offy)
 {
-   if (!text || !InitImage("DrawTextOnPad"))
+   if (!text || !pad || !InitImage("DrawTextOnPad"))
       return;
 
    TTFhandle ttf;
 
    // set text font
    ttf.SetTextFont(text->GetTextFont());
-
-   UInt_t padw = pad ? pad->GetPadWidth() : 100;
-   UInt_t padh = pad ? pad->GetPadHeight() : 100;
-
    // set text size
-   Float_t ttfsize = text->GetTextSize() * TMath::Min(padw, padh);
-   ttf.SetTextSize(ttfsize*kScale);
-
+   ttf.SetTextSize(text->GetTextSizePixels(*pad)*kScale);
    // set text angle
    ttf.SetRotationMatrix(text->GetTextAngle());
 
@@ -5747,86 +5755,8 @@ void TASImage::DrawTextOnPad(TText *text, Int_t x, Int_t y, TVirtualPad *pad, In
    ARGB32 color = ARGB32_White;
    parse_argb_color(col->AsHexString(), &color);
 
-   // Align()
-   Int_t align = 0;
-   Int_t txalh = text->GetTextAlign()/10;
-   Int_t txalv = text->GetTextAlign()%10;
-
-   switch (txalh) {
-      case 0 :
-      case 1 :
-         switch (txalv) {  //left
-            case 1 :
-               align = 7;   //bottom
-               break;
-            case 2 :
-               align = 4;   //center
-               break;
-            case 3 :
-               align = 1;   //top
-               break;
-         }
-         break;
-      case 2 :
-         switch (txalv) { //center
-            case 1 :
-               align = 8;   //bottom
-               break;
-            case 2 :
-               align = 5;   //center
-               break;
-            case 3 :
-               align = 2;   //top
-               break;
-         }
-         break;
-      case 3 :
-         switch (txalv) {  //right
-            case 1 :
-               align = 9;   //bottom
-               break;
-            case 2 :
-               align = 6;   //center
-               break;
-            case 3 :
-               align = 3;   //top
-               break;
-         }
-         break;
-   }
-
-   FT_Vector ftal;
-
-   // vertical alignment
-   if (align == 1 || align == 2 || align == 3) {
-      ftal.y = ttf.GetAscent();
-   } else if (align == 4 || align == 5 || align == 6) {
-      ftal.y = ttf.GetAscent() / 2;
-   } else {
-      ftal.y = 0;
-   }
-
-   // horizontal alignment
-   if (align == 3 || align == 6 || align == 9) {
-      ftal.x = ttf.GetWidth();
-   } else if (align == 2 || align == 5 || align == 8) {
-      ftal.x = ttf.GetWidth() / 2;
-   } else {
-      ftal.x = 0;
-   }
-
-   FT_Vector_Transform(&ftal, ttf.GetRotMatrix());
-   ftal.x = (ftal.x >> 6);
-   ftal.y = (ftal.y >> 6);
-
-   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); n++) {
-      if (auto bitmap = ttf.GetGlyphBitmap(n, kTRUE)) {
-         Int_t bx = x - ftal.x + bitmap->left;
-         Int_t by = y + ftal.y - bitmap->top;
-
-         DrawFTGlyph(&bitmap->bitmap, color, bx, by, pad, offx, offy);
-      }
-   }
+   if (ttf.ApplyAlignRotate(x, y, text->GetTextAlign(), GetWidth(), GetHeight()))
+      DrawFTGlyphs(ttf, color, x, y, pad, offx, offy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5846,18 +5776,8 @@ void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size,
    ttf.PrepareString(text);
    ttf.LayoutGlyphs();
 
-   // compute the size and position  that will contain the text
-   // Int_t Xoff = TMath::Max(0, (Int_t) -ttf.GetBox().xMin);
-   Int_t Yoff = TMath::Max(0, (Int_t) -ttf.GetBox().yMin);
-   Int_t h    = ttf.GetBox().yMax + Yoff;
-
-   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); n++) {
-      if (auto bitmap = ttf.GetGlyphBitmap(n, kTRUE)) {
-         Int_t bx = x + bitmap->left;
-         Int_t by = y + h - bitmap->top;
-         DrawFTGlyph(&bitmap->bitmap, color, bx, by);
-      }
-   }
+   if (ttf.ApplyAlignRotate(x, y, 11, GetWidth(), GetHeight()))
+      DrawFTGlyphs(ttf, color, x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
