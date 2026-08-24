@@ -34,8 +34,6 @@ protected:
    TAttFill   GetAttFillInternal(Bool_t with_transparency);
    virtual Double_t GetTTFScale() const { return 1.; }
 
-   void RenderTTF(Int_t x, Int_t y, TTFhandle &ttf, ETextMode mode);
-
 public:
 
    /// _____________________________________________________________________
