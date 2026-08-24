@@ -60,8 +60,11 @@ public:
   const RooFitResult* fitResult(Int_t sampleNum) const ;
         RooAbsData* genData(Int_t sampleNum) const ;
   const RooDataSet& fitParDataSet() ;
-  /// Return dataset with generator parameters for each toy. When constraints are used these
-  /// may generally not be the same as the fitted parameters.
+  /// Return dataset with the generator parameter values used for each toy, including any
+  /// modification by constraint-p.d.f. sampling or by study modules. When constraints are
+  /// used, the values are sampled from the constraint p.d.f.s for each toy and thus generally
+  /// differ from the fitted parameter values. Unlike fitParDataSet(), this dataset has one
+  /// entry per generated toy, including toys for which the fit did not converge.
   const RooDataSet* genParDataSet() const {
     return _genParData.get();
   }

@@ -95,6 +95,8 @@ fitting the PDF to data and accumulating the fit statistics.
 <tr><td> Verbose(bool flag)              <td> Activate informational messages in event generation phase
 <tr><td> Extended(bool flag)             <td> Determine number of events for each sample anew from a Poisson distribution
 <tr><td> Constrain(const RooArgSet& pars)  <td> Apply internal constraints on given parameters in fit and sample constrained parameter values from constraint p.d.f for each toy.
+<tr><td> ExternalConstraints(const RooArgSet& cpdfs) <td> Apply given external constraint p.d.f.s in fit and sample values of the parameters they constrain from them for each toy.
+                                                To apply the constraints in the fit only, without the per-toy sampling, pass them inside FitOptions() instead.
 <tr><td> ProtoData(const RooDataSet&, bool randOrder)
          <td> Prototype data for the event generation. If the randOrder flag is set, the order of the dataset will be re-randomized for each generation
               cycle to protect against systematic biases if the number of generated events does not exactly match the number of events in the prototype dataset
@@ -169,28 +171,31 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
     _fitOptList.Add(RooFit::ExternalConstraints(*extCons).Clone()) ;
   }
 
-  // Make list of all constraints
+  // Make list of all constraints and of the parameters they constrain
   RooArgSet allConstraints ;
   RooArgSet consPars ;
   if (cPars) {
     if (std::unique_ptr<RooArgSet> constraints{model.getAllConstraints(observables,*cPars,true)}) {
       allConstraints.add(*constraints) ;
     }
+    consPars.add(*cPars) ;
+  }
+  if (extCons) {
+    // External constraint p.d.f.s are not part of the model, so the parameters
+    // they constrain are found among their observables instead
+    allConstraints.add(*extCons) ;
+    RooArgSet params;
+    model.getParameters(&observables, params);
+    for (RooAbsArg const* con : *extCons) {
+      RooArgSet cparams;
+      con->getObservables(&params, cparams);
+      consPars.add(cparams, /*silent=*/true) ;
+    }
   }
 
   // Construct constraint p.d.f
   if (!allConstraints.empty()) {
     _constrPdf = std::make_unique<RooProdPdf>("mcs_constr_prod","RooMCStudy constraints product",allConstraints);
-
-    if (cPars) {
-      consPars.add(*cPars) ;
-    } else {
-      RooArgSet params;
-      model.getParameters(&observables, params);
-      RooArgSet cparams;
-      _constrPdf->getObservables(&params, cparams);
-      consPars.add(cparams) ;
-    }
     _constrGenContext.reset(_constrPdf->genContext(consPars,nullptr,nullptr,_verboseGen));
 
     _perExptGenParams = true ;
@@ -261,9 +266,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   tmp2.setAttribAll("StoreError",false) ;
   tmp2.setAttribAll("StoreAsymError",false) ;
 
-  if (_perExptGenParams) {
-    _genParData = std::make_unique<RooDataSet>("genParData","Generated Parameters dataset",_genParams);
-  }
+  _genParData = std::make_unique<RooDataSet>("genParData","Generated Parameters dataset",_genParams);
 
   // Append proto variables to allDependents
   if (_genProtoData) {
@@ -309,6 +312,11 @@ void RooMCStudy::addModule(RooAbsMCStudyModule& module)
 /// If keepGenData is set, all generated data sets will be kept in memory and can be accessed
 /// later via genData().
 ///
+/// When generating, the generator parameter values used for each sample are recorded in the
+/// dataset returned by genParDataSet(). When constraints are used and the run both generates
+/// and fits, the sampled parameter values are in addition merged into the fit parameter
+/// dataset as `<name>_gen` columns for each toy whose fit converged.
+///
 /// When generating, data sets will be written out in ascii form if the pattern string is supplied
 /// The pattern, which is a template for snprintf, should look something like "data/toymc_%04d.dat"
 /// and should contain one integer field that encodes the sample serial number.
@@ -329,7 +337,24 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
     mod->initializeRun(nSamples) ;
   }
 
+  if (DoFit && !doGenerate && _perExptGenParams) {
+    coutW(Generation) << "RooMCStudy::run: WARNING fitting previously generated samples in a separate run:"
+        " the per-toy sampled generator parameters are not merged into the fit parameter dataset,"
+        " so pulls are computed with respect to the initial parameter values instead of the sampled ones" << std::endl ;
+  }
+
   int prescale = nSamples>100 ? int(nSamples/100) : 1 ;
+
+  // Generator parameter values of the toys whose fit converged, filled in the
+  // same order as _fitParData so that the two datasets can be merged after the
+  // loop. Only done when the parameters are sampled from constraint p.d.f.s:
+  // otherwise the values are the constant initial ones, and study modules like
+  // RooRandomizeParamMCSModule publish their own "<name>_gen" columns that
+  // must not be overwritten by the merge.
+  std::unique_ptr<RooDataSet> genParDataForMerge;
+  if (doGenerate && DoFit && _perExptGenParams && _genParData) {
+    genParDataForMerge = std::make_unique<RooDataSet>("genParDataForMerge","Generated Parameters dataset",*_genParData->get());
+  }
 
   while(nSamples--) {
 
@@ -356,14 +381,15 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
         _genParams.assign(*std::unique_ptr<RooDataSet>{_constrGenContext->generate(1)}->get());
       }
 
-      // Save generated parameters if required
-      if (_genParData) {
-   _genParData->add(_genParams) ;
-      }
-
       // Call module before-generation hook
       for (RooAbsMCStudyModule *mod : _modList) {
          mod->processBeforeGen(nSamples) ;
+      }
+
+      // Save the generator parameters used for this toy, including any
+      // modification applied by the study modules above
+      if (_genParData) {
+   _genParData->add(_genParams) ;
       }
 
       if (_binGenData) {
@@ -436,6 +462,14 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
     bool fitOk = true;
     if (DoFit) fitOk = !fitSample(_genSample) ;
 
+    // Keep the generator parameters of this toy for merging into the fit
+    // parameter dataset. Only converged fits get an entry in _fitParData, so
+    // the toys with failed fits have to be skipped here as well. The values
+    // are taken from _genParData because the fit changes the parameters.
+    if (genParDataForMerge && _genParData && fitOk) {
+      genParDataForMerge->add(*_genParData->get(_genParData->numEntries()-1)) ;
+    }
+
     // Call module between generation and fitting hook
     for (RooAbsMCStudyModule *mod : _modList) {
       mod->processAfterFit(fitOk) ;
@@ -468,12 +502,14 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
 
   _canAddFitResults = false ;
 
-  if (_genParData) {
-    for(RooAbsArg * arg : *_genParData->get()) {
-      _genParData->changeObservableName(arg->GetName(),(std::string(arg->GetName()) + "_gen").c_str());
+  if (genParDataForMerge) {
+    // Append the generator parameter values as additional "<name>_gen"
+    // columns to the fit parameter dataset
+    for(RooAbsArg * arg : *genParDataForMerge->get()) {
+      genParDataForMerge->changeObservableName(arg->GetName(),(std::string(arg->GetName()) + "_gen").c_str());
     }
 
-    _fitParData->merge(_genParData.get());
+    _fitParData->merge(genParDataForMerge.get());
   }
 
   if (DoFit) calcPulls() ;
@@ -506,6 +542,7 @@ bool RooMCStudy::generateAndFit(Int_t nSamples, Int_t nEvtPerSample, bool keepGe
   _fitResList.Delete() ; // even though the fit results are owned by gROOT, we still want to scratch them here.
   _genDataList.Delete() ;
   _fitParData->reset() ;
+  if (_genParData) _genParData->reset() ;
 
   return run(true,true,nSamples,nEvtPerSample,keepGenData,asciiFilePat) ;
 }
@@ -526,6 +563,7 @@ bool RooMCStudy::generate(Int_t nSamples, Int_t nEvtPerSample, bool keepGenData,
 {
   // Clear any previous data in memory
   _genDataList.Delete() ;
+  if (_genParData) _genParData->reset() ;
 
   return run(true,false,nSamples,nEvtPerSample,keepGenData,asciiFilePat) ;
 }
