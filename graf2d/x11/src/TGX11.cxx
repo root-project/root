@@ -73,6 +73,17 @@ const int kMAXGC = 7,
 
 static GC gGCecho;                 // Input echo
 
+const int kAlignNone = 0,
+          kTLeft = 1,
+          kTCenter = 2,
+          kTRight = 3,
+          kMLeft = 4,
+          kMCenter = 5,
+          kMRight = 6,
+          kBLeft = 7,
+          kBCenter = 8,
+          kBRight = 9;
+
 
 /// Description of a X11 window.
 struct XWindow_t {
@@ -109,7 +120,7 @@ struct XWindow_t {
    std::vector<TPoint> markerShape;   ///< marker shape points
    Int_t markerLineWidth = 0;         ///< line width used for marker
    TAttText fAttText;                 ///< current text attribute
-   TGX11::EAlign textAlign = TGX11::kAlignNone;     ///< selected text align
+   Int_t textAlign = kAlignNone;      ///< selected text align
    XFontStruct *textFont = nullptr;   ///< selected text font
 };
 
@@ -844,12 +855,12 @@ void TGX11::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float
 
       case kClear:
          XRotDrawAlignedString((Display*)fDisplay, ctxt->textFont, angle,
-                      ctxt->fDrawing, ctxt->fGClist[kGCtext], x, y, (char*)text, (int) ctxt->textAlign);
+                      ctxt->fDrawing, ctxt->fGClist[kGCtext], x, y, (char*)text, ctxt->textAlign);
          break;
 
       case kOpaque:
          XRotDrawAlignedImageString((Display*)fDisplay, ctxt->textFont, angle,
-                      ctxt->fDrawing, ctxt->fGClist[kGCtext], x, y, (char*)text, (int) ctxt->textAlign);
+                      ctxt->fDrawing, ctxt->fGClist[kGCtext], x, y, (char*)text, ctxt->textAlign);
          break;
 
       default:
@@ -1053,16 +1064,6 @@ void *TGX11::GetGCW(WinContext_t wctxt, Int_t which) const
       return nullptr;
    }
    return &ctxt->fGClist[which];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return text align value for specified window context.
-/// Protected method used by TGX11TTF.
-
-TGX11::EAlign TGX11::GetTextAlignW(WinContext_t wctxt) const
-{
-   auto ctxt = (XWindow_t *) wctxt;
-   return ctxt ? ctxt->textAlign : kAlignNone;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

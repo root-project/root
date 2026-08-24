@@ -118,17 +118,10 @@ protected:
    Bool_t     fHasTTFonts;         ///< True when TrueType fonts are used
    Bool_t     fHasXft;             ///< True when XftFonts are used
 
-   // needed by TGX11TTF
-   enum EAlign {
-      kAlignNone,
-      kTLeft, kTCenter, kTRight, kMLeft, kMCenter, kMRight,
-      kBLeft, kBCenter, kBRight };
-
    Bool_t     AllocColor(Colormap cmap, RXColor *color);
    void       QueryColors(Colormap cmap, RXColor *colors, Int_t ncolors);
    Window_t  GetWindow(WinContext_t wctxt) const;
    void      *GetGCW(WinContext_t wctxt, Int_t which) const;
-   EAlign     GetTextAlignW(WinContext_t wctxt) const;
    const TAttText& GetTextAttW(WinContext_t wctxt) const;
 
    XColor_t  &GetColor(Int_t cid);
