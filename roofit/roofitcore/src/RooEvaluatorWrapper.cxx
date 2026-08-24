@@ -125,7 +125,7 @@ namespace RooFit::Experimental {
 
 RooEvaluatorWrapper::RooEvaluatorWrapper(RooAbsReal &topNode, RooAbsData *data, bool useGPU,
                                          std::string const &rangeName, RooAbsPdf const *pdf,
-                                         bool takeGlobalObservablesFromData)
+                                         bool takeGlobalObservablesFromData, int nWorkers)
    : RooAbsReal{"RooEvaluatorWrapper", "RooEvaluatorWrapper"},
      _evaluator{std::make_unique<RooFit::Evaluator>(topNode, useGPU)},
      _topNode("topNode", "top node", this, topNode, false, false),
@@ -135,6 +135,9 @@ RooEvaluatorWrapper::RooEvaluatorWrapper(RooAbsReal &topNode, RooAbsData *data, 
      _pdf{pdf},
      _takeGlobalObservablesFromData{takeGlobalObservablesFromData}
 {
+   if (nWorkers > 1 && !useGPU) {
+      _evaluator->setNThreads(nWorkers);
+   }
    if (data) {
       setData(*data, false);
    }

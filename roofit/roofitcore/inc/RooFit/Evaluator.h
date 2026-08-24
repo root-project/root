@@ -45,6 +45,8 @@ public:
    RooArgSet getParameters() const;
    void print(std::ostream &os);
 
+   void setNThreads(int nThreads);
+
    void setOffsetMode(RooFit::EvalContext::OffsetMode);
 
    std::unique_ptr<ChangeOperModeRAII> setOperModes(RooAbsArg::OperMode opMode);
