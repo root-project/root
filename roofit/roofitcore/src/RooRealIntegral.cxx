@@ -46,7 +46,7 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 
 #include <iostream>
 #include <memory>
-
+#include <unordered_map>
 
 namespace {
 
@@ -131,14 +131,26 @@ void addParameterToServers(RooAbsReal const &function, RooAbsArg &leaf, std::vec
 enum class MarkedState { Dependent, Independent, AlreadyAdded };
 
 /// Mark all args that recursively are value clients of "dep".
-void unmarkDepValueClients(RooAbsArg const &dep, RooArgSet const &args, std::vector<MarkedState> &marked)
+void unmarkDepValueClients(RooAbsArg const &dep, std::unordered_map<RooAbsArg const *, std::size_t> const &indexMap,
+                           std::vector<MarkedState> &marked)
 {
-   assert(args.size() == marked.size());
-   auto index = args.index(dep);
-   if (index >= 0) {
-      marked[index] = MarkedState::Dependent;
-      for (RooAbsArg *client : dep.valueClients()) {
-         unmarkDepValueClients(*client, args, marked);
+   auto found = indexMap.find(&dep);
+   if (found == indexMap.end())
+      return;
+   marked[found->second] = MarkedState::Dependent;
+
+   // Iterative depth-first traversal of the value clients within the
+   // computation graph, visiting every arg at most once.
+   std::vector<RooAbsArg const *> stack{&dep};
+   while (!stack.empty()) {
+      RooAbsArg const *arg = stack.back();
+      stack.pop_back();
+      for (RooAbsArg *client : arg->valueClients()) {
+         auto foundClient = indexMap.find(client);
+         if (foundClient != indexMap.end() && marked[foundClient->second] != MarkedState::Dependent) {
+            marked[foundClient->second] = MarkedState::Dependent;
+            stack.push_back(client);
+         }
       }
    }
 }
@@ -154,6 +166,19 @@ getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList, co
    RooArgSet allArgs{allArgsList};
    allArgs.sortTopologically();
 
+   // Maps from arg to index in allArgs for constant-time lookups. Two maps,
+   // because the graph can contain same-name instances (e.g. cloned sub-trees
+   // from projections): dependent client chains are matched by instance,
+   // while the final server matching is done by name.
+   std::unordered_map<RooAbsArg const *, std::size_t> indexMap;
+   std::unordered_map<TNamed const *, std::size_t> indexMapByName;
+   indexMap.reserve(allArgs.size());
+   indexMapByName.reserve(allArgs.size());
+   for (std::size_t i = 0; i < allArgs.size(); ++i) {
+      indexMap.emplace(allArgs[i], i);
+      indexMapByName.emplace(allArgs[i]->namePtr(), i);
+   }
+
    // Figure out what are all the value servers only
    RooArgList allValueArgsList;
    function.treeNodeServerList(&allValueArgsList, nullptr, true, true, /*valueOnly=*/true, false);
@@ -161,7 +186,10 @@ getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList, co
 
    // All "marked" args will be added as value servers to the integral
    std::vector<MarkedState> marked(allArgs.size(), MarkedState::Independent);
-   marked.back() = MarkedState::Dependent; // We don't want to consider the function itself
+   // We don't want to consider the function itself
+   if (auto foundFunc = indexMap.find(&function); foundFunc != indexMap.end()) {
+      marked[foundFunc->second] = MarkedState::Dependent;
+   }
 
    // Mark all args that are (indirect) value servers of the integration
    // variable or the integration variable itself. If something was marked,
@@ -169,7 +197,7 @@ getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList, co
    // add it to the server list.
    for (RooAbsArg *dep : depList) {
       if (RooAbsArg *depInArgs = allArgs.find(dep->GetName())) {
-         unmarkDepValueClients(*depInArgs, allArgs, marked);
+         unmarkDepValueClients(*depInArgs, indexMap, marked);
          addObservableToServers(function, *depInArgs, serversToAdd, rangeName);
       }
    }
@@ -179,10 +207,10 @@ getValueAndShapeServers(RooAbsReal const &function, RooArgSet const &depList, co
    for (std::size_t i = 0; i < allArgs.size(); ++i) {
       if (marked[i] == MarkedState::Dependent) {
          for (RooAbsArg *server : allArgs[i]->servers()) {
-            int index = allArgs.index(server->GetName());
-            if (index >= 0 && marked[index] == MarkedState::Independent) {
+            auto found = indexMapByName.find(server->namePtr());
+            if (found != indexMapByName.end() && marked[found->second] == MarkedState::Independent) {
                addParameterToServers(function, *server, serversToAdd, !allValueArgs.find(*server));
-               marked[index] = MarkedState::AlreadyAdded;
+               marked[found->second] = MarkedState::AlreadyAdded;
             }
          }
       }
