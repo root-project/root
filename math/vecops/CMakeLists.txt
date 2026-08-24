@@ -35,7 +35,7 @@ PRIVATE
     inc/LinkDef.h
 )
 
-if(builtin_vdt AND vdt)
+if(vdt)
   target_link_libraries(ROOTVecOps PRIVATE VDT::VDT)
 endif()
 
