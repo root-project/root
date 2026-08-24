@@ -58,8 +58,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
     src/TViewer3DPad.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
-  LIBRARIES
-    Freetype::Freetype
   DEPENDENCIES
     Graf
     Hist
