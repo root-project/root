@@ -357,8 +357,6 @@ else()
   #these depends on external packages
   ROOT_FIND_PYTHON_MODULE(torch)
   ROOT_FIND_PYTHON_MODULE(keras)
-  ROOT_FIND_PYTHON_MODULE(sonnet)
-  ROOT_FIND_PYTHON_MODULE(graph_nets)
   ROOT_FIND_PYTHON_MODULE(onnx)
 
 
@@ -380,7 +378,8 @@ else()
   endif()
   #veto this tutorial since it is added directly
   list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN_Parser.py)
-  if (NOT ROOT_SONNET_FOUND OR NOT ROOT_GRAPH_NETS_FOUND)
+  # The GNN tutorials define their model with PyTorch and export it to ONNX
+  if (NOT ROOT_TORCH_FOUND OR NOT ROOT_ONNX_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN.py)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN_Application.C)
   endif()
@@ -683,7 +682,7 @@ if(geom)
                 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
 endif()
 # define Python GNN parsing tutorial needed to run before
-if (ROOT_SONNET_FOUND AND ROOT_GRAPH_NETS_FOUND)
+if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND)
   ROOT_ADD_TEST(tutorial-machine_learning-TMVA_SOFIE_GNN_Parser COMMAND ${Python3_EXECUTABLE}
   ${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/TMVA_SOFIE_GNN_Parser.py
   PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
