@@ -56,6 +56,9 @@ def test_tutorial(tutorial):
     env = dict(**os.environ)
     # force matplotlib to use a non-GUI backend
     env["MPLBACKEND"] = "Agg"
+    # Tell tutorials that block on GUI input (e.g. Draw(block=True))
+    # not to wait for interactive input
+    env["ROOT_BATCH"] = "1"
     print("Test env:", env)
     try:
         result = subprocess.run(
