@@ -1,5 +1,5 @@
 // @(#)root/graf:$Id$
-// Author: Sergey  Linev     29/04/2026
+// Author: Sergey  Linev     25/08/2026
 
 /*************************************************************************
  * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,7 @@
 \ingroup BasicGraphics
 
 Dynamic handle to work with freetype 2 library.
-in ROOT7 TTFhandle will be renamed into TTF class
+in ROOT7 TTFhandle will completely replace TTF class
 */
 
 
@@ -32,8 +32,6 @@ in ROOT7 TTFhandle will be renamed into TTF class
 // to scale fonts to the same size as the old TT version
 const Float_t kScale = 0.93376068;
 
-Bool_t TTFhandle::fgHinting = kFALSE;
-
 struct TTFhandle::GlyphStruct {
 public:
    UInt_t     fIndex{0};     ///< glyph index in face
@@ -44,7 +42,7 @@ public:
 };
 
 
-struct TTFontHandle {
+struct TTFhandle::FontStruct {
    std::string name;
    FT_Face face = nullptr;
    FT_CharMap charmap = nullptr;
@@ -139,7 +137,7 @@ void TTFhandle::ComputeTrailingBlanksWidth(Int_t n)
       FT_Face face = fFont->face;
       char space = ' ';
       FT_UInt load_flags = FT_LOAD_DEFAULT;
-      if (!fgHinting) load_flags |= FT_LOAD_NO_HINTING;
+      if (!fHinting) load_flags |= FT_LOAD_NO_HINTING;
       FT_Load_Char(face, space, load_flags);
 
       FT_GlyphSlot slot      = face->glyph;
@@ -158,10 +156,8 @@ void TTFhandle::GetTextExtent(UInt_t &w, UInt_t &h, const char *text)
    SetRotationMatrix(0);
    PrepareString(text);
    LayoutGlyphs();
-   Int_t Xoff = 0; if (xMin < 0) Xoff = -xMin;
-   Int_t Yoff = 0; if (yMin < 0) Yoff = -yMin;
-   w = xMax + Xoff + GetTrailingBlanksWidth();
-   h = yMax + Yoff;
+   w = GetGlyphsWidth() + GetTrailingBlanksWidth();
+   h = GetGlyphsHeight();
    CleanupGlyphs();
 }
 
@@ -185,10 +181,8 @@ void TTFhandle::GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text)
    SetRotationMatrix(0);
    PrepareString(text);
    LayoutGlyphs();
-   Int_t Xoff = 0; if (xMin < 0) Xoff = -xMin;
-   Int_t Yoff = 0; if (yMin < 0) Yoff = -yMin;
-   w = xMax + Xoff + GetTrailingBlanksWidth();
-   h = yMax + Yoff;
+   w = GetGlyphsWidth() + GetTrailingBlanksWidth();
+   h = GetGlyphsHeight();
    CleanupGlyphs();
 }
 
@@ -209,7 +203,7 @@ void TTFhandle::LayoutGlyphs()
    fWidth  = 0;
 
    load_flags = FT_LOAD_DEFAULT;
-   if (!fgHinting)
+   if (!fHinting)
       load_flags |= FT_LOAD_NO_HINTING;
 
    xMin = yMin =  32000;
@@ -226,7 +220,7 @@ void TTFhandle::LayoutGlyphs()
          if (prev_index) {
             FT_Vector  kern;
             FT_Get_Kerning(face, prev_index, glyph.fIndex,
-                           fgHinting ? ft_kerning_default : ft_kerning_unfitted,
+                           fHinting ? ft_kerning_default : ft_kerning_unfitted,
                            &kern);
             fWidth += kern.x;
          }
@@ -251,8 +245,8 @@ void TTFhandle::LayoutGlyphs()
          continue;
 
       glyph.fPos = origin;
-      fWidth    += face->glyph->advance.x;
-      fAscent    = TMath::Max((Int_t)(face->glyph->metrics.horiBearingY), fAscent);
+      fWidth   += face->glyph->advance.x;
+      fAscent   = TMath::Max((Int_t)(face->glyph->metrics.horiBearingY), fAscent);
 
       // transform the glyphs
       FT_Matrix m, *matrix_arg = nullptr;
@@ -288,6 +282,8 @@ UInt_t TTFhandle::GetNumGlyphs() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Fill vector from TTF class
+/// Only for backward compatibility of old API
 
 void TTFhandle::FillTTFGlypths(void *data)
 {
@@ -341,8 +337,8 @@ Bool_t TTFhandle::ApplyAlignRotate(Int_t &px, Int_t &py, Int_t align, Int_t pad_
 
    Int_t Xoff = TMath::Max(0, (Int_t) -xMin);
    Int_t Yoff = TMath::Max(0, (Int_t) -yMin);
-   Int_t w    = xMax + Xoff;
-   Int_t h    = yMax + Yoff;
+   Int_t w    = GetGlyphsWidth();
+   Int_t h    = GetGlyphsHeight();
 
    // If w or h is 0, very likely the string is only blank characters
    if (w <= 0 || h <= 0)
@@ -514,11 +510,11 @@ void TTFhandle::SetRotationMatrix(Float_t angle)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return thread_local instance of TTFontHandle for speified font
+/// Return thread_local instance of FontStruct for speified font
 
 Int_t TTFhandle::SelectFontHandle(Int_t arg, const char *name)
 {
-   thread_local std::map<std::string, TTFontHandle> _fonts;
+   thread_local std::map<std::string, FontStruct> _fonts;
 
    fFont = nullptr;
 
@@ -731,21 +727,3 @@ Bool_t TTFhandle::Init()
 {
    return fFT_Library.Get() != nullptr;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-Bool_t TTFhandle::GetHinting()
-{
-   return fgHinting;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TTFhandle::SetHinting(Bool_t state)
-{
-   fgHinting = state;
-}
-
-
