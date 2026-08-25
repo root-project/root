@@ -404,9 +404,6 @@ if (opengl)
   add_subdirectory (builtins/glad) # hard coded builtin for graf3d
 endif()
 add_subdirectory (graf3d)
-if(NOT WIN32 AND x11)
-  add_subdirectory (builtins/x3d) # hard coded builtin for graf3d on Unix with x11
-endif()
 if(NOT minimal)
   add_subdirectory (gui)
 else()

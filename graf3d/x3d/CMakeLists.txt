@@ -15,6 +15,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(X3d
   SOURCES
     src/TViewerX3D.cxx
     src/TX3DFrame.cxx
+    ../../builtins/x3d/x3d.c
   LIBRARIES
     ${X11_LIBRARIES}
   DEPENDENCIES
@@ -22,4 +23,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(X3d
     Gui
 )
 
-target_include_directories(X3d PRIVATE ${X11_INCLUDE_DIR} src/) # src for x3d builtin
+target_include_directories(X3d PRIVATE ${X11_INCLUDE_DIR} src/ ../../builtins/x3d/) # src for src/X3DDefs.h
