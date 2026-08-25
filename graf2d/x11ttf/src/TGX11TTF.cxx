@@ -41,7 +41,7 @@ is redirected to point to this class.
 #include <cstdlib>
 
 #include "TEnv.h"
-#include "TTF.h"
+#include "TTFhandle.h"
 #include "TMathBase.h"
 
 
@@ -198,8 +198,6 @@ Bool_t TGX11TTF::Init(void *display)
 #endif
    Bool_t r = TGX11::Init(display);
 
-   TTFhandle::SetSmoothing(fDepth > 8);
-
    return r;
 }
 
@@ -224,6 +222,7 @@ void TGX11TTF::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angl
    auto &att = GetTextAttW(wctxt);
 
    TTFhandle ttf;
+   ttf.SetSmoothing(fDepth > 8);
    ttf.SetTextFont(att.GetTextFont());
    ttf.SetTextSize(att.GetTextSize());
    ttf.SetRotationMatrix(angle);
