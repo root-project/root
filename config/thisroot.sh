@@ -52,11 +52,6 @@ clean_environment()
          drop_from_path "$newpath" "${old_rootsys}/lib/root"
          SHLIB_PATH=$newpath
       fi
-      if [ -n "${LIBPATH-}" ]; then
-         drop_from_path "$LIBPATH" "${old_rootsys}/lib"
-         drop_from_path "$newpath" "${old_rootsys}/lib/root"
-         LIBPATH=$newpath
-      fi
       if [ -n "${PYTHONPATH-}" ]; then
          drop_from_path "$PYTHONPATH" "${old_rootsys}/lib"
          drop_from_path "$newpath" "${old_rootsys}/lib/root"
@@ -130,14 +125,6 @@ set_environment()
    else
       SHLIB_PATH=@libdir@:$SHLIB_PATH
       export SHLIB_PATH
-   fi
-
-   if [ -z "${LIBPATH-}" ]; then
-      LIBPATH=@libdir@
-      export LIBPATH       # Linux, ELF HP-UX
-   else
-      LIBPATH=@libdir@:$LIBPATH
-      export LIBPATH
    fi
 
    if [ -z "${PYTHONPATH-}" ]; then
