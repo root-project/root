@@ -75,23 +75,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_HardSwish.hxx
    TMVA/SOFIE_common.hxx
    TMVA/SOFIEHelpers.hxx
-
-   TMVA/FunctionList.hxx
-   TMVA/RModel_GNN.hxx
-   TMVA/RModel_GraphIndependent.hxx
-   TMVA/RFunction.hxx
-   TMVA/RFunction_MLP.hxx
-   TMVA/RFunction_Sum.hxx
-   TMVA/RFunction_Mean.hxx
   SOURCES
     src/RModel_Base.cxx
     src/RModel.cxx
-    src/RModel_GNN.cxx
-    src/RModel_GraphIndependent.cxx
-    src/RFunction.cxx
-    src/RFunction_MLP.cxx
-    src/RFunction_Mean.cxx
-    src/RFunction_Sum.cxx
     src/SOFIE_common.cxx
     src/SOFIE_common_helpers.cxx
   DEPENDENCIES

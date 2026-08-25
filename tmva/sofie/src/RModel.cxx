@@ -1267,7 +1267,7 @@ void RModel::GenerateSessionCode()
 {
    std::string sessionName = !fIsSubGraph ? "Session" : "Session_" + fName;
 
-   if (fUseSession && !fIsGNNComponent) {
+   if (fUseSession) {
       //  forward declare session struct
       fGC += "struct " + sessionName + ";\n";
    }
@@ -1294,13 +1294,11 @@ void RModel::GenerateSessionCode()
 
    doInferSignature = "inline void doInfer(" + doInferSignature + ")";
 
-   if (!fIsGNNComponent) {
-      // forward declare inference implementation
-      fGC += doInferSignature + ";\n";
-   }
+   // forward declare inference implementation
+   fGC += doInferSignature + ";\n";
 
-   // define the Session struct (for GNN this is generated in RModel_GNN)
-   if (fUseSession && !fIsGNNComponent) {
+   // define the Session struct
+   if (fUseSession) {
       fGC += "struct " + sessionName + " {\n";
    }
 
@@ -1402,7 +1400,7 @@ void RModel::GenerateSessionCode()
 
       if (fUseWeightFile) {
          fGC += "\n//--- reading weights from file\n";
-         ReadInitializedTensorsFromFile(fReadPos);
+         ReadInitializedTensorsFromFile();
          fGC += "\n";
          // fUseWeightFile = fUseWeightFile;
       }
@@ -1442,7 +1440,7 @@ void RModel::GenerateSessionCode()
    GenerateOutput();
 
    // end of session
-   if (fUseSession && !fIsGNNComponent) {
+   if (fUseSession) {
       fGC += "};   // end of Session\n\n";
 
       GenerateRequiredInputTensorInfo();
@@ -1471,7 +1469,7 @@ void RModel::GenerateSessionCode()
    // local variable name that we're using for the session:
    ReplaceAll(allOperatorCode, "this->", "session.");
 
-   if (fUseSession && !fIsGNNComponent) {
+   if (fUseSession) {
       // Collect all "tensor_*" data members that are not input or output tensors
       std::vector<std::string> tensorMemberNames = CollectTensorMemberNames(allOperatorCode);
       for (auto const& name: tensorMemberNames) {
@@ -1501,11 +1499,10 @@ void RModel::GenerateSessionCode()
    fGC += "}\n";
 }
 
-void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, long pos, bool verbose)
+void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, bool verbose)
 {
    fVerbose = verbose;
    fBatchSize = batchSize;
-   fReadPos = pos;
 
    // session flag is used in operator initialize
    if (static_cast<std::underlying_type_t<Options>>(Options::kNoSession) & options) {
@@ -1525,11 +1522,6 @@ void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, lo
          "TMVA-SOFIE: RModel::Generate: cannot use a separate weight file without generating a Session class");
    }
 
-   if (static_cast<std::underlying_type_t<Options>>(Options::kGNN) & options)
-      fIsGNN = true;
-   if (static_cast<std::underlying_type_t<Options>>(Options::kGNNComponent) & options)
-      fIsGNNComponent = true;
-
    // initialize the model including all operators and sub-graphs
    Initialize(batchSize, verbose);
 
@@ -1541,7 +1533,7 @@ void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, lo
    }
 
    std::string hgname;
-   if (!fIsGNNComponent && !fIsSubGraph) {
+   if (!fIsSubGraph) {
       fGC.clear();
       GenerateHeaderInfo(hgname);
    }
@@ -1560,7 +1552,7 @@ void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, lo
    // generate main session code
    GenerateSessionCode();
 
-   if (!fIsGNNComponent && !fIsSubGraph) {
+   if (!fIsSubGraph) {
       fGC += ("} //TMVA_SOFIE_" + fName + "\n");
       fGC += "\n#endif  // " + hgname + "\n";
       // dump the standalone definitions of the helper functions this model uses
@@ -1569,7 +1561,7 @@ void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, lo
    }
 }
 
-void RModel::ReadInitializedTensorsFromFile(long pos) {
+void RModel::ReadInitializedTensorsFromFile() {
     // generate the code to read initialized tensors from a text data file
     if (fWeightFile == WeightFileType::Text) {
         // check if there are tensors to write
@@ -1581,10 +1573,6 @@ void RModel::ReadInitializedTensorsFromFile(long pos) {
         fGC += "   if (!f.is_open()) {\n";
         fGC += "      throw std::runtime_error(\"tmva-sofie failed to open file \" + filename + \" for input weights\");\n";
         fGC += "   }\n";
-
-        if(fIsGNNComponent) {
-            fGC += "   f.seekg(" + std::to_string(pos) + ");\n";
-        }
 
         // ReadTensorFromStream is emitted as a standalone helper in the header
         AddNeededHelperFunction("ReadTensorFromStream");
@@ -1667,9 +1655,6 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
     // Write the initialized tensors to the file
     if (fWeightFile == WeightFileType::RootBinary) {
 #ifdef SOFIE_SUPPORT_ROOT_BINARY
-        if(fIsGNNComponent || fIsGNN) {
-            throw std::runtime_error("SOFIE-GNN yet not supports writing to a ROOT file.");
-        }
         std::unique_ptr<TFile> outputFile(TFile::Open(filename.c_str(), "UPDATE"));
 
         std::string dirName = fName + "_weights";
@@ -1715,12 +1700,7 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
 #endif // SOFIE_SUPPORT_ROOT_BINARY
     } else if (fWeightFile == WeightFileType::Text) {
         std::ofstream f;
-        if(fIsGNNComponent) {
-            // appending all GNN components into the same file
-            f.open(filename, std::ios::app);
-        } else {
-            f.open(filename);
-        }
+        f.open(filename);
         if (!f.is_open())
             throw
             std::runtime_error("tmva-sofie failed to open file " + filename + " for tensor weight data");

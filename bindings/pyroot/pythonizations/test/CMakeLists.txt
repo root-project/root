@@ -108,15 +108,6 @@ if (dataframe)
     ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_misc rdataframe_misc.py PYTHON_DEPS numpy)
 endif()
 
-# SOFIE-GNN pythonizations
-if (tmva)
-    ROOT_FIND_PYTHON_MODULE(sonnet)
-    ROOT_FIND_PYTHON_MODULE(graph_nets)
-    if (ROOT_SONNET_FOUND AND ROOT_GRAPH_NETS_FOUND)
-        ROOT_ADD_PYUNITTEST(pyroot_pyz_sofie_gnn sofie_gnn.py PYTHON_DEPS numpy sonnet graph_nets)
-    endif()
-endif()
-
 # RTensor pythonizations
 if (tmva AND dataframe)
     ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)

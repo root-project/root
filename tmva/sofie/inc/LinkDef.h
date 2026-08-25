@@ -15,6 +15,5 @@
 #pragma link C++ struct TMVA::Experimental::SOFIE::TensorInfo+;
 #pragma link C++ struct TMVA::Experimental::SOFIE::InputTensorInfo+;
 #pragma link C++ struct TMVA::Experimental::SOFIE::Dim+;
-#pragma link C++ struct TMVA::Experimental::SOFIE::GNN_Data+;
 
 #endif
