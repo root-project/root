@@ -46,8 +46,14 @@ private:
 
    //  weight data file
    std::ifstream fDataFile;
-   // filename of model
+   // user-provided external data file name (see SetExternalDataFile), valid for the next Parse call
    std::string fDataFileName;
+   // directory of the model being parsed, used to resolve relative external data locations
+   std::string fModelDirectory;
+   // default external data file name (<model file>.data), used when a tensor provides no location
+   std::string fDefaultDataFileName;
+   // name of the external data file fDataFile currently has open
+   std::string fOpenedDataFileName;
 
 
 public:
@@ -88,6 +94,9 @@ public:
    std::unique_ptr<onnx::ModelProto> LoadModel(std::istream &input);
 
    std::shared_ptr<void> GetInitializedTensorData(onnx::TensorProto *tensorproto, size_t tensor_length, ETensorType type );
+
+   // reset the external-data reading state after parsing a model
+   void ResetExternalDataState();
 
 public:
 
