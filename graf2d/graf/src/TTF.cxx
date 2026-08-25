@@ -21,21 +21,6 @@
 #include "TMath.h"
 #include "TError.h"
 
-// to scale fonts to the same size as the old TT version
-const Float_t kScale = 0.93376068;
-
-/// Free all resources of this glyph.
-
-struct TTFontHandle {
-   std::string name;
-   FT_Face face = nullptr;
-   FT_CharMap charmap = nullptr;
-   bool is_symbol() const
-   {
-      return (name == "wingding.ttf") || (name.find("symbol.ttf") == 0);
-   }
-};
-
 
 /** \class TTF
 \ingroup BasicGraphics
@@ -43,7 +28,7 @@ struct TTFontHandle {
 Interface to the freetype 2 library.
 Implements old static API.
 Unitl ROOT7 just redirects to static TTFhandle instance,
-then TTFhandle will be renamed into TTF class
+then only TTFhandle class will remains
 */
 
 thread_local TTF gCleanupTTF; // Allows to call "Cleanup" at the end of the session
@@ -69,7 +54,7 @@ void TTF::Init()
 
 Bool_t TTF::GetHinting()
 {
-   return TTFhandle::GetHinting();
+   return fgHandle ? fgHandle->GetHinting() : kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -185,7 +170,8 @@ void TTF::SetRotationMatrix(Float_t angle)
 
 void TTF::SetHinting(Bool_t state)
 {
-   TTFhandle::SetHinting(state);
+   Init();
+   fgHandle->SetHinting(state);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
