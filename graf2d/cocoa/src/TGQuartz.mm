@@ -20,10 +20,6 @@
 
 #include <Cocoa/Cocoa.h>
 
-// #include <ft2build.h>
-// #include FT_FREETYPE_H
-// #include FT_GLYPH_H
-
 #include "QuartzFillArea.h"
 #include "TColorGradient.h"
 #include "QuartzMarker.h"
@@ -35,6 +31,7 @@
 #include "QuartzText.h"
 #include "QuartzLine.h"
 #include "CocoaUtils.h"
+#include "TTFhandle.h"
 #include "TGQuartz.h"
 #include "TString.h"
 #include "TPoint.h"
@@ -43,7 +40,6 @@
 #include "TROOT.h"
 #include "TMath.h"
 #include "TEnv.h"
-#include "TTF.h"
 
 // To scale fonts to the same size as the TTF version
 const Float_t kScale = 0.93376068;
