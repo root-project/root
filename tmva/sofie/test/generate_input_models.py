@@ -1846,6 +1846,28 @@ def make_GatherNegativeIndices():
     return _model(graph, opset=17, ir_version=8)
 
 
+def make_GatherRuntimeNegativeIndices():
+    """Ops: Gather"""
+    # The indices are a graph input and not an initializer, so their values are
+    # only known at run time and the generated code gets them as a pointer to
+    # const: it must correct the negative ones without writing to the tensor.
+    nodes = [
+        helper.make_node('Gather', ['X', 'I'], ['Y'], axis=0),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'Gather',
+        inputs=[
+            _vi('X', FLOAT, [5, 2]),
+            _vi('I', INT64, [3]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [3, 2]),
+        ],
+    )
+    return _model(graph, opset=17, ir_version=8)
+
+
 def make_Gelu():
     """Ops: Gelu"""
     nodes = [
@@ -5298,6 +5320,7 @@ MODELS = {
     'GatherND_2': make_GatherND_2,
     'GatherND_3': make_GatherND_3,
     'GatherNegativeIndices': make_GatherNegativeIndices,
+    'GatherRuntimeNegativeIndices': make_GatherRuntimeNegativeIndices,
     'Gelu': make_Gelu,
     'Gemm_ConstantFolding': make_Gemm_ConstantFolding,
     'Gemm_ConstantFolding_Shared': make_Gemm_ConstantFolding_Shared,
@@ -5517,6 +5540,7 @@ TEST_INPUTS = {
     'GatherAxis2': [f32(np.arange(0.0, 120.0), (5, 4, 3, 2))],
     'GatherAxis3': [f32(np.arange(0.0, 120.0), (5, 4, 3, 2))],
     'GatherNegativeIndices': [f32(np.arange(0.0, 10.0), (10,))],
+    'GatherRuntimeNegativeIndices': [f32(np.arange(0.0, 10.0), (5, 2)), i64([-1, 2, -5])],
     'Gelu': [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
     # Note: the second operand must produce a mix of true and false results,
     # otherwise a constant implementation would pass the test.
