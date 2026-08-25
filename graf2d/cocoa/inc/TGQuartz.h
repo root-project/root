@@ -88,6 +88,7 @@ public:
    void      DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
    void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode) override;
    void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text, ETextMode mode) override;
+   void      DrawTTFglyphsW(WinContext_t wctxt, Int_t x, Int_t y, TTFhandle &ttf, ETextMode mode) override;
 
    Bool_t    GetTextExtentA(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const char *mess) override;
    Bool_t    GetTextExtentA(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const wchar_t *mess) override;
@@ -103,8 +104,6 @@ private:
    // switch because it is better to have it off by default.
    bool fUseAA;
    bool fUseFAAA;
-
-   void DrawFTGlyph(void *pixmap, void *source, ULong_t fore, ULong_t back, Int_t bx, Int_t by);
 
    void SetAA();
    TAttFill &GetAttFill(WinContext_t wctxt);
