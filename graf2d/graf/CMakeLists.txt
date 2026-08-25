@@ -46,6 +46,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     TPoints.h
     TPolyLine.h
     TTF.h
+    TTFhandle.h
     TText.h
     TWbox.h
   SOURCES
@@ -83,6 +84,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     src/TPoints.cxx
     src/TPolyLine.cxx
     src/TTF.cxx
+    src/TTFhandle.cxx
     src/TText.cxx
     src/TWbox.cxx
   DICTIONARY_OPTIONS
