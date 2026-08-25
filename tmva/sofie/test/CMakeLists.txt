@@ -26,6 +26,12 @@ if (ROOT_ONNX_FOUND AND DEFINED ROOT_ONNX_VERSION)
   endif()
 endif()
 
+# Adding a model to generate_input_models.py changes the model list below, so
+# CMake has to re-run when the script changes. Without this, an incremental
+# build keeps the stale list and the new model is silently never emitted.
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+             ${CMAKE_CURRENT_SOURCE_DIR}/generate_input_models.py)
+
 # The ONNX input models are not checked into the repository: they are created
 # by generate_input_models.py, which runs as the SofieGenerateModels_ONNX test
 # that the other ONNX tests depend on. Set ONNX_MODELS_DIR to use pre-existing
