@@ -2,266 +2,240 @@
 ## \ingroup tutorial_ml
 ## \notebook -nodraw
 ##
-## Tutorial showing how to parse a GNN from GraphNet and make a SOFIE model
-## The tutorial also generate some  data which can serve as input for the tutorial TMVA_SOFIE_GNN_Application.C
+## Tutorial parsing a Graph Neural Network from ONNX and generating SOFIE
+## inference code.
+##
+## A graph network model following DeepMind's Encode-Process-Decode architecture
+## (see arXiv:1806.01261) is defined in PyTorch and exported to ONNX with
+## dynamic node and edge counts. The SOFIE ONNX parser then generates C++
+## inference code for the four component networks. The tutorial also generates
+## input data, evaluated here with PyTorch as a reference, which serves as
+## input for the tutorial TMVA_SOFIE_GNN_Application.C.
 ##
 ## \macro_code
 ##
 ## \author
 
-import os
-
-#for getting time and memory
 import time
 
-import graph_nets as gn
 import numpy as np
-import psutil
 import ROOT
-import sonnet as snt
-from graph_nets import utils_tf
+import torch
+import torch.nn as nn
 
-# defining graph properties. Number of edges/modes are the maximum
-num_max_nodes=100
-num_max_edges=300
-node_size=4
-edge_size=4
-global_size=1
+# defining graph properties. Number of nodes/edges are the maximum
+num_max_nodes = 100
+num_max_edges = 300
+node_size = 4
+edge_size = 4
+global_size = 1
 LATENT_SIZE = 100
 NUM_LAYERS = 4
 processing_steps = 5
 numevts = 100
 
-verbose = False
-
-#print the used memory in MB
-def printMemory(s = "") :
-    #get memory of current process
-    pid = os.getpid()
-    python_process = psutil.Process(pid)
-    memoryUse = python_process.memory_info()[0]/(1024.*1024.)    #divide by 1024 * 1024 to get memory in MB
-    print(s,"memory:",memoryUse,"(MB)")
+torch.manual_seed(42)
+torch.set_grad_enabled(False)
 
 
 # method for returning dictionary of graph data
 def get_dynamic_graph_data_dict(NODE_FEATURE_SIZE=2, EDGE_FEATURE_SIZE=2, GLOBAL_FEATURE_SIZE=1):
-   num_nodes = np.random.randint(num_max_nodes-2, size=1)[0] + 2
-   num_edges = np.random.randint(num_max_edges-1, size=1)[0] + 1
-   return {
-      "globals": 10*np.random.rand(GLOBAL_FEATURE_SIZE).astype(np.float32)-5.,
-      "nodes": 10*np.random.rand(num_nodes, NODE_FEATURE_SIZE).astype(np.float32)-5.,
-      "edges": 10*np.random.rand(num_edges, EDGE_FEATURE_SIZE).astype(np.float32)-5.,
-      "senders": np.random.randint(num_nodes, size=num_edges, dtype=np.int32),
-      "receivers": np.random.randint(num_nodes, size=num_edges, dtype=np.int32)
-   }
-
-# generate graph data with a fixed number of nodes/edges
-def get_fix_graph_data_dict(num_nodes, num_edges, NODE_FEATURE_SIZE=2, EDGE_FEATURE_SIZE=2, GLOBAL_FEATURE_SIZE=1):
-   return {
-      "globals": np.ones((GLOBAL_FEATURE_SIZE),dtype=np.float32),
-      "nodes": np.ones((num_nodes, NODE_FEATURE_SIZE), dtype = np.float32),
-      "edges": np.ones((num_edges, EDGE_FEATURE_SIZE), dtype = np.float32),
-      "senders":  np.random.randint(num_nodes, size=num_edges, dtype=np.int32),
-      "receivers": np.random.randint(num_nodes, size=num_edges, dtype=np.int32)
+    num_nodes = np.random.randint(num_max_nodes - 2, size=1)[0] + 2
+    num_edges = np.random.randint(num_max_edges - 2, size=1)[0] + 2
+    return {
+        "globals": 10 * np.random.rand(1, GLOBAL_FEATURE_SIZE).astype(np.float32) - 5.0,
+        "nodes": 10 * np.random.rand(num_nodes, NODE_FEATURE_SIZE).astype(np.float32) - 5.0,
+        "edges": 10 * np.random.rand(num_edges, EDGE_FEATURE_SIZE).astype(np.float32) - 5.0,
+        "senders": np.random.randint(num_nodes, size=num_edges, dtype=np.int64),
+        "receivers": np.random.randint(num_nodes, size=num_edges, dtype=np.int64),
     }
 
 
+# method to instantiate an MLP model to be added in the GNN
+# (a stack of Linear+ReLU layers, with a final LayerNorm for the core network)
+def make_mlp_model(num_inputs, with_layer_norm=False):
+    layers = []
+    for _ in range(NUM_LAYERS):
+        layers += [nn.Linear(num_inputs, LATENT_SIZE), nn.ReLU()]
+        num_inputs = LATENT_SIZE
+    if with_layer_norm:
+        layers.append(nn.LayerNorm(LATENT_SIZE))
+    return nn.Sequential(*layers)
 
 
-# method to instantiate mlp model to be added in GNN
-def make_mlp_model():
-  return snt.Sequential([
-      snt.nets.MLP([LATENT_SIZE]*NUM_LAYERS, activate_final=True),
-      snt.LayerNorm(axis=-1, create_offset=True, create_scale=True)
-  ])
+# module applying independent MLPs to the node, edge and global features
+class MLPGraphIndependent(nn.Module):
+    def __init__(self, num_node_inputs, num_edge_inputs, num_global_inputs):
+        super().__init__()
+        self.node_fn = make_mlp_model(num_node_inputs)
+        self.edge_fn = make_mlp_model(num_edge_inputs)
+        self.global_fn = make_mlp_model(num_global_inputs)
 
-# defining GraphIndependent class with MLP edge, node, and global models.
-class MLPGraphIndependent(snt.Module):
-  def __init__(self, name="MLPGraphIndependent"):
-    super(MLPGraphIndependent, self).__init__(name=name)
-    self._network = gn.modules.GraphIndependent(
-        edge_model_fn = lambda: snt.nets.MLP([LATENT_SIZE]*NUM_LAYERS, activate_final=True),
-        node_model_fn = lambda: snt.nets.MLP([LATENT_SIZE]*NUM_LAYERS, activate_final=True),
-        global_model_fn = lambda: snt.nets.MLP([LATENT_SIZE]*NUM_LAYERS, activate_final=True))
+    def forward(self, node_data, edge_data, global_data):
+        return self.node_fn(node_data), self.edge_fn(edge_data), self.global_fn(global_data)
 
-  def __call__(self, inputs):
-    return self._network(inputs)
 
-# defining Graph network class with MLP edge, node, and global models.
-class MLPGraphNetwork(snt.Module):
-  def __init__(self, name="MLPGraphNetwork"):
-    super(MLPGraphNetwork, self).__init__(name=name)
-    self._network = gn.modules.GraphNetwork(
-            edge_model_fn=make_mlp_model,
-            node_model_fn=make_mlp_model,
-            global_model_fn=make_mlp_model)
+# module implementing a full graph-network block (see arXiv:1806.01261):
+#  - edge update from [edge, receiver node, sender node, global]
+#  - node update from [sum of received edges, node, global]
+#  - global update from [sum of edges, sum of nodes, global]
+class MLPGraphNetwork(nn.Module):
+    def __init__(self, num_node_inputs, num_edge_inputs, num_global_inputs):
+        super().__init__()
+        self.edge_fn = make_mlp_model(num_edge_inputs + 2 * num_node_inputs + num_global_inputs, True)
+        self.node_fn = make_mlp_model(LATENT_SIZE + num_node_inputs + num_global_inputs, True)
+        self.global_fn = make_mlp_model(2 * LATENT_SIZE + num_global_inputs, True)
 
-  def __call__(self, inputs):
-    return self._network(inputs)
+    def forward(self, node_data, edge_data, global_data, receivers, senders):
+        n_nodes = node_data.shape[0]
+        n_edges = edge_data.shape[0]
+        edge_input = torch.cat(
+            [edge_data, node_data[receivers], node_data[senders], global_data.expand(n_edges, -1)], dim=1
+        )
+        edge_output = self.edge_fn(edge_input)
+        # aggregate the updated edge data per receiving node
+        received_edges = torch.zeros(n_nodes, edge_output.shape[1]).scatter_add(
+            0, receivers.unsqueeze(1).expand(n_edges, edge_output.shape[1]), edge_output
+        )
+        node_input = torch.cat([received_edges, node_data, global_data.expand(n_nodes, -1)], dim=1)
+        node_output = self.node_fn(node_input)
+        global_input = torch.cat(
+            [edge_output.sum(0, keepdim=True), node_output.sum(0, keepdim=True), global_data], dim=1
+        )
+        global_output = self.global_fn(global_input)
+        return node_output, edge_output, global_output
+
 
 # defining a Encode-Process-Decode module for LHCb toy model
-class EncodeProcessDecode(snt.Module):
+class EncodeProcessDecode(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self._encoder = MLPGraphIndependent(node_size, edge_size, global_size)
+        self._core = MLPGraphNetwork(2 * LATENT_SIZE, 2 * LATENT_SIZE, 2 * LATENT_SIZE)
+        self._decoder = MLPGraphIndependent(LATENT_SIZE, LATENT_SIZE, LATENT_SIZE)
+        self._output_transform = MLPGraphIndependent(LATENT_SIZE, LATENT_SIZE, LATENT_SIZE)
 
-  def __init__(self,
-               name="EncodeProcessDecode"):
-    super(EncodeProcessDecode, self).__init__(name=name)
-    self._encoder = MLPGraphIndependent()
-    self._core = MLPGraphNetwork()
-    self._decoder = MLPGraphIndependent()
-    self._output_transform = MLPGraphIndependent()
-
-  def __call__(self, input_op, num_processing_steps):
-    latent = self._encoder(input_op)
-    latent0 = latent
-    output_ops = []
-    for _ in range(num_processing_steps):
-      core_input = utils_tf.concat([latent0, latent], axis=1)
-      latent = self._core(core_input)
-      decoded_op = self._decoder(latent)
-      output_ops.append(self._output_transform(decoded_op))
-    return output_ops
+    def forward(self, node_data, edge_data, global_data, receivers, senders, num_processing_steps):
+        latent = self._encoder(node_data, edge_data, global_data)
+        latent0 = latent
+        output_ops = []
+        for _ in range(num_processing_steps):
+            core_input = tuple(torch.cat([a, b], dim=1) for a, b in zip(latent0, latent))
+            latent = self._core(*core_input, receivers, senders)
+            decoded_op = self._decoder(*latent)
+            output_ops.append(self._output_transform(*decoded_op))
+        return output_ops
 
 
 ########################################################################################################
 
 # Instantiating EncodeProcessDecode Model
-
-printMemory("before instantiating")
 ep_model = EncodeProcessDecode()
-printMemory("after instantiating")
+ep_model.eval()
 
-# Initializing randomized input data with maximum number of nodes/edges
-GraphData = get_fix_graph_data_dict(num_max_nodes, num_max_edges, node_size, edge_size, global_size)
+# Export the four component models to ONNX, with dynamic node and edge counts
+num_nodes_dim = torch.export.Dim("num_nodes", min=2, max=num_max_nodes)
+num_edges_dim = torch.export.Dim("num_edges", min=2, max=num_max_edges)
 
-#input_graphs  is a tuple representing the initial data
-input_graph_data = utils_tf.data_dicts_to_graphs_tuple([GraphData])
 
-# Initializing randomized input data for core
-# note that the core network has as input a double number of features
-CoreGraphData = get_fix_graph_data_dict(num_max_nodes, num_max_edges, 2*LATENT_SIZE, 2*LATENT_SIZE, 2*LATENT_SIZE)
-input_core_graph_data = utils_tf.data_dicts_to_graphs_tuple([CoreGraphData])
+def export_component(component, name, num_features):
+    sample_input = (
+        torch.zeros(num_max_nodes, num_features[0]),
+        torch.zeros(num_max_edges, num_features[1]),
+        torch.zeros(1, num_features[2]),
+    )
+    input_names = ["node_data", "edge_data", "global_data"]
+    dynamic_shapes = {
+        "node_data": {0: num_nodes_dim},
+        "edge_data": {0: num_edges_dim},
+        "global_data": None,
+    }
+    if isinstance(component, MLPGraphNetwork):
+        sample_input += (
+            torch.randint(num_max_nodes, (num_max_edges,)),
+            torch.randint(num_max_nodes, (num_max_edges,)),
+        )
+        input_names += ["receivers", "senders"]
+        dynamic_shapes.update({"receivers": {0: num_edges_dim}, "senders": {0: num_edges_dim}})
+    torch.onnx.export(
+        component,
+        sample_input,
+        name + ".onnx",
+        input_names=input_names,
+        output_names=["node_output", "edge_output", "global_output"],
+        dynamic_shapes=dynamic_shapes,
+        dynamo=True,
+    )
 
-#initialize graph data for decoder (input is LATENT_SIZE)
-DecodeGraphData = get_fix_graph_data_dict(num_max_nodes, num_max_edges, LATENT_SIZE, LATENT_SIZE, LATENT_SIZE)
 
-# Make prediction of GNN. This will initialize the GNN with weights
-printMemory("before first eval")
-output_gn = ep_model(input_graph_data, processing_steps)
-printMemory("after first eval")
-#print("---> Input:\n",input_graph_data)
-#print("\n\n------> Input core data:\n",input_core_graph_data)
-#print("\n\n---> Output:\n",output_gn)
+export_component(ep_model._encoder, "encoder", (node_size, edge_size, global_size))
+export_component(ep_model._core, "core", (2 * LATENT_SIZE,) * 3)
+export_component(ep_model._decoder, "decoder", (LATENT_SIZE,) * 3)
+export_component(ep_model._output_transform, "output_transform", (LATENT_SIZE,) * 3)
 
-# Make SOFIE Model, the model will be made using a maximum number of nodes/edges which are inside GraphData
-
-encoder = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(ep_model._encoder._network, GraphData, filename = "encoder")
-encoder.Generate()
-encoder.OutputGenerated()
-
-core = ROOT.TMVA.Experimental.SOFIE.RModel_GNN.ParseFromMemory(ep_model._core._network, CoreGraphData, filename = "core")
-core.Generate()
-core.OutputGenerated()
-
-decoder = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(ep_model._decoder._network, DecodeGraphData, filename = "decoder")
-decoder.Generate()
-decoder.OutputGenerated()
-
-output_transform = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(ep_model._output_transform._network, DecodeGraphData, filename = "output_transform")
-output_transform.Generate()
-output_transform.OutputGenerated()
+# Make the SOFIE models: parse the ONNX files and generate the inference code
+parser = ROOT.TMVA.Experimental.SOFIE.RModelParser_ONNX()
+for name in ["encoder", "core", "decoder", "output_transform"]:
+    model = parser.Parse(name + ".onnx")
+    model.Generate()
+    model.OutputGenerated()
+    print("generated SOFIE model", name + ".hxx")
 
 ####################################################################################################################################
 
-#generate data and save in a ROOT TTree
-#
+# generate data and save in a ROOT TTree
+fileOut = ROOT.TFile.Open("graph_data.root", "RECREATE")
+tree = ROOT.TTree("gdata", "GNN data")
 
-fileOut = ROOT.TFile.Open("graph_data.root","RECREATE")
-tree = ROOT.TTree("gdata","GNN data")
-#need to store each element since annot store RTensor
+node_data = ROOT.std.vector["float"]()
+edge_data = ROOT.std.vector["float"]()
+global_data = ROOT.std.vector["float"]()
+receivers = ROOT.std.vector["int"]()
+senders = ROOT.std.vector["int"]()
 
-node_data = ROOT.std.vector['float'](num_max_nodes*node_size)
-edge_data = ROOT.std.vector['float'](num_max_edges*edge_size)
-global_data = ROOT.std.vector['float'](global_size)
-receivers =  ROOT.std.vector['int'](num_max_edges)
-senders = ROOT.std.vector['int'](num_max_edges)
-outgnn = ROOT.std.vector['float'](3)
-
-tree.Branch("node_data", "std::vector<float>" , node_data)
-tree.Branch("edge_data", "std::vector<float>" ,  edge_data)
-tree.Branch("global_data", "std::vector<float>" ,  global_data)
-tree.Branch("receivers", "std::vector<int>" ,  receivers)
-tree.Branch("senders", "std::vector<int>" ,  senders)
-
+tree.Branch("node_data", "std::vector<float>", node_data)
+tree.Branch("edge_data", "std::vector<float>", edge_data)
+tree.Branch("global_data", "std::vector<float>", global_data)
+tree.Branch("receivers", "std::vector<int>", receivers)
+tree.Branch("senders", "std::vector<int>", senders)
 
 print("\n\nSaving data in a ROOT File:")
-h1 = ROOT.TH1D("h1","GraphNet nodes output",40,1,0)
-h2 = ROOT.TH1D("h2","GraphNet edges output",40,1,0)
-h3 = ROOT.TH1D("h3","GraphNet global output",40,1,0)
+h1 = ROOT.TH1D("h1", "GNN nodes output", 40, 1, 0)
+h2 = ROOT.TH1D("h2", "GNN edges output", 40, 1, 0)
+h3 = ROOT.TH1D("h3", "GNN global output", 40, 1, 0)
 dataset = []
-for i in range(0,numevts):
+for i in range(numevts):
     graphData = get_dynamic_graph_data_dict(node_size, edge_size, global_size)
-    s_nodes = graphData['nodes'].size
-    s_edges = graphData['edges'].size
-    num_edges = graphData['edges'].shape[0]
-    tmp = ROOT.std.vector['float'](graphData['nodes'].reshape((graphData['nodes'].size)))
-    node_data.assign(tmp.begin(),tmp.end())
-    tmp = ROOT.std.vector['float'](graphData['edges'].reshape((graphData['edges'].size)))
-    edge_data.assign(tmp.begin(),tmp.end())
-    tmp = ROOT.std.vector['float'](graphData['globals'].reshape((graphData['globals'].size)))
-    global_data.assign(tmp.begin(),tmp.end())
-    #make sure dtype of graphData['receivers'] and senders is int32
-    tmp = ROOT.std.vector['int'](graphData['receivers'])
-    receivers.assign(tmp.begin(),tmp.end())
-    tmp = ROOT.std.vector['int'](graphData['senders'])
-    senders.assign(tmp.begin(),tmp.end())
-    if (i < 1 and verbose) :
-      print("Nodes - shape:",int(node_data.size()/node_size),node_size,"data: ",node_data)
-      print("Edges - shape:",num_edges, edge_size,"data: ", edge_data)
-      print("Globals : ",global_data)
-      print("Receivers : ",receivers)
-      print("Senders   : ",senders)
-#
-#evaluate graph net on these events
-#
+    node_data.assign(graphData["nodes"].flatten())
+    edge_data.assign(graphData["edges"].flatten())
+    global_data.assign(graphData["globals"].flatten())
+    receivers.assign(graphData["receivers"].astype(np.int32))
+    senders.assign(graphData["senders"].astype(np.int32))
     tree.Fill()
-    tf_graph_data = utils_tf.data_dicts_to_graphs_tuple([graphData])
-    dataset.append(tf_graph_data)
+    dataset.append(graphData)
 
 tree.Print()
 
-#do a first evaluation
-printMemory("before eval1")
-output_gnn = ep_model(dataset[0], processing_steps)
-printMemory("after eval1")
-
+# evaluate the reference PyTorch model on these events
 start = time.time()
-firstEvent = True
-for tf_graph_data in dataset:
-    output_gnn = ep_model(tf_graph_data, processing_steps)
-    output_nodes = output_gnn[-1].nodes.numpy()
-    output_edges = output_gnn[-1].edges.numpy()
-    output_globals = output_gnn[-1].globals.numpy()
-    outgnn[0] = np.mean(output_nodes)
-    outgnn[1] = np.mean(output_edges)
-    outgnn[2] = np.mean(output_globals)
-    h1.Fill(outgnn[0])
-    h2.Fill(outgnn[1])
-    h3.Fill(outgnn[2])
-    if (firstEvent and verbose) :
-      print("Output of first event")
-      print("nodes data", output_gnn[-1].nodes.numpy())
-      print("edge data", output_gnn[-1].edges.numpy())
-      print("global data", output_gnn[-1].globals.numpy())
-      firstEvent = False
-
+for graphData in dataset:
+    output_gnn = ep_model(
+        torch.from_numpy(graphData["nodes"]),
+        torch.from_numpy(graphData["edges"]),
+        torch.from_numpy(graphData["globals"]),
+        torch.from_numpy(graphData["receivers"]),
+        torch.from_numpy(graphData["senders"]),
+        processing_steps,
+    )
+    h1.Fill(np.mean(output_gnn[-1][0].numpy()))
+    h2.Fill(np.mean(output_gnn[-1][1].numpy()))
+    h3.Fill(np.mean(output_gnn[-1][2].numpy()))
 
 end = time.time()
-
-print("time to evaluate events",end-start)
-printMemory("after eval Nevts")
+print("time to evaluate ", numevts, " events", end - start)
 
 c1 = ROOT.TCanvas()
-c1.Divide(1,3)
+c1.Divide(1, 3)
 c1.cd(1)
 h1.DrawCopy()
 c1.cd(2)
