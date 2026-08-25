@@ -24,8 +24,6 @@ enum class Options {
    kNoSession = 0x1,
    kNoWeightFile = 0x2,
    kRootBinaryWeightFile = 0x4,
-   kGNN = 0x8,
-   kGNNComponent = 0x10,
 };
 
 // Optimization levels inspired by ONNXRuntime.
@@ -68,8 +66,6 @@ protected:
    std::string fGC; // generated code
    bool fUseWeightFile = true;
    bool fUseSession = true;
-   bool fIsGNN = false;
-   bool fIsGNNComponent = false;
 
 public:
    /**
@@ -79,9 +75,6 @@ public:
    RModel_Base() = default;
 
    RModel_Base(std::string name, std::string parsedtime);
-
-   // For GNN Functions usage
-   RModel_Base(std::string function_name) : fName(function_name) {}
 
    void AddBlasRoutines(std::vector<std::string> routines)
    {
@@ -124,19 +117,6 @@ public:
    void SetFilename(std::string filename) { fName = filename; }
    std::string GetFilename() { return fName; }
    const std::string & GetName() const { return fName;}
-};
-
-enum class GraphType { INVALID = 0, GNN = 1, GraphIndependent = 2 };
-
-enum class FunctionType { UPDATE = 0, AGGREGATE = 1 };
-enum class FunctionTarget { INVALID = 0, NODES = 1, EDGES = 2, GLOBALS = 3 };
-enum class FunctionReducer { INVALID = 0, SUM = 1, MEAN = 2 };
-enum class FunctionRelation { INVALID = 0, NODES_EDGES = 1, NODES_GLOBALS = 2, EDGES_GLOBALS = 3 };
-
-class RModel_GNNBase : public RModel_Base {
-public:
-   virtual void Generate() = 0;
-   virtual ~RModel_GNNBase() = default;
 };
 
 } // namespace SOFIE

@@ -764,15 +764,6 @@ inline MemoryResult OrganizeMemory(const std::vector<TensorLifeInfo> &tensorsInf
 }
 )SOFIE";
 
-// GNN_Data is the shared input/output type passed between GNN inference
-// sessions (callers build a TMVA::Experimental::SOFIE::GNN_Data and hand it to
-// infer()), so unlike the other helpers it must NOT be re-defined per model:
-// each model aliases the one shared type. The definition (and RTensor) comes
-// from TMVA/SOFIE_common.hxx, which the generated header includes in this case.
-constexpr const char *kGNNData = R"SOFIE(
-using GNN_Data = TMVA::Experimental::SOFIE::GNN_Data;
-)SOFIE";
-
 } // anonymous namespace
 
 HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &neededHelpers,
@@ -792,7 +783,6 @@ HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &nee
    const bool readTensor = need("ReadTensorFromStream");
    const bool inputDims = need("InputTensorDims");
    const bool dynMemory = need("DynamicMemory");
-   const bool gnnData = need("GNN_Data");
 
    const bool im2colFamily = im2col || im2col3d || col2im;
    const bool needConvertLength = uniBroadcast || convBias;
@@ -800,7 +790,6 @@ HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &nee
 
    // ---- collect the required standard headers -----------------------------
    std::set<std::string> stdHeaders;
-   std::set<std::string> otherHeaders;
    auto addStd = [&](std::initializer_list<const char *> hs) {
       for (auto h : hs)
          stdHeaders.insert(h);
@@ -818,16 +807,10 @@ HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &nee
       addStd({"array", "string_view", "cstddef"});
    if (dynMemory)
       addStd({"set", "unordered_map", "stdexcept", "iterator"});
-   if (gnnData)
-      // GNN_Data (and, transitively, RTensor) is provided by SOFIE_common.hxx;
-      // see kGNNData for why GNN keeps using the shared type.
-      otherHeaders.insert("TMVA/SOFIE_common.hxx");
 
    std::string includes;
    for (auto const &h : stdHeaders)
       includes += "#include <" + h + ">\n";
-   for (auto const &h : otherHeaders)
-      includes += "#include \"" + h + "\"\n";
 
    // ---- assemble the definitions ------------------------------------------
    // The order matters: a definition must precede any non-dependent use of it.
@@ -874,8 +857,6 @@ HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &nee
       defs += kInputTensorDims;
    if (dynMemory)
       defs += kDynamicMemory;
-   if (gnnData)
-      defs += kGNNData;
 
    defs += "// --- End of SOFIE inference helper functions ---\n\n";
 

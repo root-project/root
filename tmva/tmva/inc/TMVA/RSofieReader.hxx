@@ -105,7 +105,7 @@ public:
       if (verbose) std::cout << "generating the code with batch size = " << batchSize << " ...\n";
 
       parserCode += "model.Generate(TMVA::Experimental::SOFIE::Options::kDefault,"
-                 + ROOT::Math::Util::ToString(batchSize) + ", 0, " + std::to_string(verbose) + ");\n";
+                 + ROOT::Math::Util::ToString(batchSize) + ", " + std::to_string(verbose) + ");\n";
 
       parserCode += "model.OutputGenerated(\"" + modelHeader + "\");\n";
       if (verbose) {
