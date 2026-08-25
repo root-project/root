@@ -14,7 +14,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
-#include "TTF.h"
+#include "TTFhandle.h"
 #include "TMathText.h"
 #include "TMath.h"
 #include "TVirtualPad.h"
@@ -223,7 +223,7 @@ public:
       h.SetTextFont(is_cyrillic_or_cjk(character) ? root_cjk_face_number() : root_face_number(family));
       h.SetTextSize(_current_font_size[family] * _pad_scale);
 
-      auto font_face = h.GetFontFace();
+      auto font_face = (FT_Face) h.GetFontFace();
       if (!font_face || font_face->units_per_EM == 0)
          return mathtext::bounding_box_t(0, 0, 0, 0, 0, 0);
 

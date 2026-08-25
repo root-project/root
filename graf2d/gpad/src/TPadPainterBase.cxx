@@ -16,7 +16,7 @@
 #include "TVirtualPad.h"
 #include "TMathBase.h"
 #include "TError.h"
-#include "TTF.h"
+#include "TTFhandle.h"
 
 /** \class TPadPainterBase
 \ingroup gpad
@@ -104,8 +104,8 @@ void TPadPainterBase::GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a
       ttf.SetTextSize(size * GetTTFScale());
       UInt_t w, h;
       ttf.GetTextExtent(w, h, mess);
-      a = ttf.GetBox().yMax;
-      d = TMath::Abs(ttf.GetBox().yMin);
+      a = ttf.GetBoxYMax();
+      d = TMath::Abs(ttf.GetBoxYMin());
    }
 }
 
@@ -131,8 +131,8 @@ void TPadPainterBase::GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a
       ttf.SetTextSize(size * GetTTFScale());
       UInt_t w, h;
       ttf.GetTextExtent(w, h, mess);
-      a = ttf.GetBox().yMax;
-      d = TMath::Abs(ttf.GetBox().yMin);
+      a = ttf.GetBoxYMax();
+      d = TMath::Abs(ttf.GetBoxYMin());
    }
 }
 
