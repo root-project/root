@@ -22,9 +22,10 @@ This code was initially developed in the context of HIGZ and PAW
 by Olivier Couet (package X11INT).
 */
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
+// #include <ft2build.h>
+// #include FT_FREETYPE_H
+// #include FT_GLYPH_H
+
 #include "TGWin32.h"
 #include <stdio.h>
 #include <string.h>
@@ -120,9 +121,6 @@ void gdk_win32_draw_lines     (GdkDrawable    *drawable,
 
 };
 
-enum EAlign { kAlignNone, kTLeft, kTCenter, kTRight, kMLeft, kMCenter, kMRight,
-              kBLeft, kBCenter, kBRight };
-
 const int kMAXGC = 7,
           kGCline = 0, kGCmark = 1, kGCfill = 2,
           kGCtext = 3, kGCinvt = 4, kGCdash = 5, kGCpxmp = 6;
@@ -164,8 +162,6 @@ struct XWindow_t {
    std::vector<TPoint> markerShape;   ///< marker shape points
    Int_t markerLineWidth = 0;         ///< line width used for marker
    TAttText fAttText;                 ///< current text attributes
-   EAlign textAlign = kAlignNone;     ///< selected text align
-   FT_Vector  alignVector;            ///< alignment vector
 };
 
 
@@ -1111,101 +1107,6 @@ void TGWin32::QueryColors(GdkColormap *cmap, GdkColor *color, Int_t ncolors)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw FT_Bitmap bitmap to xim image at position bx,by using specified
-/// foreground color.
-
-void TGWin32::DrawFTGlyph(void *_source, ULong_t fore, ULong_t back,
-                          GdkImage *xim, Int_t bx, Int_t by)
-{
-   FT_Bitmap *source = (FT_Bitmap *) _source;
-
-   UChar_t *s = source->buffer;
-
-   if (TTFhandle::GetSmoothing()) {
-
-      GdkColor col[5];
-
-      // background kClear, i.e. transparent, we take as background color
-      // the average of the rgb values of all pixels covered by this character
-      if (back == (ULong_t) -1) {
-         const UInt_t ndots = TMath::Min((UInt_t) 50000, source->width * source->rows);
-         std::vector<GdkColor> bcol(ndots);
-         if (!bcol.size())
-            return;
-
-         UInt_t dotcnt = 0;
-         for (unsigned y = 0; y < source->rows; y++) {
-            for (unsigned x = 0; x < source->width; x++) {
-               bcol[dotcnt].pixel = GetPixelImage((Drawable_t)xim, bx + x, by + y);
-               if (++dotcnt >= bcol.size())
-                  break;
-            }
-         }
-         QueryColors(fColormap, bcol.data(), bcol.size());
-         ULong_t r = 0, g = 0, b = 0;
-         for (auto &bc : bcol) {
-            r += bc.red;
-            g += bc.green;
-            b += bc.blue;
-         }
-         col[0].red   = (UShort_t) (r / bcol.size());
-         col[0].green = (UShort_t) (g / bcol.size());
-         col[0].blue  = (UShort_t) (b / bcol.size());
-      } else {
-         // query background color
-         col[0].pixel = back;
-         QueryColors(fColormap, &col[0], 1);
-      }
-
-      // query foreground color
-      col[4].pixel = fore;
-      QueryColors(fColormap, &col[4], 1);
-
-      // calculate the 3 smooting colors
-      // (interpolation between fore- and background colors)
-
-      // interpolate between fore and backgound colors
-      for (int x = 3; x > 0; x--) {
-         col[x].red   = (col[4].red  *x + col[0].red  *(4-x)) /4;
-         col[x].green = (col[4].green*x + col[0].green*(4-x)) /4;
-         col[x].blue  = (col[4].blue *x + col[0].blue *(4-x)) /4;
-         if (!AllocColor(fColormap, &col[x])) {
-            Warning("DrawImage", "cannot allocate smoothing color");
-            col[x].pixel = col[x+1].pixel;
-         }
-      }
-
-      // put smoothed character, character pixmap values are an index
-      // into the 5 colors used for aliasing (4 = foreground, 0 = background)
-      for (unsigned y = 0; y < source->rows; y++) {
-         for (unsigned x = 0; x < source->width; x++) {
-            UChar_t d = (((*s++ & 0xff) + 10) * 5) / 256;
-            if (d > 4) d = 4;
-            if (d > 0)
-               PutPixel((Drawable_t)xim, bx + x, by + y, col[d].pixel);
-         }
-      }
-   } else {
-      // no smoothing, just put character using foreground color
-      UChar_t* row = s;
-      for (unsigned y = 0; y < source->rows; y++) {
-         unsigned n = 0;
-         s = row;
-         UChar_t d;
-         for (unsigned x = 0; x < source->width; x++) {
-            if (n == 0)
-               d = *s++;
-            if (TESTBIT(d, 7-n))
-               PutPixel((Drawable_t)xim, bx + x, by + y, fore);
-            if (++n == kBitsPerByte)
-               n = 0;
-         }
-         row += source->pitch;
-      }
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Draw text using TrueType fonts. If TrueType fonts are not available the
 /// text is drawn with TGWin32::DrawText.
 
@@ -1224,6 +1125,10 @@ void TGWin32::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle
    if (!ctxt)
       return;
 
+   UInt_t width = 0, height = 0;
+   Int_t xy;
+   GetWindowSize((Drawable_t) ctxt->drawing, xy, xy, width, height);
+
    TTFhandle ttf;
    ttf.SetTextFont(ctxt->fAttText.GetTextFont());
    ttf.SetTextSize(ctxt->fAttText.GetTextSize());
@@ -1232,50 +1137,8 @@ void TGWin32::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle
 
    ttf.LayoutGlyphs();
 
-   auto align = ctxt->textAlign;
-
-   // vertical alignment
-   if (align == kTLeft || align == kTCenter || align == kTRight) {
-      ctxt->alignVector.y = ttf.GetAscent();
-   } else if (align == kMLeft || align == kMCenter || align == kMRight) {
-      ctxt->alignVector.y = ttf.GetAscent() / 2;
-   } else {
-      ctxt->alignVector.y = 0;
-   }
-   // horizontal alignment
-   if (align == kTRight || align == kMRight || align == kBRight) {
-      ctxt->alignVector.x = ttf.GetWidth();
-   } else if (align == kTCenter || align == kMCenter || align == kBCenter) {
-      ctxt->alignVector.x = ttf.GetWidth()/2;
-   } else {
-      ctxt->alignVector.x = 0;
-   }
-
-   FT_Vector_Transform(&ctxt->alignVector, ttf.GetRotMatrix());
-   ctxt->alignVector.x = ctxt->alignVector.x >> 6;
-   ctxt->alignVector.y = ctxt->alignVector.y >> 6;
-
-   // compute the size and position of the XImage that will contain the text
-   Int_t Xoff = TMath::Max(0, (Int_t) -ttf.GetBox().xMin);
-   Int_t Yoff = TMath::Max(0, (Int_t) -ttf.GetBox().yMin);
-   Int_t w    = ttf.GetBox().xMax + Xoff;
-   Int_t h    = ttf.GetBox().yMax + Yoff;
-   Int_t x1   = x - Xoff - ctxt->alignVector.x;
-   Int_t y1   = y + Yoff + ctxt->alignVector.y - h;
-
-   UInt_t width = 0, height = 0;
-   Int_t xy;
-   GetWindowSize((Drawable_t) ctxt->drawing, xy, xy, width, height);
-
-   // If w or h is 0, very likely the string is only blank characters
-   if (w <= 0 || h <= 0)
-      return;
-
-   // If string falls outside window, there is probably no need to draw it.
-   if (x1 + w <= 0 || x1 >= (Int_t)width || y1 + h <= 0 || y1 >= (Int_t) height)
-      return;
-
-   DrawTTFglyphsW(wctxt, x1, y1, ttf, mode);
+   if (ttf.ApplyAlignRotate(x, y, ctxt->fAttText.GetTextAlign(), width, height))
+      DrawTTFglyphsW(wctxt, x, y, ttf, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1287,10 +1150,8 @@ void TGWin32::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle &
    if (!ctxt)
       return;
 
-   Int_t Xoff = TMath::Max(0, (Int_t) -ttf.GetBox().xMin);
-   Int_t Yoff = TMath::Max(0, (Int_t) -ttf.GetBox().yMin);
-   Int_t w    = ttf.GetBox().xMax + Xoff;
-   Int_t h    = ttf.GetBox().yMax + Yoff;
+   Int_t w    = ttf.GetGlyphsWidth();
+   Int_t h    = ttf.GetGlyphsHeight();
 
    // create the XImage that will contain the text
    UInt_t depth = fDepth;
@@ -1301,7 +1162,7 @@ void TGWin32::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle &
 //   memset(xim->data, 0, xim->bytes_per_line * h);
 
    ULong_t   pixel;
-   ULong_t   bg;
+   ULong_t   back;
    GdkGCValues gcvals;
 
    gdk_gc_get_values(ctxt->fGClist[kGCtext], &gcvals);
@@ -1328,7 +1189,6 @@ void TGWin32::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle &
 
       gdk_image_unref((GdkImage *)bim);
 
-      bg = (ULong_t) -1;
    } else {
       // if mode == kOpaque its simple, we just draw the background
 
@@ -1338,29 +1198,110 @@ void TGWin32::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle &
       } else {
          pixel = GetPixelImage((Drawable_t)bim, 0, 0);
       }
-      Int_t xo = 0, yo = 0;
-      if (x1 < 0) xo = -x1;
-      if (y1 < 0) yo = -y1;
+      Int_t xo = x1 < 0 ? -x1 : 0;
+      Int_t yo = y1 < 0 ? -y1 : 0;
 
       for (int yp = 0; yp < h; yp++) {
-         for (int xp = 0; xp < (int) w; xp++) {
+         for (int xp = 0; xp < w; xp++) {
             PutPixel((Drawable_t)xim, xo+xp, yo+yp, pixel);
          }
       }
       if (bim) {
          gdk_image_unref((GdkImage *)bim);
-         bg = (ULong_t) -1;
+         mode = kClear;
       } else {
-         bg = pixel;
+         back = pixel;
       }
    }
 
    // paint the glyphs in the XImage
-   for (UInt_t n = 0; n < ttf.GetNumGlyphs(); n++) {
-      if (auto bitmap = ttf.GetGlyphBitmap(n)) {
-         Int_t bx = bitmap->left + Xoff;
-         Int_t by = h - bitmap->top - Yoff;
-         DrawFTGlyph(&bitmap->bitmap, gcvals.foreground.pixel, bg, xim, bx, by);
+   for (UInt_t nglyph = 0; nglyph < ttf.GetNumGlyphs(); nglyph++) {
+      Int_t bx = 0, by = 0;
+      UChar_t *buffer = nullptr;
+      UInt_t width = 0, rows = 0, pitch = 0;
+      if (!ttf.GetGlyphData(nglyph, bx, by, buffer, width, rows, pitch))
+         continue;
+
+      if (ttf.GetSmoothing()) {
+
+         GdkColor col[5];
+
+         // background kClear, i.e. transparent, we take as background color
+         // the average of the rgb values of all pixels covered by this character
+         if (mode == kClear) {
+            const UInt_t ndots = TMath::Min((UInt_t) 50000, width * rows);
+            std::vector<GdkColor> bcol(ndots);
+            if (!bcol.size())
+               return;
+
+            for (UInt_t y = 0, dotcnt = 0; y < rows; y++)
+               for (UInt_t x = 0; (x < width) && (dotcnt < bcol.size()); x++)
+                  bcol[dotcnt++].pixel = GetPixelImage((Drawable_t)xim, bx + x, by + y);
+            QueryColors(fColormap, bcol.data(), bcol.size());
+            ULong_t r = 0, g = 0, b = 0;
+            for (auto &bc : bcol) {
+               r += bc.red;
+               g += bc.green;
+               b += bc.blue;
+            }
+            col[0].red   = (UShort_t) (r / bcol.size());
+            col[0].green = (UShort_t) (g / bcol.size());
+            col[0].blue  = (UShort_t) (b / bcol.size());
+         } else {
+            // query background color
+            col[0].pixel = back;
+            QueryColors(fColormap, &col[0], 1);
+         }
+
+         // query foreground color
+         col[4].pixel = gcvals.foreground.pixel;
+         QueryColors(fColormap, &col[4], 1);
+
+         // calculate the 3 smooting colors
+         // (interpolation between fore- and background colors)
+
+         // interpolate between fore and backgound colors
+         for (int x = 3; x > 0; x--) {
+            col[x].red   = (col[4].red  *x + col[0].red  *(4-x)) /4;
+            col[x].green = (col[4].green*x + col[0].green*(4-x)) /4;
+            col[x].blue  = (col[4].blue *x + col[0].blue *(4-x)) /4;
+            if (!AllocColor(fColormap, &col[x])) {
+               Warning("DrawImage", "cannot allocate smoothing color");
+               col[x].pixel = col[x+1].pixel;
+            }
+         }
+
+         // put smoothed character, character pixmap values are an index
+         // into the 5 colors used for aliasing (4 = foreground, 0 = background)
+         UChar_t* row = buffer;
+         for (unsigned y = 0; y < rows; y++) {
+            UChar_t *s = row;
+            for (unsigned x = 0; x < width; x++) {
+               UChar_t d = (((*s++ & 0xff) + 10) * 5) / 256;
+               if (d > 4)
+                  d = 4;
+               if (d > 0)
+                  PutPixel((Drawable_t)xim, bx + x, by + y, col[d].pixel);
+            }
+            row += pitch;
+         }
+      } else {
+         // no smoothing, just put character using foreground color
+         UChar_t* row = buffer;
+         for (unsigned y = 0; y < rows; y++) {
+            unsigned n = 0;
+            UChar_t *s = row;
+            UChar_t d;
+            for (unsigned x = 0; x < width; x++) {
+               if (n == 0)
+                  d = *s++;
+               if (TESTBIT(d, 7-n))
+                  PutPixel((Drawable_t)xim, bx + x, by + y, gcvals.foreground.pixel);
+               if (++n == kBitsPerByte)
+                  n = 0;
+            }
+            row += pitch;
+         }
       }
    }
 
@@ -3376,54 +3317,6 @@ void TGWin32::SetAttText(WinContext_t wctxt, const TAttText &att)
    auto ctxt = (XWindow_t *) wctxt;
    if (!ctxt)
       return;
-
-   Int_t txalh = att.GetTextAlign() / 10;
-   Int_t txalv = att.GetTextAlign() % 10;
-
-   ctxt->textAlign = kAlignNone;
-
-   switch (txalh) {
-      case 0 :
-      case 1 :
-         switch (txalv) {  //left
-            case 1 :
-               ctxt->textAlign = kBLeft;   //bottom
-               break;
-            case 2 :
-               ctxt->textAlign = kMLeft;   //middle
-               break;
-            case 3 :
-               ctxt->textAlign = kTLeft;   //top
-               break;
-         }
-         break;
-      case 2 :
-         switch (txalv) { //center
-            case 1 :
-               ctxt->textAlign = kBCenter;   //bottom
-               break;
-            case 2 :
-               ctxt->textAlign = kMCenter;   //middle
-               break;
-            case 3 :
-               ctxt->textAlign = kTCenter;   //top
-               break;
-         }
-         break;
-      case 3 :
-         switch (txalv) {  //right
-            case 1 :
-               ctxt->textAlign = kBRight;   //bottom
-               break;
-            case 2 :
-               ctxt->textAlign = kMRight;   //center
-               break;
-            case 3 :
-               ctxt->textAlign = kTRight;   //top
-               break;
-         }
-         break;
-   }
 
    SetColor(ctxt, ctxt->fGClist[kGCtext], att.GetTextColor());
 
