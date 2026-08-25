@@ -124,6 +124,11 @@ if (BLAS_FOUND)
   endif()
 endif()
 
+# Unit tests for the ONNX parser layer: the tests write the model files
+# themselves as hand-crafted protobuf wire format, so they need no Python
+ROOT_ADD_GTEST(TestSofieParser TestSofieParser.cxx
+  LIBRARIES Core ROOTTMVASofie ROOTTMVASofieParser)
+
 if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND NOT broken_onnx)
   # ModelGeneratorUtils.py holds the code shared by the generators below, so it
   # has to be copied next to them.

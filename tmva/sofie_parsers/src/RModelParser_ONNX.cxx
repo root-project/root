@@ -253,8 +253,6 @@ std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorPr
 
    }  else {
       // case of external data
-      if (fVerbose)
-         std::cout << "Initialized data are stored externally in file " << fDataFileName;
 
       // read now tensor from file
       std::string location;
@@ -265,17 +263,33 @@ std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorPr
          else if (kv.key() == "offset") offset = std::stoull(kv.value());
          else if (kv.key() == "length") buffer_size = std::stoull(kv.value());
       }
+
+      // an explicitly set data file (SetExternalDataFile) takes precedence;
+      // otherwise use the location stored in the model, which is a path
+      // relative to the model directory, and as a last resort the
+      // conventional <model file>.data
+      std::string dataFileName = fDataFileName;
+      if (dataFileName.empty())
+         dataFileName = location.empty() ? fDefaultDataFileName : fModelDirectory + location;
+      if (dataFileName.empty())
+         throw std::runtime_error("TMVA::SOFIE ONNX : tensor " + tensorproto->name() +
+                                  " has external data but no data file location is available");
+
       if (fVerbose)
-         std::cout << " at location " << location << " offset " << offset << " and with length " << buffer_size << std::endl;
+         std::cout << "Initialized data are stored externally in file " << dataFileName
+                   << " at location " << location << " offset " << offset << " and with length " << buffer_size << std::endl;
 
       if (buffer_size != tensor_size)
          throw std::runtime_error("TMVA::SOFIE ONNX : invalid stored data size vs tensor size");
 
-      // open the data file if needed
+      // open the data file if needed (a previous tensor may have opened a different one)
+      if (fDataFile.is_open() && fOpenedDataFileName != dataFileName)
+         fDataFile.close();
       if (!fDataFile.is_open()) {
-         fDataFile.open(fDataFileName, std::ios::binary);
+         fDataFile.open(dataFileName, std::ios::binary);
          if (!fDataFile.is_open())
-            throw std::runtime_error("TMVA::SOFIE ONNX:  error reading external weight ONNX data file " + fDataFileName);
+            throw std::runtime_error("TMVA::SOFIE ONNX:  error reading external weight ONNX data file " + dataFileName);
+         fOpenedDataFileName = dataFileName;
       }
 
       fDataFile.seekg(offset);
@@ -539,10 +553,12 @@ RModel RModelParser_ONNX::Parse(std::string const &filename, bool verbose)
       filename_nodir = (filename.substr(isep + 1, filename.length() - isep));
    }
 
-   if (fDataFileName.empty() ) fDataFileName = filename + ".data";
+   fModelDirectory = (isep != std::string::npos) ? filename.substr(0, isep + 1) : "";
+   fDefaultDataFileName = filename + ".data";
 
    RModel rmodel(filename_nodir, parsetime);
    ParseONNXGraph(rmodel, graph, filename_nodir);
+   ResetExternalDataState();
    return rmodel;
 }
 
@@ -564,7 +580,21 @@ RModel RModelParser_ONNX::Parse(std::istream &input, std::string const &name, bo
 
    RModel rmodel(name, parsetime);
    ParseONNXGraph(rmodel, graph, name);
+   ResetExternalDataState();
    return rmodel;
+}
+
+// Reset the state used to read external weight data, so that the next Parse
+// call does not pick up the data file of a previously parsed model. The
+// file name set with SetExternalDataFile is valid for a single Parse call.
+void RModelParser_ONNX::ResetExternalDataState()
+{
+   fDataFileName.clear();
+   fModelDirectory.clear();
+   fDefaultDataFileName.clear();
+   fOpenedDataFileName.clear();
+   if (fDataFile.is_open())
+      fDataFile.close();
 }
 
 std::unique_ptr<onnx::ModelProto> RModelParser_ONNX::LoadModel(const std::string &filename) {
