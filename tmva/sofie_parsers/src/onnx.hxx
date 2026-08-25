@@ -20,6 +20,18 @@
 #include <string>
 #include <vector>
 
+// The messages live in TMVA::Experimental::SOFIE::onnx, not in the global onnx
+// namespace the protoc-generated headers use. The real ONNX C++ library ships
+// inside the `onnx` Python wheel, and when that extension module is loaded in
+// the same process (as any PyTorch ONNX export does) its exported symbols
+// interpose ours on ELF platforms: SOFIE would then call protobuf's
+// onnx::TensorProto destructor on an object with this file's layout.
+// Unqualified `onnx::` inside namespace SOFIE still names these classes, so
+// the parser sources need no change.
+namespace TMVA {
+namespace Experimental {
+namespace SOFIE {
+
 namespace onnx {
 
 // ---------------------------------------------------------------------------
@@ -659,5 +671,9 @@ private:
 };
 
 } // namespace onnx
+
+} // namespace SOFIE
+} // namespace Experimental
+} // namespace TMVA
 
 #endif
