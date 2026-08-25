@@ -523,81 +523,6 @@ extern "C" void sgemm_(const char * transa, const char * transb, const int * m, 
 }//BLAS
 
 
-struct GNN_Data {
-      RTensor<float> node_data;      // the node feature data, tensor with shape (num_nodes, num_node_features)
-      RTensor<float> edge_data;      // the edge feature data, tensor with shape (num_edges, num_edge_features)
-      RTensor<float> global_data;    // the global features, tensor with shape (1, num_global_features)
-      RTensor<int> edge_index;       // the edge index (receivers and senders for each edge), tensor with shape (2, num_edges)
-                                     // edge_index[0,:] are the receivers and edge_index[1,:] are the senders
-
-
-      // need to have default constructor since RTensor has not one
-      GNN_Data(): node_data(RTensor<float>({})), edge_data(RTensor<float>({})), global_data(RTensor<float>({})), edge_index(RTensor<int>({})) {}
-
-};
-
-template<typename T>
-TMVA::Experimental::RTensor<T> Concatenate( TMVA::Experimental::RTensor<T> & t1,  TMVA::Experimental::RTensor<T> & t2, int axis = 0)
-{
-   // concatenate tensor along axis. Shape must be the same except in the dimension of the concatenated axis
-   if (t1.GetMemoryLayout() != t2.GetMemoryLayout())
-      throw std::runtime_error("TMVA RTensor Concatenate - tensors have different memory layout");
-   auto & shape1 = t1.GetShape();
-   auto & shape2 = t2.GetShape();
-   if (t1.GetSize()/shape1[axis] != t2.GetSize()/shape2[axis]) {
-      std::cout << "axis " << axis << " sizes " << t1.GetSize() << " " << t2.GetSize() << "  ";
-      std::cout << "shape 1 : " << ConvertShapeToString(t1.GetShape());
-      std::cout << " shape 2 : " << ConvertShapeToString(t2.GetShape()) << std::endl;
-      throw std::runtime_error("TMVA RTensor Concatenate - tensors have incompatible shapes");
-   }
-   std::vector<size_t> outShape = shape1;
-   outShape[axis] = shape1[axis] + shape2[axis];
-   TMVA::Experimental::RTensor<T> tout(outShape, t1.GetMemoryLayout());
-   if (t1.GetMemoryLayout() == TMVA::Experimental::MemoryLayout::ColumnMajor) {
-      throw std::runtime_error("TMVA RTensor Concatenate is not yet supported for column major tensors");
-   }
-
-   auto & stride1 = t1.GetStrides();
-   auto & stride2 = t2.GetStrides();
-   auto & outStride = tout.GetStrides();
-
-   size_t s1 = (axis > 0) ? stride1[axis-1] : t1.GetSize();  // block size to copy from first tensor
-   size_t s2 = (axis > 0) ? stride2[axis-1] : t2.GetSize();  // block size to copy from second tensor
-   size_t sout = (axis > 0) ? outStride[axis-1] : tout.GetSize();
-   size_t nb = t1.GetSize()/s1;
-   for (size_t i = 0; i < nb; i++) {
-      std::copy(t1.GetData() + i*s1, t1.GetData() + (i+1)*s1, tout.GetData() + i * sout );
-      std::copy(t2.GetData() + i*s2, t2.GetData() + (i+1)*s2, tout.GetData() + i * sout + s1 );
-   }
-
-   return tout;
-}
-
-
-inline GNN_Data Concatenate(GNN_Data & data1, GNN_Data & data2, int axis = 0) {
-   GNN_Data out;
-   out.node_data = Concatenate(data1.node_data,data2.node_data, axis);
-   out.edge_data = Concatenate(data1.edge_data,data2.edge_data, axis);
-   out.global_data = Concatenate<float>(data1.global_data,data2.global_data, axis-1);
-   // assume sender/receivers of data1 and data2 are the same
-   out.edge_index = data1.edge_index.Copy();
-   return out;
-}
-
-inline GNN_Data Copy(const GNN_Data & data) {
-   GNN_Data out;
-   out.node_data = RTensor<float>(data.node_data.GetShape());
-   out.edge_data = RTensor<float>(data.edge_data.GetShape());
-   out.global_data = RTensor<float>(data.global_data.GetShape());
-   out.edge_index = RTensor<int>(data.edge_index.GetShape());
-   std::copy(data.node_data.GetData(), data.node_data.GetData()+ data.node_data.GetSize(), out.node_data.GetData());
-   std::copy(data.edge_data.GetData(), data.edge_data.GetData()+ data.edge_data.GetSize(), out.edge_data.GetData());
-   std::copy(data.global_data.GetData(), data.global_data.GetData()+ data.global_data.GetSize(), out.global_data.GetData());
-   std::copy(data.edge_index.GetData(), data.edge_index.GetData()+ data.edge_index.GetSize(), out.edge_index.GetData());
-   return out;
-}
-
-
 //Utility functions to generate code
 void EmitNestedLoops(std::stringstream &out, size_t loopRank, const std::vector<Dim> shape);
 void CloseNestedLoops(std::stringstream &out, size_t loopRank);
@@ -618,7 +543,7 @@ struct HelperFunctionsCode {
 /// their inter-dependencies. Recognised keys are: "Im2col", "Im2col_3d",
 /// "col2im", "UnidirectionalBroadcast", "BroadcastConvBias", "Gemm_Call",
 /// "Relu", "Fill", "Copy", "ReadTensorFromStream", "InputTensorDims",
-/// "DynamicMemory" and "GNN_Data".
+/// "DynamicMemory".
 ///
 /// `modelNamespace` (e.g. "TMVA_SOFIE_MyModel") is the generated model namespace;
 /// the Clad pullbacks are emitted into clad::custom_derivatives::<modelNamespace>
