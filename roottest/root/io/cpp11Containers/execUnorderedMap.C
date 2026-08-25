@@ -71,31 +71,31 @@ void check(const char* testName){
    gRandom->SetSeed(1);
    {
       printf("    * Write\n");
-      TFile f(binFilename.c_str(),"UPDATE");
-      TTree t("t","Test Tree");
-      t.Branch("doubleCont_split", &doubleCont,16000,99);
-      t.Branch("doubleCont", &doubleCont,16000,0);
-      t.Branch("histoCont_split", &histoCont,16000,99);
-      t.Branch("histoCont", &histoCont,16000,0);
-      t.Branch("vecHistoCont_split", &vecHistoCont,16000,99);
-      t.Branch("vecHistoCont", &vecHistoCont,16000,0);
-      t.Branch("contHistoVec_split", &contHistoVec,16000,99);
-      t.Branch("contHistoVec", &contHistoVec,16000,0);
+      auto f = std::make_unique<TFile>(binFilename.c_str(), "UPDATE");
+      auto t = std::make_unique<TTree>("t", "Test Tree");
+      t->Branch("doubleCont_split", &doubleCont, 16000, 99);
+      t->Branch("doubleCont", &doubleCont, 16000, 0);
+      t->Branch("histoCont_split", &histoCont, 16000, 99);
+      t->Branch("histoCont", &histoCont, 16000, 0);
+      t->Branch("vecHistoCont_split", &vecHistoCont, 16000, 99);
+      t->Branch("vecHistoCont", &vecHistoCont, 16000, 0);
+      t->Branch("contHistoVec_split", &contHistoVec, 16000, 99);
+      t->Branch("contHistoVec", &contHistoVec, 16000, 0);
 
       for (int i=0;i<NEvts;++i){
          randomizeAssoCont(doubleCont);
          fillHistoAssoCont(histoCont,10);
          fillHistoNestedAssoCont(contHistoVec,10);
-         t.Fill();
+         t->Fill();
       }
-      t.Write();
+      f->Write();
    }
    // And Read
    gRandom->SetSeed(1);
    {
       printf("    * Read\n");
-      TFile f(binFilename.c_str());
-      TTreeReader reader("t", &f);
+      auto f = std::make_unique<TFile>(binFilename.c_str());
+      TTreeReader reader("t", f.get());
       TTreeReaderValue<decltype(doubleCont)> rdoubleCont_split(reader, "doubleCont_split");
       TTreeReaderValue<decltype(doubleCont)> rdoubleCont(reader, "doubleCont");
       TTreeReaderValue<decltype(histoCont)> rhistoCont_split(reader, "histoCont_split");
