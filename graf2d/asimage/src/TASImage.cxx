@@ -78,7 +78,7 @@ ROOT tutorials: `$ROOTSYS/tutorials/visualisation/image/`
 #include "TStyle.h"
 #include "TSystem.h"
 #include "TText.h"
-#include "TTF.h"
+#include "TTFhandle.h"
 #include "TVectorD.h"
 #include "TVirtualPad.h"
 #include "TVirtualPadPainter.h"
@@ -5619,7 +5619,6 @@ void TASImage::DrawFTGlyphs(TTFhandle &ttf, UInt_t color, Int_t px, Int_t py, TV
    UInt_t col[5];
    Bool_t has_alpha = (color & 0xff000000) != 0xff000000;
 
-   Bool_t had_smoothing = ttf.GetSmoothing();
    ttf.SetSmoothing(kTRUE);
 
    for (UInt_t nglyph = 0; nglyph < ttf.GetNumGlyphs(); nglyph++) {
@@ -5707,8 +5706,6 @@ void TASImage::DrawFTGlyphs(TTFhandle &ttf, UInt_t color, Int_t px, Int_t py, TV
          yy += fImage->width;
       }
    }
-
-   ttf.SetSmoothing(had_smoothing);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
