@@ -1228,6 +1228,18 @@ TEST(ONNX, GatherNegativeIndices)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
+// The gather indices are a graph input here, so the generated code receives
+// them as an "int64_t const*": correcting the negative ones must not write
+// back into the indices tensor, otherwise the model does not even compile.
+TEST(ONNX, GatherRuntimeNegativeIndices)
+{
+   SofieReference ref = readReference("GatherRuntimeNegativeIndices");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "GatherRuntimeNegativeIndices", ref.f32("input0"), ref.i64("input1"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 TEST(ONNX, Slice)
 {
    SofieReference ref = readReference("Slice");

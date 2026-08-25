@@ -186,16 +186,6 @@ public:
       auto stridesY = UTILITY::ComputeStrideFromShape(fShapeY);
       auto stridesIndices = UTILITY::ComputeStrideFromShape(fShapeIndices);
 
-      // case fIndices is not known we need to correct for negative axis indices at run-time
-      if (fIndices.empty()) {
-         auto indicesLength = ConvertDimShapeToLength(fShapeIndices);
-         out << SP << "// correct in case of negative gather indices\n";
-         out << SP << "for (size_t i = 0; i < " << indicesLength << "; i++){\n";
-         out << SP << SP << "if (tensor_" << fNIndices << "[i] < 0)\n";
-         out << SP << SP << SP <<  "tensor_" << fNIndices << "[i] += " << fShapeX[fAttrAxis] << ";\n";
-         out << SP << "}\n";
-      }
-
       // Fill the output Y[j_0, j_1, ..., j_{axis - 1}, i_0, i_1, ..., i_{q - 1}, j_{axis + 1}, ..., j_{r - 1}]
       // [0 ... axis) [axis ... axis + q) [axis + q ... q + r - 1)
       // iterate in [0 ... axis) [0 ... q) [axis ... r - 1)
@@ -260,8 +250,16 @@ public:
       out << ";\n";
 
       // K
+      // when the indices are not a known constant, correct at the read site for
+      // possible negative values (the indices tensor may be a const model input)
       for (size_t k = 0; k < q + r; k++) out << SP;
-      out << "size_t k = static_cast<size_t>(" << "tensor_" << fNIndices << "[i_index]" << ");\n";
+      if (fIndices.empty()) {
+         out << "int64_t k_i = static_cast<int64_t>(tensor_" << fNIndices << "[i_index]);\n";
+         for (size_t k = 0; k < q + r; k++) out << SP;
+         out << "size_t k = static_cast<size_t>(k_i < 0 ? k_i + " << fShapeX[fAttrAxis] << " : k_i);\n";
+      } else {
+         out << "size_t k = static_cast<size_t>(" << "tensor_" << fNIndices << "[i_index]" << ");\n";
+      }
       // Input
       for (size_t k = 0; k < q + r; k++) out << SP;
       out << "size_t x_index = k";
