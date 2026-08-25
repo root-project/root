@@ -33,7 +33,6 @@ in ROOT7 TTFhandle will be renamed into TTF class
 const Float_t kScale = 0.93376068;
 
 Bool_t TTFhandle::fgHinting = kFALSE;
-Bool_t TTFhandle::fgSmoothing = kTRUE;
 
 struct TTFhandle::GlyphStruct {
 public:
@@ -741,12 +740,6 @@ Bool_t TTFhandle::GetHinting()
    return fgHinting;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-Bool_t TTFhandle::GetSmoothing()
-{
-   return fgSmoothing;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -755,10 +748,4 @@ void TTFhandle::SetHinting(Bool_t state)
    fgHinting = state;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-void TTFhandle::SetSmoothing(Bool_t state)
-{
-   fgSmoothing = state;
-}
 
