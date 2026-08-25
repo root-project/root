@@ -32,12 +32,13 @@ class TTFhandle {
       long xMin = 0, yMin = 0, xMax = 0, yMax = 0; ///< boundaries
       std::vector<GlyphStruct> fGlyphs;          ///< glyphs
       Bool_t         fKerning = kTRUE;           ///< use kerning (true by default)
+      Bool_t         fSmoothing = kTRUE;         ///< use anti-aliasing (true when >8 planes, false otherwise)
       long           fRotationXX = 0, fRotationXY = 0;
       Int_t          fTBlankW = 0;               ///< trailing blanks width
       Int_t          fWidth = 0;                 ///< string width, used to compute X alignment
 
       static  Bool_t fgHinting;                   ///< use hinting (false by default)
-      static  Bool_t fgSmoothing;                 ///< use anti-aliasing (true when >8 planes, false otherwise)
+
 
       UInt_t         CharToUnicode(UInt_t code);
       void           ComputeTrailingBlanksWidth(Int_t n);
@@ -57,6 +58,10 @@ class TTFhandle {
       UInt_t         GetNumGlyphs() const;
       void*          GetFontFace() const;
       Int_t          GetAscent() const { return fAscent; }
+
+      void           SetSmoothing(Bool_t state) { fSmoothing = state;  }
+      Bool_t         GetSmoothing() const { return fSmoothing; }
+
       Bool_t         GetKerning() const { return fKerning; }
       Int_t          GetTrailingBlanksWidth() const { return fTBlankW; }
       Int_t          GetWidth() const { return fWidth; }
@@ -89,9 +94,7 @@ class TTFhandle {
 
       static Bool_t  Init();
       static Bool_t  GetHinting();
-      static Bool_t  GetSmoothing();
       static void    SetHinting(Bool_t state);
-      static void    SetSmoothing(Bool_t state);
 
    ClassDef(TTFhandle, 0)  // Dynamic interface to TTF
 

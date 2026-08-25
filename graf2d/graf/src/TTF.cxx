@@ -83,7 +83,7 @@ Bool_t TTF::GetKerning()
 
 Bool_t TTF::GetSmoothing()
 {
-   return TTFhandle::GetSmoothing();
+   return fgHandle ? fgHandle->GetSmoothing() : kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,7 +202,8 @@ void TTF::SetKerning(Bool_t state)
 
 void TTF::SetSmoothing(Bool_t state)
 {
-   TTFhandle::SetSmoothing(state);
+   Init();
+   fgHandle->SetSmoothing(state);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

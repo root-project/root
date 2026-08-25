@@ -42,7 +42,7 @@ by Olivier Couet (package X11INT).
 #include "TApplication.h"
 #include "TColor.h"
 #include "TPoint.h"
-#include "TTF.h"
+#include "TTFhandle.h"
 #include "TMath.h"
 #include "TStorage.h"
 #include "TStyle.h"
@@ -1044,8 +1044,6 @@ Int_t TGWin32::OpenDisplay(const char *dpyName)
    SetName("Win32TTF");
    SetTitle("ROOT interface to Win32 with TrueType fonts");
 
-   TTFhandle::SetSmoothing(fDepth > 8);
-
    TGWin32VirtualXProxy::fMaxResponseTime = 1000;
    fHasTTFonts = TTFhandle::Init();
    return 0;
@@ -1130,6 +1128,7 @@ void TGWin32::DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle
    GetWindowSize((Drawable_t) ctxt->drawing, xy, xy, width, height);
 
    TTFhandle ttf;
+   ttf.SetSmoothing(fDepth > 8);
    ttf.SetTextFont(ctxt->fAttText.GetTextFont());
    ttf.SetTextSize(ctxt->fAttText.GetTextSize());
    ttf.SetRotationMatrix(angle);
