@@ -8,17 +8,17 @@
 #include <unordered_map>
 #include <fstream>
 
-// forward declaration
+namespace TMVA {
+namespace Experimental {
+namespace SOFIE {
+
+// forward declaration of the messages defined in sofie_parsers/src/onnx.hxx
 namespace onnx {
 class NodeProto;
 class GraphProto;
 class ModelProto;
 class TensorProto;
 } // namespace onnx
-
-namespace TMVA {
-namespace Experimental {
-namespace SOFIE {
 
 class RModelParser_ONNX;
 
