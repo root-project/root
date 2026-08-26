@@ -11,7 +11,6 @@
 
 #ifdef WIN32
 #include "RVersion.h"
-#include "strlcpy.h"
 #include <wincodec.h>
 #include <tchar.h>
 #include <iostream>
