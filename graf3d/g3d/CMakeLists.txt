@@ -27,10 +27,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf3d
     TPolyLine3D.cxx
     TPolyMarker3D.cxx
     TView3D.cxx
-    X3DBuffer.c
   DEPENDENCIES
     Gpad
     Graf
     Hist
     MathCore
+  LIBRARIES
+    x3d
 )
