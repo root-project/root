@@ -38,7 +38,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(EG
     MathCore
     Physics
   LIBRARIES
-    x3d
+    ROOTx3d
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
