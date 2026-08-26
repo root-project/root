@@ -37,6 +37,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(EG
     Graf3d
     MathCore
     Physics
+  LIBRARIES
+    x3d
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
