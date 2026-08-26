@@ -43,6 +43,10 @@ std::vector<size_t> ConvertShapeToInt(const std::vector<Dim> & shape){
             ret_shape.clear();
             break;
          }
+         catch (const std::out_of_range& ) {
+            ret_shape.clear();
+            break;
+         }
       } else {
          ret_shape[i] = shape[i].dim;
       }
