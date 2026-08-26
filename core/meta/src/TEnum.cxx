@@ -198,10 +198,20 @@ TEnum *TEnum::GetEnum(const std::type_info &ti, ESearchAction sa)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function to retrieve enumerator from the ROOT's typesystem.
-/// It has no side effect, except when the load flag is true. In this case,
-/// the load of the library containing the scope of the enumerator is attempted.
-/// There are two top level code paths: the enumerator is scoped or isn't.
-/// If it is not, a lookup in the list of global enums is performed.
+/// The search is carried out in up to three passes:
+/// 1. with the name as given, restricted to the enums already registered in
+///    the typesystem lists (no autoloading, no interpreter lookup);
+/// 2. on a miss, with the name normalized to resolve typedefs and using
+///    declarations (see #15406); the normalization is computed with both
+///    autoloading and autoparsing suspended, so that it cannot load
+///    libraries or parse dictionary payloads as a side effect (see #18923),
+///    and the search then runs at the requested search level;
+/// 3. if the requested search level allows interpreter lookups
+///    (kInterpLookup), the normalization is repeated with autoparsing
+///    allowed - resolving names whose typedefs require parsing a header
+///    first - and the search is repeated if this yields a different name.
+/// In each pass there are two top level code paths: the enumerator is scoped
+/// or isn't. If it is not, a lookup in the list of global enums is performed.
 /// If it is, two lookups are carried out for its scope: one in the list of
 /// classes and one in the list of protoclasses. If a scope with the desired name
 /// is found, the enum is searched. If the scope is not found, and the load flag is
@@ -216,8 +226,6 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
 {
    // Potential optimisation: reduce number of branches using partial specialisation of
    // helper functions.
-
-   TEnum *theEnum = nullptr;
 
    // Wrap some gymnastic around the enum finding. The special treatment of the
    // ListOfEnums objects is located in this routine.
@@ -235,15 +243,15 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
    // Helper routine to look fo the scope::enum in the typesystem.
    // If autoload and interpreter lookup is allowed, TClass::GetClass is called.
    // If not, the list of classes and the list of protoclasses is inspected.
-   auto searchEnum = [&theEnum, findEnumInList](const char * scopeName, const char * enName, ESearchAction sa_local) {
+   auto searchEnum = [findEnumInList](const char *scopeName, const char *enName, ESearchAction sa_local) -> TEnum * {
       // Check if the scope is a class
       if (sa_local == (kALoadAndInterpLookup)) {
          auto scope = TClass::GetClass(scopeName, true);
          TEnum *en = nullptr;
-         if (scope) en = findEnumInList(scope->GetListOfEnums(kFALSE), enName, sa_local);
+         if (scope)
+            en = findEnumInList(scope->GetListOfEnums(kFALSE), enName, sa_local);
          return en;
       }
-
 
       if (auto tClassScope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName))) {
          // If this is a class, load only if the user allowed interpreter lookup
@@ -262,17 +270,78 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
             auto listOfEnums = tClassScope->GetListOfEnums(true);
             // Previous incarnation of the code re-enabled the auto parsing,
             // before executing findEnumInList
-            theEnum = findEnumInList(listOfEnums, enName, sa_local);
+            return findEnumInList(listOfEnums, enName, sa_local);
          } else {
             auto listOfEnums = tClassScope->GetListOfEnums(canLoadEnums);
-            theEnum = findEnumInList(listOfEnums, enName, sa_local);
+            return findEnumInList(listOfEnums, enName, sa_local);
          }
       }
       // Check if the scope is still a protoclass
       else if (auto tProtoClassscope = static_cast<TProtoClass *>((gClassTable->GetProtoNorm(scopeName)))) {
          auto listOfEnums = tProtoClassscope->GetListOfEnums();
-         if (listOfEnums) theEnum = findEnumInList(listOfEnums, enName, sa_local);
+         if (listOfEnums)
+            return findEnumInList(listOfEnums, enName, sa_local);
       }
+      return nullptr;
+   };
+
+   // Run the search with the given name and search level. skipListLookup
+   // skips the initial list-only (kNone-level) lookup, for callers that
+   // already know it missed for this name. Returns nullptr if no enum was
+   // found.
+   auto runSearch = [&searchEnum, &findEnumInList](const char *name, ESearchAction sa_arg,
+                                                   bool skipListLookup) -> TEnum * {
+      TEnum *theEnum = nullptr;
+      const char *lastPos = TClassEdit::GetUnqualifiedName(name);
+
+      // Keep the state consistent.  In particular prevent change in the state of
+      // AutoLoading and AutoParsing allowance and gROOT->GetListOfClasses()
+      // and the later update/modification to the autoparsing state.
+      R__READ_LOCKGUARD(ROOT::gCoreMutex);
+
+      if (lastPos != name) {
+         // We have a scope
+         const auto enName = lastPos;
+         std::string scopeName{name, static_cast<std::size_t>(lastPos - name) - 2};
+         // Three levels of search
+         if (!skipListLookup)
+            theEnum = searchEnum(scopeName.c_str(), enName, kNone);
+         if (!theEnum && (sa_arg & kAutoload)) {
+            const auto libsLoaded = gInterpreter->AutoLoad(scopeName.c_str());
+            // It could be an enum in a scope which is not selected
+            if (libsLoaded == 0) {
+               gInterpreter->AutoLoad(name);
+            }
+            theEnum = searchEnum(scopeName.c_str(), enName, kAutoload);
+         }
+         if (!theEnum && (sa_arg & kALoadAndInterpLookup)) {
+            if (gDebug > 0) {
+               printf("TEnum::GetEnum: Header Parsing - The enumerator %s is not known to the typesystem: an "
+                      "interpreter lookup will be performed. This can imply parsing of headers. This can be avoided "
+                      "selecting the numerator in the linkdef/selection file.\n",
+                      name);
+            }
+            theEnum = searchEnum(scopeName.c_str(), enName, kALoadAndInterpLookup);
+         }
+      } else {
+         // We don't have any scope: this is a global enum
+         if (!skipListLookup)
+            theEnum = findEnumInList(gROOT->GetListOfEnums(), name, kNone);
+         if (!theEnum && (sa_arg & kAutoload)) {
+            gInterpreter->AutoLoad(name);
+            theEnum = findEnumInList(gROOT->GetListOfEnums(), name, kAutoload);
+         }
+         if (!theEnum && (sa_arg & kALoadAndInterpLookup)) {
+            if (gDebug > 0) {
+               printf("TEnum::GetEnum: Header Parsing - The enumerator %s is not known to the typesystem: an "
+                      "interpreter lookup will be performed. This can imply parsing of headers. This can be avoided "
+                      "selecting the numerator in the linkdef/selection file.\n",
+                      name);
+            }
+            theEnum = findEnumInList(gROOT->GetListOfEnums(), name, kALoadAndInterpLookup);
+         }
+      }
+
       return theEnum;
    };
 
@@ -284,58 +353,52 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
       return nullptr;
    }
 
+   // Pass 1: search with the name as given, restricted to what is already
+   // registered in ROOT's typesystem lists (kNone: no autoloading and no
+   // header parsing). This avoids interpreter round trips (and the
+   // autoloading and autoparsing they can trigger) for names that are
+   // already known, notably while dictionaries are being registered (see
+   // #18923).
+   if (TEnum *en = runSearch(enumName, kNone, false))
+      return en;
+
+   // Pass 2: the enum is not already known under the name as given;
+   // normalize the name to resolve typedefs and using declarations (see
+   // #15406) and run the search at the requested level.
+   // The normalization may call into the interpreter; suspend both
+   // AutoLoading and AutoParsing to keep it free of those side effects (a
+   // dictionary payload parsed halfway through a dictionary registration
+   // can leave the interpreter in an inconsistent state, see #18923).
    std::string normalizedName;
    {
       R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
       TInterpreter::SuspendAutoLoadingRAII autoloadOff(gInterpreter);
+      TInterpreter::SuspendAutoParsing autoParseRaii(gInterpreter, true);
       TClassEdit::GetNormalizedName(normalizedName, enumName);
    }
 
-   if (normalizedName != enumName) {
-      enumName = normalizedName.c_str();
-      lastPos = TClassEdit::GetUnqualifiedName(enumName);
+   const bool nameChanged = normalizedName != enumName;
+   if (nameChanged || sa != kNone) {
+      if (TEnum *en = runSearch(nameChanged ? normalizedName.c_str() : enumName, sa,
+                                /*skipListLookup=*/!nameChanged))
+         return en;
    }
 
-   // Keep the state consistent.  In particular prevent change in the state of
-   // AutoLoading and AutoParsing allowance and gROOT->GetListOfClasses()
-   // and the later update/modification to the autoparsing state.
-   R__READ_LOCKGUARD(ROOT::gCoreMutex);
-
-   if (lastPos != enumName) {
-      // We have a scope
-      const auto enName = lastPos;
-      const auto scopeNameSize = (lastPos - enumName) / sizeof(decltype(*lastPos)) - 2;
-      std::string scopeName{enumName, scopeNameSize};
-      // Three levels of search
-      theEnum = searchEnum(scopeName.c_str(), enName, kNone);
-      if (!theEnum && (sa & kAutoload)) {
-         const auto libsLoaded = gInterpreter->AutoLoad(scopeName.c_str());
-         // It could be an enum in a scope which is not selected
-         if (libsLoaded == 0){
-            gInterpreter->AutoLoad(enumName);
-         }
-         theEnum = searchEnum(scopeName.c_str(), enName, kAutoload);
+   // Pass 3: the caller explicitly allows interpreter lookups that can imply
+   // parsing headers; repeat the normalization with autoparsing allowed (as
+   // before this restructuring), to also resolve names whose typedefs or
+   // using declarations only become visible by parsing a header, and search
+   // again if this yields a different name than the passes above.
+   if (sa & kInterpLookup) {
+      std::string reparsedName;
+      {
+         R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+         TInterpreter::SuspendAutoLoadingRAII autoloadOff(gInterpreter);
+         TClassEdit::GetNormalizedName(reparsedName, enumName);
       }
-      if (!theEnum && (sa & kALoadAndInterpLookup)) {
-         if (gDebug > 0) {
-            printf("TEnum::GetEnum: Header Parsing - The enumerator %s is not known to the typesystem: an interpreter lookup will be performed. This can imply parsing of headers. This can be avoided selecting the numerator in the linkdef/selection file.\n", enumName);
-         }
-         theEnum = searchEnum(scopeName.c_str(), enName, kALoadAndInterpLookup);
-      }
-   } else {
-      // We don't have any scope: this is a global enum
-      theEnum = findEnumInList(gROOT->GetListOfEnums(), enumName, kNone);
-      if (!theEnum && (sa & kAutoload)) {
-         gInterpreter->AutoLoad(enumName);
-         theEnum = findEnumInList(gROOT->GetListOfEnums(), enumName, kAutoload);
-      }
-      if (!theEnum && (sa & kALoadAndInterpLookup)) {
-         if (gDebug > 0) {
-            printf("TEnum::GetEnum: Header Parsing - The enumerator %s is not known to the typesystem: an interpreter lookup will be performed. This can imply parsing of headers. This can be avoided selecting the numerator in the linkdef/selection file.\n", enumName);
-         }
-         theEnum = findEnumInList(gROOT->GetListOfEnums(), enumName, kALoadAndInterpLookup);
-      }
+      if (reparsedName != normalizedName)
+         return runSearch(reparsedName.c_str(), sa, false);
    }
 
-   return theEnum;
+   return nullptr;
 }
