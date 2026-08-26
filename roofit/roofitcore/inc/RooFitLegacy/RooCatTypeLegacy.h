@@ -18,7 +18,8 @@
 
 #include "TObject.h"
 #include "RooPrintable.h"
-#include "strlcpy.h"
+
+#include <cstring>
 
 class RooCatType : public TObject, public RooPrintable {
 public:
@@ -35,7 +36,8 @@ public:
   /// Copy constructor.
   inline RooCatType(const RooCatType& other) :
     TObject(other), RooPrintable(other), _value(other._value) {
-    strlcpy(_label,other._label,256) ;
+    std::memcpy(_label, other._label, sizeof(_label));
+    _label[255] = 0;
   }
 
   TObject* Clone(const char*) const override { return new RooCatType(*this); }
