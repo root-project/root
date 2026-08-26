@@ -1180,9 +1180,8 @@ void TGWin32::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
          bc = bcol;
          dotcnt = 0;
          for (y = 0; y < (int) source->rows; y++) {
-            for (x = 0; x < (int) source->width; x++, bc++) {
+            for (x = 0; (x < (int) source->width) && (dotcnt < maxdots); x++, bc++, dotcnt++) {
                bc->pixel = GetPixelImage((Drawable_t)xim, bx + x, by + y);
-               if (++dotcnt >= maxdots) break;
             }
          }
          QueryColors(fColormap, bcol, dots);
@@ -1190,11 +1189,10 @@ void TGWin32::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
          bc = bcol;
          dotcnt = 0;
          for (y = 0; y < (int) source->rows; y++) {
-            for (x = 0; x < (int) source->width; x++, bc++) {
+            for (x = 0; (x < (int) source->width) && (dotcnt < maxdots); x++, bc++, dotcnt++) {
                r += bc->red;
                g += bc->green;
                b += bc->blue;
-               if (++dotcnt >= maxdots) break;
             }
          }
          if (dots != 0) {
