@@ -82,6 +82,14 @@ TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, UInt_t w
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create a batch version of TCanvasImpNative, skipping the IsWebDisplay check.
+
+TCanvasImp *TGuiFactory::CreateCanvasImpNative(TCanvas *c, const char *title, UInt_t width, UInt_t height)
+{
+   return new TCanvasImp(c, title, width, height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Create a batch version of TCanvasImp.
 
 TCanvasImp *TGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height)

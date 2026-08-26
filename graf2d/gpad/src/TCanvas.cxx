@@ -255,7 +255,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid) : TPad(), fD
          fUseGL = kFALSE;
    }
 
-   fCanvasImp = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
+   fCanvasImp = gBatchGuiFactory->CreateCanvasImpNative(this, name, fCw, fCh);
    if (!fCanvasImp) return;
 
    CreatePainter();
