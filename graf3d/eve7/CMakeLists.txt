@@ -9,6 +9,12 @@ if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
 endif()
 
+if (builtin_glu)
+  set(EXTRA_GL_LIBS tessglu)
+else ()
+  set(EXTRA_GL_LIBS OpenGL::GLU)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
   HEADERS
     ROOT/REveChunkManager.hxx
@@ -68,16 +74,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     ROOT/REveVSD.hxx
     ROOT/REveVSDStructs.hxx
   SOURCES
-    glu/memalloc.c
-    glu/dict.c
-    glu/geom.c
-    glu/mesh.c
-    glu/priorityq.c
-    glu/normal.c
-    glu/render.c
-    glu/sweep.c
-    glu/tess.c
-    glu/tessmono.c
     src/REveChunkManager.cxx
     src/REveBox.cxx
     src/REveBoxSet.cxx
@@ -140,6 +136,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     ROOTWebDisplay
     ROOTBrowserv7
     ROOTGeomViewer
+  LIBRARIES
+    ${EXTRA_GL_LIBS}
   ${EXTRA_DICT_OPTS}
 )
 
