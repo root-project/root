@@ -314,7 +314,7 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
             }
             theEnum = searchEnum(scopeName.c_str(), enName, kAutoload);
          }
-         if (!theEnum && (sa_arg & kALoadAndInterpLookup)) {
+         if (!theEnum && (sa_arg & kInterpLookup)) {
             if (gDebug > 0) {
                printf("TEnum::GetEnum: Header Parsing - The enumerator %s is not known to the typesystem: an "
                       "interpreter lookup will be performed. This can imply parsing of headers. This can be avoided "
@@ -331,7 +331,7 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
             gInterpreter->AutoLoad(name);
             theEnum = findEnumInList(gROOT->GetListOfEnums(), name, kAutoload);
          }
-         if (!theEnum && (sa_arg & kALoadAndInterpLookup)) {
+         if (!theEnum && (sa_arg & kInterpLookup)) {
             if (gDebug > 0) {
                printf("TEnum::GetEnum: Header Parsing - The enumerator %s is not known to the typesystem: an "
                       "interpreter lookup will be performed. This can imply parsing of headers. This can be avoided "
