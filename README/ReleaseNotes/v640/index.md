@@ -217,6 +217,16 @@ This change affects the following classes:  `TFile`, `TMapFile`, `TMemFile`, `TD
 
 ### TTree
 
+#### Behavior change since 6.40.04: `sqrt()` of negative arguments in TTreeFormula now returns NaN
+
+Since its introduction in 1995, the formula engine used by `TTree::Draw()`, `TTree::Scan()` and `TTreeFormula`
+silently evaluated `sqrt(x)` as `sqrt(abs(x))` for negative arguments (or as `0` in the optimized evaluation path
+of the legacy `ROOT::v5::TFormula`). This could produce silently wrong results, e.g. in selections involving
+`sqrt` of an expression that can become negative. `sqrt()` now returns NaN for negative arguments, consistent
+with `TMath::Sqrt()`, the standard C `sqrt()`, and the modern `TFormula` used by `TF1`.
+Note that in a selection, a NaN evaluates as `false`, so entries where the `sqrt` argument is negative now fail
+the cut instead of being selected based on `sqrt(abs(x))`.
+
 ### RNTuple
 
 - A new API to create "active entry tokens" was added to the `RNTupleReader`. Active entry tokens that are used prevent cache eviction of the entries at hand.
