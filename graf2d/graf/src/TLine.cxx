@@ -265,11 +265,11 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          }
          break;
       }
+      selectPoint = 0;
       if (opaque)
          parent.ShowGuidelines(this, event);
       else
          parent.ModifiedUpdate();
-      selectPoint = 0;
       break;
 
    case kButton1Locate:
