@@ -224,31 +224,18 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    auto &parent = *gPad;
 
-   static Int_t px1, py1, pxold, pyold, Size, height, width;
-   static Bool_t resize,turn;
-   Int_t dx, dy;
-   const char *text = GetTitle();
-   Int_t len = strlen(text);
-   Double_t sizetowin = parent.GetAbsHNDC()*Double_t(parent.GetWh());
-   Double_t fh = (fTextSize*sizetowin);
-   Int_t h     = Int_t(fh/2);
-   Int_t w     = h*len;
-   Short_t halign = fTextAlign/10;
-   Short_t valign = fTextAlign - 10*halign;
-   Double_t co, si, dtheta, norm;
-   static Bool_t right;
+   static Int_t px1, py1, pxold, pyold, height, width;
+   static Bool_t resize, turn, right;
    static Double_t theta;
-   Int_t ax = 0, ay = 0, bx, by, cx, cy;
-   Double_t lambda, x2,y2;
-   Int_t cBoxX[4], cBoxY[4], part;
-   Double_t div = 0;
+   Short_t halign = GetTextAlign() / 10;
+   Short_t valign = GetTextAlign() % 10;
    Bool_t opaque  = parent.OpaqueMoving();
 
    switch (event) {
 
    case kArrowKeyPress:
    case kButton1Down:
-   case kMouseMotion:
+   case kMouseMotion: {
       if (TestBit(kTextNDC)) {
          px1 = parent.UtoAbsPixel(fX);
          py1 = parent.VtoAbsPixel(fY);
@@ -257,19 +244,18 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          py1 = parent.YtoAbsPixel(parent.YtoPad(fY));
       }
       theta  = GetTextAngle();
-      Size   = 0;
       pxold  = px;
       pyold  = py;
-      co     = TMath::Cos(theta*0.017453293);
-      si     = TMath::Sin(theta*0.017453293);
+      auto co = TMath::Cos(theta/180.*TMath::Pi());
+      auto si = TMath::Sin(theta/180.*TMath::Pi());
       resize = kFALSE;
       turn   = kFALSE;
+      Int_t cBoxX[4], cBoxY[4];
       GetControlBox(px1, py1, -theta, cBoxX, cBoxY);
-      div    = ((cBoxX[3]-cBoxX[0])*co-(cBoxY[3]-cBoxY[0])*si);
+      auto div    = ((cBoxX[3]-cBoxX[0])*co-(cBoxY[3]-cBoxY[0])*si);
+      Int_t part = 0;
       if (TMath::Abs(div) > 1e-8)
          part = (Int_t)(3*((px-cBoxX[0])*co-(py-cBoxY[0])*si)/ div);
-      else
-         part = 0;
       switch (part) {
       case 0:
          if (halign == 3) {
@@ -299,24 +285,32 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          }
       }
       break;
+   }
 
    case kArrowKeyRelease:
    case kButton1Motion:
       if (!opaque)
          PaintControlBox(px1, py1, -theta);
       if (turn) {
-         norm = TMath::Sqrt(Double_t((py-py1)*(py-py1)+(px-px1)*(px-px1)));
-         if (norm>0) {
-            theta = TMath::ACos((px-px1)/norm);
-            dtheta= TMath::ASin((py1-py)/norm);
-            if (dtheta<0) theta = -theta;
-            theta = theta/TMath::Pi()*180;
-            if (theta<0) theta += 360;
-            if (right) {theta = theta+180; if (theta>=360) theta -= 360;}
+         auto norm = TMath::Sqrt(1.*(py-py1)*(py-py1)+ 1.*(px-px1)*(px-px1));
+         if (norm > 0) {
+            theta = TMath::ACos((px - px1) / norm) / TMath::Pi() * 180;
+            auto dtheta = TMath::ASin((py1 - py) / norm);
+            if (dtheta < 0)
+               theta = -theta;
+            if (right)
+               theta += 180;
+            if (theta < 0)
+               theta += 360;
+            else if (theta >= 360)
+               theta -= 360;
          }
       } else if (resize) {
-         co = TMath::Cos(fTextAngle*0.017453293);
-         si = TMath::Sin(fTextAngle*0.017453293);
+         Int_t h = GetTextSizePixels(parent) / 2;
+         Int_t w = h*strlen(GetTitle()); // approximate width
+         auto co = TMath::Cos(GetTextAngle()/180.*TMath::Pi());
+         auto si = TMath::Sin(GetTextAngle()/180.*TMath::Pi());
+         Int_t ax = 0, ay = 0, bx, by;
          if (width == 1) {
             switch (valign) {
                case 1 : ax = px1; ay = py1; break;
@@ -339,23 +333,24 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             }
          }
          if (height == 3) {
-            bx = ax-Int_t(si*h);
-            by = ay-Int_t(co*h);
+            bx = ax - Int_t(si*h);
+            by = ay - Int_t(co*h);
          } else {
             bx = ax;
             by = ay;
          }
-         cx = bx+Int_t(co*w); cy = by-Int_t(si*w);
-         lambda = Double_t(((px-bx)*(cx-bx)+(py-by)*(cy-by)))/Double_t(((cx-bx)*(cx-bx)+(cy-by)*(cy-by)));
-         x2 = Double_t(px) - lambda*Double_t(cx-bx)-Double_t(bx);
-         y2 = Double_t(py) - lambda*Double_t(cy-by)-Double_t(by);
-         Size = Int_t(TMath::Sqrt(x2*x2+y2*y2)*2);
-         if (Size<4) Size = 4;
+         Int_t cx = bx+Int_t(co*w);
+         Int_t cy = by-Int_t(si*w);
+         Double_t lambda = Double_t(((px-bx)*(cx-bx)+(py-by)*(cy-by)))/Double_t(((cx-bx)*(cx-bx)+(cy-by)*(cy-by)));
+         Double_t x2 = Double_t(px) - lambda*Double_t(cx-bx)-Double_t(bx);
+         Double_t y2 = Double_t(py) - lambda*Double_t(cy-by)-Double_t(by);
+         Int_t Size = Int_t(TMath::Sqrt(x2*x2+y2*y2)*2);
+         if (Size < 4) Size = 4;
 
-         SetTextSize(Size/sizetowin);
+         SetTextSizePixels(Size);
       } else {
-         dx = px - pxold;  px1 += dx;   pxold = px;
-         dy = py - pyold;  py1 += dy;   pyold = py;
+         px1 += px - pxold;   pxold = px;
+         py1 += py - pyold;   pyold = py;
       }
       if (opaque) {
          SetX(GetXCoord(px1, TestBit(kTextNDC), kTRUE));
@@ -367,9 +362,9 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          parent.ShowGuidelines(this, event, !resize && !turn);
          SetTextAngle(theta);
          parent.ModifiedUpdate();
-      }
-      if (!opaque)
+      } else {
          PaintControlBox(px1, py1, -theta);
+      }
       break;
 
    case kButton1Up:
