@@ -9,7 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#if __has_include("GL/glu.h") // either from builtin or from system-wise install
 #include "GL/glu.h"
+#elif defined(__APPLE__) && defined(__MACH__) // fallback solution for APPLE
+#include <OpenGL/glu.h>
+#endif
+
 #include <ROOT/REveGluTess.hxx>
 
 #include <cmath>
