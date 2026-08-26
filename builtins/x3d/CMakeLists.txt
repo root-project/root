@@ -12,7 +12,7 @@ if(NOT WIN32 AND x11)
   target_link_libraries(ROOTX3dViewer PRIVATE ${X11_LIBRARIES})
 endif()
 # Now the ROOT extra additions to the C library:
-target_sources(ROOTx3d PRIVATE
+target_sources(ROOTX3dViewer PRIVATE
     X3DBuffer.c
     X3DDefs.h # private header
   PUBLIC
