@@ -209,6 +209,8 @@ The [TGeometry](https://root.cern/doc/master/classTGeometry.html) classes (Geant
 To link to these classes, use the cmake target `TGeometry` (preferred), `root-config --libs`, or link with `-lTGeometry`.
 When ROOT is configured with `-Dgeom=Off`, these classes are now off as well.
 
+The header X3DBuffer.h is no longer part of the installed ROOT headers.
+
 ## Documentation and Examples
 
 ## Build, Configuration and Testing
