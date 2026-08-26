@@ -354,8 +354,8 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
          SetTextSize(Size/sizetowin);
       } else {
-         dx = px - pxold;  px1 += dx;
-         dy = py - pyold;  py1 += dy;
+         dx = px - pxold;  px1 += dx;   pxold = px;
+         dy = py - pyold;  py1 += dy;   pyold = py;
       }
       if (opaque) {
          SetX(GetXCoord(px1, TestBit(kTextNDC), kTRUE));
@@ -370,7 +370,6 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
       if (!opaque)
          PaintControlBox(px1, py1, -theta);
-      pxold = px;  pyold = py;
       break;
 
    case kButton1Up:
