@@ -1007,8 +1007,9 @@ TEST(RDFHelpers, ProgressBarFinalRateIsFinite)
    std::ostringstream strCout;
    std::cout.rdbuf(strCout.rdbuf());
    {
-      auto d_write = ROOT::RDataFrame(100).Define("x", ret42).Snapshot("tree", "fh_rate.root", {"x"});
-      ROOT::RDF::RNode d = ROOT::RDataFrame("tree", {"fh_rate.root"});
+      ROOT::TestSupport::FileRaii raii{"fh_rate.root"};
+      auto d_write = ROOT::RDataFrame(100).Define("x", ret42).Snapshot("tree", raii.GetPath(), {"x"});
+      ROOT::RDF::RNode d = ROOT::RDataFrame("tree", raii.GetPath());
       ROOT::RDF::Experimental::AddProgressBar(d);
       d.Count().GetValue();
    }
