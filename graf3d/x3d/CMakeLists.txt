@@ -19,5 +19,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(X3d
     Graf3d
     Gui
   LIBRARIES
-    ROOTx3d
+    ROOTX3dViewer
 )

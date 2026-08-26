@@ -32,5 +32,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf3d
     Hist
     MathCore
   LIBRARIES
-    ROOTx3d
+    ROOTX3dViewer
 )
