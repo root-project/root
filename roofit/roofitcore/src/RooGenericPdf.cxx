@@ -35,8 +35,6 @@ class documentation.
 #include "RooFormulaUtils.h"
 #include "RooAbsRealLValue.h"
 
-#include "TFormula.h"
-
 using std::istream, std::ostream, std::endl;
 
 
@@ -228,19 +226,37 @@ void RooGenericPdf::writeToStream(ostream& os, bool compact) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Name of the cling-JIT-compiled function that evaluates this formula, which
-/// generated code from the codegen path calls by name.
-///
-/// See RooFormulaVar::getUniqueFuncName() for the details of the lazily
-/// created TFormula on the JIT-free expression backend.
+/// Name of the cling-JIT-compiled function evaluating this formula, which the
+/// codegen fallback path calls by name in generated code. Empty when the
+/// formula is evaluated by the JIT-free expression backend (codegen then
+/// inlines the expression via emitFormulaCpp() instead).
 std::string RooGenericPdf::getUniqueFuncName() const
 {
-   if (TFormula *tFormula = evaluator().getTFormula()) {
-      return tFormula->GetUniqueFuncName().Data();
-   }
-   if (!_tFormulaForCodegen) {
-      // evaluator() above has normalized _formExpr to the processed `x[i]` dialect.
-      _tFormulaForCodegen = std::make_unique<TFormula>(GetName(), _formExpr.Data(), /*addToGlobList=*/false);
-   }
-   return _tFormulaForCodegen->GetUniqueFuncName().Data();
+   return evaluator().uniqueFuncName();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// If the formula expression can be emitted as inline C++ (i.e. it is
+/// evaluated by the JIT-free expression backend), return the emitted
+/// expression, with `varName(i)` supplying the generated name of
+/// `dependents()[i]`. Return an empty string otherwise; codegen then falls
+/// back to calling the cling-JIT-compiled TFormula function by name (see
+/// getUniqueFuncName()).
+std::string RooGenericPdf::emitFormulaCpp(std::function<std::string(unsigned int)> const &varName) const
+{
+   return evaluator().emitCpp(varName);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Whether the formula expression is evaluated by RooFit's built-in JIT-free
+/// (AST) formula backend, which is the default for supported expressions.
+/// Returns false if it is evaluated by the TFormula (cling JIT) fallback
+/// backend instead, either because the built-in parser does not support the
+/// expression or because the TFormula backend was forced with the
+/// ROOFIT_FORMULA_BACKEND environment variable. Exactly the formulas on the
+/// JIT-free backend can be emitted as inline C++ (emitFormulaCpp()); the
+/// others report the name of their JIT-compiled function (getUniqueFuncName()).
+bool RooGenericPdf::formulaUsesAstBackend() const
+{
+   return evaluator().canEmitCpp();
 }

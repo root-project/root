@@ -20,13 +20,13 @@
 #include "RooListProxy.h"
 #include "RooAbsBinning.h"
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
 
 class RooArgList ;
 class RooFormulaEvaluator;
-class TFormula;
 class RooAbsRealLValue;
 
 class RooGenericPdf : public RooAbsPdf {
@@ -66,7 +66,15 @@ public:
   const char* expression() const { return _formExpr.Data(); }
   const RooArgList& dependents() const { return _actualVars; }
 
+  /// Name of the cling-JIT-compiled function that evaluates this formula,
+  /// which generated code from the codegen fallback path calls by name.
+  /// \note Returns an empty string when the formula is handled by the JIT-free
+  /// formula backend (the default for supported expressions, see
+  /// formulaUsesAstBackend()); codegen then inlines the expression via
+  /// emitFormulaCpp() instead.
   std::string getUniqueFuncName() const;
+  std::string emitFormulaCpp(std::function<std::string(unsigned int)> const &varName) const;
+  bool formulaUsesAstBackend() const;
 
   void setBinning(const RooAbsRealLValue &obs, const RooAbsBinning &binning, bool checkFlatness = true);
   const RooAbsBinning *getBinning(const RooAbsRealLValue &obs) const;
@@ -87,7 +95,6 @@ protected:
    bool isValidReal(double /*value*/, bool /*printError*/) const override { return true; }
 
    mutable std::unique_ptr<RooFormulaEvaluator> _evaluator; ///<! Formula evaluation engine
-   mutable std::unique_ptr<TFormula> _tFormulaForCodegen;   ///<! See getUniqueFuncName()
    TString _formExpr;                                       ///< Formula expression string
 
    std::map<int, std::unique_ptr<RooAbsBinning>> _binnings; ///< User-defined binnings, keyed by the observable's index

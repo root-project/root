@@ -51,8 +51,6 @@
 #include "RooFormulaUtils.h"
 #include "RooAbsRealLValue.h"
 
-#include "TFormula.h"
-
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include "RooNLLVar.h"
 #include "RooChi2Var.h"
@@ -327,29 +325,39 @@ double RooFormulaVar::defaultErrorLevel() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Name of the cling-JIT-compiled function that evaluates this formula, which
-/// generated code from the codegen path calls by name.
-///
-/// If the formula is evaluated by the TFormula backend, this is the function
-/// of the evaluating TFormula itself. Otherwise, a TFormula is created lazily,
-/// only to serve the codegen path.
-///
-/// TODO(Phase 2.5): remove the lazily-created TFormula once codegen emits C++
-/// for the expression directly from the parsed representation instead of
-/// calling the JIT-compiled TFormula function. Until then, codegen keeps
-/// working exactly as before, at the cost of one JIT compilation per formula
-/// -- but only when codegen is actually used. Like codegen itself, this lazy
-/// creation is not thread-safe.
+/// Name of the cling-JIT-compiled function evaluating this formula, which the
+/// codegen fallback path calls by name in generated code. Empty when the
+/// formula is evaluated by the JIT-free expression backend (codegen then
+/// inlines the expression via emitFormulaCpp() instead).
 std::string RooFormulaVar::getUniqueFuncName() const
 {
-   if (TFormula *tFormula = evaluator().getTFormula()) {
-      return tFormula->GetUniqueFuncName().Data();
-   }
-   if (!_tFormulaForCodegen) {
-      // evaluator() above has normalized _formExpr to the processed `x[i]` dialect.
-      _tFormulaForCodegen = std::make_unique<TFormula>(GetName(), _formExpr.Data(), /*addToGlobList=*/false);
-   }
-   return _tFormulaForCodegen->GetUniqueFuncName().Data();
+   return evaluator().uniqueFuncName();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// If the formula expression can be emitted as inline C++ (i.e. it is
+/// evaluated by the JIT-free expression backend), return the emitted
+/// expression, with `varName(i)` supplying the generated name of
+/// `dependents()[i]`. Return an empty string otherwise; codegen then falls
+/// back to calling the cling-JIT-compiled TFormula function by name (see
+/// getUniqueFuncName()).
+std::string RooFormulaVar::emitFormulaCpp(std::function<std::string(unsigned int)> const &varName) const
+{
+   return evaluator().emitCpp(varName);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Whether the formula expression is evaluated by RooFit's built-in JIT-free
+/// (AST) formula backend, which is the default for supported expressions.
+/// Returns false if it is evaluated by the TFormula (cling JIT) fallback
+/// backend instead, either because the built-in parser does not support the
+/// expression or because the TFormula backend was forced with the
+/// ROOFIT_FORMULA_BACKEND environment variable. Exactly the formulas on the
+/// JIT-free backend can be emitted as inline C++ (emitFormulaCpp()); the
+/// others report the name of their JIT-compiled function (getUniqueFuncName()).
+bool RooFormulaVar::formulaUsesAstBackend() const
+{
+   return evaluator().canEmitCpp();
 }
 
 std::unique_ptr<RooAbsArg>
