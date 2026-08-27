@@ -1,0 +1,5 @@
+add_library(xvertext STATIC)
+target_sources(xvertext PRIVATE rotated.c PUBLIC rotated.h)
+target_include_directories(xvertext PUBLIC .)
+set_property(TARGET xvertext PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(xvertext PRIVATE ${X11_LIBRARIES})
