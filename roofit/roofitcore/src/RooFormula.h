@@ -18,13 +18,14 @@
 #include "RooArgSet.h"
 #include "RooFit/EvalContext.h"
 
-#include "TFormula.h"
+#include "RooFormulaEvaluator.h"
 
 #include <memory>
 #include <vector>
 #include <string>
 
 class RooAbsReal;
+class TFormula;
 
 class RooFormula : public TNamed {
 public:
@@ -41,25 +42,27 @@ public:
    RooArgSet actualDependents() const { return usedVariables(); }
    bool changeDependents(const RooAbsCollection &newDeps, bool mustReplaceAll, bool nameChange);
 
-   bool ok() const { return _tFormula != nullptr; }
+   bool ok() const { return _evaluator != nullptr; }
    /// Evaluate all parameters/observables, and then evaluate formula.
    double eval(const RooArgSet *nset = nullptr) const;
    void doEval(RooArgList const &actualVars, RooFit::EvalContext &) const;
 
    void printMultiline(std::ostream &os, Int_t contents, bool verbose = false, TString indent = "") const;
 
-   std::string formulaString() const { return _tFormula ? _tFormula->GetTitle() : ""; }
+   std::string formulaString() const { return _evaluator ? _evaluator->processedFormula() : ""; }
    std::string reindexedFormulaForUsedVars() const;
-   TFormula* getTFormula() const { return _tFormula.get(); }
+   /// Return the underlying TFormula, or `nullptr` if the formula is not
+   /// evaluated by a TFormula backend.
+   TFormula *getTFormula() const { return _evaluator ? _evaluator->getTFormula() : nullptr; }
 
 private:
    std::string processFormula(std::string origFormula) const;
    RooArgList usedVariables() const;
    void installFormulaOrThrow(const std::string &formula);
 
-   std::vector<bool> _varIsUsed;        ///<! Track whether a given variable is in use or not
-   RooArgList _origList;                ///<! Original list of dependents
-   std::unique_ptr<TFormula> _tFormula; ///<! The formula used to compute values
+   std::vector<bool> _varIsUsed;                    ///<! Track whether a given variable is in use or not
+   RooArgList _origList;                            ///<! Original list of dependents
+   std::unique_ptr<RooFormulaEvaluator> _evaluator; ///<! The evaluation engine used to compute values
 };
 
 #endif
