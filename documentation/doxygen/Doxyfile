@@ -1109,7 +1109,6 @@ EXCLUDE_PATTERNS       = */G__* \
                          */libAfterImage/* \
                          */doc/v6* \
                          */doc/v5* \
-                         */win32gdk/gdk/* \
                          */bindings/pyroot/*.py \
                          *gl2ps* \
                          *CsgOps* \

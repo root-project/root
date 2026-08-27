@@ -29,9 +29,9 @@ set(gdkdll   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gdk-1.3.dll)
 set(gdkliba  ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/gdk/gdk-1.3.lib)
 set(gdkdlla  ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/gdk/gdk-1.3.dll)
 
-file(GLOB iconvfiles "gdk/src/iconv/*.*")
-file(GLOB_RECURSE glibfiles "gdk/src/glib/*.*")
-file(GLOB_RECURSE gdkfiles "gdk/src/gdk/*.*")
+file(GLOB iconvfiles "../../builtins/win32gdk/iconv/*.*")
+file(GLOB_RECURSE glibfiles "../../builtins/win32gdk/glib/*.*")
+file(GLOB_RECURSE gdkfiles "../../builtins/win32gdk/gdk/*.*")
 
 if(CMAKE_GENERATOR MATCHES Ninja)
   set(nmcxxflags ${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}})
@@ -49,12 +49,13 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8)
   set(nmcxxflags "${nmcxxflags} -D_WIN64")
 endif()
 
-# Build iconv
+# Build iconv, was forked from https://github.com/winlibs/libiconv/blob/libiconv-1.14/MSVC9/libiconv.rc
+# vs https://github.com/root-project/root/commit/11e6c04d7ee196c794d19ae43ad4d1ad57786d3d#diff-9cbb57072c182c295932b31f4421982d0ac9d1ca2d545bd065509aba4ecfdfce
+# and only slightly modified by ROOT
 
 add_custom_command( OUTPUT ${iconvliba} ${iconvdlla}
-					COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/gdk gdk
 					COMMAND echo "*** Building ${iconvliba}"
-					COMMAND ${CMAKE_COMMAND} -E chdir gdk/src/iconv
+					COMMAND ${CMAKE_COMMAND} -E chdir ../../builtins/win32gdk/iconv
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
 					DEPENDS ${iconvfiles} ${glibfiles} ${gdkfiles} )
 
@@ -66,11 +67,13 @@ add_custom_command( OUTPUT ${iconvlib} ${iconvdll}
 add_custom_target(iconv DEPENDS ${iconvlib})
 set_target_properties(iconv PROPERTIES FOLDER Builtins)
 
-# Build glib
+# Build glib, was forked from https://gitlab.gnome.org/GNOME/glib/-/tags/GLIB_1_3_9
+# vs https://github.com/root-project/root/commit/11e6c04d7ee196c794d19ae43ad4d1ad57786d3d#diff-9cbb57072c182c295932b31f4421982d0ac9d1ca2d545bd065509aba4ecfdfce
+# and only slightly modified by ROOT
 
 add_custom_command( OUTPUT ${glibliba} ${glibdlla}
 					COMMAND echo "*** Building ${glibliba}"
-					COMMAND ${CMAKE_COMMAND} -E chdir gdk/src/glib
+					COMMAND ${CMAKE_COMMAND} -E chdir ../../builtins/win32gdk/glib
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
 					DEPENDS iconv ${glibfiles} )
 
@@ -82,13 +85,15 @@ add_custom_command( OUTPUT ${gliblib} ${glibdll}
 add_custom_target(glib DEPENDS ${gliblib})
 set_target_properties(glib PROPERTIES FOLDER Builtins)
 
-# Build gdk
+# Build gdk, was forked from https://github.com/GNOME/gtk/blob/GTK_1_3_1/gdk/win32/rc/gdk.rc
+# vs https://github.com/root-project/root/commit/11e6c04d7ee196c794d19ae43ad4d1ad57786d3d#diff-9cbb57072c182c295932b31f4421982d0ac9d1ca2d545bd065509aba4ecfdfce
+# and only slightly modified by ROOT
 
 add_custom_command( OUTPUT ${gdkliba}
 					COMMAND echo "*** Building ${gdkliba}"
-					COMMAND ${CMAKE_COMMAND} -E chdir gdk/src/gdk/win32
+					COMMAND ${CMAKE_COMMAND} -E chdir ../../builtins/win32gdk/gdk/win32
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
-					COMMAND ${CMAKE_COMMAND} -E chdir gdk/src/gdk
+					COMMAND ${CMAKE_COMMAND} -E chdir ../../builtins/win32gdk/gdk/src/gdk
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
 					DEPENDS glib ${gdkfiles} )
 
