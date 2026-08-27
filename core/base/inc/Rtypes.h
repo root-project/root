@@ -25,7 +25,6 @@
 
 #ifndef R__LESS_INCLUDES
 #include <cstdio>
-#include "strtok.h"     // provides R__STRTOK_R with <cstring> include
 #include <type_traits>
 #endif
 
