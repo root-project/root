@@ -369,13 +369,13 @@ namespace {
                                   const char *addpath = 0)
    {
       static TString dynpath;
-      static TString extrapath;        // directories appended via `addpath`
+      static TString addedPaths;        // directories appended via `addpath`
       static Bool_t userpath = kFALSE; // dynpath explicitly set via SetDynamicPath()
       static Bool_t sawEnv = kFALSE;   // dynpath was assembled with gEnv available
 
       if (reset) {
          dynpath = "";
-         extrapath = "";
+         addedPaths = "";
          userpath = kFALSE;
          sawEnv = kFALSE;
       }
@@ -386,7 +386,7 @@ namespace {
          if (!dynpath.IsNull()) {
             dynpath += ";"; dynpath += addpath;
          }
-         extrapath += ";"; extrapath += addpath;
+         addedPaths += ";"; addedPaths += addpath;
       }
       if (!userpath && (dynpath.IsNull() || (!sawEnv && gEnv))) {
          // (Re)assemble the path. A path assembled while gEnv was not yet
@@ -413,7 +413,7 @@ namespace {
          if (!dynpath.Contains(TROOT::GetLibDir())) {
             dynpath += ";"; dynpath += TROOT::GetLibDir();
          }
-         dynpath += extrapath;  // entries carry a leading ';'
+         dynpath += addedPaths;  // entries carry a leading ';'
       }
       if (!dynpath.Contains(TROOT::GetLibDir())) {
          dynpath += ";"; dynpath += TROOT::GetLibDir();

@@ -4552,7 +4552,8 @@ int TUnixSystem::UnixSend(int sock, const void *buffer, int length, int flag)
 /// path" | sed 's/.*=//g' | awk '//{print $1}')` This might be useful in scenarios, where ROOT is instantiated many
 /// times.
 
-static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFALSE)
+static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFALSE,
+                               const char *addpath = nullptr)
 {
    static TString dynpath_full;
    static std::atomic<bool> initialized(kFALSE);
@@ -4560,10 +4561,23 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
 
    // If we have not seen Cling but the result has been initialized and gCling
    // is still nullptr, the result won't change.
-   if (newpath == nullptr && !reset && (seenCling || (initialized && gCling == nullptr)))
+   if (newpath == nullptr && addpath == nullptr && !reset &&
+       (seenCling || (initialized && gCling == nullptr)))
       return dynpath_full;
 
    R__LOCKGUARD2(gSystemMutex);
+
+   // Directories appended via `addpath` (TUnixSystem::AddDynamicPath). They are
+   // kept separately from the automatically assembled part so that they survive
+   // a re-assembly (e.g. the deferred insertion of the Cling provided parts).
+   static TString addedPaths;
+
+   if (reset) {
+      addedPaths = "";
+      // Re-arm the deferred insertion of the Cling provided parts (it is set
+      // again below if gCling is already available).
+      seenCling = kFALSE;
+   }
 
    if (newpath) {
       dynpath_full = newpath;
@@ -4577,6 +4591,23 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
       // back to the default.
       seenCling = kTRUE;
       return dynpath_full;
+   }
+
+   if (addpath && *addpath) {
+      // Record the extra directory and append it to the current value. Contrary
+      // to a path set explicitly via SetDynamicPath (`newpath`), this must not
+      // set seenCling: the automatically assembled part can still be updated
+      // (to insert the Cling provided parts) and the extra directories are then
+      // re-appended below.
+      addedPaths += ":";
+      addedPaths += addpath;
+      if (initialized) {
+         if (!dynpath_full.EndsWith(":"))
+            dynpath_full += ":";
+         dynpath_full += addpath;
+      }
+      // Fall through: if the path was not yet assembled, or if the Cling
+      // provided parts can now be inserted, do it now (extrapath included).
    }
 
    // Another thread might have updated this. Even-though this is executed at the
@@ -4668,7 +4699,7 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
    #endif
    }
 
-   if (!initialized || (!seenCling && gCling)) {
+   if (reset || !initialized || (!seenCling && gCling)) {
       dynpath_full = dynpath_envpart;
       if (!dynpath_full.EndsWith(":")) dynpath_full += ":";
       if (gCling) {
@@ -4678,6 +4709,7 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
          seenCling = kTRUE;
       }
       dynpath_full += dynpath_syspart;
+      dynpath_full += addedPaths;  // entries carry a leading ':'
       initialized = kTRUE;
 
       if (gDebug > 0) std::cout << "dynpath = " << dynpath_full.Data() << std::endl;
@@ -4692,10 +4724,7 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
 void TUnixSystem::AddDynamicPath(const char *path)
 {
    if (path) {
-      TString oldpath = DynamicPath(nullptr, kFALSE);
-      oldpath.Append(":");
-      oldpath.Append(path);
-      DynamicPath(oldpath);
+      DynamicPath(nullptr, kFALSE, path);
    }
 }
 
