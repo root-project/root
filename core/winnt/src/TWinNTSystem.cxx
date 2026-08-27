@@ -356,17 +356,43 @@ namespace {
 
    /////////////////////////////////////////////////////////////////////////////
    /// Get shared library search path.
+   /// The path is assembled from the ROOT_LIBRARY_PATH environment variable,
+   /// the PATH environment variable, the `Root.DynamicPath` resource of
+   /// .rootrc and the ROOT library directory. Directories can be appended via
+   /// `addpath` (used by TWinNTSystem::AddDynamicPath). The path may first be
+   /// assembled before gEnv is available (TWinNTSystem::Init() adds the
+   /// directory of libCore.dll); in that case it is re-assembled - keeping the
+   /// appended directories - as soon as gEnv exists, so that the
+   /// `Root.DynamicPath` resource is taken into account.
 
-   static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
+   static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE,
+                                  const char *addpath = 0)
    {
       static TString dynpath;
+      static TString extrapath;        // directories appended via `addpath`
+      static Bool_t userpath = kFALSE; // dynpath explicitly set via SetDynamicPath()
+      static Bool_t sawEnv = kFALSE;   // dynpath was assembled with gEnv available
 
-      if (reset || newpath) {
+      if (reset) {
          dynpath = "";
+         extrapath = "";
+         userpath = kFALSE;
+         sawEnv = kFALSE;
       }
       if (newpath) {
          dynpath = newpath;
-      } else if (dynpath == "") {
+         userpath = kTRUE;
+      } else if (addpath && *addpath) {
+         if (!dynpath.IsNull()) {
+            dynpath += ";"; dynpath += addpath;
+         }
+         extrapath += ";"; extrapath += addpath;
+      }
+      if (!userpath && (dynpath.IsNull() || (!sawEnv && gEnv))) {
+         // (Re)assemble the path. A path assembled while gEnv was not yet
+         // available misses the Root.DynamicPath resource, so it is rebuilt
+         // here once gEnv exists.
+         sawEnv = (gEnv != nullptr);
          dynpath = gSystem->Getenv("ROOT_LIBRARY_PATH");
          TString rdynpath = gEnv ? gEnv->GetValue("Root.DynamicPath", (char*)0) : "";
          rdynpath.ReplaceAll("; ", ";");  // in case DynamicPath was extended
@@ -384,6 +410,10 @@ namespace {
                dynpath += ";";
             dynpath += rdynpath;
          }
+         if (!dynpath.Contains(TROOT::GetLibDir())) {
+            dynpath += ";"; dynpath += TROOT::GetLibDir();
+         }
+         dynpath += extrapath;  // entries carry a leading ';'
       }
       if (!dynpath.Contains(TROOT::GetLibDir())) {
          dynpath += ";"; dynpath += TROOT::GetLibDir();
@@ -4073,10 +4103,7 @@ Int_t TWinNTSystem::RedirectOutput(const char *file, const char *mode,
 void TWinNTSystem::AddDynamicPath(const char *dir)
 {
    if (dir) {
-      TString oldpath = DynamicPath(0, kFALSE);
-      oldpath.Append(";");
-      oldpath.Append(dir);
-      DynamicPath(oldpath);
+      DynamicPath(0, kFALSE, dir);
    }
 }
 
