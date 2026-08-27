@@ -91,7 +91,7 @@ ROOT_BUILD_OPTION(builtin_freetype OFF "Build freetype from an automatically dow
 ROOT_BUILD_OPTION(builtin_ftgl OFF "Build FTGL from an automatically downloaded source tarball (requires network)")
 ROOT_BUILD_OPTION(builtin_gif OFF "Build libgif from an automatically downloaded source tarball (requires network)")
 ROOT_BUILD_OPTION(builtin_gl2ps OFF "Build gl2ps from an automatically downloaded source tarball (requires network)")
-ROOT_BUILD_OPTION(builtin_glu OFF "Build libtess-GLU from an automatically downloaded source tarball (requires network)")
+ROOT_BUILD_OPTION(builtin_glu OFF "Build libtess-GLU from an internal source tarball (does not require network)")
 ROOT_BUILD_OPTION(builtin_gsl OFF "Build GSL from an automatically downloaded source tarball (requires network) [GPL]")
 ROOT_BUILD_OPTION(builtin_gtest OFF "Build googletest from an automatically downloaded source tarball (requires network)")
 ROOT_BUILD_OPTION(builtin_jpeg OFF "Build libjpeg from an automatically downloaded source tarball (requires network)")
