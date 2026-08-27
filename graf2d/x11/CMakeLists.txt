@@ -16,7 +16,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GX11
     ../gifencode/gifdecode.cxx
     ../gifencode/gifencode.cxx
     src/GX11Gui.cxx
-    src/Rotated.cxx
+    ../../builtins/xvertext/Rotated.cxx # was forked from http://hpux.connect.org.uk/hppd/hpux/X11/Misc/xvertext-5.0/ vs https://github.com/root-project/root/blob/852600061bcacd9b255d44f6312c96b6b1e00a2d/x11/src/Rotated.cxx
     src/TGX11.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
