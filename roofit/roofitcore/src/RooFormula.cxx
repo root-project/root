@@ -60,7 +60,9 @@ Check the tutorial rf506_msgservice.C for details.
 #include "RooArgList.h"
 #include "RooMsgService.h"
 #include "RooBatchCompute.h"
+#include "RooTFormulaEvaluator.h"
 
+#include "TFormula.h"
 #include "TObjString.h"
 
 #include <memory>
@@ -238,23 +240,6 @@ std::string reconstructFormula(std::string internalRepr, RooArgList const& args)
   return internalRepr;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// From the internal representation, construct a null-formula by replacing all
-/// index place holders with zeroes, and return it as string
-std::string reconstructNullFormula(std::string internalRepr, RooArgList const& args) {
-  const auto nArgs = args.size();
-  for (unsigned int i = 0; i < nArgs; ++i) {
-     std::stringstream regexStr;
-     regexStr << "x\\[" << i << "\\]|@" << i;
-     std::regex regex(regexStr.str());
-
-     std::string replacement = "1e-18";
-     internalRepr = std::regex_replace(internalRepr, regex, replacement);
-  }
-
-  return internalRepr;
-}
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -272,10 +257,10 @@ RooFormula::RooFormula(const char *name, const char *formula, const RooArgList &
 
    installFormulaOrThrow(formula);
 
-   if (_tFormula == nullptr)
+   if (_evaluator == nullptr)
       return;
 
-   const std::string processedFormula(_tFormula->GetTitle());
+   const std::string processedFormula = _evaluator->processedFormula();
 
    std::set<unsigned int> matchedOrdinals;
    static const std::regex newOrdinalRegex("\\bx\\[([0-9]+)\\]");
@@ -302,13 +287,14 @@ RooFormula::RooFormula(const RooFormula& other, const char* name) :
 {
   _origList.add(other._origList);
 
-  std::unique_ptr<TFormula> newTF;
-  if (other._tFormula) {
-    newTF = std::make_unique<TFormula>(*other._tFormula);
-    newTF->SetName(GetName());
+  if (other._evaluator) {
+    _evaluator = other._evaluator->clone();
+    // Like when the TFormula was still copied directly, the copied TFormula
+    // is renamed after the possibly-different name of this RooFormula.
+    if (TFormula *tFormula = _evaluator->getTFormula()) {
+      tFormula->SetName(GetName());
+    }
   }
-
-  _tFormula = std::move(newTF);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -400,7 +386,7 @@ RooArgList RooFormula::usedVariables() const {
 /// \return A new formula string with reindexed variable placeholders.
 std::string RooFormula::reindexedFormulaForUsedVars() const
 {
-   const std::string processedFormula(_tFormula->GetTitle());
+   const std::string processedFormula = _evaluator->processedFormula();
 
    int unUsedCount = 0;
    std::vector<int> newIndex;
@@ -478,7 +464,7 @@ bool RooFormula::changeDependents(const RooAbsCollection& newDeps, bool mustRepl
 /// \return The result of the evaluation.
 double RooFormula::eval(const RooArgSet* nset) const
 {
-  if (!_tFormula) {
+  if (!_evaluator) {
     coutF(Eval) << __func__ << " (" << GetName() << "): Formula didn't compile: " << GetTitle() << std::endl;
     std::string what = "Formula ";
     what += GetTitle();
@@ -498,7 +484,7 @@ double RooFormula::eval(const RooArgSet* nset) const
     }
   }
 
-  return _tFormula->EvalPar(pars.data());
+  return _evaluator->eval(pars.data());
 }
 
 void RooFormula::doEval(RooArgList const &actualVars, RooFit::EvalContext &ctx) const
@@ -529,7 +515,7 @@ void RooFormula::doEval(RooArgList const &actualVars, RooFit::EvalContext &ctx) 
          }
          pars[j] = inputSpans[j].size() > 1 ? inputSpans[j][i] : inputSpans[j][0];
       }
-      output[i] = _tFormula->EvalPar(pars.data());
+      output[i] = _evaluator->eval(pars.data());
    }
 }
 
@@ -558,38 +544,7 @@ void RooFormula::installFormulaOrThrow(const std::string& formula) {
       << "\n\t" << reconstructFormula(processedFormula, _origList)
       << "\n  with the parameters " << _origList << std::endl;
 
-  auto theFormula = std::make_unique<TFormula>(GetName(), processedFormula.c_str(), /*addToGlobList=*/false);
-
-  if (!theFormula || !theFormula->IsValid()) {
-    std::stringstream msg;
-    msg << "RooFormula '" << GetName() << "' did not compile or is invalid."
-        << "\nInput:\n\t" << formula
-        << "\nPassed over to TFormula:\n\t" << processedFormula << std::endl;
-    coutF(InputArguments) << msg.str();
-    throw std::runtime_error(msg.str());
-  }
-
-  if (theFormula && theFormula->GetNdim() != 0) {
-    TFormula nullFormula{"nullFormula", reconstructNullFormula(processedFormula, _origList).c_str(), /*addToGlobList=*/false};
-    const auto nullDim = nullFormula.GetNdim();
-    if (nullDim != 0) {
-      // TFormula thinks that we have an n-dimensional formula (n>0), but it shouldn't, as
-      // these vars should have been replaced by zeroes in reconstructNullFormula
-      // since RooFit only uses the syntax x[0], x[1], x[2], ...
-      // This can happen e.g. with variables x,y,z,t that were not supplied in arglist.
-      std::stringstream msg;
-      msg << "TFormula interprets the formula " << formula << " as " << theFormula->GetNdim()+nullDim << "-dimensional with undefined variable(s) {";
-      for (auto i=0; i < nullDim; ++i) {
-        msg << nullFormula.GetVarName(i) << ",";
-      }
-      msg << "}, which could not be supplied by RooFit."
-          << "\nThe formula must be modified, or those variables must be supplied in the list of variables." << std::endl;
-      coutF(InputArguments) << msg.str();
-      throw std::invalid_argument(msg.str());
-    }
-  }
-
-  _tFormula = std::move(theFormula);
+  _evaluator = std::make_unique<RooTFormulaEvaluator>(GetName(), processedFormula, formula, _origList);
 }
 
 /// \endcond

@@ -53,6 +53,8 @@ the names of the arguments are not hard coded.
 #include "RooCurve.h"
 #include "RooFitImplHelpers.h"
 
+#include "TFormula.h"
+
 using std::istream, std::ostream, std::endl;
 
 
