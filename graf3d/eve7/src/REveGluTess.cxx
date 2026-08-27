@@ -13,6 +13,9 @@
 #include "GL/glu.h"
 #elif defined(__APPLE__) && defined(__MACH__) // fallback solution for APPLE
 #include <OpenGL/glu.h>
+#ifndef _GLUfuncptr
+typedef void (* _GLUfuncptr)(void);
+#endif
 #endif
 
 #include <ROOT/REveGluTess.hxx>
