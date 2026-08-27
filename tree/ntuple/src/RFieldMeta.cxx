@@ -552,6 +552,10 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RClassField::BeforeConnectPageSource(ROO
       // A staging class (conversion streamer info) only exists if there is at least one rule that has an
       // on disk source member defined.
       if (hasSources) {
+         if (fieldDesc.GetTypeVersion() != GetTypeVersion() || fieldDesc.GetTypeName() != GetTypeName()) {
+            // We need the on-disk streamer info for the conversion streamer info
+            pageSource.LoadStreamerInfo();
+         }
          SetStagingClass(fieldDesc.GetTypeName(), fieldDesc.GetTypeVersion());
          PrepareStagingArea(rules, desc, fieldDesc);
          for (auto &[_, si] : fStagingItems) {
