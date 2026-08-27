@@ -1225,8 +1225,7 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
          RooArgList  genObs(*bkgdata->get(0));
          RooStats::PrintListContent(genObs, oocoutP(nullptr,Generation) );
          nObs = 0;
-         for (std::size_t i = 0; i < genObs.size(); ++i) {
-            RooRealVar * x = dynamic_cast<RooRealVar*>(&genObs[i]);
+         for (auto *x : dynamic_range_cast<RooRealVar*>(genObs)) {
             if (x) nObs += x->getVal();
          }
       }
@@ -1237,7 +1236,8 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
       inverter.SetData(*bkgdata);
 
       // print global observables
-      auto gobs = bModel->GetPdf()->getVariables()->selectCommon(* sbModel->GetGlobalObservables() );
+      std::unique_ptr<RooArgSet> bModelVars{bModel->GetPdf()->getVariables()};
+      std::unique_ptr<RooAbsCollection> gobs{bModelVars->selectCommon(*sbModel->GetGlobalObservables())};
       gobs->Print("v");
 
       HypoTestInverterResult * r  = inverter.GetInterval();

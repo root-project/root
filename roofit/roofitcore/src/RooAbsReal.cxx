@@ -2203,6 +2203,12 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     }
   }
 
+  // The asymmetry category itself defines the two sides of the asymmetry, so it
+  // must not be treated as a variable to be averaged over the projection data.
+  if (RooAbsArg *asymCatInProjData = projDataVars.find(asymCat.GetName())) {
+    projDataVars.remove(*asymCatInProjData) ;
+  }
+
   // Must depend on asymCat
   if (!dependsOn(asymCat)) {
     coutE(Plotting) << "RooAbsReal::plotAsymOn(" << GetName()
@@ -2247,10 +2253,10 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
 
   // Take out data-projected dependents from projectedVars
-  RooArgSet* projDataNeededVars = nullptr ;
+  std::unique_ptr<RooArgSet> projDataNeededVars;
   if (o.projData) {
-    projDataNeededVars = projectedVars.selectCommon(projDataVars);
-    projectedVars.remove(projDataVars,true,true) ;
+     projDataNeededVars.reset(projectedVars.selectCommon(projDataVars));
+     projectedVars.remove(projDataVars, true, true);
   }
 
   // Take out plotted asymmetry from projection
@@ -2273,19 +2279,16 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   }
 
 
-  // Customize two copies of projection with fixed negative and positive asymmetry
+  // Build two copies of the function with the asymmetry category fixed to its
+  // negative and positive state. By default these are copies with the category
+  // pinned via a RooCustomizer, but subclasses (RooSimultaneous) can provide a
+  // more suitable construction.
   std::unique_ptr<RooAbsCategoryLValue> asymPos{static_cast<RooAbsCategoryLValue*>(asymCat.Clone("asym_pos"))};
   std::unique_ptr<RooAbsCategoryLValue> asymNeg{static_cast<RooAbsCategoryLValue*>(asymCat.Clone("asym_neg"))};
   asymPos->setIndex(1) ;
   asymNeg->setIndex(-1) ;
-  RooCustomizer custPos{*this,"pos"};
-  RooCustomizer custNeg{*this,"neg"};
-  //custPos->setOwning(true) ;
-  //custNeg->setOwning(true) ;
-  custPos.replaceArg(asymCat,*asymPos) ;
-  custNeg.replaceArg(asymCat,*asymNeg) ;
-  std::unique_ptr<RooAbsReal> funcPos{static_cast<RooAbsReal*>(custPos.build())};
-  std::unique_ptr<RooAbsReal> funcNeg{static_cast<RooAbsReal*>(custNeg.build())};
+  std::unique_ptr<RooAbsReal> funcPos = createAsymmetryComponent(asymCat, *asymPos);
+  std::unique_ptr<RooAbsReal> funcNeg = createAsymmetryComponent(asymCat, *asymNeg);
 
   // Create projection integral
   RooArgSet *posProjCompList;
@@ -2293,8 +2296,12 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
   // Add projDataVars to normalized dependents of projection
   // This is needed only for asymmetries (why?)
-  RooArgSet depPos(*plotVar,*asymPos) ;
-  RooArgSet depNeg(*plotVar,*asymNeg) ;
+  RooArgSet depPos(*plotVar) ;
+  RooArgSet depNeg(*plotVar) ;
+  // Keep the fixed asymmetry category in the normalization set only if the
+  // component function actually depends on it (i.e. it was pinned in place).
+  if (funcPos->dependsOn(*asymPos)) depPos.add(*asymPos) ;
+  if (funcNeg->dependsOn(*asymNeg)) depNeg.add(*asymNeg) ;
   depPos.add(projDataVars) ;
   depNeg.add(projDataVars) ;
 
@@ -2410,6 +2417,21 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   delete plotVar ;
 
   return frame;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Build the component function of an asymmetry plot (see plotAsymOn()) that
+/// corresponds to a fixed state of the asymmetry category. The default
+/// implementation returns a copy of this function with the asymmetry category
+/// pinned to the requested state via a RooCustomizer.
+
+std::unique_ptr<RooAbsReal>
+RooAbsReal::createAsymmetryComponent(const RooAbsCategoryLValue &asymCat, const RooAbsCategoryLValue &asymCatState) const
+{
+   RooCustomizer cust{*this, asymCatState.GetName()};
+   cust.replaceArg(asymCat, asymCatState);
+   return std::unique_ptr<RooAbsReal>{static_cast<RooAbsReal *>(cust.build())};
 }
 
 

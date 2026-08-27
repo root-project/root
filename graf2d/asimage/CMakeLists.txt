@@ -68,3 +68,5 @@ if (x11)
 endif()
 
 ROOT_INSTALL_HEADERS()
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)

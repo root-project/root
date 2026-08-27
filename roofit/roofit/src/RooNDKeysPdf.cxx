@@ -1179,10 +1179,10 @@ double RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
     norm = bi->nEventsBMSW;
     if (norm<0.) norm=0.;
 
-    for (Int_t i=0; i<Int_t(bi->sIdcs.size()); ++i) {
+    for (Int_t sIdx : bi->sIdcs) {
       double prob=1.;
-      const vector<double>& x = _dataPts[bi->sIdcs[i]];
-      const vector<double>& weight = (*_weights)[_idx[bi->sIdcs[i]]];
+      const vector<double>& x = _dataPts[sIdx];
+      const vector<double>& weight = (*_weights)[_idx[sIdx]];
 
       vector<double> chi(_nDim,100.);
 
@@ -1202,7 +1202,7 @@ double RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
    }
       }
 
-      norm += prob * _wMap.at(_idx[bi->sIdcs[i]]);
+      norm += prob * _wMap.at(_idx[sIdx]);
     }
 
     cxcoutD(Eval) << "RooNDKeysPdf::analyticalIntegral() : Final normalization : " << norm << " " << bi->nEventsBW << std::endl;

@@ -137,12 +137,14 @@ class TF2Painter extends TH2Painter {
 
                try {
                   z = func.evalPar(x, y);
+                  if (!Number.isFinite(z))
+                     iserror = true;
                } catch {
                   iserror = true;
                }
 
                if (!iserror)
-                  hist.setBinContent(hist.getBin(i + 1, j + 1), Number.isFinite(z) ? z : 0);
+                  hist.setBinContent(hist.getBin(i + 1, j + 1), z);
             }
          }
 

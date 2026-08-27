@@ -1,4 +1,5 @@
-import { BIT, settings, gStyle, internals, browser, create, parse, toJSON, loadScript, isFunc, isStr, clTCanvas } from '../core.mjs';
+import { BIT, settings, gStyle, internals, browser, create, parse,
+         toJSON, loadScript, isFunc, isStr, clTCanvas, clTList } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
@@ -856,9 +857,10 @@ class TCanvasPainter extends TPadPainter {
 
       this.forEachPainterInPad(pp => {
          const pad = pp.getRootPad(true);
-         if (pp.getNumPainters() && pad?.fPrimitives && !pad.fPrimitives.arr.length) {
+         if (pp.getNumPainters() && pad && !pad.fPrimitives?.arr.length) {
+            prims.push(pad, pad.fPrimitives); // remember old value
             // create list of primitives when missing
-            prims.push(pad.fPrimitives);
+            pad.fPrimitives = create(clTList);
             pp.forEachPainterInPad(p => {
                // ignore all secondary painters
                if (p.isSecondary())
@@ -917,7 +919,8 @@ class TCanvasPainter extends TPadPainter {
          e.hist.fMaximum = e.max;
       });
 
-      prims.forEach(lst => lst.Clear());
+      for (let k = 0; k < prims.length; k += 2)
+         prims[k].fPrimitives = prims[k + 1];
 
       return res;
    }

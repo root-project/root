@@ -59,6 +59,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py PYTHON_DEPS numpy)
 
 # TColor-related pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tcolor tcolor.py)
+ROOT_ADD_PYUNITTEST(regression_20018 regression_20018.py)
 
 # TH1 and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1 th1.py)
@@ -182,6 +183,8 @@ if (dataframe)
 endif()
 
 ROOT_ADD_PYUNITTEST(regression_18441 regression_18441.py)
+
+ROOT_ADD_PYUNITTEST(regression_pickle_no_cppyy regression_pickle_no_cppyy.py)
 
 if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 8 OR win_broken_tests)
     # Test the conversion and low level views of interpreter-defined C++ arrays to NumPy

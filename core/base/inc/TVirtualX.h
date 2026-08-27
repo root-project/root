@@ -50,6 +50,7 @@ public:
    enum EBoxMode     { kHollow, kFilled };
    enum ETextMode    { kClear, kOpaque };
    enum ETextSetMode { kCheck, kLoad };
+   enum EWindowHint  { kHintCombo, kHintPopup, kHintTooltip };
 
 protected:
    EDrawMode fDrawMode;           //Drawing mode
@@ -257,6 +258,7 @@ public:
    virtual void         ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *attr);
    virtual void         ChangeProperty(Window_t id, Atom_t property, Atom_t type,
                                        UChar_t *data, Int_t len);
+   virtual void         SetWindowHint(Window_t id, EWindowHint hint);
    virtual void         DrawLine(Drawable_t id, GContext_t gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
    virtual void         ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual Bool_t       CheckEvent(Window_t id, EGEventType type, Event_t &ev);

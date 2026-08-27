@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.11.0
+// https://root.cern/js/ v7.11.1
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -10,11 +10,11 @@ var _documentCurrentScript = typeof document !== 'undefined' ? document.currentS
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = '7.11.0',
+const version_id = '7.11.1',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '5/05/2026',
+version_date = '27/07/2026',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -81017,6 +81017,13 @@ class JSRootMenu {
 
    /** @summary Add menu header - must be first entry */
    header(name, title) {
+      if (name.length > 25) {
+         if (!title)
+            title = name;
+         else if (isStr(title) && title.indexOf('https://') === 0)
+            title = name + title;
+         name = name.slice(0, 22) + '...';
+      }
       this.add(sHeader + name, undefined, undefined, title);
    }
 
@@ -93165,9 +93172,10 @@ class TCanvasPainter extends TPadPainter {
 
       this.forEachPainterInPad(pp => {
          const pad = pp.getRootPad(true);
-         if (pp.getNumPainters() && pad?.fPrimitives && !pad.fPrimitives.arr.length) {
+         if (pp.getNumPainters() && pad && !pad.fPrimitives?.arr.length) {
+            prims.push(pad, pad.fPrimitives); // remember old value
             // create list of primitives when missing
-            prims.push(pad.fPrimitives);
+            pad.fPrimitives = create$1(clTList);
             pp.forEachPainterInPad(p => {
                // ignore all secondary painters
                if (p.isSecondary())
@@ -93226,7 +93234,8 @@ class TCanvasPainter extends TPadPainter {
          e.hist.fMaximum = e.max;
       });
 
-      prims.forEach(lst => lst.Clear());
+      for (let k = 0; k < prims.length; k += 2)
+         prims[k].fPrimitives = prims[k + 1];
 
       return res;
    }
@@ -97161,6 +97170,12 @@ class THistPainter extends ObjectPainter {
 
       if (!histo.fFunctions)
          histo.fFunctions = create$1(clTList);
+      else if (histo.fFunctions._typename !== clTList) {
+         // Fix - seen once in jupyter notebook that typename was TList*
+         console.error(`Fixing wrong typename ${histo.fFunctions._typename} for histogram list of functions`);
+         histo.fFunctions._typename = clTList;
+         exports.addMethods(histo.fFunctions, clTList);
+      }
 
       if (asfirst)
          histo.fFunctions.AddFirst(obj);
@@ -104602,10 +104617,10 @@ function getTF1Value(func, x, skip_eval = undefined) {
 
    if (func.evalPar && !iserr) {
       try {
-         return func.evalPar(x);
+         const res = func.evalPar(x);
+         if (Number.isFinite(res))
+            return res;
       } catch {
-         /* eslint-disable-next-line  no-useless-assignment */
-         iserr = true;
       }
    }
 
@@ -170607,7 +170622,7 @@ function readStyleFromURL(url) {
 
    const b = d.get('batch');
    if (b !== undefined) {
-      setBatchMode(d !== 'off');
+      setBatchMode(b !== 'off');
       if (b === 'png')
          internals.batch_png = true;
    }
@@ -170854,8 +170869,10 @@ async function buildGUI(gui_element, gui_kind = '') {
    if (divsize)
       myDiv.style('position', 'relative').style('width', divsize[0] + 'px').style('height', divsize[1] + 'px');
    else if (!isBatchMode()) {
-      select('html').style('height', '100%');
-      select('body').style('min-height', '100%').style('margin', 0).style('overflow', 'hidden');
+      if (!nb) {
+         select('html').style('height', '100%');
+         select('body').style('min-height', '100%').style('margin', 0).style('overflow', 'hidden');
+      }
       myDiv.style('position', 'absolute').style('left', 0).style('top', 0).style('bottom', 0).style('right', 0).style('padding', '1px');
    }
    if (canvsize) {
@@ -170891,7 +170908,9 @@ async function buildGUI(gui_element, gui_kind = '') {
       if (d.has('websocket'))
          opt += ';websocket';
       return hpainter.display('', opt);
-   }).then(() => hpainter);
+   }).then(() => {
+      return hpainter;
+   });
 }
 
 /** @summary Draw TEllipse
@@ -175394,12 +175413,14 @@ class TF1Painter extends TH1Painter$2 {
             let y = 0;
             try {
                y = tf1.evalPar(x);
+               if (!Number.isFinite(y))
+                  iserror = true;
             } catch {
                iserror = true;
             }
 
             if (!iserror)
-               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
+               hist.setBinContent(n + 1, y);
          }
 
          if (iserror)
@@ -177187,12 +177208,14 @@ class TF2Painter extends TH2Painter {
 
                try {
                   z = func.evalPar(x, y);
+                  if (!Number.isFinite(z))
+                     iserror = true;
                } catch {
                   iserror = true;
                }
 
                if (!iserror)
-                  hist.setBinContent(hist.getBin(i + 1, j + 1), Number.isFinite(z) ? z : 0);
+                  hist.setBinContent(hist.getBin(i + 1, j + 1), z);
             }
          }
 
@@ -177552,10 +177575,16 @@ class TF3Painter extends TH2Painter {
                let z = 0;
 
                try {
-                  for (let k = 0; k < npz; ++k)
+                  for (let k = 0; k < npz; ++k) {
                      arrv[k] = func.evalPar(x, y, arrz[k]);
+                     if (!Number.isFinite(arrv[k])) {
+                        iserror = true;
+                        break;
+                     }
+                  }
 
-                  z = findZValue(arrz, arrv);
+                  if (!iserror)
+                     z = findZValue(arrz, arrv);
                } catch {
                   iserror = true;
                }
@@ -179826,9 +179855,9 @@ function decodeZigzag32(view) {
  * @private */
 function decodeZigzag64(view) {
    for (let o = 0; o < view.byteLength; o += 8) {
-      const x = view.getUint64(o, LITTLE_ENDIAN);
-      view.setInt64(o, (x >>> 1) ^ (-(x & 1)), LITTLE_ENDIAN);
-   }
+        const x = view.getBigUint64(o, LITTLE_ENDIAN);
+        view.setBigInt64(o, (x >> 1n) ^ (-(x & 1n)), LITTLE_ENDIAN);
+    }
 }
 
 

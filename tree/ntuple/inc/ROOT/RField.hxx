@@ -167,7 +167,6 @@ private:
    TClass *fClass;
    /// Additional information kept for each entry in `fSubfields`
    std::vector<RSubfieldInfo> fSubfieldsInfo;
-   std::size_t fMaxAlignment = 1;
 
    /// The staging area stores inputs to I/O rules according to the offsets given by the streamer info of
    /// "TypeName@@Version". The area is allocated depending on I/O rules resp. the source members of the I/O rules.
@@ -222,8 +221,8 @@ public:
    ~RClassField() override;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const final;
-   size_t GetAlignment() const final { return fMaxAlignment; }
+   std::size_t GetValueSize() const final;
+   std::size_t GetAlignment() const final;
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
    /// For polymorphic classes (that declare or inherit at least one virtual method), return the expected dynamic type

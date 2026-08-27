@@ -800,9 +800,6 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
   }
 
   // WVE need to prune tracking entries _below_ constant nodes as the're not needed
-//   std::cout << "Number of Cache-and-Tracked args are " << trackArgs.size() << std::endl ;
-//   std::cout << "Compound ordered cache parameters = " << std::endl ;
-//   orderedArgs.Print("v") ;
 
   checkInit() ;
 
@@ -829,6 +826,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 
   std::vector<RooArgSet*> nsetList ;
   std::vector<std::unique_ptr<RooArgSet>> argObsList ;
+  std::vector<std::unique_ptr<RooArgSet>> ownedNsets;
 
   // Now need to attach branch buffers of clones
   for (const auto arg : cloneSet) {
@@ -841,25 +839,18 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
     RooArgSet* normSet(nullptr) ;
     const char* catNset = arg->getStringAttribute("CATNormSet") ;
     if (catNset) {
-//       std::cout << "RooVectorDataStore::cacheArgs() cached node " << arg->GetName() << " has a normalization set specification CATNormSet = " << catNset << std::endl ;
-
       RooArgSet anset = RooHelpers::selectFromArgSet(nset ? *nset : RooArgSet{}, catNset);
-      normSet = anset.selectCommon(*argObs);
-
+      ownedNsets.emplace_back(anset.selectCommon(*argObs));
+      normSet = ownedNsets.back().get();
     }
     const char* catCset = arg->getStringAttribute("CATCondSet") ;
     if (catCset) {
-//       std::cout << "RooVectorDataStore::cacheArgs() cached node " << arg->GetName() << " has a conditional observable set specification CATCondSet = " << catCset << std::endl ;
-
       RooArgSet acset = RooHelpers::selectFromArgSet(nset ? *nset : RooArgSet{}, catCset);
       argObs->remove(acset,true,true) ;
       normSet = argObs ;
     }
 
     // now construct normalization set for component from cset/nset spec
-//     if (normSet) {
-//       std::cout << "RooVectorDaraStore::cacheArgs() component " << arg->GetName() << " has custom normalization set " << *normSet << std::endl ;
-//     }
     nsetList.push_back(normSet) ;
   }
 

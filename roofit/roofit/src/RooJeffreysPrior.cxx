@@ -82,11 +82,10 @@ double RooJeffreysPrior::evaluate() const
     auto& pdf = _nominal.arg();
     RooAbsPdf* clonePdf = static_cast<RooAbsPdf*>(pdf.cloneTree());
     std::unique_ptr<RooArgSet> vars{clonePdf->getParameters(_obsSet)};
-    for (auto varTmp : *vars) {
-      auto& var = static_cast<RooRealVar&>(*varTmp);
-      auto range = var.getRange();
+    for (auto* var : static_range_cast<RooRealVar*>(*vars)) {
+      auto range = var->getRange();
       double span = range.second - range.first;
-      var.setRange(range.first - 0.1*span, range.second + 0.1 * span);
+      var->setRange(range.first - 0.1*span, range.second + 0.1 * span);
     }
 
     cacheElm = new CacheElem;

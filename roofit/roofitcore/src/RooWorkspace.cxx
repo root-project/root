@@ -87,6 +87,8 @@ and try reading again.
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace {
 
@@ -428,7 +430,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
   const char* suffix = suffixA ? suffixA : suffixC ;
 
   // Process any change in variable names
-  std::map<string,string> varMap ;
+  std::unordered_map<string,string> varMap ;
   if (strlen(varChangeIn)>0) {
 
     // Parse comma separated lists into map<string,string>
@@ -488,20 +490,32 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
     }
   }
 
-  // Make list of conflicting nodes
+  // When existing nodes are recycled and no renaming is requested, nodes
+  // whose names already exist in the workspace are not cloned at all: the
+  // existing nodes are used anyway, and the clones would be discarded right
+  // after the import. One deliberate difference to the general code path:
+  // importWorkspaceHook() and the class-code import don't run for recycled
+  // nodes anymore, since there is no clone to run them on.
+  const bool pruneClones = useExistingNodes && !suffix && varMap.empty() && !noRecursion;
+
+  // Make list of conflicting nodes. With useExistingNodes, this list stays
+  // empty, and the branch set is only otherwise used by the rename-all mode
+  // that excludes pruning, so the scan is skipped when pruning is active.
   RooArgSet conflictNodes ;
   RooArgSet branchSet ;
-  if (noRecursion) {
-    branchSet.add(inArg) ;
-  } else {
-    inArg.branchNodeServerList(&branchSet) ;
-  }
+  if (!pruneClones) {
+     if (noRecursion) {
+        branchSet.add(inArg);
+     } else {
+        inArg.branchNodeServerList(&branchSet);
+     }
 
-  for (const auto branch : branchSet) {
-    RooAbsArg* wsbranch = _allOwnedNodes.find(branch->GetName()) ;
-    if (wsbranch && wsbranch!=branch && !branch->getAttribute("RooWorkspace::Recycle") && !useExistingNodes) {
-      conflictNodes.add(*branch) ;
-    }
+     for (const auto branch : branchSet) {
+        RooAbsArg *wsbranch = _allOwnedNodes.find(branch->GetName());
+        if (wsbranch && wsbranch != branch && !branch->getAttribute("RooWorkspace::Recycle") && !useExistingNodes) {
+           conflictNodes.add(*branch);
+        }
+     }
   }
 
   // Terminate here if there are conflicts and no resolution protocol
@@ -514,7 +528,73 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
   // Now create a working copy of the incoming object tree
   RooArgSet cloneSet;
   cloneSet.useHashMapForFind(true); // Accelerate finding
-  RooArgSet(inArg).snapshot(cloneSet, !noRecursion);
+  // Nodes of the input graph whose names already exist in the workspace and
+  // that are hence recycled instead of cloned.
+  std::vector<RooAbsArg const *> recycledSources;
+  if (pruneClones) {
+     // Traverse the whole graph like the snapshot in the general code path
+     // does (depth-first pre-order over the server links, keeping the first
+     // encountered instance for each name), but clone only the nodes whose
+     // names are not in the workspace yet.
+     std::vector<RooAbsArg const *> toClone;
+     std::unordered_set<TNamed const *> visited;
+     visited.insert(inArg.namePtr());
+     std::vector<RooAbsArg const *> stack{&inArg};
+     while (!stack.empty()) {
+        RooAbsArg const *arg = stack.back();
+        stack.pop_back();
+        if (RooAbsArg *wsnode = _allOwnedNodes.find(arg->GetName())) {
+           if (!silence) {
+              coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") using existing copy of "
+                                    << wsnode->ClassName() << "::" << wsnode->GetName() << " for import of "
+                                    << inArg.ClassName() << "::" << inArg.GetName() << std::endl;
+           }
+           recycledSources.push_back(arg);
+        } else {
+           toClone.push_back(arg);
+        }
+        // Push the servers in reverse order so that they are popped in
+        // forward order, matching the traversal order of the snapshot.
+        auto const &servers = arg->servers().containedObjects();
+        for (auto it = servers.rbegin(); it != servers.rend(); ++it) {
+           if (visited.insert((*it)->namePtr()).second) {
+              stack.push_back(*it);
+           }
+        }
+     }
+     for (RooAbsArg const *arg : toClone) {
+        auto clone = std::unique_ptr<RooAbsArg>{static_cast<RooAbsArg *>(arg->Clone())};
+        clone->setAttribute("SnapShot_ExtRefClone");
+        cloneSet.addOwned(std::move(clone));
+     }
+     // Redirect the server links of the clones to the other clones or to the
+     // existing nodes in the workspace.
+     RooArgSet redirectSet;
+     redirectSet.useHashMapForFind(true);
+     redirectSet.add(cloneSet);
+     for (RooAbsArg const *arg : recycledSources) {
+        redirectSet.add(*_allOwnedNodes.find(arg->GetName()));
+     }
+     for (RooAbsArg *clone : cloneSet) {
+        clone->redirectServers(redirectSet, true);
+     }
+  } else {
+     RooArgSet(inArg).snapshot(cloneSet, !noRecursion);
+  }
+
+  // Import the expensive-object cache payloads for recycled nodes like the
+  // general code path does via the discarded clones, which always hand over
+  // the global cache instance because the cache pointer of a RooAbsArg is
+  // transient and not copied when cloning.
+  for (RooAbsArg const *arg : recycledSources) {
+     _eocache.importCacheObjects(RooExpensiveObjectCache::instance(), arg->GetName(), true);
+  }
+
+  if (pruneClones && cloneSet.empty()) {
+     // The whole computation graph is already in the workspace.
+     return false;
+  }
+
   RooAbsArg* cloneTop = cloneSet.find(inArg.GetName()) ;
 
   // Mark all nodes for renaming if we are not in conflictOnly mode
@@ -524,7 +604,13 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
   }
 
   // Mark nodes that are to be renamed with special attribute
-  string topName2 = cloneTop->GetName() ;
+  // Track whether any node in cloneSet actually gets renamed below: only then
+  // does the working copy have to be cloned a second time (see there).
+  bool nodesRenamed = false ;
+  // With clone pruning, the top-level node itself may have been recycled, in
+  // which case it has no clone in cloneSet. No renaming can happen then, so
+  // the original name is already final.
+  string topName2 = cloneTop ? cloneTop->GetName() : inArg.GetName();
   if (!renameConflictOrig) {
     // Mark all nodes to be imported for renaming following conflict resolution protocol
     for (const auto cnode : conflictNodes) {
@@ -532,6 +618,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
       string origName = cnode2->GetName() ;
       cnode2->SetName(Form("%s_%s",cnode2->GetName(),suffix)) ;
       cnode2->SetTitle(Form("%s (%s)",cnode2->GetTitle(),suffix)) ;
+      nodesRenamed = true ;
       string tag = "ORIGNAME:" + origName;
       cnode2->setAttribute(tag.c_str()) ;
       if (!cnode2->getStringAttribute("origName")) {
@@ -598,6 +685,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
       if (varMap.find(cnode->GetName())!=varMap.end()) {
         string origName = cnode->GetName() ;
         cnode->SetName(varMap[cnode->GetName()].c_str()) ;
+        nodesRenamed = true ;
         string tag = "ORIGNAME:" + origName;
         cnode->setAttribute(tag.c_str()) ;
         if (!cnode->getStringAttribute("origName")) {
@@ -617,10 +705,18 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
     }
   }
 
-  // Now clone again with renaming effective
-  RooArgSet cloneSet2;
-  cloneSet2.useHashMapForFind(true); // Faster finding
-  RooArgSet(*cloneTop).snapshot(cloneSet2, !noRecursion);
+  // Now clone again with renaming effective. Cloning re-resolves all server
+  // links by name, which is what makes the renaming above take effect. If
+  // nothing was renamed, the first working copy is already in its final state
+  // and cloning the whole computation graph a second time would only cost time
+  // and memory, so it is reused as-is. This is the common case: renaming only
+  // happens with an explicit Rename*() command argument or a name conflict.
+  RooArgSet renamedCloneSet;
+  if (nodesRenamed) {
+    renamedCloneSet.useHashMapForFind(true); // Faster finding
+    RooArgSet(*cloneTop).snapshot(renamedCloneSet, !noRecursion);
+  }
+  RooArgSet &cloneSet2 = nodesRenamed ? renamedCloneSet : cloneSet;
   RooAbsArg* cloneTop2 = cloneSet2.find(topName2.c_str()) ;
 
   // Perform any auxiliary imports at this point

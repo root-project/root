@@ -26,6 +26,7 @@
 #include <RooWorkspace.h>
 #include <RooFormulaVar.h>
 #include <RooGenericPdf.h>
+#include <RooAddPdf.h>
 
 #include <TH1D.h>
 #include <TMath.h>
@@ -1211,4 +1212,62 @@ TEST(RooChi2Var, BinnedRangeAdditivityAndNormalization)
    EXPECT_NEAR(chi2ExtLo, chi2FuncLo, tol);
    EXPECT_NEAR(chi2ExtHi, chi2FuncHi, tol);
    EXPECT_NEAR(chi2ExtLoHi, chi2FuncLoHi, tol);
+}
+
+// Extended likelihood fit of a RooExtendPdf in a sub-range. This is the
+// scenario of the rf204b_extendedLikelihood_rangedFit tutorial. When the
+// RooExtendPdf is constructed with a range name, the fitted yield must be
+// reinterpreted to that range (here the full range) instead of collapsing to
+// the number of events observed in the fit range, and the shape parameters must
+// not be biased. Both must agree with the equivalent RooAddPdf model, whose
+// coefficients are automatically reinterpreted to the full range. Regression
+// test for GitHub issue #22959.
+TEST(RooNLLVar, RooExtendPdfRangedFit)
+{
+   using namespace RooFit;
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRandom::randomGenerator()->SetSeed(42);
+
+   RooRealVar x("x", "x", 10, 100);
+   x.setRange("LEFT", 10, 20);
+   x.setRange("RIGHT", 60, 100);
+   x.setRange("FULL", 10, 100);
+
+   RooRealVar alphaGen("alpha", "alpha", -0.04, -0.1, -0.0);
+   RooGenericPdf modelGen("model", "exp(alpha*x)", {x, alphaGen});
+   std::unique_ptr<RooDataSet> data{modelGen.generate(x, 10000)};
+
+   const double nFull = data->sumEntries();
+   const double nFitRange = std::unique_ptr<RooAbsData>{data->reduce(CutRange("LEFT,RIGHT"))}->sumEntries();
+   // The fit range only contains a fraction of the events, so this test is only
+   // meaningful if the two counts are clearly different.
+   ASSERT_LT(nFitRange, 0.8 * nFull);
+
+   // Extended fit with RooExtendPdf, yield N interpreted over the FULL range.
+   RooRealVar alpha1("alpha", "alpha", -0.04, -0.1, -0.0);
+   RooGenericPdf model1("model", "exp(alpha*x)", {x, alpha1});
+   RooRealVar nExpected("N", "Extended term", 5000, 0, 20000);
+   RooExtendPdf extmodel("extmodel", "Extended model", model1, nExpected, "FULL");
+   std::unique_ptr<RooFitResult> resExt{extmodel.fitTo(*data, Range("LEFT,RIGHT"), PrintLevel(-1), Save())};
+
+   // Equivalent extended fit with a single-component RooAddPdf, whose
+   // coefficient is automatically reinterpreted to the full range in a ranged
+   // fit.
+   RooRealVar alpha2("alpha", "alpha", -0.04, -0.1, -0.0);
+   RooGenericPdf model2("model", "exp(alpha*x)", {x, alpha2});
+   RooRealVar nBkg("Nbkg", "Number of background events", 5000, 0, 20000);
+   RooAddPdf modelsum("modelsum", "", RooArgList{model2}, RooArgList{nBkg});
+   std::unique_ptr<RooFitResult> resAdd{modelsum.fitTo(*data, Range("LEFT,RIGHT"), PrintLevel(-1), Save())};
+
+   // The RooExtendPdf yield must match the RooAddPdf background yield...
+   EXPECT_NEAR(nExpected.getVal(), nBkg.getVal(), 1e-3 * nBkg.getVal());
+   // ...and both refer to the full range, not the (much smaller) fit-range count.
+   EXPECT_NEAR(nExpected.getVal(), nFull, 0.05 * nFull);
+   EXPECT_GT(nExpected.getVal(), 1.5 * nFitRange);
+
+   // The shape parameter must be unbiased, i.e. agree with the RooAddPdf fit and
+   // with the generated value.
+   EXPECT_NEAR(alpha1.getVal(), alpha2.getVal(), 1e-4);
+   EXPECT_NEAR(alpha1.getVal(), -0.04, 5. * alpha1.getError());
 }

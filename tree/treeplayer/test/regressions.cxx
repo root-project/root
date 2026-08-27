@@ -19,6 +19,7 @@
 
 #include "gtest/gtest.h"
 
+#include <limits>
 #include <string>
 #include <vector>
 #include <fstream>
@@ -507,6 +508,89 @@ TEST(TTreeScan, chainNameWithDifferentTreeName)
    }
 }
 
+// Alt$(primary, alternate) used on its own, with 'primary' a variable-length
+// array, must loop over all the elements of the array instead of just the
+// first one. Previously the array dimension of 'primary' was not propagated to
+// the enclosing TTreeFormula manager when Alt$ was the only source of
+// multiplicity, so the formula reported a single instance per entry.
+TEST(TTreeFormulaRegressions, AltDollarVariableArray)
+{
+   TTree t("t", "t");
+   Int_t n = 3;
+   Float_t x[3]{};
+   t.Branch("n", &n);
+   t.Branch("x", &x, "x[n]/F");
+   x[0] = 1;
+   x[1] = 2;
+   x[2] = 3;
+   t.Fill();
+   x[0] = 4;
+   x[1] = 5;
+   x[2] = 6;
+   t.Fill();
+   n = 2;
+   x[0] = -1;
+   x[1] = -2;
+   x[2] = -3;
+   t.Fill();
+   n = 1;
+   x[0] = 0;
+   t.Fill();
+
+   auto evalAll = [](TTree &tree, TTreeFormula &form, Long64_t entry) {
+      tree.LoadTree(entry);
+      const Int_t ndata = form.GetNdata();
+      std::vector<double> values;
+      for (Int_t i = 0; i < ndata; ++i)
+         values.push_back(form.EvalInstance(i));
+      return values;
+   };
+
+   // 1) Standalone Alt$ over the whole array loops over its elements.
+   {
+      TTreeFormula form("form", "Alt$(x,-1)", &t);
+      EXPECT_EQ(form.GetMultiplicity(), 1);
+      const std::vector<std::vector<double>> expected{{1, 2, 3}, {4, 5, 6}, {-1, -2}, {0}};
+      for (Long64_t entry = 0; entry < t.GetEntries(); ++entry)
+         EXPECT_EQ(evalAll(t, form, entry), expected[entry]) << "entry " << entry;
+   }
+
+   // 2) A fixed index into the variable-length array stays a single value per
+   // entry and falls back to the alternate when the index is out of range.
+   // This is the documented Alt$(arr[i], default) use case and must not be
+   // turned into a zero-instance (dropped) entry.
+   {
+      TTreeFormula form("form", "Alt$(x[2],-1)", &t);
+      const std::vector<std::vector<double>> expected{{3}, {6}, {-1}, {-1}}; // x[2] only exists for n==3
+      for (Long64_t entry = 0; entry < t.GetEntries(); ++entry)
+         EXPECT_EQ(evalAll(t, form, entry), expected[entry]) << "entry " << entry;
+   }
+}
+
+// Companion to AltDollarVariableArray: when Alt$ is combined with another array
+// that drives the iteration, the alternate must pad the shorter array rather
+// than shrinking the loop. See the TTree::Draw documentation for Alt$.
+TEST(TTreeFormulaRegressions, AltDollarPadsShorterArray)
+{
+   TTree t("t", "t");
+   Int_t n1 = 3, n2 = 2;
+   Float_t a1[3]{10, 20, 30};
+   Float_t a2[3]{1, 2, 3};
+   t.Branch("n1", &n1);
+   t.Branch("n2", &n2);
+   t.Branch("a1", &a1, "a1[n1]/F");
+   t.Branch("a2", &a2, "a2[n2]/F");
+   t.Fill();
+
+   // The loop is driven by a1 (3 elements); Alt$(a2,0) yields a2[0],a2[1],0.
+   TTreeFormula form("form", "a1+Alt$(a2,0)", &t);
+   t.LoadTree(0);
+   ASSERT_EQ(form.GetNdata(), 3);
+   const std::vector<double> expected{11, 22, 30};
+   for (Int_t i = 0; i < 3; ++i)
+      EXPECT_FLOAT_EQ(form.EvalInstance(i), expected[i]) << "instance " << i;
+}
+
 // https://github.com/root-project/root/issues/20249
 TEST(TTreeScan, TTreeGetBranchOfFriendTChain)
 {
@@ -584,4 +668,79 @@ TEST(TTreeScan, TTreeGetBranchOfFriendTChain)
       } else
          throw std::runtime_error("Could not retrieve TTreePlayer from main tree!");
    }
+}
+
+// https://github.com/root-project/root/issues/7844
+// TTree::Scan() used to lose precision when printing 64-bit integer branches
+// (e.g. ULong64_t): the "lld" column format, when given without an embedded
+// column size (i.e. via "colsize=N col=lld"), was not recognized as a
+// "long long" modifier because of an off-by-one in the length-modifier
+// detection in TTreeFormula::PrintValue. As a consequence the value was
+// evaluated and printed as a double, rounding anything above 2^53.
+TEST(TTreeScan, ULong64Precision)
+{
+   // The "long long" Scan/Draw column format is evaluated through `long double`
+   // (see TTreeFormula::PrintValue), so exact 64-bit integer output is only
+   // possible where `long double` has more mantissa bits than `double`. That is
+   // the case on x86-64 (80-bit, 64-bit mantissa) but not, e.g., on macOS ARM
+   // where `long double` is just a 64-bit `double` (53-bit mantissa). Skip the
+   // exactness check there, since the value genuinely cannot be represented.
+   if (std::numeric_limits<long double>::digits <= std::numeric_limits<double>::digits)
+      GTEST_SKIP() << "long double is not wider than double here; the 64-bit value "
+                      "is genuinely unrepresentable and exactness cannot be checked";
+
+   // 1617047019150033926 needs 61 bits, so it cannot be represented exactly
+   // by a double (53-bit mantissa).
+   constexpr ULong64_t value{1617047019150033926ULL};
+
+   constexpr const char *treeName{"tree_7844"};
+   ROOT::TestSupport::FileRaii fileGuard{"tree_7844.root"};
+   {
+      std::unique_ptr<TFile> file{TFile::Open(fileGuard.GetPath().c_str(), "recreate")};
+      auto tree = std::make_unique<TTree>(treeName, treeName);
+
+      ULong64_t x = value;
+      tree->Branch("x", &x, "x/l");
+      tree->Fill();
+      file->Write();
+   }
+
+   std::unique_ptr<TFile> file{TFile::Open(fileGuard.GetPath().c_str())};
+   auto tree = file->Get<TTree>(treeName);
+
+   auto *treePlayer = static_cast<TTreePlayer *>(tree->GetPlayer());
+   ASSERT_TRUE(treePlayer) << "Could not retrieve TTreePlayer from main tree!";
+
+   ROOT::TestSupport::FileRaii redirectFile{"tree_7844_regression_redirect.txt"};
+   // SetScanFileName() stores the raw pointer, so keep the path string alive.
+   const std::string redirectPath{redirectFile.GetPath()};
+   treePlayer->SetScanRedirect(true);
+   treePlayer->SetScanFileName(redirectPath.c_str());
+
+   // Run a Scan with the given option string into the redirect file and return
+   // its contents.
+   auto scanToString = [&](const char *option) {
+      tree->Scan("x:x-1617047019150033925:x-1617047019150033000", "", option);
+      std::ifstream redirectStream(redirectPath.c_str());
+      std::stringstream redirectOutput;
+      redirectOutput << redirectStream.rdbuf();
+      return redirectOutput.str();
+   };
+
+   const static std::string expectedScanOut{
+      R"Scan(************************************************************************************
+*    Row   *                     x * x-1617047019150033925 * x-1617047019150033000 *
+************************************************************************************
+*        0 *   1617047019150033926 *                     1 *                   926 *
+************************************************************************************
+)Scan"};
+
+   // The "long long" column format must print the exact 64-bit value, as well as
+   // the exact result of integer arithmetic with large constants. The column size
+   // can either be given separately via "colsize=" (so the format passed to
+   // TTreeFormula::PrintValue is just "lld") or be embedded in the format token
+   // itself ("21lld"). Only the former triggered the off-by-one in the
+   // length-modifier detection, but both must yield the exact output.
+   EXPECT_EQ(scanToString("colsize=21 col=lld:lld:lld"), expectedScanOut);
+   EXPECT_EQ(scanToString("col=21lld:21lld:21lld"), expectedScanOut);
 }

@@ -211,7 +211,7 @@ namespace {
     return false;
   }
 
-  pair<list<string>,unsigned int> ctorArgs(const char* classname, std::size_t nPassedArgs) {
+  pair<list<string>,unsigned int> ctorArgsImpl(const char* classname, std::size_t nPassedArgs) {
     // Utility function for RooFactoryWSTool. Return arguments of 'first' non-default, non-copy constructor of any RooAbsArg
     // derived class. Only constructors that start with two `const char*` arguments (for name and title) are considered
     // The returned object contains
@@ -269,6 +269,22 @@ namespace {
     gInterpreter->ClassInfo_Delete(cls);
     return pair<list<string>,unsigned int>(ret,nreq);
   }
+
+  pair<list<string>,unsigned int> const & ctorArgs(const char* classname, std::size_t nPassedArgs) {
+    // Cache the result of ctorArgsImpl(). For a given (classname, nPassedArgs)
+    // the answer is determined by the static class definition and never changes
+    // at runtime, but ctorArgsImpl() drives the Cling interpreter to enumerate
+    // every constructor of the class. When the factory is invoked thousands of
+    // times (e.g. during HS3 JSON import of a large workspace), repeating that
+    // lookup dominates the import time.
+    static std::map<pair<string, std::size_t>, pair<list<string>, unsigned int>> cache;
+    auto key = std::make_pair(string(classname), nPassedArgs);
+    auto it = cache.find(key);
+    if (it == cache.end()) {
+      it = cache.emplace(std::move(key), ctorArgsImpl(classname, nPassedArgs)).first;
+    }
+    return it->second;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -321,7 +337,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
   _args.push_back(tmp.substr(start_tok, end_tok));
 
   // Try Cling interface
-  pair<list<string>,unsigned int> ca = ctorArgs(className,_args.size()+2) ;
+  pair<list<string>,unsigned int> const & ca = ctorArgs(className,_args.size()+2) ;
   if (ca.first.empty()) {
     coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR no suitable constructor found for class " << className << std::endl ;
     logError() ;
@@ -352,7 +368,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 
   try {
     Int_t i(0) ;
-    list<string>::iterator ti = ca.first.begin() ; ++ti ; ++ti ;
+    list<string>::const_iterator ti = ca.first.begin() ; ++ti ; ++ti ;
     for (vector<string>::iterator ai = _args.begin() ; ai != _args.end() ; ++ai,++ti,++i) {
       if ((*ti)=="RooAbsReal&" || (*ti)=="const RooAbsReal&" || (*ti)=="RooAbsReal::Ref") {
    RooFactoryWSTool::as_FUNC(i) ;

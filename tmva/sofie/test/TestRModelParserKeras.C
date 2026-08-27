@@ -1,9 +1,8 @@
 #include <Python.h>
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/arrayobject.h>
 
 #include "gtest/gtest.h"
 #include <cmath>
+#include <vector>
 
 #include "TSystem.h"
 #include "TMVA/RSofieReader.hxx"
@@ -19,6 +18,20 @@ const char *PyStringAsString(PyObject *string)
    PyObject *encodedString = PyUnicode_AsUTF8String(string);
    const char *cstring = PyBytes_AsString(encodedString);
    return cstring;
+}
+
+// Read a NumPy array bound in the Python namespace into a std::vector<float>.
+// The array is flattened to a Python list and read through the generic CPython
+// API, so this avoids any dependency on the NumPy C API (arrayobject.h).
+std::vector<float> GetTensorValues(PyObject *globalNS, PyObject *localNS, const char *name)
+{
+   std::string code = std::string("outputFlat=") + name + ".flatten().tolist()";
+   PyRun_String(code.c_str(), Py_single_input, globalNS, localNS);
+   PyObject *list = PyDict_GetItemString(localNS, "outputFlat");
+   std::vector<float> values(PyList_Size(list));
+   for (std::size_t i = 0; i < values.size(); ++i)
+      values[i] = (float)PyFloat_AsDouble(PyList_GetItem(list, i));
+   return values;
 }
 
 } // namespace
@@ -78,14 +91,11 @@ TEST(RModelParser_Keras, SEQUENTIAL)
                                     "0.63637339, 0.94483464, 0.11032887, 0.22424818,"
                                     "0.50972592, 0.04671024, 0.39230661, 0.80500943]).reshape(4,8)",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
-    std::size_t pOutputSequentialSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+    std::vector<float> pOutputSequential=GetTensorValues(fGlobalNS,fLocalNS,"output");
+    std::size_t pOutputSequentialSize=pOutputSequential.size();
 
     //Testing the actual and expected output tensor sizes
     EXPECT_EQ(outputSequential.size(), pOutputSequentialSize);
-
-    PyArrayObject* pSequentialValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
-    float* pOutputSequential=(float*)PyArray_DATA(pSequentialValues);
 
     //Testing the actual and expected output tensor values
     for (size_t i = 0; i < outputSequential.size(); ++i) {
@@ -124,14 +134,11 @@ TEST(RModelParser_Keras, FUNCTIONAL)
     PyRun_String("input=numpy.array([0.60828574, 0.50069386, 0.75186709, 0.14968806, 0.7692464 ,0.77027585, 0.75095316, 0.96651197,"
                                     "0.38536308, 0.95565917, 0.62796356, 0.13818375, 0.65484891,0.89220363, 0.23879365, 0.00635323]).reshape(2,8)",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
-    std::size_t pOutputFunctionalSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+    std::vector<float> pOutputFunctional=GetTensorValues(fGlobalNS,fLocalNS,"output");
+    std::size_t pOutputFunctionalSize=pOutputFunctional.size();
 
     //Testing the actual and expected output tensor sizes
     EXPECT_EQ(outputFunctional.size(), pOutputFunctionalSize);
-
-    PyArrayObject* pFunctionalValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
-    float* pOutputFunctional=(float*)PyArray_DATA(pFunctionalValues);
 
     //Testing the actual and expected output tensor values
     for (size_t i = 0; i < outputFunctional.size(); ++i) {
@@ -169,14 +176,11 @@ TEST(RModelParser_Keras, BATCH_NORM)
     PyRun_String("input=numpy.array([0.22308163, 0.95274901, 0.44712538, 0.84640867,"
                                     "0.69947928, 0.29743695, 0.81379782, 0.39650574]).reshape(2,4)",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
-    std::size_t pOutputBatchNormSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+    std::vector<float> pOutputBatchNorm=GetTensorValues(fGlobalNS,fLocalNS,"output");
+    std::size_t pOutputBatchNormSize=pOutputBatchNorm.size();
 
     //Testing the actual and expected output tensor sizes
     EXPECT_EQ(outputBatchNorm.size(), pOutputBatchNormSize);
-
-    PyArrayObject* pBatchNormValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
-    float* pOutputBatchNorm=(float*)PyArray_DATA(pBatchNormValues);
 
     //Testing the actual and expected output tensor values
     for (size_t i = 0; i < outputBatchNorm.size(); ++i) {
@@ -218,14 +222,11 @@ TEST(DISABLED_RModelParser_Keras, CONV_VALID)
     PyRun_String("model=load_model('KerasModelConv2D_Valid.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.ones((1,4,4,1))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
-    std::size_t pOutputConv2DValidSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+    std::vector<float> pOutputConv2DValid=GetTensorValues(fGlobalNS,fLocalNS,"output");
+    std::size_t pOutputConv2DValidSize=pOutputConv2DValid.size();
 
     //Testing the actual and expected output tensor sizes
     EXPECT_EQ(outputConv2D_Valid.size(), pOutputConv2DValidSize);
-
-    PyArrayObject* pConv2DValidValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
-    float* pOutputConv2DValid=(float*)PyArray_DATA(pConv2DValidValues);
 
     //Testing the actual and expected output tensor values
     for (size_t i = 0; i < outputConv2D_Valid.size(); ++i) {
@@ -268,14 +269,11 @@ TEST(DISABLED_RModelParser_Keras, CONV_SAME)
     PyRun_String("model=load_model('KerasModelConv2D_Same.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.ones((1,4,4,1))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
-    std::size_t pOutputConv2DSameSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+    std::vector<float> pOutputConv2DSame=GetTensorValues(fGlobalNS,fLocalNS,"output");
+    std::size_t pOutputConv2DSameSize=pOutputConv2DSame.size();
 
     //Testing the actual and expected output tensor sizes
     EXPECT_EQ(outputConv2D_Same.size(), pOutputConv2DSameSize);
-
-    PyArrayObject* pConv2DSameValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
-    float* pOutputConv2DSame=(float*)PyArray_DATA(pConv2DSameValues);
 
     //Testing the actual and expected output tensor values
     for (size_t i = 0; i < outputConv2D_Same.size(); ++i) {
@@ -314,14 +312,11 @@ TEST(RModelParser_Keras, RESHAPE)
     PyRun_String("model=load_model('KerasModelReshape.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.ones((1,4,4,1))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
-    std::size_t pOutputReshapeSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+    std::vector<float> pOutputReshape=GetTensorValues(fGlobalNS,fLocalNS,"output");
+    std::size_t pOutputReshapeSize=pOutputReshape.size();
 
     //Testing the actual and expected output tensor sizes
     EXPECT_EQ(outputReshape.size(), pOutputReshapeSize);
-
-    PyArrayObject* pReshapeValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
-    float* pOutputReshape=(float*)PyArray_DATA(pReshapeValues);
 
     //Testing the actual and expected output tensor values
     for (size_t i = 0; i < outputReshape.size(); ++i) {
@@ -359,14 +354,12 @@ TEST(RModelParser_Keras, CONCATENATE)
     PyRun_String("input_1=numpy.ones((1,2))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input_2=numpy.ones((1,2))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model([input_1,input_2]).numpy()",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
-    long pOutputConcatenateSize=PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+    std::vector<float> pOutputConcatenate=GetTensorValues(fGlobalNS,fLocalNS,"output");
+    long pOutputConcatenateSize=(long)pOutputConcatenate.size();
 
     //Testing the actual and expected output tensor sizes (can fail if an error eccoured and returns a -1 from Python)
     EXPECT_EQ((long) outputConcatenate.size(), pOutputConcatenateSize);
 
-    PyArrayObject* pConcatenateValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
-    float* pOutputConcatenate=(float*)PyArray_DATA(pConcatenateValues);
 
     //Testing the actual and expected output tensor values
     for (size_t i = 0; i < outputConcatenate.size(); ++i) {
@@ -405,14 +398,12 @@ TEST(RModelParser_Keras, BINARY_OP)
     PyRun_String("input1=numpy.array([[1,2],[3,4]],dtype='float32')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input2=numpy.array([[5,6],[7,8]],dtype='float32')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model([input1,input2]).numpy()",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
-    long pOutputBinaryOpSize=PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+    std::vector<float> pOutputBinaryOp=GetTensorValues(fGlobalNS,fLocalNS,"output");
+    long pOutputBinaryOpSize=(long)pOutputBinaryOp.size();
 
     //Testing the actual and expected output tensor sizes
     EXPECT_EQ((long) outputBinaryOp.size(), pOutputBinaryOpSize);
 
-    PyArrayObject* pBinaryOpValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
-    float* pOutputBinaryOp=(float*)PyArray_DATA(pBinaryOpValues);
 
     //Testing the actual and expected output tensor values
     for (size_t i = 0; i < outputBinaryOp.size(); ++i) {
@@ -448,14 +439,11 @@ TEST(RModelParser_Keras, ACTIVATIONS)
     PyRun_String("model=load_model('KerasModelActivations.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.ones((1,8))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
-    std::size_t pOutputActivationsSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+    std::vector<float> pOutputActivations=GetTensorValues(fGlobalNS,fLocalNS,"output");
+    std::size_t pOutputActivationsSize=pOutputActivations.size();
 
     //Testing the actual and expected output tensor sizes
     EXPECT_EQ(outputActivations.size(), pOutputActivationsSize);
-
-    PyArrayObject* pActivationsValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
-    float* pOutputActivations=(float*)PyArray_DATA(pActivationsValues);
 
     //Testing the actual and expected output tensor values
     for (size_t i = 0; i < outputActivations.size(); ++i) {
@@ -491,14 +479,11 @@ TEST(RModelParser_Keras, SWISH)
     PyRun_String("model=load_model('KerasModelSwish.keras')",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.ones((1,8))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
-    std::size_t pOutputSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+    std::vector<float> pOutput=GetTensorValues(fGlobalNS,fLocalNS,"output");
+    std::size_t pOutputSize=pOutput.size();
 
     //Testing the actual and expected output tensor sizes
     EXPECT_EQ(output.size(), pOutputSize);
-
-    PyArrayObject* pValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
-    float* pOutput=(float*)PyArray_DATA(pValues);
 
     //Testing the actual and expected output tensor values
     for (size_t i = 0; i < output.size(); ++i) {
@@ -537,8 +522,8 @@ TEST(RModel, CUSTOM_OP)
     PyRun_String("model.add(Lambda(lambda x: x * 2))",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("input=numpy.array([1,1,1,1,1,1,1,1]).reshape(1,8)",Py_single_input,fGlobalNS,fLocalNS);
     PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
-    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
-    std::size_t pOutputCustomOpSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+    std::vector<float> pOutputCustomOp=GetTensorValues(fGlobalNS,fLocalNS,"output");
+    std::size_t pOutputCustomOpSize=pOutputCustomOp.size();
 
     // get input name for custom (it is output of one before last)
     PyRun_String("outputName = model.get_layer(index=len(model.layers)-2).output.name",Py_single_input,fGlobalNS,fLocalNS);
@@ -556,9 +541,6 @@ TEST(RModel, CUSTOM_OP)
 
     //Testing the actual and expected output tensor sizes
     EXPECT_EQ(outputCustomOp.size(), pOutputCustomOpSize);
-
-    PyArrayObject* pCustomOpValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
-    float* pOutputCustomOp=(float*)PyArray_DATA(pCustomOpValues);
 
     //Testing the actual and expected output tensor values
     for (size_t i = 0; i < outputCustomOp.size(); ++i) {

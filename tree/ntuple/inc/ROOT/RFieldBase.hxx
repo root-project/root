@@ -247,14 +247,15 @@ private:
          func(target);
    }
 
-   /// Translate an entry index to a column element index of the principal column and vice versa. These functions
-   /// take into account the role and number of repetitions on each level of the field hierarchy as follows:
+   /// Translate an entry index to a column element index of the principal column. This function
+   /// takes into account the role and number of repetitions on each level of the field hierarchy as follows:
    /// - Top level fields: element index == entry index
    /// - Record fields propagate their principal column index to the principal columns of direct descendant fields
    /// - Collection and variant fields set the principal column index of their children to 0
    ///
    /// The column element index also depends on the number of repetitions of each field in the hierarchy, e.g., given a
-   /// field with type `std::array<std::array<float, 4>, 2>`, this function returns 8 for the innermost field.
+   /// field with type `std::array<std::array<float, 4>, 2>`, this function called with `globalIndex == 1`
+   /// returns 8 for the innermost field.
    ROOT::NTupleSize_t EntryToColumnElementIndex(ROOT::NTupleSize_t globalIndex) const;
 
    /// Flushes data from active columns
@@ -624,10 +625,9 @@ public:
    /// correct `std::variant` or all the elements of a collection. The default implementation assumes no subvalues
    /// and returns an empty vector.
    virtual std::vector<RValue> SplitValue(const RValue &value) const;
-   /// The number of bytes taken by a value of the appropriate type
+   /// What sizeof(T) for this type returns
    virtual size_t GetValueSize() const = 0;
-   /// As a rule of thumb, the alignment is equal to the size of the type. There are, however, various exceptions
-   /// to this rule depending on OS and CPU architecture. So enforce the alignment to be explicitly spelled out.
+   /// What alignof(T) for this type returns
    virtual size_t GetAlignment() const = 0;
    std::uint32_t GetTraits() const { return fTraits; }
    bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }

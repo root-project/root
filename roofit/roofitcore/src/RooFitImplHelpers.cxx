@@ -286,6 +286,42 @@ RooAbsArg *cloneTreeWithSameParametersImpl(RooAbsArg const &arg, RooArgSet const
 
 } // namespace Detail
 
+bool isFunctionFlatInBins(const RooAbsReal &function, RooAbsRealLValue &obs, std::span<const double> boundaries,
+                          double relTol)
+{
+   // Fractions of the bin width at which the function is sampled. They are kept
+   // strictly inside the bin (away from the boundaries) so that the evaluation
+   // is not affected by which side of a boundary a step function jumps.
+   const double fractions[] = {0.04, 0.27, 0.5, 0.73, 0.96};
+
+   const double savedVal = obs.getVal();
+
+   bool isFlat = true;
+   for (std::size_t i = 0; i + 1 < boundaries.size() && isFlat; ++i) {
+      const double lo = boundaries[i];
+      const double hi = boundaries[i + 1];
+      double reference = 0.0;
+      bool first = true;
+      for (double frac : fractions) {
+         obs.setVal(lo + frac * (hi - lo));
+         const double val = function.getVal();
+         if (first) {
+            reference = val;
+            first = false;
+            continue;
+         }
+         const double scale = std::max(std::abs(reference), 1e-12);
+         if (std::abs(val - reference) > relTol * scale) {
+            isFlat = false;
+            break;
+         }
+      }
+   }
+
+   obs.setVal(savedVal);
+   return isFlat;
+}
+
 } // namespace RooHelpers
 
 namespace RooFit::Detail {

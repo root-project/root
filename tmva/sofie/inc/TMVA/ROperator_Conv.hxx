@@ -429,6 +429,10 @@ public:
       out << SP << SP << "}\n";
       out << SP << "}\n";
 
+      // Dilation is already folded into the expanded kernel shape and the dilated tensor_<X>_f
+      // layout above, so the dense im2col below must use dilation 1 to avoid double-counting it.
+      fAttrDilations = std::vector<size_t>(3, 1);
+
       //out << SP << "char " << OpName << "_transA = 'T';\n";
       out << SP << "char " << OpName << "_transA = 'N';\n";
       out << SP << "char " << OpName << "_transB = 'N';\n";

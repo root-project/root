@@ -57,6 +57,12 @@ long double SinParameterTransformation::DInt2Ext(long double Value, long double 
    return 0.5 * ((Upper - Lower) * std::cos(Value));
 }
 
+long double SinParameterTransformation::D2Int2Ext(long double Value, long double Upper, long double Lower) const
+{
+   // return the second derivative of the transformation d^2 Ext/ d Int^2
+   return -0.5 * ((Upper - Lower) * std::sin(Value));
+}
+
 long double SinParameterTransformation::DExt2Int(long double Value, long double Upper, long double Lower) const
 {
    // return the derivative of the transformation d Int/ d Ext
@@ -86,6 +92,13 @@ long double SqrtLowParameterTransformation::DInt2Ext(long double value, long dou
 {
    // derivative of internal to external transformation   :  d (Int2Ext) / d Int
    long double val = value / (std::sqrt(value * value + 1.));
+   return val;
+}
+
+long double SqrtLowParameterTransformation::D2Int2Ext(long double value, long double) const
+{
+   // second derivative of internal to external transformation : d^2 (Int2Ext) / d Int^2
+   long double val = std::pow(value * value + 1., -1.5);
    return val;
 }
 
@@ -119,6 +132,13 @@ long double SqrtUpParameterTransformation::DInt2Ext(long double value, long doub
 {
    // derivative of internal to external transformation :  d (Int2Ext ) / d Int
    long double val = -value / (std::sqrt(value * value + 1.));
+   return val;
+}
+
+long double SqrtUpParameterTransformation::D2Int2Ext(long double value, long double) const
+{
+   // second derivative of internal to external transformation : d^2 (Int2Ext) / d Int^2
+   long double val = -std::pow(value * value + 1., -1.5);
    return val;
 }
 

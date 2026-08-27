@@ -851,6 +851,116 @@ class RooWorkspace_test(unittest.TestCase):
         self.assertEqual(ws["gauss"].getMean(), ws["mean"])
         self.assertEqual(ws["gauss"].getSigma(), ws["sigma"])
 
+    def test_set_item_using_dictionary_histfactory(self):
+        """Build a single-channel HistFactory model by assigning JSON-backed
+        dictionaries to the workspace, analogous to the hf_001.C tutorial.
+        Covers the import of variables, constraints, binned datasets,
+        histfactory distributions and model configs via
+        RooJSONFactoryWSTool::importJSONElement.
+        """
+        ws = ROOT.RooWorkspace()
+
+        # Add the variables to the workspace
+        ws["Lumi"] = {"max": 10.0, "min": 0.0, "value": 1.0}
+        ws["nominalLumi"] = {"max": 2.0, "min": 0.0, "value": 1.0}
+
+        # Add the constraint variable
+        ws["lumiConstraint"] = {
+            "mean": "nominalLumi",
+            "sigma": 0.1,
+            "type": "gaussian_dist",
+            "x": "Lumi",
+        }
+
+        # Add data channels to the workspace
+        axes = [{"max": 2.0, "min": 1.0, "name": "obs_x_channel1", "nbins": 2}]
+        ws["obsData_channel1"] = {"axes": axes, "contents": [122, 112], "type": "binned"}
+        ws["asimovData_channel1"] = {"axes": axes, "contents": [120, 110], "type": "binned"}
+
+        # Specify the model inside the workspace by adding samples with
+        # constraints, datasets and modifiers
+        lumi_modifier = {
+            "constraint_name": "lumiConstraint",
+            "name": "Lumi",
+            "parameter": "Lumi",
+            "type": "normfactor",
+        }
+        staterror_modifier = {"constraint": "Poisson", "name": "staterror", "type": "staterror"}
+
+        def normsys_modifier(name):
+            return {
+                "constraint": "Gauss",
+                "data": {"hi": 1.05, "lo": 0.95},
+                "name": name,
+                "parameter": "alpha_" + name,
+                "type": "normsys",
+            }
+
+        ws["model_channel1"] = {
+            "axes": axes,
+            "samples": [
+                {
+                    "data": {"contents": [100, 0], "errors": [5, 0]},
+                    "modifiers": [lumi_modifier, normsys_modifier("syst2"), staterror_modifier],
+                    "name": "background1",
+                },
+                {
+                    "data": {"contents": [0, 100], "errors": [0, 10]},
+                    "modifiers": [lumi_modifier, normsys_modifier("syst3"), staterror_modifier],
+                    "name": "background2",
+                },
+                {
+                    "data": {"contents": [20, 10]},
+                    "modifiers": [
+                        lumi_modifier,
+                        {"name": "SigXsecOverSM", "parameter": "SigXsecOverSM", "type": "normfactor"},
+                        normsys_modifier("syst1"),
+                    ],
+                    "name": "signal",
+                },
+            ],
+            "type": "histfactory_dist",
+        }
+
+        # Configure the model by specifying the pdf and parameter of interest
+        ws["ModelConfig"] = {"pdfName": "model_channel1", "poi": "SigXsecOverSM"}
+
+        # Check that the variables were imported correctly
+        self.assertAlmostEqual(ws["Lumi"].getVal(), 1.0)
+        self.assertAlmostEqual(ws["Lumi"].getMin(), 0.0)
+        self.assertAlmostEqual(ws["Lumi"].getMax(), 10.0)
+
+        # Check that the constraint pdf was imported correctly
+        lumi_constraint = ws.pdf("lumiConstraint")
+        self.assertTrue(lumi_constraint)
+        self.assertEqual(lumi_constraint.getX(), ws["Lumi"])
+        self.assertEqual(lumi_constraint.getMean(), ws["nominalLumi"])
+
+        # Check that the binned datasets were imported correctly
+        obs_data = ws.data("obsData_channel1")
+        self.assertTrue(obs_data)
+        self.assertEqual(obs_data.numEntries(), 2)
+        self.assertAlmostEqual(obs_data.sumEntries(), 234.0)
+        asimov_data = ws.data("asimovData_channel1")
+        self.assertTrue(asimov_data)
+        self.assertAlmostEqual(asimov_data.sumEntries(), 230.0)
+
+        # Check that the histfactory pdf was imported correctly, together with
+        # the model parameters implied by the modifiers
+        pdf = ws.pdf("model_channel1")
+        self.assertTrue(pdf)
+        params = pdf.getParameters(obs_data.get())
+        for name in ["Lumi", "SigXsecOverSM", "alpha_syst1", "alpha_syst2", "alpha_syst3"]:
+            self.assertIn(name, params)
+
+        # Check that the model config was imported correctly
+        model_config = ws.obj("ModelConfig")
+        self.assertTrue(model_config)
+        self.assertEqual(model_config.GetPdf(), pdf)
+        poi = model_config.GetParametersOfInterest()
+        self.assertEqual(poi.size(), 1)
+        self.assertIn("SigXsecOverSM", poi)
+
 
 if __name__ == "__main__":
     unittest.main()

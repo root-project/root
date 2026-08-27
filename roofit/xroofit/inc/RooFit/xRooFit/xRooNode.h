@@ -197,7 +197,23 @@ public:
          return aa == bb;
       };
    };
-   auto begin() const -> xRooNodeIterator { return xRooNodeIterator(std::vector<std::shared_ptr<xRooNode>>::begin()); }
+   auto begin() const -> xRooNodeIterator
+   {
+      // this update is to resolve need for calling browse() before iterating, e.g.
+      //      for(auto a : xRooNode(b).browse()) ...
+      // can now become the more natural:
+      //      for(auto a : xRooNode(b)) ...
+      // but would still need e.g. xRooNode(s).browse().size() rather than xRooNode(s).size() which would give 0 for
+      // unpopulated case
+      static bool browseLock =
+         false; // need for blocking recursive calls to browse (since browse method uses the iterators)
+      if (!browseLock && get() && empty()) {
+         browseLock = true;
+         const_cast<xRooNode &>(*this).browse();
+         browseLock = false;
+      }
+      return xRooNodeIterator(std::vector<std::shared_ptr<xRooNode>>::begin());
+   }
    auto end() const -> xRooNodeIterator { return xRooNodeIterator(std::vector<std::shared_ptr<xRooNode>>::end()); }
 
    // needed in pyROOT to avoid it creating iterators that follow the 'get' to death
@@ -312,6 +328,9 @@ public:
    xRooNode datasets()
       const; // datasets corresponding to this pdf (parent nodes that do observable selections automatically applied)
 
+   xRooNode parents() const; // the clients of this node
+   xRooNode args() const;    // all the nodes underneath this node
+
    xRooNode Replace(const xRooNode &node); // use to replace a node in the tree at the location of this node
    xRooNode Remove(const xRooNode &child);
    xRooNode
@@ -326,6 +345,7 @@ public:
 
    xRooNode reduced(const std::string &range = "", bool invert = false)
       const; // return a node representing reduced version of this node, will use the SetRange to reduce if blank
+   xRooNode reduced(const std::function<bool(const xRooNode &)> selector) const;
 
    // following versions are for the menu in the GUI
    /** @private */
@@ -537,10 +557,11 @@ public:
    ClassDefOverride(xRooNode, 0)
 };
 
-namespace cling {
-std::string printValue(const xRooNode *val);
-}
-
 END_XROOFIT_NAMESPACE
+
+
+namespace cling {
+std::string printValue(const XROOFIT_NAMESPACE_NAME::xRooNode *val);
+}
 
 #endif // include guard

@@ -100,7 +100,12 @@ The following people have contributed to this new version:
 * ROOT now adds a RUNPATH to compiled macros. This ensures that when compiled macros are loaded, they load the libraries that belong to the ROOT installation
   that compiled the macro. See [TSystem::SetMakeSharedLib()](https://root.cern.ch/doc/master/classTSystem.html#a80cd12e064e2285b35e9f39b5111d20e) for
   customising or disabling the RUNPATH.
-* `rootcling` fails if no selection rule is specified and if the creation of a C++ module is not requested.
+* `rootcling` fails if no selection rule is specified and if the creation of a C++ module is not requested. Calling `ROOT_GENERATE_DICTIONARY(G__MyClass MyClass.h)` from an external CMake project with classes without any LinkDef might break your build now, since automatic linkdef generation has been removed. To solve it, just update (backward compatible) your header class `MyClass.h`  with the following lines:
+```
+#ifdef __ROOTCLING__
+#pragma link C++ class MyClass + ;
+#endif
+```
 * To ease debugging of unwanted auto-parsing triggered by TClass::GetClass, two new features are introduced:
 * * Give access to the list of classes that triggered auto-parsing:
 ```
@@ -819,7 +824,6 @@ The following items were addressed:
 
   * [[#22538](https://github.com/root-project/root/issues/22538)] - [ntuple] Late model extension of untyped records broken
   * [[#22496](https://github.com/root-project/root/issues/22496)] - root -q -e '.gh bug' doesn't work on ssh connections
-  * [[#22473](https://github.com/root-project/root/issues/22473)] - [tmva][sofie] Conv generates invalid code and crashes for dilation > 1
   * [[#22471](https://github.com/root-project/root/issues/22471)] - issue with transparency and interactive mode on macOS
   * [[#22447](https://github.com/root-project/root/issues/22447)] - 6.40: Glitch in TTree::Draw for 3D (missing bins)
   * [[#22436](https://github.com/root-project/root/issues/22436)] - [tmva][sofie] MaxPool and AveragePool generates wrong code for asymmetric padding
@@ -840,3 +844,41 @@ The following items were addressed:
 The version of the following packages has been updated:
 
  - xrootd: 5.9.5
+
+## Release 6.40.04
+Published on August 27, 2026
+
+This patch release brings a few fixes, that accumulated since the 6.40.02 release.
+
+## Items addressed for this release
+The following items were addressed:
+
+  * [[#23036](https://github.com/root-project/root/issues/23036)] - system.rootrc ships three settings that nothing reads (WebGui.HttpLoopback, WebGui.WaitForTmout, Browser.StartUrl)
+  * [[#23026](https://github.com/root-project/root/issues/23026)] - ROOT fails to configure with CMake 4.4
+  * [[#22981](https://github.com/root-project/root/issues/22981)] - [ntuple] streamer field end up using wrong type name
+  * [[#22959](https://github.com/root-project/root/issues/22959)] - [RF] Bug with RooExtendPdf produces inconsistency in rf204b_extendedLikelihood_rangedFit.C between before 6.26 and after 6.28
+  * [[#22938](https://github.com/root-project/root/issues/22938)] - `R__memcompress` fails with limited stack size
+  * [[#22858](https://github.com/root-project/root/issues/22858)] - [RF] RooBinIntegreator gives wrong result for integrals that cut thought bin boundaries
+  * [[#22855](https://github.com/root-project/root/issues/22855)] - [ntuple] double free when resizing small RVec
+  * [[#22843](https://github.com/root-project/root/issues/22843)] - TMath::Laplacian computes wrong finite differences
+  * [[#22831](https://github.com/root-project/root/issues/22831)] - TGDMLParse silently drops elements whose name collides with a material name after `0x` pointer-suffix stripping
+  * [[#22769](https://github.com/root-project/root/issues/22769)] - Histogram with fit function not correctly drawn to canvas in Jupyter notebook with JsROOT on
+  * [[#22727](https://github.com/root-project/root/issues/22727)] - [jsroot] Scroll breaks on SWAN when using %rootbrowse
+  * [[#22692](https://github.com/root-project/root/issues/22692)] - Providing analytical Hessian reduces robustness of minimization to initial values in Minuit2
+  * [[#22656](https://github.com/root-project/root/issues/22656)] - [rootcling] external software no longer compiles with ROOT 6.40 (regression)
+  * [[#22501](https://github.com/root-project/root/issues/22501)] - THttpServer/TRootSniffer: exe.json leaks the object returned by the executed method (e.g. TH2::ProjectionY)
+  * [[#22473](https://github.com/root-project/root/issues/22473)] - [tmva][sofie] Conv generates invalid code and crashes for dilation > 1
+  * [[#22395](https://github.com/root-project/root/issues/22395)] - TGeoTessellated volumes read from GDML impossible to be closed (6.40.00 regression)
+  * [[#22359](https://github.com/root-project/root/issues/22359)] - "Second registration of" error with a template argument "missing"
+  * [[#21402](https://github.com/root-project/root/issues/21402)] - [RF] Building of Histograms/Errors from a workspace with a region with many bins is super slow
+  * [[#20697](https://github.com/root-project/root/issues/20697)] - [RF] Add support to set the nominal value and limits for the ShapeFactor parameters in HistFactory
+  * [[#20116](https://github.com/root-project/root/issues/20116)] - Wrong integrals for RooHistPdf with interpolation order = 1
+  * [[#20018](https://github.com/root-project/root/issues/20018)] - ROOT.TColor.DefinedColors(1) problematic in jupyter notebooks
+  * [[#19560](https://github.com/root-project/root/issues/19560)] - TTreeIndex fails under Valgrind due to long double emulation
+  * [[#18683](https://github.com/root-project/root/issues/18683)] - [RF] Parallelize per-channel workspace creation in MakeModelAndMeasurementsFast
+  * [[#17483](https://github.com/root-project/root/issues/17483)] - wsl2 menu display issue
+  * [[#14255](https://github.com/root-project/root/issues/14255)] - [RF] Asymmetry plots with RooFit
+  * [[#10784](https://github.com/root-project/root/issues/10784)] - TKDTreeBinning missing bins
+  * [[#10240](https://github.com/root-project/root/issues/10240)] - TTree: Creating a branch with std::vector can raise an internal error when mixing I/O systems.
+  * [[#6378](https://github.com/root-project/root/issues/6378)] - TTreeFormula `Alt$` gives (silently) wrong result when used by itself.
+  

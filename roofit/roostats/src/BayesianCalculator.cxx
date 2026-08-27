@@ -833,8 +833,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
                   << " Negative log likelihood evaluates to infinity " << std::endl
                   << " Non-const Parameter values : ";
       RooArgList p(*constrainedParams);
-      for (std::size_t i = 0; i < p.size(); ++i) {
-         RooRealVar * v = dynamic_cast<RooRealVar *>(&p[i] );
+      for (auto *v : dynamic_range_cast<RooRealVar *>(p)) {
          if (v!=nullptr) ccoutE(Eval) << v->GetName() << " = " << v->getVal() << "   ";
       }
       ccoutE(Eval) << std::endl;

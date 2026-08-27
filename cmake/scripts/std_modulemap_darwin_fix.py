@@ -4,11 +4,10 @@ import re
 import subprocess
 import sys
 
-def remove_ctype_module(content):
-    # Break cyclic module dependencies
-    # See: https://github.com/root-project/root/commit/8045591a17125b49c1007787c586868dea764479
-    pattern = re.compile(r"module\s+std_ctype_h\s+\[system\]\s*\{.*?\}", re.DOTALL)
-    return pattern.sub("", content)
+def resolve_cyclic_module_dependencies(content):
+    for h in ["ctype.h", "stdint.h"]:
+        content = re.sub(f'  header "{h}"', f'  textual header "{h}"', content)
+    return content
 
 
 def main():
@@ -31,7 +30,7 @@ def main():
     with open(cpp_modulemap, "r") as f:
         original_content = f.read()
 
-    cleaned_content = remove_ctype_module(original_content)
+    cleaned_content = resolve_cyclic_module_dependencies(original_content)
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, "w") as f:

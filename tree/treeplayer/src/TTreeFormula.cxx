@@ -5052,12 +5052,12 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
             Ssiz_t len = strlen(decform);
             Char_t outputSizeLevel = 1;
             char *expo = nullptr;
-            if (len>2) {
+            if (len > 1) {
                switch (decform[len-2]) {
                   case 'l':
                   case 'L': {
                      outputSizeLevel = 2;
-                     if (len>3 && tolower(decform[len-3])=='l') {
+                     if (len > 2 && tolower(decform[len - 3]) == 'l') {
                         outputSizeLevel = 3;
                      }
                      break;
@@ -5525,6 +5525,40 @@ void TTreeFormula::ResetDimensions() {
       //   if (fVarIndexes[i][k]) fManager->Add(fVarIndexes[i][k]);
       //}
 
+   }
+
+   // Handle the case of an Alt$(primary,alternate) expression that provides
+   // the only source of multiplicity, i.e. it's used not alongside another
+   // array that drives the iteration. Example: Scan("Alt$(x,-1)"), instead of
+   // Scan("y-Alt$(x,-1)"). In that case the number of instances must be
+   // dictated by the `primary` array, so we register it with the manager. We
+   // only get here when fMultiplicity == 0, i.e. nothing else in this formula
+   // drives an iteration.
+   if (fMultiplicity == 0) {
+      for (i = 0; i < fNoper; i++) {
+         Int_t action = GetAction(i);
+         if (action == kAlternate || action == kAlternateString) {
+            TTreeFormula *primary = static_cast<TTreeFormula *>(fAliases.UncheckedAt(i));
+            R__ASSERT(primary);
+            switch (primary->GetManager()->GetMultiplicity()) {
+            case 1: // primary is a variable length array: drive a variable length loop
+               fMultiplicity = 1;
+               fManager->Add(primary);
+               break;
+            case 2: // primary is a fixed length array: drive a fixed length loop
+               if (fMultiplicity != 1)
+                  fMultiplicity = 2;
+               fManager->Add(primary);
+               break;
+               // multiplicity 0 (scalar) or -1 (0-or-1 element): nothing to loop
+               // over, leave fMultiplicity at 0
+            }
+            // An Alt$(primary,alternate) expression occupies two consecutive
+            // operands: the `primary` action we just handled, immediately
+            // followed by the `alternate`, which we can skip.
+            ++i;
+         }
+      }
    }
 }
 

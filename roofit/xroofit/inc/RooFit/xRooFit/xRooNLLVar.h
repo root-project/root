@@ -63,6 +63,7 @@ public:
       xValueWithError(const std::pair<double, double> &in = {0, 0}) : std::pair<double, double>(in) {}
       double value() const { return std::pair<double, double>::first; }
       double error() const { return std::pair<double, double>::second; }
+      std::string __repr__() const { return Form("%g +/- %g", value(), error()); }
    };
 
    void Print(Option_t *opt = "");
@@ -405,8 +406,8 @@ public:
                            double alt_value = std::numeric_limits<double>::quiet_NaN(),
                            const xRooFit::Asymptotics::PLLType &pllType = xRooFit::Asymptotics::Unknown);
    xRooHypoSpace hypoSpace(const char *parName, xRooFit::TestStatistic::Type tsType, int nPoints = 0,
-                           double low = -std::numeric_limits<double>::infinity(),
-                           double high = std::numeric_limits<double>::infinity(),
+                           double low = std::numeric_limits<double>::quiet_NaN(),
+                           double high = std::numeric_limits<double>::quiet_NaN(),
                            double alt_value = std::numeric_limits<double>::quiet_NaN())
    {
       return hypoSpace(parName, nPoints, low, high, alt_value, xRooFit::Asymptotics::Unknown, tsType);
@@ -511,11 +512,12 @@ public:
    bool kReuseNLL = true;
 };
 
-namespace cling {
-std::string printValue(const xRooNLLVar::xValueWithError *val);
-std::string printValue(const std::map<std::string, xRooNLLVar::xValueWithError> *m);
-} // namespace cling
-
 END_XROOFIT_NAMESPACE
+
+
+namespace cling {
+std::string printValue(const XROOFIT_NAMESPACE_NAME::xRooNLLVar::xValueWithError *val);
+std::string printValue(const std::map<std::string, XROOFIT_NAMESPACE_NAME::xRooNLLVar::xValueWithError> *m);
+} // namespace cling
 
 #endif // include guard

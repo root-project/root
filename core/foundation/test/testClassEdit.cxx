@@ -375,3 +375,20 @@ TEST(TClassEdit, SplitType)
    auto si = (TStreamerInfo*) c->GetStreamerInfo();
    si->ls("noaddr");
 }
+
+TEST(TClassEdit, MultiLineName)
+{
+   // A class name in a selection XML can span multiple lines. Whitespace
+   // other than ' ' used to empty out the template arguments it preceded,
+   // e.g. "Foo<,vector<float>,>" (https://github.com/root-project/root/issues/22359).
+   const char *name = "Foo<\n  std::vector<int>, std::vector<float>,\n\tunsigned int,\n  Bar ::Ref<std::vector<int>>>";
+   TClassEdit::TSplitType split(name, (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
+   std::string out;
+   split.ShortType(out, TClassEdit::kLong64 | TClassEdit::kDropStd);
+   EXPECT_STREQ("Foo<vector<int>,vector<float>,unsigned int,Bar::Ref<vector<int> > >", out.c_str());
+
+   // Whitespace that separates two identifiers is significant and must be
+   // kept as a single plain space.
+   EXPECT_STREQ("unsigned int", TClassEdit::CleanType("unsigned\nint").c_str());
+   EXPECT_STREQ("Foo<int>", TClassEdit::CleanType("\n Foo<\n  int\n>").c_str());
+}

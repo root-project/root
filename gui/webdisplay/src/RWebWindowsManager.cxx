@@ -348,28 +348,27 @@ bool RWebWindowsManager::InformListener(const std::string &msg)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Creates http server, if required - with real http engine (civetweb)
-/// One could configure concrete HTTP port, which should be used for the server,
-/// provide following entry in rootrc file:
 ///
-///      WebGui.HttpPort: 8088
+/// Server for the webgui applications by default allow communication only via
+/// `localhost` address (so-called loopback mode). Disable it calling \ref SetLoopbackMode
+/// method only if really necessary - it may open unauthorized access to your application
+/// from external nodes! When normal server is started, one can specify hostname in `rootrc`
+/// file which should be used for binding of server socket:
 ///
-/// or specify range of http ports, which can be used:
+///      WebGui.HttpBind: hostname | ipaddress
+///
+/// By default port number is not fixed (0) and range of http ports is used to locate
+/// first available port:
 ///
 ///      WebGui.HttpPortMin: 8800
 ///      WebGui.HttpPortMax: 9800
 ///
-/// By default range [8800..9800] is used
+/// To configure exact HTTP port, which should be used for the server,
+/// provide following entry in `rootrc` file:
 ///
-/// One also can bind HTTP server socket to loopback address,
-/// In that case only connection from localhost will be available:
+///      WebGui.HttpPort: 8088
 ///
-///      WebGui.HttpLoopback: yes
-///
-/// Or one could specify hostname which should be used for binding of server socket
-///
-///      WebGui.HttpBind: hostname | ipaddress
-///
-/// To use secured protocol, following parameter should be specified
+/// To use secured protocol, following parameters should be specified:
 ///
 ///      WebGui.UseHttps: yes
 ///      WebGui.ServerCert: sertificate_filename.pem
@@ -379,7 +378,7 @@ bool RWebWindowsManager::InformListener(const std::string &msg)
 ///      WebGui.UnixSocket: /path/to/unix/socket
 ///      WebGui.UnixSocketMode: 0700
 ///
-/// Typically one used unix sockets together with server mode like `root --web=server:/tmp/root.socket` and
+/// Typically one uses unix sockets together with server mode like `root --web=server:/tmp/root.socket` and
 /// then redirect it via ssh tunnel (e.g. using `rootssh`) to client node
 ///
 /// All incoming requests processed in THttpServer in timer handler with 10 ms timeout.
@@ -786,6 +785,7 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.FirefoxRandomProfile: usage of random Firefox profile "no" - disabled, "yes" - enabled (default)
 ///      WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
 ///      WebGui.ReconnectTmout: time to reconnect for already existing connection, if negative - no reconnecting possible (default 15 s)
+///      WebGui.BatchTimeout: time required to produce images in headless (batch) mode (default 30 s)
 ///      WebGui.CefTimer: periodic time to run CEF event loop (default 10 ms)
 ///      WebGui.CefUseViews: "yes" - enable / "no" - disable usage of CEF views frameworks (default is platform/version dependent)
 ///      WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings

@@ -37,6 +37,8 @@
 #include "RooStats/HypoTestInverterResult.h"
 #include "TEnv.h"
 
+#include "./PythonInterface.h"
+
 BEGIN_XROOFIT_NAMESPACE
 
 xRooNLLVar::xRooHypoSpace::xRooHypoSpace(const char *name, const char *title)
@@ -316,15 +318,13 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
    }
 
    if (/*high < low ||*/ (high == low && nPoints != 1)) {
-      // take from parameter
+      // take from parameter (will be either the defaults from the construction of the hypoSpace or whatever last scan
+      // was
       low = p->getMin("scan");
       high = p->getMax("scan");
    }
    if (!std::isnan(low) && !std::isnan(high) && !(std::isinf(low) && std::isinf(high))) {
       p->setRange("scan", std::min(low, high), std::max(low, high));
-   }
-   if (p->hasRange("scan")) {
-      ::Info("xRooHypoSpace::scan", "Using %s scan range: %g - %g", p->GetName(), p->getMin("scan"), p->getMax("scan"));
    }
 
    bool doObs = false;
@@ -403,6 +403,10 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
    if (nPoints == 0) {
       // automatic scan
       if (sType.Contains("cls")) {
+         if (p->hasRange("scan")) {
+            ::Info("xRooHypoSpace::scan", "Using %s scan range: %g - %g", p->GetName(), p->getMin("scan"),
+                   p->getMax("scan"));
+         }
          for (double nSigma : nSigmas) {
             xValueWithError res(std::make_pair(0., 0.));
             if (std::isnan(nSigma)) {
@@ -428,8 +432,8 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
             out += 1;
          } else {
             // fit was ok, so use the values to determine an appropriate range
-            low = std::max(low, back().mu_hat().getVal()-back().mu_hat().getError()*3);
-            high = std::min(high, back().mu_hat().getVal()+back().mu_hat().getError()*3);
+            low = std::max(low, back().mu_hat().getVal() - back().mu_hat().getError() * 3);
+            high = std::min(high, back().mu_hat().getVal() + back().mu_hat().getError() * 3);
             nPoints = 20;
             double step = (high - low) / (nPoints - 1);
             for (size_t i = 0; i < nPoints; i++) {
@@ -438,7 +442,6 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
                if (back().status() != 0)
                   out += 1;
             }
-
          }
       } else {
          throw std::runtime_error(TString::Format("Automatic scanning not yet supported for %s", type));
@@ -642,7 +645,15 @@ xRooNLLVar::xRooHypoPoint &xRooNLLVar::xRooHypoSpace::AddPoint(const char *coord
    }
    coordString.erase(coordString.end() - 1);
 
-   ::Info("xRooHypoSpace::AddPoint", "Added new point @ %s", coordString.c_str());
+   if (xPython::isPythonInitialized()) {
+      auto s = TString::Format("Info in <xRooHypoSpace::AddPoint>: Added new point @ %s", coordString.c_str());
+      xPython::writeStdoutLine(s.Data());
+      //      if (PyObject *sys_stdout = PySys_GetObject("stdout"); sys_stdout != nullptr) {
+      //         Py_XDECREF(PyObject_CallMethod(sys_stdout, "flush", nullptr));
+      //      }
+   } else {
+      ::Info("xRooHypoSpace::AddPoint", "Added new point @ %s", coordString.c_str());
+   }
    return emplace_back(out);
 }
 
@@ -899,8 +910,8 @@ std::shared_ptr<TGraphErrors> xRooNLLVar::xRooHypoSpace::graph(
          out->GetListOfFunctions()->Add(x, "F");
          x = out->Clone("down");
          x->SetBit(kCanDelete);
-         // dynamic_cast<TAttFill*>(x)->SetFillColor((nSigma==2) ? kYellow : kGreen);
-         // dynamic_cast<TAttFill*>(x)->SetFillStyle(1001);
+         dynamic_cast<TAttFill *>(x)->SetFillColor(kBlack);
+         dynamic_cast<TAttFill *>(x)->SetFillStyle(nSigma == 2 ? 3005 : 3004);
          out->GetListOfFunctions()->Add(x, "F");
       }
       if (sOpt.Contains("ts")) {
@@ -1006,10 +1017,22 @@ std::shared_ptr<TGraphErrors> xRooNLLVar::xRooHypoSpace::graph(
       for (int i = 0; i < out->GetN(); i++) {
          if (i < out->GetN() - nPointsDown) {
             up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) + out->GetErrorY(i) * (above ? 1. : -1.));
-            down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
+            // down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. :
+            // -1.));
          } else {
-            up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
+            // up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
             down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) + out->GetErrorY(i) * (above ? 1. : -1.));
+         }
+      }
+      // now go back round in reverse
+      for (int i = out->GetN() - 1; i >= 0; i--) {
+         if (i < out->GetN() - nPointsDown) {
+            up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
+            // down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. :
+            // -1.));
+         } else {
+            // up->SetPoint(up->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
+            down->SetPoint(down->GetN(), out->GetPointX(i), out->GetPointY(i) - out->GetErrorY(i) * (above ? 1. : -1.));
          }
       }
    }
@@ -1099,8 +1122,8 @@ std::shared_ptr<TMultiGraph> xRooNLLVar::xRooHypoSpace::graphs(const char *opt)
          // out->GetListOfFunctions()->Add(out->GetHistogram()->Clone(".axis"),"sameaxis"); // redraw axis
 
          for (auto g : *out->GetListOfGraphs()) {
-            if (auto o = dynamic_cast<TGraph *>(g)->GetListOfFunctions()->FindObject("down")) {
-               leg->AddEntry(o, "", "F");
+            if (dynamic_cast<TGraph *>(g)->GetListOfFunctions()->FindObject("down")) {
+               leg->AddEntry(g, "", "F");
             } else {
                leg->AddEntry(g, "", "LPE");
             }
@@ -1154,7 +1177,8 @@ std::shared_ptr<TMultiGraph> xRooNLLVar::xRooHypoSpace::graphs(const char *opt)
          auto gra2 = static_cast<TMultiGraph *>(out->DrawClone("A"));
          gra2->SetBit(kCanDelete);
          if (sOpt.Contains("pcls") || sOpt.Contains("pnull")) {
-            gra2->GetHistogram()->SetMinimum(1e-6);
+            gra2->SetMinimum(1e-6);
+            gra2->SetMaximum(1);
          }
          if (gPad) {
             gPad->RedrawAxis();
@@ -1268,11 +1292,13 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
          if (!gPad)
             gra->Draw(); // in 6.28 DrawClone wont make the gPad defined :( ... so Draw then clear and Draw Clone
          gPad->Clear();
-         gra->DrawClone("A")->SetBit(kCanDelete);
+         auto gra2 = static_cast<TMultiGraph *>(gra->DrawClone("A"));
+         gra2->SetBit(kCanDelete);
+         gra2->SetMinimum(1e-9);
+         gra2->SetMaximum(1);
          gPad->RedrawAxis();
-         gra->GetHistogram()->SetMinimum(1e-9);
-         gra->GetHistogram()->GetYaxis()->SetRangeUser(1e-9, 1);
-         gPad->Modified();
+         gPad->GetCanvas()->Paint();
+         gPad->GetCanvas()->Update();
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 30, 00)
          gPad->GetCanvas()->ResetUpdated(); // stops previous canvas being replaced in a jupyter notebook
 #endif
@@ -1298,7 +1324,7 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
       if (!gr || gr->GetN() < 1) {
          if (maxTries == 0 || std::isnan(AddPoint(TString::Format("%s=%g", v->GetName(), muMin)).getVal(sOpt).first)) {
             // first point failed ... give up
-            ::Error("findlimit", "Problem evaluating %s @ %s=%g", sOpt.Data(), v->GetName(), muMin);
+            ::Error("findlimit", "Problem evaluating First Point %s @ %s=%g", sOpt.Data(), v->GetName(), muMin);
             return std::pair(std::numeric_limits<double>::quiet_NaN(), 0.);
          }
          gr.reset();
@@ -1334,7 +1360,8 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
 
       if (maxTries == 0 || std::isnan(AddPoint(TString::Format("%s=%g", v->GetName(), nextPoint)).getVal(sOpt).first)) {
          // second point failed ... give up
-         ::Error("xRooHypoSpace::findlimit", "Problem evaluating %s @ %s=%g", sOpt.Data(), v->GetName(), nextPoint);
+         ::Error("xRooHypoSpace::findlimit", "Problem evaluating Second Point %s @ %s=%g", sOpt.Data(), v->GetName(),
+                 nextPoint);
          return std::pair(std::numeric_limits<double>::quiet_NaN(), 0.);
       }
       gr.reset();
@@ -1396,14 +1423,15 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
    // got here need a new point .... evaluate the estimated lim location +/- the relUncert (signed error takes care of
    // direction)
 
+   if (maxTries == 0) {
+      ::Warning("xRooHypoSpace::findlimit", "Reached max number of point evaluations");
+      return lim;
+   }
+
    ::Info("xRooHypoSpace::findlimit", "%s -- Testing new point @ %s=%g (delta=%g)", sOpt.Data(), v->GetName(),
           nextPoint, lim.second);
-   if (maxTries == 0 || std::isnan(AddPoint(TString::Format("%s=%g", v->GetName(), nextPoint)).getVal(sOpt).first)) {
-      if (maxTries == 0) {
-         ::Warning("xRooHypoSpace::findlimit", "Reached max number of point evaluations");
-      } else {
-         ::Error("xRooHypoSpace::findlimit", "Problem evaluating %s @ %s=%g", sOpt.Data(), v->GetName(), nextPoint);
-      }
+   if (std::isnan(AddPoint(TString::Format("%s=%g", v->GetName(), nextPoint)).getVal(sOpt).first)) {
+      ::Error("xRooHypoSpace::findlimit", "Problem evaluating %s @ %s=%g", sOpt.Data(), v->GetName(), nextPoint);
       return lim;
    }
    gr.reset();
@@ -1578,7 +1606,8 @@ void xRooNLLVar::xRooHypoSpace::Draw(Option_t *opt)
          auto gra2 = static_cast<TMultiGraph *>(gra->DrawClone(sOpt.Contains("same") ? "" : "A"));
          gra2->SetBit(kCanDelete);
          if (sOpt.Contains("pcls") || sOpt.Contains("pnull")) {
-            gra2->GetHistogram()->SetMinimum(1e-6);
+            gra2->SetMinimum(1e-6);
+            gra2->SetMaximum(1);
          }
          if (gPad) {
             gPad->RedrawAxis();
@@ -1667,9 +1696,9 @@ void xRooNLLVar::xRooHypoSpace::Draw(Option_t *opt)
       minMax.second = std::max(minMax.second, val);
    }
    if (minMax.first < std::numeric_limits<double>::infinity())
-      out->GetHistogram()->SetMinimum(minMax.first);
+      out->SetMinimum(minMax.first);
    if (minMax.second > -std::numeric_limits<double>::infinity())
-      out->GetHistogram()->SetMaximum(minMax.second);
+      out->SetMaximum(minMax.second);
 
    TGraph *badPoints = nullptr;
 

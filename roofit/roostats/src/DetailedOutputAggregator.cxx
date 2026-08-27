@@ -131,8 +131,8 @@ namespace RooStats {
       }
       fResult->add(RooArgSet(*fBuiltSet), weight);
 
-      for (RooAbsArg* v : *fBuiltSet) {
-         if (RooRealVar* var= dynamic_cast<RooRealVar*>(v)) {
+      for (auto* var : dynamic_range_cast<RooRealVar*>(*fBuiltSet)) {
+         if (var) {
             // Invalidate values in case we don't set some of them next time round (eg. if fit not done)
             var->setVal(std::numeric_limits<double>::quiet_NaN());
             var->removeError();

@@ -167,6 +167,9 @@ static void R__zipOld(int cxlevel, int *srcsize, const char *src, int *tgtsize, 
     tgt[8] = (char)((state.in_size >> 16) & 0xff);
 
     *irep     = state.out_offset;
+
+    R__lm_free(&state);
+
     return;
 }
 

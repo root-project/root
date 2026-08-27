@@ -11,7 +11,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(CustomStruct
                               HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/CustomStruct.hxx
                               SOURCES CustomStruct.cxx
                               LINKDEF CustomStructLinkDef.h
-                              DEPENDENCIES RIO)
+                              DEPENDENCIES RIO ROOTVecOps)
 configure_file(CustomStruct.hxx . COPYONLY)
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET CustomStruct POST_BUILD

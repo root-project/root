@@ -411,6 +411,10 @@ TEST(RNTuple, TClassMetaName)
    ROOT::RStreamerField f6("f", "EdmWrapper<long long>");
    EXPECT_STREQ("EdmWrapper<Long64_t>", f6.GetClass()->GetName());
    EXPECT_EQ("EdmWrapper<Long64_t>", f6.GetTypeAlias());
+   auto clone = f6.Clone("f");
+   auto streamerFieldPtr = static_cast<ROOT::RStreamerField *>(clone.get());
+   EXPECT_STREQ("EdmWrapper<Long64_t>", streamerFieldPtr->GetClass()->GetName());
+   EXPECT_EQ("EdmWrapper<Long64_t>", streamerFieldPtr->GetTypeAlias());
 }
 
 TEST(RNTuple, StreamerInfoRecords)
@@ -501,4 +505,16 @@ TEST(RNTuple, MemberWithCustomStreamer)
 
    // After setting member streamer: field creation should throw
    EXPECT_THROW(RFieldBase::Create("f", "MemberWithCustomStreamer").Unwrap(), ROOT::RException);
+}
+
+TEST(RNTuple, AlignmentCornerCases)
+{
+   // Alignment determined by transient member
+   EXPECT_EQ(alignof(AlignmentDeterminedByTransientMember),
+             RFieldBase::Create("", "AlignmentDeterminedByTransientMember").Unwrap()->GetAlignment());
+
+   // Respect custom alignment
+   EXPECT_EQ(alignof(AlignedAs), RFieldBase::Create("", "AlignedAs").Unwrap()->GetAlignment());
+   EXPECT_EQ(sizeof(AlignedAs), RFieldBase::Create("", "AlignedAs").Unwrap()->GetValueSize());
+   EXPECT_EQ(8u, RFieldBase::Create("", "AlignedAs").Unwrap()->GetValueSize());
 }

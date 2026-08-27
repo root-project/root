@@ -109,8 +109,8 @@ double RooLegacyExpPoly::evaluateLog() const
    const double x = _x;
    double xpow = std::pow(x, lowestOrder);
    double retval = 0;
-   for (size_t i = 0; i < sz; ++i) {
-      retval += coefs[i] * xpow;
+   for (double coef : coefs) {
+      retval += coef * xpow;
       xpow *= x;
    }
 
@@ -158,9 +158,8 @@ void RooLegacyExpPoly::adjustLimits()
    if (x) {
       const double xmax = x->getMax();
       double xmaxpow = std::pow(xmax, lowestOrder);
-      for (size_t i = 0; i < sz; ++i) {
+      for (auto *coef : dynamic_range_cast<RooRealVar *>(_coefList)) {
          double thismax = max / xmaxpow;
-         RooRealVar *coef = dynamic_cast<RooRealVar *>(this->_coefList.at(i));
          if (coef) {
             coef->setVal(thismax);
             coef->setMax(thismax);

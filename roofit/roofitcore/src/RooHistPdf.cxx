@@ -300,6 +300,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars,
 
   Int_t code = 0;
   Int_t frcode = 0;
+  bool directSubRange = false;
   for (unsigned int n=0; n < pdfObsList.size() && n < histObsList.size(); ++n) {
     const auto pa = pdfObsList[n];
     const auto ha = histObsList[n];
@@ -309,6 +310,9 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars,
       analVars.add(*pa);
       if (fullRange(*pa, *ha, rangeName)) {
         frcode |= 2 << n;
+      } else if (pa->isFundamental()) {
+        // Sub-range integral over the histogram observable itself (no transform).
+        directSubRange = true;
       }
     }
   }
@@ -319,10 +323,12 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars,
     code |= 1;
   }
 
-  // Disable partial analytical integrals if interpolation is used, and we
-  // integrate over sub-ranges, but leave them enabled when we integrate over
-  // the full range of one or several variables
-  if (intOrder > 1 && !(code & 1)) {
+  // the full range. For interpolated histograms (intOrder > 0), fall back to
+  // numerical integration over a direct sub-range of the histogram observable.
+  // A derived (non-fundamental) observable, such as a linear transform used to
+  // renormalize the components of a RooMomentMorphFuncND, keeps the analytical
+  // path it relies on.
+  if (intOrder > 0 && directSubRange) {
     analVars.removeAll();
     return 0;
   }

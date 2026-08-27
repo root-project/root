@@ -237,12 +237,11 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
    // t.b.f. " RooProfileLL should keep and provide possibility to query on global minimum
    // set POI to fit value (this will speed up profileLL calculation of global minimum)
    const RooArgList & fitParams = fFitResult->floatParsFinal();
-   for (std::size_t i = 0; i < fitParams.size(); ++i) {
-      RooRealVar & fitPar =  static_cast<RooRealVar &>( fitParams[i]);
-      RooRealVar * par = static_cast<RooRealVar*>(fPOI.find( fitPar.GetName() ));
+   for (auto *fitPar : static_range_cast<RooRealVar *>(fitParams)) {
+      RooRealVar * par = static_cast<RooRealVar*>(fPOI.find( fitPar->GetName() ));
       if (par) {
-         par->setVal( fitPar.getVal() );
-         par->setError( fitPar.getError() );
+         par->setVal( fitPar->getVal() );
+         par->setError( fitPar->getError() );
       }
    }
 

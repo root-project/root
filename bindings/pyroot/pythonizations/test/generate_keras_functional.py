@@ -123,7 +123,7 @@ def generate_keras_functional(dst_dir):
     train_and_save(model, "Flatten")
 
     # GlobalAveragePooling2D channels first
-    if (is_channels_first_supported):
+    if is_channels_first_supported():
       inp = layers.Input(shape=(3, 4, 6))
       out = layers.GlobalAveragePooling2D(data_format='channels_first')(inp)
       model = models.Model(inp, out)
@@ -148,9 +148,9 @@ def generate_keras_functional(dst_dir):
     train_and_save(model, "LeakyReLU")
 
     # MaxPooling2D channels_first
-    if (is_channels_first_supported):
+    if is_channels_first_supported():
        inp = layers.Input(shape=(3, 8, 8))
-       out = layers.MaxPooling2D(pool_size=(2, 2), data_format='channels_last')(inp)
+       out = layers.MaxPooling2D(pool_size=(2, 2), data_format='channels_first')(inp)
        model = models.Model(inp, out)
        train_and_save(model, "MaxPool2D_channels_first")
 

@@ -86,7 +86,6 @@ public:
 
 public:
    virtual void writeJSON(std::ostream &os) const = 0;
-   virtual void writeYML(std::ostream &) const { throw std::runtime_error("YML not supported"); }
 
 public:
    virtual JSONNode &operator<<(std::string const &s) = 0;
@@ -100,8 +99,11 @@ public:
    virtual bool is_container() const = 0;
    virtual bool is_map() const = 0;
    virtual bool is_seq() const = 0;
+   virtual bool is_null() const = 0;
+   virtual bool is_number() const;
    virtual JSONNode &set_map() = 0;
    virtual JSONNode &set_seq() = 0;
+   virtual JSONNode &set_null() = 0;
    virtual void clear() = 0;
 
    virtual std::string key() const = 0;
@@ -208,17 +210,7 @@ public:
    static std::unique_ptr<JSONTree> create(std::istream &is);
    static std::unique_ptr<JSONTree> create(std::string const &str);
 
-   static std::string getBackend();
-   static void setBackend(std::string const &name);
-
-   static bool hasBackend(std::string const &name);
-
 private:
-   // Internally, we store the backend type with an enum to be more memory efficient.
-   enum class Backend { NlohmannJson, Ryml };
-
-   static Backend &getBackendEnum();
-
    template <typename... Args>
    static std::unique_ptr<JSONTree> createImpl(Args &&...args);
 };

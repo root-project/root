@@ -30,6 +30,16 @@ std::vector<ROOT::RFieldBase::RValue> SplitVector(std::shared_ptr<void> valuePtr
    return result;
 }
 
+std::size_t GetSizeOfVector()
+{
+   return sizeof(std::vector<char>);
+}
+
+std::size_t GetAlignOfVector()
+{
+   return alignof(std::vector<char>);
+}
+
 } // anonymous namespace
 
 ROOT::RArrayField::RArrayField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
@@ -254,10 +264,7 @@ unsigned char *ROOT::RRVecField::ResizeRVec(void *rvec, std::size_t nItems, std:
       }
 
       // TODO Increment capacity by a factor rather than just enough to fit the elements.
-      if (owns) {
-         // *beginPtr points to the array of item values (allocated in an earlier call by the following malloc())
-         free(*beginPtr);
-      }
+      Internal::DestroyRVecWithChecks(itemField->GetAlignment(), beginPtr, capacityPtr);
       // We trust that malloc returns a buffer with large enough alignment.
       // This might not be the case if T in RVec<T> is over-aligned.
       *beginPtr = static_cast<unsigned char *>(malloc(nItems * itemSize));
@@ -648,6 +655,16 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RVectorField::SplitValue(const RValu
    return SplitVector(value.GetPtr<void>(), *fSubfields[0]);
 }
 
+std::size_t ROOT::RVectorField::GetValueSize() const
+{
+   return GetSizeOfVector();
+}
+
+std::size_t ROOT::RVectorField::GetAlignment() const
+{
+   return GetAlignOfVector();
+}
+
 void ROOT::RVectorField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitVectorField(*this);
@@ -972,6 +989,16 @@ void ROOT::RArrayAsVectorField::ReconcileOnDiskField(const RNTupleDescriptor &de
 std::vector<ROOT::RFieldBase::RValue> ROOT::RArrayAsVectorField::SplitValue(const ROOT::RFieldBase::RValue &value) const
 {
    return SplitVector(value.GetPtr<void>(), *fSubfields[0]);
+}
+
+std::size_t ROOT::RArrayAsVectorField::GetValueSize() const
+{
+   return GetSizeOfVector();
+}
+
+std::size_t ROOT::RArrayAsVectorField::GetAlignment() const
+{
+   return GetAlignOfVector();
 }
 
 void ROOT::RArrayAsVectorField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const

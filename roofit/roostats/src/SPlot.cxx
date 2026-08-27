@@ -466,7 +466,8 @@ void SPlot::AddSWeight(RooAbsPdf *pdf, const RooArgList &yieldsTmp, const RooArg
   }
 
   const Int_t nspec = yieldsTmp.size();
-  RooArgList yields = *static_cast<RooArgList*>(yieldsTmp.snapshot(false));
+  std::unique_ptr<RooArgList> yieldsSnapshot{static_cast<RooArgList *>(yieldsTmp.snapshot(false))};
+  RooArgList &yields = *yieldsSnapshot;
 
   if (RooMsgService::instance().isActive(this, RooFit::InputArguments, RooFit::DEBUG)) {
     coutI(InputArguments) << "Printing Yields" << std::endl;

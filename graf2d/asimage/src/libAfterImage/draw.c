@@ -340,7 +340,7 @@ apply_tool_point_colored(ASDrawContext *ctx, int curr_x, int curr_y, CARD32 rati
 		dst += curr_y * cw + curr_x;
 		if (get_flags(ctx->flags, ASDrawCTX_UsingScratch))
 		{
-			CARD32 value = (ARGB32_ALPHA8(ctx->tool->matrix[0])*ratio)/255 ;
+			CARD32 value = ratio ;	/* coverage only; alpha applied on merge */
 			if( *dst < value ) 
 				*dst = value ;
 		}		
@@ -391,7 +391,7 @@ fill_hline_notile_colored(ASDrawContext *ctx, int x_from, int y, int x_to, CARD3
 		{
 			while( x1 <= x2 ) 
 			{
-				CARD32 value = (ARGB32_ALPHA8(ctx->tool->matrix[0])*ratio)/255 ;
+				CARD32 value = ratio ;	/* coverage only; alpha applied on merge */
 				if( dst[x1] < value ) 
 					dst[x1] = value ;
 				++x1 ;
