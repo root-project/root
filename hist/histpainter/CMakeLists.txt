@@ -31,4 +31,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistPainter
     MathCore
   LIBRARIES
     Matrix
+    ROOTclib
 )

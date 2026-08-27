@@ -30,6 +30,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Minuit
     -writeEmptyRootPCM
 )
 
+target_link_libraries(Minuit PRIVATE ROOTclib)
+
 if (CMAKE_BUILD_TYPE STREQUAL Optimized)
   target_compile_options(Minuit PRIVATE "-fno-fast-math")
 endif()

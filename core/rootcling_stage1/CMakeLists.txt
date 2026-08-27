@@ -29,11 +29,10 @@ else()
 endif()
 
 ROOT_EXECUTABLE(rootcling_stage1 src/rootcling_stage1.cxx
-                              $<TARGET_OBJECTS:Clib>
                               $<TARGET_OBJECTS:ClingUtils>
                               $<TARGET_OBJECTS:Dictgen>
                               $<TARGET_OBJECTS:Foundation_Stage1>
-                              LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${ROOT_ATOMIC_LIBS}
+                              LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${ROOT_ATOMIC_LIBS} ROOTclib
                               NOINSTALL)
 target_compile_options(rootcling_stage1 PRIVATE -DCMAKE_BINARY_DIR="${CMAKE_BINARY_DIR}")
 

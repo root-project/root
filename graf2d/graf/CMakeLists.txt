@@ -93,6 +93,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     Freetype::Freetype
     ZLIB::ZLIB
     mathtext
+    ROOTclib
   DEPENDENCIES
     Hist
     Matrix

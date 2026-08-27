@@ -173,6 +173,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     RIO
 )
 
+target_link_libraries(Hist PRIVATE ROOTclib) # Uses the internal strtok header
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 
 if(clad)

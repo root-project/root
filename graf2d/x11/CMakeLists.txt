@@ -24,6 +24,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GX11
     ${X11_Xpm_LIB}
     ${CMAKE_THREAD_LIBS_INIT}
     xvertext
+    ROOTclib
   DEPENDENCIES
     Core
     MathCore

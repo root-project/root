@@ -6,15 +6,11 @@
 
 ############################################################################
 # CMakeLists.txt file for building ROOT core/clib package
+# This library contains string functions that first were introduced in BSD.
+# None of its headers should be used in installed ROOT headers.
 ############################################################################
 
-set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
-  strlcpy.h
-  snprintf.h
-  strtok.h
-)
-
-ROOT_OBJECT_LIBRARY(Clib
+add_library(ROOTclib STATIC
   src/attach.c
   src/detach.c
   src/getpagesize.c
@@ -31,20 +27,13 @@ ROOT_OBJECT_LIBRARY(Clib
   src/strlcpy.c
 )
 
-target_include_directories(Clib
+target_include_directories(ROOTclib
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
   PRIVATE
-    ${CMAKE_BINARY_DIR}/ginclude
+    ${CMAKE_BINARY_DIR}/ginclude # RConfigure.h
     ${CMAKE_CURRENT_SOURCE_DIR}/res
     ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/inc # for RConfig.hxx
 )
-
-target_include_directories(Core
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-)
-
-target_sources(Core PRIVATE $<TARGET_OBJECTS:Clib>)
-
-ROOT_INSTALL_HEADERS()
+target_link_options(ROOTclib PRIVATE -fvisibility=hidden)
+set_target_properties(ROOTclib PROPERTIES POSITION_INDEPENDENT_CODE TRUE)

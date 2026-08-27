@@ -472,6 +472,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     "-writeEmptyRootPCM"
   LIBRARIES
     ${EXTRA_LIBRARIES}
+    ROOTclib
   DEPENDENCIES
     Core
     Hist

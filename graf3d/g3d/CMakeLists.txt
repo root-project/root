@@ -33,4 +33,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf3d
     MathCore
   LIBRARIES
     ROOTX3dViewer
+    ROOTclib
 )
