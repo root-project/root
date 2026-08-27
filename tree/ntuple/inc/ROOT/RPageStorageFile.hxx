@@ -139,6 +139,8 @@ private:
    RNTupleDescriptorBuilder fDescriptorBuilder;
    /// Tracks the last read offset for seek distance calculation
    std::uint64_t fLastOffset = 0;
+   /// Set to true after the first call to LoadStreamerInfo()
+   bool fHasStreamerInfo = false;
 
    /// File-specific I/O performance counters
    struct RFileCounters {
