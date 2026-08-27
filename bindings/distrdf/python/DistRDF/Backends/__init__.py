@@ -16,12 +16,13 @@ import pkgutil
 import types
 
 
-def build_backends_submodules(parentmodule: types.ModuleType) -> types.ModuleType:
+def build_backends_submodules(parentmodule: types.ModuleType, experimental: bool) -> types.ModuleType:
     """
     Helper function to create the submodules of the backends.
     """
-    for _, module_name, is_pkg in pkgutil.walk_packages(__path__):
+    from ROOT._distrdf import _raise_warning_if_experimental
 
+    for _, module_name, is_pkg in pkgutil.walk_packages(__path__):
         if is_pkg:
             # The actual python package with the backend implementation
             actual = importlib.import_module(__name__ + "." + module_name)
@@ -37,7 +38,7 @@ def build_backends_submodules(parentmodule: types.ModuleType) -> types.ModuleTyp
             dummy.__package__ = parentmodule
 
             # Attached functions
-            dummy.RDataFrame = actual.RDataFrame
+            dummy.RDataFrame = _raise_warning_if_experimental(actual.RDataFrame, experimental)
 
             setattr(parentmodule, module_name, dummy)
 
