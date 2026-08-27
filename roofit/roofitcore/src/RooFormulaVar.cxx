@@ -56,6 +56,8 @@
 #include "RooCurve.h"
 #include "RooFitImplHelpers.h"
 
+#include "TFormula.h"
+
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include "RooNLLVar.h"
 #include "RooChi2Var.h"
