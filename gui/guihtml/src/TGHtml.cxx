@@ -50,7 +50,7 @@
 #include "TGMenu.h"
 #include "TVirtualX.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+#include <cstdio>
 
 
 /** \class TGHtml

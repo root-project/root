@@ -45,7 +45,7 @@
 
 #include <cstdlib>
 #include <iostream>
-#include "snprintf.h"
+#include <cstdio>
 #include "TApplication.h"
 #include "TBenchmark.h"
 #include "TCanvas.h"

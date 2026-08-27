@@ -72,7 +72,7 @@ for usage examples.
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
 
-#include <snprintf.h>
+#include <cstdio>
 #include <iostream>
 
 

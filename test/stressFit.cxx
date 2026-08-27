@@ -62,7 +62,7 @@
 #include "Riostream.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include "Math/Factory.h"
 #include "Math/Functor.h"

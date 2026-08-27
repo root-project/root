@@ -56,7 +56,7 @@
 #ifndef __CLING__
 
 #include <cstdlib>
-#include <snprintf.h>
+#include <cstdio>
 #include <TROOT.h>
 #include <TSystem.h>
 #include <TH1.h>

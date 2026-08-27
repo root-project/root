@@ -90,7 +90,7 @@
 
 #include <cstdlib>
 #include <iostream>
-#include <snprintf.h>
+#include <cstdio>
 #include <TSystem.h>
 #include <TFile.h>
 #include <TBenchmark.h>

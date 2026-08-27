@@ -106,6 +106,7 @@ class Container {
 #include <cmath>
 #include <memory>
 #include <cstdlib>
+#include <cstdio>
 #include <fstream>
 
 #include "Compression.h"
@@ -133,7 +134,6 @@ class Container {
 #include "TVirtualMutex.h"
 #include "TInterpreter.h"
 #include "TEmulatedCollectionProxy.h"
-#include "snprintf.h"
 
 #include <nlohmann/json.hpp>
 

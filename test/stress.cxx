@@ -97,7 +97,7 @@
 #include <TApplication.h>
 #include <TClassTable.h>
 #include <Compression.h>
-#include <snprintf.h>
+#include <cstdio>
 #include "Event.h"
 
 void stress(Int_t nevent, Int_t style, Int_t printSubBenchmark, UInt_t portion );

@@ -20,7 +20,7 @@
 
 #include "strtok.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+#include <cstdio>
 #include "TClass.h"
 #include "TList.h"
 #include "TMethod.h"

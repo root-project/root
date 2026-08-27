@@ -46,7 +46,7 @@ There are limitations for complex objects like TTree, which can not be converted
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
 #include "RZip.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include <limits>
 #include <memory>

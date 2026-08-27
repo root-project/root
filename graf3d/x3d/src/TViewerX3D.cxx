@@ -22,7 +22,7 @@
 #include "TView.h"
 #include "TMath.h"
 #include "TROOT.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include "TRootHelpDialog.h"
 #include "TGClient.h"

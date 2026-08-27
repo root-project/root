@@ -13,7 +13,7 @@
 
 #include "RConfigure.h"
 #include "Rtypes.h"
-#include "snprintf.h"
+#include <cstdio>
 #include "TApplicationCmdlineHelp.h"
 
 #include <cstdio>

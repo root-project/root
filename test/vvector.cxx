@@ -24,7 +24,7 @@
 
 #include "TFile.h"
 #include <iostream>
-#include "snprintf.h"
+#include <cstdio>
 #include "TVectorD.h"
 #include "TMath.h"
 

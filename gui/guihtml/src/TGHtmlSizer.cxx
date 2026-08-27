@@ -32,7 +32,7 @@
 #include "TGHtml.h"
 #include "TImage.h"
 #include "TVirtualX.h"
-#include "snprintf.h"
+#include <cstdio>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the current rendering style. In other words, get the style

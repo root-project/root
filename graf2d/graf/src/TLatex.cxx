@@ -17,7 +17,7 @@
 #include "TVirtualPad.h"
 #include "TVirtualPadPainter.h"
 #include "TVirtualPS.h"
-#include "snprintf.h"
+#include <cstdio>
 
 const Double_t kPI = TMath::Pi();
 

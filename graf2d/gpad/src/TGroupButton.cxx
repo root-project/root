@@ -17,7 +17,7 @@
 #include "TText.h"
 #include "TInterpreter.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include <cstring>
 #include <iostream>

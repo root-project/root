@@ -20,7 +20,7 @@
 #include "TMath.h"
 #include "TPoint.h"
 #include "TText.h"
-#include "snprintf.h"
+#include <cstdio>
 
 
 

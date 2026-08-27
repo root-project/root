@@ -29,7 +29,7 @@ arrow::Schema.
 #include <ROOT/RDF/Utils.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RArrowDS.hxx>
-#include <snprintf.h>
+#include <cstdio>
 
 #include <algorithm>
 #include <memory>

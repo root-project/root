@@ -60,7 +60,7 @@ For a multi-dimensional version of this pdf, see RooNDKeysPdf.
 #include <cmath>
 #include <iostream>
 #include "TMath.h"
-#include "snprintf.h"
+#include <cstdio>
 #include "RooKeysPdf.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"

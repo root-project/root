@@ -62,7 +62,7 @@
 #include "TAtt3D.h"
 #include "TVirtualPadPainter.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include "TVirtualMutex.h"
 

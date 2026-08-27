@@ -246,7 +246,7 @@ more complex cuts such as (~e1) && (~e2), or (~e1) || !(~e2). Parentheses are im
 #include "TGProgressBar.h"
 #include "TSpider.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include <filesystem>
 

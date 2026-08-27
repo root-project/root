@@ -107,7 +107,7 @@ the new `RooAbsData::uniqueId()`.
 #include "TFile.h"
 #include "TBuffer.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include <iostream>
 #include <memory>

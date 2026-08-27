@@ -12,7 +12,7 @@
 #include <TCanvas.h>
 #include <TROOT.h>
 #include <TVirtualX.h>
-#include <snprintf.h>
+#include <cstdio>
 
 
 

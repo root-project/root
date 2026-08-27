@@ -42,7 +42,7 @@ In order to access the name of a class within the ROOT type system, the method T
 #include "TClass.h"
 
 #include "strlcpy.h"
-#include "snprintf.h"
+#include <cstdio>
 #include "TBaseClass.h"
 #include "TBrowser.h"
 #include "TBuffer.h"

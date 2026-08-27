@@ -49,7 +49,7 @@ class hierarchies (watch out for overlaps).
 #include <limits>
 
 #include "Varargs.h"
-#include "snprintf.h"
+#include <cstdio>
 #include "TObject.h"
 #include "TBuffer.h"
 #include "TClass.h"

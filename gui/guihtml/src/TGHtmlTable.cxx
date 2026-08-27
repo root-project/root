@@ -31,7 +31,7 @@
 #include <cmath>
 
 #include "TGHtml.h"
-#include "snprintf.h"
+#include <cstdio>
 
 // Default values for various table style parameters
 

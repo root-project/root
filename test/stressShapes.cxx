@@ -2,7 +2,7 @@
 #ifndef __CLING__
 #include <TRandom3.h>
 #include <TROOT.h>
-#include <snprintf.h>
+#include <cstdio>
 #include <TH1.h>
 #include <TMath.h>
 #include <TGeoManager.h>

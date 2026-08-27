@@ -15,7 +15,7 @@
 #include "RConversionRuleParser.h"
 #include <ROOT/RConfig.hxx>
 #include <ROOT/FoundationUtils.hxx>
-#include "snprintf.h"
+#include <cstdio>
 
 #include <iostream>
 #include <iomanip>

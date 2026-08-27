@@ -46,7 +46,7 @@
 #include "TGraph.h"
 #include "TMath.h"
 #include "TView.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include "TVirtualMutex.h"
 
