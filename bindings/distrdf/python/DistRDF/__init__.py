@@ -12,12 +12,13 @@
 from __future__ import annotations
 
 import concurrent.futures
+import functools
 import importlib.util
 import logging
 import textwrap
 import types
 import warnings
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Callable, Iterable
 
 from .Backends import build_backends_submodules
 from .LiveVisualize import LiveVisualize
@@ -208,29 +209,33 @@ def FromSpec(jsonfile: str, *args, **kwargs) -> RDataFrame:
     )
 
 
-class _DeprecatedModule(types.ModuleType):
-    """A simple module type to raise a warning before usage."""
+def _raise_warning_if_experimental(func: Callable, experimental: bool):
+    """A simple function decorator to raise a warning before usage."""
 
-    def __getattribute__(self, name):
-        msg_warng = textwrap.dedent(
-            """
-            In ROOT 6.36, the ROOT.RDF.Experimental.Distributed module has become just ROOT.RDF.Distributed. In the
-            future, the 'Experimental' keyword will be removed, so it is suggested to move to the stable API in user 
-            code. You can now change lines such as:
-            ```
-            connection = ... # your distributed Dask client or SparkContext
-            RDataFrame = ROOT.RDF.Experimental.Distributed.[Backend].RDataFrame
-            df = RDataFrame(..., [daskclient,sparkcontext] = connection)
-            ```
-            to simply:
-            ```
-            connection = ... # your distributed Dask client or SparkContext
-            df = ROOT.RDataFrame(..., executor = connection)
-            ```
-            """
-        )
-        warnings.warn(msg_warng, FutureWarning)
-        return super().__getattribute__(name)
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if experimental:
+            msg_warng = textwrap.dedent(
+                """
+                In ROOT 6.36, the ROOT.RDF.Experimental.Distributed module has become just ROOT.RDF.Distributed. In the
+                future, the 'Experimental' keyword will be removed, so it is suggested to move to the stable API in user 
+                code. You can now change lines such as:
+                ```
+                connection = ... # your distributed Dask client or SparkContext
+                RDataFrame = ROOT.RDF.Experimental.Distributed.[Backend].RDataFrame
+                df = RDataFrame(..., [daskclient,sparkcontext] = connection)
+                ```
+                to simply:
+                ```
+                connection = ... # your distributed Dask client or SparkContext
+                df = ROOT.RDataFrame(..., executor = connection)
+                ```
+                """
+            )
+            warnings.warn(msg_warng, FutureWarning, stacklevel=2)
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 def create_distributed_module(parentmodule, experimental: bool = False):
@@ -249,21 +254,18 @@ def create_distributed_module(parentmodule, experimental: bool = False):
     # distributed.__loader__ is not defined
     distributed.__package__ = parentmodule
 
-    distributed = build_backends_submodules(distributed)
+    distributed = build_backends_submodules(distributed, experimental)
 
     # Inject top-level functions
-    distributed.initialize = initialize
-    distributed.RunGraphs = RunGraphs
-    distributed.VariationsFor = VariationsFor
-    distributed.LiveVisualize = LiveVisualize
-    distributed.DistributeHeaders = DistributeHeaders
-    distributed.DistributeFiles = DistributeFiles
-    distributed.DistributeSharedLibs = DistributeSharedLibs
-    distributed.DistributeCppCode = DistributeCppCode
-    distributed.FromSpec = FromSpec
-
-    if experimental:
-        distributed.__class__ = _DeprecatedModule
+    distributed.initialize = _raise_warning_if_experimental(initialize, experimental)
+    distributed.RunGraphs = _raise_warning_if_experimental(RunGraphs, experimental)
+    distributed.VariationsFor = _raise_warning_if_experimental(VariationsFor, experimental)
+    distributed.LiveVisualize = _raise_warning_if_experimental(LiveVisualize, experimental)
+    distributed.DistributeHeaders = _raise_warning_if_experimental(DistributeHeaders, experimental)
+    distributed.DistributeFiles = _raise_warning_if_experimental(DistributeFiles, experimental)
+    distributed.DistributeSharedLibs = _raise_warning_if_experimental(DistributeSharedLibs, experimental)
+    distributed.DistributeCppCode = _raise_warning_if_experimental(DistributeCppCode, experimental)
+    distributed.FromSpec = _raise_warning_if_experimental(FromSpec, experimental)
 
     return distributed
 
