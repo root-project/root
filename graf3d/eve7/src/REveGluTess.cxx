@@ -9,13 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#if __has_include("GL/glu.h") // either from builtin or from system-wise install
+#ifdef ROOT_BUILTIN_GLU
 #include "GL/glu.h"
-#elif defined(__APPLE__) && defined(__MACH__) // fallback solution for APPLE
+#elif defined(__APPLE__) && defined(__MACH__) // fallback solution for APPLE system GLU
 #include <OpenGL/glu.h>
 #ifndef _GLUfuncptr
 typedef void (* _GLUfuncptr)(void);
 #endif
+#else // Linux system GLU
+#include <GL/glu.h>
 #endif
 
 #include <ROOT/REveGluTess.hxx>

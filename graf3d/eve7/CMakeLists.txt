@@ -145,6 +145,8 @@ target_link_libraries(ROOTEve PUBLIC nlohmann_json::nlohmann_json)
 
 if (APPLE AND NOT builtin_glu)
   set_source_files_properties(src/REveGluTess.cxx PROPERTIES COMPILE_DEFINITIONS "GL_SILENCE_DEPRECATION")
+elseif(bultin_glu)
+  set_source_files_properties(src/REveGluTess.cxx PROPERTIES COMPILE_DEFINITIONS "ROOT_BUILTIN_GLU")
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
