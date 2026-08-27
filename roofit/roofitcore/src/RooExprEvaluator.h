@@ -39,6 +39,12 @@ enum class TypeRule : std::uint8_t {
 
 struct Entry {
    const char *name = nullptr; ///< accepted spelling in the formula
+   /// Spelling emitted in generated C++ for this entry. A nullptr means
+   /// "derive from name": qualified names (TMath::Erf, std::sin) are emitted
+   /// as-is, bare libm/std names get a std:: qualification (sin -> std::sin,
+   /// resolving to the same function the JIT-compiled code called). Only
+   /// entries whose emission cannot be derived this way set it explicitly.
+   const char *cppName = nullptr;
    std::uint8_t arity = 0;
    TypeRule rule = TypeRule::Double;
    double (*fn0)() = nullptr;
@@ -122,6 +128,10 @@ public:
 
    /// The processed formula string this program was compiled from.
    std::string processedFormula() const { return _program->formula; }
+
+   bool canEmitCpp() const override { return true; }
+
+   std::string emitCpp(std::function<std::string(unsigned int)> const &varName) const override;
 
 private:
    std::shared_ptr<const Program> _program;

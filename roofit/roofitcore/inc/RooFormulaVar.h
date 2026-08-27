@@ -21,6 +21,7 @@
 #include "RooListProxy.h"
 #include "RooAbsBinning.h"
 
+#include <functional>
 #include <memory>
 #include <list>
 #include <map>
@@ -29,7 +30,6 @@
 class RooArgSet ;
 class RooFormulaEvaluator;
 class RooAbsRealLValue;
-class TFormula;
 
 class RooFormulaVar : public RooAbsReal {
 public:
@@ -84,7 +84,15 @@ public:
   double evaluate() const override ;
   void doEval(RooFit::EvalContext &ctx) const override;
 
+  /// Name of the cling-JIT-compiled function that evaluates this formula,
+  /// which generated code from the codegen fallback path calls by name.
+  /// \note Returns an empty string when the formula is handled by the JIT-free
+  /// formula backend (the default for supported expressions, see
+  /// formulaUsesAstBackend()); codegen then inlines the expression via
+  /// emitFormulaCpp() instead.
   std::string getUniqueFuncName() const;
+  std::string emitFormulaCpp(std::function<std::string(unsigned int)> const &varName) const;
+  bool formulaUsesAstBackend() const;
 
   std::unique_ptr<RooAbsArg>
   compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const override;
@@ -97,7 +105,6 @@ public:
 
      RooListProxy _actualVars;                                ///< Actual parameters used by formula engine
      mutable std::unique_ptr<RooFormulaEvaluator> _evaluator; ///<! Formula evaluation engine
-     mutable std::unique_ptr<TFormula> _tFormulaForCodegen;   ///<! See getUniqueFuncName()
      mutable RooArgSet *_nset{nullptr};                       ///<! Normalization set to be passed along to contents
      TString _formExpr;                                       ///< Formula expression string
 

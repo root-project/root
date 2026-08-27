@@ -48,8 +48,6 @@ unsupported expressions into hard errors (useful for testing).
 #include "RooFormulaParser.h"
 #include "RooTFormulaEvaluator.h"
 
-#include "TFormula.h"
-
 #include <cassert>
 #include <cctype>
 #include <cstdlib>
@@ -501,15 +499,13 @@ RooFormulaEvaluator &RooFormulaUtils::ensureEvaluator(std::unique_ptr<RooFormula
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clone a formula evaluation engine, renaming the copied TFormula (if any)
-/// after the possibly-different name of the new owner.
+/// Clone a formula evaluation engine, renaming the copy after the
+/// possibly-different name of the new owner.
 std::unique_ptr<RooFormulaEvaluator> RooFormulaUtils::cloneEvaluator(RooFormulaEvaluator const &other,
                                                                      const char *newName)
 {
    std::unique_ptr<RooFormulaEvaluator> out = other.clone();
-   if (TFormula *tFormula = out->getTFormula()) {
-      tFormula->SetName(newName);
-   }
+   out->setName(newName);
    return out;
 }
 
