@@ -29,6 +29,7 @@
 class RooArgSet ;
 class RooFormulaEvaluator;
 class RooAbsRealLValue;
+class TFormula;
 
 class RooFormulaVar : public RooAbsReal {
 public:
@@ -96,6 +97,7 @@ public:
 
      RooListProxy _actualVars;                                ///< Actual parameters used by formula engine
      mutable std::unique_ptr<RooFormulaEvaluator> _evaluator; ///<! Formula evaluation engine
+     mutable std::unique_ptr<TFormula> _tFormulaForCodegen;   ///<! See getUniqueFuncName()
      mutable RooArgSet *_nset{nullptr};                       ///<! Normalization set to be passed along to contents
      TString _formExpr;                                       ///< Formula expression string
 

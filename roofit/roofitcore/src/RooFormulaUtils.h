@@ -83,6 +83,14 @@ std::list<double> *plotSamplingHint(BinningMap const &binnings, RooArgList const
 
 } // namespace RooFormulaUtils
 
+namespace RooFormulaInternal {
+
+/// Testing hook: discard the cached ROOFIT_FORMULA_BACKEND setting so that it
+/// is read again from the environment on the next evaluator creation.
+void resetFormulaBackendForTesting();
+
+} // namespace RooFormulaInternal
+
 #endif
 
 /// \endcond
