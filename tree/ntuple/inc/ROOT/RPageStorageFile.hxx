@@ -152,6 +152,8 @@ private:
    RNTupleDescriptorBuilder fDescriptorBuilder;
    /// Populated by LoadStructureImpl(), reset at the end of Attach()
    RStructureBuffer fStructureBuffer;
+   /// Set to true after the first call to LoadStreamerInfo()
+   bool fHasStreamerInfo = false;
 
    RPageSourceFile(std::string_view ntupleName, const ROOT::RNTupleReadOptions &options);
 
