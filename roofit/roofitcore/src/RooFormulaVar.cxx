@@ -326,9 +326,30 @@ double RooFormulaVar::defaultErrorLevel() const
   return 1.0 ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Name of the cling-JIT-compiled function that evaluates this formula, which
+/// generated code from the codegen path calls by name.
+///
+/// If the formula is evaluated by the TFormula backend, this is the function
+/// of the evaluating TFormula itself. Otherwise, a TFormula is created lazily,
+/// only to serve the codegen path.
+///
+/// TODO(Phase 2.5): remove the lazily-created TFormula once codegen emits C++
+/// for the expression directly from the parsed representation instead of
+/// calling the JIT-compiled TFormula function. Until then, codegen keeps
+/// working exactly as before, at the cost of one JIT compilation per formula
+/// -- but only when codegen is actually used. Like codegen itself, this lazy
+/// creation is not thread-safe.
 std::string RooFormulaVar::getUniqueFuncName() const
 {
-   return evaluator().getTFormula()->GetUniqueFuncName().Data();
+   if (TFormula *tFormula = evaluator().getTFormula()) {
+      return tFormula->GetUniqueFuncName().Data();
+   }
+   if (!_tFormulaForCodegen) {
+      // evaluator() above has normalized _formExpr to the processed `x[i]` dialect.
+      _tFormulaForCodegen = std::make_unique<TFormula>(GetName(), _formExpr.Data(), /*addToGlobList=*/false);
+   }
+   return _tFormulaForCodegen->GetUniqueFuncName().Data();
 }
 
 std::unique_ptr<RooAbsArg>

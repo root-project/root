@@ -26,6 +26,7 @@
 
 class RooArgList ;
 class RooFormulaEvaluator;
+class TFormula;
 class RooAbsRealLValue;
 
 class RooGenericPdf : public RooAbsPdf {
@@ -86,6 +87,7 @@ protected:
    bool isValidReal(double /*value*/, bool /*printError*/) const override { return true; }
 
    mutable std::unique_ptr<RooFormulaEvaluator> _evaluator; ///<! Formula evaluation engine
+   mutable std::unique_ptr<TFormula> _tFormulaForCodegen;   ///<! See getUniqueFuncName()
    TString _formExpr;                                       ///< Formula expression string
 
    std::map<int, std::unique_ptr<RooAbsBinning>> _binnings; ///< User-defined binnings, keyed by the observable's index

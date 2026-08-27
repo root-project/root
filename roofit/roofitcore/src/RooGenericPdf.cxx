@@ -227,7 +227,20 @@ void RooGenericPdf::writeToStream(ostream& os, bool compact) const
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Name of the cling-JIT-compiled function that evaluates this formula, which
+/// generated code from the codegen path calls by name.
+///
+/// See RooFormulaVar::getUniqueFuncName() for the details of the lazily
+/// created TFormula on the JIT-free expression backend.
 std::string RooGenericPdf::getUniqueFuncName() const
 {
-   return evaluator().getTFormula()->GetUniqueFuncName().Data();
+   if (TFormula *tFormula = evaluator().getTFormula()) {
+      return tFormula->GetUniqueFuncName().Data();
+   }
+   if (!_tFormulaForCodegen) {
+      // evaluator() above has normalized _formExpr to the processed `x[i]` dialect.
+      _tFormulaForCodegen = std::make_unique<TFormula>(GetName(), _formExpr.Data(), /*addToGlobList=*/false);
+   }
+   return _tFormulaForCodegen->GetUniqueFuncName().Data();
 }
