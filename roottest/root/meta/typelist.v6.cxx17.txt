@@ -1273,7 +1273,6 @@ wstreambuf
 wstring
 wstringbuf
 wstringstream
-X3DBuffer
 XMLAttrPointer_t
 XMLDocPointer_t
 XMLNodePointer_t
