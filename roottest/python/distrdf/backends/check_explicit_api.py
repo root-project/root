@@ -90,6 +90,24 @@ class TestExplicitAPI:
 class TestDeprecation:
     """Test deprecation warnings in the distributed module."""
 
+    MODULE_WARN = textwrap.dedent(
+        """
+    In ROOT 6.36, the ROOT.RDF.Experimental.Distributed module has become just ROOT.RDF.Distributed. In the
+    future, the 'Experimental' keyword will be removed, so it is suggested to move to the stable API in user 
+    code. You can now change lines such as:
+    ```
+    connection = ... # your distributed Dask client or SparkContext
+    RDataFrame = ROOT.RDF.Experimental.Distributed.[Backend].RDataFrame
+    df = RDataFrame(..., [daskclient,sparkcontext] = connection)
+    ```
+    to simply:
+    ```
+    connection = ... # your distributed Dask client or SparkContext
+    df = ROOT.RDataFrame(..., executor = connection)
+    ```
+    """
+    )
+
     def test_experimental_module_deprecation(self, payload):
         connection, backend = payload
         with pytest.warns() as warninglist:
@@ -100,50 +118,34 @@ class TestDeprecation:
                 RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
                 df = RDataFrame(10, npartitions=2, executor=connection)
 
-            msg_warng = textwrap.dedent(
-                """
-                In ROOT 6.36, the ROOT.RDF.Experimental.Distributed module has become just ROOT.RDF.Distributed. In the
-                future, the 'Experimental' keyword will be removed, so it is suggested to move to the stable API in user 
-                code. You can now change lines such as:
-                ```
-                connection = ... # your distributed Dask client or SparkContext
-                RDataFrame = ROOT.RDF.Experimental.Distributed.[Backend].RDataFrame
-                df = RDataFrame(..., [daskclient,sparkcontext] = connection)
-                ```
-                to simply:
-                ```
-                connection = ... # your distributed Dask client or SparkContext
-                df = ROOT.RDataFrame(..., executor = connection)
-                ```
-                """
-            )
             assert len(warninglist) == 1, f"{warninglist}"
             assert issubclass(warninglist[0].category, FutureWarning)
-            assert str(warninglist[0].message == msg_warng)
+            assert str(warninglist[0].message == self.MODULE_WARN)
 
             assert df.Count().GetValue() == 10
 
     def test_backend_argument_deprecation(self, payload):
         connection, backend = payload
-
-        if backend == "dask":
-            with pytest.warns():  # This will trigger the warning about experimental module deprecation tested above
+        with pytest.warns() as warninglist:
+            if backend == "dask":
                 RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-            with pytest.warns(
-                FutureWarning,
-                match="The keyword argument 'daskclient' is not necessary anymore and will be removed in a future release",
-            ):
                 df = RDataFrame(10, npartitions=2, daskclient=connection)
-                assert df.Count().GetValue() == 10
-        elif backend == "spark":
-            with pytest.warns():  # This will trigger the warning about experimental module deprecation tested above
+            elif backend == "spark":
                 RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
-            with pytest.warns(
-                FutureWarning,
-                match="The keyword argument 'sparkcontext' is not necessary anymore and will be removed in a future release",
-            ):
                 df = RDataFrame(10, npartitions=2, sparkcontext=connection)
-                assert df.Count().GetValue() == 10
+
+            keyword = "daskclient" if backend == "dask" else "sparkcontext"
+            keyword_warn = (
+                f"The keyword argument '{keyword}' is not necessary anymore and will be removed in a future release"
+            )
+
+            assert len(warninglist) == 2, f"{warninglist}"
+            assert issubclass(warninglist[0].category, FutureWarning)
+            assert str(warninglist[0].message == self.MODULE_WARN)
+            assert issubclass(warninglist[1].category, FutureWarning)
+            assert str(warninglist[1].message == keyword_warn)
+
+            assert df.Count().GetValue() == 10
 
 
 if __name__ == "__main__":
