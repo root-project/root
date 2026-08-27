@@ -3,6 +3,7 @@
 
 // Bindings
 #include "PyCallable.h"
+#include "cppjit_interop.h"
 
 // Standard
 #include <map>
@@ -11,35 +12,6 @@
 #include <vector>
 
 namespace cppjit::cpyrt {
-
-// signature hashes are also used by TemplateProxy
-inline uint64_t HashSignature(cpyrt_PyArgs_t args, size_t nargsf) {
-  // Build a hash from the types of the given python function arguments.
-  uint64_t hash = 0;
-
-  Py_ssize_t nargs = cpyrt_PyArgs_GET_SIZE(args, nargsf);
-  for (Py_ssize_t i = 0; i < nargs; ++i) {
-    // TODO: hashing in the ref-count is for moves; resolve this together with
-    // the improved overloads for implicit conversions
-    PyObject* pyobj = cpyrt_PyArgs_GET_ITEM(args, i);
-    hash += (uint64_t)Py_TYPE(pyobj);
-#if PY_VERSION_HEX >= 0x030e0000
-    hash +=
-        (uint64_t)(PyUnstable_Object_IsUniqueReferencedTemporary(pyobj) ? 1
-                                                                        : 0);
-#else
-    hash += (uint64_t)(Py_REFCNT(pyobj) == 1 ? 1 : 0);
-#endif
-    hash += (hash << 10);
-    hash ^= (hash >> 6);
-  }
-
-  hash += (hash << 3);
-  hash ^= (hash >> 11);
-  hash += (hash << 15);
-
-  return hash;
-}
 
 class CPPOverload {
 public:
@@ -56,6 +28,7 @@ public:
     CPPOverload::DispatchMap_t fDispatchMap;
     CPPOverload::Methods_t fMethods;
     PyObject* fDoc;
+    interop::TCppScope_t fScope;
     uint32_t fFlags;
 
     int* fRefCount;
@@ -66,7 +39,8 @@ public:
   };
 
 public:
-  void Set(const std::string& name, std::vector<PyCallable*>& methods);
+  void Set(const std::string& name, interop::TCppScope_t scope,
+           std::vector<PyCallable*>& methods);
   void AdoptMethod(PyCallable* pc);
   void MergeOverload(CPPOverload* meth);
 
@@ -101,20 +75,56 @@ template <typename T> inline bool CPPOverload_CheckExact(T* object) {
 
 //- creation -----------------------------------------------------------------
 inline CPPOverload* CPPOverload_New(const std::string& name,
+                                    interop::TCppScope_t scope,
                                     std::vector<PyCallable*>& methods) {
   // Create and initialize a new method proxy from the overloads.
   CPPOverload* pymeth = (CPPOverload*)CPPOverload_Type.tp_new(&CPPOverload_Type,
                                                               nullptr, nullptr);
-  pymeth->Set(name, methods);
+  pymeth->Set(name, scope, methods);
   return pymeth;
 }
 
 inline CPPOverload* CPPOverload_New(const std::string& name,
+                                    interop::TCppScope_t scope,
                                     PyCallable* method) {
   // Create and initialize a new method proxy from the method.
   std::vector<PyCallable*> p;
   p.push_back(method);
-  return CPPOverload_New(name, p);
+  return CPPOverload_New(name, scope, p);
+}
+
+// signature hashes are also used by TemplateProxy
+inline uint64_t HashSignature(cpyrt_PyArgs_t args, size_t nargsf) {
+  // Build a hash from the types of the given python function arguments.
+  uint64_t hash = 0;
+
+  Py_ssize_t nargs = cpyrt_PyArgs_GET_SIZE(args, nargsf);
+  for (Py_ssize_t i = 0; i < nargs; ++i) {
+    // TODO: hashing in the ref-count is for moves; resolve this together with
+    // the improved overloads for implicit conversions
+    PyObject* pyobj = cpyrt_PyArgs_GET_ITEM(args, i);
+    hash += (uint64_t)Py_TYPE(pyobj);
+#if PY_VERSION_HEX >= 0x030e0000
+    hash +=
+        (uint64_t)(PyUnstable_Object_IsUniqueReferencedTemporary(pyobj) ? 1
+                                                                        : 0);
+#else
+    hash += (uint64_t)(Py_REFCNT(pyobj) == 1 ? 1 : 0);
+#endif
+    if (CPPOverload_CheckExact(pyobj)) {
+      static std::hash<std::string> hash_string;
+      CPPOverload* overload = (CPPOverload*)pyobj;
+      hash += hash_string(overload->fMethodInfo->fName);
+    }
+    hash += (hash << 10);
+    hash ^= (hash >> 6);
+  }
+
+  hash += (hash << 3);
+  hash ^= (hash >> 11);
+  hash += (hash << 15);
+
+  return hash;
 }
 
 } // namespace cppjit::cpyrt

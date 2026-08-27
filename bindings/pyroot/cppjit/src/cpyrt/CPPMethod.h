@@ -46,6 +46,7 @@ public:
   virtual ~CPPMethod();
 
 public:
+  interop::TCppMethod_t GetMethod() override { return fMethod; }
   PyObject* GetSignature(bool show_formalargs = true) override;
   PyObject* GetSignatureNames() override;
   PyObject* GetSignatureTypes() override;
@@ -54,9 +55,6 @@ public:
   PyObject*
   Reflex(interop::Reflex::RequestId_t request,
          interop::Reflex::FormatId_t = interop::Reflex::OPTIMAL) override;
-
-  int GetPriority() override;
-  bool IsGreedy() override;
 
   int GetMaxArgs() override;
   PyObject* GetCoVarNames() override;
@@ -75,6 +73,12 @@ public:
         fn_type, cppjit::interop::GetTypeFromScope(
                      cppjit::interop::TCppScope_t(fMethod.data)));
   }
+  // extra info methods
+  bool IsOperator() { return interop::IsOperator(fMethod.data); }
+  bool IsConversionOperator() {
+    return interop::IsConversionOperator(fMethod.data);
+  }
+  bool IsStaticMethod() { return interop::IsStaticMethod(fMethod); }
 
 public:
   PyObject* Call(CPPInstance*& self, cpyrt_PyArgs_t args, size_t nargsf,
@@ -89,7 +93,6 @@ protected:
                          CallContext* ctxt = nullptr);
   PyObject* Execute(void* self, ptrdiff_t offset, CallContext* ctxt = nullptr);
 
-  interop::TCppMethod_t GetMethod() { return fMethod; }
   interop::TCppScope_t GetScope() { return fScope; }
   Executor* GetExecutor() { return fExecutor; }
   std::string GetSignatureString(bool show_formalargs = true);

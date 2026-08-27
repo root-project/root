@@ -89,7 +89,7 @@ class TestOVERLOADS:
         assert more_overloads().call(bb) == "bb_ol"
         assert more_overloads().call(cc_ol()) == "cc_ol"
         dd = cppjit.bind_object(cppjit.nullptr, dd_ol)
-        with raises(TypeError):
+        with raises(ReferenceError):
             more_overloads().call(dd)
         dd = cppjit.gbl.get_dd_ol()
         assert more_overloads().call(dd) == "dd_ol"
@@ -102,10 +102,12 @@ class TestOVERLOADS:
         more_overloads2 = cppjit.gbl.more_overloads2
 
         bb = cppjit.bind_object(cppjit.nullptr, cppjit.gbl.bb_ol)
-        assert more_overloads2().call(bb) == "bb_olptr"
+        with raises(ReferenceError):
+            more_overloads2().call(bb)
 
         dd = cppjit.bind_object(cppjit.nullptr, cppjit.gbl.dd_ol)
-        assert more_overloads2().call(dd, 1) == "dd_olptr"
+        with raises(ReferenceError):
+            more_overloads2().call(dd, 1)
 
     def test05_array_overloads(self):
         """Test functions overloaded on different arrays"""
@@ -260,10 +262,10 @@ class TestOVERLOADS:
         with raises(ns.ConfigFileNotFoundError):
             ns.MyClass1("some_file")
 
-        with raises(TypeError):
+        with raises(ns.ConfigFileNotFoundError):
             ns.MyClass2("some_file")
 
-        with raises(TypeError):
+        with raises(cppjit.OverloadResolutionException):
             ns.MyClass3("some_file")
 
     def test11_deep_inheritance(self):

@@ -1015,14 +1015,10 @@ class TestCROSSINHERITANCE:
                 a1 = val1 is not None and (val1,) or ()
                 a2 = val2 is not None and (val2,) or ()
                 a3 = val3 is not None and (val3,) or ()
-                if nArgs == 3:
-                    super(MyPyDerived, self).__init__(a1, a2, a3)
-                elif nArgs == 0:
+                if nArgs == 0:
                     super(MyPyDerived, self).__init__()
-                elif nArgs == 1:
-                    super(MyPyDerived, self).__init__(a1)
-                elif nArgs == 2:
-                    super(MyPyDerived, self).__init__(a1, a2)
+                else:
+                    super(MyPyDerived, self).__init__(a1, a2, a3)
 
             def x(self):
                 return 16
@@ -1116,7 +1112,7 @@ class TestCROSSINHERITANCE:
 
         class NoCopyNoMove {
         public:
-            NoCopyNoMove() = delete;
+            NoCopyNoMove() = default;
             NoCopyNoMove(const NoCopyNoMove&) = delete;
             NoCopyNoMove(NoCopyNoMove&&) = delete;
             NoCopyNoMove& operator=(const NoCopyNoMove&) = delete;
@@ -1245,21 +1241,21 @@ class TestCROSSINHERITANCE:
                 def __init__(self):
                     super(PyDerived, self).__init__()
 
-            with raises(TypeError):
+            with raises(cppjit.OverloadResolutionException):
                 PyDerived()
 
             class PyDerived(cppjit.multi(kls, ns.Simple)):
                 def __init__(self):
                     super(PyDerived, self).__init__()
 
-            with raises(TypeError):
+            with raises(cppjit.OverloadResolutionException):
                 PyDerived()
 
             class PyDerived(cppjit.multi(ns.Simple, kls)):
                 def __init__(self):
                     super(PyDerived, self).__init__()
 
-            with raises(TypeError):
+            with raises(cppjit.OverloadResolutionException):
                 PyDerived()
 
     def test27_interfaces(self):

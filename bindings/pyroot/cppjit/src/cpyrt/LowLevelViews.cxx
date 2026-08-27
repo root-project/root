@@ -1095,6 +1095,7 @@ CreateLowLevelViewT(T* address, cpyrt::cdims_t shape,
   PyObject* args = PyTuple_New(0);
   LowLevelView* llp = (LowLevelView*)LowLevelView_Type.tp_new(
       &LowLevelView_Type, args, nullptr);
+  llp->fCppTypeName = (format ? "void" : typecode_traits<T>::name);
   Py_DECREF(args);
 
   Py_buffer& view = llp->fBufInfo;

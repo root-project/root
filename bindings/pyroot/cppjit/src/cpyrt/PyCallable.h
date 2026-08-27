@@ -6,9 +6,13 @@
 // Bindings
 #include "CallContext.h"
 #include "cppjit_interop.h"
+#include "cpyrt.h"
 #include "cpyrt/Reflex.h"
 
 namespace cppjit::cpyrt {
+
+extern PyObject* gOverloadResolutionException;
+extern PyObject* gOverloadAmbiguityException;
 
 class CPPInstance;
 
@@ -17,6 +21,7 @@ public:
   virtual ~PyCallable() {}
 
 public:
+  virtual interop::TCppMethod_t GetMethod() { return nullptr; }
   virtual PyObject* GetSignature(bool show_formalargs = true) = 0;
   virtual PyObject* GetSignatureNames() = 0;
   virtual PyObject* GetSignatureTypes() = 0;
@@ -30,9 +35,6 @@ public:
                  request, format);
     return nullptr;
   };
-
-  virtual int GetPriority() = 0;
-  virtual bool IsGreedy() = 0;
 
   virtual int GetMaxArgs() = 0;
   virtual PyObject* GetCoVarNames() = 0;

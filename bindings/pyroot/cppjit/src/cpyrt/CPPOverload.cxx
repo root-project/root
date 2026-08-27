@@ -3,10 +3,15 @@
 
 using namespace cppjit;
 #include "CPPInstance.h"
+#include "CPPMethod.h"
 #include "CPPOverload.h"
 #include "CallContext.h"
+#include "MemoryRegulator.h"
+#include "ProxyWrappers.h"
+#include "PyCallable.h"
 #include "PyStrings.h"
 #include "Utility.h"
+#include "cppjit_interop.h"
 #include "structmember.h" // from Python
 #include "cpyrt/Reflex.h"
 
@@ -62,9 +67,6 @@ public:
       return GetPrototype();
     }
   }
-
-  int GetPriority() override { return 100; };
-  bool IsGreedy() override { return false; };
 
   int GetMaxArgs() override { return 100; };
   PyObject* GetCoVarNames() override { // TODO: pick these up from the callable
@@ -122,12 +124,6 @@ public:
 // helper to test whether a method is used in a pseudo-function modus
 static inline bool IsPseudoFunc(CPPOverload* pymeth) {
   return pymeth->fMethodInfo->fFlags & CallContext::kIsPseudoFunc;
-}
-
-// helper to sort on method priority
-static int PriorityCmp(const std::pair<int, PyCallable*>& left,
-                       const std::pair<int, PyCallable*>& right) {
-  return left.first > right.first;
 }
 
 // return helper
@@ -608,101 +604,267 @@ static PyObject* mp_vectorcall(CPPOverload* pymeth, PyObject* const* args,
     ResetCallState(pymeth->fSelf, im_self);
   }
 
-  // ... otherwise loop over all methods and find the one that does not fail
-  if (!IsSorted(mflags)) {
-    // sorting is based on priority, which is not stored on the method as it is
-    // used only once, so copy the vector of methods into one where the priority
-    // can be stored during sorting
-    std::vector<std::pair<int, PyCallable*>> pm;
-    pm.reserve(methods.size());
-    for (auto ptr : methods)
-      pm.emplace_back(ptr->GetPriority(), ptr);
-    std::stable_sort(pm.begin(), pm.end(), PriorityCmp);
-    for (CPPOverload::Methods_t::size_type i = 0; i < methods.size(); ++i)
-      methods[i] = pm[i].second;
-    pymeth->fMethodInfo->fFlags |= CallContext::kIsSorted;
+  std::vector<interop::TCppMethod_t> overloads;
+  bool is_operator = false;
+  bool is_conversion_operator = false;
+  bool is_static = false;
+  for (auto i : pymeth->fMethodInfo->fMethods) {
+    if (is_operator || dynamic_cast<cpyrt::CPPMethod*>(i)->IsOperator())
+      is_operator = true;
+    if (is_conversion_operator ||
+        dynamic_cast<cpyrt::CPPMethod*>(i)->IsConversionOperator())
+      is_conversion_operator = true;
+    if (is_static || dynamic_cast<cpyrt::CPPMethod*>(i)->IsStaticMethod())
+      is_static = true;
+    overloads.push_back(i->GetMethod());
   }
 
-  // three stages, as the C++ ranking: exact matches, standard conversions
-  // (kNoImplicit: no user-defined construction from the argument), then
-  // implicit conversions
-  std::vector<Utility::PyError_t> errors;
-  std::vector<bool> implicit_possible(methods.size());
-  bool bHaveImplicit = false;
-  for (int stage = 0; stage < 3; ++stage) {
-    if (stage == 1)
-      ctxt.fFlags |= CallContext::kNoImplicit;
-    else if (stage == 2) {
-      ctxt.fFlags &= ~CallContext::kNoImplicit;
-      ctxt.fFlags |= CallContext::kAllowImplicit;
-    }
-    for (CPPOverload::Methods_t::size_type i = 0; i < nMethods; ++i) {
-      if (stage && !implicit_possible[i])
-        continue; // did not set implicit conversion, so don't try again
+  std::string proto = "";
+  if (im_self && !(ctxt.fFlags & CallContext::kIsConstructor)) {
+    PyObject* self = (PyObject*)im_self;
+    [[maybe_unused]] auto res =
+        AddTypeName(proto, (PyObject*)Py_TYPE(self), self, Utility::kNone);
+    assert(res);
+  }
 
-      PyObject* result = methods[i]->Call(im_self, args, nargsf, kwds, &ctxt);
-      if (result) {
-        // success: update the dispatch map for subsequent calls
-        if (!memoized_pc)
-          dispatchMap.push_back(std::make_pair(sighash, methods[i]));
-        else {
-          // debatable: apparently there are two methods that map onto the same
-          // sighash and preferring the latest may result in "ping pong."
-          for (auto& p : dispatchMap) {
-            if (p.first == sighash) {
-              p.second = methods[i];
-              break;
+  ctxt.fFlags |= CallContext::kAllowImplicit;
+  {
+    size_t i = ctxt.fFlags & CallContext::kIsConstructor && !im_self ? 1 : 0;
+    CPPInstance* self = nullptr;
+    if (i) {
+      self = (CPPInstance*)cpyrt_PyArgs_GET_ITEM(args, 0);
+    } else {
+      self = im_self;
+    }
+    size_t nArgs = PyVectorcall_NARGS(nargsf);
+    for (; i < nArgs; i++) {
+      PyObject* obj = cpyrt_PyArgs_GET_ITEM(args, i);
+      PyObject* typ = (PyObject*)Py_TYPE(obj);
+      // TODO: this can be a flag within CPPOverload
+      if ((pymeth->fMethodInfo->fName == "__getitem__") ||
+          (pymeth->fMethodInfo->fName == "__setitem__")) {
+        // unpack the tuple for Python getter and setter...
+        // TODO: propogate this logic to TemplateProxy too
+        if ((typ == (PyObject*)&PyTuple_Type) && (i == (im_self ? 0 : 1))) {
+          for (Py_ssize_t j = 0; j < PyTuple_GET_SIZE(obj); j++) {
+            if (!proto.empty())
+              proto += ", ";
+            PyObject* unpacking_obj = PyTuple_GET_ITEM(obj, j);
+            PyObject* unpacking_typ = (PyObject*)Py_TYPE(unpacking_obj);
+            if (!AddTypeName(proto, unpacking_typ, unpacking_obj,
+                             Utility::kNone)) {
+              proto += "__cppjit_internal::UnknownType";
+              // break; // ???: do we need to raise error here
             }
           }
+          continue;
+        } else if (i == (im_self ? 1 : 2))
+          continue;
+      }
+      if (self && IsConstructor(ctxt.fFlags) &&
+          self->ObjectIsA(/*check_smart=*/false) !=
+              pymeth->fMethodInfo->fScope) {
+        // this is a constructor of cross-inherited class
+        interop::TCppScope_t disp = self->ObjectIsA(/*check_smart=*/false);
+
+        // happens for Python derived types (which have a dispatcher inserted
+        // that is not otherwise user-visible: call it instead) and C++ derived
+        // classes without public constructors
+
+        // get the dispatcher class and verify
+        PyObject* dispproxy = cpyrt::GetScopeProxy(disp);
+        if (!dispproxy) {
+          PyErr_SetString(PyExc_TypeError,
+                          "dispatcher proxy was never created");
+          return nullptr;
         }
 
-        return HandleReturn(pymeth, im_self, result);
+        if (!(((CPPClass*)dispproxy)->fFlags & CPPScope::kIsPython)) {
+          PyErr_SetString(PyExc_TypeError,
+                          const_cast<char*>(("constructor for " +
+                                             interop::GetScopedFinalName(disp) +
+                                             " is not a dispatcher")
+                                                .c_str()));
+          return nullptr;
+        }
+
+        PyObject* pyobj =
+            cpyrt_PyObject_Call(dispproxy, args + (self == im_self ? 0 : 1),
+                                nargsf - (self == im_self ? 0 : 1), kwds);
+        if (!pyobj)
+          return nullptr;
+
+        // retrieve the actual pointer, take over control, and set set
+        // _internal_self
+        intptr_t address = (intptr_t)((CPPInstance*)pyobj)->GetObject();
+        if (address) {
+          ((CPPInstance*)pyobj)
+              ->CppOwns(); // b/c self will control the object on address
+          PyObject* res = PyObject_CallMethodObjArgs(
+              dispproxy, PyStrings::gDispInit, pyobj, (PyObject*)self, nullptr);
+          Py_XDECREF(res);
+        }
+        Py_DECREF(dispproxy);
+
+        // return object if successful, lament if not
+        if (address) {
+          Py_INCREF(self);
+
+          // note: constructors are no longer set to take ownership by default;
+          // instead that is decided by the method proxy (which carries a
+          // creator flag) upon return
+          self->Set((void*)address);
+          if (IsCreator(pymeth->fMethodInfo->fFlags))
+            self->PythonOwns();
+
+          // mark as actual to prevent needless auto-casting and register on its
+          // class
+          self->fFlags |= CPPInstance::kIsActual;
+          if (!(((CPPClass*)Py_TYPE(self))->fFlags & CPPScope::kIsSmart))
+            MemoryRegulator::RegisterPyObject(
+                self, interop::TCppObject_t((void*)address));
+
+          // handling smart types this way is deeply fugly, but if CPPInstance
+          // sets the proper types in op_new first, then the wrong init is
+          // called
+          if (((CPPClass*)Py_TYPE(self))->fFlags & CPPScope::kIsSmart) {
+            PyObject* pyclass = CreateScopeProxy(
+                ((CPPSmartClass*)Py_TYPE(self))->fUnderlyingType);
+            if (pyclass) {
+              self->SetSmart((PyObject*)Py_TYPE(self));
+              Py_DECREF((PyObject*)Py_TYPE(self));
+              Py_SET_TYPE(self, (PyTypeObject*)pyclass);
+            }
+          }
+
+          // done with self
+          Py_DECREF(self);
+
+          Py_RETURN_NONE; // by definition
+        }
       }
-
-      // else failure ..
-      if (stage != 0) {
-        PyErr_Clear(); // first stage errors should be the more informative
-        ResetCallState(pymeth->fSelf, im_self);
-        continue;
+      if (IsConstructor(ctxt.fFlags) &&
+          interop::GetScopedFinalName(pymeth->fMethodInfo->fScope)
+                  .find("__cppjit_internal::Dispatcher") == 0) {
+        if (typ == (PyObject*)&PyTuple_Type) {
+          if (i > 1)
+            proto += ", __cppjit_internal::Sep*";
+          for (Py_ssize_t j = 0; j < PyTuple_GET_SIZE(obj); j++) {
+            if (!proto.empty())
+              proto += ", ";
+            PyObject* unpacking_obj = PyTuple_GET_ITEM(obj, j);
+            PyObject* unpacking_typ = (PyObject*)Py_TYPE(unpacking_obj);
+            if (!AddTypeName(proto, unpacking_typ, unpacking_obj,
+                             Utility::kNone)) {
+              proto += "__cppjit_internal::UnknownType";
+              // break; // ???: do we need to raise error here
+            }
+          }
+          continue;
+        }
       }
-
-      // collect error message/trace (automatically clears exception, too)
-      if (!PyErr_Occurred()) {
-        // this should not happen; set an error to prevent core dump and report
-        PyObject* sig = methods[i]->GetPrototype();
-        PyErr_Format(PyExc_SystemError, "%s =>\n    %s", PyUnicode_AsUTF8(sig),
-                     (char*)"nullptr result without error in overload call");
-        Py_DECREF(sig);
+      if (!proto.empty())
+        proto += ", ";
+      if (!AddTypeName(proto, typ, obj, Utility::kNone)) {
+        proto += "__cppjit_internal::UnknownType";
+        // break; // ???: do we need to raise error here
       }
-
-      // retrieve, store, and clear errors
-      bool callee_error = ctxt.fFlags & (CallContext::kPyException |
-                                         CallContext::kCppException);
-      ctxt.fFlags &= ~(CallContext::kPyException | CallContext::kCppException);
-      Utility::FetchError(errors, callee_error);
-
-      if (HaveImplicit(&ctxt)) {
-        bHaveImplicit = true;
-        implicit_possible[i] = true;
-        ctxt.fFlags &= ~CallContext::kHaveImplicit;
-      } else
-        implicit_possible[i] = false;
-      ResetCallState(pymeth->fSelf, im_self);
     }
-
-    // only move forward if implicit conversions are available
-    if (!bHaveImplicit)
-      break;
+    if (kwds) {
+      for (Py_ssize_t i = 0; i < PyTuple_GET_SIZE(kwds); i++) {
+        if (!proto.empty())
+          proto += ", ";
+        PyObject* obj = cpyrt_PyArgs_GET_ITEM(args, i + nArgs);
+        PyObject* typ = (PyObject*)Py_TYPE(obj);
+        if (!AddTypeName(proto, typ, obj, Utility::kNone)) {
+          proto += "__cppjit_internal::UnknownType";
+          break; // ???: do we need to raise error here
+        }
+      }
+    }
   }
 
-  // first summarize, then add details
-  PyObject* topmsg = PyUnicode_FromFormat(
-      "none of the %d overloaded methods succeeded. Full details:",
-      (int)nMethods);
-  SetDetailedException(std::move(errors), topmsg /* steals */,
-                       PyExc_TypeError /* default error */);
-
-  // report failure
+  std::vector<interop::TCppMethod_t> ambiguous_candidates;
+  interop::TCppMethod_t meth = interop::BestOverloadFunctionMatch(
+      overloads, proto, ambiguous_candidates, /*TODO:*/ nullptr, is_operator);
+  if (!meth && (ctxt.fFlags & CallContext::kIsConstructor)) {
+    // this might be a POD class/struct
+    // and might need the self* for the overload resolution
+    // to pick up the custom generated constructor defined in
+    // __cppjit_internal namespace
+    // FIXME: for the self parameter changes in CppInterOp
+    std::string self_type_name = "";
+    if (PyVectorcall_NARGS(nargsf) > 0) {
+      PyObject* obj = cpyrt_PyArgs_GET_ITEM(args, 0);
+      PyObject* typ = (PyObject*)Py_TYPE(obj);
+      AddTypeName(self_type_name, typ, nullptr, Utility::kNone);
+      proto = self_type_name + "**, " + proto;
+      meth = interop::BestOverloadFunctionMatch(overloads, proto,
+                                                ambiguous_candidates,
+                                                /*TODO:*/ nullptr, is_operator);
+    }
+  }
+  if (meth) {
+    for (auto i : pymeth->fMethodInfo->fMethods) {
+      if (i->GetMethod() == meth) {
+        PyObject* result = i->Call(im_self, args, nargsf, kwds, &ctxt);
+        if (result) {
+          // success: update the dispatch map for subsequent calls
+          if (!memoized_pc)
+            dispatchMap.push_back(std::make_pair(sighash, i));
+          else {
+            // debatable: apparently there are two methods that map onto the
+            // same sighash and preferring the latest may result in "ping
+            // pong."
+            for (auto& p : dispatchMap) {
+              if (p.first == sighash) {
+                p.second = i;
+                break;
+              }
+            }
+          }
+          return HandleReturn(pymeth, im_self, result);
+        }
+        return nullptr;
+      }
+    }
+  }
+  std::ostringstream overload_signatures;
+  if (ambiguous_candidates.empty()) {
+    for (const auto i : overloads) {
+      overload_signatures
+          << "  "
+          << interop::GetMethodReturnTypeAsString(
+                 i) // TODO: mention if the function is static from the list
+          << " " << interop::GetScopedFinalName(i.data)
+          << interop::GetMethodSignature(i, true) << "\n";
+    }
+    PyErr_Format(
+        gOverloadResolutionException,
+        "Overload Resolution Failed.\nOverload set:\n%sDeduced Argument Types: "
+        "(%s)\n%s",
+        overload_signatures.str().c_str(), proto.c_str(),
+        is_static ? "Found static methods in the overload set. If you want to "
+                    "invoke the static overload, try calling the function "
+                    "using the class type instead of the instance.\n"
+                  : "");
+  } else {
+    for (const auto i : ambiguous_candidates) {
+      overload_signatures << "  " << interop::GetMethodReturnTypeAsString(i)
+                          << " " << interop::GetScopedFinalName(i.data)
+                          << interop::GetMethodSignature(i, true) << "\n";
+    }
+    PyErr_Format(
+        gOverloadAmbiguityException,
+        "Overload Resolution Failed. Call to \"%s\" is ambiguous.\nAmbigious "
+        "set:\n%sDeduced Argument Types: (%s)\n%s",
+        pymeth->fMethodInfo->fName.c_str(), overload_signatures.str().c_str(),
+        proto.c_str(),
+        is_static ? "Found static methods in the overload set. If you want to "
+                    "invoke the static overload, try calling the function "
+                    "using the class type instead of the instance.\n"
+                  : "");
+  }
   return nullptr;
 }
 
@@ -959,11 +1121,12 @@ PyTypeObject CPPOverload_Type = {
 
 //- public members -----------------------------------------------------------
 void cpyrt::CPPOverload::Set(const std::string& name,
+                             interop::TCppScope_t scope,
                              std::vector<PyCallable*>& methods) {
   // Fill in the data of a freshly created method proxy.
   fMethodInfo->fName = name;
+  fMethodInfo->fScope = scope;
   fMethodInfo->fMethods.swap(methods);
-  fMethodInfo->fFlags &= ~CallContext::kIsSorted;
 
   // special case: all constructors are considered creators by default
   if (name == "__init__")
@@ -991,7 +1154,6 @@ void cpyrt::CPPOverload::Set(const std::string& name,
 void cpyrt::CPPOverload::AdoptMethod(PyCallable* pc) {
   // Fill in the data of a freshly created method proxy.
   fMethodInfo->fMethods.push_back(pc);
-  fMethodInfo->fFlags &= ~CallContext::kIsSorted;
 }
 
 //----------------------------------------------------------------------------
@@ -1001,7 +1163,6 @@ void cpyrt::CPPOverload::MergeOverload(CPPOverload* meth) {
   fMethodInfo->fMethods.insert(fMethodInfo->fMethods.end(),
                                meth->fMethodInfo->fMethods.begin(),
                                meth->fMethodInfo->fMethods.end());
-  fMethodInfo->fFlags &= ~CallContext::kIsSorted;
   meth->fMethodInfo->fDispatchMap.clear();
   meth->fMethodInfo->fMethods.clear();
 }
@@ -1051,7 +1212,7 @@ PyObject* cpyrt::CPPOverload::FindOverload(const std::string& signature,
         newmeth = mp_new(nullptr, nullptr, nullptr);
         CPPOverload::Methods_t vec;
         vec.push_back(meth->Clone());
-        newmeth->Set(fMethodInfo->fName, vec);
+        newmeth->Set(fMethodInfo->fName, nullptr, vec);
 
         if (fSelf) {
           Py_INCREF(fSelf);
@@ -1126,7 +1287,7 @@ PyObject* cpyrt::CPPOverload::FindOverload(PyObject* args_tuple,
   CPPOverload* newmeth = mp_new(nullptr, nullptr, nullptr);
   CPPOverload::Methods_t vec;
   vec.push_back(methods[best_method]->Clone());
-  newmeth->Set(fMethodInfo->fName, vec);
+  newmeth->Set(fMethodInfo->fName, nullptr, vec);
 
   if (fSelf) {
     Py_INCREF(fSelf);

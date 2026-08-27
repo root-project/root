@@ -1,6 +1,9 @@
 #ifndef CPYRT_CPPEXCINSTANCE_H
 #define CPYRT_CPPEXCINSTANCE_H
 
+#include "Python.h"
+#include "cpyrt/CommonDefs.h"
+
 //////////////////////////////////////////////////////////////////////////////
 //                                                                          //
 // cppjit::cpyrt::CPPExceptionInstance                                      //

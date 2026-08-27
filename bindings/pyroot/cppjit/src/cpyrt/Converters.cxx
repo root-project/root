@@ -2483,7 +2483,12 @@ bool cpyrt::InstanceRefConverter::SetArg(PyObject* pyobject, Parameter& para,
     interop::TCppScope_t cls;
     if (pyobj->IsSmart()) {
       cls = pyobj->ObjectIsA(false);
-      if (cls && interop::IsSubclass(cls, fClass)) {
+      interop::TCppScope_t deref_cls = nullptr;
+      interop::TCppScope_t deref_fClass = nullptr;
+      interop::GetSmartPtrInfo(cls, &deref_cls, nullptr);
+      interop::GetSmartPtrInfo(fClass, &deref_fClass, nullptr);
+      if (deref_cls && deref_fClass &&
+          interop::IsSubclass(deref_cls, deref_fClass)) {
         para.fValue.fVoidp = pyobj->GetObjectRaw();
         argset = true;
       }
@@ -2506,7 +2511,7 @@ bool cpyrt::InstanceRefConverter::SetArg(PyObject* pyobject, Parameter& para,
       }
 
       // calculate offset between formal and actual arguments
-      if (cls != fClass) {
+      if ((cls != fClass) && (!pyobj->IsSmart())) {
         para.fValue.fIntPtr += interop::GetBaseOffset(
             cls, fClass, para.fValue.fVoidp, 1 /* up-cast */);
       }
@@ -2896,10 +2901,12 @@ static void* PyFunction_AsCPointer(PyObject* pyobject,
     if (pytmpl->fTemplateArgs)
       fullname += PyUnicode_AsUTF8(pytmpl->fTemplateArgs);
     interop::TCppScope_t scope = ((CPPClass*)pytmpl->fTI->fPyClass)->fCppType;
+
     std::string ret{}, sig{};
     GetSignatureFromFnType(fn_type, ret, sig);
+    std::vector<interop::TCppMethod_t> ambiguous_candidates;
     interop::TCppMethod_t cppmeth = interop::GetMethodTemplate(
-        scope, fullname, sig.substr(1, sig.size() - 2));
+        scope, fullname, sig.substr(1, sig.size() - 2), ambiguous_candidates);
     if (cppmeth) {
       void* fptr = (void*)interop::GetFunctionAddress(cppmeth, false);
       if (fptr)

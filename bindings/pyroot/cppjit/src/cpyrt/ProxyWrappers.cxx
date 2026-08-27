@@ -155,7 +155,8 @@ static inline void sync_templates(PyObject* pyclass,
     PyErr_Clear();
   Py_DECREF(dct);
   if (!TemplateProxy_Check(attr)) {
-    TemplateProxy* pytmpl = TemplateProxy_New(mtCppName, mtName, pyclass);
+    TemplateProxy* pytmpl =
+        TemplateProxy_New(mtCppName, mtName, pyclass, mtName == "__init__");
     if (CPPOverload_Check(attr))
       pytmpl->MergeOverload((CPPOverload*)attr);
     PyType_Type.tp_setattro(pyclass, pyname, (PyObject*)pytmpl);
@@ -285,10 +286,7 @@ static int BuildScopeProxyDict(interop::TCppScope_t scope, PyObject* pyclass,
       // add only here, not to the cache of collected methods
       PyObject* attr =
           PyObject_GetAttrString(pyclass, const_cast<char*>(mtName.c_str()));
-      if (isTemplate)
-        ((TemplateProxy*)attr)->AdoptTemplate(pycall);
-      else
-        ((TemplateProxy*)attr)->AdoptMethod(pycall);
+      ((TemplateProxy*)attr)->AdoptMethod(pycall);
       Py_DECREF(attr);
 
       // for operator[]/() that returns by ref, also add __setitem__
@@ -307,10 +305,7 @@ static int BuildScopeProxyDict(interop::TCppScope_t scope, PyObject* pyclass,
           PyObject_SetAttrString(pyclass, const_cast<char*>("__setitem__"),
                                  (PyObject*)pysi);
         }
-        if (isTemplate)
-          pysi->AdoptTemplate(new CPPSetItem(scope, method));
-        else
-          pysi->AdoptMethod(new CPPSetItem(scope, method));
+        pysi->AdoptMethod(new CPPSetItem(scope, method));
         Py_XDECREF(pysi);
       }
 
@@ -410,7 +405,7 @@ static int BuildScopeProxyDict(interop::TCppScope_t scope, PyObject* pyclass,
       if (!attr)
         PyErr_Clear();
       // normal case, add a new method
-      CPPOverload* method = CPPOverload_New(imd->first, imd->second);
+      CPPOverload* method = CPPOverload_New(imd->first, scope, imd->second);
       PyObject* pymname = PyUnicode_InternFromString(
           const_cast<char*>(method->GetName().c_str()));
       PyType_Type.tp_setattro(pyclass, pymname, (PyObject*)method);

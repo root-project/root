@@ -524,6 +524,7 @@ bool cpyrt::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
   code << "};\n}";
 
   // finally, compile the code
+  // printf("\n\n%s\n\n", code.str().c_str());
   if (!interop::Compile(code.str())) {
     err << "failed to compile the dispatcher code";
     return false;

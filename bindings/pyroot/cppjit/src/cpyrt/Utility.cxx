@@ -2,16 +2,19 @@
 #include "cpyrt.h"
 
 using namespace cppjit;
+#include "CPPExcInstance.h"
 #include "CPPFunction.h"
 #include "CPPInstance.h"
 #include "CPPOverload.h"
 #include "CustomPyTypes.h"
+#include "LowLevelViews.h"
 #include "ProxyWrappers.h"
 #include "PyCallable.h"
 #include "PyStrings.h"
 #include "TemplateProxy.h"
 #include "TypeManip.h"
 #include "Utility.h"
+#include "cppjit_interop.h"
 #include "cpyrt/DispatchPtr.h"
 
 // Standard
@@ -23,12 +26,15 @@ using namespace cppjit;
 #include <sstream>
 #include <string.h>
 #include <utility>
+#include <vector>
 
 //- data _____________________________________________________________________
 typedef std::unordered_map<std::string, std::string> TC2POperatorMapping_t;
 static TC2POperatorMapping_t gC2POperatorMapping;
 static std::set<std::string> gOpSkip;
 static std::set<std::string> gOpRemove;
+
+extern PyTypeObject PyNullPtr_t_Type;
 
 namespace cppjit::cpyrt {
 // special objects
@@ -239,7 +245,8 @@ bool cpyrt::Utility::AddToClass(PyObject* pyclass, const char* label,
     if (PyErr_Occurred())
       PyErr_Clear();
     Py_XDECREF((PyObject*)method);
-    method = CPPOverload_New(label, pyfunc);
+    method = CPPOverload_New(
+        label, interop::GetParentScope(pyfunc->GetMethod().data), pyfunc);
     PyObject* pylabel = PyUnicode_InternFromString(const_cast<char*>(label));
     bool isOk =
         PyType_Type.tp_setattro(pyclass, pylabel, (PyObject*)method) == 0;
@@ -262,8 +269,9 @@ static inline cpyrt::PyCallable* BuildOperator(const std::string& lcname,
                                                bool reverse = false) {
   // Helper to find a function with matching signature in 'funcs'.
 
-  interop::TCppMethod_t meth =
-      interop::GetGlobalOperator(scope, lcname, rcname, op);
+  std::vector<interop::TCppMethod_t> ambiguous_candidates;
+  interop::TCppMethod_t meth = interop::GetGlobalOperator(
+      scope, lcname, rcname, op, ambiguous_candidates);
   if (!meth)
     return nullptr;
 
@@ -396,8 +404,9 @@ cpyrt::Utility::FindBinaryOperator(const std::string& lcname,
       }
       fname << lcname << ", " << rcname << ">";
       proto << "const " << lcname << "&, const " << rcname;
-      interop::TCppMethod_t method =
-          interop::GetMethodTemplate(s_intern, fname.str(), proto.str());
+      std::vector<interop::TCppMethod_t> ambiguous_candidates;
+      interop::TCppMethod_t method = interop::GetMethodTemplate(
+          s_intern, fname.str(), proto.str(), ambiguous_candidates);
       if (method)
         pyfunc = new CPPFunction(s_intern, method);
     }
@@ -422,9 +431,10 @@ static inline std::string AnnotationAsText(PyObject* pyobj) {
   return PyUnicode_AsUTF8(pyobj);
 }
 
-static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
-                        cpyrt::Utility::ArgPreference pref,
-                        int* pcnt = nullptr) {
+bool cpyrt::Utility::AddTypeName(std::string& tmpl_name, PyObject* tn,
+                                 PyObject* arg,
+                                 cpyrt::Utility::ArgPreference pref,
+                                 int* pcnt) {
   // Determine the appropriate C++ type for a given Python type; this is a
   // helper because it can recurse if the type is list or tuple and needs
   // matching on std::vector.
@@ -470,11 +480,80 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
     return true;
   }
 
+  if (tn == (PyObject*)&PyComplex_Type) {
+    tmpl_name.append("std::complex<double>");
+    return true;
+  }
+
+  if (tn == (PyObject*)&PyRange_Type) {
+    tmpl_name.append("std::initializer_list<int>");
+    return true;
+  }
+
+  if (tn == (PyObject*)&PyNullPtr_t_Type) {
+    tmpl_name.append("std::nullptr_t");
+    return true;
+  }
+
+  PyObject* array_module = PyImport_ImportModule("array");
+  PyObject* array_type = PyObject_GetAttrString(array_module, "array");
+  if (tn == array_type) {
+    PyObject* typecode = PyObject_GetAttrString(arg, "typecode");
+    const char* typecode_str = PyUnicode_AsUTF8(typecode);
+    switch (*typecode_str) {
+    case 'b':
+      tmpl_name.append("signed char*");
+      break;
+    case 'B':
+      tmpl_name.append("unsigned char*");
+      break;
+    case 'u':
+      tmpl_name.append("wchar_t*");
+      break;
+    case 'h':
+      tmpl_name.append("signed short*");
+      break;
+    case 'H':
+      tmpl_name.append("unsigned short*");
+      break;
+    case 'i':
+      tmpl_name.append("signed int*");
+      break;
+    case 'I':
+      tmpl_name.append("unsigned int*");
+      break;
+    case 'l':
+      tmpl_name.append("signed long*");
+      break;
+    case 'L':
+      tmpl_name.append("unsigned long*");
+      break;
+    case 'q':
+      tmpl_name.append("signed long long*");
+      break;
+    case 'Q':
+      tmpl_name.append("unsigned long long*");
+      break;
+    case 'f':
+      tmpl_name.append("float*");
+      break;
+    case 'd':
+      tmpl_name.append("double*");
+      break;
+    }
+    Py_DECREF(array_module);
+    Py_DECREF(array_type);
+    Py_DECREF(typecode);
+    return true;
+  }
+  Py_XDECREF(array_module);
+  Py_XDECREF(array_type);
+
   if (tn == (PyObject*)&PyList_Type || tn == (PyObject*)&PyTuple_Type) {
     if (arg && PySequence_Size(arg)) {
       std::string subtype{"std::initializer_list<"};
       PyObject* item = PySequence_GetItem(arg, 0);
-      ArgPreference subpref = pref == kValue ? kValue : kPointer;
+      ArgPreference subpref = pref == kPointer ? kPointer : kValue;
       bool ret = AddTypeName(subtype, (PyObject*)Py_TYPE(item), item, subpref);
       if (ret) {
         tmpl_name.append(subtype);
@@ -491,13 +570,42 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
     return true;
   }
 
+  if (tn == (PyObject*)&LowLevelView_Type) {
+    LowLevelView* ll = (LowLevelView*)arg;
+    tmpl_name.append(ll->fCppTypeName);
+    if (ll->fBufInfo.ndim > 0) {
+      for (int i = ll->fBufInfo.ndim; i > 0; i--)
+        tmpl_name.push_back('*');
+    } else {
+      tmpl_name.push_back('*');
+    }
+    return true;
+  }
+
+  if (tn == (PyObject*)&CPPExcInstance_Type) {
+    // this is a execption class
+    // that is derived from std::exception
+    // FIXME: merge this code path with CPPScope -> CPPInstance path below
+    CPPInstance* inst = (CPPInstance*)((CPPExcInstance*)arg)->fCppInstance;
+    if (inst) {
+      tmpl_name.append(interop::GetScopedFinalName(inst->ObjectIsA(false)));
+      if (inst->fFlags & CPPInstance::kIsRValue)
+        tmpl_name.append("&&");
+      else
+        tmpl_name.append("&");
+      return true;
+    }
+  }
+
   if (CPPScope_Check(tn)) {
-    auto cpp_type = interop::GetScopedFinalName(((CPPClass*)tn)->fCppType);
-    tmpl_name.append(full_scope(cpp_type));
+    bool resolved = false;
     if (arg) {
       // try to specialize the type match for the given object
       CPPInstance* pyobj = (CPPInstance*)arg;
       if (CPPInstance_Check(pyobj)) {
+        auto cpp_type = interop::GetScopedFinalName(
+            pyobj->IsSmart() ? SMART_TYPE(pyobj) : ((CPPClass*)tn)->fCppType);
+        tmpl_name.append(full_scope(cpp_type));
         if (pyobj->fFlags & CPPInstance::kIsRValue)
           tmpl_name.append("&&");
         else {
@@ -508,7 +616,12 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
           else if (pref != kValue)
             tmpl_name.push_back('&');
         }
+        resolved = true;
       }
+    }
+    if (!resolved) {
+      auto cpp_type = interop::GetScopedFinalName(((CPPClass*)tn)->fCppType);
+      tmpl_name.append(full_scope(cpp_type));
     }
 
     return true;
@@ -523,11 +636,19 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
     return true;
   }
 
+  if (tn == (PyObject*)&TemplateProxy_Type) {
+    TemplateProxy* tp = (TemplateProxy*)arg;
+    tmpl_name.append(tp->fTI->fCppName);
+    if (tp->fTemplateArgs)
+      tmpl_name.append(PyUnicode_AsUTF8(tp->fTemplateArgs));
+    return true;
+  }
+
   if (arg && PyCallable_Check(arg)) {
     // annotated/typed Python function
     PyObject* annot = PyObject_GetAttr(arg, PyStrings::gAnnotations);
     if (annot) {
-      if (PyDict_Check(annot) && 1 < PyDict_Size(annot)) {
+      if (PyDict_Check(annot)) {
         PyObject* ret = PyDict_GetItemString(annot, "return");
         if (ret) {
           // dict is ordered, with the last value being the return type
@@ -601,6 +722,14 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
       return true;
     }
     PyErr_Clear();
+
+    // We append std::nullptr_t and hope for the best.
+    // We know this is a pure Python function, but we don't have any
+    // annotation information. If the receiver takes a pointer this works,
+    // but if the receiver takes a function reference like `int
+    // callback(int(&f)(int))`, this fails.
+    tmpl_name.append("std::nullptr_t");
+    return true;
   }
 
   for (auto nn : {PyStrings::gCppName, PyStrings::gName}) {
@@ -637,11 +766,9 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
   return false;
 }
 
-std::string cpyrt::Utility::ConstructTemplateArgs(PyObject* pyname,
-                                                  PyObject* tpArgs,
-                                                  PyObject* args,
-                                                  ArgPreference pref,
-                                                  int argoff, int* pcnt) {
+std::string cpyrt::Utility::ConstructTemplateArgs(
+    PyObject* pyname, PyObject* tpArgs, PyObject* args, ArgPreference pref,
+    int argoff, int* pcnt, bool usingThisParameter) {
   // Helper to construct the "<type, type, ...>" part of a templated name
   // (either for a class or method lookup
   bool justOne = !PyTuple_CheckExact(tpArgs);
@@ -665,9 +792,10 @@ std::string cpyrt::Utility::ConstructTemplateArgs(PyObject* pyname,
       // some common numeric types (separated out for performance: checking for
       // __cpp_name__ and/or __name__ is rather expensive)
     } else {
-      if (!AddTypeName(tmpl_name, tn,
-                       (args ? PyTuple_GET_ITEM(args, i) : nullptr), pref,
-                       pcnt)) {
+      if (!AddTypeName(
+              tmpl_name, tn, (args ? PyTuple_GET_ITEM(args, i) : nullptr),
+              (usingThisParameter && i == argoff) ? ArgPreference::kNone : pref,
+              pcnt)) {
         PyErr_SetString(
             PyExc_TypeError,
             "could not construct C++ name from provided template argument.");
@@ -699,6 +827,11 @@ static bool AddTypeName(std::vector<Cpp::TemplateArgInfo>& types, PyObject* tn,
 
   if (tn == (PyObject*)&PyLong_Type) {
     if (arg) {
+#if PY_VERSION_HEX < 0x03000000
+      long l = PyInt_AS_LONG(arg);
+      types.push_back(
+          interop::GetType((l < INT_MIN || INT_MAX < l) ? "long" : "int").data);
+#else
       PY_LONG_LONG ll = PyLong_AsLongLong(arg);
       if (ll == (PY_LONG_LONG)-1 && PyErr_Occurred()) {
         PyErr_Clear();
@@ -717,12 +850,39 @@ static bool AddTypeName(std::vector<Cpp::TemplateArgInfo>& types, PyObject* tn,
                     ? ((ll < LONG_MIN || LONG_MAX < ll) ? "long long" : "long")
                     : "int")
                 .data);
+#endif
     } else {
       types.push_back(interop::GetType("int").data);
     }
 
     return true;
   }
+
+#if PY_VERSION_HEX < 0x03000000
+  if (tn == (PyObject*)&PyLong_Type) {
+    if (arg) {
+      PY_LONG_LONG ll = PyLong_AsLongLong(arg);
+      if (ll == (PY_LONG_LONG)-1 && PyErr_Occurred()) {
+        PyErr_Clear();
+        PY_ULONG_LONG ull = PyLong_AsUnsignedLongLong(arg);
+        if (ull == (PY_ULONG_LONG)-1 && PyErr_Occurred()) {
+          PyErr_Clear();
+          types.push_back(interop::GetType("long")
+                              .data); // still out of range, will fail later
+        } else
+          types.push_back(interop::GetType("unsigned long long")
+                              .data); // since already failed long long
+      } else
+        types.push_back(interop::GetType((ll < LONG_MIN || LONG_MAX < ll)
+                                             ? "long long"
+                                             : "long")
+                            .data);
+    } else
+      types.push_back(interop::GetType("long").data);
+
+    return true;
+  }
+#endif
 
   if (tn == (PyObject*)&PyFloat_Type) {
     // special case for floats (Python-speak for double) if from argument (only)
@@ -737,7 +897,11 @@ static bool AddTypeName(std::vector<Cpp::TemplateArgInfo>& types, PyObject* tn,
     return true;
   }
 
+#if PY_VERSION_HEX < 0x03000000
+  if (tn == (PyObject*)&PyString_Type) {
+#else
   if (tn == (PyObject*)&PyUnicode_Type) {
+#endif
     types.push_back(
         interop::GetType("std::string", /* enable_slow_lookup */ true).data);
     return true;

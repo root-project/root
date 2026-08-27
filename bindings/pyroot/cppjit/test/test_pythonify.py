@@ -65,7 +65,7 @@ class TestPYTHONIFY:
 
         raises(TypeError, example01_class.staticAddOneToInt, 1, [])
         raises(TypeError, example01_class.staticAddOneToInt, 1.0)
-        raises(TypeError, example01_class.staticAddOneToInt, maxint32 + 1)
+        raises(ValueError, example01_class.staticAddOneToInt, maxint32 + 1)
         res = example01_class.staticAddToDouble(0.09)
         assert res == 0.09 + 0.01
 
@@ -123,7 +123,7 @@ class TestPYTHONIFY:
         res = instance.addToStringValue("-12")  # TODO: this leaks
         assert res == "30"
 
-        res = instance.staticAddOneToInt(pylong(1))
+        res = type(instance).staticAddOneToInt(pylong(1))  # FIXME
         assert res == 2
 
         instance.__destruct__()

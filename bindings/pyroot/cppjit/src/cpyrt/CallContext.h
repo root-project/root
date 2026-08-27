@@ -30,7 +30,9 @@ struct CallContext {
 
   enum ECallFlags {
     kNone = 0x000000,
-    kIsSorted = 0x000001,      // if method overload priority determined
+    // UNUSED with new overload resolution
+    // kIsSorted                    = 0x000001, // if method overload priority
+    // determined
     kIsCreator = 0x000002,     // if method creates python-owned objects
     kIsConstructor = 0x000004, // if method is a C++ constructor
     kHaveImplicit = 0x000008, // indicate that implicit converters are available
@@ -40,15 +42,18 @@ struct CallContext {
     kFromDescr = 0x000080,     // initiated from a descriptor
     kUseHeuristics = 0x000100, // if method applies heuristics memory policy
     kImplicitSmartPtrConversion =
-        0x000200,              // enable implicit conversion to smart pointers
-    kReleaseGIL = 0x000400,    // if method should release the GIL
-    kSetLifeLine = 0x000800,   // if return value is part of 'this'
-    kNeverLifeLine = 0x001000, // if the return value is never part of 'this'
-    kPyException = 0x002000,   // Python exception during method execution
-    kCppException = 0x004000,  // C++ exception during method execution
-    kProtected = 0x008000,     // if method should return on signals
-    kUseFFI = 0x010000,        // not implemented
-    kIsPseudoFunc = 0x020000,  // internal, used for introspection
+        0x000200,               // enable implicit conversion to smart pointers
+    kReleaseGIL = 0x000400,     // if method should release the GIL
+    kSetLifeLine = 0x000800,    // if return value is part of 'this'
+    kNeverLifeLine = 0x001000,  // if the return value is never part of 'this'
+    kPyException = 0x002000,    // Python exception during method execution
+    kCppException = 0x004000,   // C++ exception during method execution
+    kProtected = 0x008000,      // if method should return on signals
+    kUseFFI = 0x010000,         // not implemented
+    kIsPseudoFunc = 0x020000,   // internal, used for introspection
+    kUseStrict = 0x040000,      // if method applies strict memory policy
+    kIsMethod = 0x080000,       // If this is a class method
+    kIsSatticMethod = 0x100000, // If this is a static class method
   };
 
   // Policies about memory handling and signal safety
@@ -99,8 +104,6 @@ private:
   size_t fNArgs;
   Temporary* fTemps;
 };
-
-inline bool IsSorted(uint64_t flags) { return flags & CallContext::kIsSorted; }
 
 inline bool IsCreator(uint64_t flags) {
   return flags & CallContext::kIsCreator;

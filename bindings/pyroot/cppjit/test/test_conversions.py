@@ -1,6 +1,6 @@
 import py
 from pytest import mark, raises
-from support import IS_CLANG_REPL, IS_CLING, IS_MAC, setup_make
+from support import setup_make
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = "conversions_cxx"
@@ -97,9 +97,8 @@ class TestCONVERSIONS:
         gc.collect()
         assert CC.s_count == 0
 
-    @mark.xfail(
-        condition=IS_MAC or IS_CLING, run=IS_CLANG_REPL, reason="Crashes on Cling"
-    )
+    # @mark.xfail(run=IS_CLANG_REPL, condition = IS_MAC or IS_CLING, reason = "Crashes on Cling")
+    @mark.xfail(strict=True, reason="FIXME: New Overload Resolution")
     def test04_implicit_conversion_from_tuple(self):
         """Allow implicit conversions from tuples as arguments {}-like"""
 

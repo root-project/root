@@ -34,12 +34,10 @@ public:
 public:
   std::string fCppName;
   PyObject* fPyClass;
-  CPPOverload* fNonTemplated; // holder for non-template overloads
-  CPPOverload* fTemplated;    // holder for templated overloads
-  CPPOverload* fLowPriority;  // low priority overloads such as void*/void**
-
+  CPPOverload* fOverloads; // holder for all overloads
   TP_DispatchMap_t fDispatchMap;
   PyObject* fDoc;
+  bool fIsConstructor;
 };
 
 typedef std::shared_ptr<TemplateInfo> TP_TInfo_t;
@@ -48,9 +46,10 @@ class TemplateProxy {
 private:
   friend TemplateProxy* TemplateProxy_New(const std::string& cppname,
                                           const std::string& pyname,
-                                          PyObject* pyclass);
+                                          PyObject* pyclass,
+                                          bool isConstructor);
   void Set(const std::string& cppname, const std::string& pyname,
-           PyObject* pyclass);
+           PyObject* pyclass, bool is_constructor);
 
 public: // public, as the python C-API works with C structs
   PyObject_HEAD PyObject* fSelf; // must be first (same layout as CPPOverload)
@@ -62,10 +61,10 @@ public: // public, as the python C-API works with C structs
 public:
   void MergeOverload(CPPOverload* mp);
   void AdoptMethod(PyCallable* pc);
-  void AdoptTemplate(PyCallable* pc);
   PyObject* Instantiate(const std::string& fname, cpyrt_PyArgs_t tmplArgs,
                         size_t nargsf, Utility::ArgPreference,
-                        int* pcnt = nullptr);
+                        int* pcnt = nullptr,
+                        bool include_non_templated = false);
 
 private: // private, as the python C-API will handle creation
   TemplateProxy() = delete;
@@ -85,14 +84,15 @@ template <typename T> inline bool TemplateProxy_CheckExact(T* object) {
 //- creation -----------------------------------------------------------------
 inline TemplateProxy* TemplateProxy_New(const std::string& cppname,
                                         const std::string& pyname,
-                                        PyObject* pyclass) {
+                                        PyObject* pyclass,
+                                        bool isConstructor = false) {
   // Create and initialize a new template method proxy for the class.
   if (!CPPScope_Check(pyclass))
     return nullptr;
 
   TemplateProxy* pytmpl = (TemplateProxy*)TemplateProxy_Type.tp_new(
       &TemplateProxy_Type, nullptr, nullptr);
-  pytmpl->Set(cppname, pyname, pyclass);
+  pytmpl->Set(cppname, pyname, pyclass, isConstructor);
   return pytmpl;
 }
 
