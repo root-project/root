@@ -8,11 +8,13 @@
 #include "../src/RooExprEvaluator.h"
 
 #include <RooFormulaVar.h>
+#include <RooGenericPdf.h>
 #include <RooRealVar.h>
 
 #include <Math/PdfFuncMathCore.h>
 #include <ROOT/TestSupport.hxx>
 #include <TFormula.h>
+#include <TInterpreter.h>
 #include <TMath.h>
 #include <TSystem.h>
 
@@ -22,6 +24,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <locale>
 #include <map>
 #include <random>
 #include <string>
@@ -533,9 +536,31 @@ TEST(RooFormulaEvaluator, RooFormulaIntegration)
    EXPECT_STREQ(fVar.expression(), "x[0]*x[1]+sin(x[0])");
    EXPECT_TRUE(sameBits(fVar.getVal(), 2.0 * 3.0 + std::sin(2.0)));
 
-   // the codegen accessor lazily provides a JIT-compiled TFormula function
-   // even on the AST path
-   EXPECT_FALSE(fVar.getUniqueFuncName().empty());
+   // on the AST path, the expression is emitted as C++ for codegen instead of
+   // JIT-compiling a TFormula; there is no JIT'd function name
+   ASSERT_TRUE(f->canEmitCpp());
+   auto varName = [](unsigned int i) { return "v[" + std::to_string(i) + "]"; };
+   EXPECT_EQ(f->emitCpp(varName), "(((v[0]) * (v[1])) + std::sin((v[0])))");
+   EXPECT_TRUE(f->uniqueFuncName().empty());
+   EXPECT_TRUE(fVar.getUniqueFuncName().empty());
+}
+
+// Codegen indexes the pruned list of actually-used dependents. Since the
+// owning classes prune unused variables and reindex the expression before the
+// evaluation engine is created, emitFormulaCpp() must name the variables
+// consistently with dependents().
+TEST(RooFormulaEvaluator, EmitCppDependentRemap)
+{
+   ScopedBackendEnv env{nullptr};
+
+   RooRealVar x("x", "x", 2.0);
+   RooRealVar y("y", "y", 3.0);
+
+   // x (list index 0) is unused, so y is dependents()[0].
+   RooFormulaVar f("f", "y*2", {x, y});
+   ASSERT_EQ(f.dependents().size(), 1u);
+   std::string expr = f.emitFormulaCpp([](unsigned int i) { return "dep" + std::to_string(i); });
+   EXPECT_EQ(expr, "((dep0) * 2.0)");
 }
 
 TEST(RooFormulaEvaluator, BackendOverride)
@@ -552,6 +577,11 @@ TEST(RooFormulaEvaluator, BackendOverride)
       auto g = RooFormulaUtils::makeFormulaEvaluator("g", "ROOT::Math::normal_pdf(x,1.,0.)", vars);
       EXPECT_FALSE(isAstBackend(*g));
       EXPECT_TRUE(sameBits(RooFormulaUtils::evalFormula(*g, vars), ROOT::Math::normal_pdf(2.0, 1.0, 0.0)));
+      // the fallback backend cannot emit C++; codegen instead calls the
+      // cling-JIT-compiled TFormula function by its unique name
+      EXPECT_FALSE(g->canEmitCpp());
+      EXPECT_TRUE(g->emitCpp([](unsigned int) { return std::string{"v"}; }).empty());
+      EXPECT_FALSE(g->uniqueFuncName().empty());
    }
    {
       ScopedBackendEnv env{"tformula"};
@@ -567,6 +597,35 @@ TEST(RooFormulaEvaluator, BackendOverride)
       // unsupported expression: fail loudly instead of falling back
       EXPECT_THROW(RooFormulaUtils::makeFormulaEvaluator("g", "ROOT::Math::normal_pdf(x,1.,0.)", vars),
                    std::runtime_error);
+   }
+}
+
+// The public backend query on RooFormulaVar and RooGenericPdf: true when the
+// formula is evaluated by the JIT-free AST backend (the default for supported
+// expressions), false on the TFormula fallback backend.
+TEST(RooFormulaEvaluator, PublicBackendQuery)
+{
+   RooRealVar a("a", "a", 1.1);
+   RooRealVar x("x", "x", 2.0);
+   RooRealVar b("b", "b", 0.3);
+
+   {
+      ScopedBackendEnv env{nullptr};
+      RooFormulaVar f("f", "a*x+b", {a, x, b});
+      EXPECT_TRUE(f.formulaUsesAstBackend());
+      EXPECT_TRUE(f.getUniqueFuncName().empty());
+      RooGenericPdf p("p", "a*x+b", {a, x, b});
+      EXPECT_TRUE(p.formulaUsesAstBackend());
+      EXPECT_TRUE(p.getUniqueFuncName().empty());
+   }
+   {
+      ScopedBackendEnv env{"tformula"};
+      RooFormulaVar f("f", "a*x+b", {a, x, b});
+      EXPECT_FALSE(f.formulaUsesAstBackend());
+      EXPECT_FALSE(f.getUniqueFuncName().empty());
+      RooGenericPdf p("p", "a*x+b", {a, x, b});
+      EXPECT_FALSE(p.formulaUsesAstBackend());
+      EXPECT_FALSE(p.getUniqueFuncName().empty());
    }
 }
 
@@ -887,4 +946,133 @@ TEST(RooFormulaEvaluator, DifferentialCorpus)
       std::cout << "  fallback: " << f << "\n";
    }
    EXPECT_GE(coverage, 0.9);
+}
+
+namespace {
+
+using EmittedFunc = double (*)(double const *);
+
+/// Declare the emitted expression as a function of the variable array `v` in
+/// the interpreter and return a pointer to the compiled function.
+EmittedFunc compileEmitted(std::string const &expr)
+{
+   static bool headersDeclared =
+      gInterpreter->Declare("#include \"TMath.h\"\n#include <algorithm>\n#include <cmath>\n#include <limits>\n");
+   if (!headersDeclared) {
+      return nullptr;
+   }
+   static int counter = 0;
+   const std::string fname = "rooFormulaEmitTestFunc" + std::to_string(counter++);
+   const std::string code = "double " + fname + "(double const *v) { return " + expr + "; }";
+   if (!gInterpreter->Declare(code.c_str())) {
+      return nullptr;
+   }
+   return reinterpret_cast<EmittedFunc>(gInterpreter->Calc(("(void *) " + fname).c_str()));
+}
+
+} // namespace
+
+// Emitted-code agreement (Phase 3 item 5, brought forward minimally): for
+// every corpus expression the JIT-free parser accepts, emit the C++
+// expression, compile it with the interpreter, and require agreement with AST
+// evaluation on random inputs (bitwise up to floating-point contraction in the
+// JIT, see agreesWithJit()). The C++ is emitted from the same
+// instruction vector that eval() walks, so this directly validates the
+// emission itself: the operator spellings, the function-name mapping table,
+// and the exact round-trip of numeric literals.
+TEST(RooFormulaEvaluator, EmittedCppDifferential)
+{
+   auto varName = [](unsigned int i) { return "v[" + std::to_string(i) + "]"; };
+
+   int iEntry = 0;
+   for (const char *entry : kCorpus) {
+      ++iEntry;
+      int nVars = 0;
+      const std::string processed = normalizeCorpusEntry(entry, nVars);
+
+      auto prog = RooFormulaParser::compile(processed, nVars);
+      if (!prog) {
+         continue; // fallback expressions have no emission; covered elsewhere
+      }
+      RooExprEvaluator ast{prog};
+
+      const std::string expr = ast.emitCpp(varName);
+      ASSERT_FALSE(expr.empty()) << entry;
+      EmittedFunc fn = compileEmitted(expr);
+      ASSERT_NE(fn, nullptr) << "emitted C++ failed to compile for: " << entry << "\n  emitted: " << expr;
+
+      std::mt19937 rng{987u + static_cast<unsigned>(iEntry)};
+      for (int trial = 0; trial < 5; ++trial) {
+         std::vector<double> pars(std::max(nVars, 1));
+         for (double &p : pars) {
+            p = trial == 0 ? 0.5 : trial == 1 ? 2.0 : uniformDouble(rng, -3.0, 3.0);
+         }
+         const double a = ast.eval(pars.data());
+         const double c = fn(pars.data());
+         EXPECT_TRUE(agreesWithJit(a, c))
+            << "AST and emitted C++ disagree for: " << entry << "\n  emitted: " << expr << "\n  ast = " << std::hexfloat
+            << a << " emitted = " << c << std::defaultfloat;
+      }
+   }
+}
+
+// Numeric literals must survive emit -> compile -> eval bitwise, so they are
+// emitted with max_digits10 (17) significant digits. A lossy emission (e.g.
+// the default 6-digit %g formatting) would show up here: 0.1 and friends are
+// not exactly representable.
+TEST(RooFormulaEvaluator, EmittedLiteralRoundTrip)
+{
+   auto varName = [](unsigned int) { return std::string{"v[0]"}; };
+
+   auto prog = RooFormulaParser::compile("x[0]*0.1+0.2e-6*3.360779", 1);
+   ASSERT_TRUE(prog);
+   RooExprEvaluator ast{prog};
+   const std::string expr = ast.emitCpp(varName);
+   // 0.1 must be emitted with enough digits for an exact round-trip
+   EXPECT_NE(expr.find("0.10000000000000001"), std::string::npos) << expr;
+   EmittedFunc fn = compileEmitted(expr);
+   ASSERT_NE(fn, nullptr) << expr;
+   for (double v : {0.3, 1.0, 7.7, 1e30, 1e-30, -2.5}) {
+      EXPECT_TRUE(sameBits(ast.eval(&v), fn(&v))) << expr << " at v = " << v;
+   }
+
+   // integer-spelled literals must be emitted with double type: `2` in the
+   // formula dialect is emitted as `2.0`
+   auto prog2 = RooFormulaParser::compile("7./2", 0);
+   ASSERT_TRUE(prog2);
+   EXPECT_EQ(RooExprEvaluator{prog2}.emitCpp(varName), "(7.0 / 2.0)");
+}
+
+// The emitted C++ must not depend on the global locale: under a comma-decimal
+// locale a default-constructed stream would format 0.5 as "0,5", corrupting
+// the generated code. No comma-decimal OS locale is installed on every test
+// machine, so the locale is built from a custom numpunct facet instead. The
+// global locale is restored before any assertion can bail out of the test.
+TEST(RooFormulaEvaluator, EmitCppLocaleIndependent)
+{
+   struct CommaPunct : std::numpunct<char> {
+      char do_decimal_point() const override { return ','; }
+   };
+
+   const std::locale old = std::locale::global(std::locale{std::locale::classic(), new CommaPunct});
+   std::string expr;
+   std::string formatted;
+   try {
+      std::stringstream ss; // sanity check: the facet is actually in effect
+      ss << 0.5;
+      formatted = ss.str();
+      auto prog = RooFormulaParser::compile("x[0]*0.5+1.25", 1);
+      if (prog) {
+         expr = RooExprEvaluator{prog}.emitCpp([](unsigned int i) { return "v[" + std::to_string(i) + "]"; });
+      }
+   } catch (...) {
+      std::locale::global(old);
+      throw;
+   }
+   std::locale::global(old);
+
+   EXPECT_EQ(formatted, "0,5");
+   EXPECT_NE(expr.find("0.5"), std::string::npos) << expr;
+   EXPECT_NE(expr.find("1.25"), std::string::npos) << expr;
+   EXPECT_EQ(expr.find(','), std::string::npos) << expr;
 }

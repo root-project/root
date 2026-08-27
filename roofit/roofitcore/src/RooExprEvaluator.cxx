@@ -16,6 +16,10 @@
 
 #include <cmath>
 #include <cstring>
+#include <iomanip>
+#include <limits>
+#include <locale>
+#include <sstream>
 #include <stdexcept>
 #include <vector>
 
@@ -33,20 +37,23 @@ Entry F0(const char *name, double (*fn)())
    return e;
 }
 
-Entry F1(const char *name, double (*fn)(double), TypeRule rule = TypeRule::Double)
+Entry F1(const char *name, double (*fn)(double), TypeRule rule = TypeRule::Double, const char *cppName = nullptr)
 {
    Entry e;
    e.name = name;
+   e.cppName = cppName;
    e.arity = 1;
    e.rule = rule;
    e.fn1 = fn;
    return e;
 }
 
-Entry F2(const char *name, double (*fn)(double, double), TypeRule rule = TypeRule::Double)
+Entry F2(const char *name, double (*fn)(double, double), TypeRule rule = TypeRule::Double,
+         const char *cppName = nullptr)
 {
    Entry e;
    e.name = name;
+   e.cppName = cppName;
    e.arity = 2;
    e.rule = rule;
    e.fn2 = fn;
@@ -154,8 +161,10 @@ std::vector<Entry> makeTable()
       F1("std::abs",     +[](double x) { return std::fabs(x); }, TypeRule::SameAsFirstArg),
       F1("fabs",         +[](double x) { return std::fabs(x); }),
       F1("std::fabs",    +[](double x) { return std::fabs(x); }),
-      F1("int",          castInt, TypeRule::Int), // C++ functional cast: truncation towards zero
-      F1("sq",           square), // TFormula shortcut for TMath::Sq(Double_t)
+      // C++ functional cast: truncation towards zero
+      F1("int",          castInt, TypeRule::Int, "int"),
+      // TFormula shortcut for TMath::Sq(Double_t)
+      F1("sq",           square, TypeRule::Double, "TMath::Sq"),
       // one-argument functions, TMath spellings
       F1("TMath::Sqrt",  +[](double x) { return TMath::Sqrt(x); }),
       F1("TMath::Exp",   +[](double x) { return TMath::Exp(x); }),
@@ -195,7 +204,8 @@ std::vector<Entry> makeTable()
       F2("max",          stdMax, TypeRule::MinMax),
       F2("std::max",     stdMax, TypeRule::MinMax),
       F2("TMath::Max",   tmathMax, TypeRule::MinMax),
-      F2("sign",         sign, TypeRule::SameAsFirstArg), // TFormula shortcut for TMath::Sign
+      // TFormula shortcut for TMath::Sign
+      F2("sign",         sign, TypeRule::SameAsFirstArg, "TMath::Sign"),
       F2("TMath::Sign",  sign, TypeRule::SameAsFirstArg),
       // zero-argument constants (folded to Op::Const at parse time)
       F0("TMath::Pi",     +[]() { return TMath::Pi(); }),
@@ -340,6 +350,134 @@ double RooExprEvaluator::eval(const double *vars) const
    }
 
    return stack[0];
+}
+
+namespace {
+
+/// Format a double as a C++ expression of type double that parses back to the
+/// exact same value: max_digits10 (17) significant decimal digits guarantee
+/// the bitwise round-trip (this is also the formatting convention used
+/// elsewhere in RooFit codegen).
+std::string emitDouble(double val)
+{
+   if (std::isnan(val)) {
+      return "std::numeric_limits<double>::quiet_NaN()";
+   }
+   if (std::isinf(val)) {
+      return val > 0 ? "std::numeric_limits<double>::infinity()" : "(-std::numeric_limits<double>::infinity())";
+   }
+   std::stringstream ss;
+   // The formatting must not depend on the global locale: a comma decimal
+   // separator (e.g. from a German locale) would corrupt the emitted C++.
+   ss.imbue(std::locale::classic());
+   ss << std::setprecision(std::numeric_limits<double>::max_digits10) << val;
+   std::string out = ss.str();
+   // The emitted literal must have type double: an integer-looking literal
+   // like `2` would be an int in C++, with different division semantics.
+   if (out.find_first_of(".eE") == std::string::npos) {
+      out += ".0";
+   }
+   // Parse-time constant folding (e.g. of TMath::Pi()) can in principle
+   // produce negative values; keep every stack entry self-contained.
+   if (out[0] == '-') {
+      out = "(" + out + ")";
+   }
+   return out;
+}
+
+/// The C++ spelling emitted for a function-table entry (see Entry::cppName).
+std::string emissionName(RooFormulaFunctions::Entry const &entry)
+{
+   if (entry.cppName) {
+      return entry.cppName;
+   }
+   const std::string name = entry.name;
+   return name.find("::") == std::string::npos ? "std::" + name : name;
+}
+
+} // namespace
+
+////////////////////////////////////////////////////////////////////////////////
+/// Emit the expression as C++ source by walking the same instruction sequence
+/// that eval() interprets, so evaluation and code generation cannot diverge
+/// structurally. Every intermediate result is kept fully parenthesized, so no
+/// operator-precedence reasoning is involved. The emitted operators and
+/// function spellings reproduce what the cling-JIT-compiled TFormula code
+/// called for the same formula, so all three semantic paths (AST evaluation,
+/// emitted C++, TFormula fallback) agree bitwise.
+std::string RooExprEvaluator::emitCpp(std::function<std::string(unsigned int)> const &varName) const
+{
+   std::vector<std::string> stack;
+   auto const *funcs = RooFormulaFunctions::table();
+
+   auto pop = [&]() {
+      std::string out = std::move(stack.back());
+      stack.pop_back();
+      return out;
+   };
+   auto binary = [&](const char *sym) {
+      const std::string b = pop();
+      stack.back() = "(" + stack.back() + " " + sym + " " + b + ")";
+   };
+
+   for (Instr const &ins : _program->code) {
+      switch (ins.op) {
+      case Op::Const: stack.push_back(emitDouble(ins.konst)); break;
+      case Op::Var: stack.push_back("(" + varName(ins.arg) + ")"); break;
+      case Op::Add: binary("+"); break;
+      case Op::Sub: binary("-"); break;
+      case Op::Mul: binary("*"); break;
+      case Op::Div: binary("/"); break;
+      case Op::Neg: stack.back() = "(-" + stack.back() + ")"; break;
+      case Op::Not: stack.back() = "(!" + stack.back() + ")"; break;
+      case Op::LT: binary("<"); break;
+      case Op::LE: binary("<="); break;
+      case Op::GT: binary(">"); break;
+      case Op::GE: binary(">="); break;
+      case Op::EQ: binary("=="); break;
+      case Op::NE: binary("!="); break;
+      // In C++, `&&`/`||` short-circuit and `?:` evaluates only the taken
+      // branch, while eval() always evaluates both operands. The resulting
+      // values are identical; the difference is only observable if
+      // floating-point exceptions are trapped.
+      case Op::And: binary("&&"); break;
+      case Op::Or: binary("||"); break;
+      case Op::Select: {
+         const std::string b = pop();
+         const std::string a = pop();
+         stack.back() = "(" + stack.back() + " ? " + a + " : " + b + ")";
+         break;
+      }
+      case Op::Pow: {
+         const std::string b = pop();
+         stack.back() = "std::pow(" + stack.back() + ", " + b + ")";
+         break;
+      }
+      case Op::Sq: stack.back() = "TMath::Sq(" + stack.back() + ")"; break;
+      case Op::IntNorm: stack.back() = "(" + stack.back() + " + 0.0)"; break;
+      case Op::Call1: stack.back() = emissionName(funcs[ins.arg]) + "(" + stack.back() + ")"; break;
+      case Op::Call2: {
+         const std::string b = pop();
+         stack.back() = emissionName(funcs[ins.arg]) + "(" + stack.back() + ", " + b + ")";
+         break;
+      }
+      case Op::Call3: {
+         const std::string c = pop();
+         const std::string b = pop();
+         stack.back() = emissionName(funcs[ins.arg]) + "(" + stack.back() + ", " + b + ", " + c + ")";
+         break;
+      }
+      case Op::Call4: {
+         const std::string d = pop();
+         const std::string c = pop();
+         const std::string b = pop();
+         stack.back() = emissionName(funcs[ins.arg]) + "(" + stack.back() + ", " + b + ", " + c + ", " + d + ")";
+         break;
+      }
+      }
+   }
+
+   return stack.back();
 }
 
 /// \endcond
