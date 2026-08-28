@@ -19,6 +19,9 @@ typedef void (* _GLUfuncptr)(void);
 #elif defined(WIN32)
 #include <windows.h>
 #include <GL/glu.h>
+#ifndef _GLUfuncptr
+typedef void (* _GLUfuncptr)(void);
+#endif
 #else // Linux system GLU
 #include <GL/glu.h>
 #endif
