@@ -91,7 +91,9 @@ namespace Detail {
       // std::vector<bool> must not use this optimization because it has a proxy
       // iterator and is handled by its dedicated collection proxy below.
       template <typename T> struct IsVectorFastPath : std::false_type {};
-      template <typename T, typename A> struct IsVectorFastPath<std::vector<T, A>> : std::true_type {};
+      // Keep the existing optimization limited to std::vector<T> with its
+      // default allocator. Custom allocators use the normal iterator path.
+      template <typename T> struct IsVectorFastPath<std::vector<T>> : std::true_type {};
       template <typename A> struct IsVectorFastPath<std::vector<Bool_t, A>> : std::false_type {};
 
    /** @class ROOT::Detail::TCollectionProxyInfo::Iterators
