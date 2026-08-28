@@ -1,13 +1,13 @@
- /*****************************************************************************
-  * Project: RooFit                                                           *
-  *                                                                           *
-  * Copyright (c) 2000-2005, Regents of the University of California          *
-  *                          and Stanford University. All rights reserved.    *
-  *                                                                           *
-  * Redistribution and use in source and binary forms,                        *
-  * with or without modification, are permitted according to the terms        *
-  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
-  *****************************************************************************/
+/*****************************************************************************
+ * Project: RooFit                                                           *
+ *                                                                           *
+ * Copyright (c) 2000-2005, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
+ *****************************************************************************/
 
 /** \class RooIntegralMorph
     \ingroup Roofit
@@ -89,8 +89,7 @@ in calculation speed.
 #include "RooDataHist.h"
 #include "TH1.h"
 
- using std::flush, std::endl;
-
+using std::flush, std::endl;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with observables x, pdf shapes pdf1 and pdf2 which represent
@@ -98,31 +97,27 @@ in calculation speed.
 /// If doCacheAlpha is true, a two-dimensional cache is constructed in
 /// both alpha and x
 
-RooIntegralMorph::RooIntegralMorph(const char *name, const char *title,
-                RooAbsReal& _pdf1,
-                RooAbsReal& _pdf2,
-                RooAbsReal& _x,
-                RooAbsReal& _alpha,
-                bool doCacheAlpha) :
-  RooAbsCachedPdf(name,title,2),
-  pdf1("pdf1","pdf1",this,_pdf1),
-  pdf2("pdf2","pdf2",this,_pdf2),
-  x("x","x",this,_x),
-  alpha("alpha","alpha",this,_alpha),
-  _cacheAlpha(doCacheAlpha)
+RooIntegralMorph::RooIntegralMorph(const char *name, const char *title, RooAbsReal &_pdf1, RooAbsReal &_pdf2,
+                                   RooAbsReal &_x, RooAbsReal &_alpha, bool doCacheAlpha)
+   : RooAbsCachedPdf(name, title, 2),
+     pdf1("pdf1", "pdf1", this, _pdf1),
+     pdf2("pdf2", "pdf2", this, _pdf2),
+     x("x", "x", this, _x),
+     alpha("alpha", "alpha", this, _alpha),
+     _cacheAlpha(doCacheAlpha)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooIntegralMorph::RooIntegralMorph(const RooIntegralMorph& other, const char* name) :
-  RooAbsCachedPdf(other,name),
-  pdf1("pdf1",this,other.pdf1),
-  pdf2("pdf2",this,other.pdf2),
-  x("x",this,other.x),
-  alpha("alpha",this,other.alpha),
-  _cacheAlpha(other._cacheAlpha)
+RooIntegralMorph::RooIntegralMorph(const RooIntegralMorph &other, const char *name)
+   : RooAbsCachedPdf(other, name),
+     pdf1("pdf1", this, other.pdf1),
+     pdf2("pdf2", this, other.pdf2),
+     x("x", this, other.x),
+     alpha("alpha", this, other.alpha),
+     _cacheAlpha(other._cacheAlpha)
 {
 }
 
@@ -131,85 +126,87 @@ RooIntegralMorph::RooIntegralMorph(const RooIntegralMorph& other, const char* na
 /// Returns the 'x' observable unless doCacheAlpha is set in which
 /// case a set with both x and alpha
 
-RooFit::OwningPtr<RooArgSet> RooIntegralMorph::actualObservables(const RooArgSet& /*nset*/) const
+RooFit::OwningPtr<RooArgSet> RooIntegralMorph::actualObservables(const RooArgSet & /*nset*/) const
 {
-  RooArgSet* obs = new RooArgSet ;
-  if (_cacheAlpha) {
-    obs->add(alpha.arg()) ;
-  }
-  obs->add(x.arg()) ;
-  return RooFit::OwningPtr<RooArgSet>{obs};
+   RooArgSet *obs = new RooArgSet;
+   if (_cacheAlpha) {
+      obs->add(alpha.arg());
+   }
+   obs->add(x.arg());
+   return RooFit::OwningPtr<RooArgSet>{obs};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Parameters of the cache. Returns parameters of both pdf1 and pdf2
 /// and parameter cache, in case doCacheAlpha is not set.
 
-RooFit::OwningPtr<RooArgSet> RooIntegralMorph::actualParameters(const RooArgSet& /*nset*/) const
+RooFit::OwningPtr<RooArgSet> RooIntegralMorph::actualParameters(const RooArgSet & /*nset*/) const
 {
-  std::unique_ptr<RooArgSet> par1{pdf1->getParameters(static_cast<RooArgSet*>(nullptr))};
-  RooArgSet par2;
-  pdf2->getParameters(nullptr, par2);
-  par1->add(par2,true) ;
-  par1->remove(x.arg(),true,true) ;
-  if (!_cacheAlpha) {
-    par1->add(alpha.arg()) ;
-  }
-  return RooFit::makeOwningPtr(std::move(par1));
+   std::unique_ptr<RooArgSet> par1{pdf1->getParameters(static_cast<RooArgSet *>(nullptr))};
+   RooArgSet par2;
+   pdf2->getParameters(nullptr, par2);
+   par1->add(par2, true);
+   par1->remove(x.arg(), true, true);
+   if (!_cacheAlpha) {
+      par1->add(alpha.arg());
+   }
+   return RooFit::makeOwningPtr(std::move(par1));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return base name component for cache components in this case
 /// a string encoding the names of both end point p.d.f.s
 
-const char* RooIntegralMorph::inputBaseName() const
+const char *RooIntegralMorph::inputBaseName() const
 {
-  static TString name ;
+   static TString name;
 
-  name = pdf1.arg().GetName() ;
-  name.Append("_MORPH_") ;
-  name.Append(pdf2.arg().GetName()) ;
-  return name.Data() ;
+   name = pdf1.arg().GetName();
+   name.Append("_MORPH_");
+   name.Append(pdf2.arg().GetName());
+   return name.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the cache with the interpolated shape.
 
-void RooIntegralMorph::fillCacheObject(PdfCacheElem& cache) const
+void RooIntegralMorph::fillCacheObject(PdfCacheElem &cache) const
 {
-  MorphCacheElem& mcache = static_cast<MorphCacheElem&>(cache) ;
+   MorphCacheElem &mcache = static_cast<MorphCacheElem &>(cache);
 
-  // If cacheAlpha is true employ slice iterator here to fill all slices
+   // If cacheAlpha is true employ slice iterator here to fill all slices
 
-  if (!_cacheAlpha) {
+   if (!_cacheAlpha) {
 
-    std::unique_ptr<TIterator> dIter{cache.hist()->sliceIterator(const_cast<RooAbsReal&>(x.arg()),RooArgSet())};
-    mcache.calculate(dIter.get());
-
-  } else {
-    std::unique_ptr<TIterator> slIter{cache.hist()->sliceIterator(const_cast<RooAbsReal&>(alpha.arg()),RooArgSet())};
-
-    double alphaSave = alpha ;
-    RooArgSet alphaSet(alpha.arg()) ;
-    coutP(Eval) << "RooIntegralMorph::fillCacheObject(" << GetName() << ") filling multi-dimensional cache" ;
-    while(slIter->Next()) {
-      alphaSet.assign(*cache.hist()->get()) ;
-      std::unique_ptr<TIterator> dIter{cache.hist()->sliceIterator(const_cast<RooAbsReal&>(x.arg()),RooArgSet(alpha.arg()))};
+      std::unique_ptr<TIterator> dIter{cache.hist()->sliceIterator(const_cast<RooAbsReal &>(x.arg()), RooArgSet())};
       mcache.calculate(dIter.get());
-      ccoutP(Eval) << "." << flush;
-    }
-    ccoutP(Eval) << std::endl;
 
-    const_cast<RooIntegralMorph*>(this)->alpha = alphaSave ;
-  }
+   } else {
+      std::unique_ptr<TIterator> slIter{
+         cache.hist()->sliceIterator(const_cast<RooAbsReal &>(alpha.arg()), RooArgSet())};
+
+      double alphaSave = alpha;
+      RooArgSet alphaSet(alpha.arg());
+      coutP(Eval) << "RooIntegralMorph::fillCacheObject(" << GetName() << ") filling multi-dimensional cache";
+      while (slIter->Next()) {
+         alphaSet.assign(*cache.hist()->get());
+         std::unique_ptr<TIterator> dIter{
+            cache.hist()->sliceIterator(const_cast<RooAbsReal &>(x.arg()), RooArgSet(alpha.arg()))};
+         mcache.calculate(dIter.get());
+         ccoutP(Eval) << "." << flush;
+      }
+      ccoutP(Eval) << std::endl;
+
+      const_cast<RooIntegralMorph *>(this)->alpha = alphaSave;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create and return a derived MorphCacheElem.
 
-RooAbsCachedPdf::PdfCacheElem* RooIntegralMorph::createCache(const RooArgSet* nset) const
+RooAbsCachedPdf::PdfCacheElem *RooIntegralMorph::createCache(const RooArgSet *nset) const
 {
-  return new MorphCacheElem(const_cast<RooIntegralMorph&>(*this),nset) ;
+   return new MorphCacheElem(const_cast<RooIntegralMorph &>(*this), nset);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -217,17 +214,17 @@ RooAbsCachedPdf::PdfCacheElem* RooIntegralMorph::createCache(const RooArgSet* ns
 
 RooArgList RooIntegralMorph::MorphCacheElem::containedArgs(Action action)
 {
-  RooArgList ret ;
-  ret.add(PdfCacheElem::containedArgs(action)) ;
-  ret.add(*_self) ;
-  ret.add(*_pdf1) ;
-  ret.add(*_pdf2) ;
-  ret.add(*_x  ) ;
-  ret.add(*_alpha) ;
-  ret.add(*_c1) ;
-  ret.add(*_c2) ;
+   RooArgList ret;
+   ret.add(PdfCacheElem::containedArgs(action));
+   ret.add(*_self);
+   ret.add(*_pdf1);
+   ret.add(*_pdf2);
+   ret.add(*_x);
+   ret.add(*_alpha);
+   ret.add(*_c1);
+   ret.add(*_c2);
 
-  return ret ;
+   return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -247,57 +244,58 @@ RooIntegralMorph::MorphCacheElem::MorphCacheElem(RooIntegralMorph &self, const R
      _ccounter(0),
      _ycutoff(1e-12)
 {
-  // Mark in base class that normalization of cached pdf is invariant under pdf parameters
+   // Mark in base class that normalization of cached pdf is invariant under pdf parameters
 
-  _nset = std::make_unique<RooArgSet>(*_x);
+   _nset = std::make_unique<RooArgSet>(*_x);
 
-  _c1 = std::unique_ptr<RooAbsReal>{_pdf1->createCdf(*_x)};
-  _c2 = std::unique_ptr<RooAbsReal>{_pdf2->createCdf(*_x)};
-  _cb1 = std::unique_ptr<RooAbsFunc>{_c1->bindVars(*_x,_nset.get())};
-  _cb2 = std::unique_ptr<RooAbsFunc>{_c2->bindVars(*_x,_nset.get())};
+   _c1 = std::unique_ptr<RooAbsReal>{_pdf1->createCdf(*_x)};
+   _c2 = std::unique_ptr<RooAbsReal>{_pdf2->createCdf(*_x)};
+   _cb1 = std::unique_ptr<RooAbsFunc>{_c1->bindVars(*_x, _nset.get())};
+   _cb2 = std::unique_ptr<RooAbsFunc>{_c2->bindVars(*_x, _nset.get())};
 
-  _rf1 = std::make_unique<RooBrentRootFinder>(*_cb1);
-  _rf2 = std::make_unique<RooBrentRootFinder>(*_cb2);
+   _rf1 = std::make_unique<RooBrentRootFinder>(*_cb1);
+   _rf2 = std::make_unique<RooBrentRootFinder>(*_cb2);
 
-  _rf1->setTol(1e-12) ;
-  _rf2->setTol(1e-12) ;
+   _rf1->setTol(1e-12);
+   _rf2->setTol(1e-12);
 
-  // _yatX = 0 ;
-  // _calcX = 0 ;
+   // _yatX = 0 ;
+   // _calcX = 0 ;
 
-  // Must do this here too: fillCache() may not be called if cache contents is retrieved from EOcache
-  pdf()->setUnitNorm(true) ;
+   // Must do this here too: fillCache() may not be called if cache contents is retrieved from EOcache
+   pdf()->setUnitNorm(true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooIntegralMorph::MorphCacheElem::~MorphCacheElem()
-{
-}
+RooIntegralMorph::MorphCacheElem::~MorphCacheElem() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the x value of the output p.d.f at the given cdf value y.
 /// The ok boolean is filled with the success status of the operation.
 
-double RooIntegralMorph::MorphCacheElem::calcX(double y, bool& ok)
+double RooIntegralMorph::MorphCacheElem::calcX(double y, bool &ok)
 {
-  if (y<0 || y>1) {
-    oocoutW(_self,Eval) << "RooIntegralMorph::MorphCacheElem::calcX() WARNING: requested root finding for unphysical CDF value " << y << std::endl ;
-  }
-  double x1;
-  double x2;
+   if (y < 0 || y > 1) {
+      oocoutW(_self, Eval)
+         << "RooIntegralMorph::MorphCacheElem::calcX() WARNING: requested root finding for unphysical CDF value " << y
+         << std::endl;
+   }
+   double x1;
+   double x2;
 
-  double xmax = _x->getMax("cache") ;
-  double xmin = _x->getMin("cache") ;
+   double xmax = _x->getMax("cache");
+   double xmin = _x->getMin("cache");
 
-  ok=true ;
-  ok &= _rf1->findRoot(x1,xmin,xmax,y) ;
-  ok &= _rf2->findRoot(x2,xmin,xmax,y) ;
-  if (!ok) return 0 ;
-  _ccounter++ ;
+   ok = true;
+   ok &= _rf1->findRoot(x1, xmin, xmax, y);
+   ok &= _rf2->findRoot(x2, xmin, xmax, y);
+   if (!ok)
+      return 0;
+   _ccounter++;
 
-  return _alpha->getVal()*x1 + (1-_alpha->getVal())*x2 ;
+   return _alpha->getVal() * x1 + (1 - _alpha->getVal()) * x2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -305,169 +303,177 @@ double RooIntegralMorph::MorphCacheElem::calcX(double y, bool& ok)
 
 Int_t RooIntegralMorph::MorphCacheElem::binX(double X)
 {
-  double xmax = _x->getMax("cache") ;
-  double xmin = _x->getMin("cache") ;
-  return (Int_t)(_x->numBins("cache")*(X-xmin)/(xmax-xmin)) ;
+   double xmax = _x->getMax("cache");
+   double xmin = _x->getMin("cache");
+   return (Int_t)(_x->numBins("cache") * (X - xmin) / (xmax - xmin));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate shape of p.d.f for x,alpha values
 /// defined by dIter iterator over cache histogram
 
-void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
+void RooIntegralMorph::MorphCacheElem::calculate(TIterator *dIter)
 {
-  double xsave = _self->x ;
+   double xsave = _self->x;
 
-  // if (!_yatX) {
-  //   _yatX = new double[_x->numBins("cache")+1] ;
-  //   _calcX = new double[_x->numBins("cache")+1] ;
-  // }
+   // if (!_yatX) {
+   //   _yatX = new double[_x->numBins("cache")+1] ;
+   //   _calcX = new double[_x->numBins("cache")+1] ;
+   // }
 
- _yatX.resize(_x->numBins("cache")+1);
- _calcX.resize(_x->numBins("cache")+1);
+   _yatX.resize(_x->numBins("cache") + 1);
+   _calcX.resize(_x->numBins("cache") + 1);
 
-  _ccounter = 0 ;
+   _ccounter = 0;
 
-  // Get number of bins from PdfCacheElem histogram
-  Int_t nbins = _x->numBins("cache") ;
-  if (nbins < 2) {
-    oocoutE(_self,Eval) << "RooIntegralMorph::MorphCacheElem::calculate(" << _self->GetName()
-         << ") ERROR: observable " << _x->GetName() << " has an empty binning for the cache histogram."
-         << " Define one with RooRealVar::setBins(nbins, \"cache\")." << std::endl ;
-    return ;
-  }
+   // Get number of bins from PdfCacheElem histogram
+   Int_t nbins = _x->numBins("cache");
+   if (nbins < 2) {
+      oocoutE(_self, Eval) << "RooIntegralMorph::MorphCacheElem::calculate(" << _self->GetName()
+                           << ") ERROR: observable " << _x->GetName()
+                           << " has an empty binning for the cache histogram."
+                           << " Define one with RooRealVar::setBins(nbins, \"cache\")." << std::endl;
+      return;
+   }
 
-  // Initialize yatX array to 'un-calculated values (-1)'
-  for (int i=0 ; i<nbins ; i++) {
-    _yatX[i] = -1 ;
-    _calcX[i] = 0 ;
-  }
+   // Initialize yatX array to 'un-calculated values (-1)'
+   for (int i = 0; i < nbins; i++) {
+      _yatX[i] = -1;
+      _calcX[i] = 0;
+   }
 
-  // Find low and high point
-  findRange() ;
+   // Find low and high point
+   findRange();
 
-  // Perform initial scan of 100 points
-  for (int i=0 ; i<10 ; i++) {
+   // Perform initial scan of 100 points
+   for (int i = 0; i < 10; i++) {
 
-    // Take a point in y
-    double offset = _yatX[_yatXmin] ;
-    double delta = (_yatX[_yatXmax] - _yatX[_yatXmin])/10 ;
-    double y = offset + i*delta ;
+      // Take a point in y
+      double offset = _yatX[_yatXmin];
+      double delta = (_yatX[_yatXmax] - _yatX[_yatXmin]) / 10;
+      double y = offset + i * delta;
 
-    // Calculate corresponding X
-    bool ok ;
-    double X = calcX(y,ok) ;
-    if (ok) {
-      Int_t iX = binX(X) ;
-      _yatX[iX] = y ;
-      _calcX[iX] =  X ;
-    }
-  }
+      // Calculate corresponding X
+      bool ok;
+      double X = calcX(y, ok);
+      if (ok) {
+         Int_t iX = binX(X);
+         _yatX[iX] = y;
+         _calcX[iX] = X;
+      }
+   }
 
-  // Now take an iteration filling the 'gaps'
-  Int_t igapLow = _yatXmin+1 ;
-  while(true) {
-    // Find next gap
-    Int_t igapHigh = igapLow+1 ;
-    while(igapHigh<(_yatXmax) && _yatX[igapHigh]<0) igapHigh++ ;
+   // Now take an iteration filling the 'gaps'
+   Int_t igapLow = _yatXmin + 1;
+   while (true) {
+      // Find next gap
+      Int_t igapHigh = igapLow + 1;
+      while (igapHigh < (_yatXmax) && _yatX[igapHigh] < 0)
+         igapHigh++;
 
-    // Fill the gap (iteratively and/or using interpolation)
-    fillGap(igapLow-1,igapHigh) ;
+      // Fill the gap (iteratively and/or using interpolation)
+      fillGap(igapLow - 1, igapHigh);
 
-    // Terminate after processing of last gap
-    if (igapHigh>=_yatXmax-1) break ;
-    igapLow = igapHigh+1 ;
-  }
+      // Terminate after processing of last gap
+      if (igapHigh >= _yatXmax - 1)
+         break;
+      igapLow = igapHigh + 1;
+   }
 
-  // Make one more iteration to recalculate Y value at bin centers
-  double xmax = _x->getMax("cache") ;
-  double xmin = _x->getMin("cache") ;
-  double binw = (xmax-xmin)/_x->numBins("cache") ;
-  for (int i=_yatXmin+1 ; i<_yatXmax-1 ; i++) {
+   // Make one more iteration to recalculate Y value at bin centers
+   double xmax = _x->getMax("cache");
+   double xmin = _x->getMin("cache");
+   double binw = (xmax - xmin) / _x->numBins("cache");
+   for (int i = _yatXmin + 1; i < _yatXmax - 1; i++) {
 
-    // Calculate additional offset to apply if bin ixlo does not have X value calculated at bin center
-    double xBinC = xmin + (i+0.5)*binw ;
-    double xOffset = xBinC-_calcX[i] ;
-    if (std::abs(xOffset/binw)>1e-3) {
-      double slope = (_yatX[i+1]-_yatX[i-1])/(_calcX[i+1]-_calcX[i-1]) ;
-      double newY = _yatX[i] + slope*xOffset ;
-      //cout << "bin " << i << " needs to be re-centered " << xOffset/binw << " slope = " << slope << " origY = " << _yatX[i] << " newY = " << newY << std::endl ;
-      _yatX[i] = newY ;
-    }
-  }
+      // Calculate additional offset to apply if bin ixlo does not have X value calculated at bin center
+      double xBinC = xmin + (i + 0.5) * binw;
+      double xOffset = xBinC - _calcX[i];
+      if (std::abs(xOffset / binw) > 1e-3) {
+         double slope = (_yatX[i + 1] - _yatX[i - 1]) / (_calcX[i + 1] - _calcX[i - 1]);
+         double newY = _yatX[i] + slope * xOffset;
+         // cout << "bin " << i << " needs to be re-centered " << xOffset/binw << " slope = " << slope << " origY = " <<
+         // _yatX[i] << " newY = " << newY << std::endl ;
+         _yatX[i] = newY;
+      }
+   }
 
-  // Zero output histogram below lowest calculable X value
-  for (int i=0; i<_yatXmin ; i++) {
-    dIter->Next() ;
-    const std::size_t binIdx = hist()->getIndex(*hist()->get(), /*fast=*/true);
-    hist()->set(binIdx, 0, -1) ;
-  }
-
-  double xMax = _x->getMax("cache");
-  const double aval = _alpha->getVal() ;
-
-  // Lower bounds for the root finding in the loop below, exploiting the fact
-  // that the cumulative distribution functions increase monotonically: as y
-  // increases from bin to bin, the x values found in the previous bin are
-  // valid lower bounds for the current bin.
-  double x1lo = _x->getMin("cache");
-  double x2lo = _x->getMin("cache");
-
-  // Transfer calculated values to histogram
-  for (int i=_yatXmin ; i<=_yatXmax ; i++) {
-
-    double y = _yatX[i] ;
-    const double xBinC = xmin + (i+0.5)*binw ;
-
-    double x1 = x1lo ;
-    double x2 = x2lo ;
-    double f1x1 = 0 ;
-    double f2x2 = 0 ;
-
-    // The y values obtained from the recursive gap filling are only
-    // approximate solutions of X(y) == xBinC. Polish them with Newton
-    // iterations on the monotone map X(y) = alpha*x1(y) + (1-alpha)*x2(y),
-    // whose derivative is dX/dy = alpha/f1(x1) + (1-alpha)/f2(x2), so that
-    // the stored p.d.f. value corresponds to the bin center to full precision.
-    for (int iter=0 ; iter<10 ; iter++) {
-      bool ok = _rf1->findRoot(x1,x1lo,xMax,y) ;
-      ok &= _rf2->findRoot(x2,x2lo,xMax,y) ;
-      _x->setVal(x1);
-      f1x1 = _pdf1->getVal(_nset.get());
-      _x->setVal(x2);
-      f2x2 = _pdf2->getVal(_nset.get());
-      if (!ok || f1x1<=0 || f2x2<=0) break ;
-      const double X = aval*x1 + (1-aval)*x2 ;
-      if (std::abs(X-xBinC) < 1e-12*(xMax-xmin)) break ;
-      const double dXdy = aval/f1x1 + (1-aval)/f2x2 ;
-      const double yNew = y + (xBinC-X)/dXdy ;
-      if (!(yNew>0.) || !(yNew<1.) || yNew==y) break ;
-      y = yNew ;
-    }
-    _yatX[i] = y ;
-
-    double fbarX = f1x1*f2x2 / ( aval*f2x2 + (1-aval)*f1x1 ) ;
-
-    dIter->Next() ;
-    {
+   // Zero output histogram below lowest calculable X value
+   for (int i = 0; i < _yatXmin; i++) {
+      dIter->Next();
       const std::size_t binIdx = hist()->getIndex(*hist()->get(), /*fast=*/true);
-      hist()->set(binIdx, fbarX, -1) ;
-    }
+      hist()->set(binIdx, 0, -1);
+   }
 
-    x1lo = x1 ;
-    x2lo = x2 ;
-  }
-  // Zero output histogram above highest calculable X value
-  for (int i=_yatXmax+1 ; i<nbins ; i++) {
-    dIter->Next() ;
-    const std::size_t binIdx = hist()->getIndex(*hist()->get(), /*fast=*/true);
-    hist()->set(binIdx, 0, -1) ;
-  }
+   double xMax = _x->getMax("cache");
+   const double aval = _alpha->getVal();
 
-  pdf()->setUnitNorm(true) ;
-  _self->x = xsave ;
+   // Lower bounds for the root finding in the loop below, exploiting the fact
+   // that the cumulative distribution functions increase monotonically: as y
+   // increases from bin to bin, the x values found in the previous bin are
+   // valid lower bounds for the current bin.
+   double x1lo = _x->getMin("cache");
+   double x2lo = _x->getMin("cache");
 
-  oocxcoutD(_self,Eval) << "RooIntegralMorph::MorphCacheElem::calculate(" << _self->GetName() << ") calculation required " << _ccounter << " samplings of cdfs" << std::endl ;
+   // Transfer calculated values to histogram
+   for (int i = _yatXmin; i <= _yatXmax; i++) {
+
+      double y = _yatX[i];
+      const double xBinC = xmin + (i + 0.5) * binw;
+
+      double x1 = x1lo;
+      double x2 = x2lo;
+      double f1x1 = 0;
+      double f2x2 = 0;
+
+      // The y values obtained from the recursive gap filling are only
+      // approximate solutions of X(y) == xBinC. Polish them with Newton
+      // iterations on the monotone map X(y) = alpha*x1(y) + (1-alpha)*x2(y),
+      // whose derivative is dX/dy = alpha/f1(x1) + (1-alpha)/f2(x2), so that
+      // the stored p.d.f. value corresponds to the bin center to full precision.
+      for (int iter = 0; iter < 10; iter++) {
+         bool ok = _rf1->findRoot(x1, x1lo, xMax, y);
+         ok &= _rf2->findRoot(x2, x2lo, xMax, y);
+         _x->setVal(x1);
+         f1x1 = _pdf1->getVal(_nset.get());
+         _x->setVal(x2);
+         f2x2 = _pdf2->getVal(_nset.get());
+         if (!ok || f1x1 <= 0 || f2x2 <= 0)
+            break;
+         const double X = aval * x1 + (1 - aval) * x2;
+         if (std::abs(X - xBinC) < 1e-12 * (xMax - xmin))
+            break;
+         const double dXdy = aval / f1x1 + (1 - aval) / f2x2;
+         const double yNew = y + (xBinC - X) / dXdy;
+         if (!(yNew > 0.) || !(yNew < 1.) || yNew == y)
+            break;
+         y = yNew;
+      }
+      _yatX[i] = y;
+
+      double fbarX = f1x1 * f2x2 / (aval * f2x2 + (1 - aval) * f1x1);
+
+      dIter->Next();
+      {
+         const std::size_t binIdx = hist()->getIndex(*hist()->get(), /*fast=*/true);
+         hist()->set(binIdx, fbarX, -1);
+      }
+
+      x1lo = x1;
+      x2lo = x2;
+   }
+   // Zero output histogram above highest calculable X value
+   for (int i = _yatXmax + 1; i < nbins; i++) {
+      dIter->Next();
+      const std::size_t binIdx = hist()->getIndex(*hist()->get(), /*fast=*/true);
+      hist()->set(binIdx, 0, -1);
+   }
+
+   pdf()->setUnitNorm(true);
+   _self->x = xsave;
+
+   oocxcoutD(_self, Eval) << "RooIntegralMorph::MorphCacheElem::calculate(" << _self->GetName()
+                          << ") calculation required " << _ccounter << " samplings of cdfs" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -478,82 +484,86 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
 
 void RooIntegralMorph::MorphCacheElem::fillGap(Int_t ixlo, Int_t ixhi, double splitPoint)
 {
-  // CONVENTION: _yatX[ixlo] is filled, _yatX[ixhi] is filled, elements in between are empty
-  //   std::cout << "fillGap: gap from _yatX[" << ixlo << "]=" << _yatX[ixlo] << " to _yatX[" << ixhi << "]=" << _yatX[ixhi] << ", size = " << ixhi-ixlo << std::endl ;
+   // CONVENTION: _yatX[ixlo] is filled, _yatX[ixhi] is filled, elements in between are empty
+   //   std::cout << "fillGap: gap from _yatX[" << ixlo << "]=" << _yatX[ixlo] << " to _yatX[" << ixhi << "]=" <<
+   //   _yatX[ixhi] << ", size = " << ixhi-ixlo << std::endl ;
 
-  if (_yatX[ixlo]<0) {
-    oocoutE(_self,Eval) << "RooIntegralMorph::MorphCacheElme::fillGap(" << _self->GetName() << "): ERROR in fillgap " << ixlo << " = " << ixhi
-         << " splitPoint= " << splitPoint << " _yatX[ixlo] = " << _yatX[ixlo] << std::endl ;
-  }
-  if (_yatX[ixhi]<0) {
-    oocoutE(_self,Eval) << "RooIntegralMorph::MorphCacheElme::fillGap(" << _self->GetName() << "): ERROR in fillgap " << ixlo << " = " << ixhi
-         << " splitPoint " << splitPoint << " _yatX[ixhi] = " << _yatX[ixhi] << std::endl ;
-  }
+   if (_yatX[ixlo] < 0) {
+      oocoutE(_self, Eval) << "RooIntegralMorph::MorphCacheElme::fillGap(" << _self->GetName() << "): ERROR in fillgap "
+                           << ixlo << " = " << ixhi << " splitPoint= " << splitPoint << " _yatX[ixlo] = " << _yatX[ixlo]
+                           << std::endl;
+   }
+   if (_yatX[ixhi] < 0) {
+      oocoutE(_self, Eval) << "RooIntegralMorph::MorphCacheElme::fillGap(" << _self->GetName() << "): ERROR in fillgap "
+                           << ixlo << " = " << ixhi << " splitPoint " << splitPoint << " _yatX[ixhi] = " << _yatX[ixhi]
+                           << std::endl;
+   }
 
-  // Determine where half-way Y value lands
-  double ymid = _yatX[ixlo]*splitPoint + _yatX[ixhi]*(1-splitPoint) ;
-  bool ok ;
-  double Xmid = calcX(ymid,ok) ;
-  if (!ok) {
-    oocoutW(_self,Eval) << "RooIntegralMorph::MorphCacheElem::fillGap(" << _self->GetName() << ") unable to calculate midpoint in gap ["
-         << ixlo << "," << ixhi << "], resorting to interpolation" << std::endl ;
-    interpolateGap(ixlo,ixhi) ;
-  }
+   // Determine where half-way Y value lands
+   double ymid = _yatX[ixlo] * splitPoint + _yatX[ixhi] * (1 - splitPoint);
+   bool ok;
+   double Xmid = calcX(ymid, ok);
+   if (!ok) {
+      oocoutW(_self, Eval) << "RooIntegralMorph::MorphCacheElem::fillGap(" << _self->GetName()
+                           << ") unable to calculate midpoint in gap [" << ixlo << "," << ixhi
+                           << "], resorting to interpolation" << std::endl;
+      interpolateGap(ixlo, ixhi);
+   }
 
-  Int_t iX = binX(Xmid) ;
-  double cq = (Xmid-_calcX[ixlo])/(_calcX[ixhi]-_calcX[ixlo])-0.5 ;
+   Int_t iX = binX(Xmid);
+   double cq = (Xmid - _calcX[ixlo]) / (_calcX[ixhi] - _calcX[ixlo]) - 0.5;
 
-  // Store midway point
-  _yatX[iX] = ymid ;
-  _calcX[iX] = Xmid ;
+   // Store midway point
+   _yatX[iX] = ymid;
+   _calcX[iX] = Xmid;
 
+   // Policy: If centration quality is better than 1% OR better than 1/10 of a bin, fill interval with linear
+   // interpolation
+   if (std::abs(cq) < 0.01 || std::abs(cq * (ixhi - ixlo)) < 0.1 || ymid < _ycutoff) {
 
-  // Policy: If centration quality is better than 1% OR better than 1/10 of a bin, fill interval with linear interpolation
-  if (std::abs(cq)<0.01 || std::abs(cq*(ixhi-ixlo))<0.1 || ymid<_ycutoff ) {
+      // Fill remaining gaps on either side with linear interpolation
+      if (iX - ixlo > 1) {
+         interpolateGap(ixlo, iX);
+      }
+      if (ixhi - iX > 1) {
+         interpolateGap(iX, ixhi);
+      }
 
-    // Fill remaining gaps on either side with linear interpolation
-    if (iX-ixlo>1) {
-      interpolateGap(ixlo,iX) ;
-    }
-    if (ixhi-iX>1) {
-      interpolateGap(iX,ixhi) ;
-    }
+   } else {
 
-  } else {
+      if (iX == ixlo) {
 
-    if (iX==ixlo) {
+         if (splitPoint < 0.95) {
+            // Midway value lands on lowest bin, retry split with higher split point
+            double newSplit = splitPoint + 0.5 * (1 - splitPoint);
+            fillGap(ixlo, ixhi, newSplit);
+         } else {
+            // Give up and resort to interpolation
+            interpolateGap(ixlo, ixhi);
+         }
 
-      if (splitPoint<0.95) {
-   // Midway value lands on lowest bin, retry split with higher split point
-   double newSplit = splitPoint + 0.5*(1-splitPoint) ;
-   fillGap(ixlo,ixhi,newSplit) ;
+      } else if (iX == ixhi) {
+
+         // Midway value lands on highest bin, retry split with lower split point
+         if (splitPoint > 0.05) {
+            double newSplit = splitPoint / 2;
+            fillGap(ixlo, ixhi, newSplit);
+         } else {
+            // Give up and resort to interpolation
+            interpolateGap(ixlo, ixhi);
+         }
+
       } else {
-   // Give up and resort to interpolation
-   interpolateGap(ixlo,ixhi) ;
-      }
 
-    } else if (iX==ixhi) {
-
-      // Midway value lands on highest bin, retry split with lower split point
-      if (splitPoint>0.05) {
-   double newSplit = splitPoint/2 ;
-   fillGap(ixlo,ixhi,newSplit) ;
-      } else {
-   // Give up and resort to interpolation
-   interpolateGap(ixlo,ixhi) ;
+         // Midway point reasonable, iterate on interval on both sides
+         if (iX - ixlo > 1) {
+            fillGap(ixlo, iX);
+         }
+         if (ixhi - iX > 1) {
+            fillGap(iX, ixhi);
+         }
       }
-
-    } else {
-
-      // Midway point reasonable, iterate on interval on both sides
-      if (iX-ixlo>1) {
-   fillGap(ixlo,iX) ;
-      }
-      if (ixhi-iX>1) {
-   fillGap(iX,ixhi) ;
-      }
-    }
-  }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -562,24 +572,23 @@ void RooIntegralMorph::MorphCacheElem::fillGap(Int_t ixlo, Int_t ixhi, double sp
 
 void RooIntegralMorph::MorphCacheElem::interpolateGap(Int_t ixlo, Int_t ixhi)
 {
-  //cout << "filling gap with linear interpolation ixlo=" << ixlo << " ixhi=" << ixhi << std::endl ;
+   // cout << "filling gap with linear interpolation ixlo=" << ixlo << " ixhi=" << ixhi << std::endl ;
 
-  double xmax = _x->getMax("cache") ;
-  double xmin = _x->getMin("cache") ;
-  double binw = (xmax-xmin)/_x->numBins("cache") ;
+   double xmax = _x->getMax("cache");
+   double xmin = _x->getMin("cache");
+   double binw = (xmax - xmin) / _x->numBins("cache");
 
-  // Calculate deltaY in terms of actual X difference calculate, not based on nominal bin width
-  double deltaY = (_yatX[ixhi]-_yatX[ixlo])/((_calcX[ixhi]-_calcX[ixlo])/binw) ;
+   // Calculate deltaY in terms of actual X difference calculate, not based on nominal bin width
+   double deltaY = (_yatX[ixhi] - _yatX[ixlo]) / ((_calcX[ixhi] - _calcX[ixlo]) / binw);
 
-  // Calculate additional offset to apply if bin ixlo does not have X value calculated at bin center
-  double xBinC = xmin + (ixlo+0.5)*binw ;
-  double xOffset = xBinC-_calcX[ixlo] ;
+   // Calculate additional offset to apply if bin ixlo does not have X value calculated at bin center
+   double xBinC = xmin + (ixlo + 0.5) * binw;
+   double xOffset = xBinC - _calcX[ixlo];
 
-  for (int j=ixlo+1 ; j<ixhi ; j++) {
-    _yatX[j] = _yatX[ixlo]+(xOffset/binw+(j-ixlo))*deltaY ;
-    _calcX[j] = xmin + (j+0.5)*binw ;
-  }
-
+   for (int j = ixlo + 1; j < ixhi; j++) {
+      _yatX[j] = _yatX[ixlo] + (xOffset / binw + (j - ixlo)) * deltaY;
+      _calcX[j] = xmin + (j + 0.5) * binw;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -591,96 +600,105 @@ void RooIntegralMorph::MorphCacheElem::interpolateGap(Int_t ixlo, Int_t ixhi)
 
 void RooIntegralMorph::MorphCacheElem::findRange()
 {
-  double xmin = _x->getMin("cache") ;
-  double xmax = _x->getMax("cache") ;
-  Int_t nbins = _x->numBins("cache") ;
+   double xmin = _x->getMin("cache");
+   double xmax = _x->getMax("cache");
+   Int_t nbins = _x->numBins("cache");
 
-  double x1;
-  double x2;
-  bool ok = true ;
-  double ymin = 0.1;
-  double yminSave(-1);
-  double Xsave(-1);
-  double Xlast = xmax;
+   double x1;
+   double x2;
+   bool ok = true;
+   double ymin = 0.1;
+   double yminSave(-1);
+   double Xsave(-1);
+   double Xlast = xmax;
 
-  // Find lowest Y value that can be measured
-  // Start at 0.1 and iteratively lower limit by sqrt(10)
-  while(true) {
-    ok &= _rf1->findRoot(x1,xmin,xmax,ymin) ;
-    ok &= _rf2->findRoot(x2,xmin,xmax,ymin) ;
-    oocxcoutD(_self,Eval) << "RooIntegralMorph::MorphCacheElem::findRange(" << _self->GetName() << ") findMin: x1 = " << x1 << " x2 = " << x2 << " ok = " << (ok?"T":"F") << std::endl ;
+   // Find lowest Y value that can be measured
+   // Start at 0.1 and iteratively lower limit by sqrt(10)
+   while (true) {
+      ok &= _rf1->findRoot(x1, xmin, xmax, ymin);
+      ok &= _rf2->findRoot(x2, xmin, xmax, ymin);
+      oocxcoutD(_self, Eval) << "RooIntegralMorph::MorphCacheElem::findRange(" << _self->GetName()
+                             << ") findMin: x1 = " << x1 << " x2 = " << x2 << " ok = " << (ok ? "T" : "F") << std::endl;
 
-    // Terminate in case of non-convergence
-    if (!ok) break ;
+      // Terminate in case of non-convergence
+      if (!ok)
+         break;
 
-    // Terminate if value of X no longer moves by >0.1 bin size
-    double X = _alpha->getVal()*x1 + (1-_alpha->getVal())*x2 ;
-    if (std::abs(X-Xlast)/(xmax-xmin)<0.0001) {
-      break ;
-    }
-    Xlast=X ;
+      // Terminate if value of X no longer moves by >0.1 bin size
+      double X = _alpha->getVal() * x1 + (1 - _alpha->getVal()) * x2;
+      if (std::abs(X - Xlast) / (xmax - xmin) < 0.0001) {
+         break;
+      }
+      Xlast = X;
 
-    // Store new Y value
-    _yatXmin = (Int_t)(nbins*(X-xmin)/(xmax-xmin)) ;
-    _yatX[_yatXmin] = ymin ;
-    _calcX[_yatXmin] = X ;
-    yminSave = ymin ;
-    Xsave=X ;
+      // Store new Y value
+      _yatXmin = (Int_t)(nbins * (X - xmin) / (xmax - xmin));
+      _yatX[_yatXmin] = ymin;
+      _calcX[_yatXmin] = X;
+      yminSave = ymin;
+      Xsave = X;
 
-    // Reduce ymin by half an order of magnitude
-    ymin /=sqrt(10.) ;
+      // Reduce ymin by half an order of magnitude
+      ymin /= sqrt(10.);
 
-    // Emergency break
-    if (ymin<_ycutoff) break ;
-  }
-  _yatX[_yatXmin] = yminSave ;
-  _calcX[_yatXmin] = Xsave ;
+      // Emergency break
+      if (ymin < _ycutoff)
+         break;
+   }
+   _yatX[_yatXmin] = yminSave;
+   _calcX[_yatXmin] = Xsave;
 
-  // Find highest Y value that can be measured
-  // Start at 1 - 0.1 and iteratively lower delta by sqrt(10)
-  ok = true ;
-  double deltaymax = 0.1;
-  double deltaymaxSave(-1);
-  Xlast=xmin ;
-  while(true) {
-    ok &= _rf1->findRoot(x1,xmin,xmax,1-deltaymax) ;
-    ok &= _rf2->findRoot(x2,xmin,xmax,1-deltaymax) ;
+   // Find highest Y value that can be measured
+   // Start at 1 - 0.1 and iteratively lower delta by sqrt(10)
+   ok = true;
+   double deltaymax = 0.1;
+   double deltaymaxSave(-1);
+   Xlast = xmin;
+   while (true) {
+      ok &= _rf1->findRoot(x1, xmin, xmax, 1 - deltaymax);
+      ok &= _rf2->findRoot(x2, xmin, xmax, 1 - deltaymax);
 
-    oocxcoutD(_self,Eval) << "RooIntegralMorph::MorphCacheElem::findRange(" << _self->GetName() << ") findMax: x1 = " << x1 << " x2 = " << x2 << " ok = " << (ok?"T":"F") << std::endl ;
+      oocxcoutD(_self, Eval) << "RooIntegralMorph::MorphCacheElem::findRange(" << _self->GetName()
+                             << ") findMax: x1 = " << x1 << " x2 = " << x2 << " ok = " << (ok ? "T" : "F") << std::endl;
 
-    // Terminate in case of non-convergence
-    if (!ok) break ;
+      // Terminate in case of non-convergence
+      if (!ok)
+         break;
 
-    // Terminate if value of X no longer moves by >0.1 bin size
-    double X = _alpha->getVal()*x1 + (1-_alpha->getVal())*x2 ;
-    if (std::abs(X-Xlast)/(xmax-xmin)<0.0001) {
-      break ;
-    }
-    Xlast=X ;
+      // Terminate if value of X no longer moves by >0.1 bin size
+      double X = _alpha->getVal() * x1 + (1 - _alpha->getVal()) * x2;
+      if (std::abs(X - Xlast) / (xmax - xmin) < 0.0001) {
+         break;
+      }
+      Xlast = X;
 
-    // Store new Y value
-    _yatXmax = (Int_t)(nbins*(X-xmin)/(xmax-xmin)) ;
-    _yatX[_yatXmax] = 1-deltaymax ;
-    _calcX[_yatXmax] = X ;
-    deltaymaxSave = deltaymax ;
-    Xsave=X ;
+      // Store new Y value
+      _yatXmax = (Int_t)(nbins * (X - xmin) / (xmax - xmin));
+      _yatX[_yatXmax] = 1 - deltaymax;
+      _calcX[_yatXmax] = X;
+      deltaymaxSave = deltaymax;
+      Xsave = X;
 
-    // Reduce ymin by half an order of magnitude
-    deltaymax /=sqrt(10.) ;
+      // Reduce ymin by half an order of magnitude
+      deltaymax /= sqrt(10.);
 
-    // Emergency break
-    if (deltaymax<_ycutoff) break ;
-  }
+      // Emergency break
+      if (deltaymax < _ycutoff)
+         break;
+   }
 
-  _yatX[_yatXmax] = 1-deltaymaxSave ;
-  _calcX[_yatXmax] = Xsave ;
+   _yatX[_yatXmax] = 1 - deltaymaxSave;
+   _calcX[_yatXmax] = Xsave;
 
-
-  // Initialize values out of range to 'out-of-range' (-2)
-  for (int i=0 ; i<_yatXmin ; i++)  _yatX[i] = -2 ;
-  for (int i=_yatXmax+1 ; i<nbins; i++) _yatX[i] = -2 ;
-  oocxcoutD(_self,Eval) << "RooIntegralMorph::findRange(" << _self->GetName() << "): ymin = " << _yatX[_yatXmin] << " ymax = " << _yatX[_yatXmax] << std::endl;
-  oocxcoutD(_self,Eval) << "RooIntegralMorph::findRange(" << _self->GetName() << "): xmin = " << _calcX[_yatXmin] << " xmax = " << _calcX[_yatXmax] << std::endl;
+   // Initialize values out of range to 'out-of-range' (-2)
+   for (int i = 0; i < _yatXmin; i++)
+      _yatX[i] = -2;
+   for (int i = _yatXmax + 1; i < nbins; i++)
+      _yatX[i] = -2;
+   oocxcoutD(_self, Eval) << "RooIntegralMorph::findRange(" << _self->GetName() << "): ymin = " << _yatX[_yatXmin]
+                          << " ymax = " << _yatX[_yatXmax] << std::endl;
+   oocxcoutD(_self, Eval) << "RooIntegralMorph::findRange(" << _self->GetName() << "): xmin = " << _calcX[_yatXmin]
+                          << " xmax = " << _calcX[_yatXmax] << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -688,7 +706,7 @@ void RooIntegralMorph::MorphCacheElem::findRange()
 
 double RooIntegralMorph::evaluate() const
 {
-  return 0 ;
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -696,15 +714,15 @@ double RooIntegralMorph::evaluate() const
 /// cache the traversal of the x should be in the innermost loop, to minimize
 /// recalculation of the one-dimensional internal cache for a fixed value of alpha
 
-void RooIntegralMorph::preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const
+void RooIntegralMorph::preferredObservableScanOrder(const RooArgSet &obs, RooArgSet &orderedObs) const
 {
-  // Put x last to minimize cache faulting
-  orderedObs.removeAll() ;
+   // Put x last to minimize cache faulting
+   orderedObs.removeAll();
 
-  orderedObs.add(obs) ;
-  RooAbsArg* obsX = obs.find(x.arg().GetName()) ;
-  if (obsX) {
-    orderedObs.remove(*obsX) ;
-    orderedObs.add(*obsX) ;
-  }
+   orderedObs.add(obs);
+   RooAbsArg *obsX = obs.find(x.arg().GetName());
+   if (obsX) {
+      orderedObs.remove(*obsX);
+      orderedObs.add(*obsX);
+   }
 }
