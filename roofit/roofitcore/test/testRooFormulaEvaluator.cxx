@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <locale>
@@ -49,6 +50,12 @@ bool sameBits(double a, double b)
 double uniformDouble(std::mt19937 &rng, double lo, double hi)
 {
    return lo + (hi - lo) * (static_cast<double>(rng()) * (1.0 / 4294967296.0)); // mt19937 yields [0, 2^32)
+}
+
+/// Uniform draw from [0, n).
+int uniformInt(std::mt19937 &rng, int n)
+{
+   return static_cast<int>(rng() % static_cast<std::uint32_t>(n));
 }
 
 /// Comparison against a value that JIT-compiled code produced: a TFormula, or
@@ -413,6 +420,48 @@ TEST(RooFormulaEvaluator, FallbackTriggers)
    EXPECT_FALSE(astParses("pow(x[0],2^3)"));
    EXPECT_FALSE(astParses("x[0]>0?1:x[0]^2"));
    EXPECT_TRUE(astParses("x[0]>0?1:(x[0]^2)"));
+   // `^` with an explicit sign on a parenthesized exponent: TFormula's
+   // textual rewrite pushes the sign onto only the first term inside the
+   // group (`x^-(a+b)` compiles as pow(x,-(a)+b) today), so fall back
+   EXPECT_FALSE(astParses("x[0]^-(x[0]+1)"));
+   EXPECT_FALSE(astParses("x[0]^-(2)"));
+   EXPECT_FALSE(astParses("x[0]^+(x[0]*2)"));
+   EXPECT_TRUE(astParses("x[0]^(-x[0]-1)")); // sign inside the group is fine
+   EXPECT_TRUE(astParses("x[0]^-2.5"));
+   EXPECT_TRUE(astParses("x[0]^-sin(x[0])"));
+   // cling resolves TMath::Sign with a bool first argument to the generic
+   // template, which returns bool -- not copysign
+   EXPECT_FALSE(astParses("sign(x[0]>1, x[0])"));
+   EXPECT_FALSE(astParses("TMath::Sign(!x[0], x[0])"));
+   EXPECT_FALSE(astParses("sign(TMath::SignBit(x[0]), x[0])"));
+   EXPECT_TRUE(astParses("sign(1, x[0])")); // an int first argument is copysign-like
+   // bool/int mixes in min/max do not compile in cling either
+   EXPECT_FALSE(astParses("min(x[0]>1, 2)"));
+   EXPECT_TRUE(astParses("min(x[0]>1, x[0]>2)"));
+   EXPECT_TRUE(astParses("abs(x[0]>1)")); // abs(bool) promotes to int and works
+   // cling compiles the TFormula code with -Wparentheses promoted to an
+   // error, so a bare chained comparison is invalid in TFormula today
+   EXPECT_FALSE(astParses("x[0]<x[0]<2"));
+   EXPECT_FALSE(astParses("x[0]<=x[0]>1"));
+   EXPECT_FALSE(astParses("1+x[0]<2<3"));
+   EXPECT_TRUE(astParses("(x[0]<x[0])<2"));
+   EXPECT_TRUE(astParses("x[0]<(x[0]<2)"));
+   EXPECT_TRUE(astParses("x[0]==x[0]==1")); // ... while equality chains do compile
+   EXPECT_TRUE(astParses("x[0]<2==x[0]>1"));
+   // a textually adjacent `++` is TFormula's linear-combination separator
+   // (one fit parameter per part), not an addition
+   EXPECT_FALSE(astParses("2++3"));
+   EXPECT_FALSE(astParses("x[0]++x[1]"));
+   EXPECT_FALSE(astParses("++x[0]"));
+   EXPECT_TRUE(astParses("2+ +3")); // with whitespace it is an ordinary addition
+   // runs of three or more `-` (with or without whitespace) survive TFormula's
+   // double-negation rewrite as a `--` pre-decrement, which cling rejects
+   EXPECT_FALSE(astParses("2---3"));
+   EXPECT_FALSE(astParses("---x[0]"));
+   EXPECT_FALSE(astParses("x[0]- - -x[1]", 2));
+   EXPECT_TRUE(astParses("2--3"));
+   EXPECT_TRUE(astParses("x[0]- -x[1]", 2));
+   EXPECT_TRUE(astParses("-(-(-x[0]))"));
    // TFormula parameters and parametrized shortcuts
    EXPECT_FALSE(astParses("[0]+x[0]"));
    EXPECT_FALSE(astParses("x[0]+[0]*0xaf"));
@@ -444,6 +493,63 @@ TEST(RooFormulaEvaluator, FallbackTriggers)
    shallow += "1";
    shallow += std::string(50, ')');
    EXPECT_TRUE(astParses(shallow));
+}
+
+// Int-typed constant arithmetic that leaves the int32 range wrapped around in
+// cling's int arithmetic ("100000*100000" is 1410065408 there, not 1e10).
+// That is not reproduced in double arithmetic: such formulas must fall back
+// to the TFormula backend, so their values are unchanged. Integer literals
+// too large for int32 have type long (decimal) or unsigned int (hex/octal) in
+// C++ -- not the int typing tracked by the parser -- and fall back too.
+TEST(RooFormulaEvaluator, IntOverflowFallback)
+{
+   EXPECT_FALSE(astParses("100000*100000"));
+   EXPECT_FALSE(astParses("x[0]*(100000*100000)"));
+   EXPECT_FALSE(astParses("2000000000+2000000000"));
+   EXPECT_FALSE(astParses("2147483647+1"));
+   EXPECT_FALSE(astParses("0-2000000000-2000000000"));
+   EXPECT_FALSE(astParses("-(0-2147483647-1)")); // negating INT_MIN overflows
+   EXPECT_TRUE(astParses("100000*100000."));     // double arithmetic is fine
+   EXPECT_TRUE(astParses("100000.*100000"));
+   EXPECT_EQ(astVal("2147483647*1"), 2147483647.0);
+   EXPECT_EQ(astVal("0-2147483647-1"), -2147483648.0); // INT_MIN itself is in range
+   // literals out of int32 range
+   EXPECT_FALSE(astParses("3000000000"));
+   EXPECT_FALSE(astParses("0x80000000"));
+   EXPECT_FALSE(astParses("min(3000000000,2)"));
+   EXPECT_TRUE(astParses("2147483647"));
+   EXPECT_TRUE(astParses("0x7fffffff"));
+
+   ScopedBackendEnv env{nullptr};
+   RooRealVar x("x", "x", 5.0);
+
+   // The fallback must reproduce cling's wrapped value exactly.
+   RooArgList vars{x};
+   auto f = RooFormulaUtils::makeFormulaEvaluator("f", "x*(100000*100000)", vars);
+   EXPECT_FALSE(isAstBackend(*f));
+   TFormula ref("ref", "x*(100000*100000)", /*addToGlobList=*/false);
+   ASSERT_TRUE(ref.IsValid());
+   double xv = 5.0;
+   EXPECT_TRUE(sameBits(RooFormulaUtils::evalFormula(*f, vars), ref.EvalPar(&xv)));
+
+   // A long-typed literal on its own is valid in cling with the same value;
+   // the fallback keeps such formulas working.
+   auto g = RooFormulaUtils::makeFormulaEvaluator("g", "3000000000+0*x", vars);
+   EXPECT_FALSE(isAstBackend(*g));
+   EXPECT_EQ(RooFormulaUtils::evalFormula(*g, vars), 3000000000.0);
+
+   // min(long, int) does not compile in cling, so this formula threw at
+   // construction before the JIT-free backend existed. It must still throw
+   // instead of silently yielding 2.
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, "TFormula::InputFormulaIntoCling", "Error compiling formula expression in Cling",
+                         false);
+      diags.requiredDiag(kError, "TFormula::ProcessFormula", " is invalid", false);
+      diags.optionalDiag(kError, "prepareMethod", "Can't compile function TFormula", false);
+      diags.optionalDiag(kError, "cling", "no matching function", false);
+      EXPECT_THROW(RooFormulaUtils::makeFormulaEvaluator("h", "min(3000000000,2)+x", vars), std::runtime_error);
+   }
 }
 
 // "0x1e+2" is one single (invalid) pp-number in C++, not 0x1e + 2: cling
@@ -945,6 +1051,11 @@ TEST(RooFormulaEvaluator, DifferentialCorpus)
    for (auto const &f : fallbacks) {
       std::cout << "  fallback: " << f << "\n";
    }
+   RecordProperty("CorpusSize", nTotal);
+   RecordProperty("CorpusOnAstPath", nAst);
+   RecordProperty("CorpusCoveragePercent", static_cast<int>(std::round(100. * coverage)));
+   // Hard floor only: the detailed number is reported above. A drop below 90%
+   // means the allow-list lost something that real-world formulas need.
    EXPECT_GE(coverage, 0.9);
 }
 
@@ -1075,4 +1186,415 @@ TEST(RooFormulaEvaluator, EmitCppLocaleIndependent)
    EXPECT_NE(expr.find("0.5"), std::string::npos) << expr;
    EXPECT_NE(expr.find("1.25"), std::string::npos) << expr;
    EXPECT_EQ(expr.find(','), std::string::npos) << expr;
+}
+
+namespace {
+
+/// A randomly generated expression in the processed `x[i]` dialect, together
+/// with the C++ type (double, int, or bool) its cling compilation would have.
+struct RandomExpr {
+   enum class Type : std::uint8_t {
+      Double,
+      Int,
+      Bool
+   };
+   std::string text;
+   Type type = Type::Double;
+   bool isIntegral() const { return type != Type::Double; }
+};
+
+/// Generates random well-formed expressions over exactly the grammar the
+/// JIT-free parser supports: all binary and unary operators including `^` and
+/// `**`, comparisons, logical operators, the ternary operator, and every
+/// function spelling in the RooFormulaFunctions allow-list (sampled directly
+/// from the table, so new entries are covered automatically, including the
+/// zero-argument constants and the multi-arity TMath::Gaus).
+///
+/// The generator composes strings level by level along the C++ operator
+/// precedence, so the string parses back to the generated structure and the
+/// tracked double/int/bool typing is that of the actual parse. The typing is
+/// used to steer around the deliberately unsupported constructs (truncating
+/// integer division, min/max with mixed argument types, sign() with a
+/// bool-typed first argument) by inserting a `1.0 *` factor. The textual
+/// pitfalls of the dialect are avoided structurally: `^` expressions are
+/// always parenthesized (a `^` operand adjacent to `,` or `:` is invalid in
+/// TFormula), a signed exponent never starts with `(` (TFormula's rewrite
+/// distributes the sign into the group), comparisons are not chained, stacked
+/// signs are parenthesized (`++` is TFormula's linear-combination separator
+/// and runs of three `-` are invalid), and the else branch of a ternary is
+/// parenthesized (TFormula reads the `:` in front of it as the tail of a `::`
+/// scope and then leaves a short function alias behind it unrewritten, so
+/// `1?2:sq(1.)` does not compile while `1?2:(sq(1.))` does). Everything the
+/// generator produces must therefore parse on the AST path *and* be a valid
+/// TFormula, so the differential test can compare every expression with no
+/// skips.
+class RandomExprGenerator {
+public:
+   RandomExprGenerator(unsigned int seed, unsigned int nVars) : _rng{seed}, _nVars{nVars} {}
+
+   RandomExpr gen(int depth) { return genTernary(depth); }
+
+private:
+   double chance() { return uniformDouble(_rng, 0., 1.); }
+   int pick(int n) { return uniformInt(_rng, n); }
+
+   /// Turn an int- or bool-typed operand into a double-typed one with the
+   /// same value.
+   RandomExpr forceDouble(RandomExpr e)
+   {
+      if (e.isIntegral()) {
+         e.text = "(1.0 * (" + e.text + "))";
+         e.type = RandomExpr::Type::Double;
+      }
+      return e;
+   }
+
+   RandomExpr genTernary(int depth)
+   {
+      if (depth > 0 && chance() < 0.10) {
+         RandomExpr c = genBinary(1, depth - 1);
+         RandomExpr a = genTernary(depth - 1);
+         RandomExpr b = genTernary(depth - 1);
+         RandomExpr out;
+         out.text = c.text + " ? " + a.text + " : (" + b.text + ")";
+         if (a.type == RandomExpr::Type::Double || b.type == RandomExpr::Type::Double) {
+            out.type = RandomExpr::Type::Double;
+         } else if (a.type == RandomExpr::Type::Bool && b.type == RandomExpr::Type::Bool) {
+            out.type = RandomExpr::Type::Bool;
+         } else {
+            out.type = RandomExpr::Type::Int;
+         }
+         return out;
+      }
+      return genBinary(1, depth);
+   }
+
+   /// Precedence levels: 1 `||`, 2 `&&`, 3 `== !=`, 4 `< <= > >=`, 5 `+ -`,
+   /// 6 `* /`; operands of a level come from the next-tighter level, so no
+   /// parentheses are needed to reproduce the intended structure.
+   RandomExpr genBinary(int level, int depth)
+   {
+      if (level > 6)
+         return genUnary(depth);
+      RandomExpr lhs = genBinary(level + 1, depth);
+      static constexpr double probs[7] = {0.0, 0.06, 0.06, 0.08, 0.10, 0.35, 0.35};
+      while (depth > 0 && chance() < probs[level]) {
+         --depth;
+         RandomExpr rhs = genBinary(level + 1, depth);
+         const char *op = nullptr;
+         switch (level) {
+         case 1:
+            op = "||";
+            lhs.type = RandomExpr::Type::Bool;
+            break;
+         case 2:
+            op = "&&";
+            lhs.type = RandomExpr::Type::Bool;
+            break;
+         case 3:
+            op = pick(2) ? "==" : "!=";
+            lhs.type = RandomExpr::Type::Bool;
+            break;
+         case 4:
+            switch (pick(4)) {
+            case 0: op = "<"; break;
+            case 1: op = "<="; break;
+            case 2: op = ">"; break;
+            default: op = ">="; break;
+            }
+            lhs.type = RandomExpr::Type::Bool;
+            break;
+         case 5:
+            op = pick(2) ? "+" : "-";
+            lhs.type = lhs.isIntegral() && rhs.isIntegral() ? RandomExpr::Type::Int : RandomExpr::Type::Double;
+            break;
+         case 6:
+            if (pick(3) == 0) {
+               // avoid truncating integer division (unsupported: falls back)
+               if (lhs.isIntegral())
+                  rhs = forceDouble(rhs);
+               op = "/";
+               lhs.type = RandomExpr::Type::Double;
+            } else {
+               op = "*";
+               lhs.type = lhs.isIntegral() && rhs.isIntegral() ? RandomExpr::Type::Int : RandomExpr::Type::Double;
+            }
+            break;
+         }
+         lhs.text += std::string{" "} + op + " " + rhs.text;
+         // no bare chained comparison (`a < b < c`): invalid in TFormula,
+         // where cling compiles with -Wparentheses promoted to an error
+         if (level == 4)
+            break;
+      }
+      return lhs;
+   }
+
+   RandomExpr genUnary(int depth)
+   {
+      if (depth > 0 && chance() < 0.15) {
+         RandomExpr e = genUnary(depth - 1);
+         const int which = pick(3); // -, +, !
+         if (which == 2) {
+            e.text = "!(" + e.text + ")";
+            e.type = RandomExpr::Type::Bool;
+         } else {
+            // parenthesize an operand that starts with a sign or `!`, to
+            // avoid the `++` / `---` pitfalls (see FallbackTriggers)
+            if (e.text[0] == '-' || e.text[0] == '+' || e.text[0] == '!')
+               e.text = "(" + e.text + ")";
+            e.text = (which == 0 ? "-" : "+") + e.text;
+            if (e.isIntegral())
+               e.type = RandomExpr::Type::Int; // bool promotes to int
+         }
+         return e;
+      }
+      return genPower(depth);
+   }
+
+   /// `^`/`**` exponentiation, always parenthesized as a whole; base and
+   /// exponent are primaries (with one optional sign on the exponent),
+   /// matching how the operator appears in real formulas and staying within
+   /// what TFormula's textual pow() rewrite scans correctly.
+   RandomExpr genPower(int depth)
+   {
+      if (depth > 0 && chance() < 0.12) {
+         RandomExpr base = genPrimary(depth - 1);
+         std::string sign;
+         if (chance() < 0.3)
+            sign = pick(2) ? "-" : "+";
+         RandomExpr exponent = genPrimary(depth - 1);
+         // a signed exponent must not start with `(`: TFormula's textual
+         // rewrite distributes the sign into the group (falls back)
+         if (!sign.empty() && exponent.text[0] == '(')
+            sign.clear();
+         const char *op = pick(4) == 0 ? "**" : "^";
+         RandomExpr out;
+         out.text = "(" + base.text + op + sign + exponent.text + ")";
+         out.type = RandomExpr::Type::Double;
+         return out;
+      }
+      return genPrimary(depth);
+   }
+
+   RandomExpr genPrimary(int depth)
+   {
+      const double r = chance();
+      if (depth <= 0 || r < 0.4) {
+         if (chance() < 0.55) {
+            RandomExpr out;
+            out.text = "x[" + std::to_string(pick(_nVars)) + "]";
+            return out;
+         }
+         return genLiteral();
+      }
+      if (r < 0.6) {
+         RandomExpr e = genTernary(depth - 1);
+         e.text = "(" + e.text + ")";
+         return e;
+      }
+      return genCall(depth - 1);
+   }
+
+   RandomExpr genLiteral()
+   {
+      static const char *const kIntLiterals[] = {"0", "1", "2", "3", "7", "42", "0x1f"};
+      static const char *const kDoubleLiterals[] = {"0.5",  "1.5",  "2.5",    "3.360779", "0.25",          ".5",
+                                                    "1.",   "1e-3", "2e+2",   "1e300",    "1e-300",        "0.1",
+                                                    "1e30", "13.7", "1.5e-8", "2.0",      "6.62607015e-34"};
+      RandomExpr out;
+      if (chance() < 0.4) {
+         out.text = kIntLiterals[pick(std::end(kIntLiterals) - std::begin(kIntLiterals))];
+         out.type = RandomExpr::Type::Int;
+      } else {
+         out.text = kDoubleLiterals[pick(std::end(kDoubleLiterals) - std::begin(kDoubleLiterals))];
+      }
+      return out;
+   }
+
+   /// A call to a random entry of the actual allow-list table.
+   RandomExpr genCall(int depth)
+   {
+      auto const *tab = RooFormulaFunctions::table();
+      auto const &entry = tab[pick(static_cast<int>(RooFormulaFunctions::tableSize()))];
+
+      RandomExpr args[4];
+      for (unsigned int i = 0; i < entry.arity; ++i) {
+         args[i] = genTernary(depth);
+      }
+
+      // `int(x)` is a C++ functional cast, and converting a NaN or an
+      // out-of-int-range double is undefined behaviour: cling and the compiler
+      // that built the evaluator are then free to disagree, and they do. Guard
+      // the argument into the safe range so that the generated expression is
+      // well-defined. The guard is NaN-safe: a comparison with NaN is false,
+      // so a NaN argument selects the constant.
+      if (std::strcmp(entry.name, "int") == 0) {
+         const std::string arg = "(" + args[0].text + ")";
+         args[0].text = "(" + arg + " > -1e9 && " + arg + " < 1e9 ? " + arg + " : (0.0))";
+         args[0].type = RandomExpr::Type::Double;
+      }
+
+      using RooFormulaFunctions::TypeRule;
+      using Type = RandomExpr::Type;
+      Type type = Type::Double;
+      switch (entry.rule) {
+      case TypeRule::Double: break;
+      case TypeRule::SameAsFirstArg:
+         if (entry.arity >= 1)
+            type = args[0].type == Type::Bool ? Type::Int : args[0].type;
+         break;
+      case TypeRule::Int: type = Type::Int; break;
+      case TypeRule::Bool: type = Type::Bool; break;
+      case TypeRule::Sign:
+         // sign() with a bool first argument is not copysign in cling (falls back)
+         if (args[0].type == Type::Bool)
+            args[0] = forceDouble(args[0]);
+         type = args[0].type;
+         break;
+      case TypeRule::MinMax:
+         // mixed argument types do not compile in cling (falls back)
+         if (args[0].type != args[1].type) {
+            args[0] = forceDouble(args[0]);
+            args[1] = forceDouble(args[1]);
+         }
+         type = args[0].type;
+         break;
+      }
+
+      RandomExpr out;
+      out.type = type;
+      out.text = std::string{entry.name} + "(";
+      for (unsigned int i = 0; i < entry.arity; ++i) {
+         if (i > 0)
+            out.text += ", ";
+         out.text += args[i].text;
+      }
+      out.text += ")";
+      return out;
+   }
+
+   std::mt19937 _rng;
+   unsigned int _nVars = 0;
+};
+
+constexpr unsigned int kRandomExprSeed = 20260827u; // fixed: failures must reproduce
+constexpr unsigned int kRandomExprVars = 3;
+
+/// Fill the input vector for the given trial: the first trials use edge
+/// values (0, +-1, very large, very small, negatives that drive sqrt/log/pow
+/// into NaN territory), later ones random values from the given generator.
+void fillRandomInputs(int trial, double *pars, std::mt19937 &rng)
+{
+   switch (trial) {
+   case 0:
+      for (unsigned int j = 0; j < kRandomExprVars; ++j)
+         pars[j] = 0.0;
+      break;
+   case 1:
+      for (unsigned int j = 0; j < kRandomExprVars; ++j)
+         pars[j] = j == 1 ? -1.0 : 1.0;
+      break;
+   case 2:
+      pars[0] = 1e300;
+      pars[1] = 1e-300;
+      pars[2] = -1.0;
+      break;
+   case 3:
+      pars[0] = -2.5;
+      pars[1] = -1e300;
+      pars[2] = -1e-300;
+      break;
+   default: {
+      const double scale = trial % 2 ? 3.0 : 50.0;
+      for (unsigned int j = 0; j < kRandomExprVars; ++j)
+         pars[j] = uniformDouble(rng, -scale, scale);
+      break;
+   }
+   }
+}
+
+} // namespace
+
+// Random-expression differential campaign: several hundred generated
+// expressions, each evaluated through both backends on several input vectors
+// including edge cases. Results must agree bitwise up to floating-point
+// contraction in the JIT (see agreesWithJit(); NaN counts as equal to NaN).
+// The generator and the input draws use only portable arithmetic on the
+// engine, so the fixed seeds produce the same expressions and the same inputs
+// on every platform and a failure reproduces exactly; to investigate one,
+// print `expr.text` and the hexfloat values from the failure message.
+TEST(RooFormulaEvaluator, RandomExpressionDifferential)
+{
+   constexpr int nExprs = 500;
+   constexpr int nTrials = 8;
+
+   RandomExprGenerator gen{kRandomExprSeed, kRandomExprVars};
+   std::mt19937 inputRng{987654u};
+
+   for (int iExpr = 0; iExpr < nExprs; ++iExpr) {
+      const RandomExpr expr = gen.gen(4);
+
+      std::string error;
+      auto prog = RooFormulaParser::compile(expr.text, kRandomExprVars, &error);
+      ASSERT_TRUE(prog) << "generated expression unexpectedly failed to parse: " << expr.text << "\n  error: " << error;
+      RooExprEvaluator ast{prog};
+
+      TFormula ref("ref", expr.text.c_str(), /*addToGlobList=*/false);
+      ASSERT_TRUE(ref.IsValid()) << "generated expression is invalid in TFormula (the generator must only produce "
+                                    "expressions valid in both dialects): "
+                                 << expr.text;
+
+      for (int trial = 0; trial < nTrials; ++trial) {
+         double pars[kRandomExprVars];
+         fillRandomInputs(trial, pars, inputRng);
+         const double a = ast.eval(pars);
+         const double t = ref.EvalPar(pars);
+         EXPECT_TRUE(agreesWithJit(a, t))
+            << "AST and TFormula backends disagree for: " << expr.text << "\n  inputs: " << pars[0] << " " << pars[1]
+            << " " << pars[2] << "\n  ast = " << std::hexfloat << a << " tformula = " << t << std::defaultfloat;
+      }
+   }
+}
+
+// Emitted-code agreement on random expressions (the corpus counterpart is
+// EmittedCppDifferential): emit the C++ for a sample of the same generated
+// expression stream, compile it with the interpreter, and require agreement
+// with AST evaluation (bitwise up to floating-point contraction in the JIT,
+// see agreesWithJit()). Uses the same seed as
+// RandomExpressionDifferential, so this covers a prefix of the same
+// expressions.
+TEST(RooFormulaEvaluator, EmittedCppRandomExpressions)
+{
+   constexpr int nExprs = 150;
+   constexpr int nTrials = 6;
+
+   auto varName = [](unsigned int i) { return "v[" + std::to_string(i) + "]"; };
+
+   RandomExprGenerator gen{kRandomExprSeed, kRandomExprVars};
+   std::mt19937 inputRng{192837u};
+
+   for (int iExpr = 0; iExpr < nExprs; ++iExpr) {
+      const RandomExpr expr = gen.gen(4);
+
+      auto prog = RooFormulaParser::compile(expr.text, kRandomExprVars);
+      ASSERT_TRUE(prog) << expr.text;
+      RooExprEvaluator ast{prog};
+
+      const std::string emitted = ast.emitCpp(varName);
+      ASSERT_FALSE(emitted.empty()) << expr.text;
+      EmittedFunc fn = compileEmitted(emitted);
+      ASSERT_NE(fn, nullptr) << "emitted C++ failed to compile for: " << expr.text << "\n  emitted: " << emitted;
+
+      for (int trial = 0; trial < nTrials; ++trial) {
+         double pars[kRandomExprVars];
+         fillRandomInputs(trial, pars, inputRng);
+         const double a = ast.eval(pars);
+         const double c = fn(pars);
+         EXPECT_TRUE(agreesWithJit(a, c))
+            << "AST and emitted C++ disagree for: " << expr.text << "\n  emitted: " << emitted
+            << "\n  inputs: " << pars[0] << " " << pars[1] << " " << pars[2] << "\n  ast = " << std::hexfloat << a
+            << " emitted = " << c << std::defaultfloat;
+      }
+   }
 }
