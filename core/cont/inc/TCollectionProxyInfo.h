@@ -24,6 +24,7 @@
 #include <vector>
 #include <forward_list>
 #include <typeinfo>
+#include <type_traits>
 #include <utility>
 
 #if defined(_WIN32)
@@ -84,6 +85,15 @@ namespace Detail {
          }
       };
 
+      // std::vector has a specialized iterator implementation below which does
+      // not use std::vector<T>::iterator at all. This is important on platforms
+      // such as MSVC, where Debug iterators can be larger than fgIteratorArenaSize.
+      // std::vector<bool> must not use this optimization because it has a proxy
+      // iterator and is handled by its dedicated collection proxy below.
+      template <typename T> struct IsVectorFastPath : std::false_type {};
+      template <typename T, typename A> struct IsVectorFastPath<std::vector<T, A>> : std::true_type {};
+      template <typename A> struct IsVectorFastPath<std::vector<Bool_t, A>> : std::false_type {};
+
    /** @class ROOT::Detail::TCollectionProxyInfo::Iterators
     *
     * Small helper to implement the function to create,access and destroy
@@ -132,8 +142,8 @@ namespace Detail {
       // the iterator all the time and redefine the 'address' of the
       // iterator as the iterator itself.  This requires special handling
       // in the looper (see TStreamerInfoAction) but is much faster.
-      template <typename T> struct Iterators<std::vector<T>, false> {
-         typedef std::vector<T> Cont_t;
+      template <typename T, typename A> struct Iterators<std::vector<T, A>, false> {
+         typedef std::vector<T, A> Cont_t;
          typedef Cont_t *PCont_t;
          typedef typename Cont_t::iterator iterator;
 
@@ -352,7 +362,8 @@ namespace Detail {
             m->~Value_t();
       }
 
-      static const bool fgLargeIterator = sizeof(typename Cont_t::iterator) > fgIteratorArenaSize;
+      static const bool fgLargeIterator =
+         sizeof(typename Cont_t::iterator) > fgIteratorArenaSize && !IsVectorFastPath<Cont_t>::value;
       typedef Iterators<Cont_t,fgLargeIterator> Iterators_t;
 
    };
@@ -678,21 +689,29 @@ namespace Detail {
          // Nothing to destruct.
       }
 
-      //static const bool fgLargeIterator = sizeof(Cont_t::iterator) > fgIteratorArenaSize;
-      //typedef Iterators<Cont_t,fgLargeIterator> Iterators_t;
+      static const bool fgLargeIterator = sizeof(typename Cont_t::iterator) > fgIteratorArenaSize;
 
       struct Iterators {
          typedef typename Cont_t::iterator iterator;
 
          static void create(void *coll, void **begin_arena, void **end_arena, TVirtualCollectionProxy*) {
             PCont_t c = PCont_t(coll);
-            new (*begin_arena) iterator(c->begin());
-            new (*end_arena) iterator(c->end());
+            if constexpr (fgLargeIterator) {
+               *begin_arena = new iterator(c->begin());
+               *end_arena = new iterator(c->end());
+            } else {
+               new (*begin_arena) iterator(c->begin());
+               new (*end_arena) iterator(c->end());
+            }
          }
          static void* copy(void *dest_arena, const void *source_ptr) {
             const iterator *source = (const iterator *)(source_ptr);
-            new (dest_arena) iterator(*source);
-            return dest_arena;
+            if constexpr (fgLargeIterator) {
+               return new iterator(*source);
+            } else {
+               new (dest_arena) iterator(*source);
+               return dest_arena;
+            }
          }
          static void* next(void *, const void *) {
             R__ASSERT(false && "Intentionally not implemented, should use VectorLooper or similar for vector<bool>.");
@@ -700,13 +719,21 @@ namespace Detail {
          }
          static void destruct1(void *iter_ptr) {
             iterator *start = (iterator *)(iter_ptr);
-            start->~iterator();
+            if constexpr (fgLargeIterator)
+               delete start;
+            else
+               start->~iterator();
          }
          static void destruct2(void *begin_ptr, void *end_ptr) {
             iterator *start = (iterator *)(begin_ptr);
             iterator *end = (iterator *)(end_ptr);
-            start->~iterator();
-            end->~iterator();
+            if constexpr (fgLargeIterator) {
+               delete start;
+               delete end;
+            } else {
+               start->~iterator();
+               end->~iterator();
+            }
          }
       };
       typedef Iterators Iterators_t;

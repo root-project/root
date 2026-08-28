@@ -69,8 +69,11 @@ if(NOT (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64) OR M1_BROKEN_TESTS)
 endif()
 
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(NOT MSVC)
+  set(HUGERDF_COMPILE_FLAGS COMPILE_FLAGS /O2)
+endif()
 ROOTTEST_GENERATE_EXECUTABLE(test_hugeRDF test_hugeRDF.cxx
-                             COMPILE_FLAGS "-O2"  # too slow otherwise
+                             ${HUGERDF_COMPILE_FLAGS}
                              LIBRARIES ${DFLIBRARIES}
                              FIXTURES_SETUP root-dataframe-hugeRDF-fixture)
 
