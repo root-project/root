@@ -581,7 +581,9 @@ int cpyrt::CPPMethod::GetPriority() {
       if (scope)
         priority += static_cast<int>(interop::GetNumBasesLongestBranch(scope));
 
-      if (interop::IsEnumScope(scope))
+      // GetScope does not resolve enum names, so also detect enums by type
+      if (interop::IsEnumScope(scope) ||
+          interop::IsEnumType(interop::GetMethodArgType(fMethod, iarg)))
         priority -= 100;
 
       // a couple of special cases as explained above
