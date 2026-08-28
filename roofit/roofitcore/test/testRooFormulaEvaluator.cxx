@@ -9,6 +9,7 @@
 
 #include <RooAddition.h>
 #include <RooDataSet.h>
+#include <RooFit/Evaluator.h>
 #include <RooFormulaVar.h>
 #include <RooGaussian.h>
 #include <RooGenericPdf.h>
@@ -16,6 +17,7 @@
 #include <RooRealVar.h>
 
 #include <Math/PdfFuncMathCore.h>
+#include <RConfigure.h> // for R__HAS_VDT
 #include <ROOT/TestSupport.hxx>
 #include <TFormula.h>
 #include <TInterpreter.h>
@@ -1607,6 +1609,288 @@ TEST(RooFormulaEvaluator, EmittedCppRandomExpressions)
             << "\n  inputs: " << pars[0] << " " << pars[1] << " " << pars[2] << "\n  ast = " << std::hexfloat << a
             << " emitted = " << c << std::defaultfloat;
       }
+   }
+}
+
+namespace {
+
+// The vectorized doEval() path evaluates exp/log/sin/cos with the fast VDT
+// implementations when ROOT is built with VDT (like all RooBatchCompute pdf
+// kernels), in which case batch and per-event scalar results agree within
+// RooBatchCompute's own batch-vs-scalar tolerance (_toleranceCompareBatches
+// in roofit/test/vectorisedPDFs/VectorisedPDFTests.h). Without VDT, every
+// vectorized operation is the exact same double-precision operation the
+// scalar evaluator applies, so agreement must be bitwise.
+//
+// The VDT functions are only approximations over their normal argument range
+// and do not reproduce libm's special values: vdt::fast_log() of zero or of a
+// negative number returns a finite garbage value instead of -Inf or NaN, and
+// that value then propagates through the rest of the expression. Special
+// values are therefore not comparable at all on a VDT build; their bitwise
+// propagation is checked on non-VDT builds (and holds unconditionally for the
+// scalar path, which always calls the exact libm functions).
+bool batchAgrees(double batch, double ref)
+{
+   if (sameBits(batch, ref)) {
+      return true;
+   }
+#ifdef R__HAS_VDT
+   if (!std::isfinite(batch) || !std::isfinite(ref)) {
+      return true;
+   }
+   return std::abs(batch - ref) <= 5e-14 * std::max(1.0, std::abs(ref));
+#else
+   return false;
+#endif
+}
+
+/// Batch-evaluate `processedExpr` (in the x[i] dialect) through
+/// RooFit::Evaluator, exercising RooFormula::doEval() with mixed span sizes:
+/// x[0] gets the vector input `xData` (span of size N), all other x[i] are
+/// scalar parameters (spans of size 1) with value scalarVals[i], and one
+/// trailing unused dependent exercises the empty-span handling.
+std::vector<double> batchEvalFormula(std::string const &processedExpr, std::vector<double> const &xData,
+                                     std::vector<double> const &scalarVals)
+{
+   const std::size_t nVars = scalarVals.size();
+   RooArgList vars;
+   std::vector<std::unique_ptr<RooRealVar>> owned;
+   for (std::size_t i = 0; i <= nVars; ++i) { // one extra, unused dependent
+      const std::string name = "v" + std::to_string(i);
+      const double val = i == 0 ? (xData.empty() ? 1.0 : xData[0]) : (i < nVars ? scalarVals[i] : 0.5);
+      owned.emplace_back(std::make_unique<RooRealVar>(name.c_str(), name.c_str(), val, -1e300, 1e300));
+      vars.add(*owned.back());
+   }
+   RooFormulaVar f("f", processedExpr.c_str(), vars);
+   RooFit::Evaluator ev(f);
+   ev.setInput("v0", {xData.data(), xData.size()}, false);
+   std::span<const double> out = ev.run();
+   return {out.begin(), out.end()};
+}
+
+/// Per-event scalar reference for the same inputs, through the same compiled
+/// program that the vectorized path executes.
+std::vector<double> scalarRefFormula(std::string const &processedExpr, std::vector<double> const &xData,
+                                     std::vector<double> const &scalarVals)
+{
+   auto prog = RooFormulaParser::compile(processedExpr, scalarVals.size() + 1);
+   if (!prog) {
+      ADD_FAILURE() << "expression unexpectedly failed to parse: " << processedExpr;
+      return {};
+   }
+   RooExprEvaluator ev{prog};
+   std::vector<double> pars(scalarVals.size() + 1);
+   for (std::size_t i = 1; i < scalarVals.size(); ++i) {
+      pars[i] = scalarVals[i];
+   }
+   std::vector<double> out(xData.size());
+   for (std::size_t i = 0; i < xData.size(); ++i) {
+      pars[0] = xData[i];
+      out[i] = ev.eval(pars.data());
+   }
+   return out;
+}
+
+/// Compare a batch output against the per-event reference. An output of size
+/// 1 means the evaluator collapsed the case to a single value (x[0] unused or
+/// a size-1 input span): compare only the first reference value then.
+void expectBatchMatches(std::vector<double> const &out, std::vector<double> const &ref, std::string const &what)
+{
+   ASSERT_FALSE(ref.empty()) << what;
+   if (out.size() == 1) {
+      EXPECT_TRUE(batchAgrees(out[0], ref[0]))
+         << what << "\n  batch = " << std::hexfloat << out[0] << " scalar = " << ref[0] << std::defaultfloat;
+      return;
+   }
+   ASSERT_EQ(out.size(), ref.size()) << what;
+   for (std::size_t i = 0; i < out.size(); ++i) {
+      ASSERT_TRUE(batchAgrees(out[i], ref[i])) << what << "\n  event " << i << ": batch = " << std::hexfloat << out[i]
+                                               << " scalar = " << ref[i] << std::defaultfloat;
+   }
+}
+
+} // namespace
+
+// Differential test of the vectorized doEval() against per-event scalar
+// evaluation on batch sizes around the bufferSize=64 chunking boundaries,
+// with an expression covering ternary, comparisons, logical operators and the
+// vectorizable functions, and with input values that produce NaN (log of a
+// negative number, sqrt of a negative number) and Inf (division by zero), to
+// check that special values propagate identically.
+TEST(RooFormulaEvaluator, VectorizedDoEvalEdgeSizes)
+{
+   ScopedBackendEnv env{nullptr};
+
+   const std::string expr = "x[0]*x[1] + sin(x[0])*cos(x[2]) + (x[0] > 0.5 ? log(x[0] - 1.0) : -x[0])"
+                            " + sqrt(x[0] - 2.0) + (x[0] != 0.0 && x[1] > 0.0) + 1.0/x[0] + exp(-x[0])";
+   const std::vector<double> scalarVals{0.0, 1.5, 0.7};
+
+   std::mt19937 rng{20260828u};
+
+   for (std::size_t n : {1u, 2u, 63u, 64u, 65u, 127u, 128u, 1000u}) {
+      std::vector<double> xData(n);
+      for (double &v : xData) {
+         v = uniformDouble(rng, -3.0, 8.0);
+      }
+      // special values: division by zero -> Inf, negatives -> NaN from log/sqrt
+      if (n > 2) {
+         xData[0] = 0.0;
+         xData[1] = -1.0;
+         xData[2] = 1.75; // log(0.75) finite, sqrt(-0.25) NaN
+      }
+      auto out = batchEvalFormula(expr, xData, scalarVals);
+      auto ref = scalarRefFormula(expr, xData, scalarVals);
+      expectBatchMatches(out, ref, "n = " + std::to_string(n));
+   }
+}
+
+// Differential doEval() over the real-world corpus: every entry the JIT-free
+// parser accepts is evaluated through the batch path (x[0] vectorized, other
+// variables scalar, plus an unused dependent) and compared per event against
+// scalar evaluation of the same program.
+TEST(RooFormulaEvaluator, VectorizedDoEvalCorpus)
+{
+   ScopedBackendEnv env{nullptr};
+
+   constexpr std::size_t nEvents = 197; // 3 full chunks plus a remainder
+
+   std::mt19937 rng{555u};
+
+   for (const char *entry : kCorpus) {
+      int nVars = 0;
+      const std::string processed = normalizeCorpusEntry(entry, nVars);
+      auto prog = RooFormulaParser::compile(processed, std::max(nVars, 1));
+      if (!prog) {
+         continue; // TFormula-fallback expressions are not vectorized
+      }
+
+      std::vector<double> xData(nEvents);
+      for (double &v : xData) {
+         v = uniformDouble(rng, 0.1, 3.0);
+      }
+      xData[0] = 0.0;
+      xData[1] = -1.5;
+
+      std::vector<double> scalarVals(std::max(nVars, 1));
+      for (std::size_t i = 1; i < scalarVals.size(); ++i) {
+         scalarVals[i] = uniformDouble(rng, 0.1, 3.0);
+      }
+
+      auto out = batchEvalFormula(processed, xData, scalarVals);
+      auto ref = scalarRefFormula(processed, xData, scalarVals);
+      expectBatchMatches(out, ref, std::string{"corpus entry: "} + entry + "\n  processed: " + processed);
+   }
+}
+
+// Differential doEval() on randomly generated expressions (same generator and
+// seed as RandomExpressionDifferential), covering ternary/comparison/logical
+// operators and the whole function allow-list in random combinations.
+TEST(RooFormulaEvaluator, VectorizedDoEvalRandomExpressions)
+{
+   ScopedBackendEnv env{nullptr};
+
+   constexpr int nExprs = 150;
+   constexpr std::size_t nEvents = 130; // two full chunks plus a remainder
+
+   RandomExprGenerator gen{kRandomExprSeed, kRandomExprVars};
+   std::mt19937 inputRng{424242u};
+
+   for (int iExpr = 0; iExpr < nExprs; ++iExpr) {
+      const RandomExpr expr = gen.gen(4);
+
+      std::vector<double> xData(nEvents);
+      for (double &v : xData) {
+         v = uniformDouble(inputRng, -5.0, 5.0);
+      }
+      xData[0] = 0.0;
+      xData[1] = 1e300;
+      xData[2] = -1e-300;
+
+      std::vector<double> scalarVals(kRandomExprVars);
+      for (std::size_t i = 1; i < scalarVals.size(); ++i) {
+         scalarVals[i] = uniformDouble(inputRng, -5.0, 5.0);
+      }
+
+      auto out = batchEvalFormula(expr.text, xData, scalarVals);
+      auto ref = scalarRefFormula(expr.text, xData, scalarVals);
+      expectBatchMatches(out, ref, "random expression: " + expr.text);
+   }
+}
+
+// A large batch through the vectorized path: the ~30-instruction expression
+// from the Phase 5 benchmarks over 10^6 events, compared per event.
+TEST(RooFormulaEvaluator, VectorizedDoEvalLargeBatch)
+{
+   ScopedBackendEnv env{nullptr};
+
+   const std::string expr = "0.5*exp(-0.5*(x[0]-x[1])*(x[0]-x[1])/(x[2]*x[2])) + 0.3*sin(0.5*x[0]+x[1])*cos(x[0]*x[2])"
+                            " + 0.2/(1.0+x[0]*x[0]) + sqrt(abs(x[0]*x[1])+1.0) + 0.1*log(1.0+exp(-x[0]))";
+   const std::vector<double> scalarVals{0.0, 1.0, 2.0};
+
+   constexpr std::size_t nEvents = 1000000;
+   std::vector<double> xData(nEvents);
+   std::mt19937 rng{31415u};
+   for (double &v : xData) {
+      v = uniformDouble(rng, 0.0, 10.0);
+   }
+
+   auto out = batchEvalFormula(expr, xData, scalarVals);
+   auto ref = scalarRefFormula(expr, xData, scalarVals);
+   expectBatchMatches(out, ref, "large batch");
+}
+
+// The all-scalar case (every input span has size 1, e.g. a formula of
+// parameters only -- the HistFactory NormFactor shape of issue #21052) must
+// short-circuit to a single scalar evaluation, bitwise identical to eval(),
+// with or without VDT.
+TEST(RooFormulaEvaluator, VectorizedDoEvalAllScalar)
+{
+   ScopedBackendEnv env{nullptr};
+
+   RooRealVar a("a", "a", 1.3, 0.0, 10.0);
+   RooRealVar b("b", "b", 0.7, 0.0, 10.0);
+   RooRealVar unused("unused", "unused", 2.0, 0.0, 10.0);
+   RooFormulaVar f("f", "exp(-a*b) + sin(a)/b", {a, b, unused});
+
+   const double refVal = f.getVal();
+   RooFit::Evaluator ev(f);
+   std::span<const double> out = ev.run();
+   ASSERT_EQ(out.size(), 1u);
+   EXPECT_TRUE(sameBits(out[0], refVal)) << std::hexfloat << out[0] << " vs " << refVal << std::defaultfloat;
+}
+
+// The TFormula fallback backend keeps its scalar per-event loop in doEval();
+// its batch results must stay identical to scalar evaluation.
+TEST(RooFormulaEvaluator, TFormulaBackendDoEval)
+{
+   ScopedBackendEnv env{"tformula"};
+
+   RooRealVar x("x", "x", 5.0, 0.0, 10.0);
+   RooRealVar p("p", "p", 1.5, 0.1, 3.0);
+   RooRealVar q("q", "q", 0.7, 0.1, 3.0); // unused by the formula
+   RooFormulaVar f("f", "x*p + sin(x) + (x > 5.0 ? log(x) : -x)", {x, p, q});
+
+   std::vector<double> xData(100);
+   std::mt19937 rng{777u};
+   for (double &v : xData) {
+      v = uniformDouble(rng, 0.0, 10.0);
+   }
+
+   RooFit::Evaluator ev(f);
+   ev.setInput("x", {xData.data(), xData.size()}, false);
+   std::span<const double> out = ev.run();
+   // The TFormula backend was used: there is a JIT-compiled function.
+   EXPECT_FALSE(f.getUniqueFuncName().empty());
+   ASSERT_EQ(out.size(), xData.size());
+   // Reference through the JIT-free scalar program, which evaluates
+   // identically to the JIT-compiled TFormula (the Phase 3 contract), bitwise
+   // up to the contraction the JIT applies and the interpreter loop cannot.
+   // A reference expression inlined here would not be reliable either: this
+   // test file is compiled with FMA contraction enabled.
+   auto ref = scalarRefFormula("x[0]*x[1] + sin(x[0]) + (x[0] > 5.0 ? log(x[0]) : -x[0])", xData, {0.0, 1.5});
+   ASSERT_EQ(ref.size(), xData.size());
+   for (std::size_t i = 0; i < xData.size(); ++i) {
+      EXPECT_TRUE(agreesWithJit(out[i], ref[i])) << "event " << i;
    }
 }
 

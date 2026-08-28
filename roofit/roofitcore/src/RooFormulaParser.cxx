@@ -464,7 +464,7 @@ public:
       // over ExprOp with no default case, so that adding an opcode without
       // extending the accounting is a compiler warning (-Wswitch); the
       // static_assert additionally breaks the build when the enum grows.
-      static_assert(static_cast<int>(Op::Call4) == 23,
+      static_assert(static_cast<int>(Op::Call4) == 28,
                     "ExprOp changed: update the stack-depth accounting switch in RooFormulaParser");
       int depth = 0;
       int maxDepth = 0;
@@ -476,6 +476,11 @@ public:
          case Op::Not:
          case Op::Sq:
          case Op::IntNorm:
+         case Op::Exp:
+         case Op::Log:
+         case Op::Sin:
+         case Op::Cos:
+         case Op::Sqrt:
          case Op::Call1: break;
          case Op::Add:
          case Op::Sub:
@@ -538,12 +543,36 @@ private:
    Token const &peek() const { return _tokens[_pos]; }
    Token const &next() { return _tokens[_pos++]; }
 
-   void emit(Op op, std::uint32_t arg = 0, double konst = 0.0)
+   void emit(Op op, std::uint32_t arg = 0)
    {
       Instr ins;
       ins.op = op;
       ins.arg = arg;
+      _code.push_back(ins);
+   }
+
+   void emitConst(double konst)
+   {
+      Instr ins;
+      ins.op = Op::Const;
       ins.konst = konst;
+      _code.push_back(ins);
+   }
+
+   /// Emit a call instruction. The resolved function pointer is stored in the
+   /// instruction itself (evaluation involves no table lookup); `index` keeps
+   /// the position in RooFormulaFunctions::table() for C++ emission.
+   void emitCall(Op op, std::uint32_t index, RooFormulaFunctions::Entry const &entry)
+   {
+      Instr ins;
+      ins.op = op;
+      ins.arg = index;
+      switch (op) {
+      case Op::Call2: ins.fn2 = entry.fn2; break;
+      case Op::Call3: ins.fn3 = entry.fn3; break;
+      case Op::Call4: ins.fn4 = entry.fn4; break;
+      default: ins.fn1 = entry.fn1; break; // Call1 and the vectorizable unary opcodes
+      }
       _code.push_back(ins);
    }
 
@@ -786,7 +815,7 @@ private:
       switch (peek().kind) {
       case Tok::Number: {
          Token const &tok = next();
-         emit(Op::Const, 0, tok.value);
+         emitConst(tok.value);
          out.type = tok.isInt ? ExprInfo::Type::Int : ExprInfo::Type::Double;
          out.isIntConst = tok.isInt;
          out.intConstValue = tok.intValue;
@@ -883,12 +912,12 @@ private:
       switch (nArgs) {
       case 0:
          // Zero-argument calls are the TMath constants: fold to a literal.
-         emit(Op::Const, 0, entry->fn0());
+         emitConst(entry->fn0());
          break;
-      case 1: emit(Op::Call1, index); break;
-      case 2: emit(Op::Call2, index); break;
-      case 3: emit(Op::Call3, index); break;
-      case 4: emit(Op::Call4, index); break;
+      case 1: emitCall(entry->op1, index, *entry); break;
+      case 2: emitCall(Op::Call2, index, *entry); break;
+      case 3: emitCall(Op::Call3, index, *entry); break;
+      case 4: emitCall(Op::Call4, index, *entry); break;
       }
       if (out.isIntegral())
          emit(Op::IntNorm); // integer-valued calls cannot yield -0.0 in cling

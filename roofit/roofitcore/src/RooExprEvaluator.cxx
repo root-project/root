@@ -92,6 +92,23 @@ Entry F4(const char *name, double (*fn)(double, double, double, double))
 // (see TFormula::FillDefaults). All spellings below were cross-checked
 // against what TFormula accepts today; do not add a spelling TFormula
 // would reject (e.g. there is no std::sq or std::sign).
+/// Tag the arity-1 entries with the given spellings with a dedicated opcode
+/// (see Entry::op1). Every tagged spelling family calls exactly the same libm
+/// function (the TMath:: versions are inline wrappers of the std ones), so the
+/// scalar semantics carried by fn1 are unchanged; only the batch evaluation in
+/// RooBatchCompute::computeExprProgram() treats the opcode specially.
+void tagVectorizable(std::vector<Entry> &table, std::initializer_list<const char *> names, RooBatchCompute::ExprOp op)
+{
+   for (Entry &e : table) {
+      if (e.arity != 1)
+         continue;
+      for (const char *name : names) {
+         if (std::strcmp(e.name, name) == 0)
+            e.op1 = op;
+      }
+   }
+}
+
 std::vector<Entry> makeTable()
 {
    auto castInt = +[](double x) { return static_cast<double>(static_cast<int>(x)); };
@@ -112,7 +129,7 @@ std::vector<Entry> makeTable()
    auto sign = +[](double a, double b) { return TMath::Sign(a, b); };
    auto signBit = +[](double x) { return std::signbit(x) ? 1.0 : 0.0; };
 
-   return {
+   std::vector<Entry> table{
       // clang-format off
       // one-argument functions, libm/std spellings
       F1("sqrt",         +[](double x) { return std::sqrt(x); }),
@@ -222,6 +239,15 @@ std::vector<Entry> makeTable()
       F4("TMath::Gaus",  +[](double x, double m, double s, double n) { return TMath::Gaus(x, m, s, n != 0.0); }),
       // clang-format on
    };
+
+   using RooBatchCompute::ExprOp;
+   tagVectorizable(table, {"exp", "std::exp", "TMath::Exp"}, ExprOp::Exp);
+   tagVectorizable(table, {"log", "std::log", "TMath::Log"}, ExprOp::Log);
+   tagVectorizable(table, {"sin", "std::sin", "TMath::Sin"}, ExprOp::Sin);
+   tagVectorizable(table, {"cos", "std::cos", "TMath::Cos"}, ExprOp::Cos);
+   tagVectorizable(table, {"sqrt", "std::sqrt", "TMath::Sqrt"}, ExprOp::Sqrt);
+
+   return table;
 }
 
 std::vector<Entry> const &theTable()
@@ -270,7 +296,6 @@ double RooExprEvaluator::eval(const double *vars) const
 
    double stack[kMaxStackDepth];
    std::size_t sp = 0;
-   auto const *funcs = RooFormulaFunctions::table();
 
    for (Instr const &ins : _program->code) {
       switch (ins.op) {
@@ -336,18 +361,25 @@ double RooExprEvaluator::eval(const double *vars) const
          break;
       case Op::Sq: stack[sp - 1] *= stack[sp - 1]; break;
       case Op::IntNorm: stack[sp - 1] += 0.0; break;
-      case Op::Call1: stack[sp - 1] = funcs[ins.arg].fn1(stack[sp - 1]); break;
+      // The dedicated vectorizable opcodes carry the exact scalar function in
+      // fn1 (see Entry::op1), so scalar evaluation treats them like Call1.
+      case Op::Exp:
+      case Op::Log:
+      case Op::Sin:
+      case Op::Cos:
+      case Op::Sqrt:
+      case Op::Call1: stack[sp - 1] = ins.fn1(stack[sp - 1]); break;
       case Op::Call2:
          --sp;
-         stack[sp - 1] = funcs[ins.arg].fn2(stack[sp - 1], stack[sp]);
+         stack[sp - 1] = ins.fn2(stack[sp - 1], stack[sp]);
          break;
       case Op::Call3:
          sp -= 2;
-         stack[sp - 1] = funcs[ins.arg].fn3(stack[sp - 1], stack[sp], stack[sp + 1]);
+         stack[sp - 1] = ins.fn3(stack[sp - 1], stack[sp], stack[sp + 1]);
          break;
       case Op::Call4:
          sp -= 3;
-         stack[sp - 1] = funcs[ins.arg].fn4(stack[sp - 1], stack[sp], stack[sp + 1], stack[sp + 2]);
+         stack[sp - 1] = ins.fn4(stack[sp - 1], stack[sp], stack[sp + 1], stack[sp + 2]);
          break;
       }
    }
@@ -458,6 +490,13 @@ std::string RooExprEvaluator::emitCpp(std::function<std::string(unsigned int)> c
       }
       case Op::Sq: stack.back() = "TMath::Sq(" + stack.back() + ")"; break;
       case Op::IntNorm: stack.back() = "(" + stack.back() + " + 0.0)"; break;
+      // The dedicated vectorizable opcodes keep the function-table index in
+      // `arg`, so they emit exactly like Call1 (with the original spelling).
+      case Op::Exp:
+      case Op::Log:
+      case Op::Sin:
+      case Op::Cos:
+      case Op::Sqrt:
       case Op::Call1: stack.back() = emissionName(funcs[ins.arg]) + "(" + stack.back() + ")"; break;
       case Op::Call2: {
          const std::string b = pop();

@@ -15,6 +15,10 @@
 
 #include "RooFormulaEvaluator.h"
 
+#include "RooExprProgram.h"
+
+#include <ROOT/RSpan.hxx>
+
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -53,6 +57,13 @@ struct Entry {
    const char *cppName = nullptr;
    std::uint8_t arity = 0;
    TypeRule rule = TypeRule::Double;
+   /// Opcode emitted for a call to this entry when arity == 1. Entries whose
+   /// semantics are exactly a std/libm function with a fast vectorizable
+   /// batch implementation (the exp/log/sin/cos/sqrt spelling families) get
+   /// the corresponding dedicated opcode instead of the generic Call1, so
+   /// that RooBatchCompute::computeExprProgram() can vectorize them. Scalar
+   /// evaluation and C++ emission treat those opcodes exactly like Call1.
+   RooBatchCompute::ExprOp op1 = RooBatchCompute::ExprOp::Call1;
    double (*fn0)() = nullptr;
    double (*fn1)(double) = nullptr;
    double (*fn2)(double, double) = nullptr;
@@ -78,38 +89,12 @@ Entry const *find(std::string const &name, unsigned int nArgs, std::uint32_t &in
 /// call concurrently from multiple threads.
 class RooExprEvaluator final : public RooFormulaEvaluator {
 public:
-   enum class Op : std::uint8_t {
-      Const,   ///< push konst
-      Var,     ///< push vars[arg]
-      Add,     ///< a + b
-      Sub,     ///< a - b
-      Mul,     ///< a * b
-      Div,     ///< a / b
-      Neg,     ///< -a
-      Not,     ///< !a  (exactly 0.0 or 1.0)
-      LT,      ///< a < b   (exactly 0.0 or 1.0, likewise below)
-      LE,      ///< a <= b
-      GT,      ///< a > b
-      GE,      ///< a >= b
-      EQ,      ///< a == b
-      NE,      ///< a != b
-      And,     ///< a && b  (no short-circuit: both operands are always evaluated)
-      Or,      ///< a || b  (no short-circuit)
-      Select,  ///< c ? a : b  (both branches are always evaluated)
-      Pow,     ///< std::pow(a, b), from the `^`/`**` operator or pow()
-      Sq,      ///< a * a, from TFormula's `expr^2` -> TMath::Sq(expr) rewrite
-      IntNorm, ///< a + 0.0: maps -0.0 to +0.0 where cling would have used integer arithmetic
-      Call1,   ///< RooFormulaFunctions::table()[arg].fn1
-      Call2,   ///< RooFormulaFunctions::table()[arg].fn2
-      Call3,   ///< RooFormulaFunctions::table()[arg].fn3
-      Call4    ///< RooFormulaFunctions::table()[arg].fn4
-   };
-
-   struct Instr {
-      Op op = Op::Const;
-      std::uint32_t arg = 0;
-      double konst = 0.0;
-   };
+   /// The instruction set is shared with RooBatchCompute (see
+   /// RooExprProgram.h): the same instruction vector drives the scalar
+   /// per-event eval() here and the chunked, vectorized batch evaluation in
+   /// RooBatchCompute::computeExprProgram().
+   using Op = RooBatchCompute::ExprOp;
+   using Instr = RooBatchCompute::ExprInstr;
 
    /// A compiled formula: immutable after construction and shared between all
    /// RooFormula instances with the same processed formula string.
@@ -138,6 +123,13 @@ public:
    bool canEmitCpp() const override { return true; }
 
    std::string emitCpp(std::function<std::string(unsigned int)> const &varName) const override;
+
+   /// The compiled instruction sequence, for handing to
+   /// RooBatchCompute::computeExprProgram().
+   std::span<const Instr> code() const { return {_program->code.data(), _program->code.size()}; }
+
+   /// The program's maximum expression stack depth.
+   unsigned int stackDepth() const { return _program->stackDepth; }
 
 private:
    std::shared_ptr<const Program> _program;
