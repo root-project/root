@@ -2050,6 +2050,8 @@ bool cpyrt::Pythonize(PyObject* pyclass, interop::TCppScope_t scope) {
   }
 
   else if (name == "std::basic_string<char>" ||
+           name == "std::basic_string<char, std::char_traits<char>, "
+                   "std::allocator<char> >" ||
            name == "std::__1::basic_string<char>" || // libc++ inline namespace
            name == "std::string") { // typedef preserved by GetScopedFinalName
                                     // on libc++
@@ -2090,6 +2092,7 @@ bool cpyrt::Pythonize(PyObject* pyclass, interop::TCppScope_t scope) {
   }
 
   else if (name == "std::basic_string_view<char>" ||
+           name == "std::basic_string_view<char, std::char_traits<char> >" ||
            name ==
                "std::__1::basic_string_view<char>" || // libc++ inline namespace
            name == "std::string_view") {              // typedef preserved by
@@ -2113,6 +2116,8 @@ bool cpyrt::Pythonize(PyObject* pyclass, interop::TCppScope_t scope) {
 
   else if (name == "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::"
                    "allocator<wchar_t> >" ||
+           name == "std::basic_string<wchar_t, std::char_traits<wchar_t>, "
+                   "std::allocator<wchar_t> >" ||
            name == "std::__1::basic_string<wchar_t,std::__1::char_traits<wchar_"
                    "t>,std::__1::allocator<wchar_t> >" ||
            name == "std::wstring") {
