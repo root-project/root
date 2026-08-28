@@ -96,6 +96,40 @@ void CheckFilledShapeStaysInside(const char *colour, Int_t shape)
 }
 
 
+// Draw a thin tilted ellipse: however it is tilted, nothing can sit further than
+// rx from the centre, so the painted columns must span at most 2*rx.
+void CheckTiltedThinEllipsStaysInside(const char *colour, Int_t angle)
+{
+   constexpr Int_t rx = kSize / 3;
+   constexpr Int_t ry = 2;
+
+   TASImage img(kSize, kSize);
+
+   UInt_t *argb = img.GetArgbArray();
+   ASSERT_NE(argb, nullptr);
+
+   const UInt_t before = argb[0];
+
+   img.DrawEllips2(kSize / 2, kSize / 2, rx, ry, angle, colour, -1);
+
+   argb = img.GetArgbArray();
+   ASSERT_NE(argb, nullptr);
+
+   Int_t first = kSize, last = -1;
+   for (UInt_t i = 0; i < kPixels; ++i)
+      if (argb[i] != before) {
+         const Int_t x = i % kSize;
+         if (x < first)
+            first = x;
+         if (x > last)
+            last = x;
+      }
+
+   ASSERT_GE(last, 0) << "the ellipse was not drawn at " << angle << " degrees";
+   EXPECT_LE(last - first + 1, 2 * rx + 2)
+      << "the fill ran along the whole scanline at " << angle << " degrees";
+}
+
 } // namespace
 
 // https://github.com/root-project/root/issues/23014
@@ -230,4 +264,25 @@ TEST(TASImage, FilledAxisAlignedEllipsSemiTransparent)
 TEST(TASImage, FilledAxisAlignedEllipsLowAlpha)
 {
    CheckFilledShapeStaysInside("#102277CC", 4);
+}
+
+// https://github.com/root-project/root/issues/23148
+//
+// A tilted ellipse is walked by asim_ellips2 itself and never flooded. On a thin
+// one the walk drifted far off the shape and the spans it produced were reversed,
+// which fill_hline clips to the whole scanline.
+
+TEST(TASImage, FilledTiltedThinEllips45)
+{
+   CheckTiltedThinEllipsStaysInside("#FF2277CC", 45);
+}
+
+TEST(TASImage, FilledTiltedThinEllips135)
+{
+   CheckTiltedThinEllipsStaysInside("#FF2277CC", 135);
+}
+
+TEST(TASImage, FilledTiltedThinEllipsSemiTransparent)
+{
+   CheckTiltedThinEllipsStaysInside("#7F2277CC", 45);
 }
