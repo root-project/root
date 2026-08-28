@@ -16,7 +16,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GX11
     ../gifencode/gifdecode.cxx
     ../gifencode/gifencode.cxx
     src/GX11Gui.cxx
-    src/Rotated.cxx
     src/TGX11.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
@@ -24,6 +23,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GX11
     ${X11_LIBRARIES}
     ${X11_Xpm_LIB}
     ${CMAKE_THREAD_LIBS_INIT}
+    xvertext
   DEPENDENCIES
     Core
     MathCore

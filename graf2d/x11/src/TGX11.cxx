@@ -61,21 +61,7 @@ by Olivier Couet (package X11INT).
 
 #include "gifencode.h"
 #include "gifdecode.h"
-
-extern float   XRotVersion(char*, int);
-extern void    XRotSetMagnification(float);
-extern void    XRotSetBoundingBoxPad(int);
-extern int     XRotDrawString(Display*, XFontStruct*, float,
-                              Drawable, GC, int, int, char*);
-extern int     XRotDrawImageString(Display*, XFontStruct*, float,
-                                   Drawable, GC, int, int, char*);
-extern int     XRotDrawAlignedString(Display*, XFontStruct*, float,
-                                     Drawable, GC, int, int, char*, int);
-extern int     XRotDrawAlignedImageString(Display*, XFontStruct*, float,
-                                          Drawable, GC, int, int, char*, int);
-extern XPoint *XRotTextExtents(Display*, XFontStruct*, float,
-                               int, int, char*, int);
-
+#include "rotated.h"
 
 
 //
