@@ -139,6 +139,28 @@ class TestCONVERSIONS:
         assert ns.Test2(True)
         assert not ns.Test2(False)
 
+    def test06_pointer_const_reference(self):
+        """A T* const& argument is accepted; only T*& is banned"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace PtrConstRef {
+            struct A { int v = 3; };
+            int by_const_ref(A* const& a) { return a->v; }
+            void by_mutable_ref(A*& a) { a = nullptr; }
+        }""")
+
+        ns = cppjit.gbl.PtrConstRef
+        a = ns.A()
+
+        # the callee cannot rebind the pointer, so this is safe to pass
+        assert ns.by_const_ref(a) == 3
+
+        # a mutable pointer reference stays unsupported
+        with raises(TypeError):
+            ns.by_mutable_ref(a)
+
     def test07_mutable_voidp_reference(self):
         """An object can be passed through a non-const void*& argument"""
 

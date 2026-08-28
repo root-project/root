@@ -3418,15 +3418,19 @@ cppjit::cpyrt::CreateConverter(const std::string& fullType, cdims_t dims) {
     return (h->second)(dims);
 
   // mutable pointer references (T*&) are incompatible with Python's object
-  // model
+  // model; a string that resolves to no type keeps the ban
   if (!isConst && cpd == "*&") {
-    return new NotImplementedConverter{
-        PyExc_TypeError,
-        "argument type '" + resolvedType +
-            "' is not supported: non-const references to pointers (T*&) allow a"
-            " function to replace the pointer itself. Python cannot represent "
-            "this safely. Consider changing the"
-            " C++ API to return the new pointer or use a wrapper"};
+    interop::TCppType_t refType =
+        interop::GetType(resolvedType, /* enable_slow_lookup */ true);
+    if (!refType || interop::IsMutablePtrRefType(refType)) {
+      return new NotImplementedConverter{
+          PyExc_TypeError,
+          "argument type '" + resolvedType +
+              "' is not supported: non-const references to pointers (T*&) "
+              "allow a function to replace the pointer itself. Python cannot "
+              "represent this safely. Consider changing the"
+              " C++ API to return the new pointer or use a wrapper"};
+    }
   }
 
   // drop const, as that is mostly meaningless to python (with the exception
@@ -3647,7 +3651,7 @@ cppjit::cpyrt::CreateConverter(interop::TCppType_t type, cdims_t dims) {
 
   // mutable pointer references (T*&) are incompatible with Python's object
   // model
-  if (!isConst && cpd == "*&") {
+  if (!isConst && cpd == "*&" && interop::IsMutablePtrRefType(resolvedType)) {
     return new NotImplementedConverter{
         PyExc_TypeError,
         "argument type '" + resolvedTypeStr +
