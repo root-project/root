@@ -478,6 +478,11 @@ def multi(*bases):  # after six, see also _typemap.py
 
 # - workaround (TODO: may not be needed with Clang9) --------------------------
 if "win32" in sys.platform:
-    cppdef("""template<>
-    std::basic_ostream<char, std::char_traits<char>>& __cdecl std::endl<char, std::char_traits<char>>(
-        std::basic_ostream<char, std::char_traits<char>>&);""")
+    # Ill-formed if std::endl<char> was already instantiated; then the
+    # instantiation exists and the workaround is unnecessary.
+    try:
+        cppdef("""template<>
+        std::basic_ostream<char, std::char_traits<char>>& __cdecl std::endl<char, std::char_traits<char>>(
+            std::basic_ostream<char, std::char_traits<char>>&);""")
+    except SyntaxError:
+        pass
