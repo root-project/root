@@ -259,6 +259,72 @@ namespace SOFIE{
                shapeY.erase(shapeY.end()-1);
          }
 
+         // Constant-fold Gemm/MatMul when A, B (and C) are all initializers, following the
+         // ROperator_BasicBinary pattern (compute now, skip Generate() entirely). Only full
+         // constant folding is handled; propagating just A or B (see the TODO above) would
+         // need a different mechanism than fIsOutputConstant's all-or-nothing fold.
+         bool canFold = !fIsDynamic
+            && model.IsInitializedTensor(fNA)
+            && model.IsInitializedTensor(fNB)
+            && (fNC.empty() || model.IsInitializedTensor(fNC))
+            && fShapeA.size() <= 2       // exclude stacked/batched MatMul
+            && !fBroadcastBias           // exclude bias requiring run-time broadcast
+            && !fCheckBiasShapeAtRuntime;
+
+         if (canFold) {
+            auto shapeA_i = ConvertShapeToInt(fShapeA);
+            auto shapeB_i = ConvertShapeToInt(fShapeB);
+            size_t dimA = shapeA_i.size();
+            size_t dimB = shapeB_i.size();
+            size_t m = fAttrTransA ? shapeA_i[dimA - 1] : shapeA_i[dimA - 2];
+            size_t k = fAttrTransA ? shapeA_i[dimA - 2] : shapeA_i[dimA - 1];
+            size_t n = fAttrTransB ? shapeB_i[dimB - 2] : shapeB_i[dimB - 1];
+
+            auto dataA = static_cast<T *>(model.GetInitializedTensorData(fNA).get());
+            auto dataB = static_cast<T *>(model.GetInitializedTensorData(fNB).get());
+
+            // plain host-side 2D matrix multiply: Y = alpha * op(A) * op(B)
+            std::vector<T> dataY(m * n, T(0));
+            for (size_t i = 0; i < m; i++) {
+               for (size_t j = 0; j < n; j++) {
+                  T sum{};
+                  for (size_t p = 0; p < k; p++) {
+                     T aVal = fAttrTransA ? dataA[p * m + i] : dataA[i * k + p];
+                     T bVal = fAttrTransB ? dataB[j * k + p] : dataB[p * n + j];
+                     sum += aVal * bVal;
+                  }
+                  dataY[i * n + j] = static_cast<T>(fAttrAlpha) * sum;
+               }
+            }
+            // Y += beta * C (fBroadcastBias is false here, so C already matches Y's length)
+            if (!fNC.empty()) {
+               auto dataC = static_cast<T *>(model.GetInitializedTensorData(fNC).get());
+               for (size_t idx = 0; idx < dataY.size(); idx++)
+                  dataY[idx] += static_cast<T>(fAttrBeta) * dataC[idx];
+            }
+            // fuse ReLU now since Generate() will be skipped entirely for a constant output
+            if (fActivation == EActivationType::RELU) {
+               for (auto &v : dataY)
+                  v = std::max(v, T(0));
+            }
+
+            model.AddConstantTensor<T>(fNY, shapeY, dataY.data());
+            // flag the operand tensors to not be written in the generated code or weight file
+            model.SetNotWritableInitializedTensor(fNA);
+            model.SetNotWritableInitializedTensor(fNB);
+            if (!fNC.empty())
+               model.SetNotWritableInitializedTensor(fNC);
+            fIsOutputConstant = true;
+
+            if (model.Verbose()) {
+               std::cout << "Gemm (or MatMul) " << fNA << " , " << fNB;
+               if (!fNC.empty())
+                  std::cout << " , " << fNC;
+               std::cout << " ---> " << fNY << " (constant) " << ConvertShapeToString(shapeY) << std::endl;
+            }
+            return;
+         }
+
          if (!fIsDynamic)
             model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), shapeY);
          else
@@ -287,6 +353,9 @@ namespace SOFIE{
       }
 
       std::string Generate(std::string opName) override {
+         if (fIsOutputConstant)
+            return ""; // no op for constant tensors
+
          opName = "op_" + opName;
 
          // if (fShapeA.empty() || fShapeB.empty() || fShapeY.empty() || (fNC != "" && fShapeC.empty())) {
