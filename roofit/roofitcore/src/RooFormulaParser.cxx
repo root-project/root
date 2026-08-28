@@ -27,13 +27,27 @@
  *    right-associative exponentiation binding tighter than unary minus, whose
  *    right-hand side may carry one leading sign (see
  *    TFormula::HandleExponentiation).
- *  - cling's expression typing is tracked (integer literals and bool-valued
- *    operators are `int` in C++): integer division like `1/2` or `(x>0)/2`
- *    truncates in cling, so such expressions are not supported here and fall
- *    back. Similarly min/max with mixed int/double arguments does not compile
- *    in cling at all and is rejected.
+ *  - cling's expression typing is tracked as double/int/bool: integer
+ *    division like `1/2` or `(x>0)/2` truncates in cling, so such expressions
+ *    are not supported here and fall back. The range of values that an
+ *    int-typed subexpression can take is tracked at parse time, and any
+ *    int-typed intermediate that can leave the int32 range falls back
+ *    (cling's int arithmetic would overflow there, which the double
+ *    arithmetic used here does not reproduce); an
+ *    integer literal too large for int32 (which is long or unsigned in C++,
+ *    not int) falls back as well. min/max with mixed argument types
+ *    (int/double or bool/int) does not compile in cling at all and is
+ *    rejected, and sign()/TMath::Sign with a bool-typed first argument
+ *    resolves to the generic template returning bool (not copysign) and is
+ *    rejected too.
  *  - `%` on doubles does not compile in cling, so TFormula formulas using it
  *    are invalid today; it is not part of this grammar either.
+ *  - Several textual TFormula constructs that are invalid or surprising today
+ *    are kept out of the dialect so that they keep behaving as before (see
+ *    the FallbackTriggers test): the `++` linear-combination separator, runs
+ *    of three or more `-`, bare chained comparisons (cling compiles with
+ *    -Wparentheses as an error), and `^` with a sign on a parenthesized
+ *    exponent (TFormula's rewrite distributes the sign into the group).
  *  - `&&` and `||` do not short-circuit and `?:` evaluates both branches, so
  *    that the scalar and a future vectorized path behave identically. The
  *    selected/combined values are unchanged; this is only observable if
@@ -46,6 +60,7 @@
 #include <cctype>
 #include <cerrno>
 #include <cstdlib>
+#include <limits>
 #include <locale>
 #include <mutex>
 #include <sstream>
@@ -88,6 +103,7 @@ enum class Tok : std::uint8_t {
 struct Token {
    Tok kind = Tok::End;
    double value = 0.0;         ///< Tok::Number
+   long long intValue = 0;     ///< Tok::Number with isInt: the exact integer value
    bool isInt = false;         ///< Tok::Number: literal has integer type in C++
    std::uint32_t varIndex = 0; ///< Tok::Var
    std::string_view text;      ///< Tok::Ident / Tok::Number: raw spelling
@@ -215,7 +231,13 @@ private:
          const long long v = std::strtoll(begin, &end, 0);
          if (errno == ERANGE)
             return fail("integer literal out of range");
+         // An integer literal too large for int32 does not have type int in
+         // C++ (a decimal one becomes long, a hex/octal one unsigned int),
+         // which is not the int typing tracked here. Fall back.
+         if (v > std::numeric_limits<int>::max())
+            return fail("integer literal does not fit in int");
          tok.value = static_cast<double>(v);
+         tok.intValue = v;
          tok.isInt = true;
       }
       if (end == begin)
@@ -301,8 +323,31 @@ private:
       Tok kind;
       std::size_t len = 1;
       switch (c) {
-      case '+': kind = Tok::Plus; break;
-      case '-': kind = Tok::Minus; break;
+      case '+':
+         // A textually adjacent `++` is TFormula's linear-combination
+         // separator (TLinearFitter syntax with one fit parameter per part),
+         // not an addition. `+ +` with whitespace is ordinary addition.
+         if (c2 == '+')
+            return fail("'++' is TFormula's linear-combination separator");
+         kind = Tok::Plus;
+         break;
+      case '-': {
+         // TFormula rewrites a double negation `--` (also with whitespace in
+         // between) so that cling accepts it, but a run of three or more `-`
+         // survives as a `--` pre-decrement in the generated code, which does
+         // not compile. Keep such formulas failing (fall back).
+         std::size_t j = i + 1;
+         int run = 1;
+         while (j < n && (_s[j] == '-' || std::isspace(static_cast<unsigned char>(_s[j])))) {
+            if (_s[j] == '-')
+               ++run;
+            ++j;
+         }
+         if (run >= 3)
+            return fail("three or more consecutive '-' are invalid in TFormula");
+         kind = Tok::Minus;
+         break;
+      }
       case '*':
          if (c2 == '*') { // TFormula rewrites `**` to `^`
             kind = Tok::Caret;
@@ -418,10 +463,47 @@ public:
    {
    }
 
-   /// C++ int-vs-double typing of a subexpression, tracked to reject
-   /// constructs whose cling semantics double arithmetic cannot reproduce.
+   /// C++ typing of a subexpression (double vs int vs bool), tracked to
+   /// reject constructs whose cling semantics double arithmetic cannot
+   /// reproduce: truncating integer division, min/max with mixed argument
+   /// types, and the bool-typed constructs with non-arithmetic behavior.
    struct ExprInfo {
-      bool isInt = false;
+      enum class Type : std::uint8_t {
+         Double,
+         Int,
+         Bool
+      };
+      Type type = Type::Double;
+      /// Whether this is an int-typed constant subexpression (only used to
+      /// word the error message).
+      bool isIntConst = false;
+      /// For integral types, the inclusive range of values the subexpression
+      /// can take: a single value for a constant, [0, 1] for a bool, the full
+      /// int32 range for an int(x) cast. It is propagated through int-typed
+      /// arithmetic in 64-bit arithmetic at parse time: cling evaluated such
+      /// expressions in int32 arithmetic, so once an int-typed intermediate
+      /// can leave the int32 range, this evaluator's double arithmetic
+      /// diverges ("100000*100000" is 1410065408 in cling, not 1e10, and so
+      /// is `int(x)*int(y)` for x = y = 100000) and the formula must fall
+      /// back. The range is conservative, so some formulas that never
+      /// overflow for the values they are used with (`int(x)+1`) fall back
+      /// too.
+      long long intLo = 0;
+      long long intHi = 0;
+      void setIntRange(long long lo, long long hi)
+      {
+         intLo = lo;
+         intHi = hi;
+      }
+      /// A non-constant bool value.
+      void setBool()
+      {
+         type = Type::Bool;
+         isIntConst = false;
+         setIntRange(0, 1);
+      }
+      /// Whether the C++ type is an integral type (int or bool).
+      bool isIntegral() const { return type != Type::Double; }
    };
 
    bool run(Program &prog)
@@ -496,11 +578,35 @@ private:
       int &_d;
    };
 
+   static bool fitsInInt32(long long v)
+   {
+      return v >= std::numeric_limits<int>::min() && v <= std::numeric_limits<int>::max();
+   }
+
    bool fail(std::string msg)
    {
       if (_error.empty())
          _error = std::move(msg);
       return false;
+   }
+
+   /// Set the value range of an int-typed result (see ExprInfo::intLo), and
+   /// fail if cling's int arithmetic can overflow for it.
+   bool setIntResultRange(ExprInfo &out, long long lo, long long hi)
+   {
+      if (!fitsInInt32(lo) || !fitsInInt32(hi)) {
+         return fail(out.isIntConst ? "integer constant expression overflows int in cling"
+                                    : "integer expression can overflow int in cling");
+      }
+      out.setIntRange(lo, hi);
+      return true;
+   }
+
+   /// Typing of the negation of an integral value, which is an int.
+   bool negateIntegral(ExprInfo &out)
+   {
+      out.type = ExprInfo::Type::Int;
+      return setIntResultRange(out, -out.intHi, -out.intLo); // -(INT_MIN) overflows in cling
    }
 
    Token const &peek() const { return _tokens[_pos]; }
@@ -537,8 +643,16 @@ private:
       if (!parseTernary(right))
          return false;
       emit(Op::Select);
-      // The C++ type of `c ? a : b` is int only if both branches are int.
-      out.isInt = left.isInt && right.isInt;
+      // The C++ type of `c ? a : b` is the common type of the branches.
+      if (left.type == ExprInfo::Type::Double || right.type == ExprInfo::Type::Double) {
+         out.type = ExprInfo::Type::Double;
+      } else {
+         const bool isBool = left.type == ExprInfo::Type::Bool && right.type == ExprInfo::Type::Bool;
+         out.type = isBool ? ExprInfo::Type::Bool : ExprInfo::Type::Int;
+         out.setIntRange(std::min(left.intLo, right.intLo), std::max(left.intHi, right.intHi));
+      }
+      // Not a constant (the branch values themselves stay in int32 range).
+      out.isIntConst = false;
       return true;
    }
 
@@ -547,10 +661,19 @@ private:
    {
       if (!parseUnary(out))
          return false;
+      // Whether the expression accumulated so far is a bare (unparenthesized)
+      // relational comparison: cling compiles TFormula code with clang's
+      // -Wparentheses promoted to an error, so a chained comparison like
+      // `a < b < c` is invalid in TFormula today (chained equality like
+      // `a == b == c` is accepted, and parenthesized operands are fine).
+      bool lhsIsBareRelational = false;
       while (true) {
          BinOpInfo const *info = findBinOp(peek().kind);
          if (!info || info->prec < minPrec)
             break;
+         if (info->prec == 4 && lhsIsBareRelational)
+            return fail("chained comparison is invalid in TFormula");
+         lhsIsBareRelational = info->prec == 4;
          next();
          ExprInfo rhs;
          if (!parseBinary(info->prec + 1, rhs))
@@ -559,24 +682,53 @@ private:
          case Op::Add:
          case Op::Sub:
          case Op::Mul:
-            out.isInt = out.isInt && rhs.isInt;
+            // integral operands (bool promotes to int) give an int result
+            if (out.isIntegral() && rhs.isIntegral()) {
+               out.type = ExprInfo::Type::Int;
+               // Propagate the value range (a single value for constants) in
+               // 64-bit arithmetic; leaving the int32 range means cling's int
+               // arithmetic overflows, which is not reproduced here. Fall
+               // back. (Operands are within int32 range, so the 64-bit
+               // arithmetic cannot overflow.)
+               out.isIntConst = out.isIntConst && rhs.isIntConst;
+               long long lo = 0;
+               long long hi = 0;
+               if (info->op == Op::Add) {
+                  lo = out.intLo + rhs.intLo;
+                  hi = out.intHi + rhs.intHi;
+               } else if (info->op == Op::Sub) {
+                  lo = out.intLo - rhs.intHi;
+                  hi = out.intHi - rhs.intLo;
+               } else {
+                  const auto products = {out.intLo * rhs.intLo, out.intLo * rhs.intHi, out.intHi * rhs.intLo,
+                                         out.intHi * rhs.intHi};
+                  lo = std::min(products);
+                  hi = std::max(products);
+               }
+               if (!setIntResultRange(out, lo, hi))
+                  return false;
+            } else {
+               out.type = ExprInfo::Type::Double;
+               out.isIntConst = false;
+            }
             emit(info->op);
             // cling would compute `int * int` in integer arithmetic, where
             // e.g. (-1) * 0 is +0 and not the -0.0 of double arithmetic.
-            if (out.isInt && info->op == Op::Mul)
+            if (out.type == ExprInfo::Type::Int && info->op == Op::Mul)
                emit(Op::IntNorm);
             break;
          case Op::Div:
             // `1/2` is a truncating integer division in cling. Not supported;
             // fall back to TFormula so the behavior is unchanged.
-            if (out.isInt && rhs.isInt)
+            if (out.isIntegral() && rhs.isIntegral())
                return fail("integer division has truncating semantics in TFormula/cling");
-            out.isInt = false;
+            out.type = ExprInfo::Type::Double;
+            out.isIntConst = false;
             emit(info->op);
             break;
          default:
             // comparisons and logical operators: C++ result type is bool
-            out.isInt = true;
+            out.setBool();
             emit(info->op);
             break;
          }
@@ -591,21 +743,31 @@ private:
       if (_depth > kMaxRecursionDepth)
          return fail("expression too deeply nested");
       switch (peek().kind) {
-      case Tok::Plus: next(); return parseUnary(out); // unary plus: no-op, type preserved
+      case Tok::Plus:
+         next();
+         if (!parseUnary(out))
+            return false;
+         // unary plus: no-op on the value, but bool promotes to int
+         if (out.type == ExprInfo::Type::Bool)
+            out.type = ExprInfo::Type::Int;
+         return true;
       case Tok::Minus:
          next();
          if (!parseUnary(out))
             return false;
          emit(Op::Neg);
-         if (out.isInt)
+         if (out.isIntegral()) {
             emit(Op::IntNorm); // cling: -(int)0 is +0, not -0.0
+            if (!negateIntegral(out))
+               return false;
+         }
          return true;
       case Tok::Not:
          next();
          if (!parseUnary(out))
             return false;
          emit(Op::Not);
-         out.isInt = true;
+         out.setBool();
          return true;
       default: return parsePower(out);
       }
@@ -645,7 +807,8 @@ private:
       } else {
          emit(Op::Pow);
       }
-      out.isInt = false; // pow() and TMath::Sq(Double_t) return double
+      out.type = ExprInfo::Type::Double; // pow() and TMath::Sq(Double_t) return double
+      out.isIntConst = false;
       return true;
    }
 
@@ -666,6 +829,11 @@ private:
          haveSign = true;
          negate = true;
       }
+      // TFormula's textual rewrite pushes an explicit sign into a
+      // parenthesized exponent group, onto only its first term: `x^-(a+b)`
+      // compiles as pow(x,-(a)+b) today. Do not reproduce that; fall back.
+      if (haveSign && peek().kind == Tok::LParen)
+         return fail("'^' with a sign on a parenthesized exponent is broken in TFormula");
       const std::size_t operandStart = _pos;
       if (!parsePower(out))
          return false;
@@ -675,8 +843,11 @@ private:
                      _tokens[operandStart].text == "2";
       if (negate) {
          emit(Op::Neg);
-         if (out.isInt)
+         if (out.isIntegral()) {
             emit(Op::IntNorm);
+            if (!negateIntegral(out))
+               return false;
+         }
       }
       return true;
    }
@@ -689,7 +860,9 @@ private:
       case Tok::Number: {
          Token const &tok = next();
          emit(Op::Const, 0, tok.value);
-         out.isInt = tok.isInt;
+         out.type = tok.isInt ? ExprInfo::Type::Int : ExprInfo::Type::Double;
+         out.isIntConst = tok.isInt;
+         out.setIntRange(tok.intValue, tok.intValue);
          return true;
       }
       case Tok::Var: {
@@ -698,7 +871,8 @@ private:
             return fail("formula references x[" + std::to_string(tok.varIndex) + "] but fewer variables were provided");
          _used[tok.varIndex] = true;
          emit(Op::Var, tok.varIndex);
-         out.isInt = false;
+         out.type = ExprInfo::Type::Double;
+         out.isIntConst = false;
          return true;
       }
       case Tok::LParen: {
@@ -751,16 +925,47 @@ private:
       }
 
       using RooFormulaFunctions::TypeRule;
+      using Type = ExprInfo::Type;
+      out.isIntConst = false; // call results are not constant-folded
+      // The largest absolute value of an integral argument.
+      auto maxAbs = [](ExprInfo const &arg) { return std::max(-arg.intLo, arg.intHi); };
       switch (entry->rule) {
-      case TypeRule::Double: out.isInt = false; break;
-      case TypeRule::SameAsFirstArg: out.isInt = argInfo[0].isInt; break;
-      case TypeRule::Int: out.isInt = true; break;
+      case TypeRule::Double: out.type = Type::Double; break;
+      case TypeRule::SameAsFirstArg:
+         // abs(bool) resolves to abs(int) in cling: bool promotes to int
+         out.type = argInfo[0].type == Type::Bool ? Type::Int : argInfo[0].type;
+         if (out.isIntegral()) {
+            // abs(INT_MIN) overflows in cling
+            const bool spansZero = argInfo[0].intLo < 0 && argInfo[0].intHi > 0;
+            const long long lo = spansZero ? 0 : std::min(std::abs(argInfo[0].intLo), std::abs(argInfo[0].intHi));
+            if (!setIntResultRange(out, lo, maxAbs(argInfo[0])))
+               return false;
+         }
+         break;
+      case TypeRule::Int:
+         out.type = Type::Int;
+         out.setIntRange(std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+         break;
+      case TypeRule::Bool: out.setBool(); break;
+      case TypeRule::Sign:
+         // With a bool first argument, cling resolves TMath::Sign to the
+         // generic template returning bool: Sign(true, -1.) is +1 there, not
+         // the -1 of copysign. Fall back rather than reproducing that.
+         if (argInfo[0].type == Type::Bool)
+            return fail("'" + name + "' with a bool-typed first argument is not copysign in cling");
+         out.type = argInfo[0].type;
+         // The result is +-abs() of the first argument: abs(INT_MIN) overflows.
+         if (out.isIntegral() && !setIntResultRange(out, -maxAbs(argInfo[0]), maxAbs(argInfo[0])))
+            return false;
+         break;
       case TypeRule::MinMax:
-         // e.g. std::min(x, 3) with double x and int 3 does not compile in
-         // cling, so such formulas are invalid in TFormula today. Keep it so.
-         if (argInfo[0].isInt != argInfo[1].isInt)
-            return fail("'" + name + "' with mixed int/double arguments is invalid in TFormula");
-         out.isInt = argInfo[0].isInt;
+         // e.g. std::min(x, 3) with double x and int 3 (or a bool/int mix)
+         // does not compile in cling, so such formulas are invalid in
+         // TFormula today. Keep it so.
+         if (argInfo[0].type != argInfo[1].type)
+            return fail("'" + name + "' with mixed argument types is invalid in TFormula");
+         out.type = argInfo[0].type;
+         out.setIntRange(std::min(argInfo[0].intLo, argInfo[1].intLo), std::max(argInfo[0].intHi, argInfo[1].intHi));
          break;
       }
 
@@ -774,8 +979,8 @@ private:
       case 3: emit(Op::Call3, index); break;
       case 4: emit(Op::Call4, index); break;
       }
-      if (out.isInt)
-         emit(Op::IntNorm); // int-valued calls cannot yield -0.0 in cling
+      if (out.isIntegral())
+         emit(Op::IntNorm); // integer-valued calls cannot yield -0.0 in cling
       return true;
    }
 

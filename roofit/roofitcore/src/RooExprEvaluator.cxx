@@ -104,8 +104,11 @@ std::vector<Entry> makeTable()
    auto tmathMin = +[](double a, double b) { return TMath::Min(a, b); };
    auto tmathMax = +[](double a, double b) { return TMath::Max(a, b); };
    // Both the `sign` shortcut and TMath::Sign resolve to TMath::Sign, which is
-   // std::copysign for double arguments. (For an integer first argument cling
-   // picks the TMath::Sign template, whose result is numerically identical.)
+   // std::copysign for double arguments. (For an int first argument cling picks
+   // the generic TMath::Sign template, which also follows the sign bit of the
+   // second argument and is numerically identical for int values. A *bool*
+   // first argument is rejected by the parser: the template would return bool,
+   // turning e.g. Sign(true, -1.) into +1.)
    auto sign = +[](double a, double b) { return TMath::Sign(a, b); };
    auto signBit = +[](double x) { return std::signbit(x) ? 1.0 : 0.0; };
 
@@ -188,7 +191,7 @@ std::vector<Entry> makeTable()
       F1("TMath::Erfc",  +[](double x) { return TMath::Erfc(x); }),
       F1("TMath::Abs",   +[](double x) { return TMath::Abs(x); }, TypeRule::SameAsFirstArg),
       F1("TMath::Sq",    square),
-      F1("TMath::SignBit", signBit, TypeRule::Int),
+      F1("TMath::SignBit", signBit, TypeRule::Bool),
       // two-argument functions
       F2("pow",          +[](double a, double b) { return std::pow(a, b); }),
       F2("std::pow",     +[](double a, double b) { return std::pow(a, b); }),
@@ -205,8 +208,8 @@ std::vector<Entry> makeTable()
       F2("std::max",     stdMax, TypeRule::MinMax),
       F2("TMath::Max",   tmathMax, TypeRule::MinMax),
       // TFormula shortcut for TMath::Sign
-      F2("sign",         sign, TypeRule::SameAsFirstArg, "TMath::Sign"),
-      F2("TMath::Sign",  sign, TypeRule::SameAsFirstArg),
+      F2("sign",         sign, TypeRule::Sign, "TMath::Sign"),
+      F2("TMath::Sign",  sign, TypeRule::Sign),
       // zero-argument constants (folded to Op::Const at parse time)
       F0("TMath::Pi",     +[]() { return TMath::Pi(); }),
       F0("TMath::TwoPi",  +[]() { return TMath::TwoPi(); }),
