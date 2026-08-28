@@ -17,7 +17,9 @@
 
 #include <memory>
 #include <map>
-#include <windows.h>
+
+typedef unsigned long DWORD;
+typedef void* HANDLE;
 
 typedef ULongptr_t XID;
 typedef XID GdkDrawable;
