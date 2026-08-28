@@ -58,7 +58,8 @@ std::vector<size_t> ConvertShapeToInt(const std::vector<Dim> & shape){
 std::size_t ConvertShapeToLength(const std::vector<size_t> & shape){
    // Empty shape represent scalar values, so we return a length=1
    std::size_t fLength = 1;
-   for (auto& dim: shape) fLength *= dim;
+   for (const auto &dim : shape)
+   fLength *= dim;
    return fLength;
 }
 
