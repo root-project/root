@@ -60,7 +60,7 @@ See RooAbsDataHelper, rf408_RDataFrameToRooFit.C
 #include "RooTreeDataStore.h"
 #include "RooVectorDataStore.h"
 #include "RooFormulaVar.h"
-#include "RooFormula.h"
+#include "RooFormulaUtils.h"
 #include "RooUniformBinning.h"
 
 #include "RooFitImplHelpers.h"
@@ -2133,18 +2133,18 @@ double RooDataHist::sumEntries(const char* cutSpec, const char* cutRange) const
     return sumEntries();
   } else {
 
-    // Setup RooFormulaVar for cutSpec if it is present
-    std::unique_ptr<RooFormula> select;
-    if (cutSpec) {
-      select = std::make_unique<RooFormula>("select",cutSpec,*get());
-    }
+     // Setup a formula evaluator for cutSpec if it is present
+     std::unique_ptr<RooFormulaEvaluator> select;
+     if (cutSpec) {
+        select = RooFormulaUtils::makeFormulaEvaluator("select", cutSpec, *get());
+     }
 
     // Otherwise sum the weights in the event
     ROOT::Math::KahanSum<> kahanSum;
     for (Int_t i=0; i < _arrSize; i++) {
       get(i) ;
-      if ((select && select->eval() == 0.) || (cutRange && !_vars.allInRange(cutRange)))
-          continue;
+      if ((select && RooFormulaUtils::evalFormula(*select, _vars) == 0.) || (cutRange && !_vars.allInRange(cutRange)))
+         continue;
 
       kahanSum += weight(i);
     }

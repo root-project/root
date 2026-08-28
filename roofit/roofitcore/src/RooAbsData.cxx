@@ -85,7 +85,7 @@ observable snapshots are stored in the dataset.
 #include "TMath.h"
 #include "TTree.h"
 
-#include "RooFormula.h"
+#include "RooFormulaUtils.h"
 #include "RooFormulaVar.h"
 #include "RooCmdConfig.h"
 #include "RooAbsRealLValue.h"
@@ -870,9 +870,9 @@ double RooAbsData::moment(const RooRealVar& var, double order, double offset, co
   }
 
   // Setup RooFormulaVar for cutSpec if it is present
-  std::unique_ptr<RooFormula> select;
+  std::unique_ptr<RooFormulaEvaluator> select;
   if (cutSpec) {
-    select = std::make_unique<RooFormula>("select",cutSpec,*get());
+     select = RooFormulaUtils::makeFormulaEvaluator("select", cutSpec, *get());
   }
 
 
@@ -880,7 +880,8 @@ double RooAbsData::moment(const RooRealVar& var, double order, double offset, co
   ROOT::Math::KahanSum<double> sum;
   for(int index= 0; index < numEntries(); index++) {
     const RooArgSet* vars = get(index) ;
-    if (select && select->eval()==0) continue ;
+    if (select && RooFormulaUtils::evalFormula(*select, _vars) == 0)
+       continue;
     if (cutRange && vars->allInRange(cutRange)) continue ;
 
     sum += weight() * std::pow(varPtr->getVal() - offset,order);
@@ -925,8 +926,9 @@ double RooAbsData::corrcov(const RooRealVar &x, const RooRealVar &y, const char*
   }
 
   // Setup RooFormulaVar for cutSpec if it is present
-  std::unique_ptr<RooFormula> select;
-  if (cutSpec) select = std::make_unique<RooFormula>("select",cutSpec,*get());
+  std::unique_ptr<RooFormulaEvaluator> select;
+  if (cutSpec)
+     select = RooFormulaUtils::makeFormulaEvaluator("select", cutSpec, *get());
 
   // Calculate requested moment
   double xysum(0);
@@ -937,7 +939,8 @@ double RooAbsData::corrcov(const RooRealVar &x, const RooRealVar &y, const char*
   const RooArgSet* vars ;
   for(int index= 0; index < numEntries(); index++) {
     vars = get(index) ;
-    if (select && select->eval()==0) continue ;
+    if (select && RooFormulaUtils::evalFormula(*select, _vars) == 0)
+       continue;
     if (cutRange && vars->allInRange(cutRange)) continue ;
 
     xysum += weight()*xdata->getVal()*ydata->getVal() ;
@@ -988,7 +991,8 @@ RooFit::OwningPtr<TMatrixDSym> RooAbsData::corrcovMatrix(const RooArgList& vars,
   }
 
   // Setup RooFormulaVar for cutSpec if it is present
-  std::unique_ptr<RooFormula> select = cutSpec ? std::make_unique<RooFormula>("select",cutSpec,*get()) : nullptr;
+  std::unique_ptr<RooFormulaEvaluator> select =
+     cutSpec ? RooFormulaUtils::makeFormulaEvaluator("select", cutSpec, *get()) : nullptr;
 
   TMatrixDSym xysum(varList.size()) ;
   std::vector<double> xsum(varList.size()) ;
@@ -997,7 +1001,8 @@ RooFit::OwningPtr<TMatrixDSym> RooAbsData::corrcovMatrix(const RooArgList& vars,
   // Calculate <x_i> and <x_i y_j>
   for(int index= 0; index < numEntries(); index++) {
     const RooArgSet* dvars = get(index) ;
-    if (select && select->eval()==0) continue ;
+    if (select && RooFormulaUtils::evalFormula(*select, _vars) == 0)
+       continue;
     if (cutRange && dvars->allInRange(cutRange)) continue ;
 
     for(std::size_t iX = 0; iX < varList.size(); ++iX) {
@@ -1298,13 +1303,9 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
   }
 
   // Create selection formula if selection cuts are specified
-  std::unique_ptr<RooFormula> select;
+  std::unique_ptr<RooFormulaEvaluator> select;
   if (cuts != nullptr && strlen(cuts) > 0) {
-    select = std::make_unique<RooFormula>(cuts, cuts, _vars, false);
-    if (!select || !select->ok()) {
-      coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: invalid cuts \"" << cuts << "\"" << std::endl;
-      return nullptr;
-    }
+     select = RooFormulaUtils::makeFormulaEvaluator(cuts, cuts, _vars);
   }
 
   // Lookup each of the variables we are binning in our tree variables
@@ -1345,10 +1346,9 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
     get(i);
 
     // Apply expression based selection criteria
-    if (select && select->eval()==0) {
-      continue ;
+    if (select && RooFormulaUtils::evalFormula(*select, _vars) == 0) {
+       continue;
     }
-
 
     // Apply range based selection criteria
     bool selectByRange = true ;
@@ -2592,12 +2592,9 @@ TH2F *RooAbsData::createHistogram(const RooAbsRealLValue &var1, const RooAbsReal
    }
 
    // Create selection formula if selection cuts are specified
-   std::unique_ptr<RooFormula> select;
+   std::unique_ptr<RooFormulaEvaluator> select;
    if (nullptr != cuts && strlen(cuts)) {
-      select = std::make_unique<RooFormula>(cuts, cuts, _vars);
-      if (!select->ok()) {
-         return nullptr;
-      }
+      select = RooFormulaUtils::makeFormulaEvaluator(cuts, cuts, _vars);
    }
 
    std::stringstream histName;
@@ -2616,7 +2613,7 @@ TH2F *RooAbsData::createHistogram(const RooAbsRealLValue &var1, const RooAbsReal
    for (int i = 0; i < nevent; ++i) {
       get(i);
 
-      if (select && select->eval() == 0)
+      if (select && RooFormulaUtils::evalFormula(*select, _vars) == 0)
          continue;
       histogram->Fill(plotVarX->getVal(), plotVarY->getVal(), weight());
    }

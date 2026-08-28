@@ -1,10 +1,10 @@
-// Tests for the RooFormula
+// Tests for the RooFormulaUtils functions and RooFormulaVar
 // Authors: Stephan Hageboeck, CERN  2020
 //          Jonas Rembser, CERN 2023
 //          Andrea Germinario, CERN 2025
 #include <TFile.h>
 
-#include "../src/RooFormula.h"
+#include "../src/RooFormulaUtils.h"
 #include <RooFit/Evaluator.h>
 #include <RooFormulaVar.h>
 #include <RooRealVar.h>
@@ -38,19 +38,22 @@ TEST(RooFormula, TestInvalidFormulae)
 
    RooRealVar x("x", "x", 1.337);
    RooRealVar y("y", "y", -1.);
-   RooFormula form("form", "x+10", x);
-   EXPECT_FLOAT_EQ(form.eval(nullptr), 11.337);
+   auto form = RooFormulaUtils::makeFormulaEvaluator("form", "x+10", x);
+   EXPECT_FLOAT_EQ(RooFormulaUtils::evalFormula(*form, RooArgList{x}), 11.337);
 
-   ASSERT_ANY_THROW(RooFormula("form", "x+y", x)) << "Formulae with y,z,t and no RooFit variable cannot work.";
-   ASSERT_ANY_THROW(RooFormula("form", "x+z", x)) << "Formulae with y,z,t and no RooFit variable cannot work.";
-   ASSERT_ANY_THROW(RooFormula("form", "x+t", x)) << "Formulae with y,z,t and no RooFit variable cannot work.";
-   ASSERT_ANY_THROW(RooFormula("form", "x+a", x)) << "Formulae with unknown variable cannot work.";
+   using RooFormulaUtils::makeFormulaEvaluator;
+   ASSERT_ANY_THROW(makeFormulaEvaluator("form", "x+y", x))
+      << "Formulae with y,z,t and no RooFit variable cannot work.";
+   ASSERT_ANY_THROW(makeFormulaEvaluator("form", "x+z", x))
+      << "Formulae with y,z,t and no RooFit variable cannot work.";
+   ASSERT_ANY_THROW(makeFormulaEvaluator("form", "x+t", x))
+      << "Formulae with y,z,t and no RooFit variable cannot work.";
+   ASSERT_ANY_THROW(makeFormulaEvaluator("form", "x+a", x)) << "Formulae with unknown variable cannot work.";
 
-   std::unique_ptr<RooFormula> form6;
-   ASSERT_NO_THROW(form6 = std::make_unique<RooFormula>("form", "x+y", RooArgList{x, y}))
-      << "Formula with x,y must work.";
+   std::unique_ptr<RooFormulaEvaluator> form6;
+   ASSERT_NO_THROW(form6 = makeFormulaEvaluator("form", "x+y", RooArgList{x, y})) << "Formula with x,y must work.";
    ASSERT_NE(form6, nullptr);
-   EXPECT_FLOAT_EQ(form6->eval(nullptr), 1.337 - 1.);
+   EXPECT_FLOAT_EQ(RooFormulaUtils::evalFormula(*form6, RooArgList{x, y}), 1.337 - 1.);
 }
 
 // In case of named arguments, the RooFormula will replace the argument names
@@ -68,7 +71,7 @@ TEST(RooFormula, TestDangerousVariableNames)
 
    // Create the formula, triggers an error if the formula doesn't compile
    // correctly because the dangerous variable names haven't been treated right.
-   RooFormula formula("formula", "exp(-abs(@0)/@1)*cos(@0*@2)", {dt, x, zero});
+   RooFormulaUtils::makeFormulaEvaluator("formula", "exp(-abs(@0)/@1)*cos(@0*@2)", {dt, x, zero});
 }
 
 /// Check that the RooFormulaVar has the right number of servers when some

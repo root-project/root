@@ -51,7 +51,7 @@
 #include "RooArgSet.h"
 
 #include "RooStreamParser.h"
-#include "RooFormula.h"
+#include "RooFormulaUtils.h"
 #include "RooAbsRealLValue.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooStringVar.h"
@@ -414,11 +414,10 @@ bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAt
 
       // Extract conditional expressions and check validity
       TString expr = parser.readLine() ;
-      RooFormula form(expr,expr,*this) ;
-      if (!form.ok()) return true ;
+      auto form = RooFormulaUtils::makeFormulaEvaluator(expr.Data(), expr.Data(), *this);
 
       // Evaluate expression
-      bool status = form.eval()?true:false ;
+      bool status = RooFormulaUtils::evalFormula(*form, *this) ? true : false;
       if (lastLineWasElse) {
         anyCondTrue[condStackLevel] |= status ;
         lastLineWasElse=false ;
