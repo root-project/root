@@ -308,7 +308,7 @@ if(builtin_openssl AND NOT APPLE)
     message(FATAL_ERROR ">>> Option 'builtin_openssl' is only supported on macOS.")
 endif()
 
-if(WINDOWS AND NOT shared)
+if(WIN32 AND NOT shared)
   message(FATAL_ERROR "Option \"shared=Off\" not supported on Windows!")
 endif()
 
