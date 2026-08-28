@@ -1848,7 +1848,7 @@ interop::TCppType_t interop::GetEnumConstantType(TCppScope_t scope) {
   return Cpp::GetEnumConstantType(Cpp::GetUnderlyingScope(scope));
 }
 
-interop::TCppIndex_t interop::GetEnumDataValue(TCppScope_t scope) {
+long long interop::GetEnumDataValue(TCppScope_t scope) {
   std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
   return Cpp::GetEnumConstantValue(scope);
 }
