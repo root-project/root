@@ -26,7 +26,7 @@
 #include <iostream>
 #include <algorithm>
 #include <string>
-#include "../inc/mathtext.h"
+#include "mathtext/mathtext.h"
 
 /////////////////////////////////////////////////////////////////////
 

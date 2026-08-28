@@ -17,7 +17,7 @@
 // 02110-1301 USA
 
 #include <cmath>
-#include "../inc/mathrender.h"
+#include "mathtext/mathrender.h"
 
 /////////////////////////////////////////////////////////////////////
 
