@@ -17,19 +17,7 @@
 
 #include <memory>
 #include <map>
-
-
-
-#ifndef __CLING__
-
-#include "Windows4Root.h"
-#include "gdk/gdk.h"
-#include "gdk/win32/gdkwin32.h"
-
-#else
-
-typedef unsigned long DWORD;
-typedef void* HANDLE;
+#include <windows.h>
 
 typedef ULongptr_t XID;
 typedef XID GdkDrawable;
@@ -46,8 +34,6 @@ struct GdkEvent;
 struct GdkImage;
 struct GdkPoint;
 struct GdkRectangle;
-
-#endif
 
 typedef unsigned long KeySym;
 
