@@ -17,6 +17,7 @@ builtin_lz4=OFF
 builtin_lzma=OFF
 builtin_nlohmannjson=OFF
 builtin_openssl=OFF
+builtin_mathjax=ON
 builtin_openui5=ON
 builtin_pcre=OFF
 builtin_tbb=OFF
