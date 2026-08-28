@@ -1649,3 +1649,24 @@ class TestREGRESSION:
 
         with raises(TypeError):
             cppjit.gbl.std.vector[object()]
+
+    def test53_enum_arg_overload_priority(self):
+        """An integer argument prefers the integer overload over an enum one"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace EnumArgPriority {
+            enum Color { Red = 0, Green = 1, Blue = 2 };
+            int pick(Color)        { return 1; }
+            int pick(unsigned int) { return 2; }
+            int only_enum(Color c) { return 10 + (int)c; }
+        }""")
+
+        ns = cppjit.gbl.EnumArgPriority
+
+        # C++ has no implicit int -> enum conversion
+        assert ns.pick(2) == 2
+
+        # an enum parameter is only deprioritized, never unusable
+        assert ns.only_enum(2) == 12
