@@ -310,7 +310,7 @@ if(roofit_multiprocess AND WIN32)
     message(FATAL_ERROR ">>> Option 'roofit_multiprocess' is not supported on Windows.")
 endif()
 
-if(WINDOWS AND NOT shared)
+if(WIN32 AND NOT shared)
   message(FATAL_ERROR "Option \"shared=Off\" not supported on Windows!")
 endif()
 
