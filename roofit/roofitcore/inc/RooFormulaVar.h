@@ -27,7 +27,7 @@
 #include <string>
 
 class RooArgSet ;
-class RooFormula ;
+class RooFormulaEvaluator;
 class RooAbsRealLValue;
 
 class RooFormulaVar : public RooAbsReal {
@@ -89,23 +89,21 @@ public:
   compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const override;
 
   protected:
-  // Post-processing of server redirection
-  bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
-
   bool isValidReal(double /*value*/, bool /*printError*/) const override {return true;}
 
   private:
-  RooFormula& getFormula() const;
+     RooFormulaEvaluator &evaluator() const;
 
-  RooListProxy _actualVars ;     ///< Actual parameters used by formula engine
-  mutable RooFormula *_formula = nullptr; ///<! Formula engine
-  mutable RooArgSet* _nset{nullptr}; ///<! Normalization set to be passed along to contents
-  TString _formExpr ;            ///< Formula expression string
+     RooListProxy _actualVars;                                ///< Actual parameters used by formula engine
+     mutable std::unique_ptr<RooFormulaEvaluator> _evaluator; ///<! Formula evaluation engine
+     mutable RooArgSet *_nset{nullptr};                       ///<! Normalization set to be passed along to contents
+     TString _formExpr;                                       ///< Formula expression string
 
-  std::map<int, std::unique_ptr<RooAbsBinning>> _binnings; ///< User-defined binnings, keyed by the observable's index
-                                                           ///< in _actualVars, for a piecewise-flat distribution
+     std::map<int, std::unique_ptr<RooAbsBinning>>
+        _binnings; ///< User-defined binnings, keyed by the observable's index
+                   ///< in _actualVars, for a piecewise-flat distribution
 
-  ClassDefOverride(RooFormulaVar, 2) // Real-valued function of other RooAbsArgs calculated by a TFormula expression
+     ClassDefOverride(RooFormulaVar, 2) // Real-valued function of other RooAbsArgs calculated by a TFormula expression
 };
 
 #endif

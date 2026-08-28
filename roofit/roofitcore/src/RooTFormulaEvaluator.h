@@ -17,7 +17,6 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 
 class RooArgList;
 class TFormula;
@@ -36,14 +35,11 @@ public:
 
    double eval(const double *vars) const override;
    std::unique_ptr<RooFormulaEvaluator> clone() const override;
-   bool usesVariable(unsigned int i) const override;
-   std::string processedFormula() const override;
 
    TFormula *getTFormula() const override { return _tFormula.get(); }
 
 private:
    std::unique_ptr<TFormula> _tFormula; ///< The formula used to compute values
-   std::vector<bool> _varIsUsed;        ///< Flags which variables `x[i]` appear in the formula
 };
 
 #endif
