@@ -58,6 +58,12 @@ void CheckFilledShapeStaysInside(const char *colour, Int_t shape)
          expected_area = 3.1415 * (kSize / 3 + 1) * (kSize / 7 + 1);
          expected_delta = kSize / 3 * 3.14;
          break;
+      case 4:
+         img.DrawEllips2(kSize / 2, kSize / 2, kSize / 3, kSize / 7, 0, colour, -1);
+         name = "AxisAlignedEllipse";
+         expected_area = 3.1415 * (kSize / 3 + 1) * (kSize / 7 + 1);
+         expected_delta = kSize / 3 * 3.14;
+         break;
       default:
          img.DrawCircle(kSize / 2, kSize / 2, kSize / 4, colour, -1);
          name = "Circle";
@@ -195,4 +201,33 @@ TEST(TASImage, FilledEllipsSemiTransparent)
 TEST(TASImage, FilleEllipsLowAlpha)
 {
    CheckFilledShapeStaysInside("#102277CC", 3);
+}
+
+// https://github.com/root-project/root/issues/23148
+//
+// The same radii at 0 degrees take a different route: asim_ellips2 forwards
+// 0, 90 and 180 to asim_straight_ellips, which drew an anti-aliased outline and
+// then flooded from the centre. Where the outline stepped diagonally its
+// coverage could land just under the fill threshold, and the flood escaped
+// through that one-cell hole and painted the whole image. It now fills by spans,
+// so there is no threshold to fall short of.
+
+TEST(TASImage, FilledAxisAlignedEllipsOpaque)
+{
+   CheckFilledShapeStaysInside("#FF2277CC", 4);
+}
+
+TEST(TASImage, FilledAxisAlignedEllipsHighAlpha)
+{
+   CheckFilledShapeStaysInside("#C02277CC", 4);
+}
+
+TEST(TASImage, FilledAxisAlignedEllipsSemiTransparent)
+{
+   CheckFilledShapeStaysInside("#7F2277CC", 4);
+}
+
+TEST(TASImage, FilledAxisAlignedEllipsLowAlpha)
+{
+   CheckFilledShapeStaysInside("#102277CC", 4);
 }
