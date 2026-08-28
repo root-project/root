@@ -7,8 +7,12 @@
 #include "../src/RooFormulaParser.h"
 #include "../src/RooExprEvaluator.h"
 
+#include <RooAddition.h>
+#include <RooDataSet.h>
 #include <RooFormulaVar.h>
+#include <RooGaussian.h>
 #include <RooGenericPdf.h>
+#include <RooGlobalFunc.h>
 #include <RooRealVar.h>
 
 #include <Math/PdfFuncMathCore.h>
@@ -21,15 +25,22 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <locale>
 #include <map>
+#include <memory>
 #include <random>
 #include <string>
 #include <vector>
+
+#ifdef __linux__
+#include <fstream>
+#endif
 
 namespace {
 
@@ -1596,5 +1607,170 @@ TEST(RooFormulaEvaluator, EmittedCppRandomExpressions)
             << "\n  inputs: " << pars[0] << " " << pars[1] << " " << pars[2] << "\n  ast = " << std::hexfloat << a
             << " emitted = " << c << std::defaultfloat;
       }
+   }
+}
+
+namespace {
+
+/// Resident set size of this process in kB, or -1 where unsupported.
+long vmRSSkB()
+{
+#ifdef __linux__
+   std::ifstream in("/proc/self/status");
+   std::string line;
+   while (std::getline(in, line)) {
+      if (line.rfind("VmRSS:", 0) == 0)
+         return std::atol(line.c_str() + 6);
+   }
+#endif
+   return -1;
+}
+
+/// A formula string with numeric literals that are distinct for each `i`,
+/// mirroring the TRExFitter-style expression NormFactors reported in
+/// https://github.com/root-project/root/issues/21052, e.g.
+/// `(1-(SFb_pcbt90_20_40*0.035)-(SFc_pcbt85_20_40*0.138))/0.518`.
+std::string distinctLiteralExpr(int i)
+{
+   char buf[64];
+   const double k1 = 0.001 + 1e-6 * i;
+   const double k2 = 0.100 + 1e-6 * i;
+   std::snprintf(buf, sizeof(buf), "(1-(a*%.6f)-(b*%.6f))/0.518", k1, k2);
+   return buf;
+}
+
+} // namespace
+
+// Regression test for https://github.com/root-project/root/issues/21052:
+// constructing many RooFormulaVars whose formulas differ only in their
+// numeric literals must not JIT-compile anything. On the old TFormula
+// backend, each distinct-literal formula misses the JIT'd-function cache and
+// costs two cling JIT compilations (the formula and its validation clone) at
+// ~130 kB and ~6 ms each -- about 8 GB and several minutes for this N, which
+// is the reported out-of-memory failure. Note that literals distinct per
+// formula are essential: with identical formula bodies the JIT'd-function
+// cache absorbs the repetition and the old path passes this test too.
+TEST(RooFormulaEvaluator, ManyDistinctLiteralFormulas)
+{
+   // The default backend must handle this workload; shield the test from an
+   // ambient ROOFIT_FORMULA_BACKEND override.
+   ScopedBackendEnv env{nullptr};
+
+   constexpr int n = 30000;
+
+   RooRealVar a("a", "a", 1.0, 0.1, 3.0);
+   RooRealVar b("b", "b", 1.0, 0.1, 3.0);
+
+   const long rss0 = vmRSSkB();
+   const auto t0 = std::chrono::steady_clock::now();
+
+   std::vector<std::unique_ptr<RooFormulaVar>> fvs;
+   fvs.reserve(n);
+   for (int i = 0; i < n; ++i) {
+      const std::string name = "f_" + std::to_string(i);
+      fvs.emplace_back(std::make_unique<RooFormulaVar>(name.c_str(), distinctLiteralExpr(i).c_str(), RooArgList(a, b)));
+      RooFormulaVar &fv = *fvs.back();
+      fv.getVal(); // force evaluation like a real fit setup would
+      // The whole batch must run on the JIT-free expression backend: a
+      // formula on the TFormula backend always reports the (non-empty) name
+      // of its cling-JIT-compiled function, so a non-empty name here means a
+      // JIT compilation happened for this formula.
+      ASSERT_TRUE(fv.getUniqueFuncName().empty()) << name;
+   }
+
+   const auto t1 = std::chrono::steady_clock::now();
+   const long rss1 = vmRSSkB();
+
+   // Spot-check values and that the expressions are emittable as inline C++
+   // (the positive counterpart of the empty unique function name: exactly the
+   // JIT-free expression backend can emit C++).
+   auto varName = [](unsigned int i) { return "v[" + std::to_string(i) + "]"; };
+   for (int i : {0, 12345, n - 1}) {
+      const double k1 = 0.001 + 1e-6 * i;
+      const double k2 = 0.100 + 1e-6 * i;
+      EXPECT_DOUBLE_EQ(fvs[i]->getVal(), (1. - k1 - k2) / 0.518) << i;
+      EXPECT_FALSE(fvs[i]->emitFormulaCpp(varName).empty()) << i;
+   }
+
+   // Order-of-magnitude resource bounds, far above what the JIT-free path
+   // needs (measured: 1.1 s wall, 82 MB RSS growth) and far below what the
+   // per-formula JIT path would cost (minutes, gigabytes).
+   const double wallSeconds = std::chrono::duration<double>(t1 - t0).count();
+   EXPECT_LT(wallSeconds, 60.);
+   if (rss0 >= 0) {
+      EXPECT_LT((rss1 - rss0) / 1024., 400.) << "RSS growth in MB";
+   }
+}
+
+// The codegen counterpart of ManyDistinctLiteralFormulas, also for
+// https://github.com/root-project/root/issues/21052: before the JIT-free
+// backend, codegen forced one TFormula JIT compilation per RooFormulaVar just
+// to obtain a function name for the generated code to call. Now the
+// expressions are inlined into the generated code, so building and evaluating
+// the likelihood of a model with many distinct-literal formulas involves no
+// per-formula JIT. Cling is still invoked once, for the whole squashed
+// likelihood function: the claim under test is O(1) compilations per model
+// instead of O(N) per formula.
+TEST(RooFormulaEvaluator, ManyDistinctLiteralFormulasCodegen)
+{
+   ScopedBackendEnv env{nullptr};
+
+   constexpr int n = 1000;
+
+   RooRealVar x("x", "x", 0.0, -10.0, 10.0);
+   RooRealVar a("a", "a", 1.0, 0.1, 3.0);
+   RooRealVar b("b", "b", 1.0, 0.1, 3.0);
+   RooRealVar sigma("sigma", "sigma", 2.0, 0.1, 10.0);
+
+   const long rss0 = vmRSSkB();
+   const auto t0 = std::chrono::steady_clock::now();
+
+   // A Gaussian whose mean is the sum of n distinct-literal formula terms,
+   // each scaled such that the sum stays of order one.
+   std::vector<std::unique_ptr<RooFormulaVar>> fvs;
+   RooArgList terms;
+   fvs.reserve(n);
+   for (int i = 0; i < n; ++i) {
+      const std::string name = "f_" + std::to_string(i);
+      const std::string expr = "(" + distinctLiteralExpr(i) + " - 0.9)/" + std::to_string(n) + ".0";
+      fvs.emplace_back(std::make_unique<RooFormulaVar>(name.c_str(), expr.c_str(), RooArgList(a, b)));
+      terms.add(*fvs.back());
+   }
+   RooAddition mean("mean", "mean", terms);
+   RooGaussian gauss("gauss", "gauss", x, mean, sigma);
+
+   RooDataSet data("data", "data", x);
+   for (int i = 0; i < 20; ++i) {
+      x.setVal(-3.0 + 0.3 * i);
+      data.add(x);
+   }
+
+   // CodegenNoGrad is the codegen backend without the (clad-dependent)
+   // gradient generation, which is not needed to test the compilation count.
+   std::unique_ptr<RooAbsReal> nll{gauss.createNLL(data, RooFit::EvalBackend::CodegenNoGrad())};
+   const double nllVal = nll->getVal();
+
+   const auto t1 = std::chrono::steady_clock::now();
+   const long rss1 = vmRSSkB();
+
+   // Codegen must not have created any TFormula behind the scenes (it used
+   // to call getVal() and getUniqueFuncName() on each formula, forcing one
+   // JIT compilation per formula): every formula still has no JIT'd function
+   // name, i.e. it stayed on the JIT-free expression backend throughout.
+   for (auto const &fv : fvs) {
+      ASSERT_TRUE(fv->getUniqueFuncName().empty()) << fv->GetName();
+   }
+
+   // The generated code must agree with the regular CPU evaluation backend.
+   std::unique_ptr<RooAbsReal> nllRef{gauss.createNLL(data, RooFit::EvalBackend::Cpu())};
+   EXPECT_NEAR(nllVal, nllRef->getVal(), 1e-10 * std::abs(nllRef->getVal()));
+
+   // Order-of-magnitude resource bounds (measured: 0.6 s wall, 40 MB RSS
+   // growth, dominated by the one cling compilation of the squashed
+   // likelihood function).
+   const double wallSeconds = std::chrono::duration<double>(t1 - t0).count();
+   EXPECT_LT(wallSeconds, 60.);
+   if (rss0 >= 0) {
+      EXPECT_LT((rss1 - rss0) / 1024., 400.) << "RSS growth in MB";
    }
 }
