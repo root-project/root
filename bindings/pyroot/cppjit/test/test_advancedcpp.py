@@ -1000,3 +1000,21 @@ class TestADVANCEDCPP:
 
         for norm in [ns.norm_cr, ns.norm_m, ns.norm_v]:
             assert round(norm(p3) - pynorm, 8) == 0
+
+
+class TestQUALIFIEDLOOKUP:
+    def test01_qualified_name_in_namespace(self):
+        """A qualified name resolves relative to a namespace"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace QualLookup {
+            namespace Inner { struct Thing { int v = 7; }; }
+            struct Outer { struct Nested { int w = 9; }; };
+        }""")
+
+        ns = cppjit.gbl.QualLookup
+
+        assert getattr(ns, "Inner::Thing")().v == 7
+        assert getattr(ns, "Outer::Nested")().w == 9
