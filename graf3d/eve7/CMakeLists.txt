@@ -12,7 +12,11 @@ endif()
 if (builtin_glu)
   set(EXTRA_GL_LIBS tessglu)
 else ()
-  set(EXTRA_GL_LIBS OpenGL::GLU)
+  if (WIN32)
+    set(EXTRA_GL_LIBS Glu32.lib)
+  else()
+    set(EXTRA_GL_LIBS OpenGL::GLU)
+  endif()
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
