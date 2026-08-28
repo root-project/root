@@ -13,6 +13,7 @@ ROOT_ADD_GTEST(testRooFit
     testRooCrystalBall.cxx
     testRooExponential.cxx
     testRooGaussian.cxx
+    testRooIntegralMorph.cxx
     testRooJohnson.cxx
     testRooKeysPdf.cxx
     testRooLandau.cxx

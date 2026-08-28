@@ -37,25 +37,26 @@ calculates the shape of the interpolated p.d.f. fbar(x) for all values
 of x for a given value of alpha,p,q and caches these values in a histogram
 (as implemented by RooAbsCachedPdf). The binning granularity of the cache
 can be controlled by the binning named "cache" on the RooRealVar representing
-the observable x. The fbar sampling algorithm is based on a recursive division
-mechanism with a built-in precision cutoff: First an initial sampling in
-64 equally spaced bins is made. Then the value of fbar is calculated in
-the center of each gap. If the calculated value deviates too much from
-the value obtained by linear interpolation from the edge bins, gap
-is recursively divided. This strategy makes it possible to define a very
-fine cache sampling (e.g. 1000 or 10000) bins without incurring a
-corresponding CPU penalty.
+the observable x. The fbar sampling algorithm first scans the range of
+calculable c.d.f. values with a coarse grid and a recursive gap division
+mechanism, and then polishes the c.d.f. value for each cache bin center with
+Newton iterations on the monotone map X(y) = alpha*x1(y) + (1-alpha)*x2(y).
+The residual inaccuracy of the cached p.d.f. is therefore dominated by the
+interpolation between the cache bin centers and decreases steeply with the
+number of cache bins: with O(1000) cache bins the difference between the
+cached shape and the exact morphed p.d.f. is typically at the 1e-7 level
+(measured as a Kolmogorov-Smirnov distance) for Gaussian input shapes.
 
 Note on numeric stability of the algorithm. Since the algorithm relies
 on a numeric inversion of cumulative distributions functions, some precision
 may be lost at the 'edges' of the same (i.e. at regions in x where the
-c.d.f. value is close to zero or one). The general sampling strategy is
-to start with 64 equally spaces samples in the range y=(0.01-0.99).
-Then the y ranges are pushed outward by reducing y (or the distance of y to 1.0)
-by a factor of sqrt(10) iteratively up to the point where the corresponding
-x value no longer changes significantly. For p.d.f.s with very flat tails
-such as Gaussians some part of the tail may be lost due to limitations
-in numeric precision in the CDF inversion step.
+c.d.f. value is close to zero or one). The sampling strategy is to start
+at y=0.1 (or the distance of y to 1.0) and push the y range outward by
+a factor of sqrt(10) iteratively up to the point where the corresponding
+x value no longer changes significantly, with a hard cutoff at y=1e-12.
+For p.d.f.s with very flat tails such as Gaussians some part of the tail
+may be lost due to limitations in numeric precision in the CDF inversion
+step.
 
 An effect related to the above limitation in numeric precision should
 be anticipated when floating the alpha parameter in a fit. If a p.d.f
@@ -244,7 +245,7 @@ RooIntegralMorph::MorphCacheElem::MorphCacheElem(RooIntegralMorph &self, const R
      _yatXmin(0),
      _yatXmax(0),
      _ccounter(0),
-     _ycutoff(1e-7)
+     _ycutoff(1e-12)
 {
   // Mark in base class that normalization of cached pdf is invariant under pdf parameters
 
@@ -329,6 +330,12 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
 
   // Get number of bins from PdfCacheElem histogram
   Int_t nbins = _x->numBins("cache") ;
+  if (nbins < 2) {
+    oocoutE(_self,Eval) << "RooIntegralMorph::MorphCacheElem::calculate(" << _self->GetName()
+         << ") ERROR: observable " << _x->GetName() << " has an empty binning for the cache histogram."
+         << " Define one with RooRealVar::setBins(nbins, \"cache\")." << std::endl ;
+    return ;
+  }
 
   // Initialize yatX array to 'un-calculated values (-1)'
   for (int i=0 ; i<nbins ; i++) {
@@ -396,34 +403,59 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
     hist()->set(binIdx, 0, -1) ;
   }
 
-  double x1 = _x->getMin("cache");
-  double x2 = _x->getMin("cache");
-
   double xMax = _x->getMax("cache");
+  const double aval = _alpha->getVal() ;
+
+  // Lower bounds for the root finding in the loop below, exploiting the fact
+  // that the cumulative distribution functions increase monotonically: as y
+  // increases from bin to bin, the x values found in the previous bin are
+  // valid lower bounds for the current bin.
+  double x1lo = _x->getMin("cache");
+  double x2lo = _x->getMin("cache");
 
   // Transfer calculated values to histogram
-  for (int i=_yatXmin ; i<_yatXmax ; i++) {
+  for (int i=_yatXmin ; i<=_yatXmax ; i++) {
 
     double y = _yatX[i] ;
+    const double xBinC = xmin + (i+0.5)*binw ;
 
-    // Little optimization here exploiting the fact that th cumulative
-    // distribution functions increase monotonically, so we already know that
-    // the next x-value must be higher than the last one as y is increasing. So
-    // we can use the previous x values as lower bounds.
-    _rf1->findRoot(x1,x1,xMax,y) ;
-    _rf2->findRoot(x2,x2,xMax,y) ;
+    double x1 = x1lo ;
+    double x2 = x2lo ;
+    double f1x1 = 0 ;
+    double f2x2 = 0 ;
 
-    _x->setVal(x1);
-    double f1x1 = _pdf1->getVal(_nset.get());
-    _x->setVal(x2);
-    double f2x2 = _pdf2->getVal(_nset.get());
-    double fbarX = f1x1*f2x2 / ( _alpha->getVal()*f2x2 + (1-_alpha->getVal())*f1x1 ) ;
+    // The y values obtained from the recursive gap filling are only
+    // approximate solutions of X(y) == xBinC. Polish them with Newton
+    // iterations on the monotone map X(y) = alpha*x1(y) + (1-alpha)*x2(y),
+    // whose derivative is dX/dy = alpha/f1(x1) + (1-alpha)/f2(x2), so that
+    // the stored p.d.f. value corresponds to the bin center to full precision.
+    for (int iter=0 ; iter<10 ; iter++) {
+      bool ok = _rf1->findRoot(x1,x1lo,xMax,y) ;
+      ok &= _rf2->findRoot(x2,x2lo,xMax,y) ;
+      _x->setVal(x1);
+      f1x1 = _pdf1->getVal(_nset.get());
+      _x->setVal(x2);
+      f2x2 = _pdf2->getVal(_nset.get());
+      if (!ok || f1x1<=0 || f2x2<=0) break ;
+      const double X = aval*x1 + (1-aval)*x2 ;
+      if (std::abs(X-xBinC) < 1e-12*(xMax-xmin)) break ;
+      const double dXdy = aval/f1x1 + (1-aval)/f2x2 ;
+      const double yNew = y + (xBinC-X)/dXdy ;
+      if (!(yNew>0.) || !(yNew<1.) || yNew==y) break ;
+      y = yNew ;
+    }
+    _yatX[i] = y ;
+
+    double fbarX = f1x1*f2x2 / ( aval*f2x2 + (1-aval)*f1x1 ) ;
 
     dIter->Next() ;
     {
       const std::size_t binIdx = hist()->getIndex(*hist()->get(), /*fast=*/true);
       hist()->set(binIdx, fbarX, -1) ;
     }
+
+    x1lo = x1 ;
+    x2lo = x2 ;
   }
   // Zero output histogram above highest calculable X value
   for (int i=_yatXmax+1 ; i<nbins ; i++) {
@@ -544,7 +576,7 @@ void RooIntegralMorph::MorphCacheElem::interpolateGap(Int_t ixlo, Int_t ixhi)
   double xOffset = xBinC-_calcX[ixlo] ;
 
   for (int j=ixlo+1 ; j<ixhi ; j++) {
-    _yatX[j] = _yatX[ixlo]+(xOffset+(j-ixlo))*deltaY ;
+    _yatX[j] = _yatX[ixlo]+(xOffset/binw+(j-ixlo))*deltaY ;
     _calcX[j] = xmin + (j+0.5)*binw ;
   }
 
