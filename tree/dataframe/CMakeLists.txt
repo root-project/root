@@ -173,6 +173,8 @@ if(MSVC)
   target_compile_definitions(ROOTDataFrame PRIVATE _USE_MATH_DEFINES)
 endif()
 
+target_include_directories(ROOTDataFrame PRIVATE ../../builtins/exprtk) # hard-coded builtin for lexing
+
 target_link_libraries(ROOTDataFrame PRIVATE nlohmann_json::nlohmann_json)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

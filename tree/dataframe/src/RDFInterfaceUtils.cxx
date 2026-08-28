@@ -41,7 +41,7 @@
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
 #pragma GCC diagnostic ignored "-Wshadow"
 #endif
-#include "lexertk.hpp"
+#include "exprtk.hpp"
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
@@ -86,7 +86,7 @@ std::pair<ColumnNames_t, ColumnNames_t> FindUsedColsAndAliases(const std::string
                                                                const ROOT::Internal::RDF::RColumnRegister &colRegister,
                                                                const ColumnNames_t &dataSourceColNames)
 {
-   lexertk::generator tokens;
+   exprtk::lexer::generator tokens;
    const auto tokensOk = tokens.process(expr);
    if (!tokensOk) {
       const auto msg = "Failed to tokenize expression:\n" + expr + "\n\nMake sure it is valid C++.";
@@ -98,16 +98,16 @@ std::pair<ColumnNames_t, ColumnNames_t> FindUsedColsAndAliases(const std::string
 
    // iterate over tokens in expression and fill usedCols and usedAliases
    const auto nTokens = tokens.size();
-   const auto kSymbol = lexertk::token::e_symbol;
+   const auto kSymbol = exprtk::lexer::token::e_symbol;
    for (auto i = 0u; i < nTokens; ++i) {
       const auto &tok = tokens[i];
-      // lexertk classifies '&' as e_symbol for some reason
+      // exprtk::lexer classifies '&' as e_symbol for some reason
       if (tok.type != kSymbol || tok.value == "&" || tok.value == "|") {
          // token is not a potential variable name, skip it
          continue;
       }
       // Skip symbols that are member accesses (obj.method) — they are not column references.
-      // lexertk does not produce dot-prefixed tokens, so the token immediately before a method
+      // exprtk::lexer does not produce dot-prefixed tokens, so the token immediately before a method
       // name is always the literal "." token when it is a member access.
       if (i > 0 && tokens[i - 1].value == ".") {
          continue;
