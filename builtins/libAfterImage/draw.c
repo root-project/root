@@ -1527,9 +1527,28 @@ asim_ellips2( ASDrawContext *ctx, int x, int y, int rx, int ry, int angle, Bool 
 
 		while( line >= -1 ) 
 		{
-			double d ; 
+			double d ;
 			int dx1 = 0, dx2 = 0 ;
-			int fill_edge = -1 ;
+			/* Exact interior of this scanline: A*x^2+CC*x+BB < 0. See #23148. */
+			double mid = -CC/A2, half2 = mid*mid - BB/A ;
+			int xa = 0, xb = -1 ;
+
+			if( half2 > 0. )
+			{	/* asim_sqrt only gives the integer part, so refine it once */
+				double half = (double)asim_sqrt( half2 ) ;
+				double lo, hi ;
+
+				if( half > 0. )
+					half = ( half + half2/half )/2. ;
+				lo = mid - half ;
+				hi = mid + half ;
+				xa = (int)lo ;
+				xb = (int)hi ;
+				if( (double)xa < lo )
+					++xa ;
+				if( (double)xb > hi )
+					--xb ;
+			}
 			d = A*(double)x1*(double)x1 + BB +CC*(double)x1;
 #ifdef DEBUG_ELLIPS					 						   
 			fprintf( stderr, "line = %d, d1 = %f", y-line, d ); 
@@ -1561,7 +1580,7 @@ asim_ellips2( ASDrawContext *ctx, int x, int y, int rx, int ry, int angle, Bool 
 					fprintf( stderr, "\t\t dx1 = %d, v = %d\n", dx1, v ); 
 #endif
 				}else	 
-					while( dd > -(aa>>1) ) 
+					while( dd > -(aa>>1) && (xb < xa || x1-dx1 >= xa-2) ) 
 					{ 	
 						int v ; 
 						v = ( dd >= med_dd )? dd-med_dd: med_dd-dd ;  
@@ -1619,7 +1638,7 @@ asim_ellips2( ASDrawContext *ctx, int x, int y, int rx, int ry, int angle, Bool 
 #ifdef DEBUG_ELLIPS					 						   
 						fprintf( stderr, "\t\t dx2 = %d, v = %d\n", dx2, v ); 
 #endif
-					}else while( dd < aa/2 ) 
+					}else while( dd < aa/2 && (xb < xa || x2+dx2 <= xb+2) ) 
 					{ 
 						int v ; 
 						v = ( dd >= med_dd )? dd-med_dd: med_dd-dd ;  
@@ -1641,7 +1660,6 @@ asim_ellips2( ASDrawContext *ctx, int x, int y, int rx, int ry, int angle, Bool 
 						dd += aa ; 
 					}
 					x2 += (dx2>>1)-1 ;
-					fill_edge = 1 ;
 					last_med_dd2 = med_dd ; 
 				}	 
 			}else if( line < yr ) 
@@ -1673,7 +1691,8 @@ asim_ellips2( ASDrawContext *ctx, int x, int y, int rx, int ry, int angle, Bool 
 						CTX_PUT_PIXEL( ctx, x+(x2-2), y-y1, v ) ;
 						CTX_PUT_PIXEL( ctx, x-(x2-2), y+y1, v ) ;
 						dx2 = -2 ;
-					}else while( dd > aa/2 )	
+					/* dd grows with aa here, so without a bound this only ends on overflow. See #23148. */
+					}else while( dd > aa/2 && -dx2 <= 10 && (xb < xa || x2+dx2 >= xa-2) )	
 					{	
 						int v ; 
 						v = ( dd >= med_dd )? dd-med_dd: med_dd-dd ;  
@@ -1705,10 +1724,17 @@ asim_ellips2( ASDrawContext *ctx, int x, int y, int rx, int ry, int angle, Bool 
 #ifdef DEBUG_ELLIPS					 
 			fprintf( stderr, "dx1 = %d, x1 = %d, dx2 = %d, x2 = %d\n", dx1, x1, dx2, x2 ); 
 #endif
-			if( fill ) 
-			{	
-				CTX_FILL_HLINE(ctx,x+(x1-2),y-y1,x+(x2+fill_edge),255);
-				CTX_FILL_HLINE(ctx,x-(x2+fill_edge),y+y1,x-(x1-2),255);
+			if( fill && xb >= xa )
+			{
+				CTX_FILL_HLINE(ctx,x+xa,y-y1,x+xb,255);
+				CTX_FILL_HLINE(ctx,x-xb,y+y1,x-xa,255);
+			}
+			if( xb >= xa )
+			{	/* the edge trackers drift on thin ellipses; hold them to the real span */
+				if( x1 < xa-2 ) x1 = xa-2 ;
+				if( x1 > xb+2 ) x1 = xb+2 ;
+				if( x2 < xa-2 ) x2 = xa-2 ;
+				if( x2 > xb+2 ) x2 = xb+2 ;
 			}
 			
 			CC -= 2.*C ;
