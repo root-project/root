@@ -2452,3 +2452,21 @@ class TestSTLANY:
         my_inst = cppjit.gbl.STLANY.MyClass()
 
         cppjit.gbl.std.make_any["STLANY::MyClass*", "STLANY::MyClass*"](my_inst)
+
+
+class TestCOMPLEXTEMPLATEARG:
+    def test01_python_complex_template_arg(self):
+        """Python's complex names std::complex<double> as a template argument"""
+
+        import cppjit
+
+        assert (
+            cppjit.gbl.std.vector[complex].__cpp_name__
+            == "std::vector<std::complex<double>>"
+        )
+
+        cppjit.cppdef("""\
+        namespace ComplexTmpl { template <typename T> int width(T) { return sizeof(T); } }""")
+        v = cppjit.gbl.std.vector[complex]()
+        v.push_back(cppjit.gbl.std.complex["double"](1, 2))
+        assert v[0].real == 1

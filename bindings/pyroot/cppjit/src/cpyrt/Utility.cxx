@@ -455,6 +455,11 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
     return true;
   }
 
+  if (tn == (PyObject*)&PyComplex_Type) {
+    tmpl_name.append("std::complex<double>");
+    return true;
+  }
+
   if (tn == (PyObject*)&PyUnicode_Type) {
     tmpl_name.append("std::string");
     return true;
@@ -717,6 +722,13 @@ static bool AddTypeName(std::vector<Cpp::TemplateArgInfo>& types, PyObject* tn,
   if (tn == (PyObject*)&PyFloat_Type) {
     // special case for floats (Python-speak for double) if from argument (only)
     types.push_back(interop::GetType(arg ? "double" : "float").data);
+    return true;
+  }
+
+  if (tn == (PyObject*)&PyComplex_Type) {
+    types.push_back(
+        interop::GetType("std::complex<double>", /* enable_slow_lookup */ true)
+            .data);
     return true;
   }
 
