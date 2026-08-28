@@ -131,6 +131,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
 )
 
 target_include_directories(Win32gdk PRIVATE ../gifencode)
+target_include_directories(Win32gdk PUBLIC ../../builtins/win32gdk) # this should be instead dealt via PUBLIC target_include_directories of gdklib and gliblib targets. And: TODO change to PRIVATE instead of PUBLIC by removing inclusion of gdk.h in TGWin32.h, maybe fw declarations would be sufficient
 
 add_dependencies(Win32gdk GDKLIB glib)
 install(FILES ${gdkdlla} ${glibdlla} ${iconvdlla} DESTINATION ${CMAKE_INSTALL_BINDIR})
