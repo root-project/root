@@ -1112,15 +1112,6 @@ if (testing OR testsupport)
 endif()
 
 #------------------------------------------------------------------------------------
-if(webgui AND NOT builtin_openui5)
-  ROOT_CHECK_CONNECTION("builtin_openui5=ON")
-  if(NO_CONNECTION)
-    message(STATUS "No internet connection, switching to 'builtin_openui5' option")
-    set(builtin_openui5 ON CACHE BOOL "Enabled because there is no internet connection" FORCE)
-  endif()
-endif()
-
-#------------------------------------------------------------------------------------
 if(webgui)
   if(NOT "$ENV{OPENUI5DIR}" STREQUAL "" AND EXISTS "$ENV{OPENUI5DIR}/resources/sap-ui-core.js")
      # create symbolic link on existing openui5 installation
@@ -1131,7 +1122,16 @@ if(webgui)
      execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
         $ENV{OPENUI5DIR} ${CMAKE_BINARY_DIR}/ui5/distribution)
   else()
-    add_subdirectory(builtins/openui5)
+    if(builtin_openui5)
+      ROOT_CHECK_CONNECTION("builtin_openui5=OFF")
+      if (NO_CONNECTION)
+         message(SEND_ERROR "builtin_openui5=ON requires internet connection, check it or disable feature")
+         list(APPEND HOTFIX_BUILD_FLAGS -Dbuiltin_openui5=OFF)
+      endif()
+      add_subdirectory(builtins/openui5)
+    else()
+      message(WARNING "Without builtin_openui5 option most of webgui components will not work")
+    endif()
   endif()
   add_subdirectory(builtins/rendercore)
   add_subdirectory(builtins/mathjax)
