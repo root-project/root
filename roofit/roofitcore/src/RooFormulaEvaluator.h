@@ -14,12 +14,11 @@
 #define ROO_FORMULA_EVALUATOR
 
 #include <memory>
-#include <string>
 
 class TFormula;
 
-/// Abstract interface for evaluating a processed RooFormula expression, i.e.
-/// one normalized by RooFormula::processFormula() to the `x[i]`-only dialect,
+/// Abstract interface for evaluating a processed formula expression, i.e. one
+/// normalized by RooFormulaUtils::processFormula() to the `x[i]`-only dialect,
 /// so an implementation doesn't need any name resolution.
 class RooFormulaEvaluator {
 public:
@@ -31,15 +30,10 @@ public:
    /// Return a deep copy of this evaluator.
    virtual std::unique_ptr<RooFormulaEvaluator> clone() const = 0;
 
-   /// Report whether the variable `x[i]` appears in the formula.
-   virtual bool usesVariable(unsigned int i) const = 0;
-
-   /// Return the processed formula string (in the normalized `x[i]` dialect).
-   virtual std::string processedFormula() const = 0;
-
    /// Return the underlying TFormula. Only the TFormula-backed evaluator
-   /// returns a non-nullptr. This accessor only exists to support
-   /// RooFormula::getTFormula() and will be removed together with it.
+   /// returns a non-nullptr. This accessor only exists to support the
+   /// getUniqueFuncName() functions used by the codegen backend and will be
+   /// removed together with them.
    virtual TFormula *getTFormula() const { return nullptr; }
 };
 

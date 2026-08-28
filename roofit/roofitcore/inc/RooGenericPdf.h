@@ -25,7 +25,7 @@
 #include <string>
 
 class RooArgList ;
-class RooFormula ;
+class RooFormulaEvaluator;
 class RooAbsRealLValue;
 
 class RooGenericPdf : public RooAbsPdf {
@@ -76,25 +76,22 @@ public:
   std::list<double> *plotSamplingHint(RooAbsRealLValue &obs, double xlo, double xhi) const override;
 
 protected:
-  RooFormula& formula() const ;
+   RooFormulaEvaluator &evaluator() const;
 
-  // Function evaluation
-  RooListProxy _actualVars ;
-  double evaluate() const override ;
-  void doEval(RooFit::EvalContext &) const override;
+   // Function evaluation
+   RooListProxy _actualVars;
+   double evaluate() const override;
+   void doEval(RooFit::EvalContext &) const override;
 
-  // Post-processing of server redirection
-  bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
+   bool isValidReal(double /*value*/, bool /*printError*/) const override { return true; }
 
-  bool isValidReal(double /*value*/, bool /*printError*/) const override { return true; }
+   mutable std::unique_ptr<RooFormulaEvaluator> _evaluator; ///<! Formula evaluation engine
+   TString _formExpr;                                       ///< Formula expression string
 
-  mutable RooFormula * _formula = nullptr; ///<! Formula engine
-  TString _formExpr ;            ///< Formula expression string
+   std::map<int, std::unique_ptr<RooAbsBinning>> _binnings; ///< User-defined binnings, keyed by the observable's index
+                                                            ///< in _actualVars, for a piecewise-flat distribution
 
-  std::map<int, std::unique_ptr<RooAbsBinning>> _binnings; ///< User-defined binnings, keyed by the observable's index
-                                                           ///< in _actualVars, for a piecewise-flat distribution
-
-  ClassDefOverride(RooGenericPdf, 2) // Generic PDF defined by string expression and list of variables
+   ClassDefOverride(RooGenericPdf, 2) // Generic PDF defined by string expression and list of variables
 };
 
 #endif

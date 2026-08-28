@@ -86,7 +86,7 @@ the new `RooAbsData::uniqueId()`.
 #include "RooAbsReal.h"
 #include "Roo1DTable.h"
 #include "RooCategory.h"
-#include "RooFormula.h"
+#include "RooFormulaUtils.h"
 #include "RooFormulaVar.h"
 #include "RooArgList.h"
 #include "RooRealVar.h"
@@ -775,11 +775,11 @@ double RooDataSet::sumEntries() const
 
 double RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const
 {
-  // Setup RooFormulaVar for cutSpec if it is present
-  std::unique_ptr<RooFormula> select = nullptr ;
-  if (cutSpec && strlen(cutSpec) > 0) {
-    select = std::make_unique<RooFormula>("select",cutSpec,*get()) ;
-  }
+   // Setup a formula evaluator for cutSpec if it is present
+   std::unique_ptr<RooFormulaEvaluator> select = nullptr;
+   if (cutSpec && strlen(cutSpec) > 0) {
+      select = RooFormulaUtils::makeFormulaEvaluator("select", cutSpec, *get());
+   }
 
   // Shortcut for unweighted unselected datasets
   if (!select && !cutRange && !isWeighted()) {
@@ -790,7 +790,8 @@ double RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const
   ROOT::Math::KahanSum<double> sumw{0.0};
   for (int i = 0 ; i<numEntries() ; i++) {
     get(i) ;
-    if (select && select->eval()==0.) continue ;
+    if (select && RooFormulaUtils::evalFormula(*select, _vars) == 0.)
+       continue;
     if (cutRange && !_vars.allInRange(cutRange)) continue ;
     sumw += weight();
   }
