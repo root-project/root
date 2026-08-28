@@ -1864,6 +1864,54 @@ def make_Gelu():
     return _model(graph, opset=20, ir_version=13)
 
 
+def make_Gemm_ConstantFolding():
+    """Ops: Gemm"""
+    nodes = [
+        helper.make_node('Gemm', ['A', 'B', 'C'], ['Y'], alpha=1.0, beta=1.0, transA=0, transB=0),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'Gemm_ConstantFolding',
+        inputs=[
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [2, 2]),
+        ],
+        initializer=[
+            _tensor('A', FLOAT, [2, 3], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
+            _tensor('B', FLOAT, [3, 2], [7.0, 8.0, 9.0, 10.0, 11.0, 12.0]),
+            _tensor('C', FLOAT, [2, 2], [1.0, 1.0, 1.0, 1.0]),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=13)
+
+
+def make_Gemm_ConstantFolding_Shared():
+    """Ops: Gemm x2 (shared initializer)"""
+    nodes = [
+        helper.make_node('Gemm', ['A1', 'B', 'C1'], ['Y1'], alpha=1.0, beta=1.0, transA=0, transB=0),
+        helper.make_node('Gemm', ['A2', 'B', 'C2'], ['Y2'], alpha=1.0, beta=1.0, transA=0, transB=0),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'Gemm_ConstantFolding_Shared',
+        inputs=[
+            _vi('A2', FLOAT, [2, 2]),
+        ],
+        outputs=[
+            _vi('Y1', FLOAT, [2, 2]),
+            _vi('Y2', FLOAT, [2, 2]),
+        ],
+        initializer=[
+            _tensor('A1', FLOAT, [2, 2], [1.0, 2.0, 3.0, 4.0]),
+            _tensor('B', FLOAT, [2, 2], [1.0, 0.0, 0.0, 1.0]),
+            _tensor('C1', FLOAT, [2, 2], [1.0, 1.0, 1.0, 1.0]),
+            _tensor('C2', FLOAT, [2, 2], [10.0, 10.0, 10.0, 10.0]),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=13)
+
+
 def make_Greater():
     """Ops: Greater"""
     nodes = [
@@ -3459,6 +3507,27 @@ def make_Log():
         ],
     )
     return _model(graph, opset=14, ir_version=7, producer_name='pytorch', producer_version='1.13.1')
+
+
+def make_MatMul_1D_Constant():
+    """Ops: MatMul"""
+    nodes = [
+        helper.make_node('MatMul', ['A', 'B'], ['Y']),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'MatMul_1D_Constant',
+        inputs=[
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [2]),
+        ],
+        initializer=[
+            _tensor('A', FLOAT, [3], [1.0, 2.0, 3.0]),
+            _tensor('B', FLOAT, [3, 2], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=13)
 
 
 def make_MatMul_Stacked():
@@ -5169,6 +5238,8 @@ MODELS = {
     'GatherND_3': make_GatherND_3,
     'GatherNegativeIndices': make_GatherNegativeIndices,
     'Gelu': make_Gelu,
+    'Gemm_ConstantFolding': make_Gemm_ConstantFolding,
+    'Gemm_ConstantFolding_Shared': make_Gemm_ConstantFolding_Shared,
     'Greater': make_Greater,
     'GreaterOrEqual': make_GreaterOrEqual,
     'HardSigmoid': make_HardSigmoid,
@@ -5193,6 +5264,7 @@ MODELS = {
     'Linear_32': make_Linear_32,
     'Linear_64': make_Linear_64,
     'Log': make_Log,
+    'MatMul_1D_Constant': make_MatMul_1D_Constant,
     'MatMul_Stacked': make_MatMul_Stacked,
     'MatMul_Stacked2': make_MatMul_Stacked2,
     'Max': make_Max,

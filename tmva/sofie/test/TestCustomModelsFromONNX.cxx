@@ -537,6 +537,33 @@ TEST(ONNX, Mod_ConstantFolding)
    expectEqual(output, correct_output);
 }
 
+TEST(ONNX, Gemm_ConstantFolding)
+{
+   // A, B and bias C are all initializers, so this constant-folds instead of calling Gemm_Call.
+   // A = [[1,2,3],[4,5,6]], B = [[7,8],[9,10],[11,12]], C = [[1,1],[1,1]]
+   // Y = A*B + C = [[59,65],[140,155]]
+   std::vector<float> correct_output = {59, 65, 140, 155};
+   ASSERT_INCLUDE_AND_RUN_0(std::vector<float>, "Gemm_ConstantFolding");
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, Gemm_ConstantFolding_Shared)
+{
+   // Node 1 (A1,B,C1 all initializers) folds; node 2 (A2 is a graph input, B shared with
+   // node 1, C2 an initializer) can't. Checks B still gets written to the weight file for
+   // node 2 despite node 1 marking it not-writable while folding.
+   // B is the identity: Y1 = A1+C1 = [[2,3],[4,5]], Y2 = A2+C2 = [[15,16],[17,18]]
+   std::vector<float> A2 = {5, 6, 7, 8};
+   std::vector<float> correct_Y1 = {2, 3, 4, 5};
+   std::vector<float> correct_Y2 = {15, 16, 17, 18};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "Gemm_ConstantFolding_Shared", A2);
+
+   ASSERT_EQ(output.size(), 2u);
+   expectNear(output[0], correct_Y1, DEFAULT_TOLERANCE);
+   expectNear(output[1], correct_Y2, DEFAULT_TOLERANCE);
+}
+
    TEST(ONNX, ReduceMean)
 {
    SofieReference ref = readReference("ReduceMean");
@@ -1472,6 +1499,16 @@ TEST(ONNX, ScatterElements)
 
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ScatterElements", input, indices, updates);
 
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, MatMul_1D_Constant)
+{
+   // A is 1-D, B is 2-D, both initializers; A gets padded to (1,3) internally so this
+   // still constant-folds like a normal Gemm.
+   // A = [1,2,3], B = [[1,2],[3,4],[5,6]], Y = A.B = [22, 28]
+   std::vector<float> correct_output = {22, 28};
+   ASSERT_INCLUDE_AND_RUN_0(std::vector<float>, "MatMul_1D_Constant");
    expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
