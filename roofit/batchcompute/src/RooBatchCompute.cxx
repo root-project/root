@@ -20,6 +20,7 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 
 #include "RooBatchCompute.h"
 #include "RooNaNPacker.h"
+#include "RooVDTHeaders.h"
 #include "Batches.h"
 
 #include <ROOT/RConfig.hxx>
@@ -31,6 +32,7 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 #include <Math/Util.h>
 
 #include <algorithm>
+#include <cmath>
 #include <functional>
 #include <map>
 #include <queue>
@@ -98,6 +100,8 @@ public:
    };
 
    void compute(Config const &, Computer computer, std::span<double> output, VarSpan vars, ArgSpan extraArgs) override;
+   void computeExprProgram(Config const &, std::span<const ExprInstr> code, unsigned int stackDepth,
+                           std::span<double> output, VarSpan vars) override;
    double reduceSum(Config const &, InputArr input, size_t n) override;
    ReduceNLLOutput reduceNLL(Config const &, std::span<const double> probas, std::span<const double> weights,
                              std::span<const double> offsetProbas) override;
@@ -230,6 +234,196 @@ void RooBatchComputeClass::compute(Config const &, Computer computer, std::span<
    }
    batches.nEvents = events;
    _computeFunctions[computer](batches);
+}
+
+namespace {
+
+/// Apply a unary operation in place on a chunk at the top of the value stack.
+template <class F>
+inline void exprUnaryOp(double *__restrict a, std::size_t len, F f)
+{
+   for (std::size_t k = 0; k < len; ++k) {
+      a[k] = f(a[k]);
+   }
+}
+
+/// Apply a binary operation on two chunks, storing the result in the first.
+template <class F>
+inline void exprBinaryOp(double *__restrict a, const double *__restrict b, std::size_t len, F f)
+{
+   for (std::size_t k = 0; k < len; ++k) {
+      a[k] = f(a[k], b[k]);
+   }
+}
+
+} // namespace
+
+/** Evaluate a postfix expression program over a batch of events.
+
+The evaluation is chunked over bufferSize events, exactly like compute() and
+the stack temporaries in ComputeFunctions.cxx, so that all intermediate value
+buffers stay resident in L1 cache. Within a chunk, each instruction is applied
+across the whole chunk: the per-instruction loops are trivial elementwise
+operations that the compiler auto-vectorizes for the target architecture of
+each RooBatchCompute library, and the interpreter dispatch cost is amortized
+over bufferSize events. Scalar inputs (spans of size 1) are broadcast once per
+chunk, hoisting the broadcast decision out of the per-event loop.
+
+Exp/Log/Sin/Cos use the fast vectorizable VDT implementations when ROOT is
+built with VDT, exactly like the pdf compute kernels, in which case batch
+results can differ from per-event scalar evaluation within the usual
+RooBatchCompute batch-vs-scalar tolerance (relative ~5e-14) over the normal
+argument range, and the special values are not reproduced either (fast_log()
+of a non-positive number returns a finite garbage value instead of -Inf or
+NaN). All other operations apply the exact same double-precision operation per
+event that the scalar evaluator applies, so without VDT the results are
+bitwise identical to scalar evaluation. **/
+void RooBatchComputeClass::computeExprProgram(Config const &, std::span<const ExprInstr> code, unsigned int stackDepth,
+                                              std::span<double> output, VarSpan vars)
+{
+   if (stackDepth > maxExprProgramStackDepth) {
+      throw std::runtime_error("expression program exceeds the computeExprProgram() stack-depth limit");
+   }
+
+   double stack[maxExprProgramStackDepth][bufferSize];
+
+   const std::size_t nEvents = output.size();
+   for (std::size_t begin = 0; begin < nEvents; begin += bufferSize) {
+      const std::size_t len = std::min(bufferSize, nEvents - begin);
+      std::size_t sp = 0;
+      for (ExprInstr const &ins : code) {
+         switch (ins.op) {
+         case ExprOp::Const: {
+            const double val = ins.konst;
+            double *__restrict out = stack[sp++];
+            for (std::size_t k = 0; k < len; ++k) {
+               out[k] = val;
+            }
+            break;
+         }
+         case ExprOp::Var: {
+            std::span<const double> v = vars[ins.arg];
+            double *__restrict out = stack[sp++];
+            if (v.size() == 1) {
+               const double val = v[0];
+               for (std::size_t k = 0; k < len; ++k) {
+                  out[k] = val;
+               }
+            } else {
+               const double *__restrict in = v.data() + begin;
+               for (std::size_t k = 0; k < len; ++k) {
+                  out[k] = in[k];
+               }
+            }
+            break;
+         }
+         case ExprOp::Add:
+            --sp;
+            exprBinaryOp(stack[sp - 1], stack[sp], len, [](double a, double b) { return a + b; });
+            break;
+         case ExprOp::Sub:
+            --sp;
+            exprBinaryOp(stack[sp - 1], stack[sp], len, [](double a, double b) { return a - b; });
+            break;
+         case ExprOp::Mul:
+            --sp;
+            exprBinaryOp(stack[sp - 1], stack[sp], len, [](double a, double b) { return a * b; });
+            break;
+         case ExprOp::Div:
+            --sp;
+            exprBinaryOp(stack[sp - 1], stack[sp], len, [](double a, double b) { return a / b; });
+            break;
+         case ExprOp::Neg: exprUnaryOp(stack[sp - 1], len, [](double a) { return -a; }); break;
+         case ExprOp::Not: exprUnaryOp(stack[sp - 1], len, [](double a) { return a == 0.0 ? 1.0 : 0.0; }); break;
+         case ExprOp::LT:
+            --sp;
+            exprBinaryOp(stack[sp - 1], stack[sp], len, [](double a, double b) { return a < b ? 1.0 : 0.0; });
+            break;
+         case ExprOp::LE:
+            --sp;
+            exprBinaryOp(stack[sp - 1], stack[sp], len, [](double a, double b) { return a <= b ? 1.0 : 0.0; });
+            break;
+         case ExprOp::GT:
+            --sp;
+            exprBinaryOp(stack[sp - 1], stack[sp], len, [](double a, double b) { return a > b ? 1.0 : 0.0; });
+            break;
+         case ExprOp::GE:
+            --sp;
+            exprBinaryOp(stack[sp - 1], stack[sp], len, [](double a, double b) { return a >= b ? 1.0 : 0.0; });
+            break;
+         case ExprOp::EQ:
+            --sp;
+            exprBinaryOp(stack[sp - 1], stack[sp], len, [](double a, double b) { return a == b ? 1.0 : 0.0; });
+            break;
+         case ExprOp::NE:
+            --sp;
+            exprBinaryOp(stack[sp - 1], stack[sp], len, [](double a, double b) { return a != b ? 1.0 : 0.0; });
+            break;
+         case ExprOp::And:
+            --sp;
+            exprBinaryOp(stack[sp - 1], stack[sp], len,
+                         [](double a, double b) { return (a != 0.0 && b != 0.0) ? 1.0 : 0.0; });
+            break;
+         case ExprOp::Or:
+            --sp;
+            exprBinaryOp(stack[sp - 1], stack[sp], len,
+                         [](double a, double b) { return (a != 0.0 || b != 0.0) ? 1.0 : 0.0; });
+            break;
+         case ExprOp::Select: {
+            sp -= 2;
+            double *__restrict c = stack[sp - 1];
+            const double *__restrict a = stack[sp];
+            const double *__restrict b = stack[sp + 1];
+            for (std::size_t k = 0; k < len; ++k) {
+               c[k] = c[k] != 0.0 ? a[k] : b[k];
+            }
+            break;
+         }
+         case ExprOp::Pow:
+            --sp;
+            exprBinaryOp(stack[sp - 1], stack[sp], len, [](double a, double b) { return std::pow(a, b); });
+            break;
+         case ExprOp::Sq: exprUnaryOp(stack[sp - 1], len, [](double a) { return a * a; }); break;
+         case ExprOp::IntNorm: exprUnaryOp(stack[sp - 1], len, [](double a) { return a + 0.0; }); break;
+         case ExprOp::Exp: exprUnaryOp(stack[sp - 1], len, [](double a) { return fast_exp(a); }); break;
+         case ExprOp::Log: exprUnaryOp(stack[sp - 1], len, [](double a) { return fast_log(a); }); break;
+         case ExprOp::Sin: exprUnaryOp(stack[sp - 1], len, [](double a) { return fast_sin(a); }); break;
+         case ExprOp::Cos: exprUnaryOp(stack[sp - 1], len, [](double a) { return fast_cos(a); }); break;
+         case ExprOp::Sqrt: exprUnaryOp(stack[sp - 1], len, [](double a) { return std::sqrt(a); }); break;
+         case ExprOp::Call1: exprUnaryOp(stack[sp - 1], len, ins.fn1); break;
+         case ExprOp::Call2:
+            --sp;
+            exprBinaryOp(stack[sp - 1], stack[sp], len, ins.fn2);
+            break;
+         case ExprOp::Call3: {
+            sp -= 2;
+            double *__restrict a = stack[sp - 1];
+            const double *__restrict b = stack[sp];
+            const double *__restrict c = stack[sp + 1];
+            for (std::size_t k = 0; k < len; ++k) {
+               a[k] = ins.fn3(a[k], b[k], c[k]);
+            }
+            break;
+         }
+         case ExprOp::Call4: {
+            sp -= 3;
+            double *__restrict a = stack[sp - 1];
+            const double *__restrict b = stack[sp];
+            const double *__restrict c = stack[sp + 1];
+            const double *__restrict d = stack[sp + 2];
+            for (std::size_t k = 0; k < len; ++k) {
+               a[k] = ins.fn4(a[k], b[k], c[k], d[k]);
+            }
+            break;
+         }
+         }
+      }
+      const double *__restrict res = stack[0];
+      double *__restrict out = output.data() + begin;
+      for (std::size_t k = 0; k < len; ++k) {
+         out[k] = res[k];
+      }
+   }
 }
 
 namespace {
