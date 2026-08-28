@@ -1270,8 +1270,13 @@ asim_straight_ellips( ASDrawContext *ctx, int x, int y, int rx, int ry, Bool fil
 		if (y + ry  > ctx->canvas_height && y - ry  < 0) 
 			max_y = max (y, ctx->canvas_height - y); 
 #endif			
-#if 0
-		if( fill ) 
+		/* Fill by spans rather than by flooding from the centre. The outline is
+		 * anti-aliased, so along a diagonal step its coverage can land just under
+		 * CTX_ELLIPS_FILL_THRESHOLD, and asim_flood_fill then walks out through
+		 * that one-cell hole and paints the whole canvas. Spans need no threshold,
+		 * so the interior cannot leak. See #23148.
+		 */
+		if( fill )
 		{
 			long y1 = 0; 
 			long x1 = rx-1;
@@ -1296,7 +1301,6 @@ asim_straight_ellips( ASDrawContext *ctx, int x, int y, int rx, int ry, Bool fil
 			
 			}while( ++y1 < max_y ); 
 		}
-#endif
 
 		asim_start_path( ctx );
 		asim_move_to( ctx, x+rx, y );
@@ -1367,7 +1371,9 @@ asim_straight_ellips( ASDrawContext *ctx, int x, int y, int rx, int ry, Bool fil
 				}while( ++y1 <= max_y ); 
 			}
 		}		
-		asim_apply_path( ctx, orig_x+orig_rx, orig_y, fill, orig_x, orig_y, CTX_ELLIPS_FILL_THRESHOLD );
+		/* The interior is already filled above, so do not flood: pass False and
+		 * let asim_apply_path only blend the scratch canvas onto the target. */
+		asim_apply_path( ctx, orig_x+orig_rx, orig_y, False, orig_x, orig_y, CTX_ELLIPS_FILL_THRESHOLD );
 	}		
 }	 
 
