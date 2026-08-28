@@ -33,6 +33,10 @@ the parser does not support silently fall back to the traditional TFormula
 environment variable `ROOFIT_FORMULA_BACKEND` overrides this: `tformula`
 always uses the TFormula backend, and `ast` disables the fallback, turning
 unsupported expressions into hard errors (useful for testing).
+
+Batch evaluation (doEvalFormula()) of expressions on the built-in backend is
+chunk-vectorized via the RooBatchCompute library, see doEvalFormula() for the
+numerical implications.
 **/
 
 #include "RooFormulaUtils.h"
@@ -44,10 +48,12 @@ unsupported expressions into hard errors (useful for testing).
 #include "RooCurve.h"
 #include "RooFitImplHelpers.h"
 #include "RooMsgService.h"
+#include "RooBatchCompute.h"
 #include "RooExprEvaluator.h"
 #include "RooFormulaParser.h"
 #include "RooTFormulaEvaluator.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cctype>
 #include <cstdlib>
@@ -534,25 +540,69 @@ RooFormulaUtils::evalFormula(RooFormulaEvaluator const &evaluator, RooAbsCollect
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate a formula for a batch of input values from the evaluation context,
 /// with `x[i]` taking the values of the i-th variable in `actualVars`.
+///
+/// If every input is a single value (e.g. a formula of parameters only, the
+/// HistFactory expression-NormFactor shape), the formula is evaluated once and
+/// the result is broadcast. Otherwise, formulas on the JIT-free expression
+/// backend are evaluated with RooBatchCompute::computeExprProgram(), which
+/// applies one instruction across a chunk of RooBatchCompute::bufferSize
+/// events at a time in vectorizable elementwise loops. The batch results are
+/// bitwise identical to scalar evaluation, also when ROOT is built with VDT
+/// and also for arguments that yield Inf or NaN. The TFormula fallback backend
+/// evaluates with a scalar per-event loop as before.
 void RooFormulaUtils::doEvalFormula(RooFormulaEvaluator const &evaluator, RooArgList const &actualVars,
                                     RooFit::EvalContext &ctx)
 {
    std::span<double> output = ctx.output();
 
+   // Every x[i] has an input span, because the evaluation engine refers to
+   // the (pruned) list of actual dependents directly.
    const std::size_t nPars = actualVars.size();
    // Note: emplace_back() instead of assignment into a pre-sized vector,
    // because the custom std::span backport for C++ < 20 in ROOT/span.hxx is
    // not move-assignable.
    std::vector<std::span<const double>> inputSpans;
    inputSpans.reserve(nPars);
+   bool allScalar = true;
    for (std::size_t i = 0; i < nPars; ++i) {
       inputSpans.emplace_back(ctx.at(static_cast<const RooAbsReal *>(&actualVars[i])));
+      allScalar &= inputSpans.back().size() <= 1;
    }
 
+   // All inputs are single values: evaluate once and broadcast.
+   if (allScalar) {
+      std::vector<double> pars(nPars);
+      for (std::size_t j = 0; j < nPars; j++) {
+         if (!inputSpans[j].empty()) {
+            pars[j] = inputSpans[j][0];
+         }
+      }
+      std::fill(output.begin(), output.end(), evaluator.eval(pars.data()));
+      return;
+   }
+
+   // Chunked, vectorized evaluation of JIT-free expression programs.
+   if (auto *expr = dynamic_cast<RooExprEvaluator const *>(&evaluator)) {
+      if (expr->stackDepth() <= RooBatchCompute::maxExprProgramStackDepth) {
+         // Load the RooBatchCompute CPU dispatch if no RooFit::Evaluator has
+         // done so yet: doEvalFormula() can also be called directly, and the
+         // dispatch pointer is null until the library is loaded (a cheap
+         // no-op once initialized).
+         RooBatchCompute::initCPU();
+         RooBatchCompute::computeExprProgram({}, expr->code(), expr->stackDepth(), output,
+                                             {inputSpans.data(), inputSpans.size()});
+         return;
+      }
+   }
+
+   // Scalar per-event loop: the TFormula fallback backend, and expression
+   // programs too deep for the vector interpreter's fixed-size chunk stack.
    std::vector<double> pars(nPars);
    for (std::size_t i = 0; i < output.size(); ++i) {
       for (std::size_t j = 0; j < nPars; ++j) {
-         pars[j] = inputSpans[j].size() > 1 ? inputSpans[j][i] : inputSpans[j][0];
+         // An empty span counts as the scalar zero, like in the all-scalar
+         // case above and in RooBatchCompute::computeExprProgram().
+         pars[j] = inputSpans[j].size() > 1 ? inputSpans[j][i] : (inputSpans[j].empty() ? 0.0 : inputSpans[j][0]);
       }
       output[i] = evaluator.eval(pars.data());
    }
