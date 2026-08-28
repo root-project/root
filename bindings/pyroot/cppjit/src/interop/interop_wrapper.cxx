@@ -381,6 +381,16 @@ bool interop::IsLValueReferenceType(TCppType_t type) {
   return Cpp::GetValueKind(type) == Cpp::ValueKind::LValue;
 }
 
+// Whether the callee can rebind a pointer through this reference (T*&);
+// false for T* const& and for references to non-pointers.
+bool interop::IsMutablePtrRefType(TCppType_t type) {
+  if (!Cpp::IsReferenceType(type))
+    return false;
+  TCppType_t nonref = Cpp::GetNonReferenceType(type);
+  return Cpp::IsPointerType(nonref) &&
+         !Cpp::HasTypeQualifier(nonref, Cpp::QualKind::Const);
+}
+
 bool interop::IsClassType(TCppType_t type) { return Cpp::IsRecordType(type); }
 
 bool interop::IsIntegerType(TCppType_t type, bool* is_signed /*= nullptr*/) {
