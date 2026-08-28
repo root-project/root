@@ -1125,6 +1125,20 @@ if (testing OR testsupport)
 endif()
 
 #------------------------------------------------------------------------------------
+if(http)
+  if(builtin_mathjax)
+    ROOT_CHECK_CONNECTION("builtin_mathjax=OFF")
+    if (NO_CONNECTION)
+      message(SEND_ERROR "builtin_mathjax=ON requires internet connection, check it or disable feature")
+      list(APPEND HOTFIX_BUILD_FLAGS -Dbuiltin_mathjax=OFF)
+    endif()
+    add_subdirectory(builtins/mathjax)
+  else()
+    message(WARNING "Without builtin_mathjax option TMathText rendering will not work in jsroot")
+  endif()
+endif()
+
+#------------------------------------------------------------------------------------
 if(webgui)
   if(NOT "$ENV{OPENUI5DIR}" STREQUAL "" AND EXISTS "$ENV{OPENUI5DIR}/resources/sap-ui-core.js")
      # create symbolic link on existing openui5 installation
@@ -1147,7 +1161,6 @@ if(webgui)
     endif()
   endif()
   add_subdirectory(builtins/rendercore)
-  add_subdirectory(builtins/mathjax)
 endif()
 
 #------------------------------------------------------------------------------------
