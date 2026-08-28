@@ -64,7 +64,9 @@ ROOT_ADD_GTEST(testRooAbsPdf testRooAbsPdf.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooDataSet testRooDataSet.cxx LIBRARIES Tree RooFitCore
   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/dataSet_with_errors_6_26_10.root)
 ROOT_ADD_GTEST(testRooFormula testRooFormula.cxx LIBRARIES RooFitCore ROOT::TestSupport)
-ROOT_ADD_GTEST(testRooFormulaEvaluator testRooFormulaEvaluator.cxx LIBRARIES RooFitCore Hist MathCore)
+ROOT_ADD_GTEST(testRooFormulaEvaluator testRooFormulaEvaluator.cxx testRooFormulaEvaluatorIO.cxx
+  LIBRARIES RooFitCore Hist MathCore
+  COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/testRooFormulaEvaluator_legacy_ws.root)
 ROOT_ADD_GTEST(testProxiesAndCategories testProxiesAndCategories.cxx
   LIBRARIES RooFitCore
   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/testProxiesAndCategories_1.root

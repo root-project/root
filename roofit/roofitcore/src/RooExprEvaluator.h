@@ -28,13 +28,19 @@
 namespace RooFormulaFunctions {
 
 /// How the C++ result type of a call depends on the argument types. The parser
-/// tracks int-ness of subexpressions to reproduce cling's expression typing
-/// (in particular to detect integer division, which is not supported).
+/// tracks the double/int/bool typing of subexpressions to reproduce cling's
+/// expression typing (in particular to detect integer division, which is not
+/// supported, and the bool-typed constructs that behave differently).
 enum class TypeRule : std::uint8_t {
    Double,         ///< result is always double
-   SameAsFirstArg, ///< result type equals the type of the first argument (abs, sign)
-   Int,            ///< result is an integer type (`int(x)` cast, TMath::SignBit)
-   MinMax          ///< int if both args are int; mixed int/double does not compile in cling
+   SameAsFirstArg, ///< abs: result type follows the first argument (bool promotes to int)
+   Int,            ///< result is int (the `int(x)` functional cast)
+   Bool,           ///< result is bool (TMath::SignBit)
+   Sign,           ///< sign/TMath::Sign: result type follows the first argument; a bool
+                   ///< first argument is rejected, because cling resolves it to the
+                   ///< generic TMath::Sign template returning bool -- not copysign
+   MinMax          ///< result type is the common argument type; mixed argument types
+                   ///< (int/double or bool/int) do not compile in cling
 };
 
 struct Entry {
