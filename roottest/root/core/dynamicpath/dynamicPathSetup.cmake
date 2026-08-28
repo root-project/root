@@ -105,7 +105,9 @@ endfunction()
 # search path, followed by the `.rootrc` entries.
 function(root_env_part rdynpath outvar)
   if(WIN32)
-    set(ld "$ENV{PATH}")
+    # `ld_prefix` accounts for the bin directory prepended to PATH by the
+    # TWinNTSystem constructor (see below).
+    set(ld "${ld_prefix}$ENV{PATH}")
   elseif(APPLE)
     # On macOS ROOT concatenates all three of these.
     set(ld "$ENV{DYLD_LIBRARY_PATH}${sep}$ENV{LD_LIBRARY_PATH}${sep}$ENV{DYLD_FALLBACK_LIBRARY_PATH}")
@@ -164,6 +166,27 @@ endif()
 message(STATUS "ROOT library directory: ${libdir}")
 message(STATUS "default dynamic path  : .${sep}${defaultdir}")
 
+# On Windows the TWinNTSystem constructor prepends "<rootsys>\bin;" to the
+# PATH environment variable itself (so that ROOT's DLLs are always found),
+# *before* the dynamic path is assembled. Hence the loader part of the
+# dynamic path is "<rootsys>\bin;<PATH as set by this script>". The prepend
+# does not happen for every build flavour (e.g. ROOTPREFIX builds), so detect
+# the actual prefix by comparing the PATH seen by ROOT with our own.
+set(ld_prefix "")
+if(WIN32)
+  root_eval("gSystem->Getenv(\"PATH\")" root_path)
+  string(LENGTH "${root_path}" root_path_len)
+  string(LENGTH "$ENV{PATH}" env_path_len)
+  if(root_path_len GREATER env_path_len)
+    math(EXPR prefix_len "${root_path_len} - ${env_path_len}")
+    string(SUBSTRING "${root_path}" ${prefix_len} -1 root_path_tail)
+    if(root_path_tail STREQUAL "$ENV{PATH}")
+      string(SUBSTRING "${root_path}" 0 ${prefix_len} ld_prefix)
+      message(STATUS "PATH prefix added by ROOT: ${ld_prefix}")
+    endif()
+  endif()
+endif()
+
 #---Checks without an explicit loader search path-------------------------------
 
 set(ENV{ROOT_LIBRARY_PATH} "${rootlibpath}")
@@ -198,22 +221,22 @@ endif()
 set(ENV{ROOT_LIBRARY_PATH} "${rootlibpath}")
 set_rootrc("${rootrcpath}")
 get_dynpath()
-check_begin("${rootlibpath}${sep}${ldpath}")
+check_begin("${rootlibpath}${sep}${ld_prefix}${ldpath}")
 check_rootrc_then_libdir("${rootrcpath}")
 
 set(ENV{ROOT_LIBRARY_PATH} "${rootlibpath}")
 set_rootrc("${libdir}${sep}${rootrcpath}")
 get_dynpath()
-check_begin_and_mid("${rootlibpath}${sep}${ldpath}" "${libdir}${sep}${rootrcpath}")
+check_begin_and_mid("${rootlibpath}${sep}${ld_prefix}${ldpath}" "${libdir}${sep}${rootrcpath}")
 
 set(ENV{ROOT_LIBRARY_PATH} "${rootlibpath}")
 set_rootrc("")
 get_dynpath()
-check_begin_and_mid("${rootlibpath}${sep}${ldpath}" ".${sep}${defaultdir}")
+check_begin_and_mid("${rootlibpath}${sep}${ld_prefix}${ldpath}" ".${sep}${defaultdir}")
 
 unset(ENV{ROOT_LIBRARY_PATH})
 set_rootrc("")
 get_dynpath()
-check_begin_and_mid("${ldpath}" ".${sep}${defaultdir}")
+check_begin_and_mid("${ld_prefix}${ldpath}" ".${sep}${defaultdir}")
 
 message(STATUS "dynamic path setup: all checks passed")
