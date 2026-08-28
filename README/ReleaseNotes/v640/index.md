@@ -217,7 +217,7 @@ This change affects the following classes:  `TFile`, `TMapFile`, `TMemFile`, `TD
 
 ### TTree
 
-#### Behavior change since 6.40.04: `sqrt()` of negative arguments in TTreeFormula now returns NaN
+#### Behavior change since 6.40.06: `sqrt()` of negative arguments in TTreeFormula now returns NaN
 
 Since its introduction in 1995, the formula engine used by `TTree::Draw()`, `TTree::Scan()` and `TTreeFormula`
 silently evaluated `sqrt(x)` as `sqrt(abs(x))` for negative arguments (or as `0` in the optimized evaluation path
