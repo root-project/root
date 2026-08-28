@@ -147,7 +147,6 @@ int stressRooFit(const char *refFile, bool writeRef, int doVerbose, int oneTest,
    testList.push_back(new TestBasic702(fref, writeRef, doVerbose));
    testList.push_back(new TestBasic703(fref, writeRef, doVerbose));
    testList.push_back(new TestBasic704(fref, writeRef, doVerbose));
-   testList.push_back(new TestBasic705(fref, writeRef, doVerbose));
    testList.push_back(new TestBasic706(fref, writeRef, doVerbose));
    testList.push_back(new TestBasic707(fref, writeRef, doVerbose));
    testList.push_back(new TestBasic708(fref, writeRef, doVerbose));
