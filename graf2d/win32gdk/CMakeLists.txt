@@ -54,8 +54,9 @@ endif()
 # and only slightly modified by ROOT
 
 add_custom_command( OUTPUT ${iconvliba} ${iconvdlla}
+                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/builtins/win32gdk/iconv iconv
 					COMMAND echo "*** Building ${iconvliba}"
-					COMMAND ${CMAKE_COMMAND} -E chdir ../../builtins/win32gdk/iconv
+					COMMAND ${CMAKE_COMMAND} -E chdir iconv
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
 					DEPENDS ${iconvfiles} ${glibfiles} ${gdkfiles} )
 
