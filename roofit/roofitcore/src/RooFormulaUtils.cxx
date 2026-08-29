@@ -37,6 +37,8 @@ RooFit::DEBUG message level for the RooFit::InputArguments topic.
 #include "RooMsgService.h"
 #include "RooTFormulaEvaluator.h"
 
+#include "TFormula.h"
+
 #include <cassert>
 #include <cctype>
 #include <map>
@@ -392,6 +394,51 @@ RooFormulaUtils::compileFormula(std::string const &name, std::string const &expr
    out.formula = reindexFormula(processed, varIsUsed);
    out.evaluator = makeEvaluator(name, out.formula, expression, out.actualVars);
 
+   return out;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Implementation of the formula constructors of RooFormulaVar and
+/// RooGenericPdf: compile the expression currently held in `formExpr` against
+/// the `dependents` list and initialize the owner's state from the result,
+/// with the variables that the expression doesn't use pruned. Throws if the
+/// expression is invalid.
+void RooFormulaUtils::initFormula(std::unique_ptr<RooFormulaEvaluator> &evaluator, TString &formExpr,
+                                  RooAbsCollection &actualVars, RooArgList const &dependents, const char *name)
+{
+   CompiledFormula compiled = compileFormula(name, formExpr.Data(), dependents);
+   formExpr = compiled.formula.c_str();
+   actualVars.add(compiled.actualVars);
+   evaluator = std::move(compiled.evaluator);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return an owner's formula evaluation engine, creating it on the fly if it
+/// doesn't exist yet (i.e. after being read from file). The expression is
+/// normalized to the `x[i]` dialect in the process, as old files may store it
+/// with name or ordinal references. Throws if the formula is invalid.
+RooFormulaEvaluator &RooFormulaUtils::ensureEvaluator(std::unique_ptr<RooFormulaEvaluator> &evaluator,
+                                                      TString &formExpr, RooArgList const &actualVars,
+                                                      const char *name)
+{
+   if (!evaluator) {
+      std::string processed = processFormula(formExpr.Data(), actualVars, name);
+      evaluator = makeEvaluator(name, processed, formExpr.Data(), actualVars);
+      formExpr = processed.c_str();
+   }
+   return *evaluator;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Clone a formula evaluation engine, renaming the copied TFormula (if any)
+/// after the possibly-different name of the new owner.
+std::unique_ptr<RooFormulaEvaluator> RooFormulaUtils::cloneEvaluator(RooFormulaEvaluator const &other,
+                                                                     const char *newName)
+{
+   std::unique_ptr<RooFormulaEvaluator> out = other.clone();
+   if (TFormula *tFormula = out->getTFormula()) {
+      tFormula->SetName(newName);
+   }
    return out;
 }
 

@@ -67,6 +67,14 @@ makeFormulaEvaluator(std::string const &name, std::string const &expression, Roo
 
 CompiledFormula compileFormula(std::string const &name, std::string const &expression, RooArgList const &varList);
 
+void initFormula(std::unique_ptr<RooFormulaEvaluator> &evaluator, TString &formExpr, RooAbsCollection &actualVars,
+                 RooArgList const &dependents, const char *name);
+
+RooFormulaEvaluator &ensureEvaluator(std::unique_ptr<RooFormulaEvaluator> &evaluator, TString &formExpr,
+                                     RooArgList const &actualVars, const char *name);
+
+std::unique_ptr<RooFormulaEvaluator> cloneEvaluator(RooFormulaEvaluator const &other, const char *newName);
+
 double evalFormula(RooFormulaEvaluator const &evaluator, RooAbsCollection const &vars, RooArgSet const *nset = nullptr);
 
 void doEvalFormula(RooFormulaEvaluator const &evaluator, RooArgList const &actualVars, RooFit::EvalContext &ctx);
