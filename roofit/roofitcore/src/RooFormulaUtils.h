@@ -22,7 +22,6 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <vector>
 
 class RooAbsBinning;
 class RooAbsReal;
@@ -37,24 +36,7 @@ class RooAbsRealLValue;
 /// backends understand; the other functions operate on the normalized form.
 namespace RooFormulaUtils {
 
-/// The result of compileFormula(): the normalized expression together with the
-/// variables it actually uses and the evaluation engine for it.
-struct CompiledFormula {
-   /// Processed expression in the `x[i]` dialect, where `i` refers to the
-   /// position in `actualVars` (variables that turned out to be unused in the
-   /// expression are pruned and the indices remapped accordingly).
-   std::string formula;
-   /// The subset of input variables that the expression actually uses.
-   RooArgList actualVars;
-   /// The evaluation engine, with `x[i]` referring to `actualVars[i]`.
-   std::unique_ptr<RooFormulaEvaluator> evaluator;
-};
-
 std::string processFormula(std::string formula, RooArgList const &varList, std::string const &callerName);
-
-std::vector<bool> usedVariables(std::string const &processedFormula, std::size_t nVars);
-
-std::string reindexFormula(std::string const &processedFormula, std::vector<bool> const &varIsUsed);
 
 std::string reconstructFormula(std::string internalRepr, RooArgList const &args,
                                const char *fixedReplacement = nullptr);
@@ -64,8 +46,6 @@ std::unique_ptr<RooFormulaEvaluator> makeEvaluator(std::string const &name, std:
 
 std::unique_ptr<RooFormulaEvaluator>
 makeFormulaEvaluator(std::string const &name, std::string const &expression, RooArgList const &varList);
-
-CompiledFormula compileFormula(std::string const &name, std::string const &expression, RooArgList const &varList);
 
 void initFormula(std::unique_ptr<RooFormulaEvaluator> &evaluator, TString &formExpr, RooAbsCollection &actualVars,
                  RooArgList const &dependents, const char *name);
