@@ -59,9 +59,15 @@ static bool Initialize() {
                 << std::endl;
       return false;
     }
+  }
 
-    // force loading of the cppjit module
-    PyRun_SimpleString(const_cast<char*>("import cppjit"));
+  // Importing the extension module is what runs the cpyrt initialization
+  // that sets gThisModule.
+  if (!cpyrt::gThisModule) {
+    PyObject* cppjitmod = PyImport_ImportModule("cppjit");
+    if (!cppjitmod)
+      return false;
+    Py_DECREF(cppjitmod);
   }
 
   if (!gMainDict) {
