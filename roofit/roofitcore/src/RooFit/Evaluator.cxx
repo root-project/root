@@ -44,7 +44,9 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 
 #include <chrono>
 #include <iomanip>
+#include <mutex>
 #include <numeric>
+#include <set>
 #include <thread>
 #include <unordered_set>
 
@@ -88,6 +90,28 @@ void logArchitectureInfo(bool useGPU)
    }
    if (useGPU) {
       log("using CUDA computation library");
+   }
+}
+
+/// Advise the user to implement CUDA support for a class that had to be
+/// evaluated on the CPU even though the CUDA backend was requested. Just like
+/// for the analogous message about the missing batch evaluation interface in
+/// RooAbsReal::doEval(), the message is only printed once per class, because
+/// the computation graph is evaluated many times, e.g. in every minimizer
+/// iteration.
+void logMissingCudaSupport(RooAbsArg const &arg)
+{
+   if (!RooMsgService::instance().isActive(&arg, RooFit::FastEvaluations, RooFit::INFO)) {
+      return;
+   }
+   static std::set<std::string> warnedClasses;
+   static std::mutex warnedClassesMutex;
+   std::lock_guard<std::mutex> guard{warnedClassesMutex};
+   if (warnedClasses.insert(arg.ClassName()).second) {
+      oocoutI(&arg, FastEvaluations) << "The class " << arg.ClassName()
+                                     << " could not be evaluated on the GPU because it doesn't support it."
+                                     << " Consider requesting or implementing it to benefit from a speed up."
+                                     << std::endl;
    }
 }
 
@@ -357,12 +381,10 @@ void Evaluator::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
          _evalContextCUDA.set(node, {buffer, nOut});
       }
    } else {
+      // Advising to implement the CUDA evaluation makes only sense if the batch was not a scalar.
+      // Otherwise, there would be no speedup benefit.
       if (!info.hasLogged && _useGPU) {
-         RooAbsArg const &arg = *info.absArg;
-         oocoutI(&arg, FastEvaluations) << "The argument " << arg.ClassName() << "::" << arg.GetName()
-                                        << " could not be evaluated on the GPU because the class doesn't support it. "
-                                           "Consider requesting or implementing it to benefit from a speed up."
-                                        << std::endl;
+         logMissingCudaSupport(*info.absArg);
          info.hasLogged = true;
       }
       if (!info.buffer) {
