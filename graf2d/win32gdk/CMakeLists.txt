@@ -11,23 +11,23 @@
 
 # use relative paths to avoid filtering in dictionary generator
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gdk/src
-                    ${CMAKE_CURRENT_SOURCE_DIR}/gdk/src/gdk
-                    ${CMAKE_CURRENT_SOURCE_DIR}/gdk/src/glib)
+                    ${CMAKE_SOURCE_DIR}/builtins/win32gdk/gdk
+                    ${CMAKE_SOURCE_DIR}/builtins/win32gdk/glib)
 
 set(iconvlib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/iconv-1.3.lib)
 set(iconvdll  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/iconv-1.3.dll)
-set(iconvliba ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/iconv/iconv-1.3.lib)
-set(iconvdlla ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/iconv/iconv-1.3.dll)
+set(iconvliba ${CMAKE_CURRENT_BINARY_DIR}/iconv/iconv-1.3.lib)
+set(iconvdlla ${CMAKE_CURRENT_BINARY_DIR}/iconv/iconv-1.3.dll)
 
 set(gliblib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/glib-1.3.lib)
 set(glibdll  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/glib-1.3.dll)
-set(glibliba ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/glib/glib-1.3.lib)
-set(glibdlla ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/glib/glib-1.3.dll)
+set(glibliba ${CMAKE_SOURCE_DIR}/builtins/win32gdk/glib/glib-1.3.lib)
+set(glibdlla ${CMAKE_SOURCE_DIR}/builtins/win32gdk/glib/glib-1.3.dll)
 
 set(gdklib   ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/gdk-1.3.lib)
 set(gdkdll   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gdk-1.3.dll)
-set(gdkliba  ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/gdk/gdk-1.3.lib)
-set(gdkdlla  ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/gdk/gdk-1.3.dll)
+set(gdkliba  ${CMAKE_SOURCE_DIR}/builtins/win32gdk/gdk/gdk-1.3.lib)
+set(gdkdlla  ${CMAKE_SOURCE_DIR}/builtins/win32gdk/gdk/gdk-1.3.dll)
 
 file(GLOB iconvfiles "../../builtins/win32gdk/iconv/*.*")
 file(GLOB_RECURSE glibfiles "../../builtins/win32gdk/glib/*.*")
