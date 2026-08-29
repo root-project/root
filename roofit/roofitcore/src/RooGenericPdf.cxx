@@ -64,10 +64,7 @@ RooGenericPdf::RooGenericPdf(const char *name, const char *title,
   if (dependents.empty()) {
     _value = traceEval(nullptr);
   } else {
-     auto compiled = RooFormulaUtils::compileFormula(GetName(), _formExpr.Data(), dependents);
-     _formExpr = compiled.formula.c_str();
-     _actualVars.add(compiled.actualVars);
-     _evaluator = std::move(compiled.evaluator);
+     RooFormulaUtils::initFormula(_evaluator, _formExpr, _actualVars, dependents, GetName());
   }
 }
 
@@ -83,12 +80,7 @@ RooGenericPdf::RooGenericPdf(const RooGenericPdf& other, const char* name) :
 {
    _binnings = RooFormulaUtils::cloneBinnings(other._binnings);
    if (other._evaluator) {
-      _evaluator = other._evaluator->clone();
-      // Like when the TFormula was still copied directly, the copied TFormula is
-      // renamed after the possibly-different name of this object.
-      if (TFormula *tFormula = _evaluator->getTFormula()) {
-         tFormula->SetName(GetName());
-      }
+      _evaluator = RooFormulaUtils::cloneEvaluator(*other._evaluator, GetName());
    }
 }
 
@@ -98,16 +90,7 @@ RooGenericPdf::RooGenericPdf(const RooGenericPdf& other, const char* name) :
 
 RooFormulaEvaluator &RooGenericPdf::evaluator() const
 {
-   if (!_evaluator) {
-      // After being read from file, the evaluation engine might not exist, yet.
-      // Old files may also store the formula expression with name or ordinal
-      // references, so it is normalized to the `x[i]` dialect here, where `i`
-      // refers to the position in _actualVars.
-      std::string processed = RooFormulaUtils::processFormula(_formExpr.Data(), _actualVars, GetName());
-      _evaluator = RooFormulaUtils::makeEvaluator(GetName(), processed, _formExpr.Data(), _actualVars);
-      const_cast<TString &>(_formExpr) = processed.c_str();
-   }
-   return *_evaluator;
+   return RooFormulaUtils::ensureEvaluator(_evaluator, const_cast<TString &>(_formExpr), _actualVars, GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
