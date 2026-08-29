@@ -74,7 +74,7 @@ set_target_properties(iconv PROPERTIES FOLDER Builtins)
 
 add_custom_command( OUTPUT ${glibliba} ${glibdlla}
 					COMMAND echo "*** Building ${glibliba}"
-					COMMAND ${CMAKE_COMMAND} -E chdir ../../builtins/win32gdk/glib
+					COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_SOURCE_DIR}/builtins/win32gdk/glib
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
 					DEPENDS iconv ${glibfiles} )
 
