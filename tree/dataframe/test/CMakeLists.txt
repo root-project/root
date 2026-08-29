@@ -50,7 +50,8 @@ endif()
 
 ROOT_ADD_GTEST(dataframe_snapshot dataframe_snapshot.cxx LIBRARIES ROOTDataFrame GenVector)
 ROOT_GENERATE_DICTIONARY(DataFrameSnapshotUtils ${CMAKE_CURRENT_SOURCE_DIR}/DataFrameSnapshotUtils.hxx
-  MODULE dataframe_snapshot LINKDEF DataFrameSnapshotUtilsLinkDef.hxx OPTIONS -inlineInputHeader)
+  MODULE dataframe_snapshot LINKDEF DataFrameSnapshotUtilsLinkDef.hxx OPTIONS -inlineInputHeader
+  DEPENDENCIES ROOTDataFrame GenVector)
 
 ROOT_ADD_GTEST(dataframe_snapshot_emptyoutput dataframe_snapshot_emptyoutput.cxx LIBRARIES ROOTDataFrame GenVector)
 ROOT_GENERATE_DICTIONARY(DummyDict ${CMAKE_CURRENT_SOURCE_DIR}/DummyHeader.hxx
