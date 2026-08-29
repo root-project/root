@@ -252,80 +252,57 @@ RooFormulaUtils::processFormula(std::string formula, RooArgList const &varList, 
    return formula;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Analyse a processed formula to find out which of the `nVars` variables are
-/// actually referenced as `x[i]`. Out-of-range indices are ignored here; they
-/// are reported when the evaluator is created.
-std::vector<bool> RooFormulaUtils::usedVariables(std::string const &processedFormula, std::size_t nVars)
-{
-   std::vector<bool> out(nVars);
+namespace {
 
-   static const std::regex newOrdinalRegex("\\bx\\[([0-9]+)\\]");
-   for (sregex_iterator matchIt = sregex_iterator(processedFormula.begin(), processedFormula.end(), newOrdinalRegex);
+/// Prune the variables that a processed formula doesn't reference as `x[i]`,
+/// adding the used subset of `varList` to `actualVars` and returning the
+/// formula with the `x[i]` indices remapped to the pruned list. The remapping
+/// keeps the persisted pair (formula string, dependents) self-consistent, see
+/// https://github.com/root-project/root/issues/21371. Out-of-range references
+/// are kept as they are; they are reported when the evaluator is created.
+std::string pruneAndReindexFormula(std::string const &processedFormula, RooArgList const &varList,
+                                   RooArgList &actualVars)
+{
+   static const std::regex ordinalRegex("\\bx\\[([0-9]+)\\]");
+
+   // First pass: find out which variables are actually referenced as `x[i]`.
+   std::vector<bool> varIsUsed(varList.size());
+   for (auto matchIt = sregex_iterator(processedFormula.begin(), processedFormula.end(), ordinalRegex);
         matchIt != sregex_iterator(); ++matchIt) {
-      assert(matchIt->size() == 2);
-      std::stringstream matchString((*matchIt)[1]);
-      unsigned int i;
-      matchString >> i;
-
-      if (i < nVars) {
-         out[i] = true;
+      const std::size_t i = std::stoi((*matchIt)[1].str());
+      if (i < varIsUsed.size()) {
+         varIsUsed[i] = true;
       }
    }
 
-   return out;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Reindex a processed formula to map only the variables that are actually in use.
-/// Return the formula string with the `x[i]` positional indices remapped to each
-/// variable's position in the pruned list of actually-used variables instead of
-/// the full original list. This keeps the persisted pair (formula string,
-/// dependents) self-consistent, so a RooFormulaVar or RooGenericPdf survives a
-/// write/read cycle even when unused parameters were pruned.
-/// See https://github.com/root-project/root/issues/21371
-/// \return A new formula string with reindexed variable placeholders.
-std::string RooFormulaUtils::reindexFormula(std::string const &processedFormula, std::vector<bool> const &varIsUsed)
-{
-   int unUsedCount = 0;
-   std::vector<int> newIndex;
-   newIndex.reserve(varIsUsed.size());
-   // Map each original index to its position among the used variables;
-   // pruned entries get -1 and are never looked up (they don't appear in the formula).
-   for (std::size_t i = 0; i < varIsUsed.size(); ++i) {
-      if (!varIsUsed[i]) {
-         unUsedCount++;
-         newIndex.push_back(-1);
-      } else {
-         newIndex.push_back(static_cast<int>(i) - unUsedCount);
+   // Map each original index to its position among the used variables; pruned
+   // entries get -1 and are never looked up (they don't appear in the formula).
+   std::vector<int> newIndex(varList.size(), -1);
+   for (std::size_t i = 0; i < varList.size(); ++i) {
+      if (varIsUsed[i]) {
+         newIndex[i] = actualVars.size();
+         actualVars.add(varList[i]);
       }
    }
 
-   static const std::regex newOrdinalRegex("\\bx\\[([0-9]+)\\]");
-
+   // Second pass: rewrite every x[old] to x[newIndex[old]].
    std::string result;
-   std::size_t lastPos = 0;
    result.reserve(processedFormula.size());
-   // Single pass: rewrite every x[old] to x[newIndex[old]]. Out-of-range
-   // references are kept as they are; the evaluator creation reports them.
-   for (sregex_iterator matchIt = sregex_iterator(processedFormula.begin(), processedFormula.end(), newOrdinalRegex);
+   std::size_t lastPos = 0;
+   for (auto matchIt = sregex_iterator(processedFormula.begin(), processedFormula.end(), ordinalRegex);
         matchIt != sregex_iterator(); ++matchIt) {
       std::smatch match = *matchIt;
-
       result.append(processedFormula, lastPos, match.position() - lastPos);
       const std::size_t oldIdx = std::stoi(match[1].str());
-      if (oldIdx < newIndex.size()) {
-         result += "x[" + std::to_string(newIndex[oldIdx]) + "]";
-      } else {
-         result += match[0].str();
-      }
-
+      result += oldIdx < newIndex.size() ? "x[" + std::to_string(newIndex[oldIdx]) + "]" : match[0].str();
       lastPos = match.position() + match.length();
    }
    result.append(processedFormula, lastPos, std::string::npos);
 
    return result;
 }
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reconstruct a user-facing formula string by replacing the index
@@ -375,41 +352,19 @@ RooFormulaUtils::makeFormulaEvaluator(std::string const &name, std::string const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compile a formula expression for a RooFormulaVar or RooGenericPdf: process
-/// the expression, prune the variables that it doesn't use, reindex it to the
-/// pruned variable list, and create the evaluation engine for it. Throws if
-/// the expression is invalid.
-RooFormulaUtils::CompiledFormula
-RooFormulaUtils::compileFormula(std::string const &name, std::string const &expression, RooArgList const &varList)
-{
-   CompiledFormula out;
-
-   const std::string processed = processFormula(expression, varList, name);
-   const std::vector<bool> varIsUsed = usedVariables(processed, varList.size());
-   for (std::size_t i = 0; i < varList.size(); ++i) {
-      if (varIsUsed[i]) {
-         out.actualVars.add(varList[i]);
-      }
-   }
-   out.formula = reindexFormula(processed, varIsUsed);
-   out.evaluator = makeEvaluator(name, out.formula, expression, out.actualVars);
-
-   return out;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Implementation of the formula constructors of RooFormulaVar and
-/// RooGenericPdf: compile the expression currently held in `formExpr` against
-/// the `dependents` list and initialize the owner's state from the result,
-/// with the variables that the expression doesn't use pruned. Throws if the
-/// expression is invalid.
+/// RooGenericPdf: compile the expression currently held in `formExpr` and
+/// initialize the owner's state, pruning the variables that the expression
+/// doesn't use. Throws if the expression is invalid.
 void RooFormulaUtils::initFormula(std::unique_ptr<RooFormulaEvaluator> &evaluator, TString &formExpr,
                                   RooAbsCollection &actualVars, RooArgList const &dependents, const char *name)
 {
-   CompiledFormula compiled = compileFormula(name, formExpr.Data(), dependents);
-   formExpr = compiled.formula.c_str();
-   actualVars.add(compiled.actualVars);
-   evaluator = std::move(compiled.evaluator);
+   const std::string processed = processFormula(formExpr.Data(), dependents, name);
+   RooArgList usedVars;
+   const std::string pruned = pruneAndReindexFormula(processed, dependents, usedVars);
+   evaluator = makeEvaluator(name, pruned, formExpr.Data(), usedVars);
+   actualVars.add(usedVars);
+   formExpr = pruned.c_str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
