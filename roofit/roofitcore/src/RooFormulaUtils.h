@@ -18,9 +18,15 @@
 
 #include "RooFormulaEvaluator.h"
 
+#include <list>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
+
+class RooAbsBinning;
+class RooAbsReal;
+class RooAbsRealLValue;
 
 /// Free functions to translate and evaluate user-defined expressions of
 /// RooAbsArgs, as used by RooFormulaVar and RooGenericPdf and for cut
@@ -66,6 +72,26 @@ double evalFormula(RooFormulaEvaluator const &evaluator, RooAbsCollection const 
 void doEvalFormula(RooFormulaEvaluator const &evaluator, RooArgList const &actualVars, RooFit::EvalContext &ctx);
 
 void printFormula(std::ostream &os, TString indent, std::string const &formula, RooArgList const &actualVars);
+
+/// Map of user-defined binnings for a piecewise-flat RooFormulaVar or
+/// RooGenericPdf, keyed by the observable's index in the formula variables.
+/// The functions below implement the binning interface of these two classes.
+using BinningMap = std::map<int, std::unique_ptr<RooAbsBinning>>;
+
+BinningMap cloneBinnings(BinningMap const &binnings);
+
+void setBinning(BinningMap &binnings, RooAbsReal const &caller, RooArgList const &actualVars, const char *formExpr,
+                RooAbsRealLValue const &obs, RooAbsBinning const &binning, bool checkFlatness);
+
+const RooAbsBinning *getBinning(BinningMap const &binnings, RooArgList const &actualVars, RooAbsRealLValue const &obs);
+
+bool isBinnedDistribution(BinningMap const &binnings, RooArgList const &actualVars, RooArgSet const &obs);
+
+std::list<double> *binBoundaries(BinningMap const &binnings, RooArgList const &actualVars, RooAbsRealLValue const &obs,
+                                 double xlo, double xhi);
+
+std::list<double> *plotSamplingHint(BinningMap const &binnings, RooArgList const &actualVars,
+                                    RooAbsRealLValue const &obs, double xlo, double xhi);
 
 } // namespace RooFormulaUtils
 
