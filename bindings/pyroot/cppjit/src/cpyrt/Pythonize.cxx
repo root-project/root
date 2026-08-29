@@ -1982,8 +1982,21 @@ bool cpyrt::Pythonize(PyObject* pyclass, interop::TCppScope_t scope) {
     }
 #endif
 
-  if (interop::IsAggregate(((CPPClass*)pyclass)->fCppType) &&
-      name.compare(0, 5, "std::", 5) != 0) {
+  // The pseudo-constructor is not meant for standard-library aggregates;
+  // detect those by walking the enclosing scopes instead of testing the
+  // exposed name, which may or may not be qualified (e.g. std::tuple is
+  // reported without its namespace here).
+  bool stdclass = false;
+  for (interop::TCppScope_t p =
+           interop::GetParentScope(((CPPClass*)pyclass)->fCppType);
+       p; p = interop::GetParentScope(p)) {
+    if (interop::IsNamespace(p) && interop::GetName(p) == "std") {
+      stdclass = true;
+      break;
+    }
+  }
+
+  if (interop::IsAggregate(((CPPClass*)pyclass)->fCppType) && !stdclass) {
     // create a pseudo-constructor to allow initializer-style object creation
     interop::TCppScope_t kls = ((CPPClass*)pyclass)->fCppType;
     std::vector<interop::TCppScope_t> datamems;
