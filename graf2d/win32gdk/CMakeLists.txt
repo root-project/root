@@ -9,15 +9,14 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-# use relative paths to avoid filtering in dictionary generator
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gdk/src
                     ${CMAKE_SOURCE_DIR}/builtins/win32gdk/gdk
                     ${CMAKE_SOURCE_DIR}/builtins/win32gdk/glib)
 
 set(iconvlib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/iconv-1.3.lib)
 set(iconvdll  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/iconv-1.3.dll)
-set(iconvliba ${CMAKE_CURRENT_BINARY_DIR}/iconv/iconv-1.3.lib)
-set(iconvdlla ${CMAKE_CURRENT_BINARY_DIR}/iconv/iconv-1.3.dll)
+set(iconvliba ${CMAKE_SOURCE_DIR}/builtins/win32gdk/iconv/iconv-1.3.lib)
+set(iconvdlla ${CMAKE_SOURCE_DIR}/builtins/win32gdk/iconv/iconv-1.3.dll)
 
 set(gliblib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/glib-1.3.lib)
 set(glibdll  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/glib-1.3.dll)
@@ -29,9 +28,9 @@ set(gdkdll   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gdk-1.3.dll)
 set(gdkliba  ${CMAKE_SOURCE_DIR}/builtins/win32gdk/gdk/gdk-1.3.lib)
 set(gdkdlla  ${CMAKE_SOURCE_DIR}/builtins/win32gdk/gdk/gdk-1.3.dll)
 
-file(GLOB iconvfiles "../../builtins/win32gdk/iconv/*.*")
-file(GLOB_RECURSE glibfiles "../../builtins/win32gdk/glib/*.*")
-file(GLOB_RECURSE gdkfiles "../../builtins/win32gdk/gdk/*.*")
+file(GLOB iconvfiles "${CMAKE_SOURCE_DIR}/builtins/win32gdk/iconv/*.*")
+file(GLOB_RECURSE glibfiles "${CMAKE_SOURCE_DIR}/builtins/win32gdk/glib/*.*")
+file(GLOB_RECURSE gdkfiles "${CMAKE_SOURCE_DIR}/builtins/win32gdk/gdk/*.*")
 
 if(CMAKE_GENERATOR MATCHES Ninja)
   set(nmcxxflags ${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}})
@@ -54,9 +53,8 @@ endif()
 # and only slightly modified by ROOT
 
 add_custom_command( OUTPUT ${iconvliba} ${iconvdlla}
-                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/builtins/win32gdk/iconv iconv
-					COMMAND echo "*** Building ${iconvliba}"
-					COMMAND ${CMAKE_COMMAND} -E chdir iconv
+                    COMMAND echo "*** Building ${iconvliba}"
+					COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_SOURCE_DIR}/builtins/win32gdk/iconv
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
 					DEPENDS ${iconvfiles} ${glibfiles} ${gdkfiles} )
 
@@ -92,9 +90,9 @@ set_target_properties(glib PROPERTIES FOLDER Builtins)
 
 add_custom_command( OUTPUT ${gdkliba}
 					COMMAND echo "*** Building ${gdkliba}"
-					COMMAND ${CMAKE_COMMAND} -E chdir ../../builtins/win32gdk/gdk/win32
+					COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_SOURCE_DIR}/builtins/win32gdk/gdk/win32
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
-					COMMAND ${CMAKE_COMMAND} -E chdir ../../builtins/win32gdk/gdk/src/gdk
+					COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_SOURCE_DIR}/builtins/win32gdk/gdk/
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
 					DEPENDS glib ${gdkfiles} )
 
@@ -132,7 +130,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
 )
 
 target_include_directories(Win32gdk PRIVATE ../gifencode)
-target_include_directories(Win32gdk PRIVATE ../../builtins/win32gdk) # this should be instead dealt via PUBLIC target_include_directories of gdklib and gliblib targets
+target_include_directories(Win32gdk PRIVATE ${CMAKE_SOURCE_DIR}/builtins/win32gdk) # this should be instead dealt via PUBLIC target_include_directories of gdklib and gliblib targets
 
 add_dependencies(Win32gdk GDKLIB glib)
 install(FILES ${gdkdlla} ${glibdlla} ${iconvdlla} DESTINATION ${CMAKE_INSTALL_BINDIR})
