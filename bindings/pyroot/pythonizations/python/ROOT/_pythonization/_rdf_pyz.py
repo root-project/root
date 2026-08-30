@@ -11,7 +11,7 @@ import inspect
 import re
 import typing
 
-from .._numbadeclare import _NumbaDeclareDecorator
+from .._pydeclare import _numba_declare_dispatch
 
 
 class FunctionJitter:
@@ -226,7 +226,7 @@ class FunctionJitter:
 
         self.get_function_params_args_call(func, cols_list, extra_args)
         if not hasattr(self.func, "__cpp_wrapper__"):  # not already declared with ROOT.Numba.Declare
-            _NumbaDeclareDecorator(self.func_sign, self.return_type)(self.func)
+            _numba_declare_dispatch(self.func_sign, self.return_type)(self.func)
         FunctionJitter.function_cache[self.func.__name__] = (self.func_call, self.func_sign)
         return self.func_call
 
