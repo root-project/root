@@ -220,7 +220,7 @@ TClingCXXRecMethIter::InstantiateTemplateWithDefaults(const clang::RedeclarableT
             break;
          }*/
 
-         paramType = S.SubstType(paramType, MLTAL, SourceLocation(), templatedDecl->getDeclName());
+         paramType = S.SubstType(paramType, MLTAL, templatedDecl->getLocation(), templatedDecl->getDeclName());
 
          if (paramType.isNull() || paramType->isDependentType()) {
             // Even after resolving the types through the surrounding template
