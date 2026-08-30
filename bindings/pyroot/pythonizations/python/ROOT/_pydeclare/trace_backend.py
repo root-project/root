@@ -655,7 +655,10 @@ def trace(func, param_names, param_types, declared_return, cpp_param_names, unro
     lines, root_value = _emit(ctx, result)
 
     if declared_return is not None:
-        lines.append("   return {}::Return<{}>({});".format(emit.PYD, declared_return.cpp(), root_value.code))
+        if root_value.type == declared_return:
+            lines.append("   return {};".format(root_value.code))
+        else:
+            lines.append("   return {}::Return<{}>({});".format(emit.PYD, declared_return.cpp(), root_value.code))
         deduced = declared_return
     else:
         lines.append("   return {};".format(root_value.code))
