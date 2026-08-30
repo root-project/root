@@ -5881,6 +5881,16 @@ namespace {
 
          nsDecl->setHasExternalVisibleStorage();
          fNSSet.insert(nsDecl);
+
+         // When cling eventually queries fNSSet/fNSFromRootmaps, it always does so
+         // using the primary DeclContext. Therefore we need to store
+         // the namespace's primary, not just nsDecl which might just
+         // be a non-primary declaration context for the namespace.
+         auto *primaryNsDecl = dyn_cast_or_null<NamespaceDecl>(nsDecl->getPrimaryContext());
+         if (primaryNsDecl && primaryNsDecl != nsDecl) {
+            primaryNsDecl->setHasExternalVisibleStorage();
+            fNSSet.insert(primaryNsDecl);
+         }
          return true;
       }
       bool VisitClassTemplateSpecializationDecl(ClassTemplateSpecializationDecl* specDecl) {
