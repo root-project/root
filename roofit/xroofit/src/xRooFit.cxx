@@ -612,9 +612,10 @@ public:
 
    // required forwarding methods for RooEvaluatorWrapper in 6.32 onwards
    double defaultErrorLevel() const override { return fFunc->defaultErrorLevel(); }
-   bool getParameters(const RooArgSet *observables, RooArgSet &outputSet, bool stripDisconnected) const override
+   void addParameters(RooAbsCollection &params, const RooArgSet *nset,
+                      RooFit::GetParametersPolicy const &policy) const override
    {
-      return fFunc->getParameters(observables, outputSet, stripDisconnected);
+      fFunc->addParameters(params, nset, policy);
    }
    bool setData(RooAbsData &data, bool cloneData) override { return fFunc->setData(data, cloneData); }
    double getValV(const RooArgSet *) const override { return evaluate(); }
