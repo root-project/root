@@ -1591,17 +1591,17 @@ void RooDataHist::weightError(double& lo, double& hi, ErrorType etype) const
     }
 
     // We didn't track asymmetric errors so far, so now we need to allocate
-    initializeAsymErrArrays();
+    // initializeAsymErrArrays();
 
     // Calculate poisson errors
     double ym;
     double yp;
     const double w = weight(_curIndex);
     RooHistError::instance().getPoissonInterval(Int_t(w+0.5),ym,yp,1) ;
-    _errLo[_curIndex] = w-ym;
-    _errHi[_curIndex] = yp-w;
-    lo = _errLo[_curIndex];
-    hi = _errHi[_curIndex];
+    lo = w-ym;
+    hi = yp-w;
+    //_errLo[_curIndex] = lo;
+    //_errHi[_curIndex] = hi;
     return ;
   }
 
