@@ -1797,6 +1797,10 @@ TEST(RNTuple, DeserializeDescriptorModes)
    {
       // Deserialize page list in various modes
       RNTupleDescriptorBuilder builder;
+      // Normally SetVersion() would be called in LoadStructure(). Since it's required for cloning the descriptor
+      // but we don't really care otherwise, we just set it as the current version (which is what the writer's
+      // descriptor builder does in this test).
+      builder.SetVersionForWriting();
       RNTupleSerializer::DeserializeHeader(bufHeader.get(), sizeHeader, builder);
       RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
 
