@@ -629,6 +629,45 @@ def astype(obj, dtype_obj, fail):
     )
 
 
+# ---------------------------------------------------------------------------
+# cppyy entities
+#
+# Anything cling already knows can be named directly from translated code; the
+# transpiler needs no model of it beyond a valid C++ name.
+# ---------------------------------------------------------------------------
+
+
+def is_cpp_root_namespace(obj):
+    """True for the ROOT facade and cppyy.gbl, the roots of the C++ world."""
+    if type(obj).__name__ == "ROOTFacade":
+        return True
+    return getattr(obj, "__name__", None) == "gbl" and (getattr(obj, "__module__", "") or "").startswith("cppyy")
+
+
+def cpp_entity_name(obj):
+    """The C++ name of a cppyy class or namespace, if it has a usable one.
+
+    Function overloads report a signature rather than a name, so they fall
+    back to being addressed by the path they were reached through.
+    """
+    name = getattr(obj, "__cpp_name__", None)
+    if isinstance(name, str) and name and "(" not in name:
+        return name
+    return None
+
+
+def cpp_entity_kind(obj):
+    """'type' for a class or namespace, 'callable' for a function, else None."""
+    if isinstance(obj, type):
+        return "type"
+    kind = type(obj).__name__
+    if kind in ("CPPOverload", "TemplateProxy", "CPPFunction", "StaticCPPOverload"):
+        return "callable"
+    if callable(obj) and (type(obj).__module__ or "").startswith("cppyy"):
+        return "callable"
+    return None
+
+
 def check_no_kwargs(kwargs, what, fail):
     if kwargs:
         fail("Keyword arguments are not supported in a call to {}".format(what))

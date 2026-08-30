@@ -47,8 +47,9 @@ resolves them.
 **Expressions.** Arithmetic, comparisons (including chained ones on scalars),
 `and`/`or`/`not`, the bitwise operators, indexing with wrap-around for negative
 indices, slicing with full Python semantics, boolean-mask indexing (`v[v > 0]`),
-conditional expressions, calls to other declared callables and to cppyy
-entities such as `ROOT.TMath.Abs`.
+conditional expressions, calls to other declared callables, and calls to
+cppyy entities such as `ROOT.TMath.Abs` -- the C++ namespace is walked through
+cppyy, so a name cling does not know is reported at declaration time.
 
 **Statements** (`ast` backend only): assignment, augmented and annotated
 assignment, `if`/`elif`/`else`, `for` over a range or an array, `while`,
