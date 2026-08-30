@@ -1531,8 +1531,13 @@ Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
    Int_t N = ((fNextBasketEntry < 0) ? fEntryNumber : fNextBasketEntry) - first;
    //printf("Requesting %d events; fNextBasketEntry=%lld; first=%lld.\n", N, fNextBasketEntry, first);
    if (R__unlikely(!leaf->ReadBasketFast(user_buf, N))) {
-      Error("GetBulkEntries", "Leaf failed to read.\n");
-      return -1;
+      if (N == 1) {
+         N = leaf->GetNdata();
+         leaf->ReadBasket(user_buf);
+      } else {
+         Error("GetBulkEntries", "Leaf failed to read.\n");
+         return -1;
+      }
    }
    user_buf.SetBufferOffset(bufbegin);
 
