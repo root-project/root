@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<gdml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://service-spi.web.cern.ch/service-spi/app/releases/GDML/schema/gdml.xsd">
+  <define>
+    <matrix name="prop1" coldim="2" values="1 7
+2 9.4"/>
+    <matrix name="prop2" coldim="2" values="3 -1
+4 -9.4
+5 -11.1"/>
+    <matrix name="RINDEX" coldim="2" values="1.65e-09 1.58"/>
+    <matrix name="REFLECTIVITY" coldim="2" values="1.65e-09 0.8"/>
+    <position name="pv1inWorldpos" x="0" y="0" z="0" unit="cm"/>
+    <position name="pv2inWorldpos" x="200" y="0" z="0" unit="cm"/>
+  </define>
+  <materials>
+    <element name="NITROGEN_elm" formula="N" Z="7" N="14">
+      <atom unit="g/mole" value="14.00674"/>
+    </element>
+    <element name="OXYGEN_elm" formula="O" Z="8" N="16">
+      <atom unit="g/mole" value="15.9994"/>
+    </element>
+    <material name="Air">
+      <property name="myproperty1" ref="prop1"/>
+      <property name="myproperty2" ref="prop2"/>
+      <property name="RINDEX" ref="RINDEX"/>
+      <D unit="g/cm3" value="0.00129"/>
+      <fraction n="0.69999999" ref="NITROGEN_elm"/>
+      <fraction n="0.30000001" ref="OXYGEN_elm"/>
+    </material>
+  </materials>
+  <solids>
+    <box name="world" x="1000" y="1000" z="1000" lunit="cm"/>
+    <box name="det" x="200" y="200" z="200" lunit="cm"/>
+    <opticalsurface name="surf1" model="glisur" finish="polished" type="dielectric_dielectric" value="1"/>
+    <opticalsurface name="surf2" model="glisur" finish="polished" type="dielectric_metal" value="1">
+      <property name="REFLECTIVITY" ref="REFLECTIVITY"/>
+    </opticalsurface>
+  </solids>
+  <structure>
+    <volume name="Detector">
+      <materialref ref="Air"/>
+      <solidref ref="det"/>
+    </volume>
+    <volume name="World">
+      <materialref ref="Air"/>
+      <solidref ref="world"/>
+      <physvol name="pv1" copynumber="0">
+        <volumeref ref="Detector"/>
+        <positionref ref="pv1inWorldpos"/>
+      </physvol>
+      <physvol name="pv2" copynumber="0">
+        <volumeref ref="Detector"/>
+        <positionref ref="pv2inWorldpos"/>
+      </physvol>
+    </volume>
+    <skinsurface name="skinsrf1" surfaceproperty="surf1">
+      <volumeref ref="Detector"/>
+    </skinsurface>
+    <bordersurface name="bordersrf1" surfaceproperty="surf2">
+      <physvolref ref="pv1"/>
+      <physvolref ref="pv2"/>
+    </bordersurface>
+  </structure>
+  <setup name="default" version="1.0">
+    <world ref="World"/>
+  </setup>
+</gdml>
