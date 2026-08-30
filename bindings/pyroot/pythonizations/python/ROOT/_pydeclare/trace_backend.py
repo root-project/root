@@ -29,6 +29,7 @@ import sys
 import textwrap
 
 from . import emit
+from .cpptypes import UNKNOWN_T
 from .errors import PyDeclareError
 
 _CONTROL_FLOW_NODES = (ast.If, ast.For, ast.While, ast.Try, ast.With, ast.IfExp)
@@ -479,6 +480,49 @@ def _traced_np_array(obj, dtype=None):
     return ctx.node(build, children)
 
 
+class _CppProxy:
+    """Stands in for a C++ namespace, class or function while tracing.
+
+    Calling it with a symbol records a C++ call; calling it with ordinary
+    Python values does the real thing, so a traced callable that happens to use
+    cppyy for something unrelated keeps working.
+    """
+
+    def __init__(self, cpp_name, obj):
+        object.__setattr__(self, "_cpp_name", cpp_name)
+        object.__setattr__(self, "_obj", obj)
+
+    def __getattr__(self, name):
+        if name.startswith("__"):
+            raise AttributeError(name)
+        obj = object.__getattribute__(self, "_obj")
+        prefix = object.__getattribute__(self, "_cpp_name")
+        try:
+            child = getattr(obj, name)
+        except AttributeError:
+            raise _TraceError("'{}' has no member '{}' known to cling".format(prefix or "the global namespace", name))
+        if emit.cpp_entity_kind(child) is None:
+            raise _TraceError(
+                "'{}{}' is a C++ object, not a type or a function.\n"
+                "  Only classes, namespaces and functions can be named from translated code. "
+                "Pass the object in as an argument instead.".format(prefix + "::" if prefix else "", name)
+            )
+        qualified = emit.cpp_entity_name(child) or ("{}::{}".format(prefix, name) if prefix else name)
+        return _CppProxy(qualified, child)
+
+    def __call__(self, *args, **kwargs):
+        obj = object.__getattribute__(self, "_obj")
+        syms = [a for a in args if isinstance(a, Sym)]
+        if not syms:
+            return obj(*args, **kwargs)
+        if kwargs:
+            raise _TraceError("Keyword arguments are not supported in a call to C++")
+        ctx = syms[0].ctx
+        name = object.__getattribute__(self, "_cpp_name")
+        children = [ctx.wrap(a) for a in args]
+        return ctx.node(lambda vals: emit.call(name, vals, UNKNOWN_T), children)
+
+
 TRACED_BUILTINS = ("float", "int", "bool", "len", "abs", "round", "sum", "pow", "min", "max")
 
 
@@ -495,10 +539,11 @@ def _with_traced_builtins(func):
     glob = dict(getattr(func, "__globals__", {}) or {})
     glob["__builtins__"] = env
     numpy_module = sys.modules.get("numpy")
-    if numpy_module is not None:
-        for name, value in list(glob.items()):
-            if value is numpy_module:
-                glob[name] = _NumpyProxy(numpy_module)
+    for name, value in list(glob.items()):
+        if numpy_module is not None and value is numpy_module:
+            glob[name] = _NumpyProxy(numpy_module)
+        elif emit.is_cpp_root_namespace(value):
+            glob[name] = _CppProxy("", value)
     clone = types.FunctionType(func.__code__, glob, func.__name__, func.__defaults__, func.__closure__)
     clone.__kwdefaults__ = getattr(func, "__kwdefaults__", None)
     return clone
