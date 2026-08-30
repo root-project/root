@@ -30,8 +30,7 @@
 template <class T>
 class RooTemplateProxy;
 
-namespace RooFit {
-namespace Experimental {
+namespace RooFit::Experimental {
 
 template <int P>
 struct Prio {
@@ -46,18 +45,18 @@ using PrioLowest = Prio<10>;
 class CodegenContext {
 public:
    void addResult(RooAbsArg const *key, std::string const &value);
-   void addResult(const char *key, std::string const &value);
 
-   std::string const &getResult(RooAbsArg const &arg);
+   std::string getResult(RooAbsArg const &arg);
 
    template <class T>
-   std::string const &getResult(RooTemplateProxy<T> const &key)
+   std::string getResult(RooTemplateProxy<T> const &key)
    {
       return getResult(key.arg());
    }
 
    void addToGlobalScope(std::string const &str);
    void addVecObs(const char *key, int idx);
+   void addParam(const RooAbsArg *key, int idx);
    int observableIndexOf(const RooAbsArg &arg) const;
 
    void addToCodeBody(RooAbsArg const *klass, std::string const &in);
@@ -123,6 +122,13 @@ public:
    };
    ScopeRAII OutputScopeRangeComment(RooAbsArg const *arg) { return {arg, *this}; }
 
+   /// @brief Map of node names to their result strings.
+   std::unordered_map<const TNamed *, std::size_t> _nodeNames;
+   std::size_t _nWksp = 0;
+   std::unordered_map<const RooAbsArg *, int> _paramIndices;
+   /// @brief A map to keep track of the observable indices if they are non scalar.
+   std::unordered_map<const TNamed *, std::size_t> _vecObsIndices;
+
 private:
    void pushScope();
    void popScope();
@@ -132,8 +138,6 @@ private:
    bool isScopeIndependent(RooAbsArg const *in) const;
 
    void endLoop(LoopScope const &scope);
-
-   void addResult(TNamed const *key, std::string const &value);
 
    template <class T, typename std::enable_if<std::is_floating_point<T>{}, bool>::type = true>
    std::string buildArg(T x)
@@ -179,10 +183,6 @@ private:
    template <class T>
    std::string typeName() const;
 
-   /// @brief Map of node names to their result strings.
-   std::unordered_map<const TNamed *, std::string> _nodeNames;
-   /// @brief A map to keep track of the observable indices if they are non scalar.
-   std::unordered_map<const TNamed *, int> _vecObsIndices;
    /// @brief Indicate whether a node depends on the dataset.
    std::unordered_set<RooFit::Detail::DataKey> _dependsOnData;
    /// @brief The code layered by lexical scopes used as a stack.
@@ -191,8 +191,6 @@ private:
    unsigned _indent = 0;
    /// @brief Index to get unique names for temporary variables.
    mutable int _tmpVarIdx = 0;
-   /// @brief A map to keep track of list names as assigned by addResult.
-   std::unordered_map<RooFit::UniqueId<RooAbsCollection>::Value_t, std::string> _listNames;
    std::vector<double> _xlArr;
    std::vector<std::string> _collectedFunctions;
    std::string _collectedCode;
@@ -231,7 +229,6 @@ void declareDispatcherCode(std::string const &funcName);
 
 void codegen(RooAbsArg &arg, CodegenContext &ctx);
 
-} // namespace Experimental
-} // namespace RooFit
+} // namespace RooFit::Experimental
 
 #endif
