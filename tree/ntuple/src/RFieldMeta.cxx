@@ -552,11 +552,23 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RClassField::BeforeConnectPageSource(ROO
       // A staging class (conversion streamer info) only exists if there is at least one rule that has an
       // on disk source member defined.
       if (hasSources) {
-         if (fieldDesc.GetTypeVersion() != GetTypeVersion() || fieldDesc.GetTypeName() != GetTypeName()) {
+         // For unversioned classes, the in-memory layout may by chance have the same transient version number
+         // than the recorded (transient, at the time of writing) on-disk version.  Therefore, we also need to compare
+         // the checksums to find out if we need a conversion streamer info.
+         std::uint32_t assignedVersionForOnDiskLayout = fieldDesc.GetTypeVersion();
+         R__ASSERT(fieldDesc.GetTypeChecksum());
+         if (fieldDesc.GetTypeVersion() != GetTypeVersion() || *fieldDesc.GetTypeChecksum() != fClass->GetCheckSum() ||
+             fieldDesc.GetTypeName() != GetTypeName()) {
             // We need the on-disk streamer info for the conversion streamer info
             pageSource.LoadStreamerInfo();
+
+            auto oldCl = TClass::GetClass(fieldDesc.GetTypeName().c_str());
+            R__ASSERT(oldCl);
+            auto onDiskStreamerInfo = oldCl->FindStreamerInfo(*fieldDesc.GetTypeChecksum());
+            R__ASSERT(onDiskStreamerInfo);
+            assignedVersionForOnDiskLayout = onDiskStreamerInfo->GetClassVersion();
          }
-         SetStagingClass(fieldDesc.GetTypeName(), fieldDesc.GetTypeVersion());
+         SetStagingClass(fieldDesc.GetTypeName(), assignedVersionForOnDiskLayout);
          PrepareStagingArea(rules, desc, fieldDesc);
          for (auto &[_, si] : fStagingItems) {
             Internal::CallConnectPageSourceOnField(*si.fField, pageSource);
