@@ -133,6 +133,14 @@ if (dataframe)
     if(NOT MSVC OR win_broken_tests)
         # Test wrapping Python callables for use in C++ using numba
         ROOT_ADD_PYUNITTEST(pyroot_numbadeclare numbadeclare.py PYTHON_DEPS numba)
+        # The same suite, run against each implementation of Numba.Declare: the
+        # numba one and the two transpiler backends, which need no numba.
+        ROOT_ADD_PYUNITTEST(pyroot_pydeclare_numba pydeclare.py PYTHON_DEPS numba
+                            ENVIRONMENT ROOT_NUMBA_DECLARE_BACKEND=numba)
+        ROOT_ADD_PYUNITTEST(pyroot_pydeclare_ast pydeclare.py
+                            ENVIRONMENT ROOT_NUMBA_DECLARE_BACKEND=ast)
+        ROOT_ADD_PYUNITTEST(pyroot_pydeclare_trace pydeclare.py
+                            ENVIRONMENT ROOT_NUMBA_DECLARE_BACKEND=trace)
         ROOT_ADD_PYUNITTEST(pyroot_rdf_filter_pyz rdf_filter_pyz.py PYTHON_DEPS numba)
         ROOT_ADD_PYUNITTEST(pyroot_rdf_define_pyz rdf_define_pyz.py PYTHON_DEPS numba)
         # std::string_view in CPyCppyy

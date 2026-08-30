@@ -576,12 +576,26 @@ class ROOTFacade(types.ModuleType):
     # Create and overload Numba namespace
     @property
     def Numba(self):
-        from ._numbadeclare import _NumbaDeclareDecorator
+        from ._pydeclare import _numba_declare_dispatch
 
         self._cppyy.cppdef("namespace Numba {}")
         ns = self._fallback_getattr("Numba")
-        ns.Declare = staticmethod(_NumbaDeclareDecorator)
+        # The implementation behind the decorator is selected by
+        # $ROOT_NUMBA_DECLARE_BACKEND: 'numba' (default), 'ast' or 'trace'.
+        ns.Declare = staticmethod(_numba_declare_dispatch)
         del type(self).Numba
+        return ns
+
+    # Create and overload the Py namespace, holding the transpiler based
+    # counterpart of Numba.Declare
+    @property
+    def Py(self):
+        from ._pydeclare import Declare
+
+        self._cppyy.cppdef("namespace Py {}")
+        ns = self._fallback_getattr("Py")
+        ns.Declare = staticmethod(Declare)
+        del type(self).Py
         return ns
 
     @property

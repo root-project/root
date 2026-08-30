@@ -86,6 +86,13 @@ set(py_sources
   ROOT/_jupyroot/magics/jsrootmagic.py
   ROOT/_jupyroot/magics/rootbrowsemagic.py
   ROOT/_numbadeclare.py
+  ROOT/_pydeclare/__init__.py
+  ROOT/_pydeclare/ast_backend.py
+  ROOT/_pydeclare/cpptypes.py
+  ROOT/_pydeclare/emit.py
+  ROOT/_pydeclare/errors.py
+  ROOT/_pydeclare/support.py
+  ROOT/_pydeclare/trace_backend.py
   ROOT/_pythonization/__init__.py
   ROOT/_pythonization/_cppinstance.py
   ROOT/_pythonization/_drawables.py

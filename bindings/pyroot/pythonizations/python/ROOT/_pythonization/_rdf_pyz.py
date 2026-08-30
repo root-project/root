@@ -12,7 +12,7 @@ import textwrap
 import typing
 import warnings
 
-from .._numbadeclare import _NumbaDeclareDecorator
+from .._pydeclare import _numba_declare_dispatch
 
 
 class FunctionJitter:
@@ -226,7 +226,7 @@ class FunctionJitter:
             return self.func_call
 
         self.get_function_params_args_call(func, cols_list, extra_args)
-        _NumbaDeclareDecorator(self.func_sign, self.return_type)(self.func)
+        _numba_declare_dispatch(self.func_sign, self.return_type)(self.func)
         FunctionJitter.function_cache[self.func.__name__] = (self.func_call, self.func_sign)
         return self.func_call
 
