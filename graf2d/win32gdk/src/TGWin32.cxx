@@ -23,6 +23,9 @@ by Olivier Couet (package X11INT).
 */
 
 #include "TGWin32.h"
+#include "Windows4Root.h"
+#include "gdk/gdk.h"
+#include "gdk/win32/gdkwin32.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
