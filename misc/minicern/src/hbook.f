@@ -296,6 +296,13 @@
       INTEGER       KEYS(2)
       DATA KHIDE,KHID1,KHID2,KHCO1,KHCO2/4HHIDE,4HHID1,4HHID2,
      +                                   4hHCO1,4HHCO2/
+      INTEGER ZARR(1)
+      INTEGER N2ARR(1)
+      INTEGER LCARR(1)
+      INTEGER LLARR(1)
+      ZARR(1) = 0
+      N2ARR(1) = -2
+      LCARR(1) = LCDIR
       IOFSET=KOFSET
       IF(ICHTOP(ICDIR).LT.0)THEN
          print*, '>>>>>> HRIN: ICHTOP(ICDIR).LT.0'
@@ -313,7 +320,7 @@
       IDN=IDD
       IF(IDD.EQ.0)THEN
          KEYS(1) = 1
-         CALL HRZIN(IHDIV,0,0,KEYS,9999,'SC')
+         CALL HRZIN(IHDIV,ZARR,ZARR,KEYS,9999,'SC')
          IDN=IQUEST(21)
          IQ42=IQUEST(22)
       ENDIF
@@ -334,7 +341,7 @@
       ENDIF
       KEYS(1) = IDN
       KEYS(2) = IQ42
-      CALL HRZIN(IHDIV,0,0,KEYS,ICYCLE,'NC')
+      CALL HRZIN(IHDIV,ZARR,ZARR,KEYS,ICYCLE,'NC')
       IF(IQUEST(1).NE.0)GO TO 70
       IQ40=IQUEST(40)
       IQ41=IQUEST(41)
@@ -355,7 +362,7 @@
    20 CONTINUE
       IF(LIDS.EQ.0)THEN
          KEYS(1) = IDN
-         CALL HRZIN(IHDIV,LCDIR,-2,KEYS,ICYCLE,'ND')
+         CALL HRZIN(IHDIV,LCARR,N2ARR,KEYS,ICYCLE,'ND')
          IF(IQUEST(1).NE.0)THEN
             print*, 'Bad sequence for RZ','HRIN',IDN
             GO TO 70
@@ -365,7 +372,8 @@
       ELSE
          LLID=LQ(LCDIR-9)
          KEYS(1) = IDN
-         CALL HRZIN(IHDIV,LLID,  0,KEYS,ICYCLE,'ND')
+         LLARR(1) = LLID
+         CALL HRZIN(IHDIV,LLARR,ZARR,KEYS,ICYCLE,'ND')
          IF(IQUEST(1).NE.0)THEN
             print*, 'Bad sequence for RZ','HRIN',IDN
             GO TO 70
@@ -692,6 +700,10 @@
       INCLUDE 'quest.inc'
       DIMENSION X(*)
       INTEGER   KEYS(2)
+      INTEGER LCARR(1)
+      INTEGER NARR(1)
+      LCARR(1)=LCIDN
+      NARR(1)=-1
       LC=LQ(LCIDN-1)
       NEVB=IQ(LC-1)/IQ(LCIDN+2)
       IBANK=(IDNEVT-1)/NEVB + 1
@@ -703,7 +715,7 @@
             LKEY=LQ(LC)
             IF(LKEY.GT.0)THEN
                KEYS(1)=IQ(LKEY+IBANK)
-               CALL HRZIN(IHDIV,LCIDN,-1,KEYS,99999,'RS')
+               CALL HRZIN(IHDIV,LCARR,NARR,KEYS,99999,'RS')
             ELSE
                IF(ICHTYP(ICDIR).EQ.1)THEN
                   KEYS(1) = IQ(LCIDN+5)+10000*IBANK
@@ -712,7 +724,7 @@
                   KEYS(1) = IQ(LCIDN+5)
                   KEYS(2) = IBANK
                ENDIF
-               CALL HRZIN(IHDIV,LCIDN,-1,KEYS,99999,'R')
+               CALL HRZIN(IHDIV,LCARR,NARR,KEYS,99999,'R')
                IF(IQUEST(1).NE.0)GO TO 90
             ENDIF
          ELSE
@@ -737,7 +749,9 @@
 *-------------------------------------------------------------------------------
 
       SUBROUTINE HGNT(IDN,IDNEVT,IERROR)
-      CALL HGNT1(IDN, '*', '*', 0, 0, IDNEVT, IERROR)
+      INTEGER ZARR(1)
+      ZARR(1) = 0
+      CALL HGNT1(IDN, '*', '*', ZARR, 0, IDNEVT, IERROR)
       END
 
 *-------------------------------------------------------------------------------
@@ -1482,6 +1496,12 @@
      +            ' ','/'/
       DATA IPROJ/'HIST','HIST','PROX','PROY','SLIX',
      +           'SLIY','BANX','BANY','FUNC'/
+      DIMENSION IFLAG(37)
+      EQUIVALENCE       (IFLAG(1),I1)
+      INTEGER INOARR(4)
+      INTEGER IDOARR(4)
+      INOARR(1) = INO
+      IDOARR(1) = 0
       HVERSN = 1.00
       NBIT   = MBIT
       NBITCH = MBITCH
@@ -1507,7 +1527,7 @@
       IH     = 0
       NH     = 0
       IPONCE = 0
-      CALL VZERO(I1,37)
+      CALL VZERO(IFLAG,37)
       K = (NBIT+1)/2
       MAXBIT(1) = 2
       DO 10 I=2,K
@@ -1521,10 +1541,10 @@
       ICBLAC = IDG(34)
       ICFUNC = IDG(37)
       CALL UCTOH(IPROJ,IDENT,4,36)
-      CALL UCTOH('NO  ',INO,4,4)
+      CALL UCTOH('NO  ',INOARR,4,4)
       L2 = 1
-      CALL UCTOH('$   ',IDOL,4,4)
-      IDOLAR = JBYT(IDOL,L2,NBITCH)
+      CALL UCTOH('$   ',IDOARR,4,4)
+      IDOLAR = JBYT(IDOARR(1),L2,NBITCH)
       IBLANC = JBYT(IDG(41),L2,NBITCH)
       NRECOV = .FALSE.
       IBSIZE = 1009
@@ -2020,6 +2040,10 @@
       CHARACTER*128 CHWOLD, CHDIR, CWDRZ
       INTEGER       KEYS(2)
       LOGICAL       MEMORY
+      INTEGER ZARR(1)
+      INTEGER LBARR(1)
+      INTEGER NLCARR(1)
+      ZARR(1) = 0
       IERR   = 0
       ICYCLE = 9999
       NDIM = IQ(LCID+ZNDIM)
@@ -2077,7 +2101,7 @@
          ELSEIF (MEMORY .AND. LB.EQ.0) THEN
             KEYS(2) = IQ(LNAME+IOFF+ZNRZB)*10000 +
      +                IQ(LNAME+IOFF+ZLCONT)
-            CALL HRZIN(IHDIV,0,0,KEYS,ICYCLE,'C')
+            CALL HRZIN(IHDIV,ZARR,ZARR,KEYS,ICYCLE,'C')
             IF (IQUEST(1) .NE. 0) THEN
                print*,'Error reading contents bank', 'HNBUFR', IDD
                IERR = 1
@@ -2086,7 +2110,9 @@
             NWORDS = IQUEST(12)
             CALL HSPACE(NWORDS+1000,'HNBUFR',IDD)
             IF (IERR .NE. 0) GOTO 50
-            CALL HRZIN(IHDIV,LBUF,-LCIND,KEYS,ICYCLE,' ')
+            LBARR(1)=LBUF
+            NLCARR(1)=-LCIND
+            CALL HRZIN(IHDIV,LBARR,NLCARR,KEYS,ICYCLE,' ')
          ELSEIF (LB .EQ. 0) THEN
             NTOT = NWP+33
             CALL HSPACE(NTOT,'HNBUFR',IDD)
@@ -2119,6 +2145,9 @@
       INCLUDE 'quest.inc'
       CHARACTER*128 CHWOLD, CHDIR, CWDRZ
       INTEGER       KEYS(2)
+      INTEGER NLCARR(1)
+      INTEGER LBARR(1)
+      LBARR(1)=LBUF
       IF (IQ(LNAME+IOFF+ZIBANK) .EQ. IBANK) THEN
          LR2 = LQ(LNAME-INDX)
          RETURN
@@ -2126,6 +2155,7 @@
       IERROR = 0
       IDD    = IQ(LBUF-5)
       LCIND  = IQ(LNAME+IOFF+ZLCONT)
+      NLCARR(1) = -LCIND
       IF (IQ(LCID+ZNPRIM) .LT. 0) THEN
          LR2 = LQ(LBUF-LCIND)
          DO 10 I = 2, IBANK
@@ -2157,15 +2187,15 @@
             IF (IQUEST(1) .NE. 0) GOTO 90
             IQ(LNAME+IOFF+ZNRZB) = IBANK
             IF (JBIT(IQ(LNAME+IOFF+ZDESC),28) .EQ. 1) THEN
-               CALL HRZIN(IHDIV,LBUF,-LCIND,KEYS,99999,'R')
+               CALL HRZIN(IHDIV,LBARR,NLCARR,KEYS,99999,'R')
                IF (IQUEST(1) .NE. 0) GOTO 90
             ENDIF
          ELSE
-            CALL HRZIN(IHDIV,LBUF,-LCIND,KEYS,99999,'R')
+            CALL HRZIN(IHDIV,LBARR,NLCARR,KEYS,99999,'R')
             IF (IQUEST(1) .NE. 0) THEN
                KEYS(1)   = 0
                IQUEST(1) = 0
-               CALL HRZIN(IHDIV,LBUF,-LCIND,KEYS,99999,'R')
+               CALL HRZIN(IHDIV,LBARR,NLCARR,KEYS,99999,'R')
             ENDIF
             IF (IQUEST(1) .NE. 0) GOTO 90
             IQ(LQ(LBUF-LCIND)) = 0
@@ -2647,6 +2677,12 @@
       INCLUDE 'quest.inc'
       CHARACTER*1 HTYPE
       INTEGER     KEYS(2)
+      INTEGER ZARR(1)
+      INTEGER PARR(1)
+      INTEGER LARR(1)
+      ZARR(1) = 0
+      PARR(1) = 1
+      LARR(1) = LHWORK
       NCH=LENOCC(CHDIR)
       WRITE(LOUT,1000)CHDIR(1:NCH)
       IOPTS=IQUEST(88)
@@ -2658,12 +2694,12 @@
       KEYNUM  = 1
       KEYS(1) = KEYNUM
       KEYS(2) = 0
-      CALL HRZIN(IHWORK,0,0,KEYS,9999,'SC')
+      CALL HRZIN(IHWORK,ZARR,ZARR,KEYS,9999,'SC')
       IDN=IQUEST(21)
       IQ42=IQUEST(22)
   10  IF (IDN .EQ. 0) GOTO 90
       KEYS(1) = KEYNUM
-      CALL HRZIN(IHWORK,0,0,KEYS,9999,'SNC')
+      CALL HRZIN(IHWORK,ZARR,ZARR,KEYS,9999,'SNC')
       IF(IQUEST(1).NE.0)GO TO 90
       IDN =IQUEST(21)
       IQ40=IQUEST(40)
@@ -2675,7 +2711,7 @@
       IF(IOPTA.NE.0)GO TO 40
       CALL HSPACE(NWORDS+1000,'HLDIR ',IDN)
       IF(IERR.NE.0)                    GO TO 90
-      CALL HRZIN(IHWORK,LHWORK,1,KEYS,9999,'SND')
+      CALL HRZIN(IHWORK,LARR,PARR,KEYS,9999,'SND')
       IF(IQUEST(1).NE.0)THEN
          print*, 'Bad sequence for RZ','HLDIR',IDN
          GO TO 90
