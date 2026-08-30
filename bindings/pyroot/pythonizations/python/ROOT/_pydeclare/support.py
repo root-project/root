@@ -31,9 +31,11 @@ CPP_SUPPORT = r"""
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdlib>
 #include <limits>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace ROOT {
@@ -86,6 +88,96 @@ constexpr bool IsNeg(T x)
    }
 }
 
+/// The type an integer operation is carried out in.
+///
+/// Python integers do not overflow and have no unsigned flavour, so the usual
+/// C++ arithmetic conversions are wrong for us in one specific place: a mix of
+/// a signed and an unsigned operand converts the signed one, turning -7 into a
+/// huge positive value before the operation ever runs.  Working in a signed
+/// 64-bit type whenever either operand is signed reproduces Python for every
+/// pair of operands that is narrower than 64 bits, which is all of them except
+/// long long itself.
+template <class A, class B>
+using IntOpType =
+   typename std::conditional<std::is_signed<A>::value || std::is_signed<B>::value,
+                             typename std::conditional<(sizeof(A) < sizeof(long long) &&
+                                                        sizeof(B) < sizeof(long long)),
+                                                       long long, typename std::common_type<A, B>::type>::type,
+                             typename std::common_type<A, B>::type>::type;
+
+/// The type a Python arithmetic expression on A and B produces.
+template <class A, class B>
+using ArithResult =
+   typename std::conditional<std::is_integral<A>::value && std::is_integral<B>::value, IntOpType<A, B>,
+                             typename std::common_type<A, B>::type>::type;
+
+/// '<' that is correct across a signed/unsigned mix, where C++'s own '<' is not.
+template <class A, class B>
+constexpr bool Less(A a, B b)
+{
+   if constexpr (std::is_integral<A>::value && std::is_integral<B>::value &&
+                 std::is_signed<A>::value != std::is_signed<B>::value) {
+      if constexpr (std::is_signed<A>::value) {
+         if (a < A(0)) {
+            return true;
+         }
+         return static_cast<typename std::make_unsigned<A>::type>(a) < b;
+      } else {
+         if (b < B(0)) {
+            return false;
+         }
+         return a < static_cast<typename std::make_unsigned<B>::type>(b);
+      }
+   } else {
+      return a < b;
+   }
+}
+
+/// Python's unary minus.  Negating an unsigned value in C++ wraps around;
+/// Python has no unsigned integers and simply produces a negative number.
+template <class T>
+auto NegScalar(T x)
+{
+   if constexpr (std::is_integral<T>::value && !std::is_signed<T>::value) {
+      return -static_cast<IntOpType<T, long long>>(x);
+   } else {
+      return -x;
+   }
+}
+
+template <class T>
+auto Neg(const T &x)
+{
+   if constexpr (IsVecLike<typename std::decay<T>::type>::value) {
+      using E = ElemType<T>;
+      using R = typename std::decay<decltype(NegScalar(std::declval<E>()))>::type;
+      ROOT::VecOps::RVec<R> out(x.size());
+      for (std::size_t i = 0; i < x.size(); ++i) {
+         out[i] = NegScalar(static_cast<E>(x[i]));
+      }
+      return out;
+   } else {
+      return NegScalar(x);
+   }
+}
+
+/// Python's 'and' and 'or' evaluate to one of their *operands*, not to a bool,
+/// and they short-circuit.  The right-hand side is passed as a callable so
+/// that it is only evaluated when Python would evaluate it.
+template <class A, class F>
+auto And(const A &a, F &&rhs)
+{
+   using R = typename std::common_type<A, decltype(rhs())>::type;
+   return a ? static_cast<R>(rhs()) : static_cast<R>(a);
+}
+
+template <class A, class F>
+auto Or(const A &a, F &&rhs)
+{
+   using R = typename std::common_type<A, decltype(rhs())>::type;
+   return a ? static_cast<R>(a) : static_cast<R>(rhs());
+}
+
 // ---------------------------------------------------------------------------
 // Adapting the supported container types to RVec
 //
@@ -118,6 +210,14 @@ ROOT::VecOps::RVec<T> AsRVec(const std::array<T, N> &v)
 {
    return ROOT::VecOps::RVec<T>(const_cast<T *>(v.data()), N);
 }
+
+// The views above are non-owning, so a view over a temporary would dangle as
+// soon as the full expression ends.  Generated code never does this, but the
+// header is declared into a live interpreter where anyone can call AsRVec.
+template <class T, class A>
+ROOT::VecOps::RVec<T> AsRVec(std::vector<T, A> &&) = delete;
+template <class T, std::size_t N>
+ROOT::VecOps::RVec<T> AsRVec(std::array<T, N> &&) = delete;
 
 // ---------------------------------------------------------------------------
 // Element-wise application over a mix of containers and scalars
@@ -198,7 +298,29 @@ auto Div(const A &a, const B &b)
    } else if constexpr (IsVecLike<typename std::decay<B>::type>::value) {
       return static_cast<double>(a) / AsDoubleVec(b);
    } else {
+      if constexpr (std::is_integral<EA>::value && std::is_integral<EB>::value) {
+         if (b == B(0)) {
+            throw std::domain_error("PyDeclare: division by zero");
+         }
+      }
       return static_cast<double>(a) / static_cast<double>(b);
+   }
+}
+
+/// Guard the two integer divisions C++ leaves undefined.  Both of them abort
+/// the process on x86 rather than producing a wrong number, so there is no
+/// choice about paying for the check; Python raises here in any case.
+template <class T>
+void CheckIntDivisor(T a, T b)
+{
+   if (b == T(0)) {
+      throw std::domain_error("PyDeclare: integer division or modulo by zero");
+   }
+   if constexpr (std::is_signed<T>::value) {
+      if (b == T(-1) && a == std::numeric_limits<T>::min()) {
+         throw std::overflow_error("PyDeclare: integer division overflow; the result of "
+                                   "-(-2**63) is not representable as a C++ integer");
+      }
    }
 }
 
@@ -207,9 +329,13 @@ template <class A, class B>
 auto FloorDivScalar(A a, B b)
 {
    if constexpr (std::is_integral<A>::value && std::is_integral<B>::value) {
-      auto q = a / b;
-      auto r = a % b;
-      if (r != 0 && (IsNeg(r) != IsNeg(b))) {
+      using T = IntOpType<A, B>;
+      const T x = static_cast<T>(a);
+      const T y = static_cast<T>(b);
+      CheckIntDivisor(x, y);
+      T q = x / y;
+      const T r = x % y;
+      if (r != 0 && (IsNeg(r) != IsNeg(y))) {
          q -= 1;
       }
       return q;
@@ -235,9 +361,13 @@ template <class A, class B>
 auto ModScalar(A a, B b)
 {
    if constexpr (std::is_integral<A>::value && std::is_integral<B>::value) {
-      auto r = a % b;
-      if (r != 0 && (IsNeg(r) != IsNeg(b))) {
-         r += b;
+      using T = IntOpType<A, B>;
+      const T x = static_cast<T>(a);
+      const T y = static_cast<T>(b);
+      CheckIntDivisor(x, y);
+      T r = x % y;
+      if (r != 0 && (IsNeg(r) != IsNeg(y))) {
+         r += y;
       }
       return r;
    } else {
@@ -270,8 +400,11 @@ auto PowScalar(A a, B b)
          throw std::runtime_error("PyDeclare: integer ** negative integer would return a float in Python; "
                                   "cast a base or exponent to a floating point type");
       }
-      A result = A(1);
-      A base = a;
+      // Accumulating in A would truncate: a short base overflows at 2**15
+      // even though both Python and C++'s own integer promotion would not.
+      using T = IntOpType<A, long long>;
+      T result = T(1);
+      T base = static_cast<T>(a);
       auto e = b;
       while (e > 0) {
          if (e & 1) {
@@ -303,36 +436,35 @@ auto Pow(const A &a, const B &b)
 // Indexing and slicing with Python semantics
 // ---------------------------------------------------------------------------
 
+/// Resolve a Python index against a size, wrapping negatives and rejecting
+/// anything out of range.  Python raises IndexError rather than reading past
+/// the end, and an out-of-bounds read is not something to hand to an analysis.
+template <class I>
+std::size_t IndexOf(I i, std::size_t size)
+{
+   const long long n = static_cast<long long>(size);
+   long long j = static_cast<long long>(i);
+   if constexpr (std::is_signed<I>::value) {
+      if (j < 0) {
+         j += n;
+      }
+   }
+   if (j < 0 || j >= n) {
+      throw std::out_of_range("PyDeclare: index out of range");
+   }
+   return static_cast<std::size_t>(j);
+}
+
 template <class V, class I>
 decltype(auto) Index(const V &v, I i)
 {
-   if constexpr (std::is_signed<I>::value) {
-      if (i < 0) {
-         const long long n = static_cast<long long>(v.size());
-         const long long j = n + static_cast<long long>(i);
-         if (j < 0) {
-            throw std::out_of_range("PyDeclare: index out of range");
-         }
-         return v[static_cast<std::size_t>(j)];
-      }
-   }
-   return v[static_cast<std::size_t>(i)];
+   return v[IndexOf(i, v.size())];
 }
 
 template <class V, class I>
 decltype(auto) Index(V &v, I i)
 {
-   if constexpr (std::is_signed<I>::value) {
-      if (i < 0) {
-         const long long n = static_cast<long long>(v.size());
-         const long long j = n + static_cast<long long>(i);
-         if (j < 0) {
-            throw std::out_of_range("PyDeclare: index out of range");
-         }
-         return v[static_cast<std::size_t>(j)];
-      }
-   }
-   return v[static_cast<std::size_t>(i)];
+   return v[IndexOf(i, v.size())];
 }
 
 /// Full Python slice semantics, including negative bounds and negative steps.
@@ -382,28 +514,51 @@ long Len(const V &v)
 // Reductions, with numpy's result conventions
 // ---------------------------------------------------------------------------
 
+/// The type numpy accumulates a sum or a product into: at least 64 bits for
+/// any integer input, so that summing an array of small integers does not
+/// overflow the element type.  ROOT::VecOps::Sum accumulates into the element
+/// type instead, which is why the integer cases below are spelled out.
+template <class E>
+using AccType =
+   typename std::conditional<std::is_integral<E>::value,
+                             typename std::conditional<std::is_signed<E>::value ||
+                                                          std::is_same<E, bool>::value,
+                                                       long long, unsigned long long>::type,
+                             E>::type;
+
+/// numpy sums booleans and narrow integers as wide integers.  For floating
+/// point the two agree, and the VecOps implementation is used unchanged so
+/// that the generated code is exactly as fast as hand-written C++.
 template <class V>
 auto Sum(const V &v)
 {
    using E = ElemType<V>;
-   using R = typename std::conditional<std::is_same<E, bool>::value, long, E>::type;
-   R acc = R(0);
-   for (std::size_t i = 0; i < v.size(); ++i) {
-      acc += static_cast<R>(v[i]);
+   if constexpr (std::is_integral<E>::value) {
+      using Acc = AccType<E>;
+      Acc acc = 0;
+      for (std::size_t i = 0; i < v.size(); ++i) {
+         acc += static_cast<Acc>(v[i]);
+      }
+      return acc;
+   } else {
+      return ROOT::VecOps::Sum(v);
    }
-   return acc;
 }
 
 template <class V>
 auto Prod(const V &v)
 {
    using E = ElemType<V>;
-   using R = typename std::conditional<std::is_same<E, bool>::value, long, E>::type;
-   R acc = R(1);
-   for (std::size_t i = 0; i < v.size(); ++i) {
-      acc *= static_cast<R>(v[i]);
+   if constexpr (std::is_integral<E>::value) {
+      using Acc = AccType<E>;
+      Acc acc = 1;
+      for (std::size_t i = 0; i < v.size(); ++i) {
+         acc *= static_cast<Acc>(v[i]);
+      }
+      return acc;
+   } else {
+      return ROOT::VecOps::Product(v);
    }
-   return acc;
 }
 
 template <class V>
@@ -412,11 +567,7 @@ double Mean(const V &v)
    if (v.empty()) {
       return std::numeric_limits<double>::quiet_NaN();
    }
-   double acc = 0.;
-   for (std::size_t i = 0; i < v.size(); ++i) {
-      acc += static_cast<double>(v[i]);
-   }
-   return acc / static_cast<double>(v.size());
+   return ROOT::VecOps::Mean(v);
 }
 
 /// numpy's std(), i.e. the population standard deviation (ddof = 0).  Note
@@ -439,33 +590,19 @@ double Std(const V &v)
 template <class V>
 auto Min(const V &v)
 {
-   using E = ElemType<V>;
    if (v.empty()) {
       throw std::runtime_error("PyDeclare: min() of an empty sequence");
    }
-   E best = v[0];
-   for (std::size_t i = 1; i < v.size(); ++i) {
-      if (v[i] < best) {
-         best = v[i];
-      }
-   }
-   return best;
+   return ROOT::VecOps::Min(v);
 }
 
 template <class V>
 auto Max(const V &v)
 {
-   using E = ElemType<V>;
    if (v.empty()) {
       throw std::runtime_error("PyDeclare: max() of an empty sequence");
    }
-   E best = v[0];
-   for (std::size_t i = 1; i < v.size(); ++i) {
-      if (best < v[i]) {
-         best = v[i];
-      }
-   }
-   return best;
+   return ROOT::VecOps::Max(v);
 }
 
 template <class V>
@@ -534,7 +671,6 @@ bool All(const V &v)
       return FN(x);                         \
    }
 
-PYDECLARE_UNARY_MATH(Abs, abs)
 PYDECLARE_UNARY_MATH(Sqrt, sqrt)
 PYDECLARE_UNARY_MATH(Cbrt, cbrt)
 PYDECLARE_UNARY_MATH(Exp, exp)
@@ -565,6 +701,36 @@ PYDECLARE_UNARY_MATH(Lgamma, lgamma)
 PYDECLARE_UNARY_MATH(Tgamma, tgamma)
 
 #undef PYDECLARE_UNARY_MATH
+
+/// abs() is the one function here with no unsigned overload in <cstdlib>: for
+/// an unsigned argument every candidate is an equally good conversion and the
+/// call is ambiguous.  Python's abs() of a non-negative number is the identity.
+template <class T>
+auto AbsScalar(T x)
+{
+   if constexpr (std::is_integral<T>::value && !std::is_signed<T>::value) {
+      return x;
+   } else {
+      using std::abs;
+      return abs(x);
+   }
+}
+
+template <class T>
+auto Abs(const T &x)
+{
+   if constexpr (IsVecLike<typename std::decay<T>::type>::value) {
+      using E = ElemType<T>;
+      if constexpr (std::is_integral<E>::value && !std::is_signed<E>::value) {
+         return x;
+      } else {
+         using namespace ROOT::VecOps;
+         return abs(x);
+      }
+   } else {
+      return AbsScalar(x);
+   }
+}
 
 /// Python's round() and numpy's round() both round halves to even, while
 /// std::round rounds halves away from zero.  std::nearbyint under the default
@@ -605,13 +771,27 @@ PYDECLARE_BINARY_MATH(Fmod, fmod)
 #undef PYDECLARE_BINARY_MATH
 
 template <class A, class B>
+auto MaximumScalar(A a, B b)
+{
+   using R = ArithResult<A, B>;
+   return Less(a, b) ? static_cast<R>(b) : static_cast<R>(a);
+}
+
+template <class A, class B>
+auto MinimumScalar(A a, B b)
+{
+   using R = ArithResult<A, B>;
+   return Less(b, a) ? static_cast<R>(b) : static_cast<R>(a);
+}
+
+template <class A, class B>
 auto Maximum(const A &a, const B &b)
 {
    if constexpr (IsVecLike<typename std::decay<A>::type>::value ||
                  IsVecLike<typename std::decay<B>::type>::value) {
-      return ZipMap(a, b, [](auto x, auto y) { return x > y ? x : y; });
+      return ZipMap(a, b, [](auto x, auto y) { return MaximumScalar(x, y); });
    } else {
-      return a > b ? a : b;
+      return MaximumScalar(a, b);
    }
 }
 
@@ -620,9 +800,9 @@ auto Minimum(const A &a, const B &b)
 {
    if constexpr (IsVecLike<typename std::decay<A>::type>::value ||
                  IsVecLike<typename std::decay<B>::type>::value) {
-      return ZipMap(a, b, [](auto x, auto y) { return x < y ? x : y; });
+      return ZipMap(a, b, [](auto x, auto y) { return MinimumScalar(x, y); });
    } else {
-      return a < b ? a : b;
+      return MinimumScalar(a, b);
    }
 }
 
@@ -631,6 +811,16 @@ auto Where(const C &c, const A &a, const B &b)
 {
    if constexpr (IsVecLike<typename std::decay<C>::type>::value) {
       const std::size_t n = c.size();
+      if constexpr (IsVecLike<typename std::decay<A>::type>::value) {
+         if (a.size() != n) {
+            throw std::runtime_error("PyDeclare: operands could not be broadcast together");
+         }
+      }
+      if constexpr (IsVecLike<typename std::decay<B>::type>::value) {
+         if (b.size() != n) {
+            throw std::runtime_error("PyDeclare: operands could not be broadcast together");
+         }
+      }
       using R = typename std::decay<decltype(true ? ElemAt(a, 0) : ElemAt(b, 0))>::type;
       ROOT::VecOps::RVec<R> out(n);
       for (std::size_t i = 0; i < n; ++i) {
