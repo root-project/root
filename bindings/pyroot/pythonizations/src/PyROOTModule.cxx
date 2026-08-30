@@ -259,5 +259,10 @@ extern "C" PyObject *PyInit_libROOTPythonizations()
    // keep gRootModule, but do not increase its reference count even as it is borrowed,
    // or a self-referencing cycle would be created
 
+   // Avoid fallback to the GIL when importing this module in a free-threaded
+   // Python build.
+#ifdef Py_GIL_DISABLED
+   PyUnstable_Module_SetGIL(gRootModule, Py_MOD_GIL_NOT_USED);
+#endif
    return gRootModule;
 }
