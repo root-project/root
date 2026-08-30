@@ -68,8 +68,9 @@ class _FuncRef:
 class _CppRef:
     """A cppyy entity (class, namespace or free function) usable from C++."""
 
-    def __init__(self, cpp_name):
+    def __init__(self, cpp_name, obj=None):
         self.cpp_name = cpp_name
+        self.obj = obj
 
 
 class _DeclaredRef:
@@ -613,7 +614,7 @@ class AstTranspiler:
         if isinstance(base, _ModuleRef):
             return self._module_attribute(base, name, node)
         if isinstance(base, _CppRef):
-            return _CppRef("{}::{}".format(base.cpp_name, name))
+            return self._cpp_attribute(base, name, node)
         if isinstance(base, _DeclaredRef):
             raise_unsupported(self.func, node, "Cannot take an attribute of a declared function")
 
@@ -635,6 +636,33 @@ class AstTranspiler:
             raise_unsupported(self.func, node, "'{}' has no attribute '{}'".format(value.type, name))
         # Opaque C++ object: pass the access straight through.
         return _CppAttr(value, name)
+
+    def _cpp_attribute(self, base, name, node):
+        """Walk one step further into the C++ namespace, validating as we go."""
+        child = None
+        if base.obj is not None:
+            try:
+                child = getattr(base.obj, name)
+            except AttributeError:
+                raise_unsupported(
+                    self.func,
+                    node,
+                    "'{}' has no member '{}' known to cling".format(base.cpp_name or "the global namespace", name),
+                )
+            if emit.cpp_entity_kind(child) is None:
+                raise_unsupported(
+                    self.func,
+                    node,
+                    "'{}{}' is a C++ object, not a type or a function".format(
+                        base.cpp_name + "::" if base.cpp_name else "", name
+                    ),
+                    hint="Only classes, namespaces and functions can be named from translated "
+                    "code. Pass the object in as an argument instead.",
+                )
+        qualified = emit.cpp_entity_name(child) if child is not None else None
+        if qualified is None:
+            qualified = "{}::{}".format(base.cpp_name, name) if base.cpp_name else name
+        return _CppRef(qualified, child)
 
     def ex_Call(self, node):
         fail = self.fail_at(node)
@@ -859,6 +887,9 @@ class AstTranspiler:
         if value is not None:
             return value
 
+        if emit.is_cpp_root_namespace(obj):
+            return _CppRef("", obj)
+
         module_name = getattr(obj, "__name__", None)
         if inspect.ismodule(obj):
             if module_name in ("numpy", "math"):
@@ -874,9 +905,10 @@ class AstTranspiler:
         if declared is not None:
             return _DeclaredRef(declared, getattr(obj, "__pydeclare_return_type__", None))
 
-        cpp_name = _cppyy_name(obj)
-        if cpp_name is not None:
-            return _CppRef(cpp_name)
+        if emit.cpp_entity_kind(obj) is not None:
+            cpp_name = emit.cpp_entity_name(obj)
+            if cpp_name is not None:
+                return _CppRef(cpp_name, obj)
 
         if callable(obj) and module_name in emit.UNARY_FUNCTIONS:
             return _FuncRef(module_name, path)
@@ -1041,16 +1073,3 @@ def _unify(a, b):
         return UNKNOWN_T
     merged = ct.promote(a, b)
     return merged
-
-
-def _cppyy_name(obj):
-    """The C++ name of a cppyy class, namespace or function, if it is one."""
-    name = getattr(obj, "__cpp_name__", None)
-    if isinstance(name, str) and name:
-        return name
-    module = getattr(obj, "__module__", "") or ""
-    qual = getattr(obj, "__name__", None)
-    if isinstance(qual, str) and qual and (module.startswith("cppyy") or module == "ROOT"):
-        prefix = module.split(".", 1)[1] if module.startswith("cppyy.gbl.") else ""
-        return "{}::{}".format(prefix, qual) if prefix else qual
-    return None
