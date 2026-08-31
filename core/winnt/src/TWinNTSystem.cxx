@@ -364,6 +364,8 @@ namespace {
    /// directory of libCore.dll); in that case it is re-assembled - keeping the
    /// appended directories - as soon as gEnv exists, so that the
    /// `Root.DynamicPath` resource is taken into account.
+   /// A path set explicitly through `newpath` (TWinNTSystem::SetDynamicPath)
+   /// is used verbatim and is never amended.
 
    static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE,
                                   const char *addpath = 0)
@@ -414,9 +416,6 @@ namespace {
             dynpath += ";"; dynpath += TROOT::GetLibDir();
          }
          dynpath += addedPaths;  // entries carry a leading ';'
-      }
-      if (!dynpath.Contains(TROOT::GetLibDir())) {
-         dynpath += ";"; dynpath += TROOT::GetLibDir();
       }
 
       return dynpath;
