@@ -3,7 +3,7 @@ import ROOT
 ROOT.EnableImplicitMT(4)
 
 
-# Declare filters on RVec objects and JIT with Numba
+# Declare filters on RVec objects, translated to C++ and jitted with cling
 @ROOT.Numba.Declare(["int", "int", "RVecI"], "bool")
 def ik_ipi_nhitrp_cut(ik, ipi, nhitrp):
     return nhitrp[ik - 1] * nhitrp[ipi - 1] > 1
