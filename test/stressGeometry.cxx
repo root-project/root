@@ -146,20 +146,20 @@ const Int_t versions[NG] =  {5, //aleph
                              3, //sdc
                              4, //integral
                              4, //ams
-                             3, //brahms
+                             4, //brahms
                              5, //gem
                              4, //tesla
                              3, //btev
                              6, //cdf
                              4, //hades2
                              4, //lhcbfull
-                             4, //star
+                             5, //star
                              4, //sld
                              4, //cms
                              6, //alice3
-                             4, //babar2
+                             5, //babar2
                              3, //belle
-                             6}; //atlas
+                             7}; //atlas
 // The timings below are on my machine PIV 3GHz
 const Double_t cp_brun[NG] = {1.9,  //aleph
                               0.1,  //barres
@@ -322,7 +322,7 @@ void ReadRef(Int_t kexp) {
    if (!gen_ref)
       fname = TString::Format("root://eospublic.cern.ch//eos/root-eos/testfiles//%s_ref_%d.root", exps[kexp],versions[kexp]);
    else
-      fname.Format("files/%s_ref_%d.root", exps[kexp],versions[kexp]);
+      fname = TString::Format("files/%s_ref_%d.root", exps[kexp],versions[kexp]);
 
    f = TFile::Open(fname,"CACHEREAD");
    if (!f) {
