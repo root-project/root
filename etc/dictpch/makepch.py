@@ -76,7 +76,7 @@ def makepch():
          print ("ERROR: cannot find %s file here %s nor here %s" %(allheadersFilename, loc1, loc2))
          sys.exit(1)
    else:
-      rootbuildFlag="-rootbuild"
+      rootbuildFlag="--rootbuild"
 
 
    cppFlags = getCppFlags(cppflagsFilename)
@@ -100,7 +100,7 @@ def makepch():
       alllinkdefsFilename.replace("\\","/")
 
    rootclingExe = os.path.join(rootdir,"bin","rootcling")
-   command = "%s %s -generate-pch -f allDict.cxx -noDictSelection %s %s %s %s" %(rootclingExe,
+   command = "%s %s --generate-pch -f allDict.cxx --noDictSelection %s %s %s %s" %(rootclingExe,
                                                                                  rootbuildFlag,
                                                                                  allCppFlags,
                                                                                  allheadersFilename,
