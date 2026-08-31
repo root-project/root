@@ -621,7 +621,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   #---Get the library and module dependencies-----------------
-  
   foreach(dep Core ${ARG_DEPENDENCIES})
     # Whether <dep> provides a dictionary/pcm is decided at generation time
     # via $<TARGET_EXISTS:G__<dep>>, so the '-m' flag and the module-file
