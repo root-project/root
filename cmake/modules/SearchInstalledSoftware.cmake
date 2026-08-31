@@ -145,6 +145,14 @@ elseif(builtin_ftgl)
   message(SEND_ERROR "FTGL features enabled with \"builtin_ftgl=ON\" require \"opengl=ON\"")
   list(APPEND HOTFIX_BUILD_FLAGS '-Dopengl=ON')
 endif()
+if(webgui AND root7 AND geom)
+  ROOT_FIND_REQUIRED_DEP(OpenGL builtin_glu)
+  if (NOT builtin_glu AND OpenGL_FOUND AND NOT TARGET OpenGL::GLU)
+    message(SEND_ERROR "OpenGL found but missing GLU feature, consider enabling -Dbuiltin_glu=ON")
+    list(APPEND MISSING_PACKAGES 'GLU')
+    list(APPEND HOTFIX_BUILD_FLAGS '-Dbuiltin_glu=ON')
+  endif()
+endif()
 foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES VERSION)
   unset(OPENSSL_${suffix} CACHE)
 endforeach()
@@ -543,6 +551,11 @@ endif()
 #---Check for gl2ps ------------------------------------------------------------------
 if(opengl AND builtin_gl2ps)
   add_subdirectory(builtins/gl2ps)
+endif()
+
+#---Check for glu ------------------------------------------------------------------
+if(webgui AND root7 AND geom AND builtin_glu)
+  add_subdirectory(builtins/libtess)
 endif()
 
 #---Check for Graphviz installation-------------------------------------------------------

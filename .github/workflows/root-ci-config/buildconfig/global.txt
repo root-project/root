@@ -11,6 +11,7 @@ builtin_fftw3=OFF
 builtin_freetype=OFF
 builtin_ftgl=OFF
 builtin_gl2ps=OFF
+builtin_glu=OFF
 builtin_gsl=OFF
 builtin_llvm=ON
 builtin_lz4=OFF
