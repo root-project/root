@@ -22,7 +22,7 @@ This code was initially developed in the context of HIGZ and PAW
 by Olivier Couet (package X11INT).
 */
 
-#include "Windows4Root.h"
+#include <windows.h>
 #include "gdk/gdk.h"
 #include "gdk/win32/gdkwin32.h"
 #include "TGWin32.h"
