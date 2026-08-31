@@ -16,8 +16,10 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301 USA
 
-#include "mathtext/mathtext.h"
-#include <climits>
+#include <limits.h>
+#include <cmath>
+#include <iostream>
+#include <mathtext/mathtext.h>
 
 /////////////////////////////////////////////////////////////////////
 
@@ -148,8 +150,9 @@ namespace mathtext {
    bool math_text_t::field_t::generalized_fraction(void) const
    {
       if(_type == TYPE_MATH_LIST)
-         for (std::vector<item_t>::const_iterator iterator = _math_list.begin(); iterator != _math_list.end();
-              ++iterator)
+			for (std::vector<item_t>::const_iterator iterator =
+					_math_list.begin();
+				iterator != _math_list.end(); iterator++)
             if(iterator->_type ==
                item_t::TYPE_GENERALIZED_FRACTION)
                return true;
@@ -221,7 +224,8 @@ namespace mathtext {
    {
       std::wstring wstring;
 
-      for (std::string::const_iterator iterator = string.begin(); iterator != string.end(); ++iterator) {
+		for (std::string::const_iterator iterator = string.begin();
+			iterator != string.end(); iterator++) {
          wstring.push_back(*iterator);
       }
 
@@ -237,63 +241,63 @@ namespace mathtext {
          wchar_t c;
 
          // Skip over byte ordering marks
-         if((unsigned char)(*iterator) == 0xef) {
-            ++iterator;
-            if((unsigned char)(*iterator) == 0xbb) {
-               ++iterator;
-               if((unsigned char)(*iterator) == 0xbf) {
-                  ++iterator;
+			if ((*iterator & 0xff) == 0xef) {
+				iterator++;
+				if ((*iterator & 0xff) == 0xbb) {
+					iterator++;
+					if ((*iterator & 0xff) == 0xbf) {
+						iterator++;
                }
             }
          }
          if((*iterator & 0xf0) == 0xf0) {
             c = (*iterator & 0x7) << 18;
-            ++iterator;
+				iterator++;
             if((*iterator & 0xc0) != 0x80) {
                continue;
             }
             c |= (*iterator & 0x3f) << 12;
-            ++iterator;
+				iterator++;
             if((*iterator & 0xc0) != 0x80) {
                continue;
             }
             c |= (*iterator & 0x3f) << 6;
-            ++iterator;
+				iterator++;
             if((*iterator & 0xc0) != 0x80) {
                continue;
             }
             c |= (*iterator & 0x3f);
-            ++iterator;
+				iterator++;
          }
          else if((*iterator & 0xe0) == 0xe0) {
             c = (*iterator & 0xf) << 12;
-            ++iterator;
+				iterator++;
             if((*iterator & 0xc0) != 0x80) {
                continue;
             }
             c |= (*iterator & 0x3f) << 6;
-            ++iterator;
+				iterator++;
             if((*iterator & 0xc0) != 0x80) {
                continue;
             }
             c |= (*iterator & 0x3f);
-            ++iterator;
+				iterator++;
          }
          else if((*iterator & 0xc0) == 0xc0) {
             c = (*iterator & 0x1f) << 6;
-            ++iterator;
+				iterator++;
             if((*iterator & 0xc0) != 0x80) {
                continue;
             }
             c |= (*iterator & 0x3f);
-            ++iterator;
+				iterator++;
          }
          else if((*iterator & 0x80) == 0x0) {
             c = (*iterator & 0x7f);
-            ++iterator;
+				iterator++;
          }
          else {
-            ++iterator;
+				iterator++;
             continue;
          }
          wstring.push_back(c);
@@ -333,7 +337,6 @@ namespace mathtext {
       return true;
    }
 
-#if 0
    std::string tex_form(const double x)
    {
       std::string retval;
@@ -343,6 +346,5 @@ namespace mathtext {
             return retval;
       }
    }
-#endif
 
 }

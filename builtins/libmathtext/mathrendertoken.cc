@@ -16,8 +16,9 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301 USA
 
+#include <cmath>
 #include <algorithm>
-#include "mathtext/mathrender.h"
+#include <mathtext/mathrender.h>
 
 /////////////////////////////////////////////////////////////////////
 
@@ -183,7 +184,7 @@ namespace mathtext {
       const bool generalized_fraction =
       fraction_iterator != math_list_end_interior;
       bool delimiter = false;
-      float delimiter_height = 0.f;
+		float delimiter_height;
       bounding_box_t bounding_box_delimiter_left(0, 0, 0, 0, 0, 0);
       bounding_box_t bounding_box_delimiter_right(0, 0, 0, 0, 0, 0);
 
@@ -191,8 +192,8 @@ namespace mathtext {
          math_text_t::item_t::TYPE_BOUNDARY &&
          (math_list_end - 1)->_type ==
          math_text_t::item_t::TYPE_BOUNDARY) {
-         ++math_list_begin_interior;
-         --math_list_end_interior;
+			math_list_begin_interior++;
+			math_list_end_interior--;
          delimiter = true;
 
          const bounding_box_t bounding_box_interior =
@@ -381,8 +382,9 @@ namespace mathtext {
       }
       else
          // Incrementally process a math list
-         for (std::vector<math_text_t::item_t>::const_iterator iterator = math_list_begin_interior;
-              iterator != math_list_end_interior; ++iterator) {
+			for (std::vector<math_text_t::item_t>::const_iterator
+					iterator = math_list_begin_interior;
+				iterator != math_list_end_interior; iterator++) {
             unsigned int atom_type;
             bounding_box_t item_bounding_box;
             unsigned int current_style = has_accent ?

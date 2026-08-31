@@ -20,8 +20,6 @@
 #define MATHTEXT_H_
 
 #include <vector>
-#include <string>
-#include <iostream>
 
 namespace mathtext {
 
@@ -43,8 +41,8 @@ namespace mathtext {
     * - Illegal TeX syntax may result in not well defined behaviors.
     * Most notably, `a^b^c' or `a_b_c' result in `a^c' and `a_c',
     * i.e. the overwriting of the previous superscripts and
-    * subscripts, and `a \\atop b \\atop c' or `a \\over b \\over c'
-    * result in `a \\atop {b \\atop c}' and `a \\over {b \\over c}', i.e.
+	 * subscripts, and `a \atop b \atop c' or `a \over b \over c'
+	 * result in `a \atop {b \atop c}' and `a \over {b \over c}', i.e.
     * a right associative interpretation.
     *
     * @see ISO/IEC JTC1/SC2/WG2, ISO/IEC 10646:2003/Amd.2:2006 (ISO,
@@ -153,8 +151,7 @@ namespace mathtext {
          wchar_t _glyph;
          unsigned int _type;
          inline math_symbol_t(void)
-            : _family(FAMILY_PLAIN), _glyph(L'\0'),
-              _type(atom_t::TYPE_UNKNOWN)
+				: _family(FAMILY_PLAIN), _type(atom_t::TYPE_UNKNOWN)
          {
          }
          inline math_symbol_t(std::string code, wchar_t glyph,
@@ -192,7 +189,6 @@ namespace mathtext {
          bool _vertical;
          std::wstring _string;
          box_t(void)
-            : _vertical(false), _string(L"")
          {
          }
          box_t(std::wstring string)
@@ -314,8 +310,7 @@ namespace mathtext {
          field_t _index;
          inline atom_t(const unsigned int type,
                     const field_t &nucleus)
-            : _type(type), _nucleus(nucleus),
-              _limits(LIMITS_UNKNOWN)
+				: _type(type), _nucleus(nucleus)
          {
          }
          inline atom_t(const unsigned int type,
@@ -325,7 +320,7 @@ namespace mathtext {
          {
          }
          inline atom_t(const field_t &nucleus)
-            : _nucleus(nucleus), _limits(false)
+				: _nucleus(nucleus)
          {
             classify();
          }
@@ -333,7 +328,7 @@ namespace mathtext {
                     const field_t &superscript,
                     const field_t &subscript)
             : _nucleus(nucleus), _superscript(superscript),
-              _subscript(subscript), _limits(LIMITS_UNKNOWN)
+				  _subscript(subscript)
          {
             classify();
          }
@@ -355,19 +350,18 @@ namespace mathtext {
           * Returns the interelement spacing between the given left
           * and right atom types, and whether the present style is
           * script or scriptscript, with 0, 1, 2, and 3
-          * representing no space, \\thinkmuskip, \\medmuskip, and
-          * \\thickmuskip, respectively.
+			 * representing no space, \thinkmuskip, \medmuskip, and
+			 * \thickmuskip, respectively.
           *
-          * TeX defaults to \\thinkmuskip to 3 mu, \\medmuskip to 4
-          * mu, and \\thickmuskip to 5 mu, with 1 mu being 1/18
+			 * TeX defaults to \thinkmuskip to 3 mu, \medmuskip to 4
+			 * mu, and \thickmuskip to 5 mu, with 1 mu being 1/18
           * quad.
           *
           * @param[in] left_type left (enum) atom type
           * @param[in] right_type right (enum) atom type
-          * @param[in] script boolean
           * @return interelement spacing, with 0, 1, 2, and 3
-          * representing no space, \\thinkmuskip, \\medmuskip, and
-          * \\thickmuskip, respectively
+			 * representing no space, \thinkmuskip, \medmuskip, and
+			 * \thickmuskip, respectively
           */
          static unsigned int
          spacing(const unsigned int left_type,
@@ -422,22 +416,16 @@ namespace mathtext {
          unsigned int _boundary;
          inline item_t(const unsigned int type,
                     const float length = 0)
-            : _type(type), _atom(field_t()), _length(length),
-              _style_change(STYLE_UNKNOWN),
-              _boundary(BOUNDARY_UNKNOWN)
+				: _type(type), _atom(field_t()), _length(length)
          {
          }
          inline item_t(const atom_t &atom)
-            : _type(TYPE_ATOM), _atom(atom), _length(0),
-              _style_change(STYLE_UNKNOWN),
-              _boundary(BOUNDARY_UNKNOWN)
+				: _type(TYPE_ATOM), _atom(atom)
          {
          }
          inline item_t(const unsigned int type,
                     const atom_t &atom)
-            : _type(type), _atom(atom), _length(0),
-              _style_change(STYLE_UNKNOWN),
-              _boundary(BOUNDARY_UNKNOWN)
+				: _type(type), _atom(atom)
          {
          }
          bool operator==(const item_t &item) const;
@@ -507,6 +495,7 @@ namespace mathtext {
       inline void tree_view(void) const
       {
          std::vector<bool> branch;
+
          tree_view(_math_list, branch, true);
       }
       friend class math_text_renderer_t;

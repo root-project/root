@@ -1,117 +1,39 @@
-////////////////////////////////////////////////////////////////////////////////
-/// mathtext - A TeX/LaTeX compatible rendering library. Copyright (C)
-/// 2008-2012 Yue Shi Lai <ylai@users.sourceforge.net>
-///
-/// This library is free software; you can redistribute it and/or
-/// modify it under the terms of the GNU Lesser General Public License
-/// as published by the Free Software Foundation; either version 2.1 of
-/// the License, or (at your option) any later version.
-///
-/// This library is distributed in the hope that it will be useful, but
-/// WITHOUT ANY WARRANTY; without even the implied warranty of
-/// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-/// Lesser General Public License for more details.
-///
-/// You should have received a copy of the GNU Lesser General Public
-/// License along with this library; if not, write to the Free Software
-/// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-/// 02110-1301 USA
-
-#ifdef WIN32
-// On Windows, Disable the warning:
-// "characters beyond first in wide-character constant ignored"
-#pragma warning( push )
-#pragma warning( disable : 4066)
-#endif
+// mathtext - A TeX/LaTeX compatible rendering library. Copyright (C)
+// 2008-2012 Yue Shi Lai <ylai@users.sourceforge.net>
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1 of
+// the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+// 02110-1301 USA
 
 #include <cmath>
 #include <algorithm>
 #include <sstream>
-#include "mathtext/mathrender.h"
+#include <mathtext/mathrender.h>
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////
 
 namespace mathtext {
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-   point_t::operator std::string(void) const
-   {
-      std::stringstream stream;
-
-      stream << '(' << _x[0] << ", " << _x[1] << ')';
-
-      return stream.str();
-   }
-
-   const affine_transform_t affine_transform_t::identity =
-      affine_transform_t(1.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F);
-   const affine_transform_t affine_transform_t::flip_y =
-      affine_transform_t(1.0F, 0.0F, 0.0F, -1.0F, 0.0F, 0.0F);
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-   affine_transform_t affine_transform_t::
-   translate(const float tx, const float ty)
-   {
-      return affine_transform_t(1.0F, 0.0F, 0.0F, 1.0F, tx, ty);
-   }
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-   affine_transform_t affine_transform_t::
-   scale(const float sx, const float sy)
-   {
-      return affine_transform_t(sx, 0.0F, 0.0F, sy, 0.0F, 0.0F);
-   }
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-   affine_transform_t affine_transform_t::rotate(const float angle)
-   {
-      float sin_angle;
-      float cos_angle;
-
-      sin_angle = sin(angle);
-      cos_angle = cos(angle);
-
-      return affine_transform_t(cos_angle, sin_angle,
-                                -sin_angle, cos_angle, 0, 0);
-   }
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-   affine_transform_t::operator std::string(void) const
-   {
-      std::stringstream stream;
-
-      stream << '(' << _a[0] << ", " << _a[1] << ", 0)" << std::endl;
-      stream << '(' << _a[2] << ", " << _a[3] << ", 0)" << std::endl;
-      stream << '(' << _a[4] << ", " << _a[5] << ", 1)";
-
-      return stream.str();
-   }
 
 #ifdef __INTEL_COMPILER
 #pragma warning(push)
 #pragma warning(disable: 869)
 #endif // __INTEL_COMPILER
 
-
-////////////////////////////////////////////////////////////////////////////////
-
    bool math_text_renderer_t::is_cyrillic(const wchar_t c)
    {
       return c >= L'\u0400' && c <= L'\u052f';
    }
-
-
-////////////////////////////////////////////////////////////////////////////////
 
    bool math_text_renderer_t::is_cjk(const wchar_t c)
    {
@@ -141,21 +63,15 @@ namespace mathtext {
        (c >= L'\U0002f800' && c <= L'\U0002fa1f'));
    }
 
-
 #if 0
-////////////////////////////////////////////////////////////////////////////////
-
    bool math_text_renderer_t::is_wgl_4(const wchar_t c)
    {
       return true;
    }
 #endif
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// @see http://www.w3.org/International/questions/qa-scripts
-/// @see http://www.unicode.org/reports/tr9/tr9-21.html
-
+	// @see http://www.w3.org/International/questions/qa-scripts
+	// @see http://www.unicode.org/reports/tr9/tr9-21.html
    bool math_text_renderer_t::is_right_to_left(const wchar_t c)
    {
       return
@@ -170,26 +86,17 @@ namespace mathtext {
        (c >= L'\ufb1d' && c <= L'\ufb4f'));
    }
 
-
 #if 0
-////////////////////////////////////////////////////////////////////////////////
-
    bool math_text_renderer_t::is_cjk_punctuation_open(const wchar_t c)
    {
       return false;
    }
-
-
-////////////////////////////////////////////////////////////////////////////////
 
    bool math_text_renderer_t::is_cjk_punctuation_closed(const wchar_t c)
    {
       return false;
    }
 #endif
-
-
-////////////////////////////////////////////////////////////////////////////////
 
    bounding_box_t math_text_renderer_t::
    math_bounding_box(const math_text_t::box_t &box,
@@ -204,9 +111,6 @@ namespace mathtext {
 
       return box_bounding_box;
    }
-
-
-////////////////////////////////////////////////////////////////////////////////
 
    void math_text_renderer_t::
    math_text(const point_t origin,
@@ -225,9 +129,6 @@ namespace mathtext {
 #pragma warning(pop)
 #endif // __INTEL_COMPILER
 
-
-////////////////////////////////////////////////////////////////////////////////
-
    bounding_box_t math_text_renderer_t::
    math_bounding_box(const wchar_t &glyph,
                      const unsigned int family, const float size)
@@ -242,9 +143,6 @@ namespace mathtext {
 
       return math_symbol_bounding_box;
    }
-
-
-////////////////////////////////////////////////////////////////////////////////
 
    void math_text_renderer_t::
    math_text(const point_t origin, const wchar_t &glyph,
@@ -265,9 +163,6 @@ namespace mathtext {
       reset_font_size(family);
    }
 
-
-////////////////////////////////////////////////////////////////////////////////
-
    bounding_box_t math_text_renderer_t::
    math_bounding_box(const math_text_t::math_symbol_t &math_symbol,
                      const unsigned int style)
@@ -277,9 +172,6 @@ namespace mathtext {
 
       return math_bounding_box(math_symbol._glyph, family, size);
    }
-
-
-////////////////////////////////////////////////////////////////////////////////
 
    void math_text_renderer_t::
    math_text(const point_t origin,
@@ -293,9 +185,6 @@ namespace mathtext {
       math_text(origin, math_symbol._glyph, family, size,
                 render_structure);
    }
-
-
-////////////////////////////////////////////////////////////////////////////////
 
    bounding_box_t math_text_renderer_t::
    math_bounding_box(const math_text_t::math_symbol_t &math_symbol,
@@ -312,15 +201,12 @@ namespace mathtext {
       bounding_box_t ret = iterator->_offset +
       iterator->_bounding_box;
 
-      for (; iterator != token.end(); ++iterator)
+		for (; iterator != token.end(); iterator++)
          ret = ret.merge(iterator->_offset +
                          iterator->_bounding_box);
 
       return ret;
    }
-
-
-////////////////////////////////////////////////////////////////////////////////
 
    void math_text_renderer_t::
    math_text(const point_t origin,
@@ -331,7 +217,9 @@ namespace mathtext {
       std::vector<math_token_t> token =
       math_tokenize(math_symbol, style, height);
 
-      for (std::vector<math_token_t>::const_iterator iterator = token.begin(); iterator != token.end(); ++iterator)
+		for (std::vector<math_token_t>::const_iterator iterator =
+				token.begin();
+			iterator != token.end(); iterator++)
          math_text(origin +
                    transform_pixel_to_logical().linear() *
                    iterator->_offset,
@@ -340,10 +228,9 @@ namespace mathtext {
                    iterator->_extensible._size, render_structure);
    }
 
+	/////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////
-/// A field can be a math symbol or a math list
-
+	// A field can be a math symbol or a math list
    bounding_box_t math_text_renderer_t::
    math_bounding_box(const std::vector<math_text_t::item_t>::
                      const_iterator &math_list_begin,
@@ -362,15 +249,12 @@ namespace mathtext {
       bounding_box_t ret = iterator->_offset +
       iterator->_bounding_box;
 
-      for (; iterator != token.end(); ++iterator)
+		for (; iterator != token.end(); iterator++)
          ret = ret.merge(iterator->_offset +
                          iterator->_bounding_box);
 
       return ret;
    }
-
-
-////////////////////////////////////////////////////////////////////////////////
 
    void math_text_renderer_t::
    math_text(const point_t origin,
@@ -398,8 +282,8 @@ namespace mathtext {
          math_text_t::item_t::TYPE_BOUNDARY &&
          (math_list_end - 1)->_type ==
          math_text_t::item_t::TYPE_BOUNDARY) {
-         ++math_list_begin_interior;
-         --math_list_end_interior;
+			math_list_begin_interior++;
+			math_list_end_interior--;
          delimiter = true;
       }
 
@@ -415,7 +299,7 @@ namespace mathtext {
                    math_list_begin->_atom._nucleus._math_symbol,
                    style, token_iterator->_delimiter_height,
                    render_structure);
-         ++token_iterator;
+			token_iterator++;
       }
 
       static const math_text_t::item_t fraction_item =
@@ -435,14 +319,14 @@ namespace mathtext {
                    fraction_iterator + 1, math_list_end_interior,
                    token_iterator->_style,
                    render_structure);
-         ++token_iterator;
+			token_iterator++;
          if(thickness > 0) {
             filled_rectangle(
                              origin +
                              transform_pixel_to_logical().linear() *
                              (token_iterator->_offset +
                               token_iterator->_bounding_box));
-            ++token_iterator;
+				token_iterator++;
          }
          math_text(origin +
                    transform_pixel_to_logical().linear() *
@@ -450,12 +334,13 @@ namespace mathtext {
                    math_list_begin_interior, fraction_iterator,
                    token_iterator->_style,
                    render_structure);
-         ++token_iterator;
+			token_iterator++;
       }
       else
          // Incrementally process a math list
-         for (std::vector<math_text_t::item_t>::const_iterator iterator = math_list_begin_interior;
-              iterator != math_list_end_interior; ++iterator) {
+			for (std::vector<math_text_t::item_t>::const_iterator
+					iterator = math_list_begin_interior;
+				iterator != math_list_end_interior; iterator++) {
             switch(iterator->_type) {
                case math_text_t::item_t::TYPE_ATOM:
                   if(render_structure)
@@ -469,7 +354,7 @@ namespace mathtext {
                             iterator->_atom,
                             token_iterator->_style,
                             render_structure);
-                  ++token_iterator;
+				token_iterator++;
                   break;
             }
             // math_text_t::item_t::TYPE_KERN can be ignored
@@ -485,9 +370,6 @@ namespace mathtext {
                    token_iterator->_delimiter_height,
                    render_structure);
    }
-
-
-////////////////////////////////////////////////////////////////////////////////
 
    bounding_box_t math_text_renderer_t::
    math_bounding_box(const math_text_t::field_t &field,
@@ -508,9 +390,6 @@ namespace mathtext {
             return bounding_box_t(0, 0, 0, 0, 0, 0);
       }
    }
-
-
-////////////////////////////////////////////////////////////////////////////////
 
    void math_text_renderer_t::
    math_text(const point_t origin,
@@ -533,12 +412,9 @@ namespace mathtext {
       }
    }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// TeX algorithm for (three-way) atoms:
-///
-/// See Knuth, The TeXbook (1986), pp. 445f.
-
+	// TeX algorithm for (three-way) atoms:
+	//
+	// See Knuth, The TeXbook (1986), pp. 445f.
    bounding_box_t math_text_renderer_t::
    math_bounding_box(const math_text_t::atom_t &atom,
                      const unsigned int style)
@@ -554,15 +430,12 @@ namespace mathtext {
       bounding_box_t ret = iterator->_offset +
       iterator->_bounding_box;
 
-      for (; iterator != token.end(); ++iterator)
+		for (; iterator != token.end(); iterator++)
          ret = ret.merge(iterator->_offset +
                          iterator->_bounding_box);
 
       return ret;
    }
-
-
-////////////////////////////////////////////////////////////////////////////////
 
    void math_text_renderer_t::
    math_text(const point_t origin,
@@ -594,7 +467,7 @@ namespace mathtext {
                       token_iterator->_offset,
                       atom._index, token_iterator->_style,
                       render_structure);
-            ++token_iterator;
+				token_iterator++;
          }
 
          const math_text_t::math_symbol_t
@@ -607,7 +480,7 @@ namespace mathtext {
                    symbol_surd, token_iterator->_style,
                    token_iterator->_delimiter_height,
                    render_structure);
-         ++token_iterator;
+			token_iterator++;
          // Rule with clearance
          filled_rectangle(
                           origin + transform_pixel_to_logical().linear() *
@@ -637,7 +510,7 @@ namespace mathtext {
       if(atom._superscript.empty() && atom._subscript.empty())
          return;
 
-      ++token_iterator;
+		token_iterator++;
 
       if(atom._superscript.empty()) {
          math_text(origin +
@@ -659,55 +532,46 @@ namespace mathtext {
                 token_iterator->_offset,
                 atom._superscript, token_iterator->_style,
                 render_structure);
-      ++token_iterator;
+		token_iterator++;
       math_text(origin + transform_pixel_to_logical().linear() *
                 token_iterator->_offset,
                 atom._subscript, token_iterator->_style,
                 render_structure);
    }
 
-
-////////////////////////////////////////////////////////////////////////////////
-
    bounding_box_t math_text_renderer_t::
-   bounding_box(const math_text_t &textbb, const bool display_style)
+	bounding_box(const math_text_t &text, const bool display_style)
    {
-      if(!textbb.well_formed())
-         bounding_box(L"*** invalid: " + textbb.code());
+		if (!text.well_formed())
+			bounding_box(L"*** invalid: " + text.code());
 
       const unsigned int initial_style = display_style ?
       math_text_t::item_t::STYLE_DISPLAY :
       math_text_t::item_t::STYLE_TEXT;
 
-      return math_bounding_box(textbb._math_list._math_list,
+		return math_bounding_box(text._math_list._math_list,
                                initial_style);
    }
 
-
-////////////////////////////////////////////////////////////////////////////////
-
    void math_text_renderer_t::
-   text(const float x, const float y, const math_text_t &texti,
+	text(const float x, const float y, const math_text_t &text,
         const bool display_style)
    {
-      if(!texti.well_formed()) {
-         text_raw(x, y, L"*** invalid: " + texti.code());
+		if (!text.well_formed()) {
+			text_raw(x, y, L"*** invalid: " + text.code());
       }
 
       const unsigned int initial_style = display_style ?
       math_text_t::item_t::STYLE_DISPLAY :
       math_text_t::item_t::STYLE_TEXT;
 
-      if(texti._render_structure) {
+		if (text._render_structure) {
          point(x, y);
          rectangle(point_t(x, y) + math_bounding_box(
-                                                     texti._math_list._math_list, initial_style));
+				text._math_list._math_list, initial_style));
       }
-      math_text(point_t(x, y), texti._math_list._math_list,
-                initial_style, texti._render_structure);
+		math_text(point_t(x, y), text._math_list._math_list,
+				  initial_style, text._render_structure);
    }
 
 }
-#ifdef WIN32
-#pragma warning( pop )
-#endif

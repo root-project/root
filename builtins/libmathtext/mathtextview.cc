@@ -16,9 +16,9 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301 USA
 
+#include <cmath>
 #include <iostream>
-#include <string>
-#include "mathtext/mathtext.h"
+#include <mathtext/mathtext.h>
 
 /////////////////////////////////////////////////////////////////////
 
@@ -30,9 +30,11 @@ namespace mathtext {
    tree_view_prefix(const std::vector<bool> &branch,
                     const bool final) const
    {
-      if(!branch.empty()) {
+		if (branch.size() > 0) {
          std::cerr << ' ';
-         for (std::vector<bool>::const_iterator iterator = branch.begin(); iterator != branch.end(); ++iterator) {
+			for (std::vector<bool>::const_iterator iterator =
+					branch.begin();
+				iterator != branch.end(); iterator++) {
             if(*iterator) {
                if(iterator + 1 == branch.end()) {
                   if(final)
@@ -81,8 +83,9 @@ namespace mathtext {
                std::vector<bool> branch_copy = branch;
 
                branch_copy.back() = !final;
-               for (std::vector<item_t>::const_iterator iterator = field._math_list.begin();
-                    iterator != field._math_list.end(); ++iterator) {
+				for (std::vector<item_t>::const_iterator iterator =
+						field._math_list.begin();
+					iterator != field._math_list.end(); iterator++) {
                   branch_copy.back() = !final;
                   branch_copy.push_back(true);
                   tree_view(*iterator, branch_copy,
