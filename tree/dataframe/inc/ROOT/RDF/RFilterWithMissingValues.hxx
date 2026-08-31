@@ -102,24 +102,30 @@ public:
       constexpr static auto cacheLineStepint = RDFInternal::CacheLineStep<int>();
       constexpr static auto cacheLineStepULong64_t = RDFInternal::CacheLineStep<ULong64_t>();
 
-      if (entry != fLastCheckedEntry[slot * cacheLineStepLong64_t]) {
-         if (!fPrevNodePtr->CheckFilters(slot, entry)) {
-            // a filter upstream returned false, cache the result
-            fLastResult[slot * cacheLineStepint] = false;
-         } else {
-            // evaluate this filter, cache the result
-            const bool valueIsMissing = fValues[slot]->template TryGet<void>(entry) == nullptr;
-            if (fDiscardEntryWithMissingValue) {
-               valueIsMissing ? ++fRejected[slot * cacheLineStepULong64_t] : ++fAccepted[slot * cacheLineStepULong64_t];
-               fLastResult[slot * cacheLineStepint] = !valueIsMissing;
-            } else {
-               valueIsMissing ? ++fAccepted[slot * cacheLineStepULong64_t] : ++fRejected[slot * cacheLineStepULong64_t];
-               fLastResult[slot * cacheLineStepint] = valueIsMissing;
-            }
-         }
-         fLastCheckedEntry[slot * cacheLineStepLong64_t] = entry;
+      auto &newMask = fLastResult[slot * cacheLineStepint];
+      auto &lastEntry = fLastCheckedEntry[slot * cacheLineStepLong64_t];
+
+      if (entry == lastEntry)
+         return newMask;
+
+      newMask = fPrevNodePtr->CheckFilters(slot, entry);
+      if (!newMask)
+         return false;
+
+      fValues[slot]->Load(entry, newMask);
+
+      const bool valueIsMissing = fValues[slot]->template TryGet<void>(/*idx=*/0u) == nullptr;
+      if (fDiscardEntryWithMissingValue) {
+         valueIsMissing ? ++fRejected[slot * cacheLineStepULong64_t] : ++fAccepted[slot * cacheLineStepULong64_t];
+         newMask = !valueIsMissing;
+      } else {
+         valueIsMissing ? ++fAccepted[slot * cacheLineStepULong64_t] : ++fRejected[slot * cacheLineStepULong64_t];
+         newMask = valueIsMissing;
       }
-      return fLastResult[slot * cacheLineStepint];
+
+      lastEntry = entry;
+
+      return newMask;
    }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final

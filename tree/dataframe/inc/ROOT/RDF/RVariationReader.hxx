@@ -32,11 +32,9 @@ class R__CLING_PTRCHECK(off) RVariationReader final : public ROOT::Detail::RDF::
    /// The slot this value belongs to.
    unsigned int fSlot = std::numeric_limits<unsigned int>::max();
 
-   void *GetImpl(Long64_t entry) final
-   {
-      fVariation->Update(fSlot, entry);
-      return fValuePtr;
-   }
+   void *GetImpl(std::size_t /*idx*/) final { return fValuePtr; }
+
+   void LoadImpl(Long64_t entry, bool mask) final { fVariation->Update(fSlot, entry, mask); }
 
 public:
    RVariationReader(unsigned int slot, const std::string &colName, const std::string &variationName,
