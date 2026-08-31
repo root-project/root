@@ -180,8 +180,8 @@ namespace mathtext {
 		std::map<wchar_t, uint16_t> cid_map;
 		std::vector<std::string> charset;
 		std::vector<uint16_t> advance_width;
-		unsigned int cff_offset;
-		unsigned int cff_length;
+		unsigned int cff_offset = 0;
+		unsigned int cff_length = 0;
 
 		std::map<std::string, std::string> pdf_object;
 
