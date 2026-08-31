@@ -8,40 +8,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// TEMPORARY DUPLICATION OF ZipLZ4.h until header is removed from public interface and can be made fully private
-// Author: Brian Bockelman March 2015
+#include "ZipLZ4.h"
+#include "unlikely.h"
 
-/*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
-
-#ifndef ROOT_ZipLZ4
-#define ROOT_ZipLZ4
-
-// NOTE: the ROOT compression libraries aren't consistently written in C++; hence the
-// #ifdef's to avoid problems with C code.
-#ifdef __cplusplus
-extern "C" {
-#endif
-void R__zipLZ4(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep);
-void R__unzipLZ4(int *srcsize, const unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-
-#include "ROOT/RConfig.hxx"
-
-#include <cinttypes>
-#include <cstdint>
-#include <cstdio>
-#include <cstring>
+#include <inttypes.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 #include <lz4.h>
 #include <lz4hc.h>
 #include <xxhash.h>
@@ -105,7 +78,7 @@ void R__zipLZ4(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *t
    tgt[8] = (char)((in_size >> 16) & 0xff);
 
    // Write out checksum.
-   XXH64_canonicalFromHash(reinterpret_cast<XXH64_canonical_t *>(tgt + kChecksumOffset), checksumResult);
+   XXH64_canonicalFromHash((XXH64_canonical_t *)(tgt + kChecksumOffset), checksumResult);
 
    *irep = (int)returnStatus + kHeaderSize;
 }
@@ -136,8 +109,7 @@ void R__unzipLZ4(int *srcsize, const unsigned char *src, int *tgtsize, unsigned 
    // what size of chunks does interleaving (avoiding two fetches from RAM) improve enough for the
    // extra function call costs?  NOTE that ROOT limits the buffer size to 16MB.
    XXH64_hash_t checksumResult = XXH64(src + kHeaderSize, inputBufferSize, 0);
-   XXH64_hash_t checksumFromFile =
-      XXH64_hashFromCanonical(reinterpret_cast<const XXH64_canonical_t *>(src + kChecksumOffset));
+   XXH64_hash_t checksumFromFile = XXH64_hashFromCanonical((const XXH64_canonical_t *)(src + kChecksumOffset));
 
    if (R__unlikely(checksumFromFile != checksumResult)) {
       fprintf(

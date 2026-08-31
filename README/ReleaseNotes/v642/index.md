@@ -78,7 +78,7 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
 * The header `snprintf.h` is deprecated (will emit warnings) and will be removed in ROOT 6.44. Use instead `<cstdio>`.
 * The header `Strlen.h` is deprecated and will be removed in ROOT 6.44. Use `<cstring>` directly as a replacement. `NEED_STRING` macro should not be defined or an error will be raised.
 * The header `Rstrstream.h` is deprecated and will be removed after ROOT 6.44, use instead `<sstream>`.
-* The headers `ZipLZMA.h`, `ZipLZ4.h` and `ZipZSTD.h` are deprecated and will be removed in ROOT 6.46, use instead the public methods in the `RZip.h` interface.
+* The headers `ZipLZMA.h`, `ZipZSTD.h` and `ZipLZ4.h` are no longer part of ROOT installed headers. Use instead `RZip.h` methods.
 
 ## Build System
 
