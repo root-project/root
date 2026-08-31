@@ -19,6 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Windows4Root.h"
 #include <windows.h>
 #include "gdk/gdk.h"
 #include "gdk/win32/gdkwin32.h"
