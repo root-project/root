@@ -1,10 +1,10 @@
 [build-system]
-requires = ["scikit-build-core>=0.10"]
+requires = ["scikit-build-core>=1.0"] # the dynamic metadata syntax below is a scikit-build-core 1.0 feature
 build-backend = "scikit_build_core.build"
 
 [project]
 name = "root"
-version = "0.1a14"
+dynamic = ["version"]
 requires-python = ">=3.10"
 maintainers = [
   {name = "Vincenzo Eduardo Padulano", email = "vincenzo.eduardo.padulano@cern.ch"}
@@ -15,6 +15,25 @@ license = {file = "LICENSE"}
 dependencies = [
   "numpy",
 ]
+
+# The wheel version is derived automatically from ROOT's version macros
+# in RVersion.hxx bumped every release, with a PEP 440 pre-release suffix
+# appended. ex.: ROOT 6.42.02  ->  wheel version "6.42.2a1".
+# The "a1" marks an alpha pre-release. Bump it manually ("a1" -> "a2")
+# only to re-publish a wheel for a ROOT version already on PyPI since PyPI
+# refuses a filename it has already seen, this should only happen in case
+# of a failed/ broken upload of the first wheel.
+# Reset to "a1" for the next ROOT release.
+[[tool.dynamic-metadata]]
+provider = "scikit_build_core.metadata.regex"
+field = "version"
+input = "core/foundation/inc/ROOT/RVersion.hxx"
+regex = '''(?sx)
+  \#define \s+ ROOT_VERSION_MAJOR \s+ (?P<major>\d+) .*?
+  \#define \s+ ROOT_VERSION_MINOR \s+ (?P<minor>\d+) .*?
+  \#define \s+ ROOT_VERSION_PATCH \s+ (?P<patch>\d+)
+'''
+result = "{major}.{minor}.{patch}a1"
 
 # Point backend to python packages and to explicitly use Ninja
 [tool.scikit-build]
