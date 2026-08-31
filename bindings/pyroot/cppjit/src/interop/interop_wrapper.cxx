@@ -482,6 +482,12 @@ bool interop::AppendTypesSlow(const std::string& name,
   if (name == "<unnamed>")
     return true;
 
+  // A type inside an anonymous namespace cannot be spelled in injected
+  // code; attempting it crashes codegen on the ill-formed recovery (e.g.
+  // auto-downcasting to an anonymous FuncExporter<...> instantiation).
+  if (name.find("(anonymous namespace)") != std::string::npos)
+    return true;
+
   auto replace_all = [](std::string& str, const std::string& from,
                         const std::string& to) {
     if (from.empty())
@@ -835,8 +841,17 @@ interop::TCppScope_t interop::GetActualClass(TCppScope_t klass,
   std::string demangled_name = Cpp::Demangle(mangled_name);
 #endif
 
-  if (TCppScope_t scope = interop::GetScope(demangled_name))
+  if (TCppScope_t scope = interop::GetScope(demangled_name)) {
+    // A type inside an anonymous namespace cannot be spelled in injected
+    // code (e.g. the dispatcher's), so it is unusable as a cast target;
+    // keep the static type. Anonymous namespaces are the ones without a
+    // name of their own.
+    for (TCppScope_t p = Cpp::GetParentScope(scope); p;
+         p = Cpp::GetParentScope(p))
+      if (Cpp::IsNamespace(p) && Cpp::GetName(p).empty())
+        return klass;
     return scope;
+  }
 
   return klass;
 }
