@@ -2493,7 +2493,10 @@ namespace TStreamerInfoActions
       static INLINE_TEMPLATE_ARGS Int_t LoopOverCollection(TBuffer &buf, void *start, const void *end, const TConfiguration *config)
       {
          for(void *iter = start; iter != end; iter = (char*)iter + sizeof(void*) ) {
-            action(buf, *(void**)iter, config);
+            if (*(void**)iter)
+               action(buf, *(void**)iter, config);
+            else 
+               buf << static_cast<const Char_t *>(nullptr);
          }
          return 0;
       }
@@ -2513,8 +2516,10 @@ namespace TStreamerInfoActions
          const Int_t offset = config->fOffset;
 
          for(; iter != end; iter = (char*)iter + sizeof(void*) ) {
-            T *x = (T*)( ((char*) (*(void**)iter) ) + offset );
-            buf >> *x;
+            if (*(void**)iter) {
+               T *x = (T*)( ((char*) (*(void**)iter) ) + offset );
+               buf >> *x;
+            }
          }
          return 0;
       }
@@ -2528,8 +2533,10 @@ namespace TStreamerInfoActions
             const Int_t offset = config->fOffset;
             for(; iter != end; iter = (char*)iter + sizeof(void*) ) {
                buf >> temp;
-               To *x = (To*)( ((char*) (*(void**)iter) ) + offset );
-               *x = (To)temp;
+               if (*(void**)iter) {
+                  To *x = (To*)( ((char*) (*(void**)iter) ) + offset );
+                  *x = (To)temp;
+               }
             }
             return 0;
          }
@@ -2545,12 +2552,15 @@ namespace TStreamerInfoActions
             for(; iter != end; iter = (char*)iter + sizeof(void*) ) {
                buf >> temp;
 
-               if ((temp & kIsReferenced) != 0) {
-                  HandleReferencedTObject(buf,*(void**)iter,config);
-               }
+               if (*(void**)iter)
+               {
+                  if ((temp & kIsReferenced) != 0) {
+                     HandleReferencedTObject(buf,*(void**)iter,config);
+                  }
 
-               To *x = (To*)( ((char*) (*(void**)iter) ) + offset );
-               *x = (To)temp;
+                  To *x = (To*)( ((char*) (*(void**)iter) ) + offset );
+                  *x = (To)temp;
+               }
             }
             return 0;
          }
@@ -2566,8 +2576,10 @@ namespace TStreamerInfoActions
             const Int_t offset = config->fOffset;
             for(; iter != end; iter = (char*)iter + sizeof(void*) ) {
                buf.ReadWithFactor(&temp, conf->fFactor, conf->fXmin);
-               To *x = (To*)( ((char*) (*(void**)iter) ) + offset );
-               *x = (To)temp;
+               if (*(void**)iter) {
+                  To *x = (To*)( ((char*) (*(void**)iter) ) + offset );
+                  *x = (To)temp;
+               }
             }
             return 0;
          }
@@ -2583,8 +2595,10 @@ namespace TStreamerInfoActions
             const Int_t offset = config->fOffset;
             for(; iter != end; iter = (char*)iter + sizeof(void*) ) {
                buf.ReadWithNbits(&temp, conf->fNbits);
-               To *x = (To*)( ((char*) (*(void**)iter) ) + offset );
-               *x = (To)temp;
+               if (*(void**)iter) {
+                  To *x = (To*)( ((char*) (*(void**)iter) ) + offset );
+                  *x = (To)temp;
+               }
             }
             return 0;
          }
@@ -2596,8 +2610,12 @@ namespace TStreamerInfoActions
          const Int_t offset = config->fOffset;
 
          for(; iter != end; iter = (char*)iter + sizeof(void*) ) {
-            T *x = (T*)( ((char*) (*(void**)iter) ) + offset );
-            buf << *x;
+            if (*(void**)iter) {
+               T *x = (T*)( ((char*) (*(void**)iter) ) + offset );
+               buf << *x;
+            }
+            else
+               buf << static_cast<const Char_t *>(nullptr);
          }
          return 0;
       }
@@ -2609,9 +2627,13 @@ namespace TStreamerInfoActions
             const Int_t offset = config->fOffset;
 
             for(; iter != end; iter = (char*)iter + sizeof(void*) ) {
-               From *from = (From*)( ((char*) (*(void**)iter) ) + offset );
-               To to = (To)(*from);
-               buf << to;
+               if (*(void**)iter) {
+                  From *from = (From*)( ((char*) (*(void**)iter) ) + offset );
+                  To to = (To)(*from);
+                  buf << to;
+               } else {
+                  buf << static_cast<const Char_t *>(nullptr);
+               }
             }
             return 0;
          }
@@ -2626,8 +2648,13 @@ namespace TStreamerInfoActions
 
             for(; iter != end; iter = (char*)iter + sizeof(void*) ) {
                From *from = (From*)( ((char*) (*(void**)iter) ) + offset );
-               To to = (To)(*from);
-               WriteCompressed(buf, &to, elem);
+               if (*(void**)iter) {
+                  To to = (To)(*from);
+                  WriteCompressed(buf, &to, elem);
+               } else {
+                  To to; // uninitialized value
+                  WriteCompressed(buf, &to, elem);
+               }
             }
             return 0;
          }
@@ -2640,9 +2667,14 @@ namespace TStreamerInfoActions
             const TStreamerElement *elem = config->fCompInfo->fElem;
 
             for(; iter != end; iter = (char*)iter + sizeof(void*) ) {
-               From *from = (From*)( ((char*) (*(void**)iter) ) + offset );
-               To to = (To)(*from);
-               WriteCompressed(buf, &to, elem);
+               if(*(void**)iter) {
+                  From *from = (From*)( ((char*) (*(void**)iter) ) + offset );
+                  To to = (To)(*from);
+                  WriteCompressed(buf, &to, elem);
+               } else {
+                  To to; // uninitialized value
+                  WriteCompressed(buf, &to, elem);
+               }
             }
             return 0;
          }
@@ -2689,14 +2721,20 @@ namespace TStreamerInfoActions
       {
          Int_t n = ( ((void**)end) - ((void**)iter) );
          char **arr = (char**)iter;
-         return ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, arr, &(config->fCompInfo), /*first*/ 0, /*last*/ 1, /*narr*/ n, config->fOffset, 1|2 );
+         if (arr)
+            return ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, arr, &(config->fCompInfo), /*first*/ 0, /*last*/ 1, /*narr*/ n, config->fOffset, 1|2 );
+         else
+            return 0;
       }
 
       static INLINE_TEMPLATE_ARGS Int_t GenericWrite(TBuffer &buf, void *iter, const void *end, const TConfiguration *config)
       {
          Int_t n = ( ((void**)end) - ((void**)iter) );
          char **arr = (char**)iter;
-         return ((TStreamerInfo*)config->fInfo)->WriteBufferAux(buf, arr, &(config->fCompInfo), /*first*/ 0, /*last*/ 1, n, config->fOffset, 1|2 );
+         if (arr)
+            return ((TStreamerInfo*)config->fInfo)->WriteBufferAux(buf, arr, &(config->fCompInfo), /*first*/ 0, /*last*/ 1, n, config->fOffset, 1|2 );
+         else
+            return 0;
       }
 
    };
