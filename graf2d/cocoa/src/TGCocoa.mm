@@ -2905,8 +2905,7 @@ void TGCocoa::DeleteFont(FontStruct_t fs)
 Bool_t TGCocoa::HasTTFonts() const
 {
    // Returns True when TrueType fonts are used
-   //No, we use Core Text and do not want TTF to calculate metrics.
-   return kFALSE;
+   return kTRUE;
 }
 
 //______________________________________________________________________________
