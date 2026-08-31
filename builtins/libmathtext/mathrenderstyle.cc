@@ -17,7 +17,8 @@
 // 02110-1301 USA
 
 #include <cmath>
-#include "mathtext/mathrender.h"
+#include <algorithm>
+#include <mathtext/mathrender.h>
 
 /////////////////////////////////////////////////////////////////////
 
@@ -251,11 +252,19 @@ namespace mathtext {
                 unsigned int style) const
    {
       const unsigned int left_type_modified =
-      left_type <= (unsigned int) math_text_t::atom_t::TYPE_INNER ?
-      left_type : (unsigned int) math_text_t::atom_t::TYPE_ORD;
+			left_type <=
+			static_cast<unsigned int>(
+				math_text_t::atom_t::TYPE_INNER) ?
+			left_type :
+			static_cast<unsigned int>(
+				math_text_t::atom_t::TYPE_ORD);
       const unsigned int right_type_modified =
-      right_type <= (unsigned int) math_text_t::atom_t::TYPE_INNER ?
-      right_type : (unsigned int) math_text_t::atom_t::TYPE_ORD;
+			right_type <=
+			static_cast<unsigned int>(
+				math_text_t::atom_t::TYPE_INNER) ?
+			right_type :
+			static_cast<unsigned int>(
+				math_text_t::atom_t::TYPE_ORD);
       const unsigned int space = math_text_t::atom_t::
       spacing(left_type_modified, right_type_modified,
               is_script_style(style));
@@ -454,13 +463,11 @@ namespace mathtext {
                            size);
          const float remaining_height =
          height - bounding_box_sum.height();
-         unsigned long repeat_ratio = 0;
-         if (bounding_box_repeatable.height() !=0) {
-            repeat_ratio =
+			const unsigned long repeat_ratio =
             (unsigned long)ceil(
                                 remaining_height /
                                 bounding_box_repeatable.height());
-         }
+
          nrepeat = glyph[GLYPH_MIDDLE] == L'\0' ?
          repeat_ratio : ((repeat_ratio + 1UL) >> 1);
       }
