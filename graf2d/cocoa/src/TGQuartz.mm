@@ -41,10 +41,6 @@
 #include "TMath.h"
 #include "TEnv.h"
 
-// To scale fonts to the same size as the TTF version
-const Float_t kScale = 0.93376068;
-
-
 namespace X11 = ROOT::MacOSX::X11;
 namespace Quartz = ROOT::Quartz;
 namespace Util = ROOT::MacOSX::Util;
@@ -434,24 +430,17 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
 
 
 //______________________________________________________________________________
-
-std::vector<UniChar> quartz_get_greek_unicars(const char *text)
+void TGQuartz::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t /* mgn */,
+                         const char *text, ETextMode mode)
 {
-   //This is a hack. Correct way is to extract glyphs from symbol.ttf,
-   //find correct mapping, place this glyphs. This requires manual layout though (?),
-   //and as usually, I have to many things to do, may be, one day I'll fix text rendering also.
-   //This hack work only on MacOSX 10.7.3, does not work on iOS and I'm not sure about future/previous
-   //versions of MacOSX.
-   std::vector<UniChar> unichars(std::strlen(text));
-   for (std::size_t i = 0; i < unichars.size(); ++i)
-      unichars[i] = 0xF000 + (unsigned char)text[i];
-   return unichars;
-}
+   if (!text || !*text)
+      return;
 
-//______________________________________________________________________________
-void TGQuartz::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t /* angle */ , Float_t /* mgn */,
-                         const char *text, ETextMode /* mode */)
-{
+   if (!TTFhandle::Init()) {
+      Error("DrawTextW", "char string to draw, but TTF initialization failed");
+      return;
+   }
+
    auto drawable0 = (NSObject<X11Drawable> * const) wctxt;
    if (!drawable0)
       return;
@@ -459,40 +448,27 @@ void TGQuartz::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t /* angle 
    if ([drawable0 isDirectDraw])
       return;
 
-   if (!text || !text[0])//Can this ever happen? TPad::PaintText does not check this.
+   UInt_t width = 0, height = 0;
+   Int_t xy = 0;
+   GetWindowSize((Drawable_t) drawable0.fID, xy, xy, width, height);
+
+   auto &att = GetAttText(wctxt);
+
+   //Do not draw anything when pixel size too small
+   if (att.GetTextSize() < 1.5)
       return;
 
-   auto &atttext = GetAttText(wctxt);
+   TTFhandle ttf;
 
-   if (atttext.GetTextSize() < 1.5)//Do not draw anything, or CoreText will create some small (but not of size 0 font).
-      return;
+   ttf.SetSmoothing(kTRUE);
+   ttf.SetTextFont(att.GetTextFont());
+   ttf.SetTextSize(att.GetTextSize());
+   ttf.SetRotationMatrix(angle);
+   ttf.PrepareString(text);
+   ttf.LayoutGlyphs();
 
-   auto drawable = (NSObject<X11Drawable> * const) GetPixmapDrawable(drawable0, "DrawTextW");
-   if (!drawable)
-      return;
-
-   CGContextRef ctx = drawable.fContext;
-   const Quartz::CGStateGuard ctxGuard(ctx);
-
-   //Before any core text drawing operations, reset text matrix.
-   CGContextSetTextMatrix(ctx, CGAffineTransformIdentity);
-
-   try {
-      if (CTFontRef currentFont = fPimpl->fFontManager.SelectFont(atttext.GetTextFont(), kScale * atttext.GetTextSize())) {
-         const unsigned fontIndex = atttext.GetTextFont() / 10;
-         if (fontIndex == 12 || fontIndex == 15) {
-            //Greek and math symbols.
-            auto unichars = quartz_get_greek_unicars(text);
-            Quartz::TextLine ctLine(unichars, currentFont, atttext.GetTextColor());
-            ctLine.DrawLine(ctx, x, X11::LocalYROOTToCocoa(drawable, y), atttext);
-         } else {
-            const Quartz::TextLine ctLine(text, currentFont, atttext.GetTextColor());
-            ctLine.DrawLine(ctx, x, X11::LocalYROOTToCocoa(drawable, y), atttext);
-         }
-      }
-   } catch (const std::exception &e) {
-      Error("DrawTextW", "Exception from Quartz::TextLine: %s", e.what());
-   }
+   if (ttf.ApplyAlignRotate(x, y, att.GetTextAlign(), width, height))
+      DrawTTFglyphsW(wctxt, x, y, ttf, mode);
 }
 
 //______________________________________________________________________________
