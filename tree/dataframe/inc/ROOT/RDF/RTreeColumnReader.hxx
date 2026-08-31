@@ -37,8 +37,10 @@ namespace RDF {
 
 class R__CLING_PTRCHECK(off) RTreeOpaqueColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<ROOT::Internal::TTreeReaderOpaqueValue> fTreeValue;
+   void *fValuePtr{nullptr};
 
-   void *GetImpl(Long64_t) override;
+   void *GetImpl(std::size_t) override;
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) override;
 
 public:
    /// Construct the RTreeColumnReader. Actual initialization is performed lazily by the Init method.
@@ -56,8 +58,13 @@ public:
 /// RTreeColumnReader specialization for TTree values read via TTreeReaderUntypedValue
 class R__CLING_PTRCHECK(off) RTreeUntypedValueColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<ROOT::Internal::TTreeReaderUntypedValue> fTreeValue;
+   ROOT::RVec<std::byte> fCachedResults{};
+   ROOT::RVec<std::size_t> fCachedResultsInvalidIndices{};
+   std::size_t fValueSize{0};
+   std::uint64_t fLastEntry = std::numeric_limits<std::uint64_t>::max();
 
-   void *GetImpl(Long64_t) override;
+   void *GetImpl(std::size_t) override;
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) override;
 
 public:
    RTreeUntypedValueColumnReader(TTreeReader &r, std::string_view colName, std::string_view typeName);
@@ -111,11 +118,14 @@ private:
    /// Whether we already printed a warning about performing a copy of the TTreeReaderArray contents
    bool fCopyWarningPrinted = false;
 
-   void *GetImpl(Long64_t entry) override;
+   void *fValuePtr{nullptr};
 
-   void *ReadStdArray(Long64_t entry);
-   void *ReadStdVector(Long64_t entry);
-   void *ReadRVec(Long64_t entry);
+   void *GetImpl(std::size_t) override;
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) override;
+
+   void *LoadStdArray(Long64_t entry);
+   void *LoadStdVector(Long64_t entry);
+   void *LoadRVec(Long64_t entry);
 };
 
 class R__CLING_PTRCHECK(off) RMaskedColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
@@ -123,7 +133,9 @@ class R__CLING_PTRCHECK(off) RMaskedColumnReader : public ROOT::Detail::RDF::RCo
    std::unique_ptr<TTreeReaderValue<uint64_t>> fTreeValueMask;
    unsigned int fMaskIndex = 0;
 
-   void *GetImpl(Long64_t) override;
+   void *fValuePtr{nullptr};
+   void *GetImpl(std::size_t) override;
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) override;
 
 public:
    RMaskedColumnReader(TTreeReader &r, std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> valueReader,

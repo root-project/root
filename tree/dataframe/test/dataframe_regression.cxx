@@ -195,6 +195,11 @@ TEST_P(RDFRegressionTests, ReadWriteVector3)
    gSystem->Unlink(filename.c_str());
 }
 
+/*
+DF-BULK-DISABLED: we do not support anymore reading of polymorphic objects
+of different concrete types from TBranch. Test was originally added by
+https://github.com/root-project/root/pull/6087 as a regression test for
+https://its.cern.ch/jira/browse/ROOT-10022
 TEST_P(RDFRegressionTests, PolymorphicTBranchObject)
 {
    const std::string filename = "polymorphictbranchobject.root";
@@ -251,6 +256,7 @@ TEST_P(RDFRegressionTests, PolymorphicTBranchObject)
    gSystem->Unlink(snap_fname.c_str());
    gSystem->Unlink(filename.c_str());
 }
+*/
 
 // #11222
 TEST_P(RDFRegressionTests, UseAfterDeleteOfSampleCallbacks)
