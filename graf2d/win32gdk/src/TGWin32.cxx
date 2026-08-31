@@ -16,16 +16,16 @@
 /** \class TGWin32
 \ingroup win32
 This class is the basic interface to the Win32 graphics system.
-It is  an implementation of the abstract TVirtualX class.
+It is an implementation of the abstract TVirtualX class.
 
 This code was initially developed in the context of HIGZ and PAW
 by Olivier Couet (package X11INT).
 */
 
-#include "TGWin32.h"
 #include "Windows4Root.h"
 #include "gdk/gdk.h"
 #include "gdk/win32/gdkwin32.h"
+#include "TGWin32.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
