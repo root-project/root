@@ -127,39 +127,39 @@ const char *exps[NG] = {"aleph",
                         "belle",
                         "atlas"
 };
-const Int_t versions[NG] =  {5, //aleph
-                             3, //barres
-                             3, //felix
-                             3, //phenix
-                             3, //chambers
-                             4, //p326
-                             3, //bes
-                             3, //dubna
-                             3, //ganil
-                             3, //e907
-                             4, //phobos2
-                             3, //hermes
-                             3, //na35
-                             3, //na47
-                             3, //na49
-                             3, //wa91
-                             3, //sdc
-                             4, //integral
-                             4, //ams
-                             4, //brahms
-                             5, //gem
-                             4, //tesla
-                             3, //btev
-                             6, //cdf
-                             4, //hades2
-                             4, //lhcbfull
-                             5, //star
-                             4, //sld
-                             4, //cms
-                             6, //alice3
-                             5, //babar2
-                             3, //belle
-                             7}; //atlas
+const Int_t versions[NG] = {5,  // aleph
+                            3,  // barres
+                            3,  // felix
+                            3,  // phenix
+                            3,  // chambers
+                            4,  // p326
+                            3,  // bes
+                            3,  // dubna
+                            3,  // ganil
+                            3,  // e907
+                            4,  // phobos2
+                            3,  // hermes
+                            3,  // na35
+                            3,  // na47
+                            3,  // na49
+                            3,  // wa91
+                            3,  // sdc
+                            4,  // integral
+                            4,  // ams
+                            4,  // brahms
+                            5,  // gem
+                            4,  // tesla
+                            3,  // btev
+                            6,  // cdf
+                            4,  // hades2
+                            4,  // lhcbfull
+                            5,  // star
+                            4,  // sld
+                            4,  // cms
+                            6,  // alice3
+                            5,  // babar2
+                            3,  // belle
+                            7}; // atlas
 // The timings below are on my machine PIV 3GHz
 const Double_t cp_brun[NG] = {1.9,  //aleph
                               0.1,  //barres
@@ -322,7 +322,7 @@ void ReadRef(Int_t kexp) {
    if (!gen_ref)
       fname = TString::Format("root://eospublic.cern.ch//eos/root-eos/testfiles//%s_ref_%d.root", exps[kexp],versions[kexp]);
    else
-      fname = TString::Format("files/%s_ref_%d.root", exps[kexp],versions[kexp]);
+      fname = TString::Format("files/%s_ref_%d.root", exps[kexp], versions[kexp]);
 
    f = TFile::Open(fname,"CACHEREAD");
    if (!f) {
