@@ -22,6 +22,7 @@
 #include <cctype>
 #include <charconv>
 #include <fstream>
+#include <locale>
 #include <type_traits>
 #include <unordered_map>
 
@@ -285,6 +286,7 @@ std::string CodegenContext::buildArg(std::span<const double> arr)
 CodegenContext::ScopeRAII::ScopeRAII(RooAbsArg const *arg, CodegenContext &ctx) : _ctx(ctx), _arg(arg)
 {
    std::ostringstream os;
+   os.imbue(std::locale::classic()); // the generated code is C++, not locale-dependent text
    Option_t *opts = nullptr;
    arg->printStream(os, _arg->defaultPrintContents(opts), _arg->defaultPrintStyle(opts));
    _fn = os.str();
