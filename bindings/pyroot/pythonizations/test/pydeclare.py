@@ -1,9 +1,9 @@
 """Backend-parameterised version of numbadeclare.py.
 
-The same suite is run against every implementation of ROOT.Numba.Declare that
-exists: the original numba one, and the two transpiler backends that translate
-the Python callable to C++ source instead.  Which one is exercised is selected
-by $ROOT_NUMBA_DECLARE_BACKEND, read by the decorator itself, so apart from the
+The same suite is run against both implementations of ROOT.Numba.Declare: the
+original numba one, and the transpiler that translates the Python callable to
+C++ source instead.  Which one is exercised is selected by
+$ROOT_NUMBA_DECLARE_BACKEND, read by the decorator itself, so apart from the
 handful of assertions that are about numba's implementation rather than about
 the feature, this file is the original test suite unchanged.
 """
@@ -114,7 +114,6 @@ class NumbaDeclareSimple(unittest.TestCase):
             self.assertTrue(hasattr(fn1, "numba_func"))
             self.assertEqual(sys.getrefcount(fn1.numba_func), 3)
         else:
-            self.assertEqual(fn1.__pydeclare_backend__, BACKEND)
             self.assertEqual(fn1.__pydeclare_cpp_name__, "Numba::fn1")
 
     # Test cling integration
@@ -327,21 +326,7 @@ class NumbaDeclareSimple(unittest.TestCase):
     def test_wrapper_in_b(self):
         """
         Test wrapper with different input/output configurations
-
-        'not x' is the one construct in this suite that the tracing backend
-        cannot translate: the interpreter resolves it through __bool__, which a
-        symbol cannot answer. The backend has to say so rather than guess, and
-        that is what is checked here.
         """
-        if BACKEND == "trace":
-            with self.assertRaises(Exception) as caught:
-
-                @ROOT.Numba.Declare(["bool"], "bool")
-                def fn6b2_trace(x):
-                    return not x
-
-            self.assertIn("bool", str(caught.exception))
-            return
 
         @ROOT.Numba.Declare(["bool"], "bool")
         def fn6b2(x):

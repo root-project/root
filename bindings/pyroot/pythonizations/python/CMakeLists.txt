@@ -92,7 +92,6 @@ set(py_sources
   ROOT/_pydeclare/emit.py
   ROOT/_pydeclare/errors.py
   ROOT/_pydeclare/support.py
-  ROOT/_pydeclare/trace_backend.py
   ROOT/_pythonization/__init__.py
   ROOT/_pythonization/_cppinstance.py
   ROOT/_pythonization/_drawables.py
