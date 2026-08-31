@@ -41,7 +41,7 @@ from . import emit, support
 from .ast_backend import CPP_KEYWORDS, AstTranspiler
 from .errors import PyDeclareError
 
-__all__ = ["Declare", "PyDeclareError", "declare"]
+__all__ = ["Declare", "DeclareInNumbaNamespace", "PyDeclareError", "declare"]
 
 DEFAULT_NAMESPACE = "Py"
 
@@ -202,18 +202,24 @@ def Declare(input_types=None, return_type=None, name=None, namespace=DEFAULT_NAM
     return inner
 
 
-def _numba_declare_dispatch(input_types, return_type=None, name=None, **kwargs):
-    """``ROOT.Numba.Declare``, routed to the implementation selected by
-    ``$ROOT_NUMBA_DECLARE_BACKEND``: ``numba`` (the default, the original
-    implementation) or ``ast``.  The generated function always lands in the
-    ``Numba`` C++ namespace, so existing code that says ``"Numba::myfunc(x)"``
-    keeps working with either implementation.
-    """
-    backend = os.environ.get("ROOT_NUMBA_DECLARE_BACKEND", "numba").strip().lower()
-    if backend in ("", "numba"):
-        from .._numbadeclare import _NumbaDeclareDecorator
+def DeclareInNumbaNamespace(input_types=None, return_type=None, name=None):
+    """Decorator making a Python callable available in C++, by translation.
 
-        return _NumbaDeclareDecorator(input_types, return_type, name)
-    if backend != "ast":
-        raise PyDeclareError("ROOT_NUMBA_DECLARE_BACKEND is '{}'; expected 'numba' or 'ast'".format(backend))
-    return Declare(input_types, return_type, name, namespace="Numba", **kwargs)
+    This is ``ROOT.Numba.Declare``.  The decorator used to compile the callable
+    with numba, hence the name.  It no longer does, but the spelling and the
+    ``Numba`` C++ namespace are kept so that existing code saying
+    ``"Numba::myfunc(x)"`` keeps working unchanged.  ``ROOT.Py.Declare`` is the
+    same thing under a name that is not a historical accident.
+
+    input_types
+        List of C++ type names, one per argument of the callable.
+    return_type
+        The C++ return type.  If omitted, it is deduced -- either by the
+        transpiler, or by the C++ compiler through an ``auto`` return type.
+    name
+        The name of the generated C++ function; defaults to the Python name.
+
+    The generated C++ source is available on the decorated callable as
+    ``__cpp_wrapper__``.
+    """
+    return Declare(input_types, return_type, name, namespace="Numba")
