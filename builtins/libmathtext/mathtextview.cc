@@ -18,7 +18,7 @@
 
 #include <iostream>
 #include <string>
-#include "../inc/mathtext.h"
+#include "mathtext/mathtext.h"
 
 /////////////////////////////////////////////////////////////////////
 

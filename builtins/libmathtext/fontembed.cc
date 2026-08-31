@@ -16,28 +16,23 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301 USA
 
-#include "../inc/fontembed.h"
+#include "mathtext/fontembed.h"
 #include <algorithm>
 #include <cstring>
 #include <cstdio>
 #ifdef WIN32
 #define snprintf _snprintf
 #endif
-
-// ROOT integration
-#include <ROOT/RConfig.hxx>
-#ifdef R__BYTESWAP
-#ifndef LITTLE_ENDIAN
-#define LITTLE_ENDIAN 1
-#endif // LITTLE_ENDIAN
-#include "Byteswap.h"
-#define bswap_16(x)   Rbswap_16((x))
-#define bswap_32(x)   Rbswap_32((x))
-#else // R__BYTESWAP
-#ifdef LITTLE_ENDIAN
-#undef LITTLE_ENDIAN
-#endif // LITTLE_ENDIAN
-#endif // R__BYTESWAP
+#if defined(__APPLE__)
+#include <libkern/OSByteOrder.h>
+#define bswap_16 OSSwapInt16
+#define bswap_32 OSSwapInt32
+#elif defined(_WIN32)
+#define bswap_16(x) _byteswap_ushort(x)
+#define bswap_32(x) _byteswap_ulong(x)
+#else
+#include <byteswap.h>
+#endif
 
 // References:
 //

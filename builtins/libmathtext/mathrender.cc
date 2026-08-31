@@ -27,8 +27,7 @@
 #include <cmath>
 #include <algorithm>
 #include <sstream>
-#include "../inc/mathrender.h"
-
+#include "mathtext/mathrender.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 

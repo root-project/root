@@ -22,8 +22,8 @@
 #include "TVirtualPS.h"
 #include "TText.h"
 
-#include "../../../builtins/mathtext/inc/mathtext.h"
-#include "../../../builtins/mathtext/inc/mathrender.h"
+#include "mathtext/mathtext.h"
+#include "mathtext/mathrender.h"
 
 /** \class TMathText
 \ingroup BasicGraphics

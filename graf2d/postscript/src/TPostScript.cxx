@@ -251,7 +251,7 @@ To change the color model use `gStyle->SetColorModelPS(c)`.
 #include "TSystem.h"
 #include "TEnv.h"
 
-#include "../../../builtins/mathtext/inc/fontembed.h"
+#include "mathtext/fontembed.h"
 
 // to scale fonts to the same size as the old TT version
 const Float_t kScale = 0.93376068;
