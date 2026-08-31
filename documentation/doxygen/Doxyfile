@@ -1105,13 +1105,10 @@ EXCLUDE_SYMLINKS       = NO
 
 EXCLUDE_PATTERNS       = */G__* \
                          */test/* \
-                         */src/unuran-* \
-                         */libAfterImage/* \
                          */doc/v6* \
                          */doc/v5* \
                          */win32gdk/gdk/* \
                          */bindings/pyroot/*.py \
-                         *gl2ps* \
                          *CsgOps* \
                          LinkDef*.h \
                          launcher.py \
@@ -1119,7 +1116,6 @@ EXCLUDE_PATTERNS       = */G__* \
                          */src/lexertk.hpp \
                          *.xml \
                          *.dtd \
-                         */graf3d/eve7/glu/* \
                          */gui/qt6webdisplay/* \
                          */tutorials/visualisation/webgui/qtweb/* \
                          */math/mathcore/src/CDT*

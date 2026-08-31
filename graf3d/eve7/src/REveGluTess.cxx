@@ -9,19 +9,25 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
-// This is a minimal-change import of GLU libtess from:
-//   git://anongit.freedesktop.org/git/mesa/glu
-//
-// Changes to make it build in the horrible one-file-hack way:
-// - remove include gl.h from glu.h (and replace with the mini-gl defs below);
-// - comment out clashing typedef EdgePair in tess.c;
-// - use -Wno-unused-parameter for this cxx file.
-
-// Sergey: first include gl code before any normal ROOT includes,
-// try to avoid clash with other system includes through Rtypes.h
-
-#include "glu/GL_glu.h"
+#ifdef ROOT_BUILTIN_GLU
+#include "GL/glu.h"
+#elif defined(__APPLE__) && defined(__MACH__) // fallback solution for APPLE system GLU
+#include <OpenGL/glu.h>
+#ifndef _GLUfuncptr
+typedef void (* _GLUfuncptr)(void);
+#endif
+#elif defined(WIN32)
+#include <windows.h>
+#include <GL/glu.h>
+#ifndef GLAPIENTRY
+#define GLAPIENTRY __stdcall
+#endif
+#ifndef _GLUfuncptr
+typedef void (GLAPIENTRY * _GLUfuncptr)(void);
+#endif
+#else // Linux system GLU
+#include <GL/glu.h>
+#endif
 
 #include <ROOT/REveGluTess.hxx>
 
