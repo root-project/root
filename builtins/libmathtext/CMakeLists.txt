@@ -6,7 +6,9 @@
 
 add_library(mathtext STATIC
   fontembed.cc
+  fontembedpdf.cc
   fontembedps.cc
+  geometry.cc
   mathrender.cc
   mathrenderstyle.cc
   mathrendertoken.cc
@@ -15,7 +17,7 @@ add_library(mathtext STATIC
   mathtextparse.cc
   mathtextview.cc
 )
-target_include_directories(mathtext PUBLIC ./) # for mathtext/fontembed.h  mathtext/mathrender.h  mathtext/mathtext.h
+target_include_directories(mathtext PUBLIC ./) # for mathtext/fontembed.h  mathtext/mathrender.h  mathtext/mathtext.h mathtext/geometry.h
 
 check_cxx_compiler_flag(-Wbidi-chars=none GCC_HAS_BIDI_CHARS_FLAG)
 if(GCC_HAS_BIDI_CHARS_FLAG)

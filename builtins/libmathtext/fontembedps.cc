@@ -16,10 +16,10 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301 USA
 
-#include "mathtext/fontembed.h"
+#include <mathtext/fontembed.h>
+#include <algorithm>
 #include <cstring>
 #include <cstdio>
-#include <algorithm>
 #ifdef WIN32
 #define snprintf _snprintf
 #endif
@@ -405,7 +405,7 @@ namespace mathtext {
          unsigned int glyph_index = cid_map[code_point];
 
          if (char_strings[glyph_index] != ".notdef" &&
-             !char_strings[glyph_index].empty()) {
+             char_strings[glyph_index] != "") {
             snprintf(linebuf, BUFSIZ, "dup %u /%s put\n",
                      code_point,
                      char_strings[glyph_index].c_str());
@@ -438,8 +438,9 @@ namespace mathtext {
 
       unsigned int char_strings_count = 0;
 
-      for (std::vector<std::string>::const_iterator iterator = char_strings.begin(); iterator < char_strings.end();
-           ++iterator) {
+      for (std::vector<std::string>::const_iterator iterator =
+           char_strings.begin();
+           iterator < char_strings.end(); iterator++) {
          if (!iterator->empty()) {
             char_strings_count++;
          }
