@@ -19,6 +19,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Windows4Root.h"
+#include "gdk/gdk.h"
+#include "gdk/win32/gdkwin32.h"
 #include "TGWin32ProxyDefs.h"
 #include "TGWin32VirtualXProxy.h"
 #include "TGWin32.h"
