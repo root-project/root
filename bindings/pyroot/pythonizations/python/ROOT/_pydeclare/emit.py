@@ -10,11 +10,11 @@
 
 """Lowering of Python operations to C++ expressions.
 
-This module is shared by both backends: the AST walker and the tracer both
-reduce to calls into the functions here, so the two produce identical C++ for
-identical Python.  A backend contributes only the *discovery* of the operations
-(walking a syntax tree versus recording overloaded operators); the semantics of
-each individual operation live here, exactly once.
+The syntax tree walk in ast_backend discovers *which* operations a callable
+performs; this module decides what each one becomes in C++.  Keeping the two
+apart means every semantic decision -- when a division needs Python's rules,
+when '|' is logical rather than bitwise, when an index has to wrap around --
+is written down exactly once, and can be read without following a tree walk.
 """
 
 from . import cpptypes as ct
@@ -173,7 +173,10 @@ def binop(op, a, b, fail):
 
     if op == "//":
         _check_numeric(op, a, b, fail)
-        return _pyd("FloorDiv", [a, b], ct.promote(a.type, b.type))
+        t = ct.promote(a.type, b.type)
+        if t.is_integral:
+            t = ct.with_scalar(t, ct.int_op_type(a.type, b.type))
+        return _pyd("FloorDiv", [a, b], t)
 
     if op == "%":
         _check_numeric(op, a, b, fail)
@@ -181,13 +184,16 @@ def binop(op, a, b, fail):
         # For unsigned integers C++ '%' already agrees with Python's.
         if a.type.is_integral and b.type.is_integral and not a.type.is_signed and not b.type.is_signed:
             return _binary("%", a, b, t)
+        if t.is_integral:
+            t = ct.with_scalar(t, ct.int_op_type(a.type, b.type))
         return _pyd("Mod", [a, b], t)
 
     if op == "**":
         _check_numeric(op, a, b, fail)
         t = ct.promote(a.type, b.type)
         if t.is_integral:
-            return _pyd("Pow", [a, b], t)
+            # PyD::Pow accumulates in a wide integer, as Python does.
+            return _pyd("Pow", [a, b], ct.with_scalar(t, ct.int_op_type(a.type, ct.LLONG_T)))
         return _pyd("Pow", [a, b], ct.with_scalar(t, DOUBLE_T))
 
     if op in ("|", "&", "^"):
@@ -216,17 +222,28 @@ def binop(op, a, b, fail):
     fail("Binary operator '{}' is not supported".format(op))
 
 
+def _unary_code(op, a):
+    """'-' followed by '-x' would fuse into the decrement token."""
+    inner = a.paren(PREC_UNARY)
+    sep = " " if inner.startswith(op) else ""
+    return "{}{}{}".format(op, sep, inner)
+
+
 def unaryop(op, a, fail):
     """Lower a Python unary operator to C++."""
     if op == "+":
-        return Value("+{}".format(a.paren(PREC_UNARY)), a.type, PREC_UNARY)
+        return Value(_unary_code("+", a), a.type, PREC_UNARY)
     if op == "-":
         if a.type.kind == ct.OPAQUE:
             fail("Unary '-' is not supported for values of C++ type '{}'".format(a.type.name))
         t = a.type
         if t.is_bool:
             t = ct.with_scalar(t, ct.INT_T)
-        return Value("-{}".format(a.paren(PREC_UNARY)), t, PREC_UNARY)
+        elif t.is_integral and not t.is_signed:
+            # Negating an unsigned value wraps around in C++; Python has no
+            # unsigned integers and simply produces a negative number.
+            return _pyd("Neg", [a], ct.with_scalar(t, ct.int_op_type(t, ct.LLONG_T)))
+        return Value(_unary_code("-", a), t, PREC_UNARY)
     if op == "not":
         return Value("!{}".format(truth(a, fail).paren(PREC_UNARY)), ct.bool_like(a.type), PREC_UNARY)
     if op == "~":
@@ -270,27 +287,84 @@ def compare(op, a, b, fail):
     if a.type.kind == ct.OPAQUE or b.type.kind == ct.OPAQUE:
         # Let C++ resolve the operator on the class; we cannot infer the result.
         return _binary(op, a, b, UNKNOWN_T)
+    a, b = _balance_signedness(a, b)
+    # A comparison used as an operand of another comparison has to be
+    # parenthesised: C++ rejects the chained spelling 'a >= b > c'.
+    a = _parenthesise_comparison(a)
+    b = _parenthesise_comparison(b)
     return _binary(op, a, b, ct.bool_like(ct.promote(a.type, b.type)))
+
+
+def _parenthesise_comparison(v):
+    if v.prec in (PREC_REL, PREC_EQ):
+        return Value("({})".format(v.code), v.type, PREC_PRIMARY)
+    return v
+
+
+def _balance_signedness(a, b):
+    """Compare a signed and an unsigned operand the way Python would.
+
+    C++ converts the signed side, so -1 > 2u is true.  Widening both sides to
+    a signed 64-bit type reproduces Python for every operand pair narrower
+    than 64 bits, which is all of them except (unsigned) long long itself.
+    """
+    ta, tb = a.type, b.type
+    if not (ta.is_integral and tb.is_integral):
+        return a, b
+    if ta.is_container or tb.is_container:
+        return a, b
+    if ta.is_signed == tb.is_signed:
+        return a, b
+    wide = ct.int_op_type(ta, tb)
+    return _widen(a, wide), _widen(b, wide)
+
+
+def _widen(v, t):
+    if v.type == t:
+        return v
+    return Value("static_cast<{}>({})".format(t.cpp(), v.code), t, PREC_UNARY)
 
 
 def boolop(op, values, fail):
     """Lower 'and'/'or'.  Only defined for scalars, as in numpy."""
-    cpp = "&&" if op == "and" else "||"
     for v in values:
         if v.type.is_container:
             fail(
                 "'{}' is not defined for arrays".format(op),
                 hint="Use '&' and '|' for element-wise logic, as you would with numpy.",
             )
-    out = truth(values[0], fail)
-    for v in values[1:]:
-        out = _binary(cpp, out, truth(v, fail), BOOL_T)
+        if not (v.type.is_numeric or v.type.is_unknown):
+            fail("Values of C++ type '{}' cannot be used with '{}'".format(v.type, op))
+
+    if all(v.type.is_bool for v in values):
+        # The result is a bool either way, so keep the plain C++ spelling.
+        cpp = "&&" if op == "and" else "||"
+        out = values[0]
+        for v in values[1:]:
+            out = _binary(cpp, out, v, BOOL_T)
+        return out
+
+    # Python's 'and'/'or' evaluate to one of their operands rather than to a
+    # bool: '0.0 or 5.0' is 5.0.  The right-hand side goes in as a lambda so
+    # that it is only evaluated when Python would evaluate it.
+    fn = "And" if op == "and" else "Or"
+    out = values[-1]
+    for v in reversed(values[:-1]):
+        t = ct.promote(v.type, out.type)
+        code = "{}::{}({}, [&]() {{ return {}; }})".format(PYD, fn, v.code, out.code)
+        out = Value(code, t, PREC_PRIMARY)
     return out
 
 
-def ternary(cond, a, b, fail):
-    """Lower a Python conditional expression."""
+def ternary(cond, a, b, fail, elementwise=False):
+    """Lower a Python conditional expression, or np.where when *elementwise*."""
     if cond.type.is_container:
+        if not elementwise:
+            fail(
+                "The truth value of an array is ambiguous",
+                hint="'a if mask else b' is not defined for arrays in Python either. "
+                "Use np.where(mask, a, b) for the element-wise choice.",
+            )
         return _pyd("Where", [cond, a, b], ct.with_scalar(cond.type, ct.promote(a.type, b.type).scalar()))
     t = ct.promote(a.type, b.type)
     code = "{} ? {} : {}".format(truth(cond, fail).paren(PREC_COND + 1), a.paren(PREC_COND + 1), b.paren(PREC_COND))
@@ -324,10 +398,9 @@ def subscript(obj, index, fail):
     if not (index.type.is_integral or index.type.is_unknown):
         fail("Array indices must be integers, got '{}'".format(index.type))
 
-    # A non-negative literal, or an unsigned index, needs no wrap-around check.
-    literal_nonneg = index.code.isdigit()
-    if literal_nonneg or (index.type.is_integral and not index.type.is_signed):
-        return Value("{}[{}]".format(obj.paren(PREC_PRIMARY), index.code), elem, PREC_PRIMARY)
+    # PyD::Index wraps negative indices and rejects out-of-range ones, as
+    # Python does.  Reading past the end of an event's array silently would be
+    # a poor trade for one comparison.
     return _pyd("Index", [obj, index], elem)
 
 
@@ -340,6 +413,14 @@ def slice_(obj, start, stop, step, fail):
 
     elem = obj.type.scalar()
     out_t = ct.rvec_of(elem)
+
+    for name, part in (("start", start), ("stop", stop), ("step", step)):
+        if part is None:
+            continue
+        if part.type.is_container:
+            fail("A slice {} may not be an array".format(name))
+        if not (part.type.is_integral or part.type.is_unknown):
+            fail("Slice indices must be integers, got '{}' for the {}".format(part.type, name))
 
     # v[::-1] is a plain reverse; emit the readable form.
     if start is None and stop is None and step is not None and step.code == "-1":
@@ -366,8 +447,8 @@ def slice_(obj, start, stop, step, fail):
 
 #: numpy-style reductions available as methods on arrays.
 ARRAY_METHODS = {
-    "sum": ("Sum", "scalar"),
-    "prod": ("Prod", "scalar"),
+    "sum": ("Sum", "accumulate"),
+    "prod": ("Prod", "accumulate"),
     "mean": ("Mean", "double"),
     "std": ("Std", "double"),
     "min": ("Min", "scalar"),
@@ -500,8 +581,8 @@ def _reduction_type(kind, obj):
     if kind == "bool":
         return BOOL_T
     elem = obj.type.scalar()
-    if elem.is_bool:
-        return LONG_T
+    if kind == "accumulate":
+        return ct.acc_type(elem)
     return elem
 
 
