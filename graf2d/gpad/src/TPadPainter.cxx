@@ -206,6 +206,15 @@ void TPadPainter::SetDoubleBuffer(Int_t device, Int_t mode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return true if TTF font can be used
+
+Bool_t TPadPainter::HasTTFonts() const
+{
+   return gVirtualX->HasTTFonts();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 ///Noop, for non-gl pad TASImage calls gVirtualX->CopyArea.
 
 void TPadPainter::DrawPixels(const unsigned char * /*pixelData*/, UInt_t /*width*/, UInt_t /*height*/,

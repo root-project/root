@@ -50,6 +50,7 @@ public:
    void     SetDrawMode(Int_t device, Int_t mode) override;
    void     SetDoubleBuffer(Int_t device, Int_t mode) override;
 
+   Bool_t    HasTTFonts() const override;
 
    //TASImage support (noop for a non-gl pad).
    void     DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
