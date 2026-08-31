@@ -751,13 +751,35 @@ interop::TCppScope_t interop::GetActualClass(TCppScope_t klass,
                                              TCppObject_t obj) {
   std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
 
-  if (!Cpp::IsClassPolymorphic(klass))
+  if (!obj || !Cpp::IsClassPolymorphic(klass))
+    return klass;
+
+  // Skip iostream classes: autocasting them is not useful, and on MSVC their
+  // virtual inheritance puts the vbptr, not a vfptr, at offset 0.
+  const std::string& clName = interop::GetScopedFinalName(klass);
+  if (clName.compare(0, 5, "std::") == 0 &&
+      clName.find("stream") != std::string::npos)
     return klass;
 
   const std::type_info* typ = &typeid(*(AutoCastRTTI*)obj.data);
+  if (!typ)
+    return klass;
 
+#ifdef _WIN32
+  // MSVC's type_info::name() is readable but spelled as an elaborated type
+  // specifier ("class X<class Y>"), which plain name lookup does not accept.
+  // Resolve it as a type and respell it, so the tags are removed by the
+  // type system rather than by hand.
+  std::string demangled_name = typ->name();
+  {
+    std::vector<Cpp::TemplateArgInfo> types;
+    if (!interop::AppendTypesSlow(demangled_name, types) && types.size() == 1)
+      demangled_name = Cpp::GetTypeAsString(types[0].m_Type);
+  }
+#else
   std::string mangled_name = typ->name();
   std::string demangled_name = Cpp::Demangle(mangled_name);
+#endif
 
   if (TCppScope_t scope = interop::GetScope(demangled_name))
     return scope;
