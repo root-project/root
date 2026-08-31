@@ -625,7 +625,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if(NOT dictionary STREQUAL "G__Core" AND NOT "Core" IN_LIST ALL_DEPENDENCIES)
     set(ALL_DEPENDENCIES Core ${ARG_DEPENDENCIES}) # Add extra implicit dependency on Core
   endif()
-  foreach(dep Core ${ALL_DEPENDENCIES})
+  foreach(dep ${ALL_DEPENDENCIES})
     # Whether <dep> provides a dictionary/pcm is decided at generation time
     # via $<TARGET_EXISTS:G__<dep>>, so the '-m' flag and the module-file
     # dependency below are independent of configuration order and expand to
