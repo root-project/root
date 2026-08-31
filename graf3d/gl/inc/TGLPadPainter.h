@@ -92,6 +92,8 @@ public:
    void     InvalidateCS() override;
    void     LockPainter() override;
 
+   Bool_t    HasTTFonts() const override;
+
    void     DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2) override;
    void     DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2) override;
 
