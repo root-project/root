@@ -621,9 +621,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   #---Get the library and module dependencies-----------------
-  set(ALL_DEPENDENCIES ${ARG_DEPENDENCIES})
-  if(NOT dictionary STREQUAL "G__Core" AND NOT "Core" IN_LIST ALL_DEPENDENCIES)
-    set(ALL_DEPENDENCIES Core ${ARG_DEPENDENCIES}) # Add extra implicit dependency on Core
+  # Every dictionary implicitly depends on Core's pcm, except the one for Core itself.
+  if(ARG_MODULE AND NOT ARG_MODULE STREQUAL "Core")
+    list(INSERT ARG_DEPENDENCIES 0 Core)
+    list(REMOVE_DUPLICATES ARG_DEPENDENCIES)
   endif()
   foreach(dep ${ALL_DEPENDENCIES})
     # Whether <dep> provides a dictionary/pcm is decided at generation time
