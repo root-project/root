@@ -8,7 +8,9 @@
 # CMakeLists.txt file for building textinput package for ROOT
 ############################################################################
 
-target_sources(Core PRIVATE
+add_library(textinput STATIC)
+
+target_sources(textinput PRIVATE
   Editor.cpp
   History.cpp
   KeyBinding.cpp
@@ -26,7 +28,8 @@ target_sources(Core PRIVATE
   UTF8.cpp
 )
 
-target_include_directories(Core
-  PRIVATE
-    ../ # to be able to call #include "textinput/header.h" from ROOT core files
+target_include_directories(textinput
+  PUBLIC
+    ./ # to be able to call #include "textinput/header.h" from ROOT core files
 )
+set_property(TARGET textinput PROPERTY POSITION_INDEPENDENT_CODE ON)
