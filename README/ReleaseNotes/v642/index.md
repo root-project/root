@@ -48,6 +48,7 @@ The following people have contributed to this new version:
 * The overloads of `RooAbsReal::createChi2()` and `RooAbsReal::chi2FitTo()` that take unbinned **RooDataSet** data objects were deprecated in ROOT 6.40 and are now removed.
 * The **RooStats::HybridPlot** class and the related **HybridResult::GetPlot** method were deprecated in ROOT 6.40 and are now removed.
 * The `builtin_zeromq` and `builtin_cppzmq` build options that were deprecated in ROOT 6.40 are now removed.
+* `numba` and `cffi` are no longer dependencies of PyROOT. `ROOT.Numba.Declare` translates the Python callable to C++ instead of compiling it with numba; see the Python Interface section.
 * The ROOT **auth** package together with `TVirtualAuth` and `TROOT::GetListOfSecContexts()`, and the **authenticated sockets** (`TSocket::CreateAuthSocket()`) feature are now removed following deprecation in ROOT 6.40.
 * The `TSSLSocket` class is now removed following deprecation in ROOT 6.40.
 * The bindings to the R programming language that are enabled with the `r=ON` or `tmva-rmva=ON` build options (`TRInterface`, RMVA, and friends) are removed, following deprecation in ROOT 6.40. Their maintenance is no longer justified, given the broader adoption of the scientific Python ecosystem. Users who still rely on R from C++ are encouraged to call R directly via https://cran.r-project.org/package=RInside, which is what the ROOT bindings were using internally.
@@ -74,6 +75,56 @@ Users are encouraged to export their models to ONNX and use the retained ONNX pa
 * For the builtin versions of `ftgl`, `gl2ps`, `gtest`, `nlohmann_json`, `unuran`, `civetweb`, `xxhash`, `pcre2`, the source tarballs are now fetched from [SPI](https://spi.web.cern.ch)'s [website](https://lcgpackages.web.cern.ch/), as for the vast majority of ROOT's builtins.
 
 ## Python Interface
+
+### `ROOT.Numba.Declare` no longer uses numba
+
+The decorator now translates the decorated Python callable to C++ source and declares that to the interpreter, instead
+of compiling it with numba and calling into it through a function pointer. The spelling and the `Numba` C++ namespace
+are unchanged, so existing code such as
+
+~~~{.py}
+@ROOT.Numba.Declare(["float", "int"], "float")
+def pypow(x, y):
+    return x**y
+
+df.Define("y", "Numba::pypow(x, 3)")
+~~~
+
+keeps working, and numba and cffi are no longer dependencies of PyROOT.
+
+The same decorator is available as `ROOT.Py.Declare`, which declares into the `Py` namespace and is the recommended
+spelling for new code. Because the result is ordinary C++ rather than an opaque address, it is inlined into the
+RDataFrame event loop, it can call anything the interpreter already knows -- methods on ROOT classes, functions such
+as `TMath::Abs`, other declared callables -- and the generated code can be read back from the callable as
+`__cpp_wrapper__`.
+
+Practical consequences:
+
+* Callables returning an `RVec`, `std::vector` or `std::array` no longer allocate and copy the result twice per entry.
+* Declaring a function is roughly an order of magnitude faster, which is noticeable in notebooks.
+* Methods on C++ objects, for example `ROOT::Math::PtEtaPhiMVector::M()`, work on every platform rather than only
+  where the experimental cppyy/numba bridge is tested.
+
+Only a subset of Python is translated. Anything outside it is refused when the function is declared, with the
+offending source line quoted, rather than being approximated in C++. Constructs that numba accepted and this
+translation does not include comprehensions, tuple unpacking, dictionaries, sets, strings, `try`, `with`, lambdas in
+the function body, array allocation such as `np.zeros`, calls to other plain Python functions, and any third-party
+call -- `np.random` in particular, because no C++ generator reproduces numpy's stream and silently different random
+numbers are worse than an error. The supported subset is documented in the RDataFrame Python section and in
+`bindings/pyroot/pythonizations/python/ROOT/_pydeclare/README.md` in the source tree.
+
+Two further differences from the numba implementation are worth knowing about when migrating:
+
+* The translation reads the Python source of the callable with `inspect.getsource`, so a callable whose source is not
+  available cannot be translated. In practice this means functions typed at the plain `python` prompt, passed to
+  `python -c`, piped in on standard input, or built with `exec()`. Functions in a file, in a Jupyter or IPython cell,
+  and in a notebook all work.
+* The decorated callable no longer carries the `numba_func`, `__py_wrapper__` and `__numba_cfunc__` attributes. The
+  generated C++ is available instead as `__cpp_wrapper__`.
+
+Note that `ROOT.NumbaExt`, which enables numba-compiled Python to call into C++ through cppyy, is a separate feature
+and is unaffected. numba is therefore still an optional dependency, needed only for that bridge; cffi is not needed at
+all any more.
 
 ### Connecting Python callables to signals
 

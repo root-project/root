@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 """
-Contains constants needed for _rdf_pyz to convert datatypes for numba declarable types.
+Contains constants needed for _rdf_pyz to convert datatypes for declarable types.
 It is in a separate module so as to avoid a numpy dependency for ROOT.
 """
 try:
@@ -22,7 +22,7 @@ FUNDAMENTAL_PYTHON_TYPES = {
     float: 'double',
 }
 
-TREE_TO_NUMBA = {
+TREE_TO_CPP = {
     'C': 'str', 
     'Char_t': 'int',
     'UChar_t': 'unsigned int',

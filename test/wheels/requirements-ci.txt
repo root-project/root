@@ -4,10 +4,6 @@
 numpy
 pandas
 
-# PyROOT: ROOT.Numba.Declare decorator
-numba
-cffi
-
 # Distributed RDataFrame
 pyspark # Spark backend
 dask>=2022.08.1 # Dask backend

@@ -20,9 +20,10 @@ xgboost
 # RDataLoader
 jax
 
-# PyROOT: ROOT.Numba.Declare decorator
+# PyROOT: ROOT.NumbaExt, which lets numba-compiled Python call into C++.
+# ROOT itself does not use numba; this is here so that the tests of that
+# bridge in roottest/python/numba are not silently skipped.
 numba
-cffi
 
 # Notebooks: ROOT C++ kernel
 IPython

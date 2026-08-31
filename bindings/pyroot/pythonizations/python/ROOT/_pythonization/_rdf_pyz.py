@@ -75,21 +75,21 @@ class FunctionJitter:
             import numpy as np
         except ImportError:
             raise ImportError("Failed to import numpy during call to determine function signature.")
-        from ._rdf_conversion_maps import FUNDAMENTAL_PYTHON_TYPES, NUMPY_TO_TREE, TREE_TO_NUMBA
+        from ._rdf_conversion_maps import FUNDAMENTAL_PYTHON_TYPES, NUMPY_TO_TREE, TREE_TO_CPP
 
         if isinstance(x, str):
             # Can be string constant or can be column name
             if x in self.col_names:  # If x is a column
                 t = self.rdf.GetColumnType(x)
-                if t in TREE_TO_NUMBA:  # The column is a fundamental type from tree
-                    return TREE_TO_NUMBA[t]
+                if t in TREE_TO_CPP:  # The column is a fundamental type from tree
+                    return TREE_TO_CPP[t]
 
                 match = re.match(r"([\w:]+)<(.+)>", t)
                 if match:
                     container_type, inner_type = match.groups()
                     container_type = container_type.strip()
                     inner_type = inner_type.strip()
-                    inner_mapped = TREE_TO_NUMBA.get(inner_type, inner_type)
+                    inner_mapped = TREE_TO_CPP.get(inner_type, inner_type)
                     return f"{container_type}<{inner_mapped}>"
                 else:
                     return t
