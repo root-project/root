@@ -930,6 +930,39 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
                }
                matrix->MasterToLocal(fPoint, dpt);
                matrix->MasterToLocalVect(fDirection, dvec);
+               // If the node below this mother is a MANY node, its overlap
+               // candidates have to be checked even when the current node is
+               // one of its ONLY descendants.
+               if (ovlp && !offset) {
+                  Int_t *ovlps = currentnode->GetOverlaps(novlps);
+                  for (Int_t i = 0; i < novlps; i++) {
+                     current = mothernode->GetVolume()->GetNode(ovlps[i]);
+                     if (current->IsOverlapping())
+                        continue;
+                     current->cd();
+                     current->MasterToLocal(dpt, mothpt);
+                     current->MasterToLocalVect(dvec, vecpt);
+                     snext = current->GetVolume()->GetShape()->DistFromOutside(mothpt, vecpt, iact, fStep, &safe);
+                     if (snext < fStep - gTolerance) {
+                        if (computeGlobal) {
+                           fCurrentMatrix->CopyFrom(matrix);
+                           fCurrentMatrix->Multiply(current->GetMatrix());
+                        }
+                        fIsStepExiting = kTRUE;
+                        fIsStepEntering = kFALSE;
+                        fStep = snext;
+                        fNextNode = current;
+                        fNextDaughterIndex = -3;
+                        PushPath();
+                        Int_t iup = up;
+                        while (iup--)
+                           CdUp();
+                        CdDown(ovlps[i]);
+                        DoBackupState();
+                        PopPath();
+                     }
+                  }
+               }
                snext = TGeoShape::Big();
                if (!mothernode->GetVolume()->IsAssembly())
                   snext = mothernode->GetVolume()->GetShape()->DistFromInside(dpt, dvec, iact, fStep);
@@ -1446,6 +1479,53 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
                matrix = GetMotherMatrix(up);
                matrix->MasterToLocal(fPoint, dpt);
                matrix->MasterToLocalVect(fDirection, dvec);
+               /*
+                * The live leaf can be ONLY while currentnode is a MANY ancestor.
+                * Check its ONLY overlap candidates in mothernode. If one wins,
+                * commit the climb to mothernode and restart because the path,
+                * MANY count, and coordinate frame have changed.
+                */
+               Bool_t restart = kFALSE;
+               if (ovlp && !offset) {
+                  Int_t *ovlps = currentnode->GetOverlaps(novlps);
+                  Int_t icandidate = -1;
+                  TGeoNode *candidate = nullptr;
+                  for (Int_t i = 0; i < novlps; i++) {
+                     current = mothernode->GetVolume()->GetNode(ovlps[i]);
+                     if (current->IsOverlapping())
+                        continue;
+                     current->cd();
+                     current->MasterToLocal(dpt, mothpt);
+                     current->MasterToLocalVect(dvec, vecpt);
+                     snext = current->GetVolume()->GetShape()->DistFromOutside(mothpt, vecpt, iact, fStep);
+                     if (snext < fStep - gTolerance) {
+                        fCurrentMatrix->CopyFrom(matrix);
+                        fCurrentMatrix->Multiply(current->GetMatrix());
+                        fIsStepEntering = kFALSE;
+                        fIsStepExiting = kTRUE;
+                        fStep = snext;
+                        fNextNode = current;
+                        icandidate = ovlps[i];
+                        candidate = current;
+                     }
+                  }
+                  if (icandidate >= 0) {
+                     icrossed = icandidate;
+                     current = candidate;
+                     Int_t iup = up;
+                     while (iup--)
+                        CdUp();
+                     PopDummy();
+                     PushPath(fLevel + 1);
+                     nmany = fNmany;
+                     up = 1;
+                     currentnode = fCurrentNode;
+                     ovlp = currentnode->IsOverlapping();
+                     restart = kTRUE;
+                  }
+                  if (restart)
+                     continue;
+               }
                snext = TGeoShape::Big();
                if (!mothernode->GetVolume()->IsAssembly())
                   snext = mothernode->GetVolume()->GetShape()->DistFromInside(dpt, dvec, iact, fStep);
