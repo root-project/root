@@ -9,37 +9,17 @@
 ### other SOFIE tutorials (e.g. TMVA_SOFIE_RDataFrame.C), so this macro needs
 ### to be run before them.
 ###
-### The PyTorch export and ROOT's SOFIE parser are both linked against protobuf,
-### but usually against different versions, so loading them in the same process
-### leads to a symbol clash. We therefore run the PyTorch training and ONNX
-### export in a separate Python process and only use ROOT before and afterwards.
-###
 ### \macro_code
 ### \macro_output
 
-import os
-import subprocess
-import sys
+import contextlib
+import inspect
+import warnings
 
 import numpy as np
 import ROOT
-
-# The PyTorch training and ONNX export, as a small standalone script run in its
-# own process. It takes as arguments the .npz file with the training data and
-# the model name, and writes <modelName>.onnx together with the PyTorch
-# predictions for the validation inputs in <modelName>_torch_output.npy.
-TRAIN_SCRIPT = r"""
-import sys
-import inspect
-import warnings
-import contextlib
-
-import numpy as np
 import torch
 import torch.nn as nn
-
-dataFile = sys.argv[1]
-modelName = sys.argv[2]
 
 
 @contextlib.contextmanager
@@ -61,6 +41,43 @@ def expect_warning(category, message):
             f"Expected {category.__name__} containing {message!r} was not "
             "emitted. This tutorial's workaround can probably be removed."
         )
+
+
+def PrepareData():
+    # get the input data
+    inputFile = str(ROOT.gROOT.GetTutorialDir()) + "/machine_learning/data/Higgs_data.root"
+
+    df1 = ROOT.RDataFrame("sig_tree", inputFile)
+    sigData = df1.AsNumpy(columns=["m_jj", "m_jjj", "m_lv", "m_jlv", "m_bb", "m_wbb", "m_wwbb"])
+    # print(sigData)
+
+    # stack all the 7 numpy array in a single array (nevents x nvars)
+    xsig = np.column_stack(list(sigData.values()))
+    data_sig_size = xsig.shape[0]
+    print("size of data", data_sig_size)
+
+    # make SOFIE inference on background data
+    df2 = ROOT.RDataFrame("bkg_tree", inputFile)
+    bkgData = df2.AsNumpy(columns=["m_jj", "m_jjj", "m_lv", "m_jlv", "m_bb", "m_wbb", "m_wwbb"])
+    xbkg = np.column_stack(list(bkgData.values()))
+    data_bkg_size = xbkg.shape[0]
+
+    ysig = np.ones(data_sig_size)
+    ybkg = np.zeros(data_bkg_size)
+    inputs_data = np.concatenate((xsig, xbkg), axis=0).astype(np.float32)
+    inputs_targets = np.concatenate((ysig, ybkg), axis=0).astype(np.float32)
+
+    # split data in training and test data
+    rng = np.random.default_rng(1234)
+    idx = rng.permutation(inputs_data.shape[0])
+    ntrain = inputs_data.shape[0] // 2
+
+    x_train = inputs_data[idx[:ntrain]]
+    y_train = inputs_targets[idx[:ntrain]].reshape(-1, 1)
+    x_test = inputs_data[idx[ntrain:]]
+    y_test = inputs_targets[idx[ntrain:]].reshape(-1, 1)
+
+    return x_train, y_train, x_test, y_test
 
 
 def CreateModel(nlayers=4, nunits=64):
@@ -124,87 +141,14 @@ def ExportModel(model, modelName):
         # is emitted from inside PyTorch and cannot be avoided from user code.
         with expect_warning(FutureWarning, "isinstance(treespec, LeafSpec)"):
             torch.onnx.export(model, dummy_x, modelFile, **kwargs)
-        print("model exported to ONNX as", modelFile)
-    except TypeError:
-        print("Cannot export model from pytorch to ONNX - with version ", torch.__version__)
-        # leave no .onnx behind: which the parent process treats as a RuntimeError
-        sys.exit()
+    except TypeError as e:
+        raise RuntimeError("Cannot export model from pytorch to ONNX - with version " + torch.__version__) from e
 
-
-data = np.load(dataFile)
-
-# create dense model with 3 layers of 64 units and train it
-model = CreateModel(3, 64)
-TrainModel(model, data["x_train"], data["y_train"])
-ExportModel(model, modelName)
-
-# evaluate the trained model on the validation inputs, for comparison with SOFIE
-with torch.no_grad():
-    y = model(torch.from_numpy(data["x_check"])).numpy()
-np.save(modelName + "_torch_output.npy", y)
-"""
-
-
-def PrepareData():
-    # get the input data
-    inputFile = str(ROOT.gROOT.GetTutorialDir()) + "/machine_learning/data/Higgs_data.root"
-
-    df1 = ROOT.RDataFrame("sig_tree", inputFile)
-    sigData = df1.AsNumpy(columns=["m_jj", "m_jjj", "m_lv", "m_jlv", "m_bb", "m_wbb", "m_wwbb"])
-    # print(sigData)
-
-    # stack all the 7 numpy array in a single array (nevents x nvars)
-    xsig = np.column_stack(list(sigData.values()))
-    data_sig_size = xsig.shape[0]
-    print("size of data", data_sig_size)
-
-    # make SOFIE inference on background data
-    df2 = ROOT.RDataFrame("bkg_tree", inputFile)
-    bkgData = df2.AsNumpy(columns=["m_jj", "m_jjj", "m_lv", "m_jlv", "m_bb", "m_wbb", "m_wwbb"])
-    xbkg = np.column_stack(list(bkgData.values()))
-    data_bkg_size = xbkg.shape[0]
-
-    ysig = np.ones(data_sig_size)
-    ybkg = np.zeros(data_bkg_size)
-    inputs_data = np.concatenate((xsig, xbkg), axis=0).astype(np.float32)
-    inputs_targets = np.concatenate((ysig, ybkg), axis=0).astype(np.float32)
-
-    # split data in training and test data
-    rng = np.random.default_rng(1234)
-    idx = rng.permutation(inputs_data.shape[0])
-    ntrain = inputs_data.shape[0] // 2
-
-    x_train = inputs_data[idx[:ntrain]]
-    y_train = inputs_targets[idx[:ntrain]].reshape(-1, 1)
-    x_test = inputs_data[idx[ntrain:]]
-    y_test = inputs_targets[idx[ntrain:]].reshape(-1, 1)
-
-    return x_train, y_train, x_test, y_test
-
-
-def TrainModel(x_train, y_train, x_check, name):
-    # train the model with PyTorch and export it to ONNX
-    # (done in a separate process to avoid the protobuf clash, see above)
-    dataFile = name + "_train_data.npz"
-    np.savez(dataFile, x_train=x_train, y_train=y_train, x_check=x_check)
-
-    modelFile = name + ".onnx"
-    torchOutputFile = name + "_torch_output.npy"
-    subprocess.run([sys.executable, "-c", TRAIN_SCRIPT, dataFile, name], check=True)
-    os.remove(dataFile)
-    if not os.path.exists(modelFile) or not os.path.exists(torchOutputFile):
-        raise RuntimeError("ONNX model could not be exported")
-
-    ytorch = np.load(torchOutputFile)
-    os.remove(torchOutputFile)
-    return modelFile, ytorch
+    print("model exported to ONNX as", modelFile)
+    return modelFile
 
 
 def GenerateCode(modelFile="model.onnx"):
-
-    # check if the input file exists
-    if not os.path.exists(modelFile):
-        raise FileNotFoundError("Input model file is missing. The PyTorch training did not produce " + modelFile)
 
     # parse the input ONNX model into an RModel object
     parser = ROOT.TMVA.Experimental.SOFIE.RModelParser_ONNX()
@@ -225,7 +169,15 @@ def GenerateCode(modelFile="model.onnx"):
 x_train, y_train, x_test, y_test = PrepareData()
 # validate the exported model on the first test events
 x_check = x_test[:10]
-modelFile, ytorch = TrainModel(x_train, y_train, x_check, "HiggsModel")
+
+# create dense model with 3 layers of 64 units and train it
+model = CreateModel(3, 64)
+TrainModel(model, x_train, y_train)
+modelFile = ExportModel(model, "HiggsModel")
+
+# evaluate the trained model on the validation inputs, for comparison with SOFIE
+with torch.no_grad():
+    ytorch = model(torch.from_numpy(x_check)).numpy()
 
 ###################################################################
 ## Step 2 : Parse model and generate inference code with SOFIE
