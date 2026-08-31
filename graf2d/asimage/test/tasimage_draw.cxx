@@ -125,9 +125,43 @@ void CheckTiltedThinEllipsStaysInside(const char *colour, Int_t angle)
             last = x;
       }
 
+   for (int i = 0; i < 4; ++i)
+      EXPECT_EQ(argb[kCorners[i]], before) << "the fill escaped the ellipse and reached corner " << i;
+
    ASSERT_GE(last, 0) << "the ellipse was not drawn at " << angle << " degrees";
    EXPECT_LE(last - first + 1, 2 * rx + 2)
       << "the fill ran along the whole scanline at " << angle << " degrees";
+}
+
+// A semi-transparent brush has to be applied exactly once. Drawn over a uniform
+// background the interior must therefore come out as a single flat colour, so a
+// fill that is blended on top of the outline is visible as a darker rim and, at
+// the middle scanline, a darker line. Counting pixels cannot see this: the fill
+// covers the same cells either way, only their value changes.
+void CheckFilledCircleIsFlat(const char *background, const char *colour)
+{
+   constexpr Int_t r = kSize / 4;
+   constexpr Int_t centre = kSize / 2;
+
+   TASImage img(kSize, kSize);
+   img.FillRectangle(background, 0, 0, kSize, kSize);
+   img.DrawCircle(centre, centre, r, colour, -1);
+
+   UInt_t *argb = img.GetArgbArray();
+   ASSERT_NE(argb, nullptr);
+
+   // Stay two pixels clear of the boundary: those are anti-aliased and are
+   // expected to differ.
+   const Int_t inner = r - 2;
+   const UInt_t inside = argb[centre * kSize + centre];
+   Int_t differing = 0;
+   for (Int_t dy = -inner; dy <= inner; ++dy)
+      for (Int_t dx = -inner; dx <= inner; ++dx)
+         if (dx * dx + dy * dy <= inner * inner && argb[(centre + dy) * kSize + centre + dx] != inside)
+            ++differing;
+
+   EXPECT_EQ(differing, 0) << differing << " pixels inside the circle differ from its centre, so the "
+                                           "fill was applied more than once";
 }
 
 } // namespace
@@ -285,4 +319,25 @@ TEST(TASImage, FilledTiltedThinEllips135)
 TEST(TASImage, FilledTiltedThinEllipsSemiTransparent)
 {
    CheckTiltedThinEllipsStaysInside("#7F2277CC", 45);
+}
+
+// The interior used to be blended straight onto the image before the scratch
+// canvas existed, so wherever the anti-aliased outline also painted, the colour
+// landed twice. On a semi-transparent marker that showed up as a rim and a line
+// across the middle. The interior now goes through the scratch and is merged
+// once, like the flood fill it replaced.
+
+TEST(TASImage, FilledCircleFlatOnLightBackground)
+{
+   CheckFilledCircleIsFlat("#FFFFFFFF", "#802277CC");
+}
+
+TEST(TASImage, FilledCircleFlatOnDarkBackground)
+{
+   CheckFilledCircleIsFlat("#FF303030", "#802277CC");
+}
+
+TEST(TASImage, FilledCircleFlatHighAlpha)
+{
+   CheckFilledCircleIsFlat("#FFFFFFFF", "#C02277CC");
 }

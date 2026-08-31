@@ -1270,12 +1270,9 @@ asim_straight_ellips( ASDrawContext *ctx, int x, int y, int rx, int ry, Bool fil
 		if (y + ry  > ctx->canvas_height && y - ry  < 0) 
 			max_y = max (y, ctx->canvas_height - y); 
 #endif			
-		/* Fill by spans rather than by flooding from the centre. The outline is
-		 * anti-aliased, so along a diagonal step its coverage can land just under
-		 * CTX_ELLIPS_FILL_THRESHOLD, and asim_flood_fill then walks out through
-		 * that one-cell hole and paints the whole canvas. Spans need no threshold,
-		 * so the interior cannot leak. See #23148.
-		 */
+
+		asim_start_path( ctx );
+		/* Span the interior into the scratch so it is blended once, like the flood it replaced. See #23148. */
 		if( fill )
 		{
 			long y1 = 0; 
@@ -1302,7 +1299,6 @@ asim_straight_ellips( ASDrawContext *ctx, int x, int y, int rx, int ry, Bool fil
 			}while( ++y1 < max_y ); 
 		}
 
-		asim_start_path( ctx );
 		asim_move_to( ctx, x+rx, y );
 		LOCAL_DEBUG_OUT( "x = %d, y = %d, rx = %d, ry = %d", x, y, rx, ry );
 /* if no 64 bit integers - then tough luck - have to resort to beziers */
@@ -1491,6 +1487,12 @@ asim_ellips2( ASDrawContext *ctx, int x, int y, int rx, int ry, int angle, Bool 
 
 	if( ctx && rx > 0 && ry > 0 ) 
 	{	
+		Bool path_started = False;
+
+		/* Route the walk through the scratch so overlapping writes blend once. See #23148. */
+		if (get_flags (ctx->flags, ASDrawCTX_CanvasIsARGB))
+			path_started = asim_start_path (ctx);
+
 		int sin90 = 0x00010000 ;
 		double sin_val = (double)asim_sin(angle)/(double)sin90;
 		double cos_val = (double)asim_sin(angle+90)/(double)sin90;
@@ -1742,6 +1744,9 @@ asim_ellips2( ASDrawContext *ctx, int x, int y, int rx, int ry, int angle, Bool 
 			y1 -= direction ;
 			--line ; 
 		}	 
+
+		if (path_started)
+			asim_apply_path( ctx, 0, 0, False, 0, 0, 0);
 	}		
 }	 
 
