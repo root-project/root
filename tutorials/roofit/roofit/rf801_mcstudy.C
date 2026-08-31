@@ -87,8 +87,10 @@ void rf801_mcstudy()
    // E x p l o r e   r e s u l t s   o f   s t u d y
    // ------------------------------------------------
 
-   // Make plots of the distributions of mean, the error on mean and the pull of mean
-   RooPlot *frame1 = mcstudy->plotParam(mean, Bins(40));
+   // Make plots of the distributions of mean, the error on mean and the pull of mean.
+   // The FitGauss() option overlays a Gaussian fit of the plotted distribution,
+   // which is for example useful for linearity studies of the fitted parameter.
+   RooPlot *frame1 = mcstudy->plotParam(mean, Bins(40), FitGauss(true));
    RooPlot *frame2 = mcstudy->plotError(mean, Bins(40));
    RooPlot *frame3 = mcstudy->plotPull(mean, Bins(40), FitGauss(true));
 

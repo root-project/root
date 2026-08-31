@@ -72,7 +72,11 @@ for usage examples.
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
 
+#include <TAxis.h>
+
 #include <snprintf.h>
+
+#include <algorithm>
 #include <iostream>
 
 
@@ -908,6 +912,98 @@ RooAbsData* RooMCStudy::genData(Int_t sampleNum) const
   return  static_cast<RooAbsData*>(_genDataList.At(sampleNum)) ;
 }
 
+namespace {
+
+// Fits a Gaussian p.d.f. to the distribution of the frame's plot variable in
+// the given dataset, overlays the fitted p.d.f. on the frame and adds a box
+// with the fitted mean and sigma. Implementation detail of RooMCStudy.
+void fitGaussAndPlotOnFrame(RooPlot &frame, RooDataSet &fitParData, RooAbsPdf &gauss, RooRealVar &mean,
+                            RooRealVar &sigma)
+{
+   gauss.fitTo(fitParData, RooFit::Minos(false), RooFit::PrintLevel(-1));
+   gauss.plotOn(&frame);
+
+   // Instead of using paramOn() without command arguments to plot the fit
+   // parameters, we are building the parameter label ourselves for more
+   // flexibility and pass this together with an appropriate layout
+   // parametrization to paramOn().
+   const int sigDigits = 2;
+   const char *options = "ELU";
+   std::stringstream ss;
+   ss << "Fit parameters:\n"
+      << "#mu: " << mean.format(sigDigits, options) << "\n#sigma: " << sigma.format(sigDigits, options);
+   // We set the parameters constant to disable the default label. Still, we
+   // use param() on as a wrapper for the text box generation.
+   mean.setConstant(true);
+   sigma.setConstant(true);
+   gauss.paramOn(&frame, RooFit::Label(ss.str().c_str()), RooFit::Layout(0.60, 0.9, 0.9));
+}
+
+// Fits a Gaussian to the distribution of the variable plotted in the frame.
+// The initial values of the Gaussian parameters are taken from the moments of
+// the plotted distribution. Implementation detail of RooMCStudy::plotParam(),
+// which is also used by RooMCStudy::plotError() and RooMCStudy::plotNLL().
+void fitGaussToFrame(RooPlot &frame, RooDataSet &fitParData)
+{
+   // Build the Gaussian fit model for the plotted variable, then fit it and
+   // plot it. We have to use the RooWorkspace factory here, because different
+   // from the RooMCStudy class, the RooGaussian is not in RooFitCore.
+   RooWorkspace ws;
+   auto plotVar = frame.getPlotVar();
+   const std::string plotVarName = plotVar->GetName();
+   ws.import(*plotVar);
+   ws.factory("Gaussian::frameGauss(" + plotVarName + ", frameMean[0.0, 0.0, 1.0], frameSigma[1.0, 0.1, 10.0])");
+
+   RooRealVar &mean = *ws.var("frameMean");
+   RooRealVar &sigma = *ws.var("frameSigma");
+
+   // Seed the Gaussian with the moments of the plotted distribution, so that
+   // the fit also converges for distributions that are much narrower than the
+   // frame range. The values are set here and not passed via the factory
+   // string above, because the limited precision of the string representation
+   // would matter for variables with large absolute values.
+   auto const *dataVar = static_cast<RooRealVar const *>(fitParData.get()->find(plotVarName.c_str()));
+   if (!dataVar) {
+      oocoutE(nullptr, Plotting) << "RooMCStudy: no Gaussian fit for '" << plotVarName
+                                 << "', which is not in the dataset of fit parameters." << std::endl;
+      return;
+   }
+   const double dataMean = fitParData.mean(*dataVar);
+   const double dataSigma = fitParData.sigma(*dataVar);
+
+   // The mean is limited to the plotted range, extended if necessary such that
+   // it also covers the seed value.
+   mean.setRange(std::min(frame.GetXaxis()->GetXmin(), dataMean), std::max(frame.GetXaxis()->GetXmax(), dataMean));
+   mean.setVal(dataMean);
+
+   // Fall back to the frame range if the distribution has no spread at all,
+   // which can happen for example if there is only a single successful fit.
+   const double sigmaSeed =
+      dataSigma > 0.0 ? dataSigma : 0.05 * (frame.GetXaxis()->GetXmax() - frame.GetXaxis()->GetXmin());
+   sigma.setRange(0.01 * sigmaSeed, 10. * sigmaSeed);
+   sigma.setVal(sigmaSeed);
+
+   fitGaussAndPlotOnFrame(frame, fitParData, *ws.pdf("frameGauss"), mean, sigma);
+}
+
+// Fits a Gaussian to the pull distribution, plots the fit and prints the fit
+// parameters on the canvas. Implementation detail of RooMCStudy::plotPull().
+void fitGaussToPulls(RooPlot& frame, RooDataSet& fitParData)
+{
+   // Build the Gaussian fit mode for the pulls, then fit it and plot it. We
+   // have to use the RooWorkspace factory here, because different from the
+   // RooMCStudy class, the RooGaussian is not in RooFitCore.
+   RooWorkspace ws;
+   auto plotVar = frame.getPlotVar();
+   const std::string plotVarName = plotVar->GetName();
+   ws.import(*plotVar);
+   ws.factory("Gaussian::pullGauss(" + plotVarName  + ", pullMean[0.0, -10.0, 10.0], pullSigma[1.0, 0.1, 5.0])");
+
+   fitGaussAndPlotOnFrame(frame, fitParData, *ws.pdf("pullGauss"), *ws.var("pullMean"), *ws.var("pullSigma"));
+}
+
+} // namespace
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -937,6 +1033,7 @@ RooPlot* RooMCStudy::plotParamOn(RooPlot* frame, const RooCmdArg& arg1, const Ro
 /// <tr><td> FrameBins(int bins)              <td> Set default number of bins of frame to given number
 /// <tr><td> Frame()                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
 ///     for list of allowed arguments
+/// <tr><td> FitGauss(bool flag)            <td> Add a gaussian fit to the frame
 /// </table>
 /// If no frame specifications are given, the AutoRange() feature will be used to set the range
 /// Any other named argument is passed to the RooAbsData::plotOn() call. See that function for allowed options
@@ -975,7 +1072,22 @@ RooPlot* RooMCStudy::plotParam(const RooRealVar& param, const RooCmdArg& arg1, c
 
   RooPlot* frame = makeFrameAndPlotCmd(param, cmdList) ;
   if (frame) {
+
+    // Pick up optional FitGauss command from list
+    RooCmdConfig pc("RooMCStudy::plotParam(" + std::string(_genModel->GetName()) + ")");
+    pc.defineInt("fitGauss","FitGauss",0,0) ;
+    pc.allowUndefined() ;
+    pc.process(cmdList) ;
+    bool fitGauss=pc.getInt("fitGauss") ;
+
+    // Pass stripped command list to plotOn()
+    RooCmdConfig::stripCmdList(cmdList,"FitGauss") ;
     _fitParData->plotOn(frame, cmdList) ;
+
+    // Add Gaussian fit if requested
+    if (fitGauss) {
+      fitGaussToFrame(*frame, *_fitParData);
+    }
   }
 
   return frame ;
@@ -992,6 +1104,7 @@ RooPlot* RooMCStudy::plotParam(const RooRealVar& param, const RooCmdArg& arg1, c
 /// <tr><td> FrameBins(int bins)              <td> Set default number of bins of frame to given number
 /// <tr><td> Frame()                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
 ///     for list of allowed arguments
+/// <tr><td> FitGauss(bool flag)            <td> Add a gaussian fit to the frame
 /// </table>
 ///
 /// If no frame specifications are given, the AutoRange() feature will be used to set the range.
@@ -1016,6 +1129,7 @@ RooPlot* RooMCStudy::plotNLL(const RooCmdArg& arg1, const RooCmdArg& arg2,
 /// <tr><td> FrameBins(int bins)              <td> Set default number of bins of frame to given number
 /// <tr><td> Frame()                       <td> Pass supplied named arguments to RooAbsRealLValue::frame() function. See there
 ///     for list of allowed arguments
+/// <tr><td> FitGauss(bool flag)            <td> Add a gaussian fit to the frame
 /// </table>
 ///
 /// If no frame specifications are given, the AutoRange() feature will be used to set a default range.
@@ -1041,46 +1155,6 @@ RooPlot* RooMCStudy::plotError(const RooRealVar& param, const RooCmdArg& arg1, c
   return frame ;
 }
 
-namespace {
-
-// Fits a Gaussian to the pull distribution, plots the fit and prints the fit
-// parameters on the canvas. Implementation detail of RooMCStudy::plotPull().
-void fitGaussToPulls(RooPlot& frame, RooDataSet& fitParData)
-{
-   // Build the Gaussian fit mode for the pulls, then fit it and plot it. We
-   // have to use the RooWorkspace factory here, because different from the
-   // RooMCStudy class, the RooGaussian is not in RooFitCore.
-   RooWorkspace ws;
-   auto plotVar = frame.getPlotVar();
-   const std::string plotVarName = plotVar->GetName();
-   ws.import(*plotVar);
-   ws.factory("Gaussian::pullGauss(" + plotVarName  + ", pullMean[0.0, -10.0, 10.0], pullSigma[1.0, 0.1, 5.0])");
-
-   RooRealVar& pullMean = *ws.var("pullMean");
-   RooRealVar& pullSigma = *ws.var("pullSigma");
-   RooAbsPdf& pullGauss = *ws.pdf("pullGauss");
-
-   pullGauss.fitTo(fitParData, RooFit::Minos(false), RooFit::PrintLevel(-1)) ;
-   pullGauss.plotOn(&frame) ;
-
-   // Instead of using paramOn() without command arguments to plot the fit
-   // parameters, we are building the parameter label ourselves for more
-   // flexibility and pass this together with an appropriate layout
-   // parametrization to paramOn().
-   const int sigDigits = 2;
-   const char * options = "ELU";
-   std::stringstream ss;
-   ss << "Fit parameters:\n"
-      << "#mu: " << pullMean.format(sigDigits, options)
-      << "\n#sigma: " << pullSigma.format(sigDigits, options);
-   // We set the parameters constant to disable the default label. Still, we
-   // use param() on as a wrapper for the text box generation.
-   pullMean.setConstant(true);
-   pullSigma.setConstant(true);
-   pullGauss.paramOn(&frame, RooFit::Label(ss.str().c_str()), RooFit::Layout(0.60, 0.9, 0.9));
-}
-
-} // namespace
 
 
 ////////////////////////////////////////////////////////////////////////////////
