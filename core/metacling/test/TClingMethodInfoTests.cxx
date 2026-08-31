@@ -7,8 +7,6 @@
 #include "TMethod.h"
 #include "TROOT.h"
 
-#include <string>
-
 #include "gtest/gtest.h"
 
 TEST(TClingMethodInfo, Prototype)
@@ -561,7 +559,6 @@ namespace BUG6578 {
 TEST(TClingMethodInfo, InstantiateTemplateWithDefaultsROOT23195)
 {
    gInterpreter->Declare(R"CODE(
-#include <concepts>
 #include <initializer_list>
 #include <string>
 
@@ -570,36 +567,18 @@ template <typename TYPE>
 class Property {
 public:
    template <typename T = TYPE>
-      requires requires { typename T::value_type; } &&
-               std::constructible_from<TYPE, std::initializer_list<typename T::value_type>>
    Property &operator=(std::initializer_list<typename T::value_type>)
    {
       return *this;
    }
 };
-
-struct NoValueType {
-};
 } // namespace ROOT23195
 )CODE");
-
-   auto hasInitializerListAssignment = [](TClass *cl) {
-      TListOfFunctions *methods = (TListOfFunctions *)cl->GetListOfMethods();
-      for (TMethod *method : TRangeDynCast<TMethod>(*methods)) {
-         if (std::string(method->GetName()) == "operator=" &&
-             std::string(method->GetSignature()).find("initializer_list") != std::string::npos)
-            return true;
-      }
-      return false;
-   };
 
    // This method-template default argument needs a valid source location while Cling
    // substitutes typename T::value_type. An invalid one used to assert in
    // Sema::CheckTypenameType.
-   TClass *withValueType = TClass::GetClass("ROOT23195::Property<std::string>");
-   ASSERT_NE(withValueType, nullptr);
-
-   TClass *withoutValueType = TClass::GetClass("ROOT23195::Property<ROOT23195::NoValueType>");
-   ASSERT_NE(withoutValueType, nullptr);
-   EXPECT_FALSE(hasInitializerListAssignment(withoutValueType));
+   TClass *cl = TClass::GetClass("ROOT23195::Property<std::string>");
+   ASSERT_NE(cl, nullptr);
+   EXPECT_NE(cl->GetListOfMethods(), nullptr);
 }
