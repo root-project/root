@@ -117,7 +117,7 @@ public:
    virtual void     NewPage() {}
 
    //Methods for text dimensions handling
-   virtual Bool_t    HasTTFonts() const;
+   virtual Bool_t    HasTTFonts() const { return kFALSE; }
    virtual void      GetTextExtent(Font_t /* font */, Double_t /* size */, UInt_t & /* w */, UInt_t & /* h */, const char * /* mess */) {}
    virtual void      GetTextExtent(Font_t /* font */, Double_t /* size */, UInt_t & /* w */, UInt_t & /* h */, const wchar_t * /* mess */) {}
    virtual void      GetTextAscentDescent(Font_t /* font */, Double_t /* size */, UInt_t & /* w */, UInt_t & /* h */, const char * /* mess */) {}

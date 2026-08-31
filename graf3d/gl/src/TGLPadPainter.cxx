@@ -698,6 +698,16 @@ void TGLPadPainter::SelectGLFont(Font_t font, Float_t tsize)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Indicate that TTF can be used for text metrics
+/// Drawing done with FTGL which is based on Freetype library
+
+Bool_t TGLPadPainter::HasTTFonts() const
+{
+   return kTRUE;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Helper function to draw text
 
 template<class Char>
