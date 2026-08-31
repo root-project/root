@@ -1,12 +1,7 @@
 import unittest
 
-import numba  # noqa: F401
 import numpy as np
 import ROOT
-
-# numba is not used directly, but tests can crash when ROOT is built with
-# builtin_llvm=OFF and numba is not imported at the beginning
-
 
 class PyDefine(unittest.TestCase):
     """
@@ -15,23 +10,27 @@ class PyDefine(unittest.TestCase):
 
     def test_with_dtypes(self):
         """
-        Tests the pythonized define with all the numba declare datatypes and
+        Tests the pythonized define with all the supported datatypes and
         """
-        numba_declare_dtypes = ["float", "double", "int", "unsigned int", "long", "unsigned long", "bool"]
+        declare_dtypes = ["float", "double", "int", "unsigned int", "long", "unsigned long", "bool"]
         rdf = ROOT.RDataFrame(10)
-        for type in numba_declare_dtypes:
+        for type in declare_dtypes:
             col_name = "col_" + type.replace(" ", "")
             rdf = rdf.Define(col_name, f"({type}) rdfentry_")
             rdf = rdf.Define(col_name + "_arr", lambda col: np.array([col, col]), [col_name])
             arr = np.arange(0, 10)
             if type == "bool":
                 arr = np.array(arr, dtype="bool")
-            flag1 = np.array_equal(rdf.AsNumpy()[col_name], arr)
-            flag2 = True
+            self.assertTrue(
+                np.array_equal(rdf.AsNumpy()[col_name], arr),
+                "scalar column differs for {}".format(type),
+            )
             for idx, entry in enumerate(rdf.AsNumpy()[col_name + "_arr"]):
-                if not (entry[0] == arr[idx] and entry[1] == arr[idx]):
-                    flag2 = False
-            self.assertTrue(flag1 and flag2)
+                self.assertEqual(
+                    [entry[0], entry[1]],
+                    [arr[idx], arr[idx]],
+                    "array column differs for {} at entry {}".format(type, idx),
+                )
 
     def test_define_overload1(self):
         rdf = ROOT.RDataFrame(10).Define("x", "rdfentry_")

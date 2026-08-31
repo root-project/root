@@ -1,14 +1,9 @@
 import os
 import unittest
 
-import numba  # noqa: F401
 import numpy as np
 import ROOT
 from rdf_filter_pyz_helper import TYPE_TO_SYMBOL, CreateData, filter_dict
-
-# numba is not used directly, but tests can crash when ROOT is built with
-# builtin_llvm=OFF and numba is not imported at the beginning
-
 
 class PyFilter(unittest.TestCase):
     """
@@ -24,7 +19,10 @@ class PyFilter(unittest.TestCase):
         test_cols = [str(c) for c in rdf.GetColumnNames()]
         for col_name in test_cols:
             func = filter_dict[TYPE_TO_SYMBOL[col_name]]  # filter function
-            x = rdf.Mean(col_name).GetValue()
+            # A threshold that occurs in the data, so that '>' and '>=' give
+            # different answers and the cross-check can tell them apart.  The
+            # column mean is almost never an actual entry.
+            x = rdf.Take[col_name](col_name).GetValue()[0]
             if col_name == "Bool_t":
                 x = True
             filtered = rdf.Filter(func, extra_args={"x": x})

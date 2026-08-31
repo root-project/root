@@ -576,13 +576,14 @@ class ROOTFacade(types.ModuleType):
     # Create and overload Numba namespace
     @property
     def Numba(self):
-        from ._pydeclare import _numba_declare_dispatch
+        from ._pydeclare import DeclareInNumbaNamespace
 
         self._cppyy.cppdef("namespace Numba {}")
         ns = self._fallback_getattr("Numba")
-        # The implementation behind the decorator is selected by
-        # $ROOT_NUMBA_DECLARE_BACKEND: 'numba' (default), 'ast' or 'trace'.
-        ns.Declare = staticmethod(_numba_declare_dispatch)
+        # Kept for backwards compatibility: the decorator no longer uses numba,
+        # but the spelling and the C++ namespace are unchanged. ROOT.Py.Declare
+        # is the same thing under a name that is not a historical accident.
+        ns.Declare = staticmethod(DeclareInNumbaNamespace)
         del type(self).Numba
         return ns
 

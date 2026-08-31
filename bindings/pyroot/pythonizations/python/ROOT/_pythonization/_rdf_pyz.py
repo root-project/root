@@ -12,12 +12,12 @@ import textwrap
 import typing
 import warnings
 
-from .._pydeclare import _numba_declare_dispatch
+from .._pydeclare import DeclareInNumbaNamespace
 
 
 class FunctionJitter:
     """
-    This class allows to jit a python callable with Numba, being able to infer the signature of the function from the types of the RDF columns.
+    This class allows to translate a python callable to C++, being able to infer the signature of the function from the types of the RDF columns.
     It takes a python callable, an RDF and optionally a column list and dictionary containing any other arguments for the callable.
     It determines the function signature and Declares the function and returns the corresponding function call.
 
@@ -95,7 +95,20 @@ class FunctionJitter:
                     return t
             else:
                 return "str"
-                #! Numba Declare does not support "string" type. Check _numbadeclare.Thus, Cannot pass string constants to the filter/Defines..
+                #! The translation does not support the "string" type, so string constants
+                #! cannot be passed to the Filters/Defines.
+        elif type(x) is int:
+            # A Python int has no width; pick a C++ type that can hold this one,
+            # rather than truncating anything above 2**31 to a negative int.
+            if -(2**31) <= x < 2**31:
+                return "int"
+            if 2**31 <= x < 2**32:
+                return "unsigned int"
+            if -(2**63) <= x < 2**63:
+                return "long long"
+            if 2**63 <= x < 2**64:
+                return "unsigned long long"
+            raise TypeError("The integer {} does not fit in any C++ integer type.".format(x))
         elif type(x) in FUNDAMENTAL_PYTHON_TYPES:
             return FUNDAMENTAL_PYTHON_TYPES[type(x)]
         elif isinstance(x, np.ndarray):
@@ -209,7 +222,7 @@ class FunctionJitter:
 
     def jit_function(self, func, cols_list, extra_args):
         """
-        Jits the provided function using ROOT's NumbaDeclare.
+        Declares the provided function as C++ using ROOT's Numba.Declare.
         Also checks if the function was jitted earlier in which case it won't jit again but if signature does not match. It raises an error.
 
         Arguments:
@@ -226,7 +239,7 @@ class FunctionJitter:
             return self.func_call
 
         self.get_function_params_args_call(func, cols_list, extra_args)
-        _numba_declare_dispatch(self.func_sign, self.return_type)(self.func)
+        DeclareInNumbaNamespace(self.func_sign, self.return_type)(self.func)
         FunctionJitter.function_cache[self.func.__name__] = (self.func_call, self.func_sign)
         return self.func_call
 
@@ -373,19 +386,19 @@ class _WarnOnce:
     def warn(cls):
         if not cls.called:
             msg = """
-                RDataFrame is implicitly calling numba to JIT compile your Python functions. This behaviour will be in the
-                future only opt-in. You can silence this warning and achieve the same behaviour by explicitly calling the
-                ROOT.Numba.Declare decorator on your Python function and pass a string expression to RDataFrame that calls
-                the same function, for example:
+                RDataFrame is implicitly translating your Python function to C++ and JIT compiling it. This behaviour
+                will be in the future only opt-in. You can silence this warning and achieve the same behaviour by
+                explicitly calling the ROOT.Py.Declare decorator on your Python function and pass a string expression
+                to RDataFrame that calls the same function, for example:
 
                 ```
-                @ROOT.Numba.Declare([input_type_1, input_type_2], ret_type)
+                @ROOT.Py.Declare([input_type_1, input_type_2], ret_type)
                 def foo(x, y):
                     return x + y
-                
-                df.Define("sum", "Numba::foo(x, y)")
+
+                df.Define("sum", "Py::foo(x, y)")
                 ```
-                
+
                 See more details at https://root.cern/doc/master/classROOT_1_1RDataFrame.html#python
             """
             warnings.warn(textwrap.dedent(msg), FutureWarning)

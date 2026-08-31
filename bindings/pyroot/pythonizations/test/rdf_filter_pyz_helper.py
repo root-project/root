@@ -1,36 +1,52 @@
 import ROOT
-import numpy as np
+
+
+def _declare_random_helper():
+    """Declare a helper giving a random integer over a signed or unsigned range.
+
+    gRandom->Integer takes a UInt_t bound, so it can neither produce the signed
+    ranges the Short_t and Int_t columns need nor span the full 2**32 width of
+    the Int_t one.  Scaling Rndm(), which returns a double in ]0, 1[, does
+    both, and draws from [low, high) like Python's range -- Uniform() returns
+    ]x1, x2], which would never produce `low` and could overflow at `high`.
+
+    gRandom is a TRandom3 with its default seed, so the dataset is the same on
+    every run.  That is wanted here -- these tests compare a translated filter
+    against the equivalent C++ one, and a reproducible dataset is worth more
+    than a fresh one.
+    """
+    if hasattr(ROOT, "RandomInRange"):
+        return
+    ROOT.gInterpreter.Declare("""
+    Long64_t RandomInRange(Long64_t low, Long64_t high)
+    {
+       const Double_t width = static_cast<Double_t>(high - low);
+       return low + static_cast<Long64_t>(gRandom->Rndm() * width);
+    }
+    """)
+
 
 def CreateData():
     """
     This function generates the root files of various datatypes with random values to test them.
     Datatypes could be generated are Strings, Char_t, UChar_t
     """
-    # function to create random numbers.. gRandom did not give me signed integers
-    @ROOT.Numba.Declare(['int', 'bool'], 'long')
-    def random_long(bits, signed):
-        if signed:
-            low = -1*2**(bits - 1)
-            high = 2**(bits - 1) -1
-        else:
-            low = 0
-            high = 2**bits
-        return np.random.randint(low, high)
-    
+    _declare_random_helper()
+
     N = 100 # df with 100 entries
     df = ROOT.RDataFrame(N)
 
     col_name = "Short_t"
-    df = df.Define(col_name, f"({col_name}) Numba::random_long(16, true)")
+    df = df.Define(col_name, f"({col_name}) RandomInRange(-32768, 32768)")
 
     col_name = "UShort_t"
-    df = df.Define(col_name, f"({col_name}) Numba::random_long(16, false)")
+    df = df.Define(col_name, f"({col_name}) RandomInRange(0, 65536)")
 
     col_name = "Int_t"
-    df = df.Define(col_name, f"({col_name}) Numba::random_long(32, true)") 
+    df = df.Define(col_name, f"({col_name}) RandomInRange(-2147483648LL, 2147483648LL)")
 
     col_name = "UInt_t"
-    df = df.Define(col_name, f"({col_name}) Numba::random_long(32, false)")
+    df = df.Define(col_name, f"({col_name}) RandomInRange(0, 4294967296LL)")
 
     col_name = "Float_t"
     df = df.Define(col_name, f"({col_name}) gRandom->Gaus()")

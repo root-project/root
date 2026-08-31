@@ -85,7 +85,6 @@ set(py_sources
   ROOT/_jupyroot/magics/cppmagic.py
   ROOT/_jupyroot/magics/jsrootmagic.py
   ROOT/_jupyroot/magics/rootbrowsemagic.py
-  ROOT/_numbadeclare.py
   ROOT/_pydeclare/__init__.py
   ROOT/_pydeclare/ast_backend.py
   ROOT/_pydeclare/cpptypes.py
