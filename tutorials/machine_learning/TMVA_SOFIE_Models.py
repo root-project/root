@@ -7,40 +7,19 @@
 ### the weights in a ROOT binary file.
 ### The models are then evaluated using the RDataFrame
 ###
-### The PyTorch export and ROOT's SOFIE parser are both linked against protobuf,
-### but usually against different versions, so loading them in the same process
-### leads to a symbol clash. We therefore run the PyTorch training and ONNX
-### export in a separate Python process and only use ROOT before and afterwards.
-###
 ### \macro_code
 ### \macro_output
 ### \author Lorenzo Moneta
 
+import contextlib
+import inspect
 import os
-import subprocess
-import sys
+import warnings
 
 import numpy as np
 import ROOT
-
-## generate and train PyTorch models with different architectures
-
-# The PyTorch training and ONNX export, as a small standalone script run in its
-# own process. It takes as arguments the .npz file with the training data and
-# the names of the models to train, and writes a <modelName>.onnx file for each
-# of them.
-TRAIN_SCRIPT = r"""
-import sys
-import inspect
-import warnings
-import contextlib
-
-import numpy as np
 import torch
 import torch.nn as nn
-
-dataFile = sys.argv[1]
-modelNames = sys.argv[2:]
 
 
 @contextlib.contextmanager
@@ -62,6 +41,9 @@ def expect_warning(category, message):
             f"Expected {category.__name__} containing {message!r} was not "
             "emitted. This tutorial's workaround can probably be removed."
         )
+
+
+## generate and train PyTorch models with different architectures
 
 
 def CreateModel(nlayers=4, nunits=64):
@@ -125,19 +107,11 @@ def ExportModel(model, modelName):
         # is emitted from inside PyTorch and cannot be avoided from user code.
         with expect_warning(FutureWarning, "isinstance(treespec, LeafSpec)"):
             torch.onnx.export(model, dummy_x, modelFile, **kwargs)
-        print("model exported to ONNX as", modelFile)
-    except TypeError:
-        print("Cannot export model from pytorch to ONNX - with version ", torch.__version__)
-        # leave no .onnx behind: which the parent process treats as a RuntimeError
-        sys.exit()
+    except TypeError as e:
+        raise RuntimeError("Cannot export model from pytorch to ONNX - with version " + torch.__version__) from e
 
-
-data = np.load(dataFile)
-for modelName in modelNames:
-    model = CreateModel(4, 64)
-    TrainModel(model, data["x_train"], data["y_train"])
-    ExportModel(model, modelName)
-"""
+    print("model exported to ONNX as", modelFile)
+    return modelFile
 
 
 def PrepareData():
@@ -179,17 +153,11 @@ def PrepareData():
 
 def TrainModels(x_train, y_train, modelNames):
     # train the models with PyTorch and export them to ONNX
-    # (done in a separate process to avoid the protobuf clash, see above)
-    dataFile = "Higgs_Model_train_data.npz"
-    np.savez(dataFile, x_train=x_train, y_train=y_train)
-
-    subprocess.run([sys.executable, "-c", TRAIN_SCRIPT, dataFile] + modelNames, check=True)
-    os.remove(dataFile)
-
-    modelFiles = [name + ".onnx" for name in modelNames]
-    for modelFile in modelFiles:
-        if not os.path.exists(modelFile):
-            raise RuntimeError("ONNX model " + modelFile + " could not be exported")
+    modelFiles = []
+    for modelName in modelNames:
+        model = CreateModel(4, 64)
+        TrainModel(model, x_train, y_train)
+        modelFiles.append(ExportModel(model, modelName))
     return modelFiles
 
 
