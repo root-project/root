@@ -78,6 +78,5 @@ echo "        ../../bindings/pyroot/pythonizations/python/ROOT/_pythonization/  
 # echo "        ../../core/lzma/                 \\" >> Doxyfile_INPUT
 # echo "        ../../core/newdelete/            \\" >> Doxyfile_INPUT
 # echo "        ../../core/textinput/            \\" >> Doxyfile_INPUT
-# echo "        ../../builtins/mathtext/           \\" >> Doxyfile_INPUT
 # echo "        ../../graf3d/x3d/                \\" >> Doxyfile_INPUT
 
