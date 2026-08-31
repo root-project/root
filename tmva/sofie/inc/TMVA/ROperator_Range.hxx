@@ -96,7 +96,7 @@ public:
          fShape = {Dim{"range_size_" + fNStart + "_" + fNLimit}};
          model.AddDynamicTensor(fNOutput, type, fShape);
       } else if (res1 == 1 && res2 == 1 && res3 == 1) {
-         size_t number_of_elements = std::max(static_cast<int>(std::ceil((limit_value - start_value) / delta_value )) , 0 );
+         size_t number_of_elements = std::max(static_cast<int>(std::ceil(static_cast<float>(limit_value - start_value) / delta_value)) , 0 );
          fIsOutputConstant = true;
 
          // compute output
@@ -123,12 +123,12 @@ public:
                if (start == "0")
                   s <<  limit;
                else
-                  s << "std::max((" << limit << " - " << start << "),0L)";
+                  s << "((" << limit << " > " << start << ") ? (" << limit << " - " << start << ") : 0)";
             } else {
                if (start == "0")
-                  s <<  "((" << limit << ")/" << delta << ")";
+                  s <<  "((" << limit << " + " << delta << " - 1)/" << delta << ")";
                else
-                  s << "std::max((" << limit << " - " << start << ")/"<< delta << "),0L)";
+                  s << "((" << limit << " > " << start << ") ? ((" << limit << " - " << start << " + " << delta << " - 1)/" << delta << ") : 0)";
             }
          } else {
             throw
