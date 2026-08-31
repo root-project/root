@@ -4497,6 +4497,67 @@ def make_RangeInt():
     return _model(graph, opset=19, ir_version=9)
 
 
+def make_Range_ConstantFolding():
+    """Ops: Range"""
+    nodes = [
+        helper.make_node('Range', ['start', 'limit', 'delta'], ['Y']),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'Range_ConstantFolding',
+        inputs=[],
+        outputs=[
+            _vi('Y', INT64, [3]),
+        ],
+        initializer=[
+            _tensor('start', INT64, [], [0]),
+            _tensor('limit', INT64, [], [5]),
+            _tensor('delta', INT64, [], [2]),
+        ],
+    )
+    return _model(graph, opset=19, ir_version=9)
+
+
+def _range_symbolic(name, start, delta):
+    """Range whose limit is a symbolic dimension read via Shape and Gather."""
+    nodes = [
+        helper.make_node('Shape', ['X'], ['xshape']),
+        helper.make_node('Gather', ['xshape', 'i0'], ['limit'], axis=0),
+        helper.make_node('Range', ['start', 'limit', 'delta'], ['Y']),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        name,
+        inputs=[
+            _vi('X', FLOAT, ['K']),
+        ],
+        outputs=[
+            _vi('Y', INT64, ['M']),
+        ],
+        initializer=[
+            _tensor('i0', INT64, [], [0]),
+            _tensor('start', INT64, [], [start]),
+            _tensor('delta', INT64, [], [delta]),
+        ],
+    )
+    return _model(graph, opset=19, ir_version=9)
+
+
+def make_RangeWithDynShapeStart():
+    """Ops: Range, Shape, Gather"""
+    return _range_symbolic('RangeWithDynShapeStart', start=1, delta=1)
+
+
+def make_RangeWithDynShapeDelta():
+    """Ops: Range, Shape, Gather"""
+    return _range_symbolic('RangeWithDynShapeDelta', start=0, delta=2)
+
+
+def make_RangeWithDynShapeStartDelta():
+    """Ops: Range, Shape, Gather"""
+    return _range_symbolic('RangeWithDynShapeStartDelta', start=1, delta=2)
+
+
 def make_Reciprocal():
     """Ops: Reciprocal"""
     nodes = [
@@ -5298,6 +5359,10 @@ MODELS = {
     'RandomUniform': make_RandomUniform,
     'RangeFloat': make_RangeFloat,
     'RangeInt': make_RangeInt,
+    'RangeWithDynShapeDelta': make_RangeWithDynShapeDelta,
+    'RangeWithDynShapeStart': make_RangeWithDynShapeStart,
+    'RangeWithDynShapeStartDelta': make_RangeWithDynShapeStartDelta,
+    'Range_ConstantFolding': make_Range_ConstantFolding,
     'Reciprocal': make_Reciprocal,
     'ReduceMean': make_ReduceMean,
     'ReduceMean_kFirst': make_ReduceMean_kFirst,
