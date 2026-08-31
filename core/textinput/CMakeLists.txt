@@ -22,4 +22,6 @@ target_include_directories(Core
     src
 )
 
+target_link_libraries(Core PRIVATE textinput)
+
 ROOT_INSTALL_HEADERS()
