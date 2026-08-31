@@ -14,9 +14,12 @@ set(ROOT_CIVETWEB_LIBRARY ${ROOT_CIVETWEB_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PRE
 if (NOT DEFINED GIT_EXECUTABLE)
   set(GIT_EXECUTABLE "git")
 endif()
+if(WIN32)
+  set(GIT_PATCH_ARGS "--ignore-space-change")
+endif()
 # check if the patch has already been applied
 if(NOT EXISTS "${ROOT_CIVETWEB_PREFIX}/src/BUILTIN_CIVETWEB/._patched")
-  set(ROOT_CIVETWEB_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} init COMMAND ${GIT_EXECUTABLE} apply
+  set(ROOT_CIVETWEB_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} init COMMAND ${GIT_EXECUTABLE} apply ${GIT_PATCH_ARGS}
          ${CMAKE_CURRENT_SOURCE_DIR}/1385.patch # https://github.com/civetweb/civetweb/pull/1385
          ${CMAKE_CURRENT_SOURCE_DIR}/1389.patch # https://github.com/civetweb/civetweb/pull/1389
          ${CMAKE_CURRENT_SOURCE_DIR}/civetweb-marker.diff)
