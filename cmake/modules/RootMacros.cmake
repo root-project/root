@@ -499,11 +499,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       list(APPEND incdirs ${CMAKE_CURRENT_SOURCE_DIR}/inc)
     endif()
 
-    set(ALL_DEPENDENCIES ${ARG_DEPENDENCIES})
-    if(NOT dictionary STREQUAL "G__Core" AND NOT "Core" IN_LIST ALL_DEPENDENCIES)
-      set(ALL_DEPENDENCIES Core ${ARG_DEPENDENCIES})
-    endif()
-    foreach(dep ${ALL_DEPENDENCIES})
+    foreach(dep ${ARG_DEPENDENCIES})
       if(TARGET ${dep})
         get_target_property(dep_include_dirs ${dep} INTERFACE_INCLUDE_DIRECTORIES)
         if (NOT dep_include_dirs)
@@ -625,7 +621,11 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   #---Get the library and module dependencies-----------------
-  foreach(dep Core ${ARG_DEPENDENCIES})
+  set(ALL_DEPENDENCIES ${ARG_DEPENDENCIES})
+  if(NOT dictionary STREQUAL "G__Core" AND NOT "Core" IN_LIST ALL_DEPENDENCIES)
+    set(ALL_DEPENDENCIES Core ${ARG_DEPENDENCIES}) # Add extra implicit dependency on Core
+  endif()
+  foreach(dep Core ${ALL_DEPENDENCIES})
     # Whether <dep> provides a dictionary/pcm is decided at generation time
     # via $<TARGET_EXISTS:G__<dep>>, so the '-m' flag and the module-file
     # dependency below are independent of configuration order and expand to
