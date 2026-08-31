@@ -21,6 +21,7 @@
 typedef unsigned long DWORD;
 typedef void* HANDLE;
 
+#ifndef __GDK_H__
 struct _GdkDrawable;
 typedef struct _GdkDrawable    GdkDrawable;
 struct _GdkWindow;
@@ -41,18 +42,13 @@ struct _GdkGCValues;
 typedef struct _GdkGCValues    GdkGCValues;
 struct _GdkWindowAttr;
 typedef struct _GdkWindowAttr  GdkWindowAttr;
-struct _GdkColor;
-typedef struct _GdkColor       GdkColor;
-struct _GdkPoint;
-typedef struct _GdkPoint       GdkPoint;
-struct _GdkRectangle;
-typedef struct _GdkRectangle   GdkRectangle;
 struct _GdkColor { unsigned long pixel; unsigned short red; unsigned short green; unsigned short blue; };
 typedef struct _GdkColor       GdkColor;
 struct _GdkPoint;
 typedef struct _GdkPoint       GdkPoint;
 struct _GdkRectangle;
 typedef struct _GdkRectangle   GdkRectangle;
+#endif
 
 typedef unsigned long KeySym;
 
