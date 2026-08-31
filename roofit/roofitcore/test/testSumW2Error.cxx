@@ -11,6 +11,8 @@
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
 
+#include <TMatrixDSym.h>
+
 #include <gtest/gtest.h>
 
 #include <cmath>
@@ -219,5 +221,64 @@ TEST(SumW2Error, ExtendedFit)
 
       auto fitWNoSw2 = doFit(datahistW, /*sumw2=*/false, range);
       expectFitsCompatible(*refScaledByW, *fitWNoSw2, valTol, errTol, scaleNoSw2);
+   }
+}
+
+// GitHub issue 12935: RooFitResult::globalCorr() returned only zeros when the
+// fit result was created with an externally provided covariance matrix, as
+// happens with SumW2Error. The global correlation coefficients are now
+// computed from the corrected covariance matrix in
+// RooFitResult::setCovarianceMatrix().
+TEST(SumW2Error, GlobalCorrelations)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   using namespace RooFit;
+
+   RooWorkspace ws{"workspace"};
+   ws.factory("Gaussian::sig(x[0,0,10],mu[3,0,10],s[1, 0.1, 5])");
+   ws.factory("Exponential::bkg(x,c1[-0.5, -3, -0.1])");
+   ws.factory("SUM::model(f[0.2, 0.0, 1.0] * sig, bkg)");
+
+   auto &model = *ws.pdf("model");
+
+   RooRandom::randomGenerator()->SetSeed(4357);
+   std::unique_ptr<RooDataSet> dataSet{model.generate(*ws.var("x"), 1000)};
+
+   RooDataSet dataSetWeighted("dataSetWeighted", "dataSetWeighted", *dataSet->get(), RooFit::WeightVar());
+   for (int i = 0; i < dataSet->numEntries(); ++i) {
+      dataSetWeighted.add(*dataSet->get(i), 0.5);
+   }
+
+   RooArgSet params;
+   RooArgSet initialParams;
+   model.getParameters(dataSet->get(), params);
+   params.snapshot(initialParams);
+
+   auto fit = [&](RooAbsData &data, bool sumw2) {
+      params.assign(initialParams);
+      return std::unique_ptr<RooFitResult>{
+         model.fitTo(data, Save(), SumW2Error(sumw2), Strategy(1), EvalBackend::Cpu(), PrintLevel(-1))};
+   };
+
+   auto refFit = fit(*dataSet, /*sumw2=*/false);
+
+   // Recomputing the global correlations from the covariance matrix of the
+   // reference fit must reproduce the values that Minuit reported for it.
+   RooFitResult copy{*refFit};
+   TMatrixDSym cov = refFit->covarianceMatrix();
+   copy.setCovarianceMatrix(cov);
+   for (auto *p : refFit->floatParsFinal()) {
+      EXPECT_NEAR(copy.globalCorr(p->GetName()), refFit->globalCorr(p->GetName()), 1e-6)
+         << "recomputed global correlation mismatch for " << p->GetName();
+   }
+
+   // The SumW2 correction on uniformly weighted data reproduces the
+   // unweighted covariance matrix, so the global correlations must match the
+   // unweighted fit too. Before the fix, they were all zero.
+   auto fitWSw2 = fit(dataSetWeighted, /*sumw2=*/true);
+   for (auto *p : refFit->floatParsFinal()) {
+      EXPECT_NEAR(fitWSw2->globalCorr(p->GetName()), refFit->globalCorr(p->GetName()), 1e-2)
+         << "global correlation mismatch for " << p->GetName();
    }
 }
