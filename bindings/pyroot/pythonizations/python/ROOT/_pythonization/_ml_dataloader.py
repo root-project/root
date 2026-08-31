@@ -19,6 +19,8 @@ import atexit
 from typing import TYPE_CHECKING, Any, Callable, Tuple
 
 if TYPE_CHECKING:
+    import os
+
     import numpy as np
     import tensorflow as tf
     import torch
@@ -494,6 +496,9 @@ class _RDataLoader:
         batch = self.engine.GetValidationBatch()
         return batch if (batch and batch.GetSize() > 0) else None
 
+    def Save(self, dataset_name: str, filename: str, is_training: bool, output_format: str) -> None:
+        self.engine.Save(dataset_name, filename, is_training, output_format)
+
 
 # context managers for the loading thread
 class _TrainingEpochContext:
@@ -696,7 +701,8 @@ class RDataLoader:
         self._test_size = test_size
 
     def train_test_split(self, test_size: float = 0.2) -> Tuple[RDataLoader, RDataLoader]:
-        """
+        r"""
+        \ingroup Py_ML
         Partition the dataset into training and validation splits.
         Returns two RDataLoader instances that share the same underlying C++
         backend and can each be iterated independently.
@@ -709,6 +715,26 @@ class RDataLoader:
             RDataLoader._from_internal(self._internal, is_training=True),
             RDataLoader._from_internal(self._internal, is_training=False),
         )
+
+    def save(self, dataset_name: str, filename: str | os.PathLike, *, output_format: str = "ttree") -> None:
+        r"""
+        \ingroup Py_ML
+        Write this split to disk as it would be loaded for training. This function preserves the
+        input column names when writing the output dataset. Input columns of collection types keep
+        the same type, but their values will be fixed-sized and padded according to the
+        configuration during loading (e.g. via `max_vec_sizes` and `vec_padding`).
+
+        Args:
+            dataset_name: Name of the output TTree (or RNTuple).
+            filename: Output file path.
+            output_format: `"ttree"` (default) or `"rntuple"`.
+        """
+        output_formats = ("ttree", "rntuple")
+        if output_format not in output_formats:
+            raise ValueError(f"output_format must be one of {list(output_formats)}, got {output_format!r}")
+
+        self._ensure_created()
+        self._internal.Save(dataset_name, str(filename), self._is_training, output_format)
 
     def as_numpy(self) -> FormattedLoader:
         r"""
