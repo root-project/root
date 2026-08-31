@@ -1292,6 +1292,53 @@ TEST(ONNX, RangeInt)
 
    expectEqual(output, ref.i64("output0"));
 }
+
+// constant INT64 Range(0, 5, 2) folds at generation time; the count is ceiled, not floored
+TEST(ONNX, Range_ConstantFolding)
+{
+   std::vector<int64_t> correct_output = {0, 2, 4};
+   ASSERT_INCLUDE_AND_RUN_0(std::vector<int64_t>, "Range_ConstantFolding");
+   expectEqual(output, correct_output);
+}
+
+// Range(1, K, 1) with the limit K read via Shape; the emitted size expression must compile
+TEST(ONNX, RangeWithDynShapeStart)
+{
+   std::vector<float> input(5);
+   std::vector<int64_t> correct_output = {1, 2, 3, 4};
+
+   // model is dynamic in K, use K = 5
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<int64_t>, "RangeWithDynShapeStart",
+                                       "\"RangeWithDynShapeStart_FromONNX.dat\", 5", 5, input);
+
+   expectEqual(output, correct_output);
+}
+
+// Range(0, K, 2): the symbolic count is ceil(K / delta), not the floored (K)/delta
+TEST(ONNX, RangeWithDynShapeDelta)
+{
+   std::vector<float> input(5);
+   std::vector<int64_t> correct_output = {0, 2, 4};
+
+   // model is dynamic in K, use K = 5
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<int64_t>, "RangeWithDynShapeDelta",
+                                       "\"RangeWithDynShapeDelta_FromONNX.dat\", 5", 5, input);
+
+   expectEqual(output, correct_output);
+}
+
+// Range(1, K, 2): both start and delta in play; pre-fix expression had unbalanced parentheses
+TEST(ONNX, RangeWithDynShapeStartDelta)
+{
+   std::vector<float> input(5);
+   std::vector<int64_t> correct_output = {1, 3};
+
+   // model is dynamic in K, use K = 5
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<int64_t>, "RangeWithDynShapeStartDelta",
+                                       "\"RangeWithDynShapeStartDelta_FromONNX.dat\", 5", 5, input);
+
+   expectEqual(output, correct_output);
+}
 TEST(ONNX, Tile5D)
 {
    SofieReference ref = readReference("Tile5D");
