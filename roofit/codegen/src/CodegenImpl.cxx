@@ -66,6 +66,7 @@
 
 #include <TInterpreter.h>
 
+#include <locale>
 #include <unordered_set>
 
 namespace RooFit::Experimental {
@@ -76,6 +77,9 @@ namespace {
 std::string doubleToString(double val)
 {
    std::stringstream ss;
+   // The formatting must not depend on the global locale: a comma decimal
+   // separator (e.g. from a German locale) would corrupt the generated C++.
+   ss.imbue(std::locale::classic());
    ss << std::setprecision(std::numeric_limits<double>::max_digits10) << val;
    return ss.str();
 }

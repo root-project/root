@@ -34,3 +34,5 @@ if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
           inc/RooFit/CodegenImpl.h
   )
 endif()
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)

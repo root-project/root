@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <iomanip>
+#include <locale>
 #include <sstream>
 #include <string>
 #include <type_traits>
@@ -139,6 +140,7 @@ private:
    std::string buildArg(T x)
    {
       std::stringstream ss;
+      ss.imbue(std::locale::classic()); // the generated code is C++, not locale-dependent text
       ss << std::setprecision(std::numeric_limits<double>::max_digits10) << x;
       return ss.str();
    }
@@ -215,6 +217,7 @@ std::string CodegenContext::buildArgSpanImpl(std::span<const T> arr)
    unsigned int n = arr.size();
    std::string arrName = getTmpVarName();
    std::stringstream ss;
+   ss.imbue(std::locale::classic()); // the generated code is C++, not locale-dependent text
    ss << typeName<T>() << " " << arrName << "[" << n << "] = {";
    for (unsigned int i = 0; i < n; i++) {
       ss << " " << arr[i] << ",";
