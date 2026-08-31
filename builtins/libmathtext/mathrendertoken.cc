@@ -184,7 +184,7 @@ namespace mathtext {
       const bool generalized_fraction =
       fraction_iterator != math_list_end_interior;
       bool delimiter = false;
-		float delimiter_height;
+		float delimiter_height = 0.f;
       bounding_box_t bounding_box_delimiter_left(0, 0, 0, 0, 0, 0);
       bounding_box_t bounding_box_delimiter_right(0, 0, 0, 0, 0, 0);
 
