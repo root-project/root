@@ -17,14 +17,10 @@ generated code is therefore inlinable into the RDataFrame event loop, can call
 anything cling knows about (including user classes), and needs no third-party
 dependency.
 
-Two backends are available and produce the same C++ for the same input:
-
-``ast``
-    Walks the Python syntax tree.  Handles control flow.
-
-``trace``
-    Runs the callable once with symbolic arguments and records the operations.
-    Cannot see control flow, and says so rather than guessing.
+The translation walks the Python syntax tree.  Because the argument types are
+known -- RDataFrame knows its column types, and the decorator takes them
+explicitly -- forward type inference through the tree is enough to choose the
+right C++ for every operation, including control flow.
 
 Usage::
 
@@ -44,23 +40,14 @@ from . import cpptypes as ct
 from . import emit, support
 from .ast_backend import CPP_KEYWORDS, AstTranspiler
 from .errors import PyDeclareError
-from .trace_backend import trace as _trace
 
 __all__ = ["Declare", "PyDeclareError", "declare"]
 
-BACKENDS = ("ast", "trace")
 DEFAULT_NAMESPACE = "Py"
 
 #: (namespace, name) -> generated code, so that re-running a script in the same
 #: session does not hit a cling redefinition error.
 _DECLARED = {}
-
-
-def _default_backend():
-    backend = os.environ.get("ROOT_PYDECLARE_BACKEND", "ast").strip().lower()
-    if backend not in BACKENDS:
-        raise PyDeclareError("ROOT_PYDECLARE_BACKEND is '{}'; expected one of {}".format(backend, ", ".join(BACKENDS)))
-    return backend
 
 
 def _sanitize(name):
@@ -104,16 +91,12 @@ def _signature_names(func, n_expected):
     return names
 
 
-def declare(func, input_types, return_type=None, name=None, namespace=DEFAULT_NAMESPACE, backend=None, unroll=False):
+def declare(func, input_types, return_type=None, name=None, namespace=DEFAULT_NAMESPACE):
     """Translate a Python callable to C++ and declare it to cling.
 
     Returns the original callable, with the generated code and some metadata
     attached as attributes.
     """
-    backend = (backend or _default_backend()).strip().lower()
-    if backend not in BACKENDS:
-        raise PyDeclareError("Unknown backend '{}'; expected one of {}".format(backend, ", ".join(BACKENDS)))
-
     raw_types = list(input_types or [])
     param_names = _signature_names(func, len(raw_types))
     parsed = [ct.parse_type(t) for t in raw_types]
@@ -139,18 +122,15 @@ def declare(func, input_types, return_type=None, name=None, namespace=DEFAULT_NA
             body_names.append(cpp_params[i])
             body_types.append(t)
 
-    if backend == "ast":
-        transpiler = AstTranspiler(func, param_names, body_types, declared_return, body_names)
-        body, deduced = transpiler.translate()
-    else:
-        body, deduced = _trace(func, param_names, body_types, declared_return, body_names, unroll=unroll)
+    transpiler = AstTranspiler(func, param_names, body_types, declared_return, body_names)
+    body, deduced = transpiler.translate()
 
     cpp_return = (declared_return or deduced).cpp() if (declared_return or deduced) is not None else "auto"
     func_name = name or getattr(func, "__name__", None)
     if not func_name or func_name == "<lambda>":
         raise PyDeclareError("Anonymous callables need an explicit name=... argument")
 
-    code = _render(namespace, func_name, cpp_return, declarations, adapters, body, func, backend)
+    code = _render(namespace, func_name, cpp_return, declarations, adapters, body, func)
 
     key = (namespace, func_name)
     previous = _DECLARED.get(key)
@@ -170,11 +150,10 @@ def declare(func, input_types, return_type=None, name=None, namespace=DEFAULT_NA
     func.__cpp_wrapper__ = code
     func.__pydeclare_cpp_name__ = "{}::{}".format(namespace, func_name)
     func.__pydeclare_return_type__ = declared_return or deduced
-    func.__pydeclare_backend__ = backend
     return func
 
 
-def _render(namespace, func_name, cpp_return, declarations, adapters, body, func, backend):
+def _render(namespace, func_name, cpp_return, declarations, adapters, body, func):
     origin = ""
     try:
         origin = " ({}:{})".format(os.path.basename(inspect.getsourcefile(func) or "?"), func.__code__.co_firstlineno)
@@ -188,14 +167,14 @@ def _render(namespace, func_name, cpp_return, declarations, adapters, body, func
         "/// Generated from the Python callable '{}'{} by the ROOT".format(
             getattr(func, "__name__", func_name), origin
         ),
-        "/// Python-to-C++ transpiler, {} backend.".format(backend),
+        "/// Python-to-C++ transpiler.",
         "{} {}({})".format(cpp_return, func_name, ", ".join(declarations)),
         "{",
     ]
     return "\n".join(header + adapters + [body, "}", "", "}} // namespace {}".format(namespace)]) + "\n"
 
 
-def Declare(input_types=None, return_type=None, name=None, namespace=DEFAULT_NAMESPACE, backend=None, unroll=False):
+def Declare(input_types=None, return_type=None, name=None, namespace=DEFAULT_NAMESPACE):
     """Decorator making a Python callable available in C++, by translation.
 
     Arguments mirror ``ROOT.Numba.Declare``:
@@ -209,11 +188,6 @@ def Declare(input_types=None, return_type=None, name=None, namespace=DEFAULT_NAM
         The name of the generated C++ function; defaults to the Python name.
     namespace
         The C++ namespace to declare it in; defaults to ``Py``.
-    backend
-        ``"ast"`` or ``"trace"``; defaults to $ROOT_PYDECLARE_BACKEND or ast.
-    unroll
-        Tracing backend only: accept Python-level control flow, evaluating it
-        once at declaration time.
     """
 
     def inner(func):
@@ -223,30 +197,23 @@ def Declare(input_types=None, return_type=None, name=None, namespace=DEFAULT_NAM
             return_type=return_type,
             name=name,
             namespace=namespace,
-            backend=backend,
-            unroll=unroll,
         )
 
     return inner
 
 
 def _numba_declare_dispatch(input_types, return_type=None, name=None, **kwargs):
-    """``ROOT.Numba.Declare``, routed to whichever backend is selected.
-
-    ``ROOT_NUMBA_DECLARE_BACKEND`` picks the implementation: ``numba`` (the
-    default, the original implementation), ``ast`` or ``trace``.  The generated
-    function always lands in the ``Numba`` C++ namespace, so existing code that
-    says ``"Numba::myfunc(x)"`` keeps working whichever backend is in use.
+    """``ROOT.Numba.Declare``, routed to the implementation selected by
+    ``$ROOT_NUMBA_DECLARE_BACKEND``: ``numba`` (the default, the original
+    implementation) or ``ast``.  The generated function always lands in the
+    ``Numba`` C++ namespace, so existing code that says ``"Numba::myfunc(x)"``
+    keeps working with either implementation.
     """
     backend = os.environ.get("ROOT_NUMBA_DECLARE_BACKEND", "numba").strip().lower()
     if backend in ("", "numba"):
         from .._numbadeclare import _NumbaDeclareDecorator
 
         return _NumbaDeclareDecorator(input_types, return_type, name)
-    if backend not in BACKENDS:
-        raise PyDeclareError(
-            "ROOT_NUMBA_DECLARE_BACKEND is '{}'; expected 'numba', {}".format(
-                backend, " or ".join(repr(b) for b in BACKENDS)
-            )
-        )
-    return Declare(input_types, return_type, name, namespace="Numba", backend=backend, **kwargs)
+    if backend != "ast":
+        raise PyDeclareError("ROOT_NUMBA_DECLARE_BACKEND is '{}'; expected 'numba' or 'ast'".format(backend))
+    return Declare(input_types, return_type, name, namespace="Numba", **kwargs)

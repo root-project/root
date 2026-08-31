@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-"""Errors raised by the Python-to-C++ transpiler backends.
+"""Errors raised by the Python-to-C++ transpiler.
 
 The guiding principle of this package is that anything outside the supported
 subset must fail *loudly*, at declaration time, with a message that points at
@@ -24,7 +24,7 @@ class PyDeclareError(Exception):
     """Raised when a Python callable cannot be translated to C++.
 
     The message carries the location in the user's Python source whenever the
-    backend was able to determine it.
+    translation was able to determine it.
     """
 
 

@@ -8,15 +8,16 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-"""The AST-traversal backend.
+"""The Python-to-C++ translation.
 
 Walks the Python syntax tree of the decorated callable and emits C++.  Because
 the argument types are known -- RDataFrame knows its column types, and the
 decorator takes them explicitly -- forward type inference through the tree is
 enough to choose the right lowering for every operation.
 
-Compared to the tracing backend this one sees the *source*, so it can translate
-control flow: if/elif/else, for, while, break/continue and early returns.
+Working from the source rather than from a traced execution is what makes
+control flow translatable: if/elif/else, for, while, break/continue and early
+returns all survive the trip.
 """
 
 import ast
@@ -115,6 +116,8 @@ class AstTranspiler:
         self.hoisted = {}  # python name -> (cpp name, CppType)
         self.collected = {}  # python name -> CppType, filled by the first pass
         self.collected_depth = {}  # python name -> set of block depths it is assigned at
+        self.read_at_top = set()  # names read at function-block level
+        self.fresh_arrays = set()  # locals holding an array that is a copy in Python too
         self.return_types = []
         self.loop_depth = 0
         self.globals_cache = None
@@ -158,6 +161,22 @@ class AstTranspiler:
         self.lines, self.indent = saved
 
         hoist_names = {n for n, depths in self.collected_depth.items() if any(d > 0 for d in depths)}
+        # A parameter is already a function-scope variable; re-declaring it
+        # would be a redefinition in C++.
+        hoist_names -= set(self.param_names)
+
+        for name in sorted(hoist_names):
+            if 0 in self.collected_depth[name] or name not in self.read_at_top:
+                continue
+            # Python would raise UnboundLocalError here if the block never ran.
+            # C++ has no such state, so the alternative to refusing would be to
+            # hand back a zero that looks like a result.
+            raise PyDeclareError(
+                "The variable '{}' is only assigned inside a nested block but is read outside it. "
+                "If the block does not run, Python raises UnboundLocalError, which cannot be "
+                "reproduced in C++.\n"
+                "  Assign it before the block, for example \"{} = 0.0\".".format(name, name)
+            )
 
         # Pass 2: the real one.
         self.flat_scope = False
@@ -209,9 +228,9 @@ class AstTranspiler:
             src = inspect.getsource(self.func)
         except (OSError, TypeError):
             raise PyDeclareError(
-                "Cannot read the source of the callable. The AST backend needs the Python source; "
-                "callables defined in the interpreter prompt or in an exec() string cannot be "
-                "translated. Use the tracing backend, or move the function into a file."
+                "Cannot read the source of the callable. The translation reads the Python source, "
+                "so callables defined at an interactive prompt or built by exec() cannot be "
+                "translated. Define the function in a file, or in a notebook cell."
             )
         src = textwrap.dedent(src)
         try:
@@ -333,6 +352,36 @@ class AstTranspiler:
         result = emit.binop(op, current, self.expr(node.value), self.fail_at(node))
         self._assign_to(node.target, result, node)
 
+    def _is_fresh_array(self, node):
+        """True if this assignment's right-hand side builds a new array.
+
+        np.array([...]) and .astype(...) copy in numpy as well as here.  A bare
+        name, a slice or a mask produces a view in numpy and a copy in C++, so
+        those are not fresh and may not be written through.
+        """
+        value = getattr(node, "value", None)
+        if not isinstance(value, ast.Call):
+            return False
+        func = value.func
+        if isinstance(func, ast.Attribute):
+            return func.attr in ("array", "astype", "copy", "zeros", "ones", "full", "empty")
+        return False
+
+    def _check_mutable_target(self, target, node):
+        base = target.value
+        if isinstance(base, ast.Name) and base.id in self.fresh_arrays:
+            return
+        what = "'{}'".format(base.id) if isinstance(base, ast.Name) else "this array"
+        raise_unsupported(
+            self.func,
+            node,
+            "Cannot assign to an element of {}".format(what),
+            hint="In Python, 'w = v' and 'w = v[1:]' make w refer to the same data as v, while the "
+            "translation copies, so an element assignment would mean different things in the two "
+            "languages. Only an array built in the function, as by np.array([...]), can be written "
+            "to element by element.",
+        )
+
     def _record(self, name, type_):
         """Remember an assignment for the hoisting pass."""
         self.collected_depth.setdefault(name, set()).add(self.depth)
@@ -352,6 +401,7 @@ class AstTranspiler:
 
     def _assign_to(self, target, value, node):
         if isinstance(target, ast.Subscript):
+            self._check_mutable_target(target, node)
             obj = self.expr(target.value)
             index = self.expr(target.slice)
             slot = emit.subscript(obj, index, self.fail_at(node))
@@ -365,6 +415,25 @@ class AstTranspiler:
         name = target.id
         cpp = self.cpp_name(name)
         self._record(name, value.type)
+
+        if name in self.param_names and value.type.is_container:
+            raise_unsupported(
+                self.func,
+                node,
+                "Cannot assign to the array parameter '{}'".format(name),
+                hint="Array parameters are passed by const reference, so the caller's array is "
+                "never modified. Assign to a new variable instead.",
+            )
+
+        if value.type.is_container:
+            # Track whether this name holds an array that is a fresh copy in
+            # Python too, so that element assignment through it means the same
+            # thing in both languages.  numpy aliases on 'w = v' and on a
+            # slice; the generated C++ copies, so those may not be mutated.
+            if self._is_fresh_array(node):
+                self.fresh_arrays.add(name)
+            else:
+                self.fresh_arrays.discard(name)
 
         if name in self.hoisted:
             declared = self.hoisted[name][1]
@@ -444,8 +513,13 @@ class AstTranspiler:
             )
         elem = iterable.type.scalar()
         self._record(name, elem)
-        self.write("for (auto {} : {}) {{".format(cpp, iterable.code))
-        self._loop_body(node, name, cpp, elem)
+        if name in self.hoisted:
+            item = self.tmp("item")
+            self.write("for (auto &&{} : {}) {{".format(item, iterable.code))
+            self._loop_body(node, name, cpp, elem, preamble="{} = {};".format(cpp, item))
+        else:
+            self.write("for (auto {} : {}) {{".format(cpp, iterable.code))
+            self._loop_body(node, name, cpp, elem)
 
     def _is_range(self, func):
         return isinstance(func, ast.Name) and func.id == "range" and self.scope.lookup("range") is None
@@ -480,21 +554,40 @@ class AstTranspiler:
             if abs(step_value) != 1
             else ("++" + cpp if step_value > 0 else "--" + cpp)
         )
-        self.write(
-            "for (long {} = static_cast<long>({}); {} {} {}; {}) {{".format(cpp, start.code, cpp, cmp_op, bound, incr)
-        )
+        # A variable assigned inside a nested block lives at function scope; if
+        # the loop declared its own, it would shadow that one and Python's
+        # "the loop variable is still there afterwards" would not hold.  The
+        # counter stays separate so that the visible variable keeps the last
+        # value the loop ran with rather than the bound it stopped at.
         self._record(name, ct.LONG_T)
-        self._loop_body(node, name, cpp, ct.LONG_T)
+        if name in self.hoisted:
+            counter = self.tmp("i")
+            incr = incr.replace(cpp, counter)
+            self.write(
+                "for (long {} = static_cast<long>({}); {} {} {}; {}) {{".format(
+                    counter, start.code, counter, cmp_op, bound, incr
+                )
+            )
+            self._loop_body(node, name, cpp, ct.LONG_T, preamble="{} = {};".format(cpp, counter))
+        else:
+            self.write(
+                "for (long {} = static_cast<long>({}); {} {} {}; {}) {{".format(
+                    cpp, start.code, cpp, cmp_op, bound, incr
+                )
+            )
+            self._loop_body(node, name, cpp, ct.LONG_T)
         self.indent -= 1
         self.write("}")
 
-    def _loop_body(self, node, name, cpp, elem_type):
+    def _loop_body(self, node, name, cpp, elem_type, preamble=None):
         self.indent += 1
         self.depth += 1
         self.loop_depth += 1
         if not self.flat_scope:
             self.scope = _Scope(self.scope)
         self.scope.names[name] = emit.Value(cpp, elem_type)
+        if preamble is not None:
+            self.write(preamble)
         for stmt in node.body:
             self.exec_stmt(stmt)
         if not self.flat_scope:
@@ -550,6 +643,8 @@ class AstTranspiler:
         return emit.literal(node.value, self.fail_at(node))
 
     def ex_Name(self, node):
+        if self.depth == 0:
+            self.read_at_top.add(node.id)
         local = self.scope.lookup(node.id)
         if local is not None:
             return local
@@ -751,7 +846,7 @@ class AstTranspiler:
                 raise_unsupported(self.func, node, "'{}' expects an array".format(ref.path))
             return emit.array_method(args[0], _REDUCTION_METHOD[emit.FREE_REDUCTIONS[name]], [], fail)
         if name == "where" and len(args) == 3:
-            return emit.ternary(args[0], args[1], args[2], fail)
+            return emit.ternary(args[0], args[1], args[2], fail, elementwise=True)
         if name in ("sqrt", "fabs") and len(args) == 1:
             return emit.unary_function(emit.UNARY_FUNCTIONS[name], args[0], fail)
         raise_unsupported(
@@ -810,9 +905,25 @@ class AstTranspiler:
             "would need a dynamic container.",
         )
 
-    ex_Tuple = ex_List
-    ex_Dict = ex_List
-    ex_Set = ex_List
+    def ex_Tuple(self, node):
+        raise_unsupported(
+            self.func,
+            node,
+            "Tuple literals are not supported",
+            hint="A translated function has exactly one value of one C++ type; there is nothing "
+            "to translate a tuple to.",
+        )
+
+    def ex_Dict(self, node):
+        raise_unsupported(
+            self.func,
+            node,
+            "Dict literals are not supported",
+            hint="Use an array indexed by an integer, or a chain of if statements.",
+        )
+
+    def ex_Set(self, node):
+        raise_unsupported(self.func, node, "Set literals are not supported")
 
     def ex_ListComp(self, node):
         raise_unsupported(
@@ -956,7 +1067,14 @@ class AstTranspiler:
         return True
 
     def _callee_is_safe(self, func_node):
-        """True if this callee is a numpy/math function or a pure builtin."""
+        """True if this callee is a pure numpy/math function or a pure builtin.
+
+        Purity is what matters, and it is not a property of the package: the
+        whole point of numpy.random is to return something different every
+        time, and freezing one draw into the source would silently give every
+        entry the same random number.  Nothing under the impure submodules
+        below may run, and neither may anything that touches the filesystem.
+        """
         if isinstance(func_node, ast.Name) and func_node.id not in self._get_globals():
             return func_node.id in PURE_BUILTINS
         try:
@@ -964,14 +1082,23 @@ class AstTranspiler:
             obj = eval(code, dict(self._get_globals()))  # noqa: S307
         except Exception:
             return False
-        module = (getattr(obj, "__module__", "") or "").split(".")[0]
-        if module in ("numpy", "math"):
+        module = (getattr(obj, "__module__", "") or "") or ""
+        if module.split(".")[0] in ("numpy", "math"):
+            if module.split(".")[0] == "numpy" and not self._numpy_callable_is_pure(obj, module):
+                return False
             return True
         # A bound method of a numpy object, as in np.array([...]).astype(...)
         receiver = getattr(obj, "__self__", None)
         if receiver is not None:
             return (type(receiver).__module__ or "").split(".")[0] == "numpy"
         return False
+
+    @staticmethod
+    def _numpy_callable_is_pure(obj, module):
+        for impure in _IMPURE_NUMPY_MODULES:
+            if module == impure or module.startswith(impure + "."):
+                return False
+        return getattr(obj, "__name__", "") not in _IMPURE_NUMPY_FUNCTIONS
 
     def _fold_safe(self, node):
         """True if evaluating this expression at declaration time is harmless.
@@ -1001,6 +1128,28 @@ class AstTranspiler:
         except Exception:
             return None
         return emit.constant_value(obj, self.fail_at(node))
+
+
+#: numpy submodules whose whole point is to return something different on
+#: every call, or to read the outside world.  Nothing in them may be folded.
+_IMPURE_NUMPY_MODULES = ("numpy.random", "numpy.random.mtrand", "numpy.testing")
+
+#: numpy functions that touch the filesystem.
+_IMPURE_NUMPY_FUNCTIONS = frozenset(
+    [
+        "load",
+        "loadtxt",
+        "save",
+        "savetxt",
+        "savez",
+        "savez_compressed",
+        "fromfile",
+        "tofile",
+        "genfromtxt",
+        "memmap",
+        "fromregex",
+    ]
+)
 
 
 class _BoundMethod:
