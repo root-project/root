@@ -21,25 +21,40 @@
 typedef unsigned long DWORD;
 typedef void* HANDLE;
 
-typedef ULongptr_t XID;
-typedef XID GdkDrawable;
-typedef XID GdkCursor;
-typedef XID GdkColormap;
-typedef XID GdkWindow;
-typedef XID GdkVisual;
-
-struct GdkGC;
-struct GdkGCValues;
-struct GdkWindowAttr;
-struct GdkColor { int pixel,red,green,blue; };
-struct GdkEvent;
-struct GdkImage;
-struct GdkPoint;
-struct GdkRectangle;
+struct _GdkDrawable;
+typedef struct _GdkDrawable    GdkDrawable;
+struct _GdkWindow;
+typedef struct _GdkWindow      GdkWindow;
+struct _GdkVisual;
+typedef struct _GdkVisual      GdkVisual;
+struct _GdkColormap;
+typedef struct _GdkColormap    GdkColormap;
+struct _GdkCursor;
+typedef struct _GdkCursor      GdkCursor;
+struct _GdkGC;
+typedef struct _GdkGC          GdkGC;
+struct _GdkImage;
+typedef struct _GdkImage       GdkImage;
+union _GdkEvent;
+typedef union _GdkEvent        GdkEvent;
+struct _GdkGCValues;
+typedef struct _GdkGCValues    GdkGCValues;
+struct _GdkWindowAttr;
+typedef struct _GdkWindowAttr  GdkWindowAttr;
+struct _GdkColor;
+typedef struct _GdkColor       GdkColor;
+struct _GdkPoint;
+typedef struct _GdkPoint       GdkPoint;
+struct _GdkRectangle;
+typedef struct _GdkRectangle   GdkRectangle;
+struct _GdkColor { unsigned long pixel; unsigned short red; unsigned short green; unsigned short blue; };
+typedef struct _GdkColor       GdkColor;
+struct _GdkPoint;
+typedef struct _GdkPoint       GdkPoint;
+struct _GdkRectangle;
+typedef struct _GdkRectangle   GdkRectangle;
 
 typedef unsigned long KeySym;
-
-//#define None 0 /* universal null resource or null atom */
 
 struct XWindow_t;
 
