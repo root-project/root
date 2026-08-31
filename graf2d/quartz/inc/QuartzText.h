@@ -48,7 +48,6 @@ public:
    ~TextLine();
 
    void GetBounds(UInt_t &w, UInt_t &h)const;
-   void GetAscentDescent(Int_t &asc, Int_t &desc)const;
 
    void DrawLine(CGContextRef ctx) const;
    void DrawLine(CGContextRef ctx, Double_t x, Double_t y, const TAttText &att) const;

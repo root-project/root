@@ -56,19 +56,6 @@ public:
    //Select the existing font or create a new one and select it.
    CTFontRef SelectFont(Font_t fontIndex, Float_t fontSize);
 
-   //Typographical bounds (whatever it means),
-   //for the current selected font and text.
-   void GetTextBounds(CTFontRef fontref, UInt_t &w, UInt_t &h, const char *text)const;
-   void GetTextBounds(CTFontRef fontref, UInt_t &w, UInt_t &h, const std::vector<UniChar> & unichars)const;
-   //
-   double GetAscent(CTFontRef fontref) const;
-   double GetAscent(CTFontRef fontref, const char *text) const;
-   double GetAscent(CTFontRef fontref, const std::vector<UniChar> &unichars) const;
-   double GetDescent(CTFontRef fontref) const;
-   double GetDescent(CTFontRef fontref, const char *text) const;
-   double GetDescent(CTFontRef fontref, const std::vector<UniChar> &unichars) const;
-   double GetLeading()const;
-
 private:
 
    //We have "two symbolic" fonts, both of them use the same symbol.ttf (index 11),
