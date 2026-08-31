@@ -23,6 +23,7 @@ static inline size_t CALL_NARGS(size_t nargs) { return nargs & ~DIRECT_CALL; }
 
 // Standard
 #include <algorithm> // for std::count, std::remove
+#include <array>
 #include <cassert>
 #include <csignal>
 #include <cstdlib> // for getenv
@@ -751,13 +752,41 @@ interop::TCppScope_t interop::GetActualClass(TCppScope_t klass,
                                              TCppObject_t obj) {
   std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
 
-  if (!Cpp::IsClassPolymorphic(klass))
+  if (!obj || !Cpp::IsClassPolymorphic(klass))
     return klass;
 
-  const std::type_info* typ = &typeid(*(AutoCastRTTI*)obj.data);
+  // Skip the std stream hierarchy: autocasting it is not useful, and on MSVC
+  // its virtual inheritance puts the vbptr, not a vfptr, at offset 0, so the
+  // RTTI probe below follows a garbage pointer.
+  static const std::array<TCppScope_t, 3> stream_bases = {
+      interop::GetScope("std::ios_base"), interop::GetScope("std::streambuf"),
+      interop::GetScope("std::wstreambuf")};
+  for (TCppScope_t base : stream_bases)
+    if (base && interop::IsSubclass(klass, base))
+      return klass;
 
+  const std::type_info* typ = &typeid(*(AutoCastRTTI*)obj.data);
+  if (!typ)
+    return klass;
+
+#ifdef _WIN32
+  // MSVC's type_info::name() is already human-readable, but prefixed with
+  // the tag kind ("class TWinNTSystem"), which plain name lookup does not
+  // accept. Strip the prefix by hand; respelling through type resolution
+  // would JIT an uncached declaration per downcast. Template arguments
+  // keep their tags, which is harmless as templated names go through type
+  // resolution rather than plain lookup.
+  std::string demangled_name = typ->name();
+  for (const char* prefix : {"class ", "struct ", "union ", "enum "}) {
+    if (demangled_name.compare(0, strlen(prefix), prefix) == 0) {
+      demangled_name = demangled_name.substr(strlen(prefix));
+      break;
+    }
+  }
+#else
   std::string mangled_name = typ->name();
   std::string demangled_name = Cpp::Demangle(mangled_name);
+#endif
 
   if (TCppScope_t scope = interop::GetScope(demangled_name))
     return scope;
