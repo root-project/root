@@ -3,9 +3,12 @@
 
 #include <RooAbsPdf.h>
 #include <RooArgSet.h>
+#include <RooCurve.h>
 #include <RooDataSet.h>
+#include <RooGlobalFunc.h>
 #include <RooHelpers.h>
 #include <RooMCStudy.h>
+#include <RooPlot.h>
 #include <RooRandom.h>
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
@@ -13,8 +16,10 @@
 #include "gtest_wrapper.h"
 
 #include <algorithm>
+#include <limits>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -40,6 +45,38 @@ std::vector<double> getColumn(RooDataSet const &data, const char *name)
       out.push_back(var->getVal());
    }
    return out;
+}
+
+/// Returns the peak position and the width of the last curve on the frame,
+/// estimated from the full width at half maximum. Used to validate the
+/// Gaussian that FitGauss() fits to the plotted distribution.
+std::pair<double, double> curvePeakAndWidth(RooPlot &frame)
+{
+   // Not frame.getCurve(), because that returns the last item on the frame,
+   // which is the box with the fit parameters and not the fitted curve.
+   auto *curve = static_cast<RooCurve *>(frame.findObject(nullptr, RooCurve::Class()));
+   if (curve == nullptr) {
+      throw std::runtime_error("frame has no curve");
+   }
+   const int nPoints = curve->GetN();
+   double yMax = -std::numeric_limits<double>::infinity();
+   double xPeak = 0.0;
+   for (int i = 0; i < nPoints; ++i) {
+      if (curve->GetPointY(i) > yMax) {
+         yMax = curve->GetPointY(i);
+         xPeak = curve->GetPointX(i);
+      }
+   }
+   double xLo = std::numeric_limits<double>::infinity();
+   double xHi = -std::numeric_limits<double>::infinity();
+   for (int i = 0; i < nPoints; ++i) {
+      if (curve->GetPointY(i) >= 0.5 * yMax) {
+         xLo = std::min(xLo, curve->GetPointX(i));
+         xHi = std::max(xHi, curve->GetPointX(i));
+      }
+   }
+   // 2 * sqrt(2 * log(2)) converts the full width at half maximum to a sigma
+   return {xPeak, (xHi - xLo) / 2.3548200450309493};
 }
 
 } // namespace
@@ -122,6 +159,100 @@ TEST(RooMCStudy, GenParDataSetInternalConstraints)
    EXPECT_EQ(genParData->numEntries(), nToys);
    EXPECT_NE(genParData->get()->find("s"), nullptr);
    EXPECT_NE(mcstudy.fitParDataSet().get()->find("s_gen"), nullptr);
+}
+
+/// Covers GitHub issue #12387: the FitGauss() command argument should work
+/// not only for plotPull(), but also for the functions that plot the fitted
+/// values, their errors and the NLL distribution, because users need Gaussian
+/// fits of the parameter distribution for linearity tests.
+TEST(RooMCStudy, FitGauss)
+{
+   RooRandom::randomGenerator()->SetSeed(4357);
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING};
+
+   RooWorkspace ws;
+   fillModel(ws);
+
+   RooMCStudy mcstudy{*ws.pdf("pdf"), *ws.var("x"), RooFit::Silence(), RooFit::FitOptions(RooFit::PrintLevel(-1))};
+   mcstudy.generateAndFit(50, 200);
+
+   // Without FitGauss(), the frame only contains the data histogram
+   std::unique_ptr<RooPlot> frame1{mcstudy.plotParam(*ws.var("s"), RooFit::Bins(40))};
+   ASSERT_NE(frame1, nullptr);
+   EXPECT_EQ(frame1->numItems(), 1);
+
+   // With FitGauss(), the fitted Gaussian curve and the box with the fitted
+   // mean and sigma are added to the frame
+   std::unique_ptr<RooPlot> frame2{mcstudy.plotParam(*ws.var("s"), RooFit::Bins(40), RooFit::FitGauss(true))};
+   ASSERT_NE(frame2, nullptr);
+   EXPECT_EQ(frame2->numItems(), 3);
+
+   // FitGauss() is also supported by plotError() and plotNLL(), which are
+   // implemented via plotParam()
+   std::unique_ptr<RooPlot> frame3{mcstudy.plotError(*ws.var("s"), RooFit::Bins(40), RooFit::FitGauss(true))};
+   ASSERT_NE(frame3, nullptr);
+   EXPECT_EQ(frame3->numItems(), 3);
+
+   std::unique_ptr<RooPlot> frame4{mcstudy.plotNLL(RooFit::Bins(40), RooFit::FitGauss(true))};
+   ASSERT_NE(frame4, nullptr);
+   EXPECT_EQ(frame4->numItems(), 3);
+
+   // The existing FitGauss() support in plotPull() must be unchanged
+   std::unique_ptr<RooPlot> frame5{mcstudy.plotPull(*ws.var("s"), RooFit::Bins(40), RooFit::FitGauss(true))};
+   ASSERT_NE(frame5, nullptr);
+   EXPECT_EQ(frame5->numItems(), 3);
+}
+
+/// Also covers GitHub issue #12387: the Gaussian that FitGauss() adds must
+/// actually describe the plotted distribution. The parameters of that Gaussian
+/// are seeded from the moments of the distribution, because seeding them from
+/// the frame range instead fails in two ways: the fitted width runs into a
+/// limit if the distribution is much narrower than the frame, and the fitted
+/// mean is off if the frame range can't be represented precisely enough in the
+/// RooWorkspace factory expression that builds the Gaussian.
+TEST(RooMCStudy, FitGaussSeeding)
+{
+   // Both the width of the frame relative to the distribution and the absolute
+   // scale of the fitted parameter are relevant here, so they are scanned.
+   // The offset 1000000.5 is deliberately a value that a low-precision string
+   // representation of the frame range would not resolve.
+   for (double offset : {0.0, 1000000.5}) {
+      for (bool wideFrame : {false, true}) {
+         RooRandom::randomGenerator()->SetSeed(4357);
+         RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING};
+
+         RooWorkspace ws;
+         ws.factory("x[" + std::to_string(offset - 10.0) + ", " + std::to_string(offset + 10.0) + "]");
+         ws.factory("Gaussian::pdf(x, m[" + std::to_string(offset) + ", " + std::to_string(offset - 5.0) + ", " +
+                    std::to_string(offset + 5.0) + "], s[1.0, 0.1, 5.0])");
+
+         RooMCStudy mcstudy{*ws.pdf("pdf"), *ws.var("x"), RooFit::Silence(),
+                            RooFit::FitOptions(RooFit::PrintLevel(-1))};
+         // Many events per toy, so that the distribution of the fitted parameter is
+         // much narrower than the wide frame range below.
+         mcstudy.generateAndFit(100, 5000);
+
+         auto const &fitParData = mcstudy.fitParDataSet();
+         auto const &mFit = static_cast<RooRealVar const &>(*fitParData.get()->find("m"));
+         const double dataMean = fitParData.mean(mFit);
+         const double dataSigma = fitParData.sigma(mFit);
+
+         // Without FrameRange(), the frame is auto-ranged around the
+         // distribution. With it, the frame is much wider than the distribution.
+         RooCmdArg frameRange = wideFrame ? RooFit::Range(offset - 5.0, offset + 5.0) : RooCmdArg::none();
+         std::unique_ptr<RooPlot> frame{
+            mcstudy.plotParam(*ws.var("m"), RooFit::Bins(40), RooFit::FitGauss(true), frameRange)};
+         ASSERT_NE(frame, nullptr);
+         ASSERT_EQ(frame->numItems(), 3);
+
+         auto const [peak, width] = curvePeakAndWidth(*frame);
+         const std::string ctx =
+            "offset = " + std::to_string(offset) + ", wideFrame = " + std::to_string(wideFrame);
+         EXPECT_NEAR(peak, dataMean, 0.5 * dataSigma) << ctx;
+         EXPECT_GT(width, 0.5 * dataSigma) << ctx;
+         EXPECT_LT(width, 2.0 * dataSigma) << ctx;
+      }
+   }
 }
 
 /// Covers the fitParData/genParData size mismatch from the discussion in

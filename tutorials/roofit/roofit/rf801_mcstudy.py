@@ -80,8 +80,10 @@ mcstudy.generateAndFit(1000)
 # ------------------------------------------------
 
 # Make plots of the distributions of mean, error on mean and the pull of
-# mean
-frame1 = mcstudy.plotParam(mean, Bins=40)
+# mean. The FitGauss option overlays a Gaussian fit of the plotted
+# distribution, which is for example useful for linearity studies of the
+# fitted parameter.
+frame1 = mcstudy.plotParam(mean, Bins=40, FitGauss=True)
 frame2 = mcstudy.plotError(mean, Bins=40)
 frame3 = mcstudy.plotPull(mean, Bins=40, FitGauss=True)
 
