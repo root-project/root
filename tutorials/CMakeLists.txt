@@ -785,6 +785,7 @@ if(pyroot)
       analysis/dataframe/df017_vecOpsHEP.py
       analysis/dataframe/df026_AsNumpyArrays.py
       analysis/dataframe/df032_RDFFromNumpy.py
+      analysis/dataframe/df038_NumbaDeclare.py
       hist/hist010_TH1_two_scales.py
       math/fit/NumericalMinimization.py
       math/fit/combinedFit.py
@@ -815,10 +816,6 @@ if(pyroot)
       hist/hist015_TH1_read_and_draw_uhi.py
       machine_learning/ml_dataloader_Higgs_Classification.py
   )
-
-  file(GLOB requires_numba   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-      analysis/dataframe/df038_NumbaDeclare.py
-      analysis/dataframe/df101_h1Analysis.py)
 
   file(GLOB requires_pandas  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       analysis/dataframe/df026_AsNumpyArrays.py
@@ -869,7 +866,6 @@ if(pyroot)
 
   set(fixtureLists
       requires_keras
-      requires_numba
       requires_numpy
       requires_pandas
       requires_sklearn
