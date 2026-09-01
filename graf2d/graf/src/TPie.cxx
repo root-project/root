@@ -359,72 +359,52 @@ void TPie::DrawGhost()
 
    auto &parent = *gPad;
    auto pp = parent.GetPainter();
-   pp->SetAttLine({ kBlack, 1 ,2 });
+   pp->SetAttLine({ kBlack, 1, 2 });
 
    // XY metric
-   Double_t radXY = !fIs3D ? 1. : TMath::Sin(fAngle3D/180.*TMath::Pi());
+   Double_t radXY = !fIs3D ? 1. : TMath::Sin(fAngle3D/180.*TMath::Pi()), x0 = 0, y0 = 0;
 
-   for (Int_t i = 0; i < fNvals && fIs3D;++i) {
+   auto drawLine = [pp, &parent, &x0, &y0](double x1, double y1, double x2, double y2) {
+      x1 = parent.XtoPad(x0 + x1);
+      x2 = parent.XtoPad(x0 + x2);
+      y1 = parent.YtoPad(y0 + y1);
+      y2 = parent.YtoPad(y0 + y2);
+      pp->DrawLine(x1, y1, x2, y2);
+
+   };
+
+   for(Int_t loop3d = fIs3D ? 1 : 0; loop3d >= 0; loop3d--)
+   for (Int_t i = 0; i < fNvals; ++i) {
       Float_t minphi = (fSlices[i*2]+gAngularOffset+.5)*TMath::Pi()/180.;
       Float_t avgphi = (fSlices[i*2+1]+gAngularOffset)*TMath::Pi()/180.;
       Float_t maxphi = (fSlices[i*2+2]+gAngularOffset-.5)*TMath::Pi()/180.;
 
       Double_t radOffset = (i == gCurrent_slice ? gRadiusOffset : fPieSlices[i]->GetRadiusOffset());
-      Double_t x0 = gX+radOffset*TMath::Cos(avgphi);
-      Double_t y0 = gY+radOffset*TMath::Sin(avgphi)*radXY-fHeight;
+      x0 = gX + radOffset*TMath::Cos(avgphi);
+      y0 = gY + radOffset*TMath::Sin(avgphi)*radXY - loop3d * fHeight; // draw layer beyond
 
-      pp->DrawLine(x0, y0, x0+gRadius*TMath::Cos(minphi), y0+gRadius*TMath::Sin(minphi)*radXY);
+      drawLine(0, 0, gRadius*TMath::Cos(minphi), gRadius*TMath::Sin(minphi)*radXY);
 
-      Int_t ndiv = 10;
-      Double_t dphi = (maxphi-minphi)/ndiv;
-
-      if (dphi>.15) ndiv = (Int_t) ((maxphi-minphi)/.15);
-      dphi = (maxphi-minphi)/ndiv;
+      Double_t dphi = (maxphi - minphi);
+      Int_t ndiv = dphi > 1.5 ? (Int_t) (dphi/.15) : 10;
+      dphi = dphi /ndiv;
 
       // Loop to draw the arc
-      for (Int_t j=0;j<ndiv;++j) {
-         Double_t phi = minphi+dphi*j;
-         pp->DrawLine(x0+gRadius*TMath::Cos(phi), y0+gRadius*TMath::Sin(phi)*radXY,
-                      x0+gRadius*TMath::Cos(phi+dphi), y0+gRadius*TMath::Sin(phi+dphi)*radXY);
+      for (Int_t j = 0; j < ndiv; ++j) {
+         Double_t phi = minphi + dphi * j;
+         drawLine(gRadius*TMath::Cos(phi), gRadius*TMath::Sin(phi)*radXY,
+                  gRadius*TMath::Cos(phi+dphi), gRadius*TMath::Sin(phi+dphi)*radXY);
       }
 
-      pp->DrawLine(x0+gRadius*TMath::Cos(maxphi), y0+gRadius*TMath::Sin(maxphi)*radXY, x0, y0);
+      drawLine(gRadius*TMath::Cos(maxphi), gRadius*TMath::Sin(maxphi)*radXY, 0, 0);
 
-      pp->DrawLine(x0, y0, x0, y0+fHeight);
-      pp->DrawLine(x0+gRadius*TMath::Cos(minphi), y0+gRadius*TMath::Sin(minphi)*radXY,
-                   x0+gRadius*TMath::Cos(minphi), y0+gRadius*TMath::Sin(minphi)*radXY+fHeight);
-      pp->DrawLine(x0+gRadius*TMath::Cos(maxphi), y0+gRadius*TMath::Sin(maxphi)*radXY,
-                   x0+gRadius*TMath::Cos(maxphi), y0+gRadius*TMath::Sin(maxphi)*radXY+fHeight);
-   }
-
-
-   // Loop over slices
-   for (Int_t i=0;i<fNvals;++i) {
-      Float_t minphi = (fSlices[i*2]+gAngularOffset+.5)*TMath::Pi()/180.;
-      Float_t avgphi = (fSlices[i*2+1]+gAngularOffset)*TMath::Pi()/180.;
-      Float_t maxphi = (fSlices[i*2+2]+gAngularOffset-.5)*TMath::Pi()/180.;
-
-      Double_t radOffset = (i == gCurrent_slice ? gRadiusOffset : fPieSlices[i]->GetRadiusOffset());
-      Double_t x0 = gX+radOffset*TMath::Cos(avgphi);
-      Double_t y0 = gY+radOffset*TMath::Sin(avgphi)*radXY;
-
-      pp->DrawLine(x0, y0, x0+gRadius*TMath::Cos(minphi), y0+gRadius*TMath::Sin(minphi)*radXY);
-
-
-      Int_t ndiv = 10;
-      Double_t dphi = (maxphi-minphi)/ndiv;
-
-      if (dphi>.15) ndiv = (Int_t) ((maxphi-minphi)/.15);
-      dphi = (maxphi-minphi)/ndiv;
-
-      // Loop to draw the arc
-      for (Int_t j=0;j<ndiv;++j) {
-         Double_t phi = minphi+dphi*j;
-         pp->DrawLine(x0+gRadius*TMath::Cos(phi), y0+gRadius*TMath::Sin(phi)*radXY,
-                      x0+gRadius*TMath::Cos(phi+dphi), y0+gRadius*TMath::Sin(phi+dphi)*radXY);
+      if (loop3d) {
+         drawLine(0, 0, 0, fHeight);
+         drawLine(gRadius*TMath::Cos(minphi), gRadius*TMath::Sin(minphi)*radXY,
+                  gRadius*TMath::Cos(minphi), gRadius*TMath::Sin(minphi)*radXY+fHeight);
+         drawLine(gRadius*TMath::Cos(maxphi), gRadius*TMath::Sin(maxphi)*radXY,
+                  gRadius*TMath::Cos(maxphi), gRadius*TMath::Sin(maxphi)*radXY+fHeight);
       }
-
-      pp->DrawLine(x0+gRadius*TMath::Cos(maxphi), y0+gRadius*TMath::Sin(maxphi)*radXY, x0, y0);
    }
 }
 
