@@ -164,6 +164,12 @@ def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
     dataCanvas.Draw()
     dataCanvas.SaveAs("3.png")
 
+    # The profile likelihood and the NLL are not needed anymore. Delete them
+    # already here, so that the NLL evaluation machinery is not torn down at
+    # interpreter shutdown, where the order of cleanups is less controlled.
+    del pll
+    del nll
+
     # --------------------------------------------------------------
     # show use of Feldman-Cousins utility in RooStats
     # set the distribution creator, which encodes the test statistic
