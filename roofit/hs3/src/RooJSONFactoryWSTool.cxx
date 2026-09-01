@@ -736,6 +736,23 @@ void sortByName(T &coll)
    std::sort(coll.begin(), coll.end(), [](auto &l, auto &r) { return strcmp(l->GetName(), r->GetName()) < 0; });
 }
 
+/// Check whether an object is a top-level object of the workspace, i.e. not a
+/// component of some other workspace object. Only clients that are part of the
+/// workspace count: RooFit also registers evaluation artifacts as clients,
+/// like the normalization integral that RooAbsPdf caches after
+/// getVal(normSet), or the integral returned by createIntegral(). These live
+/// outside the workspace and are not evidence that the object is a sub-node of
+/// a bigger model (see https://github.com/root-project/root/issues/23221).
+bool isTopLevel(RooAbsArg const &arg, RooWorkspace const &ws)
+{
+   for (RooAbsArg const *client : arg.clients()) {
+      if (ws.components().containsInstance(*client)) {
+         return false;
+      }
+   }
+   return true;
+}
+
 } // namespace
 
 RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
@@ -1737,7 +1754,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    // export all toplevel pdfs
    std::vector<RooAbsPdf *> allpdfs;
    for (auto &arg : _workspace.allPdfs()) {
-      if (!arg->hasClients()) {
+      if (isTopLevel(*arg, _workspace)) {
          if (auto *pdf = dynamic_cast<RooAbsPdf *>(arg)) {
             allpdfs.push_back(pdf);
          }
@@ -1750,7 +1767,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    // export all toplevel functions
    std::vector<RooAbsReal *> allfuncs;
    for (auto &arg : _workspace.allFunctions()) {
-      if (!arg->hasClients()) {
+      if (isTopLevel(*arg, _workspace)) {
          if (auto *func = dynamic_cast<RooAbsReal *>(arg)) {
             allfuncs.push_back(func);
          }
@@ -2257,13 +2274,13 @@ RooWorkspace RooJSONFactoryWSTool::cleanWS(const RooWorkspace &ws, bool onlyMode
    } else {
 
       for (auto *pdf : ws.allPdfs()) {
-         if (!pdf->hasClients()) {
+         if (isTopLevel(*pdf, ws)) {
             tmpWS.import(*pdf, RooFit::RecycleConflictNodes(true));
          }
       }
 
       for (auto *func : ws.allFunctions()) {
-         if (!func->hasClients()) {
+         if (isTopLevel(*func, ws)) {
             tmpWS.import(*func, RooFit::RecycleConflictNodes(true));
          }
       }
