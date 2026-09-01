@@ -8,6 +8,7 @@
 #include <TGeoMedium.h>
 #include <TGeoNavigator.h>
 #include <TGeoNode.h>
+#include <TGeoPatternFinder.h>
 #include <TGeoPgon.h>
 #include <TGeoTube.h>
 #include <TGeoVolume.h>
@@ -78,6 +79,39 @@ TGeoManager *MakeGeometry()
 
    geom->CloseGeometry();
    return geom;
+}
+
+struct GeometryWithFinders {
+   TGeoManager *manager;
+   TGeoPatternFinder *linearFinder;
+   TGeoPatternFinder *radialFinder;
+};
+
+/// Build two divided volumes without touching their lazily-created matrices.
+GeometryWithFinders MakeDividedGeometry(const char *name)
+{
+   auto *manager = new TGeoManager(name, name);
+   auto *material = new TGeoMaterial("vacuum", 0., 0., 0.);
+   auto *medium = new TGeoMedium("vacuum", 1, material);
+   auto *top = manager->MakeBox("top", medium, 100., 100., 100.);
+   manager->SetTopVolume(top);
+
+   auto *slab = manager->MakeBox("slab", medium, 20., 5., 5.);
+   slab->Divide("linear_slice", 1, 10, -20., 4.);
+   top->AddNode(slab, 1);
+
+   auto *tube = manager->MakeTube("tube", medium, 1., 20., 10.);
+   tube->Divide("radial_slice", 1, 4, 1., 19. / 4.);
+   top->AddNode(tube, 1, new TGeoTranslation(0., 40., 0.));
+
+   manager->CloseGeometry();
+   return {manager, slab->GetFinder(), tube->GetFinder()};
+}
+
+void MakeCurrent(TGeoManager *manager)
+{
+   gGeoManager = manager;
+   gGeoIdentity = static_cast<TGeoIdentity *>(manager->GetListOfMatrices()->At(0));
 }
 
 struct Ray {
@@ -185,4 +219,36 @@ TEST(Geometry, MultiThreadedNavigationMatchesSerial)
    }
 
    delete geom;
+}
+
+TEST(Geometry, PatternMatricesBelongToOwningManager)
+{
+   auto geometryA = MakeDividedGeometry("pattern_owner_A");
+
+   // Keep A alive while constructing B. This is how applications that cache several
+   // managers switch away from the current geometry before creating another one.
+   gGeoManager = nullptr;
+   gGeoIdentity = nullptr;
+   auto geometryB = MakeDividedGeometry("pattern_owner_B");
+
+   // First-touch A while B is current. Matrix ownership must follow the divided volume,
+   // not the ambient globals.
+   TGeoMatrix *matrix = geometryA.linearFinder->GetMatrix();
+   ASSERT_NE(matrix, nullptr);
+   EXPECT_GE(geometryA.manager->GetListOfMatrices()->IndexOf(matrix), 0);
+   EXPECT_LT(geometryB.manager->GetListOfMatrices()->IndexOf(matrix), 0);
+
+   TGeoMatrix *identity = geometryA.radialFinder->GetMatrix();
+   EXPECT_EQ(identity, geometryA.manager->GetListOfMatrices()->At(0));
+   EXPECT_NE(identity, geometryB.manager->GetListOfMatrices()->At(0));
+
+   delete geometryB.manager;
+   MakeCurrent(geometryA.manager);
+
+   // Under ASan this dereference also catches a matrix that was wrongly owned and deleted by B.
+   geometryA.linearFinder->cd(0);
+   EXPECT_EQ(geometryA.linearFinder->GetMatrix(), matrix);
+   EXPECT_TRUE(geometryA.radialFinder->GetMatrix()->IsIdentity());
+
+   delete geometryA.manager;
 }

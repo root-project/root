@@ -60,8 +60,14 @@ public:
 
 protected:
    void InitThreadSlot(ThreadData_t &td) const;
+   TGeoManager *GetOwnerManager() const { return fVolume ? fVolume->GetGeoManager() : nullptr; }
+   TGeoMatrix *GetOwnerIdentity() const;
+   void RegisterMatrix(TGeoMatrix *matrix) const;
 
-   enum EGeoPatternFlags { kPatternReflected = BIT(14), kPatternSpacedOut = BIT(15) };
+   enum EGeoPatternFlags {
+      kPatternReflected = BIT(14),
+      kPatternSpacedOut = BIT(15)
+   };
    Double_t fStep;      // division step length
    Double_t fStart;     // starting point on divided axis
    Double_t fEnd;       // ending point
