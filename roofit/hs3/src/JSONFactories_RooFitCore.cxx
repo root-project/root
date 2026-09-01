@@ -12,13 +12,11 @@
 
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
-#include <RooAbsCachedPdf.h>
 #include <RooAddPdf.h>
 #include <RooAddModel.h>
 #include <RooBinning.h>
 #include <RooBinSamplingPdf.h>
 #include <RooBinWidthFunction.h>
-#include <RooCategory.h>
 #include <RooDataHist.h>
 #include <RooDecay.h>
 #include <RooDerivative.h>
@@ -50,16 +48,16 @@
 #include <RooTruthModel.h>
 #include <RooGaussModel.h>
 #include <RooWrapperPdf.h>
-#include <RooWorkspace.h>
 #include <RooRealIntegral.h>
 #include <RooSpline.h>
 #include <RooUniformBinning.h>
 #include <TSpline.h>
 
 #include <TF1.h>
-#include <TH1.h>
 
 #include "JSONIOUtils.h"
+
+#include <type_traits>
 
 #include "static_execute.h"
 
@@ -374,24 +372,18 @@ bool importBinSamplingPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
-bool importRealSumPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
+template <class RooArg_t>
+bool importRealSum(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
-
-   bool extended = false;
-   if (p.has_child("extended") && p["extended"].val_bool()) {
-      extended = true;
+   RooArgList samples = tool->requestArgList<RooAbsReal>(p, "samples");
+   RooArgList coefs = tool->requestArgList<RooAbsReal>(p, "coefficients");
+   if constexpr (std::is_same_v<RooArg_t, RooRealSumPdf>) {
+      const bool extended = p.has_child("extended") && p["extended"].val_bool();
+      tool->wsEmplace<RooRealSumPdf>(name, samples, coefs, extended);
+   } else {
+      tool->wsEmplace<RooArg_t>(name, samples, coefs);
    }
-   tool->wsEmplace<RooRealSumPdf>(name, tool->requestArgList<RooAbsReal>(p, "samples"),
-                                  tool->requestArgList<RooAbsReal>(p, "coefficients"), extended);
-   return true;
-}
-
-bool importRealSumFunc(RooJSONFactoryWSTool *tool, const JSONNode &p)
-{
-   std::string name(RooJSONFactoryWSTool::name(p));
-   tool->wsEmplace<RooRealSumFunc>(name, tool->requestArgList<RooAbsReal>(p, "samples"),
-                                   tool->requestArgList<RooAbsReal>(p, "coefficients"));
    return true;
 }
 
@@ -624,9 +616,7 @@ bool importMultiVarGaussian(RooJSONFactoryWSTool *tool, const JSONNode &p)
       }
    } else {
       std::vector<double> variances;
-      for (const auto &v : p["standard_deviations"].children()) {
-         variances.push_back(v.val_double());
-      }
+      variances << p["standard_deviations"];
       covmat.ResizeTo(variances.size(), variances.size());
       int i = 0;
       for (const auto &row : p["correlations"].children()) {
@@ -643,44 +633,14 @@ bool importMultiVarGaussian(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
+/// Read the binning variables from the "axes" node, ordered like in `varList`.
 RooArgList readBinning(const JSONNode &topNode, const RooArgList &varList)
 {
-   // Temporary map from variable name → RooRealVar
-   std::map<std::string, std::unique_ptr<RooRealVar>> varMap;
-
-   // Build variables from JSON
-   for (const JSONNode &node : topNode["axes"].children()) {
-      const std::string name = node["name"].val();
-      std::unique_ptr<RooRealVar> obs;
-
-      if (node.has_child("edges")) {
-         std::vector<double> edges;
-         for (const auto &bound : node["edges"].children()) {
-            edges.push_back(bound.val_double());
-         }
-         obs = std::make_unique<RooRealVar>(name.c_str(), name.c_str(), edges.front(), edges.back());
-         RooBinning bins(obs->getMin(), obs->getMax());
-         for (auto b : edges)
-            bins.addBoundary(b);
-         obs->setBinning(bins);
-      } else {
-         obs = std::make_unique<RooRealVar>(name.c_str(), name.c_str(), node["min"].val_double(),
-                                            node["max"].val_double());
-         obs->setBins(node["nbins"].val_int());
-      }
-
-      varMap[name] = std::move(obs);
-   }
-
-   // Now build the final list following the order in varList
+   RooArgSet axes = RooJSONFactoryWSTool::readAxes(topNode);
    RooArgList vars;
-   for (auto *refVar : dynamic_range_cast<RooRealVar *>(varList)) {
-      if (!refVar)
-         continue;
-
-      auto it = varMap.find(refVar->GetName());
-      if (it != varMap.end()) {
-         vars.addOwned(std::move(it->second)); // preserve ownership
+   for (RooAbsArg *refVar : varList) {
+      if (RooAbsArg *axis = axes.find(*refVar)) {
+         vars.addClone(*axis);
       }
    }
    return vars;
@@ -737,13 +697,8 @@ bool importSpline(RooJSONFactoryWSTool *tool, const JSONNode &p)
    // Read knots
    std::vector<double> x0;
    std::vector<double> y0;
-   x0.reserve(p["x0"].num_children());
-   y0.reserve(p["y0"].num_children());
-
-   for (const auto &v : p["x0"].children())
-      x0.push_back(v.val_double());
-   for (const auto &v : p["y0"].children())
-      y0.push_back(v.val_double());
+   x0 << p["x0"];
+   y0 << p["y0"];
 
    if (x0.size() != y0.size()) {
       RooJSONFactoryWSTool::error("x0/y0 size mismatch in '" + name + "': x0 has " + std::to_string(x0.size()) +
@@ -774,22 +729,16 @@ bool exportAddPdf(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem,
    return true;
 }
 
-bool exportRealSumPdf(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+template <class RooArg_t>
+bool exportRealSum(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
 {
-   const RooRealSumPdf *pdf = static_cast<const RooRealSumPdf *>(func);
+   auto const *pdf = static_cast<const RooArg_t *>(func);
    elem["type"] << key;
    RooJSONFactoryWSTool::fillSeq(elem["samples"], pdf->funcList());
    RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf->coefList());
-   elem["extended"] << (pdf->extendMode() != RooAbsPdf::CanNotBeExtended);
-   return true;
-}
-
-bool exportRealSumFunc(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
-{
-   const RooRealSumFunc *pdf = static_cast<const RooRealSumFunc *>(func);
-   elem["type"] << key;
-   RooJSONFactoryWSTool::fillSeq(elem["samples"], pdf->funcList());
-   RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf->coefList());
+   if constexpr (std::is_same_v<RooArg_t, RooRealSumPdf>) {
+      elem["extended"] << (pdf->extendMode() != RooAbsPdf::CanNotBeExtended);
+   }
    return true;
 }
 
@@ -910,9 +859,11 @@ bool exportFormulaArg(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &e
 // Write the "x" reference and the coefficient list for polynomial-like
 // pdfs/funcs, including the implicit defaults below "lowestOrder" so that the
 // output is self-documenting.
-template <class Pdf>
-void writePolynomialBody(const Pdf *pdf, JSONNode &elem)
+template <class RooArg_t>
+bool exportPolynomial(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
 {
+   auto const *pdf = static_cast<const RooArg_t *>(func);
+   elem["type"] << key;
    elem["x"] << pdf->x().GetName();
    auto &coefs = elem["coefficients"].set_seq();
    for (int i = 0; i < pdf->lowestOrder(); ++i) {
@@ -921,13 +872,6 @@ void writePolynomialBody(const Pdf *pdf, JSONNode &elem)
    for (const auto &coef : pdf->coefList()) {
       coefs.append_child() << coef->GetName();
    }
-}
-
-template <class RooArg_t>
-bool exportPolynomial(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
-{
-   elem["type"] << key;
-   writePolynomialBody(static_cast<const RooArg_t *>(func), elem);
    return true;
 }
 
@@ -1244,8 +1188,8 @@ STATIC_EXECUTE([]() {
    registerImporter<importGaussModel>("gauss_resolution_model", false);
    registerImporter<importPolynomial<RooPolynomial>>("polynomial_dist", false);
    registerImporter<importPolynomial<RooPolyVar>>("polynomial", false);
-   registerImporter<importRealSumPdf>("weighted_sum_dist", false);
-   registerImporter<importRealSumFunc>("weighted_sum", false);
+   registerImporter<importRealSum<RooRealSumPdf>>("weighted_sum_dist", false);
+   registerImporter<importRealSum<RooRealSumFunc>>("weighted_sum", false);
    registerImporter<importRealIntegral>("integral", false);
    registerImporter<importDerivative>("derivative", false);
    registerImporter<importFFTConvPdf>("fft_convolution_dist", false);
@@ -1272,8 +1216,8 @@ STATIC_EXECUTE([]() {
    registerExporter<exportGaussModel>(RooGaussModel::Class(), "gauss_resolution_model", false);
    registerExporter<exportPolynomial<RooPolynomial>>(RooPolynomial::Class(), "polynomial_dist", false);
    registerExporter<exportPolynomial<RooPolyVar>>(RooPolyVar::Class(), "polynomial", false);
-   registerExporter<exportRealSumFunc>(RooRealSumFunc::Class(), "weighted_sum", false);
-   registerExporter<exportRealSumPdf>(RooRealSumPdf::Class(), "weighted_sum_dist", false);
+   registerExporter<exportRealSum<RooRealSumFunc>>(RooRealSumFunc::Class(), "weighted_sum", false);
+   registerExporter<exportRealSum<RooRealSumPdf>>(RooRealSumPdf::Class(), "weighted_sum_dist", false);
    registerExporter<exportTFnBinding>(RooTFnBinding::Class(), "generic", false);
    registerExporter<exportRealIntegral>(RooRealIntegral::Class(), "integral", false);
    registerExporter<exportDerivative>(RooDerivative::Class(), "derivative", false);
