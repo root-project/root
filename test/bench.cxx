@@ -26,7 +26,7 @@
 #include "TStopwatch.h"
 #include "TSystem.h"
 #include "TStreamerInfo.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include "TBench.h"
 

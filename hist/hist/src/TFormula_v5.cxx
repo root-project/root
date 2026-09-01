@@ -25,7 +25,7 @@
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #ifdef WIN32
 #pragma optimize("",off)

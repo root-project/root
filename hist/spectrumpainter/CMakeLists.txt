@@ -20,3 +20,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(SpectrumPainter
     Hist
     Gpad
 )
+
+target_link_libraries(SpectrumPainter PRIVATE ROOTclib)

@@ -54,7 +54,7 @@ Utility class used by the file selection dialog (TGFSDialog).
 #include "TRemoteObject.h"
 #include "TBufferFile.h"
 #include "TImage.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include <ctime>
 #include <cstdlib>

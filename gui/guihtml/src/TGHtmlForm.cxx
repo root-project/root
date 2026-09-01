@@ -43,7 +43,7 @@
 #include "TGListBox.h"
 #include "TGTextEdit.h"
 #include "TGComboBox.h"
-#include "snprintf.h"
+#include <cstdio>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Unmap any input control that is currently mapped.

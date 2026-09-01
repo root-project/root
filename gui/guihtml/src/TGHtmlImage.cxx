@@ -37,7 +37,7 @@
 #include <cstdlib>
 
 #include "TGHtml.h"
-#include "snprintf.h"
+#include <cstdio>
 #include "TImage.h"
 #include "TUrl.h"
 #include "TSocket.h"

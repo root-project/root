@@ -31,4 +31,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(FitPanel
     TreePlayer
 )
 
+target_link_libraries(FitPanel PRIVATE ROOTclib)
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)

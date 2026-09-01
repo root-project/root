@@ -76,7 +76,7 @@ It uses 2 TGColorPalette's and the TGColorPick widgets.
 #include "TROOT.h"
 #include "TMath.h"
 #include "TVirtualX.h"
-#include "snprintf.h"
+#include <cstdio>
 
 
 

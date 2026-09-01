@@ -451,7 +451,7 @@ End_Macro
 #include "ROOT/StringConv.hxx"
 #include "TVirtualMutex.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include "TBranchIMTHelper.h"
 #include "TNotifyLink.h"

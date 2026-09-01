@@ -89,7 +89,7 @@ extra libraries (Histogram, display, etc).
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include "HFitInterface.h"
 #include "Fit/BinData.h"

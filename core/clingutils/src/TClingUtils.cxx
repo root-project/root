@@ -29,7 +29,6 @@
 #include <ROOT/RConfig.hxx>
 #include <ROOT/FoundationUtils.hxx>
 #include "Rtypes.h"
-#include "strlcpy.h"
 
 #include "RStl.h"
 

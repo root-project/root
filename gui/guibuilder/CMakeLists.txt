@@ -30,3 +30,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GuiBld
     Graf
     MathCore
 )
+
+target_link_libraries(GuiBld PRIVATE ROOTclib)

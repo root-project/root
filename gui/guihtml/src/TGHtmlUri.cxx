@@ -39,7 +39,6 @@
 
 #include "TGHtml.h"
 #include "TGHtmlUri.h"
-#include "strlcpy.h"
 
 static char *StrNDup(const char *z, int n);
 static void ReplaceStr(char **pzDest, const char *zSrc);

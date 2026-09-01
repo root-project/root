@@ -23,6 +23,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hbook
     -writeEmptyRootPCM
   LIBRARIES
     minicern
+    ROOTclib
   DEPENDENCIES
     Hist
     Tree

@@ -149,7 +149,7 @@ This is especially useful for example with TVirtualMC or similar.
 #include "TPaveText.h"
 #include "TClonesArray.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include <iostream>
 

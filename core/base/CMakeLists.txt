@@ -224,6 +224,7 @@ target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
 )
 target_include_directories(Core PRIVATE ${CMAKE_SOURCE_DIR}/core/utils/inc)
+target_link_libraries(Core PRIVATE ROOTclib)
 
 if(ROOT_NEED_STDCXXFS)
     target_link_libraries(Core PRIVATE stdc++fs)

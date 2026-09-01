@@ -44,4 +44,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TreeViewer
 if(ROOT_NEED_STDCXXFS)
   target_link_libraries(TreeViewer PUBLIC stdc++fs)
 endif()
-
+target_link_libraries(TreeViewer PRIVATE ROOTclib)

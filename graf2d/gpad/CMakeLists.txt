@@ -63,4 +63,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
     Hist
 )
 
+target_link_libraries(Gpad PRIVATE ROOTclib)
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)

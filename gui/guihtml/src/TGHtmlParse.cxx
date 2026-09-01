@@ -41,7 +41,7 @@
 #include "TGHtml.h"
 #include "TGHtmlTokens.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+#include <cstdio>
 
 //----------------------------------------------------------------------
 

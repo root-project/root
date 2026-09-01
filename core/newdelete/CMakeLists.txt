@@ -19,5 +19,6 @@ ROOT_LINKER_LIBRARY(New
 )
 
 target_include_directories(New PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/res)
+target_link_libraries(New PRIVATE ROOTclib)
 
 ROOT_INSTALL_HEADERS()

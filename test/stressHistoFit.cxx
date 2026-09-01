@@ -81,7 +81,7 @@
 #include "TF1.h"
 #include "TF2.h"
 #include "TFile.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include "Math/IFunction.h"
 #include "Math/IParamFunction.h"

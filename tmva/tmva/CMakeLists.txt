@@ -400,6 +400,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
   ${EXTRA_DICT_OPTS}
 )
 
+target_link_libraries(TMVA PRIVATE ROOTclib)
+
 if(MSVC)
   target_compile_definitions(TMVA PRIVATE _USE_MATH_DEFINES)
 endif()

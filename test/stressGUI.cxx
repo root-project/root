@@ -19,7 +19,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
-#include <snprintf.h>
+#include <cstdio>
 #include <TString.h>
 #include <TROOT.h>
 #include <TClass.h>

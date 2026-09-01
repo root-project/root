@@ -33,7 +33,7 @@
 #include "TColor.h"
 #include "TTimeStamp.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+#include <cstdio>
 
 const Int_t kHori = BIT(9);
 

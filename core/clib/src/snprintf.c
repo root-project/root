@@ -28,6 +28,8 @@
       cc -g -DSNTEST `root-config --cflags` snprintf.c -o snprintf
 */
 
+#include "snprintf.h"
+
 #include <stdarg.h>
 #include <stdlib.h>
 #include <ctype.h>

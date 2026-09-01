@@ -14,7 +14,7 @@
 #include "TVirtualPad.h"
 #include "TClass.h"
 #include "TLink.h"
-#include "snprintf.h"
+#include <cstdio>
 
 
 /** \class TLink

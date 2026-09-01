@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <cstdarg>
 #include <iostream>
-#include "snprintf.h"
+#include <cstdio>
 
 #include "TError.h"
 #include "TSystem.h"

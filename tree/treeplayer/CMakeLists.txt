@@ -106,6 +106,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
   ${EXTRA_DICT_OPTS}
 )
 
+target_link_libraries(TreePlayer PRIVATE ROOTclib)
+
 if(NOT MSVC)
   target_sources(TreePlayer PRIVATE
     src/TMPWorkerTree.cxx

@@ -20,7 +20,7 @@
 
 #include "RConfigure.h"
 #include <ROOT/RConfig.hxx>
-#include "snprintf.h"
+#include <cstdio>
 #include <iostream>
 
 #ifdef WIN32

@@ -36,7 +36,7 @@
 #include "TKeyMapFile.h"
 #include "TVirtualPad.h"
 #include "Getline.h"
-#include "snprintf.h"
+#include <cstdio>
 #include <ctime>
 #include <cstring>
 #include <cstdlib>

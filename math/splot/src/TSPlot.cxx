@@ -17,7 +17,7 @@
 #include "TBrowser.h"
 #include "TClass.h"
 #include "TMath.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include <sstream>
 #include <string>

@@ -35,7 +35,7 @@ required, use TTimeStamp.
 
 #include "TBuffer.h"
 #include "Strlen.h"
-#include "snprintf.h"
+#include <cstdio>
 #include "TDatime.h"
 #include "TError.h"
 #include "Bytes.h"

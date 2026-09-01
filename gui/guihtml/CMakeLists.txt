@@ -30,3 +30,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GuiHtml
     Gui
     Graf
 )
+
+target_link_libraries(GuiHtml PRIVATE ROOTclib)

@@ -12,7 +12,7 @@
 #include <iostream>
 #include <memory>
 #include "strlcpy.h"
-#include "snprintf.h"
+#include <cstdio>
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TMath.h"

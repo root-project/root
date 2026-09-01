@@ -31,7 +31,7 @@
 #ifndef __CLING__
 
 #include <iostream>
-#include "snprintf.h"
+#include <cstdio>
 #include "TFile.h"
 #include "TMatrixD.h"
 #include "TMatrixDSym.h"

@@ -39,7 +39,7 @@
 #include "TVirtualX.h"
 #include "TUrl.h"
 #include "ThreadLocalStorage.h"
-#include "snprintf.h"
+#include <cstdio>
 #include "strlcpy.h"
 
 #include <sys/utime.h>

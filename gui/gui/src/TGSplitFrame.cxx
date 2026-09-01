@@ -23,7 +23,7 @@
 #include "TClass.h"
 #include "TList.h"
 #include "TVirtualX.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include <iostream>
 

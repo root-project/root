@@ -56,7 +56,7 @@ element type.
 #include "TProcessID.h"
 #include "TSystem.h"
 #include "TObjString.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include "TStreamer.h"
 #include "TContainerConverters.h"

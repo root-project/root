@@ -24,7 +24,7 @@
 #include "TMath.h"
 #include "THLimitsFinder.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+#include <cstdio>
 
 #include <iostream>
 #include <cmath>

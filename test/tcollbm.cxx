@@ -3,7 +3,7 @@
 
 #include <cstdlib>
 #include <iostream>
-#include "snprintf.h"
+#include <cstdio>
 #include "TCollection.h"
 #include "TSortedList.h"
 #include "TObjArray.h"
