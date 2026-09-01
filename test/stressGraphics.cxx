@@ -580,7 +580,7 @@ void start_block(const TString &title, bool is3d = false)
       batch_size = 10;
    // chrome on the CI nodes in the docker also sometime fails in 3d mode
    else if (is3d && TString("chrome") == gROOT->GetWebDisplay() && !gSystem->AccessPathName("/.dockerenv", kFileExists))
-      batch_size = 10;
+      batch_size = 5;
 
    webcanv_batch_mode(batch_size);
 }
