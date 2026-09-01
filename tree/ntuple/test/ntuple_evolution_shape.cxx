@@ -1,31 +1,12 @@
 #include "ntuple_test.hxx"
 
 #include "ntuple_fork.hxx"
+#include "ntuple_test_evolution.hxx"
 
 #include <TInterpreter.h>
 
 #include <string>
 #include <string_view>
-
-namespace {
-
-void EvaluateIntImpl(const char *expression, int *value)
-{
-   auto interpreterValue = gInterpreter->MakeInterpreterValue();
-   ASSERT_TRUE(gInterpreter->Evaluate(expression, *interpreterValue));
-   *value = interpreterValue->GetAsLong();
-}
-
-#define EXPECT_EVALUATE_EQ(expression, expected) \
-   do {                                          \
-      int _value;                                \
-      EvaluateIntImpl(expression, &_value);      \
-      if (::testing::Test::HasFatalFailure())    \
-         return;                                 \
-      EXPECT_EQ(expected, _value);               \
-   } while (0)
-
-} // namespace
 
 TEST(RNTupleEvolution, AddedMember)
 {
