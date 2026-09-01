@@ -115,8 +115,9 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    const Int_t kMaxDiff = 5;
    const Int_t kMinSize = 20;
 
-   static Int_t px1, px2, py1, py2, dpx1, dpy2, px1p, px2p, py1p, py2p;
+   static Int_t px1, px2, py1, py2, dpx1, dpy2;
    static enum { pNone, pTop, pL, pR, pBot, pINSIDE } mode = pNone;
+   static bool firstPaint = kFALSE;
    static Double_t oldX1, oldY1, oldX2, oldY2;
    static Bool_t hasOld = kFALSE;
    Bool_t opaque  = parent.OpaqueMoving();
@@ -133,6 +134,8 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          SetY1(parent.PadtoY(y1));
          SetX2(parent.PadtoX(x2));
          SetY2(parent.PadtoY(y2));
+      } else if (firstPaint) {
+         firstPaint = kFALSE;
       } else {
          auto pp = parent.GetPainter();
          Double_t arrx[5] = { x1, (x1+x2) / 2, x2, (x1+x2) / 2, x1 };
@@ -166,15 +169,6 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (py1 < py2)
          std::swap(py1, py2);
 
-      px1p = parent.XtoAbsPixel(parent.GetX1()) + parent.GetBorderSize();
-      py1p = parent.YtoAbsPixel(parent.GetY1()) - parent.GetBorderSize();
-      px2p = parent.XtoAbsPixel(parent.GetX2()) - parent.GetBorderSize();
-      py2p = parent.YtoAbsPixel(parent.GetY2()) + parent.GetBorderSize();
-      if (px1p > px2p)
-         std::swap(px1p, px2p);
-      if (py1p < py2p)
-         std::swap(py1p, py2p);
-
       if ((TMath::Abs(px-(px1+px2)/2) < kMaxDiff) && (TMath::Abs(py - py2) < kMaxDiff)) { // top edge
          mode = pTop;
          parent.SetCursor(kTopSide);
@@ -198,16 +192,24 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
 
       fResizing = mode == pTop || mode == pL || mode == pR || mode == pBot;
-
-      if ((!opaque && mode == pINSIDE) || (!ropaque && fResizing))
-         paint_or_set(true);
+      firstPaint = kTRUE;
 
       break;
 
    case kArrowKeyRelease:
-   case kButton1Motion:
+   case kButton1Motion: {
+      Int_t px1p = parent.XtoAbsPixel(parent.GetX1()) + parent.GetBorderSize();
+      Int_t py1p = parent.YtoAbsPixel(parent.GetY1()) - parent.GetBorderSize();
+      Int_t px2p = parent.XtoAbsPixel(parent.GetX2()) - parent.GetBorderSize();
+      Int_t py2p = parent.YtoAbsPixel(parent.GetY2()) + parent.GetBorderSize();
+      if (px1p > px2p)
+         std::swap(px1p, px2p);
+      if (py1p < py2p)
+         std::swap(py1p, py2p);
+
       switch (mode) {
-         case pNone: return;
+         case pNone:
+            return;
          case pTop:
             if (!ropaque) paint_or_set(kTRUE);
             py2 = TMath::Max(py2p, TMath::Min(py, py1 - kMinSize));
@@ -255,6 +257,7 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
 
       break;
+   }
 
    case kButton1Up:
 
