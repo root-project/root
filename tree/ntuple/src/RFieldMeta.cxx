@@ -688,7 +688,7 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, std::string
 
 void ROOT::Experimental::RSoAField::GraftNestedMemberFields(
    const RSoAField &nestedSoA, std::size_t offsetInParent,
-   std::function<RFieldBase *(const std::string &)> fnRecordFieldFinder)
+   const std::function<RFieldBase *(const std::string &)> &fnRecordFieldFinder)
 {
    const std::size_t nNestedRecordMemberFields = nestedSoA.fRecordMemberFields.size();
 

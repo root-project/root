@@ -95,7 +95,7 @@ class RSoAField : public RFieldBase {
    /// For a nested SoA struct (either as a member of as a base class), use their fRecordMemberFields in this class,
    /// i.e. "unroll" the vectors in the nested SoA struct into the SoA base class.
    void GraftNestedMemberFields(const RSoAField &nestedSoA, std::size_t offsetInParent,
-                                std::function<RFieldBase *(const std::string &)> fnRecordFieldFinder);
+                                const std::function<RFieldBase *(const std::string &)> &fnRecordFieldFinder);
 
    void ReconstructSplitFields() const;
 
