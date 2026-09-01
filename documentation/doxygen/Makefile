@@ -53,9 +53,10 @@ filter:
 	`root-config --cxx` -o filter filter.cxx -O2
 
 mathjax:
-	$(call MkDir,$(DOXYGEN_IMAGE_PATH))
+	$(call MkDir,$(DOXYGEN_IMAGE_PATH)/mathjax)
 	curl -o mathjax.tar.gz https://lcgpackages.web.cern.ch/tarFiles/sources/mathjax-3.2.0.tar.gz
-	tar xfz mathjax.tar.gz -C $(DOXYGEN_IMAGE_PATH)
+	tar xfz mathjax.tar.gz -C $(DOXYGEN_IMAGE_PATH)/mathjax --strip-components=1
+	rm -f mathjax.tar.gz
 
 js:
 	$(call MkDir,$(DOXYGEN_IMAGE_PATH))
