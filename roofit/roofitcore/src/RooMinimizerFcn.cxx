@@ -25,11 +25,12 @@
 #include "RooAbsArg.h"
 #include "RooAbsPdf.h"
 #include "RooArgSet.h"
-#include "RooRealVar.h"
-#include "RooMsgService.h"
+#include "RooFit/VariableGroups.h"
 #include "RooMinimizer.h"
+#include "RooMsgService.h"
 #include "RooNaNPacker.h"
 #include "RooCategory.h"
+#include "RooRealVar.h"
 
 #include "Math/Functor.h"
 #include "TMatrixDSym.h"
@@ -40,6 +41,23 @@
 using std::setprecision;
 
 namespace {
+
+template <class InputIt1, class InputIt2>
+bool intersect(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
+{
+   while (first1 != last1 && first2 != last2) {
+      if (*first1 < *first2) {
+         ++first1;
+         continue;
+      }
+      if (*first2 < *first1) {
+         ++first2;
+         continue;
+      }
+      return true;
+   }
+   return false;
+}
 
 // Helper function that wraps RooAbsArg::getParameters and directly returns the
 // output RooArgSet. To be used in the initializer list of the RooMinimizerFcn
@@ -59,14 +77,38 @@ RooArgSet getAllParameters(RooAbsReal const &funct)
 RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context)
    : RooAbsMinimizerFcn(getAllParameters(*funct), context), _funct(funct)
 {
-   unsigned int nDim = getNDim();
+   RooFit::VariableGroups groups;
+   funct->fillVariableGroups(groups);
+
+   RooArgList parameters;
+   for (std::size_t i = 0; i < getNDim(); ++i) {
+      parameters.add(floatableParam(i));
+   }
+
+   std::size_t nParams = parameters.size();
+
+   _secondDerivMask.resize(nParams * nParams);
+   for (std::size_t i = 0; i < nParams; ++i) {
+      _secondDerivMask[nParams * i + i] = 1;
+      for (std::size_t j = 0; j < i; ++j) {
+         // std::cout << parameters[i].GetName() << "   " << parameters[j].GetName() << std::endl;
+         auto const &gr1 = groups.groups.at(parameters[i].namePtr());
+         auto const &gr2 = groups.groups.at(parameters[j].namePtr());
+         _secondDerivMask[nParams * i + j] = intersect(gr1.begin(), gr1.end(), gr2.begin(), gr2.end());
+         _secondDerivMask[nParams * j + i] = _secondDerivMask[nParams * i + j];
+      }
+   }
 
    if (context->_cfg.useGradient && funct->hasGradient()) {
       _gradientOutput.resize(_allParams.size());
-      _multiGenFcn = std::make_unique<ROOT::Math::GradFunctor>(this, &RooMinimizerFcn::operator(),
-                                                               &RooMinimizerFcn::evaluateGradient, nDim);
+      auto functor = std::make_unique<ROOT::Math::GradFunctor>(this, &RooMinimizerFcn::operator(),
+                                                               &RooMinimizerFcn::evaluateGradient, getNDim());
+      functor->SetVanishingSecondDerivativeFunc([this](int i, int j) { return this->vanishingSecondDerivative(i, j); });
+      _multiGenFcn = std::move(functor);
    } else {
-      _multiGenFcn = std::make_unique<ROOT::Math::Functor>(std::cref(*this), getNDim());
+      auto functor = std::make_unique<ROOT::Math::Functor>(std::cref(*this), getNDim());
+      functor->SetVanishingSecondDerivativeFunc([this](int i, int j) { return this->vanishingSecondDerivative(i, j); });
+      _multiGenFcn = std::move(functor);
    }
    if (context->_cfg.useHessian) {
       _hessianOutput.resize(_allParams.size() * _allParams.size());
@@ -233,6 +275,11 @@ void RooMinimizerFcn::initMinimizer(ROOT::Math::Minimizer &minim, RooMinimizer *
       minim.SetHessianFunction(
          std::bind(&RooMinimizerFcn::evaluateHessian, this, std::placeholders::_1, std::placeholders::_2));
    }
+}
+
+bool RooMinimizerFcn::vanishingSecondDerivative(int i, int j) const
+{
+   return _secondDerivMask[getNDim() * i + j] == 0;
 }
 
 /// \endcond

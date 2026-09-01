@@ -206,7 +206,7 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _function{
       _fcn = std::make_unique<RooMinimizerFcn>(&function, this);
    }
    initMinimizerFcnDependentPart(function.defaultErrorLevel());
-};
+}
 
 /// Initialize the part of the minimizer that is independent of the function to be minimized
 void RooMinimizer::initMinimizerFirstPart()

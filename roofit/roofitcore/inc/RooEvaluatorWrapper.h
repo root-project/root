@@ -73,6 +73,8 @@ public:
 
    RooFit::Evaluator &evaluator() const { return *_evaluator; }
 
+   void fillVariableGroups(RooFit::VariableGroups &out) const override;
+
 protected:
    double evaluate() const override;
 
