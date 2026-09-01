@@ -61,6 +61,7 @@ the table of contents.
 #include "TROOT.h"
 #include "TDatime.h"
 #include "TColor.h"
+#include "TEnv.h"
 #include "TVirtualPad.h"
 #include "TPoint.h"
 #include "TPoints.h"
@@ -68,11 +69,14 @@ the table of contents.
 #include "TStyle.h"
 #include "TMath.h"
 #include "TStorage.h"
+#include "TSystem.h"
 #include "TText.h"
 #include "zlib.h"
 #include "TObjString.h"
 #include "TObjArray.h"
 #include "snprintf.h"
+
+#include "mathtext/fontembed.h"
 
 // To scale fonts to the same size as the old TT version
 const Float_t kScale = 0.93376068;
@@ -108,6 +112,7 @@ TPDF::TPDF() : TVirtualPS()
    fCurrentPage = kObjFirstPage;
    SetTitle("PDF");
    gVirtualPS = this;
+   fFontEmbed = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -473,6 +478,50 @@ void TPDF::Close(Option_t *)
    WriteInteger(refInd, false);
    PrintStr("@");
    PrintStr("%%EOF@");
+
+   // Embed the fonts previously used by TMathText
+   if (!fFontEmbed) {
+      // Close the file fFileName
+      if (fStream) {
+         PrintStr("@");
+         CloseStream();
+      }
+
+      // Rename the file fFileName
+      TString tmpname = TString::Format("%s_tmp_%d", fFileName.Data(), gSystem->GetPid());
+      if (gSystem->Rename(fFileName.Data(), tmpname.Data())) {
+         Error("Close", "Cannot open temporary file: %s", tmpname.Data());
+         return;
+      }
+
+      if (!OpenStream(fFileName.Data()) || gSystem->AccessPathName(fFileName.Data(), kWritePermission)) {
+         Error("Close", "Cannot open file: %s", fFileName.Data());
+         return;
+      }
+
+      // Embed the fonts at the right place
+      FILE *sg = fopen(tmpname.Data(), "r");
+      if (!sg) {
+         Error("Close", "Cannot open file: %s", tmpname.Data());
+         return;
+      }
+      char line[255];
+      while (fgets(line, 255, sg)) {
+         if (strstr(line, "EndComments"))
+            PrintStr("%%DocumentNeededResources: ProcSet (FontSetInit)@");
+         fStream->write(line, strlen(line));
+         // insert font after end of generic defines
+         if (!fFontEmbed && strstr(line, "/ita")) {
+            FontEmbed();
+            PrintStr("@");
+         }
+      }
+      fclose(sg);
+      if (gSystem->Unlink(tmpname.Data()))
+         return;
+   }
+
+   fFontEmbed = kFALSE;
 
    // Close file stream
    CloseStream();
@@ -1031,6 +1080,146 @@ void TPDF::FontEncode()
       EndObject();
    }
 }
+////////////////////////////////////////////////////////////////////////////////
+
+Bool_t TPDF::FontEmbedType2(const char *filename)
+{
+   std::ifstream font_file(filename, std::ios::binary);
+
+   // We cannot read directly using iostream iterators due to
+   // signedness
+   font_file.seekg(0, std::ios::end);
+
+   const size_t font_file_length = font_file.tellg();
+
+   font_file.seekg(0, std::ios::beg);
+
+   std::vector<unsigned char> font_data(font_file_length, '\0');
+
+   font_file.read(reinterpret_cast<char *>(&font_data[0]), font_file_length);
+
+   std::string font_name;
+   auto pdf_string_map = mathtext::font_embed_pdf_t::font_embed_type_2(font_name, font_data);
+
+   if (!pdf_string_map.empty()) {
+      // PrintRaw(postscript_string.size(), postscript_string.data());
+      // PrintStr("@");
+
+      return true;
+   }
+
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Bool_t TPDF::FontEmbedType42(const char *filename)
+{
+   std::ifstream font_file(filename, std::ios::binary);
+
+   // We cannot read directly using iostream iterators due to signedness
+
+   font_file.seekg(0, std::ios::end);
+
+   const size_t font_file_length = font_file.tellg();
+
+   font_file.seekg(0, std::ios::beg);
+
+   std::vector<unsigned char> font_data(font_file_length, '\0');
+
+   font_file.read(reinterpret_cast<char *>(&font_data[0]), font_file_length);
+
+   std::string font_name;
+   auto pdf_string_map = mathtext::font_embed_pdf_t::font_embed_type_42(font_name, font_data);
+
+   if (!pdf_string_map.empty()) {
+      // PrintRaw(postscript_string.size(), postscript_string.data());
+      // PrintStr("@");
+
+      return true;
+   }
+   fprintf(stderr, "%s:%d:\n", __FILE__, __LINE__);
+
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Embed font in PDF file.
+
+void TPDF::FontEmbed()
+{
+   static const char *fonttable[32][2] = {{"Root.TTFont.0", "FreeSansBold.otf"},
+                                          {"Root.TTFont.1", "FreeSerifItalic.otf"},
+                                          {"Root.TTFont.2", "FreeSerifBold.otf"},
+                                          {"Root.TTFont.3", "FreeSerifBoldItalic.otf"},
+                                          {"Root.TTFont.4", "FreeSans.otf"},
+                                          {"Root.TTFont.5", "FreeSansOblique.otf"},
+                                          {"Root.TTFont.6", "FreeSansBold.otf"},
+                                          {"Root.TTFont.7", "FreeSansBoldOblique.otf"},
+                                          {"Root.TTFont.8", "FreeMono.otf"},
+                                          {"Root.TTFont.9", "FreeMonoOblique.otf"},
+                                          {"Root.TTFont.10", "FreeMonoBold.otf"},
+                                          {"Root.TTFont.11", "FreeMonoBoldOblique.otf"},
+                                          {"Root.TTFont.12", "symbol.ttf"},
+                                          {"Root.TTFont.13", "FreeSerif.otf"},
+                                          {"Root.TTFont.14", "wingding.ttf"},
+                                          {"Root.TTFont.15", "symbol.ttf"},
+                                          {"Root.TTFont.STIXGen", "STIXGeneral.otf"},
+                                          {"Root.TTFont.STIXGenIt", "STIXGeneralItalic.otf"},
+                                          {"Root.TTFont.STIXGenBd", "STIXGeneralBol.otf"},
+                                          {"Root.TTFont.STIXGenBdIt", "STIXGeneralBolIta.otf"},
+                                          {"Root.TTFont.STIXSiz1Sym", "STIXSiz1Sym.otf"},
+                                          {"Root.TTFont.STIXSiz1SymBd", "STIXSiz1SymBol.otf"},
+                                          {"Root.TTFont.STIXSiz2Sym", "STIXSiz2Sym.otf"},
+                                          {"Root.TTFont.STIXSiz2SymBd", "STIXSiz2SymBol.otf"},
+                                          {"Root.TTFont.STIXSiz3Sym", "STIXSiz3Sym.otf"},
+                                          {"Root.TTFont.STIXSiz3SymBd", "STIXSiz3SymBol.otf"},
+                                          {"Root.TTFont.STIXSiz4Sym", "STIXSiz4Sym.otf"},
+                                          {"Root.TTFont.STIXSiz4SymBd", "STIXSiz4SymBol.otf"},
+                                          {"Root.TTFont.STIXSiz5Sym", "STIXSiz5Sym.otf"},
+                                          {"Root.TTFont.ME", "DroidSansFallback.ttf"},
+                                          {"Root.TTFont.CJKMing", "DroidSansFallback.ttf"},
+                                          {"Root.TTFont.CJKCothic", "DroidSansFallback.ttf"}};
+
+   PrintStr("%%IncludeResource: ProcSet (FontSetInit)@");
+
+   // try to load font (font must be in Root.TTFontPath resource)
+   const char *ttpath = gEnv->GetValue("Root.TTFontPath", TROOT::GetTTFFontDir());
+
+   for (Int_t fontid = 1; fontid < 30; fontid++) {
+      if (fontid != 15 && fMustEmbed[fontid - 1]) {
+         TString filename = gEnv->GetValue(fonttable[fontid][0], fonttable[fontid][1]);
+         const char *ttfont = gSystem->FindFile(ttpath, filename, kReadPermission);
+         if (!ttfont) {
+            Error("FontEmbed", "font %d (filename '%s') not found in path", fontid, filename.Data());
+         } else if (FontEmbedType2(ttfont)) {
+            // nothing
+            /*} else if(FontEmbedType1(ttfont)) {
+               // nothing*/
+         } else if (FontEmbedType42(ttfont)) {
+            // nothing
+         } else {
+            Error("FontEmbed", "failed to embed font %d (filename '%s')", fontid, filename.Data());
+         }
+      }
+   }
+   PrintStr("%%IncludeResource: font Times-Roman@");
+   PrintStr("%%IncludeResource: font Times-Italic@");
+   PrintStr("%%IncludeResource: font Times-Bold@");
+   PrintStr("%%IncludeResource: font Times-BoldItalic@");
+   PrintStr("%%IncludeResource: font Helvetica@");
+   PrintStr("%%IncludeResource: font Helvetica-Oblique@");
+   PrintStr("%%IncludeResource: font Helvetica-Bold@");
+   PrintStr("%%IncludeResource: font Helvetica-BoldOblique@");
+   PrintStr("%%IncludeResource: font Courier@");
+   PrintStr("%%IncludeResource: font Courier-Oblique@");
+   PrintStr("%%IncludeResource: font Courier-Bold@");
+   PrintStr("%%IncludeResource: font Courier-BoldOblique@");
+   PrintStr("%%IncludeResource: font Symbol@");
+   PrintStr("%%IncludeResource: font ZapfDingbats@");
+
+   fFontEmbed = kTRUE;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a line to a new position
@@ -1329,6 +1518,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
       Error("Open", "Cannot open file: %s", fname);
       return;
    }
+   fFileName = fname;
 
    gVirtualPS = this;
 

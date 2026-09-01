@@ -1890,5 +1890,9 @@ TCanvas *tmathtext2()
    l.DrawMathText(x1, y, "\\tanh");
    l.DrawText(x2, y, "\\tanh");
 
+//   c1->Print("c2.png");
+//   c1->Print("c2.ps");
+//   c1->Print("c2.pdf");
+
    return c1;
 }
