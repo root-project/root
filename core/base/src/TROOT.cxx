@@ -1751,27 +1751,19 @@ TObject *TROOT::GetFunction(const char *name) const
    if (!name || !*name)
       return nullptr;
 
-   static std::atomic<bool> isInited = false;
+   // Look for function name in list of ROOT functions. Use the locking pattern
+   // with ROOT re-entrant locks to apply the following strategy:
+   // - First, early return if function is already available
+   // - Second, acquire a write lock and make other threads wait until all ROOT
+   //   standard functions have been initialized through ProcessLine
 
-   // Capture the state before calling FindObject as it could change
-   // between the end of FindObject and the if statement
-   bool wasInited = isInited.load();
-
-   auto f1 = fFunctions->FindObject(name);
-   if (f1 || wasInited)
+   R__READ_LOCKGUARD(ROOT::gCoreMutex);
+   if (auto f1 = fFunctions->FindObject(name))
       return f1;
 
-   // If 2 threads gets here at the same time, the static initialization "lock"
-   // will stall one of them until ProcessLine is finished and both will return the
-   // correct answer.
-   // Note: if one (or more) thread(s) is suspended right after the 'isInited.load()`
-   // and restart after this thread has finished the initialization (i.e. a rare case),
-   // the only penalty we pay is a spurious 2nd lookup for an unknown function.
-   [[maybe_unused]] static const auto _res = []() {
-      gROOT->ProcessLine("TF1::InitStandardFunctions(); TF2::InitStandardFunctions(); TF3::InitStandardFunctions();");
-      isInited = true;
-      return true;
-   }();
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+   gROOT->ProcessLine("TF1::InitStandardFunctions(); TF2::InitStandardFunctions(); TF3::InitStandardFunctions();");
+
    return fFunctions->FindObject(name);
 }
 
