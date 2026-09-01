@@ -9,10 +9,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/gdk/src
-                    ${CMAKE_SOURCE_DIR}/builtins/win32gdk/gdk
-                    ${CMAKE_SOURCE_DIR}/builtins/win32gdk/glib)
-
 set(iconvlib  ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/iconv-1.3.lib)
 set(iconvdll  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/iconv-1.3.dll)
 set(iconvliba ${CMAKE_BINARY_DIR}/builtins/win32gdk/iconv/iconv-1.3.lib)
