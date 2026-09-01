@@ -17,14 +17,12 @@
 #include <RooRealVar.h>
 #include <RooBinning.h>
 #include <RooAbsCategory.h>
-#include <RooRealProxy.h>
-#include <RooListProxy.h>
+#include <RooArgProxy.h>
 #include <RooAbsProxy.h>
 #include <RooCategory.h>
 #include <RooDataSet.h>
 #include <RooDataHist.h>
 #include <RooSimultaneous.h>
-#include <RooFormulaVar.h>
 #include <RooFit/ModelConfig.h>
 #include <RooFitImplHelpers.h>
 #include <RooAbsCollection.h>
@@ -32,15 +30,12 @@
 #include "JSONIOUtils.h"
 #include "Domains.h"
 
-#include "RooFitImplHelpers.h"
-
 #include <TROOT.h>
 
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <stack>
 #include <stdexcept>
 
 /** \class RooJSONFactoryWSTool
@@ -347,9 +342,7 @@ std::string generate(const RooFit::JSONIO::ImportExpression &ex, const JSONNode 
       if (k == "true" || k == "false") {
          expression << (k == "true" ? "1" : "0");
       } else if (!p.has_child(k)) {
-         std::stringstream errMsg;
-         errMsg << "node '" << name << "' is missing key '" << k << "'";
-         RooJSONFactoryWSTool::error(errMsg.str());
+         RooJSONFactoryWSTool::error("node '" + name + "' is missing key '" + k + "'");
       } else if (p[k].is_seq()) {
          bool firstInner = true;
          expression << "{";
@@ -444,9 +437,7 @@ void getObservables(RooWorkspace const &ws, const JSONNode &node, RooAbsCollecti
       if (ws.var(name)) {
          out.add(*ws.var(name));
       } else {
-         std::stringstream errMsg;
-         errMsg << "The observable \"" << name << "\" could not be found in the workspace!";
-         RooJSONFactoryWSTool::error(errMsg.str());
+         RooJSONFactoryWSTool::error("The observable \"" + name + "\" could not be found in the workspace!");
       }
    }
 }
@@ -485,9 +476,7 @@ std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
       std::size_t i = 0;
       for (auto const &point : coords.children()) {
          if (!point.is_seq()) {
-            std::stringstream errMsg;
-            errMsg << "coordinate point '" << i << "' is not a list!";
-            RooJSONFactoryWSTool::error(errMsg.str());
+            RooJSONFactoryWSTool::error("coordinate point '" + std::to_string(i) + "' is not a list!");
          }
          if (point.num_children() != varlist.size()) {
             RooJSONFactoryWSTool::error("inconsistent number of entries and observables!");
@@ -508,10 +497,7 @@ std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
       return data;
    }
 
-   std::stringstream ss;
-   ss << "RooJSONFactoryWSTool() failed to create dataset " << name << std::endl;
-   RooJSONFactoryWSTool::error(ss.str());
-   return nullptr;
+   RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() failed to create dataset " + name);
 }
 
 // Import an analysis (likelihood + domains) as one or more ModelConfig objects into the workspace.
@@ -751,6 +737,22 @@ bool isTopLevel(RooAbsArg const &arg, RooWorkspace const &ws)
       }
    }
    return true;
+}
+
+/// Find the single category observable of a dataset, if any.
+RooAbsCategory *findCategoryObservable(RooAbsData const &data)
+{
+   RooAbsCategory *cat = nullptr;
+   for (RooAbsArg *obs : *data.get()) {
+      if (auto *c = dynamic_cast<RooAbsCategory *>(obs)) {
+         if (cat) {
+            RooJSONFactoryWSTool::error("dataset '" + std::string(data.GetName()) +
+                                        " has several category observables!");
+         }
+         cat = c;
+      }
+   }
+   return cat;
 }
 
 } // namespace
@@ -1139,19 +1141,13 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
    }
    // if the key we found is not a map, it's an error
    if (!p.is_map()) {
-      std::stringstream ss;
-      ss << "RooJSONFactoryWSTool() function node " + name + " is not a map!";
-      RooJSONFactoryWSTool::error(ss.str());
-      return;
+      RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() function node " + name + " is not a map!");
    }
    std::string prefix = genPrefix(p, true);
    if (!prefix.empty())
       name = prefix + name;
    if (!p.has_child("type")) {
-      std::stringstream ss;
-      ss << "RooJSONFactoryWSTool() no type given for function '" << name << "', skipping." << std::endl;
-      RooJSONFactoryWSTool::error(ss.str());
-      return;
+      RooJSONFactoryWSTool::error("RooJSONFactoryWSTool() no type given for function '" + name + "', skipping.");
    }
 
    std::string functype(p["type"].val());
@@ -1215,9 +1211,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
    }
    RooAbsReal *func = _workspace.function(name);
    if (!func) {
-      std::stringstream err;
-      err << "something went wrong importing function '" << name << "'.";
-      RooJSONFactoryWSTool::error(err.str());
+      RooJSONFactoryWSTool::error("something went wrong importing function '" + name + "'.");
    }
 }
 
@@ -1343,17 +1337,7 @@ void RooJSONFactoryWSTool::exportCategory(RooAbsCategory const &cat, JSONNode &n
 // component-name map.
 RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooAbsData const &data)
 {
-   // find category observables
-   RooAbsCategory *cat = nullptr;
-   for (RooAbsArg *obs : *data.get()) {
-      if (dynamic_cast<RooAbsCategory *>(obs)) {
-         if (cat) {
-            RooJSONFactoryWSTool::error("dataset '" + std::string(data.GetName()) +
-                                        " has several category observables!");
-         }
-         cat = static_cast<RooAbsCategory *>(obs);
-      }
-   }
+   RooAbsCategory *cat = findCategoryObservable(data);
 
    // prepare return value
    RooJSONFactoryWSTool::CombinedData datamap;
@@ -1399,18 +1383,7 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
 // Export a single dataset `data` (binned or unbinned) to the output JSON.
 void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
 {
-   // find category observables
-
-   RooAbsCategory *cat = nullptr;
-   for (RooAbsArg *obs : *data.get()) {
-      if (dynamic_cast<RooAbsCategory *>(obs)) {
-         if (cat) {
-            RooJSONFactoryWSTool::error("dataset '" + std::string(data.GetName()) +
-                                        " has several category observables!");
-         }
-         cat = static_cast<RooAbsCategory *>(obs);
-      }
-   }
+   RooAbsCategory *cat = findCategoryObservable(data);
 
    if (cat)
       return;
@@ -1558,9 +1531,8 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
 
    auto bins = generateBinIndices(vars);
    if (contents.num_children() != bins.size()) {
-      std::stringstream errMsg;
-      errMsg << "inconsistent bin numbers: contents=" << contents.num_children() << ", bins=" << bins.size();
-      RooJSONFactoryWSTool::error(errMsg.str());
+      RooJSONFactoryWSTool::error("inconsistent bin numbers: contents=" + std::to_string(contents.num_children()) +
+                                  ", bins=" + std::to_string(bins.size()));
    }
    auto dh = std::make_unique<RooDataHist>(name, name, vars);
    std::vector<double> contentVals;
@@ -1592,9 +1564,8 @@ void RooJSONFactoryWSTool::importVariable(const JSONNode &p)
    if (_workspace.arg(name))
       return;
    if (!p.is_map()) {
-      std::stringstream ss;
-      ss << "RooJSONFactoryWSTool() node '" << name << "' is not a map, skipping.";
-      oocoutE(nullptr, InputArguments) << ss.str() << std::endl;
+      oocoutE(nullptr, InputArguments) << "RooJSONFactoryWSTool() node '" << name << "' is not a map, skipping."
+                                       << std::endl;
       return;
    }
    if (config().importNoDomainParametersAsRooConstVars && !_domains->hasVariable(name.c_str())) {
@@ -2000,24 +1971,18 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
    // arguments) triggers a linear scan over all sibling nodes via
    // findNamedChild(), which becomes O(N^2) on workspaces with thousands of
    // entries. Populating the maps up-front turns each lookup into O(1).
-   _functionsByName.clear();
-   _distributionsByName.clear();
-   if (auto seq = n.find("functions")) {
-      if (seq->is_seq()) {
-         _functionsByName.reserve(seq->num_children());
-         for (const auto &p : seq->children()) {
-            _functionsByName.emplace(RooJSONFactoryWSTool::name(p), &p);
-         }
+   auto buildIndex = [&n](const char *key, auto &index) {
+      index.clear();
+      auto seq = n.find(key);
+      if (!seq || !seq->is_seq())
+         return;
+      index.reserve(seq->num_children());
+      for (const auto &p : seq->children()) {
+         index.emplace(RooJSONFactoryWSTool::name(p), &p);
       }
-   }
-   if (auto seq = n.find("distributions")) {
-      if (seq->is_seq()) {
-         _distributionsByName.reserve(seq->num_children());
-         for (const auto &p : seq->children()) {
-            _distributionsByName.emplace(RooJSONFactoryWSTool::name(p), &p);
-         }
-      }
-   }
+   };
+   buildIndex("functions", _functionsByName);
+   buildIndex("distributions", _distributionsByName);
 
    this->importDependants(n);
 
@@ -2181,13 +2146,9 @@ void RooJSONFactoryWSTool::importVariableElement(const JSONNode &elementNode)
    importVariable(p);
 
    auto paramPointsNode = n.find("parameter_points");
-   const auto &snsh = paramPointsNode->child(0);
-   std::string name = RooJSONFactoryWSTool::name(snsh);
-   RooArgSet vars;
-   const auto &var = snsh["parameters"].child(0);
+   const auto &var = paramPointsNode->child(0)["parameters"].child(0);
    if (RooRealVar *rrv = _workspace.var(RooJSONFactoryWSTool::name(var))) {
       configureVariable(*_domains, var, *rrv);
-      vars.add(*rrv);
    }
 
    // Import attributes
