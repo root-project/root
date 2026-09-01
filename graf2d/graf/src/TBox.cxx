@@ -245,7 +245,6 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    constexpr Int_t kMinSize = 20;
 
    static Int_t px1, px2, py1, py2, dpx1, dpy2;
-   static Int_t px1p, px2p, py1p, py2p;
    static Double_t oldX1, oldY1, oldX2, oldY2;
    static Bool_t hasOld = kFALSE;
    static enum { pNone, pA, pB, pC, pD, pTop, pL, pR, pBot, pINSIDE } mode = pNone;
@@ -310,17 +309,6 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (py1 < py2)
          std::swap(py1, py2);
 
-      px1p = parent.XtoAbsPixel(parent.GetX1()) + parent.GetBorderSize();
-      py1p = parent.YtoAbsPixel(parent.GetY1()) - parent.GetBorderSize();
-      px2p = parent.XtoAbsPixel(parent.GetX2()) - parent.GetBorderSize();
-      py2p = parent.YtoAbsPixel(parent.GetY2()) + parent.GetBorderSize();
-      if (px1p > px2p)
-         std::swap(px1p, px2p);
-      if (py1p < py2p)
-         std::swap(py1p, py2p);
-
-      mode = pNone;
-
       if (TMath::Abs(px - px1) <= kMaxDiff && TMath::Abs(py - py2) <= kMaxDiff) {
          mode = pA;
          parent.SetCursor(kTopLeft);
@@ -349,21 +337,27 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          dpx1 = px - px1; // cursor position relative to top-left corner
          dpy2 = py - py2;
          mode = pINSIDE;
-         if (event == kButton1Down)
-            parent.SetCursor(kMove);
-         else
-            parent.SetCursor(kCross);
+         parent.SetCursor(event == kButton1Down ? kMove : kCross);
+      } else {
+         mode = pNone;
+         parent.SetCursor(kCross);
       }
 
       fResizing = (mode != pNone) && (mode != pINSIDE);
       firstPaint = kTRUE;
-      if (mode == pNone)
-         parent.SetCursor(kCross);
 
       break;
 
    case kArrowKeyRelease:
-   case kButton1Motion:
+   case kButton1Motion: {
+      Int_t px1p = parent.XtoAbsPixel(parent.GetX1()) + parent.GetBorderSize();
+      Int_t py1p = parent.YtoAbsPixel(parent.GetY1()) - parent.GetBorderSize();
+      Int_t px2p = parent.XtoAbsPixel(parent.GetX2()) - parent.GetBorderSize();
+      Int_t py2p = parent.YtoAbsPixel(parent.GetY2()) + parent.GetBorderSize();
+      if (px1p > px2p)
+         std::swap(px1p, px2p);
+      if (py1p < py2p)
+         std::swap(py1p, py2p);
 
       switch (mode) {
       case pNone:
@@ -443,6 +437,7 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
 
       break;
+   }
 
    case kButton1Up:
       if (opaque || ropaque)
