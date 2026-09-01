@@ -7,8 +7,7 @@
 
 // The test still has some repetitions which one could wash away with metaprogramming.
 
-#include "commonUtils.h"
-
+#include "commonUtilsUnorderedMap.h"
 
 template<class T>
 void checkObjects(const char* name, const T& a, const T& b){
@@ -22,7 +21,9 @@ void check(const char* testName){
    printf("o Checking %s\n",testName);
 
    TH1::AddDirectory(0); // same name is ok
-   gRandom->SetSeed(1); // make all contents identical irrespective of the container
+   gRNG.seed(1);
+   gGaus.reset();
+   gUniform.reset(); // make all contents identical irrespective of the container
 
    std::string binFilename(testName); binFilename+="UnorderedMap"; binFilename+=".root";
    std::string xmlFilename(testName); xmlFilename+="UnorderedMap"; xmlFilename+=".xml";
@@ -68,7 +69,9 @@ void check(const char* testName){
    auto contHistoVecOrig = contHistoVec;
 
    // Write
-   gRandom->SetSeed(1);
+   gRNG.seed(1);
+   gGaus.reset();
+   gUniform.reset();
    {
       printf("    * Write\n");
       TFile f(binFilename.c_str(),"UPDATE");
@@ -91,7 +94,9 @@ void check(const char* testName){
       t.Write();
    }
    // And Read
-   gRandom->SetSeed(1);
+   gRNG.seed(1);
+   gGaus.reset();
+   gUniform.reset();
    {
       printf("    * Read\n");
       TFile f(binFilename.c_str());
