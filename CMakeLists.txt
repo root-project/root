@@ -36,6 +36,7 @@ set(policy_new CMP0072 CMP0076 CMP0077 CMP0079
     CMP0135 # Timestamps of downloaded archives are set to time of extraction
     CMP0144 # <PACKAGENAME>_ROOT (converted to upper case) can be used to search for dependencies
     CMP0156 CMP0179 #deduplicate static libraries when linker supports it
+    CMP0218 # no special handling for `CMAKE_WARN_DEPRECATED` and `CMAKE_ERROR_DEPRECATED` variables
 )
 foreach(policy ${policy_new})
   if(POLICY ${policy})
