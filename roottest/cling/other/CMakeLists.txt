@@ -61,3 +61,17 @@ ROOTTEST_ADD_TEST(checkMissingSymbolExitCode
 ROOTTEST_ADD_TEST(assertDirWithParen
                   MACRO assertDirWithParen.C
                   LABELS roottest regression cling)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    find_program(THE_PERF_EXE perf)
+    if(THE_PERF_EXE)
+        set(PERF_MISSING False)
+    else()
+        set(PERF_MISSING True)
+    endif()
+
+    add_test(NAME testPerfJitdump COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/testPerfJitdump.sh $<TARGET_FILE:root>)
+    set_tests_properties(testPerfJitdump PROPERTIES
+        SKIP_RETURN_CODE 127
+        DISABLED ${PERF_MISSING})
+endif()
