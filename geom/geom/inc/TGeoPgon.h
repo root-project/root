@@ -16,11 +16,13 @@
 
 #include <algorithm>
 #include <atomic>
+#include <memory>
+#include <mutex>
 #include <vector>
 
 class TGeoPgon : public TGeoPcon {
-   static std::atomic<UInt_t> fgInstanceCount; //! source of dense per-object indices
-   UInt_t fIndex{fgInstanceCount++};           //! dense index of this shape into the per-thread vector
+   static std::atomic<UInt_t> fgInstanceCount; //! source of monotonic per-object indices
+   UInt_t fIndex{fgInstanceCount++};           //! non-reused index of this shape into the per-thread vector
    mutable std::atomic<Int_t> fGeneration{0};  //! bumped whenever the per-thread state must be rebuilt
 
 public:
@@ -28,18 +30,9 @@ public:
       Int_t *fIntBuffer{nullptr};    //![fNedges+4] temporary int buffer array
       Double_t *fDblBuffer{nullptr}; //![fNedges+4] temporary double buffer array
       Int_t fInitGen{-1};            //! generation this slot was last initialized for
-
-      ThreadData_t() = default;
-      ~ThreadData_t();
-      // Owns the two scratch buffers: movable so the slot can live in a resizable vector,
-      // but not copyable.
-      ThreadData_t(ThreadData_t &&other) noexcept;
-      ThreadData_t &operator=(ThreadData_t &&other) noexcept;
-      ThreadData_t(const ThreadData_t &) = delete;
-      ThreadData_t &operator=(const ThreadData_t &) = delete;
    };
 
-   /// Per-thread scratch buffers, owned by the calling thread and indexed by this shape.
+   /// Per-thread non-owning cache of scratch buffers indexed by this shape.
    /// Hot path: a TLS read plus an indexed load; the cold rebuild lives in InitThreadSlot().
    ThreadData_t &GetThreadData() const
    {
@@ -51,17 +44,20 @@ public:
          InitThreadSlot(td);
       return td;
    }
-   /// Invalidate the per-thread data. Each thread rebuilds its own slot lazily on next access.
-   void ClearThreadData() const override { fGeneration.fetch_add(1, std::memory_order_release); }
-   /// No-op: per-thread data is allocated lazily, so no provisioning for a fixed thread count
-   /// is required and any number of threads works.
+   /// Release object-owned scratch buffers and invalidate the non-owning TLS slots.
+   /// Navigation using this shape must not be active when this method is called.
+   void ClearThreadData() const override;
+   /// No-op: this shape allocates scratch data lazily for every calling thread.
    void CreateThreadData(Int_t) override {}
 
 protected:
+   struct OwnedThreadData_t;
    void InitThreadSlot(ThreadData_t &td) const;
 
    // data members
-   Int_t fNedges; // number of edges (at least one)
+   Int_t fNedges;                                                      // number of edges (at least one)
+   mutable std::vector<std::unique_ptr<OwnedThreadData_t>> fOwnedData; ///<! Object-owned per-thread buffers
+   mutable std::mutex fOwnedDataMutex;                                 ///<! Protects cold allocation and cleanup
 
    // internal utility methods
    Int_t GetPhiCrossList(const Double_t *point, const Double_t *dir, Int_t istart, Double_t *sphi, Int_t *iphi,

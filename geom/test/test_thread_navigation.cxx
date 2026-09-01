@@ -15,7 +15,9 @@
 #include <TGeoXtru.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
+#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -113,6 +115,28 @@ void MakeCurrent(TGeoManager *manager)
    gGeoManager = manager;
    gGeoIdentity = static_cast<TGeoIdentity *>(manager->GetListOfMatrices()->At(0));
 }
+
+class InspectablePgon : public TGeoPgon {
+public:
+   using TGeoPgon::TGeoPgon;
+
+   std::size_t GetOwnedThreadDataCount() const
+   {
+      std::lock_guard<std::mutex> guard(fOwnedDataMutex);
+      return fOwnedData.size();
+   }
+};
+
+class InspectableXtru : public TGeoXtru {
+public:
+   using TGeoXtru::TGeoXtru;
+
+   std::size_t GetOwnedThreadDataCount() const
+   {
+      std::lock_guard<std::mutex> guard(fOwnedDataMutex);
+      return fOwnedData.size();
+   }
+};
 
 struct Ray {
    Double_t point[3];
@@ -251,4 +275,52 @@ TEST(Geometry, PatternMatricesBelongToOwningManager)
    EXPECT_TRUE(geometryA.radialFinder->GetMatrix()->IsIdentity());
 
    delete geometryA.manager;
+}
+
+TEST(Geometry, ShapeScratchDataReleasedOnClear)
+{
+   InspectablePgon pgon(0., 360., 64, 2);
+   pgon.DefineSection(0, -10., 1., 5.);
+   pgon.DefineSection(1, 10., 1., 5.);
+
+   InspectableXtru xtru(2);
+   Double_t x[] = {-5., 5., 5., -5.};
+   Double_t y[] = {-5., -5., 5., 5.};
+   xtru.DefinePolygon(4, x, y);
+   xtru.DefineSection(0, -10.);
+   xtru.DefineSection(1, 10.);
+
+   // DefineSection computes the Xtru bounding box using the main-thread slot.
+   pgon.ClearThreadData();
+   xtru.ClearThreadData();
+
+   constexpr int kNThreads = 8;
+   std::atomic<bool> valid{true};
+   std::vector<std::thread> threads;
+   threads.reserve(kNThreads);
+   for (int i = 0; i < kNThreads; ++i) {
+      threads.emplace_back([&] {
+         auto &pgonData = pgon.GetThreadData();
+         auto &xtruData = xtru.GetThreadData();
+         if (!pgonData.fIntBuffer || !pgonData.fDblBuffer || !xtruData.fXc || !xtruData.fYc || !xtruData.fPoly)
+            valid.store(false, std::memory_order_relaxed);
+      });
+   }
+   for (auto &thread : threads)
+      thread.join();
+
+   ASSERT_TRUE(valid.load(std::memory_order_relaxed));
+   EXPECT_EQ(pgon.GetOwnedThreadDataCount(), kNThreads);
+   EXPECT_EQ(xtru.GetOwnedThreadDataCount(), kNThreads);
+
+   pgon.ClearThreadData();
+   xtru.ClearThreadData();
+   EXPECT_EQ(pgon.GetOwnedThreadDataCount(), 0u);
+   EXPECT_EQ(xtru.GetOwnedThreadDataCount(), 0u);
+
+   // The main thread's stale non-owning slots must rebuild on the next access.
+   EXPECT_NE(pgon.GetThreadData().fIntBuffer, nullptr);
+   EXPECT_NE(xtru.GetThreadData().fPoly, nullptr);
+   EXPECT_EQ(pgon.GetOwnedThreadDataCount(), 1u);
+   EXPECT_EQ(xtru.GetOwnedThreadDataCount(), 1u);
 }

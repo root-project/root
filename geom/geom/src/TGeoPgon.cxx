@@ -68,44 +68,12 @@ polygons, between `phi1` and `phi1+dphi.`
 
 std::atomic<UInt_t> TGeoPgon::fgInstanceCount{0};
 
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
+struct TGeoPgon::OwnedThreadData_t {
+   std::unique_ptr<Int_t[]> fIntBuffer;
+   std::unique_ptr<Double_t[]> fDblBuffer;
 
-TGeoPgon::ThreadData_t::~ThreadData_t()
-{
-   delete[] fIntBuffer;
-   delete[] fDblBuffer;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Move constructor. Steals the owned buffers; the moved-from slot is left empty
-/// and uninitialized (fInitGen = -1).
-
-TGeoPgon::ThreadData_t::ThreadData_t(ThreadData_t &&other) noexcept
-   : fIntBuffer(other.fIntBuffer), fDblBuffer(other.fDblBuffer), fInitGen(other.fInitGen)
-{
-   other.fIntBuffer = nullptr;
-   other.fDblBuffer = nullptr;
-   other.fInitGen = -1;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Move assignment. Releases the current buffers before stealing the source's.
-
-TGeoPgon::ThreadData_t &TGeoPgon::ThreadData_t::operator=(ThreadData_t &&other) noexcept
-{
-   if (this != &other) {
-      delete[] fIntBuffer;
-      delete[] fDblBuffer;
-      fIntBuffer = other.fIntBuffer;
-      fDblBuffer = other.fDblBuffer;
-      fInitGen = other.fInitGen;
-      other.fIntBuffer = nullptr;
-      other.fDblBuffer = nullptr;
-      other.fInitGen = -1;
-   }
-   return *this;
-}
+   explicit OwnedThreadData_t(std::size_t size) : fIntBuffer(new Int_t[size]), fDblBuffer(new Double_t[size]) {}
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// (Re)build the per-thread scratch buffers for this shape into the given slot.
@@ -113,10 +81,25 @@ TGeoPgon::ThreadData_t &TGeoPgon::ThreadData_t::operator=(ThreadData_t &&other) 
 
 void TGeoPgon::InitThreadSlot(ThreadData_t &td) const
 {
-   td = ThreadData_t{}; // release any buffers left from a previous generation
-   td.fIntBuffer = new Int_t[fNedges + 10];
-   td.fDblBuffer = new Double_t[fNedges + 10];
+   auto data = std::make_unique<OwnedThreadData_t>(fNedges + 10);
+   Int_t *intBuffer = data->fIntBuffer.get();
+   Double_t *dblBuffer = data->fDblBuffer.get();
+
+   std::lock_guard<std::mutex> guard(fOwnedDataMutex);
+   fOwnedData.push_back(std::move(data));
+   td.fIntBuffer = intBuffer;
+   td.fDblBuffer = dblBuffer;
    td.fInitGen = fGeneration.load(std::memory_order_acquire);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Release the large scratch buffers. Navigation using this shape must not be active.
+
+void TGeoPgon::ClearThreadData() const
+{
+   std::lock_guard<std::mutex> guard(fOwnedDataMutex);
+   fOwnedData.clear();
+   fGeneration.fetch_add(1, std::memory_order_release);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -944,7 +927,7 @@ Bool_t TGeoPgon::SliceCrossingIn(const Double_t *point, const Double_t *dir, Int
          }
          ipl += incseg;
       } // end loop Z
-   }    // end loop phi
+   } // end loop phi
    snext = TGeoShape::Big();
    return kFALSE;
 }
