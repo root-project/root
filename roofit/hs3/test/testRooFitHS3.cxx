@@ -438,6 +438,52 @@ TEST(RooFitHS3, ParameterPointsDoNotExportRanges)
    }
 }
 
+// Evaluating a pdf with a normalization set, or creating an integral over it,
+// registers an integral that lives outside the workspace as a client of the
+// pdf. This must not demote the pdf from being a top-level object of the
+// export. Covers https://github.com/root-project/root/issues/23221.
+TEST(RooFitHS3, TopLevelPdfExportAfterNormalizedEvaluation)
+{
+   auto exportedDistributions = [](RooWorkspace &ws) {
+      std::vector<std::string> names;
+      auto tree = RooFit::Detail::JSONTree::create(RooJSONFactoryWSTool{ws}.exportJSONtoString());
+      if (auto const *dists = tree->rootnode().find("distributions")) {
+         for (auto const &dist : dists->children()) {
+            names.push_back(dist["name"].val());
+         }
+      }
+      return names;
+   };
+
+   const std::vector<std::string> expected{"gauss"};
+
+   {
+      RooWorkspace ws{"ws"};
+      ws.factory("Gaussian::gauss(x[0, -5, 5], mean[1, -5, 5], sigma[2, 0.1, 10])");
+      RooAbsPdf &pdf = *ws.pdf("gauss");
+      RooArgSet normSet{*ws.var("x")};
+      pdf.getVal(normSet);
+      // Make sure the test covers the scenario from the issue: the cached
+      // normalization integral is registered as a client of the pdf.
+      ASSERT_TRUE(pdf.hasClients());
+
+      EXPECT_EQ(exportedDistributions(ws), expected);
+      // cleanWS() uses the same top-level criterion
+      EXPECT_NE(RooJSONFactoryWSTool::cleanWS(ws).pdf("gauss"), nullptr);
+      // ... and the full round trip should still work after the evaluation
+      EXPECT_EQ(validate(ws, "gauss"), 0);
+   }
+   {
+      RooWorkspace ws{"ws"};
+      ws.factory("Gaussian::gauss(x[0, -5, 5], mean[1, -5, 5], sigma[2, 0.1, 10])");
+      std::unique_ptr<RooAbsReal> integral{ws.pdf("gauss")->createIntegral(*ws.var("x"))};
+      ASSERT_TRUE(ws.pdf("gauss")->hasClients());
+
+      EXPECT_EQ(exportedDistributions(ws), expected);
+      EXPECT_NE(RooJSONFactoryWSTool::cleanWS(ws).pdf("gauss"), nullptr);
+   }
+}
+
 TEST(RooFitHS3, ProductDomainEntriesExportExplicitBounds)
 {
    RooRealVar x{"x", "x", 0.0, -10.0, 10.0};
