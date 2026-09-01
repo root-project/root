@@ -665,10 +665,10 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(tru
       TString extra_arg;
       // in starting from version 151 one have to allow use of unsafe swiftshader
       if (fChromeVersion > 150)
-         extra_arg = "--enable-unsafe-swiftshader";
+         extra_arg = "--enable-unsafe-swiftshader --use-gl=swiftshader";
       // in docker disable shared memory usage because of limited resources
       if (!gSystem->AccessPathName("/.dockerenv", kFileExists))
-         extra_arg.Append(" --disable-dev-shm-usage");
+         extra_arg.Append(" --disable-dev-shm-usage --force-color-profile=srgb --disable-accelerated-2d-canvas");
       // old or newest browser with standard headless mode
       fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), TString::Format("fork:--headless --no-sandbox --disable-extensions --disable-audio-output %s $geometry --dump-dom $url", extra_arg.Data()).Data());
       fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), TString::Format("fork:--headless --no-sandbox --disable-extensions --disable-audio-output %s $geometry $url", extra_arg.Data()).Data());
