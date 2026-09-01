@@ -317,8 +317,8 @@ public:
 ////////////////////////////////////////////////////////////////////////////
 
 class TGeoVolumeAssembly : public TGeoVolume {
-   static std::atomic<UInt_t> fgInstanceCount; //! source of dense per-object indices
-   UInt_t fIndex{fgInstanceCount++};           //! dense index of this assembly into the per-thread vector
+   static std::atomic<UInt_t> fgInstanceCount; //! source of monotonic per-object indices
+   UInt_t fIndex{fgInstanceCount++};           //! non-reused index of this assembly into the per-thread vector
 
 public:
    struct ThreadData_t {
@@ -328,6 +328,7 @@ public:
 
    /// Per-thread scratch state, owned by the calling thread and indexed by this assembly.
    /// Each thread owns its whole vector, so no two threads ever write the same cache line.
+   /// The vector retains its high-water size until the owning thread exits.
    ThreadData_t &GetThreadData() const
    {
       thread_local std::vector<ThreadData_t> tdata;

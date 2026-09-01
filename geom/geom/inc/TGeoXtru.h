@@ -40,6 +40,7 @@ public:
 
    /// Per-thread non-owning cache of scratch state indexed by this shape.
    /// Hot path: a TLS read plus an indexed load; the cold rebuild lives in InitThreadSlot().
+   /// The vector retains its high-water size until the owning thread exits.
    ThreadData_t &GetThreadData() const
    {
       thread_local std::vector<ThreadData_t> tdata;

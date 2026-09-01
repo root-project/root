@@ -58,9 +58,9 @@ void TGeoPatternFinder::InitThreadSlot(ThreadData_t &td) const
       std::lock_guard<std::mutex> guard(sInitMutex);
       td.fMatrix = CreateMatrix();
    }
-   // A generation bump only invalidates the cached division indices. The matrix stays valid and
-   // is deliberately reused: it is owned by the geometry manager and never released, so creating
-   // a fresh one here would leak one matrix per (thread, finder) on every ClearThreadData().
+   // A generation bump only invalidates the cached division indices. The matrix stays valid for
+   // its owning manager's lifetime and is deliberately reused. The manager releases it during
+   // destruction; replacing it here would retain another matrix on every ClearThreadData().
    td.fCurrent = -1;
    td.fNextIndex = -1;
    td.fInitGen = fGeneration.load(std::memory_order_acquire);

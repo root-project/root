@@ -24,8 +24,8 @@ class TGeoMatrix;
 
 /// base finder class for patterns. A pattern is specifying a division type
 class TGeoPatternFinder : public TObject {
-   static std::atomic<UInt_t> fgInstanceCount; //! source of dense per-object indices
-   UInt_t fIndex{fgInstanceCount++};           //! dense index of this finder into the per-thread vector
+   static std::atomic<UInt_t> fgInstanceCount; //! source of monotonic per-object indices
+   UInt_t fIndex{fgInstanceCount++};           //! non-reused index of this finder into the per-thread vector
    mutable std::atomic<Int_t> fGeneration{0};  //! bumped whenever the per-thread state must be rebuilt
 
 public:
@@ -41,6 +41,7 @@ public:
 
    /// Per-thread scratch state, owned by the calling thread and indexed by this finder.
    /// Hot path: a TLS read plus an indexed load; the cold rebuild lives in InitThreadSlot().
+   /// The vector retains its high-water size until the owning thread exits.
    ThreadData_t &GetThreadData() const
    {
       thread_local std::vector<ThreadData_t> tdata;
@@ -54,8 +55,7 @@ public:
    /// Invalidate the per-thread data. Each thread rebuilds its own slot lazily on next access,
    /// so no cross-thread reach-in is needed.
    void ClearThreadData() const { fGeneration.fetch_add(1, std::memory_order_release); }
-   /// No-op: per-thread data is allocated lazily, so no provisioning for a fixed thread count
-   /// is required and any number of threads works.
+   /// No-op: this finder allocates its scratch state lazily for every calling thread.
    void CreateThreadData(Int_t) {}
 
 protected:

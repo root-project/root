@@ -24,8 +24,8 @@ class TGeoMatrix;
 class TGeoHMatrix;
 
 class TGeoBoolNode : public TObject {
-   static std::atomic<UInt_t> fgInstanceCount; //! source of dense per-object indices
-   UInt_t fIndex{fgInstanceCount++};           //! dense index of this node into the per-thread vector
+   static std::atomic<UInt_t> fgInstanceCount; //! source of monotonic per-object indices
+   UInt_t fIndex{fgInstanceCount++};           //! non-reused index of this node into the per-thread vector
 
 public:
    enum EGeoBoolType {
@@ -39,6 +39,7 @@ public:
 
    /// Per-thread scratch state, owned by the calling thread and indexed by this node.
    /// Each thread owns its whole vector, so no two threads ever write the same cache line.
+   /// The vector retains its high-water size until the owning thread exits.
    ThreadData_t &GetThreadData() const
    {
       thread_local std::vector<ThreadData_t> tdata;
@@ -47,6 +48,7 @@ public:
       return tdata[fIndex];
    }
    void ClearThreadData() const {}
+   /// No-op: this node allocates its scratch state lazily for every calling thread.
    void CreateThreadData(Int_t) {}
 
 private:
