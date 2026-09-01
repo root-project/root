@@ -131,6 +131,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
 
 target_include_directories(Win32gdk PRIVATE ../gifencode)
 target_include_directories(Win32gdk PRIVATE ${CMAKE_SOURCE_DIR}/builtins/win32gdk) # this should be instead dealt via PUBLIC target_include_directories of gdklib and gliblib targets
+target_include_directories(Win32gdk PRIVATE ${CMAKE_SOURCE_DIR}/builtins/win32gdk/glib) # when we include gdktypes.h it then includes glib.h without glib prefix since it's compiled with -I../glib
 
 add_dependencies(Win32gdk GDKLIB glib)
 install(FILES ${gdkdlla} ${glibdlla} ${iconvdlla} DESTINATION ${CMAKE_INSTALL_BINDIR})
