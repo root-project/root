@@ -56,7 +56,7 @@ add_custom_command( OUTPUT ${iconvliba} ${iconvdlla}
                     COMMAND echo "*** Building ${iconvliba}"
 					COMMAND ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR}/builtins/win32gdk/iconv
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
-					DEPENDS ${iconvfiles} )
+					DEPENDS ${iconvfiles} ${glibfiles} ${gdkfiles} )
 
 add_custom_command( OUTPUT ${iconvlib} ${iconvdll}
 					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${iconvliba} ${iconvlib}
