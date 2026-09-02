@@ -68,7 +68,10 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
   bool skipSelf = fTI->fIsConstructor && (!fSelf || fSelf == Py_None);
   if (fSelf && (fSelf != Py_None) && (!fTI->fIsConstructor)) {
     PyObject* self = (PyObject*)fSelf;
-    assert(AddTypeName(proto, (PyObject*)Py_TYPE(self), self, Utility::kNone));
+    bool addedSelf =
+        AddTypeName(proto, (PyObject*)Py_TYPE(self), self, Utility::kNone);
+    assert(addedSelf);
+    (void)addedSelf;
   }
 
   // adjust arguments for self if this is a rebound global function

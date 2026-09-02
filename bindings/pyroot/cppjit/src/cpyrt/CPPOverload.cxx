@@ -792,9 +792,13 @@ static PyObject* mp_vectorcall(CPPOverload* pymeth, PyObject* const* args,
     // and might need the self* for the overload resolution
     // to pick up the custom generated constructor defined in
     // __cppjit_internal namespace
-    // FIXME: for the self parameter changes in CppInterOp
     std::string self_type_name = "";
-    if (PyVectorcall_NARGS(nargsf) > 0) {
+    // only prepend self and retry when there are real value args to forward to
+    // a generated/forwarding ctor. with no value args this is default
+    // construction: prepending self would then spuriously match the implicit
+    // copy ctor (self binds const T&) instead of failing, which is what the
+    // base-second dispatcher hit.
+    if (PyVectorcall_NARGS(nargsf) > 0 && !proto.empty()) {
       PyObject* obj = cpyrt_PyArgs_GET_ITEM(args, 0);
       PyObject* typ = (PyObject*)Py_TYPE(obj);
       AddTypeName(self_type_name, typ, nullptr, Utility::kNone);
@@ -802,6 +806,34 @@ static PyObject* mp_vectorcall(CPPOverload* pymeth, PyObject* const* args,
       meth = interop::BestOverloadFunctionMatch(overloads, proto,
                                                 ambiguous_candidates,
                                                 /*TODO:*/ nullptr, is_operator);
+    }
+  }
+  // Subscript tie-break: cppjit maps both operator[] and operator() into the
+  // __getitem__/__setitem__ overload set (operator() is needed for 2D access,
+  // m[i,j] -> operator()(i,j)). For single-index access both can have identical
+  // signatures, which Clang then reports as ambiguous -- yet in C++ `x[i]`
+  // binds to operator[] alone and never considers operator(). Mirror that: if
+  // the ambiguity for a subscript method contains exactly one operator[],
+  // prefer it.
+  if (!meth && !ambiguous_candidates.empty() &&
+      (pymeth->fMethodInfo->fName == "__getitem__" ||
+       pymeth->fMethodInfo->fName == "__setitem__")) {
+    interop::TCppMethod_t subscript = nullptr;
+    bool unique = true;
+    for (auto cand : ambiguous_candidates) {
+      const std::string nm = interop::GetScopedFinalName(cand.data);
+      if (nm.size() >= 10 &&
+          nm.compare(nm.size() - 10, 10, "operator[]") == 0) {
+        if (subscript) {
+          unique = false;
+          break;
+        }
+        subscript = cand;
+      }
+    }
+    if (subscript && unique) {
+      meth = subscript;
+      ambiguous_candidates.clear();
     }
   }
   if (meth) {

@@ -3013,9 +3013,13 @@ static void* PyFunction_AsCPointer(PyObject* pyobject,
         return nullptr;
 
       // TODO: is there no easier way?
-      static interop::TCppScope_t scope =
-          interop::GetScope("__cppjit_internal");
+      // FIXME: cache the scope handle again (llvm/llvm-project#201844): on
+      // released LLVM a static handle to __cppjit_internal goes stale across
+      // incremental PTUs and the lookup below comes back empty.
+      interop::TCppScope_t scope = interop::GetScope("__cppjit_internal");
       const auto& methods = interop::GetMethodsFromName(scope, wname.str());
+      if (methods.empty())
+        return nullptr;
       wpraddress = interop::GetFunctionAddress(methods[0], false);
       sWrapperReference[wpraddress] = ref;
 
@@ -3093,17 +3097,23 @@ bool cpyrt::FunctionPointerConverter::ToMemory(PyObject* pyobject,
 //- std::function converter --------------------------------------------------
 bool cpyrt::StdFunctionConverter::SetArg(PyObject* pyobject, Parameter& para,
                                          CallContext* ctxt) {
-  // prefer normal "object" conversion
-  CallContextRAII<CallContext::kNoImplicit> noimp(ctxt);
-  if (fConverter->SetArg(pyobject, para, ctxt))
-    return true;
+  // prefer normal "object" conversion; keep kNoImplicit scoped to this attempt
+  // only, so it does not suppress the implicit copy the wrapper-fallback relies
+  // on
+  {
+    CallContextRAII<CallContext::kNoImplicit> noimp(ctxt);
+    if (fConverter->SetArg(pyobject, para, ctxt))
+      return true;
+  }
 
   PyErr_Clear();
 
   // else create a wrapper function
   if (this->FunctionPointerConverter::SetArg(pyobject, para, ctxt)) {
     // retrieve the wrapper pointer and capture it in a temporary std::function,
-    // then try normal conversion a second time
+    // then convert again with implicit conversion allowed (kNoImplicit scoped
+    // out above): the wrapper is flagged kIsLValue for reuse, so binding it to
+    // a std::function&& parameter needs an implicit copy, not a move.
     PyObject* func =
         this->FunctionPointerConverter::FromMemory(&para.fValue.fVoidp);
     if (func) {
