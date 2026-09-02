@@ -468,3 +468,45 @@ using func0_ret_t = typename ROOT::TypeTraits::CallableTraits<decltype(func0)>::
    EXPECT_TRUE(res);
 }
 #endif
+
+// https://github.com/root-project/root/issues/22235
+TEST_F(TClingTests, ErrorHandling)
+{
+   // Tests of error handling of various TInterpreter APIs.
+   const char *wrongCode{"rndm_stuff"};
+
+   auto processLineWithError = [](const char *code) {
+      // ProcessLine
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, "cling", "use of undeclared identifier 'rndm_stuff'",
+                         /*matchFullMessage=*/false);
+      diags.requiredDiag(kError, "HandleInterpreterException", "Error evaluating expression (rndm_stuff)",
+                         /*matchFullMessage=*/false);
+      TInterpreter::EErrorCode error = TInterpreter::kNoError;
+      gInterpreter->ProcessLine(code, &error);
+      EXPECT_NE(error, TInterpreter::kNoError);
+   };
+   EXPECT_NO_THROW(processLineWithError(wrongCode));
+
+   auto calcWithError = [](const char *code) {
+      // Calc
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, "cling", "use of undeclared identifier 'rndm_stuff'",
+                         /*matchFullMessage=*/false);
+      diags.requiredDiag(kError, "Calc", "Error evaluating expression (rndm_stuff)",
+                         /*matchFullMessage=*/false);
+      TInterpreter::EErrorCode error = TInterpreter::kNoError;
+      gInterpreter->Calc(code, &error);
+      EXPECT_NE(error, TInterpreter::kNoError);
+   };
+   EXPECT_NO_THROW(calcWithError(wrongCode));
+
+   // Evaluate
+   try {
+      std::unique_ptr<TInterpreterValue> v = gInterpreter->MakeInterpreterValue();
+      gInterpreter->Evaluate(wrongCode, *v);
+      FAIL() << "expected exception thrown by Evaluate";
+   } catch (const std::runtime_error &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("Error evaluating expression (rndm_stuff)"));
+   }
+}
