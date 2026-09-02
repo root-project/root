@@ -10,6 +10,7 @@
 #include "TH1.h"
 #include "Math/DistFuncMathCore.h"
 
+#include <iostream>
 
 struct TestKDE {
 

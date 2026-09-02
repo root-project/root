@@ -71,7 +71,6 @@
 //_____________________________batch only_____________________
 #ifndef __CLING__
 
-#include <cstdlib>
 #include <TROOT.h>
 #include <TSystem.h>
 #include <TH1.h>
@@ -99,6 +98,9 @@
 #include <Compression.h>
 #include <snprintf.h>
 #include "Event.h"
+
+#include <cstdlib>
+#include <iostream>
 
 void stress(Int_t nevent, Int_t style, Int_t printSubBenchmark, UInt_t portion );
 void stress1();

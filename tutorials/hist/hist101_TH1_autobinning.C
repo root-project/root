@@ -19,6 +19,8 @@
 #include "TFile.h"
 #include "TStyle.h"
 
+#include <iostream>
+
 TF1 *gam = new TF1("gam", "1/(1+0.1*x*0.1*x)", -100., 100.);
 TF1 *gam1 = new TF1("gam", "1/(1+0.1*x*0.1*x)", -1., .25);
 TF1 *iga = new TF1("inv gam", "1.-1/(1+0.1*x*0.1*x)", -100., 100.);
