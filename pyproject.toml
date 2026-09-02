@@ -85,6 +85,7 @@ root = "ROOT._rootcli:main"
 build-frontend = { name = "build" }
 build-verbosity = 1
 manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
 
 # Install system libraries
 [tool.cibuildwheel.linux]
