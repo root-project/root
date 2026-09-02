@@ -19,6 +19,8 @@
 #include "TFile.h"
 #include "TStyle.h"
 
+#include <iostream>
+
 // Function parameters are passed as an array to TF1. Here, we
 // define the position of each parameter in this array.
 // Note: N_PAR will give us the total number of parameters. Make

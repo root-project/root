@@ -1,13 +1,6 @@
 #ifndef ROOT_TEfficiency_cxx
 #define ROOT_TEfficiency_cxx
 
-//standard header
-#include <vector>
-#include <string>
-#include <cmath>
-#include <cstdlib>
-#include <cassert>
-
 //ROOT headers
 #include "Math/DistFuncMathCore.h"
 #include "TBinomialEfficiencyFitter.h"
@@ -32,6 +25,14 @@
 
 // file with extra class for FC method
 #include "TEfficiencyHelper.h"
+
+//standard header
+#include <vector>
+#include <string>
+#include <cmath>
+#include <cstdlib>
+#include <cassert>
+#include <ostream>
 
 //default values
 const Double_t kDefBetaAlpha = 1;

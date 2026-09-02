@@ -13,6 +13,7 @@
 #include "TH1.h"
 #include "TVirtualPad.h"
 
+#include <ostream>
 
 /** \class TF12
     \ingroup Functions
