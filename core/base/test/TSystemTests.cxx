@@ -4,17 +4,15 @@
 #include "TString.h"
 #include "TROOT.h"
 
+#include <ROOT/FoundationUtils.hxx>
+
 #include <string>
 #include <cstdio>
 #include <cstdint>
 #include <fstream>
 #include <streambuf>
 
-#ifdef WIN32
-static const char kPathSep = ';';
-#else
-static const char kPathSep = ':';
-#endif
+static const char kPathSep = ROOT::FoundationUtils::GetEnvPathSeparator();
 
 TEST(TSystem, TempFile)
 {

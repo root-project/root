@@ -97,6 +97,8 @@ TFile etc. functionality.
 #include "TObjArray.h"
 #include "ThreadLocalStorage.h"
 
+#include <ROOT/FoundationUtils.hxx>
+
 #include <memory>
 #include <sstream>
 
@@ -513,11 +515,7 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
       plugindirs = "plugins";
       gSystem->PrependPathName(TROOT::GetEtcDir(), plugindirs);
    }
-#ifdef WIN32
-   TObjArray *dirs = plugindirs.Tokenize(";");
-#else
-   TObjArray *dirs = plugindirs.Tokenize(":");
-#endif
+   TObjArray *dirs = plugindirs.Tokenize(TString(ROOT::FoundationUtils::GetEnvPathSeparator()));
    TString d;
    for (Int_t i = 0; i < dirs->GetEntriesFast(); i++) {
       d = ((TObjString*)dirs->At(i))->GetString();

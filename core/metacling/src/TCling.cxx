@@ -5937,11 +5937,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
    TString ldpath = gSystem->GetDynamicPath();
    if (ldpath != fRootmapLoadPath) {
       fRootmapLoadPath = ldpath;
-#ifdef WIN32
-      TObjArray* paths = ldpath.Tokenize(";");
-#else
-      TObjArray* paths = ldpath.Tokenize(":");
-#endif
+      TObjArray *paths = ldpath.Tokenize(TString(ROOT::FoundationUtils::GetEnvPathSeparator()));
       TString d;
       for (Int_t i = 0; i < paths->GetEntriesFast(); i++) {
          d = ((TObjString *)paths->At(i))->GetString();
