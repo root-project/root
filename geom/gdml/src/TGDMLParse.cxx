@@ -2466,7 +2466,7 @@ XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine *gdml, XMLNodePointer_t node)
    TGeoVolume *lv = nullptr;
    TGeoTranslation *pos = nullptr;
    TGeoRotation *rot = nullptr;
-   TGeoCombiTrans *matr;
+   TGeoScale *scl = nullptr;
 
    TGeoVolumeAssembly *assem = new TGeoVolumeAssembly(NameShort(name));
 
@@ -2483,6 +2483,7 @@ XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine *gdml, XMLNodePointer_t node)
          subchild = gdml->GetChild(child);
          pos = new TGeoTranslation(0, 0, 0);
          rot = new TGeoRotation();
+         scl = nullptr;
 
          while (subchild != nullptr) {
             tempattr = gdml->GetNodeName(subchild);
@@ -2511,6 +2512,16 @@ XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine *gdml, XMLNodePointer_t node)
                RotProcess(gdml, subchild, attr);
                reftemp = gdml->GetAttr(subchild, "name");
                rot = GetRotation(reftemp.Data());
+            } else if (tempattr == "scale") {
+               attr = gdml->GetFirstAttr(subchild);
+               SclProcess(gdml, subchild, attr);
+               reftemp = gdml->GetAttr(subchild, "name");
+               scl = GetScaleObj(reftemp.Data());
+            } else if (tempattr == "scaleref") {
+               reftemp = gdml->GetAttr(subchild, "ref");
+               scl = GetScaleObj(reftemp.Data());
+               if (!scl)
+                  Fatal("AssProcess", "Physvol's scale %s not found", reftemp.Data());
             }
 
             subchild = gdml->GetNext(subchild);
@@ -2518,7 +2529,25 @@ XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine *gdml, XMLNodePointer_t node)
 
          // ADD PHYSVOL TO GEOMETRY
          fVolID = fVolID + 1;
-         matr = new TGeoCombiTrans(*pos, *rot);
+         TGeoHMatrix *matr = new TGeoHMatrix();
+         matr->SetTranslation(pos->GetTranslation());
+         matr->SetRotation(rot->GetRotationMatrix());
+
+         if (scl != nullptr) { // Scaling must be added to the rotation matrix!
+
+            Double_t scale3x3[9];
+            memset(scale3x3, 0, 9 * sizeof(Double_t));
+            const Double_t *diagonal = scl->GetScale();
+
+            scale3x3[0] = diagonal[0];
+            scale3x3[4] = diagonal[1];
+            scale3x3[8] = diagonal[2];
+
+            TGeoRotation scaleMatrix;
+            scaleMatrix.SetMatrix(scale3x3);
+            matr->Multiply(&scaleMatrix);
+         }
+
          assem->AddNode(lv, copynum, matr);
          TGeoNode *lastnode = (TGeoNode *)assem->GetNodes()->Last();
          if (!pnodename.IsNull())

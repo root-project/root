@@ -16,6 +16,9 @@ if(gdml)
   ROOT_ADD_GTEST(boolean_extrusion
     test_boolean_extrusion.cxx
     LIBRARIES Geom GeomChecker)
+  ROOT_ADD_GTEST(gdml_reflection
+    test_gdml_reflection.cxx
+    LIBRARIES Geom)
 endif()
 ROOT_ADD_GTEST(tessellated
   test_tessellated.cxx
