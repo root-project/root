@@ -153,6 +153,28 @@
    fun:_ZN6TClass4InitEPKcs*
 }
 
+# TClass::fNoInfoOrEmuOrFwdDeclNameRegistry is an intentionally immortal
+# singleton (see issue #13200): it is never destroyed so that it can be safely
+# touched by SetUnloaded() from the TGenericClassInfo destructors during
+# __cxa_finalize at exit(). Everything it owns therefore stays reachable until
+# process death. The two blocks below cover it independently of the caller
+# (TClass::Init, SetUnloaded, ResetClassInfo).
+{
+   TClass::TDeclNameRegistry immortal singleton (#13200)
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:_ZN6TClass35GetNoInfoOrEmuOrFwdDeclNameRegistryEv
+}
+
+{
+   TClass::TDeclNameRegistry::AddQualifiedName immortal set (#13200)
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:_ZN6TClass17TDeclNameRegistry16AddQualifiedNameEPKc
+}
+
 {
    TClass thread local storage
    Memcheck:Leak
