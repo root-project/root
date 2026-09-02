@@ -9,17 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <cstdlib>
+#include "TEllipse.h"
 
+#include <cstdlib>
 #include <iostream>
+
 #include "TROOT.h"
 #include "TBuffer.h"
-#include "TEllipse.h"
+#include "TAttMarker.h"
 #include "TVirtualPad.h"
 #include "TVirtualPadPainter.h"
 #include "TMath.h"
 #include "TPoint.h"
-#include "TVirtualX.h"
 
 
 constexpr Double_t kPI = TMath::Pi();
