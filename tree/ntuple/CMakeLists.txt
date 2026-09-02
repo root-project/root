@@ -124,6 +124,15 @@ DEPENDENCIES
   ${ROOTNTuple_OPTIONAL_DEPENDENCIES}
 )
 
+# Non-standalone headers must be left out of the dictionary, so a dedicated install command is required.
+ROOT_INSTALL_HEADERS(HEADERS
+  ROOT/RField/RFieldFundamental.hxx
+  ROOT/RField/RFieldProxiedCollection.hxx
+  ROOT/RField/RFieldRecord.hxx
+  ROOT/RField/RFieldSequenceContainer.hxx
+  ROOT/RField/RFieldSoA.hxx
+  ROOT/RField/RFieldSTLMisc.hxx)
+
 target_link_libraries(ROOTNTuple PRIVATE xxHash::xxHash)
 
 # Enable RNTuple support for Intel DAOS
