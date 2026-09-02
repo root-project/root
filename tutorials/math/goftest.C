@@ -13,7 +13,6 @@
 ///
 /// \author Bartolomeu Rabacal
 
-#include <cassert>
 #include "TCanvas.h"
 #include "TPaveText.h"
 #include "TH1.h"
@@ -22,6 +21,9 @@
 #include "Math/Functor.h"
 #include "TRandom3.h"
 #include "Math/DistFunc.h"
+
+#include <cassert>
+#include <iostream>
 
 // need to use Functor1D
 double landau(double x) {
