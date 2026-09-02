@@ -39,6 +39,9 @@ jobs:
           - runner: ubuntu-latest
             platform: manylinux_x86_64
             deployment_target: ""
+          - runner: ubuntu-24.04-arm
+            platform: manylinux_aarch64
+            deployment_target: ""
     name: ${{ matrix.python }}-${{ matrix.config.platform }}-${{ matrix.config.runner }}
     steps:
       - uses: actions/checkout@v6
@@ -65,7 +68,9 @@ jobs:
           - runner: macos-26
             wheel_name_pattern: "macosx_26"
           - runner: ubuntu-latest
-            wheel_name_pattern: "manylinux"
+            wheel_name_pattern: "x86_64"
+          - runner: ubuntu-24.04-arm
+            wheel_name_pattern: "aarch64"
     name: test-cp${{ matrix.python }}-${{ matrix.test_config.wheel_name_pattern }}
     steps:
       - uses: actions/checkout@v6
