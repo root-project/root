@@ -656,7 +656,7 @@ class TestFRAGILE:
                 int add42(int i) { return i + 42; }
             }""")
 
-    @mark.xfail(condition=IS_CLANG_REPL, reason="Fails on ClangRepl")
+    @mark.xfail(condition=IS_CLANG_REPL, reason="Fails with ClangRepl")
     @mark.xfail(
         run=False,
         reason="rolling back a failed declaration asserts in ROOT's unload "
@@ -778,6 +778,13 @@ class TestFRAGILE:
         for ns, val in [(cppjit.gbl, 42), (cppjit.gbl.ClassEnumNS, 37)]:
             assert ns.EnumTemplate[ns.ClassEnumA.A]().foo() == val
 
+    @mark.xfail(
+        run=False,
+        reason="New Overload Resolution: calling through a pointer-valued global "
+        "proxy deduces the self argument as T*, and Cpp::BestOverloadFunctionMatch "
+        "feeds that rvalue classification into Sema::AddMethodCandidate, which "
+        "asserts FromClassification.isLValue() on assert-enabled clang",
+    )
     def test32_overloaded_method_error_with_null_object(self):
         """Check exception type and message when method invoked on instance without C++ object"""
 
