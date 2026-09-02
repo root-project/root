@@ -6370,36 +6370,171 @@ TLeaf* TTree::GetLeaf(const char *name)
    return GetLeaf(nullptr, name);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Return maximum of column with name columname.
-/// if the Tree has an associated TEventList or TEntryList, the maximum
-/// is computed for the entries in this list.
+namespace {
 
-Double_t TTree::GetMaximum(const char* columname)
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Helper detecting *any* file transition of a tree dataset
+///
+/// This is a generic helper, works if the dataset is a TTree or a TChain, and
+/// transitively detects transitions in friends.
+///
+/// Comparing `TChain::GetTreeNumber()` before and after a call to
+/// `TChain::LoadTree` only detects that the chain itself switched to another of
+/// its own sub-trees. It does *not* detect that one of the (possibly indirect)
+/// friends of the chain switched to a new file: in that case the cached
+/// TLeaf/TBranch pointers become dangling even though the tree number of the
+/// chain is unchanged.
+///
+/// `TChain::LoadTree` (both when the chain itself moves to a new tree and, via
+/// `TChain::RefreshFriendAddresses`, when only a friend was updated) calls
+/// `fNotify->Notify()`. Subscribing to that notification is therefore the
+/// reliable way to know that anything in the friend graph moved.
+///
+/// This derives directly from TNotifyLinkBase rather than using TNotifyLink<T>
+/// because the latter would require a dictionary for the instantiation.
+///
+/// We could also use
+/// ```
+/// struct TLeafRefresher {
+///    bool fDirty = true;
+///    bool Notify() { fDirty = true; return true; }
+/// };
+/// ```
+/// declared in TChain.h or InternalTreeUtils.hxx and genereate a dictionary for
+/// TNotifyLink<TLeafRefresher>.
+class FileTransitionDetector final : public TNotifyLinkBase {
+   /// Set to true initially so that the very first iteration performs the lookup.
+   bool fChanged = true;
+   TTree &fChain;
+
+public:
+   FileTransitionDetector(TTree &chain) : fChain(chain) { PrependLink(fChain); }
+
+   ~FileTransitionDetector() override { RemoveLink(fChain); }
+   FileTransitionDetector(const FileTransitionDetector &) = delete;
+   FileTransitionDetector &operator=(const FileTransitionDetector &) = delete;
+   FileTransitionDetector(FileTransitionDetector &&) = delete;
+   FileTransitionDetector &operator=(FileTransitionDetector &&) = delete;
+
+   /// Must return true: returning false would make TChain::LoadTree fail with -6.
+   Bool_t Notify() override
+   {
+      fChanged = true;
+      // Propagate to the rest of the list of subscribers, as TNotifyLink does.
+      if (fNext)
+         return fNext->Notify();
+      return true;
+   }
+
+   /// Returns true (once) if the chain or any of its direct or indirect friends
+   /// switched to a new tree since the last call.
+   bool CheckAndReset()
+   {
+      bool changed = fChanged;
+      fChanged = false;
+      return changed;
+   }
+};
+} // anonymous namespace
+
+////////////////////////////////////////////////////////////////////////////////
+/// Computes the extremum (minimum or maximum) for the input column name
+///
+/// It takes into account the following situations:
+///
+/// * The dataset is a TTree and contains the input column
+/// * The dataset is a TChain and contains the input column, in which case the methods detect file switching and update
+/// the leaf pointer correctly.
+/// * The dataset is a TChain, contains the input column, but some files miss it, in which case the methods skip the
+/// entries from those files.
+/// * The dataset has a friend TTree which contains the input column
+/// * The dataset is a TChain and has a friend TChain which contains the input column, in which case the methods detect
+/// file switching on the friend and update the leaf pointer correctly.
+/// * The dataset is a TChain and has a friend TChain. The input column is partially available in either the main or the
+/// friend chain. This can happen for example if the main chain has some files missing the input column and the user
+/// knowingly injects the input column in the files of the friend chain. In this case, the methods detect file switching
+/// at the boundary between files of the main chain, but also detect if there are file switches in the friend chain.
+/// Notably, the entries must still be overall aligned between the main chain and the friend one.
+double TTree::ComputeExtremum(const char *columname, double errVal, bool (*cmp)(double, double))
 {
-   TLeaf* leaf = this->GetLeaf(columname);
+   // Ensure the TTree cursor is brought back to the current entry after computing the value
+   struct CurrentEntryRAII {
+
+      Long64_t fCurrentEntry;
+      TTree &fTree;
+
+      CurrentEntryRAII(TTree &tree) : fCurrentEntry(tree.GetReadEntry()), fTree(tree) {}
+
+      ~CurrentEntryRAII() { fTree.LoadTree(fCurrentEntry); }
+   } raii{*this};
+
+   // Initial lookup of the leaf name, this will find it whether it's in the
+   // current tree or in any of its friends
+   TLeaf *leaf = GetLeaf(columname);
    if (!leaf) {
       return 0;
    }
+   TBranch *branch = leaf->GetBranch();
+   assert(branch); // leaf without a branch is not allowed by construction
 
    // create cache if wanted
    if (fCacheDoAutoInit)
       SetCacheSizeAux();
 
-   TBranch* branch = leaf->GetBranch();
-   Double_t cmax = -DBL_MAX;
+   FileTransitionDetector fileTransition{*this};
+   double extremum{errVal};
    for (Long64_t i = 0; i < fEntries; ++i) {
-      Long64_t entryNumber = this->GetEntryNumber(i);
+      const auto entryNumber = GetEntryNumber(i);
       if (entryNumber < 0) break;
-      branch->GetEntry(entryNumber);
-      for (Int_t j = 0; j < leaf->GetLen(); ++j) {
-         Double_t val = leaf->GetValue(j);
-         if (val > cmax) {
-            cmax = val;
+      const auto localEntryNumber = LoadTree(entryNumber);
+      if (localEntryNumber < 0)
+         break;
+
+      // At every entry, we check if the processing has triggered a switch to
+      // a new file. We detect both a switch of the current tree in the chain
+      // (if this tree is a TChain) as well as a switch in any of its direct
+      // and indirect friends (if they are also a TChain)
+      if (fileTransition.CheckAndReset()) {
+         branch = nullptr;
+         leaf = GetLeaf(columname);
+         if (leaf) {
+            branch = leaf->GetBranch();
+            assert(branch); // leaf without a branch is not allowed by construction
+         }
+      }
+
+      // We accept that the leaf may not be present in one or more files in case
+      // it was found in a chain, we just continue processing the next entry
+      if (!leaf)
+         continue;
+
+      // If the branch belongs to a friend, the local entry number of the friend
+      // may differ from the one of the chain (e.g. when the friend is indexed).
+      // The owning TTree has already been positioned by TChain::LoadTree, so
+      // its read entry is the correct one to use.
+      auto *owningTree = branch->GetTree();
+      branch->GetEntry(owningTree->GetReadEntry());
+
+      auto leafLen{leaf->GetLen()};
+      for (decltype(leafLen) j = 0; j < leafLen; ++j) {
+         auto val = leaf->GetValue(j);
+         if (cmp(val, extremum)) {
+            extremum = val;
          }
       }
    }
-   return cmax;
+
+   return extremum;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return maximum of column with name columname.
+/// if the Tree has an associated TEventList or TEntryList, the maximum
+/// is computed for the entries in this list.
+
+Double_t TTree::GetMaximum(const char *columname)
+{
+   return ComputeExtremum(columname, std::numeric_limits<double>::lowest(), [](double a, double b) { return a > b; });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6417,29 +6552,7 @@ Long64_t TTree::GetMaxTreeSize()
 
 Double_t TTree::GetMinimum(const char* columname)
 {
-   TLeaf* leaf = this->GetLeaf(columname);
-   if (!leaf) {
-      return 0;
-   }
-
-   // create cache if wanted
-   if (fCacheDoAutoInit)
-      SetCacheSizeAux();
-
-   TBranch* branch = leaf->GetBranch();
-   Double_t cmin = DBL_MAX;
-   for (Long64_t i = 0; i < fEntries; ++i) {
-      Long64_t entryNumber = this->GetEntryNumber(i);
-      if (entryNumber < 0) break;
-      branch->GetEntry(entryNumber);
-      for (Int_t j = 0;j < leaf->GetLen(); ++j) {
-         Double_t val = leaf->GetValue(j);
-         if (val < cmin) {
-            cmin = val;
-         }
-      }
-   }
-   return cmin;
+   return ComputeExtremum(columname, std::numeric_limits<double>::max(), [](double a, double b) { return a < b; });
 }
 
 ////////////////////////////////////////////////////////////////////////////////

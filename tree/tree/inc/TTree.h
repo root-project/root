@@ -185,6 +185,9 @@ private:
    Int_t
    SetBranchAddressImp(const char *bname, void *add, TBranch **ptr, TClass *realClass, EDataType datatype, bool isptr);
 
+   // Helper method to factorize the processing logic for GetMinium, GetMaximum
+   double ComputeExtremum(const char *columname, double errVal, bool (*cmp)(double, double));
+
 protected:
    friend TBranch *ROOT::Internal::TreeUtils::CallBranchImpRef(TTree &tree, const char *branchname, TClass *ptrClass,
                                                                EDataType datatype, void *addobj, Int_t bufsize,
