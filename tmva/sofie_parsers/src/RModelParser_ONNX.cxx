@@ -660,6 +660,16 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
    if (verbose)
       std::cout << "\nParsing Graph - " << graphName << std::endl;
 
+   // fFusedOperators is keyed by node index, so it is only valid for the graph
+   // being parsed: neither a second model parsed with the same parser nor a
+   // subgraph (e.g. of the If operator) may inherit it.
+   struct FusedOperatorsGuard {
+      std::map<int, std::pair<EFusedOp, int>> &fMap;
+      std::map<int, std::pair<EFusedOp, int>> fSaved;
+      FusedOperatorsGuard(std::map<int, std::pair<EFusedOp, int>> &map) : fMap(map) { fSaved.swap(fMap); }
+      ~FusedOperatorsGuard() { fMap.swap(fSaved); }
+   } fusedOperatorsGuard{fFusedOperators};
+
    std::unordered_set<std::string> initializer_names;
    for (int i = 0; i < graph.initializer_size(); i++) {
       initializer_names.insert(graph.initializer(i).name());
