@@ -30,7 +30,6 @@
 #include "TBaseClass.h"
 #include "TClassTable.h"
 #include "TVirtualPS.h"
-#include "TVirtualX.h"
 #include "TVirtualViewer3D.h"
 #include "TView.h"
 #include "TPoint.h"
