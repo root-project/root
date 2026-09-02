@@ -12,6 +12,18 @@
 # RNTuple optionally writes to S3-compatible object storage via libcurl (RCurlHttp).
 if(curl)
   set(ROOTNTuple_OPTIONAL_DEPENDENCIES RCurlHttp)
+  list(APPEND ROOTNTuple_EXTRA_HEADERS ROOT/RPageStorageS3.hxx)
+  list(APPEND ROOTNTuple_EXTRA_SOURCES src/RPageStorageS3.cxx)
+endif()
+
+# Enable RNTuple support for Intel DAOS
+if(daos OR daos_mock)
+  list(APPEND ROOTNTuple_EXTRA_HEADERS ROOT/RPageStorageDaos.hxx)
+  list(APPEND ROOTNTuple_EXTRA_SOURCES src/RDaos.cxx src/RPageStorageDaos.cxx)
+
+  if(daos_mock)
+    list(APPEND ROOTNTuple_EXTRA_SOURCES src/libdaos_mock/libdaos_mock.cxx)
+  endif()
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTuple
@@ -62,6 +74,7 @@ HEADERS
   ROOT/RPageStorage.hxx
   ROOT/RPageStorageFile.hxx
   ROOT/RRawPtrWriteEntry.hxx
+  ${ROOTNTuple_EXTRA_HEADERS}
 SOURCES
   src/RCluster.cxx
   src/RClusterPool.cxx
@@ -100,6 +113,7 @@ SOURCES
   src/RPageSinkBuf.cxx
   src/RPageStorage.cxx
   src/RPageStorageFile.cxx
+  ${ROOTNTuple_EXTRA_SOURCES}
 LINKDEF
   LinkDef.h
 DEPENDENCIES
@@ -113,15 +127,12 @@ target_link_libraries(ROOTNTuple PRIVATE xxHash::xxHash)
 
 # Enable RNTuple support for Intel DAOS
 if(daos OR daos_mock)
-  set(ROOTNTuple_EXTRA_HEADERS ROOT/RPageStorageDaos.hxx)
-  target_sources(ROOTNTuple PRIVATE src/RDaos.cxx src/RPageStorageDaos.cxx)
   target_compile_definitions(ROOTNTuple PRIVATE R__ENABLE_DAOS)
 
   target_include_directories(ROOTNTuple PRIVATE ${UUID_INCLUDE_DIR})
   target_link_libraries(ROOTNTuple PRIVATE ${UUID_LIBRARY})
   if(daos_mock)
     target_include_directories(ROOTNTuple PRIVATE inc/ROOT/libdaos_mock/)
-    target_sources(ROOTNTuple PRIVATE src/libdaos_mock/libdaos_mock.cxx)
   else()
     target_include_directories(ROOTNTuple PRIVATE ${DAOS_INCLUDE_DIRS})
     target_link_libraries(ROOTNTuple PRIVATE ${DAOS_LIBRARIES})
@@ -130,8 +141,6 @@ endif()
 
 # Enable RNTuple support for S3-compatible object storage
 if(curl)
-  set(ROOTNTuple_EXTRA_HEADERS ${ROOTNTuple_EXTRA_HEADERS} ROOT/RPageStorageS3.hxx)
-  target_sources(ROOTNTuple PRIVATE src/RPageStorageS3.cxx)
   target_compile_definitions(ROOTNTuple PRIVATE R__ENABLE_S3)
   target_link_libraries(ROOTNTuple PRIVATE nlohmann_json::nlohmann_json)
 endif()
