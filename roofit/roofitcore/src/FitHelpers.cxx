@@ -259,6 +259,37 @@ struct MinimizerConfig {
    std::string minAlg = "minuit";
 };
 
+/// Validates the NumCPU() argument for the non-legacy evaluation backends and
+/// returns the effective number of worker threads for the RooFit::Evaluator.
+int effectiveNumWorkers(RooAbsArg const &arg, RooFit::EvalBackend::Value evalBackend, int numCpu)
+{
+   using Value = RooFit::EvalBackend::Value;
+
+   if (numCpu <= 1) {
+      return 1;
+   }
+   if (evalBackend == Value::Cuda) {
+      oocoutW(&arg, Fitting) << "The NumCPU() option is ignored by the CUDA evaluation backend." << std::endl;
+      return 1;
+   }
+   if (evalBackend == Value::CodegenNoGrad) {
+      oocoutW(&arg, Fitting) << "The NumCPU() option has no effect with EvalBackend(\"codegen_no_grad\"), "
+                                "because the test statistic is evaluated with single-threaded generated code."
+                             << std::endl;
+      return 1;
+   }
+   if (evalBackend == Value::Codegen) {
+      oocxcoutI(&arg, Fitting) << "NumCPU(" << numCpu << ") enables multi-threaded evaluation of large batches "
+                               << "for test statistic values. The generated gradient code is not affected."
+                               << std::endl;
+      return numCpu;
+   }
+   oocxcoutI(&arg, Fitting) << "NumCPU(" << numCpu << ") enables multi-threaded evaluation of large batches in "
+                            << "the RooBatchCompute library. The interleaving strategy argument of NumCPU() is "
+                            << "ignored." << std::endl;
+   return numCpu;
+}
+
 bool interpretExtendedCmdArg(RooAbsPdf const &pdf, int extendedCmdArg)
 {
    // Process automatic extended option
@@ -913,9 +944,11 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
          nll = std::move(correctedNLL);
       }
 
+      const int nWorkers = effectiveNumWorkers(pdf, evalBackend, pc.getInt("numcpu"));
+
       auto nllWrapper = std::make_unique<RooFit::Experimental::RooEvaluatorWrapper>(
          *nll, &data, evalBackend == RooFit::EvalBackend::Value::Cuda, rangeName ? rangeName : "", pdfClone.get(),
-         takeGlobalObservablesFromData);
+         takeGlobalObservablesFromData, nWorkers);
 
       // We destroy the timing scrope for createNLL prematurely, because we
       // separately measure the time for jitting and gradient creation
@@ -1089,6 +1122,8 @@ std::unique_ptr<RooAbsReal> createChi2(RooAbsReal &real, RooDataHist &data, cons
 
       std::unique_ptr<RooFit::Experimental::RooEvaluatorWrapper> wrapper;
 
+      const int nWorkers = effectiveNumWorkers(real, evalBackend, pc.getInt("numcpu"));
+
       // Function mode: the input is a non-pdf RooAbsReal. We can short-circuit
       // the pdf-compilation pipeline since there's no real pdf to normalize.
       if (!pdf) {
@@ -1101,7 +1136,7 @@ std::unique_ptr<RooAbsReal> createChi2(RooAbsReal &real, RooDataHist &data, cons
          wrapper = std::make_unique<RooFit::Experimental::RooEvaluatorWrapper>(
             *chi2, &data, evalBackend == RooFit::EvalBackend::Value::Cuda, rangeName ? rangeName : "",
             /*simPdf=*/nullptr,
-            /*takeGlobalObservablesFromData=*/true);
+            /*takeGlobalObservablesFromData=*/true, nWorkers);
          wrapper->addOwnedComponents(std::move(chi2));
       } else {
          const bool extended = interpretExtendedCmdArg(*pdf, pc.getInt("extended"));
@@ -1140,7 +1175,7 @@ std::unique_ptr<RooAbsReal> createChi2(RooAbsReal &real, RooDataHist &data, cons
 
          wrapper = std::make_unique<RooFit::Experimental::RooEvaluatorWrapper>(
             *chi2, &data, evalBackend == RooFit::EvalBackend::Value::Cuda, rangeName ? rangeName : "", pdfClone.get(),
-            /*takeGlobalObservablesFromData=*/true);
+            /*takeGlobalObservablesFromData=*/true, nWorkers);
          wrapper->addOwnedComponents(std::move(binSamplingPdfs));
          wrapper->addOwnedComponents(std::move(chi2));
          wrapper->addOwnedComponents(std::move(pdfClone));

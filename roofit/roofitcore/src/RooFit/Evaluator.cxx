@@ -613,6 +613,25 @@ void Evaluator::markGPUNodes()
    }
 }
 
+/// \brief Sets the number of threads to use for the evaluation of a single node.
+///
+/// With a value greater than one, the computation functions and reductions of
+/// the CPU backend process large batches multi-threaded, using up to the
+/// given number of threads. Nodes evaluated on the CPU with fewer events than
+/// an internal threshold are still evaluated single-threaded, so requesting
+/// multiple threads never introduces scheduling overhead for small fits.
+void Evaluator::setNThreads(int nThreads)
+{
+   for (auto &info : _nodes) {
+      if (info.isVariable) {
+         continue;
+      }
+      RooBatchCompute::Config cfg = _evalContextCPU.config(info.absArg);
+      cfg.setNThreads(nThreads);
+      _evalContextCPU.setConfig(info.absArg, cfg);
+   }
+}
+
 /// Temporarily change the operation mode of a RooAbsArg until the
 /// Evaluator gets deleted.
 void Evaluator::setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode)

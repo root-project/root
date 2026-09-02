@@ -58,8 +58,16 @@ public:
    void setCudaStream(CudaInterface::CudaStream *cudaStream) { _cudaStream = cudaStream; }
    CudaInterface::CudaStream *cudaStream() const { return _cudaStream; }
 
+   /// Number of threads to use for CPU batch computations and reductions.
+   /// Values smaller than two mean single-threaded evaluation. The CPU
+   /// backend may still evaluate small batches single-threaded to avoid
+   /// scheduling overhead.
+   void setNThreads(int nThreads) { _nThreads = nThreads; }
+   int nThreads() const { return _nThreads; }
+
 private:
    CudaInterface::CudaStream *_cudaStream = nullptr;
+   int _nThreads = 1;
 };
 
 enum class Architecture {
