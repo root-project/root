@@ -800,6 +800,9 @@ private:
   /// files.
   llvm::DenseSet<LoadedMacroInfo> LoadedUndefs;
 
+  /// \Token literal data loaded and owned by us.
+  std::vector<std::string *> TokenLiteralDataLoaded;
+
   /// A vector containing submodules that have already been loaded.
   ///
   /// This vector is indexed by the Submodule ID (-1). NULL submodule entries
