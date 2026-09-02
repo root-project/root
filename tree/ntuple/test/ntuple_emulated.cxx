@@ -1,5 +1,7 @@
 #include "ntuple_test.hxx"
 #include "ntuple_fork.hxx"
+
+#include "TDictAttributeMap.h"
 #include "TSystem.h"
 
 TEST(RNTupleEmulated, EmulatedFields_Simple)
@@ -684,6 +686,105 @@ TEST(RNTupleEmulated, CollectionProxy)
    EXPECT_EQ(0x42, vec->at(99));
    reader->LoadEntry(1);
    EXPECT_EQ(0u, vec->size());
+}
+
+TEST(RNTupleEmulated, EmulatedFields_SoA)
+{
+   FileRaii fileGuard("test_ntuple_emulated_fields_soa.root");
+
+   ExecInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.requiredDiag(kWarning, "[ROOT.NTuple]", "The SoA field is experimental and still under development.",
+                            true /* matchFullMessage */);
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+         struct EmulatedRecord {
+            int fX;
+
+            ClassDefNV(EmulatedRecord, 2);
+         };
+
+         struct EmulatedSoA {
+            ROOT::RVec<int> fX;
+
+            ClassDefNV(EmulatedSoA, 2);
+         };
+      )"));
+
+      auto cl = TClass::GetClass("EmulatedSoA");
+      cl->CreateAttributeMap();
+      cl->GetAttributeMap()->AddProperty("rntuple.SoARecord", "EmulatedRecord");
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "EmulatedSoA").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+      DeclarePointer("EmulatedSoA", "ptr", ptr);
+
+      ProcessLine("ptr->fX.push_back(13)");
+      ProcessLine("ptr->fX.push_back(17)");
+      writer->Fill();
+   });
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+
+   {
+      RNTupleDescriptor::RCreateModelOptions opts;
+      opts.SetEmulateUnknownTypes(false);
+      try {
+         auto model = desc.CreateModel(opts);
+         FAIL() << "Creating a model without fEmulateUnknownTypes should fail";
+      } catch (const ROOT::RException &ex) {
+         ASSERT_THAT(ex.GetError().GetReport(), testing::HasSubstr("unknown type"));
+      }
+   }
+
+   {
+      RNTupleDescriptor::RCreateModelOptions opts;
+      opts.SetEmulateUnknownTypes(true);
+      auto model = desc.CreateModel(opts);
+      ASSERT_NE(model, nullptr);
+
+      const auto &soa = model->GetConstField("f");
+      EXPECT_EQ(soa.GetTypeName(), "EmulatedSoA");
+      EXPECT_TRUE(soa.GetTraits() & ROOT::RFieldBase::kTraitEmulatedField);
+      EXPECT_EQ(soa.GetStructure(), ROOT::ENTupleStructure::kCollection);
+
+      const auto children = soa.GetConstSubfields();
+      EXPECT_EQ(children[0]->GetFieldName(), "_0");
+      EXPECT_EQ(children[0]->GetTypeName(), "EmulatedRecord");
+      EXPECT_EQ(children[0]->GetStructure(), ROOT::ENTupleStructure::kRecord);
+      EXPECT_NE(children[0]->GetTraits() & RFieldBase::kTraitEmulatedField, 0);
+      const auto grandChildren = children[0]->GetConstSubfields();
+      EXPECT_EQ(grandChildren[0]->GetFieldName(), "fX");
+      EXPECT_EQ(grandChildren[0]->GetTypeName(), "std::int32_t");
+   }
+
+   RNTupleDescriptor::RCreateModelOptions cmOpts;
+   cmOpts.SetEmulateUnknownTypes(true);
+
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
+   diagRAII.optionalDiag(kWarning, "TClass::Init", "no dictionary for class",
+                         /*matchFullMessage=*/false);
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
+   std::unique_ptr<ROOT::RNTuple> ntpl(file->Get<ROOT::RNTuple>("ntpl"));
+   reader = RNTupleReader::Open(cmOpts, *ntpl);
+   EXPECT_EQ(reader->GetNEntries(), 2);
+
+   auto vecView = reader->GetCollectionView("f");
+   EXPECT_EQ(0u, vecView(0));
+
+   EXPECT_EQ(2u, vecView(1));
+   auto viewX = vecView.GetView<int>("_0.fX");
+   EXPECT_EQ(13, viewX(0));
+   EXPECT_EQ(17, viewX(1));
 }
 
 TEST(RNTupleEmulated, MergeEmulated)
