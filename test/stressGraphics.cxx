@@ -125,7 +125,7 @@ Bool_t    gSvgMode = kFALSE;
 Bool_t    gSvgCompact = kTRUE;
 std::string gSvgRefPath;
 Bool_t    gWebMode = kFALSE;
-Bool_t    gSkip3D = kFALSE;
+Int_t     gSkip3D = 0;
 Bool_t    gOptionR = kFALSE;
 Bool_t    gOptionK = kFALSE;
 TH2F     *gH2 = nullptr;
@@ -577,9 +577,6 @@ void start_block(const TString &title, bool is3d = false)
    int batch_size = 80;
    // cef makes problem with many images in 3D mode, so reduce it
    if (is3d && TString("cef") == gROOT->GetWebDisplay())
-      batch_size = 10;
-   // chrome on the CI nodes in the docker also sometime fails in 3d mode
-   else if (is3d && TString("chrome") == gROOT->GetWebDisplay() && !gSystem->AccessPathName("/.dockerenv", kFileExists))
       batch_size = 10;
 
    webcanv_batch_mode(batch_size);
@@ -4659,12 +4656,12 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    options2d1    ();
    options2d2    ();
    options2d3    ();
-   if (!gSkip3D) {
+   if (gSkip3D <= 0) {
       options2d4 ();
       options2d5 ();
    }
    earth         ();
-   if (!gSkip3D) {
+   if (gSkip3D <= 0) {
       thstack2   ();
       tgraph2d1  ();
       tgraph2d2  ();
@@ -4679,7 +4676,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    print_reports ();
 
    start_block("complex drawing and TPad");
-   if (!gSkip3D) {
+   if (gSkip3D <= 0) {
       ntuple1    ();
    }
    quarks        ();
@@ -4827,10 +4824,12 @@ int main(int argc, char *argv[])
          gSvgMode = kTRUE;
          gSvgCompact = kFALSE;
          gSvgRefPath = argv[i] + 7;
-      } else if (strstr(argv[i], "-p="))
+      } else if (strstr(argv[i], "-p=") == argv[i])
          filePrefix = argv[i] + 3;
-      else if (strstr(argv[i], "-skip3d"))
-         gSkip3D = kTRUE;
+      else if (!strcmp(argv[i], "-skip3d"))
+         gSkip3D = 1;
+      else if (!strcmp(argv[i], "-3d"))
+         gSkip3D = -1;
       else if (!strcmp(argv[i], "-h")) {
          printf("Usage: stressGraphics [-h] [-r] [-k] [-p=prefix] [--web]\n");
          printf("Options:\n");
@@ -4839,28 +4838,37 @@ int main(int argc, char *argv[])
          printf("       to redefine the reference file.\n");
          printf("  -k : Keep the output files even for passed tests.\n");
          printf("       By default output files for passed tests are deleted.\n");
-         printf("  -p=prefix: Provide custom prefix for generated files, default \"sg\"\n");
+         printf("  -p=prefix : Provide custom prefix for generated files, default \"sg\"\n");
          printf("  -skip3d : skip 3D testing.\n");
+         printf("  -3d : force 3D testing.\n");
          printf("  -svg=<path/to/ref/files> : check compact SVG files.\n");
          printf("  -svg0=<path/to/ref/files> : check normal SVG files.\n");
          printf("  -v : increase verbosity.\n");
          printf("  --web=chrome|firefox|off : Configure web mode\n");
          printf("  -h : Print usage\n");
-         printf("  --build file1.txt file2.txt file3.txt: Build ref file\n");
+         printf("  --build file1.txt file2.txt file3.txt : Build ref file\n");
          printf("      One run stressGraphics on different platforms with -r flag and store into text files.\n");
          printf("      Based on these files one generate ref file which can be commited to repository\n");
-         printf("  Any other option is ignored.\n");
+         printf("  All other options are ignored.\n");
          return 0;
       }
    }
 
    gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
+
+   if ((gSkip3D == 0) && gWebMode && (TString("chrome") == gROOT->GetWebDisplay())) {
+      if (!gSystem->AccessPathName("/.dockerenv", kFileExists)) {
+         printf("!!! Disable 3D tests with chrome when running in the docker !!!\n");
+         gSkip3D = 1;
+      }
+   }
+
    gBenchmark = new TBenchmark();
 
    stressGraphics(verbose, generate, keep);
 
    return gTestsFailed != 0;
 }
-#endif
 
+#endif
