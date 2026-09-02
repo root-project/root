@@ -2660,7 +2660,7 @@ Longptr_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          }
       } else {
          // neither ACLiC nor run shared-library (.x)
-         size_t unnamedMacroOpenCurly;
+         size_t unnamedMacroOpenCurly, unnamedMacroCloseCurly;
          {
             std::string code;
             std::string codeline;
@@ -2671,14 +2671,15 @@ Longptr_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
                std::getline(in, codeline);
                code += codeline + "\n";
             }
-            unnamedMacroOpenCurly
-              = cling::utils::isUnnamedMacro(code, fInterpreter->getCI()->getLangOpts());
+            TString dirName = gSystem->DirName(fname);
+            std::tie(unnamedMacroOpenCurly, unnamedMacroCloseCurly)
+              = cling::utils::isUnnamedMacro(code, fInterpreter->getCI()->getSourceManager(), fInterpreter->getCI()->getPreprocessor(), dirName.Data());
          }
 
          fCurExecutingMacros.push_back(fname);
-         if (unnamedMacroOpenCurly != std::string::npos) {
+         if (unnamedMacroOpenCurly != std::string::npos && unnamedMacroCloseCurly != std::string::npos) {
             compRes = fMetaProcessor->readInputFromFile(fname.Data(), &result,
-                                                        unnamedMacroOpenCurly);
+                                                        unnamedMacroOpenCurly, false, unnamedMacroCloseCurly);
          } else {
             // No DynLookup for .x, .L of named macros.
             fInterpreter->enableDynamicLookup(false);
