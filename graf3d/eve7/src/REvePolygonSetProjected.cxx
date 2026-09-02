@@ -87,6 +87,10 @@ Int_t REvePolygonSetProjected::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset
 
 void REvePolygonSetProjected::BuildRenderData()
 {
+   // check the shape is not just a holder
+   if (fPnts.empty())
+         return;
+
    fRenderData = std::make_unique<REveRenderData>("makePolygonSetProjected", 3 * fPnts.size());
 
    Int_t n_pols = fPols.size();

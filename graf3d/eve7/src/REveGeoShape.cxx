@@ -146,18 +146,26 @@ void REveGeoShape::BuildRenderData()
 {
    if (!fShape) return;
 
+   // Tesselate first, a shape without faces has nothing that can be rendered
+   // as a mesh. Composite shapes are already converted in SetShape().
+   REveGeoPolyShape *egps = nullptr;
+   std::unique_ptr<REveGeoPolyShape> tmp_egps;
+
+   if (fCompositeShape) {
+      egps = dynamic_cast<REveGeoPolyShape *>(fShape);
+   } else {
+      REveGeoManagerHolder gmgr(fgGeoManager);
+      tmp_egps = std::make_unique<REveGeoPolyShape>();
+      tmp_egps->BuildFromShape(fShape, fNSegments);
+      egps = tmp_egps.get();
+   }
+
+   if (!egps || egps->GetNumFaces() == 0) return;
+
    fRenderData = std::make_unique<REveRenderData>("makeEveGeoShape");
    REveElement::BuildRenderData();
 
-   if (fCompositeShape) {
-      REveGeoPolyShape* egps = dynamic_cast<REveGeoPolyShape *>(fShape);
-      egps->FillRenderData(*fRenderData);
-   } else {
-      REveGeoManagerHolder gmgr(fgGeoManager);
-      std::unique_ptr<REveGeoPolyShape> tmp_egps = std::make_unique<REveGeoPolyShape>();
-      tmp_egps->BuildFromShape(fShape, fNSegments);
-      tmp_egps->FillRenderData(*fRenderData);
-   }
+   egps->FillRenderData(*fRenderData);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

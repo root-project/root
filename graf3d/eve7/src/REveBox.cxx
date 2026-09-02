@@ -263,6 +263,11 @@ void REveBoxProjected::SetDebugCornerPoints(Bool_t d)
 void REveBoxProjected::BuildRenderData()
 {
    int N = fPoints.size();
+
+   // makeBoxProjected draws the projected box as a 3D mesh
+   // ignore REveBoxProjected render data if projected box is a line (N=2)
+   if ( N < 3 ) return;
+
    fRenderData = std::make_unique<REveRenderData>("makeBoxProjected", N*3);
    for (auto &v : fPoints)
    {
