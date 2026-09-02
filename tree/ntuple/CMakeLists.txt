@@ -27,6 +27,7 @@ if(daos OR daos_mock)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTuple
+NO_GLOB_HEADERS # Ensure that the optional headers above only get installed when enabled
 HEADERS
   ROOT/RCluster.hxx
   ROOT/RClusterPool.hxx
