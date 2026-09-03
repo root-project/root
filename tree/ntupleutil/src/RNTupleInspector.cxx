@@ -455,6 +455,70 @@ ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(std::initializer_l
    return stackedHist;
 }
 
+std::unique_ptr<THStack> ROOT::Experimental::RNTupleInspector::GetPagesPerClusterDistribution(
+   std::initializer_list<ROOT::ENTupleColumnType> colTypes, std::string_view histName, std::string_view histTitle,
+   size_t nBins)
+{
+   if (histName.empty())
+      histName = "pagesPerClusterHist";
+   if (histTitle.empty())
+      histTitle = "#pages per cluster";
+
+   auto stackedHist = std::make_unique<THStack>(std::string(histName).c_str(), std::string(histTitle).c_str());
+   // Each element of the vector contains the sum of all pages of all columns of each type.
+   std::vector<std::unordered_map<ENTupleColumnType, std::uint64_t>> pagesPerClusterPerColumnType;
+
+   std::vector<ROOT::ENTupleColumnType> colTypeVec = colTypes;
+   if (std::empty(colTypes)) {
+      colTypeVec = GetColumnTypes();
+   }
+
+   for (const auto &clDesc : fDescriptor.GetClusterIterable()) {
+      auto &pagesPerColumnTypeInThisCluster = pagesPerClusterPerColumnType.emplace_back();
+      for (const auto &colRange : clDesc.GetColumnRangeIterable()) {
+         const auto colId = colRange.GetPhysicalColumnId();
+         const auto &colDesc = fDescriptor.GetColumnDescriptor(colId);
+         const auto nPages = clDesc.GetPageRange(colId).GetPageInfos().size();
+         auto &nPagesForThisType = pagesPerColumnTypeInThisCluster[colDesc.GetType()];
+         nPagesForThisType += nPages;
+      }
+   }
+
+   double histMin = std::numeric_limits<double>::max();
+   double histMax = 0;
+   for (const auto &pagesPerType : pagesPerClusterPerColumnType) {
+      auto [min, max] = std::minmax_element(pagesPerType.begin(), pagesPerType.end(),
+                                            [](const auto &a, const auto &b) { return a.second < b.second; });
+      histMin = std::min<double>(histMin, min->second);
+      histMax = std::max<double>(histMax, max->second);
+   }
+
+   std::cout << "histMin = " << histMin << ", histMax = " << histMax << "\n";
+
+   std::array<std::unique_ptr<TH1L>, static_cast<std::size_t>(ENTupleColumnType::kMax)> histsPerType;
+   for (const auto &pagesPerType : pagesPerClusterPerColumnType) {
+      for (const auto &[colType, nPages] : pagesPerType) {
+         auto &hist = histsPerType[static_cast<std::size_t>(colType)];
+         if (!hist) {
+            hist =
+               std::make_unique<TH1L>(ROOT::Internal::RColumnElementBase::GetColumnTypeName(colType),
+                                      TString::Format("%s_%s", std::string(histTitle).c_str(),
+                                                      ROOT::Internal::RColumnElementBase::GetColumnTypeName(colType)),
+                                      nBins, histMin, histMax + ((histMax - histMin) / static_cast<double>(nBins)));
+         }
+         hist->Fill(nPages);
+      }
+   }
+
+   for (auto &hist : histsPerType) {
+      if (hist) {
+         stackedHist->Add(hist.release());
+      }
+   }
+
+   return stackedHist;
+}
+
 //------------------------------------------------------------------------------
 
 const ROOT::Experimental::RNTupleInspector::RFieldTreeInspector &
