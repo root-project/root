@@ -5638,7 +5638,7 @@ void TASImage::DrawTextTTF(Int_t x, Int_t y, const char *text, Int_t size,
    ttf.PrepareString(text);
    ttf.LayoutGlyphs();
 
-   if (ttf.ApplyAlignRotate(x, y, 11, GetWidth(), GetHeight()))
+   if (ttf.ApplyAlignRotate(x, y, 13, GetWidth(), GetHeight()))
       DrawFTGlyphs(ttf, color, x, y);
 }
 
