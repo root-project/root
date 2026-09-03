@@ -303,10 +303,12 @@ TEST(RProfile, FillWeight)
    EXPECT_EQ(profile.GetNEntries(), 2);
    EXPECT_FLOAT_EQ(profile.GetStats().GetSumW(), 1.7);
    EXPECT_FLOAT_EQ(profile.GetStats().GetSumW2(), 1.45);
-   // Cross-checked with TH1
+   // Cross-checked with TProfile
    EXPECT_FLOAT_EQ(profile.ComputeNEffectiveEntries(), 1.9931034);
    EXPECT_FLOAT_EQ(profile.ComputeMean(0), 9.0294118);
    EXPECT_FLOAT_EQ(profile.ComputeStdDev(0), 0.49913420);
+   EXPECT_FLOAT_EQ(profile.ComputeMean(1), 24.058824);
+   EXPECT_FLOAT_EQ(profile.ComputeStdDev(1), 0.99826840);
 }
 
 TEST(RProfile, FillWeightInvalidNumberOfArguments)
