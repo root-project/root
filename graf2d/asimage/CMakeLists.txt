@@ -49,6 +49,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ASImageUtils
     LinkDefUtils.h
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
+  LIBRARIES
+    ROOTclib # strlcpy.h
   DEPENDENCIES
     Gpad
 )

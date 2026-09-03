@@ -2,7 +2,6 @@
 // C and C++ context.
 module ROOT_Foundation_C  {
   module "ThreadLocalStorage.h" { header "ThreadLocalStorage.h" export * }
-  module "strlcpy.h" { header "strlcpy.h" export * }
 
   export *
 }

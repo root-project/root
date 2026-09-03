@@ -8,12 +8,10 @@
 # CMakeLists.txt file for building ROOT core/clib package
 ############################################################################
 
-set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
-  strlcpy.h # custom ROOT file (https://github.com/root-project/root/blob/b48975de4dcbcd5f1ecf7f60c3f8e39c38a1f6e3/core/clib/inc/strlcpy.h)
-  strtok.h # custom ROOT file (https://github.com/root-project/root/blob/d39c9211ba045c0b9aaa780ec76a32666e04cd1e/core/clib/inc/strtok.h)
-)
+add_library(ROOTclib STATIC)
 
-ROOT_OBJECT_LIBRARY(Clib
+target_sources(ROOTclib
+PRIVATE
   # All this code below is LGPL (GNU Lesser General Public License was called at that time GNU Library General Public License)
   src/attach.c # forked in 1999 from gdb-4 (https://github.com/root-project/root/blob/852600061bcacd9b255d44f6312c96b6b1e00a2d/clib/src/attach.c vs https://github.com/gnutools/binutils-gdb/blob/c906108c21474dfb4ed285bcc0ac6fe02cd400cc/mmalloc/attach.c)
   src/detach.c # forked in 1999 from gdb-4 (https://github.com/root-project/root/blob/852600061bcacd9b255d44f6312c96b6b1e00a2d/clib/src/detach.c vs https://github.com/gnutools/binutils-gdb/blob/c906108c21474dfb4ed285bcc0ac6fe02cd400cc/mmalloc/detach.c)
@@ -31,22 +29,40 @@ ROOT_OBJECT_LIBRARY(Clib
   # res/mmalloc.h (https://github.com/root-project/root/blob/852600061bcacd9b255d44f6312c96b6b1e00a2d/clib/inc/mmalloc.h vs https://github.com/gnutools/binutils-gdb/blob/c906108c21474dfb4ed285bcc0ac6fe02cd400cc/mmalloc/mmalloc.h)
   # res/mmconfig.h # custom ROOT file (https://github.com/root-project/root/blob/852600061bcacd9b255d44f6312c96b6b1e00a2d/clib/inc/mmconfig.h)
   # res/mmprivate.h # forked in 1999 from gdb-4 (https://github.com/root-project/root/blob/852600061bcacd9b255d44f6312c96b6b1e00a2d/clib/inc/mmprivate.c vs https://github.com/gnutools/binutils-gdb/blob/c906108c21474dfb4ed285bcc0ac6fe02cd400cc/mmalloc/mmprivate.c)
+PUBLIC
+  FILE_SET HEADERS
+  TYPE HEADERS
+  BASE_DIRS inc/ res/
+  FILES
+    inc/strlcpy.h # custom ROOT file (https://github.com/root-project/root/blob/b48975de4dcbcd5f1ecf7f60c3f8e39c38a1f6e3/core/clib/inc/strlcpy.h)
+    inc/strtok.h # custom ROOT file (https://github.com/root-project/root/blob/d39c9211ba045c0b9aaa780ec76a32666e04cd1e/core/clib/inc/strtok.h)
+    res/mmprivate.h # New requires those publicly
+    res/mmalloc.h # New requires those publicly
 )
 
-target_include_directories(Clib
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-  PRIVATE
-    ${CMAKE_BINARY_DIR}/ginclude
-    ${CMAKE_CURRENT_SOURCE_DIR}/res
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../core/foundation/inc # for RConfig.hxx
+include(CheckSourceCompiles)
+check_source_compiles(C
+    "#include <string.h>
+     int main() {
+         char dst[10];
+         strlcpy(dst, \"a\", 10);
+         return 0;
+     }"
+    HAS_STRLCPY
 )
 
-target_include_directories(Core
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-)
 
-target_sources(Core PRIVATE $<TARGET_OBJECTS:Clib>)
+target_compile_definitions(ROOTclib PUBLIC $<$<BOOL:${HAS_STRLCPY}>:HAS_STRLCPY>)
+if (NOT WIN32)
+  target_compile_definitions(ROOTclib PRIVATE INVALID_HANDLE_VALUE=-1)
+endif()
+if (UNIX)
+target_compile_definitions(ROOTclib PRIVATE R__HAVE_UNISTD_H)
+endif()
+target_compile_definitions(ROOTclib PRIVATE R__HAVE_MMAP)
+target_compile_definitions(ROOTclib PRIVATE NO_SBRK_MALLOC)
+target_compile_definitions(ROOTclib PRIVATE $<$<PLATFORM_ID:LynxOS>:R__LYNXOS>)
+target_compile_definitions(ROOTclib PRIVATE $<$<PLATFORM_ID:GNU>:R__HURD>)
 
-ROOT_INSTALL_HEADERS()
+set_property(TARGET ROOTclib PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_link_options(ROOTclib PRIVATE -fvisibility=hidden)
