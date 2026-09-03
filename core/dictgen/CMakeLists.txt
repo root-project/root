@@ -48,12 +48,13 @@ target_include_directories(Dictgen PRIVATE
   ${CMAKE_SOURCE_DIR}/core/foundation/res
   ${CMAKE_SOURCE_DIR}/core/clingutils/res
   ${CMAKE_SOURCE_DIR}/core/base/inc
-  ${CMAKE_SOURCE_DIR}/builtins/clib/inc
   ${CMAKE_SOURCE_DIR}/core/meta/inc
   ${CMAKE_SOURCE_DIR}/core/foundation/inc
   ${CMAKE_BINARY_DIR}/ginclude
   ${CLING_INCLUDE_DIRS}
 )
+
+target_link_libraries(Dictgen PRIVATE ROOTclib)
 
 # Register the llvm include directories after clangs. This instructs the compiler to resolve
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off

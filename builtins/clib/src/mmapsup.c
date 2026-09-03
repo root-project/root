@@ -31,7 +31,7 @@ Boston, MA 02111-1307, USA.  */
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
-#ifdef WIN32
+#ifdef _WIN32
 typedef char* caddr_t;
 #else
 #  include <unistd.h>
@@ -68,7 +68,7 @@ PTR __mmalloc_mmap_morecore(struct mdesc *mdp, int size)
   caddr_t moveto;       /* Address where we wish to move "break value" to */
   caddr_t mapto;        /* Address we actually mapped to */
   char buf = 0;         /* Single byte to write to extend mapped file */
-#ifdef WIN32
+#ifdef _WIN32
   HANDLE hMap;
 #endif
 
@@ -108,7 +108,7 @@ PTR __mmalloc_mmap_morecore(struct mdesc *mdp, int size)
           if (mdp -> breakval == mdp -> base) {
             /* moveto = PAGE_ALIGN (mdp -> breakval); */
             moveto = PAGE_ALIGN (mdp -> base);
-#ifndef WIN32
+#ifndef _WIN32
             munmap (moveto, (size_t) (mdp -> top - moveto));
 #else
             UnmapViewOfFile(moveto);
@@ -135,7 +135,7 @@ PTR __mmalloc_mmap_morecore(struct mdesc *mdp, int size)
           moveto = PAGE_ALIGN (mdp -> breakval + size);
           mapbytes = moveto - mdp -> top;
           foffset = mdp -> top - mdp -> base;
-#ifndef WIN32
+#ifndef _WIN32
           if (lseek (mdp -> fd, foffset + mapbytes - 1, SEEK_SET) == -1) {
              fprintf(stderr, "mmap_morecore: error in lseek (%d)\n", errno);
              return (result);
@@ -170,7 +170,7 @@ PTR __mmalloc_mmap_morecore(struct mdesc *mdp, int size)
             }
           } else {
             /*fprintf(stderr, "mmap_morecore: try to extend mapping by %d bytes, use bigger TMapFile\n", mapbytes);*/
-#ifndef WIN32
+#ifndef _WIN32
             if (mdp -> top != PAGE_ALIGN(mdp -> top)) {
               fprintf(stderr,
                       "mmap_morecore error: base memory location (%p) is not aligned with %zu as required.\n",
@@ -213,7 +213,7 @@ PTR __mmalloc_remap_core(struct mdesc *mdp)
   caddr_t base;
   int rdonly = 0;
 
-#ifndef WIN32
+#ifndef _WIN32
   int val;
   if ((val = fcntl(mdp->fd, F_GETFL, 0)) < 0) {
      fprintf(stderr, "__mmalloc_remap_core: error calling fcntl(%d)\n", errno);
@@ -233,7 +233,7 @@ PTR __mmalloc_remap_core(struct mdesc *mdp)
 #endif
 
   if (rdonly) {
-#ifndef WIN32
+#ifndef _WIN32
     base = mmap (mdp -> base, mdp -> top - mdp -> base,
                  PROT_READ, MAP_SHARED /* | MAP_FIXED */,
                  mdp -> fd, 0);
@@ -262,7 +262,7 @@ PTR __mmalloc_remap_core(struct mdesc *mdp)
 #endif
     if (base != mdp->base) mdp->offset = base - mdp->base;
   } else {
-#ifndef WIN32
+#ifndef _WIN32
     base = mmap (mdp -> base, mdp -> top - mdp -> base,
                  PROT_READ | PROT_WRITE, MAP_SHARED /* | MAP_FIXED */,
                  mdp -> fd, 0);
@@ -301,7 +301,7 @@ int mmalloc_update_mapping(PTR md)
   size_t  mapbytes;
   off_t   foffset;
   int     result;
-#ifdef WIN32
+#ifdef _WIN32
     HANDLE hMap;
 #endif
 
@@ -312,7 +312,7 @@ int mmalloc_update_mapping(PTR md)
 
   if (top < oldtop) {
 
-#ifndef WIN32
+#ifndef _WIN32
     munmap (top, (size_t) (oldtop - top));
 #else
     UnmapViewOfFile((LPCVOID)top);
@@ -323,7 +323,7 @@ int mmalloc_update_mapping(PTR md)
 
     mapbytes = top - oldtop;
     foffset = oldtop - mdp->base;
-#ifndef WIN32
+#ifndef _WIN32
     mapto = mmap (oldtop, mapbytes, PROT_READ,
                   MAP_SHARED /* | MAP_FIXED */, mdp -> fd, foffset);
 #else

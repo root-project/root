@@ -257,6 +257,8 @@ endif()
 target_compile_options(Core PRIVATE -DLIB_CORE_NAME=${full_core_filename}
                                     -DINSTALL_LIB_TO_INCLUDE="${install_lib_to_include}"
 )
+target_link_libraries(Core PRIVATE ROOTclib)
+
 add_dependencies(Core ensure_build_tree_marker)
 
 if(PCRE2_FOUND)

@@ -61,6 +61,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
   DEPENDENCIES
     Graf
     Hist
+  LIBRARIES
+    ROOTclib # strlcpy.h
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

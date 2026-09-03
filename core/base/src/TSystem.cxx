@@ -23,7 +23,6 @@ allows a simple partial implementation for new OS'es.
 
 #include <ROOT/FoundationUtils.hxx>
 #include <ROOT/RCryptoRandom.hxx>
-#include "strlcpy.h"
 #include "TSystem.h"
 #include "TApplication.h"
 #include "TException.h"
@@ -46,6 +45,7 @@ allows a simple partial implementation for new OS'es.
 #include "RConfigure.h"
 #include "THashList.h"
 #include "ThreadLocalStorage.h"
+#include "strlcpy.h"
 
 #include <functional>
 #include <iostream>
