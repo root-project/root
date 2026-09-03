@@ -95,6 +95,10 @@ protected:
    template<typename T>
    void PrintPolyMarkerShape(Int_t n, T *x, T* y);
 
+   TString fFileName;          ///< PDF file name
+   Bool_t fFontEmbed = kFALSE; ///< True is FontEmbed has been called
+   Bool_t fMustEmbed[29];      ///< flag to embed font
+
 public:
    TPDF();
    TPDF(const char *filename, Int_t type=-111);
@@ -120,6 +124,10 @@ public:
    void LineTo(Double_t x, Double_t y);
    void MoveTo(Double_t x, Double_t y);
    void EndObject();
+   // bool  FontEmbedType1(const char *filename);
+   bool FontEmbedType2(const char *filename);
+   bool FontEmbedType42(const char *filename);
+   void FontEmbed();
    void FontEncode();
    void NewObject(Int_t n);
    void NewPage() override;
