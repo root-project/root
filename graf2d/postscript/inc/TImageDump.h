@@ -50,6 +50,8 @@ public:
    void  CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) override;
    void  CellArrayFill(Int_t r, Int_t g, Int_t b) override;
    void  CellArrayEnd() override;
+   void  DrawImage(TImage *img, Int_t x, Int_t y , Int_t flags = 0) override;
+
    void  Close(Option_t *opt = "") override;
    void  DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2) override;
    void  DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,

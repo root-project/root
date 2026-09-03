@@ -625,6 +625,16 @@ void TImageDump::CellArrayEnd()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Draw image
+
+void TImageDump::DrawImage(TImage *img, Int_t x, Int_t y, Int_t)
+{
+   if (fImage)
+      fImage->Merge(img, "alphablend", x, y);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set color with its R G B components
 ///
 ///  - r: % of red in [0,1]
