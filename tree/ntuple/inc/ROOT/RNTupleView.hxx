@@ -311,6 +311,9 @@ public:
 \class ROOT::RNTupleCollectionView
 \ingroup NTuple
 \brief A view for a collection, that can itself generate new ntuple views for its nested fields.
+*
+* The collection view's call operator returns the size of the collection. The collection view can also return
+* the element range and it can create subviews for fields inside the collection.
 */
 // clang-format on
 class RNTupleCollectionView {
