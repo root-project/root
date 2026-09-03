@@ -63,7 +63,6 @@ clang/LLVM technology.
 #include "RConfigure.h"
 #include "compiledata.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 #include "TClingUtils.h"
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualStreamerInfo.h"
@@ -136,6 +135,7 @@ clang/LLVM technology.
 #include <set>
 #include <stdexcept>
 #include <cstdint>
+#include <cstdio>
 #include <fstream>
 #include <sstream>
 #include <string>

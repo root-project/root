@@ -19,8 +19,8 @@
 #include "TH1.h"
 #include "TGaxis.h"
 #include "TLatex.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <iostream>
 
 

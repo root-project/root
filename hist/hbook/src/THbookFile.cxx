@@ -31,10 +31,6 @@
  THbookFile can be browsed via TBrowser.
 */
 
-#include <cstdlib>
-#include <cstring>
-#include <cctype>
-
 #include "TROOT.h"
 #include "THbookFile.h"
 #include "TH2.h"
@@ -49,7 +45,11 @@
 #include "TSystem.h"
 #include "TMath.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
 
 // NOTE: THe following comments and declarations are a duplicate
 // of those in main/src/h2root.cxx

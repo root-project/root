@@ -9,8 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <cmath>
-
 #include "TROOT.h"
 #include "TClass.h"
 #include "TBuffer.h"
@@ -25,7 +23,9 @@
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cstdio>
+#include <cmath>
 
 #ifdef WIN32
 #pragma optimize("",off)

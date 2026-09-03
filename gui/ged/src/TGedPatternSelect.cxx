@@ -75,8 +75,8 @@ is a popup window.
 #include "TGButton.h"
 #include "RStipples.h"
 #include "TVirtualX.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <iostream>
 
 

@@ -56,7 +56,6 @@ element type.
 #include "TProcessID.h"
 #include "TSystem.h"
 #include "TObjString.h"
-#include "snprintf.h"
 
 #include "TStreamer.h"
 #include "TContainerConverters.h"
@@ -76,6 +75,7 @@ element type.
 #include "TStreamerInfoActions.h"
 #include "ROOT/BitUtils.hxx"
 
+#include <cstdio>
 #include <memory>
 #include <algorithm>
 #include <array>

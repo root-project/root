@@ -27,8 +27,8 @@
 #include "TSystem.h"
 #include "TObjString.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <fstream>
 #include <algorithm>
 

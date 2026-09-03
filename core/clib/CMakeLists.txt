@@ -10,7 +10,6 @@
 
 set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   strlcpy.h
-  snprintf.h
   strtok.h
 )
 
@@ -26,7 +25,6 @@ ROOT_OBJECT_LIBRARY(Clib
   src/mmcheck.c
   src/mrealloc.c
   src/sbrksup.c
-  src/snprintf.c
   src/strlcat.c
   src/strlcpy.c
 )

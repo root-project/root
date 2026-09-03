@@ -40,7 +40,8 @@
 #include "TVirtualX.h"
 #include "TRegexp.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cstdio>
 #include <memory>
 
 Int_t TGraphPainter::fgMaxPointsPerLine = 50;

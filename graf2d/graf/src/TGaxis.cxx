@@ -9,12 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <cstdlib>
-#include <cstring>
-#include <ctime>
-#include <cmath>
-#include <iostream>
-
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TGaxis.h"
@@ -33,7 +27,13 @@
 #include "TColor.h"
 #include "TTimeStamp.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <cmath>
+#include <iostream>
 
 const Int_t kHori = BIT(9);
 

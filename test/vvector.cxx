@@ -23,10 +23,11 @@
 #ifndef __CLING__
 
 #include "TFile.h"
-#include <iostream>
-#include "snprintf.h"
 #include "TVectorD.h"
 #include "TMath.h"
+
+#include <iostream>
+#include <cstdio>
 
 void stress_vector       (Int_t verbose);
 void stress_allocation   ();

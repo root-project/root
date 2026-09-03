@@ -16,10 +16,6 @@
 //    stressGUI -help
 //
 
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-#include <snprintf.h>
 #include <TString.h>
 #include <TROOT.h>
 #include <TClass.h>
@@ -82,6 +78,11 @@
 #include <TVirtualX.h>
 
 #include <TRecorder.h>
+
+#include <cstdlib>
+#include <ctime>
+#include <iostream>
+#include <cstdio>
 
 // Global variables.
 RedirectHandle_t gRH;

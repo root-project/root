@@ -81,7 +81,6 @@
 #include "TF1.h"
 #include "TF2.h"
 #include "TFile.h"
-#include "snprintf.h"
 
 #include "Math/IFunction.h"
 #include "Math/IParamFunction.h"
@@ -110,6 +109,7 @@
 #include "TCanvas.h"
 #include "TApplication.h"
 
+#include <cstdio>
 #include <vector>
 #include <string>
 #include <cassert>

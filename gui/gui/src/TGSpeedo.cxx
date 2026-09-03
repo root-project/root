@@ -33,9 +33,9 @@ Two signals are available:
 #include "TImage.h"
 #include "TMath.h"
 #include "TVirtualX.h"
-#include "snprintf.h"
-
 #include "TGSpeedo.h"
+
+#include <cstdio>
 #include <numeric>
 
 

@@ -24,10 +24,10 @@
 #include "TMath.h"
 #include "THLimitsFinder.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
 #include <iostream>
 #include <cmath>
+#include <cstdio>
 #include <ctime>
 #include <cassert>
 

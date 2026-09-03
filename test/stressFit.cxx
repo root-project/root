@@ -53,7 +53,6 @@
 //                                                                           //
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*_*//
 
-#include <cstdlib>
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TBenchmark.h"
@@ -62,13 +61,15 @@
 #include "Riostream.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
-#include "snprintf.h"
 
 #include "Math/Factory.h"
 #include "Math/Functor.h"
 #include "Math/IFunction.h"
 #include "Math/MinimizerOptions.h"
 #include "Math/Minimizer.h"
+
+#include <cstdlib>
+#include <cstdio>
 
 Int_t stressFit(const char *type = "Minuit", const char *algo = "Migrad", Int_t N = 2000);
 Int_t    gVerbose      = -1;

@@ -1,9 +1,6 @@
 // @(#)root/test:$Id$
 // Author: Nikolay Root   05/07/98
 
-#include <cstdlib>
-#include <iostream>
-#include "snprintf.h"
 #include "TCollection.h"
 #include "TSortedList.h"
 #include "TObjArray.h"
@@ -15,6 +12,11 @@
 
 #include "TStopwatch.h"
 #include "TRandom.h"
+
+#include <cstdlib>
+#include <iostream>
+#include <cstdio>
+
 //
 // This program benchmarks access time to objects by name or index
 // for TObjArray,TOrdCollection,TList,TSortedList,THashList,TBtree,
