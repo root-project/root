@@ -39,6 +39,8 @@ public:
   RooGenericPdf(const RooGenericPdf& other, const char* name=nullptr);
   TObject* clone(const char* newname=nullptr) const override { return new RooGenericPdf(*this,newname); }
 
+  bool canComputeBatchWithCuda() const override;
+
   // I/O streaming interface (machine readable)
   bool readFromStream(std::istream& is, bool compact, bool verbose=false) override ;
   void writeToStream(std::ostream& os, bool compact) const override ;
