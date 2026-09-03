@@ -151,6 +151,8 @@ namespace Cppyy {
     CPPYY_IMPORT
     bool IsLValueReferenceType(TCppType_t type);
     CPPYY_IMPORT
+    bool IsMutablePtrRefType(TCppType_t type);
+    CPPYY_IMPORT
     bool IsRValueReferenceType(TCppType_t type);
     CPPYY_IMPORT
     bool IsClassType(TCppType_t type);

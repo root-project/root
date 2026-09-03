@@ -82,6 +82,8 @@ namespace Cppyy {
     RPY_EXPORTED
     bool IsLValueReferenceType(TCppType_t type);
     RPY_EXPORTED
+    bool IsMutablePtrRefType(TCppType_t type);
+    RPY_EXPORTED
     bool IsRValueReferenceType(TCppType_t type);
     RPY_EXPORTED
     bool IsClassType(TCppType_t type);
