@@ -422,6 +422,19 @@ void TPadPainterPS::DrawTextNDC(Double_t u, Double_t v, const char *text, ETextM
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Draw image on the PS output
+
+void TPadPainterPS::DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags)
+{
+   // transfer to absolute pixel coordiantes for PS
+   x += fPad->UtoAbsPixel(0);
+   y += fPad->VtoAbsPixel(1);
+
+   fPS->DrawImage(img, x, y, flags);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Save the image displayed in the canvas pointed by "pad" into a binary file.
 
 void TPadPainterPS::SaveImage(TVirtualPad *, const char *, Int_t) const
