@@ -45,7 +45,7 @@ public:
    {
       thread_local std::vector<ThreadData_t> tdata;
       if (tdata.size() <= fIndex)
-         tdata.resize(std::max<size_t>(fgInstanceCount.load(std::memory_order_relaxed), fIndex + 1));
+         tdata.resize(fIndex + 1);
       ThreadData_t &td = tdata[fIndex];
       if (td.fInitGen != fGeneration.load(std::memory_order_acquire))
          InitThreadSlot(td);
