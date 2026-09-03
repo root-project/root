@@ -178,7 +178,16 @@ public:
    /// Input spans of size 1 are broadcast; `stackDepth` is the program's
    /// maximum expression stack depth and must not exceed
    /// maxExprProgramStackDepth. The default implementation throws; the CPU
-   /// backends implement it.
+   /// backends and, for programs marked cudaCapable, the CUDA backend
+   /// implement it.
+   ///
+   /// The CUDA backend follows the same memory convention as compute(): the
+   /// output and every input span of more than one value are device memory,
+   /// while a span of one value (or an empty one, for a dependent the formula
+   /// does not use) is a host value that the backend stages to the device
+   /// itself. The two are told apart by the span size alone, which is
+   /// unambiguous because RooFit only schedules a node on the GPU when one of
+   /// its servers has more than one value, so `output.size()` is then > 1.
    virtual void computeExprProgram(Config const &cfg, std::span<const ExprInstr> code, unsigned int stackDepth,
                                    std::span<double> output, VarSpan vars);
 

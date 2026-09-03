@@ -171,7 +171,17 @@ double RooGenericPdf::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 void RooGenericPdf::doEval(RooFit::EvalContext & ctx) const
 {
-   RooFormulaUtils::doEvalFormula(evaluator(), _actualVars, ctx);
+   RooFormulaUtils::doEvalFormula(*this, evaluator(), _actualVars, ctx);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Whether the batch evaluation of this formula can run on the GPU: only on
+/// the JIT-free expression backend, and only for programs the CUDA
+/// interpreter accepts (see RooFormulaUtils::formulaCanComputeBatchWithCuda).
+
+bool RooGenericPdf::canComputeBatchWithCuda() const
+{
+   return RooFormulaUtils::formulaCanComputeBatchWithCuda(evaluator());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

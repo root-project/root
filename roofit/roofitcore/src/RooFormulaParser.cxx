@@ -507,6 +507,7 @@ public:
 
       prog.code = std::move(_code);
       prog.stackDepth = maxDepth;
+      prog.cudaCapable = isCudaCapable(prog.code, maxDepth);
       // Trim to the highest used index so that programs can be shared between
       // formulas with different (sufficiently long) variable lists.
       std::size_t lastUsed = 0;
@@ -543,6 +544,26 @@ private:
    Token const &peek() const { return _tokens[_pos]; }
    Token const &next() { return _tokens[_pos++]; }
 
+   /// Whether RooBatchCompute's CUDA backend can evaluate this program: its
+   /// stack must fit the fixed-size per-thread stack of the GPU interpreter,
+   /// and every call must resolve to a function that has a device
+   /// implementation. Function pointers are useless on the device, so a call
+   /// is dispatched there through ExprInstr::func, and an allow-list entry
+   /// with no device implementation leaves that at ExprFunc::None.
+   static bool isCudaCapable(std::vector<Instr> const &code, int maxDepth)
+   {
+      if (maxDepth > static_cast<int>(RooBatchCompute::maxExprProgramStackDepth))
+         return false;
+      for (Instr const &ins : code) {
+         const bool isCall = ins.op == Op::Call1 || ins.op == Op::Call2 || ins.op == Op::Call3 || ins.op == Op::Call4 ||
+                             ins.op == Op::Exp || ins.op == Op::Log || ins.op == Op::Sin || ins.op == Op::Cos ||
+                             ins.op == Op::Sqrt;
+         if (isCall && ins.func == RooBatchCompute::ExprFunc::None)
+            return false;
+      }
+      return true;
+   }
+
    void emit(Op op, std::uint32_t arg = 0)
    {
       Instr ins;
@@ -567,6 +588,7 @@ private:
       Instr ins;
       ins.op = op;
       ins.arg = index;
+      ins.func = entry.func;
       switch (op) {
       case Op::Call2: ins.fn2 = entry.fn2; break;
       case Op::Call3: ins.fn3 = entry.fn3; break;

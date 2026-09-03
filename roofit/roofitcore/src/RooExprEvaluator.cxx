@@ -27,6 +27,12 @@ namespace RooFormulaFunctions {
 
 namespace {
 
+/// The device-representable function identity that every entry carries; see
+/// RooBatchCompute::ExprFunc. Entries that share a host implementation share a
+/// value, and it is exactly that value the CUDA backend switches on, so a new
+/// entry either reuses an existing one or needs a new device implementation.
+using Func = RooBatchCompute::ExprFunc;
+
 // Entry construction helpers (C++17 has no designated initializers).
 Entry F0(const char *name, double (*fn)())
 {
@@ -37,18 +43,20 @@ Entry F0(const char *name, double (*fn)())
    return e;
 }
 
-Entry F1(const char *name, double (*fn)(double), TypeRule rule = TypeRule::Double, const char *cppName = nullptr)
+Entry F1(const char *name, Func func, double (*fn)(double), TypeRule rule = TypeRule::Double,
+         const char *cppName = nullptr)
 {
    Entry e;
    e.name = name;
    e.cppName = cppName;
    e.arity = 1;
    e.rule = rule;
+   e.func = func;
    e.fn1 = fn;
    return e;
 }
 
-Entry F2(const char *name, double (*fn)(double, double), TypeRule rule = TypeRule::Double,
+Entry F2(const char *name, Func func, double (*fn)(double, double), TypeRule rule = TypeRule::Double,
          const char *cppName = nullptr)
 {
    Entry e;
@@ -56,24 +64,27 @@ Entry F2(const char *name, double (*fn)(double, double), TypeRule rule = TypeRul
    e.cppName = cppName;
    e.arity = 2;
    e.rule = rule;
+   e.func = func;
    e.fn2 = fn;
    return e;
 }
 
-Entry F3(const char *name, double (*fn)(double, double, double))
+Entry F3(const char *name, Func func, double (*fn)(double, double, double))
 {
    Entry e;
    e.name = name;
    e.arity = 3;
+   e.func = func;
    e.fn3 = fn;
    return e;
 }
 
-Entry F4(const char *name, double (*fn)(double, double, double, double))
+Entry F4(const char *name, Func func, double (*fn)(double, double, double, double))
 {
    Entry e;
    e.name = name;
    e.arity = 4;
+   e.func = func;
    e.fn4 = fn;
    return e;
 }
@@ -132,111 +143,111 @@ std::vector<Entry> makeTable()
    std::vector<Entry> table{
       // clang-format off
       // one-argument functions, libm/std spellings
-      F1("sqrt",         +[](double x) { return std::sqrt(x); }),
-      F1("std::sqrt",    +[](double x) { return std::sqrt(x); }),
-      F1("exp",          +[](double x) { return std::exp(x); }),
-      F1("std::exp",     +[](double x) { return std::exp(x); }),
-      F1("log",          +[](double x) { return std::log(x); }),
-      F1("std::log",     +[](double x) { return std::log(x); }),
-      F1("log10",        +[](double x) { return std::log10(x); }),
-      F1("std::log10",   +[](double x) { return std::log10(x); }),
-      F1("sin",          +[](double x) { return std::sin(x); }),
-      F1("std::sin",     +[](double x) { return std::sin(x); }),
-      F1("cos",          +[](double x) { return std::cos(x); }),
-      F1("std::cos",     +[](double x) { return std::cos(x); }),
-      F1("tan",          +[](double x) { return std::tan(x); }),
-      F1("std::tan",     +[](double x) { return std::tan(x); }),
-      F1("asin",         +[](double x) { return std::asin(x); }),
-      F1("std::asin",    +[](double x) { return std::asin(x); }),
-      F1("acos",         +[](double x) { return std::acos(x); }),
-      F1("std::acos",    +[](double x) { return std::acos(x); }),
-      F1("atan",         +[](double x) { return std::atan(x); }),
-      F1("std::atan",    +[](double x) { return std::atan(x); }),
-      F1("sinh",         +[](double x) { return std::sinh(x); }),
-      F1("std::sinh",    +[](double x) { return std::sinh(x); }),
-      F1("cosh",         +[](double x) { return std::cosh(x); }),
-      F1("std::cosh",    +[](double x) { return std::cosh(x); }),
-      F1("tanh",         +[](double x) { return std::tanh(x); }),
-      F1("std::tanh",    +[](double x) { return std::tanh(x); }),
-      F1("asinh",        +[](double x) { return std::asinh(x); }),
-      F1("std::asinh",   +[](double x) { return std::asinh(x); }),
-      F1("acosh",        +[](double x) { return std::acosh(x); }),
-      F1("std::acosh",   +[](double x) { return std::acosh(x); }),
-      F1("atanh",        +[](double x) { return std::atanh(x); }),
-      F1("std::atanh",   +[](double x) { return std::atanh(x); }),
-      F1("floor",        +[](double x) { return std::floor(x); }),
-      F1("std::floor",   +[](double x) { return std::floor(x); }),
-      F1("ceil",         +[](double x) { return std::ceil(x); }),
-      F1("std::ceil",    +[](double x) { return std::ceil(x); }),
-      F1("erf",          +[](double x) { return std::erf(x); }),
-      F1("std::erf",     +[](double x) { return std::erf(x); }),
-      F1("erfc",         +[](double x) { return std::erfc(x); }),
-      F1("std::erfc",    +[](double x) { return std::erfc(x); }),
-      F1("tgamma",       +[](double x) { return std::tgamma(x); }),
-      F1("std::tgamma",  +[](double x) { return std::tgamma(x); }),
-      F1("lgamma",       +[](double x) { return std::lgamma(x); }),
-      F1("std::lgamma",  +[](double x) { return std::lgamma(x); }),
+      F1("sqrt",           Func::Sqrt,       +[](double x) { return std::sqrt(x); }),
+      F1("std::sqrt",      Func::Sqrt,       +[](double x) { return std::sqrt(x); }),
+      F1("exp",            Func::Exp,        +[](double x) { return std::exp(x); }),
+      F1("std::exp",       Func::Exp,        +[](double x) { return std::exp(x); }),
+      F1("log",            Func::Log,        +[](double x) { return std::log(x); }),
+      F1("std::log",       Func::Log,        +[](double x) { return std::log(x); }),
+      F1("log10",          Func::Log10,      +[](double x) { return std::log10(x); }),
+      F1("std::log10",     Func::Log10,      +[](double x) { return std::log10(x); }),
+      F1("sin",            Func::Sin,        +[](double x) { return std::sin(x); }),
+      F1("std::sin",       Func::Sin,        +[](double x) { return std::sin(x); }),
+      F1("cos",            Func::Cos,        +[](double x) { return std::cos(x); }),
+      F1("std::cos",       Func::Cos,        +[](double x) { return std::cos(x); }),
+      F1("tan",            Func::Tan,        +[](double x) { return std::tan(x); }),
+      F1("std::tan",       Func::Tan,        +[](double x) { return std::tan(x); }),
+      F1("asin",           Func::ASin,       +[](double x) { return std::asin(x); }),
+      F1("std::asin",      Func::ASin,       +[](double x) { return std::asin(x); }),
+      F1("acos",           Func::ACos,       +[](double x) { return std::acos(x); }),
+      F1("std::acos",      Func::ACos,       +[](double x) { return std::acos(x); }),
+      F1("atan",           Func::ATan,       +[](double x) { return std::atan(x); }),
+      F1("std::atan",      Func::ATan,       +[](double x) { return std::atan(x); }),
+      F1("sinh",           Func::SinH,       +[](double x) { return std::sinh(x); }),
+      F1("std::sinh",      Func::SinH,       +[](double x) { return std::sinh(x); }),
+      F1("cosh",           Func::CosH,       +[](double x) { return std::cosh(x); }),
+      F1("std::cosh",      Func::CosH,       +[](double x) { return std::cosh(x); }),
+      F1("tanh",           Func::TanH,       +[](double x) { return std::tanh(x); }),
+      F1("std::tanh",      Func::TanH,       +[](double x) { return std::tanh(x); }),
+      F1("asinh",          Func::ASinH,      +[](double x) { return std::asinh(x); }),
+      F1("std::asinh",     Func::ASinH,      +[](double x) { return std::asinh(x); }),
+      F1("acosh",          Func::ACosH,      +[](double x) { return std::acosh(x); }),
+      F1("std::acosh",     Func::ACosH,      +[](double x) { return std::acosh(x); }),
+      F1("atanh",          Func::ATanH,      +[](double x) { return std::atanh(x); }),
+      F1("std::atanh",     Func::ATanH,      +[](double x) { return std::atanh(x); }),
+      F1("floor",          Func::Floor,      +[](double x) { return std::floor(x); }),
+      F1("std::floor",     Func::Floor,      +[](double x) { return std::floor(x); }),
+      F1("ceil",           Func::Ceil,       +[](double x) { return std::ceil(x); }),
+      F1("std::ceil",      Func::Ceil,       +[](double x) { return std::ceil(x); }),
+      F1("erf",            Func::Erf,        +[](double x) { return std::erf(x); }),
+      F1("std::erf",       Func::Erf,        +[](double x) { return std::erf(x); }),
+      F1("erfc",           Func::Erfc,       +[](double x) { return std::erfc(x); }),
+      F1("std::erfc",      Func::Erfc,       +[](double x) { return std::erfc(x); }),
+      F1("tgamma",         Func::TGamma,     +[](double x) { return std::tgamma(x); }),
+      F1("std::tgamma",    Func::TGamma,     +[](double x) { return std::tgamma(x); }),
+      F1("lgamma",         Func::LGamma,     +[](double x) { return std::lgamma(x); }),
+      F1("std::lgamma",    Func::LGamma,     +[](double x) { return std::lgamma(x); }),
       // abs is integer-preserving in C++ (::abs(int), std::abs(int)); fabs is not
-      F1("abs",          +[](double x) { return std::fabs(x); }, TypeRule::SameAsFirstArg),
-      F1("std::abs",     +[](double x) { return std::fabs(x); }, TypeRule::SameAsFirstArg),
-      F1("fabs",         +[](double x) { return std::fabs(x); }),
-      F1("std::fabs",    +[](double x) { return std::fabs(x); }),
+      F1("abs",            Func::Abs,        +[](double x) { return std::fabs(x); }, TypeRule::SameAsFirstArg),
+      F1("std::abs",       Func::Abs,        +[](double x) { return std::fabs(x); }, TypeRule::SameAsFirstArg),
+      F1("fabs",           Func::Abs,        +[](double x) { return std::fabs(x); }),
+      F1("std::fabs",      Func::Abs,        +[](double x) { return std::fabs(x); }),
       // C++ functional cast: truncation towards zero
-      F1("int",          castInt, TypeRule::Int, "int"),
+      F1("int",            Func::CastInt,    castInt, TypeRule::Int, "int"),
       // TFormula shortcut for TMath::Sq(Double_t)
-      F1("sq",           square, TypeRule::Double, "TMath::Sq"),
+      F1("sq",             Func::Square,     square, TypeRule::Double, "TMath::Sq"),
       // one-argument functions, TMath spellings
-      F1("TMath::Sqrt",  +[](double x) { return TMath::Sqrt(x); }),
-      F1("TMath::Exp",   +[](double x) { return TMath::Exp(x); }),
-      F1("TMath::Log",   +[](double x) { return TMath::Log(x); }),
-      F1("TMath::Log10", +[](double x) { return TMath::Log10(x); }),
-      F1("TMath::Sin",   +[](double x) { return TMath::Sin(x); }),
-      F1("TMath::Cos",   +[](double x) { return TMath::Cos(x); }),
-      F1("TMath::Tan",   +[](double x) { return TMath::Tan(x); }),
-      F1("TMath::ASin",  +[](double x) { return TMath::ASin(x); }),
-      F1("TMath::ACos",  +[](double x) { return TMath::ACos(x); }),
-      F1("TMath::ATan",  +[](double x) { return TMath::ATan(x); }),
-      F1("TMath::SinH",  +[](double x) { return TMath::SinH(x); }),
-      F1("TMath::CosH",  +[](double x) { return TMath::CosH(x); }),
-      F1("TMath::TanH",  +[](double x) { return TMath::TanH(x); }),
-      F1("TMath::ASinH", +[](double x) { return TMath::ASinH(x); }),
-      F1("TMath::ACosH", +[](double x) { return TMath::ACosH(x); }),
-      F1("TMath::ATanH", +[](double x) { return TMath::ATanH(x); }),
-      F1("TMath::Floor", +[](double x) { return TMath::Floor(x); }),
-      F1("TMath::Ceil",  +[](double x) { return TMath::Ceil(x); }),
-      F1("TMath::Erf",   +[](double x) { return TMath::Erf(x); }),
-      F1("TMath::Erfc",  +[](double x) { return TMath::Erfc(x); }),
-      F1("TMath::Abs",   +[](double x) { return TMath::Abs(x); }, TypeRule::SameAsFirstArg),
-      F1("TMath::Sq",    square),
-      F1("TMath::SignBit", signBit, TypeRule::Bool),
+      F1("TMath::Sqrt",    Func::Sqrt,       +[](double x) { return TMath::Sqrt(x); }),
+      F1("TMath::Exp",     Func::Exp,        +[](double x) { return TMath::Exp(x); }),
+      F1("TMath::Log",     Func::Log,        +[](double x) { return TMath::Log(x); }),
+      F1("TMath::Log10",   Func::Log10,      +[](double x) { return TMath::Log10(x); }),
+      F1("TMath::Sin",     Func::Sin,        +[](double x) { return TMath::Sin(x); }),
+      F1("TMath::Cos",     Func::Cos,        +[](double x) { return TMath::Cos(x); }),
+      F1("TMath::Tan",     Func::Tan,        +[](double x) { return TMath::Tan(x); }),
+      F1("TMath::ASin",    Func::ASin,       +[](double x) { return TMath::ASin(x); }),
+      F1("TMath::ACos",    Func::ACos,       +[](double x) { return TMath::ACos(x); }),
+      F1("TMath::ATan",    Func::ATan,       +[](double x) { return TMath::ATan(x); }),
+      F1("TMath::SinH",    Func::SinH,       +[](double x) { return TMath::SinH(x); }),
+      F1("TMath::CosH",    Func::CosH,       +[](double x) { return TMath::CosH(x); }),
+      F1("TMath::TanH",    Func::TanH,       +[](double x) { return TMath::TanH(x); }),
+      F1("TMath::ASinH",   Func::ASinH,      +[](double x) { return TMath::ASinH(x); }),
+      F1("TMath::ACosH",   Func::ACosH,      +[](double x) { return TMath::ACosH(x); }),
+      F1("TMath::ATanH",   Func::ATanH,      +[](double x) { return TMath::ATanH(x); }),
+      F1("TMath::Floor",   Func::Floor,      +[](double x) { return TMath::Floor(x); }),
+      F1("TMath::Ceil",    Func::Ceil,       +[](double x) { return TMath::Ceil(x); }),
+      F1("TMath::Erf",     Func::TMathErf,   +[](double x) { return TMath::Erf(x); }),
+      F1("TMath::Erfc",    Func::TMathErfc,  +[](double x) { return TMath::Erfc(x); }),
+      F1("TMath::Abs",     Func::Abs,        +[](double x) { return TMath::Abs(x); }, TypeRule::SameAsFirstArg),
+      F1("TMath::Sq",      Func::Square,     square),
+      F1("TMath::SignBit", Func::SignBit,    signBit, TypeRule::Bool),
       // two-argument functions
-      F2("pow",          +[](double a, double b) { return std::pow(a, b); }),
-      F2("std::pow",     +[](double a, double b) { return std::pow(a, b); }),
-      F2("TMath::Power", +[](double a, double b) { return TMath::Power(a, b); }),
-      F2("atan2",        +[](double a, double b) { return std::atan2(a, b); }),
-      F2("std::atan2",   +[](double a, double b) { return std::atan2(a, b); }),
-      F2("TMath::ATan2", +[](double a, double b) { return TMath::ATan2(a, b); }),
-      F2("fmod",         +[](double a, double b) { return std::fmod(a, b); }),
-      F2("std::fmod",    +[](double a, double b) { return std::fmod(a, b); }),
-      F2("min",          stdMin, TypeRule::MinMax),
-      F2("std::min",     stdMin, TypeRule::MinMax),
-      F2("TMath::Min",   tmathMin, TypeRule::MinMax),
-      F2("max",          stdMax, TypeRule::MinMax),
-      F2("std::max",     stdMax, TypeRule::MinMax),
-      F2("TMath::Max",   tmathMax, TypeRule::MinMax),
+      F2("pow",            Func::Pow,        +[](double a, double b) { return std::pow(a, b); }),
+      F2("std::pow",       Func::Pow,        +[](double a, double b) { return std::pow(a, b); }),
+      F2("TMath::Power",   Func::Pow,        +[](double a, double b) { return TMath::Power(a, b); }),
+      F2("atan2",          Func::ATan2,      +[](double a, double b) { return std::atan2(a, b); }),
+      F2("std::atan2",     Func::ATan2,      +[](double a, double b) { return std::atan2(a, b); }),
+      F2("TMath::ATan2",   Func::TMathATan2, +[](double a, double b) { return TMath::ATan2(a, b); }),
+      F2("fmod",           Func::Fmod,       +[](double a, double b) { return std::fmod(a, b); }),
+      F2("std::fmod",      Func::Fmod,       +[](double a, double b) { return std::fmod(a, b); }),
+      F2("min",            Func::StdMin,     stdMin, TypeRule::MinMax),
+      F2("std::min",       Func::StdMin,     stdMin, TypeRule::MinMax),
+      F2("TMath::Min",     Func::TMathMin,   tmathMin, TypeRule::MinMax),
+      F2("max",            Func::StdMax,     stdMax, TypeRule::MinMax),
+      F2("std::max",       Func::StdMax,     stdMax, TypeRule::MinMax),
+      F2("TMath::Max",     Func::TMathMax,   tmathMax, TypeRule::MinMax),
       // TFormula shortcut for TMath::Sign
-      F2("sign",         sign, TypeRule::Sign, "TMath::Sign"),
-      F2("TMath::Sign",  sign, TypeRule::Sign),
+      F2("sign",           Func::CopySign,   sign, TypeRule::Sign, "TMath::Sign"),
+      F2("TMath::Sign",    Func::CopySign,   sign, TypeRule::Sign),
       // zero-argument constants (folded to Op::Const at parse time)
-      F0("TMath::Pi",     +[]() { return TMath::Pi(); }),
-      F0("TMath::TwoPi",  +[]() { return TMath::TwoPi(); }),
-      F0("TMath::PiOver2",+[]() { return TMath::PiOver2(); }),
-      F0("TMath::E",      +[]() { return TMath::E(); }),
+      F0("TMath::Pi",                        +[]() { return TMath::Pi(); }),
+      F0("TMath::TwoPi",                     +[]() { return TMath::TwoPi(); }),
+      F0("TMath::PiOver2",                   +[]() { return TMath::PiOver2(); }),
+      F0("TMath::E",                         +[]() { return TMath::E(); }),
       // TMath::Gaus with its default arguments mean=0, sigma=1, norm=false
-      F1("TMath::Gaus",  +[](double x) { return TMath::Gaus(x); }),
-      F2("TMath::Gaus",  +[](double x, double m) { return TMath::Gaus(x, m); }),
-      F3("TMath::Gaus",  +[](double x, double m, double s) { return TMath::Gaus(x, m, s); }),
-      F4("TMath::Gaus",  +[](double x, double m, double s, double n) { return TMath::Gaus(x, m, s, n != 0.0); }),
+      F1("TMath::Gaus",    Func::Gaus1,      +[](double x) { return TMath::Gaus(x); }),
+      F2("TMath::Gaus",    Func::Gaus2,      +[](double x, double m) { return TMath::Gaus(x, m); }),
+      F3("TMath::Gaus",    Func::Gaus3,      +[](double x, double m, double s) { return TMath::Gaus(x, m, s); }),
+      F4("TMath::Gaus",    Func::Gaus4,      +[](double x, double m, double s, double n) { return TMath::Gaus(x, m, s, n != 0.0); }),
       // clang-format on
    };
 

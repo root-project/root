@@ -57,14 +57,80 @@ enum class ExprOp : std::uint8_t {
    Call4  ///< fn4(a, b, c, d)
 };
 
+/// Device-representable identity of the function a call instruction calls.
+///
+/// The host interpreters call through the function pointer in the instruction,
+/// which reproduces exactly what the cling-JIT-compiled code called for that
+/// spelling. A GPU kernel cannot call a host function pointer, so every call
+/// instruction additionally carries this identity, which the CUDA backend
+/// switches on. There is one value per distinct host implementation, not per
+/// accepted spelling: `sin`, `std::sin` and `TMath::Sin` all resolve to the
+/// same libm call and share a value, while `TMath::Erf` (Cephes) is separate
+/// from `erf` (libm) because the host implementations differ.
+///
+/// A call instruction whose function has no device implementation keeps
+/// ExprFunc::None; RooFitCore refuses to schedule such a program on the GPU
+/// (see RooExprEvaluator::Program::cudaCapable). The five spelling families
+/// with their own opcode (Exp, Log, Sin, Cos, Sqrt) are identified by the
+/// opcode and do not need a value here, but carry one anyway.
+enum class ExprFunc : std::uint8_t {
+   None = 0, ///< no device implementation
+   // Unary. The values shared with a dedicated opcode come first.
+   Exp,
+   Log,
+   Sin,
+   Cos,
+   Sqrt,
+   Log10,
+   Tan,
+   ASin,
+   ACos,
+   ATan,
+   SinH,
+   CosH,
+   TanH,
+   ASinH,
+   ACosH,
+   ATanH,
+   Floor,
+   Ceil,
+   Erf,
+   Erfc,
+   TMathErf,  ///< TMath::Erf, which is ROOT::Math::erf (Cephes) on the host
+   TMathErfc, ///< TMath::Erfc, likewise
+   TGamma,
+   LGamma,
+   Abs,     ///< std::abs/std::fabs/TMath::Abs
+   CastInt, ///< the `int(x)` functional cast: truncation towards zero
+   Square,  ///< `sq`/TMath::Sq
+   SignBit, ///< TMath::SignBit
+   Gaus1,   ///< TMath::Gaus(x)
+   // Binary.
+   Pow,
+   ATan2,      ///< std::atan2
+   TMathATan2, ///< TMath::ATan2, which special-cases x == 0
+   Fmod,
+   StdMin, ///< std::min: asymmetric in NaN, unlike TMath::Min
+   StdMax,
+   TMathMin,
+   TMathMax,
+   CopySign, ///< `sign`/TMath::Sign
+   Gaus2,    ///< TMath::Gaus(x, mean)
+   // Ternary and quaternary.
+   Gaus3, ///< TMath::Gaus(x, mean, sigma)
+   Gaus4  ///< TMath::Gaus(x, mean, sigma, norm)
+};
+
 /// One instruction of a postfix expression program. Call instructions carry
 /// the resolved function pointer, so evaluation involves no lookup table;
 /// `arg` additionally keeps the index into RooFitCore's function allow-list
 /// (RooFormulaFunctions) that the call was resolved from, which C++ emission
-/// uses to reproduce the exact spelling.
+/// uses to reproduce the exact spelling, and `func` identifies the function
+/// for backends that cannot use the host function pointer.
 struct ExprInstr {
    ExprOp op = ExprOp::Const;
-   std::uint32_t arg = 0; ///< Var: variable index; calls: function-table index
+   ExprFunc func = ExprFunc::None; ///< calls: which function (for GPU dispatch)
+   std::uint32_t arg = 0;          ///< Var: variable index; calls: function-table index
    union {
       double konst = 0.0;                            ///< Const
       double (*fn1)(double);                         ///< Call1 and Exp...Sqrt
@@ -75,8 +141,9 @@ struct ExprInstr {
 };
 
 /// Maximum expression stack depth accepted by computeExprProgram(), which
-/// stack-allocates one bufferSize-sized chunk buffer per stack slot. Deeper
-/// programs must be evaluated with the scalar per-event fallback.
+/// stack-allocates one bufferSize-sized chunk buffer per stack slot on the CPU
+/// and one per-thread stack of this size on the GPU. Deeper programs must be
+/// evaluated with the scalar per-event fallback.
 constexpr std::uint32_t maxExprProgramStackDepth = 24;
 
 } // End namespace RooBatchCompute

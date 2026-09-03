@@ -35,8 +35,10 @@ always uses the TFormula backend, and `ast` disables the fallback, turning
 unsupported expressions into hard errors (useful for testing).
 
 Batch evaluation (doEvalFormula()) of expressions on the built-in backend is
-chunk-vectorized via the RooBatchCompute library, see doEvalFormula() for the
-numerical implications.
+chunk-vectorized via the RooBatchCompute library, and runs on the GPU when the
+evaluation backend is CUDA and the compiled program is one the CUDA
+interpreter accepts (formulaCanComputeBatchWithCuda()). See doEvalFormula()
+for the numerical implications of both.
 **/
 
 #include "RooFormulaUtils.h"
@@ -556,8 +558,15 @@ RooFormulaUtils::evalFormula(RooFormulaEvaluator const &evaluator, RooAbsCollect
 /// number returns a finite garbage value instead of -Inf or NaN). Without VDT
 /// the batch results are bitwise identical to scalar evaluation. The TFormula
 /// fallback backend evaluates with a scalar per-event loop as before.
-void RooFormulaUtils::doEvalFormula(RooFormulaEvaluator const &evaluator, RooArgList const &actualVars,
-                                    RooFit::EvalContext &ctx)
+///
+/// When the evaluation context assigns this node to the GPU (which the
+/// Evaluator only does for nodes that answer true to
+/// formulaCanComputeBatchWithCuda()), the same expression program is evaluated
+/// by the CUDA backend instead, one event per thread. Its inputs and its
+/// output live in device memory, so that case must be taken before anything
+/// dereferences an input span on the host.
+void RooFormulaUtils::doEvalFormula(RooAbsArg const &caller, RooFormulaEvaluator const &evaluator,
+                                    RooArgList const &actualVars, RooFit::EvalContext &ctx)
 {
    std::span<double> output = ctx.output();
 
@@ -573,6 +582,17 @@ void RooFormulaUtils::doEvalFormula(RooFormulaEvaluator const &evaluator, RooArg
    for (std::size_t i = 0; i < nPars; ++i) {
       inputSpans.emplace_back(ctx.at(static_cast<const RooAbsReal *>(&actualVars[i])));
       allScalar &= inputSpans.back().size() <= 1;
+   }
+
+   // On the GPU the spans point into device memory, so this branch has to come
+   // before any host-side read of an input. formulaCanComputeBatchWithCuda()
+   // guarantees the cast and the stack-depth precondition.
+   RooBatchCompute::Config cfg = ctx.config(&caller);
+   if (cfg.useCuda()) {
+      auto const &expr = static_cast<RooExprEvaluator const &>(evaluator);
+      RooBatchCompute::computeExprProgram(cfg, expr.code(), expr.stackDepth(), output,
+                                          {inputSpans.data(), inputSpans.size()});
+      return;
    }
 
    // All inputs are single values: evaluate once and broadcast.
@@ -610,6 +630,20 @@ void RooFormulaUtils::doEvalFormula(RooFormulaEvaluator const &evaluator, RooArg
       }
       output[i] = evaluator.eval(pars.data());
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Whether RooBatchCompute's CUDA backend can evaluate this formula, i.e.
+/// whether RooFormulaVar and RooGenericPdf may answer true to
+/// canComputeBatchWithCuda(). True only on the JIT-free expression backend
+/// (the TFormula fallback JIT-compiles host code, which cannot run on the
+/// device) and only for programs the GPU interpreter accepts: the stack must
+/// fit its fixed-size per-thread stack and every call must resolve to a
+/// function with a device implementation.
+bool RooFormulaUtils::formulaCanComputeBatchWithCuda(RooFormulaEvaluator const &evaluator)
+{
+   auto const *expr = dynamic_cast<RooExprEvaluator const *>(&evaluator);
+   return expr && expr->cudaCapable();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

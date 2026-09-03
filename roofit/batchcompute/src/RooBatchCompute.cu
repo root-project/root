@@ -27,6 +27,7 @@ This file contains the code for cuda computations using the RooBatchCompute libr
 #include <functional>
 #include <map>
 #include <queue>
+#include <stdexcept>
 #include <vector>
 
 namespace RooBatchCompute {
@@ -148,6 +149,9 @@ public:
          copyDeviceToHost(extraArgsDevice, extraArgs.data(), extraArgs.size(), cfg.cudaStream());
       }
    }
+   void computeExprProgram(Config const &cfg, std::span<const ExprInstr> code, unsigned int stackDepth,
+                           std::span<double> output, VarSpan vars) override;
+
    /// Return the sum of an input array
    double reduceSum(RooBatchCompute::Config const &cfg, InputArr input, size_t n) override;
    ReduceNLLOutput reduceNLL(RooBatchCompute::Config const &cfg, std::span<const double> probas,
@@ -177,6 +181,320 @@ private:
    const std::vector<void (*)(Batches &)> _computeFunctions;
 
 }; // End class RooBatchComputeClass
+
+namespace {
+
+/// TMath::Gaus, ported for the device (the host implementation lives in
+/// TMath.cxx, which is not device code).
+inline __device__ double gaus(double x, double mean, double sigma, bool norm)
+{
+   if (sigma == 0.0)
+      return 1.e30;
+   const double arg = (x - mean) / sigma;
+   // for |arg| > 39 the result is zero in double precision
+   if (arg < -39.0 || arg > 39.0)
+      return 0.0;
+   const double res = ::exp(-0.5 * arg * arg);
+   return norm ? res / (2.50662827463100024 * sigma) : res; // sqrt(2*Pi)
+}
+
+/// Device counterpart of the unary functions in RooFitCore's formula
+/// allow-list. There is one case per ExprFunc value, so the compiler warns
+/// (-Wswitch) when the enum grows without a device implementation. Values with
+/// a different arity, and ExprFunc::None, cannot reach here: the parser only
+/// marks a program cudaCapable when every call has a device implementation,
+/// and the arity follows from the opcode.
+inline __device__ double applyFunc1(ExprFunc f, double a)
+{
+   switch (f) {
+   case ExprFunc::Exp: return ::exp(a);
+   case ExprFunc::Log: return ::log(a);
+   case ExprFunc::Sin: return ::sin(a);
+   case ExprFunc::Cos: return ::cos(a);
+   case ExprFunc::Sqrt: return ::sqrt(a);
+   case ExprFunc::Log10: return ::log10(a);
+   case ExprFunc::Tan: return ::tan(a);
+   case ExprFunc::ASin: return ::asin(a);
+   case ExprFunc::ACos: return ::acos(a);
+   case ExprFunc::ATan: return ::atan(a);
+   case ExprFunc::SinH: return ::sinh(a);
+   case ExprFunc::CosH: return ::cosh(a);
+   case ExprFunc::TanH: return ::tanh(a);
+   case ExprFunc::ASinH: return ::asinh(a);
+   case ExprFunc::ACosH: return ::acosh(a);
+   case ExprFunc::ATanH: return ::atanh(a);
+   case ExprFunc::Floor: return ::floor(a);
+   case ExprFunc::Ceil: return ::ceil(a);
+   // TMath::Erf and TMath::Erfc go through Cephes on the host; the device has
+   // only its own erf/erfc. Like every other function here, they agree with
+   // the host only to within the batch-vs-scalar tolerance.
+   case ExprFunc::Erf:
+   case ExprFunc::TMathErf: return ::erf(a);
+   case ExprFunc::Erfc:
+   case ExprFunc::TMathErfc: return ::erfc(a);
+   case ExprFunc::TGamma: return ::tgamma(a);
+   case ExprFunc::LGamma: return ::lgamma(a);
+   case ExprFunc::Abs: return ::fabs(a);
+   case ExprFunc::CastInt: return static_cast<double>(static_cast<int>(a));
+   case ExprFunc::Square: return a * a;
+   case ExprFunc::SignBit: return ::signbit(a) ? 1.0 : 0.0;
+   case ExprFunc::Gaus1: return gaus(a, 0.0, 1.0, false);
+   // Values of another arity, and None, cannot reach here. They are listed so
+   // that -Wswitch flags a new ExprFunc that has no device implementation.
+   case ExprFunc::None:
+   case ExprFunc::Pow:
+   case ExprFunc::ATan2:
+   case ExprFunc::TMathATan2:
+   case ExprFunc::Fmod:
+   case ExprFunc::StdMin:
+   case ExprFunc::StdMax:
+   case ExprFunc::TMathMin:
+   case ExprFunc::TMathMax:
+   case ExprFunc::CopySign:
+   case ExprFunc::Gaus2:
+   case ExprFunc::Gaus3:
+   case ExprFunc::Gaus4: break;
+   }
+   return ::nan("");
+}
+
+/// Device counterpart of the binary functions in the allow-list.
+inline __device__ double applyFunc2(ExprFunc f, double a, double b)
+{
+   switch (f) {
+   case ExprFunc::Pow: return ::pow(a, b);
+   case ExprFunc::ATan2: return ::atan2(a, b);
+   case ExprFunc::TMathATan2:
+      // TMath::ATan2 special-cases x == 0 instead of leaving it to atan2().
+      if (b != 0.0)
+         return ::atan2(a, b);
+      return a == 0.0 ? 0.0 : (a > 0.0 ? 1.5707963267948966 : -1.5707963267948966);
+   case ExprFunc::Fmod: return ::fmod(a, b);
+   // std::min/max and TMath::Min/Max differ in how they order NaN; both
+   // orderings are reproduced exactly as the host comparisons are written.
+   case ExprFunc::StdMin: return b < a ? b : a;
+   case ExprFunc::StdMax: return a < b ? b : a;
+   case ExprFunc::TMathMin: return a <= b ? a : b;
+   case ExprFunc::TMathMax: return a >= b ? a : b;
+   case ExprFunc::CopySign: return ::copysign(a, b);
+   case ExprFunc::Gaus2: return gaus(a, b, 1.0, false);
+   // Values of another arity, and None, cannot reach here. They are listed so
+   // that -Wswitch flags a new ExprFunc that has no device implementation.
+   case ExprFunc::None:
+   case ExprFunc::Exp:
+   case ExprFunc::Log:
+   case ExprFunc::Sin:
+   case ExprFunc::Cos:
+   case ExprFunc::Sqrt:
+   case ExprFunc::Log10:
+   case ExprFunc::Tan:
+   case ExprFunc::ASin:
+   case ExprFunc::ACos:
+   case ExprFunc::ATan:
+   case ExprFunc::SinH:
+   case ExprFunc::CosH:
+   case ExprFunc::TanH:
+   case ExprFunc::ASinH:
+   case ExprFunc::ACosH:
+   case ExprFunc::ATanH:
+   case ExprFunc::Floor:
+   case ExprFunc::Ceil:
+   case ExprFunc::Erf:
+   case ExprFunc::Erfc:
+   case ExprFunc::TMathErf:
+   case ExprFunc::TMathErfc:
+   case ExprFunc::TGamma:
+   case ExprFunc::LGamma:
+   case ExprFunc::Abs:
+   case ExprFunc::CastInt:
+   case ExprFunc::Square:
+   case ExprFunc::SignBit:
+   case ExprFunc::Gaus1:
+   case ExprFunc::Gaus3:
+   case ExprFunc::Gaus4: break;
+   }
+   return ::nan("");
+}
+
+/// Evaluate one expression program per thread over a batch of events.
+///
+/// The loops are interchanged with respect to the CPU interpreter: there, one
+/// instruction is applied across a chunk of events; here, each thread walks
+/// the whole program for its own events, keeping the value stack in per-thread
+/// local memory. Input reads are then coalesced across the warp, and no
+/// intermediate value ever reaches global memory. All threads execute the same
+/// instruction at the same time, so the program itself is read uniformly and
+/// stays in cache.
+__global__ void exprProgramKernel(const ExprInstr *__restrict code, unsigned int nInstr, const Batch *__restrict vars,
+                                  double *__restrict output, std::size_t nEvents)
+{
+   const std::size_t nThreadsTotal = static_cast<std::size_t>(blockDim.x) * gridDim.x;
+   for (std::size_t i = blockIdx.x * blockDim.x + threadIdx.x; i < nEvents; i += nThreadsTotal) {
+      double stack[maxExprProgramStackDepth];
+      unsigned int sp = 0;
+      for (unsigned int k = 0; k < nInstr; ++k) {
+         const ExprInstr ins = code[k];
+         switch (ins.op) {
+         case ExprOp::Const: stack[sp++] = ins.konst; break;
+         case ExprOp::Var: stack[sp++] = vars[ins.arg][i]; break;
+         case ExprOp::Add:
+            --sp;
+            stack[sp - 1] += stack[sp];
+            break;
+         case ExprOp::Sub:
+            --sp;
+            stack[sp - 1] -= stack[sp];
+            break;
+         case ExprOp::Mul:
+            --sp;
+            stack[sp - 1] *= stack[sp];
+            break;
+         case ExprOp::Div:
+            --sp;
+            stack[sp - 1] /= stack[sp];
+            break;
+         case ExprOp::Neg: stack[sp - 1] = -stack[sp - 1]; break;
+         case ExprOp::Not: stack[sp - 1] = stack[sp - 1] == 0.0 ? 1.0 : 0.0; break;
+         case ExprOp::LT:
+            --sp;
+            stack[sp - 1] = stack[sp - 1] < stack[sp] ? 1.0 : 0.0;
+            break;
+         case ExprOp::LE:
+            --sp;
+            stack[sp - 1] = stack[sp - 1] <= stack[sp] ? 1.0 : 0.0;
+            break;
+         case ExprOp::GT:
+            --sp;
+            stack[sp - 1] = stack[sp - 1] > stack[sp] ? 1.0 : 0.0;
+            break;
+         case ExprOp::GE:
+            --sp;
+            stack[sp - 1] = stack[sp - 1] >= stack[sp] ? 1.0 : 0.0;
+            break;
+         case ExprOp::EQ:
+            --sp;
+            stack[sp - 1] = stack[sp - 1] == stack[sp] ? 1.0 : 0.0;
+            break;
+         case ExprOp::NE:
+            --sp;
+            stack[sp - 1] = stack[sp - 1] != stack[sp] ? 1.0 : 0.0;
+            break;
+         case ExprOp::And:
+            --sp;
+            stack[sp - 1] = (stack[sp - 1] != 0.0 && stack[sp] != 0.0) ? 1.0 : 0.0;
+            break;
+         case ExprOp::Or:
+            --sp;
+            stack[sp - 1] = (stack[sp - 1] != 0.0 || stack[sp] != 0.0) ? 1.0 : 0.0;
+            break;
+         case ExprOp::Select:
+            // Both branches were evaluated, exactly as on the CPU.
+            sp -= 2;
+            stack[sp - 1] = stack[sp - 1] != 0.0 ? stack[sp] : stack[sp + 1];
+            break;
+         case ExprOp::Pow:
+            --sp;
+            stack[sp - 1] = ::pow(stack[sp - 1], stack[sp]);
+            break;
+         case ExprOp::Sq: stack[sp - 1] *= stack[sp - 1]; break;
+         case ExprOp::IntNorm: stack[sp - 1] += 0.0; break;
+         case ExprOp::Exp: stack[sp - 1] = ::exp(stack[sp - 1]); break;
+         case ExprOp::Log: stack[sp - 1] = ::log(stack[sp - 1]); break;
+         case ExprOp::Sin: stack[sp - 1] = ::sin(stack[sp - 1]); break;
+         case ExprOp::Cos: stack[sp - 1] = ::cos(stack[sp - 1]); break;
+         case ExprOp::Sqrt: stack[sp - 1] = ::sqrt(stack[sp - 1]); break;
+         case ExprOp::Call1: stack[sp - 1] = applyFunc1(ins.func, stack[sp - 1]); break;
+         case ExprOp::Call2:
+            --sp;
+            stack[sp - 1] = applyFunc2(ins.func, stack[sp - 1], stack[sp]);
+            break;
+         case ExprOp::Call3:
+            sp -= 2;
+            // TMath::Gaus(x, mean, sigma) is the only ternary entry.
+            stack[sp - 1] = gaus(stack[sp - 1], stack[sp], stack[sp + 1], false);
+            break;
+         case ExprOp::Call4:
+            sp -= 3;
+            // TMath::Gaus(x, mean, sigma, norm) is the only quaternary entry.
+            stack[sp - 1] = gaus(stack[sp - 1], stack[sp], stack[sp + 1], stack[sp + 2] != 0.0);
+            break;
+         }
+      }
+      output[i] = stack[0];
+   }
+}
+
+} // namespace
+
+/** Evaluate a postfix expression program over a batch of events on the GPU.
+
+One thread evaluates the whole program for one event (with a grid-stride loop
+over the batch), so the per-event value stack lives in per-thread local memory
+and no intermediate result is written to global memory.
+
+The device math functions are not the host's libm, so, unlike the CPU
+backends, the results are not bitwise identical to per-event scalar evaluation
+on the host; they agree within the usual RooBatchCompute batch-vs-scalar
+tolerance. Only programs that RooFitCore marked as cudaCapable get here: their
+stack fits maxExprProgramStackDepth and every call has a device
+implementation. **/
+void RooBatchComputeClass::computeExprProgram(Config const &cfg, std::span<const ExprInstr> code,
+                                              unsigned int stackDepth, std::span<double> output, VarSpan vars)
+{
+   using namespace CudaInterface;
+
+   if (stackDepth > maxExprProgramStackDepth) {
+      throw std::runtime_error("expression program exceeds the computeExprProgram() stack-depth limit");
+   }
+
+   const std::size_t nEvents = output.size();
+   if (nEvents == 0) {
+      return;
+   }
+
+   // One host-side staging block that mirrors the device block: the program,
+   // the per-variable input descriptors, and the values of the scalar inputs
+   // (which, unlike the vector inputs, are not on the device yet).
+   const std::size_t codeBytes = code.size() * sizeof(ExprInstr);
+   const std::size_t varsBytes = vars.size() * sizeof(Batch);
+   const std::size_t scalarBytes = vars.size() * sizeof(double);
+   const std::size_t memSize = codeBytes + varsBytes + scalarBytes;
+
+   std::vector<char> hostMem(memSize);
+   auto codeHost = reinterpret_cast<ExprInstr *>(hostMem.data());
+   auto varsHost = reinterpret_cast<Batch *>(hostMem.data() + codeBytes);
+   auto scalarsHost = reinterpret_cast<double *>(hostMem.data() + codeBytes + varsBytes);
+
+   DeviceArray<char> deviceMem(memSize);
+   auto codeDevice = reinterpret_cast<ExprInstr *>(deviceMem.data());
+   auto varsDevice = reinterpret_cast<Batch *>(deviceMem.data() + codeBytes);
+   auto scalarsDevice = reinterpret_cast<double *>(deviceMem.data() + codeBytes + varsBytes);
+
+   std::copy(code.begin(), code.end(), codeHost);
+   for (std::size_t i = 0; i < vars.size(); ++i) {
+      std::span<const double> span = vars[i];
+      // Exactly the rule the CPU backend applies: a span of more than one
+      // value is per-event, anything else is broadcast. The distinction is not
+      // just about broadcasting here -- only the per-event inputs are on the
+      // device. A scalar input is the host-side value buffer of a node the
+      // Evaluator computed on the CPU, and an empty span belongs to a
+      // dependent the formula does not use (no Var instruction reads it, but
+      // it must still not leave a host pointer for the kernel to follow), so
+      // both are staged into the device scalar buffer.
+      const bool isVector = span.size() > 1;
+      varsHost[i]._isVector = isVector;
+      varsHost[i]._array = isVector ? span.data() : scalarsDevice + i;
+      // Only a scalar span may be dereferenced here: a per-event span points
+      // into device memory.
+      scalarsHost[i] = isVector || span.empty() ? 0.0 : span[0];
+   }
+
+   copyHostToDevice(hostMem.data(), deviceMem.data(), hostMem.size(), cfg.cudaStream());
+
+   const int gridSize = getGridSize(nEvents);
+   exprProgramKernel<<<gridSize, blockSize, 0, *cfg.cudaStream()>>>(codeDevice, static_cast<unsigned int>(code.size()),
+                                                                    varsDevice, output.data(), nEvents);
+}
 
 inline __device__ void kahanSumUpdate(double &sum, double &carry, double a, double otherCarry)
 {
