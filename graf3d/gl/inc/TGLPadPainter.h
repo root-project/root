@@ -116,6 +116,8 @@ public:
    void     DrawTextNDC(Double_t x, Double_t y, const char *text, ETextMode mode) override;
    void     DrawTextNDC(Double_t, Double_t, const wchar_t *, ETextMode) override;
 
+   void     DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags = 0) override;
+
    //jpg, png, gif and bmp output.
    void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const override;
 

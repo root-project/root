@@ -22,6 +22,7 @@
 #include "TROOT.h"
 #include "TPad.h"
 #include "TCanvas.h"
+#include "TImage.h"
 
 #include "TColorGradient.h"
 #include "TGLPadPainter.h"
@@ -856,6 +857,19 @@ void TGLPadPainter::SaveViewport()
 void TGLPadPainter::RestoreViewport()
 {
    glViewport(fVp[0], fVp[1], fVp[2], fVp[3]);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw image on the GL window
+
+void TGLPadPainter::DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags)
+{
+   Int_t width = img->GetWidth();
+   Int_t height = img->GetHeight();
+   auto bits = img->GetArgbArray();
+   if (bits)
+      DrawPixels((unsigned char *)bits, width, height, x, y, flags);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
