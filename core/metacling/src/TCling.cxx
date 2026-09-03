@@ -4205,9 +4205,20 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
 /// Set pointer to the TClingClassInfo in TClass.
 /// If 'reload' is true, (attempt to) generate a new ClassInfo even if we
 /// already have one.
+/// If 'classInfo' is non-null, take ownership of it and use it instead of
+/// looking up the class again; it must have been obtained from a call to
+/// CheckClassInfo(cl->GetName(), ...).
 
-void TCling::SetClassInfo(TClass* cl, Bool_t reload, Bool_t silent)
+void TCling::SetClassInfo(TClass *cl, Bool_t reload, Bool_t silent, ClassInfo_t *classInfo)
 {
+   // Whether we use it below or not, we own the passed class info.
+   std::unique_ptr<TClingClassInfo> providedInfo{(TClingClassInfo *)classInfo};
+
+   // A provided class info is a cached lookup result; honoring it would defeat
+   // the point of a reload, which is to redo the lookup.
+   if (reload)
+      providedInfo.reset();
+
    // We are shutting down, there is no point in reloading, it only triggers
    // redundant deserializations.
    if (fIsShuttingDown) {
@@ -4252,6 +4263,9 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload, Bool_t silent)
    // details and just overlay a 'simpler'/'simplistic' version that is easy
    // for the I/O to understand and handle.
    if (strncmp(cl->GetName(),"tuple<",std::char_traits<char>::length("tuple<"))==0) {
+      // A provided class info would describe the real std::tuple, not the
+      // alternate version overlaid below: it cannot be used.
+      providedInfo.reset();
       if (!reload)
          name = AlternateTuple(cl->GetName(), fInterpreter->getLookupHelper(), silent);
       if (reload || name.empty()) {
@@ -4266,7 +4280,8 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload, Bool_t silent)
    // that is currently in the caller (like SetUnloaded) that disable AutoLoading and AutoParsing and
    // code is in the callee (disabling template instantiation) and end up with a more explicit class:
    //      TClingClassInfoReadOnly.
-   TClingClassInfo* info = new TClingClassInfo(GetInterpreterImpl(), name.c_str(), instantiateTemplate);
+   TClingClassInfo *info = providedInfo ? providedInfo.release()
+                                        : new TClingClassInfo(GetInterpreterImpl(), name.c_str(), instantiateTemplate);
    if (!info->IsValid()) {
       SetWithoutClassInfoState(cl);
       delete info;
@@ -4340,11 +4355,20 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload, Bool_t silent)
 /// specifically check that each level of nesting is already loaded.
 /// In case of templates the idea is that everything between the outer
 /// '<' and '>' has to be skipped, e.g.: `aap<pippo<noot>::klaas>::a_class`
+///
+/// If 'classInfo' is non-null and the lookup found a declaration (which
+/// findScope only returns if it points to a complete definition, i.e. when no
+/// template instantiation would be needed to create it), '*classInfo' is set
+/// to a newly allocated TClingClassInfo for that declaration, owned by the
+/// caller. Passing it to SetClassInfo() avoids repeating the lookup there.
 
-TInterpreter::ECheckClassInfo
-TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamespaceOnly /* = kFALSE*/)
+TInterpreter::ECheckClassInfo TCling::CheckClassInfo(const char *name, Bool_t autoload,
+                                                     Bool_t isClassOrNamespaceOnly /* = kFALSE*/,
+                                                     ClassInfo_t **classInfo /* = nullptr*/)
 {
    R__LOCKGUARD(gInterpreterMutex);
+   if (classInfo)
+      *classInfo = nullptr;
    static const char *anonEnum = "anonymous enum ";
    static const int cmplen = strlen(anonEnum);
 
@@ -4416,12 +4440,23 @@ TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamesp
                      : cling::LookupHelper::NoDiagnostics,
                      &type, /* intantiateTemplate= */ false );
    if (!decl) {
+      // Use a separate output type for the retry: findScope does not write it
+      // on every path (e.g. when finding a namespace), and the type left over
+      // from the lookup above must not be paired with this lookup's decl.
+      const clang::Type *typeFromStd = nullptr;
       std::string buf = TClassEdit::InsertStd(classname);
-      decl = lh.findScope(buf,
-                          gDebug > 5 ? cling::LookupHelper::WithDiagnostics
-                          : cling::LookupHelper::NoDiagnostics,
-                          &type,false);
+      decl = lh.findScope(buf, gDebug > 5 ? cling::LookupHelper::WithDiagnostics : cling::LookupHelper::NoDiagnostics,
+                          &typeFromStd, false);
+      if (decl || typeFromStd)
+         type = typeFromStd;
    }
+
+   // If requested and an entity was found by the lookup above, hand a class
+   // info for it out to the caller (see the function documentation).
+   auto provideClassInfo = [this, classInfo, &decl, &type] {
+      if (classInfo && decl && !decl->isInvalidDecl())
+         *classInfo = (ClassInfo_t *)new TClingClassInfo(GetInterpreterImpl(), decl, type);
+   };
 
    if (type) {
       // If decl==0 and the type is valid, then we have a forward declaration.
@@ -4477,6 +4512,7 @@ TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamesp
          // , hasClassDefInline);
 
          // We are now sure that the entry is not in fact an autoload entry.
+         provideClassInfo();
          if (hasClassDefInline)
             return kWithClassDefInline;
          else
@@ -4487,9 +4523,10 @@ TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamesp
       }
    }
 
-   if (decl)
+   if (decl) {
+      provideClassInfo();
       return kKnown;
-   else
+   } else
       return kUnknown;
 
    // Setting up iterator part of TClingTypedefInfo is too slow.

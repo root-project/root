@@ -210,14 +210,20 @@ public:
    virtual void     UpdateListOfGlobals() = 0;
    virtual void     UpdateListOfGlobalFunctions() = 0;
    virtual void     UpdateListOfTypes() = 0;
-   virtual void     SetClassInfo(TClass *cl, Bool_t reload = kFALSE, Bool_t silent = kFALSE) = 0;
+   virtual void     SetClassInfo(TClass *cl,
+                                 Bool_t reload = kFALSE,
+                                 Bool_t silent = kFALSE,
+                                 ClassInfo_t *classInfo = nullptr) = 0;
 
    enum ECheckClassInfo {
       kUnknown = 0, // backward compatible with false
       kKnown = 1,
       kWithClassDefInline = 2
    };
-   virtual ECheckClassInfo CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamespaceOnly = kFALSE) = 0;
+   virtual ECheckClassInfo CheckClassInfo(const char *name,
+                                          Bool_t autoload,
+                                          Bool_t isClassOrNamespaceOnly = kFALSE,
+                                          ClassInfo_t **classInfo = nullptr) = 0;
 
    virtual Bool_t   CheckClassTemplate(const char *name) = 0;
    virtual Longptr_t Calc(const char *line, EErrorCode* error = nullptr) = 0;
