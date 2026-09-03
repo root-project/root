@@ -58,6 +58,7 @@
 #include "TPaletteAxis.h"
 #include "TCrown.h"
 #include "TArrow.h"
+#include "TVirtualPadPainter.h"
 #include "TVirtualPadEditor.h"
 #include "TVirtualX.h"
 #include "TEnv.h"
@@ -5772,11 +5773,14 @@ void THistPainter::PaintColorLevelsFast(Option_t*)
    pImage->SetImage(buffer.data(), nXPixels, nYPixels, pPalette);
    delete pPalette;
 
-   Window_t wid = static_cast<Window_t>(gVirtualX->GetWindowID(gPad->GetPixmapID()));
-   pImage->PaintImage(wid, px0, py1, 0, 0, nXPixels, nYPixels);
+   auto pp = gPad->GetPainter();
+   if (pp)
+      pp->DrawImage(pImage, px0, py1);
+
    delete pImage;
 
-   if (Hoption.Zscale) PaintPalette();
+   if (Hoption.Zscale)
+      PaintPalette();
 
    // Reset the maximum and minimum values to their original values
    // when this function was called. If we don't do this, an initial
