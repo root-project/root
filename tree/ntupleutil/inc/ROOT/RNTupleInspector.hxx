@@ -502,14 +502,16 @@ public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Print a string that represents the tree of the (sub)fields and columns of an RNTuple in a format which a
    /// performance profile visualizer can render
-   void PrintSchemaProfile(ESchemaProfileFormat format, std::ostream &output = std::cout) const;
+   void PrintSchemaProfile(std::ostream &output = std::cout,
+                           ESchemaProfileFormat format = ESchemaProfileFormat::kSpeedscopeJSON) const;
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Print a string that represents the on-disk storage of the cluster groups, clusters, column ranges, pages,
    /// header, footer and page lists on an RNTuple in a format which a performance profile visualizer can render
    ///
    /// \warning ntuple must have a file-based backend
-   void PrintDiskProfile(ESchemaProfileFormat format, std::ostream &output = std::cout) const;
+   void PrintDiskProfile(std::ostream &output = std::cout,
+                         ESchemaProfileFormat format = ESchemaProfileFormat::kSpeedscopeJSON) const;
 };
 } // namespace Experimental
 } // namespace ROOT
