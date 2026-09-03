@@ -503,6 +503,10 @@ For user-defined classes as well as sets and maps, RNTuple uses `TClass`.
 Simple types and other stdlib classes are natively supported and do not require dictionaries.
 See the format specification for an exhaustive list of types supported in RNTuple.
 The streamer field uses the standard ROOT streaming machinery.
+Without dictionaries, RNTuple can still read data with an emulated schema derived from the RNTuple fields.
+Type emulation reads classes as untyped records, collections as `std::vector`s, and custom enums as integers.
+Type emulation works for all fields except streamer fields.
+Emulated types cannot be used for writing, but they can be used for merging.
 
 Integration to RDataFrame is provided through an RNTuple data source.
 A universal RDataFrame constructor can create a data frame from either a TTree or an RNTuple with the same syntax.
