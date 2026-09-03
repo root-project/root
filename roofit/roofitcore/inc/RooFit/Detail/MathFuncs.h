@@ -825,7 +825,11 @@ double bernsteinIntegral(double xlo, double xhi, double xmin, double xmax, Doubl
          double binCoefs = binomial(degree, j) * binomial(j, i);
          double oneOverJPlusOne = 1. / (j + 1.);
          double powDiff = std::pow(xhiScaled, j + 1.) - std::pow(xloScaled, j + 1.);
-         temp += std::pow(-1., j - i) * binCoefs * powDiff * oneOverJPlusOne;
+         // The exponent is cast to double on purpose. Clad generates only one
+         // pullback for std::pow per session, so mixing an integral exponent
+         // with the floating-point one above makes clad::hessian() fail with an
+         // int*/double* mismatch on the exponent adjoint.
+         temp += std::pow(-1., static_cast<double>(j - i)) * binCoefs * powDiff * oneOverJPlusOne;
       }
       temp *= coefs[i]; // include coeff
       norm += temp;     // add this basis's contribution to total
@@ -865,17 +869,47 @@ double stepFunctionIntegral(double xmin, double xmax, std::size_t nBins, DoubleA
 
 } // namespace RooFit::Detail::MathFuncs
 
+namespace clad {
+// Only declared, never defined here: clad's own headers exist exclusively
+// inside the interpreter, but this header is also compiled normally.
+template <typename T, typename U>
+struct ValueAndPushforward;
+} // namespace clad
+
 namespace clad::custom_derivatives {
 namespace RooFit::Detail::MathFuncs {
 
-// Clad can't generate the pullback for binNumber because of the
+// Clad can't generate the derivatives for binNumber because of the
 // std::lower_bound usage. But since binNumber returns an integer, and such
-// functions have mathematically no derivatives anyway, we just declare a
-// custom dummy pullback that does nothing.
+// functions have mathematically no derivatives anyway, we just declare custom
+// dummy derivatives that do nothing.
+//
+// Both directions have to be covered: the pullback alone is enough for
+// gradients, but Hessians also run the forward pass over binNumber, and
+// without a pushforward clad descends into std::lower_bound.
 
 template <class... Types>
 void binNumber_pullback(Types...)
 {
+}
+
+// The second parameter is unused. It is what keeps the return type of the
+// pushforward below dependent, so that clad::ValueAndPushforward only has to be
+// complete once that template is instantiated. That happens under clad and
+// nowhere else, while parsing the declaration happens in every build that
+// includes this header. A class template is needed here: an alias template
+// would be expanded eagerly and defeat the purpose.
+template <typename T, typename>
+struct ValueAndPushforwardOf {
+   using type = ::clad::ValueAndPushforward<T, T>;
+};
+
+template <typename DoubleArray, class... Types>
+typename ValueAndPushforwardOf<unsigned int, DoubleArray>::type
+binNumber_pushforward(double x, double coef, DoubleArray boundaries, unsigned int nBoundaries, int nbins, int blo,
+                      Types...)
+{
+   return {::RooFit::Detail::MathFuncs::binNumber(x, coef, boundaries, nBoundaries, nbins, blo), 0};
 }
 
 } // namespace RooFit::Detail::MathFuncs
