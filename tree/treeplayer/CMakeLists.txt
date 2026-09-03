@@ -103,6 +103,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
     MathCore
     RIO
     Tree
+  LIBRARIES
+    ROOTclib # strlcpy.h
   ${EXTRA_DICT_OPTS}
 )
 

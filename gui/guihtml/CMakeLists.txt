@@ -29,4 +29,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GuiHtml
   DEPENDENCIES
     Gui
     Graf
+  LIBRARIES
+    ROOTclib # strlcpy.h
 )

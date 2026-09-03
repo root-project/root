@@ -16,15 +16,13 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <ROOT/RConfig.hxx>            /* for HAS_STRLCPY */
-
 #ifndef HAS_STRLCPY
 
 #if defined(LIBC_SCCS) && !defined(lint)
 static char *rcsid = "$OpenBSD: strlcat.c,v 1.11 2003/06/17 21:56:24 millert Exp $";
 #endif /* LIBC_SCCS and not lint */
 
-#ifndef WIN32
+#ifndef _WIN32
 #   include <unistd.h>
 #else
 #   include <sys/types.h>

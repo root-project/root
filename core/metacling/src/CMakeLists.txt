@@ -56,7 +56,6 @@ target_include_directories(MetaCling SYSTEM PRIVATE
 target_include_directories(MetaCling PRIVATE
    ${CLING_INCLUDE_DIRS}
    ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_SOURCE_DIR}/builtins/clib/inc
    ${CMAKE_SOURCE_DIR}/core/clingutils/res
    ${CMAKE_SOURCE_DIR}/core/cont/inc
    ${CMAKE_SOURCE_DIR}/core/foundation/inc
@@ -68,6 +67,7 @@ target_include_directories(MetaCling PRIVATE
    ${CMAKE_SOURCE_DIR}/io/io/inc
    ${CMAKE_BINARY_DIR}/ginclude
 )
+target_link_libraries(MetaCling PRIVATE ROOTclib)
 
 set_target_properties(MetaCling PROPERTIES
   COMPILE_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}"

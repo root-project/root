@@ -19,4 +19,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(SpectrumPainter
     Graf
     Hist
     Gpad
+  LIBRARIES
+    ROOTclib # strlcpy.h
 )

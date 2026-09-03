@@ -14,3 +14,4 @@ target_include_directories(RootPcmObjs PRIVATE
    ${CMAKE_SOURCE_DIR}/io/io/inc
    ${CMAKE_SOURCE_DIR}/core/zip/inc
 )
+target_link_libraries(RootPcmObjs PRIVATE ROOTclib) # strtok.h

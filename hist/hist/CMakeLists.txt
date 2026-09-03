@@ -171,6 +171,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     MathCore
     Matrix
     RIO
+  LIBRARIES
+    ROOTclib # strlcpy.h
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

@@ -29,6 +29,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(FitPanel
     MathCore
     Tree
     TreePlayer
+  LIBRARIES
+    ROOTclib # strlcpy.h
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

@@ -26,6 +26,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Minuit
     Hist
     Matrix
     MathCore
+  LIBRARIES
+    ROOTclib # strlcpy.h
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
 )

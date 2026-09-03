@@ -23,4 +23,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(XMLIO
                                  src/TXMLFile.cxx
                                  src/TXMLPlayer.cxx
                                  src/TXMLSetup.cxx
-                              DEPENDENCIES RIO)
+                              DEPENDENCIES RIO
+                              LIBRARIES ROOTclib)
