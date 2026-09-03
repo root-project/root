@@ -244,6 +244,7 @@ To change the color model use `gStyle->SetColorModelPS(c)`.
 #include "TVirtualPad.h"
 #include "TPoints.h"
 #include "TPoint.h"
+#include "TImage.h"
 #include "TPostScript.h"
 #include "TStyle.h"
 #include "TMath.h"
@@ -621,6 +622,102 @@ void TPostScript::CellArrayEnd()
    PrintStr(" def DrawCT ");
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw image in postscript
+
+void TPostScript::DrawImage(TImage *img, Int_t x, Int_t y, Int_t)
+{
+   auto argb = img->GetArgbArray();
+   if (!argb) {
+      Error("DrawImage", "Fail to access ARGB values");
+      return;
+   }
+
+   Int_t width = img->GetWidth();
+   Int_t height = img->GetHeight();
+
+   auto x1 = gPad->AbsPixeltoX(x);
+   auto x2 = gPad->AbsPixeltoX(x + width);
+   auto y1 = gPad->AbsPixeltoY(y);
+   auto y2 = gPad->AbsPixeltoY(y - height);
+
+   Int_t ix1 = XtoPS(x1);
+   Int_t iy1 = YtoPS(y1);
+   Int_t ix2 = XtoPS(x2);
+   Int_t iy2 = YtoPS(y2);
+
+   Float_t wt = (0. + ix2 - ix1) / width;
+   Float_t ht = (0. + iy2 - iy1) / height;
+
+   fLastCellRed     = 300;
+   fLastCellGreen   = 300;
+   fLastCellBlue    = 300;
+   fNBSameColorCell = 0;
+
+   fNbinCT = 0;
+   fNbCellW = width;
+   fNbCellLine = 0;
+   fMaxLines = 40000/(3*fNbCellW);
+
+   // Define some parameters
+   PrintStr("@/WT"); WriteReal(wt)          ; PrintStr(" def"); // Cells width
+   PrintStr(" /HT"); WriteReal(ht)          ; PrintStr(" def"); // Cells height
+   PrintStr(" /XS"); WriteInteger(ix1)      ; PrintStr(" def"); // X start
+   PrintStr(" /YY"); WriteInteger(iy1)      ; PrintStr(" def"); // Y start
+   PrintStr(" /NX"); WriteInteger(width)    ; PrintStr(" def"); // Number of columns
+   PrintStr(" /NY"); WriteInteger(fMaxLines); PrintStr(" def"); // Number of lines
+
+   // This PS procedure draws one cell.
+   PrintStr(" /DrawCell ");
+   PrintStr(   "{WT HT XX YY bf");
+   PrintStr(   " /NBBD NBBD 1 add def");
+   PrintStr(   " NBBD NBB eq {exit} if");
+   PrintStr(   " /XX WT XX add def");
+   PrintStr(   " IX NX eq ");
+   PrintStr(      "{/YY YY HT sub def");
+   PrintStr(      " /XX XS def");
+   PrintStr(      " /IX 0 def} if");
+   PrintStr(   " /IX IX 1 add def} def");
+
+   // This PS procedure draws fMaxLines line. It takes care of duplicated
+   // colors. Values "n" greater than 300 mean than the previous color
+   // should be duplicated n-300 times.
+   PrintStr(" /DrawCT ");
+   PrintStr(   "{/NBB NX NY mul def");
+   PrintStr(   " /XX XS def");
+   PrintStr(   " /IX 1 def");
+   PrintStr(   " /NBBD 0 def");
+   PrintStr(   " /RC 0 def /GC 1 def /BC 2 def");
+   PrintStr(   " 1 1 NBB ");
+   PrintStr(      "{/NB CT RC get def");
+   PrintStr(      " NB 301 ge ");
+   PrintStr(         "{/NBL NB 300 sub def");
+   PrintStr(         " 1 1 NBL ");
+   PrintStr(            "{DrawCell}");
+   PrintStr(         " for");
+   PrintStr(         " /RC RC 1 add def");
+   PrintStr(         " /GC RC 1 add def");
+   PrintStr(         " /BC RC 2 add def}");
+   PrintStr(         "{CT RC get 255 div CT GC get 255 div CT BC get 255 div setrgbcolor");
+   PrintStr(         " DrawCell");
+   PrintStr(         " /RC RC 3 add def");
+   PrintStr(         " /GC GC 3 add def");
+   PrintStr(         " /BC BC 3 add def} ifelse NBBD NBB eq {exit} if} for");
+   PrintStr(         " /YY YY HT sub def clear} def");
+
+   PrintStr(" /CT [");
+
+   // use old API, move here once old is deprecated
+   for (Int_t i = 0; i < width * height; ++i) {
+      UInt_t p = argb[i];
+      auto r = static_cast<unsigned char>((p >> 16) & 0xFF);
+      auto g = static_cast<unsigned char>((p >> 8) & 0xFF);
+      auto b = static_cast<unsigned char>(p & 0xFF);
+      CellArrayFill(r, g, b);
+   }
+
+   CellArrayEnd();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a Box
