@@ -231,6 +231,12 @@ private:
    /// The RNTuple class description is always present.
    ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t fStreamerInfoMap;
 
+   /// Private constructor used by all factory methods.
+   /// Note that, in case of "owned" files (those created via Recreate) there must be exactly one non-hidden
+   /// RNTupleFileWriter which is responsible for serializing the ROOT file metadata.
+   /// This is enforced by the public API, as the only way to create a hidden FileWriter is via CloneAsHidden (which
+   /// creates a secondary hidden writer over the same file) and Append (which never writes the file metadata because
+   /// they are already handled by the "real" TFile).
    explicit RNTupleFileWriter(std::string_view name, std::uint64_t maxKeySize, bool isHidden);
 
    /// For a TFile container written by a C file stream, write the header and TFile object
