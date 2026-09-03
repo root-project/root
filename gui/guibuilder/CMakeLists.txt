@@ -30,4 +30,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GuiBld
     Graf
     MathCore
     ASImageUtils
+  LIBRARIES
+    ROOTclib # strlcpy.h
 )

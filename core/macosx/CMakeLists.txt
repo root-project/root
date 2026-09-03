@@ -32,7 +32,7 @@ if(cocoa)
 
   target_compile_options(Macosx PRIVATE -ObjC++)
   target_include_directories(Macosx PRIVATE ../unix/inc)
-  target_include_directories(Macosx PRIVATE ${CMAKE_SOURCE_DIR}/builtins/clib/inc) # for strtok.h
+  target_link_libraries(Macosx PRIVATE ROOTclib) # for strtok.h
 
   target_sources(Core PRIVATE $<TARGET_OBJECTS:Macosx>)
 

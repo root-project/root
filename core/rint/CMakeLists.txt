@@ -23,5 +23,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Rint
 )
 
 target_include_directories(Core PRIVATE inc)
+target_link_libraries(Rint PRIVATE ROOTclib)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

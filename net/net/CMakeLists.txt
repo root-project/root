@@ -69,6 +69,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Net
     RIO
   LIBRARIES
     ${ROOT_ATOMIC_LIBS}
+    ROOTclib
 )
 # Suppress deprecation warnings across compilation units and during dictionary generation, remove with NetErrors.h
 target_compile_definitions(Net PRIVATE ROOT_NetErrors_cxx)

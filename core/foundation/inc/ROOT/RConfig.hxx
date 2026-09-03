@@ -131,9 +131,6 @@
 #      define R__USESTHROW
 #      define R__SEEK64
 #   endif
-#   if __GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 38)
-#      define HAS_STRLCPY
-#   endif
 #endif
 
 #if defined(linux) && defined(__i386__)
@@ -262,7 +259,6 @@
 #   if defined(__amd64__)
 #      define R__B64
 #   endif
-#   define HAS_STRLCPY
 #endif
 
 #if defined(__OpenBSD__)
@@ -277,7 +273,6 @@
 #   if defined(__amd64__)
 #      define R__B64
 #   endif
-#   define HAS_STRLCPY
 #endif
 
 #if defined(__APPLE__)       /* MacOS X support, initially following FreeBSD */
@@ -305,7 +300,6 @@
 #      define R__BYTESWAP
 #      define R__B64      /* enable when 64 bit machine */
 #   endif
-#   define HAS_STRLCPY
 #endif
 
 #ifdef _HIUX_SOURCE

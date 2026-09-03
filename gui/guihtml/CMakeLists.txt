@@ -30,4 +30,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GuiHtml
     Gui
     Graf
     ASImageUtils
+  LIBRARIES
+    ROOTclib # strlcpy.h
 )
