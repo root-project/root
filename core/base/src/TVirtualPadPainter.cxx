@@ -212,3 +212,10 @@ void TVirtualPadPainter::SetCursor(Int_t device, ECursor cursor)
       gVirtualX->SetCursor(device, cursor);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw image, need to be implemented in correspondent
+
+void TVirtualPadPainter::DrawImage(TImage *, Int_t, Int_t, Int_t)
+{
+}
