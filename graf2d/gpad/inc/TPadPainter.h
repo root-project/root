@@ -79,6 +79,8 @@ public:
 
    void     DrawTTFglyphs(Int_t x, Int_t y, TTFhandle &ttf, ETextMode mode) override;
 
+   void     DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags = 0) override;
+
    //jpg, png, bmp, gif output.
    void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const override;
 
