@@ -1484,8 +1484,13 @@ void TClass::Init(const char *name, Version_t cversion,
          if (proto)
             proto->FillTClass(this);
       }
-      if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName, /* autoload = */ kTRUE)) {
-         gInterpreter->SetClassInfo(this, kFALSE, silent);   // sets fClassInfo pointer
+      ClassInfo_t *checkedInfo = nullptr;
+      if (!fHasRootPcmInfo &&
+          gInterpreter->CheckClassInfo(fName, /* autoload = */ kTRUE, /* isClassOrNamespaceOnly = */ kFALSE,
+                                       /* classInfo = */ &checkedInfo)) {
+         // Pass along the class info that CheckClassInfo may have found, so that
+         // SetClassInfo (which takes its ownership) does not repeat the lookup.
+         gInterpreter->SetClassInfo(this, kFALSE, silent, checkedInfo); // sets fClassInfo pointer
          if (fClassInfo) {
             // This should be moved out of GetCheckSum itself however the last time
             // we tried this cause problem, in particular in the end-of-process operation.
