@@ -55,18 +55,20 @@ of options.
 For a multi-dimensional version of this pdf, see RooNDKeysPdf.
 **/
 
-#include <limits>
-#include <algorithm>
-#include <cmath>
-#include <iostream>
 #include "TMath.h"
-#include "snprintf.h"
 #include "RooKeysPdf.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooDataSet.h"
 
 #include "TError.h"
+#include "TMath.h"
+
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <iostream>
+#include <limits>
 
 
 const double RooKeysPdf::_nSigma = std::sqrt(-2. *

@@ -55,8 +55,6 @@
 //_____________________________batch only_____________________
 #ifndef __CLING__
 
-#include <cstdlib>
-#include <snprintf.h>
 #include <TROOT.h>
 #include <TSystem.h>
 #include <TH1.h>
@@ -75,6 +73,9 @@
 #include <TClassTable.h>
 #include <Compression.h>
 #include "Event.h"
+
+#include <cstdlib>
+#include <cstdio>
 
 R__LOAD_LIBRARY( libEvent )
 

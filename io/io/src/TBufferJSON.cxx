@@ -133,7 +133,8 @@ class Container {
 #include "TVirtualMutex.h"
 #include "TInterpreter.h"
 #include "TEmulatedCollectionProxy.h"
-#include "snprintf.h"
+
+#include <cstdio>
 
 #include <nlohmann/json.hpp>
 

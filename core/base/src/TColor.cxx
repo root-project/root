@@ -19,10 +19,10 @@
 #include "TMathBase.h"
 #include "TApplication.h"
 #include "TColorGradient.h"
-#include "snprintf.h"
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <sstream>

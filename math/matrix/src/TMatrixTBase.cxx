@@ -27,7 +27,8 @@ of the derived classes
 #include "TBuffer.h"
 #include "TROOT.h"
 #include "TMath.h"
-#include "snprintf.h"
+
+#include <cstdio>
 #include <climits>
 
 Int_t gMatrixCheck = 1;

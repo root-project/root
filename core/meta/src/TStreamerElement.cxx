@@ -32,8 +32,8 @@
 #include "TVirtualMutex.h"
 #include "TVirtualCollectionProxy.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <string>
 
 using std::string;

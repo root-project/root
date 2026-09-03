@@ -20,9 +20,9 @@
 
 #include "RConfigure.h"
 #include <ROOT/RConfig.hxx>
-#include "snprintf.h"
-#include <iostream>
 
+#include <cstdio>
+#include <iostream>
 #ifdef WIN32
    #include <io.h>
    typedef long off_t;

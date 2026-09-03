@@ -26,9 +26,9 @@
 #include "TStopwatch.h"
 #include "TSystem.h"
 #include "TStreamerInfo.h"
-#include "snprintf.h"
-
 #include "TBench.h"
+
+#include <cstdio>
 
 using std::vector;
 

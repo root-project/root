@@ -858,7 +858,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
                         DllImport.h ESTLType.h Varargs.h
                         ThreadLocalStorage.h
                         TBranchProxyTemplate.h
-                        snprintf.h strlcpy.h)
+                        strlcpy.h)
 
    # Deprecated header files.
   set (excluded_headers "${excluded_headers}")

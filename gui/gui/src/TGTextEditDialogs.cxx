@@ -43,8 +43,8 @@ and TGPrintDialog.
 #include "TObjArray.h"
 #include "TVirtualX.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <cstdlib>
 
 

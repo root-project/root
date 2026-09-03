@@ -60,7 +60,6 @@
 #include "TStopwatch.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
-#include "snprintf.h"
 
 #include "Math/Factory.h"
 #include "Math/Functor.h"
@@ -68,6 +67,7 @@
 #include "Math/MinimizerOptions.h"
 #include "Math/Minimizer.h"
 
+#include <cstdio>
 #include <cstdlib>
 #include <iostream>
 
