@@ -56,6 +56,8 @@ ROOT::Experimental::RProfile profile(axes);
 Feedback is welcome!
 */
 class RProfile final {
+   friend class RProfileFillContext;
+
    struct RValueWrapper {
       double fValue;
 
@@ -111,6 +113,29 @@ public:
          fSum *= factor;
          fSum2 *= factor * factor;
          return *this;
+      }
+
+   private:
+      void AtomicAddRelease(double v, double v2, double w, double w2)
+      {
+         Internal::AtomicAddRelease(&fSumValues, v);
+         Internal::AtomicAddRelease(&fSumValues2, v2);
+         Internal::AtomicAddRelease(&fSum, w);
+         Internal::AtomicAddRelease(&fSum2, w2);
+      }
+
+   public:
+      void AtomicAddRelease(const RValueWrapper &rhs)
+      {
+         double v = rhs.fValue;
+         AtomicAddRelease(v, v * v, 1.0, 1.0);
+      }
+
+      void AtomicAddRelease(const RValueWeightWrapper &rhs)
+      {
+         double v = rhs.fValue;
+         double w = rhs.fWeight;
+         AtomicAddRelease(w * v, w * v * v, w, w * w);
       }
 
       /// Add another bin content using atomic instructions.
