@@ -26,6 +26,7 @@
 #include "TVirtualPad.h"
 #include "TPoint.h"
 #include "TPoints.h"
+#include "TImage.h"
 #include "TSVG.h"
 #include "TStyle.h"
 #include "TMath.h"
@@ -748,6 +749,53 @@ void TSVG::CellArrayPng(char *buffer, int size)
 
 void TSVG::CellArrayEnd()
 {
+   PrintStr("\"></image>@");
+   PrintStr("</g>@");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw image in the SVG
+/// Replaces CellArray methods calling
+
+void TSVG::DrawImage(TImage *img, Int_t x, Int_t y, Int_t)
+{
+   Int_t width = img->GetWidth();
+   Int_t height = img->GetHeight();
+
+   auto x1 = gPad->AbsPixeltoX(x);
+   auto x2 = gPad->AbsPixeltoX(x + width);
+   auto y1 = gPad->AbsPixeltoY(y);
+   auto y2 = gPad->AbsPixeltoY(y + height);
+
+   Double_t svgx1 = XtoSVG(x1);
+   Double_t svgx2 = XtoSVG(x2);
+   Double_t svgy1 = YtoSVG(y1);
+   Double_t svgy2 = YtoSVG(y2);
+
+   char *buffer = nullptr;
+   int  size = 0;
+
+   img->GetImageBuffer(&buffer, &size, TImage::kPng);
+   if (!buffer) {
+      Error("DrawImage", "Fail to get PNG format of the image");
+      return;
+   }
+
+   TString base64 = TBase64::Encode(reinterpret_cast<char *>(buffer), size);
+   free(buffer);
+
+   PrintStr("@<g transform=\"translate(");
+   WriteReal(svgx1, kFALSE);
+   WriteReal(svgy1, kTRUE);
+   PrintStr(") scale(");
+   WriteReal((svgx2 - svgx1) / width, kFALSE);
+   WriteReal((svgy2 - svgy1) / height, kTRUE);
+   PrintStr(")\">@");
+   PrintStr(TString::Format("<image width=\"%d\" height=\"%d\" href=\"data:image/png;base64,", width, height));
+
+   if (!fCompact)
+      PrintFast(base64.Length(), base64.Data());
+
    PrintStr("\"></image>@");
    PrintStr("</g>@");
 }
