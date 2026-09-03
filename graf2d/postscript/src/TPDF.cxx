@@ -64,6 +64,7 @@ the table of contents.
 #include "TVirtualPad.h"
 #include "TPoint.h"
 #include "TPoints.h"
+#include "TImage.h"
 #include "TPDF.h"
 #include "TStyle.h"
 #include "TMath.h"
@@ -258,6 +259,51 @@ void TPDF::CellArrayEnd()
    fCellArrayRGB.clear();
    fCellArrayRGB.shrink_to_fit();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw image in the PDF
+
+void TPDF::DrawImage(TImage *img, Int_t x, Int_t y, Int_t)
+{
+   Int_t width = img->GetWidth();
+   Int_t height = img->GetHeight();
+
+   auto x1 = gPad->AbsPixeltoX(x);
+   auto x2 = gPad->AbsPixeltoX(x + width);
+   auto y1 = gPad->AbsPixeltoY(y);
+   auto y2 = gPad->AbsPixeltoY(y + height);
+
+   fCellArrayW = width;
+   fCellArrayH = height;
+
+   Double_t xLeft = XtoPDF(x1);
+   Double_t xRight = XtoPDF(x2);
+   Double_t yTop = YtoPDF(y1);
+   Double_t yBot = YtoPDF(y2);
+
+   fCellArrayXpdf = xLeft;
+   fCellArrayYpdfBot = yBot;
+   fCellArrayWpdf = xRight - xLeft;
+   fCellArrayHpdf = yTop - yBot;
+
+   auto argb = img->GetArgbArray();
+   if (!argb) {
+      Error("DrawImage", "Fail to access to ARGB values");
+      return;
+   }
+
+   fCellArrayRGB.resize(3 * width * height);
+   for (Int_t i = 0; i < width * height; ++i) {
+      UInt_t p = argb[i];
+      fCellArrayRGB[i*3] = static_cast<unsigned char>((p >> 16) & 0xFF);
+      fCellArrayRGB[i*3 + 1] = static_cast<unsigned char>((p >> 8) & 0xFF);
+      fCellArrayRGB[i*3 + 2] = static_cast<unsigned char>(p & 0xFF);
+   }
+
+   // use old method, move here once old API is deprecated
+   CellArrayEnd();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Close a PDF file
