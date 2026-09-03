@@ -89,6 +89,7 @@ private:
    Int_t         fCanvasDefW;        ///< Default canvas width
    Int_t         fCanvasDefX;        ///< Default canvas top X position
    Int_t         fCanvasDefY;        ///< Default canvas top Y position
+   Bool_t        fCanvasSizeIsDrawingArea; ///< If true, TCanvas ctor sizes define the drawing area instead of the window size. Default is false.
    Color_t       fPadColor;          ///< Pad color
    Width_t       fPadBorderSize;     ///< Pad border size
    Int_t         fPadBorderMode;     ///< Pad border mode
@@ -194,6 +195,7 @@ public:
    Int_t            GetCanvasDefW() const      {return fCanvasDefW;}
    Int_t            GetCanvasDefX() const      {return fCanvasDefX;}
    Int_t            GetCanvasDefY() const      {return fCanvasDefY;}
+   Bool_t           GetCanvasSizeIsDrawingArea() const   {return fCanvasSizeIsDrawingArea;}
    Int_t            GetColorPalette(Int_t i) const;
    Int_t            GetColorModelPS() const    {return fColorModelPS;}
    Float_t          GetDateX() const           {return fDateX;}
@@ -351,6 +353,7 @@ public:
    void             SetCanvasDefW(Int_t w=700) {fCanvasDefW = w;}
    void             SetCanvasDefX(Int_t topx=10) {fCanvasDefX = topx;}
    void             SetCanvasDefY(Int_t topy=10) {fCanvasDefY = topy;}
+   void             SetCanvasSizeIsDrawingArea(Int_t da =kFALSE) {fCanvasSizeIsDrawingArea = da;}
    void             SetLegendBorderSize(Width_t size=4) {fLegendBorderSize = size;}
    void             SetLegendFillColor(Color_t color=0) {fLegendFillColor = color;}
    void             SetLegendFillStyle(Style_t style=1001) {fLegendFillStyle = style;}
@@ -435,7 +438,7 @@ public:
    void             SavePrimitive(std::ostream &out, Option_t * = "") override;
    void             SaveSource(const char *filename, Option_t *option = nullptr);
 
-   ClassDefOverride(TStyle, 24);  //A collection of all graphics attributes
+   ClassDefOverride(TStyle, 25);  //A collection of all graphics attributes
 };
 
 
