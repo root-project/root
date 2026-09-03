@@ -20,6 +20,7 @@ HEADERS
   ROOT/RClusterPool.hxx
   ROOT/RColumn.hxx
   ROOT/RColumnElementBase.hxx
+  ROOT/RCreateFieldOptions.hxx
   ROOT/REntry.hxx
   ROOT/RField.hxx
   ROOT/RFieldBase.hxx
