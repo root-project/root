@@ -1411,6 +1411,9 @@ void TASImage::Paint(Option_t *option)
       }
    }
 
+   // opaque flag used in some X11
+   Int_t flags = opt.Contains("opaque") ? 0 : 1;
+
    ASImage *image = fImage;
 
    // Get geometry of pad
@@ -1536,173 +1539,42 @@ void TASImage::Paint(Option_t *option)
    int tox = expand  ? 0 : int(gPad->UtoPixel(1.) * gPad->GetLeftMargin());
    int toy = expand  ? 0 : int(gPad->VtoPixel(0.) * gPad->GetTopMargin());
 
-   auto ps = gPad->GetPainter()->GetPS();
+   auto pp = gPad->GetPainter();
 
-   if (!ps) {
-      Window_t wid = (Window_t)gVirtualX->GetWindowID(gPad->GetPixmapID());
-      Image2Drawable(fScaledImage ? fScaledImage->fImage : fImage, wid, tox, toy);
+   pp->DrawImage(fScaledImage ? fScaledImage : this, tox, toy, flags);
 
-      if (grad_im && fPaletteEnabled) {
-         // draw color bar
-         Image2Drawable(grad_im, wid, pal_x, pal_y);
+   if (grad_im && fPaletteEnabled) {
+      TASImage pimg;
+      pimg.fImage = grad_im;
+      grad_im = nullptr; // will be delete with pimg destructor
 
-         // values of palette
-         TGaxis axis;
-         Int_t ndiv = 510;
-         double min = fMinValue;
-         double max = fMaxValue;
+      // draw color bar
+      pp->DrawImage(&pimg, pal_x, pal_y, flags);
+
+      // values of palette
+      TGaxis axis;
+      Int_t ndiv = 510;
+      Double_t min = fMinValue;
+      Double_t max = fMaxValue;
+      Double_t pal_Xpos = gPad->AbsPixeltoX(pal_Ax + pal_w);
+      if (!pp->GetPS()) {
+         // TODO: check why here special drawing for none-PS
          axis.SetLineColor(0);       // draw white ticks
-         Double_t pal_Xpos = gPad->AbsPixeltoX(pal_Ax + pal_w);
          axis.PaintAxis(pal_Xpos, gPad->PixeltoY(pal_Ay + pal_h - 1),
                         pal_Xpos, gPad->PixeltoY(pal_Ay),
                         min, max, ndiv, "+LU");
          min = fMinValue;
          max = fMaxValue;
-         axis.SetLineColor(1);       // draw black ticks
-         axis.PaintAxis(pal_Xpos, gPad->AbsPixeltoY(pal_Ay + pal_h),
-                        pal_Xpos, gPad->AbsPixeltoY(pal_Ay + 1),
-                        min, max, ndiv, "+L");
-      }
-   } else {
-      // loop over pixmap and draw image to PostScript
-
-      Bool_t paint_as_png = kFALSE;
-
-      if (ps->InheritsFrom("TImageDump")) { // PostScript is asimage
-         TImage *dump = (TImage *)ps->GetStream();
-         if (!dump) return;
-         dump->Merge(fScaledImage ? fScaledImage : this, "alphablend",
-                     gPad->XtoAbsPixel(0), gPad->YtoAbsPixel(1));
-
-         if (grad_im) {
-            TASImage tgrad;
-            tgrad.fImage = grad_im;
-            dump->Merge(&tgrad, "alphablend", pal_Ax, pal_Ay);
-
-            // values of palette
-            TGaxis axis;
-            Int_t ndiv = 510;
-            double min = fMinValue;
-            double max = fMaxValue;
-            axis.SetLineColor(1);       // draw black ticks
-            Double_t pal_Xpos = gPad->AbsPixeltoX(pal_Ax + pal_w);
-            axis.PaintAxis(pal_Xpos, gPad->AbsPixeltoY(pal_Ay + pal_h),
-                           pal_Xpos, gPad->AbsPixeltoY(pal_Ay + 1),
-                           min, max, ndiv, "+L");
-         }
-         return;
-      } else if (ps->InheritsFrom("TSVG")) {
-         paint_as_png = kTRUE;
       }
 
-      Double_t dx = gPad->GetX2() - gPad->GetX1();
-      Double_t dy = gPad->GetY2() - gPad->GetY1();
-      Double_t x1, x2, y1, y2;
-
-      if (expand) {
-         x1 = gPad->GetX1();
-         x2 = x1+dx/image->width;
-         y1 = gPad->GetY2();
-         y2 = y1+dy/image->height;
-      } else {
-         x1 = gPad->GetX1()+dx*gPad->GetLeftMargin();
-         x2 = x1+(dx*(1-gPad->GetRightMargin()-gPad->GetLeftMargin()))/image->width;
-         y1 = gPad->GetY2()-dy*gPad->GetTopMargin();
-         y2 = y1+(dy*(1-gPad->GetTopMargin()-gPad->GetBottomMargin()))/image->height;
-      }
-
-      // get special color cell to be reused during image printing
-      ps->SetFillColor(TColor::GetColor((Float_t) 1., (Float_t) 1., (Float_t) 1.));
-      ps->SetFillStyle(1001);
-
-      ps->CellArrayBegin(image->width, image->height, x1, x2, y1, y2);
-
-      if (paint_as_png) {
-         char *buffer = nullptr;
-         int size = 0;
-         ASImageExportParams params;
-         params.png.type = ASIT_Png;
-         params.png.flags = EXPORT_ALPHA;
-         params.png.compression = GetImageCompression();
-         if (!params.png.compression)
-            params.png.compression = -1;
-         if (ASImage2PNGBuff(image, (CARD8 **)&buffer, &size, &params)) {
-            ps->CellArrayPng(buffer, size);
-            free(buffer);
-         }
-      } else {
-         auto imdec = start_image_decoding(fgVisual, image, SCL_DO_ALL,
-                                           0, 0, image->width, image->height, nullptr);
-         if (imdec)
-            for (Int_t yt = 0; yt < (Int_t)image->height; yt++) {
-               imdec->decode_image_scanline(imdec);
-               for (Int_t xt = 0; xt < (Int_t)image->width; xt++)
-                  ps->CellArrayFill(imdec->buffer.red[xt],
-                                    imdec->buffer.green[xt],
-                                    imdec->buffer.blue[xt]);
-            }
-         stop_image_decoding(&imdec);
-      }
-      ps->CellArrayEnd();
-
-      // print the color bar
-      if (grad_im) {
-         Double_t xconv = (gPad->AbsPixeltoX(pal_Ax + pal_w) - gPad->AbsPixeltoX(pal_Ax)) / grad_im->width;
-         Double_t yconv = (gPad->AbsPixeltoY(pal_Ay - pal_h) - gPad->AbsPixeltoY(pal_Ay)) / grad_im->height;
-         x1 = gPad->AbsPixeltoX(pal_Ax);
-         x2 = x1 + xconv;
-         y2 = gPad->AbsPixeltoY(pal_Ay);
-         y1 = y2 - yconv;
-         ps->CellArrayBegin(grad_im->width, grad_im->height,
-                            x1, x2, y1, y2);
-
-         if (paint_as_png) {
-            char *buffer = nullptr;
-            int size = 0;
-            ASImageExportParams params;
-            params.png.type = ASIT_Png;
-            params.png.flags = EXPORT_ALPHA;
-            params.png.compression = GetImageCompression();
-            if (!params.png.compression)
-               params.png.compression = -1;
-
-            if (ASImage2PNGBuff(grad_im, (CARD8 **)&buffer, &size, &params)) {
-               ps->CellArrayPng(buffer, size);
-               free(buffer);
-            }
-         } else {
-            auto imdec = start_image_decoding(fgVisual, grad_im, SCL_DO_ALL,
-                                              0, 0, grad_im->width, grad_im->height, nullptr);
-            if (imdec)
-               for (Int_t yt = 0; yt < (Int_t)grad_im->height; yt++) {
-                  imdec->decode_image_scanline(imdec);
-                  for (Int_t xt = 0; xt < (Int_t)grad_im->width; xt++)
-                     ps->CellArrayFill(imdec->buffer.red[xt],
-                                       imdec->buffer.green[xt],
-                                       imdec->buffer.blue[xt]);
-               }
-            stop_image_decoding(&imdec);
-         }
-         ps->CellArrayEnd();
-
-         // values of palette
-         TGaxis axis;
-         Int_t ndiv = 510;
-         double min = fMinValue;
-         double max = fMaxValue;
-         axis.SetLineColor(1);       // draw black ticks
-         Double_t pal_Xpos = gPad->AbsPixeltoX(pal_Ax + pal_w);
-         // TODO: provide PaintAxisOn method
-         axis.PaintAxis(pal_Xpos, gPad->AbsPixeltoY(pal_Ay + pal_h),
-                        pal_Xpos, gPad->AbsPixeltoY(pal_Ay + 1),
-                        min, max, ndiv, "+L");
-
-      }
+      axis.SetLineColor(1);       // draw black ticks
+      axis.PaintAxis(pal_Xpos, gPad->AbsPixeltoY(pal_Ay + pal_h),
+                     pal_Xpos, gPad->AbsPixeltoY(pal_Ay + 1),
+                     min, max, ndiv, "+L");
    }
 
-   if (grad_im) {
+   if (grad_im)
       destroy_asimage(&grad_im);
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
