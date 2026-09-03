@@ -430,6 +430,10 @@ public:
                                                     std::string histName = "", std::string histTitle = "",
                                                     size_t nBins = 64);
 
+   std::unique_ptr<THStack> GetPagesPerClusterDistribution(std::initializer_list<ROOT::ENTupleColumnType> colTypes = {},
+                                                           std::string_view histName = "",
+                                                           std::string_view histTitle = "", size_t nBins = 32);
+
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get storage information for a given (sub)field by ID.
    ///
