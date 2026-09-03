@@ -213,6 +213,15 @@ Bool_t TPadPainter::HasTTFonts() const
    return gVirtualX->HasTTFonts();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw image on the gVirtualX window
+
+void TPadPainter::DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags)
+{
+   Window_t wid = (Window_t)gVirtualX->GetWindowID(fPad->GetPixmapID());
+   // use old API to draw image on gVirtualX window
+   img->PaintImage(wid, x, y, 0, 0, 0, 0, flags ? "" : "opaque");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Noop, for non-gl pad TASImage calls gVirtualX->CopyArea.
