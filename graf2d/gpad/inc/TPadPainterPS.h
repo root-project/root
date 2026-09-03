@@ -85,6 +85,8 @@ public:
 
    void     DrawTextUrl(Double_t x, Double_t y, const char *text, const char *url) override;
 
+   void     DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags = 0) override;
+
    //jpg, png, bmp, gif output.
    void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const override;
 
