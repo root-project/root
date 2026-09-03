@@ -57,7 +57,10 @@ std::unique_ptr<RooFormulaEvaluator> cloneEvaluator(RooFormulaEvaluator const &o
 
 double evalFormula(RooFormulaEvaluator const &evaluator, RooAbsCollection const &vars, RooArgSet const *nset = nullptr);
 
-void doEvalFormula(RooFormulaEvaluator const &evaluator, RooArgList const &actualVars, RooFit::EvalContext &ctx);
+void doEvalFormula(RooAbsArg const &caller, RooFormulaEvaluator const &evaluator, RooArgList const &actualVars,
+                   RooFit::EvalContext &ctx);
+
+bool formulaCanComputeBatchWithCuda(RooFormulaEvaluator const &evaluator);
 
 void printFormula(std::ostream &os, TString indent, std::string const &formula, RooArgList const &actualVars);
 

@@ -83,6 +83,7 @@ public:
   // Function evaluation
   double evaluate() const override ;
   void doEval(RooFit::EvalContext &ctx) const override;
+  bool canComputeBatchWithCuda() const override;
 
   /// Name of the cling-JIT-compiled function that evaluates this formula,
   /// which generated code from the codegen fallback path calls by name.

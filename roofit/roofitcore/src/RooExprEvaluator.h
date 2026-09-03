@@ -64,6 +64,11 @@ struct Entry {
    /// that RooBatchCompute::computeExprProgram() can vectorize them. Scalar
    /// evaluation and C++ emission treat those opcodes exactly like Call1.
    RooBatchCompute::ExprOp op1 = RooBatchCompute::ExprOp::Call1;
+   /// Device-representable identity of `fn0`..`fn4`, copied into the call
+   /// instruction so that the CUDA backend can dispatch without the host
+   /// function pointer. Entries that leave this at ExprFunc::None keep their
+   /// programs off the GPU.
+   RooBatchCompute::ExprFunc func = RooBatchCompute::ExprFunc::None;
    double (*fn0)() = nullptr;
    double (*fn1)(double) = nullptr;
    double (*fn2)(double, double) = nullptr;
@@ -103,6 +108,11 @@ public:
       std::vector<bool> usedVars; ///< usedVars[i] is true if `x[i]` appears in the formula
       std::string formula;        ///< the processed formula string this was compiled from
       unsigned int stackDepth = 0;
+      /// Whether RooBatchCompute's CUDA backend can evaluate this program:
+      /// the stack fits the fixed-size per-thread stack, and every call
+      /// resolves to a function with a device implementation. Determined once
+      /// at parse time.
+      bool cudaCapable = false;
    };
 
    /// Maximum evaluation stack depth (checked at compile time in the parser).
@@ -130,6 +140,9 @@ public:
 
    /// The program's maximum expression stack depth.
    unsigned int stackDepth() const { return _program->stackDepth; }
+
+   /// Whether this program can be evaluated by RooBatchCompute's CUDA backend.
+   bool cudaCapable() const { return _program->cudaCapable; }
 
 private:
    std::shared_ptr<const Program> _program;
