@@ -891,7 +891,7 @@ TEST(RNTupleInspector, SchemaProfile)
    }
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
    std::ostringstream schemaProfileStream;
-   inspector->PrintSchemaProfile(ROOT::Experimental::ESchemaProfileFormat::kSpeedscopeJSON, schemaProfileStream);
+   inspector->PrintSchemaProfile(schemaProfileStream);
    const std::string schemaProfile = schemaProfileStream.str();
    const std::string expected = R"foo({
    "$schema":"https://www.speedscope.app/file-format-schema.json",
@@ -1129,7 +1129,7 @@ TEST(RNTupleInspector, DiskProfile)
 
    auto inspector = RNTupleInspector::Create("shuffled_ntuple", fileGuard.GetPath());
    std::ostringstream diskProfileStream;
-   inspector->PrintDiskProfile(ROOT::Experimental::ESchemaProfileFormat::kSpeedscopeJSON, diskProfileStream);
+   inspector->PrintDiskProfile(diskProfileStream);
    const std::string diskProfile = diskProfileStream.str();
    const std::string expected = R"foo({
    "$schema":"https://www.speedscope.app/file-format-schema.json",
