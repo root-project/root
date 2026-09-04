@@ -292,6 +292,22 @@ void RooNLLVarNew::doEvalBinnedL(RooFit::EvalContext &ctx, std::span<const doubl
    finalizeResult(ctx, result, sumWeightKahanSum.Sum());
 }
 
+/// Return the sum of the event weights (or of the squared event weights).
+/// The sum only changes when new input data is loaded into the evaluation
+/// context, which is tracked with EvalContext::inputGeneration(). Caching it
+/// avoids a reduction for every evaluation, which in CUDA mode would also
+/// synchronize the stream.
+double RooNLLVarNew::sumOfWeights(RooFit::EvalContext &ctx, std::span<const double> weights, bool squared) const
+{
+   std::size_t &generation = squared ? _sumWeight2Gen : _sumWeightGen;
+   double &cache = squared ? _sumWeight2Cache : _sumWeightCache;
+   if (generation != ctx.inputGeneration()) {
+      cache = RooBatchCompute::reduceSum(ctx.config(this), weights.data(), weights.size());
+      generation = ctx.inputGeneration();
+   }
+   return cache;
+}
+
 void RooNLLVarNew::doEvalChi2(RooFit::EvalContext &ctx, std::span<const double> preds, std::span<const double> weights,
                               std::span<const double> weightsSumW2) const
 {
@@ -302,12 +318,11 @@ void RooNLLVarNew::doEvalChi2(RooFit::EvalContext &ctx, std::span<const double> 
       return;
    }
 
-   auto config = ctx.config(this);
    std::span<const double> binVol = ctx.at(*_binVolumes);
    std::span<const double> errLo = _weightErrLo ? ctx.at(*_weightErrLo) : std::span<const double>{};
    std::span<const double> errHi = _weightErrHi ? ctx.at(*_weightErrHi) : std::span<const double>{};
 
-   const double sumWeight = RooBatchCompute::reduceSum(config, weights.data(), weights.size());
+   const double sumWeight = sumOfWeights(ctx, weights, false);
 
    double normFactor = 1.0;
    switch (_funcMode) {
@@ -370,10 +385,10 @@ void RooNLLVarNew::doEval(RooFit::EvalContext &ctx) const
 
    auto probas = ctx.at(_func);
 
-   double sumWeight = RooBatchCompute::reduceSum(config, weights.data(), weights.size());
+   double sumWeight = sumOfWeights(ctx, weights, false);
    double sumWeight2 = 0.;
    if (_expectedEvents && _weightSquared) {
-      sumWeight2 = RooBatchCompute::reduceSum(config, weightsSumW2.data(), weightsSumW2.size());
+      sumWeight2 = sumOfWeights(ctx, weightsSumW2, true);
    }
 
    auto nllOut = RooBatchCompute::reduceNLL(config, probas, _weightSquared ? weightsSumW2 : weights,
