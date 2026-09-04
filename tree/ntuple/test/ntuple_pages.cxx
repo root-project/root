@@ -13,7 +13,6 @@ protected:
    std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
    void LoadPageListImpl(const ROOT::RNTupleLocator &, unsigned char *) final {}
    void LoadSealedPageImpl(const ROOT::RNTupleLocator &, RSealedPage &) final {}
-   void LoadStreamerInfo() final {}
    std::unique_ptr<ROOT::Internal::RPageSource>
    OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &, const ROOT::RNTupleReadOptions &) final
    {

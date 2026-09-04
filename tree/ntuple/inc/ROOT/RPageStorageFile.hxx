@@ -189,8 +189,6 @@ public:
 
    std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
    LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) final;
-
-   void LoadStreamerInfo() final;
 }; // class RPageSourceFile
 
 } // namespace Internal

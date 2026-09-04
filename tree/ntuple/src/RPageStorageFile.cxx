@@ -712,5 +712,3 @@ ROOT::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterK
 
    return clusters;
 }
-
-void ROOT::Internal::RPageSourceFile::LoadStreamerInfo() {}
