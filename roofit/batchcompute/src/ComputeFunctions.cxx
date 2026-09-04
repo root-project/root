@@ -100,12 +100,10 @@ __rooglobal__ void computeBernstein(Batches &batches)
    const double xmax = batches.extra[nCoef + 1];
    Batch xData = batches.args[0];
 
-   // apply binomial coefficient in-place so we don't have to allocate new memory
-   double binomial = 1.0;
-   for (int k = 0; k < nCoef; k++) {
-      batches.extra[k] = batches.extra[k] * binomial;
-      binomial = (binomial * (degree - k)) / (k + 1);
-   }
+   // The binomial coefficients are applied on the fly in the evaluation loops
+   // below. Note for the CUDA case: the coefficients must not be applied to
+   // batches.extra in-place, because the extra arguments live in global device
+   // memory that is shared by all threads.
 
    if (STEP == 1) {
       double X[bufferSize];
@@ -134,9 +132,12 @@ __rooglobal__ void computeBernstein(Batches &batches)
       for (size_t i = BEGIN; i < batches.nEvents; i += STEP)
          _1_X[i] = 1 / _1_X[i];
 
+      double binomial = 1.0;
       for (int k = 0; k < nCoef; k++) {
+         const double coef = batches.extra[k] * binomial;
+         binomial = (binomial * (degree - k)) / (k + 1);
          for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
-            batches.output[i] += batches.extra[k] * powX[i] * pow_1_X[i];
+            batches.output[i] += coef * powX[i] * pow_1_X[i];
 
             // calculating next power for x and 1-x
             powX[i] *= X[i];
@@ -152,19 +153,14 @@ __rooglobal__ void computeBernstein(Batches &batches)
          for (int k = 1; k <= degree; k++)
             pow_1_X *= 1 - X;
          const double _1_X = 1 / (1 - X);
+         double binomial = 1.0;
          for (int k = 0; k < nCoef; k++) {
-            batches.output[i] += batches.extra[k] * powX * pow_1_X;
+            batches.output[i] += batches.extra[k] * binomial * powX * pow_1_X;
+            binomial = (binomial * (degree - k)) / (k + 1);
             powX *= X;
             pow_1_X *= _1_X;
          }
       }
-   }
-
-   // reset extraArgs values so we don't mutate the Batches object
-   binomial = 1.0;
-   for (int k = 0; k < nCoef; k++) {
-      batches.extra[k] = batches.extra[k] / binomial;
-      binomial = (binomial * (degree - k)) / (k + 1);
    }
 }
 
