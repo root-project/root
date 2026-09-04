@@ -5,8 +5,6 @@ numpy
 pandas
 
 # TMVA: SOFIE
-dm-sonnet ; python_version < "3.14" # used for GNNs
-graph_nets ; python_version < "3.14"
 onnx
 onnxscript
 packaging
