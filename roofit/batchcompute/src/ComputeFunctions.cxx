@@ -660,12 +660,20 @@ __rooglobal__ void computeNormalizedPdf(Batches &batches)
       batches.output[i] = out;
    }
 
+   // The counters live in memory that is shared between all threads in the
+   // CUDA case, so they need to be accumulated atomically there.
+#ifdef __CUDACC__
    if (nEvalErrorsType0 > 0)
-      batches.extra[0] = batches.extra[0] + nEvalErrorsType0;
-   if (nEvalErrorsType1 > 1)
-      batches.extra[1] = batches.extra[1] + nEvalErrorsType1;
-   if (nEvalErrorsType2 > 2)
-      batches.extra[2] = batches.extra[2] + nEvalErrorsType2;
+      atomicAdd(&batches.extra[0], double(nEvalErrorsType0));
+   if (nEvalErrorsType1 > 0)
+      atomicAdd(&batches.extra[1], double(nEvalErrorsType1));
+   if (nEvalErrorsType2 > 0)
+      atomicAdd(&batches.extra[2], double(nEvalErrorsType2));
+#else
+   batches.extra[0] = batches.extra[0] + nEvalErrorsType0;
+   batches.extra[1] = batches.extra[1] + nEvalErrorsType1;
+   batches.extra[2] = batches.extra[2] + nEvalErrorsType2;
+#endif
 }
 
 /* TMath::ASinH(x) needs to be replaced with ln( x + sqrt(x^2+1))

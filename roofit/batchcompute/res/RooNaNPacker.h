@@ -96,7 +96,7 @@ struct RooNaNPacker {
    bool isNaNWithPayload() const { return isNaNWithPayload(_payload); }
 
    /// Test if `val` has a float packed into its mantissa.
-   static bool isNaNWithPayload(double val)
+   __roodevice__ __roohost__ static bool isNaNWithPayload(double val)
    {
       uint64_t tmp;
       std::memcpy(&tmp, &val, sizeof(uint64_t));
@@ -120,7 +120,7 @@ struct RooNaNPacker {
    /// If `val` is NaN and a this NaN has been tagged as containing
    /// a payload, unpack the float from the mantissa.
    /// Return 0 otherwise.
-   static float unpackNaN(double val)
+   __roodevice__ __roohost__ static float unpackNaN(double val)
    {
       float tmp;
       std::memcpy(&tmp, &val, sizeof(float));

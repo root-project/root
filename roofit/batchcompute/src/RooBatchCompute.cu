@@ -19,6 +19,7 @@ This file contains the code for cuda computations using the RooBatchCompute libr
 **/
 
 #include "RooBatchCompute.h"
+#include "RooNaNPacker.h"
 #include "Batches.h"
 #include "CudaInterface.h"
 
@@ -323,9 +324,15 @@ __global__ void kahanSum(const double *__restrict__ input, const double *__restr
    kahanSumReduction(shared, n, result, carry_index);
 }
 
+/// Computes the negative log likelihood sum with the same semantics as the
+/// CPU implementation of RooBatchComputeInterface::reduceNLL(): zero-weight
+/// events are skipped, and evaluation problems are counted and accumulated
+/// into a "badness" value that the host can pack into a NaN for the error
+/// recovery in the minimizer. The `stats` output has the layout
+/// [badness, nNonPositive, nNaN, nInfinite] and must be zero-initialized.
 __global__ void nllSumKernel(const double *__restrict__ probas, const double *__restrict__ weights,
                              const double *__restrict__ offsetProbas, size_t nProbas, double scalarProba,
-                             size_t nWeights, double *__restrict__ result)
+                             size_t nWeights, double *__restrict__ result, double *__restrict__ stats)
 {
    int thIdx = threadIdx.x;
    int gthIdx = thIdx + blockIdx.x * blockSize;
@@ -337,16 +344,51 @@ __global__ void nllSumKernel(const double *__restrict__ probas, const double *__
 
    double sum = 0.0;
    double carry = 0.0;
+   double badness = 0.0;
+   unsigned int nNonPositive = 0;
+   unsigned int nNaN = 0;
+   unsigned int nInfinite = 0;
 
    for (int i = gthIdx; i < nWeights; i += nThreadsTotal) {
-      // Note: it does not make sense to use the nll option and provide at the
-      // same time external carries.
-      double val = -std::log(nProbas == 1 ? scalarProba : probas[i]);
+      const double weight = weights[i];
+      // Zero-weight events don't contribute to the likelihood. Skipping them
+      // also avoids 0 * inf = NaN for zero probabilities.
+      if (weight == 0.0) {
+         continue;
+      }
+      const double proba = nProbas == 1 ? scalarProba : probas[i];
+      double term;
+      if (proba <= 0.0) {
+         ++nNonPositive;
+         badness += -proba;
+         term = std::log(proba);
+      } else if (std::isnan(proba)) {
+         ++nNaN;
+         badness += RooNaNPacker::unpackNaN(proba);
+         term = proba;
+      } else {
+         if (std::isinf(proba)) {
+            ++nInfinite;
+         }
+         term = std::log(proba);
+      }
       if (offsetProbas)
-         val += std::log(offsetProbas[i]);
-      val = weights[i] * val;
-      kahanSumUpdate(sum, carry, val, 0.0);
+         term -= std::log(offsetProbas[i]);
+      term *= -weight;
+      kahanSumUpdate(sum, carry, term, 0.0);
    }
+
+   // Accumulate the evaluation error statistics over the whole grid. These
+   // atomics are on the rare path: they are only executed by threads that
+   // actually encountered problematic values.
+   if (badness != 0.0)
+      atomicAdd(&stats[0], badness);
+   if (nNonPositive != 0)
+      atomicAdd(&stats[1], double(nNonPositive));
+   if (nNaN != 0)
+      atomicAdd(&stats[2], double(nNaN));
+   if (nInfinite != 0)
+      atomicAdd(&stats[3], double(nInfinite));
 
    shared[thIdx] = sum;
    shared[carry_index] = carry;
@@ -385,7 +427,9 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
    }
    const int gridSize = getGridSize(weights.size());
    cudaStream_t stream = *cfg.cudaStream();
-   StreamScratch::Slot &slot = scratch(cfg.cudaStream()).acquire(2 * gridSize * sizeof(double));
+   // Layout of the scratch buffer: [sum, carry, badness, nNonPositive, nNaN,
+   // nInfinite, partial sums (gridSize), partial carries (gridSize)].
+   StreamScratch::Slot &slot = scratch(cfg.cudaStream()).acquire((6 + 2 * gridSize) * sizeof(double));
    auto devOut = reinterpret_cast<double *>(slot.device);
    auto hostOut = reinterpret_cast<double *>(slot.host);
    constexpr int shMemSize = 2 * blockSize * sizeof(double);
@@ -401,19 +445,34 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
    }
 #endif
 
+   // Zero-initialize the evaluation error statistics for the atomic updates.
+   ERRCHECK(cudaMemsetAsync(devOut + 2, 0, 4 * sizeof(double), stream));
+
    nllSumKernel<<<gridSize, blockSize, shMemSize, stream>>>(
       probas.data(), weights.data(), offsetProbas.empty() ? nullptr : offsetProbas.data(), probas.size(),
-      probas.size() == 1 ? probas[0] : 0.0, weights.size(), devOut);
+      probas.size() == 1 ? probas[0] : 0.0, weights.size(), devOut + 6, devOut + 2);
 
-   kahanSum<<<1, blockSize, shMemSize, stream>>>(devOut, devOut + gridSize, gridSize, devOut, 0);
+   kahanSum<<<1, blockSize, shMemSize, stream>>>(devOut + 6, devOut + 6 + gridSize, gridSize, devOut, 0);
 
-   // The sum and its Kahan carry are adjacent in the output buffer, so they
-   // can be read back with a single copy.
-   CudaInterface::copyDeviceToHost(devOut, hostOut, 2, cfg.cudaStream());
+   // The sum, its Kahan carry, and the evaluation error statistics are
+   // adjacent in the output buffer, so they can be read back in a single copy.
+   CudaInterface::copyDeviceToHost(devOut, hostOut, 6, cfg.cudaStream());
    ERRCHECK(cudaStreamSynchronize(stream));
 
    out.nllSum = hostOut[0];
    out.nllSumCarry = hostOut[1];
+   out.nNonPositiveValues = hostOut[3];
+   out.nNaNValues = hostOut[4];
+   out.nInfiniteValues = hostOut[5];
+
+   if (hostOut[2] != 0.0) {
+      // Some events had evaluation errors: return the accumulated "badness"
+      // of the errors packed into a NaN, like the CPU implementation, so the
+      // minimizer can use it to recover.
+      out.nllSum = RooNaNPacker::packFloatIntoNaN(hostOut[2]);
+      out.nllSumCarry = 0.0;
+   }
+
    scratch(cfg.cudaStream()).release(slot, stream);
    return out;
 }
