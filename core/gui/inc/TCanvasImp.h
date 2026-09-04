@@ -23,6 +23,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Rtypes.h"
+#include "GuiTypes.h"
 
 class TCanvas;
 class TVirtualPadPainter;
@@ -72,6 +73,7 @@ public:
    virtual void   SetWindowSize(UInt_t width, UInt_t height) { (void) width; (void) height; }
    virtual void   SetWindowTitle(const char *newTitle) { (void) newTitle; }
    virtual void   SetCanvasSize(UInt_t w, UInt_t h) { (void) w; (void) h; }
+   virtual void   SetCursor(Cursor_t cursor) { (void) cursor; }
    virtual void   Show() {}
    virtual void   ShowMenuBar(Bool_t show = kTRUE) { (void) show; }
    virtual void   ShowStatusBar(Bool_t show = kTRUE) { (void) show; }
