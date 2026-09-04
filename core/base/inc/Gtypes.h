@@ -21,6 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#warning "The header Gtypes.h is deprecated and will be removed in ROOT 6.44, include instead Rtypes.h"
+
 #include "Rtypes.h"
 
 #endif
