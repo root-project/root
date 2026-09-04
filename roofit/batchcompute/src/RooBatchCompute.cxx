@@ -106,6 +106,7 @@ public:
 
    CudaInterface::CudaStream *newCudaStream() const override { throw std::bad_function_call(); }
    void deleteCudaStream(CudaInterface::CudaStream *) const override { throw std::bad_function_call(); }
+   void synchronizeCudaStream(CudaInterface::CudaStream *) const override { throw std::bad_function_call(); }
 
 private:
 #ifdef ROOBATCHCOMPUTE_USE_IMT

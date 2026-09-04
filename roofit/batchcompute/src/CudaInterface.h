@@ -16,6 +16,29 @@
 #include <cstddef>
 #include <memory>
 
+#ifdef __CUDACC__
+#include <sstream>
+#include <stdexcept>
+#include <string>
+
+#define ERRCHECK(err) RooBatchCompute::CudaInterface::checkCudaErrors((err), __func__, __FILE__, __LINE__)
+
+namespace RooBatchCompute {
+namespace CudaInterface {
+
+inline void checkCudaErrors(cudaError_t error, std::string const &func, std::string const &file, int line)
+{
+   if (error != cudaSuccess) {
+      std::stringstream errMsg;
+      errMsg << func << "(), " << file << ":" << std::to_string(line) << " : " << cudaGetErrorString(error);
+      throw std::runtime_error(errMsg.str());
+   }
+}
+
+} // namespace CudaInterface
+} // namespace RooBatchCompute
+#endif // __CUDACC__
+
 namespace RooBatchCompute {
 
 /*
@@ -68,9 +91,9 @@ void copyDeviceToDeviceImpl(const void *src, void *dest, std::size_t n, CudaStre
  * @param[in] stream          CudaStream for asynchronous memory transfer (optional).
  */
 template <class T>
-void copyHostToDevice(const T *src, T *dest, std::size_t n, CudaStream * = nullptr)
+void copyHostToDevice(const T *src, T *dest, std::size_t n, CudaStream *stream = nullptr)
 {
-   copyHostToDeviceImpl(src, dest, sizeof(T) * n);
+   copyHostToDeviceImpl(src, dest, sizeof(T) * n, stream);
 }
 
 /**
@@ -82,9 +105,9 @@ void copyHostToDevice(const T *src, T *dest, std::size_t n, CudaStream * = nullp
  * @param[in] stream          CudaStream for asynchronous memory transfer (optional).
  */
 template <class T>
-void copyDeviceToHost(const T *src, T *dest, std::size_t n, CudaStream * = nullptr)
+void copyDeviceToHost(const T *src, T *dest, std::size_t n, CudaStream *stream = nullptr)
 {
-   copyDeviceToHostImpl(src, dest, sizeof(T) * n);
+   copyDeviceToHostImpl(src, dest, sizeof(T) * n, stream);
 }
 
 /**
@@ -96,9 +119,9 @@ void copyDeviceToHost(const T *src, T *dest, std::size_t n, CudaStream * = nullp
  * @param[in] stream          CudaStream for asynchronous memory transfer (optional).
  */
 template <class T>
-void copyDeviceToDevice(const T *src, T *dest, std::size_t n, CudaStream * = nullptr)
+void copyDeviceToDevice(const T *src, T *dest, std::size_t n, CudaStream *stream = nullptr)
 {
-   copyDeviceToDeviceImpl(src, dest, sizeof(T) * n);
+   copyDeviceToDeviceImpl(src, dest, sizeof(T) * n, stream);
 }
 
 /// \cond ROOFIT_INTERNAL
