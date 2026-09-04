@@ -1118,9 +1118,14 @@ Int_t RooRealIntegral::getCacheAllNumeric()
 }
 
 std::unique_ptr<RooAbsArg>
-RooRealIntegral::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
+RooRealIntegral::compileForNormSet(RooArgSet const & /*normSet*/, RooFit::Detail::CompileContext &ctx) const
 {
-   return RooAbsReal::compileForNormSet(_funcNormSet ? *_funcNormSet : normSet, ctx);
+   // The integrand is compiled with the function normalization set of this
+   // integral, and not with the normalization set of the client: a raw
+   // integral (no function normalization set) evaluates its integrand
+   // unnormalized, so passing down the outer normalization set would wrongly
+   // wrap the integrand in a normalized pdf.
+   return RooAbsReal::compileForNormSet(_funcNormSet ? *_funcNormSet : RooArgSet{}, ctx);
 }
 
 /// Sort numeric integration variables in summation and integration lists.
