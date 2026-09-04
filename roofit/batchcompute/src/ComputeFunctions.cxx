@@ -661,7 +661,10 @@ __rooglobal__ void computeNormalizedPdf(Batches &batches)
    }
 
    // The counters live in memory that is shared between all threads in the
-   // CUDA case, so they need to be accumulated atomically there.
+   // CUDA case, so they need to be accumulated atomically there. Note that
+   // the CPU branch below is only safe because the CPU implementation runs
+   // single-threaded: with implicit multi-threading, the workers would share
+   // this memory as well and would also need atomic accumulation.
 #ifdef __CUDACC__
    if (nEvalErrorsType0 > 0)
       atomicAdd(&batches.extra[0], double(nEvalErrorsType0));
