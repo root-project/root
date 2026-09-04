@@ -120,10 +120,18 @@ public:
          slot.inFlight = false;
       }
       if (slot.capacity < n) {
-         if (slot.host)
+         // Reset the slot state before reallocating, so that a throwing
+         // allocation can't leave dangling pointers with a stale capacity
+         // behind (which would lead to a double free later).
+         if (slot.host) {
             ERRCHECK(cudaFreeHost(slot.host));
-         if (slot.device)
+            slot.host = nullptr;
+         }
+         if (slot.device) {
             ERRCHECK(cudaFree(slot.device));
+            slot.device = nullptr;
+         }
+         slot.capacity = 0;
          const std::size_t newCapacity = std::max<std::size_t>(n, 1024);
          ERRCHECK(cudaMallocHost(reinterpret_cast<void **>(&slot.host), newCapacity));
          ERRCHECK(cudaMalloc(reinterpret_cast<void **>(&slot.device), newCapacity));
@@ -163,9 +171,13 @@ public:
       DeferredSlot &slot = _deferredSlots[_deferredCursor++];
       if (slot.capacity < n) {
          // The slot is idle here: its previous use ended with the flush after
-         // a stream synchronization.
-         if (slot.host)
+         // a stream synchronization. Reset the state before reallocating for
+         // exception safety, like in acquire().
+         if (slot.host) {
             ERRCHECK(cudaFreeHost(slot.host));
+            slot.host = nullptr;
+         }
+         slot.capacity = 0;
          ERRCHECK(cudaMallocHost(reinterpret_cast<void **>(&slot.host), n));
          slot.capacity = n;
       }
@@ -468,17 +480,19 @@ double RooBatchComputeClass::reduceSum(RooBatchCompute::Config const &cfg, Input
       return 0.0;
    const int gridSize = getGridSize(n);
    cudaStream_t stream = *cfg.cudaStream();
-   StreamScratch::Slot &slot = scratch(cfg.cudaStream()).acquire(2 * gridSize * sizeof(double));
+   StreamScratch &streamScratch = scratch(cfg.cudaStream());
+   StreamScratch::Slot &slot = streamScratch.acquire(2 * gridSize * sizeof(double));
    auto devOut = reinterpret_cast<double *>(slot.device);
    auto hostOut = reinterpret_cast<double *>(slot.host);
    constexpr int shMemSize = 2 * blockSize * sizeof(double);
    kahanSum<<<gridSize, blockSize, shMemSize, stream>>>(input, nullptr, n, devOut, 0);
    kahanSum<<<1, blockSize, shMemSize, stream>>>(devOut, devOut + gridSize, gridSize, devOut, 0);
    CudaInterface::copyDeviceToHost(devOut, hostOut, 1, cfg.cudaStream());
+   // Release right after the last enqueued use of the slot, so that the slot
+   // is protected by its event even if the synchronization below throws.
+   streamScratch.release(slot, stream);
    ERRCHECK(cudaStreamSynchronize(stream));
-   const double result = hostOut[0];
-   scratch(cfg.cudaStream()).release(slot, stream);
-   return result;
+   return hostOut[0];
 }
 
 ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &cfg, std::span<const double> probas,
@@ -492,7 +506,8 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
    cudaStream_t stream = *cfg.cudaStream();
    // Layout of the scratch buffer: [sum, carry, badness, nNonPositive, nNaN,
    // nInfinite, partial sums (gridSize), partial carries (gridSize)].
-   StreamScratch::Slot &slot = scratch(cfg.cudaStream()).acquire((6 + 2 * gridSize) * sizeof(double));
+   StreamScratch &streamScratch = scratch(cfg.cudaStream());
+   StreamScratch::Slot &slot = streamScratch.acquire((6 + 2 * gridSize) * sizeof(double));
    auto devOut = reinterpret_cast<double *>(slot.device);
    auto hostOut = reinterpret_cast<double *>(slot.host);
    constexpr int shMemSize = 2 * blockSize * sizeof(double);
@@ -520,6 +535,9 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
    // The sum, its Kahan carry, and the evaluation error statistics are
    // adjacent in the output buffer, so they can be read back in a single copy.
    CudaInterface::copyDeviceToHost(devOut, hostOut, 6, cfg.cudaStream());
+   // Release right after the last enqueued use of the slot, so that the slot
+   // is protected by its event even if the synchronization below throws.
+   streamScratch.release(slot, stream);
    ERRCHECK(cudaStreamSynchronize(stream));
 
    out.nllSum = hostOut[0];
@@ -536,7 +554,6 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
       out.nllSumCarry = 0.0;
    }
 
-   scratch(cfg.cudaStream()).release(slot, stream);
    return out;
 }
 

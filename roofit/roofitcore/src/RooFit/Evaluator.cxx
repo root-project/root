@@ -120,10 +120,16 @@ struct NodeInfo {
    std::vector<NodeInfo *> clientInfos;
 
    /// Check the servers of a node that has been computed and release its
-   /// resources if they are no longer needed.
+   /// resources if they are no longer needed. Buffers of nodes whose results
+   /// are copied between host and device (copyAfterEvaluation) must not be
+   /// released eagerly: their pinned host memory can still be the source of
+   /// an asynchronous copy that was enqueued on the CUDA stream, and a new
+   /// owner would overwrite it from the CPU without any stream ordering.
+   /// Those buffers are released at the beginning of the next evaluation
+   /// instead, after the stream was synchronized at the end of this one.
    void decrementRemainingClients()
    {
-      if (--remClients == 0 && !fromArrayInput) {
+      if (--remClients == 0 && !fromArrayInput && !copyAfterEvaluation) {
          buffer.reset();
       }
    }
@@ -499,22 +505,41 @@ std::span<const double> Evaluator::getValHeterogeneous()
    // stream guarantees that GPU nodes see the results of their GPU servers,
    // and host-side reads of GPU results synchronize on the stream in the
    // buffer implementation.
-   for (auto &info : _nodes) {
-      if (!info.fromArrayInput) {
-         if (info.computeInGPU) {
-            assignToGPU(info);
-         } else {
-            computeCPUNode(info.absArg, info);
+   try {
+      for (auto &info : _nodes) {
+         if (!info.fromArrayInput) {
+            if (info.computeInGPU) {
+               assignToGPU(info);
+            } else {
+               computeCPUNode(info.absArg, info);
+            }
+         }
+
+         // Release the buffers of server nodes that are no longer needed. For
+         // device-only buffers this is safe to do right away even if GPU work
+         // is still in flight, because any reuse of a released device buffer
+         // happens through operations that are enqueued later on the same
+         // stream. Pinned buffers are exempted from the eager release, see
+         // the comment in NodeInfo::decrementRemainingClients().
+         for (auto *serverInfo : info.serverInfos) {
+            serverInfo->decrementRemainingClients();
          }
       }
-
-      // Release the buffers of server nodes that are no longer needed. This
-      // is safe to do right away even if GPU work is still in flight, because
-      // any reuse of a released device buffer happens through operations that
-      // are enqueued later on the same stream.
-      for (auto *serverInfo : info.serverInfos) {
-         serverInfo->decrementRemainingClients();
+   } catch (...) {
+      // The evaluation was aborted, but readbacks that compute() calls
+      // deferred may still be armed. Deliver them now, while the destination
+      // memory in the nodes of the computation graph is guaranteed to be
+      // alive, so that no armed readback survives into a later evaluation.
+      try {
+         RooBatchCompute::dispatchCUDA->synchronizeCudaStream(_cudaStream);
+      } catch (...) {
+         // The stream is in an unrecoverable error state. The deferred
+         // readbacks are dropped together with the scratch memory when the
+         // stream gets deleted.
       }
+      _evalContextCUDA._deferredActions.clear();
+      _evalContextCPU._deferredActions.clear();
+      throw;
    }
 
    // Ensure that all enqueued GPU work has completed when run() returns. For
@@ -527,10 +552,14 @@ std::span<const double> Evaluator::getValHeterogeneous()
 
    // Run the deferred actions now that all results have arrived on the host,
    // e.g. the logging of evaluation errors that were counted on the GPU.
-   for (auto &action : _evalContextCUDA._deferredActions) {
-      action();
+   // Nodes evaluated on the CPU register their actions in the CPU context,
+   // so both contexts are drained.
+   for (auto *ctx : {&_evalContextCUDA, &_evalContextCPU}) {
+      for (auto &action : ctx->_deferredActions) {
+         action();
+      }
+      ctx->_deferredActions.clear();
    }
-   _evalContextCUDA._deferredActions.clear();
 
    // return the final value
    return _evalContextCUDA.at(&_topNode);
