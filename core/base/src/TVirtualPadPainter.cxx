@@ -201,14 +201,3 @@ void TVirtualPadPainter::SetDoubleBuffer(Int_t device, Int_t mode)
    if (gVirtualX)
       gVirtualX->SetDoubleBuffer(device, mode);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set cursor for specified device, redirect to gVirtualX
-
-void TVirtualPadPainter::SetCursor(Int_t device, ECursor cursor)
-{
-   // TODO: move to actual painter classes, call only for selected device
-   if (gVirtualX)
-      gVirtualX->SetCursor(device, cursor);
-}
-
