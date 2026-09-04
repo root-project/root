@@ -9,255 +9,19 @@
  **********************************************************************/
 
 // Header file for Functor classes.
-// design is inspired by the Loki Functor
 
 #ifndef ROOT_Math_ParamFunctor
 #define ROOT_Math_ParamFunctor
 
-// #ifndef ROOT_Math_IFunction
-// #include "Math/IFunction.h"
-// #endif
-
-// #ifndef Root_Math_StaticCheck
-// #include "Math/StaticCheck.h"
-// #endif
-
-//#include <memory>
-
 #include "RtypesCore.h"
+
 #include <functional>
-#include <iostream>
+#include <type_traits>
+#include <utility>
 
 namespace ROOT {
 
 namespace Math {
-
-/**
- * \defgroup ParamFunctor_int N-D parametric functions
- * \brief Multi-dimensional parametric functions
- * \ingroup Math
- */
-
-/** class defining the signature for multi-dim parametric functions
-
-   @ingroup  ParamFunctor_int
- */
-template<class T>
-class ParamFunctionBase {
-  public:
-   virtual ~ParamFunctionBase() {}
-   virtual T operator() (const T * x, const double *p) = 0;
-   virtual T operator() (T * x, double *p) = 0;
-   virtual ParamFunctionBase * Clone() const = 0;
-};
-
-
-
-/**
-   ParamFunctor Handler class is responsible for wrapping any other functor and pointer to
-   free C functions.
-   It can be created from any function implementing the correct signature
-   corresponding to the requested type
-
-   @ingroup  ParamFunctor_int
-
-*/
-
-template<class ParentFunctor, class Func >
-class ParamFunctorHandler : public ParentFunctor::Impl {
-
-   typedef typename ParentFunctor::EvalType EvalType;
-   typedef typename ParentFunctor::Impl     Base;
-
-public:
-
-   // constructor
-   ParamFunctorHandler(const Func & fun) : fFunc(fun) {}
-
-
-   virtual ~ParamFunctorHandler() {}
-
-
-   // for 1D functions
-   inline EvalType operator() (EvalType x, double *p)  {
-      return fFunc(x,p);
-   }
-//    inline double operator() (double x, const double *p) const {
-//       return fFunc(x,p);
-//    }
-   // for multi-dimensional functions
-//    inline double operator() (const double * x, const double *p) const {
-//       return fFunc(x,p);
-//    }
-   inline EvalType operator() (EvalType * x, double *p) override {
-      return FuncEvaluator<Func, EvalType>::Eval(fFunc,x,p);
-   }
-
-   inline EvalType operator() (const EvalType * x, const double *p) override {
-      return FuncEvaluator<Func, EvalType>::EvalConst(fFunc,x,p);
-   }
-
-   // clone (use same pointer)
-   ParamFunctorHandler  * Clone() const override {
-      return new ParamFunctorHandler(fFunc);
-   }
-
-
-private :
-
-   Func fFunc;
-
-   // structure to distinguish pointer types
-   template <typename F,typename  T> struct FuncEvaluator {
-      inline static T Eval( F & f, T *x, double * p) {
-         return f(x, p);
-      }
-
-      inline static T EvalConst( F & f, const T *x, const double * p) {
-         return f((T*)x, (double*)p);
-      }
-   };
-
-   template <typename F, typename T> struct FuncEvaluator<F*, T> {
-      inline static T Eval( F * f, T *x, double * p) {
-         return (*f)(x, p);
-      }
-
-      inline static T EvalConst( F * f, const T *x, const double * p) {
-         return (*f)((T*)x, (double*)p);
-
-      }
-   };
-
-   template <typename F,typename  T> struct FuncEvaluator<F* const, T> {
-      inline static T Eval( const F * f, T *x, double * p) {
-         return (*f)(x, p);
-      }
-
-      inline static T EvalConst( const F * f, const T *x, const double * p) {
-         return (*f)((T*)x, (double*)p);
-      }
-   };
-
-   // need maybe also volatile ?
-};
-
-
-#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
-// needed since Cling initialize it with TRootIOCtor
-//class TRootIOCtor;
-template<class ParentFunctor>
-class ParamFunctorHandler<ParentFunctor,TRootIOCtor *> : public ParentFunctor::Impl
-{
-public:
-
-   ParamFunctorHandler(TRootIOCtor  *) {}
-
-   double operator() (double *, double * )  { return 0; }
-
-   double operator() (const double *, const double * )  { return 0; }
-   // clone (use same pointer)
-   ParamFunctorHandler  * Clone() const {
-      return 0;
-   }
-
-};
-#endif
-
-
-/**
-   ParamFunctor Handler to Wrap pointers to member functions
-
-   @ingroup  ParamFunctor_int
-*/
-template <class ParentFunctor, typename PointerToObj,
-          typename PointerToMemFn>
-class ParamMemFunHandler : public ParentFunctor::Impl
-{
-   typedef typename ParentFunctor::Impl Base;
-
-
-public:
-
-   /// constructor from a pointer to the class and a pointer to the function
-   ParamMemFunHandler(const PointerToObj& pObj, PointerToMemFn pMemFn)
-      : fObj(pObj), fMemFn(pMemFn)
-   {}
-
-   virtual ~ParamMemFunHandler() {}
-
-//    inline double operator() (double x, const double * p) const {
-//       return ((*fObj).*fMemFn)(x,p);
-//    }
-
-   inline double operator() (double x, double * p)  {
-      return ((*fObj).*fMemFn)(x,p);
-   }
-
-//    inline double operator() (const double * x, const double * p) const {
-//       return ((*fObj).*fMemFn)(x,p);
-//    }
-
-   inline double operator() (double * x, double * p) override {
-      return MemFuncEvaluator<PointerToObj,PointerToMemFn, double>::Eval(fObj,fMemFn,x,p);
-   }
-
-   inline double operator() (const double * x, const double * p) override {
-      return MemFuncEvaluator<PointerToObj,PointerToMemFn, double>::EvalConst(fObj,fMemFn,x,p);
-   }
-
-   // clone (use same pointer)
-   ParamMemFunHandler  * Clone() const override {
-      return new ParamMemFunHandler(fObj, fMemFn);
-   }
-
-private:
-
-   // structure to distinguish pointer types
-   template <typename PObj, typename F,typename  T> struct MemFuncEvaluator {
-      inline static T Eval(PObj & pobj, F &  f, T *x, double * p) {
-         return ((*pobj).*f)(x, p);
-      }
-
-      inline static T EvalConst(PObj & pobj, F & f, const T *x, const double * p) {
-         return ((*pobj).*f)((T*)x, (double*)p);
-      }
-   };
-
-
-   // // these are needed ??
-   // template <typename PObj, typename F, typename T> struct MemFuncEvaluator<PObj,F*, T> {
-   //    inline static T Eval(PObj & pobj,  F * f, T *x, double * p) {
-   //       return ((*pobj).*f)f(x, p);
-   //    }
-
-   //    inline static T EvalConst(PObj & pobj,  F * f, const T *x, const double * p) {
-   //       return ((*pobj).*f)((T*)x, (double*)p);
-
-   //    }
-   // };
-
-   // template <typename PObj, typename F,typename  T> struct FuncEvaluator<PObj,F* const, T> {
-   //    inline static T Eval(PObj &, const F * f, T *x, double * p) {
-   //       return ((*pobj).*f)f(x, p);
-   //    }
-
-   //    inline static T EvalConst(PObj & pobj, const F * f, const T *x, const double * p) {
-   //       return ((*pobj).*f)((T*)x, (double*)p);
-   //    }
-   // };
-
-private :
-   ParamMemFunHandler(const ParamMemFunHandler&) = delete; // Not implemented
-   ParamMemFunHandler& operator=(const ParamMemFunHandler&) = delete; // Not implemented
-
-   PointerToObj fObj;
-   PointerToMemFn fMemFn;
-
-};
-
-
-
 
 /**
    Param Functor class for Multidimensional functions.
@@ -270,127 +34,71 @@ private :
 
  */
 
-
-template<class T>
-class ParamFunctorTempl   {
-
+template <class T>
+class ParamFunctorTempl {
 
 public:
+   using EvalType = T;
 
-   typedef  T                    EvalType;
-   typedef  ParamFunctionBase<T> Impl;
+   /// The signature every wrapped callable is normalized to.
+   using Signature = T(const T *, const double *);
 
+   ParamFunctorTempl() = default;
 
-   /**
-      Default constructor
-   */
-   ParamFunctorTempl ()  : fImpl(nullptr) {}
+   /// Construct from a pointer to a class object and a pointer to one of its member
+   /// functions, like `Foo::EvalPar(const double *x, const double *p)`.
+   template <class Obj, typename MemFn>
+   ParamFunctorTempl(Obj *p, MemFn memFn)
+      : fFunc{[p, memFn](const T *x, const double *par) {
+           return (p->*memFn)(const_cast<T *>(x), const_cast<double *>(par));
+        }}
+   {
+   }
 
-
-   /**
-       construct from a pointer to member function (multi-dim type)
-    */
-   template <class PtrObj, typename MemFn>
-   ParamFunctorTempl(const PtrObj& p, MemFn memFn)
-      : fImpl(new ParamMemFunHandler<ParamFunctorTempl<T>, PtrObj, MemFn>(p, memFn))
-   {}
-
-
-
-   /**
-      construct from another generic Functor of multi-dimension
-    */
+   /// Construct from any callable object, or from a pointer to one.
    template <typename Func>
-   explicit ParamFunctorTempl( const Func & f) :
-      fImpl(new ParamFunctorHandler<ParamFunctorTempl<T>,Func>(f) )
-   {}
-
-
-
-   // specialization used in TF1
-   typedef T (* FreeFunc ) (T * , double *);
-   ParamFunctorTempl(FreeFunc f) :
-      fImpl(new ParamFunctorHandler<ParamFunctorTempl<T>,FreeFunc>(f) )
+   explicit ParamFunctorTempl(const Func &f) : fFunc{Adapt(f)}
    {
    }
 
-   // specialization used in TF1
-   ParamFunctorTempl(const std::function<T(const T *f, const Double_t *param)> &func) :
-      fImpl(new ParamFunctorHandler<ParamFunctorTempl<T>, const std::function<T(const T *f, const Double_t *param)>>(func))
+   /// Implicit conversion, relied on by PyROOT when passing a callable to TF1.
+   ParamFunctorTempl(std::function<Signature> f) : fFunc{std::move(f)} {}
+
+   T operator()(const T *x, const double *p) const { return fFunc(x, p); }
+
+   bool Empty() const { return !fFunc; }
+
+private:
+   /// Normalize any supported callable to the `T (const T *, const double *)` signature.
+   ///
+   /// A pointer to a callable object is called through without taking ownership of it, and
+   /// callables that insist on non-const pointers (the classic `T (T *x, double *p)`
+   /// signature) get their arguments cast for them.
+   template <class Func>
+   static std::function<Signature> Adapt(Func f)
    {
-   }
-
-   /**
-      Destructor (no operations)
-   */
-   virtual ~ParamFunctorTempl ()  {
-      if (fImpl) delete fImpl;
-   }
-
-   /**
-      Copy constructor
-   */
-   ParamFunctorTempl(const ParamFunctorTempl & rhs) :
-      fImpl(nullptr)
-   {
-//       if (rhs.fImpl.get() != 0)
-//          fImpl = std::unique_ptr<Impl>( (rhs.fImpl)->Clone() );
-      if (rhs.fImpl)  fImpl = rhs.fImpl->Clone();
-   }
-
-   /**
-      Assignment operator
-   */
-   ParamFunctorTempl & operator = (const ParamFunctorTempl & rhs)  {
-//      ParamFunctor copy(rhs);
-      // swap unique_ptr by hand
-//       Impl * p = fImpl.release();
-//       fImpl.reset(copy.fImpl.release());
-//       copy.fImpl.reset(p);
-
-      if(this != &rhs) {
-         if (fImpl) delete fImpl;
-         fImpl = nullptr;
-         if (rhs.fImpl)
-            fImpl = rhs.fImpl->Clone();
+      if constexpr (std::is_pointer_v<Func> && std::is_class_v<std::remove_pointer_t<Func>>) {
+         if constexpr (std::is_invocable_v<std::remove_pointer_t<Func> &, const T *, const double *>) {
+            return [f](const T *x, const double *p) { return (*f)(x, p); };
+         } else {
+            return [f](const T *x, const double *p) { return (*f)(const_cast<T *>(x), const_cast<double *>(p)); };
+         }
+      } else if constexpr (std::is_invocable_v<Func &, const T *, const double *>) {
+         return std::move(f);
+      } else {
+         return [f = std::move(f)](const T *x, const double *p) mutable {
+            return f(const_cast<T *>(x), const_cast<double *>(p));
+         };
       }
-      return *this;
    }
 
-   void * GetImpl() { return (void *) fImpl; }
-
-
-   T operator() ( T * x, double * p)  {
-      return (*fImpl)(x,p);
-   }
-
-   T operator() (const T * x, const double * p)  {
-      return (*fImpl)(x,p);
-   }
-
-
-   bool Empty() const { return !fImpl; }
-
-
-   void SetFunction(Impl * f) {
-      fImpl = f;
-   }
-
-private :
-
-
-   //std::unique_ptr<Impl> fImpl;
-   Impl * fImpl;
-
-
+   std::function<Signature> fFunc;
 };
-
 
 using ParamFunctor = ParamFunctorTempl<double>;
 
-   } // end namespace Math
+} // end namespace Math
 
 } // end namespace ROOT
-
 
 #endif /* ROOT_Math_ParamFunctor */
