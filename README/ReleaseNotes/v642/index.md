@@ -12,8 +12,6 @@ For more information, see:
 
 The following people have contributed to this new version:
 
-The following people have contributed to this new version:
-
  Bertrand Bellenot, CERN/EP-SFT,\
  Jakob Blomer, CERN/EP-SFT,\
  Lukas Breitwieser, CERN/EP-SFT,\
@@ -66,7 +64,8 @@ Users are encouraged to export their models to ONNX and use the retained ONNX pa
 * The **RooStats::DebuggingSampler** and **RooStats::DebuggingTestStat** classes are removed. They were mock implementations of the `TestStatSampler` and `TestStatistic` interfaces that returned uniform random numbers independent of the data, only meant for debugging the RooStats framework itself during its initial development.
 * The `RooTrace` class is deprecated and will be removed in ROOT 6.44. It was a RooFit-specific memory tracer whose instrumentation hooks are compiled out by default, so it has been inert and untested for years. For memory debugging, please use general-purpose tools such as AddressSanitizer or Valgrind instead.
 * Support for the AIX operating system has been removed from the codebase. This support has not been tested since the late v5 releases and the LLVM JIT is not yet supporting AIX.
-* The headers Htypes.h and Gtypes.h that were deprecated in ROOT 6.20 will now emit warnings and will be fully removed in ROOT 6.44.
+* The headers `Htypes.h` and `Gtypes.h` that were deprecated in ROOT 6.20 will now emit warnings and will be fully removed in ROOT 6.44.
+* Including `RConfig.h` and `RVersion.h` is now deprecated and will be removed in 6.46, use instead `ROOT/RConfig.hxx` and `ROOT/RVersion.hxx`.
 
 ## Build System
 
