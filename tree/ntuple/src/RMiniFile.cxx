@@ -723,16 +723,15 @@ std::uint64_t ROOT::Internal::RMiniFileReader::SearchInDirectory(std::uint64_t &
 
 void ROOT::Internal::RMiniFileReader::LoadStreamerInfo()
 {
-   RTFHeader fileHeader;
-   ReadBuffer(&fileHeader, sizeof(fileHeader), 0);
-
-   const std::uint64_t seekKeyInfo = fileHeader.GetSeekInfo();
+   if (fIsBare == 0)
+      return;
 
    RTFKey key;
-   ReadBuffer(&key, sizeof(key), seekKeyInfo);
+   ReadBuffer(&key, sizeof(key), fSeekKeyInfo);
 
-   const std::uint64_t nbytesInfo = fileHeader.GetNbytesInfo() - key.fKeyLen;
-   const std::uint64_t seekInfo = seekKeyInfo + key.fKeyLen;
+   R__ASSERT(fNbytesKeyAndInfo >= key.fKeyLen);
+   const std::uint64_t nbytesInfo = fNbytesKeyAndInfo - key.fKeyLen;
+   const std::uint64_t seekInfo = fSeekKeyInfo + key.fKeyLen;
    const std::uint32_t uncompLenInfo = key.fObjLen;
    auto streamerInfo = MakeUninitArray<char>(uncompLenInfo);
    if (nbytesInfo == uncompLenInfo) {
@@ -769,6 +768,9 @@ ROOT::RResult<ROOT::RNTuple> ROOT::Internal::RMiniFileReader::GetNTupleProper(st
 {
    RTFHeader fileHeader;
    ReadBuffer(&fileHeader, sizeof(fileHeader), 0);
+
+   fSeekKeyInfo = fileHeader.GetSeekInfo();
+   fNbytesKeyAndInfo = fileHeader.GetNbytesInfo();
 
    RTFKey key;
    RTFString name;
@@ -817,6 +819,7 @@ ROOT::RResult<ROOT::RNTuple> ROOT::Internal::RMiniFileReader::GetNTupleProper(st
 
    const auto objNbytes = key.GetSize() - key.fKeyLen;
    auto res = GetNTupleProperAtOffset(offset, objNbytes, key.fObjLen);
+
    return res;
 }
 

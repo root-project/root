@@ -11,6 +11,8 @@ TEST(RNTupleEmulated, EmulatedFields_Simple)
 
    FileRaii fileGuard("test_ntuple_emulated_fields.root");
 
+   EXPECT_NO_STREAMER_OR_DICTIONARY();
+
    ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
@@ -33,12 +35,6 @@ TEST(RNTupleEmulated, EmulatedFields_Simple)
 
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "Outer_Simple").Unwrap());
-
-      // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
-      // See also https://github.com/root-project/root/issues/9371
-      ROOT::TestSupport::CheckDiagsRAII diagRAII;
-      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                            /*matchFullMessage=*/false);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
@@ -95,9 +91,6 @@ TEST(RNTupleEmulated, EmulatedFields_Simple)
    RNTupleDescriptor::RCreateModelOptions cmOpts;
    cmOpts.SetEmulateUnknownTypes(true);
 
-   ROOT::TestSupport::CheckDiagsRAII diagRAII;
-   diagRAII.optionalDiag(kWarning, "TClass::Init", "no dictionary for class",
-                         /*matchFullMessage=*/false);
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
    std::unique_ptr<ROOT::RNTuple> ntpl(file->Get<ROOT::RNTuple>("ntpl"));
    reader = RNTupleReader::Open(cmOpts, *ntpl);
@@ -123,6 +116,8 @@ TEST(RNTupleEmulated, EmulatedFields_Vecs)
 
    FileRaii fileGuard("test_ntuple_emulated_fields_vecs.root");
 
+   EXPECT_NO_STREAMER_OR_DICTIONARY();
+
    ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
@@ -145,12 +140,6 @@ TEST(RNTupleEmulated, EmulatedFields_Vecs)
 
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("outers", "std::vector<Outer_Vecs>").Unwrap());
-
-      // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
-      // See also https://github.com/root-project/root/issues/9371
-      ROOT::TestSupport::CheckDiagsRAII diagRAII;
-      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                            /*matchFullMessage=*/false);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
@@ -223,6 +212,8 @@ TEST(RNTupleEmulated, EmulatedFields_Vecs)
 TEST(RNTupleEmulated, EmulatedFields_VecsTemplatedWrapper)
 {
    FileRaii fileGuard("test_ntuple_emulated_fields_vecs_templated_wrapper.root");
+
+   EXPECT_NO_STREAMER_OR_DICTIONARY();
 
    ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
@@ -300,6 +291,8 @@ TEST(RNTupleEmulated, EmulatedFields_EmptyStruct)
 
    FileRaii fileGuard("test_ntuple_emulated_emptystruct.root");
 
+   EXPECT_NO_STREAMER_OR_DICTIONARY();
+
    ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
@@ -317,12 +310,6 @@ TEST(RNTupleEmulated, EmulatedFields_EmptyStruct)
 
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "Outer_EmptyStruct").Unwrap());
-
-      // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
-      // See also https://github.com/root-project/root/issues/9371
-      ROOT::TestSupport::CheckDiagsRAII diagRAII;
-      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                            /*matchFullMessage=*/false);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
@@ -375,6 +362,8 @@ TEST(RNTupleEmulated, EmulatedFields_EmptyVec)
 
    FileRaii fileGuard("test_ntuple_emulated_emptyvec.root");
 
+   EXPECT_NO_STREAMER_OR_DICTIONARY();
+
    ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
@@ -398,11 +387,6 @@ TEST(RNTupleEmulated, EmulatedFields_EmptyVec)
       ProcessLine("ptrInners->push_back(Inner_EmptyVec{});");
       ProcessLine("ptrInners->push_back(Inner_EmptyVec{});");
 
-      // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
-      // See also https://github.com/root-project/root/issues/9371
-      ROOT::TestSupport::CheckDiagsRAII diagRAII;
-      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                            /*matchFullMessage=*/false);
       writer.reset();
    });
 
@@ -455,6 +439,8 @@ TEST(RNTupleEmulated, EmulatedFields_Write)
 
    FileRaii fileGuard("test_ntuple_emulated_write.root");
 
+   EXPECT_NO_STREAMER_OR_DICTIONARY();
+
    ExecInFork([&] {
       fileGuard.PreserveFile();
 
@@ -478,11 +464,6 @@ TEST(RNTupleEmulated, EmulatedFields_Write)
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
 
-      // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
-      // See also https://github.com/root-project/root/issues/9371
-      ROOT::TestSupport::CheckDiagsRAII diagRAII;
-      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                            /*matchFullMessage=*/false);
       writer.reset();
    });
 
@@ -505,6 +486,8 @@ TEST(RNTupleEmulated, EmulatedFields_Write)
 TEST(RNTupleEmulated, CollectionProxy)
 {
    FileRaii fileGuard("test_ntuple_emulated_collproxy.root");
+
+   EXPECT_NO_STREAMER_OR_DICTIONARY();
 
    // Declare a custom type in a separate process, then write it through a custom collection proxy.
    // In the main process we load the generated RNTuple without having its dictionary available and we verify
@@ -650,11 +633,6 @@ TEST(RNTupleEmulated, CollectionProxy)
       ProcessLine("pProxyC->v.clear();");
       writer->Fill();
 
-      // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
-      // See also https://github.com/root-project/root/issues/9371
-      ROOT::TestSupport::CheckDiagsRAII diagRAII;
-      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                            /*matchFullMessage=*/false);
       writer.reset();
    });
 
@@ -793,6 +771,8 @@ TEST(RNTupleEmulated, MergeEmulated)
    FileRaii fileGuard2("test_ntuple_merge_emulated2.root");
    FileRaii fileGuardOut("test_ntuple_merge_emulated_out.root");
 
+   EXPECT_NO_STREAMER_OR_DICTIONARY();
+
    ExecInFork([&] {
       fileGuard1.PreserveFile();
       fileGuard2.PreserveFile();
@@ -827,11 +807,6 @@ TEST(RNTupleEmulated, MergeEmulated)
       ProcessLine("ptr2->fInt2 = 66;");
       writer2->Fill();
 
-      // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
-      // See also https://github.com/root-project/root/issues/9371
-      ROOT::TestSupport::CheckDiagsRAII diagRAII;
-      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                            /*matchFullMessage=*/false);
       writer.reset();
       writer2.reset();
    });
@@ -846,9 +821,6 @@ TEST(RNTupleEmulated, MergeEmulated)
    }
 
    {
-      ROOT::TestSupport::CheckDiagsRAII diagRAII;
-      diagRAII.requiredDiag(kWarning, "TClass::Init", "no dictionary", /*matchFullMessage=*/false);
-
       auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
       RNTupleMerger merger{std::move(destination)};
       auto res = merger.Merge(sourcePtrs);
