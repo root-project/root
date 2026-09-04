@@ -150,4 +150,11 @@ void PatchRNTupleSection(std::string_view filePath, std::uint64_t sectionSeek, s
                          std::uint64_t patchedOffsetIntoSection, const std::byte *bytesToWrite,
                          std::size_t bytesToWriteLen, EEndianness sectionEndianness);
 
+// TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
+// See also https://github.com/root-project/root/issues/9371
+#define EXPECT_NO_STREAMER_OR_DICTIONARY()                                                                          \
+   ROOT::TestSupport::CheckDiagsRAII diagNoStreamerOrDictRAII;                                                      \
+   diagNoStreamerOrDictRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary", false); \
+   diagNoStreamerOrDictRAII.optionalDiag(kWarning, "TClass::Init", "no dictionary for class", false)
+
 #endif

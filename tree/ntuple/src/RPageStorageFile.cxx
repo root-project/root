@@ -425,6 +425,10 @@ void ROOT::Internal::RPageSourceFile::LoadStructureImpl()
    // Otherwise, the page source was created by OpenFromAnchor()
    if (!fAnchor) {
       fAnchor = fReader.GetNTuple(fNTupleName).Unwrap();
+      // We couple finding the RNTuple anchor to loading the streamer infos.
+      // If we already have the anchor, we must have opened the file before (either through TFile or by the source of
+      // OpenWithDifferentAnchor(), in which case we already loaded the streamer info) .
+      fReader.LoadStreamerInfo();
    }
    fReader.SetMaxKeySize(fAnchor->GetMaxKeySize());
 
@@ -712,7 +716,4 @@ ROOT::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterK
    return clusters;
 }
 
-void ROOT::Internal::RPageSourceFile::LoadStreamerInfo()
-{
-   fReader.LoadStreamerInfo();
-}
+void ROOT::Internal::RPageSourceFile::LoadStreamerInfo() {}
