@@ -120,8 +120,9 @@ public:
    void     SetWindowSize(UInt_t w, UInt_t h) override;
    void     SetWindowTitle(const char *newTitle) override;
    void     SetCanvasSize(UInt_t w, UInt_t h) override;
+   void     SetCursor(Cursor_t cursor) override;
    void     SetStatusText(const char *txt = nullptr, Int_t partidx = 0) override;
-   void UpdateViewWithMenu();
+   void     UpdateViewWithMenu();
 
    void     Show() override { MapRaised(); }
    void     ShowMenuBar(Bool_t show = kTRUE) override;
