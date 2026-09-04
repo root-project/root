@@ -22,6 +22,7 @@
 
 #include <Math/Util.h>
 
+#include <functional>
 #include <map>
 #include <stdexcept>
 #include <sstream>
@@ -123,6 +124,13 @@ public:
    void setOutputWithOffset(RooAbsArg const *arg, ROOT::Math::KahanSum<double> val,
                             ROOT::Math::KahanSum<double> const &offset);
 
+   /// Register an action to be run after the evaluation of the full
+   /// computation graph, when all potentially asynchronous computations and
+   /// data transfers have completed. Used to defer work that depends on
+   /// results that are read back from the GPU without synchronization, like
+   /// the logging of evaluation error counts.
+   void deferAction(std::function<void()> action) { _deferredActions.emplace_back(std::move(action)); }
+
 private:
    friend class Evaluator;
 
@@ -134,6 +142,7 @@ private:
    std::vector<std::vector<double>> _buffers;
    std::size_t _bufferIdx = 0;
    std::vector<RooBatchCompute::Config> _cfgs;
+   std::vector<std::function<void()>> _deferredActions;
 };
 
 } // namespace RooFit

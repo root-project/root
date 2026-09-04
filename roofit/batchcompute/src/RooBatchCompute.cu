@@ -26,6 +26,7 @@ This file contains the code for cuda computations using the RooBatchCompute libr
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cstring>
 #include <functional>
 #include <map>
 #include <queue>
@@ -142,6 +143,50 @@ public:
       slot.inFlight = true;
    }
 
+   /// A persistent slot for a deferred device-to-host readback: an
+   /// asynchronous copy delivers device results (e.g. evaluation error
+   /// counters) into the pinned host buffer, and flushDeferred() forwards
+   /// them to the destination in the caller's memory once the stream was
+   /// synchronized. Slots stay valid from acquireDeferred() until the flush.
+   struct DeferredSlot {
+      char *host = nullptr; // pinned host memory
+      std::size_t capacity = 0;
+      double *dst = nullptr;
+      std::size_t nPending = 0;
+   };
+
+   DeferredSlot &acquireDeferred(std::size_t n)
+   {
+      if (_deferredCursor == _deferredSlots.size()) {
+         _deferredSlots.emplace_back();
+      }
+      DeferredSlot &slot = _deferredSlots[_deferredCursor++];
+      if (slot.capacity < n) {
+         // The slot is idle here: its previous use ended with the flush after
+         // a stream synchronization.
+         if (slot.host)
+            ERRCHECK(cudaFreeHost(slot.host));
+         ERRCHECK(cudaMallocHost(reinterpret_cast<void **>(&slot.host), n));
+         slot.capacity = n;
+      }
+      return slot;
+   }
+
+   /// Copy the completed readbacks to their destinations. Must only be
+   /// called after the stream was synchronized.
+   void flushDeferred()
+   {
+      for (std::size_t i = 0; i < _deferredCursor; ++i) {
+         DeferredSlot &slot = _deferredSlots[i];
+         if (slot.dst) {
+            std::memcpy(slot.dst, slot.host, slot.nPending * sizeof(double));
+            slot.dst = nullptr;
+            slot.nPending = 0;
+         }
+      }
+      _deferredCursor = 0;
+   }
+
    ~StreamScratch()
    {
       // Don't use ERRCHECK here: throwing from a destructor would terminate.
@@ -155,11 +200,17 @@ public:
          if (slot.device)
             cudaFree(slot.device);
       }
+      for (DeferredSlot &slot : _deferredSlots) {
+         if (slot.host)
+            cudaFreeHost(slot.host);
+      }
    }
 
 private:
    std::array<Slot, 64> _slots;
    std::size_t _next = 0;
+   std::vector<DeferredSlot> _deferredSlots;
+   std::size_t _deferredCursor = 0;
 };
 
 } // namespace
@@ -197,7 +248,8 @@ public:
                                   extraArgs.size() * sizeof(double);
 
       cudaStream_t stream = *cfg.cudaStream();
-      StreamScratch::Slot &slot = scratch(cfg.cudaStream()).acquire(memSize);
+      StreamScratch &streamScratch = scratch(cfg.cudaStream());
+      StreamScratch::Slot &slot = streamScratch.acquire(memSize);
 
       // The staging area has the same layout in the pinned host buffer and in
       // the device buffer, so it can be uploaded with a single copy.
@@ -226,16 +278,21 @@ public:
       _computeFunctions[computer]<<<gridSize, blockSize, 0, stream>>>(*batchesDevice);
 
       // Only the NormalizedPdf computer mutates its extra args: it uses them
-      // as output parameters for the evaluation error counts. Only then the
-      // extra args need to be copied back, and the stream needs to be
-      // synchronized because the caller inspects the counters right after
-      // this function returns.
+      // as output parameters for the evaluation error counts. Instead of
+      // synchronizing the stream to read the counters back immediately, the
+      // readback is deferred to avoid stalling the pipeline: an asynchronous
+      // copy delivers them into a persistent pinned buffer, and the next
+      // synchronizeCudaStream() call forwards them to the caller's span. The
+      // caller's memory therefore has to stay valid until then.
       if (computer == NormalizedPdf && !extraArgs.empty()) {
-         copyDeviceToHost(extraArgsDevice, extraArgs.data(), extraArgs.size(), cfg.cudaStream());
-         ERRCHECK(cudaStreamSynchronize(stream));
+         const std::size_t nBytes = extraArgs.size() * sizeof(double);
+         StreamScratch::DeferredSlot &deferredSlot = streamScratch.acquireDeferred(nBytes);
+         ERRCHECK(cudaMemcpyAsync(deferredSlot.host, extraArgsDevice, nBytes, cudaMemcpyDeviceToHost, stream));
+         deferredSlot.dst = extraArgs.data();
+         deferredSlot.nPending = extraArgs.size();
       }
 
-      scratch(cfg.cudaStream()).release(slot, stream);
+      streamScratch.release(slot, stream);
    }
    /// Return the sum of an input array
    double reduceSum(RooBatchCompute::Config const &cfg, InputArr input, size_t n) override;
@@ -253,6 +310,12 @@ public:
    void synchronizeCudaStream(CudaInterface::CudaStream *stream) const override
    {
       ERRCHECK(::cudaStreamSynchronize(*stream));
+      // Deliver deferred readbacks (e.g. the evaluation error counters from
+      // compute()) that have completed with the synchronization.
+      auto found = _scratchMap.find(stream);
+      if (found != _scratchMap.end()) {
+         found->second.flushDeferred();
+      }
    }
 
 private:

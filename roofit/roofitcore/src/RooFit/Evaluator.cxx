@@ -448,6 +448,11 @@ std::span<const double> Evaluator::run()
 
    ++_nEvaluations;
 
+   // Discard leftover deferred actions in case a previous evaluation was
+   // aborted by an exception.
+   _evalContextCPU._deferredActions.clear();
+   _evalContextCUDA._deferredActions.clear();
+
    if (_useGPU) {
       return getValHeterogeneous();
    }
@@ -467,6 +472,11 @@ std::span<const double> Evaluator::run()
          }
       }
    }
+
+   for (auto &action : _evalContextCPU._deferredActions) {
+      action();
+   }
+   _evalContextCPU._deferredActions.clear();
 
    // return the final output
    return _evalContextCPU.at(&_topNode);
@@ -508,10 +518,19 @@ std::span<const double> Evaluator::getValHeterogeneous()
    }
 
    // Ensure that all enqueued GPU work has completed when run() returns. For
-   // the usual likelihood evaluations this is a no-op, because the final
-   // reduction has synchronized the stream already. It also guarantees that
-   // recycling the buffers at the beginning of the next evaluation is safe.
+   // the usual likelihood evaluations this is mostly a no-op, because the
+   // final reduction has synchronized the stream already. It also guarantees
+   // that recycling the buffers at the beginning of the next evaluation is
+   // safe, and it delivers the deferred readbacks like the evaluation error
+   // counters.
    RooBatchCompute::dispatchCUDA->synchronizeCudaStream(_cudaStream);
+
+   // Run the deferred actions now that all results have arrived on the host,
+   // e.g. the logging of evaluation errors that were counted on the GPU.
+   for (auto &action : _evalContextCUDA._deferredActions) {
+      action();
+   }
+   _evalContextCUDA._deferredActions.clear();
 
    // return the final value
    return _evalContextCUDA.at(&_topNode);

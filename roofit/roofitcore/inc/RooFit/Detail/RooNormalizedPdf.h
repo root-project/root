@@ -16,6 +16,8 @@
 #include <RooAbsPdf.h>
 #include <RooRealProxy.h>
 
+#include <array>
+
 namespace RooFit::Detail {
 
 class RooNormalizedPdf : public RooAbsPdf {
@@ -85,9 +87,17 @@ protected:
    double getValV(const RooArgSet * normSet) const override;
 
 private:
+   void logEvalErrorCounts() const;
+
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooRealProxy _normIntegral;
    RooArgSet _normSet;
+
+   /// Evaluation error counters, filled by the compute function. In CUDA
+   /// mode, they are read back from the GPU asynchronously and only arrive
+   /// after the evaluation of the computation graph, so they have to live in
+   /// a member and not on the stack of doEval(). Transient and not copied.
+   mutable std::array<double, 3> _evalErrorCounts{}; //<!
 
    ClassDefOverride(RooFit::Detail::RooNormalizedPdf, 0);
 };
