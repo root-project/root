@@ -86,6 +86,7 @@ ROOT tutorials: `$ROOTSYS/tutorials/visualisation/image/`
 #include "TVirtualX.h"
 
 #include <iostream>
+#include <vector>
 #include <memory>
 
 #include "snprintf.h"
@@ -1230,13 +1231,13 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
                               Int_t xsrc, Int_t ysrc, UInt_t wsrc, UInt_t hsrc,
                               Option_t *opt)
 {
-   if (!im) return;
+   if (!im)
+      return;
 
    wsrc = wsrc ? wsrc : im->width;
    hsrc = hsrc ? hsrc : im->height;
 
-   static int x11 = -1;
-   if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
+   static int x11 = gVirtualX->InheritsFrom("TGX11");
 
    Pixmap_t mask = kNone;
 
@@ -1245,21 +1246,18 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
       UInt_t ow = wsrc%8;
       UInt_t ww = wsrc - ow + (ow ? 8 : 0);
 
-      UInt_t bit = 0;
-      int i = 0;
-      UInt_t yy = 0;
-      UInt_t xx = 0;
+      UInt_t bit = 0, i = 0;
 
-      char *bits = new char[ww*hh]; //an array of bits
+      std::vector<char> bits(ww*hh); //an array of bits
 
       ASImageDecoder *imdec = start_image_decoding(fgVisual, im, SCL_DO_ALPHA,
                                                    xsrc, ysrc, ww, 0, nullptr);
       if (imdec) {
-         for (yy = 0; yy < hh; yy++) {
+         for (UInt_t yy = 0; yy < hh; yy++) {
             imdec->decode_image_scanline(imdec);
             CARD32 *a = imdec->buffer.alpha;
 
-            for (xx = 0; xx < ww; xx++) {
+            for (UInt_t xx = 0; xx < ww; xx++) {
                if (a[xx]) {
                   SETBIT(bits[i], bit);
                } else {
@@ -1277,8 +1275,7 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
       stop_image_decoding(&imdec);
 
       mask = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(),
-                                          (const char *)bits, ww, hh);
-      delete [] bits;
+                                     bits.data(), ww, hh);
    }
 
    GCValues_t gv;
@@ -1295,7 +1292,7 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
       gVirtualX->ChangeGC(gc, &gv);
    }
 
-   if (x11 && (!gPad || gPad->GetGLDevice() == -1)) { //use built-in optimized version
+   if (x11) { //use built-in optimized version
       asimage2drawable(fgVisual, wid, im, (GC)gc, xsrc, ysrc, x, y, wsrc, hsrc, 1);
    } else {
       ASImage *img = nullptr;
@@ -1311,33 +1308,29 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
          TString option(opt);
          option.ToLower();
 
-         if (gPad && gPad->GetGLDevice() != -1) {
-            if (TVirtualPadPainter *painter = gPad->GetPainter())
-               painter->DrawPixels(bits, wsrc, hsrc, x, y, !option.Contains("opaque"));
-         } else {
-            Pixmap_t pic = gVirtualX->CreatePixmapFromData(bits, wsrc, hsrc);
-            if (pic) {
-               if (!option.Contains("opaque")) {
-                  SETBIT(wsrc,31);
-                  SETBIT(hsrc,31);
-               }
-               gVirtualX->CopyArea(pic, wid, gc, 0, 0, wsrc, hsrc, x, y);
-               gVirtualX->DeletePixmap(pic);
+         Pixmap_t pic = gVirtualX->CreatePixmapFromData(bits, wsrc, hsrc);
+         if (pic) {
+            if (!option.Contains("opaque")) {
+               SETBIT(wsrc,31);
+               SETBIT(hsrc,31);
             }
+            gVirtualX->CopyArea(pic, wid, gc, 0, 0, wsrc, hsrc, x, y);
+            gVirtualX->DeletePixmap(pic);
          }
       }
 
-      if (img) {
+      if (img)
          destroy_asimage(&img);
-      }
    }
 
    // free mask pixmap
-   if (gv.fClipMask != kNone) gVirtualX->DeletePixmap(gv.fClipMask);
+   if (mask != kNone)
+      gVirtualX->DeletePixmap(mask);
 
    gv.fMask = kGCClipMask;
    gv.fClipMask = kNone;
-   if (gc) gVirtualX->ChangeGC(gc, &gv);
+   if (gc)
+      gVirtualX->ChangeGC(gc, &gv);
 }
 
 
