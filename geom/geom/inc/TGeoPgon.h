@@ -14,28 +14,51 @@
 
 #include "TGeoPcon.h"
 
+#include <algorithm>
+#include <atomic>
+#include <memory>
 #include <mutex>
 #include <vector>
 
 class TGeoPgon : public TGeoPcon {
+   static std::atomic<UInt_t> fgInstanceCount; //! source of monotonic per-object indices
+   UInt_t fIndex{fgInstanceCount++};           //! non-reused index of this shape into the per-thread vector
+   mutable std::atomic<Int_t> fGeneration{0};  //! bumped whenever the per-thread state must be rebuilt
+
 public:
    struct ThreadData_t {
-      Int_t *fIntBuffer;    ///<![fNedges+4] temporary int buffer array
-      Double_t *fDblBuffer; ///<![fNedges+4] temporary double buffer array
-
-      ThreadData_t();
-      ~ThreadData_t();
+      Int_t *fIntBuffer{nullptr};    //![fNedges+4] temporary int buffer array
+      Double_t *fDblBuffer{nullptr}; //![fNedges+4] temporary double buffer array
+      Int_t fInitGen{-1};            //! generation this slot was last initialized for
    };
-   ThreadData_t &GetThreadData() const;
+
+   /// Per-thread non-owning cache of scratch buffers indexed by this shape.
+   /// Hot path: a TLS read plus an indexed load; the cold rebuild lives in InitThreadSlot().
+   /// The vector retains its high-water size until the owning thread exits.
+   ThreadData_t &GetThreadData() const
+   {
+      thread_local std::vector<ThreadData_t> tdata;
+      if (tdata.size() <= fIndex)
+         tdata.resize(fIndex + 1);
+      ThreadData_t &td = tdata[fIndex];
+      if (td.fInitGen != fGeneration.load(std::memory_order_acquire))
+         InitThreadSlot(td);
+      return td;
+   }
+   /// Release object-owned scratch buffers and invalidate the non-owning TLS slots.
+   /// Navigation using this shape must not be active when this method is called.
    void ClearThreadData() const override;
-   void CreateThreadData(Int_t nthreads) override;
+   /// No-op: this shape allocates scratch data lazily for every calling thread.
+   void CreateThreadData(Int_t) override {}
 
 protected:
+   struct OwnedThreadData_t;
+   void InitThreadSlot(ThreadData_t &td) const;
+
    // data members
-   Int_t fNedges;                                   // number of edges (at least one)
-   mutable std::vector<ThreadData_t *> fThreadData; ///<! Navigation data per thread
-   mutable Int_t fThreadSize;                       ///<! Size for the navigation data array
-   mutable std::mutex fMutex;                       ///<! Mutex for thread data
+   Int_t fNedges;                                                      // number of edges (at least one)
+   mutable std::vector<std::unique_ptr<OwnedThreadData_t>> fOwnedData; ///<! Object-owned per-thread buffers
+   mutable std::mutex fOwnedDataMutex;                                 ///<! Protects cold allocation and cleanup
 
    // internal utility methods
    Int_t GetPhiCrossList(const Double_t *point, const Double_t *dir, Int_t istart, Double_t *sphi, Int_t *iphi,

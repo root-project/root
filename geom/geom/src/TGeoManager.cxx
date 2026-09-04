@@ -976,7 +976,9 @@ void TGeoManager::RemoveNavigator(const TGeoNavigator *nav)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set maximum number of threads for navigation.
+/// Enable multi-threaded navigation for at most `nthreads` worker threads.
+/// The geometry must be closed and navigation must not be active when this method is called.
+/// This enables ROOT thread safety and prepares the manager and geometry objects for concurrent navigation.
 
 void TGeoManager::SetMaxThreads(Int_t nthreads)
 {

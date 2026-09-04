@@ -14,28 +14,53 @@
 
 #include "TGeoBBox.h"
 
+#include <algorithm>
+#include <atomic>
+#include <memory>
 #include <mutex>
 #include <vector>
 
 class TGeoPolygon;
 
 class TGeoXtru : public TGeoBBox {
+   static std::atomic<UInt_t> fgInstanceCount;          //! source of monotonic per-object indices
+   UInt_t fIndex{fgInstanceCount++};                    //! non-reused index of this shape into the per-thread vector
+   mutable std::atomic<Int_t> fGeneration{0};           //! bumped whenever the per-thread state must be rebuilt
+   mutable std::atomic<Bool_t> fIllegalChecked{kFALSE}; //! illegal-polygon warning already emitted
+
 public:
    struct ThreadData_t {
-      Int_t fSeg;         // !current segment [0,fNvert-1]
-      Int_t fIz;          // !current z plane [0,fNz-1]
-      Double_t *fXc;      // ![fNvert] current X positions for polygon vertices
-      Double_t *fYc;      // ![fNvert] current Y positions for polygon vertices
-      TGeoPolygon *fPoly; // !polygon defining section shape
-
-      ThreadData_t();
-      ~ThreadData_t();
+      Int_t fSeg{0};               //! current segment [0,fNvert-1]
+      Int_t fIz{0};                //! current z plane [0,fNz-1]
+      Double_t *fXc{nullptr};      //![fNvert] current X positions for polygon vertices
+      Double_t *fYc{nullptr};      //![fNvert] current Y positions for polygon vertices
+      TGeoPolygon *fPoly{nullptr}; //! polygon defining section shape
+      Int_t fInitGen{-1};          //! generation this slot was last initialized for
    };
-   ThreadData_t &GetThreadData() const;
+
+   /// Per-thread non-owning cache of scratch state indexed by this shape.
+   /// Hot path: a TLS read plus an indexed load; the cold rebuild lives in InitThreadSlot().
+   /// The vector retains its high-water size until the owning thread exits.
+   ThreadData_t &GetThreadData() const
+   {
+      thread_local std::vector<ThreadData_t> tdata;
+      if (tdata.size() <= fIndex)
+         tdata.resize(fIndex + 1);
+      ThreadData_t &td = tdata[fIndex];
+      if (td.fInitGen != fGeneration.load(std::memory_order_acquire))
+         InitThreadSlot(td);
+      return td;
+   }
+   /// Release object-owned scratch buffers and invalidate the non-owning TLS slots.
+   /// Navigation using this shape must not be active when this method is called.
    void ClearThreadData() const override;
-   void CreateThreadData(Int_t nthreads) override;
+   /// No-op: this shape allocates scratch data lazily for every calling thread.
+   void CreateThreadData(Int_t) override {}
 
 protected:
+   struct OwnedThreadData_t;
+   void InitThreadSlot(ThreadData_t &td) const;
+
    // data members
    Int_t fNvert;       // number of vertices of the 2D polygon (at least 3)
    Int_t fNz;          // number of z planes (at least two)
@@ -46,10 +71,8 @@ protected:
    Double_t *fScale;   //[fNz] array of scale factors (for each Z)
    Double_t *fX0;      //[fNz] array of X offsets (for each Z)
    Double_t *fY0;      //[fNz] array of Y offsets (for each Z)
-
-   mutable std::vector<ThreadData_t *> fThreadData; ///<! Navigation data per thread
-   mutable Int_t fThreadSize;                       ///<! size of thread-specific array
-   mutable std::mutex fMutex;                       ///<! mutex for thread data
+   mutable std::vector<std::unique_ptr<OwnedThreadData_t>> fOwnedData; ///<! Object-owned per-thread buffers
+   mutable std::mutex fOwnedDataMutex;                                 ///<! Protects cold allocation and cleanup
 
    TGeoXtru(const TGeoXtru &) = delete;
    TGeoXtru &operator=(const TGeoXtru &) = delete;

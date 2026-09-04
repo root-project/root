@@ -36,55 +36,61 @@ on different axis. Implemented patterns are:
 #include "TGeoManager.h"
 #include "TMath.h"
 
+std::atomic<UInt_t> TGeoPatternFinder::fgInstanceCount{0};
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// (Re)build the per-thread scratch state for this finder into the given slot.
+/// Cold path: runs once per (thread, finder, generation).
 
-TGeoPatternFinder::ThreadData_t::ThreadData_t() : fMatrix(nullptr), fCurrent(-1), fNextIndex(-1) {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
-
-TGeoPatternFinder::ThreadData_t::~ThreadData_t()
+void TGeoPatternFinder::InitThreadSlot(ThreadData_t &td) const
 {
-   //   if (fMatrix != gGeoIdentity) delete fMatrix;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-TGeoPatternFinder::ThreadData_t &TGeoPatternFinder::GetThreadData() const
-{
-   Int_t tid = TGeoManager::ThreadId();
-   return *fThreadData[tid];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TGeoPatternFinder::ClearThreadData() const
-{
-   std::lock_guard<std::mutex> guard(fMutex);
-   std::vector<ThreadData_t *>::iterator i = fThreadData.begin();
-   while (i != fThreadData.end()) {
-      delete *i;
-      ++i;
+   TGeoManager *manager = GetOwnerManager();
+   if (!manager) {
+      Error("InitThreadSlot", "Pattern finder has no owning geometry manager");
+      return;
    }
-   fThreadData.clear();
-   fThreadSize = 0;
+   if (!td.fMatrix) {
+      // CreateMatrix() registers the new matrix with the geometry manager, which mutates a
+      // shared, unlocked TObjArray. Lazy initialization means several threads can reach this
+      // on first touch concurrently, so serialize the registration. Taken once per
+      // (thread, finder); steady-state navigation is lock-free.
+      static std::mutex sInitMutex;
+      std::lock_guard<std::mutex> guard(sInitMutex);
+      td.fMatrix = CreateMatrix();
+   }
+   // A generation bump only invalidates the cached division indices. The matrix stays valid for
+   // its owning manager's lifetime and is deliberately reused. The manager releases it during
+   // destruction; replacing it here would retain another matrix on every ClearThreadData().
+   td.fCurrent = -1;
+   td.fNextIndex = -1;
+   td.fInitGen = fGeneration.load(std::memory_order_acquire);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create thread data for n threads max.
+/// Return the identity matrix owned by this finder's geometry manager.
 
-void TGeoPatternFinder::CreateThreadData(Int_t nthreads)
+TGeoMatrix *TGeoPatternFinder::GetOwnerIdentity() const
 {
-   std::lock_guard<std::mutex> guard(fMutex);
-   fThreadData.resize(nthreads);
-   fThreadSize = nthreads;
-   for (Int_t tid = 0; tid < nthreads; tid++) {
-      if (fThreadData[tid] == nullptr) {
-         fThreadData[tid] = new ThreadData_t;
-         fThreadData[tid]->fMatrix = CreateMatrix();
-      }
+   TGeoManager *manager = GetOwnerManager();
+   return manager ? static_cast<TGeoMatrix *>(manager->GetListOfMatrices()->At(0)) : nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Register a lazily-created pattern matrix with the manager owning this finder's volume.
+
+void TGeoPatternFinder::RegisterMatrix(TGeoMatrix *matrix) const
+{
+   TGeoManager *manager = GetOwnerManager();
+   if (!manager || !matrix)
+      return;
+   if (!matrix->IsRegistered()) {
+      manager->RegisterMatrix(matrix);
+      matrix->SetBit(TGeoMatrix::kGeoRegistered);
+   }
+   if (matrix->IsCombi()) {
+      TGeoRotation *rotation = static_cast<TGeoCombiTrans *>(matrix)->GetRotation();
+      if (rotation && rotation->IsRotation())
+         RegisterMatrix(rotation);
    }
 }
 
@@ -99,7 +105,6 @@ TGeoPatternFinder::TGeoPatternFinder()
    fStart = 0;
    fEnd = 0;
    fVolume = nullptr;
-   fThreadSize = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +118,6 @@ TGeoPatternFinder::TGeoPatternFinder(TGeoVolume *vol, Int_t ndiv)
    fStep = 0;
    fStart = 0;
    fEnd = 0;
-   fThreadSize = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -300,11 +304,11 @@ TGeoMatrix *TGeoPatternX::CreateMatrix() const
 {
    if (!IsReflected()) {
       TGeoMatrix *matrix = new TGeoTranslation(0., 0., 0.);
-      matrix->RegisterYourself();
+      RegisterMatrix(matrix);
       return matrix;
    }
    TGeoCombiTrans *combi = new TGeoCombiTrans();
-   combi->RegisterYourself();
+   RegisterMatrix(combi);
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
    return combi;
@@ -494,11 +498,11 @@ TGeoMatrix *TGeoPatternY::CreateMatrix() const
 {
    if (!IsReflected()) {
       TGeoMatrix *matrix = new TGeoTranslation(0., 0., 0.);
-      matrix->RegisterYourself();
+      RegisterMatrix(matrix);
       return matrix;
    }
    TGeoCombiTrans *combi = new TGeoCombiTrans();
-   combi->RegisterYourself();
+   RegisterMatrix(combi);
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
    return combi;
@@ -684,11 +688,11 @@ TGeoMatrix *TGeoPatternZ::CreateMatrix() const
 {
    if (!IsReflected()) {
       TGeoMatrix *matrix = new TGeoTranslation(0., 0., 0.);
-      matrix->RegisterYourself();
+      RegisterMatrix(matrix);
       return matrix;
    }
    TGeoCombiTrans *combi = new TGeoCombiTrans();
-   combi->RegisterYourself();
+   RegisterMatrix(combi);
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
    return combi;
@@ -947,11 +951,11 @@ TGeoMatrix *TGeoPatternParaX::CreateMatrix() const
 {
    if (!IsReflected()) {
       TGeoMatrix *matrix = new TGeoTranslation(0., 0., 0.);
-      matrix->RegisterYourself();
+      RegisterMatrix(matrix);
       return matrix;
    }
    TGeoCombiTrans *combi = new TGeoCombiTrans();
-   combi->RegisterYourself();
+   RegisterMatrix(combi);
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
    return combi;
@@ -1125,11 +1129,11 @@ TGeoMatrix *TGeoPatternParaY::CreateMatrix() const
 {
    if (!IsReflected()) {
       TGeoMatrix *matrix = new TGeoTranslation(0., 0., 0.);
-      matrix->RegisterYourself();
+      RegisterMatrix(matrix);
       return matrix;
    }
    TGeoCombiTrans *combi = new TGeoCombiTrans();
-   combi->RegisterYourself();
+   RegisterMatrix(combi);
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
    return combi;
@@ -1307,11 +1311,11 @@ TGeoMatrix *TGeoPatternParaZ::CreateMatrix() const
 {
    if (!IsReflected()) {
       TGeoMatrix *matrix = new TGeoTranslation(0., 0., 0.);
-      matrix->RegisterYourself();
+      RegisterMatrix(matrix);
       return matrix;
    }
    TGeoCombiTrans *combi = new TGeoCombiTrans();
-   combi->RegisterYourself();
+   RegisterMatrix(combi);
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
    return combi;
@@ -1496,11 +1500,11 @@ TGeoMatrix *TGeoPatternTrapZ::CreateMatrix() const
 {
    if (!IsReflected()) {
       TGeoMatrix *matrix = new TGeoTranslation(0., 0., 0.);
-      matrix->RegisterYourself();
+      RegisterMatrix(matrix);
       return matrix;
    }
    TGeoCombiTrans *combi = new TGeoCombiTrans();
-   combi->RegisterYourself();
+   RegisterMatrix(combi);
    combi->ReflectZ(kTRUE);
    combi->ReflectZ(kFALSE);
    return combi;
@@ -1660,7 +1664,7 @@ void TGeoPatternCylR::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*=
 
 TGeoMatrix *TGeoPatternCylR::CreateMatrix() const
 {
-   return gGeoIdentity;
+   return GetOwnerIdentity();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1856,11 +1860,11 @@ TGeoMatrix *TGeoPatternCylPhi::CreateMatrix() const
 {
    if (!IsReflected()) {
       TGeoRotation *matrix = new TGeoRotation();
-      matrix->RegisterYourself();
+      RegisterMatrix(matrix);
       return matrix;
    }
    TGeoRotation *rot = new TGeoRotation();
-   rot->RegisterYourself();
+   RegisterMatrix(rot);
    rot->ReflectZ(kTRUE);
    rot->ReflectZ(kFALSE);
    return rot;
@@ -1978,7 +1982,7 @@ void TGeoPatternSphR::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*=
 
 TGeoMatrix *TGeoPatternSphR::CreateMatrix() const
 {
-   return gGeoIdentity;
+   return GetOwnerIdentity();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2091,7 +2095,7 @@ void TGeoPatternSphTheta::SavePrimitive(std::ostream &out, Option_t * /*option*/
 
 TGeoMatrix *TGeoPatternSphTheta::CreateMatrix() const
 {
-   return gGeoIdentity;
+   return GetOwnerIdentity();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2270,11 +2274,11 @@ TGeoMatrix *TGeoPatternSphPhi::CreateMatrix() const
 {
    if (!IsReflected()) {
       TGeoRotation *matrix = new TGeoRotation();
-      matrix->RegisterYourself();
+      RegisterMatrix(matrix);
       return matrix;
    }
    TGeoRotation *rot = new TGeoRotation();
-   rot->RegisterYourself();
+   RegisterMatrix(rot);
    rot->ReflectZ(kTRUE);
    rot->ReflectZ(kFALSE);
    return rot;
@@ -2371,7 +2375,7 @@ TGeoNode *TGeoPatternHoneycomb::FindNode(Double_t * /*point*/, const Double_t * 
 
 TGeoMatrix *TGeoPatternHoneycomb::CreateMatrix() const
 {
-   return gGeoIdentity;
+   return GetOwnerIdentity();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

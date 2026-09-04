@@ -66,60 +66,40 @@ polygons, between `phi1` and `phi1+dphi.`
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
+std::atomic<UInt_t> TGeoPgon::fgInstanceCount{0};
+
+struct TGeoPgon::OwnedThreadData_t {
+   std::unique_ptr<Int_t[]> fIntBuffer;
+   std::unique_ptr<Double_t[]> fDblBuffer;
+
+   explicit OwnedThreadData_t(std::size_t size) : fIntBuffer(new Int_t[size]), fDblBuffer(new Double_t[size]) {}
+};
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// (Re)build the per-thread scratch buffers for this shape into the given slot.
+/// Cold path: runs once per (thread, shape, generation).
 
-TGeoPgon::ThreadData_t::ThreadData_t() : fIntBuffer(nullptr), fDblBuffer(nullptr) {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
-
-TGeoPgon::ThreadData_t::~ThreadData_t()
+void TGeoPgon::InitThreadSlot(ThreadData_t &td) const
 {
-   delete[] fIntBuffer;
-   delete[] fDblBuffer;
+   auto data = std::make_unique<OwnedThreadData_t>(fNedges + 10);
+   Int_t *intBuffer = data->fIntBuffer.get();
+   Double_t *dblBuffer = data->fDblBuffer.get();
+
+   std::lock_guard<std::mutex> guard(fOwnedDataMutex);
+   fOwnedData.push_back(std::move(data));
+   td.fIntBuffer = intBuffer;
+   td.fDblBuffer = dblBuffer;
+   td.fInitGen = fGeneration.load(std::memory_order_acquire);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-TGeoPgon::ThreadData_t &TGeoPgon::GetThreadData() const
-{
-   Int_t tid = TGeoManager::ThreadId();
-   return *fThreadData[tid];
-}
-
-////////////////////////////////////////////////////////////////////////////////
+/// Release the large scratch buffers. Navigation using this shape must not be active.
 
 void TGeoPgon::ClearThreadData() const
 {
-   std::lock_guard<std::mutex> guard(fMutex);
-   std::vector<ThreadData_t *>::iterator i = fThreadData.begin();
-   while (i != fThreadData.end()) {
-      delete *i;
-      ++i;
-   }
-   fThreadData.clear();
-   fThreadSize = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Create thread data for n threads max.
-
-void TGeoPgon::CreateThreadData(Int_t nthreads)
-{
-   if (fThreadSize)
-      ClearThreadData();
-   std::lock_guard<std::mutex> guard(fMutex);
-   fThreadData.resize(nthreads);
-   fThreadSize = nthreads;
-   for (Int_t tid = 0; tid < nthreads; tid++) {
-      if (fThreadData[tid] == nullptr) {
-         fThreadData[tid] = new ThreadData_t;
-         fThreadData[tid]->fIntBuffer = new Int_t[fNedges + 10];
-         fThreadData[tid]->fDblBuffer = new Double_t[fNedges + 10];
-      }
-   }
+   std::lock_guard<std::mutex> guard(fOwnedDataMutex);
+   fOwnedData.clear();
+   fGeneration.fetch_add(1, std::memory_order_release);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,7 +109,6 @@ TGeoPgon::TGeoPgon()
 {
    SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = 0;
-   fThreadSize = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,8 +118,6 @@ TGeoPgon::TGeoPgon(Double_t phi, Double_t dphi, Int_t nedges, Int_t nz) : TGeoPc
 {
    SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = nedges;
-   fThreadSize = 0;
-   CreateThreadData(1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -151,8 +128,6 @@ TGeoPgon::TGeoPgon(const char *name, Double_t phi, Double_t dphi, Int_t nedges, 
 {
    SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = nedges;
-   fThreadSize = 0;
-   CreateThreadData(1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,8 +146,6 @@ TGeoPgon::TGeoPgon(Double_t *param) : TGeoPcon("")
    SetShapeBit(TGeoShape::kGeoPgon);
    SetDimensions(param);
    ComputeBBox();
-   fThreadSize = 0;
-   CreateThreadData(1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -466,8 +439,6 @@ TGeoPgon::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact,
       ipl++;
    }
    Double_t stepmax = step;
-   if (!fThreadSize)
-      ((TGeoPgon *)this)->CreateThreadData(1);
    ThreadData_t &td = GetThreadData();
    Double_t *sph = td.fDblBuffer;
    Int_t *iph = td.fIntBuffer;
@@ -956,7 +927,7 @@ Bool_t TGeoPgon::SliceCrossingIn(const Double_t *point, const Double_t *dir, Int
          }
          ipl += incseg;
       } // end loop Z
-   }    // end loop phi
+   } // end loop phi
    snext = TGeoShape::Big();
    return kFALSE;
 }
@@ -1253,8 +1224,6 @@ TGeoPgon::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact
          }
       }
    }
-   if (!fThreadSize)
-      ((TGeoPgon *)this)->CreateThreadData(1);
    ThreadData_t &td = GetThreadData();
    Double_t *sph = td.fDblBuffer;
    Int_t *iph = td.fIntBuffer;

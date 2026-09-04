@@ -21,6 +21,8 @@
 #include "TObjArray.h"
 #include "TGeoMedium.h"
 #include "TGeoShape.h"
+#include <algorithm>
+#include <atomic>
 #include <mutex>
 #include <vector>
 
@@ -315,23 +317,33 @@ public:
 ////////////////////////////////////////////////////////////////////////////
 
 class TGeoVolumeAssembly : public TGeoVolume {
+   static std::atomic<UInt_t> fgInstanceCount; //! source of monotonic per-object indices
+   UInt_t fIndex{fgInstanceCount++};           //! non-reused index of this assembly into the per-thread vector
+
 public:
    struct ThreadData_t {
-      Int_t fCurrent; ///<! index of current selected node
-      Int_t fNext;    ///<! index of next node to be entered
-
-      ThreadData_t();
-      ~ThreadData_t();
+      Int_t fCurrent{-1}; //! index of current selected node
+      Int_t fNext{-1};    //! index of next node to be entered
    };
 
-   ThreadData_t &GetThreadData() const;
-   void ClearThreadData() const override;
-   void CreateThreadData(Int_t nthreads) override;
+   /// Per-thread scratch state, owned by the calling thread and indexed by this assembly.
+   /// Each thread owns its whole vector, so no two threads ever write the same cache line.
+   /// The vector retains its high-water size until the owning thread exits.
+   ThreadData_t &GetThreadData() const
+   {
+      thread_local std::vector<ThreadData_t> tdata;
+      if (tdata.size() <= fIndex)
+         tdata.resize(std::max<size_t>(fgInstanceCount.load(std::memory_order_relaxed), fIndex + 1));
+      return tdata[fIndex];
+   }
+   // ClearThreadData()/CreateThreadData() are deliberately not overridden: the assembly's own
+   // per-thread state is allocated lazily, and TGeoVolume's implementation still has to run so
+   // the shape and the division finder get their generation bumped.
 
-protected:
-   mutable std::vector<ThreadData_t *> fThreadData; ///<! Thread specific data vector
-   mutable Int_t fThreadSize;                       ///<! Thread vector size
-   mutable std::mutex fMutex;                       ///<! Mutex for concurrent operations
+   Int_t GetCurrentNodeIndex() const override { return GetThreadData().fCurrent; }
+   Int_t GetNextNodeIndex() const override { return GetThreadData().fNext; }
+   void SetCurrentNodeIndex(Int_t index) { GetThreadData().fCurrent = index; }
+   void SetNextNodeIndex(Int_t index) { GetThreadData().fNext = index; }
 
 private:
    TGeoVolumeAssembly(const TGeoVolumeAssembly &) = delete;
@@ -349,13 +361,9 @@ public:
                       Option_t *option = "") override;
    TGeoVolume *Divide(TGeoVolume *cell, TGeoPatternFinder *pattern, Option_t *option = "spacedout");
    void DrawOnly(Option_t *) override {}
-   Int_t GetCurrentNodeIndex() const override;
-   Int_t GetNextNodeIndex() const override;
    Bool_t IsAssembly() const override { return kTRUE; }
    Bool_t IsVisible() const override { return kFALSE; }
    static TGeoVolumeAssembly *MakeAssemblyFromVolume(TGeoVolume *vol);
-   void SetCurrentNodeIndex(Int_t index);
-   void SetNextNodeIndex(Int_t index);
 
    ClassDefOverride(TGeoVolumeAssembly, 2) // an assembly of volumes
 };
