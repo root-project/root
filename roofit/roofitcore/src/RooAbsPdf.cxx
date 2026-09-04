@@ -142,20 +142,16 @@ called for each data event.
 #include "RooMsgService.h"
 #include "RooArgSet.h"
 #include "RooArgProxy.h"
-#include "RooRealProxy.h"
 #include "RooRealVar.h"
 #include "RooGenContext.h"
 #include "RooBinnedGenContext.h"
 #include "RooPlot.h"
 #include "RooCurve.h"
-#include "RooCategory.h"
 #include "RooNameReg.h"
 #include "RooCmdConfig.h"
 #include "RooGlobalFunc.h"
 #include "RooRandom.h"
-#include "RooNumIntConfig.h"
 #include "RooProjectedPdf.h"
-#include "RooParamBinning.h"
 #include "RooNumCdf.h"
 #include "RooFitResult.h"
 #include "RooNumGenConfig.h"
@@ -171,8 +167,6 @@ called for each data event.
 #include "ROOT/StringUtils.hxx"
 #include "TMath.h"
 #include "TPaveText.h"
-#include "TMatrixD.h"
-#include "TMatrixDSym.h"
 
 #include <algorithm>
 #include <iostream>
@@ -239,11 +233,11 @@ RooAbsPdf::RooAbsPdf() : _normMgr(this, 10) {}
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with name and title only
 
-RooAbsPdf::RooAbsPdf(const char *name, const char *title) :
-  RooAbsReal(name,title), _normMgr(this,10), _selectComp(true)
+RooAbsPdf::RooAbsPdf(const char *name, const char *title) : RooAbsReal(name, title), _normMgr(this, 10)
 {
-  resetErrorCounters() ;
-  setTraceCounter(0) ;
+   _selectComp = true;
+   resetErrorCounters();
+   setTraceCounter(0);
 }
 
 
@@ -251,29 +245,27 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with name, title, and plot range
 
-RooAbsPdf::RooAbsPdf(const char *name, const char *title,
-           double plotMin, double plotMax) :
-  RooAbsReal(name,title,plotMin,plotMax), _normMgr(this,10), _selectComp(true)
+RooAbsPdf::RooAbsPdf(const char *name, const char *title, double plotMin, double plotMax)
+   : RooAbsReal(name, title, plotMin, plotMax), _normMgr(this, 10)
 {
-  resetErrorCounters() ;
-  setTraceCounter(0) ;
+   _selectComp = true;
+   resetErrorCounters();
+   setTraceCounter(0);
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) :
-  RooAbsReal(other,name),
-  _normMgr(other._normMgr,this), _selectComp(other._selectComp), _normRange(other._normRange)
+RooAbsPdf::RooAbsPdf(const RooAbsPdf &other, const char *name)
+   : RooAbsReal(other, name), _normMgr(other._normMgr, this), _normRange(other._normRange)
 {
-  resetErrorCounters() ;
-  setTraceCounter(other._traceCount) ;
+   _selectComp = other._selectComp;
+   resetErrorCounters();
+   setTraceCounter(other._traceCount);
 
-  if (other._specGeneratorConfig) {
-    _specGeneratorConfig = std::make_unique<RooNumGenConfig>(*other._specGeneratorConfig);
-  }
+   if (other._specGeneratorConfig) {
+      _specGeneratorConfig = std::make_unique<RooNumGenConfig>(*other._specGeneratorConfig);
+   }
 }
 
 

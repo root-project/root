@@ -76,8 +76,8 @@ protected:
   RooArgSet*  _funcCloneSet = nullptr;      ///< Set owning all components of internal clone of input function
   RooAbsData* _dataClone = nullptr; ///< Pointer to internal clone if input data
   RooAbsReal* _funcClone = nullptr;   ///< Pointer to internal clone of input function
-  RooArgSet*  _projDeps = nullptr;    ///< Set of projected observable
-  bool      _ownData = false;    ///< Do we own the dataset
+  RooArgSet *_projDepsOpt = nullptr;  ///< Set of projected observable (optimized)
+  bool _ownData = false;              ///< Do we own the dataset
   bool      _sealed = false;      ///< Is test statistic sealed -- i.e. no access to data
   TString     _sealNotice ;  ///< User-defined notice shown when reading a sealed likelihood
   RooArgSet*  _funcObsSet = nullptr;  ///< List of observables in the pdf expression

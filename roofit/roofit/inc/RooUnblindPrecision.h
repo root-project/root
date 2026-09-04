@@ -40,10 +40,10 @@ protected:
   // Function evaluation
   double evaluate() const override ;
 
-  RooRealProxy _value ;          // Holder of the blind value
+  RooRealProxy _proxyValue;      // Holder of the blind value
   RooBlindTools _blindEngine ;   // Blinding engine
 
-  ClassDefOverride(RooUnblindPrecision,1) // Precision unblinding transformation
+  ClassDefOverride(RooUnblindPrecision, 2) // Precision unblinding transformation
 };
 
 #endif
