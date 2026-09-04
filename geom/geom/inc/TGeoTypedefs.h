@@ -15,6 +15,14 @@
 /// Typedefs used by the geometry group
 #include <vector>
 
+namespace ROOT::Geom {
+struct Vertex_t;
+}
+
+namespace ROOT::Geom {
+struct Vertex_t;
+}
+
 namespace Tessellated {
 
 using Vertex_t = ROOT::Geom::Vertex_t;

@@ -1223,60 +1223,69 @@ function(ROOT_FIND_DIRS_WITH_HEADERS result_dirs)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_INSTALL_HEADERS([dir1 dir2 ...] [FILTER <regex>])
-# Glob for headers in the folder where this target is defined, and install them in
-# <buildDir>/include
+#---ROOT_INSTALL_HEADERS([dir1 dir2 ...] [FILTER <regex>] [HEADERS <header1> ...])
+# Declare the install command for headers and copy them into <binary_dir>/include.
+# This function supports two modes to build the list of headers:
+# - [New] If headers are passed explicitly using HEADERS ..., install only these
+# - [Old] Otherwise, glob in the specified folders or where this target is defined
 #---------------------------------------------------------------------------------------------------
 function(ROOT_INSTALL_HEADERS)
-  CMAKE_PARSE_ARGUMENTS(ARG "OPTIONS" "" "FILTER" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "OPTIONS" "" "FILTER;HEADERS" ${ARGN})
   if (${ARG_OPTIONS})
     message(FATAL_ERROR "ROOT_INSTALL_HEADERS no longer supports the OPTIONS argument. Rewrite using the FILTER argument.")
   endif()
-  ROOT_FIND_DIRS_WITH_HEADERS(dirs ${ARG_UNPARSED_ARGUMENTS})
-  set (filter "LinkDef")
-  set (options REGEX "LinkDef" EXCLUDE)
-  foreach (f ${ARG_FILTER})
-    set (filter "${filter}|${f}")
-    set (options ${options} REGEX "${f}" EXCLUDE)
-  endforeach()
-  set (filter "(${filter})")
-  set(include_files "")
-  foreach(d ${dirs})
-    install(DIRECTORY ${d} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-                           COMPONENT headers
-                           ${options})
-    string(REGEX REPLACE "(.*)/$" "\\1" d ${d})
-    ROOT_GLOB_FILES(globbed_files
-      RECURSE
-      RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-      FILTER ${filter}
-      ${d}/*.h ${d}/*.hxx ${d}/*.icc )
-    list(APPEND include_files ${globbed_files})
-  endforeach()
 
-  string(REPLACE ${CMAKE_SOURCE_DIR} "" target_name ${CMAKE_CURRENT_SOURCE_DIR})
-  string(REPLACE / _ target_name "copy_header_${target_name}")
-  string(REGEX REPLACE "_$" "" target_name ${target_name})
+  unset(include_files)
+
+  if(ARG_HEADERS)
+    # Headers have been listed explicitly, find them one by one
+    foreach(regex ${ARG_FILTER} "LinkDef")
+      list(FILTER ARG_HEADERS EXCLUDE REGEX "${regex}")
+    endforeach()
+    foreach(header ${ARG_HEADERS})
+      file(GLOB globbed_header ${header} */${header})
+      if(globbed_header STREQUAL "")
+	message(SEND_ERROR "No header corresponding to ${header} found in ${CMAKE_CURRENT_SOURCE_DIR}")
+      endif()
+      list(APPEND include_files ${globbed_header})
+    endforeach()
+  else()
+    # Glob across all include directories
+    ROOT_FIND_DIRS_WITH_HEADERS(dirs ${ARG_UNPARSED_ARGUMENTS})
+    set (filter "LinkDef")
+    foreach (f ${ARG_FILTER})
+      set (filter "${filter}|${f}")
+    endforeach()
+    set (filter "(${filter})")
+    foreach(d ${dirs})
+      string(REGEX REPLACE "(.*)/$" "\\1" d ${d})
+      ROOT_GLOB_FILES(globbed_files
+        RECURSE
+        FILTER ${filter}
+        ${d}/*.h ${d}/*.hxx ${d}/*.icc )
+      list(APPEND include_files ${globbed_files})
+    endforeach()
+  endif()
 
   # Register the files to be copied for each target directory (e.g. include/ include/ROOT include/v7/inc/ ...)
   list(REMOVE_DUPLICATES include_files)
   list(TRANSFORM include_files REPLACE "(.*)/[^/]*" "\\1/" OUTPUT_VARIABLE subdirs)
   list(REMOVE_DUPLICATES subdirs)
   foreach(subdir ${subdirs})
+    string(REGEX REPLACE ".*/inc/" "" destination_subdir ${subdir})
+
     set(input_files ${include_files})
     list(FILTER input_files INCLUDE REGEX "^${subdir}[^/]*$")
+
+    install(FILES ${input_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${destination_subdir} COMPONENT headers)
+
     set(output_files ${input_files})
+    list(TRANSFORM output_files REPLACE ".*/" "${CMAKE_BINARY_DIR}/include/${destination_subdir}")
 
-    string(REGEX REPLACE ".*/*inc/" "" destination ${subdir})
-
-    list(TRANSFORM input_files  PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/")
-    list(TRANSFORM output_files REPLACE ".*/" "${CMAKE_BINARY_DIR}/include/${destination}")
-
-    set(destination destination_${destination})
-
-    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_COPY_LISTS ${destination})
-    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_INPUT_${destination} ${input_files})
-    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_OUTPUT_${destination} ${output_files})
+    set(destination_target_name destination_${destination_subdir})
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_COPY_LISTS ${destination_target_name})
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_INPUT_${destination_target_name} ${input_files})
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_OUTPUT_${destination_target_name} ${output_files})
   endforeach()
 endfunction()
 
@@ -1317,6 +1326,7 @@ endmacro()
 #---------------------------------------------------------------------------------------------------
 #---ROOT_STANDARD_LIBRARY_PACKAGE(libname
 #                                 [NO_INSTALL_HEADERS]         : don't install headers for this package
+#                                 [NO_GLOB_HEADERS]            : don't glob for headers, only install listed ones
 #                                 [STAGE1]                     : use rootcling_stage1 for generating
 #                                 HEADERS header1 header2      : relative header path as #included; pass -I to find them. If not specified, globbing for *.h is used
 #                                 NODEPHEADERS header1 header2 : like HEADERS, but no dependency is generated
@@ -1335,7 +1345,7 @@ endmacro()
 #                                )
 #---------------------------------------------------------------------------------------------------
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
-  set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE)
+  set(options NO_INSTALL_HEADERS NO_GLOB_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE)
   set(oneValueArgs LINKDEF)
   set(multiValueArgs DEPENDENCIES HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS INSTALL_OPTIONS)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -1441,7 +1451,11 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   # Install headers if we have any headers and if the user didn't explicitly
   # disabled this.
   if (NOT ARG_NO_INSTALL_HEADERS OR ARG_NO_HEADERS)
-    ROOT_INSTALL_HEADERS(${ARG_INSTALL_OPTIONS})
+    if(ARG_NO_GLOB_HEADERS)
+      ROOT_INSTALL_HEADERS(${ARG_INSTALL_OPTIONS} HEADERS ${ARG_HEADERS})
+    else()
+      ROOT_INSTALL_HEADERS(${ARG_INSTALL_OPTIONS})
+    endif()
   endif()
 endfunction()
 
