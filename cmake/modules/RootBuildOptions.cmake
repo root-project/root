@@ -392,7 +392,7 @@ foreach(opt afdsmgrd afs alien bonjour builtin_afterimage builtin_davix builtin_
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt mpi r)
+foreach(opt mpi r tmva-pymva)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()
