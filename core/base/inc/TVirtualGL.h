@@ -30,7 +30,6 @@
 
 #include "TNamed.h"
 #include "GuiTypes.h"
-#include "GLConstants.h"
 
 class TVirtualViewer3D;
 class TPoints3DABC;
