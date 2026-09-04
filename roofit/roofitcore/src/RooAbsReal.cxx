@@ -98,6 +98,8 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <mutex>
+#include <set>
 #include <sstream>
 #include <sys/types.h>
 
@@ -4186,12 +4188,18 @@ void RooAbsReal::doEval(RooFit::EvalContext & ctx) const
     std::vector<ServerData>& _servers;
   } restoreState{ourServers};
 
-
   // Advising to implement the batch interface makes only sense if the batch was not a scalar.
-  // Otherwise, there would be no speedup benefit.
+  // Otherwise, there would be no speedup benefit. Warn only once per class, because doEval() is
+  // called for every evaluation of the computation graph, e.g. in every minimizer iteration.
   if(output.size() > 1 && RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
-    coutI(FastEvaluations) << "The class " << ClassName() << " does not implement the faster batch evaluation interface."
-        << " Consider requesting or implementing it to benefit from a speed up." << std::endl;
+     static std::set<std::string> warnedClasses;
+     static std::mutex warnedClassesMutex;
+     std::lock_guard<std::mutex> guard{warnedClassesMutex};
+     if (warnedClasses.insert(ClassName()).second) {
+        coutI(FastEvaluations) << "The class " << ClassName()
+                               << " does not implement the faster batch evaluation interface."
+                               << " Consider requesting or implementing it to benefit from a speed up." << std::endl;
+     }
   }
 
 
