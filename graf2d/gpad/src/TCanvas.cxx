@@ -1973,8 +1973,8 @@ void TCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
 
 void TCanvas::SetCursor(ECursor cursor)
 {
-   if (!IsBatch() && !IsWeb() && fCanvasID != -1)
-      fPainter->SetCursor(fCanvasID, cursor);
+   if (fCanvasImp)
+      fCanvasImp->SetCursor(cursor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
