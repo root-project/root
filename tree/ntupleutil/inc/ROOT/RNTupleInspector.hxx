@@ -105,7 +105,9 @@ public:
          : fColumnDescriptor(colDesc),
            fCompressedPageSizes(compressedPageSizes),
            fElementSize(elemSize),
-           fNElements(nElems){};
+           fNElements(nElems)
+      {
+      }
       ~RColumnInspector() = default;
 
       const ROOT::RColumnDescriptor &GetDescriptor() const { return fColumnDescriptor; }
@@ -136,7 +138,9 @@ public:
 
    public:
       RFieldTreeInspector(const ROOT::RFieldDescriptor &fieldDesc, std::uint64_t onDiskSize, std::uint64_t inMemSize)
-         : fRootFieldDescriptor(fieldDesc), fCompressedSize(onDiskSize), fUncompressedSize(inMemSize){};
+         : fRootFieldDescriptor(fieldDesc), fCompressedSize(onDiskSize), fUncompressedSize(inMemSize)
+      {
+      }
       ~RFieldTreeInspector() = default;
 
       const ROOT::RFieldDescriptor &GetDescriptor() const { return fRootFieldDescriptor; }
@@ -425,6 +429,10 @@ public:
    std::unique_ptr<THStack> GetPageSizeDistribution(std::initializer_list<ROOT::ENTupleColumnType> colTypes = {},
                                                     std::string histName = "", std::string histTitle = "",
                                                     size_t nBins = 64);
+
+   std::unique_ptr<THStack> GetPagesPerClusterDistribution(std::initializer_list<ROOT::ENTupleColumnType> colTypes = {},
+                                                           std::string histName = "", std::string histTitle = "",
+                                                           size_t nBins = 32);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get storage information for a given (sub)field by ID.

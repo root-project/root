@@ -455,6 +455,58 @@ ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(std::initializer_l
    return stackedHist;
 }
 
+std::unique_ptr<THStack> ROOT::Experimental::RNTupleInspector::GetPagesPerClusterDistribution(
+   std::initializer_list<ROOT::ENTupleColumnType> colTypes, std::string histName, std::string histTitle, size_t nBins)
+{
+   if (histName.empty())
+      histName = "pagesPerClusterHist";
+   if (histTitle.empty())
+      histTitle = "Per-column #pages per cluster distribution";
+
+   auto stackedHist =
+      std::make_unique<THStack>(histName.c_str(), TString::Format("%s;#pages per cluster", histTitle.c_str()));
+
+   double histMin = std::numeric_limits<double>::max();
+   double histMax = 0;
+   // Each element of the vector is a map { columnId => nPagesInThisCluster }
+   std::vector<std::unordered_map<DescriptorId_t, std::uint64_t>> pagesPerCluster;
+   std::set<std::pair<DescriptorId_t, DescriptorId_t>> allFieldAndColumnIds;
+
+   std::vector<ROOT::ENTupleColumnType> colTypeVec = colTypes;
+   if (std::empty(colTypes)) {
+      colTypeVec = GetColumnTypes();
+   }
+
+   for (const auto &clDesc : fDescriptor.GetClusterIterable()) {
+      auto &pagesInThisCluster = pagesPerCluster.emplace_back();
+      for (const auto &colRange : clDesc.GetColumnRangeIterable()) {
+         const auto colId = colRange.GetPhysicalColumnId();
+         const auto nPages = clDesc.GetPageRange(colId).GetPageInfos().size();
+         auto &pagesForThisColumn = pagesInThisCluster[colId];
+         pagesForThisColumn += nPages;
+         histMin = std::min(histMin, static_cast<double>(pagesForThisColumn));
+         histMax = std::max(histMax, static_cast<double>(pagesForThisColumn));
+         const auto &colDesc = fDescriptor.GetColumnDescriptor(colId);
+         allFieldAndColumnIds.emplace(colDesc.GetFieldId(), colId);
+      }
+   }
+
+   for (const auto [fieldId, colId] : allFieldAndColumnIds) {
+      auto fieldName = fDescriptor.GetQualifiedFieldName(fieldId);
+      auto hist =
+         std::make_unique<TH1D>(TString::Format("%s_%lu", fieldName.c_str(), colId), std::to_string(colId).c_str(),
+                                nBins, histMin, histMax + ((histMax - histMin) / static_cast<double>(nBins)));
+      for (const auto &pagesInCluster : pagesPerCluster) {
+         auto it = pagesInCluster.find(colId);
+         hist->Fill(it == pagesInCluster.end() ? 0u : it->second);
+      }
+
+      stackedHist->Add(hist.release());
+   }
+
+   return stackedHist;
+}
+
 //------------------------------------------------------------------------------
 
 const ROOT::Experimental::RNTupleInspector::RFieldTreeInspector &
