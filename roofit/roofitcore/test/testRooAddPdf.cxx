@@ -16,6 +16,7 @@
 #include <RooMsgService.h>
 #include <RooPolynomial.h>
 #include <RooProdPdf.h>
+#include <RooProduct.h>
 #include <RooRandom.h>
 #include <RooRealIntegral.h>
 #include <RooRealSumPdf.h>
@@ -838,4 +839,91 @@ TEST(RooAddPdf, ConditionalLikelihoodBackendConsistency)
             << "backend " << backend.name() << ", extended " << extended;
       }
    }
+}
+
+/// An extended RooAddPdf with a RooProjectedPdf component and a coefficient
+/// that contains a user-created raw integral, condensed from the neutrino
+/// oscillation model in the rs401d_FeldmanCousins tutorial. Covers the
+/// compilation of such a model for the new evaluation backends: the
+/// projection integrals have to reference the compiled pdf and observables
+/// (and not leftovers from the original graph that never see the dataset),
+/// the integrand of a raw integral must not get wrapped in a normalized pdf,
+/// and compiling the model must not mutate the original model, which has to
+/// support creating a second likelihood after the first one is gone.
+TEST(RooAddPdf, ProjectedPdfLikelihoodBackendConsistency)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar E{"E", "", 15, 10, 60};
+   RooRealVar L{"L", "", 0.8, 0.6, 1.0};
+   RooRealVar deltaMSq{"deltaMSq", "", 40, 1, 300};
+   RooRealVar sinSq2theta{"sinSq2theta", "", 0.006, 0.0, 0.02};
+   auto oscillationFormula = "std::pow(std::sin(1.27 * x[2] * x[0] / x[1]), 2)";
+   RooGenericPdf pOsc{"pOsc", "", oscillationFormula, {L, E, deltaMSq}};
+
+   // Signal shape in E: the oscillation pdf with the decay position
+   // integrated out.
+   std::unique_ptr<RooAbsPdf> sigModel{pOsc.createProjection(L)};
+
+   // The average oscillation probability enters the signal yield via a raw
+   // integral over an independent copy of the oscillation pdf.
+   RooRealVar EPrime{"EPrime", "", 15, 10, 60};
+   RooRealVar LPrime{"LPrime", "", 0.8, 0.6, 1.0};
+   RooGenericPdf pOscPrime{"pOscPrime", "", oscillationFormula, {LPrime, EPrime, deltaMSq}};
+   std::unique_ptr<RooAbsReal> intProbToOsc{pOscPrime.createIntegral({EPrime, LPrime})};
+
+   RooConstVar maxEventsTot{"maxEventsTot", "", 50000};
+   RooConstVar inverseArea{"inverseArea", "", 1. / 50. / 0.4};
+   RooProduct sigNorm{"sigNorm", "", {maxEventsTot, *intProbToOsc, inverseArea, sinSq2theta}};
+   RooConstVar bkgNorm{"bkgNorm", "", 500};
+   RooPolynomial bkgEShape{"bkgEShape", "", E};
+
+   RooAddPdf model{"model", "", {*sigModel, bkgEShape}, {sigNorm, bkgNorm}};
+
+   RooArgSet nsetE{E};
+
+   RooRandom::randomGenerator()->SetSeed(3);
+   std::unique_ptr<RooAbsData> data{model.generate(nsetE, 100)};
+
+   // Reference values, computed event by event with the plain RooFit
+   // interfaces, on a parameter grid that varies the oscillation parameters.
+   auto refNll = [&](double dm, double st) {
+      deltaMSq.setVal(dm);
+      sinSq2theta.setVal(st);
+      double out = 0.0;
+      for (int i = 0; i < data->numEntries(); ++i) {
+         E.setVal(data->get(i)->getRealValue("E"));
+         out -= std::log(model.getVal(nsetE));
+      }
+      const double nExpected = sigNorm.getVal() + bkgNorm.getVal();
+      return out + nExpected - data->sumEntries() * std::log(nExpected);
+   };
+
+   auto checkNll = [&](RooAbsReal &nll, const char *when) {
+      for (double dm : {1., 35., 300.}) {
+         for (double st : {0.002, 0.02}) {
+            const double ref = refNll(dm, st);
+            deltaMSq.setVal(dm);
+            sinSq2theta.setVal(st);
+            EXPECT_NEAR(nll.getVal(), ref, 1e-6 * std::abs(ref))
+               << when << ", deltaMSq " << dm << ", sinSq2theta " << st;
+         }
+      }
+   };
+
+   {
+      std::unique_ptr<RooAbsReal> nll{model.createNLL(*data, RooFit::Extended(true), RooFit::EvalBackend("cpu"))};
+      checkNll(*nll, "first likelihood");
+   }
+
+   // Compiling the likelihood must not have mutated the original model.
+   EXPECT_TRUE(pOsc.dependsOn(E));
+   deltaMSq.setVal(40.);
+   sinSq2theta.setVal(0.006);
+   RooArgSet snap;
+   RooArgSet{model}.snapshot(snap, true);
+
+   // Creating a second likelihood for the same model must still work.
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(*data, RooFit::Extended(true), RooFit::EvalBackend("cpu"))};
+   checkNll(*nll, "second likelihood");
 }
