@@ -6,7 +6,7 @@ This test has been provided by Attila Krasznahorkay.
 #define DICTRULES_DICTSELECTION_H
 
 // Get the active ROOT version:
-#include <RVersion.h>
+#include <ROOT/RVersion.hxx>
 
 // Include the correct header:
 #if ROOT_VERSION_CODE < ROOT_VERSION( 5, 99, 00 )

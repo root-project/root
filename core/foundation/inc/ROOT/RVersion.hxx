@@ -7,6 +7,9 @@
 #define ROOT_VERSION_PATCH 1 // When changing the version number here, never add leading zeroes!
 #define ROOT_RELEASE_DATE "Apr 23 2026"
 
+/* not updated anymore */
+#define ROOT_RELEASE_TIME "00:00:00"
+
 /* Don't change the lines below. */
 
 /*
