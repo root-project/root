@@ -513,6 +513,7 @@ std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Internal::RPageSourceFile::Cl
    auto clone = new RPageSourceFile(fNTupleName, fOptions);
    clone->fFile = fFile->Clone();
    clone->fReader = ROOT::Internal::RMiniFileReader(clone->fFile.get());
+   clone->fHasStreamerInfo = fHasStreamerInfo;
    return std::unique_ptr<RPageSourceFile>(clone);
 }
 
@@ -711,5 +712,9 @@ ROOT::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterK
 
 void ROOT::Internal::RPageSourceFile::LoadStreamerInfo()
 {
+   if (fHasStreamerInfo)
+      return;
+
    fReader.LoadStreamerInfo();
+   fHasStreamerInfo = true;
 }
