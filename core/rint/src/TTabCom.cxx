@@ -148,15 +148,13 @@
 #include "Rstrstream.h"
 #include "strlcpy.h"
 
+#include <ROOT/FoundationUtils.hxx>
+
 #define BUF_SIZE 1024 // must be smaller than/equal to fgLineBufSize in Getline.cxx and
                       // lineBufSize in cppcompleter.py
 #define IfDebug(x)  if(gDebug==TTabCom::kDebug) x
 
-#ifdef R__WIN32
-const char kDelim = ';';
-#else
-const char kDelim = ':';
-#endif
+const char kDelim = ROOT::FoundationUtils::GetEnvPathSeparator();
 
 
 // ----------------------------------------------------------------------------
