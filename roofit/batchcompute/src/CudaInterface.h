@@ -38,29 +38,11 @@ struct Deleter {
 /// \endcond
 
 /*
- * Wrapper around cudaEvent_t.
- */
-class CudaEvent {
-public:
-   CudaEvent(bool forTiming);
-
-// When compiling with NVCC, we allow setting and getting the actual CUDA objects from the wrapper.
-#ifdef __CUDACC__
-   inline operator cudaEvent_t() { return *reinterpret_cast<cudaEvent_t *>(_ptr.get()); }
-#endif
-private:
-   std::unique_ptr<void, Deleter<CudaEvent>> _ptr;
-};
-
-/*
  * Wrapper around cudaStream_t.
  */
 class CudaStream {
 public:
    CudaStream();
-
-   bool isActive();
-   void waitForEvent(CudaEvent &);
 
 // When compiling with NVCC, we allow setting and getting the actual CUDA objects from the wrapper.
 #ifdef __CUDACC__
@@ -70,9 +52,6 @@ public:
 private:
    std::unique_ptr<void, Deleter<CudaStream>> _ptr;
 };
-
-void cudaEventRecord(CudaEvent &, CudaStream &);
-float cudaEventElapsedTime(CudaEvent &, CudaEvent &);
 
 /// \cond ROOFIT_INTERNAL
 void copyHostToDeviceImpl(const void *src, void *dest, std::size_t n, CudaStream * = nullptr);

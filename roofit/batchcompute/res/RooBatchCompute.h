@@ -37,7 +37,6 @@
 namespace RooBatchCompute {
 
 namespace CudaInterface {
-class CudaEvent;
 class CudaStream;
 } // namespace CudaInterface
 
@@ -180,13 +179,8 @@ public:
 
    virtual std::unique_ptr<AbsBufferManager> createBufferManager() const = 0;
 
-   virtual CudaInterface::CudaEvent *newCudaEvent(bool forTiming) const = 0;
    virtual CudaInterface::CudaStream *newCudaStream() const = 0;
-   virtual void deleteCudaEvent(CudaInterface::CudaEvent *) const = 0;
    virtual void deleteCudaStream(CudaInterface::CudaStream *) const = 0;
-   virtual void cudaEventRecord(CudaInterface::CudaEvent *, CudaInterface::CudaStream *) const = 0;
-   virtual void cudaStreamWaitForEvent(CudaInterface::CudaStream *, CudaInterface::CudaEvent *) const = 0;
-   virtual bool cudaStreamIsActive(CudaInterface::CudaStream *) const = 0;
 };
 
 /**
