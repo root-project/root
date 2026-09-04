@@ -35,8 +35,8 @@ public:
 
    double eval(const double *vars) const override;
    std::unique_ptr<RooFormulaEvaluator> clone() const override;
-
-   TFormula *getTFormula() const override { return _tFormula.get(); }
+   std::string uniqueFuncName() const override;
+   void setName(const char *name) override;
 
 private:
    std::unique_ptr<TFormula> _tFormula; ///< The formula used to compute values

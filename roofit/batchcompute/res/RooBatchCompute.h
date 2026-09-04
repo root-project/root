@@ -13,6 +13,8 @@
 #ifndef ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 #define ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 
+#include "RooExprProgram.h"
+
 #include <ROOT/RSpan.hxx>
 
 #include <DllImport.h> //for R__EXTERN, needed for windows
@@ -171,6 +173,24 @@ public:
    virtual ~RooBatchComputeInterface() = default;
    virtual void compute(Config const &cfg, Computer, std::span<double> output, VarSpan, ArgSpan) = 0;
 
+   /// Evaluate a postfix expression program (a formula compiled by RooFit's
+   /// JIT-free formula backend, see RooExprProgram.h) over a batch of events.
+   /// Input spans of size 1 are broadcast; `stackDepth` is the program's
+   /// maximum expression stack depth and must not exceed
+   /// maxExprProgramStackDepth. The default implementation throws; the CPU
+   /// backends and, for programs marked cudaCapable, the CUDA backend
+   /// implement it.
+   ///
+   /// The CUDA backend follows the same memory convention as compute(): the
+   /// output and every input span of more than one value are device memory,
+   /// while a span of one value (or an empty one, for a dependent the formula
+   /// does not use) is a host value that the backend stages to the device
+   /// itself. The two are told apart by the span size alone, which is
+   /// unambiguous because RooFit only schedules a node on the GPU when one of
+   /// its servers has more than one value, so `output.size()` is then > 1.
+   virtual void computeExprProgram(Config const &cfg, std::span<const ExprInstr> code, unsigned int stackDepth,
+                                   std::span<double> output, VarSpan vars);
+
    virtual double reduceSum(Config const &cfg, InputArr input, size_t n) = 0;
    virtual ReduceNLLOutput reduceNLL(Config const &cfg, std::span<const double> probas, std::span<const double> weights,
                                      std::span<const double> offsetProbas) = 0;
@@ -222,6 +242,13 @@ inline void compute(Config cfg, Computer comp, std::span<double> output,
                     std::initializer_list<std::span<const double>> vars, ArgSpan extraArgs = {})
 {
    compute(cfg, comp, output, VarSpan{vars.begin(), vars.end()}, extraArgs);
+}
+
+inline void computeExprProgram(Config cfg, std::span<const ExprInstr> code, unsigned int stackDepth,
+                               std::span<double> output, VarSpan vars)
+{
+   auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
+   dispatch->computeExprProgram(cfg, code, stackDepth, output, vars);
 }
 
 inline double reduceSum(Config cfg, InputArr input, size_t n)
