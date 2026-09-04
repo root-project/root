@@ -181,6 +181,8 @@ public:
 
    virtual CudaInterface::CudaStream *newCudaStream() const = 0;
    virtual void deleteCudaStream(CudaInterface::CudaStream *) const = 0;
+   /// Wait until all work that was enqueued on the stream has completed.
+   virtual void synchronizeCudaStream(CudaInterface::CudaStream *) const = 0;
 };
 
 /**

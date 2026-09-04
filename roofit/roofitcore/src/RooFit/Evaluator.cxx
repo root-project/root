@@ -496,6 +496,12 @@ std::span<const double> Evaluator::getValHeterogeneous()
       }
    }
 
+   // Ensure that all enqueued GPU work has completed when run() returns. For
+   // the usual likelihood evaluations this is a no-op, because the final
+   // reduction has synchronized the stream already. It also guarantees that
+   // recycling the buffers at the beginning of the next evaluation is safe.
+   RooBatchCompute::dispatchCUDA->synchronizeCudaStream(_cudaStream);
+
    // return the final value
    return _evalContextCUDA.at(&_topNode);
 }

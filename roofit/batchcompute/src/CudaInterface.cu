@@ -12,20 +12,6 @@
 
 #include "CudaInterface.h"
 
-#include <stdexcept>
-#include <sstream>
-#include <string>
-
-#define ERRCHECK(err) __checkCudaErrors((err), __func__, __FILE__, __LINE__)
-inline static void __checkCudaErrors(cudaError_t error, std::string func, std::string file, int line)
-{
-   if (error != cudaSuccess) {
-      std::stringstream errMsg;
-      errMsg << func << "(), " << file + ":" << std::to_string(line) << " : " << cudaGetErrorString(error);
-      throw std::runtime_error(errMsg.str());
-   }
-}
-
 namespace RooBatchCompute {
 namespace CudaInterface {
 
