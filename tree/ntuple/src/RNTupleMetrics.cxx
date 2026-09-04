@@ -14,6 +14,7 @@
 
 #include <ROOT/RNTupleMetrics.hxx>
 
+#include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleModel.hxx>
@@ -138,7 +139,11 @@ ROOT::Experimental::Detail::RNTupleMetrics::~RNTupleMetrics()
    if (!fIsEnabled || fExportPath.empty())
       return;
 
-   ExportToRootFile();
+   try {
+      ExportToRootFile();
+   } catch (const RException &e) {
+      R__LOG_ERROR(ROOT::Internal::NTupleLog()) << "cannot export metrics: " << e.what();
+   }
 }
 
 void ROOT::Experimental::Detail::RNTupleMetrics::CollectCounters(
@@ -174,10 +179,12 @@ void ROOT::Experimental::Detail::RNTupleMetrics::ExportToRootFile()
 
    auto model = ROOT::RNTupleModel::Create();
    for (const auto &[fullyQualifiedName, counter] : counters) {
-      if (const auto *calc = dynamic_cast<const RNTupleCalcPerf *>(counter))
+      R__ASSERT(counter);
+      if (const auto *calc = dynamic_cast<const RNTupleCalcPerf *>(counter)) {
          *model->MakeField<double>(fullyQualifiedName) = calc->GetValue();
-      else
+      } else {
          *model->MakeField<std::int64_t>(fullyQualifiedName) = counter->GetValueAsInt();
+      }
    }
 
    TMemFile memoryFile(fNTupleName.c_str(), "RECREATE");
