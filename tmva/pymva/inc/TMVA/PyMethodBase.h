@@ -113,6 +113,8 @@ namespace TMVA {
       void PyRunString(TString code, TString errorMessage="Failed to run python code", int start=256 /* Py_single_input */); // runs python code from string in local namespace with error handling
 
    private:
+      void PrintDeprecationWarning();
+
       static PyObject *fModuleBuiltin;
       static PyObject *fEval; // eval funtion from python
       static PyObject *fOpen; // open function for files

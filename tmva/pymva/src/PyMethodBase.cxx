@@ -85,6 +85,8 @@ PyMethodBase::PyMethodBase(const TString &jobName, Types::EMVA methodType, const
    : MethodBase(jobName, methodType, methodTitle, dsi, theOption),
       fClassifier(NULL)
 {
+   PrintDeprecationWarning();
+
    if (!PyIsInitialized()) {
       PyInitialize();
    }
@@ -103,6 +105,8 @@ PyMethodBase::PyMethodBase(Types::EMVA methodType,
                            const TString &weightFile): MethodBase(methodType, dsi, weightFile),
    fClassifier(NULL)
 {
+   PrintDeprecationWarning();
+
    if (!PyIsInitialized()) {
       PyInitialize();
    }
@@ -112,6 +116,18 @@ PyMethodBase::PyMethodBase(Types::EMVA methodType,
    if (!fLocalNS) {
       Log() << kFATAL << "Can't init local namespace" << Endl;
    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Warn that PyMVA is deprecated and scheduled for removal in ROOT 6.44.
+
+void PyMethodBase::PrintDeprecationWarning()
+{
+   Log() << kWARNING
+         << "PyMVA is deprecated and will be removed in ROOT 6.44. Please use the underlying Python "
+            "machine-learning packages directly, or export your model to ONNX and evaluate it with SOFIE "
+            "(see the RSofieReader class)."
+         << Endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
