@@ -42,6 +42,7 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include "BatchModeDataHelpers.h"
 #include "RooFitImplHelpers.h"
 
+#include <atomic>
 #include <iomanip>
 #include <numeric>
 #include <unordered_set>
@@ -255,6 +256,16 @@ void Evaluator::setInput(std::string const &name, std::span<const double> inputA
       return;
 
    _needToUpdateOutputSizes = true;
+
+   // Invalidate the caches that reducer nodes key on the input data, like the
+   // cached sum of event weights in RooNLLVarNew. The counter is global so
+   // that generation values can never alias between different Evaluators.
+   {
+      static std::atomic<std::size_t> nextInputGeneration{1};
+      const std::size_t gen = ++nextInputGeneration;
+      _evalContextCPU._inputGeneration = gen;
+      _evalContextCUDA._inputGeneration = gen;
+   }
 
    NodeInfo &info = *found->second;
 

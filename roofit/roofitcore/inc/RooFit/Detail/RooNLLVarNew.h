@@ -95,6 +95,7 @@ public:
 private:
    double evaluate() const override { return _value; }
    void resetWeightVarNames();
+   double sumOfWeights(RooFit::EvalContext &, std::span<const double> weights, bool squared) const;
    void finalizeResult(RooFit::EvalContext &, ROOT::Math::KahanSum<double> result, double weightSum) const;
    void fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf, RooArgSet const &observables);
    void doEvalBinnedL(RooFit::EvalContext &, std::span<const double> preds, std::span<const double> weights) const;
@@ -120,6 +121,10 @@ private:
    std::string _prefix;
    std::vector<double> _binw;
    mutable ROOT::Math::KahanSum<double> _offset{0.}; ///<! Offset as KahanSum to avoid loss of precision
+   mutable std::size_t _sumWeightGen = 0;            ///<! Input data generation of the cached weight sum
+   mutable double _sumWeightCache = 0.0;             ///<! Cached sum of the event weights
+   mutable std::size_t _sumWeight2Gen = 0;           ///<! Input data generation of the cached squared-weight sum
+   mutable double _sumWeight2Cache = 0.0;            ///<! Cached sum of the squared event weights
 
    ClassDefOverride(RooFit::Detail::RooNLLVarNew, 0);
 };

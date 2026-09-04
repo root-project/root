@@ -107,6 +107,15 @@ public:
    }
 
    RooBatchCompute::Config config(RooAbsArg const *arg) const;
+
+   /// A counter that is incremented every time new input data is loaded into
+   /// the evaluation context. Reducer nodes can use it as a cache
+   /// invalidation key for quantities that only depend on the input data,
+   /// like the sum of event weights. The counter values are unique across
+   /// all evaluation contexts in the process, so cached values can not be
+   /// wrongly validated by an unrelated context.
+   std::size_t inputGeneration() const { return _inputGeneration; }
+
    void enableVectorBuffers(bool enable) { _enableVectorBuffers = enable; }
    void resetVectorBuffers() { _bufferIdx = 0; }
    std::span<double> output() { return _currentOutput; }
@@ -118,6 +127,7 @@ private:
    friend class Evaluator;
 
    OffsetMode _offsetMode = OffsetMode::WithoutOffset;
+   std::size_t _inputGeneration = 1;
    std::span<double> _currentOutput;
    std::vector<std::span<const double>> _ctx;
    bool _enableVectorBuffers = false;
