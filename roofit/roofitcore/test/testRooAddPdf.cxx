@@ -5,14 +5,20 @@
 #include <RooChebychev.h>
 #include <RooConstVar.h>
 #include <RooDataHist.h>
+#include <RooExponential.h>
+#include <RooExtendPdf.h>
 #include <RooFit/Evaluator.h>
+#include <RooFormulaVar.h>
 #include <RooGaussian.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
 #include <RooHistPdf.h>
 #include <RooMsgService.h>
+#include <RooPolynomial.h>
 #include <RooProdPdf.h>
+#include <RooRandom.h>
 #include <RooRealIntegral.h>
+#include <RooRealSumPdf.h>
 #include <RooUniform.h>
 #include <RooWorkspace.h>
 
@@ -20,6 +26,7 @@
 
 #include "gtest_wrapper.h"
 
+#include <cmath>
 #include <memory>
 
 /// Verify that sPlot does work with a RooAddPdf. This reproduces GitHub issue
@@ -452,4 +459,383 @@ TEST(RooAddPdf, NLLWithRecursiveFractions)
     std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(x), 1000)};
 
     std::unique_ptr<RooAbsReal> nll{model.createNLL(*data)};
+}
+
+/// Test that we get the right expectedEvents() in conditional fits when
+/// getting the expected number of events from the coefficients.
+TEST(RooAddPdf, ConditionalExpectedEventsFromCoefs)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   using namespace RooFit;
+
+   const double yInterval = 5.0;
+
+   // Create observables
+   RooRealVar x("x", "x", 0, 5);
+   RooRealVar y("y", "y", 0, yInterval);
+
+   // Create uniform signal and background
+   RooPolynomial gx("gx", "gx", x);
+   RooPolynomial gy("gy", "gy", y);
+   RooProdPdf sig("sig", "sig", RooArgSet(gx, gy));
+   RooPolynomial ux("ux", "ux", x);
+   RooPolynomial uy("uy", "uy", y);
+   RooProdPdf bkg("bkg", "bkg", RooArgSet(ux, uy));
+
+   // Create composite pdf sig+bkg
+   RooRealVar nsig("nsig", "", 100, 0., 1000.);
+   RooRealVar nbkg("nbkg", "", 1000, 0., 10000.);
+   RooAddPdf model("model", "model", {sig, bkg}, {nsig, nbkg});
+
+   RooArgSet nsetX{x};
+   RooArgSet nsetXY{x, y};
+
+   // As necessary for conditional fits, we need to fix the coefficient
+   // normalization set to the union set of the observables and conditional
+   // observables.
+   model.fixAddCoefNormalization(nsetXY);
+
+   // Test both the method to get expectedEvents directly, and the method that
+   // returns a RooAbsReal representing the expected number of events.
+   const double nExpected = model.expectedEvents(&nsetXY);
+   std::unique_ptr<RooAbsReal> nExpectedArg = model.createExpectedEventsFunc(&nsetXY);
+
+   // In conditional fits, the conditional observable is taken out of the
+   // normalization set.
+   const double nExpectedConditional = model.expectedEvents(&nsetX);
+   std::unique_ptr<RooAbsReal> nExpectedConditionalArg = model.createExpectedEventsFunc(&nsetX);
+
+   // Since we don't integrate the uniform expected events over the conditional
+   // observable y, we expect there to be a factor ymax - ymin.
+   EXPECT_DOUBLE_EQ(nExpectedConditional * yInterval, nExpected);
+
+   EXPECT_DOUBLE_EQ(nExpectedArg->getVal(), nExpected);
+   EXPECT_DOUBLE_EQ(nExpectedConditionalArg->getVal(), nExpectedConditional);
+}
+
+/// Test that we get the right expectedEvents() in conditional fits when
+/// getting the expected number of events from the component pdfs.
+TEST(RooAddPdf, ConditionalExpectedEventsFromPdfs)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   using namespace RooFit;
+
+   // Observables
+   RooRealVar x("x", "x", 0, 5);
+   RooRealVar y("y", "y", 0, 5);
+
+   // Yield functions: uniform yield that articficially depends on x and y
+   // because RooRealSumPdf::expectedEvents() uses the normalization integrals
+   // as the expected events via getNorm(nset). As getNorm() strips away the
+   // observables the pdf doesn't depend on (different from
+   // createIntegral(nset)), we would not get the desired expected events of
+   // xmax-xmin and ymax-ymin if we would not do this trick.
+   RooFormulaVar yieldSig{"yield_sig", "1 + x - x + y - y", {x, y}};
+   RooFormulaVar yieldBkg{"yield_bkg", "1 + x - x + y - y", {x, y}};
+
+   RooRealSumPdf pdfSig{"pdf_sig", "", yieldSig, RooArgList{1.0}, true};
+   RooRealSumPdf pdfBkg{"pdf_bkg", "", yieldBkg, RooArgList{1.0}, true};
+
+   RooAddPdf pdf{"pdf", "", {pdfSig, pdfBkg}};
+
+   RooArgSet nsetX{x};
+   RooArgSet nsetXY{x, y};
+
+   // As necessary for conditional fits, we need to fix the coefficient
+   // normalization set to the union set of the observables and conditional
+   // observables.
+   pdf.fixAddCoefNormalization(nsetXY);
+
+   // Test both the method to get expectedEvents directly, and the method that
+   // returns a RooAbsReal representing the expected number of events.
+   double nSig = pdfSig.expectedEvents(&nsetXY);
+   double nBkg = pdfBkg.expectedEvents(&nsetXY);
+   double nSum = pdf.expectedEvents(&nsetXY);
+   std::unique_ptr<RooAbsReal> nSigArg = pdfSig.createExpectedEventsFunc(&nsetXY);
+   std::unique_ptr<RooAbsReal> nBkgArg = pdfBkg.createExpectedEventsFunc(&nsetXY);
+   std::unique_ptr<RooAbsReal> nSumArg = pdf.createExpectedEventsFunc(&nsetXY);
+
+   // In conditional fits, the conditional observable is taken out of the
+   // normalization set.
+   double nSigCond = pdfSig.expectedEvents(&nsetX);
+   double nBkgCond = pdfBkg.expectedEvents(&nsetX);
+   double nSumCond = pdf.expectedEvents(&nsetX);
+   std::unique_ptr<RooAbsReal> nSigCondArg = pdfSig.createExpectedEventsFunc(&nsetX);
+   std::unique_ptr<RooAbsReal> nBkgCondArg = pdfBkg.createExpectedEventsFunc(&nsetX);
+   std::unique_ptr<RooAbsReal> nSumCondArg = pdf.createExpectedEventsFunc(&nsetX);
+
+   // We expect that the expected events of the AddPdf is the sum of the
+   // components expectedEvents(), for both normalization sets.
+   EXPECT_DOUBLE_EQ(nSum, nSig + nBkg);
+   EXPECT_DOUBLE_EQ(nSumCond, nSigCond + nBkgCond);
+
+   EXPECT_DOUBLE_EQ(nSigArg->getVal(), nSig);
+   EXPECT_DOUBLE_EQ(nBkgArg->getVal(), nBkg);
+   EXPECT_DOUBLE_EQ(nSumArg->getVal(), nSum);
+   EXPECT_DOUBLE_EQ(nSigCondArg->getVal(), nSigCond);
+   EXPECT_DOUBLE_EQ(nBkgCondArg->getVal(), nBkgCond);
+   EXPECT_DOUBLE_EQ(nSumCondArg->getVal(), nSumCond);
+}
+
+/// Test that a model where some components are grouped in a nested extended
+/// RooAddPdf gives the same conditional pdf and the same expected number of
+/// events as the equivalent "flat" RooAddPdf. This only works if
+/// RooAddPdf::expectedEvents() transforms the coefficients from the reference
+/// normalization set to the requested one, because the outer RooAddPdf takes
+/// its coefficients from the expectedEvents() of the inner one.
+TEST(RooAddPdf, ConditionalExpectedEventsNestedVsFlat)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0, 10};
+   RooRealVar y{"y", "y", 0, 1};
+
+   RooArgSet nsetX{x};
+   RooArgSet nsetXY{x, y};
+
+   // Two signal components and one background component, each with a different
+   // dependence on the conditional observable y.
+   RooRealVar mean1{"mean1", "", 5.0};
+   RooRealVar sigma1{"sigma1", "", 1.0};
+   RooGaussian gx1{"gx1", "", x, mean1, sigma1};
+   RooRealVar cy1{"cy1", "", -3.0};
+   RooExponential ey1{"ey1", "", y, cy1};
+   RooProdPdf sig1{"sig1", "", {gx1, ey1}};
+
+   RooRealVar mean2{"mean2", "", 7.0};
+   RooRealVar sigma2{"sigma2", "", 0.8};
+   RooGaussian gx2{"gx2", "", x, mean2, sigma2};
+   RooRealVar cy2{"cy2", "", -1.0};
+   RooExponential ey2{"ey2", "", y, cy2};
+   RooProdPdf sig2{"sig2", "", {gx2, ey2}};
+
+   RooRealVar cx{"cx", "", -0.2};
+   RooExponential ex{"ex", "", x, cx};
+   RooPolynomial uy{"uy", "", y};
+   RooProdPdf bkg{"bkg", "", {ex, uy}};
+
+   RooRealVar nsig1{"nsig1", "", 300.0};
+   RooRealVar nsig2{"nsig2", "", 200.0};
+   RooRealVar nbkg{"nbkg", "", 700.0};
+
+   // The model with all components in the same RooAddPdf.
+   RooAddPdf flat{"flat", "", {sig1, sig2, bkg}, {nsig1, nsig2, nbkg}};
+   flat.fixCoefNormalization(nsetXY);
+
+   // The equivalent model, with the two signals grouped in an inner RooAddPdf.
+   RooAddPdf inner{"inner", "", {sig1, sig2}, {nsig1, nsig2}};
+   inner.fixCoefNormalization(nsetXY);
+   RooExtendPdf ebkg{"ebkg", "", bkg, nbkg};
+   RooAddPdf nested{"nested", "", {inner, ebkg}};
+
+   // Reference values, computed from the component pdfs normalized over the
+   // full set of observables: the intensity lambda(x, y) and its integral over
+   // the observables that are not conditional.
+   std::unique_ptr<RooAbsReal> sig1IntX{sig1.createIntegral(nsetX, nsetXY)};
+   std::unique_ptr<RooAbsReal> sig2IntX{sig2.createIntegral(nsetX, nsetXY)};
+   std::unique_ptr<RooAbsReal> bkgIntX{bkg.createIntegral(nsetX, nsetXY)};
+
+   auto refExpectedEvents = [&]() {
+      return nsig1.getVal() * sig1IntX->getVal() + nsig2.getVal() * sig2IntX->getVal() +
+             nbkg.getVal() * bkgIntX->getVal();
+   };
+   auto refIntensity = [&]() {
+      return nsig1.getVal() * sig1.getVal(nsetXY) + nsig2.getVal() * sig2.getVal(nsetXY) +
+             nbkg.getVal() * bkg.getVal(nsetXY);
+   };
+
+   for (double yVal : {0.1, 0.5, 0.9}) {
+      y.setVal(yVal);
+      const double ref = refExpectedEvents();
+
+      y.setVal(yVal);
+      const double nExpFlat = flat.expectedEvents(&nsetX);
+      y.setVal(yVal);
+      const double nExpNested = nested.expectedEvents(&nsetX);
+
+      EXPECT_FLOAT_EQ(nExpFlat, ref) << "for y = " << yVal;
+      EXPECT_FLOAT_EQ(nExpNested, ref) << "for y = " << yVal;
+
+      for (double xVal : {2.0, 5.0, 7.0}) {
+         x.setVal(xVal);
+         y.setVal(yVal);
+         const double valFlat = flat.getVal(&nsetX);
+         x.setVal(xVal);
+         y.setVal(yVal);
+         const double valNested = nested.getVal(&nsetX);
+         x.setVal(xVal);
+         y.setVal(yVal);
+         const double intensity = refIntensity();
+
+         // The two ways to build the model must agree...
+         EXPECT_FLOAT_EQ(valNested, valFlat) << "for x = " << xVal << ", y = " << yVal;
+         // ...and the pdf times the expected number of events must reproduce
+         // the intensity of the model.
+         EXPECT_FLOAT_EQ(valFlat * nExpFlat, intensity) << "for x = " << xVal << ", y = " << yVal;
+      }
+   }
+}
+
+/// Test that expectedEvents() and createExpectedEventsFunc() agree for a
+/// conditional RooAddPdf of extended pdfs, and that they both reproduce the
+/// integral of the model intensity over the non-conditional observables.
+TEST(RooAddPdf, ConditionalExpectedEventsFromExtendPdfs)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0, 10};
+   RooRealVar y{"y", "y", 0, 1};
+
+   RooArgSet nsetX{x};
+   RooArgSet nsetXY{x, y};
+
+   RooRealVar mean{"mean", "", 5.0};
+   RooRealVar sigma{"sigma", "", 1.0};
+   RooGaussian gx{"gx", "", x, mean, sigma};
+   RooRealVar cy{"cy", "", -3.0};
+   RooExponential ey{"ey", "", y, cy};
+   RooProdPdf sig{"sig", "", {gx, ey}};
+
+   RooRealVar cx{"cx", "", -0.2};
+   RooExponential ex{"ex", "", x, cx};
+   RooPolynomial uy{"uy", "", y};
+   RooProdPdf bkg{"bkg", "", {ex, uy}};
+
+   RooRealVar nsig{"nsig", "", 300.0};
+   RooRealVar nbkg{"nbkg", "", 700.0};
+
+   RooExtendPdf esig{"esig", "", sig, nsig};
+   RooExtendPdf ebkg{"ebkg", "", bkg, nbkg};
+   RooAddPdf model{"model", "", {esig, ebkg}};
+   model.fixCoefNormalization(nsetXY);
+
+   std::unique_ptr<RooAbsReal> sigIntX{sig.createIntegral(nsetX, nsetXY)};
+   std::unique_ptr<RooAbsReal> bkgIntX{bkg.createIntegral(nsetX, nsetXY)};
+
+   std::unique_ptr<RooAbsReal> nExpArg{model.createExpectedEventsFunc(&nsetX)};
+
+   for (double yVal : {0.1, 0.5, 0.9}) {
+      y.setVal(yVal);
+      const double ref = nsig.getVal() * sigIntX->getVal() + nbkg.getVal() * bkgIntX->getVal();
+      y.setVal(yVal);
+      const double nExp = model.expectedEvents(&nsetX);
+      y.setVal(yVal);
+      const double nExpFromArg = nExpArg->getVal();
+
+      EXPECT_FLOAT_EQ(nExp, ref) << "for y = " << yVal;
+      EXPECT_FLOAT_EQ(nExpFromArg, ref) << "for y = " << yVal;
+   }
+
+   // Without conditional observables, the expected number of events is simply
+   // the sum of the component yields.
+   EXPECT_FLOAT_EQ(model.expectedEvents(&nsetXY), nsig.getVal() + nbkg.getVal());
+}
+
+/// The projection cache of a RooAddPdf is also used when there is no reference
+/// normalization set for the coefficients, but only a normalization range. In
+/// that case, the expected number of events of the components has to be
+/// evaluated in the given normalization set. Covers a regression where the
+/// components were asked for their expected number of events in the empty
+/// reference normalization set.
+TEST(RooAddPdf, ExpectedEventsWithNormRange)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0, 10};
+   x.setRange("sub", 2, 8);
+   RooArgSet nsetX{x};
+
+   // Two uniform extended RooRealSumPdfs, with yields of 300 and 700 events in
+   // the full range. Their expectedEvents() depends on the normalization set,
+   // as it is given by the integral of the sum of functions.
+   RooPolynomial f1{"f1", "", x};
+   RooPolynomial f2{"f2", "", x};
+   RooRealVar c1{"c1", "", 30.0};
+   RooRealVar c2{"c2", "", 70.0};
+   RooRealSumPdf sum1{"sum1", "", f1, RooArgList{c1}, true};
+   RooRealSumPdf sum2{"sum2", "", f2, RooArgList{c2}, true};
+
+   RooAddPdf model{"model", "", {sum1, sum2}};
+
+   ASSERT_FLOAT_EQ(sum1.expectedEvents(&nsetX), 300.0);
+   ASSERT_FLOAT_EQ(sum2.expectedEvents(&nsetX), 700.0);
+
+   EXPECT_FLOAT_EQ(model.expectedEvents(&nsetX), 1000.0);
+
+   // With a normalization range, we expect only the events inside that range,
+   // which is 60 % of the full range for these uniform pdfs.
+   model.setNormRange("sub");
+   EXPECT_FLOAT_EQ(model.expectedEvents(&nsetX), 600.0);
+}
+
+/// The evaluation backends must agree on the likelihood of a conditional fit,
+/// also if the coefficients of a RooAddPdf are defined in a normalization set
+/// that includes the conditional observables. Covers the case where the
+/// compiled computation graph contained a leftover reference to the original
+/// observable, such that the pdf didn't depend on the fit observable at all,
+/// and the case where the extended term went missing in the new backends.
+TEST(RooAddPdf, ConditionalLikelihoodBackendConsistency)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0, 10};
+   RooRealVar y{"y", "y", 0, 1};
+
+   RooArgSet nsetXY{x, y};
+
+   // The signal depends on the conditional observable y, the background
+   // doesn't. Like this, the coefficient projection is not trivial.
+   RooRealVar mean{"mean", "", 5.0};
+   RooRealVar sigma{"sigma", "", 1.0};
+   RooGaussian gx{"gx", "", x, mean, sigma};
+   RooRealVar cy{"cy", "", -3.0};
+   RooExponential ey{"ey", "", y, cy};
+   RooProdPdf sig{"sig", "", {gx, ey}};
+
+   RooRealVar cx{"cx", "", -0.2};
+   RooExponential ex{"ex", "", x, cx};
+   RooPolynomial uy{"uy", "", y};
+   RooProdPdf bkg{"bkg", "", {ex, uy}};
+
+   RooRealVar nsig{"nsig", "", 300., 0., 100000.};
+   RooRealVar nbkg{"nbkg", "", 700., 0., 100000.};
+   RooAddPdf model{"model", "", {sig, bkg}, {nsig, nbkg}};
+   model.fixCoefNormalization(nsetXY);
+
+   RooRandom::randomGenerator()->SetSeed(42);
+   std::unique_ptr<RooAbsData> data{model.generate(nsetXY, 500)};
+
+   // Reference values, computed event by event with the plain RooFit
+   // interfaces: the conditional pdf is the joint pdf divided by its integral
+   // over the non-conditional observables.
+   std::unique_ptr<RooAbsReal> denom{model.createIntegral(RooArgSet{x}, nsetXY)};
+   double refNll = 0.0;
+   for (int i = 0; i < data->numEntries(); ++i) {
+      RooArgSet const &row = *data->get(i);
+      x.setVal(row.getRealValue("x"));
+      y.setVal(row.getRealValue("y"));
+      const double pdfVal = model.getVal(nsetXY);
+      x.setVal(row.getRealValue("x"));
+      y.setVal(row.getRealValue("y"));
+      refNll -= std::log(pdfVal / denom->getVal());
+   }
+   // The extended term is the one of the full model, like in the legacy
+   // evaluation backend, where the expected number of events is evaluated in
+   // the full set of dataset observables.
+   const double nExpected = nsig.getVal() + nbkg.getVal();
+   const double refNllExt = refNll + nExpected - data->sumEntries() * std::log(nExpected);
+
+   for (auto backend : {RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu()}) {
+      for (bool extended : {false, true}) {
+         nsig.setVal(300.);
+         nbkg.setVal(700.);
+         std::unique_ptr<RooAbsReal> nll{
+            model.createNLL(*data, RooFit::ConditionalObservables(y), RooFit::Extended(extended), backend)};
+         const double ref = extended ? refNllExt : refNll;
+         EXPECT_NEAR(nll->getVal(), ref, 1e-8 * std::abs(ref))
+            << "backend " << backend.name() << ", extended " << extended;
+      }
+   }
 }

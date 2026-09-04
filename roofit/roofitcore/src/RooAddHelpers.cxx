@@ -271,7 +271,7 @@ void RooAddHelpers::updateCoefficients(RooAbsPdf const &addPdf, std::size_t nPdf
    // Adjust coefficients for given projection
    double coefSum(0);
    for (std::size_t i = 0; i < nPdfs; i++) {
-      coefCache[i] *= cache.projVal(i) / cache.projSuppNormVal(i) * cache.rangeProjScaleFactor(i);
+      coefCache[i] *= cache.coefProjectionFactor(i);
       coefSum += coefCache[i];
    }
 

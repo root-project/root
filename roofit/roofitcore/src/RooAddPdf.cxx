@@ -69,6 +69,7 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include <RooAddition.h>
 #include <RooBatchCompute.h>
 #include <RooDataSet.h>
+#include <RooExtendPdf.h>
 #include <RooGenericPdf.h>
 #include <RooGlobalFunc.h>
 #include <RooProdPdf.h>
@@ -762,10 +763,28 @@ double RooAddPdf::expectedEvents(const RooArgSet* nset) const
 
   if (cache.doProjection()) {
 
+    // The normalization set in which the individual expected number of events
+    // are evaluated. It has to be the same set in which the coefficients are
+    // defined, because the transformation from that set to nset is done with
+    // the projection factor from the cache. If there is no reference set for
+    // the coefficients, the projection is only for range reasons and the
+    // expected events are evaluated in nset itself.
+    const RooArgSet *ncompNormSet = !_refCoefNorm.empty() ? &_refCoefNorm : nset;
+
     for (std::size_t i = 0; i < _pdfList.size(); ++i) {
-      double ncomp = _allExtendable ? static_cast<RooAbsPdf&>(_pdfList[i]).expectedEvents(nset)
+      // There are two cases covered here:
+      //   1. The expected events is the sum of expectedEvents() for each pdf
+      //   2. Get the expected events from the coeffiecients
+      // For case #2, multiplying with coefProjectionFactor(i) gives the right
+      // coefs for this RooAddPdf to be normalized over nset, while the coefs
+      // where determined with the components normalized over _refCoefNorm. To
+      // reuse the same projection factor also in the first case, we evaluate
+      // the individual expected events for _refCoefNorm as well. This is done
+      // to avoid confusion about different projection factors extracted from
+      // cache, as like this we only need one factor for each pdf.
+      double ncomp = _allExtendable ? static_cast<RooAbsPdf&>(_pdfList[i]).expectedEvents(ncompNormSet)
                                     : static_cast<RooAbsReal&>(_coefList[i]).getVal(nset);
-      expectedTotal += cache.rangeProjScaleFactor(i) * ncomp ;
+      expectedTotal += cache.coefProjectionFactor(i) * ncomp ;
 
     }
 
@@ -790,11 +809,24 @@ std::unique_ptr<RooAbsReal> RooAddPdf::createExpectedEventsFunc(const RooArgSet 
 {
    std::unique_ptr<RooAbsReal> out;
 
+   // Make sure _refCoefNorm is defined
+   materializeRefCoefNormFromAttribute();
+
+   // If the _refCoefNorm is empty or it's equal to normSet anyway, this is not
+   // a conditional pdf and we don't need to do any transformation. See also
+   // RooAddPdf::compileForNormSet() for more explanations on a similar logic.
+   const bool doCoefProjection = !_refCoefNorm.empty() && nset && !nset->equals(_refCoefNorm);
+
    auto name = std::string(GetName()) + "_expectedEvents";
    if (_allExtendable) {
       RooArgSet sumSet;
+      // Like in expectedEvents(), the expected number of events of the
+      // components are evaluated in the set in which the coefficients are
+      // defined, because the transformation to nset is done by the projection
+      // integral that is multiplied in below.
+      const RooArgSet *compNormSet = doCoefProjection ? &_refCoefNorm : nset;
       for (auto *pdf : static_range_cast<RooAbsPdf *>(_pdfList)) {
-         sumSet.addOwned(pdf->createExpectedEventsFunc(nset));
+         sumSet.addOwned(pdf->createExpectedEventsFunc(compNormSet));
       }
       out = std::make_unique<RooAddition>(name.c_str(), name.c_str(), sumSet);
       out->addOwnedComponents(std::move(sumSet));
@@ -804,17 +836,11 @@ std::unique_ptr<RooAbsReal> RooAddPdf::createExpectedEventsFunc(const RooArgSet 
 
    RooArgList prodList;
 
-   // Make sure _refCoefNorm is defined
-   materializeRefCoefNormFromAttribute();
+   if (doCoefProjection) {
+      prodList.addOwned(std::unique_ptr<RooAbsReal>{createIntegral(*nset, _refCoefNorm)});
+   }
 
    if (!_allExtendable) {
-      // If the _refCoefNorm is empty or it's equal to normSet anyway, this is not
-      // a conditional pdf and we don't need to do any transformation. See also
-      // RooAddPdf::compileForNormSet() for more explanations on a similar logic.
-      if (!_refCoefNorm.empty() && !nset->equals(_refCoefNorm)) {
-         prodList.addOwned(std::unique_ptr<RooAbsReal>{createIntegral(*nset, _refCoefNorm)});
-      }
-
       // Optionally multiply with fractional normalization. I this case, we
       // replace the original factor stored in "out".
       if (!_normRange.IsNull()) {
@@ -1065,14 +1091,34 @@ RooAddPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileCo
    // this here in compileForNormSet(), we don't invoke the old RooAddPdf
    // projection caches (note that no conditional pdfs are on the right hand
    // side of the equation).
-   std::string finalName = std::string(GetName()) + "_conditional";
+   std::string condName = std::string(GetName()) + "_conditional";
    std::unique_ptr<RooAbsReal> denom{newArg->createIntegral(normSet, _refCoefNorm)};
-   auto finalArg = std::make_unique<RooGenericPdf>(finalName.c_str(), "@0/@1", RooArgList{*newArg, *denom});
+   auto condArg = std::make_unique<RooGenericPdf>(condName.c_str(), "@0/@1", RooArgList{*newArg, *denom});
    ctx.compileServers(*denom, _refCoefNorm);
    ctx.markAsCompiled(*denom);
-   ctx.markAsCompiled(*finalArg);
+   ctx.markAsCompiled(*condArg);
    ctx.compileServers(*newArg, _refCoefNorm);
-   finalArg->addOwnedComponents(std::move(newArg));
-   finalArg->addOwnedComponents(std::move(denom));
+   condArg->addOwnedComponents(std::move(newArg));
+   condArg->addOwnedComponents(std::move(denom));
+
+   if (!canBeExtended()) {
+      return condArg;
+   }
+
+   // The conditional pdf that we just created is a plain RooGenericPdf that
+   // doesn't know anything about the expected number of events anymore. To not
+   // silently lose the extended term of the likelihood, we wrap it in a
+   // RooExtendPdf. Like RooAbsPdf::extendedTerm() in the legacy evaluation
+   // backend, the expected number of events is evaluated in the reference
+   // normalization set of the coefficients, i.e., including the conditional
+   // observables.
+   std::unique_ptr<RooAbsReal> nExpected{createExpectedEventsFunc(&_refCoefNorm)};
+   std::string finalName = condName + "_extended";
+   auto finalArg = std::make_unique<RooExtendPdf>(finalName.c_str(), finalName.c_str(), *condArg, *nExpected);
+   ctx.compileServers(*nExpected, _refCoefNorm);
+   ctx.markAsCompiled(*nExpected);
+   ctx.markAsCompiled(*finalArg);
+   finalArg->addOwnedComponents(std::move(condArg));
+   finalArg->addOwnedComponents(std::move(nExpected));
    return finalArg;
 }

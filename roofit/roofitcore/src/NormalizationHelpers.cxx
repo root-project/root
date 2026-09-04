@@ -95,3 +95,21 @@ bool RooFit::Detail::CompileContext::isMarkedAsCompiled(RooAbsArg const &arg) co
 {
    return arg.getAttribute("_COMPILED");
 }
+
+/// Replace any reference to the original computation graph that is left in the
+/// compiled one. Objects that are created while compiling, like the
+/// normalization integrals, are built from the original normalization set, so
+/// they can still reference the original observables. Such a leftover is a
+/// second node with the same name in the compiled graph, which breaks the
+/// lookup of nodes by name later on: the dataset columns would potentially be
+/// attached to the leftover instead of the compiled observable, in which case
+/// the compiled function doesn't depend on the data at all anymore.
+void RooFit::Detail::CompileContext::redirectToCompiledServers(RooAbsArg &topNode) const
+{
+   RooArgList nodes;
+   topNode.treeNodeServerList(&nodes, nullptr, /*doBranch=*/true, /*doLeaf=*/true, /*valueOnly=*/false,
+                              /*recurseNonDerived=*/false);
+   for (RooAbsArg *node : nodes) {
+      node->redirectServers(_replacements);
+   }
+}
