@@ -1358,6 +1358,15 @@ void TRootCanvas::SetCanvasSize(UInt_t w, UInt_t h)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set cursor for the canvas
+
+void TRootCanvas::SetCursor(ECursor cursor)
+{
+   if (fCanvasID != -1)
+      gVirtualX->SetCursor(fCanvasID, cursor);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set canvas position (units in pixels).
 
 void TRootCanvas::SetWindowPosition(Int_t x, Int_t y)
