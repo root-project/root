@@ -78,7 +78,7 @@
 //
 ////////////////////////////////////////////////////////////////////////
 
-#include "RVersion.h"
+#include "ROOT/RVersion.hxx"
 #include "TRandom.h"
 #include "TDirectory.h"
 #include "TProcessID.h"

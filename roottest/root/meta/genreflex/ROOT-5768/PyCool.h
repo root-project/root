@@ -6,7 +6,7 @@
 #include "CoolKernel/VersionInfo.h"
 
 // Port to ROOT6 (bug #102630) - remove Reflex dependency
-#include "RVersion.h"
+#include "ROOT/RVersion.hxx"
 
 // Disable vector payload in PyCool for ROOT6 (workaround for bug #103017)
 //#if ROOT_VERSION_CODE >= ROOT_VERSION(5,99,0)
