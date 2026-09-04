@@ -9,15 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <iostream>
 #include "TROOT.h"
-#include "Strlen.h"
 #include "TWbox.h"
 #include "TColor.h"
 #include "TStyle.h"
 #include "TVirtualPad.h"
 #include "TVirtualPadPainter.h"
 
+#include <iostream>
+#include <cstring>
 
 /** \class TWbox
 \ingroup BasicGraphics
