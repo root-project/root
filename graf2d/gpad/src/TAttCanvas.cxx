@@ -9,9 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Strlen.h"
 #include "TAttCanvas.h"
-
+#include <cstring>
 
 /** \class TAttCanvas
 \ingroup gpad

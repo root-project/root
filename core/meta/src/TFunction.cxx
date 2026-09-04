@@ -21,11 +21,11 @@ functions (accessible via TROOT::GetListOfGlobalFunctions()).
 #include "TList.h"
 #include "TROOT.h"
 #include "TInterpreter.h"
-#include "Strlen.h"
 
-#include <iostream>
 #include "TVirtualMutex.h"
 
+#include <cstring>
+#include <iostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TFunction ctor. TFunctions are constructed in TROOT via
