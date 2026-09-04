@@ -906,10 +906,6 @@ public:
    /// connecting streamer fields so that emulated classes can be read.
    void RegisterStreamerInfos();
 
-   /// Forces the loading of ROOT StreamerInfo from the underlying file. This currently only has an effect for
-   /// TFile-backed sources.
-   virtual void LoadStreamerInfo() = 0;
-
    /// Creates a new PageSource using the same underlying file as this but referring to a different RNTuple,
    /// described by `anchorLink`.
    virtual std::unique_ptr<RPageSource> OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &anchorLink,
