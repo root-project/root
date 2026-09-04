@@ -20,6 +20,8 @@
  *                                                                       *
  *************************************************************************/
 
+#warning "RConfig.h is deprecated and will be removed in a future release, please include ROOT/RConfig.hxx instead"
+
 #include <ROOT/RConfig.hxx>
 
 #endif // ROOT_RConfig_fwd

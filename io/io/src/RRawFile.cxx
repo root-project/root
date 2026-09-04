@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RConfig.h>
+#include <ROOT/RConfig.hxx>
 #include <ROOT/RRawFile.hxx>
 #ifdef _WIN32
 #include <ROOT/RRawFileWin.hxx>

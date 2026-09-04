@@ -13,12 +13,13 @@
 
 /*************************************************************************
  *                                                                       *
- * Old RConfig.h forwarding to ROOT/RConfig.hxx                            *
+ * Old RConfig.h forwarding to ROOT/RConfig.hxx                          *
  *                                                                       *
- * Please #include ROOT/RConfig.hxx instead, e.g. to avoid clashes with    *
+ * Please #include ROOT/RConfig.hxx instead, e.g. to avoid clashes with  *
  * R's Rconfig.h                                                         *
  *                                                                       *
  *************************************************************************/
+#warning "RConfig.h is deprecated and will be removed in a future release, please include ROOT/RConfig.hxx instead"
 
 #include <ROOT/RConfig.hxx>
 
