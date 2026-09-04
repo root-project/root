@@ -596,11 +596,6 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
    return clusters;
 }
 
-void ROOT::Experimental::Internal::RPageSourceDaos::LoadStreamerInfo()
-{
-   R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "DAOS-backed sources have no associated StreamerInfo to load.";
-}
-
 std::unique_ptr<ROOT::Internal::RPageSource>
 ROOT::Experimental::Internal::RPageSourceDaos::OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &,
                                                                        const ROOT::RNTupleReadOptions &)

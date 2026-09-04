@@ -559,9 +559,6 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RClassField::BeforeConnectPageSource(ROO
          R__ASSERT(fieldDesc.GetTypeChecksum());
          if (fieldDesc.GetTypeVersion() != GetTypeVersion() || *fieldDesc.GetTypeChecksum() != fClass->GetCheckSum() ||
              fieldDesc.GetTypeName() != GetTypeName()) {
-            // We need the on-disk streamer info for the conversion streamer info
-            pageSource.LoadStreamerInfo();
-
             auto oldCl = TClass::GetClass(fieldDesc.GetTypeName().c_str());
             R__ASSERT(oldCl);
             auto onDiskStreamerInfo = oldCl->FindStreamerInfo(*fieldDesc.GetTypeChecksum());
