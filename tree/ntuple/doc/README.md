@@ -67,11 +67,10 @@ consecutive entries.  Clusters provide a unit of writing and provide the means f
 To get first information about an RNTuple, ROOT::RNTupleReader provides RNTupleReader::PrintInfo(). To show entries,
 it provides RNTupleReader::Show().
 
+The ROOT browsers show RNTuple contents.
+
 To get more details such as the achieved compression, there is RNTupleInspector.
 
 For plotting and scanning through entries, use ROOT::RDataFrame. A table for translating TTree commands to RDataFrame
 can be found at [RDataFrame: Rosetta stone](https://root.cern/doc/master/classROOT_1_1RDataFrame.html#rosetta-stone).
 These commands work both with TTree as well as RNTuple.
-
-## Related classes
-
