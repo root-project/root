@@ -36,6 +36,7 @@ The following people have contributed to this new version:
  Devajith Valaparambil Sreeramaswamy, CERN/EP-SFT,\
  Vassil Vassilev, Princeton,\
  Sandro Wenzel, CERN/EP-ALICE,\
+ Tristan Wenzel, ETHZ,\
 
 ## Deprecation and Removal
 
@@ -210,6 +211,15 @@ Produced HTML file will include canvas JSON data and JavaScript code to load and
 Such file can be loaded locally in any web browser or send as attachment in email to colleagues.
 
 ## Geometry
+
+### Improved multithreaded `TGeo` navigation
+
+Multithreaded `TGeo` navigation is now faster and more scalable, with improved thread-local state management that avoids
+false sharing, releases temporary memory during geometry cleanup, and correctly supports concurrent navigation of
+multiple geometries.
+
+For ALICE material-budget lookup-table generation on 28 cores, these changes reduced the runtime from 139 s to 72 s
+and improved scaling from 12x to 23x.
 
 The [TGeometry](https://root.cern/doc/master/classTGeometry.html) classes (Geant 3 shapes) have been moved out of Graf3D into their own library.
 To link to these classes, use the cmake target `TGeometry` (preferred), `root-config --libs`, or link with `-lTGeometry`.

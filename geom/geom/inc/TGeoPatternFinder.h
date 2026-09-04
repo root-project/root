@@ -14,7 +14,8 @@
 
 #include "TObject.h"
 
-#include <mutex>
+#include <algorithm>
+#include <atomic>
 #include <vector>
 
 #include "TGeoVolume.h"
@@ -23,35 +24,56 @@ class TGeoMatrix;
 
 /// base finder class for patterns. A pattern is specifying a division type
 class TGeoPatternFinder : public TObject {
+   static std::atomic<UInt_t> fgInstanceCount; //! source of monotonic per-object indices
+   UInt_t fIndex{fgInstanceCount++};           //! non-reused index of this finder into the per-thread vector
+   mutable std::atomic<Int_t> fGeneration{0};  //! bumped whenever the per-thread state must be rebuilt
+
 public:
    struct ThreadData_t {
-      TGeoMatrix *fMatrix; ///<! generic matrix
-      Int_t fCurrent;      ///<! current division element
-      Int_t fNextIndex;    ///<! index of next node
-
-      ThreadData_t();
-      ~ThreadData_t();
-
-   private:
-      ThreadData_t(const ThreadData_t &) = delete;
-      ThreadData_t &operator=(const ThreadData_t &) = delete;
+      // fMatrix is produced by the virtual CreateMatrix() and registered with (owned by) the
+      // geometry manager, so this struct does not own it. All members are trivially movable,
+      // which lets the slot live in a resizable thread_local vector.
+      TGeoMatrix *fMatrix{nullptr}; //! generic matrix (owned by TGeoManager)
+      Int_t fCurrent{-1};           //! current division element
+      Int_t fNextIndex{-1};         //! index of next node
+      Int_t fInitGen{-1};           //! generation this slot was last initialized for
    };
-   ThreadData_t &GetThreadData() const;
-   void ClearThreadData() const;
-   void CreateThreadData(Int_t nthreads);
+
+   /// Per-thread scratch state, owned by the calling thread and indexed by this finder.
+   /// Hot path: a TLS read plus an indexed load; the cold rebuild lives in InitThreadSlot().
+   /// The vector retains its high-water size until the owning thread exits.
+   ThreadData_t &GetThreadData() const
+   {
+      thread_local std::vector<ThreadData_t> tdata;
+      if (tdata.size() <= fIndex)
+         tdata.resize(std::max<size_t>(fgInstanceCount.load(std::memory_order_relaxed), fIndex + 1));
+      ThreadData_t &td = tdata[fIndex];
+      if (td.fInitGen != fGeneration.load(std::memory_order_acquire))
+         InitThreadSlot(td);
+      return td;
+   }
+   /// Invalidate the per-thread data. Each thread rebuilds its own slot lazily on next access,
+   /// so no cross-thread reach-in is needed.
+   void ClearThreadData() const { fGeneration.fetch_add(1, std::memory_order_release); }
+   /// No-op: this finder allocates its scratch state lazily for every calling thread.
+   void CreateThreadData(Int_t) {}
 
 protected:
-   enum EGeoPatternFlags { kPatternReflected = BIT(14), kPatternSpacedOut = BIT(15) };
+   void InitThreadSlot(ThreadData_t &td) const;
+   TGeoManager *GetOwnerManager() const { return fVolume ? fVolume->GetGeoManager() : nullptr; }
+   TGeoMatrix *GetOwnerIdentity() const;
+   void RegisterMatrix(TGeoMatrix *matrix) const;
+
+   enum EGeoPatternFlags {
+      kPatternReflected = BIT(14),
+      kPatternSpacedOut = BIT(15)
+   };
    Double_t fStep;      // division step length
    Double_t fStart;     // starting point on divided axis
    Double_t fEnd;       // ending point
    Int_t fNdivisions;   // number of divisions
    Int_t fDivIndex;     // index of first div. node
    TGeoVolume *fVolume; // volume to which applies
-
-   mutable std::vector<ThreadData_t *> fThreadData; ///<! Vector of thread private transient data
-   mutable Int_t fThreadSize;                       ///<! Size of the thread vector
-   mutable std::mutex fMutex;                       ///<! Mutex for thread data
 
 protected:
    TGeoPatternFinder(const TGeoPatternFinder &);

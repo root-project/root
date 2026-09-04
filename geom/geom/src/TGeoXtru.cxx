@@ -102,69 +102,55 @@ Double_t y0, Double_t scale);
 #include "TGeoVolume.h"
 #include "TGeoPolygon.h"
 
+std::atomic<UInt_t> TGeoXtru::fgInstanceCount{0};
+
+struct TGeoXtru::OwnedThreadData_t {
+   std::unique_ptr<Double_t[]> fXc;
+   std::unique_ptr<Double_t[]> fYc;
+   std::unique_ptr<TGeoPolygon> fPoly;
+
+   explicit OwnedThreadData_t(std::size_t size) : fXc(new Double_t[size]), fYc(new Double_t[size]) {}
+};
+
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// (Re)build the per-thread scratch state for this shape into the given slot.
+/// Cold path: runs once per (thread, shape, generation).
 
-TGeoXtru::ThreadData_t::ThreadData_t() : fSeg(0), fIz(0), fXc(nullptr), fYc(nullptr), fPoly(nullptr) {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
-
-TGeoXtru::ThreadData_t::~ThreadData_t()
+void TGeoXtru::InitThreadSlot(ThreadData_t &td) const
 {
-   delete[] fXc;
-   delete[] fYc;
-   delete fPoly;
+   auto data = std::make_unique<OwnedThreadData_t>(fNvert);
+   memcpy(data->fXc.get(), fX, fNvert * sizeof(Double_t));
+   memcpy(data->fYc.get(), fY, fNvert * sizeof(Double_t));
+   data->fPoly = std::make_unique<TGeoPolygon>(fNvert);
+   data->fPoly->SetXY(data->fXc.get(), data->fYc.get());
+   data->fPoly->FinishPolygon();
+   Double_t *xc = data->fXc.get();
+   Double_t *yc = data->fYc.get();
+   TGeoPolygon *poly = data->fPoly.get();
+
+   std::lock_guard<std::mutex> guard(fOwnedDataMutex);
+   fOwnedData.push_back(std::move(data));
+   td.fSeg = 0;
+   td.fIz = 0;
+   td.fXc = xc;
+   td.fYc = yc;
+   td.fPoly = poly;
+   td.fInitGen = fGeneration.load(std::memory_order_acquire);
+   // The polygon is identical in every thread, so report an illegal one exactly once
+   // instead of once per thread (previously: only for thread id 0).
+   if (td.fPoly->IsIllegalCheck() && !fIllegalChecked.exchange(kTRUE, std::memory_order_relaxed))
+      Error("DefinePolygon", "Shape %s of type XTRU has an illegal polygon.", GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-TGeoXtru::ThreadData_t &TGeoXtru::GetThreadData() const
-{
-   if (!fThreadSize)
-      ((TGeoXtru *)this)->CreateThreadData(1);
-   Int_t tid = TGeoManager::ThreadId();
-   return *fThreadData[tid];
-}
-
-////////////////////////////////////////////////////////////////////////////////
+/// Release the large scratch buffers. Navigation using this shape must not be active.
 
 void TGeoXtru::ClearThreadData() const
 {
-   std::lock_guard<std::mutex> guard(fMutex);
-   std::vector<ThreadData_t *>::iterator i = fThreadData.begin();
-   while (i != fThreadData.end()) {
-      delete *i;
-      ++i;
-   }
-   fThreadData.clear();
-   fThreadSize = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Create thread data for n threads max.
-
-void TGeoXtru::CreateThreadData(Int_t nthreads)
-{
-   std::lock_guard<std::mutex> guard(fMutex);
-   fThreadData.resize(nthreads);
-   fThreadSize = nthreads;
-   for (Int_t tid = 0; tid < nthreads; tid++) {
-      if (fThreadData[tid] == nullptr) {
-         fThreadData[tid] = new ThreadData_t;
-         ThreadData_t &td = *fThreadData[tid];
-         td.fXc = new Double_t[fNvert];
-         td.fYc = new Double_t[fNvert];
-         memcpy(td.fXc, fX, fNvert * sizeof(Double_t));
-         memcpy(td.fYc, fY, fNvert * sizeof(Double_t));
-         td.fPoly = new TGeoPolygon(fNvert);
-         td.fPoly->SetXY(td.fXc, td.fYc); // initialize with current coordinates
-         td.fPoly->FinishPolygon();
-         if (tid == 0 && td.fPoly->IsIllegalCheck()) {
-            Error("DefinePolygon", "Shape %s of type XTRU has an illegal polygon.", GetName());
-         }
-      }
-   }
+   std::lock_guard<std::mutex> guard(fOwnedDataMutex);
+   fOwnedData.clear();
+   fGeneration.fetch_add(1, std::memory_order_release);
+   fIllegalChecked.store(kFALSE, std::memory_order_relaxed);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -195,9 +181,7 @@ TGeoXtru::TGeoXtru()
      fZ(nullptr),
      fScale(nullptr),
      fX0(nullptr),
-     fY0(nullptr),
-     fThreadData(0),
-     fThreadSize(0)
+     fY0(nullptr)
 {
    SetShapeBit(TGeoShape::kGeoXtru);
 }
@@ -215,9 +199,7 @@ TGeoXtru::TGeoXtru(Int_t nz)
      fZ(new Double_t[nz]),
      fScale(new Double_t[nz]),
      fX0(new Double_t[nz]),
-     fY0(new Double_t[nz]),
-     fThreadData(0),
-     fThreadSize(0)
+     fY0(new Double_t[nz])
 {
    SetShapeBit(TGeoShape::kGeoXtru);
    if (nz < 2) {
@@ -251,9 +233,7 @@ TGeoXtru::TGeoXtru(Double_t *param)
      fZ(nullptr),
      fScale(nullptr),
      fX0(nullptr),
-     fY0(nullptr),
-     fThreadData(0),
-     fThreadSize(0)
+     fY0(nullptr)
 {
    SetShapeBit(TGeoShape::kGeoXtru);
    SetDimensions(param);
