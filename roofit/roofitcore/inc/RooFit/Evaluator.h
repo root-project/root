@@ -17,7 +17,7 @@
 #include <RooAbsReal.h>
 #include <RooFit/EvalContext.h>
 
-#include <RConfig.h>
+#include <ROOT/RConfig.hxx>
 
 #include <memory>
 

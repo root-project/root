@@ -18,8 +18,8 @@
 #include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/BitUtils.hxx>
+#include <ROOT/RVersion.hxx>
 
-#include <RVersion.h>
 #include <TBufferFile.h>
 #include <TClass.h>
 #include <TList.h>

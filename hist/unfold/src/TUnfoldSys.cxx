@@ -156,7 +156,7 @@ INCLUDED in the methods provided by the base class TUnfold.
 #include <TMath.h>
 #include <TObjString.h>
 #include <TSortedList.h>
-#include <RVersion.h>
+#include <ROOT/RVersion.hxx>
 #include <cmath>
 
 #include "TUnfoldSys.h"

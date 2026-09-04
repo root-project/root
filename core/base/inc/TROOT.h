@@ -125,7 +125,7 @@ protected:
    TString         fConfigFeatures;                   ///< ROOT ./configure detected build features
    TString         fVersion;                          ///< ROOT version as TString, example: 0.05.01
    Int_t           fVersionInt = 0;                   ///< ROOT version in integer format (501)
-   Int_t           fVersionCode = 0;                  ///< ROOT version code as used in RVersion.h
+   Int_t           fVersionCode = 0;                  ///< ROOT version code as used in ROOT/RVersion.hxx
    Int_t           fVersionDate = 0;                  ///< Date of ROOT version (ex 951226)
    Int_t           fVersionTime = 0;                  ///< Time of ROOT version (ex 1152)
    Int_t           fBuiltDate = 0;                    ///< Date of ROOT built

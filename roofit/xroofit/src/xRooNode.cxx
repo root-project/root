@@ -42,7 +42,7 @@ exploring the content are:
 
  */
 
-#include "RVersion.h"
+#include "ROOT/RVersion.hxx"
 
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
 

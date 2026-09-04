@@ -2700,8 +2700,7 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
    }
 #endif
    {
-      constexpr const char *dictHeaders[] = {"RVersion.h",
-                                             "ROOT/RConfig.hxx",
+      constexpr const char *dictHeaders[] = {"ROOT/RConfig.hxx",
                                              "TClass.h",
                                              "TDictAttributeMap.h",
                                              "TInterpreter.h",
