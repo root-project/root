@@ -12,7 +12,7 @@
 #ifndef ROOT_TVersionCheck
 #define ROOT_TVersionCheck
 
-#include "RVersion.h"
+#include "ROOT/RVersion.hxx"
 
 /** \class TVersionCheck
 \ingroup Base

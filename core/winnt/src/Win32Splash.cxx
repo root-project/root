@@ -10,7 +10,7 @@
  *************************************************************************/
 
 #ifdef WIN32
-#include "RVersion.h"
+#include "ROOT/RVersion.hxx"
 #include "strlcpy.h"
 #include <wincodec.h>
 #include <tchar.h>

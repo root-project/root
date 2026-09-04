@@ -1,8 +1,8 @@
 #ifndef ROOT_RVersion
 #define ROOT_RVersion
 
-#include "ROOT/RVersion.hxx"
+#warning "RVersion.h is deprecated and will be removed in a future release, please include ROOT/RVersion.hxx instead"
 
-#define ROOT_RELEASE_TIME "00:00:00" /* not updated anymore */
+#include "ROOT/RVersion.hxx"
 
 #endif

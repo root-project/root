@@ -24,8 +24,8 @@
 #include <ROOT/RRawFileTFile.hxx>
 #include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RNTupleUtils.hxx>
+#include <ROOT/RVersion.hxx>
 
-#include <RVersion.h>
 #include <TDirectory.h>
 #include <TError.h>
 #include <TVirtualStreamerInfo.h>

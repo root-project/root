@@ -36,7 +36,7 @@ GITDATE="`cat etc/gitinfo.txt|tail -n1`"
 GITYEARCOMMA=`echo $GITDATE|cut -d' ' -f3`
 
 # Can't do that inside the .rc file: FILEVERSION doesn't evaluate a>>b
-VERSION=`grep "ROOT_RELEASE " include/RVersion.h | sed 's,^.*"\([^"]*\)".*$,\1,' | sed 's,[^[:digit:]], ,g'`
+VERSION=`grep "ROOT_RELEASE " include/ROOT/RVersion.hxx | sed 's,^.*"\([^"]*\)".*$,\1,' | sed 's,[^[:digit:]], ,g'`
 VER1=`echo $VERSION| cut -d ' ' -f 1| sed 's,^0,,'`
 VER2=`echo $VERSION| cut -d ' ' -f 2| sed 's,^0,,'`
 VER3=`echo $VERSION| cut -d ' ' -f 3| sed 's,^0,,'`

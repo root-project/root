@@ -1,7 +1,7 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#include "RVersion.h"
+#include "ROOT/RVersion.hxx"
 #include "TFile.h"
 #include "TestOutput.h"
 

@@ -10,7 +10,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include "RVersion.h"
+#include "ROOT/RVersion.hxx"
 
 // #define private public
 // #include "Minuit2/Minuit2Minimizer.h"
