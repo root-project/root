@@ -46,8 +46,6 @@
 #include "TBranchProxyClassDescriptor.h"
 
 #include "TList.h"
-#include "Varargs.h"
-#include <cstdio>
 
 class TTree;
 class TBranch;
@@ -76,14 +74,17 @@ class TStreamerElement;
 #include "TLeafObject.h"
 #include "TVirtualCollectionProxy.h"
 
-void Debug(Int_t level, const char *va_(fmt), ...)
+#include <cstdarg>
+#include <cstdio>
+
+void Debug(Int_t level, const char *fmt, ...)
 {
    // Use this function in case an error occurred.
 
    if (gDebug>=level) {
       va_list ap;
-      va_start(ap,va_(fmt));
-      ErrorHandler(kInfo,"TTreeProxyGenerator",va_(fmt), ap);
+      va_start(ap, fmt);
+      ErrorHandler(kInfo, "TTreeProxyGenerator", fmt, ap);
       va_end(ap);
    }
 }
