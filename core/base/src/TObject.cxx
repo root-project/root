@@ -36,7 +36,6 @@ class hierarchies (watch out for overlaps).
    that the object was allocated on the heap).
 */
 
-#include "Varargs.h"
 #include "TObject.h"
 #include "TBuffer.h"
 #include "TClass.h"
@@ -55,13 +54,15 @@ class hierarchies (watch out for overlaps).
 #if !defined(WIN32) && !defined(__MWERKS__) && !defined(R__SOLARIS)
 #include <strings.h>
 #endif
+
+#include <cstdarg>
 #include <cstdlib>
 #include <cstdio>
-#include <sstream>
 #include <fstream>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <limits>
+#include <sstream>
 
 Longptr_t TObject::fgDtorOnly   = 0;
 Bool_t    TObject::fgObjectStat = kTRUE;
@@ -1066,11 +1067,11 @@ void TObject::DoError(int level, const char *location, const char *fmt, va_list 
 /// Issue info message. Use "location" to specify the method where the
 /// warning occurred. Accepts standard printf formatting arguments.
 
-void TObject::Info(const char *location, const char *va_(fmt), ...) const
+void TObject::Info(const char *location, const char *fmt, ...) const
 {
    va_list ap;
-   va_start(ap, va_(fmt));
-   DoError(kInfo, location, va_(fmt), ap);
+   va_start(ap, fmt);
+   DoError(kInfo, location, fmt, ap);
    va_end(ap);
 }
 
@@ -1078,11 +1079,11 @@ void TObject::Info(const char *location, const char *va_(fmt), ...) const
 /// Issue warning message. Use "location" to specify the method where the
 /// warning occurred. Accepts standard printf formatting arguments.
 
-void TObject::Warning(const char *location, const char *va_(fmt), ...) const
+void TObject::Warning(const char *location, const char *fmt, ...) const
 {
    va_list ap;
-   va_start(ap, va_(fmt));
-   DoError(kWarning, location, va_(fmt), ap);
+   va_start(ap, fmt);
+   DoError(kWarning, location, fmt, ap);
    va_end(ap);
    if (TROOT::Initialized())
       gROOT->Message(1001, this);
@@ -1092,11 +1093,11 @@ void TObject::Warning(const char *location, const char *va_(fmt), ...) const
 /// Issue error message. Use "location" to specify the method where the
 /// error occurred. Accepts standard printf formatting arguments.
 
-void TObject::Error(const char *location, const char *va_(fmt), ...) const
+void TObject::Error(const char *location, const char *fmt, ...) const
 {
    va_list ap;
-   va_start(ap, va_(fmt));
-   DoError(kError, location, va_(fmt), ap);
+   va_start(ap, fmt);
+   DoError(kError, location, fmt, ap);
    va_end(ap);
    if (TROOT::Initialized())
       gROOT->Message(1002, this);
@@ -1106,11 +1107,11 @@ void TObject::Error(const char *location, const char *va_(fmt), ...) const
 /// Issue system error message. Use "location" to specify the method where
 /// the system error occurred. Accepts standard printf formatting arguments.
 
-void TObject::SysError(const char *location, const char *va_(fmt), ...) const
+void TObject::SysError(const char *location, const char *fmt, ...) const
 {
    va_list ap;
-   va_start(ap, va_(fmt));
-   DoError(kSysError, location, va_(fmt), ap);
+   va_start(ap, fmt);
+   DoError(kSysError, location, fmt, ap);
    va_end(ap);
    if (TROOT::Initialized())
       gROOT->Message(1003, this);
@@ -1120,11 +1121,11 @@ void TObject::SysError(const char *location, const char *va_(fmt), ...) const
 /// Issue fatal error message. Use "location" to specify the method where the
 /// fatal error occurred. Accepts standard printf formatting arguments.
 
-void TObject::Fatal(const char *location, const char *va_(fmt), ...) const
+void TObject::Fatal(const char *location, const char *fmt, ...) const
 {
    va_list ap;
-   va_start(ap, va_(fmt));
-   DoError(kFatal, location, va_(fmt), ap);
+   va_start(ap, fmt);
+   DoError(kFatal, location, fmt, ap);
    va_end(ap);
    if (TROOT::Initialized())
       gROOT->Message(1004, this);
