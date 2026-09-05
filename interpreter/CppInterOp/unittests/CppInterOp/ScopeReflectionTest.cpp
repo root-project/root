@@ -582,6 +582,21 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetCompleteName) {
   EXPECT_EQ(Cpp::GetCompleteName(fn), "fn<int, double>");
 }
 
+// Template arguments keep their own scope in the complete name; defaulted
+// arguments are dropped and only the tag's enclosing scope is stripped.
+TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetCompleteNameQualifiedArgs) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    namespace NS { struct S {}; }
+    template <typename T, typename U = int> struct Tpl {};
+    Tpl<NS::S> t;
+  )";
+  GetAllTopLevelDecls(code, Decls);
+  EXPECT_EQ(Cpp::GetCompleteName(
+                Cpp::GetScopeFromType(Cpp::GetVariableType(Decls[2]))),
+            "Tpl<NS::S>");
+}
+
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetQualifiedName) {
   std::vector<Decl*> Decls;
   std::string code = R"(namespace N {
