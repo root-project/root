@@ -15,7 +15,6 @@
 #include "RConversionRuleParser.h"
 #include <ROOT/RConfig.hxx>
 #include <ROOT/FoundationUtils.hxx>
-#include "snprintf.h"
 
 #include <iostream>
 #include <iomanip>
@@ -23,7 +22,6 @@
 #include <vector>
 #include <algorithm>
 #include <cstdio>
-
 #include <cerrno>
 #include <string>
 #include <list>

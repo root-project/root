@@ -47,7 +47,8 @@ The picture below shows a canvas with a pop-up menu.
 #include "KeySymbols.h"
 #include "RConfigure.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cstdio>
 
 enum EContextMenu {
    kToggleStart       = 1000, // first id of toggle menu items

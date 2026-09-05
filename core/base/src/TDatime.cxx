@@ -35,13 +35,12 @@ required, use TTimeStamp.
 
 #include "TBuffer.h"
 #include "Strlen.h"
-#include "snprintf.h"
 #include "TDatime.h"
 #include "TError.h"
 #include "Bytes.h"
 #include "TString.h"
 
-
+#include <cstdio>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TDatime and set it to the current time.

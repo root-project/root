@@ -82,11 +82,10 @@
 #include "TRandom.h"
 #include "TDirectory.h"
 #include "TProcessID.h"
-#include "snprintf.h"
 
 #include "Event.h"
 
-
+#include <cstdio>
 
 TClonesArray *Event::fgTracks = 0;
 TH1F *Event::fgHist = 0;

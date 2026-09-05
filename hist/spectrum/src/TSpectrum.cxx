@@ -7,7 +7,8 @@
 #include "TList.h"
 #include "TH1.h"
 #include "TMath.h"
-#include "snprintf.h"
+
+#include <cstdio>
 
 /** \class TSpectrum
     \ingroup Spectrum

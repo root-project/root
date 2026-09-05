@@ -13,12 +13,6 @@
 #pragma optimize("",off)
 #endif
 
-#include <cstdlib>
-#include <cstring>
-#include <cctype>
-#include <cmath>
-#include <fstream>
-
 #include "TROOT.h"
 #include "TDatime.h"
 #include "TBase64.h"
@@ -32,7 +26,13 @@
 #include "TMath.h"
 #include "TObjString.h"
 #include "TObjArray.h"
-#include "snprintf.h"
+
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
+#include <cmath>
+#include <fstream>
+#include <cstdio>
 
 Int_t TSVG::fgLineJoin = 0;
 Int_t TSVG::fgLineCap  = 0;

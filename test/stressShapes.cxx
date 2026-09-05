@@ -2,7 +2,6 @@
 #ifndef __CLING__
 #include <TRandom3.h>
 #include <TROOT.h>
-#include <snprintf.h>
 #include <TH1.h>
 #include <TMath.h>
 #include <TGeoManager.h>
@@ -11,6 +10,8 @@
 #include <TGeoMatrix.h>
 #include <TBenchmark.h>
 #include <TApplication.h>
+
+#include <cstdio>
 
 void stressShapes();
 

@@ -33,7 +33,8 @@ Implements GUI for pie-chart attributes.
 #include "TBox.h"
 #include "TPaveLabel.h"
 #include "TVirtualX.h"
-#include "snprintf.h"
+
+#include <cstdio>
 
 
 enum EPieWid {

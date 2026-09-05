@@ -49,7 +49,8 @@ class is used to make the initial connection to the window server.
 #include "TGIdleHandler.h"
 #include "TError.h"
 #include "TGlobal.h"
-#include "snprintf.h"
+
+#include <cstdio>
 
 // Global pointer to the TGClient object
 static TGClient *gClientGlobal = nullptr;

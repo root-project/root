@@ -44,8 +44,8 @@
 #include <iostream>
 #include "Getline.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #ifdef R__UNIX
 #include <csignal>
 #include <unistd.h>

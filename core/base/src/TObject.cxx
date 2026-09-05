@@ -36,20 +36,7 @@ class hierarchies (watch out for overlaps).
    that the object was allocated on the heap).
 */
 
-#include <cstring>
-#if !defined(WIN32) && !defined(__MWERKS__) && !defined(R__SOLARIS)
-#include <strings.h>
-#endif
-#include <cstdlib>
-#include <cstdio>
-#include <sstream>
-#include <fstream>
-#include <iostream>
-#include <iomanip>
-#include <limits>
-
 #include "Varargs.h"
-#include "snprintf.h"
 #include "TObject.h"
 #include "TBuffer.h"
 #include "TClass.h"
@@ -63,6 +50,18 @@ class hierarchies (watch out for overlaps).
 #include "TMemberInspector.h"
 #include "TRefTable.h"
 #include "TProcessID.h"
+
+#include <cstring>
+#if !defined(WIN32) && !defined(__MWERKS__) && !defined(R__SOLARIS)
+#include <strings.h>
+#endif
+#include <cstdlib>
+#include <cstdio>
+#include <sstream>
+#include <fstream>
+#include <iostream>
+#include <iomanip>
+#include <limits>
 
 Longptr_t TObject::fgDtorOnly   = 0;
 Bool_t    TObject::fgObjectStat = kTRUE;

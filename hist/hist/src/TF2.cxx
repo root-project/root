@@ -16,11 +16,12 @@
 #include "TBuffer.h"
 #include "TH2.h"
 #include "TVirtualPad.h"
-#include <iostream>
 #include "TColor.h"
 #include "TVirtualFitter.h"
 #include "Math/IntegratorOptions.h"
-#include "snprintf.h"
+
+#include <iostream>
+#include <cstdio>
 
 
 /** \class TF2

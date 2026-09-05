@@ -36,10 +36,6 @@
 #include "TKeyMapFile.h"
 #include "TVirtualPad.h"
 #include "Getline.h"
-#include "snprintf.h"
-#include <ctime>
-#include <cstring>
-#include <cstdlib>
 
 #include "TGFileBrowser.h"
 #include "TRootBrowser.h"
@@ -51,6 +47,11 @@
 #include "TVirtualX.h"
 
 #include "RConfigure.h"
+
+#include <cstdio>
+#include <ctime>
+#include <cstring>
+#include <cstdlib>
 
 #ifdef WIN32
 const char rootdir[] = "\\";

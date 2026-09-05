@@ -13,8 +13,6 @@
 #include "TParallelCoord.h"
 #include "TParallelCoordRange.h"
 
-#include <iostream>
-
 #include "TLatex.h"
 #include "TLine.h"
 #include "TVirtualPad.h"
@@ -28,8 +26,9 @@
 #include "TFrame.h"
 #include "TCanvas.h"
 #include "TMarker.h"
-#include "snprintf.h"
 
+#include <cstdio>
+#include <iostream>
 
 /** \class TParallelCoordVar
 
