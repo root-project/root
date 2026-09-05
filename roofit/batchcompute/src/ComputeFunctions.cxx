@@ -100,12 +100,10 @@ __rooglobal__ void computeBernstein(Batches &batches)
    const double xmax = batches.extra[nCoef + 1];
    Batch xData = batches.args[0];
 
-   // apply binomial coefficient in-place so we don't have to allocate new memory
-   double binomial = 1.0;
-   for (int k = 0; k < nCoef; k++) {
-      batches.extra[k] = batches.extra[k] * binomial;
-      binomial = (binomial * (degree - k)) / (k + 1);
-   }
+   // The binomial coefficients are applied on the fly in the evaluation loops
+   // below. Note for the CUDA case: the coefficients must not be applied to
+   // batches.extra in-place, because the extra arguments live in global device
+   // memory that is shared by all threads.
 
    if (STEP == 1) {
       double X[bufferSize];
@@ -134,9 +132,12 @@ __rooglobal__ void computeBernstein(Batches &batches)
       for (size_t i = BEGIN; i < batches.nEvents; i += STEP)
          _1_X[i] = 1 / _1_X[i];
 
+      double binomial = 1.0;
       for (int k = 0; k < nCoef; k++) {
+         const double coef = batches.extra[k] * binomial;
+         binomial = (binomial * (degree - k)) / (k + 1);
          for (size_t i = BEGIN; i < batches.nEvents; i += STEP) {
-            batches.output[i] += batches.extra[k] * powX[i] * pow_1_X[i];
+            batches.output[i] += coef * powX[i] * pow_1_X[i];
 
             // calculating next power for x and 1-x
             powX[i] *= X[i];
@@ -152,19 +153,14 @@ __rooglobal__ void computeBernstein(Batches &batches)
          for (int k = 1; k <= degree; k++)
             pow_1_X *= 1 - X;
          const double _1_X = 1 / (1 - X);
+         double binomial = 1.0;
          for (int k = 0; k < nCoef; k++) {
-            batches.output[i] += batches.extra[k] * powX * pow_1_X;
+            batches.output[i] += batches.extra[k] * binomial * powX * pow_1_X;
+            binomial = (binomial * (degree - k)) / (k + 1);
             powX *= X;
             pow_1_X *= _1_X;
          }
       }
-   }
-
-   // reset extraArgs values so we don't mutate the Batches object
-   binomial = 1.0;
-   for (int k = 0; k < nCoef; k++) {
-      batches.extra[k] = batches.extra[k] / binomial;
-      binomial = (binomial * (degree - k)) / (k + 1);
    }
 }
 
@@ -664,12 +660,23 @@ __rooglobal__ void computeNormalizedPdf(Batches &batches)
       batches.output[i] = out;
    }
 
+   // The counters live in memory that is shared between all threads in the
+   // CUDA case, so they need to be accumulated atomically there. Note that
+   // the CPU branch below is only safe because the CPU implementation runs
+   // single-threaded: with implicit multi-threading, the workers would share
+   // this memory as well and would also need atomic accumulation.
+#ifdef __CUDACC__
    if (nEvalErrorsType0 > 0)
-      batches.extra[0] = batches.extra[0] + nEvalErrorsType0;
-   if (nEvalErrorsType1 > 1)
-      batches.extra[1] = batches.extra[1] + nEvalErrorsType1;
-   if (nEvalErrorsType2 > 2)
-      batches.extra[2] = batches.extra[2] + nEvalErrorsType2;
+      atomicAdd(&batches.extra[0], double(nEvalErrorsType0));
+   if (nEvalErrorsType1 > 0)
+      atomicAdd(&batches.extra[1], double(nEvalErrorsType1));
+   if (nEvalErrorsType2 > 0)
+      atomicAdd(&batches.extra[2], double(nEvalErrorsType2));
+#else
+   batches.extra[0] = batches.extra[0] + nEvalErrorsType0;
+   batches.extra[1] = batches.extra[1] + nEvalErrorsType1;
+   batches.extra[2] = batches.extra[2] + nEvalErrorsType2;
+#endif
 }
 
 /* TMath::ASinH(x) needs to be replaced with ln( x + sqrt(x^2+1))

@@ -22,6 +22,7 @@
 
 #include <Math/Util.h>
 
+#include <functional>
 #include <map>
 #include <stdexcept>
 #include <sstream>
@@ -107,6 +108,15 @@ public:
    }
 
    RooBatchCompute::Config config(RooAbsArg const *arg) const;
+
+   /// A counter that is incremented every time new input data is loaded into
+   /// the evaluation context. Reducer nodes can use it as a cache
+   /// invalidation key for quantities that only depend on the input data,
+   /// like the sum of event weights. The counter values are unique across
+   /// all evaluation contexts in the process, so cached values can not be
+   /// wrongly validated by an unrelated context.
+   std::size_t inputGeneration() const { return _inputGeneration; }
+
    void enableVectorBuffers(bool enable) { _enableVectorBuffers = enable; }
    void resetVectorBuffers() { _bufferIdx = 0; }
    std::span<double> output() { return _currentOutput; }
@@ -114,16 +124,25 @@ public:
    void setOutputWithOffset(RooAbsArg const *arg, ROOT::Math::KahanSum<double> val,
                             ROOT::Math::KahanSum<double> const &offset);
 
+   /// Register an action to be run after the evaluation of the full
+   /// computation graph, when all potentially asynchronous computations and
+   /// data transfers have completed. Used to defer work that depends on
+   /// results that are read back from the GPU without synchronization, like
+   /// the logging of evaluation error counts.
+   void deferAction(std::function<void()> action) { _deferredActions.emplace_back(std::move(action)); }
+
 private:
    friend class Evaluator;
 
    OffsetMode _offsetMode = OffsetMode::WithoutOffset;
+   std::size_t _inputGeneration = 1;
    std::span<double> _currentOutput;
    std::vector<std::span<const double>> _ctx;
    bool _enableVectorBuffers = false;
    std::vector<std::vector<double>> _buffers;
    std::size_t _bufferIdx = 0;
    std::vector<RooBatchCompute::Config> _cfgs;
+   std::vector<std::function<void()>> _deferredActions;
 };
 
 } // namespace RooFit

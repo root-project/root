@@ -104,19 +104,9 @@ public:
 
    std::unique_ptr<AbsBufferManager> createBufferManager() const override;
 
-   CudaInterface::CudaEvent *newCudaEvent(bool) const override { throw std::bad_function_call(); }
    CudaInterface::CudaStream *newCudaStream() const override { throw std::bad_function_call(); }
-   void deleteCudaEvent(CudaInterface::CudaEvent *) const override { throw std::bad_function_call(); }
    void deleteCudaStream(CudaInterface::CudaStream *) const override { throw std::bad_function_call(); }
-   void cudaEventRecord(CudaInterface::CudaEvent *, CudaInterface::CudaStream *) const override
-   {
-      throw std::bad_function_call();
-   }
-   void cudaStreamWaitForEvent(CudaInterface::CudaStream *, CudaInterface::CudaEvent *) const override
-   {
-      throw std::bad_function_call();
-   }
-   bool cudaStreamIsActive(CudaInterface::CudaStream *) const override { throw std::bad_function_call(); }
+   void synchronizeCudaStream(CudaInterface::CudaStream *) const override { throw std::bad_function_call(); }
 
 private:
 #ifdef ROOBATCHCOMPUTE_USE_IMT

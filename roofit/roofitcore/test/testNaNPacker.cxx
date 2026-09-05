@@ -261,6 +261,66 @@ INSTANTIATE_TEST_SUITE_P(RooNaNPacker, TestForDifferentBackends, testing::Values
 
 #undef BATCH_MODE_VALS
 
+#ifdef ROOFIT_CUDA
+/// Verify that the CUDA implementation of the NLL reduction reports
+/// evaluation errors exactly like the CPU implementation: the accumulated
+/// "badness" of non-positive pdf values is packed into the returned NaN so
+/// the minimizer can recover, and zero-weight events are skipped.
+TEST(RooNaNPacker, CudaEvalErrorParity)
+{
+   using namespace RooFit;
+
+   RooRealVar x("x", "x", -10, 10);
+   RooRealVar a1("a1", "a1", 12., -10., 20.);
+   RooRealVar a2("a2", "a2", 1.1, -10., 20.);
+   RooGenericPdf pdf("pdf", "a1 + x + a2*x*x", {x, a1, a2});
+   std::unique_ptr<RooDataSet> data{pdf.generate(x, 10000)};
+
+   // We provoke a lot of evaluation errors in this test: don't log them.
+   const auto prevErrorLoggingMode = RooAbsReal::evalErrorLoggingMode();
+   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::Ignore);
+
+   // Move the parameters into a region where the pdf is negative for many
+   // events: both backends must return a NaN with the same packed "badness".
+   a1.setVal(-9.);
+   a2.setVal(-1.);
+   std::unique_ptr<RooAbsReal> nllCpu{pdf.createNLL(*data, EvalBackend::Cpu())};
+   const double valCpu = nllCpu->getVal();
+   std::unique_ptr<RooAbsReal> nllCuda{pdf.createNLL(*data, EvalBackend::Cuda())};
+   const double valCuda = nllCuda->getVal();
+
+   EXPECT_TRUE(RooNaNPacker::isNaNWithPayload(valCpu));
+   EXPECT_TRUE(RooNaNPacker::isNaNWithPayload(valCuda));
+   // The accumulation order differs between the backends, so the float
+   // payloads only agree within a relative tolerance.
+   EXPECT_THAT(RooNaNPacker::unpackNaN(valCuda), RelativeNear(RooNaNPacker::unpackNaN(valCpu), 1e-5));
+
+   // Zero-weight events must be skipped, even where the pdf is not positive.
+   a1.setVal(-9.);
+   a2.setVal(1.1); // pdf negative around x=0, positive for large x
+   RooRealVar w("w", "w", 0, 1);
+   RooDataSet wdata("wdata", "wdata", RooArgSet(x, w), WeightVar("w"));
+   for (int i = 0; i < 1000; ++i) {
+      x.setVal(5.0 + 4.0 * i / 1000.0); // pdf positive here
+      wdata.add(RooArgSet(x), 1.0);
+   }
+   x.setVal(0.0); // pdf negative here, but the events are weightless
+   for (int i = 0; i < 10; ++i) {
+      wdata.add(RooArgSet(x), 0.0);
+   }
+   std::unique_ptr<RooAbsReal> nllCpuW{pdf.createNLL(wdata, EvalBackend::Cpu())};
+   const double valCpuW = nllCpuW->getVal();
+   std::unique_ptr<RooAbsReal> nllCudaW{pdf.createNLL(wdata, EvalBackend::Cuda())};
+   const double valCudaW = nllCudaW->getVal();
+
+   EXPECT_TRUE(std::isfinite(valCpuW));
+   EXPECT_TRUE(std::isfinite(valCudaW));
+   EXPECT_THAT(valCudaW, RelativeNear(valCpuW, 1e-10));
+
+   RooAbsReal::setEvalErrorLoggingMode(prevErrorLoggingMode);
+}
+#endif // ROOFIT_CUDA
+
 /// Make coefficients of RooAddPdf sum to more than 1. Fitter should recover from this.
 TEST(RooNaNPacker, FitAddPdf_DegenerateCoeff)
 {
