@@ -4422,6 +4422,23 @@ void make_narg_ctor_with_return(const FunctionDecl* FD, const unsigned N,
   }
 }
 
+// A wrapper can only name a type whose spelling is reachable from file
+// scope: the head of the sugared name and every record enclosing it must be
+// public. Builtins and compound types keep the status quo.
+static bool isWrapperSpellable(QualType QT) {
+  const NamedDecl* D = nullptr;
+  if (const auto* TT = QT->getAs<TypedefType>())
+    D = TT->getDecl();
+  else if (const auto* RD = QT->getAsRecordDecl())
+    D = RD;
+  while (D) {
+    if (D->getAccess() != AS_public && D->getAccess() != AS_none)
+      return false;
+    D = llvm::dyn_cast<NamedDecl>(D->getDeclContext());
+  }
+  return true;
+}
+
 void make_narg_call_with_return(compat::Interpreter& I, const FunctionDecl* FD,
                                 const unsigned N, const std::string& class_name,
                                 std::ostringstream& buf, int indent_level) {
@@ -4451,6 +4468,12 @@ void make_narg_call_with_return(compat::Interpreter& I, const FunctionDecl* FD,
     return;
   }
   QualType QT = FD->getReturnType();
+  // A return type spelled through a non-public path (e.g. a typedef nested
+  // in a private helper class) cannot be named in the wrapper; fall back to
+  // the canonical type when that one is spellable (the inverse also exists:
+  // a public typedef of a private class must keep its sugared name).
+  if (!isWrapperSpellable(QT) && isWrapperSpellable(QT.getCanonicalType()))
+    QT = QT.getCanonicalType();
   if (QT->isVoidType()) {
     std::ostringstream typedefbuf;
     std::ostringstream callbuf;
