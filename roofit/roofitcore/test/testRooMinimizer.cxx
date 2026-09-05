@@ -18,7 +18,7 @@
 
 class EvalBackendParametrizedTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
 public:
-   EvalBackendParametrizedTest() : _evalBackend{RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy)} {}
+   EvalBackendParametrizedTest() : _evalBackend{RooFit::EvalBackend::Cpu()} {}
 
 private:
    void SetUp() override

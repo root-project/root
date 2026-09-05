@@ -54,8 +54,7 @@ class RooFitBackend:
         with suppress_root_output():
             nll = pdf.createNLL(
                 data,
-                self.ROOT.RooFit.NumCPU(1),
-                self.ROOT.RooFit.EvalBackend("legacy"),
+                self.ROOT.RooFit.EvalBackend("cpu"),
             )
             reference = float(nll.getVal())
         values = []
