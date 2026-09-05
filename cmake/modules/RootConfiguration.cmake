@@ -159,11 +159,6 @@ set(builddavix ${value${davix}})
 set(davixlibdir ${DAVIX_LIBRARY_DIR})
 set(davixlib ${DAVIX_LIBRARY})
 set(davixincdir ${DAVIX_INCLUDE_DIR})
-if(davix)
-  set(hasdavix define)
-else()
-  set(hasdavix undef)
-endif()
 
 set(buildnetxng ${value${xrootd}})
 
@@ -171,11 +166,6 @@ set(buildcurl ${value${curl}})
 set(curllibdir ${CURL_LIBRARY_DIR})
 set(curllib ${CURL_LIBRARY})
 set(curlincdir ${CURL_INCLUDE_DIR})
-if(curl)
-  set(hascurl define)
-else()
-  set(hascurl undef)
-endif()
 
 set(builddcap ${value${dcap}})
 set(dcaplibdir ${DCAP_LIBRARY_DIR})
@@ -322,167 +312,14 @@ endif()
 # set(setresuid undef)
 CHECK_CXX_SOURCE_COMPILES("#include <unistd.h>
   int main() { uid_t r = 0, e = 0, s = 0; if (setresuid(r, e, s) != 0) { }; return 0;}" found_setresuid)
-if(found_setresuid)
-  set(setresuid define)
-else()
-  set(setresuid undef)
-endif()
-
-if(mathmore)
-  set(hasmathmore define)
-else()
-  set(hasmathmore undef)
-endif()
-if(imt)
-  set(useimt define)
-else()
-  set(useimt undef)
-endif()
-if(CMAKE_USE_PTHREADS_INIT)
-  set(haspthread define)
-else()
-  set(haspthread undef)
-endif()
-if(x11)
-  set(hasxft define)
-else()
-  set(hasxft undef)
-endif()
-if(lzma)
-  set(haslzmacompression define)
-else()
-  set(haslzmacompression undef)
-endif()
-if(lz4)
-  set(haslz4compression define)
-else()
-  set(haslz4compression undef)
-endif()
-if(clad)
-  set(hasclad define)
-else()
-  set(hasclad undef)
-endif()
-if(cocoa)
-  set(hascocoa define)
-else()
-  set(hascocoa undef)
-endif()
-if(vdt)
-  set(hasvdt define)
-else()
-  set(hasvdt undef)
-endif()
-if(ROOT_HAVE_EXPERIMENTAL_SIMD)
-  set(hasstdexperimentalsimd define)
-else()
-  set(hasstdexperimentalsimd undef)
-endif()
-if(ROOT_EXPERIMENTAL_SIMD_PIN_AVX_ABI)
-  set(experimentalsimdpinavxabi define)
-else()
-  set(experimentalsimdpinavxabi undef)
-endif()
-if(dataframe)
-  set(hasdataframe define)
-else()
-  set(hasdataframe undef)
-endif()
-if(dev)
-  set(use_less_includes define)
-else()
-  set(use_less_includes undef)
-endif()
-if(root7)
-  set(hasroot7 define)
-else()
-  set(hasroot7 undef)
-endif()
-
-if(ZLIB_NG)
-  set(usezlibng define)
-else()
-  set(usezlibng undef)
-endif()
-if(runtime_cxxmodules)
-  set(usecxxmodules define)
-else()
-  set(usecxxmodules undef)
-endif()
-if(libcxx)
-  set(uselibc++ define)
-else()
-  set(uselibc++ undef)
-endif()
-if(gcctoolchain)
-  set(setgcctoolchain define)
-else()
-  set(setgcctoolchain undef)
-endif()
-if(memory_termination)
-  set(memory_term define)
-else()
-  set(memory_term undef)
-endif()
-if(cefweb)
-  set(hascefweb define)
-else()
-  set(hascefweb undef)
-endif()
-if(qt6web)
-  set(hasqt6webengine define)
-else()
-  set(hasqt6webengine undef)
-endif()
-if (tmva-cpu)
-  set(hastmvacpu define)
-else()
-  set(hastmvacpu undef)
-endif()
-if (tmva-gpu)
-  set(hastmvagpu define)
-else()
-  set(hastmvagpu undef)
-endif()
-if (tmva-cudnn)
-   set(hastmvacudnn define)
-else()
-   set(hastmvacudnn undef)
-endif()
-if (tmva-pymva)
-  set(haspymva define)
-else()
-  set(haspymva undef)
-endif()
-if (uring)
-  set(hasuring define)
-else()
-  set(hasuring undef)
-endif()
-if (geom)
-  set(hasgeom define)
-else()
-  set(hasgeom undef)
-endif()
-
 
 CHECK_CXX_SOURCE_COMPILES("
 inline __attribute__((always_inline)) bool TestBit(unsigned long f) { return f != 0; };
 int main() { return TestBit(0); }" found_attribute_always_inline)
-if(found_attribute_always_inline)
-   set(has_found_attribute_always_inline define)
-else()
-   set(has_found_attribute_always_inline undef)
-endif()
 
 CHECK_CXX_SOURCE_COMPILES("
 inline __attribute__((noinline)) bool TestBit(unsigned long f) { return f != 0; };
 int main() { return TestBit(0); }" has_found_attribute_noinline)
-if(has_found_attribute_noinline)
-   set(has_found_attribute_noinline define)
-else()
-   set(has_found_attribute_noinline undef)
-endif()
 
 # The hardware interference size must be stable across all TUs in a ROOT build, so we need to save it in RConfigure.hxx
 # Since it can vary for different compilers or tune settings, we cannot base the ABI on a value that might change,
@@ -562,7 +399,84 @@ add_custom_target(ensure_build_tree_marker ALL
   DEPENDS "${build_tree_marker}"
 )
 
-configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in ginclude/RConfigure.h NEWLINE_STYLE UNIX)
+add_library(ROOTdefs INTERFACE)
+# Note: if this is modified, modify also RConfigure.h.in for backward compatibility
+if (gnuinstall)
+  target_compile_definitions(ROOTdefs INTERFACE
+    ROOTPREFIX=${prefix}
+    ROOTBINDIR=${bindir}
+    ROOTLIBDIR=${libdir}
+    ROOTETCDIR=${etcdir}
+    ROOTDATADIR=${datadir}
+    ROOTDOCDIR=${docdir}
+    ROOTMACRODIR=${macrodir}
+    ROOTTUTDIR=${tutdir}
+    ROOTSRCDIR=${srcdir}
+    ROOTICONPATH=${iconpath}
+    TTFFONTDIR=${ttffontdir}
+  )
+endif()
+
+target_compile_definitions(ROOTdefs INTERFACE
+  ROOT__ARCHITECTURE=${architecture}
+  EXTRAICONPATH=$<IF:$<BOOL:${extraiconpath}>,\"${extraiconpath}\",\"\">
+  ROOT__cplusplus=${__cplusplus}
+  $<$<BOOL:${found_setresuid}>:R__HAS_SETRESUID>
+  $<$<BOOL:${mathmore}>:R__HAS_MATHMORE>
+  $<$<BOOL:${CMAKE_USE_PTHREADS_INIT}>:R__HAS_PTHREAD>
+  $<$<BOOL:${x11}>:R__HAS_XFT>
+  $<$<BOOL:${clad}>:R__HAS_CLAD>
+  $<$<BOOL:${cocoa}>:R__HAS_COCOA>
+  $<$<BOOL:${vdt}>:R__HAS_VDT>
+  $<$<BOOL:${ROOT_HAVE_EXPERIMENTAL_SIMD}>:R__HAS_STD_EXPERIMENTAL_SIMD>
+  $<$<BOOL:${R__EXPERIMENTAL_SIMD_PIN_AVX_ABI}>:R__EXPERIMENTAL_SIMD_PIN_AVX_ABI>
+  $<$<BOOL:${runtime_cxxmodules}>:R__USE_CXXMODULES>
+  $<$<BOOL:${libcxx}>:R__USE_LIBCXX>
+  $<$<BOOL:${found_attribute_always_inline}>:R__HAS_ATTRIBUTE_ALWAYS_INLINE>
+  $<$<BOOL:${has_found_attribute_noinline}>:R__HAS_ATTRIBUTE_NOINLINE>
+  $<$<BOOL:${imt}>:R__USE_IMT>
+  $<$<BOOL:${memory_termination}>:R__COMPLETE_MEM_TERMINATION>
+  $<$<BOOL:${cefweb}>:R__HAS_CEFWEB>
+  $<$<BOOL:${qt6web}>:R__HAS_QT6WEB>
+  $<$<BOOL:${davix}>:R__HAS_DAVIX>
+  $<$<BOOL:${curl}>:R__HAS_CURL>
+  $<$<BOOL:${dataframe}>:R__HAS_DATAFRAME>
+  $<$<BOOL:${root7}>:R__HAS_ROOT7>
+  $<$<BOOL:${dev}>:R__LESS_INCLUDES>
+  R__HARDWARE_INTERFERENCE_SIZE=${hardwareinterferencesize}
+  $<$<BOOL:${ZLIB_NG}>:R__HAS_ZLIB_NG>
+  $<$<BOOL:${tmva-cpu}>:R__HAS_TMVACPU>
+  $<$<BOOL:${tmva-gpu}>:R__HAS_TMVAGPU>
+  $<$<BOOL:${tmva-cudnn}>:R__HAS_CUDNN>
+  $<$<BOOL:${tmva-pymva}>:R__HAS_PYMVA>
+  $<$<BOOL:${uring}>:R__HAS_URING>
+  $<$<BOOL:${geom}>:R__HAS_GEOM>
+  $<$<CXX_COMPILER_ID:MSVC>:-Zc:__cplusplus>
+)
+
+file(GENERATE
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/ginclude/RConfigure.h
+    CONTENT
+"#ifndef ROOT_RConfigure
+#define ROOT_RConfigure
+
+#define $<JOIN:$<LIST:TRANSFORM,$<TARGET_PROPERTY:ROOTdefs,INTERFACE_COMPILE_DEFINITIONS>,REPLACE,=, >,\n#define >
+
+#if defined(__cplusplus) && (__cplusplus != ROOT__cplusplus)
+# define R__STR(x) #x
+# define R__XSTR(x) R__STR(x)
+# pragma message(__FILE__ \": Warning: The C++ standard in this build (\" R__XSTR(__cplusplus) \") does not match ROOT configuration (\" R__XSTR(ROOT__cplusplus) \"); this might cause unexpected issues.\")
+# if defined(_MSC_VER)
+#  pragma message(__FILE__ \": Warning: And please make sure you are using the -Zc:__cplusplus compilation flag\")
+# endif
+# undef R__XSTR
+# undef R__STR
+#endif
+
+#endif
+"
+    NEWLINE_STYLE UNIX
+)
 install(FILES ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 #---Configure and install various files----------------------------------------------------------------------
