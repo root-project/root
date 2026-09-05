@@ -235,6 +235,22 @@ TEST(RProfile, Clone)
    EXPECT_EQ(profileB.GetBinContent(9).fSumValues, 25.0);
 }
 
+TEST(RProfile, ComputeMean)
+{
+   static constexpr std::size_t Bins = 20;
+   RProfile profile(Bins, {0, Bins});
+   EXPECT_TRUE(std::isnan(profile.GetBinContent(0).ComputeMean()));
+
+   profile.Fill(8.5, 23.0);
+   profile.Fill(8.5, 25.0);
+
+   profile.Fill(9.5, 23.0, RWeight(0.8));
+   profile.Fill(9.5, 25.0, RWeight(0.7));
+
+   EXPECT_EQ(profile.GetBinContent(8).ComputeMean(), 24.0);
+   EXPECT_FLOAT_EQ(profile.GetBinContent(9).ComputeMean(), 23.933333);
+}
+
 TEST(RProfile, Fill)
 {
    static constexpr std::size_t Bins = 20;
