@@ -98,13 +98,6 @@ TEST(RooSimultaneous, CategoriesWithNoPdf)
 
    // We don't care about the fit result, just that it doesn't crash.
    using namespace RooFit;
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   sim.fitTo(*ds, EvalBackend(EvalBackend::Value::Legacy), PrintLevel(-1));
-   m0.setVal(0.5);
-   m0.setError(0.0);
-   m1.setVal(0.5);
-   m1.setError(0.0);
-#endif
    sim.fitTo(*ds, EvalBackend::Cpu(), PrintLevel(-1));
 }
 
@@ -150,9 +143,6 @@ TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
    const char *cutRange1 = "SideBandLo_cat1,SideBandHi_cat1";
    const char *cutRange2 = "SideBandLo_cat2,SideBandHi_cat2";
    using RealPtr = std::unique_ptr<RooAbsReal>;
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   RealPtr nllSim{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange(), EvalBackend(EvalBackend::Value::Legacy))};
-#endif
    RealPtr nllSimBatch{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange(), EvalBackend::Cpu())};
 
    // In simultaneous PDFs, the probability is normalized over the categories,
@@ -168,12 +158,8 @@ TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
    RooAddition nllSimRef{"nllSimRef", "nllSimRef", {*nll1, *nll2, RooConst(normTerm)}};
 
    const double nllSimRefVal = nllSimRef.getVal();
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   const double nllSimVal = nllSim->getVal();
-   EXPECT_FLOAT_EQ(nllSimVal, nllSimRefVal);
-#endif
    const double nllSimBatchVal = nllSimBatch->getVal();
-   EXPECT_FLOAT_EQ(nllSimBatchVal, nllSimRefVal) << "BatchMode and old RooFit don't agree!";
+   EXPECT_FLOAT_EQ(nllSimBatchVal, nllSimRefVal);
 }
 
 using TestStatisticTest = RooFitEvalBackendTest;
@@ -506,8 +492,7 @@ TEST_P(TestStatisticTest, RooSimultaneousSingleChannelCrossCheckWithCondVar)
 /// The reference value is computed analytically: each channel has a single
 /// fixed-shape exponential, so the extended-MLE for the yield reduces to
 /// `N_obs_in_range * I_full / I_range`, where the integrals run over the full
-/// observable range and the fit range respectively. This avoids depending on
-/// the legacy evaluation backend, which is not always built.
+/// observable range and the fit range respectively.
 TEST(RooSimultaneous, RangedExtendedRooAddPdf)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLevel{RooFit::WARNING};
@@ -896,9 +881,6 @@ TEST(RooSimultaneous, ParameterIndexSwitchMode)
    std::unique_ptr<RooDataSet> data{refModel0.generate(x, 500)};
 
    std::vector<RooFit::EvalBackend> backends;
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   backends.push_back(RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy));
-#endif
    backends.push_back(RooFit::EvalBackend::Cpu());
    backends.push_back(RooFit::EvalBackend::CodegenNoGrad());
 
@@ -974,9 +956,6 @@ TEST(RooSimultaneous, ParameterIndexTopLevelNLL)
    std::unique_ptr<RooDataSet> data{expo.generate(x, 500)};
 
    std::vector<RooFit::EvalBackend> backends;
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   backends.push_back(RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy));
-#endif
    backends.push_back(RooFit::EvalBackend::Cpu());
    backends.push_back(RooFit::EvalBackend::CodegenNoGrad());
 
@@ -1025,9 +1004,6 @@ TEST(RooSimultaneous, ParameterIndexSwitchModeExtended)
    std::unique_ptr<RooDataSet> data{gauss.generate(x, 500)};
 
    std::vector<RooFit::EvalBackend> backends;
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   backends.push_back(RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy));
-#endif
    backends.push_back(RooFit::EvalBackend::Cpu());
    backends.push_back(RooFit::EvalBackend::CodegenNoGrad());
 
@@ -1134,9 +1110,6 @@ TEST(RooSimultaneous, NestedSwitchMode)
    ASSERT_NE(data, nullptr);
 
    std::vector<RooFit::EvalBackend> backends;
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   backends.push_back(RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy));
-#endif
    backends.push_back(RooFit::EvalBackend::Cpu());
    backends.push_back(RooFit::EvalBackend::CodegenNoGrad());
 
@@ -1183,11 +1156,5 @@ TEST(RooSimultaneous, NestedObservableIndexThrows)
 
    for (RooAbsPdf *pdf : std::initializer_list<RooAbsPdf *>{&comb, &modelSwitch}) {
       EXPECT_THROW(std::unique_ptr<RooAbsReal>{pdf->createNLL(data)}, std::runtime_error) << pdf->GetName();
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-      EXPECT_THROW(
-         std::unique_ptr<RooAbsReal>{pdf->createNLL(data, RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy))},
-         std::runtime_error)
-         << pdf->GetName();
-#endif
    }
 }

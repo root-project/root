@@ -142,9 +142,8 @@ std::unique_ptr<ChangeOperModeRAII> setOperModesDirty(RooAbsReal &function)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct MINUIT interface to given function. Function can be anything,
-/// but is typically a -log(likelihood) implemented by RooNLLVar or a chi^2
-/// (implemented by RooChi2Var). Other frequent use cases are a RooAddition
-/// of a RooNLLVar plus a penalty or constraint term. This class propagates
+/// but is typically a -log(likelihood) or a chi^2 as returned by
+/// RooAbsPdf::createNLL() or RooAbsReal::createChi2(). This class propagates
 /// all RooFit information (floating parameters, their values and errors)
 /// to MINUIT before each MINUIT call and propagates all MINUIT information
 /// back to the RooFit object at the end of each call (updated parameter

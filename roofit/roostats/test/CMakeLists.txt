@@ -18,7 +18,7 @@ if(cuda)
   set_tests_properties(gtest-roofit-roostats-stressRooStats PROPERTIES RESOURCE_LOCK GPU)
 endif()
 # Like the non-default-minimizer variant in the original suite, the Minuit
-# variant only runs the legacy and cpu backends (that is also why it doesn't
+# variant only runs the cpu backend (that is also why it doesn't
 # need to lock the GPU resource).
 ROOT_ADD_TEST(test-stressroostats-minuit COMMAND stressRooStats --gtest_filter=-*EvalBackendcuda*
               ENVIRONMENT STRESSROOSTATS_MINIMIZER=Minuit LABELS longtest TIMEOUT 3600)

@@ -48,10 +48,7 @@ COMPARE_FIXED_VALUES_UNNORM(TestGauss, CompareFixedUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestGauss, CompareFixedNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestGauss, CompareFixedNormLog)
 
-FIT_TEST_SCALAR(TestGauss, RunScalar)
 FIT_TEST_BATCH(TestGauss, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestGauss, CompareBatchScalar)
-
 #if !defined(_MSC_VER) // TODO: make TestGaussWeighted work on Windows
 
 class TestGaussWeighted : public PDFTestWeightedData {
@@ -76,8 +73,6 @@ protected:
 };
 
 FIT_TEST_BATCH(TestGaussWeighted, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestGaussWeighted, CompareBatchScalar)
-
 #endif // !defined(_MSC_VER)
 
 class TestGaussInMeanAndX : public PDFTest {
@@ -106,8 +101,6 @@ COMPARE_FIXED_VALUES_NORM(TestGaussInMeanAndX, CompareFixedNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestGaussInMeanAndX, CompareFixedNormLog)
 
 FIT_TEST_BATCH(TestGaussInMeanAndX, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestGaussInMeanAndX, CompareBatchScalar)
-
 class TestGaussWithFormulaParameters : public PDFTest {
 protected:
    TestGaussWithFormulaParameters() : PDFTest("Gauss(x, mean)")
@@ -140,6 +133,4 @@ COMPARE_FIXED_VALUES_UNNORM(TestGaussWithFormulaParameters, FixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestGaussWithFormulaParameters, FixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestGaussWithFormulaParameters, FixedValuesNormLog)
 
-FIT_TEST_SCALAR(TestGaussWithFormulaParameters, RunScalar)
 FIT_TEST_BATCH(TestGaussWithFormulaParameters, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestGaussWithFormulaParameters, CompareBatchScalar)

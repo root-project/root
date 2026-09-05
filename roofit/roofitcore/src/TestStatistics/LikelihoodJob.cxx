@@ -52,8 +52,7 @@ void LikelihoodJob::init_vars()
 
    // Retrieve non-constant parameters
    std::unique_ptr<RooArgSet> vars{likelihood_->getParameters()};
-   // TODO: make sure this is the right list of parameters, compare to original
-   // implementation in RooRealMPFE.cxx
+   // TODO: make sure this is the right list of parameters
 
    RooArgList varList(*vars);
 

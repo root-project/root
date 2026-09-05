@@ -26,6 +26,7 @@
 #include <RooFormulaVar.h>
 #include <RooGenericPdf.h>
 #include <RooAddPdf.h>
+#include <RooAddition.h>
 
 #include <TH1D.h>
 #include <TMath.h>
@@ -35,6 +36,7 @@
 #include <cmath>
 #include <memory>
 #include <numeric>
+#include <stdexcept>
 
 namespace {
 
@@ -596,9 +598,44 @@ TEST(RooNLLVar, CopyRangedNLL)
    EXPECT_FLOAT_EQ(nllrange->getVal(), nllrangeClone->getVal());
 }
 
+/// A RooFormulaVar or RooAddition that wraps a test statistic has to report its
+/// error level, such that minimizing the wrapper gives correct uncertainties.
+TEST(CreateNLL, ErrorLevelOfWrappedTestStatistic)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::gauss(x[-10, 10], mean[0, -10, 10], sigma[2, 0.1, 10])");
+   RooAbsPdf &gauss = *ws.pdf("gauss");
+   std::unique_ptr<RooDataSet> data{gauss.generate(*ws.var("x"), 100)};
+   std::unique_ptr<RooDataHist> hist{data->binnedClone()};
+
+   std::unique_ptr<RooAbsReal> nll{gauss.createNLL(*data)};
+   std::unique_ptr<RooAbsReal> chi2{gauss.createChi2(*hist)};
+
+   RooFormulaVar nllFormula{"nllFormula", "x[0]", {*nll}};
+   RooAddition nllSum{"nllSum", "nllSum", {*nll}};
+   RooFormulaVar chi2Formula{"chi2Formula", "x[0]", {*chi2}};
+
+   EXPECT_EQ(nllFormula.defaultErrorLevel(), 0.5);
+   EXPECT_EQ(nllSum.defaultErrorLevel(), 0.5);
+   EXPECT_EQ(chi2Formula.defaultErrorLevel(), 1.0);
+}
+
+/// Selecting the removed legacy evaluation backend has to give a clear error.
+TEST(CreateNLL, LegacyBackendThrows)
+{
+   try {
+      RooFit::EvalBackend backend{std::string{"legacy"}};
+      FAIL() << "Selecting the legacy backend should throw";
+   } catch (std::runtime_error const &err) {
+      EXPECT_NE(std::string{err.what()}.find("was removed"), std::string::npos) << err.what();
+   }
+}
+
 class OffsetBinTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend, bool, bool, bool, bool, bool>> {
 public:
-   OffsetBinTest() : _evalBackend{RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy)} {}
+   OffsetBinTest() : _evalBackend{RooFit::EvalBackend::Cpu()} {}
 
 private:
    void SetUp() override
@@ -986,43 +1023,6 @@ TEST(NLL, SetData)
 // pdf. The RooFit logic to figure out constrained parameters should however
 // now be confused by this, and not strip away these parameters from the list
 // of constrained parameters.
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-/// Check that selecting the deprecated legacy evaluation backend emits a
-/// deprecation warning when the test statistic object is created.
-TEST(CreateNLL, LegacyBackendDeprecationWarning)
-{
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-
-   RooWorkspace ws;
-   ws.factory("Gaussian::gauss(x[-10, 10], mean[0, -10, 10], sigma[2, 0.1, 10])");
-   RooAbsPdf &gauss = *ws.pdf("gauss");
-   std::unique_ptr<RooDataSet> data{gauss.generate(*ws.var("x"), 100)};
-   std::unique_ptr<RooDataHist> hist{data->binnedClone()};
-
-   const std::string expectedSubstr = "deprecated and will be removed in ROOT 6.44";
-
-   {
-      RooHelpers::HijackMessageStream hijack(RooFit::WARNING, RooFit::InputArguments);
-      std::unique_ptr<RooAbsReal> nll{
-         gauss.createNLL(*data, RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy))};
-      EXPECT_NE(hijack.str().find(expectedSubstr), std::string::npos) << hijack.str();
-   }
-
-   {
-      RooHelpers::HijackMessageStream hijack(RooFit::WARNING, RooFit::InputArguments);
-      std::unique_ptr<RooAbsReal> chi2{
-         gauss.createChi2(*hist, RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy))};
-      EXPECT_NE(hijack.str().find(expectedSubstr), std::string::npos) << hijack.str();
-   }
-
-   // No warning must be emitted for the default backend.
-   {
-      RooHelpers::HijackMessageStream hijack(RooFit::WARNING, RooFit::InputArguments);
-      std::unique_ptr<RooAbsReal> nll{gauss.createNLL(*data)};
-      EXPECT_EQ(hijack.str().find(expectedSubstr), std::string::npos) << hijack.str();
-   }
-}
-#endif // ROOFIT_LEGACY_EVAL_BACKEND
 
 TEST(CreateNLL, CombineStyleConstraints)
 {
