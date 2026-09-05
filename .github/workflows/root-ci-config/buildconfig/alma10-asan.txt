@@ -4,9 +4,11 @@ ccache=ON
 builtin_civetweb=ON
 builtin_vdt=ON
 ccache=ON
+daos_mock=ON
 fail-on-missing=ON
 minimal=ON
 roottest=ON
 testing=ON
+vdt=ON
 LSAN_OPTIONS=verbosity=1:log_threads=1
 ROOT_CTEST_CUSTOM_FLAGS="-E \(gtest-core-metacling-TClingTest$\|roottest-cling-specialobj-runf02$\|roottest-root-collection-DeleteWarning$\|roottest-root-io-evolution-fixarr2$\|roottest-root-meta-rlibmap$\|roottest-root-tree-cloning-runtreeCloneTest2$\|roottest-root-treeproxy-vectorint-vectorint$\)"
