@@ -358,6 +358,7 @@ TEST(RooChi2Var, IntegrateBins)
 static std::vector<RooFit::EvalBackend> chi2CrossCheckBackends()
 {
    std::vector<RooFit::EvalBackend> backends;
+#ifdef ROOFIT_CUDA
    backends.push_back(RooFit::EvalBackend::Cuda());
 #endif
    backends.push_back(RooFit::EvalBackend::CodegenNoGrad());
