@@ -1,7 +1,9 @@
 ccache=ON
 builtin_civetweb=ON
 builtin_vdt=ON
+daos_mock=ON
 fail-on-missing=ON
 minimal=ON
 roottest=ON
 testing=ON
+vdt=ON
