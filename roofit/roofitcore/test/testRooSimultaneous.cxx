@@ -96,7 +96,7 @@ TEST(RooSimultaneous, CategoriesWithNoPdf)
    // We don't care about the fit result, just that it doesn't crash.
    using namespace RooFit;
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   sim.fitTo(*ds, EvalBackend::Legacy(), PrintLevel(-1));
+   sim.fitTo(*ds, EvalBackend(EvalBackend::Value::Legacy), PrintLevel(-1));
    m0.setVal(0.5);
    m0.setError(0.0);
    m1.setVal(0.5);
@@ -148,7 +148,7 @@ TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
    const char *cutRange2 = "SideBandLo_cat2,SideBandHi_cat2";
    using RealPtr = std::unique_ptr<RooAbsReal>;
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   RealPtr nllSim{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange(), EvalBackend::Legacy())};
+   RealPtr nllSim{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange(), EvalBackend(EvalBackend::Value::Legacy))};
 #endif
    RealPtr nllSimBatch{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange(), EvalBackend::Cpu())};
 
@@ -175,7 +175,7 @@ TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
 
 class TestStatisticTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
 public:
-   TestStatisticTest() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
+   TestStatisticTest() : _evalBackend{RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy)} {}
 
 private:
    void SetUp() override
@@ -868,7 +868,7 @@ TEST(RooSimultaneous, ParameterIndexSwitchMode)
 
    std::vector<RooFit::EvalBackend> backends;
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   backends.push_back(RooFit::EvalBackend::Legacy());
+   backends.push_back(RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy));
 #endif
    backends.push_back(RooFit::EvalBackend::Cpu());
    backends.push_back(RooFit::EvalBackend::CodegenNoGrad());
@@ -946,7 +946,7 @@ TEST(RooSimultaneous, ParameterIndexTopLevelNLL)
 
    std::vector<RooFit::EvalBackend> backends;
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   backends.push_back(RooFit::EvalBackend::Legacy());
+   backends.push_back(RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy));
 #endif
    backends.push_back(RooFit::EvalBackend::Cpu());
    backends.push_back(RooFit::EvalBackend::CodegenNoGrad());

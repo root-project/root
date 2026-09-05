@@ -31,7 +31,7 @@
 
 class FitTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
 public:
-   FitTest() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
+   FitTest() : _evalBackend{RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy)} {}
 
 private:
    void SetUp() override
@@ -347,7 +347,7 @@ TEST_P(FitTest, MultiRangeFit2D)
 
    // If the BatchMode is off, we are doing the same cross-check also with the
    // chi-square fit on the RooDataHist.
-   if (_evalBackend.name() == EvalBackend::Legacy().name()) {
+   if (_evalBackend.name() == EvalBackend(EvalBackend::Value::Legacy).name()) {
 
       // full range
       resetValues();
@@ -467,7 +467,7 @@ TEST_P(FitTest, OutOfRangeDataThrows)
    // dataset's internal clone of the observable still remembers [0, 5].
    x.setMax(2.5);
 
-   const bool isLegacy = _evalBackend == EvalBackend::Legacy();
+   const bool isLegacy = _evalBackend == EvalBackend(EvalBackend::Value::Legacy);
 
    {
       // Normalizing over [0, 2.5] while still evaluating the entries at 3 would

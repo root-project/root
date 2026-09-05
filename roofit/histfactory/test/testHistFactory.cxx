@@ -444,7 +444,7 @@ TEST_P(HFFixtureEval, Evaluation)
    const double systEps = 1e-6;
 
    const MakeModelMode makeModelMode = std::get<0>(GetParam());
-   const bool useBatchMode = std::get<2>(GetParam()) != RooFit::EvalBackend::Legacy();
+   const bool useBatchMode = std::get<2>(GetParam()) != RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy);
 
    RooHelpers::HijackMessageStream evalMessages(RooFit::INFO, RooFit::FastEvaluations);
 

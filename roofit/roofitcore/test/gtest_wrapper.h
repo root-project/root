@@ -13,7 +13,7 @@
 #endif
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
-#define ROOFIT_EVAL_BACKEND_LEGACY RooFit::EvalBackend::Legacy(),
+#define ROOFIT_EVAL_BACKEND_LEGACY RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy),
 #else
 #define ROOFIT_EVAL_BACKEND_LEGACY
 #endif

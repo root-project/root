@@ -110,9 +110,9 @@ TEST(RooProdPdf, TestDepsAreCond)
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
    resetParameters();
-   ResultPtr result1{pdf1.fitTo(*data, Save(), EvalBackend::Legacy(), PrintLevel(-1))};
+   ResultPtr result1{pdf1.fitTo(*data, Save(), EvalBackend(EvalBackend::Value::Legacy), PrintLevel(-1))};
    resetParameters();
-   ResultPtr result3{pdf2.fitTo(*data, Save(), EvalBackend::Legacy(), PrintLevel(-1))};
+   ResultPtr result3{pdf2.fitTo(*data, Save(), EvalBackend(EvalBackend::Value::Legacy), PrintLevel(-1))};
 
    EXPECT_TRUE(result2->isIdentical(*result1)) << "legacy fit is inconsistent!";
    EXPECT_TRUE(result4->isIdentical(*result1)) << "alternative model legacy fit is inconsistent!";

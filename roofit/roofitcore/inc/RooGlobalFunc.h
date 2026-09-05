@@ -242,12 +242,15 @@ RooCmdArg Parallelize(int nWorkers) ;
 RooCmdArg ModularL(bool flag=false) ;
 RooCmdArg TimingAnalysis(bool timingAnalysis) ;
 
-//RooCmdArg BatchMode(std::string const& batchMode="cpu");
-//// The const char * overload is necessary, otherwise the compiler will cast a
-//// C-Style string to a bool and choose the BatchMode(bool) overload if one
-//// calls for example BatchMode("off").
-//inline RooCmdArg BatchMode(const char * batchMode) { return BatchMode(std::string(batchMode)); }
-//inline RooCmdArg BatchMode(bool batchModeOn) { return BatchMode(batchModeOn ? "cpu" : "off"); }
+RooCmdArg BatchMode(std::string const &batchMode = "cpu")
+   R__DEPRECATED(6, 44, "Use EvalBackend() instead of BatchMode().");
+// The const char * overload is necessary, otherwise the compiler will cast a
+// C-Style string to a bool and choose the BatchMode(bool) overload if one
+// calls for example BatchMode("off").
+RooCmdArg BatchMode(const char *batchMode)
+   R__DEPRECATED(6, 44, "Use EvalBackend() instead of BatchMode().");
+RooCmdArg BatchMode(bool batchModeOn)
+   R__DEPRECATED(6, 44, "Use EvalBackend() instead of BatchMode().");
 
 RooCmdArg IntegrateBins(double precision);
 
@@ -263,7 +266,10 @@ public:
 
    EvalBackend(std::string const &name);
 
-   static EvalBackend Legacy();
+   static EvalBackend Legacy()
+      R__DEPRECATED(6, 44, "The legacy evaluation backend will be removed in ROOT 6.44. "
+                           "Use the default \"cpu\" evaluation backend, i.e. simply don't pass any EvalBackend() "
+                           "command argument.");
    static EvalBackend Cpu();
    static EvalBackend Cuda();
    static EvalBackend Codegen();

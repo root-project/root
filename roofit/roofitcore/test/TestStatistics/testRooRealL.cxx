@@ -212,7 +212,7 @@ TEST_P(RooRealL, setVal)
    // the multiprocess test statistics classes were designed to give values
    // that are bit-by-bit identical with the old test statistics based on
    // RooAbsTestStatistic.
-   std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data, RooFit::EvalBackend::Legacy())};
+   std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data, RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy))};
 
    RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL",
                                             std::make_unique<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
@@ -270,7 +270,7 @@ TEST_P(RealLVsMPFE, getVal)
    // the multiprocess test statistics classes were designed to give values
    // that are bit-by-bit identical with the old test statistics based on
    // RooAbsTestStatistic.
-   std::unique_ptr<RooAbsReal> nll_mpfe{pdf->createNLL(*data, RooFit::EvalBackend::Legacy())};
+   std::unique_ptr<RooAbsReal> nll_mpfe{pdf->createNLL(*data, RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy))};
 
    auto mpfe_result = nll_mpfe->getVal();
 

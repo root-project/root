@@ -45,6 +45,7 @@ The following people have contributed to this new version:
   Note that `all=ON` enables several of these options, so building with `-Dall=ON` now requires all of their dependencies to be installed, or the unwanted ones to be disabled explicitly.
   Build options that are enabled by default, such as `pyroot`, `opengl`, `xml`, `sqlite`, `davix`, `curl`, `tmva-cpu` or `tpython` are not affected: they are still disabled automatically when their dependencies are missing.
 * The option `fail-on-missing=OFF` will no longer be honored for CMake ROOT build options that have easy-to-install dependencies (e.g. via homebrew or apt-get), such as those required by options `cfitsio`, `civetweb`, `fftw3`, `imt`, `mathmore`, `nlohmann_json`, `tmva-cpu`, `unuran`, `vdt` or `xrootd`. Before, associated `builtin_option` was automatically turned ON (or the opt-in feature turned to OFF), now, user has to install system package or manually set `builtin_option` to `ON` or opt-in feature to `OFF`.
+* The legacy evaluation backend of RooFit and the related `RooFit::BatchMode()` command argument are deprecated and will be removed in ROOT 6.44. See the RooFit section below for details.
 * The method `RooRealVar::removeRange()` and the corresponding method in `RooErrorVar` that were deprecated in ROOT 6.40 are now removed.
 * The overloads of `RooAbsReal::createChi2()` and `RooAbsReal::chi2FitTo()` that take unbinned **RooDataSet** data objects were deprecated in ROOT 6.40 and are now removed.
 * The **RooStats::HybridPlot** class and the related **HybridResult::GetPlot** method were deprecated in ROOT 6.40 and are now removed.
@@ -143,6 +144,26 @@ the cut instead of being selected based on `sqrt(abs(x))`.
 ### Small changes
 
 * The `RooMinimizer::Strategy` enum has been removed. It named the Minuit strategies that are usually referred to just by integers, but caused confusion because it didn't include the unnamed "Strategy 3". Since people usually set the strategy with integer values anyway, it was decided that the simplest solution to avoid the confusion was simply to remove the `RooMinimizer::Strategy` enum
+
+### Deprecation of the legacy evaluation backend
+
+The `legacy` evaluation backend for likelihood and chi-square fits is deprecated and will be removed in ROOT 6.44.
+It was superseded by the vectorized `cpu` backend, which is the default since ROOT 6.32.
+After the removal of the constant term optimization (see below), the legacy backend also has no performance-relevant feature left that would justify its continued maintenance.
+
+Selecting the legacy backend with `RooFit::EvalBackend("legacy")` now prints a deprecation warning whenever a likelihood or chi-square object is created with it, and the `RooFit::EvalBackend::Legacy()` factory function is marked as deprecated, resulting in compiler warnings.
+
+The **RooFit::BatchMode()** command argument, which was superseded by `RooFit::EvalBackend()` in ROOT 6.28, is deprecated at the same time and will also be removed in ROOT 6.44.
+Note that the C++ declarations of `RooFit::BatchMode()` had been unintentionally absent since ROOT 6.30; they are restored in this release, marked as deprecated, to give downstream code a proper migration window.
+
+The removal in ROOT 6.44 will also include:
+
+  * the implementation classes of the legacy test statistics: **RooNLLVar**, **RooChi2Var**, **RooAbsOptTestStatistic** and **RooAbsTestStatistic** (their headers are not part of the public interface anymore since ROOT 6.32, but they are still installed),
+  * the old multiprocessing mechanism of the legacy backend, consisting of the **RooRealMPFE** class and the underlying **BidirMMapPipe**,
+  * the `nll::name[pdf,data]` and `chi2::name[pdf,data]` expressions in the `RooWorkspace::factory()` language, which instantiate the removed classes directly.
+
+Users are strongly encouraged to switch to the default `cpu` evaluation backend, i.e., to simply not pass any `EvalBackend()` or `BatchMode()` command argument.
+If the default backend does not work for a given use case, **please report it by opening an issue on the ROOT GitHub repository**.
 
 ### Removal of the constant term optimization for legacy test statistic classes
 

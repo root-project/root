@@ -250,7 +250,7 @@ TEST_P(LikelihoodGradientJobTest, GaussianND)
    std::unique_ptr<RooArgSet> values;
    RooAbsPdf *pdf;
    std::unique_ptr<RooDataSet> data;
-   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, RooFit::EvalBackend::Legacy());
+   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy));
 
    RooArgSet savedValues;
    values->snapshot(savedValues);
@@ -632,7 +632,7 @@ TEST_P(LikelihoodGradientJobErrorTest, ErrorHandling)
    } else {
       data = std::unique_ptr<RooDataSet>{pdf->generate(*w.var("m"), 10000)};
    }
-   std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data, RooFit::EvalBackend::Legacy())};
+   std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data, RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy))};
 
    // if m0 were constant (i.e. setConstant(true)), the fit would converge without errors, because m0 outside of the
    // physical area of the Argus distribution is what causes the errors in the line search phase of the fit
@@ -693,7 +693,7 @@ TEST_P(LikelihoodGradientJobErrorTest, FitSimpleLinear)
    } else {
       data = std::unique_ptr<RooDataSet>{pdf.generate(x, 1000)};
    }
-   std::unique_ptr<RooAbsReal> nll(pdf.createNLL(*data, RooFit::EvalBackend::Legacy()));
+   std::unique_ptr<RooAbsReal> nll(pdf.createNLL(*data, RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy)));
 
    RooArgSet normSet{x};
    ASSERT_FALSE(std::isnan(pdf.getVal(normSet)));
@@ -841,7 +841,7 @@ TEST_P(LikelihoodGradientJobBinnedErrorTest, TriggerMuLEZero)
    values->snapshot(savedValues);
 
    // legacy RooFit fit
-   std::unique_ptr<RooAbsReal> nll(w.pdf("model")->createNLL(h_data, RooFit::EvalBackend::Legacy()));
+   std::unique_ptr<RooAbsReal> nll(w.pdf("model")->createNLL(h_data, RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy)));
 
    double nll0BeforeFit = nll->getVal();
 
@@ -933,7 +933,7 @@ TEST(MinuitFcnGrad, DISABLED_CompareToRooMinimizerFcn)
 
    std::unique_ptr<RooAbsReal> nll_vanilla{pdf->createNLL(*data, RooFit::Constrain(*nuisance_parameters),
                                                           RooFit::GlobalObservables(*global_observables),
-                                                          RooFit::EvalBackend::Legacy()
+                                                          RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy)
                                                           /*, RooFit::Offset(true)*/)};
 
    double vanilla_val = nll_vanilla->getVal();

@@ -60,6 +60,19 @@ namespace {
 
 constexpr int extendedFitDefault = 2;
 
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+/// Print a deprecation warning when the legacy evaluation backend is selected for a fit.
+void printLegacyEvalBackendWarning(RooAbsReal const &topLevelArg)
+{
+   oocoutW(&topLevelArg, InputArguments)
+      << "The legacy evaluation backend is deprecated and will be removed in ROOT 6.44.\n"
+         "Please use the default \"cpu\" evaluation backend instead, i.e., don't pass RooFit::EvalBackend(\"legacy\")\n"
+         "or RooFit::BatchMode(\"off\") anymore. If the default backend does not work for your use case, please\n"
+         "report it by opening an issue on the ROOT GitHub repository."
+      << std::endl;
+}
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Use the asymptotically correct approach to estimate errors in the presence of weights.
 /// This is slower but more accurate than `SumW2Error`. See also https://arxiv.org/abs/1911.01303).
@@ -924,6 +937,8 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
    std::unique_ptr<RooAbsReal> nll;
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
+   printLegacyEvalBackendWarning(pdf);
+
    bool verbose = pc.getInt("verbose");
 
    int numcpu = pc.getInt("numcpu");
@@ -1140,6 +1155,8 @@ std::unique_ptr<RooAbsReal> createChi2(RooAbsReal &real, RooDataHist &data, cons
    }
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
+   printLegacyEvalBackendWarning(real);
+
    RooAbsTestStatistic::Configuration cfg;
 
    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);

@@ -856,7 +856,9 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
  *                          This backend re-uses code from the **cpu** backend, but compiled in CUDA kernels.
  *                          Hence, the results are expected to be identical, modulo some numerical differences that can arise from the different order in which the GPU is summing the log probabilities.
  *                          This backend can drastically speed up the fit if all RooAbsArg object in the model support it.
- *   <tr><td> **legacy** <td> The original likelihood evaluation method.
+ *   <tr><td> **legacy** <td> \deprecated The original likelihood evaluation method.
+ *                            It is deprecated and will be removed in ROOT 6.44, together with the deprecated BatchMode() command argument
+ *                            (where the legacy backend corresponded to `BatchMode("off")`).
  *                            Evaluates the PDF for each single data entry at a time before summing the negative log probabilities.
  *                            It supports multi-threading, but you might need more than 20 threads to maybe see about 10% performance gain over the default cpu-backend (that runs currently only on a single thread).
  *   <tr><td> **codegen** <td> **Experimental** - Generates and compiles minimal C++ code for the NLL on-the-fly and wraps it in the returned RooAbsReal.

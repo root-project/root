@@ -171,7 +171,7 @@ TEST(RooNaNPacker, FitSimpleLinear)
 
 class TestForDifferentBackends : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
 public:
-   TestForDifferentBackends() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
+   TestForDifferentBackends() : _evalBackend{RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy)} {}
 
 private:
    void SetUp() override

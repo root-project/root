@@ -152,7 +152,7 @@ TEST(RooBinSamplingPdf, AnalyticalMatchesNumeric)
    std::unique_ptr<RooDataHist> dataH(gaus.generateBinned(x, 20000));
    RooDataSet data("data", "data", x, RooFit::Import(*dataH));
 
-   for (auto backend : {EvalBackend::Legacy(), EvalBackend::Cpu()}) {
+   for (auto backend : {EvalBackend(EvalBackend::Value::Legacy), EvalBackend::Cpu()}) {
       mean.setVal(0.7);
       sigma.setVal(1.3);
       std::unique_ptr<RooAbsReal> nllAna{gaus.createNLL(data, IntegrateBins(1.E-3), backend)};

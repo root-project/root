@@ -46,7 +46,7 @@ bool isNotIdentical(RooFitResult const &res1, RooFitResult const &res2)
 // we track the global observables separately.
 class GlobsTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
 public:
-   GlobsTest() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
+   GlobsTest() : _evalBackend{RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy)} {}
 
    void SetUp() override
    {

@@ -522,7 +522,7 @@ std::unique_ptr<RooFitResult> PDFTest::runScalarFit(RooAbsPdf *pdf)
    }
 
    MyTimer singleTimer("Fitting scalar mode " + _name);
-   std::unique_ptr<RooFitResult> result{pdf->fitTo(*_dataFit, RooFit::EvalBackend::Legacy(), RooFit::SumW2Error(false),
+   std::unique_ptr<RooFitResult> result{pdf->fitTo(*_dataFit, RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy), RooFit::SumW2Error(false),
                                                    RooFit::PrintLevel(_printLevel), RooFit::Save(),
                                                    _multiProcess > 0 ? RooFit::NumCPU(_multiProcess) : RooCmdArg())};
    std::cout << singleTimer;

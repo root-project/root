@@ -301,7 +301,7 @@ int main(int argc, const char *argv[])
    bool dryRun = false;
    bool doDump = false;
    bool doTreeStore = false;
-   auto backend = RooFit::EvalBackend::Legacy();
+   auto backend = RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy);
 
    // string refFileName = "http://root.cern/files/stressRooStats_v534_ref.root" ;
    string refFileName = "stressRooStats_ref.root";

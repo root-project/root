@@ -476,20 +476,40 @@ RooCmdArg TimingAnalysis(bool flag)
 {
    return RooCmdArg("TimingAnalysis", flag, 0, 0, 0, nullptr, nullptr, nullptr);
 }
-RooCmdArg BatchMode(std::string const &batchMode)
+namespace {
+
+RooCmdArg batchModeImpl(std::string const &batchMode)
 {
    oocoutW(nullptr, InputArguments)
-      << "The BatchMode() command argument is deprecated. Please use EvalBackend() instead." << std::endl;
+      << "The BatchMode() command argument is deprecated and will be removed in ROOT 6.44, together with the legacy\n"
+         "evaluation backend that corresponds to BatchMode(\"off\"). Please use EvalBackend() instead, or simply pass\n"
+         "no command argument to get the default \"cpu\" evaluation backend."
+      << std::endl;
    std::string lower = batchMode;
    std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return std::tolower(c); });
    if (lower == "off") {
-      return EvalBackend::Legacy();
+      return EvalBackend(EvalBackend::Value::Legacy);
    } else if (lower == "cpu") {
-      return EvalBackend::Cpu();
+      return EvalBackend(EvalBackend::Value::Cpu);
    } else if (lower == "cuda") {
-      return EvalBackend::Cuda();
+      return EvalBackend(EvalBackend::Value::Cuda);
    }
    throw std::runtime_error("Only supported string values for BatchMode() are \"off\", \"cpu\", or \"cuda\".");
+}
+
+} // namespace
+
+RooCmdArg BatchMode(std::string const &batchMode)
+{
+   return batchModeImpl(batchMode);
+}
+RooCmdArg BatchMode(const char *batchMode)
+{
+   return batchModeImpl(batchMode);
+}
+RooCmdArg BatchMode(bool batchModeOn)
+{
+   return batchModeImpl(batchModeOn ? "cpu" : "off");
 }
 /// Integrate the PDF over bins. Improves accuracy for binned fits. Switch off using `0.` as argument. \see
 /// RooAbsPdf::fitTo().

@@ -33,7 +33,7 @@ namespace TestStatistics {
 class RooUnbinnedL : public RooAbsL {
 public:
    RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended = RooAbsL::Extended::Auto,
-                RooFit::EvalBackend evalBackend = RooFit::EvalBackend::Legacy());
+                RooFit::EvalBackend evalBackend = RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy));
    RooUnbinnedL(const RooUnbinnedL &other);
    ~RooUnbinnedL() override;
    bool setApplyWeightSquared(bool flag);

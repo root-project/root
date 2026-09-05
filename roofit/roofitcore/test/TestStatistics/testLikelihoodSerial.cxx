@@ -104,7 +104,7 @@ TEST_F(LikelihoodSerialTest, UnbinnedGaussianND)
 {
    unsigned int N = 4;
 
-   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, RooFit::EvalBackend::Legacy());
+   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy));
    likelihood = RFTS::buildLikelihood(pdf, data.get());
    // dummy offsets (normally they are shared with other objects):
    SharedOffset offset;
@@ -409,7 +409,7 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
    // RooAbsTestStatistic.
    nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, Constrain(*w.var("alpha_bkg_A")),
                                                     GlobalObservables(*w.var("alpha_bkg_obs_B")), Offset("initial"),
-                                                    EvalBackend::Legacy())};
+                                                    EvalBackend(EvalBackend::Value::Legacy))};
 
    // --------
 
