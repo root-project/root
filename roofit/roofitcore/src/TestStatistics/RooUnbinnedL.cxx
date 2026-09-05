@@ -62,8 +62,12 @@ RooUnbinnedL::RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended e
    if (evalBackend.value() != RooFit::EvalBackend::Value::Legacy) {
       evaluator_ = std::make_unique<RooFit::Evaluator>(*pdf_, evalBackend.value() == RooFit::EvalBackend::Value::Cuda);
       std::stack<std::vector<double>>{}.swap(_vectorBuffers);
+      // Zero-weight events must not be skipped here: the probabilities from
+      // the evaluator are indexed by the original event indices, aligned with
+      // the weights obtained from RooAbsData::getWeightBatch(). Events with
+      // zero weight are skipped in the summation instead.
       auto dataSpans =
-         RooFit::BatchModeDataHelpers::getDataSpans(*data, "", nullptr, /*skipZeroWeights=*/true,
+         RooFit::BatchModeDataHelpers::getDataSpans(*data, "", nullptr, /*skipZeroWeights=*/false,
                                                     /*takeGlobalObservablesFromData=*/false, _vectorBuffers);
       for (auto const &item : dataSpans) {
          evaluator_->setInput(item.first->GetName(), item.second, false);

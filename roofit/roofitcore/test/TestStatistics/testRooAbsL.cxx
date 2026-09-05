@@ -28,6 +28,7 @@
 
 #include "Math/Util.h" // KahanSum
 
+#include <cmath>     // isnan
 #include <stdexcept> // runtime_error
 
 #include "gtest/gtest.h"
@@ -302,6 +303,47 @@ TEST_F(SimBinnedConstrainedTest, SubEventSections)
    }
    // See comment in BinnedDatasetTest.EventSections for explanation on why no EXPECT_EQ.
    EXPECT_DOUBLE_EQ(whole.Sum(), thrice_N_events_total_parts.Sum());
+}
+
+TEST_F(RooAbsLTest, ZeroWeightsWithBatchEvaluator)
+{
+   // The probabilities returned by the RooFit::Evaluator are indexed by the
+   // original event indices, aligned with the weights that are obtained from
+   // RooAbsData::getWeightBatch(). This test checks that zero-weight events
+   // (e.g. empty bins of a binned dataset) don't spoil this alignment, which
+   // resulted in NaN likelihood values in the past.
+
+   w.factory("Gaussian::g(x[-10,10],mu[0,-5,5],sigma[1,0.1,10])");
+   w.var("x")->setBins(40);
+   pdf = w.pdf("g");
+   data = std::unique_ptr<RooDataHist>{pdf->generateBinned(*w.var("x"), 100)};
+
+   // The whole point of this test is to have zero-weight events in the
+   // dataset, so make sure the empty tail bins are really there.
+   std::size_t nZeroWeight = 0;
+   for (int i = 0; i < data->numEntries(); ++i) {
+      data->get(i);
+      nZeroWeight += (data->weight() == 0.);
+   }
+   ASSERT_GT(nZeroWeight, 0);
+
+   // Compute the reference NLL value by hand, skipping zero-weight events.
+   RooArgSet normSet{*w.var("x")};
+   ROOT::Math::KahanSum<double> refNll;
+   for (int i = 0; i < data->numEntries(); ++i) {
+      w.var("x")->setVal(data->get(i)->getRealValue("x"));
+      if (data->weight() == 0.)
+         continue;
+      refNll += -data->weight() * std::log(pdf->getVal(normSet));
+   }
+
+   likelihood = std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(
+      pdf, data.get(), RooFit::TestStatistics::RooAbsL::Extended::Auto, RooFit::EvalBackend::Cpu());
+
+   const double nllVal = likelihood->evaluatePartition({0, 1}, 0, 0).Sum();
+
+   EXPECT_FALSE(std::isnan(nllVal));
+   EXPECT_NEAR(nllVal, refNll.Sum(), 1e-8 * std::abs(refNll.Sum()));
 }
 
 TEST_F(RooAbsLTest, VSRooNLLVar)
