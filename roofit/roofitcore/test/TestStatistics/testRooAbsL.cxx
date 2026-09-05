@@ -138,7 +138,9 @@ TEST_F(RooAbsLTest, UnbinnedLikelihoodIntrospection)
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
 
    EXPECT_STREQ("RooUnbinnedL", (likelihood->GetClassName()).c_str());
-   EXPECT_STREQ("RooUnbinnedL::g", (likelihood->GetInfo()).c_str());
+   // The pdf is compiled for the normalization set before it is wrapped in the
+   // RooUnbinnedL, which changes its name from the original "g".
+   EXPECT_STREQ("RooUnbinnedL::g_over_g_Int[x]", (likelihood->GetInfo()).c_str());
 }
 
 TEST_F(BinnedDatasetTest, BinnedLikelihoodIntrospection)

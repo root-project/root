@@ -48,7 +48,7 @@ private:
    RooArgSet _externalConstraints;
    RooArgSet _globalObservables;
    std::string _globalObservablesTag;
-   RooFit::EvalBackend _evalBackend = RooFit::EvalBackend::Legacy();
+   RooFit::EvalBackend _evalBackend = RooFit::EvalBackend::Cpu();
 };
 
 /// Delegating function to build a likelihood without additional arguments.

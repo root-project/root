@@ -447,7 +447,7 @@ RooCmdArg Link(const std::map<std::string, RooAbsData *> &arg)
    return processMap("LinkDataSliceMany", processLinkItem<RooAbsData>, arg);
 }
 
-// RooChi2Var::ctor / RooNLLVar arguments
+// createChi2() / createNLL() arguments
 RooCmdArg Extended(bool flag)
 {
    return RooCmdArg("Extended", flag, 0, 0, 0, nullptr, nullptr, nullptr, nullptr);
@@ -482,14 +482,13 @@ RooCmdArg BatchMode(std::string const &batchMode)
       << "The BatchMode() command argument is deprecated. Please use EvalBackend() instead." << std::endl;
    std::string lower = batchMode;
    std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return std::tolower(c); });
-   if (lower == "off") {
-      return EvalBackend::Legacy();
-   } else if (lower == "cpu") {
+   if (lower == "cpu") {
       return EvalBackend::Cpu();
    } else if (lower == "cuda") {
       return EvalBackend::Cuda();
    }
-   throw std::runtime_error("Only supported string values for BatchMode() are \"off\", \"cpu\", or \"cuda\".");
+   throw std::runtime_error("Only supported string values for BatchMode() are \"cpu\" or \"cuda\". The legacy "
+                            "evaluation backend that corresponded to BatchMode(\"off\") was removed from RooFit.");
 }
 /// Integrate the PDF over bins. Improves accuracy for binned fits. Switch off using `0.` as argument. \see
 /// RooAbsPdf::fitTo().
@@ -575,8 +574,6 @@ EvalBackend::Value EvalBackend::toValue(std::string const &name)
 {
    std::string lower = name;
    std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return std::tolower(c); });
-   if (lower == toName(Value::Legacy))
-      return Value::Legacy;
    if (lower == toName(Value::Cpu))
       return Value::Cpu;
    if (lower == toName(Value::Cuda))
@@ -585,12 +582,8 @@ EvalBackend::Value EvalBackend::toValue(std::string const &name)
       return Value::Codegen;
    if (lower == toName(Value::CodegenNoGrad))
       return Value::CodegenNoGrad;
-   throw std::runtime_error("Only supported string values for EvalBackend() are \"legacy\", \"cpu\", \"cuda\", "
+   throw std::runtime_error("Only supported string values for EvalBackend() are \"cpu\", \"cuda\", "
                             "\"codegen\", or \"codegen_no_grad\".");
-}
-EvalBackend EvalBackend::Legacy()
-{
-   return EvalBackend(Value::Legacy);
 }
 EvalBackend EvalBackend::Cpu()
 {
@@ -614,8 +607,6 @@ std::string EvalBackend::name() const
 }
 std::string EvalBackend::toName(EvalBackend::Value value)
 {
-   if (value == Value::Legacy)
-      return "legacy";
    if (value == Value::Cpu)
       return "cpu";
    if (value == Value::Cuda)

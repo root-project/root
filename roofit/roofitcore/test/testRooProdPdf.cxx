@@ -108,15 +108,6 @@ TEST(RooProdPdf, TestDepsAreCond)
 
    EXPECT_TRUE(result4->isIdentical(*result2)) << "alternative model fit is inconsistent!";
 
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   resetParameters();
-   ResultPtr result1{pdf1.fitTo(*data, Save(), EvalBackend::Legacy(), PrintLevel(-1))};
-   resetParameters();
-   ResultPtr result3{pdf2.fitTo(*data, Save(), EvalBackend::Legacy(), PrintLevel(-1))};
-
-   EXPECT_TRUE(result2->isIdentical(*result1)) << "legacy fit is inconsistent!";
-   EXPECT_TRUE(result4->isIdentical(*result1)) << "alternative model legacy fit is inconsistent!";
-#endif
 }
 
 /// This test covers a potential problem with the custom normalization ranges

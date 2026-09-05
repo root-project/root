@@ -27,25 +27,6 @@ if(roofit_multiprocess)
   list(APPEND EXTRA_DEPENDENCIES Minuit2)
 endif()
 
-if(roofit_legacy_eval_backend)
-  set(LegacyEvalBackendSources
-    src/BidirMMapPipe.cxx
-    src/RooAbsOptTestStatistic.cxx
-    src/RooAbsTestStatistic.cxx
-    src/RooChi2Var.cxx
-    src/RooNLLVar.cxx
-    src/RooRealMPFE.cxx
-  )
-  set(LegacyEvalBackendHeaders
-    src/BidirMMapPipe.h
-    src/RooAbsOptTestStatistic.h
-    src/RooAbsTestStatistic.h
-    src/RooChi2Var.h
-    src/RooNLLVar.h
-    src/RooRealMPFE.h
-  )
-endif()
-
 set (EXTRA_DICT_OPTS)
 if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)
@@ -464,7 +445,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/TestStatistics/RooUnbinnedL.cxx
     src/TestStatistics/buildLikelihood.cxx
     src/TestStatistics/SharedOffset.cxx
-    ${LegacyEvalBackendSources}
     ${RooFitMPTestStatisticsSources}
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
@@ -487,10 +467,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
 )
 
 # The following definitions are PUBLIC so they can also be used in ROOT-internal tests
-
-if(roofit_legacy_eval_backend)
-  target_compile_definitions(RooFitCore PUBLIC ROOFIT_LEGACY_EVAL_BACKEND)
-endif()
 
 if(roofit_multiprocess)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_MULTIPROCESS)
@@ -552,7 +528,6 @@ if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
           src/RooRombergIntegrator.h
           src/RooBinIntegrator.h
           ${RooFitMPTestStatisticsHeaders}
-          ${LegacyEvalBackendHeaders}
           src/RooFit/BatchModeDataHelpers.h
           src/RooMinimizerFcn.h
           src/RooAbsNumGenerator.h

@@ -31,7 +31,7 @@
 
 class FitTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
 public:
-   FitTest() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
+   FitTest() : _evalBackend{RooFit::EvalBackend::Cpu()} {}
 
 private:
    void SetUp() override
@@ -345,24 +345,6 @@ TEST_P(FitTest, MultiRangeFit2D)
          << "Results of fitting " << model.GetName() << " to a " << data->ClassName() << " should be very similar.";
    }
 
-   // If the BatchMode is off, we are doing the same cross-check also with the
-   // chi-square fit on the RooDataHist.
-   if (_evalBackend.name() == EvalBackend::Legacy().name()) {
-
-      // full range
-      resetValues();
-      std::unique_ptr<RooFitResult> fitResultFull{
-         model.fitTo(*dataHist, Range("FULL"), Save(), PrintLevel(-1), _evalBackend)};
-
-      // part (side band fit, but the union of the side bands is the full range)
-      resetValues();
-      std::unique_ptr<RooFitResult> fitResultPart{
-         model.fitTo(*dataHist, Range("SB1,SB2,SIG"), Save(), PrintLevel(-1), _evalBackend)};
-
-      EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull))
-         << "Results of fitting " << model.GetName()
-         << " to a RooDataHist should be very similar also for chi2FitTo().";
-   }
 }
 
 // This test will crash if the cached normalization sets are not reset
@@ -467,21 +449,14 @@ TEST_P(FitTest, OutOfRangeDataThrows)
    // dataset's internal clone of the observable still remembers [0, 5].
    x.setMax(2.5);
 
-   const bool isLegacy = _evalBackend == EvalBackend::Legacy();
-
    {
       // Normalizing over [0, 2.5] while still evaluating the entries at 3 would
-      // bias the fit, so the vectorizing backends throw. The legacy backend is
-      // not affected by this check and keeps its historical behavior.
+      // bias the fit, so the backends throw.
       RooHelpers::HijackMessageStream hijack(RooFit::ERROR, RooFit::InputArguments);
       auto doFit = [&]() {
          std::unique_ptr<RooFitResult>{gauss.fitTo(data, _evalBackend, Save(), PrintLevel(-1))};
       };
-      if (isLegacy) {
-         EXPECT_NO_THROW(doFit());
-      } else {
-         EXPECT_THROW(doFit(), std::runtime_error);
-      }
+      EXPECT_THROW(doFit(), std::runtime_error);
    }
 
    // Restricting the fit with a named range is the correct approach: the

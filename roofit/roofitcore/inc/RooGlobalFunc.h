@@ -233,7 +233,7 @@ RooCmdArg EventRange(Int_t nStart, Int_t nStop) ;
  * \defgroup Fitting Arguments for fitting
  * @{
  */
-// RooChi2Var::ctor / RooNLLVar arguments
+// createChi2() / createNLL() arguments
 RooCmdArg Extended(bool flag=true) ;
 RooCmdArg DataError(Int_t) ;
 RooCmdArg DataError(std::string const&) ;
@@ -257,13 +257,12 @@ RooCmdArg Optimize(Int_t flag = 2);
 
 class EvalBackend : public RooCmdArg {
 public:
-   enum class Value { Legacy, Cpu, Cuda, Codegen, CodegenNoGrad };
+   enum class Value { Cpu, Cuda, Codegen, CodegenNoGrad };
 
    EvalBackend(Value value);
 
    EvalBackend(std::string const &name);
 
-   static EvalBackend Legacy();
    static EvalBackend Cpu();
    static EvalBackend Cuda();
    static EvalBackend Codegen();

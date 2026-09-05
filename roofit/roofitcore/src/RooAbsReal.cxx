@@ -3307,7 +3307,7 @@ double RooAbsReal::maxVal(Int_t /*code*/) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Interface to insert remote error logging messages received by RooRealMPFE into current error logging stream.
+/// Interface to insert error logging messages from an external originator into the current error logging stream.
 
 void RooAbsReal::logEvalError(const RooAbsReal* originator, const char* origName, const char* message, const char* serverValueString)
 {
@@ -3988,7 +3988,7 @@ double RooAbsReal::findRoot(RooRealVar& x, double xmin, double xmax, double yval
 /// <tr><td> `Range(const char* name)`         <td> Fit only data inside range with given name
 /// <tr><td> `Range(double lo, double hi)` <td> Fit only data inside given range. A range named "fit" is created on the fly on all observables.
 ///                                               Multiple comma separated range names can be specified.
-/// <tr><td> `NumCPU(int num)`                 <td> Parallelize NLL calculation on num CPUs
+/// <tr><td> `NumCPU(int num)`                 <td> \warning Deprecated option that is ignored.
 /// <tr><td> `IntegrateBins()`                 <td> Integrate PDF within each bin. This sets the desired precision.
 /// <tr><td> `Verbose()`    <td> Verbose output of GOF framework
 /// <tr><td> `SumCoefRange()` <td>  Set the range in which to interpret the coefficients of RooAddPdf components
@@ -4055,15 +4055,10 @@ std::unique_ptr<RooFitResult> RooAbsReal::chi2FitToImpl(RooDataHist &data, const
 /// expected number of events that the PDF predicts.
 ///
 /// \note If the dataset has errors stored, empty bins will prevent the calculation of \f$ \chi^2 \f$, because those have
-/// zero error. This leads to messages like:
-/// ```
-/// [#0] ERROR:Eval -- RooChi2Var::RooChi2Var(chi2_GenPdf_data_hist) INFINITY ERROR: bin 2 has zero error
-/// ```
+/// zero error.
 ///
-/// \note In this case, one can use the expected errors of the PDF instead of the data errors:
-/// ```{.cpp}
-/// RooChi2Var chi2(..., ..., RooFit::DataError(RooAbsData::Expected), ...);
-/// ```
+/// \note In this case, one can use the expected errors of the PDF instead of the data errors,
+/// by passing `RooFit::DataError(RooAbsData::Expected)` as a command argument.
 ///
 /// \param data Histogram with data
 /// \param arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8 ordered arguments

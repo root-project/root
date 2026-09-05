@@ -58,10 +58,6 @@ It interprets all expressions for RooWorkspace::factory(const char*).
 #include "TROOT.h"
 #include "RooFitImplHelpers.h"
 
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-#include "RooChi2Var.h"
-#include "RooNLLVar.h"
-#endif
 
 using namespace RooFit;
 using std::string, std::map, std::list, std::pair, std::endl, std::vector;
@@ -2054,20 +2050,6 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     // nconv::name[var,pdf1,pdf2]
     ft.createArg("RooNumConvolution",instName,pargs) ;
 
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-  } else if (cl=="nll") {
-
-    // nll::name[pdf,data]
-    RooNLLVar nll(instName,instName,ft.asPDF(pargv[0].c_str()),ft.asDATA(pargv[1].c_str()), /*extended=*/false) ;
-    if (ft.ws().import(nll,Silence())) ft.logError() ;
-
-  } else if (cl=="chi2") {
-
-    // chi2::name[pdf,data]
-    RooChi2Var nll(instName,instName,ft.asPDF(pargv[0].c_str()),ft.asDHIST(pargv[1].c_str()), /*extended=*/false, /*etype=*/RooAbsData::Auto);
-    if (ft.ws().import(nll,Silence())) ft.logError() ;
-
-#endif
   } else if (cl=="profile") {
 
     // profile::name[func,vars]
