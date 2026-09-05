@@ -237,6 +237,10 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, EnumReflection_GetEnumConstantValue) {
       MinusTen = -10,
       MinusNine
     };
+    enum Huge : unsigned long long {
+      Big = ((unsigned long long)1) << 63,
+      Max = 0xFFFFFFFFFFFFFFFFULL
+    };
     int a = 10;
   )";
 
@@ -250,7 +254,15 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, EnumReflection_GetEnumConstantValue) {
   EXPECT_EQ(Cpp::GetEnumConstantValue(EnumConstants[4]), 54);
   EXPECT_EQ(Cpp::GetEnumConstantValue(EnumConstants[5]), -10);
   EXPECT_EQ(Cpp::GetEnumConstantValue(EnumConstants[6]), -9);
-  EXPECT_EQ(Cpp::GetEnumConstantValue(Decls[1]), 0); // Checking value of non enum constant
+  EXPECT_EQ(Cpp::GetEnumConstantValue(Decls[2]), 0); // Checking value of non enum constant
+
+  // Values above INT64_MAX must not throw (std::stoul would overflow on
+  // LLP64 platforms where unsigned long is 32 bit) and must round-trip
+  // their 64-bit pattern on all platforms (as two's complement).
+  auto HugeConstants = Cpp::GetEnumConstants(Decls[1]);
+  EXPECT_EQ(Cpp::GetEnumConstantValue(HugeConstants[0]),
+            (int64_t)((uint64_t)1 << 63));
+  EXPECT_EQ(Cpp::GetEnumConstantValue(HugeConstants[1]), (int64_t)-1);
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, EnumReflection_GetEnums) {

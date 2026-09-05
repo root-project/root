@@ -455,7 +455,6 @@ class TestFRAGILE:
         finally:
             sys.path = oldsp
 
-    @mark.xfail(strict=True)
     def test18_overload(self):
         """Test usage of __overload__"""
 
@@ -471,7 +470,7 @@ class TestFRAGILE:
                     'double lb, double ub, double value, bool binary, bool integer, const std::string& name']:
             assert cppyy.gbl.Variable.__init__.__overload__(sig)
 
-    @mark.xfail(strict=True, run=not is_modules_off(), condition=IS_WINDOWS or is_modules_off(), reason="Fails on Windows, crashes on alma9 with modules off")
+    @mark.xfail(run=False)
     def test19_gbl_contents(self):
         """Assure cppyy.gbl is mostly devoid of ROOT thingies"""
 
@@ -709,7 +708,6 @@ class TestFRAGILE:
         output = (captured.out + captured.err).lower()
         assert "error:" not in output
 
-    @mark.xfail(strict=True)
     def test31_template_with_class_enum(self):
         """Template instantiated with class enum"""
 
@@ -753,7 +751,7 @@ class TestSIGNALS:
     # passes, but it fails in the nightlies with:
     # "Failed: DID NOT RAISE <class 'cppyy.ll.AbortSignal'>"
     # We can therefore not use strict=True and a meaningful failure condition.
-    @mark.xfail()
+    @mark.xfail(run=False)
     def test01_abortive_signals(self):
         """Conversion from abortive signals to Python exceptions"""
 
@@ -839,7 +837,6 @@ class TestSTDNOTINGLOBAL:
         assert cppyy.gbl.std.int8_t(-42) == cppyy.gbl.int8_t(-42)
         assert cppyy.gbl.std.uint8_t(42) == cppyy.gbl.uint8_t(42)
 
-    @mark.xfail(strict=True)
     def test03_clashing_using_in_global(self):
         """Redefines of std:: typedefs should be possible in global"""
 

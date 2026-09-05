@@ -8,6 +8,7 @@
     ROOT_rootcling_Driver;
     _ZN5cling*;
     cling_runtime_internal_throwIfInvalidPointer;
+    CppGetProcAddress;
   local:
     *;
 };

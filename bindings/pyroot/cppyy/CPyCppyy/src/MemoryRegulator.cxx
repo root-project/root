@@ -1,4 +1,5 @@
 // Bindings
+#include "Cppyy.h"
 #include "CPyCppyy.h"
 #include "MemoryRegulator.h"
 #include "CPPInstance.h"
@@ -35,18 +36,6 @@ static PyMappingMethods CPyCppyy_NoneType_mapping = {
 //-----------------------------------------------------------------------------
 namespace {
 
-// Py_SET_REFCNT was only introduced in Python 3.9
-#if PY_VERSION_HEX < 0x03090000
-inline void Py_SET_REFCNT(PyObject *ob, Py_ssize_t refcnt) {
-    assert(refcnt >= 0);
-#if SIZEOF_VOID_P > 4
-    ob->ob_refcnt = (PY_UINT32_T)refcnt;
-#else
-    ob->ob_refcnt = refcnt;
-#endif
-}
-#endif
-
 struct InitCPyCppyy_NoneType_t {
     InitCPyCppyy_NoneType_t() {
     // create a CPyCppyy NoneType (for references that went dodo) from NoneType
@@ -64,10 +53,6 @@ struct InitCPyCppyy_NoneType_t {
         CPyCppyy_NoneType.tp_dealloc     = (destructor)&InitCPyCppyy_NoneType_t::DeAlloc;
         CPyCppyy_NoneType.tp_repr        = Py_TYPE(Py_None)->tp_repr;
         CPyCppyy_NoneType.tp_richcompare = (richcmpfunc)&InitCPyCppyy_NoneType_t::RichCompare;
-#if PY_VERSION_HEX < 0x03000000
-    // tp_compare has become tp_reserved (place holder only) in p3
-        CPyCppyy_NoneType.tp_compare     = (cmpfunc)&InitCPyCppyy_NoneType_t::Compare;
-#endif
         CPyCppyy_NoneType.tp_hash        = (hashfunc)&InitCPyCppyy_NoneType_t::PtrHash;
 
         CPyCppyy_NoneType.tp_as_mapping  = &CPyCppyy_NoneType_mapping;
@@ -83,12 +68,8 @@ struct InitCPyCppyy_NoneType_t {
     }
 
     static int Compare(PyObject*, PyObject* other) {
-#if PY_VERSION_HEX < 0x03000000
-        return PyObject_Compare(other, Py_None);
-#else
     // TODO the following isn't correct as it doesn't order, but will do for now ...
         return !PyObject_RichCompareBool(other, Py_None, Py_EQ);
-#endif
     }
 };
 
@@ -109,7 +90,7 @@ CPyCppyy::MemoryRegulator::MemoryRegulator()
 
 //- public members -----------------------------------------------------------
 bool CPyCppyy::MemoryRegulator::RecursiveRemove(
-    Cppyy::TCppObject_t cppobj, Cppyy::TCppType_t klass)
+    Cppyy::TCppObject_t cppobj, Cppyy::TCppScope_t klass)
 {
 // if registered by the framework, called whenever a cppobj gets destroyed
     if (!cppobj)

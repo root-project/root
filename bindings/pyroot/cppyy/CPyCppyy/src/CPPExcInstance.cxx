@@ -164,9 +164,6 @@ static PyNumberMethods ep_as_number = {
     0,                             // nb_add
     0,                             // nb_subtract
     0,                             // nb_multiply
-#if PY_VERSION_HEX < 0x03000000
-    0,                             // nb_divide
-#endif
     0,                             // nb_remainder
     0,                             // nb_divmod
     0,                             // nb_power
@@ -180,46 +177,26 @@ static PyNumberMethods ep_as_number = {
     0,                             // nb_and
     0,                             // nb_xor
     0,                             // nb_or
-#if PY_VERSION_HEX < 0x03000000
-    0,                             // nb_coerce
-#endif
     0,                             // nb_int
     0,                             // nb_long (nb_reserved in p3)
     0,                             // nb_float
-#if PY_VERSION_HEX < 0x03000000
-    0,                             // nb_oct
-    0,                             // nb_hex
-#endif
     0,                             // nb_inplace_add
     0,                             // nb_inplace_subtract
     0,                             // nb_inplace_multiply
-#if PY_VERSION_HEX < 0x03000000
-    0,                             // nb_inplace_divide
-#endif
     0,                             // nb_inplace_remainder
     0,                             // nb_inplace_power
     0,                             // nb_inplace_lshift
     0,                             // nb_inplace_rshift
     0,                             // nb_inplace_and
     0,                             // nb_inplace_xor
-    0                              // nb_inplace_or
-#if PY_VERSION_HEX >= 0x02020000
-    , 0                            // nb_floor_divide
-#if PY_VERSION_HEX < 0x03000000
-    , 0                            // nb_true_divide
-#else
-    , 0                            // nb_true_divide
-#endif
-    , 0                            // nb_inplace_floor_divide
-    , 0                            // nb_inplace_true_divide
-#endif
-#if PY_VERSION_HEX >= 0x02050000
-    , 0                            // nb_index
-#endif
-#if PY_VERSION_HEX >= 0x03050000
-    , 0                            // nb_matrix_multiply
-    , 0                            // nb_inplace_matrix_multiply
-#endif
+    0,                             // nb_inplace_or
+    0,                             // nb_floor_divide
+    0,                             // nb_true_divide
+    0,                             // nb_inplace_floor_divide
+    0,                             // nb_inplace_true_divide
+    0,                             // nb_index
+    0,                             // nb_matrix_multiply
+    0                              // nb_inplace_matrix_multiply
 };
 
 //= CPyCppyy exception object proxy type ======================================
@@ -272,19 +249,11 @@ PyTypeObject CPPExcInstance_Type = {
     0,                             // tp_mro
     0,                             // tp_cache
     0,                             // tp_subclasses
-    0                              // tp_weaklist
-#if PY_VERSION_HEX >= 0x02030000
-    , 0                            // tp_del
-#endif
-#if PY_VERSION_HEX >= 0x02060000
-    , 0                            // tp_version_tag
-#endif
-#if PY_VERSION_HEX >= 0x03040000
-    , 0                            // tp_finalize
-#endif
-#if PY_VERSION_HEX >= 0x03080000
-    , 0                            // tp_vectorcall
-#endif
+    0,                             // tp_weaklist
+    0,                             // tp_del
+    0,                             // tp_version_tag
+    0,                             // tp_finalize
+    0                              // tp_vectorcall
     CPYCPPYY_PYTYPE_TAIL
 };
 
