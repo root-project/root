@@ -399,10 +399,9 @@ add_custom_target(ensure_build_tree_marker ALL
   DEPENDS "${build_tree_marker}"
 )
 
-add_library(ROOTdefs INTERFACE)
-# Note: if this is modified, modify also RConfigure.h.in for backward compatibility
+add_library(RConfigureDefs INTERFACE) # temporary target, do not link against it, just for bw-compatible header generation RConfigure.h
 if (gnuinstall)
-  target_compile_definitions(ROOTdefs INTERFACE
+  target_compile_definitions(RConfigureDefs INTERFACE
     ROOTPREFIX=${prefix}
     ROOTBINDIR=${bindir}
     ROOTLIBDIR=${libdir}
@@ -417,7 +416,7 @@ if (gnuinstall)
   )
 endif()
 
-target_compile_definitions(ROOTdefs INTERFACE
+target_compile_definitions(RConfigureDefs INTERFACE
   ROOT__ARCHITECTURE=${architecture}
   EXTRAICONPATH=$<IF:$<BOOL:${extraiconpath}>,\"${extraiconpath}\",\"\">
   ROOT__cplusplus=${__cplusplus}
@@ -460,8 +459,11 @@ file(GENERATE
 "#ifndef ROOT_RConfigure
 #define ROOT_RConfigure
 
-#define $<JOIN:$<LIST:TRANSFORM,$<TARGET_PROPERTY:ROOTdefs,INTERFACE_COMPILE_DEFINITIONS>,REPLACE,=, >,\n#define >
+#define $<JOIN:$<LIST:TRANSFORM,$<TARGET_PROPERTY:RConfigureDefs,INTERFACE_COMPILE_DEFINITIONS>,REPLACE,=, >,\n#define >
+#endif
 
+#ifndef ROOT_RConfigure_w
+#define ROOT_RConfigure_w
 #if defined(__cplusplus) && (__cplusplus != ROOT__cplusplus)
 # define R__STR(x) #x
 # define R__XSTR(x) R__STR(x)
@@ -472,12 +474,19 @@ file(GENERATE
 # undef R__XSTR
 # undef R__STR
 #endif
-
 #endif
 "
     NEWLINE_STYLE UNIX
 )
 install(FILES ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+# Public target interface against which to link
+add_library(ROOTdefs INTERFACE)
+target_compile_definitions(ROOTdefs INTERFACE
+ROOT_RConfigure # so that including the mirror header RConfigure.h is inocuous if linking against this target
+)
+target_link_libraries(ROOTdefs INTERFACE RConfigureDefs)
+
 
 #---Configure and install various files----------------------------------------------------------------------
 execute_Process(COMMAND hostname OUTPUT_VARIABLE BuildNodeInfo OUTPUT_STRIP_TRAILING_WHITESPACE )
