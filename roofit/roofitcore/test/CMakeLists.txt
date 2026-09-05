@@ -35,6 +35,7 @@ ROOT_ADD_GTEST(testRooFitCore
     testRooLinkedList.cxx
     testRooPolyFunc.cxx
     testRooProdPdf.cxx
+    testRooRealSumPdf.cxx
     testRooSTLRefCountList.cxx
     testRooWrapperPdf.cxx
     testSimple.cxx
@@ -81,10 +82,12 @@ if(clad)
   ROOT_ADD_GTEST(testRooFuncWrapper testRooFuncWrapper.cxx LIBRARIES RooFitCore RooFit HistFactory)
 endif()
 ROOT_ADD_GTEST(testNaNPacker testNaNPacker.cxx LIBRARIES RooFitCore)
+ROOT_ADD_GTEST(testRooEfficiency testRooEfficiency.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooExtendedBinding testRooExtendedBinding.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooMCStudy testRooMCStudy.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooMinimizer testRooMinimizer.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooMulti testRooMulti.cxx LIBRARIES RooFitCore RooFit)
+ROOT_ADD_GTEST(testRooProfileLL testRooProfileLL.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooRombergIntegrator testRooRombergIntegrator.cxx LIBRARIES MathCore RooFitCore)
 ROOT_ADD_GTEST(testRooSimultaneous testRooSimultaneous.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooTruthModel testRooTruthModel.cxx LIBRARIES RooFitCore RooFit

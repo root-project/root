@@ -8,11 +8,14 @@
 #include <RooConstVar.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
+#include <RooExponential.h>
 #include <RooFitResult.h>
 #include <RooFormulaVar.h>
 #include <RooGaussian.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
+#include <RooLandau.h>
+#include <RooNumIntConfig.h>
 #include <RooParametricStepFunction.h>
 #include <RooProdPdf.h>
 #include <RooProduct.h>
@@ -23,11 +26,15 @@
 
 #include <TArrayD.h>
 #include <TClass.h>
+#include <TMath.h>
 #include <TRandom.h>
 
 #include "gtest_wrapper.h"
 
+#include <cmath>
 #include <memory>
+#include <utility>
+#include <vector>
 
 class FitTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
 public:
@@ -518,6 +525,169 @@ TEST(RooAbsPdf, NormSetChange)
    // The change of normalization set should trigger a recomputation of the
    // value, so val2 should be different from val1. }
    EXPECT_NE(v1, v2);
+}
+
+namespace {
+
+/// Integral of an unnormalized Gaussian exp(-0.5 ((x - mean) / sigma)^2) over [lo, hi].
+double gaussInt(double lo, double hi, double mean, double sigma)
+{
+   const double sqrt2 = std::sqrt(2.0);
+   return sigma * std::sqrt(TMath::Pi() / 2.) *
+          (std::erf((hi - mean) / (sqrt2 * sigma)) - std::erf((lo - mean) / (sqrt2 * sigma)));
+}
+
+} // namespace
+
+/// Normalization, integration and cdf of a pdf in one dimension, checked
+/// against the analytically known Gaussian integrals. Replaces the former
+/// stressRooFit test based on the rf110 tutorial, which compared against
+/// stored reference values.
+TEST(RooAbsPdf, Normalization1D)
+{
+   RooRealVar x("x", "x", -10, 10);
+   RooGaussian gx("gx", "gx", x, -2.0, 3.0);
+
+   const double rawVal = std::exp(-0.5 * std::pow((x.getVal() + 2.) / 3., 2));
+   const double normInt = gaussInt(-10, 10, -2., 3.);
+
+   // Raw unnormalized value and value normalized over x in [-10, 10]
+   EXPECT_NEAR(gx.getVal(), rawVal, 1e-10);
+   RooArgSet nset{x};
+   EXPECT_NEAR(gx.getVal(&nset), rawVal / normInt, 1e-10);
+
+   // Integral over the full range
+   std::unique_ptr<RooAbsReal> igx{gx.createIntegral(x)};
+   EXPECT_NEAR(igx->getVal(), normInt, 1e-6 * normInt);
+
+   // Fraction of the normalized pdf contained in the "signal" sub range
+   x.setRange("signal", -5, 5);
+   std::unique_ptr<RooAbsReal> igxSig{gx.createIntegral(x, RooFit::NormSet(x), RooFit::Range("signal"))};
+   const double sigFrac = gaussInt(-5, 5, -2., 3.) / normInt;
+   EXPECT_NEAR(igxSig->getVal(), sigFrac, 1e-6);
+
+   // Cumulative distribution function
+   std::unique_ptr<RooAbsReal> cdf{gx.createCdf(x)};
+   for (double xVal : {-10., -5., -2., 0., 3., 10.}) {
+      x.setVal(xVal);
+      EXPECT_NEAR(cdf->getVal(), gaussInt(-10, xVal, -2., 3.) / normInt, 1e-6) << "cdf at x = " << xVal;
+   }
+}
+
+/// Normalization and integration of a product pdf in two dimensions, checked
+/// against the analytically known Gaussian integrals. Replaces the former
+/// stressRooFit test based on the rf308 tutorial, which compared against
+/// stored reference values.
+TEST(RooAbsPdf, Normalization2D)
+{
+   RooRealVar x("x", "x", -10, 10);
+   RooRealVar y("y", "y", -10, 10);
+
+   RooGaussian gx("gx", "gx", x, -2.0, 3.0);
+   RooGaussian gy("gy", "gy", y, +2.0, 2.0);
+   RooProdPdf gxy("gxy", "gxy", RooArgSet(gx, gy));
+
+   const double rawX = std::exp(-0.5 * std::pow((x.getVal() + 2.) / 3., 2));
+   const double rawY = std::exp(-0.5 * std::pow((y.getVal() - 2.) / 2., 2));
+   const double intX = gaussInt(-10, 10, -2., 3.);
+   const double intY = gaussInt(-10, 10, +2., 2.);
+
+   EXPECT_NEAR(gxy.getVal(), rawX * rawY, 1e-10);
+
+   // Normalized over both, or only one of the observables (the other one is
+   // then treated as a parameter)
+   RooArgSet nsetXY{x, y};
+   RooArgSet nsetX{x};
+   RooArgSet nsetY{y};
+   EXPECT_NEAR(gxy.getVal(&nsetXY), rawX * rawY / (intX * intY), 1e-10);
+   EXPECT_NEAR(gxy.getVal(&nsetX), rawX / intX, 1e-10);
+   EXPECT_NEAR(gxy.getVal(&nsetY), rawY / intY, 1e-10);
+
+   std::unique_ptr<RooAbsReal> igxy{gxy.createIntegral({x, y})};
+   EXPECT_NEAR(igxy->getVal(), intX * intY, 1e-6 * intX * intY);
+
+   // Fraction of the normalized pdf contained in the rectangular "signal" range
+   x.setRange("signal", -5, 5);
+   y.setRange("signal", -3, 3);
+   std::unique_ptr<RooAbsReal> igxySig{gxy.createIntegral({x, y}, RooFit::NormSet(RooArgSet{x, y}), RooFit::Range("signal"))};
+   const double sigFrac = gaussInt(-5, 5, -2., 3.) * gaussInt(-3, 3, 2., 2.) / (intX * intY);
+   EXPECT_NEAR(igxySig->getVal(), sigFrac, 1e-6);
+
+   // The cdf of the product of two independent pdfs factorizes into the
+   // product of the marginal cdfs
+   std::unique_ptr<RooAbsReal> cdf{gxy.createCdf({x, y})};
+   const std::vector<std::pair<double, double>> cdfPoints{{-5., -2.}, {0., 0.}, {2.5, 4.}, {10., 10.}};
+   for (auto const &[xVal, yVal] : cdfPoints) {
+      x.setVal(xVal);
+      y.setVal(yVal);
+      const double ref = gaussInt(-10, xVal, -2., 3.) / intX * gaussInt(-10, yVal, 2., 2.) / intY;
+      EXPECT_NEAR(cdf->getVal(), ref, 1e-6) << "cdf at (x, y) = (" << xVal << ", " << yVal << ")";
+   }
+}
+
+/// Configuration of numeric integration, validated against the analytical
+/// integral of the Landau pdf instead of stored reference values. Replaces the
+/// former stressRooFit test based on the rf111 tutorial.
+TEST(RooAbsPdf, NumIntConfig)
+{
+   RooRealVar x("x", "x", -10, 10);
+   RooLandau landau("landau", "landau", x, 0.0, 0.1);
+
+   // The analytical integral serves as the reference
+   const double refVal = std::unique_ptr<RooAbsReal>{landau.createIntegral(x)}->getVal();
+
+   // Disable analytic integration and integrate with the default numeric
+   // integrator configuration
+   landau.forceNumInt(true);
+   const double val1 = std::unique_ptr<RooAbsReal>{landau.createIntegral(x)}->getVal();
+   EXPECT_NEAR(val1, refVal, 1e-3 * refVal);
+
+   // Use a custom configuration, once passed explicitly to createIntegral()
+   // and once set as the default configuration of the pdf object
+   RooNumIntConfig customConfig(*RooAbsReal::defaultIntegratorConfig());
+   customConfig.setEpsAbs(1e-8);
+   customConfig.setEpsRel(1e-8);
+
+   const double val2 =
+      std::unique_ptr<RooAbsReal>{landau.createIntegral(x, RooFit::NumIntConfig(customConfig))}->getVal();
+   EXPECT_NEAR(val2, refVal, 1e-3 * refVal);
+
+   landau.setIntegratorConfig(customConfig);
+   const double val3 = std::unique_ptr<RooAbsReal>{landau.createIntegral(x)}->getVal();
+
+   // Both ways of passing the custom configuration must give the identical result
+   EXPECT_DOUBLE_EQ(val3, val2);
+}
+
+/// Unbinned fit with a per-event acceptance region, implemented via a range
+/// that is parameterized by another observable in the dataset. The fit must
+/// recover the generating decay constant without bias. Replaces the former
+/// stressRooFit test based on the rf314 tutorial.
+TEST_P(FitTest, ParameterizedRangeFit)
+{
+   using namespace RooFit;
+
+   RooRealVar t("t", "t", 0, 5);
+   RooRealVar tmin("tmin", "tmin", 0, 0, 5);
+
+   // Parameterized range in t : [tmin, 5]
+   t.setRange(tmin, RooConst(t.getMax()));
+
+   RooRealVar tau("tau", "tau", -1.54, -10, -0.1);
+   RooExponential model("model", "model", t, tau);
+
+   // Prototype dataset with per-event acceptance limit values
+   RooGaussian gmin("gmin", "gmin", tmin, 0.0, 0.5);
+   std::unique_ptr<RooDataSet> proto{gmin.generate(tmin, 5000)};
+
+   // Dataset with t values that observe t > tmin
+   std::unique_ptr<RooDataSet> data{model.generate(t, ProtoData(*proto))};
+
+   std::unique_ptr<RooFitResult> res{model.fitTo(*data, Save(), PrintLevel(-1), _evalBackend)};
+
+   EXPECT_EQ(res->status(), 0);
+   EXPECT_EQ(res->covQual(), 3);
+   expectParamNear(*res, "tau", -1.54);
 }
 
 INSTANTIATE_TEST_SUITE_P(RooAbsPdf, FitTest, testing::Values(ROOFIT_EVAL_BACKENDS),

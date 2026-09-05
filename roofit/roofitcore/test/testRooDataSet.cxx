@@ -21,6 +21,7 @@
 #include <TSystem.h>
 #include <TTree.h>
 
+#include <cmath>
 #include <fstream>
 #include <memory>
 
@@ -540,4 +541,74 @@ TEST(RooDataSet, ReduceCompositeDataStoreByIndexCat)
    // Test that the category state was correctly reset (both in workspace and datastore)
    EXPECT_EQ(dsCat->getCurrentIndex(), initialIndexInDataStore);
    EXPECT_EQ(cat->getCurrentIndex(), initialIndexInWorkspace);
+}
+
+/// Reducing, merging and appending of unbinned and binned datasets, checked
+/// against event counts that are computed while deterministically filling the
+/// inputs. Replaces the former stressRooFit test based on the rf402 tutorial,
+/// which compared against stored reference values.
+TEST(RooDataSet, ReduceMergeAppend)
+{
+   RooRealVar x("x", "x", -10, 10);
+   RooRealVar y("y", "y", 0, 40);
+   RooCategory c("c", "c", {{"Plus", +1}, {"Minus", -1}});
+
+   RooDataSet d("d", "d", {x, y, c});
+
+   // Fill the dataset with deterministic values and keep track of the entry
+   // counts that the reduce operations below are expected to yield
+   int nYCut = 0;    // entries with y > 5.17
+   int nXBinCut = 0; // entries in x bins with positive bin center (10 bins in [-10, 10], so x >= 0)
+   for (int i = 0; i < 1000; i++) {
+      x.setVal(i / 50 - 10);
+      y.setVal(std::sqrt(1.0 * i));
+      c.setLabel((i % 2) ? "Plus" : "Minus");
+      d.add({x, y, c});
+      if (y.getVal() > 5.17)
+         ++nYCut;
+      if (x.getVal() >= 0)
+         ++nXBinCut;
+   }
+
+   using namespace RooFit;
+
+   std::unique_ptr<RooAbsData> d1{d.reduce(SelectVars({x, c}))};
+   std::unique_ptr<RooAbsData> d2{d.reduce(SelectVars(y))};
+   std::unique_ptr<RooAbsData> d3{d.reduce(Cut("y>5.17"))};
+   std::unique_ptr<RooAbsData> d4{d.reduce(SelectVars({x, c}), Cut("y>5.17"))};
+
+   EXPECT_EQ(d1->numEntries(), 1000);
+   EXPECT_EQ(d1->get()->size(), 2u);
+   EXPECT_EQ(d2->numEntries(), 1000);
+   EXPECT_EQ(d2->get()->size(), 1u);
+   EXPECT_EQ(d3->numEntries(), nYCut);
+   EXPECT_EQ(d3->get()->size(), 3u);
+   EXPECT_EQ(d4->numEntries(), nYCut);
+   EXPECT_EQ(d4->get()->size(), 2u);
+
+   // merge() adds datasets column-wise
+   static_cast<RooDataSet &>(*d1).merge(static_cast<RooDataSet *>(d2.get()));
+   EXPECT_EQ(d1->numEntries(), 1000);
+   EXPECT_EQ(d1->get()->size(), 3u);
+
+   // The merged column must contain the original y values
+   EXPECT_DOUBLE_EQ(d1->get(999)->getRealValue("y"), std::sqrt(999.));
+
+   // append() adds datasets row-wise
+   static_cast<RooDataSet &>(*d1).append(static_cast<RooDataSet &>(*d3));
+   EXPECT_EQ(d1->numEntries(), 1000 + nYCut);
+
+   // Binned clone of the unbinned dataset: all entries are inside the variable
+   // ranges, so no events may be lost
+   x.setBins(10);
+   y.setBins(10);
+   RooDataHist dh("dh", "binned version of d", {x, y}, d);
+   EXPECT_DOUBLE_EQ(dh.sumEntries(), 1000.);
+
+   // Reduction of the binned dataset. The cut is evaluated on the bin
+   // centers, so the reduced histogram contains the full content of all bins
+   // with positive center.
+   std::unique_ptr<RooAbsData> dh2{dh.reduce(SelectVars(y), Cut("x>0"))};
+   EXPECT_EQ(dh2->numEntries(), 10);
+   EXPECT_DOUBLE_EQ(dh2->sumEntries(), nXBinCut);
 }
