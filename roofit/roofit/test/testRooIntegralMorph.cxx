@@ -251,8 +251,8 @@ TEST(RooIntegralMorph, AlphaCacheScan)
 
 /// Generating a toy dataset from the morph pdf and fitting it back must
 /// recover the true alpha, with the alpha cache enabled as in a realistic
-/// fitting application, on both the legacy and cpu evaluation backends. This
-/// covers the toy fit of the former stressRooFit test 705.
+/// fitting application. This covers the toy fit of the former stressRooFit
+/// test 705.
 TEST(RooIntegralMorph, GenerateAndFit)
 {
    GaussPolySetup s;
@@ -270,7 +270,7 @@ TEST(RooIntegralMorph, GenerateAndFit)
 
    morph.setCacheAlpha(true);
 
-   for (std::string backend : {"legacy", "cpu"}) {
+   for (std::string backend : {"cpu"}) {
       alpha.setVal(0.5);
       alpha.setError(0.0);
       std::unique_ptr<RooFitResult> res{

@@ -41,10 +41,7 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestBernstein2, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestBernstein2, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestBernstein2, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestBernstein2, RunScalar)
 FIT_TEST_BATCH(TestBernstein2, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestBernstein2, CompareBatchScalar)
-
 class TestBernstein5 : public PDFTest {
 protected:
    TestBernstein5() : PDFTest("Bernstein5")
@@ -74,6 +71,4 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestBernstein5, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestBernstein5, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestBernstein5, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestBernstein5, RunScalar)
 FIT_TEST_BATCH(TestBernstein5, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestBernstein5, CompareBatchScalar)

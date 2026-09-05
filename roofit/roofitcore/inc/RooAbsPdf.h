@@ -340,7 +340,6 @@ private:
   mutable RooFit::UniqueId<RooArgSet>::Value_t _normSetId = RooFit::UniqueId<RooArgSet>::nullval; ///<! Unique ID of the currently-active normalization set
 
   friend class RooAbsReal;
-  friend class RooChi2Var;
 
   ClassDefOverride(RooAbsPdf,5) // Abstract PDF with normalization support
 };
