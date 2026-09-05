@@ -513,6 +513,10 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, bool verbose,
       os << std::endl ;
     }
 
+    if (_globalCorr == nullptr && _GC) {
+       fillLegacyCorrMatrix();
+    }
+
     // Has any parameter asymmetric errors?
     bool doAsymErr(false) ;
     for (std::size_t i=0 ; i<_finalPars->size() ; i++) {
@@ -875,6 +879,11 @@ void RooFitResult::setCovarianceMatrix(TMatrixDSym& V)
   if (_CM) {
     delete _CM ;
   }
+  if (_GC) {
+     delete _GC;
+     _GC = nullptr;
+  }
+  _globalCorr.reset();
 
   // Clone input covariance matrix ;
   _VM = static_cast<TMatrixDSym*>(V.Clone()) ;
@@ -890,6 +899,23 @@ void RooFitResult::setCovarianceMatrix(TMatrixDSym& V)
   }
   for (Int_t i=0 ; i<_CM->GetNrows() ; i++) {
     (*_CM)(i,i) = 1.0 ;
+  }
+
+  // Compute the global correlation coefficients from the correlation matrix:
+  // rho_k^2 = 1 - 1/[V_kk * (V^-1)_kk] = 1 - 1/(C^-1)_kk
+  TMatrixDSym invC(*_CM);
+  double det = 0.0;
+  invC.Invert(&det);
+  if (det != 0.0) {
+     _GC = new TVectorD(_CM->GetNcols());
+     for (Int_t i = 0; i < _CM->GetNcols(); i++) {
+        const double rho2 = 1.0 - 1.0 / invC(i, i);
+        (*_GC)[i] = rho2 > 0.0 ? sqrt(rho2) : 0.0;
+     }
+  } else {
+     coutW(InputArguments) << "RooFitResult::setCovarianceMatrix(" << GetName()
+                           << ") covariance matrix is singular, global correlation coefficients not available"
+                           << std::endl;
   }
 
   _covQual = -1 ;
