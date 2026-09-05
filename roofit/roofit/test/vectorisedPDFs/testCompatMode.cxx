@@ -51,10 +51,7 @@ COMPARE_FIXED_VALUES_UNNORM(TestRooPolynomial, CompareFixedUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestRooPolynomial, CompareFixedNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestRooPolynomial, CompareFixedNormLog)
 
-FIT_TEST_SCALAR(TestRooPolynomial, RunScalar)
 FIT_TEST_BATCH(TestRooPolynomial, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestRooPolynomial, CompareBatchScalar)
-
 class RooNonVecGaussian : public RooAbsPdf {
 public:
    RooNonVecGaussian() {};
@@ -191,10 +188,7 @@ COMPARE_FIXED_VALUES_UNNORM(TestNonVecGauss, CompareFixedUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestNonVecGauss, CompareFixedNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestNonVecGauss, CompareFixedNormLog)
 
-FIT_TEST_SCALAR(TestNonVecGauss, RunScalar)
 FIT_TEST_BATCH(TestNonVecGauss, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestNonVecGauss, CompareBatchScalar)
-
 class TestNonVecGaussWeighted : public PDFTestWeightedData {
 protected:
    TestNonVecGaussWeighted() : PDFTestWeightedData("GaussNoBatchesWithWeights", 50000)
@@ -220,11 +214,7 @@ COMPARE_FIXED_VALUES_UNNORM(TestNonVecGaussWeighted, CompareFixedUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestNonVecGaussWeighted, CompareFixedNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestNonVecGaussWeighted, CompareFixedNormLog)
 
-FIT_TEST_SCALAR(TestNonVecGaussWeighted,
-                DISABLED_RunScalar) // Would need SumW2 error matrix correction, but no done in macro
 FIT_TEST_BATCH(TestNonVecGaussWeighted, DISABLED_RunBatch) // As above
-FIT_TEST_BATCH_VS_SCALAR(TestNonVecGaussWeighted, CompareBatchScalar)
-
 class TestNonVecGaussInMeanAndX : public PDFTest {
 protected:
    TestNonVecGaussInMeanAndX() : PDFTest("GaussNoBatches(x, mean)")
@@ -249,6 +239,4 @@ COMPARE_FIXED_VALUES_UNNORM(TestNonVecGaussInMeanAndX, CompareFixedUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestNonVecGaussInMeanAndX, CompareFixedNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestNonVecGaussInMeanAndX, CompareFixedNormLog)
 
-FIT_TEST_SCALAR(TestNonVecGaussInMeanAndX, RunScalar)
 FIT_TEST_BATCH(TestNonVecGaussInMeanAndX, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestNonVecGaussInMeanAndX, CompareBatchScalar)

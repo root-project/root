@@ -97,13 +97,6 @@ TEST(RooSimultaneous, CategoriesWithNoPdf)
 
    // We don't care about the fit result, just that it doesn't crash.
    using namespace RooFit;
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   sim.fitTo(*ds, EvalBackend(EvalBackend::Value::Legacy), PrintLevel(-1));
-   m0.setVal(0.5);
-   m0.setError(0.0);
-   m1.setVal(0.5);
-   m1.setError(0.0);
-#endif
    sim.fitTo(*ds, EvalBackend::Cpu(), PrintLevel(-1));
 }
 
@@ -149,9 +142,6 @@ TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
    const char *cutRange1 = "SideBandLo_cat1,SideBandHi_cat1";
    const char *cutRange2 = "SideBandLo_cat2,SideBandHi_cat2";
    using RealPtr = std::unique_ptr<RooAbsReal>;
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   RealPtr nllSim{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange(), EvalBackend(EvalBackend::Value::Legacy))};
-#endif
    RealPtr nllSimBatch{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange(), EvalBackend::Cpu())};
 
    // In simultaneous PDFs, the probability is normalized over the categories,
@@ -167,12 +157,8 @@ TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
    RooAddition nllSimRef{"nllSimRef", "nllSimRef", {*nll1, *nll2, RooConst(normTerm)}};
 
    const double nllSimRefVal = nllSimRef.getVal();
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   const double nllSimVal = nllSim->getVal();
-   EXPECT_FLOAT_EQ(nllSimVal, nllSimRefVal);
-#endif
    const double nllSimBatchVal = nllSimBatch->getVal();
-   EXPECT_FLOAT_EQ(nllSimBatchVal, nllSimRefVal) << "BatchMode and old RooFit don't agree!";
+   EXPECT_FLOAT_EQ(nllSimBatchVal, nllSimRefVal);
 }
 
 using TestStatisticTest = RooFitEvalBackendTest;
@@ -895,9 +881,6 @@ TEST(RooSimultaneous, ParameterIndexSwitchMode)
    std::unique_ptr<RooDataSet> data{refModel0.generate(x, 500)};
 
    std::vector<RooFit::EvalBackend> backends;
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   backends.push_back(RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy));
-#endif
    backends.push_back(RooFit::EvalBackend::Cpu());
    backends.push_back(RooFit::EvalBackend::CodegenNoGrad());
 
@@ -973,9 +956,6 @@ TEST(RooSimultaneous, ParameterIndexTopLevelNLL)
    std::unique_ptr<RooDataSet> data{expo.generate(x, 500)};
 
    std::vector<RooFit::EvalBackend> backends;
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   backends.push_back(RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy));
-#endif
    backends.push_back(RooFit::EvalBackend::Cpu());
    backends.push_back(RooFit::EvalBackend::CodegenNoGrad());
 
@@ -1024,9 +1004,6 @@ TEST(RooSimultaneous, ParameterIndexSwitchModeExtended)
    std::unique_ptr<RooDataSet> data{gauss.generate(x, 500)};
 
    std::vector<RooFit::EvalBackend> backends;
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   backends.push_back(RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy));
-#endif
    backends.push_back(RooFit::EvalBackend::Cpu());
    backends.push_back(RooFit::EvalBackend::CodegenNoGrad());
 

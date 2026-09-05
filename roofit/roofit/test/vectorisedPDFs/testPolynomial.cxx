@@ -39,10 +39,7 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestPolynomial2, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestPolynomial2, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestPolynomial2, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestPolynomial2, DISABLED_RunScalar) // Save time
 FIT_TEST_BATCH(TestPolynomial2, DISABLED_RunBatch)   // Save time
-FIT_TEST_BATCH_VS_SCALAR(TestPolynomial2, CompareBatchScalar)
-
 class TestPolynomial5 : public PDFTest {
 protected:
    TestPolynomial5() : PDFTest("Polynomial5")
@@ -78,6 +75,4 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestPolynomial5, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestPolynomial5, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestPolynomial5, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestPolynomial5, DISABLED_RunScalar) // Save time
 FIT_TEST_BATCH(TestPolynomial5, DISABLED_RunBatch)   // Save time
-FIT_TEST_BATCH_VS_SCALAR(TestPolynomial5, CompareBatchScalar)
