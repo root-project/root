@@ -597,6 +597,29 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetCompleteNameQualifiedArgs) {
             "Tpl<NS::S>");
 }
 
+// Printed names must not depend on platform naming features: preferred-name
+// substitution is off (libc++ tags basic_string<char> as std::string) and
+// inline namespaces are dropped unconditionally.
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           ScopeReflection_GetCompleteNamePlatformIndependent) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    namespace Outer { inline namespace v1 { struct T {}; } }
+    Outer::T t;
+    template <typename T> struct BS;
+    typedef BS<char> MyStr;
+    template <typename T> struct [[clang::preferred_name(MyStr)]] BS {};
+    BS<char> v;
+  )";
+  GetAllTopLevelDecls(code, Decls);
+  EXPECT_EQ(Cpp::GetQualifiedCompleteName(
+                Cpp::GetScopeFromType(Cpp::GetVariableType(Decls[1]))),
+            "Outer::T");
+  EXPECT_EQ(Cpp::GetQualifiedCompleteName(
+                Cpp::GetScopeFromType(Cpp::GetVariableType(Decls[5]))),
+            "BS<char>");
+}
+
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetQualifiedName) {
   std::vector<Decl*> Decls;
   std::string code = R"(namespace N {
