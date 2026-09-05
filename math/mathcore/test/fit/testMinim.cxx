@@ -19,7 +19,7 @@
 #include "TRandom3.h"
 #include "TMath.h"
 
-#include "RVersion.h"
+#include "ROOT/RVersion.hxx"
 #include "RConfigure.h"
 
 //#define DEBUG

@@ -23,7 +23,7 @@
 #include "TText.h"
 #include "TLegend.h"
 
-#include "RVersion.h"
+#include "ROOT/RVersion.hxx"
 
 namespace TMVA{
 

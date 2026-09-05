@@ -26,8 +26,8 @@
 #include <ROOT/RPagePool.hxx>
 #include <ROOT/RDaos.hxx>
 #include <ROOT/RPageStorageDaos.hxx>
+#include <ROOT/RVersion.hxx>
 
-#include <RVersion.h>
 #include <TError.h>
 
 #include <algorithm>
