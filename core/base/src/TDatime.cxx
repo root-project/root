@@ -26,22 +26,19 @@ required, use TTimeStamp.
 
 #include <ROOT/RConfig.hxx>
 
-#include <ctime>
-
 #ifdef WIN32
 #include "Windows4Root.h"
-#include <cstring>
 #endif
 
 #include "TBuffer.h"
-#include "Strlen.h"
 #include "snprintf.h"
 #include "TDatime.h"
 #include "TError.h"
 #include "Bytes.h"
 #include "TString.h"
 
-
+#include <ctime>
+#include <cstring>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TDatime and set it to the current time.

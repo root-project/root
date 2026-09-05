@@ -127,7 +127,6 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "Bytes.h"
 #include "Compression.h"
 #include "RConfigure.h"
-#include "Strlen.h"
 #include "strlcpy.h"
 #include "snprintf.h"
 #include "TArrayC.h"
@@ -172,8 +171,10 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TGlobal.h"
 #include "ROOT/RConcurrentHashColl.hxx"
 #include "ROOT/InternalIOUtils.hxx"
+
 #include <memory>
 #include <cinttypes>
+#include <cstring>
 
 #ifdef R__FBSD
 #include <sys/extattr.h>

@@ -11,10 +11,11 @@
 
 #include "TMethodArg.h"
 #include "TInterpreter.h"
-#include "Strlen.h"
 #include "TMethod.h"
 #include "TMethodCall.h"
 #include "TDataMember.h"
+
+#include <cstring>
 
 /** \class TMethodArg
 Each ROOT method (see TMethod) has a linked list of its arguments.

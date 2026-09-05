@@ -8,9 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#include <cstdlib>
-
-#include "Strlen.h"
 #include "strlcpy.h"
 #include "TDirectory.h"
 #include "TBuffer.h"
@@ -31,6 +28,8 @@
 
 #include <algorithm>
 #include <limits>
+#include <cstdlib>
+#include <cstring>
 
 const Int_t  kMaxLen = 2048;
 
