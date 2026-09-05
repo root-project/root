@@ -5435,3 +5435,69 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   EXPECT_EQ(ra, 7); // HeavyZero<1>::tls.id set by the NonTrivial ctor
   EXPECT_EQ(rb, 7);
 }
+
+// The wrapper spells the return type in its placement-new; a typedef nested
+// in a private member class is not spellable there (and, unlike a typedef of
+// a builtin, is not desugared by get_type_as_string), the canonical type is.
+TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_PrivateTypedefReturn) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscripten builds";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    struct Obj {};
+    struct Res {
+    private:
+      struct Helper { typedef Obj Iterator_t; };
+    public:
+      Helper::Iterator_t get() { return {}; }
+    };
+  )";
+
+  GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
+                      /*interpreter_args=*/{"-include", "new"});
+  ASSERT_EQ(Decls.size(), 2);
+  auto Fns = Cpp::GetFunctionsUsingName(Decls[1], "get");
+  ASSERT_EQ(Fns.size(), 1);
+  EXPECT_EQ(Cpp::MakeFunctionCallable(Fns[0]).getKind(),
+            Cpp::JitCall::kGenericCall);
+}
+
+// decltype sugar is spelled as its expression: a call in it keeps its
+// qualifier as written (detail::helper), which does not resolve at file scope;
+// the canonical type is spellable. A typedef of a class type underneath keeps
+// the sugar from being desugared when the type is printed (a builtin would be).
+TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_DecltypeReturn) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscripten builds";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    namespace ns {
+      namespace detail { inline int helper() { return 0; } }
+      struct Obj { int v; };
+      typedef Obj Res;
+      auto get(int i) -> decltype(detail::helper(), Res()) { return Res{7 * i}; }
+    }
+  )";
+
+  GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
+                      /*interpreter_args=*/{"-include", "new"});
+  ASSERT_EQ(Decls.size(), 1);
+  auto Fns = Cpp::GetFunctionsUsingName(Decls[0], "get");
+  ASSERT_EQ(Fns.size(), 1);
+  Cpp::JitCall JC = Cpp::MakeFunctionCallable(Fns[0]);
+  ASSERT_EQ(JC.getKind(), Cpp::JitCall::kGenericCall);
+
+  int i = 3;
+  struct { int v; } result = {0};
+  std::array<void*, 1> args = {(void*)&i};
+  JC.Invoke(&result, {args.data(), /*args_size=*/1}, /*self=*/nullptr);
+  EXPECT_EQ(result.v, 21);
+}
