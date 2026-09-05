@@ -1031,6 +1031,20 @@ static std::string GetCompleteNameImpl(ConstDeclRef DRef, bool qualified) {
 
     if (const auto* TD = llvm::dyn_cast<TagDecl>(ND)) {
       std::string type_name;
+      if (!qualified && TD->getIdentifier()) {
+        // The name must be unqualified only for the tag itself; template
+        // arguments have to keep their scopes (SuppressScope would strip
+        // those too). getNameForDiagnostic prints the bare name and the
+        // template arguments under the policy, dropping defaulted ones.
+        Policy.SuppressScope = false;
+        Policy.FullyQualifiedName = true;
+        Policy.Suppress_Elab = true;
+        Policy.SuppressDefaultTemplateArgs = true;
+        llvm::raw_string_ostream name_stream(type_name);
+        TD->getNameForDiagnostic(name_stream, Policy, /*Qualified=*/false);
+        name_stream.flush();
+        return type_name;
+      }
       QualType QT = compat::GetTypeFromDecl(TD);
       QT.getAsStringInternal(type_name, Policy);
       return type_name;
