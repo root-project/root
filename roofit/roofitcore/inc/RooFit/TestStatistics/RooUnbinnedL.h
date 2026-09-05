@@ -33,7 +33,7 @@ namespace TestStatistics {
 class RooUnbinnedL : public RooAbsL {
 public:
    RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended = RooAbsL::Extended::Auto,
-                RooFit::EvalBackend evalBackend = RooFit::EvalBackend::Legacy());
+                RooFit::EvalBackend evalBackend = RooFit::EvalBackend::Cpu());
    RooUnbinnedL(const RooUnbinnedL &other);
    ~RooUnbinnedL() override;
    bool setApplyWeightSquared(bool flag);
@@ -46,7 +46,6 @@ public:
 
 private:
    bool apply_weight_squared = false; ///< Apply weights squared?
-   mutable bool _first = true;        ///<!
    std::unique_ptr<RooChangeTracker> paramTracker_;
    Section lastSection_ = {0, 0}; // used for cache together with the parameter tracker
    mutable ROOT::Math::KahanSum<double> cachedResult_{0.};

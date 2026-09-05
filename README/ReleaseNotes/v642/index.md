@@ -175,6 +175,41 @@ Users are strongly encouraged to switch to the vectorized CPU backend if they ar
 
 If the vectorized backend does not work for a given use case, **please report it by opening an issue on the ROOT GitHub repository**.
 
+### Removal of the legacy evaluation backend
+
+The `legacy` evaluation backend for likelihood and chi-square fits is removed.
+It was superseded by the vectorized `cpu` backend, which is the default since
+ROOT 6.32. After the removal of the constant term optimization (see above), the
+legacy backend also had no performance-relevant feature left that would justify
+its continued maintenance.
+
+Concretely, this means:
+
+  * `RooFit::EvalBackend::Legacy()` and the corresponding enum value are
+    removed. Passing `RooFit::EvalBackend("legacy")` to `fitTo()`,
+    `createNLL()`, `chi2FitTo()` or `createChi2()` now throws an exception, and
+    so does the deprecated `RooFit::BatchMode("off")`.
+  * The implementation classes of the legacy test statistics are removed:
+    **RooNLLVar**, **RooChi2Var**, **RooAbsOptTestStatistic** and
+    **RooAbsTestStatistic**. Their headers were not part of the public
+    interface anymore since ROOT 6.32, but they were still installed for
+    backwards compatibility.
+  * The old multiprocessing mechanism of the legacy backend is removed as well,
+    consisting of the **RooRealMPFE** class and the underlying
+    **BidirMMapPipe**. The `RooFit::NumCPU()` command argument, which was
+    forking off one `RooRealMPFE` process per CPU, is now ignored in fits. For
+    parallelized fits, use the `RooFit::Parallelize()` argument that is based
+    on the new `RooFit::MultiProcess` framework (requires building ROOT with
+    `roofit_multiprocess=ON`).
+  * The `nll::name[pdf,data]` and `chi2::name[pdf,data]` expressions in the
+    `RooWorkspace::factory()` language are removed, since they instantiated the
+    removed classes directly. Use `RooAbsPdf::createNLL()` or
+    `RooAbsReal::createChi2()` instead.
+  * The `RooFit::TestStatistics::RooUnbinnedL` class now always evaluates with
+    the `RooFit::Evaluator` and its `evalBackend` constructor parameter
+    defaults to the `cpu` backend, like `RooFit::TestStatistics::NLLFactory`.
+  * The `roofit_legacy_eval_backend` CMake option is gone.
+
 ### Default binning of RooFit variables changed to zero bins
 
 A freshly-constructed `RooRealVar` (or `RooErrorVar`) no longer has a default binning of 100 bins.

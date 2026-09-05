@@ -48,6 +48,4 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestCBShape, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestCBShape, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestCBShape, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestCBShape, RunScalar)
 FIT_TEST_BATCH(TestCBShape, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestCBShape, CompareBatchScalar)

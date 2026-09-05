@@ -826,39 +826,18 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
  *                                                  \f]
  * <tr><td> `Range(double lo, double hi)` <td>  Fit only data inside given range. A range named "fit" is created on the fly on all observables.
  * <tr><td> `SumCoefRange(const char* name)`  <td> Set the range in which to interpret the coefficients of RooAddPdf components
- * <tr><td> `NumCPU(int num, int istrat)`      <td> Parallelize NLL calculation on num CPUs. (Currently, this setting is ignored with the **cpu** Backend.)
- *   <table>
- *   <tr><th> Strategy   <th> Effect
- *   <tr><td> 0 = RooFit::BulkPartition - *default* <td> Divide events in N equal chunks
- *   <tr><td> 1 = RooFit::Interleave <td> Process event i%N in process N. Recommended for binned data with
- *                     a substantial number of zero-bins, which will be distributed across processes more equitably in this strategy
- *   <tr><td> 2 = RooFit::SimComponents <td> Process each component likelihood of a RooSimultaneous fully in a single process
- *                     and distribute components over processes. This approach can be beneficial if normalization calculation time
- *                     dominates the total computation time of a component (since the normalization calculation must be performed
- *                     in each process in strategies 0 and 1. However beware that if the RooSimultaneous components do not share many
- *                     parameters this strategy is inefficient: as most minuit-induced likelihood calculations involve changing
- *                     a single parameter, only 1 of the N processes will be active most of the time if RooSimultaneous components
- *                     do not share many parameters
- *   <tr><td> 3 = RooFit::Hybrid <td> Follow strategy 0 for all RooSimultaneous components, except those with less than
- *                     30 dataset entries, for which strategy 2 is followed.
- *   </table>
+ * <tr><td> `NumCPU(int num, int istrat)`      <td> \warning Deprecated option that is ignored.
+ *                                                 It was used to parallelize the NLL calculation of the removed legacy evaluation backend.
  * <tr><td> `EvalBackend(std::string const&)` <td> Choose a likelihood evaluation backend:
  *   <table>
  *   <tr><th> Backend <th> Description
- *   <tr><td> **cpu** - *default* <td> New vectorized evaluation mode, using faster math functions and auto-vectorisation (currently on a single thread).
- *                         Since ROOT 6.23, this is the default if `EvalBackend()` is not passed, succeeding the **legacy** backend.
- *                         If all RooAbsArg objects in the model support vectorized evaluation,
- *                         likelihood computations are 2 to 10 times faster than with the **legacy** backend (each on a single thread).
- *                         - unless your dataset is so small that the vectorization is not worth it.
- *                         The relative difference of the single log-likelihoods with respect to the legacy mode is usually better than \f$10^{-12}\f$,
- *                         and for fit parameters it's usually better than \f$10^{-6}\f$. In past ROOT releases, this backend could be activated with the now deprecated `BatchMode()` option.
+ *   <tr><td> **cpu** - *default* <td> Vectorized evaluation mode, using faster math functions and auto-vectorisation (currently on a single thread).
+ *                         Since ROOT 6.23, this is the default if `EvalBackend()` is not passed.
+ *                         In past ROOT releases, this backend could be activated with the now deprecated `BatchMode()` option.
  *   <tr><td> **cuda** <td> Evaluate the likelihood on a GPU that supports CUDA.
  *                          This backend re-uses code from the **cpu** backend, but compiled in CUDA kernels.
  *                          Hence, the results are expected to be identical, modulo some numerical differences that can arise from the different order in which the GPU is summing the log probabilities.
  *                          This backend can drastically speed up the fit if all RooAbsArg object in the model support it.
- *   <tr><td> **legacy** <td> The original likelihood evaluation method.
- *                            Evaluates the PDF for each single data entry at a time before summing the negative log probabilities.
- *                            It supports multi-threading, but you might need more than 20 threads to maybe see about 10% performance gain over the default cpu-backend (that runs currently only on a single thread).
  *   <tr><td> **codegen** <td> **Experimental** - Generates and compiles minimal C++ code for the NLL on-the-fly and wraps it in the returned RooAbsReal.
  *                             Also generates and compiles the code for the gradient using Automatic Differentiation (AD) with [Clad](https://github.com/vgvassilev/clad).
  *                             This analytic gradient is passed to the minimizer, which can result in significant speedups for many-parameter fits,

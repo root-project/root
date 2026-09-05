@@ -4,8 +4,6 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-set(roofit_legacy_eval_backend ON CACHE BOOL "" FORCE)
-
 add_subdirectory(batchcompute)
 add_subdirectory(codegen)
 if (roofit_multiprocess)
@@ -20,7 +18,7 @@ endif()
 add_subdirectory(roostats)
 add_subdirectory(histfactory)
 add_subdirectory(hs3)
-if(roofit_legacy_eval_backend AND NOT MSVC)
+if(NOT MSVC)
   add_subdirectory(xroofit)
 endif()
 

@@ -147,12 +147,11 @@ TEST(RooBinSamplingPdf, AnalyticalMatchesNumeric)
          << "mismatch in bin " << i;
    }
 
-   // The results must also agree when used in a fit, for both the legacy and
-   // the vectorizing "cpu" evaluation backend.
+   // The results must also agree when used in a fit.
    std::unique_ptr<RooDataHist> dataH(gaus.generateBinned(x, 20000));
    RooDataSet data("data", "data", x, RooFit::Import(*dataH));
 
-   for (auto backend : {EvalBackend::Legacy(), EvalBackend::Cpu()}) {
+   for (auto backend : {EvalBackend::Cpu()}) {
       mean.setVal(0.7);
       sigma.setVal(1.3);
       std::unique_ptr<RooAbsReal> nllAna{gaus.createNLL(data, IntegrateBins(1.E-3), backend)};

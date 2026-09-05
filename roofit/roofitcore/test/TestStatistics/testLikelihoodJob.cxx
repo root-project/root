@@ -176,27 +176,6 @@ TEST_F(LikelihoodJobTest, DISABLED_UnbinnedGaussian1DTwice)
    EXPECT_EQ(nll0, nll1.Sum());
 }
 
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-TEST_F(LikelihoodJobTest, UnbinnedGaussianND)
-{
-   using namespace RooFit;
-   unsigned int N = 4;
-
-   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, EvalBackend::Legacy());
-   likelihood = TestStatistics::buildLikelihood(pdf, data.get());
-   // dummy offsets (normally they are shared with other objects):
-   SharedOffset offset;
-   auto nll_ts = RFTS::LikelihoodWrapper::create(RFTS::LikelihoodMode::multiprocess, likelihood, clean_flags, offset);
-
-   auto nll0 = nll->getVal();
-
-   nll_ts->evaluate();
-   auto nll1 = nll_ts->getResult();
-
-   EXPECT_EQ(nll0, nll1.Sum());
-}
-#endif // ROOFIT_LEGACY_EVAL_BACKEND
-
 TEST_F(LikelihoodJobBinnedDatasetTest, UnbinnedPdf)
 {
    data = std::unique_ptr<RooDataHist>{pdf->generateBinned(*w.var("x"))};
@@ -474,60 +453,6 @@ TEST_F(LikelihoodJobSimBinnedConstrainedTest, BasicParameters)
    EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
 }
 
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-TEST_F(LikelihoodJobSimBinnedConstrainedTest, ConstrainedAndOffset)
-{
-   using namespace RooFit;
-
-   // A variation to test some additional parameters (ConstrainedParameters and offsetting)
-
-   // The reference likelihood is using the legacy evaluation backend, because
-   // the multiprocess test statistics classes were designed to give values
-   // that are bit-by-bit identical with the old test statistics based on
-   // RooAbsTestStatistic.
-   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, Constrain(*w.var("alpha_bkg_A")),
-                                                    GlobalObservables(*w.var("alpha_bkg_obs_B")), Offset("initial"),
-                                                    EvalBackend::Legacy())};
-
-   // --------
-
-   auto nll0 = nll->getVal();
-
-   likelihood = RFTS::NLLFactory{*pdf, *data}
-                   .ConstrainedParameters(*w.var("alpha_bkg_A"))
-                   .GlobalObservables(*w.var("alpha_bkg_obs_B"))
-                   .build();
-   // dummy offsets (normally they are shared with other objects):
-   SharedOffset offset;
-   auto nll_ts = RFTS::LikelihoodWrapper::create(RFTS::LikelihoodMode::multiprocess, likelihood, clean_flags, offset);
-   nll_ts->enableOffsetting(true);
-
-   nll_ts->evaluate();
-   // The RFTS classes used for minimization (RooAbsL and Wrapper derivatives) will return offset
-   // values, whereas RooNLLVar::getVal will always return the non-offset value, since that is the "actual" likelihood
-   // value. RooRealL will also give the non-offset value, so that can be directly compared to the RooNLLVar::getVal
-   // result (the nll0 vs nll2 comparison below). To compare to the raw RooAbsL/Wrapper value nll1, however, we need to
-   // manually add the offset.
-   ROOT::Math::KahanSum<double> nll1 = nll_ts->getResult();
-   ROOT::Math::KahanSum<double> nll_ts_offset;
-   for (auto &offset_comp : offset.offsets()) {
-      nll1 += offset_comp;
-      nll_ts_offset += offset_comp;
-   }
-
-   EXPECT_EQ(nll0, nll1.Sum());
-   EXPECT_FALSE(nll_ts_offset.Sum() == 0);
-
-   // also check against RooRealL value
-   RFTS::RooRealL nll_real("real_nll", "RooRealL version", likelihood);
-
-   auto nll2 = nll_real.getVal();
-
-   EXPECT_EQ(nll0, nll2);
-   EXPECT_EQ(nll1.Sum(), nll2);
-}
-#endif // ROOFIT_LEGACY_EVAL_BACKEND
-
 TEST_F(LikelihoodJobTest, BatchedUnbinnedGaussianND)
 {
    unsigned int N = 4;
@@ -551,23 +476,15 @@ TEST_F(LikelihoodJobTest, BatchedUnbinnedGaussianND)
 class LikelihoodJobSplitStrategies : public LikelihoodJobSimBinnedConstrainedTest,
                                      public testing::WithParamInterface<std::tuple<std::size_t, std::size_t>> {};
 
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-TEST_P(LikelihoodJobSplitStrategies, SimBinnedConstrainedAndOffset)
-#else
 TEST_P(LikelihoodJobSplitStrategies, DISABLED_SimBinnedConstrainedAndOffset)
-#endif
 {
    using namespace RooFit;
 
    // Based on ConstrainedAndOffset, this test tests different parallelization strategies
 
-   // The reference likelihood is using the legacy evaluation backend, because
-   // the multiprocess test statistics classes were designed to give values
-   // that are bit-by-bit identical with the old test statistics based on
-   // RooAbsTestStatistic.
    nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, Constrain(*w.var("alpha_bkg_A")),
                                                     GlobalObservables(*w.var("alpha_bkg_obs_B")), Offset("initial"),
-                                                    EvalBackend::Legacy())};
+                                                    EvalBackend::Cpu())};
 
    // --------
 

@@ -37,10 +37,6 @@ in the two sets.
 #include "RooMsgService.h"
 #include "RooBatchCompute.h"
 
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-#include "RooNLLVar.h"
-#include "RooChi2Var.h"
-#endif
 
 #include <algorithm>
 #include <cmath>
@@ -154,49 +150,30 @@ void RooAddition::doEval(RooFit::EvalContext &ctx) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the default error level for MINUIT error analysis
-/// If the addition contains one or more RooNLLVars and
-/// no RooChi2Vars, return the defaultErrorLevel() of
-/// RooNLLVar. If the addition contains one ore more RooChi2Vars
-/// and no RooNLLVars, return the defaultErrorLevel() of
-/// RooChi2Var. If the addition contains neither or both
-/// issue a warning message and return a value of 1
+/// Return the default error level for MINUIT error analysis.
+/// If the addition contains a test statistic implemented by RooNLLVarNew,
+/// return its defaultErrorLevel(). Otherwise, issue a warning message and
+/// return a value of 1.
 
 double RooAddition::defaultErrorLevel() const
 {
   RooAbsReal* nllArg(nullptr) ;
-  RooAbsReal* chi2Arg(nullptr) ;
 
   std::unique_ptr<RooArgSet> comps{getComponents()};
   for(RooAbsArg * arg : *comps) {
     if (dynamic_cast<RooFit::Detail::RooNLLVarNew*>(arg)) {
       nllArg = static_cast<RooAbsReal*>(arg) ;
     }
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-    if (dynamic_cast<RooNLLVar*>(arg)) {
-      nllArg = static_cast<RooAbsReal*>(arg) ;
-    }
-    if (dynamic_cast<RooChi2Var*>(arg)) {
-      chi2Arg = static_cast<RooAbsReal*>(arg) ;
-    }
-#endif
   }
 
-  if (nllArg && !chi2Arg) {
+  if (nllArg) {
     coutI(Fitting) << "RooAddition::defaultErrorLevel(" << GetName()
-         << ") Summation contains a RooNLLVar, using its error level" << std::endl;
+         << ") Summation contains a test statistic, using its error level" << std::endl;
     return nllArg->defaultErrorLevel() ;
-  } else if (chi2Arg && !nllArg) {
-    coutI(Fitting) << "RooAddition::defaultErrorLevel(" << GetName()
-         << ") Summation contains a RooChi2Var, using its error level" << std::endl;
-    return chi2Arg->defaultErrorLevel() ;
-  } else if (!nllArg && !chi2Arg) {
-    coutI(Fitting) << "RooAddition::defaultErrorLevel(" << GetName() << ") WARNING: "
-         << "Summation contains neither RooNLLVar nor RooChi2Var server, using default level of 1.0" << std::endl;
-  } else {
-    coutI(Fitting) << "RooAddition::defaultErrorLevel(" << GetName() << ") WARNING: "
-         << "Summation contains BOTH RooNLLVar and RooChi2Var server, using default level of 1.0" << std::endl;
   }
+
+  coutI(Fitting) << "RooAddition::defaultErrorLevel(" << GetName() << ") WARNING: "
+       << "Summation contains no test statistic server, using default level of 1.0" << std::endl;
 
   return 1.0 ;
 }

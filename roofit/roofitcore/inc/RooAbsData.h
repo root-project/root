@@ -331,7 +331,6 @@ protected:
 
 
   // Constant term optimizer interface
-  friend class RooAbsOptTestStatistic ;
   // for access into copied dataset:
   friend class RooFit::TestStatistics::RooAbsL;
 
