@@ -13,6 +13,8 @@
 #ifndef ROOT_RNTupleReadOptions
 #define ROOT_RNTupleReadOptions
 
+#include <cstdint>
+
 namespace ROOT {
 
 class RNTupleReadOptions;
@@ -71,6 +73,18 @@ If `true`, the RNTupleReader will track metrics straight from its construction, 
 if calling RNTupleReader::EnableMetrics() before having created the object.
 </td>
 </tr>
+
+<tr>
+<td>`MaxEnvelopeSize`</td>
+<td>`std::uint64_t`</td>
+<td>1 GiB</td>
+<td>
+Largest header or footer envelope the reader will accept, as a guard against a corrupt or
+untrusted anchor. Enlarge it for a data set with an unusually large schema. The binary format
+caps an envelope at 2^48 bytes, so a larger value has no effect. Currently honoured by the S3
+page source, where the sizes are read from a separately stored anchor.
+</td>
+</tr>
 </table>
 */
 // clang-format on
@@ -96,6 +110,8 @@ private:
    unsigned int fClusterBunchSize = 1;
    EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
    bool fEnableMetrics = false;
+   /// Guards against a corrupt or untrusted anchor declaring an envelope size that is used to allocate.
+   std::uint64_t fMaxEnvelopeSize = 1024 * 1024 * 1024;
 
 public:
    EClusterCache GetClusterCache() const { return fClusterCache; }
@@ -106,6 +122,9 @@ public:
 
    bool GetEnableMetrics() const { return fEnableMetrics; }
    void SetEnableMetrics(bool val) { fEnableMetrics = val; }
+
+   std::uint64_t GetMaxEnvelopeSize() const { return fMaxEnvelopeSize; }
+   void SetMaxEnvelopeSize(std::uint64_t val) { fMaxEnvelopeSize = val; }
 }; // class RNTupleReadOptions
 
 namespace Internal {
