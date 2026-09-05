@@ -759,5 +759,11 @@ std::unique_ptr<RooAbsReal> RooRealSumPdf::createExpectedEventsFunc(const RooArg
 {
    if (nset == nullptr)
       return nullptr;
-   return std::unique_ptr<RooAbsReal>{createIntegral(*nset, *getIntegratorConfig(), normRange())};
+   // Restrict the integration to the observables that this pdf actually
+   // depends on: variables in nset that are not dependents (e.g. the channel
+   // index when this pdf is the component of a simultaneous mixture) don't
+   // contribute to the expected event count.
+   RooArgSet obs;
+   getObservables(nset, obs);
+   return std::unique_ptr<RooAbsReal>{createIntegral(obs, *getIntegratorConfig(), normRange())};
 }

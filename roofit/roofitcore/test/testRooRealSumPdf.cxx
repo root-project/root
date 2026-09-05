@@ -1,10 +1,13 @@
 // Tests for RooRealSumPdf
 // Authors: Jonas Rembser, CERN 09/2026
 
+#include <RooAddPdf.h>
 #include <RooDataSet.h>
 #include <RooFitResult.h>
 #include <RooFormulaVar.h>
+#include <RooGenericPdf.h>
 #include <RooPolyVar.h>
+#include <RooProdPdf.h>
 #include <RooProduct.h>
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
@@ -92,3 +95,73 @@ INSTANTIATE_TEST_SUITE_P(RooRealSumPdf, RooFitEvalBackendTest, testing::Values(R
                             ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
                             return ss.str();
                          });
+
+/// The normalization set that is passed to createExpectedEventsFunc() can
+/// contain variables that the pdf does not depend on. Such variables must not
+/// end up in the yield integral: they would factorize out of it and scale the
+/// expected event count by their range. This is also a regression test for
+/// the crash that this caused: an all-extendable RooAddPdf passes its full
+/// normalization set down to the components in compileForNormSet(), which
+/// corrupted the analytical integration cache of the RooRealSumPdf and
+/// segfaulted in analyticalIntegralWN() on the first likelihood evaluation.
+TEST(RooRealSumPdf, ExpectedEventsFuncInExtendedAddPdf)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x("x", "x", 0., 10.);
+   RooRealVar y("y", "y", -5., 5.);
+
+   // Channel A: a RooRealSumPdf in x, times a shape in y
+   RooPolyVar a1("a1", "a1", x, RooArgList(0.0, 1.0), 0); // x
+   RooPolyVar a2("a2", "a2", x, RooArgList(1.0), 0);      // 1
+   RooRealVar yieldA1("yieldA1", "yieldA1", 2.0, 0.01, 100.);
+   RooRealVar yieldA2("yieldA2", "yieldA2", 3.0, 0.01, 100.);
+   RooRealSumPdf sumA("sumA", "sumA", RooArgList(a1, a2), RooArgList(yieldA1, yieldA2), true);
+   RooGenericPdf shapeA("shapeA", "std::exp(-0.5 * (y + 1) * (y + 1))", {y});
+   RooProdPdf chanA("chanA", "chanA", RooArgList(sumA, shapeA));
+
+   // Channel B, same structure
+   RooPolyVar b1("b1", "b1", x, RooArgList(1.0, -0.05), 0); // 1 - 0.05 * x
+   RooRealVar yieldB1("yieldB1", "yieldB1", 4.0, 0.01, 100.);
+   RooRealSumPdf sumB("sumB", "sumB", RooArgList(b1), RooArgList(yieldB1), true);
+   RooGenericPdf shapeB("shapeB", "std::exp(-0.5 * (y - 2) * (y - 2) / 2.25)", {y});
+   RooProdPdf chanB("chanB", "chanB", RooArgList(sumB, shapeB));
+
+   RooAddPdf model("model", "model", RooArgList(chanA, chanB));
+
+   // int_0^10 (2 * x + 3) dx + int_0^10 4 * (1 - 0.05 * x) dx
+   const double nExpected = 130. + 30.;
+
+   RooArgSet nset{x, y};
+   EXPECT_NEAR(model.expectedEvents(&nset), nExpected, 1e-9);
+
+   // Without restricting the integration set, y would factorize out of the
+   // yield integral and scale it by the range of y.
+   std::unique_ptr<RooAbsReal> yieldFuncA{sumA.createExpectedEventsFunc(&nset)};
+   ASSERT_TRUE(yieldFuncA);
+   EXPECT_FALSE(yieldFuncA->dependsOn(y));
+   EXPECT_NEAR(yieldFuncA->getVal(), 130., 1e-9);
+
+   RooDataSet data("data", "data", nset);
+   for (int i = 0; i < 5; ++i) {
+      x.setVal(1.0 + 1.5 * i);
+      y.setVal(-2.0 + i);
+      data.add(nset);
+   }
+   const double nObserved = data.numEntries();
+
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(data, RooFit::Extended(true), RooFit::EvalBackend::Cpu())};
+   const double nllVal = nll->getVal();
+   ASSERT_TRUE(std::isfinite(nllVal));
+
+   // Scaling all yields by a common factor leaves the normalized shapes
+   // untouched, so the extended likelihood must shift by exactly
+   // (k - 1) * nExpected - nObserved * log(k). This pins down the expected
+   // event count that the compiled likelihood actually used.
+   const double k = 2.0;
+   yieldA1.setVal(k * yieldA1.getVal());
+   yieldA2.setVal(k * yieldA2.getVal());
+   yieldB1.setVal(k * yieldB1.getVal());
+
+   EXPECT_NEAR(nll->getVal() - nllVal, (k - 1.) * nExpected - nObserved * std::log(k), 1e-6);
+}
