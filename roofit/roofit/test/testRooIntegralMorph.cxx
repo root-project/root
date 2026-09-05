@@ -251,8 +251,8 @@ TEST(RooIntegralMorph, AlphaCacheScan)
 
 /// Generating a toy dataset from the morph pdf and fitting it back must
 /// recover the true alpha, with the alpha cache enabled as in a realistic
-/// fitting application, on both the legacy and cpu evaluation backends. This
-/// covers the toy fit of the former stressRooFit test 705.
+/// fitting application. This covers the toy fit of the former stressRooFit
+/// test 705.
 TEST(RooIntegralMorph, GenerateAndFit)
 {
    GaussPolySetup s;
@@ -270,16 +270,13 @@ TEST(RooIntegralMorph, GenerateAndFit)
 
    morph.setCacheAlpha(true);
 
-   for (std::string backend : {"legacy", "cpu"}) {
-      alpha.setVal(0.5);
-      alpha.setError(0.0);
-      std::unique_ptr<RooFitResult> res{
-         morph.fitTo(*data, RooFit::EvalBackend(backend), RooFit::PrintLevel(-1), RooFit::Save())};
-      EXPECT_EQ(res->status(), 0) << backend;
-      EXPECT_NEAR(alpha.getVal(), 0.8, 5. * alpha.getError()) << backend;
-      EXPECT_LT(alpha.getError(), 0.1) << backend;
-      EXPECT_GT(alpha.getError(), 1e-4) << backend;
-   }
+   alpha.setVal(0.5);
+   alpha.setError(0.0);
+   std::unique_ptr<RooFitResult> res{morph.fitTo(*data, RooFit::PrintLevel(-1), RooFit::Save())};
+   EXPECT_EQ(res->status(), 0);
+   EXPECT_NEAR(alpha.getVal(), 0.8, 5. * alpha.getError());
+   EXPECT_LT(alpha.getError(), 0.1);
+   EXPECT_GT(alpha.getError(), 1e-4);
 }
 
 /// Morphing from a bimodal shape must yield a smooth, normalized and

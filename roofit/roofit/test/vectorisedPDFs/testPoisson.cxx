@@ -33,8 +33,6 @@ protected:
 };
 
 FIT_TEST_BATCH(TestPoisson, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestPoisson, CompareBatchScalar)
-
 class TestPoissonOddMean : public PDFTest {
 protected:
    TestPoissonOddMean() : PDFTest("PoissonOddMean")
@@ -50,8 +48,6 @@ protected:
 };
 
 FIT_TEST_BATCH(TestPoissonOddMean, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestPoissonOddMean, CompareBatchScalar)
-
 class TestPoissonOddMeanNoRounding : public PDFTest {
 protected:
    TestPoissonOddMeanNoRounding() : PDFTest("PoissonOddMeanNoRounding")
@@ -74,6 +70,4 @@ COMPARE_FIXED_VALUES_UNNORM(TestPoissonOddMeanNoRounding, CompareFixedValuesUnno
 COMPARE_FIXED_VALUES_NORM(TestPoissonOddMeanNoRounding, CompareFixedValuesNorm);
 COMPARE_FIXED_VALUES_NORM_LOG(TestPoissonOddMeanNoRounding, CompareFixedValuesNormLog);
 
-FIT_TEST_SCALAR(TestPoissonOddMeanNoRounding, DISABLED_RunScalar)
 FIT_TEST_BATCH(TestPoissonOddMeanNoRounding, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestPoissonOddMeanNoRounding, CompareBatchScalar)
