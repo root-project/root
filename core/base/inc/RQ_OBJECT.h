@@ -13,7 +13,7 @@
 #define ROOT_RQ_OBJECT
 
 #include <TQObject.h>
-#include <Varargs.h>
+#include <cstdarg>
 
 
 //---- RQ_OBJECT macro -----------------------------------------------

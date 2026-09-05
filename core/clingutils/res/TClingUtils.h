@@ -20,7 +20,7 @@
 #include <list>
 #include <map>
 #include <utility>
-
+#include <cstdarg>
 #include <cstdlib>
 
 #if defined(__GNUC__) && !defined(__clang__)
@@ -86,8 +86,6 @@ namespace cling {
 
 // for TClassEdit::TInterpreterLookupHelper
 #include "TClassEdit.h"
-
-#include "Varargs.h"
 
 namespace ROOT {
 namespace TMetaUtils {
@@ -834,11 +832,11 @@ inline void LevelPrint(bool prefix, int level, const char *location, const char 
 
    if (!location || !location[0]) {
       if (prefix) fprintf(stderr, "%s: ", type);
-      vfprintf(stderr, (const char*)va_(fmt), ap);
+      vfprintf(stderr, (const char *)fmt, ap);
    } else {
       if (prefix) fprintf(stderr, "%s in <%s>: ", type, location);
       else fprintf(stderr, "In <%s>: ", location);
-      vfprintf(stderr, (const char*)va_(fmt), ap);
+      vfprintf(stderr, (const char *)fmt, ap);
    }
 
    fflush(stderr);
@@ -851,51 +849,51 @@ inline void LevelPrint(bool prefix, int level, const char *location, const char 
 
 //______________________________________________________________________________
 // Use this function in case an error occurred.
-inline void Error(const char *location, const char *va_(fmt), ...)
+inline void Error(const char *location, const char *fmt, ...)
 {
    va_list ap;
-   va_start(ap,va_(fmt));
-   LevelPrint(true, ROOT::TMetaUtils::kError, location, va_(fmt), ap);
+   va_start(ap, fmt);
+   LevelPrint(true, ROOT::TMetaUtils::kError, location, fmt, ap);
    va_end(ap);
 }
 
 //______________________________________________________________________________
 // Use this function in case a system (OS or GUI) related error occurred.
-inline void SysError(const char *location, const char *va_(fmt), ...)
+inline void SysError(const char *location, const char *fmt, ...)
 {
    va_list ap;
-   va_start(ap, va_(fmt));
-   LevelPrint(true, ROOT::TMetaUtils::kSysError, location, va_(fmt), ap);
+   va_start(ap, fmt);
+   LevelPrint(true, ROOT::TMetaUtils::kSysError, location, fmt, ap);
    va_end(ap);
 }
 
 //______________________________________________________________________________
 // Use this function for informational messages.
-inline void Info(const char *location, const char *va_(fmt), ...)
+inline void Info(const char *location, const char *fmt, ...)
 {
    va_list ap;
-   va_start(ap,va_(fmt));
-   LevelPrint(true, ROOT::TMetaUtils::kInfo, location, va_(fmt), ap);
+   va_start(ap, fmt);
+   LevelPrint(true, ROOT::TMetaUtils::kInfo, location, fmt, ap);
    va_end(ap);
 }
 
 //______________________________________________________________________________
 // Use this function in warning situations.
-inline void Warning(const char *location, const char *va_(fmt), ...)
+inline void Warning(const char *location, const char *fmt, ...)
 {
    va_list ap;
-   va_start(ap,va_(fmt));
-   LevelPrint(true, ROOT::TMetaUtils::kWarning, location, va_(fmt), ap);
+   va_start(ap, fmt);
+   LevelPrint(true, ROOT::TMetaUtils::kWarning, location, fmt, ap);
    va_end(ap);
 }
 
 //______________________________________________________________________________
 // Use this function in case of a fatal error. It will abort the program.
-inline void Fatal(const char *location, const char *va_(fmt), ...)
+inline void Fatal(const char *location, const char *fmt, ...)
 {
    va_list ap;
-   va_start(ap,va_(fmt));
-   LevelPrint(true, ROOT::TMetaUtils::kFatal, location, va_(fmt), ap);
+   va_start(ap, fmt);
+   LevelPrint(true, ROOT::TMetaUtils::kFatal, location, fmt, ap);
    va_end(ap);
 }
 

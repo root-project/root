@@ -17,8 +17,8 @@
 #include <TError.h>
 #include <ThreadLocalStorage.h>
 #include <TSystem.h>
-#include <Varargs.h>
 
+#include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cctype> // for tolower
