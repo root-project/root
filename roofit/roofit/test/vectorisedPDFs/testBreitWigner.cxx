@@ -42,6 +42,4 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestBreitWigner, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestBreitWigner, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestBreitWigner, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestBreitWigner, RunScalar)
 FIT_TEST_BATCH(TestBreitWigner, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestBreitWigner, CompareBatchScalar)
