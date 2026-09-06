@@ -1674,33 +1674,23 @@ TH2 *TH2::Rebin(Int_t ngroup, const char *newname, const Double_t *xbins)
 /// #### case 2  `xbins`!=0 || `ybins`!=0
 ///
 /// A new histogram is created and `newname` must be specified.
-/// For each axis with a non-null bin-edges array, the parameter `nxgroup`
-/// (`nygroup`) is the number of variable size bins for the x-axis (y-axis) in
-/// the created histogram, and the array `xbins` (`ybins`) must contain
-/// `nxgroup+1` (`nygroup+1`) elements that represent the low-edges of the new
-/// bins plus the upper edge of the last bin. An axis without a bin-edges
+/// For an axis with a non-null bin-edges array, `nxgroup` (`nygroup`) is the
+/// number of bins of the new x-axis (y-axis) and `xbins` (`ybins`) must hold
+/// the `nxgroup+1` (`nygroup+1`) edges of the new bins. An axis without an
 /// array is rebinned in constant groups as in case 1.
-/// The content of an old bin is added to the new bin containing the old bin
-/// center; old bins outside the range of the new axes are added to the
-/// under-/overflow bins.
-/// If the original histogram has errors stored (via Sumw2), the resulting
-/// histograms has new errors correctly calculated.
+/// The content of each old bin is added to the new bin containing its center;
+/// old bins outside the range of the new axes end up in the under-/overflow
+/// bins. Errors stored via Sumw2 are correctly recalculated.
 ///
-/// \note  The bin edges specified in xbins and ybins should correspond
-/// to bin edges in the original histogram. If a bin edge in the new histogram
-/// is in the middle of a bin in the original histogram, all entries in
-/// the split bin in the original histogram will be transfered to the
-/// lower of the two possible bins in the new histogram. This is
-/// probably not what you want. A warning message is emitted in this
-/// case.
+/// \note The new bin edges should line up with old bin edges: the entries of
+/// an old bin that is split between two new bins are all transferred to the
+/// bin containing the old bin center, and a warning is emitted.
 ///
-/// examples: if h2 is an existing TH2F histogram with 100 bins on x-axis
-/// and 100 bins y-axis
-///
+/// example: rebinning a TH2F with 100 x 100 bins into 24 x 24 variable bins
 /// ~~~ {.cpp}
-///     Double_t xbins[25] = {...} array of low-edges for x-axis (xbins[24] is the upper edge of last bin)
-///     Double_t ybins[25] = {...} array of low-edges for y-axis (ybins[24] is the upper edge of last bin)
-///     h2->Rebin2D(24,24,"hnew",xbins,ybins);  //creates a new variable bin size histogram hnew
+///     Double_t xbins[25] = {...}; // low-edges plus upper edge of last bin
+///     Double_t ybins[25] = {...};
+///     TH2 *hnew = h2->Rebin2D(24, 24, "hnew", xbins, ybins);
 /// ~~~
 
 TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname, const Double_t *xbins, const Double_t *ybins)

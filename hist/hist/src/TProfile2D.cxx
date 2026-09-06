@@ -1583,24 +1583,25 @@ void TProfile2D::ExtendAxis(Double_t x, TAxis *axis)
 ///          Statistics will be recomputed from the new bin contents.
 ///
 ///  ## case 2  `xbins`!=0 || `ybins`!=0
-///  a new profile is created and `newname` must be specified.
-///  For each axis with a non-null bin-edges array, the parameter `nxgroup`
-///  (`nygroup`) is the number of variable size bins for the x-axis (y-axis)
-///  in the created profile, and the array `xbins` (`ybins`) must contain
-///  `nxgroup+1` (`nygroup+1`) elements that represent the low-edges of the
-///  new bins plus the upper edge of the last bin. An axis without a bin-edges
+///
+///  A new profile is created and `newname` must be specified.
+///  For an axis with a non-null bin-edges array, `nxgroup` (`nygroup`) is the
+///  number of bins of the new x-axis (y-axis) and `xbins` (`ybins`) must hold
+///  the `nxgroup+1` (`nygroup+1`) edges of the new bins. An axis without an
 ///  array is rebinned in constant groups as in case 1.
-///  The data of the old bins are added to the new bin which contains the bin center
-///  of the old bins. It is possible that information from the old binning are attached
-///  to the under-/overflow bins of the new binning.
+///  The data of each old bin are added to the new bin containing its center;
+///  old bins outside the range of the new axes end up in the under-/overflow
+///  bins.
 ///
-///  examples: if hp is an existing TProfile2D with 100 bins on x-axis
-///  and 100 bins y-axis
+///  \note The new bin edges should line up with old bin edges: the entries of
+///  an old bin that is split between two new bins are all transferred to the
+///  bin containing the old bin center, and a warning is emitted.
 ///
+///  example: rebinning a TProfile2D with 100 x 100 bins into 24 x 24 variable bins
 /// ~~~ {.cpp}
-///      Double_t xbins[25] = {...} array of low-edges for x-axis (xbins[24] is the upper edge of last bin)
-///      Double_t ybins[25] = {...} array of low-edges for y-axis (ybins[24] is the upper edge of last bin)
-///      hp->Rebin2D(24,24,"hpnew",xbins,ybins);  //creates a new variable bin size profile hpnew
+///      Double_t xbins[25] = {...}; // low-edges plus upper edge of last bin
+///      Double_t ybins[25] = {...};
+///      TProfile2D *hpnew = hp->Rebin2D(24, 24, "hpnew", xbins, ybins);
 /// ~~~
 
 TProfile2D *
