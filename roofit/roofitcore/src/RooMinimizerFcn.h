@@ -23,6 +23,7 @@
 #include "RooArgList.h"
 
 #include <fstream>
+#include <mutex>
 #include <vector>
 
 #include "RooAbsMinimizerFcn.h"
@@ -48,11 +49,17 @@ public:
 
    RooArgSet freezeDisconnectedParameters() const override;
 
+   bool secondDerivativeAlwaysVanishes(unsigned int i, unsigned int j) const;
+
 private:
+   void buildSecondDerivMask() const;
+
    RooAbsReal *_funct = nullptr;
    std::unique_ptr<ROOT::Math::IBaseFunctionMultiDim> _multiGenFcn;
    mutable std::vector<double> _gradientOutput;
    mutable std::vector<double> _hessianOutput;
+   mutable std::vector<bool> _secondDerivMask; ///< Lazily built, see buildSecondDerivMask().
+   mutable std::once_flag _secondDerivMaskOnce;
 };
 
 #endif

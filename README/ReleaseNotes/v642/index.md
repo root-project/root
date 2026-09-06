@@ -151,6 +151,13 @@ the cut instead of being selected based on `sqrt(abs(x))`.
 
 * The `RooMinimizer::Strategy` enum has been removed. It named the Minuit strategies that are usually referred to just by integers, but caused confusion because it didn't include the unnamed "Strategy 3". Since people usually set the strategy with integer values anyway, it was decided that the simplest solution to avoid the confusion was simply to remove the `RooMinimizer::Strategy` enum
 
+### Faster Hesse for likelihoods with many independent parameters
+
+RooFit now analyzes the computation graph of the minimized function to find pairs of parameters that never appear in the same additive term of the likelihood, meaning their mixed second derivative is identically zero.
+This information is forwarded to Minuit2, which skips the corresponding finite-difference evaluations in the numerical Hessian computation (see the Math section above).
+For likelihoods with many mutually independent parameters, such as the per-channel nuisance parameters of large combined HistFactory models, this can speed up `RooMinimizer::hesse()` by 30 % or more, with results identical up to floating-point noise.
+This optimization is automatic and requires no user action.
+
 ### Deprecation of the legacy evaluation backend
 
 The `legacy` evaluation backend for likelihood and chi-square fits is deprecated and will be removed in ROOT 6.44.

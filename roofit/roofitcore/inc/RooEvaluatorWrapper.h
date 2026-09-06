@@ -70,6 +70,9 @@ public:
 
    RooFit::Evaluator &evaluator() const { return *_evaluator; }
 
+   /// The RooFit object that this wrapper evaluates.
+   RooAbsReal const &topNode() const { return *_topNode; }
+
 protected:
    double evaluate() const override;
 
