@@ -65,11 +65,7 @@ private:
    // LIKELIHOOD ROUTINE
    Double_t Likelihood(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em, Int_t mid, Double_t sde, Double_t sdb, Double_t tau, Double_t b, Int_t m, Int_t what);
 
-   //MODEL 1
-   Double_t EvalLikeMod1(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m, Int_t what);
-   Double_t LikeMod1(Double_t mu, Double_t b, Double_t e, Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m);
-   void     ProfLikeMod1(Double_t mu, Double_t &b, Double_t &e, Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m);
-   Double_t LikeGradMod1(Double_t e, Double_t mu, Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m);
+   //MODEL 1 is removed due to an implementation error that may lead to wrong limits estimation and can't be fixed without massive changes in the algorithm
 
    //MODEL 2
    Double_t EvalLikeMod2(Double_t mu, Int_t x, Int_t y, Double_t em, Double_t sde, Double_t tau, Int_t what);
@@ -131,8 +127,7 @@ public:
    }
 
    // The Set methods for the different models are described in Rolke.cxx
-   // model 1
-   void SetPoissonBkgBinomEff(Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m);
+   // model 1 is removed due to an implementation error that may lead to wrong limits estimation and can't be fixed without massive changes in the algorithm
 
    // model 2
    void SetPoissonBkgGaussEff(Int_t x, Int_t y, Double_t em, Double_t tau, Double_t sde);
