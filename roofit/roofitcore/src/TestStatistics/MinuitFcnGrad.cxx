@@ -54,6 +54,9 @@ public:
                                                    : ROOT::Minuit2::GradientParameterSpace::External;
    }
 
+   // TODO: Implement this
+   bool SecondDerivativeAlwaysVanishes(unsigned int /*i*/, unsigned int /*j*/) const override { return false; }
+
 private:
    MinuitFcnGrad const &_fcn;
    double _up;
