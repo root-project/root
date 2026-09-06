@@ -206,9 +206,23 @@ TEST(Rebin2DVariable, Diagnostics)
       EXPECT_EQ(h.Rebin2D(4, 4, nullptr, xEdges, yEdges), nullptr);
    }
    {
+      // an empty name must be rejected too, otherwise Clone("") would create
+      // a second histogram registered under the original name
+      ROOT::TestSupport::CheckDiagsRAII checkDiag(kError, "TH2D::Rebin2D", "newname must be given", false);
+      EXPECT_EQ(h.Rebin2D(4, 4, "", xEdges, yEdges), nullptr);
+   }
+   {
       ROOT::TestSupport::CheckDiagsRAII checkDiag(kWarning, "TH2D::Rebin2D", "does not match any bin edges", false);
       const double misaligned[3] = {0., 10.5, 100.};
       std::unique_ptr<TH2> hnew{h.Rebin2D(2, 2, "hnew", misaligned, nullptr)};
+      EXPECT_NE(hnew, nullptr);
+   }
+   {
+      // a new top edge that splits an old bin between range and overflow must
+      // warn as well
+      ROOT::TestSupport::CheckDiagsRAII checkDiag(kWarning, "TH2D::Rebin2D", "does not match any bin edges", false);
+      const double splitTop[3] = {0., 50., 99.5};
+      std::unique_ptr<TH2> hnew{h.Rebin2D(2, 2, "hnew", splitTop, nullptr)};
       EXPECT_NE(hnew, nullptr);
    }
 }

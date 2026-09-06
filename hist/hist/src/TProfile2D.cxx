@@ -1614,37 +1614,23 @@ TProfile2D::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname, const Dou
          return this;
    }
 
-   Int_t nxbins = fXaxis.GetNbins();
-   Int_t nybins = fYaxis.GetNbins();
-   Double_t xmin = fXaxis.GetXmin();
-   Double_t xmax = fXaxis.GetXmax();
-   Double_t ymin = fYaxis.GetXmin();
-   Double_t ymax = fYaxis.GetXmax();
-   if ((nxgroup <= 0) || (nxgroup > nxbins)) {
-      Error("Rebin2D", "Illegal value of nxgroup=%d", nxgroup);
-      return nullptr;
-   }
-   if ((nygroup <= 0) || (nygroup > nybins)) {
-      Error("Rebin2D", "Illegal value of nygroup=%d", nygroup);
-      return nullptr;
-   }
-   if (!newname && (xbins || ybins)) {
+   if ((!newname || strlen(newname) == 0) && (xbins || ybins)) {
       Error("Rebin2D", "if xbins or ybins are specified, newname must be given");
       return nullptr;
    }
 
-   // number of bins of the rebinned profile: for an axis with user-provided
-   // bin edges the group parameter is directly the new number of bins,
-   // otherwise the old bins are merged in groups
-   Int_t newxbins = xbins ? nxgroup : nxbins / nxgroup;
-   Int_t newybins = ybins ? nygroup : nybins / nygroup;
-   // warning if bins are added to the overflow bin
-   if (!xbins && newxbins * nxgroup != nxbins) {
-      Warning("Rebin2D", "nxgroup=%d should be an exact divider of nxbins=%d", nxgroup, nxbins);
+   const Int_t nxbins = fXaxis.GetNbins();
+   const Int_t nybins = fYaxis.GetNbins();
+
+   // validate the parameters and define the axes of the rebinned profile and
+   // the mapping of old to new bins
+   ROOT::Internal::RebinnedAxisInfo infoX, infoY;
+   if (!ROOT::Internal::SetupRebinnedAxis(fXaxis, nxgroup, xbins, 'x', *this, "Rebin2D", infoX) ||
+       !ROOT::Internal::SetupRebinnedAxis(fYaxis, nygroup, ybins, 'y', *this, "Rebin2D", infoY)) {
+      return nullptr;
    }
-   if (!ybins && newybins * nygroup != nybins) {
-      Warning("Rebin2D", "nygroup=%d should be an exact divider of nybins=%d", nygroup, nybins);
-   }
+   const Int_t newxbins = infoX.nNewBins;
+   const Int_t newybins = infoY.nNewBins;
 
    // save old bin contents in new arrays
    const Int_t ncells = (nxbins + 2) * (nybins + 2);
@@ -1655,34 +1641,27 @@ TProfile2D::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname, const Dou
    if (fBinSumw2.fN)
       oldBinw2.assign(GetB2(), GetB2() + ncells);
 
-   // create a clone of the old profile if newname is specified
+   // rebinning will not redistribute under-/overflow content into the range
+   // of new axes that extend beyond the old ones
+   ROOT::Internal::WarnAboutUnusedFlowContent(fXaxis, infoX, xbins, 'X', oldBins.data(), 1, nybins + 2, nxbins + 2,
+                                              *this, "Rebin2D");
+   ROOT::Internal::WarnAboutUnusedFlowContent(fYaxis, infoY, ybins, 'Y', oldBins.data(), nxbins + 2, nxbins + 2, 1,
+                                              *this, "Rebin2D");
+
+   // create a clone of the old profile if newname is specified (guaranteed
+   // when bin edges are passed)
    TProfile2D *hnew = this;
-   if ((newname && strlen(newname) > 0) || xbins || ybins) {
+   if (newname && strlen(newname) > 0) {
       hnew = (TProfile2D *)Clone(newname);
    }
 
-   // in case of nxgroup/nygroup not an exact divider of nxbins/nybins,
-   // top limit is changed (see NOTE in method comment)
-   if (!xbins && (newxbins * nxgroup != nxbins)) {
-      xmax = fXaxis.GetBinUpEdge(newxbins * nxgroup);
-      hnew->fTsumw = 0; // stats must be reset because top bins will be moved to overflow bin
-   }
-   if (!ybins && (newybins * nygroup != nybins)) {
-      ymax = fYaxis.GetBinUpEdge(newybins * nygroup);
-      hnew->fTsumw = 0; // stats must be reset because top bins will be moved to overflow bin
-   }
-
-   // define the axes of the rebinned profile and the mapping of old to new
-   // bins, before hnew->SetBins() below possibly modifies fXaxis/fYaxis in
-   // the in-place case (hnew == this)
-   TAxis newXaxis, newYaxis;
-   ROOT::Internal::DefineRebinnedAxis(fXaxis, nxgroup, newxbins, xbins, xmin, xmax, newXaxis);
-   ROOT::Internal::DefineRebinnedAxis(fYaxis, nygroup, newybins, ybins, ymin, ymax, newYaxis);
-   std::vector<Int_t> binMapX = ROOT::Internal::MakeRebinMap(fXaxis, newXaxis, xbins != nullptr, *this, "Rebin2D");
-   std::vector<Int_t> binMapY = ROOT::Internal::MakeRebinMap(fYaxis, newYaxis, ybins != nullptr, *this, "Rebin2D");
+   // when the group count does not divide the old bin count, the top bins
+   // move to the overflow and the stats must be recomputed
+   if (infoX.truncated || infoY.truncated)
+      hnew->fTsumw = 0;
 
    // rebin the axes
-   ROOT::Internal::SetRebinnedBins2D(*hnew, newXaxis, newYaxis);
+   ROOT::Internal::SetRebinnedBins2D(*hnew, infoX.newAxis, infoY.newAxis);
 
    // merge bins: add the content of each old cell (including under- and
    // overflow) to the new cell that contains its bin center
@@ -1697,10 +1676,10 @@ TProfile2D::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname, const Dou
       Double_t *ew2 = hnew->GetB2();
       std::fill(ew2, ew2 + newncells, 0.);
       ROOT::Internal::MergeRebinnedCells(
-         nxbins, nybins, newxbins, binMapX, binMapY,
+         nxbins, nybins, newxbins, infoX.binMap, infoY.binMap,
          {{oldBins.data(), cu2}, {oldErrors.data(), er2}, {oldCount.data(), en2}, {oldBinw2.data(), ew2}});
    } else {
-      ROOT::Internal::MergeRebinnedCells(nxbins, nybins, newxbins, binMapX, binMapY,
+      ROOT::Internal::MergeRebinnedCells(nxbins, nybins, newxbins, infoX.binMap, infoY.binMap,
                                          {{oldBins.data(), cu2}, {oldErrors.data(), er2}, {oldCount.data(), en2}});
    }
 
