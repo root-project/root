@@ -122,6 +122,12 @@ maps) will now obtain different, mathematically consistent values.
 
 ## Math
 
+### Skipping identically-vanishing second derivatives in numerical Hessian evaluation
+
+Minuit2 objective functions can now advertise pairs of parameters whose mixed second derivative is identically zero, via the new virtual function `ROOT::Minuit2::FCNBase::SecondDerivativeAlwaysVanishes()` (with corresponding setters on `ROOT::Minuit2::FCNAdapter` and `ROOT::Minuit2::Minuit2Minimizer`).
+The numerical Hessian computation in Minuit2 (`MnHesse`) skips the finite-difference evaluations for such parameter pairs, which can speed up Hesse significantly for likelihoods with many mutually independent parameters.
+The parameter indices in this interface always refer to the function's own full (external) parameter space, including parameters that are fixed in the minimizer, and the advertised information must hold for all parameter values; see the `FCNBase` documentation for the full contract.
+
 ## RDataFrame
 
 * Added `RedefinePerSample` transformation. Works similarly to `DefinePerSample`, but allows to redefine existing values
