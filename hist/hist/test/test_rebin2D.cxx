@@ -94,26 +94,19 @@ TEST(Rebin2DVariable, TH2SingleAxis)
    std::unique_ptr<TH2> hnew{fine.Rebin2D(4, 2, "hnew", xEdges, nullptr)};
    ASSERT_NE(hnew, nullptr);
    expectSameBinsAndStats(*hnew, ref, "TH2SingleAxis");
+
+   // TH2::Rebin with bin edges must forward to Rebin2D with the TH1
+   // conventions, leaving the y-axis untouched
+   std::unique_ptr<TH2> viaRebin{fine.Rebin(4, "viaRebin", xEdges)};
+   std::unique_ptr<TH2> viaRebin2D{fine.Rebin2D(4, 1, "viaRebin2D", xEdges, nullptr)};
+   ASSERT_NE(viaRebin, nullptr);
+   ASSERT_NE(viaRebin2D, nullptr);
+   expectSameBinsAndStats(*viaRebin, *viaRebin2D, "TH2RebinForwards");
 }
 
-// TH2::Rebin with bin edges forwards to Rebin2D with the TH1 conventions,
-// leaving the y-axis untouched.
-TEST(Rebin2DVariable, TH2RebinForwards)
-{
-   TH2D fine("fine", "fine", 100, 0., 100., 100, 0., 100.);
-   fine.Sumw2();
-   TH2D ref("ref", "ref", 4, xEdges, 100, 0., 100.);
-   ref.Sumw2();
-   fillSame(fine, ref);
-
-   std::unique_ptr<TH2> hnew{fine.Rebin(4, "hnew", xEdges)};
-   ASSERT_NE(hnew, nullptr);
-   expectSameBinsAndStats(*hnew, ref, "TH2RebinForwards");
-}
-
-// Rebinning a variable-bin TH2 back into a coarser variable binning whose
-// edges are a subset of the original ones.
-TEST(Rebin2DVariable, TH2VariableSource)
+// Constant-group rebinning of a TH2 that has variable-width axes: the new
+// edges are synthesized from the old axis.
+TEST(Rebin2DVariable, TH2VariableSourceConstantGroups)
 {
    TH2D fine("fine", "fine", 4, xEdges, 4, yEdges);
    fine.Sumw2();
@@ -123,9 +116,9 @@ TEST(Rebin2DVariable, TH2VariableSource)
    ref.Sumw2();
    fillSame(fine, ref);
 
-   std::unique_ptr<TH2> hnew{fine.Rebin2D(2, 2, "hnew", xCoarse, yCoarse)};
+   std::unique_ptr<TH2> hnew{fine.Rebin2D(2, 2, "hnew")};
    ASSERT_NE(hnew, nullptr);
-   expectSameBinsAndStats(*hnew, ref, "TH2VariableSource");
+   expectSameBinsAndStats(*hnew, ref, "TH2VariableSourceConstantGroups");
 }
 
 // Rebin a uniform TProfile2D into variable bins on both axes.
@@ -202,13 +195,10 @@ TEST(Rebin2DVariable, Diagnostics)
 {
    TH2D h("h", "h", 100, 0., 100., 100, 0., 100.);
    {
+      // an empty name must be rejected like a null one, otherwise Clone("")
+      // would create a second histogram registered under the original name
       ROOT::TestSupport::CheckDiagsRAII checkDiag(kError, "TH2D::Rebin2D", "newname must be given", false);
       EXPECT_EQ(h.Rebin2D(4, 4, nullptr, xEdges, yEdges), nullptr);
-   }
-   {
-      // an empty name must be rejected too, otherwise Clone("") would create
-      // a second histogram registered under the original name
-      ROOT::TestSupport::CheckDiagsRAII checkDiag(kError, "TH2D::Rebin2D", "newname must be given", false);
       EXPECT_EQ(h.Rebin2D(4, 4, "", xEdges, yEdges), nullptr);
    }
    {
