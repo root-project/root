@@ -509,6 +509,9 @@ if(fftw3)
   target_link_libraries(RooFitCore PRIVATE FFTW::Double)
 endif()
 
+# Used to silence deprecation warnings when testing deprecated features
+target_compile_definitions(RooFitCore PUBLIC ROOFIT_BUILDS_ITSELF)
+
 target_include_directories(RooFitCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 
 # The SMatrix package is header-only, but it's only exposed via the Smatrix

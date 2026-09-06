@@ -267,9 +267,15 @@ public:
    EvalBackend(std::string const &name);
 
    static EvalBackend Legacy()
-      R__DEPRECATED(6, 44, "The legacy evaluation backend will be removed in ROOT 6.44. "
-                           "Use the default \"cpu\" evaluation backend, i.e. simply don't pass any EvalBackend() "
-                           "command argument.");
+// Deprecation macro skipped when building RooFit itself, so we don't get
+// warnings when unit testing deprecated features.
+#ifndef ROOFIT_BUILDS_ITSELF
+      R__DEPRECATED(6, 44,
+                    "The legacy evaluation backend will be removed in ROOT 6.44. "
+                    "Use the default \"cpu\" evaluation backend, i.e. simply don't pass any EvalBackend() "
+                    "command argument.")
+#endif
+         ;
    static EvalBackend Cpu();
    static EvalBackend Cuda();
    static EvalBackend Codegen();
