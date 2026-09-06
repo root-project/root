@@ -6,20 +6,19 @@ ROOT_ADD_GTEST(testHypoTestInvResult testHypoTestInvResult.cxx
 ROOT_ADD_GTEST(testSPlot testSPlot.cxx LIBRARIES RooStats)
 
 #--stressRooStats----------------------------------------------------------------------------------
-ROOT_EXECUTABLE(stressRooStats stressRooStats.cxx LIBRARIES RooStats Gpad Net)
+# Googletest version of the old RooStats S.T.R.E.S.S. suite, parameterized
+# over the RooFit evaluation backends. Like in the original suite, the tests
+# are also run with the Minuit2 minimizer (the default minimizer of the suite
+# is Minuit2).
+ROOT_ADD_GTEST(stressRooStats stressRooStats.cxx LIBRARIES RooStats LABELS longtest TIMEOUT 3600)
 if(mathmore)
     target_compile_definitions(stressRooStats PRIVATE ROOFITMORE)
 endif()
-
-configure_file(stressRooStats_ref.root stressRooStats_ref.root COPYONLY)
-if(roofit_legacy_eval_backend)
-  ROOT_ADD_TEST(test-stressroostats-legacy COMMAND stressRooStats -b legacy FAILREGEX "FAILED|Error in" LABELS longtest)
-endif()
-ROOT_ADD_TEST(test-stressroostats-cpu COMMAND stressRooStats -b cpu FAILREGEX "FAILED|Error in" LABELS longtest)
 if(cuda)
-  ROOT_ADD_TEST(test-stressroostats-cuda COMMAND stressRooStats -b cuda FAILREGEX "FAILED|Error in" LABELS longtest RESOURCE_LOCK GPU)
+  set_tests_properties(gtest-roofit-roostats-stressRooStats PROPERTIES RESOURCE_LOCK GPU)
 endif()
-if(roofit_legacy_eval_backend)
-  ROOT_ADD_TEST(test-stressroostats-legacy-minuit2 COMMAND stressRooStats -minim Minuit2 -b legacy FAILREGEX "FAILED|Error in" LABELS longtest)
-endif()
-ROOT_ADD_TEST(test-stressroostats-cpu-minuit2 COMMAND stressRooStats -minim Minuit2 -b cpu FAILREGEX "FAILED|Error in" LABELS longtest)
+# Like the non-default-minimizer variant in the original suite, the Minuit
+# variant only runs the legacy and cpu backends (that is also why it doesn't
+# need to lock the GPU resource).
+ROOT_ADD_TEST(test-stressroostats-minuit COMMAND stressRooStats --gtest_filter=-*EvalBackendcuda*
+              ENVIRONMENT STRESSROOSTATS_MINIMIZER=Minuit LABELS longtest TIMEOUT 3600)
