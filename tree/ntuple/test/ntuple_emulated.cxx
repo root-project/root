@@ -666,6 +666,73 @@ TEST(RNTupleEmulated, CollectionProxy)
    EXPECT_EQ(0u, vec->size());
 }
 
+TEST(RNTupleEmulated, EmulatedFields_Enum)
+{
+   FileRaii fileGuard("test_ntuple_emulated_fields_enum.root");
+
+   ExecInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+         enum class EmulatedEnum { kZero, kOne };
+      )"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "EmulatedEnum").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+      DeclarePointer("EmulatedEnum", "ptr", ptr);
+
+      ProcessLine("*ptr = EmulatedEnum::kOne");
+      writer->Fill();
+   });
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+
+   {
+      RNTupleDescriptor::RCreateModelOptions opts;
+      opts.SetEmulateUnknownTypes(false);
+      try {
+         auto model = desc.CreateModel(opts);
+         FAIL() << "Creating a model without fEmulateUnknownTypes should fail";
+      } catch (const ROOT::RException &ex) {
+         ASSERT_THAT(ex.GetError().GetReport(), testing::HasSubstr("unknown type"));
+      }
+   }
+
+   {
+      RNTupleDescriptor::RCreateModelOptions opts;
+      opts.SetEmulateUnknownTypes(true);
+      auto model = desc.CreateModel(opts);
+      ASSERT_NE(model, nullptr);
+
+      const auto &e = model->GetConstField("f");
+      EXPECT_EQ(e.GetTypeName(), "EmulatedEnum");
+      EXPECT_TRUE(e.GetTraits() & ROOT::RFieldBase::kTraitEmulatedField);
+      EXPECT_EQ(e.GetStructure(), ROOT::ENTupleStructure::kPlain);
+
+      const auto underlyingIntField = e.GetConstSubfields()[0];
+      EXPECT_EQ(underlyingIntField->GetTypeName(), "std::int32_t");
+   }
+
+   RNTupleDescriptor::RCreateModelOptions cmOpts;
+   cmOpts.SetEmulateUnknownTypes(true);
+
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
+   std::unique_ptr<ROOT::RNTuple> ntpl(file->Get<ROOT::RNTuple>("ntpl"));
+   reader = RNTupleReader::Open(cmOpts, *ntpl);
+   EXPECT_EQ(reader->GetNEntries(), 1);
+
+   std::int32_t value = 0;
+   auto e = reader->CreateEntry();
+   e->BindRawPtr<void>("f", &value);
+   reader->LoadEntry(0, *e);
+   EXPECT_EQ(1, value);
+}
+
 TEST(RNTupleEmulated, EmulatedFields_SoA)
 {
    FileRaii fileGuard("test_ntuple_emulated_fields_soa.root");
