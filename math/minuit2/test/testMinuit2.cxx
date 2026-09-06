@@ -3,6 +3,7 @@
 // Author: Jonas Rembser, CERN 01/2026
 
 #include <Minuit2/FCNBase.h>
+#include <Minuit2/MnHesse.h>
 #include <Minuit2/MnMigrad.h>
 #include <Minuit2/MnUserParameters.h>
 #include <Minuit2/MnUserParameterState.h>
@@ -410,4 +411,137 @@ TEST(Minuit2, AnalyticalHessianLimitTransformation)
          }
       }
    }
+}
+
+// ----------------------------------------------------------------------
+// Tests for FCNBase::SecondDerivativeAlwaysVanishes()
+// ----------------------------------------------------------------------
+
+// Sum of two additive terms: the first couples parameters (0, 2) and the
+// second couples (1, 2), so only the mixed second derivative with respect to
+// the pair (0, 1) is identically zero. The full Hessian is:
+//
+//   [ 4  0 -2]
+//   [ 0  4 -2]
+//   [-2 -2  6]
+class SparseQuadraticFCN : public ROOT::Minuit2::FCNBase {
+public:
+   double operator()(const std::vector<double> &p) const override
+   {
+      ++fNCalls;
+      const double a = p[0];
+      const double b = p[1];
+      const double c = p[2];
+      // clang-format off
+      return (a-1)*(a-1) + (a-c)*(a-c) + (c-1)*(c-1) + (b-c)*(b-c) + (b-1)*(b-1);
+      // clang-format on
+   }
+
+   double Up() const override { return 1.0; }
+
+   mutable int fNCalls = 0;
+};
+
+// Same function, but advertising the identically-vanishing mixed second
+// derivative with respect to the (external) parameter pair (0, 1).
+class SparseQuadraticFCNWithInfo : public SparseQuadraticFCN {
+public:
+   bool SecondDerivativeAlwaysVanishes(unsigned int i, unsigned int j) const override
+   {
+      return (i == 0 && j == 1) || (i == 1 && j == 0);
+   }
+};
+
+namespace {
+
+/// Minimize, run MnHesse explicitly, and report the number of FCN calls that
+/// the MnHesse run needed in the output parameter.
+template <typename FCN>
+ROOT::Minuit2::FunctionMinimum RunMigradAndHesse(const FCN &fcn, int &nHesseCalls)
+{
+   using namespace ROOT::Minuit2;
+
+   MnUserParameters upar;
+   upar.Add("a", 0.5, 0.1);
+   upar.Add("b", 0.5, 0.1);
+   upar.Add("c", 0.5, 0.1);
+
+   MnMigrad migrad(fcn, upar);
+   FunctionMinimum min = migrad();
+
+   fcn.fNCalls = 0;
+   MnHesse hesse;
+   hesse(fcn, min);
+   nHesseCalls = fcn.fNCalls;
+   return min;
+}
+
+} // namespace
+
+// The Hessian from MnHesse must be correct whether or not the FCN advertises
+// its identically-vanishing second derivative, and advertising it must save
+// function calls.
+TEST(Minuit2, SecondDerivativeAlwaysVanishes)
+{
+   using ROOT::Minuit2::FunctionMinimum;
+
+   const double tol = 1e-5;
+
+   SparseQuadraticFCN fcnDense;
+   int nCallsDense = 0;
+   const FunctionMinimum minDense = RunMigradAndHesse(fcnDense, nCallsDense);
+
+   SparseQuadraticFCNWithInfo fcnSparse;
+   int nCallsSparse = 0;
+   const FunctionMinimum minSparse = RunMigradAndHesse(fcnSparse, nCallsSparse);
+
+   for (FunctionMinimum const *min : {&minDense, &minSparse}) {
+      const auto &hessian = min->Error().Hessian();
+      ASSERT_EQ(hessian.Nrow(), 3);
+      EXPECT_NEAR(hessian(0, 0), 4.0, tol);
+      EXPECT_NEAR(hessian(1, 1), 4.0, tol);
+      EXPECT_NEAR(hessian(2, 2), 6.0, tol);
+      EXPECT_NEAR(hessian(0, 1), 0.0, tol);
+      EXPECT_NEAR(hessian(0, 2), -2.0, tol);
+      EXPECT_NEAR(hessian(1, 2), -2.0, tol);
+   }
+
+   // The advertised element must be skipped, not computed: zero up to the
+   // round-off of the covariance inversion round-trip (much smaller than
+   // finite-difference noise), and with fewer function calls.
+   EXPECT_NEAR(minSparse.Error().Hessian()(0, 1), 0.0, 1e-12);
+   EXPECT_LT(nCallsSparse, nCallsDense);
+}
+
+// With parameter "a" fixed, Minuit's internal parameter indices no longer
+// coincide with the external ones that the FCN advertises the vanishing
+// second derivative in. If MnHesse did not translate the indices via
+// MnUserTransformation::ExtOfInt(), the internal pair (0, 1) = (b, c) would
+// be looked up as the advertised external pair (0, 1) = (a, b), wrongly
+// zeroing the genuinely non-vanishing (b, c) Hessian element.
+TEST(Minuit2, SecondDerivativeAlwaysVanishesFixedParameter)
+{
+   using namespace ROOT::Minuit2;
+
+   const double tol = 1e-5;
+
+   SparseQuadraticFCNWithInfo fcn;
+
+   MnUserParameters upar;
+   upar.Add("a", 1.0, 0.1);
+   upar.Add("b", 0.5, 0.1);
+   upar.Add("c", 0.5, 0.1);
+   upar.Fix("a");
+
+   MnMigrad migrad(fcn, upar);
+   FunctionMinimum min = migrad();
+   MnHesse hesse;
+   hesse(fcn, min);
+
+   // Reduced Hessian in the internal space (b, c)
+   const auto &hessian = min.Error().Hessian();
+   ASSERT_EQ(hessian.Nrow(), 2);
+   EXPECT_NEAR(hessian(0, 0), 4.0, tol);
+   EXPECT_NEAR(hessian(0, 1), -2.0, tol);
+   EXPECT_NEAR(hessian(1, 1), 6.0, tol);
 }
