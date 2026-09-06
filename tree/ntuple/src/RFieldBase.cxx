@@ -546,6 +546,14 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
                   ROOT::Internal::CreateEmulatedVectorField(fieldName, std::move(itemField), fieldDesc.GetTypeName());
                vecField->fTypeAlias = fieldDesc.GetTypeAlias();
                return vecField;
+            } else if (ROOT::Internal::IsCustomEnumFieldDesc(*desc, fieldDesc)) {
+               R__ASSERT(!fieldDesc.GetLinkIds().empty());
+               auto underlyingIntFieldId = fieldDesc.GetLinkIds()[0];
+               const auto &underlyingIntFieldDesc = desc->GetFieldDescriptor(underlyingIntFieldId);
+               auto enumField = ROOT::Internal::CreateEmulatedEnumField(fieldName, fieldDesc.GetTypeName(),
+                                                                        underlyingIntFieldDesc.GetTypeName());
+               enumField->fTypeAlias = fieldDesc.GetTypeAlias();
+               return enumField;
             }
          }
       }

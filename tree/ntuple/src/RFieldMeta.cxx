@@ -1117,6 +1117,13 @@ void ROOT::Experimental::RSoAField::AcceptVisitor(ROOT::Detail::RFieldVisitor &v
 
 //------------------------------------------------------------------------------
 
+std::unique_ptr<ROOT::RFieldBase> ROOT::Internal::CreateEmulatedEnumField(std::string_view fieldName,
+                                                                          std::string_view emulatedFromType,
+                                                                          std::string_view underlyingIntType)
+{
+   return std::unique_ptr<RFieldBase>(new REnumField(fieldName, emulatedFromType, underlyingIntType));
+}
+
 ROOT::REnumField::REnumField(std::string_view fieldName, std::string_view enumName)
    : REnumField(fieldName, EnsureValidEnum(enumName))
 {
@@ -1155,6 +1162,15 @@ ROOT::REnumField::REnumField(std::string_view fieldName, std::string_view enumNa
 {
    Attach(std::move(intField));
    fTraits |= kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+}
+
+ROOT::REnumField::REnumField(std::string_view fieldName, std::string_view emulatedFromType,
+                             std::string_view underlyingIntType)
+   : ROOT::RFieldBase(fieldName, emulatedFromType, ROOT::ENTupleStructure::kPlain, false /* isSimple */)
+{
+   auto intField = Create("_0", std::string(underlyingIntType)).Unwrap();
+   Attach(std::move(intField));
+   fTraits |= kTraitTriviallyConstructible | kTraitTriviallyDestructible | kTraitEmulatedField;
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::REnumField::CloneImpl(std::string_view newName) const
