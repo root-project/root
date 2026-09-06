@@ -9,6 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// this file is only kept for backwards compatibility reasons. ROOT/RStringView.hxx should be included instead.
+#warning "This header is deprecated and will be removed in ROOT 6.44, use ROOT/RStringView.hxx instead"
 
 #include <ROOT/RStringView.hxx>
