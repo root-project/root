@@ -11030,9 +11030,9 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
    // turn off double buffer mode and draw primitives in invert mode
    // return if such mode not supported
    auto pp = gPad->GetPainter();
+   auto dmode = gPad->GetDoubleBuffer();
    if (!pp || !gPad->FeedbackMode(kTRUE))
       return;
-
 
    Int_t nbins = (Int_t)fShowProjection/100;
 
@@ -11046,7 +11046,7 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
    Double_t py1 = gPad->YtoPad(fH->GetYaxis()->GetBinLowEdge(biny1));
    Double_t py2 = gPad->YtoPad(fH->GetYaxis()->GetBinUpEdge(biny2));
 
-   if (pyold1 || pyold2)
+   if (!dmode && (pyold1 || pyold2))
       pp->DrawBox(uxmin,pyold1,uxmax,pyold2,TVirtualPadPainter::kFilled);
    pp->DrawBox(uxmin,py1,uxmax,py2,TVirtualPadPainter::kFilled);
    pyold1 = py1;
@@ -11113,6 +11113,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
    // turn off double buffer mode and draw primitives in invert mode
    // return if such mode not supported
    auto pp = gPad->GetPainter();
+   auto dmode = gPad->GetDoubleBuffer();
    if (!pp || !gPad->FeedbackMode(kTRUE))
       return;
 
@@ -11130,7 +11131,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
    Double_t px1   = gPad->XtoPad(fH->GetXaxis()->GetBinLowEdge(binx1));
    Double_t px2   = gPad->XtoPad(fH->GetXaxis()->GetBinUpEdge(binx2));
 
-   if (pxold1 || pxold2)
+   if (!dmode && (pxold1 || pxold2))
       pp->DrawBox(pxold1, uymin, pxold2, uymax, TVirtualPadPainter::kFilled);
    pp->DrawBox(px1, uymin, px2, uymax, TVirtualPadPainter::kFilled);
    pxold1 = px1;
