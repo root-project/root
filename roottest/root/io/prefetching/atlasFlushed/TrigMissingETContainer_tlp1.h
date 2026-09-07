@@ -9,7 +9,7 @@
 #define TrigMissingETContainer_tlp1_h
 class TrigMissingETContainer_tlp1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "TrigMissingETContainer_p1.h"
 #include "TrigMissingET_p1.h"

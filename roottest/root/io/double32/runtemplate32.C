@@ -12,9 +12,10 @@
 #include "TStreamerInfo.h"
 #include "TROOT.h"
 #include "TRealData.h"
-#include "Riostream.h"
 #include "TDataMember.h"
 #include "TFile.h"
+
+#include <iostream>
 
 int runtemplate32 ()
 {

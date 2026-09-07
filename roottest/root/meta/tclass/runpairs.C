@@ -8,10 +8,11 @@
 
 #endif
 
-#include <typeinfo>
-#include "Riostream.h"
 #include "TVirtualCollectionProxy.h"
 #include "TEmulatedCollectionProxy.h"
+
+#include <typeinfo>
+#include <iostream>
 
 void whatis(TVirtualCollectionProxy* p) {
    if (p) cout << typeid(*p).name() << endl;

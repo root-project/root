@@ -12,7 +12,7 @@ class EventInfo_p2;
 #include "EventID_p1.h"
 #include "EventType_p1.h"
 #include "TriggerInfo_p2.h"
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 
 class EventInfo_p2 {

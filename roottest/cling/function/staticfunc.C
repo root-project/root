@@ -1,8 +1,9 @@
 #ifndef __CLING__
 #include "TString.h"
-#include "Riostream.h"
 #include <TLorentzVector.h>
 #include "TH1F.h"
+
+#include <iostream>
 #endif
 
 struct SelLambda {
@@ -34,7 +35,7 @@ class Top {
 public:
    void func(const TString &s) {
 #ifndef ClingWorkAroundBrokenRecovery
-      cout << s.Data() << endl;
+      std::cout << s.Data() << std::endl;
 #endif
    }
    void Run() {

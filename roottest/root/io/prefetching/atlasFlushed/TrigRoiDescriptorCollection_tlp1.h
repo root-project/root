@@ -9,7 +9,7 @@
 #define TrigRoiDescriptorCollection_tlp1_h
 class TrigRoiDescriptorCollection_tlp1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "TrigRoiDescriptorCollection_p1.h"
 #include "TrigRoiDescriptor_p1.h"

@@ -6,7 +6,7 @@
 // --------------------------------------------------------------
 #include "TDetectorVEvent.hh"
 
-#include "Riostream.h"
+#include <iostream>
 
 TDetectorVEvent::TDetectorVEvent() : TVEvent(), fNHits(0), fHits(nullptr) {}
 

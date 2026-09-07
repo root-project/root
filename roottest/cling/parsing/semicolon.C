@@ -1,6 +1,7 @@
-#include "Riostream.h"
+#include <iostream>
+
 void semicolon(const char *string = "/star/simu/simu/jwebb/11-12-2010-pp500-pileup/rcf10100_1000_5evts_Wplus_enu.fzd;  gfile b /star/simu/simu/jwebb/11-12-2010-pp500-pileup/rcf10000_1000_250evts_minb.fzd; mode TPCE back 4001400; gback 400 400 0.1 106.6") {
-  cout << string << endl;
+  std::cout << string << std::endl;
 }
 
 #if !defined(__CLING__)

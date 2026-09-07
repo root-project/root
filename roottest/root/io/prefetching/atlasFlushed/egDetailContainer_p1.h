@@ -9,7 +9,7 @@
 #define egDetailContainer_p1_h
 class egDetailContainer_p1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "egDetail_p1.h"
 

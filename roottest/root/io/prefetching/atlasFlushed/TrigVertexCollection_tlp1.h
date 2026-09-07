@@ -9,7 +9,7 @@
 #define TrigVertexCollection_tlp1_h
 class TrigVertexCollection_tlp1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "TrigVertexCollection_p1.h"
 #include "TrigVertex_p1.h"

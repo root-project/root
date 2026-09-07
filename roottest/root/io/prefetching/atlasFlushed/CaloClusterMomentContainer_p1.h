@@ -9,7 +9,7 @@
 #define CaloClusterMomentContainer_p1_h
 class CaloClusterMomentContainer_p1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "CaloClusterMomentContainer_p1.h"
 
