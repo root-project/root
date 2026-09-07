@@ -32,6 +32,7 @@
 #include "TVectorD.h"
 #include "TVectorF.h"
 #include "TCanvas.h"
+#include "TCanvasImp.h"
 #include "TPad.h"
 #include "TPaveStats.h"
 #include "TFrame.h"
@@ -3482,23 +3483,14 @@ void THistPainter::DrawPanel()
 
 void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-
-   if (!gPad) return;
-
-   static Int_t bin, px1, py1, px2, py2, pyold;
-   static std::unique_ptr<TBox> zoombox;
-   Double_t zbx1,zbx2,zby1,zby2;
-
-   Int_t bin1, bin2;
-   Double_t xlow, xup, ylow, binval, x, baroffset, barwidth, binwidth;
-   Bool_t opaque  = gPad->OpaqueMoving();
-
-   if (!gPad->IsEditable()) return;
+   if (!gPad || !gPad->IsEditable())
+      return;
 
    if (fPie) {
       fPie->ExecuteEvent(event, px, py);
       return;
    }
+
    //     come here if we have a lego/surface in the pad
    TView *view = gPad->GetView();
 
@@ -3506,6 +3498,15 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       view->ExecuteRotateView(event, px, py);
       return;
    }
+
+   static Int_t px1, py1, px2, py2, pyold;
+   static std::unique_ptr<TBox> zoombox;
+   Double_t zbx1,zbx2,zby1,zby2;
+
+   Int_t bin1, bin2;
+   Bool_t opaque  = gPad->OpaqueMoving();
+   auto pp = gPad->GetPainter();
+
 
    TAxis *xaxis    = fH->GetXaxis();
    TAxis *yaxis    = fH->GetYaxis();
@@ -3515,29 +3516,21 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    TString IsSame = fH->GetDrawOption();
    IsSame.ToLower();
    if (IsSame.Index("same")>=0) {
-      TH1 *h1;
       TIter next(gPad->GetListOfPrimitives());
-      while ((h1 = (TH1 *)next())) {
-         if (!h1->InheritsFrom(TH1::Class())) continue;
-         xaxis    = h1->GetXaxis();
-         yaxis    = h1->GetYaxis();
-         break;
+      while (auto h1 = (TH1 *)next()) {
+         if (h1->InheritsFrom(TH1::Class())) {
+            xaxis    = h1->GetXaxis();
+            yaxis    = h1->GetYaxis();
+            break;
+         }
       }
-   }
-
-   Double_t factor = 1;
-   if (fH->GetNormFactor() != 0) {
-      factor = fH->GetNormFactor()/fH->GetSumOfWeights();
    }
 
    switch (event) {
 
    case kButton1Down:
 
-      if (!opaque) gVirtualX->SetLineColor(-1);
-      fH->TAttLine::Modify();
-
-      if (opaque && dimension ==2) {
+      if (opaque && dimension == 2) {
          zbx1 = gPad->AbsPixeltoX(px);
          zbx2 = gPad->AbsPixeltoX(px);
          zby1 = gPad->AbsPixeltoY(py);
@@ -3567,53 +3560,51 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kMouseMotion:
 
-      if (fShowProjection) {ShowProjection3(px,py); break;}
+      if (fShowProjection) {
+         ShowProjection3(px,py);
+         break;
+      }
 
       gPad->SetCursor(kPointer);
-      if (dimension ==1) {
-         if (Hoption.Bar) {
-            baroffset = fH->GetBarOffset();
-            barwidth  = fH->GetBarWidth();
-         } else {
-            baroffset = 0;
-            barwidth  = 1;
-         }
-         x        = gPad->AbsPixeltoX(px);
-         bin      = fXaxis->FindFixBin(gPad->PadtoX(x));
-         binwidth = fXaxis->GetBinWidth(bin);
-         xlow     = gPad->XtoPad(fXaxis->GetBinLowEdge(bin) + baroffset*binwidth);
-         xup      = gPad->XtoPad(xlow + barwidth*binwidth);
-         ylow     = gPad->GetUymin();
-         px1      = gPad->XtoAbsPixel(xlow);
-         px2      = gPad->XtoAbsPixel(xup);
-         py1      = gPad->YtoAbsPixel(ylow);
-         py2      = py;
-         pyold    = py;
-         if (gROOT->GetEditHistograms()) gPad->SetCursor(kArrowVer);
+      if ((dimension == 1) && gROOT->GetEditHistograms()) {
+         px1 = px2 = px; // remember last x to calculate bin
+         py2 = pyold = py; // remember last bin position
+         gPad->SetCursor(kArrowVer);
       }
 
       break;
 
    case kButton1Motion:
 
-      if (dimension ==1) {
-         if (gROOT->GetEditHistograms()) {
-            if (!opaque) {
-               gVirtualX->DrawBox(px1, py1, px2, py2,TVirtualX::kHollow);  // Draw the old box
-               py2 += py - pyold;
-               gVirtualX->DrawBox(px1, py1, px2, py2,TVirtualX::kHollow);  // Draw the new box
-               pyold = py;
-            } else {
-               py2 += py - pyold;
-               pyold = py;
-               binval = gPad->PadtoY(gPad->AbsPixeltoY(py2))/factor;
-               fH->SetBinContent(bin,binval);
-               gPad->Modified(kTRUE);
-            }
+      if ((dimension == 1) && gROOT->GetEditHistograms()) {
+         Double_t baroffset = Hoption.Bar ? fH->GetBarOffset() : 0;
+         Double_t barwidth  = Hoption.Bar ? fH->GetBarWidth() : 1;
+         // px1 remains until button1 is pressed to identify bin
+         Int_t    bin      = fXaxis->FindFixBin(gPad->PadtoX(gPad->AbsPixeltoX(px1)));
+         Double_t binwidth = fXaxis->GetBinWidth(bin);
+         Double_t xlow     = gPad->XtoPad(fXaxis->GetBinLowEdge(bin) + baroffset*binwidth);
+         Double_t xup      = gPad->XtoPad(xlow + barwidth*binwidth);
+         Double_t ylow     = gPad->GetUymin();
+         Double_t yup      = fH->GetBinContent(bin);
+         Double_t factor   = fH->GetNormFactor() / fH->GetSumOfWeights();
+
+         if (!opaque) {
+            pp->SetAttLine(*fH);
+            pp->DrawBox(xlow, ylow, xup, yup, TVirtualPadPainter::kHollow);  // Draw the old box
          }
+
+         py2 += py - pyold;
+         pyold = py;
+         yup = gPad->PadtoY(gPad->AbsPixeltoY(py2)) / (factor ? factor : 1.);
+         fH->SetBinContent(bin, yup);
+
+         if (!opaque)
+            pp->DrawBox(xlow, ylow, xup, yup, TVirtualPadPainter::kHollow);  // Draw the new box
+         else
+            gPad->Modified();
       }
 
-      if (opaque && dimension ==2) {
+      if (opaque && dimension == 2) {
          if (TMath::Abs(px1-px)>5 && TMath::Abs(py1-py)>5) {
             zbx2 = gPad->AbsPixeltoX(px);
             zby2 = gPad->AbsPixeltoY(py);
@@ -3632,17 +3623,19 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kWheelUp:
 
-      if (dimension ==2) {
+      if (dimension == 2) {
          bin1 = xaxis->GetFirst()+1;
          bin2 = xaxis->GetLast()-1;
          bin1 = TMath::Max(bin1, 1);
          bin2 = TMath::Min(bin2, xaxis->GetNbins());
-         if (bin2>bin1) xaxis->SetRange(bin1,bin2);
+         if (bin2 > bin1)
+            xaxis->SetRange(bin1, bin2);
          bin1 = yaxis->GetFirst()+1;
          bin2 = yaxis->GetLast()-1;
          bin1 = TMath::Max(bin1, 1);
          bin2 = TMath::Min(bin2, yaxis->GetNbins());
-         if (bin2>bin1) yaxis->SetRange(bin1,bin2);
+         if (bin2 > bin1)
+            yaxis->SetRange(bin1,bin2);
       }
       gPad->Modified();
       gPad->Update();
@@ -3673,17 +3666,12 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Up:
-      if (dimension ==1) {
-         if (gROOT->GetEditHistograms()) {
-            binval = gPad->PadtoY(gPad->AbsPixeltoY(py2))/factor;
-            fH->SetBinContent(bin,binval);
-            PaintInit();   // recalculate Hparam structure and recalculate range
-         }
-
+      if ((dimension == 1) && gROOT->GetEditHistograms()) {
+         PaintInit();   // recalculate Hparam structure and recalculate range
          // might resize pad pixmap so should be called before any paint routine
          RecalculateRange();
       }
-      if (opaque && dimension ==2) {
+      if (opaque && dimension == 2) {
          if (zoombox) {
             Double_t x1 = TMath::Min(zoombox->GetX1(), zoombox->GetX2());
             Double_t x2 = TMath::Max(zoombox->GetX1(), zoombox->GetX2());
@@ -3701,7 +3689,6 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          }
       }
       gPad->Modified(kTRUE);
-      if (opaque) gVirtualX->SetLineColor(-1);
 
       break;
 
@@ -3711,7 +3698,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       while (true) {
          px = py = 0;
-         event = gVirtualX->RequestLocator(1, 1, px, py);
+         event = gPad->GetCanvasImp()->RequestLocator(px, py);
 
          ExecuteEvent(kButton1Motion, px, py);
 
