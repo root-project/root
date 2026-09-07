@@ -103,6 +103,7 @@ public:
    virtual Int_t    GetCanvasID() const = 0;
    virtual TCanvasImp *GetCanvasImp() const = 0;
    virtual TCanvas  *GetCanvas() const = 0;
+   virtual Int_t    GetDoubleBuffer() const  = 0;
    virtual TVirtualPad *GetVirtCanvas() const = 0;
    virtual Int_t    GetEvent() const  = 0;
    virtual Int_t    GetEventX() const = 0;

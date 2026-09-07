@@ -202,6 +202,7 @@ public:
    Int_t             GetCrosshair() const;
    Int_t             GetCanvasID() const override;
    TCanvasImp       *GetCanvasImp() const override;
+   Int_t             GetDoubleBuffer() const override;
    TFrame           *GetFrame() override;
    Int_t             GetEvent() const override;
    Int_t             GetEventX() const override;
