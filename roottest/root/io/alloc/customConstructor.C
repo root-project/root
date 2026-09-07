@@ -1,7 +1,8 @@
-#include "Riostream.h"
 #include "Rtypes.h"
 
-using namespace std;
+#include <iostream>
+
+using std::cout;
 
 class G4_ROOT_IO;
 

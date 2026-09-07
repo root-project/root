@@ -26,14 +26,15 @@ Use $ROOTSYS/bin/hadd to merge many histogram files
 */
 
 
-#include <cstring>
 #include "TChain.h"
 #include "TFile.h"
 #include "TH1.h"
 #include "TTree.h"
 #include "TKey.h"
 #include "TSystem.h"
-#include "Riostream.h"
+
+#include <cstring>
+#include <iostream>
 
 TList *FileList;
 TFile *Target;

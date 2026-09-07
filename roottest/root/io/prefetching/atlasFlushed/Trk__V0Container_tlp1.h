@@ -11,7 +11,7 @@ namespace Trk {
 class V0Container_tlp1;
 } // end of namespace.
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "Trk__V0Container_p1.h"
 #include "Trk__V0Candidate_p1.h"

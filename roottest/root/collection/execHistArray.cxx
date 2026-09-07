@@ -1,10 +1,5 @@
 // This test checks the I/O backward compatibility of classes TArray(C|S|I|L|L64|F|D)
 //    after the introduction of the template class TArrayT
-#include <cassert>
-#include <cmath>
-#include <limits>
-#include <cstring>
-#include "Riostream.h"
 #include "TClass.h"
 #include "TFile.h"
 #include "TH1F.h"
@@ -19,6 +14,11 @@
 #include "TArrayD.h"
 #include "TArrayL.h"
 #include "TArrayL64.h"
+
+#include <cassert>
+#include <cmath>
+#include <limits>
+#include <cstring>
 
 void write(const char *filename = "HistArray.root")
 {

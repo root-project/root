@@ -1,5 +1,6 @@
 #include "TFile.h"
-#include "Riostream.h"
+
+#include <iostream>
 
 void printLoc() {
    if (gFile) cout << "gFile is: " << gFile->GetName() << endl;

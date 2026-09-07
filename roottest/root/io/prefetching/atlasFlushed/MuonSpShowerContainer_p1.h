@@ -9,7 +9,7 @@
 #define MuonSpShowerContainer_p1_h
 class MuonSpShowerContainer_p1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "MuonSpShower_p1.h"
 

@@ -9,7 +9,7 @@
 #define JetCollection_p5_h
 class JetCollection_p5;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "TPObjRef.h"
 #include "DataLink_p1.h"

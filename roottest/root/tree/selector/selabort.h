@@ -14,9 +14,7 @@
 #include <TFile.h>
 #include <TSelector.h>
 #include <TRef.h>
-#ifndef __CLING__
-#include <Riostream.h>
-#endif
+
 #include <cstdio>
 
 class selabort : public TSelector {

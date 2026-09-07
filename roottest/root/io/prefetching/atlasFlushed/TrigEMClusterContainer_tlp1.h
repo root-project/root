@@ -9,7 +9,7 @@
 #define TrigEMClusterContainer_tlp1_h
 class TrigEMClusterContainer_tlp1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "TrigEMClusterContainer_p1.h"
 #include "TrigEMCluster_p1.h"

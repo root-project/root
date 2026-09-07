@@ -10,7 +10,7 @@
 template <typename T0> class ElementLinkVector_p1;
 template <> class ElementLinkVector_p1<unsigned int>;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "ElementLinkVector_p1_unsigned_int_.h"
 #include "DataLink_p1.h"

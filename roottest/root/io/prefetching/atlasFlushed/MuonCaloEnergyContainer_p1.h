@@ -9,7 +9,7 @@
 #define MuonCaloEnergyContainer_p1_h
 class MuonCaloEnergyContainer_p1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "CaloEnergy_p2.h"
 

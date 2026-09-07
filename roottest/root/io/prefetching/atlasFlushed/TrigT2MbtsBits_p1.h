@@ -9,7 +9,7 @@
 #define TrigT2MbtsBits_p1_h
 class TrigT2MbtsBits_p1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 
 class TrigT2MbtsBits_p1 {

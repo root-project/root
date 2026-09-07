@@ -12,7 +12,7 @@ class VxContainer_tlp1;
 } // end of namespace.
 
 #include "TPCnvTokenList_p1.h"
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "Trk__VxContainer_p1.h"
 #include "Trk__VxCandidate_p1.h"

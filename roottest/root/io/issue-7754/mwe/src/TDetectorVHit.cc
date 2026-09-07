@@ -6,7 +6,7 @@
 // --------------------------------------------------------------
 #include "TDetectorVHit.hh"
 
-#include "Riostream.h"
+#include <iostream>
 
 
 TDetectorVHit::TDetectorVHit() :

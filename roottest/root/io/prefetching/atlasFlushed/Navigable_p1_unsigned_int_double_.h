@@ -11,7 +11,7 @@ template <typename T0, typename T1> class Navigable_p1;
 template <> class Navigable_p1<unsigned int,double>;
 
 #include "ElementLinkVector_p1_unsigned_int_.h"
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 
 template <typename T0, typename T1> class Navigable_p1;

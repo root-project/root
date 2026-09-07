@@ -6,8 +6,9 @@ class BottomMissing : public TopLevel {};
 #endif
 #endif
 
-#include "Riostream.h"
 #include "TClass.h"
+
+#include <iostream>
 
 #ifdef __CLING__
 void missingInfo();

@@ -7,11 +7,12 @@ public:
 class C : public B {};
 class D : public A {};
 
-#include "Riostream.h"
+#include "TClass.h"
+
+#include <iostream>
 #include <map>
 #include <string>
 #include <typeinfo>
-#include "TClass.h"
 
 namespace std {}
 using namespace std;

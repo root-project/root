@@ -9,7 +9,7 @@
 #define GenEvent_p4_h
 class GenEvent_p4;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 
 class GenEvent_p4 {

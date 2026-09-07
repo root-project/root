@@ -9,7 +9,7 @@
 #define GenVertex_p4_h
 class GenVertex_p4;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 
 class GenVertex_p4 {
