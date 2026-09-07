@@ -11027,10 +11027,12 @@ void THistPainter::SetShowProjectionXY(const char *option,Int_t nbinsY,Int_t nbi
 
 void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 {
+   // turn off double buffer mode and draw primitives in invert mode
+   // return if such mode not supported
+   if (!gPad->FeedbackMode(kTRUE))
+      return;
 
    Int_t nbins = (Int_t)fShowProjection/100;
-   gPad->SetDoubleBuffer(0); // turn off double buffer mode
-   gVirtualX->SetDrawMode(TVirtualX::kInvert); // set the drawing mode to XOR mode
 
    // Erase old position and draw a line at current position
    static int pyold1 = 0;
@@ -11110,12 +11112,14 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 
 void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 {
+   // turn off double buffer mode and draw primitives in invert mode
+   // return if such mode not supported
+   if (!gPad->FeedbackMode(kTRUE))
+      return;
 
    Int_t nbins = (Int_t)fShowProjection/100;
    if (fShowProjection2)
        nbins = (Int_t)fShowProjection2/100;
-   gPad->SetDoubleBuffer(0);             // turn off double buffer mode
-   gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
 
    // Erase old position and draw a line at current position
    static int pxold1 = 0;
@@ -11197,7 +11201,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 /// Show projection (specified by `fShowProjection`) of a `TH3`.
 /// The drawing option for the projection is in `fShowOption`.
 ///
-/// First implementation; R.Brun
+/// First implementation: R.Brun
 ///
 /// Full implementation: Tim Tran (timtran@jlab.org)  April 2006
 
@@ -11219,8 +11223,10 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
       }
    }
 
-   gPad->SetDoubleBuffer(0);             // turn off double buffer mode
-   gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
+   // turn off double buffer mode and draw primitives in invert mode
+   // return if such mode not supported
+   if (!gPad->FeedbackMode(kTRUE))
+      return;
 
    // Erase old position and draw a line at current position
    TView *view = gPad->GetView();
