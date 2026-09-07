@@ -14,6 +14,12 @@ from http import HTTPStatus
 from shutil import which
 from typing import Callable, Dict
 
+dry_run : bool = False
+
+def set_dry_run(d: bool):
+    global dry_run
+    dry_run = d
+
 
 def is_macos():
     return 'Darwin' == platform.system()
@@ -132,13 +138,16 @@ def subprocess_with_log(command: str) -> int:
     if os.name == 'nt':
         command = "$env:comspec = 'cmd.exe'; " + command
 
-    result = subprocess.run(command, shell=True, check=False, stderr=subprocess.STDOUT)
+    if not dry_run:
+        result = subprocess.run(command, shell=True, check=False, stderr=subprocess.STDOUT)
+    else:
+        print(command)
 
     print("\033[0m", end='')
 
     log.add(command)
 
-    return result.returncode
+    return 0 if dry_run else result.returncode
 
 def subprocess_with_capture(command: str):
     """Runs <command> in shell, capture output and appends <command> to log"""
