@@ -28,24 +28,19 @@ the nature of the integration limits (closed or open ended) and
 the preference of the caller as encoded in the configuration object.
 **/
 
-#include "TClass.h"
-#include "TSystem.h"
-#include "Riostream.h"
-
 #include "RooNumIntFactory.h"
 #include "RooArgSet.h"
 #include "RooAbsFunc.h"
 #include "RooNumIntConfig.h"
 #include "RooNumber.h"
-
 #include "RooRombergIntegrator.h"
 #include "RooBinIntegrator.h"
 #include "RooImproperIntegrator1D.h"
 #include "RooMCIntegrator.h"
 #include "RooAdaptiveIntegratorND.h"
-
 #include "RooMsgService.h"
 
+#include <ostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register all known integrators by calling

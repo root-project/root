@@ -23,11 +23,10 @@ Abstract interface for integrators of real-valued
 functions that implement the RooAbsFunc interface.
 **/
 
-#include "Riostream.h"
-
 #include "RooAbsIntegrator.h"
 #include "RooMsgService.h"
-#include "TClass.h"
+
+#include <ostream>
 
 using std::endl;
 

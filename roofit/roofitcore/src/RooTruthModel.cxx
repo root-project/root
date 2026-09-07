@@ -33,8 +33,6 @@ functions used in D mixing have been hand coded for increased execution speed.
 
 #include <RooFit/Detail/MathFuncs.h>
 
-#include <Riostream.h>
-
 #include <TError.h>
 
 #include <algorithm>

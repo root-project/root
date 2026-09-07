@@ -30,8 +30,7 @@ e.g. the binning of class RooBinning.
 #include <RooFit/CodegenContext.h>
 #include <RooMsgService.h>
 
-#include <Riostream.h>
-
+#include <ostream>
 
 using std::endl;
 

@@ -39,18 +39,12 @@ parallelized calculation of test statistics.
 
 #include "RooAbsOptTestStatistic.h"
 
-#include "Riostream.h"
-#include "TClass.h"
-#include <cstring>
-
 #include "RooAbsData.h"
 #include "RooAbsDataStore.h"
 #include "RooAbsPdf.h"
-#include "RooAddPdf.h"
 #include "RooArgSet.h"
 #include "RooBinSamplingPdf.h"
 #include "RooBinning.h"
-#include "RooCategory.h"
 #include "RooDataHist.h"
 #include "RooDataSet.h"
 #include "RooErrorHandler.h"
@@ -59,11 +53,13 @@ parallelized calculation of test statistics.
 #include "RooMsgService.h"
 #include "RooProdPdf.h"
 #include "RooProduct.h"
-#include "RooRealSumPdf.h"
 #include "RooRealVar.h"
 #include "RooVectorDataStore.h"
 
 #include "ROOT/StringUtils.hxx"
+
+#include <cstring>
+#include <ostream>
 
 using std::ostream;
 

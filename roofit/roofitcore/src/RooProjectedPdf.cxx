@@ -27,8 +27,6 @@ The performance of <pre>f->createProjection(x)->createProjection(y)</pre>
 is therefore identical to that of <pre>f->createProjection(RooArgSet(x,y))</pre>
 **/
 
-#include "Riostream.h"
-
 #include "RooProjectedPdf.h"
 #include "RooMsgService.h"
 #include "RooAbsReal.h"
@@ -37,6 +35,8 @@ is therefore identical to that of <pre>f->createProjection(RooArgSet(x,y))</pre>
 #include "RooRatio.h"
 #include "RooWrapperPdf.h"
 #include "RooFitImplHelpers.h"
+
+#include <ostream>
 
  ////////////////////////////////////////////////////////////////////////////////
  /// Default constructor

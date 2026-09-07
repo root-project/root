@@ -43,8 +43,6 @@
 /// the names of the arguments are not hard coded.
 ///
 
-#include "Riostream.h"
-
 #include "RooFormulaVar.h"
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
@@ -57,6 +55,9 @@
 #include "RooNLLVar.h"
 #include "RooChi2Var.h"
 #endif
+
+#include <iostream>
+#include <list>
 
 using std::ostream, std::istream, std::list;
 

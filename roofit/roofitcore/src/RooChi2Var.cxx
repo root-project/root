@@ -23,14 +23,12 @@
 #include "RooAbsPdf.h"
 #include "RooCmdConfig.h"
 #include "RooMsgService.h"
-
-#include "Riostream.h"
-#include "TClass.h"
-
 #include "RooRealVar.h"
 #include "RooAbsDataStore.h"
 
 #include <ROOT/StringUtils.hxx>
+
+#include <ostream>
 
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsReal &func, RooDataHist &data, bool extended,
                        RooDataHist::ErrorType etype, RooAbsTestStatistic::Configuration const &cfg)

@@ -34,7 +34,6 @@ Use RooAbsCollection derived objects for public use
 #include "RooAbsData.h"
 #include "RooMsgService.h"
 
-#include "Riostream.h"
 #include "TBuffer.h"
 #include "TROOT.h"
 
@@ -42,7 +41,7 @@ Use RooAbsCollection derived objects for public use
 #include <list>
 #include <memory>
 #include <vector>
-
+#include <ostream>
 
 /// \cond ROOFIT_INTERNAL
 

@@ -26,7 +26,6 @@ the user to add single bin boundaries, mirrored pairs, or sets of
 uniformly spaced boundaries.
 **/
 
-#include <Riostream.h>
 #include <RooAbsPdf.h>
 #include <RooBinning.h>
 #include <RooDouble.h>
@@ -41,6 +40,7 @@ uniformly spaced boundaries.
 
 #include <algorithm>
 #include <cmath>
+#include <ostream>
 
 using std::endl;
 

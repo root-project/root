@@ -42,7 +42,6 @@
 
 #include "HistFactoryInterpolationCodeUtils.h"
 
-#include "Riostream.h"
 #include "TBuffer.h"
 
 #include "RooAbsReal.h"

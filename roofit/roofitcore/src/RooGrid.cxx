@@ -30,14 +30,11 @@ integration, following the VEGAS algorithm.
 #include "RooAbsFunc.h"
 #include "RooNumber.h"
 #include "RooRandom.h"
-#include "TMath.h"
 #include "RooMsgService.h"
 
 #include <cmath>
-#include "Riostream.h"
 #include <iomanip>
-
-
+#include <ostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with given function binding

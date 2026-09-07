@@ -28,8 +28,6 @@ class documentation.
 **/
 
 #include "RooGenericPdf.h"
-#include "Riostream.h"
-#include "RooStreamParser.h"
 #include "RooMsgService.h"
 #include "RooArgList.h"
 #include "RooFormulaUtils.h"
@@ -37,6 +35,7 @@ class documentation.
 
 #include "TFormula.h"
 
+#include <iostream>
 using std::istream, std::ostream, std::endl;
 
 

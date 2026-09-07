@@ -15,8 +15,6 @@
   functions RooFit::bindFunction().
 **/
 
-#include "Riostream.h"
-
 #include "RooTFnBinding.h"
 #include "TF3.h"
 

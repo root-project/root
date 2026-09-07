@@ -34,7 +34,6 @@ number of expected events of an extended p.d.f
 **/
 
 
-#include "Riostream.h"
 #include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
@@ -43,6 +42,8 @@ number of expected events of an extended p.d.f
 #include "RooAddition.h"
 #include "RooMsgService.h"
 #include "RooRandomizeParamMCSModule.h"
+
+#include <ostream>
 
 using std::endl;
 

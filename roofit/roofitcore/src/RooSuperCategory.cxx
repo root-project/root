@@ -31,8 +31,6 @@ supercategory will propagate to its input categories.
 
 #include "RooSuperCategory.h"
 
-#include "Riostream.h"
-#include "RooStreamParser.h"
 #include "RooArgSet.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooMsgService.h"
@@ -40,6 +38,7 @@ supercategory will propagate to its input categories.
 #include "TString.h"
 #include "TClass.h"
 
+#include <ostream>
 using std::endl, std::ostream;
 
 

@@ -28,8 +28,9 @@ by the user to getVal() and on which parameters need to be tracked
 for changes to trigger a refilling of the cache histogram.
 **/
 
-#include "Riostream.h"
-using std::string, std::endl, std::ostream;
+#include <string>
+#include <ostream>
+ using std::string, std::endl, std::ostream;
 
 #include "TString.h"
 #include "RooAbsCachedReal.h"
@@ -40,17 +41,11 @@ using std::string, std::endl, std::ostream;
 #include "RooChangeTracker.h"
 #include "RooExpensiveObjectCache.h"
 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Constructor
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
-
-RooAbsCachedReal::RooAbsCachedReal(const char *name, const char *title, Int_t ipOrder) :
-  RooAbsReal(name,title),
-  _cacheMgr(this,10),
-  _ipOrder(ipOrder),
-  _disableCache(false)
+ RooAbsCachedReal::RooAbsCachedReal(const char *name, const char *title, Int_t ipOrder)
+    : RooAbsReal(name, title), _cacheMgr(this, 10), _ipOrder(ipOrder), _disableCache(false)
  {
  }
 

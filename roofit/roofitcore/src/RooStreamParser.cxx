@@ -33,18 +33,16 @@
 // from the context. The definition of what is punctuation can be redefined.
 //
 
-
-#include "Riostream.h"
-#include <cstdlib>
-
 #ifndef _WIN32
 #include <strings.h>
 #endif
 
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
-#include "RooNumber.h"
 #include "RooFitImplHelpers.h"
+
+#include <cstdlib>
+#include <istream>
 
 using std::istream, std::endl;
 

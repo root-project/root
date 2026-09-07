@@ -24,16 +24,11 @@ upper bound is guaranteed to converge to exactly one, at all interpolation
 orders.
 **/
 
-#include "Riostream.h"
-
 #include "RooAbsPdf.h"
 #include "RooNumCdf.h"
 #include "RooAbsReal.h"
-#include "RooMsgService.h"
-#include "RooDataHist.h"
 #include "RooHistPdf.h"
 #include "RooRealVar.h"
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a cumulative distribution function from given input p.d.f over observable x.

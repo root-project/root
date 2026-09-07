@@ -34,9 +34,6 @@ apply a five-point series acceleration, and successively add more steps until th
 desired precision is reached.
 **/
 
-#include "Riostream.h"
-
-#include "TClass.h"
 #include "RooRombergIntegrator.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
@@ -46,6 +43,7 @@ desired precision is reached.
 #include "RooMsgService.h"
 
 #include <cassert>
+#include <ostream>
 
 namespace {
 

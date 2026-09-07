@@ -26,9 +26,10 @@ the RooRealVar::setRange() method.
 
 #include "RooNumber.h"
 #include "RooMsgService.h"
-#include "Riostream.h"
 
 #include "RooRangeBinning.h"
+
+#include <ostream>
 
 using std::endl;
 

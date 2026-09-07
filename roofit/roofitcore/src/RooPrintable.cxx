@@ -34,10 +34,8 @@ given a Print() option string.
 
 #include "RooPrintable.h"
 
-#include "Riostream.h"
+#include <ostream>
 #include <iomanip>
-#include "TNamed.h"
-#include "TClass.h"
 
 using std::ostream, std::setw;
 

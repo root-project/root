@@ -22,7 +22,6 @@ class cannot be persisted in a RooWorkspace without registering the function
 pointer first using RooCFunction1Binding<T1,T2>::register().
 **/
 
-#include "Riostream.h"
 #include "RooCFunction1Binding.h"
 
 

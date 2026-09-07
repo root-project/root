@@ -90,12 +90,13 @@ and there is no guarantee that this works.
 
 #include "RooTrace.h"
 #include "RooAbsArg.h"
-#include "Riostream.h"
 #include "RooMsgService.h"
-
-#include <iomanip>
 #include "TClass.h"
 
+#include <iomanip>
+#include <ostream>
+#include <string>
+#include <map>
 
 using std::ostream, std::setw, std::hex, std::dec, std::map, std::string;
 

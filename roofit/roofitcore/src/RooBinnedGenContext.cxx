@@ -22,9 +22,6 @@
 Efficient implementation of the generator context specific for binned pdfs.
 **/
 
-#include "Riostream.h"
-
-
 #include "RooMsgService.h"
 #include "RooBinnedGenContext.h"
 #include "RooAbsPdf.h"
@@ -33,8 +30,10 @@ Efficient implementation of the generator context specific for binned pdfs.
 #include "RooDataSet.h"
 #include "RooRandom.h"
 
-using std::endl, std::vector, std::ostream;
+#include <ostream>
+#include <vector>
 
+using std::endl, std::vector, std::ostream;
 
 
 ////////////////////////////////////////////////////////////////////////////////
