@@ -3500,13 +3500,12 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 
    static Int_t px1, py1, px2, py2, pyold;
-   static std::unique_ptr<TBox> zoombox;
-   Double_t zbx1,zbx2,zby1,zby2;
+   static TBox *zoombox = nullptr;
 
-   Int_t bin1, bin2;
    Bool_t opaque  = gPad->OpaqueMoving();
    auto pp = gPad->GetPainter();
-
+   if (!pp)
+      return;
 
    TAxis *xaxis    = fH->GetXaxis();
    TAxis *yaxis    = fH->GetYaxis();
@@ -3530,31 +3529,30 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Down:
 
-      if (opaque && dimension == 2) {
-         zbx1 = gPad->AbsPixeltoX(px);
-         zbx2 = gPad->AbsPixeltoX(px);
-         zby1 = gPad->AbsPixeltoY(py);
-         zby2 = gPad->AbsPixeltoY(py);
+      if (dimension == 2) {
+         auto zbx1 = gPad->PadtoX(gPad->AbsPixeltoX(px));
+         auto zby1 = gPad->PadtoY(gPad->AbsPixeltoY(py));
          px1 = px;
          py1 = py;
-         if (gPad->GetLogx()) {
-            zbx1 = TMath::Power(10,zbx1);
-            zbx2 = TMath::Power(10,zbx2);
-         }
-         if (gPad->GetLogy()) {
-            zby1 = TMath::Power(10,zby1);
-            zby2 = TMath::Power(10,zby2);
-         }
-         if (zoombox) Error("ExecuteEvent", "Last zoom box was not deleted");
-         zoombox = std::make_unique<TBox>(zbx1, zby1, zbx2, zby2);
+         if (zoombox)
+            Error("ExecuteEvent", "Last zoom box was not deleted");
+         zoombox = new TBox(zbx1, zby1, zbx1, zby1);
+         zoombox->SetBit(kCanDelete); // in case of cleanup object can be deleted
          Int_t ci = TColor::GetColor("#7d7dff");
-         TColor *zoomcolor = gROOT->GetColor(ci);
-         if (!TCanvas::SupportAlpha() || !zoomcolor) zoombox->SetFillStyle(3002);
-         else                                        zoomcolor->SetAlpha(0.5);
-         zoombox->SetFillColor(ci);
-         zoombox->Draw();
-         gPad->Modified();
-         gPad->Update();
+         if (opaque) {
+            TColor *zoomcolor = gROOT->GetColor(ci);
+            if (!pp->IsSupportAlpha() || !zoomcolor)
+               zoombox->SetFillStyle(3002);
+            else
+               zoomcolor->SetAlpha(0.5);
+            zoombox->SetFillColor(ci);
+            gPad->Add(zoombox);
+            // no need to paint now while box is not visible
+         } else {
+            zoombox->SetFillStyle(0);
+            zoombox->SetLineColor(ci);
+         }
+
       }
       // No break !!!
 
@@ -3604,18 +3602,24 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             gPad->Modified();
       }
 
-      if (opaque && dimension == 2) {
-         if (TMath::Abs(px1-px)>5 && TMath::Abs(py1-py)>5) {
-            zbx2 = gPad->AbsPixeltoX(px);
-            zby2 = gPad->AbsPixeltoY(py);
-            if (gPad->GetLogx()) zbx2 = TMath::Power(10,zbx2);
-            if (gPad->GetLogy()) zby2 = TMath::Power(10,zby2);
-            if (zoombox) {
+      if (zoombox && dimension == 2) {
+         if (TMath::Abs(px1 - px) > 5 && TMath::Abs(py1 - py) > 5) {
+            auto zbx2 = gPad->PadtoX(gPad->AbsPixeltoX(px));
+            auto zby2 = gPad->PadtoY(gPad->AbsPixeltoY(py));
+            if (!opaque) {
+               if (zoombox->GetX1() != zoombox->GetX2())
+                  zoombox->Paint();
                zoombox->SetX2(zbx2);
                zoombox->SetY2(zby2);
+               zoombox->Paint();
+            } else if (gPad->FindObject(zoombox)) {
+               zoombox->SetX2(zbx2);
+               zoombox->SetY2(zby2);
+               gPad->Modified();
+               gPad->Update();
+            } else {
+               zoombox = nullptr;
             }
-            gPad->Modified();
-            gPad->Update();
          }
       }
 
@@ -3624,16 +3628,12 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kWheelUp:
 
       if (dimension == 2) {
-         bin1 = xaxis->GetFirst()+1;
-         bin2 = xaxis->GetLast()-1;
-         bin1 = TMath::Max(bin1, 1);
-         bin2 = TMath::Min(bin2, xaxis->GetNbins());
+         Int_t bin1 = TMath::Max(xaxis->GetFirst() + 1, 1);
+         Int_t bin2 = TMath::Min(xaxis->GetLast() - 1, xaxis->GetNbins());
          if (bin2 > bin1)
             xaxis->SetRange(bin1, bin2);
-         bin1 = yaxis->GetFirst()+1;
-         bin2 = yaxis->GetLast()-1;
-         bin1 = TMath::Max(bin1, 1);
-         bin2 = TMath::Min(bin2, yaxis->GetNbins());
+         bin1 = TMath::Max(yaxis->GetFirst() + 1, 1);
+         bin2 = TMath::Min(yaxis->GetLast() - 1, yaxis->GetNbins());
          if (bin2 > bin1)
             yaxis->SetRange(bin1,bin2);
       }
@@ -3645,20 +3645,20 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kWheelDown:
 
       if (dimension == 2) {
-         bin1 = xaxis->GetFirst()-1;
-         bin2 = xaxis->GetLast()+1;
-         bin1 = TMath::Max(bin1, 1);
-         bin2 = TMath::Min(bin2, xaxis->GetNbins());
+         Int_t bin1 = TMath::Max(xaxis->GetFirst() - 1, 1);
+         Int_t bin2 = TMath::Min(xaxis->GetLast() + 1, xaxis->GetNbins());
          const bool resetXaxisRange = bin1 == 1 && xaxis->GetFirst() == 1 && bin2 == xaxis->GetNbins() && xaxis->GetLast() == xaxis->GetNbins();
-         if (bin2>bin1) xaxis->SetRange(bin1,bin2);
-         if (resetXaxisRange) xaxis->ResetBit(TAxis::kAxisRange);
-         bin1 = yaxis->GetFirst()-1;
-         bin2 = yaxis->GetLast()+1;
-         bin1 = TMath::Max(bin1, 1);
-         bin2 = TMath::Min(bin2, yaxis->GetNbins());
+         if (bin2 > bin1)
+            xaxis->SetRange(bin1, bin2);
+         if (resetXaxisRange)
+            xaxis->ResetBit(TAxis::kAxisRange);
+         bin1 = TMath::Max(yaxis->GetFirst() - 1, 1);
+         bin2 = TMath::Min(yaxis->GetLast() + 1, yaxis->GetNbins());
          const bool resetYaxisRange = bin1 == 1 && yaxis->GetFirst() == 1 && bin2 == yaxis->GetNbins() && yaxis->GetLast() == yaxis->GetNbins();
-         if (bin2>bin1) yaxis->SetRange(bin1,bin2);
-         if (resetYaxisRange) yaxis->ResetBit(TAxis::kAxisRange);
+         if (bin2 > bin1)
+            yaxis->SetRange(bin1, bin2);
+         if (resetYaxisRange)
+            yaxis->ResetBit(TAxis::kAxisRange);
       }
       gPad->Modified();
       gPad->Update();
@@ -3671,21 +3671,21 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          // might resize pad pixmap so should be called before any paint routine
          RecalculateRange();
       }
-      if (opaque && dimension == 2) {
-         if (zoombox) {
-            Double_t x1 = TMath::Min(zoombox->GetX1(), zoombox->GetX2());
-            Double_t x2 = TMath::Max(zoombox->GetX1(), zoombox->GetX2());
-            Double_t y1 = TMath::Min(zoombox->GetY1(), zoombox->GetY2());
-            Double_t y2 = TMath::Max(zoombox->GetY1(), zoombox->GetY2());
-            x1 = TMath::Max(x1,xaxis->GetXmin());
-            x2 = TMath::Min(x2,xaxis->GetXmax());
-            y1 = TMath::Max(y1,yaxis->GetXmin());
-            y2 = TMath::Min(y2,yaxis->GetXmax());
-            if (x1<x2 && y1<y2) {
+      if (zoombox && dimension == 2) {
+         if (!opaque || gPad->FindObject(zoombox)) {
+            Double_t x1 = TMath::Max(TMath::Min(zoombox->GetX1(), zoombox->GetX2()), xaxis->GetXmin());
+            Double_t x2 = TMath::Min(TMath::Max(zoombox->GetX1(), zoombox->GetX2()), xaxis->GetXmax());
+            Double_t y1 = TMath::Max(TMath::Min(zoombox->GetY1(), zoombox->GetY2()), yaxis->GetXmin());
+            Double_t y2 = TMath::Min(TMath::Max(zoombox->GetY1(), zoombox->GetY2()), yaxis->GetXmax());
+            if (x1 < x2 && y1 < y2) {
                xaxis->SetRangeUser(x1, x2);
                yaxis->SetRangeUser(y1, y2);
             }
-            zoombox.reset();
+            if (opaque)
+               gPad->Remove(zoombox);
+            SafeDelete(zoombox);
+         } else {
+            zoombox = nullptr;
          }
       }
       gPad->Modified(kTRUE);
