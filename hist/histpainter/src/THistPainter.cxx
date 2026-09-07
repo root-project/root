@@ -10895,6 +10895,11 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
 
    if (nbins <= 0) return;
 
+   if ((fH->GetDimension() == 3) && (gPad->GetGLDevice() != -1)) {
+      Error("SetShowProjection", "TH3 projections do not work in GL mode");
+      return;
+   }
+
    TString opt = option;
    opt.ToLower();
    Int_t projection = 0;
@@ -10933,6 +10938,10 @@ void THistPainter::SetShowProjectionXY(const char *option,Int_t nbinsY,Int_t nbi
 
    if ((nbinsX <= 0) || (nbinsY <= 0)) return;
 
+   if ((fH->GetDimension() == 3) && (gPad->GetGLDevice() != -1)) {
+      Error("SetShowProjection", "TH3 projections do not work in GL mode");
+      return;
+   }
 
    TString opt = option;
    opt.ToLower();
@@ -11155,6 +11164,10 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
          return;
       }
    }
+
+   // 3D protection does not work with GL painters
+   if (gPad->GetGLDevice() != -1)
+      return;
 
    gPad->SetDoubleBuffer(0);             // turn off double buffer mode
    gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
