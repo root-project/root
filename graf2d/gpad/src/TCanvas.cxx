@@ -1144,6 +1144,8 @@ void TCanvas::FeedbackMode(Bool_t set)
 
    SetDoubleBuffer(set ? 0 : 1);  // switch double buffer
 
+   // now direcly switch draw mode in painter,
+   // later move such special code to place where painting performed
    if (fPainter)
       fPainter->SetDrawMode(fCanvasID, set ? TVirtualX::kInvert : TVirtualX::kCopy);
 }
