@@ -29,9 +29,6 @@ Population definition for genetic algorithm.
 
 */
 
-#include <algorithm>
-
-#include "Rstrstream.h"
 #include "TRandom3.h"
 #include "TH1.h"
 
@@ -39,6 +36,7 @@ Population definition for genetic algorithm.
 #include "TMVA/GeneticGenes.h"
 #include "TMVA/MsgLogger.h"
 
+#include <sstream>
 
 using std::vector, std::ostream;
 
