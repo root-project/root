@@ -135,7 +135,7 @@ public:
    void              ForceUpdate();
    const char       *GetDISPLAY() const {return fDISPLAY.Data();}
    TContextMenu     *GetContextMenu() const {return fContextMenu;};
-   Int_t             GetDoubleBuffer() const {return fDoubleBuffer;}
+   Int_t             GetDoubleBuffer() const override { return fDoubleBuffer; }
    Int_t             GetEvent() const override { return fEvent; }
    Int_t             GetEventX() const override { return fEventX; }
    Int_t             GetEventY() const override { return fEventY; }
