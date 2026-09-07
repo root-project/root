@@ -4857,13 +4857,6 @@ int main(int argc, char *argv[])
    gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
 
-   if ((gSkip3D == 0) && gWebMode && (TString("chrome") == gROOT->GetWebDisplay())) {
-      if (!gSystem->AccessPathName("/.dockerenv", kFileExists)) {
-         printf("!!! Disable 3D tests with chrome when running in the docker !!!\n");
-         gSkip3D = 1;
-      }
-   }
-
    gBenchmark = new TBenchmark();
 
    stressGraphics(verbose, generate, keep);
