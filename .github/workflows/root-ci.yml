@@ -153,18 +153,20 @@ jobs:
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
         run: |
-          set -x
+          # set -x
           cd /tmp
-          git config --global --get-regexp 'http\..*extraheader' || true
-          git config --system --get-regexp 'http\..*extraheader' || true
-          git config --global --get-regexp credential || true
-          git config --system --get-regexp credential || true
-          # git ls-remote https://github.com/vgvassilev/clad.git
-          curl -vI https://github.com 2>&1 | grep -E "issuer|subject|HTTP/" || true
-          # trace 
-          GIT_CURL_VERBOSE=1 GIT_TRACE=1 git clone https://github.com/vgvassilev/clad.git /tmp/clad-trace 2>&1 | head -300 || true
-          # try clean env variables
-          env -i PATH="$PATH" HOME="$HOME" git clone https://github.com/vgvassilev/clad.git /tmp/clad-clean || true
+          # git config --global --get-regexp 'http\..*extraheader' || true
+          # git config --system --get-regexp 'http\..*extraheader' || true
+          # git config --global --get-regexp credential || true
+          # git config --system --get-regexp credential || true
+          # # git ls-remote https://github.com/vgvassilev/clad.git
+          # curl -vI https://github.com 2>&1 | grep -E "issuer|subject|HTTP/" || true
+          # # trace 
+          # GIT_CURL_VERBOSE=1 GIT_TRACE=1 git clone https://github.com/vgvassilev/clad.git /tmp/clad-trace 2>&1 | head -300 || true
+          # # try clean env variables
+          # env -i PATH="$PATH" HOME="$HOME" git clone https://github.com/vgvassilev/clad.git /tmp/clad-clean || true
+          git config --global url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/" || true
+          echo "clone"
           git clone https://github.com/vgvassilev/clad.git
 
       - uses: root-project/gcc-problem-matcher-improved@main
