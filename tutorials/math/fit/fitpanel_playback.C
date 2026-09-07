@@ -17,7 +17,8 @@
 #include "TSystem.h"
 #include "TSystemFile.h"
 #include "TRecorder.h"
-#include "Riostream.h"
+
+#include <iostream>
 
 int file_size(const char *filename)
 {

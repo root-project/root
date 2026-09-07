@@ -23,7 +23,6 @@
 #include "TGLLogicalShape.h"
 #include "HelpText.h"
 #include "TClass.h"
-#include "Riostream.h"
 #include "TEnv.h"
 #include "TGListTree.h"
 #include "TOrdCollection.h"

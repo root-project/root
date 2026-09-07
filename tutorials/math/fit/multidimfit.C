@@ -8,7 +8,6 @@
 ///
 /// \authors Rene Brun, Christian Holm Christensen
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TApplication.h"
 #include "TCanvas.h"
@@ -21,6 +20,7 @@
 #include "TVectorD.h"
 #include "TMath.h"
 
+#include <iostream>
 
 //____________________________________________________________________
 void makeData(double* x, double& d, double& e)
