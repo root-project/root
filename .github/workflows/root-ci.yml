@@ -154,9 +154,8 @@ jobs:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
         run: |
           set -x
-          env | grep -i GIT_CONFIG
-          git config --global --get-regexp 'http\..*extraheader'
-          git config --system --get-regexp 'http\..*extraheader'
+          git config --global --get-regexp 'http\..*extraheader' || true
+          git config --system --get-regexp 'http\..*extraheader' || true
           git ls-remote https://github.com/vgvassilev/clad.git
           cd /tmp
           git clone https://github.com/vgvassilev/clad.git
