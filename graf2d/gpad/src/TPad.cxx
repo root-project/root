@@ -2686,6 +2686,16 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Switch feedback mode for the canvas
+/// Only for internal use when implementing special painters
+/// Returns kTRUE when requested mode was set
+
+Bool_t TPad::FeedbackMode(Int_t set)
+{
+   return fCanvas ? fCanvas->FeedbackMode(set) : kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Search if object named name is inside this pad or in pads inside this pad.
 ///
 /// In case name is in several sub-pads the first one is returned.

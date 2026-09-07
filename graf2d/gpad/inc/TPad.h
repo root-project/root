@@ -193,6 +193,7 @@ public:
    virtual void      DrawCrosshair();
    TH1F             *DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title="") override;
    void              ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis) override;
+   Bool_t            FeedbackMode(Int_t set) override;
    TObject          *FindObject(const char *name) const override;
    TObject          *FindObject(const TObject *obj) const override;
    void              UseCurrentStyle() override;  // *MENU*

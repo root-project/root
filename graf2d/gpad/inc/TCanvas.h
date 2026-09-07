@@ -129,7 +129,7 @@ public:
    virtual void      EditorBar();
    void              EmbedInto(Int_t winid, Int_t ww, Int_t wh);
    void              EnterLeave(TPad *prevSelPad, TObject *prevSelObj);
-   void              FeedbackMode(Bool_t set);
+   Bool_t            FeedbackMode(Int_t set) override;
    void              Flush();
    void              UseCurrentStyle() override; // *MENU*
    void              ForceUpdate();
