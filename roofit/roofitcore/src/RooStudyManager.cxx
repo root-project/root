@@ -38,7 +38,7 @@ repeated applications of generate-and-fit operations on a workspace
 #include "TSystem.h"
 
 #include <string>
-#include <ostream>
+#include <fstream>
 
 ////////////////////////////////////////////////////////////////////////////////
 
