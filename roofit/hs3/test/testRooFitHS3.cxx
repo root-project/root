@@ -604,6 +604,35 @@ TEST(RooFitHS3, ProductDomainEntriesExportBinning)
    EXPECT_DOUBLE_EQ(importedBinning.binHigh(2), 3.0);
 }
 
+// Named fit ranges are stored as RooRangeBinning, which has no bin structure.
+// They must be exported as plain min/max bounds, not as bin edges — in
+// particular for half-infinite ranges, where an infinite edge would not be
+// representable as a JSON number and broke the round trip.
+TEST(RooFitHS3, NamedRangesRoundTrip)
+{
+   RooWorkspace ws{"workspace"};
+   ws.factory("Gaussian::pdf(x[0, 10], mu[1, -5, 5], sigma[2, 0.1, 10])");
+   RooRealVar &x = *ws.var("x");
+   x.setRange("tail", 1.0, RooNumber::infinity());
+   x.setRange("core", 2.0, 5.0);
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_EQ(json.find("\"edges\""), std::string::npos) << json;
+
+   RooWorkspace imported;
+   ASSERT_TRUE(RooJSONFactoryWSTool{imported}.importJSONfromString(json));
+   RooRealVar *importedX = imported.var("x");
+   ASSERT_NE(importedX, nullptr);
+
+   ASSERT_TRUE(importedX->hasRange("tail"));
+   EXPECT_DOUBLE_EQ(importedX->getMin("tail"), 1.0);
+   EXPECT_TRUE(std::isinf(importedX->getMax("tail")));
+
+   ASSERT_TRUE(importedX->hasRange("core"));
+   EXPECT_DOUBLE_EQ(importedX->getMin("core"), 2.0);
+   EXPECT_DOUBLE_EQ(importedX->getMax("core"), 5.0);
+}
+
 TEST(RooFitHS3, ParameterStepWidthsModelConfigRoundTrip)
 {
    RooWorkspace ws1{"workspace"};

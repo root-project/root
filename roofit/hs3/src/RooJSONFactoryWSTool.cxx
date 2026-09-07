@@ -17,6 +17,7 @@
 #include <RooNumber.h>
 #include <RooRealVar.h>
 #include <RooBinning.h>
+#include <RooRangeBinning.h>
 #include <RooAbsCategory.h>
 #include <RooArgProxy.h>
 #include <RooAbsProxy.h>
@@ -183,6 +184,7 @@ HS3::Binning toBinning(RooAbsBinning const &binning)
 }
 
 // The axis of a domain for a range and binning. Infinite bounds are omitted, and only a bounded range has a binning.
+// A RooRangeBinning is a plain named range without bin structure, fully described by its bounds.
 HS3::DomainAxis toDomainAxis(std::string const &name, RooAbsBinning const &binning)
 {
    HS3::DomainAxis axis;
@@ -193,7 +195,8 @@ HS3::DomainAxis toDomainAxis(std::string const &name, RooAbsBinning const &binni
    if (!RooNumber::isInfinite(binning.highBound())) {
       axis.max = binning.highBound();
    }
-   if (axis.min && axis.max && binning.numBins() > 0) {
+   const bool hasBins = binning.numBins() > 0 && !dynamic_cast<RooRangeBinning const *>(&binning);
+   if (axis.min && axis.max && hasBins) {
       axis.binning = toBinning(binning);
    }
    return axis;
