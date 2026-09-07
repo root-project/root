@@ -29,20 +29,19 @@ any external RooAbsReal input function provided in the constructor.
 
 #include <ostream>
 
- using std::endl;
+using std::endl;
 
- ////////////////////////////////////////////////////////////////////////////////
- /// Constructor taking name, title and function to be cached. To control
- /// granularity of the binning of the cache histogram set the desired properties
- /// in the binning named "cache" in the observables of the function
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor taking name, title and function to be cached. To control
+/// granularity of the binning of the cache histogram set the desired properties
+/// in the binning named "cache" in the observables of the function
 
- RooCachedReal::RooCachedReal(const char *name, const char *title, RooAbsReal &_func)
-    : RooAbsCachedReal(name, title), func("func", "func", this, _func), _useCdfBoundaries(false), _cacheSource(false)
- {
+RooCachedReal::RooCachedReal(const char *name, const char *title, RooAbsReal &_func)
+   : RooAbsCachedReal(name, title), func("func", "func", this, _func), _useCdfBoundaries(false), _cacheSource(false)
+{
    // Choose same expensive object cache as input function
    setExpensiveObjectCache(_func.expensiveObjectCache()) ;
- }
-
+}
 
 
 
