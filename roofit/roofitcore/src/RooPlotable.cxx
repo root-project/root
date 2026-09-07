@@ -26,10 +26,10 @@ most useful implementation of RooPlotable are RooHist and RooCurve.
 
 #include "RooPlotable.h"
 #include "TObject.h"
-#include "Riostream.h"
+
+#include <ostream>
 
 using std::endl, std::ostream;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -25,9 +25,6 @@ repeated applications of generate-and-fit operations on a workspace
 **/
 
 
-
-#include "Riostream.h"
-
 #include "RooStudyPackage.h"
 #include "RooWorkspace.h"
 #include "RooAbsStudy.h"
@@ -37,7 +34,10 @@ repeated applications of generate-and-fit operations on a workspace
 #include "TRandom2.h"
 #include "RooRandom.h"
 #include "TMath.h"
-#include "TEnv.h"
+
+#include <list>
+#include <string>
+#include <ostream>
 
 using std::list, std::string;
 

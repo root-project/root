@@ -34,8 +34,7 @@ prototype data etc..
 #include "RooMsgService.h"
 #include "RooGlobalFunc.h"
 
-#include "Riostream.h"
-
+#include <ostream>
 
 using std::ostream;
 

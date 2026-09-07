@@ -31,11 +31,9 @@ This class defines the interface to retrieve bin boundaries, ranges etc.
 #include "TBuffer.h"
 #include "TClass.h"
 
-#include "Riostream.h"
+#include <ostream>
 
 using std::ostream;
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

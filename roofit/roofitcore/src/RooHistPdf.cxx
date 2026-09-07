@@ -29,8 +29,6 @@ negative content, the bin contents are clipped to zero and the bin errors are ke
 The input histogram is not modified.
 **/
 
-#include "Riostream.h"
-
 #include "RooCategory.h"
 #include "RooCurve.h"
 #include "RooDataHist.h"
@@ -39,7 +37,6 @@ The input histogram is not modified.
 #include "RooHistPdf.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
-#include "RooUniformBinning.h"
 #include "RooWorkspace.h"
 
 #include "TError.h"
@@ -47,6 +44,7 @@ The input histogram is not modified.
 
 #include <algorithm>
 #include <cmath>
+#include <ostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from a RooDataHist. RooDataHist dimensions

@@ -31,13 +31,10 @@
 
 #include "RooFit/Detail/Algorithms.h"
 
-#include <Riostream.h>
-
 #include <TMap.h>
 #include <TMath.h>
 #include <TVector.h>
 
-#include <algorithm>
 #include <map>
 
 using std::string, std::vector;

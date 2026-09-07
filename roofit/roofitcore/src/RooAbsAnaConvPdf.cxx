@@ -99,7 +99,6 @@
 
 #include "RooFit/Detail/RooNormalizedPdf.h"
 #include "RooMsgService.h"
-#include "Riostream.h"
 #include "RooResolutionModel.h"
 #include "RooRealVar.h"
 #include "RooFormulaVar.h"

@@ -30,8 +30,6 @@ on underlying normal sampling distributions and a MC study is a good way
 to test that assumption.
 **/
 
-#include "Riostream.h"
-
 #include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "TString.h"
@@ -39,7 +37,7 @@ to test that assumption.
 #include "RooDLLSignificanceMCSModule.h"
 #include "RooMsgService.h"
 
-
+#include <ostream>
 
 using std::endl;
 

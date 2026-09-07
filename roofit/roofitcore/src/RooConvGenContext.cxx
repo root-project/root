@@ -32,12 +32,11 @@ subsequently explicitly smeared with the resolution model distribution.
 #include "RooAbsAnaConvPdf.h"
 #include "RooNumConvPdf.h"
 #include "RooFFTConvPdf.h"
-#include "RooProdPdf.h"
 #include "RooDataSet.h"
 #include "RooArgSet.h"
 #include "RooTruthModel.h"
-#include "Riostream.h"
 
+#include <ostream>
 
 using std::ostream;
 

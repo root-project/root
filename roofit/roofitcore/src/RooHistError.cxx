@@ -30,10 +30,9 @@ a specified area of a Poisson or Binomail error distribution.
 
 #include "Math/QuantFuncMathCore.h" // ROOT::Math::chisquared_quantile, chisquared_quantile_c
 
-#include "Riostream.h"
-
 #include <cassert>
 #include <cmath>
+#include <ostream>
 
 using std::endl;
 

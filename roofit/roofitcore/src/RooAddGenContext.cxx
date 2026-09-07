@@ -29,15 +29,10 @@ with a probability proportional to its associated coefficient.
 
 #include "RooAddGenContext.h"
 
-#include "Riostream.h"
-#include "TClass.h"
-
 #include "RooDataSet.h"
 #include "RooRandom.h"
 
 #include <sstream>
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

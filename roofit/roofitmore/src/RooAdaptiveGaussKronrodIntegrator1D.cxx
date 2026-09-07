@@ -43,10 +43,7 @@ For integrands with integrable singularities the Wynn epsilon rule
 can be selected to speed up the convergence of these integrals.
 **/
 
-#include <cassert>
-#include <cstdlib>
 #include "TClass.h"
-#include "Riostream.h"
 #include "RooAdaptiveGaussKronrodIntegrator1D.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
@@ -55,6 +52,9 @@ can be selected to speed up the convergence of these integrals.
 #include "TMath.h"
 #include "RooMsgService.h"
 
+#include <cassert>
+#include <cstdlib>
+#include <ostream>
 using std::endl;
 
 

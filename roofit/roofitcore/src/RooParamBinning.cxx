@@ -30,8 +30,7 @@ by the RooRealVar::setRange() that takes RooAbsReal references as arguments
 #include "RooParamBinning.h"
 #include "RooMsgService.h"
 
-#include "Riostream.h"
-
+#include <ostream>
 
 using std::endl, std::ostream;
 

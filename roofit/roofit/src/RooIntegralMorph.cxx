@@ -79,15 +79,12 @@ in calculation speed.
 
 **/
 
-#include "Riostream.h"
-
 #include "RooIntegralMorph.h"
 #include "RooAbsCategory.h"
 #include "RooBrentRootFinder.h"
 #include "RooAbsFunc.h"
 #include "RooRealVar.h"
 #include "RooDataHist.h"
-#include "TH1.h"
 
 using std::flush, std::endl;
 

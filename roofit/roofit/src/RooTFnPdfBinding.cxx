@@ -13,10 +13,7 @@
 
 **/
 
-#include "Riostream.h"
-
 #include "RooTFnPdfBinding.h"
-#include "RooAbsCategory.h"
 #include "TF3.h"
 
 using std::ostream;

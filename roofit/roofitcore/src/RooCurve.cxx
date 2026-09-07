@@ -46,15 +46,19 @@ To retrieve a RooCurve from a RooPlot, use RooPlot::getCurve().
 #include "RooProduct.h"
 #include "RooConstVar.h"
 
-#include "Riostream.h"
 #include "TMath.h"
 #include "TAxis.h"
 #include "TMatrixD.h"
 #include "TVectorD.h"
 #include "Math/Util.h"
+
 #include <iomanip>
 #include <deque>
 #include <algorithm>
+#include <ostream>
+#include <list>
+#include <vector>
+#include <cmath>
 
 using std::ostream, std::list, std::vector, std::min;
 

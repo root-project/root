@@ -44,7 +44,6 @@ See RooAbsDataHelper, rf408_RDataFrameToRooFit.C
 
 #include "RooDataHist.h"
 
-#include "Riostream.h"
 #include "RooMsgService.h"
 #include "RooDataHistSliceIter.h"
 #include "RooAbsLValue.h"
@@ -72,8 +71,10 @@ See RooAbsDataHelper, rf408_RDataFrameToRooFit.C
 #include "TH1.h"
 #include "TTree.h"
 #include "TBuffer.h"
-#include "TMath.h"
 #include "Math/Util.h"
+
+#include <string>
+#include <ostream>
 
 using std::string, std::ostream;
 

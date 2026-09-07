@@ -25,15 +25,14 @@ cached in a histogram. The cache histogram is automatically recalculated
 when any of the parameters of the input p.d.f. has changed.
 **/
 
-#include "Riostream.h"
-
 #include "RooAbsPdf.h"
 #include "RooNumRunningInt.h"
 #include "RooAbsReal.h"
-#include "RooMsgService.h"
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
 #include "RooRealVar.h"
+
+#include <ostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct running integral of function '_func' over x_print from
@@ -42,14 +41,15 @@ when any of the parameters of the input p.d.f. has changed.
 /// binning named 'bname' and a default second order interpolation
 /// is applied to smooth the histogram-based c.d.f.
 
-RooNumRunningInt::RooNumRunningInt(const char *name, const char *title, RooAbsReal& _func, RooRealVar& _x, const char* bname) :
-   RooAbsCachedReal(name,title),
-   func("func","func",this,_func),
-   x("x","x",this,_x),
-   _binningName(bname?bname:"cache")
- {
+RooNumRunningInt::RooNumRunningInt(const char *name, const char *title, RooAbsReal &_func, RooRealVar &_x,
+                                   const char *bname)
+   : RooAbsCachedReal(name, title),
+     func("func", "func", this, _func),
+     x("x", "x", this, _x),
+     _binningName(bname ? bname : "cache")
+{
    setInterpolationOrder(2) ;
- }
+}
 
 
 

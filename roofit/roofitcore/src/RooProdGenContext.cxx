@@ -25,16 +25,14 @@ component generator contexts that are used to generate the dependents
 for each component PDF sequentially.
 **/
 
-#include "Riostream.h"
 #include "RooMsgService.h"
-
 #include "RooProdGenContext.h"
 #include "RooProdPdf.h"
 #include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
 
-
+#include <ostream>
 
 using std::endl, std::ostream;
 

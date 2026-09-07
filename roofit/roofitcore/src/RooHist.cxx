@@ -36,10 +36,9 @@ a RooPlot.
 #include "RooConstVar.h"
 
 #include "TH1.h"
-#include "Riostream.h"
+
 #include <iomanip>
-
-
+#include <ostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an empty histogram that can be filled with the addBin()

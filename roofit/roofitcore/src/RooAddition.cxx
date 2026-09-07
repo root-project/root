@@ -24,10 +24,7 @@ when constructed with two sets, it sums the product of the terms
 in the two sets.
 **/
 
-
-#include "Riostream.h"
 #include "RooAddition.h"
-#include "RooRealSumFunc.h"
 #include "RooRealSumPdf.h"
 #include "RooProduct.h"
 #include "RooErrorHandler.h"
@@ -42,10 +39,7 @@ in the two sets.
 #include "RooChi2Var.h"
 #endif
 
-#include <algorithm>
-#include <cmath>
-
-
+#include <ostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with a single set consisting of RooAbsReal.

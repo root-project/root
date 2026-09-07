@@ -22,18 +22,20 @@
 Multivariate Gaussian p.d.f. with correlations
 **/
 
-#include "Riostream.h"
-#include <cmath>
-
 #include "RooMultiVarGaussian.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
-#include "RooMath.h"
 #include "RooGlobalFunc.h"
 #include "RooConstVar.h"
 #include "TDecompChol.h"
 #include "RooFitResult.h"
+
+#include <cmath>
+#include <list>
+#include <map>
+#include <vector>
+#include <ostream>
 
 using std::string, std::list, std::map, std::vector;
 

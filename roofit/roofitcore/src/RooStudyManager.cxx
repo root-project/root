@@ -24,9 +24,6 @@ repeated applications of generate-and-fit operations on a workspace
 
 **/
 
-
-#include "Riostream.h"
-
 #include "RooStudyManager.h"
 #include "RooWorkspace.h"
 #include "RooAbsStudy.h"
@@ -37,9 +34,11 @@ repeated applications of generate-and-fit operations on a workspace
 #include "TObjString.h"
 #include "TRegexp.h"
 #include "TKey.h"
-#include <string>
 #include "TROOT.h"
 #include "TSystem.h"
+
+#include <string>
+#include <fstream>
 
 ////////////////////////////////////////////////////////////////////////////////
 

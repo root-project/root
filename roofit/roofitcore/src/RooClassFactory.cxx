@@ -601,11 +601,18 @@ void codegenImpl(CLASS_NAME &arg, CodegenContext &ctx);
 #include <RooAbsReal.h>
 #include <RooAbsCategory.h>
 
-#include <Riostream.h>
 #include <TMath.h>
 
 #include <cmath>
-
+#ifdef __APPLE__
+// Workaround for https://github.com/llvm/llvm-project/issues/138683
+// Include <chrono> before <fstream> to ensure _FilesystemClock is defined
+// Can be removed once the upstream issue is fixed.
+#include <chrono>
+#endif
+#include <fstream>
+#include <iostream>
+#include <iomanip>
 
 CLASS_NAME::CLASS_NAME(const char *name, const char *title,
 )";

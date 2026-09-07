@@ -26,10 +26,8 @@ Two-dimensional ellipse that can be used to represent an error contour.
 #include "TMath.h"
 #include "RooMsgService.h"
 
-#include "Riostream.h"
-#include "TClass.h"
 #include <cmath>
-
+#include <ostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a 2-dimensional ellipse centered at `(x1,x2)` that represents the confidence

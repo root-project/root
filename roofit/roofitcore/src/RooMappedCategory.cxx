@@ -26,13 +26,13 @@
 
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
-#include "Riostream.h"
 #include "RooAbsCache.h"
 
 #include "TBuffer.h"
 #include "TString.h"
 #include "TRegexp.h"
 
+#include <ostream>
 
 class RooMappedCategoryCache : public RooAbsCache {
   public:

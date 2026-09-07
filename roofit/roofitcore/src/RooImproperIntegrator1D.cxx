@@ -34,11 +34,7 @@ and the outer two pieces, if required are calculated using a 1/x transform
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 
-#include "Riostream.h"
-#include <cmath>
-#include "TClass.h"
-
-
+#include <ostream>
 
 // Register this class with RooNumIntConfig
 

@@ -38,8 +38,6 @@ http://live.boost.org/doc/libs/1_42_0/libs/math/doc/sf_and_dist/html/math_toolki
 http://wesnoth.repositoryhosting.com/trac/wesnoth_wesnoth/browser/trunk/include/boost/math/distributions/non_central_chi_squared.hpp?rev=6
 **/
 
-#include "Riostream.h"
-
 #include "RooNonCentralChiSquare.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
@@ -48,10 +46,11 @@ http://wesnoth.repositoryhosting.com/trac/wesnoth_wesnoth/browser/trunk/include/
 //#include "RooNumber.h"
 #include "Math/DistFunc.h"
 
-
 #include "RooMsgService.h"
 
 #include "TError.h"
+
+#include <ostream>
 
 using std::endl;
 

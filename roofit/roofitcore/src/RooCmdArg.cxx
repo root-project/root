@@ -28,10 +28,7 @@ created using global helper functions defined in RooGlobalFunc.h
 that create and fill these generic containers
 **/
 
-
-
 #include "RooCmdArg.h"
-#include "Riostream.h"
 #include "RooArgSet.h"
 
 #include "RooFitImplHelpers.h"

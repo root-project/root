@@ -24,8 +24,6 @@ the number of degrees of freedom and the probability of the chi-squared
 is store in the summary dataset.
 **/
 
-#include "Riostream.h"
-
 #include "RooAbsPdf.h"
 #include "RooDataSet.h"
 #include "RooRealVar.h"

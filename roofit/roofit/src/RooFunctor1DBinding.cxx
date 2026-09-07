@@ -26,7 +26,6 @@ pointer first using RooCFunction1Binding<T1,T2>::register().
     \ingroup Roofit
 **/
 
-#include "Riostream.h"
 #include "RooFunctor1DBinding.h"
 
 using std::ostream;
