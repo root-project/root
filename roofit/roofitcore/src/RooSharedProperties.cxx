@@ -25,6 +25,8 @@ that can be stored in RooSharedPropertiesList.
 
 #include "RooSharedProperties.h"
 
+#include <iostream>
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
