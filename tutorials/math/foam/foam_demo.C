@@ -15,13 +15,14 @@
 /// \author Stascek Jadach
 
 
-#include "Riostream.h"
 #include "TFile.h"
 #include "TFoam.h"
 #include "TH1.h"
 #include "TMath.h"
 #include "TFoamIntegrand.h"
 #include "TRandom3.h"
+
+#include <iostream>
 
 class TFDISTR: public TFoamIntegrand {
 public:

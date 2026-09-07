@@ -17,12 +17,12 @@
 ///
 /// \author Sergey Linev
 
-#include <Riostream.h>
 #include <TDOMParser.h>
 #include <TXMLNode.h>
 #include <TXMLAttr.h>
 #include <TList.h>
 
+#include <iostream>
 
 void ParseContext(TXMLNode *node)
 {
