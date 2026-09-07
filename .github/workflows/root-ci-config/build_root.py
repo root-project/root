@@ -169,7 +169,7 @@ def main():
     if not WINDOWS:
         show_node_state()
 
-    if args.coverage and args.incremental:
+    if args.coverage and args.incremental and not build_utils.dry_run:
         # Delete all the .gcda files produced by an artifact.
         build_utils.remove_file_match_ext(WORKDIR, "gcda")
 
@@ -177,13 +177,13 @@ def main():
 
     # Done before anything else touches the build tree, and reported only at the
     # very end so that a spurious rebuild does not cost us the test results.
-    null_build_ok = check_for_spurious_rebuilds(args.buildtype)
+    null_build_ok = build_utils.dry_run or check_for_spurious_rebuilds(args.buildtype)
 
     # Build artifacts should only be uploaded for full builds, and only for
     # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
     # We also want to upload any successful build, even if it fails testing
     # later on.
-    if not pull_request and not args.incremental and args.upload_artifacts:
+    if not pull_request and not args.incremental and args.upload_artifacts and not build_utils.dry_run:
         archive_and_upload(yyyy_mm_dd, obj_prefix)
 
     if args.binaries:
@@ -250,6 +250,7 @@ def parse_args():
                         help="url to repository")
     parser.add_argument("--overrides",       default=None,      help="Override build options using a syntax like 'A=1 B=2'", nargs="*")
     parser.add_argument("--upload_artifacts", default="true",   help="Whether to upload binary artifacts")
+    parser.add_argument("--dry_run",         default="false",   help="Only print what would have been done, don't actually do it")
 
     args = parser.parse_args()
 
@@ -258,6 +259,9 @@ def parse_args():
     args.coverage = args.coverage.lower() in ('yes', 'true', '1', 'on')
     args.binaries = args.binaries.lower() in ('yes', 'true', '1', 'on')
     args.upload_artifacts = args.upload_artifacts.lower() in ('yes', 'true', '1', 'on')
+
+    if args.dry_run.lower() in ('yes', 'true', '1', 'on'):
+        build_utils.set_dry_run(True)
 
     if not args.base_ref:
         die(os.EX_USAGE, "base_ref not specified")
@@ -301,7 +305,7 @@ def cleanup_previous_build():
 def git_pull(directory: str, repository: str, branch: str):
     returncode = 1
 
-    max_attempts = 6
+    max_attempts = 6 if not build_utils.dry_run else 1
     sleep_time_unit = 3
     for attempt in range(1, max_attempts+1):
         targetdir = os.path.join(WORKDIR, directory)
@@ -592,22 +596,23 @@ def get_base_head_sha(directory: str, repository: str, merge_sha: str, head_sha:
   the commit corresponding to the head of the branch we are merging into.
   """
   targetdir = os.path.join(WORKDIR, directory)
-  command = f"""
+  result = subprocess_with_log(f"""
       cd '{targetdir}'
       git fetch {repository} {merge_sha}
-      """
-  result = subprocess_with_log(command)
+      """)
   if result != 0:
       die("Failed to fetch {merge_sha} from {repository}")
-  command = f"""
-      cd '{targetdir}'
-      git rev-list --parents -1 {merge_sha}
-      """
-  result = get_stdout_subprocess(command, "Failed to find the base branch head for this pull request")
 
-  for s in result.split(' '):
-    if (s != merge_sha and s != head_sha):
-      return s
+  if not build_utils.dry_run:
+      command = f"""
+          cd '{targetdir}'
+          git rev-list --parents -1 {merge_sha}
+          """
+      result = get_stdout_subprocess(command, "Failed to find the base branch head for this pull request")
+
+      for s in result.split(' '):
+        if (s != merge_sha and s != head_sha):
+          return s
 
   return ""
 
