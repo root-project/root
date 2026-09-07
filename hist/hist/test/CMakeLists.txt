@@ -13,6 +13,7 @@ ROOT_ADD_GTEST(testTH2PolyGetNumberOfBins test_TH2Poly_GetNumberOfBins.cxx LIBRA
 ROOT_ADD_GTEST(testTHn THn.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTH1 test_TH1.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTH2 test_TH2.cxx LIBRARIES Hist)
+ROOT_ADD_GTEST(testRebin2D test_rebin2D.cxx LIBRARIES Hist MathCore)
 ROOT_ADD_GTEST(testTH3 test_TH3.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTHStack test_THStack.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testProject3Dname test_Project3D_name.cxx LIBRARIES Hist)
