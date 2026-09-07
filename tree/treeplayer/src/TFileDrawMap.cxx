@@ -220,8 +220,11 @@ void  TFileDrawMap::AnimateTree(const char *branches)
    Int_t sleep = 1;
    Int_t stime = (Int_t)(100./(nentries*fractionRead));
    if (stime < 10) {stime=1; sleep = nentries/400;}
-   gPad->SetDoubleBuffer(0);             // turn off double buffer mode
-   gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
+
+   // turn off double buffer and draw in invert mode
+   if (!gPad->FeedbackMode(kTRUE))
+      return;
+
    for (Int_t entry=0;entry<nentries;entry++) {
       for (Int_t ib=0;ib<nbranches;ib++) {
          branch = (TBranch*)list.At(ib);
