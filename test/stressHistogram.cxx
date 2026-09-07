@@ -60,9 +60,6 @@
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
 
 
-#include <sstream>
-#include <cmath>
-
 #include "TH2.h"
 #include "TH3.h"
 #include "TH2.h"
@@ -85,17 +82,20 @@
 
 #include "TApplication.h"
 #include "TBenchmark.h"
-#include "Riostream.h"
 #include "TMath.h"
 #include "TRandom2.h"
 #include "TFile.h"
 #include "TClass.h"
 #include "THashList.h"
-
 #include "TROOT.h"
+
 #include <algorithm>
 #include <random>
 #include <cassert>
+#include <sstream>
+#include <cmath>
+#include <iostream>
+#include <string>
 
 #ifdef __CLING__
 const auto tmp_root_file_name = "tmp_hist_interpreted.root";

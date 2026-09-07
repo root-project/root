@@ -23,7 +23,6 @@
 #include "TRandom.h"
 #include "TGDoubleSlider.h"
 #include "TGaxis.h"
-#include "Riostream.h"
 
 
 Viewer::Viewer(const TGWindow *win) : TGMainFrame(win,500,500)
