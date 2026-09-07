@@ -30,22 +30,22 @@ as a MIGRAD minimization step is executed for each function evaluation
 
 #include <ostream>
 
- ////////////////////////////////////////////////////////////////////////////////
- /// Constructor of profile likelihood given input likelihood nll w.r.t
- /// the given set of variables. The input log likelihood is minimized w.r.t
- /// to all other variables of the likelihood at each evaluation and the
- /// value of the global log likelihood minimum is always subtracted.
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of profile likelihood given input likelihood nll w.r.t
+/// the given set of variables. The input log likelihood is minimized w.r.t
+/// to all other variables of the likelihood at each evaluation and the
+/// value of the global log likelihood minimum is always subtracted.
 
- RooProfileLL::RooProfileLL(const char *name, const char *title, RooAbsReal &nllIn, const RooArgSet &observables)
-    : RooAbsReal(name, title),
-      _nll("input", "-log(L) function", this, nllIn),
-      _obs("paramOfInterest", "Parameters of interest", this),
-      _par("nuisanceParam", "Nuisance parameters", this, false, false)
- {
-    // Determine actual parameters and observables
-    nllIn.getObservables(&observables, _obs);
-    nllIn.getParameters(&observables, _par);
- }
+RooProfileLL::RooProfileLL(const char *name, const char *title, RooAbsReal &nllIn, const RooArgSet &observables)
+   : RooAbsReal(name, title),
+     _nll("input", "-log(L) function", this, nllIn),
+     _obs("paramOfInterest", "Parameters of interest", this),
+     _par("nuisanceParam", "Nuisance parameters", this, false, false)
+{
+   // Determine actual parameters and observables
+   nllIn.getObservables(&observables, _obs);
+   nllIn.getParameters(&observables, _par);
+}
 
 
 
