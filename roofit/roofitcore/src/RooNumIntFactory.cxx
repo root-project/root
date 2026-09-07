@@ -28,6 +28,8 @@ the nature of the integration limits (closed or open ended) and
 the preference of the caller as encoded in the configuration object.
 **/
 
+#include "TSystem.h"
+
 #include "RooNumIntFactory.h"
 #include "RooArgSet.h"
 #include "RooAbsFunc.h"

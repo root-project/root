@@ -56,6 +56,7 @@ calls that MINUIT needs to fit your function as function of the
 convolution precision.
 **/
 
+#include "TH2F.h"
 #include "RooNumConvolution.h"
 #include "RooRealVar.h"
 #include "RooCustomizer.h"
