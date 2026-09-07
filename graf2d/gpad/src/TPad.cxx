@@ -2784,6 +2784,14 @@ TVirtualPad *TPad::GetVirtCanvas() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get doublebuffer mode - 1 by default.
+
+Int_t TPad::GetDoubleBuffer() const
+{
+   return fCanvas ? fCanvas->GetDoubleBuffer() : 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Get highlight color.
 
 Color_t TPad::GetHighLightColor() const
