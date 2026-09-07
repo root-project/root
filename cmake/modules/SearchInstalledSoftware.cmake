@@ -283,7 +283,7 @@ if(mathmore OR (tmva-cpu AND use_gsl_cblas))
     endif()
   endif()
 endif()
-
+ROOT_FIND_REQUIRED_DEP(mathtext builtin_mathtext)
 
 if(NOT "${MISSING_PACKAGES}" STREQUAL "")
   list(REMOVE_DUPLICATES MISSING_PACKAGES)
@@ -754,6 +754,10 @@ endif()
 #---Check for ftgl if needed----------------------------------------------------------
 if(opengl AND builtin_ftgl)
   add_subdirectory(builtins/ftgl)
+endif()
+
+if (builtin_mathtext)
+  add_subdirectory (builtins/libmathtext) # hard coded builtin for graf2d
 endif()
 
 #---Check for Davix library-----------------------------------------------------------
