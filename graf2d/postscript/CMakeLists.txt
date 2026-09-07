@@ -26,7 +26,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Postscript
     -writeEmptyRootPCM
   LIBRARIES
     ZLIB::ZLIB
-    mathtext
+    mathtext::mathtext
   DEPENDENCIES
     Graf
 )

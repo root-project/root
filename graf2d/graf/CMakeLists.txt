@@ -92,7 +92,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
   LIBRARIES
     Freetype::Freetype
     ZLIB::ZLIB
-    mathtext
+    mathtext::mathtext
   DEPENDENCIES
     Hist
     Matrix

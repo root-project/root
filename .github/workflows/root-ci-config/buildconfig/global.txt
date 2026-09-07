@@ -16,6 +16,7 @@ builtin_gsl=OFF
 builtin_llvm=ON
 builtin_lz4=OFF
 builtin_lzma=OFF
+builtin_mathtext=ON
 builtin_nlohmannjson=OFF
 builtin_openssl=OFF
 builtin_mathjax=ON
