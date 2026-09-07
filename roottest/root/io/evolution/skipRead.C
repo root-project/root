@@ -1,8 +1,12 @@
-#include <Riostream.h>
 #include "TFile.h"
 #include "TRef.h"
 #include "TClass.h"
 #include "TStreamerInfo.h"
+
+#include <iostream>
+
+using std::cout;
+using std::endl;
 
 class MyClass : public TObject {
    public:
@@ -32,6 +36,7 @@ void skipRead(bool withxml = 0)
    if (withxml) {
       TFile* f = TFile::Open("skiptestfile.xml");
       if (f==0) return;
+      
       cout << "Reading .xml file\n";
 
       MyClass *m; f->GetObject("abc",m);

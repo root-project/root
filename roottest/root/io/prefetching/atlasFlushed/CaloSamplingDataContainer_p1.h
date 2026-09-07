@@ -9,7 +9,7 @@
 #define CaloSamplingDataContainer_p1_h
 class CaloSamplingDataContainer_p1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 
 class CaloSamplingDataContainer_p1 {

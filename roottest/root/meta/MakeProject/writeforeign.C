@@ -1,6 +1,5 @@
 #include "TNamed.h"
 
-#include "Riostream.h"
 #include <vector>
 
 namespace ndtf {

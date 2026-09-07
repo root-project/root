@@ -9,7 +9,7 @@
 #define CTP_Decision_p2_h
 class CTP_Decision_p2;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 
 class CTP_Decision_p2 {

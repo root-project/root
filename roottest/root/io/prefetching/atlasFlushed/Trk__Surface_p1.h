@@ -11,7 +11,6 @@ namespace Trk {
 class Surface_p1;
 } // end of namespace.
 
-#include "Riostream.h"
 #include <vector>
 
 namespace Trk {

@@ -2,8 +2,9 @@
 // Testing transient member setting
 //
 
-#include "Riostream.h"
 #include "TObjArray.h"
+
+#include <iostream>
 
 class Unversioned {
 public:

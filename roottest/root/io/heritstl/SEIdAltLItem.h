@@ -15,7 +15,7 @@
 // not inheriting from TObject so we need an explicit Rtypes
 #include "Rtypes.h"
 
-#include "Riostream.h"
+#include <ostream>
 
 class SEIdAltLItem {
 

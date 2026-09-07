@@ -4,12 +4,6 @@
 
 #include "cltestClass.h"
 
-
-#include <Riostream.h>
-#include <TString.h>
-#include <TObjString.h>
-
-
 //________________________________________________________________________
 TestClass::TestClass() 
    : TObject(),

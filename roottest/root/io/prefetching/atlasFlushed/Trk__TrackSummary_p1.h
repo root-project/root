@@ -11,7 +11,7 @@ namespace Trk {
 class TrackSummary_p1;
 } // end of namespace.
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 
 namespace Trk {

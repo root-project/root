@@ -12,7 +12,7 @@ class TrackParticleTruthCollection_p1;
 } // end of namespace.
 
 #include "DataLink_p1.h"
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "Rec__TrackParticleTruthCollection_p1.h"
 #include "HepMcParticleLink_p1.h"

@@ -1,6 +1,7 @@
 #include "TFile.h"
 #include "TTree.h"
-#include "Riostream.h"
+
+#include <iostream>
 
 struct mys {
    Float_t x[3];

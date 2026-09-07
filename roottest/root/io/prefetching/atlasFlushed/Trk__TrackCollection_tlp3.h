@@ -12,7 +12,7 @@ class TrackCollection_tlp3;
 } // end of namespace.
 
 #include "TPCnvTokenList_p1.h"
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "Trk__TrackCollection_p1.h"
 #include "Trk__Track_p2.h"

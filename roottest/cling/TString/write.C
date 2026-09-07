@@ -1,4 +1,5 @@
-#include <iostream.h>
+#include <iostream>
+
 void write(char *name) {
   cout << name << endl; 
 

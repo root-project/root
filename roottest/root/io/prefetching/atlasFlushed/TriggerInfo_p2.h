@@ -9,7 +9,7 @@
 #define TriggerInfo_p2_h
 class TriggerInfo_p2;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "TriggerInfo_p2.h"
 #include <string>

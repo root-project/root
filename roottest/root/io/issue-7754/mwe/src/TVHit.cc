@@ -6,7 +6,8 @@
 // --------------------------------------------------------------
 #include "TVHit.hh"
 #include "NA62Global.hh"
-#include "Riostream.h"
+
+#include <iostream>
 
 TVHit::TVHit() : TObject(), fChannelID(-1),fMCTrackID(-1),
   fDirectInteraction(kFALSE), fKinePartIndex(-1) {}

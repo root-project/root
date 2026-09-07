@@ -9,7 +9,7 @@
 #define MissingEtCalo_p2_h
 class MissingEtCalo_p2;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 
 class MissingEtCalo_p2 {

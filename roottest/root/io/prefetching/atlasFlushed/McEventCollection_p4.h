@@ -9,7 +9,7 @@
 #define McEventCollection_p4_h
 class McEventCollection_p4;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "GenEvent_p4.h"
 #include "GenVertex_p4.h"

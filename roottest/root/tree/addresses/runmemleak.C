@@ -11,7 +11,8 @@
 #include <TObjString.h>
 #include <TMap.h>
 #include <TSystem.h>
-#include <Riostream.h>
+
+#include <iostream>
 #endif
 
 class TMyPar : public TObject

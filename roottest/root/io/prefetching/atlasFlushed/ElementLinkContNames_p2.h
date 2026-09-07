@@ -9,7 +9,7 @@
 #define ElementLinkContNames_p2_h
 class ElementLinkContNames_p2;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 
 class ElementLinkContNames_p2 {

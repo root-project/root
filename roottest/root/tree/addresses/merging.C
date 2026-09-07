@@ -1,8 +1,8 @@
-#include "Riostream.h"
-
 #include "TMessage.h"
 #include "TTree.h"
 #include "TROOT.h"
+
+#include <iostream>
 
 #ifndef merging_C
 #define merging_C

@@ -9,7 +9,7 @@
 #define TrigMuonEFContainer_tlp1_h
 class TrigMuonEFContainer_tlp1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "TrigMuonEFContainer_p1.h"
 #include "TrigMuonEF_p1.h"

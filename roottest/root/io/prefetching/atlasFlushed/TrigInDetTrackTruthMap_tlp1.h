@@ -9,7 +9,7 @@
 #define TrigInDetTrackTruthMap_tlp1_h
 class TrigInDetTrackTruthMap_tlp1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "TrigInDetTrackTruthMap_p1.h"
 #include "TrigInDetTrackTruth_p1.h"

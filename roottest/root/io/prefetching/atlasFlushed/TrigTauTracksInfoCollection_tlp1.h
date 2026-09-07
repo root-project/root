@@ -9,7 +9,7 @@
 #define TrigTauTracksInfoCollection_tlp1_h
 class TrigTauTracksInfoCollection_tlp1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "TrigTauTracksInfoCollection_p1.h"
 #include "TrigTauTracksInfo_p1.h"

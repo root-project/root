@@ -11,7 +11,6 @@ namespace LVL1CTP {
 class Lvl1Result_p2;
 } // end of namespace.
 
-#include "Riostream.h"
 #include <vector>
 
 namespace LVL1CTP {

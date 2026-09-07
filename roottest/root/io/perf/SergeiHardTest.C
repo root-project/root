@@ -1,4 +1,3 @@
-#include <iostream.h>
 #include "TTree.h"
 #include "TFile.h"
 #include "TCanvas.h"
@@ -7,6 +6,8 @@
 #include "TSystem.h"
 #include "TH1.h"
 #include "TH2.h"
+
+#include <iostream>
 
 void MakeDelay(int time_in_sec) {
    gSystem->Sleep(time_in_sec*1000);

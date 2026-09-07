@@ -1,7 +1,8 @@
 #include <TSystem.h>
 #include <TFile.h>
 #include <TTree.h>
-#include "Riostream.h"
+
+#include <iostream>
 
 void clone(char *filename, char *tag) 
 {

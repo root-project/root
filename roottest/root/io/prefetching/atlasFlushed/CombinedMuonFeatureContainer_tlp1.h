@@ -9,7 +9,7 @@
 #define CombinedMuonFeatureContainer_tlp1_h
 class CombinedMuonFeatureContainer_tlp1;
 
-#include "Riostream.h"
+#include <iostream>
 #include <vector>
 #include "CombinedMuonFeatureContainer_p1.h"
 #include "CombinedMuonFeature_p1.h"
