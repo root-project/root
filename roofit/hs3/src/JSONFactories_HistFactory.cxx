@@ -544,7 +544,11 @@ void buildSample(ChannelContext const &ctx, HS3::Sample const &sample, RooDataHi
             },
             [&](HS3::NormFactor const &mod) {
                RooAbsReal &param = getOrCreateParameter(tool, mod.parameter.name, 1., -3, 5, mod.name);
-               setErrorIfVariable(param, 0.0);
+               // Norm factors get an initial zero error like in HistoToWorkspaceFactoryFast, unless an error was
+               // already set, e.g. by the constraint of another occurrence of this parameter.
+               if (auto *var = dynamic_cast<RooRealVar *>(&param); var && !var->hasError()) {
+                  var->setError(0.0);
+               }
                elems.normElems.add(param);
                // for norm factors, constraints are optional
                addConstraint(tool, mod.constraint, param, 1.0, mod.name, sampleName, ctx.constraints);
