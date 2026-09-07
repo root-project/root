@@ -24,21 +24,18 @@
 Adaptive one-dimensional numerical integration algorithm.
 **/
 
-
-#include "Riostream.h"
-
-#include "TClass.h"
 #include "RooAdaptiveIntegratorND.h"
 #include "RooFunctor.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
-#include "RooNumber.h"
 #include "RooMsgService.h"
 #include "RooNumIntFactory.h"
 #include "Math/AdaptiveIntegratorMultiDim.h"
 #include "Math/Functor.h"
 
 #include <cassert>
+#include <string>
+#include <ostream>
 
 using std::endl, std::string;
 

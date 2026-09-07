@@ -18,8 +18,6 @@ Implementation of RooAbsCachedPdf that can cache
 any external RooAbsPdf input function provided in the constructor.
 **/
 
-#include "Riostream.h"
-
 #include "RooAbsPdf.h"
 #include "RooCachedPdf.h"
 #include "RooAbsReal.h"
@@ -29,7 +27,7 @@ any external RooAbsPdf input function provided in the constructor.
 
 using std::endl;
 
-
+#include <ostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor taking name, title and function to be cached. To control

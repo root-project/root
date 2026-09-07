@@ -24,12 +24,12 @@ A RooAbsArg implementing string values.
 
 #include "RooStringVar.h"
 
-#include "Riostream.h"
 #include "TTree.h"
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
 #include "TBranch.h"
 
+#include <ostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with initial value. The size argument is ignored.

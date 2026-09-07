@@ -25,18 +25,15 @@ from a set of recursive fractions: for a given set of input fractions
 \f$ {a_i} \f$, it returns \f$ a_n * \prod_{i=0}^{n-1} (1 - a_i) \f$.
 **/
 
-#include "Riostream.h"
-#include <cmath>
-
 #include "RooRecursiveFraction.h"
 #include "RooAbsReal.h"
 #include "RooAbsPdf.h"
-#include "RooErrorHandler.h"
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 
 #include <RooFit/Detail/MathFuncs.h>
 
+#include <ostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of plain RooAddPdf fraction from list of recursive fractions

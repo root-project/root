@@ -46,8 +46,6 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 
 **/
 
-#include "Riostream.h"
-
 #ifndef _WIN32
 #include "BidirMMapPipe.h"
 #endif
@@ -63,9 +61,9 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 #include "RooMsgService.h"
 #include "RooNLLVar.h"
 
-#include "Rtypes.h"
 #include "TSystem.h"
 
+#include <ostream>
 
 class RooRealMPFE ;
 

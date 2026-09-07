@@ -22,15 +22,8 @@
 Returns `1.0` if variable is within given a range and `0.0` otherwise.
 **/
 
-#include "Riostream.h"
-#include <cmath>
-
 #include "RooRangeBoolean.h"
 #include "RooAbsReal.h"
-#include "RooRealVar.h"
-#include "RooArgList.h"
-#include "RooMsgService.h"
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

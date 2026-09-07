@@ -30,15 +30,10 @@ observable propagates a valueDirty flag when an event is loaded even
 though usually only one observable actually changes.
 **/
 
-
-#include "Riostream.h"
-#include <cmath>
-
 #include "RooChangeTracker.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooArgSet.h"
-#include "RooMsgService.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////

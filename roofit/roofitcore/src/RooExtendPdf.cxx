@@ -35,8 +35,6 @@ is the set of remaining dependents.
 the nominal integration range \f$ \mathrm{normRegion}[x] \f$.
 */
 
-#include "Riostream.h"
-
 #include "RooArgList.h"
 #include "RooConstVar.h"
 #include "RooExtendPdf.h"
@@ -50,6 +48,8 @@ the nominal integration range \f$ \mathrm{normRegion}[x] \f$.
 #include "RooFitImplHelpers.h"
 
 #include <RooFit/Detail/NormalizationHelpers.h>
+
+#include <ostream>
 
 using std::endl;
 

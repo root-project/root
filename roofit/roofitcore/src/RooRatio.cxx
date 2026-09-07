@@ -28,11 +28,7 @@ Represents the ratio of two RooAbsReal objects.
 
 #include "RooFit/Detail/MathFuncs.h"
 
-#include <Riostream.h>
-
 #include <TMath.h>
-
-#include <cmath>
 
 
 RooRatio::RooRatio()

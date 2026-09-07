@@ -28,11 +28,11 @@ by forwarding these calls to the RooAbsCacheElement interface functions, which
 have a sensible default implementation.
 **/
 
-#include "Riostream.h"
-#include <vector>
 #include "RooObjCacheManager.h"
 #include "RooMsgService.h"
 
+#include <ostream>
+#include <vector>
 
 bool RooObjCacheManager::_clearObsList(false) ;
 

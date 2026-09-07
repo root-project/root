@@ -22,8 +22,6 @@
 Abstract base class for RooStudyManager modules
 **/
 
-#include "Riostream.h"
-
 #include "RooGenFitStudy.h"
 #include "RooWorkspace.h"
 #include "RooMsgService.h"
@@ -33,7 +31,7 @@ Abstract base class for RooStudyManager modules
 #include "RooGlobalFunc.h"
 #include "RooFitResult.h"
 
-
+#include <ostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

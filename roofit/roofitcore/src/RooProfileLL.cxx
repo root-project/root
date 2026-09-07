@@ -22,15 +22,13 @@ the -log(L) of the best fit. Note that this function is slow to evaluate
 as a MIGRAD minimization step is executed for each function evaluation
 **/
 
-#include "Riostream.h"
-
 #include "RooProfileLL.h"
 #include "RooAbsReal.h"
 #include "RooMinimizer.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
 
-
+#include <ostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of profile likelihood given input likelihood nll w.r.t
@@ -38,16 +36,15 @@ as a MIGRAD minimization step is executed for each function evaluation
 /// to all other variables of the likelihood at each evaluation and the
 /// value of the global log likelihood minimum is always subtracted.
 
-RooProfileLL::RooProfileLL(const char *name, const char *title,
-            RooAbsReal& nllIn, const RooArgSet& observables) :
-  RooAbsReal(name,title),
-  _nll("input","-log(L) function",this,nllIn),
-  _obs("paramOfInterest","Parameters of interest",this),
-  _par("nuisanceParam","Nuisance parameters",this,false,false)
+RooProfileLL::RooProfileLL(const char *name, const char *title, RooAbsReal &nllIn, const RooArgSet &observables)
+   : RooAbsReal(name, title),
+     _nll("input", "-log(L) function", this, nllIn),
+     _obs("paramOfInterest", "Parameters of interest", this),
+     _par("nuisanceParam", "Nuisance parameters", this, false, false)
 {
-  // Determine actual parameters and observables
-  nllIn.getObservables(&observables, _obs) ;
-  nllIn.getParameters(&observables, _par) ;
+   // Determine actual parameters and observables
+   nllIn.getObservables(&observables, _obs);
+   nllIn.getParameters(&observables, _par);
 }
 
 

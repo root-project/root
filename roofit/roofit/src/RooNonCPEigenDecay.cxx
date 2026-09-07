@@ -43,11 +43,9 @@ get the parameters used here you have to change the sign of both
 where Q denotes the charge of the \f$\rho\f$ meson.
 **/
 
-#include "Riostream.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooNonCPEigenDecay.h"
-#include "TMath.h"
 #include "RooRealIntegral.h"
 
 

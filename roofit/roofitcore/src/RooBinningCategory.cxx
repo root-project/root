@@ -28,9 +28,7 @@ the inputVar. The name of this binning is passed in the constructor.
 
 #include "RooBinningCategory.h"
 
-#include "Riostream.h"
-#include "RooStreamParser.h"
-
+#include <ostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with input function to be mapped and name and index of default

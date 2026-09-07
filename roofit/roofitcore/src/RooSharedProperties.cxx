@@ -24,11 +24,8 @@ that can be stored in RooSharedPropertiesList.
 **/
 
 #include "RooSharedProperties.h"
-#include "RooMsgService.h"
 
-#include "Riostream.h"
-
-
+#include <iostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

@@ -36,8 +36,6 @@ input.
 #include <RooMsgService.h>
 #include <RooRealProxy.h>
 
-#include <Riostream.h>
-
 template <class Base_t>
 class RooAbsSelfCached : public Base_t {
 public:

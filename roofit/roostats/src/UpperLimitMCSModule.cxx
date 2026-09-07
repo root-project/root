@@ -16,19 +16,16 @@ upper limit for each toy-MC sample generated
 
 */
 
-#include "Riostream.h"
-
 #include "RooDataSet.h"
 #include "RooFitResult.h"
 #include "RooStats/UpperLimitMCSModule.h"
 #include "RooMsgService.h"
 #include "RooStats/ConfInterval.h"
-#include "RooStats/PointSetInterval.h"
 #include "RooStats/LikelihoodInterval.h"
-#include "RooStats/LikelihoodIntervalPlot.h"
 #include "RooStats/ProfileLikelihoodCalculator.h"
 #include "RooRealVar.h"
 
+#include <ostream>
 
 using namespace RooStats ;
 

@@ -28,7 +28,6 @@ use a RooAcceptReject sampling technique.
 **/
 
 #include "RooMsgService.h"
-#include "Riostream.h"
 
 #include "RooGenContext.h"
 #include "RooAbsPdf.h"
@@ -43,6 +42,8 @@ use a RooAcceptReject sampling technique.
 
 #include "TString.h"
 
+#include <string>
+#include <ostream>
 
 using std::endl, std::string, std::ostream;
 
