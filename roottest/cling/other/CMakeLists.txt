@@ -61,3 +61,15 @@ ROOTTEST_ADD_TEST(checkMissingSymbolExitCode
 ROOTTEST_ADD_TEST(assertDirWithParen
                   MACRO assertDirWithParen.C
                   LABELS roottest regression cling)
+
+# GH #12277
+add_library(dupSymJIT SHARED dupSymJIT.cpp)
+
+if(NOT MSVC)
+  ROOTTEST_ADD_TEST(checkDupSymJIT
+                    MACRO checkDupSymJIT.C
+                    OUTREF checkDupSymJIT.ref
+                    COPY_TO_BUILDDIR dupSymJIT.h
+                    DEPENDS dupSymJIT
+                    LABELS roottest regression cling)
+endif()
