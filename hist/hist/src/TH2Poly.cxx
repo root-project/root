@@ -13,8 +13,6 @@
 #include "TH2Poly.h"
 #include "TMultiGraph.h"
 #include "TGraph.h"
-#include "TInterpreter.h"
-#include "Riostream.h"
 #include "TList.h"
 #include "TMath.h"
 #include <cassert>

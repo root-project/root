@@ -9,13 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TVirtualPad.h"
 #include "TPolyMarker.h"
 #include "TMath.h"
-
 
 
 /** \class TPolyMarker
