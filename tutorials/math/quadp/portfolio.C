@@ -119,7 +119,6 @@
 ///
 /// \author Eddy Offermann
 
-#include "Riostream.h"
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TMath.h"
@@ -135,6 +134,8 @@
 #include "TVectorD.h"
 #include "TQpProbDens.h"
 #include "TGondzioSolver.h"
+
+#include <iostream>
 
 const Int_t nrStocks = 10;
 static const Char_t *stocks[] =

@@ -11,7 +11,6 @@
 #include "TSystem.h"
 #include "TSystemFile.h"
 #include "TRecorder.h"
-#include "Riostream.h"
 
 // count characters in the file, skipping cr/lf
 Int_t file_size(const char *filename)

@@ -44,7 +44,7 @@
 #include <TCanvas.h>
 #include <TStyle.h>
 
-#include <Riostream.h>
+#include <iostream>
 
 //class Det : public TObject  {
 class Det {  // each detector gives an energy and time signal
