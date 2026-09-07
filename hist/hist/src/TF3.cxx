@@ -16,14 +16,11 @@
 #include "TH3.h"
 #include "TVirtualPad.h"
 #include "TRandom.h"
-#include "TVectorD.h"
-#include "Riostream.h"
-#include "TColor.h"
-#include "TVirtualFitter.h"
 #include "TVirtualHistPainter.h"
 #include "Math/IntegratorOptions.h"
-#include <cassert>
 
+#include <cassert>
+#include <ostream>
 
 /** \class TF3
     \ingroup Functions
