@@ -48,6 +48,8 @@ To retrieve a RooCurve from a RooPlot, use RooPlot::getCurve().
 
 #include "TMath.h"
 #include "TAxis.h"
+#include "TMatrixD.h"
+#include "TVectorD.h"
 #include "Math/Util.h"
 
 #include <iomanip>
