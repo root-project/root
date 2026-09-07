@@ -148,6 +148,19 @@ jobs:
           ref: ${{ inputs.ref_name }}
           path: "src/"
 
+      - name: Clone clad
+        env:
+          GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
+          OVERRIDES: ${{ join( matrix.overrides, ' ') }}
+        run: |
+          set -x
+          env | grep -i GIT_CONFIG
+          git config --global --get-regexp 'http\..*extraheader'
+          git config --system --get-regexp 'http\..*extraheader'
+          git ls-remote https://github.com/vgvassilev/clad.git
+          cd /tmp
+          git clone https://github.com/vgvassilev/clad.git
+
       - uses: root-project/gcc-problem-matcher-improved@main
         with:
           build-directory: /Users/sftnight/ROOT-CI/src/
