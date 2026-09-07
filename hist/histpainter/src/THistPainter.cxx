@@ -11029,41 +11029,39 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 {
    // turn off double buffer mode and draw primitives in invert mode
    // return if such mode not supported
-   if (!gPad->FeedbackMode(kTRUE))
+   auto pp = gPad->GetPainter();
+   if (!pp || !gPad->FeedbackMode(kTRUE))
       return;
+
 
    Int_t nbins = (Int_t)fShowProjection/100;
 
    // Erase old position and draw a line at current position
-   static int pyold1 = 0;
-   static int pyold2 = 0;
-   float uxmin = gPad->GetUxmin();
-   float uxmax = gPad->GetUxmax();
-   int pxmin   = gPad->XtoAbsPixel(uxmin);
-   int pxmax   = gPad->XtoAbsPixel(uxmax);
-   Float_t upy = gPad->AbsPixeltoY(py);
-   Float_t y   = gPad->PadtoY(upy);
+   static Double_t pyold1 = 0, pyold2 = 0;
+   Double_t uxmin = gPad->GetUxmin();
+   Double_t uxmax = gPad->GetUxmax();
+   Float_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
    Int_t biny1 = fH->GetYaxis()->FindBin(y);
    Int_t biny2 = TMath::Min(biny1+nbins-1, fH->GetYaxis()->GetNbins());
-   Int_t py1   = gPad->YtoAbsPixel(gPad->GetLogy() ? TMath::Log10(fH->GetYaxis()->GetBinLowEdge(biny1)) : fH->GetYaxis()->GetBinLowEdge(biny1));
-   Int_t py2   = gPad->YtoAbsPixel(gPad->GetLogy() ? TMath::Log10(fH->GetYaxis()->GetBinUpEdge(biny2)) : fH->GetYaxis()->GetBinUpEdge(biny2));
+   Double_t py1 = gPad->YtoPad(fH->GetYaxis()->GetBinLowEdge(biny1));
+   Double_t py2 = gPad->YtoPad(fH->GetYaxis()->GetBinUpEdge(biny2));
 
-   if (pyold1 || pyold2) gVirtualX->DrawBox(pxmin,pyold1,pxmax,pyold2,TVirtualX::kFilled);
-   gVirtualX->DrawBox(pxmin,py1,pxmax,py2,TVirtualX::kFilled);
+   if (pyold1 || pyold2)
+      pp->DrawBox(uxmin,pyold1,uxmax,pyold2,TVirtualPadPainter::kFilled);
+   pp->DrawBox(uxmin,py1,uxmax,py2,TVirtualPadPainter::kFilled);
    pyold1 = py1;
    pyold2 = py2;
 
    // Create or set the new canvas proj x
    TVirtualPad::TContext ctxt(true);
    auto name1 = TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(name1.Data());
+   auto c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(name1.Data());
    if (c) {
       c->Clear();
    } else {
       fShowProjection = 0;
       fShowProjection2 = 0;
-      pyold1 = 0;
-      pyold2 = 0;
+      pyold1 = pyold2 = 0;
       return;
    }
    c->cd();
@@ -11114,7 +11112,8 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 {
    // turn off double buffer mode and draw primitives in invert mode
    // return if such mode not supported
-   if (!gPad->FeedbackMode(kTRUE))
+   auto pp = gPad->GetPainter();
+   if (!pp || !gPad->FeedbackMode(kTRUE))
       return;
 
    Int_t nbins = (Int_t)fShowProjection/100;
@@ -11122,21 +11121,18 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
        nbins = (Int_t)fShowProjection2/100;
 
    // Erase old position and draw a line at current position
-   static int pxold1 = 0;
-   static int pxold2 = 0;
-   float uymin = gPad->GetUymin();
-   float uymax = gPad->GetUymax();
-   int pymin   = gPad->YtoAbsPixel(uymin);
-   int pymax   = gPad->YtoAbsPixel(uymax);
-   Float_t upx = gPad->AbsPixeltoX(px);
-   Float_t x   = gPad->PadtoX(upx);
+   static Double_t pxold1 = 0, pxold2 = 0;
+   Double_t uymin = gPad->GetUymin();
+   Double_t uymax = gPad->GetUymax();
+   Float_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
    Int_t binx1 = fH->GetXaxis()->FindBin(x);
    Int_t binx2 = TMath::Min(binx1+nbins-1, fH->GetXaxis()->GetNbins());
-   Int_t px1   = gPad->XtoAbsPixel(gPad->GetLogx() ? TMath::Log10(fH->GetXaxis()->GetBinLowEdge(binx1)) : fH->GetXaxis()->GetBinLowEdge(binx1));
-   Int_t px2   = gPad->XtoAbsPixel(gPad->GetLogx() ? TMath::Log10(fH->GetXaxis()->GetBinUpEdge(binx2)) : fH->GetXaxis()->GetBinUpEdge(binx2));
+   Double_t px1   = gPad->XtoPad(fH->GetXaxis()->GetBinLowEdge(binx1));
+   Double_t px2   = gPad->XtoPad(fH->GetXaxis()->GetBinUpEdge(binx2));
 
-   if (pxold1 || pxold2) gVirtualX->DrawBox(pxold1,pymin,pxold2,pymax,TVirtualX::kFilled);
-   gVirtualX->DrawBox(px1,pymin,px2,pymax,TVirtualX::kFilled);
+   if (pxold1 || pxold2)
+      pp->DrawBox(pxold1, uymin, pxold2, uymax, TVirtualPadPainter::kFilled);
+   pp->DrawBox(px1, uymin, px2, uymax, TVirtualPadPainter::kFilled);
    pxold1 = px1;
    pxold2 = px2;
 
