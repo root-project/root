@@ -41,13 +41,13 @@ for changes to trigger a refilling of the cache histogram.
 #include "RooChangeTracker.h"
 #include "RooExpensiveObjectCache.h"
 
- ////////////////////////////////////////////////////////////////////////////////
- /// Constructor
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
 
- RooAbsCachedReal::RooAbsCachedReal(const char *name, const char *title, Int_t ipOrder)
-    : RooAbsReal(name, title), _cacheMgr(this, 10), _ipOrder(ipOrder), _disableCache(false)
- {
- }
+RooAbsCachedReal::RooAbsCachedReal(const char *name, const char *title, Int_t ipOrder)
+   : RooAbsReal(name, title), _cacheMgr(this, 10), _ipOrder(ipOrder), _disableCache(false)
+{
+}
 
 
 
