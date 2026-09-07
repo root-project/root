@@ -12,8 +12,9 @@
 #ifndef ROOT_TGeoVector3
 #define ROOT_TGeoVector3
 
-#include <Riostream.h>
 #include <TMath.h>
+
+#include <iosfwd>
 
 namespace ROOT {
 namespace Geom {
