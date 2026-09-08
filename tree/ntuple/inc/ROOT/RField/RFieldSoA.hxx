@@ -53,7 +53,7 @@ namespace Experimental {
 ///
 /// Since the on-disk representation is a collection of record type, the class version and checksum of the SoA type
 /// itself is ignored.
-class RSoAField : public RFieldBase {
+class RSoAField : public RRuleField {
    class RSoADeleter : public RDeleter {
    private:
       TClass *fSoAClass;
@@ -115,6 +115,8 @@ protected:
    void CommitClusterImpl() final { fNWritten = 0; }
 
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
+   TClass *GetInMemoryClass() const final { return fSoAClass; }
 
 public:
    RSoAField(std::string_view fieldName, std::string_view className);

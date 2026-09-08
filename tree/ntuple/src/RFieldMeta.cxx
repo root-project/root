@@ -689,7 +689,7 @@ void ROOT::RClassField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) cons
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, const RSoAField &source)
-   : ROOT::RFieldBase(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kCollection, false /* isSimple */),
+   : ROOT::RRuleField(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kCollection),
      fSoAClass(source.fSoAClass),
      fSoAMemberOffsets(source.fSoAMemberOffsets)
 {
@@ -879,8 +879,7 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
 }
 
 ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clSoA)
-   : ROOT::RFieldBase(fieldName, GetRenormalizedTypeName(clSoA->GetName()), ROOT::ENTupleStructure::kCollection,
-                      false /* isSimple */),
+   : ROOT::RRuleField(fieldName, GetRenormalizedTypeName(clSoA->GetName()), ROOT::ENTupleStructure::kCollection),
      fSoAClass(clSoA)
 {
    static std::once_flag once;
