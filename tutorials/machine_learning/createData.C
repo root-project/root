@@ -19,8 +19,8 @@
 #include "TLegend.h"
 #include "TBranch.h"
 
-#include <vector>
 #include <iostream>
+#include <vector>
 
 void plot( TString fname = "data.root", TString var0="var0", TString var1="var1" )
 {

@@ -130,9 +130,10 @@ extern "C" {
 #endif
 #endif
 
+#include <iostream>
 #include <string>
 #include <vector>
-#include <iostream>
+
 using std::string, std::vector, std::cout, std::endl;
 
 
