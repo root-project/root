@@ -276,6 +276,9 @@ public:
    };
    enum ERelativeTo { kBeg = 0, kCur = 1, kEnd = 2 };
    enum { kStartBigFile  = 2000000000 };
+   enum {
+      kMaxGapSize = 2000000000
+   }; // Maximum absolute value of the free segment on-disk size marker
    /// File type
    enum EFileType {
 // clang++ <v20 (-Wshadow) complains about shadowing TSystem.h global enum ESendRecvOptions. Let's silence warning:
