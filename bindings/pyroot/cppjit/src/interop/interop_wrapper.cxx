@@ -1171,15 +1171,36 @@ interop::GetUsingNamespaces(TCppScope_t scope) {
   return Cpp::GetUsingNamespaces(scope);
 }
 
+// Normalize a type or scope name to cppyy's canonical form: no space after
+// the commas separating template arguments, and pointers/references attached
+// to the type. This is the form cpyrt itself constructs (e.g. when
+// looking up cached template instantiations by name, see
+// Utility::ConstructTemplateArgs) and the convention that user code and the
+// test suite inherited from upstream cppyy; clang's printer instead emits
+// "a, b", "T *" and "T &".
+static std::string cppyy_normalize_name(std::string name) {
+  std::string::size_type pos = 0;
+  while ((pos = name.find(", ", pos)) != std::string::npos)
+    name.erase(pos + 1, 1);
+  pos = 0;
+  while ((pos = name.find(" *", pos)) != std::string::npos)
+    name.erase(pos, 1);
+  pos = 0;
+  while ((pos = name.find(" &", pos)) != std::string::npos)
+    name.erase(pos, 1);
+  return name;
+}
+
 // class reflection information ----------------------------------------------
 std::string interop::GetFinalName(TCppScope_t klass) {
   std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
-  return Cpp::GetCompleteName(Cpp::GetUnderlyingScope(klass));
+  return cppyy_normalize_name(
+      Cpp::GetCompleteName(Cpp::GetUnderlyingScope(klass)));
 }
 
 std::string interop::GetScopedFinalName(TCppScope_t klass) {
   std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
-  return Cpp::GetQualifiedCompleteName(klass);
+  return cppyy_normalize_name(Cpp::GetQualifiedCompleteName(klass));
 }
 
 bool interop::HasVirtualDestructor(TCppScope_t scope) {
@@ -1339,7 +1360,7 @@ std::string interop::GetName(TCppScope_t method) {
 
 std::string interop::GetFullName(TCppScope_t method) {
   std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
-  return Cpp::GetCompleteName(method);
+  return cppyy_normalize_name(Cpp::GetCompleteName(method));
 }
 
 interop::TCppType_t interop::GetMethodReturnType(TCppMethod_t method) {
@@ -1451,7 +1472,8 @@ std::string interop::GetMethodSignature(TCppMethod_t method,
   if (max_args != (TCppIndex_t)-1)
     nArgs = std::min(nArgs, (int)max_args);
   for (int iarg = 0; iarg < nArgs; ++iarg) {
-    sig << interop::GetMethodArgTypeAsString(method, iarg);
+    sig << cppyy_normalize_name(
+        interop::GetMethodArgTypeAsString(method, iarg));
     if (show_formal_args) {
       std::string argname = interop::GetMethodArgName(method, iarg);
       if (!argname.empty())
