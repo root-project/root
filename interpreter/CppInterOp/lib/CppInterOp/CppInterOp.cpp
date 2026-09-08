@@ -3360,6 +3360,9 @@ void GetEnumConstantDatamembers(ConstDeclRef DRef,
                                 std::vector<DeclRef>& datamembers,
                                 bool include_enum_class) {
   INTEROP_TRACE(DRef, INTEROP_OUT(datamembers), include_enum_class);
+  // Iterating the enumerators may lazily deserialize them (PCH/modules),
+  // which requires an open transaction.
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   std::vector<DeclRef> EDs;
   GetClassDecls<EnumDecl>(DRef, EDs);
   for (DeclRef i : EDs) {
