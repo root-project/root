@@ -15,6 +15,7 @@ using namespace cppjit;
 
 // ROOT
 #include "TClass.h"
+#include "TInterpreter.h"
 #include "TROOT.h"
 #include "TSystem.h"
 
@@ -44,7 +45,44 @@ static inline size_t CALL_NARGS(size_t nargs) { return nargs & ~DIRECT_CALL; }
 #include <typeinfo>
 #include <vector>
 
-std::recursive_mutex InterOpMutex;
+// Take ROOT's interpreter lock (when it exists) around every CppInterOp
+// entry point, so Python-side reflection serializes against TCling users on
+// other threads (I/O, RDataFrame workers).
+// The private recursive mutex still serializes concurrent Python-side callers
+// when ROOT thread safety is not enabled. Lock order is global-then-local; no
+// deadlock is possible since threads coming through TCling only ever take the
+// global mutex.
+class RInterOpMutex {
+public:
+  void lock() {
+    // gInterpreterMutex may get created at any point (by
+    // ROOT::EnableThreadSafety), so remember for each acquisition what was
+    // actually locked, to release exactly that in unlock().
+    TVirtualMutex* global = gInterpreterMutex;
+    if (global)
+      global->Lock();
+    fLocal.lock();
+    fGlobalLocked.push_back(global);
+  }
+
+  void unlock() {
+    TVirtualMutex* global = fGlobalLocked.back();
+    fGlobalLocked.pop_back();
+    fLocal.unlock();
+    if (global)
+      global->UnLock();
+  }
+
+private:
+  std::recursive_mutex fLocal;
+  // Lock/unlock pairs are properly nested per thread, so a per-thread stack
+  // suffices to match each unlock() to its lock().
+  static thread_local std::vector<TVirtualMutex*> fGlobalLocked;
+};
+
+thread_local std::vector<TVirtualMutex*> RInterOpMutex::fGlobalLocked;
+
+RInterOpMutex InterOpMutex;
 
 // builtin types
 static std::set<std::string> g_builtins = {"bool",
@@ -255,7 +293,7 @@ extern "C" int LoadCppInterOp() {
   static std::once_flag Once;
   static int Loaded = 0;
   std::call_once(Once, [] {
-    std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+    std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
     const InterOpPaths Paths = cppinterop_paths();
     if (!loadDispatchAPI(Paths))
       return;
@@ -280,13 +318,13 @@ static inline char* cppstring_to_cstring(const std::string& cppstr) {
 // direct interpreter access -------------------------------------------------
 // Returns false on failure and true on success
 bool interop::Compile(const std::string& code, bool silent) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   // Declare returns an enum which equals 0 on success
   return !Cpp::Declare(code.c_str(), silent);
 }
 
 std::string interop::ToString(TCppScope_t klass, TCppObject_t obj) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   if (klass && obj && !Cpp::IsNamespace(klass))
     return Cpp::ObjToString(Cpp::GetQualifiedCompleteName(klass).c_str(),
                             obj.data);
@@ -306,7 +344,7 @@ std::string interop::ResolveName(const std::string& name) {
 }
 
 interop::TCppType_t interop::ResolveEnumReferenceType(TCppType_t type) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   if (Cpp::GetValueKind(type) != Cpp::ValueKind::LValue)
     return type;
 
@@ -320,7 +358,7 @@ interop::TCppType_t interop::ResolveEnumReferenceType(TCppType_t type) {
 }
 
 interop::TCppType_t interop::ResolveEnumPointerType(TCppType_t type) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   if (!Cpp::IsPointerType(type))
     return type;
 
@@ -350,7 +388,7 @@ interop::TCppType_t interop::ResolveType(TCppType_t type) {
   if (!type)
     return type;
 
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
 
   TCppType_t check_int_typedefs = int_like_type(type);
   if (check_int_typedefs)
@@ -370,7 +408,7 @@ interop::TCppType_t interop::ResolveType(TCppType_t type) {
 }
 
 interop::TCppType_t interop::GetRealType(TCppType_t type) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   TCppType_t check_int_typedefs = int_like_type(type);
   if (check_int_typedefs)
     return check_int_typedefs;
@@ -378,12 +416,12 @@ interop::TCppType_t interop::GetRealType(TCppType_t type) {
 }
 
 interop::TCppType_t interop::GetPointerType(TCppType_t type) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetPointerType(type);
 }
 
 interop::TCppType_t interop::GetReferencedType(TCppType_t type, bool rvalue) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetReferencedType(type, rvalue);
 }
 
@@ -547,7 +585,7 @@ bool interop::AppendTypesSlow(const std::string& name,
     // ROOT::RVecF); the trampoline below applies real unqualified lookup.
   }
 
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
 
   // We might have an entire expression such as int, double.
   static unsigned long long struct_count = 0;
@@ -662,7 +700,7 @@ interop::TCppType_t interop::GetType(const std::string& name,
   // The ast printer gave us garbage.
   if (name == "<unnamed>")
     return nullptr;
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
 
   if (auto type = Cpp::GetType(name))
     return type;
@@ -706,12 +744,12 @@ interop::TCppType_t interop::GetType(const std::string& name,
 }
 
 interop::TCppType_t interop::GetComplexType(const std::string& name) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetComplexType(Cpp::GetType(name));
 }
 
 std::string interop::ResolveEnum(TCppScope_t handle) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   std::string type =
       Cpp::GetTypeAsString(Cpp::GetIntegerTypeFromEnumScope(handle));
   if (type == "signed char")
@@ -720,13 +758,13 @@ std::string interop::ResolveEnum(TCppScope_t handle) {
 }
 
 interop::TCppScope_t interop::GetUnderlyingScope(TCppScope_t scope) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetUnderlyingScope(scope);
 }
 
 interop::TCppScope_t interop::GetScope(const std::string& name,
                                        TCppScope_t parent_scope) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::unique_lock<RInterOpMutex> Lock(InterOpMutex);
   // CppInterOp directly looks at the AST which is not enough.
   // We require lazy module loading that ROOT relies on, so we do it here
   // first. Use TClass::GetClass to trigger auto-loading of dictionaries and
@@ -761,10 +799,10 @@ interop::TCppScope_t interop::GetScope(const std::string& name,
     // Splitting off the argument list and resolving it directly cannot
     // represent non-type arguments such as the `3` in std::array<float, 3>.
     std::vector<Cpp::TemplateArgInfo> types;
-    InterOpMutex.unlock(); // unlock to allow AppendTypesSlow
+    Lock.unlock(); // unlock to allow AppendTypesSlow
     bool added_new_type =
         !interop::AppendTypesSlow(name, types, /*parent=*/parent_scope);
-    std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+    Lock.lock();
     if (added_new_type && types.size() == 1) {
       // A pointer or reference spelling (e.g. "std::chrono::nanoseconds *",
       // the return type of std::array<nanoseconds, N>::begin()) does not
@@ -791,33 +829,33 @@ interop::TCppScope_t interop::GetFullScope(const std::string& name) {
 }
 
 interop::TCppScope_t interop::GetTypeScope(TCppScope_t var) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetScopeFromType(Cpp::GetVariableType(var));
 }
 
 interop::TCppScope_t interop::GetNamed(const std::string& name,
                                        TCppScope_t parent_scope) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetNamed(name, parent_scope);
 }
 
 interop::TCppScope_t interop::GetParentScope(TCppScope_t scope) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetParentScope(scope);
 }
 
 interop::TCppScope_t interop::GetScopeFromType(TCppType_t type) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetScopeFromType(type);
 }
 
 interop::TCppType_t interop::GetTypeFromScope(TCppScope_t klass) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetTypeFromScope(klass);
 }
 
 interop::TCppScope_t interop::GetGlobalScope() {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetGlobalScope();
 }
 
@@ -840,7 +878,7 @@ public:
 
 interop::TCppScope_t interop::GetActualClass(TCppScope_t klass,
                                              TCppObject_t obj) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
 
   if (!obj || !Cpp::IsClassPolymorphic(klass))
     return klass;
@@ -896,14 +934,14 @@ interop::TCppScope_t interop::GetActualClass(TCppScope_t klass,
 }
 
 size_t interop::SizeOf(TCppScope_t klass) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::SizeOf(klass);
 }
 
 size_t interop::SizeOfType(TCppType_t klass) {
   if (!klass)
     return 0;
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetSizeOfType(klass);
 }
 
@@ -937,31 +975,31 @@ bool interop::IsBuiltin(const std::string& type_name) {
 bool interop::IsBuiltin(TCppType_t type) { return Cpp::IsBuiltin(type); }
 
 bool interop::IsComplete(TCppScope_t scope) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::IsComplete(scope);
 }
 
 // // memory management
 // ---------------------------------------------------------
 interop::TCppObject_t interop::Allocate(TCppScope_t scope) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::Allocate(scope, /*count=*/1);
 }
 
 void interop::Deallocate(TCppScope_t scope, TCppObject_t instance) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   Cpp::Deallocate(scope, instance, /*count=*/1);
 }
 
 interop::TCppObject_t interop::Construct(TCppScope_t scope,
                                          void* arena /*=nullptr*/) {
-  std::lock_guard<std::recursive_mutex> Lock(
+  std::lock_guard<RInterOpMutex> Lock(
       InterOpMutex); // TODO: this shouldn't locks the JIT call
   return Cpp::Construct(scope, arena, /*count=*/1);
 }
 
 void interop::Destruct(TCppScope_t scope, TCppObject_t instance) {
-  std::lock_guard<std::recursive_mutex> Lock(
+  std::lock_guard<RInterOpMutex> Lock(
       InterOpMutex); // TODO: this shouldn't locks the JIT call
   Cpp::Destruct(instance, scope, true, /*count=*/0);
 }
@@ -1101,7 +1139,7 @@ interop::TCppObject_t interop::CallConstructor(TCppMethod_t method,
 }
 
 void interop::CallDestructor(TCppScope_t scope, TCppObject_t self) {
-  std::lock_guard<std::recursive_mutex> Lock(
+  std::lock_guard<RInterOpMutex> Lock(
       InterOpMutex); // TODO: this shouldn't locks the JIT call
   Cpp::Destruct(self, scope, /*withFree=*/false, /*count=*/0);
 }
@@ -1126,7 +1164,7 @@ interop::TCppObject_t interop::CallO(TCppMethod_t method, TCppObject_t self,
 
 interop::TCppFuncAddr_t interop::GetFunctionAddress(TCppMethod_t method,
                                                     bool /*check_enabled*/) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetFunctionAddress(method);
 }
 
@@ -1149,7 +1187,7 @@ bool interop::IsNamespace(TCppScope_t scope) {
     return false;
 
   // Test if this scope represents a namespace.
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::IsNamespace(scope) || Cpp::GetGlobalScope() == scope;
 }
 
@@ -1177,7 +1215,7 @@ bool interop::IsAggregate(TCppScope_t type) {
 }
 
 bool interop::IsDefaultConstructable(TCppScope_t scope) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   // Test if this type has a default constructor or is a "plain old data" type
   return Cpp::HasDefaultConstructor(scope);
 }
@@ -1189,14 +1227,14 @@ void interop::GetAllCppNames(TCppScope_t scope,
   // Collect all known names of C++ entities under scope. This is useful for
   // IDEs employing tab-completion, for example. Note that functions names need
   // not be unique as they can be overloaded.
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   Cpp::GetAllCppNames(scope, cppnames);
 }
 
 // class reflection information ----------------------------------------------
 std::vector<interop::TCppScope_t>
 interop::GetUsingNamespaces(TCppScope_t scope) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetUsingNamespaces(scope);
 }
 
@@ -1222,25 +1260,25 @@ static std::string cppyy_normalize_name(std::string name) {
 
 // class reflection information ----------------------------------------------
 std::string interop::GetFinalName(TCppScope_t klass) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return cppyy_normalize_name(
       Cpp::GetCompleteName(Cpp::GetUnderlyingScope(klass)));
 }
 
 std::string interop::GetScopedFinalName(TCppScope_t klass) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return cppyy_normalize_name(Cpp::GetQualifiedCompleteName(klass));
 }
 
 bool interop::HasVirtualDestructor(TCppScope_t scope) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   TCppMethod_t func = Cpp::GetDestructor(scope);
   return Cpp::IsVirtualMethod(func);
 }
 
 interop::TCppIndex_t interop::GetNumBases(TCppScope_t klass) {
   // Get the total number of base classes that this class has.
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetNumBases(klass);
 }
 
@@ -1276,18 +1314,18 @@ interop::TCppIndex_t interop::GetNumBasesLongestBranch(TCppScope_t klass) {
 }
 
 std::string interop::GetBaseName(TCppScope_t klass, TCppIndex_t ibase) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetName(Cpp::GetBaseClass(klass, ibase));
 }
 
 interop::TCppScope_t interop::GetBaseScope(TCppScope_t klass,
                                            TCppIndex_t ibase) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetBaseClass(klass, ibase);
 }
 
 bool interop::IsSubclass(TCppScope_t derived, TCppScope_t base) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::IsSubclass(derived, base);
 }
 
@@ -1317,7 +1355,7 @@ bool interop::GetSmartPtrInfo(const std::string& tname, TCppScope_t* raw,
 
   std::vector<TCppMethod_t> ops;
   {
-    std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+    std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
     Cpp::GetOperator(scope, Cpp::Operator::OP_Arrow, ops,
                      /*kind=*/Cpp::OperatorArity::kBoth);
     if (ops.size() != 1)
@@ -1345,7 +1383,7 @@ bool interop::GetSmartPtrInfo(const std::string& tname, TCppScope_t* raw,
 ptrdiff_t interop::GetBaseOffset(TCppScope_t derived, TCppScope_t base,
                                  TCppObject_t /*address*/, int direction,
                                  bool rerror) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   // Either base or derived class is incomplete, treat silently
   if (!Cpp::IsComplete(derived) || !Cpp::IsComplete(base))
     return rerror ? (ptrdiff_t)-1 : 0;
@@ -1372,14 +1410,14 @@ remove_deleted_methods(std::vector<interop::TCppMethod_t>& methods) {
 
 void interop::GetClassMethods(TCppScope_t scope,
                               std::vector<interop::TCppMethod_t>& methods) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   Cpp::GetClassMethods(scope, methods);
   remove_deleted_methods(methods);
 }
 
 std::vector<interop::TCppMethod_t>
 interop::GetMethodsFromName(TCppScope_t scope, const std::string& name) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   std::vector<interop::TCppMethod_t> methods =
       Cpp::GetFunctionsUsingName(scope, name);
   remove_deleted_methods(methods);
@@ -1387,22 +1425,22 @@ interop::GetMethodsFromName(TCppScope_t scope, const std::string& name) {
 }
 
 std::string interop::GetName(TCppScope_t method) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetName(method);
 }
 
 std::string interop::GetFullName(TCppScope_t method) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return cppyy_normalize_name(Cpp::GetCompleteName(method));
 }
 
 interop::TCppType_t interop::GetMethodReturnType(TCppMethod_t method) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetFunctionReturnType(method);
 }
 
 std::string interop::GetMethodReturnTypeAsString(TCppMethod_t method) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   TCppType_t ret = Cpp::GetCanonicalType(Cpp::GetFunctionReturnType(method));
   // C++ deletes top-level cv-qualifiers on non-class return types from the
   // function type ([dcl.fct]); mirror that so name matching sees the plain
@@ -1416,12 +1454,12 @@ std::string interop::GetMethodReturnTypeAsString(TCppMethod_t method) {
 }
 
 interop::TCppIndex_t interop::GetMethodNumArgs(TCppMethod_t method) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetFunctionNumArgs(method);
 }
 
 interop::TCppIndex_t interop::GetMethodReqArgs(TCppMethod_t method) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetFunctionRequiredArgs(method);
 }
 
@@ -1429,26 +1467,26 @@ std::string interop::GetMethodArgName(TCppMethod_t method, TCppIndex_t iarg) {
   if (!method)
     return "<unknown>";
 
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetFunctionArgName(method, iarg);
 }
 
 interop::TCppType_t interop::GetMethodArgType(TCppMethod_t method,
                                               TCppIndex_t iarg) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetFunctionArgType(method, iarg);
 }
 
 std::string interop::GetMethodArgTypeAsString(TCppMethod_t method,
                                               TCppIndex_t iarg) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetTypeAsString(Cpp::RemoveTypeQualifier(
       Cpp::GetFunctionArgType(method, iarg), Cpp::QualKind::Const));
 }
 
 std::string interop::GetMethodArgCanonTypeAsString(TCppMethod_t method,
                                                    TCppIndex_t iarg) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetTypeAsString(
       Cpp::GetCanonicalType(Cpp::GetFunctionArgType(method, iarg)));
 }
@@ -1458,7 +1496,7 @@ std::string interop::GetMethodArgDefault(TCppMethod_t method,
   if (!method)
     return "";
 
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetFunctionArgDefault(method, iarg);
 }
 
@@ -1564,26 +1602,26 @@ bool interop::IsSimilarFnTypes(TCppType_t typ1, TCppType_t typ2) {
 }
 
 std::string interop::GetDoxygenComment(TCppScope_t scope, bool strip_markers) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetDoxygenComment(scope, strip_markers);
 }
 
 bool interop::IsConstMethod(TCppMethod_t method) {
   if (!method)
     return false;
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::IsConstMethod(method);
 }
 
 void interop::GetTemplatedMethods(TCppScope_t scope,
                                   std::vector<interop::TCppMethod_t>& methods) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   Cpp::GetFunctionTemplatedDecls(scope, methods);
 }
 
 interop::TCppIndex_t
 interop::GetNumTemplatedMethods(TCppScope_t scope, bool /*accept_namespace*/) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   std::vector<interop::TCppMethod_t> mc;
   Cpp::GetFunctionTemplatedDecls(scope, mc);
   return mc.size();
@@ -1591,7 +1629,7 @@ interop::GetNumTemplatedMethods(TCppScope_t scope, bool /*accept_namespace*/) {
 
 std::string interop::GetTemplatedMethodName(TCppScope_t scope,
                                             TCppIndex_t imeth) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   std::vector<interop::TCppMethod_t> mc;
   Cpp::GetFunctionTemplatedDecls(scope, mc);
 
@@ -1602,7 +1640,7 @@ std::string interop::GetTemplatedMethodName(TCppScope_t scope,
 }
 
 bool interop::ExistsMethodTemplate(TCppScope_t scope, const std::string& name) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::ExistsFunctionTemplate(name, scope);
 }
 
@@ -1638,7 +1676,7 @@ interop::TCppMethod_t interop::GetMethodTemplate(TCppScope_t scope,
     pureName = name;
   }
 
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
 
   std::vector<interop::TCppMethod_t> unresolved_candidate_methods;
   Cpp::GetClassTemplatedMethods(pureName, scope, unresolved_candidate_methods);
@@ -1714,7 +1752,7 @@ static inline std::string type_remap(const std::string& n1,
 void interop::GetClassOperators(interop::TCppScope_t klass,
                                 const std::string& opname,
                                 std::vector<TCppMethod_t>& operators) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   std::string op = opname.substr(8);
   Cpp::GetOperator(klass, Cpp::GetOperatorFromSpelling(op), operators,
                    /*kind=*/Cpp::OperatorArity::kBoth);
@@ -1795,14 +1833,14 @@ bool interop::IsExplicit(TCppMethod_t method) {
 // data member reflection information ----------------------------------------
 void interop::GetDatamembers(TCppScope_t scope,
                              std::vector<TCppScope_t>& datamembers) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   Cpp::GetDatamembers(scope, datamembers);
   Cpp::GetStaticDatamembers(scope, datamembers);
   Cpp::GetEnumConstantDatamembers(scope, datamembers, false);
 }
 
 bool interop::CheckDatamember(TCppScope_t scope, const std::string& name) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return (bool)Cpp::LookupDatamember(name, scope);
 }
 
@@ -1811,7 +1849,7 @@ bool interop::IsLambdaClass(TCppType_t type) {
 }
 
 interop::TCppScope_t interop::WrapLambdaFromVariable(TCppScope_t var) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   std::ostringstream code;
   std::string name = interop::GetFinalName(var);
   code << "namespace __cppjit_internal_wrap_g {\n"
@@ -1830,7 +1868,7 @@ interop::TCppScope_t interop::WrapLambdaFromVariable(TCppScope_t var) {
 
 interop::TCppMethod_t
 interop::AdaptFunctionForLambdaReturn(interop::TCppMethod_t fn) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
 
   std::string fn_name = Cpp::GetQualifiedCompleteName(TCppScope_t(fn.data));
   std::string signature = interop::GetMethodSignature(fn, true);
@@ -1861,23 +1899,23 @@ interop::AdaptFunctionForLambdaReturn(interop::TCppMethod_t fn) {
 }
 
 interop::TCppType_t interop::GetDatamemberType(TCppScope_t var) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetVariableType(Cpp::GetUnderlyingScope(var));
 }
 
 std::string interop::GetDatamemberTypeAsString(TCppScope_t scope) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetTypeAsString(
       Cpp::GetVariableType(Cpp::GetUnderlyingScope(scope)));
 }
 
 std::string interop::GetTypeAsString(TCppType_t type) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetTypeAsString(type);
 }
 
 intptr_t interop::GetDatamemberOffset(TCppScope_t var, TCppScope_t klass) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetVariableOffset(Cpp::GetUnderlyingScope(var), klass);
 }
 
@@ -1902,7 +1940,7 @@ bool interop::IsConstVar(TCppScope_t var) { return Cpp::IsConstVariable(var); }
 
 interop::TCppMethod_t interop::ReduceReturnType(TCppMethod_t fn,
                                                 TCppType_t reduce) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
 
   std::string fn_name = Cpp::GetQualifiedCompleteName(TCppScope_t(fn.data));
   std::string signature = interop::GetMethodSignature(fn, true);
@@ -1934,35 +1972,35 @@ interop::TCppMethod_t interop::ReduceReturnType(TCppMethod_t fn,
 }
 
 std::vector<long int> interop::GetDimensions(TCppType_t type) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetDimensions(type);
 }
 
 // enum properties -----------------------------------------------------------
 std::vector<interop::TCppScope_t> interop::GetEnumConstants(TCppScope_t scope) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetEnumConstants(scope);
 }
 
 interop::TCppType_t interop::GetEnumConstantType(TCppScope_t scope) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetEnumConstantType(Cpp::GetUnderlyingScope(scope));
 }
 
 long long interop::GetEnumDataValue(TCppScope_t scope) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::GetEnumConstantValue(scope);
 }
 
 interop::TCppScope_t interop::InstantiateTemplate(TCppScope_t tmpl,
                                                   Cpp::TemplateArgInfo* args,
                                                   size_t args_size) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   return Cpp::InstantiateTemplate(tmpl, args, args_size,
                                   /*instantiate_body=*/false);
 }
 
 void interop::DumpScope(TCppScope_t scope) {
-  std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   Cpp::DumpScope(scope);
 }
