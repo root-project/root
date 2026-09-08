@@ -553,7 +553,12 @@ bool cpyrt::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
   // is not a base of the Python class to keep the inheritance tree intact)
   for (const auto& name : protected_names) {
     PyObject* disp_dct = PyObject_GetAttr(disp_proxy, PyStrings::gDict);
+#if PY_VERSION_HEX < 0x30d00f0
     PyObject* pyf = PyMapping_GetItemString(disp_dct, (char*)name.c_str());
+#else
+    PyObject* pyf = nullptr;
+    PyMapping_GetOptionalItemString(disp_dct, (char*)name.c_str(), &pyf);
+#endif
     if (pyf) {
       PyObject_SetAttrString((PyObject*)klass, (char*)name.c_str(), pyf);
       Py_DECREF(pyf);

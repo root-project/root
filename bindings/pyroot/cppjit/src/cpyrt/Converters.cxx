@@ -1537,14 +1537,14 @@ bool cpyrt::VoidArrayConverter::GetAddressSpecialCase(PyObject* pyobject,
 
 //----------------------------------------------------------------------------
 bool cpyrt::VoidArrayConverter::SetArg(PyObject* pyobject, Parameter& para,
-                                       CallContext* ctxt) {
+                                       CallContext* /*ctxt*/) {
   // just convert pointer if it is a C++ object
   CPPInstance* pyobj = GetCppInstance(pyobject);
   para.fValue.fVoidp = nullptr;
   if (pyobj) {
     // depending on memory policy, some objects are no longer owned when passed
     // to C++
-    if (!fKeepControl && !UseStrictOwnership(ctxt))
+    if (!fKeepControl && !UseStrictOwnership())
       pyobj->CppOwns();
 
     // set pointer (may be null) and declare success
@@ -1610,7 +1610,7 @@ bool cpyrt::VoidArrayConverter::ToMemory(PyObject* value, void* address,
   if (pyobj) {
     // depending on memory policy, some objects are no longer owned when passed
     // to C++
-    if (!fKeepControl && CallContext::sMemoryPolicy != CallContext::kUseStrict)
+    if (!fKeepControl && !UseStrictOwnership())
       pyobj->CppOwns();
 
     // set pointer (may be null) and declare success
@@ -2226,7 +2226,7 @@ bool cpyrt::InstancePtrConverter<ISCONST>::SetArg(PyObject* pyobject,
   if (oisa && (oisa == fClass || interop::IsSubclass(oisa, fClass))) {
     // depending on memory policy, some objects need releasing when passed into
     // functions
-    if (!KeepControl() && !UseStrictOwnership(ctxt))
+    if (!KeepControl() && !UseStrictOwnership())
       pyobj->CppOwns();
 
     // calculate offset between formal and actual arguments
@@ -2276,7 +2276,7 @@ bool cpyrt::InstancePtrConverter<ISCONST>::ToMemory(PyObject* value,
   if (interop::IsSubclass(pyobj->ObjectIsA(), fClass)) {
     // depending on memory policy, some objects need releasing when passed into
     // functions
-    if (!KeepControl() && CallContext::sMemoryPolicy != CallContext::kUseStrict)
+    if (!KeepControl() && !UseStrictOwnership())
       ((CPPInstance*)value)->CppOwns();
 
     *(void**)address = pyobj->GetObject();
@@ -2439,9 +2439,8 @@ bool cpyrt::InstanceMoveConverter::SetArg(PyObject* pyobject, Parameter& para,
 
 //----------------------------------------------------------------------------
 template <bool ISREFERENCE>
-bool cpyrt::InstancePtrPtrConverter<ISREFERENCE>::SetArg(PyObject* pyobject,
-                                                         Parameter& para,
-                                                         CallContext* ctxt) {
+bool cpyrt::InstancePtrPtrConverter<ISREFERENCE>::SetArg(
+    PyObject* pyobject, Parameter& para, CallContext* /*ctxt*/) {
   // convert <pyobject> to C++ instance**, set arg for call
   CPPInstance* pyobj = GetCppInstance(pyobject);
   if (!pyobj) {
@@ -2458,7 +2457,7 @@ bool cpyrt::InstancePtrPtrConverter<ISREFERENCE>::SetArg(PyObject* pyobject,
   if (interop::IsSubclass(pyobj->ObjectIsA(), fClass)) {
     // depending on memory policy, some objects need releasing when passed into
     // functions
-    if (!KeepControl() && !UseStrictOwnership(ctxt))
+    if (!KeepControl() && !UseStrictOwnership())
       pyobj->CppOwns();
 
     // set pointer (may be null) and declare success
@@ -2500,7 +2499,7 @@ bool cpyrt::InstancePtrPtrConverter<ISREFERENCE>::ToMemory(
   if (interop::IsSubclass(pyobj->ObjectIsA(), fClass)) {
     // depending on memory policy, some objects need releasing when passed into
     // functions
-    if (!KeepControl() && CallContext::sMemoryPolicy != CallContext::kUseStrict)
+    if (!KeepControl() && !UseStrictOwnership())
       pyobj->CppOwns();
 
     // register the value for potential recycling
@@ -3018,7 +3017,7 @@ bool cpyrt::SmartPtrConverter::SetArg(PyObject* pyobject, Parameter& para,
     if (interop::IsSubclass(tsmart, fSmartPtrType)) {
       // depending on memory policy, some objects need releasing when passed
       // into functions
-      if (!fKeepControl && !UseStrictOwnership(ctxt))
+      if (!fKeepControl && !UseStrictOwnership())
         ((CPPInstance*)pyobject)->CppOwns();
 
       // calculate offset between formal and actual arguments
@@ -3049,7 +3048,8 @@ bool cpyrt::SmartPtrConverter::SetArg(PyObject* pyobject, Parameter& para,
   }
 
   // for the case where we have an ordinary object to convert
-  if (!pyobj->IsSmart() && interop::IsSubclass(oisa, fUnderlyingType)) {
+  if ((ctxt->fFlags & CallContext::kImplicitSmartPtrConversion) &&
+      !pyobj->IsSmart() && interop::IsSubclass(oisa, fUnderlyingType)) {
     // create the relevant smart pointer and make the pyobject "smart"
     CPPInstance* pysmart = (CPPInstance*)ConvertImplicit(
         fSmartPtrType, pyobject, para, ctxt, false);
