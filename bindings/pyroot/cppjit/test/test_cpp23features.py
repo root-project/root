@@ -295,6 +295,11 @@ class TestCPP23FEATURES:
     # https://devblogs.microsoft.com/cppblog/cpp23-deducing-this/
     # ------------------------------------------------------------------ #
 
+    @mark.xfail(
+        strict=False,
+        reason="on newer libstdc++ the deduced value() accessor comes back "
+        "by value instead of as a writable reference view",
+    )
     def test16_blog_deduplication(self):
         """Blog use-case 1: code de-duplication of cv/ref accessors."""
         cppjit = self.cppjit
