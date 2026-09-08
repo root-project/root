@@ -13,6 +13,11 @@
 using namespace cppjit;
 #include "callcontext.h"
 
+// ROOT
+#include "TClass.h"
+#include "TROOT.h"
+#include "TSystem.h"
+
 typedef cppjit::cpyrt::Parameter Parameter;
 
 static inline size_t CALL_NARGS(size_t nargs) { return nargs & ~DIRECT_CALL; }
@@ -122,9 +127,18 @@ static InterOpPaths cppinterop_paths() {
   return Paths;
 }
 
-// The one place libclangCppInterOp is dlopen'd.
-static bool loadDispatchAPI(const InterOpPaths& Paths) {
-  if (!Cpp::LoadDispatchAPI(Paths.Library.c_str())) {
+// The one place the dispatch source is dlopen'd. In ROOT, CppInterOp is
+// compiled into libCling, so the dispatch API is loaded from there instead of
+// from a standalone libclangCppInterOp.
+static bool loadDispatchAPI(const InterOpPaths& /*Paths*/) {
+  (void)gROOT;
+  char* libcling = gSystem->DynamicPathName("libCling");
+
+  if (!libcling) {
+    std::cerr << "[cppjit] Failed to find libCling" << std::endl;
+    return false;
+  }
+  if (!Cpp::LoadDispatchAPI(libcling)) {
     std::cerr << "[cppjit] Failed to load CppInterOp" << std::endl;
     return false;
   }
@@ -713,6 +727,13 @@ interop::TCppScope_t interop::GetUnderlyingScope(TCppScope_t scope) {
 interop::TCppScope_t interop::GetScope(const std::string& name,
                                        TCppScope_t parent_scope) {
   std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  // CppInterOp directly looks at the AST which is not enough.
+  // We require lazy module loading that ROOT relies on, so we do it here
+  // first. Use TClass::GetClass to trigger auto-loading of dictionaries and
+  // modules.
+  if (!parent_scope || parent_scope == Cpp::GetGlobalScope())
+    TClass::GetClass(name.c_str(), true /* load */, true /* silent */);
+
   if (interop::TCppScope_t scope = Cpp::GetScope(name, parent_scope))
     return scope;
   if (!parent_scope || parent_scope == Cpp::GetGlobalScope()) {
@@ -860,7 +881,13 @@ interop::TCppScope_t interop::GetActualClass(TCppScope_t klass,
          p = Cpp::GetParentScope(p))
       if (Cpp::IsNamespace(p) && Cpp::GetName(p).empty())
         return klass;
-    return scope;
+    // Only return the derived type if theres a complete definition in the
+    // interpreter. internal classes like TCling have no public header and
+    // no dictionary, so their CXXRecordDecl has no DefinitionData.
+    // returning them crashes when querying offsets. Fall back to the base
+    // type if the derived type is incomplete.
+    if (Cpp::IsComplete(scope))
+      return scope;
   }
 
   return klass;
@@ -1317,6 +1344,10 @@ ptrdiff_t interop::GetBaseOffset(TCppScope_t derived, TCppScope_t base,
                                  TCppObject_t /*address*/, int direction,
                                  bool rerror) {
   std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
+  // Either base or derived class is incomplete, treat silently
+  if (!Cpp::IsComplete(derived) || !Cpp::IsComplete(base))
+    return rerror ? (ptrdiff_t)-1 : 0;
+
   intptr_t offset = Cpp::GetBaseClassOffset(derived, base);
 
   if (offset == -1) // Cling error, treat silently
