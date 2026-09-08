@@ -450,7 +450,6 @@ target_compile_definitions(RConfigureDefs INTERFACE
   $<$<BOOL:${tmva-pymva}>:R__HAS_PYMVA>
   $<$<BOOL:${uring}>:R__HAS_URING>
   $<$<BOOL:${geom}>:R__HAS_GEOM>
-  $<$<CXX_COMPILER_ID:MSVC>:-Zc:__cplusplus>
 )
 
 file(GENERATE
@@ -483,7 +482,7 @@ install(FILES ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h DESTINATION ${CMAKE_INST
 # Public target interface against which to link
 add_library(ROOTdefs INTERFACE)
 target_compile_definitions(ROOTdefs INTERFACE
-ROOT_RConfigure # so that including the mirror header RConfigure.h is inocuous if linking against this target
+ROOT_RConfigure # so that including the mirror header RConfigure.h is imnocuous if linking against this target
 )
 target_link_libraries(ROOTdefs INTERFACE RConfigureDefs)
 
