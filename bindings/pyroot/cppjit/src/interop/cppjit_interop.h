@@ -48,6 +48,12 @@ typedef void* TCppFuncAddr_t;
 // direct interpreter access -------------------------------------------------
 RPY_EXPORTED
 bool Compile(const std::string& code, bool silent = false);
+// the interpreter lock (ROOT's gInterpreterMutex when thread safety is on)
+// for Cpp:: calls made directly from Python; recursive, pair the calls
+RPY_EXPORTED
+void LockInterpreter();
+RPY_EXPORTED
+void UnlockInterpreter();
 RPY_EXPORTED
 std::string ToString(TCppScope_t klass, TCppObject_t obj);
 

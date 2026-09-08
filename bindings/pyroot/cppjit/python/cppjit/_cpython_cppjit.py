@@ -15,6 +15,8 @@ __all__ = [
     "_backend",
     "_begin_capture_stderr",
     "_end_capture_stderr",
+    "_lock_interpreter",
+    "_unlock_interpreter",
 ]
 
 
@@ -204,6 +206,10 @@ def load_reflection_info(name):
         raise RuntimeError('Could not load library "%s"' % (name))
 
     return True
+
+
+_lock_interpreter = _backend._lock_interpreter
+_unlock_interpreter = _backend._unlock_interpreter
 
 
 def _begin_capture_stderr():

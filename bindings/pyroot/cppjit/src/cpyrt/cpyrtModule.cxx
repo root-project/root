@@ -821,6 +821,22 @@ static PyObject* EndCaptureStderr(PyObject*, PyObject*) {
 } // unnamed namespace
 
 //- data -----------------------------------------------------------------------
+//----------------------------------------------------------------------------
+static PyObject* LockInterpreter(PyObject*, PyObject*) {
+  // release the GIL while waiting: the thread holding the interpreter lock
+  // may need Python to finish
+  Py_BEGIN_ALLOW_THREADS
+  interop::LockInterpreter();
+  Py_END_ALLOW_THREADS
+  Py_RETURN_NONE;
+}
+
+//----------------------------------------------------------------------------
+static PyObject* UnlockInterpreter(PyObject*, PyObject*) {
+  interop::UnlockInterpreter();
+  Py_RETURN_NONE;
+}
+
 static PyMethodDef gcpyrtMethods[] = {
     {(char*)"CreateScopeProxy", (PyCFunction)cpyrt::CreateScopeProxy,
      METH_VARARGS, (char*)"cppjit internal function"},
@@ -874,6 +890,10 @@ static PyMethodDef gcpyrtMethods[] = {
      METH_NOARGS, (char*)"Begin capturing stderr to a in memory buffer."},
     {(char*)"_end_capture_stderr", (PyCFunction)EndCaptureStderr, METH_NOARGS,
      (char*)"End capturing stderr and returns the captured buffer."},
+    {(char*)"_lock_interpreter", (PyCFunction)LockInterpreter, METH_NOARGS,
+     (char*)"Take the interpreter lock; pair with _unlock_interpreter."},
+    {(char*)"_unlock_interpreter", (PyCFunction)UnlockInterpreter,
+     METH_NOARGS, (char*)"Release the lock taken by _lock_interpreter."},
     {nullptr, nullptr, 0, nullptr}};
 
 struct module_state {
