@@ -1,6 +1,0 @@
-<lcgdict>
-
-  <namespace name="DocHelper" />
-  <function name="DocHelper::throw_an_error" />
-
-</lcgdict>

@@ -277,7 +277,7 @@ def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
     ns_vars = vars(ns_obj)
     for var_name, var_value in ns_vars.items():
         if isinstance(var_value, type):
-            if str(var_value).startswith("<class cppyy.gbl.") and not hasattr(var_value, "__cpp_template__"):
+            if str(var_value).startswith("<class cppjit.gbl.") and not hasattr(var_value, "__cpp_template__"):
                 # It's a class proxy (possibly a template instantiation cached
                 # in the namespace).
                 pythonize_if_match(var_name, var_value)
@@ -287,7 +287,7 @@ def _find_used_classes(ns, passes_filter, user_pythonizor, npars):
             # overload resolution for operator<<, which can JIT-compile
             # candidate implicit conversions.
             continue
-        elif str(var_value).startswith("<cppyy.Template"):
+        elif str(var_value).startswith("<cppjit.Template"):
             # Template proxies are not Python types and cannot be reliably
             # detected with isinstance (cppyy.types.Template is the backend
             # proxy class, which the cppyy.Template wrapper does not derive

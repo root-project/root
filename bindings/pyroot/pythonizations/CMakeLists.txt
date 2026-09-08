@@ -35,7 +35,7 @@ endif()
 
 # Set the suffix to '.so' and the prefix to 'lib'
 set_target_properties(${libname} PROPERTIES ${ROOT_LIBRARY_PROPERTIES_NO_VERSION})
-target_link_libraries(${libname} PUBLIC Core Tree CPyCppyy)
+target_link_libraries(${libname} PUBLIC Core Tree cpyrt)
 if(MSVC)
   set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   set_target_properties(${libname} PROPERTIES SUFFIX ".pyd")
@@ -55,7 +55,7 @@ endif()
 # Create meta-target PyROOT3 (INTERFACE library)
 # Export of targets are not supported for custom targets(add_custom_targets())
 add_library(PyROOT INTERFACE)
-target_link_libraries(PyROOT INTERFACE cppyy_backend cppyy ROOTPythonizations)
+target_link_libraries(PyROOT INTERFACE cppjit_backend cppjit ROOTPythonizations)
 
 # Define library output directories for build and install trees
 set(pymoduledir_build "${localruntimedir}/ROOT")
