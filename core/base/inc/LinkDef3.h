@@ -185,8 +185,7 @@
 // Insure the creation of the TClass object for pairs that might be
 // inside the cintdlls.
 #pragma extra_include "string";
-// insure using namespace std and declaration of std::pair
-#pragma extra_include "Rpair.h";
+// ensure using namespace std and declaration of std::pair
 #include <utility>
 
 #pragma link C++ class std::pair<char*,int>+;
