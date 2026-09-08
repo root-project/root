@@ -461,10 +461,21 @@ PyObject* VectorIAdd(PyObject* self, PyObject* args, PyObject* /* kwds */) {
         !(cpyrt_PyText_Check(fi) || PyBytes_Check(fi))) {
       PyObject* vend = PyObject_CallMethodNoArgs(self, PyStrings::gEnd);
       if (vend) {
-        PyObject* result = PyObject_CallMethodObjArgs(self, PyStrings::gInsert,
-                                                      vend, fi, nullptr);
+        // when __iadd__ is overriden, the operation does not end with
+        // calling the __iadd__ method, but also assigns the result to the
+        // lhs of the iadd. For example, performing vec += arr, Python
+        // first calls our override, and then does vec = vec.iadd(arr).
+        PyObject* it = PyObject_CallMethodObjArgs(self, PyStrings::gInsert,
+                                                  vend, fi, nullptr);
         Py_DECREF(vend);
-        return result;
+
+        if (!it)
+          return nullptr;
+
+        Py_DECREF(it);
+        // Assign the result of the __iadd__ override to the std::vector
+        Py_INCREF(self);
+        return self;
       }
     }
   }
@@ -1902,10 +1913,6 @@ bool cpyrt::Pythonize(PyObject* pyclass, interop::TCppScope_t scope) {
         PyErr_Clear(); // no 'data' method to alias
       Utility::AddToClass(pyclass, "data", (PyCFunction)VectorData);
 
-      // numpy array conversion
-      Utility::AddToClass(pyclass, "__array__", (PyCFunction)VectorArray,
-                          METH_VARARGS | METH_KEYWORDS /* unused */);
-
       // checked getitem
       if (HasAttrDirect(pyclass, PyStrings::gLen)) {
         Utility::AddToClass(pyclass, "_getitem__unchecked", "__getitem__");
@@ -1924,6 +1931,16 @@ bool cpyrt::Pythonize(PyObject* pyclass, interop::TCppScope_t scope) {
       interop::TCppType_t value_type =
           interop::GetTypeFromScope(interop::GetNamed("value_type", scope));
       interop::TCppType_t vtype = interop::ResolveType(value_type);
+
+      // numpy array conversion; only for vectors of non-class types:
+      // data() on a vector of class instances hands back a proxy of the
+      // first element, so forwarding __array__ to it would yield that
+      // element instead of the full vector (numpy's generic sequence
+      // protocol handles such vectors correctly on its own)
+      if (vtype && !interop::GetScopeFromType(vtype))
+        Utility::AddToClass(pyclass, "__array__", (PyCFunction)VectorArray,
+                            METH_VARARGS | METH_KEYWORDS /* unused */);
+
       if (vtype) { // actually resolved?
         PyObject* pyvalue_type = PyLong_FromVoidPtr(vtype.data);
         PyObject_SetAttr(pyclass, PyStrings::gValueTypePtr, pyvalue_type);
