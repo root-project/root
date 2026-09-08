@@ -402,17 +402,17 @@ add_custom_target(ensure_build_tree_marker ALL
 add_library(RConfigureDefs INTERFACE) # temporary target, do not link against it, just for bw-compatible header generation RConfigure.h
 if (gnuinstall)
   target_compile_definitions(RConfigureDefs INTERFACE
-    ROOTPREFIX=${prefix}
-    ROOTBINDIR=${bindir}
-    ROOTLIBDIR=${libdir}
-    ROOTETCDIR=${etcdir}
-    ROOTDATADIR=${datadir}
-    ROOTDOCDIR=${docdir}
-    ROOTMACRODIR=${macrodir}
-    ROOTTUTDIR=${tutdir}
-    ROOTSRCDIR=${srcdir}
-    ROOTICONPATH=${iconpath}
-    TTFFONTDIR=${ttffontdir}
+    ROOTPREFIX="${prefix}"
+    ROOTBINDIR="${bindir}"
+    ROOTLIBDIR="${libdir}"
+    ROOTETCDIR="${etcdir}"
+    ROOTDATADIR="${datadir}"
+    ROOTDOCDIR="${docdir}"
+    ROOTMACRODIR="${macrodir}"
+    ROOTTUTDIR="${tutdir}"
+    ROOTSRCDIR="${srcdir}"
+    ROOTICONPATH="${iconpath}"
+    TTFFONTDIR="${ttffontdir}"
   )
 endif()
 
