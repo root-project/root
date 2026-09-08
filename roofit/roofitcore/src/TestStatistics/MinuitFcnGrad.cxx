@@ -42,10 +42,10 @@ public:
       return grad;
    }
    std::vector<double> GradientWithPrevResult(std::vector<double> const &v, double *previous_grad, double *previous_g2,
-                                              double *previous_gstep) const override
+                                              double *previous_gstep, double fValAtV) const override
    {
       std::vector<double> output(v.size());
-      _fcn.GradientWithPrevResult(v.data(), output.data(), previous_grad, previous_g2, previous_gstep);
+      _fcn.GradientWithPrevResult(v.data(), output.data(), previous_grad, previous_g2, previous_gstep, fValAtV);
       return output;
    }
    ROOT::Minuit2::GradientParameterSpace gradParameterSpace() const override
@@ -259,12 +259,12 @@ void MinuitFcnGrad::Gradient(const double *x, double *grad) const
 }
 
 void MinuitFcnGrad::GradientWithPrevResult(const double *x, double *grad, double *previous_grad, double *previous_g2,
-                                           double *previous_gstep) const
+                                           double *previous_gstep, double fValAtX) const
 {
    _calculatingGradient = true;
    syncParameterValuesFromMinuitCalls(x, returnsInMinuit2ParameterSpace());
    syncOffsets();
-   _gradient->fillGradientWithPrevResult(grad, previous_grad, previous_g2, previous_gstep);
+   _gradient->fillGradientWithPrevResult(grad, previous_grad, previous_g2, previous_gstep, fValAtX);
    _calculatingGradient = false;
 }
 
