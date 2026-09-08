@@ -12,9 +12,9 @@
 #include <Python.h>
 
 // Bindings
-// CPyCppyy.h must be go first, since it includes Python.h, which must be
+// cpyrt.h must be go first, since it includes Python.h, which must be
 // included before any standard header
-#include "CPyCppyy/API.h"
+#include "cpyrt/API.h"
 #include "TPython.h"
 #include "TPyClassGenerator.h"
 
@@ -136,8 +136,8 @@ Bool_t TPython::Initialize()
       return true;
 
    if (!Py_IsInitialized()) {
-      // Trigger the Python initialization indirectly via CPyCppyy
-      CPyCppyy::Scope_Check(nullptr);
+      // Trigger the Python initialization indirectly via cpyrt
+      cppjit::cpyrt::Scope_Check(nullptr);
 
       mainThreadState = PyEval_SaveThread();
    }
@@ -203,7 +203,7 @@ Bool_t TPython::Import(const char *mod_name)
 
    PyGILRAII gilRaii;
 
-   if (!CPyCppyy::Import(mod_name)) {
+   if (!cppjit::cpyrt::Import(mod_name)) {
       return false;
    }
 
@@ -352,7 +352,7 @@ void TPython::ExecScript(const char *name, int argc, const char **argv)
    for (int i = 0; i < argc; ++i) {
       args[i] = argv[i];
    }
-   CPyCppyy::ExecScript(name, args);
+   cppjit::cpyrt::ExecScript(name, args);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -395,7 +395,7 @@ Bool_t TPython::Exec(const char *cmd, std::any *result, std::string const &resul
    }
 
    // execute the command
-   return CPyCppyy::Exec(command.str());
+   return cppjit::cpyrt::Exec(command.str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -412,7 +412,7 @@ Bool_t TPython::Bind(TObject *object, const char *label)
    // bind object in the main namespace
    TClass *klass = object->IsA();
    if (klass != 0) {
-      PyObjectRef bound{CPyCppyy::Instance_FromVoidPtr((void *)object, klass->GetName())};
+      PyObjectRef bound{cppjit::cpyrt::Instance_FromVoidPtr((void *)object, klass->GetName())};
 
       if (bound) {
          Bool_t bOk = PyDict_SetItemString(gMainDict, label, bound.get()) == 0;
@@ -438,7 +438,7 @@ void TPython::Prompt()
    PyGILRAII gilRaii;
 
    // enter i/o interactive mode
-   CPyCppyy::Prompt();
+   cppjit::cpyrt::Prompt();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -454,7 +454,7 @@ Bool_t TPython::CPPInstance_Check(PyObject *pyobject)
    PyGILRAII gilRaii;
 
    // detailed walk through inheritance hierarchy
-   return CPyCppyy::Instance_Check(pyobject);
+   return cppjit::cpyrt::Instance_Check(pyobject);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -469,7 +469,7 @@ Bool_t TPython::CPPInstance_CheckExact(PyObject *pyobject)
    PyGILRAII gilRaii;
 
    // direct pointer comparison of type member
-   return CPyCppyy::Instance_CheckExact(pyobject);
+   return cppjit::cpyrt::Instance_CheckExact(pyobject);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -485,7 +485,7 @@ Bool_t TPython::CPPOverload_Check(PyObject *pyobject)
    PyGILRAII gilRaii;
 
    // detailed walk through inheritance hierarchy
-   return CPyCppyy::Overload_Check(pyobject);
+   return cppjit::cpyrt::Overload_Check(pyobject);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -500,7 +500,7 @@ Bool_t TPython::CPPOverload_CheckExact(PyObject *pyobject)
    PyGILRAII gilRaii;
 
    // direct pointer comparison of type member
-   return CPyCppyy::Overload_CheckExact(pyobject);
+   return cppjit::cpyrt::Overload_CheckExact(pyobject);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -515,7 +515,7 @@ void *TPython::CPPInstance_AsVoidPtr(PyObject *pyobject)
    PyGILRAII gilRaii;
 
    // get held object (may be null)
-   return CPyCppyy::Instance_AsVoidPtr(pyobject);
+   return cppjit::cpyrt::Instance_AsVoidPtr(pyobject);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -531,5 +531,5 @@ PyObject *TPython::CPPInstance_FromVoidPtr(void *addr, const char *classname, Bo
 
    // perform cast (the call will check TClass and addr, and set python errors)
    // give ownership, for ref-counting, to the python side, if so requested
-   return CPyCppyy::Instance_FromVoidPtr(addr, classname, python_owns);
+   return cppjit::cpyrt::Instance_FromVoidPtr(addr, classname, python_owns);
 }
