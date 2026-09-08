@@ -320,6 +320,108 @@ static ItemGetter* GetGetter(PyObject* args) {
   return getter;
 }
 
+namespace {
+
+void compileSpanHelpers() {
+  static bool compiled = false;
+
+  if (compiled)
+    return;
+
+  compiled = true;
+
+  auto code = R"(
+namespace __cppjit_internal {
+
+template <class T>
+struct ptr_iterator {
+   T *cur;
+   T *end;
+
+   ptr_iterator(T *c, T *e) : cur(c), end(e) {}
+
+   T &operator*() const { return *cur; }
+   ptr_iterator &operator++()
+   {
+      ++cur;
+      return *this;
+   }
+   bool operator==(const ptr_iterator &other) const { return cur == other.cur; }
+   bool operator!=(const ptr_iterator &other) const { return !(*this == other); }
+};
+
+template <class T>
+ptr_iterator<T> make_iter(T *begin, T *end)
+{
+   return {begin, end};
+}
+
+} // namespace __cppjit_internal
+
+// Note: for const span<T>, T is const-qualified here
+template <class T>
+auto __cppjit_internal_begin(T &s) noexcept
+{
+   return __cppjit_internal::make_iter(s.data(), s.data() + s.size());
+}
+
+// Note: for const span<T>, T is const-qualified here
+template <class T>
+auto __cppjit_internal_end(T &s) noexcept
+{
+   // end iterator = begin iterator with cur == end
+   return __cppjit_internal::make_iter(s.data() + s.size(), s.data() + s.size());
+}
+    )";
+  interop::Compile(code, /*silent*/ true);
+}
+
+PyObject* spanBegin() {
+  static PyObject* pyFunc = nullptr;
+  if (!pyFunc) {
+    compileSpanHelpers();
+    PyObject* py_ns = cpyrt::GetScopeProxy(interop::GetGlobalScope());
+    pyFunc = PyObject_GetAttrString(py_ns, "__cppjit_internal_begin");
+    if (!pyFunc) {
+      PyErr_Format(PyExc_RuntimeError,
+                   "cppyy internal error: failed to locate helper "
+                   "'__cppjit_internal_begin' for std::span pythonization");
+    }
+  }
+  return pyFunc;
+}
+
+PyObject* spanEnd() {
+  static PyObject* pyFunc = nullptr;
+  if (!pyFunc) {
+    compileSpanHelpers();
+    PyObject* py_ns = cpyrt::GetScopeProxy(interop::GetGlobalScope());
+    pyFunc = PyObject_GetAttrString(py_ns, "__cppjit_internal_end");
+    if (!pyFunc) {
+      PyErr_Format(PyExc_RuntimeError,
+                   "cppyy internal error: failed to locate helper "
+                   "'__cppjit_internal_end' for std::span pythonization");
+    }
+  }
+  return pyFunc;
+}
+
+} // namespace
+
+static PyObject* SpanBegin(PyObject* self, PyObject*) {
+  auto begin = spanBegin();
+  if (!begin)
+    return nullptr;
+  return PyObject_CallOneArg(begin, self);
+}
+
+static PyObject* SpanEnd(PyObject* self, PyObject*) {
+  auto end = spanEnd();
+  if (!end)
+    return nullptr;
+  return PyObject_CallOneArg(end, self);
+}
+
 static bool FillVector(PyObject* vecin, PyObject* args, ItemGetter* getter) {
   Py_ssize_t sz = getter->size();
   if (sz < 0)
@@ -1892,6 +1994,18 @@ bool cpyrt::Pythonize(PyObject* pyclass, interop::TCppScope_t scope) {
 
   //- class name based pythonization -------------------------------------------
 
+  if (IsTemplatedSTLClass(name, "span")) {
+    // libstdc++ (GCC >= 15) implements std::span::iterator using a private
+    // nested tag type, which makes the iterator non-instantiable by
+    // CallFunc-generated wrappers (the return type cannot be named without
+    // violating access rules).
+    //
+    // To preserve correct Python iteration semantics, we replace begin()/end()
+    // for std::span to return a custom pointer-based iterator instead.
+    Utility::AddToClass(pyclass, "begin", (PyCFunction)SpanBegin, METH_NOARGS);
+    Utility::AddToClass(pyclass, "end", (PyCFunction)SpanEnd, METH_NOARGS);
+  }
+
   if (IsTemplatedSTLClass(name, "vector")) {
 
     // std::vector<bool> is a special case in C++
@@ -2087,10 +2201,18 @@ bool cpyrt::Pythonize(PyObject* pyclass, interop::TCppScope_t scope) {
                         METH_NOARGS);
   }
 
+  // The first condition was already present in upstream cpyrt. The others
+  // are special to ROOT, because its reflection layer gives us the types
+  // without the "std::" namespace. On some platforms, that applies only to the
+  // template arguments, and on others also to the "basic_string".
   else if (name == "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::"
                    "allocator<wchar_t> >" ||
            name == "std::basic_string<wchar_t, std::char_traits<wchar_t>, "
                    "std::allocator<wchar_t> >" ||
+           name == "basic_string<wchar_t,char_traits<wchar_t>,allocator<wchar_"
+                   "t> >" ||
+           name == "std::basic_string<wchar_t,char_traits<wchar_t>,allocator<"
+                   "wchar_t> >" ||
            name == "std::__1::basic_string<wchar_t,std::__1::char_traits<wchar_"
                    "t>,std::__1::allocator<wchar_t> >" ||
            name == "std::wstring") {
