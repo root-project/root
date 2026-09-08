@@ -11,7 +11,7 @@ from support import (
 )
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/pythonizablesDict"))
+test_dct = "pythonizables_cxx"
 
 
 def setup_module(mod):

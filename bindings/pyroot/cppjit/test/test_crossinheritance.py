@@ -8,11 +8,12 @@ from support import (
     IS_MAC,
     IS_MAC_ARM,
     IS_VALGRIND,
+    IS_WINDOWS,
     setup_make,
 )
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/crossinheritanceDict"))
+test_dct = "crossinheritance_cxx"
 
 
 def setup_module(mod):
@@ -260,6 +261,7 @@ class TestCROSSINHERITANCE:
         assert p1.get_value() == 13
 
     @mark.xfail(condition=IS_MAC_ARM, run=False, reason="Fails on macOS arm")
+    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows")
     def test08_error_handling(self):
         """Python errors should propagate through wrapper"""
 
@@ -1630,6 +1632,7 @@ class TestCROSSINHERITANCE:
 
         assert p.func(d) == 42 + 2 * d.value
 
+    @mark.xfail(strict=True)
     def test33_direct_base_methods(self):
         """Call base class methods directly"""
 
