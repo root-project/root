@@ -46,7 +46,7 @@ public:
    /// IMultiGradFunction overrides necessary for Minuit
    void Gradient(const double *x, double *grad) const;
    void GradientWithPrevResult(const double *x, double *grad, double *previous_grad, double *previous_g2,
-                               double *previous_gstep) const;
+                               double *previous_gstep, double fValAtX) const;
 
    inline std::string getFunctionName() const override { return _likelihood->GetName(); }
 

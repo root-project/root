@@ -20,6 +20,7 @@
 #include "Minuit2/NumericalDerivator.h"
 #include "Minuit2/MnMatrix.h"
 
+#include <limits>
 #include <vector>
 
 namespace RooFit {
@@ -32,8 +33,8 @@ public:
                          RooMinimizer *minimizer, SharedOffset offset);
 
    void fillGradient(double *grad) override;
-   void fillGradientWithPrevResult(double *grad, double *previous_grad, double *previous_g2,
-                                   double *previous_gstep) override;
+   void fillGradientWithPrevResult(double *grad, double *previous_grad, double *previous_g2, double *previous_gstep,
+                                   double fValAtX) override;
 
    void update_state() override;
 
@@ -80,6 +81,9 @@ private:
    std::size_t N_tasks_ = 0;
    std::size_t N_tasks_at_workers_ = 0;
    std::vector<double> minuit_internal_x_;
+   /// Function value at minuit_internal_x_ as known by the master (NaN when unknown); broadcast
+   /// to workers so their NumericalDerivator setup can skip the central-point evaluation.
+   double fval_at_x_ = std::numeric_limits<double>::quiet_NaN();
 
    mutable bool isCalculating_ = false;
 
