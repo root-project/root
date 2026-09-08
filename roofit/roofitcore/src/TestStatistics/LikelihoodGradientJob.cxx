@@ -24,6 +24,7 @@
 #include "Minuit2/Minuit2Minimizer.h"
 #include "Minuit2/MnStrategy.h"
 
+#include <algorithm>
 #include <cmath>
 
 namespace RooFit {
@@ -34,11 +35,31 @@ LikelihoodGradientJob::LikelihoodGradientJob(std::shared_ptr<RooAbsL> likelihood
                                              std::size_t N_dim, RooMinimizer *minimizer, SharedOffset offset)
    : LikelihoodGradientWrapper(std::move(likelihood), std::move(calculation_is_clean), N_dim, minimizer,
                                std::move(offset)),
-     grad_(N_dim),
-     N_tasks_(N_dim)
+     grad_(N_dim)
 {
+   // Each task covers multiple parameters to reduce the scheduling overhead
+   // per gradient: every task costs a dequeue round trip through the queue
+   // process plus a result message to the master, which for cheap partial
+   // derivatives can otherwise dominate over the actual calculation. A few
+   // tasks per worker still leave the queue room for load balancing. Parameters
+   // are assigned to tasks in strides, so parameters with expensive partial
+   // derivatives (that often sit next to each other in the parameter order,
+   // e.g. a block of correlated systematics) spread evenly over the tasks.
+   N_tasks_ = MultiProcess::Config::LikelihoodGradientJob::defaultNParamTasks;
+   if (N_tasks_ == MultiProcess::Config::LikelihoodGradientJob::automaticNParamTasks) {
+      N_tasks_ = 4 * MultiProcess::Config::getDefaultNWorkers();
+   }
+   N_tasks_ = std::min(N_tasks_, N_dim);
+
    minuit_internal_x_.reserve(N_dim);
    offsets_previous_ = shared_offset_.offsets();
+}
+
+/// Number of parameters assigned to task \p task (parameter indices congruent
+/// to \p task modulo N_tasks_).
+std::size_t LikelihoodGradientJob::taskSize(std::size_t task) const
+{
+   return grad_.size() / N_tasks_ + (task < grad_.size() % N_tasks_ ? 1 : 0);
 }
 
 void LikelihoodGradientJob::synchronizeParameterSettingsImpl(
@@ -88,23 +109,33 @@ void LikelihoodGradientJob::setErrorLevel(double error_level) const
 
 void LikelihoodGradientJob::evaluate_task(std::size_t task)
 {
-   run_derivator(task);
+   for (std::size_t ix = task; ix < grad_.size(); ix += N_tasks_) {
+      run_derivator(ix);
+   }
 }
 
 // SYNCHRONIZATION FROM WORKERS TO MASTER
 
 void LikelihoodGradientJob::send_back_task_result_from_worker(std::size_t task)
 {
-   task_result_t task_result{id_, task, grad_[task]};
-   zmq::message_t message(sizeof(task_result_t));
+   task_result_t task_result{id_, task};
+   zmq::message_t message(sizeof(task_result_t) + taskSize(task) * sizeof(ROOT::Minuit2::DerivatorElement));
    memcpy(message.data(), &task_result, sizeof(task_result_t));
+   auto elements = reinterpret_cast<ROOT::Minuit2::DerivatorElement *>(message.data<char>() + sizeof(task_result_t));
+   for (std::size_t ix = task; ix < grad_.size(); ix += N_tasks_) {
+      *elements++ = grad_[ix];
+   }
    get_manager()->messenger().send_from_worker_to_master(std::move(message));
 }
 
 bool LikelihoodGradientJob::receive_task_result_on_master(const zmq::message_t &message)
 {
    auto result = message.data<task_result_t>();
-   grad_[result->task_id] = result->grad;
+   auto elements =
+      reinterpret_cast<ROOT::Minuit2::DerivatorElement const *>(message.data<char>() + sizeof(task_result_t));
+   for (std::size_t ix = result->task_id; ix < grad_.size(); ix += N_tasks_) {
+      grad_[ix] = *elements++;
+   }
    --N_tasks_at_workers_;
    bool job_completed = (N_tasks_at_workers_ == 0);
    return job_completed;
@@ -263,7 +294,7 @@ void LikelihoodGradientJob::fillGradientWithPrevResult(double *grad, double *pre
                                                        double *previous_gstep, double fValAtX)
 {
    if (get_manager()->process_manager().is_master()) {
-      for (std::size_t i_component = 0; i_component < N_tasks_; ++i_component) {
+      for (std::size_t i_component = 0; i_component < grad_.size(); ++i_component) {
          grad_[i_component] = {previous_grad[i_component], previous_g2[i_component], previous_gstep[i_component]};
       }
 

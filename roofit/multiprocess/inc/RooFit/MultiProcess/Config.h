@@ -38,6 +38,18 @@ public:
       static std::size_t defaultNComponentTasks;
    };
 
+   struct LikelihoodGradientJob {
+      // magic value to indicate that the number of tasks will be set automatically
+      constexpr static std::size_t automaticNParamTasks = 0;
+
+      /// Number of tasks to split a gradient calculation into. Each task
+      /// covers a contiguous block of parameters, so fewer tasks mean less
+      /// scheduling overhead per gradient, but also less opportunity for load
+      /// balancing between the workers. The automatic default uses a small
+      /// multiple of the number of workers.
+      static std::size_t defaultNParamTasks;
+   };
+
    struct Queue {
       enum class QueueType {FIFO, Priority};
       static bool setQueueType(QueueType queueType);

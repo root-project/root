@@ -60,11 +60,13 @@ private:
    // Job overrides:
    void evaluate_task(std::size_t task) override;
 
+   /// Message header for a task result; followed in the same message by the
+   /// DerivatorElement results for the parameters of that task.
    struct task_result_t {
       std::size_t job_id;
       std::size_t task_id;
-      ROOT::Minuit2::DerivatorElement grad;
    };
+   std::size_t taskSize(std::size_t task) const;
    void send_back_task_result_from_worker(std::size_t task) override;
    bool receive_task_result_on_master(const zmq::message_t &message) override;
 
