@@ -520,7 +520,10 @@ class TestREGRESSION:
         assert a == "a"
         assert b == "b"
 
-        assert type(a + b) == cppjit.gbl.std.string
+        # Expect same return type as other funcs returning a std::string in
+        # C++, which might be different from gbl.std.string on the Python side
+        # depending on the enabled Pythonizations.
+        assert type(a + b) == type(cppjit.gbl.std.to_string(42))
         assert a + b == "ab"
 
     @mark.xfail(condition=IS_MAC, reason="Fails on OS X")

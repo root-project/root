@@ -1249,7 +1249,10 @@ class TestTEMPLATES:
 
         ns = cppjit.gbl.CStringTemplateArg
 
-        assert type(ns.stringify("Alice")) == cppjit.gbl.std.string
+        # Expect same return type as other funcs returning a std::string in
+        # C++, which might be different from gbl.std.string on the Python side
+        # depending on the enabled Pythonizations.
+        assert type(ns.stringify("Alice")) == type(cppjit.gbl.std.to_string(42))
         assert ns.stringify("Alice", "Bob") == "Alice Bob "
         assert ns.stringify(1, 2, 3) == "1 2 3 "
         assert ns.stringify["const char*"]("Aap") == "Aap "
