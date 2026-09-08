@@ -688,7 +688,7 @@ TEST_P(GH20033SameBranchName, Test)
    expectedScan += "*    Row   *";
    // We keep the same colsize in the output scan to make the building of the expected output easier. Cut the longer
    // expression name to the same length as the other branch name.
-   std::string expressionToken{(expressionName == "genEvent.Weight()" ? "genEv" : "value")};
+   std::string expressionToken{(expressionName == "genEvent.Weight()" ? "ge..." : "value")};
    if (!stepZeroScan.empty())
       expectedScan += " step0chai." + expressionToken + " *";
    if (!stepOneScan.empty())
