@@ -41,5 +41,5 @@ $<$<PLATFORM_ID:SunOS>:R__SOLARIS>
 target_include_directories(ROOTtls INTERFACE ${CMAKE_SOURCE_DIR}/core/foundation/inc) # TODO move to builtins. could be instead a fileSET.
 
 target_include_directories(ROOTzip PUBLIC .)
-target_link_libraries(ROOTzip PRIVATE LibLZMA::LibLZMA xxHash::xxHash LZ4::LZ4 ZSTD::ZSTD ROOTtls)
+target_link_libraries(ROOTzip PRIVATE xxHash::xxHash LibLZMA::LibLZMA LZ4::LZ4 ZSTD::ZSTD ZLIB::ZLIB ROOTtls)
 set_target_properties(ROOTzip PROPERTIES POSITION_INDEPENDENT_CODE ON)
