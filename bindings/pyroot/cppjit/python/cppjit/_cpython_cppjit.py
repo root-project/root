@@ -2,8 +2,16 @@
 
 import ctypes
 import importlib.util
+import os
+import sys
 
 from . import _stdcpp_fix  # noqa: F401
+
+# The libcppjit extension lives inside the package, but its dependent DLLs
+# (cpyrt, the ROOT libraries) live one level above, as for the ROOT package
+# itself (see ROOT/__init__.py).
+if "win32" in sys.platform:
+    os.add_dll_directory(os.path.dirname(os.path.dirname(__file__)))
 
 __all__ = [
     "gbl",
@@ -25,6 +33,11 @@ def _preload_backend_library():
     if spec is None or not spec.origin:
         raise ImportError("cannot locate the cppjit.libcppjit extension module")
     lib = ctypes.CDLL(spec.origin, ctypes.RTLD_GLOBAL)
+    if not hasattr(lib, "LoadCppInterOp"):
+        # In ROOT's split wiring the loader lives in the cpyrt DLL and the
+        # thin extension module does not re-export it on Windows.
+        libdir = os.path.dirname(os.path.dirname(spec.origin))
+        lib = ctypes.CDLL(os.path.join(libdir, "libcpyrt.dll"))
     if not lib.LoadCppInterOp():
         raise RuntimeError("failed to load CppInterOp (LoadCppInterOp returned 0)")
     return lib
@@ -192,16 +205,9 @@ default = _backend.default
 
 
 def load_reflection_info(name):
-    #    with _stderr_capture() as err:
-    # FIXME: Remove the .so and add logic in libcppinterop
-    name = name + ".so"
-    result = Cpp.LoadLibrary(name, True)
-    if name.endswith("Dict.so"):
-        header = name[:-7] + ".h"
-        Cpp.Declare('#include "' + header + '"', False)
-
-    if result == False:  # noqa: E712
-        raise RuntimeError('Could not load library "%s"' % (name))
+    sc = gbl.gSystem.Load(name)
+    if sc == -1:
+        raise RuntimeError("Unable to load reflection library " + name)
 
     return True
 
