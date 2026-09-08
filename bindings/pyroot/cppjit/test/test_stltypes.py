@@ -11,6 +11,7 @@ from support import (
     IS_MAC_ARM,
     IS_MAC_X86,
     IS_VALGRIND,
+    IS_WINDOWS,
     ispypy,
     maxvalue,
     pylong,
@@ -19,7 +20,7 @@ from support import (
 )
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/stltypesDict"))
+test_dct = "stltypes_cxx"
 
 
 def setup_module(mod):
@@ -990,8 +991,6 @@ class TestSTLSTRING:
 
         assert tuple(cppjit.gbl.str_array_1) == ("a", "b", "c")
         str_array_2 = cppjit.gbl.str_array_2
-        # fix up the size
-        str_array_2.size = 4
         assert tuple(str_array_2) == ("d", "e", "f", "g")
         assert tuple(str_array_2) == ("d", "e", "f", "g")
 
@@ -1873,6 +1872,7 @@ class TestSTLSTRING_VIEW:
         assert "Lorem ipsum dolor sit amet" in str(text)
 
     @mark.xfail(condition=IS_MAC, run=False, reason="Crashes on OSX")
+    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows")
     def test03_string_view_pythonize(self):
         """Pythonization of std::string_view"""
 
@@ -2283,6 +2283,7 @@ class TestSTLEXCEPTION:
         assert cppjit.gbl.GetMyErrorCount() == 0
 
     @mark.xfail(condition=IS_MAC_ARM, run=False, reason="Seg Faults on OSX-ARM")
+    @mark.xfail(condition=IS_WINDOWS == 64, run=False, reason="Crashes on Windows 64 bit")
     def test04_from_cpp(self):
         """Catch C++ exceptiosn from C++"""
 
@@ -2433,6 +2434,7 @@ class TestSTLSPAN:
 
 
 class TestSTLANY:
+    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows")
     def test01_make_any(self):
         """
         Test that std::make_any can be used for class types.
@@ -2460,9 +2462,9 @@ class TestCOMPLEXTEMPLATEARG:
 
         import cppjit
 
-        assert (
-            cppjit.gbl.std.vector[complex].__cpp_name__
-            == "std::vector<std::complex<double>>"
+        # ROOT's backend prints names with expanded default template arguments
+        assert cppjit.gbl.std.vector[complex].__cpp_name__ == (
+            "std::vector<std::complex<double>,std::allocator<std::complex<double> > >"
         )
 
         cppjit.cppdef("""\

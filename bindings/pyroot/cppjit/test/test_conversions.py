@@ -3,7 +3,7 @@ from pytest import mark, raises
 from support import IS_CLANG_REPL, IS_CLING, IS_MAC, setup_make
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/conversionsDict"))
+test_dct = "conversions_cxx"
 
 
 def setup_module(mod):

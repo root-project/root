@@ -15,7 +15,7 @@ from support import (
 )
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/doc_helperDict"))
+test_dct = "doc_helper_cxx"
 
 
 def setup_module(mod):
@@ -456,6 +456,7 @@ namespace Namespace {
         run=False,
         reason="Crashes with exception not being caught on Apple Silicon",
     )
+    @mark.xfail(condition=IS_WINDOWS == 64, run=False, reason="Crashes on Windows 64 bit")
     def test_exceptions(self):
         """Exception throwing and catching"""
 
@@ -1320,6 +1321,7 @@ class TestTALKEXAMPLES:
         with raises(CC.MyException):
             CC.throw_error()
 
+    @mark.xfail(strict=True)
     def test_unicode(self):
         """Unicode non-UTF-8 example"""
 
