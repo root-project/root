@@ -1245,9 +1245,19 @@ bool interop::GetSmartPtrInfo(const std::string& tname, TCppScope_t* raw,
     std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
     Cpp::GetOperator(scope, Cpp::Operator::OP_Arrow, ops,
                      /*kind=*/Cpp::OperatorArity::kBoth);
+    if (ops.size() != 1)
+      return false;
+
+    // The dereference operator can be a member template: MSVC's
+    // std::shared_ptr::operator-> is SFINAE-constrained on the element
+    // type not being an array. Its return type is dependent, so it has
+    // to be instantiated (it takes no arguments) before the pointee
+    // type can be determined - and before it can be called.
+    if (Cpp::IsTemplatedFunction(ops[0]))
+      ops[0] = Cpp::BestOverloadFunctionMatch(ops, {}, {});
+    if (!ops[0])
+      return false;
   }
-  if (ops.size() != 1)
-    return false;
 
   if (deref)
     *deref = ops[0];
