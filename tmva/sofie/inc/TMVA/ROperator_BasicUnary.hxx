@@ -9,7 +9,7 @@ namespace TMVA {
 namespace Experimental {
 namespace SOFIE {
 
-enum class EBasicUnaryOperator { kReciprocal, kSqrt , kNeg, kExp, kLog, kSin, kCos, kAbs, kSoftplus, kAtan, kFloor };
+enum class EBasicUnaryOperator { kReciprocal, kSqrt , kNeg, kExp, kLog, kSin, kCos, kAbs, kSoftplus, kAtan, kFloor, kAsinh, kAcosh, kAtanh };
 
 template <typename T, EBasicUnaryOperator Op>
 struct UnaryOpTraits {
@@ -82,6 +82,26 @@ template <typename T>
 struct UnaryOpTraits<T, EBasicUnaryOperator::kFloor> {
    static std::string Name() { return "Floor"; }
    static std::string Op(const std::string &X) { return "std::floor(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kAsinh> {
+   static std::string Name() { return "Asinh"; }
+   static std::string Op(const std::string &X) { return "std::asinh(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kAcosh> {
+   // acosh is only defined for X >= 1; std::acosh returns NaN outside this domain
+   static std::string Name() { return "Acosh"; }
+   static std::string Op(const std::string &X) { return "std::acosh(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kAtanh> {
+   // atanh is only defined for |X| < 1; std::atanh returns NaN/inf outside this domain
+   static std::string Name() { return "Atanh"; }
+   static std::string Op(const std::string &X) { return "std::atanh(" + X + ")"; }
 };
 
 template <typename T, EBasicUnaryOperator Op>
