@@ -12,7 +12,7 @@
 #include <Python.h>
 
 // Bindings
-#include "CPyCppyy/API.h"
+#include "cpyrt/API.h"
 #include "TPyReturn.h"
 
 // ROOT
@@ -212,9 +212,9 @@ TPyReturn::operator void *() const
    if (fPyObject == Py_None)
       return nullptr;
 
-   if (CPyCppyy::Instance_Check(fPyObject)) {
-      CPyCppyy::Instance_SetCppOwns(fPyObject);
-      return CPyCppyy::Instance_AsVoidPtr(fPyObject);
+   if (cppjit::cpyrt::Instance_Check(fPyObject)) {
+      cppjit::cpyrt::Instance_SetCppOwns(fPyObject);
+      return cppjit::cpyrt::Instance_AsVoidPtr(fPyObject);
    } else
       return fPyObject; // borrows reference
 }

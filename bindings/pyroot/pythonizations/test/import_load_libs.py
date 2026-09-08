@@ -57,9 +57,9 @@ class ImportLoadLibs(unittest.TestCase):
         "libkeyutils",
         "libcom_err",
         "libresolv",
-        # cppyy and Python libraries
-        "libcppyy.*",
-        "libCPyCppyy.*",
+        # cppjit and Python libraries
+        "libcppjit.*",
+        "libcpyrt.*",
         "libROOTPythonizations.*",
         "libpython.*",
         "libutil.*",
