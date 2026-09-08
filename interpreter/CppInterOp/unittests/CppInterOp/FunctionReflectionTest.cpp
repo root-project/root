@@ -8,6 +8,7 @@
 #include "clang/Sema/Sema.h"
 
 #include <CppInterOp/CppInterOpTypes.h>
+#include <cstdint>
 #include <llvm/ADT/ArrayRef.h>
 
 #include "gtest/gtest.h"
@@ -161,6 +162,270 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetClassMethods) {
   EXPECT_EQ(get_method_name(templ_methods2[5]),
             "inline TT &TT::operator=(TT &&)");
   EXPECT_EQ(get_method_name(templ_methods2[6]), "inline TT::~TT()");
+}
+
+// A method introduced into a derived class with `using Base::name;` in a
+// public section must report public access (taken from the using-declaration),
+// not the access of the underlying target in the base class.
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           FunctionReflection_GetClassMethods_UsingShadowAccess) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    class MyBase {
+    protected:
+       void foo(int, int) {}
+    };
+    class MyDerived : public MyBase {
+    public:
+       using MyBase::foo;   // promoted to public
+       void foo(int) {}
+    };
+    class HiddenDerived : public MyBase {
+    protected:
+       using MyBase::foo;   // stays protected
+    };
+    )";
+
+  GetAllTopLevelDecls(code, Decls);
+
+  std::vector<Cpp::FuncRef> derived_methods;
+  Cpp::GetClassMethods(Decls[1], derived_methods);
+
+  // Find the using-promoted foo (the two-argument overload).
+  bool found_using_promoted = false;
+  Cpp::FuncRef using_promoted;
+  for (auto m : derived_methods) {
+    if (Cpp::GetName(Cpp::DeclRef{m.data}) != "foo")
+      continue;
+    if (Cpp::GetFunctionNumArgs(m) == 2) {
+      found_using_promoted = true;
+      using_promoted = m;
+      EXPECT_TRUE(Cpp::IsPublicMethod(m));
+      EXPECT_FALSE(Cpp::IsProtectedMethod(m));
+      EXPECT_FALSE(Cpp::IsConstructor(m));
+    }
+  }
+  EXPECT_TRUE(found_using_promoted)
+      << "using-promoted base method missing from GetClassMethods";
+
+  // Resolving the address of the using-promoted overload must transparently
+  // unwrap the using-shadow to its target before emitting code. This is the
+  // only caller exercising the non-const UnwrapUsingShadowToFunction overload
+  // (the reflection-only APIs above all go through the const overload), and the
+  // resolved address must match the one obtained directly from the base method.
+#ifndef _WIN32 // GetFunctionAddress is disabled on Windows; see its own test.
+  if (!TypeParam::isOutOfProcess && found_using_promoted) {
+    std::vector<Cpp::FuncRef> base_methods;
+    Cpp::GetClassMethods(Decls[0], base_methods);
+    Cpp::FuncRef base_foo;
+    for (auto m : base_methods) {
+      if (Cpp::GetName(Cpp::DeclRef{m.data}) == "foo" &&
+          Cpp::GetFunctionNumArgs(m) == 2)
+        base_foo = m;
+    }
+    ASSERT_TRUE(base_foo);
+
+    void* shadow_addr = Cpp::GetFunctionAddress(using_promoted);
+    EXPECT_TRUE(shadow_addr);
+    EXPECT_EQ(shadow_addr, Cpp::GetFunctionAddress(base_foo));
+  }
+#endif
+
+  std::vector<Cpp::FuncRef> hidden_methods;
+  Cpp::GetClassMethods(Decls[2], hidden_methods);
+
+  bool found_hidden = false;
+  for (auto m : hidden_methods) {
+    if (Cpp::GetName(Cpp::DeclRef{m.data}) == "foo" &&
+        Cpp::GetFunctionNumArgs(m) == 2) {
+      found_hidden = true;
+      EXPECT_FALSE(Cpp::IsPublicMethod(m));
+      EXPECT_TRUE(Cpp::IsProtectedMethod(m));
+    }
+  }
+  EXPECT_TRUE(found_hidden);
+}
+
+// Companion to the access test above, covering the *call* path: a method
+// promoted into a derived class with a public `using Base::name;` must be
+// invocable through the derived class even though the target still carries the
+// base class's protected access. The generated wrapper references the target by
+// its original (protected) qualified name, so MakeFunctionCallable threads a
+// relaxAccessControl flag into wrapper compilation for this case. Exercise it
+// end to end: compile the wrapper and actually invoke it.
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           FunctionReflection_MakeFunctionCallable_UsingShadow) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscripten builds";
+#endif
+#if defined(CPPINTEROP_USE_CLING) && defined(_WIN32)
+  GTEST_SKIP() << "Disabled on Cling/Windows.";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    class MyBase {
+    protected:
+       int foo(int a, int b) { return a * 100 + b; }
+    };
+    class MyDerived : public MyBase {
+    public:
+       using MyBase::foo;   // promoted to public
+       int foo(int a) { return a; }
+    };
+    )";
+
+  // `-include new` is needed for the constructor wrapper's placement new.
+  GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
+                      /*interpreter_args=*/{"-include", "new"});
+
+  std::vector<Cpp::FuncRef> derived_methods;
+  Cpp::GetClassMethods(Decls[1], derived_methods);
+
+  // Locate the using-promoted foo (the two-argument overload from the base).
+  Cpp::FuncRef using_promoted;
+  for (auto m : derived_methods) {
+    if (Cpp::GetName(Cpp::DeclRef{m.data}) == "foo" &&
+        Cpp::GetFunctionNumArgs(m) == 2)
+      using_promoted = m;
+  }
+  ASSERT_TRUE(using_promoted);
+
+  // Compiling this wrapper exercises the relaxAccessControl path: the generated
+  // body calls MyBase::foo through its qualified (protected) name, so access
+  // control has to be disabled for the wrapper to compile.
+  Cpp::JitCall Call = Cpp::MakeFunctionCallable(using_promoted);
+  ASSERT_EQ(Call.getKind(), Cpp::JitCall::kGenericCall);
+
+  // Construct a MyDerived and call the promoted overload through it.
+  auto Ctor = Cpp::MakeFunctionCallable(Cpp::GetDefaultConstructor(Decls[1]));
+  void* object = nullptr;
+  Ctor.Invoke((void*)&object, {}, /*self=*/nullptr);
+  ASSERT_TRUE(object);
+
+  int a = 3;
+  int b = 7;
+  int result = 0;
+  std::array<void*, 2> args = {(void*)&a, (void*)&b};
+  Call.Invoke(&result, {args.data(), /*args_size=*/2}, object);
+  EXPECT_EQ(result, (a * 100) + b);
+
+  Cpp::Destruct(object, Decls[1]);
+}
+
+// A using-promoted method still belongs to its declaring base class. When that
+// base sits at a non-zero offset inside the derived object (multiple
+// inheritance), callers adjust `this` with
+// GetBaseClassOffset(derived, GetParentScope(method)) — exactly what CPyCppyy
+// does before invoking the wrapper, which casts `self` to the declaring base
+// type. GetParentScope on the using-shadow handle must therefore return the
+// target's declaring base, not the class holding the using-declaration —
+// otherwise the offset comes out zero and the call writes through an
+// unadjusted pointer into the wrong subobject. Mirrors cppyy's
+// test_regression.py::test50_using_decl_base_this_offset.
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           FunctionReflection_UsingShadow_BaseThisOffset) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscripten builds";
+#endif
+#if defined(CPPINTEROP_USE_CLING) && defined(_WIN32)
+  GTEST_SKIP() << "Disabled on Cling/Windows.";
+#endif
+
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    // Fat first base so that SecondBase lands at a non-zero offset in Derived.
+    struct FirstBase {
+      long long a, b, c, d, e, f, g, h;
+      FirstBase() : a(11), b(22), c(33), d(44), e(55), f(66), g(77), h(88) {}
+      long long get_a() const { return a; }
+    };
+    struct SecondBase {
+      int value;
+      SecondBase() : value(-1) {}
+      void set_value(int v) { value = v; }
+      int get_value() const { return value; }
+    };
+    struct Derived : public FirstBase, public SecondBase {
+      int extra;
+      Derived() : extra(0) {}
+      using SecondBase::set_value;                // import the 1-arg overload
+      void set_value(int v, int w) { value = v + w; extra = w; }
+    };
+    )";
+
+  // `-include new` is needed for the constructor wrapper's placement new.
+  GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
+                      /*interpreter_args=*/{"-include", "new"});
+
+  std::vector<Cpp::FuncRef> derived_methods;
+  Cpp::GetClassMethods(Decls[2], derived_methods);
+
+  // Locate the using-imported set_value (the one-argument overload).
+  Cpp::FuncRef imported;
+  for (auto m : derived_methods) {
+    if (Cpp::GetName(Cpp::DeclRef{m.data}) == "set_value" &&
+        Cpp::GetFunctionNumArgs(m) == 1)
+      imported = m;
+  }
+  ASSERT_TRUE(imported);
+
+  // The declaring scope of the imported method is SecondBase, not Derived.
+  Cpp::DeclRef declaring = Cpp::GetParentScope(Cpp::DeclRef{imported.data});
+  EXPECT_EQ(Cpp::GetQualifiedName(declaring), "SecondBase");
+
+  // ... and SecondBase sits at a non-zero offset inside Derived.
+  int64_t offset = Cpp::GetBaseClassOffset(Decls[2], declaring);
+  EXPECT_GT(offset, 0);
+
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "JitCall part fails for OOP JIT builds";
+
+  // End-to-end: construct a Derived, call the imported overload with `this`
+  // adjusted to the SecondBase subobject, and check the value landed there.
+  auto Ctor = Cpp::MakeFunctionCallable(Cpp::GetDefaultConstructor(Decls[2]));
+  void* object = nullptr;
+  Ctor.Invoke((void*)&object, {}, /*self=*/nullptr);
+  ASSERT_TRUE(object);
+  void* second_base = static_cast<char*>(object) + offset;
+
+  Cpp::JitCall SetValue = Cpp::MakeFunctionCallable(imported);
+  ASSERT_EQ(SetValue.getKind(), Cpp::JitCall::kGenericCall);
+  int v = 42;
+  std::array<void*, 1> args = {(void*)&v};
+  SetValue.Invoke(nullptr, {args.data(), /*args_size=*/1}, second_base);
+
+  std::vector<Cpp::FuncRef> second_base_methods;
+  Cpp::GetClassMethods(Decls[1], second_base_methods);
+  Cpp::FuncRef get_value;
+  for (auto m : second_base_methods) {
+    if (Cpp::GetName(Cpp::DeclRef{m.data}) == "get_value")
+      get_value = m;
+  }
+  ASSERT_TRUE(get_value);
+
+  int result = 0;
+  Cpp::MakeFunctionCallable(get_value).Invoke(&result, {}, second_base);
+  EXPECT_EQ(result, 42);
+
+  // The FirstBase subobject must be untouched (no write through an
+  // unadjusted pointer).
+  std::vector<Cpp::FuncRef> first_base_methods;
+  Cpp::GetClassMethods(Decls[0], first_base_methods);
+  Cpp::FuncRef get_a;
+  for (auto m : first_base_methods) {
+    if (Cpp::GetName(Cpp::DeclRef{m.data}) == "get_a")
+      get_a = m;
+  }
+  ASSERT_TRUE(get_a);
+
+  long long a = 0;
+  Cpp::MakeFunctionCallable(get_a).Invoke(&a, {}, object);
+  EXPECT_EQ(a, 11);
+
+  Cpp::Destruct(object, Decls[2]);
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE,
@@ -829,6 +1094,265 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_FunctionTypes) {
   EXPECT_TRUE(Cpp::IsSameType(typ1, typ2));
 }
 
+TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetDeallocType) {
+  std::string code = R"(
+    #include <new>
+    #include <stdlib.h>
+
+    void func0(int* p){ delete p; }
+
+    void func1(int* p){ delete[] p; }
+
+    void func2(int* p){ free(p); }
+
+    void func3(int* p, int* q){ delete q; }
+
+    void func4(int* p){ int* x = p; delete x; }
+
+    void func5(int* p){ int* x = p; int* y = x; delete y; }
+
+    void func6(int* p){ p = nullptr; delete p; }
+
+    void func7(int* p){ int* x = p; p = nullptr; delete x; }
+
+    void func8(int* p, bool b){
+      if(b)
+        delete p;
+      else
+        delete[] p;
+    }
+
+    void func9(int* p, bool b){
+      if(b)
+        delete p;
+      else
+        delete p;
+    }
+
+    void func10(int* p, int x){
+      if(x<0)
+        delete[] p;
+      if(x==0)
+        free(p);
+      else
+        delete p;
+    }
+
+    void func11(int* p);
+
+    void func12(int* p) try { delete p; } catch(...) {}
+
+    void func13(int n){}
+
+    int func14;
+
+    void func15(int* p){ int x = 5; (void)x; delete p; }
+
+    void func16(int* p){ int* x = new int; delete x; }
+
+    void func17(int* p){ delete new int; }
+
+    void func18(int* p, void(*fp)(int*)){ fp(p); }
+
+    void helper19(int*);
+
+    void func19(int* p){ helper19(p); }
+
+    void func20(int* p){ int* x; x = p; delete x; }
+
+    void func21(int* p){ *p = 5; delete p; }
+
+    void func22(int* p){ if(p == nullptr) return; delete p; }
+
+    void func23(int* p, int* q){ q = p; delete q; }
+
+    void func24(int* ptr){ func0(ptr); }
+
+    void func25(int* ptr1, int* ptr2){ func2(ptr1); func1(ptr2); }
+
+    void func26(int* ptr1, int* ptr2){ func0(ptr1); func6(ptr2); }
+
+    void func27(int* ptr1, int* ptr2){
+      int* tmp1 = ptr1;
+      func0(tmp1);
+      int* tmp2 = ptr2;
+      func22(tmp2);
+    }
+
+    void func28(int* ptr, int n){
+      if(n > 0)
+        func28(ptr, n-1);
+      delete ptr;
+    }
+
+    void func30(int* ptr, int n);
+    void func31(int* ptr, int n);
+    void func29(int* ptr, int n){
+      func30(ptr, n);
+    }
+
+    void func30(int* ptr, int n){
+      func31(ptr, n-1);
+    }
+
+    void func31(int* ptr, int n){
+      if(n > 0)
+        func29(ptr, n-1);
+      delete ptr;
+    }
+
+    // FIXME: Can not resolve parameter location in recursive call
+    // Probably impossible to solve statically
+    void func32(int* ptr1, int* ptr2, int n){
+      if(n > 0)
+        func32(ptr2, ptr1, n-1);
+      delete ptr1;
+    }
+
+    void func33(int* ptr1, int* ptr2){
+      delete ptr1;
+    }
+
+    void func34(int* ptr1, int* ptr2){
+      func33(ptr2, ptr1);
+    }
+
+    void func35(int* ptr1, int* ptr2){
+      func24(ptr1);
+      func0(ptr2);
+    }
+
+    void func36(int* ptr){
+      helper19(ptr);
+      delete ptr;
+    }
+
+    void func37(int* ptr){
+      delete ptr;
+      helper19(ptr);
+    }
+
+    void func38(int* ptr){
+      ptr = nullptr;
+      func0(ptr);
+    }
+
+    void func39(int* ptr, int n){
+      if(n > 0)
+        func0(ptr);
+      else
+        func2(ptr);
+    }
+
+    struct Klass {
+      void operator=(int* q){
+        delete q;
+      }
+    };
+    void func40(int* p, Klass& K){
+      K = p;
+    }
+
+    void func41(int* ptr){ auto l = [&]{ delete ptr; }; }
+
+    void func42(int* ptr){
+      ptr = nullptr;
+      int* x = ptr;
+      delete x;
+    }
+
+    void func43(int* ptr){ func8(ptr, true); }
+
+    void func44(int* ptr){
+      struct S { void g(int* q){ delete q; } };
+      delete ptr;
+    }
+
+    // This test's purpose is testing some lines, no specific purpose
+    int* globPtr = nullptr;
+    void func45(int* ptr){
+      int a = 5;
+      a = 6;
+      int* tmp = globPtr;
+      tmp = (int*)malloc(sizeof(int));
+      free(tmp);
+      delete ptr;
+    }
+  )";
+  TestFixture::CreateInterpreter();
+  Interp->declare(code);
+
+  using DT = Cpp::DeallocType;
+#define TESTGDT(N, BOOL, ...)                                                  \
+  {                                                                            \
+    std::vector<Cpp::DeallocType> result;                                      \
+    bool valid = Cpp::GetDeallocType(                                          \
+        Cpp::ConstFuncRef { Cpp::GetNamed("func" #N).data }, result);          \
+    EXPECT_EQ(valid, BOOL);                                                    \
+    EXPECT_EQ(result, (std::vector<Cpp::DeallocType>{__VA_ARGS__}));           \
+  }
+
+  TESTGDT(0, true, DT::Delete);
+  TESTGDT(1, true, DT::DeleteArr);
+  TESTGDT(2, true, DT::Free);
+  TESTGDT(3, true, DT::None, DT::Delete);
+  TESTGDT(4, true, DT::Delete);
+  TESTGDT(5, true, DT::Delete);
+  TESTGDT(6, true, DT::None);
+  TESTGDT(7, true, DT::Delete);
+  TESTGDT(8, true, DT::Unknown, DT::None);
+  TESTGDT(9, true, DT::Delete, DT::None);
+  TESTGDT(10, true, DT::Unknown, DT::None);
+  TESTGDT(11, false, DT::Opaque);
+  TESTGDT(12, false, DT::Opaque);
+  TESTGDT(13, true, DT::None);
+  TESTGDT(15, true, DT::Delete);
+  TESTGDT(16, true, DT::None);
+  TESTGDT(17, true, DT::None);
+  TESTGDT(18, true, DT::None, DT::None);
+  TESTGDT(19, true, DT::Unknown);
+  TESTGDT(20, true, DT::Delete);
+  TESTGDT(21, true, DT::Delete);
+  TESTGDT(22, true, DT::Delete);
+  TESTGDT(23, true, DT::None, DT::None);
+  TESTGDT(24, true, DT::Delete);
+  TESTGDT(25, true, DT::Free, DT::DeleteArr);
+  TESTGDT(26, true, DT::Delete, DT::None);
+  TESTGDT(27, true, DT::Delete, DT::Delete);
+  TESTGDT(28, true, DT::Delete, DT::None);
+  TESTGDT(29, true, DT::Delete, DT::None);
+  TESTGDT(30, true, DT::Delete, DT::None);
+  TESTGDT(31, true, DT::Delete, DT::None);
+  TESTGDT(32, true, DT::Delete, DT::None, DT::None);
+  TESTGDT(33, true, DT::Delete, DT::None);
+  TESTGDT(34, true, DT::None, DT::Delete);
+  TESTGDT(35, true, DT::Delete, DT::Delete);
+  TESTGDT(36, true, DT::Unknown);
+  TESTGDT(37, true, DT::Unknown);
+  TESTGDT(38, true, DT::None);
+  TESTGDT(39, true, DT::Unknown, DT::None);
+  // FIXME: check top of VisitCallExpr function
+  TESTGDT(40, true, DT::None, DT::None);
+  TESTGDT(41, true, DT::None);
+  TESTGDT(42, true, DT::None);
+  TESTGDT(43, true, DT::Unknown);
+  TESTGDT(44, true, DT::Delete);
+  TESTGDT(45, true, DT::Delete);
+
+#undef TESTGDT
+
+  {
+    std::vector<Cpp::DeallocType> result;
+    bool valid = Cpp::GetDeallocType(
+        Cpp::ConstFuncRef{Cpp::GetNamed("func14").data}, result);
+    EXPECT_FALSE(valid);
+    EXPECT_TRUE(result.empty());
+  }
+
+  std::vector<Cpp::DeallocType> nullResult;
+  EXPECT_FALSE(Cpp::GetDeallocType(Cpp::ConstFuncRef{nullptr}, nullResult));
+}
+
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetAllocType) {
   std::string code = R"(
     #include <new>
@@ -906,8 +1430,327 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetAllocType) {
       p += 1;
       return p;
     }
+
+    int* func28(int n){
+      if(n>0)
+        return func28(n-1);
+      return new int;
+    }
+
+    int* func29(int n){
+      if(n>0){
+        int* ptr = func29(n-1);
+        return ptr;
+      }
+      return new int;
+    }
+    int* func31(int n);
+    int* func32(int n);
+
+    int* func30(int n){
+      return func31(n);
+    }
+
+    int* func31(int n){
+      return func32(n-1);
+    }
+
+    int* func32(int n){
+      if(n>0)
+        return func30(n-1);
+      return new int;
+    }
+
+    int* func33(int n){
+      class Klass {
+      public:
+        int* getArr(int m) { return new int[m]; }
+      };                                                   //Inside of struct/class/lambda's are not analyzed
+      auto lam = []() { return (int*)malloc(sizeof(int)); };
+      return new int(n);
+    }
+
+    int* func34(int n){
+      int* ptr = nullptr;
+      if(n>0)
+        ptr = new int(n);
+      return ptr;
+    }
+
+    int* func35(int n){
+      int* ptr = nullptr;
+      if(n>0)
+        ptr = new int(n);
+      else
+        ptr = new int(n);
+      return ptr;
+    }
+
+    int* func36(int n){
+      int* ptr = nullptr;
+      if(n>0)
+        ptr = new int(n);
+      else
+        ptr = (int*)malloc(sizeof(int));
+      return ptr;
+    }
+
+    int* func37(int n){
+      int* ptr = nullptr;
+      int* ptr2 = nullptr;
+      if(n>0){
+        ptr = new int(n);
+      } else {
+        ptr2 = new int(n);
+      }
+      return ptr;
+    }
+
+    int* func38(int n){
+      int* ptr = nullptr;
+      if(n>9)
+        ptr = new int(n);
+      else if(n>5)
+        ptr = new int(n);
+      else if(n>2)
+        ptr = new int(n);
+      else
+        ptr = new int(n);
+      return ptr;
+    }
+
+    int* func39(int n){
+      int* ptr = nullptr;
+      if(n>9)
+        ptr = new int(n);
+      else if(n>5)
+        ptr = (int*)malloc(sizeof(int));
+      else if(n>2)
+        ptr = new int(n);
+      else
+        ptr = new int(n);
+      return ptr;
+    }
+
+    int* func40(int n){
+      int* ptr = nullptr;
+      if(n>0){
+        int* tmp = nullptr;
+        if(n>10)
+          tmp = new int(n);
+        else
+          tmp = new int(n);
+        ptr = tmp;
+      }
+      return ptr;
+    }
+
+    int* func41(int n){
+      int* ptr = nullptr;
+      if(n>0){
+        ptr = new int(n);
+        ptr = new int(n);
+      }
+      return ptr;
+    }
+
+    int* func42(int n){
+      int* ptr = nullptr;
+      if(int* tmp = new int(n)){
+        ptr = tmp;
+      }
+      return ptr;
+    }
+
+    int* func43(int n){
+      int* ptr = new int(n);
+      if(n>0){
+        int* tmp = (int*)malloc(sizeof(int));
+        ptr = tmp;
+      }
+      return ptr;
+    }
+
+    int* func44(int n){
+      int* q = NULL;
+      if(n>9){
+
+      }
+      else if(n>5){
+        q = new int(n);
+      }
+      else{
+        q = new int(n);
+      }
+      return q;
+    }
+
+    int* func45(int n){
+      int* x = (int*)0;
+      if(n>5){
+        if(n>8)
+          x = new int(n);
+        else
+          x = new int(n);
+      }
+      return x;
+    }
+
+    int* func46(int n){
+      int* p = nullptr;
+      if(n>20){
+        if(n>15){
+          if(n>10)
+            p = new int(n);
+          else
+            p = new int(n);
+        }
+        else {
+          p = new int(n);
+        }
+      }
+      else {
+        p = new int(n);
+      }
+      return p;
+    }
+
+    int* func47(int n){
+      int* p = nullptr;
+      if(n>20){
+        if(n>15){
+          if(n>10)
+            p = new int(n);
+          else
+            p = new int(n);
+        }
+      }
+      return p;
+    }
+
+    int* func48(int n){
+      int* p = nullptr;
+      int* q = nullptr;
+      if(n>30){
+        q = new int(n);
+        if(n>25){
+          if(n>22)
+            p = new int(n);
+          else
+            p = new int(n);
+        }
+        else {
+          p = new int(n);
+        }
+      }
+      else if(n>20){
+        p = new int(n);
+        if(n>15)
+          q = new int(n);
+        else
+          q = (int*)malloc(sizeof(int));
+      }
+      else {
+        p = new int(n);
+        q = new int(n);
+      }
+      return p;
+    }
+
+    int* func49(int n){
+      int* p = (int*)malloc(sizeof(int));
+      int* q = new int(n);
+      if(n>30){
+        if(n>25){
+          p = (int*)malloc(sizeof(int));
+          if(n>20)
+            q += 1;
+        }
+        else {
+          p = (int*)malloc(sizeof(int));
+        }
+      }
+      return p;
+    }
+
+    int* func50(int n){
+      int* p = nullptr;
+      if(n>40){
+        p = new int(n);
+      }
+      else if(n>30){
+        if(n>25){
+          if(n>20)
+            p = new int(n);
+          else
+            p = (int*)malloc(sizeof(int));
+        }
+      }
+      else if(n>10){
+        p = new int(n);
+      }
+      else {
+        p = new int(n);
+      }
+      return p;
+    }
+
+    int* func51(int n){
+      int* ptr = nullptr;
+      if(ptr = new int(n)){
+
+      }
+      return ptr;
+    }
+
+    int* func52(int n){
+      if(n>0)
+        return new int(n);
+      return NULL;
+    }
+
+    int* func53(int n){
+      int* p = static_cast<int*>(0);
+      if(n>0)
+        p = new int(n);
+      return p;
+    }
+
+    int* func54(int n){
+      int* p;
+      if(n>0)
+        p = new int(n);
+      else
+        p = (int*)malloc(sizeof(int));
+      return p;
+    }
+    void* func55(){ return ::operator new(64); }
+    void* func56(){ return ::operator new[](64); }
+    void* func57(void* buf){ return ::operator new(sizeof(int), buf); }
+    void* func58(){ return __builtin_operator_new(64); }
+    void* func59(){int* m = (int*)0; return malloc(sizeof(int));}
+
+    // This test is for testing some lines, does not neccesarily mean something;
+    // But, it also shows how BindingDecls are not handled
+    struct Tuple {
+      int* ptr1;
+      int* ptr2;
+    };
+    int* func70(){
+      int arr[5];
+      arr[0] = 5;
+      arr[1] = 6;
+      int* ptr = (int*)::operator new(sizeof(int));
+      ::operator delete(ptr);
+      Tuple T;
+      T.ptr1 = &arr[0];
+      T.ptr2 = &arr[1];
+      auto [a, b] = T;
+      a = new int;
+      return a;
+    }
     )";
-  TestFixture::CreateInterpreter();
+  TestFixture::CreateInterpreter({"-std=c++17"});
   Interp->declare(code);
 
 #define TESTAC(N, EXP)                                                         \
@@ -934,7 +1777,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetAllocType) {
   TESTAC(16, Unknown);
   TESTAC(17, None);
   TESTAC(18, None);
-  TESTAC(19, None);
+  TESTAC(19, Null);
   TESTAC(20, Unknown);
   TESTAC(21, None);
   TESTAC(22, New);
@@ -942,9 +1785,40 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetAllocType) {
   TESTAC(24, New);
   TESTAC(25, NewArr);
   TESTAC(26, Unknown);
-  // FIXME: Pointer overwriten by a non-assignment operator
-  TESTAC(27, NewArr);
-
+  TESTAC(27, Unknown);
+  TESTAC(28, New);
+  TESTAC(29, New);
+  TESTAC(30, New);
+  TESTAC(31, New);
+  TESTAC(32, New);
+  TESTAC(33, New);
+  TESTAC(34, New);
+  TESTAC(35, New);
+  TESTAC(36, Unknown);
+  TESTAC(37, New);
+  TESTAC(38, New);
+  TESTAC(39, Unknown);
+  TESTAC(40, New);
+  TESTAC(41, New);
+  TESTAC(42, New);
+  TESTAC(43, Unknown);
+  TESTAC(44, New);
+  TESTAC(45, New);
+  TESTAC(46, New);
+  TESTAC(47, New);
+  TESTAC(48, New);
+  TESTAC(49, Malloc);
+  TESTAC(50, Unknown);
+  TESTAC(51, New);
+  TESTAC(52, New);
+  TESTAC(53, New);
+  TESTAC(54, Unknown);
+  TESTAC(55, OperatorNew);
+  TESTAC(56, OperatorNewArr);
+  TESTAC(57, None);
+  TESTAC(58, OperatorNew);
+  TESTAC(59, Malloc);
+  TESTAC(70, Unknown);
 #undef TESTAC
 
   Cpp::DeleteInterpreter();
@@ -1034,12 +1908,34 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_ExistsFunctionTemplate) {
     };
 
     void f(char ch) {}
+
+    void g(int) {}
+    void g(double) {}
+
+    template<typename T>
+    void h(T a) {}
+    void h(int) {}
+
+    namespace NS {
+      template<typename T>
+      void k(T a) {}
+    }
+    using NS::k;
+    void k(int) {}
     )";
 
   GetAllTopLevelDecls(code, Decls);
   EXPECT_TRUE(Cpp::ExistsFunctionTemplate("f", nullptr));
   EXPECT_TRUE(Cpp::ExistsFunctionTemplate("f", Decls[1]));
   EXPECT_FALSE(Cpp::ExistsFunctionTemplate("f", Decls[2]));
+  // An ambiguous name (overload set) is not a template just because the
+  // lookup found more than one decl: only report true if a templated
+  // function is among the results.
+  EXPECT_FALSE(Cpp::ExistsFunctionTemplate("g", nullptr));
+  EXPECT_TRUE(Cpp::ExistsFunctionTemplate("h", nullptr));
+  // The template may enter the overload set through a using-declaration:
+  // the using-shadow must be unwrapped to its target.
+  EXPECT_TRUE(Cpp::ExistsFunctionTemplate("k", nullptr));
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE,
@@ -2932,6 +3828,162 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_Construct) {
   Cpp::Deallocate(scope, where);
 }
 
+// The wrappers behind Construct and by-value returns placement-new into a
+// caller-provided buffer. A class-scope operator new with no placement form
+// hides the global `operator new(size_t, void*)`, so those wrappers only
+// compile if they spell it `::new (buf) C(...)`.
+TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_ConstructClassScopeNew) {
+#ifdef _WIN32
+  GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
+#endif
+#ifdef EMSCRIPTEN
+#if CLANG_VERSION_MAJOR > 21
+  GTEST_SKIP() << "Test fails for Emscipten builds using LLVM 22";
+#endif
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+  std::vector<Decl*> Decls;
+
+  std::string code = R"(
+    class WithClassNew {
+    public:
+      int x;
+      WithClassNew() : x(42) {}
+      static void* operator new(__SIZE_TYPE__ sz) { return ::operator new(sz); }
+      static void* operator new[](__SIZE_TYPE__ sz) {
+        return ::operator new[](sz);
+      }
+      static void operator delete(void* p) { ::operator delete(p); }
+      static void operator delete[](void* p) { ::operator delete[](p); }
+    };
+    WithClassNew MakeWithClassNew() { return WithClassNew(); }
+    )";
+
+  GetAllTopLevelDecls(code, Decls, false, interpreter_args);
+  Cpp::DeclRef scope = Cpp::GetNamed("WithClassNew");
+  ASSERT_TRUE(scope);
+
+  // Heap construction; the non-arena branch of the wrapper must keep using
+  // the unqualified `new` so it picks up the class-scope operator new.
+  Cpp::ObjectRef object = Cpp::Construct(scope);
+  ASSERT_TRUE(object);
+  EXPECT_EQ(*static_cast<int*>(object.data), 42);
+  Cpp::Destruct(object, scope, /*withFree=*/true, /*count=*/0);
+
+  // Placement construction into an arena.
+  void* where = Cpp::Allocate(scope).data;
+  ASSERT_TRUE(where);
+  EXPECT_TRUE(where == Cpp::Construct(scope, where).data);
+  EXPECT_EQ(*static_cast<int*>(where), 42);
+  Cpp::Destruct(where, scope, /*withFree=*/false, /*count=*/0);
+  Cpp::Deallocate(scope, where);
+
+  // Placement construction of an array (the wrapper's `nary > 1` branch).
+  constexpr size_t count = 3;
+  // The class holds a single int, so the array stride is one int and the
+  // constructed elements read back as int[count].
+  ASSERT_EQ(Cpp::SizeOf(scope), sizeof(int));
+  where = Cpp::Allocate(scope, count).data;
+  ASSERT_TRUE(where);
+  EXPECT_TRUE(where == Cpp::Construct(scope, where, count).data);
+  for (size_t i = 0; i < count; ++i)
+    EXPECT_EQ(static_cast<int*>(where)[i], 42);
+  Cpp::Destruct(where, scope, /*withFree=*/false, count);
+  Cpp::Deallocate(scope, where, count);
+
+  // A by-value return placement-news the result into `ret`
+  // (make_narg_call_with_return); this must also bypass the class-scope
+  // operator new.
+  Cpp::JitCall JC = Cpp::MakeFunctionCallable(Decls[1]);
+  ASSERT_TRUE(JC.getKind() == Cpp::JitCall::kGenericCall);
+  int result = 0; // WithClassNew's layout is a single int
+  JC.Invoke(&result);
+  EXPECT_EQ(result, 42);
+}
+
+// Pins down which operator new the wrappers pick when the class-scope forms
+// are all accessible, including a class-scope *placement* operator new. The
+// contract is the standard library's construct-at contract
+// ([specialized.construct]): construction into a caller-provided buffer is
+// spelled `::new (buf) C(...)`, so it constructs at `buf` directly and never
+// routes through a class-scope placement operator new (which unqualified
+// `new (buf)` would pick). Plain heap construction still goes through the
+// user's class-scope allocator. The counters make the choice observable.
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           FunctionReflection_ConstructClassScopePlacementNew) {
+#ifdef _WIN32
+  GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
+#endif
+#ifdef EMSCRIPTEN
+#if CLANG_VERSION_MAJOR > 21
+  GTEST_SKIP() << "Test fails for Emscipten builds using LLVM 22";
+#endif
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+  std::vector<Decl*> Decls;
+
+  std::string code = R"(
+    int heap_news = 0;      // calls to the class-scope operator new(size_t)
+    int placement_news = 0; // calls to the class-scope placement form
+    class WithPlacementNew {
+    public:
+      int x;
+      WithPlacementNew() : x(7) {}
+      WithPlacementNew Clone() { return WithPlacementNew(); }
+      static void* operator new(__SIZE_TYPE__ sz) {
+        ++heap_news;
+        return ::operator new(sz);
+      }
+      static void* operator new(__SIZE_TYPE__, void* where) {
+        ++placement_news;
+        return where;
+      }
+      static void operator delete(void* p) { ::operator delete(p); }
+      static void operator delete(void*, void*) {}
+    };
+    )";
+
+  GetAllTopLevelDecls(code, Decls, false, interpreter_args);
+  Cpp::DeclRef scope = Cpp::GetNamed("WithPlacementNew");
+  ASSERT_TRUE(scope);
+
+  // Heap construction (the wrapper's non-arena `new C(...)`) must keep
+  // honoring the user's class-scope allocator.
+  Cpp::ObjectRef object = Cpp::Construct(scope);
+  ASSERT_TRUE(object);
+  EXPECT_EQ(*static_cast<int*>(object.data), 7);
+  EXPECT_EQ(Cpp::Evaluate("heap_news").unbox<int>(), 1);
+  EXPECT_EQ(Cpp::Evaluate("placement_news").unbox<int>(), 0);
+
+  // Construction into a caller-provided buffer bypasses the class-scope
+  // placement operator new, like std::construct_at does.
+  void* where = Cpp::Allocate(scope).data;
+  ASSERT_TRUE(where);
+  EXPECT_TRUE(where == Cpp::Construct(scope, where).data);
+  EXPECT_EQ(*static_cast<int*>(where), 7);
+  EXPECT_EQ(Cpp::Evaluate("placement_news").unbox<int>(), 0);
+  Cpp::Destruct(where, scope, /*withFree=*/false, /*count=*/0);
+  Cpp::Deallocate(scope, where);
+
+  // A JitCall to a method of the class with a by-value result: the wrapper
+  // stores the result into the caller's buffer with `::new (ret)`, so the
+  // class-scope placement operator new stays out of the call path here too.
+  Cpp::JitCall JC = Cpp::MakeFunctionCallable(
+      Cpp::FuncRef{Cpp::GetNamed("Clone", scope).data});
+  ASSERT_TRUE(JC.getKind() == Cpp::JitCall::kGenericCall);
+  int result = 0; // WithPlacementNew's layout is a single int
+  JC.Invoke(&result, {}, object.data);
+  EXPECT_EQ(result, 7);
+  EXPECT_EQ(Cpp::Evaluate("heap_news").unbox<int>(), 1);
+  EXPECT_EQ(Cpp::Evaluate("placement_news").unbox<int>(), 0);
+
+  Cpp::Destruct(object, scope, /*withFree=*/true, /*count=*/0);
+}
+
 // Test zero initialization of PODs and default initialization cases
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_ConstructPOD) {
 #ifdef _WIN32
@@ -3240,7 +4292,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_UndoTest) {
     defined(__APPLE__)
   GTEST_SKIP() << "Disabled on osx for cling based on llvm 20. Needs fixing.";
 #endif
-#if defined(CPPINTEROP_USE_CLING) && defined(CPPINTEROP_ASAN_BUILD)
+#if defined(CPPINTEROP_USE_CLING)
   GTEST_SKIP() << "cling unload walks a module already freed by ORC "
                   "clone-on-emit; skip until the cling-side fix lands.";
 #endif
@@ -3946,4 +4998,58 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
                       /*interpreter_args=*/{"-std=c++23", "-include", "new"});
   EXPECT_EQ(JitCallIntNullary("BlogTransform", "drive"), 42);
+}
+
+// A by-value parameter of a move-only type must be moved into the call: the
+// wrapper otherwise fails to compile against the deleted copy constructor.
+// MoveOnly's deleted copy constructor is also non-trivial (Payload's is
+// user-provided), so triviality bits cannot classify it.
+TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_MoveOnlyByValueArgs) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscripten builds";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+
+  std::vector<Decl*> Decls;
+  std::vector<Decl*> SubDecls;
+  std::string code = R"(
+    struct Payload {
+      Payload() = default;
+      Payload(const Payload&) {}
+    };
+    struct MoveOnly {
+      Payload p;
+      MoveOnly(const MoveOnly&) = delete;
+      MoveOnly(MoveOnly&&) = default;
+    };
+    int take(MoveOnly m) { return 1; }
+    struct Taker {
+      Taker(MoveOnly m) {}
+    };
+    struct Fwd;
+    int take_fwd(Fwd f);
+  )";
+
+  GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
+                      /*interpreter_args=*/{"-include", "new"});
+  ASSERT_EQ(Decls.size(), 6);
+
+  // Function argument path (make_narg_call).
+  EXPECT_EQ(Cpp::MakeFunctionCallable(Decls[2]).getKind(),
+            Cpp::JitCall::kGenericCall);
+
+  // Constructor argument path (make_narg_ctor).
+  GetAllSubDecls(Decls[3], SubDecls);
+  ASSERT_TRUE(Cpp::IsConstructor(SubDecls[1]));
+  EXPECT_EQ(Cpp::MakeFunctionCallable(SubDecls[1]).getKind(),
+            Cpp::JitCall::kConstructorCall);
+
+  // A parameter type with no reachable definition is assumed copyable; the
+  // wrapper compile reports the incomplete type (captured: on Windows the
+  // MSVC-format diagnostic would fail MSBuild's output scan).
+  testing::internal::CaptureStderr();
+  EXPECT_EQ(Cpp::MakeFunctionCallable(Decls[5]).getKind(),
+            Cpp::JitCall::kUnknown);
+  EXPECT_FALSE(testing::internal::GetCapturedStderr().empty());
 }

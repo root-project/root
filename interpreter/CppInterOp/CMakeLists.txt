@@ -17,6 +17,12 @@ option(CPPINTEROP_BUILD_TABLEGEN_ONLY "Only build cppinterop-tblgen (for cross-c
 #=Set OFF to suppress install() rules and route clangCppInterOp through
 # add_llvm_library(... BUILDTREE_ONLY)
 option(CPPINTEROP_INSTALL "Generate install rules for CppInterOp" ON)
+
+# OFF to ship the shared library as a single unversioned file, matching
+# the Darwin layout: archives that cannot carry symlinks (Python wheels)
+# would otherwise materialize the SOVERSION namelink as a second full copy.
+option(CPPINTEROP_SHARED_LIBRARY_VERSIONING
+  "Attach the LLVM SOVERSION and namelink to shared clangCppInterOp" ON)
 if(EMSCRIPTEN)
   set(CPPINTEROP_EXTRA_WASM_FLAGS "-fwasm-exceptions" CACHE STRING "Extra flags for wasm")
 endif()
@@ -504,6 +510,7 @@ if(CPPINTEROP_INSTALL)
 
   install(DIRECTORY include/
     DESTINATION include
+    COMPONENT cppinterop-headers
     FILES_MATCHING
     PATTERN "*.def"
     PATTERN "*.h"
@@ -513,12 +520,14 @@ if(CPPINTEROP_INSTALL)
 
   install(DIRECTORY tools/
     DESTINATION include/CppInterOp/tools
+    COMPONENT cppinterop-headers
     FILES_MATCHING
     PATTERN "*.h"
   )
 
   install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
     DESTINATION include
+    COMPONENT cppinterop-headers
     FILES_MATCHING
     PATTERN "CMakeFiles" EXCLUDE
     PATTERN "*.inc"
@@ -617,6 +626,17 @@ if(NOT EMSCRIPTEN AND NOT CPPINTEROP_TABLEGEN_EXE)
   add_subdirectory(utils/TableGen)
 endif()
 add_subdirectory(lib)
+
+if(CPPINTEROP_INSTALL)
+  # Installing the headers needs to depend on generating the tablegen'd
+  # public headers.
+  add_custom_target(cppinterop-headers DEPENDS CppInterOpTableGen)
+  if(NOT LLVM_ENABLE_IDE)
+    add_llvm_install_targets(install-cppinterop-headers
+                             DEPENDS cppinterop-headers
+                             COMPONENT cppinterop-headers)
+  endif()
+endif()
 if (CPPINTEROP_ENABLE_TESTING)
   add_subdirectory(unittests)
 endif(CPPINTEROP_ENABLE_TESTING)

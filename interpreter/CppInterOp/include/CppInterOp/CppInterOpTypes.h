@@ -412,7 +412,19 @@ enum class AllocType : unsigned char {
   NewArr,
   Malloc,
   Unknown,
-  CustomAlloc
+  CustomAlloc,
+  Null,
+  OperatorNew,
+  OperatorNewArr
+};
+
+enum class DeallocType : unsigned char {
+  None,
+  Delete,
+  DeleteArr,
+  Free,
+  Unknown, // Contradiction, delete x or delete[] x in same func
+  Opaque   // Could not analyze
 };
 
 inline QualKind operator|(QualKind a, QualKind b) {

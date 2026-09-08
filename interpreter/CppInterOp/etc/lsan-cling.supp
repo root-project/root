@@ -1,0 +1,14 @@
+# Two cling interpreter-teardown leaks, fixed in root-project/root#23045;
+# suppress until the fixes reach root-project/cling. Applied only to the
+# cling+Address row; the clang-repl asan row runs unsuppressed.
+#
+# 1. deallocate() retains code via FinalizedAlloc::release(), orphaning
+#    each allocation's DeallocActions vector (eh-frame deregistration,
+#    new with LLVM 22).
+# 2. ShutDown() leaks the frontend through the DisableFree path and hides
+#    the pointers with llvm::BuryPointer, which only holds 16 pointers;
+#    destroying a few interpreters per process overflows it.
+#
+# The allocation stacks are often 2 frames deep (the fast unwinder stops
+# at JIT frames), hence the module-level match.
+leak:libclangCppInterOp
