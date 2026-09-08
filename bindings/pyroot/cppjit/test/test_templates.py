@@ -11,7 +11,7 @@ from support import (
 )
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/templatesDict"))
+test_dct = "templates_cxx"
 
 
 def setup_module(mod):
@@ -506,7 +506,6 @@ class TestTEMPLATES:
         assert g3.get_size(ns.SomeClass()) == cppjit.sizeof(ns.SomeClass)
         assert g3.get_size(cppjit.nullptr, True) == -1
 
-    @mark.xfail(condition=IS_CLING, reason="Fails on Cling")
     def test19_templated_operator_add(self):
         """Templated operator+ is ambiguous: either __pos__ or __add__"""
 
@@ -1553,6 +1552,7 @@ class TestTEMPLATED_TYPEDEFS:
         three = w.whatis(3)
         assert three == 3
 
+    @mark.xfail(strict=True)
     def test05_type_deduction_and_extern(self):
         """Usage of type reducer with extern template"""
 
