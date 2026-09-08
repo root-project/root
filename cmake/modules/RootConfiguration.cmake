@@ -406,17 +406,17 @@ include(CheckSourceCompiles)
 add_library(RConfigureDefs INTERFACE) # temporary target, do not link against it, just for bw-compatible header generation RConfigure.h
 if (gnuinstall)
   target_compile_definitions(RConfigureDefs INTERFACE
-    ROOTPREFIX=${prefix}
-    ROOTBINDIR=${bindir}
-    ROOTLIBDIR=${libdir}
-    ROOTETCDIR=${etcdir}
-    ROOTDATADIR=${datadir}
-    ROOTDOCDIR=${docdir}
-    ROOTMACRODIR=${macrodir}
-    ROOTTUTDIR=${tutdir}
-    ROOTSRCDIR=${srcdir}
-    ROOTICONPATH=${iconpath}
-    TTFFONTDIR=${ttffontdir}
+    ROOTPREFIX="${prefix}"
+    ROOTBINDIR="${bindir}"
+    ROOTLIBDIR="${libdir}"
+    ROOTETCDIR="${etcdir}"
+    ROOTDATADIR="${datadir}"
+    ROOTDOCDIR="${docdir}"
+    ROOTMACRODIR="${macrodir}"
+    ROOTTUTDIR="${tutdir}"
+    ROOTSRCDIR="${srcdir}"
+    ROOTICONPATH="${iconpath}"
+    TTFFONTDIR="${ttffontdir}"
   )
 endif()
 
@@ -432,7 +432,7 @@ target_compile_definitions(RConfigureDefs INTERFACE
   $<$<BOOL:${cocoa}>:R__HAS_COCOA>
   $<$<BOOL:${vdt}>:R__HAS_VDT>
   $<$<BOOL:${ROOT_HAVE_EXPERIMENTAL_SIMD}>:R__HAS_STD_EXPERIMENTAL_SIMD>
-  $<$<BOOL:${R__EXPERIMENTAL_SIMD_PIN_AVX_ABI}>:R__EXPERIMENTAL_SIMD_PIN_AVX_ABI>
+  $<$<BOOL:${ROOT_EXPERIMENTAL_SIMD_PIN_AVX_ABI}>:R__EXPERIMENTAL_SIMD_PIN_AVX_ABI>
   $<$<BOOL:${runtime_cxxmodules}>:R__USE_CXXMODULES>
   $<$<BOOL:${libcxx}>:R__USE_LIBCXX>
   $<$<BOOL:${found_attribute_always_inline}>:R__HAS_ATTRIBUTE_ALWAYS_INLINE>
@@ -454,7 +454,6 @@ target_compile_definitions(RConfigureDefs INTERFACE
   $<$<BOOL:${tmva-pymva}>:R__HAS_PYMVA>
   $<$<BOOL:${uring}>:R__HAS_URING>
   $<$<BOOL:${geom}>:R__HAS_GEOM>
-  $<$<CXX_COMPILER_ID:MSVC>:-Zc:__cplusplus>
 )
 
 file(GENERATE
@@ -879,7 +878,7 @@ file(GENERATE
 # Public target interface against which to link
 add_library(ROOTdefs INTERFACE)
 target_compile_definitions(ROOTdefs INTERFACE
-ROOT_RConfigure # so that including the mirror header RConfigure.h is inocuous if linking against this target
+ROOT_RConfigure # so that including the mirror header RConfigure.h is innocuous if linking against this target
 ROOT_RVERSION_HXX
 )
 target_link_libraries(ROOTdefs INTERFACE RConfigureDefs RVersionDefs RConfigDefs)
