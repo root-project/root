@@ -12,6 +12,7 @@
 #ifdef _MSC_VER
 #define LZMA_API_STATIC
 #endif
+// TEMPORARY DUPLICATION OF ZipLZMA.h until header is removed from public interface and can be made fully private
 // @(#)root/lzma:$Id$
 // Author: David Dagenhart   May 2011
 

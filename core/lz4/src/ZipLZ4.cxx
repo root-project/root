@@ -8,6 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+// TEMPORARY DUPLICATION OF ZipLZ4.h until header is removed from public interface and can be made fully private
 // Author: Brian Bockelman March 2015
 
 /*************************************************************************
