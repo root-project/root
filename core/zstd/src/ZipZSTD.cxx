@@ -8,6 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+// TEMPORARY DUPLICATION OF ZipZSTD.h until header is removed from public interface and can be made fully private
 // Original Author: Brian Bockelman
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *

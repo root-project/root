@@ -20,6 +20,7 @@ static const int qflag = 0;
 #include "zlib.h"
 #include "RConfigure.h"
 
+// TEMPORARY DUPLICATION OF ZipLZMA.h until header is removed from public interface and can be made fully private
 // @(#)root/lzma:$Id$
 // Author: David Dagenhart   May 2011
 
@@ -48,6 +49,7 @@ void R__unzipLZMA(int *srcsize, const unsigned char *src, int *tgtsize, unsigned
 
 #endif
 
+// TEMPORARY DUPLICATION OF ZipLZ4.h until header is removed from public interface and can be made fully private
 // Author: Brian Bockelman March 2015
 
 /*************************************************************************
