@@ -428,7 +428,7 @@ target_compile_definitions(RConfigureDefs INTERFACE
   $<$<BOOL:${cocoa}>:R__HAS_COCOA>
   $<$<BOOL:${vdt}>:R__HAS_VDT>
   $<$<BOOL:${ROOT_HAVE_EXPERIMENTAL_SIMD}>:R__HAS_STD_EXPERIMENTAL_SIMD>
-  $<$<BOOL:${R__EXPERIMENTAL_SIMD_PIN_AVX_ABI}>:R__EXPERIMENTAL_SIMD_PIN_AVX_ABI>
+  $<$<BOOL:${ROOT_EXPERIMENTAL_SIMD_PIN_AVX_ABI}>:R__EXPERIMENTAL_SIMD_PIN_AVX_ABI>
   $<$<BOOL:${runtime_cxxmodules}>:R__USE_CXXMODULES>
   $<$<BOOL:${libcxx}>:R__USE_LIBCXX>
   $<$<BOOL:${found_attribute_always_inline}>:R__HAS_ATTRIBUTE_ALWAYS_INLINE>
