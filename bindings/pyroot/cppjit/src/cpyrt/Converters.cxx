@@ -2272,10 +2272,21 @@ bool cpyrt::InstancePtrConverter<ISCONST>::SetArg(PyObject* pyobject,
 //----------------------------------------------------------------------------
 template <bool ISCONST>
 PyObject* cpyrt::InstancePtrConverter<ISCONST>::FromMemory(void* address) {
-  // construct python object from C++ instance read at <address>
+  // construct python object from C++ instance read at <address>; auto down-cast
+  // polymorphic pointers to the actual class (re-applied from e93464a9e95,
+  // which was lost in the fork baseline; fixes root-project#16062), except for
+  // writable pointer variables of abstract declared type: those proxies track
+  // the pointer itself, whose pointee can be replaced from Python, so they stay
+  // at the declared class (see test21_access_to_global_variables).
   if (ISCONST)
-    return BindCppObject(*(void**)address, fClass); // by pointer value
-  return BindCppObject(address, fClass,
+    return BindCppObject(
+        *(void**)address,
+        interop::GetActualClass(fClass, *(void**)address)); // by pointer value
+  interop::TCppScope_t actual_class =
+      interop::IsAbstract(fClass)
+          ? fClass
+          : interop::GetActualClass(fClass, *(void**)address);
+  return BindCppObject(address, actual_class,
                        CPPInstance::kIsReference); // modifiable
 }
 
