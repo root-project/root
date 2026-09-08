@@ -5,6 +5,7 @@
 
 // Bindings
 #include "CallContext.h"
+#include "cppjit_interop.h"
 #include "cpyrt/Reflex.h"
 
 namespace cppjit::cpyrt {
@@ -44,6 +45,11 @@ public:
   virtual PyCallable* Clone() = 0;
 
   virtual int GetArgMatchScore(PyObject* /* args_tuple */) { return INT_MAX; }
+
+  virtual bool
+  IsSimilarFnType([[maybe_unused]] cppjit::interop::TCppType_t fn_type) {
+    return false;
+  }
 
 public:
   virtual PyObject* Call(CPPInstance*& self, cpyrt_PyArgs_t args, size_t nargsf,
