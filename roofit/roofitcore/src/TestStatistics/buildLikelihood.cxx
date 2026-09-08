@@ -294,7 +294,20 @@ std::vector<std::unique_ptr<RooAbsL>> NLLFactory::getSimultaneousComponents()
          RooArgSet selTargetParams;
          params.selectCommon(*actualParams, selTargetParams);
 
-         assert(selTargetParams.equals(*components.back()->getParameters()));
+         // Sanity check that the parameters of the component likelihood are among the parameters that the component
+         // pdf has in common with the full model. With a non-legacy evaluation backend, the component pdf is
+         // additionally "compiled" for the dataset, which can move constant constraint factors out of the pdf (see
+         // RooProdPdf::compileForNormSet and RooFixedProdPdf). The component likelihood can then legitimately report
+         // fewer parameters than the original component pdf, so only containment can be asserted, not set equality.
+         assert([&] {
+            std::unique_ptr<RooArgSet> componentParams{components.back()->getParameters()};
+            for (auto *param : *componentParams) {
+               if (!selTargetParams.find(param->GetName())) {
+                  return false;
+               }
+            }
+            return true;
+         }());
 
          ++n;
       } else {
