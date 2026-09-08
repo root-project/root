@@ -52,7 +52,6 @@ __all__ = [
 
 import contextlib
 import ctypes
-import importlib.util
 import os
 import sys
 import sysconfig
@@ -206,6 +205,8 @@ def _install_smartptr_makers():
 
 _install_smartptr_makers()
 
+gbl.gInterpreter = gbl.TInterpreter.Instance()
+
 
 # --- interface to Cling ------------------------------------------------------
 class _stderr_capture(object):
@@ -265,7 +266,13 @@ def cppexec(stmt):
             if not errcode.value:
                 errcode.value = 1
 
-    if not errcode == 0:
+    # the return code of Process does not cover errors raised while executing a
+    # wrapped expression: with dynamic scopes, a failed lookup compiles fine and
+    # fails at runtime, reported through an exception from the JIT that on
+    # Windows cannot cross the JITed wrapper frame (so nothing is raised and the
+    # return code stays 0); check the captured diagnostics as well, like the
+    # reference cppyy implementation does
+    if not errcode == 0 or ("input_line" in err.err and "error" in err.err):
         raise SyntaxError("Failed to parse the given C++ code%s" % err.err)
     elif err.err and err.err[1:] != "\n":
         sys.stderr.write(err.err[1:])
@@ -298,10 +305,20 @@ def macro(cppm):
 
 def load_library(name):
     """Explicitly load a shared library."""
-    reason = gbl.std.string()
-    result = gbl.Cpp.LoadLibrary(name, True, reason)
-    if result == False:  # noqa: E712
-        raise RuntimeError('Could not load library "%s": %s' % (name, reason))
+    with _stderr_capture() as err:
+        gSystem = gbl.gSystem
+        if name[:3] != "lib":
+            if not gSystem.FindDynamicLibrary(
+                gbl.TString(name), True
+            ) and gSystem.FindDynamicLibrary(gbl.TString("lib" + name), True):
+                name = "lib" + name
+        sc = gSystem.Load(name)
+    if sc == -1:
+        # special case for Windows as of python3.8: use winmode=0, otherwise
+        # the default will not consider regular search paths (such as $PATH)
+        if 0x3080000 <= sys.hexversion and "win32" in sys.platform and os.path.isabs(name):
+            return ctypes.CDLL(name, ctypes.RTLD_GLOBAL, winmode=0)  # raises on error
+        raise RuntimeError('Unable to load library "%s"%s' % (name, err.err))
 
     return True
 
@@ -342,7 +359,7 @@ def add_library_path(path):
     """Add a path to the library search paths available to Cling."""
     if not os.path.isdir(path):
         raise OSError("No such directory: %s" % path)
-    gbl.Cpp.AddSearchPath(path, True, False)
+    gbl.gSystem.AddDynamicPath(path)
 
 
 def _setup_include_paths():
@@ -359,30 +376,6 @@ def _setup_include_paths():
             os.path.join(apipath, "Python.h")
         ):
             add_include_path(apipath)
-
-    # add access to the cpyrt dispatcher API headers, which install next to the
-    # extension module; anchoring on the extension resolves editable and regular
-    # installs alike. CPPJIT_API_PATH overrides ("none" disables the lookup).
-    if not _ispypy:
-        apipath_extra = os.environ.get("CPPJIT_API_PATH")
-        if apipath_extra:
-            if os.path.basename(apipath_extra) == "cpyrt":
-                apipath_extra = os.path.dirname(apipath_extra)
-        else:
-            spec = importlib.util.find_spec("cppjit.libcppjit")
-            if spec is not None and spec.origin:
-                apipath_extra = os.path.join(
-                    os.path.dirname(spec.origin), "interop", "include"
-                )
-
-        if apipath_extra and apipath_extra.lower() != "none":
-            if os.path.isdir(os.path.join(apipath_extra, "cpyrt")):
-                add_include_path(apipath_extra)
-            else:
-                warnings.warn(
-                    "cpyrt API not found (tried: %s); set CPPJIT_API_PATH envar to the 'cpyrt' API directory to fix"
-                    % apipath_extra
-                )
 
     if os.getenv("CONDA_PREFIX"):
         # MacOS, Linux
