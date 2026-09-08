@@ -825,7 +825,8 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
          .ConstrainedParameters(cParsSet)
          .ExternalConstraints(extConsSet)
          .GlobalObservables(glObsSet)
-         .GlobalObservablesTag(rangeName.c_str());
+         .GlobalObservablesTag(rangeName.c_str())
+         .EvalBackend(RooFit::EvalBackend(static_cast<RooFit::EvalBackend::Value>(pc.getInt("EvalBackend"))));
 
       return std::make_unique<RooFit::TestStatistics::RooRealL>("likelihood", "", builder.build());
    }
