@@ -194,8 +194,14 @@ static int BuildScopeProxyDict(interop::TCppScope_t scope, PyObject* pyclass,
   for (auto& method : methods) {
 
     // do not expose non-public methods as the Cling wrappers as those won't
-    // compile
-    if (!interop::IsPublicMethod(method))
+    // compile; exception: a non-public method whose declaring class is not this
+    // scope can only have entered the enumeration through a public
+    // using-declaration (the backend drops non-public shadows), so it is
+    // publicly callable through this class and its wrapper compiles (e.g.
+    // MSVC's std::shared_ptr re-exposes the protected std::_Ptr_base<T>::get
+    // with `public: using _Mybase::get;`)
+    if (!interop::IsPublicMethod(method) &&
+        interop::GetParentScope(interop::TCppScope_t(method.data)) == scope)
       continue;
 
     // process the method based on its name
