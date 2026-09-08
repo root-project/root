@@ -15,31 +15,7 @@
 #include <ROOT/RConfig.hxx>
 #include <stdio.h>
 #ifdef NEED_SNPRINTF
-
-#include <stdarg.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifdef WIN32
-#pragma warning( push )
-#pragma warning (disable: 4273)
-#endif
-
-#ifndef DONTNEED_VSNPRINTF
-int vsnprintf(char *string, size_t length, const char *format, va_list args);
-#endif
-int snprintf(char *string, size_t length, const char *format, ...);
-
-#ifdef WIN32
-#pragma warning( pop )
-#endif
-
-#ifdef __cplusplus
-}
-#endif
-
+#error "ROOT no longer provides fallback implementation for snprintf. NEED_SNPRINTF should not be defined."
 #endif /* NEED_SNPRINTF */
 
 #endif /* ROOT_snprintf */
