@@ -881,12 +881,14 @@ interop::TCppScope_t interop::GetActualClass(TCppScope_t klass,
          p = Cpp::GetParentScope(p))
       if (Cpp::IsNamespace(p) && Cpp::GetName(p).empty())
         return klass;
-    // Only return the derived type if theres a complete definition in the
-    // interpreter. internal classes like TCling have no public header and
-    // no dictionary, so their CXXRecordDecl has no DefinitionData.
-    // returning them crashes when querying offsets. Fall back to the base
-    // type if the derived type is incomplete.
-    if (Cpp::IsComplete(scope))
+    // Only return the derived type once it has a complete definition. Under
+    // runtime_cxxmodules=OFF, autoloading the dictionary registers only a
+    // forward declaration, so force the definition into the AST here. Internal
+    // classes like TCling have no header and cannot be completed (their
+    // CXXRecordDecl has no DefinitionData); GetOrForceDefinition returns null
+    // for them and we fall back to the base type, avoiding a crash when
+    // querying offsets.
+    if (Cpp::GetOrForceDefinition(scope))
       return scope;
   }
 
