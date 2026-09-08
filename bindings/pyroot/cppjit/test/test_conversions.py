@@ -176,3 +176,30 @@ class TestCONVERSIONS:
         o = ns.Obj()
 
         assert ns.is_same(o, o)
+
+
+class TestSMARTPTRPOLICY:
+    def test01_implicit_smartptr_conversion_policy(self):
+        """Wrapping an object into a smart-pointer argument is off by default"""
+
+        import cppjit
+        from pytest import raises
+
+        cppjit.cppdef("""\
+        #include <memory>
+        namespace SPPolicy {
+            struct Payload { int x = 5; };
+            int take(std::shared_ptr<Payload> p) { return p ? p->x : -1; }
+        }""")
+
+        obj = cppjit.gbl.SPPolicy.Payload()
+        with raises(TypeError):
+            cppjit.gbl.SPPolicy.take(obj)
+
+        # a smart pointer passes regardless of the policy
+        sp = cppjit.gbl.std.make_shared["SPPolicy::Payload"]()
+        assert cppjit.gbl.SPPolicy.take(sp) == 5
+
+        # the toggle is exposed and returns the prior setting
+        assert cppjit.libcppjit.SetImplicitSmartPointerConversion(True) is False
+        assert cppjit.libcppjit.SetImplicitSmartPointerConversion(False) is True
