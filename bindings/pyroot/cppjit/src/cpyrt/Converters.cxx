@@ -3125,8 +3125,8 @@ bool cpyrt::SmartPtrConverter::SetArg(PyObject* pyobject, Parameter& para,
   }
 
   // for the case where we have an ordinary object to convert
-  if ((ctxt->fFlags & CallContext::kImplicitSmartPtrConversion) &&
-      !pyobj->IsSmart() && interop::IsSubclass(oisa, fUnderlyingType)) {
+  if (AllowImplicitSmartPtrConversion(ctxt) && !pyobj->IsSmart() &&
+      interop::IsSubclass(oisa, fUnderlyingType)) {
     // create the relevant smart pointer and make the pyobject "smart"
     CPPInstance* pysmart = (CPPInstance*)ConvertImplicit(
         fSmartPtrType, pyobject, para, ctxt, false);
