@@ -425,19 +425,9 @@ PyObject* cpyrt::STLStringRefExecutor::Execute(interop::TCppMethod_t method,
                                                CallContext* ctxt) {
   // execute <method> with argument <self, ctxt>, return python string return
   // value
-  static interop::TCppScope_t sSTLStringScope =
-      interop::GetFullScope("std::string");
-
   std::string* result = (std::string*)GILCallR(method, self, ctxt);
   if (!fAssignable) {
-    std::string* rescp = new std::string{*result};
-    return BindCppObjectNoCast((void*)rescp, sSTLStringScope,
-                               CPPInstance::kIsOwner);
-  }
-
-  if (!cpyrt_PyText_Check(fAssignable)) {
-    PyErr_Format(PyExc_TypeError, "wrong type in assignment (string expected)");
-    return nullptr;
+    return cpyrt_PyText_FromStringAndSize(result->c_str(), result->size());
   }
 
   *result = std::string(cpyrt_PyText_AsString(fAssignable),
@@ -622,15 +612,17 @@ PyObject* cpyrt::STLStringExecutor::Execute(interop::TCppMethod_t method,
       interop::GetFullScope("std::string");
   std::string* result =
       (std::string*)GILCallO(method, self, ctxt, sSTLStringScope).data;
-  if (!result)
-    result = new std::string{};
-  else if (PyErr_Occurred()) {
-    delete result;
-    return nullptr;
+  if (!result) {
+    Py_INCREF(PyStrings::gEmptyString);
+    return PyStrings::gEmptyString;
   }
 
-  return BindCppObjectNoCast((void*)result, sSTLStringScope,
-                             CPPInstance::kIsOwner);
+  PyObject* pyresult =
+      cpyrt_PyText_FromStringAndSize(result->c_str(), result->size());
+  delete result; // interop::CallO allocates and constructs a string, so it must
+                 // be properly destroyed
+
+  return pyresult;
 }
 
 //----------------------------------------------------------------------------

@@ -643,7 +643,6 @@ class TestADVANCEDCPP:
             b.m_b.push_back(i)
             assert round(b.m_b[i], 5) == float(i)
 
-    @mark.xfail(reason="templated free function returns a string proxy, not str")
     def test16_template_global_functions(self):
         """Test template global function lookup and calls"""
 
