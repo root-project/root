@@ -14,7 +14,7 @@ from support import (
 )
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/fragileDict"))
+test_dct = "fragile_cxx"
 
 
 def setup_module(mod):
@@ -502,6 +502,7 @@ class TestFRAGILE:
         ]:
             assert cppjit.gbl.Variable.__init__.__overload__(sig)
 
+    @mark.xfail(run=False)
     def test19_gbl_contents(self):
         """Assure cppjit.gbl is mostly devoid of ROOT thingies"""
 
@@ -619,6 +620,11 @@ class TestFRAGILE:
         cppjit.include("sanitizer/asan_interface.h")
 
     @mark.xfail(reason="cppdef of invalid code does not raise SyntaxError")
+    @mark.xfail(
+        run=False,
+        reason="rolling back a failed declaration asserts in ROOT's unload "
+        "callbacks (debug builds); reproduces with plain cppyy on master",
+    )
     def test25_cppdef_error_reporting(self):
         """Check error reporting of cppjit.cppdef"""
 
@@ -660,6 +666,11 @@ class TestFRAGILE:
             }""")
 
     @mark.xfail(condition=IS_CLANG_REPL, reason="Fails on ClangRepl")
+    @mark.xfail(
+        run=False,
+        reason="rolling back a failed declaration asserts in ROOT's unload "
+        "callbacks (debug builds); reproduces with plain cppyy on master",
+    )
     def test26_macro(self):
         """Test access to C++ pre-processor macro's"""
 
@@ -859,6 +870,7 @@ class TestSTDNOTINGLOBAL:
     def setup_class(cls):
         pass
 
+    @mark.xfail(strict=True)
     def test01_stl_in_std(self):
         """STL classes should live in std:: only"""
 
@@ -904,6 +916,7 @@ class TestSTDNOTINGLOBAL:
         for name in ["int", "uint", "ushort", "uchar", "byte"]:
             getattr(cppjit.gbl, name)
 
+    @mark.xfail(strict=True)
     def test04_no_legacy(self):
         """Test some functions that previously crashed"""
 

@@ -7,7 +7,7 @@ from support import setup_make
 
 # reuse the example01
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/example01Dict"))
+test_dct = "example01_cxx"
 
 
 def setup_module(mod):
@@ -50,7 +50,7 @@ class TestBASICAPI:
 
             # now we should actually see if load library can follow this...
             # first, try to load without moving to directory...
-            with raises(RuntimeError, match="Could not load library"):
+            with raises(RuntimeError, match="Unable to load library"):
                 cppjit.load_library("test.so")
 
             # then copy to our rpath, and make sure it can be loaded now

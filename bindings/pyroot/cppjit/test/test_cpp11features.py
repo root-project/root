@@ -12,7 +12,7 @@ from support import (
 )
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/cpp11featuresDict"))
+test_dct = "cpp11features_cxx"
 
 
 def setup_module(mod):

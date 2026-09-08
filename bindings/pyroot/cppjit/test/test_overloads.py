@@ -3,7 +3,7 @@ from pytest import mark, raises, skip
 from support import IS_MAC, IS_MAC_ARM, IS_WINDOWS, ispypy, setup_make
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/overloadsDict"))
+test_dct = "overloads_cxx"
 
 
 def setup_module(mod):

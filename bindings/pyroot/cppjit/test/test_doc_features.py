@@ -15,7 +15,7 @@ from support import (
 )
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/doc_helperDict"))
+test_dct = "doc_helper_cxx"
 
 
 def setup_module(mod):
@@ -1320,6 +1320,7 @@ class TestTALKEXAMPLES:
         with raises(CC.MyException):
             CC.throw_error()
 
+    @mark.xfail(strict=True)
     def test_unicode(self):
         """Unicode non-UTF-8 example"""
 

@@ -132,6 +132,7 @@ class TestREGRESSION:
 
         assert 1 == cppjit.gbl.py2long(1)
 
+    @mark.skip(reason="For ROOT, we don't enable AVX by default ('-mavx' is not passed to Cling)")
     def test04_avx(self):
         """Test usability of AVX by default."""
 

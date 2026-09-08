@@ -11,7 +11,7 @@ from support import (
 )
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/advancedcppDict"))
+test_dct = "advancedcpp_cxx"
 
 
 def setup_module(mod):
@@ -174,7 +174,7 @@ class TestADVANCEDCPP:
 
         gbl = cppjit.gbl
 
-        lib2 = cppjit.load_reflection_info(str(currpath.join("cpp/advancedcpp2Dict")))
+        lib2 = cppjit.load_reflection_info("advancedcpp2_cxx")
 
         assert gbl.a_ns is gbl.a_ns
         assert gbl.a_ns.d_ns is gbl.a_ns.d_ns
@@ -777,7 +777,6 @@ class TestADVANCEDCPP:
             caught = True
         assert caught == True
 
-    @mark.xfail(reason="using-declared overloads expose the base class signature")
     def test23_using(self):
         """Accessibility of using declarations"""
 

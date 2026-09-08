@@ -2,10 +2,10 @@ import sys
 
 import py
 from pytest import mark, raises, skip
-from support import IS_CLANG_REPL, IS_CPP23, IS_MAC, pylong, pyunicode, setup_make
+from support import IS_CLANG_REPL, IS_MAC, pylong, pyunicode, setup_make
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/datatypesDict"))
+test_dct = "datatypes_cxx"
 
 
 def setup_module(mod):
@@ -20,13 +20,6 @@ class TestDATATYPES:
         cls.datatypes = cppjit.load_reflection_info(cls.test_dct)
         cls.N = 5  # cppjit.gbl.N
 
-    @mark.xfail(
-        condition=IS_CPP23 and not IS_MAC,
-        reason="since C++23 (P1467) the narrowing std::complex<double> to "
-        "complex<float> constructor is explicit, breaking the implicit "
-        "conversion of Python complex arguments; libc++ does not implement "
-        "P1467 yet, so the conversion still succeeds on macOS",
-    )
     def test01_instance_data_read_access(self):
         """Read access to instance public data and verify values"""
 

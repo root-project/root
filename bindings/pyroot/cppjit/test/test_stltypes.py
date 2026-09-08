@@ -19,7 +19,7 @@ from support import (
 )
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/stltypesDict"))
+test_dct = "stltypes_cxx"
 
 
 def setup_module(mod):
@@ -990,8 +990,6 @@ class TestSTLSTRING:
 
         assert tuple(cppjit.gbl.str_array_1) == ("a", "b", "c")
         str_array_2 = cppjit.gbl.str_array_2
-        # fix up the size
-        str_array_2.size = 4
         assert tuple(str_array_2) == ("d", "e", "f", "g")
         assert tuple(str_array_2) == ("d", "e", "f", "g")
 
@@ -2460,9 +2458,9 @@ class TestCOMPLEXTEMPLATEARG:
 
         import cppjit
 
-        assert (
-            cppjit.gbl.std.vector[complex].__cpp_name__
-            == "std::vector<std::complex<double>>"
+        # ROOT's backend prints names with expanded default template arguments
+        assert cppjit.gbl.std.vector[complex].__cpp_name__ == (
+            "std::vector<std::complex<double>,std::allocator<std::complex<double> > >"
         )
 
         cppjit.cppdef("""\

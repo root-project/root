@@ -8,7 +8,7 @@ from support import (
 )
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/operatorsDict"))
+test_dct = "operators_cxx"
 
 
 def setup_module(mod):

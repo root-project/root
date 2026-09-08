@@ -2,7 +2,7 @@ import py
 from support import setup_make
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/example01Dict"))
+test_dct = "example01_cxx"
 
 
 def setup_module(mod):

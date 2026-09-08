@@ -12,7 +12,7 @@ from support import (
 )
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/datatypesDict"))
+test_dct = "datatypes_cxx"
 
 
 def setup_module(mod):

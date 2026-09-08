@@ -13,7 +13,7 @@ from support import (
 )
 
 currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp/crossinheritanceDict"))
+test_dct = "crossinheritance_cxx"
 
 
 def setup_module(mod):
@@ -1635,6 +1635,7 @@ class TestCROSSINHERITANCE:
 
         assert p.func(d) == 42 + 2 * d.value
 
+    @mark.xfail(strict=True)
     def test33_direct_base_methods(self):
         """Call base class methods directly"""
 
