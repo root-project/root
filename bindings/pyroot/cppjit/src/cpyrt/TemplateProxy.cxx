@@ -766,6 +766,22 @@ static int tpp_setuseffi(CPPOverload*, PyObject*, void*) {
   return 0; // dummy (__useffi__ unused)
 }
 
+//-----------------------------------------------------------------------------
+static PyObject* tpp_gettemplateargs(TemplateProxy* self, void*) {
+  if (!self->fTemplateArgs) {
+    Py_RETURN_NONE;
+  }
+
+  Py_INCREF(self->fTemplateArgs);
+  return self->fTemplateArgs;
+}
+
+//-----------------------------------------------------------------------------
+static int tpp_settemplateargs(TemplateProxy*, PyObject*, void*) {
+  PyErr_SetString(PyExc_AttributeError, "__template_args__ is read-only");
+  return -1;
+}
+
 //----------------------------------------------------------------------------
 static PyMappingMethods tpp_as_mapping = {nullptr, (binaryfunc)tpp_subscript,
                                           nullptr};
@@ -774,7 +790,11 @@ static PyGetSetDef tpp_getset[] = {
     {(char*)"__doc__", (getter)tpp_doc, (setter)tpp_doc_set, nullptr, nullptr},
     {(char*)"__useffi__", (getter)tpp_getuseffi, (setter)tpp_setuseffi,
      (char*)"unused", nullptr},
-    {(char*)nullptr, nullptr, nullptr, nullptr, nullptr}};
+    {(char*)"__template_args__", (getter)tpp_gettemplateargs,
+     (setter)tpp_settemplateargs,
+     (char*)"the template arguments for this method", nullptr},
+    {(char*)nullptr, nullptr, nullptr, nullptr, nullptr},
+};
 
 //----------------------------------------------------------------------------
 void TemplateProxy::Set(const std::string& cppname, const std::string& pyname,
@@ -799,6 +819,7 @@ void TemplateProxy::Set(const std::string& cppname, const std::string& pyname,
 static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args) {
   // Select and call a specific C++ overload, based on its signature.
   const char* sigarg = nullptr;
+  const char* tmplarg = nullptr;
   PyObject* sigarg_tuple = nullptr;
   int want_const = -1;
 
@@ -833,6 +854,13 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args) {
     scope = ((CPPClass*)pytmpl->fTI->fPyClass)->fCppType;
     cppmeth = interop::GetMethodTemplate(scope, pytmpl->fTI->fCppName,
                                          proto.substr(1, proto.size() - 2));
+  } else if (PyArg_ParseTuple(args, const_cast<char*>("ss:__overload__"),
+                              &sigarg, &tmplarg)) {
+    scope = ((CPPClass*)pytmpl->fTI->fPyClass)->fCppType;
+    std::string full_name =
+        std::string(pytmpl->fTI->fCppName) + "<" + tmplarg + ">";
+
+    cppmeth = interop::GetMethodTemplate(scope, full_name, sigarg);
   } else if (PyArg_ParseTuple(args, const_cast<char*>("O|i:__overload__"),
                               &sigarg_tuple, &want_const)) {
     PyErr_Clear();
