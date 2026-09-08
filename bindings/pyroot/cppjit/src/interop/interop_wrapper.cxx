@@ -1349,8 +1349,16 @@ interop::TCppType_t interop::GetMethodReturnType(TCppMethod_t method) {
 
 std::string interop::GetMethodReturnTypeAsString(TCppMethod_t method) {
   std::lock_guard<std::recursive_mutex> Lock(InterOpMutex);
-  return Cpp::GetTypeAsString(
-      Cpp::GetCanonicalType(Cpp::GetFunctionReturnType(method)));
+  TCppType_t ret = Cpp::GetCanonicalType(Cpp::GetFunctionReturnType(method));
+  // C++ deletes top-level cv-qualifiers on non-class return types from the
+  // function type ([dcl.fct]); mirror that so name matching sees the plain
+  // type, e.g. "unsigned long" for `static const size_t size()`. Class
+  // types keep the qualifier: it stays part of the function type there
+  // (e.g. for override matching in the dispatcher).
+  if (ret && !Cpp::IsRecordType(ret))
+    ret = Cpp::RemoveTypeQualifier(ret,
+                                   Cpp::QualKind::Const | Cpp::QualKind::Volatile);
+  return Cpp::GetTypeAsString(ret);
 }
 
 interop::TCppIndex_t interop::GetMethodNumArgs(TCppMethod_t method) {
