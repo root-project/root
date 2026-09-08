@@ -320,6 +320,43 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   Cpp::Destruct(object, Decls[1]);
 }
 
+// The wrapper spells the callee's return type. When that spelling runs through
+// a private member template, as RResultPtr<std::vector<T>>::begin() does with
+// RIterationHelper<T, true>::Iterator_t, the wrapper only compiles with access
+// control off, as cppyy-backend's TClingCallFunc always compiled it.
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           FunctionReflection_MakeFunctionCallable_PrivateReturnSpelling) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscripten builds";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    struct Value { int v; };
+    class Holder {
+      template <class V, bool B = true> struct Helper { using Value_t = void; };
+      template <class V> struct Helper<V, true> { using Value_t = V; };
+    public:
+      Helper<Value>::Value_t get() { return Value{42}; }
+    };
+    )";
+  GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
+                      /*interpreter_args=*/{"-include", "new"});
+
+  Cpp::JitCall Call = Cpp::MakeFunctionCallable(
+      Cpp::ConstFuncRef{Cpp::GetNamed("get", Decls[1]).data});
+  ASSERT_EQ(Call.getKind(), Cpp::JitCall::kGenericCall);
+
+  Cpp::ObjectRef object = Cpp::Construct(Decls[1]);
+  ASSERT_TRUE(object);
+  int result = 0;
+  Call.Invoke(&result, {}, object.data);
+  EXPECT_EQ(result, 42);
+  Cpp::Destruct(object, Decls[1]);
+}
+
 // A using-promoted method still belongs to its declaring base class. When that
 // base sits at a non-zero offset inside the derived object (multiple
 // inheritance), callers adjust `this` with
