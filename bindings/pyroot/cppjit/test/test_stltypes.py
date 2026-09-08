@@ -1236,6 +1236,19 @@ class TestSTLSTRING:
         assert str(ns.Test3()) == "Test3"
         assert repr(ns.Test3()) == "Test3"
 
+    def test11_string_reference_assignment(self):
+        """Assignment through a returned std::string& checks the value type"""
+
+        import cppjit
+
+        v = cppjit.gbl.std.vector["std::string"](1)
+        v[0] = "abc"
+        assert v[0] == "abc"
+
+        with raises(TypeError):
+            v[0] = 5
+        assert v[0] == "abc"
+
 
 class TestSTLLIST:
     def setup_class(cls):

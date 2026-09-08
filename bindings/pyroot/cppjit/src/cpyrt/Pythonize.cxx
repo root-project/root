@@ -1525,28 +1525,6 @@ PyObject* STLStringGetAttr(CPPInstance* self, PyObject* attr_name) {
   return attr;
 }
 
-PyObject* UTF8Repr(PyObject* self) {
-  // force C++ string types conversion to Python str per Python __repr__
-  // requirements
-  PyObject* res = PyObject_CallMethodNoArgs(self, PyStrings::gCppRepr);
-  if (!res || cpyrt_PyText_Check(res))
-    return res;
-  PyObject* str_res = PyObject_Str(res);
-  Py_DECREF(res);
-  return str_res;
-}
-
-PyObject* UTF8Str(PyObject* self) {
-  // force C++ string types conversion to Python str per Python __str__
-  // requirements
-  PyObject* res = PyObject_CallMethodNoArgs(self, PyStrings::gCppStr);
-  if (!res || cpyrt_PyText_Check(res))
-    return res;
-  PyObject* str_res = PyObject_Str(res);
-  Py_DECREF(res);
-  return str_res;
-}
-
 Py_hash_t STLStringHash(PyObject* self) {
   // std::string objects hash to the same values as Python strings to allow
   // matches in dictionaries etc.
@@ -1980,19 +1958,6 @@ bool cpyrt::Pythonize(PyObject* pyclass, interop::TCppScope_t scope) {
       Py_DECREF(top_cls);
     }
     PyObject_SetAttr(pyclass, PyStrings::gNe, top_ne);
-  }
-
-  if (HasAttrDirect(pyclass, PyStrings::gRepr, true)) {
-    // guarantee that the result of __repr__ is a Python string
-    Utility::AddToClass(pyclass, "__cpp_repr", "__repr__");
-    Utility::AddToClass(pyclass, "__repr__", (PyCFunction)UTF8Repr,
-                        METH_NOARGS);
-  }
-
-  if (HasAttrDirect(pyclass, PyStrings::gStr, true)) {
-    // guarantee that the result of __str__ is a Python string
-    Utility::AddToClass(pyclass, "__cpp_str", "__str__");
-    Utility::AddToClass(pyclass, "__str__", (PyCFunction)UTF8Str, METH_NOARGS);
   }
 
   // The pseudo-constructor is not meant for standard-library aggregates;
