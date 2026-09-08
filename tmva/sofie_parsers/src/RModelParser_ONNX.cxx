@@ -29,6 +29,9 @@ extern ParserFuncSignature ParseCos;
 extern ParserFuncSignature ParseAbs;
 extern ParserFuncSignature ParseSoftplus;
 extern ParserFuncSignature ParseAtan;
+extern ParserFuncSignature ParseAsinh;
+extern ParserFuncSignature ParseAcosh;
+extern ParserFuncSignature ParseAtanh;
 extern ParserFuncSignature ParseFloor;
 // Binary operators
 extern ParserFuncSignature ParseAdd;
@@ -318,6 +321,9 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Abs", ParseAbs);
    RegisterOperator("Softplus", ParseSoftplus);
    RegisterOperator("Atan", ParseAtan);
+   RegisterOperator("Asinh", ParseAsinh);
+   RegisterOperator("Acosh", ParseAcosh);
+   RegisterOperator("Atanh", ParseAtanh);
    RegisterOperator("Floor", ParseFloor);
    // Binary operators
    RegisterOperator("Add", ParseAdd);

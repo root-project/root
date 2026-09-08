@@ -4825,6 +4825,60 @@ def make_Sin():
     return _model(graph, opset=7, ir_version=10, producer_name='onnx-example')
 
 
+def make_Asinh():
+    """Ops: Asinh"""
+    nodes = [
+        helper.make_node('Asinh', ['input'], ['output']),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'asinh_test',
+        inputs=[
+            _vi('input', FLOAT, [3, 4]),
+        ],
+        outputs=[
+            _vi('output', FLOAT, [3, 4]),
+        ],
+    )
+    return _model(graph, opset=9, ir_version=10, producer_name='onnx-example')
+
+
+def make_Acosh():
+    """Ops: Acosh"""
+    nodes = [
+        helper.make_node('Acosh', ['input'], ['output']),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'acosh_test',
+        inputs=[
+            _vi('input', FLOAT, [3, 4]),
+        ],
+        outputs=[
+            _vi('output', FLOAT, [3, 4]),
+        ],
+    )
+    return _model(graph, opset=9, ir_version=10, producer_name='onnx-example')
+
+
+def make_Atanh():
+    """Ops: Atanh"""
+    nodes = [
+        helper.make_node('Atanh', ['input'], ['output']),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'atanh_test',
+        inputs=[
+            _vi('input', FLOAT, [3, 4]),
+        ],
+        outputs=[
+            _vi('output', FLOAT, [3, 4]),
+        ],
+    )
+    return _model(graph, opset=9, ir_version=10, producer_name='onnx-example')
+
+
 def make_Slice():
     """Ops: Slice"""
     nodes = [
@@ -5247,6 +5301,7 @@ def make_Where():
 
 MODELS = {
     'Abs': make_Abs,
+    'Acosh': make_Acosh,
     'Add': make_Add,
     'AddBroadcast1': make_AddBroadcast1,
     'AddBroadcast2': make_AddBroadcast2,
@@ -5255,6 +5310,8 @@ MODELS = {
     'AddBroadcast5': make_AddBroadcast5,
     'AddBroadcast6': make_AddBroadcast6,
     'AddBroadcast7': make_AddBroadcast7,
+    'Asinh': make_Asinh,
+    'Atanh': make_Atanh,
     'AveragePool1d_CeilMode': make_AveragePool1d_CeilMode,
     'AveragePool1d_CeilMode_Overhang': make_AveragePool1d_CeilMode_Overhang,
     'AveragePool2d_CeilMode': make_AveragePool2d_CeilMode,

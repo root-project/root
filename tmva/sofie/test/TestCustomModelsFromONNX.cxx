@@ -1397,6 +1397,50 @@ TEST(ONNX, Sin)
    expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, Asinh)
+{
+   std::vector<float> input({
+     -0.786738,-0.197796,-0.187787,0.142758,0.876096,-0.653239,0.145444,-1.107658,2.259171,-0.947054,-0.506689,1.801250
+   });
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Asinh", input);
+
+   std::vector<float> correct_output;
+   for (float x : input)
+      correct_output.push_back(std::asinh(x));
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, Acosh)
+{
+   // acosh is only defined for x >= 1
+   std::vector<float> input({
+     1.0, 1.001, 1.5, 2.0, 3.789, 5.234, 10.0, 1.234, 7.891, 2.345, 1.999, 100.0
+   });
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Acosh", input);
+
+   std::vector<float> correct_output;
+   for (float x : input)
+      correct_output.push_back(std::acosh(x));
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, Atanh)
+{
+   // atanh is only defined for |x| < 1
+   std::vector<float> input({
+     -0.99,-0.786738,-0.5,-0.197796,0.0,0.142758,0.5,0.876096,-0.653239,0.3,0.99,-0.142758
+   });
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Atanh", input);
+
+   std::vector<float> correct_output;
+   for (float x : input)
+      correct_output.push_back(std::atanh(x));
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
+}
+
 TEST(ONNX, Cos)
 {
    // Preparing the random input
