@@ -3616,80 +3616,150 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
     auto GD = GlobalDecl(VD);
     std::string mangledName;
     compat::maybeMangleDeclName(GD, mangledName);
-    void* address = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(
-        mangledName.c_str());
+    void* address = nullptr;
+    {
+      // scoped: the final symbol lookup and the evaluate fallback below must
+      // run outside of any nested transaction, or execution is deferred; the
+      // initializer reads (getInit/evaluateValue) may lazily deserialize and
+      // so need an open transaction
+      compat::SynthesizingCodeRAII RAII(&getInterp());
 
-    // A const variable whose constant initializer is in the AST: serve the
-    // evaluated value before the JIT lookup. This must stay *after* the
-    // search in the loaded binaries above: a symbol that a binary does
-    // export keeps its real address. A missed lookup falls through to the
-    // symbol autoloader, which scans and parses every library on the
-    // search path (over a thousand file opens with ROOT, ~0.5 s), only to
-    // end up in the evaluate fallback below anyway: in-class initialized
-    // static members like TString::kNPOS are exported by no binary. Unlike
-    // that fallback, don't instantiate templates here, so no Sema work is
-    // added for variables the lookup would have found.
-    if (!address) {
-      const VarDecl* InitVD = VD->hasInit() ? VD : VD->getDefinition();
-      if (InitVD && InitVD->hasInit() &&
-          !InitVD->getType().isVolatileQualified() &&
-          (InitVD->isConstexpr() || InitVD->getType().isConstQualified())) {
-        if (const APValue* val = InitVD->evaluateValue()) {
-          if (InitVD->getType()->isIntegralType(C))
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-            return reinterpret_cast<intptr_t>(val->getInt().getRawData());
-          if (intptr_t ArrAddr = MaterializeConstArrayValue(
-                  C, InitVD, *val, getInterpInfo(&I).ConstArrayValueStore))
-            return ArrAddr;
+      // A name without external linkage is module-local: no library symbol
+      // can legitimately be this entity, and a missed JIT lookup falls
+      // through to the symbol autoloader, which loads any library on the
+      // dynamic path exporting the name (a REPL "constexpr int S" pulled in
+      // msys-2.0.dll on Windows). Serve the evaluated value directly.
+      if (!VD->hasExternalFormalLinkage()) {
+        if (!VD->hasInit()) {
+          if (VarDecl* Def = VD->getDefinition()) {
+            VD = Def;
+          } else if (VD->getTemplateInstantiationPattern()) {
+            getSema().InstantiateVariableDefinition(SourceLocation(), VD);
+            if (VarDecl* Inst = VD->getDefinition())
+              VD = Inst;
+          }
         }
-      }
-    }
-
-    if (!address)
-      address = I.getAddressOfGlobal(GD);
-    if (!address) {
-      if (!VD->hasInit()) {
-        // The initializer feeding the constexpr fast path below may live on
-        // an already-parsed out-of-line definition (a non-template class's
-        // static data member, e.g. std::partial_ordering::less): prefer it,
-        // with no Sema work at all. Only a variable instantiated from a
-        // template can need Sema::InstantiateVariableDefinition — and
-        // without an instantiation pattern that call dereferences a null
-        // VarDecl in release builds.
-        if (VarDecl* Def = VD->getDefinition()) {
-          VD = Def;
-        } else if (VD->getTemplateInstantiationPattern()) {
-          compat::SynthesizingCodeRAII RAII(&getInterp());
-          getSema().InstantiateVariableDefinition(SourceLocation(), VD);
-          if (VarDecl* Inst = VD->getDefinition())
-            VD = Inst;
-        }
-      }
-      if (VD->hasInit() &&
-          (VD->isConstexpr() || VD->getType().isConstQualified())) {
-        if (const APValue* val = VD->evaluateValue()) {
-          if (VD->getType()->isIntegralType(C)) {
-            return (intptr_t)val->getInt().getRawData();
+        if (VD->hasInit() &&
+            (VD->isConstexpr() || VD->getType().isConstQualified())) {
+          if (const APValue* val = VD->evaluateValue()) {
+            if (VD->getType()->isIntegralType(C))
+              return (intptr_t)val->getInt().getRawData();
+            if (intptr_t ArrAddr = MaterializeConstArrayValue(
+                    C, VD, *val, getInterpInfo(&I).ConstArrayValueStore))
+              return ArrAddr;
           }
         }
       }
-    }
-    if (!address) {
-      auto Linkage = C.GetGVALinkageForVariable(VD);
-      // Odr-use emission only for discardable-ODR entities (inline/constexpr
-      // statics) — the class the used-list crash traced to. Internal-linkage
-      // variables cannot be odr-used from a later PTU (module-local symbol:
-      // the reference duplicates or misses the entity), and an
-      // available-externally definition would not be emitted by a mere
-      // reference; both stay on the stock UsedAttr path.
-      if (isDiscardableGVALinkage(Linkage) &&
-          (Linkage != GVA_DiscardableODR || !EmitVariableViaOdrUse(I, VD)))
-        ForceCodeGen(VD, I);
+
+      address = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(
+          mangledName.c_str());
+
+      // A const variable whose constant initializer is in the AST: serve the
+      // evaluated value before the JIT lookup. This must stay *after* the
+      // search in the loaded binaries above: a symbol that a binary does
+      // export keeps its real address. A missed lookup falls through to the
+      // symbol autoloader, which scans and parses every library on the
+      // search path (over a thousand file opens with ROOT, ~0.5 s), only to
+      // end up in the evaluate fallback below anyway: in-class initialized
+      // static members like TString::kNPOS are exported by no binary. Unlike
+      // that fallback, don't instantiate templates here, so no Sema work is
+      // added for variables the lookup would have found.
+      if (!address) {
+        const VarDecl* InitVD = VD->hasInit() ? VD : VD->getDefinition();
+        if (InitVD && InitVD->hasInit() &&
+            !InitVD->getType().isVolatileQualified() &&
+            (InitVD->isConstexpr() || InitVD->getType().isConstQualified())) {
+          if (const APValue* val = InitVD->evaluateValue()) {
+            if (InitVD->getType()->isIntegralType(C))
+              // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+              return reinterpret_cast<intptr_t>(val->getInt().getRawData());
+            if (intptr_t ArrAddr = MaterializeConstArrayValue(
+                    C, InitVD, *val, getInterpInfo(&I).ConstArrayValueStore))
+              return ArrAddr;
+          }
+        }
+      }
+
+      if (!address)
+        address = I.getAddressOfGlobal(GD);
+      if (!address) {
+        if (!VD->hasInit()) {
+          // The initializer feeding the constexpr fast path below may live on
+          // an already-parsed out-of-line definition (a non-template class's
+          // static data member, e.g. std::partial_ordering::less): prefer it,
+          // with no Sema work at all. Only a variable instantiated from a
+          // template can need Sema::InstantiateVariableDefinition — and
+          // without an instantiation pattern that call dereferences a null
+          // VarDecl in release builds.
+          if (VarDecl* Def = VD->getDefinition()) {
+            VD = Def;
+          } else if (VD->getTemplateInstantiationPattern()) {
+            getSema().InstantiateVariableDefinition(SourceLocation(), VD);
+            if (VarDecl* Inst = VD->getDefinition())
+              VD = Inst;
+          }
+        }
+        if (VD->hasInit() &&
+            (VD->isConstexpr() || VD->getType().isConstQualified())) {
+          if (const APValue* val = VD->evaluateValue()) {
+            if (VD->getType()->isIntegralType(C)) {
+              return (intptr_t)val->getInt().getRawData();
+            }
+            if (intptr_t ArrAddr = MaterializeConstArrayValue(
+                    C, VD, *val, getInterpInfo(&I).ConstArrayValueStore))
+              return ArrAddr;
+          }
+        }
+      }
+      if (!address) {
+        auto Linkage = C.GetGVALinkageForVariable(VD);
+        // Odr-use emission only for discardable-ODR entities (inline/constexpr
+        // statics) — the class the used-list crash traced to. Internal-linkage
+        // variables cannot be odr-used from a later PTU (module-local symbol:
+        // the reference duplicates or misses the entity), and an
+        // available-externally definition would not be emitted by a mere
+        // reference; both stay on the stock UsedAttr path.
+        // Also emit non-discardable strong definitions whose initializer is
+        // available in the AST but whose home binary does not export the
+        // symbol: e.g. on Windows, bindexplib deliberately does not export
+        // read-only data from DLLs, but the dictionary provides the
+        // initializer, so an emitted copy has the same value. Writable
+        // globals are exported and found above, so they cannot end up with a
+        // diverging JIT copy here. A discardable entity already emitted via
+        // odr-use must never also take the UsedAttr route: the attr sticks on
+        // the AST decl and grows used-list residue in every later PTU.
+        bool discardable = isDiscardableGVALinkage(Linkage);
+        if ((discardable &&
+             (Linkage != GVA_DiscardableODR || !EmitVariableViaOdrUse(I, VD))) ||
+            (!discardable && VD->isThisDeclarationADefinition() &&
+             VD->hasInit()))
+          ForceCodeGen(VD, I);
+      }
     }
     auto VDAorErr = compat::getSymbolAddress(I, StringRef(mangledName));
     if (!VDAorErr) {
-      llvm::logAllUnhandledErrors(VDAorErr.takeError(), llvm::errs(),
-                                  "Failed to GetVariableOffset:");
+      // Last resort: ODR-use the variable in an interpreter-evaluated
+      // expression. This forces CodeGen to emit inline/constexpr variables
+      // that exist in no loaded library (e.g. std::nullopt) and that the
+      // deferred-decl handling above did not emit. Mirrors what
+      // TClingDataMemberInfo::Offset does in ROOT.
+      // This can only work when CodeGen can emit the variable, i.e. when its
+      // definition or at least an initializer is available in the AST (e.g.
+      // std::ios_base::__noreplace, a static const member initialized in the
+      // class). For a variable defined in a binary that does not export it,
+      // the emitted reference could never be resolved, and executing the
+      // expression would be undefined behavior.
+      llvm::consumeError(VDAorErr.takeError());
+      if (VD->getDefinition() || VD->hasInit()) {
+        compat::Value V;
+        const std::string addr_of =
+            "&::" + VD->getQualifiedNameAsString() + ";";
+        if (I.evaluate(addr_of.c_str(), V) == compat::Interpreter::kSuccess &&
+            V.hasValue())
+          return (intptr_t)compat::convertTo<void*>(V);
+      }
+      llvm::errs() << "Failed to GetVariableOffset: symbol '" << mangledName
+                   << "' not found and its definition is not available\n";
       return 0;
     }
     return (intptr_t)jitTargetAddressToPointer<void*>(VDAorErr.get());
