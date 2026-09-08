@@ -5942,7 +5942,14 @@ int Declare(const char* code, bool silent) {
 
 int Process(const char* code) {
   INTEROP_TRACE(code);
-  return INTEROP_RETURN(getInterp().process(code));
+  // Trap diagnostics like Declare: process's rc is kSuccess even when the
+  // parse recovered from emitted errors or a wrapped expression failed at
+  // run time, so callers cannot rely on it alone.
+  clang::DiagnosticsEngine& Diag = getSema().getDiagnostics();
+  clang::DiagnosticErrorTrap Trap(Diag);
+  if (getInterp().process(code) != compat::Interpreter::kSuccess)
+    return INTEROP_RETURN(1);
+  return INTEROP_RETURN(Trap.hasErrorOccurred() ? 1 : 0);
 }
 
 // Classify the QualType of a successfully-evaluated value into a
