@@ -40,10 +40,6 @@ using cppjit_interopExceptionContext_t = CppyyLegacy::ExceptionContext_t;
 using cppjit_interopExceptionContext_t = ExceptionContext_t;
 #endif
 
-// FIXME: This is a dummy, replace with cling equivalent of gException
-static cppjit_interopExceptionContext_t DummyException;
-static cppjit_interopExceptionContext_t* gException = &DummyException;
-
 #ifdef NEED_SIGJMP
 #define CLING_EXCEPTION_SETJMP(buf) sigsetjmp(buf, 1)
 #else
@@ -79,6 +75,11 @@ static cppjit_interopExceptionContext_t* gException = &DummyException;
   gException = R__old;                                                         \
   }
 
-CPYRT_IMPORT cppjit_interopExceptionContext_t* gException;
+// extern, defined in ROOT Core
+#ifdef _MSC_VER
+extern __declspec(dllimport) cppjit_interopExceptionContext_t* gException;
+#else
+extern cppjit_interopExceptionContext_t* gException;
+#endif
 
 #endif
