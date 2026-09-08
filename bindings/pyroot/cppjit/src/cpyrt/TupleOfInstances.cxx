@@ -1,0 +1,266 @@
+#include "Python.h"
+#include "cppjit_interop.h"
+
+// Bindings
+#include "cpyrt.h"
+
+using namespace cppjit;
+#include "ProxyWrappers.h"
+#include "TupleOfInstances.h"
+
+namespace {
+
+typedef struct {
+  PyObject_HEAD interop::TCppScope_t ia_klass;
+  void* ia_array_start;
+  Py_ssize_t ia_pos;
+  Py_ssize_t ia_len;
+  Py_ssize_t ia_stride;
+} ia_iterobject;
+
+static PyObject* ia_iternext(ia_iterobject* ia) {
+  if (ia->ia_len != (Py_ssize_t)-1 && ia->ia_pos >= ia->ia_len) {
+    ia->ia_pos = 0; // debatable, but since the iterator is cached, this
+    return nullptr; //   allows for multiple conversions to e.g. a tuple
+  } else if (ia->ia_stride == 0 && ia->ia_pos != 0) {
+    PyErr_SetString(PyExc_ReferenceError, "no stride available for indexing");
+    return nullptr;
+  }
+  PyObject* result = cpyrt::BindCppObjectNoCast(
+      (char*)ia->ia_array_start + ia->ia_pos * ia->ia_stride, ia->ia_klass);
+  ia->ia_pos += 1;
+  return result;
+}
+
+static int ia_traverse(ia_iterobject*, visitproc, void*) { return 0; }
+
+static PyObject* ia_getsize(ia_iterobject* ia, void*) {
+  return PyInt_FromSsize_t(ia->ia_len);
+}
+
+static int ia_setsize(ia_iterobject* ia, PyObject* pysize, void*) {
+  Py_ssize_t size = PyInt_AsSsize_t(pysize);
+  if (size == (Py_ssize_t)-1 && PyErr_Occurred())
+    return -1;
+  ia->ia_len = size;
+  return 0;
+}
+
+static PyGetSetDef ia_getset[] = {
+    {(char*)"size", (getter)ia_getsize, (setter)ia_setsize,
+     (char*)"set size of array to which this iterator refers", nullptr},
+    {(char*)nullptr, nullptr, nullptr, nullptr, nullptr}};
+
+static Py_ssize_t ia_length(ia_iterobject* ia) { return ia->ia_len; }
+
+static PyObject* ia_subscript(ia_iterobject* ia, PyObject* pyidx) {
+  // Subscripting the iterator allows direct access through indexing on arrays
+  // that do not have a defined length. This way, the return from accessing such
+  // an array as a data member can both be used in a loop and directly.
+  Py_ssize_t idx = PyInt_AsSsize_t(pyidx);
+  if (idx == (Py_ssize_t)-1 && PyErr_Occurred())
+    return nullptr;
+
+  if (ia->ia_len != (Py_ssize_t)-1 && (idx < 0 || ia->ia_len <= idx)) {
+    PyErr_SetString(PyExc_IndexError, "index out of range");
+    return nullptr;
+  }
+
+  return cpyrt::BindCppObjectNoCast(
+      (char*)ia->ia_array_start + ia->ia_pos * ia->ia_stride, ia->ia_klass);
+}
+
+static PyMappingMethods ia_as_mapping = {
+    (lenfunc)ia_length,       // mp_length
+    (binaryfunc)ia_subscript, // mp_subscript
+    (objobjargproc) nullptr,  // mp_ass_subscript
+};
+
+} // unnamed namespace
+
+namespace cppjit::cpyrt {
+
+PyTypeObject InstanceArrayIter_Type = {
+    PyVarObject_HEAD_INIT(&PyType_Type,
+                          0)(char*) "cppjit.instancearrayiter", // tp_name
+    sizeof(ia_iterobject),                                      // tp_basicsize
+    0,
+    (destructor)PyObject_GC_Del, // tp_dealloc
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    &ia_as_mapping, // tp_as_mapping
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC, // tp_flags
+    0,
+    (traverseproc)ia_traverse, // tp_traverse
+    0,
+    0,
+    0,
+    PyObject_SelfIter,         // tp_iter
+    (iternextfunc)ia_iternext, // tp_iternext
+    0,
+    0,
+    ia_getset, // tp_getset
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0, // tp_del
+    0, // tp_version_tag
+    0, // tp_finalize
+    0  // tp_vectorcall
+    CPYRT_PYTYPE_TAIL};
+
+//= support for C-style arrays of objects ====================================
+PyObject* TupleOfInstances_New(interop::TCppObject_t address,
+                               interop::TCppScope_t klass, cdims_t dims) {
+  // recursively set up tuples of instances on all dimensions
+  if (dims.ndim() == UNKNOWN_SIZE ||
+      dims[0] == UNKNOWN_SIZE /* unknown shape or size */) {
+    // no known length ... return an iterable object and let the user figure it
+    // out
+    ia_iterobject* ia = PyObject_GC_New(ia_iterobject, &InstanceArrayIter_Type);
+    if (!ia)
+      return nullptr;
+
+    ia->ia_klass = klass;
+    ia->ia_array_start = address.data;
+    ia->ia_pos = 0;
+    ia->ia_len = -1;
+    ia->ia_stride = interop::SizeOf(klass);
+
+    PyObject_GC_Track(ia);
+    return (PyObject*)ia;
+  } else if (1 < dims.ndim()) {
+    // not the innermost dimension, descend one level
+    size_t block_size = 1;
+    for (Py_ssize_t i = 1; i < dims.ndim(); ++i) {
+      if (dims[i] != 0)
+        block_size *= (size_t)dims[i];
+    }
+    block_size *= interop::SizeOf(klass);
+
+    Py_ssize_t nelems = dims[0];
+    PyObject* tup = PyTuple_New(nelems);
+    for (Py_ssize_t i = 0; i < nelems; ++i) {
+      PyTuple_SetItem(
+          tup, i,
+          TupleOfInstances_New(((char*)address.data) + i * block_size, klass,
+                               dims.sub()));
+    }
+    return tup;
+  } else {
+    // innermost dimension: construct tuple
+    int nelems = (int)dims[0];
+    size_t block_size = interop::SizeOf(klass);
+    if (block_size == 0) {
+      PyErr_Format(PyExc_TypeError,
+                   "can not determine size of type \"%s\" for array indexing",
+                   interop::GetScopedFinalName(klass).c_str());
+      return nullptr;
+    }
+
+    // TODO: the extra copy is inefficient, but it appears that the only way to
+    // initialize a subclass of a tuple is through a sequence
+    PyObject* tup = PyTuple_New(nelems);
+    for (int i = 0; i < nelems; ++i) {
+      // TODO: there's an assumption here that there is no padding, which is
+      // bound to be incorrect in certain cases
+      PyTuple_SetItem(
+          tup, i,
+          BindCppObjectNoCast(((char*)address.data) + i * block_size, klass));
+      // Note: objects are bound as pointers, yet since the pointer value stays
+      // in place, updates propagate just as if they were bound by-reference
+    }
+
+    PyObject* args = PyTuple_New(1);
+    Py_INCREF(tup);
+    PyTuple_SET_ITEM(args, 0, tup);
+    PyObject* arr = PyTuple_Type.tp_new(&TupleOfInstances_Type, args, nullptr);
+
+    Py_DECREF(args);
+    // tup ref eaten by SET_ITEM on args
+
+    return arr;
+  }
+
+  // never get here
+  return nullptr;
+}
+
+//= cpyrt custom tuple-like array type ====================================
+PyTypeObject TupleOfInstances_Type = {
+    PyVarObject_HEAD_INIT(&PyType_Type,
+                          0)(char*) "cppjit.InstancesArray", // tp_name
+    0,                                                       // tp_basicsize
+    0,                                                       // tp_itemsize
+    0,                                                       // tp_dealloc
+    0, // tp_vectorcall_offset / tp_print
+    0, // tp_getattr
+    0, // tp_setattr
+    0, // tp_as_async / tp_compare
+    0, // tp_repr
+    0, // tp_as_number
+    0, // tp_as_sequence
+    0, // tp_as_mapping
+    0, // tp_hash
+    0, // tp_call
+    0, // tp_str
+    0, // tp_getattro
+    0, // tp_setattro
+    0, // tp_as_buffer
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_CHECKTYPES |
+        Py_TPFLAGS_BASETYPE,         // tp_flags
+    (char*)"array of C++ instances", // tp_doc
+    0,                               // tp_traverse
+    0,                               // tp_clear
+    0,                               // tp_richcompare
+    0,                               // tp_weaklistoffset
+    0,                               // tp_iter
+    0,                               // tp_iternext
+    0,                               // tp_methods
+    0,                               // tp_members
+    0,                               // tp_getset
+    &PyTuple_Type,                   // tp_base
+    0,                               // tp_dict
+    0,                               // tp_descr_get
+    0,                               // tp_descr_set
+    0,                               // tp_dictoffset
+    0,                               // tp_init
+    0,                               // tp_alloc
+    0,                               // tp_new
+    0,                               // tp_free
+    0,                               // tp_is_gc
+    0,                               // tp_bases
+    0,                               // tp_mro
+    0,                               // tp_cache
+    0,                               // tp_subclasses
+    0,                               // tp_weaklist
+    0,                               // tp_del
+    0,                               // tp_version_tag
+    0,                               // tp_finalize
+    0                                // tp_vectorcall
+    CPYRT_PYTYPE_TAIL};
+
+} // namespace cppjit::cpyrt
