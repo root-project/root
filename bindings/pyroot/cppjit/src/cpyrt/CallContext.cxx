@@ -4,15 +4,11 @@
 using namespace cppjit;
 #include "CallContext.h"
 
-//- data _____________________________________________________________________
-namespace cppjit::cpyrt {
-
-CallContext::ECallFlags CallContext::sMemoryPolicy = CallContext::kUseStrict;
-// this is just a data holder for linking; actual value is set in
-// cpyrtModule.cxx
-CallContext::ECallFlags CallContext::sSignalPolicy = CallContext::kNone;
-
-} // namespace cppjit::cpyrt
+//-----------------------------------------------------------------------------
+uint32_t& cpyrt::CallContext::GlobalPolicyFlags() {
+  static uint32_t flags = 0;
+  return flags;
+}
 
 //-----------------------------------------------------------------------------
 void cpyrt::CallContext::AddTemporary(PyObject* pyobj) {
@@ -41,21 +37,12 @@ void cpyrt::CallContext::Cleanup() {
 }
 
 //-----------------------------------------------------------------------------
-bool cpyrt::CallContext::SetMemoryPolicy(ECallFlags e) {
-  // Set the global memory policy, which affects object ownership when objects
-  // are passed as function arguments.
-  if (kUseHeuristics == e || e == kUseStrict) {
-    sMemoryPolicy = e;
-    return true;
-  }
-  return false;
-}
-
-//-----------------------------------------------------------------------------
-bool cpyrt::CallContext::SetGlobalSignalPolicy(bool setProtected) {
-  // Set the global signal policy, which determines whether a jmp address
-  // should be saved to return to after a C++ segfault.
-  bool old = sSignalPolicy == kProtected;
-  sSignalPolicy = setProtected ? kProtected : kNone;
+bool cpyrt::CallContext::SetGlobalPolicy(ECallFlags toggleFlag, bool enabled) {
+  auto& flags = GlobalPolicyFlags();
+  bool old = flags & toggleFlag;
+  if (enabled)
+    flags |= toggleFlag;
+  else
+    flags &= ~toggleFlag;
   return old;
 }

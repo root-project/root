@@ -931,39 +931,24 @@ static PyObject* AddTypeReducer(PyObject*, PyObject* args) {
   Py_RETURN_NONE;
 }
 
-//----------------------------------------------------------------------------
-static PyObject* SetMemoryPolicy(PyObject*, PyObject* args) {
-  // Set the global memory policy, which affects object ownership when objects
-  // are passed as function arguments.
-  PyObject* policy = nullptr;
-  if (!PyArg_ParseTuple(args, const_cast<char*>("O!"), &PyInt_Type, &policy))
-    return nullptr;
-
-  long old = (long)CallContext::sMemoryPolicy;
-
-  long l = PyInt_AS_LONG(policy);
-  if (CallContext::SetMemoryPolicy((CallContext::ECallFlags)l)) {
-    return PyInt_FromLong(old);
+#define DEFINE_CALL_POLICY_TOGGLE(name, flagname)                              \
+  static PyObject* name(PyObject*, PyObject* args) {                           \
+    PyObject* enabled = 0;                                                     \
+    if (!PyArg_ParseTuple(args, const_cast<char*>("O"), &enabled))             \
+      return nullptr;                                                          \
+                                                                               \
+    if (CallContext::SetGlobalPolicy(CallContext::flagname,                    \
+                                     PyObject_IsTrue(enabled))) {              \
+      Py_RETURN_TRUE;                                                          \
+    }                                                                          \
+                                                                               \
+    Py_RETURN_FALSE;                                                           \
   }
 
-  PyErr_Format(PyExc_ValueError, "Unknown policy %ld", l);
-  return nullptr;
-}
-
-//----------------------------------------------------------------------------
-static PyObject* SetGlobalSignalPolicy(PyObject*, PyObject* args) {
-  // Set the global signal policy, which determines whether a jmp address
-  // should be saved to return to after a C++ segfault.
-  PyObject* setProtected = 0;
-  if (!PyArg_ParseTuple(args, const_cast<char*>("O"), &setProtected))
-    return nullptr;
-
-  if (CallContext::SetGlobalSignalPolicy(PyObject_IsTrue(setProtected))) {
-    Py_RETURN_TRUE;
-  }
-
-  Py_RETURN_FALSE;
-}
+DEFINE_CALL_POLICY_TOGGLE(SetHeuristicMemoryPolicy, kUseHeuristics);
+DEFINE_CALL_POLICY_TOGGLE(SetImplicitSmartPointerConversion,
+                          kImplicitSmartPtrConversion);
+DEFINE_CALL_POLICY_TOGGLE(SetGlobalSignalPolicy, kProtected);
 
 //----------------------------------------------------------------------------
 static PyObject* SetOwnership(PyObject*, PyObject* args) {
@@ -1048,11 +1033,20 @@ static PyMethodDef gcpyrtMethods[] = {
      (char*)"Install a type pinning."},
     {(char*)"_add_type_reducer", (PyCFunction)AddTypeReducer, METH_VARARGS,
      (char*)"Add a type reducer."},
-    {(char*)"SetMemoryPolicy", (PyCFunction)SetMemoryPolicy, METH_VARARGS,
-     (char*)"Determines object ownership model."},
+    {(char*)"SetHeuristicMemoryPolicy", (PyCFunction)SetHeuristicMemoryPolicy,
+     METH_VARARGS,
+     (char*)"Set the global memory policy, which affects object ownership when "
+            "objects are passed as function arguments."},
+    {(char*)"SetImplicitSmartPointerConversion",
+     (PyCFunction)SetImplicitSmartPointerConversion, METH_VARARGS,
+     (char*)"Enable or disable the implicit conversion to smart pointers in "
+            "function calls (on by default)."},
     {(char*)"SetGlobalSignalPolicy", (PyCFunction)SetGlobalSignalPolicy,
      METH_VARARGS,
-     (char*)"Trap signals in safe mode to prevent interpreter abort."},
+     (char*)"Set the global signal policy, which determines whether a jmp "
+            "address should be saved to return to after a "
+            "C++ segfault. In practical terms: trap signals in safe mode to "
+            "prevent interpreter abort."},
     {(char*)"SetOwnership", (PyCFunction)SetOwnership, METH_VARARGS,
      (char*)"Modify held C++ object ownership."},
     {(char*)"AddSmartPtrType", (PyCFunction)AddSmartPtrType, METH_VARARGS,
@@ -1196,12 +1190,6 @@ extern "C" PyObject* PyInit_libcppjit() {
   gAbrtException =
       PyErr_NewException((char*)"cppjit.ll.AbortSignal", cppfatal, nullptr);
   PyModule_AddObject(gThisModule, (char*)"AbortSignal", gAbrtException);
-
-  // policy labels
-  PyModule_AddObject(gThisModule, (char*)"kMemoryHeuristics",
-                     PyInt_FromLong((int)CallContext::kUseHeuristics));
-  PyModule_AddObject(gThisModule, (char*)"kMemoryStrict",
-                     PyInt_FromLong((int)CallContext::kUseStrict));
 
   // gbl namespace is injected in cppjit.py
 
