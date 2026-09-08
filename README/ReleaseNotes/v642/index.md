@@ -70,7 +70,7 @@ Users are encouraged to export their models to ONNX and use the retained ONNX pa
 * The headers `Htypes.h` and `Gtypes.h` that were deprecated in ROOT 6.20 will now emit warnings and will be fully removed in ROOT 6.44. Use instead `Rtypes.h`.
 * The header `GLConstants.h` is no longer part of ROOT installed headers.
 * The header `RStringView.h` deprecated in ROOT 6.14  will now emit warnings and will be fully removed after ROOT 6.44. Use `ROOT/RStringView.hxx` instead.
-* The header `snprintf.h` is no longer part of ROOT installed headers. Use instead `<cstdio>`.
+* The header `snprintf.h` is deprecated (will emit warnings) and will be removed in ROOT 6.44. Use instead `<cstdio>`.
 
 ## Build System
 
