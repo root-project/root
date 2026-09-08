@@ -58,7 +58,7 @@ class RFileKeyIterable;
 
 /**
 \class ROOT::Experimental::RKeyInfo
-\ingroup RFile
+\ingroup io_files
 \brief Information about an RFile object's Key.
 
 Every object inside a ROOT file has an associated "Key" which contains metadata on the object, such as its name, type
@@ -185,7 +185,7 @@ public:
 
 /**
 \class ROOT::Experimental::RFile
-\ingroup RFile
+\ingroup io_files
 \brief An interface to read from, or write to, a ROOT file, as well as performing other common operations.
 
 Please refer to the documentation of TFile for the details related to how data and executable code can be stored
