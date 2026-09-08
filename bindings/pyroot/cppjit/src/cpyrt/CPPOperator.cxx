@@ -1,0 +1,62 @@
+// Bindings
+#include "cpyrt.h"
+
+using namespace cppjit;
+#include "CPPInstance.h"
+#include "CPPOperator.h"
+#include "Utility.h"
+
+//- constructor --------------------------------------------------------------
+cpyrt::CPPOperator::CPPOperator(interop::TCppScope_t scope,
+                                interop::TCppMethod_t method,
+                                const std::string& name)
+    : CPPMethod(scope, method) {
+  // a bit silly but doing it this way allows decoupling the initialization
+  // order
+  if (name == "__mul__")
+    fStub = CPPInstance_Type.tp_as_number->nb_multiply;
+  else if (name == CPPJIT__div__)
+    fStub = CPPInstance_Type.tp_as_number->nb_true_divide;
+  else if (name == "__add__")
+    fStub = CPPInstance_Type.tp_as_number->nb_add;
+  else if (name == "__sub__")
+    fStub = CPPInstance_Type.tp_as_number->nb_subtract;
+  else
+    fStub = nullptr;
+}
+
+//-----------------------------------------------------------------------------
+PyObject* cpyrt::CPPOperator::Call(CPPInstance*& self, cpyrt_PyArgs_t args,
+                                   size_t nargsf, PyObject* kwds,
+                                   CallContext* ctxt) {
+  // some operators can be a mix of global and class overloads; this method will
+  // first try class overloads (the existence of this method means that such
+  // were defined) and if failed, fall back on the global stubs
+  // TODO: the fact that this is a method and not an overload means that the
+  // global ones are tried for each method that fails during the overload
+  // resolution
+  PyObject* result = this->CPPMethod::Call(self, args, nargsf, kwds, ctxt);
+  if (result || !fStub || !self)
+    return result;
+
+  Py_ssize_t idx_other = 0;
+  if (cpyrt_PyArgs_GET_SIZE(args, nargsf) != 1) {
+    if ((cpyrt_PyArgs_GET_SIZE(args, nargsf) == 2 &&
+         cpyrt_PyArgs_GET_ITEM(args, 0) == (PyObject*)self))
+      idx_other = 1;
+    else
+      return result;
+  }
+
+  // fetch the current error, resetting the error buffer
+  auto error = cpyrt::Utility::FetchPyError();
+
+  result = fStub((PyObject*)self, cpyrt_PyArgs_GET_ITEM(args, idx_other));
+
+  // if there was still a problem, restore the Python error buffer
+  if (!result) {
+    cpyrt::Utility::RestorePyError(error);
+  }
+
+  return result;
+}
