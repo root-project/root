@@ -50,6 +50,7 @@ __all__ = [
     "set_debug",  # enable/disable debug output
 ]
 
+import contextlib
 import ctypes
 import importlib.util
 import os
@@ -222,9 +223,23 @@ class _stderr_capture(object):
             self.err = _end_capture_stderr()
 
 
+@contextlib.contextmanager
+def _interpreter_lock():
+    """Hold the interpreter lock around Cpp calls made directly from Python.
+
+    Method calls through cpyrt take it themselves; the Cpp.Declare & co.
+    calls below are plain functions and would otherwise run unlocked next to
+    TCling users on other threads."""
+    _lock_interpreter()
+    try:
+        yield
+    finally:
+        _unlock_interpreter()
+
+
 def cppdef(src, verbose=True):
     """Declare C++ source <src> to Cling."""
-    with _stderr_capture() as err:
+    with _stderr_capture() as err, _interpreter_lock():
         errcode = gbl.Cpp.Declare(src, not verbose)
     if not errcode == 0 or err.err:
         if "warning" in err.err.lower() and "error" not in err.err.lower():
@@ -241,7 +256,7 @@ def cppexec(stmt):
 
     # capture stderr, but note that Process could legitimately be writing to
     # std::cerr, in which case the captured output needs to be printed as normal
-    with _stderr_capture() as err:
+    with _stderr_capture() as err, _interpreter_lock():
         errcode = ctypes.c_int(0)
         try:
             errcode = gbl.Cpp.Process(stmt)
@@ -259,7 +274,8 @@ def cppexec(stmt):
 
 
 def evaluate(input):
-    box = gbl.Cpp.Evaluate(input)
+    with _interpreter_lock():
+        box = gbl.Cpp.Evaluate(input)
     # Truthy sentinel: skips Box::convertTo's UB-on-K_Unspecified arm.
     if box.getKind() == gbl.Cpp.Box.K_Unspecified:
         return ~0
@@ -292,7 +308,7 @@ def load_library(name):
 
 def include(header):
     """Load (and JIT) header file <header> into Cling."""
-    with _stderr_capture() as err:
+    with _stderr_capture() as err, _interpreter_lock():
         errcode = gbl.Cpp.Declare('#include "%s"' % header, False)
     if not errcode == 0:
         raise ImportError('Failed to load header file "%s"%s' % (header, err.err))
@@ -301,7 +317,7 @@ def include(header):
 
 def c_include(header):
     """Load (and JIT) header file <header> into Cling."""
-    with _stderr_capture() as err:
+    with _stderr_capture() as err, _interpreter_lock():
         errcode = gbl.Cpp.Declare(
             """extern "C" {
                                     #include "%s"
@@ -318,7 +334,8 @@ def add_include_path(path):
     """Add a path to the include paths available to Cling."""
     if not os.path.isdir(path):
         raise OSError("No such directory: %s" % path)
-    gbl.Cpp.AddIncludePath(path)
+    with _interpreter_lock():
+        gbl.Cpp.AddIncludePath(path)
 
 
 def add_library_path(path):
