@@ -70,6 +70,12 @@ public:
 
   int GetArgMatchScore(PyObject* args_tuple) override;
 
+  bool IsSimilarFnType(cppjit::interop::TCppType_t fn_type) override {
+    return cppjit::interop::IsSimilarFnTypes(
+        fn_type, cppjit::interop::GetTypeFromScope(
+                     cppjit::interop::TCppScope_t(fMethod.data)));
+  }
+
 public:
   PyObject* Call(CPPInstance*& self, cpyrt_PyArgs_t args, size_t nargsf,
                  PyObject* kwds, CallContext* ctxt = nullptr) override;
