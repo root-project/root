@@ -1,16 +1,24 @@
 #include "Utils.h"
 
+#include "../../lib/CppInterOp/Unwrap.h"
+
 #include "CppInterOp/CppInterOp.h"
+#include "CppInterOp/CppInterOpTypes.h"
 
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/Attr.h"
 #include "clang/Basic/Version.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Sema.h"
 
-#include "gtest/gtest.h"
-#include <string>
+#include "llvm/Support/Error.h"
 
+#include "gtest/gtest.h"
+
+#include <array>
 #include <cstddef>
+#include <string>
+#include <utility>
 
 using namespace TestUtils;
 using namespace llvm;
@@ -235,6 +243,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_GetVariableType) {
     E<int> *f;
     int g[4];
     auto fn = []() { return 1; };
+    extern int uarr[];
+    int uarr[7];
     )";
 
   GetAllTopLevelDecls(code, Decls);
@@ -249,6 +259,14 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_GetVariableType) {
 
   EXPECT_FALSE(Cpp::IsLambdaClass(Cpp::GetVariableType(Decls[8])));
   EXPECT_TRUE(Cpp::IsLambdaClass(Cpp::GetVariableType(Decls[9])));
+
+  std::vector<Decl*> UArrDecls;
+  for (Decl* D : Decls)
+    if (Cpp::GetName(D) == "uarr")
+      UArrDecls.push_back(D);
+  ASSERT_EQ(UArrDecls.size(), 2);
+  EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetVariableType(UArrDecls[0])), "int[7]");
+  EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetVariableType(UArrDecls[1])), "int[7]");
 }
 
 #define CODE                                                                   \
@@ -338,6 +356,251 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_GetVariableOffset) {
   EXPECT_TRUE(var);
 
   EXPECT_TRUE(Cpp::GetVariableOffset(var));
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           VariableReflection_GetVariableOffset_NonTemplateStaticNoInit) {
+  // A non-template class's static data member declared in-class and defined
+  // out-of-line reaches the no-initializer branch with no template
+  // instantiation pattern. Sema::InstantiateVariableDefinition requires a
+  // pattern and dereferences null without one (std::partial_ordering::less
+  // is the in-the-wild shape). Must not crash; must resolve the definition.
+  TestFixture::CreateInterpreter();
+  Cpp::Declare(R"(
+    struct NonTemplateStatic {
+      static const NonTemplateStatic less;
+      int value;
+    };
+    inline constexpr NonTemplateStatic NonTemplateStatic::less{-1};
+  )");
+  Cpp::DeclRef klass = Cpp::GetNamed("NonTemplateStatic");
+  EXPECT_TRUE(klass);
+  Cpp::DeclRef var = Cpp::GetNamed("less", klass);
+  EXPECT_TRUE(var);
+  EXPECT_TRUE(Cpp::GetVariableOffset(var));
+
+  // Declared and never defined: still no pattern and now no definition
+  // either — the query must fail cleanly, not crash.
+  Cpp::Declare(R"(
+    struct NeverDefined {
+      static const NeverDefined missing;
+      int value;
+    };
+  )");
+  Cpp::DeclRef klass2 = Cpp::GetNamed("NeverDefined");
+  EXPECT_TRUE(klass2);
+  Cpp::DeclRef var2 = Cpp::GetNamed("missing", klass2);
+  EXPECT_TRUE(var2);
+  EXPECT_FALSE(Cpp::GetVariableOffset(var2));
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           VariableReflection_GetVariableOffset_NoStaleUsedHandle) {
+#ifdef __EMSCRIPTEN__
+  // The stale-handle crash this test pins is native-JIT mechanics (ORC
+  // freeing materialized IR), and a single failed module load poisons
+  // Emscripten's process-global dynamic-linking state for every test that
+  // follows (issue #1071) — not worth the fragility for a native-only
+  // scenario.
+  GTEST_SKIP() << "Stale-used-handle scenario is native-JIT specific";
+#endif
+  // Emitting a discardable-ODR variable through the UsedAttr route records
+  // the global as a weak handle in codegen's llvm.used list. If the global
+  // is later replaced/erased (weak-def discard when a later PTU re-emits
+  // the same entity), the next PTU's emitUsed dereferences the nulled
+  // handle. The offset query must not leave used-list residue.
+  TestFixture::CreateInterpreter();
+  Cpp::Declare(R"(
+    struct UsedHandle {
+      inline static int probe = 3;
+    };
+  )");
+  Cpp::DeclRef klass = Cpp::GetNamed("UsedHandle");
+  EXPECT_TRUE(klass);
+  Cpp::DeclRef var = Cpp::GetNamed("probe", klass);
+  EXPECT_TRUE(var);
+  EXPECT_TRUE(Cpp::GetVariableOffset(var));
+  // ForceCodeGen's UsedAttr is planted permanently on the AST decl; the
+  // odr-use route must not.
+  EXPECT_FALSE(Cpp::unwrap<Decl>(var)->hasAttr<clang::UsedAttr>());
+#ifndef CPPINTEROP_USE_CLING
+  // The UsedAttr lives on the AST decl, so every later PTU that re-emits
+  // the entity re-adds it to that module's llvm.used — the residue the
+  // stale-handle crash grows from. Neither a module that re-emits the
+  // variable nor an unrelated one may carry llvm.used. (PTU/TheModule is
+  // clang::Interpreter surface; cling covers this path via the UsedAttr
+  // assert above.)
+  {
+    auto PTUOrErr = Interp->Parse("int consume_probe = UsedHandle::probe;");
+    ASSERT_TRUE(bool(PTUOrErr));
+    EXPECT_EQ(PTUOrErr->TheModule->getNamedGlobal("llvm.used"), nullptr);
+    if (auto Err = Interp->Execute(*PTUOrErr))
+      llvm::consumeError(std::move(Err));
+  }
+  {
+    auto PTUOrErr = Interp->Parse("int flush_ptu = 0;");
+    ASSERT_TRUE(bool(PTUOrErr));
+    EXPECT_EQ(PTUOrErr->TheModule->getNamedGlobal("llvm.used"), nullptr);
+    if (auto Err = Interp->Execute(*PTUOrErr))
+      llvm::consumeError(std::move(Err));
+  }
+  EXPECT_TRUE(Cpp::GetNamed("flush_ptu"));
+#endif // !CPPINTEROP_USE_CLING
+  // The crash this guards against was cumulative — many force-emitted
+  // statics plus JIT materialization cycles, interleaved with absorbed
+  // parse failures. Mimic that sweep shape as a regression net; the
+  // per-index sources are assembled at compile time by stringification.
+  struct SweepCase {
+    const char* decl;
+    const char* cls;
+    const char* var;
+    const char* probe;
+    const char* use;
+  };
+#define SWEEP_CASE(n)                                                          \
+  {                                                                            \
+    "struct Sweep" #n " { inline static int v" #n " = " #n "; };", "Sweep" #n, \
+        "v" #n, "template <> struct Sweep" #n "<int>;",                        \
+        "int use" #n " = Sweep" #n "::v" #n ";"                                \
+  }
+  constexpr std::array<SweepCase, 8> Sweeps = {
+      {SWEEP_CASE(0), SWEEP_CASE(1), SWEEP_CASE(2), SWEEP_CASE(3),
+       SWEEP_CASE(4), SWEEP_CASE(5), SWEEP_CASE(6), SWEEP_CASE(7)}};
+#undef SWEEP_CASE
+  for (const SweepCase& S : Sweeps) {
+    Cpp::Declare(S.decl);
+    Cpp::DeclRef k = Cpp::GetNamed(S.cls);
+    ASSERT_TRUE(k);
+    Cpp::DeclRef v = Cpp::GetNamed(S.var, k);
+    ASSERT_TRUE(v);
+    EXPECT_TRUE(Cpp::GetVariableOffset(v));
+    Cpp::Declare(S.probe, /*silent=*/true); // expected parse failure
+    Cpp::Declare(S.use);
+  }
+  Cpp::Declare("int sweep_done = 1;");
+  EXPECT_TRUE(Cpp::GetNamed("sweep_done"));
+
+  // Template-specialization members take the odr-use route too — the
+  // Sema-built address-of needs no source spelling of the specialization,
+  // and the caller has already instantiated the definition.
+  Cpp::Declare(R"(
+    template <typename T> struct TmplStatic {
+      inline static int member = 7;
+    };
+  )");
+  Cpp::DeclRef tmpl = Cpp::GetNamed("TmplStatic");
+  EXPECT_TRUE(tmpl);
+  ASTContext& C = Interp->getCI()->getASTContext();
+  std::vector<Cpp::TemplateArgInfo> template_args = {
+      {C.IntTy.getAsOpaquePtr()}};
+  Cpp::DeclRef inst = Cpp::InstantiateTemplate(tmpl, template_args);
+  EXPECT_TRUE(inst);
+  Cpp::DeclRef member = Cpp::GetNamed("member", inst);
+  EXPECT_TRUE(member);
+  EXPECT_TRUE(Cpp::GetVariableOffset(member));
+  EXPECT_FALSE(Cpp::unwrap<Decl>(member)->hasAttr<clang::UsedAttr>());
+
+  // Anonymous-namespace members cannot be named from a fresh chunk of
+  // source; they bail out of the odr-use route the same way.
+  Cpp::Declare(R"(
+    namespace {
+      struct AnonNsStatic {
+        inline static int member = 9;
+      };
+    }
+  )");
+  Cpp::DeclRef anon_klass = Cpp::GetNamed("AnonNsStatic");
+  ASSERT_TRUE(anon_klass);
+  Cpp::DeclRef anon_member = Cpp::GetNamed("member", anon_klass);
+  ASSERT_TRUE(anon_member);
+  EXPECT_TRUE(Cpp::GetVariableOffset(anon_member));
+#ifndef CPPINTEROP_USE_CLING
+  EXPECT_TRUE(Cpp::unwrap<Decl>(anon_member)->hasAttr<clang::UsedAttr>());
+#endif
+
+  // A linkage-spec block is transparent for naming purposes and stays on
+  // the odr-use route.
+  Cpp::Declare(R"(
+    extern "C++" {
+      struct CxxLinkStatic {
+        inline static int member = 11;
+      };
+    }
+  )");
+  Cpp::DeclRef link_klass = Cpp::GetNamed("CxxLinkStatic");
+  ASSERT_TRUE(link_klass);
+  Cpp::DeclRef link_member = Cpp::GetNamed("member", link_klass);
+  ASSERT_TRUE(link_member);
+  EXPECT_TRUE(Cpp::GetVariableOffset(link_member));
+  EXPECT_FALSE(Cpp::unwrap<Decl>(link_member)->hasAttr<clang::UsedAttr>());
+}
+
+#ifndef CPPINTEROP_USE_CLING
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           VariableReflection_GetVariableOffset_UnmaterializableDefinition) {
+  // A definition whose dynamic initializer needs an undefined symbol parses
+  // fine but cannot be materialized: the odr-use anchor's execution fails
+  // and the query must fail cleanly. (The anchor's flush block is
+  // clang-repl-only, hence the gate.)
+#ifdef __EMSCRIPTEN__
+  // The intentional materialization failure leaves the process-global wasm
+  // dynamic-linking state broken for every later load (see issue #1071).
+  GTEST_SKIP() << "A failed module load poisons wasm dynamic linking";
+#endif
+#ifdef _WIN32
+  // The intentional failure makes ORC print "JIT session error :" on
+  // stderr, which MSBuild's canonical-error scraping promotes to a build
+  // error (MSB8066) even though every test passes.
+  GTEST_SKIP() << "MSBuild's canonical-error scraping treats ORC's "
+                  "JIT-session-failure stderr line as a build failure";
+#endif
+  // The intentional failure makes the remote dlupdate fail, and the
+  // out-of-process session then blocks instead of reporting the error.
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "A failed dlupdate wedges the out-of-process session";
+  TestFixture::CreateInterpreter();
+  Cpp::Declare(R"(
+    int undefined_fn();
+    struct Unmaterializable {
+      inline static int probe = undefined_fn();
+    };
+  )");
+  Cpp::DeclRef klass = Cpp::GetNamed("Unmaterializable");
+  ASSERT_TRUE(klass);
+  Cpp::DeclRef var = Cpp::GetNamed("probe", klass);
+  ASSERT_TRUE(var);
+  EXPECT_FALSE(Cpp::GetVariableOffset(var));
+}
+#endif // !CPPINTEROP_USE_CLING
+
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           VariableReflection_GetVariableOffset_OdrUseAnchorPerInterpreter) {
+  // The synthesized odr-use anchors must be named per-interpreter: a fresh
+  // interpreter's AST (and anything derived from it, e.g. a crash
+  // reproducer) may not depend on how many queries a sibling interpreter
+  // has run.
+  Cpp::InterpRef I1 = TestFixture::CreateInterpreter();
+  ASSERT_TRUE(I1);
+  Cpp::Declare(R"(struct PerInterpA { inline static int probe = 1; };)");
+  Cpp::DeclRef ka = Cpp::GetNamed("PerInterpA");
+  ASSERT_TRUE(ka);
+  Cpp::DeclRef va = Cpp::GetNamed("probe", ka);
+  ASSERT_TRUE(va);
+  EXPECT_TRUE(Cpp::GetVariableOffset(va));
+  EXPECT_TRUE(Cpp::GetNamed("__cppinterop_odr_use_v0"));
+
+  Cpp::InterpRef I2 = TestFixture::CreateInterpreter();
+  ASSERT_TRUE(I2);
+  Cpp::Declare(R"(struct PerInterpB { inline static int probe = 2; };)");
+  Cpp::DeclRef kb = Cpp::GetNamed("PerInterpB");
+  ASSERT_TRUE(kb);
+  Cpp::DeclRef vb = Cpp::GetNamed("probe", kb);
+  ASSERT_TRUE(vb);
+  EXPECT_TRUE(Cpp::GetVariableOffset(vb));
+  // The second interpreter's first anchor is also its v0.
+  EXPECT_TRUE(Cpp::GetNamed("__cppinterop_odr_use_v0"));
+  EXPECT_FALSE(Cpp::GetNamed("__cppinterop_odr_use_v1"));
+  EXPECT_TRUE(Cpp::DeleteInterpreter(I2));
 }
 
 #define CODE                                                                   \

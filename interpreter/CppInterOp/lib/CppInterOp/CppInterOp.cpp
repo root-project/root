@@ -59,6 +59,7 @@
 #include "clang/Basic/CharInfo.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/DiagnosticSema.h"
+#include "clang/Basic/LLVM.h"
 #include "clang/Basic/LangStandard.h"
 #include "clang/Basic/Linkage.h"
 #include "clang/Basic/OperatorKinds.h"
@@ -402,6 +403,91 @@ static void ForceCodeGen(Decl* D, compat::Interpreter& I) {
 #endif
 }
 
+// Force emission of a variable's definition by synthesizing an odr-use of
+// it, instead of ForceCodeGen's UsedAttr route. The UsedAttr route records
+// the emitted global in codegen's llvm.used list as a weak handle; the
+// handle can go null (global deleted) before a later incremental PTU's
+// emitUsed runs, and release-built clang dereferences it without checking —
+// a process crash that accumulates with interpreter state rather than
+// tracing to any one declaration. The odr-use anchor is a dummy global
+// initialized with the variable's address, built directly through Sema (the
+// AST that parsing "&var" would produce — no source-text round-trip), so
+// the definition flows through the regular deferred-decl path and leaves no
+// used-list residue. Returns false when the odr-use cannot be built — the
+// caller falls back to ForceCodeGen.
+// FIXME: Remove the synthesized-anchor mechanism once clang grows a direct
+// interpreter emission API for a GlobalDecl (the emitUsed hardening it
+// depends on landed via llvm/llvm-project#210959):
+#if CLANG_VERSION_MAJOR >= 24
+#warning "Revisit EmitVariableViaOdrUse: a direct-emission API may exist now"
+#endif
+static bool EmitVariableViaOdrUse(compat::Interpreter& I, VarDecl* VD) {
+  // A reference cannot conjure a definition that does not exist: the dummy
+  // would carry an unresolvable symbol into the JIT (Emscripten's dynamic
+  // loader rejects the whole module over it, and the stale entry then
+  // breaks every later load in the process). The UsedAttr fallback defers
+  // harmlessly for definition-less declarations.
+  VarDecl* Def = VD->getDefinition();
+  if (!Def)
+    return false;
+
+  Sema& S = I.getCI()->getSema();
+  ASTContext& C = S.getASTContext();
+
+  // Open the synthesizing region before ANY Sema work: odr-use marking in
+  // BuildDeclRefExpr can trigger an immediate static-member instantiation,
+  // and cling's DeclCollector aborts on instantiation callbacks that arrive
+  // outside an active transaction. (Inert under clang-repl — TODO destructor
+  // in Compatibility.h.)
+  compat::SynthesizingCodeRAII RAII(&I);
+
+  // Build '&VD' the way the parser would; the address-of marks Def
+  // odr-used, which is what schedules the deferred definition.
+  ExprResult Ref = S.BuildDeclRefExpr(Def, Def->getType().getNonReferenceType(),
+                                      VK_LValue, SourceLocation());
+  if (Ref.isInvalid())
+    return false;
+  ExprResult AddrOf =
+      S.CreateBuiltinUnaryOp(SourceLocation(), UO_AddrOf, Ref.get());
+  if (AddrOf.isInvalid())
+    return false;
+
+  // Anchor the odr-use in an external-linkage dummy the JIT must emit; the
+  // initializer's implicit conversion to 'const void*' is Sema-checked, so
+  // exotic types fail over to the fallback instead of asserting.
+  // FIXME: The synthesized nodes are parked in the TU for the rest of the
+  // session; move them under a scratch area whose AST nodes get deallocated
+  // after emission.
+  std::string DummyName = "__cppinterop_odr_use_v" +
+                          std::to_string(getInterpInfo(&I).OdrUseCounter++);
+  QualType Ty = C.getPointerType(C.VoidTy.withConst());
+  TranslationUnitDecl* TU = C.getTranslationUnitDecl();
+  VarDecl* Dummy = VarDecl::Create(C, TU, SourceLocation(), SourceLocation(),
+                                   &C.Idents.get(DummyName), Ty,
+                                   C.getTrivialTypeSourceInfo(Ty), SC_None);
+  S.AddInitializerToDecl(Dummy, AddrOf.get(), /*DirectInit=*/false);
+  if (Dummy->isInvalidDecl())
+    return false;
+  TU->addDecl(Dummy);
+
+  // Under cling the RAII's transaction commit (at scope exit) triggers
+  // emission of everything collected above plus this dummy.
+  I.getCI()->getASTConsumer().HandleTopLevelDecl(DeclGroupRef(Dummy));
+#ifndef CPPINTEROP_USE_CLING
+  // FIXME: Parsing an empty string is the only way to flush incremental
+  // CodeGen for a decl handed straight to the consumer — the state-reset
+  // bug SynthesizingCodeRAII's clang-repl destructor should eventually
+  // own. Drop this when it does.
+  auto GeneratedPTU = I.Parse("");
+  if (llvm::Error Err =
+          !GeneratedPTU ? GeneratedPTU.takeError() : I.Execute(*GeneratedPTU)) {
+    llvm::consumeError(std::move(Err));
+    return false;
+  }
+#endif
+  return true;
+}
+
 #define DEBUG_TYPE "jitcall"
 bool JitCall::AreArgumentsValid(void* result, ArgList args, void* self,
                                 size_t nary) const {
@@ -659,6 +745,36 @@ bool IsComplete(ConstDeclRef DRef) {
   return INTEROP_RETURN(true);
 }
 
+DeclRef GetOrForceDefinition(DeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  if (!DRef)
+    return INTEROP_RETURN(nullptr);
+
+  auto* D = unwrap<clang::Decl>(DRef);
+
+  if (auto* TD = dyn_cast<TagDecl>(D)) {
+    if (!TD->getDefinition()) {
+      clang::Sema& S = getSema();
+      QualType QT = QualType::getFromOpaquePtr(GetTypeFromScope(DRef).data);
+      SourceLocation fakeLoc = GetValidSLoc(S);
+      compat::SynthesizingCodeRAII RAII(&getInterp());
+      S.isCompleteType(fakeLoc, QT);
+    }
+    return INTEROP_RETURN(TD->getDefinition());
+  }
+
+  if (auto* FD = dyn_cast<FunctionDecl>(D)) {
+    if (!FD->getDefinition() && FD->getTemplateInstantiationPattern())
+      InstantiateFunctionDefinition(D);
+    return INTEROP_RETURN(FD->getDefinition());
+  }
+
+  if (auto* VD = dyn_cast<VarDecl>(D))
+    return INTEROP_RETURN(VD->getDefinition());
+
+  return INTEROP_RETURN(nullptr);
+}
+
 size_t SizeOf(ConstDeclRef DRef) {
   INTEROP_TRACE(DRef);
   assert(DRef);
@@ -710,11 +826,14 @@ bool IsTypedefed(ConstDeclRef DRef) {
   return INTEROP_RETURN(llvm::isa_and_nonnull<clang::TypedefNameDecl>(D));
 }
 
-bool IsAbstract(ConstDeclRef DRef) {
+bool IsAbstract(DeclRef DRef) {
   INTEROP_TRACE(DRef);
   const auto* D = unwrap<clang::Decl>(DRef);
-  if (const auto* CXXRD = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(D))
-    return INTEROP_RETURN(CXXRD->isAbstract());
+  if (llvm::isa_and_nonnull<clang::CXXRecordDecl>(D)) {
+    const auto* Def = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(
+        unwrap<clang::Decl>(GetOrForceDefinition(DRef)));
+    return INTEROP_RETURN(Def && Def->isAbstract());
+  }
 
   return INTEROP_RETURN(false);
 }
@@ -845,12 +964,16 @@ TypeRef GetEnumConstantType(ConstDeclRef DRef) {
   return INTEROP_RETURN(nullptr);
 }
 
-size_t GetEnumConstantValue(ConstDeclRef DRef) {
+int64_t GetEnumConstantValue(ConstDeclRef DRef) {
   INTEROP_TRACE(DRef);
   const auto* D = unwrap<clang::Decl>(DRef);
   if (const auto* ECD = llvm::dyn_cast_or_null<clang::EnumConstantDecl>(D)) {
     const llvm::APSInt& Val = ECD->getInitVal();
-    return INTEROP_RETURN(Val.getExtValue());
+    if (Val.isRepresentableByInt64())
+      return INTEROP_RETURN(Val.getExtValue());
+    // Do not round-trip through a string and std::stoul: unsigned long is
+    // 32 bit on LLP64/ILP32 and throws out_of_range for these values.
+    return INTEROP_RETURN((int64_t)Val.getZExtValue());
   }
   return INTEROP_RETURN(0);
 }
@@ -1029,6 +1152,27 @@ static const clang::Decl* GetUnderlyingScopeImpl(const clang::Decl* D) {
   return D->getCanonicalDecl();
 }
 
+// If D is a UsingShadowDecl whose target is a function-like decl,
+// return that target; otherwise return D unchanged. The using-shadow
+// is the only carrier of the "effective access" introduced into the
+// derived class, so callers that need access info should consult D
+// before unwrapping.
+static clang::Decl* UnwrapUsingShadowToFunction(clang::Decl* D) {
+  if (auto* USD = dyn_cast_or_null<UsingShadowDecl>(D))
+    if (auto* Target = USD->getTargetDecl())
+      if (isa<FunctionDecl>(Target) || isa<FunctionTemplateDecl>(Target))
+        return Target;
+  return D;
+}
+
+static const clang::Decl* UnwrapUsingShadowToFunction(const clang::Decl* D) {
+  if (const auto* USD = dyn_cast_or_null<UsingShadowDecl>(D))
+    if (const auto* Target = USD->getTargetDecl())
+      if (isa<FunctionDecl>(Target) || isa<FunctionTemplateDecl>(Target))
+        return Target;
+  return D;
+}
+
 DeclRef GetUnderlyingScope(ConstDeclRef DRef) {
   INTEROP_TRACE(DRef);
   if (!DRef)
@@ -1189,11 +1333,9 @@ DeclRef GetNamed(const std::string& name, ConstDeclRef parent /*= nullptr*/) {
     auto* D = unwrap<clang::Decl>(GetUnderlyingScope(parent));
     Within = llvm::dyn_cast<clang::DeclContext>(D);
   }
-#ifdef CPPINTEROP_USE_CLING
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   if (Within)
     Within->getPrimaryContext()->buildLookup();
-#endif
-  compat::SynthesizingCodeRAII RAII(&getInterp());
 
   // Fast path: qualified lookup. Cheap, no DRef-chain allocation, and
   // resolves every name not brought into `Within` via a using-directive.
@@ -1202,6 +1344,34 @@ DeclRef GetNamed(const std::string& name, ConstDeclRef parent /*= nullptr*/) {
   auto* ND = CppInternal::utils::Lookup::Named(&getSema(), name, Within);
   if (ND && ND != (clang::NamedDecl*)-1)
     return INTEROP_RETURN(ND->getCanonicalDecl());
+
+  // Redeclaration-style lookup stops at the class itself; [class.qual]
+  // member lookup also searches the bases. Retry accordingly.
+  // FIXME: GetNamed should only return decls that are named and reachable
+  // within the provided decl context — the same contract question as the
+  // LookupUnqualified FIXME above: expose distinct lookup routes so callers
+  // pick the semantics they want, instead of GetNamed approximating both.
+  if (!ND && Within) {
+    if (auto* RD = llvm::dyn_cast<clang::CXXRecordDecl>(Within)) {
+      auto* Def = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(
+          unwrap<clang::Decl>(GetOrForceDefinition(DeclRef(RD))));
+      if (!Def)
+        return INTEROP_RETURN(nullptr);
+      auto& S = getSema();
+      clang::DeclarationName DName = &S.Context.Idents.get(name);
+      clang::LookupResult R(S, DName, clang::SourceLocation(),
+                            clang::Sema::LookupOrdinaryName,
+                            RedeclarationKind::NotForRedeclaration);
+      R.suppressDiagnostics();
+      S.LookupQualifiedName(R, Def);
+      if (R.empty())
+        return INTEROP_RETURN(nullptr);
+      R.resolveKind();
+      if (!R.isSingleResult())
+        return INTEROP_RETURN(nullptr);
+      return INTEROP_RETURN(R.getFoundDecl()->getCanonicalDecl());
+    }
+  }
 
   // Slow path: only when qualified lookup missed AND `Within` is a
   // namespace whose enclosing chain carries at least one using-directive
@@ -1228,6 +1398,11 @@ DeclRef GetParentScope(ConstDeclRef DRef) {
   if (llvm::isa_and_nonnull<TranslationUnitDecl>(D)) {
     return INTEROP_RETURN(nullptr);
   }
+  // For a method handle that is a using-shadow, the parent must be the
+  // target's declaring class, not the class holding the using-declaration:
+  // callers (e.g. CPyCppyy) use it to adjust `this` to the declaring base's
+  // subobject, and the wrapper calls the target through that base type.
+  D = UnwrapUsingShadowToFunction(D);
   auto* ParentDC = D->getDeclContext();
 
   if (!ParentDC)
@@ -1349,6 +1524,8 @@ int64_t GetBaseClassOffset(ConstDeclRef derived, ConstDeclRef base) {
 
   assert(derived || base);
 
+  compat::SynthesizingCodeRAII RAII(&getInterp());
+
   const auto* DD = unwrap<Decl>(derived);
   const auto* BD = unwrap<Decl>(base);
   if (!isa<CXXRecordDecl>(DD) || !isa<CXXRecordDecl>(BD))
@@ -1416,7 +1593,10 @@ static void GetClassDecls(ConstDeclRef DRef, std::vector<HandleType>& methods) {
 
       auto* CUSD = dyn_cast<ConstructorUsingShadowDecl>(DI);
       if (!CUSD) {
-        methods.push_back(MD);
+        // Push the using-shadow rather than the target so that the
+        // effective access (USD->getAccess()) reachable from the
+        // introducing class is preserved for downstream consumers.
+        methods.push_back(USD);
         continue;
       }
 
@@ -1536,6 +1716,7 @@ std::vector<FuncRef> GetFunctionsUsingName(ConstDeclRef DRef,
   clang::LookupResult R(S, DName, SourceLocation(), Sema::LookupOrdinaryName,
                         RedeclarationKind::ForVisibleRedeclaration);
 
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   CppInternal::utils::Lookup::Named(&S, R, Decl::castToDeclContext(D));
 
   if (R.empty())
@@ -1557,7 +1738,7 @@ std::vector<FuncRef> GetFunctionsUsingName(ConstDeclRef DRef,
 
 TypeRef GetFunctionReturnType(ConstFuncRef func) {
   INTEROP_TRACE(func);
-  const auto* D = unwrap<clang::Decl>(func);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(func));
   if (const auto* FD = llvm::dyn_cast_or_null<clang::FunctionDecl>(D)) {
     QualType Type = FD->getReturnType();
     if (Type->isUndeducedAutoType()) {
@@ -1637,98 +1818,261 @@ bool IsFunctionProtoType(ConstTypeRef TyRef) {
   return INTEROP_RETURN(llvm::isa_and_nonnull<clang::FunctionProtoType>(T));
 }
 
-static AllocType handleNew(const clang::CXXNewExpr* CNE) {
-  if (CNE->getNumPlacementArgs() > 0)
-    return AllocType::None;
-  if (CNE->isArray())
-    return AllocType::NewArr;
-  return AllocType::New;
-}
+static std::optional<AllocType>
+AnalyzeAllocType(const clang::FunctionDecl* Fn,
+                 std::unordered_map<const clang::FunctionDecl*,
+                                    std::optional<AllocType>>& visitedFuncs);
 
-static AllocType AnalyzeAllocType(const clang::FunctionDecl* Fn);
+namespace {
+struct AllocationTraverser : RecursiveASTVisitor<AllocationTraverser> {
+  std::unordered_map<const clang::VarDecl*, std::optional<AllocType>> varMap;
+  std::unordered_map<const clang::FunctionDecl*, std::optional<AllocType>>&
+      visitedFuncs;
+  // Result var keeps the combination all possible values of previous return
+  // statements
+  std::optional<AllocType> result;
+  // A map every branch writes the previous value of overwriten variables
+  std::unordered_map<const clang::VarDecl*, std::optional<AllocType>>* undoLog =
+      nullptr;
 
-static AllocType handleCall(const clang::CallExpr* CE) {
-  if (const auto* FD = CE->getDirectCallee()) {
-    if (FD->getBuiltinID() == Builtin::ID::BImalloc)
-      return AllocType::Malloc;
-    return AnalyzeAllocType(FD);
-  }
-  // Function pointer calle
-  return AllocType::Unknown;
-}
+  AllocationTraverser(std::unordered_map<const clang::FunctionDecl*,
+                                         std::optional<AllocType>>& cache)
+      : visitedFuncs(cache) {}
 
-static AllocType
-handleExpr(const clang::Expr* expr,
-           std::unordered_map<const VarDecl*, AllocType>& varMap) {
-  const clang::Expr* finExpr = expr->IgnoreParenCasts();
-  // Case: return new __type__
-  if (const auto* CNE = dyn_cast<CXXNewExpr>(finExpr))
-    return handleNew(CNE);
+  // Do not analyze lambda functions' bodies.
+  bool TraverseLambdaExpr(clang::LambdaExpr*) { return true; }
 
-  // Case: returns a variable
-  if (const auto* DRE = dyn_cast<DeclRefExpr>(finExpr)) {
-    if (const auto* VD = dyn_cast<VarDecl>(DRE->getDecl())) {
-      auto it = varMap.find(VD);
-      if (it != varMap.end())
-        return it->second;
-    }
-    // FIXME: BindingDecl, NonTypeTemplateParmDecl are not handled
-    return AllocType::None;
+  // Do not analyze inside of TagDecls(structs/unions/class)
+  bool TraverseDecl(clang::Decl* D) {
+    if (llvm::isa_and_nonnull<clang::TagDecl>(D))
+      return true;
+    return RecursiveASTVisitor::TraverseDecl(D);
   }
 
-  // Case: malloc or another func call
-  if (const auto* CE = dyn_cast<CallExpr>(finExpr))
-    return handleCall(CE);
-  return AllocType::None;
-}
+  std::optional<AllocType> join(std::optional<AllocType> a,
+                                std::optional<AllocType> b) {
+    if (a == AllocType::Null)
+      return b;
 
-static std::vector<const ReturnStmt*>
-getAllRetStmt(const clang::CompoundStmt* CS) {
-  struct RetStmtVisitor : RecursiveASTVisitor<RetStmtVisitor> {
-    std::vector<const ReturnStmt*> vec;
-    bool VisitReturnStmt(ReturnStmt* RS) {
-      vec.push_back(RS);
+    if (b == AllocType::Null)
+      return a;
+
+    if (a == b)
+      return a;
+    return AllocType::Unknown;
+  }
+  void undoOnVarMap() {
+    for (auto& [VD, oldVal] : *undoLog)
+      varMap[VD] = oldVal;
+  }
+
+  bool TraverseIfStmt(clang::IfStmt* IS) {
+    TraverseStmt(IS->getConditionVariableDeclStmt());
+    TraverseStmt(IS->getCond());
+    auto* undoLogCopy = undoLog;
+    std::unordered_map<const clang::VarDecl*, std::optional<AllocType>>
+        undoLogThen;
+    undoLog = &undoLogThen;
+    TraverseStmt(IS->getThen());
+    auto* elseBranch = IS->getElse();
+    // There is no else
+    if (!elseBranch) {
+      for (auto& [VD, val] : undoLogThen) {
+        // Overwrite varMap with join of overwriten and previous value
+        varMap[VD] = join(val, varMap[VD]);
+        // If branch is nested, inform upper branch about your changes
+        if (undoLogCopy)
+          undoLogCopy->try_emplace(VD, val);
+      }
+      undoLog = undoLogCopy;
       return true;
     }
-  };
-  RetStmtVisitor Visitor;
-  Visitor.TraverseStmt(const_cast<CompoundStmt*>(CS));
-  return Visitor.vec;
-}
 
-static std::unordered_map<const VarDecl*, AllocType>
-getAllVarDecl(const clang::CompoundStmt* CS) {
-  struct VarVisitor : RecursiveASTVisitor<VarVisitor> {
-    std::unordered_map<const VarDecl*, AllocType> varMap;
-    bool VisitVarDecl(VarDecl* VD) {
-      Expr* expr = VD->getInit();
-      if (expr)
-        varMap[VD] = handleExpr(expr, varMap);
-      else
-        varMap[VD] = AllocType::None;
-      return true;
+    // Save overwriten values in if branch to join
+    std::unordered_map<const clang::VarDecl*, std::optional<AllocType>>
+        valuesInIfBranch;
+    for (auto& [VD, val] : undoLogThen)
+      valuesInIfBranch[VD] = varMap[VD];
+
+    // Take changes on varMap back before going to else branch
+    undoOnVarMap();
+
+    std::unordered_map<const clang::VarDecl*, std::optional<AllocType>>
+        undoLogElse;
+    undoLog = &undoLogElse;
+    TraverseStmt(elseBranch);
+
+    for (auto& [VD, val] : undoLogElse) {
+      auto it2 = valuesInIfBranch.find(VD);
+      // If var is just changed in else branch
+      if (it2 == valuesInIfBranch.end()) {
+        varMap[VD] = join(val, varMap[VD]);
+        continue;
+      }
+      // If var is changed in both
+      varMap[VD] = join(varMap[VD], it2->second);
     }
 
-    bool VisitBinaryOperator(clang::BinaryOperator* BO) {
-      if (BO->getOpcode() != BO_Assign)
-        return true;
-      Expr* LHS = BO->getLHS();
-      LHS = LHS->IgnoreParenCasts();
-      if (auto* DRE = dyn_cast<DeclRefExpr>(LHS)) {
-        if (auto* VD = dyn_cast<VarDecl>(DRE->getDecl())) {
-          Expr* RHS = BO->getRHS();
-          varMap[VD] = handleExpr(RHS, varMap);
+    for (auto& [VD, val] : valuesInIfBranch)
+      // If var is changed in both, varMap carries new value from ELSE, if it is
+      // just changed in THEN, varMap carries old value, so both situation
+      // yields to same
+      varMap[VD] = join(val, varMap[VD]);
+
+    // Inform upper branch about changes done for both inner if and else branch
+    if (undoLogCopy) {
+      for (auto& [VD, val] : undoLogThen)
+        undoLogCopy->try_emplace(VD, val);
+      for (auto& [VD, val] : undoLogElse)
+        undoLogCopy->try_emplace(VD, val);
+    }
+
+    undoLog = undoLogCopy;
+    return true;
+  }
+
+  bool VisitVarDecl(VarDecl* VD) {
+    Expr* expr = VD->getInit();
+    if (expr)
+      varMap[VD] = handleExpr(expr);
+    else
+      varMap[VD] = AllocType::None;
+    return true;
+  }
+
+  bool VisitBinaryOperator(clang::BinaryOperator* BO) {
+    Expr* LHS = BO->getLHS();
+    LHS = LHS->IgnoreParenCasts();
+    auto* DRE = dyn_cast<DeclRefExpr>(LHS);
+    if (!DRE)
+      return true;
+
+    auto* VD = dyn_cast<VarDecl>(DRE->getDecl());
+    // FIXME: BindingDecls are not handled
+    if (!VD)
+      return true;
+
+    if (BO->getOpcode() == BO_Assign) {
+      if (undoLog)
+        undoLog->try_emplace(VD, varMap[VD]);
+      Expr* RHS = BO->getRHS();
+      varMap[VD] = handleExpr(RHS);
+      return true;
+    }
+    if (BO->isCompoundAssignmentOp()) {
+      if (undoLog)
+        undoLog->try_emplace(VD, varMap[VD]);
+      varMap[VD] = AllocType::Unknown;
+      return true;
+    }
+    return true;
+  }
+
+  bool VisitReturnStmt(ReturnStmt* RS) {
+    const clang::Expr* retExpr = RS->getRetValue();
+    // Tmp is current return statement's AllocType value, result is combination
+    // of previous return statements
+    std::optional<AllocType> tmp = handleExpr(retExpr);
+    if (!tmp.has_value())
+      return true;
+    if (!result.has_value()) {
+      result = tmp;
+      return true;
+    }
+    // If function's allocation behaviour differs between different cases,
+    // analyzer returns unknown.
+    result = join(result, tmp);
+    if (result == AllocType::Unknown)
+      return false;
+    return true;
+  }
+
+  std::optional<AllocType> handleCall(const clang::CallExpr* CE) {
+    if (const auto* FD = CE->getDirectCallee()) {
+      if (FD->getBuiltinID() == Builtin::ID::BImalloc)
+        return AllocType::Malloc;
+      if (FD->getBuiltinID() == Builtin::ID::BI__builtin_operator_new)
+        return AllocType::OperatorNew;
+      // Detects operator new/new[]/delete/delete[]
+      if (FD->isReplaceableGlobalAllocationFunction()) {
+        switch (FD->getOverloadedOperator()) {
+        case OO_New:
+          return AllocType::OperatorNew;
+        case OO_Array_New:
+          return AllocType::OperatorNewArr;
+        // Unreachable code
+        default:
+          break; // OO_Delete/OO_Array_Delete
         }
       }
-      return true;
+      auto it = visitedFuncs.find(FD);
+      if (it == visitedFuncs.end()) {
+        visitedFuncs[FD] = std::nullopt;
+        return AnalyzeAllocType(FD, visitedFuncs);
+      }
+      return it->second;
     }
-  };
-  VarVisitor Visitor;
-  Visitor.TraverseStmt(const_cast<CompoundStmt*>(CS));
-  return Visitor.varMap;
-}
+    // Function pointer calle
+    return AllocType::Unknown;
+  }
 
-static AllocType AnalyzeAllocType(const clang::FunctionDecl* Fn) {
+  static AllocType handleNew(const clang::CXXNewExpr* CNE) {
+    if (CNE->getNumPlacementArgs() > 0) {
+      /*
+      Non-allocating placement allocation functions
+      void* operator new  ( std::size_t count, void* ptr );
+      void* operator new[]( std::size_t count, void* ptr );
+      */
+      const clang::FunctionDecl* OpNew = CNE->getOperatorNew();
+      if (OpNew && OpNew->isReservedGlobalPlacementOperator())
+        return AllocType::None;
+    }
+    if (CNE->isArray())
+      return AllocType::NewArr;
+    return AllocType::New;
+  }
+
+  std::optional<AllocType> handleExpr(const clang::Expr* expr) {
+    const clang::Expr* finExpr = expr->IgnoreParenCasts();
+    // Case: return new __type__
+    if (const auto* CNE = dyn_cast<CXXNewExpr>(finExpr))
+      return handleNew(CNE);
+
+    // Case: returns a variable
+    if (const auto* DRE = dyn_cast<DeclRefExpr>(finExpr)) {
+      if (const auto* VD = dyn_cast<VarDecl>(DRE->getDecl())) {
+        auto it = varMap.find(VD);
+        if (it != varMap.end())
+          return it->second;
+      }
+      // FIXME: BindingDecl, NonTypeTemplateParmDecl are not handled
+      if (isa<BindingDecl>(DRE->getDecl()) ||
+          isa<NonTypeTemplateParmDecl>(DRE->getDecl()))
+        return AllocType::Unknown;
+      return AllocType::None;
+    }
+
+    // Case: malloc or another func call
+    if (const auto* CE = dyn_cast<CallExpr>(finExpr))
+      return handleCall(CE);
+
+    // Case: NULL, nullptr or (int*)(__integerLiteral__)
+    const clang::Expr* parExpr = expr->IgnoreParens();
+    while (const auto* CE = dyn_cast<CastExpr>(parExpr)) {
+      if (CE->getCastKind() == CK_NullToPointer)
+        return AllocType::Null;
+      parExpr = CE->getSubExpr();
+    }
+
+    return AllocType::None;
+  }
+};
+} // namespace
+
+static std::optional<AllocType>
+AnalyzeAllocType(const clang::FunctionDecl* Fn,
+                 std::unordered_map<const clang::FunctionDecl*,
+                                    std::optional<AllocType>>& visitedFuncs) {
   const clang::QualType QT = Fn->getReturnType();
   if (!QT->isPointerType())
     return AllocType::None;
@@ -1739,22 +2083,13 @@ static AllocType AnalyzeAllocType(const clang::FunctionDecl* Fn) {
   // FIXME:: try catch blocks are not CompoundStmt, only edge case
   if (!CmpStmt)
     return AllocType::Unknown;
-  std::unordered_map<const VarDecl*, AllocType> varMap = getAllVarDecl(CmpStmt);
-  std::vector<const ReturnStmt*> allRetStmt = getAllRetStmt(CmpStmt);
-  std::optional<AllocType> res;
-  for (const ReturnStmt* retStmt : allRetStmt) {
-    const clang::Expr* retExpr = retStmt->getRetValue();
-    if (retExpr == nullptr)
-      continue;
-    AllocType tmp = handleExpr(retExpr, varMap);
-    if (!res.has_value())
-      res = tmp;
-    // If function's allocation behaviour differs between different cases,
-    // analyzer returns unknown.
-    else if (*res != tmp)
-      return AllocType::Unknown;
-  }
-  return res.value_or(AllocType::None);
+  AllocationTraverser Traverser(visitedFuncs);
+  for (auto* parm : Fn->parameters())
+    Traverser.VisitVarDecl(parm);
+  Traverser.TraverseStmt(const_cast<clang::CompoundStmt*>(CmpStmt));
+  auto res = Traverser.result;
+  visitedFuncs[Fn] = res;
+  return res;
 }
 
 AllocType GetAllocType(ConstFuncRef Fn) {
@@ -1762,10 +2097,239 @@ AllocType GetAllocType(ConstFuncRef Fn) {
   if (Fn) {
     const auto* D = unwrap<Decl>(Fn);
     if (const auto* FD = dyn_cast<FunctionDecl>(D)) {
-      return INTEROP_RETURN(AnalyzeAllocType(FD));
+      std::unordered_map<const clang::FunctionDecl*, std::optional<AllocType>>
+          visitedFuncs;
+      visitedFuncs[FD] = std::nullopt;
+      return INTEROP_RETURN(
+          AnalyzeAllocType(FD, visitedFuncs).value_or(AllocType::None));
     }
   }
   return INTEROP_RETURN(AllocType::None);
+}
+
+static bool AnalyzeDeallocType(
+    const clang::FunctionDecl* FD, std::vector<DeallocType>& valPerParam,
+    std::unordered_map<const FunctionDecl*,
+                       std::optional<std::vector<DeallocType>>>& visitedFuncs);
+namespace {
+struct DeallocationTraverser : RecursiveASTVisitor<DeallocationTraverser> {
+  std::unordered_map<const clang::VarDecl*, const clang::ParmVarDecl*> aliasMap;
+  std::set<const clang::ParmVarDecl*> overwritenParms;
+  std::vector<DeallocType>& valPerParam;
+  std::unordered_map<const FunctionDecl*,
+                     std::optional<std::vector<DeallocType>>>& visitedFuncs;
+  DeallocationTraverser(
+      std::vector<DeallocType>& v,
+      std::unordered_map<const FunctionDecl*,
+                         std::optional<std::vector<DeallocType>>>& cache)
+      : valPerParam(v), visitedFuncs(cache) {}
+
+  // Do not analyze lambda functions' bodies.
+  bool TraverseLambdaExpr(clang::LambdaExpr*) { return true; }
+
+  // Do not analyze inside of TagDecls(structs/unions/class)
+  bool TraverseDecl(clang::Decl* D) {
+    if (llvm::isa_and_nonnull<clang::TagDecl>(D))
+      return true;
+    return RecursiveASTVisitor::TraverseDecl(D);
+  }
+
+  // recursiveVec is VPP of callee
+  void joinVectors(std::vector<DeallocType>& recursiveVec,
+                   clang::CallExpr* CE) {
+    for (unsigned i = 0; i < recursiveVec.size() && i < CE->getNumArgs(); i++) {
+      if (recursiveVec[i] == DeallocType::None)
+        continue;
+      const clang::ParmVarDecl* PVD = resolveParam(CE->getArg(i));
+      if (!PVD)
+        continue;
+      updateVPP(PVD->getFunctionScopeIndex(), recursiveVec[i]);
+    }
+  }
+
+  bool VisitVarDecl(clang::VarDecl* VD) {
+    if (llvm::isa<clang::ParmVarDecl>(VD) ||
+        (!VD->getType()->isPointerType() && !VD->getType()->isRecordType()))
+      return true;
+    const clang::Expr* E = VD->getInit();
+    updateMap(VD, E);
+    return true;
+  }
+
+  bool VisitBinaryOperator(clang::BinaryOperator* BO) {
+    if (BO->getOpcode() != BO_Assign)
+      return true;
+    const auto* VD = resolveExpr(BO->getLHS());
+    updateMap(VD, BO->getRHS());
+    return true;
+  }
+
+  bool VisitCXXDeleteExpr(clang::CXXDeleteExpr* CDE) {
+    const clang::Expr* E = CDE->getArgument();
+    const auto* PVR = resolveParam(E);
+    if (!PVR)
+      return true;
+    if (CDE->isArrayForm()) {
+      updateVPP(PVR->getFunctionScopeIndex(), DeallocType::DeleteArr);
+      return true;
+    }
+    updateVPP(PVR->getFunctionScopeIndex(), DeallocType::Delete);
+    return true;
+  }
+
+  bool VisitCallExpr(clang::CallExpr* CE) {
+    // FIXME: for some operators, arg and parameter match may not match because
+    // of hidden __this__ parameter
+    if (llvm::isa<clang::CXXOperatorCallExpr>(CE))
+      return true;
+    const clang::FunctionDecl* FD = CE->getDirectCallee();
+    if (!FD)
+      return true;
+    if (FD->getBuiltinID() == Builtin::ID::BIfree) {
+      handleFree(CE);
+      return true;
+    }
+
+    // FIXME: Recursive Case
+    auto it = visitedFuncs.find(FD);
+    if (it != visitedFuncs.end()) {
+      // Function calls itself, or a cycle recursion
+      if (it->second == std::nullopt)
+        return true;
+      joinVectors(*(it->second), CE);
+      return true;
+    }
+    std::vector<DeallocType> calleeVec;
+    visitedFuncs[FD] = std::nullopt;
+    AnalyzeDeallocType(FD, calleeVec, visitedFuncs);
+    joinVectors(calleeVec, CE);
+    return true;
+  }
+
+  const clang::ParmVarDecl* resolveParam(const clang::Expr* E) {
+    const auto* VD = resolveExpr(E);
+    if (!VD)
+      return nullptr;
+    if (const auto* PVD = dyn_cast<clang::ParmVarDecl>(VD)) {
+      if (overwritenParms.count(PVD))
+        return nullptr;
+      return PVD;
+    }
+    auto it = aliasMap.find(VD);
+    if (it != aliasMap.end() && it->second != nullptr) {
+      return it->second;
+    }
+    return nullptr;
+  }
+
+  void updateMap(const clang::VarDecl* VD, const clang::Expr* E) {
+    if (!VD)
+      return;
+    if (!VD->getType()->isPointerType() && !VD->getType()->isRecordType())
+      return;
+    if (const auto* PVD = dyn_cast<clang::ParmVarDecl>(VD)) {
+      overwritenParms.insert(PVD);
+      return;
+    }
+    const auto* rhsVD = resolveExpr(E);
+
+    if (!rhsVD) {
+      aliasMap[VD] = nullptr;
+      return;
+    }
+
+    if (const auto* rhsPVD = dyn_cast<clang::ParmVarDecl>(rhsVD)) {
+      if (overwritenParms.count(rhsPVD)) {
+        aliasMap[VD] = nullptr;
+        return;
+      }
+      aliasMap[VD] = rhsPVD;
+      // FIXME: does not handle situation where one param is assigned to
+      // another param
+      return;
+    }
+
+    auto it = aliasMap.find(rhsVD);
+    if (it != aliasMap.end()) {
+      aliasMap[VD] = it->second;
+      return;
+    }
+    aliasMap[VD] = nullptr;
+  }
+
+  void updateVPP(unsigned index, DeallocType DT) {
+    if (valPerParam[index] == DeallocType::Unknown)
+      return;
+    // If new value from callee is Opaque, it is best to make parameter Unknown
+    // since we can not know what is going inside no-body functions
+    if ((valPerParam[index] != DeallocType::None && valPerParam[index] != DT) ||
+        DT == DeallocType::Opaque) {
+      valPerParam[index] = DeallocType::Unknown;
+      return;
+    }
+    valPerParam[index] = DT;
+  }
+
+  void handleFree(clang::CallExpr* CE) {
+    const clang::Expr* paramExpr = CE->getArg(0);
+    const auto* PVR = resolveParam(paramExpr);
+    if (!PVR)
+      return;
+    updateVPP(PVR->getFunctionScopeIndex(), DeallocType::Free);
+  }
+
+  const clang::VarDecl* resolveExpr(const clang::Expr* E) {
+    if (!E)
+      return nullptr;
+    E = E->IgnoreParenCasts();
+    const auto* DRE = dyn_cast<clang::DeclRefExpr>(E);
+    if (!DRE)
+      return nullptr;
+    const auto* VD = dyn_cast<clang::VarDecl>(DRE->getDecl());
+    return VD;
+  }
+};
+} // namespace
+
+static bool AnalyzeDeallocType(
+    const clang::FunctionDecl* FD, std::vector<DeallocType>& valPerParam,
+    std::unordered_map<const FunctionDecl*,
+                       std::optional<std::vector<DeallocType>>>& visitedFuncs) {
+  const unsigned int numParam = FD->getNumParams();
+  const auto* S = FD->getBody();
+  if (!S) {
+    valPerParam.assign(numParam, DeallocType::Opaque);
+    visitedFuncs[FD] = valPerParam;
+    return false;
+  }
+  const auto* CmpStmt = dyn_cast<CompoundStmt>(S);
+  if (!CmpStmt) {
+    // FIXME: try catch block are not handled
+    valPerParam.assign(numParam, DeallocType::Opaque);
+    visitedFuncs[FD] = valPerParam;
+    return false;
+  }
+  valPerParam.assign(numParam, DeallocType::None);
+  DeallocationTraverser Traverser(valPerParam, visitedFuncs);
+  Traverser.TraverseStmt(const_cast<CompoundStmt*>(CmpStmt));
+  visitedFuncs[FD] = valPerParam;
+  return true;
+}
+
+bool GetDeallocType(ConstFuncRef Fn, std::vector<DeallocType>& valPerParam) {
+  INTEROP_TRACE(Fn, INTEROP_OUT(valPerParam));
+  if (!Fn)
+    return INTEROP_RETURN(false);
+
+  const auto* D = unwrap<clang::Decl>(Fn);
+  const auto* FD = dyn_cast<clang::FunctionDecl>(D);
+  if (!FD)
+    return INTEROP_RETURN(false);
+  std::unordered_map<const FunctionDecl*,
+                     std::optional<std::vector<DeallocType>>>
+      visitedFuncs;
+  visitedFuncs[FD] = std::nullopt;
+  return INTEROP_RETURN(AnalyzeDeallocType(FD, valPerParam, visitedFuncs));
 }
 
 void GetFnTypeSignature(ConstTypeRef fn_type, std::vector<TypeRef>& sig) {
@@ -1787,7 +2351,7 @@ void GetFnTypeSignature(ConstTypeRef fn_type, std::vector<TypeRef>& sig) {
 // exclude it, which is what callers introspecting the argument list want.
 size_t GetFunctionNumArgs(ConstFuncRef func) {
   INTEROP_TRACE(func);
-  const auto* D = unwrap<clang::Decl>(func);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(func));
   if (const auto* FD = llvm::dyn_cast_or_null<FunctionDecl>(D))
     return INTEROP_RETURN(FD->getNumNonObjectParams());
 
@@ -1799,7 +2363,7 @@ size_t GetFunctionNumArgs(ConstFuncRef func) {
 
 size_t GetFunctionRequiredArgs(ConstFuncRef func) {
   INTEROP_TRACE(func);
-  const auto* D = unwrap<clang::Decl>(func);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(func));
   if (const auto* FD = llvm::dyn_cast_or_null<FunctionDecl>(D))
     return INTEROP_RETURN(FD->getMinRequiredExplicitArguments());
 
@@ -1812,7 +2376,7 @@ size_t GetFunctionRequiredArgs(ConstFuncRef func) {
 
 TypeRef GetFunctionArgType(ConstFuncRef func, size_t iarg) {
   INTEROP_TRACE(func, iarg);
-  const auto* D = unwrap<clang::Decl>(func);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(func));
 
   if (const auto* FTD = llvm::dyn_cast_or_null<clang::FunctionTemplateDecl>(D))
     D = FTD->getTemplatedDecl();
@@ -1838,7 +2402,7 @@ std::string GetFunctionSignature(ConstFuncRef func) {
   if (!func)
     return INTEROP_RETURN("<unknown>");
 
-  const auto* D = unwrap<clang::Decl>(func);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(func));
   const clang::FunctionDecl* FD;
 
   if (llvm::dyn_cast<FunctionDecl>(D))
@@ -1883,13 +2447,14 @@ bool IsTemplateInstantiationOrSpecialization(const Decl* D) {
 
 bool IsFunctionDeleted(ConstFuncRef function) {
   INTEROP_TRACE(function);
-  const auto* FD = cast<FunctionDecl>(unwrap<clang::Decl>(function));
+  const auto* FD = cast<FunctionDecl>(
+      UnwrapUsingShadowToFunction(unwrap<clang::Decl>(function)));
   return INTEROP_RETURN(FD->isDeleted());
 }
 
 bool IsTemplatedFunction(ConstFuncRef func) {
   INTEROP_TRACE(func);
-  const auto* D = unwrap<Decl>(func);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<Decl>(func));
   return INTEROP_RETURN(IsTemplatedFunction(D) ||
                         IsTemplateInstantiationOrSpecialization(D));
 }
@@ -1905,6 +2470,7 @@ bool ExistsFunctionTemplate(const std::string& name, ConstDeclRef parent) {
     Within = llvm::dyn_cast<DeclContext>(D);
   }
 
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   auto* ND = CppInternal::utils::Lookup::Named(&getSema(), name, Within);
 
   if ((intptr_t)ND == (intptr_t)0)
@@ -1914,8 +2480,24 @@ bool ExistsFunctionTemplate(const std::string& name, ConstDeclRef parent) {
     return INTEROP_RETURN(IsTemplatedFunction(ND) ||
                           IsTemplateInstantiationOrSpecialization(ND));
 
-  // FIXME: Cycle through the Decls and check if there is a templated function
-  return INTEROP_RETURN(true);
+  // The name is ambiguous, i.e. an overload set: cycle through the found
+  // decls and check if any of them is a templated function. Blindly
+  // returning true here would present any function with two or more
+  // non-template overloads as a template.
+  auto& S = getSema();
+  auto& Ctx = getASTContext();
+  clang::LookupResult R(S, &Ctx.Idents.get(name), SourceLocation(),
+                        Sema::LookupOrdinaryName,
+                        RedeclarationKind::ForVisibleRedeclaration);
+  CppInternal::utils::Lookup::Named(&S, R, Within);
+  for (const NamedDecl* Found : R) {
+    const Decl* D = Found;
+    if (const auto* USD = llvm::dyn_cast<UsingShadowDecl>(Found))
+      D = USD->getTargetDecl();
+    if (IsTemplatedFunction(D) || IsTemplateInstantiationOrSpecialization(D))
+      return INTEROP_RETURN(true);
+  }
+  return INTEROP_RETURN(false);
 }
 
 // Looks up all constructors in the current DeclContext
@@ -1926,6 +2508,9 @@ void LookupConstructors(const std::string& name, ConstDeclRef parent,
   auto* D = const_cast<Decl*>(unwrap<Decl>(parent));
 
   if (auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D)) {
+    // Both calls below declare implicit members lazily and can deserialize
+    // decls from an AST file, which must happen within a transaction.
+    compat::SynthesizingCodeRAII RAII(&getInterp());
     getSema().ForceDeclarationOfImplicitMembers(CXXRD);
     DeclContextLookupResult Result = getSema().LookupConstructors(CXXRD);
     // Obtaining all constructors when we intend to lookup a method under a
@@ -1954,6 +2539,8 @@ bool GetClassTemplatedMethods(const std::string& name, ConstDeclRef parent,
   clang::LookupResult R(S, DName, SourceLocation(), Sema::LookupOrdinaryName,
                         RedeclarationKind::ForVisibleRedeclaration);
   auto* DC = clang::Decl::castToDeclContext(DU);
+
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   CppInternal::utils::Lookup::Named(&S, R, DC);
 
   if (R.getResultKind() == clang_LookupResult_Not_Found && funcs.empty())
@@ -2095,6 +2682,13 @@ BestOverloadFunctionMatch(const std::vector<FuncRef>& candidates,
 // the provided AccessSpecifier.
 bool CheckMethodAccess(ConstFuncRef method, AccessSpecifier AS) {
   const auto* D = unwrap<Decl>(method);
+  // Must NOT unwrap here: the using-shadow is the only carrier of the effective
+  // access (e.g. `public` in the derived class), while the target only knows
+  // its base access (e.g. `protected`).
+  if (const auto* USD = llvm::dyn_cast_or_null<UsingShadowDecl>(D)) {
+    if (llvm::isa_and_nonnull<CXXMethodDecl>(USD->getTargetDecl()))
+      return USD->getAccess() == AS;
+  }
   if (const auto* CXXMD = llvm::dyn_cast_or_null<CXXMethodDecl>(D)) {
     return CXXMD->getAccess() == AS;
   }
@@ -2104,7 +2698,7 @@ bool CheckMethodAccess(ConstFuncRef method, AccessSpecifier AS) {
 
 bool IsMethod(ConstFuncRef method) {
   INTEROP_TRACE(method);
-  const auto* D = unwrap<clang::Decl>(method);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(method));
   if (const auto* FTD = dyn_cast_or_null<FunctionTemplateDecl>(D))
     D = FTD->getTemplatedDecl();
   return INTEROP_RETURN(dyn_cast_or_null<CXXMethodDecl>(D));
@@ -2128,7 +2722,7 @@ bool IsPrivateMethod(ConstFuncRef method) {
 
 bool IsConstructor(ConstFuncRef method) {
   INTEROP_TRACE(method);
-  const auto* D = unwrap<Decl>(method);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<Decl>(method));
   if (const auto* FTD = dyn_cast<FunctionTemplateDecl>(D))
     return INTEROP_RETURN(IsConstructor(FTD->getTemplatedDecl()));
   return INTEROP_RETURN(llvm::isa_and_nonnull<CXXConstructorDecl>(D));
@@ -2136,13 +2730,13 @@ bool IsConstructor(ConstFuncRef method) {
 
 bool IsDestructor(ConstFuncRef method) {
   INTEROP_TRACE(method);
-  const auto* D = unwrap<Decl>(method);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<Decl>(method));
   return INTEROP_RETURN(llvm::isa_and_nonnull<CXXDestructorDecl>(D));
 }
 
 bool IsStaticMethod(ConstFuncRef method) {
   INTEROP_TRACE(method);
-  const auto* D = unwrap<Decl>(method);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<Decl>(method));
   if (const auto* FTD = llvm::dyn_cast_or_null<FunctionTemplateDecl>(D))
     D = FTD->getTemplatedDecl();
 
@@ -2158,7 +2752,7 @@ bool IsExplicit(ConstFuncRef method) {
   if (!method)
     return INTEROP_RETURN(false);
 
-  const auto* D = unwrap<Decl>(method);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<Decl>(method));
 
   if (const auto* FTD = llvm::dyn_cast_or_null<FunctionTemplateDecl>(D))
     D = FTD->getTemplatedDecl();
@@ -2215,7 +2809,7 @@ static void* GetFunctionAddress(const FunctionDecl* FD) {
 
 void* GetFunctionAddress(FuncRef method) {
   INTEROP_TRACE(method);
-  auto* D = unwrap<Decl>(method);
+  auto* D = UnwrapUsingShadowToFunction(unwrap<Decl>(method));
   if (auto* FD = llvm::dyn_cast_or_null<FunctionDecl>(D)) {
     if ((IsTemplateInstantiationOrSpecialization(FD) ||
          FD->getTemplatedKind() == FunctionDecl::TK_MemberSpecialization) &&
@@ -2231,7 +2825,7 @@ void* GetFunctionAddress(FuncRef method) {
 
 bool IsVirtualMethod(ConstFuncRef method) {
   INTEROP_TRACE(method);
-  const auto* D = unwrap<Decl>(method);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<Decl>(method));
   if (const auto* CXXMD = llvm::dyn_cast_or_null<CXXMethodDecl>(D)) {
     return INTEROP_RETURN(CXXMD->isVirtual());
   }
@@ -2636,6 +3230,7 @@ DeclRef LookupDatamember(const std::string& name, ConstDeclRef parent) {
     Within = llvm::dyn_cast<clang::DeclContext>(D);
   }
 
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   auto* ND = CppInternal::utils::Lookup::Named(&getSema(), name, Within);
   if (ND && ND != (clang::NamedDecl*)-1) {
     if (llvm::isa_and_nonnull<clang::FieldDecl>(ND)) {
@@ -2662,6 +3257,16 @@ TypeRef GetVariableType(ConstDeclRef var) {
   if (const auto* DD = llvm::dyn_cast_or_null<DeclaratorDecl>(D)) {
     QualType QT = DD->getType();
 
+    // For an array of unknown bound (e.g. `extern std::string arr[];`),
+    // prefer the defining declaration's complete type, which carries the
+    // actual dimension.
+    if (QT->isIncompleteArrayType()) {
+      if (const auto* VD = llvm::dyn_cast<VarDecl>(DD)) {
+        if (const VarDecl* Def = VD->getDefinition())
+          QT = Def->getType();
+      }
+    }
+
     // Check if the TyRef is a typedef TyRef
     if (QT->isTypedefNameType()) {
       return INTEROP_RETURN(QT.getAsOpaquePtr());
@@ -2686,6 +3291,7 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
   auto& C = I.getSema().getASTContext();
 
   if (auto* FD = llvm::dyn_cast<FieldDecl>(D)) {
+    compat::SynthesizingCodeRAII RAII(&getInterp());
     clang::RecordDecl* FieldParentRecordDecl = FD->getParent();
     intptr_t offset = C.toCharUnitsFromBits(C.getFieldOffset(FD)).getQuantity();
     while (FieldParentRecordDecl->isAnonymousStructOrUnion()) {
@@ -2757,9 +3363,21 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
       address = I.getAddressOfGlobal(GD);
     if (!address) {
       if (!VD->hasInit()) {
-        compat::SynthesizingCodeRAII RAII(&getInterp());
-        getSema().InstantiateVariableDefinition(SourceLocation(), VD);
-        VD = VD->getDefinition();
+        // The initializer feeding the constexpr fast path below may live on
+        // an already-parsed out-of-line definition (a non-template class's
+        // static data member, e.g. std::partial_ordering::less): prefer it,
+        // with no Sema work at all. Only a variable instantiated from a
+        // template can need Sema::InstantiateVariableDefinition — and
+        // without an instantiation pattern that call dereferences a null
+        // VarDecl in release builds.
+        if (VarDecl* Def = VD->getDefinition()) {
+          VD = Def;
+        } else if (VD->getTemplateInstantiationPattern()) {
+          compat::SynthesizingCodeRAII RAII(&getInterp());
+          getSema().InstantiateVariableDefinition(SourceLocation(), VD);
+          if (VarDecl* Inst = VD->getDefinition())
+            VD = Inst;
+        }
       }
       if (VD->hasInit() &&
           (VD->isConstexpr() || VD->getType().isConstQualified())) {
@@ -2772,7 +3390,14 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
     }
     if (!address) {
       auto Linkage = C.GetGVALinkageForVariable(VD);
-      if (isDiscardableGVALinkage(Linkage))
+      // Odr-use emission only for discardable-ODR entities (inline/constexpr
+      // statics) — the class the used-list crash traced to. Internal-linkage
+      // variables cannot be odr-used from a later PTU (module-local symbol:
+      // the reference duplicates or misses the entity), and an
+      // available-externally definition would not be emitted by a mere
+      // reference; both stay on the stock UsedAttr path.
+      if (isDiscardableGVALinkage(Linkage) &&
+          (Linkage != GVA_DiscardableODR || !EmitVariableViaOdrUse(I, VD)))
         ForceCodeGen(VD, I);
     }
     auto VDAorErr = compat::getSymbolAddress(I, StringRef(mangledName));
@@ -3367,6 +3992,30 @@ void collect_type_info(const FunctionDecl* FD, QualType& QT,
   get_type_as_string(QT, type_name, C, Policy);
 }
 
+bool IsCopyConstructorDeleted(QualType QT) {
+  CXXRecordDecl* RD = QT->getAsCXXRecordDecl();
+  if (!RD) {
+    // For types that are not C++ records (such as PODs), we assume that they
+    // are copyable, ie their copy constructor is not deleted.
+    return false;
+  }
+
+  RD = unwrap<CXXRecordDecl>(GetOrForceDefinition(DeclRef(RD)));
+  if (!RD)
+    return false;
+
+  if (RD->hasSimpleCopyConstructor())
+    return false;
+
+  for (auto* Ctor : RD->ctors())
+    if (Ctor->isCopyConstructor())
+      return Ctor->isDeleted();
+
+  // The return value is somewhat arbitrary: we did not see a deleted copy
+  // ctor. The user will be told if the generated code doesn't compile.
+  return false;
+}
+
 void make_narg_ctor(const FunctionDecl* FD, const unsigned N,
                     std::ostringstream& typedefbuf, std::ostringstream& callbuf,
                     const std::string& class_name, int indent_level,
@@ -3411,7 +4060,18 @@ void make_narg_ctor(const FunctionDecl* FD, const unsigned N,
       } else if (isPointer) {
         callbuf << "*(" << type_name.c_str() << "**)args[" << i << "]";
       } else {
+        // By-value construction: Figure out if the type can be
+        // copy-constructed. This is tricky and cannot be done in a fully
+        // reliable way, also because std::vector<T> always defines a copy
+        // constructor, even if the type T is only moveable. As a heuristic, we
+        // only check if the copy constructor is deleted, or would be if
+        // implicit.
+        bool Move = IsCopyConstructorDeleted(QT);
+        if (Move)
+          callbuf << "static_cast<" << type_name << "&&>(";
         callbuf << "*(" << type_name.c_str() << "*)args[" << i << "]";
+        if (Move)
+          callbuf << ")";
       }
     }
     callbuf << ")";
@@ -3591,17 +4251,11 @@ void make_narg_call(const FunctionDecl* FD, const std::string& return_type,
               << type_name.c_str() << "*)args[" << i << "]";
     } else if (isPointer) {
       callbuf << "*(" << type_name.c_str() << "**)args[" << i << "]";
-    } else if (rtdecl &&
-               (rtdecl->hasTrivialCopyConstructor() &&
-                !rtdecl->hasSimpleCopyConstructor()) &&
-               rtdecl->hasMoveConstructor()) {
+    } else if (rtdecl && IsCopyConstructorDeleted(QT)) {
       // By-value construction; this may either copy or move, but there is no
       // information here in terms of intent. Thus, simply assume that the
       // intent is to move if there is no viable copy constructor (ie. if the
-      // code would otherwise fail to even compile). There does not appear to be
-      // a simple way of determining whether a viable copy constructor exists,
-      // so check for the most common case: the trivial one, but not uniquely
-      // available, while there is a move constructor.
+      // code would otherwise fail to even compile).
 
       // Move construction as needed for classes (note that this is
       // implicit). Emit `std::move`'s expansion directly rather than the
@@ -3655,7 +4309,10 @@ void make_narg_ctor_with_return(const FunctionDecl* FD, const unsigned N,
       callbuf << "if (nary > 1) {\n";
       indent(callbuf, indent_level);
       callbuf << "(*(" << class_name << "**)ret) = ";
-      callbuf << "(is_arena) ? new (*(" << class_name << "**)ret) ";
+      // Use ::new to construct in the arena: a class-scope operator new
+      // (e.g. a custom allocator with no matching placement form) would
+      // otherwise hide the global placement operator new.
+      callbuf << "(is_arena) ? ::new (*(" << class_name << "**)ret) ";
       make_narg_ctor(FD, N, typedefbuf, callbuf, class_name, indent_level,
                      true);
 
@@ -3679,7 +4336,8 @@ void make_narg_ctor_with_return(const FunctionDecl* FD, const unsigned N,
     // : new ClassName(args...);
     indent(callbuf, indent_level);
     callbuf << "(*(" << class_name << "**)ret) = ";
-    callbuf << "(is_arena) ? new (*(" << class_name << "**)ret) ";
+    // ::new for the same reason as in the array branch above.
+    callbuf << "(is_arena) ? ::new (*(" << class_name << "**)ret) ";
     make_narg_ctor(FD, N, typedefbuf, callbuf, class_name, indent_level);
 
     callbuf << ": new ";
@@ -3770,7 +4428,9 @@ void make_narg_call_with_return(compat::Interpreter& I, const FunctionDecl* FD,
       //  Write the placement part of the placement new.
       //
       indent(callbuf, indent_level);
-      callbuf << "new (ret) ";
+      // ::new so that a class-scope operator new cannot hide the global
+      // placement form used to construct the return value in `ret`.
+      callbuf << "::new (ret) ";
       //
       //  Write the TyRef part of the placement new.
       //
@@ -4258,7 +4918,8 @@ int get_wrapper_code(compat::Interpreter& I, const FunctionDecl* FD,
 }
 
 JitCall::GenericCall make_wrapper(compat::Interpreter& I,
-                                  const FunctionDecl* FD) {
+                                  const FunctionDecl* FD,
+                                  bool relaxAccessControl = false) {
   auto& WrapperStore = getInterpInfo(&I).WrapperStore;
 
   auto R = WrapperStore.find(FD);
@@ -4296,6 +4957,12 @@ JitCall::GenericCall make_wrapper(compat::Interpreter& I,
   // We should be able to call private default constructors.
   if (auto Ctor = dyn_cast<CXXConstructorDecl>(FD))
     withAccessControl = !Ctor->isDefaultConstructor();
+  // Members introduced into a derived class with a public using-declaration
+  // are reachable through the derived class, but the generated wrapper still
+  // calls the target through its original (e.g. protected) qualified name.
+  // Disable access control for this specific case so the wrapper compiles.
+  if (relaxAccessControl)
+    withAccessControl = false;
   void* wrapper =
       compile_wrapper(I, wrapper_name, wrapper_code, withAccessControl);
   if (wrapper) {
@@ -4507,9 +5174,15 @@ static JitCall::DestructorCall make_dtor_wrapper(compat::Interpreter& interp,
 
 CPPINTEROP_API JitCall MakeFunctionCallable(InterpRef I, ConstFuncRef func) {
   INTEROP_TRACE(I, func);
-  const auto* D = unwrap<clang::Decl>(func);
-  if (!D)
+  const auto* InputD = unwrap<clang::Decl>(func);
+  if (!InputD)
     return INTEROP_RETURN(JitCall{});
+
+  // If the caller passed a using-shadow, unwrap to the target function but
+  // remember the fact: the generated wrapper still references the target's
+  // original (e.g. protected) name, so it needs access control relaxed.
+  const bool isUsingShadow = isa<UsingShadowDecl>(InputD);
+  const auto* D = UnwrapUsingShadowToFunction(InputD);
 
   auto* interp = unwrap<compat::Interpreter>(I);
 
@@ -4523,14 +5196,16 @@ CPPINTEROP_API JitCall MakeFunctionCallable(InterpRef I, ConstFuncRef func) {
   }
 
   if (const auto* Ctor = dyn_cast<CXXConstructorDecl>(D)) {
-    if (auto Wrapper = make_wrapper(*interp, cast<FunctionDecl>(D)))
+    if (auto Wrapper =
+            make_wrapper(*interp, cast<FunctionDecl>(D), isUsingShadow))
       return INTEROP_RETURN(JitCall(JitCall::kConstructorCall, Wrapper,
                                     wrap<ConstFuncRef>(Ctor)));
     // FIXME: else error we failed to compile the wrapper.
     return INTEROP_RETURN(JitCall{});
   }
 
-  if (auto Wrapper = make_wrapper(*interp, cast<FunctionDecl>(D))) {
+  if (auto Wrapper =
+          make_wrapper(*interp, cast<FunctionDecl>(D), isUsingShadow)) {
     return INTEROP_RETURN(JitCall(JitCall::kGenericCall, Wrapper,
                                   wrap<ConstFuncRef>(cast<FunctionDecl>(D))));
   }
@@ -4955,7 +5630,7 @@ protected:
 };
 } // namespace
 
-int Declare(compat::Interpreter& I, const char* code, bool silent) {
+static int Declare(compat::Interpreter& I, const char* code, bool silent) {
   // Trap diagnostics on both paths: I.declare's rc is 0 even when
   // Parse recovered from emitted errors, so callers need the trap to
   // distinguish "parsed cleanly" from "parsed with errors".
@@ -5316,7 +5991,10 @@ void GetClassTemplateArgs(ConstDeclRef templ_instance,
 void GetClassTemplateInstantiationArgs(ConstDeclRef templ_instance,
                                        std::vector<TemplateArgInfo>& args) {
   INTEROP_TRACE(templ_instance, INTEROP_OUT(args));
-  const auto* CTSD = unwrap<ClassTemplateSpecializationDecl>(templ_instance);
+  const auto* CTSD = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(
+      unwrap<Decl>(templ_instance));
+  if (!CTSD)
+    return INTEROP_VOID_RETURN();
   for (const auto& TA : CTSD->getTemplateInstantiationArgs().asArray()) {
     switch (TA.getKind()) {
     default:
@@ -5452,7 +6130,7 @@ bool IsTypeDerivedFrom(ConstTypeRef derived, ConstTypeRef base) {
 
 std::string GetFunctionArgDefault(ConstFuncRef func, size_t param_index) {
   INTEROP_TRACE(func, param_index);
-  const auto* D = unwrap<clang::Decl>(func);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(func));
   const clang::ParmVarDecl* PI = nullptr;
 
   if (const auto* FD = llvm::dyn_cast_or_null<clang::FunctionDecl>(D))
@@ -5495,7 +6173,7 @@ bool IsConstMethod(ConstFuncRef method) {
   if (!method)
     return INTEROP_RETURN(false);
 
-  const auto* D = unwrap<clang::Decl>(method);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(method));
   if (const auto* func = dyn_cast<CXXMethodDecl>(D))
     return INTEROP_RETURN(func->getMethodQualifiers().hasConst());
 
@@ -5504,7 +6182,7 @@ bool IsConstMethod(ConstFuncRef method) {
 
 std::string GetFunctionArgName(ConstFuncRef func, size_t param_index) {
   INTEROP_TRACE(func, param_index);
-  const auto* D = unwrap<clang::Decl>(func);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(func));
   const clang::ParmVarDecl* PI = nullptr;
 
   if (const auto* FD = llvm::dyn_cast_or_null<clang::FunctionDecl>(D))
@@ -5534,7 +6212,7 @@ Operator GetOperatorFromSpelling(const std::string& op) {
 
 OperatorArity GetOperatorArity(ConstFuncRef op) {
   INTEROP_TRACE(op);
-  const auto* D = unwrap<Decl>(op);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<Decl>(op));
   if (const auto* FD = llvm::dyn_cast<FunctionDecl>(D)) {
     if (FD->isOverloadedOperator()) {
       switch (FD->getOverloadedOperator()) {
