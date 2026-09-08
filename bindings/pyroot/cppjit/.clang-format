@@ -1,0 +1,15 @@
+BasedOnStyle: LLVM
+
+Language: Cpp
+Standard: c++17
+PointerAlignment: Left
+
+IncludeCategories:
+  - Regex:           '^"[^/]+\"'
+    Priority:        10
+  - Regex:           '^"clang/'
+    Priority:        30
+  - Regex:           '^"llvm/'
+    Priority:        40
+  - Regex:           '^<'
+    Priority:        50

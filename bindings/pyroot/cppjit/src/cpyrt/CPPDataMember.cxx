@@ -1,0 +1,450 @@
+// Bindings
+#include "cpyrt.h"
+
+using namespace cppjit;
+#include "CPPDataMember.h"
+#include "CPPEnum.h"
+#include "CPPInstance.h"
+#include "Dimensions.h"
+#include "LowLevelViews.h"
+#include "ProxyWrappers.h"
+#include "PyStrings.h"
+#include "TypeManip.h"
+#include "Utility.h"
+#include "cppjit_interop.h"
+#include "cpyrt/Reflex.h"
+
+// Standard
+#include <algorithm>
+#include <limits.h>
+#include <structmember.h>
+#include <vector>
+
+namespace cppjit::cpyrt {
+
+enum ETypeDetails {
+  kNone = 0x0000,
+  kIsStaticData = 0x0001,
+  kIsConstData = 0x0002,
+  kIsArrayType = 0x0004,
+  kIsEnumPrep = 0x0008,
+  kIsEnumType = 0x0010,
+  kIsCachable = 0x0020
+};
+
+//= cpyrt data member as Python property behavior =========================
+static PyObject* dm_get(CPPDataMember* dm, CPPInstance* pyobj,
+                        PyObject* /* kls */) {
+  // cache lookup for low level views
+  if (pyobj && dm->fFlags & kIsCachable) {
+    cpyrt::CI_DatamemberCache_t& cache = pyobj->GetDatamemberCache();
+    for (auto it = cache.begin(); it != cache.end(); ++it) {
+      if (it->first == dm->fOffset) {
+        if (it->second) {
+          Py_INCREF(it->second);
+          return it->second;
+        } else
+          cache.erase(it);
+        break;
+      }
+    }
+  }
+
+  if (dm->fFlags & (kIsEnumPrep | kIsEnumType)) {
+    if (dm->fFlags & kIsEnumPrep) {
+      // still need to do lookup; only ever try this once, then fallback on
+      // converter
+      dm->fFlags &= ~kIsEnumPrep;
+
+      // fDescription contains the full name of the actual enum value object
+      const interop::TCppScope_t enum_type =
+          interop::GetParentScope(dm->fScope);
+      const interop::TCppScope_t enum_scope =
+          interop::GetParentScope(enum_type);
+
+      PyObject* pyscope = CreateScopeProxy(enum_scope);
+      if (pyscope) {
+        PyObject* pyEnumType = PyObject_GetAttrString(
+            pyscope, interop::GetFinalName(enum_type).c_str());
+        if (pyEnumType) {
+          PyObject* pyval = PyObject_GetAttrString(
+              pyEnumType, interop::GetFinalName(dm->fScope).c_str());
+          Py_DECREF(pyEnumType);
+          if (pyval) {
+            Py_DECREF(dm->fDescription);
+            dm->fDescription = pyval;
+            dm->fFlags |= kIsEnumType;
+          }
+        }
+        Py_DECREF(pyscope);
+      }
+      if (!(dm->fFlags & kIsEnumType))
+        PyErr_Clear();
+    }
+
+    if (dm->fFlags & kIsEnumType) {
+      Py_INCREF(dm->fDescription);
+      return dm->fDescription;
+    }
+
+    if (interop::IsEnumConstant(dm->fScope)) {
+      // anonymous enum; cache the value in fDescription like the named case
+      // above: once kIsEnumPrep is cleared this block is not reached again
+      PyObject* pyval = pyval_from_enum(interop::ResolveEnum(dm->fScope),
+                                        nullptr, nullptr, dm->fScope);
+      if (pyval) {
+        Py_DECREF(dm->fDescription);
+        dm->fDescription = pyval;
+        dm->fFlags |= kIsEnumType;
+        Py_INCREF(pyval);
+        return pyval;
+      }
+    }
+  }
+  // non-initialized or public data accesses through class (e.g. by help())
+  void* address = dm->GetAddress(pyobj);
+  if (!address || (intptr_t)address == -1 /* Cling error */)
+    return nullptr;
+
+  if (dm->fConverter != 0) {
+    PyObject* result = dm->fConverter->FromMemory(
+        (dm->fFlags & kIsArrayType) ? &address : address);
+    if (!result)
+      return result;
+
+    // low level views are expensive to create, so cache them on the object
+    // instead
+    bool isLLView = LowLevelView_CheckExact(result);
+    if (isLLView && CPPInstance_Check(pyobj)) {
+      Py_INCREF(result);
+      pyobj->GetDatamemberCache().push_back(
+          std::make_pair(dm->fOffset, result));
+      dm->fFlags |= kIsCachable;
+    }
+
+    // ensure that the encapsulating class does not go away for the duration
+    // of the data member's lifetime, if it is a bound type (it doesn't matter
+    // for builtin types, b/c those are copied over into python types and thus
+    // end up being "stand-alone")
+    // TODO: should be done for LLViews as well
+    else if (pyobj && !(dm->fFlags & kIsStaticData) &&
+             CPPInstance_Check(result)) {
+      if (PyObject_SetAttr(result, PyStrings::gLifeLine, (PyObject*)pyobj) ==
+          -1)
+        PyErr_Clear(); // ignored
+    }
+
+    return result;
+  }
+
+  PyErr_Format(PyExc_NotImplementedError, "no converter available for \"%s\"",
+               dm->GetName().c_str());
+  return nullptr;
+}
+
+//-----------------------------------------------------------------------------
+static int dm_set(CPPDataMember* dm, CPPInstance* pyobj, PyObject* value) {
+  // Set the value of the C++ datum held.
+  const int errret = -1;
+
+  if (!value) {
+    // we're being deleted; fine for namespaces (redo lookup next time), but
+    // makes no sense for classes/structs
+    if (!interop::IsNamespace(dm->fEnclosingScope)) {
+      PyErr_SetString(PyExc_TypeError, "data member deletion is not supported");
+      return errret;
+    }
+
+    // deletion removes the proxy, with the idea that a fresh lookup can be
+    // made, to support Cling's shadowing of declarations (TODO: the use case
+    // here is redeclared variables, for which fDescription is indeed th ename;
+    // it might fail for enums).
+    return PyObject_DelAttr((PyObject*)Py_TYPE(pyobj), dm->fDescription);
+  }
+
+  // filter const objects to prevent changing their values
+  if (dm->fFlags & kIsConstData) {
+    PyErr_SetString(PyExc_TypeError, "assignment to const data not allowed");
+    return errret;
+  }
+
+  // remove cached low level view, if any (will be restored upon reaeding)
+  if (dm->fFlags & kIsCachable) {
+    cpyrt::CI_DatamemberCache_t& cache = pyobj->GetDatamemberCache();
+    for (auto it = cache.begin(); it != cache.end(); ++it) {
+      if (it->first == dm->fOffset) {
+        Py_XDECREF(it->second);
+        cache.erase(it);
+        break;
+      }
+    }
+  }
+
+  intptr_t address = (intptr_t)dm->GetAddress(pyobj);
+  if (!address || address == -1 /* Cling error */)
+    return errret;
+
+  // for fixed size arrays
+  void* ptr = (void*)address;
+  if (dm->fFlags & kIsArrayType)
+    ptr = &address;
+
+  // actual conversion; return on success
+  if (dm->fConverter && dm->fConverter->ToMemory(value, ptr, (PyObject*)pyobj))
+    return 0;
+
+  // set a python error, if not already done
+  if (!PyErr_Occurred())
+    PyErr_SetString(PyExc_RuntimeError,
+                    "property type mismatch or assignment not allowed");
+
+  // failure ...
+  return errret;
+}
+
+//= cpyrt data member construction/destruction ===========================
+static CPPDataMember* dm_new(PyTypeObject* pytype, PyObject*, PyObject*) {
+  // Create and initialize a new property descriptor.
+  CPPDataMember* dm = (CPPDataMember*)pytype->tp_alloc(pytype, 0);
+
+  dm->fOffset = 0;
+  dm->fFlags = 0;
+  dm->fConverter = nullptr;
+  dm->fEnclosingScope = nullptr;
+  dm->fDescription = nullptr;
+  dm->fDoc = nullptr;
+
+  new (&dm->fFullType) std::string{};
+
+  return dm;
+}
+
+//----------------------------------------------------------------------------
+static void dm_dealloc(CPPDataMember* dm) {
+  // Deallocate memory held by this descriptor.
+  using namespace std;
+  if (dm->fConverter && dm->fConverter->HasState())
+    delete dm->fConverter;
+  Py_XDECREF(dm->fDescription); // never exposed so no GC necessary
+  Py_XDECREF(dm->fDoc);
+
+  dm->fFullType.~string();
+
+  Py_TYPE(dm)->tp_free((PyObject*)dm);
+}
+
+static PyMemberDef dm_members[] = {
+    {(char*)"__doc__", T_OBJECT, offsetof(CPPDataMember, fDoc), 0,
+     (char*)"writable documentation"},
+    {NULL, 0, 0, 0, nullptr} /* Sentinel */
+};
+
+//= cpyrt datamember proxy access to internals ============================
+static PyObject* dm_reflex(CPPDataMember* dm, PyObject* args) {
+  // Provide the requested reflection information.
+  interop::Reflex::RequestId_t request = -1;
+  interop::Reflex::FormatId_t format = interop::Reflex::OPTIMAL;
+  if (!PyArg_ParseTuple(args, const_cast<char*>("i|i:__cpp_reflex__"), &request,
+                        &format))
+    return nullptr;
+
+  if (request == interop::Reflex::TYPE) {
+    if (format == interop::Reflex::OPTIMAL ||
+        format == interop::Reflex::AS_STRING)
+      return cpyrt_PyText_FromString(dm->fFullType.c_str());
+  } else if (request == interop::Reflex::OFFSET) {
+    if (format == interop::Reflex::OPTIMAL)
+      return PyLong_FromLong(dm->fOffset);
+  }
+
+  PyErr_Format(PyExc_ValueError, "unsupported reflex request %d or format %d",
+               request, format);
+  return nullptr;
+}
+
+//----------------------------------------------------------------------------
+static PyMethodDef dm_methods[] = {
+    {(char*)"__cpp_reflex__", (PyCFunction)dm_reflex, METH_VARARGS,
+     (char*)"C++ datamember reflection information"},
+    {(char*)nullptr, nullptr, 0, nullptr}};
+
+//= cpyrt data member type ================================================
+PyTypeObject CPPDataMember_Type = {
+    PyVarObject_HEAD_INIT(&PyType_Type,
+                          0)(char*) "cppjit.CPPDataMember", // tp_name
+    sizeof(CPPDataMember),                                  // tp_basicsize
+    0,                                                      // tp_itemsize
+    (destructor)dm_dealloc,                                 // tp_dealloc
+    0,                                      // tp_vectorcall_offset / tp_print
+    0,                                      // tp_getattr
+    0,                                      // tp_setattr
+    0,                                      // tp_as_async / tp_compare
+    0,                                      // tp_repr
+    0,                                      // tp_as_number
+    0,                                      // tp_as_sequence
+    0,                                      // tp_as_mapping
+    0,                                      // tp_hash
+    0,                                      // tp_call
+    0,                                      // tp_str
+    0,                                      // tp_getattro
+    0,                                      // tp_setattro
+    0,                                      // tp_as_buffer
+    Py_TPFLAGS_DEFAULT,                     // tp_flags
+    (char*)"cppjit data member (internal)", // tp_doc
+    0,                                      // tp_traverse
+    0,                                      // tp_clear
+    0,                                      // tp_richcompare
+    0,                                      // tp_weaklistoffset
+    0,                                      // tp_iter
+    0,                                      // tp_iternext
+    dm_methods,                             // tp_methods
+    dm_members,                             // tp_members
+    0,                                      // tp_getset
+    0,                                      // tp_base
+    0,                                      // tp_dict
+    (descrgetfunc)dm_get,                   // tp_descr_get
+    (descrsetfunc)dm_set,                   // tp_descr_set
+    0,                                      // tp_dictoffset
+    0,                                      // tp_init
+    0,                                      // tp_alloc
+    (newfunc)dm_new,                        // tp_new
+    0,                                      // tp_free
+    0,                                      // tp_is_gc
+    0,                                      // tp_bases
+    0,                                      // tp_mro
+    0,                                      // tp_cache
+    0,                                      // tp_subclasses
+    0,                                      // tp_weaklist
+    0,                                      // tp_del
+    0,                                      // tp_version_tag
+    0,                                      // tp_finalize
+    0                                       // tp_vectorcall
+    CPYRT_PYTYPE_TAIL};
+
+} // namespace cppjit::cpyrt
+
+//- public members -----------------------------------------------------------
+void cpyrt::CPPDataMember::Set(interop::TCppScope_t scope,
+                               interop::TCppScope_t data) {
+  if (interop::IsLambdaClass(interop::GetDatamemberType(data))) {
+    fScope = interop::WrapLambdaFromVariable(data);
+  } else {
+    fScope = data;
+  }
+
+  fEnclosingScope = scope;
+  fOffset = interop::GetDatamemberOffset(
+      fScope, fScope == data
+                  ? scope
+                  : interop::GetScope(
+                        "__cppjit_internal_wrap_g")); // XXX: Check back here //
+                                                      // TODO: make lazy
+  fFlags = interop::IsStaticDatamember(fScope) ? kIsStaticData : 0;
+
+  const std::string name = interop::GetFinalName(fScope);
+  interop::TCppType_t type;
+
+  if (interop::IsEnumConstant(fScope)) {
+    type = interop::GetEnumConstantType(fScope);
+    fFullType = interop::GetTypeAsString(type);
+    if (fFullType.find("(anonymous)") == std::string::npos &&
+        fFullType.find("(unnamed)") == std::string::npos) {
+      // repurpose fDescription for lazy lookup of the enum later
+      fDescription = cpyrt_PyText_FromString((fFullType + "::" + name).c_str());
+      fFlags |= kIsEnumPrep;
+    }
+    type = interop::ResolveType(type);
+    fFlags |= kIsConstData;
+  } else {
+    type = interop::GetDatamemberType(fScope);
+    fFullType = interop::GetTypeAsString(type);
+
+    // Get the integer type if it's an enum
+    if (interop::IsEnumType(type))
+      type = interop::ResolveType(type);
+
+    if (interop::IsConstVar(fScope))
+      fFlags |= kIsConstData;
+  }
+
+  auto ldims = interop::GetDimensions(type);
+  std::vector<dim_t> dims(ldims.begin(), ldims.end());
+
+  if (!dims.empty())
+    fFlags |= kIsArrayType;
+
+  if (dims.empty())
+    fConverter = CreateConverter(type, 0);
+  else
+    fConverter = CreateConverter(type, {(dim_t)dims.size(), dims.data()});
+
+  if (!(fFlags & kIsEnumPrep))
+    fDescription = cpyrt_PyText_FromString(name.c_str());
+}
+
+//-----------------------------------------------------------------------------
+void cpyrt::CPPDataMember::Set(interop::TCppScope_t scope,
+                               const std::string& name, void* address) {
+  fEnclosingScope = scope;
+  fDescription = cpyrt_PyText_FromString(name.c_str());
+  fOffset = (intptr_t)address;
+  fFlags = kIsStaticData | kIsConstData;
+  fConverter = CreateConverter("internal_enum_type_t");
+  fFullType = "unsigned int";
+}
+
+//-----------------------------------------------------------------------------
+void* cpyrt::CPPDataMember::GetAddress(CPPInstance* pyobj) {
+  // class attributes, global properties
+  if (fFlags & kIsStaticData)
+    return (void*)fOffset;
+
+  // special case: non-static lookup through class
+  if (!pyobj) {
+    PyErr_SetString(PyExc_AttributeError,
+                    "attribute access requires an instance");
+    return nullptr;
+  }
+
+  // instance attributes; requires valid object for full address
+  if (!CPPInstance_Check(pyobj)) {
+    PyErr_Format(PyExc_TypeError,
+                 "object instance required for access to property \"%s\"",
+                 GetName().c_str());
+    return nullptr;
+  }
+
+  void* obj = pyobj->GetObject();
+  if (!obj) {
+    PyErr_SetString(PyExc_ReferenceError, "attempt to access a null-pointer");
+    return nullptr;
+  }
+
+  // the proxy's internal offset is calculated from the enclosing class
+  ptrdiff_t offset = 0;
+  interop::TCppScope_t oisa = pyobj->ObjectIsA();
+  if (oisa != fEnclosingScope)
+    offset =
+        interop::GetBaseOffset(oisa, fEnclosingScope, obj, 1 /* up-cast */);
+
+  return (void*)((intptr_t)obj + offset + fOffset);
+}
+
+//-----------------------------------------------------------------------------
+std::string cpyrt::CPPDataMember::GetName() {
+  if (fFlags & kIsEnumType) {
+    PyObject* repr = PyObject_Repr(fDescription);
+    if (repr) {
+      std::string res = cpyrt_PyText_AsString(repr);
+      Py_DECREF(repr);
+      return res;
+    }
+    PyErr_Clear();
+    return "<unknown>";
+  } else if (fFlags & kIsEnumPrep) {
+    std::string fullName = cpyrt_PyText_AsString(fDescription);
+    return fullName.substr(fullName.rfind("::") + 2, std::string::npos);
+  }
+
+  return cpyrt_PyText_AsString(fDescription);
+}
