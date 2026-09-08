@@ -11196,11 +11196,14 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 /// First implementation: R.Brun
 ///
 /// Full implementation: Tim Tran (timtran@jlab.org)  April 2006
+///
+/// Redesign: S. Linev September 2026
 
 void THistPainter::ShowProjection3(Int_t px, Int_t py)
 {
+   Int_t nbins = fShowProjection / 100; //decode nbins
+   Int_t kind = fShowProjection % 100; // projection kinds
 
-   Int_t nbins = (Int_t)fShowProjection/100; //decode nbins
    if (fH->GetDimension() < 3) {
       if (fShowProjection2 % 100 == 1) {
          ShowProjectionY(px, py);
@@ -11232,24 +11235,87 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
    if (!view || !pp)
       return;
 
-   auto h3 = static_cast<TH3 *>(fH);
+   // check that ranges are set
+   if ((parent.GetUxmin() == parent.GetUxmax()) || (parent.GetUymin() == parent.GetUymax()))
+      return;
+
+   auto cname = TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
+   auto c = static_cast<TVirtualPad*>(gROOT->GetListOfCanvases()->FindObject(cname));
+   if (!c) {
+      fShowProjection = 0;
+      return;
+   }
+
+   auto h3 = dynamic_cast<TH3 *>(fH);
+   if (!h3) {
+      fShowProjection = 0;
+      return;
+   }
+
    TAxis *xaxis = h3->GetXaxis();
    TAxis *yaxis = h3->GetYaxis();
    TAxis *zaxis = h3->GetZaxis();
 
    const Int_t iMin = -111;
    const Int_t iMax = -11;
+   const Int_t kMaxDist = 50; // maximal distance to detect bin
 
    // stored vertices
    static Double_t rect1x[5] = {0,0,0,0,0}, rect1y[5] = {0,0,0,0,0}, rect2x[5] = {0,0,0,0,0}, rect2y[5] = {0,0,0,0,0};
 
-   Double_t uxmin = gPad->GetUxmin();
-   Double_t uxmax = gPad->GetUxmax();
-   Double_t uymin = gPad->GetUymin();
-   Double_t uymax = gPad->GetUymax();
+   auto getx = [iMin, iMax](TAxis *axis, Int_t indx) {
+      return indx == iMin ? axis->GetBinLowEdge(axis->GetFirst())
+                          : (indx == iMax ? axis->GetBinUpEdge(axis->GetLast()) : axis->GetBinCenter(indx));
+   };
 
-   auto getx = [this, iMin, iMax](TAxis *axis, Int_t indx) {
-      return indx == iMin ? axis->GetXmin() : (indx == iMax ? axis->GetXmax() : axis->GetBinCenter(indx));
+   auto findAxis = [&parent, px, py, xaxis, yaxis, zaxis, view, getx, iMin, iMax, kMaxDist](Int_t &besti1, Int_t &besti2, char name) {
+
+      TAxis *axis1 = nullptr, *axis2 = nullptr;
+      Int_t xindx, yindx, zindx;
+
+      switch(name) {
+         case 'x':
+            axis1 = yaxis;
+            axis2 = zaxis;
+            xindx = TMath::Cos(view->GetLongitude() / 180. * TMath::Pi()) < 0 ? iMin : iMax;
+            break;
+         case 'y':
+            axis1 = xaxis;
+            axis2 = zaxis;
+            yindx = TMath::Sin(view->GetLongitude() / 180. * TMath::Pi()) < 0 ? iMin : iMax;
+            break;
+         default:
+            axis1 = xaxis;
+            axis2 = yaxis;
+            zindx = TMath::Cos(view->GetLatitude() / 180. * TMath::Pi()) > 0 ? iMax : iMin;
+            break;
+      }
+
+      Double_t best_dist = kMaxDist;
+
+      for (Int_t i1 = axis1->GetFirst(); i1 <= axis1->GetLast(); ++i1)
+         for (Int_t i2 = axis2->GetFirst(); i2 <= axis2->GetLast(); ++i2) {
+
+            switch(name) {
+               case 'x': yindx = i1; zindx = i2; break;
+               case 'y': xindx = i1; zindx = i2; break;
+               default: xindx = i1; yindx = i2; break;
+            }
+
+            Double_t v[3] = {getx(xaxis, xindx), getx(yaxis, yindx), getx(zaxis, zindx)};
+            Double_t ndc[3];
+            view->WCtoNDC(v, ndc);
+            Int_t px1 = parent.XtoAbsPixel(ndc[0]);
+            Int_t py1 = parent.YtoAbsPixel(ndc[1]);
+            Double_t distance = TMath::Sqrt(1. * (px1 - px) * (px1 - px) + 1. * (py1 - py) * (py1 - py));
+            if (distance < best_dist) {
+               best_dist = distance;
+               besti1 = i1;
+               besti2 = i2;
+            }
+         }
+
+      return best_dist < kMaxDist;
    };
 
    auto convert = [this, view, &parent, getx, iMin, iMax, xaxis, yaxis, zaxis](Int_t ix, Int_t iy, Int_t iz,
@@ -11257,13 +11323,9 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
       Double_t vvv[3] = {getx(xaxis, ix), getx(yaxis, iy), getx(zaxis, iz)};
       Double_t uu[3];
       view->WCtoNDC(vvv, uu);
-      resx = (uu[0] - parent.GetUxmin()) / (parent.GetUxmax() - parent.GetUxmin()) * (parent.GetX2() - parent.GetX1()) +
-             parent.GetX1();
-      resy = (uu[1] - parent.GetUymin()) / (parent.GetUymax() - parent.GetUymin()) * (parent.GetY2() - parent.GetY1()) +
-             parent.GetY1();
+      resx = uu[0];
+      resy = uu[1];
    };
-
-   Int_t kind = fShowProjection % 100;
 
    auto draw_rects = [pp, nbins, kind]() {
       rect1x[4] = rect1x[0];
@@ -11284,36 +11346,53 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
       }
    };
 
-   int pxmin = gPad->XtoAbsPixel(uxmin);
-   int pxmax = gPad->XtoAbsPixel(uxmax);
-   if (pxmin == pxmax) return;
-   int pymin = gPad->YtoAbsPixel(uymin);
-   int pymax = gPad->YtoAbsPixel(uymax);
-   if (pymin == pymax) return;
-   auto cname = TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
-   auto c = static_cast<TVirtualPad*>(gROOT->GetListOfCanvases()->FindObject(cname));
-   if (!c) {
-      fShowProjection = 0;
-      return;
-   }
+   Int_t binx = -1, biny = -1, binz = -1, binx2 = -1, biny2 = -1, binz2 = -1, dummy = -1;
+
+   auto extend_bin = [nbins](TAxis *axis, Int_t &bin) {
+      Int_t bin2 = bin;
+      if (nbins > 1) {
+         bin2 = TMath::Min(bin + nbins / 2, axis->GetLast());
+         bin = TMath::Max(bin2 - nbins + 1, axis->GetFirst());
+      }
+      return bin2;
+   };
+
+   auto make_proj = [h3, &binx, &biny, &binz, &binx2, &biny2, &binz2, xaxis, yaxis, zaxis](const char *proj_kind) {
+      Int_t firstX = xaxis->GetFirst();
+      Int_t lastX  = xaxis->GetLast();
+      Int_t firstY = yaxis->GetFirst();
+      Int_t lastY  = yaxis->GetLast();
+      Int_t firstZ = zaxis->GetFirst();
+      Int_t lastZ  = zaxis->GetLast();
+      if (binx >= 0)
+         xaxis->SetRange(binx, binx2);
+      if (biny >= 0)
+         yaxis->SetRange(biny, biny2);
+      if (binz >= 0)
+         zaxis->SetRange(binz, binz2);
+      auto hp = h3->Project3D(proj_kind);
+      if (binx >= 0)
+         xaxis->SetRange(firstX,lastX);
+      if (biny >= 0)
+         yaxis->SetRange(firstY, lastY);
+      if (binz >= 0)
+         zaxis->SetRange(firstZ,lastZ);
+      return hp;
+   };
 
    TVirtualPad::TContext ctxt(true);
 
    switch (kind) {
       case 1: { // "x"
-         Int_t firstY = yaxis->GetFirst();
-         Int_t lastY  = yaxis->GetLast();
-         Int_t biny = firstY + Int_t((lastY-firstY)*(px-pxmin)/(pxmax-pxmin));
-         Int_t biny2 = TMath::Min(biny+nbins-1, yaxis->GetNbins());
-         yaxis->SetRange(biny, biny2);
-         Int_t firstZ = zaxis->GetFirst();
-         Int_t lastZ  = zaxis->GetLast();
-         Int_t binz = firstZ + Int_t((lastZ-firstZ)*(py-pymin)/(pymax-pymin));
-         Int_t binz2 = TMath::Min(binz+nbins-1,zaxis->GetNbins() );
-         zaxis->SetRange(binz, binz2);
-
-         if (rect1x[0])
+         if (rect1x[0]) {
             draw_rects();
+            rect1x[0] = 0;
+         }
+         if (!findAxis(biny, binz, 'x'))
+            break;
+
+         biny2 = extend_bin(yaxis, biny);
+         binz2 = extend_bin(zaxis, binz);
 
          convert(iMin, biny,  binz,  rect1x[0], rect1y[0]);
          convert(iMax, biny,  binz,  rect1x[1], rect1y[1]);
@@ -11327,12 +11406,10 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
          draw_rects();
 
          c->Clear();
-         TH1 *hp = h3->Project3D("x");
-         yaxis->SetRange(firstY, lastY);
-         zaxis->SetRange(firstZ, lastZ);
-         if (hp) {
+
+         if (auto hp = make_proj("x")) {
             hp->SetFillColor(38);
-            if (nbins == 1)
+            if ((biny == biny2) && (binz == binz2))
                hp->SetTitle(TString::Format("ProjectionX of biny=%d [y=%.1f..%.1f] binz=%d [z=%.1f..%.1f]", biny, yaxis->GetBinLowEdge(biny), yaxis->GetBinUpEdge(biny),
                                              binz, zaxis->GetBinLowEdge(binz), zaxis->GetBinUpEdge(binz)));
             else
@@ -11346,19 +11423,15 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
       }
 
       case 2: { // "y"
-         Int_t firstX = xaxis->GetFirst();
-         Int_t lastX  = xaxis->GetLast();
-         Int_t binx = firstX + Int_t((lastX-firstX)*(px-pxmin)/(pxmax-pxmin));
-         Int_t binx2 = TMath::Min(binx+nbins-1, xaxis->GetNbins());
-         xaxis->SetRange(binx,binx2);
-         Int_t firstZ = zaxis->GetFirst();
-         Int_t lastZ  = zaxis->GetLast();
-         Int_t binz = firstZ + Int_t((lastZ-firstZ)*(py-pymin)/(pymax-pymin));
-         Int_t binz2 = TMath::Min(binz+nbins-1, zaxis->GetNbins());
-         zaxis->SetRange(binz,binz2);
-
-         if (rect1x[0])
+         if (rect1x[0]) {
             draw_rects();
+            rect1x[0] = 0;
+         }
+         if (!findAxis(binx, binz, 'y'))
+            break;
+
+         binx2 = extend_bin(xaxis, binx);
+         binz2 = extend_bin(zaxis, binz);
 
          convert(binx,  iMin, binz,  rect1x[0], rect1y[0]);
          convert(binx,  iMax, binz,  rect1x[1], rect1y[1]);
@@ -11372,12 +11445,9 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
          draw_rects();
 
          c->Clear();
-         TH1 *hp = h3->Project3D("y");
-         xaxis->SetRange(firstX,lastX);
-         zaxis->SetRange(firstZ,lastZ);
-         if (hp) {
+         if (auto hp = make_proj("y")) {
             hp->SetFillColor(38);
-            if (nbins == 1)
+            if ((binx == binx2) && (binz == binz2))
                hp->SetTitle(TString::Format("ProjectionY of binx=%d [x=%.1f..%.1f] binz=%d [z=%.1f..%.1f]", binx, xaxis->GetBinLowEdge(binx), xaxis->GetBinUpEdge(binx),
                                              binz, zaxis->GetBinLowEdge(binz), zaxis->GetBinUpEdge(binz)));
             else
@@ -11391,19 +11461,14 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
       }
 
       case 3: { // "z"
-         Int_t firstX = xaxis->GetFirst();
-         Int_t lastX  = xaxis->GetLast();
-         Int_t binx = firstX + Int_t((lastX-firstX)*(px-pxmin)/(pxmax-pxmin));
-         Int_t binx2 = TMath::Min(binx+nbins-1, xaxis->GetNbins());
-         xaxis->SetRange(binx,binx2);
-         Int_t firstY = yaxis->GetFirst();
-         Int_t lastY  = yaxis->GetLast();
-         Int_t biny = firstY + Int_t((lastY-firstY)*(py-pymin)/(pymax-pymin));
-         Int_t biny2 = TMath::Min(biny+nbins-1, yaxis->GetNbins());
-         yaxis->SetRange(biny,biny2);
-
-         if (rect1x[0])
+         if (rect1x[0]) {
             draw_rects();
+            rect1x[0] = 0;
+         }
+         if (!findAxis(binx, biny, 'z'))
+            break;
+         binx2 = extend_bin(xaxis, binx);
+         biny2 = extend_bin(yaxis, biny);
 
          convert(binx,  biny,  iMin, rect1x[0], rect1y[0]);
          convert(binx,  biny,  iMax, rect1x[1], rect1y[1]);
@@ -11415,13 +11480,11 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
          convert(binx2, biny2, iMin, rect2x[3], rect2y[3]);
 
          draw_rects();
+
          c->Clear();
-         TH1 *hp = h3->Project3D("z");
-         xaxis->SetRange(firstX, lastX);
-         yaxis->SetRange(firstY, lastY);
-         if (hp) {
+         if (auto hp = make_proj("z")) {
             hp->SetFillColor(38);
-            if (nbins == 1)
+            if ((binx == binx2) && (biny == biny2))
                hp->SetTitle(TString::Format("ProjectionZ of binx=%d [x=%.1f..%.1f] biny=%d [y=%.1f..%.1f]", binx, xaxis->GetBinLowEdge(binx), xaxis->GetBinUpEdge(binx),
                                              biny, yaxis->GetBinLowEdge(biny), yaxis->GetBinUpEdge(biny)));
             else
@@ -11436,20 +11499,18 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
 
       case 4:   // "xy"
       case 5: { // "yx"
-         Int_t first = zaxis->GetFirst();
-         Int_t last  = zaxis->GetLast();
-         Int_t binz  = first + Int_t((last-first)*(py-pymin)/(pymax-pymin));
-         Int_t binz2 = TMath::Min(binz+nbins-1, zaxis->GetNbins());
-         zaxis->SetRange(binz, binz2);
-
          if (rect1x[0])
             draw_rects();
+
+         if (!findAxis(dummy, binz, 'x') && !findAxis(dummy, binz, 'y'))
+            break;
+         binz2 = extend_bin(zaxis, binz);
 
          convert(iMin, iMax, binz, rect1x[0], rect1y[0]);
          convert(iMax, iMax, binz, rect1x[1], rect1y[1]);
          convert(iMax, iMin, binz, rect1x[2], rect1y[2]);
          convert(iMin, iMin, binz, rect1x[3], rect1y[3]);
-         if (nbins > 1) {
+         if (binz != binz2) {
             convert(iMin, iMax, binz2, rect2x[0], rect2y[0]);
             convert(iMax, iMax, binz2, rect2x[1], rect2y[1]);
             convert(iMax, iMin, binz2, rect2x[2], rect2y[2]);
@@ -11459,11 +11520,10 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
          draw_rects();
 
          c->Clear();
-         TH2 *hp = (TH2*) h3->Project3D(kind == 4 ? "xy" : "yx");
-         zaxis->SetRange(first, last);
-         if (hp) {
+
+         if (auto hp = make_proj(kind == 4 ? "xy" : "yx")) {
             hp->SetFillColor(38);
-            TString sbins = (nbins == 1) ? TString::Format("%d", binz) : TString::Format("[%d,%d]", binz, binz2);
+            TString sbins = (binz == binz2) ? TString::Format("%d", binz) : TString::Format("[%d,%d]", binz, binz2);
             hp->SetTitle(TString::Format("Projection%s, binz=%s [z=%.1f..%.1f]", kind == 4 ? "XY" : "YX", sbins.Data(),
                                          zaxis->GetBinLowEdge(binz), zaxis->GetBinUpEdge(binz2)));
             if (kind == 4) {
@@ -11481,21 +11541,20 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
 
       case 6:   // "xz"
       case 7: { // "zx"
-         Int_t first = yaxis->GetFirst();
-         Int_t last  = yaxis->GetLast();
-         Int_t biny = first + Int_t((last-first)*(py-pymin)/(pymax-pymin));
-         Int_t biny2 = TMath::Min(biny + nbins - 1, yaxis->GetNbins());
-         yaxis->SetRange(biny, biny2);
-
          if (rect1x[0])
             draw_rects();
+
+         if (!findAxis(biny, dummy, 'x') && !findAxis(dummy, biny, 'z'))
+            break;
+
+         biny2 = extend_bin(yaxis, biny);
 
          convert(iMin, biny, iMax, rect1x[0], rect1y[0]);
          convert(iMax, biny, iMax, rect1x[1], rect1y[1]);
          convert(iMax, biny, iMin, rect1x[2], rect1y[2]);
          convert(iMin, biny, iMin, rect1x[3], rect1y[3]);
 
-         if (nbins > 1) {
+         if (biny != biny2) {
             convert(iMin, biny2, iMax, rect2x[0], rect2y[0]);
             convert(iMax, biny2, iMax, rect2x[1], rect2y[1]);
             convert(iMax, biny2, iMin, rect2x[2], rect2y[2]);
@@ -11505,11 +11564,10 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
          draw_rects();
 
          c->Clear();
-         TH2 *hp = (TH2*)h3->Project3D(kind == 6 ? "xz" : "zx");
-         yaxis->SetRange(first,last);
-         if (hp) {
+
+         if (auto hp = make_proj(kind == 6 ? "xz" : "zx")) {
             hp->SetFillColor(38);
-            TString sbins = (nbins == 1) ? TString::Format("%d", biny) : TString::Format("[%d,%d]", biny, biny2);
+            TString sbins = (biny == biny2) ? TString::Format("%d", biny) : TString::Format("[%d,%d]", biny, biny2);
             hp->SetTitle(TString::Format("Projection%s, biny=%s [y=%.1f..%.1f]", kind == 6 ? "XZ" : "ZX", sbins.Data(),
                                          yaxis->GetBinLowEdge(biny), yaxis->GetBinUpEdge(biny2)));
             if (kind == 6) {
@@ -11527,20 +11585,19 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
 
       case 8:   // "yz"
       case 9: { // "zy"
-         Int_t first = xaxis->GetFirst();
-         Int_t last  = xaxis->GetLast();
-         Int_t binx = first + Int_t((last-first)*(px-pxmin)/(pxmax-pxmin));
-         Int_t binx2 = TMath::Min(binx+nbins-1, xaxis->GetNbins());
-         xaxis->SetRange(binx, binx2);
-
          if (rect1x[0])
             draw_rects();
+
+         if (!findAxis(binx, dummy, 'y') && !findAxis(binx, dummy, 'z'))
+            break;
+
+         binx2 = extend_bin(xaxis, binx);
 
          convert(binx, iMax, iMin, rect1x[0], rect1y[0]);
          convert(binx, iMax, iMax, rect1x[1], rect1y[1]);
          convert(binx, iMin, iMax, rect1x[2], rect1y[2]);
          convert(binx, iMin, iMin, rect1x[3], rect1y[3]);
-         if (nbins > 1) {
+         if (binx != binx2) {
             convert(binx2, iMax, iMin, rect2x[0], rect2y[0]);
             convert(binx2, iMax, iMax, rect2x[1], rect2y[1]);
             convert(binx2, iMin, iMax, rect2x[2], rect2y[2]);
@@ -11550,11 +11607,9 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
          draw_rects();
 
          c->Clear();
-         TH2 *hp = (TH2*) h3->Project3D(kind == 8 ? "yz" : "zy");
-         xaxis->SetRange(first,last);
-         if (hp) {
+         if (auto hp = make_proj(kind == 8 ? "yz" : "zy")) {
             hp->SetFillColor(38);
-            TString sbins = (nbins == 1) ? TString::Format("%d", binx) : TString::Format("[%d,%d]", binx, binx2);
+            TString sbins = (binx == binx2) ? TString::Format("%d", binx) : TString::Format("[%d,%d]", binx, binx2);
             hp->SetTitle(TString::Format("Projection%s of binx=%s [x=%.1f..%.f]", kind == 8 ? "YZ" : "ZY", sbins.Data(),
                                          xaxis->GetBinLowEdge(binx), xaxis->GetBinUpEdge(binx2)));
             if (kind == 8) {
