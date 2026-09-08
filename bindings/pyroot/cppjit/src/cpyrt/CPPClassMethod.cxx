@@ -1,0 +1,60 @@
+// Bindings
+#include "cpyrt.h"
+
+using namespace cppjit;
+#include "CPPClassMethod.h"
+#include "CPPInstance.h"
+
+//- public members
+//--------------------------------------------------------------
+PyObject* cpyrt::CPPClassMethod::Call(CPPInstance*& self, cpyrt_PyArgs_t args,
+                                      size_t nargsf, PyObject* kwds,
+                                      CallContext* ctxt) {
+  // preliminary check in case keywords are accidently used (they are ignored
+  // otherwise)
+  if (kwds && ((PyDict_Check(kwds) && PyDict_Size(kwds)) ||
+               (PyTuple_CheckExact(kwds) && PyTuple_GET_SIZE(kwds)))) {
+    PyErr_SetString(PyExc_TypeError, "keyword arguments are not yet supported");
+    return nullptr;
+  }
+
+  // setup as necessary
+  if (!this->Initialize(ctxt))
+    return nullptr;
+
+  // translate the arguments
+  // TODO: The following is not robust and should be revisited e.g. by making
+  // CPPOverloads that have only CPPClassMethods be true Python classmethods?
+  // Note that the original implementation wasn't 100% correct either (e.g.
+  // static size() mapped to len()).
+  //
+  // As-is, if no suitable `self` is given (normal case), but the type of the
+  // first argument matches the enclosing scope of the class method and it isn't
+  // needed for the call, then assume that the method was (incorrectly) bound
+  // and so drop that instance from args.
+  int nargs = (int)cpyrt_PyArgs_GET_SIZE(args, nargsf);
+  if ((!self || (PyObject*)self == Py_None) && nargs) {
+    PyObject* arg0 = cpyrt_PyArgs_GET_ITEM(args, 0);
+    if (CPPInstance_Check(arg0) && fArgsRequired <= nargs - 1 &&
+        interop::IsSubclass(reinterpret_cast<CPPInstance*>(arg0)->ObjectIsA(),
+                            GetScope())) {
+      args += 1; // drops first argument
+      nargsf -= 1;
+    }
+  }
+
+  if (!this->ConvertAndSetArgs(args, nargsf, ctxt))
+    return nullptr;
+
+  // execute function
+  return this->Execute(nullptr, 0, ctxt);
+}
+
+//----------------------------------------------------------------------------
+PyObject* cpyrt::CPPClassMethod::GetTypeName() {
+  PyObject* cppname =
+      cpyrt_PyText_FromString((GetReturnTypeName() + " (*)").c_str());
+  cpyrt_PyText_AppendAndDel(&cppname,
+                            GetSignature(false /* show_formalargs */));
+  return cppname;
+}

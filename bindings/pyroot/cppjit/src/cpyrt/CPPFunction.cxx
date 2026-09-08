@@ -1,0 +1,138 @@
+// Bindings
+#include "cpyrt.h"
+
+using namespace cppjit;
+#include "CPPFunction.h"
+#include "CPPInstance.h"
+
+// Standard
+#include <algorithm>
+
+//- CFunction helpers
+//-----------------------------------------------------------
+bool cpyrt::AdjustSelf(PyCallArgs& cargs) {
+  if (cargs.fNArgsf & PY_VECTORCALL_ARGUMENTS_OFFSET) { // mutation allowed?
+    std::swap(((PyObject**)cargs.fArgs - 1)[0], (PyObject*&)cargs.fSelf);
+    cargs.fFlags |= PyCallArgs::kSelfSwap;
+    cargs.fArgs -= 1;
+    cargs.fNArgsf &= ~PY_VECTORCALL_ARGUMENTS_OFFSET;
+    cargs.fNArgsf += 1;
+  } else {
+    Py_ssize_t nkwargs = cargs.fKwds ? PyTuple_GET_SIZE(cargs.fKwds) : 0;
+    Py_ssize_t totalargs = PyVectorcall_NARGS(cargs.fNArgsf) + nkwargs;
+    PyObject** newArgs =
+        (PyObject**)PyMem_Malloc((totalargs + 1) * sizeof(PyObject*));
+    if (!newArgs)
+      return false;
+
+    newArgs[0] = (PyObject*)cargs.fSelf;
+    if (0 < totalargs)
+      memcpy((void*)&newArgs[1], cargs.fArgs, totalargs * sizeof(PyObject*));
+    cargs.fArgs = newArgs;
+    cargs.fFlags |= PyCallArgs::kDoFree;
+    cargs.fNArgsf += 1;
+  }
+  return true;
+}
+
+bool cpyrt::CPPFunction::ProcessArgs(PyCallArgs& cargs) {
+  // add self as part of the function arguments (means bound member)
+  if (cargs.fKwds)
+    return this->ProcessKwds((PyObject*)cargs.fSelf, cargs);
+  return AdjustSelf(cargs);
+}
+
+//- CPPFunction public members
+//--------------------------------------------------
+PyObject* cpyrt::CPPFunction::Call(CPPInstance*& self, cpyrt_PyArgs_t args,
+                                   size_t nargsf, PyObject* kwds,
+                                   CallContext* ctxt) {
+  // setup as necessary
+  if (fArgsRequired == -1 && !this->Initialize(ctxt))
+    return nullptr;
+
+  // if function was attached to a class, self will be non-zero and should be
+  // the first function argument, so reorder
+  PyCallArgs cargs{self, args, nargsf, kwds};
+  if (self || kwds) {
+    if (!this->ProcessArgs(cargs))
+      return nullptr;
+  }
+
+  // special case, if this method was inserted as a constructor, then self is
+  // nullptr and it will be the first argument and needs to be used as Python
+  // context
+  if (IsConstructor(ctxt->fFlags) && !ctxt->fPyContext &&
+      cpyrt_PyArgs_GET_SIZE(cargs.fArgs, cargs.fNArgsf)) {
+    ctxt->fPyContext = cargs.fArgs[0];
+  }
+
+  // translate the arguments as normal
+  if (!this->ConvertAndSetArgs(cargs.fArgs, cargs.fNArgsf, ctxt))
+    return nullptr;
+
+  // execute function
+  PyObject* result = this->Execute(nullptr, 0, ctxt);
+
+  // special case, if this method was inserted as a constructor, then if no self
+  // was provided, it will be the first argument and may have been updated
+  if (IsConstructor(ctxt->fFlags) && result && !cargs.fSelf &&
+      cpyrt_PyArgs_GET_SIZE(cargs.fArgs, cargs.fNArgsf) &&
+      CPPInstance_Check(cargs.fArgs[0])) {
+    self = (CPPInstance*)cargs.fArgs[0];
+    Py_INCREF(self);
+  }
+
+  return result;
+}
+
+//----------------------------------------------------------------------------
+PyObject* cpyrt::CPPFunction::GetTypeName() {
+  PyObject* cppname =
+      cpyrt_PyText_FromString((GetReturnTypeName() + " (*)").c_str());
+  cpyrt_PyText_AppendAndDel(&cppname,
+                            GetSignature(false /* show_formalargs */));
+  return cppname;
+}
+
+//- CPPReverseBinary private helper
+//---------------------------------------------
+bool cpyrt::CPPReverseBinary::ProcessArgs(PyCallArgs& cargs) {
+  if (cargs.fSelf || cargs.fKwds) {
+    // add self as part of the function arguments (means bound member)
+    if (!this->CPPFunction::ProcessArgs(cargs))
+      return false;
+  }
+
+  // swap the arguments
+  std::swap(((PyObject**)cargs.fArgs)[0], ((PyObject**)cargs.fArgs)[1]);
+  cargs.fFlags |= PyCallArgs::kArgsSwap;
+
+  return true;
+}
+
+//- CPPReverseBinary public members
+//---------------------------------------------
+PyObject* cpyrt::CPPReverseBinary::Call(CPPInstance*& self, cpyrt_PyArgs_t args,
+                                        size_t nargsf, PyObject* kwds,
+                                        CallContext* ctxt) {
+  // This Call() function is very similar to the one of CPPFunction: only
+  // difference is that ProcessArgs() is always called.
+
+  // setup as necessary
+  if (fArgsRequired == -1 && !this->Initialize(ctxt))
+    return nullptr;
+
+  // if function was attached to a class, self will be non-zero and should be
+  // the first function argument, further, the arguments needs swapping
+  PyCallArgs cargs{self, args, nargsf, kwds};
+  if (!this->ProcessArgs(cargs))
+    return nullptr;
+
+  // translate the arguments as normal
+  if (!this->ConvertAndSetArgs(cargs.fArgs, cargs.fNArgsf, ctxt))
+    return nullptr;
+
+  // execute function
+  return this->Execute(nullptr, 0, ctxt);
+}
