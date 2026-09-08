@@ -1233,3 +1233,51 @@ PyObject* cpyrt::CreateLowLevelView_i8(uint8_t** address, cdims_t shape) {
       CreateLowLevelViewT<uint8_t>(address, shape, "B", "uint8_t");
   CPPJIT_RET_W_CREATOR(uint8_t**, CreateLowLevelView_i8);
 }
+
+PyObject* cpyrt::CreateLowLevelView_i16(int16_t* address, cdims_t shape) {
+  LowLevelView* ll =
+      CreateLowLevelViewT<int16_t>(address, shape, "h", "int16_t");
+  CPPJIT_RET_W_CREATOR(int16_t*, CreateLowLevelView_i16);
+}
+
+PyObject* cpyrt::CreateLowLevelView_i16(int16_t** address, cdims_t shape) {
+  LowLevelView* ll =
+      CreateLowLevelViewT<int16_t>(address, shape, "h", "int16_t");
+  CPPJIT_RET_W_CREATOR(int16_t**, CreateLowLevelView_i16);
+}
+
+PyObject* cpyrt::CreateLowLevelView_i16(uint16_t* address, cdims_t shape) {
+  LowLevelView* ll =
+      CreateLowLevelViewT<uint16_t>(address, shape, "H", "uint16_t");
+  CPPJIT_RET_W_CREATOR(uint16_t*, CreateLowLevelView_i16);
+}
+
+PyObject* cpyrt::CreateLowLevelView_i16(uint16_t** address, cdims_t shape) {
+  LowLevelView* ll =
+      CreateLowLevelViewT<uint16_t>(address, shape, "H", "uint16_t");
+  CPPJIT_RET_W_CREATOR(uint16_t**, CreateLowLevelView_i16);
+}
+
+PyObject* cpyrt::CreateLowLevelView_i32(int32_t* address, cdims_t shape) {
+  LowLevelView* ll =
+      CreateLowLevelViewT<int32_t>(address, shape, "i", "int32_t");
+  CPPJIT_RET_W_CREATOR(int32_t*, CreateLowLevelView_i32);
+}
+
+PyObject* cpyrt::CreateLowLevelView_i32(int32_t** address, cdims_t shape) {
+  LowLevelView* ll =
+      CreateLowLevelViewT<int32_t>(address, shape, "i", "int32_t");
+  CPPJIT_RET_W_CREATOR(int32_t**, CreateLowLevelView_i32);
+}
+
+PyObject* cpyrt::CreateLowLevelView_i32(uint32_t* address, cdims_t shape) {
+  LowLevelView* ll =
+      CreateLowLevelViewT<uint32_t>(address, shape, "I", "uint32_t");
+  CPPJIT_RET_W_CREATOR(uint32_t*, CreateLowLevelView_i32);
+}
+
+PyObject* cpyrt::CreateLowLevelView_i32(uint32_t** address, cdims_t shape) {
+  LowLevelView* ll =
+      CreateLowLevelViewT<uint32_t>(address, shape, "I", "uint32_t");
+  CPPJIT_RET_W_CREATOR(uint32_t**, CreateLowLevelView_i32);
+}
