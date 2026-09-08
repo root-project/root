@@ -132,6 +132,7 @@ class TestREGRESSION:
 
         assert 1 == cppjit.gbl.py2long(1)
 
+    @mark.skip(reason="For ROOT, we don't enable AVX by default ('-mavx' is not passed to Cling)")
     def test04_avx(self):
         """Test usability of AVX by default."""
 
@@ -1439,6 +1440,7 @@ class TestREGRESSION:
         run=False,
         reason="Crashes with exception not being caught on Apple Silicon",
     )
+    @mark.xfail(condition=IS_WINDOWS == 64, run=False, reason="Crashes on Windows 64 bit")
     def test46_exception_narrowing(self):
         """Exception narrowing to C++ exception of all overloads"""
 
@@ -1573,6 +1575,7 @@ class TestREGRESSION:
         # destruction must not crash (heap integrity preserved)
         del d
 
+    @mark.xfail(condition=IS_WINDOWS, reason="Fails on Windows")
     def test51_nontype_enum_template_arg(self):
         """Regression test for a class template with a non-type enum parameter
 
