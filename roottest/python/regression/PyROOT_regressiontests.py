@@ -1,4 +1,6 @@
 # File: roottest/python/regression/PyROOT_regressiontests.py
+# ruff: noqa: E402, E701, E741, F403, F405, F841  # legacy layout: setup code
+# interleaved with module-level imports, star imports, crash-repro locals
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 01/02/07
 # Last: 04/26/16
@@ -13,8 +15,10 @@ test_regression.py and test_crossinheritance.py. What remains are
 ROOT-specific tests and tests without upstream equivalents.
 """
 
-import platform
-import sys, os, unittest
+import os
+import sys
+import unittest
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 if not os.path.exists('ScottCppyy.C'):
@@ -30,11 +34,10 @@ except ImportError:
 original_preload = os.environ.get('LD_PRELOAD', None)
 
 import ROOT
+
 ROOT.PyConfig.IgnoreCommandLineOptions = False
-from ROOT import gROOT, gInterpreter
-from ROOT import TClass, TObject, TFile
-from ROOT import TVector3, TGraph, TMatrixD
 import cppyy
+from ROOT import TClass, TFile, TGraph, TMatrixD, TObject, TVector3, gInterpreter, gROOT
 
 cleaned_preload = os.environ.get('LD_PRELOAD', None)
 
@@ -277,40 +280,40 @@ class Regression12WriteTGraph( MyTestCase ):
 
 ### TPyException had troubles due to its base class of std::exception ========
 class Regression14TPyException( MyTestCase ):
-   def test1PythonAccessToTPyException( self ):
-      """Load TPyException into python and make sure its usable"""
+    def test1PythonAccessToTPyException(self):
+        """Load TPyException into python and make sure its usable"""
 
-      # In exp PyROOT, TPyException is called PyException and it belongs
-      # to the CPyCppyy namespace.
-      # Also, it is not included in the PCH, so we need to include the
-      # header first
-      ROOT.gInterpreter.Declare("#include \"CPyCppyy/PyException.h\"")
-      e = ROOT.CPyCppyy.PyException()
-      self.assertTrue( e )
-      self.assertEqual( e.what(), "python exception" )
+        # In cppjit-based PyROOT, TPyException is called PyException and it
+        # belongs to the cppjit::cpyrt namespace.
+        # Also, it is not included in the PCH, so we need to include the
+        # header first
+        ROOT.gInterpreter.Declare('#include "cpyrt/PyException.h"')
+        e = ROOT.cppjit.cpyrt.PyException()
+        self.assertTrue(e)
+        self.assertEqual(e.what(), "python exception")
 
 
 ### matrix access has to go through non-const lookup =========================
 class Regression17MatrixD( MyTestCase ):
-   def test1MatrixElementAssignment( self ):
-      """Matrix lookup has to be non-const to allow assigment"""
+    def test1MatrixElementAssignment(self):
+        """Matrix lookup has to be non-const to allow assigment"""
 
-      m = TMatrixD( 5, 5 )
-      self.assertTrue( not 'const' in type(m[0]).__name__ )
+        m = TMatrixD(5, 5)
+        self.assertTrue("const" not in type(m[0]).__name__)
 
-    # test assignment
-      m[1][2] = 3.
-      self.assertEqual( m[1][2], 3. )
+        # test assignment
+        m[1][2] = 3.0
+        self.assertEqual(m[1][2], 3.0)
 
-      m[1, 2] = 4.
-      self.assertEqual( m[1][2], 4. )
+        m[1, 2] = 4.0
+        self.assertEqual(m[1][2], 4.0)
 
 
 ### Tests for TGL classes ================
 try:
-   from ROOT import TGLLine3, TGLVertex3, TGLVector3
+    from ROOT import TGLLine3, TGLVector3, TGLVertex3
 except ImportError:
-   print("GL classes not found, skipping GL tests")
+    print("GL classes not found, skipping GL tests")
 else:
    class Regression19TGL(MyTestCase):
       def test1TGLVertex3OperatorPlus(self):
