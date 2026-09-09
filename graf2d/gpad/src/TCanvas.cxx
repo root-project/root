@@ -814,12 +814,11 @@ void TCanvas::Close(Option_t *option)
       cd();
       TPad::Close(option);
 
-      if (!IsBatch() && !IsWeb()) {
-         DeleteCanvasPainter();
+      DeleteCanvasPainter();
 
-         if (fCanvasImp)
-            fCanvasImp->Close();
-      }
+      if (fCanvasImp)
+         fCanvasImp->Close();
+
       fCanvasID = -1;
       fBatch    = kTRUE;
 
