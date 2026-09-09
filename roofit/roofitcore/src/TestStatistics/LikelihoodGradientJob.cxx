@@ -94,12 +94,12 @@ void LikelihoodGradientJob::evaluate_task(std::size_t task)
 void LikelihoodGradientJob::send_back_task_result_from_worker(std::size_t task)
 {
    task_result_t task_result{id_, task, grad_[task]};
-   zmq::message_t message(sizeof(task_result_t));
+   RooFit::MultiProcess::Message message(sizeof(task_result_t));
    memcpy(message.data(), &task_result, sizeof(task_result_t));
    get_manager()->messenger().send_from_worker_to_master(std::move(message));
 }
 
-bool LikelihoodGradientJob::receive_task_result_on_master(const zmq::message_t &message)
+bool LikelihoodGradientJob::receive_task_result_on_master(const RooFit::MultiProcess::Message &message)
 {
    auto result = message.data<task_result_t>();
    grad_[result->task_id] = result->grad;
@@ -115,14 +115,14 @@ bool LikelihoodGradientJob::receive_task_result_on_master(const zmq::message_t &
 void LikelihoodGradientJob::update_workers_state()
 {
    // TODO optimization: only send changed parameters (now sending all)
-   zmq::message_t gradient_message(grad_.begin(), grad_.end());
-   zmq::message_t minuit_internal_x_message(minuit_internal_x_.begin(), minuit_internal_x_.end());
+   RooFit::MultiProcess::Message gradient_message(grad_.begin(), grad_.end());
+   RooFit::MultiProcess::Message minuit_internal_x_message(minuit_internal_x_.begin(), minuit_internal_x_.end());
    double maxFCN = minimizer_->maxFCN();
    double fcnOffset = minimizer_->fcnOffset();
    ++state_id_;
 
    if (shared_offset_.offsets() != offsets_previous_) {
-      zmq::message_t offsets_message(shared_offset_.offsets().begin(), shared_offset_.offsets().end());
+      RooFit::MultiProcess::Message offsets_message(shared_offset_.offsets().begin(), shared_offset_.offsets().end());
       get_manager()->messenger().publish_from_master_to_workers(
          id_, state_id_, isCalculating_, maxFCN, fcnOffset, std::move(gradient_message),
          std::move(minuit_internal_x_message), std::move(offsets_message));
@@ -157,14 +157,16 @@ void LikelihoodGradientJob::update_state()
       minimizer_->fcnOffset() = fcnOffset;
       assert(more);
 
-      auto gradient_message = get_manager()->messenger().receive_from_master_on_worker<zmq::message_t>(&more);
+      auto gradient_message =
+         get_manager()->messenger().receive_from_master_on_worker<RooFit::MultiProcess::Message>(&more);
       assert(more);
       auto gradient_message_begin = gradient_message.data<ROOT::Minuit2::DerivatorElement>();
       auto gradient_message_end =
          gradient_message_begin + gradient_message.size() / sizeof(ROOT::Minuit2::DerivatorElement);
       std::copy(gradient_message_begin, gradient_message_end, grad_.begin());
 
-      auto minuit_internal_x_message = get_manager()->messenger().receive_from_master_on_worker<zmq::message_t>(&more);
+      auto minuit_internal_x_message =
+         get_manager()->messenger().receive_from_master_on_worker<RooFit::MultiProcess::Message>(&more);
       auto minuit_internal_x_message_begin = minuit_internal_x_message.data<double>();
       auto minuit_internal_x_message_end =
          minuit_internal_x_message_begin + minuit_internal_x_message.size() / sizeof(double);
@@ -172,7 +174,8 @@ void LikelihoodGradientJob::update_state()
 
       if (more) {
          // offsets also incoming
-         auto offsets_message = get_manager()->messenger().receive_from_master_on_worker<zmq::message_t>(&more);
+         auto offsets_message =
+            get_manager()->messenger().receive_from_master_on_worker<RooFit::MultiProcess::Message>(&more);
          assert(!more);
          auto offsets_message_begin = offsets_message.data<ROOT::Math::KahanSum<double>>();
          std::size_t N_offsets = offsets_message.size() / sizeof(ROOT::Math::KahanSum<double>);

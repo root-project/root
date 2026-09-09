@@ -3,4 +3,3 @@ pythia8=ON
 test_distrdf_dask=OFF
 test_distrdf_pyspark=OFF
 vdt=OFF
-roofit_multiprocess=ON
