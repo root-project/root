@@ -352,20 +352,21 @@ std::vector<const ROOT::TSchemaRule *> ROOT::RRuleField::FindRules(const ROOT::R
    return rules;
 }
 
-void ROOT::RRuleField::AddReadCallbacksFromIORule(const TSchemaRule *rule)
+void ROOT::RRuleField::AddReadCallbacksFromIORule(const TSchemaRule *rule, std::size_t subObjectOffset)
 {
    auto func = rule->GetReadFunctionPointer();
    if (func == nullptr) {
       // Can happen for rename rules
       return;
    }
-   fReadCallbacks.emplace_back([func, stagingClass = fStagingClass, stagingArea = fStagingArea.get()](void *target) {
-      TVirtualObject onfileObj{nullptr};
-      onfileObj.fClass = stagingClass;
-      onfileObj.fObject = stagingArea;
-      func(static_cast<char *>(target), &onfileObj);
-      onfileObj.fObject = nullptr; // TVirtualObject does not own the value
-   });
+   fReadCallbacks.emplace_back(
+      [func, subObjectOffset, stagingClass = fStagingClass, stagingArea = fStagingArea.get()](void *target) {
+         TVirtualObject onfileObj{nullptr};
+         onfileObj.fClass = stagingClass;
+         onfileObj.fObject = stagingArea;
+         func(static_cast<char *>(target) + subObjectOffset, &onfileObj);
+         onfileObj.fObject = nullptr; // TVirtualObject does not own the value
+      });
 }
 
 //------------------------------------------------------------------------------
@@ -816,6 +817,11 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
          return realRecordMemberFields[recordFieldNameToIdx[name]];
       });
 
+      for (const RRule &r : soaBaseField->fRules) {
+         fRules.emplace_back(r);
+         fRules.back().fOffset += base->GetDelta();
+      }
+
       baseIdx++;
    }
 
@@ -851,6 +857,11 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
          GraftNestedMemberFields(*soaField, dataMember->GetOffset(), [&](const std::string &name) {
             return realRecordMemberFields[recordFieldNameToIdx[name]];
          });
+
+         for (const RRule &r : soaField->fRules) {
+            fRules.emplace_back(r);
+            fRules.back().fOffset += dataMember->GetOffset();
+         }
       } else if (auto vecField = dynamic_cast<RRVecField *>(dmField.get())) {
          if (vecField->begin()->GetTypeName() != underlyingField->GetTypeName() ||
              vecField->begin()->GetTypeAlias() != underlyingField->GetTypeAlias()) {
@@ -876,6 +887,10 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
    if (nDirectRecordSubfields != nMembers) {
       throw RException(R__FAIL("missing SoA members"));
    }
+
+   auto schemaRules = FindRules(nullptr);
+   for (const auto &r : schemaRules)
+      fRules.emplace_back(RRule{r, 0});
 }
 
 ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clSoA)
@@ -1021,9 +1036,42 @@ void ROOT::Experimental::RSoAField::ReadGlobalImpl(ROOT::NTupleSize_t globalInde
    }
 }
 
+std::unique_ptr<ROOT::RFieldBase>
+ROOT::Experimental::RSoAField::BeforeConnectPageSource(ROOT::Internal::RPageSource & /*pageSource*/)
+{
+   // Most of the heavy lifting is done by the actual subfields that map onto the on-disk AoS schema.
+   // In the SoA field itself, we only need to take care of the in-memory part of the rule processing.
+   // One complication is that for non-rename rules, we manually need to recurse into base (SoA) classes and
+   // nested (SoA) classes because we don't have them in the field tree.
+
+   // For now, allow only rename rules and whole-object rules
+
+   const bool hasSources = std::any_of(fRules.begin(), fRules.end(), [](const auto &r) {
+      return r.fRule->GetSource() && (r.fRule->GetSource()->GetEntries() > 0);
+   });
+   const bool hasTargets =
+      std::any_of(fRules.begin(), fRules.end(), [](const auto &r) { return r.fRule->GetTarget(); });
+
+   if (hasSources) {
+      throw RException(R__FAIL("I/O customization rules with sources are currently unsupported for SoA fields (" +
+                               GetTypeName() + ")"));
+   }
+
+   if (hasTargets) {
+      throw RException(R__FAIL("I/O customization rules with targets are currently unsupported for SoA fields (" +
+                               GetTypeName() + ")"));
+   }
+
+   for (const auto &r : fRules) {
+      AddReadCallbacksFromIORule(r.fRule, r.fOffset);
+   }
+
+   return nullptr;
+}
+
 void ROOT::Experimental::RSoAField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc, kDiffTypeVersion).ThrowOnError();
+   EnsureMatchingOnDiskField(desc, kDiffTypeName | kDiffTypeVersion).ThrowOnError();
 }
 
 void ROOT::Experimental::RSoAField::ConstructValue(void *where) const

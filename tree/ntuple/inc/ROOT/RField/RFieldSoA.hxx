@@ -63,6 +63,13 @@ class RSoAField : public RRuleField {
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
+   // A rule of the SoA type itself or one of its nested SoA types or base classes, togther with the offset
+   // of the nested object in the SoA type.
+   struct RRule {
+      const TSchemaRule *fRule = nullptr;
+      std::size_t fOffset = 0;
+   };
+
    TClass *fSoAClass = nullptr;
    /// Direct access to the member fields of the underlying record. In case of a nested SoA type, this vector
    /// contains the contents of the inner fRecordMemberFields, too. Effectively, this record will contain all the
@@ -74,6 +81,9 @@ class RSoAField : public RRuleField {
    ///< A deleter returned by each record member's GetDeleter()
    std::vector<std::unique_ptr<RDeleter>> fRecordMemberDeleters;
    ROOT::Internal::RColumnIndex fNWritten;
+
+   /// Contains the I/O customization rules for fSoAClass and all nested SoA classes and base classes.
+   std::vector<RRule> fRules;
 
    /// For reading and writing, the RVecs of the SoA class do not have a dedicated field. The in-memory RVecs of the
    /// SoA object are used directly with the subfields of the underlying record type. For splitting a SoA class object
@@ -90,7 +100,7 @@ class RSoAField : public RRuleField {
    RSoAField(std::string_view fieldName, TClass *clSoA);
 
    /// Called during construction, picks up the (nested) member fields of the underlying record type(s) and its
-   /// base classes.
+   /// base classes. Also fills fRules.
    void CollectRecordMemberFields();
    /// For a nested SoA struct (either as a member of as a base class), use their fRecordMemberFields in this class,
    /// i.e. "unroll" the vectors in the nested SoA struct into the SoA base class.
@@ -114,6 +124,7 @@ protected:
 
    void CommitClusterImpl() final { fNWritten = 0; }
 
+   std::unique_ptr<RFieldBase> BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
    TClass *GetInMemoryClass() const final { return fSoAClass; }
