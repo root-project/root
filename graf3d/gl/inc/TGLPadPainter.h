@@ -86,7 +86,7 @@ public:
    void     DestroyDrawable(Int_t device) override;
    void     SelectDrawable(Int_t device) override;
    void     UpdateDrawable(Int_t mode) override;
-   void     SetDrawMode(Int_t device, Int_t mode) override;
+   Bool_t   SetDrawMode(Int_t device, Int_t mode) override;
 
    void     InitPainter() override;
    void     InvalidateCS() override;

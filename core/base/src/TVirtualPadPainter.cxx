@@ -15,17 +15,15 @@
 #include "TAttLine.h"
 #include "TAttMarker.h"
 #include "TAttText.h"
-#include "TVirtualX.h"
 
 
 /** \class TVirtualPadPainter
 \ingroup Base
 
-To make it possible to use GL for 2D graphic in a TPad/TCanvas.
+To make it possible to use alternative 2D graphic engines in a TPad/TCanvas.
 TVirtualPadPainter interface must be used instead of TVirtualX.
-Internally, non-GL implementation _should_ delegate all calls
-to gVirtualX, GL implementation will delegate part of calls
-to gVirtualX, and has to implement some of the calls from the scratch.
+Historically the class was introduced to enable graphics in GL-based display
+Meanwhile it used to support PS, Web and many other graphical backends
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -193,18 +191,17 @@ const TAttText &TVirtualPadPainter::GetAttText() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set double buffer mode for specified device, redirect to gVirtualX
-
-void TVirtualPadPainter::SetDoubleBuffer(Int_t device, Int_t mode)
-{
-   // TODO: move to actual painter classes, call only for selected device
-   if (gVirtualX)
-      gVirtualX->SetDoubleBuffer(device, mode);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Draw image, need to be implemented in correspondent
 
 void TVirtualPadPainter::DrawImage(TImage *, Int_t, Int_t, Int_t)
 {
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set draw mode, see TVirtualX::EDrawMode for supportted values
+/// By default only kCopy = 1 mode is supported
+
+Bool_t TVirtualPadPainter::SetDrawMode(Int_t device, Int_t mode)
+{
+   return (device != -1) && (mode == 1);
 }

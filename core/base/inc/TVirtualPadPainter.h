@@ -102,11 +102,11 @@ public:
    virtual void     DestroyDrawable(Int_t device) = 0;//gVirtualX->CloseWindow
    virtual void     SelectDrawable(Int_t device) = 0;//gVirtualX->SelectWindow
    virtual void     UpdateDrawable(Int_t /* mode */) {}
-   virtual void     SetDrawMode(Int_t /* device */, Int_t /* mode */) {}
-   virtual void     SetDoubleBuffer(Int_t device, Int_t mode);
+   virtual Bool_t   SetDrawMode(Int_t device, Int_t mode);
+   virtual void     SetDoubleBuffer(Int_t /* device */, Int_t /* mode */) {}
 
 
-   //TASImage support.
+   //TASImage support - obsolete, no longer in use.
    virtual void     DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
                                Int_t dstX, Int_t dstY, Bool_t enableAlphaBlending) = 0;
    //
