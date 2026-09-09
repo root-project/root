@@ -53,7 +53,7 @@ private:
    ROOT::Internal::RPage fWritePage;
    /// The initial number of elements in a page
    ROOT::NTupleSize_t fInitialNElements = 1;
-   /// The number of elements written resp. available in the column
+   /// The number of elements written
    ROOT::NTupleSize_t fNElements = 0;
    /// The currently mapped page for reading
    ROOT::Internal::RPageRef fReadPageRef;
