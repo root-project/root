@@ -170,7 +170,9 @@ protected:
    void PrepareStagingArea(const std::vector<const TSchemaRule *> &rules, const ROOT::RNTupleDescriptor &desc,
                            const ROOT::RFieldDescriptor &classFieldId);
    /// Register post-read callback corresponding to a ROOT I/O customization rules.
-   void AddReadCallbacksFromIORule(const TSchemaRule *rule);
+   /// The sub object offset allows to apply the rule to a nested object within the passed target.
+   /// This is used to execute rules on base classes and nested classes in a SoA field.
+   void AddReadCallbacksFromIORule(const TSchemaRule *rule, std::size_t subObjectOffset = 0);
    /// Given the on-disk information from the page source, find all the I/O customization rules that apply
    /// to the class field at hand, to which the fieldDesc descriptor, if provided, must correspond.
    /// Fields may not have an on-disk representation (e.g., when inserted by schema evolution), in which case the passed
