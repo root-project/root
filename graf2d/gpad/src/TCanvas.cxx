@@ -1140,15 +1140,12 @@ void TCanvas::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 Bool_t TCanvas::FeedbackMode(Int_t set)
 {
-   if (IsWeb() || (fCanvasID == -1))
+   if (!fPainter || (fCanvasID == -1))
       return kFALSE;
 
    SetDoubleBuffer(set ? 0 : 1);  // switch double buffer
 
-   if (fPainter)
-      fPainter->SetDrawMode(fCanvasID, set ? TVirtualX::kInvert : TVirtualX::kCopy);
-
-   return kTRUE;
+   return fPainter->SetDrawMode(fCanvasID, set ? TVirtualX::kInvert : TVirtualX::kCopy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
