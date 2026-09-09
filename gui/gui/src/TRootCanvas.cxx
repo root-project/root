@@ -726,7 +726,11 @@ void TRootCanvas::Close()
       else gged->Hide();
    }
 
-   gVirtualX->CloseWindow();
+   if (fCanvasID != -1) {
+      gVirtualX->SelectWindow(fCanvasID);
+      gVirtualX->CloseWindow();
+      fCanvasID = -1;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
