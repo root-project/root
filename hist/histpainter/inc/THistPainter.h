@@ -71,6 +71,8 @@ protected:
    Int_t                 fYHighlightBin;          ///< Y highlight bin
    TF3                  *fCurrentF3;              ///< Current TF3 function
 
+   Int_t DetectProjectionKind(Option_t *option);
+
 private:
    mutable TString fObjectInfo;
 
