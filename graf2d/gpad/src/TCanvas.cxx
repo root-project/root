@@ -815,10 +815,6 @@ void TCanvas::Close(Option_t *option)
       TPad::Close(option);
 
       if (!IsBatch() && !IsWeb()) {
-         //select current canvas
-         if (fPainter)
-            fPainter->SelectDrawable(fCanvasID);
-
          DeleteCanvasPainter();
 
          if (fCanvasImp)
