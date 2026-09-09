@@ -41,36 +41,41 @@ void DynamicExec()
 
    static int pyold = 0;
 
-   float uxmin = gPad->GetUxmin();
-   float uxmax = gPad->GetUxmax();
-   int pxmin = gPad->XtoAbsPixel(uxmin);
-   int pxmax = gPad->XtoAbsPixel(uxmax);
+   if (!gPad->FeedbackMode(kTRUE)) {
+      Error("DynamicExec", "Feedback mode is not supported");
+      return;
+   }
    int px = gPad->GetEventX();
    int py = gPad->GetEventY();
    TObject *select = gPad->GetSelected();
+   float uxmin = gPad->GetUxmin();
+   float uxmax = gPad->GetUxmax();
+   auto c2 = static_cast<TCanvas *>(gROOT->GetListOfCanvases()->FindObject("c2"));
 
-   gPad->GetCanvas()->FeedbackMode(kTRUE);
-   if (pyold) {
-      // erase line at old position
-      gVirtualX->DrawLine(pxmin, pyold, pxmax, pyold);
-      pyold = 0;
-   }
-
-   if (!select || !select->InheritsFrom(TH2::Class()))
+   TH2 *h = dynamic_cast<TH2 *>(select);
+   if (!h)
       return;
 
-   TH2 *h = (TH2 *)select;
-
-   // draw a line at current position
-   gVirtualX->DrawLine(pxmin, py, pxmax, py);
-   pyold = py;
+   if (pyold) {
+      // erase line at old position
+      Float_t upyold = gPad->AbsPixeltoY(pyold);
+      gPad->PaintLine(uxmin, upyold, uxmax, upyold);
+      pyold = 0;
+   }
 
    Float_t upy = gPad->AbsPixeltoY(py);
    Float_t y = gPad->PadtoY(upy);
 
+   // draw a line at current position
+   gPad->GetPainter()->DrawLine(uxmin, upy, uxmax, upy);
+
+   // remember position of last painted line
+   pyold = py;
+
+   // remember active pad and restore it when leave function
+   TVirtualPad::TContext ctxt;
+
    // create or set the new canvas c2
-   TVirtualPad *padsav = gPad;
-   TCanvas *c2 = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("c2");
    if (c2)
       delete c2->GetPrimitive("Projection");
    else
@@ -88,5 +93,4 @@ void DynamicExec()
    hp->GetFunction("gaus")->SetLineColor(kRed);
    hp->GetFunction("gaus")->SetLineWidth(6);
    c2->Update();
-   padsav->cd();
 }
