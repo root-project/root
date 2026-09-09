@@ -113,7 +113,6 @@ in graphical user interface) see THistPainter::Paint
 #include "TGDoubleSlider.h"
 #include "TGSlider.h"
 #include "TView.h"
-#include "TCanvas.h"
 #include "TTreePlayer.h"
 #include "TSelectorDraw.h"
 #include "TGMsgBox.h"
@@ -1480,8 +1479,7 @@ void TH1Editor::DoHBar(Bool_t on)
 void TH1Editor::DoSliderMoved()
 {
    if (fAvoidSignal) return;
-   if (fGedEditor->GetPad()->GetCanvas())
-      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+   fGedEditor->GetPad()->FeedbackMode(kTRUE);
    fGedEditor->GetPad()->cd();
    if (fDelaydraw->GetState()==kButtonDown && fDim->GetState()==kButtonDown) {
       static Int_t px1,py1,px2,py2;
@@ -1494,8 +1492,7 @@ void TH1Editor::DoSliderMoved()
       py1   = fGedEditor->GetPad()->YtoAbsPixel(ymin);
       px2   = fGedEditor->GetPad()->XtoAbsPixel(xright);
       py2   = fGedEditor->GetPad()->YtoAbsPixel(ymax);
-      if (fGedEditor->GetPad()->GetCanvas())
-         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+      fGedEditor->GetPad()->FeedbackMode(kTRUE);
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
       fGedEditor->GetPad()->SetLineWidth(1);
@@ -1579,16 +1576,14 @@ void TH1Editor::DoSliderMoved()
 void TH1Editor::DoSliderPressed()
 {
    if (fAvoidSignal) return;
-   if (fGedEditor->GetPad()->GetCanvas())
-      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+   fGedEditor->GetPad()->FeedbackMode(kTRUE);
    fGedEditor->GetPad()->cd();
    static Float_t ymin,ymax,xleft,xright;
    Int_t sldmin = (Int_t)((fSlider->GetMinPosition())+0.5);
    Int_t sldmax = (Int_t)((fSlider->GetMaxPosition())+0.5);
    if (fDelaydraw->GetState() == kButtonDown &&
        fDim->GetState()==kButtonDown) {
-      if (fGedEditor->GetPad()->GetCanvas())
-         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+      fGedEditor->GetPad()->FeedbackMode(kTRUE);
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
       xleft = fHist->GetXaxis()->GetBinLowEdge(sldmin);
@@ -1617,8 +1612,7 @@ void TH1Editor::DoSliderPressed()
       fP5old[1] = fP6old[1] = fP7old[1] = fP8old[1] = rmax[1];
       fP1old[2] = fP2old[2] = fP5old[2] = fP6old[2] = rmin[2];
       fP3old[2] = fP4old[2] = fP7old[2] = fP8old[2] = rmax[2];
-      if (fGedEditor->GetPad()->GetCanvas())
-         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+      fGedEditor->GetPad()->FeedbackMode(kTRUE);
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
       PaintBox3D(fP2old, fP3old, fP7old, fP6old);
@@ -2398,8 +2392,7 @@ void TH1Editor::ChangeErrorCombo(Int_t i)
 
 void TH1Editor::PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4)
 {
-   if (fGedEditor->GetPad()->GetCanvas())
-      fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+   fGedEditor->GetPad()->FeedbackMode(kTRUE);
    fGedEditor->GetPad()->SetLineWidth(1);
    fGedEditor->GetPad()->SetLineColor(2);
    fGedEditor->GetPad()->cd();
