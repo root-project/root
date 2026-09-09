@@ -9,47 +9,47 @@
 ############################################################################
 
 set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
-  TBaseClass.h
-  TClassGenerator.h
-  TClass.h
-  TClassRef.h
-  TClassStreamer.h
-  TDataMember.h
-  TDataType.h
-  TDictAttributeMap.h
-  TDictionary.h
-  TEnumConstant.h
-  TEnum.h
-  TFileMergeInfo.h
-  TFunction.h
-  TFunctionTemplate.h
-  TGenericClassInfo.h
-  TGlobal.h
-  TInterpreter.h
-  TInterpreterValue.h
-  TIsAProxy.h
-  TListOfDataMembers.h
-  TListOfEnums.h
-  TListOfEnumsWithLock.h
-  TListOfFunctions.h
-  TListOfFunctionTemplates.h
-  TMemberStreamer.h
-  TMethodArg.h
-  TMethodCall.h
-  TMethod.h
-  TProtoClass.h
-  TRealData.h
-  TSchemaHelper.h
-  TSchemaRule.h
-  TSchemaRuleSet.h
-  TStatusBitsChecker.h
-  TStreamerElement.h
-  TStreamer.h
-  TVirtualIsAProxy.h
-  TVirtualRefProxy.h
-  TVirtualStreamerInfo.h
-  TVirtualArray.h
-  TVirtualObject.h
+  ROOT/TBaseClass.h
+  ROOT/TClassGenerator.h
+  ROOT/TClass.h
+  ROOT/TClassRef.h
+  ROOT/TClassStreamer.h
+  ROOT/TDataMember.h
+  ROOT/TDataType.h
+  ROOT/TDictAttributeMap.h
+  ROOT/TDictionary.h
+  ROOT/TEnumConstant.h
+  ROOT/TEnum.h
+  ROOT/TFileMergeInfo.h
+  ROOT/TFunction.h
+  ROOT/TFunctionTemplate.h
+  ROOT/TGenericClassInfo.h
+  ROOT/TGlobal.h
+  ROOT/TInterpreter.h
+  ROOT/TInterpreterValue.h
+  ROOT/TIsAProxy.h
+  ROOT/TListOfDataMembers.h
+  ROOT/TListOfEnums.h
+  ROOT/TListOfEnumsWithLock.h
+  ROOT/TListOfFunctions.h
+  ROOT/TListOfFunctionTemplates.h
+  ROOT/TMemberStreamer.h
+  ROOT/TMethodArg.h
+  ROOT/TMethodCall.h
+  ROOT/TMethod.h
+  ROOT/TProtoClass.h
+  ROOT/TRealData.h
+  ROOT/TSchemaHelper.h
+  ROOT/TSchemaRule.h
+  ROOT/TSchemaRuleSet.h
+  ROOT/TStatusBitsChecker.h
+  ROOT/TStreamerElement.h
+  ROOT/TStreamer.h
+  ROOT/TVirtualIsAProxy.h
+  ROOT/TVirtualRefProxy.h
+  ROOT/TVirtualStreamerInfo.h
+  ROOT/TVirtualArray.h
+  ROOT/TVirtualObject.h
 )
 
 target_sources(Core PRIVATE
@@ -91,6 +91,7 @@ target_sources(Core PRIVATE
 target_include_directories(Core
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT> # bw compatibility
 )
 
 ROOT_INSTALL_HEADERS()

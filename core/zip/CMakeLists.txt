@@ -14,6 +14,7 @@ target_include_directories(Core PRIVATE ../../builtins/zip)
 
 target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT> # bw compatibility
 )
 
 ROOT_INSTALL_HEADERS()

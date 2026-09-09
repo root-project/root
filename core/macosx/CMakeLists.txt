@@ -18,9 +18,11 @@ target_link_libraries(Core PRIVATE
 )
 
 if(cocoa)
-  set_property(TARGET Core APPEND PROPERTY DICT_HEADERS TMacOSXSystem.h)
+  set_property(TARGET Core APPEND PROPERTY DICT_HEADERS ROOT/TMacOSXSystem.h)
 
-  target_include_directories(Core PRIVATE inc)
+  target_include_directories(Core PRIVATE inc
+  inc/ROOT # bw compatibility
+  )
 
   find_library(COCOA_FRAMEWORK Cocoa REQUIRED)
   target_link_libraries(Core PRIVATE ${COCOA_FRAMEWORK})
@@ -31,7 +33,9 @@ if(cocoa)
   )
 
   target_compile_options(Macosx PRIVATE -ObjC++)
-  target_include_directories(Macosx PRIVATE ../unix/inc)
+  target_include_directories(Macosx PRIVATE ../unix/inc/
+  ../unix/inc/ROOT # bw compatibility
+  )
 
   target_sources(Core PRIVATE $<TARGET_OBJECTS:Macosx>)
 
