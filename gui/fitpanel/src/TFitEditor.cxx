@@ -2862,7 +2862,7 @@ void TFitEditor::DrawSelection(bool restore)
    px2 = gPad->XtoAbsPixel(xright);
    py2 = gPad->YtoAbsPixel(ymax);
 
-   if (gPad->GetCanvas()) gPad->GetCanvas()->FeedbackMode(kTRUE);
+   gPad->FeedbackMode(kTRUE);
    gPad->SetLineWidth(1);
    gPad->SetLineColor(2);
 #ifndef R__HAS_COCOA
