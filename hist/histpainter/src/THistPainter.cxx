@@ -10875,7 +10875,7 @@ LZMIN:
 /// This function returns the best format to print the error value (e)
 /// knowing the parameter value (v) and the format (f) used to print it.
 
-const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
+const char *THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
 {
 
    static TString ef;
@@ -10927,7 +10927,7 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set projection.
 
-void THistPainter::SetShowProjection(const char *option,Int_t nbins)
+void THistPainter::SetShowProjection(const char *option, Int_t nbins)
 {
    if (fShowProjection2) {
       auto name2 = TString::Format("c_%zx_projection2_%d", (size_t)fH, fShowProjection2);
@@ -10942,35 +10942,53 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
       fShowProjection = 0;
    }
 
-   if (nbins <= 0) return;
+   if (nbins <= 0)
+      return;
 
    if ((fH->GetDimension() == 3) && (gPad->GetGLDevice() != -1)) {
       Error("SetShowProjection", "TH3 projections do not work in GL mode");
       return;
    }
 
+   // just try to switch feedback mode
+   if (!gPad->FeedbackMode(kTRUE))
+      return;
+   gPad->FeedbackMode(kFALSE);
+
    TString opt = option;
    opt.ToLower();
    Int_t projection = 0;
-   if (opt.Contains("x"))  projection = 1;
-   if (opt.Contains("y"))  projection = 2;
-   if (opt.Contains("z"))  projection = 3;
-   if (opt.Contains("xy")) projection = 4;
-   if (opt.Contains("yx")) projection = 5;
-   if (opt.Contains("xz")) projection = 6;
-   if (opt.Contains("zx")) projection = 7;
-   if (opt.Contains("yz")) projection = 8;
-   if (opt.Contains("zy")) projection = 9;
-   if (projection < 4) fShowOption = option+1;
-   else                fShowOption = option+2;
-   fShowProjection = projection+100*nbins;
+   if (opt.BeginsWith("xy"))
+      projection = 4;
+   else if (opt.BeginsWith("yx"))
+      projection = 5;
+   else if (opt.BeginsWith("xz"))
+      projection = 6;
+   else if (opt.BeginsWith("zx"))
+      projection = 7;
+   else if (opt.BeginsWith("yz"))
+      projection = 8;
+   else if (opt.BeginsWith("zy"))
+      projection = 9;
+   else if (opt.BeginsWith("x"))
+      projection = 1;
+   else if (opt.BeginsWith("y"))
+      projection = 2;
+   else if (opt.BeginsWith("z"))
+      projection = 3;
+   else
+      return;
+
+   fShowOption = option + (projection < 4 ? 1 : 2);
+   fShowProjection = projection + 100 * nbins;
    fShowProjection2 = 0;
+
    gROOT->MakeDefCanvas();
    gPad->SetName(TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection).Data());
    gPad->SetGrid();
 }
 
-void THistPainter::SetShowProjectionXY(const char *option,Int_t nbinsY,Int_t nbinsX)
+void THistPainter::SetShowProjectionXY(const char *option, Int_t nbinsY, Int_t nbinsX)
 {
    if (fShowProjection2) {
       auto name2 = TString::Format("c_%zx_projection2_%d", (size_t)fH, fShowProjection2);
@@ -10995,19 +11013,31 @@ void THistPainter::SetShowProjectionXY(const char *option,Int_t nbinsY,Int_t nbi
    TString opt = option;
    opt.ToLower();
    Int_t projection = 0;
-   if (opt.Contains("x"))  projection = 1;
-   if (opt.Contains("y"))  projection = 2;
-   if (opt.Contains("z"))  projection = 3;
-   if (opt.Contains("xy")) projection = 4;
-   if (opt.Contains("yx")) projection = 5;
-   if (opt.Contains("xz")) projection = 6;
-   if (opt.Contains("zx")) projection = 7;
-   if (opt.Contains("yz")) projection = 8;
-   if (opt.Contains("zy")) projection = 9;
-   if (projection < 4) fShowOption = option+1;
-   else                fShowOption = option+2;
-   fShowProjection = projection+100*nbinsY;
-   fShowProjection2 = projection+100*nbinsX;
+   if (opt.BeginsWith("xy"))
+      projection = 4;
+   else if (opt.BeginsWith("yx"))
+      projection = 5;
+   else if (opt.BeginsWith("xz"))
+      projection = 6;
+   else if (opt.BeginsWith("zx"))
+      projection = 7;
+   else if (opt.BeginsWith("yz"))
+      projection = 8;
+   else if (opt.BeginsWith("zy"))
+      projection = 9;
+   else if (opt.BeginsWith("x"))
+      projection = 1;
+   else if (opt.BeginsWith("y"))
+      projection = 2;
+   else if (opt.BeginsWith("z"))
+      projection = 3;
+   else
+      return;
+
+   fShowOption = option + (projection < 4 ? 1 : 2);
+   fShowProjection = projection + 100*nbinsY;
+   fShowProjection2 = projection + 100*nbinsX;
+
    gROOT->MakeDefCanvas();
    gPad->SetName(TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection).Data());
    gPad->SetGrid();
@@ -11050,23 +11080,22 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
    // Create or set the new canvas proj x
    TVirtualPad::TContext ctxt(true);
    auto name1 = TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
-   auto c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(name1.Data());
-   if (c) {
-      c->Clear();
-   } else {
+   auto c = static_cast<TVirtualPad *>(gROOT->GetListOfCanvases()->FindObject(name1.Data()));
+   if (!c) {
       fShowProjection = 0;
       fShowProjection2 = 0;
       pyold1 = pyold2 = 0;
       return;
    }
+
+   c->Clear();
    c->cd();
    c->SetLogy(ctxt.GetSaved()->GetLogz());
    c->SetLogx(ctxt.GetSaved()->GetLogx());
 
    // Draw slice corresponding to mouse position
    TString prjName = TString::Format("slice_px_of_%s",fH->GetName());
-   TH1D *hp = ((TH2*)fH)->ProjectionX(prjName, biny1, biny2);
-   if (hp) {
+   if (auto hp = ((TH2*)fH)->ProjectionX(prjName, biny1, biny2)) {
       hp->SetFillColor(38);
       // apply a patch from Oliver Freyermuth to set the title in the projection
       // using the range of the projected Y values
@@ -11095,7 +11124,7 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
       }
       hp->SetXTitle(fH->GetXaxis()->GetTitle());
       hp->SetYTitle(((TH2*)fH)->GetZaxis()->GetTitle() ? ((TH2*)fH)->GetZaxis()->GetTitle() : "Number of Entries");
-      hp->Draw();
+      c->Add(hp, fShowOption);
       c->Update();
    }
 }
@@ -11138,24 +11167,22 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
    TString name2 = fShowProjection2 ? TString::Format("c_%zx_projection2_%d", (size_t)fH, fShowProjection2)
                                     : TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
 
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(name2.Data());
-   if (c) {
-      c->Clear();
-   } else {
+   auto c = static_cast<TVirtualPad *>(gROOT->GetListOfCanvases()->FindObject(name2.Data()));
+   if (!c) {
       fShowProjection = 0;
       fShowProjection2 = 0;
-      pxold1 = 0;
-      pxold2 = 0;
+      pxold1 = pxold2 = 0;
       return;
    }
+
+   c->Clear();
    c->cd();
    c->SetLogy(ctxt.GetSaved()->GetLogz());
    c->SetLogx(ctxt.GetSaved()->GetLogy());
 
    // Draw slice corresponding to mouse position
    TString prjName = TString::Format("slice_py_of_%s",fH->GetName());
-   TH1D *hp = ((TH2*)fH)->ProjectionY(prjName, binx1, binx2);
-   if (hp) {
+   if (auto hp = ((TH2*)fH)->ProjectionY(prjName, binx1, binx2)) {
       hp->SetFillColor(38);
       // apply a patch from Oliver Freyermuth to set the title in the projection
       // using the range of the projected X values
@@ -11164,7 +11191,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
          Double_t valueTo     = fH->GetXaxis()->GetBinUpEdge(binx1);
          // Limit precision to 1 digit more than the difference between upper and lower bound (to also catch 121.5-120.5).
          Int_t valuePrecision = -TMath::Nint(TMath::Log10(valueTo-valueFrom))+1;
-         if (fH->GetXaxis()->GetLabels() != nullptr) {
+         if (fH->GetXaxis()->GetLabels()) {
             hp->SetTitle(TString::Format("ProjectionY of binx=%d [x=%.*lf..%.*lf] [%s]", binx1, valuePrecision, valueFrom, valuePrecision, valueTo, fH->GetXaxis()->GetBinLabel(binx1)));
          } else {
             hp->SetTitle(TString::Format("ProjectionY of binx=%d [x=%.*lf..%.*lf]", binx1, valuePrecision, valueFrom, valuePrecision, valueTo));
@@ -11176,7 +11203,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
          // binx1 is used here to get equal precision no matter how large the binrange is,
          // otherwise precision may change when moving the mouse to the histogram boundaries (limiting effective binrange).
          Int_t valuePrecision = -TMath::Nint(TMath::Log10(fH->GetXaxis()->GetBinUpEdge(binx1)-valueFrom))+1;
-         if (fH->GetXaxis()->GetLabels() != nullptr) {
+         if (fH->GetXaxis()->GetLabels()) {
             hp->SetTitle(TString::Format("ProjectionY of binx=[%d,%d] [x=%.*lf..%.*lf] [%s..%s]", binx1, binx2, valuePrecision, valueFrom, valuePrecision, valueTo, fH->GetXaxis()->GetBinLabel(binx1), fH->GetXaxis()->GetBinLabel(binx2)));
          } else {
             hp->SetTitle(TString::Format("ProjectionY of binx=[%d,%d] [x=%.*lf..%.*lf]", binx1, binx2, valuePrecision, valueFrom, valuePrecision, valueTo));
@@ -11184,7 +11211,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
       }
       hp->SetXTitle(fH->GetYaxis()->GetTitle());
       hp->SetYTitle(((TH2*)fH)->GetZaxis()->GetTitle() ? ((TH2*)fH)->GetZaxis()->GetTitle() : "Number of Entries");
-      hp->Draw(fShowProjection2 ? "hbar" : "");
+      c->Add(hp, fShowProjection2 ? "hbar" + fShowOption : fShowOption);
       c->Update();
    }
 }
@@ -11229,7 +11256,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
    if (!parent.FeedbackMode(kTRUE))
       return;
 
-   // Erase old position and draw a line at current position
    auto view = parent.GetView();
    auto pp = parent.GetPainter();
    if (!view || !pp)
@@ -11239,29 +11265,26 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
    if ((parent.GetUxmin() == parent.GetUxmax()) || (parent.GetUymin() == parent.GetUymax()))
       return;
 
+   // stored vertices
+   static Double_t rect1x[5] = {0,0,0,0,0}, rect1y[5] = {0,0,0,0,0}, rect2x[5] = {0,0,0,0,0}, rect2y[5] = {0,0,0,0,0};
+
    auto cname = TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
-   auto c = static_cast<TVirtualPad*>(gROOT->GetListOfCanvases()->FindObject(cname));
-   if (!c) {
-      fShowProjection = 0;
-      return;
-   }
-
+   auto c = static_cast<TVirtualPad *>(gROOT->GetListOfCanvases()->FindObject(cname));
    auto h3 = dynamic_cast<TH3 *>(fH);
-   if (!h3) {
+
+   if (!c || !h3) {
       fShowProjection = 0;
+      rect1x[0] = 0;
       return;
    }
 
-   TAxis *xaxis = h3->GetXaxis();
-   TAxis *yaxis = h3->GetYaxis();
-   TAxis *zaxis = h3->GetZaxis();
+   TAxis *xaxis = fH->GetXaxis();
+   TAxis *yaxis = fH->GetYaxis();
+   TAxis *zaxis = fH->GetZaxis();
 
    const Int_t iMin = -111;
    const Int_t iMax = -11;
    const Int_t kMaxDist = 50; // maximal distance to detect bin
-
-   // stored vertices
-   static Double_t rect1x[5] = {0,0,0,0,0}, rect1y[5] = {0,0,0,0,0}, rect2x[5] = {0,0,0,0,0}, rect2y[5] = {0,0,0,0,0};
 
    auto getx = [iMin, iMax](TAxis *axis, Int_t indx) {
       return indx == iMin ? axis->GetBinLowEdge(axis->GetFirst())
@@ -11295,13 +11318,11 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
 
       for (Int_t i1 = axis1->GetFirst(); i1 <= axis1->GetLast(); ++i1)
          for (Int_t i2 = axis2->GetFirst(); i2 <= axis2->GetLast(); ++i2) {
-
             switch(name) {
                case 'x': yindx = i1; zindx = i2; break;
                case 'y': xindx = i1; zindx = i2; break;
                default: xindx = i1; yindx = i2; break;
             }
-
             Double_t v[3] = {getx(xaxis, xindx), getx(yaxis, yindx), getx(zaxis, zindx)};
             Double_t ndc[3];
             view->WCtoNDC(v, ndc);
@@ -11417,7 +11438,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
                                              binz, binz2, zaxis->GetBinLowEdge(binz), zaxis->GetBinUpEdge(binz2) ) );
             hp->SetXTitle(xaxis->GetTitle());
             hp->SetYTitle("Number of Entries");
-            c->Add(hp, fShowOption.Data());
+            c->Add(hp, fShowOption);
          }
          break;
       }
@@ -11455,7 +11476,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
                                              binz, binz2, zaxis->GetBinLowEdge(binz), zaxis->GetBinUpEdge(binz2) ) );
             hp->SetXTitle(yaxis->GetTitle());
             hp->SetYTitle("Number of Entries");
-            c->Add(hp, fShowOption.Data());
+            c->Add(hp, fShowOption);
          }
          break;
       }
@@ -11492,7 +11513,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
                                              biny, biny2, yaxis->GetBinLowEdge(biny), yaxis->GetBinUpEdge(biny2) ) );
             hp->SetXTitle(zaxis->GetTitle());
             hp->SetYTitle("Number of Entries");
-            c->Add(hp, fShowOption.Data());
+            c->Add(hp, fShowOption);
          }
          break;
       }
@@ -11534,7 +11555,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
                hp->SetYTitle(yaxis->GetTitle());
             }
             hp->SetZTitle("Number of Entries");
-            c->Add(hp, fShowOption.Data());
+            c->Add(hp, fShowOption);
          }
          break;
       }
@@ -11578,7 +11599,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
                hp->SetYTitle(zaxis->GetTitle());
             }
             hp->SetZTitle("Number of Entries");
-            c->Add(hp, fShowOption.Data());
+            c->Add(hp, fShowOption);
          }
          break;
       }
@@ -11620,7 +11641,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
                hp->SetYTitle(zaxis->GetTitle());
             }
             hp->SetZTitle("Number of Entries");
-            c->Add(hp, fShowOption.Data());
+            c->Add(hp, fShowOption);
          }
          break;
       }
