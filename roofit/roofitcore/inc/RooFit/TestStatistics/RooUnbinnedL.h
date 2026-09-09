@@ -52,6 +52,7 @@ private:
    mutable ROOT::Math::KahanSum<double> cachedResult_{0.};
    std::shared_ptr<RooFit::Evaluator> evaluator_;  ///<! For batched evaluation
    std::stack<std::vector<double>> _vectorBuffers; // used for preserving resources in batched evaluation
+   std::vector<double> _unitWeights;               ///<! all-ones weights for unweighted data in batched evaluation
 };
 
 } // namespace TestStatistics
