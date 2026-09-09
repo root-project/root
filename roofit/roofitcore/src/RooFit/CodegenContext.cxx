@@ -25,6 +25,7 @@
 #include <locale>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace {
 
@@ -166,13 +167,35 @@ std::unique_ptr<CodegenContext::LoopScope> CodegenContext::beginLoop(RooAbsArg c
 
    std::vector<TNamed const *> vars;
 
+   // Figure out which vector observables are in the server tree of "in" with
+   // a single depth-first traversal that visits each node only once. This is
+   // equivalent to calling RooAbsArg::dependsOn() for each vector observable,
+   // but much faster for large computation graphs: dependsOn() doesn't
+   // deduplicate the visited nodes, so its cost scales with the number of
+   // paths in the graph instead of the number of nodes.
+   std::unordered_set<TNamed const *> reachableVecObs;
+   {
+      std::unordered_set<RooAbsArg const *> visited;
+      std::vector<RooAbsArg const *> stack{in};
+      while (!stack.empty()) {
+         RooAbsArg const *arg = stack.back();
+         stack.pop_back();
+         if (!visited.insert(arg).second)
+            continue;
+         if (_vecObsIndices.find(arg->namePtr()) != _vecObsIndices.end())
+            reachableVecObs.insert(arg->namePtr());
+         for (RooAbsArg const *server : arg->servers())
+            stack.push_back(server);
+      }
+   }
+
    // Set the results of the vector observables.
    // TODO: we are using the size of the first loop variable to the the number
    // of iterations, but it should be made sure that all loop vars are either
    // scalar or have the same size.
    int firstObsIdx = -1;
    for (auto const &it : _vecObsIndices) {
-      if (!in->dependsOn(it.first))
+      if (reachableVecObs.find(it.first) == reachableVecObs.end())
          continue;
 
       vars.push_back(it.first);
