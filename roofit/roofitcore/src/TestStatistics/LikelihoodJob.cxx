@@ -74,7 +74,7 @@ void LikelihoodJob::update_state()
       case update_state_mode::parameters: {
          state_id_ = get_manager()->messenger().receive_from_master_on_worker<RooFit::MultiProcess::State>(&more);
          assert(more);
-         auto message = get_manager()->messenger().receive_from_master_on_worker<zmq::message_t>(&more);
+         auto message = get_manager()->messenger().receive_from_master_on_worker<RooFit::MultiProcess::Message>(&more);
          auto message_begin = message.data<update_state_t>();
          auto message_end = message_begin + message.size() / sizeof(update_state_t);
          std::vector<update_state_t> to_update(message_begin, message_end);
@@ -88,7 +88,8 @@ void LikelihoodJob::update_state()
 
          if (more) {
             // offsets also incoming
-            auto offsets_message = get_manager()->messenger().receive_from_master_on_worker<zmq::message_t>(&more);
+            auto offsets_message =
+               get_manager()->messenger().receive_from_master_on_worker<RooFit::MultiProcess::Message>(&more);
             assert(!more);
             auto offsets_message_begin = offsets_message.data<ROOT::Math::KahanSum<double>>();
             std::size_t N_offsets = offsets_message.size() / sizeof(ROOT::Math::KahanSum<double>);
@@ -166,11 +167,12 @@ void LikelihoodJob::updateWorkersParameters()
       bool update_offsets = isOffsetting() && shared_offset_.offsets() != offsets_previous_;
       if (!to_update.empty() || update_offsets) {
          ++state_id_;
-         zmq::message_t message(to_update.begin(), to_update.end());
+         RooFit::MultiProcess::Message message(to_update.begin(), to_update.end());
          // always send Job id first! This is used in worker_loop to route the
          // update_state call to the correct Job.
          if (update_offsets) {
-            zmq::message_t offsets_message(shared_offset_.offsets().begin(), shared_offset_.offsets().end());
+            RooFit::MultiProcess::Message offsets_message(shared_offset_.offsets().begin(),
+                                                          shared_offset_.offsets().end());
             get_manager()->messenger().publish_from_master_to_workers(id_, update_state_mode::parameters, state_id_,
                                                                       std::move(message), std::move(offsets_message));
             offsets_previous_ = shared_offset_.offsets();
@@ -246,12 +248,12 @@ void LikelihoodJob::send_back_task_result_from_worker(std::size_t /*task*/)
    }
 
    task_result_t task_result{id_, result_.Result(), result_.Carry(), numErrors > 0};
-   zmq::message_t message(sizeof(task_result_t));
+   RooFit::MultiProcess::Message message(sizeof(task_result_t));
    memcpy(message.data(), &task_result, sizeof(task_result_t));
    get_manager()->messenger().send_from_worker_to_master(std::move(message));
 }
 
-bool LikelihoodJob::receive_task_result_on_master(const zmq::message_t &message)
+bool LikelihoodJob::receive_task_result_on_master(const RooFit::MultiProcess::Message &message)
 {
    auto task_result = message.data<task_result_t>();
    results_.emplace_back(task_result->value, task_result->carry);

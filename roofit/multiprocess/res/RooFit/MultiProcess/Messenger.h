@@ -15,6 +15,9 @@
 
 #include "RooFit/MultiProcess/Messenger_decl.h"
 
+#include <sstream>
+#include <unistd.h> // getpid
+
 #ifdef NDEBUG
 #undef NDEBUG
 #define turn_NDEBUG_back_on
@@ -34,16 +37,14 @@ void Messenger::send_from_worker_to_queue(T item, Ts... items)
    debug_print(ss.str());
 #endif
 
-   zmqSvc().send(*this_worker_qw_push_, item, send_flag_);
-   //      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
+   send_item(this_worker_qw_, item, /*more=*/false);
    send_from_worker_to_queue(items...);
 }
 
 template <typename value_t>
 value_t Messenger::receive_from_worker_on_queue(std::size_t this_worker_id)
 {
-   qw_pull_poller_[this_worker_id].ppoll(-1, &ppoll_sigmask);
-   auto value = zmqSvc().receive<value_t>(*qw_pull_[this_worker_id], zmq::recv_flags::dontwait);
+   auto value = receive_item<value_t>(qw_[this_worker_id]);
 
 #ifndef NDEBUG
    std::stringstream ss;
@@ -63,16 +64,14 @@ void Messenger::send_from_queue_to_worker(std::size_t this_worker_id, T item, Ts
    debug_print(ss.str());
 #endif
 
-   zmqSvc().send(*qw_push_[this_worker_id], item, send_flag_);
-   //      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
+   send_item(qw_[this_worker_id], item, /*more=*/false);
    send_from_queue_to_worker(this_worker_id, items...);
 }
 
 template <typename value_t>
 value_t Messenger::receive_from_queue_on_worker()
 {
-   qw_pull_poller_[0].ppoll(-1, &ppoll_sigmask);
-   auto value = zmqSvc().receive<value_t>(*this_worker_qw_pull_, zmq::recv_flags::dontwait);
+   auto value = receive_item<value_t>(this_worker_qw_);
 
 #ifndef NDEBUG
    std::stringstream ss;
@@ -94,16 +93,14 @@ void Messenger::send_from_queue_to_master(T item, Ts... items)
    debug_print(ss.str());
 #endif
 
-   zmqSvc().send(*mq_push_, item, send_flag_);
-   //      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
+   send_item(mq_, item, /*more=*/false);
    send_from_queue_to_master(items...);
 }
 
 template <typename value_t>
 value_t Messenger::receive_from_queue_on_master()
 {
-   mq_pull_poller_.ppoll(-1, &ppoll_sigmask);
-   auto value = zmqSvc().receive<value_t>(*mq_pull_, zmq::recv_flags::dontwait);
+   auto value = receive_item<value_t>(mq_);
 
 #ifndef NDEBUG
    std::stringstream ss;
@@ -123,16 +120,14 @@ void Messenger::send_from_master_to_queue(T item, Ts... items)
    debug_print(ss.str());
 #endif
 
-   zmqSvc().send(*mq_push_, item, send_flag_);
-   //      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
+   send_item(mq_, item, /*more=*/false);
    send_from_master_to_queue(items...);
 }
 
 template <typename value_t>
 value_t Messenger::receive_from_master_on_queue()
 {
-   mq_pull_poller_.ppoll(-1, &ppoll_sigmask);
-   auto value = zmqSvc().receive<value_t>(*mq_pull_, zmq::recv_flags::dontwait);
+   auto value = receive_item<value_t>(mq_);
 
 #ifndef NDEBUG
    std::stringstream ss;
@@ -145,7 +140,7 @@ value_t Messenger::receive_from_master_on_queue()
 
 // -- MASTER - WORKER COMMUNICATION --
 
-/// specialization that sends the final message
+/// specialization that sends the final part of a message
 template <typename T>
 void Messenger::publish_from_master_to_workers(T &&item)
 {
@@ -155,10 +150,12 @@ void Messenger::publish_from_master_to_workers(T &&item)
    debug_print(ss.str());
 #endif
 
-   zmqSvc().send(*mw_pub_, std::forward<T>(item), send_flag_);
+   for (auto &channel : mw_) {
+      send_item(channel, item, /*more=*/false);
+   }
 }
 
-/// specialization that queues first parts of multipart messages
+/// specialization that sends the first parts of multipart messages
 template <typename T, typename T2, typename... Ts>
 void Messenger::publish_from_master_to_workers(T &&item, T2 &&item2, Ts &&...items)
 {
@@ -168,15 +165,16 @@ void Messenger::publish_from_master_to_workers(T &&item, T2 &&item2, Ts &&...ite
    debug_print(ss.str());
 #endif
 
-   zmqSvc().send(*mw_pub_, std::forward<T>(item), send_flag_ | zmq::send_flags::sndmore);
+   for (auto &channel : mw_) {
+      send_item(channel, item, /*more=*/true);
+   }
    publish_from_master_to_workers(std::forward<T2>(item2), std::forward<Ts>(items)...);
 }
 
 template <typename value_t>
 value_t Messenger::receive_from_master_on_worker(bool *more)
 {
-   mw_sub_poller_.ppoll(-1, &ppoll_sigmask);
-   auto value = zmqSvc().receive<value_t>(*mw_sub_, zmq::recv_flags::dontwait, more);
+   auto value = receive_item<value_t>(this_worker_mw_, more);
 
 #ifndef NDEBUG
    std::stringstream ss;
@@ -187,7 +185,7 @@ value_t Messenger::receive_from_master_on_worker(bool *more)
    return value;
 }
 
-/// specialization that sends the final message
+/// specialization that sends the final part of a message
 template <typename T>
 void Messenger::send_from_worker_to_master(T &&item)
 {
@@ -197,10 +195,10 @@ void Messenger::send_from_worker_to_master(T &&item)
    debug_print(ss.str());
 #endif
 
-   zmqSvc().send(*wm_push_, std::forward<T>(item), send_flag_);
+   send_item(this_worker_mw_, item, /*more=*/false);
 }
 
-/// specialization that queues first parts of multipart messages
+/// specialization that sends the first parts of multipart messages
 template <typename T, typename T2, typename... Ts>
 void Messenger::send_from_worker_to_master(T &&item, T2 &&item2, Ts &&...items)
 {
@@ -210,20 +208,24 @@ void Messenger::send_from_worker_to_master(T &&item, T2 &&item2, Ts &&...items)
    debug_print(ss.str());
 #endif
 
-   zmqSvc().send(*wm_push_, std::forward<T>(item), send_flag_ | zmq::send_flags::sndmore);
-   //      if (sizeof...(items) > 0) {  // this will only work with if constexpr, c++17
+   send_item(this_worker_mw_, item, /*more=*/true);
    send_from_worker_to_master(std::forward<T2>(item2), std::forward<Ts>(items)...);
 }
 
 template <typename value_t>
 value_t Messenger::receive_from_worker_on_master(bool *more)
 {
-   wm_pull_poller_.ppoll(-1, &ppoll_sigmask);
-   auto value = zmqSvc().receive<value_t>(*wm_pull_, zmq::recv_flags::dontwait, more);
+   Channel &channel = select_worker_channel_on_master();
+   bool more_parts = false;
+   auto value = receive_item<value_t>(channel, &more_parts);
+   update_worker_channel_on_master(channel, more_parts);
+   if (more) {
+      *more = more_parts;
+   }
 
 #ifndef NDEBUG
    std::stringstream ss;
-   ss << "PID " << getpid() << " receives M2W " << value;
+   ss << "PID " << getpid() << " receives W2M " << value;
    debug_print(ss.str());
 #endif
 

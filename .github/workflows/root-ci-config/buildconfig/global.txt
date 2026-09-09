@@ -68,7 +68,6 @@ pyroot=ON
 pythia8=OFF
 qt6web=OFF
 roofit=ON
-roofit_multiprocess=OFF
 root7=ON
 rootbench=OFF
 roottest=ON
