@@ -34,20 +34,8 @@ TEST(TestMPMessenger, Connections)
       }
    }
    RooFit::MultiProcess::Messenger messenger(pm);
-   if (pm.is_master()) {
-      // more SIGCHLD handling
-      sigset_t sigmask;
-      sigemptyset(&sigmask);
-      sigaddset(&sigmask, SIGCHLD);
-      int rc = sigprocmask(SIG_BLOCK, &sigmask, &messenger.ppoll_sigmask);
-      if (rc < 0) {
-         throw std::runtime_error("sigprocmask failed in TestMPMessenger.Connections");
-      }
-   }
    messenger.test_connections(pm);
    if (pm.is_master()) {
-      // clean up signal management modifications
-      sigprocmask(SIG_SETMASK, &messenger.ppoll_sigmask, nullptr);
       sa.sa_handler = SIG_DFL;
       if (sigaction(SIGCHLD, &sa, nullptr) < 0) {
          std::perror("sigaction failed");
@@ -58,9 +46,9 @@ TEST(TestMPMessenger, Connections)
 
 TEST(TestMPMessenger, ConnectionsManualExit)
 {
-   // the point of this test is to see whether clean-up of ZeroMQ resources is done properly without calling any
-   // destructors (which is what happens when you call _Exit() instead of regularly ending the program by reaching the
-   // end of main()).
+   // the point of this test is to see whether clean-up of the communication resources is done properly without calling
+   // any destructors (which is what happens when you call _Exit() instead of regularly ending the program by reaching
+   // the end of main()).
 
    struct sigaction sa;
 
@@ -75,16 +63,6 @@ TEST(TestMPMessenger, ConnectionsManualExit)
       }
    }
    RooFit::MultiProcess::Messenger messenger(pm);
-   if (pm.is_master()) {
-      // more SIGCHLD handling
-      sigset_t sigmask;
-      sigemptyset(&sigmask);
-      sigaddset(&sigmask, SIGCHLD);
-      int rc = sigprocmask(SIG_BLOCK, &sigmask, &messenger.ppoll_sigmask);
-      if (rc < 0) {
-         throw std::runtime_error("sigprocmask failed in TestMPMessenger.Connections");
-      }
-   }
    messenger.test_connections(pm);
    if (!pm.is_master()) {
       // just wait until we get terminated
@@ -95,8 +73,6 @@ TEST(TestMPMessenger, ConnectionsManualExit)
       pm.terminate();
    }
    if (pm.is_master()) {
-      // clean up signal management modifications
-      sigprocmask(SIG_SETMASK, &messenger.ppoll_sigmask, nullptr);
       sa.sa_handler = SIG_DFL;
       if (sigaction(SIGCHLD, &sa, nullptr) < 0) {
          std::perror("sigaction failed");

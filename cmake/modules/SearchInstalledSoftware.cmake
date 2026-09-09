@@ -1071,32 +1071,6 @@ if (mpi)
   endif()
 endif()
 
-#---Check for ZeroMQ when building RooFit::MultiProcess--------------------------------------------
-
-if (roofit_multiprocess)
-    message(STATUS "Looking for ZeroMQ (libzmq)")
-
-    # Temporarily prefer config mode over module mode, so that a CMake-installed system version
-    # gets detected before looking for an autotools-installed system version (which the
-    # FindZeroMQ.cmake module does).
-    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG_ORIGINAL_VALUE ${CMAKE_FIND_PACKAGE_PREFER_CONFIG})
-    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
-
-    # The fail-on-missing branching is not implemented, and we always look for
-    # ZeroMQ and cppzmq with REQUIRED to fail configuration if not available.
-    # That's because the roofit_multiprocess option can only be deliberately
-    # enabled by the user with roofit_multiprocess=ON, in which case it would
-    # be frustrating to get it auto-disabled on missing dependencies.
-    find_package(ZeroMQ 4.3.5 REQUIRED)
-
-    # Reset default find_package mode
-    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ${CMAKE_FIND_PACKAGE_PREFER_CONFIG_ORIGINAL_VALUE})
-    unset(CMAKE_FIND_PACKAGE_PREFER_CONFIG_ORIGINAL_VALUE)
-
-    message(STATUS "Looking for ZeroMQ C++ bindings (cppzmq)")
-    find_package(cppzmq REQUIRED)
-endif (roofit_multiprocess)
-
 #---Check for googletest---------------------------------------------------------------
 if (testing OR testsupport)
   if (builtin_gtest)

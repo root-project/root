@@ -154,7 +154,6 @@ ROOT_BUILD_OPTION(pyroot ON "Enable support for automatic Python bindings (PyROO
 ROOT_BUILD_OPTION(pythia8 OFF "Enable support for Pythia 8.x [GPL]")
 ROOT_BUILD_OPTION(qt6web OFF "Enable support for Qt6 web-based display (requires Qt6::WebEngineCore and Qt6::WebEngineWidgets)")
 ROOT_BUILD_OPTION(roofit ON "Build the advanced fitting package RooFit, and RooStats for statistical tests. If xml is available, also build HistFactory.")
-ROOT_BUILD_OPTION(roofit_multiprocess OFF "Build RooFit::MultiProcess and multi-process RooFit::TestStatistics classes (requires ZeroMQ >= 4.3.5 built with -DENABLE_DRAFTS and cppzmq).")
 ROOT_BUILD_OPTION(root7 ON "Build ROOT 7 experimental components of ROOT")
 ROOT_BUILD_OPTION(runtime_cxxmodules ON "Enable runtime support for C++ modules")
 ROOT_BUILD_OPTION(shadowpw OFF "Enable support for shadow passwords")
@@ -306,11 +305,6 @@ if(builtin_openssl AND NOT APPLE)
     message(FATAL_ERROR ">>> Option 'builtin_openssl' is only supported on macOS.")
 endif()
 
-# MultiProcess is not possible on Windows, so fail if it is manually set:
-if(roofit_multiprocess AND WIN32)
-    message(FATAL_ERROR ">>> Option 'roofit_multiprocess' is not supported on Windows.")
-endif()
-
 #---Options depending of CMake Generator-------------------------------------------------------
 if( CMAKE_GENERATOR STREQUAL Ninja)
    set(fortran_defvalue OFF)
@@ -394,6 +388,10 @@ foreach(opt afdsmgrd afs alien bonjour builtin_afterimage builtin_davix builtin_
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
+if(DEFINED roofit_multiprocess)
+  message(DEPRECATION ">>> Option 'roofit_multiprocess' has no effect anymore and will be removed in the next release of ROOT: RooFit::MultiProcess no longer needs ZeroMQ and is now always built on all platforms except Windows.")
+endif()
+
 foreach(opt mpi r tmva-pymva)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")

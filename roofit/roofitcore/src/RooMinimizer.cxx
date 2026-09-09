@@ -181,8 +181,7 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, Config const &cfg) : _function{
             RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
 #else
          throw std::logic_error(
-            "Parallel minimization requested, but ROOT was not compiled with multiprocessing enabled, "
-            "please recompile with -Droofit_multiprocess=ON for parallel evaluation");
+            "Parallel minimization requested, but multiprocessing is not supported on this platform");
 #endif
       } else { // modular test statistic non parallel
          coutW(InputArguments)
@@ -355,9 +354,7 @@ int RooMinimizer::minimize(const char *type, const char *alg)
 #ifdef ROOFIT_MULTIPROCESS
       addParamsToProcessTimer();
 #else
-      throw std::logic_error("ProcessTimer, but ROOT was not compiled with multiprocessing enabled, "
-                             "please recompile with -Droofit_multiprocess=ON for logging with the "
-                             "ProcessTimer.");
+      throw std::logic_error("ProcessTimer requested, but multiprocessing is not supported on this platform.");
 #endif
    }
    _fcn->Synchronize(_config.ParamsSettings());

@@ -15,6 +15,7 @@
 
 #include "RooFit/MultiProcess/types.h"
 #include "NoopJob.h"
+#include <unordered_map>
 #include <vector>
 
 class OrderTrackingJob : public NoopJob {
@@ -24,7 +25,7 @@ public:
    {
    }
 
-   bool receive_task_result_on_master(const zmq::message_t &message) override
+   bool receive_task_result_on_master(const RooFit::MultiProcess::Message &message) override
    {
       auto result = message.data<task_result_t>();
       received_task_order[id_].push_back(result->task_id);

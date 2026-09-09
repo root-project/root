@@ -14,6 +14,8 @@
 #define ROOT_NOOPJOB_H
 
 #include "RooFit/MultiProcess/Job.h"
+
+#include <cassert>
 // needed to complete type returned from...
 #include "RooFit/MultiProcess/JobManager.h"     // ... Job::get_manager()
 #include "RooFit/MultiProcess/ProcessManager.h" // ... JobManager::process_manager()
@@ -48,12 +50,12 @@ public:
    void send_back_task_result_from_worker(std::size_t task) override
    {
       task_result_t task_result{id_, task};
-      zmq::message_t message(sizeof(task_result_t));
+      RooFit::MultiProcess::Message message(sizeof(task_result_t));
       memcpy(message.data(), &task_result, sizeof(task_result_t));
       get_manager()->messenger().send_from_worker_to_master(std::move(message));
    }
 
-   bool receive_task_result_on_master(const zmq::message_t &message) override
+   bool receive_task_result_on_master(const RooFit::MultiProcess::Message &message) override
    {
       /*auto result =*/ message.data<task_result_t>();
       --N_tasks_at_workers_;

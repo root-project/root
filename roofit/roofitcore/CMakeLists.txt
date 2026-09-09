@@ -9,7 +9,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-if(roofit_multiprocess)
+if(NOT WIN32)
   set(RooFitMPTestStatisticsSources
     src/TestStatistics/LikelihoodGradientJob.cxx
     src/TestStatistics/LikelihoodJob.cxx
@@ -496,7 +496,7 @@ if(roofit_legacy_eval_backend)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_LEGACY_EVAL_BACKEND)
 endif()
 
-if(roofit_multiprocess)
+if(NOT WIN32)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_MULTIPROCESS)
 endif()
 

@@ -48,6 +48,7 @@ The following people have contributed to this new version:
 * The overloads of `RooAbsReal::createChi2()` and `RooAbsReal::chi2FitTo()` that take unbinned **RooDataSet** data objects were deprecated in ROOT 6.40 and are now removed.
 * The **RooStats::HybridPlot** class and the related **HybridResult::GetPlot** method were deprecated in ROOT 6.40 and are now removed.
 * The `builtin_zeromq` and `builtin_cppzmq` build options that were deprecated in ROOT 6.40 are now removed.
+* The `roofit_multiprocess` build option is deprecated and will be removed in ROOT 6.44. It has no effect anymore: RooFit's multi-process test statistics no longer depend on ZeroMQ and are now always built on non-Windows platforms, so there is no reason for an opt-in build option anymore (see the RooFit section below).
 * The ROOT **auth** package together with `TVirtualAuth` and `TROOT::GetListOfSecContexts()`, and the **authenticated sockets** (`TSocket::CreateAuthSocket()`) feature are now removed following deprecation in ROOT 6.40.
 * The `TSSLSocket` class is now removed following deprecation in ROOT 6.40.
 * The bindings to the R programming language that are enabled with the `r=ON` or `tmva-rmva=ON` build options (`TRInterface`, RMVA, and friends) are removed, following deprecation in ROOT 6.40. Their maintenance is no longer justified, given the broader adoption of the scientific Python ecosystem. Users who still rely on R from C++ are encouraged to call R directly via https://cran.r-project.org/package=RInside, which is what the ROOT bindings were using internally.
@@ -160,6 +161,13 @@ Note that in a selection, a NaN evaluates as `false`, so entries where the `sqrt
 the cut instead of being selected based on `sqrt(abs(x))`.
 
 ## RooFit
+
+### RooFit::MultiProcess without ZeroMQ, now enabled by default
+
+The `RooFit::MultiProcess` package that implements the parallel gradient minimization with `fitTo(..., RooFit::Parallelize(n))` previously communicated between the forked processes with ZeroMQ sockets, which required building ROOT with `roofit_multiprocess=ON` and the ZeroMQ (with draft API) and cppzmq dependencies.
+The interprocess communication is now implemented directly on top of plain `socketpair()` pipes that are inherited by the forked worker processes, so the ZeroMQ and cppzmq dependencies and the `RooFitZMQ` library are removed entirely.
+Since the feature no longer needs extra dependencies, it is now always built on non-Windows platforms and the `roofit_multiprocess` build option has no effect anymore; it is deprecated and will be removed in ROOT 6.44.
+For implementers of custom `RooFit::MultiProcess::Job` subclasses, the message type in the `Job` interface changed from `zmq::message_t` to the new `RooFit::MultiProcess::Message` byte-buffer class, which supports the same usage patterns.
 
 ### Small changes
 

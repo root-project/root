@@ -29,13 +29,13 @@ namespace MultiProcess {
  * Classes inheriting from Job must implement the pure virtual methods:
  * - void evaluate_task(std::size_t task)
  * - void send_back_task_result_from_worker(std::size_t task)
- * - void receive_task_result_on_master(const zmq::message_t & message)
+ * - void receive_task_result_on_master(const Message & message)
  *
  * An example/reference implementation can be found in test_Job.cxx.
  *
  * Most Jobs will also want to override the virtual update_state() function.
  * This function can be used to send and receive state from master to worker.
- * In the worker loop, when something is received over the ZeroMQ "SUB" socket,
+ * In the worker loop, when a state update is received from the master process,
  * update_state() is called to put the received data into the right places,
  * thus updating for instance parameter values on the worker that were updated
  * since the last call on the master side.
@@ -130,10 +130,10 @@ void Job::gather_worker_results()
 
 /// \brief Virtual function to update any necessary state on workers
 ///
-/// This function is called from the worker loop when something is received
-/// over the ZeroMQ "SUB" socket. The master process sends messages to workers
-/// on its "PUB" socket. Thus, we can update, for instance, parameter values
-/// on the worker that were updated since the last call on the master side.
+/// This function is called from the worker loop when a state update message
+/// from the master process is received. Thus, we can update, for instance,
+/// parameter values on the worker that were updated since the last call on
+/// the master side.
 /// \note Implementers: make sure to also update the state_id_ member.
 void Job::update_state() {}
 
