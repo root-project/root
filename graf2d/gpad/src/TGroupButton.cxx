@@ -184,7 +184,7 @@ void TGroupButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             return;
          }
          pad = canvas->GetRefPad();
-         if (pad) pad->GetCanvas()->FeedbackMode(kFALSE);
+         if (pad) pad->FeedbackMode(kFALSE);
          canvas->Apply(GetTitle());   //just in case the apply button executes some code
          if (pad) {
             pad->Modified(kTRUE);
