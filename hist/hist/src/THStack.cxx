@@ -715,39 +715,34 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint, Bool_t rebuild_stac
    if (!fHists) return;
    if (!fHists->GetSize()) return;
 
-   char option[128];
-   strlcpy(option,choptin,128);
+   TString opt = choptin;
+   opt.ToLower();
 
    // Automatic color
-   char *l1 = strstr(option,"pfc"); // Automatic Fill Color
-   char *l2 = strstr(option,"plc"); // Automatic Line Color
-   char *l3 = strstr(option,"pmc"); // Automatic Marker Color
-   if (l1 || l2 || l3) {
-      TString opt1 = option;
-      if (l1) memcpy(l1,"   ",3);
-      if (l2) memcpy(l2,"   ",3);
-      if (l3) memcpy(l3,"   ",3);
-      TString ws = option;
-      if (ws.IsWhitespace()) strncpy(option,"\0",1);
+   Bool_t pfc = opt.Contains("pfc"); // Automatic Fill Color
+   Bool_t plc = opt.Contains("plc"); // Automatic Line Color
+   Bool_t pmc = opt.Contains("pmc"); // Automatic Marker Color
+   if (pfc || plc || pmc) {
       Int_t nhists = fHists->GetSize();
-      gPad->IncrementPaletteColor(nhists, opt1);
+      gPad->IncrementPaletteColor(nhists, opt);
       for (Int_t i = 0; i < nhists; i++) {
          auto ic = gPad->NextPaletteColor();
          auto hAti = static_cast<TH1 *>(fHists->At(i));
-         if (l1) hAti->SetFillColor(ic);
-         if (l2) hAti->SetLineColor(ic);
-         if (l3) hAti->SetMarkerColor(ic);
+         if (pfc) hAti->SetFillColor(ic);
+         if (plc) hAti->SetLineColor(ic);
+         if (pmc) hAti->SetMarkerColor(ic);
          if (fStack) {
             auto hsAti = static_cast<TH1 *>(fStack->At(i));
-            if (l1) hsAti->SetFillColor(ic);
-            if (l2) hsAti->SetLineColor(ic);
-            if (l3) hsAti->SetMarkerColor(ic);
+            if (pfc) hsAti->SetFillColor(ic);
+            if (plc) hsAti->SetLineColor(ic);
+            if (pmc) hsAti->SetMarkerColor(ic);
          }
       }
+      opt.ReplaceAll("pfc", "");
+      opt.ReplaceAll("plc", "");
+      opt.ReplaceAll("pmc", "");
    }
 
-   TString opt = option;
-   opt.ToLower();
    opt.ReplaceAll(" ","");
    Bool_t lsame = kFALSE;
    if (opt.Contains("same")) {
@@ -850,10 +845,10 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint, Bool_t rebuild_stac
    }
 
    Double_t themax,themin;
-   if (fMaximum == -1111) themax = GetMaximum(option);
+   if (fMaximum == -1111) themax = GetMaximum(choptin);
    else                   themax = fMaximum;
    if (fMinimum == -1111) {
-      themin = GetMinimum(option);
+      themin = GetMinimum(choptin);
       if (gPad->GetLogy()){
          if (themin>0)  themin *= .9;
          else           themin = themax*1.e-3;
