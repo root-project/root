@@ -25,13 +25,15 @@ target_link_libraries(Imt PRIVATE Thread INTERFACE Core)
 
 if(imt)
   target_link_libraries(Imt PRIVATE TBB::tbb)
-  
-  ROOT_GENERATE_DICTIONARY(G__Imt STAGE1
+  set(IMT_HEADERS
     ROOT/TTaskGroup.hxx
     ROOT/RTaskArena.hxx
     ROOT/RSlotStack.hxx
     ROOT/TExecutor.hxx
     ROOT/TThreadExecutor.hxx
+  )
+  ROOT_GENERATE_DICTIONARY(G__Imt STAGE1
+    ${IMT_HEADERS}
     LINKDEF
       LinkDef.h
     MODULE
@@ -52,8 +54,11 @@ if(imt)
 
   ROOT_ADD_TEST_SUBDIRECTORY(test)
 else()
-  ROOT_GENERATE_DICTIONARY(G__Imt STAGE1
+  set(IMT_HEADERS
     ROOT/TExecutor.hxx
+  )
+  ROOT_GENERATE_DICTIONARY(G__Imt STAGE1
+    ${IMT_HEADERS}
     LINKDEF
       LinkDef.h
     MODULE
@@ -61,6 +66,22 @@ else()
     DEPENDENCIES
       Core
       ${MULTIPROC_LIB}
+  )
+endif()
+
+set(RELATIVE_INC_HEADERS ${IMT_HEADERS})
+list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
+
+if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
+  target_sources(
+      Imt
+      PRIVATE
+      FILE_SET private_header_files
+      TYPE HEADERS
+      BASE_DIRS inc/
+      FILES
+          ${RELATIVE_INC_HEADERS}
+          inc/LinkDef.h
   )
 endif()
 
