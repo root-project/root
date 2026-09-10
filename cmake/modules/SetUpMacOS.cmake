@@ -10,7 +10,10 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
   MESSAGE(STATUS "Found a macOS system")
 
   if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
-    set(libcxx ON CACHE BOOL "Build using libc++" FORCE)
+    if (NOT libcxx)
+      message(SEND_ERROR "libcxx=ON is needed for Clang compilers")
+      list(APPEND HOTFIX_BUILD_FLAGS -Dlibcxx=ON)
+    endif()
   endif()
 
   #TODO: check haveconfig and rpath -> set rpath true
