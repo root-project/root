@@ -3609,6 +3609,46 @@ def make_Max():
     return _model(graph, opset=13, ir_version=8, producer_name='onnx-example')
 
 
+def make_MinInt64():
+    """Ops: Min. The n-ary operators on a non-float type."""
+    nodes = [
+        helper.make_node('Min', ['input0', 'input1', 'input2'], ['output']),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'min_int64_test',
+        inputs=[
+            _vi('input0', INT64, [5]),
+            _vi('input1', INT64, [5]),
+            _vi('input2', INT64, [5]),
+        ],
+        outputs=[
+            _vi('output', INT64, [5]),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name='onnx-example')
+
+
+def make_MaxInt64():
+    """Ops: Max. The n-ary operators on a non-float type."""
+    nodes = [
+        helper.make_node('Max', ['input0', 'input1', 'input2'], ['output']),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'max_int64_test',
+        inputs=[
+            _vi('input0', INT64, [5]),
+            _vi('input1', INT64, [5]),
+            _vi('input2', INT64, [5]),
+        ],
+        outputs=[
+            _vi('output', INT64, [5]),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name='onnx-example')
+
+
 def make_MaxMultidirectionalBroadcast():
     """Ops: Max"""
     nodes = [
@@ -4641,6 +4681,137 @@ def make_ReduceMean_kFirst():
     return _model(graph, opset=13, ir_version=13)
 
 
+def make_ReduceMax():
+    """Ops: ReduceMax"""
+    nodes = [
+        helper.make_node('ReduceMax', ['input', 'axes'], ['output'], keepdims=0),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'reducemax_test',
+        inputs=[
+            _vi('input', FLOAT, [1, 2, 3]),
+        ],
+        outputs=[
+            _vi('output', FLOAT, [1, 3]),
+        ],
+        initializer=[_tensor('axes', INT64, [1], [1])],
+    )
+    return _model(graph, opset=18, ir_version=10, producer_name='onnx-example')
+
+
+def make_ReduceMin():
+    """Ops: ReduceMin"""
+    nodes = [
+        helper.make_node('ReduceMin', ['input', 'axes'], ['output'], keepdims=0),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'reducemin_test',
+        inputs=[
+            _vi('input', FLOAT, [1, 2, 3]),
+        ],
+        outputs=[
+            _vi('output', FLOAT, [1, 3]),
+        ],
+        initializer=[_tensor('axes', INT64, [1], [1])],
+    )
+    return _model(graph, opset=18, ir_version=10, producer_name='onnx-example')
+
+
+def make_EluDynShape():
+    """Ops: Elu. Elu on a tensor with a parametric first dimension."""
+    nodes = [
+        helper.make_node('Elu', ['input'], ['output'], alpha=1.0),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'elu_dynshape_test',
+        inputs=[
+            _vi('input', FLOAT, ['N', 4]),
+        ],
+        outputs=[
+            _vi('output', FLOAT, ['N', 4]),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name='onnx-example')
+
+
+def make_TopKWithDynShapeK():
+    """Ops: Shape, Gather, Min, Unsqueeze, TopK.
+
+    K is not an initializer here: it is min(N, 4) with N the parametric first
+    dimension, so it reaches TopK as a shape tensor through the n-ary Min."""
+    nodes = [
+        helper.make_node('Shape', ['input'], ['shape']),
+        helper.make_node('Gather', ['shape', 'zero'], ['n'], axis=0),
+        helper.make_node('Min', ['n', 'four'], ['k']),
+        helper.make_node('Unsqueeze', ['k', 'zero_1d'], ['k_1d']),
+        helper.make_node('TopK', ['input', 'k_1d'], ['values', 'indices'],
+                         axis=0, largest=1, sorted=1),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'topk_dyn_k_test',
+        inputs=[
+            _vi('input', FLOAT, ['N', 3]),
+        ],
+        outputs=[
+            _vi('values', FLOAT, [None, 3]),
+            _vi('indices', INT64, [None, 3]),
+        ],
+        initializer=[
+            _tensor('zero', INT64, [], [0]),
+            _tensor('four', INT64, [], [4]),
+            _tensor('zero_1d', INT64, [1], [0]),
+        ],
+    )
+    return _model(graph, opset=18, ir_version=10, producer_name='onnx-example')
+
+
+def make_ReduceMean_kMiddle_DynShape():
+    """Ops: ReduceMean. Reduction over an interior axis of a tensor with a
+    parametric outer dimension, i.e. the case whose index arithmetic used to be
+    generated wrong."""
+    nodes = [
+        helper.make_node('ReduceMean', ['input', 'axes'], ['output'], keepdims=0),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'reducemean_kmiddle_dynshape_test',
+        inputs=[
+            _vi('input', FLOAT, ['N', 3, 4]),
+        ],
+        outputs=[
+            _vi('output', FLOAT, ['N', 4]),
+        ],
+        initializer=[_tensor('axes', INT64, [1], [1])],
+    )
+    return _model(graph, opset=18, ir_version=10, producer_name='onnx-example')
+
+
+def make_TopKLargestUnsorted():
+    """Ops: TopK with largest=1 and sorted=0, which used to ignore largest and
+    return the K smallest elements."""
+    nodes = [
+        helper.make_node('TopK', ['input', 'k'], ['values', 'indices'],
+                         axis=-1, largest=1, sorted=0),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'topk_largest_unsorted_test',
+        inputs=[
+            _vi('input', FLOAT, [2, 6]),
+        ],
+        outputs=[
+            _vi('values', FLOAT, [2, 3]),
+            _vi('indices', INT64, [2, 3]),
+        ],
+        initializer=[_tensor('k', INT64, [1], [3])],
+    )
+    return _model(graph, opset=18, ir_version=10, producer_name='onnx-example')
+
+
 def make_ReduceProd():
     """Ops: ReduceProd"""
     nodes = [
@@ -5356,6 +5527,7 @@ MODELS = {
     'Einsum_matmul': make_Einsum_matmul,
     'Elu': make_Elu,
     'EluAlpha': make_EluAlpha,
+    'EluDynShape': make_EluDynShape,
     'Equal': make_Equal,
     'Erf': make_Erf,
     'Exp': make_Exp,
@@ -5409,6 +5581,7 @@ MODELS = {
     'MatMul_Stacked': make_MatMul_Stacked,
     'MatMul_Stacked2': make_MatMul_Stacked2,
     'Max': make_Max,
+    'MaxInt64': make_MaxInt64,
     'MaxMultidirectionalBroadcast': make_MaxMultidirectionalBroadcast,
     'MaxPool1d': make_MaxPool1d,
     'MaxPool2d': make_MaxPool2d,
@@ -5418,6 +5591,7 @@ MODELS = {
     'MaxPool2d_CeilMode_Pads': make_MaxPool2d_CeilMode_Pads,
     'MaxPool3d': make_MaxPool3d,
     'MeanMultidirectionalBroadcast': make_MeanMultidirectionalBroadcast,
+    'MinInt64': make_MinInt64,
     'MinMultidirectionalBroadcast': make_MinMultidirectionalBroadcast,
     'Mod_ConstantFolding': make_Mod_ConstantFolding,
     'Mul': make_Mul,
@@ -5444,8 +5618,11 @@ MODELS = {
     'RangeWithDynShapeStartDelta': make_RangeWithDynShapeStartDelta,
     'Range_ConstantFolding': make_Range_ConstantFolding,
     'Reciprocal': make_Reciprocal,
+    'ReduceMax': make_ReduceMax,
     'ReduceMean': make_ReduceMean,
     'ReduceMean_kFirst': make_ReduceMean_kFirst,
+    'ReduceMean_kMiddle_DynShape': make_ReduceMean_kMiddle_DynShape,
+    'ReduceMin': make_ReduceMin,
     'ReduceProd': make_ReduceProd,
     'ReduceSum': make_ReduceSum,
     'ReduceSumSquare': make_ReduceSumSquare,
@@ -5474,6 +5651,8 @@ MODELS = {
     'Tanh': make_Tanh,
     'Tile5D': make_Tile5D,
     'TopK': make_TopK,
+    'TopKLargestUnsorted': make_TopKLargestUnsorted,
+    'TopKWithDynShapeK': make_TopKWithDynShapeK,
     'Where': make_Where,
 }
 
@@ -5507,6 +5686,10 @@ def rand_f32(seed, shape):
 
 
 TEST_INPUTS = {
+    'MaxInt64': [i64([1, -7, 3, 100, 0], (5,)), i64([2, -2, -3, 50, 0], (5,)), i64([0, 5, 9, 75, 1], (5,))],
+    'MinInt64': [i64([1, -7, 3, 100, 0], (5,)), i64([2, -2, -3, 50, 0], (5,)), i64([0, 5, 9, 75, 1], (5,))],
+    'ReduceMax': [f32([5, 2, 3, 5, 5, 4], (1, 2, 3))],
+    'ReduceMin': [f32([5, 2, 3, 5, 5, 4], (1, 2, 3))],
     'Add': [
         f32([1.0, 2.0], (2,)),
         f32([0.0, 1.0], (2,)),
