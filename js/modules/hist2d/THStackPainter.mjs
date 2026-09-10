@@ -214,7 +214,9 @@ class THStackPainter extends ObjectPainter {
             hopt = hopt.slice(0, p + 3) + hopt.slice(p + 4);
       }
       if (!o.pads)
-         hopt += ' same nostat' + o.auto;
+         hopt += ' same nostat';
+      if (!this.getPadPainter()?.getSnapId())
+         hopt += o.auto;
       return hopt;
    }
 
