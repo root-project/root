@@ -14,5 +14,15 @@ ROOTTEST_ADD_TEST(basket
 # Verify that it does.
 ROOTTEST_ADD_TEST(corrupted_basket
                   COPY_TO_BUILDDIR corrupted.root
-                  COMMAND ${ROOT_root_CMD} -q -l -e "(new TFile(\"corrupted.root\"))->template Get<TTree>(\"tree\")->GetEntry(0)"
+                  COMMAND ${ROOT_root_CMD} -b -q -l -e "(new TFile(\"corrupted.root\"))->template Get<TTree>(\"tree\")->GetEntry(0)"
                   PASSREGEX "Inconsistent length for the entry offset buffer \\(4210752 events for a buffer size of 4\\)")
+
+ROOT_ADD_TEST(test_TBasket_Resize
+   COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/test_basket_resize.C
+   OUTREF basketresize.ref
+)
+
+ROOT_ADD_TEST(test_TBasket_ReadResetBuffer
+   COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/test_basket_readreset.C
+   OUTREF basketreadreset.ref
+)
