@@ -62,7 +62,7 @@ public:
       // known only symbolically (e.g. it depends on one of the input dimensions)
       Dim kdim;
       if (model.IsShapeTensor(fNK)) {
-         auto & kvalues = model.GetShapeTensorValues(fNK);
+         auto &kvalues = model.GetShapeTensorValues(fNK);
          if (kvalues.size() != 1)
             throw std::runtime_error("TMVA SOFIE TopK Op input tensor K = " + fNK + " must be a single value");
          kdim = kvalues[0];
@@ -71,7 +71,8 @@ public:
          kdim = Dim{static_cast<size_t>(*kptr)};
          model.SetNotWritableInitializedTensor(fNK);
       } else {
-         throw std::runtime_error("TMVA SOFIE TopK Op input tensor K = " + fNK + " must be known at initialization time");
+         throw std::runtime_error("TMVA SOFIE TopK Op input tensor K = " + fNK +
+                                  " must be known at initialization time");
       }
       fAttrAxis = fAttrAxis < 0 ? fShapeX.size() + fAttrAxis : fAttrAxis;
       if(static_cast<size_t>(fAttrAxis) >=  fShapeX.size()){
@@ -80,9 +81,10 @@ public:
       }
       // fK cannot be larger that axis dimension
       if (kdim.isParam || fShapeX[fAttrAxis].isParam)
-         fK = Dim{std::string("std::min(size_t(" + kdim.GetVal() + "), size_t(" + fShapeX[fAttrAxis].GetVal() + "))" ), static_cast<size_t>(-1) };
+         fK = Dim{std::string("std::min(size_t(" + kdim.GetVal() + "), size_t(" + fShapeX[fAttrAxis].GetVal() + "))"),
+                  static_cast<size_t>(-1)};
       else
-         fK = Dim { std::min(kdim.dim, fShapeX[fAttrAxis].dim) };
+         fK = Dim{std::min(kdim.dim, fShapeX[fAttrAxis].dim)};
 
       // output shape is equal to input shape apart for value in fAttrAxis
       fShapeY = fShapeX;
@@ -184,20 +186,19 @@ public:
             out << SP << SP << SP << "b_ = ~b_;\n"; // reverse the value order, keep index ascending
          out << SP << SP << SP << "elements[l] = (static_cast<uint64_t>(b_) << 32) | static_cast<uint32_t>(l);\n";
       } else {
-         out << SP << SP << SP << "elements[l] = std::make_pair(tensor_" << fNX << "[xoffset + "
-             << strideX[axis] << "*l + j], l);\n";
+         out << SP << SP << SP << "elements[l] = std::make_pair(tensor_" << fNX << "[xoffset + " << strideX[axis]
+             << "*l + j], l);\n";
       }
       out << SP << SP << "}\n";
 
       // Move the K selected elements to the front in linear time, then order just those.
       // std::partial_sort would be O(n log K) with heap operations over the whole range.
       std::string cmp = packed ? "" : (", " + OpName + "_cmp");
-      out << SP << SP << "std::nth_element(elements.begin(), elements.begin() + (" << fK
-          << "), elements.end()" << cmp << ");\n";
+      out << SP << SP << "std::nth_element(elements.begin(), elements.begin() + (" << fK << "), elements.end()" << cmp
+          << ");\n";
       // The ONNX spec leaves the order unspecified when sorted=0, but we sort anyway: it is
       // only O(K log K) and it keeps the generated code reproducible across standard libraries.
-      out << SP << SP << "std::sort(elements.begin(), elements.begin() + (" << fK << ")"
-          << cmp << ");\n";
+      out << SP << SP << "std::sort(elements.begin(), elements.begin() + (" << fK << ")" << cmp << ");\n";
 
       // copy the selected elements in the output
       out << SP << SP << "for (size_t l = 0; l < " << fK << "; l++) {\n";

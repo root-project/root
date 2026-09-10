@@ -21,7 +21,8 @@ struct NaryOperatorTraits {};
 template<typename T>
 struct NaryOperatorTraits<T, EBasicNaryOperator::Max> {
    static const std::string Name() {return "Max";}
-   static std::string Expr(const std::vector<std::string>& inputs) {
+   static std::string Expr(const std::vector<std::string> &inputs)
+   {
       std::stringstream out;
       out << "std::max({ " << inputs[0];
       for (size_t i = 1; i < inputs.size(); i++) {
@@ -30,18 +31,18 @@ struct NaryOperatorTraits<T, EBasicNaryOperator::Max> {
       out << "})";
       return out.str();
    }
-   static std::string Op(const std::string& res, std::vector<std::string>& inputs) {
+   static std::string Op(const std::string &res, std::vector<std::string> &inputs)
+   {
       return res + " = " + Expr(inputs) + ";\n";
    }
-   static size_t Func(const std::vector<size_t>& values) {
-      return *std::max_element(values.begin(), values.end());
-   }
+   static size_t Func(const std::vector<size_t> &values) { return *std::max_element(values.begin(), values.end()); }
 };
 
 template<typename T>
 struct NaryOperatorTraits<T, EBasicNaryOperator::Min> {
    static const std::string Name() {return "Min";}
-   static std::string Expr(const std::vector<std::string>& inputs) {
+   static std::string Expr(const std::vector<std::string> &inputs)
+   {
       std::stringstream out;
       out << "std::min({ " << inputs[0];
       for (size_t i = 1; i < inputs.size(); i++) {
@@ -50,18 +51,18 @@ struct NaryOperatorTraits<T, EBasicNaryOperator::Min> {
       out << "})";
       return out.str();
    }
-   static std::string Op(const std::string& res, std::vector<std::string>& inputs) {
+   static std::string Op(const std::string &res, std::vector<std::string> &inputs)
+   {
       return res + " = " + Expr(inputs) + ";\n";
    }
-   static size_t Func(const std::vector<size_t>& values) {
-      return *std::min_element(values.begin(), values.end());
-   }
+   static size_t Func(const std::vector<size_t> &values) { return *std::min_element(values.begin(), values.end()); }
 };
 
-template<typename T>
+template <typename T>
 struct NaryOperatorTraits<T, EBasicNaryOperator::Mean> {
    static const std::string Name() {return "Mean";}
-   static std::string Expr(const std::vector<std::string>& inputs) {
+   static std::string Expr(const std::vector<std::string> &inputs)
+   {
       std::stringstream out;
       out << "((" << inputs[0];
       for (size_t i = 1; i < inputs.size(); i++) {
@@ -71,12 +72,15 @@ struct NaryOperatorTraits<T, EBasicNaryOperator::Mean> {
       out << ") / " << ConvertTypeToString(GetTemplatedType(T{})) << "(" << inputs.size() << "))";
       return out.str();
    }
-   static std::string Op(const std::string& res, std::vector<std::string>& inputs) {
+   static std::string Op(const std::string &res, std::vector<std::string> &inputs)
+   {
       return res + " = " + Expr(inputs) + ";\n";
    }
-   static size_t Func(const std::vector<size_t>& values) {
+   static size_t Func(const std::vector<size_t> &values)
+   {
       size_t sum = 0;
-      for (auto & v : values) sum += v;
+      for (auto &v : values)
+         sum += v;
       return sum / values.size();
    }
 };
@@ -84,7 +88,8 @@ struct NaryOperatorTraits<T, EBasicNaryOperator::Mean> {
 template<typename T>
 struct NaryOperatorTraits<T, EBasicNaryOperator::Sum> {
    static const std::string Name() {return "Sum";}
-   static std::string Expr(const std::vector<std::string>& inputs) {
+   static std::string Expr(const std::vector<std::string> &inputs)
+   {
       std::stringstream out;
       out << "(" << inputs[0];
       for (size_t i = 1; i < inputs.size(); i++) {
@@ -93,12 +98,15 @@ struct NaryOperatorTraits<T, EBasicNaryOperator::Sum> {
       out << ")";
       return out.str();
    }
-   static std::string Op(const std::string& res, std::vector<std::string>& inputs) {
+   static std::string Op(const std::string &res, std::vector<std::string> &inputs)
+   {
       return res + " = " + Expr(inputs) + ";\n";
    }
-   static size_t Func(const std::vector<size_t>& values) {
+   static size_t Func(const std::vector<size_t> &values)
+   {
       size_t sum = 0;
-      for (auto & v : values) sum += v;
+      for (auto &v : values)
+         sum += v;
       return sum;
    }
 };
@@ -150,7 +158,8 @@ public:
    // Case where all inputs are rank <= 1 INT64 tensors known at initialization time and at least one of
    // them is a shape tensor. The output is then also a shape tensor (its values, possibly symbolic, are
    // computed here) and no code needs to be generated for this operator.
-   bool InitializeShapeTensorOutput(RModel &model) {
+   bool InitializeShapeTensorOutput(RModel &model)
+   {
       bool hasShapeTensor = false;
       bool isScalar = true;
       size_t length = 1;
