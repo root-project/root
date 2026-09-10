@@ -116,8 +116,9 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    ///      c) trigger staging of the next batch of files in the I/O background thread.
    ///   4. On `Finalize()`, the I/O background thread is stopped.
    std::vector<std::unique_ptr<ROOT::Internal::RPageSource>> fStagingArea;
-   std::size_t fNextFileIndex = 0; ///< Index into fFileNames to the next file to process
 
+   std::map<std::string_view, uint64_t> fRangeOffsets;
+   std::size_t fNextFileIndex = 0; ///< Index into fFileNames to the next file to process
    /// We prepare a prototype field for every column. If a column reader is actually requested
    /// in GetColumnReaders(), we move a clone of the field into a new column reader for RDataFrame.
    /// Only the clone connects to the backing page store and acquires I/O resources.
