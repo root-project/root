@@ -4990,7 +4990,7 @@ int RootClingMain(int argc,
    // module file that we currently generate.
    {
       cling::Interpreter::PushTransactionRAII RAII(&interp);
-      CI->getSema().getASTConsumer().HandleTranslationUnit(CI->getSema().getASTContext());
+      interp.GeneratePCH();
    }
 
    // Add the warnings

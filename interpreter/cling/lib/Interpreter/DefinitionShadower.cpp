@@ -31,8 +31,11 @@ namespace cling {
       return false;
     const SourceManager &SM = L.getManager();
     const FileID FID = SM.getFileID(L);
-    return SM.isFileOverridden(SM.getFileEntryForID(FID))
-           && (SM.getFileID(SM.getIncludeLoc(FID)) == SM.getMainFileID());
+    auto FE = SM.getFileEntryRefForID(FID);
+    if (!FE)
+      return false;
+    return SM.isFileOverridden(*FE) &&
+           FE->getName().contains("input_line_");
   }
 
   /// \brief Returns whether a declaration is a definition.  A `TemplateDecl` is

@@ -37,8 +37,10 @@
 #include "clang/AST/ASTContext.h"
 
 #include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/FrontendActions.h"
 
 #include "clang/Lex/Preprocessor.h"
+#include "clang/Lex/PreprocessorOptions.h"
 #include "clang/Lex/Pragma.h"
 
 #include "cling/Interpreter/CIFactory.h"
@@ -1085,34 +1087,65 @@ bool LinkdefReader::Parse(SelectionRules &sr, llvm::StringRef code, const std::v
       parserArgsC.push_back(parserArgs[i].c_str());
    }
 
-   // Extract all #pragmas
    std::unique_ptr<llvm::MemoryBuffer> memBuf = llvm::MemoryBuffer::getMemBuffer(code, "CLING #pragma extraction");
    clang::CompilerInstance *pragmaCI =
       cling::CIFactory::createCI(std::move(memBuf), parserArgsC.size(), &parserArgsC[0], llvmdir,
                                  std::nullopt /*Consumer*/, {} /*ModuleFileExtension*/, true /*OnlyLex*/);
+   cling::CompilerOptions COpts(parserArgsC.size(), &parserArgsC[0]);
+   struct PragmaCollectAction : public clang::SyntaxOnlyAction {
+      bool isError = false;
+      LinkdefReader &fLDR;
+      cling::CompilerOptions COpts;
+      PragmaCollectAction(LinkdefReader &ldr, cling::CompilerOptions &COpts) : fLDR(ldr), COpts(COpts) {}
+      bool BeginSourceFileAction(clang::CompilerInstance &CI) override
+      {
+         if (COpts.CxxModules)
+            cling::CIFactory::collectModule(CI);
+         clang::Preprocessor &PP = CI.getPreprocessor();
+         // Attach the handlers before we have started. PP takes the ownership.
+         PP.AddPragmaHandler(new PragmaLinkCollector(fLDR));
+         PP.AddPragmaHandler(new PragmaCreateCollector(fLDR));
+         PP.AddPragmaHandler(new PragmaExtraInclude(fLDR));
+         PP.AddPragmaHandler(new PragmaIoReadInclude(fLDR));
+         return clang::SyntaxOnlyAction::BeginSourceFileAction(CI);
+      }
 
-   clang::Preprocessor &PP = pragmaCI->getPreprocessor();
-   clang::DiagnosticConsumer &DClient = pragmaCI->getDiagnosticClient();
-   DClient.BeginSourceFile(pragmaCI->getLangOpts(), &PP);
+      void ExecuteAction() override
+      {
+         clang::CompilerInstance &CI = getCompilerInstance();
+         if (!CI.hasPreprocessor())
+            return;
 
-   // FIXME: Reduce the code duplication across these collector classes.
-   PragmaLinkCollector pragmaLinkCollector(*this);
-   PragmaCreateCollector pragmaCreateCollector(*this);
-   PragmaExtraInclude pragmaExtraInclude(*this);
-   PragmaIoReadInclude pragmaIoReadInclude(*this);
+         // FIXME: Move the truncation aspect of this into Sema, we delayed this
+         // till here so the source manager would be initialized.
+         // if (hasCodeCompletionSupport() && !CI.getFrontendOpts().CodeCompletionAt.FileName.empty())
+         //    CI.createCodeCompletionConsumer();
 
-   PP.AddPragmaHandler(&pragmaLinkCollector);
-   PP.AddPragmaHandler(&pragmaCreateCollector);
-   PP.AddPragmaHandler(&pragmaExtraInclude);
-   PP.AddPragmaHandler(&pragmaIoReadInclude);
+         // // Use a code completion consumer?
+         // clang::CodeCompleteConsumer *CompletionConsumer = nullptr;
+         // if (CI.hasCodeCompletionConsumer())
+         //    CompletionConsumer = &CI.getCodeCompletionConsumer();
 
-   // Start parsing the specified input file.
-   PP.EnterMainSourceFile();
-   clang::Token tok;
-   do {
-      PP.Lex(tok);
-   } while (tok.isNot(clang::tok::annot_repl_input_end));
+         // if (!CI.hasSema())
+         //    CI.createSema(getTranslationUnitKind(), CompletionConsumer);
+
+         clang::Preprocessor &PP = CI.getPreprocessor();
+
+         PP.EnterMainSourceFile();
+         clang::Token tok;
+         do {
+            PP.Lex(tok);
+         } while (tok.isNot(clang::tok::annot_repl_input_end));
+
+         if ((0 != CI.getDiagnosticClient().getNumErrors()) && !isError)
+            isError = true;
+      }
+
+      bool usesPreprocessorOnly() const override { return true; }
+   } Act(*this, COpts);
+
+   pragmaCI->ExecuteAction(Act);
 
    fSelectionRules = nullptr;
-   return 0 == DClient.getNumErrors();
+   return !Act.isError;
 }

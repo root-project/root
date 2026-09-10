@@ -33,6 +33,7 @@ namespace cling {
     using ModuleFileExtensions =
         std::vector<std::shared_ptr<clang::ModuleFileExtension>>;
 
+    void collectModule(clang::CompilerInstance &CI);
     // TODO: Add overload that takes file not MemoryBuffer
 
     clang::CompilerInstance*
@@ -48,6 +49,7 @@ namespace cling {
              std::optional<std::unique_ptr<clang::ASTConsumer>> consumerOpt,
              const ModuleFileExtensions& moduleExtensions,
              bool OnlyLex = false);
+    unsigned CxxStdCompiledWith();
   } // namespace CIFactory
 } // namespace cling
 #endif // CLING_CIFACTORY_H
