@@ -497,6 +497,10 @@ Double_t THStack::GetMaximum(Option_t *option, Double_t maxval)
 {
    TString opt = option;
    opt.ToLower();
+   // exclude option which can conflict with "e" draw option
+   opt.ReplaceAll("same", "");
+   opt.ReplaceAll("candle", "");
+   opt.ReplaceAll("lego", "");
    Bool_t lerr = opt.Contains("e");
    Double_t themax = -std::numeric_limits<Double_t>::max();
    if (!fHists) return 0;
@@ -550,6 +554,10 @@ Double_t THStack::GetMinimum(Option_t *option, Double_t minval)
 
    TString opt = option;
    opt.ToLower();
+   // exclude option which can conflict with "e" draw option
+   opt.ReplaceAll("same", "");
+   opt.ReplaceAll("candle", "");
+   opt.ReplaceAll("lego", "");
    Bool_t lerr = opt.Contains("e");
    Bool_t logy = gPad ? gPad->GetLogy() : kFALSE;
    Double_t themin = std::numeric_limits<Double_t>::max();
