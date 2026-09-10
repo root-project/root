@@ -334,7 +334,6 @@ public:
 
    void MergeTeams(RColumn &other);
 
-   ROOT::NTupleSize_t GetNElements() const { return fNElements; }
    ROOT::Internal::RColumnElementBase *GetElement() const { return fElement.get(); }
    ROOT::ENTupleColumnType GetType() const { return fType; }
    std::uint16_t GetBitsOnStorage() const
