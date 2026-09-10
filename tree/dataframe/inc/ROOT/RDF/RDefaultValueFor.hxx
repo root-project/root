@@ -57,9 +57,9 @@ class R__CLING_PTRCHECK(off) RDefaultValueFor final : public RDefineBase {
    /// The map key is the full variation name, e.g. "pt:up".
    std::unordered_map<std::string, std::unique_ptr<RDefineBase>> fVariedDefines;
 
-   T &GetValueOrDefault(unsigned int slot, Long64_t entry)
+   T &GetValueOrDefault(unsigned int slot, std::size_t idx)
    {
-      if (auto *value = fValues[slot]->template TryGet<T>(entry))
+      if (auto *value = fValues[slot]->template TryGet<T>(idx))
          return *value;
       else
          return fDefaultValue;
@@ -104,13 +104,20 @@ public:
    }
 
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
-   void Update(unsigned int slot, Long64_t entry) final
+   void Update(unsigned int slot, const ROOT::Internal::RDF::RMaskedEntryRange &mask) final
    {
-      if (entry != fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()]) {
-         // evaluate this define expression, cache the result
-         fLastResults[slot * RDFInternal::CacheLineStep<T>()] = GetValueOrDefault(slot, entry);
-         fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = entry;
+      if (static_cast<Long64_t>(mask.GetFirstEntry()) ==
+          fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()])
+         return;
+
+      // Assume 1-size bulk for now
+      fValues[slot]->Load(mask);
+      const std::size_t bulkSize = 1;
+      for (std::size_t i = 0; i < bulkSize; ++i) {
+         if (mask[i])
+            fLastResults[slot * RDFInternal::CacheLineStep<T>()] = GetValueOrDefault(slot, i);
       }
+      fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = mask.GetFirstEntry();
    }
 
    void Update(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo & /*id*/) final {}
