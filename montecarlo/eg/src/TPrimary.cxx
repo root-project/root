@@ -27,7 +27,8 @@ This class is now obsolete. Use TParticle instead.
 #include "TView.h"
 #include "TVirtualPad.h"
 #include "X3DBuffer.h"
-#include "snprintf.h"
+
+#include <cstdio>
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -24,7 +24,8 @@
 #include "TSystem.h"
 #include "TMath.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cstdio>
 #include <iostream>
 #include <fstream>
 

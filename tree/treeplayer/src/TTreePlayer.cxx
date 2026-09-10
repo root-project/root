@@ -26,13 +26,6 @@ extra libraries (Histogram, display, etc).
 
 #include "TTreePlayer.h"
 
-#include <cstring>
-#include <cstdio>
-#include <cstdlib>
-#include <iostream>
-#include <fstream>
-#include <vector>
-
 #include "TROOT.h"
 #include "TApplication.h"
 #include "TSystem.h"
@@ -89,13 +82,18 @@ extra libraries (Histogram, display, etc).
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
 #include "HFitInterface.h"
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Math/MinimizerOptions.h"
 
+#include <cstring>
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
+#include <vector>
 
 R__EXTERN Foption_t Foption;
 

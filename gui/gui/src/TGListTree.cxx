@@ -37,10 +37,6 @@ A list tree can generate the following events:
 
 */
 
-
-#include <cstdlib>
-#include <iostream>
-
 #include "TClass.h"
 #include "TGListTree.h"
 #include "TGPicture.h"
@@ -62,7 +58,10 @@ A list tree can generate the following events:
 #include "TVirtualX.h"
 #include "RConfigure.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <iostream>
 
 Pixel_t          TGListTree::fgGrayPixel = 0;
 const TGFont    *TGListTree::fgDefaultFont = nullptr;

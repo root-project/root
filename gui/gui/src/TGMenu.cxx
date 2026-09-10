@@ -73,8 +73,8 @@ kC_COMMAND, kCM_MENU, menu id, user data.
 #include "TParameter.h"
 #include "RConfigure.h"
 #include "TVirtualX.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <iostream>
 
 const TGGC   *TGPopupMenu::fgDefaultGC = nullptr;

@@ -229,14 +229,7 @@ To change the color model use `gStyle->SetColorModelPS(c)`.
 #pragma optimize("",off)
 #endif
 
-#include <cstdlib>
-#include <cstring>
-#include <cctype>
-#include <cwchar>
-#include <fstream>
-
 #include "strlcpy.h"
-#include "snprintf.h"
 #include "Byteswap.h"
 #include "TROOT.h"
 #include "TDatime.h"
@@ -251,6 +244,13 @@ To change the color model use `gStyle->SetColorModelPS(c)`.
 #include "TText.h"
 #include "TSystem.h"
 #include "TEnv.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
+#include <cwchar>
+#include <fstream>
 
 #include "mathtext/fontembed.h"
 

@@ -36,8 +36,8 @@ few other, which can not be converted to SQL (yet).
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
 #include "TStreamerInfoActions.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <limits>

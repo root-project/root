@@ -129,12 +129,13 @@ Provides a help of the currently selected tab.
 #include <TGTab.h>
 #include <TGToolBar.h>
 #include <TROOT.h>
-#include <snprintf.h>
 #include <TRootHelpDialog.h>
 #include <TStyle.h>
 #include <TSystem.h>
 #include <TVirtualPad.h>
 #include <TVirtualX.h>
+
+#include <cstdio>
 
 TStyleManager *TStyleManager::fgStyleManager = nullptr;
 

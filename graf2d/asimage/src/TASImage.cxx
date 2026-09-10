@@ -88,8 +88,7 @@ ROOT tutorials: `$ROOTSYS/tutorials/visualisation/image/`
 #include <iostream>
 #include <vector>
 #include <memory>
-
-#include "snprintf.h"
+#include <cstdio>
 
 #ifndef WIN32
 #ifndef R__HAS_COCOA

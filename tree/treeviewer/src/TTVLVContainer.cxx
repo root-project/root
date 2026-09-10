@@ -18,8 +18,8 @@
 #include "TGToolTip.h"
 #include "TList.h"
 #include "TVirtualX.h"
-#include "snprintf.h"
 
+#include <cstdio>
 
 
 /** \class TGItemContext

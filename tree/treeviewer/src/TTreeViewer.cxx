@@ -198,8 +198,6 @@ more complex cuts such as (~e1) && (~e2), or (~e1) || !(~e2). Parentheses are im
 
 #include "RConfigure.h"
 
-#include <iostream>
-#include <fstream>
 #include "TTreeViewer.h"
 #include "HelpText.h"
 #include "HelpTextTV.h"
@@ -246,9 +244,11 @@ more complex cuts such as (~e1) && (~e2), or (~e1) || !(~e2). Parentheses are im
 #include "TGProgressBar.h"
 #include "TSpider.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <filesystem>
+#include <iostream>
+#include <fstream>
 
 #ifdef WIN32
 #include "TWin32SplashThread.h"

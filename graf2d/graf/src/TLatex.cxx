@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <iostream>
 #include "TROOT.h"
 #include "TLatex.h"
 #include "TMathText.h"
@@ -17,7 +16,9 @@
 #include "TVirtualPad.h"
 #include "TVirtualPadPainter.h"
 #include "TVirtualPS.h"
-#include "snprintf.h"
+
+#include <cstdio>
+#include <iostream>
 
 const Double_t kPI = TMath::Pi();
 

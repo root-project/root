@@ -62,8 +62,8 @@ the trees in the chain.
 #include "TVirtualMutex.h"
 #include "TVirtualPerfStats.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <string_view>
 #include "ROOT/StringUtils.hxx"
 

@@ -19,7 +19,8 @@
 
 #include "TRint.h"
 #include "RConfigure.h"
-#include "snprintf.h"
+
+#include <cstdio>
 #ifdef _MSC_VER
 #include <process.h>
 #define execv _execv

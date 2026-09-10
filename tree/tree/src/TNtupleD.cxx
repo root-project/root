@@ -17,7 +17,8 @@
 #include "TBuffer.h"
 #include "TreeUtils.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cstdio>
 
 
 /** \class TNtupleD
