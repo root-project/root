@@ -23,7 +23,8 @@ template <typename T>
 class R__CLING_PTRCHECK(off) RDSColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    T **fDSValuePtr = nullptr;
 
-   void *GetImpl(Long64_t) final { return *fDSValuePtr; }
+   void *GetImpl(std::size_t) final { return *fDSValuePtr; }
+   void LoadImpl(Long64_t, bool) final {}
 
 public:
    RDSColumnReader(void *DSValuePtr) : fDSValuePtr(static_cast<T **>(DSValuePtr)) {}
