@@ -43,7 +43,7 @@ The following people have contributed to this new version:
   Note that `all=ON` enables several of these options, so building with `-Dall=ON` now requires all of their dependencies to be installed, or the unwanted ones to be disabled explicitly.
   Build options that are enabled by default, such as `pyroot`, `opengl`, `xml`, `sqlite`, `davix`, `curl`, `tmva-cpu` or `tpython` are not affected: they are still disabled automatically when their dependencies are missing.
 * The option `fail-on-missing=OFF` will no longer be honored for CMake ROOT build options that have easy-to-install dependencies (e.g. via homebrew or apt-get), such as those required by options `cfitsio`, `civetweb`, `fftw3`, `imt`, `mathmore`, `nlohmann_json`, `tmva-cpu`, `unuran`, `vdt` or `xrootd`. Before, associated `builtin_option` was automatically turned ON (or the opt-in feature turned to OFF), now, user has to install system package or manually set `builtin_option` to `ON` or opt-in feature to `OFF`.
-* The legacy evaluation backend of RooFit and the related `RooFit::BatchMode()` command argument are deprecated and will be removed in ROOT 6.44. See the RooFit section below for details.
+* The legacy evaluation backend of RooFit is deprecated and will be removed in ROOT 6.44, and the related `RooFit::BatchMode()` command argument is deprecated and will be removed in ROOT 6.46. See the RooFit section below for details.
 * The method `RooRealVar::removeRange()` and the corresponding method in `RooErrorVar` that were deprecated in ROOT 6.40 are now removed.
 * The overloads of `RooAbsReal::createChi2()` and `RooAbsReal::chi2FitTo()` that take unbinned **RooDataSet** data objects were deprecated in ROOT 6.40 and are now removed.
 * The **RooStats::HybridPlot** class and the related **HybridResult::GetPlot** method were deprecated in ROOT 6.40 and are now removed.
@@ -172,7 +172,7 @@ After the removal of the constant term optimization (see below), the legacy back
 
 Selecting the legacy backend with `RooFit::EvalBackend("legacy")` now prints a deprecation warning whenever a likelihood or chi-square object is created with it, and the `RooFit::EvalBackend::Legacy()` factory function is marked as deprecated, resulting in compiler warnings.
 
-The **RooFit::BatchMode()** command argument, which was superseded by `RooFit::EvalBackend()` in ROOT 6.28, is deprecated at the same time and will also be removed in ROOT 6.44.
+The **RooFit::BatchMode()** command argument, which was superseded by `RooFit::EvalBackend()` in ROOT 6.28, is deprecated at the same time and will be removed in ROOT 6.46.
 Note that the C++ declarations of `RooFit::BatchMode()` had been unintentionally absent since ROOT 6.30; they are restored in this release, marked as deprecated, to give downstream code a proper migration window.
 
 The removal in ROOT 6.44 will also include:
@@ -214,6 +214,43 @@ The default vectorized CPU evaluation backend (introduced in ROOT 6.32) already 
 Users are strongly encouraged to switch to the vectorized CPU backend if they are still using the legacy backend.
 
 If the vectorized backend does not work for a given use case, **please report it by opening an issue on the ROOT GitHub repository**.
+
+### Removal of the legacy evaluation backend
+
+The `legacy` evaluation backend for likelihood and chi-square fits is removed.
+It was superseded by the vectorized `cpu` backend, which is the default since
+ROOT 6.32. After the removal of the constant term optimization (see above), the
+legacy backend also had no performance-relevant feature left that would justify
+its continued maintenance.
+
+Concretely, this means:
+
+  * `RooFit::EvalBackend::Legacy()` and the corresponding enum value are
+    removed. Passing `RooFit::EvalBackend("legacy")` to `fitTo()`,
+    `createNLL()`, `chi2FitTo()` or `createChi2()` now throws an exception, and
+    so does the deprecated `RooFit::BatchMode("off")`.
+  * The implementation classes of the legacy test statistics are removed:
+    **RooNLLVar**, **RooChi2Var**, **RooAbsOptTestStatistic** and
+    **RooAbsTestStatistic**. Their headers were not part of the public
+    interface anymore since ROOT 6.32, but they were still installed for
+    backwards compatibility.
+  * The old multiprocessing mechanism of the legacy backend is removed as well,
+    consisting of the **RooRealMPFE** class and the underlying
+    **BidirMMapPipe**. The `RooFit::NumCPU()` command argument no longer forks
+    off one `RooRealMPFE` process per CPU: it now selects the number of worker
+    threads for the multi-threaded batch evaluation in the RooBatchCompute
+    library, and its interleaving strategy argument is ignored. For fits with a
+    parallelized gradient, there is also the `RooFit::Parallelize()` argument,
+    based on the `RooFit::MultiProcess` framework (requires building ROOT with
+    `roofit_multiprocess=ON`).
+  * The `nll::name[pdf,data]` and `chi2::name[pdf,data]` expressions in the
+    `RooWorkspace::factory()` language are removed, since they instantiated the
+    removed classes directly. Use `RooAbsPdf::createNLL()` or
+    `RooAbsReal::createChi2()` instead.
+  * The `RooFit::TestStatistics::RooUnbinnedL` class now always evaluates with
+    the `RooFit::Evaluator` and its `evalBackend` constructor parameter
+    defaults to the `cpu` backend, like `RooFit::TestStatistics::NLLFactory`.
+  * The `roofit_legacy_eval_backend` CMake option is gone.
 
 ### Default binning of RooFit variables changed to zero bins
 

@@ -56,6 +56,4 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestBukin, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestBukin, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestBukin, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestBukin, RunScalar)
 FIT_TEST_BATCH(TestBukin, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestBukin, CompareBatchScalar)
