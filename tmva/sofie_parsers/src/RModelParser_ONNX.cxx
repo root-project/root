@@ -60,6 +60,8 @@ extern ParserFuncSignature ParseReduceMean;
 extern ParserFuncSignature ParseReduceSum;
 extern ParserFuncSignature ParseReduceSumSquare;
 extern ParserFuncSignature ParseReduceProd;
+extern ParserFuncSignature ParseReduceMax;
+extern ParserFuncSignature ParseReduceMin;
 // Others
 extern ParserFuncSignature ParseBatchNormalization;
 extern ParserFuncSignature ParseConstant;
@@ -352,6 +354,8 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("ReduceSum", ParseReduceSum);
    RegisterOperator("ReduceSumSquare", ParseReduceSumSquare);
    RegisterOperator("ReduceProd", ParseReduceProd);
+   RegisterOperator("ReduceMax", ParseReduceMax);
+   RegisterOperator("ReduceMin", ParseReduceMin);
    // Others
    RegisterOperator("BatchNormalization", ParseBatchNormalization);
    RegisterOperator("Constant", ParseConstant);

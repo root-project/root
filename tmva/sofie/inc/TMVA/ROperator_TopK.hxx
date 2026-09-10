@@ -58,20 +58,31 @@ public:
       }
 
       fShapeX = model.GetDimTensorShape(fNX);
-      auto fShapeK = model.GetTensorShape(fNK);
-      auto kptr = static_cast<int64_t *>(model.GetInitializedTensorData(fNK).get());
-      size_t kval = *kptr;
-      model.SetNotWritableInitializedTensor(fNK);
+      // K can either be an initialized tensor or a shape tensor, in which case its value is
+      // known only symbolically (e.g. it depends on one of the input dimensions)
+      Dim kdim;
+      if (model.IsShapeTensor(fNK)) {
+         auto & kvalues = model.GetShapeTensorValues(fNK);
+         if (kvalues.size() != 1)
+            throw std::runtime_error("TMVA SOFIE TopK Op input tensor K = " + fNK + " must be a single value");
+         kdim = kvalues[0];
+      } else if (model.IsInitializedTensor(fNK)) {
+         auto kptr = static_cast<int64_t *>(model.GetInitializedTensorData(fNK).get());
+         kdim = Dim{static_cast<size_t>(*kptr)};
+         model.SetNotWritableInitializedTensor(fNK);
+      } else {
+         throw std::runtime_error("TMVA SOFIE TopK Op input tensor K = " + fNK + " must be known at initialization time");
+      }
       fAttrAxis = fAttrAxis < 0 ? fShapeX.size() + fAttrAxis : fAttrAxis;
       if(static_cast<size_t>(fAttrAxis) >=  fShapeX.size()){
          throw
             std::runtime_error("TMVA::SOFIE ONNX TopK op axis = "+ std::to_string(fAttrAxis) +" value exeeds size of tensor " +fNX+" of size "+fShapeX.size()+" .");
       }
       // fK cannot be larger that axis dimension
-      if (fShapeX[fAttrAxis].isParam)
-         fK = Dim{std::string("std::min(size_t(" + std::to_string(kval) + "), " + fShapeX[fAttrAxis].GetVal() + ")" ), static_cast<size_t>(-1) };
+      if (kdim.isParam || fShapeX[fAttrAxis].isParam)
+         fK = Dim{std::string("std::min(size_t(" + kdim.GetVal() + "), size_t(" + fShapeX[fAttrAxis].GetVal() + "))" ), static_cast<size_t>(-1) };
       else
-         fK = Dim { std::min(kval, fShapeX[fAttrAxis].dim) };
+         fK = Dim { std::min(kdim.dim, fShapeX[fAttrAxis].dim) };
 
       // output shape is equal to input shape apart for value in fAttrAxis
       fShapeY = fShapeX;
