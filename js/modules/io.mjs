@@ -2041,8 +2041,7 @@ function ZIP_inflate(arr, tgt) {
                   --zip_copy_leng;
                   zip_copy_dist &= zip_WSIZE - 1;
                   zip_wp &= zip_WSIZE - 1;
-                  buff[off + n++] = zip_slide[zip_wp++] =
-                  zip_slide[zip_copy_dist++];
+                  buff[off + n++] = zip_slide[zip_wp++] = zip_slide[zip_copy_dist++];
                }
             } else {
                while (zip_copy_leng > 0 && n < size) {
