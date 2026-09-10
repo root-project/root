@@ -123,6 +123,10 @@ ExternalProject_Add(BUILTIN_CIVETWEB
     -DCIVETWEB_BUILD_TESTING=FALSE
     -DCIVETWEB_ENABLE_ASAN=OFF # If set to ON, you need to set below link_library interface to UBSAN libs
     -DCIVETWEB_ENABLE_CXX=ON
+    # civetweb defines -DDEBUG for Debug builds, which activates its DEBUG_TRACE
+    # macro (~130 call sites) and floods stderr with per-request output.
+    # Note the same option also gates civetweb's assertions.
+    -DCIVETWEB_ENABLE_DEBUG_TOOLS=OFF
     ${ROOT_SSL_API}
     -DCIVETWEB_ENABLE_SSL_DYNAMIC_LOADING=OFF # If set to ON, you need to set below link_library interface to CMAKE_DL_LIBS
     -DCIVETWEB_ENABLE_WEBSOCKETS=ON
