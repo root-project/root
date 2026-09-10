@@ -90108,13 +90108,14 @@ class TPadPainter extends ObjectPainter {
    /** @summary Provides automatic color
     * @desc Uses ROOT colors palette if possible
     * @private */
-   getAutoColor(numprimitives) {
-      numprimitives = Math.max(numprimitives || (this.#num_primitives || 5) - (this.#num_specials || 0), 2);
-
-      let indx = this.#auto_color_cnt ?? 0;
-      this.#auto_color_cnt = (indx + 1) % numprimitives;
-      if (indx >= numprimitives)
-         indx = numprimitives - 1;
+   getAutoColor(numprimitives, indx) {
+      if (!numprimitives || indx === undefined) {
+         numprimitives = Math.max(numprimitives || (this.#num_primitives || 5) - (this.#num_specials || 0), 2);
+         indx = this.#auto_color_cnt ?? 0;
+         this.#auto_color_cnt = (indx + 1) % numprimitives;
+         if (indx >= numprimitives)
+            indx = numprimitives - 1;
+      }
 
       let indexes = this._getCustomPaletteIndexes();
       if (!indexes) {
@@ -91867,12 +91868,6 @@ class TPadPainter extends ObjectPainter {
             const opt = createWebObjectOptions(sub);
             if (opt)
                elem.primitives.push(opt);
-            if (sub.$copywebid && opt?.fcust) {
-               // workaround for stack histograms to assign attributes to original histo
-               const opt2 = Object.assign({}, opt);
-               opt2.snapid = sub.getPrimary().getSnapId() + '#' + sub.$copywebid;
-               elem.primitives.push(opt2);
-            }
          }
       });
 
@@ -96741,7 +96736,7 @@ class THistPainter extends ObjectPainter {
       if (o._pfc > 1 || o._plc > 1 || o._pmc > 1) {
          const pp = this.getPadPainter();
          if (isFunc(pp?.getAutoColor)) {
-            const icolor = pp.getAutoColor(histo.$num_histos);
+            const icolor = pp.getAutoColor();
             this.#auto_exec = '';
             if (o._pfc > 1) {
                o._pfc = 1;
@@ -108551,7 +108546,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       if (o._pfc > 1 || o._plc > 1 || o._pmc > 1) {
          const pp = this.getPadPainter();
          if (isFunc(pp?.getAutoColor)) {
-            const icolor = pp.getAutoColor(graph.$num_graphs);
+            const icolor = pp.getAutoColor();
             this.#auto_exec = ''; // can be reused when sending option back to server
             if (o._pfc > 1) {
                o._pfc = 1;
@@ -172375,8 +172370,6 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
       }
       if (!o.pads)
          hopt += ' same nostat';
-      if (!this.getPadPainter()?.getSnapId())
-         hopt += o.auto;
       return hopt;
    }
 
@@ -172390,36 +172383,39 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
       if (indx >= nhists)
          return this;
 
-      const rindx = o.horder ? indx : nhists - indx - 1,
-            h_id = `hists_${rindx}`, s_id = `stack_${rindx}`,
+      const rindx = o.nostack ? indx : nhists - indx - 1,
             hist = hlst.arr[rindx],
             hopt = this.getHistDrawOption(hist, stack.fHists.opt[rindx]);
-      let dom;
+      let pp;
 
       if (pad_painter) {
          // handling of 'pads' draw option
-         const subpad_painter = pad_painter.getSubPadPainter(indx + 1);
-         if (!subpad_painter)
+         pp = pad_painter.getSubPadPainter(indx + 1);
+         if (!pp)
             return this;
-         subpad_painter.cleanPrimitives(true);
-         dom = subpad_painter;
+         pp.cleanPrimitives(true);
       } else {
          // special handling of stacked histograms
          // also used to provide tooltips
          if ((rindx > 0) && !o.nostack)
             hist.$baseh = hlst.arr[rindx - 1];
-         // this number used for auto colors creation
-         if (o.auto)
-            hist.$num_histos = nhists;
-         dom = this.#firstpainter?.getPadPainter() || this.getDrawDom();
+         pp = this.#firstpainter?.getPadPainter() || getElementPadPainter(this.getDrawDom());
       }
 
-      return this.drawHist(dom, hist, hopt).then(subp => {
+      // assign auto color to histogram, exclude web canvas
+      if ((o._pfc || o._plc || o._pmc) && pp && !pp.getSnapId()) {
+         const col = pp.getAutoColor(nhists, rindx);
+         if (o._pfc)
+            hist.fFillColor = col;
+         if (o._plc)
+            hist.fLineColor = col;
+         if (o._pmc)
+            hist.fMarkerColor = col;
+      }
+
+      return this.drawHist(pp, hist, hopt).then(subp => {
          if (subp) {
-            subp.setSecondaryId(this, o.nostack ? h_id : s_id);
-            // workaround to assign weboptions also back to original histogram
-            if (!o.nostack)
-               subp.$copywebid = h_id;
+            subp.setSecondaryId(this, o.nostack ? `hists_${rindx}` : `stack_${rindx}`);
             this.#painters.push(subp);
          }
          return this.drawNextHisto(indx + 1, pad_painter);
@@ -172428,7 +172424,7 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
 
    /** @summary Decode draw options of THStack painter */
    decodeOptions(opt) {
-      const o = this.setOptions({ ndim: 1, nostack: false, same: false, horder: true, has_errors: false, draw_errors: false, hopt: '', auto: '' }),
+      const o = this.setOptions({ ndim: 1, nostack: false, same: false, has_errors: false, draw_errors: false, _pfc: false, _pmc: false, _plc: false, hopt: '' }),
             stack = this.getObject(),
             hist = stack.fHistogram || stack.fHists?.arr[0] || this.#stack?.arr[0];
 
@@ -172460,11 +172456,9 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
       o.same = d.check('SAME');
 
       d.check('NOCLEAR'); // ignore option
-
-      ['PFC', 'PLC', 'PMC'].forEach(f => {
-         if (d.check(f))
-            o.auto += ' ' + f;
-      });
+      o._pfc = d.check('PFC');
+      o._plc = d.check('PLC');
+      o._pmc = d.check('PMC');
 
       if (d.check('PADS', true)) {
          o.pads = true;
@@ -172485,8 +172479,6 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
       // if any histogram appears with pre-calculated errors, use E for all histograms
       if (!o.nostack && o.has_errors && !dolego && !d.check('HIST') && (o.hopt.indexOf('E') < 0))
          o.draw_errors = true;
-
-      o.horder = o.nostack || dolego;
    }
 
    /** @summary Create main histogram for THStack axis drawing */
@@ -172583,7 +172575,7 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
       } else {
          this.#did_update = 2;
          for (let indx = 0; indx < nhists; ++indx) {
-            const rindx = o.horder ? indx : nhists - indx - 1,
+            const rindx = o.nostack ? indx : nhists - indx - 1,
                   hist = hlst.arr[rindx];
             this.#painters[indx].updateObject(hist, this.getHistDrawOption(hist, stack.fHists.opt[rindx]));
          }
@@ -172635,7 +172627,7 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
                   hlst = o.nostack ? stack.fHists : this.#stack,
                   nhists = hlst?.arr?.length ?? 0;
             for (let indx = 0; indx < nhists; ++indx) {
-               const rindx = o.horder ? indx : nhists - indx - 1,
+               const rindx = o.nostack ? indx : nhists - indx - 1,
                      hist = hlst.arr[rindx];
                this.#painters[indx].decodeOptions(this.getHistDrawOption(hist, stack.fHists.opt[rindx]));
             }
@@ -176698,7 +176690,9 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
    #painters; // array of sub-painters
    #funcs_handler; // special instance for functions drawing
    #restopt; // remaining part of draw options
-   #auto; // extra options for auto colors
+   #pfc; // extra options for auto colors
+   #plc; // extra options for auto colors
+   #pmc; // extra options for auto colors
    #is3d; // if 3d drawing
    #pads;  // pads draw option
    #pads_columns; // number pads columns
@@ -176717,7 +176711,9 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
       this.#painters = [];
       this.#is3d = undefined;
       this.#pads = undefined;
-      this.#auto = undefined;
+      this.#pfc = undefined;
+      this.#pmc = undefined;
+      this.#plc = undefined;
       this.#restopt = undefined;
       super.cleanup();
    }
@@ -176747,7 +176743,7 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
 
       // TODO: handle changing number of graphs
       for (let i = 0; i < ngr; ++i) {
-         if (this.#painters[i].updateObject(graphs.arr[i], (graphs.opt[i] || this.#restopt) + this.#auto))
+         if (this.#painters[i].updateObject(graphs.arr[i], (graphs.opt[i] || this.#restopt)))
             isany = true;
       }
 
@@ -176939,37 +176935,37 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
          return this;
 
       const gr = graphs.arr[indx],
-            draw_opt = (graphs.opt[indx] || this.#restopt) + this.#auto,
-            pos3d = graphs.arr.length - indx,
-            subid = `graphs_${indx}`;
+            draw_opt = (graphs.opt[indx] || this.#restopt),
+            pos3d = graphs.arr.length - indx;
+      let pp;
 
       // handling of 'pads' draw option
       if (pad_painter) {
-         const subpad_painter = pad_painter.getSubPadPainter(indx + 1);
-         if (!subpad_painter)
+         pp = pad_painter.getSubPadPainter(indx + 1);
+         if (!pp)
             return this;
 
-         subpad_painter.cleanPrimitives(true);
+         pp.cleanPrimitives(true);
+      } else
+         pp = this.#firstpainter?.getPadPainter() || getElementPadPainter(this.getDrawDom());
 
-         return this.drawGraph(subpad_painter, gr, draw_opt, pos3d).then(subp => {
-            if (subp) {
-               subp.setSecondaryId(this, subid);
-               this.#painters.push(subp);
-            }
-            return this.drawNextGraph(indx + 1, pad_painter);
-         });
+      // assign auto color to graph, exclude web canvas
+      if ((this.#pfc || this.#plc || this.#pmc) && pp && !pp.getSnapId()) {
+         const col = pp.getAutoColor(graphs.arr.length, indx);
+         if (this.#pfc)
+            gr.fFillColor = col;
+         if (this.#plc)
+            gr.fLineColor = col;
+         if (this.#pmc)
+            gr.fMarkerColor = col;
       }
 
-      // used in automatic colors numbering
-      if (this.#auto)
-         gr.$num_graphs = graphs.arr.length;
-
-      return this.drawGraph(this.getPadPainter(), gr, draw_opt, pos3d).then(subp => {
+      return this.drawGraph(pp, gr, draw_opt, pos3d).then(subp => {
          if (subp) {
-            subp.setSecondaryId(this, subid);
+            subp.setSecondaryId(this, `graphs_${indx}`);
             this.#painters.push(subp);
          }
-         return this.drawNextGraph(indx + 1);
+         return this.drawNextGraph(indx + 1, pad_painter);
       });
    }
 
@@ -176994,14 +176990,12 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
             mgraph = this.getObject();
 
       this.#is3d = d.check('3D');
-      this.#auto = '';
       this.#pads = d.check('PADS', true);
       if (this.#pads)
          this.#pads_columns = d.partAsInt();
-      ['PFC', 'PLC', 'PMC'].forEach(f => {
-         if (d.check(f))
-            this.#auto += ' ' + f;
-      });
+      this.#pfc = d.check('PFC');
+      this.#plc = d.check('PLC');
+      this.#pmc = d.check('PMC');
 
       let hopt = '', pad_painter = null;
       if (d.check('FB') && this.is3d())

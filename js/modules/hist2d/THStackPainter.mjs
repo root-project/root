@@ -1,7 +1,7 @@
 import { clone, create, createHistogram, setHistogramTitle, BIT,
          gStyle, clTH1F, clTH2, clTH2F, clTObjArray, kNoZoom, kNoStats } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
-import { ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
+import { ObjectPainter, EAxisBits, getElementPadPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from './TH1Painter.mjs';
 import { TH2Painter } from './TH2Painter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
@@ -215,8 +215,6 @@ class THStackPainter extends ObjectPainter {
       }
       if (!o.pads)
          hopt += ' same nostat';
-      if (!this.getPadPainter()?.getSnapId())
-         hopt += o.auto;
       return hopt;
    }
 
@@ -230,36 +228,39 @@ class THStackPainter extends ObjectPainter {
       if (indx >= nhists)
          return this;
 
-      const rindx = o.horder ? indx : nhists - indx - 1,
-            h_id = `hists_${rindx}`, s_id = `stack_${rindx}`,
+      const rindx = o.nostack ? indx : nhists - indx - 1,
             hist = hlst.arr[rindx],
             hopt = this.getHistDrawOption(hist, stack.fHists.opt[rindx]);
-      let dom;
+      let pp;
 
       if (pad_painter) {
          // handling of 'pads' draw option
-         const subpad_painter = pad_painter.getSubPadPainter(indx + 1);
-         if (!subpad_painter)
+         pp = pad_painter.getSubPadPainter(indx + 1);
+         if (!pp)
             return this;
-         subpad_painter.cleanPrimitives(true);
-         dom = subpad_painter;
+         pp.cleanPrimitives(true);
       } else {
          // special handling of stacked histograms
          // also used to provide tooltips
          if ((rindx > 0) && !o.nostack)
             hist.$baseh = hlst.arr[rindx - 1];
-         // this number used for auto colors creation
-         if (o.auto)
-            hist.$num_histos = nhists;
-         dom = this.#firstpainter?.getPadPainter() || this.getDrawDom();
+         pp = this.#firstpainter?.getPadPainter() || getElementPadPainter(this.getDrawDom());
       }
 
-      return this.drawHist(dom, hist, hopt).then(subp => {
+      // assign auto color to histogram, exclude web canvas
+      if ((o._pfc || o._plc || o._pmc) && pp && !pp.getSnapId()) {
+         const col = pp.getAutoColor(nhists, rindx);
+         if (o._pfc)
+            hist.fFillColor = col;
+         if (o._plc)
+            hist.fLineColor = col;
+         if (o._pmc)
+            hist.fMarkerColor = col;
+      }
+
+      return this.drawHist(pp, hist, hopt).then(subp => {
          if (subp) {
-            subp.setSecondaryId(this, o.nostack ? h_id : s_id);
-            // workaround to assign weboptions also back to original histogram
-            if (!o.nostack)
-               subp.$copywebid = h_id;
+            subp.setSecondaryId(this, o.nostack ? `hists_${rindx}` : `stack_${rindx}`);
             this.#painters.push(subp);
          }
          return this.drawNextHisto(indx + 1, pad_painter);
@@ -268,7 +269,7 @@ class THStackPainter extends ObjectPainter {
 
    /** @summary Decode draw options of THStack painter */
    decodeOptions(opt) {
-      const o = this.setOptions({ ndim: 1, nostack: false, same: false, horder: true, has_errors: false, draw_errors: false, hopt: '', auto: '' }),
+      const o = this.setOptions({ ndim: 1, nostack: false, same: false, has_errors: false, draw_errors: false, _pfc: false, _pmc: false, _plc: false, hopt: '' }),
             stack = this.getObject(),
             hist = stack.fHistogram || stack.fHists?.arr[0] || this.#stack?.arr[0];
 
@@ -300,11 +301,9 @@ class THStackPainter extends ObjectPainter {
       o.same = d.check('SAME');
 
       d.check('NOCLEAR'); // ignore option
-
-      ['PFC', 'PLC', 'PMC'].forEach(f => {
-         if (d.check(f))
-            o.auto += ' ' + f;
-      });
+      o._pfc = d.check('PFC');
+      o._plc = d.check('PLC');
+      o._pmc = d.check('PMC');
 
       if (d.check('PADS', true)) {
          o.pads = true;
@@ -325,8 +324,6 @@ class THStackPainter extends ObjectPainter {
       // if any histogram appears with pre-calculated errors, use E for all histograms
       if (!o.nostack && o.has_errors && !dolego && !d.check('HIST') && (o.hopt.indexOf('E') < 0))
          o.draw_errors = true;
-
-      o.horder = o.nostack || dolego;
    }
 
    /** @summary Create main histogram for THStack axis drawing */
@@ -423,7 +420,7 @@ class THStackPainter extends ObjectPainter {
       } else {
          this.#did_update = 2;
          for (let indx = 0; indx < nhists; ++indx) {
-            const rindx = o.horder ? indx : nhists - indx - 1,
+            const rindx = o.nostack ? indx : nhists - indx - 1,
                   hist = hlst.arr[rindx];
             this.#painters[indx].updateObject(hist, this.getHistDrawOption(hist, stack.fHists.opt[rindx]));
          }
@@ -475,7 +472,7 @@ class THStackPainter extends ObjectPainter {
                   hlst = o.nostack ? stack.fHists : this.#stack,
                   nhists = hlst?.arr?.length ?? 0;
             for (let indx = 0; indx < nhists; ++indx) {
-               const rindx = o.horder ? indx : nhists - indx - 1,
+               const rindx = o.nostack ? indx : nhists - indx - 1,
                      hist = hlst.arr[rindx];
                this.#painters[indx].decodeOptions(this.getHistDrawOption(hist, stack.fHists.opt[rindx]));
             }
