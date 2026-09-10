@@ -900,7 +900,9 @@ public:
 
    /// We know the number of entries from adding the cluster summaries
    ROOT::NTupleSize_t GetNEntries() const { return fNEntries; }
-   ROOT::NTupleSize_t GetNElements(ROOT::DescriptorId_t physicalColumnId) const;
+   ROOT::NTupleSize_t R__DEPRECATED(6,46, "This function is ill-conceived in the descriptor "
+      "as not all cluster descriptors may be present. For internal purposes, the page source offers this function.")
+   GetNElements(ROOT::DescriptorId_t physicalColumnId) const;
 
    /// Returns the logical parent of all top-level RNTuple data fields.
    ROOT::DescriptorId_t GetFieldZeroId() const { return fFieldZeroId; }
