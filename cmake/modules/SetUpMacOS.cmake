@@ -9,13 +9,6 @@ set(ROOT_PLATFORM macosx)
 if (CMAKE_SYSTEM_NAME MATCHES Darwin)
   MESSAGE(STATUS "Found a macOS system")
 
-  if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
-    if (NOT libcxx)
-      message(SEND_ERROR "libcxx=ON is needed for Clang compilers")
-      list(APPEND HOTFIX_BUILD_FLAGS -Dlibcxx=ON)
-    endif()
-  endif()
-
   #TODO: check haveconfig and rpath -> set rpath true
   #TODO: check Thread, define link command
   #TODO: more stuff check configure script
