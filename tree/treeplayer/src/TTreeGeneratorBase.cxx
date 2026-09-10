@@ -24,6 +24,8 @@
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualStreamerInfo.h"
 
+#include <ROOT/FoundationUtils.hxx>
+
 /** \class ROOT::Internal::TTreeGeneratorBase
 Base class for code generators like TTreeProxyGenerator and TTreeReaderGenerator
 */
@@ -107,21 +109,13 @@ namespace Internal {
 
          if (!filename) return;
 
-#ifdef R__WIN32
-         TString inclPath("include;prec_stl"); // GetHtml()->GetIncludePath());
-#else
-         TString inclPath("include:prec_stl"); // GetHtml()->GetIncludePath());
-#endif
+         const TString pdelim(ROOT::FoundationUtils::GetEnvPathSeparator());
+         const char ddelim = ROOT::FoundationUtils::GetPathSeparator()[0];
+         // GetHtml()->GetIncludePath());
+         const TString inclPath("include" + pdelim + "prec_stl");
          Ssiz_t posDelim = 0;
          TString inclDir;
          TString sIncl(filename);
-#ifdef R__WIN32
-         const char* pdelim = ";";
-         static const char ddelim = '\\';
-#else
-         const char* pdelim = ":";
-         static const char ddelim = '/';
-#endif
          while (inclPath.Tokenize(inclDir, posDelim, pdelim))
          {
             if (sIncl.BeginsWith(inclDir)) {

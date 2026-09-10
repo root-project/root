@@ -2934,18 +2934,14 @@ const char *TROOT::GetMacroPath()
    TString &macroPath = ROOT::GetMacroPath();
 
    if (macroPath.Length() == 0) {
+      const TString sep(ROOT::FoundationUtils::GetEnvPathSeparator());
       macroPath = gEnv->GetValue("Root.MacroPath", (char*)nullptr);
-#if defined(R__WIN32)
-      macroPath.ReplaceAll("; ", ";");
-#else
-      macroPath.ReplaceAll(": ", ":");
-#endif
+      // Drop the blank that may follow a separator in the rootrc value, so that
+      // "Root.MacroPath: .: $(HOME)/macros" does not yield a path element
+      // starting with a space.
+      macroPath.ReplaceAll(sep + " ", sep);
       if (macroPath.Length() == 0)
-#if !defined(R__WIN32)
-         macroPath = ".:" + TROOT::GetMacroDir();
-#else
-         macroPath = ".;" + TROOT::GetMacroDir();
-#endif
+         macroPath = "." + sep + TROOT::GetMacroDir();
    }
 
    return macroPath;

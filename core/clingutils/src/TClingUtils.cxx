@@ -5208,11 +5208,7 @@ void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& cling
    if (!envInclPath)
       return;
 
-#ifdef _WIN32
-   constexpr char kPathSep = ';';
-#else
-   constexpr char kPathSep = ':';
-#endif
+   const char kPathSep = ROOT::FoundationUtils::GetEnvPathSeparator();
 
    std::istringstream envInclPathsStream(envInclPath);
    std::string inclPath;

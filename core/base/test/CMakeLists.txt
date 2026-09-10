@@ -26,7 +26,8 @@ ROOT_ADD_GTEST(CoreEnvTests TEnvTests.cxx LIBRARIES Core)
 
 ROOT_ADD_GTEST(CoreErrorTests TErrorTests.cxx LIBRARIES Core)
 
-ROOT_ADD_GTEST(CoreSystemTests TSystemTests.cxx LIBRARIES Core)
+# INCLUDE_DIRS: for ROOT/FoundationUtils.hxx
+ROOT_ADD_GTEST(CoreSystemTests TSystemTests.cxx LIBRARIES Core INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/core/foundation/res)
 
 ROOT_ADD_GTEST(CoreCryptoRandomTest CryptoRandomTest.cxx LIBRARIES Core)
 
