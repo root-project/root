@@ -505,6 +505,7 @@ TEST(RNTuple, ViewFieldIteration)
       model->MakeField<std::array<CustomEnum, 2>>("array");
       model->MakeField<CustomStruct>("struct");
       model->MakeField<EmptyStruct>("empty");
+      model->MakeField<std::vector<EmptyStruct>>("vecOfEmpty");
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
@@ -524,13 +525,16 @@ TEST(RNTuple, ViewFieldIteration)
    EXPECT_EQ(1u, viewStruct.GetFieldRange().size());
    auto viewArray = reader->GetView<void>("array");
    EXPECT_EQ(1u, viewArray.GetFieldRange().size());
-
    auto viewEmpty = reader->GetView<void>("empty");
+   EXPECT_EQ(1u, viewArray.GetFieldRange().size());
+
+   auto viewVecOfEmpty = reader->GetView<void>("vecOfEmpty._0");
    try {
-      viewEmpty.GetFieldRange();
-      FAIL() << "accessing the field range of a view on an empty field should throw";
+      viewVecOfEmpty.GetFieldRange();
+      FAIL() << "accessing the field range of a view on an empty vector item should throw";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("field iteration over empty fields is unsupported"));
+      EXPECT_THAT(err.what(),
+                  testing::HasSubstr("field iteration over empty fields"));
    }
 }
 

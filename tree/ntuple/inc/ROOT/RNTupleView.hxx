@@ -145,7 +145,8 @@ public:
    ROOT::RNTupleGlobalRange GetFieldRange() const
    {
       if (!fFieldRange.IsValid()) {
-         throw RException(R__FAIL("field iteration over empty fields is unsupported: " + fField->GetFieldName()));
+         throw RException(R__FAIL("field iteration over empty fields in vectors or variants is unsupported: " +
+                          fField->GetFieldName()));
       }
       return fFieldRange;
    }
