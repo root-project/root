@@ -14,13 +14,13 @@ endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(MultiProc STAGE1
   HEADERS
-    MPCode.h
-    MPSendRecv.h
-    PoolUtils.h
-    TMPClient.h
-    TMPWorker.h
-    TMPWorkerExecutor.h
-    TProcPool.h
+    ROOT/MPCode.h
+    ROOT/MPSendRecv.h
+    ROOT/PoolUtils.h
+    ROOT/TMPClient.h
+    ROOT/TMPWorker.h
+    ROOT/TMPWorkerExecutor.h
+    ROOT/TProcPool.h
     ROOT/TProcessExecutor.hxx
   SOURCES
     src/MPSendRecv.cxx

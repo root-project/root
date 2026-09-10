@@ -11,8 +11,8 @@
 ROOT_STANDARD_LIBRARY_PACKAGE(Rint
   STAGE1
   HEADERS
-    TRint.h
-    TTabCom.h
+    ROOT/TRint.h
+    ROOT/TTabCom.h
   SOURCES
     src/TRint.cxx
     src/TTabCom.cxx
@@ -22,6 +22,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Rint
     Core
 )
 
-target_include_directories(Core PRIVATE inc)
+target_include_directories(Core PRIVATE inc
+inc/ROOT # bw compatibility
+)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

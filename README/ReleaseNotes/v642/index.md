@@ -40,6 +40,7 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 
+* Starting from ROOT 6.42, the recommended way to include headers is to use e.g `<ROOT/TCanvas.h>` instead of the traditional `"TCanvas.h"`. The traditional variant will stop working in ROOT 7, a point at which you will need to either add that prefix in all your scripts, or alternatively add the extra ROOT/ folder to the global search include paths of your program.
 * The build options `vc`, `veccore`, `builtin_vc`, `builtin_veccore` and `rpath` that were deprecated are now removed and will result in configuration errors if used.
 * The option `fail-on-missing=OFF` is no longer honored for opt-in (ie OFF by default) build options requiring external dependencies such as `arrow`, `cocoa`, `daos`, `daos_mock`, `dcache`, `experimental_adaptivecpp`, `fcgi`, `fortran`, `gviz`, `mpi`, `pythia8`, `qt6web`, `tmva-cudnn`, `tmva-pymva`, `tmva-sofie`, `uring` or `vecgeom`. If the respective associated package dependency is not installed, ROOT will always raise a configuration error independent of the value of `fail-on-missing`. The user has to take action by either providing the dependency or manually disabling that option via `-Darrow=OFF`.
   Note that `all=ON` enables several of these options, so building with `-Dall=ON` now requires all of their dependencies to be installed, or the unwanted ones to be disabled explicitly.

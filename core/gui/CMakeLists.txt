@@ -9,20 +9,20 @@
 ############################################################################
 
 set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
-  GuiTypes.h
-  TApplicationImp.h
-  TBrowser.h
-  TBrowserImp.h
-  TCanvasImp.h
-  TClassMenuItem.h
-  TContextMenu.h
-  TContextMenuImp.h
-  TControlBarImp.h
-  TGuiFactory.h
-  TInspectorImp.h
-  TObjectSpy.h
-  TToggleGroup.h
-  TToggle.h
+  ROOT/GuiTypes.h
+  ROOT/TApplicationImp.h
+  ROOT/TBrowser.h
+  ROOT/TBrowserImp.h
+  ROOT/TCanvasImp.h
+  ROOT/TClassMenuItem.h
+  ROOT/TContextMenu.h
+  ROOT/TContextMenuImp.h
+  ROOT/TControlBarImp.h
+  ROOT/TGuiFactory.h
+  ROOT/TInspectorImp.h
+  ROOT/TObjectSpy.h
+  ROOT/TToggleGroup.h
+  ROOT/TToggle.h
 )
 
 target_sources(Core PRIVATE
@@ -44,6 +44,7 @@ target_sources(Core PRIVATE
 
 target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT> # bw compatibility
 )
 
 ROOT_INSTALL_HEADERS()

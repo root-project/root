@@ -17,6 +17,7 @@ set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
 
 target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT> # bw compatibility
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>
 )
 
@@ -35,10 +36,15 @@ target_include_directories(ClingUtils PRIVATE
    ${CLING_INCLUDE_DIRS}
    ${CMAKE_SOURCE_DIR}/core/foundation/res
    ${CMAKE_SOURCE_DIR}/core/foundation/inc
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc/ROOT # bw compatibility
    ${CMAKE_SOURCE_DIR}/core/base/inc
+   ${CMAKE_SOURCE_DIR}/core/base/inc/ROOT # bw compatibility
    ${CMAKE_SOURCE_DIR}/core/clib/inc
    ${CMAKE_SOURCE_DIR}/core/meta/inc
-   ${CMAKE_BINARY_DIR}/ginclude)
+   ${CMAKE_SOURCE_DIR}/core/meta/inc/ROOT # bw compatibility
+   ${CMAKE_BINARY_DIR}/ginclude
+   ${CMAKE_BINARY_DIR}/ginclude/ROOT # bw compatibility
+   )
 
 # Register the llvm include directories after clangs. This instructs the compiler to resolve
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off

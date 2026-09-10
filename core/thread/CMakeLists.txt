@@ -11,18 +11,18 @@
 if(WIN32)
   set(PLATFORM_FILTER FILTER "Posix")
   set(PLATFORM_HEADERS
-    TWin32Condition.h
-    TWin32Mutex.h
-    TWin32Thread.h
-    TWin32ThreadFactory.h
+    ROOT/TWin32Condition.h
+    ROOT/TWin32Mutex.h
+    ROOT/TWin32Thread.h
+    ROOT/TWin32ThreadFactory.h
   )
 else()
   set(PLATFORM_FILTER FILTER "Win32")
   set(PLATFORM_HEADERS
-    TPosixCondition.h
-    TPosixMutex.h
-    TPosixThread.h
-    TPosixThreadFactory.h
+    ROOT/TPosixCondition.h
+    ROOT/TPosixMutex.h
+    ROOT/TPosixThread.h
+    ROOT/TPosixThreadFactory.h
     PosixThreadInc.h
   )
 endif()
@@ -30,17 +30,17 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(Thread
   HEADERS
     ${PLATFORM_HEADERS}
-    TAtomicCount.h
-    TCondition.h
-    TConditionImp.h
-    TMutex.h
-    TMutexImp.h
-    TRWLock.h
-    TSemaphore.h
-    TThreadFactory.h
-    TThread.h
-    TThreadImp.h
-    TThreadPool.h
+    ROOT/TAtomicCount.h
+    ROOT/TCondition.h
+    ROOT/TConditionImp.h
+    ROOT/TMutex.h
+    ROOT/TMutexImp.h
+    ROOT/TRWLock.h
+    ROOT/TSemaphore.h
+    ROOT/TThreadFactory.h
+    ROOT/TThread.h
+    ROOT/TThreadImp.h
+    ROOT/TThreadPool.h
     ROOT/TRWSpinLock.hxx
     ROOT/TSpinMutex.hxx
     ROOT/TThreadedObject.hxx
@@ -67,12 +67,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
 
 target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT> # bw compatibility
 )
 
 target_link_libraries(Thread PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 
 target_include_directories(Thread PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT> # bw compatibility
 )
 
 if(TARGET TBB::tbb)

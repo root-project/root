@@ -9,9 +9,9 @@
 ############################################################################
 
 set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
-  ESTLType.h
-  TClassEdit.h
-  TError.h
+  ROOT/ESTLType.h
+  ROOT/TClassEdit.h
+  ROOT/TError.h
   ThreadLocalStorage.h
   ROOT/BitUtils.hxx
   ROOT/RError.hxx
@@ -20,6 +20,7 @@ set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   ROOT/RRangeCast.hxx
   ROOT/RSpan.hxx
   ROOT/RStringView.hxx
+  ROOT/RtypesCore.h
   ROOT/StringUtils.hxx
   ROOT/span.hxx
   ROOT/TypeTraits.hxx
@@ -35,13 +36,16 @@ set(FOUNDATION_SOURCES
   src/TError.cxx
 )
 
-set(FOUNDATION_HEADER_DIRS inc/)
+set(FOUNDATION_HEADER_DIRS inc/
+inc/ROOT/ # bw compatibility
+)
 
 target_sources(Core PRIVATE ${FOUNDATION_SOURCES})
 
 target_include_directories(Core
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT> # bw compatibility
   PRIVATE
     res
 )
@@ -51,6 +55,7 @@ ROOT_OBJECT_LIBRARY(Foundation_Stage1 ${FOUNDATION_SOURCES}) # used by rootcling
 target_include_directories(Foundation_Stage1
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT> # bw compatibility
   PRIVATE
     $<$<BOOL:${MSVC}>:${CMAKE_SOURCE_DIR}/core/winnt/inc>
     ${CMAKE_BINARY_DIR}/ginclude res

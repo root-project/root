@@ -12,7 +12,7 @@ if(NOT WIN32)
   return()
 endif()
 
-set_property(TARGET Core APPEND PROPERTY DICT_HEADERS TWinNTSystem.h)
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS ROOT/TWinNTSystem.h)
 
 target_sources(Core PRIVATE
   src/TWin32SplashThread.cxx
@@ -28,6 +28,8 @@ target_link_libraries(Core PRIVATE
   Bcrypt.lib
 )
 
-target_include_directories(Core PRIVATE inc)
+target_include_directories(Core PRIVATE inc
+inc/ROOT # bw compatibility
+)
 
 ROOT_INSTALL_HEADERS()
