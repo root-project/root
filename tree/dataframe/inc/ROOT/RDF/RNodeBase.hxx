@@ -13,6 +13,8 @@
 
 #include "RtypesCore.h"
 #include "TError.h" // R__ASSERT
+#include <ROOT/RDF/RMaskedEntryRange.hxx>
+#include <ROOT/RDF/Utils.hxx>
 
 #include <memory>
 #include <string>
@@ -46,10 +48,13 @@ protected:
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
    std::vector<std::string> fVariations; ///< List of systematic variations that affect this node.
+   std::vector<Long64_t> fLastCheckedEntry;
 
 public:
-   RNodeBase(const std::vector<std::string> &variations = {}, RLoopManager *lm = nullptr)
-      : fLoopManager(lm), fVariations(variations)
+   RNodeBase(const std::vector<std::string> &variations = {}, RLoopManager *lm = nullptr, unsigned int nSlots = 1)
+      : fLoopManager(lm),
+        fVariations(variations),
+        fLastCheckedEntry(nSlots * ROOT::Internal::RDF::CacheLineStep<Long64_t>(), -1)
    {
    }
 
@@ -60,7 +65,6 @@ public:
    RNodeBase &operator=(RNodeBase &&) = delete;
    virtual ~RNodeBase() = default;
 
-   virtual bool CheckFilters(unsigned int, Long64_t) = 0;
    virtual void Report(ROOT::RDF::RCutFlowReport &) const = 0;
    virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;
    virtual void IncrChildrenCount() = 0;
@@ -87,6 +91,9 @@ public:
                 "GetVariedFilter was called on a node type that does not implement it. This should never happen.");
       return nullptr;
    }
+
+   virtual ROOT::Internal::RDF::RMaskedEntryRange
+   CheckFilters(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize) = 0;
 };
 } // ns RDF
 } // ns Detail
