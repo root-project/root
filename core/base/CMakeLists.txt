@@ -27,7 +27,6 @@ set(BASE_HEADERS
   Byteswap.h
   KeySymbols.h
   MessageTypes.h
-  Riostream.h
   Rtypes.h
   TApplication.h
   TAtt3D.h
