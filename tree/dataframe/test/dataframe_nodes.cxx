@@ -134,7 +134,12 @@ TEST(RDataFrameNodes, DoubleEvtLoop)
       gSystem->Unlink(f.c_str());
 }
 
+/*
 // ROOT-9736
+DF-BULK-DISABLED: we do not support anymore reading of polymorphic objects
+with a base class type when on-disk the object is stored as a derived class type.
+This was a regression test for https://its.cern.ch/jira/browse/ROOT-9736 which
+was submitted by ATLAS, so we may consider re-adding support for it.
 TEST(RDataFrameNodes, InheritanceOfDefines)
 {
    ROOT::RDataFrame df(1);
@@ -157,7 +162,7 @@ TEST(RDataFrameNodes, InheritanceOfDefines)
    ROOT::RDataFrame(1).Define("x", createStat).Snapshot("t", ofileName, {"x"})->Foreach(checkStat, {"x"});
    gSystem->Unlink(ofileName);
 }
-
+*/
 TEST(RDataFrameNodes, InvalidLoopType)
 {
    ROOT::Detail::RDF::RLoopManager lm{};

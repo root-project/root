@@ -49,7 +49,7 @@ public:
    bool IsContiguous() const { return fImpl->IsContiguous(GetProxy()); }
 
    /// Returns the `sizeof` of the collection value type. Returns 0 in case the value size could not be retrieved.
-   std::size_t GetValueSize() const { return fImpl ? fImpl->GetValueSize(GetProxy()) : 0; }
+   std::size_t GetValueSize() const override { return fImpl ? fImpl->GetValueSize(GetProxy()) : 0; }
 
 protected:
    void *UntypedAt(std::size_t idx) const { return fImpl->At(GetProxy(), idx); }
