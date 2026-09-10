@@ -598,6 +598,31 @@ TEST(RColumnDescriptorIterable, IterateOverColumns)
    EXPECT_EQ(desc.GetNLogicalColumns(), counter);
 }
 
+TEST(RClusterGroupDescriptorIterable, Ordering)
+{
+   auto model = RNTupleModel::Create();
+
+   ROOT::TestSupport::FileRaii fileGuard("test_rntuple_cluster_group_iterable.root");
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      writer->Fill();
+      writer->CommitCluster(true /* commitClusterGroup */);
+      writer->Fill();
+      writer->CommitCluster(true /* commitClusterGroup */);
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+
+   EXPECT_EQ(3u, desc.GetNClusterGroups());
+   int entryIdx = -1;
+   for (const auto &cg : desc.GetClusterGroupIterable()) {
+      EXPECT_LT(entryIdx, static_cast<int>(cg.GetMinEntry()));
+      entryIdx = cg.GetMinEntry();
+   }
+}
+
 TEST(RClusterDescriptor, GetNBytesOnStorage)
 {
    auto model = RNTupleModel::Create();
