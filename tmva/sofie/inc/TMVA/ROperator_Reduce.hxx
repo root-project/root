@@ -131,7 +131,6 @@ public:
       auto inputLength = TMVA::Experimental::SOFIE::ConvertDimShapeToLength(fShapeX);
       auto outputLength = TMVA::Experimental::SOFIE::ConvertDimShapeToLength(fShapeY);
 
-      auto inputStrides = TMVA::Experimental::SOFIE::UTILITY::ComputeStrideFromShape(fShapeX);
       // output stride (or not pruned vector)
       auto outputStrides = TMVA::Experimental::SOFIE::UTILITY::ComputeStrideFromShape(fShapeYNotPruned);
 
@@ -250,35 +249,53 @@ public:
          // reset output tensors
          out << SP << "std::fill(tensor_" << fNY <<", tensor_"<< fNY <<" + "<< outputLength << ", " << initValue << ");\n";
 
-         out << SP << "for (size_t i = 0; i < " << inputLength << "; i++) {\n";
-
          size_t dim = fShapeX.size(); // this is the input dimension (e.g. 2, 3 or 4 or more)
 
-         // here we find output index
-         out << SP << SP << "size_t outputIndex = 0;\n";
+         // Loop over the input in memory order with one nested loop per axis. Recovering the
+         // indices instead from a single flat loop would need a division and a modulo per
+         // element, and with dynamic shapes those are real integer divisions (the divisors are
+         // not known at compile time). Here the input index is just a running counter and the
+         // output index is accumulated one axis at a time, so the inner loop is division-free.
+         auto indent = [&](size_t n) {
+            for (size_t q = 0; q < n; q++) out << SP;
+         };
+         // scope the loop counters, they are declared outside of the loop nest
+         out << SP << "{\n";
+         out << SP << SP << "size_t inputIndex = 0;\n";
+         std::string outputIndex = "0"; // output index accumulated so far
          for (size_t k = 0; k < dim; k++) {
+            indent(k + 2);
+            out << "for (size_t i_" << k << " = 0; i_" << k << " < (" << fShapeX[k] << "); i_" << k << "++) {\n";
             if (std::find(fAttrAxes.begin(), fAttrAxes.end(), k) == fAttrAxes.end()) {
-               // do for not reducing axes
-               // the strides and the dimensions can be expressions, so they need to be parenthesized
-               out << SP << SP << "size_t i_" << k << " = i / (" << inputStrides[k] << ") % (" << fShapeX[k] << ");\n";
-               out << SP << SP << "outputIndex += i_" << k << " * (" << outputStrides[k] << ");\n";
+               // not a reduced axis: it contributes to the output index
+               std::string next = "outputIndex_" + std::to_string(k);
+               indent(k + 3);
+               out << "size_t " << next << " = " << outputIndex << " + i_" << k << " * ("
+                   << outputStrides[k] << ");\n";
+               outputIndex = next;
             }
          }
          // now compute reduction
-         out << SP << SP << "// compute reduction....\n";
+         indent(dim + 2);
+         out << "// compute reduction....\n";
+         std::string y = "tensor_" + fNY + "[" + outputIndex + "]";
+         std::string x = "tensor_" + fNX + "[inputIndex]";
+         indent(dim + 2);
          if (fReduceOpMode == ReduceMax)
-            out << SP << SP << "tensor_" << fNY << "[outputIndex] = std::max(tensor_" << fNY << "[outputIndex], tensor_"
-                << fNX << "[i]);\n";
+            out << y << " = std::max(" << y << ", " << x << ");\n";
          else if (fReduceOpMode == ReduceMin)
-            out << SP << SP << "tensor_" << fNY << "[outputIndex] = std::min(tensor_" << fNY << "[outputIndex], tensor_"
-                << fNX << "[i]);\n";
+            out << y << " = std::min(" << y << ", " << x << ");\n";
          else if (fReduceOpMode == ReduceProd)
-            out << SP << SP << "tensor_" << fNY << "[outputIndex] *= tensor_" << fNX << "[i];\n";
+            out << y << " *= " << x << ";\n";
          else if (fReduceOpMode == ReduceSum || fReduceOpMode == ReduceMean)
-            out << SP << SP << "tensor_" << fNY << "[outputIndex] += tensor_" << fNX << "[i];\n";
-         else if (fReduceOpMode == ReduceSumSquare) {
-            out << SP << SP << "tensor_" << fNY << "[outputIndex] += tensor_" << fNX << "[i] * tensor_" << fNX
-                << "[i];\n";
+            out << y << " += " << x << ";\n";
+         else if (fReduceOpMode == ReduceSumSquare)
+            out << y << " += " << x << " * " << x << ";\n";
+         indent(dim + 2);
+         out << "inputIndex++;\n";
+         for (size_t k = dim; k > 0; k--) {
+            indent(k + 1);
+            out << "}\n";
          }
          out << SP << "}\n"; // end loop on input elements
          // normalize for reduced mean
