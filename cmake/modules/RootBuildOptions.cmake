@@ -344,6 +344,13 @@ endif()
 #---Define at moment the options with the selected default values------------------------------
 ROOT_APPLY_OPTIONS()
 
+if(APPLE AND ${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
+  if (NOT libcxx)
+    message(SEND_ERROR "libcxx=ON is needed for Clang compilers on Apple")
+    list(APPEND HOTFIX_BUILD_FLAGS -Dlibcxx=ON)
+  endif()
+endif()
+
 # builtins require feature
 if (builtin_fftw3 AND NOT fftw3)
   message(SEND_ERROR "-Dbuiltin_fftw3=ON requires -Dfftw3=ON")
