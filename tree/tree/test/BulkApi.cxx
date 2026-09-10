@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <memory>
 
 #include "Bytes.h"
 #include "TBranch.h"
@@ -254,4 +255,55 @@ TEST_F(BulkApiTest, BulkInMem)
       if (s < 0)
          break;
    }
+}
+
+// https://github.com/root-project/root/issues/8961
+// Reading a branch with the bulk API must not change its reported size: the bulk
+// path temporarily loads a basket into the fBaskets array and must remove it
+// cleanly afterwards, otherwise the branch streams an extra (empty) basket slot
+// and its total size grows by 4 bytes on every read.
+TEST_F(BulkApiTest, SizeInvariantAfterBulkRead)
+{
+   const std::string fileName = "BulkApiSizeInvariant.root";
+   {
+      // Heap-allocated to avoid the intermittent failures that stack-allocated
+      // TFile/TTree have caused in the past. The TTree is owned by the file.
+      std::unique_ptr<TFile> f(TFile::Open(fileName.c_str(), "recreate"));
+      f->SetCompressionLevel(0);
+      auto t = new TTree("T", "T");
+      int x = 0;
+      t->Branch("x", &x, 8000, 0); // small basket size -> many baskets
+      for (int i = 0; i < 100000; ++i) {
+         x = i;
+         t->Fill();
+      }
+      f->Write();
+   }
+
+   std::unique_ptr<TFile> f(TFile::Open(fileName.c_str()));
+   ASSERT_NE(nullptr, f);
+   auto t = f->Get<TTree>("T"); // owned by the file
+   ASSERT_NE(nullptr, t);
+   TBranch *b = t->GetBranch("x");
+   ASSERT_NE(nullptr, b);
+
+   const Long64_t sizeBefore = b->GetTotalSize();
+
+   // Read the whole branch: the size grew by 4 bytes on *every* call, so going
+   // through all the baskets also covers the accumulation over repeated reads.
+   TBufferFile buf(TBuffer::EMode::kWrite, 32 * 1024);
+   Long64_t entry = 0;
+   while (entry < t->GetEntries()) {
+      auto s = b->GetBulkRead().GetBulkEntries(entry, buf);
+      ASSERT_GT(s, 0) << "Did not read any entry with the bulk API at entry " << entry << ".";
+      entry += s;
+
+      EXPECT_EQ(sizeBefore, b->GetTotalSize())
+         << "The branch size must be invariant from the API used to read it (at entry " << entry << ").";
+      // The bulk read hands the basket buffer over to the user, so the branch
+      // must not be left holding on to the basket either.
+      EXPECT_EQ(0, b->GetListOfBaskets()->GetEntriesFast())
+         << "The bulk read left a basket behind (at entry " << entry << ").";
+   }
+   EXPECT_EQ(t->GetEntries(), entry);
 }

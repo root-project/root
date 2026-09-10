@@ -188,6 +188,7 @@ protected:
    virtual void SetAddressImpl(void *addr, bool /* implied */, Int_t /* offset */) { SetAddress(addr); }
 
 private:
+   void     DisassociateBulkBasket(Int_t basketnumber);
    Int_t    GetBasketAndFirst(TBasket*& basket, Long64_t& first, TBuffer* user_buffer);
    TBasket *GetBasketImpl(Int_t basket, TBuffer* user_buffer);
    Int_t    GetBulkEntries(Long64_t, TBuffer&);
