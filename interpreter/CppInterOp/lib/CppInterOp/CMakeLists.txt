@@ -302,6 +302,9 @@ if(TARGET CppInterOpTableGen)
   add_dependencies(clangCppInterOp CppInterOpTableGen)
 endif()
 target_compile_definitions(clangCppInterOp PUBLIC "_CINDEX_LIB_") # workaround for the use of `CINDEX_LINKAGE`
+# The library defines its own dispatch trace-hook slots (Tracing.cpp): mark
+# them dllexport on Windows via the CPPINTEROP_DISPATCH_STORAGE declarations.
+target_compile_definitions(clangCppInterOp PRIVATE CPPINTEROP_DISPATCH_EXPORTS)
 
 # Where clang keeps its builtin headers. MakeResourcesPath() derives this
 # from LLVM_BINARY_DIR at runtime, which misses wherever clang's headers are

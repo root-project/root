@@ -28,6 +28,9 @@
 #ifdef _WIN32
 #include <windows.h>
 #undef LoadLibrary
+// windows.h aliases GetObject to GetObjectA/W, mangling any consumer method
+// of that name compiled after this header (e.g. TBranch::GetObject in ROOT).
+#undef GetObject
 #else
 #include <dlfcn.h>
 #endif
@@ -107,7 +110,7 @@ namespace CppInternal::DispatchRaw {
 using namespace Cpp;
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 #define CPPINTEROP_API_FUNC(DN, CN, Ret, DeclArgs, CallArgs, RawTypes)         \
-  extern Ret(*DN) RawTypes;
+  extern CPPINTEROP_DISPATCH_STORAGE Ret(*DN) RawTypes;
 #include "CppInterOp/CppInterOpAPI.inc"
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 } // namespace CppInternal::DispatchRaw
