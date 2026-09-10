@@ -24,6 +24,7 @@ __all__ = [
     'free',
     'array_new',
     'array_delete',
+    'value_from_memory',
     'signals_as_exception',
     'set_signals_as_exception',
     'FatalError',
@@ -43,6 +44,34 @@ def argv():
 def argc():
     """Return C's argc for use with cppyy/ctypes."""
     return len(sys.argv)
+
+def value_from_memory(type_name, address, dims=None):
+    """Read a value of the C++ type `type_name` from `address`.
+
+    This is the reading half of the conversion that cppyy performs when a
+    function returns, or a data member is read: given a type name and a raw
+    address, it hands back the Python object that cppyy would have produced.
+    It is meant for code that has an address and a type name in hand, but no
+    C++ entity to read them from, such as a framework exposing its own data
+    description.
+
+    `address` is an integer, as returned by `addressof`. `type_name` is any
+    C++ type name that cppyy can resolve, including typedefs. For a class
+    type a bound proxy is returned, for a builtin type a Python value.
+
+    If `dims` is given, it is a sequence of integers describing the shape of
+    an array, `address` is taken to be the start of the array data, and a
+    `LowLevelView` of that shape is returned. The type name should then name
+    the element type followed by `[]`, e.g. `"double[]"`. Pass a single-entry
+    sequence for a one-dimensional array.
+
+        v = ll.value_from_memory('double', addr)             # a float
+        a = ll.value_from_memory('double[]', addr, (2, 3))   # a 2x3 view
+
+    Note that no lifetime or bounds checking is or can be done: the caller
+    vouches for the address, the type and the shape.
+    """
+    return cppyy._backend.value_from_memory(type_name, address, dims)
 
 # import low-level python converters
 for _name in ['addressof', 'as_cobject', 'as_capsule', 'as_ctypes', 'as_memoryview']:
