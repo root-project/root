@@ -41,8 +41,8 @@
 #include "TVirtualPerfStats.h"
 #include "TDavixFileInternal.h"
 #include "utils.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <cerrno>
 #include <cstdlib>
 #include <unistd.h>

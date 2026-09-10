@@ -19,11 +19,6 @@
 //                converted to lower case
 /////////////////////////////////////////////////////////////////////////
 
-#include <cstdlib>
-#include <cstring>
-#include <cctype>
-#include <iostream>
-
 #include "TFile.h"
 #include "TDirectoryFile.h"
 #include "TTree.h"
@@ -35,7 +30,12 @@
 #include "TGraph.h"
 #include "TMath.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
+#include <iostream>
+#include <cstdio>
 
 //  Define the names of the Fortran common blocks for the different OSs
 // Note that with gcc3.4 or above the size of PAWC_SIZE must be the same

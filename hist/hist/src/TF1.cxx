@@ -9,10 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <iostream>
-#include <memory>
 #include "strlcpy.h"
-#include "snprintf.h"
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TMath.h"
@@ -56,6 +53,10 @@
 #include "v5/TF1Data.h"
 
 #include "AnalyticalIntegrals.h"
+
+#include <cstdio>
+#include <iostream>
+#include <memory>
 
 std::atomic<Bool_t> TF1::fgAbsValue(kFALSE);
 Bool_t TF1::fgRejectPoint = kFALSE;

@@ -1,14 +1,12 @@
 // Utilities to be used by some scripts.
 // To load them up copy the rootlogon_template.C into the current directory.
 
-#include <cstdio>
-#include <cstdarg>
-#include <iostream>
-#include "snprintf.h"
-
 #include "TError.h"
 #include "TSystem.h"
 
+#include <cstdio>
+#include <cstdarg>
+#include <iostream>
 
 // This redirect the root warning to be on stdout instead of stderr.
 

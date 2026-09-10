@@ -74,8 +74,8 @@ for usage examples.
 
 #include <TAxis.h>
 
-#include <snprintf.h>
 
+#include <cstdio>
 #include <algorithm>
 #include <iostream>
 

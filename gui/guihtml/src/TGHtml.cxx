@@ -31,11 +31,6 @@
 
 **************************************************************************/
 
-#include <cctype>
-#include <cstdlib>
-#include <cstring>
-#include <iostream>
-
 #include "TGHtml.h"
 #include "THashTable.h"
 #include "TObjString.h"
@@ -50,7 +45,12 @@
 #include "TGMenu.h"
 #include "TVirtualX.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cctype>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+#include <cstdio>
 
 
 /** \class TGHtml

@@ -84,8 +84,8 @@ Hitting the tab key will generate:
 #include "TMath.h"
 #include "TVirtualX.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <cctype>
 #include <iostream>
 

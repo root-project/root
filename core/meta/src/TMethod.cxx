@@ -20,7 +20,6 @@
 
 #include "strtok.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 #include "TClass.h"
 #include "TList.h"
 #include "TMethod.h"
@@ -30,7 +29,7 @@
 #include "Strlen.h"
 #include "TDataMember.h"
 
-
+#include <cstdio>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TMethod ctor. TMethods are constructed in TClass.

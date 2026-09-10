@@ -47,7 +47,6 @@
 #include "TVirtualPad.h"
 #include "TVirtualPerfStats.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
 #include "TBranchIMTHelper.h"
 
