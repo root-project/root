@@ -30,7 +30,6 @@
 #include "TQObject.h"
 
 #include "GuiTypes.h"
-#include "TString.h"
 #include "Buttons.h"
 
 // forward declarations
@@ -44,6 +43,7 @@ class TH1F;
 class TFrame;
 class TLegend;
 class TBox;
+class TString;
 class TVirtualViewer3D;
 class TVirtualPadPainter;
 
@@ -273,7 +273,7 @@ public:
    virtual void     XYtoPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const = 0;
    virtual void     XYtoPixel(Double_t x, Double_t y, Double_t &xpixel, Double_t &ypixel) const = 0;
 
-   virtual Int_t    IncrementPaletteColor(Int_t i, TString opt) = 0;
+   virtual Int_t    IncrementPaletteColor(Int_t i, const TString &opt) = 0;
    virtual Int_t    NextPaletteColor() = 0;
 
    virtual Bool_t   PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t &yb, Option_t* opt = "lb") = 0;

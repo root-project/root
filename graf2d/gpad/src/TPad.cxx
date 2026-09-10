@@ -3129,15 +3129,18 @@ void TPad::ls(Option_t *option) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment (i==1) or set (i>1) the number of autocolor in the pad.
 
-Int_t TPad::IncrementPaletteColor(Int_t i, TString opt)
+Int_t TPad::IncrementPaletteColor(Int_t i, const TString &opt)
 {
-   if (opt.Index("pfc")>=0 || opt.Index("plc")>=0 || opt.Index("pmc")>=0) {
-       if (i==1) fNumPaletteColor++;
-       else      fNumPaletteColor = i;
-       return    fNumPaletteColor;
-   } else {
-      return 0;
+   TString opt1 = opt;
+   opt1.ToLower();
+
+   if (opt1.Contains("pfc") || opt1.Contains("plc") || opt1.Contains("pmc")) {
+      if (i == 1) fNumPaletteColor++;
+      else      fNumPaletteColor = i;
+      return    fNumPaletteColor;
    }
+
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -399,7 +399,7 @@ public:
    void              ResetToolTip(TObject *tip) override;
    void              CloseToolTip(TObject *tip) override;
 
-   Int_t             IncrementPaletteColor(Int_t i, TString opt) override;
+   Int_t             IncrementPaletteColor(Int_t i, const TString &opt) override;
    Int_t             NextPaletteColor() override;
 
    void              DrawCollideGrid();
