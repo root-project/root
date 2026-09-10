@@ -23,6 +23,9 @@
 #include <RooFit/Detail/MathFuncs.h>
 #include <RooConstVar.h>
 
+#include <sstream>
+#include <stdexcept>
+
 // Constructing a RooMultiPdf
 //  parameter name : The name of the RooMultiPdf object
 //  parameter title : Display title in plots
@@ -87,4 +90,34 @@ void RooMultiPdf::getParametersHook(const RooArgSet *nset, RooArgSet *list, bool
    list->removeAll();
    getCurrentPdf()->getParameters(nset, *list, stripDisconnected);
    list->add(*x);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// The index category of a RooMultiPdf selects between alternative hypotheses
+/// for the observables (as used in the discrete profiling method), it does not
+/// partition the data into subsamples like the index category of a
+/// RooSimultaneous. It therefore has no well-defined prior probability, and
+/// there is no meaningful way to sample it in generate(). Fix the index to a
+/// specific state (e.g. with RooCategory::setIndex()) and generate from the
+/// resulting single-component pdf instead.
+
+RooAbsGenContext *RooMultiPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype,
+                                           const RooArgSet *auxProto, bool verbose) const
+{
+   RooArgSet allVars{vars};
+   if (prototype)
+      allVars.add(*prototype->get(), true);
+
+   if (allVars.find(x->GetName())) {
+      std::stringstream ss;
+      ss << "RooMultiPdf::genContext(" << GetName() << "): the index category \"" << x->GetName()
+         << "\" selects between alternative hypotheses for the observables and is not itself an observable "
+            "with a well-defined prior probability, unlike the index category of a RooSimultaneous. "
+            "Generating data with this index among the variables to generate is therefore not supported. "
+            "Fix the index to a specific state (e.g. with RooCategory::setIndex()) and generate from the "
+            "resulting single-component pdf instead.";
+      throw std::invalid_argument(ss.str());
+   }
+
+   return RooAbsPdf::genContext(vars, prototype, auxProto, verbose);
 }
