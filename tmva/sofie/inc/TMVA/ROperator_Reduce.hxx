@@ -259,8 +259,9 @@ public:
          for (size_t k = 0; k < dim; k++) {
             if (std::find(fAttrAxes.begin(), fAttrAxes.end(), k) == fAttrAxes.end()) {
                // do for not reducing axes
-               out << SP << SP << "size_t i_" << k << " = i / " << inputStrides[k] << " % " << fShapeX[k] << ";\n";
-               out << SP << SP << "outputIndex += i_" << k << " * " << outputStrides[k] << ";\n";
+               // the strides and the dimensions can be expressions, so they need to be parenthesized
+               out << SP << SP << "size_t i_" << k << " = i / (" << inputStrides[k] << ") % (" << fShapeX[k] << ");\n";
+               out << SP << SP << "outputIndex += i_" << k << " * (" << outputStrides[k] << ");\n";
             }
          }
          // now compute reduction

@@ -142,17 +142,17 @@ public:
       out << SP << SP << SP << "elements[l] = std::make_pair(tensor_" << fNX << "[xoffset + " << strideX[axis] << "*l + j], l);\n";
       out << SP << SP << "}\n";
 
-      if (fAttrSorted) {
-         if (fAttrLargest) {
-            out<<SP<<SP << "std::partial_sort(elements.begin(),elements.begin()+" << fK << ",elements.end()," <<
-               "[](std::pair<float,int64_t>a,std::pair<float,int64_t>b){return (a.first!=b.first) ? (a.first>b.first) : a.second < b.second;});\n";
-
-         } else
-            out<<SP<<SP << "std::partial_sort(elements.begin(),elements.begin()+" << fK << ",elements.end()," <<
-            "[](std::pair<float,int64_t>a,std::pair<float,int64_t>b){return (a.first!=b.first) ? (a.first<b.first) : a.second < b.second;});\n";
-      } else
-         // in this case we don;t need to return sorted elements, so we keep same order as before
-         out<<SP<<SP << "std::partial_sort(elements.begin(),elements.begin()+" << fK << ",elements.end());\n";
+      // One comparator for every case. The previous sorted=0 branch used the default
+      // operator< on the pair and so ignored fAttrLargest, selecting the K smallest
+      // elements even when the largest were asked for. Ties break by index, which makes
+      // the ordering total and the selected set unique.
+      std::string cmp = "[](const std::pair<float,int64_t> &a, const std::pair<float,int64_t> &b){"
+                        "return (a.first != b.first) ? (a.first " + std::string(fAttrLargest ? ">" : "<") +
+                        " b.first) : a.second < b.second;}";
+      // the ONNX spec leaves the order unspecified when sorted=0, but sorting anyway costs
+      // only O(K log K) and keeps the generated code reproducible
+      out << SP << SP << "std::partial_sort(elements.begin(), elements.begin() + (" << fK
+          << "), elements.end(), " << cmp << ");\n";
 
       // copy the selected elements in the output
       out << SP << SP << "for (size_t l = 0; l < " << fK << "; l++) {\n";
