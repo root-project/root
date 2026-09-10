@@ -84,8 +84,6 @@ to save the pointer to the object as a class member or local variable
 if this pointer is used frequently or inside loops.
 */
 
-#include <iostream>
-#include "Strlen.h"
 #include "strlcpy.h"
 #include "TFolder.h"
 #include "TBrowser.h"
@@ -94,6 +92,9 @@ if this pointer is used frequently or inside loops.
 #include "TClass.h"
 #include "TError.h"
 #include "TRegexp.h"
+
+#include <iostream>
+#include <cstring>
 
 static const char *gFolderD[64];
 static Int_t gFolderLevel = -1;

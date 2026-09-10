@@ -9,8 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <iostream>
-#include "Strlen.h"
 #include "TROOT.h"
 #include "TAttText.h"
 #include "TVirtualPad.h"
@@ -21,6 +19,8 @@
 #include "TError.h"
 #include "TColor.h"
 
+#include <iostream>
+#include <cstring>
 
 /** \class TAttText
 \ingroup Base

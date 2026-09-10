@@ -26,10 +26,10 @@
 #include "TMethodArg.h"
 #include "TMethodCall.h"
 #include "TInterpreter.h"
-#include "Strlen.h"
 #include "TDataMember.h"
 
 #include <cstdio>
+#include <cstring>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TMethod ctor. TMethods are constructed in TClass.
