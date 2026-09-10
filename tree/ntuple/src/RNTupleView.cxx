@@ -28,6 +28,21 @@ ROOT::Internal::GetFieldRange(const ROOT::RFieldBase &field, ROOT::Internal::RPa
       auto descGuard = pageSource.GetSharedDescriptorGuard();
       const auto &desc = descGuard.GetRef();
 
+      auto parentId = desc.GetFieldDescriptor(field.GetOnDiskId()).GetParentId();
+      while (parentId != desc.GetFieldZeroId()) {
+         const auto &fd = desc.GetFieldDescriptor(parentId);
+         if ((fd.GetStructure() != ROOT::ENTupleStructure::kPlain) &&
+             (fd.GetStructure() != ROOT::ENTupleStructure::kRecord)) {
+            break;
+         }
+         parentId = fd.GetParentId();
+      }
+      if (parentId == desc.GetFieldZeroId()) {
+         // This field is structurally a top-level field, hence we can avoid the calculation of column elements
+         // and instead return the number of entries.
+         return ROOT::RNTupleGlobalRange(0, desc.GetNEntries());
+      }
+
       auto fnGetPrincipalColumnId = [&desc](ROOT::DescriptorId_t fieldId) -> ROOT::DescriptorId_t {
          R__ASSERT(fieldId != ROOT::kInvalidDescriptorId);
          auto columnIterable = desc.GetColumnIterable(fieldId);
