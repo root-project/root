@@ -218,10 +218,11 @@ const PadButtonsHandler = {
 /** @summary Fill TWebObjectOptions for painter
   * @private */
 function createWebObjectOptions(painter) {
-   if (!painter?.getSnapId())
+   const snapid = painter?.getSnapId();
+   if (!snapid)
       return null;
 
-   const obj = { _typename: 'TWebObjectOptions', snapid: painter.getSnapId(), opt: painter.getDrawOpt(true), fcust: '', fopt: [] };
+   const obj = { _typename: 'TWebObjectOptions', snapid, opt: painter.getDrawOpt(true), fcust: '', fopt: [] };
    if (isFunc(painter.fillWebObjectOptions))
       painter.fillWebObjectOptions(obj);
    return obj;
@@ -2364,6 +2365,12 @@ class TPadPainter extends ObjectPainter {
             const opt = createWebObjectOptions(sub);
             if (opt)
                elem.primitives.push(opt);
+            if (sub.$copywebid && opt?.fcust) {
+               // workaround for stack histograms to assign attributes to original histo
+               const opt2 = Object.assign({}, opt);
+               opt2.snapid = sub.getPrimary().getSnapId() + '#' + sub.$copywebid;
+               elem.primitives.push(opt2);
+            }
          }
       });
 
