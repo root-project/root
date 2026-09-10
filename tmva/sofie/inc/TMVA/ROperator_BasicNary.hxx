@@ -21,28 +21,40 @@ struct NaryOperatorTraits {};
 template<typename T>
 struct NaryOperatorTraits<T, EBasicNaryOperator::Max> {
    static const std::string Name() {return "Max";}
-   static std::string Op(const std::string& res, std::vector<std::string>& inputs) {
+   static std::string Expr(const std::vector<std::string>& inputs) {
       std::stringstream out;
-      out << res << " = std::max({ " << inputs[0];
+      out << "std::max({ " << inputs[0];
       for (size_t i = 1; i < inputs.size(); i++) {
          out << ", " << inputs[i];
       }
-      out << "});\n";
+      out << "})";
       return out.str();
+   }
+   static std::string Op(const std::string& res, std::vector<std::string>& inputs) {
+      return res + " = " + Expr(inputs) + ";\n";
+   }
+   static size_t Func(const std::vector<size_t>& values) {
+      return *std::max_element(values.begin(), values.end());
    }
 };
 
 template<typename T>
 struct NaryOperatorTraits<T, EBasicNaryOperator::Min> {
    static const std::string Name() {return "Min";}
-   static std::string Op(const std::string& res, std::vector<std::string>& inputs) {
+   static std::string Expr(const std::vector<std::string>& inputs) {
       std::stringstream out;
-       out << res << " = std::min({ " << inputs[0];
+      out << "std::min({ " << inputs[0];
       for (size_t i = 1; i < inputs.size(); i++) {
          out << ", " << inputs[i];
       }
-      out << "});\n";
+      out << "})";
       return out.str();
+   }
+   static std::string Op(const std::string& res, std::vector<std::string>& inputs) {
+      return res + " = " + Expr(inputs) + ";\n";
+   }
+   static size_t Func(const std::vector<size_t>& values) {
+      return *std::min_element(values.begin(), values.end());
    }
 };
 
@@ -52,28 +64,44 @@ struct NaryOperatorTraits<T, EBasicNaryOperator::Mean> {};
 template<>
 struct NaryOperatorTraits<float, EBasicNaryOperator::Mean> {
    static const std::string Name() {return "Mean";}
-   static std::string Op(const std::string& res, std::vector<std::string>& inputs) {
+   static std::string Expr(const std::vector<std::string>& inputs) {
       std::stringstream out;
-      out << res << " = (" << inputs[0];
+      out << "((" << inputs[0];
       for (size_t i = 1; i < inputs.size(); i++) {
          out << " + " << inputs[i];
       }
-      out << ") / float(" << inputs.size() << ");\n";
+      out << ") / float(" << inputs.size() << "))";
       return out.str();
+   }
+   static std::string Op(const std::string& res, std::vector<std::string>& inputs) {
+      return res + " = " + Expr(inputs) + ";\n";
+   }
+   static size_t Func(const std::vector<size_t>& values) {
+      size_t sum = 0;
+      for (auto & v : values) sum += v;
+      return sum / values.size();
    }
 };
 
 template<typename T>
 struct NaryOperatorTraits<T, EBasicNaryOperator::Sum> {
    static const std::string Name() {return "Sum";}
-   static std::string Op(const std::string& res, std::vector<std::string>& inputs) {
+   static std::string Expr(const std::vector<std::string>& inputs) {
       std::stringstream out;
-      out << res << " = " << inputs[0];
+      out << "(" << inputs[0];
       for (size_t i = 1; i < inputs.size(); i++) {
          out << " + " << inputs[i];
       }
-      out << ";\n";
+      out << ")";
       return out.str();
+   }
+   static std::string Op(const std::string& res, std::vector<std::string>& inputs) {
+      return res + " = " + Expr(inputs) + ";\n";
+   }
+   static size_t Func(const std::vector<size_t>& values) {
+      size_t sum = 0;
+      for (auto & v : values) sum += v;
+      return sum;
    }
 };
 
@@ -121,12 +149,87 @@ public:
       return ret;
    }
 
+   // Case where all inputs are rank <= 1 INT64 tensors known at initialization time and at least one of
+   // them is a shape tensor. The output is then also a shape tensor (its values, possibly symbolic, are
+   // computed here) and no code needs to be generated for this operator.
+   bool InitializeShapeTensorOutput(RModel &model) {
+      bool hasShapeTensor = false;
+      bool isScalar = true;
+      size_t length = 1;
+      for (auto &name : fNInputs) {
+         if (model.GetTensorType(name) != ETensorType::INT64)
+            return false;
+         if (!model.IsShapeTensor(name) && !model.IsInitializedTensor(name))
+            return false;
+         hasShapeTensor |= model.IsShapeTensor(name);
+         auto shape = model.GetTensorShape(name);
+         if (shape.size() > 1)
+            return false;
+         if (!shape.empty()) {
+            isScalar = false;
+            // only scalars or tensors of the same length can be combined here
+            if (shape[0] != 1 && length != 1 && shape[0] != length)
+               return false;
+            length = std::max(length, shape[0]);
+         }
+      }
+      if (!hasShapeTensor)
+         return false;
+
+      // collect the values of every input as Dim's, broadcasting the scalars and the size-1 tensors
+      std::vector<std::vector<Dim>> values(fNInputs.size(), std::vector<Dim>(length));
+      for (size_t i = 0; i < fNInputs.size(); i++) {
+         auto &name = fNInputs[i];
+         if (model.IsShapeTensor(name)) {
+            auto &dims = model.GetShapeTensorValues(name);
+            for (size_t j = 0; j < length; j++)
+               values[i][j] = (dims.size() == 1) ? dims[0] : dims[j];
+         } else {
+            auto data = static_cast<int64_t *>(model.GetInitializedTensorData(name).get());
+            size_t n = ConvertShapeToLength(model.GetTensorShape(name));
+            for (size_t j = 0; j < length; j++)
+               values[i][j] = Dim{static_cast<size_t>(data[(n == 1) ? 0 : j])};
+            // deliberately not flagged as non-writable: the same initializer may still be
+            // read at run time by another operator, and a non-writable tensor gets no
+            // member emitted at all. Leaving it costs a few bytes in the weight file.
+         }
+      }
+
+      std::vector<Dim> outputValues(length);
+      for (size_t j = 0; j < length; j++) {
+         bool isConstant = true;
+         std::vector<size_t> dims(fNInputs.size());
+         std::vector<std::string> exprs(fNInputs.size());
+         for (size_t i = 0; i < fNInputs.size(); i++) {
+            isConstant &= !values[i][j].isParam;
+            dims[i] = values[i][j].dim;
+            // cast to size_t so that the parametric dimensions and the literals have a common type
+            exprs[i] = "size_t(" + values[i][j].GetVal() + ")";
+         }
+         if (isConstant)
+            outputValues[j] = Dim{NaryOperatorTraits<T, Op>::Func(dims)};
+         else
+            outputValues[j] = Dim{NaryOperatorTraits<T, Op>::Expr(exprs), static_cast<size_t>(-1)};
+      }
+      model.AddShapeTensor(fNY, outputValues, isScalar);
+      fIsOutputConstant = true;
+      if (model.Verbose()) {
+         std::cout << NaryOperatorTraits<T, Op>::Name() << " : --> " << fNY << " "
+                   << ConvertDimShapeToString(outputValues) << " (shape)" << std::endl;
+      }
+      return true;
+   }
+
    void Initialize(RModel& model) override {
       std::vector<std::vector<size_t>> inputShapes;
       for (auto &it : fNInputs) {
          if (!model.CheckIfTensorAlreadyExist(it)) {
             throw std::runtime_error("TMVA SOFIE BasicNary Op Input Tensor " + it + " is not found in model");
          }
+      }
+      if (InitializeShapeTensorOutput(model))
+         return;
+      for (auto &it : fNInputs) {
          fShapeInputs.push_back(model.GetDimTensorShape(it));
          if (fNInputs.size()> 2) {
             if (model.IsDimInputTensor(it))
@@ -201,6 +304,8 @@ public:
    }
 
    std::string Generate(std::string OpName) override {
+      if (fIsOutputConstant)
+         return "";
       OpName = "op_" + OpName;
       if (fDimShapeY.empty()) {
          throw std::runtime_error("TMVA SOFIE BasicNary called to Generate without being initialized first");
