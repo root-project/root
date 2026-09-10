@@ -121,21 +121,21 @@ jobs:
         # Specify platform + optional build option overrides
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          #~ - platform: mac14
-            #~ arch: X64
-            #~ overrides: ["CMAKE_CXX_STANDARD=20"]
-          #~ - platform: mac15
-            #~ arch: ARM64
-            #~ overrides: ["CMAKE_CXX_STANDARD=23"]
-          #~ - platform: mac26
-            #~ arch: ARM64
-          #~ - platform: mac-beta
-            #~ is_special: true
-            #~ arch: ARM64
+          - platform: mac14
+            arch: X64
+            overrides: ["CMAKE_CXX_STANDARD=20"]
+          - platform: mac15
+            arch: ARM64
+            overrides: ["CMAKE_CXX_STANDARD=23"]
+          - platform: mac26
+            arch: ARM64
+          - platform: mac-beta
+            is_special: true
+            arch: ARM64
 
     runs-on:
       - self-hosted
-      - ${{ matrix.platform }}
+      #~ - ${{ matrix.platform }}
 
     name: |
       ${{ matrix.platform }} ${{ matrix.arch }}
