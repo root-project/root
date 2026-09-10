@@ -20,6 +20,7 @@
 #include "RooListProxy.h"
 #include "RooAbsBinning.h"
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -37,6 +38,8 @@ public:
   RooGenericPdf(const char *name, const char *title, const RooArgList& dependents);
   RooGenericPdf(const RooGenericPdf& other, const char* name=nullptr);
   TObject* clone(const char* newname=nullptr) const override { return new RooGenericPdf(*this,newname); }
+
+  bool canComputeBatchWithCuda() const override;
 
   // I/O streaming interface (machine readable)
   bool readFromStream(std::istream& is, bool compact, bool verbose=false) override ;
@@ -65,7 +68,15 @@ public:
   const char* expression() const { return _formExpr.Data(); }
   const RooArgList& dependents() const { return _actualVars; }
 
+  /// Name of the cling-JIT-compiled function that evaluates this formula,
+  /// which generated code from the codegen fallback path calls by name.
+  /// \note Returns an empty string when the formula is handled by the JIT-free
+  /// formula backend (the default for supported expressions, see
+  /// formulaUsesAstBackend()); codegen then inlines the expression via
+  /// emitFormulaCpp() instead.
   std::string getUniqueFuncName() const;
+  std::string emitFormulaCpp(std::function<std::string(unsigned int)> const &varName) const;
+  bool formulaUsesAstBackend() const;
 
   void setBinning(const RooAbsRealLValue &obs, const RooAbsBinning &binning, bool checkFlatness = true);
   const RooAbsBinning *getBinning(const RooAbsRealLValue &obs) const;
