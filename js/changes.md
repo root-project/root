@@ -1,5 +1,11 @@
 # JSROOT changelog
 
+
+## Changes in 7.11.x
+1. Fix - exclude @resvg/resvg-js from browser bundlers #421
+2. Fix - hstack autocolor handling in TWebCanvas
+
+
 ## Changes in 7.11.1
 1. Fix - prevent very long header in context menu
 2. Fix - JSON production for TWebCanvas
