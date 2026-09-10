@@ -97,26 +97,6 @@ namespace cling {
                                    DeclarationName &parentDeclName,
                                    const DeclContext *childCurrentDeclContext) {
 
-    // Don't do the import if we have a Function Template or using decls. They
-    // are not supported by clang.
-    // FIXME: These are temporary checks and should be de-activated once clang
-    // supports their import.
-    if ((declToImport->isFunctionOrFunctionTemplate()
-         && declToImport->isTemplateDecl()) || dyn_cast<UsingDecl>(declToImport)
-         || dyn_cast<UsingShadowDecl>(declToImport)) {
-#ifndef NDEBUG
-      utils::DiagnosticsStore DS(
-        m_Importer->getFromContext().getDiagnostics(), false, false, true);
-
-      const Decl* To = llvm::cantFail(m_Importer->Import(declToImport));
-      assert(To && "Import did not work!");
-      assert((DS.empty() ||
-              DS[0].getID() != clang::diag::err_unsupported_ast_node) &&
-             "Import not supported!");
-#endif
-      return;
-    }
-
     if (auto toOrErr = m_Importer->Import(declToImport)) {
       if (NamedDecl *importedNamedDecl = llvm::dyn_cast<NamedDecl>(*toOrErr)) {
         SetExternalVisibleDeclsForName(childCurrentDeclContext,
