@@ -5,12 +5,22 @@
 1. Let store canvas as html file via context menu
 1. Improve `TGraph` update
 1. When draw TH2/TF2 with "surf same" draw option, only lines are drawn
+1. Implement new "POLF" and "POLN" draw options for polar coordinates for `TH2`
 1. Use "JSROOT" label for main pad button, hide it after 5 seconds from the drawing
+1. Let preserve `BigInt` values when calling `rntupleProcess()` function #418
+1. Use `8.6g`/`10.8g` format for float/double historgam content-to-text conversion in tooltips
 1. Add `@vite-ignore` comment to dynamic imports to suppress Vite/Rollup analysis warnings
+1. Fix - read all cluster groups from ntuple #415
+1. Fix - correctly handle empty clusters in ntuple #420
+1. Fix - hstack autocolor handling in TWebCanvas
+
+
+## Changes in 7.11.1
 1. Fix - prevent very long header in context menu
-1. Fix - draw 3d contours in "surf3" twice https://root-forum.cern.ch/t/64910
-1. Fix - check evaluated value of TF1
-1. Fix - corrupted page layout in SWAN after calling %rootbrowse
+2. Fix - JSON production for TWebCanvas
+3. Fix - check evaluated value of TF1
+4. Fix - corrupted page layout in SWAN after calling %rootbrowse
+5. Fix - RNtuple decodeZigzag64 for SplitInt64 columns #410
 
 
 ## Changes in 7.11.0

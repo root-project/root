@@ -36,7 +36,7 @@ class THistDrawOptions {
          Text: false, TextAngle: 0, TextKind: '', Char: 0, Color: false, Contour: 0, Cjust: false,
          Lego: 0, Surf: 0, Off: 0, Tri: 0, Proj: 0, AxisPos: 0, Ortho: gStyle.fOrthoCamera,
          Spec: false, Pie: false, List: false, Zscale: false, Zvert: true, PadPalette: false,
-         Candle: '', Violin: '', Scaled: null, Circular: 0, Poisson: kNormal,
+         Candle: '', Violin: '', Scaled: null, Circular: 0, Poisson: kNormal, Polar: 0,
          GLBox: 0, GLColor: false, Project: '', ProfileProj: '', Profile2DProj: '', System: kCARTESIAN,
          AutoColor: false, NoStat: false, ForceStat: false, PadStats: false, PadTitle: false, AutoZoom: false,
          HighRes: 0, Zero: 1, Palette: 0, BaseLine: false, ShowEmpty: false,
@@ -388,8 +388,18 @@ class THistDrawOptions {
       if (d.check('R3D_', true))
          this.Render3D = constants.Render3D.fromString(d.part.toLowerCase());
 
-      if (d.check('POL'))
+      if (d.check('POLN')) {
          this.System = kPOLAR;
+         this.Polar = 3;
+      }
+      if (d.check('POLF')) {
+         this.System = kPOLAR;
+         this.Polar = 2;
+      }
+      if (d.check('POL')) {
+         this.System = kPOLAR;
+         this.Polar = 1;
+      }
       if (d.check('CYL'))
          this.System = kCYLINDRICAL;
       if (d.check('SPH'))

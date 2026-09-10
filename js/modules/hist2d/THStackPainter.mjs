@@ -214,7 +214,9 @@ class THStackPainter extends ObjectPainter {
             hopt = hopt.slice(0, p + 3) + hopt.slice(p + 4);
       }
       if (!o.pads)
-         hopt += ' same nostat' + o.auto;
+         hopt += ' same nostat';
+      if (!this.getPadPainter()?.getSnapId())
+         hopt += o.auto;
       return hopt;
    }
 
@@ -229,40 +231,37 @@ class THStackPainter extends ObjectPainter {
          return this;
 
       const rindx = o.horder ? indx : nhists - indx - 1,
-            subid = o.nostack ? `hists_${rindx}` : `stack_${rindx}`,
+            h_id = `hists_${rindx}`, s_id = `stack_${rindx}`,
             hist = hlst.arr[rindx],
             hopt = this.getHistDrawOption(hist, stack.fHists.opt[rindx]);
+      let dom;
 
-      // handling of 'pads' draw option
       if (pad_painter) {
+         // handling of 'pads' draw option
          const subpad_painter = pad_painter.getSubPadPainter(indx + 1);
          if (!subpad_painter)
             return this;
-
          subpad_painter.cleanPrimitives(true);
-
-         return this.drawHist(subpad_painter, hist, hopt).then(subp => {
-            if (subp) {
-               subp.setSecondaryId(this, subid);
-               this.#painters.push(subp);
-            }
-            return this.drawNextHisto(indx + 1, pad_painter);
-         });
+         dom = subpad_painter;
+      } else {
+         // special handling of stacked histograms
+         // also used to provide tooltips
+         if ((rindx > 0) && !o.nostack)
+            hist.$baseh = hlst.arr[rindx - 1];
+         // this number used for auto colors creation
+         if (o.auto)
+            hist.$num_histos = nhists;
+         dom = this.#firstpainter?.getPadPainter() || this.getDrawDom();
       }
 
-      // special handling of stacked histograms
-      // also used to provide tooltips
-      if ((rindx > 0) && !o.nostack)
-         hist.$baseh = hlst.arr[rindx - 1];
-      // this number used for auto colors creation
-      if (o.auto)
-         hist.$num_histos = nhists;
-
-      const dom = this.#firstpainter?.getPadPainter() || this.getDrawDom();
-
       return this.drawHist(dom, hist, hopt).then(subp => {
-         subp.setSecondaryId(this, subid);
-         this.#painters.push(subp);
+         if (subp) {
+            subp.setSecondaryId(this, o.nostack ? h_id : s_id);
+            // workaround to assign weboptions also back to original histogram
+            if (!o.nostack)
+               subp.$copywebid = h_id;
+            this.#painters.push(subp);
+         }
          return this.drawNextHisto(indx + 1, pad_painter);
       });
    }

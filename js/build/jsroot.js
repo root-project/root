@@ -14,7 +14,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '24/07/2026',
+version_date = '10/09/2026',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -338,6 +338,10 @@ settings = {
    YValuesFormat: undefined,
    /** @summary custom format for all Z values, when not specified {@link gStyle.fStatFormat} is used */
    ZValuesFormat: undefined,
+   /** @summary custom format for all float values like TH1F content */
+   FloatFormat: '8.6g',
+   /** @summary custom format for all double values like TH1D content */
+   DoubleFormat: '10.8g',
    /** @summary Let detect and solve problem when server returns wrong Content-Length header
      * @desc See [jsroot#189]{@link https://github.com/root-project/jsroot/issues/189} for more info
      * Can be enabled by adding 'wrong_http_response' parameter to URL when using JSROOT UI
@@ -1300,8 +1304,11 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTPolyLine3D = 'TPolyLine3D', clTPolyMarker3D = 'TPolyMarker3D',
       clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTFrame = 'TFrame', clTAttCanvas = 'TAttCanvas',
       clTGaxis = 'TGaxis', clTAttAxis = 'TAttAxis', clTAxis = 'TAxis', clTStyle = 'TStyle',
-      clTH1 = 'TH1', clTH1I = 'TH1I', clTH1F = 'TH1F', clTH1D = 'TH1D', clTH2 = 'TH2', clTH2I = 'TH2I', clTH2F = 'TH2F', clTH2D = 'TH2D', clTH3 = 'TH3',
-      clTF1 = 'TF1', clTF12 = 'TF12', clTF2 = 'TF2', clTF3 = 'TF3', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D', clTProfile3D = 'TProfile3D',
+      clTH1 = 'TH1', clTH1I = 'TH1I', clTH1F = 'TH1F', clTH1D = 'TH1D',
+      clTH2 = 'TH2', clTH2I = 'TH2I', clTH2F = 'TH2F', clTH2D = 'TH2D',
+      clTH3 = 'TH3', clTH3I = 'TH3I', clTH3F = 'TH3F', clTH3D = 'TH3D',
+      clTProfile = 'TProfile', clTProfile2D = 'TProfile2D', clTProfile3D = 'TProfile3D',
+      clTF1 = 'TF1', clTF12 = 'TF12', clTF2 = 'TF2', clTF3 = 'TF3',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
       nsROOT = 'ROOT::', nsREX = nsROOT + 'Experimental::', nsSVG = 'http://www.w3.org/2000/svg',
       kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect', kTitle = 'title',
@@ -1441,7 +1448,7 @@ function create$1(typename, target) {
       case clTH1I:
       case clTH1D:
       case 'TH1L64':
-      case 'TH1F':
+      case clTH1F:
       case 'TH1S':
       case 'TH1C':
          create$1(clTH1, obj);
@@ -1454,7 +1461,7 @@ function create$1(typename, target) {
       case clTH2I:
       case 'TH2L64':
       case clTH2F:
-      case 'TH2D':
+      case clTH2D:
       case 'TH2S':
       case 'TH2C':
          create$1(clTH2, obj);
@@ -1464,10 +1471,10 @@ function create$1(typename, target) {
          create$1(clTH1, obj);
          extend$1(obj, { fTsumwy: 0, fTsumwy2: 0, fTsumwz: 0, fTsumwz2: 0, fTsumwxy: 0, fTsumwxz: 0, fTsumwyz: 0 });
          break;
-      case 'TH3I':
+      case clTH3I:
       case 'TH3L64':
-      case 'TH3F':
-      case 'TH3D':
+      case clTH3F:
+      case clTH3D:
       case 'TH3S':
       case 'TH3C':
          create$1(clTH3, obj);
@@ -2233,6 +2240,9 @@ clTH2D: clTH2D,
 clTH2F: clTH2F,
 clTH2I: clTH2I,
 clTH3: clTH3,
+clTH3D: clTH3D,
+clTH3F: clTH3F,
+clTH3I: clTH3I,
 clTHStack: clTHStack,
 clTHashList: clTHashList,
 clTImagePalette: clTImagePalette,
@@ -8844,10 +8854,14 @@ function getAbsPosInCanvas(sel, pos) {
   * @return {string|Array} - converted value or array with value and actual format
   * @private */
 function floatToString(value, fmt, ret_fmt) {
-   if (!fmt)
-      fmt = '6.4g';
+   if ((fmt === true) || (fmt === 'double'))
+      fmt = settings.DoubleFormat || '10.8g';
+   else if ((fmt === false) || (fmt === 'float'))
+      fmt = settings.FloatFormat || '8.6g';
    else if (fmt === 'g')
       fmt = '7.5g';
+   else if (!fmt || !isStr(fmt))
+      fmt = '6.4g';
 
    fmt = fmt.trim();
    const len = fmt.length;
@@ -84739,9 +84753,7 @@ class TooltipHandler extends ObjectPainter {
          // check if fully duplicated hint already exists
          for (let k = 0; k < n; ++k) {
             const hprev = hints[k];
-            let diff = false;
-            if (!hprev || (hprev.lines.length !== hint.lines.length))
-               continue;
+            let diff = hprev?.lines.length !== hint.lines.length;
             for (let l = 0; l < hint.lines.length && !diff; ++l) {
                if (hprev.lines[l] !== hint.lines[l])
                   diff = true;
@@ -89708,10 +89720,11 @@ const PadButtonsHandler = {
 /** @summary Fill TWebObjectOptions for painter
   * @private */
 function createWebObjectOptions(painter) {
-   if (!painter?.getSnapId())
+   const snapid = painter?.getSnapId();
+   if (!snapid)
       return null;
 
-   const obj = { _typename: 'TWebObjectOptions', snapid: painter.getSnapId(), opt: painter.getDrawOpt(true), fcust: '', fopt: [] };
+   const obj = { _typename: 'TWebObjectOptions', snapid, opt: painter.getDrawOpt(true), fcust: '', fopt: [] };
    if (isFunc(painter.fillWebObjectOptions))
       painter.fillWebObjectOptions(obj);
    return obj;
@@ -91854,6 +91867,12 @@ class TPadPainter extends ObjectPainter {
             const opt = createWebObjectOptions(sub);
             if (opt)
                elem.primitives.push(opt);
+            if (sub.$copywebid && opt?.fcust) {
+               // workaround for stack histograms to assign attributes to original histo
+               const opt2 = Object.assign({}, opt);
+               opt2.snapid = sub.getPrimary().getSnapId() + '#' + sub.$copywebid;
+               elem.primitives.push(opt2);
+            }
          }
       });
 
@@ -95463,7 +95482,7 @@ class THistDrawOptions {
          Text: false, TextAngle: 0, TextKind: '', Char: 0, Color: false, Contour: 0, Cjust: false,
          Lego: 0, Surf: 0, Off: 0, Tri: 0, Proj: 0, AxisPos: 0, Ortho: gStyle.fOrthoCamera,
          Spec: false, Pie: false, List: false, Zscale: false, Zvert: true, PadPalette: false,
-         Candle: '', Violin: '', Scaled: null, Circular: 0, Poisson: kNormal$1,
+         Candle: '', Violin: '', Scaled: null, Circular: 0, Poisson: kNormal$1, Polar: 0,
          GLBox: 0, GLColor: false, Project: '', ProfileProj: '', Profile2DProj: '', System: kCARTESIAN,
          AutoColor: false, NoStat: false, ForceStat: false, PadStats: false, PadTitle: false, AutoZoom: false,
          HighRes: 0, Zero: 1, Palette: 0, BaseLine: false, ShowEmpty: false,
@@ -95815,8 +95834,18 @@ class THistDrawOptions {
       if (d.check('R3D_', true))
          this.Render3D = constants$1.Render3D.fromString(d.part.toLowerCase());
 
-      if (d.check('POL'))
+      if (d.check('POLN')) {
          this.System = kPOLAR;
+         this.Polar = 3;
+      }
+      if (d.check('POLF')) {
+         this.System = kPOLAR;
+         this.Polar = 2;
+      }
+      if (d.check('POL')) {
+         this.System = kPOLAR;
+         this.Polar = 1;
+      }
       if (d.check('CYL'))
          this.System = kCYLINDRICAL;
       if (d.check('SPH'))
@@ -99850,7 +99879,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
    drawBinsPolar() {
       const histo = this.getHisto(),
             o = this.getOptions(),
-            handle = this.prepareDraw(),
+            handle = this.prepareDraw({ original: true }),
             cntr = this.getContour(),
             palette = this.getHistPalette(),
             entries = [],
@@ -99871,22 +99900,52 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       if (skip_zero && (histo?._typename === clTProfile2D))
          skip_zero = 1;
 
+      handle.natural_a = o.Polar === 3;
+      if (o.Polar > 1) {
+         handle.natural_r = true;
+         handle.rmax = this.ymax;
+         handle.rmin = (this.ymax > 0) && (handle.natural_a || (this.ymin > 0)) ? 0 : this.ymin;
+         if (handle.rmin >= handle.rmax)
+            handle.rmax = handle.rmin + 1;
+      }
+      if (o.Polar === 2) {
+         handle.fixed_a = true;
+         handle.amin = this.xmin;
+         handle.amax = this.xmax;
+      }
+
+      handle.pkr = (o.Polar === 2) || (handle.natural_a && !o.Same) ? 0.45 : 0.5;
+
+      handle.getBinAngle = function(i) {
+         if (this.natural_a)
+            return this.origx[i];
+         if (this.fixed_a)
+            return ((this.origx[i] - this.amin) / (this.amax - this.amin) - 0.5) * 2 * Math.PI;
+         return 2 * Math.PI * (Math.min(this.width, Math.max(0, this.grx[i])) / this.width - 0.5);
+      };
+
+      handle.getBinRadius = function(j, side) {
+         if (this.natural_r)
+            return (this.origy[j] - this.rmin) / (this.rmax - this.rmin);
+         return Math.min(this.height, Math.max(0, this.gry[j + side])) / this.height;
+      };
+
       handle.getBinPath = function(i, j) {
-         const a1 = 2 * Math.PI * Math.max(0, this.grx[i]) / this.width,
-               a2 = 2 * Math.PI * Math.min(this.grx[i + 1], this.width) / this.width,
-               r2 = Math.min(this.gry[j], this.height) / this.height,
-               r1 = Math.max(0, this.gry[j + 1]) / this.height,
+         const a1 = this.getBinAngle(i),
+               a2 = this.getBinAngle(i + 1),
+               r1 = Math.max(0, this.getBinRadius(j, 1)),
+               r2 = this.getBinRadius(j + 1, -1),
                side = a2 - a1 > Math.PI ? 1 : 0; // handle very large sector
 
          // do not process bins outside visible range
-         if ((a2 <= a1) || (r2 <= r1))
+         if ((a2 <= a1) || (r2 <= r1) || (r2 < 0))
             return '';
 
          const x0 = this.width / 2, y0 = this.height / 2,
-               rx1 = r1 * this.width / 2,
-               rx2 = r2 * this.width / 2,
-               ry1 = r1 * this.height / 2,
-               ry2 = r2 * this.height / 2,
+               rx1 = r1 * this.width * this.pkr,
+               rx2 = r2 * this.width * this.pkr,
+               ry1 = r1 * this.height * this.pkr,
+               ry2 = r2 * this.height * this.pkr,
                x11 = x0 + rx1 * Math.cos(a1),
                x12 = x0 + rx1 * Math.cos(a2),
                y11 = y0 + ry1 * Math.sin(a1),
@@ -99905,21 +99964,21 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       handle.findBin = function(x, y) {
          const x0 = this.width / 2, y0 = this.height / 2;
          let angle = Math.atan2((y - y0) / this.height, (x - x0) / this.width), i, j;
-         const radius = Math.abs(Math.cos(angle)) > 0.5 ? (x - x0) / Math.cos(angle) / this.width * 2 : (y - y0) / Math.sin(angle) / this.height * 2;
+         const radius = Math.abs(Math.cos(angle)) > 0.5 ? (x - x0) / Math.cos(angle) / this.width / this.pkr : (y - y0) / Math.sin(angle) / this.height / this.pkr;
 
-         if (angle < 0)
+         if (angle < -Math.PI)
             angle += 2 * Math.PI;
 
          for (i = this.i1; i < this.i2; ++i) {
-            const a1 = 2 * Math.PI * this.grx[i] / this.width,
-                  a2 = 2 * Math.PI * this.grx[i + 1] / this.width;
+            const a1 = this.getBinAngle(i),
+                  a2 = this.getBinAngle(i + 1);
             if ((a1 <= angle) && (angle <= a2))
                break;
          }
 
          for (j = this.j1; j < this.j2; ++j) {
-            const r2 = this.gry[j] / this.height,
-                  r1 = this.gry[j + 1] / this.height;
+            const r1 = this.getBinRadius(j, 1),
+                  r2 = this.getBinRadius(j + 1, -1);
             if ((r1 <= radius) && (radius <= r2))
                break;
          }
@@ -101366,7 +101425,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          if (o.Scat)
             handle = this.drawBinsScatter();
 
-         if (o.System === kPOLAR)
+         if (o.Polar)
             handle = this.drawBinsPolar();
          else if (o.Arrow)
             handle = this.drawBinsArrow();
@@ -101695,6 +101754,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
    getBinTooltips(i, j) {
       const histo = this.getHisto(),
             profile2d = this.matchObjectType(clTProfile2D) && isFunc(histo.getBinEntries),
+            is_dbl = profile2d || this.matchObjectType(clTH2D),
             bincontent = histo.getBinContent(i + 1, j + 1);
       let binz = bincontent;
 
@@ -101705,7 +101765,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
                      'x = ' + this.getAxisBinTip('x', histo.fXaxis, i),
                      'y = ' + this.getAxisBinTip('y', histo.fYaxis, j),
                      `bin = ${histo.getBin(i + 1, j + 1)}  x: ${i + 1}  y: ${j + 1}`,
-                     'content = ' + ((binz === Math.round(binz)) ? binz : floatToString(binz, gStyle.fStatFormat))];
+                     'content = ' + ((binz === Math.round(binz)) ? binz : floatToString(binz, is_dbl))];
 
       if ((this.getOptions().TextKind === 'E') || profile2d || histo.fSumw2?.length) {
          const errs = this.getBinErrors(histo, histo.getBin(i + 1, j + 1), bincontent);
@@ -101717,7 +101777,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       if (profile2d) {
          const entries = histo.getBinEntries(i + 1, j + 1);
-         lines.push('entries = ' + ((entries === Math.round(entries)) ? entries : floatToString(entries, gStyle.fStatFormat)));
+         lines.push('entries = ' + ((entries === Math.round(entries)) ? entries : floatToString(entries, true)));
       }
 
       return lines;
@@ -101783,7 +101843,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       if (bin.fContent === Math.round(bin.fContent))
          lines.push('content = ' + bin.fContent);
       else
-         lines.push('content = ' + floatToString(bin.fContent, gStyle.fStatFormat));
+         lines.push('content = ' + floatToString(bin.fContent, true));
       return lines;
    }
 
@@ -105780,8 +105840,10 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             cont -= histo.$baseh.getBinContent(bin + 1);
          if (cont === Math.round(cont))
             tips.push(`entries = ${cont}`);
-         else
-            tips.push(`entries = ${floatToString(cont, gStyle.fStatFormat)}`);
+         else {
+            const is_dbl = this.isTProfile() || this.matchObjectType(clTH1D);
+            tips.push(`entries = ${floatToString(cont, is_dbl)}`);
+         }
       }
 
       return tips;
@@ -106875,7 +106937,8 @@ class TH3Painter extends THistPainter {
 
    /** @summary Provide text information (tooltips) for histogram bin */
    getBinTooltips(ix, iy, iz) {
-      const lines = [], histo = this.getHisto();
+      const lines = [], histo = this.getHisto(),
+            is_profile3d = this.matchObjectType(clTProfile3D);
 
       lines.push(this.getObjectHint(),
                  `x = ${this.getAxisBinTip('x', histo.fXaxis, ix)}  xbin=${ix + 1}`,
@@ -106885,10 +106948,12 @@ class TH3Painter extends THistPainter {
       const binz = histo.getBinContent(ix + 1, iy + 1, iz + 1);
       if (binz === Math.round(binz))
          lines.push(`entries = ${binz}`);
-      else
-         lines.push(`entries = ${floatToString(binz, gStyle.fStatFormat)}`);
+      else {
+         const is_dbl = is_profile3d || this.matchObjectType(clTH3D);
+         lines.push(`entries = ${floatToString(binz, is_dbl)}`);
+      }
 
-      if (this.matchObjectType(clTProfile3D)) {
+      if (is_profile3d) {
          const errz = histo.getBinError(histo.getBin(ix + 1, iy + 1, iz + 1));
          lines.push('error = ' + ((errz === Math.round(errz)) ? errz.toString() : floatToString(errz, gStyle.fPaintTextFormat)));
       }
@@ -125673,8 +125738,7 @@ function ZIP_inflate(arr, tgt) {
                   --zip_copy_leng;
                   zip_copy_dist &= zip_WSIZE - 1;
                   zip_wp &= zip_WSIZE - 1;
-                  buff[off + n++] = zip_slide[zip_wp++] =
-                  zip_slide[zip_copy_dist++];
+                  buff[off + n++] = zip_slide[zip_wp++] = zip_slide[zip_copy_dist++];
                }
             } else {
                while (zip_copy_leng > 0 && n < size) {
@@ -172310,7 +172374,9 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
             hopt = hopt.slice(0, p + 3) + hopt.slice(p + 4);
       }
       if (!o.pads)
-         hopt += ' same nostat' + o.auto;
+         hopt += ' same nostat';
+      if (!this.getPadPainter()?.getSnapId())
+         hopt += o.auto;
       return hopt;
    }
 
@@ -172325,40 +172391,37 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
          return this;
 
       const rindx = o.horder ? indx : nhists - indx - 1,
-            subid = o.nostack ? `hists_${rindx}` : `stack_${rindx}`,
+            h_id = `hists_${rindx}`, s_id = `stack_${rindx}`,
             hist = hlst.arr[rindx],
             hopt = this.getHistDrawOption(hist, stack.fHists.opt[rindx]);
+      let dom;
 
-      // handling of 'pads' draw option
       if (pad_painter) {
+         // handling of 'pads' draw option
          const subpad_painter = pad_painter.getSubPadPainter(indx + 1);
          if (!subpad_painter)
             return this;
-
          subpad_painter.cleanPrimitives(true);
-
-         return this.drawHist(subpad_painter, hist, hopt).then(subp => {
-            if (subp) {
-               subp.setSecondaryId(this, subid);
-               this.#painters.push(subp);
-            }
-            return this.drawNextHisto(indx + 1, pad_painter);
-         });
+         dom = subpad_painter;
+      } else {
+         // special handling of stacked histograms
+         // also used to provide tooltips
+         if ((rindx > 0) && !o.nostack)
+            hist.$baseh = hlst.arr[rindx - 1];
+         // this number used for auto colors creation
+         if (o.auto)
+            hist.$num_histos = nhists;
+         dom = this.#firstpainter?.getPadPainter() || this.getDrawDom();
       }
 
-      // special handling of stacked histograms
-      // also used to provide tooltips
-      if ((rindx > 0) && !o.nostack)
-         hist.$baseh = hlst.arr[rindx - 1];
-      // this number used for auto colors creation
-      if (o.auto)
-         hist.$num_histos = nhists;
-
-      const dom = this.#firstpainter?.getPadPainter() || this.getDrawDom();
-
       return this.drawHist(dom, hist, hopt).then(subp => {
-         subp.setSecondaryId(this, subid);
-         this.#painters.push(subp);
+         if (subp) {
+            subp.setSecondaryId(this, o.nostack ? h_id : s_id);
+            // workaround to assign weboptions also back to original histogram
+            if (!o.nostack)
+               subp.$copywebid = h_id;
+            this.#painters.push(subp);
+         }
          return this.drawNextHisto(indx + 1, pad_painter);
       });
    }
@@ -180018,8 +180081,8 @@ function decodeZigzag32(view) {
  * @private */
 function decodeZigzag64(view) {
    for (let o = 0; o < view.byteLength; o += 8) {
-      const x = view.getUint64(o, LITTLE_ENDIAN);
-      view.setInt64(o, (x >>> 1) ^ (-(x & 1)), LITTLE_ENDIAN);
+      const x = view.getBigUint64(o, LITTLE_ENDIAN);
+      view.setBigInt64(o, (x >> 1n) ^ (-(x & 1n)), LITTLE_ENDIAN);
    }
 }
 
@@ -180346,7 +180409,7 @@ class RNTupleDescriptorBuilder {
       if (clusterSummaryListSize >= 0)
          throw new Error('Expected a list frame for cluster summaries');
       const clusterSummaryCount = reader.readU32();
-      this.clusterSummaries = [];
+      this.clusterSummaries ??= []; // don't overwrite summaries if there is more than one cluster group
 
       for (let i = 0; i < clusterSummaryCount; ++i) {
          const recordStart = BigInt(reader.offset),
@@ -180372,7 +180435,7 @@ class RNTupleDescriptorBuilder {
       if (numListClusters >= 0)
          throw new Error('Expected list frame for clusters');
 
-      this.pageLocations = [];
+      this.pageLocations ??= []; // don't overwrite locations if there is more than one cluster group
 
       for (let i = 0; i < numRecordCluster; ++i) {
          const outerListSize = reader.readS64();
@@ -180492,33 +180555,42 @@ async function readHeaderFooter(tuple) {
       tuple.builder.deserializeHeader(header_blob);
       tuple.builder.deserializeFooter(footer_blob);
 
-      // Deserialize Page List
-      const group = tuple.builder.clusterGroups?.[0];
-      if (!group || !group.pageListLocator)
-         throw new Error('No valid cluster group or page list locator found');
+      // Deserialize Page List. Get byte range of each cluster group
+      const groups = tuple.builder.clusterGroups;
+      if (!groups?.length)
+         return tuple.builder; // process RNTuples with no cluster groups
 
-      const offset = Number(group.pageListLocator.offset),
-            size = Number(group.pageListLocator.size);
-
-      return tuple.$file.readBuffer([offset, size]);
+      const ranges = [];
+      for (const g of groups) {
+         if (!g.pageListLocator)
+            throw new Error('Missing pageListLocator in cluster group');
+         ranges.push(Number(g.pageListLocator.offset),
+                     Number(g.pageListLocator.size));
+      }
+      return tuple.$file.readBuffer(ranges); // array of DataViews
    }).then(page_list_blob => {
-      if (!(page_list_blob instanceof DataView))
-         throw new Error(`Expected DataView from readBuffer, got ${Object.prototype.toString.call(page_list_blob)}`);
-
-      const group = tuple.builder.clusterGroups?.[0],
-            uncompressedSize = Number(group.pageListLength);
-
-      // Check if page list data is uncompressed
-      if (page_list_blob.byteLength === uncompressedSize)
-         return page_list_blob;
-
-      // Attempt to decompress the page list
-      return R__unzip(page_list_blob, uncompressedSize);
+      const groups = tuple.builder.clusterGroups,
+            blobs = Array.isArray(page_list_blob) ? page_list_blob : [page_list_blob], // keep it an array of DataViews even for one cluster group
+            unzipped_blobs = [];
+      for (let i = 0; i < groups.length; i++) {
+         const g = groups[i],
+               blob = blobs[i],
+               uncompressedSize = Number(g.pageListLength);
+         if (!(blob instanceof DataView))
+            throw new Error(`Expected DataView from readBuffer, got ${Object.prototype.toString.call(blob)}`);
+         if (blob.byteLength === uncompressedSize)
+            unzipped_blobs.push(blob);
+         else
+            unzipped_blobs.push(R__unzip(blob, uncompressedSize));
+      }
+      return Promise.all(unzipped_blobs);
    }).then(unzipped_blob => {
-      if (!(unzipped_blob instanceof DataView))
-         throw new Error(`Unzipped page list is not a DataView, got ${Object.prototype.toString.call(unzipped_blob)}`);
+      unzipped_blob.forEach(blob => {
+         if (!(blob instanceof DataView))
+            throw new Error(`Expected DataView from readBuffer, got ${Object.prototype.toString.call(blob)}`);
 
-      tuple.builder.deserializePageList(unzipped_blob);
+         tuple.builder.deserializePageList(blob);
+      });
       return tuple.builder;
    }).catch(err => {
       console.error('Error during readHeaderFooter execution:', err);
@@ -180532,7 +180604,7 @@ async function readHeaderFooter(tuple) {
 
 class ReaderItem {
 
-   constructor(column, name) {
+   constructor(column, name, preserveBigInt) {
       this.column = null;
       this.name = name;
       this.id = -1;
@@ -180540,6 +180612,7 @@ class ReaderItem {
       this.sz = 0;
       this.simple = true;
       this.page = -1; // current page for the reading
+      this.preserveBigInt = preserveBigInt; // keep precision of bigint
 
       if (column?.coltype !== undefined) {
          this.column = column;
@@ -180654,7 +180727,7 @@ class ReaderItem {
          case kReal32Quant:
             this.nbits = this.column.bitsOnStorage;
             if (!this.buf) {
-               this.factor = (this.column.maxValue - this.column.minValue) / ((1 << this.nbits) - 1);
+               this.factor = (this.column.maxValue - this.column.minValue) / (2 ** this.nbits - 1);
                this.min = this.column.minValue;
             }
 
@@ -180683,22 +180756,22 @@ class ReaderItem {
                   this.buf.setUint32(0, res << (32 - this.nbits), true);
                   obj[this.name] = this.buf.getFloat32(0, true);
                } else
-                  obj[this.name] = res * this.factor + this.min;
+                  obj[this.name] = (res >>> 0) * this.factor + this.min; // convert res to Uint32
             };
             break;
          case kInt64:
          case kIndex64:
             this.func = function(obj) {
-               // FIXME: let process BigInt in the TTree::Draw
-               obj[this.name] = Number(this.view.getBigInt64(this.o, LITTLE_ENDIAN));
+               const val = this.view.getBigInt64(this.o, LITTLE_ENDIAN);
+               obj[this.name] = this.preserveBigInt ? val : Number(val);
                this.shift_o(8);
             };
             this.sz = 8;
             break;
          case kUInt64:
             this.func = function(obj) {
-               // FIXME: let process BigInt in the TTree::Draw
-               obj[this.name] = Number(this.view.getBigUint64(this.o, LITTLE_ENDIAN));
+               const val = this.view.getBigUint64(this.o, LITTLE_ENDIAN);
+               obj[this.name] = this.preserveBigInt ? val : Number(val);
                this.shift_o(8);
             };
             this.sz = 8;
@@ -181122,6 +181195,17 @@ class PairReaderItem extends ReaderItem {
 }
 
 
+/** @summary Process selector for the RNtuple
+  * @desc function similar to the {@link treeProcess}
+  * @param {object} rntuple - instance of RNtuple class
+  * @param {object} selector - instance of {@link TSelector} class
+  * @param {object} [args] - different arguments
+  * @param {number} [args.firstentry] - first entry to process, 0 when not specified
+  * @param {number} [args.numentries] - number of entries to process, all when not specified
+  * @param {Array} [args.elist] - arrays of entries id to process
+  * @param {Array} [args.preserveBigInt] - do not convert BigInt values to Number
+  * @return {Promise} with TSelector instance */
+
 async function rntupleProcess(rntuple, selector, args = {}) {
    const handle = {
       file: rntuple.$file, // keep file reference
@@ -181219,7 +181303,7 @@ async function rntupleProcess(rntuple, selector, args = {}) {
    }
 
    function addColumnReadout(column, tgtname) {
-      const item = new ReaderItem(column, tgtname);
+      const item = new ReaderItem(column, tgtname, args.preserveBigInt);
       item.assignReadFunc();
       handle.columns.push(item);
       return item;
@@ -181322,6 +181406,10 @@ async function rntupleProcess(rntuple, selector, args = {}) {
          const item = addFieldReading(builder, field, tgtname);
          handle.items.push(item);
       }
+
+      // no entries for empty clusters
+      if (builder.clusterSummaries === undefined)
+         return selector;
 
       // calculate number of entries
       builder.clusterSummaries.forEach(summary => { handle.lastentry += summary.numEntries; });
@@ -187939,6 +188027,9 @@ exports.clTH2D = clTH2D;
 exports.clTH2F = clTH2F;
 exports.clTH2I = clTH2I;
 exports.clTH3 = clTH3;
+exports.clTH3D = clTH3D;
+exports.clTH3F = clTH3F;
+exports.clTH3I = clTH3I;
 exports.clTHStack = clTHStack;
 exports.clTHashList = clTHashList;
 exports.clTImagePalette = clTImagePalette;

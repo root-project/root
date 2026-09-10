@@ -1,4 +1,4 @@
-import { gStyle, settings, clTF1, clTProfile, kNoZoom, kInspect, isFunc } from '../core.mjs';
+import { gStyle, settings, clTF1, clTH1D, clTProfile, kNoZoom, kInspect, isFunc } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
 import { floatToString, buildSvgCurve, addHighlightStyle } from '../base/BasePainter.mjs';
 import { THistPainter } from './THistPainter.mjs';
@@ -1001,8 +1001,10 @@ class TH1Painter extends THistPainter {
             cont -= histo.$baseh.getBinContent(bin + 1);
          if (cont === Math.round(cont))
             tips.push(`entries = ${cont}`);
-         else
-            tips.push(`entries = ${floatToString(cont, gStyle.fStatFormat)}`);
+         else {
+            const is_dbl = this.isTProfile() || this.matchObjectType(clTH1D);
+            tips.push(`entries = ${floatToString(cont, is_dbl)}`);
+         }
       }
 
       return tips;

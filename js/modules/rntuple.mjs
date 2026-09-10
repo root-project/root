@@ -234,8 +234,8 @@ function decodeZigzag32(view) {
  * @private */
 function decodeZigzag64(view) {
    for (let o = 0; o < view.byteLength; o += 8) {
-      const x = view.getUint64(o, LITTLE_ENDIAN);
-      view.setInt64(o, (x >>> 1) ^ (-(x & 1)), LITTLE_ENDIAN);
+      const x = view.getBigUint64(o, LITTLE_ENDIAN);
+      view.setBigInt64(o, (x >> 1n) ^ (-(x & 1n)), LITTLE_ENDIAN);
    }
 }
 
@@ -562,7 +562,7 @@ class RNTupleDescriptorBuilder {
       if (clusterSummaryListSize >= 0)
          throw new Error('Expected a list frame for cluster summaries');
       const clusterSummaryCount = reader.readU32();
-      this.clusterSummaries = [];
+      this.clusterSummaries ??= []; // don't overwrite summaries if there is more than one cluster group
 
       for (let i = 0; i < clusterSummaryCount; ++i) {
          const recordStart = BigInt(reader.offset),
@@ -588,7 +588,7 @@ class RNTupleDescriptorBuilder {
       if (numListClusters >= 0)
          throw new Error('Expected list frame for clusters');
 
-      this.pageLocations = [];
+      this.pageLocations ??= []; // don't overwrite locations if there is more than one cluster group
 
       for (let i = 0; i < numRecordCluster; ++i) {
          const outerListSize = reader.readS64();
@@ -708,33 +708,42 @@ async function readHeaderFooter(tuple) {
       tuple.builder.deserializeHeader(header_blob);
       tuple.builder.deserializeFooter(footer_blob);
 
-      // Deserialize Page List
-      const group = tuple.builder.clusterGroups?.[0];
-      if (!group || !group.pageListLocator)
-         throw new Error('No valid cluster group or page list locator found');
+      // Deserialize Page List. Get byte range of each cluster group
+      const groups = tuple.builder.clusterGroups;
+      if (!groups?.length)
+         return tuple.builder; // process RNTuples with no cluster groups
 
-      const offset = Number(group.pageListLocator.offset),
-            size = Number(group.pageListLocator.size);
-
-      return tuple.$file.readBuffer([offset, size]);
+      const ranges = [];
+      for (const g of groups) {
+         if (!g.pageListLocator)
+            throw new Error('Missing pageListLocator in cluster group');
+         ranges.push(Number(g.pageListLocator.offset),
+                     Number(g.pageListLocator.size));
+      }
+      return tuple.$file.readBuffer(ranges); // array of DataViews
    }).then(page_list_blob => {
-      if (!(page_list_blob instanceof DataView))
-         throw new Error(`Expected DataView from readBuffer, got ${Object.prototype.toString.call(page_list_blob)}`);
-
-      const group = tuple.builder.clusterGroups?.[0],
-            uncompressedSize = Number(group.pageListLength);
-
-      // Check if page list data is uncompressed
-      if (page_list_blob.byteLength === uncompressedSize)
-         return page_list_blob;
-
-      // Attempt to decompress the page list
-      return R__unzip(page_list_blob, uncompressedSize);
+      const groups = tuple.builder.clusterGroups,
+            blobs = Array.isArray(page_list_blob) ? page_list_blob : [page_list_blob], // keep it an array of DataViews even for one cluster group
+            unzipped_blobs = [];
+      for (let i = 0; i < groups.length; i++) {
+         const g = groups[i],
+               blob = blobs[i],
+               uncompressedSize = Number(g.pageListLength);
+         if (!(blob instanceof DataView))
+            throw new Error(`Expected DataView from readBuffer, got ${Object.prototype.toString.call(blob)}`);
+         if (blob.byteLength === uncompressedSize)
+            unzipped_blobs.push(blob);
+         else
+            unzipped_blobs.push(R__unzip(blob, uncompressedSize));
+      }
+      return Promise.all(unzipped_blobs);
    }).then(unzipped_blob => {
-      if (!(unzipped_blob instanceof DataView))
-         throw new Error(`Unzipped page list is not a DataView, got ${Object.prototype.toString.call(unzipped_blob)}`);
+      unzipped_blob.forEach(blob => {
+         if (!(blob instanceof DataView))
+            throw new Error(`Expected DataView from readBuffer, got ${Object.prototype.toString.call(blob)}`);
 
-      tuple.builder.deserializePageList(unzipped_blob);
+         tuple.builder.deserializePageList(blob);
+      });
       return tuple.builder;
    }).catch(err => {
       console.error('Error during readHeaderFooter execution:', err);
@@ -748,7 +757,7 @@ async function readHeaderFooter(tuple) {
 
 class ReaderItem {
 
-   constructor(column, name) {
+   constructor(column, name, preserveBigInt) {
       this.column = null;
       this.name = name;
       this.id = -1;
@@ -756,6 +765,7 @@ class ReaderItem {
       this.sz = 0;
       this.simple = true;
       this.page = -1; // current page for the reading
+      this.preserveBigInt = preserveBigInt; // keep precision of bigint
 
       if (column?.coltype !== undefined) {
          this.column = column;
@@ -870,7 +880,7 @@ class ReaderItem {
          case kReal32Quant:
             this.nbits = this.column.bitsOnStorage;
             if (!this.buf) {
-               this.factor = (this.column.maxValue - this.column.minValue) / ((1 << this.nbits) - 1);
+               this.factor = (this.column.maxValue - this.column.minValue) / (2 ** this.nbits - 1);
                this.min = this.column.minValue;
             }
 
@@ -899,22 +909,22 @@ class ReaderItem {
                   this.buf.setUint32(0, res << (32 - this.nbits), true);
                   obj[this.name] = this.buf.getFloat32(0, true);
                } else
-                  obj[this.name] = res * this.factor + this.min;
+                  obj[this.name] = (res >>> 0) * this.factor + this.min; // convert res to Uint32
             };
             break;
          case kInt64:
          case kIndex64:
             this.func = function(obj) {
-               // FIXME: let process BigInt in the TTree::Draw
-               obj[this.name] = Number(this.view.getBigInt64(this.o, LITTLE_ENDIAN));
+               const val = this.view.getBigInt64(this.o, LITTLE_ENDIAN);
+               obj[this.name] = this.preserveBigInt ? val : Number(val);
                this.shift_o(8);
             };
             this.sz = 8;
             break;
          case kUInt64:
             this.func = function(obj) {
-               // FIXME: let process BigInt in the TTree::Draw
-               obj[this.name] = Number(this.view.getBigUint64(this.o, LITTLE_ENDIAN));
+               const val = this.view.getBigUint64(this.o, LITTLE_ENDIAN);
+               obj[this.name] = this.preserveBigInt ? val : Number(val);
                this.shift_o(8);
             };
             this.sz = 8;
@@ -1338,6 +1348,17 @@ class PairReaderItem extends ReaderItem {
 }
 
 
+/** @summary Process selector for the RNtuple
+  * @desc function similar to the {@link treeProcess}
+  * @param {object} rntuple - instance of RNtuple class
+  * @param {object} selector - instance of {@link TSelector} class
+  * @param {object} [args] - different arguments
+  * @param {number} [args.firstentry] - first entry to process, 0 when not specified
+  * @param {number} [args.numentries] - number of entries to process, all when not specified
+  * @param {Array} [args.elist] - arrays of entries id to process
+  * @param {Array} [args.preserveBigInt] - do not convert BigInt values to Number
+  * @return {Promise} with TSelector instance */
+
 async function rntupleProcess(rntuple, selector, args = {}) {
    const handle = {
       rntuple, // keep rntuple reference
@@ -1437,7 +1458,7 @@ async function rntupleProcess(rntuple, selector, args = {}) {
    }
 
    function addColumnReadout(column, tgtname) {
-      const item = new ReaderItem(column, tgtname);
+      const item = new ReaderItem(column, tgtname, args.preserveBigInt);
       item.assignReadFunc();
       handle.columns.push(item);
       return item;
@@ -1540,6 +1561,10 @@ async function rntupleProcess(rntuple, selector, args = {}) {
          const item = addFieldReading(builder, field, tgtname);
          handle.items.push(item);
       }
+
+      // no entries for empty clusters
+      if (builder.clusterSummaries === undefined)
+         return selector;
 
       // calculate number of entries
       builder.clusterSummaries.forEach(summary => { handle.lastentry += summary.numEntries; });

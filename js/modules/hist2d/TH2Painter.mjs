@@ -1,10 +1,10 @@
 import { gStyle, settings, createHistogram, createTPolyLine, isFunc, isStr,
-         clTMultiGraph, clTH1D, clTF2, clTProfile2D, kInspect } from '../core.mjs';
+         clTMultiGraph, clTH1D, clTH2D, clTF2, clTProfile2D, kInspect } from '../core.mjs';
 import { pointer as d3_pointer, rgb as d3_rgb, chord as d3_chord, arc as d3_arc, ribbon as d3_ribbon } from '../d3.mjs';
 import { kBlack } from '../base/colors.mjs';
 import { TRandom, floatToString, makeTranslate, addHighlightStyle, getBoxDecorations } from '../base/BasePainter.mjs';
 import { EAxisBits } from '../base/ObjectPainter.mjs';
-import { THistPainter, kPOLAR } from './THistPainter.mjs';
+import { THistPainter } from './THistPainter.mjs';
 import { assignContextMenu } from '../gui/menu.mjs';
 
 
@@ -1461,7 +1461,7 @@ class TH2Painter extends THistPainter {
    drawBinsPolar() {
       const histo = this.getHisto(),
             o = this.getOptions(),
-            handle = this.prepareDraw(),
+            handle = this.prepareDraw({ original: true }),
             cntr = this.getContour(),
             palette = this.getHistPalette(),
             entries = [],
@@ -1482,22 +1482,52 @@ class TH2Painter extends THistPainter {
       if (skip_zero && (histo?._typename === clTProfile2D))
          skip_zero = 1;
 
+      handle.natural_a = o.Polar === 3;
+      if (o.Polar > 1) {
+         handle.natural_r = true;
+         handle.rmax = this.ymax;
+         handle.rmin = (this.ymax > 0) && (handle.natural_a || (this.ymin > 0)) ? 0 : this.ymin;
+         if (handle.rmin >= handle.rmax)
+            handle.rmax = handle.rmin + 1;
+      }
+      if (o.Polar === 2) {
+         handle.fixed_a = true;
+         handle.amin = this.xmin;
+         handle.amax = this.xmax;
+      }
+
+      handle.pkr = (o.Polar === 2) || (handle.natural_a && !o.Same) ? 0.45 : 0.5;
+
+      handle.getBinAngle = function(i) {
+         if (this.natural_a)
+            return this.origx[i];
+         if (this.fixed_a)
+            return ((this.origx[i] - this.amin) / (this.amax - this.amin) - 0.5) * 2 * Math.PI;
+         return 2 * Math.PI * (Math.min(this.width, Math.max(0, this.grx[i])) / this.width - 0.5);
+      };
+
+      handle.getBinRadius = function(j, side) {
+         if (this.natural_r)
+            return (this.origy[j] - this.rmin) / (this.rmax - this.rmin);
+         return Math.min(this.height, Math.max(0, this.gry[j + side])) / this.height;
+      };
+
       handle.getBinPath = function(i, j) {
-         const a1 = 2 * Math.PI * Math.max(0, this.grx[i]) / this.width,
-               a2 = 2 * Math.PI * Math.min(this.grx[i + 1], this.width) / this.width,
-               r2 = Math.min(this.gry[j], this.height) / this.height,
-               r1 = Math.max(0, this.gry[j + 1]) / this.height,
+         const a1 = this.getBinAngle(i),
+               a2 = this.getBinAngle(i + 1),
+               r1 = Math.max(0, this.getBinRadius(j, 1)),
+               r2 = this.getBinRadius(j + 1, -1),
                side = a2 - a1 > Math.PI ? 1 : 0; // handle very large sector
 
          // do not process bins outside visible range
-         if ((a2 <= a1) || (r2 <= r1))
+         if ((a2 <= a1) || (r2 <= r1) || (r2 < 0))
             return '';
 
          const x0 = this.width / 2, y0 = this.height / 2,
-               rx1 = r1 * this.width / 2,
-               rx2 = r2 * this.width / 2,
-               ry1 = r1 * this.height / 2,
-               ry2 = r2 * this.height / 2,
+               rx1 = r1 * this.width * this.pkr,
+               rx2 = r2 * this.width * this.pkr,
+               ry1 = r1 * this.height * this.pkr,
+               ry2 = r2 * this.height * this.pkr,
                x11 = x0 + rx1 * Math.cos(a1),
                x12 = x0 + rx1 * Math.cos(a2),
                y11 = y0 + ry1 * Math.sin(a1),
@@ -1516,21 +1546,21 @@ class TH2Painter extends THistPainter {
       handle.findBin = function(x, y) {
          const x0 = this.width / 2, y0 = this.height / 2;
          let angle = Math.atan2((y - y0) / this.height, (x - x0) / this.width), i, j;
-         const radius = Math.abs(Math.cos(angle)) > 0.5 ? (x - x0) / Math.cos(angle) / this.width * 2 : (y - y0) / Math.sin(angle) / this.height * 2;
+         const radius = Math.abs(Math.cos(angle)) > 0.5 ? (x - x0) / Math.cos(angle) / this.width / this.pkr : (y - y0) / Math.sin(angle) / this.height / this.pkr;
 
-         if (angle < 0)
+         if (angle < -Math.PI)
             angle += 2 * Math.PI;
 
          for (i = this.i1; i < this.i2; ++i) {
-            const a1 = 2 * Math.PI * this.grx[i] / this.width,
-                  a2 = 2 * Math.PI * this.grx[i + 1] / this.width;
+            const a1 = this.getBinAngle(i),
+                  a2 = this.getBinAngle(i + 1);
             if ((a1 <= angle) && (angle <= a2))
                break;
          }
 
          for (j = this.j1; j < this.j2; ++j) {
-            const r2 = this.gry[j] / this.height,
-                  r1 = this.gry[j + 1] / this.height;
+            const r1 = this.getBinRadius(j, 1),
+                  r2 = this.getBinRadius(j + 1, -1);
             if ((r1 <= radius) && (radius <= r2))
                break;
          }
@@ -2981,7 +3011,7 @@ class TH2Painter extends THistPainter {
          if (o.Scat)
             handle = this.drawBinsScatter();
 
-         if (o.System === kPOLAR)
+         if (o.Polar)
             handle = this.drawBinsPolar();
          else if (o.Arrow)
             handle = this.drawBinsArrow();
@@ -3310,6 +3340,7 @@ class TH2Painter extends THistPainter {
    getBinTooltips(i, j) {
       const histo = this.getHisto(),
             profile2d = this.matchObjectType(clTProfile2D) && isFunc(histo.getBinEntries),
+            is_dbl = profile2d || this.matchObjectType(clTH2D),
             bincontent = histo.getBinContent(i + 1, j + 1);
       let binz = bincontent;
 
@@ -3320,7 +3351,7 @@ class TH2Painter extends THistPainter {
                      'x = ' + this.getAxisBinTip('x', histo.fXaxis, i),
                      'y = ' + this.getAxisBinTip('y', histo.fYaxis, j),
                      `bin = ${histo.getBin(i + 1, j + 1)}  x: ${i + 1}  y: ${j + 1}`,
-                     'content = ' + ((binz === Math.round(binz)) ? binz : floatToString(binz, gStyle.fStatFormat))];
+                     'content = ' + ((binz === Math.round(binz)) ? binz : floatToString(binz, is_dbl))];
 
       if ((this.getOptions().TextKind === 'E') || profile2d || histo.fSumw2?.length) {
          const errs = this.getBinErrors(histo, histo.getBin(i + 1, j + 1), bincontent);
@@ -3332,7 +3363,7 @@ class TH2Painter extends THistPainter {
 
       if (profile2d) {
          const entries = histo.getBinEntries(i + 1, j + 1);
-         lines.push('entries = ' + ((entries === Math.round(entries)) ? entries : floatToString(entries, gStyle.fStatFormat)));
+         lines.push('entries = ' + ((entries === Math.round(entries)) ? entries : floatToString(entries, true)));
       }
 
       return lines;
@@ -3398,7 +3429,7 @@ class TH2Painter extends THistPainter {
       if (bin.fContent === Math.round(bin.fContent))
          lines.push('content = ' + bin.fContent);
       else
-         lines.push('content = ' + floatToString(bin.fContent, gStyle.fStatFormat));
+         lines.push('content = ' + floatToString(bin.fContent, true));
       return lines;
    }
 
