@@ -259,6 +259,7 @@ namespace TStreamerInfoActions
 
          if (fOffset != TVirtualStreamerInfo::kMissing) {
             fOffset += delta;
+            assert(fCounterOffset != TVirtualStreamerInfo::kMissing);
             fCounterOffset += delta;
          }
       }
