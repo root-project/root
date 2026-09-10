@@ -26,6 +26,27 @@
 #endif
 #endif
 
+// Storage class for the dispatch-table slots (CppInternal::DispatchRaw).
+// Consumers spread across several shared libraries must share ONE table: on
+// ELF the extern pointers resolve across module boundaries by default, but
+// on Windows data symbols need explicit annotations (unlike CPPINTEROP_API,
+// which is unconditionally dllexport, promising a same-module definition).
+// The module that compiles a table definition defines
+// CPPINTEROP_DISPATCH_EXPORTS for all of its TUs; every other module imports.
+#ifndef CPPINTEROP_DISPATCH_STORAGE
+#if defined(_WIN32)
+#if defined(CPPINTEROP_DISPATCH_EXPORTS)
+#define CPPINTEROP_DISPATCH_STORAGE __declspec(dllexport)
+#else
+#define CPPINTEROP_DISPATCH_STORAGE __declspec(dllimport)
+#endif
+#elif defined(__GNUC__)
+#define CPPINTEROP_DISPATCH_STORAGE __attribute__((__visibility__("default")))
+#else
+#define CPPINTEROP_DISPATCH_STORAGE
+#endif
+#endif
+
 // Cross-platform deprecation attribute. Older Clang versions (Cling)
 // mis-parse C++11 `[[deprecated]]` near the return type, so we use
 // the vendor-specific spelling on each compiler.
@@ -225,13 +246,17 @@ namespace DispatchRaw {
 // Trace-hook slot forward decls; the X-macro expansion of
 // CppInterOpAPI.inc re-declares these with identical types. They're
 // here so JitCall::Invoke's inline body below can reference them.
-extern CPPINTEROP_API void (*CppInterOpTraceJitCallInvokeImpl)(
+extern CPPINTEROP_DISPATCH_STORAGE void (*CppInterOpTraceJitCallInvokeImpl)(
     const Cpp::JitCall* JC, void* result, void** args, std::size_t nargs,
     void* self);
-extern CPPINTEROP_API void (*CppInterOpTraceJitCallInvokeDestructorImpl)(
-    const Cpp::JitCall* JC, void* object, unsigned long nary, int withFree);
-extern CPPINTEROP_API void (*CppInterOpTraceJitCallInvokeReturnImpl)(
-    const Cpp::JitCall* JC, void* result);
+extern CPPINTEROP_DISPATCH_STORAGE void (
+    *CppInterOpTraceJitCallInvokeDestructorImpl)(const Cpp::JitCall* JC,
+                                                 void* object,
+                                                 unsigned long nary,
+                                                 int withFree);
+extern CPPINTEROP_DISPATCH_STORAGE void (
+    *CppInterOpTraceJitCallInvokeReturnImpl)(const Cpp::JitCall* JC,
+                                             void* result);
 } // namespace DispatchRaw
 } // namespace CppInternal
 
