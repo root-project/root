@@ -222,19 +222,25 @@ Int_t TChain::Add(TChain* chain)
       delete[] fTreeOffset;
       fTreeOffset = trees;
    }
-   chain->GetEntries(); //to force the computation of nentries
+
    TIter next(chain->GetListOfFiles());
    Int_t nf = 0;
    TChainElement* element = nullptr;
    while ((element = (TChainElement*) next())) {
       Long64_t nentries = element->GetEntries();
-      if (fTreeOffset[fNtrees] == TTree::kMaxEntries) {
+      if (nentries == TTree::kMaxEntries) {
+         fEntries = TTree::kMaxEntries;
          fTreeOffset[fNtrees+1] = TTree::kMaxEntries;
       } else {
-         fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
+         if (fTreeOffset[fNtrees] == TTree::kMaxEntries) {
+            fTreeOffset[fNtrees+1] = TTree::kMaxEntries;
+         } else {
+            fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
+         }
+         if (fEntries != TTree::kMaxEntries)
+            fEntries += nentries;
       }
       fNtrees++;
-      fEntries += nentries;
       TChainElement* newelement = new TChainElement(element->GetName(), element->GetTitle());
       newelement->SetPacketSize(element->GetPacketSize());
       newelement->SetNumberEntries(nentries);
