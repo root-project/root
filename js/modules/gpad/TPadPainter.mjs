@@ -606,13 +606,14 @@ class TPadPainter extends ObjectPainter {
    /** @summary Provides automatic color
     * @desc Uses ROOT colors palette if possible
     * @private */
-   getAutoColor(numprimitives) {
-      numprimitives = Math.max(numprimitives || (this.#num_primitives || 5) - (this.#num_specials || 0), 2);
-
-      let indx = this.#auto_color_cnt ?? 0;
-      this.#auto_color_cnt = (indx + 1) % numprimitives;
-      if (indx >= numprimitives)
-         indx = numprimitives - 1;
+   getAutoColor(numprimitives, indx) {
+      if (!numprimitives || indx === undefined) {
+         numprimitives = Math.max(numprimitives || (this.#num_primitives || 5) - (this.#num_specials || 0), 2);
+         indx = this.#auto_color_cnt ?? 0;
+         this.#auto_color_cnt = (indx + 1) % numprimitives;
+         if (indx >= numprimitives)
+            indx = numprimitives - 1;
+      }
 
       let indexes = this._getCustomPaletteIndexes();
       if (!indexes) {
@@ -2365,12 +2366,6 @@ class TPadPainter extends ObjectPainter {
             const opt = createWebObjectOptions(sub);
             if (opt)
                elem.primitives.push(opt);
-            if (sub.$copywebid && opt?.fcust) {
-               // workaround for stack histograms to assign attributes to original histo
-               const opt2 = Object.assign({}, opt);
-               opt2.snapid = sub.getPrimary().getSnapId() + '#' + sub.$copywebid;
-               elem.primitives.push(opt2);
-            }
          }
       });
 

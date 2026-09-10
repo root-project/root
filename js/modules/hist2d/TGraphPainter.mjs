@@ -1042,7 +1042,7 @@ class TGraphPainter extends ObjectPainter {
       if (o._pfc > 1 || o._plc > 1 || o._pmc > 1) {
          const pp = this.getPadPainter();
          if (isFunc(pp?.getAutoColor)) {
-            const icolor = pp.getAutoColor(graph.$num_graphs);
+            const icolor = pp.getAutoColor();
             this.#auto_exec = ''; // can be reused when sending option back to server
             if (o._pfc > 1) {
                o._pfc = 1;
