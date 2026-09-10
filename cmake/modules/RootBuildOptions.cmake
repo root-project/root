@@ -298,6 +298,9 @@ if(WIN32)
 elseif(APPLE)
   set(cocoa_defvalue ON)
   set(x11_defvalue OFF)
+  if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
+    set(libcxx_defvalue ON)
+  endif()
 endif()
 
 # builtin_openssl is only supported on macOS
