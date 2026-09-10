@@ -1147,42 +1147,48 @@ TAxis *TMultiGraph::GetYaxis()
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint all the graphs of this multigraph.
 
-void TMultiGraph::Paint(Option_t *choptin)
+void TMultiGraph::Paint(Option_t *opt)
+{
+   BuildAndPaint(opt, kTRUE);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill automatic colors and then paint multigraph
+
+void TMultiGraph::BuildAndPaint(Option_t *mgropt, Bool_t paint)
 {
    const TPickerStackGuard pushGuard(this);
 
    if (!fGraphs) return;
    if (fGraphs->GetSize() == 0) return;
 
-   char option[128];
-   strlcpy(option,choptin,128);
-   Int_t nch = choptin ? strlen(choptin) : 0;
-   for (Int_t i=0;i<nch;i++) option[i] = toupper(option[i]);
+   TString chopt = mgropt;
+   chopt.ToUpper();
+   Bool_t pfc = chopt.Contains("PFC"); // Automatic Fill Color
+   Bool_t plc = chopt.Contains("PLC"); // Automatic Line Color
+   Bool_t pmc = chopt.Contains("PMC"); // Automatic Marker Color
 
-   // Automatic color
-   char *l1 = strstr(option,"PFC"); // Automatic Fill Color
-   char *l2 = strstr(option,"PLC"); // Automatic Line Color
-   char *l3 = strstr(option,"PMC"); // Automatic Marker Color
-   if (l1 || l2 || l3) {
-      TString opt1 = option; opt1.ToLower();
-      if (l1) memcpy(l1,"   ",3);
-      if (l2) memcpy(l2,"   ",3);
-      if (l3) memcpy(l3,"   ",3);
-      auto lnk = fGraphs->FirstLink();
+   if (pfc || plc || pmc) {
       Int_t ngraphs = fGraphs->GetSize();
-      Int_t ic;
-      gPad->IncrementPaletteColor(ngraphs, opt1);
-      for (Int_t i=0;i<ngraphs;i++) {
-         ic = gPad->NextPaletteColor();
-         auto gAti = (TGraph*)(fGraphs->At(i));
-         if (l1) gAti->SetFillColor(ic);
-         if (l2) gAti->SetLineColor(ic);
-         if (l3) gAti->SetMarkerColor(ic);
-         lnk = lnk->Next();
+      gPad->IncrementPaletteColor(ngraphs, chopt);
+      for (Int_t i = 0; i < ngraphs; i++) {
+         Int_t ic = gPad->NextPaletteColor();
+         auto gAti = (TGraph *)(fGraphs->At(i));
+         if (pfc)
+            gAti->SetFillColor(ic);
+         if (plc)
+            gAti->SetLineColor(ic);
+         if (pmc)
+            gAti->SetMarkerColor(ic);
       }
+      chopt.ReplaceAll("PFC", "");
+      chopt.ReplaceAll("PLC", "");
+      chopt.ReplaceAll("PMC", "");
    }
 
-   TString chopt = option;
+   if (!paint)
+      return;
 
    auto l = strstr(chopt.Data(), "3D");
    if (l) {
