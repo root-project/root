@@ -1132,6 +1132,11 @@ public:
          fIdx++;
          return old;
       }
+      iterator &operator+=(std::size_t n)
+      {
+         fIdx += n;
+         return *this;
+      }
       reference operator*() const { return fNTuple->GetClusterGroupDescriptor((*fSortedClusterGroupIds)[fIdx]); }
       pointer operator->() const { return &fNTuple->GetClusterGroupDescriptor((*fSortedClusterGroupIds)[fIdx]); }
       bool operator==(const iterator &rh) const { return (fNTuple == rh.fNTuple) && (fIdx == rh.fIdx); }
