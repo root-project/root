@@ -585,6 +585,84 @@ TEST(ONNX, ReduceMean_kFirst)
    expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, ReduceMax)
+{
+   SofieReference ref = readReference("ReduceMax");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceMax", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, ReduceMin)
+{
+   SofieReference ref = readReference("ReduceMin");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceMin", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// Elu on a tensor whose first dimension is only known at run time.
+TEST(ONNX, EluDynShape)
+{
+   std::vector<float> input({-2.0, -0.5, 0.0, 0.5, 1.0, 2.0, -1.0, 3.0});
+   std::vector<float> correct_output;
+   for (float x : input)
+      correct_output.push_back(x >= 0 ? x : std::exp(x) - 1);
+
+   // model is dynamic in N, use N = 2
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "EluDynShape",
+                                       "\"EluDynShape_FromONNX.dat\", 2", 2, input);
+
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
+}
+
+// K reaches TopK as a shape tensor: K = min(N, 4) with N the dynamic dimension.
+TEST(ONNX, TopKWithDynShapeK)
+{
+   std::vector<float> input({5, 1, 9, 2, 8, 3, 7, 4, 6, 0, 5, 5, 3, 3, 3});
+   std::vector<float> correct_values({7, 8, 9, 5, 5, 6, 3, 4, 5, 2, 3, 3});
+   std::vector<int64_t> correct_indices({2, 1, 0, 0, 3, 2, 4, 2, 3, 1, 4, 1});
+
+   // model is dynamic in N, use N = 5, so K = min(5, 4) = 4
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(TupleFloatInt64_t, "TopKWithDynShapeK",
+                                       "\"TopKWithDynShapeK_FromONNX.dat\", 5", 5, input);
+
+   expectNear(std::get<0>(output), correct_values, DEFAULT_TOLERANCE);
+   expectEqual(std::get<1>(output), correct_indices);
+}
+
+// Reduction over an interior axis with a parametric outer dimension. The strides
+// are then expressions rather than single tokens, which used to be emitted
+// unparenthesised and gave wrong indices.
+TEST(ONNX, ReduceMean_kMiddle_DynShape)
+{
+   std::vector<float> input(24);
+   std::iota(input.begin(), input.end(), 0.0f);
+   std::vector<float> correct_output = {4, 5, 6, 7, 16, 17, 18, 19};
+
+   // model is dynamic in N, use N = 2
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "ReduceMean_kMiddle_DynShape",
+                                       "\"ReduceMean_kMiddle_DynShape_FromONNX.dat\", 2", 2, input);
+
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
+}
+
+// largest=1 with sorted=0 used to return the K smallest elements. ONNX leaves the
+// order unspecified for sorted=0; SOFIE returns them ordered, as for sorted=1.
+TEST(ONNX, TopKLargestUnsorted)
+{
+   std::vector<float> input({1, 6, 3, 2, 5, 4, 10, 40, 20, 60, 30, 50});
+   std::vector<float> correct_values({6, 5, 4, 60, 50, 40});
+   std::vector<int64_t> correct_indices({1, 4, 5, 3, 5, 1});
+
+   ASSERT_INCLUDE_AND_RUN(TupleFloatInt64_t, "TopKLargestUnsorted", input);
+
+   expectNear(std::get<0>(output), correct_values, DEFAULT_TOLERANCE);
+   expectEqual(std::get<1>(output), correct_indices);
+}
+
    TEST(ONNX, ReduceProd)
 {
    SofieReference ref = readReference("ReduceProd");
@@ -635,6 +713,26 @@ TEST(ONNX, Max)
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Max", ref.f32("input0"), ref.f32("input1"));
 
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, MinInt64)
+{
+   SofieReference ref = readReference("MinInt64");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<int64_t>, "MinInt64", ref.i64("input0"), ref.i64("input1"),
+                          ref.i64("input2"));
+
+   expectEqual(output, ref.i64("output0"));
+}
+
+TEST(ONNX, MaxInt64)
+{
+   SofieReference ref = readReference("MaxInt64");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<int64_t>, "MaxInt64", ref.i64("input0"), ref.i64("input1"),
+                          ref.i64("input2"));
+
+   expectEqual(output, ref.i64("output0"));
 }
 
 TEST(ONNX, MaxMultidirectionalBroadcast)
