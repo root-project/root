@@ -21,8 +21,8 @@ std::unique_ptr<ROperator> ParseBasicNary(RModelParser_ONNX& parser, const onnx:
          else
             assert(parser.GetTensorType(input_name) == input_type);
       } else {
-         throw std::runtime_error("TMVA::SOFIE ONNX Parser Max op has input tensor" + input_name +
-                                  " but its type is not yet registered");
+         throw std::runtime_error("TMVA::SOFIE ONNX Parser " + nodeproto.op_type() + " op has input tensor " +
+                                  input_name + " but its type is not yet registered");
       }
       inputs.emplace_back(input_name);
    }
@@ -32,8 +32,12 @@ std::unique_ptr<ROperator> ParseBasicNary(RModelParser_ONNX& parser, const onnx:
 
    switch (input_type) {
    case ETensorType::FLOAT: op.reset(new ROperator_BasicNary<float, Op>(inputs, output_name)); break;
+   case ETensorType::DOUBLE: op.reset(new ROperator_BasicNary<double, Op>(inputs, output_name)); break;
+   case ETensorType::INT32: op.reset(new ROperator_BasicNary<int32_t, Op>(inputs, output_name)); break;
+   case ETensorType::INT64: op.reset(new ROperator_BasicNary<int64_t, Op>(inputs, output_name)); break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Max does not yet support input type " + ConvertTypeToString(input_type));
+      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator " + nodeproto.op_type() +
+                               " does not yet support input type " + ConvertTypeToString(input_type));
    }
 
    if (!parser.IsRegisteredTensorType(output_name)) {

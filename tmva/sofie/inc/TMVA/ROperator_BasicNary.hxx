@@ -59,10 +59,7 @@ struct NaryOperatorTraits<T, EBasicNaryOperator::Min> {
 };
 
 template<typename T>
-struct NaryOperatorTraits<T, EBasicNaryOperator::Mean> {};
-
-template<>
-struct NaryOperatorTraits<float, EBasicNaryOperator::Mean> {
+struct NaryOperatorTraits<T, EBasicNaryOperator::Mean> {
    static const std::string Name() {return "Mean";}
    static std::string Expr(const std::vector<std::string>& inputs) {
       std::stringstream out;
@@ -70,7 +67,8 @@ struct NaryOperatorTraits<float, EBasicNaryOperator::Mean> {
       for (size_t i = 1; i < inputs.size(); i++) {
          out << " + " << inputs[i];
       }
-      out << ") / float(" << inputs.size() << "))";
+      // divide using the tensor type to avoid narrowing conversions
+      out << ") / " << ConvertTypeToString(GetTemplatedType(T{})) << "(" << inputs.size() << "))";
       return out.str();
    }
    static std::string Op(const std::string& res, std::vector<std::string>& inputs) {
