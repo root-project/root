@@ -96,7 +96,6 @@
 #      include <cstdlib>
 #   endif
 #   define R__UNIX
-#   define NEED_STRING
 #   define NEED_SIGJMP
 #   if __SUNPRO_CC > 0x420
 #      define R__SOLARIS_CC50
@@ -114,7 +113,6 @@
 #   define R__SEEK64
 #   define ANSICPP
 #   define R__UNIX
-#   define NEED_STRING
 #   define NEED_SIGJMP
 #endif
 
@@ -379,7 +377,6 @@
 #   define SC
 #   define R__SC
 #   if defined(WIN32)
-#      define NEED_STRING
 #      define NEED_STRCASECMP
 #      define ANSICPP
 #   else
@@ -391,7 +388,6 @@
 
 #ifdef _MSC_VER
 #   define R__VISUAL_CPLUSPLUS
-#   define NEED_STRING
 #   define NEED_STRCASECMP
 #   define ANSICPP
 #   if _MSC_VER < 1310
