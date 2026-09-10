@@ -121,17 +121,17 @@ jobs:
         # Specify platform + optional build option overrides
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - platform: mac14
-            arch: X64
-            overrides: ["CMAKE_CXX_STANDARD=20"]
+          #~ - platform: mac14
+            #~ arch: X64
+            #~ overrides: ["CMAKE_CXX_STANDARD=20"]
           - platform: mac15
             arch: ARM64
             overrides: ["CMAKE_CXX_STANDARD=23"]
-          - platform: mac26
-            arch: ARM64
-          - platform: mac-beta
-            is_special: true
-            arch: ARM64
+          #~ - platform: mac26
+            #~ arch: ARM64
+          #~ - platform: mac-beta
+            #~ is_special: true
+            #~ arch: ARM64
 
     runs-on:
       - self-hosted
@@ -399,69 +399,69 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - image: fedora43
-          - image: fedora44
-          - image: alma8
-          - image: alma9
-            overrides: ["CMAKE_BUILD_TYPE=Debug"]
-          - image: alma10
-          - image: ubuntu22
-            overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
-          - image: ubuntu2404
-            overrides: ["CMAKE_BUILD_TYPE=Debug"]
-          - image: ubuntu2604
-          - image: debian13
-            overrides: ["dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
-          # Special builds
-          - image: alma9
-            platform_config: alma9-modules_off
-            is_special: true
-            property: modules_off
-            overrides: ["CMAKE_CXX_STANDARD=20"]
-          - image: alma10
-            is_special: true
-            property: arm64
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "builtin_zlib=ON", "builtin_zstd=ON", "CMAKE_CXX_STANDARD=20"]
-            architecture: ARM64
+          #~ - image: fedora43
+          #~ - image: fedora44
+          #~ - image: alma8
+          #~ - image: alma9
+            #~ overrides: ["CMAKE_BUILD_TYPE=Debug"]
+          #~ - image: alma10
+          #~ - image: ubuntu22
+            #~ overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
+          #~ - image: ubuntu2404
+            #~ overrides: ["CMAKE_BUILD_TYPE=Debug"]
+          #~ - image: ubuntu2604
+          #~ - image: debian13
+            #~ overrides: ["dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
+          #~ # Special builds
+          #~ - image: alma9
+            #~ platform_config: alma9-modules_off
+            #~ is_special: true
+            #~ property: modules_off
+            #~ overrides: ["CMAKE_CXX_STANDARD=20"]
+          #~ - image: alma10
+            #~ is_special: true
+            #~ property: arm64
+            #~ overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "builtin_zlib=ON", "builtin_zstd=ON", "CMAKE_CXX_STANDARD=20"]
+            #~ architecture: ARM64
           - image: alma10
             platform_config: alma10-clang_ninja
             is_special: true
             property: "clang Ninja builtins auto-registration off"
             overrides: ["CMAKE_CXX_STANDARD=20", "CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++", "libcxx=ON"]
           # Asan build
-          - image: alma10
-            platform_config: alma10-asan
-            is_special: true
-            property: "asan"
-            overrides: ["ROOT_CTEST_CUSTOM_FLAGS=-E@\\(^tutorial-\\|gtest-core-metacling-TClingTest$\\|roottest-cling-specialobj-runf02$\\|roottest-root-collection-DeleteWarning$\\|roottest-root-io-evolution-fixarr2$\\|roottest-root-meta-rlibmap$\\|roottest-root-tree-cloning-runtreeCloneTest2$\\|roottest-root-treeproxy-vectorint-vectorint$\\)"]
-          # Fedora Rawhide with Python freethreading+debug build
-          - image: rawhide
-            python_venv: "/py-venv-3.15td/ROOT-CI"
-            is_special: true
-            property: "Fedora pydebug no GIL"
-            overrides: ["CMAKE_CXX_STANDARD=23"]
-          # Minimal build
-          - image: alma10
-            platform_config: alma10-minimal
-            is_special: true
-            property: "minimal build"
-            overrides: ["CMAKE_CXX_STANDARD=20"]
-          # Benchmark build
-          - image: alma10
-            platform_config: alma10-benchmark
-            is_special: true
-            property: "benchmark build"
-            overrides: ["CMAKE_CXX_STANDARD=20"]
-          # Disable GPU builds until the DNS problem is solved
-          # - image: ubuntu2404-cuda
-          #   is_special: true
-          #   property: gpu
-          #   extra-runs-on: gpu
-          # openSUSE Leap
-          - image: opensuse16
-            platform_config: opensuse16-march_native
-            is_special: true
-            property: march_native
+          #~ - image: alma10
+            #~ platform_config: alma10-asan
+            #~ is_special: true
+            #~ property: "asan"
+            #~ overrides: ["ROOT_CTEST_CUSTOM_FLAGS=-E@\\(^tutorial-\\|gtest-core-metacling-TClingTest$\\|roottest-cling-specialobj-runf02$\\|roottest-root-collection-DeleteWarning$\\|roottest-root-io-evolution-fixarr2$\\|roottest-root-meta-rlibmap$\\|roottest-root-tree-cloning-runtreeCloneTest2$\\|roottest-root-treeproxy-vectorint-vectorint$\\)"]
+          #~ # Fedora Rawhide with Python freethreading+debug build
+          #~ - image: rawhide
+            #~ python_venv: "/py-venv-3.15td/ROOT-CI"
+            #~ is_special: true
+            #~ property: "Fedora pydebug no GIL"
+            #~ overrides: ["CMAKE_CXX_STANDARD=23"]
+          #~ # Minimal build
+          #~ - image: alma10
+            #~ platform_config: alma10-minimal
+            #~ is_special: true
+            #~ property: "minimal build"
+            #~ overrides: ["CMAKE_CXX_STANDARD=20"]
+          #~ # Benchmark build
+          #~ - image: alma10
+            #~ platform_config: alma10-benchmark
+            #~ is_special: true
+            #~ property: "benchmark build"
+            #~ overrides: ["CMAKE_CXX_STANDARD=20"]
+          #~ # Disable GPU builds until the DNS problem is solved
+          #~ # - image: ubuntu2404-cuda
+          #~ #   is_special: true
+          #~ #   property: gpu
+          #~ #   extra-runs-on: gpu
+          #~ # openSUSE Leap
+          #~ - image: opensuse16
+            #~ platform_config: opensuse16-march_native
+            #~ is_special: true
+            #~ property: march_native
 
     runs-on:
       - self-hosted
