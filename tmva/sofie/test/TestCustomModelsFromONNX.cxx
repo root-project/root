@@ -587,20 +587,23 @@ TEST(ONNX, ReduceMean_kFirst)
 
 TEST(ONNX, ReduceMax)
 {
-   SofieReference ref = readReference("ReduceMax");
+   // reduce over axis 1 of a [1,2,3] tensor, not keeping the dimension
+   std::vector<float> input({5, 2, 3, 5, 5, 4});
+   std::vector<float> correct_output({5, 5, 4});
 
-   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceMax", ref.f32("input0"));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceMax", input);
 
-   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
 TEST(ONNX, ReduceMin)
 {
-   SofieReference ref = readReference("ReduceMin");
+   std::vector<float> input({5, 2, 3, 5, 5, 4});
+   std::vector<float> correct_output({5, 2, 3});
 
-   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceMin", ref.f32("input0"));
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceMin", input);
 
-   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
 // Elu on a tensor whose first dimension is only known at run time.
@@ -612,8 +615,7 @@ TEST(ONNX, EluDynShape)
       correct_output.push_back(x >= 0 ? x : std::exp(x) - 1);
 
    // model is dynamic in N, use N = 2
-   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "EluDynShape",
-                                       "\"EluDynShape_FromONNX.dat\", 2", 2, input);
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "EluDynShape", "\"EluDynShape_FromONNX.dat\", 2", 2, input);
 
    expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
@@ -626,8 +628,8 @@ TEST(ONNX, TopKWithDynShapeK)
    std::vector<int64_t> correct_indices({2, 1, 0, 0, 3, 2, 4, 2, 3, 1, 4, 1});
 
    // model is dynamic in N, use N = 5, so K = min(5, 4) = 4
-   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(TupleFloatInt64_t, "TopKWithDynShapeK",
-                                       "\"TopKWithDynShapeK_FromONNX.dat\", 5", 5, input);
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(TupleFloatInt64_t, "TopKWithDynShapeK", "\"TopKWithDynShapeK_FromONNX.dat\", 5",
+                                       5, input);
 
    expectNear(std::get<0>(output), correct_values, DEFAULT_TOLERANCE);
    expectEqual(std::get<1>(output), correct_indices);
@@ -717,22 +719,26 @@ TEST(ONNX, Max)
 
 TEST(ONNX, MinInt64)
 {
-   SofieReference ref = readReference("MinInt64");
+   std::vector<int64_t> a({1, -7, 3, 100, 0});
+   std::vector<int64_t> b({2, -2, -3, 50, 0});
+   std::vector<int64_t> c({0, 5, 9, 75, 1});
+   std::vector<int64_t> correct_output({0, -7, -3, 50, 0});
 
-   ASSERT_INCLUDE_AND_RUN(std::vector<int64_t>, "MinInt64", ref.i64("input0"), ref.i64("input1"),
-                          ref.i64("input2"));
+   ASSERT_INCLUDE_AND_RUN(std::vector<int64_t>, "MinInt64", a, b, c);
 
-   expectEqual(output, ref.i64("output0"));
+   expectEqual(output, correct_output);
 }
 
 TEST(ONNX, MaxInt64)
 {
-   SofieReference ref = readReference("MaxInt64");
+   std::vector<int64_t> a({1, -7, 3, 100, 0});
+   std::vector<int64_t> b({2, -2, -3, 50, 0});
+   std::vector<int64_t> c({0, 5, 9, 75, 1});
+   std::vector<int64_t> correct_output({2, 5, 9, 100, 1});
 
-   ASSERT_INCLUDE_AND_RUN(std::vector<int64_t>, "MaxInt64", ref.i64("input0"), ref.i64("input1"),
-                          ref.i64("input2"));
+   ASSERT_INCLUDE_AND_RUN(std::vector<int64_t>, "MaxInt64", a, b, c);
 
-   expectEqual(output, ref.i64("output0"));
+   expectEqual(output, correct_output);
 }
 
 TEST(ONNX, MaxMultidirectionalBroadcast)

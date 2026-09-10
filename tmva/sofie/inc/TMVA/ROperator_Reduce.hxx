@@ -17,7 +17,15 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
-enum EReduceOpMode { ReduceMean, ReduceSum, ReduceSumSquare, ReduceProd, ReduceMax, ReduceMin, InvalidReduceOp };
+enum EReduceOpMode {
+   ReduceMean,
+   ReduceSum,
+   ReduceSumSquare,
+   ReduceProd,
+   ReduceMax,
+   ReduceMin,
+   InvalidReduceOp
+};
 
 template <EReduceOpMode Op>
 class ROperator_Reduce final : public ROperator
@@ -34,20 +42,25 @@ private:
     std::vector<Dim> fShapeX;
     std::vector<Dim> fShapeY;
     std::vector<Dim> fShapeYNotPruned; // needed for fKeepdims=0
-    std::string fType; // type of the tensors (needed by ReduceMax/ReduceMin)
+    std::string fType;                 // type of the tensors (needed by ReduceMax/ReduceMin)
 
-
-public:
-
-   std::string Name() {
-      if (fReduceOpMode == ReduceMean)  return "ReduceMean";
-      else if (fReduceOpMode == ReduceSumSquare )  return "ReduceSumSquare";
-      else if (fReduceOpMode == ReduceProd ) return "ReduceProd";
-      else if (fReduceOpMode == ReduceSum) return "ReduceSum";
-      else if (fReduceOpMode == ReduceMax) return "ReduceMax";
-      else if (fReduceOpMode == ReduceMin) return "ReduceMin";
-      return "Invalid";
-   }
+ public:
+    std::string Name()
+    {
+       if (fReduceOpMode == ReduceMean)
+          return "ReduceMean";
+       else if (fReduceOpMode == ReduceSumSquare)
+          return "ReduceSumSquare";
+       else if (fReduceOpMode == ReduceProd)
+          return "ReduceProd";
+       else if (fReduceOpMode == ReduceSum)
+          return "ReduceSum";
+       else if (fReduceOpMode == ReduceMax)
+          return "ReduceMax";
+       else if (fReduceOpMode == ReduceMin)
+          return "ReduceMin";
+       return "Invalid";
+    }
 
    ROperator_Reduce(){}
    ROperator_Reduce(int keepdims, std::vector<int64_t> attrAxes, std::string nameX, std::string nameAxes, std::string nameY):
@@ -196,11 +209,11 @@ public:
          out << SP << SP << "for (size_t j = 0; j < " << reducedLength << "; j++) {\n";
 
          if (fReduceOpMode == ReduceMax)
-            out << SP << SP << SP <<  "tensor_" << fNY << "[i] = std::max(tensor_" << fNY << "[i], tensor_" << fNX
-                                    << "[i * " << reducedLength << " + j]);\n";
+            out << SP << SP << SP << "tensor_" << fNY << "[i] = std::max(tensor_" << fNY << "[i], tensor_" << fNX
+                << "[i * " << reducedLength << " + j]);\n";
          else if (fReduceOpMode == ReduceMin)
-            out << SP << SP << SP <<  "tensor_" << fNY << "[i] = std::min(tensor_" << fNY << "[i], tensor_" << fNX
-                                    << "[i * " << reducedLength << " + j]);\n";
+            out << SP << SP << SP << "tensor_" << fNY << "[i] = std::min(tensor_" << fNY << "[i], tensor_" << fNX
+                << "[i * " << reducedLength << " + j]);\n";
          else if (fReduceOpMode == ReduceProd)
             out << SP << SP << SP <<  "tensor_" << fNY << "[i] *= tensor_" << fNX << "[i * " << reducedLength << " + j];\n";
          else if (fReduceOpMode == ReduceSum || fReduceOpMode == ReduceMean)
@@ -217,17 +230,18 @@ public:
          //std::cout << "reduction for operator " << opName << " is first" << std::endl;
          // case reduction is at beginning
          // reset output tensors
-         out << SP << "std::fill(tensor_" << fNY <<", tensor_"<< fNY <<" + "<< outputLength << ", " << initValue << ");\n";
+         out << SP << "std::fill(tensor_" << fNY << ", tensor_" << fNY << " + " << outputLength << ", " << initValue
+             << ");\n";
 
          out << SP << "for (size_t i = 0; i < " << reducedLength << "; i++) {\n";
          out << SP << SP << "for (size_t j = 0; j < " << outputLength << "; j++) {\n";
 
          if (fReduceOpMode == ReduceMax)
             out << SP << SP << SP << "tensor_" << fNY << "[j] = std::max(tensor_" << fNY << "[j], tensor_" << fNX
-                                  << "[i * " << outputLength << " + j]);\n";
+                << "[i * " << outputLength << " + j]);\n";
          else if (fReduceOpMode == ReduceMin)
             out << SP << SP << SP << "tensor_" << fNY << "[j] = std::min(tensor_" << fNY << "[j], tensor_" << fNX
-                                  << "[i * " << outputLength << " + j]);\n";
+                << "[i * " << outputLength << " + j]);\n";
          else if (fReduceOpMode == ReduceProd)
             out << SP << SP << SP << "tensor_" << fNY << "[j] *= tensor_" << fNX << "[i * " << outputLength << " + j];\n";
          else if (fReduceOpMode == ReduceSum || fReduceOpMode == ReduceMean)
@@ -247,7 +261,8 @@ public:
       { // standard case
          //std::cout << "reduction for operator " << opName << " is middle" << std::endl;
          // reset output tensors
-         out << SP << "std::fill(tensor_" << fNY <<", tensor_"<< fNY <<" + "<< outputLength << ", " << initValue << ");\n";
+         out << SP << "std::fill(tensor_" << fNY << ", tensor_" << fNY << " + " << outputLength << ", " << initValue
+             << ");\n";
 
          size_t dim = fShapeX.size(); // this is the input dimension (e.g. 2, 3 or 4 or more)
 
@@ -257,7 +272,8 @@ public:
          // not known at compile time). Here the input index is just a running counter and the
          // output index is accumulated one axis at a time, so the inner loop is division-free.
          auto indent = [&](size_t n) {
-            for (size_t q = 0; q < n; q++) out << SP;
+            for (size_t q = 0; q < n; q++)
+               out << SP;
          };
          // scope the loop counters, they are declared outside of the loop nest
          out << SP << "{\n";
@@ -270,8 +286,7 @@ public:
                // not a reduced axis: it contributes to the output index
                std::string next = "outputIndex_" + std::to_string(k);
                indent(k + 3);
-               out << "size_t " << next << " = " << outputIndex << " + i_" << k << " * ("
-                   << outputStrides[k] << ");\n";
+               out << "size_t " << next << " = " << outputIndex << " + i_" << k << " * (" << outputStrides[k] << ");\n";
                outputIndex = next;
             }
          }
