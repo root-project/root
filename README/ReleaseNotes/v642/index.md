@@ -75,6 +75,7 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
 * The header `GLConstants.h` is no longer part of ROOT installed headers.
 * The header `PosixThreadInc.h` is deprecated and will be removed after ROOT 6.44. Use instead `<ctime>` and `<cstdlib>`.
 * The header `RStringView.h` deprecated in ROOT 6.14  will now emit warnings and will be fully removed after ROOT 6.44. Use `ROOT/RStringView.hxx` instead.
+* The headers `strlcpy.h` and `strtok.h` are deprecated (but will not emit warnings) and will no longer be part of ROOT installed headers in ROOT 6.44.
 * The header `snprintf.h` is deprecated (will emit warnings) and will be removed in ROOT 6.44. Use instead `<cstdio>`.
 * The header `Strlen.h` is deprecated and will be removed in ROOT 6.44. Use `<cstring>` directly as a replacement. `NEED_STRING` macro should not be defined or an error will be raised.
 * The header `Varargs.h` and the macro `R__VA_COPY` are deprecated and will be removed in ROOT 6.46, use `<cstdarg>` instead.
