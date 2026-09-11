@@ -621,21 +621,24 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   #---Get the library and module dependencies-----------------
-  if(ARG_DEPENDENCIES)
-    foreach(dep ${ARG_DEPENDENCIES})
-      # Whether <dep> provides a dictionary/pcm is decided at generation time
-      # via $<TARGET_EXISTS:G__<dep>>, so the '-m' flag and the module-file
-      # dependency below are independent of configuration order and expand to
-      # nothing for a dictionary-less library.
-      set(dep_has_dict "$<TARGET_EXISTS:G__${dep}>")
-      set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
-      if (runtime_cxxmodules AND NOT dep IN_LIST local_no_cxxmodules)
-        set(dependent_pcm ${dep}.pcm)
-        list(APPEND pcm_dependencies "$<${dep_has_dict}:$<TARGET_PROPERTY:${dep},ROOT_PCM_FILENAME>>")
-      endif()
-      set(newargs ${newargs} "$<${dep_has_dict}:-m>" "$<${dep_has_dict}:${dependent_pcm}>")
-    endforeach()
+  # Every dictionary implicitly depends on Core's pcm, except the one for Core itself.
+  if(ARG_MODULE AND NOT ARG_MODULE STREQUAL "Core")
+    list(INSERT ARG_DEPENDENCIES 0 Core)
+    list(REMOVE_DUPLICATES ARG_DEPENDENCIES)
   endif()
+  foreach(dep ${ARG_DEPENDENCIES})
+    # Whether <dep> provides a dictionary/pcm is decided at generation time
+    # via $<TARGET_EXISTS:G__<dep>>, so the '-m' flag and the module-file
+    # dependency below are independent of configuration order and expand to
+    # nothing for a dictionary-less library.
+    set(dep_has_dict "$<TARGET_EXISTS:G__${dep}>")
+    set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
+    if (runtime_cxxmodules AND NOT dep IN_LIST local_no_cxxmodules)
+      set(dependent_pcm ${dep}.pcm)
+      list(APPEND pcm_dependencies "$<${dep_has_dict}:$<TARGET_PROPERTY:${dep},ROOT_PCM_FILENAME>>")
+    endif()
+    set(newargs ${newargs} "$<${dep_has_dict}:-m>" "$<${dep_has_dict}:${dependent_pcm}>")
+  endforeach()
 
   if(cpp_module_file)
     set(newargs -cxxmodule ${newargs})
