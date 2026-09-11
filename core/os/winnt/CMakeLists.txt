@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT core/winnt package
+# CMakeLists.txt file for building ROOT core/os/winnt package
 ############################################################################
 
 if(NOT WIN32)

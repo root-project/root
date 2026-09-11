@@ -52,7 +52,7 @@ target_include_directories(Foundation_Stage1
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
   PRIVATE
-    $<$<BOOL:${MSVC}>:${CMAKE_SOURCE_DIR}/core/winnt/inc>
+    $<$<BOOL:${MSVC}>:${CMAKE_SOURCE_DIR}/core/os/winnt/inc>
     ${CMAKE_BINARY_DIR}/ginclude res
 )
 
