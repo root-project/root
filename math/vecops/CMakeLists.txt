@@ -19,7 +19,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
     Core
 )
 
-if(builtin_vdt OR vdt)
+if(vdt)
   target_link_libraries(ROOTVecOps PRIVATE VDT::VDT)
 endif()
 

@@ -406,7 +406,7 @@ jobs:
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: alma10
           - image: ubuntu22
-            overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["imt=Off", "tmva-cpu=OFF", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2404
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2604

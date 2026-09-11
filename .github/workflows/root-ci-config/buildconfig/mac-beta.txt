@@ -22,5 +22,6 @@ builtin_zstd=ON
 check_connection=ON
 cocoa=ON
 davix=OFF
+libcxx=ON
 minuit2_omp=OFF
 x11=OFF
