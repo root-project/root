@@ -9,8 +9,7 @@ target_sources(Core PRIVATE
   src/RZip.cxx
 )
 
-target_link_libraries(Core PRIVATE ZLIB::ZLIB)
-target_include_directories(Core PRIVATE ../../builtins/zip)
+target_link_libraries(Core PRIVATE ZLIB::ZLIB ROOTzip)
 
 target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
