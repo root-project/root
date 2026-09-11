@@ -29,6 +29,7 @@ In extended mode, a
 #include <RooAbsData.h>
 #include <RooAbsPdf.h>
 #include <RooAbsDataStore.h>
+#include <RooBatchCompute.h>
 #include <RooChangeTracker.h>
 #include <RooNaNPacker.h>
 #include <RooFit/Evaluator.h>
@@ -148,42 +149,38 @@ ComputeResult computeScalarFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone
 // Similar to computeScalarFunc, but the probabilities were already evaluated
 // as a batch, and the weights are also retrieved as batches instead of looping
 // over RooAbsData::get(i), which loads every column of the dataset only to
-// then read a single weight.
+// then read a single weight. The reduction is done with the same vectorized
+// RooBatchCompute::reduceNLL() that RooNLLVarNew uses in the standard
+// evaluation backend, including its RooNaNPacker-based error propagation.
 ComputeResult computeBatchFunc(std::span<const double> probas, RooAbsData *dataClone, bool weightSq,
-                               std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent)
+                               std::size_t firstEvent, std::size_t lastEvent, std::vector<double> &unitWeights,
+                               RooBatchCompute::Config const &cfg)
 {
-   ROOT::Math::KahanSum<double> kahanWeight;
-   ROOT::Math::KahanSum<double> kahanProb;
-   RooNaNPacker packedNaN(0.f);
-
    const std::size_t nEvents = lastEvent - firstEvent;
    // Empty spans mean the dataset is unweighted, i.e. all weights are one.
-   std::span<const double> weights = dataClone->getWeightBatch(firstEvent, nEvents, /*sumW2=*/false);
-   std::span<const double> weightsSumW2 =
-      weightSq ? dataClone->getWeightBatch(firstEvent, nEvents, /*sumW2=*/true) : std::span<const double>{};
+   std::span<const double> dataWeights = dataClone->getWeightBatch(firstEvent, nEvents, /*sumW2=*/weightSq);
 
-   for (auto i = firstEvent; i < lastEvent; i += stepSize) {
-      double weight = weights.empty() ? 1.0 : weights[i - firstEvent];
-
-      if (0. == weight * weight)
-         continue;
-      if (weightSq)
-         weight = weightsSumW2.empty() ? 1.0 : weightsSumW2[i - firstEvent];
-
-      double logProba = std::log(probas[i]);
-      const double term = -weight * logProba;
-
-      kahanWeight.Add(weight);
-      kahanProb.Add(term);
-      packedNaN.accumulate(term);
+   double sumWeight;
+   const double *weightData = nullptr;
+   std::size_t nWeights = 0;
+   if (dataWeights.empty()) {
+      if (unitWeights.size() < nEvents) {
+         unitWeights.assign(nEvents, 1.0);
+      }
+      weightData = unitWeights.data();
+      nWeights = nEvents;
+      sumWeight = nEvents;
+   } else {
+      weightData = dataWeights.data();
+      nWeights = dataWeights.size();
+      sumWeight = RooBatchCompute::reduceSum(cfg, weightData, nWeights);
    }
+   std::span<const double> weights{weightData, nWeights};
 
-   if (packedNaN.getPayload() != 0.) {
-      // Some events with evaluation errors. Return "badness" of errors.
-      return {ROOT::Math::KahanSum<double>{packedNaN.getNaNWithPayload()}, kahanWeight.Sum()};
-   }
+   std::span<const double> probasInRange{probas.data() + firstEvent, nEvents};
 
-   return {kahanProb, kahanWeight.Sum()};
+   auto out = RooBatchCompute::reduceNLL(cfg, probasInRange, weights, {});
+   return {ROOT::Math::KahanSum<double>{out.nllSum, out.nllSumCarry}, sumWeight};
 }
 
 } // namespace
@@ -214,8 +211,8 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
       // Here, we have a memory allocation that should be avoided when this
       // code needs to be optimized.
       std::span<const double> probas = evaluator_->run();
-      std::tie(result, sumWeight) =
-         computeBatchFunc(probas, data_.get(), apply_weight_squared, 1, events.begin(N_events_), events.end(N_events_));
+      std::tie(result, sumWeight) = computeBatchFunc(probas, data_.get(), apply_weight_squared, events.begin(N_events_),
+                                                     events.end(N_events_), _unitWeights, RooBatchCompute::Config{});
    } else {
       std::tie(result, sumWeight) = computeScalarFunc(pdf_.get(), data_.get(), normSet_.get(), apply_weight_squared, 1,
                                                       events.begin(N_events_), events.end(N_events_));

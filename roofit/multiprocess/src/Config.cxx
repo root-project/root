@@ -146,6 +146,7 @@ void Config::Queue::suggestTaskOrder(std::size_t job_id, const std::vector<Task>
 unsigned int Config::defaultNWorkers_ = std::thread::hardware_concurrency();
 std::size_t Config::LikelihoodJob::defaultNEventTasks = Config::LikelihoodJob::automaticNEventTasks;
 std::size_t Config::LikelihoodJob::defaultNComponentTasks = Config::LikelihoodJob::automaticNComponentTasks;
+std::size_t Config::LikelihoodGradientJob::defaultNParamTasks = Config::LikelihoodGradientJob::automaticNParamTasks;
 Config::Queue::QueueType Config::Queue::queueType_ = Config::Queue::QueueType::FIFO;
 bool Config::timingAnalysis_ = false;
 

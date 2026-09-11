@@ -24,6 +24,9 @@
 #include "Minuit2/Minuit2Minimizer.h"
 #include "Minuit2/MnStrategy.h"
 
+#include <algorithm>
+#include <cmath>
+
 namespace RooFit {
 namespace TestStatistics {
 
@@ -32,11 +35,31 @@ LikelihoodGradientJob::LikelihoodGradientJob(std::shared_ptr<RooAbsL> likelihood
                                              std::size_t N_dim, RooMinimizer *minimizer, SharedOffset offset)
    : LikelihoodGradientWrapper(std::move(likelihood), std::move(calculation_is_clean), N_dim, minimizer,
                                std::move(offset)),
-     grad_(N_dim),
-     N_tasks_(N_dim)
+     grad_(N_dim)
 {
+   // Each task covers multiple parameters to reduce the scheduling overhead
+   // per gradient: every task costs a dequeue round trip through the queue
+   // process plus a result message to the master, which for cheap partial
+   // derivatives can otherwise dominate over the actual calculation. A few
+   // tasks per worker still leave the queue room for load balancing. Parameters
+   // are assigned to tasks in strides, so parameters with expensive partial
+   // derivatives (that often sit next to each other in the parameter order,
+   // e.g. a block of correlated systematics) spread evenly over the tasks.
+   N_tasks_ = MultiProcess::Config::LikelihoodGradientJob::defaultNParamTasks;
+   if (N_tasks_ == MultiProcess::Config::LikelihoodGradientJob::automaticNParamTasks) {
+      N_tasks_ = 4 * MultiProcess::Config::getDefaultNWorkers();
+   }
+   N_tasks_ = std::min(N_tasks_, N_dim);
+
    minuit_internal_x_.reserve(N_dim);
    offsets_previous_ = shared_offset_.offsets();
+}
+
+/// Number of parameters assigned to task \p task (parameter indices congruent
+/// to \p task modulo N_tasks_).
+std::size_t LikelihoodGradientJob::taskSize(std::size_t task) const
+{
+   return grad_.size() / N_tasks_ + (task < grad_.size() % N_tasks_ ? 1 : 0);
 }
 
 void LikelihoodGradientJob::synchronizeParameterSettingsImpl(
@@ -86,23 +109,33 @@ void LikelihoodGradientJob::setErrorLevel(double error_level) const
 
 void LikelihoodGradientJob::evaluate_task(std::size_t task)
 {
-   run_derivator(task);
+   for (std::size_t ix = task; ix < grad_.size(); ix += N_tasks_) {
+      run_derivator(ix);
+   }
 }
 
 // SYNCHRONIZATION FROM WORKERS TO MASTER
 
 void LikelihoodGradientJob::send_back_task_result_from_worker(std::size_t task)
 {
-   task_result_t task_result{id_, task, grad_[task]};
-   zmq::message_t message(sizeof(task_result_t));
+   task_result_t task_result{id_, task};
+   zmq::message_t message(sizeof(task_result_t) + taskSize(task) * sizeof(ROOT::Minuit2::DerivatorElement));
    memcpy(message.data(), &task_result, sizeof(task_result_t));
+   auto elements = reinterpret_cast<ROOT::Minuit2::DerivatorElement *>(message.data<char>() + sizeof(task_result_t));
+   for (std::size_t ix = task; ix < grad_.size(); ix += N_tasks_) {
+      *elements++ = grad_[ix];
+   }
    get_manager()->messenger().send_from_worker_to_master(std::move(message));
 }
 
 bool LikelihoodGradientJob::receive_task_result_on_master(const zmq::message_t &message)
 {
    auto result = message.data<task_result_t>();
-   grad_[result->task_id] = result->grad;
+   auto elements =
+      reinterpret_cast<ROOT::Minuit2::DerivatorElement const *>(message.data<char>() + sizeof(task_result_t));
+   for (std::size_t ix = result->task_id; ix < grad_.size(); ix += N_tasks_) {
+      grad_[ix] = *elements++;
+   }
    --N_tasks_at_workers_;
    bool job_completed = (N_tasks_at_workers_ == 0);
    return job_completed;
@@ -122,14 +155,18 @@ void LikelihoodGradientJob::update_workers_state()
    ++state_id_;
 
    if (shared_offset_.offsets() != offsets_previous_) {
+      // The function value known by the master corresponds to the previous
+      // offsets, so it cannot be used to skip the central-point evaluation on
+      // the workers in this update.
+      double fValAtX = std::numeric_limits<double>::quiet_NaN();
       zmq::message_t offsets_message(shared_offset_.offsets().begin(), shared_offset_.offsets().end());
       get_manager()->messenger().publish_from_master_to_workers(
-         id_, state_id_, isCalculating_, maxFCN, fcnOffset, std::move(gradient_message),
+         id_, state_id_, isCalculating_, maxFCN, fcnOffset, fValAtX, std::move(gradient_message),
          std::move(minuit_internal_x_message), std::move(offsets_message));
       offsets_previous_ = shared_offset_.offsets();
    } else {
       get_manager()->messenger().publish_from_master_to_workers(id_, state_id_, isCalculating_, maxFCN, fcnOffset,
-                                                                std::move(gradient_message),
+                                                                fval_at_x_, std::move(gradient_message),
                                                                 std::move(minuit_internal_x_message));
    }
 }
@@ -155,6 +192,9 @@ void LikelihoodGradientJob::update_state()
 
       auto fcnOffset = get_manager()->messenger().receive_from_master_on_worker<double>(&more);
       minimizer_->fcnOffset() = fcnOffset;
+      assert(more);
+
+      auto fValAtX = get_manager()->messenger().receive_from_master_on_worker<double>(&more);
       assert(more);
 
       auto gradient_message = get_manager()->messenger().receive_from_master_on_worker<zmq::message_t>(&more);
@@ -183,6 +223,14 @@ void LikelihoodGradientJob::update_state()
 
       // Since the gradient parallelization only support Minuit 2, we can do this cast
       auto &minim = static_cast<ROOT::Minuit2::Minuit2Minimizer &>(*minimizer_->_minimizer);
+
+      // The master already knows the function value at the current point from
+      // the line search that Minuit just completed; pre-seeding the derivator's
+      // cache with it makes the SetupDifferentiate call below skip its full
+      // likelihood evaluation at the central point.
+      if (!std::isnan(fValAtX)) {
+         gradf_.PreseedFVal(fValAtX, {minuit_internal_x_.data(), static_cast<std::size_t>(minimizer_->getNPar())});
+      }
 
       // note: the next call must stay after the (possible) update of the offset, because it
       // calls the likelihood function, so the offset must be correct at this point
@@ -231,6 +279,7 @@ void LikelihoodGradientJob::fillGradient(double *grad)
 {
    if (get_manager()->process_manager().is_master()) {
       if (!calculation_is_clean_->gradient) {
+         fval_at_x_ = std::numeric_limits<double>::quiet_NaN();
          calculate_all();
       }
 
@@ -242,12 +291,14 @@ void LikelihoodGradientJob::fillGradient(double *grad)
 }
 
 void LikelihoodGradientJob::fillGradientWithPrevResult(double *grad, double *previous_grad, double *previous_g2,
-                                                       double *previous_gstep)
+                                                       double *previous_gstep, double fValAtX)
 {
    if (get_manager()->process_manager().is_master()) {
-      for (std::size_t i_component = 0; i_component < N_tasks_; ++i_component) {
+      for (std::size_t i_component = 0; i_component < grad_.size(); ++i_component) {
          grad_[i_component] = {previous_grad[i_component], previous_g2[i_component], previous_gstep[i_component]};
       }
+
+      fval_at_x_ = fValAtX;
 
       if (!calculation_is_clean_->gradient) {
          if (RooFit::MultiProcess::Config::getTimingAnalysis()) {
