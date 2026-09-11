@@ -880,7 +880,9 @@ public:
 
    RClusterGroupDescriptorIterable GetClusterGroupIterable() const;
 
-   RClusterDescriptorIterable GetClusterIterable() const;
+   RClusterDescriptorIterable R__DEPRECATED(6,46, "This function is ill-conceived in the descriptor "
+      "as not all cluster descriptors may be present. Iterate over cluster groups instead and check for each one "
+      "if its cluster details are available.") GetClusterIterable() const;
 
    RExtraTypeInfoDescriptorIterable GetExtraTypeInfoIterable() const;
 
@@ -1147,6 +1149,8 @@ public:
    RIterator end() {
       return RIterator(&fNTuple, &fNTuple.fSortedClusterGroupIds, fNTuple.fSortedClusterGroupIds.size());
    }
+   std::size_t size() const { return fNTuple.fSortedClusterGroupIds.size(); }
+   bool empty() const { return fNTuple.fSortedClusterGroupIds.empty(); }
 };
 
 // clang-format off
