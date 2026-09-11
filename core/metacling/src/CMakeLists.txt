@@ -56,7 +56,7 @@ target_include_directories(MetaCling SYSTEM PRIVATE
 target_include_directories(MetaCling PRIVATE
    ${CLING_INCLUDE_DIRS}
    ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_SOURCE_DIR}/core/clib/inc
+   ${CMAKE_SOURCE_DIR}/builtins/clib/inc
    ${CMAKE_SOURCE_DIR}/core/clingutils/res
    ${CMAKE_SOURCE_DIR}/core/cont/inc
    ${CMAKE_SOURCE_DIR}/core/foundation/inc
