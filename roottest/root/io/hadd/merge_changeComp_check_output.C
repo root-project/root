@@ -28,7 +28,7 @@ int merge_changeComp_check_output(int expectedCompressionRNT, int expectedCompre
 
    const auto expCompAlgo = ROOT::RCompressionSetting::AlgorithmFromCompressionSettings(expectedCompressionRNT);
    const auto &desc = source.GetSharedDescriptorGuard();
-   auto clusterIter = desc->GetClusterIterable();
+   auto clusterIter = desc->GetActiveClusterIterable();
    for (const auto &clusterDesc : clusterIter) {
       // check advertised compression
       int advertisedCompression = clusterDesc.GetColumnRange(0).GetCompressionSettings().value();
