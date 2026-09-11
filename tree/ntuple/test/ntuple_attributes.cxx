@@ -76,7 +76,6 @@ TEST(RNTupleAttributes, AttributeSetDuplicateName)
 TEST(RNTupleAttributes, BasicReadingWriting)
 {
    FileRaii fileGuard("ntuple_attr_basic_readwriting.root");
-   fileGuard.PreserveFile();
 
    ROOT::TestSupport::CheckDiagsRAII diagsRaii;
    diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
@@ -171,7 +170,6 @@ TEST(RNTupleAttributes, BasicReadingWriting)
 TEST(RNTupleAttributes, BasicReadingWritingTFile)
 {
    FileRaii fileGuard("ntuple_attr_basic_readwriting_tfile.root");
-   fileGuard.PreserveFile();
 
    ROOT::TestSupport::CheckDiagsRAII diagsRaii;
    diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
@@ -1299,4 +1297,54 @@ TEST(RNTupleAttributes, ReadAttributesUnknownMinor)
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    EXPECT_NO_THROW(reader->OpenAttributeSet("MyAttrSet"));
+}
+
+TEST(RNTupleAttributes, WriteZeroAttributes)
+{
+   FileRaii fileGuard("ntuple_attr_writezero.root");
+
+   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
+   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
+
+   /// Writing
+   {
+      auto model = RNTupleModel::Create();
+      auto pInt = model->MakeField<int>("int");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+
+      auto attrModel = RNTupleModel::Create();
+      auto pAttr = attrModel->MakeField<std::string>("attr");
+      auto attrSetWriter = writer->CreateAttributeSet(std::move(attrModel), "AttrSet1");
+
+      // Don't write any attributes
+      for (int i = 0; i < 100; ++i) {
+         *pInt = i;
+         writer->Fill();
+      }
+   }
+
+   // Cannot directly fetch the attribute RNTuple from the TFile
+   {
+      auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+      auto ntuple = tfile->Get<ROOT::RNTuple>("AttrSet1");
+      EXPECT_EQ(ntuple, nullptr);
+   }
+
+   /// Reading
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   // Even though we didn't write attribute entries we should still have our empty attribute set
+   EXPECT_EQ(reader->GetDescriptor().GetNAttributeSets(), 1);
+   for (const auto &attrSetIt : reader->GetDescriptor().GetAttrSetIterable()) {
+      EXPECT_EQ(attrSetIt.GetName(), "AttrSet1");
+   }
+
+   auto attrSetReader = reader->OpenAttributeSet("AttrSet1");
+   EXPECT_EQ(attrSetReader->GetNEntries(), 0);
+   auto pAttr = attrSetReader->GetModel().GetDefaultEntry().GetPtr<std::string>("attr");
+   auto iter = attrSetReader->GetAttributes();
+   EXPECT_EQ(iter.begin(), iter.end());
+
+   // We should never produce empty cluster groups
+   auto iterCG = attrSetReader->GetDescriptor().GetClusterGroupIterable();
+   EXPECT_EQ(iterCG.begin(), iterCG.end());
 }
