@@ -24,6 +24,10 @@ ROOT_ADD_GTEST(tessellated
   test_tessellated.cxx
   LIBRARIES Geom)
 
+ROOT_ADD_GTEST(shape_safety
+  test_shape_safety.cxx
+  LIBRARIES Geom)
+
 ROOT_ADD_GTEST(overlap_navigation
   test_overlap_navigation.cxx
   LIBRARIES Geom)
