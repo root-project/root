@@ -276,14 +276,10 @@ void TGeoPgon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
       s1 = TMath::Sin(phi1);
       c2 = TMath::Cos(phi2);
       s2 = TMath::Sin(phi2);
-      if (TGeoShape::IsCloseToPhi(1E-5, point, c1, s1, c2, s2)) {
-         TGeoShape::NormalPhi(point, dir, norm, c1, s1, c2, s2);
-         return;
-      }
    } // Phi done
 
    Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
-   if (ipl == (fNz - 1) || ipl < 0) {
+   if (point[2] >= fZ[fNz - 1] || ipl < 0) {
       // point outside Z range
       norm[2] = TMath::Sign(1., dir[2]);
       return;
@@ -299,31 +295,27 @@ void TGeoPgon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
       phi += 360.;
    Double_t ddp = phi - fPhi1;
    Int_t ipsec = Int_t(ddp / divphi);
+   // A point on or just outside a phi cut belongs to the nearest end sector.
+   if (ipsec >= fNedges)
+      ipsec = (ddp - fDphi < 360. - ddp) ? fNedges - 1 : 0;
    Double_t ph0 = (fPhi1 + divphi * (ipsec + 0.5)) * TMath::DegToRad();
    // compute projected distance
    Double_t r, rsum, rpgon, ta, calf;
    r = TMath::Abs(point[0] * TMath::Cos(ph0) + point[1] * TMath::Sin(ph0));
-   if (dz < 1E-5) {
-      if (iplclose == 0 || iplclose == (fNz - 1)) {
-         norm[2] = TMath::Sign(1., dir[2]);
-         return;
-      }
-      if (iplclose == ipl && TGeoShape::IsSameWithinTolerance(fZ[ipl], fZ[ipl - 1])) {
-         if (r < TMath::Max(fRmin[ipl], fRmin[ipl - 1]) || r > TMath::Min(fRmax[ipl], fRmax[ipl - 1])) {
-            norm[2] = TMath::Sign(1., dir[2]);
-            return;
-         }
-      } else {
-         if (TGeoShape::IsSameWithinTolerance(fZ[iplclose], fZ[iplclose + 1])) {
-            if (r < TMath::Max(fRmin[iplclose], fRmin[iplclose + 1]) ||
-                r > TMath::Min(fRmax[iplclose], fRmax[iplclose + 1])) {
-               norm[2] = TMath::Sign(1., dir[2]);
-               return;
-            }
-         }
-      }
+   Double_t safz = TGeoShape::Big();
+   if (iplclose == 0 || iplclose == (fNz - 1)) {
+      safz = dz;
+   } else if (iplclose == ipl && TGeoShape::IsSameWithinTolerance(fZ[ipl], fZ[ipl - 1])) {
+      if (r < TMath::Max(fRmin[ipl], fRmin[ipl - 1]) || r > TMath::Min(fRmax[ipl], fRmax[ipl - 1]))
+         safz = dz;
+   } else if (TGeoShape::IsSameWithinTolerance(fZ[iplclose], fZ[iplclose + 1])) {
+      if (r < TMath::Max(fRmin[iplclose], fRmin[iplclose + 1]) || r > TMath::Min(fRmax[iplclose], fRmax[iplclose + 1]))
+         safz = dz;
    } //-> Z done
 
+   // At a repeated z plane, use a section with nonzero height for the radial faces.
+   while (ipl < fNz - 2 && fZ[ipl] == fZ[ipl + 1])
+      ++ipl;
    dz = fZ[ipl + 1] - fZ[ipl];
    rmin1 = fRmin[ipl];
    rmin2 = fRmin[ipl + 1];
@@ -333,7 +325,7 @@ void TGeoPgon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
       ta = (rmin2 - rmin1) / dz;
       calf = 1. / TMath::Sqrt(1 + ta * ta);
       rpgon = rmin1 + (point[2] - fZ[ipl]) * ta;
-      safe = TMath::Abs(r - rpgon);
+      safe = TMath::Abs(r - rpgon) * calf;
       norm[0] = calf * TMath::Cos(ph0);
       norm[1] = calf * TMath::Sin(ph0);
       norm[2] = -calf * ta;
@@ -341,10 +333,22 @@ void TGeoPgon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
    ta = (fRmax[ipl + 1] - fRmax[ipl]) / dz;
    calf = 1. / TMath::Sqrt(1 + ta * ta);
    rpgon = fRmax[ipl] + (point[2] - fZ[ipl]) * ta;
-   if (safe > TMath::Abs(rpgon - r)) {
+   Double_t safr = TMath::Abs(rpgon - r) * calf;
+   if (safe > safr) {
+      safe = safr;
       norm[0] = calf * TMath::Cos(ph0);
       norm[1] = calf * TMath::Sin(ph0);
       norm[2] = -calf * ta;
+   }
+   // Compare face distances instead of letting a fixed tolerance select a nearby face.
+   if (safz < safe) {
+      safe = safz;
+      norm[0] = norm[1] = 0.;
+      norm[2] = 1.;
+   }
+   if (is_seg && TGeoShape::IsCloseToPhi(safe, point, c1, s1, c2, s2)) {
+      TGeoShape::NormalPhi(point, dir, norm, c1, s1, c2, s2);
+      return;
    }
    if (norm[0] * dir[0] + norm[1] * dir[1] + norm[2] * dir[2] < 0) {
       norm[0] = -norm[0];
