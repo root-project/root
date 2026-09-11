@@ -797,8 +797,9 @@ TEST(RNTuple, SerializeFooter)
    context = RNTupleSerializer::SerializeHeader(bufHeader.get(), desc).Unwrap();
 
    std::vector<ROOT::DescriptorId_t> physClusterIDs;
-   for (const auto &c : desc.GetClusterIterable()) {
-      physClusterIDs.emplace_back(context.MapClusterId(c.GetId()));
+   for (const auto &cg : desc.GetClusterGroupIterable()) {
+      for (const auto cid : cg.GetClusterIds())
+         physClusterIDs.emplace_back(context.MapClusterId(cid));
    }
    EXPECT_EQ(desc.GetNClusters(), physClusterIDs.size());
    context.MapClusterGroupId(256);

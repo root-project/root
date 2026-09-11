@@ -880,7 +880,13 @@ public:
 
    RClusterGroupDescriptorIterable GetClusterGroupIterable() const;
 
-   RClusterDescriptorIterable GetClusterIterable() const;
+   RClusterDescriptorIterable
+      R__DEPRECATED(6, 46,
+                    "This function is unsafe to use because, in general, not all cluster "
+                    "metadata are available (there may be cluster groups with unloaded cluster group details). Use the "
+                    "'GetActiveClusterIterable()' method instead if you are aware of this limitation.")
+         GetClusterIterable() const;
+   RClusterDescriptorIterable GetActiveClusterIterable() const;
 
    RExtraTypeInfoDescriptorIterable GetExtraTypeInfoIterable() const;
 
@@ -1153,6 +1159,8 @@ public:
    {
       return RIterator(&fNTuple, &fNTuple.fSortedClusterGroupIds, fNTuple.fSortedClusterGroupIds.size());
    }
+   std::size_t size() const { return fNTuple.fSortedClusterGroupIds.size(); }
+   bool empty() const { return fNTuple.fSortedClusterGroupIds.empty(); }
 };
 
 // clang-format off
