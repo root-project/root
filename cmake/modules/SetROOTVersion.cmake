@@ -14,29 +14,6 @@
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
-function(SET_VERSION_FROM_FILE)
-  # See https://stackoverflow.com/questions/47066115/cmake-get-version-from-multiline-text-file
-  file(READ "${CMAKE_SOURCE_DIR}/core/foundation/inc/ROOT/RVersion.hxx" versionstr)
-  string(REGEX MATCH "#define ROOT_VERSION_MAJOR ([0-9]*)" _ ${versionstr})
-  set(ROOT_MAJOR_VERSION ${CMAKE_MATCH_1})
-  string(REGEX MATCH "#define ROOT_VERSION_MINOR ([0-9]*)" _ ${versionstr})
-  if (CMAKE_MATCH_1 LESS 10)
-    set(ROOT_MINOR_VERSION "0${CMAKE_MATCH_1}")
-  else()
-    set(ROOT_MINOR_VERSION ${CMAKE_MATCH_1})
-  endif()
-  string(REGEX MATCH "#define ROOT_VERSION_PATCH ([0-9]*)" _ ${versionstr})
-  if (CMAKE_MATCH_1 LESS 10)
-    set(ROOT_PATCH_VERSION "0${CMAKE_MATCH_1}")
-  else()
-    set(ROOT_PATCH_VERSION ${CMAKE_MATCH_1})
-  endif()
-
-  set(ROOT_MAJOR_VERSION "${ROOT_MAJOR_VERSION}" PARENT_SCOPE)
-  set(ROOT_MINOR_VERSION "${ROOT_MINOR_VERSION}" PARENT_SCOPE)
-  set(ROOT_PATCH_VERSION "${ROOT_PATCH_VERSION}" PARENT_SCOPE)
-endfunction()
-
 function(SET_ROOT_VERSION)
   if(Git_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/.git)
     execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git describe --all
@@ -48,7 +25,10 @@ function(SET_ROOT_VERSION)
     set(GIT_DESCRIBE_ERRCODE "NoGit")
   endif()
 
-  SET_VERSION_FROM_FILE()
+  set(ROOT_MAJOR_VERSION 6)
+  set(ROOT_MINOR_VERSION 41)
+  set(ROOT_PATCH_VERSION 1) # When changing the version number here, never add leading zeroes!
+  set(ROOT_RELEASE_DATE "Apr 23 2026")
 
   set(ROOT_VERSION "${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}.${ROOT_PATCH_VERSION}")
   set(ROOT_FULL_VERSION "${ROOT_VERSION}")
@@ -97,6 +77,7 @@ function(SET_ROOT_VERSION)
   set(ROOT_MAJOR_VERSION "${ROOT_MAJOR_VERSION}" PARENT_SCOPE)
   set(ROOT_MINOR_VERSION "${ROOT_MINOR_VERSION}" PARENT_SCOPE)
   set(ROOT_PATCH_VERSION "${ROOT_PATCH_VERSION}" PARENT_SCOPE)
+  set(ROOT_RELEASE_DATE ${ROOT_RELEASE_DATE} PARENT_SCOPE)
   set(ROOT_VERSION "${ROOT_VERSION}" PARENT_SCOPE)
   set(ROOT_FULL_VERSION "${ROOT_FULL_VERSION}" PARENT_SCOPE)
   set(GIT_DESCRIBE_ALWAYS "${GIT_DESCRIBE_ALWAYS}" PARENT_SCOPE)

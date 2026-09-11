@@ -198,6 +198,9 @@ option(testing "Enable testing with CTest" OFF)
 option(asan "Build ROOT with address sanitizer instrumentation (see core/sanitizer for details)" OFF)
 option(_wheel_build "ROOT is being packaged as a wheel, do not install .dist-info metadata" OFF)
 
+option(ENABLE_BASKET_ALLOC_TIME_TRACKING "Setting this define causes ROOT to keep statistics about memory buffer allocation time within the TTree. Given that this is a 'hot-path', we provide a mechanism for enabling / disabling this at compile time by developers; default is disabled." OFF)
+mark_as_advanced(ENABLE_BASKET_ALLOC_TIME_TRACKING)
+
 set(gcctoolchain "" CACHE PATH "Set path to GCC toolchain used to build llvm/clang")
 
 if(all AND minimal)
