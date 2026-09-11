@@ -891,4 +891,4 @@ The following items were addressed:
   * [[#10784](https://github.com/root-project/root/issues/10784)] - TKDTreeBinning missing bins
   * [[#10240](https://github.com/root-project/root/issues/10240)] - TTree: Creating a branch with std::vector can raise an internal error when mixing I/O systems.
   * [[#6378](https://github.com/root-project/root/issues/6378)] - TTreeFormula `Alt$` gives (silently) wrong result when used by itself.
-  
+
