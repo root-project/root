@@ -190,8 +190,189 @@ std::string BuildMapTypeName(ROOT::RMapField::EMapType mapType, const ROOT::RFie
 
 } // anonymous namespace
 
+ROOT::RRuleField::RRuleField(std::string_view fieldName, std::string_view typeName, ROOT::ENTupleStructure structure)
+   : RFieldBase(fieldName, typeName, structure, false /* isSimple */)
+{
+}
+
+ROOT::DescriptorId_t ROOT::RRuleField::LookupMember(const ROOT::RNTupleDescriptor &desc, std::string_view memberName,
+                                                    ROOT::DescriptorId_t classFieldId) const
+{
+   auto idSourceMember = desc.FindFieldId(memberName, classFieldId);
+   if (idSourceMember != ROOT::kInvalidDescriptorId)
+      return idSourceMember;
+
+   for (const auto &subFieldDesc : desc.GetFieldIterable(classFieldId)) {
+      const auto &subFieldName = subFieldDesc.GetFieldName();
+      if (subFieldName.length() > 2 && subFieldName[0] == ':' && subFieldName[1] == '_') {
+         idSourceMember = LookupMember(desc, memberName, subFieldDesc.GetId());
+         if (idSourceMember != ROOT::kInvalidDescriptorId)
+            return idSourceMember;
+      }
+   }
+
+   return ROOT::kInvalidDescriptorId;
+}
+
+void ROOT::RRuleField::SetStagingClass(const std::string &className, unsigned int classVersion)
+{
+   TClass::GetClass(className.c_str())->GetStreamerInfo(classVersion);
+   if (classVersion != GetTypeVersion() || className != GetTypeName()) {
+      fStagingClass = TClass::GetClass((className + std::string("@@") + std::to_string(classVersion)).c_str());
+      if (!fStagingClass) {
+         // For a rename rule, we may simply ask for the old class name
+         fStagingClass = TClass::GetClass(className.c_str());
+      }
+   } else {
+      fStagingClass = GetInMemoryClass();
+   }
+   R__ASSERT(fStagingClass);
+   R__ASSERT(static_cast<unsigned int>(fStagingClass->GetClassVersion()) == classVersion);
+}
+
+void ROOT::RRuleField::PrepareStagingArea(const std::vector<const TSchemaRule *> &rules,
+                                          const ROOT::RNTupleDescriptor &desc,
+                                          const ROOT::RFieldDescriptor &classFieldDesc)
+{
+   std::size_t stagingAreaSize = 0;
+   for (const auto rule : rules) {
+      for (auto source : TRangeDynCast<TSchemaRule::TSources>(rule->GetSource())) {
+         auto [itr, isNew] = fStagingItems.emplace(source->GetName(), RStagingItem());
+         if (!isNew) {
+            // This source member has already been processed by another rule (and we only support one type per member)
+            continue;
+         }
+         RStagingItem &stagingItem = itr->second;
+
+         const auto memberFieldId = LookupMember(desc, source->GetName(), classFieldDesc.GetId());
+         if (memberFieldId == kInvalidDescriptorId) {
+            throw RException(R__FAIL(std::string("cannot find on disk rule source member ") + GetTypeName() + "." +
+                                     source->GetName()));
+         }
+
+         auto memberType = source->GetTypeForDeclaration() + source->GetDimensions();
+         auto memberField = Create("" /* we don't need a field name */, std::string(memberType)).Unwrap();
+         memberField->SetOnDiskId(memberFieldId);
+         auto fieldZero = std::make_unique<RFieldZero>();
+         Internal::SetAllowFieldSubstitutions(*fieldZero, true);
+         fieldZero->Attach(std::move(memberField));
+         stagingItem.fField = std::move(fieldZero);
+
+         stagingItem.fOffset = fStagingClass->GetDataMemberOffset(source->GetName());
+         // Since we successfully looked up the source member in the RNTuple on-disk metadata, we expect it
+         // to be present in the TClass instance, too.
+         R__ASSERT(stagingItem.fOffset != TVirtualStreamerInfo::kMissing);
+         stagingAreaSize = std::max(stagingAreaSize, stagingItem.fOffset + stagingItem.fField->begin()->GetValueSize());
+      }
+   }
+
+   if (stagingAreaSize) {
+      R__ASSERT(static_cast<Int_t>(stagingAreaSize) <= fStagingClass->Size()); // we may have removed rules
+      // We use std::make_unique instead of MakeUninitArray to zero-initialize the staging area.
+      fStagingArea = std::make_unique<unsigned char[]>(stagingAreaSize);
+
+      for (const auto &[_, si] : fStagingItems) {
+         const auto &memberField = *si.fField->cbegin();
+         if (!(memberField.GetTraits() & kTraitTriviallyConstructible)) {
+            CallConstructValueOn(memberField, fStagingArea.get() + si.fOffset);
+         }
+      }
+   }
+}
+
+std::vector<const ROOT::TSchemaRule *> ROOT::RRuleField::FindRules(const ROOT::RFieldDescriptor *fieldDesc) const
+{
+   ROOT::Detail::TSchemaRuleSet::TMatches rules;
+   auto cl = GetInMemoryClass();
+
+   const auto ruleset = cl->GetSchemaRules();
+   if (!ruleset)
+      return rules;
+
+   if (!fieldDesc) {
+      // If we have no on-disk information for the field, we still process the rules on the current in-memory version
+      // of the class
+      rules = ruleset->FindRules(cl->GetName(), cl->GetClassVersion(), cl->GetCheckSum());
+   } else {
+      // We need to change (back) the name normalization from RNTuple to ROOT Meta
+      std::string normalizedName;
+      TClassEdit::GetNormalizedName(normalizedName, fieldDesc->GetTypeName());
+      // We do have an on-disk field that correspond to the current RClassField instance. Ask for rules matching the
+      // on-disk version of the field.
+      if (fieldDesc->GetTypeChecksum()) {
+         rules = ruleset->FindRules(normalizedName, fieldDesc->GetTypeVersion(), *fieldDesc->GetTypeChecksum());
+      } else {
+         rules = ruleset->FindRules(normalizedName, fieldDesc->GetTypeVersion());
+      }
+   }
+
+   // Cleanup and sort rules
+   // Check that any any given source member uses the same type in all rules
+   std::unordered_map<std::string, std::string> sourceNameAndType;
+   std::size_t nskip = 0; // skip whole-object-rules that were moved to the end of the rules vector
+   for (auto itr = rules.begin(); itr != rules.end() - nskip;) {
+      const auto rule = *itr;
+
+      // Erase unknown rule types
+      if (rule->GetRuleType() != ROOT::TSchemaRule::kReadRule) {
+         R__LOG_WARNING(ROOT::Internal::NTupleLog())
+            << "ignoring I/O customization rule with unsupported type: " << rule->GetRuleType();
+         itr = rules.erase(itr);
+         continue;
+      }
+
+      bool hasConflictingSourceMembers = false;
+      for (auto source : TRangeDynCast<TSchemaRule::TSources>(rule->GetSource())) {
+         auto memberType = source->GetTypeForDeclaration() + source->GetDimensions();
+         auto [itrSrc, isNew] = sourceNameAndType.emplace(source->GetName(), memberType);
+         if (!isNew && (itrSrc->second != memberType)) {
+            R__LOG_WARNING(ROOT::Internal::NTupleLog())
+               << "ignoring I/O customization rule due to conflicting source member type: " << itrSrc->second << " vs. "
+               << memberType << " for member " << source->GetName();
+            hasConflictingSourceMembers = true;
+            break;
+         }
+      }
+      if (hasConflictingSourceMembers) {
+         itr = rules.erase(itr);
+         continue;
+      }
+
+      // Rules targeting the entire object need to be executed at the end
+      if (rule->GetTarget() == nullptr) {
+         nskip++;
+         if (itr != rules.end() - nskip)
+            std::iter_swap(itr++, rules.end() - nskip);
+         continue;
+      }
+
+      ++itr;
+   }
+
+   return rules;
+}
+
+void ROOT::RRuleField::AddReadCallbacksFromIORule(const TSchemaRule *rule, std::size_t subObjectOffset)
+{
+   auto func = rule->GetReadFunctionPointer();
+   if (func == nullptr) {
+      // Can happen for rename rules
+      return;
+   }
+   fReadCallbacks.emplace_back(
+      [func, subObjectOffset, stagingClass = fStagingClass, stagingArea = fStagingArea.get()](void *target) {
+         TVirtualObject onfileObj{nullptr};
+         onfileObj.fClass = stagingClass;
+         onfileObj.fObject = stagingArea;
+         func(static_cast<char *>(target) + subObjectOffset, &onfileObj);
+         onfileObj.fObject = nullptr; // TVirtualObject does not own the value
+      });
+}
+
+//------------------------------------------------------------------------------
+
 ROOT::RClassField::RClassField(std::string_view fieldName, const RClassField &source)
-   : ROOT::RFieldBase(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kRecord, false /* isSimple */),
+   : ROOT::RRuleField(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kRecord),
      fClass(source.fClass),
      fSubfieldsInfo(source.fSubfieldsInfo)
 {
@@ -207,8 +388,7 @@ ROOT::RClassField::RClassField(std::string_view fieldName, std::string_view clas
 }
 
 ROOT::RClassField::RClassField(std::string_view fieldName, TClass *classp)
-   : ROOT::RFieldBase(fieldName, GetRenormalizedTypeName(classp->GetName()), ROOT::ENTupleStructure::kRecord,
-                      false /* isSimple */),
+   : ROOT::RRuleField(fieldName, GetRenormalizedTypeName(classp->GetName()), ROOT::ENTupleStructure::kRecord),
      fClass(classp)
 {
    EnsureValidUserClass(fClass, *this, "RClassField");
@@ -290,76 +470,6 @@ void ROOT::RClassField::Attach(std::unique_ptr<RFieldBase> child, RSubfieldInfo 
    RFieldBase::Attach(std::move(child));
 }
 
-std::vector<const ROOT::TSchemaRule *> ROOT::RClassField::FindRules(const ROOT::RFieldDescriptor *fieldDesc)
-{
-   ROOT::Detail::TSchemaRuleSet::TMatches rules;
-   const auto ruleset = fClass->GetSchemaRules();
-   if (!ruleset)
-      return rules;
-
-   if (!fieldDesc) {
-      // If we have no on-disk information for the field, we still process the rules on the current in-memory version
-      // of the class
-      rules = ruleset->FindRules(fClass->GetName(), fClass->GetClassVersion(), fClass->GetCheckSum());
-   } else {
-      // We need to change (back) the name normalization from RNTuple to ROOT Meta
-      std::string normalizedName;
-      TClassEdit::GetNormalizedName(normalizedName, fieldDesc->GetTypeName());
-      // We do have an on-disk field that correspond to the current RClassField instance. Ask for rules matching the
-      // on-disk version of the field.
-      if (fieldDesc->GetTypeChecksum()) {
-         rules = ruleset->FindRules(normalizedName, fieldDesc->GetTypeVersion(), *fieldDesc->GetTypeChecksum());
-      } else {
-         rules = ruleset->FindRules(normalizedName, fieldDesc->GetTypeVersion());
-      }
-   }
-
-   // Cleanup and sort rules
-   // Check that any any given source member uses the same type in all rules
-   std::unordered_map<std::string, std::string> sourceNameAndType;
-   std::size_t nskip = 0; // skip whole-object-rules that were moved to the end of the rules vector
-   for (auto itr = rules.begin(); itr != rules.end() - nskip;) {
-      const auto rule = *itr;
-
-      // Erase unknown rule types
-      if (rule->GetRuleType() != ROOT::TSchemaRule::kReadRule) {
-         R__LOG_WARNING(ROOT::Internal::NTupleLog())
-            << "ignoring I/O customization rule with unsupported type: " << rule->GetRuleType();
-         itr = rules.erase(itr);
-         continue;
-      }
-
-      bool hasConflictingSourceMembers = false;
-      for (auto source : TRangeDynCast<TSchemaRule::TSources>(rule->GetSource())) {
-         auto memberType = source->GetTypeForDeclaration() + source->GetDimensions();
-         auto [itrSrc, isNew] = sourceNameAndType.emplace(source->GetName(), memberType);
-         if (!isNew && (itrSrc->second != memberType)) {
-            R__LOG_WARNING(ROOT::Internal::NTupleLog())
-               << "ignoring I/O customization rule due to conflicting source member type: " << itrSrc->second << " vs. "
-               << memberType << " for member " << source->GetName();
-            hasConflictingSourceMembers = true;
-            break;
-         }
-      }
-      if (hasConflictingSourceMembers) {
-         itr = rules.erase(itr);
-         continue;
-      }
-
-      // Rules targeting the entire object need to be executed at the end
-      if (rule->GetTarget() == nullptr) {
-         nskip++;
-         if (itr != rules.end() - nskip)
-            std::iter_swap(itr++, rules.end() - nskip);
-         continue;
-      }
-
-      ++itr;
-   }
-
-   return rules;
-}
-
 std::unique_ptr<ROOT::RFieldBase> ROOT::RClassField::CloneImpl(std::string_view newName) const
 {
    return std::unique_ptr<RClassField>(new RClassField(newName, *this));
@@ -392,107 +502,6 @@ void ROOT::RClassField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to
    for (unsigned i = 0; i < fSubfields.size(); i++) {
       CallReadOn(*fSubfields[i], localIndex, static_cast<unsigned char *>(to) + fSubfieldsInfo[i].fOffset);
    }
-}
-
-ROOT::DescriptorId_t ROOT::RClassField::LookupMember(const ROOT::RNTupleDescriptor &desc, std::string_view memberName,
-                                                     ROOT::DescriptorId_t classFieldId)
-{
-   auto idSourceMember = desc.FindFieldId(memberName, classFieldId);
-   if (idSourceMember != ROOT::kInvalidDescriptorId)
-      return idSourceMember;
-
-   for (const auto &subFieldDesc : desc.GetFieldIterable(classFieldId)) {
-      const auto &subFieldName = subFieldDesc.GetFieldName();
-      if (subFieldName.length() > 2 && subFieldName[0] == ':' && subFieldName[1] == '_') {
-         idSourceMember = LookupMember(desc, memberName, subFieldDesc.GetId());
-         if (idSourceMember != ROOT::kInvalidDescriptorId)
-            return idSourceMember;
-      }
-   }
-
-   return ROOT::kInvalidDescriptorId;
-}
-
-void ROOT::RClassField::SetStagingClass(const std::string &className, unsigned int classVersion)
-{
-   TClass::GetClass(className.c_str())->GetStreamerInfo(classVersion);
-   if (classVersion != GetTypeVersion() || className != GetTypeName()) {
-      fStagingClass = TClass::GetClass((className + std::string("@@") + std::to_string(classVersion)).c_str());
-      if (!fStagingClass) {
-         // For a rename rule, we may simply ask for the old class name
-         fStagingClass = TClass::GetClass(className.c_str());
-      }
-   } else {
-      fStagingClass = fClass;
-   }
-   R__ASSERT(fStagingClass);
-   R__ASSERT(static_cast<unsigned int>(fStagingClass->GetClassVersion()) == classVersion);
-}
-
-void ROOT::RClassField::PrepareStagingArea(const std::vector<const TSchemaRule *> &rules,
-                                           const ROOT::RNTupleDescriptor &desc,
-                                           const ROOT::RFieldDescriptor &classFieldDesc)
-{
-   std::size_t stagingAreaSize = 0;
-   for (const auto rule : rules) {
-      for (auto source : TRangeDynCast<TSchemaRule::TSources>(rule->GetSource())) {
-         auto [itr, isNew] = fStagingItems.emplace(source->GetName(), RStagingItem());
-         if (!isNew) {
-            // This source member has already been processed by another rule (and we only support one type per member)
-            continue;
-         }
-         RStagingItem &stagingItem = itr->second;
-
-         const auto memberFieldId = LookupMember(desc, source->GetName(), classFieldDesc.GetId());
-         if (memberFieldId == kInvalidDescriptorId) {
-            throw RException(R__FAIL(std::string("cannot find on disk rule source member ") + GetTypeName() + "." +
-                                     source->GetName()));
-         }
-
-         auto memberType = source->GetTypeForDeclaration() + source->GetDimensions();
-         auto memberField = Create("" /* we don't need a field name */, std::string(memberType)).Unwrap();
-         memberField->SetOnDiskId(memberFieldId);
-         auto fieldZero = std::make_unique<RFieldZero>();
-         Internal::SetAllowFieldSubstitutions(*fieldZero, true);
-         fieldZero->Attach(std::move(memberField));
-         stagingItem.fField = std::move(fieldZero);
-
-         stagingItem.fOffset = fStagingClass->GetDataMemberOffset(source->GetName());
-         // Since we successfully looked up the source member in the RNTuple on-disk metadata, we expect it
-         // to be present in the TClass instance, too.
-         R__ASSERT(stagingItem.fOffset != TVirtualStreamerInfo::kMissing);
-         stagingAreaSize = std::max(stagingAreaSize, stagingItem.fOffset + stagingItem.fField->begin()->GetValueSize());
-      }
-   }
-
-   if (stagingAreaSize) {
-      R__ASSERT(static_cast<Int_t>(stagingAreaSize) <= fStagingClass->Size()); // we may have removed rules
-      // We use std::make_unique instead of MakeUninitArray to zero-initialize the staging area.
-      fStagingArea = std::make_unique<unsigned char[]>(stagingAreaSize);
-
-      for (const auto &[_, si] : fStagingItems) {
-         const auto &memberField = *si.fField->cbegin();
-         if (!(memberField.GetTraits() & kTraitTriviallyConstructible)) {
-            CallConstructValueOn(memberField, fStagingArea.get() + si.fOffset);
-         }
-      }
-   }
-}
-
-void ROOT::RClassField::AddReadCallbacksFromIORule(const TSchemaRule *rule)
-{
-   auto func = rule->GetReadFunctionPointer();
-   if (func == nullptr) {
-      // Can happen for rename rules
-      return;
-   }
-   fReadCallbacks.emplace_back([func, stagingClass = fStagingClass, stagingArea = fStagingArea.get()](void *target) {
-      TVirtualObject onfileObj{nullptr};
-      onfileObj.fClass = stagingClass;
-      onfileObj.fObject = stagingArea;
-      func(static_cast<char *>(target), &onfileObj);
-      onfileObj.fObject = nullptr; // TVirtualObject does not own the value
-   });
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource)
@@ -681,7 +690,7 @@ void ROOT::RClassField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) cons
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, const RSoAField &source)
-   : ROOT::RFieldBase(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kCollection, false /* isSimple */),
+   : ROOT::RRuleField(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kCollection),
      fSoAClass(source.fSoAClass),
      fSoAMemberOffsets(source.fSoAMemberOffsets)
 {
@@ -808,6 +817,11 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
          return realRecordMemberFields[recordFieldNameToIdx[name]];
       });
 
+      for (const RRule &r : soaBaseField->fRules) {
+         fRules.emplace_back(r);
+         fRules.back().fOffset += base->GetDelta();
+      }
+
       baseIdx++;
    }
 
@@ -843,6 +857,11 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
          GraftNestedMemberFields(*soaField, dataMember->GetOffset(), [&](const std::string &name) {
             return realRecordMemberFields[recordFieldNameToIdx[name]];
          });
+
+         for (const RRule &r : soaField->fRules) {
+            fRules.emplace_back(r);
+            fRules.back().fOffset += dataMember->GetOffset();
+         }
       } else if (auto vecField = dynamic_cast<RRVecField *>(dmField.get())) {
          if (vecField->begin()->GetTypeName() != underlyingField->GetTypeName() ||
              vecField->begin()->GetTypeAlias() != underlyingField->GetTypeAlias()) {
@@ -868,11 +887,14 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
    if (nDirectRecordSubfields != nMembers) {
       throw RException(R__FAIL("missing SoA members"));
    }
+
+   auto schemaRules = FindRules(nullptr);
+   for (const auto &r : schemaRules)
+      fRules.emplace_back(RRule{r, 0});
 }
 
 ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clSoA)
-   : ROOT::RFieldBase(fieldName, GetRenormalizedTypeName(clSoA->GetName()), ROOT::ENTupleStructure::kCollection,
-                      false /* isSimple */),
+   : ROOT::RRuleField(fieldName, GetRenormalizedTypeName(clSoA->GetName()), ROOT::ENTupleStructure::kCollection),
      fSoAClass(clSoA)
 {
    static std::once_flag once;
@@ -1014,9 +1036,42 @@ void ROOT::Experimental::RSoAField::ReadGlobalImpl(ROOT::NTupleSize_t globalInde
    }
 }
 
+std::unique_ptr<ROOT::RFieldBase>
+ROOT::Experimental::RSoAField::BeforeConnectPageSource(ROOT::Internal::RPageSource & /*pageSource*/)
+{
+   // Most of the heavy lifting is done by the actual subfields that map onto the on-disk AoS schema.
+   // In the SoA field itself, we only need to take care of the in-memory part of the rule processing.
+   // One complication is that for non-rename rules, we manually need to recurse into base (SoA) classes and
+   // nested (SoA) classes because we don't have them in the field tree.
+
+   // For now, allow only rename rules and whole-object rules
+
+   const bool hasSources = std::any_of(fRules.begin(), fRules.end(), [](const auto &r) {
+      return r.fRule->GetSource() && (r.fRule->GetSource()->GetEntries() > 0);
+   });
+   const bool hasTargets =
+      std::any_of(fRules.begin(), fRules.end(), [](const auto &r) { return r.fRule->GetTarget(); });
+
+   if (hasSources) {
+      throw RException(R__FAIL("I/O customization rules with sources are currently unsupported for SoA fields (" +
+                               GetTypeName() + ")"));
+   }
+
+   if (hasTargets) {
+      throw RException(R__FAIL("I/O customization rules with targets are currently unsupported for SoA fields (" +
+                               GetTypeName() + ")"));
+   }
+
+   for (const auto &r : fRules) {
+      AddReadCallbacksFromIORule(r.fRule, r.fOffset);
+   }
+
+   return nullptr;
+}
+
 void ROOT::Experimental::RSoAField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc, kDiffTypeVersion).ThrowOnError();
+   EnsureMatchingOnDiskField(desc, kDiffTypeName | kDiffTypeVersion).ThrowOnError();
 }
 
 void ROOT::Experimental::RSoAField::ConstructValue(void *where) const
