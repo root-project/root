@@ -32,6 +32,7 @@
 #include "TVectorD.h"
 #include "TVectorF.h"
 #include "TCanvas.h"
+#include "TCanvasImp.h"
 #include "TPad.h"
 #include "TPaveStats.h"
 #include "TFrame.h"
@@ -60,7 +61,6 @@
 #include "TArrow.h"
 #include "TVirtualPadPainter.h"
 #include "TVirtualPadEditor.h"
-#include "TVirtualX.h"
 #include "TEnv.h"
 #include "TPoint.h"
 #include "TImage.h"
@@ -3482,23 +3482,14 @@ void THistPainter::DrawPanel()
 
 void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-
-   if (!gPad) return;
-
-   static Int_t bin, px1, py1, px2, py2, pyold;
-   static std::unique_ptr<TBox> zoombox;
-   Double_t zbx1,zbx2,zby1,zby2;
-
-   Int_t bin1, bin2;
-   Double_t xlow, xup, ylow, binval, x, baroffset, barwidth, binwidth;
-   Bool_t opaque  = gPad->OpaqueMoving();
-
-   if (!gPad->IsEditable()) return;
+   if (!gPad || !gPad->IsEditable())
+      return;
 
    if (fPie) {
       fPie->ExecuteEvent(event, px, py);
       return;
    }
+
    //     come here if we have a lego/surface in the pad
    TView *view = gPad->GetView();
 
@@ -3506,6 +3497,14 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       view->ExecuteRotateView(event, px, py);
       return;
    }
+
+   static Int_t px1, py1, px2, py2, pyold;
+   static TBox *zoombox = nullptr;
+
+   Bool_t opaque  = gPad->OpaqueMoving();
+   auto pp = gPad->GetPainter();
+   if (!pp)
+      return;
 
    TAxis *xaxis    = fH->GetXaxis();
    TAxis *yaxis    = fH->GetYaxis();
@@ -3515,116 +3514,111 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    TString IsSame = fH->GetDrawOption();
    IsSame.ToLower();
    if (IsSame.Index("same")>=0) {
-      TH1 *h1;
       TIter next(gPad->GetListOfPrimitives());
-      while ((h1 = (TH1 *)next())) {
-         if (!h1->InheritsFrom(TH1::Class())) continue;
-         xaxis    = h1->GetXaxis();
-         yaxis    = h1->GetYaxis();
-         break;
+      while (auto h1 = (TH1 *)next()) {
+         if (h1->InheritsFrom(TH1::Class())) {
+            xaxis    = h1->GetXaxis();
+            yaxis    = h1->GetYaxis();
+            break;
+         }
       }
-   }
-
-   Double_t factor = 1;
-   if (fH->GetNormFactor() != 0) {
-      factor = fH->GetNormFactor()/fH->GetSumOfWeights();
    }
 
    switch (event) {
 
    case kButton1Down:
 
-      if (!opaque) gVirtualX->SetLineColor(-1);
-      fH->TAttLine::Modify();
-
-      if (opaque && dimension ==2) {
-         zbx1 = gPad->AbsPixeltoX(px);
-         zbx2 = gPad->AbsPixeltoX(px);
-         zby1 = gPad->AbsPixeltoY(py);
-         zby2 = gPad->AbsPixeltoY(py);
+      if (dimension == 2) {
+         auto zbx1 = gPad->PadtoX(gPad->AbsPixeltoX(px));
+         auto zby1 = gPad->PadtoY(gPad->AbsPixeltoY(py));
          px1 = px;
          py1 = py;
-         if (gPad->GetLogx()) {
-            zbx1 = TMath::Power(10,zbx1);
-            zbx2 = TMath::Power(10,zbx2);
-         }
-         if (gPad->GetLogy()) {
-            zby1 = TMath::Power(10,zby1);
-            zby2 = TMath::Power(10,zby2);
-         }
-         if (zoombox) Error("ExecuteEvent", "Last zoom box was not deleted");
-         zoombox = std::make_unique<TBox>(zbx1, zby1, zbx2, zby2);
+         if (zoombox)
+            Error("ExecuteEvent", "Last zoom box was not deleted");
+         zoombox = new TBox(zbx1, zby1, zbx1, zby1);
+         zoombox->SetBit(kCanDelete); // in case of cleanup object can be deleted
          Int_t ci = TColor::GetColor("#7d7dff");
-         TColor *zoomcolor = gROOT->GetColor(ci);
-         if (!TCanvas::SupportAlpha() || !zoomcolor) zoombox->SetFillStyle(3002);
-         else                                        zoomcolor->SetAlpha(0.5);
-         zoombox->SetFillColor(ci);
-         zoombox->Draw();
-         gPad->Modified();
-         gPad->Update();
+         if (opaque) {
+            TColor *zoomcolor = gROOT->GetColor(ci);
+            if (!pp->IsSupportAlpha() || !zoomcolor)
+               zoombox->SetFillStyle(3002);
+            else
+               zoomcolor->SetAlpha(0.5);
+            zoombox->SetFillColor(ci);
+            gPad->Add(zoombox);
+            // no need to paint now while box is not visible
+         } else {
+            zoombox->SetFillStyle(0);
+            zoombox->SetLineColor(ci);
+         }
+
       }
       // No break !!!
 
    case kMouseMotion:
 
-      if (fShowProjection) {ShowProjection3(px,py); break;}
+      if (fShowProjection) {
+         ShowProjection3(px,py);
+         break;
+      }
 
       gPad->SetCursor(kPointer);
-      if (dimension ==1) {
-         if (Hoption.Bar) {
-            baroffset = fH->GetBarOffset();
-            barwidth  = fH->GetBarWidth();
-         } else {
-            baroffset = 0;
-            barwidth  = 1;
-         }
-         x        = gPad->AbsPixeltoX(px);
-         bin      = fXaxis->FindFixBin(gPad->PadtoX(x));
-         binwidth = fXaxis->GetBinWidth(bin);
-         xlow     = gPad->XtoPad(fXaxis->GetBinLowEdge(bin) + baroffset*binwidth);
-         xup      = gPad->XtoPad(xlow + barwidth*binwidth);
-         ylow     = gPad->GetUymin();
-         px1      = gPad->XtoAbsPixel(xlow);
-         px2      = gPad->XtoAbsPixel(xup);
-         py1      = gPad->YtoAbsPixel(ylow);
-         py2      = py;
-         pyold    = py;
-         if (gROOT->GetEditHistograms()) gPad->SetCursor(kArrowVer);
+      if ((dimension == 1) && gROOT->GetEditHistograms()) {
+         px1 = px2 = px; // remember last x to calculate bin
+         py2 = pyold = py; // remember last bin position
+         gPad->SetCursor(kArrowVer);
       }
 
       break;
 
    case kButton1Motion:
 
-      if (dimension ==1) {
-         if (gROOT->GetEditHistograms()) {
-            if (!opaque) {
-               gVirtualX->DrawBox(px1, py1, px2, py2,TVirtualX::kHollow);  // Draw the old box
-               py2 += py - pyold;
-               gVirtualX->DrawBox(px1, py1, px2, py2,TVirtualX::kHollow);  // Draw the new box
-               pyold = py;
-            } else {
-               py2 += py - pyold;
-               pyold = py;
-               binval = gPad->PadtoY(gPad->AbsPixeltoY(py2))/factor;
-               fH->SetBinContent(bin,binval);
-               gPad->Modified(kTRUE);
-            }
+      if ((dimension == 1) && gROOT->GetEditHistograms()) {
+         Double_t baroffset = Hoption.Bar ? fH->GetBarOffset() : 0;
+         Double_t barwidth  = Hoption.Bar ? fH->GetBarWidth() : 1;
+         // px1 remains until button1 is pressed to identify bin
+         Int_t    bin      = fXaxis->FindFixBin(gPad->PadtoX(gPad->AbsPixeltoX(px1)));
+         Double_t binwidth = fXaxis->GetBinWidth(bin);
+         Double_t xlow     = gPad->XtoPad(fXaxis->GetBinLowEdge(bin) + baroffset*binwidth);
+         Double_t xup      = gPad->XtoPad(xlow + barwidth*binwidth);
+         Double_t ylow     = gPad->GetUymin();
+         Double_t yup      = fH->GetBinContent(bin);
+         Double_t factor   = fH->GetNormFactor() / fH->GetSumOfWeights();
+
+         if (!opaque) {
+            pp->SetAttLine(*fH);
+            pp->DrawBox(xlow, ylow, xup, yup, TVirtualPadPainter::kHollow);  // Draw the old box
          }
+
+         py2 += py - pyold;
+         pyold = py;
+         yup = gPad->PadtoY(gPad->AbsPixeltoY(py2)) / (factor ? factor : 1.);
+         fH->SetBinContent(bin, yup);
+
+         if (!opaque)
+            pp->DrawBox(xlow, ylow, xup, yup, TVirtualPadPainter::kHollow);  // Draw the new box
+         else
+            gPad->Modified();
       }
 
-      if (opaque && dimension ==2) {
-         if (TMath::Abs(px1-px)>5 && TMath::Abs(py1-py)>5) {
-            zbx2 = gPad->AbsPixeltoX(px);
-            zby2 = gPad->AbsPixeltoY(py);
-            if (gPad->GetLogx()) zbx2 = TMath::Power(10,zbx2);
-            if (gPad->GetLogy()) zby2 = TMath::Power(10,zby2);
-            if (zoombox) {
+      if (zoombox && dimension == 2) {
+         if (TMath::Abs(px1 - px) > 5 && TMath::Abs(py1 - py) > 5) {
+            auto zbx2 = gPad->PadtoX(gPad->AbsPixeltoX(px));
+            auto zby2 = gPad->PadtoY(gPad->AbsPixeltoY(py));
+            if (!opaque) {
+               if (zoombox->GetX1() != zoombox->GetX2())
+                  zoombox->Paint();
                zoombox->SetX2(zbx2);
                zoombox->SetY2(zby2);
+               zoombox->Paint();
+            } else if (gPad->FindObject(zoombox)) {
+               zoombox->SetX2(zbx2);
+               zoombox->SetY2(zby2);
+               gPad->Modified();
+               gPad->Update();
+            } else {
+               zoombox = nullptr;
             }
-            gPad->Modified();
-            gPad->Update();
          }
       }
 
@@ -3632,17 +3626,15 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kWheelUp:
 
-      if (dimension ==2) {
-         bin1 = xaxis->GetFirst()+1;
-         bin2 = xaxis->GetLast()-1;
-         bin1 = TMath::Max(bin1, 1);
-         bin2 = TMath::Min(bin2, xaxis->GetNbins());
-         if (bin2>bin1) xaxis->SetRange(bin1,bin2);
-         bin1 = yaxis->GetFirst()+1;
-         bin2 = yaxis->GetLast()-1;
-         bin1 = TMath::Max(bin1, 1);
-         bin2 = TMath::Min(bin2, yaxis->GetNbins());
-         if (bin2>bin1) yaxis->SetRange(bin1,bin2);
+      if (dimension == 2) {
+         Int_t bin1 = TMath::Max(xaxis->GetFirst() + 1, 1);
+         Int_t bin2 = TMath::Min(xaxis->GetLast() - 1, xaxis->GetNbins());
+         if (bin2 > bin1)
+            xaxis->SetRange(bin1, bin2);
+         bin1 = TMath::Max(yaxis->GetFirst() + 1, 1);
+         bin2 = TMath::Min(yaxis->GetLast() - 1, yaxis->GetNbins());
+         if (bin2 > bin1)
+            yaxis->SetRange(bin1,bin2);
       }
       gPad->Modified();
       gPad->Update();
@@ -3652,20 +3644,20 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kWheelDown:
 
       if (dimension == 2) {
-         bin1 = xaxis->GetFirst()-1;
-         bin2 = xaxis->GetLast()+1;
-         bin1 = TMath::Max(bin1, 1);
-         bin2 = TMath::Min(bin2, xaxis->GetNbins());
+         Int_t bin1 = TMath::Max(xaxis->GetFirst() - 1, 1);
+         Int_t bin2 = TMath::Min(xaxis->GetLast() + 1, xaxis->GetNbins());
          const bool resetXaxisRange = bin1 == 1 && xaxis->GetFirst() == 1 && bin2 == xaxis->GetNbins() && xaxis->GetLast() == xaxis->GetNbins();
-         if (bin2>bin1) xaxis->SetRange(bin1,bin2);
-         if (resetXaxisRange) xaxis->ResetBit(TAxis::kAxisRange);
-         bin1 = yaxis->GetFirst()-1;
-         bin2 = yaxis->GetLast()+1;
-         bin1 = TMath::Max(bin1, 1);
-         bin2 = TMath::Min(bin2, yaxis->GetNbins());
+         if (bin2 > bin1)
+            xaxis->SetRange(bin1, bin2);
+         if (resetXaxisRange)
+            xaxis->ResetBit(TAxis::kAxisRange);
+         bin1 = TMath::Max(yaxis->GetFirst() - 1, 1);
+         bin2 = TMath::Min(yaxis->GetLast() + 1, yaxis->GetNbins());
          const bool resetYaxisRange = bin1 == 1 && yaxis->GetFirst() == 1 && bin2 == yaxis->GetNbins() && yaxis->GetLast() == yaxis->GetNbins();
-         if (bin2>bin1) yaxis->SetRange(bin1,bin2);
-         if (resetYaxisRange) yaxis->ResetBit(TAxis::kAxisRange);
+         if (bin2 > bin1)
+            yaxis->SetRange(bin1, bin2);
+         if (resetYaxisRange)
+            yaxis->ResetBit(TAxis::kAxisRange);
       }
       gPad->Modified();
       gPad->Update();
@@ -3673,35 +3665,29 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Up:
-      if (dimension ==1) {
-         if (gROOT->GetEditHistograms()) {
-            binval = gPad->PadtoY(gPad->AbsPixeltoY(py2))/factor;
-            fH->SetBinContent(bin,binval);
-            PaintInit();   // recalculate Hparam structure and recalculate range
-         }
-
+      if ((dimension == 1) && gROOT->GetEditHistograms()) {
+         PaintInit();   // recalculate Hparam structure and recalculate range
          // might resize pad pixmap so should be called before any paint routine
          RecalculateRange();
       }
-      if (opaque && dimension ==2) {
-         if (zoombox) {
-            Double_t x1 = TMath::Min(zoombox->GetX1(), zoombox->GetX2());
-            Double_t x2 = TMath::Max(zoombox->GetX1(), zoombox->GetX2());
-            Double_t y1 = TMath::Min(zoombox->GetY1(), zoombox->GetY2());
-            Double_t y2 = TMath::Max(zoombox->GetY1(), zoombox->GetY2());
-            x1 = TMath::Max(x1,xaxis->GetXmin());
-            x2 = TMath::Min(x2,xaxis->GetXmax());
-            y1 = TMath::Max(y1,yaxis->GetXmin());
-            y2 = TMath::Min(y2,yaxis->GetXmax());
-            if (x1<x2 && y1<y2) {
+      if (zoombox && dimension == 2) {
+         if (!opaque || gPad->FindObject(zoombox)) {
+            Double_t x1 = TMath::Max(TMath::Min(zoombox->GetX1(), zoombox->GetX2()), xaxis->GetXmin());
+            Double_t x2 = TMath::Min(TMath::Max(zoombox->GetX1(), zoombox->GetX2()), xaxis->GetXmax());
+            Double_t y1 = TMath::Max(TMath::Min(zoombox->GetY1(), zoombox->GetY2()), yaxis->GetXmin());
+            Double_t y2 = TMath::Min(TMath::Max(zoombox->GetY1(), zoombox->GetY2()), yaxis->GetXmax());
+            if (x1 < x2 && y1 < y2) {
                xaxis->SetRangeUser(x1, x2);
                yaxis->SetRangeUser(y1, y2);
             }
-            zoombox.reset();
+            if (opaque)
+               gPad->Remove(zoombox);
+            SafeDelete(zoombox);
+         } else {
+            zoombox = nullptr;
          }
       }
       gPad->Modified(kTRUE);
-      if (opaque) gVirtualX->SetLineColor(-1);
 
       break;
 
@@ -3711,7 +3697,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       while (true) {
          px = py = 0;
-         event = gVirtualX->RequestLocator(1, 1, px, py);
+         event = gPad->GetCanvasImp()->RequestLocator(px, py);
 
          ExecuteEvent(kButton1Motion, px, py);
 
@@ -10889,7 +10875,7 @@ LZMIN:
 /// This function returns the best format to print the error value (e)
 /// knowing the parameter value (v) and the format (f) used to print it.
 
-const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
+const char *THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
 {
 
    static TString ef;
@@ -10941,7 +10927,7 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set projection.
 
-void THistPainter::SetShowProjection(const char *option,Int_t nbins)
+void THistPainter::SetShowProjection(const char *option, Int_t nbins)
 {
    if (fShowProjection2) {
       auto name2 = TString::Format("c_%zx_projection2_%d", (size_t)fH, fShowProjection2);
@@ -10956,30 +10942,53 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
       fShowProjection = 0;
    }
 
-   if (nbins <= 0) return;
+   if (nbins <= 0)
+      return;
+
+   if ((fH->GetDimension() == 3) && (gPad->GetGLDevice() != -1)) {
+      Error("SetShowProjection", "TH3 projections do not work in GL mode");
+      return;
+   }
+
+   // just try to switch feedback mode
+   if (!gPad->FeedbackMode(kTRUE))
+      return;
+   gPad->FeedbackMode(kFALSE);
 
    TString opt = option;
    opt.ToLower();
    Int_t projection = 0;
-   if (opt.Contains("x"))  projection = 1;
-   if (opt.Contains("y"))  projection = 2;
-   if (opt.Contains("z"))  projection = 3;
-   if (opt.Contains("xy")) projection = 4;
-   if (opt.Contains("yx")) projection = 5;
-   if (opt.Contains("xz")) projection = 6;
-   if (opt.Contains("zx")) projection = 7;
-   if (opt.Contains("yz")) projection = 8;
-   if (opt.Contains("zy")) projection = 9;
-   if (projection < 4) fShowOption = option+1;
-   else                fShowOption = option+2;
-   fShowProjection = projection+100*nbins;
+   if (opt.BeginsWith("xy"))
+      projection = 4;
+   else if (opt.BeginsWith("yx"))
+      projection = 5;
+   else if (opt.BeginsWith("xz"))
+      projection = 6;
+   else if (opt.BeginsWith("zx"))
+      projection = 7;
+   else if (opt.BeginsWith("yz"))
+      projection = 8;
+   else if (opt.BeginsWith("zy"))
+      projection = 9;
+   else if (opt.BeginsWith("x"))
+      projection = 1;
+   else if (opt.BeginsWith("y"))
+      projection = 2;
+   else if (opt.BeginsWith("z"))
+      projection = 3;
+   else
+      return;
+
+   fShowOption = option + (projection < 4 ? 1 : 2);
+   fShowProjection = projection + 100 * nbins;
    fShowProjection2 = 0;
+
    gROOT->MakeDefCanvas();
    gPad->SetName(TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection).Data());
    gPad->SetGrid();
 }
 
-void THistPainter::SetShowProjectionXY(const char *option,Int_t nbinsY,Int_t nbinsX)
+void THistPainter::SetShowProjectionXY(const char *option, Int_t nbinsY, Int_t nbinsX)
 {
    if (fShowProjection2) {
       auto name2 = TString::Format("c_%zx_projection2_%d", (size_t)fH, fShowProjection2);
@@ -10996,23 +11005,39 @@ void THistPainter::SetShowProjectionXY(const char *option,Int_t nbinsY,Int_t nbi
 
    if ((nbinsX <= 0) || (nbinsY <= 0)) return;
 
+   if ((fH->GetDimension() == 3) && (gPad->GetGLDevice() != -1)) {
+      Error("SetShowProjection", "TH3 projections do not work in GL mode");
+      return;
+   }
 
    TString opt = option;
    opt.ToLower();
    Int_t projection = 0;
-   if (opt.Contains("x"))  projection = 1;
-   if (opt.Contains("y"))  projection = 2;
-   if (opt.Contains("z"))  projection = 3;
-   if (opt.Contains("xy")) projection = 4;
-   if (opt.Contains("yx")) projection = 5;
-   if (opt.Contains("xz")) projection = 6;
-   if (opt.Contains("zx")) projection = 7;
-   if (opt.Contains("yz")) projection = 8;
-   if (opt.Contains("zy")) projection = 9;
-   if (projection < 4) fShowOption = option+1;
-   else                fShowOption = option+2;
-   fShowProjection = projection+100*nbinsY;
-   fShowProjection2 = projection+100*nbinsX;
+   if (opt.BeginsWith("xy"))
+      projection = 4;
+   else if (opt.BeginsWith("yx"))
+      projection = 5;
+   else if (opt.BeginsWith("xz"))
+      projection = 6;
+   else if (opt.BeginsWith("zx"))
+      projection = 7;
+   else if (opt.BeginsWith("yz"))
+      projection = 8;
+   else if (opt.BeginsWith("zy"))
+      projection = 9;
+   else if (opt.BeginsWith("x"))
+      projection = 1;
+   else if (opt.BeginsWith("y"))
+      projection = 2;
+   else if (opt.BeginsWith("z"))
+      projection = 3;
+   else
+      return;
+
+   fShowOption = option + (projection < 4 ? 1 : 2);
+   fShowProjection = projection + 100*nbinsY;
+   fShowProjection2 = projection + 100*nbinsX;
+
    gROOT->MakeDefCanvas();
    gPad->SetName(TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection).Data());
    gPad->SetGrid();
@@ -11027,51 +11052,50 @@ void THistPainter::SetShowProjectionXY(const char *option,Int_t nbinsY,Int_t nbi
 
 void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 {
+   // turn off double buffer mode and draw primitives in invert mode
+   // return if such mode not supported
+   auto pp = gPad->GetPainter();
+   auto dmode = gPad->GetDoubleBuffer();
+   if (!pp || !gPad->FeedbackMode(kTRUE))
+      return;
 
    Int_t nbins = (Int_t)fShowProjection/100;
-   gPad->SetDoubleBuffer(0); // turn off double buffer mode
-   gVirtualX->SetDrawMode(TVirtualX::kInvert); // set the drawing mode to XOR mode
 
    // Erase old position and draw a line at current position
-   static int pyold1 = 0;
-   static int pyold2 = 0;
-   float uxmin = gPad->GetUxmin();
-   float uxmax = gPad->GetUxmax();
-   int pxmin   = gPad->XtoAbsPixel(uxmin);
-   int pxmax   = gPad->XtoAbsPixel(uxmax);
-   Float_t upy = gPad->AbsPixeltoY(py);
-   Float_t y   = gPad->PadtoY(upy);
+   static Double_t pyold1 = 0, pyold2 = 0;
+   Double_t uxmin = gPad->GetUxmin();
+   Double_t uxmax = gPad->GetUxmax();
+   Float_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
    Int_t biny1 = fH->GetYaxis()->FindBin(y);
    Int_t biny2 = TMath::Min(biny1+nbins-1, fH->GetYaxis()->GetNbins());
-   Int_t py1   = gPad->YtoAbsPixel(gPad->GetLogy() ? TMath::Log10(fH->GetYaxis()->GetBinLowEdge(biny1)) : fH->GetYaxis()->GetBinLowEdge(biny1));
-   Int_t py2   = gPad->YtoAbsPixel(gPad->GetLogy() ? TMath::Log10(fH->GetYaxis()->GetBinUpEdge(biny2)) : fH->GetYaxis()->GetBinUpEdge(biny2));
+   Double_t py1 = gPad->YtoPad(fH->GetYaxis()->GetBinLowEdge(biny1));
+   Double_t py2 = gPad->YtoPad(fH->GetYaxis()->GetBinUpEdge(biny2));
 
-   if (pyold1 || pyold2) gVirtualX->DrawBox(pxmin,pyold1,pxmax,pyold2,TVirtualX::kFilled);
-   gVirtualX->DrawBox(pxmin,py1,pxmax,py2,TVirtualX::kFilled);
+   if (!dmode && (pyold1 || pyold2))
+      pp->DrawBox(uxmin,pyold1,uxmax,pyold2,TVirtualPadPainter::kFilled);
+   pp->DrawBox(uxmin,py1,uxmax,py2,TVirtualPadPainter::kFilled);
    pyold1 = py1;
    pyold2 = py2;
 
    // Create or set the new canvas proj x
    TVirtualPad::TContext ctxt(true);
    auto name1 = TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(name1.Data());
-   if (c) {
-      c->Clear();
-   } else {
+   auto c = static_cast<TVirtualPad *>(gROOT->GetListOfCanvases()->FindObject(name1.Data()));
+   if (!c) {
       fShowProjection = 0;
       fShowProjection2 = 0;
-      pyold1 = 0;
-      pyold2 = 0;
+      pyold1 = pyold2 = 0;
       return;
    }
+
+   c->Clear();
    c->cd();
    c->SetLogy(ctxt.GetSaved()->GetLogz());
    c->SetLogx(ctxt.GetSaved()->GetLogx());
 
    // Draw slice corresponding to mouse position
    TString prjName = TString::Format("slice_px_of_%s",fH->GetName());
-   TH1D *hp = ((TH2*)fH)->ProjectionX(prjName, biny1, biny2);
-   if (hp) {
+   if (auto hp = ((TH2*)fH)->ProjectionX(prjName, biny1, biny2)) {
       hp->SetFillColor(38);
       // apply a patch from Oliver Freyermuth to set the title in the projection
       // using the range of the projected Y values
@@ -11100,7 +11124,7 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
       }
       hp->SetXTitle(fH->GetXaxis()->GetTitle());
       hp->SetYTitle(((TH2*)fH)->GetZaxis()->GetTitle() ? ((TH2*)fH)->GetZaxis()->GetTitle() : "Number of Entries");
-      hp->Draw();
+      c->Add(hp, fShowOption);
       c->Update();
    }
 }
@@ -11110,29 +11134,30 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 
 void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 {
+   // turn off double buffer mode and draw primitives in invert mode
+   // return if such mode not supported
+   auto pp = gPad->GetPainter();
+   auto dmode = gPad->GetDoubleBuffer();
+   if (!pp || !gPad->FeedbackMode(kTRUE))
+      return;
 
    Int_t nbins = (Int_t)fShowProjection/100;
    if (fShowProjection2)
        nbins = (Int_t)fShowProjection2/100;
-   gPad->SetDoubleBuffer(0);             // turn off double buffer mode
-   gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
 
    // Erase old position and draw a line at current position
-   static int pxold1 = 0;
-   static int pxold2 = 0;
-   float uymin = gPad->GetUymin();
-   float uymax = gPad->GetUymax();
-   int pymin   = gPad->YtoAbsPixel(uymin);
-   int pymax   = gPad->YtoAbsPixel(uymax);
-   Float_t upx = gPad->AbsPixeltoX(px);
-   Float_t x   = gPad->PadtoX(upx);
+   static Double_t pxold1 = 0, pxold2 = 0;
+   Double_t uymin = gPad->GetUymin();
+   Double_t uymax = gPad->GetUymax();
+   Float_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
    Int_t binx1 = fH->GetXaxis()->FindBin(x);
    Int_t binx2 = TMath::Min(binx1+nbins-1, fH->GetXaxis()->GetNbins());
-   Int_t px1   = gPad->XtoAbsPixel(gPad->GetLogx() ? TMath::Log10(fH->GetXaxis()->GetBinLowEdge(binx1)) : fH->GetXaxis()->GetBinLowEdge(binx1));
-   Int_t px2   = gPad->XtoAbsPixel(gPad->GetLogx() ? TMath::Log10(fH->GetXaxis()->GetBinUpEdge(binx2)) : fH->GetXaxis()->GetBinUpEdge(binx2));
+   Double_t px1   = gPad->XtoPad(fH->GetXaxis()->GetBinLowEdge(binx1));
+   Double_t px2   = gPad->XtoPad(fH->GetXaxis()->GetBinUpEdge(binx2));
 
-   if (pxold1 || pxold2) gVirtualX->DrawBox(pxold1,pymin,pxold2,pymax,TVirtualX::kFilled);
-   gVirtualX->DrawBox(px1,pymin,px2,pymax,TVirtualX::kFilled);
+   if (!dmode && (pxold1 || pxold2))
+      pp->DrawBox(pxold1, uymin, pxold2, uymax, TVirtualPadPainter::kFilled);
+   pp->DrawBox(px1, uymin, px2, uymax, TVirtualPadPainter::kFilled);
    pxold1 = px1;
    pxold2 = px2;
 
@@ -11142,24 +11167,22 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
    TString name2 = fShowProjection2 ? TString::Format("c_%zx_projection2_%d", (size_t)fH, fShowProjection2)
                                     : TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
 
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(name2.Data());
-   if (c) {
-      c->Clear();
-   } else {
+   auto c = static_cast<TVirtualPad *>(gROOT->GetListOfCanvases()->FindObject(name2.Data()));
+   if (!c) {
       fShowProjection = 0;
       fShowProjection2 = 0;
-      pxold1 = 0;
-      pxold2 = 0;
+      pxold1 = pxold2 = 0;
       return;
    }
+
+   c->Clear();
    c->cd();
    c->SetLogy(ctxt.GetSaved()->GetLogz());
    c->SetLogx(ctxt.GetSaved()->GetLogy());
 
    // Draw slice corresponding to mouse position
    TString prjName = TString::Format("slice_py_of_%s",fH->GetName());
-   TH1D *hp = ((TH2*)fH)->ProjectionY(prjName, binx1, binx2);
-   if (hp) {
+   if (auto hp = ((TH2*)fH)->ProjectionY(prjName, binx1, binx2)) {
       hp->SetFillColor(38);
       // apply a patch from Oliver Freyermuth to set the title in the projection
       // using the range of the projected X values
@@ -11168,7 +11191,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
          Double_t valueTo     = fH->GetXaxis()->GetBinUpEdge(binx1);
          // Limit precision to 1 digit more than the difference between upper and lower bound (to also catch 121.5-120.5).
          Int_t valuePrecision = -TMath::Nint(TMath::Log10(valueTo-valueFrom))+1;
-         if (fH->GetXaxis()->GetLabels() != nullptr) {
+         if (fH->GetXaxis()->GetLabels()) {
             hp->SetTitle(TString::Format("ProjectionY of binx=%d [x=%.*lf..%.*lf] [%s]", binx1, valuePrecision, valueFrom, valuePrecision, valueTo, fH->GetXaxis()->GetBinLabel(binx1)));
          } else {
             hp->SetTitle(TString::Format("ProjectionY of binx=%d [x=%.*lf..%.*lf]", binx1, valuePrecision, valueFrom, valuePrecision, valueTo));
@@ -11180,7 +11203,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
          // binx1 is used here to get equal precision no matter how large the binrange is,
          // otherwise precision may change when moving the mouse to the histogram boundaries (limiting effective binrange).
          Int_t valuePrecision = -TMath::Nint(TMath::Log10(fH->GetXaxis()->GetBinUpEdge(binx1)-valueFrom))+1;
-         if (fH->GetXaxis()->GetLabels() != nullptr) {
+         if (fH->GetXaxis()->GetLabels()) {
             hp->SetTitle(TString::Format("ProjectionY of binx=[%d,%d] [x=%.*lf..%.*lf] [%s..%s]", binx1, binx2, valuePrecision, valueFrom, valuePrecision, valueTo, fH->GetXaxis()->GetBinLabel(binx1), fH->GetXaxis()->GetBinLabel(binx2)));
          } else {
             hp->SetTitle(TString::Format("ProjectionY of binx=[%d,%d] [x=%.*lf..%.*lf]", binx1, binx2, valuePrecision, valueFrom, valuePrecision, valueTo));
@@ -11188,7 +11211,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
       }
       hp->SetXTitle(fH->GetYaxis()->GetTitle());
       hp->SetYTitle(((TH2*)fH)->GetZaxis()->GetTitle() ? ((TH2*)fH)->GetZaxis()->GetTitle() : "Number of Entries");
-      hp->Draw(fShowProjection2 ? "hbar" : "");
+      c->Add(hp, fShowProjection2 ? "hbar" + fShowOption : fShowOption);
       c->Update();
    }
 }
@@ -11197,14 +11220,17 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 /// Show projection (specified by `fShowProjection`) of a `TH3`.
 /// The drawing option for the projection is in `fShowOption`.
 ///
-/// First implementation; R.Brun
+/// First implementation: R.Brun
 ///
 /// Full implementation: Tim Tran (timtran@jlab.org)  April 2006
+///
+/// Redesign: S. Linev September 2026
 
 void THistPainter::ShowProjection3(Int_t px, Int_t py)
 {
+   Int_t nbins = fShowProjection / 100; //decode nbins
+   Int_t kind = fShowProjection % 100; // projection kinds
 
-   Int_t nbins=(Int_t)fShowProjection/100; //decode nbins
    if (fH->GetDimension() < 3) {
       if (fShowProjection2 % 100 == 1) {
          ShowProjectionY(px, py);
@@ -11219,813 +11245,406 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
       }
    }
 
-   gPad->SetDoubleBuffer(0);             // turn off double buffer mode
-   gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
+   auto &parent = *gPad;
 
-   // Erase old position and draw a line at current position
-   TView *view = gPad->GetView();
-   if (!view) return;
-   TH3 *h3 = (TH3*)fH;
-   TAxis *xaxis = h3->GetXaxis();
-   TAxis *yaxis = h3->GetYaxis();
-   TAxis *zaxis = h3->GetZaxis();
-   Double_t u[3],xx[3];
+   // 3D protection does not work with GL painters
+   if (parent.GetGLDevice() != -1)
+      return;
 
-   static TPoint line1[2];//store end points of a line, initialised 0 by default
-   static TPoint line2[2];// second line when slice thickness > 1 bin thickness
-   static TPoint line3[2];
-   static TPoint line4[2];
-   static TPoint endface1[5];
-   static TPoint endface2[5];
-   static TPoint rect1[5];//store vertices of the polyline (rectangle), initialsed 0 by default
-   static TPoint rect2[5];// second rectangle when slice thickness > 1 bin thickness
+   // turn off double buffer mode and draw primitives in invert mode
+   // return if such mode not supported
+   if (!parent.FeedbackMode(kTRUE))
+      return;
 
-   Double_t uxmin = gPad->GetUxmin();
-   Double_t uxmax = gPad->GetUxmax();
-   Double_t uymin = gPad->GetUymin();
-   Double_t uymax = gPad->GetUymax();
+   auto view = parent.GetView();
+   auto pp = parent.GetPainter();
+   if (!view || !pp)
+      return;
 
-   int pxmin = gPad->XtoAbsPixel(uxmin);
-   int pxmax = gPad->XtoAbsPixel(uxmax);
-   if (pxmin==pxmax) return;
-   int pymin = gPad->YtoAbsPixel(uymin);
-   int pymax = gPad->YtoAbsPixel(uymax);
-   if (pymin==pymax) return;
-   Double_t cx    = (pxmax-pxmin)/(uxmax-uxmin);
-   Double_t cy    = (pymax-pymin)/(uymax-uymin);
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(TString::Format("c_%zx_projection_%d",
-                                                                              (size_t)fH, fShowProjection).Data());
-   if (!c) {
+   // check that ranges are set
+   if ((parent.GetUxmin() == parent.GetUxmax()) || (parent.GetUymin() == parent.GetUymax()))
+      return;
+
+   // stored vertices
+   static Double_t rect1x[5] = {0,0,0,0,0}, rect1y[5] = {0,0,0,0,0}, rect2x[5] = {0,0,0,0,0}, rect2y[5] = {0,0,0,0,0};
+
+   auto cname = TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
+   auto c = static_cast<TVirtualPad *>(gROOT->GetListOfCanvases()->FindObject(cname));
+   auto h3 = dynamic_cast<TH3 *>(fH);
+
+   if (!c || !h3) {
       fShowProjection = 0;
+      rect1x[0] = 0;
       return;
    }
 
+   TAxis *xaxis = fH->GetXaxis();
+   TAxis *yaxis = fH->GetYaxis();
+   TAxis *zaxis = fH->GetZaxis();
+
+   const Int_t iMin = -111;
+   const Int_t iMax = -11;
+   const Int_t kMaxDist = 50; // maximal distance to detect bin
+
+   auto getx = [iMin, iMax](TAxis *axis, Int_t indx) {
+      return indx == iMin ? axis->GetBinLowEdge(axis->GetFirst())
+                          : (indx == iMax ? axis->GetBinUpEdge(axis->GetLast()) : axis->GetBinCenter(indx));
+   };
+
+   auto findAxis = [&parent, px, py, xaxis, yaxis, zaxis, view, getx, iMin, iMax, kMaxDist](Int_t &besti1, Int_t &besti2, char name) {
+
+      TAxis *axis1 = nullptr, *axis2 = nullptr;
+      Int_t xindx, yindx, zindx;
+
+      switch(name) {
+         case 'x':
+            axis1 = yaxis;
+            axis2 = zaxis;
+            xindx = TMath::Cos(view->GetLongitude() / 180. * TMath::Pi()) < 0 ? iMin : iMax;
+            break;
+         case 'y':
+            axis1 = xaxis;
+            axis2 = zaxis;
+            yindx = TMath::Sin(view->GetLongitude() / 180. * TMath::Pi()) < 0 ? iMin : iMax;
+            break;
+         default:
+            axis1 = xaxis;
+            axis2 = yaxis;
+            zindx = TMath::Cos(view->GetLatitude() / 180. * TMath::Pi()) > 0 ? iMax : iMin;
+            break;
+      }
+
+      Double_t best_dist = kMaxDist;
+
+      for (Int_t i1 = axis1->GetFirst(); i1 <= axis1->GetLast(); ++i1)
+         for (Int_t i2 = axis2->GetFirst(); i2 <= axis2->GetLast(); ++i2) {
+            switch(name) {
+               case 'x': yindx = i1; zindx = i2; break;
+               case 'y': xindx = i1; zindx = i2; break;
+               default: xindx = i1; yindx = i2; break;
+            }
+            Double_t v[3] = {getx(xaxis, xindx), getx(yaxis, yindx), getx(zaxis, zindx)};
+            Double_t ndc[3];
+            view->WCtoNDC(v, ndc);
+            Int_t px1 = parent.XtoAbsPixel(ndc[0]);
+            Int_t py1 = parent.YtoAbsPixel(ndc[1]);
+            Double_t distance = TMath::Sqrt(1. * (px1 - px) * (px1 - px) + 1. * (py1 - py) * (py1 - py));
+            if (distance < best_dist) {
+               best_dist = distance;
+               besti1 = i1;
+               besti2 = i2;
+            }
+         }
+
+      return best_dist < kMaxDist;
+   };
+
+   auto convert = [this, view, &parent, getx, iMin, iMax, xaxis, yaxis, zaxis](Int_t ix, Int_t iy, Int_t iz,
+                                                                               Double_t &resx, Double_t &resy) {
+      Double_t vvv[3] = {getx(xaxis, ix), getx(yaxis, iy), getx(zaxis, iz)};
+      Double_t uu[3];
+      view->WCtoNDC(vvv, uu);
+      resx = uu[0];
+      resy = uu[1];
+   };
+
+   auto draw_rects = [pp, nbins, kind]() {
+      rect1x[4] = rect1x[0];
+      rect1y[4] = rect1y[0];
+      rect2x[4] = rect2x[0];
+      rect2y[4] = rect2y[0];
+      if (kind > 3) {
+         pp->DrawPolyLine(5, rect1x, rect1y);
+         if (nbins > 1)
+            pp->DrawPolyLine(5, rect2x, rect2y);
+      } else {
+         pp->DrawPolyLine(nbins > 1 ? 5 : 2, rect1x, rect1y);
+         if (nbins > 1) {
+            pp->DrawPolyLine(5, rect2x, rect2y);
+            for (Int_t n = 0; n < 4; ++n)
+               pp->DrawLine(rect1x[n], rect1y[n], rect2x[n], rect2y[n]);
+         }
+      }
+   };
+
+   Int_t binx = -1, biny = -1, binz = -1, binx2 = -1, biny2 = -1, binz2 = -1, dummy = -1;
+
+   auto extend_bin = [nbins](TAxis *axis, Int_t &bin) {
+      Int_t bin2 = bin;
+      if (nbins > 1) {
+         bin2 = TMath::Min(bin + nbins / 2, axis->GetLast());
+         bin = TMath::Max(bin2 - nbins + 1, axis->GetFirst());
+      }
+      return bin2;
+   };
+
+   auto make_proj = [h3, &binx, &biny, &binz, &binx2, &biny2, &binz2, xaxis, yaxis, zaxis](const char *proj_kind) {
+      Int_t firstX = xaxis->GetFirst();
+      Int_t lastX  = xaxis->GetLast();
+      Int_t firstY = yaxis->GetFirst();
+      Int_t lastY  = yaxis->GetLast();
+      Int_t firstZ = zaxis->GetFirst();
+      Int_t lastZ  = zaxis->GetLast();
+      if (binx >= 0)
+         xaxis->SetRange(binx, binx2);
+      if (biny >= 0)
+         yaxis->SetRange(biny, biny2);
+      if (binz >= 0)
+         zaxis->SetRange(binz, binz2);
+      auto hp = h3->Project3D(proj_kind);
+      if (binx >= 0)
+         xaxis->SetRange(firstX,lastX);
+      if (biny >= 0)
+         yaxis->SetRange(firstY, lastY);
+      if (binz >= 0)
+         zaxis->SetRange(firstZ,lastZ);
+      return hp;
+   };
+
    TVirtualPad::TContext ctxt(true);
 
-   switch ((Int_t)fShowProjection%100) {
-      case 1:
-         // "x"
-         {
-            Int_t firstY = yaxis->GetFirst();
-            Int_t lastY  = yaxis->GetLast();
-            Int_t biny = firstY + Int_t((lastY-firstY)*(px-pxmin)/(pxmax-pxmin));
-            Int_t biny2 = TMath::Min(biny+nbins-1,yaxis->GetNbins() );
-            yaxis->SetRange(biny,biny2);
-            Int_t firstZ = zaxis->GetFirst();
-            Int_t lastZ  = zaxis->GetLast();
-            Int_t binz = firstZ + Int_t((lastZ-firstZ)*(py-pymin)/(pymax-pymin));
-            Int_t binz2 = TMath::Min(binz+nbins-1,zaxis->GetNbins() );
-            zaxis->SetRange(binz,binz2);
-            if (line1[0].GetX()) gVirtualX->DrawPolyLine(2,line1);
-            if (nbins>1 && line1[0].GetX()) {
-               gVirtualX->DrawPolyLine(2,line2);
-               gVirtualX->DrawPolyLine(2,line3);
-               gVirtualX->DrawPolyLine(2,line4);
-               gVirtualX->DrawPolyLine(5,endface1);
-               gVirtualX->DrawPolyLine(5,endface2);
-            }
-            xx[0] = xaxis->GetXmin();
-            xx[2] = zaxis->GetBinCenter(binz);
-            xx[1] = yaxis->GetBinCenter(biny);
-            view->WCtoNDC(xx,u);
-            line1[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            line1[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            xx[0] = xaxis->GetXmax();
-            view->WCtoNDC(xx,u);
-            line1[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            line1[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            gVirtualX->DrawPolyLine(2,line1);
-            if (nbins>1) {
-               xx[0] = xaxis->GetXmin();
-               xx[2] = zaxis->GetBinCenter(binz+nbins-1);
-               xx[1] = yaxis->GetBinCenter(biny);
-               view->WCtoNDC(xx,u);
-               line2[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line2[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[0] = xaxis->GetXmax();
-               view->WCtoNDC(xx,u);
-               line2[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line2[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
+   switch (kind) {
+      case 1: { // "x"
+         if (rect1x[0]) {
+            draw_rects();
+            rect1x[0] = 0;
+         }
+         if (!findAxis(biny, binz, 'x'))
+            break;
 
-               xx[0] = xaxis->GetXmin();
-               xx[2] = zaxis->GetBinCenter(binz+nbins-1);
-               xx[1] = yaxis->GetBinCenter(biny+nbins-1);
-               view->WCtoNDC(xx,u);
-               line3[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line3[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[0] = xaxis->GetXmax();
-               view->WCtoNDC(xx,u);
-               line3[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line3[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
+         biny2 = extend_bin(yaxis, biny);
+         binz2 = extend_bin(zaxis, binz);
 
-               xx[0] = xaxis->GetXmin();
-               xx[2] = zaxis->GetBinCenter(binz);
-               xx[1] = yaxis->GetBinCenter(biny+nbins-1);
-               view->WCtoNDC(xx,u);
-               line4[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line4[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[0] = xaxis->GetXmax();
-               view->WCtoNDC(xx,u);
-               line4[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line4[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
+         convert(iMin, biny,  binz,  rect1x[0], rect1y[0]);
+         convert(iMax, biny,  binz,  rect1x[1], rect1y[1]);
+         convert(iMax, biny,  binz2, rect1x[2], rect1y[2]);
+         convert(iMin, biny,  binz2, rect1x[3], rect1y[3]);
+         convert(iMin, biny2, binz,  rect2x[0], rect2y[0]);
+         convert(iMax, biny2, binz,  rect2x[1], rect2y[1]);
+         convert(iMax, biny2, binz2, rect2x[2], rect2y[2]);
+         convert(iMin, biny2, binz2, rect2x[3], rect2y[3]);
 
-               endface1[0].SetX(line1[0].GetX());
-               endface1[0].SetY(line1[0].GetY());
-               endface1[1].SetX(line2[0].GetX());
-               endface1[1].SetY(line2[0].GetY());
-               endface1[2].SetX(line3[0].GetX());
-               endface1[2].SetY(line3[0].GetY());
-               endface1[3].SetX(line4[0].GetX());
-               endface1[3].SetY(line4[0].GetY());
-               endface1[4].SetX(line1[0].GetX());
-               endface1[4].SetY(line1[0].GetY());
+         draw_rects();
 
-               endface2[0].SetX(line1[1].GetX());
-               endface2[0].SetY(line1[1].GetY());
-               endface2[1].SetX(line2[1].GetX());
-               endface2[1].SetY(line2[1].GetY());
-               endface2[2].SetX(line3[1].GetX());
-               endface2[2].SetY(line3[1].GetY());
-               endface2[3].SetX(line4[1].GetX());
-               endface2[3].SetY(line4[1].GetY());
-               endface2[4].SetX(line1[1].GetX());
-               endface2[4].SetY(line1[1].GetY());
+         c->Clear();
 
-               gVirtualX->DrawPolyLine(2,line2);
-               gVirtualX->DrawPolyLine(2,line3);
-               gVirtualX->DrawPolyLine(2,line4);
-               gVirtualX->DrawPolyLine(5,endface1);
-               gVirtualX->DrawPolyLine(5,endface2);
-            }
-            c->Clear();
-            c->cd();
-            TH1 *hp = h3->Project3D("x");
-            yaxis->SetRange(firstY,lastY);
-            zaxis->SetRange(firstZ,lastZ);
-            if (hp) {
-               hp->SetFillColor(38);
-               if (nbins == 1)
-                  hp->SetTitle(TString::Format("ProjectionX of biny=%d [y=%.1f..%.1f] binz=%d [z=%.1f..%.1f]", biny, yaxis->GetBinLowEdge(biny), yaxis->GetBinUpEdge(biny),
-                                               binz, zaxis->GetBinLowEdge(binz), zaxis->GetBinUpEdge(binz)));
-               else {
-                  hp->SetTitle(TString::Format("ProjectionX, biny=[%d,%d] [y=%.1f..%.1f], binz=[%d,%d] [z=%.1f..%.1f]", biny, biny2, yaxis->GetBinLowEdge(biny), yaxis->GetBinUpEdge(biny2),
-                                               binz, binz2, zaxis->GetBinLowEdge(binz), zaxis->GetBinUpEdge(binz2) ) );
-               }
-               hp->SetXTitle(fH->GetXaxis()->GetTitle());
-               hp->SetYTitle("Number of Entries");
-               hp->Draw(fShowOption.Data());
-            }
+         if (auto hp = make_proj("x")) {
+            hp->SetFillColor(38);
+            if ((biny == biny2) && (binz == binz2))
+               hp->SetTitle(TString::Format("ProjectionX of biny=%d [y=%.1f..%.1f] binz=%d [z=%.1f..%.1f]", biny, yaxis->GetBinLowEdge(biny), yaxis->GetBinUpEdge(biny),
+                                             binz, zaxis->GetBinLowEdge(binz), zaxis->GetBinUpEdge(binz)));
+            else
+               hp->SetTitle(TString::Format("ProjectionX, biny=[%d,%d] [y=%.1f..%.1f], binz=[%d,%d] [z=%.1f..%.1f]", biny, biny2, yaxis->GetBinLowEdge(biny), yaxis->GetBinUpEdge(biny2),
+                                             binz, binz2, zaxis->GetBinLowEdge(binz), zaxis->GetBinUpEdge(binz2) ) );
+            hp->SetXTitle(xaxis->GetTitle());
+            hp->SetYTitle("Number of Entries");
+            c->Add(hp, fShowOption);
          }
          break;
+      }
 
-      case 2:
-         // "y"
-         {
-            Int_t firstX = xaxis->GetFirst();
-            Int_t lastX  = xaxis->GetLast();
-            Int_t binx = firstX + Int_t((lastX-firstX)*(px-pxmin)/(pxmax-pxmin));
-            Int_t binx2 = TMath::Min(binx+nbins-1,xaxis->GetNbins() );
-            xaxis->SetRange(binx,binx2);
-            Int_t firstZ = zaxis->GetFirst();
-            Int_t lastZ  = zaxis->GetLast();
-            Int_t binz = firstZ + Int_t((lastZ-firstZ)*(py-pymin)/(pymax-pymin));
-            Int_t binz2 = TMath::Min(binz+nbins-1,zaxis->GetNbins() );
-            zaxis->SetRange(binz,binz2);
-            if (line1[0].GetX()) gVirtualX->DrawPolyLine(2,line1);
-            if (nbins>1 && line1[0].GetX()) {
-               gVirtualX->DrawPolyLine(2,line2);
-               gVirtualX->DrawPolyLine(2,line3);
-               gVirtualX->DrawPolyLine(2,line4);
-               gVirtualX->DrawPolyLine(5,endface1);
-               gVirtualX->DrawPolyLine(5,endface2);
-            }
-            xx[0]=xaxis->GetBinCenter(binx);
-            xx[2] = zaxis->GetBinCenter(binz);
-            xx[1] = yaxis->GetXmin();
-            view->WCtoNDC(xx,u);
-            line1[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            line1[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            xx[1] = yaxis->GetXmax();
-            view->WCtoNDC(xx,u);
-            line1[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            line1[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            gVirtualX->DrawPolyLine(2,line1);
-            if (nbins>1) {
-               xx[1] = yaxis->GetXmin();
-               xx[2] = zaxis->GetBinCenter(binz+nbins-1);
-               xx[0] = xaxis->GetBinCenter(binx);
-               view->WCtoNDC(xx,u);
-               line2[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line2[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[1] = yaxis->GetXmax();
-               view->WCtoNDC(xx,u);
-               line2[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line2[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
+      case 2: { // "y"
+         if (rect1x[0]) {
+            draw_rects();
+            rect1x[0] = 0;
+         }
+         if (!findAxis(binx, binz, 'y'))
+            break;
 
-               xx[1] = yaxis->GetXmin();
-               xx[2] = zaxis->GetBinCenter(binz+nbins-1);
-               xx[0] = xaxis->GetBinCenter(binx+nbins-1);
-               view->WCtoNDC(xx,u);
-               line3[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line3[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[1] = yaxis->GetXmax();
-               view->WCtoNDC(xx,u);
-               line3[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line3[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
+         binx2 = extend_bin(xaxis, binx);
+         binz2 = extend_bin(zaxis, binz);
 
-               xx[1] = yaxis->GetXmin();
-               xx[2] = zaxis->GetBinCenter(binz);
-               xx[0] = xaxis->GetBinCenter(binx+nbins-1);
-               view->WCtoNDC(xx,u);
-               line4[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line4[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[1] = yaxis->GetXmax();
-               view->WCtoNDC(xx,u);
-               line4[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line4[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
+         convert(binx,  iMin, binz,  rect1x[0], rect1y[0]);
+         convert(binx,  iMax, binz,  rect1x[1], rect1y[1]);
+         convert(binx,  iMax, binz2, rect1x[2], rect1y[2]);
+         convert(binx,  iMin, binz2, rect1x[3], rect1y[3]);
+         convert(binx2, iMin, binz,  rect2x[0], rect2y[0]);
+         convert(binx2, iMax, binz,  rect2x[1], rect2y[1]);
+         convert(binx2, iMax, binz2, rect2x[2], rect2y[2]);
+         convert(binx2, iMin, binz2, rect2x[3], rect2y[3]);
 
-               endface1[0].SetX(line1[0].GetX());
-               endface1[0].SetY(line1[0].GetY());
-               endface1[1].SetX(line2[0].GetX());
-               endface1[1].SetY(line2[0].GetY());
-               endface1[2].SetX(line3[0].GetX());
-               endface1[2].SetY(line3[0].GetY());
-               endface1[3].SetX(line4[0].GetX());
-               endface1[3].SetY(line4[0].GetY());
-               endface1[4].SetX(line1[0].GetX());
-               endface1[4].SetY(line1[0].GetY());
+         draw_rects();
 
-               endface2[0].SetX(line1[1].GetX());
-               endface2[0].SetY(line1[1].GetY());
-               endface2[1].SetX(line2[1].GetX());
-               endface2[1].SetY(line2[1].GetY());
-               endface2[2].SetX(line3[1].GetX());
-               endface2[2].SetY(line3[1].GetY());
-               endface2[3].SetX(line4[1].GetX());
-               endface2[3].SetY(line4[1].GetY());
-               endface2[4].SetX(line1[1].GetX());
-               endface2[4].SetY(line1[1].GetY());
-
-               gVirtualX->DrawPolyLine(2,line2);
-               gVirtualX->DrawPolyLine(2,line3);
-               gVirtualX->DrawPolyLine(2,line4);
-               gVirtualX->DrawPolyLine(5,endface1);
-               gVirtualX->DrawPolyLine(5,endface2);
-            }
-            c->Clear();
-            c->cd();
-            TH1 *hp = h3->Project3D("y");
-            xaxis->SetRange(firstX,lastX);
-            zaxis->SetRange(firstZ,lastZ);
-            if (hp) {
-               hp->SetFillColor(38);
-               if (nbins == 1)
-                  hp->SetTitle(TString::Format("ProjectionY of binx=%d [x=%.1f..%.1f] binz=%d [z=%.1f..%.1f]", binx, xaxis->GetBinLowEdge(binx), xaxis->GetBinUpEdge(binx),
-                                               binz, zaxis->GetBinLowEdge(binz), zaxis->GetBinUpEdge(binz)));
-               else
-                  hp->SetTitle(TString::Format("ProjectionY, binx=[%d,%d] [x=%.1f..%.1f], binz=[%d,%d] [z=%.1f..%.1f]", binx, binx2, xaxis->GetBinLowEdge(binx), xaxis->GetBinUpEdge(binx2),
-                                               binz, binz2, zaxis->GetBinLowEdge(binz), zaxis->GetBinUpEdge(binz2) ) );
-               hp->SetXTitle(fH->GetYaxis()->GetTitle());
-               hp->SetYTitle("Number of Entries");
-               hp->Draw(fShowOption.Data());
-            }
+         c->Clear();
+         if (auto hp = make_proj("y")) {
+            hp->SetFillColor(38);
+            if ((binx == binx2) && (binz == binz2))
+               hp->SetTitle(TString::Format("ProjectionY of binx=%d [x=%.1f..%.1f] binz=%d [z=%.1f..%.1f]", binx, xaxis->GetBinLowEdge(binx), xaxis->GetBinUpEdge(binx),
+                                             binz, zaxis->GetBinLowEdge(binz), zaxis->GetBinUpEdge(binz)));
+            else
+               hp->SetTitle(TString::Format("ProjectionY, binx=[%d,%d] [x=%.1f..%.1f], binz=[%d,%d] [z=%.1f..%.1f]", binx, binx2, xaxis->GetBinLowEdge(binx), xaxis->GetBinUpEdge(binx2),
+                                             binz, binz2, zaxis->GetBinLowEdge(binz), zaxis->GetBinUpEdge(binz2) ) );
+            hp->SetXTitle(yaxis->GetTitle());
+            hp->SetYTitle("Number of Entries");
+            c->Add(hp, fShowOption);
          }
          break;
+      }
 
-      case 3:
-         // "z"
-         {
-            Int_t firstX = xaxis->GetFirst();
-            Int_t lastX  = xaxis->GetLast();
-            Int_t binx = firstX + Int_t((lastX-firstX)*(px-pxmin)/(pxmax-pxmin));
-            Int_t binx2 = TMath::Min(binx+nbins-1,xaxis->GetNbins() );
-            xaxis->SetRange(binx,binx2);
-            Int_t firstY = yaxis->GetFirst();
-            Int_t lastY  = yaxis->GetLast();
-            Int_t biny = firstY + Int_t((lastY-firstY)*(py-pymin)/(pymax-pymin));
-            Int_t biny2 = TMath::Min(biny+nbins-1,yaxis->GetNbins() );
-            yaxis->SetRange(biny,biny2);
-            if (line1[0].GetX()) gVirtualX->DrawPolyLine(2,line1);
-            if (nbins>1 && line1[0].GetX()) {
-               gVirtualX->DrawPolyLine(2,line2);
-               gVirtualX->DrawPolyLine(2,line3);
-               gVirtualX->DrawPolyLine(2,line4);
-               gVirtualX->DrawPolyLine(5,endface1);
-               gVirtualX->DrawPolyLine(5,endface2);
-            }
-            xx[0] = xaxis->GetBinCenter(binx);
-            xx[1] = yaxis->GetBinCenter(biny);
-            xx[2] = zaxis->GetXmin();
-            view->WCtoNDC(xx,u);
-            line1[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            line1[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            xx[2] = zaxis->GetXmax();
-            view->WCtoNDC(xx,u);
-            line1[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            line1[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            gVirtualX->DrawPolyLine(2,line1);
-            if (nbins>1) {
-               xx[2] = zaxis->GetXmin();
-               xx[1] = yaxis->GetBinCenter(biny+nbins-1);
-               xx[0] = xaxis->GetBinCenter(binx);
-               view->WCtoNDC(xx,u);
-               line2[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line2[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[2] = zaxis->GetXmax();
-               view->WCtoNDC(xx,u);
-               line2[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line2[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
+      case 3: { // "z"
+         if (rect1x[0]) {
+            draw_rects();
+            rect1x[0] = 0;
+         }
+         if (!findAxis(binx, biny, 'z'))
+            break;
+         binx2 = extend_bin(xaxis, binx);
+         biny2 = extend_bin(yaxis, biny);
 
-               xx[2] = zaxis->GetXmin();
-               xx[1] = yaxis->GetBinCenter(biny+nbins-1);
-               xx[0] = xaxis->GetBinCenter(binx+nbins-1);
-               view->WCtoNDC(xx,u);
-               line3[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line3[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[2] = zaxis->GetXmax();
-               view->WCtoNDC(xx,u);
-               line3[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line3[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
+         convert(binx,  biny,  iMin, rect1x[0], rect1y[0]);
+         convert(binx,  biny,  iMax, rect1x[1], rect1y[1]);
+         convert(binx,  biny2, iMax, rect1x[2], rect1y[2]);
+         convert(binx,  biny2, iMin, rect1x[3], rect1y[3]);
+         convert(binx2, biny,  iMin, rect2x[0], rect2y[0]);
+         convert(binx2, biny,  iMax, rect2x[1], rect2y[1]);
+         convert(binx2, biny2, iMax, rect2x[2], rect2y[2]);
+         convert(binx2, biny2, iMin, rect2x[3], rect2y[3]);
 
-               xx[2] = zaxis->GetXmin();
-               xx[1] = yaxis->GetBinCenter(biny);
-               xx[0] = xaxis->GetBinCenter(binx+nbins-1);
-               view->WCtoNDC(xx,u);
-               line4[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line4[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[2] = zaxis->GetXmax();
-               view->WCtoNDC(xx,u);
-               line4[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               line4[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
+         draw_rects();
 
-               endface1[0].SetX(line1[0].GetX());
-               endface1[0].SetY(line1[0].GetY());
-               endface1[1].SetX(line2[0].GetX());
-               endface1[1].SetY(line2[0].GetY());
-               endface1[2].SetX(line3[0].GetX());
-               endface1[2].SetY(line3[0].GetY());
-               endface1[3].SetX(line4[0].GetX());
-               endface1[3].SetY(line4[0].GetY());
-               endface1[4].SetX(line1[0].GetX());
-               endface1[4].SetY(line1[0].GetY());
-
-               endface2[0].SetX(line1[1].GetX());
-               endface2[0].SetY(line1[1].GetY());
-               endface2[1].SetX(line2[1].GetX());
-               endface2[1].SetY(line2[1].GetY());
-               endface2[2].SetX(line3[1].GetX());
-               endface2[2].SetY(line3[1].GetY());
-               endface2[3].SetX(line4[1].GetX());
-               endface2[3].SetY(line4[1].GetY());
-               endface2[4].SetX(line1[1].GetX());
-               endface2[4].SetY(line1[1].GetY());
-
-               gVirtualX->DrawPolyLine(2,line2);
-               gVirtualX->DrawPolyLine(2,line3);
-               gVirtualX->DrawPolyLine(2,line4);
-               gVirtualX->DrawPolyLine(5,endface1);
-               gVirtualX->DrawPolyLine(5,endface2);
-            }
-            c->Clear();
-            c->cd();
-            TH1 *hp = h3->Project3D("z");
-            xaxis->SetRange(firstX,lastX);
-            yaxis->SetRange(firstY,lastY);
-            if (hp) {
-               hp->SetFillColor(38);
-               if (nbins == 1)
-                  hp->SetTitle(TString::Format("ProjectionZ of binx=%d [x=%.1f..%.1f] biny=%d [y=%.1f..%.1f]", binx, xaxis->GetBinLowEdge(binx), xaxis->GetBinUpEdge(binx),
-                                               biny, yaxis->GetBinLowEdge(biny), yaxis->GetBinUpEdge(biny)));
-               else
-                  hp->SetTitle(TString::Format("ProjectionZ, binx=[%d,%d] [x=%.1f..%.1f], biny=[%d,%d] [y=%.1f..%.1f]", binx, binx2, xaxis->GetBinLowEdge(binx), xaxis->GetBinUpEdge(binx2),
-                                               biny, biny2, yaxis->GetBinLowEdge(biny), yaxis->GetBinUpEdge(biny2) ) );
-               hp->SetXTitle(fH->GetZaxis()->GetTitle());
-               hp->SetYTitle("Number of Entries");
-               hp->Draw(fShowOption.Data());
-            }
+         c->Clear();
+         if (auto hp = make_proj("z")) {
+            hp->SetFillColor(38);
+            if ((binx == binx2) && (biny == biny2))
+               hp->SetTitle(TString::Format("ProjectionZ of binx=%d [x=%.1f..%.1f] biny=%d [y=%.1f..%.1f]", binx, xaxis->GetBinLowEdge(binx), xaxis->GetBinUpEdge(binx),
+                                             biny, yaxis->GetBinLowEdge(biny), yaxis->GetBinUpEdge(biny)));
+            else
+               hp->SetTitle(TString::Format("ProjectionZ, binx=[%d,%d] [x=%.1f..%.1f], biny=[%d,%d] [y=%.1f..%.1f]", binx, binx2, xaxis->GetBinLowEdge(binx), xaxis->GetBinUpEdge(binx2),
+                                             biny, biny2, yaxis->GetBinLowEdge(biny), yaxis->GetBinUpEdge(biny2) ) );
+            hp->SetXTitle(zaxis->GetTitle());
+            hp->SetYTitle("Number of Entries");
+            c->Add(hp, fShowOption);
          }
          break;
+      }
 
-      case 4:
-         // "xy"
-         {
-            Int_t first = zaxis->GetFirst();
-            Int_t last  = zaxis->GetLast();
-            Int_t binz  = first + Int_t((last-first)*(py-pymin)/(pymax-pymin));
-            Int_t binz2 = TMath::Min(binz+nbins-1,zaxis->GetNbins() );
-            zaxis->SetRange(binz,binz2);
-            if (rect1[0].GetX())            gVirtualX->DrawPolyLine(5,rect1);
-            if (nbins>1 && rect2[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
-            xx[0] = xaxis->GetXmin();
-            xx[1] = yaxis->GetXmax();
-            xx[2] = zaxis->GetBinCenter(binz);
-            view->WCtoNDC(xx,u);
-            rect1[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            rect1[4].SetX(rect1[0].GetX());
-            rect1[4].SetY(rect1[0].GetY());
-            xx[0] = xaxis->GetXmax();
-            view->WCtoNDC(xx,u);
-            rect1[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            xx[1] = yaxis->GetXmin();
-            view->WCtoNDC(xx,u);
-            rect1[2].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[2].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            xx[0] = xaxis->GetXmin();
-            view->WCtoNDC(xx,u);
-            rect1[3].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[3].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            gVirtualX->DrawPolyLine(5,rect1);
-            if (nbins>1) {
-               xx[0] = xaxis->GetXmin();
-               xx[1] = yaxis->GetXmax();
-               xx[2] = zaxis->GetBinCenter(binz+nbins-1);
-               view->WCtoNDC(xx,u);
-               rect2[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               rect2[4].SetX(rect2[0].GetX());
-               rect2[4].SetY(rect2[0].GetY());
-               xx[0] = xaxis->GetXmax();
-               view->WCtoNDC(xx,u);
-               rect2[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[1] = yaxis->GetXmin();
-               view->WCtoNDC(xx,u);
-               rect2[2].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[2].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[0] = xaxis->GetXmin();
-               view->WCtoNDC(xx,u);
-               rect2[3].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[3].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               gVirtualX->DrawPolyLine(5,rect2);
-            }
+      case 4:   // "xy"
+      case 5: { // "yx"
+         if (rect1x[0])
+            draw_rects();
 
-            c->Clear();
-            c->cd();
-            TH2 *hp = (TH2*)h3->Project3D("xy");
-            zaxis->SetRange(first,last);
-            if (hp) {
-               hp->SetFillColor(38);
-               if (nbins==1)hp->SetTitle(TString::Format("ProjectionXY of binz=%d [z=%.1f..%.f]", binz,zaxis->GetBinLowEdge(binz),zaxis->GetBinUpEdge(binz)));
-               else        hp->SetTitle(TString::Format("ProjectionXY, binz=[%d,%d] [z=%.1f..%.1f]", binz,binz2,zaxis->GetBinLowEdge(binz),zaxis->GetBinUpEdge(binz2)));
-               hp->SetXTitle(fH->GetYaxis()->GetTitle());
-               hp->SetYTitle(fH->GetXaxis()->GetTitle());
-               hp->SetZTitle("Number of Entries");
-               hp->Draw(fShowOption.Data());
+         if (!findAxis(dummy, binz, 'x') && !findAxis(dummy, binz, 'y'))
+            break;
+         binz2 = extend_bin(zaxis, binz);
+
+         convert(iMin, iMax, binz, rect1x[0], rect1y[0]);
+         convert(iMax, iMax, binz, rect1x[1], rect1y[1]);
+         convert(iMax, iMin, binz, rect1x[2], rect1y[2]);
+         convert(iMin, iMin, binz, rect1x[3], rect1y[3]);
+         if (binz != binz2) {
+            convert(iMin, iMax, binz2, rect2x[0], rect2y[0]);
+            convert(iMax, iMax, binz2, rect2x[1], rect2y[1]);
+            convert(iMax, iMin, binz2, rect2x[2], rect2y[2]);
+            convert(iMin, iMin, binz2, rect2x[3], rect2y[3]);
+         }
+
+         draw_rects();
+
+         c->Clear();
+
+         if (auto hp = make_proj(kind == 4 ? "xy" : "yx")) {
+            hp->SetFillColor(38);
+            TString sbins = (binz == binz2) ? TString::Format("%d", binz) : TString::Format("[%d,%d]", binz, binz2);
+            hp->SetTitle(TString::Format("Projection%s, binz=%s [z=%.1f..%.1f]", kind == 4 ? "XY" : "YX", sbins.Data(),
+                                         zaxis->GetBinLowEdge(binz), zaxis->GetBinUpEdge(binz2)));
+            if (kind == 4) {
+               hp->SetXTitle(yaxis->GetTitle());
+               hp->SetYTitle(xaxis->GetTitle());
+            } else {
+               hp->SetXTitle(xaxis->GetTitle());
+               hp->SetYTitle(yaxis->GetTitle());
             }
+            hp->SetZTitle("Number of Entries");
+            c->Add(hp, fShowOption);
          }
          break;
+      }
 
-      case 5:
-         // "yx"
-         {
-            Int_t first = zaxis->GetFirst();
-            Int_t last  = zaxis->GetLast();
-            Int_t binz = first + Int_t((last-first)*(py-pymin)/(pymax-pymin));
-            Int_t binz2 = TMath::Min(binz+nbins-1,zaxis->GetNbins() );
-            zaxis->SetRange(binz,binz2);
-            if (rect1[0].GetX())            gVirtualX->DrawPolyLine(5,rect1);
-            if (nbins>1 && rect2[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
-            xx[0] = xaxis->GetXmin();
-            xx[1] = yaxis->GetXmax();
-            xx[2] = zaxis->GetBinCenter(binz);
-            view->WCtoNDC(xx,u);
-            rect1[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            rect1[4].SetX(rect1[0].GetX());
-            rect1[4].SetY(rect1[0].GetY());
-            xx[0] = xaxis->GetXmax();
-            view->WCtoNDC(xx,u);
-            rect1[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            xx[1] = yaxis->GetXmin();
-            view->WCtoNDC(xx,u);
-            rect1[2].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[2].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            xx[0] = xaxis->GetXmin();
-            view->WCtoNDC(xx,u);
-            rect1[3].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[3].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            gVirtualX->DrawPolyLine(5,rect1);
-            if (nbins>1) {
-               xx[0] = xaxis->GetXmin();
-               xx[1] = yaxis->GetXmax();
-               xx[2] = zaxis->GetBinCenter(binz+nbins-1);
-               view->WCtoNDC(xx,u);
-               rect2[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               rect2[4].SetX(rect2[0].GetX());
-               rect2[4].SetY(rect2[0].GetY());
-               xx[0] = xaxis->GetXmax();
-               view->WCtoNDC(xx,u);
-               rect2[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[1] = yaxis->GetXmin();
-               view->WCtoNDC(xx,u);
-               rect2[2].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[2].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[0] = xaxis->GetXmin();
-               view->WCtoNDC(xx,u);
-               rect2[3].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[3].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               gVirtualX->DrawPolyLine(5,rect2);
+      case 6:   // "xz"
+      case 7: { // "zx"
+         if (rect1x[0])
+            draw_rects();
+
+         if (!findAxis(biny, dummy, 'x') && !findAxis(dummy, biny, 'z'))
+            break;
+
+         biny2 = extend_bin(yaxis, biny);
+
+         convert(iMin, biny, iMax, rect1x[0], rect1y[0]);
+         convert(iMax, biny, iMax, rect1x[1], rect1y[1]);
+         convert(iMax, biny, iMin, rect1x[2], rect1y[2]);
+         convert(iMin, biny, iMin, rect1x[3], rect1y[3]);
+
+         if (biny != biny2) {
+            convert(iMin, biny2, iMax, rect2x[0], rect2y[0]);
+            convert(iMax, biny2, iMax, rect2x[1], rect2y[1]);
+            convert(iMax, biny2, iMin, rect2x[2], rect2y[2]);
+            convert(iMin, biny2, iMin, rect2x[3], rect2y[3]);
+         }
+
+         draw_rects();
+
+         c->Clear();
+
+         if (auto hp = make_proj(kind == 6 ? "xz" : "zx")) {
+            hp->SetFillColor(38);
+            TString sbins = (biny == biny2) ? TString::Format("%d", biny) : TString::Format("[%d,%d]", biny, biny2);
+            hp->SetTitle(TString::Format("Projection%s, biny=%s [y=%.1f..%.1f]", kind == 6 ? "XZ" : "ZX", sbins.Data(),
+                                         yaxis->GetBinLowEdge(biny), yaxis->GetBinUpEdge(biny2)));
+            if (kind == 6) {
+               hp->SetXTitle(zaxis->GetTitle());
+               hp->SetYTitle(xaxis->GetTitle());
+            } else {
+               hp->SetXTitle(xaxis->GetTitle());
+               hp->SetYTitle(zaxis->GetTitle());
             }
-            c->Clear();
-            c->cd();
-            TH2 *hp = (TH2*)h3->Project3D("yx");
-            zaxis->SetRange(first,last);
-            if (hp) {
-               hp->SetFillColor(38);
-               if (nbins==1)hp->SetTitle(TString::Format("ProjectionYX of binz=%d [z=%.1f..%.f]", binz,zaxis->GetBinLowEdge(binz),zaxis->GetBinUpEdge(binz)));
-               else        hp->SetTitle(TString::Format("ProjectionYX, binz=[%d,%d] [z=%.1f..%.1f]", binz,binz2,zaxis->GetBinLowEdge(binz),zaxis->GetBinUpEdge(binz2)));
-               hp->SetXTitle(fH->GetXaxis()->GetTitle());
-               hp->SetYTitle(fH->GetYaxis()->GetTitle());
-               hp->SetZTitle("Number of Entries");
-               hp->Draw(fShowOption.Data());
-            }
+            hp->SetZTitle("Number of Entries");
+            c->Add(hp, fShowOption);
          }
          break;
+      }
 
-      case 6:
-         // "xz"
-         {
-            Int_t first = yaxis->GetFirst();
-            Int_t last  = yaxis->GetLast();
-            Int_t biny = first + Int_t((last-first)*(py-pymin)/(pymax-pymin));
-            Int_t biny2 = TMath::Min(biny+nbins-1,yaxis->GetNbins() );
-            yaxis->SetRange(biny,biny2);
-            if (rect1[0].GetX())            gVirtualX->DrawPolyLine(5,rect1);
-            if (nbins>1 && rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
-            xx[0] = xaxis->GetXmin();
-            xx[2] = zaxis->GetXmax();
-            xx[1] = yaxis->GetBinCenter(biny);
-            view->WCtoNDC(xx,u);
-            rect1[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            rect1[4].SetX(rect1[0].GetX());
-            rect1[4].SetY(rect1[0].GetY());
-            xx[0] = xaxis->GetXmax();
-            view->WCtoNDC(xx,u);
-            rect1[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            xx[2] = zaxis->GetXmin();
-            view->WCtoNDC(xx,u);
-            rect1[2].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[2].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            xx[0] = xaxis->GetXmin();
-            view->WCtoNDC(xx,u);
-            rect1[3].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[3].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            gVirtualX->DrawPolyLine(5,rect1);
-            if (nbins>1) {
-               xx[0] = xaxis->GetXmin();
-               xx[2] = zaxis->GetXmax();
-               xx[1] = yaxis->GetBinCenter(biny+nbins-1);
-               view->WCtoNDC(xx,u);
-               rect2[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               rect2[4].SetX(rect2[0].GetX());
-               rect2[4].SetY(rect2[0].GetY());
-               xx[0] = xaxis->GetXmax();
-               view->WCtoNDC(xx,u);
-               rect2[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[2] = zaxis->GetXmin();
-               view->WCtoNDC(xx,u);
-               rect2[2].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[2].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[0] = xaxis->GetXmin();
-               view->WCtoNDC(xx,u);
-               rect2[3].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[3].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               gVirtualX->DrawPolyLine(5,rect2);
+      case 8:   // "yz"
+      case 9: { // "zy"
+         if (rect1x[0])
+            draw_rects();
+
+         if (!findAxis(binx, dummy, 'y') && !findAxis(binx, dummy, 'z'))
+            break;
+
+         binx2 = extend_bin(xaxis, binx);
+
+         convert(binx, iMax, iMin, rect1x[0], rect1y[0]);
+         convert(binx, iMax, iMax, rect1x[1], rect1y[1]);
+         convert(binx, iMin, iMax, rect1x[2], rect1y[2]);
+         convert(binx, iMin, iMin, rect1x[3], rect1y[3]);
+         if (binx != binx2) {
+            convert(binx2, iMax, iMin, rect2x[0], rect2y[0]);
+            convert(binx2, iMax, iMax, rect2x[1], rect2y[1]);
+            convert(binx2, iMin, iMax, rect2x[2], rect2y[2]);
+            convert(binx2, iMin, iMin, rect2x[3], rect2y[3]);
+         }
+
+         draw_rects();
+
+         c->Clear();
+         if (auto hp = make_proj(kind == 8 ? "yz" : "zy")) {
+            hp->SetFillColor(38);
+            TString sbins = (binx == binx2) ? TString::Format("%d", binx) : TString::Format("[%d,%d]", binx, binx2);
+            hp->SetTitle(TString::Format("Projection%s of binx=%s [x=%.1f..%.f]", kind == 8 ? "YZ" : "ZY", sbins.Data(),
+                                         xaxis->GetBinLowEdge(binx), xaxis->GetBinUpEdge(binx2)));
+            if (kind == 8) {
+               hp->SetXTitle(zaxis->GetTitle());
+               hp->SetYTitle(yaxis->GetTitle());
+            } else {
+               hp->SetXTitle(yaxis->GetTitle());
+               hp->SetYTitle(zaxis->GetTitle());
             }
-            c->Clear();
-            c->cd();
-            TH2 *hp = (TH2*)h3->Project3D("xz");
-            yaxis->SetRange(first,last);
-            if (hp) {
-               hp->SetFillColor(38);
-               if (nbins==1)hp->SetTitle(TString::Format("ProjectionXZ of biny=%d [y=%.1f..%.f]", biny,yaxis->GetBinLowEdge(biny),yaxis->GetBinUpEdge(biny)));
-               else        hp->SetTitle(TString::Format("ProjectionXZ, biny=[%d,%d] [y=%.1f..%.1f]", biny,biny2,yaxis->GetBinLowEdge(biny),yaxis->GetBinUpEdge(biny2)));
-               hp->SetXTitle(fH->GetZaxis()->GetTitle());
-               hp->SetYTitle(fH->GetXaxis()->GetTitle());
-               hp->SetZTitle("Number of Entries");
-               hp->Draw(fShowOption.Data());
-            }
+            hp->SetZTitle("Number of Entries");
+            c->Add(hp, fShowOption);
          }
          break;
-
-      case 7:
-         // "zx"
-         {
-            Int_t first = yaxis->GetFirst();
-            Int_t last  = yaxis->GetLast();
-            Int_t biny = first + Int_t((last-first)*(py-pymin)/(pymax-pymin));
-            Int_t biny2 = TMath::Min(biny+nbins-1,yaxis->GetNbins() );
-            yaxis->SetRange(biny,biny2);
-            if (rect1[0].GetX())            gVirtualX->DrawPolyLine(5,rect1);
-            if (nbins>1 && rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
-            xx[0] = xaxis->GetXmin();
-            xx[2] = zaxis->GetXmax();
-            xx[1] = yaxis->GetBinCenter(biny);
-            view->WCtoNDC(xx,u);
-            rect1[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            rect1[4].SetX(rect1[0].GetX());
-            rect1[4].SetY(rect1[0].GetY());
-            xx[0] = xaxis->GetXmax();
-            view->WCtoNDC(xx,u);
-            rect1[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            xx[2] = zaxis->GetXmin();
-            view->WCtoNDC(xx,u);
-            rect1[2].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[2].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            xx[0] = xaxis->GetXmin();
-            view->WCtoNDC(xx,u);
-            rect1[3].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[3].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            gVirtualX->DrawPolyLine(5,rect1);
-            if (nbins>1) {
-               xx[0] = xaxis->GetXmin();
-               xx[2] = zaxis->GetXmax();
-               xx[1] = yaxis->GetBinCenter(biny+nbins-1);
-               view->WCtoNDC(xx,u);
-               rect2[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               rect2[4].SetX(rect2[0].GetX());
-               rect2[4].SetY(rect2[0].GetY());
-               xx[0] = xaxis->GetXmax();
-               view->WCtoNDC(xx,u);
-               rect2[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[2] = zaxis->GetXmin();
-               view->WCtoNDC(xx,u);
-               rect2[2].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[2].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[0] = xaxis->GetXmin();
-               view->WCtoNDC(xx,u);
-               rect2[3].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[3].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               gVirtualX->DrawPolyLine(5,rect2);
-            }
-            c->Clear();
-            c->cd();
-            TH2 *hp = (TH2*)h3->Project3D("zx");
-            yaxis->SetRange(first,last);
-            if (hp) {
-               hp->SetFillColor(38);
-               if (nbins==1)hp->SetTitle(TString::Format("ProjectionZX of biny=%d [y=%.1f..%.f]", biny,yaxis->GetBinLowEdge(biny),yaxis->GetBinUpEdge(biny)));
-               else        hp->SetTitle(TString::Format("ProjectionZX, biny=[%d,%d] [y=%.1f..%.1f]", biny,biny2,yaxis->GetBinLowEdge(biny),yaxis->GetBinUpEdge(biny2)));
-               hp->SetXTitle(fH->GetXaxis()->GetTitle());
-               hp->SetYTitle(fH->GetZaxis()->GetTitle());
-               hp->SetZTitle("Number of Entries");
-               hp->Draw(fShowOption.Data());
-            }
-         }
-         break;
-
-      case 8:
-         // "yz"
-         {
-            Int_t first = xaxis->GetFirst();
-            Int_t last  = xaxis->GetLast();
-            Int_t binx = first + Int_t((last-first)*(px-pxmin)/(pxmax-pxmin));
-            Int_t binx2 = TMath::Min(binx+nbins-1,xaxis->GetNbins() );
-            xaxis->SetRange(binx,binx2);
-            if (rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect1);
-            if (nbins>1 && rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
-            xx[2] = zaxis->GetXmin();
-            xx[1] = yaxis->GetXmax();
-            xx[0] = xaxis->GetBinCenter(binx);
-            view->WCtoNDC(xx,u);
-            rect1[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            rect1[4].SetX(rect1[0].GetX());
-            rect1[4].SetY(rect1[0].GetY());
-            xx[2] = zaxis->GetXmax();
-            view->WCtoNDC(xx,u);
-            rect1[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            xx[1] = yaxis->GetXmin();
-            view->WCtoNDC(xx,u);
-            rect1[2].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[2].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            xx[2] = zaxis->GetXmin();
-            view->WCtoNDC(xx,u);
-            rect1[3].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[3].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            gVirtualX->DrawPolyLine(5,rect1);
-            if (nbins>1) {
-               xx[2] = zaxis->GetXmin();
-               xx[1] = yaxis->GetXmax();
-               xx[0] = xaxis->GetBinCenter(binx+nbins-1);
-               view->WCtoNDC(xx,u);
-               rect2[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               rect2[4].SetX(rect2[0].GetX());
-               rect2[4].SetY(rect2[0].GetY());
-               xx[2] = zaxis->GetXmax();
-               view->WCtoNDC(xx,u);
-               rect2[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[1] = yaxis->GetXmin();
-               view->WCtoNDC(xx,u);
-               rect2[2].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[2].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[2] = zaxis->GetXmin();
-               view->WCtoNDC(xx,u);
-               rect2[3].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[3].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               gVirtualX->DrawPolyLine(5,rect2);
-            }
-            c->Clear();
-            c->cd();
-            TH2 *hp = (TH2*)h3->Project3D("yz");
-            xaxis->SetRange(first,last);
-            if (hp) {
-               hp->SetFillColor(38);
-               if (nbins==1)hp->SetTitle(TString::Format("ProjectionYZ of binx=%d [x=%.1f..%.f]", binx,xaxis->GetBinLowEdge(binx),xaxis->GetBinUpEdge(binx)));
-               else         hp->SetTitle(TString::Format("ProjectionYZ, binx=[%d,%d] [x=%.1f..%.1f]", binx,binx2,xaxis->GetBinLowEdge(binx),xaxis->GetBinUpEdge(binx2)));
-               hp->SetXTitle(fH->GetZaxis()->GetTitle());
-               hp->SetYTitle(fH->GetYaxis()->GetTitle());
-               hp->SetZTitle("Number of Entries");
-               hp->Draw(fShowOption.Data());
-            }
-         }
-         break;
-
-      case 9:
-         // "zy"
-         {
-            Int_t first = xaxis->GetFirst();
-            Int_t last  = xaxis->GetLast();
-            Int_t binx = first + Int_t((last-first)*(px-pxmin)/(pxmax-pxmin));
-            Int_t binx2 = TMath::Min(binx+nbins-1,xaxis->GetNbins() );
-            xaxis->SetRange(binx,binx2);
-            if (rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect1);
-            if (nbins>1 && rect1[0].GetX()) gVirtualX->DrawPolyLine(5,rect2);
-            xx[2] = zaxis->GetXmin();
-            xx[1] = yaxis->GetXmax();
-            xx[0] = xaxis->GetBinCenter(binx);
-            view->WCtoNDC(xx,u);
-            rect1[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            rect1[4].SetX(rect1[0].GetX());
-            rect1[4].SetY(rect1[0].GetY());
-            xx[2] = zaxis->GetXmax();
-            view->WCtoNDC(xx,u);
-            rect1[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            xx[1] = yaxis->GetXmin();
-            view->WCtoNDC(xx,u);
-            rect1[2].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[2].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            xx[2] = zaxis->GetXmin();
-            view->WCtoNDC(xx,u);
-            rect1[3].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-            rect1[3].SetY(pymin + Int_t((u[1]-uymin)*cy));
-            gVirtualX->DrawPolyLine(5,rect1);
-            if (nbins>1) {
-               xx[2] = zaxis->GetXmin();
-               xx[1] = yaxis->GetXmax();
-               xx[0] = xaxis->GetBinCenter(binx+nbins-1);
-               view->WCtoNDC(xx,u);
-               rect2[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               rect2[4].SetX(rect2[0].GetX());
-               rect2[4].SetY(rect2[0].GetY());
-               xx[2] = zaxis->GetXmax();
-               view->WCtoNDC(xx,u);
-               rect2[1].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[1].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[1] = yaxis->GetXmin();
-               view->WCtoNDC(xx,u);
-               rect2[2].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[2].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               xx[2] = zaxis->GetXmin();
-               view->WCtoNDC(xx,u);
-               rect2[3].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
-               rect2[3].SetY(pymin + Int_t((u[1]-uymin)*cy));
-               gVirtualX->DrawPolyLine(5,rect2);
-            }
-            c->Clear();
-            c->cd();
-            TH2 *hp = (TH2*)h3->Project3D("zy");
-            xaxis->SetRange(first,last);
-            if (hp) {
-               hp->SetFillColor(38);
-               if (nbins==1)hp->SetTitle(TString::Format("ProjectionZY of binx=%d [x=%.1f..%.f]", binx,xaxis->GetBinLowEdge(binx),xaxis->GetBinUpEdge(binx)));
-               else         hp->SetTitle(TString::Format("ProjectionZY, binx=[%d,%d] [x=%.1f..%.1f]", binx,binx2,xaxis->GetBinLowEdge(binx),xaxis->GetBinUpEdge(binx2)));
-               hp->SetXTitle(fH->GetYaxis()->GetTitle());
-               hp->SetYTitle(fH->GetZaxis()->GetTitle());
-               hp->SetZTitle("Number of Entries");
-               hp->Draw(fShowOption.Data());
-            }
-         }
-         break;
+      }
    }
    c->Update();
 }

@@ -814,16 +814,11 @@ void TCanvas::Close(Option_t *option)
       cd();
       TPad::Close(option);
 
-      if (!IsBatch() && !IsWeb()) {
-         //select current canvas
-         if (fPainter)
-            fPainter->SelectDrawable(fCanvasID);
+      DeleteCanvasPainter();
 
-         DeleteCanvasPainter();
+      if (fCanvasImp)
+         fCanvasImp->Close();
 
-         if (fCanvasImp)
-            fCanvasImp->Close();
-      }
       fCanvasID = -1;
       fBatch    = kTRUE;
 
@@ -1136,16 +1131,16 @@ void TCanvas::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Turn rubberband feedback mode on or off.
+/// Returns kTRUE when requested mode was successfully set
 
-void TCanvas::FeedbackMode(Bool_t set)
+Bool_t TCanvas::FeedbackMode(Int_t set)
 {
-   if (IsWeb() || (fCanvasID == -1))
-      return;
+   if (!fPainter || (fCanvasID == -1))
+      return kFALSE;
 
    SetDoubleBuffer(set ? 0 : 1);  // switch double buffer
 
-   if (fPainter)
-      fPainter->SetDrawMode(fCanvasID, set ? TVirtualX::kInvert : TVirtualX::kCopy);
+   return fPainter->SetDrawMode(fCanvasID, set ? TVirtualX::kInvert : TVirtualX::kCopy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

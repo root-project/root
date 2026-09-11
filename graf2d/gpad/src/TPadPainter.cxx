@@ -188,9 +188,17 @@ void TPadPainter::UpdateDrawable(Int_t mode)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set drawing mode for specified device
 
-void TPadPainter::SetDrawMode(Int_t device, Int_t mode)
+Bool_t TPadPainter::SetDrawMode(Int_t device, Int_t mode)
 {
-   gVirtualX->SetDrawModeW(gVirtualX->GetWindowContext(device), (TVirtualX::EDrawMode) mode);
+   if (device == -1)
+      return kFALSE;
+
+   auto ctxt = gVirtualX->GetWindowContext(device);
+   if (!ctxt)
+      return kFALSE;
+
+   gVirtualX->SetDrawModeW(ctxt, (TVirtualX::EDrawMode) mode);
+   return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

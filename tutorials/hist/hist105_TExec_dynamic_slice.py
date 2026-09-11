@@ -16,12 +16,12 @@
 ## \macro_image
 ## \macro_code
 ##
-## \author Rene Brun, Johann Cohen-Tanugi, Wim Lavrijsen, Enric Tejedor
+## \author Rene Brun, Johann Cohen-Tanugi, Wim Lavrijsen, Enric Tejedor, Sergey Linev
 
 import sys
 import ctypes
 
-from ROOT import gRandom, gPad, gROOT, gVirtualX
+from ROOT import gRandom, gPad, gROOT
 from ROOT import kTRUE, kRed
 from ROOT import TCanvas, TH2, TH2F
 
@@ -42,28 +42,27 @@ class DynamicExec:
       if not isinstance( h, TH2 ):
          return
 
-      gPad.GetCanvas().FeedbackMode( kTRUE )
+      if not gPad.FeedbackMode( kTRUE ):
+         return
 
-    # erase old position and draw a line at current position
       px = gPad.GetEventX()
       py = gPad.GetEventY()
+      upx = gPad.AbsPixeltoX( px )
+      upy = gPad.AbsPixeltoY( py )
 
       uxmin, uxmax = gPad.GetUxmin(), gPad.GetUxmax()
       uymin, uymax = gPad.GetUymin(), gPad.GetUymax()
-      pxmin, pxmax = gPad.XtoAbsPixel( uxmin ), gPad.XtoAbsPixel( uxmax )
-      pymin, pymax = gPad.YtoAbsPixel( uymin ), gPad.YtoAbsPixel( uymax )
 
+      # erase old position and paint lines at current position
       if self._old != None:
-         gVirtualX.DrawLine( pxmin, self._old[1], pxmax, self._old[1] )
-         gVirtualX.DrawLine( self._old[0], pymin, self._old[0], pymax )
-      gVirtualX.DrawLine( pxmin, py, pxmax, py )
-      gVirtualX.DrawLine( px, pymin, px, pymax )
+         gPad.PaintLine( uxmin, self._old[1], uxmax, self._old[1] )
+         gPad.PaintLine( self._old[0], uymin, self._old[0], uymax )
+      gPad.PaintLine( uxmin, upy, uxmax, upy )
+      gPad.PaintLine( upx, uymin, upx, uymax )
 
-      self._old = px, py
+      self._old = upx, upy
 
-      upx = gPad.AbsPixeltoX( px )
       x = gPad.PadtoX( upx )
-      upy = gPad.AbsPixeltoY( py )
       y = gPad.PadtoY( upy )
 
       padsav = gPad
@@ -110,6 +109,7 @@ class DynamicExec:
 
 if __name__ == '__main__':
  # create a new canvas.
+
    c1 = TCanvas('c1', 'Dynamic Slice Example', 10, 10, 700, 500 )
    c1.SetFillColor( 42 )
    c1.SetFrameFillColor( 33 )

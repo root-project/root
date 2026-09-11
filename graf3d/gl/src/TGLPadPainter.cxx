@@ -255,13 +255,15 @@ void TGLPadPainter::UpdateDrawable(Int_t mode)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set drawing mode for specified device
 
-void TGLPadPainter::SetDrawMode(Int_t device, Int_t mode)
+Bool_t TGLPadPainter::SetDrawMode(Int_t device, Int_t mode)
 {
    auto ctxt = fWinContext;
-   if (device)
+   if (device != -1)
       ctxt = gVirtualX->GetWindowContext(device);
-   if (ctxt)
-      gVirtualX->SetDrawModeW(ctxt, (TVirtualX::EDrawMode) mode);
+   if (!ctxt)
+      return kFALSE;
+   gVirtualX->SetDrawModeW(ctxt, (TVirtualX::EDrawMode) mode);
+   return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

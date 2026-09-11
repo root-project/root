@@ -129,13 +129,13 @@ public:
    virtual void      EditorBar();
    void              EmbedInto(Int_t winid, Int_t ww, Int_t wh);
    void              EnterLeave(TPad *prevSelPad, TObject *prevSelObj);
-   void              FeedbackMode(Bool_t set);
+   Bool_t            FeedbackMode(Int_t set) override;
    void              Flush();
    void              UseCurrentStyle() override; // *MENU*
    void              ForceUpdate();
    const char       *GetDISPLAY() const {return fDISPLAY.Data();}
    TContextMenu     *GetContextMenu() const {return fContextMenu;};
-   Int_t             GetDoubleBuffer() const {return fDoubleBuffer;}
+   Int_t             GetDoubleBuffer() const override { return fDoubleBuffer; }
    Int_t             GetEvent() const override { return fEvent; }
    Int_t             GetEventX() const override { return fEventX; }
    Int_t             GetEventY() const override { return fEventY; }

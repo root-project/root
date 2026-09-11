@@ -96,12 +96,14 @@ public:
    virtual void     DrawClassObject(const TObject *obj, Option_t *option="") = 0;
    virtual TH1F    *DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title="") = 0;
    virtual void     ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis) = 0;
+   virtual Bool_t   FeedbackMode(Int_t set) = 0;
    virtual void     UnZoomed() { Emit("UnZoomed()"); } // *SIGNAL*
    virtual Short_t  GetBorderMode() const = 0;
    virtual Short_t  GetBorderSize() const = 0;
    virtual Int_t    GetCanvasID() const = 0;
    virtual TCanvasImp *GetCanvasImp() const = 0;
    virtual TCanvas  *GetCanvas() const = 0;
+   virtual Int_t    GetDoubleBuffer() const  = 0;
    virtual TVirtualPad *GetVirtCanvas() const = 0;
    virtual Int_t    GetEvent() const  = 0;
    virtual Int_t    GetEventX() const = 0;

@@ -29,38 +29,45 @@ void hist058_TExec_th2()
       return;
    }
 
+   if (!gPad->FeedbackMode(kTRUE)) {
+      Error("hist058_TExec_th2", "Feedback mode is not supported");
+      return;
+   }
+
    int px = gPad->GetEventX();
    int py = gPad->GetEventY();
+   TObject *select = gPad->GetSelected();
    float uxmin = gPad->GetUxmin();
    float uxmax = gPad->GetUxmax();
-   int pxmin = gPad->XtoAbsPixel(uxmin);
-   int pxmax = gPad->XtoAbsPixel(uxmax);
-   TObject *select = gPad->GetSelected();
-   TCanvas *c2 = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("c2");
-
-   gPad->GetCanvas()->FeedbackMode(kTRUE);
-
-   int pyold = gPad->GetUniqueID(); // misuse of pad unique for last draw position
-
-   if (pyold && c2) {
-      // erase line at old position
-      gVirtualX->DrawLine(pxmin, pyold, pxmax, pyold);
-      gPad->SetUniqueID(0);
-   }
+   auto c2 = static_cast<TCanvas *>(gROOT->GetListOfCanvases()->FindObject("c2"));
 
    TH2 *h = dynamic_cast<TH2 *>(select);
    if (!h)
       return;
 
-   // erase old position and draw a line at current position
-   gVirtualX->DrawLine(pxmin, py, pxmax, py);
-   gPad->SetUniqueID(py);
+   // misuse of pad uniqueid for last paint position
+   int pyold = gPad->GetUniqueID();
+   gPad->SetUniqueID(0);
+
+   if (pyold && c2) {
+      // erase line at old position
+      Float_t upyold = gPad->AbsPixeltoY(pyold);
+      gPad->PaintLine(uxmin, upyold, uxmax, upyold);
+   }
 
    Float_t upy = gPad->AbsPixeltoY(py);
    Float_t y = gPad->PadtoY(upy);
 
+   // paint a line at current position
+   gPad->PaintLine(uxmin, upy, uxmax, upy);
+
+   // remember last paint position, misuse of pad uniqueid
+   gPad->SetUniqueID(py);
+
+   // remember active pad and restore it when leave function
+   TVirtualPad::TContext ctxt;
+
    // create or set the new canvas c2
-   auto padsav = gPad;
    if (c2)
       delete c2->GetPrimitive("Projection");
    else
@@ -75,6 +82,4 @@ void hist058_TExec_th2()
    hp->SetTitle(TString::Format("Projection of biny=%d", biny));
    hp->Fit("gaus", "ql");
    c2->Update();
-
-   padsav->cd();
 }
