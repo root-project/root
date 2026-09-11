@@ -233,6 +233,7 @@ if(NOT xrootd)
                   analysis/dataframe/df105_WBosonAnalysis.py
                   analysis/dataframe/df106_HiggsToFourLeptons.py
                   analysis/dataframe/df107_SingleTopAnalysis.py
+                  analysis/tree/run_h1analysis.C
                   roofit/roofit/rf618_mixture_models.py # depends on df106_HiggsToFourLeptons.py
                   visualisation/rcanvas/df104.py
                   visualisation/rcanvas/df105.py
