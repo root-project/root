@@ -10,7 +10,6 @@
 
 set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   strlcpy.h # custom ROOT file (https://github.com/root-project/root/blob/b48975de4dcbcd5f1ecf7f60c3f8e39c38a1f6e3/core/clib/inc/strlcpy.h)
-  snprintf.h # custom ROOT file (https://github.com/root-project/root/blob/3c0f42cd0d4f7aeab78e01533afefeb6f1248946/clib/inc/snprintf.h vs https://github.com/daztucker/historic-ssh/blob/658f5a469b028b54a9934db11fb43f65319bb811/snprintf.h)
   strtok.h # custom ROOT file (https://github.com/root-project/root/blob/d39c9211ba045c0b9aaa780ec76a32666e04cd1e/core/clib/inc/strtok.h)
 )
 
@@ -27,7 +26,6 @@ ROOT_OBJECT_LIBRARY(Clib
   src/mmcheck.c # forked in 1999 from gdb-4 (https://github.com/root-project/root/blob/852600061bcacd9b255d44f6312c96b6b1e00a2d/clib/src/mmcheck.c vs https://github.com/gnutools/binutils-gdb/blob/c906108c21474dfb4ed285bcc0ac6fe02cd400cc/mmalloc/mmcheck.c)
   src/mrealloc.c # forked in 1999 from gdb-4 (https://github.com/root-project/root/blob/852600061bcacd9b255d44f6312c96b6b1e00a2d/clib/src/mrealloc.c vs https://github.com/gnutools/binutils-gdb/blob/c906108c21474dfb4ed285bcc0ac6fe02cd400cc/mmalloc/mrealloc.c)
   src/sbrksup.c # forked in 1999 from gdb-4 (https://github.com/root-project/root/blob/852600061bcacd9b255d44f6312c96b6b1e00a2d/clib/src/sbrksup.c vs https://github.com/gnutools/binutils-gdb/blob/c906108c21474dfb4ed285bcc0ac6fe02cd400cc/mmalloc/sbrk-sup.c)
-  src/snprintf.c # forked in ~1998 maybe from Revision 1.19 / ssh 1.2.26 (https://github.com/root-project/root/blob/3c0f42cd0d4f7aeab78e01533afefeb6f1248946/clib/src/snprintf.c vs https://github.com/daztucker/historic-ssh/blob/ssh/snprintf.c)
   src/strlcat.c # forked in 2010 from OpenBSD (https://github.com/root-project/root/blob/b48975de4dcbcd5f1ecf7f60c3f8e39c38a1f6e3/core/clib/src/strlcat.c vs https://github.com/libressl/openbsd/blob/032d9a965adfb74e42b18dc939b34fcda2cf740e/src/lib/libc/string/strlcat.c)
   src/strlcpy.c # forked in 2010 from OpenBSD (https://github.com/root-project/root/blob/b48975de4dcbcd5f1ecf7f60c3f8e39c38a1f6e3/core/clib/src/strlcpy.c vs https://github.com/libressl/openbsd/blob/032d9a965adfb74e42b18dc939b34fcda2cf740e/src/lib/libc/string/strlcpy.c)
   # res/mmalloc.h (https://github.com/root-project/root/blob/852600061bcacd9b255d44f6312c96b6b1e00a2d/clib/inc/mmalloc.h vs https://github.com/gnutools/binutils-gdb/blob/c906108c21474dfb4ed285bcc0ac6fe02cd400cc/mmalloc/mmalloc.h)
