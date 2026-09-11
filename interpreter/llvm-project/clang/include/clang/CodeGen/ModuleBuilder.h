@@ -113,9 +113,6 @@ public:
   /// enable codegen in interactive processing environments.
   llvm::Module* StartModule(llvm::StringRef ModuleName, llvm::LLVMContext &C);
 
-  llvm::Module *StartModule(llvm::StringRef ModuleName, llvm::LLVMContext &C,
-                            const CodeGenOptions &CGO);
-
   void forgetGlobal(llvm::GlobalValue *GV);
   void forgetDecl(llvm::StringRef MangledName);
 };
