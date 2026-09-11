@@ -283,7 +283,9 @@ if(mathmore OR (tmva-cpu AND use_gsl_cblas))
     endif()
   endif()
 endif()
-
+if(http)
+  ROOT_FIND_REQUIRED_DEP(MathJax builtin_mathjax)
+endif()
 
 if(NOT "${MISSING_PACKAGES}" STREQUAL "")
   list(REMOVE_DUPLICATES MISSING_PACKAGES)
