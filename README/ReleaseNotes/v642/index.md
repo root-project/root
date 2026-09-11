@@ -140,6 +140,8 @@ The parameter indices in this interface always refer to the function's own full 
 
 * Added `RedefinePerSample` transformation. Works similarly to `DefinePerSample`, but allows to redefine existing values
   of a column on a per-sample basis. This operation is supported in local and distributed mode.
+* Added `Median` action. Computes the exact median of the input column. At the moment this action is supported in local
+  mode only.
 
 ## Trees
 
