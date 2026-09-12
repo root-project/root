@@ -39,3 +39,4 @@ ROOTTEST_ADD_TEST(ReadFile
                   FIXTURES_REQUIRED root-io-datamodelevolution-stl-WriteFile-fixture
                                     root-io-datamodelevolution-stl-readFile-compile-fixture)
 
+ROOTTEST_ADD_TESTDIRS()
