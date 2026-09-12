@@ -16,6 +16,8 @@ Simple 3-vector representation
 
 #include "TGeoVector3.h"
 
+#include <ostream>
+
 std::ostream &operator<<(std::ostream &os, ROOT::Geom::Vertex_t const &vec)
 {
    os << "{" << vec[0] << ", " << vec[1] << ", " << vec[2] << "}";

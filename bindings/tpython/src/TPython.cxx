@@ -23,12 +23,11 @@
 #include "TClassRef.h"
 #include "TObject.h"
 
-#include <Riostream.h>
-
 // Standard
 #include <mutex>
 #include <sstream>
-#include <stdio.h>
+#include <cstdio>
+#include <iostream>
 #include <string>
 
 /// \class TPython
