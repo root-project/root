@@ -29,3 +29,11 @@ endif()
 ROOTTEST_ADD_TEST(macroCalledMain
                   COPY_TO_BUILDDIR main.cpp
                   MACRO main.cpp)
+
+# issue 21457
+if(NOT MSVC) # test does not work on Windows
+  ROOTTEST_ADD_TEST(inskey
+                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
+                  INPUT 21457_input.txt
+                  FAILREGEX "Execution of your code was aborted.")
+endif()
