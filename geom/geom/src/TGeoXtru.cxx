@@ -607,7 +607,7 @@ TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact
 {
    ThreadData_t &td = GetThreadData();
    if (iact < 3 && safe) {
-      *safe = Safety(point, kTRUE);
+      *safe = Safety(point, kFALSE);
       if (iact == 0)
          return TGeoShape::Big();
       if (iact == 1 && step < *safe)
