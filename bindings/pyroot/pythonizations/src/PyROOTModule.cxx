@@ -14,7 +14,7 @@
 #include "RPyROOTApplication.h"
 
 // Cppyy
-#include "CPyCppyy/API.h"
+#include "cpyrt/API.h"
 
 // ROOT
 #include "TInterpreter.h"
@@ -54,7 +54,7 @@ PyObject *RegisterConverterAlias(PyObject * /*self*/, PyObject *args)
       return nullptr;
    }
 
-   CPyCppyy::RegisterConverterAlias(nameStr, targetStr);
+   cppjit::cpyrt::RegisterConverterAlias(nameStr, targetStr);
 
    Py_RETURN_NONE;
 }
@@ -78,7 +78,7 @@ PyObject *RegisterExecutorAlias(PyObject * /*self*/, PyObject *args)
       return nullptr;
    }
 
-   CPyCppyy::RegisterExecutorAlias(nameStr, targetStr);
+   cppjit::cpyrt::RegisterExecutorAlias(nameStr, targetStr);
 
    Py_RETURN_NONE;
 }
@@ -140,12 +140,12 @@ PyObject *PyObjRefCounterAsStdAny(PyObject * /*self*/, PyObject *args)
    PyArg_ParseTuple(args, "O:PyObjRefCounterAsStdAny", &object);
 
    // The std::any is managed by Python
-   return CPyCppyy::Instance_FromVoidPtr(new std::any{std::in_place_type<PyObjRefCounter>, object}, "std::any",
+   return cppjit::cpyrt::Instance_FromVoidPtr(new std::any{std::in_place_type<PyObjRefCounter>, object}, "std::any",
                                          /*python_owns=*/true);
 }
 
 // Helper function to get the pointer to a buffer (heavily simplified copy of
-// CPyCppyy::Utility::GetBuffer).
+// cppjit::cpyrt::Utility::GetBuffer).
 void GetBuffer(PyObject *pyobject, void *&buf)
 {
    buf = nullptr;

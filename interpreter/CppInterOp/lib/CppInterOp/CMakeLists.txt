@@ -277,6 +277,9 @@ if(TARGET CppInterOpTableGen)
   add_dependencies(clangCppInterOp CppInterOpTableGen)
 endif()
 target_compile_definitions(clangCppInterOp PUBLIC "_CINDEX_LIB_") # workaround for the use of `CINDEX_LINKAGE`
+# The library defines its own dispatch trace-hook slots (Tracing.cpp): mark
+# them dllexport on Windows via the CPPINTEROP_DISPATCH_STORAGE declarations.
+target_compile_definitions(clangCppInterOp PRIVATE CPPINTEROP_DISPATCH_EXPORTS)
 
 string(REPLACE ";" "\;" _VER CPPINTEROP_VERSION)
 set_source_files_properties(CppInterOp.cpp PROPERTIES COMPILE_DEFINITIONS

@@ -1,0 +1,10 @@
+pytest
+pytest-xdist
+
+# Numba tests (numba dropped macOS x86_64 wheels after 0.61)
+numba==0.67.0; sys_platform != "darwin" or platform_machine != "x86_64"
+numba==0.61.2; sys_platform == "darwin" and platform_machine == "x86_64" and python_version < "3.14"
+numpy
+
+# Leak check tests
+psutil

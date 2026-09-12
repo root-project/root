@@ -12,18 +12,18 @@
 // Bindings
 #include <Python.h>
 
-// TODO: refactor public CPyCppyy API such that this forward declaration is not
-// needed anymore. Including "CPyCppyy/API.h" should be enough.
-namespace CPyCppyy {
+// TODO: refactor public cpyrt API such that this forward declaration is not
+// needed anymore. Including "cpyrt/API.h" should be enough.
+namespace cppjit::cpyrt {
 typedef Py_ssize_t dim_t;
-} // namespace CPyCppyy
+} // namespace cppjit::cpyrt
 
-#include "../../cppyy/CPyCppyy/src/Cppyy.h"
-#include "../../cppyy/CPyCppyy/src/CPPInstance.h"
-#include "../../cppyy/CPyCppyy/src/ProxyWrappers.h"
-#include "../../cppyy/CPyCppyy/src/Dimensions.h"
+#include "../../cppjit/src/interop/cppjit_interop.h"
+#include "../../cppjit/src/cpyrt/CPPInstance.h"
+#include "../../cppjit/src/cpyrt/ProxyWrappers.h"
+#include "../../cppjit/src/cpyrt/Dimensions.h"
 
-#include "CPyCppyy/API.h"
+#include "cpyrt/API.h"
 
 #include "PyROOTPythonize.h"
 
@@ -47,12 +47,12 @@ namespace {
 // Get the TClass of the C++ object proxied by pyobj
 TClass *GetTClass(PyObject *pyobj)
 {
-   return TClass::GetClass(CPyCppyy::Instance_GetScopedFinalName(pyobj).c_str());
+   return TClass::GetClass(cppjit::cpyrt::Instance_GetScopedFinalName(pyobj).c_str());
 }
 
 } // namespace
 
-using namespace CPyCppyy;
+using namespace cppjit::cpyrt;
 
 namespace PyROOT{
 void GetBuffer(PyObject *pyobject, void *&buf);
@@ -150,7 +150,7 @@ static PyObject *WrapLeaf(TLeaf *leaf)
       if (std::count(title.begin(), title.end(), '[') >= 2) {
          dimsVec = getMultiDims(title);
       }
-      CPyCppyy::Dimensions dims{static_cast<dim_t>(dimsVec.size()), dimsVec.data()};
+      cppjit::cpyrt::Dimensions dims{static_cast<dim_t>(dimsVec.size()), dimsVec.data()};
       Converter *pcnv = CreateConverter(typeName + (isStatic ? "[]" : "*"), dims);
 
       void *address = 0;
@@ -160,7 +160,7 @@ static PyObject *WrapLeaf(TLeaf *leaf)
          address = (void *)leaf->GetValuePointer();
 
       PyObject *value = pcnv->FromMemory(&address);
-      CPyCppyy::DestroyConverter(pcnv);
+      cppjit::cpyrt::DestroyConverter(pcnv);
 
       return value;
    } else if (leaf->GetValuePointer()) {
@@ -171,7 +171,7 @@ static PyObject *WrapLeaf(TLeaf *leaf)
          value = pcnv->FromMemory((void *)*(void **)leaf->GetValuePointer());
       else
          value = pcnv->FromMemory((void *)leaf->GetValuePointer());
-      CPyCppyy::DestroyConverter(pcnv);
+      cppjit::cpyrt::DestroyConverter(pcnv);
 
       return value;
    }
@@ -180,7 +180,7 @@ static PyObject *WrapLeaf(TLeaf *leaf)
 }
 
 // Allow access to branches/leaves as if they were data members Returns a
-// Python tuple where the first element is either the desired CPyCppyy proxy,
+// Python tuple where the first element is either the desired cpyrt proxy,
 // or an address that still needs to be wrapped by the caller in a proxy using
 // cppyy.ll.cast. In the latter case, the second tuple element is the target
 // type name. Otherwise, the second element is an empty string.
@@ -196,7 +196,7 @@ PyObject *PyROOT::GetBranchAttr(PyObject * /*self*/, PyObject *args)
       return nullptr;
 
    // get hold of actual tree
-   auto tree = (TTree *)GetTClass(self)->DynamicCast(TTree::Class(), CPyCppyy::Instance_AsVoidPtr(self));
+   auto tree = (TTree *)GetTClass(self)->DynamicCast(TTree::Class(), cppjit::cpyrt::Instance_AsVoidPtr(self));
 
    if (!tree) {
       PyErr_SetString(PyExc_ReferenceError, "attempt to access a null-pointer");
@@ -252,15 +252,15 @@ PyObject *TryBranchLeafListOverload(int argc, PyObject *args)
    if (PyArg_ParseTuple(args, "OO!OO!|O!:Branch", &treeObj, &PyUnicode_Type, &name, &address, &PyUnicode_Type,
                         &leaflist, &PyLong_Type, &bufsize)) {
 
-      auto tree = (TTree *)GetTClass(treeObj)->DynamicCast(TTree::Class(), CPyCppyy::Instance_AsVoidPtr(treeObj));
+      auto tree = (TTree *)GetTClass(treeObj)->DynamicCast(TTree::Class(), cppjit::cpyrt::Instance_AsVoidPtr(treeObj));
       if (!tree) {
          PyErr_SetString(PyExc_TypeError, "TTree::Branch must be called with a TTree instance as first argument");
          return nullptr;
       }
 
       void *buf = nullptr;
-      if (CPyCppyy::Instance_Check(address))
-         buf = CPyCppyy::Instance_AsVoidPtr(address);
+      if (cppjit::cpyrt::Instance_Check(address))
+         buf = cppjit::cpyrt::Instance_AsVoidPtr(address);
       else
          PyROOT::GetBuffer(address, buf);
 
@@ -280,7 +280,7 @@ PyObject *TryBranchLeafListOverload(int argc, PyObject *args)
             branch = tree->Branch(nameString, buf, leaflistString);
          }
 
-         return BindCppObject(branch, Cppyy::GetScope("TBranch"));
+         return BindCppObject(branch, cppjit::interop::GetScope("TBranch"));
       }
    }
    PyErr_Clear();
@@ -315,7 +315,7 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
    }
 
    if (bIsMatch) {
-      auto tree = (TTree *)GetTClass(treeObj)->DynamicCast(TTree::Class(), CPyCppyy::Instance_AsVoidPtr(treeObj));
+      auto tree = (TTree *)GetTClass(treeObj)->DynamicCast(TTree::Class(), cppjit::cpyrt::Instance_AsVoidPtr(treeObj));
       if (!tree) {
          PyErr_SetString(PyExc_TypeError, "TTree::Branch must be called with a TTree instance as first argument");
          return nullptr;
@@ -331,7 +331,7 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
       }
       void *buf = nullptr;
 
-      if (CPyCppyy::Instance_Check(address)) {
+      if (cppjit::cpyrt::Instance_Check(address)) {
          if (((CPPInstance *)address)->fFlags & CPPInstance::kIsReference)
             buf = (void *)((CPPInstance *)address)->fObject;
          else
@@ -363,7 +363,7 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
                                   PyLong_AsLong(splitlevel));
          }
 
-         return BindCppObject(branch, Cppyy::GetScope("TBranch"));
+         return BindCppObject(branch, cppjit::interop::GetScope("TBranch"));
       }
    }
 

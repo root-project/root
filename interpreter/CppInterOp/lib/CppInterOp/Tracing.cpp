@@ -27,16 +27,17 @@
 
 // libclangCppInterOp's own trace-hook slot storage; Dispatch.h
 // consumers carry their per-DSO copies, populated by LoadDispatchAPI.
+// Storage class (dllexport/visibility) comes from the declarations in
+// CppInterOpTypes.h; this TU's module defines CPPINTEROP_DISPATCH_EXPORTS.
 namespace CppInternal {
 namespace DispatchRaw {
-CPPINTEROP_API void (*CppInterOpTraceJitCallInvokeImpl)(const Cpp::JitCall*,
-                                                        void*, void**,
-                                                        std::size_t,
-                                                        void*) = nullptr;
-CPPINTEROP_API void (*CppInterOpTraceJitCallInvokeDestructorImpl)(
-    const Cpp::JitCall*, void*, unsigned long, int) = nullptr;
-CPPINTEROP_API void (*CppInterOpTraceJitCallInvokeReturnImpl)(
-    const Cpp::JitCall*, void*) = nullptr;
+void (*CppInterOpTraceJitCallInvokeImpl)(const Cpp::JitCall*, void*, void**,
+                                         std::size_t, void*) = nullptr;
+void (*CppInterOpTraceJitCallInvokeDestructorImpl)(const Cpp::JitCall*, void*,
+                                                   unsigned long,
+                                                   int) = nullptr;
+void (*CppInterOpTraceJitCallInvokeReturnImpl)(const Cpp::JitCall*,
+                                               void*) = nullptr;
 } // namespace DispatchRaw
 } // namespace CppInternal
 

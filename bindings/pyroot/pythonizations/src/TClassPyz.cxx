@@ -10,17 +10,17 @@
  *************************************************************************/
 
 // Bindings
-#include "CPyCppyy/API.h"
+#include "cpyrt/API.h"
 
-#include "../../cppyy/CPyCppyy/src/Cppyy.h"
-#include "../../cppyy/CPyCppyy/src/Utility.h"
+#include "../../cppjit/src/interop/cppjit_interop.h"
+#include "../../cppjit/src/cpyrt/Utility.h"
 
 #include "PyROOTPythonize.h"
 
 // ROOT
 #include "TClass.h"
 
-using namespace CPyCppyy;
+using namespace cppjit::cpyrt;
 
 namespace PyROOT{
 void GetBuffer(PyObject *pyobject, void *&buf);
@@ -36,7 +36,7 @@ PyObject *TClassDynamicCastPyz(PyObject *self, PyObject *args)
    if (!PyArg_ParseTuple(args, "OO|i:DynamicCast", &pyclass, &pyobject, &up))
       return nullptr;
 
-   if (!CPyCppyy::Instance_Check(pyclass)) {
+   if (!cppjit::cpyrt::Instance_Check(pyclass)) {
       PyObject *type = PyObject_Type(pyclass);
       if (!type) {
          return nullptr;
@@ -54,13 +54,13 @@ PyObject *TClassDynamicCastPyz(PyObject *self, PyObject *args)
    }
 
    // Perform actual cast - calls default implementation of DynamicCast
-   TClass *cl1 = (TClass *)CPyCppyy::Instance_AsVoidPtr(self);
-   TClass *cl2 = (TClass *)CPyCppyy::Instance_AsVoidPtr(pyclass);
+   TClass *cl1 = (TClass *)cppjit::cpyrt::Instance_AsVoidPtr(self);
+   TClass *cl2 = (TClass *)cppjit::cpyrt::Instance_AsVoidPtr(pyclass);
 
-   void *address = cl1->DynamicCast(cl2, CPyCppyy::Instance_AsVoidPtr(pyobject), up);
+   void *address = cl1->DynamicCast(cl2, cppjit::cpyrt::Instance_AsVoidPtr(pyobject), up);
 
-   if (CPyCppyy::Instance_Check(pyobject)) {
-      address = CPyCppyy::Instance_AsVoidPtr(pyobject);
+   if (cppjit::cpyrt::Instance_Check(pyobject)) {
+      address = cppjit::cpyrt::Instance_AsVoidPtr(pyobject);
    } else {
       long long value = PyLong_AsLongLong(pyobject);
       if (!PyErr_Occurred()) {
@@ -73,10 +73,10 @@ PyObject *TClassDynamicCastPyz(PyObject *self, PyObject *args)
 
    // Now use binding to return a usable class. Upcast: result is a base.
    // Downcast: result is a derived.
-   TClass *tcl = TClass::GetClass(CPyCppyy::Instance_GetScopedFinalName(up ? pyclass : self).c_str());
-   TClass *klass = (TClass *)tcl->DynamicCast(TClass::Class(), up ? CPyCppyy::Instance_AsVoidPtr(pyclass) : cl1);
+   TClass *tcl = TClass::GetClass(cppjit::cpyrt::Instance_GetScopedFinalName(up ? pyclass : self).c_str());
+   TClass *klass = (TClass *)tcl->DynamicCast(TClass::Class(), up ? cppjit::cpyrt::Instance_AsVoidPtr(pyclass) : cl1);
 
-   return CPyCppyy::Instance_FromVoidPtr(address, klass->GetName());
+   return cppjit::cpyrt::Instance_FromVoidPtr(address, klass->GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////
