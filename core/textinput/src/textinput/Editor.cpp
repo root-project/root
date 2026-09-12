@@ -191,7 +191,8 @@ namespace textinput {
         Line += C;
       }
       R.fEdit.Extend(Range(Cursor));
-      R.fDisplay.Extend(Range(Cursor));
+      R.fDisplay.Extend(Range(Cursor, Cursor + 1));
+      fContext->SetCursor(Cursor + 1);
     } else {
       Line.insert(Cursor, C);
       R.fEdit.Extend(Range(Cursor));
