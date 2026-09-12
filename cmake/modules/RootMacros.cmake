@@ -1965,6 +1965,11 @@ function(ROOT_ADD_GTEST test_suite)
   # against. For example, tests in Core should link only against libCore. This could be tricky
   # to implement because some ROOT components create more than one library.
   ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
+  if(runtime_cxxmodules)
+    # Register the test so that the modules_idx dependency can be attached at
+    # the end of the top-level CMakeLists, where the modules_idx target exists.
+    set_property(GLOBAL APPEND PROPERTY ROOT_MODULES_IDX_GTESTS ${test_suite})
+  endif()
   target_link_libraries(${test_suite} PRIVATE GTest::gtest GTest::gmock GTest::gtest_main GTest::gmock_main)
   if(TARGET ROOT::TestSupport)
     target_link_libraries(${test_suite} PRIVATE ROOT::TestSupport)
