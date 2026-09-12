@@ -269,9 +269,25 @@ ROOT::NTupleSize_t ROOT::Internal::RPageSource::GetNEntries()
    return GetSharedDescriptorGuard()->GetNEntries();
 }
 
-ROOT::NTupleSize_t ROOT::Internal::RPageSource::GetNElements(ColumnHandle_t columnHandle)
+ROOT::NTupleSize_t ROOT::Internal::RPageSource::GetNElements(ROOT::DescriptorId_t physicalColumnId)
 {
-   return GetSharedDescriptorGuard()->GetNElements(columnHandle.fPhysicalId);
+   auto descGuard = GetSharedDescriptorGuard();
+   if (descGuard->GetNClusters() == 0)
+      return 0;
+
+   auto itr = descGuard->GetClusterGroupIterable().begin();
+   itr += descGuard->GetNClusterGroups() - 1;
+   R__ASSERT(itr->HasClusterDetails());
+
+   ROOT::NTupleSize_t result = 0;
+   for (const auto &clusterId : itr->GetClusterIds()) {
+      const auto &cd = descGuard->GetClusterDescriptor(clusterId);
+      if (!cd.ContainsColumn(physicalColumnId))
+         continue;
+      auto columnRange = cd.GetColumnRange(physicalColumnId);
+      result = std::max(result, columnRange.GetFirstElementIndex() + columnRange.GetNElements());
+   }
+   return result;
 }
 
 void ROOT::Internal::RPageSource::UnzipCluster(RCluster *cluster)

@@ -37,7 +37,7 @@ namespace Internal {
 /// by the number of elements of the first principal column found in the subfields searched by BFS.
 /// If the field hierarchy is empty on columns, the returned field range is invalid (start and end set to
 /// kInvalidNTupleIndex). An attempt to use such a field range in RNTupleViewBase::GetFieldRange will throw.
-ROOT::RNTupleGlobalRange GetFieldRange(const ROOT::RFieldBase &field, const ROOT::Internal::RPageSource &pageSource);
+ROOT::RNTupleGlobalRange GetFieldRange(const ROOT::RFieldBase &field, ROOT::Internal::RPageSource &pageSource);
 
 } // namespace Internal
 
@@ -145,7 +145,8 @@ public:
    ROOT::RNTupleGlobalRange GetFieldRange() const
    {
       if (!fFieldRange.IsValid()) {
-         throw RException(R__FAIL("field iteration over empty fields is unsupported: " + fField->GetFieldName()));
+         throw RException(R__FAIL("field iteration over empty fields in vectors or variants is unsupported: " +
+                          fField->GetFieldName()));
       }
       return fFieldRange;
    }

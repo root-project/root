@@ -880,7 +880,9 @@ public:
 
    RClusterGroupDescriptorIterable GetClusterGroupIterable() const;
 
-   RClusterDescriptorIterable GetClusterIterable() const;
+   RClusterDescriptorIterable R__DEPRECATED(6,46, "This function is ill-conceived in the descriptor "
+      "as not all cluster descriptors may be present. Iterate over cluster groups instead and check for each one "
+      "if its cluster details are available.") GetClusterIterable() const;
 
    RExtraTypeInfoDescriptorIterable GetExtraTypeInfoIterable() const;
 
@@ -900,7 +902,9 @@ public:
 
    /// We know the number of entries from adding the cluster summaries
    ROOT::NTupleSize_t GetNEntries() const { return fNEntries; }
-   ROOT::NTupleSize_t GetNElements(ROOT::DescriptorId_t physicalColumnId) const;
+   ROOT::NTupleSize_t R__DEPRECATED(6,46, "This function is ill-conceived in the descriptor "
+      "as not all cluster descriptors may be present. For internal purposes, the page source offers this function.")
+   GetNElements(ROOT::DescriptorId_t physicalColumnId) const;
 
    /// Returns the logical parent of all top-level RNTuple data fields.
    ROOT::DescriptorId_t GetFieldZeroId() const { return fFieldZeroId; }
@@ -1087,7 +1091,7 @@ public:
 /**
 \class ROOT::RNTupleDescriptor::RClusterGroupDescriptorIterable
 \ingroup NTuple
-\brief Used to loop over all the cluster groups of an RNTuple (in unspecified order)
+\brief Used to loop over all the cluster groups of an RNTuple in order of entry ranges
 
 Enumerate all cluster group IDs from the descriptor.  No specific order can be assumed.
 */
@@ -1099,10 +1103,15 @@ private:
 
 public:
    class RIterator final {
+      friend class RNTupleDescriptor::RClusterGroupDescriptorIterable;
+
    private:
-      using Iter_t = std::unordered_map<ROOT::DescriptorId_t, RClusterGroupDescriptor>::const_iterator;
-      /// The wrapped map iterator
-      Iter_t fIter;
+      const RNTupleDescriptor *fNTuple = nullptr;
+      const std::vector<ROOT::DescriptorId_t> *fSortedClusterGroupIds = nullptr;
+      std::size_t fIdx = 0;
+
+      RIterator(const RNTupleDescriptor *ntuple, const std::vector<ROOT::DescriptorId_t> *sortedClusterGroupIds,
+                std::size_t idx) : fNTuple(ntuple), fSortedClusterGroupIds(sortedClusterGroupIds), fIdx(idx) {}
 
    public:
       using iterator_category = std::forward_iterator_tag;
@@ -1113,27 +1122,35 @@ public:
       using reference = const RClusterGroupDescriptor &;
 
       RIterator() = default;
-      explicit RIterator(Iter_t iter) : fIter(iter) {}
       iterator &operator++() /* prefix */
       {
-         ++fIter;
+         ++fIdx;
          return *this;
       }
       iterator operator++(int) /* postfix */
       {
          auto old = *this;
-         operator++();
+         fIdx++;
          return old;
       }
-      reference operator*() const { return fIter->second; }
-      pointer operator->() const { return &fIter->second; }
-      bool operator!=(const iterator &rh) const { return fIter != rh.fIter; }
-      bool operator==(const iterator &rh) const { return fIter == rh.fIter; }
+      iterator &operator+=(std::size_t n)
+      {
+         fIdx += n;
+         return *this;
+      }
+      reference operator*() const { return fNTuple->GetClusterGroupDescriptor((*fSortedClusterGroupIds)[fIdx]); }
+      pointer operator->() const { return &fNTuple->GetClusterGroupDescriptor((*fSortedClusterGroupIds)[fIdx]); }
+      bool operator==(const iterator &rh) const { return (fNTuple == rh.fNTuple) && (fIdx == rh.fIdx); }
+      bool operator!=(const iterator &rh) const { return !(*this == rh); }
    };
 
    RClusterGroupDescriptorIterable(const RNTupleDescriptor &ntuple) : fNTuple(ntuple) {}
-   RIterator begin() { return RIterator(fNTuple.fClusterGroupDescriptors.cbegin()); }
-   RIterator end() { return RIterator(fNTuple.fClusterGroupDescriptors.cend()); }
+   RIterator begin() { return RIterator(&fNTuple, &fNTuple.fSortedClusterGroupIds, 0); }
+   RIterator end() {
+      return RIterator(&fNTuple, &fNTuple.fSortedClusterGroupIds, fNTuple.fSortedClusterGroupIds.size());
+   }
+   std::size_t size() const { return fNTuple.fSortedClusterGroupIds.size(); }
+   bool empty() const { return fNTuple.fSortedClusterGroupIds.empty(); }
 };
 
 // clang-format off
