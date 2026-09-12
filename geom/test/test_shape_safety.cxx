@@ -77,8 +77,9 @@ TEST_F(ShapeSafety, EltuExitNearLateralSurface)
          const double direction[] = {0.6, 0.8, 0.};
          ASSERT_TRUE(shape.Contains(point));
          const double distance = shape.DistFromInside(point, direction, 3);
-         if (b == 5.)
+         if (b == 5.) {
             EXPECT_NEAR(distance, gap, 1.e-12);
+         }
          const double expected = shape.Safety(point, true);
          ASSERT_GT(expected, 0.);
          for (int action : {0, 1, 2}) {
