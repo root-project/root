@@ -4246,15 +4246,7 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *ext
       //must include streaming classes in case of an STL container
       if (!incRiostream && element->InheritsFrom(TStreamerSTL::Class())) {
          incRiostream = kTRUE;
-#ifdef __APPLE__
-         // Workaround for https://github.com/llvm/llvm-project/issues/138683
-         // Include <chrono> before <fstream> to ensure _FilesystemClock is defined
-         // Can be removed once the upstream issue is fixed.
-         TMakeProject::AddInclude( fp, "chrono", kTRUE, inclist);
-#endif
-         TMakeProject::AddInclude( fp, "fstream", kTRUE, inclist);
-         TMakeProject::AddInclude( fp, "iostream", kTRUE, inclist);
-         TMakeProject::AddInclude( fp, "iomanip", kTRUE, inclist);
+         TMakeProject::AddInclude( fp, "Riostream.h", kFALSE, inclist);
       }
 
       //get include file name if any
