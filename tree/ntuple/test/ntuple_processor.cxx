@@ -208,10 +208,10 @@ TEST_F(RNTupleProcessorTest, RequestFieldWithPtr)
 
    for (auto idx : *proc) {
       EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
-      EXPECT_EQ(x.GetRawPtr(), xPtr.get());
+      EXPECT_EQ(x.GetPtr(), xPtr);
 
       if (idx == 2) {
-         x.BindRawPtr(xNewPtr.get());
+         x.Bind(xNewPtr);
          xPtr.swap(xNewPtr);
       }
    }
@@ -228,10 +228,10 @@ TEST_F(RNTupleProcessorTest, RequestFieldWithVoidPtr)
 
    for (auto idx : *proc) {
       EXPECT_FLOAT_EQ(static_cast<float>(idx), *std::static_pointer_cast<float>(x.GetPtr()));
-      EXPECT_EQ(x.GetRawPtr(), xPtr.get());
+      EXPECT_EQ(x.GetPtr(), xPtr);
 
       if (idx == 2) {
-         x.BindRawPtr(xNewPtr.get());
+         x.Bind(xNewPtr);
          xPtr.swap(xNewPtr);
       }
    }
@@ -355,9 +355,9 @@ TEST_F(RNTupleProcessorTest, ChainedChain)
    EXPECT_EQ(20, proc->GetNEntriesProcessed());
 
    auto zPtr = std::make_shared<float>();
-   z.BindRawPtr(zPtr.get());
+   z.Bind(zPtr);
    auto aPtr = std::make_shared<float>();
-   strct_a.BindRawPtr(aPtr.get());
+   strct_a.Bind(aPtr);
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1 + 20, proc->GetNEntriesProcessed());

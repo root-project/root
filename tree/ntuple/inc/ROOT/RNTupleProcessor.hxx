@@ -98,6 +98,24 @@ private:
    {
    }
 
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a non-owning pointer to the field value managed by the processor's entry.
+   ///
+   /// \return A `T*` if the field is valid in the current entry, or a `nullptr` otherwise.
+   T *GetRawPtr() const { return GetPtr().get(); }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Bind the value to `valuePtr`.
+   ///
+   /// \param[in] valuePtr Pointer to bind the value to.
+   ///
+   /// \warning Use this function with care! Values may not always be valid for every entry during processing, for
+   /// example when a field is not present in one of the chained processors or when during a join operation, no matching
+   /// entry in the auxiliary processor can be found. Reading `valuePtr` as-is therefore comes with the risk of reading
+   /// invalid data. After binding a pointer to an `RNTupleProcessorOptionalPtr`, we *strongly* recommend only accessing
+   /// its data through this interface, to ensure that only valid data can be read.
+   void BindRawPtr(T *valuePtr) { fProcessorEntry->BindRawPtr(fFieldIndex, valuePtr); }
+
 public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Check if the pointer currently holds a valid value.
@@ -118,12 +136,6 @@ public:
    }
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get a non-owning pointer to the field value managed by the processor's entry.
-   ///
-   /// \return A `T*` if the field is valid in the current entry, or a `nullptr` otherwise.
-   T *GetRawPtr() const { return GetPtr().get(); }
-
-   /////////////////////////////////////////////////////////////////////////////
    /// \brief Bind the value to `valuePtr`.
    ///
    /// \param[in] valuePtr Pointer to bind the value to.
@@ -133,7 +145,7 @@ public:
    /// entry in the auxiliary processor can be found. Reading `valuePtr` as-is therefore comes with the risk of reading
    /// invalid data. After binding a pointer to an `RNTupleProcessorOptionalPtr`, we *strongly* recommend only accessing
    /// its data through this interface, to ensure that only valid data can be read.
-   void BindRawPtr(T *valuePtr) { fProcessorEntry->BindRawPtr(fFieldIndex, valuePtr); }
+   void Bind(std::shared_ptr<T> valuePtr) { fProcessorEntry->Bind(fFieldIndex, std::move(valuePtr)); }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get a reference to the field value managed by the processor's entry.
@@ -183,6 +195,24 @@ private:
    {
    }
 
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a non-owning pointer to the field value managed by the processor's entry.
+   ///
+   /// \return A `void*` if the field is valid in the current entry, or a `nullptr` otherwise.
+   void *GetRawPtr() const { return GetPtr().get(); }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Bind the value to `valuePtr`.
+   ///
+   /// \param[in] valuePtr Pointer to bind the value to.
+   ///
+   /// \warning Use this function with care! Values may not always be valid for every entry during processing, for
+   /// example when a field is not present in one of the chained processors or when during a join operation, no matching
+   /// entry in the auxiliary processor can be found. Reading `valuePtr` as-is therefore comes with the risk of reading
+   /// invalid data. After binding a pointer to an `RNTupleProcessorOptionalPtr`, we *strongly* recommend only accessing
+   /// its data through this interface, to ensure that only valid data can be read.
+   void BindRawPtr(void *valuePtr) { fProcessorEntry->BindRawPtr(fFieldIndex, valuePtr); }
+
 public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Check if the pointer currently holds a valid value.
@@ -203,12 +233,6 @@ public:
    }
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get a non-owning pointer to the field value managed by the processor's entry.
-   ///
-   /// \return A `void*` if the field is valid in the current entry, or a `nullptr` otherwise.
-   void *GetRawPtr() const { return GetPtr().get(); }
-
-   /////////////////////////////////////////////////////////////////////////////
    /// \brief Bind the value to `valuePtr`.
    ///
    /// \param[in] valuePtr Pointer to bind the value to.
@@ -218,7 +242,7 @@ public:
    /// entry in the auxiliary processor can be found. Reading `valuePtr` as-is therefore comes with the risk of reading
    /// invalid data. After binding a pointer to an `RNTupleProcessorOptionalPtr`, we *strongly* recommend only accessing
    /// its data through this interface, to ensure that only valid data can be read.
-   void BindRawPtr(void *valuePtr) { fProcessorEntry->BindRawPtr(fFieldIndex, valuePtr); }
+   void Bind(std::shared_ptr<void> valuePtr) { fProcessorEntry->Bind(fFieldIndex, std::move(valuePtr)); }
 };
 
 // clang-format off
