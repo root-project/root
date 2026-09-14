@@ -24,12 +24,7 @@
 #include "TDictionary.h"
 #include <string>
 
-#ifdef R__LESS_INCLUDES
 class TDataMember;
-#else
-#include "TDataMember.h"
-#endif
-
 class TFunction;
 class TMethod;
 

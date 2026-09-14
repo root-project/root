@@ -39,20 +39,13 @@
 #include "TObjArray.h"
 #include "TVirtualTreePlayer.h"
 
-#ifdef R__LESS_INCLUDES
-class TBranch;
-class TList;
-#else
-#include "TBranch.h"
-// #include "TBuffer.h"
-#include "TList.h"
-#endif
-
 #include <array>
 #include <atomic>
 #include <vector>
 #include <utility>
 
+class TBranch;
+class TList;
 class TBuffer;
 class TBrowser;
 class TFile;

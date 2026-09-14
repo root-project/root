@@ -20,11 +20,7 @@
 class TClass;
 class TList;
 class TRealData;
-#ifdef R__LESS_INCLUDES
 class TDataMember;
-#else
-#include "TDataMember.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

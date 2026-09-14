@@ -22,14 +22,8 @@
 
 #include "TNamed.h"
 
-#ifdef R__LESS_INCLUDES
 class TList;
 class TMap;
-#else
-#include "TList.h"
-#include "TMap.h"
-#endif
-
 class TFile;
 
 class TVirtualMonitoringWriter : public TNamed {

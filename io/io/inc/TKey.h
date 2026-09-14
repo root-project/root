@@ -15,13 +15,9 @@
 #include "TNamed.h"
 #include "TDatime.h"
 #include "TClass.h"
-#ifdef R__LESS_INCLUDES
-class TBuffer;
-#else
-#include "TBuffer.h"
-#endif
 
 class TBrowser;
+class TBuffer;
 class TDirectory;
 class TFile;
 

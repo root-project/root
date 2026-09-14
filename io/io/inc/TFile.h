@@ -31,11 +31,6 @@
 #include "ROOT/RConcurrentHashColl.hxx"
 #include <optional>
 
-// Not a part of TFile interface; provide a forward declaration instead of #include.
-// #ifndef R__LESS_INCLUDES
-// #include "TMap.h"
-// #endif
-
 #ifdef R__USE_IMT
 #include <mutex>
 #endif

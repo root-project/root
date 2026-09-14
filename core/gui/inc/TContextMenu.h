@@ -15,12 +15,7 @@
 
 #include "TNamed.h"
 
-#ifdef R__LESS_INCLUDES
 class TContextMenuImp;
-#else
-#include "TContextMenuImp.h"
-#endif
-
 class TMethod;
 class TFunction;
 class TMethodArg;

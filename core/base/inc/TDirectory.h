@@ -26,14 +26,7 @@
 #include "TUUID.h"
 #include <atomic>
 
-#ifdef R__LESS_INCLUDES
 class TList;
-#else
-#include "TList.h"
-#include "TBuffer.h"
-// #include "TDatime.h"
-#endif
-
 class TBrowser;
 class TKey;
 class TFile;

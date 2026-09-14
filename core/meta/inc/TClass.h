@@ -24,16 +24,6 @@
 #include "TString.h"
 #include "TSchemaRule.h"
 
-#ifdef R__LESS_INCLUDES
-class TObjArray;
-#else
-#include "TObjArray.h"
-// Not used in this header file; user code should #include this directly.
-// #include "TObjString.h"
-// #include "ThreadLocalStorage.h"
-// #include <set>
-#endif
-
 #include <cstddef>
 #include <map>
 #include <string>
@@ -42,6 +32,7 @@ class TObjArray;
 #include <vector>
 #include <atomic>
 
+class TObjArray;
 class TBaseClass;
 class TBrowser;
 class TDataMember;
