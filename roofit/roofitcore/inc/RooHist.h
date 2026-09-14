@@ -75,6 +75,11 @@ public:
 
   bool hasIdenticalBinning(const RooHist& other) const ;
 
+  /// Compute residuals with respect to a curve.
+  /// \note For residuals/pulls of binned data against a fitted model, the
+  /// more accurate RooFit::makeResidHist() and RooFit::makePullHist() are
+  /// the recommended interface: they integrate the model itself exactly over
+  /// each bin, instead of interpolating the curve.
   RooHist* makeResidHist(const RooCurve& curve,bool normalize=false, bool useAverage=false) const;
   RooHist* makePullHist(const RooCurve& curve, bool useAverage=false) const
     {return makeResidHist(curve,true,useAverage); }
