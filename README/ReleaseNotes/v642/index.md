@@ -91,7 +91,7 @@ In ROOT 6.22, many (but not all) unused includes were removed from ROOT header f
 For instance, `#include "TBuffer.h"` was removed from `TKey.h`. This change may cause errors during compilation of ROOT-based code if one was implicitly relying on this transitive include on downstream code using TBuffer without actually including `TBuffer.h`. Another example: `TStyle.h` no longer includes internally `TArrayI.h`.
 To fix it in downstream code, provide the missing includes if you were using those classes from transitive includes without explicitly including them.
 This improves compile times and reduces code inter-dependency; see https://github.com/include-what-you-use/include-what-you-use/blob/master/docs/WhyIWYU.md for a good overview of the motivation.
-The macro `R__LESS_INCLUDES` no longer has an effecct since it's the new default behavior.
+The macro `R__LESS_INCLUDES` no longer has an effect since it's the new default behavior.
 
 ### Moving from builtin dependencies to system-provided packages
 
