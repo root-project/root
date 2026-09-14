@@ -506,11 +506,13 @@ jobs:
         with:
           ref: ${{ inputs.ref_name }}
           sparse-checkout: .github/workflows/
+          progress: false
 
       - name: Checkout root
         uses: actions/checkout@v7
         with:
           path: src/
+          progress: false
 
       - name: Dump GitHub context
         env:
@@ -546,6 +548,7 @@ jobs:
                     --platform_config ${{ matrix.platform_config }}
                     --dockeropts      \"$CONTAINER_OPTIONS\"
                     --incremental     $INCREMENTAL
+                    --base_ref        ${{ github.base_ref }}
                     --source_dir      ${GITHUB_WORKSPACE}/src
                     --overrides       ${GLOBAL_OVERRIDES} ${OVERRIDES}
               "
