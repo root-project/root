@@ -4,6 +4,8 @@ Tests within a file share interpreter state (cppdefs, loaded dictionaries,
 pythonizations), so distributed runs must keep whole files on one worker.
 """
 
+import os
+
 import pytest
 
 
@@ -26,6 +28,19 @@ def _applies_here(mark):
 
 
 def pytest_collection_modifyitems(config, items):
+    # [TEMP-CI-PROBE] CPPJIT_LOWLEVEL_PROBE={only|skip}:<name>[,...] keeps
+    # only / drops the named tests, for bisecting the Windows x64 exit crash
+    # in test_lowlevel. Removed together with the probe tests.
+    probe = os.environ.get("CPPJIT_LOWLEVEL_PROBE")
+    if probe:
+        mode, _, names = probe.partition(":")
+        names = set(names.split(","))
+        keep = [i for i in items if (i.name in names) == (mode == "only")]
+        drop = [i for i in items if i not in keep]
+        if drop:
+            config.hook.pytest_deselected(items=drop)
+            items[:] = keep
+
     if not config.getoption("--run-crashing-xfails"):
         return
     # Keep only the crash markers that claim this platform, and let them run:

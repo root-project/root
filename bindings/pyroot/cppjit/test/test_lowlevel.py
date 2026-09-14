@@ -1,3 +1,4 @@
+import os
 import sys
 
 import py
@@ -1108,6 +1109,11 @@ class TestMULTIDIMARRAYS:
                 for k in range(gbl.S + 7):
                     assert gbl.consume_klass(gbl.klasses[i][j][k], i, j, k)
 
+    @mark.skipif(not os.getenv("CPPJIT_LOWLEVEL_PROBE"), reason="probe-only test")
+    def test_probe07x_exact(self):
+        # [TEMP-CI-PROBE] test07's body verbatim, run in its own process
+        self.test07_3D_custom_struct()
+
     @mark.xfail(condition=IS_WINDOWS == 32, reason="Fails on Windows 32 bit")
     def test08_reshape_sets_unknown_dimensions_only(self):
         """Reshaping fills in the dimensions the type leaves open"""
@@ -1184,3 +1190,145 @@ class TestCSTRINGARRAY:
 
         s.names = "abc"
         assert ns.as_chars(s) == "abc"
+
+
+@mark.skipif(not os.getenv("CPPJIT_LOWLEVEL_PROBE"), reason="probe-only tests")
+class TestPROBE07:
+    """[TEMP-CI-PROBE] Phase bisection of test07_3D_custom_struct's Windows
+    x64 process-exit crash: each phase replicates test07 up to one step, under
+    suffixed global names, with the datatypes dictionary loaded as in
+    TestMULTIDIMARRAYS (round 9: without it no phase reproduces). Removed
+    together with the probe tests."""
+
+    def setup_class(cls):
+        import cppjit
+
+        cls.datatypes = cppjit.load_reflection_info(test_dct)
+        try:
+            import numpy  # noqa: F401
+        except ImportError:
+            pass
+
+    def _cppdef(self, t):
+        import cppjit
+
+        cppjit.cppdef(r"""
+        constexpr int S_%(t)s = 4;
+
+        struct Klass_%(t)s {
+            static int i;
+            int k;
+            Klass_%(t)s() : k(++i) {}
+        };
+        int Klass_%(t)s::i = 0;
+        Klass_%(t)s klasses_%(t)s[S_%(t)s][S_%(t)s + 3][S_%(t)s + 7];
+
+        bool consume_klass_%(t)s(Klass_%(t)s* c, int i, int j, int k) {
+            if (c->k == ((S_%(t)s + 7) * (i * (S_%(t)s + 3) + j) + (k + 1))) return true;
+            return false;
+        }
+        """ % {"t": t})
+
+    def test_probe07a_cppdef(self):
+        self._cppdef("a")
+
+    def test_probe07b_constexpr(self):
+        import cppjit
+
+        self._cppdef("b")
+        for _ in range(3):
+            assert cppjit.gbl.S_b == 4
+
+    def test_probe07c_bind(self):
+        import cppjit
+
+        self._cppdef("c")
+        assert cppjit.gbl.klasses_c
+        assert type(cppjit.gbl.klasses_c)
+
+    def test_probe07d_calls(self):
+        from cppjit import gbl
+
+        self._cppdef("d")
+        assert gbl.klasses_d
+        for i in range(gbl.S_d):
+            for j in range(gbl.S_d + 3):
+                for k in range(gbl.S_d + 7):
+                    assert gbl.consume_klass_d(gbl.klasses_d[i][j][k], i, j, k)
+
+    def _run_variant(self, t, orig):
+        # replicate test07 with one identifier restored to its original
+        # spelling (round 10: all-suffixed passes, the verbatim clone crashes)
+        import cppjit
+        from cppjit import gbl
+
+        n = {k: (k if k in orig else "%s_%s" % (k, t)) for k in ("S", "Klass", "klasses", "consume_klass")}
+        cppjit.cppdef(
+            r"""
+        constexpr int %(S)s = 4;
+
+        struct %(Klass)s {
+            static int i;
+            int k;
+            %(Klass)s() : k(++i) {}
+        };
+        int %(Klass)s::i = 0;
+        %(Klass)s %(klasses)s[%(S)s][%(S)s + 3][%(S)s + 7];
+
+        bool %(consume_klass)s(%(Klass)s* c, int i, int j, int k) {
+            if (c->k == ((%(S)s + 7) * (i * (%(S)s + 3) + j) + (k + 1))) return true;
+            return false;
+        }
+        """
+            % n
+        )
+
+        assert getattr(gbl, n["klasses"])
+        for i in range(getattr(gbl, n["S"])):
+            for j in range(getattr(gbl, n["S"]) + 3):
+                for k in range(getattr(gbl, n["S"]) + 7):
+                    assert getattr(gbl, n["consume_klass"])(getattr(gbl, n["klasses"])[i][j][k], i, j, k)
+
+    def test_probe07e_name_s(self):
+        self._run_variant("e", {"S"})
+
+    def test_probe07f_name_klass(self):
+        self._run_variant("f", {"Klass"})
+
+    def test_probe07g_name_klasses(self):
+        self._run_variant("g", {"klasses"})
+
+    def test_probe07h_name_consume(self):
+        self._run_variant("h", {"consume_klass"})
+
+    def test_probe07i_min_read(self):
+        import cppjit
+
+        cppjit.cppdef("constexpr int S = 4;")
+        for _ in range(3):
+            assert cppjit.gbl.S == 4
+
+    def test_probe07j_min_defonly(self):
+        import cppjit
+
+        cppjit.cppdef("constexpr int S = 4;")
+
+    def test_probe07k_min_nonconst(self):
+        import cppjit
+
+        cppjit.cppdef("int S = 4;")
+        for _ in range(3):
+            assert cppjit.gbl.S == 4
+
+
+@mark.skipif(not os.getenv("CPPJIT_LOWLEVEL_PROBE"), reason="probe-only tests")
+class TestPROBE07NODICT:
+    """[TEMP-CI-PROBE] As TestPROBE07's minimal probes, without the datatypes
+    dictionary loaded (no setup_class)."""
+
+    def test_probe07l_min_read_nodict(self):
+        import cppjit
+
+        cppjit.cppdef("constexpr int S = 4;")
+        for _ in range(3):
+            assert cppjit.gbl.S == 4

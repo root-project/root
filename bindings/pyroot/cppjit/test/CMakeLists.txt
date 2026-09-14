@@ -109,6 +109,42 @@ CPPJIT_ADD_PYTEST(test_advancedcpp DICTS advancedcpp advancedcpp2)
 CPPJIT_ADD_PYTEST(test_lowlevel DICTS datatypes
   FIXTURES_SETUP cppjit_datatypes_dict_fixture)
 
+# [TEMP-CI-PROBE] test_lowlevel passes on Windows x64, then the process
+# fail-fasts at exit; the round-8 matrix pinned test07_3D_custom_struct as
+# the sole poison. Phase-replica probes (TestPROBE07 in test_lowlevel.py)
+# bisect within it: cppdef of the JIT global array, the constexpr global
+# read, the eager proxy-tuple bind, the call loop. no:faulthandler keeps a
+# crash from looping the fault handler (30GB log in round 8). The probes
+# reuse the dictionary ACLiC-built by the main test (DEPENDS still runs
+# after a failed dependency, unlike a fixture). Dropped with the fix.
+if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+  # The crash under bisection can loop python's fault handler instead of
+  # fail-fasting (rounds 8/12 produced multi-GB logs); disable it for the
+  # main test as the probes already do.
+  set_property(TEST pyunittests-bindings-cppjit-test-lowlevel APPEND
+    PROPERTY ENVIRONMENT "PYTEST_ADDOPTS=-p no:faulthandler")
+  set(lowlevel_probes
+      "name-s|only:test_probe07e_name_s"
+      "min-read|only:test_probe07i_min_read"
+      "min-defonly|only:test_probe07j_min_defonly"
+      "min-nonconst|only:test_probe07k_min_nonconst"
+      "min-read-nodict|only:test_probe07l_min_read_nodict")
+  foreach(probe ${lowlevel_probes})
+    string(REPLACE "|" ";" probe "${probe}")
+    list(GET probe 0 probe_id)
+    list(GET probe 1 probe_spec)
+    ROOT_ADD_TEST(pyunittests-bindings-cppjit-lowlevel-probe-${probe_id}
+      COMMAND ${Python3_EXECUTABLE} -B -m pytest -v -p no:cacheprovider
+              -p no:faulthandler -o xfail_strict=false
+              ${CMAKE_CURRENT_SOURCE_DIR}/test_lowlevel.py
+      WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
+      ENVIRONMENT ${common_env} CPPJIT_LOWLEVEL_PROBE=${probe_spec}
+      LABELS python
+      PYTHON_DEPS pytest
+      DEPENDS pyunittests-bindings-cppjit-test-lowlevel)
+  endforeach()
+endif()
+
 CPPJIT_ADD_PYTEST(test_aclassloader
   FIXTURES_REQUIRED cppjit_example01_dict_fixture)
 CPPJIT_ADD_PYTEST(test_basic_api
