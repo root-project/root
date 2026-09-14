@@ -501,7 +501,7 @@ jobs:
             echo ROOT_OBJECT_AUTO_REGISTRATION=0 >> $GITHUB_ENV;
           fi
 
-      - name: Checkout root build config
+      - name: Checkout root build scripts
         uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref_name }}
