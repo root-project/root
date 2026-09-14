@@ -404,7 +404,6 @@ def archive_and_upload(archive_name, prefix):
     os.chdir(WORKDIR)
 
     with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz", compresslevel=COMPRESSIONLEVEL) as targz:
-        targz.add("src")
         targz.add("build")
 
     try:
