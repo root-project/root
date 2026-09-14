@@ -68,7 +68,7 @@ def main():
     else:
         build_utils.print_info("head_ref same as base_ref, assuming non-PR build")
 
-    cleanup_previous_build()
+    cleanup_previous_build(args.dry_run)
 
     this_script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -150,44 +150,44 @@ def main():
             build_utils.print_warning(f'Failed to download: {err}')
             args.incremental = False
 
-    git_pull("src", args.repository, args.base_ref)
+    git_pull("src", args.repository, args.base_ref, args.dry_run)
 
     benchmark: bool = 'rootbench' in options_dict and options_dict['rootbench'] == "ON"
     if benchmark:
-        git_pull("rootbench", "https://github.com/root-project/rootbench", "master")
+        git_pull("rootbench", "https://github.com/root-project/rootbench", "master", args.dry_run)
 
     if pull_request:
-      base_head_sha = get_base_head_sha("src", args.repository, args.sha, args.head_sha)
+      base_head_sha = get_base_head_sha("src", args.repository, args.sha, args.head_sha, args.dry_run)
 
       head_ref_src, _, head_ref_dst = args.head_ref.partition(":")
       head_ref_dst = head_ref_dst or "__tmp"
 
-      rebase("src", "origin", base_head_sha, head_ref_dst, args.head_sha)
+      rebase("src", "origin", base_head_sha, head_ref_dst, args.head_sha, args.dry_run)
 
     testing: bool = options_dict['testing'] == "ON"
 
     if not WINDOWS:
         show_node_state()
 
-    if args.coverage and args.incremental:
+    if args.coverage and args.incremental and not args.dry_run:
         # Delete all the .gcda files produced by an artifact.
         build_utils.remove_file_match_ext(WORKDIR, "gcda")
 
-    build(options, args.buildtype)
+    build(options, args.buildtype, args.dry_run)
 
     # Done before anything else touches the build tree, and reported only at the
     # very end so that a spurious rebuild does not cost us the test results.
-    null_build_ok = check_for_spurious_rebuilds(args.buildtype)
+    null_build_ok = True if args.dry_run else check_for_spurious_rebuilds(args.buildtype)
 
     # Build artifacts should only be uploaded for full builds, and only for
     # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
     # We also want to upload any successful build, even if it fails testing
     # later on.
-    if not pull_request and not args.incremental and args.upload_artifacts:
+    if not pull_request and not args.incremental and args.upload_artifacts and not args.dry_run:
         archive_and_upload(yyyy_mm_dd, obj_prefix)
 
     if args.binaries:
-        create_binaries(args.buildtype)
+        create_binaries(args.buildtype, args.dry_run)
 
     if testing:
         extra_ctest_flags = ''
@@ -198,10 +198,10 @@ def main():
             extra_ctest_flags = ' -R "^rootbench-" '
         if ctest_custom_flags:
             extra_ctest_flags += ctest_custom_flags
-        ctest_returncode = run_ctest(extra_ctest_flags)
+        ctest_returncode = run_ctest(extra_ctest_flags, args.dry_run)
 
     if args.coverage:
-        create_coverage_xml()
+        create_coverage_xml(args.dry_run)
 
     if testing and ctest_returncode != 0:
         handle_test_failure(ctest_returncode)
@@ -250,6 +250,7 @@ def parse_args():
                         help="url to repository")
     parser.add_argument("--overrides",       default=None,      help="Override build options using a syntax like 'A=1 B=2'", nargs="*")
     parser.add_argument("--upload_artifacts", default="true",   help="Whether to upload binary artifacts")
+    parser.add_argument("--dry_run", default="false",   help="Only print what would have been done, don't actually do it")
 
     args = parser.parse_args()
 
@@ -258,6 +259,7 @@ def parse_args():
     args.coverage = args.coverage.lower() in ('yes', 'true', '1', 'on')
     args.binaries = args.binaries.lower() in ('yes', 'true', '1', 'on')
     args.upload_artifacts = args.upload_artifacts.lower() in ('yes', 'true', '1', 'on')
+    args.dry_run = args.dry_run.lower() in ('yes', 'true', '1', 'on')
 
     if not args.base_ref:
         die(os.EX_USAGE, "base_ref not specified")
@@ -272,7 +274,7 @@ def print_trace():
     build_utils.log.print()
 
 @github_log_group("Clean up from previous runs")
-def cleanup_previous_build():
+def cleanup_previous_build(dry_run: bool):
     # runners should never have root permissions but be on the safe side
     if WORKDIR in ("", "/"):
         die(1, "WORKDIR not set")
@@ -286,22 +288,22 @@ def cleanup_previous_build():
                 Remove-Item -Recurse -Force -Path {WORKDIR}
             }}
             New-Item -Force -Type directory -Path {WORKDIR}
-        """)
+        """, dry_run)
     else:
         # mac/linux/POSIX
         result = subprocess_with_log(f"""
             rm -rf {WORKDIR}/*
-        """)
+        """, dry_run)
 
     if result != 0:
         die(result, "Failed to clean up previous artifacts")
 
 
 @github_log_group("Pull/clone branch")
-def git_pull(directory: str, repository: str, branch: str):
+def git_pull(directory: str, repository: str, branch: str, dry_run: bool):
     returncode = 1
 
-    max_attempts = 6
+    max_attempts = 6 if not dry_run else 1
     sleep_time_unit = 3
     for attempt in range(1, max_attempts+1):
         targetdir = os.path.join(WORKDIR, directory)
@@ -311,11 +313,11 @@ def git_pull(directory: str, repository: str, branch: str):
                 git checkout {branch}
                 git fetch
                 git reset --hard @{{u}}
-            """)
+            """, dry_run)
         else:
             returncode = subprocess_with_log(f"""
                 git clone --branch {branch} --single-branch {repository} "{targetdir}"
-            """)
+            """, dry_run)
 
         if returncode == 0:
             return
@@ -370,7 +372,7 @@ def show_node_state() -> None:
         build_utils.print_warning("Failed to extract node state")
 
 @github_log_group("Run tests")
-def run_ctest(extra_ctest_flags: str) -> int:
+def run_ctest(extra_ctest_flags: str, dry_run: bool) -> int:
     """
     Just return the exit code in case of test failures instead of `die()`-ing; report test
     failures in main().
@@ -381,7 +383,7 @@ def run_ctest(extra_ctest_flags: str) -> int:
         cd '{builddir}'
         {setupROOTEnv}
         ctest --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
-    """)
+    """, dry_run)
     if WINDOWS and ctest_result != 0:
         ctest_result = subprocess_with_log(f"""
             cd '{builddir}'
@@ -419,7 +421,7 @@ def archive_and_upload(archive_name, prefix):
 
 
 @github_log_group("Configure")
-def cmake_configure(options, buildtype):
+def cmake_configure(options, buildtype, dry_run: bool):
     srcdir = os.path.join(WORKDIR, "src")
     builddir = os.path.join(WORKDIR, "build")
 
@@ -430,7 +432,7 @@ def cmake_configure(options, buildtype):
 
     result = subprocess_with_log(f"""
         cmake -S '{srcdir}' -B '{builddir}' -DCMAKE_BUILD_TYPE={buildtype} {options}
-    """)
+    """, dry_run)
 
     if result != 0:
         die(result, "Failed cmake generation step")
@@ -466,8 +468,8 @@ def cmake_build_command(buildtype) -> str:
 
 
 @github_log_group("Build")
-def cmake_build(buildtype):
-    result = subprocess_with_log(cmake_build_command(buildtype))
+def cmake_build(buildtype, dry_run: bool):
+    result = subprocess_with_log(cmake_build_command(buildtype), dry_run)
 
     if result != 0:
         die(result, "Failed to build")
@@ -498,40 +500,39 @@ def check_for_spurious_rebuilds(buildtype) -> bool:
     return not touched
 
 
-def build(options, buildtype):
+def build(options, buildtype, dry_run: bool):
     if not os.path.isdir(os.path.join(WORKDIR, "build")):
         builddir = os.path.join(WORKDIR, "build")
-        result = subprocess_with_log(f"mkdir {builddir}")
-
+        result = subprocess_with_log(f"mkdir {builddir}", dry_run)
         if result != 0:
             die(result, "Failed to create build directory")
 
     if not os.path.exists(os.path.join(WORKDIR, "build", "CMakeCache.txt")):
-        cmake_configure(options, buildtype)
+        cmake_configure(options, buildtype, dry_run)
     else:
         cmake_dump_config()
 
     dump_requested_config(options)
 
-    cmake_build(buildtype)
+    cmake_build(buildtype, dry_run)
 
 
 @github_log_group("Create binary packages")
-def create_binaries(buildtype):
+def create_binaries(buildtype, dry_run: bool):
     builddir = os.path.join(WORKDIR, "build")
     packagedir = os.path.join(WORKDIR, "packages")
     os.makedirs(packagedir, exist_ok=True)
     result = subprocess_with_log(f"""
         cd '{builddir}'
         cpack -B {packagedir} --verbose -C {buildtype}
-    """)
+    """, dry_run)
 
     if result != 0:
         die(result, "Failed to generate binary package")
 
 
 @github_log_group("Rebase")
-def rebase(directory: str, repository:str, base_ref: str, head_ref: str, head_sha: str) -> None:
+def rebase(directory: str, repository:str, base_ref: str, head_ref: str, head_sha: str, dry_run: bool) -> None:
     # rebase fails unless user.email and user.name is set
     targetdir = os.path.join(WORKDIR, directory)
     if (head_sha and head_ref):
@@ -548,7 +549,7 @@ def rebase(directory: str, repository:str, base_ref: str, head_ref: str, head_sh
         git fetch {repository} {branch}
         git checkout {head_ref}
         git rebase {base_ref}
-    """)
+    """, dry_run)
 
     if result != 0:
         die(result, "Rebase failed")
@@ -581,7 +582,7 @@ def get_stdout_subprocess(command: str, error_message: str) -> str:
 
 
 @github_log_group("Rebase")
-def get_base_head_sha(directory: str, repository: str, merge_sha: str, head_sha: str) -> str:
+def get_base_head_sha(directory: str, repository: str, merge_sha: str, head_sha: str, dry_run: bool) -> str:
   """
   get_base_head_sha
 
@@ -589,18 +590,19 @@ def get_base_head_sha(directory: str, repository: str, merge_sha: str, head_sha:
   the commit corresponding to the head of the branch we are merging into.
   """
   targetdir = os.path.join(WORKDIR, directory)
-  command = f"""
+  result = subprocess_with_log(f"""
       cd '{targetdir}'
       git fetch {repository} {merge_sha}
-      """
-  result = subprocess_with_log(command)
+      """, dry_run)
   if result != 0:
       die("Failed to fetch {merge_sha} from {repository}")
-  command = f"""
-      cd '{targetdir}'
-      git rev-list --parents -1 {merge_sha}
-      """
-  result = get_stdout_subprocess(command, "Failed to find the base branch head for this pull request")
+
+  if not dry_run:
+      command = f"""
+          cd '{targetdir}'
+          git rev-list --parents -1 {merge_sha}
+          """
+      result = get_stdout_subprocess(command, "Failed to find the base branch head for this pull request")
 
   for s in result.split(' '):
     if (s != merge_sha and s != head_sha):
@@ -609,7 +611,7 @@ def get_base_head_sha(directory: str, repository: str, merge_sha: str, head_sha:
   return ""
 
 @github_log_group("Create Test Coverage in XML")
-def create_coverage_xml() -> None:
+def create_coverage_xml(dry_run: bool) -> None:
     builddir = os.path.join(WORKDIR, "build")
     ignore_directories = "runtutorials|interpreter|.*-prefix|bindings/pyroot/cppyy"
     ignore_subpattern = "externals|ginclude|googletest-prefix|macosx|winnt|geombuilder|cocoa|quartz|win32gdk|x11|x11ttf|eve|fitpanel|ged|gui|guibuilder|guihtml|qtgsi|qtroot|recorder|sessionviewer|tmvagui|treeviewer|geocad|fitsio|gviz|qt|gviz3d|x3d|spectrum|spectrumpainter|dcache|hdfs"
@@ -623,7 +625,7 @@ def create_coverage_xml() -> None:
     result = subprocess_with_log(f"""
         cd '{builddir}'
         gcovr -j {os.cpu_count()} --output=cobertura-cov.xml --cobertura-pretty {ignore_errors} --merge-mode-functions=merge-use-line-min --exclude-unreachable-branches --exclude-directories="{ignore_directories}" --exclude='.*/({ignore_subpattern})/.*' {exclude_dictionaries} -r ../src ../build
-    """)
+    """, dry_run)
 
     if result != 0:
         die(result, "Failed to create test coverage")
