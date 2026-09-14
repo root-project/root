@@ -506,7 +506,7 @@ def check_for_spurious_rebuilds(buildtype) -> bool:
     return not touched
 
 
-def build(options, buildtype, **kwargs):
+def build(options, **kwargs):
     if not os.path.isdir(os.path.join(WORKDIR, "build")):
         builddir = os.path.join(WORKDIR, "build")
         result = subprocess_with_log(f"mkdir {builddir}")
