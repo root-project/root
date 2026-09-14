@@ -36,8 +36,9 @@ void kalman(std::string machine = "",int sym=1,int cut =6) {
 
 int read_data(const char *  machine, double * s, double * ss, double * t) {
 
-   char filename[100];
-   sprintf(filename,"%s.root",machine);
+   const unsigned filenameSize = 100;
+   char filename[filenameSize];
+   snprintf(filename, filenameSize, "%s.root",machine);
    TFile * file = new TFile(filename,machine);
    if (file == 0) return -1;
    SMatrix<double,9,7,ROOT::Math::MatRepStd<double,9,7> > *ms;
@@ -77,13 +78,14 @@ void kalman_do(const char *machine,int sym, int cut) {
    static Int_t xtop = 0, ytop = 0;
    xtop += 10; ytop += 10;
    TCanvas *c1 = 0;
-   char tmachine[50];
+   const unsigned tmachineSize = 50;
+   char tmachine[tmachineSize];
 
    double s[n];
    double ss[n];
    double t[n];
 
-   sprintf(tmachine,"%s",machine);
+   snprintf(tmachine, tmachineSize, "%s",machine);
    c1 = new TCanvas(machine,machine,xtop,ytop,800,650);
    if (read_data(machine,s,ss,t)) return;
 
@@ -126,19 +128,20 @@ void kalman_do(const char *machine,int sym, int cut) {
    ts.SetTextSize(0.031);
    tt.SetTextColor(kRed);
    tt.SetTextSize(0.031);
-   char text[21];
+   const unsigned textSize = 21;
+   char text[textSize];
    ts.SetTextAlign(22);
    for (i=0;i<=nx;i++) {
       line.DrawLine(xmin+i*dx,ymin,xmin+i*dx,ymax);
       if(i==nx) continue;
-      sprintf(text,"%d",i+2);
+      snprintf(text, textSize, "%d",i+2);
       ts.DrawText(xmin+(i+0.5)*dx,ymax+0.1*dy,text);
    }
    ts.SetTextAlign(32);
    for (i=0;i<=ny;i++) {
       line.DrawLine(xmin,ymax-i*dy,xmax,ymax-i*dy);
       if(i==ny) continue;
-      sprintf(text,"%d",i+2);
+      snprintf(text, textSize, "%d",i+2);
       ts.DrawText(xmin-0.1*dx,ymax-(i+0.5)*dy,text);
    }
    tss.SetTextAlign(22);
@@ -152,11 +155,11 @@ void kalman_do(const char *machine,int sym, int cut) {
    double sumt2  = 0;
    for (i=0;i<nx;i++) {
       for (j=0;j<ny;j++) {
-         sprintf(text,"%6.2f",ss[ny*i+j]);
+         snprintf(text, textSize, "%6.2f",ss[ny*i+j]);
          tss.DrawText(xmin+(i+0.5)*dx,ymax -(j+0.22)*dy,text);
-         sprintf(text,"%6.2f",s[ny*i+j]);
+         snprintf(text, textSize, "%6.2f",s[ny*i+j]);
          ts.DrawText(xmin+(i+0.5)*dx,ymax -(j+0.5)*dy,text);
-         sprintf(text,"%6.2f",t[ny*i+j]);
+         snprintf(text, textSize, "%6.2f",t[ny*i+j]);
          tt.DrawText(xmin+(i+0.5)*dx,ymax -(j+0.78)*dy,text);
          if ( i <=cut-2 && j <=cut-2) {
             sums1  += s[ny*i+j];
@@ -174,8 +177,9 @@ void kalman_do(const char *machine,int sym, int cut) {
    ts.DrawText (xmin+2.5*dx,0.05,"SMatrix");
    tt.DrawText (xmin+4*dx,0.05,"TMatrix");
    ts.SetTextSize(0.05);
-   char title[100];
-   sprintf(title,"TestKalman [nx,ny] : %s",tmachine);
+   const unsigned titleSize = 100;
+   char title[titleSize];
+   snprintf(title, titleSize, "TestKalman [nx,ny] : %s",tmachine);
    ts.DrawText(0.5,0.96,title);
 
 
@@ -197,7 +201,7 @@ void kalman_do(const char *machine,int sym, int cut) {
    tt.SetTextAlign(22);
 
    i = 2;
-   sprintf(text,"N1,N2 <= %d",cut);
+   snprintf(text, textSize, "N1,N2 <= %d",cut);
    tl.DrawText (xmin+i*dx-0.15,ylow+0.04,text);
    if (sym == 0) {
       if (sums1 <= sumt1)
@@ -207,16 +211,16 @@ void kalman_do(const char *machine,int sym, int cut) {
       if (sumss1 <= sumt1)
          box.DrawBox(xmin+i*dx,ylow,xmin+(i+1)*dx,ylow+dy);
    }
-   sprintf(text,"%6.2f",sumss1);
+   snprintf(text, textSize, "%6.2f",sumss1);
    tss.DrawText(xmin+(i+0.5)*dx,ylow+0.078,text);
-   sprintf(text,"%6.2f",sums1);
+   snprintf(text, textSize, "%6.2f",sums1);
    ts.DrawText(xmin+(i+0.5)*dx,ylow+0.05,text);
-   sprintf(text,"%6.2f",sumt1);
+   snprintf(text, textSize, "%6.2f",sumt1);
    tt.DrawText(xmin+(i+0.5)*dx,ylow+0.022,text);
 
 
    i = 5;
-   sprintf(text,"N1,N2 >  %d",cut);
+   snprintf(text, textSize, "N1,N2 >  %d",cut);
    tl.DrawText (xmin+i*dx-0.15,ylow+0.04,text);
    if (sym == 0) {
       if (sums2 <= sumt2)
@@ -226,11 +230,11 @@ void kalman_do(const char *machine,int sym, int cut) {
       if (sumss2 <= sumt2)
          box.DrawBox(xmin+i*dx,ylow,xmin+(i+1)*dx,ylow+dy);
    }
-   sprintf(text,"%6.2f",sumss2);
+   snprintf(text, textSize, "%6.2f",sumss2);
    tss.DrawText(xmin+(i+0.5)*dx,ylow+0.078,text);
-   sprintf(text,"%6.2f",sums2);
+   snprintf(text, textSize, "%6.2f",sums2);
    ts.DrawText(xmin+(i+0.5)*dx,ylow+0.05,text);
-   sprintf(text,"%6.2f",sumt2);
+   snprintf(text, textSize, "%6.2f",sumt2);
    tt.DrawText(xmin+(i+0.5)*dx,ylow+0.022,text);
 
    i= 8;
@@ -243,11 +247,11 @@ void kalman_do(const char *machine,int sym, int cut) {
       if (sumss1+sumss2 <= sumt1+sumt2)
          box.DrawBox(xmin+i*dx,ylow,xmin+(i+1)*dx,ylow+dy);
    }
-   sprintf(text,"%6.2f",sumss1+sumss2);
+   snprintf(text, textSize, "%6.2f",sumss1+sumss2);
    tss.DrawText(xmin+(i+0.5)*dx,ylow+0.078,text);
-   sprintf(text,"%6.2f",sums1+sums2);
+   snprintf(text, textSize, "%6.2f",sums1+sums2);
    ts.DrawText(xmin+(i+0.5)*dx,ylow+0.05,text);
-   sprintf(text,"%6.2f",sumt1+sumt2);
+   snprintf(text, textSize, "%6.2f",sumt1+sumt2);
    tt.DrawText(xmin+(i+0.5)*dx,ylow+0.022,text);
 }
 
