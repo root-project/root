@@ -109,6 +109,8 @@ Note: if you build ROOT with option `dev=ON`, the header `RConfigure.h` will alr
 
 ## Python Interface
 
+ROOT dropped support for Python 3.10, meaning ROOT now requires at least Python 3.11.
+
 ### Connecting Python callables to signals
 
 `TQObject::Connect()` now directly accepts a Python callable as the slot, for

@@ -481,7 +481,7 @@ endif()
 if(tmva-pymva)
   list(APPEND python_components NumPy)
 endif()
-find_package(Python3 3.10 COMPONENTS ${python_components})
+find_package(Python3 3.11 COMPONENTS ${python_components})
 
 # Detect whether the found Python interpreter is a free-threaded build
 # (Py_GIL_DISABLED is defined in pyconfig.h). The limited C API is not
