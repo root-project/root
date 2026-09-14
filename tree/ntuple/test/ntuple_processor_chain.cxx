@@ -89,9 +89,7 @@ TEST_F(RNTupleChainProcessorTest, SingleNTuple)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-
-      EXPECT_FLOAT_EQ(static_cast<float>(proc->GetCurrentEntryNumber()), *x);
+      EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
    }
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
@@ -115,8 +113,6 @@ TEST_F(RNTupleChainProcessorTest, Basic)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-
       EXPECT_EQ(static_cast<float>(idx), *x);
 
       std::vector<float> yExp = {static_cast<float>(idx), static_cast<float>((idx) * 2)};
@@ -196,19 +192,15 @@ TEST_F(RNTupleChainProcessorTest, LoadRandomEntry)
 
    RNTupleProcessorEntryLoader::LoadEntry(*proc, 3);
    EXPECT_EQ(3.f, *x);
-   EXPECT_EQ(0, proc->GetCurrentProcessorNumber());
 
    RNTupleProcessorEntryLoader::LoadEntry(*proc, 9);
    EXPECT_EQ(9.f, *x);
-   EXPECT_EQ(1, proc->GetCurrentProcessorNumber());
 
    RNTupleProcessorEntryLoader::LoadEntry(*proc, 6);
    EXPECT_EQ(6.f, *x);
-   EXPECT_EQ(1, proc->GetCurrentProcessorNumber());
 
    RNTupleProcessorEntryLoader::LoadEntry(*proc, 2);
    EXPECT_EQ(2.f, *x);
-   EXPECT_EQ(0, proc->GetCurrentProcessorNumber());
 
    EXPECT_EQ(ROOT::kInvalidNTupleIndex, RNTupleProcessorEntryLoader::LoadEntry(*proc, 10));
 }
@@ -235,8 +227,6 @@ TEST_F(RNTupleChainProcessorTest, TMemFile)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-
       EXPECT_EQ(static_cast<float>(idx), *x);
    }
    EXPECT_EQ(10, proc->GetNEntriesProcessed());

@@ -392,16 +392,6 @@ public:
    ROOT::NTupleSize_t GetNEntriesProcessed() const { return fNEntriesProcessed; }
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the entry number that is currently being processed.
-   ROOT::NTupleSize_t GetCurrentEntryNumber() const { return fCurrentEntryNumber; }
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the number of the inner processor currently being read.
-   ///
-   /// This method is only relevant for the RNTupleChainProcessor. For the other processors, 0 is always returned.
-   std::size_t GetCurrentProcessorNumber() const { return fCurrentProcessorNumber; }
-
-   /////////////////////////////////////////////////////////////////////////////
    /// \brief Request access to a field for reading during processing.
    ///
    /// \tparam T Type of the requested field.
