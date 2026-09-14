@@ -1294,7 +1294,7 @@ TEST(RooFitHS3, RooHistPdf)
 
 TEST(RooFitHS3, RooBinWidthFunctionUsesBinVolumeKeys)
 {
-   RooRealVar x{"x", "x", 0.0, 2.0};
+   RooRealVar x{"x", "x", 0.0, 6.0};
    x.setBins(2);
 
    RooDataHist dataHist{"dataHist", "dataHist", x};
@@ -1302,6 +1302,9 @@ TEST(RooFitHS3, RooBinWidthFunctionUsesBinVolumeKeys)
    dataHist.set(1, 4.0, -1);
 
    RooHistFunc histFunc{"histFunc", "histFunc", x, dataHist};
+   // The function must use the live variable's binning, not the data histogram's.
+   const double edges[] = {0., 1., 3., 6.};
+   x.setBinning(RooBinning{3, edges});
    RooBinWidthFunction binVolume{"binVolume", "binVolume", histFunc, false};
    RooBinWidthFunction inverseBinVolume{"inverseBinVolume", "inverseBinVolume", histFunc, true};
 
@@ -1323,6 +1326,99 @@ TEST(RooFitHS3, RooBinWidthFunctionUsesBinVolumeKeys)
    ASSERT_NE(importedInverseBinVolume, nullptr);
    EXPECT_FALSE(importedBinVolume->divideByBinWidth());
    EXPECT_TRUE(importedInverseBinVolume->divideByBinWidth());
+   EXPECT_EQ(json.find("\"histogram\""), std::string::npos) << json;
+   EXPECT_EQ(ws2.function("histFunc"), nullptr);
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   const auto *function = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["functions"], "binVolume");
+   ASSERT_NE(function, nullptr);
+   ASSERT_EQ((*function)["variables"].num_children(), 1u);
+   EXPECT_EQ((*function)["variables"].child(0).val(), "x");
+   EXPECT_FALSE(function->has_child("edges"));
+   EXPECT_FALSE(function->has_child("nbins"));
+   const auto *domain = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["domains"], "default_domain");
+   ASSERT_NE(domain, nullptr);
+   const auto *axis = RooJSONFactoryWSTool::findNamedChild((*domain)["axes"], "x");
+   ASSERT_NE(axis, nullptr);
+   ASSERT_EQ((*axis)["edges"].num_children(), 4u);
+   for (int i = 0; i < 4; ++i) EXPECT_DOUBLE_EQ((*axis)["edges"].child(i).val_double(), edges[i]);
+   for (int i = 0; i < 3; ++i) {
+      ws1.var("x")->setBin(i);
+      ws2.var("x")->setBin(i);
+      EXPECT_DOUBLE_EQ(ws1.function("binVolume")->getVal(), edges[i + 1] - edges[i]);
+      EXPECT_DOUBLE_EQ(importedBinVolume->getVal(), edges[i + 1] - edges[i]);
+      EXPECT_DOUBLE_EQ(importedInverseBinVolume->getVal(), 1. / (edges[i + 1] - edges[i]));
+   }
+}
+
+// This fixture carries binning exclusively in domains, with no histogram or
+// function-local binning metadata. Exercise both import and re-export.
+TEST(RooFitHS3, RooBinWidthFunctionBinningFromDomains)
+{
+   const std::string input = R"({
+  "metadata": {"hs3_version": "0.1.90"},
+  "domains": [{
+    "name": "default_domain",
+    "type": "product_domain",
+    "axes": [
+      {"name": "x", "min": 0.0, "max": 6.0, "edges": [0.0, 1.0, 3.0, 6.0]},
+      {"name": "y", "min": 0.0, "max": 10.0, "nbins": 2}
+    ]
+  }],
+  "parameter_points": [{
+    "name": "default_values",
+    "parameters": [{"name": "x", "value": 0.5}, {"name": "y", "value": 2.0}]
+  }],
+  "functions": [
+    {"name": "volume", "type": "binvolume", "variables": ["x", "y"]},
+    {"name": "inverse", "type": "inverse_binvolume", "variables": ["x", "y"]}
+  ]
+})";
+   RooWorkspace original;
+   ASSERT_TRUE(RooJSONFactoryWSTool{original}.importJSONfromString(input));
+   const std::string json = RooJSONFactoryWSTool{original}.exportJSONtoString();
+   RooWorkspace restored;
+   ASSERT_TRUE(RooJSONFactoryWSTool{restored}.importJSONfromString(json));
+   for (auto *ws : {&original, &restored}) {
+      ASSERT_NE(ws->function("volume"), nullptr);
+      ASSERT_NE(ws->function("inverse"), nullptr);
+      ASSERT_NE(ws->var("x"), nullptr);
+      ASSERT_NE(ws->var("y"), nullptr);
+      EXPECT_EQ(ws->var("x")->numBins(), 3);
+      EXPECT_EQ(ws->var("y")->numBins(), 2);
+      for (int bin = 0; bin < 3; ++bin) {
+         ws->var("x")->setBin(bin);
+         for (int ybin = 0; ybin < 2; ++ybin) {
+            ws->var("y")->setBin(ybin);
+            EXPECT_DOUBLE_EQ(ws->function("volume")->getVal(), (bin + 1.) * 5.);
+            EXPECT_DOUBLE_EQ(ws->function("inverse")->getVal(), 1. / ((bin + 1.) * 5.));
+         }
+      }
+   }
+}
+
+TEST(RooFitHS3, RooBinWidthFunctionLegacyHistogramReference)
+{
+   RooRealVar x{"x", "x", 0., 6.};
+   const double edges[] = {0., 1., 3., 6.};
+   x.setBinning(RooBinning{3, edges});
+   RooDataHist data{"data", "data", x};
+   RooHistFunc hist{"hist", "hist", x, data};
+   RooWorkspace ws;
+   ws.import(hist, RooFit::Silence());
+   auto tree = RooFit::Detail::JSONTree::create(RooJSONFactoryWSTool{ws}.exportJSONtoString());
+   for (auto *type : {"binvolume", "inverse_binvolume"}) {
+      auto &function = tree->rootnode()["functions"].append_child().set_map();
+      function["name"] << type;
+      function["type"] << type;
+      function["histogram"] << "hist";
+   }
+   RooWorkspace restored;
+   ASSERT_TRUE(RooJSONFactoryWSTool{restored}.importJSONfromString(jsonString(*tree)));
+   for (int bin = 0; bin < 3; ++bin) {
+      restored.var("x")->setBin(bin);
+      EXPECT_DOUBLE_EQ(restored.function("binvolume")->getVal(), bin + 1.);
+      EXPECT_DOUBLE_EQ(restored.function("inverse_binvolume")->getVal(), 1. / (bin + 1.));
+   }
 }
 
 TEST(RooFitHS3, StepDispatchesToRooHistFuncAndParamHistFunc)
