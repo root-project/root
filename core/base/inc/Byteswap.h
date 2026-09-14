@@ -11,6 +11,8 @@
 #ifndef ROOT_Byteswap
 #define ROOT_Byteswap
 
+//TO-DO when C++23: use std::byteswap
+
 /* Originally (mid-1990s), this file contained copy/pasted assembler from RH6.0's
  * version of <bits/byteswap.h>.  Hence, we keep a copy of the FSF copyright below.
  * I believe all the original code has been excised, perhaps with exception of the
@@ -53,12 +55,18 @@
 #endif
 #endif /* R__USEASMSWAP */
 
+#if defined(__APPLE__) && defined(R__USEASMSWAP)
+#include <libkern/OSByteOrder.h>
+#endif
+
 /* Swap bytes in 16 bit value.  */
 #define R__bswap_constant_16(x) \
      ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8))
 
 #if defined(R__USEASMSWAP)
-# if defined(__GNUC__)
+# if defined(__APPLE__)
+#  define R__bswap_16(x) OSSwapInt16(x)
+# elif defined(__GNUC__) || defined(__clang__)
 #  define R__bswap_16(x) __builtin_bswap16(x)
 # elif defined(_MSC_VER)
 #  define R__bswap_16(x) _byteswap_ushort(x)
@@ -73,7 +81,9 @@
       (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
 
 #if defined(R__USEASMSWAP)
-# if defined(__GNUC__)
+# if defined(__APPLE__)
+#  define R__bswap_32(x) OSSwapInt32(x)
+# elif defined(__GNUC__) || defined(__clang__)
 #  define R__bswap_32(x) __builtin_bswap32(x)
 # elif defined(_MSC_VER)
 #  define R__bswap_32(x) _byteswap_ulong(x)
@@ -91,7 +101,9 @@ static inline uint64_t R__bswap_constant_64(uint64_t x) {
 }
 
 #if defined(R__USEASMSWAP)
-# if defined(__GNUC__)
+# if defined(__APPLE__)
+#  define R__bswap_64(x) OSSwapInt64(x)
+# elif defined(__GNUC__) || defined(__clang__)
 #  define R__bswap_64(x) __builtin_bswap64(x)
 # elif defined(_MSC_VER)
 #  define R__bswap_64(x) _byteswap_uint64(x)
@@ -120,6 +132,7 @@ static inline uint64_t R__bswap_constant_64(uint64_t x) {
 ///    x = RByteSwap<sizeof(T)>::bswap(reinterpret_cast<value_type>(x));
 /// }
 /// ```
+// TO-DO when C++23: use std::byteswap and remove this header and struct
 template <unsigned N>
 struct RByteSwap {
 };
