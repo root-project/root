@@ -661,7 +661,7 @@ target_compile_definitions(RConfigDefs INTERFACE
   $<$<BOOL:${NEEDS_LARGEFILE64}>:_LARGEFILE64_SOURCE>
   $<$<BOOL:${HAS_STRLCPY}>:HAS_STRLCPY=1> # TODO move this just to Clib and remove from global defs
   $<$<BOOL:${NEEDS_I486}>:__i486__>
-  $<$<AND:$<STREQUAL:${CMAKE_SYSTEM_NAME},GNU/Hurd>,$<EQUAL:${CMAKE_SIZEOF_VOID_P},4>>:R__HURD;f2cFortran>
+  $<$<AND:$<STREQUAL:${CMAKE_SYSTEM_NAME},GNU>,$<EQUAL:${CMAKE_SIZEOF_VOID_P},4>>:R__HURD;f2cFortran>
   $<$<PLATFORM_ID:FreeBSD>:R__FBSD>
   $<$<PLATFORM_ID:OpenBSD>:R__OBSD>
   $<$<PLATFORM_ID:Apple>:R__MACOSX>
