@@ -125,7 +125,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::Initialize(
    if (!entry)
       fEntry = std::make_shared<Internal::RNTupleProcessorEntry>();
    else
-      fEntry = entry;
+      fEntry = std::move(entry);
 
    fPageSource = fNTupleSpec.CreatePageSource();
    fPageSource->Attach();
@@ -299,7 +299,7 @@ void ROOT::Experimental::RNTupleChainProcessor::Initialize(
    if (!entry)
       fEntry = std::make_shared<Internal::RNTupleProcessorEntry>();
    else
-      fEntry = entry;
+      fEntry = std::move(entry);
 
    fInnerProcessors[0]->Initialize(fEntry);
 }
@@ -432,7 +432,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::Initialize(
    if (!entry)
       fEntry = std::make_shared<Internal::RNTupleProcessorEntry>();
    else
-      fEntry = entry;
+      fEntry = std::move(entry);
 
    fPrimaryProcessor->Initialize(fEntry);
    fAuxiliaryProcessor->Initialize(fEntry);
