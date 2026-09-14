@@ -1822,8 +1822,11 @@ Bool_t TRootCanvas::HandleContainerButton(Event_t *event)
    if (event->fType == kButtonPress) {
       if (fToolTip && fCanvas->GetShowToolTips()) {
          fToolTip->Hide();
-         gVirtualX->UpdateWindowW(gVirtualX->GetWindowContext(fCanvasID), 0);
-         gSystem->ProcessEvents();
+         // do not sync GL canvas - avoid flicking
+         if (!fCanvas->UseGL() && (fCanvasID != -1)) {
+            gVirtualX->UpdateWindowW(gVirtualX->GetWindowContext(fCanvasID), 0);
+            gSystem->ProcessEvents();
+         }
       }
       fButton = button;
       if (button == kButton1) {
