@@ -2771,7 +2771,6 @@ bool MethodUnitTestWithComplexData::create_data(const char *filename, int nmax)
 // Authors: Christoph Rosemann, Eckhard von Toerne   July 2010
 // TMVA unit tests
 
-#include "Riostream.h"
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TBenchmark.h"

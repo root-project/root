@@ -16,8 +16,8 @@
 #include "TConfidenceLevel.h"
 #include "TH1F.h"
 #include "TMath.h"
-#include "Riostream.h"
 
+#include <iostream>
 
 Double_t const TConfidenceLevel::fgMCLM2S = 0.025;
 Double_t const TConfidenceLevel::fgMCLM1S = 0.16;

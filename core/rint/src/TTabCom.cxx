@@ -140,11 +140,12 @@
 #include "TFunction.h"
 #include "TMethodArg.h"
 #include "TInterpreter.h"
-#include "Riostream.h"
 #include "strlcpy.h"
 
-#include <cstdio>
 #include <cassert>
+#include <cstdio>
+#include <fstream>
+#include <iostream>
 #include <set>
 #include <sstream>
 

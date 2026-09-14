@@ -13,7 +13,6 @@
 #include "TStyle.h"
 #include "TVirtualPad.h"
 #include "TEfficiency.h"
-#include "Riostream.h"
 
 #include "TArrayD.h"
 #include "TVector.h"
@@ -24,6 +23,8 @@
 
 #include "TGraphMultiErrors.h"
 
+#include <ostream>
+#include <vector>
 
 /** \class TGraphMultiErrors
     \ingroup Graphs
