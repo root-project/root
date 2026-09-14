@@ -1503,6 +1503,11 @@ ROOT::RNTupleDescriptor::RClusterGroupDescriptorIterable ROOT::RNTupleDescriptor
 
 ROOT::RNTupleDescriptor::RClusterDescriptorIterable ROOT::RNTupleDescriptor::GetClusterIterable() const
 {
+   return GetActiveClusterIterable();
+}
+
+ROOT::RNTupleDescriptor::RClusterDescriptorIterable ROOT::RNTupleDescriptor::GetActiveClusterIterable() const
+{
    return RClusterDescriptorIterable(*this);
 }
 
