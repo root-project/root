@@ -35,6 +35,20 @@ if(cocoa)
 
   target_sources(Core PRIVATE $<TARGET_OBJECTS:Macosx>)
 
+  if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
+    target_sources(
+        Macosx
+        PRIVATE
+        FILE_SET private_header_files
+        TYPE HEADERS
+        BASE_DIRS inc/
+        FILES
+            inc/CocoaUtils.h
+            inc/TMacOSXSystem.h
+            inc/LinkDef.h
+    )
+  endif()
+
 endif()
 
 ROOT_INSTALL_HEADERS()
