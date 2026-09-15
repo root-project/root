@@ -20,10 +20,12 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <vector>
 
 #include "ROOT/ML/RBatchLoader.hxx"
+#include "ROOT/ML/RBatchSink.hxx"
 #include "ROOT/ML/RClusterLoader.hxx"
 #include "ROOT/ML/RDatasetLoader.hxx"
 #include "ROOT/ML/RFlat2DMatrix.hxx"
@@ -107,6 +109,54 @@ private:
 
    std::size_t fTrainingEpochCount{0};
    std::size_t fValidationEpochCount{0};
+
+   /// \brief Describe how the loader's columns map onto a batch-tensor row.
+   std::vector<RColumnLayout> MakeColumnLayout() const
+   {
+      std::vector<RColumnLayout> layout;
+      layout.reserve(sizeof...(Args));
+
+      std::size_t colIdx = 0;
+      std::size_t vecIdx = 0;
+      std::size_t offset = 0;
+      (
+         [&] {
+            const bool isVector = ROOT::Internal::VecOps::IsRVec<Args>::value;
+            const std::size_t width = isVector ? fVecSizes[vecIdx++] : 1;
+            layout.push_back({fCols[colIdx++], offset, width, isVector});
+            offset += width;
+         }(),
+         ...);
+
+      return layout;
+   }
+
+   /// \brief Opens a training or validation epoch and closes it again when done
+   struct REpochGuard {
+      RDataLoaderEngine &fEngine;
+      bool fIsTraining;
+
+      REpochGuard(RDataLoaderEngine &engine, bool isTraining) : fEngine(engine), fIsTraining(isTraining)
+      {
+         // Same order as the pythonization's epoch context managers
+         fEngine.Activate();
+         if (fIsTraining) {
+            fEngine.CreateTrainBatches();
+            fEngine.ActivateTrainingEpoch();
+         } else {
+            fEngine.CreateValidationBatches();
+            fEngine.ActivateValidationEpoch();
+         }
+      }
+
+      ~REpochGuard()
+      {
+         if (fIsTraining)
+            fEngine.DeActivateTrainingEpoch();
+         else
+            fEngine.DeActivateValidationEpoch();
+      }
+   };
 
 public:
    RDataLoaderEngine(const std::vector<ROOT::RDF::RNode> &rdfs, const std::size_t batchSize,
@@ -220,6 +270,32 @@ public:
       }
 
       fLoadingThread = std::make_unique<std::thread>(&RDataLoaderEngine::LoadData, this);
+   }
+
+   /// \brief Materialize one train/test split to disk by draining a full epoch through the normal batch
+   /// pipeline and Fill() each batch into \p filename instead of yielding it.
+   ///
+   /// Filters, shuffling, the train/validation split and the batch_size/drop_remainder settings
+   /// are all inherited from the loader's configuration.
+   /// \param outputFormat Either "ttree" or "rntuple".
+   void Save(std::string_view dataset_name, std::string_view filename, bool isTraining, std::string_view outputFormat)
+   {
+      // Cannot invoke mid-epoch
+      if (isTraining ? IsTrainingActive() : IsValidationActive())
+         throw std::runtime_error("RDataLoaderEngine::Save: this dataset is already being iterated elsewhere "
+                                  "(e.g. inside a training loop). Finish or stop that iteration before saving.");
+
+      REpochGuard epoch(*this, isTraining);
+      auto sink = CreateBatchSink(dataset_name, filename, MakeColumnLayout(), outputFormat);
+
+      while (true) {
+         RFlat2DMatrix batch = isTraining ? GetTrainBatch() : GetValidationBatch();
+         if (batch.GetSize() == 0)
+            break;
+         sink->FillBatch(batch);
+      }
+
+      sink->Commit();
    }
 
    /// \brief Activate the training epoch by starting the batchloader.
