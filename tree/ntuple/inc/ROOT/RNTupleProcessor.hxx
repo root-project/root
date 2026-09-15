@@ -297,9 +297,7 @@ protected:
    /// interface.
    ROOT::NTupleSize_t fNEntries = kInvalidNTupleIndex;
 
-   ROOT::NTupleSize_t fNEntriesProcessed = 0;  //< Total number of entries processed so far
-   ROOT::NTupleSize_t fCurrentEntryNumber = 0; //< Current processor entry number
-   std::size_t fCurrentProcessorNumber = 0;    //< Number of the currently open inner processor
+   ROOT::NTupleSize_t fNEntriesProcessed = 0; //< Total number of entries processed so far
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Initialize the processor by creating an (initially empty) `fEntry`, or setting an existing one.
@@ -704,6 +702,9 @@ class RNTupleChainProcessor : public RNTupleProcessor {
 private:
    std::vector<std::unique_ptr<RNTupleProcessor>> fInnerProcessors;
    std::vector<ROOT::NTupleSize_t> fInnerNEntries;
+
+   ROOT::NTupleSize_t fLastLoadedEntry = 0; //< Last (global) entry number that was loaded
+   std::size_t fCurrentProcessorNumber = 0; //< Number of the currently open inner processor
 
    Internal::RNTupleProcessorProvenance fProvenance;
 
