@@ -49,7 +49,6 @@ TEST(RNTupleProcessor, TMemFile)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
 
       EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
    }
@@ -79,7 +78,6 @@ TEST(RNTupleProcessor, TDirectory)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
 
       EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
    }
@@ -186,7 +184,6 @@ TEST_F(RNTupleProcessorTest, Base)
    }
 
    for (auto idx : *proc) {
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
 
       EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
@@ -258,7 +255,6 @@ TEST_F(RNTupleProcessorTest, RequestFieldWithTypeString)
    auto y = proc->RequestField("y", "std::vector<float>", yPtr.get());
 
    for (auto idx : *proc) {
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
 
       EXPECT_FLOAT_EQ(static_cast<float>(idx), *std::static_pointer_cast<float>(x.GetPtr()));
@@ -286,7 +282,6 @@ TEST_F(RNTupleProcessorTest, AlternativeTypes)
    auto yAsRVec = proc->RequestField<ROOT::RVec<float>>("y");
 
    for (auto idx : *proc) {
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
 
       EXPECT_FLOAT_EQ(static_cast<double>(idx), *xAsDouble);
       EXPECT_FLOAT_EQ(idx, *xAsFloat);
@@ -341,7 +336,6 @@ TEST_F(RNTupleProcessorTest, ChainedChain)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
       if ((idx >= 5 && idx < 10) || idx >= 15) {
          EXPECT_EQ(*i, 4 - idx % 5);
          EXPECT_EQ(*z, (4 - idx % 5) * 3.f);
@@ -361,7 +355,6 @@ TEST_F(RNTupleProcessorTest, ChainedChain)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1 + 20, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
 
       if ((idx >= 5 && idx < 10) || idx >= 15) {
          EXPECT_EQ(*i, 4 - idx % 5);
@@ -395,8 +388,7 @@ TEST_F(RNTupleProcessorTest, ChainedJoin)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+      EXPECT_EQ(*i, idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z);
@@ -422,8 +414,7 @@ TEST_F(RNTupleProcessorTest, ChainedJoinUnaligned)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+      EXPECT_EQ(*i, idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 3, *z);
@@ -449,8 +440,7 @@ TEST_F(RNTupleProcessorTest, ChainedJoinMissingEntries)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+      EXPECT_EQ(*i, idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
 
@@ -484,8 +474,7 @@ TEST_F(RNTupleProcessorTest, JoinedChain)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+      EXPECT_EQ(*i, idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z);
@@ -511,8 +500,7 @@ TEST_F(RNTupleProcessorTest, JoinedChainUnaligned)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+      EXPECT_EQ(*i, idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 3, *z);
@@ -538,8 +526,7 @@ TEST_F(RNTupleProcessorTest, JoinedChainMissingEntries)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+      EXPECT_EQ(*i, idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
 
@@ -662,8 +649,7 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimary)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+      EXPECT_EQ(*i, idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z1);
@@ -694,8 +680,7 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimaryMissingEntries)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+      EXPECT_EQ(*i, idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z1);
@@ -736,8 +721,7 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliary)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+      EXPECT_EQ(*i, idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z1);
@@ -771,8 +755,7 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliaryMissingEntries)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+      EXPECT_EQ(*i, idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z1);

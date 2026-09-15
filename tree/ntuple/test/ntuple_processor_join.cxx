@@ -97,7 +97,6 @@ TEST_F(RNTupleJoinProcessorTest, Aligned)
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
 
       yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
       EXPECT_EQ(yExpected, *y);
@@ -234,9 +233,9 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
    auto a = proc->RequestField<float>("ntuple4.a");
 
    for (auto idx : *proc) {
-      EXPECT_EQ(proc->GetCurrentEntryNumber(), idx);
+      EXPECT_EQ(proc->GetNEntriesProcessed(), idx + 1);
 
-      EXPECT_FLOAT_EQ(proc->GetCurrentEntryNumber() * 2, *i);
+      EXPECT_FLOAT_EQ(idx * 2, *i);
       EXPECT_FLOAT_EQ(*i * 0.5f, *x);
       EXPECT_EQ(*i * 0.1f, *a);
    }
