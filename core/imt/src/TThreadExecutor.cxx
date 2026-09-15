@@ -9,6 +9,7 @@
 #if !defined(_MSC_VER)
 #pragma GCC diagnostic pop
 #endif
+#include <ROOT/InternalIMTUtils.hxx>
 
 //////////////////////////////////////////////////////////////////////////
 ///
@@ -214,3 +215,39 @@ unsigned TThreadExecutor::GetPoolSize() const
 }
 
 } // namespace ROOT
+
+namespace {
+struct RSplittableRange {
+
+   // Needs to be a copyable type to comply with TBB's Range requirements
+   // See
+   // https://oneapi-spec.uxlfoundation.org/specifications/oneapi/latest/elements/onetbb/source/named_requirements/algorithms/range
+   std::shared_ptr<ROOT::Internal::IMTUtils::RParallelSplitFileProcessor> fFileProcessor;
+
+   RSplittableRange(std::shared_ptr<ROOT::Internal::IMTUtils::RParallelSplitFileProcessor> fp) : fFileProcessor(fp) {}
+
+   RSplittableRange(RSplittableRange &r, tbb::split) : fFileProcessor(r.fFileProcessor->SplitWork()) {}
+   bool is_divisible() const { return fFileProcessor->IsDivisible(); }
+   bool empty() const { return fFileProcessor->Empty(); }
+};
+
+} // namespace
+
+void ROOT::TThreadExecutor::ParallelFor(
+   std::shared_ptr<ROOT::Internal::IMTUtils::RParallelSplitFileProcessor> fileProcessor,
+   const std::function<void(const ROOT::Internal::IMTUtils::RParallelSplitFileProcessor &)> &body)
+{
+   fTaskArenaW->Access().execute([&] {
+      tbb::this_task_arena::isolate([&] {
+         tbb::parallel_for(RSplittableRange{fileProcessor},
+                           [body](const RSplittableRange &r) { body(*r.fFileProcessor); });
+      });
+   });
+}
+
+void ROOT::Internal::IMTUtils::ParallelFor(
+   ROOT::TThreadExecutor &pool, std::shared_ptr<ROOT::Internal::IMTUtils::RParallelSplitFileProcessor> proc,
+   const std::function<void(const ROOT::Internal::IMTUtils::RParallelSplitFileProcessor &)> &body)
+{
+   pool.ParallelFor(proc, body);
+}

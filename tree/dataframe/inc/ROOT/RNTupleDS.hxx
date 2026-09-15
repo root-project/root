@@ -35,6 +35,36 @@
 namespace ROOT {
 class RDataFrame;
 }
+
+namespace ROOT::Detail::RDF {
+class RLoopManager;
+}
+
+namespace ROOT::Internal {
+class RSlotStack;
+}
+
+namespace ROOT {
+class RFieldBase;
+class RDataFrame;
+class RNTuple;
+} // namespace ROOT
+namespace ROOT::Detail::RDF {
+class RNodeBase;
+}
+namespace ROOT::RDF {
+template <typename T>
+class RInterface;
+}
+namespace ROOT::Internal::RDF {
+class RNTupleColumnReader;
+std::vector<std::pair<std::uint64_t, std::uint64_t>>
+GetDatasetGlobalClusterBoundaries(const ROOT::RDF::RInterface<ROOT::Detail::RDF::RNodeBase> &node);
+} // namespace ROOT::Internal::RDF
+namespace ROOT::Internal {
+class RPageSource;
+}
+
 namespace ROOT::Internal::RDF {
 /**
  * \brief Internal overload of the function that allows passing a range of entries
@@ -55,28 +85,21 @@ ROOT::RDataFrame FromRNTuple(std::string_view ntupleName, const std::vector<std:
  */
 std::pair<std::vector<ROOT::Internal::RNTupleClusterBoundaries>, ROOT::NTupleSize_t>
 GetClustersAndEntries(std::string_view ntupleName, std::string_view location);
+
+/**
+ * \brief Retrieves the cluster boundaries and the number of entries for the input RNTuple
+ *
+ * \param[in] pageSource the concrete page source
+ */
+std::pair<std::vector<ROOT::Internal::RNTupleClusterBoundaries>, ROOT::NTupleSize_t>
+GetClustersAndEntries(const ROOT::Internal::RPageSource &);
 } // namespace ROOT::Internal::RDF
 
+#ifdef R__USE_IMT
 namespace ROOT {
-class RFieldBase;
-class RDataFrame;
-class RNTuple;
-} // namespace ROOT
-namespace ROOT::Detail::RDF {
-class RNodeBase;
+class TThreadExecutor;
 }
-namespace ROOT::RDF {
-template <typename T>
-class RInterface;
-}
-namespace ROOT::Internal::RDF {
-class RNTupleColumnReader;
-std::vector<std::pair<std::uint64_t, std::uint64_t>>
-GetDatasetGlobalClusterBoundaries(const ROOT::RDF::RInterface<ROOT::Detail::RDF::RNodeBase> &node);
-}
-namespace ROOT::Internal {
-class RPageSource;
-}
+#endif
 
 namespace ROOT::RDF {
 class RNTupleDS final : public ROOT::RDF::RDataSource {
@@ -86,10 +109,11 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// The GetEntryRanges() swaps fNextRanges and fCurrentRanges and uses the list of
    /// REntryRangeDS records to return the list of ranges ready to use by the RDF loop manager.
    struct REntryRangeDS {
-      std::unique_ptr<ROOT::Internal::RPageSource> fSource;
+      std::shared_ptr<ROOT::Internal::RPageSource> fSource;
       ULong64_t fFirstEntry = 0; ///< First entry index in fSource
       /// End entry index in fSource, e.g. the number of entries in the range is fLastEntry - fFirstEntry
       ULong64_t fLastEntry = 0;
+      ULong64_t fEntryOffset = 0; /// Offset of both first and last entries w.r.t. the page source
       std::string_view fFileName; ///< Storage location of the current RNTuple
    };
 
@@ -115,7 +139,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    ///         and
    ///      c) trigger staging of the next batch of files in the I/O background thread.
    ///   4. On `Finalize()`, the I/O background thread is stopped.
-   std::vector<std::unique_ptr<ROOT::Internal::RPageSource>> fStagingArea;
+   std::vector<std::shared_ptr<ROOT::Internal::RPageSource>> fStagingArea;
    std::size_t fNextFileIndex = 0; ///< Index into fFileNames to the next file to process
 
    /// We prepare a prototype field for every column. If a column reader is actually requested
@@ -143,14 +167,15 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
 
    std::vector<REntryRangeDS> fCurrentRanges; ///< Basis for the ranges returned by the last GetEntryRanges() call
    std::vector<REntryRangeDS> fNextRanges;    ///< Basis for the ranges populated by the PrepareNextRanges() call
+
+   // During MT runs, the current window of entries seen by an active slot
+   std::vector<REntryRangeDS> fActiveRangesPerSlot;
    /// Maps the first entries from the ranges of the last GetEntryRanges() call to their corresponding index in
    /// the fCurrentRanges vectors.  This is necessary because the returned ranges get distributed arbitrarily
    /// onto slots.  In the InitSlot method, the column readers use this map to find the correct range to connect to.
    std::unordered_map<ULong64_t, std::size_t> fFirstEntry2RangeIdx;
    // Keep track of the scheduled entries - necessary for processing of GlobalEntries
    std::vector<std::pair<ULong64_t, ULong64_t>> fOriginalRanges;
-   /// One element per slot, corresponding to the current range index for that slot, as filled by InitSlot
-   std::vector<std::size_t> fSlotsToRangeIdxs;
 
    /// The background thread that runs StageNextSources()
    std::thread fThreadStaging;
@@ -221,7 +246,14 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
 
    explicit RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames,
                       const std::pair<ULong64_t, ULong64_t> &range);
-
+#ifdef R__USE_IMT
+   void ProcessMTRange(ROOT::TThreadExecutor &pool, std::shared_ptr<ROOT::Internal::RPageSource> pageSource,
+                       const std::string &fileName,
+                       const std::vector<ROOT::Internal::RNTupleClusterBoundaries> &clusterBoundaries,
+                       std::uint64_t nEntries, ROOT::Detail::RDF::RLoopManager &lm,
+                       ROOT::Internal::RSlotStack &slotStack, std::atomic<ULong64_t> &processedEntries,
+                       std::atomic<ULong64_t> &globalEntries);
+#endif
 public:
    RNTupleDS(std::string_view ntupleName, std::string_view fileName);
    RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames);
@@ -255,7 +287,12 @@ public:
 
    // Old API, unused
    bool SetEntry(unsigned int, ULong64_t) final { return true; }
-
+#ifdef R__USE_IMT
+   void ProcessMT(ROOT::Detail::RDF::RLoopManager &lm) final;
+   void InsertActiveEntryRange(unsigned int slot, const std::string &fileName,
+                               std::shared_ptr<ROOT::Internal::RPageSource> pageSource, std::uint64_t beginEntry,
+                               std::uint64_t endEntry, std::uint64_t offset);
+#endif
 protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };

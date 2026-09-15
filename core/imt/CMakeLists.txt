@@ -32,6 +32,7 @@ if(imt)
     ROOT/RSlotStack.hxx
     ROOT/TExecutor.hxx
     ROOT/TThreadExecutor.hxx
+    ROOT/InternalIMTUtils.hxx
     LINKDEF
       LinkDef.h
     MODULE

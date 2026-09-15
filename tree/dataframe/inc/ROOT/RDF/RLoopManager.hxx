@@ -336,6 +336,9 @@ public:
    /// The task run by every thread on an entry range (known by the input TTreeReader), for the TTree data source.
    void
    TTreeThreadTask(TTreeReader &treeReader, ROOT::Internal::RSlotStack &slotStack, std::atomic<ULong64_t> &entryCount);
+   /// The task run by every thread on the input entry range, for the RNTuple data source.
+   void RNTupleThreadTask(const std::pair<ULong64_t, ULong64_t> &entryRange, unsigned int slot,
+                          std::uint64_t columnReaderOffset);
 };
 
 /// \brief Create an RLoopManager that reads a TChain.
