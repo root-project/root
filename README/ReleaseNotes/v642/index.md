@@ -86,6 +86,15 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
 
 ## Build System
 
+### Optimization of ROOT header files
+
+In ROOT 6.22, many (but not all) unused includes were removed from ROOT header files. The remaining unused includes will be removed after ROOT 6.44.
+For instance, `#include "TBuffer.h"` will be removed from `TKey.h`. This change may cause errors during compilation of ROOT-based code if one was implicitly relying on this transitive include on downstream code using `TBuffer` without actually including `TBuffer.h`. Another example: `TStyle.h` no longer includes internally `TArrayI.h`.
+To fix it well in advance on your side in downstream code, since no warnings are emitted in the meantime, we recommend getting a `preview` of those to-be errors by adding in your code `#define R__LESS_INCLUDES`, adding this at the very top before including any ROOT header. An alternative is to define this on CMake side via `target_compile_definitions`.
+This may also improve compile time and reduce code inter-dependency; see https://github.com/include-what-you-use/include-what-you-use/blob/master/docs/WhyIWYU.md for a good overview of the motivation.
+The macro `R__LESS_INCLUDES` will no longer have an effect after ROOT 6.44 since it will be the new default behavior.
+Note: if you build ROOT with option `dev=ON`, the header `RConfigure.h` will already contain that definition, so in that case consider just including `RConfigure.h` at the very top, rather than redefining `R__LESS_INCLUDES` in downstream code, or alternatively guard the definition with `#ifndef`. 
+
 ### Moving from builtin dependencies to system-provided packages
 
 * The general direction of the ROOT project is to become more and more reliant on system packages. It is *recommended* to make the packages required by ROOT available on the system, e.g. via a package manager, and not with the builtin mechanism. This allows for timely updates and reduces the size of the installed binaries.
