@@ -1552,9 +1552,6 @@ public:
    /// Make an empty dangling field descriptor.
    RFieldDescriptorBuilder() = default;
 
-   /// Make a new RFieldDescriptorBuilder based off a live RNTuple field.
-   static RFieldDescriptorBuilder FromField(const ROOT::RFieldBase &field);
-
    RFieldDescriptorBuilder &FieldId(ROOT::DescriptorId_t fieldId)
    {
       fField.fFieldId = fieldId;
@@ -1822,6 +1819,7 @@ public:
    /// The real footer size also include the page list envelopes
    void AddToOnDiskFooterSize(std::uint64_t size) { fDescriptor.fOnDiskFooterSize += size; }
 
+   void AddField(const ROOT::RFieldBase &field, DescriptorId_t fieldId);
    void AddField(const RFieldDescriptor &fieldDesc);
    RResult<void> AddFieldLink(ROOT::DescriptorId_t fieldId, ROOT::DescriptorId_t linkId);
    RResult<void> AddFieldProjection(ROOT::DescriptorId_t sourceId, ROOT::DescriptorId_t targetId);
