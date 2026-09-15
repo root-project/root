@@ -11,8 +11,6 @@
 #ifndef ROOT_ZipLZ4
 #define ROOT_ZipLZ4
 
-#warning "This header is deprecated and will be removed in 6.46, use instead methods within RZip.h"
-
 // NOTE: the ROOT compression libraries aren't consistently written in C++; hence the
 // #ifdef's to avoid problems with C code.
 #ifdef __cplusplus

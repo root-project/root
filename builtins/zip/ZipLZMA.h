@@ -12,8 +12,6 @@
 #ifndef ROOT_ZipLZMA
 #define ROOT_ZipLZMA
 
-#warning "This header is deprecated and will be removed in 6.46, use instead methods within RZip.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
