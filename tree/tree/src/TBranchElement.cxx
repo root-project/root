@@ -3695,6 +3695,18 @@ void TBranchElement::InitializeOffsets()
                dataName.Replace(dotpos,endpos-dotpos,subBranchElement->GetFullName());
             }
             TRealData* rd = pClass->GetRealData(dataName);
+            TRealData *stagingRd = nullptr;
+            if (!rd && fOnfileObject && fOnfileObject->fClass) {
+               // The data member does not exist in the user (target) class.
+               // If the parent owns an on-file staging area (e.g. for an I/O
+               // rule whose source is a struct member that has itself been
+               // split on disk), try the staging class.  When found, the
+               // sub-branch will be redirected to read its bytes into the
+               // staging area rather than be skipped.
+               stagingRd = fOnfileObject->fClass->GetRealData(dataName);
+               if (stagingRd && stagingRd->TestBit(TRealData::kTransient))
+                  stagingRd = nullptr;
+            }
             if (rd && (!rd->TestBit(TRealData::kTransient) || alternateElement)) {
                // -- Data member exists in the dictionary meta info, get the offset.
                // If we are using an alternateElement, it is the target of a rule
@@ -3704,6 +3716,17 @@ void TBranchElement::InitializeOffsets()
                // We are a rule with no specific target, it applies to the whole
                // object, let's set the offset to zero
                offset = 0;
+            } else if (stagingRd) {
+               // -- Staging redirect: read into the parent's on-file object.
+               offset = stagingRd->GetThisOffset();
+               subBranch->fOnfileObject = fOnfileObject;
+               subBranch->SetBit(kReadFromStagingArray);
+               // The sub-branch's read-action sequence may have been built
+               // earlier (before we had a chance to set the bit and the
+               // on-file object), so re-build it now to pick up the staging
+               // redirect.  We defer this until after the per-sub-branch
+               // SetOffset call below to make sure the action offsets are
+               // computed against the staging element layout.
             } else {
                // -- No dictionary meta info for this data member, it must no
                // longer exist
@@ -3766,6 +3789,13 @@ void TBranchElement::InitializeOffsets()
                   // The value of 'offset' for a regular data member does include its
                   // 'localOffset', we need to remove it explicitly.
                   subBranch->SetOffset(offset - localOffset);
+               }
+               if (subBranch->TestBit(kReadFromStagingArray) && subBranch->fReadActionSequence) {
+                  // The sub-branch's read action sequence may have been
+                  // built before the staging-redirect bit was set above,
+                  // so re-build it now to install the UseCacheVectorLoop
+                  // wrappers (see TBranchElement::SetReadActionSequence).
+                  subBranch->SetReadActionSequence();
                }
             }
          } else {
@@ -5763,6 +5793,19 @@ void TBranchElement::SetReadActionSequence()
 
    if (create) {
       SetActionSequence(originalClass, localInfo, create, fReadActionSequence);
+   }
+
+   if (TestBit(kReadFromStagingArray) && fReadActionSequence && fOnfileObject) {
+      // The on-disk data for this split sub-branch needs to land in the
+      // parent's on-file staging area (e.g. it is the source of an I/O rule
+      // whose source member is a nested struct that has been split on disk).
+      // Replace each action with a UseCacheVectorLoop wrapping the original,
+      // so the action iterates over the staging area rather than the user
+      // collection.  The element offsets configured on the inner actions are
+      // already expressed relative to the staging element layout.
+      TVirtualStreamerInfo *stagingInfo = fOnfileObject->fClass ? fOnfileObject->fClass->GetStreamerInfo() : nullptr;
+      if (stagingInfo)
+         fReadActionSequence->WrapAllActionsWithUseCacheVectorLoop(stagingInfo);
    }
 }
 
