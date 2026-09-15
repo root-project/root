@@ -319,6 +319,9 @@ def show_node_state() -> None:
         sw_vers || true
         uptime || true
         df || true
+        echo "PATH=$PATH"
+        echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
+        echo "DYLD_LIBRARY_PATH=${DYLD_LIBRARY_PATH}"
     """)
 
     if result != 0:
