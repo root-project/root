@@ -15,6 +15,7 @@
 #include "TVirtualPad.h"
 #include "TAttBBox2D.h"
 #include <vector>
+#include <memory>
 
 class TVirtualViewer3D;
 class TVirtualPadPainter;
@@ -31,6 +32,7 @@ friend class TWebCanvas;
 
 private:
    TObject      *fTip{nullptr};     ///<! tool tip associated with box
+   std::unique_ptr<TInteractive> fInteractive; ///<! current interactive object
 
 protected:
    Double_t      fX1;               ///<  X of lower X coordinate
@@ -400,6 +402,8 @@ public:
    void              DeleteToolTip(TObject *tip) override;
    void              ResetToolTip(TObject *tip) override;
    void              CloseToolTip(TObject *tip) override;
+
+   TInteractive     *Interactive(TObject *obj = nullptr, TInteractive *init = nullptr) override;
 
    Int_t             IncrementPaletteColor(Int_t i, const TString &opt) override;
    Int_t             NextPaletteColor() override;

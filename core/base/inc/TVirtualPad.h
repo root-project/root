@@ -70,6 +70,17 @@ public:
        void PadDeleted(TVirtualPad *pad);
    };
 
+   /** Helper class to store interactive parameters for individual objects
+    *  Should be used via gPad->Interactive() methods in the objects ExecuteEvent */
+   class TInteractive {
+      protected:
+         TObject *fObject = nullptr;
+      public:
+         TInteractive() = default;
+         virtual ~TInteractive() = default;
+         void SetObject(TObject *obj) { fObject = obj; }
+         TObject *GetObject() const { return fObject; }
+   };
 
    TVirtualPad();
    TVirtualPad(const char *name, const char *title, Double_t xlow,
@@ -274,6 +285,8 @@ public:
    virtual Int_t    YtoPixel(Double_t y) const = 0;
    virtual void     XYtoPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const = 0;
    virtual void     XYtoPixel(Double_t x, Double_t y, Double_t &xpixel, Double_t &ypixel) const = 0;
+
+   virtual TInteractive *Interactive(TObject * /* obj */ = nullptr, TInteractive * /* init */ = nullptr) = 0;
 
    virtual Int_t    IncrementPaletteColor(Int_t i, const TString &opt) = 0;
    virtual Int_t    NextPaletteColor() = 0;
