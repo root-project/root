@@ -30,6 +30,23 @@ class TTreeBranch(unittest.TestCase):
         };
         """)
 
+        # Declared separately: TreeHelper.h, which ttree.py uses, declares an
+        # identical MyStruct, so the block above is rejected whole when the two
+        # test files share an interpreter. Keep what is only needed here out of it.
+        ROOT.gInterpreter.Declare("""
+        #include <cstdint>
+        #include <vector>
+
+        // Reading a pointer data member gives a proxy for a reference to a
+        // pointer, which is bound differently from a proxy for an object.
+        struct MyHolder {
+            std::vector<double> *myvec = new std::vector<double>();
+        };
+
+        intptr_t AddressOfMyVec(MyHolder *h) { return reinterpret_cast<intptr_t>(&h->myvec); }
+        intptr_t AddressOfBranch(TBranch *b) { return reinterpret_cast<intptr_t>(b->GetAddress()); }
+        """)
+
     # Helpers
     def create_file_and_tree(self):
         f = ROOT.TFile(self.filename, 'RECREATE')
@@ -169,7 +186,42 @@ class TTreeBranch(unittest.TestCase):
                 for elem in v:
                     self.assertEqual(elem, self.fval)
 
-    def test13_write_fallback_case(self):
+    def test13_write_reference_proxy_branch(self):
+        # A proxy for a reference to a pointer, such as the one obtained by
+        # reading a pointer data member, holds the address of that pointer,
+        # while a proxy for an object holds the object itself. Branch needs the
+        # former in both cases; taking the latter binds the branch to the
+        # proxy's own memory, so that filling writes nothing and the proxy,
+        # a temporary here, is gone by the time the tree is filled.
+        f,t = self.create_file_and_tree()
+
+        h = ROOT.MyHolder()
+        h.myvec.assign(self.arraysize, self.fval)
+
+        # Assert on the address before filling: filling through a branch bound
+        # to a dead proxy is undefined, and would take the test down with it
+        for i, args in enumerate([('refvectorb0', h.myvec),
+                                  ('refvectorb1', h.myvec, 32000),
+                                  ('refvectorb2', h.myvec, 32000, 99),
+                                  ('refvectorb3', 'std::vector<double>', h.myvec),
+                                  ('refvectorb4', 'std::vector<double>', h.myvec, 32000),
+                                  ('refvectorb5', 'std::vector<double>', h.myvec, 32000, 99)]):
+            b = t.Branch(*args)
+            self.assertEqual(ROOT.AddressOfBranch(b), ROOT.AddressOfMyVec(h),
+                             'branch {} not bound to &MyHolder::myvec'.format(i))
+
+        self.fill_and_close(f, t)
+
+    def test14_read_reference_proxy_branch(self):
+        f,t = self.get_tree()
+
+        for entry in t:
+            for v in [ getattr(entry, 'refvectorb' + str(i)) for i in range(6) ]:
+                self.assertEqual(len(v), self.arraysize)
+                for elem in v:
+                    self.assertEqual(elem, self.fval)
+
+    def test15_write_fallback_case(self):
         f,t = self.create_file_and_tree()
 
         # Test an overload that uses the original Branch proxy
@@ -182,7 +234,7 @@ class TTreeBranch(unittest.TestCase):
 
         self.fill_and_close(f, t)
 
-    def test14_read_fallback_case(self):
+    def test16_read_fallback_case(self):
         f,t = self.get_tree()
 
         for entry in t:

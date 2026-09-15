@@ -807,6 +807,60 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds)
 }
 
 //----------------------------------------------------------------------------
+static PyObject* ValueFromMemory(PyObject*, PyObject* args, PyObject* kwds)
+{
+// Build a Python object from the memory at the given address, using the
+// Converter for the given type name. See cppyy.ll.value_from_memory for the
+// user-facing documentation.
+    static const char* kwlist[] = {(char*)"type_name", (char*)"address", (char*)"dims", nullptr};
+
+    const char* type_name = nullptr;
+    PyObject* pyaddress = nullptr;
+    PyObject* pydims = nullptr;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "sO|O:value_from_memory",
+            (char**)kwlist, &type_name, &pyaddress, &pydims))
+        return nullptr;
+
+    void* address = PyLong_AsVoidPtr(pyaddress);
+    if (PyErr_Occurred())
+        return nullptr;
+
+    std::vector<dim_t> dims;
+    if (pydims && pydims != Py_None) {
+        PyObject* seq = PySequence_Fast(pydims, "dims must be a sequence of integers");
+        if (!seq)
+            return nullptr;
+        Py_ssize_t ndim = PySequence_Fast_GET_SIZE(seq);
+        dims.reserve(ndim);
+        for (Py_ssize_t i = 0; i < ndim; ++i) {
+            dim_t d = (dim_t)PyLong_AsSsize_t(PySequence_Fast_GET_ITEM(seq, i));
+            if (d == (dim_t)-1 && PyErr_Occurred()) {
+                Py_DECREF(seq);
+                return nullptr;
+            }
+            dims.push_back(d);
+        }
+        Py_DECREF(seq);
+    }
+
+    Converter* cnv = CreateConverter(type_name, Dimensions((dim_t)dims.size(), dims.data()));
+    if (!cnv) {
+        PyErr_Format(PyExc_TypeError, "no converter available for type \'%s\'", type_name);
+        return nullptr;
+    }
+
+// an array converter reads through the data pointer, so it wants the address
+// of that pointer; a scalar converter wants the address of the value itself
+    PyObject* result = dims.empty() ? cnv->FromMemory(address) : cnv->FromMemory(&address);
+    DestroyConverter(cnv);
+
+    if (!result && !PyErr_Occurred())
+        PyErr_Format(PyExc_TypeError, "failed to convert a value of type \'%s\' from memory", type_name);
+
+    return result;
+}
+
+//----------------------------------------------------------------------------
 static PyObject* Move(PyObject*, PyObject* pyobject)
 {
 // Prepare the given C++ object for moving.
@@ -986,6 +1040,8 @@ static PyMethodDef gCPyCppyyMethods[] = {
       METH_O, (char*)"Represent an array of objects as raw memory."},
     {(char*)"bind_object", (PyCFunction)BindObject,
       METH_VARARGS | METH_KEYWORDS, (char*) "Create an object of given type, from given address."},
+    {(char*)"value_from_memory", (PyCFunction)ValueFromMemory,
+      METH_VARARGS | METH_KEYWORDS, (char*) "Read a value of given type, from given address."},
     {(char*) "move", (PyCFunction)Move,
       METH_O, (char*)"Cast the C++ object to become movable."},
     {(char*) "add_pythonization", (PyCFunction)AddPythonization,
