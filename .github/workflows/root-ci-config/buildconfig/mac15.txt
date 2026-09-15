@@ -1,3 +1,4 @@
+CMAKE_CXX_STANDARD=23
 builtin_cfitsio=ON
 builtin_cppzmq=ON
 builtin_davix=ON
