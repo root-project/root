@@ -413,6 +413,7 @@ jobs:
           - image: ubuntu2610
           - image: debian13
             overrides: ["dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
+          - image: debiantesting
           # Special builds
           - image: alma9
             platform_config: alma9-modules_off
@@ -494,6 +495,7 @@ jobs:
         run: |
           ccache -o max_size=${{ matrix.is_special && '5G' || '1.5G' }}
           ccache -s || true
+          apt update && apt install -y llvm-22-dev
           if [ -d "$PYTHON_VENV/bin/" ]; then
             . "$PYTHON_VENV/bin/activate" && echo PATH=$PATH >> $GITHUB_ENV;
           fi
