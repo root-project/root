@@ -9,12 +9,7 @@
 #include "TClassRef.h"
 #include <vector>
 
-#ifdef R__LESS_INCLUDES
 class TObjArray;
-#else
-#include "TObjArray.h"
-#endif
-
 
 namespace ROOT {
 

@@ -14,11 +14,7 @@
 
 #include "TGraphErrors.h"
 
-#ifdef R__LESS_INCLUDES
 class TGraphPolargram;
-#else
-#include "TGraphPolargram.h"
-#endif
 
 class TGraphPolar : public TGraphErrors {
 

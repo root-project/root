@@ -15,13 +15,8 @@
 
 #include "TGeoNode.h"
 
-#ifdef R__LESS_INCLUDES
-struct TGeoStateInfo;
-#else
-#include "TGeoStateInfo.h"
-#endif
-
 // forward declarations
+struct TGeoStateInfo;
 class TGeoManager;
 class TGeoHMatrix;
 

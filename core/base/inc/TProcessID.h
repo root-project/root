@@ -24,15 +24,10 @@
 
 #include "TNamed.h"
 
-#ifdef R__LESS_INCLUDES
-class TObjArray;
-#else
-#include "TObjArray.h"
-#endif
-
 #include <atomic>
 #include <type_traits>
 
+class TObjArray;
 class TExMap;
 
 namespace ROOT {

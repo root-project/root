@@ -23,14 +23,8 @@
 
 #include "TNamed.h"
 
-#ifdef R__LESS_INCLUDES
 class TList;
-#else
-#include "TList.h"
-#endif
-
 class TBrowser;
-
 
 class TTask : public TNamed {
 

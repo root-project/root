@@ -51,7 +51,6 @@
 #@hascurl@ R__HAS_CURL  /**/
 #@hasdataframe@ R__HAS_DATAFRAME /**/
 #@hasroot7@ R__HAS_ROOT7 /**/
-#@use_less_includes@ R__LESS_INCLUDES /**/
 #define R__HARDWARE_INTERFERENCE_SIZE @hardwareinterferencesize@ /*Determined at CMake configure to be stable across all TUs*/
 
 #@usezlibng@ R__HAS_ZLIB_NG /**/

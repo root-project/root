@@ -86,6 +86,14 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
 
 ## Build System
 
+### Optimization of ROOT header files
+
+In ROOT 6.22, many (but not all) unused includes were removed from ROOT header files. The remaining unused includes are now removed in ROOT 6.42.
+For instance, `#include "TBuffer.h"` was removed from `TKey.h`. This change may cause errors during compilation of ROOT-based code if one was implicitly relying on this transitive include on downstream code using TBuffer without actually including `TBuffer.h`. Another example: `TStyle.h` no longer includes internally `TArrayI.h`.
+To fix it in downstream code, provide the missing includes if you were using those classes from transitive includes without explicitly including them.
+This improves compile times and reduces code inter-dependency; see https://github.com/include-what-you-use/include-what-you-use/blob/master/docs/WhyIWYU.md for a good overview of the motivation.
+The macro `R__LESS_INCLUDES` no longer has an effect since it's the new default behavior.
+
 ### Moving from builtin dependencies to system-provided packages
 
 * The general direction of the ROOT project is to become more and more reliant on system packages. It is *recommended* to make the packages required by ROOT available on the system, e.g. via a package manager, and not with the builtin mechanism. This allows for timely updates and reduces the size of the installed binaries.

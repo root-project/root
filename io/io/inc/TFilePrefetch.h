@@ -22,13 +22,8 @@
 #include <condition_variable>
 #include <mutex>
 
-#ifdef R__LESS_INCLUDES
 class TSemaphore;
 class TFPBlock;
-#else
-#include "TSemaphore.h"
-#include "TFPBlock.h"
-#endif
 
 class TFilePrefetch : public TObject {
 

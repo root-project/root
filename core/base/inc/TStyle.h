@@ -20,10 +20,6 @@
 #include "TAttAxis.h"
 #include "TColor.h"
 
-#ifndef R__LESS_INCLUDES
-#include "TArrayI.h"
-#endif
-
 class TBrowser;
 
 class TStyle : public TNamed, public TAttLine, public TAttFill, public TAttMarker, public TAttText {

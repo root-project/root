@@ -38,10 +38,6 @@
 
 #include "DllImport.h"
 
-#ifndef R__LESS_INCLUDES
-#include <cstddef> // size_t, NULL
-#endif
-
 //---- Tag used by rootcling to determine constructor used for I/O.
 
 class TRootIOCtor;

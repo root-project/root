@@ -14,12 +14,8 @@
 
 #include "TControlBarButton.h"
 
-#ifdef R__LESS_INCLUDES
 class TObjArray;
 class TControlBarImp;
-#else
-#include "TControlBarImp.h"
-#endif
 
 class TList;
 

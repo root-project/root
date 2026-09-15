@@ -12,14 +12,10 @@
 #ifndef ROOT_TSpline
 #define ROOT_TSpline
 
-#ifdef R__LESS_INCLUDES
 #include "TNamed.h"
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAttMarker.h"
-#else
-#include "TGraph.h"
-#endif
 
 class TH1;
 class TH1F;

@@ -28,12 +28,7 @@
 #include "TTimer.h"
 #include <cstdarg>
 
-#ifdef R__LESS_INCLUDES
 class TCondition;
-#else
-#include "TCondition.h"
-#endif
-
 class TMutex;
 class TThreadImp;
 
