@@ -150,7 +150,8 @@ def main():
             build_utils.print_warning(f'Failed to download: {err}')
             args.incremental = False
 
-    git_pull("src", args.repository, args.base_ref)
+    if not args.source_dir:
+        git_pull("src", args.repository, args.base_ref)
 
     benchmark: bool = 'rootbench' in options_dict and options_dict['rootbench'] == "ON"
     if benchmark:
@@ -173,7 +174,10 @@ def main():
         # Delete all the .gcda files produced by an artifact.
         build_utils.remove_file_match_ext(WORKDIR, "gcda")
 
-    build(options, args.buildtype)
+    if args.source_dir:
+        build(options, build_type=args.buildtype, source_dir=args.source_dir)
+    else:
+        build(options, build_type=args.buildtype)
 
     # Done before anything else touches the build tree, and reported only at the
     # very end so that a spurious rebuild does not cost us the test results.
@@ -244,6 +248,7 @@ def parse_args():
     parser.add_argument("--pull_repository", default="",        help="Url to the pull request incoming repository")
     parser.add_argument("--head_ref",        default=None,      help="Ref to feature branch; it may contain a :<dst> part")
     parser.add_argument("--head_sha",        default=None,      help="Sha of commit that triggered the event")
+    parser.add_argument("--source_dir",      default=None,      help="Don't check out. Just use the source dir provided here.")
     parser.add_argument("--binaries",        default="false",   help="Whether to create binary artifacts")
     parser.add_argument("--architecture",    default=None,      help="Windows only, target arch")
     parser.add_argument("--repository",      default="https://github.com/root-project/root.git",
@@ -259,7 +264,7 @@ def parse_args():
     args.binaries = args.binaries.lower() in ('yes', 'true', '1', 'on')
     args.upload_artifacts = args.upload_artifacts.lower() in ('yes', 'true', '1', 'on')
 
-    if not args.base_ref:
+    if not args.base_ref and not args.source_dir:
         die(os.EX_USAGE, "base_ref not specified")
 
     if not args.platform_config: # If nothing special, we take the standard platform configuration, called as the platform
@@ -399,7 +404,6 @@ def archive_and_upload(archive_name, prefix):
     os.chdir(WORKDIR)
 
     with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz", compresslevel=COMPRESSIONLEVEL) as targz:
-        targz.add("src")
         targz.add("build")
 
     try:
@@ -419,8 +423,11 @@ def archive_and_upload(archive_name, prefix):
 
 
 @github_log_group("Configure")
-def cmake_configure(options, buildtype):
-    srcdir = os.path.join(WORKDIR, "src")
+def cmake_configure(options, **kwargs):
+    if "source_dir" in kwargs:
+        srcdir = kwargs["source_dir"]
+    else:
+        srcdir = os.path.join(WORKDIR, "src")
     builddir = os.path.join(WORKDIR, "build")
 
     # Add a private option to make the CI build faster by not changing the
@@ -429,29 +436,11 @@ def cmake_configure(options, buildtype):
     options = f"{options} -DROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES=ON"
 
     result = subprocess_with_log(f"""
-        cmake -S '{srcdir}' -B '{builddir}' -DCMAKE_BUILD_TYPE={buildtype} {options}
+        cmake --fresh -S '{srcdir}' -B '{builddir}' -DCMAKE_BUILD_TYPE={kwargs["build_type"]} {options}
     """)
 
     if result != 0:
         die(result, "Failed cmake generation step")
-
-
-@github_log_group("Dump existing configuration")
-def cmake_dump_config():
-    # Print CMake cached config
-    srcdir = os.path.join(WORKDIR, "src")
-    builddir = os.path.join(WORKDIR, "build")
-    result = subprocess_with_log(f"""
-        cmake -S '{srcdir}' -B '{builddir}' -N -L
-    """)
-
-    if result != 0:
-        die(result, "Failed cmake cache print step")
-
-
-@github_log_group("Dump requested build configuration")
-def dump_requested_config(options):
-    print(f"\nBUILD OPTIONS: {options}")
 
 
 def cmake_build_command(buildtype) -> str:
@@ -498,7 +487,7 @@ def check_for_spurious_rebuilds(buildtype) -> bool:
     return not touched
 
 
-def build(options, buildtype):
+def build(options, **kwargs):
     if not os.path.isdir(os.path.join(WORKDIR, "build")):
         builddir = os.path.join(WORKDIR, "build")
         result = subprocess_with_log(f"mkdir {builddir}")
@@ -506,14 +495,9 @@ def build(options, buildtype):
         if result != 0:
             die(result, "Failed to create build directory")
 
-    if not os.path.exists(os.path.join(WORKDIR, "build", "CMakeCache.txt")):
-        cmake_configure(options, buildtype)
-    else:
-        cmake_dump_config()
+    cmake_configure(options, **kwargs)
 
-    dump_requested_config(options)
-
-    cmake_build(buildtype)
+    cmake_build(kwargs["build_type"])
 
 
 @github_log_group("Create binary packages")
