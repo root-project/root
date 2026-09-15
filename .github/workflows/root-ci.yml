@@ -97,13 +97,11 @@ jobs:
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
           - platform: mac15
-            arch: ARM64
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
       - macOS
-      - ${{ matrix.arch }}
       - ${{ matrix.platform }}
 
     name: ${{ matrix.platform }} ${{ matrix.arch }} ${{ join( matrix.overrides, ', ' ) }}
