@@ -39,7 +39,11 @@ S3CONTAINER = 'ROOT-build-artifacts'  # Used for uploads
 S3URL = 'https://s3.cern.ch/swift/v1/' + S3CONTAINER  # Used for downloads
 
 WINDOWS = (os.name == 'nt')
-WORKDIR = (os.environ['HOME'] + '/ROOT-CI') if not WINDOWS else 'C:/ROOT-CI'
+HOMEDIR = os.environ['HOME'] if not WINDOWS else 'C:'
+WORKDIR = HOMEDIR + '/ROOT-CI'
+CLONEDIRECTORY = HOMEDIR + '/actions-runner/_work/root/root'
+if is_macos():
+    CLONEDIRECTORY += '/src'
 COMPRESSIONLEVEL = 1 if WINDOWS else 2
 
 def main():
@@ -305,23 +309,32 @@ def git_pull(directory: str, repository: str, branch: str):
     sleep_time_unit = 3
     for attempt in range(1, max_attempts+1):
         targetdir = os.path.join(WORKDIR, directory)
-        if os.path.exists(os.path.join(targetdir, ".git")):
+        if not os.path.exists(os.path.join(targetdir, ".git")):
+            build_utils.print_info(f"""Copying sources from {CLONEDIRECTORY} to {targetdir}""")
+            try:
+                shutil.copytree(CLONEDIRECTORY, targetdir)
+                returncode = 0
+            except Exception as e:
+                if hasattr(e, 'message'):
+                    print(e.message)
+                else:
+                    print(e)
+                shutil.rmtree(targetdir)
+                build_utils.print_error(f"""Error copying sources from {CLONEDIRECTORY} to {targetdir}!""")
+                returncode = 1
+
+        if returncode == 0:
             returncode = subprocess_with_log(f"""
                 cd '{targetdir}'
-                git checkout {branch}
+                git checkout -f {branch}
                 git fetch
                 git reset --hard @{{u}}
             """)
-        else:
-            returncode = subprocess_with_log(f"""
-                git clone --branch {branch} --single-branch {repository} "{targetdir}"
-            """)
-
-        if returncode == 0:
-            return
+            if returncode == 0:
+                return
 
         sleep_time = sleep_time_unit * attempt
-        build_utils.print_warning(f"""Attempt {attempt}: failed to pull/clone branch. Retrying in {sleep_time} seconds...""")
+        build_utils.print_warning(f"""Attempt {attempt}: failed to pull/clone branch or copy it. Retrying in {sleep_time} seconds...""")
         time.sleep(sleep_time)
 
     if returncode != 0:
@@ -580,7 +593,7 @@ def get_stdout_subprocess(command: str, error_message: str) -> str:
   return string_result
 
 
-@github_log_group("Rebase")
+@github_log_group("Get base head SHA")
 def get_base_head_sha(directory: str, repository: str, merge_sha: str, head_sha: str) -> str:
   """
   get_base_head_sha
