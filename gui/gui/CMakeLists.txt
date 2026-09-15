@@ -205,6 +205,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gui
     Graf
     MathCore
     ROOTNTupleBrowse
+  LIBRARIES
+    ROOTclib # strlcpy.h
 )
 
 target_include_directories(Gui PRIVATE ${CMAKE_SOURCE_DIR}/gui/ged/inc)

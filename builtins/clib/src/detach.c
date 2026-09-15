@@ -23,6 +23,9 @@ License along with the GNU C Library; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 #include <sys/types.h>
 #include <fcntl.h> /* After sys/types.h, at least for dpx/2.  */
 #include "mmprivate.h"
@@ -63,7 +66,7 @@ PTR mmalloc_detach(PTR md)
       {
          if (mtemp.flags & MMALLOC_DEVZERO)
          {
-#ifndef WIN32
+#ifndef _WIN32
             close (mtemp.fd);
 #else
             CloseHandle(mtemp.fd);

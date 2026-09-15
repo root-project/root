@@ -23,4 +23,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(SQLIO
                                  src/TSQLFile.cxx
                                  src/TSQLObjectData.cxx
                                  src/TSQLStructure.cxx
-                              DEPENDENCIES Net RIO)
+                              DEPENDENCIES Net RIO LIBRARIES ROOTclib)
