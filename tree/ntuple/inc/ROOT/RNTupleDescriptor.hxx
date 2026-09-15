@@ -232,6 +232,8 @@ private:
    /// Negative values specify a suppressed and deferred column.
    std::int64_t fFirstElementIndex = 0U;
    /// A field can be serialized into several columns, which are numbered from zero to $n$
+   /// Optional value range (used e.g. by quantized real fields)
+   std::unique_ptr<RValueRange> fValueRange;
    std::uint32_t fIndex = 0;
    /// A field may use multiple column representations, which are numbered from zero to $m$.
    /// Every representation has the same number of columns.
@@ -241,8 +243,6 @@ private:
    std::uint16_t fBitsOnStorage = 0;
    /// The on-disk column type
    ROOT::ENTupleColumnType fType = ROOT::ENTupleColumnType::kUnknown;
-   /// Optional value range (used e.g. by quantized real fields)
-   std::optional<RValueRange> fValueRange;
 
 public:
    RColumnDescriptor() = default;
@@ -263,10 +263,15 @@ public:
    std::uint64_t GetFirstElementIndex() const { return std::abs(fFirstElementIndex); }
    std::uint16_t GetBitsOnStorage() const { return fBitsOnStorage; }
    ROOT::ENTupleColumnType GetType() const { return fType; }
-   std::optional<RValueRange> GetValueRange() const { return fValueRange; }
    bool IsAliasColumn() const { return fPhysicalColumnId != fLogicalColumnId; }
    bool IsDeferredColumn() const { return fFirstElementIndex != 0; }
    bool IsSuppressedDeferredColumn() const { return fFirstElementIndex < 0; }
+   std::optional<RValueRange> GetValueRange() const
+   {
+      if (fValueRange)
+         return *fValueRange;
+      return std::nullopt;
+   }
 };
 
 // clang-format off
@@ -1509,12 +1514,13 @@ public:
    }
    RColumnDescriptorBuilder &ValueRange(double min, double max)
    {
-      fColumn.fValueRange = {min, max};
+      fColumn.fValueRange = std::make_unique<RColumnDescriptor::RValueRange>(min, max);
       return *this;
    }
    RColumnDescriptorBuilder &ValueRange(std::optional<RColumnDescriptor::RValueRange> valueRange)
    {
-      fColumn.fValueRange = valueRange;
+      if (valueRange)
+         fColumn.fValueRange = std::make_unique<RColumnDescriptor::RValueRange>(*valueRange);
       return *this;
    }
    ROOT::DescriptorId_t GetFieldId() const { return fColumn.fFieldId; }
