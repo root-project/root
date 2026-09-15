@@ -506,13 +506,13 @@ jobs:
         with:
           ref: ${{ inputs.ref_name }}
           sparse-checkout: .github/workflows/
-          progress: false
+          show-progress: false
 
       - name: Checkout root
         uses: actions/checkout@v7
         with:
           path: src/
-          progress: false
+          show-progress: false
 
       - name: Dump GitHub context
         env:
