@@ -54,6 +54,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     src/TArrow.cxx
     src/TAttImage.cxx
     src/TBox.cxx
+    src/TBoxInteractive.cxx
     src/TCandle.cxx
     src/TCrown.cxx
     src/TCurlyArc.cxx
