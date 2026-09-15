@@ -1179,27 +1179,6 @@ ROOT::RResult<ROOT::RColumnDescriptor> ROOT::Internal::RColumnDescriptorBuilder:
    return fColumn.Clone();
 }
 
-ROOT::Internal::RFieldDescriptorBuilder
-ROOT::Internal::RFieldDescriptorBuilder::FromField(const ROOT::RFieldBase &field)
-{
-   RFieldDescriptorBuilder fieldDesc;
-   fieldDesc.FieldVersion(field.GetFieldVersion())
-      .TypeVersion(field.GetTypeVersion())
-      .FieldName(field.GetFieldName())
-      .FieldDescription(field.GetDescription())
-      .TypeName(field.GetTypeName())
-      .TypeAlias(field.GetTypeAlias())
-      .Structure(field.GetStructure())
-      .NRepetitions(field.GetNRepetitions());
-   if (field.GetTraits() & ROOT::RFieldBase::kTraitTypeChecksum)
-      fieldDesc.TypeChecksum(field.GetTypeChecksum());
-   if (field.GetTraits() & ROOT::RFieldBase::kTraitSoACollection) {
-      assert(field.GetStructure() == ENTupleStructure::kCollection);
-      fieldDesc.IsSoACollection(true);
-   }
-   return fieldDesc;
-}
-
 ROOT::RResult<ROOT::RFieldDescriptor> ROOT::Internal::RFieldDescriptorBuilder::MakeDescriptor() const
 {
    if (fField.GetId() == ROOT::kInvalidDescriptorId) {
@@ -1222,6 +1201,27 @@ ROOT::RResult<ROOT::RFieldDescriptor> ROOT::Internal::RFieldDescriptorBuilder::M
       }
    }
    return fField.Clone();
+}
+
+void ROOT::Internal::RNTupleDescriptorBuilder::AddField(const ROOT::RFieldBase &field, DescriptorId_t fieldId)
+{
+   RFieldDescriptorBuilder fieldDesc;
+   fieldDesc.FieldId(fieldId)
+      .FieldVersion(field.GetFieldVersion())
+      .TypeVersion(field.GetTypeVersion())
+      .FieldName(field.GetFieldName())
+      .FieldDescription(field.GetDescription())
+      .TypeName(field.GetTypeName())
+      .TypeAlias(field.GetTypeAlias())
+      .Structure(field.GetStructure())
+      .NRepetitions(field.GetNRepetitions());
+   if (field.GetTraits() & ROOT::RFieldBase::kTraitTypeChecksum)
+      fieldDesc.TypeChecksum(field.GetTypeChecksum());
+   if (field.GetTraits() & ROOT::RFieldBase::kTraitSoACollection) {
+      assert(field.GetStructure() == ENTupleStructure::kCollection);
+      fieldDesc.IsSoACollection(true);
+   }
+   AddField(fieldDesc.MakeDescriptor().Unwrap());
 }
 
 void ROOT::Internal::RNTupleDescriptorBuilder::AddField(const RFieldDescriptor &fieldDesc)
