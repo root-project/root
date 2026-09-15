@@ -143,6 +143,9 @@ set(py_sources
 
 ROOT_PYTHON_PACKAGE(ROOT SOURCES ${py_sources})
 
+# Compatibility alias package: `import cppyy` resolves to cppjit.
+ROOT_PYTHON_PACKAGE(cppyy SOURCES cppyy/__init__.py)
+
 # The Python version at build time should be easy to figure out from Python, so
 # we can raise an exception if the used Python version is not compatible.
 # The file will be implicitly installed by install(DIRECTORY ...) in the

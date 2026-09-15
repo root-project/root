@@ -28,6 +28,9 @@
 #ifdef _WIN32
 #include <windows.h>
 #undef LoadLibrary
+// windows.h aliases GetObject to GetObjectA/W, mangling any consumer method
+// of that name compiled after this header (e.g. TBranch::GetObject in ROOT).
+#undef GetObject
 #else
 #include <dlfcn.h>
 #endif
@@ -100,6 +103,26 @@ inline void* dlGetProcAddress(const char* name,
   return getProc(name);
 }
 
+// Consumers spread across several shared libraries must share ONE dispatch
+// table: on ELF the pointers below resolve across module boundaries by
+// default, but on Windows data symbols are not auto-exported (not even with
+// WINDOWS_EXPORT_ALL_SYMBOLS, which covers functions only). The module that
+// compiles the table-definition TU defines CPPINTEROP_DISPATCH_EXPORTS for
+// all of its TUs; every other module imports the table from it.
+#ifndef CPPINTEROP_DISPATCH_STORAGE
+#if defined(_WIN32)
+#if defined(CPPINTEROP_DISPATCH_EXPORTS)
+#define CPPINTEROP_DISPATCH_STORAGE __declspec(dllexport)
+#else
+#define CPPINTEROP_DISPATCH_STORAGE __declspec(dllimport)
+#endif
+#elif defined(__GNUC__)
+#define CPPINTEROP_DISPATCH_STORAGE __attribute__((__visibility__("default")))
+#else
+#define CPPINTEROP_DISPATCH_STORAGE
+#endif
+#endif
+
 // Raw function pointers populated by LoadDispatchAPI. No default arguments.
 // Kept in a separate namespace so the dispatch-table state doesn't pollute
 // the public Cpp:: surface.
@@ -107,7 +130,7 @@ namespace CppInternal::DispatchRaw {
 using namespace Cpp;
 // NOLINTBEGIN(cppcoreguidelines-avoid-non-const-global-variables)
 #define CPPINTEROP_API_FUNC(DN, CN, Ret, DeclArgs, CallArgs, RawTypes)         \
-  extern Ret(*DN) RawTypes;
+  extern CPPINTEROP_DISPATCH_STORAGE Ret(*DN) RawTypes;
 #include "CppInterOp/CppInterOpAPI.inc"
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 } // namespace CppInternal::DispatchRaw

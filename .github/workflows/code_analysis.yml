@@ -116,7 +116,9 @@ jobs:
     - name: Get the list of changed files
       id: diff
       run: |
-        git diff --diff-filter=AMR --name-only HEAD~1 | tee changed_files.txt
+        # bindings/pyroot/cppjit is vendored third-party source (formatting
+        # tracked upstream); linting it here would force divergence.
+        git diff --diff-filter=AMR --name-only HEAD~1 | { grep -v '^bindings/pyroot/cppjit/' || true; } | tee changed_files.txt
 
     - name: Install ruff
       uses: astral-sh/ruff-action@v3

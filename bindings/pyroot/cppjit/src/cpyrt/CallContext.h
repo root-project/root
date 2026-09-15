@@ -1,0 +1,168 @@
+#ifndef CPYRT_CALLCONTEXT_H
+#define CPYRT_CALLCONTEXT_H
+
+#include "Python.h"
+#include "cppjit_interop.h"
+
+// Standard
+#include <cstdint>
+#include <vector>
+
+#include <sys/types.h>
+
+namespace cppjit::cpyrt {
+
+// Parameter and the call-ABI constants (SMALL_ARGS_N, DIRECT_CALL) come
+// from the interop callcontext.h via cppjit_interop.h
+
+// extra call information
+struct CallContext {
+  CallContext()
+      : fCurScope(nullptr), fPyContext(nullptr), fFlags(0), fArgsVec(nullptr),
+        fNArgs(0), fTemps(nullptr) {}
+  CallContext(const CallContext&) = delete;
+  CallContext& operator=(const CallContext&) = delete;
+  ~CallContext() {
+    if (fTemps)
+      Cleanup();
+    delete fArgsVec;
+  }
+
+  enum ECallFlags {
+    kNone = 0x000000,
+    kIsSorted = 0x000001,      // if method overload priority determined
+    kIsCreator = 0x000002,     // if method creates python-owned objects
+    kIsConstructor = 0x000004, // if method is a C++ constructor
+    kHaveImplicit = 0x000008, // indicate that implicit converters are available
+    kAllowImplicit = 0x000010, // indicate that implicit conversions are allowed
+    kNoImplicit = 0x000020,    // disable implicit to prevent recursion
+    kCallDirect = 0x000040,    // call wrapped method directly, no inheritance
+    kFromDescr = 0x000080,     // initiated from a descriptor
+    kUseHeuristics = 0x000100, // if method applies heuristics memory policy
+    kImplicitSmartPtrConversion =
+        0x000200,              // enable implicit conversion to smart pointers
+    kReleaseGIL = 0x000400,    // if method should release the GIL
+    kSetLifeLine = 0x000800,   // if return value is part of 'this'
+    kNeverLifeLine = 0x001000, // if the return value is never part of 'this'
+    kPyException = 0x002000,   // Python exception during method execution
+    kCppException = 0x004000,  // C++ exception during method execution
+    kProtected = 0x008000,     // if method should return on signals
+    kUseFFI = 0x010000,        // not implemented
+    kIsPseudoFunc = 0x020000,  // internal, used for introspection
+  };
+
+  // Policies about memory handling and signal safety
+  static bool SetGlobalPolicy(ECallFlags e, bool enabled);
+
+  static uint32_t& GlobalPolicyFlags();
+
+  void AddTemporary(PyObject* pyobj);
+  void Cleanup();
+
+  Parameter* GetArgs(size_t sz) {
+    if (sz != (size_t)-1)
+      fNArgs = sz;
+    if (fNArgs <= SMALL_ARGS_N)
+      return fArgs;
+    if (!fArgsVec)
+      fArgsVec = new std::vector<Parameter>();
+    fArgsVec->resize(fNArgs);
+    return fArgsVec->data();
+  }
+
+  Parameter* GetArgs() {
+    if (fNArgs <= SMALL_ARGS_N)
+      return fArgs;
+    return fArgsVec->data();
+  }
+
+  size_t GetSize() { return fNArgs; }
+  size_t GetEncodedSize() {
+    return fNArgs | ((fFlags & kCallDirect) ? DIRECT_CALL : 0);
+  }
+
+public:
+  // info/status
+  interop::TCppScope_t fCurScope;
+  PyObject* fPyContext;
+  uint32_t fFlags;
+
+private:
+  struct Temporary {
+    PyObject* fPyObject;
+    Temporary* fNext;
+  };
+
+  // payload
+  Parameter fArgs[SMALL_ARGS_N];
+  std::vector<Parameter>* fArgsVec;
+  size_t fNArgs;
+  Temporary* fTemps;
+};
+
+inline bool IsSorted(uint64_t flags) { return flags & CallContext::kIsSorted; }
+
+inline bool IsCreator(uint64_t flags) {
+  return flags & CallContext::kIsCreator;
+}
+
+inline bool IsConstructor(uint64_t flags) {
+  return flags & CallContext::kIsConstructor;
+}
+
+inline bool HaveImplicit(CallContext* ctxt) {
+  return ctxt ? (!(ctxt->fFlags & CallContext::kNoImplicit) &&
+                 (ctxt->fFlags & CallContext::kHaveImplicit))
+              : false;
+}
+
+inline bool AllowImplicit(CallContext* ctxt) {
+  return ctxt ? (!(ctxt->fFlags & CallContext::kNoImplicit) &&
+                 (ctxt->fFlags & CallContext::kAllowImplicit))
+              : false;
+}
+
+inline bool NoImplicit(CallContext* ctxt) {
+  return ctxt ? (ctxt->fFlags & CallContext::kNoImplicit) : false;
+}
+
+inline bool ReleasesGIL(CallContext* ctxt) {
+  return ctxt ? (ctxt->fFlags & CallContext::kReleaseGIL) : false;
+}
+
+inline bool UseStrictOwnership() {
+  using CC = cppjit::cpyrt::CallContext;
+  return !(CC::GlobalPolicyFlags() & CC::kUseHeuristics);
+}
+
+// kImplicitSmartPtrConversion is a global policy (set through
+// cppyy.SetImplicitSmartPointerConversion), but it can also be requested for a
+// single call through the call context, so check both words - as is done for
+// kProtected in CPPMethod::Execute.
+inline bool AllowImplicitSmartPtrConversion(CallContext* ctxt) {
+  using CC = cppjit::cpyrt::CallContext;
+  return (CC::GlobalPolicyFlags() & CC::kImplicitSmartPtrConversion) ||
+         (ctxt && (ctxt->fFlags & CC::kImplicitSmartPtrConversion));
+}
+
+template <CallContext::ECallFlags F> class CallContextRAII {
+public:
+  CallContextRAII(CallContext* ctxt) : fCtxt(ctxt) {
+    fPrior = fCtxt->fFlags & F;
+    fCtxt->fFlags |= F;
+  }
+  CallContextRAII(const CallContextRAII&) = delete;
+  CallContextRAII& operator=(const CallContextRAII&) = delete;
+  ~CallContextRAII() {
+    if (!fPrior)
+      fCtxt->fFlags &= ~F;
+  }
+
+private:
+  CallContext* fCtxt;
+  bool fPrior;
+};
+
+} // namespace cppjit::cpyrt
+
+#endif // !CPYRT_CALLCONTEXT_H
