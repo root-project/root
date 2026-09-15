@@ -406,6 +406,7 @@ jobs:
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: alma10
           - image: ubuntu22
+            python_venv: "/py-venv-3.12/ROOT-CI"
             overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2404
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
