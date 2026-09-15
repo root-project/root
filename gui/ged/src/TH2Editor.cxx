@@ -2323,8 +2323,7 @@ void TH2Editor::DoSliderXMoved()
       py1   = fGedEditor->GetPad()->YtoAbsPixel(ymin);
       px2   = fGedEditor->GetPad()->XtoAbsPixel(xright);
       py2   = fGedEditor->GetPad()->YtoAbsPixel(ymax);
-      if (fGedEditor->GetPad()->GetCanvas())
-         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+      fGedEditor->GetPad()->FeedbackMode(kTRUE);
       fGedEditor->GetPad()->cd();
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
@@ -2342,8 +2341,7 @@ void TH2Editor::DoSliderXMoved()
                 fCoordsCombo->GetSelected()==kCOORDS_CAR) {
       // 3D plot
       Float_t p1[3], p2[3], p3[3], p4[3], p5[3], p6[3], p7[3], p8[3];
-      if (fGedEditor->GetPad()->GetCanvas())
-         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+      fGedEditor->GetPad()->FeedbackMode(kTRUE);
       fGedEditor->GetPad()->cd();
       TView *fView = fGedEditor->GetPad()->GetView();
       if (!fView) return;
@@ -2406,8 +2404,7 @@ void TH2Editor::DoSliderXPressed()
       // 2D Plot
       if (!fGedEditor->GetPad()) return;
       fGedEditor->GetPad()->cd();
-      if (fGedEditor->GetPad()->GetCanvas())
-         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kFALSE);
+      fGedEditor->GetPad()->FeedbackMode(kFALSE);
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
       xleft  = xaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
@@ -2439,8 +2436,7 @@ void TH2Editor::DoSliderXPressed()
       fP5oldx[1] = fP6oldx[1] = fP7oldx[1] = fP8oldx[1] = rmax[1];
       fP1oldx[2] = fP2oldx[2] = fP5oldx[2] = fP6oldx[2] = rmin[2];
       fP3oldx[2] = fP4oldx[2] = fP7oldx[2] = fP8oldx[2] = rmax[2];
-      if (fGedEditor->GetPad()->GetCanvas())
-         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+      fGedEditor->GetPad()->FeedbackMode(kTRUE);
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
       PaintBox3D(fP2oldx, fP3oldx, fP7oldx, fP6oldx);
@@ -2510,8 +2506,7 @@ void TH2Editor::DoSliderYMoved()
       py1  = fGedEditor->GetPad()->YtoAbsPixel(ybottom);
       px2  = fGedEditor->GetPad()->XtoAbsPixel(xmax);
       py2  = fGedEditor->GetPad()->YtoAbsPixel(ytop);
-      if (fGedEditor->GetPad()->GetCanvas())
-         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+      fGedEditor->GetPad()->FeedbackMode(kTRUE);
       fGedEditor->GetPad()->cd();
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
@@ -2529,8 +2524,7 @@ void TH2Editor::DoSliderYMoved()
               fCoordsCombo->GetSelected()==kCOORDS_CAR) {
       // 3D plot
       Float_t p1[3], p2[3], p3[3], p4[3], p5[3], p6[3], p7[3], p8[3];
-      if (fGedEditor->GetPad()->GetCanvas())
-         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+      fGedEditor->GetPad()->FeedbackMode(kTRUE);
       fGedEditor->GetPad()->cd();
       TView *fView = fGedEditor->GetPad()->GetView();
       if (!fView) return;
@@ -2593,8 +2587,7 @@ void TH2Editor::DoSliderYPressed()
       // 2D plot:
       if (!fGedEditor->GetPad()) return;
       fGedEditor->GetPad()->cd();
-      if (fGedEditor->GetPad()->GetCanvas())
-         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kFALSE);
+      fGedEditor->GetPad()->FeedbackMode(kFALSE);
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
       ybottom = yaxis->GetBinLowEdge((Int_t)((fSliderY->GetMinPosition())+0.5));
@@ -2626,8 +2619,7 @@ void TH2Editor::DoSliderYPressed()
                  yaxis->GetBinUpEdge((Int_t)((fSliderY->GetMaxPosition())+0.5));
       fP1oldy[2] = fP2oldy[2] = fP5oldy[2] = fP6oldy[2] = rmin[2];
       fP3oldy[2] = fP4oldy[2] = fP7oldy[2] = fP8oldy[2] = rmax[2];
-      if (fGedEditor->GetPad()->GetCanvas())
-         fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
+      fGedEditor->GetPad()->FeedbackMode(kTRUE);
       fGedEditor->GetPad()->SetLineWidth(1);
       fGedEditor->GetPad()->SetLineColor(2);
       PaintBox3D(fP2oldy, fP3oldy, fP7oldy, fP6oldy);

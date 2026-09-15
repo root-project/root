@@ -2686,6 +2686,17 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Switch feedback mode for the canvas
+/// Only for internal use when implementing special painters
+/// Returns kTRUE when requested mode was set
+
+void TPad::FeedbackMode(Bool_t set)
+{
+   if (fCanvas)
+      fCanvas->FeedbackMode(set);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Search if object named name is inside this pad or in pads inside this pad.
 ///
 /// In case name is in several sub-pads the first one is returned.
@@ -2771,6 +2782,14 @@ Int_t TPad::GetEventY() const
 TVirtualPad *TPad::GetVirtCanvas() const
 {
    return  fCanvas ? (TVirtualPad*) fCanvas : nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get doublebuffer mode - 1 by default.
+
+Int_t TPad::GetDoubleBuffer() const
+{
+   return fCanvas ? fCanvas->GetDoubleBuffer() : 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
