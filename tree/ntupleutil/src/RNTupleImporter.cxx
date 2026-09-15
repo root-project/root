@@ -35,24 +35,47 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <utility>
 
 namespace {
 
+std::string FormatBinarySize(std::uint64_t nbytes)
+{
+   const char *suffix = "B";
+   double v = static_cast<double>(nbytes);
+   if (v >= 1024.0 * 1024.0 * 1024.0) {
+      v /= 1024.0 * 1024.0 * 1024.0;
+      suffix = "GiB";
+   } else if (v >= 1024.0 * 1024.0) {
+      v /= 1024.0 * 1024.0;
+      suffix = "MiB";
+   } else if (v >= 1024.0) {
+      v /= 1024.0;
+      suffix = "KiB";
+   }
+   std::ostringstream os;
+   os.setf(std::ios::fixed);
+   os.precision(v >= 100.0 ? 0 : (v >= 10.0 ? 1 : 2));
+   os << v << ' ' << suffix;
+   return os.str();
+}
+
 class RDefaultProgressCallback : public ROOT::Experimental::RNTupleImporter::RProgressCallback {
 private:
-   static constexpr std::uint64_t gUpdateFrequencyBytes = 100 * 1000 * 1000; // report every 100 MB
+   static constexpr std::uint64_t gUpdateFrequencyBytes = 100 * 1000 * 1000; // report every 100 MB payload
    std::uint64_t fNbytesNext = gUpdateFrequencyBytes;
 
 public:
    ~RDefaultProgressCallback() override {}
    void Call(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) final
    {
-      // Report if more than 100 MB (compressed) where written since the last status update
+      // Report if more than 100 MB of compressed page payload were written since the last status update.
       if (nbytesWritten < fNbytesNext)
          return;
-      std::cout << "Wrote " << nbytesWritten / 1000 / 1000 << "MB, " << neventsWritten << " entries\n";
+      std::cout << "Wrote " << nbytesWritten / 1000 / 1000 << "MB payload, " << neventsWritten << " entries\n";
       fNbytesNext += gUpdateFrequencyBytes;
       if (nbytesWritten > fNbytesNext) {
          // If we already passed the next threshold, increase by a sensible amount.
@@ -60,9 +83,22 @@ public:
       }
    }
 
-   void Finish(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) final
+   void Finish(const ROOT::Experimental::RNTupleImporter::RImportReport &report) final
    {
-      std::cout << "Done, wrote " << nbytesWritten / 1000 / 1000 << "MB, " << neventsWritten << " entries\n";
+      std::cout << "Done: " << report.fEntries << " entries\n";
+      std::cout << "  compressed page payload: " << FormatBinarySize(report.fCompressedPayloadBytes) << '\n';
+      std::cout << "  on disk:                 " << FormatBinarySize(report.fFileBytesOnDisk) << '\n';
+      if (report.fFileBytesOnDisk > report.fCompressedPayloadBytes) {
+         const auto overhead = report.fFileBytesOnDisk - report.fCompressedPayloadBytes;
+         std::cout << "  file overhead (approx):  " << FormatBinarySize(overhead)
+                   << "  (page lists, footer, streamer info, ROOT keys)\n";
+      }
+      if (report.fUncompressedPageBytes > 0 && report.fCompressedPayloadBytes > 0) {
+         const double ratio = static_cast<double>(report.fCompressedPayloadBytes) /
+                              static_cast<double>(report.fUncompressedPageBytes);
+         std::cout << "  page compression ratio:  " << std::fixed << std::setprecision(3) << ratio
+                   << " (payload / uncompressed pages)\n";
+      }
    }
 };
 
@@ -394,14 +430,11 @@ void ROOT::Experimental::RNTupleImporter::Import()
       std::make_unique<ROOT::Internal::RPageSinkFile>(ntupleName, *targetDir, fWriteOptions);
    sink->GetMetrics().Enable();
    auto ctrZippedBytes = sink->GetMetrics().GetCounter("RPageSinkFile.szWritePayload");
+   auto ctrUnzipBytes = sink->GetMetrics().GetCounter("RPageSinkFile.szZip");
 
    if (fWriteOptions.GetUseBufferedWrite()) {
       sink = std::make_unique<ROOT::Internal::RPageSinkBuf>(std::move(sink));
    }
-
-   auto ntplWriter = ROOT::Internal::CreateRNTupleWriter(std::move(fModel), std::move(sink));
-   // The guard needs to be destructed before the writer goes out of scope
-   RImportGuard importGuard(*this);
 
    fProgressCallback = fIsQuiet ? nullptr : std::make_unique<RDefaultProgressCallback>();
 
@@ -411,36 +444,56 @@ void ROOT::Experimental::RNTupleImporter::Import()
       nEntries = fMaxEntries;
    }
 
-   for (decltype(nEntries) i = 0; i < nEntries; ++i) {
-      fSourceTree->GetEntry(i);
+   std::uint64_t payloadBytes = 0;
+   std::uint64_t unzipBytes = 0;
+   {
+      auto ntplWriter = ROOT::Internal::CreateRNTupleWriter(std::move(fModel), std::move(sink));
+      // The guard needs to be destructed before the writer goes out of scope
+      RImportGuard importGuard(*this);
 
-      for (auto &[_, c] : fLeafCountCollections) {
-         const auto sizeOfRecord = c.fRecordField->GetValueSize();
-         c.fFieldBuffer.resize(sizeOfRecord * (*c.fCountVal));
+      for (decltype(nEntries) i = 0; i < nEntries; ++i) {
+         fSourceTree->GetEntry(i);
 
-         const auto nLeafs = c.fRecordField->GetConstSubfields().size();
-         for (std::size_t l = 0; l < nLeafs; ++l) {
-            const auto offset = c.fRecordField->GetOffsets()[l];
-            const auto sizeOfLeaf = c.fRecordField->GetConstSubfields()[l]->GetValueSize();
-            const auto idxImportBranch = c.fLeafBranchIndexes[l];
-            for (Int_t j = 0; j < *c.fCountVal; ++j) {
-               memcpy(c.fFieldBuffer.data() + j * sizeOfRecord + offset,
-                      fImportBranches[idxImportBranch].fBranchBuffer.get() + (j * sizeOfLeaf), sizeOfLeaf);
+         for (auto &[_, c] : fLeafCountCollections) {
+            const auto sizeOfRecord = c.fRecordField->GetValueSize();
+            c.fFieldBuffer.resize(sizeOfRecord * (*c.fCountVal));
+
+            const auto nLeafs = c.fRecordField->GetConstSubfields().size();
+            for (std::size_t l = 0; l < nLeafs; ++l) {
+               const auto offset = c.fRecordField->GetOffsets()[l];
+               const auto sizeOfLeaf = c.fRecordField->GetConstSubfields()[l]->GetValueSize();
+               const auto idxImportBranch = c.fLeafBranchIndexes[l];
+               for (Int_t j = 0; j < *c.fCountVal; ++j) {
+                  memcpy(c.fFieldBuffer.data() + j * sizeOfRecord + offset,
+                         fImportBranches[idxImportBranch].fBranchBuffer.get() + (j * sizeOfLeaf), sizeOfLeaf);
+               }
             }
          }
+
+         for (auto &t : fImportTransformations) {
+            auto result = t->Transform(fImportBranches[t->fImportBranchIdx], fImportFields[t->fImportFieldIdx]);
+            if (!result)
+               throw RException(R__FORWARD_ERROR(result));
+         }
+
+         ntplWriter->Fill(*fEntry);
+
+         if (fProgressCallback)
+            fProgressCallback->Call(ctrZippedBytes->GetValueAsInt(), i);
       }
 
-      for (auto &t : fImportTransformations) {
-         auto result = t->Transform(fImportBranches[t->fImportBranchIdx], fImportFields[t->fImportFieldIdx]);
-         if (!result)
-            throw RException(R__FORWARD_ERROR(result));
-      }
+      payloadBytes = ctrZippedBytes->GetValueAsInt();
+      if (ctrUnzipBytes)
+         unzipBytes = ctrUnzipBytes->GetValueAsInt();
+   } // ntplWriter commits footer / streamer info / last cluster here
 
-      ntplWriter->Fill(*fEntry);
-
-      if (fProgressCallback)
-         fProgressCallback->Call(ctrZippedBytes->GetValueAsInt(), i);
-   }
+   fDestFile->Flush();
+   RImportReport report;
+   report.fCompressedPayloadBytes = payloadBytes;
+   report.fUncompressedPageBytes = unzipBytes;
+   report.fEntries = nEntries;
+   report.fFileBytesOnDisk = static_cast<std::uint64_t>(fDestFile->GetSize());
+   fLastImportReport = report;
    if (fProgressCallback)
-      fProgressCallback->Finish(ctrZippedBytes->GetValueAsInt(), nEntries);
+      fProgressCallback->Finish(report);
 }

@@ -105,7 +105,15 @@ public:
    /// Used to make adjustments to the fields of the output model.
    using FieldModifier_t = std::function<void(ROOT::RFieldBase &)>;
 
-   /// Used to report every ~100 MB (compressed), and at the end about the status of the import.
+   /// Summary printed after the RNTuple writer commits (footer, streamer info, last cluster).
+   struct RImportReport {
+      std::uint64_t fCompressedPayloadBytes = 0; ///< Sealed column page blobs (RPageSinkFile.szWritePayload)
+      std::uint64_t fUncompressedPageBytes = 0;  ///< Logical page bytes before compression (RPageSinkFile.szZip)
+      std::uint64_t fEntries = 0;
+      std::uint64_t fFileBytesOnDisk = 0; ///< Destination TFile size after commit (matches ls -lh)
+   };
+
+   /// Used to report every ~100 MB of compressed page payload, and at the end about the status of the import.
    class RProgressCallback {
    public:
       virtual ~RProgressCallback() = default;
@@ -114,7 +122,7 @@ public:
          Call(nbytesWritten, neventsWritten);
       }
       virtual void Call(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) = 0;
-      virtual void Finish(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) = 0;
+      virtual void Finish(const RImportReport &report) = 0;
    };
 
 private:
@@ -219,6 +227,7 @@ private:
 
    /// No standard output, conversely if set to false, schema information and progress is printed.
    bool fIsQuiet = false;
+   RImportReport fLastImportReport{};
    std::unique_ptr<RProgressCallback> fProgressCallback;
    FieldModifier_t fFieldModifier;
 
@@ -264,6 +273,9 @@ public:
 
    /// Whether or not information and progress is printed to stdout.
    void SetIsQuiet(bool value) { fIsQuiet = value; }
+
+   /// Metrics from the most recent Import() call (always filled, even when quiet).
+   RImportReport GetLastImportReport() const { return fLastImportReport; }
 
    /// Add custom method to adjust column representations.  Will be called for every field of the frozen model
    /// before it is attached to the page sink

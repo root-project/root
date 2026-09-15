@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <string>
 
 using ROOT::Experimental::Detail::RNTupleAtomicCounter;
 using ROOT::Experimental::Detail::RNTupleAtomicTimer;
@@ -34,6 +35,34 @@ void ROOT::Internal::RPageSinkBuf::RColumnBuf::DropBufferedPages()
    // Each RSealedPage points to the same region as `fBuf` for some element in `fBufferedPages`; thus, no further
    // clean-up is required
    fSealedPages.clear();
+}
+
+void ROOT::Internal::RPageSinkBuf::RColumnBuf::ValidateReadyToCommit(bool requireChecksum) const
+{
+   if (fBufferedPages.size() != fSealedPages.size()) {
+      throw RException(R__FAIL("column has " + std::to_string(fBufferedPages.size()) +
+                               " buffered pages but " + std::to_string(fSealedPages.size()) +
+                               " sealed pages (parallel compression incomplete?)"));
+   }
+
+   for (std::size_t i = 0; i < fBufferedPages.size(); ++i) {
+      if (!fBufferedPages[i].IsSealed()) {
+         throw RException(R__FAIL("column page " + std::to_string(i) + " (" +
+                                  std::to_string(fBufferedPages[i].fPage.GetNBytes()) +
+                                  " B) was not sealed (compression task failed?)"));
+      }
+   }
+
+   for (std::size_t i = 0; i < fSealedPages.size(); ++i) {
+      const auto &sp = fSealedPages[i];
+      if (sp.GetBuffer() == nullptr) {
+         throw RException(R__FAIL("sealed page " + std::to_string(i) + " has a null buffer"));
+      }
+      if (requireChecksum && !sp.GetHasChecksum()) {
+         throw RException(R__FAIL("sealed page " + std::to_string(i) + " is missing a checksum (" +
+                                  std::to_string(sp.GetDataSize()) + " B payload)"));
+      }
+   }
 }
 
 ROOT::Internal::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink> inner)
@@ -268,6 +297,7 @@ void ROOT::Internal::RPageSinkBuf::FlushClusterImpl(const std::function<void(voi
    std::vector<RSealedPageGroup> toCommit;
    toCommit.reserve(fBufferedColumns.size());
    for (auto &bufColumn : fBufferedColumns) {
+      bufColumn.ValidateReadyToCommit(GetWriteOptions().GetEnableSamePageMerging());
       R__ASSERT(bufColumn.HasSealedPagesOnly());
       const auto &sealedPages = bufColumn.GetSealedPages();
       toCommit.emplace_back(bufColumn.GetHandle().fPhysicalId, sealedPages.cbegin(), sealedPages.cend());
