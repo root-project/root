@@ -169,7 +169,8 @@ ROOT::RColumnDescriptor ROOT::RColumnDescriptor::Clone() const
    clone.fIndex = fIndex;
    clone.fFirstElementIndex = fFirstElementIndex;
    clone.fRepresentationIndex = fRepresentationIndex;
-   clone.fValueRange = fValueRange;
+   if (fValueRange)
+      clone.fValueRange = std::make_unique<RValueRange>(*fValueRange);
    return clone;
 }
 
