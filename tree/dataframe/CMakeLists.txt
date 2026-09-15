@@ -36,6 +36,7 @@ if (runtime_cxxmodules AND WIN32)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
+  NO_GLOB_HEADERS # Don't install RArrowDS and similar if they are off
   HEADERS
     ROOT/RCsvDS.hxx
     ROOT/RVecDS.hxx
