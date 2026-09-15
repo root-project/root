@@ -67,6 +67,7 @@ opengl=ON
 pyroot=ON
 pythia8=OFF
 qt6web=OFF
+qt6canv=OFF
 roofit=ON
 root7=ON
 rootbench=OFF
