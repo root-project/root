@@ -3145,6 +3145,27 @@ void TPad::ls(Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create or provide interactive instance
+/// It is allowed the only instance of TInteractive per pad
+/// It can be assigned for the object when @param init is provided
+/// Otherwise returns existing instance for the @param obj
+
+TVirtualPad::TInteractive *TPad::Interactive(TObject *obj, TInteractive *init)
+{
+   if (obj && init) {
+      init->SetObject(obj);
+      fInteractive.reset(init);
+   } else if (!obj)
+      fInteractive.reset(nullptr);
+
+   if (!fInteractive || (fInteractive->GetObject() != obj))
+      return nullptr;
+
+   return fInteractive.get();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Increment (i==1) or set (i>1) the number of autocolor in the pad.
 
 Int_t TPad::IncrementPaletteColor(Int_t i, const TString &opt)
