@@ -588,7 +588,7 @@ TEST(RNTuple, StdMap)
 
    auto invalidInnerField = RFieldBase::Create("someIntField", "int").Unwrap();
    EXPECT_THROW(
-      std::make_unique<ROOT::RMapField>("myInvalidMap", ROOT::RMapField::EMapType::kMap, std::move(invalidInnerField)),
+      std::ignore = std::make_unique<ROOT::RMapField>("myInvalidMap", ROOT::RMapField::EMapType::kMap, std::move(invalidInnerField)),
       ROOT::RException);
 
    FileRaii fileGuard("test_ntuple_rfield_stdmap.root");
