@@ -442,6 +442,10 @@ public:
 \class ROOT::Internal::RPagePersistentSink
 \ingroup NTuple
 \brief Base class for a sink with a physical storage backend
+
+Prefer calling RNTupleWriter::CommitDataset() explicitly to letting the writer's destructor do it: a
+destructor cannot propagate an exception, so a failure while committing the dataset is only logged and
+the ntuple may be left incomplete on storage.
 */
 // clang-format on
 class RPagePersistentSink : public RPageSink {
