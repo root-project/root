@@ -419,7 +419,7 @@ TEST(OptParse, ParseFlagAsFloat)
 
    EXPECT_TRUE(opts.GetErrors().empty());
    EXPECT_FLOAT_EQ(opts.GetFlagValueAs<float>("b").value(), .2f);
-   EXPECT_THROW(opts.GetFlagValueAs<int>("b").value(), std::invalid_argument);
+   EXPECT_THROW(std::ignore = opts.GetFlagValueAs<int>("b").value(), std::invalid_argument);
    EXPECT_EQ(opts.GetFlagValue("b"), ".2");
 }
 
