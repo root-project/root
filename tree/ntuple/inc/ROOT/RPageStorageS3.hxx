@@ -117,10 +117,6 @@ RResult<std::string> ParseS3Url(std::string_view uri);
 Currently implements Mode B (one sealed page per S3 object, kTypeObject64 locators).
 Mode A (multiple packed pages per object, kTypeMulti locators) will be added separately.
 
-Prefer calling RNTupleWriter::CommitDataset() explicitly to letting the writer's destructor do it: a
-destructor cannot propagate an exception, so a failed footer or anchor upload is only logged and leaves
-the ntuple without an anchor, i.e. unreadable.
-
 \warning The S3 backend is experimental and under active development.
 */
 // clang-format on
