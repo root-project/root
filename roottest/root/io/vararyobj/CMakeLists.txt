@@ -50,3 +50,19 @@ ROOTTEST_ADD_TEST(readvararypolyp
                   MACRO runreadvararypolyp.C+
                   OUTREF readvararypolyp.good
                   FIXTURES_REQUIRED root-io-vararyobj-writevararypolyp-fixture)
+
+# issue #22895
+ROOTTEST_GENERATE_DICTIONARY(StreamerLoopMemberwiseDict
+                    ${CMAKE_CURRENT_SOURCE_DIR}/StreamerLoopMemberwise.hxx
+                    LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/StreamerLoopMemberwiseLinkDef.h
+                    FIXTURES_SETUP root-io-vararyobj-StreamerLoopMemberwiseDict-fixture)
+
+ROOTTEST_GENERATE_EXECUTABLE(StreamerLoopMemberwise
+                    runStreamerLoopMemberwise.cxx StreamerLoopMemberwiseDict.cxx
+                    LIBRARIES Core RIO Tree GTest::gtest GTest::gtest_main ROOT::TestSupport
+                    FIXTURES_REQUIRED root-io-vararyobj-StreamerLoopMemberwiseDict-fixture
+                    FIXTURES_SETUP root-io-vararyobj-StreamerLoopMemberwise-fixture)
+
+ROOTTEST_ADD_TEST(StreamerLoopMemberwise
+                    EXEC ${CMAKE_CURRENT_BINARY_DIR}/StreamerLoopMemberwise
+                    FIXTURES_REQUIRED root-io-vararyobj-StreamerLoopMemberwise-fixture)
