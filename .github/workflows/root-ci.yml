@@ -494,6 +494,7 @@ jobs:
         run: |
           ccache -o max_size=${{ matrix.is_special && '5G' || '1.5G' }}
           ccache -s || true
+          apt update && apt install -y llvm-22-dev
           if [ -d "$PYTHON_VENV/bin/" ]; then
             . "$PYTHON_VENV/bin/activate" && echo PATH=$PATH >> $GITHUB_ENV;
           fi
