@@ -1500,7 +1500,7 @@ public:
    ROOT::DescriptorId_t GetRepresentationIndex() const { return fColumn.fRepresentationIndex; }
    /// Attempt to make a column descriptor. This may fail if the column
    /// was not given enough information to make a proper descriptor.
-   RResult<RColumnDescriptor> MakeDescriptor() const;
+   RResult<RColumnDescriptor> MoveDescriptor();
 };
 
 // clang-format off

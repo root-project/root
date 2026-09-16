@@ -1156,7 +1156,7 @@ ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder::MoveDescriptor()
    return std::move(fDesc);
 }
 
-ROOT::RResult<ROOT::RColumnDescriptor> ROOT::Internal::RColumnDescriptorBuilder::MakeDescriptor() const
+ROOT::RResult<ROOT::RColumnDescriptor> ROOT::Internal::RColumnDescriptorBuilder::MoveDescriptor()
 {
    if (fColumn.GetLogicalId() == ROOT::kInvalidDescriptorId)
       return R__FAIL("invalid logical column id");
@@ -1176,7 +1176,9 @@ ROOT::RResult<ROOT::RColumnDescriptor> ROOT::Internal::RColumnDescriptorBuilder:
          return R__FAIL("invalid column bit width");
    }
 
-   return fColumn.Clone();
+   RColumnDescriptor result;
+   std::swap(result, fColumn);
+   return result;
 }
 
 ROOT::RResult<ROOT::RFieldDescriptor> ROOT::Internal::RFieldDescriptorBuilder::MakeDescriptor() const
