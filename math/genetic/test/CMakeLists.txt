@@ -12,7 +12,7 @@ if(NOT DEFINED ROOT_SOURCE_DIR)
 endif()
 
 set(Libraries Core RIO Net Hist Graf Graf3d Gpad Tree
-              ROOT::Rint Postscript Matrix Physics MathCore Thread Genetic)
+              Rint Postscript Matrix Physics MathCore Thread Genetic)
 
 set(TestGeneticSource
       testGAMinimizer.cxx

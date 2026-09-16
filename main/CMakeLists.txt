@@ -10,13 +10,13 @@
 ############################################################################
 
 if(NOT WIN32)
-  ROOT_EXECUTABLE(rootn.exe rmain.cxx LIBRARIES New Core MathCore ROOT::Rint CMAKENOEXPORT)
+  ROOT_EXECUTABLE(rootn.exe rmain.cxx LIBRARIES New Core MathCore Rint CMAKENOEXPORT)
   if(CMAKE_SYSTEM_NAME STREQUAL Linux)
     SET_TARGET_PROPERTIES(rootn.exe PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
   endif()
   ROOT_EXECUTABLE(roots.exe roots.cxx LIBRARIES Core MathCore CMAKENOEXPORT)
 endif()
-ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core ROOT::Rint)
+ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
 if(MSVC)
   set(root_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch \
       /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index \
@@ -111,7 +111,7 @@ set_source_files_properties(src/rootcling.cxx PROPERTIES
 set(rootcling_exe_names rootcling genreflex rootcint)
 
 foreach(exe_name IN LISTS rootcling_exe_names)
-  ROOT_EXECUTABLE(${exe_name} src/rootcling.cxx LIBRARIES RIO Cling Core ROOT::Rint)
+  ROOT_EXECUTABLE(${exe_name} src/rootcling.cxx LIBRARIES RIO Cling Core Rint)
 
   # rootcling includes the ROOT complex header which would build the complex
   # dictionary with modules. To make sure that rootcling_stage1 builds this
@@ -134,19 +134,19 @@ add_dependencies(genreflex rootcling)
 add_dependencies(rootcint rootcint)
 
 if (TARGET Gui)
-  ROOT_EXECUTABLE(rootbrowse src/rootbrowse.cxx LIBRARIES RIO Core ROOT::Rint Gui)
+  ROOT_EXECUTABLE(rootbrowse src/rootbrowse.cxx LIBRARIES RIO Core Rint Gui)
   target_include_directories(rootbrowse PRIVATE ${CMAKE_SOURCE_DIR}/core/utils/inc)
 endif()
 
-ROOT_EXECUTABLE(rootcp src/rootcp.cxx LIBRARIES RIO Tree Core ROOT::Rint)
+ROOT_EXECUTABLE(rootcp src/rootcp.cxx LIBRARIES RIO Tree Core Rint)
 target_include_directories(rootcp PRIVATE ${CMAKE_SOURCE_DIR}/core/utils/inc)
 
-ROOT_EXECUTABLE(rootls src/rootls.cxx LIBRARIES RIO Tree Core ROOT::Rint ROOTNTuple)
+ROOT_EXECUTABLE(rootls src/rootls.cxx LIBRARIES RIO Tree Core Rint ROOTNTuple)
 target_include_directories(rootls PRIVATE ${CMAKE_SOURCE_DIR}/core/utils/inc)
 
-ROOT_EXECUTABLE(rootmkdir src/rootmkdir.cxx LIBRARIES RIO Core ROOT::Rint)
+ROOT_EXECUTABLE(rootmkdir src/rootmkdir.cxx LIBRARIES RIO Core Rint)
 target_include_directories(rootmkdir PRIVATE ${CMAKE_SOURCE_DIR}/core/utils/inc)
 
-ROOT_EXECUTABLE(rootrm src/rootrm.cxx LIBRARIES RIO Core ROOT::Rint)
+ROOT_EXECUTABLE(rootrm src/rootrm.cxx LIBRARIES RIO Core Rint)
 target_include_directories(rootrm PRIVATE ${CMAKE_SOURCE_DIR}/core/utils/inc)
 

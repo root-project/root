@@ -64,7 +64,7 @@ endforeach()
 #for the global tests using ROOT libs (Minuit2 should be taken via the PluginManager)
 
 set(RootLibraries Core RIO Net Hist Graf Graf3d Gpad Tree
-              ROOT::Rint Postscript Matrix Physics MathCore Thread)
+              Rint Postscript Matrix Physics MathCore Thread)
 
 foreach(file ${TestSource})
   get_filename_component(testname ${file} NAME_WE)

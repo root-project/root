@@ -8,7 +8,7 @@
 
 project(smatrix-tests)
 
-set(Libraries Core RIO Tree ROOT::Rint Matrix MathCore Hist Graf Gpad)
+set(Libraries Core RIO Tree Rint Matrix MathCore Hist Graf Gpad)
 
 set(TestSource
     testSMatrix.cxx
