@@ -111,7 +111,7 @@ echo "#ifndef ROOT_compiledata_h" >> "${COMPILEDATA}.tmp"
 echo "#define ROOT_compiledata_h" >> "${COMPILEDATA}.tmp"
 
 echo "#if !defined(ROOT_compiledata_cxx) && !defined(G__DICTIONARY) && !defined(__ACLIC__)" >> "${COMPILEDATA}.tmp"
-echo "#warning \"This header is solely used by ROOT internally to setup ACLiC, its will be renamed in ROOT 6.44. Consider using gSystem to access its content.\"" >> "${COMPILEDATA}.tmp"
+echo "#warning \"This header is solely used by ROOT internally to setup ACLiC, it will be renamed in ROOT 6.44. Consider using gSystem to access its content.\"" >> "${COMPILEDATA}.tmp"
 echo "#endif" >> "${COMPILEDATA}.tmp"
 
 echo "#define BUILD_ARCH \"$ARCH\"" >> "${COMPILEDATA}.tmp"
