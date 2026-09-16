@@ -200,6 +200,7 @@ more complex cuts such as (~e1) && (~e2), or (~e1) || !(~e2). Parentheses are im
 
 #include "TTreeViewer.h"
 #include "HelpText.h"
+#define ROOT_HelpTextTV_cxx
 #include "HelpTextTV.h"
 #include "TTVLVContainer.h"
 #include "TTVSession.h"
