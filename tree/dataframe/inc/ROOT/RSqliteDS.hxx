@@ -22,7 +22,8 @@
 namespace ROOT::Internal::RDF {
 class R__CLING_PTRCHECK(off) RSqliteDSColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
    void *fValuePtr;
-   void *GetImpl(Long64_t) final { return fValuePtr; }
+   void *GetImpl(std::size_t) final { return fValuePtr; }
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) final {}
 
 public:
    RSqliteDSColumnReader(void *valuePtr) : fValuePtr(valuePtr) {}
