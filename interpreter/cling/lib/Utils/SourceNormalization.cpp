@@ -11,7 +11,10 @@
 
 #include "clang/Basic/LangOptions.h"
 #include "clang/Basic/SourceManager.h"
+#include "clang/Lex/HeaderSearchOptions.h"
 #include "clang/Lex/Lexer.h"
+#include "clang/Lex/Preprocessor.h"
+#include "clang/Lex/PreprocessorOptions.h"
 
 #include <utility>
 
@@ -443,7 +446,54 @@ cling::utils::isUnnamedMacro(llvm::StringRef source,
   return std::string::npos;
 }
 
+std::pair<size_t, size_t>
+cling::utils::isUnnamedMacro(llvm::StringRef source, clang::SourceManager& sm,
+                             clang::Preprocessor& pp,
+                             llvm::StringRef extraIncludePath) {
+  std::unique_ptr<llvm::MemoryBuffer> buf =
+      llvm::MemoryBuffer::getMemBufferCopy(source,
+                                           "unnamed_macro_candidate_buffer");
+  clang::FileID fid = sm.createFileID(std::move(buf));
 
+  auto HeaderOpts = pp.getHeaderSearchInfo().getHeaderSearchOpts();
+
+  clang::HeaderSearch& HS = pp.getHeaderSearchInfo();
+  if (auto fileEntry = sm.getFileEntryRefForID(fid))
+    HS.getFileInfo(*fileEntry);
+  if (!extraIncludePath.empty()) {
+    if (auto dirRef =
+            sm.getFileManager().getOptionalDirectoryRef(extraIncludePath)) {
+      HS.AddSearchPath({*dirRef, clang::SrcMgr::C_User, /*isFramework=*/false},
+                       /*isAngled=*/false);
+    }
+  }
+  clang::TrivialModuleLoader trivialLoader;
+  auto PPOpts = pp.getPreprocessorOpts();
+  clang::Preprocessor localPP(PPOpts, pp.getDiagnostics(), pp.getLangOpts(), sm,
+                              HS, trivialLoader,
+                              /*IILookup=*/nullptr, /*OwnsHeaderSearch=*/false);
+  localPP.Initialize(pp.getTargetInfo(), pp.getAuxTargetInfo());
+  localPP.setPredefines(pp.getPredefines());
+  sm.setMainFileID(fid);
+  localPP.EnterMainSourceFile();
+
+  clang::Token tok;
+  localPP.Lex(tok); // expands macros, removes comments and skips false #if
+                    // paths automatically
+  if (tok.is(tok::l_brace)) {
+    const size_t openBrace = sm.getFileOffset(sm.getFileLoc(tok.getLocation()));
+    size_t closeBrace = std::string::npos;
+    do {
+      localPP.Lex(tok);
+      if (tok.is(tok::r_brace)) {
+        closeBrace = sm.getFileOffset(sm.getFileLoc(tok.getLocation()));
+      }
+    } while (tok.isNot(tok::eof) && tok.isNot(tok::annot_repl_input_end));
+    return {openBrace, closeBrace};
+  } else {
+    return {std::string::npos, std::string::npos};
+  }
+}
 
 size_t cling::utils::getWrapPoint(std::string& source,
                                   const clang::LangOptions& LangOpts) {
