@@ -3674,3 +3674,28 @@ function (ROOT_GET_CLANG_LIBRARIES clang_libraries)
   endforeach(extra_lib)
   SET(${clang_libraries} "${found_libraries}" PARENT_SCOPE)
 endfunction(ROOT_GET_CLANG_LIBRARIES)
+
+#---------------------------------------------------------------------------------------------------
+# ROOT_SET_LIBRARY_NAME( target libname exportname )
+#
+# this function is used to set the output name of a target, for example libROOTCore for the
+# ROOT::Core target
+#---------------------------------------------------------------------------------------------------
+function (ROOT_SET_LIBRARY_NAME target libname exportname)
+  set_target_properties(target PROPERTIES
+    OUTPUT_NAME ${libname}
+    EXPORT_NAME ${exportname}
+  )
+  if (symlink_libs)
+    install(CODE "
+      set(LIB_DIR \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}\")
+      set(NEW_NAME \"\${CMAKE_SHARED_LIBRARY_PREFIX}\${libname}\${CMAKE_SHARED_LIBRARY_SUFFIX}\")
+      set(OLD_NAME \"\${CMAKE_SHARED_LIBRARY_PREFIX}\${exportname}\${CMAKE_SHARED_LIBRARY_SUFFIX}\")
+      message(STATUS \"Creating symlink: \${OLD_NAME} -> \${NEW_NAME}\")
+      execute_process(
+        COMMAND \${CMAKE_COMMAND} -E create_symlink \${NEW_NAME} \${OLD_NAME}
+        WORKING_DIRECTORY \${LIB_DIR}
+      )
+    ")
+  endif()
+endfunction(ROOT_SET_LIBRARY_NAME)
