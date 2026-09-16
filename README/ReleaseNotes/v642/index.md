@@ -83,6 +83,7 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
 * The header `Riostream.h` is deprecated and will be removed after ROOT 6.44, use `<iostream>` or `<fstream>` or `<iomanip>` instead.
 * The header `Rstrstream.h` is deprecated and will be removed after ROOT 6.44, use instead `<sstream>`.
 * The headers `ZipLZMA.h`, `ZipLZ4.h` and `ZipZSTD.h` are deprecated and will be removed in ROOT 6.46, use instead the public methods in the `RZip.h` interface.
+* The headers `Hepevt.h` and `cfortran.h` are deprecated and will no longer be part of ROOT public installed headers in ROOT 6.44, use instead the `TGenerator.h` public interface or the `cfortran.h` header of the `cfitsio` library, respectively.
 
 ## Build System
 
