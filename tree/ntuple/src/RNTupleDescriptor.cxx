@@ -1229,14 +1229,16 @@ void ROOT::Internal::RNTupleDescriptorBuilder::AddField(const ROOT::RFieldBase &
    AddField(fieldDesc.MoveDescriptor().Unwrap());
 }
 
-void ROOT::Internal::RNTupleDescriptorBuilder::AddField(const RFieldDescriptor &fieldDesc)
+void ROOT::Internal::RNTupleDescriptorBuilder::AddField(RFieldDescriptor fieldDesc)
 {
-   fDescriptor.fFieldDescriptors.emplace(fieldDesc.GetId(), fieldDesc.Clone());
+   const auto id = fieldDesc.GetId();
    if (fDescriptor.fHeaderExtension)
       fDescriptor.fHeaderExtension->MarkExtendedField(fieldDesc);
    if (fieldDesc.GetFieldName().empty() && fieldDesc.GetParentId() == ROOT::kInvalidDescriptorId) {
-      fDescriptor.fFieldZeroId = fieldDesc.GetId();
+      fDescriptor.fFieldZeroId = id;
    }
+
+   fDescriptor.fFieldDescriptors.emplace(id, std::move(fieldDesc));
 }
 
 ROOT::RResult<void>
