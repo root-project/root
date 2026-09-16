@@ -28,18 +28,17 @@ fi
 
 
 # Check all installed headers for include errors. Some headers cannot be used standalone:
-suppressions="TMVA"
-suppressions+="\|RField[A-Z]\|RtypesImp.h\|TAtomicCount[A-Z]\|CladDerivator.h\|TBranchProxyTemplate"	# Not to be used standalone
+suppressions="RField[A-Z]\|RtypesImp.h\|TAtomicCount[A-Z]\|CladDerivator.h\|TBranchProxyTemplate"	# Not to be used standalone
 suppressions+="\|TWin32"							# Why are these installed in Linux?
 suppressions+="\|xRooHypoSpace.h\|xRooFit"					# Uses macros to declare namespaces
 suppressions+="\|RIoUring.hxx"							# Might not be installed
+suppressions+="\|TCudnn.h"							# Might not be installed
 suppressions+="\|CPyCppyy/DispatchPtr.h\|CPyCppyy/API.h"			# Would need to include Python.h
 suppressions+="\|/bvh"								# Includes a non-functioning std::span in c++17
 suppressions+="\|cfortran.h"							# Seems unable to run with modern compilers
 suppressions+="\|hipSYCL.h\|GenVectorX"						# Unconditionally installed on Fedora/Ubuntu even if broken
 suppressions+="\|TR[A-Z].*__ctors.h"						# R interface without any includes, so cannot be parsed as C++
 suppressions+="\|RTaskArena.hxx\|TThreadExecutor.hxx\|TTreeProcessorMT.hxx"	# Will raise errors if imt=Off
-
 HEADERS=$(find "${INCLUDE_DIR}" -type f -name '*.h*' | grep -v "${suppressions}")
 
 xargs -P ${NCPU:-1} -n 1 "${CXX}" -fsyntax-only -x c++ -std=c++${CXXSTANDARD} ${CXXFLAGS} -I"${INCLUDE_DIR}" <<< "${HEADERS}"
