@@ -28,11 +28,10 @@ fi
 
 
 # Check all installed headers for include errors. Some headers cannot be used standalone:
-suppressions="TMVA\|vdt"							# External
+suppressions="TMVA"
 suppressions+="\|RField[A-Z]\|RtypesImp.h\|TAtomicCount[A-Z]\|CladDerivator.h\|TBranchProxyTemplate"	# Not to be used standalone
 suppressions+="\|TWin32"							# Why are these installed in Linux?
 suppressions+="\|xRooHypoSpace.h\|xRooFit"					# Uses macros to declare namespaces
-suppressions+="\|RDaos.h"							# Might not be installed
 suppressions+="\|RIoUring.hxx"							# Might not be installed
 suppressions+="\|CPyCppyy/DispatchPtr.h\|CPyCppyy/API.h"			# Would need to include Python.h
 suppressions+="\|/bvh"								# Includes a non-functioning std::span in c++17
