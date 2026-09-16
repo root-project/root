@@ -17,7 +17,6 @@
 
 #include <string>
 #include <vector>
-#include <numeric>
 #include <iterator>
 #include <utility>
 
@@ -48,7 +47,12 @@ std::string Join(const std::string &sep, InputIt_t begin, InputIt_t end)
    if (begin == end)
       return "";
 
-   return std::accumulate(std::next(begin), end, *begin, [&sep](auto const &a, auto const &b) { return a + sep + b; });
+   std::string result(*begin++);
+   for (; begin != end; ++begin) {
+      result += sep;
+      result += *begin;
+   }
+   return result;
 }
 
 /**

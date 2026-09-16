@@ -42,6 +42,22 @@ TEST(StringUtils, Join)
    test("", ";;", {""});
 }
 
+TEST(StringUtils, JoinStringViews)
+{
+   const std::string source = "appleorangebanana";
+   const std::vector<std::string_view> strings = {std::string_view(source).substr(0, 5),
+                                                  std::string_view(source).substr(5, 6),
+                                                  std::string_view(source).substr(11)};
+   EXPECT_EQ(ROOT::Join("::", strings), "apple::orange::banana");
+   EXPECT_EQ(ROOT::Join("", strings.begin(), strings.end()), source);
+}
+
+TEST(StringUtils, JoinCStringArray)
+{
+   const char *strings[] = {"apple", "", "banana"};
+   EXPECT_EQ(ROOT::Join(",", strings), "apple,,banana");
+}
+
 TEST(StringUtils, Round)
 {
    EXPECT_EQ(ROOT::Round(0.000000014, 0.000000024), "(10#pm20)*1e-9");
