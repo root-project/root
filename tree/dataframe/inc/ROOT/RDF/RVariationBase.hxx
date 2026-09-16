@@ -14,6 +14,7 @@
 #include <ROOT/RDF/RColumnRegister.hxx>
 #include <ROOT/RDF/Utils.hxx> // ColumnNames_t
 #include <ROOT/RVec.hxx>
+#include <ROOT/RDF/RMaskedEntryRange.hxx>
 
 #include <array>
 #include <deque>
@@ -70,7 +71,7 @@ public:
    const std::string &GetVariationName() const;
    std::string GetTypeName() const;
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
-   virtual void Update(unsigned int slot, Long64_t entry) = 0;
+   virtual void Update(unsigned int slot, const ROOT::Internal::RDF::RMaskedEntryRange &mask) = 0;
    /// Clean-up operations to be performed at the end of a task.
    virtual void FinalizeSlot(unsigned int slot) = 0;
 };
