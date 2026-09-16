@@ -124,7 +124,7 @@
 #include "RConfigure.h"
 #define ROOT_Match_cxx
 #include "Match.h"
-#include "TRegExp.h"
+#include "TRegexp.h"
 #include "TTabCom.h"
 #include "TClass.h"
 #include "TClassTable.h"
