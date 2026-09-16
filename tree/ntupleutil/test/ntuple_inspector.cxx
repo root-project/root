@@ -970,7 +970,7 @@ void WriteShuffledNTuple(std::string_view ntupleName, std::string_view path)
                                            .BitsOnStorage(32)
                                            .Type(ROOT::ENTupleColumnType::kIndex32)
                                            .Index(0)
-                                           .MakeDescriptor()
+                                           .MoveDescriptor()
                                            .Unwrap());
    }
 

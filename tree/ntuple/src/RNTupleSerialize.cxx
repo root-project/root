@@ -1610,7 +1610,7 @@ ROOT::Internal::RNTupleSerializer::DeserializeSchemaDescription(const void *buff
       columnBuilder.Index(fnNextColumnIndex(columnBuilder.GetFieldId(), columnBuilder.GetRepresentationIndex()));
       columnBuilder.LogicalColumnId(columnId);
       columnBuilder.PhysicalColumnId(columnId);
-      auto columnDesc = columnBuilder.MakeDescriptor();
+      auto columnDesc = columnBuilder.MoveDescriptor();
       if (!columnDesc)
          return R__FORWARD_ERROR(columnDesc);
       auto resVoid = descBuilder.AddColumn(columnDesc.Unwrap());
@@ -1645,7 +1645,7 @@ ROOT::Internal::RNTupleSerializer::DeserializeSchemaDescription(const void *buff
       columnBuilder.RepresentationIndex(physicalColumnDesc.GetRepresentationIndex());
       columnBuilder.Index(fnNextColumnIndex(columnBuilder.GetFieldId(), columnBuilder.GetRepresentationIndex()));
 
-      auto aliasColumnDesc = columnBuilder.MakeDescriptor();
+      auto aliasColumnDesc = columnBuilder.MoveDescriptor();
       if (!aliasColumnDesc)
          return R__FORWARD_ERROR(aliasColumnDesc);
       auto resVoid = descBuilder.AddColumn(aliasColumnDesc.Unwrap());

@@ -146,12 +146,12 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    ROOT::ENTupleColumnType colType{ROOT::ENTupleColumnType::kInt32};
    RColumnDescriptorBuilder colBuilder1;
    colBuilder1.LogicalColumnId(0).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(1).Index(0);
-   descBuilder.AddColumn(colBuilder1.MakeDescriptor().Unwrap()).ThrowOnError();
+   descBuilder.AddColumn(colBuilder1.MoveDescriptor().Unwrap()).ThrowOnError();
 
    RColumnDescriptorBuilder colBuilder2;
    colBuilder2.LogicalColumnId(1).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(42).Index(0);
    try {
-      descBuilder.AddColumn(colBuilder2.MakeDescriptor().Unwrap()).ThrowOnError();
+      descBuilder.AddColumn(colBuilder2.MoveDescriptor().Unwrap()).ThrowOnError();
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("doesn't exist"));
    }
@@ -159,7 +159,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    RColumnDescriptorBuilder colBuilder3;
    colBuilder3.LogicalColumnId(0).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(1).Index(0);
    try {
-      descBuilder.AddColumn(colBuilder3.MakeDescriptor().Unwrap()).ThrowOnError();
+      descBuilder.AddColumn(colBuilder3.MoveDescriptor().Unwrap()).ThrowOnError();
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("column index clash"));
    }
@@ -167,7 +167,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    RColumnDescriptorBuilder colBuilder4;
    colBuilder4.LogicalColumnId(1).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(2).Index(1);
    try {
-      descBuilder.AddColumn(colBuilder4.MakeDescriptor().Unwrap()).ThrowOnError();
+      descBuilder.AddColumn(colBuilder4.MoveDescriptor().Unwrap()).ThrowOnError();
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("out of bounds column index"));
    }
@@ -176,14 +176,14 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    ROOT::ENTupleColumnType falseType(ROOT::ENTupleColumnType::kInt64);
    colBuilder5.LogicalColumnId(1).PhysicalColumnId(0).BitsOnStorage(64).Type(falseType).FieldId(2).Index(0);
    try {
-      descBuilder.AddColumn(colBuilder5.MakeDescriptor().Unwrap()).ThrowOnError();
+      descBuilder.AddColumn(colBuilder5.MoveDescriptor().Unwrap()).ThrowOnError();
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("alias column type mismatch"));
    }
 
    RColumnDescriptorBuilder colBuilder6;
    colBuilder6.LogicalColumnId(1).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(2).Index(0);
-   descBuilder.AddColumn(colBuilder6.MakeDescriptor().Unwrap()).ThrowOnError();
+   descBuilder.AddColumn(colBuilder6.MoveDescriptor().Unwrap()).ThrowOnError();
 }
 
 TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
@@ -231,7 +231,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                             .Type(ROOT::ENTupleColumnType::kInt32)
                             .FieldId(1)
                             .Index(0)
-                            .MakeDescriptor()
+                            .MoveDescriptor()
                             .Unwrap());
    descBuilder.AddFieldLink(0, 1);
    descBuilder.AddField(RFieldDescriptorBuilder()
@@ -267,7 +267,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                             .FieldId(3)
                             .Index(0)
                             .FirstElementIndex(1002)
-                            .MakeDescriptor()
+                            .MoveDescriptor()
                             .Unwrap());
    descBuilder.AddFieldLink(2, 3);
    descBuilder.AddFieldLink(0, 2);
@@ -286,7 +286,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                             .FieldId(4)
                             .Index(0)
                             .FirstElementIndex(1100)
-                            .MakeDescriptor()
+                            .MoveDescriptor()
                             .Unwrap());
    descBuilder.AddFieldLink(0, 4);
    descBuilder.AddField(RFieldDescriptorBuilder()
@@ -303,7 +303,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                             .Type(ROOT::ENTupleColumnType::kInt64)
                             .FieldId(5)
                             .Index(0)
-                            .MakeDescriptor()
+                            .MoveDescriptor()
                             .Unwrap());
    descBuilder.AddFieldLink(0, 5);
    descBuilder.AddField(RFieldDescriptorBuilder()
@@ -321,7 +321,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                             .FieldId(11)
                             .Index(0)
                             .FirstElementIndex(1002)
-                            .MakeDescriptor()
+                            .MoveDescriptor()
                             .Unwrap());
    descBuilder.AddFieldLink(10, 11);
 
