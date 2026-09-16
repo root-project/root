@@ -141,8 +141,6 @@ private:
    std::string fTypeAlias;
    /// The number of elements per entry for fixed-size arrays
    std::uint64_t fNRepetitions = 0;
-   /// The structural information carried by this field in the data model tree
-   ROOT::ENTupleStructure fStructure = ROOT::ENTupleStructure::kInvalid;
    /// Establishes sub field relationships, such as classes and collections
    ROOT::DescriptorId_t fParentId = ROOT::kInvalidDescriptorId;
    /// For projected fields, the source field ID
@@ -150,12 +148,14 @@ private:
    /// The pointers in the other direction from parent to children. They are serialized, too, to keep the
    /// order of sub fields.
    std::vector<ROOT::DescriptorId_t> fLinkIds;
+   /// The ordered list of columns attached to this field: first by representation index then by column index.
+   std::vector<ROOT::DescriptorId_t> fLogicalColumnIds;
    /// The number of columns in the column representations of the field. The column cardinality helps to navigate the
    /// list of logical column ids. For example, the second column of the third column representation is
    /// fLogicalColumnIds[2 * fColumnCardinality + 1]
    std::uint32_t fColumnCardinality = 0;
-   /// The ordered list of columns attached to this field: first by representation index then by column index.
-   std::vector<ROOT::DescriptorId_t> fLogicalColumnIds;
+   /// The structural information carried by this field in the data model tree
+   ROOT::ENTupleStructure fStructure = ROOT::ENTupleStructure::kInvalid;
    /// For custom classes, we store the ROOT TClass reported checksum to facilitate the use of I/O rules that
    /// identify types by their checksum
    std::optional<std::uint32_t> fTypeChecksum;
