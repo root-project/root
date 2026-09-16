@@ -479,9 +479,9 @@ else()
 
   if(WIN32)
     list(APPEND incdirs
-      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src
-      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/gdk
-      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/glib
+      ${CMAKE_SOURCE_DIR}/builtins/win32gdk/
+      ${CMAKE_SOURCE_DIR}/builtins/win32gdk/gdk
+      ${CMAKE_SOURCE_DIR}/builtins/win32gdk/glib
     )
   endif()
 
