@@ -44,7 +44,7 @@ E.g., Index() functions may return incorrect result.
 
 const unsigned TRegexp::fgMaxpat = 2048;
 
-
+#include <type_traits>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a regular expression from the input string. If wildcard is
@@ -54,6 +54,7 @@ const unsigned TRegexp::fgMaxpat = 2048;
 
 TRegexp::TRegexp(const char *re, Bool_t wildcard)
 {
+   static_assert(std::is_same_v<decltype(fPattern), Pattern_t>, "Type mismatch in fPattern!");
    if (wildcard)
       GenPattern(MakeWildcard(re));
    else
