@@ -162,7 +162,7 @@ ROOT_BUILD_OPTION(soversion OFF "Set version number in sonames for shared librar
 ROOT_BUILD_OPTION(spectrum ON "Enable support for TSpectrum")
 ROOT_BUILD_OPTION(sqlite ON "Enable support for SQLite")
 ROOT_BUILD_OPTION(ssl ON "Enable support for SSL encryption via OpenSSL")
-ROOT_BUILD_OPTION(symlink_libs ON "Build backward compatibility symlinks for historical libnames (Core.so instead of libCore.so).")
+ROOT_BUILD_OPTION(symlink_libs ON "Build backward compatibility symlinks for historical libnames (libCore.so instead of libROOTCore.so).")
 ROOT_BUILD_OPTION(test_distrdf_dask OFF "Enable distributed RDataFrame tests that use dask")
 ROOT_BUILD_OPTION(test_distrdf_pyspark OFF "Enable distributed RDataFrame tests that use pyspark")
 ROOT_BUILD_OPTION(testsupport OFF "Build the ROOT::TestSupport library required to use all features of ROOT_ADD_GTEST and similar macros (requires gtest at build time)")
