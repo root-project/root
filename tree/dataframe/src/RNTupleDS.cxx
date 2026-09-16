@@ -270,13 +270,14 @@ public:
       fLastEntry = -1;
    }
 
-   void *GetImpl(Long64_t entry) final
+   void *GetImpl(std::size_t /*idx*/) final { return fValue->GetPtr<void>().get(); }
+
+   void LoadImpl(Long64_t entry, bool mask) final
    {
-      if (entry != fLastEntry) {
+      if (entry != fLastEntry && mask) {
          fValue->Read(entry - fEntryOffset);
          fLastEntry = entry;
       }
-      return fValue->GetPtr<void>().get();
    }
 };
 } // namespace ROOT::Internal::RDF
