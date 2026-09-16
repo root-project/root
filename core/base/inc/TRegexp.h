@@ -23,7 +23,7 @@
 
 #include "Rtypes.h"
 
-#include "Match.h"
+typedef unsigned short Pattern_t;
 
 class TString;
 
