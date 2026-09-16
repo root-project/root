@@ -30,19 +30,32 @@ jobs:
       matrix:
         python: [cp310, cp311, cp312, cp313, cp314]
         config:
+          # `label` is a unique artifact name for each build
           - runner: macos-15
             platform: macosx_arm64
+            label: macosx_arm64
             deployment_target: "15.0"
           - runner: macos-26
             platform: macosx_arm64
+            label: macosx_arm64
             deployment_target: "26.0"
           - runner: ubuntu-latest
             platform: manylinux_x86_64
-            deployment_target: ""
+            label: manylinux_2_28_x86_64
+            manylinux_image: manylinux_2_28
           - runner: ubuntu-24.04-arm
             platform: manylinux_aarch64
-            deployment_target: ""
-    name: ${{ matrix.python }}-${{ matrix.config.platform }}-${{ matrix.config.runner }}
+            label: manylinux_2_28_aarch64
+            manylinux_image: manylinux_2_28
+          - runner: ubuntu-latest
+            platform: manylinux_x86_64
+            label: manylinux_2_34_x86_64
+            manylinux_image: manylinux_2_34
+          - runner: ubuntu-24.04-arm
+            platform: manylinux_aarch64
+            label: manylinux_2_34_aarch64
+            manylinux_image: manylinux_2_34
+    name: ${{ matrix.python }}-${{ matrix.config.label }}-${{ matrix.config.runner }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -50,9 +63,11 @@ jobs:
       - uses: ./.github/workflows/cibuildwheel-impl
         env:
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.config.deployment_target }}
+          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.config.manylinux_image }}
+          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.config.manylinux_image }}
         with:
           build-tag: ${{ matrix.python }}-${{ matrix.config.platform }}
-          artifact-name: ${{ matrix.python }}-${{ matrix.config.platform }}-${{ matrix.config.runner }}
+          artifact-name: ${{ matrix.python }}-${{ matrix.config.label }}-${{ matrix.config.runner }}
 
   test-wheels:
     needs: build-wheels
@@ -64,14 +79,18 @@ jobs:
         test_config:
           # each runner tests the wheel built on it
           - runner: macos-15
-            wheel_name_pattern: "macosx_15"
+            build_label: macosx_arm64
           - runner: macos-26
-            wheel_name_pattern: "macosx_26"
+            build_label: macosx_arm64
           - runner: ubuntu-latest
-            wheel_name_pattern: "x86_64"
+            build_label: manylinux_2_28_x86_64
           - runner: ubuntu-24.04-arm
-            wheel_name_pattern: "aarch64"
-    name: test-cp${{ matrix.python }}-${{ matrix.test_config.wheel_name_pattern }}
+            build_label: manylinux_2_28_aarch64
+          - runner: ubuntu-latest
+            build_label: manylinux_2_34_x86_64
+          - runner: ubuntu-24.04-arm
+            build_label: manylinux_2_34_aarch64
+    name: test-cp${{ matrix.python }}-${{ matrix.test_config.build_label }}-${{ matrix.test_config.runner }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -80,6 +99,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: wheels
+          pattern: cp*-${{ matrix.test_config.build_label }}-${{ matrix.test_config.runner }}
           merge-multiple: true
 
       - name: Setup Python
@@ -91,7 +111,7 @@ jobs:
         run: |
           ls -R wheels
           PY_VER=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
-          WHEEL=$(ls wheels/*${PY_VER}*${{ matrix.test_config.wheel_name_pattern }}*.whl | head -n 1)
+          WHEEL=$(ls wheels/*${PY_VER}*.whl | head -n 1)
           echo "Python version: ${PY_VER}, installing wheel: ${WHEEL}"
           pip install "$WHEEL"
 
