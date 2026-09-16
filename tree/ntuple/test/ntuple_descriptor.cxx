@@ -2,6 +2,17 @@
 
 #include <TVirtualStreamerInfo.h>
 
+TEST(RStringPool, Basics)
+{
+   ROOT::Internal::RStringPool pool;
+
+   EXPECT_EQ("", *pool.Intern(""));
+   EXPECT_EQ("xyz", *pool.Intern("xyz"));
+   EXPECT_EQ("abc", *pool.Intern("abc"));
+
+   EXPECT_EQ(pool.Intern("abc"), pool.Intern("abc"));
+}
+
 TEST(RFieldDescriptorBuilder, MoveDescriptorErrors)
 {
    // minimum requirements for making a field descriptor from scratch

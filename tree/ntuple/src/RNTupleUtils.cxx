@@ -15,6 +15,8 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleUtils.hxx>
 
+#include <TError.h>
+
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -46,4 +48,16 @@ ROOT::RResult<void> ROOT::Internal::EnsureValidNameForRNTuple(std::string_view n
                      "carriage return.");
 
    return RResult<void>::Success();
+}
+
+const std::string *ROOT::Internal::RStringPool::Intern(std::string_view str)
+{
+   auto itr = std::lower_bound(fStrings.begin(), fStrings.end(), str, Less);
+
+   if (itr == fStrings.end() || **itr != str) {
+      R__ASSERT(!fFrozen);
+      itr = fStrings.insert(itr, std::make_unique<std::string>(str));
+   }
+
+   return itr->get();
 }
