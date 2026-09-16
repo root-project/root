@@ -35,6 +35,8 @@ Warning: The preferred way to use regular expressions is via std::regex.
 E.g., Index() functions may return incorrect result.
 */
 
+#define ROOT_Match_cxx
+#include "Match.h"
 #include "TRegexp.h"
 #include "TString.h"
 #include "TError.h"
