@@ -8,6 +8,40 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+r"""
+\pythondoc RNTupleWriter
+
+RNTupleWriter can be used to write RNTuples to storage.
+
+A simple way to write an RNTuple is done by:
+- create a model and add fields to it
+- open a RNTupleWriter 
+- create entries and fill them with data
+- commit entries to the RNTuple via writer.Fill(entry)
+
+\code{.py}
+import ROOT
+
+# Create the model
+model = ROOT.RNTupleModel.Create()
+
+# Define the schema by adding fields to the model.
+model.MakeField['int']("foo")
+
+# Create a writer as a context manager
+with ROOT.RNTupleWriter.Recreate(model, "myNtuple", "file.root") as writer:
+    # create entries and write them to the RNTuple
+    for i in range(0,10):
+        entry = writer.CreateEntry()
+        entry['foo'] = i
+        writer.Fill(entry)
+# On destruction, the writer will flush the written data to disk
+
+\endcode
+
+\endpythondoc
+"""
+
 from . import pythonization
 from ._pyz_utils import MethodTemplateGetter, MethodTemplateWrapper
 
