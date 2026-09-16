@@ -396,9 +396,12 @@ else()
     # To ensure this override stays constant, we need to avoid subdirectories calling find_package(LLVM),
     # which would set it to ON again if system was compiled that way
     # Define a macro with a toggle flag to override find_package, that will only be visible in this scope, not in parent one.
+    # TEMPORARY: remove this workaround once ROOT can link against the shared
+    # libLLVM.so for builtin_llvm=OFF
     macro(find_package _package_name)
-      if(SKIP_FIND_LLVM AND "${_package_name}" STREQUAL "LLVM")
-        message(STATUS "[ROOT] Prevented secondary find_package(LLVM) call to save overrides.")
+      if(ROOT_SKIP_FIND_LLVM_WITHIN_CLANG AND "${_package_name}" STREQUAL "LLVM")
+        message(STATUS "[ROOT] Suppressed find_package(LLVM) at ${CMAKE_CURRENT_LIST_FILE}:${CMAKE_CURRENT_LIST_LINE}"
+                       " to keep LLVM_LINK_LLVM_DYLIB=OFF.")
       else()
         _find_package(${_package_name} ${ARGN})
       endif()
@@ -409,9 +412,9 @@ else()
     set(_cxx_standard ${CMAKE_CXX_STANDARD})
     set(CMAKE_CXX_STANDARD 17)
 
-    set(SKIP_FIND_LLVM ON)
+    set(ROOT_SKIP_FIND_LLVM_WITHIN_CLANG ON)
     add_subdirectory(llvm-project/clang EXCLUDE_FROM_ALL)
-    set(SKIP_FIND_LLVM OFF)
+    set(ROOT_SKIP_FIND_LLVM_WITHIN_CLANG OFF)
     
     set(CMAKE_CXX_STANDARD ${_cxx_standard})
   endif(builtin_clang)
