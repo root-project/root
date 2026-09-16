@@ -3676,13 +3676,18 @@ function (ROOT_GET_CLANG_LIBRARIES clang_libraries)
 endfunction(ROOT_GET_CLANG_LIBRARIES)
 
 #---------------------------------------------------------------------------------------------------
-# ROOT_SET_LIBRARY_NAME( target libname exportname )
+# ROOT_SET_LIBRARY_NAME( tgt libname exportname )
 #
 # this function is used to set the output name of a target, for example libROOTCore for the
-# ROOT::Core target
+# ROOT::Core target. It also creates a symlink to old historical name, if symlink_libs is enabled,
+# for backward compatibility
+# tgt the CMake target, for example "Core"
+# libname the name of the lib when written do disk (eg "ROOTCore" so that libROOTCore.so is installed)
+# exportname the name of the CMake target when downstream projects find_package(ROOT) and want to
+#            link against it. For example "Core" so that ROOT::Core can be linked against.
 #---------------------------------------------------------------------------------------------------
-function (ROOT_SET_LIBRARY_NAME target libname exportname)
-  set_target_properties(target PROPERTIES
+function (ROOT_SET_LIBRARY_NAME tgt libname exportname)
+  set_target_properties(${tgt} PROPERTIES
     OUTPUT_NAME ${libname}
     EXPORT_NAME ${exportname}
   )
