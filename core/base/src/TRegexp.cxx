@@ -54,7 +54,7 @@ const unsigned TRegexp::fgMaxpat = 2048;
 
 TRegexp::TRegexp(const char *re, Bool_t wildcard)
 {
-   static_assert(std::is_same_v<decltype(fPattern), Pattern_t>, "Type mismatch in fPattern!");
+   static_assert(std::is_same_v<decltype(*fPattern), Pattern_t>, "Type mismatch in fPattern!");
    if (wildcard)
       GenPattern(MakeWildcard(re));
    else
