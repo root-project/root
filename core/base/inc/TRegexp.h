@@ -23,8 +23,6 @@
 
 #include "Rtypes.h"
 
-typedef unsigned short Pattern_t;
-
 class TString;
 
 
@@ -34,7 +32,7 @@ public:
    enum EStatVal { kOK = 0, kIllegal, kNomem, kToolong };
 
 private:
-   Pattern_t            *fPattern;       // Compiled pattern
+   unsigned short       *fPattern;       // Compiled pattern
    EStatVal              fStat;          // Status
    static const unsigned fgMaxpat;       // Max length of compiled pattern
 
