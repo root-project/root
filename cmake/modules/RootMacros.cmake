@@ -1584,7 +1584,8 @@ function(ROOT_PYTHON_PACKAGE pkgname)
     set(src ${CMAKE_CURRENT_SOURCE_DIR}/${py_source})
     set(tgt ${pkg_path_build}/${py_source})
 
-    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy_if_different ${src} ${tgt})
+    # Not copy_if_different: always refreshing the copies keeps the next build a no-op.
+    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${src} ${tgt})
 
     list(APPEND py_sources_in_source_dir ${src})
     list(APPEND py_sources_in_build_tree ${tgt})
