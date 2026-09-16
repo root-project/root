@@ -13,6 +13,10 @@
 
 #include "Rtypes.h"
 
+#ifndef ROOT_TGenerator_cxx
+#warning "This header is an implementation detail, is deprecated and will be removed in ROOT 6.44. Use instead the `TGenerator.h` public interface"
+#endif
+
 #include "cfortran.h"
 
 extern "C" {
