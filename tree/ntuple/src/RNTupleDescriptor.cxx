@@ -1181,7 +1181,7 @@ ROOT::RResult<ROOT::RColumnDescriptor> ROOT::Internal::RColumnDescriptorBuilder:
    return result;
 }
 
-ROOT::RResult<ROOT::RFieldDescriptor> ROOT::Internal::RFieldDescriptorBuilder::MakeDescriptor() const
+ROOT::RResult<ROOT::RFieldDescriptor> ROOT::Internal::RFieldDescriptorBuilder::MoveDescriptor()
 {
    if (fField.GetId() == ROOT::kInvalidDescriptorId) {
       return R__FAIL("invalid field id");
@@ -1202,7 +1202,10 @@ ROOT::RResult<ROOT::RFieldDescriptor> ROOT::Internal::RFieldDescriptorBuilder::M
          return R__FAIL("name cannot be empty string \"\"");
       }
    }
-   return fField.Clone();
+
+   RFieldDescriptor result;
+   std::swap(result, fField);
+   return result;
 }
 
 void ROOT::Internal::RNTupleDescriptorBuilder::AddField(const ROOT::RFieldBase &field, DescriptorId_t fieldId)
@@ -1223,7 +1226,7 @@ void ROOT::Internal::RNTupleDescriptorBuilder::AddField(const ROOT::RFieldBase &
       assert(field.GetStructure() == ENTupleStructure::kCollection);
       fieldDesc.IsSoACollection(true);
    }
-   AddField(fieldDesc.MakeDescriptor().Unwrap());
+   AddField(fieldDesc.MoveDescriptor().Unwrap());
 }
 
 void ROOT::Internal::RNTupleDescriptorBuilder::AddField(const RFieldDescriptor &fieldDesc)
