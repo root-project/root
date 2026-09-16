@@ -7,7 +7,7 @@
 project(mathmore-tests)
 
 set(Libraries Core RIO Net Hist Graf Graf3d Gpad Tree
-              Rint Postscript Matrix Physics Thread MathCore MathMore)
+              ROOT::Rint Postscript Matrix Physics Thread MathCore MathMore)
 
 set(TestMathMoreSource
      testChebyshev.cxx
