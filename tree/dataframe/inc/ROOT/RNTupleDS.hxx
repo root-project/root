@@ -35,6 +35,15 @@
 namespace ROOT {
 class RDataFrame;
 }
+
+namespace ROOT::Detail::RDF {
+class RLoopManager;
+}
+
+namespace ROOT::Internal {
+class RSlotStack;
+}
+
 namespace ROOT::Internal::RDF {
 /**
  * \brief Internal overload of the function that allows passing a range of entries
@@ -90,6 +99,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
       ULong64_t fFirstEntry = 0; ///< First entry index in fSource
       /// End entry index in fSource, e.g. the number of entries in the range is fLastEntry - fFirstEntry
       ULong64_t fLastEntry = 0;
+      ULong64_t fEntryOffset = 0; /// Offset of both first and last entries w.r.t. the page source
       std::string_view fFileName; ///< Storage location of the current RNTuple
    };
 
@@ -143,14 +153,15 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
 
    std::vector<REntryRangeDS> fCurrentRanges; ///< Basis for the ranges returned by the last GetEntryRanges() call
    std::vector<REntryRangeDS> fNextRanges;    ///< Basis for the ranges populated by the PrepareNextRanges() call
+
+   // During MT runs, the current window of entries seen by an active slot
+   std::vector<REntryRangeDS> fActiveRangesPerSlot;
    /// Maps the first entries from the ranges of the last GetEntryRanges() call to their corresponding index in
    /// the fCurrentRanges vectors.  This is necessary because the returned ranges get distributed arbitrarily
    /// onto slots.  In the InitSlot method, the column readers use this map to find the correct range to connect to.
    std::unordered_map<ULong64_t, std::size_t> fFirstEntry2RangeIdx;
    // Keep track of the scheduled entries - necessary for processing of GlobalEntries
    std::vector<std::pair<ULong64_t, ULong64_t>> fOriginalRanges;
-   /// One element per slot, corresponding to the current range index for that slot, as filled by InitSlot
-   std::vector<std::size_t> fSlotsToRangeIdxs;
 
    /// The background thread that runs StageNextSources()
    std::thread fThreadStaging;
@@ -221,7 +232,11 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
 
    explicit RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames,
                       const std::pair<ULong64_t, ULong64_t> &range);
-
+#ifdef R__USE_IMT
+   void ProcessMTRange(std::size_t fileIdx, const ROOT::Internal::RNTupleClusterBoundaries &cluster,
+                       ROOT::Detail::RDF::RLoopManager &lm, ROOT::Internal::RSlotStack &slotStack,
+                       std::atomic<ULong64_t> &entryCount, std::atomic<ULong64_t> &globalEntryCount);
+#endif
 public:
    RNTupleDS(std::string_view ntupleName, std::string_view fileName);
    RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames);
@@ -255,7 +270,9 @@ public:
 
    // Old API, unused
    bool SetEntry(unsigned int, ULong64_t) final { return true; }
-
+#ifdef R__USE_IMT
+   void ProcessMT(ROOT::Detail::RDF::RLoopManager &lm) final;
+#endif
 protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
