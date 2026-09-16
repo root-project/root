@@ -1,6 +1,8 @@
-.L lib/libjet.so
-.L lib/libbtag.so 
+.L libjet_dictrflx.so
+.L libbtag_dictrflx.so
+
 #include "DataVector.h"
+
 DataVector<xAOD::Jet_v1> obj;
 
 std::string name;
