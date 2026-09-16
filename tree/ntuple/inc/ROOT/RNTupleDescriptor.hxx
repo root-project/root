@@ -1819,8 +1819,8 @@ public:
    /// The real footer size also include the page list envelopes
    void AddToOnDiskFooterSize(std::uint64_t size) { fDescriptor.fOnDiskFooterSize += size; }
 
+   void AddField(RFieldDescriptor fieldDesc);
    void AddField(const ROOT::RFieldBase &field, DescriptorId_t fieldId);
-   void AddField(const RFieldDescriptor &fieldDesc);
    RResult<void> AddFieldLink(ROOT::DescriptorId_t fieldId, ROOT::DescriptorId_t linkId);
    RResult<void> AddFieldProjection(ROOT::DescriptorId_t sourceId, ROOT::DescriptorId_t targetId);
 
