@@ -22,6 +22,10 @@
 #ifndef ROOT_TreeUtils
 #define ROOT_TreeUtils
 
+#if !defined(ROOT_TreeUtils_cxx) && !defined(G__DICTIONARY)
+#warning "This header is deprecated and will be removed in ROOT 6.44, use instead TNtuple::ReadStream or TNtupleD::ReadStream"
+#endif
+
 #include <iosfwd>
 
 #include "RtypesCore.h"
