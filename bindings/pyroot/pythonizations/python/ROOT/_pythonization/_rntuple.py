@@ -11,13 +11,13 @@
 r"""
 \pythondoc RNTupleWriter
 
-RNTupleWriter can be used to write RNTuples to storage.
+RNTupleWriter is an interface to write RNTuples to storage.
 
-A simple way to write an RNTuple is done by:
-- create a model and add fields to it
-- open a RNTupleWriter 
-- create entries and fill them with data
-- commit entries to the RNTuple via writer.Fill(entry)
+A simple way to write an RNTuple in python is by:
+- creating a model and adding fields to it
+- opening an RNTupleWriter 
+- creating entries and filling them with data
+- committing entries to the RNTuple via writer.Fill(entry)
 
 \code{.py}
 import ROOT
