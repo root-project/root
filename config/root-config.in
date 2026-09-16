@@ -71,7 +71,7 @@ newlib="-lNew"
 rootglibs="-lGui"
 rootevelibs="-lEve -lEG -lGeom -lGed -lRGL"
 rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTVecOps -lTree -lTreePlayer\
-          -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -lROOTNTuple -lROOTNTupleUtil"
+          -lROOTRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -lROOTNTuple -lROOTNTupleUtil"
 
 # MultiProc is not supported on Windows
 if test "$platform" != "win32"; then
@@ -96,7 +96,7 @@ if test "$platform" = "win32"; then
               -include:_G__cpp_setupG__Tree       \
               -include:_G__cpp_setupG__TreePlayer \
               -include:_G__cpp_setupG__Thread     \
-              -include:_G__cpp_setupG__Rint       \
+              -include:_G__cpp_setupG__Rint   \
               -include:_G__cpp_setupG__PostScript \
               -include:_G__cpp_setupG__Matrix     \
               -include:_G__cpp_setupG__Physics"
@@ -116,7 +116,7 @@ elif test "$platform" = "aix5"; then
               -Wl,-u,.G__cpp_setupG__Tree       \
               -Wl,-u,.G__cpp_setupG__TreePlayer \
               -Wl,-u,.G__cpp_setupG__Thread     \
-              -Wl,-u,.G__cpp_setupG__Rint       \
+              -Wl,-u,.G__cpp_setupG__Rint   \
               -Wl,-u,.G__cpp_setupG__PostScript \
               -Wl,-u,.G__cpp_setupG__Matrix     \
               -Wl,-u,.G__cpp_setupG__Physics"
@@ -136,7 +136,7 @@ else
               -Wl,-u,_G__cpp_setupG__Tree          \
               -Wl,-u,_G__cpp_setupG__TreePlayer    \
               -Wl,-u,_G__cpp_setupG__Thread        \
-              -Wl,-u,_G__cpp_setupG__Rint          \
+              -Wl,-u,_G__cpp_setupG__Rint      \
               -Wl,-u,_G__cpp_setupG__PostScript    \
               -Wl,-u,_G__cpp_setupG__Matrix        \
               -Wl,-u,_G__cpp_setupG__Physics"

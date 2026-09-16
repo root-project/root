@@ -53,9 +53,9 @@ if(MSVC)
   cmake_path(CONVERT "${ROOT_INCLUDE_DIRS}" TO_CMAKE_PATH_LIST ROOT_INCLUDE_DIRS)
   cmake_path(CONVERT "${ROOT_LIBRARY_DIR}" TO_CMAKE_PATH_LIST ROOT_LIBRARY_DIR)
   if(CMAKE_GENERATOR MATCHES Ninja)
-    set(ROOT_LIBRARIES Core RIO Net Hist Gpad Graf Tree Rint Matrix MathCore)
+    set(ROOT_LIBRARIES Core RIO Net Hist Gpad Graf Tree ROOT::Rint Matrix MathCore)
   else()
-    set(ROOT_LIBRARIES libCore libRIO libNet libHist libGpad libGraf libTree libRint libMatrix libMathCore)
+    set(ROOT_LIBRARIES libCore libRIO libNet libHist libGpad libGraf libTree libROOTRint libMatrix libMathCore)
   endif()
 else()
   # We can not use CMAKE_SHARED_LIBRARY_SUFFIX as on macos it uses the standard dylib rather than the .so
@@ -65,7 +65,7 @@ else()
   # only for non-Windows platforms
   set(OptionalMultiProc MultiProc)
 
-  set(ROOT_LIBRARIES Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
+  set(ROOT_LIBRARIES Core RIO Net Hist Gpad Tree ROOT::Rint Matrix MathCore)
 endif()
 
 set(ref_suffix ".ref")
