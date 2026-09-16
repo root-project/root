@@ -947,7 +947,7 @@ void WriteShuffledNTuple(std::string_view ntupleName, std::string_view path)
                                        .FieldId(0)
                                        .FieldName("")
                                        .Structure(ROOT::ENTupleStructure::kRecord)
-                                       .MakeDescriptor()
+                                       .MoveDescriptor()
                                        .Unwrap());
 
    for (std::uint32_t i = 0; i < 6; ++i) {
@@ -958,7 +958,7 @@ void WriteShuffledNTuple(std::string_view ntupleName, std::string_view path)
                                           .FieldId(fieldId)
                                           .FieldName("tag" + std::to_string(i))
                                           .Structure(ROOT::ENTupleStructure::kPlain)
-                                          .MakeDescriptor()
+                                          .MoveDescriptor()
                                           .Unwrap());
 
       nTupleDescriptorBuilder.AddFieldLink(0, fieldId).ThrowOnError();
