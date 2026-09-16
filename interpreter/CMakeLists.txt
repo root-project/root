@@ -393,14 +393,26 @@ else()
 
     # Disable linking against shared LLVM
     set(LLVM_LINK_LLVM_DYLIB OFF)
+    # To ensure this override stays constant, we need to avoid subdirectories calling find_package(LLVM),
+    # which would set it to ON again if system was compiled that way
+    # Define a macro with a toggle flag to override find_package, that will only be visible in this scope, not in parent one.
+    macro(find_package _package_name)
+      if(SKIP_FIND_LLVM AND "${_package_name}" STREQUAL "LLVM")
+        message(STATUS "[ROOT] Prevented secondary find_package(LLVM) call to save overrides.")
+      else()
+        _find_package(${_package_name} ${ARGN})
+      endif()
+    endmacro()
 
     # Always build LLVM with C++17. It is not necessary to compile with the same
     # C++ standard as the rest of ROOT and sometimes it doesn't even work.
     set(_cxx_standard ${CMAKE_CXX_STANDARD})
     set(CMAKE_CXX_STANDARD 17)
 
+    set(SKIP_FIND_LLVM ON)
     add_subdirectory(llvm-project/clang EXCLUDE_FROM_ALL)
-
+    set(SKIP_FIND_LLVM OFF)
+    
     set(CMAKE_CXX_STANDARD ${_cxx_standard})
   endif(builtin_clang)
 
@@ -417,7 +429,11 @@ if (builtin_clang)
     ${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/clang/include
     ${CLANG_BINARY_DIR}/include
     CACHE STRING "Clang include directories.")
-  set(CLANG_CMAKE_DIR "${LLVM_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX}/cmake/clang/")
+  if(builtin_llvm)
+    set(CLANG_CMAKE_DIR "${LLVM_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX}/cmake/clang/")
+  else()
+    set(CLANG_CMAKE_DIR "${CMAKE_BINARY_DIR}/lib/cmake/clang/")
+  endif()
 else()
   find_package(Clang REQUIRED CONFIG)
   message(STATUS "Found Clang ${CLANG_PACKAGE_VERSION} in ${CLANG_CMAKE_DIR}")
