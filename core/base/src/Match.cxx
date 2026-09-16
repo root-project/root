@@ -22,7 +22,7 @@
 #include <cctype>
 #include <cstring>
 
-
+#define ROOT_Match_cxx
 #include "Match.h"
 
 
