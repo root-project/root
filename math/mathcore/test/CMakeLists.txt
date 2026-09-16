@@ -7,7 +7,7 @@
 project(mathcore-tests)
 
 set(Libraries Core RIO Net Hist Graf Graf3d Gpad Tree Minuit2
-              ROOT::Rint Postscript Matrix Physics MathCore Thread)
+              Rint Postscript Matrix Physics MathCore Thread)
 
 set(TestSource
     testMathRandom.cxx
