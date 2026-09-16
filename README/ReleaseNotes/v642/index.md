@@ -172,6 +172,19 @@ the cut instead of being selected based on `sqrt(abs(x))`.
 
 ## RooFit
 
+### Exact bin-integrated residual and pull histograms
+
+The new `RooFit::makeResidHist()` and `RooFit::makePullHist()` functions create residual and pull histograms of binned data with respect to a fitted model, where the model expectation per bin is computed by integrating the model exactly over the bin.
+The existing `RooPlot::residHist()` and `RooPlot::pullHist()` instead interpolate or average the curve of the plotted pdf, which biases the comparison for strongly peaked pdfs: it produces a characteristic "wiggle" pattern in the residuals and unrealistically large chi-square values when the binned data is compared with the result of an unbinned fit.
+The new functions take the model (any `RooAbsReal`) and the data (`RooAbsData`, which is binned internally if unbinned) and support the usual RooFit command arguments, such as `RooFit::Binning()` to select the binning (also for unbinned data), `RooFit::Range()` to restrict the comparison to (a union of) fit ranges and normalize the model accordingly, `RooFit::Normalization()` for an extra scale factor, and `RooFit::DataError()` to select the point error model.
+
+```cpp
+RooDataHist binData("binData", "binData", x, *unbinnedData);
+auto pull = RooFit::makePullHist(pdf, binData);
+```
+
+For comparisons against projected pdfs or components, project the model with `RooAbsPdf::createProjection()` and the data with `RooAbsData::reduce()`, or pass the component pdf with a matching `RooFit::Normalization()` argument.
+
 ### RooFit::MultiProcess without ZeroMQ, now enabled by default
 
 The `RooFit::MultiProcess` package that implements the parallel gradient minimization with `fitTo(..., RooFit::Parallelize(n))` previously communicated between the forked processes with ZeroMQ sockets, which required building ROOT with `roofit_multiprocess=ON` and the ZeroMQ (with draft API) and cppzmq dependencies.
