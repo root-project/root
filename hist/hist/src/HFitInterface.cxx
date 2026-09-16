@@ -136,36 +136,6 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    //  get the range (add the function range ??)
    // to check if inclusion/exclusion at end/point
    const DataRange & range = dv.Range();
-   if (range.Size(0) != 0) {
-      HFitInterface::ExamineRange( hfit->GetXaxis(), range(0), hxfirst, hxlast);
-      if (range.Size(0) > 1  ) {
-         Warning("ROOT::Fit::FillData","support only one range interval for X coordinate");
-      }
-   }
-
-   if (hfit->GetDimension() > 1 && range.Size(1) != 0) {
-      HFitInterface::ExamineRange( hfit->GetYaxis(), range(1), hyfirst, hylast);
-      if (range.Size(1) > 1  )
-         Warning("ROOT::Fit::FillData","support only one range interval for Y coordinate");
-   }
-
-   if (hfit->GetDimension() > 2 && range.Size(2) != 0) {
-      HFitInterface::ExamineRange( hfit->GetZaxis(), range(2), hzfirst, hzlast);
-      if (range.Size(2) > 1  )
-         Warning("ROOT::Fit::FillData","support only one range interval for Z coordinate");
-   }
-
-
-   int n = (hxlast-hxfirst+1)*(hylast-hyfirst+1)*(hzlast-hzfirst+1);
-
-#ifdef DEBUG
-   std::cout << "THFitInterface: ifirst = " << hxfirst << " ilast =  " << hxlast
-             << " total bins  " << n
-             << std::endl;
-#endif
-
-   // reserve n for more efficient usage
-   //dv.Data().reserve(n);
 
    int hdim =  hfit->GetDimension();
    int ndim = hdim;
@@ -175,7 +145,17 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    assert( ndim > 0 );
    //typedef  BinPoint::CoordData CoordData;
    //CoordData x = CoordData( hfit->GetDimension() );
-   dv.Initialize(n,ndim, (fitOpt.fErrors1) ? ROOT::Fit::BinData::kNoError : ROOT::Fit::BinData::kValueError);
+
+   const ROOT::Fit::BinData::ErrorType errorType =
+      (fitOpt.fErrors1) ? ROOT::Fit::BinData::kNoError : ROOT::Fit::BinData::kValueError;
+
+   // Several disjoint ranges can be defined for each coordinate. The bins are
+   // collected by looping over every combination of the per-coordinate ranges.
+   // A coordinate without any range contributes a single iteration spanning the
+   // full axis.
+   const unsigned int nRangesX = (range.Size(0) != 0) ? range.Size(0) : 1;
+   const unsigned int nRangesY = (hdim > 1 && range.Size(1) != 0) ? range.Size(1) : 1;
+   const unsigned int nRangesZ = (hdim > 2 && range.Size(2) != 0) ? range.Size(2) : 1;
 
    double x[3];
    double s[3];
@@ -187,6 +167,35 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    const TAxis *xaxis  = hfit->GetXaxis();
    const TAxis *yaxis  = hfit->GetYaxis();
    const TAxis *zaxis  = hfit->GetZaxis();
+
+   for (unsigned int ix = 0; ix < nRangesX; ++ix) {
+   hxfirst = xaxis->GetFirst();
+   hxlast  = xaxis->GetLast();
+   if (range.Size(0) != 0)
+      HFitInterface::ExamineRange( xaxis, range(0,ix), hxfirst, hxlast);
+
+   for (unsigned int iy = 0; iy < nRangesY; ++iy) {
+   hyfirst = yaxis->GetFirst();
+   hylast  = yaxis->GetLast();
+   if (hdim > 1 && range.Size(1) != 0)
+      HFitInterface::ExamineRange( yaxis, range(1,iy), hyfirst, hylast);
+
+   for (unsigned int iz = 0; iz < nRangesZ; ++iz) {
+   hzfirst = zaxis->GetFirst();
+   hzlast  = zaxis->GetLast();
+   if (hdim > 2 && range.Size(2) != 0)
+      HFitInterface::ExamineRange( zaxis, range(2,iz), hzfirst, hzlast);
+
+   int n = (hxlast-hxfirst+1)*(hylast-hyfirst+1)*(hzlast-hzfirst+1);
+
+#ifdef DEBUG
+   std::cout << "THFitInterface: ifirst = " << hxfirst << " ilast =  " << hxlast
+             << " total bins  " << n
+             << std::endl;
+#endif
+
+   // reserve n for more efficient usage
+   dv.Append(n,ndim,errorType);
 
    for ( binx = hxfirst; binx <= hxlast; ++binx) {
       if (useBinEdges) {
@@ -250,6 +259,10 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
          }  // end loop on z bins
       }  // end loop on y bins
    }   // end loop on x axis
+
+   }   // end loop on z ranges
+   }   // end loop on y ranges
+   }   // end loop on x ranges
 
 
 #ifdef DEBUG
