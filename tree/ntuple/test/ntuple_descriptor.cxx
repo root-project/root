@@ -2,32 +2,32 @@
 
 #include <TVirtualStreamerInfo.h>
 
-TEST(RFieldDescriptorBuilder, MakeDescriptorErrors)
+TEST(RFieldDescriptorBuilder, MoveDescriptorErrors)
 {
    // minimum requirements for making a field descriptor from scratch
    RFieldDescriptor fieldDesc = RFieldDescriptorBuilder()
                                    .FieldId(1)
                                    .Structure(ROOT::ENTupleStructure::kCollection)
                                    .FieldName("someField")
-                                   .MakeDescriptor()
+                                   .MoveDescriptor()
                                    .Unwrap();
 
-   // MakeDescriptor() returns an RResult<RFieldDescriptor>
+   // MoveDescriptor() returns an RResult<RFieldDescriptor>
    // -- here we check the error cases
 
    // must set field id
-   auto fieldDescRes = RFieldDescriptorBuilder().MakeDescriptor();
+   auto fieldDescRes = RFieldDescriptorBuilder().MoveDescriptor();
    ASSERT_FALSE(fieldDescRes) << "default constructed dangling descriptors should throw";
    EXPECT_THAT(fieldDescRes.GetError()->GetReport(), testing::HasSubstr("invalid field id"));
 
    // must set field structure
-   fieldDescRes = RFieldDescriptorBuilder().FieldId(1).MakeDescriptor();
+   fieldDescRes = RFieldDescriptorBuilder().FieldId(1).MoveDescriptor();
    ASSERT_FALSE(fieldDescRes) << "field descriptors without structure should throw";
    EXPECT_THAT(fieldDescRes.GetError()->GetReport(), testing::HasSubstr("invalid field structure"));
 
    // must set field name
    fieldDescRes =
-      RFieldDescriptorBuilder().FieldId(1).ParentId(1).Structure(ROOT::ENTupleStructure::kCollection).MakeDescriptor();
+      RFieldDescriptorBuilder().FieldId(1).ParentId(1).Structure(ROOT::ENTupleStructure::kCollection).MoveDescriptor();
    ASSERT_FALSE(fieldDescRes) << "unnamed field descriptors should throw";
    EXPECT_THAT(fieldDescRes.GetError()->GetReport(), testing::HasSubstr("name cannot be empty string"));
 }
@@ -36,13 +36,13 @@ TEST(RNTupleDescriptorBuilder, CatchBadLinks)
 {
    RNTupleDescriptorBuilder descBuilder;
    descBuilder.AddField(
-      RFieldDescriptorBuilder().FieldId(0).Structure(ROOT::ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
+      RFieldDescriptorBuilder().FieldId(0).Structure(ROOT::ENTupleStructure::kRecord).MoveDescriptor().Unwrap());
    descBuilder.AddField(RFieldDescriptorBuilder()
                            .FieldId(1)
                            .FieldName("field")
                            .TypeName("int32_t")
                            .Structure(ROOT::ENTupleStructure::kPlain)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
    try {
       descBuilder.AddFieldLink(1, 0);
@@ -65,27 +65,27 @@ TEST(RNTupleDescriptorBuilder, CatchBadProjections)
 {
    RNTupleDescriptorBuilder descBuilder;
    descBuilder.AddField(
-      RFieldDescriptorBuilder().FieldId(0).Structure(ROOT::ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
+      RFieldDescriptorBuilder().FieldId(0).Structure(ROOT::ENTupleStructure::kRecord).MoveDescriptor().Unwrap());
    descBuilder.AddField(RFieldDescriptorBuilder()
                            .FieldId(1)
                            .FieldName("field")
                            .TypeName("int32_t")
                            .Structure(ROOT::ENTupleStructure::kPlain)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
    descBuilder.AddField(RFieldDescriptorBuilder()
                            .FieldId(2)
                            .FieldName("projField")
                            .TypeName("int32_t")
                            .Structure(ROOT::ENTupleStructure::kPlain)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
    descBuilder.AddField(RFieldDescriptorBuilder()
                            .FieldId(3)
                            .FieldName("projField")
                            .TypeName("int32_t")
                            .Structure(ROOT::ENTupleStructure::kPlain)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
 
    try {
@@ -126,20 +126,20 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
 {
    RNTupleDescriptorBuilder descBuilder;
    descBuilder.AddField(
-      RFieldDescriptorBuilder().FieldId(0).Structure(ROOT::ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
+      RFieldDescriptorBuilder().FieldId(0).Structure(ROOT::ENTupleStructure::kRecord).MoveDescriptor().Unwrap());
    descBuilder.AddField(RFieldDescriptorBuilder()
                            .FieldId(1)
                            .FieldName("field")
                            .TypeName("int32_t")
                            .Structure(ROOT::ENTupleStructure::kPlain)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
    descBuilder.AddField(RFieldDescriptorBuilder()
                            .FieldId(2)
                            .FieldName("fieldAlias")
                            .TypeName("int32_t")
                            .Structure(ROOT::ENTupleStructure::kPlain)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
    descBuilder.AddFieldLink(0, 1);
    descBuilder.AddFieldLink(0, 2);
@@ -216,13 +216,13 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
    descBuilder.SetVersionForWriting();
    descBuilder.SetNTuple("ntpl", "");
    descBuilder.AddField(
-      RFieldDescriptorBuilder().FieldId(0).Structure(ROOT::ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
+      RFieldDescriptorBuilder().FieldId(0).Structure(ROOT::ENTupleStructure::kRecord).MoveDescriptor().Unwrap());
    descBuilder.AddField(RFieldDescriptorBuilder()
                            .FieldId(1)
                            .FieldName("i32")
                            .TypeName("int32_t")
                            .Structure(ROOT::ENTupleStructure::kPlain)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
    descBuilder.AddColumn(RColumnDescriptorBuilder()
                             .LogicalColumnId(0)
@@ -238,7 +238,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                            .FieldId(10)
                            .FieldName("untypedRecord")
                            .Structure(ROOT::ENTupleStructure::kRecord)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
    descBuilder.AddFieldLink(0, 10);
 
@@ -250,14 +250,14 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                            .FieldId(2)
                            .FieldName("topLevel1")
                            .Structure(ROOT::ENTupleStructure::kRecord)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
    descBuilder.AddField(RFieldDescriptorBuilder()
                            .FieldId(3)
                            .FieldName("i64")
                            .TypeName("int64_t")
                            .Structure(ROOT::ENTupleStructure::kPlain)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
    descBuilder.AddColumn(RColumnDescriptorBuilder()
                             .LogicalColumnId(1)
@@ -276,7 +276,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                            .FieldName("topLevel2")
                            .TypeName("bool")
                            .Structure(ROOT::ENTupleStructure::kPlain)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
    descBuilder.AddColumn(RColumnDescriptorBuilder()
                             .LogicalColumnId(2)
@@ -294,7 +294,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                            .FieldName("projected")
                            .TypeName("int64_t")
                            .Structure(ROOT::ENTupleStructure::kPlain)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
    descBuilder.AddColumn(RColumnDescriptorBuilder()
                             .LogicalColumnId(3)
@@ -311,7 +311,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                            .FieldName("f")
                            .TypeName("float")
                            .Structure(ROOT::ENTupleStructure::kPlain)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
    descBuilder.AddColumn(RColumnDescriptorBuilder()
                             .LogicalColumnId(10)
@@ -383,7 +383,7 @@ TEST(RNTupleDescriptor, GetTypeNameForComparison)
                                    .Structure(ROOT::ENTupleStructure::kRecord)
                                    .FieldName("f")
                                    .TypeName(MetaTypeName)
-                                   .MakeDescriptor()
+                                   .MoveDescriptor()
                                    .Unwrap();
    {
       RNTupleDescriptorBuilder descBuilder;

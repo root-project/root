@@ -1558,7 +1558,7 @@ ROOT::Internal::RNTupleSerializer::DeserializeSchemaDescription(const void *buff
       }
       if (fieldId == fieldBuilder.GetParentId())
          fieldBuilder.ParentId(kZeroFieldId);
-      auto fieldDesc = fieldBuilder.FieldId(fieldId).MakeDescriptor();
+      auto fieldDesc = fieldBuilder.FieldId(fieldId).MoveDescriptor();
       if (!fieldDesc)
          return R__FORWARD_ERROR(fieldDesc);
       const auto parentId = fieldDesc.Inspect().GetParentId();
@@ -1994,7 +1994,7 @@ ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeHeader(const v
    descBuilder.AddField(RFieldDescriptorBuilder()
                            .FieldId(kZeroFieldId)
                            .Structure(ROOT::ENTupleStructure::kRecord)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
    if (auto res = DeserializeSchemaDescription(bytes, fnBufSizeLeft(), descBuilder)) {
       return RResult<void>::Success();
