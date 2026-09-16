@@ -52,7 +52,9 @@
 #include "TMath.h"
 #include "TRandom2.h"
 #include "TObjArray.h"
+#define ROOT_Hoption_cxx
 #include "Hoption.h"
+#define ROOT_Hparam_cxx
 #include "Hparam.h"
 #include "TPluginManager.h"
 #include "TPaletteAxis.h"
