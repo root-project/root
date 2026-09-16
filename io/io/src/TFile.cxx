@@ -160,6 +160,7 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TMathBase.h"
 #include "TObjString.h"
 #include "TStopwatch.h"
+#define ROOT_compiledata_cxx
 #include "compiledata.h"
 #include "TSchemaRule.h"
 #include "TSchemaRuleSet.h"
