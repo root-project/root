@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 #include <iterator>
+#include <numeric>
 #include <utility>
 
 namespace ROOT {
@@ -47,12 +48,12 @@ std::string Join(const std::string &sep, InputIt_t begin, InputIt_t end)
    if (begin == end)
       return "";
 
-   std::string result(*begin++);
-   for (; begin != end; ++begin) {
+   std::string first(*begin++);
+   return std::accumulate(begin, end, std::move(first), [&sep](auto &&result, const auto &value) {
       result += sep;
-      result += *begin;
-   }
-   return result;
+      result += value;
+      return std::move(result);
+   });
 }
 
 /**
