@@ -297,9 +297,7 @@ protected:
    /// interface.
    ROOT::NTupleSize_t fNEntries = kInvalidNTupleIndex;
 
-   ROOT::NTupleSize_t fNEntriesProcessed = 0;  //< Total number of entries processed so far
-   ROOT::NTupleSize_t fCurrentEntryNumber = 0; //< Current processor entry number
-   std::size_t fCurrentProcessorNumber = 0;    //< Number of the currently open inner processor
+   ROOT::NTupleSize_t fNEntriesProcessed = 0; //< Total number of entries processed so far
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Initialize the processor by creating an (initially empty) `fEntry`, or setting an existing one.
@@ -390,16 +388,6 @@ public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries processed so far.
    ROOT::NTupleSize_t GetNEntriesProcessed() const { return fNEntriesProcessed; }
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the entry number that is currently being processed.
-   ROOT::NTupleSize_t GetCurrentEntryNumber() const { return fCurrentEntryNumber; }
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the number of the inner processor currently being read.
-   ///
-   /// This method is only relevant for the RNTupleChainProcessor. For the other processors, 0 is always returned.
-   std::size_t GetCurrentProcessorNumber() const { return fCurrentProcessorNumber; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Request access to a field for reading during processing.
@@ -714,6 +702,9 @@ class RNTupleChainProcessor : public RNTupleProcessor {
 private:
    std::vector<std::unique_ptr<RNTupleProcessor>> fInnerProcessors;
    std::vector<ROOT::NTupleSize_t> fInnerNEntries;
+
+   ROOT::NTupleSize_t fLastLoadedEntry = 0; //< Last (global) entry number that was loaded
+   std::size_t fCurrentProcessorNumber = 0; //< Number of the currently open inner processor
 
    Internal::RNTupleProcessorProvenance fProvenance;
 

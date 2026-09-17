@@ -223,7 +223,6 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::LoadEntry(ROOT::N
    }
 
    fNEntriesProcessed++;
-   fCurrentEntryNumber = entryNumber;
    return entryNumber;
 }
 
@@ -351,7 +350,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NT
    // If the requested entry number is lower than the current entry number, we have to again localise the correct local
    // entry number starting from the first processor in the chain. Otherwise, we can continue looking from the inner
    // processor that is currently connected, which is much faster when the chain consists of many inner processors.
-   if (entryNumber < fCurrentEntryNumber) {
+   if (entryNumber < fLastLoadedEntry) {
       fCurrentProcessorNumber = 0;
       ConnectInnerProcessor(fCurrentProcessorNumber);
    }
@@ -384,7 +383,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NT
 
    fCurrentProcessorNumber = currProcessorNumber;
    fNEntriesProcessed++;
-   fCurrentEntryNumber = entryNumber;
+   fLastLoadedEntry = entryNumber;
    return entryNumber;
 }
 
@@ -526,7 +525,6 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
       return kInvalidNTupleIndex;
    }
 
-   fCurrentEntryNumber = entryNumber;
    fNEntriesProcessed++;
 
    if (!fJoinTable) {
