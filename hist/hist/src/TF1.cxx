@@ -50,7 +50,7 @@
 #include "Math/ChebyshevPol.h"
 #include "Fit/FitResult.h"
 // for I/O backward compatibility
-#include "v5/TF1Data.h"
+#include "ROOT/v5/TF1Data.h"
 
 #include "AnalyticalIntegrals.h"
 
