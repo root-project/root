@@ -25,7 +25,7 @@
 
 #include "RConfigure.h"
 
-#include "v5/TFormula.h"
+#include "ROOT/v5/TFormula.h"
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAttMarker.h"

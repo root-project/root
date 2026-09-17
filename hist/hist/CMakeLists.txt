@@ -93,9 +93,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TVirtualPaveStats.h
     Math/WrappedMultiTF1.h
     Math/WrappedTF1.h
-    v5/TF1Data.h
-    v5/TFormula.h
-    v5/TFormulaPrimitive.h
+    ROOT/v5/TF1Data.h
+    ROOT/v5/TFormula.h
+    ROOT/v5/TFormulaPrimitive.h
   SOURCES
     AnalyticalIntegrals.cxx
     Haxis.cxx
