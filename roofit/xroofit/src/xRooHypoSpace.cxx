@@ -11,6 +11,7 @@
  */
 
 #include "xRooFit/xRooHypoSpace.h"
+#include "xRooFit/xRooNode.h"
 
 #include "RooArgSet.h"
 #include "RooArgList.h"
