@@ -89,6 +89,7 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
   * `Hparam.h` and `Hoption.h`: use instead `THistPainter`, `TGraph2DPainter` public interfaces.
   * `Htypes.h` and `Gtypes.h`: Use instead `Rtypes.h`.
   * `Bswapcpy.h`: no replacement.
+  * The legacy headers `v5/TF1Data.h`, `v5/TFormula.h` and `v5/TFormulaPrimitive.h` have been moved to `ROOT/v5/TF1Data.h`, `ROOT/v5/TFormula.h` and `ROOT/v5/TFormulaPrimitive.h`.
   * `VectorizedTMath.h`: use instead `TMathVectorized.h`.
   * `PosixThreadInc.h`: use instead `<ctime>` and `<cstdlib>`.
   * `RStringView.h`: use `<string_view>` or `ROOT/RStringView.hxx` instead.
