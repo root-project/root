@@ -546,14 +546,12 @@ void TPad::AddExec(const char *name, const char *command)
 
 void TPad::AutoExec()
 {
+   TIter next(fExecs);
+   while (auto exec = static_cast<TExec *>(next()))
+      exec->Exec();
+
    if (GetCrosshair())
       DrawCrosshair();
-
-   if (!fExecs)
-      return;
-   TIter next(fExecs);
-   while (auto exec = (TExec*)next())
-      exec->Exec();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1796,55 +1794,47 @@ void TPad::DrawCrosshair()
    if (!gPad || (gPad->GetEvent() == kMouseEnter))
       return;
 
-   TPad *cpad = (TPad*)gPad;
-   TCanvas *canvas = cpad->GetCanvas();
-   // switch off double buffer and select canvas drawable
-   canvas->FeedbackMode(kTRUE);
+   auto cpad = static_cast<TPad *>(gPad);
+   auto canvas = cpad->GetCanvas();
 
-   auto pp = GetPainter();
+   if (cpad->GetEvent() == kButton1Down || cpad->GetEvent() == kButton1Up || cpad->GetEvent() == kMouseLeave) {
+      if (fCrosshairPos)
+         UpdateAsync();
+      fCrosshairPos = 0;
+      return;
+   }
 
    //erase old position and draw a line at current position
-   Double_t umin, umax, vmin, vmax, u, v;
+   Double_t umin, umax, vmin, vmax;
    Int_t px    = cpad->GetEventX();
    Int_t py    = cpad->GetEventY() + 1;
-   if (canvas->GetCrosshair() > 1) {  //crosshair only in the current pad
+   if (canvas->GetCrosshair() > 1) {
+      //crosshair only in the current pad
       umin = GetAbsXlowNDC();
       umax = GetAbsXlowNDC() + GetAbsWNDC();
       vmin = GetAbsYlowNDC();
       vmax = GetAbsYlowNDC() + GetAbsHNDC();
-   } else { //default; crosshair spans the full canvas
+   } else {
+      //default; crosshair spans the full canvas
       umin = 0;
       umax = 1;
       vmin = 0;
       vmax = 1;
    }
 
-   TContext ctxt(canvas);
+   TAttLine att(kBlack, 1, 1);
+   att.ModifyOn(*this);
 
-   pp->SetAttLine({1,1,1});
+   Double_t uu[2], vv[2];
+   uu[0] = umin; uu[1] = umax;
+   vv[0] = vv[1] = 1. - 1. * py / canvas->GetWh();
+   canvas->PaintPolyLineNDC(2, uu, vv, "icrosshair1");
+   uu[0] = uu[1] = 1. * px / canvas->GetWw();
+   vv[0] = vmin; vv[1] = vmax;
+   canvas->PaintPolyLineNDC(2, uu, vv, "icrosshair2");
 
-   if ((fCrosshairPos != 0) && !pp->IsCocoa()) {
-      // xor does not supported on Cocoa, implemented differently
-      Int_t pxold = fCrosshairPos % 10000;
-      Int_t pyold = fCrosshairPos / 10000;
-      u = 1. * pxold / canvas->GetWw();
-      v = 1. - 1. * pyold / canvas->GetWh();
-      pp->DrawLineNDC(umin, v, umax, v);
-      pp->DrawLineNDC(u, vmin, u, vmax);
-   }
-
-   if (cpad->GetEvent() == kButton1Down ||
-       cpad->GetEvent() == kButton1Up   ||
-       cpad->GetEvent() == kMouseLeave) {
-      fCrosshairPos = 0;
-      return;
-   }
-
-   u = 1. * px / canvas->GetWw();
-   v = 1. - 1. * py / canvas->GetWh();
-   pp->DrawLineNDC(umin, v, umax, v);
-   pp->DrawLineNDC(u, vmin, u, vmax);
-
+   UpdateAsync();
+   // just indication that crosshair was drawn before
    fCrosshairPos = px + 10000*py;
 }
 
