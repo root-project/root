@@ -22,6 +22,7 @@ if(NOT EXISTS "${ROOT_CIVETWEB_PREFIX}/src/BUILTIN_CIVETWEB/._patched")
   set(ROOT_CIVETWEB_PATCH_COMMAND PATCH_COMMAND ${GIT_EXECUTABLE} init COMMAND ${GIT_EXECUTABLE} apply ${GIT_PATCH_ARGS}
          ${CMAKE_CURRENT_SOURCE_DIR}/1385.patch # https://github.com/civetweb/civetweb/pull/1385
          ${CMAKE_CURRENT_SOURCE_DIR}/1389.patch # https://github.com/civetweb/civetweb/pull/1389
+         ${CMAKE_CURRENT_SOURCE_DIR}/1423.patch # https://github.com/civetweb/civetweb/pull/1423 for OpenSSL4 compatibility
          ${CMAKE_CURRENT_SOURCE_DIR}/civetweb-marker.diff)
 endif()
 
@@ -54,7 +55,7 @@ if(ssl)
   if((${ssl_major} EQUAL "1") AND (${ssl_minor} EQUAL "1"))
     MESSAGE(STATUS "Use SSL API VERSION 1.1 for civetweb")
     set(ROOT_SSL_API "-DCIVETWEB_SSL_OPENSSL_API_1_1=ON" "-DCIVETWEB_SSL_OPENSSL_API_3_0=OFF" "-DCIVETWEB_SSL_OPENSSL_API_1_0=OFF" "-DCIVETWEB_ENABLE_SSL=ON")
-  elseif((${ssl_major} EQUAL "3"))
+  elseif((${ssl_major} EQUAL "3") OR (${ssl_major} EQUAL "4")) # With OpenSSL4 there is still the 3.0 API available
     MESSAGE(STATUS "Use SSL API VERSION 3.${ssl_minor} for civetweb")
     set(ROOT_SSL_API "-DCIVETWEB_SSL_OPENSSL_API_3_0=ON" "-DCIVETWEB_SSL_OPENSSL_API_1_1=OFF" "-DCIVETWEB_SSL_OPENSSL_API_1_0=OFF" "-DCIVETWEB_ENABLE_SSL=ON")
   elseif((${ssl_major} EQUAL "1") AND (${ssl_minor} EQUAL "0"))
