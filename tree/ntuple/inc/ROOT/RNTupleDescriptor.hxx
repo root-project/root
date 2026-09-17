@@ -18,6 +18,7 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RSpan.hxx>
 
 #include <TError.h>
@@ -65,8 +66,6 @@ struct RNTupleClusterBoundaries {
 };
 
 std::vector<ROOT::Internal::RNTupleClusterBoundaries> GetClusterBoundaries(const RNTupleDescriptor &desc);
-
-void FixupFieldTypeName(ROOT::RFieldDescriptor &fieldDesc);
 } // namespace Internal
 
 namespace Experimental {
@@ -123,22 +122,26 @@ class RNTupleAttrSetDescriptorIterable;
 class RFieldDescriptor final {
    friend class Internal::RNTupleDescriptorBuilder;
    friend class Internal::RFieldDescriptorBuilder;
-   friend void Internal::FixupFieldTypeName(ROOT::RFieldDescriptor &fieldDesc);
 
 private:
+   static const std::string &GetEmptyString();
+
    ROOT::DescriptorId_t fFieldId = ROOT::kInvalidDescriptorId;
    /// The version of the C++-type-to-column translation mechanics
    std::uint32_t fFieldVersion = 0;
    /// The version of the C++ type itself
    std::uint32_t fTypeVersion = 0;
+   /// Optional string storage for a free-standing field descriptor. If possible, strings come from the surrounding
+   /// RNTupleDescriptor string pool and this member remains unset.
+   std::unique_ptr<Internal::RStringPool> fStringPool;
    /// The leaf name, not including parent fields
-   std::string fFieldName;
+   const std::string *fFieldName = nullptr;
    /// Free text set by the user
-   std::string fFieldDescription;
+   const std::string *fFieldDescription = nullptr;
    /// The C++ type that was used when writing the field
-   std::string fTypeName;
+   const std::string *fTypeName = nullptr;
    /// A typedef or using directive that resolved to the type name during field creation
-   std::string fTypeAlias;
+   const std::string *fTypeAlias = nullptr;
    /// The number of elements per entry for fixed-size arrays
    std::uint64_t fNRepetitions = 0;
    /// Establishes sub field relationships, such as classes and collections
@@ -162,6 +165,8 @@ private:
    /// Indicates if this is a collection that should be represented in memory by a SoA layout.
    bool fIsSoACollection = false;
 
+   void InitFrom(const RFieldDescriptor &source, Internal::RStringPool &stringPool);
+
 public:
    RFieldDescriptor() = default;
    RFieldDescriptor(const RFieldDescriptor &other) = delete;
@@ -181,10 +186,10 @@ public:
    ROOT::DescriptorId_t GetId() const { return fFieldId; }
    std::uint32_t GetFieldVersion() const { return fFieldVersion; }
    std::uint32_t GetTypeVersion() const { return fTypeVersion; }
-   const std::string &GetFieldName() const { return fFieldName; }
-   const std::string &GetFieldDescription() const { return fFieldDescription; }
-   const std::string &GetTypeName() const { return fTypeName; }
-   const std::string &GetTypeAlias() const { return fTypeAlias; }
+   const std::string &GetFieldName() const { return fFieldName ? *fFieldName : GetEmptyString(); }
+   const std::string &GetFieldDescription() const { return fFieldDescription ? *fFieldDescription : GetEmptyString(); }
+   const std::string &GetTypeName() const { return fTypeName ? *fTypeName : GetEmptyString(); }
+   const std::string &GetTypeAlias() const { return fTypeAlias ? *fTypeAlias : GetEmptyString(); }
    std::uint64_t GetNRepetitions() const { return fNRepetitions; }
    ROOT::ENTupleStructure GetStructure() const { return fStructure; }
    ROOT::DescriptorId_t GetParentId() const { return fParentId; }
@@ -724,6 +729,9 @@ private:
 
    std::uint64_t fNPhysicalColumns = 0; ///< Updated by the descriptor builder when columns are added
 
+   /// Storage for all the field strings. Shared among descriptor clones.
+   std::shared_ptr<Internal::RStringPool> fStringPool;
+
    std::set<unsigned int> fFeatureFlags; // needs to be ordered
    std::unordered_map<ROOT::DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
    std::unordered_map<ROOT::DescriptorId_t, RColumnDescriptor> fColumnDescriptors;
@@ -771,7 +779,7 @@ private:
    /// Creates a descriptor containing only the schema information about this RNTuple, i.e. all the information needed
    /// to create a new RNTuple with the same schema as this one but not necessarily the same clustering. This is used
    /// when merging two RNTuples.
-   RNTupleDescriptor CloneSchema() const;
+   RNTupleDescriptor CloneSchema(bool shareStringPool) const;
 
    /// ROOT v6.34, with spec versions before 1.0.0.1, did not properly renormalize the type name.
    /// This function returns true if this descriptor has a version prior to 1.0.0.1 and may therefore contain such
@@ -839,7 +847,7 @@ public:
       bool GetEmulateUnknownTypes() const { return fEmulateUnknownTypes; }
    };
 
-   RNTupleDescriptor() = default;
+   RNTupleDescriptor();
    RNTupleDescriptor(const RNTupleDescriptor &other) = delete;
    RNTupleDescriptor &operator=(const RNTupleDescriptor &other) = delete;
    RNTupleDescriptor(RNTupleDescriptor &&other) = default;
@@ -1547,10 +1555,27 @@ RNTupleDescriptorBuilder instance and then linked to other fields.
 class RFieldDescriptorBuilder final {
 private:
    RFieldDescriptor fField = RFieldDescriptor();
+   RStringPool *fStringPool = nullptr;
 
 public:
-   /// Make an empty dangling field descriptor.
-   RFieldDescriptorBuilder() = default;
+   RFieldDescriptorBuilder()
+   {
+      fField.fStringPool = std::make_unique<RStringPool>();
+      fStringPool = fField.fStringPool.get();
+   }
+
+   // The passed string pool needs to live at least as long as the field descriptor to be moved out of this builder
+   explicit RFieldDescriptorBuilder(RStringPool &stringPool) : fStringPool(&stringPool) {}
+
+   // Takes an existing field descriptor to patch it up. The given string pool must be the one that is already
+   // being used by the source descriptor.
+   RFieldDescriptorBuilder(RFieldDescriptor &&source, RStringPool &stringPool)
+      : fField(std::move(source)), fStringPool(&stringPool)
+   {
+   }
+
+   // Makes a copy of the given descriptor and assigns the clone's strings to the new string pool
+   static RFieldDescriptor CloneDescriptor(const RFieldDescriptor &source, RStringPool &stringPool);
 
    RFieldDescriptorBuilder &FieldId(ROOT::DescriptorId_t fieldId)
    {
@@ -1579,22 +1604,22 @@ public:
    }
    RFieldDescriptorBuilder &FieldName(const std::string &fieldName)
    {
-      fField.fFieldName = fieldName;
+      fField.fFieldName = fStringPool->Intern(fieldName);
       return *this;
    }
    RFieldDescriptorBuilder &FieldDescription(const std::string &fieldDescription)
    {
-      fField.fFieldDescription = fieldDescription;
+      fField.fFieldDescription = fStringPool->Intern(fieldDescription);
       return *this;
    }
    RFieldDescriptorBuilder &TypeName(const std::string &typeName)
    {
-      fField.fTypeName = typeName;
+      fField.fTypeName = fStringPool->Intern(typeName);
       return *this;
    }
    RFieldDescriptorBuilder &TypeAlias(const std::string &typeAlias)
    {
-      fField.fTypeAlias = typeAlias;
+      fField.fTypeAlias = fStringPool->Intern(typeAlias);
       return *this;
    }
    RFieldDescriptorBuilder &NRepetitions(std::uint64_t nRepetitions)
@@ -1799,6 +1824,7 @@ public:
    /// * Number of columns is constant across column representations
    RResult<void> EnsureValidDescriptor() const;
    const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
+   RStringPool &GetStringPool() { return *fDescriptor.fStringPool; }
    RNTupleDescriptor MoveDescriptor();
 
    /// Copies the "schema" part of `descriptor` into the builder's descriptor.
@@ -1862,7 +1888,7 @@ public:
 
 inline RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc)
 {
-   return desc.CloneSchema();
+   return desc.CloneSchema(false /* shareStringPool */);
 }
 
 /// Tells if the field describes a user-defined enum type.
