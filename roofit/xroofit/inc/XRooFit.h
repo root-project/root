@@ -26,5 +26,6 @@ A version of the API is included in ROOT as an experimental feature, inside the 
 #include "RooFit/xRooFit/xRooNLLVar.h"
 #include "RooFit/xRooFit/xRooHypoSpace.h"
 #include "RooFit/xRooFit/xRooNode.h"
+#include "RooFit/xRooFit/xRooBrowser.h"
 
 #endif
