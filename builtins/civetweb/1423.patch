@@ -5,21 +5,27 @@ Subject: [PATCH] Fix compilation with openssl 4
 
 X509_get_subject_name() and X509_get_issuer_name() now return const.
 ---
- src/civetweb.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ src/civetweb.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/src/civetweb.c b/src/civetweb.c
 index f6a60e214..e093e094e 100644
 --- a/src/civetweb.c
 +++ b/src/civetweb.c
-@@ -17125,8 +17125,8 @@ ssl_get_client_cert_info(const struct mg_connection *conn,
+@@ -17125,8 +17125,14 @@ ssl_get_client_cert_info(const struct mg_connection *conn,
  		const EVP_MD *digest = EVP_get_digestbyname("sha1");
  
  		/* Get Subject and issuer */
 -		X509_NAME *subj = X509_get_subject_name(cert);
 -		X509_NAME *iss = X509_get_issuer_name(cert);
-+		const X509_NAME *subj = X509_get_subject_name(cert);
-+		const X509_NAME *iss = X509_get_issuer_name(cert);
++		#if !defined(OPENSSL_API_1_0) && !defined(OPENSSL_API_1_1)
++		const
++		#endif
++		X509_NAME *subj = X509_get_subject_name(cert);
++		#if !defined(OPENSSL_API_1_0) && !defined(OPENSSL_API_1_1)
++		const
++		#endif
++		X509_NAME *iss = X509_get_issuer_name(cert);
  
  		/* Get serial number */
  		ASN1_INTEGER *serial = X509_get_serialNumber(cert);
