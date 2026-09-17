@@ -1550,7 +1550,7 @@ ROOT::Internal::RNTupleSerializer::DeserializeSchemaDescription(const void *buff
    const std::uint32_t fieldIdRangeBegin = descBuilder.GetDescriptor().GetNFields() - 1;
    for (unsigned i = 0; i < nFields; ++i) {
       std::uint32_t fieldId = fieldIdRangeBegin + i;
-      RFieldDescriptorBuilder fieldBuilder;
+      RFieldDescriptorBuilder fieldBuilder(descBuilder.GetStringPool());
       if (auto res = DeserializeField(bytes, fnFrameSizeLeft(), fieldBuilder)) {
          bytes += res.Unwrap();
       } else {
@@ -1991,7 +1991,7 @@ ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeHeader(const v
    descBuilder.SetNTuple(name, description);
 
    // Zero field
-   descBuilder.AddField(RFieldDescriptorBuilder()
+   descBuilder.AddField(RFieldDescriptorBuilder(descBuilder.GetStringPool())
                            .FieldId(kZeroFieldId)
                            .Structure(ROOT::ENTupleStructure::kRecord)
                            .MoveDescriptor()
