@@ -253,18 +253,12 @@ void TApplication::InitializeGraphics(Bool_t only_web)
       LoadGraphicsLibs();
 
       // Try to load TrueType font renderer. Only try to load if not in batch
-      // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
+      // mode and Root.UseTTFonts is true. Abort silently
       // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
-      const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-                                          TROOT::GetTTFFontDir());
-      char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
-      // Check for use of DFSG - fonts
-      if (!ttfont)
-         ttfont = gSystem->Which(ttpath, "FreeSansBold.ttf", kReadPermission);
 
    #if !defined(R__WIN32)
       if (!gROOT->IsBatch() && !strcmp(gVirtualX->GetName(), "X11") &&
-          ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
+          gEnv->GetValue("Root.UseTTFonts", 1)) {
          if (gClassTable->GetDict("TGX11TTF")) {
             // in principle we should not have linked anything against libGX11TTF
             // but with ACLiC this can happen, initialize TGX11TTF by hand
@@ -278,7 +272,6 @@ void TApplication::InitializeGraphics(Bool_t only_web)
          }
       }
    #endif
-      delete [] ttfont;
    }
 
    if (!only_web || !fAppImp) {
