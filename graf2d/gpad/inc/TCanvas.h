@@ -55,6 +55,7 @@ protected:
    TPad         *fSelectedPad;     ///<! Pad containing currently selected object
    TPad         *fClickSelectedPad;///<! Pad containing currently click-selected object
    TPad         *fPadSave;         ///<! Pointer to saved pad in HandleInput
+   Int_t         fHandlingInput;   ///<! use to implement posponded update of canvas
    TCanvasImp   *fCanvasImp;       ///<! Window system specific canvas implementation
    TContextMenu *fContextMenu;     ///<! Context menu pointer
    Bool_t        fBatch;           ///<! True when in batchmode

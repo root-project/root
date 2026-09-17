@@ -181,6 +181,7 @@ TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
    fSelectedPad      = nullptr;
    fClickSelectedPad = nullptr;
    fPadSave          = nullptr;
+   fHandlingInput    = 0;
    fCanvasImp        = nullptr;
    fContextMenu      = nullptr;
 
@@ -218,6 +219,8 @@ void TCanvas::Constructor()
    fSelectedPad   = nullptr;
    fClickSelectedPad = nullptr;
    fPadSave       = nullptr;
+   fHandlingInput    = 0;
+
    SetBit(kAutoExec);
    SetBit(kShowEditor);
    SetBit(kShowToolBar);
@@ -583,6 +586,7 @@ void TCanvas::Init()
    fSelectedPad     = nullptr;
    fClickSelectedPad= nullptr;
    fPadSave         = nullptr;
+   fHandlingInput   = 0;
    fEvent           = -1;
    fEventX          = -1;
    fEventY          = -1;
@@ -1241,6 +1245,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
    TPad    *prevSelPad = fSelectedPad;
    TObject *prevSelObj = fSelected;
 
+   fHandlingInput    = 1;
    fPadSave = (TPad*)gPad;
    cd();        // make sure this canvas is the current canvas
 
@@ -1253,7 +1258,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
    case kMouseMotion:
       // highlight object tracked over
       pad = Pick(px, py, prevSelObj);
-      if (!pad) return;
+      if (!pad) break;
 
       EnterLeave(prevSelPad, prevSelObj);
 
@@ -1295,7 +1300,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
    case kButton1Down:
       // find pad in which input occurred
       pad = Pick(px, py, prevSelObj);
-      if (!pad) return;
+      if (!pad) break;
 
       gPad = pad;   // don't use cd() because we won't draw in pad
                     // we will only use its coordinate system
@@ -1362,30 +1367,30 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
    case kButton2Down:
       // find pad in which input occurred
       pad = Pick(px, py, prevSelObj);
-      if (!pad) return;
+      if (!pad)
+         break;
 
       gPad = pad;   // don't use cd() because we won't draw in pad
                     // we will only use its coordinate system
 
+      fPadSave = nullptr; // don't want fPadSave->cd() to be executed at the end
       FeedbackMode(kTRUE);
 
-      if (fSelected) fSelected->Pop();  // pop object to foreground
+      if (fSelected)
+         fSelected->Pop();  // pop object to foreground
       pad->cd();                        // and make its pad the current pad
-      if (gDebug)
-         printf("Current Pad: %s / %s\n", pad->GetName(), pad->GetTitle());
 
       // loop over all canvases to make sure that only one pad is highlighted
       {
          TIter next(gROOT->GetListOfCanvases());
-         TCanvas *tc;
-         while ((tc = (TCanvas *)next()))
+         while (auto tc = dynamic_cast<TCanvas *>(next()))
             tc->Update();
       }
 
       //if (pad->GetGLDevice() != -1 && fSelected)
       //   fSelected->ExecuteEvent(event, px, py);
 
-      break;   // don't want fPadSave->cd() to be executed at the end
+      break;
 
    case kButton2Motion:
       //was empty!
@@ -1406,12 +1411,14 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
    case kButton3Down:
       // popup context menu
       pad = Pick(px, py, prevSelObj);
-      if (!pad) return;
+      if (!pad)
+         break;
 
-      if (!fDoubleBuffer) FeedbackMode(kFALSE);
+      if (!fDoubleBuffer)
+         FeedbackMode(kFALSE);
 
-      if (fContextMenu && fSelected && !fSelected->TestBit(kNoContextMenu) &&
-         !pad->TestBit(kNoContextMenu) && !TestBit(kNoContextMenu))
+      if (fContextMenu && fSelected && !fSelected->TestBit(kNoContextMenu) && !pad->TestBit(kNoContextMenu) &&
+          !TestBit(kNoContextMenu))
          fContextMenu->Popup(px, py, fSelected, this, pad);
 
       break;
@@ -1427,7 +1434,8 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       break;
 
    case kKeyPress:
-      if (!fSelectedPad || !fSelected) return;
+      if (!fSelectedPad || !fSelected)
+         break;
       gPad = fSelectedPad;   // don't use cd() because we won't draw in pad
                     // we will only use its coordinate system
       fSelected->ExecuteEvent(event, px, py);
@@ -1440,7 +1448,8 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       // Try to select
       pad = Pick(px, py, prevSelObj);
 
-      if (!pad) return;
+      if (!pad)
+         break;
 
       EnterLeave(prevSelPad, prevSelObj);
 
@@ -1456,7 +1465,8 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
    case kWheelUp:
    case kWheelDown:
       pad = Pick(px, py, prevSelObj);
-      if (!pad) return;
+      if (!pad)
+         break;
 
       gPad = pad;
       if (fSelected)
@@ -1467,13 +1477,21 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       break;
    }
 
-   if (fPadSave && event != kButton2Down)
+   if (fPadSave)
       fPadSave->cd();
 
    if (event != kMouseLeave) { // signal was already emitted for this event
       ProcessedEvent(event, px, py, fSelected);  // emit signal
       DrawEventStatus(event, px, py, fSelected);
    }
+
+   // When during input handling async update was requested
+   // only counter was increased. It may happen several times
+   // Now reset counter and really call update of the canvas
+   bool do_update = fHandlingInput > 1;
+   fHandlingInput = 0;
+   if (do_update)
+      UpdateAsync();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2571,14 +2589,21 @@ void TCanvas::Update()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Asynchronous pad update.
+/// Asynchronous canvas update.
 /// In case of web-based canvas triggers update of the canvas on the client side,
 /// but does not wait that real update is completed. Avoids blocking of caller thread.
 /// Have to be used if called from other web-based widget to avoid logical dead-locks.
 /// In case of normal canvas just canvas->Update() is performed.
+/// Only when called from inside of HandleInput handler,
+/// canvas will be updated at the end.
 
 void TCanvas::UpdateAsync()
 {
+   if (fHandlingInput > 0) {
+      fHandlingInput++;
+      return;
+   }
+
    fUpdated = kTRUE;
 
    if (IsWeb())
