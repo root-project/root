@@ -42,6 +42,11 @@ namespace ROOT {
 ///   [207 - 208]
 ///  - LZ4 is recommended to be used with compression level 4 [404]
 ///  - ZSTD is recommended to be used with compression level 5 [505]
+///  - LHC4 is recommended to be used with compression level 6 [606]
+///  - LHC4 backends (Beam, Bwt, Zstd, Bzip3, Lzma, Auto, Mosaic, Oracle, Crystal)
+///    and filter / Auto-mask options are toggled globally via R__SetLHC4Codec(),
+///    R__SetLHC4Filters(), R__SetLHC4AutoCodecs(), and related helpers before
+///    compression (see ZipLHC4.h). Decompression auto-detects the inner frame type.
 
 struct RCompressionSetting {
    struct EDefaults { /// Note: this is only temporarily a struct and will become a enum class hence the name convention
@@ -80,7 +85,9 @@ struct RCompressionSetting {
          /// Compression level reserved for old ROOT compression algorithm
          kDefaultOld = 6,
          /// Compression level reserved for LZMA compression algorithm (slowest compression with smallest files)
-         kDefaultLZMA = 7
+         kDefaultLZMA = 7,
+         /// Compression level reserved for LHC4 compression algorithm
+         kDefaultLHC4 = 6
       };
    };
    struct EAlgorithm { /// Note: this is only temporarily a struct and will become a enum class hence the name
@@ -101,6 +108,8 @@ struct RCompressionSetting {
          kLZ4,
          /// Use ZSTD compression
          kZSTD,
+         /// Use LHC4 compression
+         kLHC4,
          /// Undefined compression algorithm (must be kept the last of the list in case a new algorithm is added).
          kUndefined
       };

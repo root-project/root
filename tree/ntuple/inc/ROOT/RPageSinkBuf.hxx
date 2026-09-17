@@ -73,6 +73,7 @@ class RPageSinkBuf : public RPageSink {
       const RPageStorage::SealedPageSequence_t &GetSealedPages() const { return fSealedPages; }
 
       void DropBufferedPages();
+      void ValidateReadyToCommit(bool requireChecksum) const;
 
       // The returned reference points to a default-constructed RSealedPage. It can be used
       // to fill in data after sealing.

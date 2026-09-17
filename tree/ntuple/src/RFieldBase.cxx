@@ -911,30 +911,45 @@ void ROOT::RFieldBase::RemoveReadCallback(size_t idx)
    fIsSimple = (fTraits & kTraitMappable) && !fIsArtificial && fReadCallbacks.empty();
 }
 
+namespace {
+
+void DemoteSplitColumnTypes(ROOT::RFieldBase::ColumnRepresentation_t &rep)
+{
+   for (auto &colType : rep) {
+      switch (colType) {
+      case ROOT::ENTupleColumnType::kSplitIndex64: colType = ROOT::ENTupleColumnType::kIndex64; break;
+      case ROOT::ENTupleColumnType::kSplitIndex32: colType = ROOT::ENTupleColumnType::kIndex32; break;
+      case ROOT::ENTupleColumnType::kSplitReal64: colType = ROOT::ENTupleColumnType::kReal64; break;
+      case ROOT::ENTupleColumnType::kSplitReal32: colType = ROOT::ENTupleColumnType::kReal32; break;
+      case ROOT::ENTupleColumnType::kSplitInt64: colType = ROOT::ENTupleColumnType::kInt64; break;
+      case ROOT::ENTupleColumnType::kSplitInt32: colType = ROOT::ENTupleColumnType::kInt32; break;
+      case ROOT::ENTupleColumnType::kSplitInt16: colType = ROOT::ENTupleColumnType::kInt16; break;
+      case ROOT::ENTupleColumnType::kSplitUInt64: colType = ROOT::ENTupleColumnType::kUInt64; break;
+      case ROOT::ENTupleColumnType::kSplitUInt32: colType = ROOT::ENTupleColumnType::kUInt32; break;
+      case ROOT::ENTupleColumnType::kSplitUInt16: colType = ROOT::ENTupleColumnType::kUInt16; break;
+      default: break;
+      }
+   }
+}
+
+} // anonymous namespace
+
 void ROOT::RFieldBase::AutoAdjustColumnTypes(const ROOT::RNTupleWriteOptions &options)
 {
-   if ((options.GetCompression() == 0) && HasDefaultColumnRepresentative()) {
+   const bool usePlainColumns = !options.GetEnableColumnEncoding() || (options.GetCompression() == 0);
+
+   if (usePlainColumns && HasDefaultColumnRepresentative()) {
       ColumnRepresentation_t rep = GetColumnRepresentations().GetSerializationDefault();
-      for (auto &colType : rep) {
-         switch (colType) {
-         case ROOT::ENTupleColumnType::kSplitIndex64: colType = ROOT::ENTupleColumnType::kIndex64; break;
-         case ROOT::ENTupleColumnType::kSplitIndex32: colType = ROOT::ENTupleColumnType::kIndex32; break;
-         case ROOT::ENTupleColumnType::kSplitReal64: colType = ROOT::ENTupleColumnType::kReal64; break;
-         case ROOT::ENTupleColumnType::kSplitReal32: colType = ROOT::ENTupleColumnType::kReal32; break;
-         case ROOT::ENTupleColumnType::kSplitInt64: colType = ROOT::ENTupleColumnType::kInt64; break;
-         case ROOT::ENTupleColumnType::kSplitInt32: colType = ROOT::ENTupleColumnType::kInt32; break;
-         case ROOT::ENTupleColumnType::kSplitInt16: colType = ROOT::ENTupleColumnType::kInt16; break;
-         case ROOT::ENTupleColumnType::kSplitUInt64: colType = ROOT::ENTupleColumnType::kUInt64; break;
-         case ROOT::ENTupleColumnType::kSplitUInt32: colType = ROOT::ENTupleColumnType::kUInt32; break;
-         case ROOT::ENTupleColumnType::kSplitUInt16: colType = ROOT::ENTupleColumnType::kUInt16; break;
-         default: break;
-         }
-      }
+      DemoteSplitColumnTypes(rep);
       SetColumnRepresentatives({rep});
    }
 
-   if (fTypeAlias == "Double32_t")
-      SetColumnRepresentatives({{ROOT::ENTupleColumnType::kSplitReal32}});
+   if (fTypeAlias == "Double32_t") {
+      if (options.GetEnableColumnEncoding() && options.GetCompression() != 0)
+         SetColumnRepresentatives({{ROOT::ENTupleColumnType::kSplitReal32}});
+      else
+         SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}});
+   }
 }
 
 void ROOT::RFieldBase::ConnectPageSink(ROOT::Internal::RPageSink &pageSink, ROOT::NTupleSize_t firstEntry)
