@@ -37,7 +37,7 @@
 
 namespace {
 
-Int_t ParseOpenMode(Option_t *in, TString &modestr, int &mode, Bool_t assumeRead);
+   Int_t ParseOpenMode(Option_t *in, TString &modestr, int &mode, Bool_t assumeRead);
 
 } // namepsace
 
@@ -987,4 +987,146 @@ void TNetXNGFile::SetEnv()
    if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XrdSecPWDVERIFYSRV"))
                             || strlen(cenv) <= 0))
       gSystem->Setenv("XrdSecPWDVERIFYSRV",    val.Data());
+
+
+   // Ugliness of the day.
+   // XrdCl can load plugins that support different protocols, e.g. http
+   // In this place in the code we cannot know which of these plugins will be used, hence
+   // we have anyway to pass all the known parameters from the ROOT env into
+   // the XrdCl env, for those plugins to find them.
+   // This is important for configuring the authentication method
+   //
+   bool gridmode = false;
+   val = gEnv->GetValue("XSec.GSI.GridMode", "y");
+   gridmode = (val[0] == 'y');
+
+
+   // Now set the CAFile/CADir. Use the default if we are in grid mode. CAFile has the precedence, if there.
+   val = gEnv->GetValue("XSec.GSI.CAFile", "");
+   if (val.Length() > 0) {
+      // Then set the parm that will be picked up by XrdCl
+      env->PutString("HttpCertFile", val.Data());
+   }
+   else {
+      if (gridmode)
+	 val = gEnv->GetValue("XSec.GSI.CADir", "/etc/grid-security/certificates");
+      else 
+	 val = gEnv->GetValue("XSec.GSI.CADir", "");
+
+      if (val.Length() > 0)
+	 // Then set the parm that will be picked up by XrdCl
+	 env->PutString("HttpCertDir", val.Data());
+   }
+
+   // Now the insecure flag, akin to 'curl -k'. Good for testing. Pass the value as is.
+   val = gEnv->GetValue("XSec.GSI.VerifyPeer", "");
+   env->PutString("HttpVerifyPeer", val.Data());
+
+   if (gridmode) {
+      bool haveproxy = false;
+      // We are in grid mode. Look for a grid proxy cert. The ROOT env overrides the process env
+      val = gEnv->GetValue("XSec.GSI.UserProxy", "");
+      cenv = gSystem->Getenv("X509_USER_PROXY");
+
+      if (val.Length() > 0)  {
+	 env->PutString("HttpClientCertFile", val.Data());
+         env->PutString("HttpClientKeyFile", val.Data());
+	 haveproxy = true;
+      }
+      else if (cenv && strlen(cenv)) {
+         env->PutString("HttpClientCertFile", cenv);
+	 env->PutString("HttpClientKeyFile", cenv);
+	 haveproxy = true;
+      }
+
+      // No proxy? We are still in gridmode, look for XSec.GSI.UserCert, XSec.GSI.UserKey, X509_USER_CERT, X509_USER_KEY
+      if (!haveproxy) {
+	 TString crt = gEnv->GetValue("XSec.GSI.UserCert", "");
+         TString key = gEnv->GetValue("XSec.GSI.UserKey", "");
+
+	 const char *c_crt = gSystem->Getenv("X509_USER_CERT");
+         const char *c_key = gSystem->Getenv("X509_USER_KEY");
+
+         // Make sure that we pick cert and env from the same place... avoid mixes!
+         // If the root env is set then stick to the root env. Otherwise the process env or the globus default
+	 if ((crt.Length() > 0) && (key.Length() > 0)) {
+            env->PutString("HttpClientCertFile", crt.Data());
+            env->PutString("HttpClientKeyFile", key.Data());
+         }
+         else {
+
+            if (c_crt && strlen(c_crt) && (c_key && strlen(c_key))) {
+               env->PutString("HttpClientCertFile", c_crt);
+               env->PutString("HttpClientKeyFile", c_key);
+            }
+            else {
+               env->PutString("HttpClientCertFile", "~/.globus/usercert.pem");
+               env->PutString("HttpClientKeyFile", "~/.globus/userkey.pem");
+            }
+         }
+      }
+   }
+   else { // No gridmode, just pick whatever is in the ROOT env
+      TString crt = gEnv->GetValue("XSec.GSI.UserCert", "");
+      TString key = gEnv->GetValue("XSec.GSI.UserKey", "");
+      if ((crt.Length() > 0) && (key.Length() > 0)) {
+         env->PutString("HttpClientCertFile", crt.Data());
+         env->PutString("HttpClientKeyFile", key.Data());
+      }
+   }
+   
+   // And now the S3 parameters, we apply the same behaviour
+   // NetXNG.S3.XrdClS3MkdirSentinel: 
+   // NetXNG.S3.XrdClS3Endpoint: the hostname of the S3 service, e.g. "s3.cern.ch" Please note that this may be conflicting with the endpoint that is in the url
+   // NetXNG.S3.XrdClS3UrlStyle: "path"->the bucket name is in the path "virtual"->the bucket name is in the hostname
+   // NetXNG.S3.XrdClS3Region: ""
+   // NetXNG.S3.XrdClS3BucketConfigs: A list of *lines* containing bucket names. Credentials for these buckets will be fetched from properly named config files. See the XrdClS3 documentation.
+   // NetXNG.S3.XrdClS3AccessKeyLocation: absolute path to a file that contains the S3 access key
+   // NetXNG.S3.XrdClS3SecretKeyLocation: absolute path to a file that contains the S3 secret key
+   // NetXNG.S3.XrdClS3AccessKey: the S3 access key
+   // NetXNG.S3.XrdClS3SecretKey: the S3 secret key
+
+
+   val = gEnv->GetValue("NetXNG.S3.XrdClS3MkdirSentinel", "");
+   if (val != "")
+      env->PutString("XrdClS3MkdirSentinel", val.Data());
+
+   val = gEnv->GetValue("NetXNG.S3.XrdClS3UrlStyle", "");
+   if (val != "")
+      env->PutString("XrdClS3UrlStyle", val.Data());
+
+   val = gEnv->GetValue("NetXNG.S3.XrdClS3Region", "");
+   if (val != "")
+      env->PutString("XrdClS3Region", val.Data());
+
+   val = gEnv->GetValue("NetXNG.S3.XrdClS3BucketConfigs", "");
+   if (val != "")
+      env->PutString("XrdClS3BucketConfigs", val.Data());
+
+   val = gEnv->GetValue("NetXNG.S3.XrdClS3AccessKeyLocation", "");
+   if (val != "")
+      env->PutString("XrdClS3AccessKeyLocation", val.Data());
+
+   val = gEnv->GetValue("NetXNG.S3.XrdClS3SecretKeyLocation", "");
+   if (val != "")
+      env->PutString("XrdClS3SecretKeyLocation", val.Data());
+
+   // Note: There are use cases where we want to directly provide the S3 keys
+   // In this case they take priority versus the other S3 authorization methods
+   val = gEnv->GetValue("NetXNG.S3.XrdClS3AccessKey", "");
+   if (val != "") {
+      env->PutString("XrdClS3AccessKey", val.Data());
+      env->PutString("XrdClS3AccessKeyLocation", "");
+      env->PutString("XrdClS3BucketConfigs", "");
+   }
+
+   val = gEnv->GetValue("NetXNG.S3.XrdClS3SecretKey", "");
+   if (val != "") {
+      env->PutString("XrdClS3SecretKey", val.Data());
+      env->PutString("XrdClS3SecretKeyLocation", "");
+      env->PutString("XrdClS3BucketConfigs", "");
+   }
+
+
+
 }
