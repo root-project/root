@@ -83,7 +83,7 @@ if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PA
 """)
                 if self.platform != self.platform_config:
                     print(f"""\
-# Here you need to set manually flags from {self.platform_config} when configuring
+# Note that the variant {self.platform_config} will be used when configuring
 """)
             print(self.trace)
 
