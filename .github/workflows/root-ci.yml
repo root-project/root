@@ -615,7 +615,7 @@ jobs:
 
       - name: Check headers
         if: steps.install.outcome == 'success'
-        run: bash ${{ github.workspace }}/src/test/PostInstall/check-headers.sh ${{ env.INSTALL_DIR }}/include/
+        run: bash ${GITHUB_WORKSPACE}/src/test/PostInstall/check-headers.sh ${{ env.INSTALL_DIR }}/include/
 
       - name: Build post-install test project
         id: postInstall
