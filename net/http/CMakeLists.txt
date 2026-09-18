@@ -83,7 +83,7 @@ if(builtin_civetweb)
       MESSAGE(STATUS "Use SSL API VERSION 1.1 for civetweb")
       target_compile_definitions(RHTTP PUBLIC -DOPENSSL_API_1_1)
       set(link_ssl ON)
-    elseif((${ssl_major} EQUAL "3"))
+    elseif((${ssl_major} EQUAL "3") OR (${ssl_major} EQUAL "4")) # OpenSSL4 has still 3.0 API
       MESSAGE(STATUS "Use SSL API VERSION 3.${ssl_minor} for civetweb")
       target_compile_definitions(RHTTP PUBLIC -DOPENSSL_API_3_0)
       set(link_ssl ON)
