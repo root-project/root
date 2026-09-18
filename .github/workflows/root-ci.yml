@@ -385,6 +385,8 @@ jobs:
         include:
           - image: fedora43
           - image: fedora44
+          - image: fedora45
+            is_special: true # special until Fedora 45 gets released
           - image: alma8
           - image: alma9
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
@@ -394,6 +396,8 @@ jobs:
           - image: ubuntu2404
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2604
+          - image: ubuntu2610
+            is_special: true # special until Ubuntu 26.10 gets released
           - image: debian13
             overrides: ["dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
           # Special builds
@@ -412,12 +416,6 @@ jobs:
             is_special: true
             property: "clang Ninja builtins auto-registration off"
             overrides: ["CMAKE_CXX_STANDARD=20"]
-          # Fedora Rawhide with Python freethreading+debug build
-          - image: rawhide
-            python_venv: "/py-venv-3.15td/ROOT-CI"
-            is_special: true
-            property: "Fedora pydebug no GIL"
-            overrides: ["CMAKE_CXX_STANDARD=23"]
           # Minimal build
           - image: alma10
             platform_config: alma10-minimal
