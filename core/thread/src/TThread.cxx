@@ -39,9 +39,8 @@ TPosixThread or TWin32Thread).
 #include "TThreadSlots.h"
 #include "TRWMutexImp.h"
 
-#include <cstdio>
-
 #include <cstdarg>
+#include <cstdio>
 
 TThreadImp     *TThread::fgThreadImp = nullptr;
 Long_t          TThread::fgMainId = 0;
@@ -921,7 +920,7 @@ void **TThread::GetTls(Int_t k) {
 void TThread::Printf(const char *fmt, ...)
 {
    va_list ap;
-   va_start(ap, fmt);
+   va_start(ap,fmt);
 
    Int_t buf_size = 2048;
    char *buf;

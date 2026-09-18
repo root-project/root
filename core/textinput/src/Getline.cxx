@@ -11,7 +11,6 @@
 
 #include "Getline.h"
 #include "strlcpy.h"
-
 #include <algorithm>
 #include <string>
 #include <sstream>
