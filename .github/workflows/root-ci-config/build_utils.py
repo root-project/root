@@ -116,7 +116,7 @@ def print_options_diff(new, old):
             print(f"\t{key: <30}None --> {new[key]}")
 
 
-def subprocess_with_log(command: str) -> int:
+def subprocess_with_log(command: str, dry_run: bool = False) -> int:
     """Runs <command> in shell and appends <command> to log"""
 
     print_fancy(textwrap.dedent(command), sgr=1)
@@ -126,13 +126,16 @@ def subprocess_with_log(command: str) -> int:
     if os.name == 'nt':
         command = "$env:comspec = 'cmd.exe'; " + command
 
-    result = subprocess.run(command, shell=True, check=False, stderr=subprocess.STDOUT)
+    if not dry_run:
+        result = subprocess.run(command, shell=True, check=False, stderr=subprocess.STDOUT)
+    else:
+        print(command)
 
     print("\033[0m", end='')
 
     log.add(command)
 
-    return result.returncode
+    return 0 if dry_run else result.returncode
 
 def subprocess_with_capture(command: str):
     """Runs <command> in shell, capture output and appends <command> to log"""
