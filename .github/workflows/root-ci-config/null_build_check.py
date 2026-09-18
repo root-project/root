@@ -52,6 +52,8 @@ ALLOWED_PATTERNS = (
     "*/CMakeFiles/generate.stamp",
     # ctest leftovers, in case the tree has been tested before.
     "Testing/*",
+    # Python caching
+    "*/__pycache__/*",
 )
 
 # ExternalProject keeps git clones of externals in the build tree.
