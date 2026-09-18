@@ -44,7 +44,7 @@ libThread depends on libCore and contains:
 libNew depends on libCore and contains:
   - newdelete
 
-libRint depends on libCore and contains:
+libROOTRint depends on libCore and contains:
   - rint
 
 libMultiProc depends on explicitly on libCore, libNet, libTreePlayer and
