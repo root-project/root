@@ -100,7 +100,7 @@ macro(ROOT_FIND_REQUIRED_DEP PACKAGE_NAME BUILTIN_CONFIG_OPTION)
       "Please install it in the system (preferred), set the corresponding CMake search variable, "
       "or opt in to downloading and auto-build it from externally provided source tarball using '-D${BUILTIN_CONFIG_OPTION}=ON'.")
       list(APPEND MISSING_PACKAGES ${PACKAGE_NAME})
-      list(APPEND HOTFIX_BUILD_FLAGS '-D${BUILTIN_CONFIG_OPTION}=ON')
+      list(APPEND HOTFIX_BUILD_FLAGS -D${BUILTIN_CONFIG_OPTION}=ON)
     endif()
   endif()
 endmacro()

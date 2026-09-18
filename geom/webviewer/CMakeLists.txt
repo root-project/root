@@ -23,9 +23,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGeomViewer
   DEPENDENCIES
     Core
     Geom
-    RCsg
     GeomPainter
     ROOTWebDisplay
     ROOTBrowserv7
+  LIBRARIES
+    ROOTCsg
   ${EXTRA_DICT_OPTS}
 )
