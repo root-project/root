@@ -39,6 +39,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     ROOT/REveGeoPolyShape.hxx
     ROOT/REveGeoShapeExtract.hxx
     ROOT/REveGeoShape.hxx
+    ROOT/REveGeoOverlaps.hxx
     ROOT/REveGeoTopNode.hxx
     ROOT/REveGluTess.hxx
     ROOT/REveJetCone.hxx
@@ -94,6 +95,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     src/REveGeoPolyShape.cxx
     src/REveGeoShape.cxx
     src/REveGeoShapeExtract.cxx
+    src/REveGeoOverlaps.cxx
     src/REveGeoTopNode.cxx
     src/REveGluTess.cxx
     src/REveJetCone.cxx

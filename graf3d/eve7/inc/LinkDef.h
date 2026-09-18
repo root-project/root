@@ -204,6 +204,7 @@
 
 // Not yet ported
 // #pragma link C++ class ROOT::Experimental::REveGeoNode+;
+#pragma link C++ class ROOT::Experimental::REveGeoOverlapTable+;
 #pragma link C++ class ROOT::Experimental::REveGeoTopNodeData+;
 
 // REveCalo

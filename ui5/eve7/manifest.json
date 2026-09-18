@@ -57,6 +57,10 @@
                 "name": "GeoTable",
                 "pattern": "geotable/:viewName:",
                 "target": ["GeoTable"]
+            }, {
+                "name": "GeoOverlapTable",
+                "pattern": "geooverlaptable/:viewName:",
+                "target": ["GeoOverlapTable"]
             }],
             "targets": {
                 "Main": {
@@ -83,6 +87,11 @@
                     "transition": "slide",
                     "clearAggregation": false,
                     "viewName": "GeoTable"
+                },
+                "GeoOverlapTable": {
+                    "transition": "slide",
+                    "clearAggregation": false,
+                    "viewName": "GeoOverlapTable"
                 }
             }
         }
