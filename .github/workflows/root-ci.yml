@@ -498,10 +498,18 @@ jobs:
             echo ROOT_OBJECT_AUTO_REGISTRATION=0 >> $GITHUB_ENV;
           fi
 
-      - name: Checkout
-        uses: actions/checkout@v6
+      - name: Checkout root build scripts
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref_name }}
+          sparse-checkout: .github/workflows/
+          show-progress: false
+
+      - name: Checkout root
+        uses: actions/checkout@v7
+        with:
+          path: src/
+          show-progress: false
 
       - name: Dump GitHub context
         env:
@@ -538,11 +546,7 @@ jobs:
                     --dockeropts      \"$CONTAINER_OPTIONS\"
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
-                    --sha             ${{ github.sha }}
-                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
-                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
-                    --head_sha        ${{ github.event.pull_request.head.sha }}
-                    --repository      ${{ github.server_url }}/${{ github.repository }}
+                    --source_dir      ${GITHUB_WORKSPACE}/src
                     --overrides       ${GLOBAL_OVERRIDES} ${OVERRIDES}
               "
 
@@ -611,13 +615,13 @@ jobs:
 
       - name: Check headers
         if: steps.install.outcome == 'success'
-        run: bash test/PostInstall/check-headers.sh ${{ env.INSTALL_DIR }}/include/
+        run: bash ${GITHUB_WORKSPACE}/src/test/PostInstall/check-headers.sh ${{ env.INSTALL_DIR }}/include/
 
       - name: Build post-install test project
         id: postInstall
         if: steps.install.outcome == 'success'
         run: |
-          cmake -S test/PostInstall/ -B ${{ env.POST_INSTALL_DIR }} -DCMAKE_PREFIX_PATH=${{ env.INSTALL_DIR }};
+          cmake -S ${GITHUB_WORKSPACE}/src/test/PostInstall/ -B ${{ env.POST_INSTALL_DIR }} -DCMAKE_PREFIX_PATH=${{ env.INSTALL_DIR }};
           cmake --build ${{ env.POST_INSTALL_DIR }};
 
       - name: CTest in post-install test project
