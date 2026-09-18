@@ -1,0 +1,32 @@
+name: Diff cppjit against upstream
+on:
+  pull_request:
+    paths:
+      - 'bindings/pyroot/cppjit/**'
+
+jobs:
+  cppjit-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out ROOT
+        uses: actions/checkout@v6
+        with:
+          path: root
+      - name: Determine tag that cppjit in ROOT is based
+        id: determine-tag
+        run: |
+          tag_file=root/bindings/pyroot/cppjit/cppjit-version.tag
+          echo "tag=$(cat $tag_file)" >> $GITHUB_OUTPUT
+          rm $tag_file
+      - name: Check out cppjit
+        uses: actions/checkout@v6
+        with:
+          repository: compiler-research/cppjit
+          ref: ${{ steps.determine-tag.outputs.tag }}
+          path: cppjit
+      - name: Drop directories that are not added to ROOT
+        working-directory: cppjit
+        run: |
+          rm -rf .git .github zizmor.yml
+      - name: Compare
+        run: diff -ur cppjit/ root/bindings/pyroot/cppjit/
