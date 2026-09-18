@@ -670,6 +670,10 @@ TEST(RNTupleEmulated, EmulatedFields_Enum)
 {
    FileRaii fileGuard("test_ntuple_emulated_fields_enum.root");
 
+   ASSERT_TRUE(gInterpreter->Declare(R"(
+      enum class KnownEnum { kZero, kOne, kTwo };
+   )"));
+
    ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
@@ -679,13 +683,19 @@ TEST(RNTupleEmulated, EmulatedFields_Enum)
       )"));
 
       auto model = RNTupleModel::Create();
-      model->AddField(RFieldBase::Create("f", "EmulatedEnum").Unwrap());
+      model->AddField(RFieldBase::Create("a", "KnownEnum").Unwrap());
+      model->AddField(RFieldBase::Create("e", "EmulatedEnum").Unwrap());
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
-      void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
-      DeclarePointer("EmulatedEnum", "ptr", ptr);
+      void *ptrKnown = writer->GetModel().GetDefaultEntry().GetPtr<void>("a").get();
+      void *ptrEmulated = writer->GetModel().GetDefaultEntry().GetPtr<void>("e").get();
 
-      ProcessLine("*ptr = EmulatedEnum::kOne");
+      DeclarePointer("KnownEnum", "ptrKnown", ptrKnown);
+      ProcessLine("*ptrKnown = KnownEnum::kTwo");
+
+      DeclarePointer("EmulatedEnum", "ptrEmulated", ptrEmulated);
+      ProcessLine("*ptrEmulated = EmulatedEnum::kOne");
+
       writer->Fill();
    });
 
@@ -709,7 +719,12 @@ TEST(RNTupleEmulated, EmulatedFields_Enum)
       auto model = desc.CreateModel(opts);
       ASSERT_NE(model, nullptr);
 
-      const auto &e = model->GetConstField("f");
+      const auto &a = model->GetConstField("a");
+      EXPECT_EQ(a.GetTypeName(), "KnownEnum");
+      EXPECT_FALSE(a.GetTraits() & ROOT::RFieldBase::kTraitEmulatedField);
+      EXPECT_EQ(a.GetStructure(), ROOT::ENTupleStructure::kPlain);
+
+      const auto &e = model->GetConstField("e");
       EXPECT_EQ(e.GetTypeName(), "EmulatedEnum");
       EXPECT_TRUE(e.GetTraits() & ROOT::RFieldBase::kTraitEmulatedField);
       EXPECT_EQ(e.GetStructure(), ROOT::ENTupleStructure::kPlain);
@@ -726,11 +741,14 @@ TEST(RNTupleEmulated, EmulatedFields_Enum)
    reader = RNTupleReader::Open(cmOpts, *ntpl);
    EXPECT_EQ(reader->GetNEntries(), 1);
 
-   std::int32_t value = 0;
+   std::int32_t valueKnown = 0;
+   std::int32_t valueEmulated = 0;
    auto e = reader->CreateEntry();
-   e->BindRawPtr<void>("f", &value);
+   e->BindRawPtr<void>("a", &valueKnown);
+   e->BindRawPtr<void>("e", &valueEmulated);
    reader->LoadEntry(0, *e);
-   EXPECT_EQ(1, value);
+   EXPECT_EQ(2, valueKnown);
+   EXPECT_EQ(1, valueEmulated);
 }
 
 TEST(RNTupleEmulated, EmulatedFields_SoA)
