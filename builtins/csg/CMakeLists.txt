@@ -7,5 +7,4 @@
 add_library(ROOTCsg STATIC)
 target_sources(ROOTCsg PRIVATE src/CsgOps.cxx)
 target_include_directories(ROOTCsg PUBLIC inc/)
-target_link_libraries(ROOTCsg PRIVATE MathCore)
 set_property(TARGET ROOTCsg PROPERTY POSITION_INDEPENDENT_CODE ON)
