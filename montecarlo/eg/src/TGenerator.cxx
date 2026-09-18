@@ -142,6 +142,7 @@ This is especially useful for example with TVirtualMC or similar.
 #include "TParticlePDG.h"
 #include "TParticle.h"
 #include "TObjArray.h"
+#define ROOT_TGenerator_cxx
 #include "Hepevt.h"
 #include "TVirtualPad.h"
 #include "TView.h"
