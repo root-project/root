@@ -1198,6 +1198,30 @@ class DataLoaderMultipleFiles(unittest.TestCase):
         finally:
             self.teardown_file(file_name)
 
+    def test18_one_batch_in_memory(self):
+        # batches_in_memory=1 used to deadlock before delivering the first batch
+        self.create_file()
+
+        try:
+            df = ROOT.RDataFrame(self.tree_name, self.file_name1)
+
+            dl = ROOT.Experimental.ML.RDataLoader(
+                df,
+                batch_size=2,
+                batches_in_memory=1,
+                target="b2",
+                shuffle=False,
+                drop_remainder=True,
+            )
+
+            gen_train, gen_validation = dl.train_test_split(0.4)
+
+            self.assertEqual(sum(1 for _ in gen_train.as_numpy()), 3)
+            self.assertEqual(sum(1 for _ in gen_validation.as_numpy()), 2)
+
+        finally:
+            self.teardown_file(self.file_name1)
+
 
 class DataLoaderEagerLoading(unittest.TestCase):
     file_name1 = "first_half.root"
