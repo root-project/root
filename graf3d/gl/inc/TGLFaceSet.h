@@ -15,7 +15,9 @@
 #define ROOT_TGLFaceSet
 
 #include "TGLLogicalShape.h"
-#include "CsgOps.h"
+namespace RootCsg {
+class TBaseMesh;
+}
 #include <vector>
 
 ///////////////////////////////////////////////////////////////////////
@@ -47,7 +49,7 @@ public:
    static void   SetEnforceTriangles(Bool_t e);
 
 private:
-   void  GLDrawPolys() const;
+   void GLDrawPolys() const;
    Int_t CheckPoints(const Int_t *source, Int_t *dest) const;
 
    static Bool_t Eq(const Double_t *p1, const Double_t *p2);

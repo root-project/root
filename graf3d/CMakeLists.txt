@@ -10,8 +10,6 @@ if(NOT WIN32 AND x11)
   add_subdirectory(x3d)
 endif()
 
-add_subdirectory(csg)
-
 if (opengl)
   add_subdirectory(gl)
 endif()
