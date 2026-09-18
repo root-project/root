@@ -1598,27 +1598,30 @@ function(ROOT_PYTHON_PACKAGE pkgname)
 
   list(REMOVE_DUPLICATES bytecode_dirs)
 
+  # Stamp files so CMake knows if it needs to copy or compile.
+  # If any of the inputs is newer than any of the stamp files,
+  # copy and compile are triggered. Using stamp files simplifies
+  # the required dependency checks, and frees us from having to
+  # list the platform-dependent bytecode filenames.
+  set(copy_stamp ${pkg_path_build}/${pkgname}-copy.stamp)
+  set(bytecode_stamp ${pkg_path_build}/${pkgname}-pybytecode.stamp)
+
   add_custom_command(
-    OUTPUT ${py_sources_in_build_tree}
+    OUTPUT ${copy_stamp}
     ${copy_commands}
+    COMMAND ${CMAKE_COMMAND} -E touch ${copy_stamp}
     DEPENDS ${py_sources_in_source_dir}
     COMMENT "Copying ${pkgname} Python sources"
   )
 
   # Compile .py files
-
-  # Stamp file so CMake knows it doesn't need to re-compile. We can't set the
-  # actual bytecode files as the OUTPUT of the custom command, because their
-  # names are CPython implementation dependent and therefore not reliable.
-  set(bytecode_stamp ${pkg_path_build}/${pkgname}-pybytecode.stamp)
-
   # It's 10x faster to compile all in one go than in single invocations
   add_custom_command(
     OUTPUT ${bytecode_stamp}
     COMMAND ${Python3_EXECUTABLE} -m py_compile ${py_sources_in_build_tree}
     COMMAND ${Python3_EXECUTABLE} -O -m py_compile ${py_sources_in_build_tree}
     COMMAND ${CMAKE_COMMAND} -E touch ${bytecode_stamp}
-    DEPENDS ${py_sources_in_build_tree}
+    DEPENDS ${copy_stamp}
     COMMENT "Compiling ${pkgname} Python sources"
   )
 
