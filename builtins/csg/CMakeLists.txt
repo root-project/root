@@ -4,12 +4,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-ROOT_STANDARD_LIBRARY_PACKAGE(RCsg
-  HEADERS
-     CsgOps.h
-  SOURCES
-     CsgOps.cxx
-  LIBRARIES
-     MathCore
-)
-add_library(ROOTCsg ALIAS RCsg)
+add_library(ROOTCsg STATIC)
+target_sources(ROOTCsg PRIVATE src/CsgOps.cxx)
+target_include_directories(ROOTCsg PUBLIC inc/)
+set_property(TARGET ROOTCsg PROPERTY POSITION_INDEPENDENT_CODE ON)
