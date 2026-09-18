@@ -32,36 +32,49 @@
 #include <set>
 #include <utility>
 
+const std::string &ROOT::RFieldDescriptor::GetEmptyString()
+{
+   static std::string gEmpty;
+   return gEmpty;
+}
+
 bool ROOT::RFieldDescriptor::operator==(const RFieldDescriptor &other) const
 {
    return fFieldId == other.fFieldId && fFieldVersion == other.fFieldVersion && fTypeVersion == other.fTypeVersion &&
-          fFieldName == other.fFieldName && fFieldDescription == other.fFieldDescription &&
-          fTypeName == other.fTypeName && fTypeAlias == other.fTypeAlias && fNRepetitions == other.fNRepetitions &&
-          fStructure == other.fStructure && fParentId == other.fParentId &&
+          GetFieldName() == other.GetFieldName() && GetFieldDescription() == other.GetFieldDescription() &&
+          GetTypeName() == other.GetTypeName() && GetTypeAlias() == other.GetTypeAlias() &&
+          fNRepetitions == other.fNRepetitions && fStructure == other.fStructure && fParentId == other.fParentId &&
           fProjectionSourceId == other.fProjectionSourceId && fLinkIds == other.fLinkIds &&
           fLogicalColumnIds == other.fLogicalColumnIds && fTypeChecksum == other.fTypeChecksum &&
           fIsSoACollection == other.fIsSoACollection;
 }
 
+void ROOT::RFieldDescriptor::InitFrom(const RFieldDescriptor &source, Internal::RStringPool &stringPool)
+{
+   fFieldId = source.fFieldId;
+   fFieldVersion = source.fFieldVersion;
+   fTypeVersion = source.fTypeVersion;
+   fNRepetitions = source.fNRepetitions;
+   fStructure = source.fStructure;
+   fParentId = source.fParentId;
+   fProjectionSourceId = source.fProjectionSourceId;
+   fLinkIds = source.fLinkIds;
+   fColumnCardinality = source.fColumnCardinality;
+   fLogicalColumnIds = source.fLogicalColumnIds;
+   fTypeChecksum = source.fTypeChecksum;
+   fIsSoACollection = source.fIsSoACollection;
+
+   fFieldName = stringPool.Intern(source.GetFieldName());
+   fFieldDescription = stringPool.Intern(source.GetFieldDescription());
+   fTypeName = stringPool.Intern(source.GetTypeName());
+   fTypeAlias = stringPool.Intern(source.GetTypeAlias());
+}
+
 ROOT::RFieldDescriptor ROOT::RFieldDescriptor::Clone() const
 {
    RFieldDescriptor clone;
-   clone.fFieldId = fFieldId;
-   clone.fFieldVersion = fFieldVersion;
-   clone.fTypeVersion = fTypeVersion;
-   clone.fFieldName = fFieldName;
-   clone.fFieldDescription = fFieldDescription;
-   clone.fTypeName = fTypeName;
-   clone.fTypeAlias = fTypeAlias;
-   clone.fNRepetitions = fNRepetitions;
-   clone.fStructure = fStructure;
-   clone.fParentId = fParentId;
-   clone.fProjectionSourceId = fProjectionSourceId;
-   clone.fLinkIds = fLinkIds;
-   clone.fColumnCardinality = fColumnCardinality;
-   clone.fLogicalColumnIds = fLogicalColumnIds;
-   clone.fTypeChecksum = fTypeChecksum;
-   clone.fIsSoACollection = fIsSoACollection;
+   clone.fStringPool = std::make_unique<Internal::RStringPool>();
+   clone.InitFrom(*this, *clone.fStringPool);
    return clone;
 }
 
@@ -169,7 +182,8 @@ ROOT::RColumnDescriptor ROOT::RColumnDescriptor::Clone() const
    clone.fIndex = fIndex;
    clone.fFirstElementIndex = fFirstElementIndex;
    clone.fRepresentationIndex = fRepresentationIndex;
-   clone.fValueRange = fValueRange;
+   if (fValueRange)
+      clone.fValueRange = std::make_unique<RValueRange>(*fValueRange);
    return clone;
 }
 
@@ -309,6 +323,13 @@ ROOT::RExtraTypeInfoDescriptor ROOT::RExtraTypeInfoDescriptor::Clone() const
 ROOT::DescriptorId_t ROOT::Internal::CallFindClusterIdOn(const RNTupleDescriptor &desc, ROOT::NTupleSize_t entryIdx)
 {
    return desc.FindClusterId(entryIdx);
+}
+
+ROOT::RNTupleDescriptor::RNTupleDescriptor() : fStringPool(std::make_shared<Internal::RStringPool>())
+{
+   // We need to make sure that for cloning fields, the empty string that is not explicitly entered for
+   // default constructed field descriptors is available.
+   fStringPool->Intern("");
 }
 
 bool ROOT::RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const
@@ -743,7 +764,7 @@ std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleDescriptor::CreateModel(const R
    return model;
 }
 
-ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::CloneSchema() const
+ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::CloneSchema(bool shareStringPool) const
 {
    RNTupleDescriptor clone;
    clone.fName = fName;
@@ -755,8 +776,28 @@ ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::CloneSchema() const
    // and therefore not represent the actual sources's header.
    // OnDiskFooterSize not copied because it contains information beyond the schema, for example the clustering.
 
-   for (const auto &d : fFieldDescriptors)
-      clone.fFieldDescriptors.emplace(d.first, d.second.Clone());
+   if (FieldTypeNamesMayNeedFixup())
+      shareStringPool = false;
+
+   if (shareStringPool)
+      clone.fStringPool = fStringPool;
+
+   if (FieldTypeNamesMayNeedFixup()) {
+      // In case we are copying the schema from a pre-1.0.0.1 RNTuple we need to patch all field type names
+      // to use the proper normalization. In this case, the clone will get a new string pool because we may need
+      // to insert.
+      for (const auto &d : fFieldDescriptors) {
+         Internal::RFieldDescriptorBuilder fieldDescBuilder(d.second.Clone(), *clone.fStringPool);
+         fieldDescBuilder.TypeName(ROOT::Internal::GetRenormalizedTypeName(d.second.GetTypeName()));
+         clone.fFieldDescriptors.emplace(d.first, fieldDescBuilder.MoveDescriptor().Unwrap());
+      }
+   } else {
+      for (const auto &d : fFieldDescriptors) {
+         clone.fFieldDescriptors.emplace(
+            d.first, Internal::RFieldDescriptorBuilder::CloneDescriptor(d.second, *clone.fStringPool));
+      }
+   }
+
    for (const auto &d : fColumnDescriptors)
       clone.fColumnDescriptors.emplace(d.first, d.second.Clone());
 
@@ -765,27 +806,13 @@ ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::CloneSchema() const
    if (fHeaderExtension)
       clone.fHeaderExtension = std::make_unique<RHeaderExtension>(*fHeaderExtension);
 
-   // In case we are copying the schema from a pre-1.0.0.1 RNTuple we need to patch all field type names
-   // to use the proper normalization.
-   if (FieldTypeNamesMayNeedFixup()) {
-      std::vector<ROOT::DescriptorId_t> toVisit;
-      toVisit.push_back(GetFieldZeroId());
-      while (!toVisit.empty()) {
-         auto fieldId = toVisit.back();
-         toVisit.pop_back();
-         for (auto &field : clone.GetFieldIterable(fieldId)) {
-            Internal::FixupFieldTypeName(const_cast<ROOT::RFieldDescriptor &>(field));
-            toVisit.push_back(field.GetId());
-         }
-      }
-   }
-
    return clone;
 }
 
 ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::Clone() const
 {
-   RNTupleDescriptor clone = CloneSchema();
+   RNTupleDescriptor clone = CloneSchema(true /* shareStringPool */);
+   clone.fStringPool->Freeze();
 
    clone.fVersionEpoch = fVersionEpoch;
    clone.fVersionMajor = fVersionMajor;
@@ -1104,6 +1131,7 @@ ROOT::RNTupleDescriptor ROOT::Internal::RNTupleDescriptorBuilder::MoveDescriptor
                 return fDescriptor.fClusterGroupDescriptors[a].GetMinEntry() <
                        fDescriptor.fClusterGroupDescriptors[b].GetMinEntry();
              });
+   fDescriptor.fStringPool->Freeze();
    RNTupleDescriptor result;
    std::swap(result, fDescriptor);
    return result;
@@ -1155,7 +1183,7 @@ ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder::MoveDescriptor()
    return std::move(fDesc);
 }
 
-ROOT::RResult<ROOT::RColumnDescriptor> ROOT::Internal::RColumnDescriptorBuilder::MakeDescriptor() const
+ROOT::RResult<ROOT::RColumnDescriptor> ROOT::Internal::RColumnDescriptorBuilder::MoveDescriptor()
 {
    if (fColumn.GetLogicalId() == ROOT::kInvalidDescriptorId)
       return R__FAIL("invalid logical column id");
@@ -1175,31 +1203,20 @@ ROOT::RResult<ROOT::RColumnDescriptor> ROOT::Internal::RColumnDescriptorBuilder:
          return R__FAIL("invalid column bit width");
    }
 
-   return fColumn.Clone();
+   RColumnDescriptor result;
+   std::swap(result, fColumn);
+   return result;
 }
 
-ROOT::Internal::RFieldDescriptorBuilder
-ROOT::Internal::RFieldDescriptorBuilder::FromField(const ROOT::RFieldBase &field)
+ROOT::RFieldDescriptor
+ROOT::Internal::RFieldDescriptorBuilder::CloneDescriptor(const RFieldDescriptor &source, RStringPool &stringPool)
 {
-   RFieldDescriptorBuilder fieldDesc;
-   fieldDesc.FieldVersion(field.GetFieldVersion())
-      .TypeVersion(field.GetTypeVersion())
-      .FieldName(field.GetFieldName())
-      .FieldDescription(field.GetDescription())
-      .TypeName(field.GetTypeName())
-      .TypeAlias(field.GetTypeAlias())
-      .Structure(field.GetStructure())
-      .NRepetitions(field.GetNRepetitions());
-   if (field.GetTraits() & ROOT::RFieldBase::kTraitTypeChecksum)
-      fieldDesc.TypeChecksum(field.GetTypeChecksum());
-   if (field.GetTraits() & ROOT::RFieldBase::kTraitSoACollection) {
-      assert(field.GetStructure() == ENTupleStructure::kCollection);
-      fieldDesc.IsSoACollection(true);
-   }
-   return fieldDesc;
+   RFieldDescriptor clone;
+   clone.InitFrom(source, stringPool);
+   return clone;
 }
 
-ROOT::RResult<ROOT::RFieldDescriptor> ROOT::Internal::RFieldDescriptorBuilder::MakeDescriptor() const
+ROOT::RResult<ROOT::RFieldDescriptor> ROOT::Internal::RFieldDescriptorBuilder::MoveDescriptor()
 {
    if (fField.GetId() == ROOT::kInvalidDescriptorId) {
       return R__FAIL("invalid field id");
@@ -1220,17 +1237,43 @@ ROOT::RResult<ROOT::RFieldDescriptor> ROOT::Internal::RFieldDescriptorBuilder::M
          return R__FAIL("name cannot be empty string \"\"");
       }
    }
-   return fField.Clone();
+
+   RFieldDescriptor result;
+   std::swap(result, fField);
+   return result;
 }
 
-void ROOT::Internal::RNTupleDescriptorBuilder::AddField(const RFieldDescriptor &fieldDesc)
+void ROOT::Internal::RNTupleDescriptorBuilder::AddField(const ROOT::RFieldBase &field, DescriptorId_t fieldId)
 {
-   fDescriptor.fFieldDescriptors.emplace(fieldDesc.GetId(), fieldDesc.Clone());
+   RFieldDescriptorBuilder fieldDesc(GetStringPool());
+   fieldDesc.FieldId(fieldId)
+      .FieldVersion(field.GetFieldVersion())
+      .TypeVersion(field.GetTypeVersion())
+      .FieldName(field.GetFieldName())
+      .FieldDescription(field.GetDescription())
+      .TypeName(field.GetTypeName())
+      .TypeAlias(field.GetTypeAlias())
+      .Structure(field.GetStructure())
+      .NRepetitions(field.GetNRepetitions());
+   if (field.GetTraits() & ROOT::RFieldBase::kTraitTypeChecksum)
+      fieldDesc.TypeChecksum(field.GetTypeChecksum());
+   if (field.GetTraits() & ROOT::RFieldBase::kTraitSoACollection) {
+      assert(field.GetStructure() == ENTupleStructure::kCollection);
+      fieldDesc.IsSoACollection(true);
+   }
+   AddField(fieldDesc.MoveDescriptor().Unwrap());
+}
+
+void ROOT::Internal::RNTupleDescriptorBuilder::AddField(RFieldDescriptor fieldDesc)
+{
+   const auto id = fieldDesc.GetId();
    if (fDescriptor.fHeaderExtension)
       fDescriptor.fHeaderExtension->MarkExtendedField(fieldDesc);
    if (fieldDesc.GetFieldName().empty() && fieldDesc.GetParentId() == ROOT::kInvalidDescriptorId) {
-      fDescriptor.fFieldZeroId = fieldDesc.GetId();
+      fDescriptor.fFieldZeroId = id;
    }
+
+   fDescriptor.fFieldDescriptors.emplace(id, std::move(fieldDesc));
 }
 
 ROOT::RResult<void>
@@ -1353,7 +1396,8 @@ ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::AddClusterGroup(RC
 
 void ROOT::Internal::RNTupleDescriptorBuilder::SetSchemaFromExisting(const RNTupleDescriptor &descriptor)
 {
-   fDescriptor = descriptor.CloneSchema();
+   // We expect the resulting descriptor to be ammended, so use a dedicated string pool
+   fDescriptor = descriptor.CloneSchema(false /* shareStringPool */);
 }
 
 void ROOT::Internal::RNTupleDescriptorBuilder::BeginHeaderExtension()
@@ -1557,9 +1601,4 @@ bool ROOT::Internal::IsStdAtomicFieldDesc(const RFieldDescriptor &fieldDesc)
    if (fieldDesc.GetStructure() != ROOT::ENTupleStructure::kPlain)
       return false;
    return (fieldDesc.GetTypeName().rfind("std::atomic<", 0) == 0);
-}
-
-void ROOT::Internal::FixupFieldTypeName(ROOT::RFieldDescriptor &fieldDesc)
-{
-   fieldDesc.fTypeName = ROOT::Internal::GetRenormalizedTypeName(fieldDesc.fTypeName);
 }

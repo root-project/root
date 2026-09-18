@@ -1550,7 +1550,7 @@ ROOT::Internal::RNTupleSerializer::DeserializeSchemaDescription(const void *buff
    const std::uint32_t fieldIdRangeBegin = descBuilder.GetDescriptor().GetNFields() - 1;
    for (unsigned i = 0; i < nFields; ++i) {
       std::uint32_t fieldId = fieldIdRangeBegin + i;
-      RFieldDescriptorBuilder fieldBuilder;
+      RFieldDescriptorBuilder fieldBuilder(descBuilder.GetStringPool());
       if (auto res = DeserializeField(bytes, fnFrameSizeLeft(), fieldBuilder)) {
          bytes += res.Unwrap();
       } else {
@@ -1558,7 +1558,7 @@ ROOT::Internal::RNTupleSerializer::DeserializeSchemaDescription(const void *buff
       }
       if (fieldId == fieldBuilder.GetParentId())
          fieldBuilder.ParentId(kZeroFieldId);
-      auto fieldDesc = fieldBuilder.FieldId(fieldId).MakeDescriptor();
+      auto fieldDesc = fieldBuilder.FieldId(fieldId).MoveDescriptor();
       if (!fieldDesc)
          return R__FORWARD_ERROR(fieldDesc);
       const auto parentId = fieldDesc.Inspect().GetParentId();
@@ -1610,7 +1610,7 @@ ROOT::Internal::RNTupleSerializer::DeserializeSchemaDescription(const void *buff
       columnBuilder.Index(fnNextColumnIndex(columnBuilder.GetFieldId(), columnBuilder.GetRepresentationIndex()));
       columnBuilder.LogicalColumnId(columnId);
       columnBuilder.PhysicalColumnId(columnId);
-      auto columnDesc = columnBuilder.MakeDescriptor();
+      auto columnDesc = columnBuilder.MoveDescriptor();
       if (!columnDesc)
          return R__FORWARD_ERROR(columnDesc);
       auto resVoid = descBuilder.AddColumn(columnDesc.Unwrap());
@@ -1645,7 +1645,7 @@ ROOT::Internal::RNTupleSerializer::DeserializeSchemaDescription(const void *buff
       columnBuilder.RepresentationIndex(physicalColumnDesc.GetRepresentationIndex());
       columnBuilder.Index(fnNextColumnIndex(columnBuilder.GetFieldId(), columnBuilder.GetRepresentationIndex()));
 
-      auto aliasColumnDesc = columnBuilder.MakeDescriptor();
+      auto aliasColumnDesc = columnBuilder.MoveDescriptor();
       if (!aliasColumnDesc)
          return R__FORWARD_ERROR(aliasColumnDesc);
       auto resVoid = descBuilder.AddColumn(aliasColumnDesc.Unwrap());
@@ -1991,10 +1991,10 @@ ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeHeader(const v
    descBuilder.SetNTuple(name, description);
 
    // Zero field
-   descBuilder.AddField(RFieldDescriptorBuilder()
+   descBuilder.AddField(RFieldDescriptorBuilder(descBuilder.GetStringPool())
                            .FieldId(kZeroFieldId)
                            .Structure(ROOT::ENTupleStructure::kRecord)
-                           .MakeDescriptor()
+                           .MoveDescriptor()
                            .Unwrap());
    if (auto res = DeserializeSchemaDescription(bytes, fnBufSizeLeft(), descBuilder)) {
       return RResult<void>::Success();
