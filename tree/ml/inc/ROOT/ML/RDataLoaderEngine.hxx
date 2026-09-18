@@ -16,6 +16,7 @@
 #ifndef ROOT_INTERNAL_ML_RDATALOADERENGINE
 #define ROOT_INTERNAL_ML_RDATALOADERENGINE
 
+#include <algorithm>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
@@ -167,7 +168,8 @@ public:
 
          // derive buffer quantities
          fBufferCapacity = fBatchSize * fBatchesInMemory;
-         fLowWatermark = fBufferCapacity / 2;
+         // at least one batch, otherwise the refill threshold rounds down to 0 and nothing is ever loaded
+         fLowWatermark = std::max(fBufferCapacity / 2, fBatchSize);
          fHighWatermark = fBufferCapacity;
 
          // split cluster list into training and validation
