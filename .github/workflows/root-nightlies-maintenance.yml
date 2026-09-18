@@ -1,7 +1,8 @@
-
-name: 'ROOT 6.26'
+name: 'ROOT Nightlies for Maintenance Releases'
 
 on:
+  schedule:
+    - cron: '10 2 1-31/2 * *'
   workflow_dispatch:
     inputs:
       incremental:
@@ -26,6 +27,13 @@ on:
         required: true
 
 jobs:
-  run_nightlies:
+  6.26:
     uses: root-project/root/.github/workflows/root-ci.yml@v6-26-00-patches
     secrets: inherit
+  6.28:
+    uses: root-project/root/.github/workflows/root-ci.yml@v6-28-00-patches
+    secrets: inherit
+  6.30:
+    uses: root-project/root/.github/workflows/root-ci.yml@v6-30-00-patches
+    secrets: inherit
+
