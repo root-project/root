@@ -17069,7 +17069,13 @@ ssl_get_client_cert_info(const struct mg_connection *conn,
 		const EVP_MD *digest = EVP_get_digestbyname("sha1");
 
 		/* Get Subject and issuer */
+		#if !defined(OPENSSL_API_1_0) && !defined(OPENSSL_API_1_1)
+		const
+		#endif
 		X509_NAME *subj = X509_get_subject_name(cert);
+		#if !defined(OPENSSL_API_1_0) && !defined(OPENSSL_API_1_1)
+		const
+		#endif
 		X509_NAME *iss = X509_get_issuer_name(cert);
 
 		/* Get serial number */
