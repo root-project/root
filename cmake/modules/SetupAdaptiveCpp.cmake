@@ -5,8 +5,8 @@ include(FetchContent)
 if(NOT DEFINED ADAPTIVE_CPP_SOURCE_DIR)
   FetchContent_Declare(
     AdaptiveCpp
-    GIT_REPOSITORY https://github.com/root-project/AdaptiveCpp.git
-    GIT_TAG ROOT-acpp-v25.02.0-20250926-01)
+    URL https://root.cern/download/AdaptiveCpp-ROOT-acpp-v25.02.0-20250926-01.tar.gz
+    URL_HASH SHA256=69ee7a0264863fa15916e7b12fa504ad78eac8fce7857df86c86b11bce7fc59d)
   FetchContent_GetProperties(AdaptiveCpp)
   if(NOT AdaptiveCpp_POPULATED)
     FetchContent_Populate(AdaptiveCpp)
