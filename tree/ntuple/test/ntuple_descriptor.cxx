@@ -619,8 +619,18 @@ TEST(RClusterGroupDescriptorIterable, Ordering)
       writer->Fill();
       writer->CommitCluster(true /* commitClusterGroup */);
       writer->Fill();
+      writer->CommitCluster();
+      writer->Fill();
       writer->CommitCluster(true /* commitClusterGroup */);
       writer->Fill();
+      writer->CommitCluster();
+      writer->Fill();
+      writer->CommitCluster();
+      writer->Fill();
+      writer.reset();
+
+      std::unique_ptr<TFile> f(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+      RNTupleWriter::Append(RNTupleModel::Create(), "empty", *f);
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
@@ -632,6 +642,19 @@ TEST(RClusterGroupDescriptorIterable, Ordering)
       EXPECT_LT(entryIdx, static_cast<int>(cg.GetMinEntry()));
       entryIdx = cg.GetMinEntry();
    }
+
+   EXPECT_EQ(desc.GetNClusters(), desc.GetNActiveClusters());
+   std::size_t count = 0;
+   entryIdx = -1;
+   for (const auto &clusterDesc : desc.GetActiveClusterIterable()) {
+      EXPECT_LT(entryIdx, static_cast<int>(clusterDesc.GetFirstEntryIndex()));
+      ++count;
+   }
+   EXPECT_EQ(count, desc.GetNClusters());
+
+   reader = RNTupleReader::Open("empty", fileGuard.GetPath());
+   const auto &descEmpty = reader->GetDescriptor();
+   EXPECT_EQ(descEmpty.GetActiveClusterIterable().begin(), descEmpty.GetActiveClusterIterable().end());
 }
 
 TEST(RClusterDescriptor, GetNBytesOnStorage)
