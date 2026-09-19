@@ -56,12 +56,14 @@ class Tracer:
     Trace command invocations and print them to reproduce builds.
     """
 
-    image = ""
+    platform = ""
+    platform_config = ""
     docker_opts = []
     trace = ""
 
-    def __init__(self, image: str, docker_opts: str):
-        self.image = image
+    def __init__(self, platform: str, platform_config: str, docker_opts: str):
+        self.platform = platform
+        self.platform_config = platform_config
         if docker_opts:
             self.docker_opts = docker_opts.split(' ')
         if '--rm' in self.docker_opts:
@@ -73,16 +75,20 @@ class Tracer:
     @github_log_group("To replicate this build locally")
     def print(self) -> None:
         if self.trace != "":
-            if self.image and not is_macos():
+            if self.platform and not is_macos():
                 print(f"""\
 # Grab the image and set up the python virtual environment:
-docker run {' '.join(self.docker_opts)} -it registry.cern.ch/root-ci/{self.image}:buildready
+docker run {' '.join(self.docker_opts)} -it registry.cern.ch/root-ci/{self.platform}:buildready
 if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi
+""")
+                if self.platform != self.platform_config:
+                    print(f"""\
+# Note that the variant {self.platform_config} will be used when configuring
 """)
             print(self.trace)
 
 
-log = Tracer("", "")
+log = Tracer("", "", "")
 
 
 def print_fancy(*values, sgr=1, **kwargs) -> None:

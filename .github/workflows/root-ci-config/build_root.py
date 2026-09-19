@@ -50,7 +50,7 @@ def main():
 
     args = parse_args()
 
-    build_utils.log = build_utils.Tracer(args.platform_config, args.dockeropts)
+    build_utils.log = build_utils.Tracer(args.platform, args.platform_config, args.dockeropts)
 
     pull_request = args.head_ref and args.head_ref != args.base_ref
 
