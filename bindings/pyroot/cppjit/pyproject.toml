@@ -1,0 +1,123 @@
+[build-system]
+requires = ["scikit-build-core>=1.0"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "cppjit"
+dynamic = ["version"]
+description = "Automatic Python-C++ interoperability layer and bindings generator"
+readme = "README.md"
+license = "BSD-3-Clause-LBNL"
+requires-python = ">=3.12"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Compilers",
+    "Topic :: Software Development :: Interpreters",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+keywords = [
+    "cplusplus",
+    "interoperability",
+    "bindings-generator",
+    "llvm-jit",
+    "scientific-computing",
+]
+authors = [
+    {name = "Wim Lavrijsen"},
+    {name = "Vassil Vassilev"},
+    {name = "Aaron Jomy"},
+    {name = "Vipul Cariappa"},
+    {name = "Jonas Rembser"},
+    {name = "Baidyanath Kundu"}
+]
+maintainers = [
+    {name = "Aaron Jomy", email = "aaronjomyjoseph@gmail.com"},
+    {name = "Jonas Rembser", email = "jonas.rembser@cern.ch"},
+    {name = "Vassil Vassilev", email = "v.g.vassilev@gmail.com"},
+    {name = "Vipul Cariappa", email = "vipulcariappa@gmail.com"}
+]
+
+[project.urls]
+Homepage = "https://github.com/compiler-research/cppjit"
+Issues = "https://github.com/compiler-research/cppjit/issues"
+Changelog = "https://github.com/compiler-research/cppjit/releases"
+
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+wheel.install-dir = "."
+wheel.packages = ["python/cppjit"]
+cmake.build-type = "Release"
+sdist.exclude = [".github", ".gitignore", ".clang-format"]
+
+[[tool.dynamic-metadata]]
+provider = "scikit_build_core.metadata.regex"
+field = "version"
+input = "python/cppjit/_version.py"
+
+[tool.cibuildwheel]
+# cp314t needs a free-threading audit first; cp315 joins at its release.
+build = ["cp312-*", "cp313-*", "cp314-*"]
+skip = ["*-musllinux*"]
+# one native runner per matrix row; no emulation
+archs = ["auto64"]
+build-verbosity = 1
+audit-requires = ["twine"]
+audit-command = "twine check {wheel}"
+test-sources = ["test", "requirements.txt", ".github/wheel_smoke.py", ".github/wheel_test.sh"]
+# smoke + full suite; the script is shared with the relocation and sdist jobs
+test-command = "bash .github/wheel_test.sh"
+# imports must resolve from the installed wheel, not the checkout
+test-environment = { PYTHONSAFEPATH = "1" }
+
+[tool.cibuildwheel.linux]
+manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
+before-test = "python -m pip install -r {project}/requirements.txt"
+# /opt/llvm is staged on the runner by wheels.yml.
+container-engine = { name = "docker", create-args = ["--volume=/opt/llvm:/opt/llvm"], disable-host-mount = true }
+environment = { CMAKE_ARGS = "-DLLVM_DIR=/opt/llvm/lib/cmake/llvm -DClang_DIR=/opt/llvm/lib/cmake/clang" }
+
+[tool.cibuildwheel.macos]
+before-test = "brew install eigen boost && python -m pip install -r {project}/requirements.txt"
+environment = { CMAKE_ARGS = "-DLLVM_DIR=/opt/llvm/lib/cmake/llvm -DClang_DIR=/opt/llvm/lib/cmake/clang", MACOSX_DEPLOYMENT_TARGET = "14.0" }
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+pythonpath = ["test"]
+xfail_strict = true
+
+[tool.ruff]
+show-fixes = true
+
+[tool.ruff.format]
+# the README's code fences hand-align their annotation comments
+exclude = ["*.md"]
+
+[tool.ruff.lint]
+# pyflakes/pycodestyle errors plus import sorting; wider rule sets are a
+# post-squash cleanup
+select = ["E4", "E7", "E9", "F", "I"]
+ignore = [
+    "E722",  # bare excepts deliberately swallow C++-originated exceptions
+]
+
+[tool.ruff.lint.per-file-ignores]
+# the star import is load-bearing: it pulls the merged extension's names into
+# the package namespace, and everything below it depends on them
+"python/cppjit/__init__.py" = ["F403", "F405"]
+"test/assert_interactive.py" = ["F403", "F405"]
+# binding-test idioms: == True/False and type(x) == y assert proxy comparison
+# semantics, fixtures use short upstream names, and unused locals hold
+# references to control C++ object lifetimes
+"test/**" = ["E712", "E721", "E741", "E742", "F841"]

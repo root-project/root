@@ -582,6 +582,44 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetCompleteName) {
   EXPECT_EQ(Cpp::GetCompleteName(fn), "fn<int, double>");
 }
 
+// Template arguments keep their own scope in the complete name; defaulted
+// arguments are dropped and only the tag's enclosing scope is stripped.
+TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetCompleteNameQualifiedArgs) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    namespace NS { struct S {}; }
+    template <typename T, typename U = int> struct Tpl {};
+    Tpl<NS::S> t;
+  )";
+  GetAllTopLevelDecls(code, Decls);
+  EXPECT_EQ(Cpp::GetCompleteName(
+                Cpp::GetScopeFromType(Cpp::GetVariableType(Decls[2]))),
+            "Tpl<NS::S>");
+}
+
+// Printed names must not depend on platform naming features: preferred-name
+// substitution is off (libc++ tags basic_string<char> as std::string) and
+// inline namespaces are dropped unconditionally.
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           ScopeReflection_GetCompleteNamePlatformIndependent) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    namespace Outer { inline namespace v1 { struct T {}; } }
+    Outer::T t;
+    template <typename T> struct BS;
+    typedef BS<char> MyStr;
+    template <typename T> struct [[clang::preferred_name(MyStr)]] BS {};
+    BS<char> v;
+  )";
+  GetAllTopLevelDecls(code, Decls);
+  EXPECT_EQ(Cpp::GetQualifiedCompleteName(
+                Cpp::GetScopeFromType(Cpp::GetVariableType(Decls[1]))),
+            "Outer::T");
+  EXPECT_EQ(Cpp::GetQualifiedCompleteName(
+                Cpp::GetScopeFromType(Cpp::GetVariableType(Decls[5]))),
+            "BS<char>");
+}
+
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetQualifiedName) {
   std::vector<Decl*> Decls;
   std::string code = R"(namespace N {
@@ -947,6 +985,24 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetParentScope) {
   EXPECT_EQ(Cpp::GetQualifiedName(Cpp::GetParentScope(en_E)), "N1::N2::C");
   EXPECT_EQ(Cpp::GetQualifiedName(Cpp::GetParentScope(en_A)), "N1::N2::C::E");
   EXPECT_EQ(Cpp::GetQualifiedName(Cpp::GetParentScope(en_B)), "N1::N2::C::E");
+
+  // A linkage spec is a transparent context, not a scope: the parent must be
+  // the enclosing scope. This is the shape of namespace std in the MSVC CRT
+  // headers, whose canonical declaration sits inside `extern "C++" { ... }`.
+  Interp->declare(R"(
+    extern "C++" { namespace NLnk { } }
+    namespace NLnk { class InLnk {}; }
+    extern "C" { namespace NC { class InC {}; } }
+  )");
+  Cpp::DeclRef ns_NLnk = Cpp::GetNamed("NLnk");
+  Cpp::DeclRef cl_InLnk = Cpp::GetNamed("InLnk", ns_NLnk);
+  Cpp::DeclRef ns_NC = Cpp::GetNamed("NC");
+  EXPECT_EQ(Cpp::GetQualifiedName(Cpp::GetParentScope(cl_InLnk)), "NLnk");
+  EXPECT_EQ(Cpp::GetParentScope(ns_NLnk).data,
+            Cpp::GetParentScope(ns_N1).data)
+      << "parent of a namespace declared in a linkage spec should be the TU";
+  EXPECT_EQ(Cpp::GetParentScope(ns_NC).data, Cpp::GetParentScope(ns_N1).data)
+      << "parent of a namespace declared in extern \"C\" should be the TU";
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetScopeFromType) {
@@ -1112,6 +1168,61 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsSubclass) {
   EXPECT_TRUE(Cpp::IsSubclass(Decls[4], Decls[4]));
   EXPECT_FALSE(Cpp::IsSubclass(Decls[4], Decls[5]));
   EXPECT_FALSE(Cpp::IsSubclass(Decls[4], nullptr));
+}
+
+// IsSubclass deliberately ignores access specifiers so bindings can pass
+// objects across non-public bases - except between two instantiations of the
+// same class template, where non-public derivation is a recursive
+// implementation detail (MSVC's std::tuple derives privately from the tuple
+// of its tail) and acceptance would reinterpret a tuple as its own tail.
+TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsSubclassSameTemplate) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    struct PrivBase { int b; };
+    struct PrivDerived : private PrivBase {};
+
+    template <typename... Ts> struct RTup;
+    template <> struct RTup<> {};
+    template <typename H, typename... Ts>
+    struct RTup<H, Ts...> : private RTup<Ts...> { H head; };
+
+    template <typename... Ts> struct PubTup;
+    template <> struct PubTup<> {};
+    template <typename H, typename... Ts>
+    struct PubTup<H, Ts...> : public PubTup<Ts...> { H head; };
+
+    RTup<double, int, char> rt3;
+    RTup<int, char> rt2;
+    PubTup<double, int> pt2;
+    PubTup<int> pt1;
+  )";
+
+  GetAllTopLevelDecls(code, Decls);
+
+  auto scope_of = [](const char* var) {
+    return Cpp::GetScopeFromType(Cpp::GetVariableType(Cpp::GetNamed(var)));
+  };
+  Cpp::DeclRef rt3 = scope_of("rt3");
+  Cpp::DeclRef rt2 = scope_of("rt2");
+  Cpp::DeclRef pt2 = scope_of("pt2");
+  Cpp::DeclRef pt1 = scope_of("pt1");
+  ASSERT_TRUE(rt3);
+  ASSERT_TRUE(rt2);
+  ASSERT_TRUE(pt2);
+  ASSERT_TRUE(pt1);
+
+  // Distinct classes keep the access-blind behavior.
+  EXPECT_TRUE(Cpp::IsSubclass(Cpp::GetScope("PrivDerived"),
+                              Cpp::GetScope("PrivBase")));
+
+  // Same template, public derivation chain: still a subclass.
+  EXPECT_TRUE(Cpp::IsSubclass(pt2, pt1));
+
+  // Same template, only a private path: a tuple is not its own tail.
+  EXPECT_FALSE(Cpp::IsSubclass(rt3, rt2));
+
+  // Identity between same-template handles is unaffected.
+  EXPECT_TRUE(Cpp::IsSubclass(rt3, rt3));
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetBaseClassOffset) {
