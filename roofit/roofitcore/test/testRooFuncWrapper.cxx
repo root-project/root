@@ -78,7 +78,9 @@ void randomizeParameters(const RooArgSet &parameters)
       double mul = rng.Uniform(lowerBound, upperBound);
 
       auto par = dynamic_cast<RooAbsRealLValue *>(param);
-      if (!par)
+      // Constant parameters must not be varied. Note that they can also have
+      // an infinite range, so the randomization logic below would break.
+      if (!par || par->isConstant())
          continue;
       double val = par->getVal();
       val = val + mul * (mul > 0 ? (par->getMax() - val) : (val - par->getMin()));
@@ -97,12 +99,15 @@ class FactoryTestParams {
 public:
    FactoryTestParams() = default;
    FactoryTestParams(std::string const &name, WorkspaceSetupFunc setupWorkspace, CreateNLLFunc createNLL,
-                     double fitResultTolerance, bool randomizeParameters)
+                     double fitResultTolerance, bool randomizeParameters, double hesseTolerance = -1.,
+                     bool enableHessian = true)
       : _name{name},
         _setupWorkspace{setupWorkspace},
         _createNLL{createNLL},
         _fitResultTolerance{fitResultTolerance},
-        _randomizeParameters{randomizeParameters}
+        _hesseTolerance{hesseTolerance},
+        _randomizeParameters{randomizeParameters},
+        _enableHessian{enableHessian}
    {
    }
 
@@ -110,7 +115,15 @@ public:
    WorkspaceSetupFunc _setupWorkspace;
    CreateNLLFunc _createNLL;
    double _fitResultTolerance = 1e-4;
+   // Tolerance for comparing parameter errors, which are less precise than
+   // the values because Minuits numeric Hesse is only accurate to about the
+   // percent level. If negative, _fitResultTolerance is used.
+   double _hesseTolerance = -1.;
    bool _randomizeParameters = true;
+   // Whether to test the minimization also with the analytic Hessian from
+   // Clad. Disabled for models where the Hessian is known to come out wrong
+   // or can't be generated at all (see comments at the test definitions).
+   bool _enableHessian = true;
 };
 
 class FactoryTest : public testing::TestWithParam<FactoryTestParams> {
@@ -129,14 +142,16 @@ private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
 
-std::unique_ptr<RooFitResult> runMinimizer(RooAbsReal &absReal, bool useGradient = true)
+std::unique_ptr<RooFitResult> runMinimizer(RooAbsReal &absReal, bool useAD = true, bool useHessian = true)
 {
    RooMinimizer::Config cfg;
-   cfg.useGradient = useGradient;
+   cfg.useGradient = useAD;
+   cfg.useHessian = useAD && useHessian;
    RooMinimizer m{absReal, cfg};
    m.setPrintLevel(-1);
    m.setStrategy(0);
    m.minimize("Minuit2");
+   m.hesse(); // to use the analytical Hessian for error estimation
    return std::unique_ptr<RooFitResult>{m.save()};
 }
 
@@ -164,8 +179,13 @@ TEST_P(FactoryTest, NLLFit)
    // We want to use the generated code also for the nominal likelihood. Like
    // this, we make sure to validate also the NLL values of the generated code.
    static_cast<RooFit::Experimental::RooEvaluatorWrapper &>(*nllFunc).setUseGeneratedFunctionCode(true);
+   // Let's also validate the Hessian
+   if (_params._enableHessian) {
+      static_cast<RooFit::Experimental::RooEvaluatorWrapper &>(*nllFunc).generateHessian();
+   }
 
    double tol = _params._fitResultTolerance;
+   double hesseTol = _params._hesseTolerance < 0. ? tol : _params._hesseTolerance;
 
    EXPECT_NEAR(nllRef->getVal(observables), nllFunc->getVal(), tol);
 
@@ -202,7 +222,7 @@ TEST_P(FactoryTest, NLLFit)
    paramsRefNll.assign(parametersOrig);
 
    // Minimize the RooFuncWrapper Implementation with AD
-   auto resultAd = runMinimizer(*nllFunc);
+   auto resultAd = runMinimizer(*nllFunc, true, _params._enableHessian);
    paramsRefNll.assign(parametersOrig);
 
    // Minimize the reference NLL
@@ -214,8 +234,8 @@ TEST_P(FactoryTest, NLLFit)
    // because for very small correlations it's usually not the same within the
    // relative tolerance because you would compare two small values that are
    // only different from zero because of noise.
-   EXPECT_TRUE(result->isIdenticalNoCov(*resultRef, tol, tol));
-   EXPECT_TRUE(resultAd->isIdenticalNoCov(*resultRef, tol, tol));
+   EXPECT_TRUE(result->isIdenticalNoCov(*resultRef, tol, hesseTol));
+   EXPECT_TRUE(resultAd->isIdenticalNoCov(*resultRef, tol, hesseTol));
 }
 
 /// Initial minimization that was not based on any other tutorial/test.
@@ -223,7 +243,10 @@ FactoryTestParams param1{"Gaussian",
                          [](RooWorkspace &ws) {
                             constexpr double inf = std::numeric_limits<double>::infinity();
                             ws.import(RooRealVar{"mu", "mu", -inf, inf});
-                            ws.factory("sum::mu_shifted(mu, shift[1.0, -10, 10])");
+                            // The shift parameter needs to be constant, because otherwise the
+                            // model would only depend on the sum "mu + shift": the Hessian at the
+                            // minimum is singular and the parameter errors are meaningless.
+                            ws.factory("sum::mu_shifted(mu, shift[1.0])");
                             ws.factory("prod::sigma_scaled(sigma[3.0, 0.01, 10], 1.5)");
                             ws.factory("Gaussian::model(x[0, -10, 10], mu_shifted, sigma_scaled)");
 
@@ -234,7 +257,8 @@ FactoryTestParams param1{"Gaussian",
                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                          },
                          1e-4,
-                         /*randomizeParameters=*/false};
+                         /*randomizeParameters=*/false,
+                         /*hesseTolerance=*/1e-3};
 
 /// Test based on the rf301 tutorial.
 FactoryTestParams param2{"PolyVar",
@@ -269,7 +293,8 @@ FactoryTestParams param4{"ConstraintSum",
                                pdf.createNLL(data, ExternalConstraints(*ws.pdf("fconstext")), backend)};
                          },
                          1e-4,
-                         /*randomizeParameters=*/true};
+                         /*randomizeParameters=*/true,
+                         /*hesseTolerance=*/1e-3};
 
 namespace {
 
@@ -341,12 +366,14 @@ void getSimPdfModel(RooWorkspace &ws)
 } // namespace
 
 /// Test based on the simultaneous fit shown in CHEP'23 results
-FactoryTestParams param5{"SimPdf", getSimPdfModel,
+FactoryTestParams param5{"SimPdf",
+                         getSimPdfModel,
                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                          },
                          5e-3,
-                         /*randomizeParameters=*/true};
+                         /*randomizeParameters=*/true,
+                         /*hesseTolerance=*/5e-2};
 
 FactoryTestParams param6{"GaussianExtended",
                          [](RooWorkspace &ws) {
@@ -388,12 +415,14 @@ void getDataHistModel(RooWorkspace &ws)
 } // namespace
 
 /// Test based on rf706 tutorial
-FactoryTestParams param7{"HistPdf", getDataHistModel,
+FactoryTestParams param7{"HistPdf",
+                         getDataHistModel,
                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                          },
                          1e-4,
-                         /*randomizeParameters=*/true};
+                         /*randomizeParameters=*/true,
+                         /*hesseTolerance=*/2e-3};
 
 FactoryTestParams param8{"Lognormal",
                          [](RooWorkspace &ws) {
@@ -404,7 +433,8 @@ FactoryTestParams param8{"Lognormal",
                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                          },
                          1e-4,
-                         /*randomizeParameters=*/true};
+                         /*randomizeParameters=*/true,
+                         /*hesseTolerance=*/1e-2};
 
 FactoryTestParams param8p1{"LognormalStandard",
                            [](RooWorkspace &ws) {
@@ -416,7 +446,8 @@ FactoryTestParams param8p1{"LognormalStandard",
                               return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                            },
                            3e-4,
-                           /*randomizeParameters=*/true};
+                           /*randomizeParameters=*/true,
+                           /*hesseTolerance=*/3e-2};
 
 FactoryTestParams param9{"Poisson",
                          [](RooWorkspace &ws) {
@@ -427,9 +458,10 @@ FactoryTestParams param9{"Poisson",
                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                          },
                          1e-4,
-                         /*randomizeParameters=*/true};
+                         /*randomizeParameters=*/true,
+                         /*hesseTolerance=*/1e-2};
 
-// A RooPoisson where x is not rounded, like it is used in HistFactory
+// A RooPoisson where x is not rounded, like it is used in HistFactory.
 FactoryTestParams param10{"PoissonNoRounding",
                           [](RooWorkspace &ws) {
                              constexpr double inf = std::numeric_limits<double>::infinity();
@@ -444,7 +476,8 @@ FactoryTestParams param10{"PoissonNoRounding",
                              return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                           },
                           1e-4,
-                          /*randomizeParameters=*/true};
+                          /*randomizeParameters=*/true,
+                          /*hesseTolerance=*/1e-2};
 
 FactoryTestParams param11{"ClassFactory1D",
                           [](RooWorkspace &ws) {
@@ -503,10 +536,14 @@ void func_1_grad(double const * /*x*/, double *grad_out)
    grad_out[0] = 1;
    grad_out[1] = -1;
 }
+void func_1_hess(double const * /*x*/, double *hess_out)
+{
+   std::fill(hess_out, hess_out + 4, 0.0);
+}
 
 auto &functor_1()
 {
-   static ROOT::Math::GradFunctor functor{func_1, 2, func_1_grad};
+   static ROOT::Math::GradFunctor functor{func_1, 2, func_1_grad, func_1_hess};
    return functor;
 }
 
@@ -530,9 +567,35 @@ void func_gaussian_grad(double const *x, double *grad_out)
    grad_out[2] = f * arg * arg * inv_sig2 / sig;
 }
 
+void func_gaussian_hess(double const *x, double *hess_out)
+{
+   const double arg = x[0] - x[1];
+   const double sig = x[2];
+
+   const double invSig2 = 1.0 / (sig * sig);
+   const double t = arg * arg * invSig2;
+   const double f = std::exp(-0.5 * t);
+
+   const double h00 = f * (t - 1.0) * invSig2;
+   const double h02 = f * arg * (2.0 - t) * invSig2 / sig;
+   const double h22 = f * t * (t - 3.0) * invSig2;
+
+   // The function is invariant under exchanging x[0] - x[1] with x[1] - x[0],
+   // so the Hessian rows/columns for x[0] and x[1] only differ in sign.
+   hess_out[0] = h00;
+   hess_out[1] = -h00;
+   hess_out[2] = h02;
+   hess_out[3] = -h00;
+   hess_out[4] = h00;
+   hess_out[5] = -h02;
+   hess_out[6] = h02;
+   hess_out[7] = -h02;
+   hess_out[8] = h22;
+}
+
 auto &functor_gaussian()
 {
-   static ROOT::Math::GradFunctor functor{func_gaussian, 3, func_gaussian_grad};
+   static ROOT::Math::GradFunctor functor{func_gaussian, 3, func_gaussian_grad, func_gaussian_hess};
    return functor;
 }
 
@@ -544,10 +607,14 @@ double func_1_1D_diff(double /*x*/)
 {
    return 1.;
 }
+double func_1_1D_diff2(double /*x*/)
+{
+   return 0.;
+}
 
 auto &functor_1_1D()
 {
-   static ROOT::Math::GradFunctor1D functor{func_1_1D, func_1_1D_diff};
+   static ROOT::Math::GradFunctor1D functor{func_1_1D, func_1_1D_diff, func_1_1D_diff2};
    return functor;
 }
 
@@ -556,12 +623,17 @@ auto &functor_1_1D()
 FactoryTestParams param13{"RooFunctor",
                           [](RooWorkspace &ws) {
                              RooRealVar x("x", "", 0.0, -4, 4);
-                             RooRealVar mu("mu", "", 0.0, -4, 4);
+                             // The initial mu value is away from zero such that relative
+                             // comparisons of the fitted values are meaningful.
+                             RooRealVar mu("mu", "", 2.0, -4, 4);
                              RooRealVar shift("shift", "", 1.0, -4, 4);
                              shift.setConstant(true);
                              RooFunctorBinding mu_shifted("mu_shifted", "", functor_1(), {mu, shift});
                              RooFunctor1DBinding mu_shifted_1D("mu_shifted_1D", "", functor_1_1D(), {mu});
-                             RooRealVar sigma("sigma", "", 4., 0.01, 10.);
+                             // The initial sigma value is small enough for the Gaussian to be
+                             // well-contained in the observable range, such that the generated
+                             // data constrains all parameters and the fits are well-defined.
+                             RooRealVar sigma("sigma", "", 1.5, 0.01, 10.);
 
                              RooFunctorPdfBinding gauss_1("model_1", "", functor_gaussian(), {x, mu_shifted, sigma});
                              RooFunctorPdfBinding gauss_2("model_2", "", functor_gaussian(), {x, mu_shifted_1D, sigma});
@@ -572,15 +644,27 @@ FactoryTestParams param13{"RooFunctor",
 
                              ws.import(model);
                              ws.defineSet("observables", vars);
+
+                             // The model is statistically very flat around the minimum, so with
+                             // only the default 100 events, the fitted values with and without
+                             // AD can differ at the percent level just because the minimizers
+                             // stop at slightly different points in the flat valley. Generate
+                             // more events to make the minimum well-defined.
+                             std::unique_ptr<RooDataSet> data{ws.pdf("model")->generate(*ws.set("observables"), 1000)};
+                             std::unique_ptr<RooAbsData> binned{data->binnedClone()};
+                             binned->SetName("data");
+                             ws.import(*binned);
                           },
                           [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
                              return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                           },
                           1e-3,
-                          /*randomizeParameters=*/true};
+                          /*randomizeParameters=*/true,
+                          /*hesseTolerance=*/1e-2};
 
 FactoryTestParams makeTestParams(const char *name, std::vector<std::string> const &expressions,
-                                 double fitResultTolerance, bool randomizeParameters = true)
+                                 double fitResultTolerance, bool randomizeParameters = true,
+                                 double hesseTolerance = -1., bool enableHessian = true, std::size_t nEvents = 0)
 {
    return {name,
            [=](RooWorkspace &ws) {
@@ -588,12 +672,23 @@ FactoryTestParams makeTestParams(const char *name, std::vector<std::string> cons
                  ws.factory(expr.c_str());
               }
               ws.defineSet("observables", "x");
+              // Provide a custom dataset if the default number of events that
+              // the test generates otherwise is not right for this model.
+              if (nEvents > 0) {
+                 std::unique_ptr<RooDataSet> data{ws.pdf("model")->generate(*ws.set("observables"), nEvents)};
+                 std::unique_ptr<RooAbsData> binned{data->binnedClone()};
+                 binned->SetName("data");
+                 ws.import(*binned);
+              }
            },
            [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
               using namespace RooFit;
               return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
            },
-           fitResultTolerance, randomizeParameters};
+           fitResultTolerance,
+           randomizeParameters,
+           hesseTolerance,
+           enableHessian};
 }
 
 auto testValues = testing::Values(
@@ -601,12 +696,15 @@ auto testValues = testing::Values(
    makeTestParams(
       "BifurGauss",
       {"x[0, -10, 10]", "mu[0, -10, 10]", "BifurGauss::model(x, mu, sigmaL[3.0, 0.01, 10], sigmaR[2.0, 0.01, 10])"},
-      1e-4, false),
+      1e-4, false, /*hesseTolerance=*/2e-2),
+   // The shift parameter needs to be constant, because otherwise the model
+   // would only depend on the sum "mu + shift": the Hessian at the minimum is
+   // singular and the parameter errors are meaningless.
    makeTestParams("RooFormulaVar",
-                  {"expr::mu_shifted('mu+shift',{mu[0, -10, 10], shift[1.0, -10, 10]})",
+                  {"expr::mu_shifted('mu+shift',{mu[0, -10, 10], shift[1.0]})",
                    "expr::sigma_scaled('sigma*1.5',{sigma[3.0, 0.01, 10]})",
                    "Gaussian::model(x[0, -10, 10], mu_shifted, sigma_scaled)"},
-                  1e-4, false),
+                  1e-4, false, /*hesseTolerance=*/5e-3),
    // Test for the uniform pdf. Since it doesn't depend on any parameters, we need
    // to add it to some other model like a Gaussian to get a meaningful fit model.
    makeTestParams("Uniform",
@@ -620,22 +718,39 @@ auto testValues = testing::Values(
                    "Gaussian::sig4(x, 6.0, sigma4[2.0, .01, 10])",
                    "RecursiveFraction::recfrac({a1[0.25, 0.0, 1.0], a2[0.25, 0.0, 1.0]})",
                    "SUM::model(a1 * sig1, a2 * sig2, recfrac * sig3, sig4)"},
-                  5e-3, true),
+                  5e-3, true, /*hesseTolerance=*/3e-2),
    makeTestParams("RooCBShape",
                   {"x[0., -200., 200.]", "x0[100., -200., 200.]",
                    "CBShape::model(x, x0, sigma[2., 1.E-1, 100.], alpha[1., 1.E-1, 100.], n[1., 1.E-1, 100.])"},
                   6e-3, true),
-   makeTestParams("RooBernstein",
-                  {"Bernstein::model(x[0., 100.], {c0[0.3, 0., 10.], c1[0.7, 0., 10.], c2[0.2, 0., 10.]})"}, 6e-3,
-                  true),
+   // The first Bernstein coefficient needs to be constant, because the pdf is
+   // invariant under a common rescaling of all coefficients: the Hessian at
+   // the minimum is singular and the parameter errors are meaningless.
+   makeTestParams("RooBernstein", {"Bernstein::model(x[0., 100.], {c0[0.3], c1[0.7, 0., 10.], c2[0.2, 0., 10.]})"},
+                  6e-3, true,
+                  /*hesseTolerance=*/2e-2),
    // We're testing several Landau configurations, because the underlying
    // ROOT::Math::landau_cdf is defined piecewise. Like this, we're covering
    // all possible code paths in the pullback.
-   makeTestParams("RooLandau1", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[1., 0.01, 50.])"}, 7e-3, false),
-   makeTestParams("RooLandau2", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[2.1, 0.01, 50.])"}, 7e-3, false),
-   makeTestParams("RooLandau3", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[10., 0.01, 50.])"}, 7e-3, false),
-   makeTestParams("RooLandau4", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.3, 0.01, 50.])"}, 7e-3, false),
-   makeTestParams("RooLandau5", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.07, 0.01, 50.])"}, 7e-3, false),
+   makeTestParams("RooLandau1", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[1., 0.01, 50.])"}, 7e-3, false,
+                  /*hesseTolerance=*/1e-2),
+   makeTestParams("RooLandau2", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[2.1, 0.01, 50.])"}, 7e-3, false,
+                  /*hesseTolerance=*/1e-2),
+   // With sl = 10, the Landau is nearly uniform over the observable window,
+   // so with only 100 events the fit is unidentifiable: the minimizers stop
+   // at arbitrary points in an almost flat valley, and the fitted values
+   // can't be meaningfully compared. Generate more events to make the
+   // minimum well-defined.
+   // The Hesse tolerance is wider than for the other Landau tests: with sl =
+   // 10, the model is poorly conditioned and Minuits numeric Hesse in the
+   // reference fit is less accurate (the Clad Hessian was validated against
+   // finite differences of the exact gradient).
+   makeTestParams("RooLandau3", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[10., 0.01, 50.])"}, 7e-3, false,
+                  /*hesseTolerance=*/3e-2, /*enableHessian=*/true, /*nEvents=*/10000),
+   makeTestParams("RooLandau4", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.3, 0.01, 50.])"}, 7e-3, false,
+                  /*hesseTolerance=*/1e-2),
+   makeTestParams("RooLandau5", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.07, 0.01, 50.])"}, 7e-3, false,
+                  /*hesseTolerance=*/1e-2),
    makeTestParams(
       "RooRealSumPdf1",
       {"Gaussian::gx(x[-10,10],m[0],1.0)", "Chebychev::ch(x,{0.1,0.2,-0.3})", "RealSumPdf::model({gx, ch}, {f[0,1]})"},
