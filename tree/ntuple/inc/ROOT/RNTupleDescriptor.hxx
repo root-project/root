@@ -1191,11 +1191,10 @@ public:
 /**
 \class ROOT::RNTupleDescriptor::RClusterDescriptorIterable
 \ingroup NTuple
-\brief Used to loop over all the clusters of an RNTuple (in unspecified order)
+\brief Loop over all the clusters of an RNTuple, ordered by first entry number
 
-Enumerate all cluster IDs from all cluster descriptors.  No specific order can be assumed, use
-RNTupleDescriptor::FindNextClusterId() and RNTupleDescriptor::FindPrevClusterId() to traverse
-clusters by entry number.
+Enumerate all the active cluster IDs from all cluster groups. Iteration is ordered by first entry number.
+Note that cluster groups without available cluster details (page lists) are silently skipped.
 */
 // clang-format on
 class RNTupleDescriptor::RClusterDescriptorIterable final {
@@ -1206,9 +1205,14 @@ private:
 public:
    class RIterator final {
    private:
-      using Iter_t = std::unordered_map<ROOT::DescriptorId_t, RClusterDescriptor>::const_iterator;
-      /// The wrapped map iterator
-      Iter_t fIter;
+      using ClusterGroupIter_t = ROOT::RNTupleDescriptor::RClusterGroupDescriptorIterable::RIterator;
+      using ClusterInGroupContainer_t = std::vector<DescriptorId_t>;
+      using ClusterInGroupIter_t = ClusterInGroupContainer_t::const_iterator;
+
+      const RNTupleDescriptor *fNTuple = nullptr;
+      ClusterGroupIter_t fClusterGroupIter;
+      ClusterGroupIter_t fClusterGroupEnd;
+      std::size_t fClusterInGroupNum = 0; // index into RClusterGroupDescriptor::GetClusterIds()
 
    public:
       using iterator_category = std::forward_iterator_tag;
@@ -1219,27 +1223,40 @@ public:
       using reference = const RClusterDescriptor &;
 
       RIterator() = default;
-      explicit RIterator(Iter_t iter) : fIter(iter) {}
+      explicit RIterator(const RNTupleDescriptor &ntuple, std::size_t clusterGroupNum)
+         : fNTuple(&ntuple),
+           fClusterGroupIter(fNTuple->GetClusterGroupIterable().begin() + clusterGroupNum),
+           fClusterGroupEnd(fNTuple->GetClusterGroupIterable().end())
+      {
+      }
       iterator &operator++() /* prefix */
       {
-         ++fIter;
+         ++fClusterInGroupNum;
+         while ((fClusterGroupIter != fClusterGroupEnd) &&
+                (fClusterInGroupNum >= fClusterGroupIter->GetClusterIds().size())) {
+            ++fClusterGroupIter;
+            fClusterInGroupNum = 0;
+         }
          return *this;
       }
-      iterator operator++(int) /* postfix */
+      reference operator*() const
       {
-         auto old = *this;
-         operator++();
-         return old;
+         return fNTuple->GetClusterDescriptor(fClusterGroupIter->GetClusterIds()[fClusterInGroupNum]);
       }
-      reference operator*() const { return fIter->second; }
-      pointer operator->() const { return &fIter->second; }
-      bool operator!=(const iterator &rh) const { return fIter != rh.fIter; }
-      bool operator==(const iterator &rh) const { return fIter == rh.fIter; }
+      pointer operator->() const
+      {
+         return &fNTuple->GetClusterDescriptor(fClusterGroupIter->GetClusterIds()[fClusterInGroupNum]);
+      }
+      bool operator==(const iterator &rh) const
+      {
+         return (fClusterGroupIter == rh.fClusterGroupIter) && (fClusterInGroupNum == rh.fClusterInGroupNum);
+      }
+      bool operator!=(const iterator &rh) const { return !(*this == rh); }
    };
 
    RClusterDescriptorIterable(const RNTupleDescriptor &ntuple) : fNTuple(ntuple) {}
-   RIterator begin() { return RIterator(fNTuple.fClusterDescriptors.cbegin()); }
-   RIterator end() { return RIterator(fNTuple.fClusterDescriptors.cend()); }
+   RIterator begin() { return RIterator(fNTuple, 0); }
+   RIterator end() { return RIterator(fNTuple, fNTuple.GetNClusterGroups()); }
 };
 
 // clang-format off
