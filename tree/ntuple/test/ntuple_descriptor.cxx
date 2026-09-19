@@ -676,10 +676,7 @@ TEST(RClusterDescriptor, GetNBytesOnStorage)
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    const auto &desc = ntuple->GetDescriptor();
-
-   auto clusterID = desc.FindClusterId(0, 0);
-   ASSERT_NE(ROOT::kInvalidDescriptorId, clusterID);
-   EXPECT_EQ(8 + 8 + 8 + 3, desc.GetClusterDescriptor(clusterID).GetNBytesOnStorage());
+   EXPECT_EQ(8 + 8 + 8 + 3, desc.GetActiveClusterIterable().begin()->GetNBytesOnStorage());
 }
 
 TEST(RNTupleDescriptor, Clone)

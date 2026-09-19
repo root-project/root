@@ -366,13 +366,11 @@ ROOT::Internal::GetClusterBoundaries(const ROOT::RNTupleDescriptor &desc)
 {
    std::vector<Internal::RNTupleClusterBoundaries> boundaries;
    boundaries.reserve(desc.GetNClusters());
-   auto clusterId = desc.FindClusterId(0, 0);
-   while (clusterId != ROOT::kInvalidDescriptorId) {
-      const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
+   R__ASSERT(desc.GetNClusters() == desc.GetNActiveClusters());
+   for (const auto &clusterDesc : desc.GetActiveClusterIterable()) {
       R__ASSERT(clusterDesc.GetNEntries() > 0);
       boundaries.emplace_back(ROOT::Internal::RNTupleClusterBoundaries{
          clusterDesc.GetFirstEntryIndex(), clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries()});
-      clusterId = desc.FindNextClusterId(clusterId);
    }
    return boundaries;
 }

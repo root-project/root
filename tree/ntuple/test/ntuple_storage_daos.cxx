@@ -281,8 +281,7 @@ TEST_F(RPageStorageDaos, DisabledSamePageMerging)
    const auto &desc = reader->GetDescriptor();
    const auto pxColId = desc.FindPhysicalColumnId(desc.FindFieldId("px"), 0, 0);
    const auto pyColId = desc.FindPhysicalColumnId(desc.FindFieldId("py"), 0, 0);
-   const auto clusterId = desc.FindClusterId(pxColId, 0);
-   const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
+   const auto &clusterDesc = *desc.GetActiveClusterIterable().begin();
    EXPECT_FALSE(clusterDesc.GetPageRange(pxColId).Find(0).GetLocator().GetPosition<RNTupleLocatorObject64>() ==
                 clusterDesc.GetPageRange(pyColId).Find(0).GetLocator().GetPosition<RNTupleLocatorObject64>());
 

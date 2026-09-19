@@ -559,8 +559,7 @@ TEST(RNTupleInspector, ColumnTypeInfoHist)
    EXPECT_STREQ("Number of elements by column type", nElemsHist->GetTitle());
    EXPECT_EQ(4U, nElemsHist->GetNbinsX());
    std::uint64_t nTotalElems = 0;
-   auto firstClusterId = inspector->GetDescriptor().FindClusterId(0, 0);
-   const auto &clusterDesc = inspector->GetDescriptor().GetClusterDescriptor(firstClusterId);
+   const auto &clusterDesc = *inspector->GetDescriptor().GetActiveClusterIterable().begin();
    for (const auto &col : inspector->GetDescriptor().GetColumnIterable()) {
       nTotalElems += clusterDesc.GetColumnRange(col.GetPhysicalId()).GetNElements();
    }
