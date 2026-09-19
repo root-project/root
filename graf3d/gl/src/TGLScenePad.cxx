@@ -39,7 +39,6 @@
 
 #include "CsgOps.h"
 
-
 /** \class TGLScenePad
 \ingroup opengl
 Implements VirtualViewer3D interface and fills the base-class
@@ -381,7 +380,8 @@ Int_t TGLScenePad::AddObject(UInt_t physicalID, const TBuffer3D& buffer, Bool_t*
 
    // If adding component to a current partial composite do this now
    if (fComposite) {
-      RootCsg::TBaseMesh *newMesh = RootCsg::ConvertToMesh(buffer);
+      RootCsg::TBaseMesh *newMesh = RootCsg::ConvertToMesh(buffer.fPnts, buffer.fSegs, buffer.fPols,
+                                                           buffer.NbPnts(), buffer.NbSegs(), buffer.NbPols());
       // Solaris CC can't create stl pair with enumerate type
       fCSTokens.push_back(std::make_pair(static_cast<UInt_t>(TBuffer3D::kCSNoOp), newMesh));
       return TBuffer3D::kNone;

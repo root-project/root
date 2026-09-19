@@ -912,7 +912,8 @@ std::unique_ptr<RootCsg::TBaseMesh> MakeGeoMesh(TGeoMatrix *matr, TGeoShape *sha
          }
       }
 
-      res.reset(RootCsg::ConvertToMesh(*b3d.get()));
+      res.reset(
+         RootCsg::ConvertToMesh(b3d->fPnts, b3d->fSegs, b3d->fPols, b3d->NbPnts(), b3d->NbSegs(), b3d->NbPols()));
    } else {
       auto node = comp->GetBoolNode();
 
