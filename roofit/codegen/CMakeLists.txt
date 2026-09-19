@@ -22,17 +22,15 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCodegen
     HistFactory
 )
 
-if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
-  target_sources(
-      RooFitCodegen
-      PRIVATE
-      FILE_SET private_header_files
-      TYPE HEADERS
-      BASE_DIRS inc/
-      FILES
-          # LinkDef.h # empty, not being used by ROOT_STANDARD_LIBRARY_PACKAGE call
-          inc/RooFit/CodegenImpl.h
-  )
-endif()
+target_sources(
+    RooFitCodegen
+    PRIVATE
+    FILE_SET private_header_files
+    TYPE HEADERS
+    BASE_DIRS inc/
+    FILES
+        # LinkDef.h # empty, not being used by ROOT_STANDARD_LIBRARY_PACKAGE call
+        inc/RooFit/CodegenImpl.h
+)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
