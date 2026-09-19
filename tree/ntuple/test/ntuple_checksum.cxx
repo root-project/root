@@ -68,7 +68,7 @@ TEST(RNTupleChecksum, VerifyOnLoad)
       pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0, 0);
       pyColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("py"), 0, 0);
       pzColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("pz"), 0, 0);
-      clusterId = descGuard->FindClusterId(pxColId, 0);
+      clusterId = descGuard->GetActiveClusterIterable().begin()->GetId();
    }
    RNTupleLocalIndex index{clusterId, 0};
 
@@ -101,8 +101,8 @@ TEST(RNTupleChecksum, OmitPageChecksum)
    pageSource->Attach();
    auto descGuard = pageSource->GetSharedDescriptorGuard();
    const auto pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0, 0);
-   const auto clusterId = descGuard->FindClusterId(pxColId, 0);
-   const auto &clusterDesc = descGuard->GetClusterDescriptor(clusterId);
+   const auto &clusterDesc = *descGuard->GetActiveClusterIterable().begin();
+   const auto clusterId = clusterDesc.GetId();
    const auto pageInfo = clusterDesc.GetPageRange(pxColId).GetPageInfos()[0];
    EXPECT_EQ(4u, pageInfo.GetLocator().GetNBytesOnStorage());
    EXPECT_FALSE(pageInfo.HasChecksum());

@@ -220,7 +220,7 @@ TEST(RNTuple, PageFilling)
    const auto colIdX = desc.FindLogicalColumnId(desc.FindFieldId("x"), 0, 0);
    const auto colIdY = desc.FindLogicalColumnId(desc.FindFieldId("y"), 0, 0);
 
-   const auto &clusterDesc = desc.GetClusterDescriptor(desc.FindClusterId(0, 0));
+   const auto &clusterDesc = *desc.GetActiveClusterIterable().begin();
    const auto &prX = clusterDesc.GetPageRange(colIdX);
    const auto &prY = clusterDesc.GetPageRange(colIdY);
    ASSERT_EQ(1u, prX.GetPageInfos().size());
@@ -273,19 +273,24 @@ TEST(RNTuple, PageFillingString)
 
    const auto &desc = ntuple->GetDescriptor();
    EXPECT_EQ(4u, desc.GetNClusters());
-   const auto &cd1 = desc.GetClusterDescriptor(desc.FindClusterId(1, 0));
+   auto clusterIter = desc.GetActiveClusterIterable().begin();
+   const auto &cd1 = *clusterIter;
+   ++clusterIter;
    const auto &pr1 = cd1.GetPageRange(1);
    ASSERT_EQ(2u, pr1.GetPageInfos().size());
    EXPECT_EQ(16u, pr1.GetPageInfos()[0].GetNElements());
    EXPECT_EQ(1u, pr1.GetPageInfos()[1].GetNElements());
-   const auto &cd2 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd1.GetId()));
+   const auto &cd2 = *clusterIter;
+   ++clusterIter;
    const auto &pr2 = cd2.GetPageRange(1);
    ASSERT_EQ(1u, pr2.GetPageInfos().size());
    EXPECT_EQ(16u, pr2.GetPageInfos()[0].GetNElements());
-   const auto &cd3 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd2.GetId()));
+   const auto &cd3 = *clusterIter;
+   ++clusterIter;
    const auto &pr3 = cd3.GetPageRange(1);
    ASSERT_EQ(0u, pr3.GetPageInfos().size());
-   const auto &cd4 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd3.GetId()));
+   const auto &cd4 = *clusterIter;
+   ++clusterIter;
    const auto &pr4 = cd4.GetPageRange(1);
    ASSERT_EQ(2u, pr4.GetPageInfos().size());
    EXPECT_EQ(16u, pr4.GetPageInfos()[0].GetNElements());
@@ -1100,8 +1105,7 @@ TEST(RPageSink, SamePageMerging)
       const auto &desc = reader->GetDescriptor();
       const auto pxColId = desc.FindPhysicalColumnId(desc.FindFieldId("px"), 0, 0);
       const auto pyColId = desc.FindPhysicalColumnId(desc.FindFieldId("py"), 0, 0);
-      const auto clusterId = desc.FindClusterId(pxColId, 0);
-      const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
+      const auto &clusterDesc = *desc.GetActiveClusterIterable().begin();
       EXPECT_EQ(enable, clusterDesc.GetPageRange(pxColId).Find(0).GetLocator().GetPosition<std::uint64_t>() ==
                            clusterDesc.GetPageRange(pyColId).Find(0).GetLocator().GetPosition<std::uint64_t>());
 

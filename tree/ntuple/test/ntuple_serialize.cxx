@@ -1194,8 +1194,6 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
    EXPECT_EQ(expect0_1, columnRange0_1);
    EXPECT_EQ(expect0_2, columnRange0_2);
    EXPECT_EQ(expect0_3, columnRange0_3);
-   EXPECT_EQ(0, desc.FindClusterId(columnIds[0], 0));
-   EXPECT_EQ(0, desc.FindClusterId(columnIds[2], 0));
 
    auto &clusterDesc1 = desc.GetClusterDescriptor(1);
    EXPECT_TRUE(clusterDesc1.ContainsColumn(columnIds[0]));
@@ -1216,10 +1214,6 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
    EXPECT_EQ(expect1_1, columnRange1_1);
    EXPECT_EQ(expect1_2, columnRange1_2);
    EXPECT_EQ(expect1_3, columnRange1_3);
-   EXPECT_EQ(1, desc.FindClusterId(columnIds[0], 1));
-   EXPECT_EQ(1, desc.FindClusterId(columnIds[1], 0));
-   EXPECT_EQ(1, desc.FindClusterId(columnIds[2], 1));
-   EXPECT_EQ(1, desc.FindClusterId(columnIds[3], 0));
 }
 
 TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
@@ -1354,11 +1348,6 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
 
    EXPECT_EQ(columnIds[0], desc.FindLogicalColumnId(aliasDesc.GetId(), 0, 0));
    EXPECT_EQ(columnIds[1], desc.FindLogicalColumnId(aliasDesc.GetId(), 0, 1));
-
-   EXPECT_EQ(0, desc.FindClusterId(0, 0));
-   EXPECT_EQ(0, desc.FindClusterId(1, 0));
-   EXPECT_EQ(1, desc.FindClusterId(0, 1));
-   EXPECT_EQ(1, desc.FindClusterId(1, 1));
 }
 
 TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)

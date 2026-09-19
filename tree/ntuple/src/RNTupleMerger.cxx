@@ -1035,16 +1035,16 @@ ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std:
                                                        std::span<const RColumnMergeInfo> extraDstColumns,
                                                        RNTupleMergeData &mergeData)
 {
+   // We treat sources with an empty schema as empty (TODO(jblomer): should we?)
+   if (mergeData.fSrcDescriptor->GetNLogicalColumns() == 0)
+      return ROOT::RResult<void>::Success();
+
    ROOT::Internal::RClusterPool clusterPool{source};
 
    std::vector<RColumnMergeInfo> missingColumns{extraDstColumns.begin(), extraDstColumns.end()};
 
-   // Loop over all clusters in this file.
-   // descriptor->GetClusterIterable() doesn't guarantee any specific order, so we explicitly
-   // request the first cluster.
-   ROOT::DescriptorId_t clusterId = mergeData.fSrcDescriptor->FindClusterId(0, 0);
-   while (clusterId != ROOT::kInvalidDescriptorId) {
-      const auto &clusterDesc = mergeData.fSrcDescriptor->GetClusterDescriptor(clusterId);
+   R__ASSERT(mergeData.fSrcDescriptor->GetNClusters() == mergeData.fSrcDescriptor->GetNActiveClusters());
+   for (const auto &clusterDesc : mergeData.fSrcDescriptor->GetActiveClusterIterable()) {
       const auto nClusterEntries = clusterDesc.GetNEntries();
       R__ASSERT(nClusterEntries > 0);
 
@@ -1130,9 +1130,6 @@ ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std:
       mergeData.fDestination.CommitSealedPageV(sealedPageData.fGroups);
       mergeData.fDestination.CommitCluster(nClusterEntries);
       mergeData.fNumDstEntries += nClusterEntries;
-
-      // Go to the next cluster
-      clusterId = mergeData.fSrcDescriptor->FindNextClusterId(clusterId);
    }
 
    // TODO(gparolini): when we get serious about huge file support (>~ 100GB) we might want to check here

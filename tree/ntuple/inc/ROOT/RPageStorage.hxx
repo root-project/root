@@ -852,8 +852,13 @@ public:
    /// Open the physical storage container and deserialize header and footer
    void Attach(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode mode =
                   ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
+
    ROOT::NTupleSize_t GetNEntries();
    ROOT::NTupleSize_t GetNElements(ROOT::DescriptorId_t physicalColumnId);
+   /// Returns a shared descriptor guard to ensure that the returned cluster id is useable, i.e. that the
+   /// corresponding cluster was not meanwhile evicted from the set of active clusters.
+   RSharedDescriptorGuard
+   FindClusterId(ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t index, ROOT::DescriptorId_t &cid);
 
    /// Promise to only read from the given entry range. If set, prevents the cluster pool from reading-ahead beyond
    /// the given range. The range needs to be within `[0, GetNEntries())`.

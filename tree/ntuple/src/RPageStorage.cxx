@@ -284,6 +284,76 @@ ROOT::NTupleSize_t ROOT::Internal::RPageSource::GetNElements(ROOT::DescriptorId_
    return columnRange.GetFirstElementIndex() + columnRange.GetNElements();
 }
 
+ROOT::Internal::RPageSource::RSharedDescriptorGuard
+ROOT::Internal::RPageSource::FindClusterId(DescriptorId_t physicalColumnId, NTupleSize_t index, DescriptorId_t &cid)
+{
+   cid = ROOT::kInvalidDescriptorId;
+   auto descGuard = GetSharedDescriptorGuard();
+   const auto &desc = descGuard.GetRef();
+
+   if (desc.GetNClusterGroups() == 0)
+      return descGuard;
+
+   // Binary search in the cluster group list, followed by a binary search in the clusters of that cluster group
+
+   auto cgIter = desc.GetClusterGroupIterable().begin();
+   std::size_t cgLeft = 0;
+   std::size_t cgRight = desc.GetNClusterGroups() - 1;
+   while (cgLeft <= cgRight) {
+      const std::size_t cgMidpoint = (cgLeft + cgRight) / 2;
+      const auto &clusterIds = (cgIter + cgMidpoint)->GetClusterIds();
+      R__ASSERT(!clusterIds.empty());
+
+      const auto &clusterDesc = desc.GetClusterDescriptor(clusterIds.front());
+      // this may happen if the RNTuple has an empty schema
+      if (!clusterDesc.ContainsColumn(physicalColumnId))
+         return descGuard;
+
+      const auto firstElementInGroup = clusterDesc.GetColumnRange(physicalColumnId).GetFirstElementIndex();
+      if (firstElementInGroup > index) {
+         // Look into the lower half of cluster groups
+         R__ASSERT(cgMidpoint > 0);
+         cgRight = cgMidpoint - 1;
+         continue;
+      }
+
+      const auto &lastColumnRange = desc.GetClusterDescriptor(clusterIds.back()).GetColumnRange(physicalColumnId);
+      if ((lastColumnRange.GetFirstElementIndex() + lastColumnRange.GetNElements()) <= index) {
+         // Look into the upper half of cluster groups
+         cgLeft = cgMidpoint + 1;
+         continue;
+      }
+
+      // Binary search in the current cluster group; since we already checked the element range boundaries,
+      // the element must be in that cluster group.
+      std::size_t clusterLeft = 0;
+      std::size_t clusterRight = clusterIds.size() - 1;
+      while (clusterLeft <= clusterRight) {
+         const std::size_t clusterMidpoint = (clusterLeft + clusterRight) / 2;
+         const auto clusterId = clusterIds[clusterMidpoint];
+         const auto &columnRange = desc.GetClusterDescriptor(clusterId).GetColumnRange(physicalColumnId);
+
+         if (columnRange.Contains(index)) {
+            cid = clusterId;
+            return descGuard;
+         }
+
+         if (columnRange.GetFirstElementIndex() > index) {
+            R__ASSERT(clusterMidpoint > 0);
+            clusterRight = clusterMidpoint - 1;
+            continue;
+         }
+
+         if (columnRange.GetFirstElementIndex() + columnRange.GetNElements() <= index) {
+            clusterLeft = clusterMidpoint + 1;
+            continue;
+         }
+      }
+      R__ASSERT(false);
+   }
+   return descGuard;
+}
+
 void ROOT::Internal::RPageSource::UnzipCluster(RCluster *cluster)
 {
    if (fTaskScheduler)
@@ -544,8 +614,7 @@ ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleS
 
    RPageSummary pageSummary;
    {
-      auto descriptorGuard = GetSharedDescriptorGuard();
-      pageSummary.fClusterId = descriptorGuard->FindClusterId(columnId, globalIndex);
+      auto descriptorGuard = FindClusterId(columnId, globalIndex, pageSummary.fClusterId);
 
       if (pageSummary.fClusterId == ROOT::kInvalidDescriptorId)
          throw RException(R__FAIL("entry with index " + std::to_string(globalIndex) + " out of bounds"));
@@ -1142,9 +1211,8 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
 
    if (copyClusters) {
       // Clone and add all cluster descriptors
-      auto clusterId = srcDescriptor.FindClusterId(0, 0);
-      while (clusterId != ROOT::kInvalidDescriptorId) {
-         auto &cluster = srcDescriptor.GetClusterDescriptor(clusterId);
+      R__ASSERT(srcDescriptor.GetNClusters() == srcDescriptor.GetNActiveClusters());
+      for (const auto &cluster : srcDescriptor.GetActiveClusterIterable()) {
          auto nEntries = cluster.GetNEntries();
          for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
             R__ASSERT(fOpenColumnRanges[i].GetPhysicalColumnId() == i);
@@ -1157,8 +1225,6 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
          }
          fDescriptorBuilder.AddCluster(cluster.Clone());
          fPrevClusterNEntries += nEntries;
-
-         clusterId = srcDescriptor.FindNextClusterId(clusterId);
       }
    }
 

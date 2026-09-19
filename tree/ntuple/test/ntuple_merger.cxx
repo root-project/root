@@ -68,9 +68,13 @@ TEST(RPageStorage, ReadSealedPages)
    source.Attach();
    const auto fieldId = source.GetSharedDescriptorGuard()->FindFieldId("pt");
    auto columnId = source.GetSharedDescriptorGuard()->FindPhysicalColumnId(fieldId, 0, 0);
+   ROOT::DescriptorId_t clusterId;
 
    // Check first cluster consisting of a single entry
-   RNTupleLocalIndex index(source.GetSharedDescriptorGuard()->FindClusterId(columnId, 0), 0);
+   {
+      source.FindClusterId(columnId, 0, clusterId);
+   }
+   RNTupleLocalIndex index(clusterId, 0);
    RPageStorage::RSealedPage sealedPage;
    source.LoadSealedPage(columnId, index, sealedPage);
    ASSERT_EQ(1U, sealedPage.GetNElements());
@@ -85,7 +89,9 @@ TEST(RPageStorage, ReadSealedPages)
    EXPECT_EQ(42, ReadRawInt(sealedPage.GetBuffer()));
 
    // Check second, big cluster
-   auto clusterId = source.GetSharedDescriptorGuard()->FindClusterId(columnId, 1);
+   {
+      source.FindClusterId(columnId, 1, clusterId);
+   }
    ASSERT_NE(clusterId, index.GetClusterId());
    const auto clusterDesc = source.GetSharedDescriptorGuard()->GetClusterDescriptor(clusterId).Clone();
    const auto &pageRange = clusterDesc.GetPageRange(columnId);
@@ -4083,7 +4089,7 @@ TEST(RNTupleMerger, MergeStreamerFields)
          ntuple->Fill();
       }
    }
-   
+
    {
       // Gather the input sources
       std::vector<std::unique_ptr<RPageSource>> sources;
@@ -4159,7 +4165,7 @@ TEST(RNTupleMerger, MergeStreamerFieldsFirstMissing)
          ntuple->Fill();
       }
    }
-   
+
    {
       // Gather the input sources
       std::vector<std::unique_ptr<RPageSource>> sources;
