@@ -5,7 +5,7 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "root"
 dynamic = ["version"]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 maintainers = [
   {name = "Vincenzo Eduardo Padulano", email = "vincenzo.eduardo.padulano@cern.ch"}
 ]
