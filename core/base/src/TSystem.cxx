@@ -42,6 +42,7 @@ allows a simple partial implementation for new OS'es.
 #include "TUrl.h"
 #include "TVirtualMutex.h"
 #include "TVersionCheck.h"
+#define ROOT_compiledata_cxx
 #include "compiledata.h"
 #include "RConfigure.h"
 #include "THashList.h"

@@ -62,6 +62,7 @@
 #include "TSystem.h"
 #include "TRemoteObject.h"
 #include "TUrl.h"
+#define ROOT_compiledata_cxx
 #include "compiledata.h"
 #include "TClass.h"
 

@@ -61,6 +61,7 @@ clang/LLVM technology.
 #include "THashTable.h"
 #include "RConversionRuleParser.h"
 #include "RConfigure.h"
+#define ROOT_compiledata_cxx
 #include "compiledata.h"
 #include "strlcpy.h"
 #include "TClingUtils.h"
