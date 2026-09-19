@@ -516,6 +516,20 @@ void codegenImpl(RooGamma &arg, CodegenContext &ctx)
 
 void codegenImpl(RooFormulaVar &arg, CodegenContext &ctx)
 {
+   // If the formula is handled by RooFit's JIT-free expression backend, the
+   // expression is inlined into the generated code with the dependents'
+   // result names substituted for the formula variables. No TFormula (and no
+   // per-formula JIT compilation) is involved, and Clad sees plain arithmetic
+   // instead of a call across a JIT boundary.
+   RooArgList const &deps = arg.dependents();
+   std::string expr = arg.emitFormulaCpp([&](unsigned int i) { return ctx.getResult(deps[i]); });
+   if (!expr.empty()) {
+      ctx.addResult(&arg, expr);
+      return;
+   }
+
+   // Fallback for formulas the JIT-free backend does not support: call the
+   // cling-JIT-compiled TFormula function by name.
    arg.getVal(); // to trigger the creation of the TFormula
    std::string funcName = arg.getUniqueFuncName();
    ctx.collectFunction(funcName);
@@ -562,6 +576,14 @@ void codegenImpl(RooGaussian &arg, CodegenContext &ctx)
 
 void codegenImpl(RooGenericPdf &arg, CodegenContext &ctx)
 {
+   // See the comments in codegenImpl(RooFormulaVar&, CodegenContext&).
+   RooArgList const &deps = arg.dependents();
+   std::string expr = arg.emitFormulaCpp([&](unsigned int i) { return ctx.getResult(deps[i]); });
+   if (!expr.empty()) {
+      ctx.addResult(&arg, expr);
+      return;
+   }
+
    arg.getVal(); // to trigger the creation of the TFormula
    std::string funcName = arg.getUniqueFuncName();
    ctx.collectFunction(funcName);
