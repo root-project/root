@@ -947,7 +947,11 @@ public:
                                              std::uint16_t representationIndex) const;
    ROOT::DescriptorId_t FindClusterId(ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t index) const;
    ROOT::DescriptorId_t FindNextClusterId(ROOT::DescriptorId_t clusterId) const;
-   ROOT::DescriptorId_t FindPrevClusterId(ROOT::DescriptorId_t clusterId) const;
+   ROOT::DescriptorId_t
+      R__DEPRECATED(6, 46,
+                    "This function is ill-defined in the descriptor "
+                    "as not all cluster descriptors may be present. This interface is no longer exposed.")
+         FindPrevClusterId(ROOT::DescriptorId_t clusterId) const;
 
    /// Walks up the parents of the field ID and returns a field name of the form a.b.c.d
    /// In case of invalid field ID, an empty string is returned.
