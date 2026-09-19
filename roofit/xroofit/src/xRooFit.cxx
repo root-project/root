@@ -26,6 +26,8 @@
 #endif
 
 #include "xRooFit/xRooFit.h"
+#include "xRooFit/xRooNLLVar.h"
+#include "xRooFit/xRooNode.h"
 
 #include "RooDataSet.h"
 #include "RooSimultaneous.h"
