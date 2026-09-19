@@ -153,7 +153,8 @@ ROOT::Experimental::RNTupleSingleProcessor::CreateAndConnectField(const std::str
    const std::string onDiskFieldName =
       qualifiedFieldName.find("R_rntproc_join_") == 0 ? qualifiedFieldName.substr(15) : qualifiedFieldName;
 
-   const auto &desc = fPageSource->GetSharedDescriptorGuard().GetRef();
+   auto descGuard = fPageSource->GetSharedDescriptorGuard();
+   const auto &desc = descGuard.GetRef();
    ROOT::RFieldZero fieldZero;
    ROOT::Internal::SetAllowFieldSubstitutions(fieldZero, true);
 

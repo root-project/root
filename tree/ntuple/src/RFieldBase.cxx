@@ -985,10 +985,10 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
       // we would need to handle it in each and every ReconcileOnDiskField()
       // Note that we have to do this before calling BeforeConnectPageSource(), which already may compare the field
       // to its on-disk description.
-      const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
+      auto descGuard = pageSource.GetSharedDescriptorGuard();
       if (!dynamic_cast<RAtomicField *>(this) &&
-          Internal::IsStdAtomicFieldDesc(desc.GetFieldDescriptor(GetOnDiskId()))) {
-         SetOnDiskId(desc.GetFieldDescriptor(GetOnDiskId()).GetLinkIds()[0]);
+          Internal::IsStdAtomicFieldDesc(descGuard->GetFieldDescriptor(GetOnDiskId()))) {
+         SetOnDiskId(descGuard->GetFieldDescriptor(GetOnDiskId()).GetLinkIds()[0]);
       }
    }
 
@@ -1014,8 +1014,8 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
    }
 
    if (!fIsArtificial) {
-      const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
-      ReconcileOnDiskField(desc);
+      auto descGuard = pageSource.GetSharedDescriptorGuard();
+      ReconcileOnDiskField(descGuard.GetRef());
    }
 
    for (auto &f : fSubfields) {
