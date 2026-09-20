@@ -10,7 +10,7 @@
 #endif
 
 #include "TMVA/RModel.hxx"
-#include "TMVA/SOFIE_common.hxx"
+#include "TMVA/ROperator.hxx"
 
 namespace TMVA::Experimental::SOFIE {
 
@@ -59,7 +59,6 @@ std::underlying_type_t<Options> operator|(Options opA, Options opB) {
 std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, Options opB) {
     return opA | static_cast<std::underlying_type_t<Options>>(opB);
 }
-
 
 std::vector<size_t> RModel::GetTensorShape(const std::string & name) const {
     auto f = fReadyInputTensorInfos.find(name);

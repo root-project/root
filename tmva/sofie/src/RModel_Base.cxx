@@ -1,7 +1,9 @@
 #include <limits>
 #include <algorithm>
 #include <cctype>
+
 #include "TMVA/RModel_Base.hxx"
+#include "TMVA/SOFIE_common.hxx"
 
 namespace TMVA {
 namespace Experimental {
