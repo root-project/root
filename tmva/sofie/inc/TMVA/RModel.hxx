@@ -205,19 +205,6 @@ public:
    void OutputGenerated(std::string filename = "", bool append = false);
    void SetFilename(std::string filename) { fName = filename; }
 
-   /*
-      template <typename T>
-      void AddInitializedTensor(std::string tensor_name, RTensor<T> new_tensor){
-         //a view only
-         T obj;
-         if (fInitializedTensors.find(tensor_name) != fInitializedTensors.end()){
-            throw std::runtime_error("TMVA-SOFIE: initialized tensor with name " + tensor_name + " already exists \n");
-         }
-         InitializedTensor new_tensor_ {GetTemplatedType(obj), new_tensor.GetShape() ,
-      static_cast<void>(new_tensor.GetData())}; fInitializedTensors[tensor_name] = new_tensor_;
-      }
-   */
-
    void PrintRequiredInputTensors() const;
    void PrintInitializedTensors() const;
    void PrintDynamicTensors() const;

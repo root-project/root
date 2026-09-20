@@ -1,8 +1,6 @@
 #ifndef TMVA_SOFIE_SOFIE_COMMON
 #define TMVA_SOFIE_SOFIE_COMMON
 
-#include "TMVA/RTensor.hxx"
-
 #include "ROOT/RSpan.hxx"
 
 #include <stdexcept>

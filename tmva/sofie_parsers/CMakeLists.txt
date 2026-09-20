@@ -79,7 +79,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseHardSigmoid.cxx
     src/ParseHardSwish.cxx
   DEPENDENCIES
-    TMVA
     ROOTTMVASofie
 )
 

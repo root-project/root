@@ -82,7 +82,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
     src/SOFIE_common_helpers.cxx
   DEPENDENCIES
     Core
-    TMVA
     ${EXTRA_SOFIE_DEPENDENCIES}
 )
 
