@@ -633,7 +633,6 @@ set (machine_learning-tmva101_Training-depends tutorial-machine_learning-tmva100
 set (machine_learning-tmva102_Testing-depends tutorial-machine_learning-tmva101_Training-py)
 set (machine_learning-tmva103_Application-depends tutorial-machine_learning-tmva101_Training-py)
 set (machine_learning-tmva003_RReader-depends tutorial-machine_learning-TMVAClassification)
-set (machine_learning-tmva004_RStandardScaler-depends tutorial-machine_learning-tmva003_RReader)
 set (machine_learning-pytorch-ApplicationClassificationPyTorch-depends tutorial-machine_learning-pytorch-ClassificationPyTorch-py)
 set (machine_learning-pytorch-RegressionPyTorch-depends tutorial-machine_learning-pytorch-ApplicationClassificationPyTorch-py)
 set (machine_learning-pytorch-ApplicationRegressionPyTorch-depends tutorial-machine_learning-pytorch-RegressionPyTorch-py)
