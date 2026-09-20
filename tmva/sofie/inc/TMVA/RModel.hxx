@@ -2,11 +2,17 @@
 #define TMVA_SOFIE_RMODEL
 
 #include "TMVA/RModel_Base.hxx"
-#include "TMVA/ROperator.hxx"
+#include "TMVA/SOFIE_common.hxx"
 
 #include "Rtypes.h" // for ClassDefNV
 
 namespace TMVA::Experimental::SOFIE {
+
+// The ROperator interface is an implementation detail of the code generation
+// and deliberately not exposed to the public: only this forward declaration
+// is visible here, the full definition (TMVA/ROperator.hxx) is a private
+// header of the SOFIE libraries.
+class ROperator;
 
 class RModel final : public RModel_Base {
 
@@ -34,7 +40,15 @@ private:
    std::vector<std::string> fOutputTensorNames;
    std::vector<std::string> fInputTensorNames; // input tensor names using ONNX order
 
-   std::vector<std::unique_ptr<ROperator>> fOperators;
+   // A bare std::unique_ptr<ROperator> would require the complete ROperator
+   // type wherever a destroyed RModel is instantiated; with the
+   // out-of-line-deleter declared here and defined in RModel.cxx the
+   // forward declaration above is enough, so the ROperator interface can stay
+   // private.
+   struct ROperatorDeleter {
+      void operator()(ROperator *ptr) const;
+   };
+   std::vector<std::unique_ptr<ROperator, ROperatorDeleter>> fOperators;
 
    std::vector<std::shared_ptr<RModel>> fSubGraphs;    ///<!  sub-graph models (transient)
    RModel * fParentGraph = nullptr;
@@ -52,6 +66,14 @@ public:
    */
    RModel() = default;
    RModel(std::string name, std::string parsedtime) : RModel_Base(name, parsedtime) {}
+
+   // Defined out of line because ROperator is an incomplete type in this
+   // header (the definition is a private implementation header).
+   ~RModel();
+   RModel(RModel &&);
+   RModel &operator=(RModel &&);
+   RModel(RModel const &) = delete;
+   RModel &operator=(RModel const &) = delete;
 
    int Verbose() const { return fVerbose;}
 

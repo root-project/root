@@ -14,6 +14,16 @@
 
 namespace TMVA::Experimental::SOFIE {
 
+// Out-of-line because ROperator is forward-declared in the public header.
+void RModel::ROperatorDeleter::operator()(ROperator *ptr) const
+{
+   std::default_delete<ROperator>()(ptr);
+}
+
+RModel::~RModel() = default;
+RModel::RModel(RModel &&) = default;
+RModel &RModel::operator=(RModel &&) = default;
+
 namespace {
 
 const std::string SP = "   ";
@@ -195,10 +205,12 @@ void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution)
    for (auto &stdlib : libs) {
       AddNeededStdLib(stdlib);
    }
+   // Convert to the deleter used for storage (see ROperatorDeleter in the header)
+   std::unique_ptr<ROperator, ROperatorDeleter> opStored(op.release());
    if (order_execution >= 0) {
-      fOperators.insert(fOperators.begin() + order_execution, std::move(op));
+      fOperators.insert(fOperators.begin() + order_execution, std::move(opStored));
    } else {
-      fOperators.push_back(std::move(op));
+      fOperators.push_back(std::move(opStored));
       order_execution = fOperators.size() - 1;
    }
 

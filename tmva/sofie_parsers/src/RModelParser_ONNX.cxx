@@ -1,5 +1,9 @@
 #include "Byteswap.h"
 #include "TMVA/RModelParser_ONNX.hxx"
+// The operator base class is a private header: RModelParser_ONNX.hxx only
+// forward-declares it, but this translation unit manages ROperator instances
+// through std::unique_ptr and needs the complete type.
+#include "TMVA/ROperator.hxx"
 #include "onnx.hxx"
 
 #include <algorithm>
