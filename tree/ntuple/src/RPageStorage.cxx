@@ -278,16 +278,10 @@ ROOT::NTupleSize_t ROOT::Internal::RPageSource::GetNElements(ROOT::DescriptorId_
    auto itr = descGuard->GetClusterGroupIterable().begin();
    itr += descGuard->GetNClusterGroups() - 1;
    R__ASSERT(itr->HasClusterDetails());
-
-   ROOT::NTupleSize_t result = 0;
-   for (const auto &clusterId : itr->GetClusterIds()) {
-      const auto &cd = descGuard->GetClusterDescriptor(clusterId);
-      if (!cd.ContainsColumn(physicalColumnId))
-         continue;
-      auto columnRange = cd.GetColumnRange(physicalColumnId);
-      result = std::max(result, columnRange.GetFirstElementIndex() + columnRange.GetNElements());
-   }
-   return result;
+   const auto &cd = descGuard->GetClusterDescriptor(itr->GetClusterIds().back());
+   R__ASSERT(cd.ContainsColumn(physicalColumnId));
+   const auto &columnRange = cd.GetColumnRange(physicalColumnId);
+   return columnRange.GetFirstElementIndex() + columnRange.GetNElements();
 }
 
 void ROOT::Internal::RPageSource::UnzipCluster(RCluster *cluster)
