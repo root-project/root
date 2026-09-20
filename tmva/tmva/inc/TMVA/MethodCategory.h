@@ -52,11 +52,7 @@ namespace TMVA {
    class Reader;   // DSMTEST
    class MethodBoost;   // DSMTEST
    class DataSetManager;  // DSMTEST
-   namespace Experimental {
-   class Classification;
-   }
    class MethodCategory : public MethodCompositeBase {
-      friend class Experimental::Classification;
 
    public :
 

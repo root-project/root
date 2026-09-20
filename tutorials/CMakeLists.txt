@@ -342,7 +342,7 @@ if(NOT TARGET Gui)
 endif()
 
 if (NOT tmva)
-  list(APPEND tmva_veto machine_learning/*.C machine_learning/*.py machine_learning/envelope/*.C machine_learning/keras/*.C machine_learning/keras/*.py machine_learning/pytorch/*.py )
+  list(APPEND tmva_veto machine_learning/*.C machine_learning/*.py machine_learning/keras/*.C machine_learning/keras/*.py machine_learning/pytorch/*.py )
 else()
   #copy input data files
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/data/tmva_class_example.root ${CMAKE_CURRENT_BINARY_DIR}/machine_learning/data COPYONLY)
@@ -352,9 +352,6 @@ else()
 
   #---These do not need to run for TMVA
   list(APPEND tmva_veto machine_learning/createData.C)
-  if(MSVC AND NOT win_broken_tests)
-    list(APPEND tmva_veto machine_learning/envelope/classification.C)
-  endif()
   #these depends on external packages
   ROOT_FIND_PYTHON_MODULE(torch)
   ROOT_FIND_PYTHON_MODULE(keras)
