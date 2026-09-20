@@ -18,7 +18,6 @@ endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
   HEADERS
-   TMVA/OperatorList.hxx
    TMVA/RModel_Base.hxx
    TMVA/RModel.hxx
    TMVA/ROperator.hxx

@@ -6,9 +6,7 @@
 #include "TMVA/ROperator.hxx"
 #include "TMVA/RModel.hxx"
 
-namespace TMVA{
-namespace Experimental{
-namespace SOFIE{
+namespace TMVA::Experimental::SOFIE {
 
 
 template<typename T>
@@ -81,11 +79,11 @@ public:
       out << "\n//------ "<<fOpName<<" \n";
       std::string args;
       for(long unsigned int i = 0; i<fInputNames.size(); ++i){
-        args+="std::span<const "+ConvertTypeToString(fInputType)+">(tensor_"+std::string(fInputNames[i])+", "+fInputSizes[i]+"),";
+        args+="std::span<const "+ConvertTypeToString(fInputType)+">(tensor_"+std::string(fInputNames[i])+", "+std::to_string(fInputSizes[i])+"),";
       }
 
       for(long unsigned int i = 0; i<fOutputNames.size(); ++i){
-        args+="std::span<"+TensorType<T>::Name()+">(tensor_"+std::string(fOutputNames[i])+", "+ConvertShapeToLength(fOutputShapes[i])+"),";
+        args+="std::span<"+TensorType<T>::Name()+">(tensor_"+std::string(fOutputNames[i])+", "+std::to_string(ConvertShapeToLength(fOutputShapes[i]))+"),";
       }
       args.pop_back();
       out << SP << fOpName<<"::Compute("+args+");\n";
@@ -95,9 +93,7 @@ public:
 };
 
 
-}//SOFIE
-}//Experimental
-}//TMVA
+} // namespace TMVA::Experimental::SOFIE
 
 
 #endif //TMVA_SOFIE_ROPERATOR_Custom

@@ -2,12 +2,11 @@
 #define TMVA_SOFIE_RMODEL
 
 #include "TMVA/RModel_Base.hxx"
-#include "TMVA/SOFIE_common.hxx"
 #include "TMVA/ROperator.hxx"
 
-namespace TMVA {
-namespace Experimental {
-namespace SOFIE {
+#include "Rtypes.h" // for ClassDefNV
+
+namespace TMVA::Experimental::SOFIE {
 
 class RModel final : public RModel_Base {
 
@@ -238,8 +237,6 @@ inline std::vector<Dim> RModel::GetTensorData<Dim>(const std::string & name) {
    return GetShapeTensorValues(name);
 }
 
-} // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA
+} // namespace TMVA::Experimental::SOFIE
 
 #endif // TMVA_SOFIE_RMODEL

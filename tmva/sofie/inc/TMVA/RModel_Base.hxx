@@ -1,23 +1,19 @@
 #ifndef TMVA_SOFIE_RMODEL_BASE
 #define TMVA_SOFIE_RMODEL_BASE
 
+#include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <set>
+#include <sstream>
 #include <type_traits>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include <unordered_map>
-#include <memory>
-#include <ctime>
-#include <set>
-#include <iomanip>
-#include <fstream>
-#include <sstream>
-#include "TMVA/SOFIE_common.hxx"
-#include "TMVA/ROperator.hxx"
-#include "TBuffer.h"
 
-namespace TMVA {
-namespace Experimental {
-namespace SOFIE {
+namespace TMVA::Experimental::SOFIE {
 
 enum class Options {
    kDefault = 0x0,
@@ -119,8 +115,6 @@ public:
    const std::string & GetName() const { return fName;}
 };
 
-} // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA
+} // namespace TMVA::Experimental::SOFIE
 
 #endif // TMVA_SOFIE_RMODEL_BASE

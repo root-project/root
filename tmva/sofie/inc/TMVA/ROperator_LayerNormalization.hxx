@@ -2,6 +2,7 @@
 #define TMVA_SOFIE_ROPERATOR_LAYERNORMALIZATION
 
 #include "TMVA/RModel.hxx"
+#include "TMVA/ROperator.hxx"
 #include "TMVA/SOFIE_common.hxx"
 
 #include <sstream>

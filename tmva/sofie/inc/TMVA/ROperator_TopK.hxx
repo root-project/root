@@ -77,7 +77,7 @@ public:
       fAttrAxis = fAttrAxis < 0 ? fShapeX.size() + fAttrAxis : fAttrAxis;
       if(static_cast<size_t>(fAttrAxis) >=  fShapeX.size()){
          throw
-            std::runtime_error("TMVA::SOFIE ONNX TopK op axis = "+ std::to_string(fAttrAxis) +" value exeeds size of tensor " +fNX+" of size "+fShapeX.size()+" .");
+            std::runtime_error("TMVA::SOFIE ONNX TopK op axis = "+ std::to_string(fAttrAxis) +" value exeeds size of tensor " +fNX+" of size "+ std::to_string(fShapeX.size()) +" .");
       }
       // fK cannot be larger that axis dimension
       if (kdim.isParam || fShapeX[fAttrAxis].isParam)

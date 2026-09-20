@@ -3,26 +3,25 @@
 
 #include "ROOT/RSpan.hxx"
 
-#include <stdexcept>
-#include <type_traits>
+#include <algorithm>
+#include <cassert>
+#include <complex>
 #include <cstdint>
 #include <cstring>
-#include <complex>
-#include <string>
-#include <vector>
+#include <iomanip>
+#include <iostream>
+#include <limits>
 #include <map>
 #include <memory>
 #include <regex>
 #include <set>
 #include <sstream>
-#include <iostream>
-#include <iomanip>
-#include <cassert>
-#include <limits>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <vector>
 
-namespace TMVA {
-namespace Experimental {
-namespace SOFIE {
+namespace TMVA::Experimental::SOFIE {
 
 enum class ETensorType{
    UNDEFINED = 0, FLOAT = 1, UINT8 = 2, INT8 = 3, UINT16 = 4, INT16 = 5, INT32 = 6, INT64 = 7, STRING = 8, BOOL = 9, //order sensitive
@@ -555,8 +554,6 @@ HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> & ne
                                                 bool sgemmAlreadyDeclared = false);
 
 
-} // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA
+} // namespace TMVA::Experimental::SOFIE
 
 #endif //TMVA_SOFIE_COMMON
