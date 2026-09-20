@@ -30,6 +30,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
     ${FREETYPE_LIBRARIES}
     ${X11_LIBRARIES}
     ZLIB::ZLIB
+    fontconfig
   DEPENDENCIES
     Core
     Graf
