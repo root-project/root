@@ -87,16 +87,6 @@ public:
       else
          parserCode += "TMVA::Experimental::SOFIE::RModel model = parser.Parse(\"" + path + "\"); \n";
 
-       // add custom operators if needed
-      if (fCustomOperators.size() > 0) {
-         for (auto & op : fCustomOperators) {
-            parserCode += "{ auto p = new TMVA::Experimental::SOFIE::ROperator_Custom<float>(\""
-                      + op.fOpName + "\"," + op.fInputNames + "," + op.fOutputNames + "," + op.fOutputShapes + ",\"" + op.fFileName + "\");\n";
-            parserCode += "std::unique_ptr<TMVA::Experimental::SOFIE::ROperator> op(p);\n";
-            parserCode += "model.AddOperator(std::move(op));\n}\n";
-         }
-      }
-
       int batchSize = 1;
       if (inputShapes.size() > 0 && inputShapes[0].size() > 0) {
          batchSize = inputShapes[0][0];
@@ -204,13 +194,6 @@ public:
       fInitialized = true;
    }
 
-   // Add custom operator
-    void AddCustomOperator(const std::string &opName, const std::string &inputNames, const std::string & outputNames,
-      const std::string & outputShapes, const std::string & fileName) {
-         if (fInitialized)  std::cout << "WARNING: Model is already loaded and initialised. It must be done after adding the custom operators" << std::endl;
-         fCustomOperators.push_back( {fileName, opName,inputNames, outputNames,outputShapes});
-      }
-
    // implementations for different outputs
    std::vector<float> DoCompute(const std::vector<float> & x1) {
       if (fNInputs != 1) {
@@ -294,17 +277,6 @@ private:
    int fNInputs = 0;
    void * fSessionPtr = nullptr;
    void * fFuncPtr = nullptr;
-
-   // data to insert custom operators
-   struct CustomOperatorData {
-      std::string fFileName; // code implementing the custom operator
-      std::string fOpName; // operator name
-      std::string fInputNames;  // input tensor names (convert as string as {"n1", "n2"})
-      std::string fOutputNames;  // output tensor names converted as trind
-      std::string fOutputShapes; // output shapes
-   };
-   std::vector<CustomOperatorData> fCustomOperators;
-
 };
 
 } // namespace Experimental
