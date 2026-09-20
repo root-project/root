@@ -1714,7 +1714,7 @@ void TMVA::MethodDL::FillInputTensor()
    size_t nVariables = GetEvent()->GetNVariables();
 
    // for Columnlayout tensor memory layout is   HWC while for rowwise is CHW
-   if (fXInput.GetLayout() == TMVA::Experimental::MemoryLayout::ColumnMajor) {
+   if (fXInput.GetLayout() == TMVA::DNN::MemoryLayout::ColumnMajor) {
       R__ASSERT(fXInput.GetShape().size() < 4);
       size_t nc, nhw = 0;
       if (fXInput.GetShape().size() == 2) {
@@ -2308,7 +2308,7 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
    fXInput = ArchitectureImpl_t::CreateTensor(fNet->GetBatchSize(), GetInputDepth(), GetInputHeight(), GetInputWidth() );
    if (batchDepth == 1 && GetInputHeight() == 1 && GetInputDepth() == 1)
       // make here a ColumnMajor tensor
-      fXInput = TensorImpl_t( fNet->GetBatchSize(), GetInputWidth(),TMVA::Experimental::MemoryLayout::ColumnMajor );
+      fXInput = TensorImpl_t(fNet->GetBatchSize(), GetInputWidth(), TMVA::DNN::MemoryLayout::ColumnMajor);
    fXInputBuffer =  HostBufferImpl_t( fXInput.GetSize());
 
    // create pointer to output matrix used for the predictions
