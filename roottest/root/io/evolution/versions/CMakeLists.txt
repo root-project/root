@@ -89,6 +89,24 @@ ROOTTEST_ADD_TEST(ROOT7500
                   OUTREF execROOT7500.ref
                   LABELS longtest io)
 
+ROOTTEST_ADD_TEST(ROOT14491writedata
+                  MACRO ROOT14491writedata.cxx+
+                  FIXTURES_SETUP root-io-evolution-versions-ROOT14491writedata
+                  OUTREF ROOT14491writedata.ref
+                  LABELS io)
+
+ROOTTEST_ADD_TEST(ROOT14491readdata
+                  MACRO ROOT14491readdata.cxx+
+                  OUTREF ROOT14491readdata.ref
+                  FIXTURES_REQUIRED root-io-evolution-versions-ROOT14491writedata
+                  LABELS io)
+
+ROOTTEST_ADD_TEST(ROOT14491simpleread
+                  MACRO ROOT14491simpleread.cxx+
+                  OUTREF ROOT14491simpleread.ref
+                  FIXTURES_REQUIRED root-io-evolution-versions-ROOT14491writedata
+                  LABELS io)
+
 ROOTTEST_ADD_TEST(attmarker
                   COMMAND ${ROOT_hadd_CMD} -f result.root hsimple14.root hsimple20.root
                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
