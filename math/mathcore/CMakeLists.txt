@@ -91,13 +91,13 @@ set(HEADERS
   TKDTree.h
   TKDTreeBinning.h
   TMath.h
+  TMathVectorized.h
   TRandom.h
   TRandom1.h
   TRandom2.h
   TRandom3.h
   TRandomGen.h
   TStatistic.h
-  VectorizedTMath.h
 )
 
 if(runtime_cxxmodules)

@@ -79,6 +79,7 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
 * The headers `Htypes.h` and `Gtypes.h` that were deprecated in ROOT 6.20 will now emit warnings and will be fully removed in ROOT 6.44. Use instead `Rtypes.h`.
 * The header `GLConstants.h` is no longer part of ROOT installed headers.
 * The header `Bswapcpy.h` is deprecated and will be removed from the public interface after ROOT 6.44, it's an implementation detail for Unix i386 GNUC used by TBufferFile.
+* The header `VectorizedTMath.h` is deprecated and will be removed in ROOT 6.44. Use instead `TMathVectorized.h`.
 * The header `PosixThreadInc.h` is deprecated and will be removed after ROOT 6.44. Use instead `<ctime>` and `<cstdlib>`.
 * The header `RStringView.h` deprecated in ROOT 6.14  will now emit warnings and will be fully removed after ROOT 6.44. Use `ROOT/RStringView.hxx` instead.
 * The header `NetErrors.h` is an implementation detail, is deprecated and will be removed in ROOT 6.44. Use instead `TSocket` public interface.
