@@ -5,9 +5,9 @@
 #include "TMVA/ROperator.hxx"
 #include "TMVA/RModel.hxx"
 
-#include <vector>
+#include <algorithm> // for std::all_of
 #include <sstream>
-#include <algorithm>
+#include <vector>
 
 namespace TMVA{
 namespace Experimental{
