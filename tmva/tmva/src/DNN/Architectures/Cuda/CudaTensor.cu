@@ -415,30 +415,6 @@ void TCudaTensor<AFloat>::PrintShape(const char * name) const
          std::cout << fShape[i] << " , ";
       std::cout << fShape.back() << " } " << " Layout : " << memlayout << std::endl;
 }
-#if 0
-// Conversion to RTensor
-//____________________________________________________________________________
-template<typename AFloat>
-TCudaTensor<AFloat>::operator Experimental::RTensor<AFloat>() const
-{
-   std::vector<size_t> shape(fNDims, fNDims + fDim)
-
-   Experimental::RTensor<AFloat> hostTensor( shape)
-
-   AFloat * buffer = new AFloat[fSize];
-   cudaMemcpy(buffer, fElementBuffer, fSize * sizeof(AFloat),
-              cudaMemcpyDeviceToHost);
-
-   int index = 0;
-   for (int j = 0; j < fSize; j++) {
-         hostTensor.GetData()[j] = static_cast<AFloat>(buffer[j]);
-      }
-   }
-
-   delete[] buffer;
-   return hostTensor;
-}
-#endif
 // Explicit Instantiations.
 
 template class TCudaTensor<float>;

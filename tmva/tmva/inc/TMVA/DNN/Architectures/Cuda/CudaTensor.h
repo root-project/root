@@ -29,8 +29,6 @@
 #include "TMatrixT.h"
 #include "CudaBuffers.h"
 
-//#include "TMVA/RTensor.hxx"
-
 #ifdef R__HAS_CUDNN
 #include "cudnn.h"
 #define CUDNNCHECK(ans) {cudnnError((ans), __FILE__, __LINE__); }

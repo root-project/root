@@ -188,7 +188,7 @@ bool testGRUBackpropagation(size_t timeSteps, size_t batchSize, size_t stateSize
          // time 0
          for (size_t l = 0; l < timeSteps; ++l) {
             for (size_t m = 0; m < inputSize; ++m) {
-               if (Architecture::GetTensorLayout() == TMVA::Experimental::MemoryLayout::RowMajor)
+               if (Architecture::GetTensorLayout() == TMVA::DNN::MemoryLayout::RowMajor)
                   mat(m, l) = Input(l, m);
                else
                   mat(l, m) = Input(l, m);

@@ -18,49 +18,116 @@
 #define TMVA_DNN_ARCHITECTURES_CPU_CPUTENSOR
 
 #include <cstddef>
+#include <cstdint>
 #include <iostream>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <vector>
 
 #include "TMatrix.h"
 #include "TMVA/Config.h"
 #include "CpuBuffer.h"
 #include "CpuMatrix.h"
-#include <TMVA/RTensor.hxx>
 
 namespace TMVA {
 namespace DNN {
 
+/// Memory layout type (row- or column-major storage of the tensor elements)
+enum class MemoryLayout : uint8_t {
+   RowMajor = 0x01,
+   ColumnMajor = 0x02
+};
+
 // CPU Tensor Class
-// It is a simple wrapper for TMVA RTensor based on
-// memory owned by CPU Buffer
+// It is a tensor container with contiguous storage whose memory is
+// owned by a CPU Buffer.
 // We need to keep a pointer for CPUBuffer for fast conversion
 // without copying to TCpuMatrix
 // also provides compatibility with old interface
 
 template <typename AFloat>
-class TCpuTensor : public TMVA::Experimental::RTensor<AFloat, TCpuBuffer<AFloat>> {
+class TCpuTensor {
 
-private:
-   //TCpuTensor will have no extra private members than RTensor
 public:
    friend class TCpuMatrix<AFloat>;
 
-   using Shape_t = typename TMVA::Experimental::RTensor<AFloat>::Shape_t;
-   using MemoryLayout = TMVA::Experimental::MemoryLayout;
+   using Shape_t = std::vector<std::size_t>;
+   using MemoryLayout = TMVA::DNN::MemoryLayout;
    using Matrix_t = TCpuMatrix<AFloat>;
    using Scalar_t = AFloat;
 
+private:
+   Shape_t fShape;                                 ///< Shape of the tensor
+   Shape_t fStrides;                               ///< Strides of the tensor
+   std::size_t fSize;                              ///< Total number of elements
+   MemoryLayout fLayout;                           ///< Memory layout of the tensor
+   AFloat *fData = nullptr;                        ///< Pointer to the first element
+   std::shared_ptr<TCpuBuffer<AFloat>> fContainer; ///< Buffer owning the data
+
+   /// Compute the total number of elements from a shape vector.
+   /// An empty shape has size 0.
+   static std::size_t GetSizeFromShape(const Shape_t &shape)
+   {
+      if (shape.size() == 0)
+         return 0;
+      std::size_t size = 1;
+      for (auto &s : shape)
+         size *= s;
+      return size;
+   }
+
+   /// Compute strides from a shape vector.
+   /// This information is needed for the multi-dimensional indexing:
+   /// for row-major layout the last dimension varies fastest, while for
+   /// column-major layout the first dimension varies fastest.
+   static Shape_t ComputeStridesFromShape(const Shape_t &shape, MemoryLayout layout)
+   {
+      const auto size = shape.size();
+      Shape_t strides(size);
+      if (layout == MemoryLayout::RowMajor) {
+         for (std::size_t i = 0; i < size; i++) {
+            if (i == 0) {
+               strides[size - 1 - i] = 1;
+            } else {
+               strides[size - 1 - i] = strides[size - 1 - i + 1] * shape[size - 1 - i + 1];
+            }
+         }
+      } else {
+         for (std::size_t i = 0; i < size; i++) {
+            if (i == 0) {
+               strides[i] = 1;
+            } else {
+               strides[i] = strides[i - 1] * shape[i - 1];
+            }
+         }
+      }
+      return strides;
+   }
+
+public:
+   /// Construct a tensor sharing the given buffer.
+   /// The container holds the memory and its destructor releases it when
+   /// all tensors sharing it are destroyed.
+   TCpuTensor(std::shared_ptr<TCpuBuffer<AFloat>> container, Shape_t shape, MemoryLayout layout)
+      : fShape(shape), fLayout(layout), fContainer(container)
+   {
+      fSize = GetSizeFromShape(shape);
+      fStrides = ComputeStridesFromShape(shape, layout);
+      fData = fContainer->data();
+   }
+
    // default constructor
-   TCpuTensor(): TMVA::Experimental::RTensor<AFloat, TCpuBuffer<AFloat>>(std::make_shared<TCpuBuffer<AFloat>>(0), {0})
-   {}
+   TCpuTensor() : TCpuTensor(std::make_shared<TCpuBuffer<AFloat>>(0), {0}, MemoryLayout::RowMajor) {}
 
    /** constructors from n m */
    TCpuTensor(size_t n, size_t m, MemoryLayout memlayout = MemoryLayout::ColumnMajor)
-      : TMVA::Experimental::RTensor<AFloat, TCpuBuffer<AFloat>>(std::make_shared<TCpuBuffer<AFloat>>(n * m), {n, m}, memlayout)
+      : TCpuTensor(std::make_shared<TCpuBuffer<AFloat>>(n * m), {n, m}, memlayout)
    {}
 
    /** constructors from batch size, depth, height*width */
    TCpuTensor(size_t bsize, size_t depth, size_t hw, MemoryLayout memlayout = MemoryLayout::ColumnMajor)
-      : TMVA::Experimental::RTensor<AFloat, TCpuBuffer<AFloat>>(std::make_shared<TCpuBuffer<AFloat>>(bsize * depth * hw), {depth, hw, bsize}, memlayout)
+      : TCpuTensor(std::make_shared<TCpuBuffer<AFloat>>(bsize * depth * hw), {depth, hw, bsize}, memlayout)
    {
       if (memlayout == MemoryLayout::RowMajor)
          this->ReshapeInplace({bsize, depth, hw});
@@ -69,8 +136,8 @@ public:
    /** constructors from batch size, depth, height, width */
    TCpuTensor(size_t bsize, size_t depth, size_t height, size_t width,
               MemoryLayout memlayout = MemoryLayout::ColumnMajor)
-      : TMVA::Experimental::RTensor<AFloat, TCpuBuffer<AFloat>>(std::make_shared<TCpuBuffer<AFloat>>(bsize * depth * height * width),
-      {depth, height, width, bsize}, memlayout)
+      : TCpuTensor(std::make_shared<TCpuBuffer<AFloat>>(bsize * depth * height * width), {depth, height, width, bsize},
+                   memlayout)
    {
       if (memlayout == MemoryLayout::RowMajor)
          this->ReshapeInplace({bsize, depth, height, width});
@@ -78,15 +145,13 @@ public:
 
    /** constructors from a shape.*/
    TCpuTensor(Shape_t shape, MemoryLayout memlayout = MemoryLayout::ColumnMajor)
-      : TMVA::Experimental::RTensor<AFloat, TCpuBuffer<AFloat>>(std::make_shared<TCpuBuffer<AFloat>>(TMVA::Experimental::Internal::GetSizeFromShape(shape)),
-      shape, memlayout)
+      : TCpuTensor(std::make_shared<TCpuBuffer<AFloat>>(GetSizeFromShape(shape)), shape, memlayout)
    {}
 
     /* constructors from a AFloat pointer  and a shape. This is a copy */
 
-   TCpuTensor(AFloat *data, const Shape_t &shape,
-              MemoryLayout memlayout = MemoryLayout::ColumnMajor)
-      : TMVA::Experimental::RTensor<AFloat, TCpuBuffer<AFloat>>(std::make_shared<TCpuBuffer<AFloat>>(TMVA::Experimental::Internal::GetSizeFromShape(shape)), shape, memlayout)
+   TCpuTensor(AFloat *data, const Shape_t &shape, MemoryLayout memlayout = MemoryLayout::ColumnMajor)
+      : TCpuTensor(std::make_shared<TCpuBuffer<AFloat>>(GetSizeFromShape(shape)), shape, memlayout)
    {
       auto& container = *(this->GetContainer());
       for (size_t i = 0; i <  this->GetSize(); ++i) container[i] = data[i];
@@ -96,17 +161,17 @@ public:
 
    /** constructors from a TCpuBuffer and a shape */
    //unsafe method for backwards compatibility, const not promised. A view.
-   TCpuTensor(const TCpuBuffer<AFloat>& buffer, Shape_t shape, MemoryLayout memlayout = MemoryLayout::ColumnMajor)
-      : TMVA::Experimental::RTensor<AFloat, TCpuBuffer<AFloat>>(std::make_shared<TCpuBuffer<AFloat>>(buffer), shape, memlayout) {
-         R__ASSERT(this->GetSize() <= this->GetContainer()->GetSize());
-      }
-
-
+   TCpuTensor(const TCpuBuffer<AFloat> &buffer, Shape_t shape, MemoryLayout memlayout = MemoryLayout::ColumnMajor)
+      : TCpuTensor(std::make_shared<TCpuBuffer<AFloat>>(buffer), shape, memlayout)
+   {
+      R__ASSERT(this->GetSize() <= this->GetContainer()->GetSize());
+   }
 
    /** constructors from a TCpuMatrix. Memory layout is forced to be same as matrix (i.e. columnlayout) */
    //unsafe method for backwards compatibility, const not promised. A view of underlying data.
    TCpuTensor(const TCpuMatrix<AFloat> &matrix, size_t dim = 3, MemoryLayout memlayout = MemoryLayout::ColumnMajor)
-      : TMVA::Experimental::RTensor<AFloat, TCpuBuffer<AFloat>>(std::make_shared<TCpuBuffer<AFloat>>(matrix.GetBuffer()),{matrix.GetNrows(), matrix.GetNcols()}, memlayout)
+      : TCpuTensor(std::make_shared<TCpuBuffer<AFloat>>(matrix.GetBuffer()), {matrix.GetNrows(), matrix.GetNcols()},
+                   memlayout)
    {
 
       if (dim >  2) {
@@ -135,6 +200,38 @@ public:
       return TMatrixT<AFloat>(1, this->GetSize(), this->GetData());
    }
 
+   // Access properties
+   std::size_t GetSize() const { return fSize; }
+   const Shape_t &GetShape() const { return fShape; }
+   const Shape_t &GetStrides() const { return fStrides; }
+   AFloat *GetData() { return fData; }
+   const AFloat *GetData() const { return fData; }
+   std::shared_ptr<TCpuBuffer<AFloat>> GetContainer() { return fContainer; }
+   const std::shared_ptr<TCpuBuffer<AFloat>> GetContainer() const { return fContainer; }
+   MemoryLayout GetMemoryLayout() const { return fLayout; }
+
+   /// Reshape tensor in place.
+   /// The new shape must have the same overall size as the old one.
+   void ReshapeInplace(const Shape_t &shape)
+   {
+      const auto size = GetSizeFromShape(shape);
+      if (size != fSize) {
+         std::stringstream ss;
+         ss << "Cannot reshape tensor with size " << fSize << " into shape { ";
+         for (std::size_t i = 0; i < shape.size(); i++) {
+            if (i != shape.size() - 1) {
+               ss << shape[i] << ", ";
+            } else {
+               ss << shape[i] << " }.";
+            }
+         }
+         throw std::runtime_error(ss.str());
+      }
+
+      // Compute new strides from shape
+      fStrides = ComputeStridesFromShape(shape, fLayout);
+      fShape = shape;
+   }
 
    /** Return raw pointer to the elements stored contiguously in column-major
     *  order. */
