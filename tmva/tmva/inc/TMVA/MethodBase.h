@@ -74,9 +74,6 @@ namespace TMVA {
    class MethodCuts;
    class MethodBoost;
    class DataSetInfo;
-   namespace Experimental {
-   class Classification;
-   }
    class TrainingHistory;
 
    class MethodBase : virtual public IMethod, public Configurable {
@@ -86,7 +83,6 @@ namespace TMVA {
       friend class RootFinder;
       friend class MethodBoost;
       friend class MethodCrossValidation;
-      friend class Experimental::Classification;
 
    public:
 
