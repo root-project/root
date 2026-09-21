@@ -859,6 +859,8 @@ public:
    /// corresponding cluster was not meanwhile evicted from the set of active clusters.
    RSharedDescriptorGuard
    FindClusterId(ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t index, ROOT::DescriptorId_t &cid);
+   /// An overload of FindClusterId that searches using a certain column element index.
+   RSharedDescriptorGuard FindClusterId(ROOT::NTupleSize_t entryIdx, ROOT::DescriptorId_t &cid);
 
    /// Promise to only read from the given entry range. If set, prevents the cluster pool from reading-ahead beyond
    /// the given range. The range needs to be within `[0, GetNEntries())`.

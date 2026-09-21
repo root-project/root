@@ -320,11 +320,6 @@ ROOT::RExtraTypeInfoDescriptor ROOT::RExtraTypeInfoDescriptor::Clone() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::DescriptorId_t ROOT::Internal::CallFindClusterIdOn(const RNTupleDescriptor &desc, ROOT::NTupleSize_t entryIdx)
-{
-   return desc.FindClusterId(entryIdx);
-}
-
 ROOT::RNTupleDescriptor::RNTupleDescriptor() : fStringPool(std::make_shared<Internal::RStringPool>())
 {
    // We need to make sure that for cloning fields, the empty string that is not explicitly entered for
