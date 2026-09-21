@@ -31,9 +31,12 @@
 
 namespace ROOT {
 namespace Experimental {
+class RNTupleProcessor;
 
 namespace Internal {
-struct RNTupleProcessorEntryLoader;
+struct RNTupleProcessorEntryLoader; // for unit tests
+const RNTupleProcessorEntry *
+LoadFullRNTupleProcessorEntry(ROOT::Experimental::RNTupleProcessor &processor, bool includeSubfields); // for unit tests
 } // namespace Internal
 
 // clang-format off
@@ -283,6 +286,9 @@ that is returned by RequestField().
 // clang-format on
 class RNTupleProcessor {
    friend struct ROOT::Experimental::Internal::RNTupleProcessorEntryLoader; // for unit tests
+   friend const Internal::RNTupleProcessorEntry *
+   ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(RNTupleProcessor &processor,
+                                                               bool includeSubfields); // For unit tests
    friend class RNTupleSingleProcessor;
    friend class RNTupleChainProcessor;
    friend class RNTupleJoinProcessor;
@@ -355,6 +361,13 @@ protected:
    virtual Internal::RNTupleProcessorEntry::FieldIndex_t
    AddFieldToEntry(const std::string &fieldName, const std::string &typeName, void *valuePtr,
                    const Internal::RNTupleProcessorProvenance &provenance) = 0;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add all known fields (from on-disk information) to the entry.
+   ///
+   /// \param[in] provenance Provenance of the processor.
+   /// \param[in] addFieldMode Bitfield indicating how the fields should be added.
+   virtual void AddAllFieldsToEntry(const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add the entry mappings for this processor to the provided join table.
@@ -666,6 +679,12 @@ private:
       const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add all known fields (from on-disk information) to the entry.
+   ///
+   /// \sa RNTupleProcessor::AddAllFieldsToEntry()
+   void AddAllFieldsToEntry(const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields) final;
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Add the entry mappings for this processor to the provided join table.
    ///
    /// \sa ROOT::Experimental::RNTupleProcessor::AddEntriesToJoinTable
@@ -765,6 +784,12 @@ private:
    Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
       const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
       const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add all known fields (from on-disk information) to the entry.
+   ///
+   /// \sa RNTupleProcessor::AddAllFieldsToEntry()
+   void AddAllFieldsToEntry(const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add the entry mappings for this processor to the provided join table.
@@ -869,6 +894,12 @@ private:
    Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
       const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
       const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add all known fields (from on-disk information) to the entry.
+   ///
+   /// \sa RNTupleProcessor::AddAllFieldsToEntry()
+   void AddAllFieldsToEntry(const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add the entry mappings for this processor to the provided join table.
