@@ -27,13 +27,13 @@ on:
         required: true
 
 jobs:
-  6.26:
+  Nightly-6_26:
     uses: root-project/root/.github/workflows/root-ci.yml@v6-26-00-patches
     secrets: inherit
-  6.28:
+  Nightly-6_28:
     uses: root-project/root/.github/workflows/root-ci.yml@v6-28-00-patches
     secrets: inherit
-  6.30:
+  Nightly-6_30:
     uses: root-project/root/.github/workflows/root-ci.yml@v6-30-00-patches
     secrets: inherit
 
