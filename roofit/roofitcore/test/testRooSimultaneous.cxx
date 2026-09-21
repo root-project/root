@@ -582,6 +582,53 @@ TEST(RooSimultaneous, RangedExtendedRooAddPdf)
    EXPECT_NEAR(getFinal("nBkgB")->getVal(), nBkgB_ref, 1e-3 * nBkgB_ref);
 }
 
+/// In a ranged fit, an extended RooAddPdf reinterprets its yield with respect
+/// to the full range. This must also happen if the RooAddPdf is a component of
+/// a RooSimultaneous, both directly and wrapped in a RooProdPdf (the common
+/// way to attach constraint terms). Regression test for GitHub issue #23444,
+/// which is the RooSimultaneous analogon of issue #16673.
+TEST(RooSimultaneous, MultiRangeExtendedRooAddPdf)
+{
+   using namespace RooFit;
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRandom::randomGenerator()->SetSeed(42);
+
+   RooRealVar x("x", "x", 105, 160);
+   x.setRange("LEFT", 105, 120);
+   x.setRange("RIGHT", 130, 160);
+
+   RooRealVar alpha("alpha", "alpha", -0.04, -0.1, -0.0);
+   RooExponential model("model", "", x, alpha);
+   RooRealVar nBkg("nBkg", "", 10000, 0, 200000);
+   RooAddPdf add("add", "", {model}, {nBkg});
+   RooProdPdf prod("prod", "", RooArgSet{add});
+
+   std::unique_ptr<RooDataSet> data{add.generate(x, 10000)};
+
+   RooCategory cat("cat", "", {{"A", 0}});
+   RooDataSet combData("combData", "", {x, cat}, Index(cat), Import("A", *data));
+
+   auto fitYield = [&](RooAbsPdf &pdf, RooAbsData &fitData) {
+      alpha.setVal(-0.04);
+      nBkg.setVal(10000.);
+      std::unique_ptr<RooFitResult> res{pdf.fitTo(fitData, Range("LEFT,RIGHT"), Save(), PrintLevel(-1))};
+      EXPECT_NE(res, nullptr) << pdf.GetName();
+      return nBkg.getVal();
+   };
+
+   // Reference: the yield of the bare RooAddPdf, which is extrapolated to the
+   // full range and therefore well above the number of in-range events.
+   const double refYield = fitYield(add, *data);
+   ASSERT_GT(refYield, 1.05 * data->sumEntries(nullptr, "LEFT,RIGHT"));
+
+   RooSimultaneous simAdd("simAdd", "", {{"A", &add}}, cat);
+   EXPECT_NEAR(fitYield(simAdd, combData), refYield, 1e-3 * refYield);
+
+   RooSimultaneous simProd("simProd", "", {{"A", &prod}}, cat);
+   EXPECT_NEAR(fitYield(simProd, combData), refYield, 1e-3 * refYield);
+}
+
 /// GitHub issue #20383.
 /// Check that the the simultaneous pdf is normalized correctly when plotting
 /// with a projection dataset.
