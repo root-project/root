@@ -13,6 +13,9 @@
 
 #include "TPadPainterBase.h"
 
+// Hide Qt classes from CLING -
+// It not able correctly parse them without some extra defines and include paths
+
 #ifdef __CLING__
 class QString;
 class QColor;
@@ -26,6 +29,7 @@ class QBrush;
 #endif
 
 class QPaintWidget;
+class TTFhandle;
 
 namespace ROOT {
 namespace Experimental {
@@ -90,6 +94,8 @@ public:
    void     DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y) override;
 
    void     DrawTTFglyphs(Int_t px, Int_t py, TTFhandle &ttf, [[maybe_unused]] ETextMode mode) override;
+
+   void     DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags = 0) override;
 
 private:
    //Let's make this clear:
