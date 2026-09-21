@@ -50,35 +50,6 @@ void TQt6PadPainter::SetOpacity(Int_t percent)
    fAttFill.SetFillStyle(4000 + percent);
 }
 
-//////////////////////////////////////////////////////////////////////////
-/// Set cursor
-
-void TQt6PadPainter::SetCursor(Int_t, ECursor cursor)
-{
-   switch(cursor) {
-      case kBottomLeft: fPaintWidget->setCursor(Qt::SizeBDiagCursor); break;
-      case kBottomRight: fPaintWidget->setCursor(Qt::SizeFDiagCursor); break;
-      case kTopLeft: fPaintWidget->setCursor(Qt::SizeFDiagCursor); break;
-      case kTopRight: fPaintWidget->setCursor(Qt::SizeBDiagCursor); break;
-      case kBottomSide: fPaintWidget->setCursor(Qt::SizeVerCursor); break;
-      case kLeftSide: fPaintWidget->setCursor(Qt::SizeHorCursor); break;
-      case kTopSide: fPaintWidget->setCursor(Qt::SizeVerCursor); break;
-      case kRightSide: fPaintWidget->setCursor(Qt::SizeHorCursor); break;
-      case kMove: fPaintWidget->setCursor(Qt::DragMoveCursor); break;
-      case kCross: fPaintWidget->setCursor(Qt::CrossCursor); break;
-      case kArrowHor: fPaintWidget->setCursor(Qt::SizeHorCursor); break;
-      case kArrowVer: fPaintWidget->setCursor(Qt::UpArrowCursor); break;
-      case kHand: fPaintWidget->setCursor(Qt::OpenHandCursor); break;
-      case kRotate: fPaintWidget->setCursor(Qt::ClosedHandCursor); break;
-      case kPointer: fPaintWidget->setCursor(Qt::ArrowCursor); break;
-      case kArrowRight: fPaintWidget->setCursor(Qt::SizeHorCursor); break;
-      case kCaret: fPaintWidget->setCursor(Qt::WaitCursor); break;
-      case kWatch: fPaintWidget->setCursor(Qt::WaitCursor); break;
-      case kNoDrop: fPaintWidget->setCursor(Qt::ForbiddenCursor); break;
-      default:
-         fPaintWidget->unsetCursor();
-   }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Noop, for non-gl pad TASImage calls gVirtualX->CopyArea.

@@ -64,6 +64,7 @@ public:
    void SetWindowSize(UInt_t w, UInt_t h) override;
    void SetWindowTitle(const char *newTitle) override;
    void SetCanvasSize(UInt_t w, UInt_t h) override;
+   void SetCursor(ECursor cursor) override;
    void Iconify() override;
    void RaiseWindow() override;
 
