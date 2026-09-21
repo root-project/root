@@ -12,7 +12,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TBuffer.h"
-#include "ROOT/v5/TFormula.h"
+#include "ROOT/v5/TFormula.hxx"
 #include "TMath.h"
 #include "TRandom.h"
 #include "TFunction.h"
