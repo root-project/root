@@ -40,9 +40,6 @@ protected:
 
    QPaintWidget *fPaintWidget = nullptr;
 
-   void PaintQString(int x, int y, const QString &s);
-
-   static QString GetFontFamily(Font_t id);
    static QColor GetQColor(Color_t id);
    QPen GetLinePen();
    QBrush GetFillBrush();
@@ -55,6 +52,7 @@ public:
 
    Bool_t   IsNative() const override { return kTRUE; }
 
+   Bool_t   IsSupportAlpha() const override { return kTRUE; }
 
    void     SetOpacity(Int_t percent) override;
 
@@ -91,20 +89,7 @@ public:
    void     DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y) override;
    void     DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y) override;
 
-   void     DrawText(Double_t x, Double_t y, const char *text, ETextMode mode) override;
-   void     DrawText(Double_t x, Double_t y, const wchar_t *text, ETextMode mode) override;
-   void     DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode mode) override;
-   void     DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, ETextMode mode) override;
-
-   void     DrawTextUrl(Double_t x, Double_t y, const char *text, const char *url) override;
-
-   void    GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const char *mess) override;
-   void    GetTextExtent(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const wchar_t *mess) override;
-   void    GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a, UInt_t &d, const char *mess) override;
-   void    GetTextAscentDescent(Font_t font, Double_t size, UInt_t &a, UInt_t &d, const wchar_t *mess) override;
-   UInt_t  GetTextAdvance(Font_t font, Double_t size, const char *text, Bool_t kern) override;
-
-   Bool_t   IsSupportAlpha() const override { return kTRUE; }
+   void     DrawTTFglyphs(Int_t px, Int_t py, TTFhandle &ttf, [[maybe_unused]] ETextMode mode) override;
 
 private:
    //Let's make this clear:
