@@ -41,6 +41,8 @@ public:
    void compileServers(RooAbsArg &arg, RooArgSet const &normSet);
    void compileServer(RooAbsArg &server, RooAbsArg &arg, RooArgSet const &normSet);
 
+   RooArgSet mapToCompiled(RooArgSet const &args) const;
+
    void markAsCompiled(RooAbsArg &arg) const;
    void markSubtreeAsCompiled(RooAbsArg &arg) const;
 
