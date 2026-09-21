@@ -2,6 +2,8 @@
 #include <vector>
 #include <string>
 #include <array>
+#include <algorithm>
+#include <fstream>
 
 #include "gtest/gtest.h"
 
@@ -16,6 +18,8 @@
 #include "TROOT.h" // gROOT
 #include "TSystem.h"
 #include "TEnv.h" // gEnv
+#include "TFree.h"
+#include "TError.h"
 
 TEST(TFile, WriteObjectTObject)
 {
@@ -331,4 +335,118 @@ TEST(TFile, UUID)
 {
    TMemFile f("uuidtest.root", "RECREATE");
    EXPECT_EQ('4', f.GetUUID().AsString()[14]);
+}
+
+namespace {
+std::string gCollectedDiags;
+void CollectDiags(int /*level*/, Bool_t /*abort*/, const char *location, const char *msg)
+{
+   gCollectedDiags += location;
+   gCollectedDiags += ": ";
+   gCollectedDiags += msg;
+   gCollectedDiags += '\n';
+}
+} // namespace
+
+TEST(TFile, ReadKeysValid)
+{
+   ROOT::TestSupport::FileRaii fileGuard("tfile_readkeys_valid.root");
+   {
+      TFile f(fileGuard.GetPath().c_str(), "RECREATE");
+      TNamed named("short", "t");
+      named.Write();
+   }
+   TFile in(fileGuard.GetPath().c_str());
+   ASSERT_FALSE(in.IsZombie());
+   EXPECT_EQ(in.GetNkeys(), 1);
+   auto *named = in.Get<TNamed>("short");
+   ASSERT_NE(named, nullptr);
+   EXPECT_STREQ(named->GetTitle(), "t");
+}
+
+TEST(TFile, ReadKeysOversizedString)
+{
+   ROOT::TestSupport::FileRaii fileGuard("tfile_readkeys_oversize.root");
+   Long64_t seekKeys = 0;
+   Int_t nbytesKeys = 0;
+   {
+      TFile f(fileGuard.GetPath().c_str(), "RECREATE");
+      TNamed named("short", "t");
+      named.Write();
+      f.Write();
+      seekKeys = f.GetSeekKeys();
+      nbytesKeys = f.GetNbytesKeys();
+   }
+   ASSERT_GT(seekKeys, 0);
+   ASSERT_GT(nbytesKeys, 0);
+
+   {
+      std::fstream fs(fileGuard.GetPath(), std::ios::in | std::ios::out | std::ios::binary);
+      ASSERT_TRUE(fs.good());
+      std::vector<char> rec(static_cast<std::size_t>(nbytesKeys));
+      fs.seekg(seekKeys);
+      fs.read(rec.data(), nbytesKeys);
+      ASSERT_EQ(fs.gcount(), nbytesKeys);
+
+      const char needle[] = {'\x05', 's', 'h', 'o', 'r', 't'};
+      auto it = std::search(rec.begin(), rec.end(), std::begin(needle), std::end(needle));
+      ASSERT_NE(it, rec.end());
+      *it = static_cast<char>(255);
+      fs.seekp(seekKeys);
+      fs.write(rec.data(), nbytesKeys);
+      ASSERT_TRUE(fs.good());
+   }
+
+   gCollectedDiags.clear();
+   {
+      ROOT::TestSupport::FilterDiagsRAII capture(CollectDiags);
+      TFile in(fileGuard.GetPath().c_str());
+      // Opening must return; do not walk off the keys buffer.
+      EXPECT_TRUE(in.IsZombie() || in.GetNkeys() >= 0);
+   }
+   EXPECT_NE(gCollectedDiags.find("given buffer is too small"), std::string::npos);
+}
+
+TEST(TFile, ReadFreeValid)
+{
+   ROOT::TestSupport::FileRaii fileGuard("tfile_readfree_valid.root");
+   {
+      TFile f(fileGuard.GetPath().c_str(), "RECREATE");
+      TNamed named("n", "t");
+      named.Write();
+   }
+   {
+      TFile f(fileGuard.GetPath().c_str(), "UPDATE");
+      ASSERT_FALSE(f.IsZombie());
+      TNamed named2("n2", "t");
+      named2.Write();
+   }
+   TFile in(fileGuard.GetPath().c_str());
+   ASSERT_FALSE(in.IsZombie());
+   EXPECT_NE(in.Get<TNamed>("n"), nullptr);
+   EXPECT_NE(in.Get<TNamed>("n2"), nullptr);
+}
+
+TEST(TFree, ReadBufferBounds)
+{
+   char packed[10] = {};
+   char *p = packed;
+   TFree out;
+   out.SetFirst(100);
+   out.SetLast(200);
+   out.FillBuffer(p);
+   ASSERT_EQ(p - packed, 10);
+
+   p = packed;
+   TFree in;
+   EXPECT_TRUE(in.ReadBuffer(p, sizeof(packed)));
+   EXPECT_EQ(in.GetFirst(), 100);
+   EXPECT_EQ(in.GetLast(), 200);
+
+   char tooSmall[3] = {};
+   p = tooSmall;
+   TFree truncated;
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TFree::ReadBuffer", "The given buffer is too small", false);
+   EXPECT_FALSE(truncated.ReadBuffer(p, sizeof(tooSmall)));
 }
