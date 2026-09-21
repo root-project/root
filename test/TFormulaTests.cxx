@@ -9,7 +9,7 @@
 #include <TSystem.h>
 #include <TApplication.h>
 #include <TFormula.h>
-#include <ROOT/v5/TFormula.h>
+#include <ROOT/v5/TFormula.hxx>
 #include <TRandom.h>
 #include <iostream>
 #include "TFormulaParsingTests.h"

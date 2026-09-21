@@ -104,7 +104,7 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
   * `ZipLZMA.h`, `ZipLZ4.h` and `ZipZSTD.h`: use instead the public methods in the `RZip.h` interface.
   * `Hepevt.h` and `cfortran.h`: these will be moved to `ROOT/Hepevt.h` and `ROOT/cfortran.h` in ROOT 6.44. At a later time point they may be fully removed from ROOT public headers, consider using instead the `TGenerator.h` public interface or the `cfortran.h` header of the `cfitsio` library, respectively.
 * Remove outdated `TSQLFile` class, was not tested for very long time, not working with only supported sqlite DB
-* The legacy headers `v5/TF1Data.h`, `v5/TFormula.h` and `v5/TFormulaPrimitive.h` have been moved to `ROOT/v5/TF1Data.h`, `ROOT/v5/TFormula.h` and `ROOT/v5/TFormulaPrimitive.h`. Including them as before will now raise warnings and will be no longer supported in ROOT 7.
+* The legacy headers `v5/TF1Data.h`, `v5/TFormula.h` and `v5/TFormulaPrimitive.h` have been moved to `ROOT/v5/TF1Data.hxx`, `ROOT/v5/TFormula.hxx` and `ROOT/v5/TFormulaPrimitive.hxx`. Including them as before will now raise warnings and will be no longer supported in ROOT 7.
 
 ## Build System
 
