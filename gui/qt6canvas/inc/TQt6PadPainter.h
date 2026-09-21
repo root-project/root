@@ -66,7 +66,6 @@ public:
    void     DestroyDrawable(Int_t) override {}
    void     SelectDrawable(Int_t) override {}
    void     SetDoubleBuffer(Int_t /* device */, Int_t /* mode */) override {}
-   void     SetCursor(Int_t, ECursor) override;
 
    //jpg, png, bmp, gif output.
    void     SaveImage(TVirtualPad *, const char *, Int_t) const override;
