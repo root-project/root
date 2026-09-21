@@ -285,6 +285,65 @@ ROOT::NTupleSize_t ROOT::Internal::RPageSource::GetNElements(ROOT::DescriptorId_
 }
 
 ROOT::Internal::RPageSource::RSharedDescriptorGuard
+ROOT::Internal::RPageSource::FindClusterId(ROOT::NTupleSize_t entryIdx, ROOT::DescriptorId_t &cid)
+{
+   cid = ROOT::kInvalidDescriptorId;
+   auto descGuard = GetSharedDescriptorGuard();
+   const auto &desc = descGuard.GetRef();
+
+   if (desc.GetNClusterGroups() == 0)
+      return descGuard;
+
+   // Binary search in the cluster group list, followed by a binary search in the clusters of that cluster group
+
+   auto cgIter = desc.GetClusterGroupIterable().begin();
+   std::size_t cgLeft = 0;
+   std::size_t cgRight = desc.GetNClusterGroups() - 1;
+   while (cgLeft <= cgRight) {
+      const std::size_t cgMidpoint = (cgLeft + cgRight) / 2;
+      const auto &cgDesc = *(cgIter + cgMidpoint);
+
+      if (cgDesc.GetMinEntry() > entryIdx) {
+         R__ASSERT(cgMidpoint > 0);
+         cgRight = cgMidpoint - 1;
+         continue;
+      }
+
+      if (cgDesc.GetMinEntry() + cgDesc.GetEntrySpan() <= entryIdx) {
+         cgLeft = cgMidpoint + 1;
+         continue;
+      }
+
+      // Binary search in the current cluster group; since we already checked the element range boundaries,
+      // the element must be in that cluster group.
+      const auto &clusterIds = cgDesc.GetClusterIds();
+      R__ASSERT(!clusterIds.empty());
+      std::size_t clusterLeft = 0;
+      std::size_t clusterRight = clusterIds.size() - 1;
+      while (clusterLeft <= clusterRight) {
+         const std::size_t clusterMidpoint = (clusterLeft + clusterRight) / 2;
+         const auto &clusterDesc = desc.GetClusterDescriptor(clusterIds[clusterMidpoint]);
+
+         if (clusterDesc.GetFirstEntryIndex() > entryIdx) {
+            R__ASSERT(clusterMidpoint > 0);
+            clusterRight = clusterMidpoint - 1;
+            continue;
+         }
+
+         if (clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries() <= entryIdx) {
+            clusterLeft = clusterMidpoint + 1;
+            continue;
+         }
+
+         cid = clusterIds[clusterMidpoint];
+         return descGuard;
+      }
+      R__ASSERT(false);
+   }
+   return descGuard;
+}
+
+ROOT::Internal::RPageSource::RSharedDescriptorGuard
 ROOT::Internal::RPageSource::FindClusterId(DescriptorId_t physicalColumnId, NTupleSize_t index, DescriptorId_t &cid)
 {
    cid = ROOT::kInvalidDescriptorId;
