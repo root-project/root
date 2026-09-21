@@ -285,6 +285,18 @@ ROOT::NTupleSize_t ROOT::Internal::RPageSource::GetNElements(ROOT::DescriptorId_
 }
 
 ROOT::Internal::RPageSource::RSharedDescriptorGuard
+ROOT::Internal::RPageSource::FindNextClusterId(ROOT::DescriptorId_t clusterId, ROOT::DescriptorId_t &nextId)
+{
+   NTupleSize_t firstEntryInNextCluster = kInvalidNTupleIndex;
+   {
+      auto descriptorGuard = GetSharedDescriptorGuard();
+      const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterId);
+      firstEntryInNextCluster = clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries();
+   }
+   return FindClusterId(firstEntryInNextCluster, nextId);
+}
+
+ROOT::Internal::RPageSource::RSharedDescriptorGuard
 ROOT::Internal::RPageSource::FindClusterId(ROOT::NTupleSize_t entryIdx, ROOT::DescriptorId_t &cid)
 {
    cid = ROOT::kInvalidDescriptorId;

@@ -944,7 +944,11 @@ public:
                     "This function is ill-defined in the descriptor "
                     "as not all cluster descriptors may be present. This interface is no longer exposed.")
          FindClusterId(ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t index) const;
-   ROOT::DescriptorId_t FindNextClusterId(ROOT::DescriptorId_t clusterId) const;
+   ROOT::DescriptorId_t
+      R__DEPRECATED(6, 46,
+                    "This function is ill-defined in the descriptor "
+                    "as not all cluster descriptors may be present. This interface is no longer exposed.")
+         FindNextClusterId(ROOT::DescriptorId_t clusterId) const;
    ROOT::DescriptorId_t
       R__DEPRECATED(6, 46,
                     "This function is ill-defined in the descriptor "
