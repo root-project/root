@@ -727,6 +727,20 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       ROOT_PCM_FILENAME "${cpp_module_file}")
   endif()
 
+  # Keep the byproducts (rdict pcm, rootmap, C++ module) newer than the
+  # generated .cxx.  The Makefile generator models secondary outputs of a
+  # multi-output custom command as a separate rule ending in
+  # 'cmake -E touch_nocreate', but that rule is not always re-evaluated after
+  # the recipe has run (make's depend/build phase split, issue #20907).  The
+  # byproduct then stays older than the .cxx until the next build, which fires
+  # the deferred touch and spuriously rebuilds everything that depends on the
+  # byproduct.  Doing the touch in the recipe itself makes the output ordering
+  # unconditional.
+  set(dictionary_byproducts ${pcm_name} ${rootmap_name} ${cpp_module_file})
+  if(dictionary_byproducts)
+    set(touch_byproducts_command COMMAND ${CMAKE_COMMAND} -E touch_nocreate ${dictionary_byproducts})
+  endif()
+
   #---call rootcling------------------------------------------
   add_custom_command(
     OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file}
@@ -742,6 +756,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                        # dictionaries will be rebuilt if the C++ standard is changed in an incremental build.
                        -DR__DUMMY_CXX_STANDARD_${CMAKE_CXX_STANDARD}
                        -MF ${depfile_path}
+    ${touch_byproducts_command}
     DEPFILE ${depfile_path}
     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCLINGDEP}
             ${pcm_dependencies}
