@@ -23,6 +23,15 @@
 
 #include <iomanip>
 
+const ROOT::Experimental::Internal::RNTupleProcessorEntry *
+ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(RNTupleProcessor &processor, bool includeSubfields)
+{
+   processor.AddAllFieldsToEntry(RNTupleProcessorProvenance(), includeSubfields);
+   return processor.fEntry.get();
+}
+
+//------------------------------------------------------------------------------
+
 std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Experimental::RNTupleOpenSpec::CreatePageSource() const
 {
    if (const std::string *storagePath = std::get_if<std::string>(&fStorage))
@@ -211,6 +220,36 @@ ROOT::Experimental::RNTupleSingleProcessor::AddFieldToEntry(const std::string &f
    return *fieldIdx;
 }
 
+void ROOT::Experimental::RNTupleSingleProcessor::AddAllFieldsToEntry(
+   const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields)
+{
+   Initialize();
+   auto descGuard = fPageSource->GetSharedDescriptorGuard();
+   const auto &desc = descGuard.GetRef();
+   auto fnAddSubfields = [this, &desc, &provenance](const ROOT::RFieldDescriptor &field, auto &fn) -> void {
+      std::string fieldName = desc.GetQualifiedFieldName(field.GetId());
+      if (auto prefix = provenance.Get(); !prefix.empty())
+         fieldName = prefix + "." + fieldName;
+
+      AddFieldToEntry(fieldName, field.GetTypeName(), nullptr, provenance);
+      for (const auto &subfield : desc.GetFieldIterable(field.GetId())) {
+         fn(subfield, fn);
+      }
+   };
+
+   for (const auto &field : desc.GetTopLevelFields()) {
+      if (includeSubfields) {
+         fnAddSubfields(field, fnAddSubfields);
+      } else {
+         std::string fieldName = desc.GetQualifiedFieldName(field.GetId());
+         if (auto prefix = provenance.Get(); !prefix.empty())
+            fieldName = prefix + "." + fieldName;
+
+         AddFieldToEntry(fieldName, field.GetTypeName(), nullptr, provenance);
+      }
+   }
+}
+
 void ROOT::Experimental::RNTupleSingleProcessor::SetEntryMapping(ROOT::NTupleSize_t globalEntryNumber,
                                                                  REntryMapping &mapping)
 {
@@ -368,6 +407,13 @@ ROOT::Experimental::RNTupleChainProcessor::AddFieldToEntry(const std::string &fi
                                                            const Internal::RNTupleProcessorProvenance &provenance)
 {
    return fInnerProcessors[fCurrentProcessorNumber]->AddFieldToEntry(fieldName, typeName, valuePtr, provenance);
+}
+
+void ROOT::Experimental::RNTupleChainProcessor::AddAllFieldsToEntry(
+   const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields)
+{
+   Initialize();
+   fInnerProcessors[0]->AddAllFieldsToEntry(provenance, includeSubfields);
 }
 
 void ROOT::Experimental::RNTupleChainProcessor::SetEntryMapping(ROOT::NTupleSize_t globalEntryNumber,
@@ -559,6 +605,15 @@ ROOT::Experimental::RNTupleJoinProcessor::AddFieldToEntry(const std::string &fie
          fFieldIdxs.insert(fieldIdx);
       return fieldIdx;
    }
+}
+
+void ROOT::Experimental::RNTupleJoinProcessor::AddAllFieldsToEntry(
+   const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields)
+{
+   Initialize();
+   fPrimaryProcessor->AddAllFieldsToEntry(provenance, includeSubfields);
+   auto auxProvenance = provenance.Evolve(fAuxiliaryProcessor->GetOptions().GetProcessorName());
+   fAuxiliaryProcessor->AddAllFieldsToEntry(auxProvenance, includeSubfields);
 }
 
 void ROOT::Experimental::RNTupleJoinProcessor::SetAuxiliaryFieldValidity(bool isValid)
