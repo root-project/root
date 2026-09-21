@@ -31,6 +31,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTQt6Canvas
     TQt6Application.h
     TQt6Canvas.h
     TQt6PadPainter.h
+    TQt6GedEditor.h
     TQt6GuiFactory.h
   SOURCES
     src/QCanvasWidget.cpp
@@ -40,6 +41,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTQt6Canvas
     src/TQt6Application.cxx
     src/TQt6Canvas.cxx
     src/TQt6PadPainter.cxx
+    src/TQt6GedEditor.cxx
     src/TQt6GuiFactory.cxx
   LIBRARIES
     Qt6::Core

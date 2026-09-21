@@ -190,6 +190,7 @@ void TQt6Canvas::SetCursor(ECursor cursor)
    }
 }
 
+
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Iconify browser window
 
@@ -262,13 +263,28 @@ UInt_t TQt6Canvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
    return 0;
 }
 
+
+bool IsAnyModified(TPad *pad)
+{
+   if (!pad)
+      return kFALSE;
+   if (pad->IsModified())
+      return kTRUE;
+   TIter next(pad->GetListOfPrimitives());
+   while (auto obj = next())
+      if (IsAnyModified(dynamic_cast<TPad*>(obj)))
+         return kTRUE;
+   return kFALSE;
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////
 /// if canvas or any subpad was modified,
 /// invoke Qt update() which will redraw area
 
 Bool_t TQt6Canvas::PerformUpdate(Bool_t /* async */)
 {
-   if (Canvas()->IsModified() && fPaintWidget)
+   if (IsAnyModified(Canvas()) && fPaintWidget)
       fPaintWidget->update();
    return kTRUE;
 }

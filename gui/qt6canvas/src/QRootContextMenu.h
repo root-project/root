@@ -24,8 +24,6 @@ class QSignalMapper;
 class TList;
 class QAction;
 class QMenu;
-class QFormLayout;
-class QPushButton;
 
 class QRootContextMenu : public QObject, public TObject, public TContextMenuImp {
    Q_OBJECT
@@ -35,20 +33,9 @@ public slots:
 
 protected:
 
-   QColor fSelectedColor;  // selected color in attributes editors
-   QPushButton *fColorButton = nullptr;
-
    TList     fTrash;
    std::map<int, void*> fCustomArg;
    QAction* addMenuAction(QMenu *menu, QSignalMapper *map, const QString &text, int id, void *arg = nullptr);
-
-   void AddColorElements(int colindx, QFormLayout *layout);
-   void UpdateColorElements();
-
-   void SetLineAttributesDialog();
-   void SetFillAttributesDialog();
-   void SetTextAttributesDialog();
-   void SetMarkerAttributesDialog();
 
 public:
    QRootContextMenu(TContextMenu *c = nullptr, const char *name = "ROOT Context Menu");

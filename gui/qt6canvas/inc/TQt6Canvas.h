@@ -41,6 +41,7 @@ public:
    TQt6Canvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
    ~TQt6Canvas() override;
 
+   QCanvasWidget *GetCanvasWidget() const { return fCanvasWidget; }
    QPaintWidget *GetPaintWidget() const { return fPaintWidget; }
 
    Int_t InitWindow() override;

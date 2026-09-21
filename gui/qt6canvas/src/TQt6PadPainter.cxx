@@ -19,18 +19,16 @@
 #include "TROOT.h"
 #include "TColor.h"
 #include "RStipples.h"
+#include "TTFhandle.h"
+#include "TImage.h"
 
 #include <memory>
 #include <map>
 
 #include "QPaintWidget.h"
 
-#include "TTFhandle.h"
-
-
-#include <QFont>
-#include <QFontDatabase>
 #include <QRect>
+#include <QImage>
 #include <QPainter>
 
 using namespace ROOT::Experimental;
@@ -462,4 +460,34 @@ void TQt6PadPainter::DrawTTFglyphs(Int_t px, Int_t py, TTFhandle &ttf, [[maybe_u
       painter->drawImage(QPoint(px + bx, py + by), colorFill);
    }
 }
+
+void TQt6PadPainter::DrawImage(TImage *img, Int_t px, Int_t py, Int_t)
+{
+   // position inside the pad is provided, therefore shift it to global image
+   px += fPad->UtoAbsPixel(0);
+   py += fPad->VtoAbsPixel(1);
+
+   auto width = img->GetWidth();
+   auto height = img->GetHeight();
+   auto argbBuffer = (const uchar*) img->GetArgbArray();
+
+   auto painter = fPaintWidget->getPainter();
+
+   int bytesPerLine = width * 4;
+
+    // 1. Wrap the raw memory array into a QImage.
+    // This constructor does NOT copy the pixel data; it points directly to your buffer.
+    QImage image(
+        argbBuffer,
+        width,
+        height,
+        bytesPerLine,
+        QImage::Format_ARGB32
+    );
+
+    // 2. Draw the image using QPainter
+    // (0, 0) is the top-left coordinate where the image will be drawn
+    painter->drawImage(px, py, image);
+}
+
 
