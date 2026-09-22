@@ -5,7 +5,7 @@
 #define ROOT_CsgOps
 
 #if !defined(ROOT_CsgOps_cxx) && !defined(G__DICTIONARY) && !defined(__ROOTCLING__) && !defined(__CLING__)
-#warning "This header and the TBaseMesh class are deprecated and will be removed in ROOT 6.44, use instead the 'TGeoTesselated' public interface"
+#warning "This header and the TBaseMesh class are deprecated and will be removed after ROOT 6.44, together with the RCsg target. Use instead the 'TGeoTesselated' public interface"
 #endif
 
 #include "RtypesCore.h"
