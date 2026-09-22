@@ -175,7 +175,7 @@ ROOT_BUILD_OPTION(tmva-pymva OFF "Enable usage of Python ML libraries in TMVA (r
 ROOT_BUILD_OPTION(tpython ON "Build the TPython class that allows you to run Python code from C++")
 ROOT_BUILD_OPTION(unfold OFF "Enable the unfold package [GPL]")
 ROOT_BUILD_OPTION(unuran OFF "Enable support for UNURAN (package for generating non-uniform random numbers) [GPL]")
-ROOT_BUILD_OPTION(uring OFF "Enable support for io_uring (requires liburing and Linux kernel >= 5.1)")
+ROOT_BUILD_OPTION(uring OFF "Enable support for io_uring (requires liburing. Actual kernel support is detected at runtime)")
 ROOT_BUILD_OPTION(use_gsl_cblas OFF "Use the CBLAS library from GSL [GPL] instead of finding a more optimized BLAS library automatically with FindBLAS (the GSL CBLAS is less performant but more portable)")
 ROOT_BUILD_OPTION(vdt ON "Enable support for VDT (fast and vectorisable mathematical functions)")
 ROOT_BUILD_OPTION(vecgeom OFF "Enable support for VecGeom vectorized geometry library")

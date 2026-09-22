@@ -14,7 +14,9 @@ if(ROOT_NEED_STDCXXFS)
   target_link_libraries(TFileMerger PUBLIC stdc++fs)
 endif()
 ROOT_ADD_GTEST(TROMemFile TROMemFileTests.cxx LIBRARIES RIO Tree)
-if(uring AND NOT DEFINED ENV{ROOTTEST_IGNORE_URING})
+# The RIoUring test checks at run time whether the kernel supports io_uring and skips
+# if it does not, so it can run everywhere regardless of the kernel configuration.
+if(uring)
   ROOT_ADD_GTEST(RIoUring RIoUring.cxx LIBRARIES RIO)
 endif()
 
