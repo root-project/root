@@ -3,6 +3,10 @@
 #include "ROOT/TestSupport.hxx"
 #include "TInterpreter.h"
 
+#ifdef R__HAS_LHC4CODEC
+#include "ZipLHC4.h"
+#endif
+
 #include <bitset>
 #include <cstring>
 #include <limits>
@@ -1814,6 +1818,29 @@ TEST(RNTuple, Double32)
    EXPECT_DOUBLE_EQ(std::numeric_limits<float>::denorm_min(), *d2Float);
 }
 
+TEST(RNTuple, Double32Uncompressed)
+{
+   FileRaii fileGuard("test_ntuple_double32_uncompressed.root");
+
+   auto model = RNTupleModel::Create();
+   model->AddField(RFieldBase::Create("d", "Double32_t").Unwrap());
+
+   auto options = RNTupleWriteOptions();
+   options.SetCompression(0);
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
+      auto d = writer->GetModel().GetDefaultEntry().GetPtr<double>("d");
+      *d = 1.25;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(ROOT::ENTupleColumnType::kReal32, reader->GetModel().GetConstField("d").GetColumnRepresentatives()[0][0]);
+   EXPECT_EQ("Double32_t", reader->GetModel().GetConstField("d").GetTypeAlias());
+   reader->LoadEntry(0);
+   EXPECT_DOUBLE_EQ(1.25, *reader->GetModel().GetDefaultEntry().GetPtr<double>("d"));
+}
+
 TEST(RNTuple, Double32Extended)
 {
    FileRaii fileGuard("test_ntuple_double32_extended.root");
@@ -2281,4 +2308,47 @@ TEST(RNTuple, ContextDependentTypes)
          EXPECT_EQ(m4View(i).fVec, std::vector<Long64_t>{static_cast<Long64_t>(i)});
       }
    }
+}
+
+TEST(RNTuple, DisableColumnEncoding)
+{
+#ifdef R__HAS_LHC4CODEC
+   R__SetLHC4Filters(0);
+#endif
+
+   FileRaii fileGuard("test_ntuple_disable_column_encoding.root");
+
+   auto model = RNTupleModel::Create();
+   model->AddField(std::make_unique<RField<std::int32_t>>("i"));
+   model->AddField(std::make_unique<RField<float>>("f"));
+   model->AddField(std::make_unique<RField<std::vector<float>>>("v"));
+
+   auto options = RNTupleWriteOptions();
+   options.SetEnableColumnEncoding(false);
+   options.SetCompression(606);
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
+      auto e = writer->CreateEntry();
+      *e->GetPtr<std::int32_t>("i") = 42;
+      *e->GetPtr<float>("f") = 3.14f;
+      e->GetPtr<std::vector<float>>("v")->assign({1.f, 2.f, 3.f});
+      writer->Fill(*e);
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+   EXPECT_EQ(ROOT::ENTupleColumnType::kInt32, (*desc.GetColumnIterable(desc.FindFieldId("i")).begin()).GetType());
+   EXPECT_EQ(ROOT::ENTupleColumnType::kReal32, (*desc.GetColumnIterable(desc.FindFieldId("f")).begin()).GetType());
+   EXPECT_EQ(ROOT::ENTupleColumnType::kIndex64,
+             (*desc.GetColumnIterable(desc.FindFieldId("v")).begin()).GetType());
+
+   reader->LoadEntry(0);
+   EXPECT_EQ(42, *reader->GetModel().GetDefaultEntry().GetPtr<std::int32_t>("i"));
+   EXPECT_FLOAT_EQ(3.14f, *reader->GetModel().GetDefaultEntry().GetPtr<float>("f"));
+   EXPECT_EQ(std::vector<float>({1.f, 2.f, 3.f}), *reader->GetModel().GetDefaultEntry().GetPtr<std::vector<float>>("v"));
+
+#ifdef R__HAS_LHC4CODEC
+   EXPECT_EQ(1, R__GetLHC4Filters());
+#endif
 }
