@@ -108,11 +108,6 @@ if (dataframe)
     ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_misc rdataframe_misc.py PYTHON_DEPS numpy)
 endif()
 
-# RTensor pythonizations
-if (tmva AND dataframe)
-    ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)
-endif()
-
 # Passing Python callables to ROOT.TF
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tf_pycallables tf_pycallables.py PYTHON_DEPS numpy)
 

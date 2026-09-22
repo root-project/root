@@ -9,7 +9,4 @@
 
 #pragma link C++ nestedclass;
 
-// RTensor will have its own streamer function
-#pragma link C++ class TMVA::Experimental::RTensor<float,std::vector<float>>-;
-
 #endif
