@@ -19,7 +19,7 @@ class TBoxInteractive : public TVirtualPad::TInteractive {
 
    protected:
 
-      enum { pNone = 0, pA, pB, pC, pD, pTop, pL, pR, pBot, pINSIDE } fMode = pNone;
+      enum EMode { pNone = 0, pA, pB, pC, pD, pTop, pL, pR, pBot, pINSIDE } fMode = pNone;
 
    public:
       Bool_t isBox = kTRUE;
@@ -33,11 +33,15 @@ class TBoxInteractive : public TVirtualPad::TInteractive {
 
       Bool_t SelectCorner(Int_t px, Int_t py, Bool_t canX = kTRUE, Bool_t canY = kTRUE);
 
+      Bool_t SelectDiamondCorner(Int_t px, Int_t py, Bool_t testInside = kTRUE);
+
       Bool_t IsResizing() const;
 
       Bool_t IsOpaque(const TVirtualPad &parent) const;
 
       Bool_t ProcessMouseMove(const TVirtualPad &parent, Int_t px, Int_t py, Bool_t canX = kTRUE, Bool_t canY = kTRUE, Double_t aspectRatio = 0.);
+
+      virtual void PaintOutline(TVirtualPad &parent);
 
       void ApplyChanges(TVirtualPad &parent);
 

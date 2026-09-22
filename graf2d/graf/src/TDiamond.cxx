@@ -15,7 +15,7 @@
 #include "TROOT.h"
 #include "TDiamond.h"
 #include "TVirtualPad.h"
-#include "TVirtualPadPainter.h"
+#include "TBoxInteractive.h"
 #include "TCanvasImp.h"
 #include "TMath.h"
 
@@ -89,6 +89,21 @@ void TDiamond::Draw(Option_t *option)
 
 }
 
+class TDiamondInteractive : public TBoxInteractive {
+   public:
+      using TBoxInteractive::TBoxInteractive;
+
+      void PaintOutline(TVirtualPad &parent) override
+      {
+         Double_t xd[5] = { (newX1 + newX2) / 2, newX1, (newX1 + newX2) / 2, newX2, (newX1 + newX2) / 2 };
+         Double_t yd[5] = { newY2, (newY1 + newY2)/2, newY1, (newY1 + newY2)/2, newY2 };
+
+         // "i" is interactive painting, "diamond" is id
+         parent.PaintPolyLine(5, xd, yd, "idiamond");
+      }
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
@@ -105,37 +120,13 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    auto &parent = *gPad;
 
-   const Int_t kMaxDiff = 5;
-   const Int_t kMinSize = 20;
+   auto inter = dynamic_cast<TDiamondInteractive *>(parent.Interactive(this));
 
-   static Int_t px1, px2, py1, py2, dpx1, dpy2;
-   static enum { pNone, pTop, pL, pR, pBot, pINSIDE } mode = pNone;
-   static bool firstPaint = kFALSE;
-   static Double_t oldX1, oldY1, oldX2, oldY2;
-   static Bool_t hasOld = kFALSE;
-   Bool_t opaque  = parent.OpaqueMoving();
-   Bool_t ropaque = parent.OpaqueResizing();
-
-   auto paint_or_set = [&parent,this](Bool_t paint)
-   {
-      auto x1 = parent.AbsPixeltoX(px1);
-      auto y1 = parent.AbsPixeltoY(py1);
-      auto x2 = parent.AbsPixeltoX(px2);
-      auto y2 = parent.AbsPixeltoY(py2);
-      if (!paint) {
-         SetX1(parent.PadtoX(x1));
-         SetY1(parent.PadtoY(y1));
-         SetX2(parent.PadtoX(x2));
-         SetY2(parent.PadtoY(y2));
-      } else if (firstPaint) {
-         firstPaint = kFALSE;
-      } else {
-         auto pp = parent.GetPainter();
-         Double_t arrx[5] = { x1, (x1+x2) / 2, x2, (x1+x2) / 2, x1 };
-         Double_t arry[5] = { (y1+y2)/2, y2, (y1+y2)/2, y1, (y1+y2)/2 };
-         pp->SetAttLine({GetFillColor() > 0 ? GetFillColor() : (Color_t) kBlack, 1, 2});
-         pp->DrawPolyLine(5, arrx, arry);
-      }
+   auto setNewValues = [&inter, this]() {
+      SetX1(inter->newX1);
+      SetX2(inter->newX2);
+      SetY1(inter->newY1);
+      SetY2(inter->newY2);
    };
 
    switch (event) {
@@ -143,109 +134,42 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kArrowKeyPress:
    case kButton1Down:
 
-      oldX1 = GetX1();
-      oldY1 = GetY1();
-      oldX2 = GetX2();
-      oldY2 = GetY2();
-      hasOld = kTRUE;
+      inter = new TDiamondInteractive(kFALSE, GetX1(), GetY1(), GetX2(), GetY2());
+      parent.Interactive(this, inter);
 
       // No break !!!
 
-   case kMouseMotion:
+   case kMouseMotion: {
 
-      px1 = parent.XtoAbsPixel(parent.XtoPad(GetX1()));
-      py1 = parent.YtoAbsPixel(parent.YtoPad(GetY1()));
-      px2 = parent.XtoAbsPixel(parent.XtoPad(GetX2()));
-      py2 = parent.YtoAbsPixel(parent.YtoPad(GetY2()));
-      if (px1 > px2)
-         std::swap(px1, px2);
-      if (py1 < py2)
-         std::swap(py1, py2);
+      TDiamondInteractive dummy(kFALSE);
+      if (!inter) inter = &dummy;
+      inter->CalcPixelCoord(parent, GetX1(), GetY1(), GetX2(), GetY2());
 
-      if ((TMath::Abs(px-(px1+px2)/2) < kMaxDiff) && (TMath::Abs(py - py2) < kMaxDiff)) { // top edge
-         mode = pTop;
-         parent.SetCursor(kTopSide);
-      } else if ((TMath::Abs(px-(px1+px2)/2) < kMaxDiff) && (TMath::Abs(py - py1) < kMaxDiff)) { // bottom edge
-         mode = pBot;
-         parent.SetCursor(kBottomSide);
-      } else if ((TMath::Abs(py-(py1+py2)/2) < kMaxDiff) && (TMath::Abs(px - px1) < kMaxDiff)) { // left edge
-         mode = pL;
-         parent.SetCursor(kLeftSide);
-      } else if ((TMath::Abs(py-(py1+py2)/2) < kMaxDiff) && (TMath::Abs(px - px2) < kMaxDiff)) { // right edge
-         mode = pR;
-         parent.SetCursor(kRightSide);
-      } else if (IsInside(parent.PadtoX(parent.AbsPixeltoX(px)), parent.PadtoY(parent.AbsPixeltoY(py)))) {
-         mode = pINSIDE;
-         dpx1 = px - px1; // cursor position relative to top-left corner
-         dpy2 = py - py2;
-         parent.SetCursor(event == kButton1Down ? kMove : kCross);
+      if (!inter->SelectDiamondCorner(px, py)) {
+         // refuse interactive changes
+         parent.Interactive();
       } else {
-         mode = pNone;
-         parent.SetCursor(kCross);
+         inter->SetCursor(parent, event == kButton1Down);
+         fResizing = inter->IsResizing() && (event != kMouseMotion);
       }
 
-      fResizing = mode == pTop || mode == pL || mode == pR || mode == pBot;
-      firstPaint = kTRUE;
-
       break;
+   }
 
    case kArrowKeyRelease:
    case kButton1Motion: {
-      Int_t px1p = parent.XtoAbsPixel(parent.GetX1()) + parent.GetBorderSize();
-      Int_t py1p = parent.YtoAbsPixel(parent.GetY1()) - parent.GetBorderSize();
-      Int_t px2p = parent.XtoAbsPixel(parent.GetX2()) - parent.GetBorderSize();
-      Int_t py2p = parent.YtoAbsPixel(parent.GetY2()) + parent.GetBorderSize();
-      if (px1p > px2p)
-         std::swap(px1p, px2p);
-      if (py1p < py2p)
-         std::swap(py1p, py2p);
 
-      switch (mode) {
-         case pNone:
-            return;
-         case pTop:
-            if (!ropaque) paint_or_set(kTRUE);
-            py2 = TMath::Max(py2p, TMath::Min(py, py1 - kMinSize));
-            paint_or_set(!ropaque);
-            break;
-         case pBot:
-            if (!ropaque) paint_or_set(kTRUE);
-            py1 = TMath::Min(py1p, TMath::Max(py, py2 + kMinSize));
-            paint_or_set(!ropaque);
-            break;
-         case pL:
-            if (!ropaque) paint_or_set(kTRUE);
-            px1 = TMath::Max(px1p, TMath::Min(px, px2 - kMinSize));
-            paint_or_set(!ropaque);
-            break;
-         case pR:
-            if (!ropaque) paint_or_set(kTRUE);
-            px2 = TMath::Min(px2p, TMath::Max(px, px1 + kMinSize));
-            paint_or_set(!ropaque);
-            break;
-         case pINSIDE:
-            if (!opaque) paint_or_set(kTRUE);
-            px2 += px - dpx1 - px1;
-            px1 = px - dpx1;
-            py1 += py - dpy2 - py2;
-            py2 = py - dpy2;
-            if (px1 < px1p) { px2 += px1p - px1; px1 = px1p; }
-            if (px2 > px2p) { px1 -= px2 - px2p; px2 = px2p; }
-            if (py1 > py1p) { py2 -= py1 - py1p; py1 = py1p; }
-            if (py2 < py2p) { py1 += py2p - py2; py2 = py2p; }
-            paint_or_set(!opaque);
-            break;
-      }
+      if (!inter)
+         return;
 
-      if ((mode == pINSIDE && opaque) || (fResizing && ropaque)) {
-         switch(mode) {
-            case pINSIDE: parent.ShowGuidelines(this, event, 'i', true); break;
-            case pL: parent.ShowGuidelines(this, event, 'l', true); break;
-            case pR: parent.ShowGuidelines(this, event, 'r', true); break;
-            case pTop: parent.ShowGuidelines(this, event, 't', true); break;
-            case pBot: parent.ShowGuidelines(this, event, 'b', true); break;
-            default: break; // not involved
-         }
+      if (!inter->ProcessMouseMove(parent, px, py))
+         return;
+
+      inter->ApplyChanges(parent);
+
+      if (inter->IsOpaque(parent)) {
+         setNewValues();
+         parent.ShowGuidelines(this, event, inter->GetGuideChar(), true);
          parent.Modified(kTRUE);
       }
 
@@ -254,35 +178,24 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Up:
 
-      if (opaque || ropaque)
+      if (inter && inter->IsOpaque(parent))
          parent.ShowGuidelines(this, event);
 
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
-         if (opaque && (mode != pNone)) {
-            if (hasOld) {
-               SetX1(oldX1);
-               SetY1(oldY1);
-               SetX2(oldX2);
-               SetY2(oldY2);
-            }
-            hasOld = kFALSE;
-            mode = pNone;
-            fResizing = kFALSE;
-            parent.ModifiedUpdate();
+         if (inter && inter->IsOpaque(parent)) {
+            SetX1(inter->oldX1);
+            SetY1(inter->oldY1);
+            SetX2(inter->oldX2);
+            SetY2(inter->oldY2);
          }
-         break;
+      } else if (inter && !inter->IsOpaque(parent) && (inter->newX1 != inter->newX2)) {
+         setNewValues();
       }
 
-      if ((!opaque && mode == pINSIDE) || (!ropaque && fResizing))
-         paint_or_set(kFALSE);
-
-      if (mode != pNone)
-         parent.Modified(kTRUE);
-
-      mode = pNone;
+      parent.Modified();
+      parent.Interactive(); // delete interactive object
       fResizing = kFALSE;
-      hasOld = kFALSE;
 
       break;
 
