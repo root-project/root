@@ -205,6 +205,26 @@ PyObject* DeRefGetAttr(PyObject* self, PyObject* name)
 }
 
 //-----------------------------------------------------------------------------
+PyObject *ValueGetAttr(PyObject *self, PyObject *name)
+{
+   // std::optional and std::expected require has_value() before operator*().
+   PyObject *has_value = PyObject_CallMethodNoArgs(self, PyStrings::gHasValue);
+   if (!has_value)
+      return nullptr;
+
+   const int contains_value = PyObject_IsTrue(has_value);
+   Py_DECREF(has_value);
+   if (contains_value < 0)
+      return nullptr;
+   if (!contains_value) {
+      PyErr_SetObject(PyExc_AttributeError, name);
+      return nullptr;
+   }
+
+   return DeRefGetAttr(self, name);
+}
+
+//-----------------------------------------------------------------------------
 PyObject* FollowGetAttr(PyObject* self, PyObject* name)
 {
 // Follow operator->() if present (available in python as __follow__), so that
@@ -1753,9 +1773,15 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
 // prefer operator-> as that returns a pointer (which is simpler since it never
 // has to deal with ref-assignment), but operator* plays better with STL iters
 // and algorithms
-    if (HasAttrDirect(pyclass, PyStrings::gDeref) && !Cppyy::IsSmartPtr(klass->fCppType))
-        Utility::AddToClass(pyclass, "__getattr__", (PyCFunction)DeRefGetAttr, METH_O);
-    else if (HasAttrDirect(pyclass, PyStrings::gFollow) && !Cppyy::IsSmartPtr(klass->fCppType))
+// optional and expected use operator* to access a contained value, rather than
+// to provide pointer-like access to an object.
+   const bool has_value_semantics = IsTemplatedSTLClass(name, "optional") || IsTemplatedSTLClass(name, "expected");
+   if (HasAttrDirect(pyclass, PyStrings::gDeref) && !Cppyy::IsSmartPtr(klass->fCppType)) {
+      if (has_value_semantics)
+         Utility::AddToClass(pyclass, "__getattr__", (PyCFunction)ValueGetAttr, METH_O);
+      else
+         Utility::AddToClass(pyclass, "__getattr__", (PyCFunction)DeRefGetAttr, METH_O);
+   } else if (HasAttrDirect(pyclass, PyStrings::gFollow) && !Cppyy::IsSmartPtr(klass->fCppType))
         Utility::AddToClass(pyclass, "__getattr__", (PyCFunction)FollowGetAttr, METH_O);
 
 // for pre-check of nullptr for boolean types
