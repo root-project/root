@@ -22,12 +22,13 @@
 #include <memory> // std::unique_ptr
 #include <sstream> // std::stringstream
 #include <iostream>
+#include <algorithm>
+
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TError.h"
 #include "TInterpreter.h"
 #include "TUUID.h"
-#include "TMVA/RTensor.hxx"
 #include "Math/Util.h"
 
 namespace TMVA {
@@ -245,30 +246,6 @@ public:
 
       // Evaluate TMVA model (need to add support for multiple outputs)
       return DoCompute(x);
-   }
-   /// Compute model prediction on input RTensor
-   /// The shape of the input tensor should be {nevents, nfeatures}
-   /// and the return shape will be {nevents, noutputs}
-   /// support for now only a single input
-   RTensor<float> Compute(RTensor<float> &x)
-   {
-      if(!fInitialized) {
-         return RTensor<float>({0});
-      }
-      const auto nrows = x.GetShape()[0];
-      const auto rowsize = x.GetStrides()[0];
-      auto fptr = reinterpret_cast<std::vector<float> (*)(void *, const float *)>(fFuncPtr);
-      auto result = fptr(fSessionPtr, x.GetData());
-
-      RTensor<float> y({nrows, result.size()}, MemoryLayout::ColumnMajor);
-      std::copy(result.begin(),result.end(), y.GetData());
-      //const bool layout = x.GetMemoryLayout() == MemoryLayout::ColumnMajor ? false : true;
-      // assume column major layout
-      for (size_t i = 1; i < nrows; i++) {
-         result = fptr(fSessionPtr, x.GetData() + i*rowsize);
-         std::copy(result.begin(),result.end(), y.GetData() + i*result.size());
-      }
-      return y;
    }
 
 private:

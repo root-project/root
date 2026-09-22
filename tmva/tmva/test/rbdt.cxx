@@ -6,6 +6,7 @@
 #include "ROOT/RVec.hxx"
 
 #include <cmath>
+#include <vector>
 
 using namespace TMVA::Experimental;
 
@@ -48,15 +49,11 @@ TEST(RBDT, ClassificationBatch)
               {1});
 
    RBDT<> bdt("myModel", "TestRBDT2.root");
-   RTensor<float> x({2, 1});
-   x(0, 0) = -999.0;
-   x(0, 1) = 999.0;
-   auto y = bdt.Compute(x);
-   const auto shape = y.GetShape();
-   EXPECT_EQ(shape[0], 2u);
-   EXPECT_EQ(shape[1], 1u);
-   EXPECT_FLOAT_EQ(y(0, 0), 1.0);
-   EXPECT_FLOAT_EQ(y(1, 0), -1.0);
+   const std::vector<float> x = {-999.0, 999.0};
+   auto y = bdt.Compute(x, 1);
+   EXPECT_EQ(y.size(), 2u);
+   EXPECT_FLOAT_EQ(y[0], 1.0);
+   EXPECT_FLOAT_EQ(y[1], -1.0);
 }
 
 TEST(RBDT, MulticlassSingleEvent)
@@ -95,22 +92,18 @@ TEST(RBDT, MulticlassBatch)
               {0.0, 1.0, -1.0, 0.0, -1.0, 1.0, 0.0, 2.0, -2.0}, {maxDepth}, {numTrees}, {numInputs}, {numOutputs});
 
    RBDT<> bdt("myModel", "TestRBDT4.root");
-   RTensor<float> x({2, 1});
-   x(0, 0) = -999.0;
-   x(0, 1) = 999.0;
-   auto y = bdt.Compute(x);
-   const auto shape = y.GetShape();
-   EXPECT_EQ(shape[0], 2u);
-   EXPECT_EQ(shape[1], 3u);
-   EXPECT_FLOAT_EQ(y(0, 0), 1.0);
-   EXPECT_FLOAT_EQ(y(0, 1), -1.0);
-   EXPECT_FLOAT_EQ(y(0, 2), 2.0);
-   EXPECT_FLOAT_EQ(y(1, 0), -1.0);
-   EXPECT_FLOAT_EQ(y(1, 1), 1.0);
-   EXPECT_FLOAT_EQ(y(1, 2), -2.0);
+   const std::vector<float> x = {-999.0, 999.0};
+   auto y = bdt.Compute(x, 1);
+   EXPECT_EQ(y.size(), 6u);
+   EXPECT_FLOAT_EQ(y[0], 1.0);
+   EXPECT_FLOAT_EQ(y[1], -1.0);
+   EXPECT_FLOAT_EQ(y[2], 2.0);
+   EXPECT_FLOAT_EQ(y[3], -1.0);
+   EXPECT_FLOAT_EQ(y[4], 1.0);
+   EXPECT_FLOAT_EQ(y[5], -2.0);
 }
 
-TEST(RBDT, ColumnMajorInput)
+TEST(RBDT, BatchMultiColumnInput)
 {
    const auto maxDepth = 1;
    const auto numInputs = 2;
@@ -119,9 +112,10 @@ TEST(RBDT, ColumnMajorInput)
               {1});
 
    RBDT<> bdt("myModel", "TestRBDT5.root");
-   float data[4] = {-999.0, -999.0, 999.0, 999.0};
-   RTensor<float> x(data, {2, 2}, MemoryLayout::ColumnMajor);
-   auto y = bdt.Compute(x);
-   EXPECT_FLOAT_EQ(y(0, 0), 1.0);
-   EXPECT_FLOAT_EQ(y(1, 0), 1.0);
+   // Two events with two features each, both events are identical: {-999.0, 999.0}.
+   const std::vector<float> x = {-999.0, 999.0, -999.0, 999.0};
+   auto y = bdt.Compute(x, 2);
+   EXPECT_EQ(y.size(), 2u);
+   EXPECT_FLOAT_EQ(y[0], 1.0);
+   EXPECT_FLOAT_EQ(y[1], 1.0);
 }

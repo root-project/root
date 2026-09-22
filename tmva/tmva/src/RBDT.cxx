@@ -93,25 +93,20 @@ inline NumericAfterSubstrOutput<NumericType> numericAfterSubstr(std::string cons
 
 } // namespace
 
-using TMVA::Experimental::RTensor;
-
-/// Compute model prediction on input RTensor
-RTensor<TMVA::Experimental::RBDT::Value_t> TMVA::Experimental::RBDT::Compute(RTensor<Value_t> const &x) const
+/// Compute model prediction on a flat batch of events
+std::vector<TMVA::Experimental::RBDT::Value_t>
+TMVA::Experimental::RBDT::Compute(std::span<const Value_t> x, unsigned int cols) const
 {
-   std::size_t nOut = fBaseResponses.size() > 2 ? fBaseResponses.size() : 1;
-   const std::size_t rows = x.GetShape()[0];
-   const std::size_t cols = x.GetShape()[1];
-   RTensor<Value_t> y({rows, nOut}, MemoryLayout::ColumnMajor);
-   std::vector<Value_t> xRow(cols);
-   std::vector<Value_t> yRow(nOut);
+   if (cols == 0 || x.empty() || x.size() % cols != 0) {
+      throw std::runtime_error(
+         "TMVA::Experimental::RBDT: the number of columns is zero or the batch input is empty or its size is not a "
+         "multiple of the number of columns.");
+   }
+   const std::size_t nOut = fBaseResponses.size() > 2 ? fBaseResponses.size() : 1;
+   const std::size_t rows = x.size() / cols;
+   std::vector<Value_t> y(rows * nOut);
    for (std::size_t iRow = 0; iRow < rows; ++iRow) {
-      for (std::size_t iCol = 0; iCol < cols; ++iCol) {
-         xRow[iCol] = x({iRow, iCol});
-      }
-      ComputeImpl(xRow.data(), yRow.data());
-      for (std::size_t iOut = 0; iOut < nOut; ++iOut) {
-         y({iRow, iOut}) = yRow[iOut];
-      }
+      ComputeImpl(x.data() + iRow * cols, y.data() + iRow * nOut);
    }
    return y;
 }
