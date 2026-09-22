@@ -10987,7 +10987,8 @@ void THistPainter::SetShowProjection(const char *option, Int_t nbins)
    if (projection == 0)
       return;
 
-   fShowOption.Form("%s%d", option, projection < 4 ? 1 : 2);
+   // exclude x or xy from option, rest use as histogram draw option
+   fShowOption = option + (projection < 4 ? 1 : 2);
    fShowProjection = projection + 100 * nbins;
    fShowProjection2 = 0;
 
@@ -11026,7 +11027,8 @@ void THistPainter::SetShowProjectionXY(const char *option, Int_t nbinsY, Int_t n
    if (projection == 0)
       return;
 
-   fShowOption.Form("%s%d", option, projection < 4 ? 1 : 2);
+   // exclude x or xy from option, rest use as histogram draw option
+   fShowOption = option + (projection < 4 ? 1 : 2);
    fShowProjection = projection + 100*nbinsY;
    fShowProjection2 = projection + 100*nbinsX;
 
