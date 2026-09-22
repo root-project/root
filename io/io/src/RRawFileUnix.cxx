@@ -104,8 +104,18 @@ void ROOT::Internal::RRawFileUnix::SetDiscourageReadAheadImpl(bool value)
 void ROOT::Internal::RRawFileUnix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
 {
 #ifdef R__HAS_URING
+   // ROOT may have been built with liburing support while the running kernel does not
+   // support io_uring (GH #12701); probe once per process and warn at the first attempt.
+   static const bool sIoUringAvailable = [] {
+      std::string errMsg;
+      if (RIoUring::IsAvailable(&errMsg))
+         return true;
+      Warning("RIoUring", "io_uring is not available because:\n%s", errMsg.c_str());
+      Warning("RRawFileUnix", "io_uring setup failed, falling back to blocking I/O in ReadV");
+      return false;
+   }();
    thread_local bool uring_failed = false;
-   if (!uring_failed) {
+   if (!uring_failed && sIoUringAvailable) {
       try {
          RIoUring ring; // throws std::runtime_error
          std::vector<RIoUring::RReadEvent> reads;
@@ -125,7 +135,7 @@ void ROOT::Internal::RRawFileUnix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
          return;
       }
       catch(const std::runtime_error &e) {
-         Warning("RIoUring", "io_uring is unexpectedly not available because:\n%s", e.what());
+         Warning("RIoUring", "io_uring is not available because:\n%s", e.what());
          Warning("RRawFileUnix",
               "io_uring setup failed, falling back to blocking I/O in ReadV");
          uring_failed = true;

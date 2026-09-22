@@ -43,8 +43,25 @@ TEST(RRawFileUnix, ReadV)
    }
 }
 
+TEST(RIoUring, AvailabilityProbe)
+{
+   // The availability probe must agree with actual ring setup.
+   std::string errMsg;
+   if (RIoUring::IsAvailable(&errMsg)) {
+      RIoUring ring; // must not throw
+   } else {
+      EXPECT_THROW({ RIoUring ring; }, std::runtime_error) << errMsg;
+   }
+   // A second probe must return the cached result.
+   EXPECT_EQ(RIoUring::IsAvailable(), RIoUring::IsAvailable());
+}
+
 TEST(RawUring, NopRoundTrip)
 {
+   std::string errMsg;
+   if (!RIoUring::IsAvailable(&errMsg))
+      GTEST_SKIP() << "io_uring is not available on the running kernel: " << errMsg;
+
    struct io_uring ring;
    int ret = io_uring_queue_init(
       4 /* queue depth */,
@@ -81,6 +98,10 @@ TEST(RawUring, NopRoundTrip)
 
 TEST(RawUring, FileRegistration)
 {
+   std::string errMsg;
+   if (!RIoUring::IsAvailable(&errMsg))
+      GTEST_SKIP() << "io_uring is not available on the running kernel: " << errMsg;
+
    auto file = "test_uring_readv";
    auto filesize = 2 << 20;
    FileRaii fileGuard(file, std::string(filesize, 'a')); // ~2MB
