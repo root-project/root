@@ -933,8 +933,12 @@ void ROOT::RFieldBase::AutoAdjustColumnTypes(const ROOT::RNTupleWriteOptions &op
       SetColumnRepresentatives({rep});
    }
 
-   if (fTypeAlias == "Double32_t")
-      SetColumnRepresentatives({{ROOT::ENTupleColumnType::kSplitReal32}});
+   if (fTypeAlias == "Double32_t") {
+      if (options.GetCompression() != 0)
+         SetColumnRepresentatives({{ROOT::ENTupleColumnType::kSplitReal32}});
+      else
+         SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}});
+   }
 }
 
 void ROOT::RFieldBase::ConnectPageSink(ROOT::Internal::RPageSink &pageSink, ROOT::NTupleSize_t firstEntry)

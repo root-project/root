@@ -1814,6 +1814,29 @@ TEST(RNTuple, Double32)
    EXPECT_DOUBLE_EQ(std::numeric_limits<float>::denorm_min(), *d2Float);
 }
 
+TEST(RNTuple, Double32Uncompressed)
+{
+   FileRaii fileGuard("test_ntuple_double32_uncompressed.root");
+
+   auto model = RNTupleModel::Create();
+   model->AddField(RFieldBase::Create("d", "Double32_t").Unwrap());
+
+   auto options = RNTupleWriteOptions();
+   options.SetCompression(0);
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
+      auto d = writer->GetModel().GetDefaultEntry().GetPtr<double>("d");
+      *d = 1.25;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(ROOT::ENTupleColumnType::kReal32, reader->GetModel().GetConstField("d").GetColumnRepresentatives()[0][0]);
+   EXPECT_EQ("Double32_t", reader->GetModel().GetConstField("d").GetTypeAlias());
+   reader->LoadEntry(0);
+   EXPECT_DOUBLE_EQ(1.25, *reader->GetModel().GetDefaultEntry().GetPtr<double>("d"));
+}
+
 TEST(RNTuple, Double32Extended)
 {
    FileRaii fileGuard("test_ntuple_double32_extended.root");
