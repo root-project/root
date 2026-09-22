@@ -432,7 +432,6 @@ if(dataframe)
 ROOT_STANDARD_LIBRARY_PACKAGE(TMVAUtils
   NO_INSTALL_HEADERS
   HEADERS
-  TMVA/RTensorUtils.hxx
   TMVA/RReader.hxx
   TMVA/RInferenceUtils.hxx
   TMVA/RBDT.hxx

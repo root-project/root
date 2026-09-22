@@ -40,7 +40,7 @@ namespace DNN {
 
 #ifndef TMVA_DNN_ARCHITECTURES_CPU_CPUTENSOR
 
-/// Memory layout type (copy from RTensor.hxx)
+/// Memory layout type
 enum class MemoryLayout : uint8_t {
    RowMajor = 0x01,
    ColumnMajor = 0x02
