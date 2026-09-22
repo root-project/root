@@ -34,6 +34,10 @@
 #include <Compression.h>
 #include <TError.h>
 
+#ifdef R__HAS_LHC4CODEC
+#include "ZipLHC4.h"
+#endif
+
 #include <algorithm>
 #include <atomic>
 #include <cassert>
@@ -829,6 +833,14 @@ ROOT::Internal::RPageSink::RPageSink(std::string_view name, const ROOT::RNTupleW
    : RPageStorage(name), fOptions(options.Clone()), fWritePageMemoryManager(options.GetPageBufferBudget())
 {
    ROOT::Internal::EnsureValidNameForRNTuple(name, "RNTuple").ThrowOnError();
+
+#ifdef R__HAS_LHC4CODEC
+   if (!fOptions->GetEnableColumnEncoding()) {
+      const auto algorithm = ROOT::RCompressionSetting::AlgorithmFromCompressionSettings(fOptions->GetCompression());
+      if (algorithm == ROOT::RCompressionSetting::EAlgorithm::kLHC4)
+         R__SetLHC4Filters(1);
+   }
+#endif
 }
 
 ROOT::Internal::RPageSink::~RPageSink() {}
