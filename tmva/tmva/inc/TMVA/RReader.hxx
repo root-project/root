@@ -4,11 +4,13 @@
 #include "TString.h"
 #include "TXMLEngine.h"
 
-#include "TMVA/RTensor.hxx"
 #include "TMVA/Reader.h"
+
+#include <ROOT/RSpan.hxx>
 
 #include <memory> // std::unique_ptr
 #include <sstream> // std::stringstream
+#include <vector>
 
 namespace TMVA {
 namespace Experimental {
@@ -212,50 +214,50 @@ public:
       }
    }
 
-   /// Compute model prediction on input RTensor
-   RTensor<float> Compute(RTensor<float> &x)
+   /// Compute model prediction on a flat batch of events
+   /// The input is the concatenation of the events' input variables and spectators
+   /// in row-major layout and the returned vector is flat row-major as well, with
+   /// size nEvents * numClasses (numClasses = 1 for classification and regression)
+   /// and the outputs of one event contiguous at y[event * numClasses ...].
+   std::vector<float> Compute(std::span<const float> x)
    {
-      // Error-handling for input tensor
-      const auto shape = x.GetShape();
-      if (shape.size() != 2)
-         throw std::runtime_error("Can only compute model outputs for input tensor of rank 2.");
+      const std::size_t numCols = fVariables.size() + fSpectators.size();
+      if (numCols == 0 || x.empty() || x.size() % numCols != 0)
+         throw std::runtime_error(
+            "Size of input vector is not a multiple of the number of variables, which must be nonzero, or the input "
+            "is empty.");
 
-      const auto numEntries = shape[0];
-      const auto numVars = shape[1];
-      if (numVars != (fVariables.size()+fSpectators.size()))
-         throw std::runtime_error("Second dimension of input tensor is not equal to number of variables.");
+      const std::size_t numEntries = x.size() / numCols;
 
-      // Define shape of output tensor based on analysis type
+      // Define size of output vector based on analysis type
       unsigned int numClasses = 1;
       if (fAnalysisType == Internal::AnalysisType::Multiclass)
          numClasses = fNumClasses;
-      RTensor<float> y({numEntries * numClasses});
-      if (fAnalysisType == Internal::AnalysisType::Multiclass)
-         y = y.Reshape({numEntries, numClasses});
+      std::vector<float> y(numEntries * numClasses);
 
-      // Fill output tensor
+      // Fill output vector
       const auto nVars = fVariables.size(); // number of non-spectator variables
       R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
       for (std::size_t i = 0; i < numEntries; i++) {
          for (std::size_t j = 0; j < nVars; j++) {
-            fVariableValues[j] = x(i, j);
+            fVariableValues[j] = x[i * numCols + j];
          }
          for (std::size_t j = 0; j < fSpectators.size(); ++j) {
-            fSpectatorValues[j] = x(i, nVars+j);
+            fSpectatorValues[j] = x[i * numCols + nVars + j];
          }
          // Classification
          if (fAnalysisType == Internal::AnalysisType::Classification) {
-            y(i) = fReader->EvaluateMVA(name);
+            y[i] = fReader->EvaluateMVA(name);
          }
          // Regression
          else if (fAnalysisType == Internal::AnalysisType::Regression) {
-            y(i) = fReader->EvaluateRegression(name)[0];
+            y[i] = fReader->EvaluateRegression(name)[0];
          }
          // Multiclass
          else if (fAnalysisType == Internal::AnalysisType::Multiclass) {
             const auto p = fReader->EvaluateMulticlass(name);
             for (std::size_t k = 0; k < numClasses; k++)
-               y(i, k) = p[k];
+               y[i * numClasses + k] = p[k];
          }
       }
 
