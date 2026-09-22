@@ -13,6 +13,7 @@
 #include <ROOT/RBrowserRequest.hxx>
 #include <ROOT/RBrowserReply.hxx>
 #include <ROOT/RLogger.hxx>
+#define ROOT_CsgOps_cxx
 #include "CsgOps.h"
 
 #include "TMath.h"
