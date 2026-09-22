@@ -396,6 +396,20 @@ ROOT::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSchema()
    }
    for (auto &[_, c] : fLeafCountCollections) {
       fEntry->BindRawPtr<void>(c.fFieldName, &c.fFieldBuffer);
+      c.fSizeOfRecord = c.fRecordField->GetValueSize();
+      const auto subfields = c.fRecordField->GetConstSubfields();
+      const auto &offsets = c.fRecordField->GetOffsets();
+      R__ASSERT(subfields.size() == c.fLeafBranchIndexes.size());
+      assert(c.fPackedLeaves.empty());
+      c.fPackedLeaves.reserve(subfields.size());
+      for (std::size_t l = 0; l < subfields.size(); ++l) {
+         RImportLeafCountCollection::RPackedLeaf packed;
+         packed.fOffset = offsets[l];
+         packed.fValueSize = subfields[l]->GetValueSize();
+         packed.fImportBranchIdx = c.fLeafBranchIndexes[l];
+         c.fPackedLeaves.push_back(packed);
+      }
+      c.fFieldBuffer.reserve(static_cast<std::size_t>(c.fMaxLength) * c.fSizeOfRecord);
    }
 
    if (!fIsQuiet)
@@ -455,17 +469,15 @@ void ROOT::Experimental::RNTupleImporter::Import()
          fSourceTree->GetEntry(i);
 
          for (auto &[_, c] : fLeafCountCollections) {
-            const auto sizeOfRecord = c.fRecordField->GetValueSize();
-            c.fFieldBuffer.resize(sizeOfRecord * (*c.fCountVal));
+            const auto nItems = static_cast<std::size_t>(*c.fCountVal);
+            const auto sizeOfRecord = c.fSizeOfRecord;
+            c.fFieldBuffer.resize(sizeOfRecord * nItems);
 
-            const auto nLeafs = c.fRecordField->GetConstSubfields().size();
-            for (std::size_t l = 0; l < nLeafs; ++l) {
-               const auto offset = c.fRecordField->GetOffsets()[l];
-               const auto sizeOfLeaf = c.fRecordField->GetConstSubfields()[l]->GetValueSize();
-               const auto idxImportBranch = c.fLeafBranchIndexes[l];
-               for (Int_t j = 0; j < *c.fCountVal; ++j) {
-                  memcpy(c.fFieldBuffer.data() + j * sizeOfRecord + offset,
-                         fImportBranches[idxImportBranch].fBranchBuffer.get() + (j * sizeOfLeaf), sizeOfLeaf);
+            for (const auto &leaf : c.fPackedLeaves) {
+               const auto *src = fImportBranches[leaf.fImportBranchIdx].fBranchBuffer.get();
+               auto *dst = c.fFieldBuffer.data() + leaf.fOffset;
+               for (std::size_t j = 0; j < nItems; ++j) {
+                  memcpy(dst + j * sizeOfRecord, src + j * leaf.fValueSize, leaf.fValueSize);
                }
             }
          }
