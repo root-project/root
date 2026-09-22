@@ -751,6 +751,91 @@ TEST(RNTupleEmulated, EmulatedFields_Enum)
    EXPECT_EQ(1, valueEmulated);
 }
 
+TEST(RNTupleEmulated, EmulatedFields_Pair)
+{
+   FileRaii fileGuard("test_ntuple_emulated_fields_pair.root");
+
+   EXPECT_NO_STREAMER_OR_DICTIONARY();
+
+   ExecInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+         struct PairMember {
+            float fFlt;
+            ClassDefNV(PairMember, 2)
+         };
+      )"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "std::pair<PairMember, PairMember>").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+
+      DeclarePointer("std::pair<PairMember, PairMember>", "ptr", ptr);
+      ProcessLine("ptr->first.fFlt = 1.0");
+      ProcessLine("ptr->second.fFlt = 2.0");
+
+      writer->Fill();
+   });
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+
+   {
+      RNTupleDescriptor::RCreateModelOptions opts;
+      opts.SetEmulateUnknownTypes(false);
+      try {
+         auto model = desc.CreateModel(opts);
+         FAIL() << "Creating a model without fEmulateUnknownTypes should fail";
+      } catch (const ROOT::RException &ex) {
+         ASSERT_THAT(ex.GetError().GetReport(), testing::HasSubstr("unknown type"));
+      }
+   }
+
+   {
+      RNTupleDescriptor::RCreateModelOptions opts;
+      opts.SetEmulateUnknownTypes(true);
+      auto model = desc.CreateModel(opts);
+      ASSERT_NE(model, nullptr);
+
+      const auto &f = model->GetConstField("f");
+      EXPECT_EQ(f.GetTypeName(), "std::pair<PairMember,PairMember>");
+      // The subfields of the pair are emulated but not the pair itself
+      EXPECT_FALSE(f.GetTraits() & ROOT::RFieldBase::kTraitEmulatedField);
+      EXPECT_EQ(f.GetStructure(), ROOT::ENTupleStructure::kRecord);
+
+      auto members = f.GetConstSubfields();
+      EXPECT_EQ(2u, members.size());
+      EXPECT_EQ(members[0]->GetTypeName(), "PairMember");
+      EXPECT_EQ(members[1]->GetTypeName(), "PairMember");
+   }
+
+   RNTupleDescriptor::RCreateModelOptions cmOpts;
+   cmOpts.SetEmulateUnknownTypes(true);
+
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
+
+   std::unique_ptr<ROOT::RNTuple> ntpl(file->Get<ROOT::RNTuple>("ntpl"));
+   reader = RNTupleReader::Open(cmOpts, *ntpl);
+   EXPECT_EQ(reader->GetNEntries(), 1);
+   void *ptrVerify = reader->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+
+   const auto &f = reader->GetModel().GetConstField("f");
+   const auto offsetFirst = dynamic_cast<const ROOT::RRecordField *>(&f)->GetOffsets()[0];
+   const auto offsetSecond = dynamic_cast<const ROOT::RRecordField *>(&f)->GetOffsets()[1];
+
+   reader->LoadEntry(0);
+   float valueFirst = 0.0;
+   float valueSecond = 0.0;
+   memcpy(&valueFirst, reinterpret_cast<unsigned char *>(ptrVerify) + offsetFirst, sizeof(float));
+   memcpy(&valueSecond, reinterpret_cast<unsigned char *>(ptrVerify) + offsetSecond, sizeof(float));
+   EXPECT_FLOAT_EQ(1.0, valueFirst);
+   EXPECT_FLOAT_EQ(2.0, valueSecond);
+}
+
 TEST(RNTupleEmulated, EmulatedFields_SoA)
 {
    FileRaii fileGuard("test_ntuple_emulated_fields_soa.root");
