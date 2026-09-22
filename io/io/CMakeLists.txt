@@ -73,8 +73,7 @@ target_link_libraries(RIO PUBLIC ${ROOT_ATOMIC_LIBS})
 target_link_libraries(RIO PRIVATE nlohmann_json::nlohmann_json)
 
 if(uring)
-  target_link_libraries(RIO PUBLIC ${LIBURING_LIBRARY})
-  target_include_directories(RIO PRIVATE ${LIBURING_INCLUDE_DIR})
+  target_link_libraries(RIO PUBLIC uring::uring)
 endif()
 
 # keep include directory for ROOT/RSha256.hxx private
