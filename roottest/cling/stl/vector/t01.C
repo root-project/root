@@ -4,43 +4,21 @@
 using namespace std;
 
 vector<float> * mask(vector<float>& vec, float val)
-/////////////////////////////////////////////////////////////////////////
-// This function compares each element of vec with the value val       //
-// It returns a pointer to a vector of the same size as vec, where     //
-// the element at position i is 1.0 for vec[i] < val and 0.0 otherwise //
-/////////////////////////////////////////////////////////////////////////
 {
-  // Create a new vector of same size as vec
-  vector<float>* resultp=new vector<float>(20);
+  vector<float>* resultp = new vector<float>(vec.size());
   if(!resultp){
     cout << "Failed to create mask" << endl;
-    return 0;
+    return nullptr;
   }
-  cout << "Loc: " << &resultp << endl;
-  cout << "Last val: " << &( (*resultp)[19] ) << endl;
-  int p;
-  vector<float> &result=*resultp; // Define a reference to the new vector
+  vector<float> &result = *resultp;
 
-  cout << "Result size: " << result.size() << endl;
-  cout << "Result pointer: " << resultp << endl;
-  cout << "Loc: " << &resultp << endl;
-  cout << "Ref add: " << &result << endl;
-
-  // Loop over all elements of vec and fill the new vector
-  vector<float>::size_type i;
-  for(i=0;i<vec.size();i++){
-    cout << i << "  Dest: " << &( (*resultp)[i] ) << endl;
-    cout << i << "  Dest: " << &(result[i]) << endl;
+  for(vector<float>::size_type i = 0; i < vec.size(); ++i){
     if( vec[i] < val )
-      result[i]=1;
+      result[i] = 1.0f;
     else
-      result[i]=0;
+      result[i] = 0.0f;
   }
 
-  // resultp has been overwritten!!
-  cout << "Result pointer: " << resultp << endl; 
-
-  // Have to return &result, because resultp is corrupt
-  return &result;
+  return resultp;
 }
 

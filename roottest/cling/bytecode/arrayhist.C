@@ -1,5 +1,5 @@
 {
-gROOT->Reset();
+gROOT->SetBatch(kTRUE);
 char name[4][50];
 
 for(int i=0; i<4; i++)
@@ -7,34 +7,17 @@ for(int i=0; i<4; i++)
   snprintf(name[i],50,"hist_array_%d", i);
 }
 
-
 TH1F *hist_array[4];
 
 for(int i=0; i<4; i++)
 {
-
-   /*  h[i] = (TH1F*)gROOT->FindObject(name[i]);
-  if(h[i]) 
-    {
-      printf("%s deleted\n", name[i]);
-      h[i]->Delete();
-    }
- 
-  */
-
-  
-  /*  TH1 *h = (TH1*)(FindObject(name[i]));
-  if(h) delete h;
-  */
-
   TH1F *h = (TH1F*)gROOT->FindObject(name[i]);
-  if(h) h->Delete();
-
+  if(h) delete h;
 }
 
-
-
-TCanvas *c1 = new TCanvas("c1", "Test Canvas");
+TCanvas *c1 = (TCanvas*)gROOT->FindObject("c1");
+if (c1) delete c1;
+c1 = new TCanvas("c1", "Test Canvas");
 c1->Divide(2,2);
 
 for(int i=0; i<4; i++)
@@ -44,6 +27,5 @@ for(int i=0; i<4; i++)
 
   c1->cd(i+1);
   hist_array[i]->Draw();
-
 }
 }
