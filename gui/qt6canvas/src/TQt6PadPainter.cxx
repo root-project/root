@@ -30,6 +30,10 @@
 #include <QRect>
 #include <QImage>
 #include <QPainter>
+#include <QString>
+#include <QColor>
+#include <QPen>
+#include <QBrush>
 
 using namespace ROOT::Experimental;
 
