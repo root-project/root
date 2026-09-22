@@ -12,7 +12,6 @@
 #include <cstdlib>
 
 #include <iostream>
-#include "TBufferFile.h"
 #include "TROOT.h"
 #include "TDiamond.h"
 #include "TVirtualPad.h"
@@ -65,14 +64,8 @@ TDiamond::~TDiamond()
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TDiamond::TDiamond(const TDiamond &diamond) : TPaveText()
+TDiamond::TDiamond(const TDiamond &diamond) : TPaveText(diamond)
 {
-   TBufferFile b(TBuffer::kWrite);
-   TDiamond *p = (TDiamond*)(&diamond);
-   p->Streamer(b);
-   b.SetReadMode();
-   b.SetBufferOffset(0);
-   Streamer(b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
