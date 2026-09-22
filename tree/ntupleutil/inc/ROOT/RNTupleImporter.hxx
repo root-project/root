@@ -199,6 +199,14 @@ private:
       ROOT::RRecordField *fRecordField =
          nullptr; ///< Points to the item field of the untyped collection field in the model.
       std::vector<unsigned char> fFieldBuffer; ///< The collection field memory representation. Bound to the entry.
+      /// Cached after Freeze() so Import() does not reallocate GetConstSubfields() on every entry.
+      std::size_t fSizeOfRecord = 0;
+      struct RPackedLeaf {
+         std::size_t fOffset = 0;
+         std::size_t fValueSize = 0;
+         std::size_t fImportBranchIdx = 0;
+      };
+      std::vector<RPackedLeaf> fPackedLeaves;
    };
 
    /// Transform a NULL terminated C string branch into an `std::string` field
