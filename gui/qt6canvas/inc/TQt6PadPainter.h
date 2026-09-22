@@ -13,23 +13,10 @@
 
 #include "TPadPainterBase.h"
 
-// Hide Qt classes from CLING -
-// It not able correctly parse them without some extra defines and include paths
-
-#ifdef __CLING__
-class QString;
 class QColor;
 class QPen;
 class QBrush;
-#else
-#include <QString>
-#include <QColor>
-#include <QPen>
-#include <QBrush>
-#endif
-
 class QPaintWidget;
-class TTFhandle;
 
 namespace ROOT {
 namespace Experimental {
