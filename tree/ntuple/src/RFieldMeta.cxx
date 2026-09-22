@@ -1211,6 +1211,12 @@ ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_
 
    // ISO C++ does not guarantee any specific layout for `std::pair`; query TClass for the member offsets
    auto *c = TClass::GetClass(GetTypeName().c_str());
+   if (!c) {
+      auto pairInfo = TVirtualStreamerInfo::Factory()->GenerateInfoForPair(
+         fSubfields[0]->GetTypeName(), fSubfields[1]->GetTypeName(), true /* silent */, 0, 0);
+      if (pairInfo)
+         c = pairInfo->GetClass();
+   }
    if (!c)
       throw RException(R__FAIL("cannot get type information for " + GetTypeName()));
    fSize = c->Size();
