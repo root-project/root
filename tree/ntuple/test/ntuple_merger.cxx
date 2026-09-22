@@ -3406,9 +3406,6 @@ TEST(RNTupleMerger, MergeEmptySchema)
          sourcePtrs.push_back(s.get());
       }
 
-      ROOT::TestSupport::CheckDiagsRAII diags;
-      diags.requiredDiag(kWarning, "ROOT.NTuple.Merge", "Output RNTuple 'ntuple' has no entries.");
-
       RNTupleMergeOptions opts;
       {
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
@@ -3433,10 +3430,10 @@ TEST(RNTupleMerger, MergeEmptySchema)
       }
    }
 
-   // We expect the output ntuple to have no entries
+   // We expect the output ntuple to have 20 entries
    {
       auto ntupleOut = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
-      EXPECT_EQ(ntupleOut->GetNEntries(), 0);
+      EXPECT_EQ(ntupleOut->GetNEntries(), 20);
       // We expect to see only the zero field
       EXPECT_EQ(ntupleOut->GetDescriptor().GetNFields(), 1);
    }
@@ -3487,11 +3484,11 @@ TEST(RNTupleMerger, MergeFirstEmptySchema)
          auto res = merger.Merge(sourcePtrs, opts);
          EXPECT_TRUE(bool(res));
       }
-      // In Filter mode, we expect the output ntuple to have 10 entries but an empty schema
+      // In Filter mode, we expect the output ntuple to have 20 entries but an empty schema
       {
          auto ntuple1 = RNTupleReader::Open("ntuple", fileGuard1.GetPath());
          auto ntupleOut = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
-         ASSERT_EQ(ntupleOut->GetNEntries(), ntuple1->GetNEntries());
+         ASSERT_EQ(ntupleOut->GetNEntries(), 20);
          ASSERT_EQ(ntupleOut->GetDescriptor().GetNFields(), 1);
       }
 
@@ -3502,18 +3499,24 @@ TEST(RNTupleMerger, MergeFirstEmptySchema)
          auto res = merger.Merge(sourcePtrs, opts);
          EXPECT_TRUE(bool(res));
       }
-      // In Union mode, we expect the output ntuple to have the entries of the non-empty ntuple
+      // In Union mode, we expect the output ntuple to have the entries of the non-empty ntuple, set to zero
+      // for the first 10 entries
       {
          auto ntuple2 = RNTupleReader::Open("ntuple", fileGuard2.GetPath());
          auto ntupleOut = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
-         ASSERT_EQ(ntupleOut->GetNEntries(), ntuple2->GetNEntries());
+         ASSERT_EQ(ntupleOut->GetNEntries(), 20);
          ASSERT_EQ(ntupleOut->GetDescriptor().GetNFields(), ntuple2->GetDescriptor().GetNFields());
 
          auto viewI = ntupleOut->GetView<int>("int");
          auto viewF = ntupleOut->GetView<float>("flt");
          for (auto idx : ntupleOut->GetEntryRange()) {
-            EXPECT_EQ(viewI(idx), idx);
-            EXPECT_FLOAT_EQ(viewF(idx), idx);
+            if (idx < 10) {
+               EXPECT_EQ(viewI(idx), 0);
+               EXPECT_FLOAT_EQ(viewF(idx), 0.);
+            } else {
+               EXPECT_EQ(viewI(idx), idx - 10);
+               EXPECT_FLOAT_EQ(viewF(idx), idx - 10);
+            }
          }
       }
 
@@ -3583,14 +3586,19 @@ TEST(RNTupleMerger, MergeSecondEmptySchema)
       {
          auto ntuple1 = RNTupleReader::Open("ntuple", fileGuard1.GetPath());
          auto ntupleOut = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
-         ASSERT_EQ(ntupleOut->GetNEntries(), ntuple1->GetNEntries());
+         ASSERT_EQ(ntupleOut->GetNEntries(), 20);
          ASSERT_EQ(ntupleOut->GetDescriptor().GetNFields(), ntuple1->GetDescriptor().GetNFields());
 
          auto viewI = ntupleOut->GetView<int>("int");
          auto viewF = ntupleOut->GetView<float>("flt");
          for (auto idx : ntupleOut->GetEntryRange()) {
-            EXPECT_EQ(viewI(idx), idx);
-            EXPECT_FLOAT_EQ(viewF(idx), idx);
+            if (idx < 10) {
+               EXPECT_EQ(viewI(idx), idx);
+               EXPECT_FLOAT_EQ(viewF(idx), idx);
+            } else {
+               EXPECT_EQ(viewI(idx), 0);
+               EXPECT_FLOAT_EQ(viewF(idx), 0.);
+            }
          }
       }
 

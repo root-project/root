@@ -1035,10 +1035,6 @@ ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std:
                                                        std::span<const RColumnMergeInfo> extraDstColumns,
                                                        RNTupleMergeData &mergeData)
 {
-   // We treat sources with an empty schema as empty (TODO(jblomer): should we?)
-   if (mergeData.fSrcDescriptor->GetNLogicalColumns() == 0)
-      return ROOT::RResult<void>::Success();
-
    ROOT::Internal::RClusterPool clusterPool{source};
 
    std::vector<RColumnMergeInfo> missingColumns{extraDstColumns.begin(), extraDstColumns.end()};
