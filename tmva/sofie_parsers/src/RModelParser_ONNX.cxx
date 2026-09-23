@@ -472,8 +472,7 @@ bool IsConvBiasAdd(const onnx::GraphProto &graph, const onnx::NodeProto &convnod
 {
    if (convnode.input_size() > 2 || addnode.input_size() != 2)
       return false;
-   const std::string &added =
-      (addnode.input(0) == convnode.output(0)) ? addnode.input(1) : addnode.input(0);
+   const std::string &added = (addnode.input(0) == convnode.output(0)) ? addnode.input(1) : addnode.input(0);
    for (int i = 0; i < graph.initializer_size(); i++) {
       if (graph.initializer(i).name() == added)
          return graph.initializer(i).dims_size() == 1;
@@ -525,7 +524,7 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
             return nullptr;
          }
       } else if (nodeproto.op_type() == "Conv" || nodeproto.op_type() == "ConvTranspose") {
-      // Fuse Conv or ConvTranspose without bias and Add, when the Add really is the bias
+         // Fuse Conv or ConvTranspose without bias and Add, when the Add really is the bias
          if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Add" &&
              IsConvBiasAdd(graphproto, nodeproto, graphproto.node(idx2))) {
             if (nodeproto.op_type() == "Conv") {

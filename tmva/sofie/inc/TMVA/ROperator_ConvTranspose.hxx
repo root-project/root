@@ -465,13 +465,15 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
           << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, "
           << "tensor_" << fNX << " + x_offset, &" << OpName
           << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-      out << SP << SP << SP << "tensor_" << fConvK << ", &" << OpName << "_n, &" << OpName << "_beta, tensor_" << fImcol << ", &" << OpName << "_m);\n";
+      out << SP << SP << SP << "tensor_" << fConvK << ", &" << OpName << "_n, &" << OpName << "_beta, tensor_" << fImcol
+          << ", &" << OpName << "_m);\n";
 
       // when using im2col - resulting matrix is transposed, is (input_c * filter_h * filter_w,  output_h *
       // output_w)
       // before using col2im I need to transpose matrix
       if (fDim < 3) {
-         out << SP << SP << "UTILITY::col2im<float>(tensor_" << fImcol << ","
+         out << SP << SP << "UTILITY::col2im<float>(tensor_" << fImcol
+             << ","
              //  channels, height, width, kernel_h, kernel_w, pad_h_begin, pad_h_end, pad_w_begin, pad_w_end,
              //  stride_h, stride_w, dilation_h, dilation_w,
              << fShapeY[1] << "," << oHeight << "," << oWidth << ",";
@@ -518,10 +520,12 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
           << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, "
           << "tensor_" << fNX << " + x_offset, &" << OpName
           << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-      out << SP << SP << SP << "tensor_" << fConvK << ", &" << OpName << "_n, &" << OpName << "_beta, tensor_" << fImcol << " , &" << OpName << "_m);\n";
+      out << SP << SP << SP << "tensor_" << fConvK << ", &" << OpName << "_n, &" << OpName << "_beta, tensor_" << fImcol
+          << " , &" << OpName << "_m);\n";
 
       if (fDim < 3) {
-         out << SP << SP << "UTILITY::col2im<float>(tensor_" << fImcol << ","
+         out << SP << SP << "UTILITY::col2im<float>(tensor_" << fImcol
+             << ","
              //  channels, height, width, kernel_h, kernel_w, pad_h_begin, pad_h_end, pad_w_begin, pad_w_end,
              //  stride_h, stride_w, dilation_h, dilation_w,
              << fShapeY[1] << "," << oHeight << "," << oWidth << ",";

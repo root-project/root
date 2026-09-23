@@ -121,7 +121,8 @@ public:
    }
 
    std::string GenerateSessionMembersCode(std::string /*opName*/) override {
-      if (fIsOutputConstant || !fDeclaresParam) return "";
+      if (fIsOutputConstant || !fDeclaresParam)
+         return "";
       std::stringstream out;
       out << SP << "size_t fV_NonZero_" << fNX << " = 0;\n";
       return out.str();

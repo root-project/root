@@ -18,7 +18,7 @@ class ROperator_Identity final : public ROperator
 private:
 
    bool fIsInputInitialized = false;
-   bool fIsOutputInitialized = false;   // the output is the same weight as the input
+   bool fIsOutputInitialized = false; // the output is the same weight as the input
    std::string fNX;
    std::string fNY;
    std::vector<Dim> fShape;
@@ -79,7 +79,8 @@ public:
 
 
    std::string Generate(std::string OpName) override {
-      if (fIsOutputConstant || fIsInputInitialized || fIsOutputInitialized) return "";
+      if (fIsOutputConstant || fIsInputInitialized || fIsOutputInitialized)
+         return "";
       OpName = "op_" + OpName;
       if (fShape.empty()) {
          throw std::runtime_error("TMVA SOFIE Operator Identity called to Generate without being initialized first");

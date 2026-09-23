@@ -364,7 +364,8 @@ void RModel::AddShapeParam(const std::string & param, size_t default_value) {
    }
 }
 
-void RModel::AddComputedShapeParam(const std::string & param) {
+void RModel::AddComputedShapeParam(const std::string &param)
+{
    fComputedShapeParams.insert(param);
    // it may already be registered as an argument, reached through a shape that broadcasting
    // rebuilt from a string; the operator's own declaration is the only one that should remain

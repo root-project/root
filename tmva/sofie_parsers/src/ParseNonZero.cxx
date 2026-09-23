@@ -44,8 +44,6 @@ ParserFuncSignature ParseNonZero = [](RModelParser_ONNX &parser, const onnx::Nod
                                std::to_string(static_cast<int>(input_type)));
    }
 
-
-
    // the indices are INT64 whatever the type of the input; registering the input type here
    // would leave the parser's type registry disagreeing with the model
    if (!parser.IsRegisteredTensorType(output_name)) {

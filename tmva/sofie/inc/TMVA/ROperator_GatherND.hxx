@@ -233,11 +233,13 @@ public:
       // read the index components, counting negative values from the end of the axis; the
       // index tensor is left untouched, since it can be shared with other operators
       for (size_t l = 0; l < ss; l++) {
-         std::string indexIndex = idIndex.empty() ? std::to_string(l)
-                                  : (l > 0 ? idIndex + " + " + std::to_string(l) : idIndex);
-         for (size_t k = 0; k <= q - 1; k++) out << SP;
+         std::string indexIndex =
+            idIndex.empty() ? std::to_string(l) : (l > 0 ? idIndex + " + " + std::to_string(l) : idIndex);
+         for (size_t k = 0; k <= q - 1; k++)
+            out << SP;
          out << "int64_t index_" << l << " = tensor_" << fNIndices << "[" << indexIndex << "];\n";
-         for (size_t k = 0; k <= q - 1; k++) out << SP;
+         for (size_t k = 0; k <= q - 1; k++)
+            out << SP;
          out << "if (index_" << l << " < 0) index_" << l << " += " << fShapeX[fBatchDims + l] << ";\n";
       }
       for (size_t k = 0; k <= q - 1; k++) out << SP;
