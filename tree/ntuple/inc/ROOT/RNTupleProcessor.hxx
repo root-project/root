@@ -175,6 +175,11 @@ public:
          throw RException(R__FAIL("cannot read \"" + fProcessorEntry->FindFieldName(fFieldIndex) +
                                   "\" because it has no value for the current entry"));
    }
+
+   friend bool operator==(const RNTupleProcessorOptionalPtr<T> &lhs, const RNTupleProcessorOptionalPtr<T> &rhs)
+   {
+      return lhs.fProcessorEntry == rhs.fProcessorEntry && lhs.fFieldIndex == rhs.fFieldIndex;
+   }
 };
 
 // clang-format off
@@ -246,6 +251,11 @@ public:
    /// invalid data. After binding a pointer to an `RNTupleProcessorOptionalPtr`, we *strongly* recommend only accessing
    /// its data through this interface, to ensure that only valid data can be read.
    void Bind(std::shared_ptr<void> valuePtr) { fProcessorEntry->Bind(fFieldIndex, std::move(valuePtr)); }
+
+   friend bool operator==(const RNTupleProcessorOptionalPtr<void> &lhs, const RNTupleProcessorOptionalPtr<void> &rhs)
+   {
+      return lhs.fProcessorEntry == rhs.fProcessorEntry && lhs.fFieldIndex == rhs.fFieldIndex;
+   }
 };
 
 // clang-format off
@@ -446,6 +456,21 @@ public:
       if constexpr (!std::is_void_v<T>) {
          typeName = ROOT::Internal::GetRenormalizedTypeName(typeid(T));
       }
+
+      // The field already exists, so return the existing one.
+      if (auto fieldIdx = fEntry->FindFieldIndex(fieldName, typeName)) {
+         auto value = fEntry->GetValue(*fieldIdx);
+         // Need to check that the provided pointer is not conflicting with the existing one
+
+         if (valuePtr != nullptr && valuePtr != value.GetPtr<void>().get()) {
+            throw RException(R__FAIL("attempted to request a field with user-provided value pointer to field \"" +
+                                     fieldName +
+                                     "\", which already exists in the entry. To change the underlying value pointer, "
+                                     "use RNTupleProcessorOptionalPtr::Bind instead."));
+         }
+         return RNTupleProcessorOptionalPtr<T>(fEntry.get(), *fieldIdx);
+      }
+
       auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, Internal::RNTupleProcessorProvenance());
       return RNTupleProcessorOptionalPtr<T>(fEntry.get(), fieldIdx);
    }

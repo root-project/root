@@ -265,6 +265,28 @@ TEST_F(RNTupleProcessorTest, RequestFieldWithTypeString)
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
 
+TEST_F(RNTupleProcessorTest, RequestExistingField)
+{
+   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+
+   auto fldX1 = proc->RequestField<float>("x");
+   auto fldX2 = proc->RequestField<float>("x");
+
+   EXPECT_EQ(fldX1, fldX2);
+
+   try {
+      float x;
+      proc->RequestField<float>("x", &x);
+      FAIL() << "requesting an existing field with a user-provided pointer should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(
+         err.what(),
+         testing::HasSubstr(
+            "attempted to request a field with user-provided value pointer to field \"x\", which already exists in the "
+            "entry. To change the underlying value pointer, use RNTupleProcessorOptionalPtr::Bind instead."));
+   }
+}
+
 TEST_F(RNTupleProcessorTest, AlternativeTypes)
 {
    auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
