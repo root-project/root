@@ -186,7 +186,6 @@ public:
    /// Unregisters a column.  A page source decreases the reference counter for the corresponding active column.
    /// For a page sink, dropping columns is currently a no-op.
    virtual void DropColumn(ColumnHandle_t columnHandle) = 0;
-   ROOT::DescriptorId_t GetColumnId(ColumnHandle_t columnHandle) const { return columnHandle.fPhysicalId; }
 
    /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by
    /// overriding this.
