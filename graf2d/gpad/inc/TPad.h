@@ -283,6 +283,7 @@ public:
    Bool_t            IsEditable() const override { return fEditable; }
    Bool_t            IsFolder() const override { return kTRUE; }
    Bool_t            IsModified() const override { return fModified; }
+   Int_t             IsAnyNeedRepaint() const;
    Bool_t            IsRetained() const override;
    Bool_t            IsVertical() const override { return !TestBit(kHori); }
    Bool_t            IsWeb() const override;

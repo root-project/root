@@ -2937,6 +2937,29 @@ void TPad::HideToolTip(Int_t event)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Check if pad or any subpads need to be repaint
+/// Returns flag with following mask:
+///  1 - some pad is modified
+///  2 - some pad is transparent (also trigger repaint in modified)
+///  4 - some pad has interactive XOR draw operations
+
+Int_t TPad::IsAnyNeedRepaint() const
+{
+   Int_t mask = IsModified() ? 1 : 0;
+   if (IsTransparent())
+      mask |= 2;
+   if (fDrawOper.size() || fDrawOperXor.size())
+      mask |= 4;
+
+   TIter next(GetListOfPrimitives());
+   while (auto obj = next())
+      if (auto p = dynamic_cast<TPad *>(obj))
+         mask |= p->IsAnyNeedRepaint();
+
+   return mask;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Is pad in batch mode ?
 
 Bool_t TPad::IsBatch() const
