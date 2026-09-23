@@ -43,10 +43,6 @@ struct GrowingStack {
         elems.pop_back();
         return top;
     }
-
-    void clear() {
-      elems.clear();
-    }
 };
 
 } // namespace bvh::v2

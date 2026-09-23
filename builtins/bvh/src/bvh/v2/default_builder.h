@@ -30,7 +30,7 @@ public:
     };
 
     /// Build a BVH in parallel using the given thread pool.
-    BVH_ALWAYS_INLINE static Bvh<Node> build(
+    [[nodiscard]] BVH_ALWAYS_INLINE static Bvh<Node> build(
         ThreadPool& thread_pool,
         std::span<const BBox> bboxes,
         std::span<const Vec> centers,
@@ -46,7 +46,7 @@ public:
     }
 
     /// Build a BVH in a single-thread.
-    BVH_ALWAYS_INLINE static Bvh<Node> build(
+    [[nodiscard]] BVH_ALWAYS_INLINE static Bvh<Node> build(
         std::span<const BBox>  bboxes,
         std::span<const Vec> centers,
         const Config& config = {})
