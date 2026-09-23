@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "../src/ranluxpp/mulmod.h"
+#include "ranluxpp/mulmod.h"
 
 #include "gtest/gtest.h"
 

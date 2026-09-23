@@ -72,9 +72,9 @@ ROOT_ADD_GTEST(stressMathCoreUnit stress/testSMatrix.cxx stress/testGenVector.cx
 
 ROOT_ADD_GTEST(GradientFittingUnit testGradientFitting.cxx LIBRARIES Core MathCore Hist)
 ROOT_ADD_GTEST(GradientUnit testGradient.cxx LIBRARIES Core MathCore Hist )
-ROOT_ADD_GTEST(MulmodUnitNoInt128 mulmod_noint128.cxx)
-ROOT_ADD_GTEST(MulmodUnitOpt mulmod_opt.cxx)
-ROOT_ADD_GTEST(RanluxLCGUnit ranlux_lcg.cxx)
+ROOT_ADD_GTEST(MulmodUnitNoInt128 mulmod_noint128.cxx LIBRARIES ranluxpp::ranluxpp)
+ROOT_ADD_GTEST(MulmodUnitOpt mulmod_opt.cxx LIBRARIES ranluxpp::ranluxpp)
+ROOT_ADD_GTEST(RanluxLCGUnit ranlux_lcg.cxx LIBRARIES ranluxpp::ranluxpp)
 ROOT_ADD_GTEST(RanluxppEngineTests RanluxppEngine.cxx LIBRARIES Core MathCore)
 ROOT_ADD_GTEST(testDelaunay2D testDelaunay2D.cxx LIBRARIES Core MathCore)
 ROOT_ADD_GTEST(testFitter testFitter.cxx LIBRARIES Core MathCore Hist)

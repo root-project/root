@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "../src/ranluxpp/ranlux_lcg.h"
+#include "ranluxpp/ranlux_lcg.h"
 
 #include "gtest/gtest.h"
 

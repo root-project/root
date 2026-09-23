@@ -185,6 +185,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
   DEPENDENCIES
     Core
   LIBRARIES
+    ranluxpp::ranluxpp
     ${MATHCORE_LIBRARIES}
 )
 
