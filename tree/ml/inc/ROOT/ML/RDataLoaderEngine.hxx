@@ -460,8 +460,8 @@ public:
                }
 
                RFlat2DMatrix shuffledStagingBuffer;
-               fTensorOperators->ShuffleTensor(shuffledStagingBuffer, stagingBuffer);
-               fTrainingBatchLoader->CreateBatches(shuffledStagingBuffer, isLastBuffer);
+               fTrainingBatchLoader->CreateBatches(fTensorOperators->ShuffleTensor(shuffledStagingBuffer, stagingBuffer),
+                                                isLastBuffer);
 
                // Re-acquire the lock before the next iteration to check conditions and update indices
                lock.lock();
@@ -519,8 +519,8 @@ public:
                }
 
                RFlat2DMatrix shuffledStagingBuffer;
-               fTensorOperators->ShuffleTensor(shuffledStagingBuffer, stagingBuffer);
-               fValidationBatchLoader->CreateBatches(shuffledStagingBuffer, isLastBuffer);
+               fValidationBatchLoader->CreateBatches(fTensorOperators->ShuffleTensor(shuffledStagingBuffer, stagingBuffer),
+                                                  isLastBuffer);
 
                lock.lock();
             }
@@ -535,15 +535,16 @@ public:
       fTrainingBatchLoader->Activate();
 
       if (fLoadEager) {
+         RFlat2DMatrix *source = &fSampledTrainingDataset;
          if (fSampleType == "") {
-            fTensorOperators->ShuffleTensor(fSampledTrainingDataset, fTrainingDataset);
+            source = &fTensorOperators->ShuffleTensor(fSampledTrainingDataset, fTrainingDataset);
          }
 
          else {
             fTrainingSampler->Sampler(fSampledTrainingDataset);
          }
 
-         fTrainingBatchLoader->CreateBatches(fSampledTrainingDataset, true);
+         fTrainingBatchLoader->CreateBatches(*source, true);
          fTrainingBatchLoader->MarkProducerDone();
       }
    }
@@ -555,15 +556,16 @@ public:
       fValidationBatchLoader->Activate();
 
       if (fLoadEager) {
+         RFlat2DMatrix *source = &fSampledValidationDataset;
          if (fSampleType == "") {
-            fTensorOperators->ShuffleTensor(fSampledValidationDataset, fValidationDataset);
+            source = &fTensorOperators->ShuffleTensor(fSampledValidationDataset, fValidationDataset);
          }
 
          else {
             fValidationSampler->Sampler(fSampledValidationDataset);
          }
 
-         fValidationBatchLoader->CreateBatches(fSampledValidationDataset, true);
+         fValidationBatchLoader->CreateBatches(*source, true);
          fValidationBatchLoader->MarkProducerDone();
       }
    }

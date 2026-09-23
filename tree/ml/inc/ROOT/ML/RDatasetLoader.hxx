@@ -187,11 +187,12 @@ public:
       // reset dataframe
       ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, (*Entries)[0], (*Entries)[NumEntries]);
 
-      RFlat2DMatrix ShuffledDataset({NumEntries, fNumDatasetCols});
-      fTensorOperators->ShuffleTensor(ShuffledDataset, Dataset);
-      fTensorOperators->SliceTensor(TrainingDataset, ShuffledDataset, {{0, NumTrainingEntries}, {0, fNumDatasetCols}});
-      fTensorOperators->SliceTensor(ValidationDataset, ShuffledDataset,
-                                    {{NumTrainingEntries, NumEntries}, {0, fNumDatasetCols}});
+      // copy out the validation tail, then shrink the (shuffled) buffer to the training rows and move it
+      RFlat2DMatrix ShuffledDataset;
+      RFlat2DMatrix &Source = fTensorOperators->ShuffleTensor(ShuffledDataset, Dataset);
+      fTensorOperators->SliceTensor(ValidationDataset, Source, {{NumTrainingEntries, NumEntries}, {0, fNumDatasetCols}});
+      Source.Resize(NumTrainingEntries, fNumDatasetCols);
+      TrainingDataset = std::move(Source);
    }
 
    //////////////////////////////////////////////////////////////////////////
@@ -207,12 +208,13 @@ public:
          RFlat2DMatrix ValidationDataset;
 
          SplitDataframe(rdf, TrainingDataset, ValidationDataset);
-         fTrainingDatasets.push_back(TrainingDataset);
-         fValidationDatasets.push_back(ValidationDataset);
 
          fNumTrainingEntries += TrainingDataset.GetRows();
          fNumValidationEntries += ValidationDataset.GetRows();
          fNumEntries += TrainingDataset.GetRows() + ValidationDataset.GetRows();
+
+         fTrainingDatasets.push_back(std::move(TrainingDataset));
+         fValidationDatasets.push_back(std::move(ValidationDataset));
       }
    }
 
@@ -220,18 +222,25 @@ public:
    /// \brief Concatenate the datasets to a dataset
    void ConcatenateDatasets()
    {
-      fTensorOperators->ConcatenateTensors(fTrainingDataset, fTrainingDatasets);
-      fTensorOperators->ConcatenateTensors(fValidationDataset, fValidationDatasets);
+      if (fTrainingDatasets.size() == 1) {
+         fTrainingDataset = std::move(fTrainingDatasets[0]);
+         fValidationDataset = std::move(fValidationDatasets[0]);
+      } else {
+         fTensorOperators->ConcatenateTensors(fTrainingDataset, fTrainingDatasets);
+         fTensorOperators->ConcatenateTensors(fValidationDataset, fValidationDatasets);
+      }
+      fTrainingDatasets.clear();
+      fValidationDatasets.clear();
    }
 
-   std::vector<RFlat2DMatrix> GetTrainingDatasets() { return fTrainingDatasets; }
-   std::vector<RFlat2DMatrix> GetValidationDatasets() { return fValidationDatasets; }
+   std::vector<RFlat2DMatrix> GetTrainingDatasets() { return std::move(fTrainingDatasets); }
+   std::vector<RFlat2DMatrix> GetValidationDatasets() { return std::move(fValidationDatasets); }
 
-   RFlat2DMatrix GetTrainingDataset() { return fTrainingDataset; }
-   RFlat2DMatrix GetValidationDataset() { return fValidationDataset; }
+   RFlat2DMatrix GetTrainingDataset() { return std::move(fTrainingDataset); }
+   RFlat2DMatrix GetValidationDataset() { return std::move(fValidationDataset); }
 
-   std::size_t GetNumTrainingEntries() { return fTrainingDataset.GetRows(); }
-   std::size_t GetNumValidationEntries() { return fValidationDataset.GetRows(); }
+   std::size_t GetNumTrainingEntries() { return fNumTrainingEntries; }
+   std::size_t GetNumValidationEntries() { return fNumValidationEntries; }
 };
 
 } // namespace ROOT::Experimental::Internal::ML
