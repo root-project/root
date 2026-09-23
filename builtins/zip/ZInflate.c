@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #define __STDC__ 1
 #endif
 #ifdef __MWERKS__
@@ -20,64 +20,8 @@ static const int qflag = 0;
 #include "zlib.h"
 #include "RConfigure.h"
 
-// TEMPORARY DUPLICATION OF ZipLZMA.h until header is removed from public interface and can be made fully private
-// @(#)root/lzma:$Id$
-// Author: David Dagenhart   May 2011
-
-/*************************************************************************
- * Copyright (C) 1995-2011, Rene Brun and Fons Rademakers.               *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
-
-#ifndef ROOT_ZipLZMA
-#define ROOT_ZipLZMA
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void R__zipLZMA(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep);
-
-void R__unzipLZMA(int *srcsize, const unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-// TEMPORARY DUPLICATION OF ZipLZ4.h until header is removed from public interface and can be made fully private
-// Author: Brian Bockelman March 2015
-
-/*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
-
-#ifndef ROOT_ZipLZ4
-#define ROOT_ZipLZ4
-
-// NOTE: the ROOT compression libraries aren't consistently written in C++; hence the
-// #ifdef's to avoid problems with C code.
-#ifdef __cplusplus
-extern "C" {
-#endif
-void R__zipLZ4(int cxlevel, int *srcsize, const char *src, int *tgtsize, char *tgt, int *irep);
-void R__unzipLZ4(int *srcsize, const unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-
-
+#include "ZipLZMA.h"
+#include "ZipLZ4.h"
 
 /* inflate.c -- put in the public domain by Mark Adler
    version c14o, 23 August 1994 */
