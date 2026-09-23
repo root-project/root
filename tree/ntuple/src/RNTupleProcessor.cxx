@@ -381,6 +381,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::GetNEntries()
 
       for (unsigned i = 0; i < fInnerProcessors.size(); ++i) {
          if (fInnerNEntries[i] == kInvalidNTupleIndex) {
+            fInnerProcessors[i]->Initialize(fEntry);
             fInnerNEntries[i] = fInnerProcessors[i]->GetNEntries();
          }
 

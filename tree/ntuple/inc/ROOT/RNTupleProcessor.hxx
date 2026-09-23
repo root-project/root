@@ -37,7 +37,15 @@ namespace Internal {
 struct RNTupleProcessorEntryLoader; // for unit tests
 const RNTupleProcessorEntry *
 LoadFullRNTupleProcessorEntry(ROOT::Experimental::RNTupleProcessor &processor, bool includeSubfields); // for unit tests
+
+namespace RDF {
+class RNTupleProcessorColumnReader;
+}
 } // namespace Internal
+
+namespace RDF {
+class RNTupleProcessorDS;
+} // namespace RDF
 
 // clang-format off
 /**
@@ -302,6 +310,8 @@ class RNTupleProcessor {
    friend class RNTupleSingleProcessor;
    friend class RNTupleChainProcessor;
    friend class RNTupleJoinProcessor;
+   friend class RDF::RNTupleProcessorDS;
+   friend class Internal::RDF::RNTupleProcessorColumnReader;
 
 protected:
    RNTupleProcessorOptions fOptions;
@@ -334,12 +344,24 @@ protected:
                         const Internal::RNTupleProcessorProvenance &provenance, bool updateFields) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Reset the number of entries processed.
+   void Reset() { fNEntriesProcessed = 0; }
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Load the entry identified by the provided entry number.
    ///
    /// \param[in] entryNumber Entry number to load
    ///
    /// \return `entryNumber` if the entry was successfully loaded, `kInvalidNTupleIndex` otherwise.
    virtual ROOT::NTupleSize_t LoadEntry(ROOT::NTupleSize_t entryNumber) = 0;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a reference to the processor's internal entry.
+   Internal::RNTupleProcessorEntry &GetEntry() { return *fEntry; }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a reference to the processor's internal entry.
+   const Internal::RNTupleProcessorEntry &GetEntry() const { return *fEntry; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor
