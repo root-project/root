@@ -528,7 +528,11 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       if (!result && options.GetEmulateUnknownTypes()) {
          assert(desc);
          const auto &fieldDesc = desc->GetFieldDescriptor(fieldId);
-         if (fieldDesc.GetStructure() == ENTupleStructure::kRecord) {
+         if (fieldDesc.GetStructure() == ENTupleStructure::kStreamer) {
+            auto streamerField = std::unique_ptr<RFieldBase>(new RStreamerField(fieldName, typeName));
+            streamerField->fTypeAlias = fieldDesc.GetTypeAlias();
+            return streamerField;
+         } else if (fieldDesc.GetStructure() == ENTupleStructure::kRecord) {
             std::vector<std::unique_ptr<RFieldBase>> memberFields;
             memberFields.reserve(fieldDesc.GetLinkIds().size());
             for (auto id : fieldDesc.GetLinkIds()) {
