@@ -333,9 +333,6 @@ public:
    bool TryMapPage(ROOT::NTupleSize_t globalIndex);
    bool TryMapPage(RNTupleLocalIndex localIndex);
 
-   bool ReadPageContains(ROOT::NTupleSize_t globalIndex) const { return fReadPageRef.Get().Contains(globalIndex); }
-   bool ReadPageContains(RNTupleLocalIndex localIndex) const { return fReadPageRef.Get().Contains(localIndex); }
-
    void MergeTeams(RColumn &other);
 
    ROOT::Internal::RColumnElementBase *GetElement() const { return fElement.get(); }
