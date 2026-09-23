@@ -409,21 +409,28 @@ namespace SOFIE{
          // case bias is present
          if (!fNC.empty()){
              // when the 2 last dims of bias and Y are not compatible we need to perform a run time broadcast
-            if (sC != sY) fBroadcastBias = true;
-            if (!fBroadcastBias) {
-               // add a check in case broadcasting was not needed or done outside of session
-               // C should have smaller dimension of Y
-               if (!fIsDynamic) {
-                  if ((std::stoi(lengthGemm) != std::stoi(ConvertDimShapeToLength(sC))) ||
-                      ( haveExtraC &&  std::stoi(lengthExtra_Y) != std::stoi(lengthExtra_C)))
-                     throw std::runtime_error("TMVA SOFIE Gemm Op " + opName + " Bias tensor " + fNC + " has not correct size "
-                            + ConvertShapeToString(fShapeC) + " output length " + lengthGemm);
-               } else {
-                  // add a dynamic check (C should not be a dynamic tensor)
-                  out << SP << "assert(" << lengthGemm << " == " <<  ConvertDimShapeToLength(sC) << ");\n";
-                  if (haveExtraC) out << SP << "assert(" << lengthExtra_Y << " == " <<  lengthExtra_C << ");\n";
-               }
-            }
+             if (sC != sY)
+                fBroadcastBias = true;
+             else if (sExtraC == sExtraY)
+                // C has exactly the shape of Y, nothing to broadcast. Initialize compares the
+                // integer shapes, which are empty while Y is dynamic, and asks for one there.
+                fBroadcastBias = false;
+             if (!fBroadcastBias) {
+                // add a check in case broadcasting was not needed or done outside of session
+                // C should have smaller dimension of Y
+                if (!fIsDynamic) {
+                   if ((std::stoi(lengthGemm) != std::stoi(ConvertDimShapeToLength(sC))) ||
+                       (haveExtraC && std::stoi(lengthExtra_Y) != std::stoi(lengthExtra_C)))
+                      throw std::runtime_error("TMVA SOFIE Gemm Op " + opName + " Bias tensor " + fNC +
+                                               " has not correct size " + ConvertShapeToString(fShapeC) +
+                                               " output length " + lengthGemm);
+                } else {
+                   // add a dynamic check (C should not be a dynamic tensor)
+                   out << SP << "assert(" << lengthGemm << " == " << ConvertDimShapeToLength(sC) << ");\n";
+                   if (haveExtraC)
+                      out << SP << "assert(" << lengthExtra_Y << " == " << lengthExtra_C << ");\n";
+                }
+             }
          } else {
             fBroadcastBias = false;
             //in this case fAttrBeta needs to be equal to zero otherwise second time we run we will use
