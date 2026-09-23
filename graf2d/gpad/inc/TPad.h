@@ -15,6 +15,8 @@
 #include "TVirtualPad.h"
 #include "TAttBBox2D.h"
 #include <vector>
+#include <string>
+#include <map>
 #include <memory>
 
 class TVirtualViewer3D;
@@ -25,6 +27,7 @@ class TLegend;
 class TArrow;
 class TPoint;
 class TWebCanvas;
+class TPadDrawOperation;
 
 class TPad : public TVirtualPad, public TAttBBox2D {
 
@@ -33,6 +36,7 @@ friend class TWebCanvas;
 private:
    TObject      *fTip{nullptr};     ///<! tool tip associated with box
    std::unique_ptr<TInteractive> fInteractive; ///<! current interactive object
+   std::map<std::string,std::unique_ptr<TPadDrawOperation>> fDrawOper, fDrawOperXor; ///<! map of draw operations performed outside of normal paint
 
 protected:
    Double_t      fX1;               ///<  X of lower X coordinate
@@ -131,6 +135,7 @@ protected:
    void          PaintBorder(Color_t color, Bool_t tops);
    void          PaintBorderPS(Double_t xl,Double_t yl,Double_t xt,Double_t yt,Int_t bmode,Int_t bsize,Int_t dark,Int_t light) override;
    void          PaintDate();
+   void          PaintOperations(Bool_t withXor = kFALSE);
    void          SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void          SetBatch(Bool_t batch=kTRUE) override;
 
