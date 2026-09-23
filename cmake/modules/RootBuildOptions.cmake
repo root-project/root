@@ -133,7 +133,7 @@ ROOT_BUILD_OPTION(experimental_genvectorx OFF "Build GenvectorX (requires SYCL s
 ROOT_BUILD_OPTION(fcgi OFF "Enable FastCGI support in HTTP server")
 ROOT_BUILD_OPTION(fftw3 OFF "Enable support for FFTW3 [GPL]")
 ROOT_BUILD_OPTION(fitsio ON "Enable support for reading FITS images")
-ROOT_BUILD_OPTION(fortran OFF "Build Fortran components of ROOT")
+ROOT_BUILD_OPTION(fortran OFF "Build Fortran components of ROOT, stemming from cernlib")
 ROOT_BUILD_OPTION(gdml ON "Enable support for GDML (Geometry Description Markup Language)")
 ROOT_BUILD_OPTION(geom ON "Enable support for the geometry library. Disabling this will also disable Eve and gviz3d.")
 ROOT_BUILD_OPTION(geombuilder OFF "Enable support for the geombuilder library")
