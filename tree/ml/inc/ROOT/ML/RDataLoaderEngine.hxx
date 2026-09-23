@@ -209,6 +209,10 @@ public:
             fNumTrainingEntries = fTrainingSampler->GetNumEntries();
             fNumValidationEntries = fValidationSampler->GetNumEntries();
          }
+
+         // the dataset is in memory now, release the objects used to create it
+         fDatasetLoader.reset();
+         fRdfs = {};
       }
 
       else {
