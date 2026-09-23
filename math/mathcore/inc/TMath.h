@@ -1330,7 +1330,7 @@ template <typename T> Bool_t TMath::IsInside(T xp, T yp, Int_t np, T *x, T *y)
 
    for (i=0; i<np; i++) {
       if ((y[i]<yp && y[j]>=yp) || (y[j]<yp && y[i]>=yp)) {
-         if (x[i]+(yp-y[i])/(y[j]-y[i])*(x[j]-x[i])<xp) {
+         if (x[i]+(yp-y[i])*(x[j]-x[i])/(y[j]-y[i])<xp) {
             oddNodes = !oddNodes;
          }
       }
