@@ -354,8 +354,6 @@ public:
    std::uint16_t GetRepresentationIndex() const { return fRepresentationIndex; }
    ROOT::DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
    ROOT::NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
-   ROOT::Internal::RPageSource *GetPageSource() const { return fPageSource; }
-   ROOT::Internal::RPageSink *GetPageSink() const { return fPageSink; }
 
    void SetBitsOnStorage(std::size_t bits) { fElement->SetBitsOnStorage(bits); }
    std::size_t GetWritePageCapacity() const { return fWritePage.GetCapacity(); }
