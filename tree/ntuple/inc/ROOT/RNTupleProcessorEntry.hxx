@@ -196,6 +196,14 @@ public:
    void UpdateField(FieldIndex_t fieldIdx, std::unique_ptr<ROOT::RFieldBase> field);
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a field by its index.
+   ///
+   /// \param[in] fieldIdx Index of the field.
+   ///
+   /// \return A constref to the field.
+   const ROOT::RFieldBase &GetField(FieldIndex_t fieldIdx) const;
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Bind a new value pointer to a field in the entry.
    ///
    /// \param[in] fieldIdx The index of the field in the entry.
