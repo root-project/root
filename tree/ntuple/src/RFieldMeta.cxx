@@ -1586,6 +1586,11 @@ ROOT::RStreamerField::RStreamerField(std::string_view fieldName, TClass *classp)
      fClass(classp),
      fIndex(0)
 {
+   if (fClass->GetState() < TClass::kEmulated)
+      throw RException(R__FAIL("streamer field " + GetFieldName() + " requires at least an emulated class"));
+   if (fClass->GetState() == TClass::kEmulated)
+      fTraits |= kTraitEmulatedField;
+
    std::string renormalizedAlias;
    if (Internal::NeedsMetaNameAsAlias(classp->GetName(), renormalizedAlias))
       fTypeAlias = renormalizedAlias;
