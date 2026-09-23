@@ -15,7 +15,15 @@
 #include "Rtypes.h"
 #include "TError.h"
 
+// workaround for https://github.com/artem-ogre/CDT/issues/228
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
 #include "CDT/CDT.h"
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 #include <algorithm>
 #include <cstdlib>
