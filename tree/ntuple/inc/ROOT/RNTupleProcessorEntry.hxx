@@ -76,8 +76,10 @@ public:
    /// \param[in] fieldName Field name to check.
    bool IsPresentInFieldName(std::string_view fieldName) const
    {
-      return !fProvenance.empty() && fieldName.find(fProvenance + ".") == 0;
+      return !fProvenance.empty() && fieldName.find(fProvenance) == 0;
    }
+
+   bool Empty() const { return fProvenance.empty(); }
 };
 
 // clang-format off
