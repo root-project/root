@@ -178,7 +178,7 @@ void Delaunay2D::DoFindTriangles() {
 
    int i;
    std::vector<CDT::V2d<double>> points(fNpoints);
-   for (i = 0; i < fNpoints; ++i) points[i] = CDT::V2d<double>::make(fXN[i], fYN[i]);
+   for (i = 0; i < fNpoints; ++i) points[i] = CDT::V2d<double>(fXN[i], fYN[i]);
    CDT::RemoveDuplicates(points);
    if (fNpoints-points.size() > 0)
       Warning("DoFindTriangles",
