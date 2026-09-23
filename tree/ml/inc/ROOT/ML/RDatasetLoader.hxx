@@ -28,65 +28,57 @@ namespace ROOT::Experimental::Internal::ML {
 /**
 \class ROOT::Experimental::Internal::ML::RDatasetLoaderFunctor
 
-\brief Loading chunks made in RDatasetLoader into tensors from data from RDataFrame.
+\brief Writes one row of RDataFrame column values into an RFlat2DMatrix, padding or truncating vector columns.
 */
 
 template <typename... ColTypes>
 class RDatasetLoaderFunctor {
-   std::size_t fOffset{};
-   std::size_t fVecSizeIdx{};
    float fVecPadding{};
    std::vector<std::size_t> fMaxVecSizes{};
    RFlat2DMatrix &fDatasetTensor;
-
-   std::size_t fNumDatasetCols;
-
-   int fI;
-   int fNumColumns;
+   std::size_t fNumColumns;
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief Copy the content of a column into RFlat2DMatrix when the column consits of vectors
+   /// \brief Copy the content of a column into RFlat2DMatrix when the column consists of vectors
    template <typename T, std::enable_if_t<ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
-   void AssignToTensor(const T &vec, int i, int numColumns)
+   void AssignToTensor(const T &vec, float *&dst, std::size_t &vecSizeIdx) const
    {
-      std::size_t max_vec_size = fMaxVecSizes[fVecSizeIdx++];
+      std::size_t max_vec_size = fMaxVecSizes[vecSizeIdx++];
       std::size_t vec_size = vec.size();
       if (vec_size < max_vec_size) // Padding vector column to max_vec_size with fVecPadding
       {
-         std::copy(vec.begin(), vec.end(), &fDatasetTensor.GetData()[fOffset + numColumns * i]);
-         std::fill(&fDatasetTensor.GetData()[fOffset + numColumns * i + vec_size],
-                   &fDatasetTensor.GetData()[fOffset + numColumns * i + max_vec_size], fVecPadding);
+         std::copy(vec.begin(), vec.end(), dst);
+         std::fill(dst + vec_size, dst + max_vec_size, fVecPadding);
       } else // Copy only max_vec_size length from vector column
       {
-         std::copy(vec.begin(), vec.begin() + max_vec_size, &fDatasetTensor.GetData()[fOffset + numColumns * i]);
+         std::copy(vec.begin(), vec.begin() + max_vec_size, dst);
       }
-      fOffset += max_vec_size;
+      dst += max_vec_size;
    }
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief Copy the content of a column into RFlat2DMatrix when the column consits of single values
+   /// \brief Copy the content of a column into RFlat2DMatrix when the column consists of single values
    template <typename T, std::enable_if_t<!ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
-   void AssignToTensor(const T &val, int i, int numColumns)
+   void AssignToTensor(const T &val, float *&dst, std::size_t & /*vecSizeIdx*/) const
    {
-      fDatasetTensor.GetData()[fOffset + numColumns * i] = val;
-      fOffset++;
+      *dst++ = val;
    }
 
 public:
    RDatasetLoaderFunctor(RFlat2DMatrix &datasetTensor, std::size_t numColumns,
-                         const std::vector<std::size_t> &maxVecSizes, float vecPadding, int i)
-      : fDatasetTensor(datasetTensor),
-        fMaxVecSizes(maxVecSizes),
-        fVecPadding(vecPadding),
-        fI(i),
-        fNumColumns(numColumns)
+                         const std::vector<std::size_t> &maxVecSizes, float vecPadding)
+      : fVecPadding(vecPadding), fMaxVecSizes(maxVecSizes), fDatasetTensor(datasetTensor), fNumColumns(numColumns)
    {
    }
 
-   void operator()(const ColTypes &...cols)
+   //////////////////////////////////////////////////////////////////////////
+   /// \brief Fill row \p row with the column values. Only local state is used, so distinct rows can be filled
+   /// concurrently.
+   void FillRow(std::size_t row, const ColTypes &...cols) const
    {
-      fVecSizeIdx = 0;
-      (AssignToTensor(cols, fI, fNumColumns), ...);
+      float *dst = fDatasetTensor.GetData() + row * fNumColumns;
+      std::size_t vecSizeIdx = 0;
+      (AssignToTensor(cols, dst, vecSizeIdx), ...);
    }
 };
 
@@ -170,17 +162,19 @@ public:
 
       bool NotFiltered = rdf.GetFilterNames().empty();
       if (NotFiltered) {
-         RDatasetLoaderFunctor<Args...> func(Dataset, fNumDatasetCols, fVecSizes, fVecPadding, 0);
-         rdf.Foreach(func, fCols);
+         // one row per rdfentry_: thread-safe under implicit multi-threading, rows follow the event loop order
+         RDatasetLoaderFunctor<Args...> func(Dataset, fNumDatasetCols, fVecSizes, fVecPadding);
+         std::vector<std::string> colsWithEntry{"rdfentry_"};
+         colsWithEntry.insert(colsWithEntry.end(), fCols.begin(), fCols.end());
+         rdf.Foreach([&func](ULong64_t entry, const Args &...cols) { func.FillRow(entry, cols...); },
+                     colsWithEntry);
       }
 
       else {
-         std::size_t datasetEntry = 0;
+         RDatasetLoaderFunctor<Args...> func(Dataset, fNumDatasetCols, fVecSizes, fVecPadding);
          for (std::size_t j = 0; j < NumEntries; j++) {
-            RDatasetLoaderFunctor<Args...> func(Dataset, fNumDatasetCols, fVecSizes, fVecPadding, datasetEntry);
             ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, (*Entries)[j], (*Entries)[j + 1]);
-            rdf.Foreach(func, fCols);
-            datasetEntry++;
+            rdf.Foreach([&func, j](const Args &...cols) { func.FillRow(j, cols...); }, fCols);
          }
       }
 

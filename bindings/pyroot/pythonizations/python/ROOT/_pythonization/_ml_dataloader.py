@@ -636,6 +636,10 @@ class RDataLoader:
             load_eager:
                 If True, load the full dataset into memory before training.
                 If False (default), load lazily in chunks.
+                With `ROOT.EnableImplicitMT()` the eager load runs in parallel and,
+                as for any multi-threaded RDataFrame loop, the row order is not
+                guaranteed to follow the input; disable it if `shuffle=False`
+                must keep the file order.
             sampling_type:
                 Resampling strategy: "undersampling" or "oversampling".
                 Requires load_eager=True and exactly two input dataframes.
