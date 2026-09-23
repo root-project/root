@@ -37,6 +37,11 @@ namespace Internal {
 struct RNTupleProcessorEntryLoader; // for unit tests
 const RNTupleProcessorEntry *
 LoadFullRNTupleProcessorEntry(ROOT::Experimental::RNTupleProcessor &processor, bool includeSubfields); // for unit tests
+
+namespace RDF {
+class RNTupleProcessorColumnReader;
+class RNTupleProcessorDS;
+} // namespace RDF
 } // namespace Internal
 
 // clang-format off
@@ -303,6 +308,7 @@ class RNTupleProcessor {
    friend class RNTupleSingleProcessor;
    friend class RNTupleChainProcessor;
    friend class RNTupleJoinProcessor;
+   friend class Internal::RDF::RNTupleProcessorDS;
 
 protected:
    /////////////////////////////////////////////////////////////////////////////
@@ -437,6 +443,14 @@ protected:
    ///
    /// \param[in] mapping Mapping to the entry to load
    virtual void LoadEntryImpl(const REntryMapping &mapping) = 0;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a reference to the processor's internal entry.
+   Internal::RNTupleProcessorEntry &GetEntry() { return *fEntry; }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a reference to the processor's internal entry.
+   const Internal::RNTupleProcessorEntry &GetEntry() const { return *fEntry; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor
