@@ -162,6 +162,16 @@ void testPoints(T x, T y)
    cout << "Point(" << x << "," << y << ") IsInside?: " << TMath::IsInside(x, y, n, dx, dy) << endl;
 }
 
+void testIsInsideInt()
+{
+   const Int_t n = 4;
+   Int_t x[n] = {299, 41, 299, 558};
+   Int_t y[n] = {531, 678, 825, 678};
+
+   // Regression test for integer division in TMath::IsInside().
+   R__ASSERT(!TMath::IsInside(42, 532, n, x, y));
+}
+
 template <typename T>
 void testPlane()
 {
@@ -299,6 +309,7 @@ int main()
    testPoints<Double_t>(1.3, 0.5);
    testPoints<Float_t>(-0.2, 1.7);
    testPoints<Int_t>(1, 1);
+   testIsInsideInt();
 
    cout << "\nPLane functions tests: " << endl;
 
