@@ -331,7 +331,9 @@ public:
          // not sure if we ever end-up here - maybe reshaping from scalar to vector or viceversa
          fIsOutputParamShape = true;
          fOutputShapeData = model.GetShapeTensorValues(fNData);
-         model.AddShapeTensor(fNOutput, fOutputShapeData);
+         // pass the rank through the scalar flag: a shape tensor stores only its values,
+         // so a rank-0 output would otherwise read back as rank 1
+         model.AddShapeTensor(fNOutput, fOutputShapeData, fShapeOutput.empty());
          if (model.Verbose()) {
             std::cout << Name() << " : " << fNData << " " << ConvertDimShapeToString(fShapeInput) << " -->  " << fNOutput << " (shape) " << ConvertDimShapeToString(fShapeOutput)  << " : " <<
             ConvertDimShapeToString(fOutputShapeData) << std::endl;

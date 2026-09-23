@@ -70,6 +70,7 @@ if onnx is not None:
     BOOL = TensorProto.BOOL
     DOUBLE = TensorProto.DOUBLE
     FLOAT = TensorProto.FLOAT
+    INT32 = TensorProto.INT32
     INT64 = TensorProto.INT64
     UINT8 = TensorProto.UINT8
 
@@ -5599,6 +5600,77 @@ def make_IdentityWeightBatchNorm():
     return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
 
 
+def make_ClipInt():
+    """Ops: Clip on an integer tensor, whose bounds must be written with the type
+    of the tensor."""
+    nodes = [
+        helper.make_node("Clip", ["input", "cmin", "cmax"], ["output"], name="clip_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "clip_int",
+        inputs=[_vi("input", INT32, [2, 3])],
+        outputs=[_vi("output", INT32, [2, 3])],
+        initializer=[
+            _tensor("cmin", INT32, [], [-2]),
+            _tensor("cmax", INT32, [], [5]),
+        ],
+    )
+    return _model(graph, opset=18, ir_version=10, producer_name="onnx-example")
+
+
+def make_TanhDynShape():
+    """Ops: Tanh on a tensor with a parametric first dimension."""
+    nodes = [
+        helper.make_node("Tanh", ["input"], ["output"], name="tanh_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "tanh_dynshape",
+        inputs=[_vi("input", FLOAT, ["N", 3])],
+        outputs=[_vi("output", FLOAT, ["N", 3])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_RangeCleanName():
+    """Ops: Range whose inputs carry characters that are not valid in a C++
+    identifier, so their names have to be cleaned as the output name is."""
+    nodes = [
+        helper.make_node("Range", ["start:0", "limit:0", "delta:0"], ["Y"], name="range_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "range_clean_name",
+        inputs=[
+            _vi("start:0", FLOAT, [1]),
+            _vi("limit:0", FLOAT, [1]),
+            _vi("delta:0", FLOAT, [1]),
+        ],
+        outputs=[_vi("Y", FLOAT, ["output_size"])],
+    )
+    return _model(graph, opset=19, ir_version=9, producer_name="onnx-example")
+
+
+def make_GemmDynBias():
+    """Ops: Gemm whose C has exactly the shape of the output, with a parametric
+    row count, so that nothing has to be broadcast."""
+    nodes = [
+        helper.make_node("Gemm", ["A", "B", "C"], ["Y"], name="gemm_0", alpha=1.0, beta=1.0),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "gemm_dyn_bias",
+        inputs=[
+            _vi("A", FLOAT, ["N", 3]),
+            _vi("C", FLOAT, ["N", 4]),
+        ],
+        outputs=[_vi("Y", FLOAT, ["N", 4])],
+        initializer=[_random_tensor("B", [3, 4], seed=107)],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
 MODELS = {
     "Abs": make_Abs,
     "Acosh": make_Acosh,
@@ -5622,6 +5694,7 @@ MODELS = {
     "AvgPool": make_AvgPool,
     "Cast": make_Cast,
     "Clip": make_Clip,
+    "ClipInt": make_ClipInt,
     "Comparison_broadcast": make_Comparison_broadcast,
     "Comparison_broadcast_3d": make_Comparison_broadcast_3d,
     "ComplexTopK": make_ComplexTopK,
@@ -5684,6 +5757,7 @@ MODELS = {
     "GatherNegativeIndices": make_GatherNegativeIndices,
     "GatherRuntimeNegativeIndices": make_GatherRuntimeNegativeIndices,
     "Gelu": make_Gelu,
+    "GemmDynBias": make_GemmDynBias,
     "Gemm_ConstantFolding": make_Gemm_ConstantFolding,
     "Gemm_ConstantFolding_Shared": make_Gemm_ConstantFolding_Shared,
     "Greater": make_Greater,
@@ -5746,6 +5820,7 @@ MODELS = {
     "RNNSequenceBatchwise": make_RNNSequenceBatchwise,
     "RandomNormal": make_RandomNormal,
     "RandomUniform": make_RandomUniform,
+    "RangeCleanName": make_RangeCleanName,
     "RangeFloat": make_RangeFloat,
     "RangeInt": make_RangeInt,
     "RangeWithDynShapeDelta": make_RangeWithDynShapeDelta,
@@ -5784,6 +5859,7 @@ MODELS = {
     "SumMultidirectionalBroadcast": make_SumMultidirectionalBroadcast,
     "Swish": make_Swish,
     "Tanh": make_Tanh,
+    "TanhDynShape": make_TanhDynShape,
     "Tile5D": make_Tile5D,
     "TopK": make_TopK,
     "TopKLargestUnsorted": make_TopKLargestUnsorted,
@@ -6504,6 +6580,7 @@ TEST_INPUTS = {
     "GatherRuntimeNegativeIndices": [f32(np.arange(0.0, 10.0), (5, 2)), i64([-1, 2, -5])],
     "Gelu": [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
     # N = 2 rows
+    "GemmDynBias": [rand_f32(36, (2, 3)), rand_f32(37, (2, 4))],
     # Note: the second operand must produce a mix of true and false results,
     # otherwise a constant implementation would pass the test.
     "Greater": [
@@ -7149,6 +7226,7 @@ TEST_INPUTS = {
         )
     ],
     # N = 2 rows
+    "TanhDynShape": [rand_f32(39, (2, 3))],
     "Tile5D": [
         f32(
             [

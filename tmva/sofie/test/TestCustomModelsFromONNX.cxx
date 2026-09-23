@@ -2055,3 +2055,54 @@ TEST(ONNX, IdentityWeightBatchNorm)
 
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
+
+// Clip on an integer tensor: the bounds have to carry the type of the tensor.
+TEST(ONNX, ClipInt)
+{
+   std::vector<int> input = {-5, -2, 0, 3, 5, 9};
+   std::vector<int> correct_output = {-2, -2, 0, 3, 5, 5};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<int>, "ClipInt", input);
+
+   expectEqual(output, correct_output);
+}
+
+// Tanh of a tensor whose first dimension is only known at run time.
+TEST(ONNX, TanhDynShape)
+{
+   SofieReference ref = readReference("TanhDynShape");
+
+   // model is dynamic in N, use N = 2
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "TanhDynShape", "\"TanhDynShape_FromONNX.dat\", 2", 2,
+                                       ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// Range reading inputs whose ONNX names are not valid C++ identifiers.
+TEST(ONNX, RangeCleanName)
+{
+   std::vector<float> start = {0.0};
+   std::vector<float> limit = {5.0};
+   std::vector<float> delta = {1.0};
+   std::vector<float> correct_output = {0.0, 1.0, 2.0, 3.0, 4.0};
+
+   // the length of a Range output is only known at run time, so the Session is given
+   // an upper bound for it; this model has no weights, hence the empty file name
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "RangeCleanName", "\"\", 5", start, limit, delta);
+
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
+}
+
+// A Gemm bias that already has the shape of the output needs no broadcasting,
+// which Initialize cannot see while the output is dynamic.
+TEST(ONNX, GemmDynBias)
+{
+   SofieReference ref = readReference("GemmDynBias");
+
+   // model is dynamic in N, use N = 2
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "GemmDynBias", "\"GemmDynBias_FromONNX.dat\", 2", 2,
+                                       ref.f32("input0"), ref.f32("input1"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
