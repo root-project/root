@@ -3963,7 +3963,12 @@ void TPad::PaintModified()
    fPadPaint = 1;
    {
       TContext ctxt(this, kTRUE);
-      if (IsModified() || IsTransparent())
+
+      auto pp = GetPainter();
+      Bool_t useXor = pp && pp->IsNative() && !pp->IsCocoa();
+      Bool_t needRepaint = IsModified() || IsTransparent() || (!useXor && fDrawOper.size());
+
+      if (needRepaint)
          PaintBorder(GetFillColor(), kTRUE);
 
       PaintDate();
@@ -3975,7 +3980,7 @@ void TPad::PaintModified()
          TObject *obj = lnk->GetObject();
          if (obj->InheritsFrom(TPad::Class())) {
             ((TPad*)obj)->PaintModified();
-         } else if (IsModified() || IsTransparent()) {
+         } else if (needRepaint) {
 
             // Create a pad 3D viewer if none exists and we encounter a
             // 3D shape
@@ -3993,6 +3998,10 @@ void TPad::PaintModified()
          }
          lnk = lnk->Next();
       }
+
+      // when XOR is not available - paint operations at the ned
+      if (!useXor && needRepaint)
+         PaintOperations();
    }
 
    fPadPaint = 0;

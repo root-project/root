@@ -2539,11 +2539,30 @@ void TCanvas::Update()
 
    if (!fCanvasImp->PerformUpdate(kFALSE)) {
 
-      if (!IsBatch()) FeedbackMode(kFALSE); // Goto double buffer mode
+      if (!IsBatch())
+         FeedbackMode(kFALSE); // Goto double buffer mode
 
-      if (!UseGL() || fGLDevice == -1) PaintModified(); // Repaint all modified pad's
+      if (UseGL() && (fGLDevice != -1)) {
+         // TODO: try to reorganize GL part to follow normal painting rules
+         Flush();
+      } else {
+         Bool_t useXor = fPainter && fPainter->IsNative() && !fPainter->IsCocoa();
+         Int_t need_rapaint = IsAnyNeedRepaint();
+         Int_t mask = useXor ? 3 : 7; // if XOR not supported, pad repaint by any change
 
-      Flush(); // Copy all pad pixmaps to the screen
+         // TODO: verify why transparency is used
+         if (need_rapaint & mask) {
+            PaintModified();
+            Flush();
+         }
+
+         // real XOR only when supported
+         if (useXor && (need_rapaint & 4)) {
+            FeedbackMode(kTRUE);
+            PaintOperations(kTRUE);
+            FeedbackMode(kFALSE);
+         }
+      }
 
       SetCursor(kCross);
    }
