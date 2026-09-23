@@ -11046,18 +11046,12 @@ void THistPainter::SetShowProjectionXY(const char *option, Int_t nbinsY, Int_t n
 
 void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 {
-   auto pp = gPad ? gPad->GetPainter() : nullptr;
-   if (!pp)
+   if (!gPad)
       return;
-
-   auto dmode = gPad->GetDoubleBuffer();
-   // turn off double buffer mode and draw primitives in invert mode
-   gPad->FeedbackMode(kTRUE);
 
    Int_t nbins = (Int_t)fShowProjection/100;
 
    // Erase old position and draw a line at current position
-   static Double_t pyold1 = 0, pyold2 = 0;
    Double_t uxmin = gPad->GetUxmin();
    Double_t uxmax = gPad->GetUxmax();
    Float_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
@@ -11066,20 +11060,15 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
    Double_t py1 = gPad->YtoPad(fH->GetYaxis()->GetBinLowEdge(biny1));
    Double_t py2 = gPad->YtoPad(fH->GetYaxis()->GetBinUpEdge(biny2));
 
-   if (!dmode && (pyold1 || pyold2))
-      pp->DrawBox(uxmin,pyold1,uxmax,pyold2,TVirtualPadPainter::kFilled);
-   pp->DrawBox(uxmin,py1,uxmax,py2,TVirtualPadPainter::kFilled);
-   pyold1 = py1;
-   pyold2 = py2;
+   gPad->PaintBox(uxmin,py1,uxmax,py2,"iprojX");
+   gPad->UpdateAsync();
 
    // Create or set the new canvas proj x
    TVirtualPad::TContext ctxt(true);
    auto name1 = TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
    auto c = static_cast<TVirtualPad *>(gROOT->GetListOfCanvases()->FindObject(name1.Data()));
    if (!c) {
-      fShowProjection = 0;
-      fShowProjection2 = 0;
-      pyold1 = pyold2 = 0;
+      fShowProjection = fShowProjection2 = 0;
       return;
    }
 
@@ -11120,7 +11109,7 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
       hp->SetXTitle(fH->GetXaxis()->GetTitle());
       hp->SetYTitle(((TH2*)fH)->GetZaxis()->GetTitle() ? ((TH2*)fH)->GetZaxis()->GetTitle() : "Number of Entries");
       c->Add(hp, fShowOption);
-      c->Update();
+      c->UpdateAsync();
    }
 }
 
@@ -11129,20 +11118,13 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 
 void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 {
-   auto pp = gPad ? gPad->GetPainter() : nullptr;
-   if (!pp)
+   if (!gPad)
       return;
-
-   auto dmode = gPad->GetDoubleBuffer();
-   // turn off double buffer mode and draw primitives in invert mode
-   gPad->FeedbackMode(kTRUE);
 
    Int_t nbins = (Int_t)fShowProjection/100;
    if (fShowProjection2)
        nbins = (Int_t)fShowProjection2/100;
 
-   // Erase old position and draw a line at current position
-   static Double_t pxold1 = 0, pxold2 = 0;
    Double_t uymin = gPad->GetUymin();
    Double_t uymax = gPad->GetUymax();
    Float_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
@@ -11151,11 +11133,8 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
    Double_t px1   = gPad->XtoPad(fH->GetXaxis()->GetBinLowEdge(binx1));
    Double_t px2   = gPad->XtoPad(fH->GetXaxis()->GetBinUpEdge(binx2));
 
-   if (!dmode && (pxold1 || pxold2))
-      pp->DrawBox(pxold1, uymin, pxold2, uymax, TVirtualPadPainter::kFilled);
-   pp->DrawBox(px1, uymin, px2, uymax, TVirtualPadPainter::kFilled);
-   pxold1 = px1;
-   pxold2 = px2;
+   gPad->PaintBox(px1, uymin, px2, uymax, "iprojY");
+   gPad->UpdateAsync();
 
    // Create or set the new canvas proj y
    TVirtualPad::TContext ctxt(true);
@@ -11165,9 +11144,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 
    auto c = static_cast<TVirtualPad *>(gROOT->GetListOfCanvases()->FindObject(name2.Data()));
    if (!c) {
-      fShowProjection = 0;
-      fShowProjection2 = 0;
-      pxold1 = pxold2 = 0;
+      fShowProjection = fShowProjection2 = 0;
       return;
    }
 
@@ -11208,7 +11185,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
       hp->SetXTitle(fH->GetYaxis()->GetTitle());
       hp->SetYTitle(((TH2*)fH)->GetZaxis()->GetTitle() ? ((TH2*)fH)->GetZaxis()->GetTitle() : "Number of Entries");
       c->Add(hp, fShowProjection2 ? "hbar" + fShowOption : fShowOption);
-      c->Update();
+      c->UpdateAsync();
    }
 }
 
@@ -11247,20 +11224,16 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
    if (parent.GetGLDevice() != -1)
       return;
 
-   // turn off double buffer mode and draw primitives in invert mode
-   parent.FeedbackMode(kTRUE);
-
    auto view = parent.GetView();
-   auto pp = parent.GetPainter();
-   if (!view || !pp)
+   if (!view)
       return;
 
    // check that ranges are set
    if ((parent.GetUxmin() == parent.GetUxmax()) || (parent.GetUymin() == parent.GetUymax()))
       return;
 
-   // stored vertices
-   static Double_t rect1x[5] = {0,0,0,0,0}, rect1y[5] = {0,0,0,0,0}, rect2x[5] = {0,0,0,0,0}, rect2y[5] = {0,0,0,0,0};
+   // calculated vertices
+   Double_t rect1x[5] = {0,0,0,0,0}, rect1y[5] = {0,0,0,0,0}, rect2x[5] = {0,0,0,0,0}, rect2y[5] = {0,0,0,0,0};
 
    auto cname = TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
    auto c = static_cast<TVirtualPad *>(gROOT->GetListOfCanvases()->FindObject(cname));
@@ -11268,7 +11241,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
 
    if (!c || !h3) {
       fShowProjection = 0;
-      rect1x[0] = 0;
       return;
    }
 
@@ -11342,23 +11314,27 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
       resy = uu[1];
    };
 
-   auto draw_rects = [pp, nbins, kind]() {
+   auto draw_rects = [&parent, nbins, kind, &rect1x, &rect2x, &rect1y, &rect2y]() {
       rect1x[4] = rect1x[0];
       rect1y[4] = rect1y[0];
       rect2x[4] = rect2x[0];
       rect2y[4] = rect2y[0];
       if (kind > 3) {
-         pp->DrawPolyLine(5, rect1x, rect1y);
+         parent.PaintPolyLine(5, rect1x, rect1y, "iproj3_rect1");
          if (nbins > 1)
-            pp->DrawPolyLine(5, rect2x, rect2y);
+            parent.PaintPolyLine(5, rect2x, rect2y, "iproj3_rect2");
       } else {
-         pp->DrawPolyLine(nbins > 1 ? 5 : 2, rect1x, rect1y);
+         parent.PaintPolyLine(nbins > 1 ? 5 : 2, rect1x, rect1y, "iproj3_rect1");
          if (nbins > 1) {
-            pp->DrawPolyLine(5, rect2x, rect2y);
-            for (Int_t n = 0; n < 4; ++n)
-               pp->DrawLine(rect1x[n], rect1y[n], rect2x[n], rect2y[n]);
+            parent.PaintPolyLine(5, rect2x, rect2y, "iproj3_rect2");
+            for (Int_t n = 0; n < 4; ++n) {
+               Double_t xx[2] = {rect1x[n], rect2x[n]};
+               Double_t yy[2] = {rect1y[n], rect2y[n]};
+               parent.PaintPolyLine(2, xx, yy, TString::Format("iproj3_line%d", n).Data());
+            }
          }
       }
+      parent.UpdateAsync();
    };
 
    Int_t binx = -1, biny = -1, binz = -1, binx2 = -1, biny2 = -1, binz2 = -1, dummy = -1;
@@ -11399,10 +11375,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
 
    switch (kind) {
       case 1: { // "x"
-         if (rect1x[0]) {
-            draw_rects();
-            rect1x[0] = 0;
-         }
          if (!findAxis(biny, binz, 'x'))
             break;
 
@@ -11438,10 +11410,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
       }
 
       case 2: { // "y"
-         if (rect1x[0]) {
-            draw_rects();
-            rect1x[0] = 0;
-         }
          if (!findAxis(binx, binz, 'y'))
             break;
 
@@ -11476,10 +11444,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
       }
 
       case 3: { // "z"
-         if (rect1x[0]) {
-            draw_rects();
-            rect1x[0] = 0;
-         }
          if (!findAxis(binx, biny, 'z'))
             break;
          binx2 = extend_bin(xaxis, binx);
@@ -11514,9 +11478,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
 
       case 4:   // "xy"
       case 5: { // "yx"
-         if (rect1x[0])
-            draw_rects();
-
          if (!findAxis(dummy, binz, 'x') && !findAxis(dummy, binz, 'y'))
             break;
          binz2 = extend_bin(zaxis, binz);
@@ -11556,9 +11517,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
 
       case 6:   // "xz"
       case 7: { // "zx"
-         if (rect1x[0])
-            draw_rects();
-
          if (!findAxis(biny, dummy, 'x') && !findAxis(dummy, biny, 'z'))
             break;
 
@@ -11600,9 +11558,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
 
       case 8:   // "yz"
       case 9: { // "zy"
-         if (rect1x[0])
-            draw_rects();
-
          if (!findAxis(binx, dummy, 'y') && !findAxis(binx, dummy, 'z'))
             break;
 
