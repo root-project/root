@@ -27,14 +27,8 @@ struct Bvh {
 
     Bvh& operator = (Bvh&&) = default;
 
-    //bool operator == (const Bvh& other) const = default;
-    //bool operator != (const Bvh& other) const = default;
-    bool operator == (const Bvh& other) const {
-        return other.nodes == nodes && other.prim_ids == prim_ids;
-    }
-    bool operator != (const Bvh& other) const {
-        return other.nodes != nodes || other.prim_ids != prim_ids;
-    }
+    bool operator == (const Bvh& other) const = default;
+    bool operator != (const Bvh& other) const = default;
 
     /// Returns whether the node located at the given index is the left child of its parent.
     static BVH_ALWAYS_INLINE bool is_left_sibling(size_t node_id) { return node_id % 2 == 1; }
@@ -60,11 +54,11 @@ struct Bvh {
     BVH_ALWAYS_INLINE const Node& get_root() const { return nodes[0]; }
 
     /// Extracts the BVH rooted at the given node index.
-    inline Bvh extract_bvh(size_t root_id) const;
+    [[nodiscard]] inline Bvh extract_bvh(size_t root_id) const;
 
     /// Traverses the BVH from the given index in `start` using the provided stack. Every leaf
     /// encountered on the way is processed using the given `LeafFn` function, and every pair of
-    /// nodes is processed with the function in `HitFn`, which returns a triplet of booleans
+    /// nodes is processed with the function in `InnerFn`, which returns a triplet of booleans
     /// indicating whether the first child should be processed, whether the second child should be
     /// processed, and whether to traverse the second child first instead of the other way around.
     template <bool IsAnyHit, typename Stack, typename LeafFn, typename InnerFn>
@@ -87,8 +81,11 @@ struct Bvh {
     template <typename LeafFn = IgnoreArgs>
     inline void refit(LeafFn&& = {});
 
+    template <typename IndexType = typename Index::Type>
     inline void serialize(OutputStream&) const;
-    static inline Bvh deserialize(InputStream&);
+
+    template <typename IndexType = typename Index::Type>
+    [[nodiscard]] static inline Bvh deserialize(InputStream&);
 };
 
 template <typename Node>
@@ -146,12 +143,10 @@ restart:
                     stack.push(far_index);
                 }
                 top = near_index;
-            } else if (hit_right) {
+            } else if (hit_right)
                 top = right.index;
-            }
-            else [[unlikely]] {
+            else [[unlikely]]
                 goto restart;
-            }
         }
 
         [[maybe_unused]] auto was_hit = leaf_fn(top.first_id(), top.first_id() + top.prim_count());
@@ -165,18 +160,19 @@ template <typename Node>
 template <bool IsAnyHit, bool IsRobust, typename Stack, typename LeafFn, typename InnerFn>
 void Bvh<Node>::intersect(const Ray& ray, Index start, Stack& stack, LeafFn&& leaf_fn, InnerFn&& inner_fn) const {
     auto inv_dir = ray.template get_inv_dir<!IsRobust>();
-    auto inv_dir_pad_or_inv_org = IsRobust ? ray.pad_inv_dir(inv_dir) : -inv_dir * ray.org;
+    auto inv_org = -inv_dir * ray.org;
+    auto inv_dir_pad = ray.pad_inv_dir(inv_dir);
     auto octant = ray.get_octant();
 
     traverse_top_down<IsAnyHit>(start, stack, leaf_fn, [&] (const Node& left, const Node& right) {
         inner_fn(left, right);
         std::pair<Scalar, Scalar> intr_left, intr_right;
         if constexpr (IsRobust) {
-            intr_left  = left .intersect_robust(ray, inv_dir, inv_dir_pad_or_inv_org, octant);
-            intr_right = right.intersect_robust(ray, inv_dir, inv_dir_pad_or_inv_org, octant);
+            intr_left  = left .intersect_robust(ray, inv_dir, inv_dir_pad, octant);
+            intr_right = right.intersect_robust(ray, inv_dir, inv_dir_pad, octant);
         } else {
-            intr_left  = left .intersect_fast(ray, inv_dir, inv_dir_pad_or_inv_org, octant);
-            intr_right = right.intersect_fast(ray, inv_dir, inv_dir_pad_or_inv_org, octant);
+            intr_left  = left .intersect_fast(ray, inv_dir, inv_org, octant);
+            intr_right = right.intersect_fast(ray, inv_dir, inv_org, octant);
         }
         return std::make_tuple(
             intr_left.first <= intr_left.second,
@@ -222,24 +218,26 @@ void Bvh<Node>::refit(LeafFn&& leaf_fn) {
 }
 
 template <typename Node>
+template <typename IndexType>
 void Bvh<Node>::serialize(OutputStream& stream) const {
-    stream.write(nodes.size());
-    stream.write(prim_ids.size());
+    stream.write(static_cast<IndexType>(nodes.size()));
+    stream.write(static_cast<IndexType>(prim_ids.size()));
     for (auto&& node : nodes)
         node.serialize(stream);
     for (auto&& prim_id : prim_ids)
-        stream.write(prim_id);
+        stream.write(static_cast<IndexType>(prim_id));
 }
 
 template <typename Node>
+template <typename IndexType>
 Bvh<Node> Bvh<Node>::deserialize(InputStream& stream) {
     Bvh bvh;
-    bvh.nodes.resize(stream.read<size_t>());
-    bvh.prim_ids.resize(stream.read<size_t>());
+    bvh.nodes.resize(stream.read<IndexType>());
+    bvh.prim_ids.resize(stream.read<IndexType>());
     for (auto& node : bvh.nodes)
         node = Node::deserialize(stream);
     for (auto& prim_id : bvh.prim_ids)
-        prim_id = stream.read<size_t>();
+        prim_id = stream.read<IndexType>();
     return bvh;
 }
 

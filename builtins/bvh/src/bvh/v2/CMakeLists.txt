@@ -12,12 +12,6 @@ target_include_directories(bvh INTERFACE
 
 set_target_properties(bvh PROPERTIES CXX_STANDARD 20)
 
-install(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
-    DESTINATION include/bvh/v2
-    FILES_MATCHING PATTERN "*.h"
-    PATTERN "c_api" EXCLUDE)
-
 if (BVH_BUILD_C_API)
     add_subdirectory(c_api)
 endif()
