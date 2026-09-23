@@ -159,9 +159,12 @@ public:
    ///
    /// \param[in] canonicalFieldName The name of the field in the entry, including its processor name prefixes and
    /// parent field names, if applicable.
+   /// \param[in] typeName Type of the field, if relevant. If no type name is provided, the first field corresponding to
+   /// the provided name is returned.
    ///
    /// \return A `std::optional` containing the field index if it was found.
-   std::optional<FieldIndex_t> FindFieldIndex(std::string_view canonicalFieldName, std::string_view typeName) const;
+   std::optional<FieldIndex_t>
+   FindFieldIndex(std::string_view canonicalFieldName, std::string_view typeName = "") const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add a new field to the entry.
