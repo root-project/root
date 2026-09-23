@@ -131,8 +131,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
 )
 
 target_include_directories(Geom PRIVATE res
-../../builtins/ # for bvh hard-coded builtin, forked from https://github.com/madmann91/bvh/commit/66e445b92f68801a6dd8ef943fe3038976ecb4ff
-# TODO: move this to a proper isolated builtin with find_package, and resync with upstream version, add ROOT builtin_bvh option 
+../../builtins/bvh/src # for bvh hard-coded builtin, forked from https://github.com/madmann91/bvh/commit/66e445b92f68801a6dd8ef943fe3038976ecb4ff
+# TODO: move this to a proper isolated builtin with find_package, and add ROOT builtin_bvh option 
 )
 # GCC has bugs with -O3 or -Ofast that break Geom
 if(CMAKE_COMPILER_IS_GNUCXX)
