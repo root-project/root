@@ -416,6 +416,7 @@ else()
 endif()
 add_subdirectory (montecarlo)
 if(geom)
+  add_subdirectory (builtins/bvh) # hard coded builtin for geom/geom TODO mv to full builtin ROOT build option
   add_subdirectory (geom)
 endif()
 if(NOT WIN32)

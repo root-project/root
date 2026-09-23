@@ -128,12 +128,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
     Hist
     GenVector
     Imt
+  LIBRARIES
+    bvh::bvh
 )
 
-target_include_directories(Geom PRIVATE res
-../../builtins/bvh/src # for bvh hard-coded builtin, forked from https://github.com/madmann91/bvh/commit/66e445b92f68801a6dd8ef943fe3038976ecb4ff
-# TODO: move this to a proper isolated builtin with find_package, and add ROOT builtin_bvh option 
-)
+target_include_directories(Geom PRIVATE res)
 # GCC has bugs with -O3 or -Ofast that break Geom
 if(CMAKE_COMPILER_IS_GNUCXX)
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5 OR CMAKE_SIZEOF_VOID_P LESS 8)
