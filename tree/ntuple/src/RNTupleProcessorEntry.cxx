@@ -76,6 +76,12 @@ ROOT::Experimental::Internal::RNTupleProcessorEntry::AddField(const std::string 
    return fieldIdx;
 }
 
+const ROOT::RFieldBase &ROOT::Experimental::Internal::RNTupleProcessorEntry::GetField(FieldIndex_t fieldIdx) const
+{
+   assert(fieldIdx < fProcessorValues.size());
+   return *fProcessorValues[fieldIdx].fField;
+}
+
 void ROOT::Experimental::Internal::RNTupleProcessorEntry::UpdateField(FieldIndex_t fieldIdx,
                                                                       std::unique_ptr<ROOT::RFieldBase> field)
 {
