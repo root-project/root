@@ -117,7 +117,8 @@ RFlat2DMatrix RBatchLoader::GetBatch()
    // Notify the loading thread that the queue has drained
    fCV.notify_all();
 
-   return *fCurrentBatch;
+   // move the buffer over to the caller
+   return std::move(*fCurrentBatch);
 }
 
 /// \brief Creating the batches from a chunk and add them to the queue.
