@@ -46,8 +46,10 @@ ParserFuncSignature ParseNonZero = [](RModelParser_ONNX &parser, const onnx::Nod
 
 
 
+   // the indices are INT64 whatever the type of the input; registering the input type here
+   // would leave the parser's type registry disagreeing with the model
    if (!parser.IsRegisteredTensorType(output_name)) {
-      parser.RegisterTensorType(output_name, input_type);
+      parser.RegisterTensorType(output_name, ETensorType::INT64);
    }
 
    return op;

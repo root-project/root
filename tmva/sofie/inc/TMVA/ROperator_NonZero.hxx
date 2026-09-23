@@ -20,6 +20,7 @@ private:
    std::string fNX;
    std::string fNY;
    std::string fNonZeroParam; // name of the parameter used to store the number of non zero elements when output is not constant
+   bool fDeclaresParam = false; // true when this operator is the one declaring fNonZeroParam
    std::vector<Dim> fShapeX;
    std::vector<Dim> fShapeY;
 
@@ -95,14 +96,22 @@ public:
 
          // identify as -1 since we will declare maximum as size of input
          // we will compute at run time the actual number of non zero and rearrange the output vector accordingly
+         // named after the input: two NonZero nodes reading the same tensor count the same
+         // elements, so they share one parameter and shape comparisons see them as equal
          fNonZeroParam = "v_NonZero_" + fNX;
          fShapeY[1] = Dim{fNonZeroParam, static_cast<size_t>(-1)};
 
-         // declare the parameter for number of non zero elements, used when output is not constant
-         auto inputLength = ConvertDimShapeToLength(fShapeX);
-         std::string codeDecl = SP + "size_t " + fNonZeroParam + " = " + inputLength + ";\n";
-         codeDecl += SP + "fV_NonZero_" + fNX + " = " + fNonZeroParam + ";\n";
-         model.AddExtraCodeForDimShapes(codeDecl);
+         // only the first operator on this input declares the parameter
+         if (!model.IsComputedShapeParam(fNonZeroParam)) {
+            fDeclaresParam = true;
+            // declare the parameter for number of non zero elements, used when output is not constant
+            auto inputLength = ConvertDimShapeToLength(fShapeX);
+            std::string codeDecl = SP + "size_t " + fNonZeroParam + " = " + inputLength + ";\n";
+            codeDecl += SP + "fV_NonZero_" + fNX + " = " + fNonZeroParam + ";\n";
+            model.AddExtraCodeForDimShapes(codeDecl);
+            // computed here, so it must not also be a Session constructor argument
+            model.AddComputedShapeParam(fNonZeroParam);
+         }
 
          model.AddIntermediateTensor(fNY, ETensorType::INT64, fShapeY);
          if (model.Verbose()) {
@@ -112,7 +121,7 @@ public:
    }
 
    std::string GenerateSessionMembersCode(std::string /*opName*/) override {
-      if (fIsOutputConstant) return "";
+      if (fIsOutputConstant || !fDeclaresParam) return "";
       std::stringstream out;
       out << SP << "size_t fV_NonZero_" << fNX << " = 0;\n";
       return out.str();
@@ -137,7 +146,8 @@ public:
       size_t dims = fShapeX.size();
       out << "\n//------ NonZero  -> " << ConvertDimShapeToString(fShapeY) << "\n";
 
-      std::string vnonzero = fNonZeroParam;
+      // the others fill their output with a private counter of the same value
+      std::string vnonzero = fDeclaresParam ? fNonZeroParam : ("nonzero_count_" + opName);
 
       // loop on input indices
       out << SP << "size_t offset_" << opName << " = 0;\n";

@@ -267,7 +267,8 @@ public:
          fShapeB = model.GetTensorShape(fNB);
          if (fShapeB.size() != 1)
             throw
-               std::runtime_error("TMVA SOFIE Conv op : invalid shape for Bias tensor (is not 1D)");
+               std::runtime_error("TMVA SOFIE Conv op " + fNY + " : invalid shape for Bias tensor " + fNB +
+                                  " : " + ConvertShapeToString(fShapeB) + " is not 1D");
          std::vector<Dim> targetShape(fShapeY.begin() + 1, fShapeY.end());
          auto shapeDimB = model.GetDimTensorShape(fNB);
          bool broadcast_needed = !UTILITY::AreSameShape(shapeDimB, targetShape);
@@ -317,10 +318,13 @@ public:
 
       std::vector<size_t> shape1 = {fShapeW[0], fShapeW[1], kernelSize};
       std::vector<Dim> shape2 = {Dim{fShapeW[1]}, Dim{kernelSize}, channelDim };
-      model.AddIntermediateTensor(fNX +"_f", ConvertStringToType(fType), shape1 );
-      model.AddIntermediateTensor(fNX +"_xcol", ConvertStringToType(fType), shape2 );
-      convK = fNX +"_f";
-      imcol = fNX +"_xcol";
+
+      // private workspaces of this node, named after its output, which is unique: the reshaped
+      // kernel depends on this node's weights and the im2col buffer on its attributes
+      model.AddIntermediateTensor(fNY +"_f", ConvertStringToType(fType), shape1 );
+      model.AddIntermediateTensor(fNY +"_xcol", ConvertStringToType(fType), shape2 );
+      convK = fNY +"_f";
+      imcol = fNY +"_xcol";
       fOutputTensorNames.emplace_back(convK);
       fOutputTensorNames.emplace_back(imcol);
       fInputTensorNames.emplace_back(convK);
@@ -423,7 +427,7 @@ public:
          out << SP << SP << SP << "for (std::size_t kh = 0; kh < " << kHeight << "; kh++) {\n";
       out << SP << SP << SP << SP << "for (std::size_t kw = 0; kw < " << kWidth << "; kw++) {\n";
 
-      out << SP << SP << SP << SP << SP << "tensor_" <<fNX <<  "_f[oc * "
+      out << SP << SP << SP << SP << SP << "tensor_" << convK << "[oc * "
           << ocstrideDil << " + ic * " << icstrideDil;
       if (fDim > 2) out << " + kd * " << dstrideDil;
       if (fDim > 1) out << " + kh * " << hstrideDil;
@@ -496,7 +500,7 @@ public:
                    << fAttrPads[2] << "," << fAttrPads[1] << "," << fAttrPads[3]
                    << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
                    << fAttrDilations[1];
-            out << "," << "tensor_" <<fNX << "_xcol);\n\n ";
+            out << "," << "tensor_" << imcol << ");\n\n ";
          } else {
             // 3d im2col
             out << SP << SP << "UTILITY::Im2col_3d<float>(tensor_" << fNX
@@ -510,13 +514,13 @@ public:
                 << fAttrPads[2] << "," << fAttrPads[5] << ","
                 << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << ","
                 << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << ","
-                << "tensor_" << fNX << "_xcol);\n\n ";
+                << "tensor_" << imcol << ");\n\n ";
          }
          // BLAS
          out << SP << "Gemm_Call("
              << "tensor_" << fNY << " + out_offset, false, false, "
              << OpName << "_m, " << OpName << "_n, " << OpName << "_k, "
-             << OpName << "_alpha, " << "tensor_" << fNX << "_xcol, tensor_" << fNX << "_f, "
+             << OpName << "_alpha, " << "tensor_" << imcol << ", tensor_" << convK << ", "
              << OpName << "_beta, ";
          if (fNB != "")
             out << "tensor_" << fNB;
@@ -526,9 +530,9 @@ public:
 
 
          // out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
-         //     << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, " << "tensor_" << fNX << "_xcol, &" << OpName
+         //     << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, " << "tensor_" << imcol << ", &" << OpName
          //     << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-         // out << SP << SP << SP << "tensor_" << fNX << "_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
+         // out << SP << SP << SP << "tensor_" << convK << ", &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
          //     << " + out_offset, &" << OpName << "_m);\n";
       } else {
          // case of group convolution
@@ -556,7 +560,7 @@ public:
                    << fAttrPads[2] << "," << fAttrPads[1] << "," << fAttrPads[3]
                    << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
                    << fAttrDilations[1];
-            out << ", tensor_" << fNX << "_xcol);\n\n ";
+            out << ", tensor_" << imcol << ");\n\n ";
          } else {
             // 3d im2col
             out << SP << SP << "UTILITY::Im2col_3d<float>(tensor_" << fNX
@@ -568,8 +572,7 @@ public:
                 << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << "," << fAttrPads[0] << "," << fAttrPads[3]
                 << "," << fAttrPads[1] << "," << fAttrPads[4] << "," << fAttrPads[2] << "," << fAttrPads[5]
                 << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2]
-                << "," << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << ",tensor_" << fNX
-                << "_xcol);\n\n ";
+                << "," << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << ",tensor_" << imcol << ");\n\n ";
          }
 
          // BLAS
@@ -583,7 +586,7 @@ public:
          out << SP << "Gemm_Call("
              << "tensor_" << fNY << " + out_offset, false, false, "
              << OpName << "_m, " << OpName << "_n, " << OpName << "_k, "
-             << OpName << "_alpha, " << "tensor_" << fNX << "_xcol, tensor_" << fNX << "_f + offset_f, "
+             << OpName << "_alpha, " << "tensor_" << imcol << ", tensor_" << convK << " + offset_f, "
              << OpName << "_beta, ";
          if (fNB != "")
             out << "tensor_" << fNB << " + g_offset";
@@ -592,9 +595,9 @@ public:
          out << ");\n";
 
          // out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
-         //     << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fNX << "_xcol, &" << OpName
+         //     << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << imcol << ", &" << OpName
          //     << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-         // out << SP << SP << SP << "tensor_" << fNX << "_f + offset_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
+         // out << SP << SP << SP << "tensor_" << convK << " + offset_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
          //     << " + out_offset"
          //     << ", &" << OpName << "_m);\n";
 

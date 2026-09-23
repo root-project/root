@@ -5468,6 +5468,135 @@ def make_Where():
     return _model(graph, opset=21, ir_version=10, producer_name='onnx-example')
 
 
+def make_ConvSharedInput():
+    """Ops: Conv, Add. Two convolutions read the same input tensor, each with
+    its own reshaped-kernel and im2col workspaces."""
+    nodes = [
+        helper.make_node("Conv", ["x", "w1"], ["c1"], name="conv_1", kernel_shape=[3, 3],
+                         pads=[1, 1, 1, 1], strides=[1, 1]),
+        helper.make_node("Conv", ["x", "w2"], ["c2"], name="conv_2", kernel_shape=[3, 3],
+                         pads=[1, 1, 1, 1], strides=[1, 1]),
+        helper.make_node("Add", ["c1", "c2"], ["y"], name="add_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "conv_shared_input",
+        inputs=[_vi("x", FLOAT, [1, 2, 4, 4])],
+        outputs=[_vi("y", FLOAT, [1, 3, 4, 4])],
+        initializer=[
+            _random_tensor("w1", [3, 2, 3, 3], seed=101),
+            _random_tensor("w2", [3, 2, 3, 3], seed=102),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_ConvTransposeSharedInput():
+    """Ops: ConvTranspose, Add. Two transposed convolutions read the same input
+    tensor (see ConvSharedInput)."""
+    nodes = [
+        helper.make_node("ConvTranspose", ["x", "w1"], ["c1"], name="convt_1", kernel_shape=[2, 2]),
+        helper.make_node("ConvTranspose", ["x", "w2"], ["c2"], name="convt_2", kernel_shape=[2, 2]),
+        helper.make_node("Add", ["c1", "c2"], ["y"], name="add_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "convtranspose_shared_input",
+        inputs=[_vi("x", FLOAT, [1, 2, 3, 3])],
+        outputs=[_vi("y", FLOAT, [1, 3, 4, 4])],
+        initializer=[
+            _random_tensor("w1", [2, 3, 2, 2], seed=103),
+            _random_tensor("w2", [2, 3, 2, 2], seed=104),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_ConvResidualAdd():
+    """Ops: Conv, Add. The Add after the bias-less Conv adds a whole feature
+    map: a residual connection, not a per-channel bias."""
+    nodes = [
+        helper.make_node("Conv", ["x", "w"], ["c"], name="conv_0", kernel_shape=[3, 3],
+                         pads=[1, 1, 1, 1], strides=[1, 1]),
+        helper.make_node("Add", ["c", "residual"], ["y"], name="add_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "conv_residual_add",
+        inputs=[_vi("x", FLOAT, [1, 2, 4, 4])],
+        outputs=[_vi("y", FLOAT, [1, 2, 4, 4])],
+        initializer=[
+            _random_tensor("w", [2, 2, 3, 3], seed=105),
+            _random_tensor("residual", [2, 4, 4], seed=106),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_NonZeroTwice():
+    """Ops: NonZero. Two NonZero nodes count the non-zero elements of the same
+    input, sharing the run-time parameter that holds the count."""
+    nodes = [
+        helper.make_node("NonZero", ["data"], ["nz1"], name="nonzero_1"),
+        helper.make_node("NonZero", ["data"], ["nz2"], name="nonzero_2"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "nonzero_twice",
+        inputs=[_vi("data", UINT8, [2, 2, 3])],
+        outputs=[
+            _vi("nz1", INT64, [3, "N"]),
+            _vi("nz2", INT64, [3, "N"]),
+        ],
+    )
+    return _model(graph, opset=21, ir_version=10, producer_name="onnx-example")
+
+
+def make_GatherNDNegativeIndicesTwice():
+    """Ops: GatherND, Add. Both gathers read the same index tensor, which holds
+    negative indices counted from the end of the axis."""
+    nodes = [
+        helper.make_node("GatherND", ["data1", "indices"], ["g1"], name="gathernd_1"),
+        helper.make_node("GatherND", ["data2", "indices"], ["g2"], name="gathernd_2"),
+        helper.make_node("Add", ["g1", "g2"], ["output"], name="add_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "gathernd_negative_indices_twice",
+        inputs=[
+            _vi("data1", FLOAT, [2, 3, 3]),
+            _vi("data2", FLOAT, [2, 3, 3]),
+        ],
+        outputs=[_vi("output", FLOAT, [2, 3])],
+        initializer=[_tensor("indices", INT64, [2, 2], [-1, -2, 0, -3])],
+    )
+    return _model(graph, opset=21, ir_version=10, producer_name="onnx-example")
+
+
+def make_IdentityWeightBatchNorm():
+    """Ops: Identity, BatchNormalization. The scale of the batch normalization
+    is reached through an Identity of a weight, which exporters emit for a shared
+    parameter, and has to stay resolvable while the code is generated."""
+    nodes = [
+        helper.make_node("Identity", ["scale_source"], ["scale"], name="identity_0"),
+        helper.make_node("BatchNormalization", ["x", "scale", "bias", "mean", "var"], ["y"],
+                         name="bn_0", epsilon=1e-5),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "identity_weight_batchnorm",
+        inputs=[_vi("x", FLOAT, [1, 3, 2, 2])],
+        outputs=[_vi("y", FLOAT, [1, 3, 2, 2])],
+        initializer=[
+            _tensor("scale_source", FLOAT, [3], [1.5, 0.5, 2.0]),
+            _tensor("bias", FLOAT, [3], [0.1, -0.2, 0.3]),
+            _tensor("mean", FLOAT, [3], [0.0, 1.0, -1.0]),
+            _tensor("var", FLOAT, [3], [1.0, 4.0, 0.25]),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
 MODELS = {
     "Abs": make_Abs,
     "Acosh": make_Acosh,
@@ -5497,7 +5626,10 @@ MODELS = {
     "Concat_0D": make_Concat_0D,
     "Constant": make_Constant,
     "ConvAddRelu": make_ConvAddRelu,
+    "ConvResidualAdd": make_ConvResidualAdd,
+    "ConvSharedInput": make_ConvSharedInput,
     "ConvTranspose1d": make_ConvTranspose1d,
+    "ConvTransposeSharedInput": make_ConvTransposeSharedInput,
     "ConvTranspose2d": make_ConvTranspose2d,
     "ConvTranspose2dOutputShape": make_ConvTranspose2dOutputShape,
     "ConvTransposeBias2d": make_ConvTransposeBias2d,
@@ -5546,6 +5678,7 @@ MODELS = {
     "GatherND_1": make_GatherND_1,
     "GatherND_2": make_GatherND_2,
     "GatherND_3": make_GatherND_3,
+    "GatherNDNegativeIndicesTwice": make_GatherNDNegativeIndicesTwice,
     "GatherNegativeIndices": make_GatherNegativeIndices,
     "GatherRuntimeNegativeIndices": make_GatherRuntimeNegativeIndices,
     "Gelu": make_Gelu,
@@ -5564,6 +5697,7 @@ MODELS = {
     "LSTMDefaults": make_LSTMDefaults,
     "LSTMInitialBias": make_LSTMInitialBias,
     "LSTMPeepholes": make_LSTMPeepholes,
+    "IdentityWeightBatchNorm": make_IdentityWeightBatchNorm,
     "LayerNormalization2d": make_LayerNormalization2d,
     "LayerNormalization4d": make_LayerNormalization4d,
     "Less": make_Less,
@@ -5596,6 +5730,7 @@ MODELS = {
     "Neg": make_Neg,
     "NonZero": make_NonZero,
     "NonZero_Constant": make_NonZero_Constant,
+    "NonZeroTwice": make_NonZeroTwice,
     "NotIsNaN": make_NotIsNaN,
     "Pad": make_Pad,
     "Pow": make_Pow,
@@ -5729,11 +5864,14 @@ TEST_INPUTS = {
     'Constant': [
     ],
     'ConvAddRelu': [f32(np.arange(-7.0, 9.0), (1, 1, 4, 4))],
+    'ConvResidualAdd': [rand_f32(31, (1, 2, 4, 4))],
+    'ConvSharedInput': [rand_f32(32, (1, 2, 4, 4))],
     'ConvTranspose1d': [f32(np.arange(0.0, 3.0), (1, 1, 3))],
     'ConvTranspose2d': [f32(np.arange(0.0, 9.0), (1, 1, 3, 3))],
     'ConvTranspose2dOutputShape': [f32(np.arange(0.0, 9.0), (1, 1, 3, 3))],
     'ConvTransposeBias2d': [f32(np.arange(0.0, 9.0), (1, 1, 3, 3))],
     'ConvTransposeBias2dBatched': [f32(np.arange(0.0, 18.0), (2, 1, 3, 3))],
+    'ConvTransposeSharedInput': [rand_f32(33, (1, 2, 3, 3))],
     'ConvWithAsymmetricPadding': [f32(np.arange(0.0, 35.0), (1, 1, 7, 5))],
     'ConvSameUpperEvenKernel': [f32(np.arange(0.0, 16.0), (1, 1, 4, 4))],
     'ConvSameLowerEvenKernel': [f32(np.arange(0.0, 16.0), (1, 1, 4, 4))],
@@ -5773,9 +5911,11 @@ TEST_INPUTS = {
     'GatherAxis1': [f32(np.arange(0.0, 120.0), (5, 4, 3, 2))],
     'GatherAxis2': [f32(np.arange(0.0, 120.0), (5, 4, 3, 2))],
     'GatherAxis3': [f32(np.arange(0.0, 120.0), (5, 4, 3, 2))],
+    'GatherNDNegativeIndicesTwice': [rand_f32(34, (2, 3, 3)), rand_f32(35, (2, 3, 3))],
     'GatherNegativeIndices': [f32(np.arange(0.0, 10.0), (10,))],
     'GatherRuntimeNegativeIndices': [f32(np.arange(0.0, 10.0), (5, 2)), i64([-1, 2, -5])],
     'Gelu': [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
+    # N = 2 rows
     # Note: the second operand must produce a mix of true and false results,
     # otherwise a constant implementation would pass the test.
     'Greater': [
@@ -5788,6 +5928,7 @@ TEST_INPUTS = {
     ],
     'HardSigmoid': [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
     'HardSwish': [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
+    'IdentityWeightBatchNorm': [rand_f32(38, (1, 3, 2, 2))],
     # Per (n, c) slice a different mean and variance, so that a normalization
     # that mixed up instances or channels would not cancel out.
     'InstanceNormalization': [
@@ -5909,6 +6050,7 @@ TEST_INPUTS = {
     ],
     'Swish': [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
     'Tanh': [f32([-0.38960000872612, -0.3521000146865845, 0.03629999980330467, 1.0961999893188477, 0.5084999799728394, -0.8522999882698059, -0.6765999794006348, 0.24210000038146973, 1.597100019454956, 1.3873000144958496, -0.21119999885559082, -0.6894999742507935, -0.5069000124931335, -2.1394999027252197, -0.7087000012397766, 1.1657999753952026, 1.3493000268936157, 0.8131999969482422, 1.7156000137329102, -0.8636999726295471, -0.19709999859333038, 0.041099999099969864, -0.5662000179290771, -0.2515999972820282], (24,))],
+    # N = 2 rows
     'Tile5D': [f32([0.2386120855808258, 0.5549510717391968, -1.8190287351608276, 0.5724563598632812, -0.6596977710723877, 0.17560836672782898, 0.7608169317245483, 0.08603227883577347, -0.049375515431165695, 0.2705111503601074, 1.42119562625885, 0.032626643776893616, -1.212586522102356, -0.5129594802856445, -0.43296414613723755, -0.1606937050819397, 1.1884371042251587, -0.662174642086029, -2.291109323501587, -0.6852569580078125, 2.325223922729492, -0.19389064610004425, -0.5784135460853577, -0.39328137040138245, 0.2831517457962036, 0.4496127665042877, -0.2029038816690445, 0.35477763414382935, 0.4266718924045563, 0.24683749675750732, 1.90426504611969, -0.4861580729484558, 0.9139055013656616, -0.5031066536903381, 0.9583520293235779, -0.23210509121418, 1.3183971643447876, 1.7042455673217773, -0.3201166093349457, -0.14444805681705475, -0.8829464912414551, 1.725736141204834, 0.45657631754875183, 0.4920198321342468, -1.088847041130066, 0.49437597393989563, -0.006085286382585764, 2.475630760192871, 0.12170185893774033, -0.8953945636749268, 1.1430096626281738, 1.3278610706329346, 0.3076854348182678, 0.036237504333257675, 0.05180325731635094, 0.2802475392818451, 0.5289335250854492, 0.9356630444526672, 0.7863689064979553, 0.4239695370197296, 0.8723016977310181, -0.2248474359512329, 0.3891502320766449, 0.5463842153549194, -0.7782878875732422, -0.8570080399513245, -2.593783378601074, -0.11392943561077118, 0.5637082457542419, 2.075004816055298, -1.0598397254943848, 1.0823975801467896], (2, 2, 2, 3, 3))],
     'TopK': [f32([9.0, 8.0, 4.5, 1.7000000476837158, 2.9000000953674316, 3.200000047683716, 4.0, 2.5999999046325684, 7.400000095367432], (9,))],
 }
@@ -6081,6 +6223,30 @@ def _convtranspose_outputshape_reference(model, feeds):
 
 
 # Models whose expected outputs the ReferenceEvaluator cannot compute.
+def _batchnorm_reference(model, feeds):
+    """Inference-mode batch normalization, computed directly.
+
+    The ReferenceEvaluator applies the training-mode update of the running
+    statistics even though training_mode is 0, normalizing with
+    momentum * mean + (1 - momentum) * batch_mean."""
+    init = {t.name: numpy_helper.to_array(t) for t in model.graph.initializer}
+    node = next(n for n in model.graph.node if n.op_type == "BatchNormalization")
+    eps = next((a.f for a in node.attribute if a.name == "epsilon"), 1e-5)
+
+    def resolve(name):
+        # a weight may be reached through an Identity
+        if name in init:
+            return init[name]
+        producer = next(n for n in model.graph.node if name in n.output)
+        return resolve(producer.input[0])
+
+    x = np.asarray(feeds[node.input[0]], dtype=np.float32)
+    scale, bias, mean, var = (resolve(n) for n in node.input[1:5])
+    shape = (1, -1) + (1,) * (x.ndim - 2)
+    y = scale.reshape(shape) * (x - mean.reshape(shape)) / np.sqrt(var.reshape(shape) + eps)
+    return [(y + bias.reshape(shape)).astype(np.float32)]
+
+
 EXPECTED_OVERRIDES = {
     "GRUBidirectional": _recurrent_reference,
     "LSTMBidirectional": _recurrent_reference,
@@ -6091,6 +6257,7 @@ EXPECTED_OVERRIDES = {
     "MaxPool2d_AsymPad": _maxpool2d_reference,
     "MeanMultidirectionalBroadcast": _mean_reference,
     "ConvTranspose2dOutputShape": _convtranspose_outputshape_reference,
+    "IdentityWeightBatchNorm": _batchnorm_reference,
 }
 
 

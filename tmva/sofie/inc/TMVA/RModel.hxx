@@ -6,6 +6,8 @@
 
 #include "Rtypes.h" // for ClassDefNV
 
+#include <unordered_set>
+
 namespace TMVA::Experimental::SOFIE {
 
 // The ROperator interface is an implementation detail of the code generation
@@ -35,6 +37,7 @@ private:
    std::unordered_map<std::string, DynamicTensorInfo> fDynamicTensorInfos;
    std::unordered_map<std::string, std::pair<std::vector<Dim>, bool>> fShapeTensors; // constant tensors describing a shape
    std::unordered_map<std::string, std::string> fShapeParams; // parameters defining the dynamic shape (e.g. batch size), store also its default value
+   std::unordered_set<std::string> fComputedShapeParams;   ///<! shape parameters computed at run time by an operator
    std::unordered_map<std::string, std::string> fAliasTensors;   // list of alias tensors
    std::vector<std::string> fDimShapeNames; // parameter names used to define the shapes
    std::vector<std::string> fOutputTensorNames;
@@ -150,6 +153,11 @@ public:
    void AddDynamicTensor(std::string tensor_name, ETensorType type, std::vector<Dim> shape);
    // void Add a shape parameter
    void AddShapeParam(const std::string & name, size_t def_value = 0);
+   /// Declare a shape parameter as computed at run time by an operator (e.g. the number of
+   /// non-zero elements found by NonZero): the operator declares it itself, so it is never a
+   /// Session constructor argument. A later AddShapeParam for the same name has no effect.
+   void AddComputedShapeParam(const std::string & name);
+   bool IsComputedShapeParam(const std::string & name) const { return fComputedShapeParams.count(name) != 0; }
    void AddInputTensorName(std::string name);
    void AddOutputTensorNameList(std::vector<std::string> output_tensor_names);
    void
