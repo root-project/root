@@ -43,7 +43,7 @@ ROOT::Experimental::Internal::RNTupleProcessorEntry::FindFieldIndex(std::string_
    assert(!fieldIdxs.empty());
 
    for (auto idx : fieldIdxs) {
-      if (fProcessorValues[idx].fField->GetTypeName() == typeName) {
+      if (typeName.empty() || fProcessorValues[idx].fField->GetTypeName() == typeName) {
          return idx;
       }
    }
