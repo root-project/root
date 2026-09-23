@@ -1,6 +1,11 @@
 #ifndef TMVA_SOFIE_SOFIE_COMMON
 #define TMVA_SOFIE_SOFIE_COMMON
 
+// This include works around broken ROOT modules.
+// It should not be necessary!
+// https://github.com/root-project/root/issues/23470
+#include "TMVA/RTensor.hxx"
+
 #include "ROOT/RSpan.hxx"
 
 #include <algorithm>
