@@ -9,5 +9,4 @@ if(CMAKE_Fortran_COMPILER)
 endif()
 
 add_subdirectory(gdbPrinters)
-add_subdirectory(rmkdepend)
 add_subdirectory(win)
