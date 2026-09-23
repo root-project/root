@@ -98,7 +98,7 @@ Bool_t TBoxInteractive::IsOpaque(const TVirtualPad &parent) const
 ///////////////////////////////////////////////////////////////////////////////
 /// Process change of moue position during dragging
 
-Bool_t TBoxInteractive::ProcessMouseMove(const TVirtualPad &parent, Int_t px, Int_t py, Bool_t canX, Bool_t canY)
+Bool_t TBoxInteractive::ProcessMouseMove(const TVirtualPad &parent, Int_t px, Int_t py, Bool_t canX, Bool_t canY, Double_t aspectRatio)
 {
    constexpr Int_t kMinSize = 20;
 
@@ -111,28 +111,48 @@ Bool_t TBoxInteractive::ProcessMouseMove(const TVirtualPad &parent, Int_t px, In
    if (py1p < py2p)
       std::swap(py1p, py2p);
 
+   enum { noAdjust = 1111, adjWidth = 11, adjBot = -1, adjHeight = 0, adjTop = 1 } choise = noAdjust;
+   Int_t prevpx1 = px1, prevpx2 = px2,
+         prevpy1 = py1, prevpy2 = py2;
+
    switch (fMode) {
    case pNone: return kFALSE;
    case pA:
+      choise = adjBot;
       px1 = TMath::Max(px1p, TMath::Min(px, px2 - kMinSize));
       py2 = TMath::Max(py2p, TMath::Min(py, py1 - kMinSize));
       break;
    case pB:
+      choise = adjBot;
       px2 = TMath::Min(px2p, TMath::Max(px, px1 + kMinSize));
       py2 = TMath::Max(py2p, TMath::Min(py, py1 - kMinSize));
       break;
    case pC:
+      choise = adjTop;
       px2 = TMath::Min(px2p, TMath::Max(px, px1 + kMinSize));
       py1 = TMath::Min(py1p, TMath::Max(py, py2 + kMinSize));
       break;
    case pD:
+      choise = adjTop;
       px1 = TMath::Max(px1p, TMath::Min(px, px2 - kMinSize));
       py1 = TMath::Min(py1p, TMath::Max(py, py2 + kMinSize));
       break;
-   case pTop: py2 = TMath::Max(py2p, TMath::Min(py, py1 - kMinSize)); break;
-   case pBot: py1 = TMath::Min(py1p, TMath::Max(py, py2 + kMinSize)); break;
-   case pL: px1 = TMath::Max(px1p, TMath::Min(px, px2 - kMinSize)); break;
-   case pR: px2 = TMath::Min(px2p, TMath::Max(px, px1 + kMinSize)); break;
+   case pTop:
+      choise = adjWidth;
+      py2 = TMath::Max(py2p, TMath::Min(py, py1 - kMinSize));
+      break;
+   case pBot:
+      choise = adjWidth;
+      py1 = TMath::Min(py1p, TMath::Max(py, py2 + kMinSize));
+      break;
+   case pL:
+      choise = adjHeight;
+      px1 = TMath::Max(px1p, TMath::Min(px, px2 - kMinSize));
+      break;
+   case pR:
+      choise = adjHeight;
+      px2 = TMath::Min(px2p, TMath::Max(px, px1 + kMinSize));
+      break;
    case pINSIDE:
       if (canX) {
          px2 += px - dpx1 - px1;
@@ -160,7 +180,41 @@ Bool_t TBoxInteractive::ProcessMouseMove(const TVirtualPad &parent, Int_t px, In
       }
       break;
    }
-   return kTRUE;
+
+   if (!aspectRatio || (choise == noAdjust))
+      return kTRUE;
+
+   if (choise == adjWidth) {
+      Int_t dx = parent.UtoPixel(aspectRatio * (py1 - py2) / parent.VtoPixel(0));
+      Int_t npx1 = (px1 + px2) / 2 - dx / 2, npx2 = npx1 + dx;
+      if ((npx1 >= px1p) && (npx2 <= px2p)) {
+         px1 = npx1;
+         px2 = npx2;
+         return kTRUE;
+      }
+   } else {
+      Int_t dy = parent.VtoPixel(1. - (0. + px2 - px1) / parent.UtoPixel(1.) / aspectRatio);
+      Int_t npy1 = py1, npy2 = py2;
+      if (choise == adjBot)
+         npy2 = py1 - dy;
+      else if (choise == adjTop)
+         npy1 = py2 + dy;
+      else if (choise == adjHeight) {
+         npy2 = (py1 + py2) / 2 - dy / 2;
+         npy1 = npy2 + dy;
+      }
+      if ((npy1 <= py1p) && (npy2 >= py2p)) {
+         py1 = npy1;
+         py2 = npy2;
+         return kTRUE;
+      }
+   }
+   px1 = prevpx1;
+   px2 = prevpx2;
+   py1 = prevpy1;
+   py2 = prevpy2;
+
+   return kFALSE;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
