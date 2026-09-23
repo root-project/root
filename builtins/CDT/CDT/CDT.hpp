@@ -6,6 +6,8 @@
  * @file
  * Public API - implementation
  */
+#ifndef CDT_WbKVsqQQaFWUcDDZzmmC
+#define CDT_WbKVsqQQaFWUcDDZzmmC
 
 #include "CDT.h"
 
@@ -13,6 +15,8 @@
 #include <deque>
 #include <limits>
 #include <stdexcept>
+
+CDT_ENSURE_PRECISE_MATH_FOR_CONSTRUCTIONS
 
 namespace CDT
 {
@@ -105,3 +109,7 @@ EdgeToPiecesMapping(const unordered_map<Edge, EdgeVec>& pieceToOriginals)
 }
 
 } // namespace CDT
+
+CDT_RESTORE_MATH_SETTINGS_FOR_CONSTRUCTIONS
+
+#endif // header-guard

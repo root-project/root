@@ -20,7 +20,6 @@
 #include <cstdlib>
 #include <iterator>
 #include <memory>
-#include <stack>
 #include <vector>
 
 /// Namespace containing triangulation functionality
@@ -139,7 +138,7 @@ template <
     typename TGetEdgeVertexStart,
     typename TGetEdgeVertexEnd,
     typename TMakeEdgeFromStartAndEnd>
-CDT_EXPORT void RemapEdges(
+void RemapEdges(
     TEdgeIter first,
     TEdgeIter last,
     const std::vector<std::size_t>& mapping,
@@ -150,7 +149,7 @@ CDT_EXPORT void RemapEdges(
 /**
  * Remap vertex indices in edges (in-place) using given vertex-index mapping.
  *
- * @note Mapping can be a result of RemoveDuplicates function
+ * @note Mapping can be a result of CDT::RemoveDuplicates function
  * @param[in,out] edges collection of edges to remap
  * @param mapping vertex-index mapping
  */
@@ -244,7 +243,7 @@ EdgeToPiecesMapping(const unordered_map<Edge, EdgeVec>& pieceToOriginals);
  * Split points are sorted from edge's start (v1) to end (v2)
  */
 template <typename T>
-CDT_EXPORT unordered_map<Edge, std::vector<VertInd> > EdgeToSplitVertices(
+unordered_map<Edge, std::vector<VertInd> > EdgeToSplitVertices(
     const unordered_map<Edge, EdgeVec>& edgeToPieces,
     const std::vector<V2d<T> >& vertices);
 
@@ -306,7 +305,7 @@ DuplicatesInfo FindDuplicates(
         typename PosToIndex::const_iterator it;
         bool isUnique;
         tie(it, isUnique) = uniqueVerts.insert(
-            std::make_pair(V2d<T>::make(getX(*first), getY(*first)), iOut));
+            std::make_pair(V2d<T>(getX(*first), getY(*first)), iOut));
         if(isUnique)
         {
             di.mapping[iIn] = iOut++;
