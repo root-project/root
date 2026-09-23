@@ -4,6 +4,7 @@
 #include <cmath>
 #include <random>
 #include <stdexcept>
+#include <utility>
 
 #include "ROOT/ML/RFlat2DMatrixOperators.hxx"
 
@@ -119,7 +120,11 @@ void RSampler::RandomUndersampler(RFlat2DMatrix &ShuffledTensor)
    }
 
    fTensorOperators->ConcatenateTensors(SampledTensor, {UndersampledMajorTensor, fDatasets[fMinor]});
-   fTensorOperators->ShuffleTensor(ShuffledTensor, SampledTensor);
+   if (fShuffle) {
+      fTensorOperators->ShuffleTensor(ShuffledTensor, SampledTensor);
+   } else {
+      ShuffledTensor = std::move(SampledTensor);
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -142,7 +147,11 @@ void RSampler::RandomOversampler(RFlat2DMatrix &ShuffledTensor)
    }
 
    fTensorOperators->ConcatenateTensors(SampledTensor, {OversampledMinorTensor, fDatasets[fMajor]});
-   fTensorOperators->ShuffleTensor(ShuffledTensor, SampledTensor);
+   if (fShuffle) {
+      fTensorOperators->ShuffleTensor(ShuffledTensor, SampledTensor);
+   } else {
+      ShuffledTensor = std::move(SampledTensor);
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////
