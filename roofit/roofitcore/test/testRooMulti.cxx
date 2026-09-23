@@ -303,15 +303,15 @@ TEST(RooMultiReal, EvaluateAndParameterAccess_Hook)
    // Prepare the observables
    RooArgSet observables(x);
 
-   // Prepare an empty parameter list for getParametersHook to fill
+   // Prepare an empty parameter list for addParameters() to fill
    RooArgSet params;
    indx.setIndex(0);
-   multiReal.getParameters(&observables, params, true);
+   multiReal.getParameters(&observables, params, {/*stripDisconnected=*/true});
    EXPECT_TRUE(params.find("model1") != nullptr);
    EXPECT_TRUE(params.find("model2") == nullptr);
 
    indx.setIndex(1);
-   multiReal.getParameters(&observables, params, true);
+   multiReal.getParameters(&observables, params, {/*stripDisconnected=*/true});
    EXPECT_TRUE(params.find("model1") == nullptr);
    EXPECT_TRUE(params.find("model2") != nullptr);
 }
@@ -342,7 +342,7 @@ TEST(RooMultiPdf, StripDisconnectedParameterTest)
 
    // --- Case 1: stripDisconnected = true ---
    cat.setIndex(0);
-   multiPdf.getParameters(&observables, params, true);
+   multiPdf.getParameters(&observables, params, {/*stripDisconnected=*/true});
 
    EXPECT_TRUE(params.find("mean1") != nullptr);
    EXPECT_TRUE(params.find("sigma1") != nullptr);
@@ -353,7 +353,7 @@ TEST(RooMultiPdf, StripDisconnectedParameterTest)
    // --- Case 2: stripDisconnected = false ---
    params.removeAll();
    cat.setIndex(0);
-   multiPdf.getParameters(&observables, params, false);
+   multiPdf.getParameters(&observables, params, {/*stripDisconnected=*/false});
 
    // Now both models' parameters should be present
    EXPECT_TRUE(params.find("mean1") != nullptr);
