@@ -148,11 +148,28 @@ public:
    /// \param[in] ValidationDataset Tensor for the validation dataset
    void SplitDataframe(ROOT::RDF::RNode &rdf, RFlat2DMatrix &TrainingDataset, RFlat2DMatrix &ValidationDataset)
    {
-      ROOT::RDF::RResultPtr<std::vector<ULong64_t>> Entries = rdf.Take<ULong64_t>("rdfentry_");
-      const std::size_t NumEntries = Entries->size();
+      const bool NotFiltered = rdf.GetFilterNames().empty();
 
-      // add the last element in entries to not go out of range when filling chunks
-      Entries->push_back((*Entries)[NumEntries - 1] + 1);
+      // size the buffer from the cluster metadata, Count() is only the fallback for sources without it
+      ROOT::RDF::RResultPtr<std::vector<ULong64_t>> Entries;
+      std::size_t NumEntries = 0;
+      if (NotFiltered) {
+         try {
+            for (const auto &cluster : ROOT::Internal::RDF::GetDatasetGlobalClusterBoundaries(rdf)) {
+               NumEntries += cluster.second - cluster.first;
+            }
+         } catch (const std::runtime_error &) {
+            // no cluster information for this data source
+         }
+         if (NumEntries == 0) {
+            NumEntries = static_cast<std::size_t>(*rdf.Count());
+         }
+      } else {
+         Entries = rdf.Take<ULong64_t>("rdfentry_");
+         NumEntries = Entries->size();
+         // add the last element in entries to not go out of range when filling chunks
+         Entries->push_back((*Entries)[NumEntries - 1] + 1);
+      }
 
       // number of training and validation entries after the split
       std::size_t NumValidationEntries = static_cast<std::size_t>(fValidationSplit * NumEntries);
@@ -160,7 +177,6 @@ public:
 
       RFlat2DMatrix Dataset({NumEntries, fNumDatasetCols});
 
-      bool NotFiltered = rdf.GetFilterNames().empty();
       if (NotFiltered) {
          // one row per rdfentry_: thread-safe under implicit multi-threading, rows follow the event loop order
          RDatasetLoaderFunctor<Args...> func(Dataset, fNumDatasetCols, fVecSizes, fVecPadding);
@@ -178,8 +194,10 @@ public:
          }
       }
 
-      // reset dataframe
-      ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, (*Entries)[0], (*Entries)[NumEntries]);
+      // reset dataframe, only the filtered path changed the entry range
+      if (!NotFiltered) {
+         ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, (*Entries)[0], (*Entries)[NumEntries]);
+      }
 
       // copy out the validation tail, then shrink the (shuffled) buffer to the training rows and move it
       RFlat2DMatrix ShuffledDataset;
