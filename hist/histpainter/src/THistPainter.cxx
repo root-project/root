@@ -11276,16 +11276,16 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
    TAxis *yaxis = fH->GetYaxis();
    TAxis *zaxis = fH->GetZaxis();
 
-   const Int_t iMin = -111;
-   const Int_t iMax = -11;
-   const Int_t kMaxDist = 50; // maximal distance to detect bin
+   static constexpr Int_t iMin = -111;
+   static constexpr Int_t iMax = -11;
+   static constexpr Int_t kMaxDist = 50; // maximal distance to detect bin
 
-   auto getx = [iMin, iMax](TAxis *axis, Int_t indx) {
+   auto getx = [](TAxis *axis, Int_t indx) {
       return indx == iMin ? axis->GetBinLowEdge(axis->GetFirst())
                           : (indx == iMax ? axis->GetBinUpEdge(axis->GetLast()) : axis->GetBinCenter(indx));
    };
 
-   auto findAxis = [&parent, px, py, xaxis, yaxis, zaxis, view, getx, iMin, iMax, kMaxDist](Int_t &besti1, Int_t &besti2, char name) {
+   auto findAxis = [&parent, px, py, xaxis, yaxis, zaxis, view, getx](Int_t &besti1, Int_t &besti2, char name) {
 
       TAxis *axis1 = nullptr, *axis2 = nullptr;
       Int_t xindx = 0, yindx = 0, zindx = 0;
@@ -11333,7 +11333,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
       return best_dist < kMaxDist;
    };
 
-   auto convert = [this, view, &parent, getx, iMin, iMax, xaxis, yaxis, zaxis](Int_t ix, Int_t iy, Int_t iz,
+   auto convert = [view, getx, xaxis, yaxis, zaxis](Int_t ix, Int_t iy, Int_t iz,
                                                                                Double_t &resx, Double_t &resy) {
       Double_t vvv[3] = {getx(xaxis, ix), getx(yaxis, iy), getx(zaxis, iz)};
       Double_t uu[3];
