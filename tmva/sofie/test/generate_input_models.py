@@ -5671,6 +5671,24 @@ def make_GemmDynBias():
     return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
 
 
+def make_IdentityWeightOutput():
+    """Ops: Identity, Mul. The graph output s is an Identity of a weight: no
+    operator writes it at run time, so the model has to copy it into the output
+    buffer."""
+    nodes = [
+        helper.make_node("Identity", ["scale_source"], ["s"], name="identity_0"),
+        helper.make_node("Mul", ["x", "s"], ["y"], name="mul_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "identity_weight_output",
+        inputs=[_vi("x", FLOAT, [3])],
+        outputs=[_vi("s", FLOAT, [3]), _vi("y", FLOAT, [3])],
+        initializer=[_tensor("scale_source", FLOAT, [3], [1.5, 0.5, 2.0])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
 MODELS = {
     "Abs": make_Abs,
     "Acosh": make_Acosh,
@@ -5774,6 +5792,7 @@ MODELS = {
     "LSTMInitialBias": make_LSTMInitialBias,
     "LSTMPeepholes": make_LSTMPeepholes,
     "IdentityWeightBatchNorm": make_IdentityWeightBatchNorm,
+    "IdentityWeightOutput": make_IdentityWeightOutput,
     "LayerNormalization2d": make_LayerNormalization2d,
     "LayerNormalization4d": make_LayerNormalization4d,
     "Less": make_Less,
@@ -6594,6 +6613,7 @@ TEST_INPUTS = {
     "HardSigmoid": [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
     "HardSwish": [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
     "IdentityWeightBatchNorm": [rand_f32(38, (1, 3, 2, 2))],
+    "IdentityWeightOutput": [rand_f32(39, (3,))],
     # Per (n, c) slice a different mean and variance, so that a normalization
     # that mixed up instances or channels would not cancel out.
     "InstanceNormalization": [
