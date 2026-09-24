@@ -1505,6 +1505,20 @@ void RModel::GenerateSessionCode()
       fGC += "\n";
    }
 
+   // an initialized tensor (constant, or a weight reached e.g. through an Identity) that is a
+   // model output is not written by any operator: copy it into the output buffer before the
+   // operator code, so that operators reading the weight also see its value (the output
+   // parameter shadows the session member in doInfer)
+   if (fUseSession) {
+      for (auto const &name : fOutputTensorNames) {
+         if (IsInitializedTensor(name)) {
+            std::string t = "session.tensor_" + name;
+            size_t length = ConvertShapeToLength(fInitializedTensors[name].shape());
+            fGC += "    std::copy(" + t + ", " + t + " + " + std::to_string(length) + ", tensor_" + name + ");\n";
+         }
+      }
+   }
+
    fGC += allOperatorCode;
 
    std::unordered_set<std::string> assignedShapeParams;
@@ -1516,11 +1530,6 @@ void RModel::GenerateSessionCode()
                 assignedShapeParams.insert(dim.param).second)
                fGC += "   " + dim.param + "_output = " + dim.param + ";\n";
          }
-      }
-      if(IsConstantTensor(name)) {
-         std::string t = "session.tensor_" + name;
-         size_t length = ConvertShapeToLength(fInitializedTensors[name].shape());
-         fGC += "    std::copy(" + t + ", " + t + " + " + std::to_string(length) + ", tensor_" + name + ");\n";
       }
    }
    fGC += "\n";

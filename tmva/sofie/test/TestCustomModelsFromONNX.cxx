@@ -2106,3 +2106,16 @@ TEST(ONNX, GemmDynBias)
 
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
+
+// The graph output s is an Identity of a weight: no operator writes it at run
+// time, so the model has to copy it into the output buffer.
+TEST(ONNX, IdentityWeightOutput)
+{
+   SofieReference ref = readReference("IdentityWeightOutput");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "IdentityWeightOutput", ref.f32("input0"));
+
+   ASSERT_EQ(output.size(), 2u);
+   expectNear(output[0], ref.f32("output0"), DEFAULT_TOLERANCE);
+   expectNear(output[1], ref.f32("output1"), DEFAULT_TOLERANCE);
+}

@@ -16,8 +16,6 @@ class ROperator_Identity final : public ROperator
 {
 
 private:
-
-   bool fIsInputInitialized = false;
    bool fIsOutputInitialized = false; // the output is the same weight as the input
    std::string fNX;
    std::string fNY;
@@ -47,9 +45,8 @@ public:
       }
       fShape = model.GetDimTensorShape(fNX);
       if (model.IsInitializedTensor(fNX)) {
-         // we need to check if is a weight (initialized) or a constant tensor
-         // in the first case we need to create a constant tensor with the output, in teh second we
-         // need to generate the identy code in the GenerateInitCode
+         // we need to check if is a weight (initialized) or a constant tensor: in both cases the
+         // output is registered directly and no code is generated at run time
          if (model.IsConstantTensor(fNX)) {
             auto inputData = static_cast<T*>(model.GetInitializedTensorData(fNX).get());
             model.AddConstantTensor<T>(fNY, model.GetTensorShape(fNX), inputData);
@@ -57,7 +54,9 @@ public:
          } else {
             // the output is the same weight under another name (exporters emit this for a
             // shared parameter); registering it as an initialized tensor keeps it resolvable
-            // while the code is generated, as BatchNormalization needs its scale to be
+            // while the code is generated, as BatchNormalization needs its scale to be.
+            // Note that the generated code and the weight file then hold the values twice,
+            // once under each name.
             fIsOutputInitialized = true;
             model.AddInitializedTensor(fNY, model.GetTensorType(fNX), model.GetTensorShape(fNX),
                                        model.GetInitializedTensorData(fNX));
@@ -67,19 +66,8 @@ public:
       }
    }
 
-   std::string GenerateInitCode() override {
-      // generate init code for identity operator
-      if (!fIsInputInitialized) return "";
-      std::stringstream out;
-      out << "\n//------ IDENTITY\n";
-      // just copy the tensor pointers
-      out << SP << SP << "tensor_" << fNY << " = tensor_" << fNX << ";\n";
-      return out.str();
-   }
-
-
    std::string Generate(std::string OpName) override {
-      if (fIsOutputConstant || fIsInputInitialized || fIsOutputInitialized)
+      if (fIsOutputConstant || fIsOutputInitialized)
          return "";
       OpName = "op_" + OpName;
       if (fShape.empty()) {
