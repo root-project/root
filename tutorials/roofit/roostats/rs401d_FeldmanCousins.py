@@ -12,6 +12,8 @@
 # \macro_output
 # \macro_code
 #
+# ruff: noqa: F541, F821  # legacy tutorial style; RooArgSet flagged in an
+# unexercised branch
 # \author Kyle Cranmer (C++ version), and P. P. (Python translation)
 
 import ROOT
@@ -163,6 +165,12 @@ def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
     dataCanvas.Update()
     dataCanvas.Draw()
     dataCanvas.SaveAs("3.png")
+
+    # The profile likelihood and the NLL are not needed anymore. Delete them
+    # already here, so that the NLL evaluation machinery is not torn down at
+    # interpreter shutdown, where the order of cleanups is less controlled.
+    del pll
+    del nll
 
     # --------------------------------------------------------------
     # show use of Feldman-Cousins utility in RooStats

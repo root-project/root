@@ -486,6 +486,15 @@ if(MSVC)
   list(APPEND extra_veto legacy/hist040_TH2Poly_europe.C) # needs to download from the web
 endif()
 
+if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4 AND NOT win_broken_tests)
+  # These fits JIT-compile their formulas through cling on top of an already
+  # large Python + ROOT process and exhaust the 32-bit address space
+  # ("LLVM ERROR: out of memory", "Buffer allocation failed").
+  list(APPEND extra_veto
+       math/fit/fitConvolution.py
+       math/fit/fitNormSum.py)
+endif()
+
 if(MSVC AND NOT llvm13_broken_tests)
   list(APPEND extra_veto
        math/exampleFunction.py
