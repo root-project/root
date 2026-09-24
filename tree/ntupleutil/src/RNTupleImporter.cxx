@@ -94,8 +94,8 @@ public:
                    << "  (page lists, footer, streamer info, ROOT keys)\n";
       }
       if (report.fUncompressedPageBytes > 0 && report.fCompressedPayloadBytes > 0) {
-         const double ratio = static_cast<double>(report.fCompressedPayloadBytes) /
-                              static_cast<double>(report.fUncompressedPageBytes);
+         const double ratio =
+            static_cast<double>(report.fCompressedPayloadBytes) / static_cast<double>(report.fUncompressedPageBytes);
          std::cout << "  page compression ratio:  " << std::fixed << std::setprecision(3) << ratio
                    << " (payload / uncompressed pages)\n";
       }
