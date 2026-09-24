@@ -489,6 +489,7 @@ jobs:
     steps:
       - name: Set up environment
         run: |
+          apt-get update && apt-get install xutils-dev
           ccache -o max_size=${{ matrix.is_special && '5G' || '1.5G' }}
           ccache -s || true
           if [ -d "$PYTHON_VENV/bin/" ]; then
