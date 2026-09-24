@@ -182,8 +182,7 @@ public:
          RDatasetLoaderFunctor<Args...> func(Dataset, fNumDatasetCols, fVecSizes, fVecPadding);
          std::vector<std::string> colsWithEntry{"rdfentry_"};
          colsWithEntry.insert(colsWithEntry.end(), fCols.begin(), fCols.end());
-         rdf.Foreach([&func](ULong64_t entry, const Args &...cols) { func.FillRow(entry, cols...); },
-                     colsWithEntry);
+         rdf.Foreach([&func](ULong64_t entry, const Args &...cols) { func.FillRow(entry, cols...); }, colsWithEntry);
       }
 
       else {
@@ -202,7 +201,8 @@ public:
       // copy out the validation tail, then shrink the (shuffled) buffer to the training rows and move it
       RFlat2DMatrix ShuffledDataset;
       RFlat2DMatrix &Source = fTensorOperators->ShuffleTensor(ShuffledDataset, Dataset);
-      fTensorOperators->SliceTensor(ValidationDataset, Source, {{NumTrainingEntries, NumEntries}, {0, fNumDatasetCols}});
+      fTensorOperators->SliceTensor(ValidationDataset, Source,
+                                    {{NumTrainingEntries, NumEntries}, {0, fNumDatasetCols}});
       Source.Resize(NumTrainingEntries, fNumDatasetCols);
       TrainingDataset = std::move(Source);
    }

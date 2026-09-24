@@ -464,8 +464,8 @@ public:
                }
 
                RFlat2DMatrix shuffledStagingBuffer;
-               fTrainingBatchLoader->CreateBatches(fTensorOperators->ShuffleTensor(shuffledStagingBuffer, stagingBuffer),
-                                                isLastBuffer);
+               fTrainingBatchLoader->CreateBatches(
+                  fTensorOperators->ShuffleTensor(shuffledStagingBuffer, stagingBuffer), isLastBuffer);
 
                // Re-acquire the lock before the next iteration to check conditions and update indices
                lock.lock();
@@ -523,8 +523,8 @@ public:
                }
 
                RFlat2DMatrix shuffledStagingBuffer;
-               fValidationBatchLoader->CreateBatches(fTensorOperators->ShuffleTensor(shuffledStagingBuffer, stagingBuffer),
-                                                  isLastBuffer);
+               fValidationBatchLoader->CreateBatches(
+                  fTensorOperators->ShuffleTensor(shuffledStagingBuffer, stagingBuffer), isLastBuffer);
 
                lock.lock();
             }
