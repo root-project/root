@@ -121,7 +121,7 @@ TCudaTensor<AFloat>::TCudaTensor(const AFloat * host_data, const std::vector<siz
 template<typename AFloat>
 TCudaTensor<AFloat>::TCudaTensor(TCudaDeviceBuffer<AFloat> buffer,
                                  const std::vector<size_t> & shape,
-                                 TMVA::Experimental::MemoryLayout layout,
+                                 MemoryLayout layout,
                                  int device, int streamIndx)
    : fNDim(shape.size()), fElementBuffer(buffer), fShape(shape), fStrides( shape.size()), fDevice(device),
      fStreamIndx(streamIndx), fTensorDescriptor(nullptr), fMemoryLayout(layout)
