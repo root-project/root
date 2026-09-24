@@ -3515,6 +3515,12 @@ public:
 
 };
 
+class TEditInteractive : public TVirtualPad::TInteractive {
+public:
+   Int_t bin = 1;
+   Double_t xlow = 0, xup = 1, y0 = 0, factor = 1.;
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute the actions corresponding to `event`.
 ///
@@ -3538,14 +3544,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       view->ExecuteRotateView(event, px, py);
       return;
    }
-
-   static Int_t px1, py1, px2, py2, pyold;
-
-
    Bool_t opaque  = gPad->OpaqueMoving();
-   auto pp = gPad->GetPainter();
-   if (!pp)
-      return;
 
    TAxis *xaxis    = fH->GetXaxis();
    TAxis *yaxis    = fH->GetYaxis();
@@ -3566,14 +3565,13 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 
    auto zoombox = dynamic_cast<TZoomInteractive *> (gPad->Interactive(this));
+   auto h1edit = dynamic_cast<TEditInteractive *> (gPad->Interactive(this));
 
    switch (event) {
 
    case kButton1Down:
 
       if (dimension == 2) {
-         if (zoombox)
-            Error("ExecuteEvent", "Last zoom box was not deleted");
          zoombox = new TZoomInteractive(*gPad, px, py);
          gPad->Interactive(this, zoombox);
          // no need to paint while box is dummy
@@ -3589,8 +3587,20 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       gPad->SetCursor(kPointer);
       if ((dimension == 1) && gROOT->GetEditHistograms()) {
-         px1 = px2 = px; // remember last x to calculate bin
-         py2 = pyold = py; // remember last bin position
+         h1edit = new TEditInteractive();
+
+         Double_t baroffset = Hoption.Bar ? fH->GetBarOffset() : 0;
+         Double_t barwidth  = Hoption.Bar ? fH->GetBarWidth() : 1;
+         h1edit->bin      = fXaxis->FindFixBin(gPad->PadtoX(gPad->AbsPixeltoX(px)));
+         Double_t binwidth = fXaxis->GetBinWidth(h1edit->bin);
+         h1edit->xlow     = fXaxis->GetBinLowEdge(h1edit->bin) + baroffset*binwidth;
+         h1edit->xup      = h1edit->xlow + barwidth*binwidth;
+         h1edit->y0       = fH->GetBinContent(h1edit->bin);
+         h1edit->factor   = fH->GetNormFactor() / fH->GetSumOfWeights();
+         if (!h1edit->factor)
+            h1edit->factor = 1.;
+
+         gPad->Interactive(this, h1edit);
          gPad->SetCursor(kArrowVer);
       }
 
@@ -3598,31 +3608,14 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Motion:
 
-      if ((dimension == 1) && gROOT->GetEditHistograms()) {
-         Double_t baroffset = Hoption.Bar ? fH->GetBarOffset() : 0;
-         Double_t barwidth  = Hoption.Bar ? fH->GetBarWidth() : 1;
-         // px1 remains until button1 is pressed to identify bin
-         Int_t    bin      = fXaxis->FindFixBin(gPad->PadtoX(gPad->AbsPixeltoX(px1)));
-         Double_t binwidth = fXaxis->GetBinWidth(bin);
-         Double_t xlow     = gPad->XtoPad(fXaxis->GetBinLowEdge(bin) + baroffset*binwidth);
-         Double_t xup      = gPad->XtoPad(xlow + barwidth*binwidth);
-         Double_t ylow     = gPad->GetUymin();
-         Double_t yup      = fH->GetBinContent(bin);
-         Double_t factor   = fH->GetNormFactor() / fH->GetSumOfWeights();
+      if ((dimension == 1) && h1edit) {
+         Double_t yup = gPad->PadtoY(gPad->AbsPixeltoY(py)) / h1edit->factor;
+         fH->SetBinContent(h1edit->bin, yup);
 
          if (!opaque) {
-            pp->SetAttLine(*fH);
-            pp->DrawBox(xlow, ylow, xup, yup, TVirtualPadPainter::kHollow);  // Draw the old box
-         }
-
-         py2 += py - pyold;
-         pyold = py;
-         yup = gPad->PadtoY(gPad->AbsPixeltoY(py2)) / (factor ? factor : 1.);
-         fH->SetBinContent(bin, yup);
-
-         if (!opaque)
-            pp->DrawBox(xlow, ylow, xup, yup, TVirtualPadPainter::kHollow);  // Draw the new box
-         else
+            gPad->PaintBox(gPad->XtoPad(h1edit->xlow), gPad->YtoPad(h1edit->y0), gPad->XtoPad(h1edit->xup), gPad->YtoPad(yup), "ilh1edit");  // Draw the new box
+            gPad->UpdateAsync();
+         } else
             gPad->Modified();
       }
 
@@ -3672,16 +3665,15 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Up:
-      if ((dimension == 1) && gROOT->GetEditHistograms()) {
+      if ((dimension == 1) && h1edit) {
          PaintInit();   // recalculate Hparam structure and recalculate range
          // might resize pad pixmap so should be called before any paint routine
          RecalculateRange();
       }
-      if (zoombox && dimension == 2) {
+      if ((dimension == 2) && zoombox)
          zoombox->ChangeRange(xaxis, yaxis);
-         gPad->Interactive(); // remove interactive object
-      }
-      gPad->Modified(kTRUE);
+      gPad->Interactive(); // remove interactive object
+      gPad->Modified();
 
       break;
 
