@@ -36,22 +36,17 @@
 
 namespace TMVA {
 
+namespace DNN {
 
+#ifndef TMVA_DNN_ARCHITECTURES_CPU_CPUTENSOR
 
-#ifndef TMVA_RTENSOR
-
-namespace Experimental {
 /// Memory layout type (copy from RTensor.hxx)
 enum class MemoryLayout : uint8_t {
    RowMajor = 0x01,
    ColumnMajor = 0x02
 };
-}
+
 #endif
-
-namespace DNN {
-
-using MemoryLayout = TMVA::Experimental::MemoryLayout;
 
 #ifdef R__HAS_CUDNN
 /**
@@ -83,7 +78,7 @@ class TCudaTensor
 public:
 
    using Shape_t = std::vector<size_t>;
-   using MemoryLayout = TMVA::Experimental:: MemoryLayout;
+   using MemoryLayout = TMVA::DNN::MemoryLayout;
    using Scalar_t = AFloat;
 
 
