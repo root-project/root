@@ -2560,12 +2560,14 @@ void TCanvas::Update()
       if (!IsBatch())
          FeedbackMode(kFALSE); // Goto double buffer mode
 
+      Int_t need_rapaint = IsAnyNeedRepaint();
+
       if (UseGL() && (fGLDevice != -1)) {
          // TODO: try to reorganize GL part to follow normal painting rules
-         Flush();
+         if (need_rapaint & 5)
+            Flush();
       } else {
          Bool_t useXor = fPainter && fPainter->IsNative() && !fPainter->IsCocoa();
-         Int_t need_rapaint = IsAnyNeedRepaint();
          Int_t mask = useXor ? 3 : 7; // if XOR not supported, pad repaint by any change
 
          // TODO: verify why transparency is used
