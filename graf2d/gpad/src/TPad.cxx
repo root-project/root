@@ -2744,7 +2744,7 @@ Int_t TPad::IsAnyNeedRepaint() const
    Int_t mask = IsModified() ? 1 : 0;
    if (IsTransparent())
       mask |= 2;
-   if (fDrawOper.size() || fDrawOperXor.size())
+   if (fDrawOper.size())
       mask |= 4;
 
    TIter next(GetListOfPrimitives());
