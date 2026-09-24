@@ -354,11 +354,23 @@ void RModel::AddDynamicTensor(std::string tensor_name, ETensorType type, std::ve
 }
 
 void RModel::AddShapeParam(const std::string & param, size_t default_value) {
+   // a parameter computed at run time by an operator is never a Session constructor argument
+   if (fComputedShapeParams.count(param) != 0)
+      return;
    if (fShapeParams.count(param) == 0) {
       fShapeParams[param] = std::to_string(default_value);
       // add also in the vector list (used to keep the order)
       fDimShapeNames.push_back(param);
    }
+}
+
+void RModel::AddComputedShapeParam(const std::string &param)
+{
+   fComputedShapeParams.insert(param);
+   // it may already be registered as an argument, reached through a shape that broadcasting
+   // rebuilt from a string; the operator's own declaration is the only one that should remain
+   fShapeParams.erase(param);
+   fDimShapeNames.erase(std::remove(fDimShapeNames.begin(), fDimShapeNames.end(), param), fDimShapeNames.end());
 }
 
 void RModel::AddOutputTensorNameList(std::vector<std::string> outputtensornames) {
@@ -648,10 +660,8 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
          // store the found parametric shape parameters
          for (auto &d : input.second.shape) {
             if (d.isParam) {
-               if (fShapeParams.count(d.param) == 0) {
-                  fDimShapeNames.push_back(d.param);
-                  fShapeParams[d.param] = std::to_string(d.dim);
-               }
+               // through AddShapeParam, which keeps out the parameters computed at run time
+               AddShapeParam(d.param, d.dim);
             }
          }
       }
@@ -1194,6 +1204,8 @@ void RModel::GenerateOutput()
    std::string doInferArgs = GenerateInferSignature(false);
    if (!doInferArgs.empty())
       doInferArgs += ",";
+   // several outputs can share one run-time shape parameter: declare and pass it once
+   std::unordered_set<std::string> emittedShapeParams;
    for (std::string const &name : fOutputTensorNames) {
       bool isDynamic = fDynamicTensorInfos.count(name) > 0;
       std::string n;
@@ -1217,7 +1229,8 @@ void RModel::GenerateOutput()
       doInferArgs += " " + outputName + ".data(),";
       if(isDynamic) {
          for (auto const &dim : GetDynamicTensorShape(name)) {
-            if (dim.isParam && !IsInputTensorShapeParam(dim.param) && IsIdentifier(dim.param)) {
+            if (dim.isParam && !IsInputTensorShapeParam(dim.param) && IsIdentifier(dim.param) &&
+                emittedShapeParams.insert(dim.param).second) {
                fGC += SP + "size_t " + dim.param + " = 0;\n";
                doInferArgs += " " + dim.param + ",";
             }
@@ -1287,12 +1300,15 @@ void RModel::GenerateSessionCode()
    std::string doInferSignature = GenerateInferSignature();
    if (!doInferSignature.empty())
       doInferSignature += ", ";
+   // one argument per shape parameter, even when several outputs share it
+   std::unordered_set<std::string> signatureShapeParams;
    for (auto const &name : fOutputTensorNames) {
       bool isDynamic = fDynamicTensorInfos.count(name) > 0;
       doInferSignature += typeForOutput(GetTensorType(name)) + " *tensor_" + name + ",";
       if(isDynamic) {
          for (auto const &dim : GetDynamicTensorShape(name)) {
-            if (dim.isParam && !IsInputTensorShapeParam(dim.param) && IsIdentifier(dim.param))
+            if (dim.isParam && !IsInputTensorShapeParam(dim.param) && IsIdentifier(dim.param) &&
+                signatureShapeParams.insert(dim.param).second)
                doInferSignature += " size_t &" + dim.param + "_output,";
          }
       }
@@ -1491,11 +1507,13 @@ void RModel::GenerateSessionCode()
 
    fGC += allOperatorCode;
 
+   std::unordered_set<std::string> assignedShapeParams;
    for (auto const& name: fOutputTensorNames) {
       bool isDynamic = fDynamicTensorInfos.count(name) > 0;
       if(isDynamic) {
          for (auto const &dim : GetDynamicTensorShape(name)) {
-            if (dim.isParam && !IsInputTensorShapeParam(dim.param) && IsIdentifier(dim.param))
+            if (dim.isParam && !IsInputTensorShapeParam(dim.param) && IsIdentifier(dim.param) &&
+                assignedShapeParams.insert(dim.param).second)
                fGC += "   " + dim.param + "_output = " + dim.param + ";\n";
          }
       }

@@ -1983,3 +1983,75 @@ TEST(ONNX, ComparisonBroadcast3d)
    ASSERT_EQ(output_equal, expected_equal);
    ASSERT_EQ(output_less, expected_less);
 }
+
+// ---------------------------------------------------------------------------
+// Regression tests for operator and parser fixes: each model is the smallest
+// graph that exercises the bug.
+// ---------------------------------------------------------------------------
+
+// Two convolutions reading the same input: their private workspaces must not collide.
+TEST(ONNX, ConvSharedInput)
+{
+   SofieReference ref = readReference("ConvSharedInput");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvSharedInput", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// The same for the transposed convolution.
+TEST(ONNX, ConvTransposeSharedInput)
+{
+   SofieReference ref = readReference("ConvTransposeSharedInput");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvTransposeSharedInput", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// The Add after a bias-less Conv is a residual connection, not the bias of that
+// convolution, and must not be fused into it.
+TEST(ONNX, ConvResidualAdd)
+{
+   SofieReference ref = readReference("ConvResidualAdd");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvResidualAdd", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// Two NonZero nodes on the same input share the parameter holding the number of
+// non-zero elements, which is therefore declared once.
+TEST(ONNX, NonZeroTwice)
+{
+   std::vector<uint8_t> input = {0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1}; // shape is (2x2x3)
+   std::vector<int64_t> correct_output = {0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 2, 1, 2};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<int64_t>>, "NonZeroTwice", input);
+
+   ASSERT_EQ(output.size(), 2u);
+   expectEqual(output[0], correct_output);
+   expectEqual(output[1], correct_output);
+}
+
+// Negative indices are resolved into locals, so the second gather reads the
+// index tensor unchanged.
+TEST(ONNX, GatherNDNegativeIndicesTwice)
+{
+   SofieReference ref = readReference("GatherNDNegativeIndicesTwice");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "GatherNDNegativeIndicesTwice", ref.f32("input0"), ref.f32("input1"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// The scale of the batch normalization is an Identity of a weight, which has to
+// still be resolvable when the code is generated.
+TEST(ONNX, IdentityWeightBatchNorm)
+{
+   SofieReference ref = readReference("IdentityWeightBatchNorm");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "IdentityWeightBatchNorm", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}

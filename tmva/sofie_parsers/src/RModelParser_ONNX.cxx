@@ -461,6 +461,27 @@ ETensorType RModelParser_ONNX::GetTensorType(const std::string &name)
    return fTensorTypeMap[UTILITY::Clean_name(name)];
 }
 
+namespace {
+
+/// Is the Add following a Conv / ConvTranspose really that convolution's bias?
+///
+/// Only if the convolution has no bias yet and the added tensor is a rank-1 initializer, one
+/// value per output channel. Anything else - a residual connection, an operand computed at
+/// run time - is a genuine addition.
+bool IsConvBiasAdd(const onnx::GraphProto &graph, const onnx::NodeProto &convnode, const onnx::NodeProto &addnode)
+{
+   if (convnode.input_size() > 2 || addnode.input_size() != 2)
+      return false;
+   const std::string &added = (addnode.input(0) == convnode.output(0)) ? addnode.input(1) : addnode.input(0);
+   for (int i = 0; i < graph.initializer_size(); i++) {
+      if (graph.initializer(i).name() == added)
+         return graph.initializer(i).dims_size() == 1;
+   }
+   return false;
+}
+
+} // namespace
+
 // Parse an operator
 std::unique_ptr<ROperator>
 RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphproto, const std::vector<size_t> &nodes, const std::vector<int> & children)
@@ -503,8 +524,9 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
             return nullptr;
          }
       } else if (nodeproto.op_type() == "Conv" || nodeproto.op_type() == "ConvTranspose") {
-      // Fuse Conv or ConvTranspose without bias and Add
-         if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Add") {
+         // Fuse Conv or ConvTranspose without bias and Add, when the Add really is the bias
+         if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Add" &&
+             IsConvBiasAdd(graphproto, nodeproto, graphproto.node(idx2))) {
             if (nodeproto.op_type() == "Conv") {
                fFusedOperators[idx2] = { EFusedOp::kConvAdd, idx};
                return nullptr;
