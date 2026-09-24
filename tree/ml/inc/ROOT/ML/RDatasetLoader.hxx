@@ -210,7 +210,8 @@ public:
       // copy out the validation tail, then shrink the (shuffled) buffer to the training rows and move it
       RFlat2DMatrix ShuffledDataset;
       RFlat2DMatrix &Source = fTensorOperators->ShuffleTensor(ShuffledDataset, Dataset);
-      fTensorOperators->SliceTensor(ValidationDataset, Source, {{NumTrainingEntries, NumEntries}, {0, fNumDatasetCols}});
+      fTensorOperators->SliceTensor(ValidationDataset, Source,
+                                    {{NumTrainingEntries, NumEntries}, {0, fNumDatasetCols}});
       Source.Resize(NumTrainingEntries, fNumDatasetCols);
       TrainingDataset = std::move(Source);
    }
