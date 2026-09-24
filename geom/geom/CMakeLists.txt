@@ -128,8 +128,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
     Hist
     GenVector
     Imt
+  LIBRARIES
+    bvh::bvh
 )
 
+target_include_directories(Geom PRIVATE res)
 # GCC has bugs with -O3 or -Ofast that break Geom
 if(CMAKE_COMPILER_IS_GNUCXX)
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5 OR CMAKE_SIZEOF_VOID_P LESS 8)
