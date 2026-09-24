@@ -285,6 +285,17 @@ if(mathmore OR (tmva-cpu AND use_gsl_cblas))
 endif()
 ROOT_FIND_REQUIRED_DEP(mathtext builtin_mathtext)
 
+if (NOT builtin_makedepend)
+  find_program(MAKEDEPEND_EXECUTABLE NAMES makedepend)
+  if(MAKEDEPEND_EXECUTABLE)
+    message(STATUS "Found makedepend: ${MAKEDEPEND_EXECUTABLE}")
+  else()
+    message(SEND_ERROR "makedepend tool not found. You may need to install xutils-dev or makedepend, or set -Dbuiltin_makedepend=ON.")
+    list(APPEND MISSING_PACKAGES makedepend)
+    list(APPEND HOTFIX_BUILD_FLAGS -Dbuiltin_makedepend=ON)
+  endif()
+endif()
+
 if(NOT "${MISSING_PACKAGES}" STREQUAL "")
   list(REMOVE_DUPLICATES MISSING_PACKAGES)
   message(SEND_ERROR "The following packages need to be installed system-wide to build ROOT: ${MISSING_PACKAGES}")
@@ -1266,4 +1277,11 @@ endif()
 # Needed to run tests of the distributed RDataFrame module that use dask.
 if(test_distrdf_dask)
   find_package(Dask 2022.08.1 REQUIRED)
+endif()
+
+if (builtin_makedepend)
+  # hard coded builtin, consumed by core/TSystem.cxx and by win/ld.sh
+  # There is no explicit build target dependency, it just calls the binary name via terminal
+  add_subdirectory(builtins/makedepend)
+  set(MAKEDEPEND_EXECUTABLE "rmkdepend")
 endif()

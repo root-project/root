@@ -2632,7 +2632,7 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
       }
    } deferGuard{needToUnlinkTempFile, devnullfile, bakdepfilename};
 
-   TString builddep = "rmkdepend";
+   TString builddep = MAKEDEPEND_EXECUTABLE;
    gSystem->PrependPathName(TROOT::GetBinDir(), builddep);
    builddep += " \"-f";
    builddep += depfilename;
@@ -2752,14 +2752,14 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
    }
    bool depbuiltOk = !gSystem->Exec(builddep);
    if (!depbuiltOk) {
-      ::Warning("ACLiC", "Failed to run rmkdepend for %s", library.Data());
+      ::Warning("ACLiC", "Failed to run %s for %s", MAKEDEPEND_EXECUTABLE, library.Data());
       return;
    }
 
    std::ofstream depFile(depfilename, std::ios::out | std::ios::app);
    if (!depFile) {
-      ::Warning("ACLiC", "Failed to open dependency file %s for %s after running rmkdepend", depfilename.Data(),
-                library.Data());
+      ::Warning("ACLiC", "Failed to open dependency file %s for %s after running %s", depfilename.Data(),
+                library.Data(), MAKEDEPEND_EXECUTABLE);
       return;
    }
    depFile << adddictdep << "\n";

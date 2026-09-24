@@ -239,6 +239,8 @@ else()
   set(full_core_filename $<TARGET_FILE_NAME:Core>)
 endif()
 
+target_compile_definitions(Core PRIVATE MAKEDEPEND_EXECUTABLE="${MAKEDEPEND_EXECUTABLE}")
+
 # Absolue CMAKE_INSTALL_<dir> paths are discouraged in CMake, but some
 # packagers use them anyway. So we support it.
 if(IS_ABSOLUTE ${CMAKE_INSTALL_INCLUDEDIR})

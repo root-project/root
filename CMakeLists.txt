@@ -385,9 +385,6 @@ add_custom_target(gitinfotxt
 )
 install(FILES ${CMAKE_BINARY_DIR}/etc/gitinfo.txt DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 
-add_subdirectory (builtins/makedepend) # hard coded builtin, consumed by core/TSystem.cxx and by win/ld.sh
-# There is no explicit build target dependency, it just calls the binary name via terminal
-
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.
 add_subdirectory (core)
