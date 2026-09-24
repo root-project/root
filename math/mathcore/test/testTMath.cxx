@@ -168,8 +168,16 @@ void testIsInsideInt()
    Int_t x[n] = {299, 41, 299, 558};
    Int_t y[n] = {531, 678, 825, 678};
 
-   // Regression test for integer division in TMath::IsInside().
-   R__ASSERT(!TMath::IsInside(42, 532, n, x, y));
+   Double_t xd[n] = {299., 41., 299., 558.};
+   Double_t yd[n] = {531., 678., 825., 678.};
+
+   for (Int_t xp = 0; xp <= 600; ++xp) {
+      for (Int_t yp = 500; yp <= 850; ++yp) {
+         R__ASSERT(TMath::IsInside(xp, yp, n, x, y) ==
+                   TMath::IsInside(static_cast<Double_t>(xp),
+                                   static_cast<Double_t>(yp), n, xd, yd));
+      }
+   }
 }
 
 template <typename T>
