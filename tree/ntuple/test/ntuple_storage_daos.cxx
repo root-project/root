@@ -328,7 +328,8 @@ TEST_F(RPageStorageDaos, Checksum)
       auto descGuard = pageSource->GetSharedDescriptorGuard();
       pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0, 0);
       pyColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("py"), 0, 0);
-      clusterId = descGuard->FindClusterId(pxColId, 0);
+      const auto &clusterDesc = *descGuard->GetActiveClusterIterable().begin();
+      clusterId = clusterDesc.GetId();
    }
    RNTupleLocalIndex index{clusterId, 0};
 
