@@ -1,0 +1,13 @@
+git clone https://github.com/civetweb/civetweb.git
+cd civetweb
+git reset --hard 588860e30721bf5453b0440c390865a8e85dcae5
+rm -rf .git
+rm -rf test unittest fuzztest
+rm -rf  civetweb_v2/src/third_party/lua
+rm -rf  civetweb_v2/src/third_party/duktape-1.*
+cd ../
+mv civetweb civetweb-588860
+tar -cvvf civetweb-588860.tar civetweb-588860
+gzip civetweb-588860.tar
+
+
