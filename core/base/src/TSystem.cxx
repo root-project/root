@@ -2612,7 +2612,7 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename,
    cmd += includes;
    cmd += defines;
 
-   cmd += " -- \"";
+   cmd += " \"";
    R__AddPath(cmd, filename);
    cmd += "\"";
 
