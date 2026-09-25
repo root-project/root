@@ -24,7 +24,7 @@ class TWriteEnvParser;
 enum EEnvLevel {
    kEnvGlobal,
    kEnvUser,
-   kEnvLocal,
+   kEnvLocal, // For gEnv, the local level is disabled by default
    kEnvChange,
    kEnvAll
 };
@@ -79,9 +79,10 @@ public:
 class TEnv : public TObject {
 
 private:
-   THashList        *fTable;     // hash table containing env records
-   TString           fRcName;    // resource file base name
-   Bool_t            fIgnoreDup; // ignore duplicates, don't issue warning
+   THashList        *fTable;                // hash table containing env records
+   TString           fRcName;               // resource file base name
+   Bool_t            fIgnoreDup;            // ignore duplicates, don't issue warning
+   Bool_t            fIsLocalLevelDisabled; //! By default, gEnv does not allow use of the local level
 
    TEnv(const TEnv&) = delete;
    TEnv& operator=(const TEnv&) = delete;
@@ -90,7 +91,7 @@ private:
    const char       *GetUserDirectory() const;
 
 public:
-   TEnv(const char *name="");
+   TEnv(const char *name = "", bool disableLocalLevel = false);
    virtual ~TEnv();
 
    THashList          *GetTable() const { return fTable; }
@@ -119,6 +120,8 @@ public:
    void                Print(Option_t *option="") const override;
    virtual void        PrintEnv(EEnvLevel level = kEnvAll) const;
    Bool_t              IgnoreDuplicates(Bool_t ignore);
+
+   Bool_t              IsLocalLevelDisabled() const { return fIsLocalLevelDisabled; }
 
    ClassDefOverride(TEnv,2)  // Handle ROOT configuration resources
 };
