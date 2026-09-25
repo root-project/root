@@ -764,7 +764,6 @@ void RModel::InitializeSubGraph(std::shared_ptr<RModel>  graph) {
    // set the same options as parent model
    graph->fWeightFile = fWeightFile;
    graph->fUseWeightFile = fUseWeightFile;
-   graph->fUseSession = fUseSession;
    // add needed blas routines and libs
    std::vector<std::string> blasRoutines;
    for (auto & e : graph->fNeededBlasRoutines)
@@ -1261,11 +1260,7 @@ void RModel::GenerateOutput()
       }
    }
 
-   if (fUseSession) {
-      fGC += SP + "doInfer(*this, " + doInferArgs + ");\n";
-   } else {
-      fGC += SP + "doInfer(" + doInferArgs + ");\n";
-   }
+   fGC += SP + "doInfer(*this, " + doInferArgs + ");\n";
 
    // If the output tensors have dynamic sizes, now is the time to set them
    for (std::string const &name : fOutputTensorNames) {
@@ -1291,10 +1286,8 @@ void RModel::GenerateSessionCode()
 {
    std::string sessionName = !fIsSubGraph ? "Session" : "Session_" + fName;
 
-   if (fUseSession) {
-      //  forward declare session struct
-      fGC += "struct " + sessionName + ";\n";
-   }
+   //  forward declare session struct
+   fGC += "struct " + sessionName + ";\n";
 
    // Determine the signature of the actual inference function
    std::string doInferSignature = GenerateInferSignature();
@@ -1315,9 +1308,7 @@ void RModel::GenerateSessionCode()
    }
    doInferSignature.back() = ' ';
 
-   if (fUseSession) {
-      doInferSignature = sessionName + " const &session, " + doInferSignature;
-   }
+   doInferSignature = sessionName + " const &session, " + doInferSignature;
 
    doInferSignature = "inline void doInfer(" + doInferSignature + ")";
 
@@ -1325,9 +1316,7 @@ void RModel::GenerateSessionCode()
    fGC += doInferSignature + ";\n";
 
    // define the Session struct
-   if (fUseSession) {
-      fGC += "struct " + sessionName + " {\n";
-   }
+   fGC += "struct " + sessionName + " {\n";
 
    // generate code for declaring the initialized tensors
    GenerateInitializedTensorInfo();
@@ -1380,98 +1369,94 @@ void RModel::GenerateSessionCode()
    }
 
    // Generate code for Session constructor
-   if (fUseSession) {
-      // add here specific operator code that needs to define session data members
-      fGC += "\n";
-      for (size_t id = 0; id < fOperators.size(); id++) {
-         std::string opName = std::to_string(id);
-         fGC += fOperators[id]->GenerateSessionMembersCode(opName);
-      }
-      fGC += "\n";
-      // here add initialization and reading of weight tensors
-      if (fUseWeightFile) {
-         std::string fileName = fName;
-         if (fWeightFile == WeightFileType::Text) {
-            fileName += ".dat";
-         }
-         if (fWeightFile == WeightFileType::RootBinary) {
-            fileName += ".root";
-         }
-         fGC += sessionName + "(std::string filename =\"" + fileName + "\"";
-      } else {
-         // no need to pass weight file since it is not used
-         // keep passing a string for compatibility
-         fGC += sessionName + "(std::string = \"\"";
-      }
-      // add initialization of shape parameters
-      // assume all parameters are of type size_t
-      if (!fDimShapeNames.empty()) {
-         // need to use same order as in infer function not alphabetical one
-         for (auto &p : fDimShapeNames) {
-            fGC += ",\n";
-            fGC += "        size_t " + p + " = " + fShapeParams[p];
-         }
-      }
-      fGC += ") {\n";
-
-      // initializing dynamic parameters
-      if (!fDimShapeNames.empty()) {
-         fGC += "\n\n";
-         std::sort(fDimShapeNames.begin(), fDimShapeNames.end());
-         for (const auto &p : fDimShapeNames) {
-            fGC += "   " + memberNameForDimShape(p) + " = " + p + ";\n";
-         }
-      }
-      // add some extra code needed for initialization of dynamic parameters
-      fGC += fExtraCodeForDimShapes;
-
-      if (fUseWeightFile) {
-         fGC += "\n//--- reading weights from file\n";
-         ReadInitializedTensorsFromFile();
-         fGC += "\n";
-         // fUseWeightFile = fUseWeightFile;
-      }
-
-      // now we have passed the parameters we can allocate the dynamic tensors
-      GenerateDynamicTensorInfo();
-
-      // add here initialization code  for operator
-      for (size_t id = 0; id < fOperators.size(); id++) {
-         fGC += fOperators[id]->GenerateInitCode();
-      }
-
-      fGC += "}\n\n";
-
-      // Used to build the tangent Session objects needed to differentiate the
-      // generated code with Clad: the derivatives of the (constant) weights
-      // are zero, but a default-constructed Session holds the actual values.
-      fGC += "// Set all weight and constant tensors to zero. This is useful to create\n"
-             "// the tangent Session objects needed to differentiate the generated code\n"
-             "// with Clad.\n"
-             "void SetWeightsToZero() {\n";
-      for (auto &i : fInitializedTensors) {
-         // IsNotWritable tensors have no emitted fTensor_ member, and integer
-         // tensors are structural (indices, shapes) that carry no tangent.
-         if (i.second.IsNotWritable() ||
-             (i.second.type() != ETensorType::FLOAT && i.second.type() != ETensorType::DOUBLE))
-            continue;
-         fGC += "   for (auto &v : fTensor_" + i.first + ") v = 0;\n";
-      }
-      for (auto &graph : fSubGraphs) {
-         fGC += "   fSession_" + graph->fName + ".SetWeightsToZero();\n";
-      }
-      fGC += "}\n\n";
+   // add here specific operator code that needs to define session data members
+   fGC += "\n";
+   for (size_t id = 0; id < fOperators.size(); id++) {
+      std::string opName = std::to_string(id);
+      fGC += fOperators[id]->GenerateSessionMembersCode(opName);
    }
+   fGC += "\n";
+   // here add initialization and reading of weight tensors
+   if (fUseWeightFile) {
+      std::string fileName = fName;
+      if (fWeightFile == WeightFileType::Text) {
+         fileName += ".dat";
+      }
+      if (fWeightFile == WeightFileType::RootBinary) {
+         fileName += ".root";
+      }
+      fGC += sessionName + "(std::string filename =\"" + fileName + "\"";
+   } else {
+      // no need to pass weight file since it is not used
+      // keep passing a string for compatibility
+      fGC += sessionName + "(std::string = \"\"";
+   }
+   // add initialization of shape parameters
+   // assume all parameters are of type size_t
+   if (!fDimShapeNames.empty()) {
+      // need to use same order as in infer function not alphabetical one
+      for (auto &p : fDimShapeNames) {
+         fGC += ",\n";
+         fGC += "        size_t " + p + " = " + fShapeParams[p];
+      }
+   }
+   fGC += ") {\n";
+
+   // initializing dynamic parameters
+   if (!fDimShapeNames.empty()) {
+      fGC += "\n\n";
+      std::sort(fDimShapeNames.begin(), fDimShapeNames.end());
+      for (const auto &p : fDimShapeNames) {
+         fGC += "   " + memberNameForDimShape(p) + " = " + p + ";\n";
+      }
+   }
+   // add some extra code needed for initialization of dynamic parameters
+   fGC += fExtraCodeForDimShapes;
+
+   if (fUseWeightFile) {
+      fGC += "\n//--- reading weights from file\n";
+      ReadInitializedTensorsFromFile();
+      fGC += "\n";
+      // fUseWeightFile = fUseWeightFile;
+   }
+
+   // now we have passed the parameters we can allocate the dynamic tensors
+   GenerateDynamicTensorInfo();
+
+   // add here initialization code  for operator
+   for (size_t id = 0; id < fOperators.size(); id++) {
+      fGC += fOperators[id]->GenerateInitCode();
+   }
+
+   fGC += "}\n\n";
+
+   // Used to build the tangent Session objects needed to differentiate the
+   // generated code with Clad: the derivatives of the (constant) weights
+   // are zero, but a default-constructed Session holds the actual values.
+   fGC += "// Set all weight and constant tensors to zero. This is useful to create\n"
+          "// the tangent Session objects needed to differentiate the generated code\n"
+          "// with Clad.\n"
+          "void SetWeightsToZero() {\n";
+   for (auto &i : fInitializedTensors) {
+      // IsNotWritable tensors have no emitted fTensor_ member, and integer
+      // tensors are structural (indices, shapes) that carry no tangent.
+      if (i.second.IsNotWritable() ||
+          (i.second.type() != ETensorType::FLOAT && i.second.type() != ETensorType::DOUBLE))
+         continue;
+      fGC += "   for (auto &v : fTensor_" + i.first + ") v = 0;\n";
+   }
+   for (auto &graph : fSubGraphs) {
+      fGC += "   fSession_" + graph->fName + ".SetWeightsToZero();\n";
+   }
+   fGC += "}\n\n";
 
    // generate the inference overload that returns an output struct
    GenerateOutput();
 
    // end of session
-   if (fUseSession) {
-      fGC += "};   // end of Session\n\n";
+   fGC += "};   // end of Session\n\n";
 
-      GenerateRequiredInputTensorInfo();
-   }
+   GenerateRequiredInputTensorInfo();
 
    fGC += doInferSignature + " {\n";
    fGC += "\n";
@@ -1496,14 +1481,12 @@ void RModel::GenerateSessionCode()
    // local variable name that we're using for the session:
    ReplaceAll(allOperatorCode, "this->", "session.");
 
-   if (fUseSession) {
-      // Collect all "tensor_*" data members that are not input or output tensors
-      std::vector<std::string> tensorMemberNames = CollectTensorMemberNames(allOperatorCode);
-      for (auto const& name: tensorMemberNames) {
-         fGC += "    auto &" + name + " = session." + name + ";\n";
-      }
-      fGC += "\n";
+   // Collect all "tensor_*" data members that are not input or output tensors
+   std::vector<std::string> tensorMemberNames = CollectTensorMemberNames(allOperatorCode);
+   for (auto const& name: tensorMemberNames) {
+      fGC += "    auto &" + name + " = session." + name + ";\n";
    }
+   fGC += "\n";
 
    fGC += allOperatorCode;
 
@@ -1533,11 +1516,7 @@ void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, bo
    fVerbose = verbose;
    fBatchSize = batchSize;
 
-   // session flag is used in operator initialize
-   if (static_cast<std::underlying_type_t<Options>>(Options::kNoSession) & options) {
-      fUseSession = false;
-      fWeightFile = WeightFileType::None;
-   }
+   // weights are contained in the generated header when kNoWeightFile is used
    if (static_cast<std::underlying_type_t<Options>>(Options::kNoWeightFile) & options) {
       fUseWeightFile = false;
       fWeightFile = WeightFileType::None;
@@ -1546,20 +1525,9 @@ void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, bo
       fUseWeightFile = true;
       fWeightFile = WeightFileType::RootBinary;
    }
-   if (fUseWeightFile && !fUseSession) {
-      throw std::runtime_error(
-         "TMVA-SOFIE: RModel::Generate: cannot use a separate weight file without generating a Session class");
-   }
 
    // initialize the model including all operators and sub-graphs
    Initialize(batchSize, verbose);
-
-   // if having dynamic tensor we need to have a Session
-   if (!fDynamicTensorInfos.empty()) {
-      fUseSession = true;
-      if (verbose)
-         std::cout << "Warning: Force having a Session since model has dynamic tensors " << std::endl;
-   }
 
    std::string hgname;
    if (!fIsSubGraph) {
