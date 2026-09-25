@@ -173,8 +173,12 @@ inline TObject *TRefArray::operator[](Int_t at) const
    if (j >= 0 && j < fSize) {
       if (!fPID) return nullptr;
       if (!TProcessID::IsValid(fPID)) return nullptr;
-      TObject *obj = fPID->GetObjectWithID(fUIDs[j]);
-      if (!obj) obj = GetFromTable(j);
+      // Query the TRefTable first so that a TBranchRef (if any) can load the
+      // entry of the referenced branch; a stale object from a previously read
+      // entry may still be registered under this UID (ROOT-3594).
+      TObject *obj = GetFromTable(j);
+      if (!obj)
+         obj = fPID->GetObjectWithID(fUIDs[j]);
       return obj;
    }
    BoundsOk("At", at);
@@ -188,8 +192,10 @@ inline TObject *TRefArray::At(Int_t at) const
    if (j >= 0 && j < fSize) {
       if (!fPID) return nullptr;
       if (!TProcessID::IsValid(fPID)) return nullptr;
-      TObject *obj = fPID->GetObjectWithID(fUIDs[j]);
-      if (!obj) obj = GetFromTable(j);
+      // See the comment in operator[] above (ROOT-3594).
+      TObject *obj = GetFromTable(j);
+      if (!obj)
+         obj = fPID->GetObjectWithID(fUIDs[j]);
       return obj;
    }
    BoundsOk("At", at);
