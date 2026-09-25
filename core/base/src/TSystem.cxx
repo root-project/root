@@ -2598,6 +2598,7 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename,
       compiler = "c++";
 
    TString cmd = compiler;
+   cmd += " -std=c++17"; // CMAKE_CXX_STANDARD minimum required
    cmd += " -MM";
    cmd += " -MF \"" + depfilename + "\"";
    cmd += " -MT \"";
