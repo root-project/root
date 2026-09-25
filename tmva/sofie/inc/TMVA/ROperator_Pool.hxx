@@ -56,7 +56,6 @@ private:
    std::string fType;
 
    size_t fDim;   // dimension of the MaxPool
-   bool fUseSession = false;
 
 public:
 
@@ -205,8 +204,6 @@ public:
    }
 
    void Initialize(RModel& model) override {
-
-      fUseSession = model.UseSession();
 
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw

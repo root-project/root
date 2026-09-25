@@ -17,7 +17,6 @@ namespace TMVA::Experimental::SOFIE {
 
 enum class Options {
    kDefault = 0x0,
-   kNoSession = 0x1,
    kNoWeightFile = 0x2,
    kRootBinaryWeightFile = 0x4,
 };
@@ -61,7 +60,6 @@ protected:
    std::string fName = "UnnamedModel";
    std::string fGC; // generated code
    bool fUseWeightFile = true;
-   bool fUseSession = true;
 
 public:
    /**

@@ -239,7 +239,6 @@ public:
    void PrintDynamicTensors() const;
    void HeadInitializedTensors(std::string name, int n_print = 50);
 
-   bool UseSession() const { return fUseSession; }
    // flag to use vdt for fast math functions (e.g. exp in softmax)
    void SetUseVDT(bool on) {
       fUseVDT = on;

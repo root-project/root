@@ -236,7 +236,6 @@ public:
    }
 
    void Initialize(RModel& model) override {
-      fUseSession = model.UseSession();
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw
             std::runtime_error("TMVA SOFIE Conv op Input Tensor " + fNX + " is not found in model");
@@ -272,7 +271,6 @@ public:
          auto shapeDimB = model.GetDimTensorShape(fNB);
          bool broadcast_needed = !UTILITY::AreSameShape(shapeDimB, targetShape);
          if (broadcast_needed) {
-            auto original_data = model.GetInitializedTensorData(fNB);
             // make bias shape equal to Y shape by adding 1
             if (fShapeB.size() < 1)
                throw std::runtime_error("TMVA SOFIE Conv op: Bias Tensor has empty shape");
@@ -283,19 +281,8 @@ public:
                                            ConvertShapeToString(fShapeB));
             if (fType != "float")
                throw std::runtime_error("TMVA SOFIE Conv op: Broadcasting for non-float type tensors is not supported");
-            // here is the actual broadcasting
+            // here is the actual broadcasting (done in the Session constructor via GenerateInitCode)
             fBroadcastBias = true;
-            if (!fUseSession) {
-               // do here broadcasting
-               std::vector<size_t> shape(fDim + 1, 1);
-               shape[0] = fShapeB[0];
-               auto intTargetShape = ConvertShapeToInt(targetShape);
-               std::shared_ptr<void> new_data_ptr(
-                  UTILITY::UnidirectionalBroadcast(static_cast<float *>(original_data.get()), shape, intTargetShape),
-                  std::default_delete<float[]>());
-               model.UpdateInitializedTensor(fNB, model.GetTensorType(fNB), intTargetShape, new_data_ptr);
-               fShapeB = model.GetTensorShape(fNB);
-            }
          }
       }
       // output channel size can be parametric and is an expression

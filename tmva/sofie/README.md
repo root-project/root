@@ -66,7 +66,6 @@ With the default settings, the weights are contained in a separate binary file, 
 model.Generate(Options::kNoWeightFile);
 ```
 
-Other such options includes `Options::kNoSession` (for not generating the Session class, and instead keeping the infer function independent).
 SOFIE also supports generating inference code with RDataFrame as inputs, refer to the tutorials below for examples.
 
 ## Supported ONNX operators

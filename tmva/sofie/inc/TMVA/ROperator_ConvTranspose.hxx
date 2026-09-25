@@ -219,7 +219,6 @@ template <typename T>
 void ROperator_ConvTranspose<T>::Initialize(RModel &model)
 {
 
-   fUseSession = model.UseSession();
    if (!model.CheckIfTensorAlreadyExist(fNX)) {
       throw std::runtime_error("TMVA SOFIE Conv Transpose op Input Tensor " + fNX + " is not found in model");
    }
@@ -262,27 +261,13 @@ void ROperator_ConvTranspose<T>::Initialize(RModel &model)
             throw std::runtime_error("TMVA SOFIE ConvTrans op: Bias Tensor has wrong shape: " +
                                      ConvertShapeToString(fShapeB));
 
-         auto original_data = model.GetInitializedTensorData(fNB);
-
          if (fType != "float")
             throw std::runtime_error(
                "TMVA SOFIE ConvTrans op: Broadcasting for non-float type tensors is not supported");
-         // here the acual broadcasting
-         if (!fUseSession) {
-            // Broadcast B from M to N x M x Od x Oh x Ow
-            std::shared_ptr<void> new_data_ptr(
-               UTILITY::BroadcastConvBias<float>(static_cast<float *>(original_data.get()), bsize, fShapeY),
-               std::default_delete<float[]>());
-
-            model.UpdateInitializedTensor(fNB, model.GetTensorType(fNB), fShapeY, new_data_ptr);
-            fShapeB = model.GetTensorShape(fNB);
-            fNBroadcastedB = fNB; // use same name
-         } else {
-            // In case of session add broadcasting code in Session constructor and in GenerateInitCode
-            // we need to add a new intermediate tensor for broadcasted bias tensor
-            fNBroadcastedB = "Broadcasted" + fNB;
-            model.AddIntermediateTensor(fNBroadcastedB, model.GetTensorType(fNB), fShapeY);
-         }
+         // Add broadcasting code in Session constructor and in GenerateInitCode:
+         // we need to add a new intermediate tensor for broadcasted bias tensor
+         fNBroadcastedB = "Broadcasted" + fNB;
+         model.AddIntermediateTensor(fNBroadcastedB, model.GetTensorType(fNB), fShapeY);
       } else {
          // bias tensor is already correct shape, no need to broadcast
          if (fShapeY != fShapeB)
@@ -362,14 +347,6 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
 
    out << "\n//----  operator ConvTranspose " << OpName << "\n";
 
-   // create first matrix with convolution kernels
-   if (!fUseSession) {
-      size_t kernelSize = fAttrKernelShape[0];
-      if (fDim > 1)
-         kernelSize *= fAttrKernelShape[1];
-      out << SP << fType << " tensor_" << fConvK << "[" << fShapeW[0] * fShapeW[1] * kernelSize << "] = {0};\n";
-   }
-
    // vectorize the (dilated)convolution kernels into a matrix
    // The shape of the kernel is W for 1d image, H x W for 2d image and D x H x W
    // for 3d image
@@ -438,11 +415,6 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
    out << SP << "int " << OpName << "_k = " << fShapeW[0] << ";\n";               // input channels
    out << SP << "float " << OpName << "_alpha = 1.0;\n";
    out << SP << "float " << OpName << "_beta = 0.0;\n";
-
-   if (!fUseSession) {
-      out << SP << fType << " tensor_" << fImcol << "[" << fShapeW[0] * icstrideDil * oDepth * oHeight * oWidth
-          << "] = {0};\n";
-   }
 
    // Loop on batch size
    out << SP << "for (size_t n = 0; n < " << bsize << "; n++) {\n";
