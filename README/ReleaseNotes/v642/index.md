@@ -98,6 +98,11 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
 
 ## Build System
 
+### CMake version
+
+CMake versions below 3.31 will emit a warning during configure, since they will become obsolete soon: 3.23 will be minimum required in ROOT 6.44 and 3.31 after ROOT 6.44, to gradually stay in sync with the [minimum version of CMake required by LLVM](https://discourse.llvm.org/t/rfc-raising-minimum-required-cmake-version-to-3-31/91086).
+
+
 ### Optimization of ROOT header files
 
 In ROOT 6.22, many (but not all) unused includes were removed from ROOT header files. The remaining unused includes will be removed after ROOT 6.44.

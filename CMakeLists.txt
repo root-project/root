@@ -5,6 +5,18 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
+if("${CMAKE_VERSION}" VERSION_LESS "3.23.0")
+  message(WARNING
+    "Your CMake version is ${CMAKE_VERSION}. Starting with ROOT 6.44, the "
+    "minimum version of CMake required to build ROOT will become 3.23.0, and "
+    "using an older CMake will raise an error. After ROOT 6.44, the CMake version "
+    "is expected to rise to 3.31.0 in sync with LLVM 24.")
+elseif("${CMAKE_VERSION}" VERSION_LESS "3.31.0")
+  message(WARNING
+    "Your CMake version is ${CMAKE_VERSION}. After ROOT 6.44, the "
+    "minimum version of CMake required to build ROOT will become 3.31.0, and "
+    "using an older CMake will raise an error, in sync with LLVM 24.")
+endif()
 
 if(WIN32)
   # Set CMP0091 (MSVC runtime library flags are selected by an abstraction) to OLD
