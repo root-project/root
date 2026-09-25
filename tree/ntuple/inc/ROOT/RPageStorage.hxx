@@ -40,6 +40,7 @@
 #include <shared_mutex>
 #include <unordered_map>
 #include <unordered_set>
+#include <variant>
 #include <vector>
 
 namespace ROOT {
@@ -698,6 +699,41 @@ public:
          fLock->unlock();
          fLock = nullptr;
          fDescriptor = nullptr;
+      }
+   };
+
+   /// Either a shared or an exclusive lock guard
+   class RAnyDescriptorGuard {
+   private:
+      std::variant<RSharedDescriptorGuard, RExclDescriptorGuard> fAnyGuard;
+
+   public:
+      RAnyDescriptorGuard(RSharedDescriptorGuard sharedGuard) : fAnyGuard(std::move(sharedGuard)) {}
+      RAnyDescriptorGuard(RExclDescriptorGuard exclGuard) : fAnyGuard(std::move(exclGuard)) {}
+      RAnyDescriptorGuard(const RAnyDescriptorGuard &) = delete;
+      RAnyDescriptorGuard &operator=(const RAnyDescriptorGuard &) = delete;
+      RAnyDescriptorGuard(RAnyDescriptorGuard &&) = default;
+      RAnyDescriptorGuard &operator=(RAnyDescriptorGuard &&) = default;
+      ~RAnyDescriptorGuard() = default;
+
+      const ROOT::RNTupleDescriptor &GetRef() const
+      {
+         return (fAnyGuard.index() == 0) ? std::get<0>(fAnyGuard).GetRef() : std::get<1>(fAnyGuard).operator*();
+      }
+      const ROOT::RNTupleDescriptor *operator->() const
+      {
+         return (fAnyGuard.index() == 0) ? std::get<0>(fAnyGuard).operator->() : std::get<1>(fAnyGuard).operator->();
+      }
+      bool IsValid() const
+      {
+         return (fAnyGuard.index() == 0) ? std::get<0>(fAnyGuard).IsValid() : std::get<1>(fAnyGuard).IsValid();
+      }
+      void Release()
+      {
+         if (fAnyGuard.index() == 0)
+            std::get<0>(fAnyGuard).Release();
+         else
+            std::get<1>(fAnyGuard).Release();
       }
    };
 
