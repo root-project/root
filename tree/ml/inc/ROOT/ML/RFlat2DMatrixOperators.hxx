@@ -35,7 +35,8 @@ public:
 
    ~RFlat2DMatrixOperators();
 
-   void ShuffleTensor(RFlat2DMatrix &ShuffledTensor, RFlat2DMatrix &Tensor);
+   // returns the tensor to read from: the permuted copy, or Tensor itself when shuffling is off
+   RFlat2DMatrix &ShuffleTensor(RFlat2DMatrix &ShuffledTensor, RFlat2DMatrix &Tensor);
 
    void
    SliceTensor(RFlat2DMatrix &SlicedTensor, RFlat2DMatrix &Tensor, const std::vector<std::vector<std::size_t>> &slice);

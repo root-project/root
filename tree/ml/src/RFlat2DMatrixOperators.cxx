@@ -11,37 +11,40 @@ namespace ROOT::Experimental::Internal::ML {
 
 RFlat2DMatrixOperators::~RFlat2DMatrixOperators() = default;
 
-void RFlat2DMatrixOperators::ShuffleTensor(RFlat2DMatrix &ShuffledTensor, RFlat2DMatrix &Tensor)
+RFlat2DMatrix &RFlat2DMatrixOperators::ShuffleTensor(RFlat2DMatrix &ShuffledTensor, RFlat2DMatrix &Tensor)
 {
-   if (fShuffle) {
-      std::random_device rd;
-      std::mt19937 g;
-
-      if (fSetSeed == 0) {
-         g.seed(rd());
-      } else {
-         g.seed(fSetSeed);
-      }
-
-      std::size_t rows = Tensor.GetRows();
-      std::size_t cols = Tensor.GetCols();
-      ShuffledTensor.Resize(rows, cols);
-
-      // make an identity permutation map
-      std::vector<Long_t> indices(rows);
-      std::iota(indices.begin(), indices.end(), 0);
-
-      // shuffle the identity permutation to create a new permutation
-      std::shuffle(indices.begin(), indices.end(), g);
-
-      // shuffle data in the tensor with the permutation map defined above
-      for (std::size_t i = 0; i < rows; i++) {
-         std::copy(Tensor.GetData() + indices[i] * cols, Tensor.GetData() + (indices[i] + 1) * cols,
-                   ShuffledTensor.GetData() + i * cols);
-      }
-   } else {
-      ShuffledTensor = Tensor;
+   // nothing to permute, no copy
+   if (!fShuffle) {
+      return Tensor;
    }
+
+   std::random_device rd;
+   std::mt19937 g;
+
+   if (fSetSeed == 0) {
+      g.seed(rd());
+   } else {
+      g.seed(fSetSeed);
+   }
+
+   std::size_t rows = Tensor.GetRows();
+   std::size_t cols = Tensor.GetCols();
+   ShuffledTensor.Resize(rows, cols);
+
+   // make an identity permutation map
+   std::vector<Long_t> indices(rows);
+   std::iota(indices.begin(), indices.end(), 0);
+
+   // shuffle the identity permutation to create a new permutation
+   std::shuffle(indices.begin(), indices.end(), g);
+
+   // shuffle data in the tensor with the permutation map defined above
+   for (std::size_t i = 0; i < rows; i++) {
+      std::copy(Tensor.GetData() + indices[i] * cols, Tensor.GetData() + (indices[i] + 1) * cols,
+                ShuffledTensor.GetData() + i * cols);
+   }
+
+   return ShuffledTensor;
 }
 
 void RFlat2DMatrixOperators::SliceTensor(RFlat2DMatrix &SlicedTensor, RFlat2DMatrix &Tensor,
