@@ -536,7 +536,7 @@ struct HelperFunctionsCode {
 };
 
 /// Return the standalone C++ source of the inference helper functions requested
-/// in `neededHelpers` (see RModel_Base::AddNeededHelperFunction), resolving
+/// in `neededHelpers` (see RModel::AddNeededHelperFunction), resolving
 /// their inter-dependencies. Recognised keys are: "Im2col", "Im2col_3d",
 /// "col2im", "UnidirectionalBroadcast", "BroadcastConvBias", "Gemm_Call",
 /// "Relu", "Fill", "Copy", "ReadTensorFromStream", "InputTensorDims",

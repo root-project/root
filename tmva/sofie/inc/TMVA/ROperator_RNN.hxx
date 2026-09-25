@@ -176,7 +176,6 @@ auto ROperator_RNN<T>::ShapeInference(std::vector<std::vector<size_t>> input) ->
 template <typename T>
 auto ROperator_RNN<T>::Initialize(RModel &model) -> void
 {
-   fUseSession = model.UseSession();
    // Check the input and output tensors
    if (!model.CheckIfTensorAlreadyExist(fNX)) {
       throw std::runtime_error("TMVA SOFIE RNN Op input tensor " + fNX + "  is not found in model.");
@@ -365,10 +364,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName) -> std::string
          out << SP << "float const*" << OpName << "_input = tensor_" << fNX << ";\n";
       }
    } else {
-      if (fUseSession)
-         out << SP << fType << " * " << OpName << "_input = this->fVec_" << OpName << "_input;\n";
-      else
-         out << SP << fType << " " << OpName << "_input[" << seq_length * batch_size * input_size << "];\n";
+      out << SP << fType << " * " << OpName << "_input = this->fVec_" << OpName << "_input;\n";
       out << SP << "for(size_t seq = 0; seq < " << seq_length << "; seq++) {\n";
       out << SP << SP << "for(size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
       out << SP << SP << SP << "for(size_t i = 0; i < " << input_size << "; i++) {\n";
@@ -385,12 +381,8 @@ auto ROperator_RNN<T>::Generate(std::string OpName) -> std::string
       if (fAttrLayout == 0) {
          out << SP << fType << " *" << OpName << "_initial_hidden_state = " << " tensor_" << fNInitial_h << ";\n";
       } else {
-         if (fUseSession)
-            out << SP << fType << " * " << OpName << "_initial_hidden_state = this->fVec_" << OpName
-                << "_initial_hidden_state;\n";
-         else
-            out << fType << " " << OpName << "_initial_hidden_state[" << num_directions * batch_size * fAttrHiddenSize
-                << "] = {0};\n";
+         out << SP << fType << " * " << OpName << "_initial_hidden_state = this->fVec_" << OpName
+             << "_initial_hidden_state;\n";
 
          for (size_t direction = 0; direction < num_directions; direction++) {
             out << SP << "for(size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
@@ -404,21 +396,13 @@ auto ROperator_RNN<T>::Generate(std::string OpName) -> std::string
       }
    }
 
-   if (fUseSession)
-      out << SP << fType << " * " << OpName << "_feedforward = this->fVec_" << OpName << "_feedforward;\n";
-   else
-      out << SP << fType << " " << OpName << "_feedforward[" << seq_length * batch_size * fAttrHiddenSize
-          << "] = {0};\n";
+   out << SP << fType << " * " << OpName << "_feedforward = this->fVec_" << OpName << "_feedforward;\n";
 
    // Set the hidden state
    if (fAttrLayout == 0 && !fNY.empty()) {
       out << SP << fType << " *" << OpName << "_hidden_state = tensor_" << fNY << ";\n";
    } else {
-      if (fUseSession)
-         out << SP << fType << " * " << OpName << "_hidden_state = this->fVec_" << OpName << "_hidden_state;\n";
-      else
-         out << SP << fType << " " << OpName << "_hidden_state["
-             << seq_length * num_directions * batch_size * fAttrHiddenSize << "] = {0};\n";
+      out << SP << fType << " * " << OpName << "_hidden_state = this->fVec_" << OpName << "_hidden_state;\n";
    }
 
    out << SP << "char " << OpName << "_transA = 'N';\n";
