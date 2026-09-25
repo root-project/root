@@ -625,9 +625,20 @@ public:
       RSharedDescriptorGuard &operator=(const RSharedDescriptorGuard &) = delete;
       RSharedDescriptorGuard(RSharedDescriptorGuard &&) = default;
       RSharedDescriptorGuard &operator=(RSharedDescriptorGuard &&) = default;
-      ~RSharedDescriptorGuard() { fLock->unlock_shared(); }
+      ~RSharedDescriptorGuard()
+      {
+         if (IsValid())
+            Release();
+      }
       const ROOT::RNTupleDescriptor *operator->() const { return fDescriptor; }
       const ROOT::RNTupleDescriptor &GetRef() const { return *fDescriptor; }
+      bool IsValid() const { return fLock; }
+      void Release()
+      {
+         fLock->unlock_shared();
+         fLock = nullptr;
+         fDescriptor = nullptr;
+      }
    };
 
    /// An RAII wrapper used for the writable access to `RPageSource::fDescriptor`. See `GetSharedDescriptorGuard()`.
