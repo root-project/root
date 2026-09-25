@@ -12,7 +12,6 @@
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TVirtualPad.h"
-#include "TVirtualPadPainter.h"
 #include "TMarker.h"
 #include "TMath.h"
 #include "TPoint.h"
@@ -225,26 +224,20 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    auto &parent = *gPad;
 
-   static Int_t pxold, pyold;
    Bool_t opaque = parent.OpaqueMoving();
 
    auto action = [this, &parent](Bool_t paint, Int_t posx, Int_t posy) {
-      Double_t x, y;
-      if ((posx != -1111) || (posy != -1111) || !paint) {
-         x = parent.AbsPixeltoX(posx);
-         y = parent.AbsPixeltoY(posy);
-      } else if (TestBit(kMarkerNDC)) {
-         // first non-opaque paint will be performed at the original position
-         x = parent.GetX1() + GetX() * (parent.GetX2() - parent.GetX1());
-         y = parent.GetY1() + GetY() * (parent.GetY2() - parent.GetY1());
-      } else {
-         x = parent.XtoPad(GetX());
-         y = parent.YtoPad(GetY());
-      }
+      Double_t x = parent.AbsPixeltoX(posx);
+      Double_t y = parent.AbsPixeltoY(posy);
       if (paint) {
-         auto pp = parent.GetPainter();
-         pp->SetAttMarker(*this);
-         pp->DrawPolyMarker(1, &x, &y);
+         Double_t scale = TMath::Max(5., 4. * GetMarkerSize());
+         Double_t dx = (parent.GetX2() - parent.GetX1()) / parent.GetPadWidth() * scale;
+         Double_t dy = (parent.GetY2() - parent.GetY1()) / parent.GetPadHeight() * scale;
+
+         Double_t xc[5] = { x, x + dx, x, x - dx, x };
+         Double_t yc[5] = { y - dy, y, y + dy, y, y - dy };
+         TAttLine(1,1,1).ModifyOn(parent);
+         parent.PaintPolyLine(5, xc, yc, "imarker");
       } else if (TestBit(kMarkerNDC)) {
          SetX((x - parent.GetX1()) / (parent.GetX2() - parent.GetX1()));
          SetY((y - parent.GetY1()) / (parent.GetY2() - parent.GetY1()));
@@ -258,7 +251,6 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Down:
    case kMouseMotion:
-      pxold = pyold = -1111;
       parent.SetCursor(kMove);
       break;
 
@@ -266,12 +258,11 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (opaque) {
          action(false, px, py);
          parent.ShowGuidelines(this, event, 'i', true);
-         parent.ModifiedUpdate();
+         parent.Modified();
       } else {
-         action(true, pxold, pyold);
          action(true, px, py);
-         pxold = px;  pyold = py;
       }
+      parent.UpdateAsync();
       break;
 
    case kButton1Up:
@@ -279,8 +270,9 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          parent.ShowGuidelines(this, event);
       } else {
          action(false, px, py);
-         parent.ModifiedUpdate();
+         parent.Modified();
       }
+      parent.UpdateAsync();
       break;
    }
 }
