@@ -24,6 +24,7 @@
 #include <vector>
 #include <forward_list>
 #include <typeinfo>
+#include <type_traits>
 #include <utility>
 
 #if defined(_WIN32)
@@ -83,6 +84,12 @@ namespace Detail {
             return (void*)(*iter);
          }
       };
+
+      // Default std::vector uses a specialized raw-data iterator
+      // representation. This is independent of the STL iterator ABI and is
+      // also needed when an STL implementation makes vector::iterator large.
+      template <typename T> struct IsStdVector : std::false_type {};
+      template <typename T> struct IsStdVector<std::vector<T>> : std::true_type {};
 
    /** @class ROOT::Detail::TCollectionProxyInfo::Iterators
     *
@@ -177,33 +184,59 @@ namespace Detail {
 
          static void create(void *coll, void **begin_arena, void **end_arena, TVirtualCollectionProxy*) {
             PCont_t  c = PCont_t(coll);
-            *begin_arena = new iterator(c->begin());
-            *end_arena = new iterator(c->end());
+            if constexpr (IsStdVector<Cont_t>::value) {
+               if (c->empty()) {
+                  *begin_arena = nullptr;
+                  *end_arena = nullptr;
+                  return;
+               }
+               *begin_arena = c->data();
+               *end_arena = c->data() + c->size();
+            } else {
+               *begin_arena = new iterator(c->begin());
+               *end_arena = new iterator(c->end());
+            }
          }
-         static void* copy(void * /*dest_arena*/, const void *source_ptr) {
-            iterator *source = (iterator *)(source_ptr);
-            void *iter = new iterator(*source);
-            return iter;
+         static void* copy(void *dest_arena, const void *source_ptr) {
+            if constexpr (IsStdVector<Cont_t>::value) {
+               *(void**)dest_arena = *(void**)(const_cast<void*>(source_ptr));
+               return dest_arena;
+            } else {
+               iterator *source = (iterator *)(source_ptr);
+               void *iter = new iterator(*source);
+               return iter;
+            }
          }
          static void* next(void *iter_loc, const void *end_loc) {
-            iterator *end = (iterator *)(end_loc);
-            iterator *iter = (iterator *)(iter_loc);
-            if (*iter != *end) {
-               void *result = IteratorValue<Cont_t, typename Cont_t::value_type>::get(*iter);
-               ++(*iter);
-               return result;
+            if constexpr (IsStdVector<Cont_t>::value) {
+               // The vector raw-data iterator is advanced by the dedicated
+               // vector looper, not through this callback.
+               R__ASSERT(0 && "Intentionally not implemented, do not use.");
+               return nullptr;
+            } else {
+               iterator *end = (iterator *)(end_loc);
+               iterator *iter = (iterator *)(iter_loc);
+               if (*iter != *end) {
+                  void *result = IteratorValue<Cont_t, typename Cont_t::value_type>::get(*iter);
+                  ++(*iter);
+                  return result;
+               }
+               return nullptr;
             }
-            return nullptr;
          }
          static void destruct1(void *begin_ptr) {
-            iterator *start = (iterator *)(begin_ptr);
-            delete start;
+            if constexpr (!IsStdVector<Cont_t>::value) {
+               iterator *start = (iterator *)(begin_ptr);
+               delete start;
+            }
          }
          static void destruct2(void *begin_ptr, void *end_ptr) {
-            iterator *start = (iterator *)(begin_ptr);
-            iterator *end = (iterator *)(end_ptr);
-            delete start;
-            delete end;
+            if constexpr (!IsStdVector<Cont_t>::value) {
+               iterator *start = (iterator *)(begin_ptr);
+               iterator *end = (iterator *)(end_ptr);
+               delete start;
+               delete end;
+            }
          }
       };
 
