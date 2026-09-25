@@ -121,7 +121,7 @@ TEST(THttpServer, main)
    if (!httpport)
       return;
 
-   server_url = TString::Format("http:/localhost:%d", httpport);
+   server_url = TString::Format("http://localhost:%d", httpport);
 
    TUserHandler handler("ws", "Test WebSocket handler");
 

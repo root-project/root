@@ -102,7 +102,7 @@ TEST(THttpServer, ssl)
 
    server_hash = httpport;
    unix_socket = "--cacert server.crt"; // curl argument
-   server_url = TString::Format("https:/localhost:%d", httpport);
+   server_url = TString::Format("https://localhost:%d", httpport);
 
    test_suite(serv);
 
