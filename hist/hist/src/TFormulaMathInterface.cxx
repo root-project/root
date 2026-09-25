@@ -1,4 +1,4 @@
-#include "v5/TFormulaPrimitive.h"
+#include "ROOT/v5/TFormulaPrimitive.hxx"
 #include "TMath.h"
 
 namespace ROOT {

@@ -17,7 +17,7 @@
 #include "TError.h"
 #include "TInterpreter.h"
 #include "TInterpreterValue.h"
-#include "TFormula.h"
+#include "TFormula.hxx"
 #include "TRegexp.h"
 
 #include "ROOT/StringUtils.hxx"
@@ -37,7 +37,7 @@ using std::map, std::pair, std::make_pair, std::list, std::max, std::string;
 #ifdef WIN32
 #pragma optimize("",off)
 #endif
-#include "v5/TFormula.h"
+#include "ROOT/v5/TFormula.h"
 
 
 namespace {
