@@ -14,7 +14,6 @@
 
 #include "TROOT.h"
 #include "TVirtualPad.h"
-#include "TVirtualPadPainter.h"
 #include "TCanvasImp.h"
 #include "TArc.h"
 #include "TLegend.h"
@@ -353,59 +352,72 @@ void TPie::Draw(Option_t *option)
 /// This method is for internal use. It is used by Execute event to draw the
 /// outline of "this" TPie. Used when the opaque movements are not permitted.
 
-void TPie::DrawGhost()
+void TPie::DrawGhost(TVirtualPad &parent)
 {
    MakeSlices();
 
-   auto &parent = *gPad;
-   auto pp = parent.GetPainter();
-   pp->SetAttLine({ kBlack, 1, 2 });
+   TAttLine(kBlack, 1, 2).ModifyOn(parent);
+
+   std::vector<Double_t> xx, yy;
 
    // XY metric
    Double_t radXY = !fIs3D ? 1. : TMath::Sin(fAngle3D/180.*TMath::Pi()), x0 = 0, y0 = 0;
 
-   auto drawLine = [pp, &parent, &x0, &y0](double x1, double y1, double x2, double y2) {
-      x1 = parent.XtoPad(x0 + x1);
-      x2 = parent.XtoPad(x0 + x2);
-      y1 = parent.YtoPad(y0 + y1);
-      y2 = parent.YtoPad(y0 + y2);
-      pp->DrawLine(x1, y1, x2, y2);
-
+   auto addPoint = [&parent, &xx, &yy, &x0, &y0](double x1, double y1) {
+      xx.emplace_back(parent.XtoPad(x0 + x1));
+      yy.emplace_back(parent.YtoPad(y0 + y1));
    };
 
-   for(Int_t loop3d = fIs3D ? 1 : 0; loop3d >= 0; loop3d--)
-   for (Int_t i = 0; i < fNvals; ++i) {
-      Float_t minphi = (fSlices[i*2]+gAngularOffset+.5)*TMath::Pi()/180.;
-      Float_t avgphi = (fSlices[i*2+1]+gAngularOffset)*TMath::Pi()/180.;
-      Float_t maxphi = (fSlices[i*2+2]+gAngularOffset-.5)*TMath::Pi()/180.;
+   for (Int_t loop3d = fIs3D ? 1 : 0; loop3d >= 0; loop3d--)
+      for (Int_t i = 0; i < fNvals; ++i) {
+         xx.clear();
+         yy.clear();
 
-      Double_t radOffset = (i == gCurrent_slice ? gRadiusOffset : fPieSlices[i]->GetRadiusOffset());
-      x0 = gX + radOffset*TMath::Cos(avgphi);
-      y0 = gY + radOffset*TMath::Sin(avgphi)*radXY - loop3d * fHeight; // draw layer beyond
+         Float_t minphi = (fSlices[i * 2] + gAngularOffset + .5) * TMath::Pi() / 180.;
+         Float_t avgphi = (fSlices[i * 2 + 1] + gAngularOffset) * TMath::Pi() / 180.;
+         Float_t maxphi = (fSlices[i * 2 + 2] + gAngularOffset - .5) * TMath::Pi() / 180.;
 
-      drawLine(0, 0, gRadius*TMath::Cos(minphi), gRadius*TMath::Sin(minphi)*radXY);
+         Double_t radOffset = (i == gCurrent_slice ? gRadiusOffset : fPieSlices[i]->GetRadiusOffset());
+         x0 = gX + radOffset * TMath::Cos(avgphi);
+         y0 = gY + radOffset * TMath::Sin(avgphi) * radXY - loop3d * fHeight; // draw layer beyond
 
-      Double_t dphi = (maxphi - minphi);
-      Int_t ndiv = dphi > 1.5 ? (Int_t) (dphi/.15) : 10;
-      dphi = dphi /ndiv;
+         addPoint(0, 0);
 
-      // Loop to draw the arc
-      for (Int_t j = 0; j < ndiv; ++j) {
-         Double_t phi = minphi + dphi * j;
-         drawLine(gRadius*TMath::Cos(phi), gRadius*TMath::Sin(phi)*radXY,
-                  gRadius*TMath::Cos(phi+dphi), gRadius*TMath::Sin(phi+dphi)*radXY);
+         Double_t dphi = (maxphi - minphi);
+         Int_t ndiv = dphi > 1.5 ? (Int_t)(dphi / .15) : 10;
+         dphi /= ndiv;
+
+         // Loop to draw the arc
+         for (Int_t j = 0; j <= ndiv; ++j) {
+            Double_t phi = minphi + dphi * j;
+            addPoint(gRadius * TMath::Cos(phi), gRadius * TMath::Sin(phi) * radXY);
+         }
+
+         addPoint(0, 0);
+
+         if (loop3d)
+            addPoint(0, fHeight);
+
+         parent.PaintPolyLine(xx.size(), xx.data(), yy.data(),
+                              TString::Format("ipiechart_slice%d_loop%d", i, loop3d).Data());
+
+         if (loop3d) {
+            xx.clear();
+            yy.clear();
+            addPoint(gRadius * TMath::Cos(minphi), gRadius * TMath::Sin(minphi) * radXY);
+            addPoint(gRadius * TMath::Cos(minphi), gRadius * TMath::Sin(minphi) * radXY + fHeight);
+            parent.PaintPolyLine(xx.size(), xx.data(), yy.data(),
+                                 TString::Format("ipiechart_slice%d_bindmin", i).Data());
+            xx.clear();
+            yy.clear();
+            addPoint(gRadius * TMath::Cos(maxphi), gRadius * TMath::Sin(maxphi) * radXY);
+            addPoint(gRadius * TMath::Cos(maxphi), gRadius * TMath::Sin(maxphi) * radXY + fHeight);
+            parent.PaintPolyLine(xx.size(), xx.data(), yy.data(),
+                                 TString::Format("ipiechart_slice%d_bindmax", i).Data());
+         }
       }
 
-      drawLine(gRadius*TMath::Cos(maxphi), gRadius*TMath::Sin(maxphi)*radXY, 0, 0);
-
-      if (loop3d) {
-         drawLine(0, 0, 0, fHeight);
-         drawLine(gRadius*TMath::Cos(minphi), gRadius*TMath::Sin(minphi)*radXY,
-                  gRadius*TMath::Cos(minphi), gRadius*TMath::Sin(minphi)*radXY+fHeight);
-         drawLine(gRadius*TMath::Cos(maxphi), gRadius*TMath::Sin(maxphi)*radXY,
-                  gRadius*TMath::Cos(maxphi), gRadius*TMath::Sin(maxphi)*radXY+fHeight);
-      }
-   }
+   parent.UpdateAsync();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -419,7 +431,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    Bool_t opaque  = parent.OpaqueMoving();
 
-   if (gCurrent_slice<=-10) {
+   if (gCurrent_slice <= -10) {
       parent.SetCursor(kCross);
       return;
    }
@@ -534,29 +546,20 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             if (isMovingSlice) {
                Float_t avgphi = fSlices[gCurrent_slice*2+1]*TMath::Pi()/180.;
 
-               if (!opaque)
-                  DrawGhost();
-
                gRadiusOffset += TMath::Cos(avgphi)*mdx +TMath::Sin(avgphi)*mdy/radXY;
                if (gRadiusOffset<0) gRadiusOffset = .0;
                gIsUptSlice         = kTRUE;
 
                if (!opaque)
-                  DrawGhost();
+                  DrawGhost(parent);
             } else {
-               if (!opaque)
-                  DrawGhost();
-
                gX += mdx;
                gY += mdy;
 
                if (!opaque)
-                  DrawGhost();
+                  DrawGhost(parent);
             }
          } else if (isResizing) {
-            if (!opaque)
-               DrawGhost();
-
             Float_t dr1 = mdx*TMath::Cos(gCurrent_ang)+mdy*TMath::Sin(gCurrent_ang)/radXY;
             if (gRadius+dr1>=minRad) {
                gRadius += dr1;
@@ -565,11 +568,8 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             }
 
             if (!opaque)
-               DrawGhost();
+               DrawGhost(parent);
          } else if (isRotating) {
-            if (!opaque)
-               DrawGhost();
-
             Double_t xx = gPad->AbsPixeltoX(px);
             Double_t yy = gPad->AbsPixeltoY(py);
 
@@ -583,7 +583,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             gAngularOffset = (ang-gCurrent_ang)*180/TMath::Pi();
 
             if (!opaque)
-               DrawGhost();
+               DrawGhost(parent);
          }
 
          oldpx = px;

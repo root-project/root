@@ -23,7 +23,7 @@ class TLegend;
 class TPie : public TNamed , public TAttText {
 private:
    void Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r);
-   void DrawGhost();
+   void DrawGhost(TVirtualPad &);
 
    Float_t  fSum;             ///<!Sum for the slice values
    Float_t *fSlices{nullptr}; ///<!Subdivisions of the slices
