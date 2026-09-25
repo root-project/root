@@ -1085,7 +1085,6 @@ EXCLUDE                = ../../interpreter/ \
     ../../core/lzma/ \
     ../../core/lz4/ \
     ../../core/newdelete/ \
-    ../../core/textinput/ \
     ../../builtins/ \
     ../../documentation/doxygen/html
 
