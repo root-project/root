@@ -1505,8 +1505,6 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
                ps->SetTextAlign(22);
                ps->Text(xx, yy, "~");
             } else {
-               if (gPad->GetPainter()->IsCocoa())
-                  y2 -= 4.7*sub;
                Rotate(gPad, spec.fAngle, x2, y2, xx, yy);
                // TODO: use pad painter SetAttText and DrawText directly
                TText tilde;
