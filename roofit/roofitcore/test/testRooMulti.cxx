@@ -260,6 +260,38 @@ TEST(RooMultiPdfTest, Minimization)
    EXPECT_DOUBLE_EQ(multiNllVals[0], nllVal1);
    EXPECT_DOUBLE_EQ(multiNllVals[1], nllVal2);
 }
+
+// The index category of a RooMultiPdf selects between alternative hypotheses
+// for the observables and has no well-defined prior probability, unlike the
+// index category of a RooSimultaneous. Requesting it as a generation
+// observable should therefore fail loudly instead of silently sampling it
+// with some arbitrary, unspecified distribution.
+// Covers https://github.com/root-project/root/issues/22916
+TEST(RooMultiPdfTest, GeneratingIndexCategoryThrows)
+{
+   RooRealVar x("x", "x", -10, 10);
+
+   RooRealVar m1("mean1", "mean1", 0.);
+   RooRealVar s1("sigma1", "sigma1", 1.);
+   RooRealVar m2("mean2", "mean2", 3.);
+   RooRealVar s2("sigma2", "sigma2", 2.);
+
+   RooGaussian gaus1("gaus1", "gaus1", x, m1, s1);
+   RooGaussian gaus2("gaus2", "gaus2", x, m2, s2);
+
+   RooCategory indx("my_special_index", "my_index");
+   RooMultiPdf pdf("mult", "multi_pdf", indx, RooArgList{gaus1, gaus2});
+
+   // Generating the observable alone (index fixed) still works.
+   indx.setConstant();
+   EXPECT_NO_THROW({ std::unique_ptr<RooAbsData> data{pdf.generate(x, 100)}; });
+
+   // Requesting the index category itself among the generation variables is
+   // not supported and must throw rather than silently generate with an
+   // arbitrary implicit prior over the index.
+   EXPECT_THROW({ std::unique_ptr<RooAbsData> data{pdf.generate(RooArgSet{x, indx}, 100)}; }, std::invalid_argument);
+}
+
 TEST(RooMultiReal, SelectsCorrectModel)
 {
    RooRealVar x("x", "x", -10, 10);
