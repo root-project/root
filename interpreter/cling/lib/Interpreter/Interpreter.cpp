@@ -19,6 +19,7 @@
 #include "EnterUserCodeRAII.h"
 #include "ExternalInterpreterSource.h"
 #include "ForwardDeclPrinter.h"
+#include "IncrementalAction.h"
 #include "IncrementalExecutor.h"
 #include "IncrementalParser.h"
 #include "MultiplexInterpreterCallbacks.h"
@@ -219,7 +220,32 @@ namespace cling {
 
     auto LLVMCtx = std::make_unique<llvm::LLVMContext>();
     TSCtx = std::make_unique<llvm::orc::ThreadSafeContext>(std::move(LLVMCtx));
-    m_IncrParser.reset(new IncrementalParser(this, llvmdir, moduleExtensions));
+
+    m_CI.reset(CIFactory::createCI("\n", getOptions(), llvmdir, std::nullopt,
+                                   moduleExtensions));
+
+    if (!m_CI) {
+      cling::errs() << "Compiler instance could not be created.\n";
+      return;
+    }
+
+    llvm::Error ErrOut = llvm::Error::success();
+    m_Act = TSCtx->withContextDo([&](llvm::LLVMContext* Ctx) {
+      return std::make_unique<IncrementalAction>(*m_CI, *Ctx,
+                                                 getOptions().CompilerOpts,
+                                                 ErrOut);
+    });
+
+    if (ErrOut) {
+      llvm::logAllUnhandledErrors(std::move(ErrOut), llvm::errs(),
+                                  "Action creation failed: ");
+      return;
+    }
+
+    m_CI->ExecuteAction(*m_Act);
+
+    m_IncrParser.reset(new IncrementalParser(this, m_CI.get(), m_Act.get()));
+
     if (!m_IncrParser->isValid(false))
       return;
 
@@ -281,10 +307,6 @@ namespace cling {
 
     bool usingCxxModules = getSema().getLangOpts().Modules;
     if (usingCxxModules) {
-      // Explicitly create the modulemanager now. If we would create it later
-      // implicitly then it would just overwrite our callbacks we set below.
-      m_IncrParser->getCI()->createASTReader();
-
       // When using C++ modules, we setup the callbacks now that we have them
       // ready before we parse code for the first time. Without C++ modules
       // we can't setup the calls now because the clang PCH currently just
@@ -302,12 +324,12 @@ namespace cling {
     }
 
     llvm::SmallVector<IncrementalParser::ParseResultTransaction, 2>
-      IncrParserTransactions;
+        IncrParserTransactions;
     if (!m_IncrParser->Initialize(IncrParserTransactions, parentInterp)) {
       // Initialization is not going well, but we still have to commit what
       // we've been given. Don't clear the DiagnosticsConsumer so the caller
       // can inspect any errors that have been generated.
-      for (auto&& I: IncrParserTransactions)
+      for (auto&& I : IncrParserTransactions)
         m_IncrParser->commitTransaction(I, false);
       return;
     }
@@ -400,6 +422,12 @@ namespace cling {
     // explicitly, before the implicit destruction (through the unique_ptr) of
     // the callbacks.
     m_IncrParser.reset(nullptr);
+    m_Act->FinalizeAction();
+    m_Act.reset(nullptr);
+  }
+
+  void Interpreter::GeneratePCH() {
+    m_Act->GenPCH(m_CI->getASTContext());
   }
 
   Transaction* Interpreter::Initialize(bool NoRuntime, bool SyntaxOnly) {
@@ -754,11 +782,11 @@ namespace cling {
   }
 
   CompilerInstance* Interpreter::getCI() const {
-    return m_IncrParser->getCI();
+    return m_CI.get();
   }
 
   CompilerInstance* Interpreter::getCIOrNull() const {
-    return m_IncrParser ? m_IncrParser->getCI() : nullptr;
+    return m_CI ? getCI() : nullptr;
   }
 
   Sema& Interpreter::getSema() const {
