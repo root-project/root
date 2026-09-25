@@ -355,7 +355,7 @@ public:
       const auto columns = ColumnNames_t{column.data()};
       // For now disable this functionality in case of an empty data source and
       // the column name was not defined previously.
-      if (ROOT::Internal::RDF::GetDataSourceLabel(*this).compare("EmptyDS") == 0)
+      if (ROOT::Internal::RDF::GetDataSourceLabel(*this) == "EmptyDS")
          throw std::runtime_error("Unknown column: \"" + std::string(column) + "\"");
       using F_t = RDFDetail::RFilterWithMissingValues<Proxied>;
       auto filterPtr = std::make_shared<F_t>(/*discardEntry*/ true, fProxiedPtr, fColRegister, columns);
@@ -406,7 +406,7 @@ public:
       const auto columns = ColumnNames_t{column.data()};
       // For now disable this functionality in case of an empty data source and
       // the column name was not defined previously.
-      if (ROOT::Internal::RDF::GetDataSourceLabel(*this).compare("EmptyDS") == 0)
+      if (ROOT::Internal::RDF::GetDataSourceLabel(*this) == "EmptyDS")
          throw std::runtime_error("Unknown column: \"" + std::string(column) + "\"");
       using F_t = RDFDetail::RFilterWithMissingValues<Proxied>;
       auto filterPtr = std::make_shared<F_t>(/*discardEntry*/ false, fProxiedPtr, fColRegister, columns);
@@ -690,7 +690,7 @@ public:
       RDFInternal::CheckForNoVariations(where, column, fColRegister);
       // For now disable this functionality in case of an empty data source and
       // the column name was not defined previously.
-      if (ROOT::Internal::RDF::GetDataSourceLabel(*this).compare("EmptyDS") == 0)
+      if (ROOT::Internal::RDF::GetDataSourceLabel(*this) == "EmptyDS")
          RDFInternal::CheckForDefinition(where, column, fColRegister,
                                          GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
 
@@ -3261,7 +3261,7 @@ public:
             RDFInternal::BuildAction(validColumnNames, snapHelperArgs, nSlots, fProxiedPtr, fColRegister, colTypeIDs);
          resPtr = MakeResultPtr(newRDF, *GetLoopManager(), std::move(action));
       } else {
-         if (RDFInternal::GetDataSourceLabel(*this).compare("RNTupleDS") == 0 &&
+         if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS" &&
              options.fOutputFormat == ESnapshotOutputFormat::kDefault) {
             Warning("Snapshot",
                     "The default Snapshot output data format is TTree, but the input data format is RNTuple. If you "
@@ -3350,7 +3350,7 @@ public:
             throw e;
       }
 
-      if (RDFInternal::GetDataSourceLabel(*this).compare("RNTupleDS") == 0) {
+      if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS") {
          RDFInternal::RemoveRNTupleSubfields(selectedColumns);
       }
 
