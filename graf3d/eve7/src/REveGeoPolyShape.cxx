@@ -21,6 +21,7 @@
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
+#define ROOT_CsgOps_cxx
 #include "CsgOps.h"
 
 #include "TGeoBoolNode.h"
