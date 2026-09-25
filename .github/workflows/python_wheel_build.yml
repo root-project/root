@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [cp311, cp312, cp313, cp314]
+        python: [cp311, cp312, cp313, cp314, cp315]
         config:
           # `label` is a unique artifact name for each build
           - runner: macos-15
@@ -75,7 +75,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.11", "3.12", "3.13", "3.14"]
+        python: ["3.11", "3.12", "3.13", "3.14", "3.15"]
         test_config:
           # each runner tests the wheel built on it
           - runner: macos-15
