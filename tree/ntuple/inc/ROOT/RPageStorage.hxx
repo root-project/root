@@ -803,6 +803,11 @@ private:
    /// Pages of pinned clusters won't be evicted from the page pool.
    std::unordered_set<ROOT::DescriptorId_t> fPinnedClusters;
 
+   /// Ensures that fDescriptor has cluster details loaded for the given cluster group ID. This method is expected
+   /// to be called while holding the lock passed by descGuard. The returned descriptor guard is either the
+   /// passed one or a new, exclusive guard if cluster details needed to be loaded.
+   RAnyDescriptorGuard EnsureClusterDetails(DescriptorId_t cgId, RAnyDescriptorGuard descGuard);
+
    /// Does nothing if fLastUsedCluster == clusterId. Otherwise, updated fLastUsedCluster
    /// and evict unused paged from the page pool of all previous clusters.
    /// Must not be called when the descriptor guard is taken.

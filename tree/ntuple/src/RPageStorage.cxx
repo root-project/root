@@ -276,6 +276,28 @@ std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Internal::RPageSource::Clone(
    return clone;
 }
 
+ROOT::Internal::RPageSource::RAnyDescriptorGuard
+ROOT::Internal::RPageSource::EnsureClusterDetails(DescriptorId_t cgId, RAnyDescriptorGuard descGuard)
+{
+   assert(descGuard.IsValid());
+   if ((cgId == kInvalidDescriptorId) || descGuard->GetClusterGroupDescriptor(cgId).HasClusterDetails())
+      return descGuard;
+
+   descGuard.Release();
+
+   auto exclGuard = GetExclDescriptorGuard();
+
+   if (exclGuard->GetClusterGroupDescriptor(cgId).HasClusterDetails()) {
+      // unlikely, but between releasing the shared guard and acquiring the exclusive guard, the cluster details
+      // may have appeared
+      return exclGuard;
+   }
+
+   LoadPageList(cgId, exclGuard);
+
+   return exclGuard;
+}
+
 ROOT::NTupleSize_t ROOT::Internal::RPageSource::GetNEntries()
 {
    return GetSharedDescriptorGuard()->GetNEntries();
