@@ -5,5 +5,4 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 add_subdirectory(gdbPrinters)
-add_subdirectory(rmkdepend)
 add_subdirectory(win)
