@@ -10,8 +10,10 @@
 #include <gtest/gtest.h>
 
 #include <cstdint>
+#include <cctype>
 #include <cstring>
 #include <fstream>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -116,6 +118,74 @@ void WriteDataFile(const std::string &fileName, const std::vector<float> &values
    ASSERT_TRUE(file.good());
 }
 
+// A tensor of the test graph. A dimension that is not a number is a named one,
+// so its value is only known at run time.
+struct TestTensor {
+   std::string name;
+   std::vector<std::string> dims;
+};
+
+// ValueInfoProto for a float tensor.
+std::string FloatValueInfo(const TestTensor &tensor)
+{
+   std::string shape;
+   for (const std::string &dim : tensor.dims) {
+      std::string entry;
+      if (std::isdigit(static_cast<unsigned char>(dim[0])))
+         AppendVarintField(entry, 1, std::stoull(dim)); // dim_value
+      else
+         AppendBytesField(entry, 2, dim); // dim_param
+      AppendBytesField(shape, 1, entry);  // dim
+   }
+
+   std::string tensorType;
+   AppendVarintField(tensorType, 1, 1);    // elem_type: FLOAT
+   AppendBytesField(tensorType, 2, shape); // shape
+   std::string type;
+   AppendBytesField(type, 1, tensorType); // tensor_type
+   std::string out;
+   AppendBytesField(out, 1, tensor.name); // name
+   AppendBytesField(out, 2, type);        // type
+   return out;
+}
+
+// Write a model holding a single Gemm node and return the code SOFIE generates
+// for it. Every operand is a graph input, which keeps the model file tiny.
+std::string
+GenerateGemmCode(const std::string &fileName, const std::vector<TestTensor> &inputs, const TestTensor &output)
+{
+   std::string node;
+   for (const TestTensor &input : inputs)
+      AppendBytesField(node, 1, input.name); // input
+   AppendBytesField(node, 2, output.name);   // output
+   AppendBytesField(node, 3, "gemm_0");      // name
+   AppendBytesField(node, 4, "Gemm");        // op_type
+
+   std::string graph;
+   AppendBytesField(graph, 1, node);         // node
+   AppendBytesField(graph, 2, "test_graph"); // name
+   for (const TestTensor &input : inputs)
+      AppendBytesField(graph, 11, FloatValueInfo(input)); // input
+   AppendBytesField(graph, 12, FloatValueInfo(output));   // output
+
+   std::string opset;
+   AppendVarintField(opset, 2, 13); // version
+   std::string model;
+   AppendVarintField(model, 1, 10);   // ir_version
+   AppendBytesField(model, 7, graph); // graph
+   AppendBytesField(model, 8, opset); // opset_import
+
+   std::ofstream file(fileName, std::ios::binary);
+   file.write(model.data(), model.size());
+   file.close();
+
+   RModel rmodel = RModelParser_ONNX{}.Parse(fileName);
+   rmodel.Generate(Options::kNoWeightFile);
+   std::ostringstream code;
+   rmodel.PrintGenerated(code);
+   return code.str();
+}
+
 } // namespace
 
 // The "location" key of a tensor's external_data names the data file relative
@@ -184,4 +254,29 @@ TEST(SOFIEParser, MissingExternalDataFileThrows)
 
    RModelParser_ONNX parser;
    EXPECT_THROW(parser.Parse("extdataD.onnx"), std::runtime_error);
+}
+
+// A bias whose shape differs from the output is written into the output before
+// the multiplication, so that Gemm_Call accumulates onto what the output holds.
+// That is the form the Clad pullback of Gemm_Call is written for: handing the
+// bias to Gemm_Call instead makes it overwrite the output, which gives the same
+// values but a different derivative.
+TEST(SOFIEParser, GemmBroadcastsABiasThatDoesNotHaveTheOutputShape)
+{
+   const std::string code = GenerateGemmCode(
+      "gemm_static_bias.onnx", {{"x", {"1", "10"}}, {"w", {"10", "32"}}, {"b", {"32"}}}, {"y", {"1", "32"}});
+
+   EXPECT_NE(code.find("Copy(tensor_y"), std::string::npos);
+   EXPECT_NE(code.find(",nullptr);"), std::string::npos);
+}
+
+// A bias that already has the shape of the output needs no broadcasting, which
+// a number of rows known only at run time must not hide.
+TEST(SOFIEParser, GemmDoesNotBroadcastABiasThatHasTheOutputShape)
+{
+   const std::string code = GenerateGemmCode(
+      "gemm_dynamic_bias.onnx", {{"a", {"N", "3"}}, {"w", {"3", "4"}}, {"c", {"N", "4"}}}, {"y", {"N", "4"}});
+
+   EXPECT_EQ(code.find("Copy(tensor_y"), std::string::npos);
+   EXPECT_NE(code.find(",tensor_c);"), std::string::npos);
 }
