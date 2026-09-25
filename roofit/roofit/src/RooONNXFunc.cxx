@@ -192,6 +192,7 @@ struct RooONNXFunc::RuntimeCache {
 
    RooFit::Detail::AnyWithVoidPtr _session;
    RooFit::Detail::AnyWithVoidPtr _d_session;
+   RooFit::Detail::AnyWithVoidPtr _zero_session; ///< Zero-weight session, the tangent for forward-mode derivatives.
    Func _func;
 };
 
@@ -295,20 +296,26 @@ std::string _RooONNXFunc_onnxToCppWithSofie(std::uint8_t const *onnxBytes, std::
       gInterpreter->ProcessLine(("std::size(" + namespaceName + "::inputTensorDims);").c_str()));
 
    // Per-input-tensor parameter / argument lists used by the JIT'd code below.
-   std::string innerParams;       // "float const *input0, float const *input1, ..."
-   std::string innerArgs;         // "input0, input1, ..."
-   std::string outerDoubleParams; // "double const *input0, double const *input1, ..."
-   std::string cladInputs;        // "input0, input1, ..."  (for clad::gradient param spec)
+   std::string innerParams;        // "float const *input0, float const *input1, ..."
+   std::string innerArgs;          // "input0, input1, ..."
+   std::string innerTangentParams; // "float const *d_input0, float const *d_input1, ..."
+   std::string innerTangentArgs;   // "d_input0, d_input1, ..."
+   std::string outerDoubleParams;  // "double const *input0, double const *input1, ..."
+   std::string cladInputs;         // "input0, input1, ..."  (for clad::gradient param spec)
    for (std::size_t i = 0; i < nInputTensors; ++i) {
       std::string istr = std::to_string(i);
       if (i > 0) {
          innerParams += ", ";
          innerArgs += ", ";
+         innerTangentParams += ", ";
+         innerTangentArgs += ", ";
          outerDoubleParams += ", ";
          cladInputs += ", ";
       }
       innerParams += "float const *input" + istr;
       innerArgs += "input" + istr;
+      innerTangentParams += "float const *d_input" + istr;
+      innerTangentArgs += "d_input" + istr;
       outerDoubleParams += "double const *input" + istr;
       cladInputs += "input" + istr;
    }
@@ -363,6 +370,47 @@ std::string _RooONNXFunc_onnxToCppWithSofie(std::uint8_t const *onnxBytes, std::
 
    gInterpreter->ProcessLine(("clad::gradient(" + namespaceName + "::roo_wrapper, \"" + cladInputs + "\");").c_str());
 
+   // Also generate roo_inner_wrapper_pushforward: the forward-mode derivative
+   // of the inner wrapper, which takes the session and input tangents as
+   // function arguments (requesting the derivative of the outer wrapper
+   // generates it, the same trick as for the pullback above). It is the basis
+   // of the exact second derivatives below.
+   gInterpreter->ProcessLine(("clad::differentiate(" + namespaceName + "::roo_wrapper, \"input0[0]\");").c_str());
+
+   // The session tangent for the pushforward: the weights are constants, so
+   // their tangent is zero (a default-constructed Session holds the actual
+   // weights). Intermediate tensors inside this session are used as tangent
+   // scratch space during the forward pass.
+   _runtime->_zero_session.emplace(sessionName);
+   auto ptrZeroSession = toPtrString(_runtime->_zero_session.ptr, sessionName);
+   gInterpreter->ProcessLine((ptrZeroSession + "->SetWeightsToZero();").c_str());
+
+   // Directional-derivative wrapper: reverse differentiation of it w.r.t.
+   // both the inputs and the tangent direction gives the exact
+   // Hessian-vector product H . d_input (in the input adjoints) and the
+   // gradient (in the tangent adjoints). Both must be requested as active:
+   // for a non-varied argument clad would look up the custom helper pullbacks
+   // with reduced signatures, not find them, and silently fall back to
+   // differentiating the BLAS calls, which yields zero.
+   {
+      std::ostringstream ss;
+      ss << "namespace " << namespaceName << " {\n\n"
+         << "float roo_dir(Session const &session, Session const &zeroSession, " << innerParams << ", "
+         << innerTangentParams << ") {\n"
+         << "   return roo_inner_wrapper_pushforward(session, " << innerArgs << ", zeroSession, " << innerTangentArgs
+         << ").pushforward;\n"
+         << "}\n\n"
+         << "float roo_dir_outer(Session const &session, Session const &zeroSession, " << innerParams << ", "
+         << innerTangentParams << ") {\n"
+         << "   return roo_dir(session, zeroSession, " << innerArgs << ", " << innerTangentArgs << ");\n"
+         << "}\n\n"
+         << "} // namespace " << namespaceName << "\n";
+      gInterpreter->Declare(ss.str().c_str());
+   }
+   gInterpreter->ProcessLine(
+      ("clad::gradient(" + namespaceName + "::roo_dir_outer, \"" + cladInputs + ", " + innerTangentArgs + "\");")
+         .c_str());
+
    // The codegen call site (CodegenImpl::codegenImpl(RooONNXFunc)) passes one
    // double-array argument per input tensor. Emit roo_outer_wrapper and the matching
    // custom-derivative pullback with the corresponding number of parameters.
@@ -414,6 +462,108 @@ std::string _RooONNXFunc_onnxToCppWithSofie(std::uint8_t const *onnxBytes, std::
       for (std::size_t i = 0; i < nInputTensors; ++i) {
          ss << "    for (::std::size_t i = 0; i < ::std::size(inputFlt" << i << "); ++i) {\n"
             << "       d_input" << i << "[i] += d_inputFlt" << i << "[i];\n"
+            << "    }\n";
+      }
+      ss << "}\n\n";
+
+      // Custom derivatives for Clad Hessians, which are implemented in clad
+      // as forward-mode derivatives that are then differentiated in reverse
+      // mode: the forward pass needs a "pushforward" for the opaque
+      // roo_outer_wrapper call, and the reverse pass over it needs the
+      // matching "pushforward_pullback". Both are exact: they are built on
+      // the clad-generated roo_inner_wrapper_pushforward and roo_dir_pullback
+      // (see above).
+
+      // Comma-separated parameter helper for the emitted code.
+      std::string tangentDoubleParams; // "double const *d_input0, ..."
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         std::string istr = std::to_string(i);
+         if (i > 0) {
+            tangentDoubleParams += ", ";
+         }
+         tangentDoubleParams += "double const *d_input" + istr;
+      }
+
+      // Emits float conversion buffers for the inputs and the tangents.
+      auto emitFloatBuffers = [&]() {
+         for (std::size_t i = 0; i < nInputTensors; ++i) {
+            ss << "    float inputFlt" << i << "[inputTensorDims[" << i << "].total_size()];\n"
+               << "    float dInputFlt" << i << "[inputTensorDims[" << i << "].total_size()];\n"
+               << "    for (::std::size_t i = 0; i < ::std::size(inputFlt" << i << "); ++i) {\n"
+               << "       inputFlt" << i << "[i] = input" << i << "[i];\n"
+               << "       dInputFlt" << i << "[i] = d_input" << i << "[i];\n"
+               << "    }\n";
+         }
+      };
+
+      // The pushforward evaluates the function value together with the exact
+      // directional derivative grad . d_input, in one forward pass.
+      ss << "clad::ValueAndPushforward<double, double> roo_outer_wrapper_pushforward(" << outerDoubleParams << ", "
+         << tangentDoubleParams << ") {\n"
+         << "    using namespace ::" << namespaceName << ";\n"
+         << "    auto &session = *" << ptrSession << ";\n"
+         << "    auto &zeroSession = *" << ptrZeroSession << ";\n";
+      emitFloatBuffers();
+      ss << "    auto vp = roo_inner_wrapper_pushforward(session, ";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << "inputFlt" << i << ", ";
+      }
+      ss << "zeroSession";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << ", dInputFlt" << i;
+      }
+      ss << ");\n"
+         << "    return {vp.value, vp.pushforward};\n"
+         << "}\n\n";
+
+      // The pullback of the pushforward needs second derivatives only in the
+      // form of the Hessian-vector product H . d_input, which roo_dir_pullback
+      // evaluates exactly (together with the gradient, as the adjoint of the
+      // tangent direction).
+      ss << "void roo_outer_wrapper_pushforward_pullback(" << outerDoubleParams << ", " << tangentDoubleParams
+         << ", clad::ValueAndPushforward<double, double> d_y";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << ", double *d_out_input" << i;
+      }
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << ", double *d_out_d_input" << i;
+      }
+      ss << ") {\n"
+         << "    using namespace ::" << namespaceName << ";\n"
+         << "    auto &session = *" << ptrSession << ";\n"
+         << "    auto &zeroSession = *" << ptrZeroSession << ";\n"
+         << "    // Fresh adjoint sessions for every call: the clad-generated\n"
+         << "    // second-order pullback does not restore the adjoint state inside\n"
+         << "    // the sessions to zero (clad bug, see the \"clad referenced\n"
+         << "    // '_tracker...' before its declaration\" warnings it prints during\n"
+         << "    // generation), so reusing them would leak state between calls.\n"
+         << "    Session dSession1;\n"
+         << "    Session dSession2;\n";
+      emitFloatBuffers();
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << "    float hvpFlt" << i << "[inputTensorDims[" << i << "].total_size()] = {};\n"
+            << "    float gradFlt" << i << "[inputTensorDims[" << i << "].total_size()] = {};\n";
+      }
+      ss << "    roo_dir_pullback(session, zeroSession, ";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << "inputFlt" << i << ", ";
+      }
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << "dInputFlt" << i << ", ";
+      }
+      ss << "1.F, &dSession1, &dSession2";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << ", hvpFlt" << i;
+      }
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << ", gradFlt" << i;
+      }
+      ss << ");\n";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << "    for (::std::size_t i = 0; i < ::std::size(inputFlt" << i << "); ++i) {\n"
+            << "       d_out_input" << i << "[i] += d_y.value * gradFlt" << i << "[i] + d_y.pushforward * hvpFlt" << i
+            << "[i];\n"
+            << "       d_out_d_input" << i << "[i] += d_y.pushforward * gradFlt" << i << "[i];\n"
             << "    }\n";
       }
       ss << "}\n\n"
