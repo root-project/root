@@ -17,7 +17,7 @@
 #include "TLine.h"
 #include "TVirtualPad.h"
 #include "TClass.h"
-#include "TVirtualPadPainter.h"
+#include "TLineInteractive.h"
 #include "TCanvasImp.h"
 #include "TMath.h"
 #include "TPoint.h"
@@ -119,32 +119,6 @@ TLine *TLine::DrawLineNDC(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    return newline;
 }
 
-
-class TLineInteractive : public TVirtualPad::TInteractive {
-   public:
-      Int_t dx1 = 0, dx2 = 0, dy1 = 0, dy2 = 0;
-      Double_t oldX1 = 0., oldY1 = 0., oldX2 = 0., oldY2 = 0.;
-      Double_t newX1 = 0., newY1 = 0., newX2 = 0., newY2 = 0.;
-      Int_t selectPoint = 0;
-
-      TLineInteractive(TLine *l)
-      {
-         newX1 = oldX1 = l->GetX1();
-         newY1 = oldY1 = l->GetY1();
-         newX2 = oldX2 = l->GetX2();
-         newY2 = oldY2 = l->GetY2();
-      }
-
-      void Apply(TLine *l, Bool_t usenew)
-      {
-         l->SetX1(usenew ? newX1 : oldX1);
-         l->SetY1(usenew ? newY1 : oldY1);
-         l->SetX2(usenew ? newX2 : oldX2);
-         l->SetY2(usenew ? newY2 : oldY2);
-      }
-};
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///  This member function is called when a line is clicked with the locator
@@ -159,117 +133,37 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    if (!gPad || !gPad->IsEditable()) return;
 
-   constexpr Int_t kMaxDiff = 20;
-
    auto &parent = *gPad;
 
    Bool_t opaque  = parent.OpaqueMoving();
 
    auto inter = dynamic_cast<TLineInteractive *>(parent.Interactive(this));
 
-   auto set_coord = [this, &inter](Int_t _x1, Int_t _y1, Int_t _x2, Int_t _y2) {
-      Bool_t isndc = TestBit(kLineNDC);
-      if (inter->selectPoint & 1) {
-         inter->newX1 = GetXCoord(_x1, isndc, kTRUE);
-         inter->newY1 = GetYCoord(_y1, isndc, kTRUE);
-      }
-      if (inter->selectPoint & 2) {
-         inter->newX2 = GetXCoord(_x2, isndc, kTRUE);
-         inter->newY2 = GetYCoord(_y2, isndc, kTRUE);
-      }
-      if (TestBit(kVertical)) {
-         if (inter->selectPoint & 1)
-            inter->newX2 = inter->newX1;
-         else
-            inter->newX1 = inter->newX2;
-      }
-      if (TestBit(kHorizontal)) {
-         if (inter->selectPoint & 1)
-            inter->newY2 = inter->newY1;
-         else
-            inter->newY1 = inter->newY2;
-      }
-   };
-
-   Int_t px1, py1, px2, py2;
-
-   if (TestBit(kLineNDC)) {
-      px1 = parent.UtoAbsPixel(GetX1());
-      py1 = parent.VtoAbsPixel(GetY1());
-      px2 = parent.UtoAbsPixel(GetX2());
-      py2 = parent.VtoAbsPixel(GetY2());
-   } else {
-      px1 = parent.XtoAbsPixel(parent.XtoPad(GetX1()));
-      py1 = parent.YtoAbsPixel(parent.YtoPad(GetY1()));
-      px2 = parent.XtoAbsPixel(parent.XtoPad(GetX2()));
-      py2 = parent.YtoAbsPixel(parent.YtoPad(GetY2()));
-   }
-
    switch (event) {
 
    case kArrowKeyPress:
    case kButton1Down:
       // create interactive object and assign it
-      inter = new TLineInteractive(this);
+      inter = new TLineInteractive(GetX1(), GetY1(), GetX2(), GetY2(), TestBit(kLineNDC));
       parent.Interactive(this, inter);
       // No break !!!
 
-   case kMouseMotion: {
-      //simply take sum of pixels differences
-      if (abs(px1 - px) + abs(py1 - py) < kMaxDiff) {
-         if (inter) inter->selectPoint = 1;
-         parent.SetCursor(kPointer);
-      } else if (abs(px2 - px) + abs(py2 - py) < kMaxDiff) {
-         if (inter) inter->selectPoint = 2;
-         parent.SetCursor(kPointer);
-      } else {
-         if (inter) {
-            inter->selectPoint = 3;
-            inter->dx1 = px1 - px;
-            inter->dx2 = px2 - px;
-            inter->dy1 = py1 - py;
-            inter->dy2 = py2 - py;
-         }
-         parent.SetCursor(kMove);
-      }
-
+   case kMouseMotion:
+      if (inter)
+         inter->SelectPoint(parent, px, py);
       break;
-   }
 
    case kArrowKeyRelease:
    case kButton1Motion:
       if (!inter)
          return;
-      if (inter->selectPoint == 1) {
-         set_coord(px, py, 0, 0);
-      } else if (inter->selectPoint == 2) {
-         set_coord(0, 0, px, py);
-      } else if (inter->selectPoint == 3) {
-         set_coord(px + inter->dx1, py + inter->dy1, px + inter->dx2, py + inter->dy2);
-      }
+      inter->ChangeCoordinate(parent, px, py, TestBit(kVertical), TestBit(kHorizontal));
       if (!opaque) {
          TAttLine::ModifyOn(parent);
-         if (TestBit(kLineNDC)) {
-            Double_t xx[2] = { inter->newX1, inter->newX2 };
-            Double_t yy[2] = { inter->newY1, inter->newY2 };
-            parent.PaintPolyLineNDC(2, xx, yy, "iline");
-         } else {
-            Double_t xx[2] = { parent.XtoPad(inter->newX1), parent.XtoPad(inter->newX2) };
-            Double_t yy[2] = { parent.YtoPad(inter->newY1), parent.YtoPad(inter->newY2) };
-            parent.PaintPolyLine(2, xx, yy, "iline");
-         }
+         inter->PaintLine(parent);
       } else {
-         inter->Apply(this, kTRUE);
-         char guide = inter->selectPoint == 3 ? 'i' : '\0';
-         if ((inter->selectPoint == 1) || (inter->selectPoint == 2))  {
-            static const char GUIDES[2][2][2] = {
-              { { '4', '1' }, { '3', '2' } },
-              { { '2', '3' }, { '1', '4' } }
-            };
-            int x_idx = GetX1() > GetX2() ? 1 : 0;
-            int y_idx = GetY1() > GetY2() ? 1 : 0;
-            guide = GUIDES[inter->selectPoint-1][x_idx][y_idx];
-         }
+         inter->Apply(this);
+         char guide = inter->GetGuideChar();
          if (guide)
             parent.ShowGuidelines(this, event, guide, true);
          parent.Modified();
@@ -278,7 +172,6 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Up:
-
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
          if (opaque && inter) {
@@ -288,11 +181,12 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          }
       } else if (opaque) {
          parent.ShowGuidelines(this, event);
-      } else {
-         inter->Apply(this, kTRUE);
+      } else if (inter) {
+         inter->Apply(this);
          parent.Modified();
       }
       parent.UpdateAsync();
+      parent.Interactive(); // delete interactive object
       break;
 
    case kButton1Locate:
@@ -304,13 +198,12 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
          ExecuteEvent(kButton1Motion, px, py);
 
-         if (event != -1) {                     // button is released
+         if (event != -1) { // button is released
             ExecuteEvent(kButton1Up, px, py);
             return;
          }
       }
    }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
