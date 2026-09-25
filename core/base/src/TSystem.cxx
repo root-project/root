@@ -2587,107 +2587,54 @@ static void R__AddPath(TString &target, const TString &path) {
 }
 #endif
 
-static void R__WriteDependencyFile(const TString & build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
-                                   const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath)
+static bool R__GenerateCompilerDependencies(const TString &depfilename,
+                                            const TString &filename,
+                                            const TString &targetname,
+                                            const TString &includes,
+                                            const TString &defines)
 {
-   // Generate the dependency via standard output, not searching the
-   // standard include directories,
+   TString compiler = gSystem->Getenv("CXX");
+   if (compiler.IsNull())
+      compiler = "c++";
 
-   bool needToUnlinkTempFile = false;
-   TString devnullfile = "/dev/null";
-#ifdef WIN32
-   // Determine the null device based on the shell in use.
-   // COMSPEC unset or pointing to cmd.exe -> NUL
-   // COMSPEC pointing to powershell       -> $null
-   // Anything else (e.g. bash/sh on Windows) -> `depfilename`.stderr.tmp
-   const char *comspec = gSystem->Getenv("COMSPEC");
-   if (!comspec || !comspec[0]) {
-      devnullfile = "NUL";
-   } else {
-      TString comspecStr(comspec);
-      comspecStr.ToLower();
-      if (comspecStr.EndsWith("cmd.exe")) {
-         devnullfile = "NUL";
-      } else if (comspecStr.Contains("powershell.exe")) {
-         devnullfile = "$null";
-      } else {
-         needToUnlinkTempFile = true;
-         devnullfile = depfilename + ".stderr.tmp";
-         gSystem->PrependPathName(build_loc, devnullfile);
-      }
-   }
-#endif
-   TString bakdepfilename = depfilename + ".bak";
+   TString cmd = compiler;
+   cmd += " -MM";
+   cmd += " -MF \"" + depfilename + "\"";
+   cmd += " -MT \"";
+   R__AddPath(cmd, targetname);
+   cmd += "\" ";
 
-   struct Defer {
-      bool fNeedToUnlinkTempFile;
-      const TString &fDevNullFile, &fBakdepfilename;
-      ~Defer()
-      {
-         if (fNeedToUnlinkTempFile) {
-            // Remove the temporary stderr file if it was created.
-            gSystem->Unlink(fDevNullFile);
-         }
-         gSystem->Unlink(fBakdepfilename);
-      }
-   } deferGuard{needToUnlinkTempFile, devnullfile, bakdepfilename};
-
-   TString builddep = "rmkdepend";
-   gSystem->PrependPathName(TROOT::GetBinDir(), builddep);
-   builddep += " \"-f";
-   builddep += depfilename;
-   builddep += "\" -o_" + extension + "." + gSystem->GetSoExt() + " ";
-   if (build_loc.BeginsWith(gSystem->WorkingDirectory())) {
-      Int_t len = strlen(gSystem->WorkingDirectory());
-      if ( build_loc.Length() > (len+1) ) {
-         builddep += " \"-p";
-         if (build_loc[len] == '/' || build_loc[len+1] != '\\' ) {
-            // Since the path is now ran through TSystem::ExpandPathName the single \ is also possible.
-            R__AddPath(builddep, build_loc.Data() + len + 1 );
-         } else {
-            // Case of dir\\name
-            R__AddPath(builddep, build_loc.Data() + len + 2 );
-         }
-         builddep += "/\" ";
-      }
-   } else {
-      builddep += " \"-p";
-      R__AddPath(builddep, build_loc);
-      builddep += "/\" ";
-   }
-   builddep += " -Y -- ";
    TString rootsysInclude = TROOT::GetIncludeDir();
-   builddep += " \"-I"+rootsysInclude+"\" "; // cflags
-   builddep += includes;
-   builddep += defines;
-   builddep += " -- \"";
-   builddep += filename;
-   builddep += "\" ";
-   TString targetname;
-   if (library.BeginsWith(gSystem->WorkingDirectory())) {
-      Int_t len = strlen(gSystem->WorkingDirectory());
-      if ( library.Length() > (len+1) ) {
-         if (library[len] == '/' || library[len+1] != '\\' ) {
-            targetname = library.Data() + len + 1;
-         } else {
-            targetname = library.Data() + len + 2;
-         }
-      } else {
-         targetname = library;
-      }
-   } else {
-      targetname = library;
-   }
-   builddep += " \"";
-   builddep += "-t";
-   R__AddPath(builddep, targetname);
-   builddep += "\" > ";
-   builddep += devnullfile;
-   builddep += " 2>&1 ";
+   cmd += " \"-I";
+   R__AddPath(cmd, rootsysInclude);
+   cmd += "\" ";
 
+   cmd += includes;
+   cmd += defines;
+
+   cmd += " -- \"";
+   R__AddPath(cmd, filename);
+   cmd += "\"";
+
+   if (gDebug > 4)
+      ::Info("ACLiC", "%s", cmd.Data());
+
+   if (gSystem->Exec(cmd)) {
+      ::Warning("ACLiC", "Failed to generate dependencies for %s", filename.Data());
+      return false;
+   }
+
+   return true;
+}
+
+static TString R__GetRootDictionaryDependencies(const TString &targetname,
+                                                const TString &incPath)
+{
    TString adddictdep;
    R__AddPath(adddictdep,targetname);
    adddictdep += ": ";
+   TString rootsysInclude = TROOT::GetIncludeDir();
+
 #if defined(R__HAS_CLING_DICTVERSION)
    {
       char *clingdictversion = gSystem->Which(incPath,"clingdictversion.h");
@@ -2734,27 +2681,34 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
          delete [] rootCling;
       }
    }
+   return adddictdep;
+}
 
-   {
-      std::ofstream depFile(depfilename, std::ios::out | std::ios::trunc);
-      if (!depFile) {
-         ::Warning("ACLiC", "Failed to open dependency file %s for %s", depfilename.Data(), library.Data());
-         return;
+static void R__WriteDependencyFile(const TString & build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
+                                   const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath)
+{
+   if (library.BeginsWith(gSystem->WorkingDirectory())) {
+      Int_t len = strlen(gSystem->WorkingDirectory());
+      if ( library.Length() > (len+1) ) {
+         if (library[len] == '/' || library[len+1] != '\\' ) {
+            targetname = library.Data() + len + 1;
+         } else {
+            targetname = library.Data() + len + 2;
+         }
+      } else {
+         targetname = library;
       }
-#ifdef WIN32
-      depFile << "#\n";
-#endif
+   } else {
+      targetname = library;
    }
-
-   if (gDebug > 4) {
-      ::Info("ACLiC", "%s", builddep.Data());
-      ::Info("ACLiC", "%s", adddictdep.Data());
-   }
-   bool depbuiltOk = !gSystem->Exec(builddep);
-   if (!depbuiltOk) {
-      ::Warning("ACLiC", "Failed to run rmkdepend for %s", library.Data());
+   if (!R__GenerateCompilerDependencies(depfilename,
+                                        filename,
+                                        targetname,
+                                        includes,
+                                        defines))
       return;
-   }
+
+   TString adddictdep = R__GetRootDictionaryDependencies(targetname, incPath);
 
    std::ofstream depFile(depfilename, std::ios::out | std::ios::app);
    if (!depFile) {
