@@ -228,12 +228,96 @@ Int_t TPie::DistancetoPrimitive(Int_t px, Int_t py)
 
    gCurrent_slice = DistancetoSlice(px,py);
    if ( gCurrent_slice>=0 ) {
-      if (gCurrent_rad<=fRadius) {
+      if (gCurrent_rad <= fRadius) {
          dist = 0;
       }
    }
 
    return dist;
+}
+
+
+TPie::SliceInfo_t TPie::FindSlice(TVirtualPad &parent, Int_t px, Int_t py)
+{
+   SliceInfo_t res;
+   res.num = -1;
+
+   // coordinates
+   Double_t xx = parent.AbsPixeltoX(px);
+   Double_t yy = parent.AbsPixeltoY(py);
+
+   // XY metric
+   Double_t radX = fRadius;
+   Double_t radY = fRadius;
+   Double_t radXY = 1.;
+   if (fIs3D) {
+      radXY = TMath::Sin(fAngle3D / 180. * TMath::Pi());
+      radY = radXY * radX;
+   }
+
+   Float_t dPxl = (parent.PixeltoY(0) - parent.PixeltoY(1)) / radY;
+   for (Int_t i = 0; i < fNvals; ++i) {
+      fPieSlices[i]->SetIsActive(kFALSE);
+
+      if (gIsUptSlice && gCurrent_slice != i)
+         continue;
+
+      // Angles' values for this slice
+      Double_t phimin = fSlices[2 * i] * TMath::Pi() / 180.;
+      Double_t cphi = fSlices[2 * i + 1] * TMath::Pi() / 180.;
+      Double_t phimax = fSlices[2 * i + 2] * TMath::Pi() / 180.;
+
+      Double_t radOffset = fPieSlices[i]->GetRadiusOffset();
+
+      Double_t dx = (xx - fX - radOffset * TMath::Cos(cphi)) / radX;
+      Double_t dy = (yy - fY - radOffset * TMath::Sin(cphi) * radXY) / radY;
+
+      if (TMath::Abs(dy) < dPxl)
+         dy = dPxl;
+
+      Double_t ang = TMath::ATan2(dy, dx);
+      if (ang < 0)
+         ang += TMath::TwoPi();
+
+      Double_t dist = TMath::Sqrt(dx * dx + dy * dy);
+
+      if (((ang >= phimin && ang <= phimax) ||
+           (phimax > TMath::TwoPi() && ang + TMath::TwoPi() >= phimin && ang + TMath::TwoPi() < phimax)) &&
+          dist <= 1.) { // if true the pointer is in the slice region
+
+         res.x = dx;
+         res.y = dy;
+         res.ang = ang;
+         res.phi1 = phimin;
+         res.phi2 = phimax;
+         res.rad = dist * fRadius;
+
+         if (dist < .95 && dist > .65) {
+            Double_t range = phimax - phimin;
+            Double_t lang = ang - phimin;
+            Double_t rang = phimax - ang;
+            if (lang < 0)
+               lang += TMath::TwoPi();
+            else if (lang >= TMath::TwoPi())
+               lang -= TMath::TwoPi();
+            if (rang < 0)
+               rang += TMath::TwoPi();
+            else if (rang >= TMath::TwoPi())
+               rang -= TMath::TwoPi();
+
+            if (lang / range < .25 || rang / range < .25) {
+               fPieSlices[i]->SetIsActive(kTRUE);
+               res.num = -1;
+            } else
+               res.num = i;
+         } else {
+            res.num = i;
+         }
+
+         break;
+      }
+   }
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -244,85 +328,23 @@ Int_t TPie::DistancetoPrimitive(Int_t px, Int_t py)
 
 Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
 {
-   if (!gPad) return 9999;
+   if (!gPad)
+      return 9999;
    MakeSlices();
 
-   Int_t result(-1);
+   auto res = FindSlice(*gPad, px, py);
 
-   // coordinates
-   Double_t xx = gPad->AbsPixeltoX(px); //gPad->PadtoX(gPad->AbsPixeltoX(px));
-   Double_t yy = gPad->AbsPixeltoY(py); //gPad->PadtoY(gPad->AbsPixeltoY(py));
-
-   // XY metric
-   Double_t radX  = fRadius;
-   Double_t radY  = fRadius;
-   Double_t radXY = 1.;
-   if (fIs3D) {
-      radXY = TMath::Sin(fAngle3D/180.*TMath::Pi());
-      radY  = radXY*radX;
+   if (res.num >= 0) {
+      gCurrent_x    = res.x;
+      gCurrent_y    = res.y;
+      gCurrent_ang  = res.ang;
+      gCurrent_phi1 = res.phi1;
+      gCurrent_phi2 = res.phi2;
+      gCurrent_rad  = res.rad;
    }
-
-   Double_t phimin;
-   Double_t cphi;
-   Double_t phimax;
-
-   Float_t dPxl = (gPad->PixeltoY(0)-gPad->PixeltoY(1))/radY;
-   for (Int_t i=0;i<fNvals;++i) {
-      fPieSlices[i]->SetIsActive(kFALSE);
-
-      if (gIsUptSlice && gCurrent_slice!=i) continue;
-
-      // Angles' values for this slice
-      phimin = fSlices[2*i  ]*TMath::Pi()/180.;
-      cphi   = fSlices[2*i+1]*TMath::Pi()/180.;
-      phimax = fSlices[2*i+2]*TMath::Pi()/180.;
-
-      Double_t radOffset = fPieSlices[i]->GetRadiusOffset();
-
-      Double_t dx  = (xx-fX-radOffset*TMath::Cos(cphi))/radX;
-      Double_t dy  = (yy-fY-radOffset*TMath::Sin(cphi)*radXY)/radY;
-
-      if (TMath::Abs(dy)<dPxl) dy = dPxl;
-
-      Double_t ang = TMath::ATan2(dy,dx);
-      if (ang<0) ang += TMath::TwoPi();
-
-      Double_t dist = TMath::Sqrt(dx*dx+dy*dy);
-
-      if ( ((ang>=phimin && ang <= phimax) || (phimax>TMath::TwoPi() &&
-            ang+TMath::TwoPi()>=phimin && ang+TMath::TwoPi()<phimax)) &&
-            dist<=1.) { // if true the pointer is in the slice region
-
-         gCurrent_x    = dx;
-         gCurrent_y    = dy;
-         gCurrent_ang  = ang;
-         gCurrent_phi1 = phimin;
-         gCurrent_phi2 = phimax;
-         gCurrent_rad  = dist*fRadius;
-
-         if (dist<.95 && dist>.65) {
-            Double_t range = phimax-phimin;
-            Double_t lang = ang-phimin;
-            Double_t rang = phimax-ang;
-            if (lang<0) lang += TMath::TwoPi();
-            else if (lang>=TMath::TwoPi()) lang -= TMath::TwoPi();
-            if (rang<0) rang += TMath::TwoPi();
-            else if (rang>=TMath::TwoPi()) rang -= TMath::TwoPi();
-
-            if (lang/range<.25 || rang/range<.25) {
-               fPieSlices[i]->SetIsActive(kTRUE);
-               result = -1;
-            }
-            else result  = i;
-         } else {
-            result = i;
-         }
-
-         break;
-      }
-   }
-   return result;
+   return res.num;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the pie chart.

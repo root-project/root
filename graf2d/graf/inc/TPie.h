@@ -25,6 +25,13 @@ private:
    void Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r);
    void DrawGhost(TVirtualPad &);
 
+   struct SliceInfo_t {
+      Int_t num;
+      Double_t x, y, ang, phi1, phi2, rad;
+   };
+
+   SliceInfo_t FindSlice(TVirtualPad &, Int_t, Int_t);
+
    Float_t  fSum;             ///<!Sum for the slice values
    Float_t *fSlices{nullptr}; ///<!Subdivisions of the slices
    TLegend *fLegend{nullptr}; ///<!Legend for this piechart
