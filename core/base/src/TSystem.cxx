@@ -2687,6 +2687,7 @@ static TString R__GetRootDictionaryDependencies(const TString &targetname,
 static void R__WriteDependencyFile(const TString & build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
                                    const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath)
 {
+   TString targetname;
    if (library.BeginsWith(gSystem->WorkingDirectory())) {
       Int_t len = strlen(gSystem->WorkingDirectory());
       if ( library.Length() > (len+1) ) {
