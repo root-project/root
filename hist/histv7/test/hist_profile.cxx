@@ -303,10 +303,12 @@ TEST(RProfile, FillWeight)
    EXPECT_EQ(profile.GetNEntries(), 2);
    EXPECT_FLOAT_EQ(profile.GetStats().GetSumW(), 1.7);
    EXPECT_FLOAT_EQ(profile.GetStats().GetSumW2(), 1.45);
-   // Cross-checked with TH1
+   // Cross-checked with TProfile
    EXPECT_FLOAT_EQ(profile.ComputeNEffectiveEntries(), 1.9931034);
    EXPECT_FLOAT_EQ(profile.ComputeMean(0), 9.0294118);
    EXPECT_FLOAT_EQ(profile.ComputeStdDev(0), 0.49913420);
+   EXPECT_FLOAT_EQ(profile.ComputeMean(1), 24.058824);
+   EXPECT_FLOAT_EQ(profile.ComputeStdDev(1), 0.99826840);
 }
 
 TEST(RProfile, FillWeightInvalidNumberOfArguments)
@@ -408,23 +410,22 @@ TEST(RProfile, FillExceptionSafety)
 TEST(RProfile, FillForward)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, {0, Bins});
-   RProfile profile(axis, axis);
+   RProfile profile(Bins, {0, Bins});
    CopyArgument value(23.0);
 
-   std::tuple<CopyArgument, CopyArgument> args(1.5, 2.5);
+   std::tuple<CopyArgument> args(1.5);
    profile.Fill(args, value);
    profile.Fill(args, value, RWeight(0.5));
    EXPECT_EQ(profile.GetNEntries(), 2);
-   EXPECT_EQ(profile.GetBinContent(1, 2).fSumValues, 34.5);
+   EXPECT_EQ(profile.GetBinContent(1).fSumValues, 34.5);
 
    ASSERT_FALSE(CopyArgument::HasBeenCopied());
 
-   CopyArgument arg1(3.5), arg2(4.5);
-   profile.Fill(arg1, arg2, value);
-   profile.Fill(arg1, arg2, value, RWeight(0.5));
+   CopyArgument arg(2.5);
+   profile.Fill(arg, value);
+   profile.Fill(arg, value, RWeight(0.5));
    EXPECT_EQ(profile.GetNEntries(), 4);
-   EXPECT_EQ(profile.GetBinContent(3, 4).fSumValues, 34.5);
+   EXPECT_EQ(profile.GetBinContent(2).fSumValues, 34.5);
 
    ASSERT_FALSE(CopyArgument::HasBeenCopied());
 }
