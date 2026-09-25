@@ -620,8 +620,21 @@ public:
       }
       RSharedDescriptorGuard(const RSharedDescriptorGuard &) = delete;
       RSharedDescriptorGuard &operator=(const RSharedDescriptorGuard &) = delete;
-      RSharedDescriptorGuard(RSharedDescriptorGuard &&) = default;
-      RSharedDescriptorGuard &operator=(RSharedDescriptorGuard &&) = default;
+      RSharedDescriptorGuard(RSharedDescriptorGuard &&other)
+      {
+         std::swap(fDescriptor, other.fDescriptor);
+         std::swap(fLock, other.fLock);
+      }
+      RSharedDescriptorGuard &operator=(RSharedDescriptorGuard &&other)
+      {
+         if (this == &other)
+            return *this;
+         if (IsValid())
+            Release();
+         std::swap(fDescriptor, other.fDescriptor);
+         std::swap(fLock, other.fLock);
+         return *this;
+      }
       ~RSharedDescriptorGuard()
       {
          if (IsValid())
