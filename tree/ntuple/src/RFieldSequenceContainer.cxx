@@ -8,10 +8,9 @@
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RFieldUtils.hxx>
 
-#include <cstdlib> // for malloc, free
 #include <limits>
 #include <memory>
-#include <new> // hardware_destructive_interference_size
+#include <new> // hardware_destructive_interference_size, operator new
 
 namespace {
 
@@ -199,7 +198,7 @@ ROOT::RRVecField::RRVecField(std::string_view fieldName, std::unique_ptr<RFieldB
      fNWritten(0)
 {
    if (itemField->GetAlignment() > sizeof(std::max_align_t)) {
-      // RVec uses malloc() and free()
+      // RVec uses operator new without alignment info
       throw RException(R__FAIL("RVec does not support over-aligned types"));
    }
 
@@ -293,9 +292,8 @@ unsigned char *ROOT::RRVecField::ResizeRVec(void *rvec, std::size_t nItems, std:
 
       // TODO Increment capacity by a factor rather than just enough to fit the elements.
       Internal::DestroyRVecWithChecks(itemField->GetAlignment(), beginPtr, capacityPtr);
-      // We trust that malloc returns a buffer with large enough alignment.
-      // This might not be the case if T in RVec<T> is over-aligned.
-      *beginPtr = static_cast<unsigned char *>(malloc(nItems * itemSize));
+      // We checked that the item type is not over-aligned
+      *beginPtr = static_cast<unsigned char *>(::operator new(nItems * itemSize, std::nothrow));
       R__ASSERT(*beginPtr != nullptr);
       *capacityPtr = nItems;
 
