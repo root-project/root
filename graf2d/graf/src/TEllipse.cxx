@@ -189,7 +189,11 @@ TEllipse *TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2
 
 class TEllipseInteractive : public TBoxInteractive {
    public:
-      using TBoxInteractive::TBoxInteractive;
+      TEllipseInteractive(TEllipse *e)
+         : TBoxInteractive(kFALSE, e->GetX1() - e->GetR1(), e->GetY1() - e->GetR2(), e->GetX1() + e->GetR1(),
+                           e->GetY1() + e->GetR2())
+      {
+      }
 
       void PaintOutline(TVirtualPad &parent) override
       {
@@ -201,22 +205,16 @@ class TEllipseInteractive : public TBoxInteractive {
          // "i" is interactive painting, "diamond" is id
          parent.PaintPolyLine(x.size(), x.data(), y.data(), "iellipse");
 
-         if(fullcircle && !e->GetTheta())
-            return;
+         if(!fullcircle || e->GetTheta())
+            PaintDiamondCorners(parent, "ellipse");
+      }
 
-         // draw corner markers for better visualisation
-         // repeat logic of classical ROOT
-         Double_t xd[4] = { (newX1+newX2)/2, newX1, (newX1+newX2)/2, newX2 };
-         Double_t yd[4] = { newY2, (newY1+newY2)/2, newY1, (newY1+newY2)/2 };
-         // area around corner with 6 pixels
-         Double_t dx = (parent.GetX2() - parent.GetX1()) / parent.GetPadWidth() * 6;
-         Double_t dy = (parent.GetY2() - parent.GetY1()) / parent.GetPadHeight() * 6;
-
-         for (Int_t n = 0; n < 4; n++) {
-            Double_t xx[5] = { xd[n] - dx, xd[n] + dx, xd[n] + dx, xd[n] - dx, xd[n] - dx };
-            Double_t yy[5] = { yd[n] - dy, yd[n] - dy, yd[n] + dy, yd[n] + dy, yd[n] - dy };
-            parent.PaintPolyLine(5, xx, yy, TString::Format("iellipse%d",n).Data());
-         }
+      void Apply(TEllipse *e, Bool_t usenew = kTRUE)
+      {
+         e->SetX1(usenew ? (newX1 + newX2) / 2 : (oldX1 + oldX2) / 2);
+         e->SetR1(usenew ? (newX2 - newX1) / 2 : (oldX2 - oldX1) / 2);
+         e->SetY1(usenew ? (newY1 + newY2) / 2 : (oldY1 + oldY2) / 2);
+         e->SetR2(usenew ? (newY2 - newY1) / 2 : (oldY2 - oldY1) / 2);
       }
 };
 
@@ -243,26 +241,18 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    auto inter = dynamic_cast<TEllipseInteractive *>(parent.Interactive(this));
 
-   auto setNewValues = [&inter, this]() {
-      SetX1((inter->newX1 + inter->newX2) / 2);
-      SetR1((inter->newX2 - inter->newX1) / 2);
-      SetY1((inter->newY1 + inter->newY2) / 2);
-      SetR2((inter->newY2 - inter->newY1) / 2);
-   };
-
    switch (event) {
 
    case kArrowKeyPress:
    case kButton1Down:
-      inter = new TEllipseInteractive(kFALSE, GetX1() - GetR1(), GetY1() - GetR2(), GetX1() + GetR1(), GetY1() + GetR2());
+      inter = new TEllipseInteractive(this);
       parent.Interactive(this, inter);
-
       // No break !!!
 
    case kMouseMotion: {
-      TEllipseInteractive dummy(kFALSE);
+      TEllipseInteractive dummy(this);
       if (!inter) inter = &dummy;
-      inter->CalcPixelCoord(parent, GetX1() - GetR1(), GetY1() - GetR2(), GetX1() + GetR1(), GetY1() + GetR2());
+      inter->CalcPixelCoord(parent, dummy.oldX1, dummy.oldY1, dummy.oldX2, dummy.oldY2);
 
       if (!inter->SelectDiamondCorner(px, py, kFALSE)) {
          // refuse interactive changes
@@ -284,7 +274,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       inter->ApplyChanges(parent);
 
       if (inter->IsOpaque(parent)) {
-         setNewValues();
+         inter->Apply(this);
          parent.ShowGuidelines(this, event, inter->GetGuideChar(), true);
          parent.Modified(kTRUE);
       }
@@ -298,13 +288,10 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
          if (inter && inter->IsOpaque(parent)) {
-            SetX1((inter->oldX1 + inter->oldX2) / 2);
-            SetR1((inter->oldX2 - inter->oldX1) / 2);
-            SetY1((inter->oldY1 + inter->oldY2) / 2);
-            SetR2((inter->oldY2 - inter->oldY1) / 2);
+            inter->Apply(this, kFALSE);
          }
-      } else if (inter && !inter->IsOpaque(parent) && (inter->newX1 != inter->newX2)) {
-         setNewValues();
+      } else if (inter && !inter->IsOpaque(parent)) {
+         inter->Apply(this);
       }
 
       parent.Modified();
