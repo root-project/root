@@ -461,6 +461,66 @@ Url.Special:         file: hpss: dcache:
 # NetXNG.QueryReadVParams     - Query the server for acceptable vector read parameters
 NetXNG.QueryReadVParams: $(ROOT_XRD_QUERY_READV_PARAMS)
 
+# NetXNG is by itself a multiprotocol client, and also supports
+# the http:// https:// s3:// s3s:// protocol prefix urls
+#
+# NOTE: the configuration of the secure connection depends on the values
+# that have been set in relation to the XrdSecGSI module, e.g.
+# XSec.GSI.CADir
+# XSec.GSI.CAFile
+# XSec.GSI.UserCert
+# XSec.GSI.UserKey
+# XSec.GSI.UserProxy
+#
+# Sets the HTTP client in Grid mode, to talk to Grid HTTP SEs
+# without having to set additional parameters (default yes)
+# Grid mode enable the following action:
+# - Auto-detect and use the available voms proxy certificate specified in the environment
+# - Auto-detect the X509_USER_CERT, X509_USER_KEY, X509_USER_PROXY
+# - Set the standard location for the grid security CAs
+# - Note that the ROOTenv has more priority than the process env
+# NetXNG.Https.GSI.GridMode: y
+#
+#
+
+# There are two ways to set the S3 auth parameters for NetXNG: file-based and direct
+#
+# *****File-based: an unique S3 endpoint is defined, and a set of little configuration
+# files hold a list of accessible buckets and the various keys
+# Sets the Amazon S3 authentication parameters in a configuration file-based
+# fashion, borrowed by the Pelican project.
+#
+# NetXNG.S3.XrdClS3MkdirSentinel: 
+# NetXNG.S3.XrdClS3Endpoint: the hostname of the S3 service, e.g. "s3.cern.ch"
+# NetXNG.S3.XrdClS3UrlStyle: "path"->the bucket name is in the path "virtual"->the bucket name is in the hostname
+# NetXNG.S3.XrdClS3Region: ""
+# NetXNG.S3.XrdClS3BucketConfigs: A list of lines containing bucket names. Credentials for these buckets will be fetched from properly named config files. See the XrdClS3 documentation.
+# NetXNG.S3.XrdClS3AccessKeyLocation: absolute path to a file that contains the S3 access key
+# NetXNG.S3.XrdClS3SecretKeyLocation: absolute path to a file that contains the S3 secret key
+#
+# *****Direct config. Sets the Amazon S3 authentication parameters directly. Setting
+# these values will disable and override the file-based bucket configuration.
+#
+# Region is optional - if provided, XrdClS3 will use v4 signatures
+# Token is optional, and enables the use of STS temporary credentials
+#
+# Alternate is optional and takes a boolean value. If set to true, XrdClS3
+# will assume that the bucket name is in the path, not in the hostname.
+# Necessary because XrdClS3 has to know the bucket name to use to calculate
+# the S3 signatures.
+#
+# NetXNG.S3.SecretKey: secret
+# NetXNG.S3.AccessKey: access
+# NetXNG.S3.RXrdClS3Region: region or empty
+# NetXNG.S3.Token: token or empty
+# NetXNG.S3.XrdClS3UrlStyle: "path"->the bucket name is in the path "virtual"->the bucket name is in the hostname
+#
+# NOTE: The authentication of NetXNG can be influenced
+# through some environment variables:
+# XRDCLS3_ACCESS_KEY, XRDCLS3_SECRET_KEY, XRDCLS3_REGION, XRDCLS3_ENDPOINT, XRDCLS3_URLSTYLE
+# The gEnv vars have higher priority over the these envvars.
+
+# --------------------------------------------------------------
 # Parameters that influence the behavior of TDavixFile/TDavixSystem. These
 # classes give a comprehensive client side support for HTTP and WebDAV,
 # with all the goodies (session caching, flexible authentication, support
