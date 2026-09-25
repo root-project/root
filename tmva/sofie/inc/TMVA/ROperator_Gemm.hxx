@@ -26,6 +26,7 @@ namespace SOFIE{
       bool fIsDynamic = false;
       bool fBroadcastBias = false;
       bool fCheckBiasShapeAtRuntime = false; // flag to identify the need to do a run time check of bias shape compatibility in case of dynamic shapes and uni-directional broadcasting
+      bool fBiasBroadcastAssumed = false;    // Initialize assumed a broadcast: the integer shape of Y was unknown
 
       float fAttrAlpha = 1.0;
       float fAttrBeta = 1.0;
@@ -222,9 +223,10 @@ namespace SOFIE{
             }
             // for dynamic outputs broadcasting is always needed
             bool broadcast_needed = false;
-            if (fIsDynamic && shapeY.empty())
+            if (fIsDynamic && shapeY.empty()) {
                broadcast_needed = true;
-            else
+               fBiasBroadcastAssumed = true;
+            } else
                // consider broadcasting also if they have different length
                broadcast_needed = (fShapeC != shapeY);
 
@@ -411,9 +413,10 @@ namespace SOFIE{
              // when the 2 last dims of bias and Y are not compatible we need to perform a run time broadcast
              if (sC != sY)
                 fBroadcastBias = true;
-             else if (sExtraC == sExtraY)
-                // C has exactly the shape of Y, nothing to broadcast. Initialize compares the
-                // integer shapes, which are empty while Y is dynamic, and asks for one there.
+             else if (fBiasBroadcastAssumed && sExtraC == sExtraY)
+                // C has exactly the shape of Y, nothing to broadcast. Only revisit the
+                // assumption Initialize had to make while the shape of Y was still unknown:
+                // a bias it did compare and found to need broadcasting keeps it.
                 fBroadcastBias = false;
              if (!fBroadcastBias) {
                 // add a check in case broadcasting was not needed or done outside of session
