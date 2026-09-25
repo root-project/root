@@ -166,8 +166,8 @@ void runCollections(const std::string &srcdir = ".")
                                      //"TreeTClonesArray0", // Known failure
                                      "TreeTClonesArray2"
                                      };
-   for (std::string const &treeName : trees)
-   {
+   for (size_t i = 0; i < trees.size(); ++i) {
+      std::string const &treeName = trees[i];
       fprintf(stderr, "Testing tree %s\n", treeName.c_str());
 
       TFile f((srcdir + "/trees/" + treeName + ".root").c_str()); // Load file
