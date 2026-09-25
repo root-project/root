@@ -1,31 +1,30 @@
 {
-gROOT->SetBatch(kTRUE);
-char name[4][50];
+   gROOT->SetBatch(kTRUE);
+   char name[4][50];
 
-for(int i=0; i<4; i++)
-{
-  snprintf(name[i],50,"hist_array_%d", i);
-}
+   for (int i = 0; i < 4; i++) {
+      snprintf(name[i], 50, "hist_array_%d", i);
+   }
 
-TH1F *hist_array[4];
+   TH1F *hist_array[4];
 
-for(int i=0; i<4; i++)
-{
-  TH1F *h = (TH1F*)gROOT->FindObject(name[i]);
-  if(h) delete h;
-}
+   for (int i = 0; i < 4; i++) {
+      TH1F *h = (TH1F *)gROOT->FindObject(name[i]);
+      if (h)
+         delete h;
+   }
 
-TCanvas *c1 = (TCanvas*)gROOT->FindObject("c1");
-if (c1) delete c1;
-c1 = new TCanvas("c1", "Test Canvas");
-c1->Divide(2,2);
+   TCanvas *c1 = (TCanvas *)gROOT->FindObject("c1");
+   if (c1)
+      delete c1;
+   c1 = new TCanvas("c1", "Test Canvas");
+   c1->Divide(2, 2);
 
-for(int i=0; i<4; i++)
-{
-  hist_array[i] = new TH1F(name[i], name[i], 100, -10, 10);
-  hist_array[i]->FillRandom("gaus", 10000);
+   for (int i = 0; i < 4; i++) {
+      hist_array[i] = new TH1F(name[i], name[i], 100, -10, 10);
+      hist_array[i]->FillRandom("gaus", 10000);
 
-  c1->cd(i+1);
-  hist_array[i]->Draw();
-}
+      c1->cd(i + 1);
+      hist_array[i]->Draw();
+   }
 }
