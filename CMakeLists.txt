@@ -389,6 +389,7 @@ install(FILES ${CMAKE_BINARY_DIR}/etc/gitinfo.txt DESTINATION ${CMAKE_INSTALL_SY
 #  to run. The same process will walk through the project's entire directory structure.
 add_subdirectory (core)
 add_subdirectory (builtins/zip) # hard coded builtin for core/zip
+add_subdirectory (builtins/CDT) # hard coded builtin for math/mathcore
 add_subdirectory (math)
 if (fortran AND CMAKE_Fortran_COMPILER)
   add_subdirectory(builtins/cernlib) # hard coded builtin for hist and main
