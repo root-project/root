@@ -24,12 +24,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
   # target.
   NO_GLOB_HEADERS
   HEADERS
-   TMVA/RModel_Base.hxx
    TMVA/RModel.hxx
    TMVA/SOFIE_common.hxx
    TMVA/SOFIEHelpers.hxx
   SOURCES
-    src/RModel_Base.cxx
     src/RModel.cxx
     src/SOFIE_common.cxx
     src/SOFIE_common_helpers.cxx
