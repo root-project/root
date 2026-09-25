@@ -667,8 +667,20 @@ public:
       }
       RExclDescriptorGuard(const RExclDescriptorGuard &) = delete;
       RExclDescriptorGuard &operator=(const RExclDescriptorGuard &) = delete;
-      RExclDescriptorGuard(RExclDescriptorGuard &&) = delete;
-      RExclDescriptorGuard &operator=(RExclDescriptorGuard &&) = delete;
+      RExclDescriptorGuard(RExclDescriptorGuard &&other)
+      {
+         std::swap(fDescriptor, other.fDescriptor);
+         std::swap(fLock, other.fLock);
+      }
+      RExclDescriptorGuard &operator=(RExclDescriptorGuard &&other)
+      {
+         if (this == &other)
+            return *this;
+         R__ASSERT(!fLock || !other.fLock);
+         std::swap(fDescriptor, other.fDescriptor);
+         std::swap(fLock, other.fLock);
+         return *this;
+      }
       ~RExclDescriptorGuard()
       {
          if (fLock) {
