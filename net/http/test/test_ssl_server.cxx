@@ -20,7 +20,6 @@ void cleanup_files()
    gSystem->Unlink("server.pem");
    gSystem->Unlink("server.crt");
    gSystem->Unlink("server.key");
-   gSystem->Unlink("server.key.orig");
 }
 
 // main http server
@@ -28,38 +27,28 @@ TEST(THttpServer, ssl)
 {
    cleanup_files();
 
-   int res = gSystem->Exec("openssl genrsa -des3 -passout pass:aaaa -out server.key 2048");
+   int res = gSystem->Exec("openssl genrsa -out server.key 2048");
    EXPECT_EQ(res, 0) << "Generate new RSA key";
    if (res) {
       cleanup_files();
       return;
    }
 
-   res = gSystem->Exec("openssl req -new -passin pass:aaaa -key server.key -subj \"/C=GE/ST=Hesse/L=Darmstadt/O=GSI/CN=localhost\" -out server.csr");
-   EXPECT_EQ(res, 0) << "Generate new server key";
-   if (res) {
-      cleanup_files();
-      return;
-   }
-
-   gSystem->CopyFile("server.key", "server.key.orig");
-
-   res = gSystem->Exec("openssl rsa -in server.key.orig -passin pass:aaaa -out server.key");
-   EXPECT_EQ(res, 0) << "Convert key into RSA";
-   if (res) {
-      cleanup_files();
-      return;
-   }
-
-   res = gSystem->Exec("openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt");
-   EXPECT_EQ(res, 0) << "Generate server certificate";
+   res = gSystem->Exec("openssl req -x509 -new -key server.key"
+                       " -out server.crt"
+                       " -days 3650 -sha256"
+                       " -subj \"/C=GE/ST=Hesse/L=Darmstadt/O=GSI/CN=localhost\""
+                       " -addext \"subjectAltName=DNS:localhost,IP:127.0.0.1,IP:::1\""
+                       " -addext \"basicConstraints=critical,CA:TRUE\""
+                       " -addext \"keyUsage=critical,digitalSignature,keyEncipherment,keyCertSign\"");
+   EXPECT_EQ(res, 0) << "Generate new server key and server certificate";
    if (res) {
       cleanup_files();
       return;
    }
 
    res = gSystem->Exec("cat server.crt server.key > server.pem");
-   EXPECT_EQ(res, 0) << "Generate server certificate";
+   EXPECT_EQ(res, 0) << "Generate server.pcm file for THttpServer";
    if (res) {
       cleanup_files();
       return;
@@ -76,6 +65,10 @@ TEST(THttpServer, ssl)
       cleanup_files();
       return;
    }
+
+   gSystem->Exec("openssl version -a");
+   gSystem->Exec("openssl x509 -in server.crt -noout -text");
+   gSystem->Exec("openssl verify -CAfile server.crt server.crt");
 
    THttpServer serv("");
 
