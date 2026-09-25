@@ -144,15 +144,19 @@ model1, model2, model3 = TrainModels(x_train, y_train, modelNames)
 # evaluate with SOFIE the 3 trained models
 
 
-def GenerateModelCode(modelFile, generatedHeaderFile):
+def GenerateModelCode(modelFile, generatedHeaderFile, weightFile):
     parser = ROOT.TMVA.Experimental.SOFIE.RModelParser_ONNX()
     model = parser.Parse(modelFile)
 
     print("Generating inference code for the ONNX model from ", modelFile, "in the header ", generatedHeaderFile)
-    # Generating inference code using a ROOT binary file
-    model.Generate(ROOT.TMVA.Experimental.SOFIE.Options.kRootBinaryWeightFile)
+    # Generating inference code; the weights are written to a binary
+    # safetensors file
+    model.Generate(ROOT.TMVA.Experimental.SOFIE.Options.kSafetensorsWeightFile)
     # add option to append to the same file the generated headers (pass True for append flag)
     model.OutputGenerated(generatedHeaderFile, True)
+    # OutputGenerated writes the weights next to the header; a safetensors file
+    # holds one model's weights, so move it to a per-model file
+    os.replace(generatedHeaderFile.replace(".hxx", ".safetensors"), weightFile)
     # model.PrintGenerated()
     return generatedHeaderFile
 
@@ -163,14 +167,15 @@ if os.path.exists(generatedHeaderFile):
     print("removing existing file", generatedHeaderFile)
     os.remove(generatedHeaderFile)
 
-weightFile = "Higgs_Model.root"
-if os.path.exists(weightFile):
-    print("removing existing file", weightFile)
-    os.remove(weightFile)
+weightFiles = [name + ".safetensors" for name in modelNames]
+for weightFile in weightFiles:
+    if os.path.exists(weightFile):
+        print("removing existing file", weightFile)
+        os.remove(weightFile)
 
-GenerateModelCode(model1, generatedHeaderFile)
-GenerateModelCode(model2, generatedHeaderFile)
-GenerateModelCode(model3, generatedHeaderFile)
+GenerateModelCode(model1, generatedHeaderFile, weightFiles[0])
+GenerateModelCode(model2, generatedHeaderFile, weightFiles[1])
+GenerateModelCode(model3, generatedHeaderFile, weightFiles[2])
 
 # compile the generated code
 
@@ -178,9 +183,9 @@ ROOT.gInterpreter.Declare('#include "' + generatedHeaderFile + '"')
 
 
 # run the inference on the test data
-session1 = ROOT.TMVA_SOFIE_Higgs_Model_4L_50.Session("Higgs_Model.root")
-session2 = ROOT.TMVA_SOFIE_Higgs_Model_4L_200.Session("Higgs_Model.root")
-session3 = ROOT.TMVA_SOFIE_Higgs_Model_2L_500.Session("Higgs_Model.root")
+session1 = ROOT.TMVA_SOFIE_Higgs_Model_4L_50.Session(weightFiles[0])
+session2 = ROOT.TMVA_SOFIE_Higgs_Model_4L_200.Session(weightFiles[1])
+session3 = ROOT.TMVA_SOFIE_Higgs_Model_2L_500.Session(weightFiles[2])
 
 hs1 = ROOT.TH1D("hs1", "Signal result 4L 50", 100, 0, 1)
 hs2 = ROOT.TH1D("hs2", "Signal result 4L 200", 100, 0, 1)

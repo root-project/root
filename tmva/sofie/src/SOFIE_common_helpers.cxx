@@ -605,6 +605,397 @@ void ReadTensorFromStream(std::istream &is, T &target, std::string const &expect
 }
 )SOFIE";
 
+// Writer and reader support for the safetensors weight format
+// (https://huggingface.co/docs/safetensors): an 8-byte little-endian JSON
+// header size, the JSON header mapping tensor names to
+// {"dtype", "shape", "data_offsets"}, then the concatenated raw little-endian
+// payloads. data_offsets are relative to the start of the payload area, i.e.
+// just after the JSON header.
+// The header is scanned with a small self-contained streaming parser (no JSON
+// value tree is built), keeping the generated header free of any third-party
+// dependency.
+
+// Non-owning view over a safetensors weight payload, either loaded from a
+// file or provided directly from memory.
+constexpr const char *kSafetensorsBlob = R"SOFIE(
+// Non-owning view over a safetensors weight payload, either loaded from a
+// file or provided directly from memory. The payload is little-endian per the
+// safetensors specification.
+struct SafetensorsBlob {
+   const char *data = nullptr;
+   std::size_t size = 0;
+   constexpr SafetensorsBlob() = default;
+   constexpr SafetensorsBlob(const char *d, std::size_t n) : data(d), size(n) {}
+   SafetensorsBlob(const std::string &s) : data(s.data()), size(s.size()) {}
+};
+)SOFIE";
+
+constexpr const char *kSafetensorsReader = R"SOFIE(
+// Bookkeeping of one tensor inside a safetensors blob
+struct SafetensorsTensorInfo {
+   std::uint64_t fBegin = 0; // payload offset of the tensor in the blob
+   std::uint64_t fEnd = 0;
+   std::string fDtype;
+};
+
+// Scanner for the JSON header of a safetensors blob. The header structure (a
+// flat object of {"dtype", "shape", "data_offsets"} tensor entries plus an
+// optional "__metadata__" member) is fixed, so the header is streamed straight
+// into the tensor index instead of being parsed into a JSON value tree.
+// Content that is not needed ("shape", "__metadata__", unknown members) is
+// still scanned completely, so malformed headers are rejected rather than
+// silently skipped.
+class SafetensorsHeaderScanner {
+public:
+   SafetensorsHeaderScanner(std::string_view text, std::uint64_t dataBegin, std::uint64_t payloadBytes)
+      : fText(text), fDataBegin(dataBegin), fPayloadBytes(payloadBytes)
+   {
+   }
+
+   void Scan(std::unordered_map<std::string, SafetensorsTensorInfo> &tensors)
+   {
+      SkipWhitespace();
+      Expect('{');
+      SkipWhitespace();
+      if (!TryConsume('}')) {
+         while (true) {
+            SkipWhitespace();
+            if (Peek() != '"')
+               Fail("expected tensor name");
+            const std::string name = ParseString(true);
+            SkipWhitespace();
+            Expect(':');
+            SkipWhitespace();
+            if (name == "__metadata__") {
+               SkipValue();
+            } else {
+               ParseTensorEntry(name, tensors);
+            }
+            SkipWhitespace();
+            if (TryConsume('}'))
+               break;
+            Expect(',');
+         }
+      }
+      SkipWhitespace();
+      if (fPos != fText.size())
+         Fail("unexpected trailing content");
+   }
+
+private:
+   std::string_view fText;
+   std::size_t fPos = 0;
+   int fDepth = 0; // recursion budget for skipped content
+   std::uint64_t fDataBegin;    // absolute offset of the payload area in the blob
+   std::uint64_t fPayloadBytes; // size of the payload area
+
+   [[noreturn]] void Fail(const std::string &message)
+   {
+      throw std::runtime_error("tmva-sofie: malformed JSON in safetensors header at offset " +
+                               std::to_string(fPos) + " : " + message);
+   }
+
+   void SkipWhitespace()
+   {
+      while (fPos < fText.size()) {
+         const char c = fText[fPos];
+         if (c == ' ' || c == '\t' || c == '\n' || c == '\r')
+            ++fPos;
+         else
+            break;
+      }
+   }
+
+   char Peek()
+   {
+      if (fPos >= fText.size())
+         Fail("unexpected end of input");
+      return fText[fPos];
+   }
+
+   void Expect(char c)
+   {
+      if (Peek() != c) {
+         std::string msg = "expected '";
+         msg += c;
+         msg += "'";
+         Fail(msg);
+      }
+      ++fPos;
+   }
+
+   bool TryConsume(char c)
+   {
+      if (fPos < fText.size() && fText[fPos] == c) {
+         ++fPos;
+         return true;
+      }
+      return false;
+   }
+
+   void ExpectLiteral(const char *literal)
+   {
+      const std::size_t len = std::string_view(literal).size();
+      if (fText.compare(fPos, len, literal) != 0)
+         Fail(std::string("expected '") + literal + "'");
+      fPos += len;
+   }
+
+   // JSON string. Decoding only matters for the strings that are kept (tensor
+   // names and dtypes); those are ASCII in practice, so \u escapes above 0x7F
+   // are rejected rather than decoded (such a name could never match the
+   // tensor names the generated code looks up). In skip mode only the scan
+   // position matters.
+   std::string ParseString(bool keep)
+   {
+      Expect('"');
+      std::string out;
+      while (true) {
+         if (fPos >= fText.size())
+            Fail("unterminated string");
+         const char c = fText[fPos++];
+         if (c == '"')
+            return out;
+         if (c != '\\') {
+            if (static_cast<unsigned char>(c) < 0x20)
+               Fail("unescaped control character in string");
+            if (keep)
+               out.push_back(c);
+            continue;
+         }
+         if (fPos >= fText.size())
+            Fail("truncated escape sequence");
+         const char esc = fText[fPos++];
+         std::uint32_t cp;
+         switch (esc) {
+         case '"': cp = '"'; break;
+         case '\\': cp = '\\'; break;
+         case '/': cp = '/'; break;
+         case 'b': cp = '\b'; break;
+         case 'f': cp = '\f'; break;
+         case 'n': cp = '\n'; break;
+         case 'r': cp = '\r'; break;
+         case 't': cp = '\t'; break;
+         case 'u': cp = ParseHexEscape(); break;
+         default: Fail("invalid escape sequence");
+         }
+         if (keep) {
+            if (cp >= 0x80)
+               Fail("unsupported non-ASCII escape in tensor name");
+            out.push_back(static_cast<char>(cp));
+         }
+      }
+   }
+
+   std::uint32_t ParseHexEscape()
+   {
+      if (fPos + 4 > fText.size())
+         Fail("truncated \\u escape");
+      std::uint32_t cp = 0;
+      for (int i = 0; i < 4; ++i) {
+         const char c = fText[fPos++];
+         cp <<= 4;
+         if (c >= '0' && c <= '9')
+            cp |= static_cast<std::uint32_t>(c - '0');
+         else if (c >= 'a' && c <= 'f')
+            cp |= static_cast<std::uint32_t>(c - 'a' + 10);
+         else if (c >= 'A' && c <= 'F')
+            cp |= static_cast<std::uint32_t>(c - 'A' + 10);
+         else
+            Fail("invalid hex digit in \\u escape");
+      }
+      return cp;
+   }
+
+   // Non-negative decimal integer; the safetensors specification fixes the
+   // data_offsets grammar to plain integers.
+   std::uint64_t ParseUInt()
+   {
+      if (fPos >= fText.size() || fText[fPos] < '0' || fText[fPos] > '9')
+         Fail("expected a non-negative integer");
+      std::uint64_t v = 0;
+      while (fPos < fText.size() && fText[fPos] >= '0' && fText[fPos] <= '9') {
+         const std::uint64_t d = std::uint64_t(fText[fPos] - '0');
+         if (v > (~std::uint64_t(0) - d) / 10)
+            Fail("integer out of range");
+         v = 10 * v + d;
+         ++fPos;
+      }
+      if (fPos < fText.size() && (fText[fPos] == '.' || fText[fPos] == 'e' || fText[fPos] == 'E'))
+         Fail("expected a non-negative integer");
+      return v;
+   }
+
+   void ParseTensorEntry(const std::string &name, std::unordered_map<std::string, SafetensorsTensorInfo> &tensors)
+   {
+      Expect('{');
+      SkipWhitespace();
+      std::string dtype;
+      std::uint64_t begin = 0;
+      std::uint64_t end = 0;
+      bool haveDtype = false;
+      bool haveOffsets = false;
+      if (!TryConsume('}')) {
+         while (true) {
+            SkipWhitespace();
+            if (Peek() != '"')
+               Fail("expected member name in tensor entry");
+            const std::string member = ParseString(true);
+            SkipWhitespace();
+            Expect(':');
+            SkipWhitespace();
+            if (member == "dtype") {
+               dtype = ParseString(true);
+               haveDtype = true;
+            } else if (member == "data_offsets") {
+               Expect('[');
+               SkipWhitespace();
+               begin = ParseUInt();
+               SkipWhitespace();
+               Expect(',');
+               SkipWhitespace();
+               end = ParseUInt();
+               SkipWhitespace();
+               Expect(']');
+               haveOffsets = true;
+            } else {
+               SkipValue();
+            }
+            SkipWhitespace();
+            if (TryConsume('}'))
+               break;
+            Expect(',');
+         }
+      }
+      if (!haveDtype || !haveOffsets)
+         throw std::runtime_error("tmva-sofie: invalid entry for tensor " + name + " in safetensors blob");
+      // Validate against the payload area before computing blob offsets, so
+      // that the additions below cannot wrap around.
+      if (begin > end || end > fPayloadBytes)
+         throw std::runtime_error("tmva-sofie: invalid data offsets for tensor " + name + " in safetensors blob");
+      tensors.emplace(name, SafetensorsTensorInfo{fDataBegin + begin, fDataBegin + end, dtype});
+   }
+
+   void SkipNumber()
+   {
+      // the value of skipped content does not matter, only the scan position
+      const std::size_t begin = fPos;
+      while (fPos < fText.size()) {
+         const char c = fText[fPos];
+         if ((c >= '0' && c <= '9') || c == '-' || c == '+' || c == '.' || c == 'e' || c == 'E')
+            ++fPos;
+         else
+            break;
+      }
+      if (fPos == begin)
+         Fail("unexpected character");
+   }
+
+   void SkipValue()
+   {
+      // A real safetensors header nests at most ~4 levels deep; the depth
+      // budget stops deeply nested malformed headers from exhausting the stack
+      if (++fDepth > 64)
+         Fail("JSON nested too deeply");
+      SkipWhitespace();
+      const char c = Peek();
+      if (c == '{') {
+         ++fPos;
+         SkipWhitespace();
+         if (!TryConsume('}')) {
+            while (true) {
+               SkipWhitespace();
+               if (Peek() != '"')
+                  Fail("expected object key");
+               ParseString(false);
+               SkipWhitespace();
+               Expect(':');
+               SkipValue();
+               SkipWhitespace();
+               if (TryConsume('}'))
+                  break;
+               Expect(',');
+            }
+         }
+      } else if (c == '[') {
+         ++fPos;
+         SkipWhitespace();
+         if (!TryConsume(']')) {
+            while (true) {
+               SkipValue();
+               SkipWhitespace();
+               if (TryConsume(']'))
+                  break;
+               Expect(',');
+            }
+         }
+      } else if (c == '"') {
+         ParseString(false);
+      } else if (c == 't') {
+         ExpectLiteral("true");
+      } else if (c == 'f') {
+         ExpectLiteral("false");
+      } else if (c == 'n') {
+         ExpectLiteral("null");
+      } else {
+         SkipNumber();
+      }
+      --fDepth;
+   }
+};
+
+class SafetensorsReader {
+public:
+   explicit SafetensorsReader(SafetensorsBlob blob) : fData(blob.data), fSize(blob.size)
+   {
+      // safetensors payloads are little-endian by specification
+      const std::uint16_t one = 1;
+      if (!*reinterpret_cast<const std::uint8_t *>(&one))
+         throw std::runtime_error("tmva-sofie: safetensors weights can only be read on a little-endian host");
+
+      if (fSize < 8)
+         throw std::runtime_error("tmva-sofie: truncated safetensors blob: missing JSON header size");
+      std::uint64_t headerSize = 0;
+      for (int i = 0; i < 8; ++i)
+         headerSize |= std::uint64_t(static_cast<unsigned char>(fData[i])) << (8 * i);
+      // safeguard against absurd allocations on a corrupted payload
+      if (headerSize > (std::uint64_t(1) << 30))
+         throw std::runtime_error("tmva-sofie: invalid JSON header size in safetensors blob");
+      if (headerSize > fSize - 8)
+         throw std::runtime_error("tmva-sofie: truncated JSON header in safetensors blob");
+      const std::uint64_t dataBegin = 8 + headerSize;
+      SafetensorsHeaderScanner(std::string_view(fData + 8, headerSize), dataBegin, fSize - dataBegin).Scan(fTensors);
+   }
+
+   // Copy the payload of tensor `name` into `target`, checking data type and
+   // size against what the generated code expects
+   template <class T>
+   void Read(const std::string &name, std::vector<T> &target, std::size_t expectedLength,
+             const std::string &expectedDtype)
+   {
+      auto it = fTensors.find(name);
+      if (it == fTensors.end())
+         throw std::runtime_error("tmva-sofie: tensor " + name + " not found in safetensors blob");
+      const SafetensorsTensorInfo &info = it->second;
+      if (info.fDtype != expectedDtype)
+         throw std::runtime_error("tmva-sofie: tensor " + name + " in safetensors blob has dtype " + info.fDtype +
+                                  " , expected " + expectedDtype);
+      const std::uint64_t nbytes = info.fEnd - info.fBegin;
+      if (nbytes != expectedLength * sizeof(T))
+         throw std::runtime_error("tmva-sofie: tensor " + name + " in safetensors blob has " +
+                                  std::to_string(nbytes) + " bytes , expected " +
+                                  std::to_string(expectedLength * sizeof(T)));
+      target.resize(expectedLength);
+      std::memcpy(target.data(), fData + info.fBegin, nbytes);
+   }
+
+private:
+   const char *fData;
+   std::size_t fSize;
+   std::unordered_map<std::string, SafetensorsTensorInfo> fTensors;
+};
+)SOFIE";
+
 // Constexpr helpers carrying static/symbolic shape metadata for the model's
 // input tensors into the emitted code.
 constexpr const char *kInputTensorDims = R"SOFIE(
@@ -781,6 +1172,8 @@ HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &nee
    const bool fill = need("Fill");
    const bool copy = need("Copy");
    const bool readTensor = need("ReadTensorFromStream");
+   const bool safetensorsBlob = need("SafetensorsBlob");
+   const bool readSafetensors = need("SafetensorsReader");
    const bool inputDims = need("InputTensorDims");
    const bool dynMemory = need("DynamicMemory");
 
@@ -803,6 +1196,10 @@ HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &nee
       addStd({"sstream", "string", "stdexcept"});
    if (readTensor)
       addStd({"string", "istream", "stdexcept", "limits"});
+   if (safetensorsBlob)
+      addStd({"cstddef", "string"});
+   if (readSafetensors)
+      addStd({"cstdint", "cstring", "string", "string_view", "unordered_map", "stdexcept", "vector"});
    if (inputDims)
       addStd({"array", "string_view", "cstddef"});
    if (dynMemory)
@@ -853,6 +1250,10 @@ HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &nee
       defs += kCopy;
    if (readTensor)
       defs += kReadTensorFromStream;
+   if (safetensorsBlob)
+      defs += kSafetensorsBlob;
+   if (readSafetensors)
+      defs += kSafetensorsReader;
    if (inputDims)
       defs += kInputTensorDims;
    if (dynMemory)
