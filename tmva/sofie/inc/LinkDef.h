@@ -8,7 +8,6 @@
 #pragma link C++ nestedclass;
 
 #pragma link C++ namespace TMVA::Experimental::SOFIE;
-#pragma link C++ class TMVA::Experimental::SOFIE::RModel_Base+;
 #pragma link C++ class TMVA::Experimental::SOFIE::RModel+;
 #pragma link C++ struct TMVA::Experimental::SOFIE::InitializedTensor+;
 #pragma link C++ struct TMVA::Experimental::SOFIE::TensorInfo+;

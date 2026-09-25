@@ -1,14 +1,43 @@
 #ifndef TMVA_SOFIE_RMODEL
 #define TMVA_SOFIE_RMODEL
 
-#include "TMVA/RModel_Base.hxx"
 #include "TMVA/SOFIE_common.hxx"
 
 #include "Rtypes.h" // for ClassDefNV
 
+#include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <set>
+#include <sstream>
+#include <type_traits>
+#include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 namespace TMVA::Experimental::SOFIE {
+
+enum class Options {
+   kDefault = 0x0,
+   kNoWeightFile = 0x2,
+   kRootBinaryWeightFile = 0x4,
+};
+
+// Optimization levels inspired by ONNXRuntime.
+// We only get Operator Fusion with the Basic, and
+// memory reuse with Extended. kExtended is enabled
+// by default
+enum class OptimizationLevel {
+   kBasic = 0x0,
+   kExtended = 0x1,
+};
+
+enum class WeightFileType { None, RootBinary, Text };
+
+std::underlying_type_t<Options> operator|(Options opA, Options opB);
+std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, Options opB);
 
 // The ROperator interface is an implementation detail of the code generation
 // and deliberately not exposed to the public: only this forward declaration
@@ -16,9 +45,39 @@ namespace TMVA::Experimental::SOFIE {
 // header of the SOFIE libraries.
 class ROperator;
 
-class RModel final : public RModel_Base {
+class RModel final {
 
 private:
+   std::string fFileName;  // file name of original model file for identification
+   std::string fParseTime; // UTC date and time string at parsing
+
+   WeightFileType fWeightFile = WeightFileType::Text;
+
+   std::unordered_set<std::string> fNeededBlasRoutines;
+   // Set to true once GenerateHeaderInfo has emitted the extern "C" declaration
+   // of the BLAS sgemm_ routine (from fNeededBlasRoutines). It lets the
+   // standalone Gemm_Call helper skip emitting a second, duplicate declaration.
+   bool fBlasSgemmDeclared = false;
+
+   std::unordered_set<std::string> fNeededStdLib = {"vector"};
+   std::unordered_set<std::string> fCustomOpHeaders;
+
+   // Inference helper functions (from SOFIE_common) that the generated code
+   // needs. Their standalone definitions are emitted into the generated header
+   // so that it does not depend on including TMVA/SOFIE_common.hxx.
+   std::set<std::string> fNeededHelperFunctions;
+
+   std::string fName = "UnnamedModel";
+   std::string fGC; // generated code
+   bool fUseWeightFile = true;
+
+   // Placeholder tokens emitted by GenerateHeaderInfo and later replaced by
+   // EmitHelperFunctionsCode with the actual helper includes / definitions.
+   // This two-step approach is needed because the full set of required helpers
+   // is only known once all operators (and sub-graphs) have been generated.
+   static constexpr const char *kHelperIncludesMarker = "//@SOFIE_HELPER_INCLUDES@\n";
+   static constexpr const char *kHelperFunctionsMarker = "//@SOFIE_HELPER_FUNCTIONS@\n";
+
    bool fIsInitialized = false;
    bool fIsSubGraph = false;
    bool fUseVDT = false;
@@ -68,7 +127,11 @@ public:
        https://root.cern/manual/io_custom_classes/#restrictions-on-types-root-io-can-handle
    */
    RModel() = default;
-   RModel(std::string name, std::string parsedtime) : RModel_Base(name, parsedtime) {}
+   RModel(std::string name, std::string parsedtime) : fFileName(std::move(name)), fParseTime(std::move(parsedtime))
+   {
+      fName = fFileName.substr(0, fFileName.rfind("."));
+      fName = UTILITY::Clean_name(fName);
+   }
 
    // Defined out of line because ROperator is an incomplete type in this
    // header (the definition is a private implementation header).
@@ -233,6 +296,38 @@ public:
    void PrintOutputTensors() const;
    void OutputGenerated(std::string filename = "", bool append = false);
    void SetFilename(std::string filename) { fName = filename; }
+   std::string GetFilename() { return fName; }
+   const std::string &GetName() const { return fName; }
+
+   void AddBlasRoutines(std::vector<std::string> routines)
+   {
+      for (auto &routine : routines) {
+         fNeededBlasRoutines.insert(routine);
+      }
+   }
+   void AddNeededStdLib(std::string libname)
+   {
+      // if the library is already in the set, insert does nothing, so we don't need to check before inserting
+      fNeededStdLib.insert(std::move(libname));
+   }
+   void AddNeededCustomHeader(std::string filename)
+   {
+      fCustomOpHeaders.insert(std::move(filename));
+   }
+   // Register an inference helper function that the generated code needs. See
+   // EmitHelperFunctionsCode for the list of recognised keys.
+   void AddNeededHelperFunction(std::string name)
+   {
+      fNeededHelperFunctions.insert(std::move(name));
+   }
+   const std::set<std::string> &GetNeededHelperFunctions() const { return fNeededHelperFunctions; }
+
+   void GenerateHeaderInfo(std::string &hgname);
+   // Replace the helper markers in the generated code with the standalone
+   // definitions of the helper functions collected in fNeededHelperFunctions.
+   void EmitHelperFunctionsCode();
+   void PrintGenerated(std::ostream &os = std::cout) { os << fGC; }
+   std::string ReturnGenerated() { return fGC; }
 
    void PrintRequiredInputTensors() const;
    void PrintInitializedTensors() const;

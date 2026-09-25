@@ -1,6 +1,6 @@
 /// \file SOFIE_common_helpers.cxx
 /// Standalone definitions of the SOFIE inference helpers (Im2col, Gemm_Call, ...).
-/// RModel records which helpers a model needs (RModel_Base::AddNeededHelperFunction)
+/// RModel records which helpers a model needs (RModel::AddNeededHelperFunction)
 /// and dumps only those into the generated namespace, so the emitted header is
 /// self-contained (no TMVA/SOFIE_common.hxx include). These are dependency-free
 /// copies of the SOFIE_common.hxx originals: keep them in sync when those change.
