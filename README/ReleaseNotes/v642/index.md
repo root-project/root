@@ -81,6 +81,7 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
 * The header `Rpair.h` is deprecated and will be removed after ROOT 6.44, use `<utility>` instead.
 * The header `Hparam.h` and `Hoption.h` are now deprecated and will be removed in ROOT 6.44, use instead `THistPainter`, `TGraph2DPainter` public interfaces.
 * The headers `Htypes.h` and `Gtypes.h` that were deprecated in ROOT 6.20 will now emit warnings and will be fully removed in ROOT 6.44. Use instead `Rtypes.h`.
+* The headers of the `bvh` library in `Geom` are no longer public in ROOT 6.42.
 * The header `GLConstants.h` is no longer part of ROOT installed headers.
 * The header `Bswapcpy.h` is deprecated and will be removed from the public interface after ROOT 6.44, it's an implementation detail for Unix i386 GNUC used by TBufferFile.
 * The header `VectorizedTMath.h` is deprecated and will be removed in ROOT 6.44. Use instead `TMathVectorized.h`.
