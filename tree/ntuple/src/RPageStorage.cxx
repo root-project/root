@@ -240,6 +240,13 @@ void ROOT::Internal::RPageSource::Attach(RNTupleSerializer::EDescriptorDeseriali
    descGuard.MoveIn(AttachImpl());
    fStructureBuffer.Reset();
 
+   NTupleSize_t sumClusterCount = 0;
+   fCumulativeClusterCounts.reserve(descGuard->GetNClusterGroups());
+   for (const auto &cgDesc : descGuard->GetClusterGroupIterable()) {
+      sumClusterCount += cgDesc.GetNClusters();
+      fCumulativeClusterCounts.emplace_back(sumClusterCount);
+   }
+
    // For a descriptor coming from disk, we know that cluster group IDs are issued consecutively
    for (DescriptorId_t cgId = 0; cgId < descGuard->GetNClusterGroups(); ++cgId) {
       LoadPageList(cgId, descGuard);
@@ -272,6 +279,7 @@ std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Internal::RPageSource::Clone(
       clone->fHasStructure = true;
       clone->fIsAttached = true;
       clone->fDeserializationMode = fDeserializationMode;
+      clone->fCumulativeClusterCounts = fCumulativeClusterCounts;
    }
    return clone;
 }
@@ -296,6 +304,16 @@ ROOT::Internal::RPageSource::EnsureClusterDetails(DescriptorId_t cgId, RAnyDescr
    LoadPageList(cgId, exclGuard);
 
    return exclGuard;
+}
+
+ROOT::DescriptorId_t ROOT::Internal::RPageSource::FindClusterGroupId(DescriptorId_t clusterId) const
+{
+   // We use `cluster + 1` because fCumulativeClusterCounts stores the cumulative _number_ of clusters and not
+   // the last cluster IDs.
+   auto iter = std::lower_bound(fCumulativeClusterCounts.begin(), fCumulativeClusterCounts.end(), clusterId + 1);
+   if (iter == fCumulativeClusterCounts.end())
+      return kInvalidDescriptorId;
+   return std::distance(fCumulativeClusterCounts.begin(), iter);
 }
 
 ROOT::NTupleSize_t ROOT::Internal::RPageSource::GetNEntries()

@@ -780,6 +780,13 @@ private:
    Internal::RNTupleSerializer::EDescriptorDeserializeMode fDeserializationMode =
       Internal::RNTupleSerializer::EDescriptorDeserializeMode::kRaw;
 
+   /// This vector is aligned with the cluster groups in the descriptor. It stores the cumulative number of clusters
+   /// in the cluster groups. Given a cluster ID, we can thus quickly determine the cluster group that the cluster
+   /// comes from. While descriptor IDs in a descriptor in general are arbitrary, for the descriptor in the page source,
+   /// that was created from a serialized on-disk representation, we know that cluster and cluster group IDs are
+   /// issued consecutively.
+   std::vector<NTupleSize_t> fCumulativeClusterCounts;
+
    /// The active columns are implicitly defined by the model fields or views
    RActivePhysicalColumns fActivePhysicalColumns;
 
@@ -807,6 +814,8 @@ private:
    /// to be called while holding the lock passed by descGuard. The returned descriptor guard is either the
    /// passed one or a new, exclusive guard if cluster details needed to be loaded.
    RAnyDescriptorGuard EnsureClusterDetails(DescriptorId_t cgId, RAnyDescriptorGuard descGuard);
+   /// Uses binary search in fCumulativeClusterCounts to determine the cluster group that the cluster ID belongs in.
+   DescriptorId_t FindClusterGroupId(DescriptorId_t clusterId) const;
 
    /// Does nothing if fLastUsedCluster == clusterId. Otherwise, updated fLastUsedCluster
    /// and evict unused paged from the page pool of all previous clusters.
