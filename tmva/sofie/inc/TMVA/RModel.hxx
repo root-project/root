@@ -22,7 +22,9 @@ namespace TMVA::Experimental::SOFIE {
 enum class Options {
    kDefault = 0x0,
    kNoWeightFile = 0x2,
-   kRootBinaryWeightFile = 0x4,
+   // Write the weight tensors in the binary safetensors format
+   // (https://huggingface.co/docs/safetensors) instead of the text format
+   kSafetensorsWeightFile = 0x4,
 };
 
 // Optimization levels inspired by ONNXRuntime.
@@ -34,7 +36,7 @@ enum class OptimizationLevel {
    kExtended = 0x1,
 };
 
-enum class WeightFileType { None, RootBinary, Text };
+enum class WeightFileType { None, Safetensors, Text };
 
 std::underlying_type_t<Options> operator|(Options opA, Options opB);
 std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, Options opB);
@@ -290,6 +292,10 @@ public:
 
    void ReadInitializedTensorsFromFile();
    long WriteInitializedTensorsToFile(std::string filename = "");
+   // Write the weight tensors as a safetensors payload to a stream or to an
+   // in-memory buffer (e.g. for use with a blob-based Session constructor)
+   void WriteInitializedTensorsToStream(std::ostream &os);
+   std::string WriteInitializedTensorsToBuffer();
 
    void PrintSummary() const;
    void PrintIntermediateTensors() const;
