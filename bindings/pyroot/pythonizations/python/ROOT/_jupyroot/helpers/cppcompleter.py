@@ -109,10 +109,10 @@ class CppCompleter(object):
         self.active = True
         if self.firstActivation:
             if platform.system() == "Windows":
-                dlOpenRint = 'gInterpreter->LoadFile("libRint.dll");'
+                dlOpenRint = 'gInterpreter->LoadFile("libROOTRint.dll");'
             else:
                 utils.declareCppCode('#include "dlfcn.h"')
-                dlOpenRint = 'dlopen("libRint.so",RTLD_NOW);'
+                dlOpenRint = 'dlopen("libROOTRint.so",RTLD_NOW);'
             utils.processCppCode(dlOpenRint)
             utils.declareCppCode(_TTabComHookCode)
             self.hook = ROOT._TTabComHook

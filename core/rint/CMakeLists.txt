@@ -21,7 +21,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Rint
   DEPENDENCIES
     Core
 )
-
 target_include_directories(Core PRIVATE inc)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
+
+ROOT_SET_LIBRARY_NAME(Rint "ROOTRint" "Rint")

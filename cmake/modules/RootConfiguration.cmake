@@ -721,7 +721,7 @@ else()
     ${CMAKE_BINARY_DIR}/ginclude/compiledata.h "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_ACLIC_FLAGS}"
         "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_LINKER_FLAGS}" "so"
-        "${libdir}" "-lCore" "-lRint" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}"
+        "${libdir}" "-lCore" "-lROOTRint" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}"
         "${local_ROOT_COMPILEDATA_IGNORE_BUILD_NODE_CHANGES}")
 endif()
 
