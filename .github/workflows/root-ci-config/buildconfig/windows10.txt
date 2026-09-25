@@ -19,6 +19,7 @@ builtin_xxhash=ON
 builtin_zlib=ON
 builtin_zstd=ON
 ccache=OFF
+daos_mock=OFF
 davix=OFF
 fortran=OFF
 llvm13_broken_tests=OFF
