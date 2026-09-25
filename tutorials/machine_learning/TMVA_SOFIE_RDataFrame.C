@@ -18,15 +18,13 @@
 /// \macro_output
 /// \author Lorenzo Moneta
 
-using namespace TMVA::Experimental;
-
 // need to add the current directory (from where we are running this macro)
 // to the include path for Cling
 R__ADD_INCLUDE_PATH($PWD)
 #include "HiggsModel.hxx"
-#include "TMVA/SOFIEHelpers.hxx"
 
-using namespace TMVA::Experimental;
+#include <array>
+#include <vector>
 
 void TMVA_SOFIE_RDataFrame(int nthreads = 2){
 
@@ -38,14 +36,29 @@ void TMVA_SOFIE_RDataFrame(int nthreads = 2){
    ROOT::RDataFrame df1("sig_tree", inputFile);
    int nslots = df1.GetNSlots();
    std::cout << "Running using " << nslots << " threads" << std::endl;
-   auto h1 = df1.DefineSlot("DNN_Value", SofieFunctor<7, TMVA_SOFIE_HiggsModel::Session>(nslots),
-                            {"m_jj", "m_jjj", "m_lv", "m_jlv", "m_bb", "m_wbb", "m_wwbb"})
+
+   // A SOFIE Session holds the model weights and the intermediate buffers and is
+   // not thread-safe: create one Session per RDataFrame processing slot and use
+   // the slot number in the DefineSlot functor to dispatch to the right one.
+   // The Session default constructor reads the weights from the default weight
+   // file (HiggsModel.dat in this case).
+   std::vector<TMVA_SOFIE_HiggsModel::Session> sessions(nslots);
+
+   // The functor assembles the model input tensor from the RDataFrame columns
+   // and evaluates the model. The column order must match the ordering of the
+   // model input tensor.
+   auto evalModel = [&sessions](unsigned int slot, float m_jj, float m_jjj, float m_lv, float m_jlv, float m_bb,
+                                float m_wbb, float m_wwbb) {
+      std::array<float, 7> input{m_jj, m_jjj, m_lv, m_jlv, m_bb, m_wbb, m_wwbb};
+      auto result = sessions[slot].infer(input.data());
+      return result[0];
+   };
+
+   auto h1 = df1.DefineSlot("DNN_Value", evalModel, {"m_jj", "m_jjj", "m_lv", "m_jlv", "m_bb", "m_wbb", "m_wwbb"})
                 .Histo1D({"h_sig", "", 100, 0, 1}, "DNN_Value");
 
    ROOT::RDataFrame df2("bkg_tree", inputFile);
-   nslots = df2.GetNSlots();
-   auto h2 = df2.DefineSlot("DNN_Value", SofieFunctor<7, TMVA_SOFIE_HiggsModel::Session>(nslots),
-                            {"m_jj", "m_jjj", "m_lv", "m_jlv", "m_bb", "m_wbb", "m_wwbb"})
+   auto h2 = df2.DefineSlot("DNN_Value", evalModel, {"m_jj", "m_jjj", "m_lv", "m_jlv", "m_bb", "m_wbb", "m_wwbb"})
                 .Histo1D({"h_bkg", "", 100, 0, 1}, "DNN_Value");
 
    h1->SetLineColor(kRed);
