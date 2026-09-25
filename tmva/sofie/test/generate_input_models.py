@@ -4300,6 +4300,61 @@ def make_RNNDefaults():
     return _model(graph, opset=14, ir_version=7)
 
 
+def make_RNNClip():
+    """Ops: RNN"""
+    nodes = [
+        helper.make_node(
+            'RNN',
+            ['X', 'W', 'R', 'B'],
+            ['Y', 'Y_h'],
+            activations=['Tanh'],
+            clip=0.1,
+            direction='forward',
+            hidden_size=5,
+            layout=0,
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'RNNClip',
+        inputs=[
+            _vi('X', FLOAT, [3, 1, 3]),
+            _vi('W', FLOAT, [1, 5, 3]),
+            _vi('R', FLOAT, [1, 5, 5]),
+            _vi('B', FLOAT, [1, 10]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [3, 1, 1, 5]),
+            _vi('Y_h', FLOAT, [1, 1, 5]),
+        ],
+        initializer=[
+            _tensor('W', FLOAT, [1, 5, 3], [
+                0.009999999776482582, 0.009999999776482582, 0.009999999776482582,
+                0.009999999776482582, 0.009999999776482582, 0.009999999776482582,
+                0.009999999776482582, 0.009999999776482582, 0.009999999776482582,
+                0.009999999776482582, 0.009999999776482582, 0.009999999776482582,
+                0.009999999776482582, 0.009999999776482582, 0.009999999776482582,
+            ]),
+            _tensor('R', FLOAT, [1, 5, 5], [
+                0.009999999776482582, 0.009999999776482582, 0.009999999776482582,
+                0.009999999776482582, 0.009999999776482582, 0.009999999776482582,
+                0.009999999776482582, 0.009999999776482582, 0.009999999776482582,
+                0.009999999776482582, 0.009999999776482582, 0.009999999776482582,
+                0.009999999776482582, 0.009999999776482582, 0.009999999776482582,
+                0.009999999776482582, 0.009999999776482582, 0.009999999776482582,
+                0.009999999776482582, 0.009999999776482582, 0.009999999776482582,
+                0.009999999776482582, 0.009999999776482582, 0.009999999776482582,
+                0.009999999776482582,
+            ]),
+            _tensor('B', FLOAT, [1, 10], [
+                0.009999999776482582, 0.009999999776482582, 0.009999999776482582,
+                0.009999999776482582, 0.009999999776482582, 0.0, 0.0, 0.0, 0.0, 0.0,
+            ]),
+        ],
+    )
+    return _model(graph, opset=14, ir_version=7)
+
+
 def make_RNNSeqLength():
     """Ops: RNN"""
     nodes = [
@@ -5814,6 +5869,7 @@ MODELS = {
     "RNNBatchwise": make_RNNBatchwise,
     "RNNBidirectional": make_RNNBidirectional,
     "RNNBidirectionalBatchwise": make_RNNBidirectionalBatchwise,
+    "RNNClip": make_RNNClip,
     "RNNDefaults": make_RNNDefaults,
     "RNNSeqLength": make_RNNSeqLength,
     "RNNSequence": make_RNNSequence,
@@ -6935,6 +6991,7 @@ TEST_INPUTS = {
             (3, 3, 2),
         )
     ],
+    "RNNClip": [f32(np.arange(1.0, 10.0), (3, 1, 3))],
     "RNNDefaults": [f32(np.arange(1.0, 10.0), (3, 1, 3))],
     "RNNSeqLength": [f32(np.arange(1.0, 19.0), (2, 3, 3))],
     "RNNSequence": [
@@ -7347,6 +7404,7 @@ def _recurrent_reference(model, feeds):
     linear_before_reset = (
         attrs["linear_before_reset"].i if "linear_before_reset" in attrs else 0
     )
+    clip = attrs["clip"].f if "clip" in attrs else 0.0
     if "activations" in attrs:
         acts = [s.decode() for s in attrs["activations"].strings]
         defaults = {"RNN": ["Tanh"], "GRU": ["Sigmoid", "Tanh"], "LSTM": ["Sigmoid", "Tanh", "Tanh"]}[op]
@@ -7403,6 +7461,8 @@ def _recurrent_reference(model, feeds):
             x = X[t]
             pre = x @ Wd.T + h @ Rd.T + Wb + Rb
             if op == "RNN":
+                if clip > 0:
+                    pre = np.clip(pre, -clip, clip)
                 h_new = np.tanh(pre)
             elif op == "GRU":
                 z = sigmoid(pre[:, :hidden])
@@ -7523,6 +7583,7 @@ EXPECTED_OVERRIDES = {
     "RNNBidirectionalBatchwise": _recurrent_reference,
     "RNNSequence": _recurrent_reference,
     "RNNSequenceBatchwise": _recurrent_reference,
+    "RNNClip": _recurrent_reference,
     "MaxPool2d_AsymPad": _maxpool2d_reference,
     "MeanMultidirectionalBroadcast": _mean_reference,
     "ConvTranspose2dOutputShape": _convtranspose_outputshape_reference,
