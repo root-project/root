@@ -43,7 +43,7 @@ ROOT::Experimental::Internal::RNTupleProcessorEntry::FindFieldIndex(std::string_
    assert(!fieldIdxs.empty());
 
    for (auto idx : fieldIdxs) {
-      if (fProcessorValues[idx].fField->GetTypeName() == typeName) {
+      if (fProcessorValues[idx].fField->GetTypeName() == typeName || typeName == "") {
          return idx;
       }
    }
@@ -74,6 +74,12 @@ ROOT::Experimental::Internal::RNTupleProcessorEntry::AddField(const std::string 
       RProcessorValue(std::move(field), qualifiedFieldName, std::move(value), true, provenance));
 
    return fieldIdx;
+}
+
+const ROOT::RFieldBase &ROOT::Experimental::Internal::RNTupleProcessorEntry::GetField(FieldIndex_t fieldIdx) const
+{
+   assert(fieldIdx < fProcessorValues.size());
+   return *fProcessorValues[fieldIdx].fField;
 }
 
 void ROOT::Experimental::Internal::RNTupleProcessorEntry::UpdateField(FieldIndex_t fieldIdx,

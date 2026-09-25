@@ -265,6 +265,28 @@ TEST_F(RNTupleProcessorTest, RequestFieldWithTypeString)
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
 
+TEST_F(RNTupleProcessorTest, RequestExistingField)
+{
+   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+
+   auto fldX1 = proc->RequestField<float>("x");
+   auto fldX2 = proc->RequestField<float>("x");
+
+   EXPECT_EQ(fldX1, fldX2);
+
+   try {
+      float x;
+      proc->RequestField<float>("x", &x);
+      FAIL() << "requesting an existing field with a user-provided pointer should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(
+         err.what(),
+         testing::HasSubstr(
+            "attempted to request a field with user-provided value pointer to field \"x\", which already exists in the "
+            "entry. To change the underlying value pointer, use RNTupleProcessorOptionalPtr::Bind instead."));
+   }
+}
+
 TEST_F(RNTupleProcessorTest, AlternativeTypes)
 {
    auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
@@ -304,6 +326,24 @@ TEST_F(RNTupleProcessorTest, Subfields)
       EXPECT_FLOAT_EQ(idx, idx);
       EXPECT_FLOAT_EQ(strct->a, *strct_a);
    }
+}
+
+TEST_F(RNTupleProcessorTest, AddAllFields)
+{
+   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/false);
+   auto fieldIdxs = entry->GetFieldIndices();
+
+   EXPECT_EQ(fieldIdxs.size(), 4);
+}
+
+TEST_F(RNTupleProcessorTest, AddAllFieldsAndSubfields)
+{
+   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/true);
+   auto fieldIdxs = entry->GetFieldIndices();
+
+   EXPECT_EQ(fieldIdxs.size(), 13);
 }
 
 TEST_F(RNTupleProcessorTest, PrintStructureSingle)
@@ -793,6 +833,48 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedSameName)
                                  "\"ntuple\", but may also refer to a field in the auxiliary RNTupleProcessor named "
                                  "\"ntuple_aux\". To avoid this ambiguity, rename the auxiliary RNTupleProcessor."));
    }
+}
+
+TEST_F(RNTupleProcessorTest, AddAllFieldsComposed)
+{
+   auto primaryProc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+
+   RNTupleProcessorOptions opts;
+   opts.SetProcessorName("ntuple_aux2");
+   auto auxProcIntermediate = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, opts);
+
+   auto auxProc = RNTupleProcessor::CreateJoin(
+      RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}),
+      std::move(auxProcIntermediate), {"i"});
+
+   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {});
+
+   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/false);
+   auto fieldIdxs = entry->GetFieldIndices();
+
+   // 11 fields instead of 10, because the join field is also included.
+   EXPECT_EQ(fieldIdxs.size(), 11);
+}
+
+TEST_F(RNTupleProcessorTest, AddAllFieldsAndSubfieldsComposed)
+{
+   auto primaryProc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+
+   RNTupleProcessorOptions opts;
+   opts.SetProcessorName("ntuple_aux2");
+   auto auxProcIntermediate = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, opts);
+
+   auto auxProc = RNTupleProcessor::CreateJoin(
+      RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}),
+      std::move(auxProcIntermediate), {"i"});
+
+   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {});
+
+   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/true);
+   auto fieldIdxs = entry->GetFieldIndices();
+
+   // 36 fields instead of 25, because the join field is also included.
+   EXPECT_EQ(fieldIdxs.size(), 36);
 }
 
 TEST_F(RNTupleProcessorTest, PrintStructureChainedJoin)

@@ -113,6 +113,7 @@ ROOT_GENERATE_DICTIONARY(ClassWithNestedSameNameDict
                          DEPENDENCIES RIO)
 
 ROOT_ADD_GTEST(datasource_ntuple datasource_ntuple.cxx LIBRARIES ROOTDataFrame)
+ROOT_ADD_GTEST(datasource_ntuple_processor datasource_ntuple_processor.cxx LIBRARIES ROOTDataFrame)
 if(MSVC)
   set_source_files_properties(datasource_ntuple.cxx PROPERTIES COMPILE_FLAGS /bigobj)
 endif()
