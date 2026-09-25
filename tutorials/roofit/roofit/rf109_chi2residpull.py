@@ -50,21 +50,29 @@ print("chi^2 = ", frame1.chiSquare())
 # Show residual and pull dists
 # -------------------------------------------------------
 
-# Construct a histogram with the residuals of the data w.r.t. the curve
-hresid = frame1.residHist()
+# For the residuals and pulls, we compare the binned data with the model
+# integrated exactly over each bin. This avoids the systematic "wiggle"
+# that curve-based residuals show for sharply peaked pdfs. The Binning()
+# argument selects how the unbinned dataset is binned.
 
-# Construct a histogram with the pulls of the data w.r.t the curve
-hpull = frame1.pullHist()
+# Construct a histogram with the residuals of the data w.r.t. the model
+hresid = ROOT.RooFit.makeResidHist(gauss, data, ROOT.RooFit.Binning(40))
+
+# Construct a histogram with the pulls of the data w.r.t the model
+hpull = ROOT.RooFit.makePullHist(gauss, data, ROOT.RooFit.Binning(40))
 
 # Create a frame to draw the residual distribution and add the
-# distribution to the frame
+# distribution to the frame. Note that addPlotable() transfers ownership
+# of the histogram to the frame.
 frame2 = x.frame(Title="Residual Distribution")
 frame2.addPlotable(hresid, "P")
+ROOT.SetOwnership(hresid, False)
 
 # Create a frame to draw the pull distribution and add the distribution to
 # the frame
 frame3 = x.frame(Title="Pull Distribution")
 frame3.addPlotable(hpull, "P")
+ROOT.SetOwnership(hpull, False)
 
 c = ROOT.TCanvas("rf109_chi2residpull", "rf109_chi2residpull", 900, 300)
 c.Divide(3)
