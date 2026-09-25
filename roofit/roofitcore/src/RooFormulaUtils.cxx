@@ -24,6 +24,21 @@ Free functions to translate and evaluate user-defined expressions of
 RooAbsArgs. See RooFormulaUtils.h for a description of the supported
 expression dialect. To debug the formula preprocessing, activate the
 RooFit::DEBUG message level for the RooFit::InputArguments topic.
+
+### Evaluation backends
+By default, makeEvaluator() compiles the expression with a small built-in
+parser and evaluates it without any use of the interpreter/JIT. Expressions
+the parser does not support silently fall back to the traditional TFormula
+(cling JIT) backend, so any expression that worked before keeps working. The
+environment variable `ROOFIT_FORMULA_BACKEND` overrides this: `tformula`
+always uses the TFormula backend, and `ast` disables the fallback, turning
+unsupported expressions into hard errors (useful for testing).
+
+Batch evaluation (doEvalFormula()) of expressions on the built-in backend is
+chunk-vectorized via the RooBatchCompute library, and runs on the GPU when the
+evaluation backend is CUDA and the compiled program is one the CUDA
+interpreter accepts (formulaCanComputeBatchWithCuda()). See doEvalFormula()
+for the numerical implications of both.
 **/
 
 #include "RooFormulaUtils.h"
@@ -35,18 +50,81 @@ RooFit::DEBUG message level for the RooFit::InputArguments topic.
 #include "RooCurve.h"
 #include "RooFitImplHelpers.h"
 #include "RooMsgService.h"
+#include "RooBatchCompute.h"
+#include "RooExprEvaluator.h"
+#include "RooFormulaParser.h"
 #include "RooTFormulaEvaluator.h"
 
-#include "TFormula.h"
-
+#include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <cstdlib>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <regex>
 #include <sstream>
 
 using std::sregex_iterator;
+
+namespace {
+
+/// Which evaluation backend the formula should use, from ROOFIT_FORMULA_BACKEND.
+enum class FormulaBackend {
+   AstWithFallback = 0, ///< default: JIT-free parser, silent TFormula fallback
+   AstOnly = 1,         ///< `ast`: fail loudly instead of falling back
+   TFormulaOnly = 2     ///< `tformula`: always use the TFormula backend
+};
+
+std::mutex gFormulaBackendMutex;
+int gFormulaBackendCached = -1; ///< -1: environment variable not read yet
+bool gFormulaBackendWarnedChange = false;
+std::string gFormulaBackendEnvSeen; ///< raw env value at first read ("" if unset)
+
+/// Read ROOFIT_FORMULA_BACKEND once (thread-safely) and cache the result. On
+/// later reads, warn (once) if the environment variable no longer matches the
+/// cached value: changing it after the first evaluator creation has no
+/// effect.
+FormulaBackend formulaBackend()
+{
+   std::lock_guard<std::mutex> lock{gFormulaBackendMutex};
+   const char *env = std::getenv("ROOFIT_FORMULA_BACKEND");
+   const std::string val = env ? env : "";
+   if (gFormulaBackendCached < 0) {
+      FormulaBackend mode = FormulaBackend::AstWithFallback;
+      if (val == "ast") {
+         mode = FormulaBackend::AstOnly;
+      } else if (val == "tformula") {
+         mode = FormulaBackend::TFormulaOnly;
+      } else if (!val.empty()) {
+         oocoutW(nullptr, InputArguments) << "Ignoring unknown ROOFIT_FORMULA_BACKEND value '" << val
+                                          << "' (supported: \"ast\", \"tformula\")" << std::endl;
+      }
+      gFormulaBackendCached = static_cast<int>(mode);
+      gFormulaBackendEnvSeen = val;
+      gFormulaBackendWarnedChange = false;
+   } else if (val != gFormulaBackendEnvSeen && !gFormulaBackendWarnedChange) {
+      gFormulaBackendWarnedChange = true;
+      oocoutW(nullptr, InputArguments) << "ROOFIT_FORMULA_BACKEND changed from '" << gFormulaBackendEnvSeen << "' to '"
+                                       << val << "' after it was first read; the change has no effect in this process"
+                                       << std::endl;
+   }
+   return static_cast<FormulaBackend>(gFormulaBackendCached);
+}
+
+} // namespace
+
+namespace RooFormulaInternal {
+
+void resetFormulaBackendForTesting()
+{
+   std::lock_guard<std::mutex> lock{gFormulaBackendMutex};
+   gFormulaBackendCached = -1;
+   gFormulaBackendWarnedChange = false;
+   gFormulaBackendEnvSeen.clear();
+}
+
+} // namespace RooFormulaInternal
 
 namespace {
 
@@ -328,6 +406,16 @@ RooFormulaUtils::reconstructFormula(std::string internalRepr, RooArgList const &
 /// Create the evaluation engine for a processed formula, checking that the
 /// formula compiles and also fulfills the assumptions. Throws on failure,
 /// with the original formula string appearing in the error messages.
+///
+/// First, the JIT-free expression parser is tried (unless disabled via
+/// ROOFIT_FORMULA_BACKEND=tformula). On any unsupported construct it silently
+/// falls back to the TFormula backend, so genuinely invalid formulas produce
+/// exactly the same errors as before.
+/// \param[in] name Name of the calling object, used to name the engine and in error messages.
+/// \param[in] processedFormula The formula string in the normalized `x[i]` dialect,
+/// with `i` referring to the position in `varList`.
+/// \param[in] origFormula The original formula string as given by the user, used in error messages.
+/// \param[in] varList List of variables to be passed to the formula.
 std::unique_ptr<RooFormulaEvaluator>
 RooFormulaUtils::makeEvaluator(std::string const &name, std::string const &processedFormula,
                                std::string const &origFormula, RooArgList const &varList)
@@ -336,6 +424,40 @@ RooFormulaUtils::makeEvaluator(std::string const &name, std::string const &proce
       << "RooFormula '" << name << "' will be compiled as "
       << "\n\t" << processedFormula << "\n  and used as"
       << "\n\t" << reconstructFormula(processedFormula, varList) << "\n  with the parameters " << varList << std::endl;
+
+   const FormulaBackend backend = formulaBackend();
+
+   if (backend != FormulaBackend::TFormulaOnly) {
+      std::string parseError;
+      if (auto program = RooFormulaParser::compile(processedFormula, varList.size(), &parseError)) {
+         return std::make_unique<RooExprEvaluator>(std::move(program));
+      }
+      if (backend == FormulaBackend::AstOnly) {
+         std::stringstream msg;
+         msg << "RooFormula '" << name << "' could not be compiled by the RooFit expression parser (" << parseError
+             << "), and ROOFIT_FORMULA_BACKEND=ast disables the TFormula fallback."
+             << "\nInput:\n\t" << origFormula << "\nProcessed formula:\n\t" << processedFormula << std::endl;
+         oocoutF(static_cast<TObject *>(nullptr), InputArguments) << msg.str();
+         throw std::runtime_error(msg.str());
+      }
+      // Report the silent fallback once per process at INFO level (further
+      // fallbacks are only visible on the debug stream, to avoid spamming).
+      static std::once_flag fallbackNoticeFlag;
+      std::call_once(fallbackNoticeFlag, [&] {
+         oocoutI(static_cast<TObject *>(nullptr), InputArguments)
+            << "RooFormula '" << name
+            << "': expression not supported by the RooFit formula "
+               "parser ("
+            << parseError
+            << "), falling back to the TFormula (cling JIT) backend. This notice is only "
+               "printed once; see the ROOFIT_FORMULA_BACKEND environment variable and the InputArguments debug "
+               "stream for details."
+            << std::endl;
+      });
+      oocxcoutD(static_cast<TObject *>(nullptr), InputArguments)
+         << "RooFormula '" << name << "': expression not supported by the RooFit expression parser (" << parseError
+         << "), falling back to TFormula" << std::endl;
+   }
 
    return std::make_unique<RooTFormulaEvaluator>(name.c_str(), processedFormula, origFormula, varList);
 }
@@ -385,15 +507,13 @@ RooFormulaEvaluator &RooFormulaUtils::ensureEvaluator(std::unique_ptr<RooFormula
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clone a formula evaluation engine, renaming the copied TFormula (if any)
-/// after the possibly-different name of the new owner.
+/// Clone a formula evaluation engine, renaming the copy after the
+/// possibly-different name of the new owner.
 std::unique_ptr<RooFormulaEvaluator> RooFormulaUtils::cloneEvaluator(RooFormulaEvaluator const &other,
                                                                      const char *newName)
 {
    std::unique_ptr<RooFormulaEvaluator> out = other.clone();
-   if (TFormula *tFormula = out->getTFormula()) {
-      tFormula->SetName(newName);
-   }
+   out->setName(newName);
    return out;
 }
 
@@ -422,21 +542,87 @@ RooFormulaUtils::evalFormula(RooFormulaEvaluator const &evaluator, RooAbsCollect
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate a formula for a batch of input values from the evaluation context,
 /// with `x[i]` taking the values of the i-th variable in `actualVars`.
-void RooFormulaUtils::doEvalFormula(RooFormulaEvaluator const &evaluator, RooArgList const &actualVars,
-                                    RooFit::EvalContext &ctx)
+///
+/// If every input is a single value (e.g. a formula of parameters only, the
+/// HistFactory expression-NormFactor shape), the formula is evaluated once and
+/// the result is broadcast. Otherwise, formulas on the JIT-free expression
+/// backend are evaluated with RooBatchCompute::computeExprProgram(), which
+/// applies one instruction across a chunk of RooBatchCompute::bufferSize
+/// events at a time in vectorizable elementwise loops. When ROOT is built with
+/// VDT, that path evaluates exp/log/sin/cos with the same fast vectorizable
+/// implementations as the RooBatchCompute pdf kernels, so batch results can
+/// differ from per-event scalar evaluation within the usual RooBatchCompute
+/// batch-vs-scalar tolerance (relative ~5e-14, see the vectorisedPDFs tests),
+/// and, because those approximations cover only their normal argument range,
+/// the special values are not reproduced either (fast_log() of a non-positive
+/// number returns a finite garbage value instead of -Inf or NaN). Without VDT
+/// the batch results are bitwise identical to scalar evaluation. The TFormula
+/// fallback backend evaluates with a scalar per-event loop as before.
+///
+/// When the evaluation context assigns this node to the GPU (which the
+/// Evaluator only does for nodes that answer true to
+/// formulaCanComputeBatchWithCuda()), the same expression program is evaluated
+/// by the CUDA backend instead, one event per thread. Its inputs and its
+/// output live in device memory, so that case must be taken before anything
+/// dereferences an input span on the host.
+void RooFormulaUtils::doEvalFormula(RooAbsArg const &caller, RooFormulaEvaluator const &evaluator,
+                                    RooArgList const &actualVars, RooFit::EvalContext &ctx)
 {
    std::span<double> output = ctx.output();
 
+   // Every x[i] has an input span, because the evaluation engine refers to
+   // the (pruned) list of actual dependents directly.
    const std::size_t nPars = actualVars.size();
    // Note: emplace_back() instead of assignment into a pre-sized vector,
    // because the custom std::span backport for C++ < 20 in ROOT/span.hxx is
    // not move-assignable.
    std::vector<std::span<const double>> inputSpans;
    inputSpans.reserve(nPars);
+   bool allScalar = true;
    for (std::size_t i = 0; i < nPars; ++i) {
       inputSpans.emplace_back(ctx.at(static_cast<const RooAbsReal *>(&actualVars[i])));
+      allScalar &= inputSpans.back().size() <= 1;
    }
 
+   // On the GPU the spans point into device memory, so this branch has to come
+   // before any host-side read of an input. formulaCanComputeBatchWithCuda()
+   // guarantees the cast and the stack-depth precondition.
+   RooBatchCompute::Config cfg = ctx.config(&caller);
+   if (cfg.useCuda()) {
+      auto const &expr = static_cast<RooExprEvaluator const &>(evaluator);
+      RooBatchCompute::computeExprProgram(cfg, expr.code(), expr.stackDepth(), output,
+                                          {inputSpans.data(), inputSpans.size()});
+      return;
+   }
+
+   // All inputs are single values: evaluate once and broadcast.
+   if (allScalar) {
+      std::vector<double> pars(nPars);
+      for (std::size_t j = 0; j < nPars; j++) {
+         if (!inputSpans[j].empty()) {
+            pars[j] = inputSpans[j][0];
+         }
+      }
+      std::fill(output.begin(), output.end(), evaluator.eval(pars.data()));
+      return;
+   }
+
+   // Chunked, vectorized evaluation of JIT-free expression programs.
+   if (auto *expr = dynamic_cast<RooExprEvaluator const *>(&evaluator)) {
+      if (expr->stackDepth() <= RooBatchCompute::maxExprProgramStackDepth) {
+         // Load the RooBatchCompute CPU dispatch if no RooFit::Evaluator has
+         // done so yet: doEvalFormula() can also be called directly, and the
+         // dispatch pointer is null until the library is loaded (a cheap
+         // no-op once initialized).
+         RooBatchCompute::initCPU();
+         RooBatchCompute::computeExprProgram({}, expr->code(), expr->stackDepth(), output,
+                                             {inputSpans.data(), inputSpans.size()});
+         return;
+      }
+   }
+
+   // Scalar per-event loop: the TFormula fallback backend, and expression
+   // programs too deep for the vector interpreter's fixed-size chunk stack.
    std::vector<double> pars(nPars);
    for (std::size_t i = 0; i < output.size(); ++i) {
       for (std::size_t j = 0; j < nPars; ++j) {
@@ -444,6 +630,20 @@ void RooFormulaUtils::doEvalFormula(RooFormulaEvaluator const &evaluator, RooArg
       }
       output[i] = evaluator.eval(pars.data());
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Whether RooBatchCompute's CUDA backend can evaluate this formula, i.e.
+/// whether RooFormulaVar and RooGenericPdf may answer true to
+/// canComputeBatchWithCuda(). True only on the JIT-free expression backend
+/// (the TFormula fallback JIT-compiles host code, which cannot run on the
+/// device) and only for programs the GPU interpreter accepts: the stack must
+/// fit its fixed-size per-thread stack and every call must resolve to a
+/// function with a device implementation.
+bool RooFormulaUtils::formulaCanComputeBatchWithCuda(RooFormulaEvaluator const &evaluator)
+{
+   auto const *expr = dynamic_cast<RooExprEvaluator const *>(&evaluator);
+   return expr && expr->cudaCapable();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
