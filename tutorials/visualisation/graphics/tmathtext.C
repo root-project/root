@@ -38,6 +38,7 @@
 
    c1->Print("c1.png");
    c1->Print("c1.ps");
+   c1->Print("c1.pdf");
 
    return c1;
 }
