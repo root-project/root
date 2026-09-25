@@ -129,6 +129,11 @@ endif()
 ROOT_ADD_GTEST(TestSofieParser TestSofieParser.cxx
   LIBRARIES Core ROOTTMVASofie ROOTTMVASofieParser)
 
+# Unit tests for the safetensors weight file format. nlohmann_json is used by
+# the test itself to validate the structure of the generated file.
+ROOT_ADD_GTEST(TestSafetensorsWeights TestSafetensorsWeights.cxx
+  LIBRARIES Core ROOTTMVASofie ROOTTMVASofieParser nlohmann_json::nlohmann_json)
+
 if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND NOT broken_onnx)
   # ModelGeneratorUtils.py holds the code shared by the generators below, so it
   # has to be copied next to them.
