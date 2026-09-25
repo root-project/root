@@ -1345,6 +1345,12 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
       pdfContext.setLikelihoodMode(ctx.likelihoodMode());
       auto *pdfFinal = pdfContext.compile(*pdfClone, *newSimPdf, *pdfNormSet);
 
+      // The observables of the compiled computation graph are clones of the
+      // ones in `pdfNormSet`, and only the clones are prefixed below. That's
+      // why we have to translate the normalization set to the compiled args
+      // before using it any further.
+      RooArgSet compiledPdfNormSet = pdfContext.mapToCompiled(*pdfNormSet);
+
       // We can only prefix the observables after everything related the
       // compiling of the compute graph for the normalization set is done. This
       // is because of a subtlety in conditional RooProdPdfs, which stores the
@@ -1354,7 +1360,12 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
       // but this has more performance overhead.
       prefixArgs(pdfFinal, prefix, normSet);
 
-      pdfFinal->fixAddCoefNormalization(*pdfNormSet, false);
+      // This has to be done with the observables of the compiled graph, which
+      // are prefixed at this point. Otherwise, the RooAddPdf components don't
+      // find their coefficient normalization observables and silently keep the
+      // default "automatic" interpretation of the coefficients, which results
+      // in wrong yields in ranged fits (GitHub issue #23444).
+      pdfFinal->fixAddCoefNormalization(compiledPdfNormSet, false);
 
       pdfClone->SetName((std::string("_") + pdfClone->GetName()).c_str());
       pdfFinal->addOwnedComponents(std::move(pdfClone));
