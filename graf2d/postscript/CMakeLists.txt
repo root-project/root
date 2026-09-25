@@ -27,6 +27,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Postscript
   LIBRARIES
     ZLIB::ZLIB
     mathtext::mathtext
+    ROOTclib # strlcpy.h
   DEPENDENCIES
     Graf
 )

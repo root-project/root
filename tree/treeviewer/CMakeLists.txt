@@ -40,6 +40,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TreeViewer
     Ged
     Gui
     TreePlayer
+  LIBRARIES
+    ROOTclib # strlcpy.h
 )
 if(ROOT_NEED_STDCXXFS)
   target_link_libraries(TreeViewer PUBLIC stdc++fs)

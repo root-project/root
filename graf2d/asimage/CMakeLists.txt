@@ -46,6 +46,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ASImageGui
     -writeEmptyRootPCM
   LIBRARIES
     libAfterImage
+    ROOTclib # strlcpy.h
   DEPENDENCIES
     Gui
     ASImage
