@@ -25,6 +25,7 @@ ROOT_ADD_GTEST(testRooFitCore
     testGenericPdf.cxx
     testGlobalObservables.cxx
     testRooAbsCollection.cxx
+    testRooBinWidthFunction.cxx
     testRooCacheManager.cxx
     testRooCategory.cxx
     testRooCollectionProxy.cxx
@@ -46,6 +47,8 @@ ROOT_ADD_GTEST(testRooFitCore
     Gpad
     RooFitCore
   COPY_TO_BUILDDIR
+    # For testRooBinWidthFunction.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/data/rooBinWidthFunction_v1.root
     # For testRooCollectionProxy.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/testRooCollectionProxy_v626.root
     # For testRooDataHist.cxx
