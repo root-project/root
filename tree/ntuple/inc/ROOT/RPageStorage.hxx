@@ -616,6 +616,7 @@ public:
       std::shared_mutex *fLock = nullptr;
 
    public:
+      RSharedDescriptorGuard() = default;
       RSharedDescriptorGuard(const ROOT::RNTupleDescriptor &desc, std::shared_mutex &lock)
          : fDescriptor(&desc), fLock(&lock)
       {
@@ -643,13 +644,14 @@ public:
 
    /// An RAII wrapper used for the writable access to `RPageSource::fDescriptor`. See `GetSharedDescriptorGuard()`.
    class RExclDescriptorGuard {
-      ROOT::RNTupleDescriptor &fDescriptor;
-      std::shared_mutex &fLock;
+      ROOT::RNTupleDescriptor *fDescriptor = nullptr;
+      std::shared_mutex *fLock = nullptr;
 
    public:
-      RExclDescriptorGuard(ROOT::RNTupleDescriptor &desc, std::shared_mutex &lock) : fDescriptor(desc), fLock(lock)
+      RExclDescriptorGuard() = default;
+      RExclDescriptorGuard(ROOT::RNTupleDescriptor &desc, std::shared_mutex &lock) : fDescriptor(&desc), fLock(&lock)
       {
-         fLock.lock();
+         fLock->lock();
       }
       RExclDescriptorGuard(const RExclDescriptorGuard &) = delete;
       RExclDescriptorGuard &operator=(const RExclDescriptorGuard &) = delete;
@@ -657,12 +659,14 @@ public:
       RExclDescriptorGuard &operator=(RExclDescriptorGuard &&) = delete;
       ~RExclDescriptorGuard()
       {
-         fDescriptor.IncGeneration();
-         fLock.unlock();
+         if (fLock) {
+            fDescriptor->IncGeneration();
+            fLock->unlock();
+         }
       }
-      ROOT::RNTupleDescriptor &operator*() const { return fDescriptor; }
-      ROOT::RNTupleDescriptor *operator->() const { return &fDescriptor; }
-      void MoveIn(ROOT::RNTupleDescriptor desc) { fDescriptor = std::move(desc); }
+      ROOT::RNTupleDescriptor &operator*() const { return *fDescriptor; }
+      ROOT::RNTupleDescriptor *operator->() const { return fDescriptor; }
+      void MoveIn(ROOT::RNTupleDescriptor desc) { *fDescriptor = std::move(desc); }
    };
 
 private:
