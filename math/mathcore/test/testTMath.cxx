@@ -174,8 +174,7 @@ void testIsInsideInt()
    for (Int_t xp = 0; xp <= 600; ++xp) {
       for (Int_t yp = 500; yp <= 850; ++yp) {
          R__ASSERT(TMath::IsInside(xp, yp, n, x, y) ==
-                   TMath::IsInside(static_cast<Double_t>(xp),
-                                   static_cast<Double_t>(yp), n, xd, yd));
+                   TMath::IsInside(static_cast<Double_t>(xp), static_cast<Double_t>(yp), n, xd, yd));
       }
    }
 }
