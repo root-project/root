@@ -318,3 +318,21 @@ char TBoxInteractive::GetGuideChar() const
    default: return 0; // not involved
    }
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/// Paint diamond corners outline
+
+void TBoxInteractive::PaintDiamondCorners(TVirtualPad &parent, const char *id)
+{
+   Double_t xd[4] = { (newX1+newX2)/2, newX1, (newX1+newX2)/2, newX2 };
+   Double_t yd[4] = { newY2, (newY1+newY2)/2, newY1, (newY1+newY2)/2 };
+   // area around corner with 6 pixels
+   Double_t dx = (parent.GetX2() - parent.GetX1()) / parent.GetPadWidth() * 6;
+   Double_t dy = (parent.GetY2() - parent.GetY1()) / parent.GetPadHeight() * 6;
+
+   for (Int_t n = 0; n < 4; n++) {
+      Double_t xx[5] = { xd[n] - dx, xd[n] + dx, xd[n] + dx, xd[n] - dx, xd[n] - dx };
+      Double_t yy[5] = { yd[n] - dy, yd[n] - dy, yd[n] + dy, yd[n] + dy, yd[n] - dy };
+      parent.PaintPolyLine(5, xx, yy, TString::Format("i%s_corner%d", id, n).Data());
+   }
+}
