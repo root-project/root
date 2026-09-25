@@ -360,3 +360,7 @@ if(asserts AND NOT MSVC)
   ROOT_EXECUTABLE(checkAssertsNDEBUG checkAssertsNDEBUG.cxx LIBRARIES Core)
   ROOT_ADD_TEST(checkAssertsNDEBUG COMMAND checkAssertsNDEBUG)
 endif()
+
+if(dataframe)
+  ROOT_ADD_TEST(modules-issue-repro COMMAND ${root_exe} -q ${CMAKE_CURRENT_SOURCE_DIR}/modules_issue_repro.C)
+endif()
