@@ -27,7 +27,6 @@ ROOTTEST_COMPILE_MACRO(MyClass.C
 
 ROOTTEST_ADD_TEST(readnew
                   MACRO readnew.C
-                  WILLFAIL
                   LABELS longtest io
                   FIXTURES_REQUIRED root-io-evolution-write-fixture root-io-evolution-MyClass-fixture)
 
