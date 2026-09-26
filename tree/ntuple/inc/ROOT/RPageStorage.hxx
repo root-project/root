@@ -683,14 +683,20 @@ public:
       }
       ~RExclDescriptorGuard()
       {
-         if (fLock) {
-            fDescriptor->IncGeneration();
-            fLock->unlock();
-         }
+         if (IsValid())
+            Release();
       }
       ROOT::RNTupleDescriptor &operator*() const { return *fDescriptor; }
       ROOT::RNTupleDescriptor *operator->() const { return fDescriptor; }
       void MoveIn(ROOT::RNTupleDescriptor desc) { *fDescriptor = std::move(desc); }
+      bool IsValid() const { return fLock; }
+      void Release()
+      {
+         fDescriptor->IncGeneration();
+         fLock->unlock();
+         fLock = nullptr;
+         fDescriptor = nullptr;
+      }
    };
 
 private:
