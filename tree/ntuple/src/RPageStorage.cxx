@@ -338,16 +338,20 @@ ROOT::NTupleSize_t ROOT::Internal::RPageSource::GetNElements(ROOT::DescriptorId_
    return columnRange.GetFirstElementIndex() + columnRange.GetNElements();
 }
 
-ROOT::Internal::RPageSource::RSharedDescriptorGuard
+ROOT::Internal::RPageSource::RAnyDescriptorGuard
 ROOT::Internal::RPageSource::FindNextClusterId(ROOT::DescriptorId_t clusterId, ROOT::DescriptorId_t &nextId)
 {
-   NTupleSize_t firstEntryInNextCluster = kInvalidNTupleIndex;
-   {
-      auto descriptorGuard = GetSharedDescriptorGuard();
-      const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterId);
-      firstEntryInNextCluster = clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries();
+   // At the cost of an additional cluster descriptor lock, we could use a more general approach that looks for the
+   // cluster containing the entry index after the last entry of the current cluster.
+   // At the moment, however, we know that cluster IDs are consecutive and clusters are not sharded.
+   auto sharedGuard = GetSharedDescriptorGuard();
+   assert(clusterId < sharedGuard->GetNClusters());
+   nextId = clusterId + 1;
+   if (nextId == sharedGuard->GetNClusters()) {
+      nextId = kInvalidDescriptorId;
+      return sharedGuard;
    }
-   return FindClusterId(firstEntryInNextCluster, nextId);
+   return EnsureClusterDetails(FindClusterGroupId(nextId), std::move(sharedGuard));
 }
 
 ROOT::Internal::RPageSource::RSharedDescriptorGuard
