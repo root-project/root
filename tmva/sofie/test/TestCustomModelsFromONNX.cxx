@@ -2066,6 +2066,24 @@ TEST(ONNX, IdentityWeightBatchNorm)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, BatchNormEpsilon)
+{
+   SofieReference ref = readReference("BatchNormEpsilon");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "BatchNormEpsilon", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, BatchNormReluEpsilon)
+{
+   SofieReference ref = readReference("BatchNormReluEpsilon");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "BatchNormReluEpsilon", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 // Clip on an integer tensor: the bounds have to carry the type of the tensor.
 TEST(ONNX, ClipInt)
 {

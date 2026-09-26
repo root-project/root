@@ -23,7 +23,14 @@ ParserFuseFuncSignature ParseFuseBatchnormRelu = [](RModelParser_ONNX &parser, c
         float fepsilon = 1e-05;
         float fmomentum = 0.9;
         std::size_t ftraining_mode = 0;
-        
+        for (int_t i = 0; i < batchnormnode.attribute_size(); i++) {
+           const std::string &attribute_name = batchnormnode.attribute(i).name();
+           if (attribute_name == "epsilon")
+              fepsilon = batchnormnode.attribute(i).f();
+           else if (attribute_name == "momentum")
+              fmomentum = batchnormnode.attribute(i).f();
+        }
+
         switch (input_type) {
         case ETensorType::FLOAT:
             if (batchnormnode.input_size() == 5) {

@@ -5704,6 +5704,51 @@ def make_IdentityWeightBatchNorm():
     return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
 
 
+def make_BatchNormEpsilon():
+    """Ops: BatchNormalization with a non-default epsilon (1e-3, the Keras default).
+    The variances are small so that epsilon visibly changes the output."""
+    nodes = [
+        helper.make_node("BatchNormalization", ["x", "scale", "bias", "mean", "var"], ["y"], name="bn_0", epsilon=1e-3),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "batchnorm_epsilon",
+        inputs=[_vi("x", FLOAT, [1, 3, 2, 2])],
+        outputs=[_vi("y", FLOAT, [1, 3, 2, 2])],
+        initializer=[
+            _tensor("scale", FLOAT, [3], [1.5, 0.5, 2.0]),
+            _tensor("bias", FLOAT, [3], [0.1, -0.2, 0.3]),
+            _tensor("mean", FLOAT, [3], [0.0, 1.0, -1.0]),
+            _tensor("var", FLOAT, [3], [0.1, 0.2, 0.05]),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_BatchNormReluEpsilon():
+    """Ops: BatchNormalization, Relu. BatchNormEpsilon followed by a Relu, which SOFIE
+    fuses into the batch normalization."""
+    nodes = [
+        helper.make_node(
+            "BatchNormalization", ["x", "scale", "bias", "mean", "var"], ["bn"], name="bn_0", epsilon=1e-3
+        ),
+        helper.make_node("Relu", ["bn"], ["y"], name="relu_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "batchnorm_relu_epsilon",
+        inputs=[_vi("x", FLOAT, [1, 3, 2, 2])],
+        outputs=[_vi("y", FLOAT, [1, 3, 2, 2])],
+        initializer=[
+            _tensor("scale", FLOAT, [3], [1.5, 0.5, 2.0]),
+            _tensor("bias", FLOAT, [3], [0.1, -0.2, 0.3]),
+            _tensor("mean", FLOAT, [3], [0.0, 1.0, -1.0]),
+            _tensor("var", FLOAT, [3], [0.1, 0.2, 0.05]),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
 def make_ClipInt():
     """Ops: Clip on an integer tensor, whose bounds must be written with the type
     of the tensor."""
@@ -5896,6 +5941,8 @@ MODELS = {
     "LSTMInitialBias": make_LSTMInitialBias,
     "LSTMPeepholes": make_LSTMPeepholes,
     "IdentityWeightBatchNorm": make_IdentityWeightBatchNorm,
+    "BatchNormEpsilon": make_BatchNormEpsilon,
+    "BatchNormReluEpsilon": make_BatchNormReluEpsilon,
     "IdentityWeightOutput": make_IdentityWeightOutput,
     "LayerNormalization2d": make_LayerNormalization2d,
     "LayerNormalization4d": make_LayerNormalization4d,
@@ -6718,6 +6765,8 @@ TEST_INPUTS = {
     "HardSigmoid": [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
     "HardSwish": [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
     "IdentityWeightBatchNorm": [rand_f32(38, (1, 3, 2, 2))],
+    "BatchNormEpsilon": [rand_f32(40, (1, 3, 2, 2))],
+    "BatchNormReluEpsilon": [rand_f32(41, (1, 3, 2, 2))],
     "IdentityWeightOutput": [rand_f32(39, (3,))],
     # Per (n, c) slice a different mean and variance, so that a normalization
     # that mixed up instances or channels would not cancel out.
@@ -7642,7 +7691,11 @@ def _batchnorm_reference(model, feeds):
     scale, bias, mean, var = (resolve(n) for n in node.input[1:5])
     shape = (1, -1) + (1,) * (x.ndim - 2)
     y = scale.reshape(shape) * (x - mean.reshape(shape)) / np.sqrt(var.reshape(shape) + eps)
-    return [(y + bias.reshape(shape)).astype(np.float32)]
+    y = y + bias.reshape(shape)
+    if any(n.op_type == "Relu" for n in model.graph.node):
+        # BatchNormalization followed by a Relu, which SOFIE fuses
+        y = np.maximum(y, 0)
+    return [y.astype(np.float32)]
 
 
 EXPECTED_OVERRIDES = {
@@ -7657,6 +7710,8 @@ EXPECTED_OVERRIDES = {
     "MeanMultidirectionalBroadcast": _mean_reference,
     "ConvTranspose2dOutputShape": _convtranspose_outputshape_reference,
     "IdentityWeightBatchNorm": _batchnorm_reference,
+    "BatchNormEpsilon": _batchnorm_reference,
+    "BatchNormReluEpsilon": _batchnorm_reference,
 }
 
 
