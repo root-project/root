@@ -360,21 +360,20 @@ ROOT::Internal::RPageSource::FindNextClusterId(ROOT::DescriptorId_t clusterId, R
    return EnsureClusterDetails(FindClusterGroupId(nextId), std::move(sharedGuard));
 }
 
-ROOT::Internal::RPageSource::RSharedDescriptorGuard
+ROOT::Internal::RPageSource::RAnyDescriptorGuard
 ROOT::Internal::RPageSource::FindClusterId(ROOT::NTupleSize_t entryIdx, ROOT::DescriptorId_t &cid)
 {
    cid = ROOT::kInvalidDescriptorId;
-   auto descGuard = GetSharedDescriptorGuard();
-   const auto &desc = descGuard.GetRef();
+   auto sharedGuard = GetSharedDescriptorGuard();
 
-   if (desc.GetNClusterGroups() == 0)
-      return descGuard;
+   if (sharedGuard->GetNClusterGroups() == 0)
+      return sharedGuard;
 
    // Binary search in the cluster group list, followed by a binary search in the clusters of that cluster group
 
-   auto cgIter = desc.GetClusterGroupIterable().begin();
+   const auto cgIter = sharedGuard->GetClusterGroupIterable().begin();
    std::size_t cgLeft = 0;
-   std::size_t cgRight = desc.GetNClusterGroups() - 1;
+   std::size_t cgRight = sharedGuard->GetNClusterGroups() - 1;
    while (cgLeft <= cgRight) {
       const std::size_t cgMidpoint = (cgLeft + cgRight) / 2;
       const auto &cgDesc = *(cgIter + cgMidpoint);
@@ -392,13 +391,15 @@ ROOT::Internal::RPageSource::FindClusterId(ROOT::NTupleSize_t entryIdx, ROOT::De
 
       // Binary search in the current cluster group; since we already checked the element range boundaries,
       // the element must be in that cluster group.
-      const auto &clusterIds = cgDesc.GetClusterIds();
-      R__ASSERT(!clusterIds.empty());
+      const auto tgtClusterGroupId = cgDesc.GetId();
+      auto descGuard = EnsureClusterDetails(tgtClusterGroupId, std::move(sharedGuard));
+
+      const auto &clusterIds = descGuard->GetClusterGroupDescriptor(tgtClusterGroupId).GetClusterIds();
       std::size_t clusterLeft = 0;
       std::size_t clusterRight = clusterIds.size() - 1;
       while (clusterLeft <= clusterRight) {
          const std::size_t clusterMidpoint = (clusterLeft + clusterRight) / 2;
-         const auto &clusterDesc = desc.GetClusterDescriptor(clusterIds[clusterMidpoint]);
+         const auto &clusterDesc = descGuard->GetClusterDescriptor(clusterIds[clusterMidpoint]);
 
          if (clusterDesc.GetFirstEntryIndex() > entryIdx) {
             R__ASSERT(clusterMidpoint > 0);
@@ -416,7 +417,7 @@ ROOT::Internal::RPageSource::FindClusterId(ROOT::NTupleSize_t entryIdx, ROOT::De
       }
       R__ASSERT(false);
    }
-   return descGuard;
+   return sharedGuard;
 }
 
 ROOT::Internal::RPageSource::RSharedDescriptorGuard
