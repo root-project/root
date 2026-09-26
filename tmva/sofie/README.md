@@ -66,7 +66,16 @@ With the default settings, the weights are contained in a separate binary file, 
 model.Generate(Options::kNoWeightFile);
 ```
 
-Other such options includes `Options::kNoSession` (for not generating the Session class, and instead keeping the infer function independent).
+By default the separate weight file uses a simple text format (`*.dat`). A
+binary alternative is the [safetensors](https://huggingface.co/docs/safetensors)
+format (`*.safetensors`), which stores the weights as raw little-endian data
+behind a small JSON header. It loads faster, round-trips the values bit-exactly,
+and can be inspected with the standard Python and Rust safetensors tooling:
+
+```c++
+model.Generate(Options::kSafetensorsWeightFile);
+```
+
 SOFIE also supports generating inference code with RDataFrame as inputs, refer to the tutorials below for examples.
 
 ## Supported ONNX operators

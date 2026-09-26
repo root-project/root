@@ -363,6 +363,10 @@ else()
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RSofieReader.C)
   endif()
+  # The safetensors weight files used by this tutorial are little-endian only
+  if (CMAKE_CXX_BYTE_ORDER STREQUAL "BIG_ENDIAN")
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Models.py)
+  endif()
   # These SOFIE tutorials take the ONNX HiggsModel trained with PyTorch as input
   if (NOT ROOT_TORCH_FOUND OR NOT ROOT_ONNX_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_ONNX.py)

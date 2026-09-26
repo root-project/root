@@ -1,13 +1,11 @@
 #include <limits>
 #include <algorithm>
 #include <cctype>
+#include <cstdint>
+#include <cstdio>
 #include <memory>
 #include <string>
 #include <cstdlib>
-
-#ifdef SOFIE_SUPPORT_ROOT_BINARY
-#include "TFile.h"
-#endif
 
 #include "TMVA/RModel.hxx"
 #include "TMVA/ROperator.hxx"
@@ -59,6 +57,43 @@ bool IsIdentifier(const std::string &s)
 std::string TensorMember(std::string const &name)
 {
    return "tensor_" + name;
+}
+
+// Safetensors dtype token (https://huggingface.co/docs/safetensors) for a
+// tensor type.
+std::string SafetensorsDType(ETensorType type)
+{
+   switch (type) {
+   case ETensorType::FLOAT: return "F32";
+   case ETensorType::DOUBLE: return "F64";
+   case ETensorType::INT64: return "I64";
+   default:
+      throw std::runtime_error("tmva-sofie tensor with type " + ConvertTypeToString(type) +
+                               " cannot be written to a safetensors file");
+   }
+}
+
+// Escape a string for inclusion in the safetensors JSON header. Only what
+// JSON requires: quotation marks, backslashes and control characters.
+std::string JsonEscape(const std::string &s)
+{
+   std::string out;
+   out.reserve(s.size() + 2);
+   for (const char c : s) {
+      switch (c) {
+      case '"': out += "\\\""; break;
+      case '\\': out += "\\\\"; break;
+      default:
+         if (static_cast<unsigned char>(c) < 0x20) {
+            char buf[8];
+            std::snprintf(buf, sizeof(buf), "\\u%04x", c);
+            out += buf;
+         } else {
+            out.push_back(c);
+         }
+      }
+   }
+   return out;
 }
 
 } // namespace
@@ -764,7 +799,6 @@ void RModel::InitializeSubGraph(std::shared_ptr<RModel>  graph) {
    // set the same options as parent model
    graph->fWeightFile = fWeightFile;
    graph->fUseWeightFile = fUseWeightFile;
-   graph->fUseSession = fUseSession;
    // add needed blas routines and libs
    std::vector<std::string> blasRoutines;
    for (auto & e : graph->fNeededBlasRoutines)
@@ -1261,11 +1295,7 @@ void RModel::GenerateOutput()
       }
    }
 
-   if (fUseSession) {
-      fGC += SP + "doInfer(*this, " + doInferArgs + ");\n";
-   } else {
-      fGC += SP + "doInfer(" + doInferArgs + ");\n";
-   }
+   fGC += SP + "doInfer(*this, " + doInferArgs + ");\n";
 
    // If the output tensors have dynamic sizes, now is the time to set them
    for (std::string const &name : fOutputTensorNames) {
@@ -1291,10 +1321,8 @@ void RModel::GenerateSessionCode()
 {
    std::string sessionName = !fIsSubGraph ? "Session" : "Session_" + fName;
 
-   if (fUseSession) {
-      //  forward declare session struct
-      fGC += "struct " + sessionName + ";\n";
-   }
+   //  forward declare session struct
+   fGC += "struct " + sessionName + ";\n";
 
    // Determine the signature of the actual inference function
    std::string doInferSignature = GenerateInferSignature();
@@ -1315,9 +1343,7 @@ void RModel::GenerateSessionCode()
    }
    doInferSignature.back() = ' ';
 
-   if (fUseSession) {
-      doInferSignature = sessionName + " const &session, " + doInferSignature;
-   }
+   doInferSignature = sessionName + " const &session, " + doInferSignature;
 
    doInferSignature = "inline void doInfer(" + doInferSignature + ")";
 
@@ -1325,9 +1351,7 @@ void RModel::GenerateSessionCode()
    fGC += doInferSignature + ";\n";
 
    // define the Session struct
-   if (fUseSession) {
-      fGC += "struct " + sessionName + " {\n";
-   }
+   fGC += "struct " + sessionName + " {\n";
 
    // generate code for declaring the initialized tensors
    GenerateInitializedTensorInfo();
@@ -1380,98 +1404,117 @@ void RModel::GenerateSessionCode()
    }
 
    // Generate code for Session constructor
-   if (fUseSession) {
-      // add here specific operator code that needs to define session data members
-      fGC += "\n";
-      for (size_t id = 0; id < fOperators.size(); id++) {
-         std::string opName = std::to_string(id);
-         fGC += fOperators[id]->GenerateSessionMembersCode(opName);
-      }
-      fGC += "\n";
-      // here add initialization and reading of weight tensors
-      if (fUseWeightFile) {
-         std::string fileName = fName;
-         if (fWeightFile == WeightFileType::Text) {
-            fileName += ".dat";
-         }
-         if (fWeightFile == WeightFileType::RootBinary) {
-            fileName += ".root";
-         }
-         fGC += sessionName + "(std::string filename =\"" + fileName + "\"";
-      } else {
-         // no need to pass weight file since it is not used
-         // keep passing a string for compatibility
-         fGC += sessionName + "(std::string = \"\"";
-      }
-      // add initialization of shape parameters
-      // assume all parameters are of type size_t
-      if (!fDimShapeNames.empty()) {
-         // need to use same order as in infer function not alphabetical one
-         for (auto &p : fDimShapeNames) {
-            fGC += ",\n";
-            fGC += "        size_t " + p + " = " + fShapeParams[p];
-         }
-      }
-      fGC += ") {\n";
-
-      // initializing dynamic parameters
-      if (!fDimShapeNames.empty()) {
-         fGC += "\n\n";
-         std::sort(fDimShapeNames.begin(), fDimShapeNames.end());
-         for (const auto &p : fDimShapeNames) {
-            fGC += "   " + memberNameForDimShape(p) + " = " + p + ";\n";
-         }
-      }
-      // add some extra code needed for initialization of dynamic parameters
-      fGC += fExtraCodeForDimShapes;
-
-      if (fUseWeightFile) {
-         fGC += "\n//--- reading weights from file\n";
-         ReadInitializedTensorsFromFile();
-         fGC += "\n";
-         // fUseWeightFile = fUseWeightFile;
-      }
-
-      // now we have passed the parameters we can allocate the dynamic tensors
-      GenerateDynamicTensorInfo();
-
-      // add here initialization code  for operator
-      for (size_t id = 0; id < fOperators.size(); id++) {
-         fGC += fOperators[id]->GenerateInitCode();
-      }
-
-      fGC += "}\n\n";
-
-      // Used to build the tangent Session objects needed to differentiate the
-      // generated code with Clad: the derivatives of the (constant) weights
-      // are zero, but a default-constructed Session holds the actual values.
-      fGC += "// Set all weight and constant tensors to zero. This is useful to create\n"
-             "// the tangent Session objects needed to differentiate the generated code\n"
-             "// with Clad.\n"
-             "void SetWeightsToZero() {\n";
-      for (auto &i : fInitializedTensors) {
-         // IsNotWritable tensors have no emitted fTensor_ member, and integer
-         // tensors are structural (indices, shapes) that carry no tangent.
-         if (i.second.IsNotWritable() ||
-             (i.second.type() != ETensorType::FLOAT && i.second.type() != ETensorType::DOUBLE))
-            continue;
-         fGC += "   for (auto &v : fTensor_" + i.first + ") v = 0;\n";
-      }
-      for (auto &graph : fSubGraphs) {
-         fGC += "   fSession_" + graph->fName + ".SetWeightsToZero();\n";
-      }
-      fGC += "}\n\n";
+   // add here specific operator code that needs to define session data members
+   fGC += "\n";
+   for (size_t id = 0; id < fOperators.size(); id++) {
+      std::string opName = std::to_string(id);
+      fGC += fOperators[id]->GenerateSessionMembersCode(opName);
    }
+   fGC += "\n";
+   // collect declaration of shape parameters (default values) and argument
+   // forwarding for delegating constructors
+   std::string dynParamDecls;
+   std::string dynParamArgs;
+   if (!fDimShapeNames.empty()) {
+      // need to use same order as in infer function not alphabetical one
+      for (auto &p : fDimShapeNames) {
+         dynParamDecls += ",\n        size_t " + p + " = " + fShapeParams[p];
+         dynParamArgs += ", " + p;
+      }
+   }
+   // here add initialization and reading of weight tensors
+   if (fUseWeightFile && fWeightFile == WeightFileType::Safetensors) {
+      // A Session is constructed from an in-memory safetensors blob; the
+      // file-based constructor loads the payload fully into memory and
+      // delegates. The temporary buffer is alive for the duration of the
+      // delegated constructor call, and the blob constructor copies the
+      // weights out of it.
+      AddNeededHelperFunction("SafetensorsBlob");
+      fGC += "   static std::string LoadWeightsFromFile(const std::string &filename) {\n";
+      fGC += "      std::ifstream f(filename, std::ios::binary);\n";
+      fGC += "      if (!f.is_open()) {\n";
+      fGC += "         throw std::runtime_error(\"tmva-sofie failed to open file \" + filename + \" for input "
+             "weights\");\n";
+      fGC += "      }\n";
+      fGC += "      return std::string(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());\n";
+      fGC += "   }\n\n";
+      fGC += sessionName + "(std::string filename =\"" + fName + ".safetensors\"" + dynParamDecls + ")\n";
+      fGC += "      : " + sessionName + "(SafetensorsBlob{LoadWeightsFromFile(filename)}" + dynParamArgs + ") {}\n\n";
+      fGC += sessionName + "(SafetensorsBlob weights_blob" + dynParamDecls + ") {\n";
+   } else if (fUseWeightFile) {
+      std::string fileName = fName + ".dat";
+      fGC += sessionName + "(std::string filename =\"" + fileName + "\"" + dynParamDecls + ") {\n";
+   } else {
+      // no need to pass weight file since it is not used
+      // keep passing a string for compatibility
+      fGC += sessionName + "(std::string = \"\"" + dynParamDecls + ") {\n";
+   }
+
+   // initializing dynamic parameters
+   if (!fDimShapeNames.empty()) {
+      fGC += "\n\n";
+      std::sort(fDimShapeNames.begin(), fDimShapeNames.end());
+      for (const auto &p : fDimShapeNames) {
+         fGC += "   " + memberNameForDimShape(p) + " = " + p + ";\n";
+      }
+   }
+   // add some extra code needed for initialization of dynamic parameters
+   fGC += fExtraCodeForDimShapes;
+
+   if (fUseWeightFile) {
+      fGC += "\n//--- reading weights from file\n";
+      ReadInitializedTensorsFromFile();
+      fGC += "\n";
+      // fUseWeightFile = fUseWeightFile;
+   }
+
+   // now we have passed the parameters we can allocate the dynamic tensors
+   GenerateDynamicTensorInfo();
+
+   // add here initialization code  for operator
+   for (size_t id = 0; id < fOperators.size(); id++) {
+      fGC += fOperators[id]->GenerateInitCode();
+   }
+
+   fGC += "}\n\n";
+
+   if (fWeightFile == WeightFileType::Safetensors && !fUseWeightFile) {
+      // Models requested with a safetensors weight file but without weight
+      // tensors also expose the blob constructor, which ignores the blob, so
+      // that both construction modes exist (from a file and from an in-memory
+      // blob) whatever the model.
+      AddNeededHelperFunction("SafetensorsBlob");
+      fGC += sessionName + "(SafetensorsBlob" + dynParamDecls + ")\n";
+      fGC += "      : " + sessionName + "(std::string{}" + dynParamArgs + ") {}\n\n";
+   }
+
+   // Used to build the tangent Session objects needed to differentiate the
+   // generated code with Clad: the derivatives of the (constant) weights
+   // are zero, but a default-constructed Session holds the actual values.
+   fGC += "// Set all weight and constant tensors to zero. This is useful to create\n"
+          "// the tangent Session objects needed to differentiate the generated code\n"
+          "// with Clad.\n"
+          "void SetWeightsToZero() {\n";
+   for (auto &i : fInitializedTensors) {
+      // IsNotWritable tensors have no emitted fTensor_ member, and integer
+      // tensors are structural (indices, shapes) that carry no tangent.
+      if (i.second.IsNotWritable() ||
+          (i.second.type() != ETensorType::FLOAT && i.second.type() != ETensorType::DOUBLE))
+         continue;
+      fGC += "   for (auto &v : fTensor_" + i.first + ") v = 0;\n";
+   }
+   for (auto &graph : fSubGraphs) {
+      fGC += "   fSession_" + graph->fName + ".SetWeightsToZero();\n";
+   }
+   fGC += "}\n\n";
 
    // generate the inference overload that returns an output struct
    GenerateOutput();
 
    // end of session
-   if (fUseSession) {
-      fGC += "};   // end of Session\n\n";
+   fGC += "};   // end of Session\n\n";
 
-      GenerateRequiredInputTensorInfo();
-   }
+   GenerateRequiredInputTensorInfo();
 
    fGC += doInferSignature + " {\n";
    fGC += "\n";
@@ -1496,14 +1539,12 @@ void RModel::GenerateSessionCode()
    // local variable name that we're using for the session:
    ReplaceAll(allOperatorCode, "this->", "session.");
 
-   if (fUseSession) {
-      // Collect all "tensor_*" data members that are not input or output tensors
-      std::vector<std::string> tensorMemberNames = CollectTensorMemberNames(allOperatorCode);
-      for (auto const& name: tensorMemberNames) {
-         fGC += "    auto &" + name + " = session." + name + ";\n";
-      }
-      fGC += "\n";
+   // Collect all "tensor_*" data members that are not input or output tensors
+   std::vector<std::string> tensorMemberNames = CollectTensorMemberNames(allOperatorCode);
+   for (auto const& name: tensorMemberNames) {
+      fGC += "    auto &" + name + " = session." + name + ";\n";
    }
+   fGC += "\n";
 
    // an initialized tensor (constant, or a weight reached e.g. through an Identity) that is a
    // model output is not written by any operator: copy it into the output buffer before the
@@ -1542,33 +1583,18 @@ void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, bo
    fVerbose = verbose;
    fBatchSize = batchSize;
 
-   // session flag is used in operator initialize
-   if (static_cast<std::underlying_type_t<Options>>(Options::kNoSession) & options) {
-      fUseSession = false;
-      fWeightFile = WeightFileType::None;
-   }
+   // weights are contained in the generated header when kNoWeightFile is used
    if (static_cast<std::underlying_type_t<Options>>(Options::kNoWeightFile) & options) {
       fUseWeightFile = false;
       fWeightFile = WeightFileType::None;
    }
-   if (static_cast<std::underlying_type_t<Options>>(Options::kRootBinaryWeightFile) & options) {
+   if (static_cast<std::underlying_type_t<Options>>(Options::kSafetensorsWeightFile) & options) {
       fUseWeightFile = true;
-      fWeightFile = WeightFileType::RootBinary;
-   }
-   if (fUseWeightFile && !fUseSession) {
-      throw std::runtime_error(
-         "TMVA-SOFIE: RModel::Generate: cannot use a separate weight file without generating a Session class");
+      fWeightFile = WeightFileType::Safetensors;
    }
 
    // initialize the model including all operators and sub-graphs
    Initialize(batchSize, verbose);
-
-   // if having dynamic tensor we need to have a Session
-   if (!fDynamicTensorInfos.empty()) {
-      fUseSession = true;
-      if (verbose)
-         std::cout << "Warning: Force having a Session since model has dynamic tensors " << std::endl;
-   }
 
    std::string hgname;
    if (!fIsSubGraph) {
@@ -1630,43 +1656,32 @@ void RModel::ReadInitializedTensorsFromFile() {
         fGC += "   f.close();\n";
     }
 
-    // generate the code to read initialized tensors from a ROOT data file
-    if(fWeightFile == WeightFileType::RootBinary) {
-#ifdef SOFIE_SUPPORT_ROOT_BINARY
-        fGC += "  {\n";
-        fGC += "   std::unique_ptr<TFile> rootFile(TFile::Open(filename.c_str(), \"READ\"));\n";
-        fGC += "   if (!rootFile->IsOpen()) {\n";
-        fGC += "      throw std::runtime_error(\"tmva-sofie failed to open ROOT file for input weights\");\n";
-        fGC += "   }\n";
+    // generate the code to read initialized tensors from a safetensors blob
+    // in memory (the blob comes from a file or directly from the caller)
+    if (fWeightFile == WeightFileType::Safetensors) {
+       // the SafetensorsBlob/SafetensorsReader helpers are emitted as
+       // standalone helpers in the generated header
+       AddNeededHelperFunction("SafetensorsReader");
 
-        std::string dirName = fName + "_weights";
-        fGC += "   if (!rootFile->GetKey(\"" + dirName + "\")) {\n";
-        fGC += "      throw std::runtime_error(\"tmva-sofie failed to open ROOT directory for input weights\");\n";
-        fGC += "   }\n";
+       fGC += "   SafetensorsReader sofie_weights_reader(weights_blob);\n";
 
-        for (auto &i : fInitializedTensors) {
-            // skip Constant and shape tensors
-            if (!i.second.IsWeightTensor()) continue;
-            fGC += "  {\n";
-            std::string tensor_name = "tensor_" + i.first;
-            if (i.second.type() == ETensorType::FLOAT) {
-               fGC += "      fTensor_" + i.first + " = *reinterpret_cast<std::vector<float>*>(rootFile->Get(\"";
-               fGC += dirName + "/" + tensor_name + "\"));\n";
-            } else if (i.second.type() == ETensorType::DOUBLE) {
-               fGC += "      fTensor_" + i.first + " = *reinterpret_cast<std::vector<double>*>(rootFile->Get(\"";
-               fGC += dirName + + "/" + tensor_name + "\"));\n";
-            } else if (i.second.type() == ETensorType::INT64) {
-               fGC += "      fTensor_" + i.first + " = *reinterpret_cast<std::vector<int64_t>*>(rootFile->Get(\"";
-               fGC += dirName + "/" + tensor_name + "\"));\n";
-            } else {
-               throw std::runtime_error("tmva-sofie tensor " + tensor_name + " with type " + ConvertTypeToString(i.second.type()) + " cannot be read from a ROOT file");
-            }
-            fGC += "  }\n";
-        }
-        fGC += "  }\n";
-#else
-        throw std::runtime_error("SOFIE was not built with ROOT file support.");
-#endif // SOFIE_SUPPORT_ROOT_BINARY
+       for (auto &i : fInitializedTensors) {
+          // skip Constant and shape tensors (not written in a file)
+          if (!i.second.IsWeightTensor())
+             continue;
+          std::string tensor_name = "tensor_" + i.first;
+          std::string dtype;
+          try {
+             dtype = SafetensorsDType(i.second.type());
+          } catch (const std::runtime_error &) {
+             throw std::runtime_error("tmva-sofie tensor " + tensor_name + " with type " +
+                                      ConvertTypeToString(i.second.type()) +
+                                      " cannot be read from a safetensors payload");
+          }
+          std::string length = std::to_string(ConvertShapeToLength(i.second.shape()));
+          fGC += "   sofie_weights_reader.Read(\"" + tensor_name + "\", fTensor_" + i.first + ", " + length + ", \"" +
+                 dtype + "\");\n";
+       }
     }
 }
 
@@ -1677,8 +1692,8 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
     case WeightFileType::None:
         fileExtension = ".dat";
         break;
-    case WeightFileType::RootBinary:
-        fileExtension = ".root";
+    case WeightFileType::Safetensors:
+        fileExtension = ".safetensors";
         break;
     case WeightFileType::Text:
         fileExtension = ".dat";
@@ -1691,51 +1706,16 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
     }
 
     // Write the initialized tensors to the file
-    if (fWeightFile == WeightFileType::RootBinary) {
-#ifdef SOFIE_SUPPORT_ROOT_BINARY
-        std::unique_ptr<TFile> outputFile(TFile::Open(filename.c_str(), "UPDATE"));
+    if (fWeightFile == WeightFileType::Safetensors) {
+        std::ofstream f(filename, std::ios::binary);
+        if (!f.is_open())
+            throw std::runtime_error("tmva-sofie failed to open file " + filename + " for tensor weight data");
 
-        std::string dirName = fName + "_weights";
-        // check if directory exists, in case delete to replace with new one
-        if (outputFile->GetKey(dirName.c_str()))
-            outputFile->rmdir(dirName.c_str());
+        WriteInitializedTensorsToStream(f);
 
-        auto outputDir = outputFile->mkdir(dirName.c_str());
-
-        for (const auto& item : fInitializedTensors) {
-            // skip Constant tensors and tensors which are not writable (e.g. shape tensors)
-            if (!item.second.IsWeightTensor()) continue;
-            std::string tensorName = "tensor_" + item.first;
-            size_t length = 1;
-            length = ConvertShapeToLength(item.second.shape());
-            if(item.second.type() == ETensorType::FLOAT) {
-               const float* data = item.second.data<float>();
-                std::vector<float> tensorDataVector(data, data + length);
-               outputDir->WriteObjectAny(&tensorDataVector, "std::vector<float>", tensorName.c_str());
-            }
-            else if(item.second.type() == ETensorType::DOUBLE) {
-               const double* data = item.second.data<double>();
-               std::vector<double> tensorDataVector(data, data + length);
-               outputDir->WriteObjectAny(&tensorDataVector, "std::vector<double>", tensorName.c_str());
-            }
-            else if(item.second.type() == ETensorType::INT64) {
-               const int64_t* data = item.second.data<int64_t>();
-               std::vector<int64_t> tensorDataVector(data, data + length);
-               outputDir->WriteObjectAny(&tensorDataVector, "std::vector<int64_t>", tensorName.c_str());
-            }
-            else {
-               throw std::runtime_error("tmva-sofie tensor " + tensorName + " with type " + ConvertTypeToString(item.second.type()) +
-                                  " cannot be written to a ROOT file");
-            }
-        }
-        outputFile->Write(filename.c_str());
-
-        // this needs to be changed, similar to the text file
-        return -1;
-
-#else
-        throw std::runtime_error("SOFIE was not built with ROOT file support.");
-#endif // SOFIE_SUPPORT_ROOT_BINARY
+        long curr_pos = f.tellp();
+        f.close();
+        return curr_pos;
     } else if (fWeightFile == WeightFileType::Text) {
         std::ofstream f;
         f.open(filename);
@@ -1778,6 +1758,68 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
     } else {
         return -1;
     }
+}
+
+void RModel::WriteInitializedTensorsToStream(std::ostream &f)
+{
+   // safetensors payloads are little-endian by specification; refuse to
+   // write silently corrupted output on a big-endian host
+   const std::uint16_t one = 1;
+   if (!*reinterpret_cast<const std::uint8_t *>(&one))
+      throw std::runtime_error("tmva-sofie: safetensors weights can only be written on a little-endian host");
+
+   // The safetensors layout (https://huggingface.co/docs/safetensors):
+   //   8 bytes: little-endian unsigned size N of the JSON header
+   //   N bytes: JSON header {name: {"dtype", "shape", "data_offsets"}}
+   //   rest:    the raw little-endian tensor payloads, concatenated;
+   //            data_offsets are relative to the start of this region
+   std::uint64_t offset = 0;
+   // sort the tensor names for a reproducible output
+   std::vector<std::string> names;
+   for (const auto &item : fInitializedTensors) {
+      // skip Constant tensors and not writable tensors (e.g. shape tensors)
+      if (item.second.IsWeightTensor())
+         names.push_back(item.first);
+   }
+   std::sort(names.begin(), names.end());
+   std::string headerStr = "{";
+   for (size_t idx = 0; idx < names.size(); ++idx) {
+      const auto &tensor = fInitializedTensors.at(names[idx]);
+      const std::uint64_t nbytes = ConvertShapeToLength(tensor.shape()) * GetTypeSize(tensor.type());
+      if (idx > 0)
+         headerStr += ",";
+      headerStr += "\"" + JsonEscape("tensor_" + names[idx]) + "\":{\"dtype\":\"" + SafetensorsDType(tensor.type()) +
+                   "\",\"shape\":[";
+      for (size_t i = 0; i < tensor.shape().size(); ++i) {
+         if (i > 0)
+            headerStr += ",";
+         headerStr += std::to_string(tensor.shape()[i]);
+      }
+      headerStr += "],\"data_offsets\":[" + std::to_string(offset) + "," + std::to_string(offset + nbytes) + "]}";
+      offset += nbytes;
+   }
+   headerStr += "}";
+   // 8-byte little-endian header length
+   const std::uint64_t headerSize = headerStr.size();
+   char sizestr[8];
+   for (int i = 0; i < 8; ++i)
+      sizestr[i] = static_cast<char>((headerSize >> (8 * i)) & 0xff);
+   f.write(sizestr, 8);
+   f.write(headerStr.data(), headerStr.size());
+   for (const auto &name : names) {
+      const auto &tensor = fInitializedTensors.at(name);
+      const std::uint64_t nbytes = ConvertShapeToLength(tensor.shape()) * GetTypeSize(tensor.type());
+      f.write(reinterpret_cast<const char *>(tensor.data<void>()), nbytes);
+   }
+   if (f.fail())
+      throw std::runtime_error("tmva-sofie failed to write safetensors payload");
+}
+
+std::string RModel::WriteInitializedTensorsToBuffer()
+{
+   std::ostringstream buffer;
+   WriteInitializedTensorsToStream(buffer);
+   return buffer.str();
 }
 
 void RModel::PrintSummary() const {
@@ -2004,23 +2046,123 @@ void RModel::HeadInitializedTensors(std::string name, int n_print) {
 
 }
 
+void RModel::GenerateHeaderInfo(std::string& hgname) {
+    fGC += ("//Code generated automatically by TMVA for Inference of Model file [" + fFileName + "] at [" + fParseTime.substr(0, fParseTime.length()-1) +"] \n");
+    // add header guards
+    hgname = fName;
+    std::transform(hgname.begin(), hgname.end(), hgname.begin(), [](unsigned char c) {
+                       return std::toupper(c);
+                   } );
+    hgname = "ROOT_TMVA_SOFIE_" + hgname;
+    fGC += "\n#ifndef " + hgname + "\n";
+    fGC += "#define " + hgname + "\n\n";
+    // Standard library headers the generated code relies on. Listed explicitly
+    // now that they are no longer pulled in transitively via SOFIE_common.hxx.
+    for (const char *h : {"cstdint", "cstring", "string", "vector", "map", "memory", "sstream", "iostream", "iomanip",
+                          "limits", "stdexcept", "algorithm", "cmath", "cassert"}) {
+        fNeededStdLib.insert(h);
+    }
+    for (auto& i: fNeededStdLib) {
+        fGC += "#include <" + i + ">\n";
+    }
+    for (auto& i: fCustomOpHeaders) {
+        fGC += "#include \"" + i + "\"\n";
+    }
+    // Placeholder for the #include directives needed by the embedded helper
+    // functions (filled in by EmitHelperFunctionsCode).
+    fGC += kHelperIncludesMarker;
+    if (fUseWeightFile)
+        fGC += "#include <fstream>\n";
+    // the safetensors file constructor buffers the payload with
+    // std::istreambuf_iterator
+    if (fWeightFile == WeightFileType::Safetensors)
+        fGC += "#include <iterator>\n";
+
+    fGC += "\nnamespace TMVA_SOFIE_" + fName + "{\n";
+    if (!fNeededBlasRoutines.empty()) {
+        fGC += ("namespace BLAS{\n");
+        for (auto &routine : fNeededBlasRoutines) {
+            if (routine == "Gemm") {
+                fGC += ("\textern \"C\" void sgemm_(const char * transa, const char * transb, const int * m, const int * n, const int * k,\n"
+                        "\t                       const float * alpha, const float * A, const int * lda, const float * B, const int * ldb,\n"
+                        "\t                       const float * beta, float * C, const int * ldc);\n");
+                // sgemm_ now declared; the standalone Gemm_Call helper will skip its copy.
+                fBlasSgemmDeclared = true;
+            } else if (routine == "Gemv") {
+                fGC += ("\textern \"C\" void sgemv_(const char * trans, const int * m, const int * n, const float * alpha, const float * A,\n"
+                        "\t                       const int * lda, const float * X, const int * incx, const float * beta, const float * Y, const int * incy);\n");
+            } else if (routine == "Axpy") {
+                fGC += ("\textern \"C\" void saxpy_(const int * n, const float * alpha, const float * x,\n"
+                        "\t                         const int * incx, float * y, const int * incy);\n");
+            } else if (routine == "Copy") {
+                fGC += ("\textern \"C\" void scopy_(const int *n, const float* x, const int *incx, float* y, const int* incy);\n");
+            }
+        }
+        fGC += ("}//BLAS\n");
+    }
+    // Placeholder for the standalone definitions of the inference helper
+    // functions used by this model (filled in by EmitHelperFunctionsCode). It
+    // sits inside the generated model namespace, right before the session code.
+    fGC += kHelperFunctionsMarker;
+}
+
+void RModel::EmitHelperFunctionsCode()
+{
+    HelperFunctionsCode code =
+        GenerateHelperFunctionsCode(fNeededHelperFunctions, "TMVA_SOFIE_" + fName, fBlasSgemmDeclared);
+
+    auto replaceMarker = [this](const std::string &marker, const std::string &replacement) {
+        auto pos = fGC.find(marker);
+        if (pos != std::string::npos) {
+            fGC.replace(pos, marker.size(), replacement);
+        }
+    };
+
+    replaceMarker(kHelperIncludesMarker, code.includes);
+    replaceMarker(kHelperFunctionsMarker, code.definitions);
+
+    // Clad derivatives live at file scope and reference the model's helpers, so
+    // insert them after the whole model namespace, just before the include guard.
+    if (!code.cladDefinitions.empty()) {
+        auto pos = fGC.rfind("#endif");
+        if (pos != std::string::npos) {
+            fGC.insert(pos, code.cladDefinitions + "\n");
+        } else {
+            fGC += code.cladDefinitions;
+        }
+    }
+}
+
 void RModel::OutputGenerated(std::string filename, bool append) {
 
-    RModel_Base::OutputGenerated(filename, append);
+    // the model can be appended only if a file name is provided
+    if (filename.empty()) {
+        // if a file is pr
+        filename = fName + ".hxx";
+        append = false;
+    }
+    std::ofstream f;
+    if (append)
+        f.open(filename, std::ios_base::app);
+    else
+        f.open(filename);
+    if (!f.is_open()) {
+        throw std::runtime_error("tmva-sofie failed to open file for output generated inference code");
+    }
+    f << fGC;
+    f.close();
 
-    // write weights in a text file
+    // write weights in a separate weight file
     if (fUseWeightFile) {
+        const std::string extension = fWeightFile == WeightFileType::Safetensors ? ".safetensors" : ".dat";
         if (!filename.empty()) {
             size_t pos = filename.find(".hxx");
-            if (fWeightFile == WeightFileType::Text)
-                filename.replace(pos, 4, ".dat");
-            if (fWeightFile == WeightFileType::RootBinary)  {
-                filename = filename.erase(pos, 4);
-                filename += ".root";
-            }
+            if (pos != std::string::npos)
+                filename.replace(pos, 4, extension);
+            else
+                filename += extension;
         } else {
-            filename = fName;
-            filename += fWeightFile == WeightFileType::Text ? ".dat" : ".root";
+            filename = fName + extension;
         }
         WriteInitializedTensorsToFile(filename);
     }
