@@ -92,7 +92,6 @@ if(NOT ClingWorkAroundNoPrivateClassIO)
    ROOTTEST_ADD_TEST(test2
                      MACRO test2.cxx+
                      OUTREF test2.ref
-                     WILLFAIL
                      LABELS longtest
                      FIXTURES_REQUIRED root-io-datamodelevolution-cms-00-libDataModelV2_dictcint-fixture
                                        root-io-datamodelevolution-cms-00-test1-fixture
@@ -102,7 +101,6 @@ if(NOT ClingWorkAroundNoPrivateClassIO)
                      MACRO test2.cxx+
                      MACROARG "\"r\""
                      OUTREF reflex_test2.ref
-                     WILLFAIL
                      LABELS longtest
                      FIXTURES_REQUIRED root-io-datamodelevolution-cms-00-libDataModelV2_dictrflx-fixture
                                        root-io-datamodelevolution-cms-00-reflex-test1-fixture
@@ -111,7 +109,6 @@ if(NOT ClingWorkAroundNoPrivateClassIO)
    ROOTTEST_ADD_TEST(test3
                      MACRO test3.cxx+
                      OUTREF test3.ref
-                     WILLFAIL
                      LABELS longtest
                      FIXTURES_REQUIRED root-io-datamodelevolution-cms-00-libDataModelV2_dictcint-fixture
                                        root-io-datamodelevolution-cms-00-test1-fixture
@@ -121,7 +118,6 @@ if(NOT ClingWorkAroundNoPrivateClassIO)
                      MACRO test3.cxx+
                      MACROARG "\"r\""
                      OUTREF reflex_test3.ref
-                     WILLFAIL
                      LABELS longtest
                      FIXTURES_REQUIRED root-io-datamodelevolution-cms-00-libDataModelV2_dictrflx-fixture
                                        root-io-datamodelevolution-cms-00-reflex-test1-fixture
