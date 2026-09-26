@@ -846,6 +846,16 @@ TEST(ONNX, RNNDefaults)
    expectNear(output[1], ref.f32("output1"), DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, RNNClip)
+{
+   SofieReference ref = readReference("RNNClip");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "RNNClip", ref.f32("input0"));
+
+   expectNear(output[0], ref.f32("output0"), DEFAULT_TOLERANCE);
+   expectNear(output[1], ref.f32("output1"), DEFAULT_TOLERANCE);
+}
+
 TEST(ONNX, RNNSeqLength)
 {
    SofieReference ref = readReference("RNNSeqLength");
