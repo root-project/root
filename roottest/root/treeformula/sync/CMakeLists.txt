@@ -27,7 +27,6 @@ ROOTTEST_ADD_TEST(readfile-0
                                -e "gSystem->AddDynamicPath(\"${CMAKE_BINARY_DIR}/roottest/root/io/event\")"
                                -e "(void) gSystem->Load(\"libTestIoEvent\")"
                   OUTREF readfile-0.ref
-                  WILLFAIL
                   FIXTURES_REQUIRED root-treeformula-sync-writefile-fixture)
 
 ROOTTEST_ADD_TEST(readfile-1
