@@ -420,27 +420,28 @@ ROOT::Internal::RPageSource::FindClusterId(ROOT::NTupleSize_t entryIdx, ROOT::De
    return sharedGuard;
 }
 
-ROOT::Internal::RPageSource::RSharedDescriptorGuard
+ROOT::Internal::RPageSource::RAnyDescriptorGuard
 ROOT::Internal::RPageSource::FindClusterId(DescriptorId_t physicalColumnId, NTupleSize_t index, DescriptorId_t &cid)
 {
    cid = ROOT::kInvalidDescriptorId;
-   auto descGuard = GetSharedDescriptorGuard();
-   const auto &desc = descGuard.GetRef();
+   RAnyDescriptorGuard descGuard = GetSharedDescriptorGuard();
 
-   if (desc.GetNClusterGroups() == 0)
+   if (descGuard->GetNClusterGroups() == 0)
       return descGuard;
 
    // Binary search in the cluster group list, followed by a binary search in the clusters of that cluster group
 
-   auto cgIter = desc.GetClusterGroupIterable().begin();
    std::size_t cgLeft = 0;
-   std::size_t cgRight = desc.GetNClusterGroups() - 1;
+   std::size_t cgRight = descGuard->GetNClusterGroups() - 1;
    while (cgLeft <= cgRight) {
       const std::size_t cgMidpoint = (cgLeft + cgRight) / 2;
+      descGuard = EnsureClusterDetails(cgMidpoint, std::move(descGuard));
+
+      const auto cgIter = descGuard->GetClusterGroupIterable().begin();
       const auto &clusterIds = (cgIter + cgMidpoint)->GetClusterIds();
       R__ASSERT(!clusterIds.empty());
 
-      const auto &clusterDesc = desc.GetClusterDescriptor(clusterIds.front());
+      const auto &clusterDesc = descGuard->GetClusterDescriptor(clusterIds.front());
       // this may happen if the RNTuple has an empty schema
       if (!clusterDesc.ContainsColumn(physicalColumnId))
          return descGuard;
@@ -453,7 +454,7 @@ ROOT::Internal::RPageSource::FindClusterId(DescriptorId_t physicalColumnId, NTup
          continue;
       }
 
-      const auto &lastColumnRange = desc.GetClusterDescriptor(clusterIds.back()).GetColumnRange(physicalColumnId);
+      const auto &lastColumnRange = descGuard->GetClusterDescriptor(clusterIds.back()).GetColumnRange(physicalColumnId);
       if ((lastColumnRange.GetFirstElementIndex() + lastColumnRange.GetNElements()) <= index) {
          // Look into the upper half of cluster groups
          cgLeft = cgMidpoint + 1;
@@ -467,7 +468,7 @@ ROOT::Internal::RPageSource::FindClusterId(DescriptorId_t physicalColumnId, NTup
       while (clusterLeft <= clusterRight) {
          const std::size_t clusterMidpoint = (clusterLeft + clusterRight) / 2;
          const auto clusterId = clusterIds[clusterMidpoint];
-         const auto &columnRange = desc.GetClusterDescriptor(clusterId).GetColumnRange(physicalColumnId);
+         const auto &columnRange = descGuard->GetClusterDescriptor(clusterId).GetColumnRange(physicalColumnId);
 
          if (columnRange.Contains(index)) {
             cid = clusterId;
