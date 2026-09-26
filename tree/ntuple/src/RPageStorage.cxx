@@ -354,15 +354,15 @@ ROOT::Internal::RPageSource::FindNextClusterId(ROOT::DescriptorId_t clusterId, R
    return EnsureClusterDetails(FindClusterGroupId(nextId), std::move(sharedGuard));
 }
 
-ROOT::Internal::RPageSource::RSharedDescriptorGuard
+ROOT::Internal::RPageSource::RAnyDescriptorGuard
 ROOT::Internal::RPageSource::FindClusterId(ROOT::NTupleSize_t entryIdx, ROOT::DescriptorId_t &cid)
 {
    cid = ROOT::kInvalidDescriptorId;
-   auto descGuard = GetSharedDescriptorGuard();
-   const auto &desc = descGuard.GetRef();
+   auto sharedGuard = GetSharedDescriptorGuard();
+   const auto &desc = sharedGuard.GetRef();
 
    if (desc.GetNClusterGroups() == 0)
-      return descGuard;
+      return sharedGuard;
 
    // Binary search in the cluster group list, followed by a binary search in the clusters of that cluster group
 
@@ -386,8 +386,9 @@ ROOT::Internal::RPageSource::FindClusterId(ROOT::NTupleSize_t entryIdx, ROOT::De
 
       // Binary search in the current cluster group; since we already checked the element range boundaries,
       // the element must be in that cluster group.
+      auto descGuard = EnsureClusterDetails(cgDesc.GetId(), std::move(sharedGuard));
+
       const auto &clusterIds = cgDesc.GetClusterIds();
-      R__ASSERT(!clusterIds.empty());
       std::size_t clusterLeft = 0;
       std::size_t clusterRight = clusterIds.size() - 1;
       while (clusterLeft <= clusterRight) {
@@ -410,7 +411,7 @@ ROOT::Internal::RPageSource::FindClusterId(ROOT::NTupleSize_t entryIdx, ROOT::De
       }
       R__ASSERT(false);
    }
-   return descGuard;
+   return sharedGuard;
 }
 
 ROOT::Internal::RPageSource::RSharedDescriptorGuard
