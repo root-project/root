@@ -39,7 +39,6 @@ if(NOT MSVC AND NOT ClingWorkAroundUnloadingVTABLES)
                     ROOTEXE_OPTS -e "gROOT->SetMacroPath(\"${CMAKE_CURRENT_BINARY_DIR}\")"
                     OUTCNVCMD grep -v -e "ROOT version" -v -e "Creating library" -e "from Tree" -e "found on file" -e "TBranchProxy::Setup" -e "creating shared" -e "Warning in <TClassTable::Add>: class generatedSel already in TClassTable" -e "Not unloading file" -e "unloading" -e "::UnloadFile"
                     LABELS longtest
-                    WILLFAIL
                     FIXTURES_REQUIRED root-treeformula-parse-templateName_cpp-fixture)
 endif()
 
@@ -98,7 +97,6 @@ ROOTTEST_ADD_TEST(PEvent
 ROOTTEST_ADD_TEST(strings
                   MACRO runstrings.C
                   COPY_TO_BUILDDIR itsdb.2006-03-17-22-28-46.root
-                  WILLFAIL
                   OUTREF strings.ref)
 
 ROOTTEST_COMPILE_MACRO(runbase.C
