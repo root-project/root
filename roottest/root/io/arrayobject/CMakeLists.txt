@@ -31,8 +31,8 @@ ROOTTEST_ADD_TEST(ReadBar
 # reading old version of bar class fails - while class not correctly equipt
 ROOTTEST_ADD_TEST(ReadBarOld
                   MACRO Run.C
+                  MACROARG "\"Event.3.2.0.root\""
                   ROOTEXE_OPTS -e "(void)gROOT->ProcessLine(\".L bar.C+\")"
                   OUTREF ReadBarOld.ref
                   COPY_TO_BUILDDIR Event.3.2.0.root
-                  WILLFAIL
                   FIXTURES_REQUIRED root-io-arrayobject-bar-fixture)
