@@ -29,7 +29,7 @@ End_Macro
 #include "TCurlyArc.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"
-#include "TVirtualPadPainter.h"
+#include "TBoxInteractive.h"
 #include "TAttMarker.h"
 #include "TMath.h"
 #include "TPoint.h"
@@ -142,6 +142,60 @@ Int_t TCurlyArc::DistancetoPrimitive(Int_t px, Int_t py)
    return (Int_t) TMath::Abs(dist - dista);
 }
 
+class TCurlyArcInteractive : public TBoxInteractive {
+   public:
+      TCurlyArcInteractive(TCurlyArc *c) :
+         TBoxInteractive(kFALSE, c->GetStartX() - c->GetRadius(), c->GetStartY() - c->GetRadius(), c->GetStartX() + c->GetRadius(), c->GetStartY() + c->GetRadius())
+      {
+      }
+
+      void PaintOutline(TVirtualPad &parent) override
+      {
+         auto c = static_cast<TCurlyArc *> (GetObject());
+
+         int np = 10;
+         std::vector<Double_t> x(np+3), y(np+3);
+
+         Double_t dphi = (c->GetPhimax() - c->GetPhimin()) / 180. * TMath::Pi();
+         Double_t midx = (newX1 + newX2) / 2;
+         Double_t midy = (newY1 + newY2) / 2;
+         Double_t radius = (newX2 - newX1 + newY2 - newY1) / 4;
+
+         if (dphi < 0)
+            dphi += 2 * TMath::Pi();
+         Double_t phi0 = c->GetPhimin() / 180. * TMath::Pi();
+         for (int i = 0; i <= np; i++) {
+            Double_t angle = phi0 + i*dphi/np;
+            x[i]  = parent.XtoPad(midx + radius*TMath::Cos(angle));
+            y[i]  = parent.YtoPad(midy + radius*TMath::Sin(angle));
+         }
+         Bool_t full_circle = kTRUE;
+         if (c->GetPhimax() - c->GetPhimin() < 360) {
+            ++np;
+            x[np] = parent.XtoPad(midx);
+            y[np] = parent.YtoPad(midy);
+            full_circle = kFALSE;
+         }
+         ++np;
+         x[np] = x[0];
+         y[np] = y[0];
+
+         c->TAttLine::ModifyOn(parent);
+         // "i" is interactive painting
+         parent.PaintPolyLine(np+1, x.data(), y.data(), "icurlyarc");
+
+         if (!full_circle)
+            PaintDiamondCorners(parent, "curlyarc");
+      }
+
+      void Apply(TCurlyArc *c, Bool_t usenew = kTRUE)
+      {
+         c->SetCenter(usenew ? (newX1 + newX2) / 2 : (oldX1 + oldX2) / 2,
+                      usenew ? (newY1 + newY2) / 2 : (oldY1 + oldY2) / 2);
+         c->SetRadius(usenew ? (newX2 - newX1 + newY2 - newY1) / 4 : (oldX2 - oldX1 + oldY2 - oldY1) / 4);
+      }
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
@@ -159,136 +213,64 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    auto &parent = *gPad;
 
-   constexpr Int_t kMaxDiff = 10;
-   static enum { pNone, pTop, pL, pR, pBot, pINSIDE } mode = pNone;
-   static Int_t sdx = 0, sdy = 0;
-   static Bool_t first_move = kTRUE;
-
-   auto paint_hollow = [this, &parent]() {
-      int np = 10;
-      std::vector<Double_t> x(np+3), y(np+3);
-
-      Double_t dphi = (fPhimax - fPhimin) * TMath::Pi() / 180;
-      if (dphi < 0)
-         dphi += 2 * TMath::Pi();
-      Double_t phi0 = fPhimin * TMath::Pi() / 180;
-      for (int i = 0; i <= np; i++) {
-         Double_t angle = phi0 + i*dphi/np;
-         x[i]  = parent.XtoPad(fX1 + fR1*TMath::Cos(angle));
-         y[i]  = parent.YtoPad(fY1 + fR1*TMath::Sin(angle));
-      }
-      if (fPhimax - fPhimin < 360) {
-         ++np;
-         x[np] = parent.XtoPad(fX1);
-         y[np] = parent.YtoPad(fY1);
-      }
-      ++np;
-      x[np] = x[0];
-      y[np] = y[0];
-
-      auto pp = parent.GetPainter();
-      pp->SetAttLine(*this);
-      pp->DrawPolyLine(np + 1, x.data(), y.data());
-
-      Double_t xm[4] = { fX1, fX1, fX1 - fR1, fX1 + fR1 };
-      Double_t ym[4] = { fY1 + fR1, fY1 - fR1, fY1, fY1 };
-      for (Int_t i = 0; i < 4; ++i) {
-         xm[i] = parent.XtoPad(xm[i]);
-         ym[i] = parent.YtoPad(ym[i]);
-      }
-      pp->SetAttMarker({GetLineColor(), 25, 2});
-      pp->DrawPolyMarker(4, xm, ym);
-   };
-
-   Bool_t opaque  = parent.OpaqueMoving();
+   auto inter = dynamic_cast<TCurlyArcInteractive *>(parent.Interactive(this));
 
    switch (event) {
 
    case kArrowKeyPress:
    case kButton1Down:
+      inter = new TCurlyArcInteractive(this);
+      parent.Interactive(this, inter);
+
       // No break !!!
    case kMouseMotion: {
-      Int_t px1 = parent.XtoAbsPixel(parent.XtoPad(fX1));
-      Int_t py1 = parent.YtoAbsPixel(parent.YtoPad(fY1));
-      Int_t pLx = parent.XtoAbsPixel(parent.XtoPad(fX1 - fR1));
-      Int_t pRx = parent.XtoAbsPixel(parent.XtoPad(fX1 + fR1));
-      Int_t pTy = parent.YtoAbsPixel(parent.YtoPad(fY1 + fR1));
-      Int_t pBy = parent.YtoAbsPixel(parent.YtoPad(fY1 - fR1));
+      TCurlyArcInteractive dummy(this);
+      if (!inter) inter = &dummy;
+      inter->CalcPixelCoord(parent, dummy.oldX1, dummy.oldY1, dummy.oldX2, dummy.oldY2);
 
-      if ((abs(px - px1) < kMaxDiff) && (abs(py - pTy) < kMaxDiff)) {
-         mode = pTop;
-         parent.SetCursor(kTopSide);
-      } else if ((abs(px - px1) < kMaxDiff) && (abs(py - pBy) < kMaxDiff)) {
-         mode = pBot;
-         parent.SetCursor(kBottomSide);
-      } else if ((abs(py - py1) < kMaxDiff) && (abs(px - pLx) < kMaxDiff)) {
-         mode = pL;
-         parent.SetCursor(kLeftSide);
-      } else if ((abs(py - py1) < kMaxDiff) && (abs(px - pRx) < kMaxDiff)) {
-         mode = pR;
-         parent.SetCursor(kRightSide);
+      if (!inter->SelectDiamondCorner(px, py, kFALSE)) {
+         // refuse interactive changes
+         parent.Interactive();
       } else {
-         mode = pINSIDE;
-         sdx = px1 - px;
-         sdy = py1 - py;
-         parent.SetCursor(kMove);
+         inter->SetCursor(parent, event == kButton1Down);
       }
-      first_move = kTRUE;
-
       break;
    }
 
    case kArrowKeyRelease:
-   case kButton1Motion: {
-      if (!opaque && !first_move)
-         paint_hollow();
-      char guide = 0;
-      switch (mode) {
-      case pNone:
-         break;
-      case pTop:
-         fR1 = GetYCoord(py, kFALSE, kTRUE) - fY1;
-         guide = 't';
-         break;
-      case pBot:
-         fR1 = fY1 - GetYCoord(py, kFALSE, kTRUE);
-         guide = 'b';
-         break;
-      case pL:
-         fR1 = fX1 - GetXCoord(px, kFALSE, kTRUE);
-         guide = 'l';
-         break;
-      case pR:
-         fR1 = GetXCoord(px, kFALSE, kTRUE) - fX1;
-         guide = 'r';
-         break;
-      case pINSIDE:
-         fX1 = GetXCoord(px + sdx, kFALSE, kTRUE);
-         fY1 = GetYCoord(py + sdy, kFALSE, kTRUE);
-         guide = 'i';
-         break;
-      }
+   case kButton1Motion:
+      if (!inter)
+         return;
 
-      first_move = kFALSE;
+      if (!inter->ProcessMouseMove(parent, px, py))
+         return;
 
-      if (!opaque)
-         paint_hollow();
-      else {
-         if (guide)
-            parent.ShowGuidelines(this, event, guide, true);
-         Build();
-         parent.ModifiedUpdate();
-      }
-      break;
-   }
+      inter->ApplyChanges(parent);
 
-   case kButton1Up:
-      if (opaque) {
-         parent.ShowGuidelines(this, event);
-      } else {
-         Build();
+      if (inter->IsOpaque(parent)) {
+         inter->Apply(this);
+         parent.ShowGuidelines(this, event, inter->GetGuideChar(), true);
          parent.Modified(kTRUE);
       }
+
+      break;
+
+   case kButton1Up:
+      if (inter && inter->IsOpaque(parent))
+         parent.ShowGuidelines(this, event);
+
+      if (gROOT->IsEscaped()) {
+         gROOT->SetEscape(kFALSE);
+         if (inter && inter->IsOpaque(parent)) {
+            inter->Apply(this, kFALSE);
+         }
+      } else if (inter && !inter->IsOpaque(parent)) {
+         inter->Apply(this);
+      }
+
+      parent.Modified();
+      parent.Interactive(); // delete interactive object
+      break;
    }
 }
 

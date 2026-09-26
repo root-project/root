@@ -27,7 +27,8 @@ End_Macro
 
 #include "TCurlyLine.h"
 #include "TVirtualPad.h"
-#include "TVirtualPadPainter.h"
+#include "TLineInteractive.h"
+#include "TROOT.h"
 #include "TMath.h"
 #include "TPoint.h"
 
@@ -167,6 +168,17 @@ Int_t TCurlyLine::DistancetoPrimitive(Int_t px, Int_t py)
    return DistancetoLine(px,py,fX1,fY1,fX2,fY2);
 }
 
+class TCurlyLineInteractive : public TLineInteractive {
+public:
+   using TLineInteractive::TLineInteractive;
+
+   void Apply(TCurlyLine *l, Bool_t usenew = kTRUE)
+   {
+      l->SetStartPoint(usenew ? newX1 : oldX1, usenew ? newY1 : oldY1);
+      l->SetEndPoint(usenew ? newX2 : oldX2, usenew ? newY2 : oldY2);
+   }
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
@@ -182,99 +194,61 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    if (!gPad || !gPad->IsEditable()) return;
 
-   constexpr Int_t kMaxDiff = 20;
-   static Int_t sdx = 0, sdy = 0, selectPoint;
-
    auto &parent = *gPad;
 
    Bool_t opaque  = parent.OpaqueMoving();
 
-   auto paint = [this, &parent]() {
-      auto pp = parent.GetPainter();
-      pp->SetAttLine(*this);
-      pp->DrawLine(parent.XtoPad(fX1), parent.YtoPad(fY1), parent.XtoPad(fX2), parent.YtoPad(fY2));
-   };
-
-   auto set_coord = [this](Int_t _x1, Int_t _y1, Int_t _x2, Int_t _y2) {
-      if (selectPoint & 1) {
-         fX1 = GetXCoord(_x1, kFALSE, kTRUE);
-         fY1 = GetYCoord(_y1, kFALSE, kTRUE);
-      }
-      if (selectPoint & 2) {
-         fX2 = GetXCoord(_x2, kFALSE, kTRUE);
-         fY2 = GetYCoord(_y2, kFALSE, kTRUE);
-      }
-   };
-
-   Int_t px1 = parent.XtoAbsPixel(parent.XtoPad(fX1));
-   Int_t py1 = parent.YtoAbsPixel(parent.YtoPad(fY1));
-   Int_t px2 = parent.XtoAbsPixel(parent.XtoPad(fX2));
-   Int_t py2 = parent.YtoAbsPixel(parent.YtoPad(fY2));
+   auto inter = dynamic_cast<TCurlyLineInteractive *>(parent.Interactive(this));
 
    switch (event) {
 
    case kArrowKeyPress:
    case kButton1Down:
-
+      // create interactive object and assign it
+      inter = new TCurlyLineInteractive(GetStartX(), GetStartY(), GetEndX(), GetEndY());
+      parent.Interactive(this, inter);
       // No break !!!
 
    case kMouseMotion:
-
-      if (abs(px1 - px) + abs(py1 - py) < kMaxDiff) {
-         selectPoint = 1;
-         parent.SetCursor(kPointer);
-      } else if (abs(px2 - px) + abs(py2 - py) < kMaxDiff) {
-         selectPoint = 2;
-         parent.SetCursor(kPointer);
-      } else {
-         selectPoint = 3;
-         sdx = px1 - px;
-         sdy = py1 - py;
-         parent.SetCursor(kMove);
-      }
-
+      if (inter)
+         inter->SelectPoint(parent, px, py);
       break;
 
    case kArrowKeyRelease:
    case kButton1Motion:
-      if (!opaque)
-         paint();
-      if (selectPoint == 1) {
-         set_coord(px, py, 0, 0);
-      } else if (selectPoint == 2) {
-         set_coord(0, 0, px, py);
-      } else if (selectPoint == 3) {
-         set_coord(px + sdx, py + sdy, px + sdx + px2 - px1, py + sdy + py2 - py1);
-      }
-      if (!opaque)
-         paint();
-      else {
-         char guide = selectPoint == 3 ? 'i' : '\0';
-         if ((selectPoint == 1) || (selectPoint == 2))  {
-            static const char GUIDES[2][2][2] = {
-              { { '4', '1' }, { '3', '2' } },
-              { { '2', '3' }, { '1', '4' } }
-            };
-            int x_idx = fX1 > fX2 ? 1 : 0;
-            int y_idx = fY1 > fY2 ? 1 : 0;
-            guide = GUIDES[selectPoint-1][x_idx][y_idx];
-         }
+      if (!inter)
+         return;
+      inter->ChangeCoordinate(parent, px, py);
+      if (!opaque) {
+         TAttLine::ModifyOn(parent);
+         inter->PaintLine(parent);
+      } else {
+         inter->Apply(this);
+         char guide = inter->GetGuideChar();
          if (guide)
             parent.ShowGuidelines(this, event, guide, true);
-
-         Build();
-         parent.ModifiedUpdate();
+         parent.Modified();
       }
+      parent.UpdateAsync();
       break;
 
    case kButton1Up:
-
-      if (opaque)
+      if (gROOT->IsEscaped()) {
+         gROOT->SetEscape(kFALSE);
+         if (opaque && inter) {
+            inter->Apply(this, kFALSE);
+            parent.Modified();
+            parent.ShowGuidelines(this, event);
+         }
+      } else if (opaque) {
          parent.ShowGuidelines(this, event);
-      else {
-         Build();
-         parent.ModifiedUpdate();
+      } else if (inter) {
+         inter->Apply(this);
+         parent.Modified();
       }
+      parent.UpdateAsync();
+      parent.Interactive(); // delete interactive object
+      break;
    }
 }
 
