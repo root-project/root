@@ -414,11 +414,11 @@ ROOT::Internal::RPageSource::FindClusterId(ROOT::NTupleSize_t entryIdx, ROOT::De
    return sharedGuard;
 }
 
-ROOT::Internal::RPageSource::RSharedDescriptorGuard
+ROOT::Internal::RPageSource::RAnyDescriptorGuard
 ROOT::Internal::RPageSource::FindClusterId(DescriptorId_t physicalColumnId, NTupleSize_t index, DescriptorId_t &cid)
 {
    cid = ROOT::kInvalidDescriptorId;
-   auto descGuard = GetSharedDescriptorGuard();
+   RAnyDescriptorGuard descGuard = GetSharedDescriptorGuard();
    const auto &desc = descGuard.GetRef();
 
    if (desc.GetNClusterGroups() == 0)
@@ -431,6 +431,8 @@ ROOT::Internal::RPageSource::FindClusterId(DescriptorId_t physicalColumnId, NTup
    std::size_t cgRight = desc.GetNClusterGroups() - 1;
    while (cgLeft <= cgRight) {
       const std::size_t cgMidpoint = (cgLeft + cgRight) / 2;
+      descGuard = EnsureClusterDetails(cgMidpoint, std::move(descGuard));
+
       const auto &clusterIds = (cgIter + cgMidpoint)->GetClusterIds();
       R__ASSERT(!clusterIds.empty());
 

@@ -965,7 +965,7 @@ public:
    ROOT::NTupleSize_t GetNElements(ROOT::DescriptorId_t physicalColumnId);
    /// Returns a shared descriptor guard to ensure that the returned cluster id is useable, i.e. that the
    /// corresponding cluster was not meanwhile evicted from the set of active clusters.
-   RSharedDescriptorGuard
+   RAnyDescriptorGuard
    FindClusterId(ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t index, ROOT::DescriptorId_t &cid);
    /// An overload of FindClusterId that searches using a certain column element index.
    RAnyDescriptorGuard FindClusterId(ROOT::NTupleSize_t entryIdx, ROOT::DescriptorId_t &cid);
