@@ -323,6 +323,16 @@ RooProjectedPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
    std::string namePdf = nameRatio + "_wrapped_pdf";
    auto newArgPdf = std::make_unique<RooWrapperPdf>(namePdf.c_str(), namePdf.c_str(), *ratio);
 
+   // Compile the integrand into the computation graph. The integrals were
+   // created from the original pdf, so without this the original pdf and its
+   // observables would be left in the compiled graph, and the dataset columns
+   // could get attached to a different node than the compiled observables that
+   // the rest of the graph uses. The integrand is compiled with an empty
+   // normalization set because the projection integrals are over the raw
+   // (unnormalized) pdf.
+   ctx.compileServers(*numerator, {});
+   ctx.compileServers(*denominator, {});
+
    ctx.markAsCompiled(*numerator);
    ctx.markAsCompiled(*denominator);
    ctx.markAsCompiled(*ratio);
