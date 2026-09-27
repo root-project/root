@@ -232,6 +232,7 @@ try {
    if (outNTuple) {
       auto outSource = RPageSourceFile::CreateFromAnchor(*outNTuple);
       outSource->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
+      outSource->LoadAllPageLists();
       auto desc = outSource->GetSharedDescriptorGuard();
       model = destination->InitFromDescriptor(desc.GetRef(), true /* copyClusters */);
    }
@@ -995,6 +996,7 @@ public:
    void InitSource(RPageSource &source) final
    {
       source.Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
+      source.LoadAllPageLists();
       fSrcDescriptor = &source.GetSharedDescriptorGuard().GetRef();
 
       if (!fDstModel) {

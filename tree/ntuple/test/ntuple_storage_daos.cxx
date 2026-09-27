@@ -324,6 +324,7 @@ TEST_F(RPageStorageDaos, Checksum)
    ROOT::DescriptorId_t clusterId;
    auto pageSource = RPageSource::Create("ntpl", daosUri);
    pageSource->Attach();
+   pageSource->LoadAllPageLists();
    {
       auto descGuard = pageSource->GetSharedDescriptorGuard();
       pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0, 0);

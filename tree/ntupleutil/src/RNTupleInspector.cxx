@@ -35,6 +35,7 @@ ROOT::Experimental::RNTupleInspector::RNTupleInspector(std::unique_ptr<ROOT::Int
    : fPageSource(std::move(pageSource))
 {
    fPageSource->Attach();
+   fPageSource->LoadAllPageLists();
    auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
    fDescriptor = descriptorGuard->Clone();
 
