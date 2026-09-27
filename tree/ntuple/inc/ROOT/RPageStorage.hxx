@@ -958,6 +958,8 @@ public:
    /// Open the physical storage container and deserialize header and footer
    void Attach(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode mode =
                   ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
+   /// Load all remaining cluster details
+   void LoadAllPageLists();
 
    ROOT::NTupleSize_t GetNEntries();
    ROOT::NTupleSize_t GetNElements(ROOT::DescriptorId_t physicalColumnId);

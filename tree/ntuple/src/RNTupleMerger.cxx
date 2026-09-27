@@ -232,6 +232,7 @@ try {
    if (outNTuple) {
       auto outSource = RPageSourceFile::CreateFromAnchor(*outNTuple);
       outSource->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
+      outSource->LoadAllPageLists();
       auto desc = outSource->GetSharedDescriptorGuard();
       model = destination->InitFromDescriptor(desc.GetRef(), true /* copyClusters */);
    }
@@ -1387,6 +1388,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
    // Merge main loop
    for (RPageSource *source : sources) {
       source->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
+      source->LoadAllPageLists();
       auto srcDescriptor = source->GetSharedDescriptorGuard();
       mergeData.fSrcDescriptor = &srcDescriptor.GetRef();
 
