@@ -693,6 +693,7 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
          source = CreatePageSource(fNTupleName, fFileNames[fNextFileIndex]);
       }
       source->Attach();
+      source->LoadAllPageLists();
       fNextFileIndex++;
 
       auto nEntries = source->GetNEntries();
@@ -1032,6 +1033,7 @@ ROOT::Internal::RDF::GetClustersAndEntries(std::string_view ntupleName, std::str
 {
    auto source = ROOT::Internal::RPageSource::Create(ntupleName, location);
    source->Attach();
+   source->LoadAllPageLists();
    auto descGuard = source->GetSharedDescriptorGuard();
    return std::make_pair(ROOT::Internal::GetClusterBoundaries(descGuard.GetRef()), descGuard->GetNEntries());
 }
