@@ -709,6 +709,15 @@ interop::TCppType_t interop::GetType(const std::string& name,
 
   // Here we might need to deal with integral types such as 3.14.
 
+  // Declaring the trampoline parses and compiles code, and each one adds a
+  // new alias to the AST, so memoize the resolved types by name. A name that
+  // fails to resolve may succeed once more declarations are available, so
+  // failures are retried.
+  static std::map<std::string, TCppType_t> s_slow_type_cache;
+  auto cached = s_slow_type_cache.find(name);
+  if (cached != s_slow_type_cache.end())
+    return cached->second;
+
   static unsigned long long var_count = 0;
   std::string id = "__cppjit_interop_GetType_" + std::to_string(var_count++);
   std::string using_clause = "using " + id + " = __typeof__(" + name + ");\n";
@@ -716,7 +725,10 @@ interop::TCppType_t interop::GetType(const std::string& name,
   if (!Cpp::Declare(using_clause.c_str(), /*silent=*/true)) {
     TCppScope_t lookup = Cpp::GetNamed(id);
     TCppType_t lookup_ty = Cpp::GetTypeFromScope(lookup);
-    return Cpp::GetCanonicalType(lookup_ty);
+    TCppType_t result = Cpp::GetCanonicalType(lookup_ty);
+    if (result)
+      s_slow_type_cache.emplace(name, result);
+    return result;
   }
   return nullptr;
 }
