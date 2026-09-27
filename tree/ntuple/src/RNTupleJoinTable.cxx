@@ -24,32 +24,36 @@ ROOT::Experimental::Internal::RNTupleJoinTable::REntryMapping::REntryMapping(
                                                                 "std::uint32_t", "std::uint64_t"};
 
    pageSource.Attach();
-   auto desc = pageSource.GetSharedDescriptorGuard();
-
    std::vector<std::unique_ptr<ROOT::RFieldBase>> fields;
    std::vector<ROOT::RFieldBase::RValue> fieldValues;
    fieldValues.reserve(fJoinFieldNames.size());
+   {
+      auto descGuard = pageSource.GetSharedDescriptorGuard();
 
-   for (const auto &fieldName : fJoinFieldNames) {
-      auto fieldId = desc->FindFieldId(fieldName);
-      if (fieldId == ROOT::kInvalidDescriptorId)
-         throw RException(R__FAIL("could not find join field \"" + std::string(fieldName) + "\" in RNTuple \"" +
-                                  pageSource.GetNTupleName() + "\""));
+      for (const auto &fieldName : fJoinFieldNames) {
+         auto fieldId = descGuard->FindFieldId(fieldName);
+         if (fieldId == ROOT::kInvalidDescriptorId) {
+            throw RException(R__FAIL("could not find join field \"" + std::string(fieldName) + "\" in RNTuple \"" +
+                                     descGuard->GetName() + "\""));
+         }
 
-      const auto &fieldDesc = desc->GetFieldDescriptor(fieldId);
+         const auto &fieldDesc = descGuard->GetFieldDescriptor(fieldId);
 
-      if (allowedTypes.find(fieldDesc.GetTypeName()) == allowedTypes.end()) {
-         throw RException(R__FAIL("cannot use field \"" + fieldName + "\" with type \"" + fieldDesc.GetTypeName() +
-                                  "\" in join table: only integral types are allowed"));
+         if (allowedTypes.find(fieldDesc.GetTypeName()) == allowedTypes.end()) {
+            throw RException(R__FAIL("cannot use field \"" + fieldName + "\" with type \"" + fieldDesc.GetTypeName() +
+                                     "\" in join table: only integral types are allowed"));
+         }
+
+         auto field = std::make_unique<ROOT::RField<JoinValue_t>>(fieldDesc.GetFieldName());
+         field->SetOnDiskId(fieldDesc.GetId());
+
+         fieldValues.emplace_back(field->CreateValue());
+         fJoinFieldValueSizes.emplace_back(field->GetValueSize());
+         fields.emplace_back(std::move(field));
       }
-
-      auto field = std::make_unique<ROOT::RField<JoinValue_t>>(fieldDesc.GetFieldName());
-      field->SetOnDiskId(fieldDesc.GetId());
-      ROOT::Internal::CallConnectPageSourceOnField(*field, pageSource);
-
-      fieldValues.emplace_back(field->CreateValue());
-      fJoinFieldValueSizes.emplace_back(field->GetValueSize());
-      fields.emplace_back(std::move(field));
+   } // descGuard
+   for (auto &f : fields) {
+      ROOT::Internal::CallConnectPageSourceOnField(*f, pageSource);
    }
 
    std::vector<JoinValue_t> castJoinValues;
