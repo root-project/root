@@ -387,9 +387,13 @@ bool TClingCallbacks::findInGlobalModuleIndex(DeclarationName Name, bool loadFir
    // We are currently instantiating one (or more) templates. At that point,
    // all Decls are present in the AST (with possibly deserialization pending),
    // and we should not load more modules which could find an implicit template
-   // instantiation that is lazily loaded.
+   // instantiation that is lazily loaded. Loading a module can also change the
+   // lookup tables that the instantiation is currently iterating over.
+   // Note that Sema::InstantiatingSpecializations cannot be used for this check:
+   // since LLVM 22, function definitions are only registered there in builds
+   // with assertions.
    Sema &SemaR = m_Interpreter->getSema();
-   if (SemaR.InstantiatingSpecializations.size() > 0)
+   if (SemaR.inTemplateInstantiation())
       return false;
 
    GlobalModuleIndex *Index = CI->getASTReader()->getGlobalIndex();
