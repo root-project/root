@@ -14,6 +14,7 @@ ROOT_ADD_GTEST(CoreBaseTests
   TRefTests.cxx
   TROOTTests.cxx
   TDatimeTest.cxx
+  TMD5Test.cxx
   LIBRARIES RIO Core)
 
 # For TROOTTests.cxx:
