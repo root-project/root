@@ -359,7 +359,7 @@ void ProgressHelper::PrintStatsFinal() const
    RestoreStreamState restore(stream);
    const std::chrono::duration<double> elapsed = std::chrono::system_clock::now() - fBeginTime;
    const auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(elapsed);
-   const auto totalEvents = ComputeTotalEvents();
+   const auto totalEvents = fProcessedEvents.load();
 
    // The next line resets the current line output in the terminal.
    // Brings the cursor at the beginning ('\r'), prints whitespace with the
