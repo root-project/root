@@ -94,11 +94,9 @@ ROOTTEST_ADD_TEST(PEvent
                   ROOTEXE_OPTS -e "(void)gROOT->ProcessLine(\".L PEvent.cc+\")"
                   FIXTURES_REQUIRED root-treeformula-parse-PEvent-fixture)
 
-# does not work, but not triggered in the makefile
 ROOTTEST_ADD_TEST(strings
                   MACRO runstrings.C
                   COPY_TO_BUILDDIR itsdb.2006-03-17-22-28-46.root
-                  WILLFAIL
                   OUTREF strings.ref)
 
 ROOTTEST_COMPILE_MACRO(runbase.C
