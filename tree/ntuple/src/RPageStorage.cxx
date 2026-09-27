@@ -242,23 +242,31 @@ void ROOT::Internal::RPageSource::Attach(RNTupleSerializer::EDescriptorDeseriali
 
    LoadStructure();
 
-   auto descGuard = GetExclDescriptorGuard();
-   descGuard.MoveIn(AttachImpl());
-   fStructureBuffer.Reset();
+   {
+      auto descGuard = GetExclDescriptorGuard();
+      descGuard.MoveIn(AttachImpl());
+      fStructureBuffer.Reset();
 
-   NTupleSize_t sumClusterCount = 0;
-   fCumulativeClusterCounts.reserve(descGuard->GetNClusterGroups());
-   for (const auto &cgDesc : descGuard->GetClusterGroupIterable()) {
-      sumClusterCount += cgDesc.GetNClusters();
-      fCumulativeClusterCounts.emplace_back(sumClusterCount);
+      NTupleSize_t sumClusterCount = 0;
+      fCumulativeClusterCounts.reserve(descGuard->GetNClusterGroups());
+      for (const auto &cgDesc : descGuard->GetClusterGroupIterable()) {
+         sumClusterCount += cgDesc.GetNClusters();
+         fCumulativeClusterCounts.emplace_back(sumClusterCount);
+      }
    }
 
-   // For a descriptor coming from disk, we know that cluster group IDs are issued consecutively
-   for (DescriptorId_t cgId = 0; cgId < descGuard->GetNClusterGroups(); ++cgId) {
-      LoadPageList(cgId, descGuard);
-   }
+   LoadAllPageLists();
 
    fIsAttached = true;
+}
+
+void ROOT::Internal::RPageSource::LoadAllPageLists()
+{
+   auto descGuard = GetExclDescriptorGuard();
+
+   for (const auto &cgDesc : descGuard->GetClusterGroupIterable()) {
+      LoadPageList(cgDesc.GetId(), descGuard);
+   }
 }
 
 void ROOT::Internal::RPageSource::LoadPageList(DescriptorId_t clusterGroupId, const RExclDescriptorGuard &exclGuard)

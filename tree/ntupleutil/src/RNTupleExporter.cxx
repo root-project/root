@@ -118,6 +118,7 @@ RNTupleExporter::ExportPages(ROOT::Internal::RPageSource &source, const RPagesOp
 
    // make sure the source is attached
    source.Attach();
+   source.LoadAllPageLists();
 
    auto desc = source.GetSharedDescriptorGuard();
    ROOT::Internal::RClusterPool clusterPool{source};
