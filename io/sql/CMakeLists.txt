@@ -24,3 +24,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(SQLIO
                                  src/TSQLObjectData.cxx
                                  src/TSQLStructure.cxx
                               DEPENDENCIES Net RIO)
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
