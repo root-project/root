@@ -303,14 +303,36 @@ void RModel::AddShapeTensor(const std::string & name, const std::vector<Dim> & s
    fShapeTensors[tensor_name] = std::make_pair(shape_values, scalar);
 }
 
-void RModel::AddAliasTensor(const std::string & name, const std::string & origin){
-   // add an alias tensor to origin
+bool RModel::AddAliasTensor(const std::string &name, const std::string &origin)
+{
+   // add an alias tensor to origin: the generated code points it to the memory of origin.
+   // The tensor must already be registered as an intermediate tensor.
    auto tensor_name = UTILITY::Clean_name(name);
    auto origin_name = UTILITY::Clean_name(origin);
    if (fAliasTensors.count(tensor_name) != 0) {
       throw std::runtime_error("TMVA-SOFIE: alias tensor with name " + tensor_name + " already exists \n");
    }
+   // an alias of an alias refers directly to the tensor owning the memory
+   if (auto it = fAliasTensors.find(origin_name); it != fAliasTensors.end())
+      origin_name = it->second;
+
+   // with kBasic every tensor keeps its own buffer, as the automatic differentiation of the
+   // generated code requires
+   if (fOptimizationLevel != OptimizationLevel::kExtended || fIsSubGraph)
+      return false;
+   // graph outputs are written into the buffers provided by the caller
+   if (std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), tensor_name) != fOutputTensorNames.end())
+      return false;
+   // only intermediate tensors can be shared: graph inputs are read-only and initialized tensors
+   // are managed by the session
+   if (fIntermediateTensorInfos.count(origin_name) == 0 && fDynamicTensorInfos.count(origin_name) == 0)
+      return false;
+   // boolean tensors are std::vector<uint8_t> members, which operators may access directly
+   if (GetTensorType(origin_name) == ETensorType::BOOL || GetTensorType(tensor_name) != GetTensorType(origin_name))
+      return false;
+
    fAliasTensors[tensor_name] = origin_name;
+   return true;
 }
 
 bool RModel::IsShapeTensor(const std::string & tensor_name) const {
@@ -565,11 +587,13 @@ void RModel::CheckAndFlushIntermediateMemory(std::span<const std::string_view> o
       // last occurrence of the tensor is reached => flush it from memory
       if (fVerbose) std::cout << ".. input tensors : " << iv;
 
-      // for alias tensors replace name with its alias
+      // for alias tensors the memory to flush is the one of the tensor they refer to
       std::string it{iv};  // convert view to string
       if (IsAliasTensor(it))
          it = fAliasTensors[it];
-      if (fIntermediateTensorFrequencyLookup[it] == op_idx) {
+      // find(): operator[] would insert a key viewing the local string
+      auto lastUse = fIntermediateTensorFrequencyLookup.find(it);
+      if (lastUse != fIntermediateTensorFrequencyLookup.end() && lastUse->second == op_idx) {
          if (fVerbose) std::cout << "  flash condition is met - looping on chunks to find matching one \n";
          for (auto chunk = fIntermediateMemoryInfo.total_stack.begin();
               chunk != fIntermediateMemoryInfo.total_stack.end(); ++chunk) {
@@ -924,11 +948,17 @@ void RModel::GenerateIntermediateTensorInfo() {
    if (!fIntermediateTensorInfos.empty()) {
       std::string tensor_declaration_block = "";
       for (auto &i : fIntermediateTensorInfos) {
-         bool  is_alias = (IsAliasTensor(i.first));
-         if (i.second.type == ETensorType::BOOL && !is_alias) {
-               tensor_declaration_block += "std::vector<std::uint8_t> fTensor_" + i.first + " = std::vector<std::uint8_t>(" + std::to_string(ConvertShapeToLength(i.second.shape)) + ");\n";
-               tensor_declaration_block += "std::uint8_t * " + TensorMember(i.first) + " = fTensor_" + i.first + ".data();\n";
-               continue;
+         // alias tensors have no storage: the operator creating them declares a pointer to the
+         // memory of the tensor they refer to
+         if (IsAliasTensor(i.first))
+            continue;
+         if (i.second.type == ETensorType::BOOL) {
+            tensor_declaration_block += "std::vector<std::uint8_t> fTensor_" + i.first +
+                                        " = std::vector<std::uint8_t>(" +
+                                        std::to_string(ConvertShapeToLength(i.second.shape)) + ");\n";
+            tensor_declaration_block +=
+               "std::uint8_t * " + TensorMember(i.first) + " = fTensor_" + i.first + ".data();\n";
+            continue;
          }
          bool is_extended = (fOptimizationLevel == OptimizationLevel::kExtended);
          bool not_in_freq_map =
@@ -936,7 +966,7 @@ void RModel::GenerateIntermediateTensorInfo() {
          bool not_in_output_names =
             (std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), i.first) == fOutputTensorNames.end());
 
-         if (((not_in_freq_map && not_in_output_names) || (!not_in_freq_map && !is_extended && not_in_output_names) ) && !is_alias) {
+         if ((not_in_freq_map && not_in_output_names) || (!not_in_freq_map && !is_extended && not_in_output_names)) {
             size_t length = ConvertShapeToLength(i.second.shape);
 
             if (i.second.type == ETensorType::FLOAT) {
@@ -955,10 +985,6 @@ void RModel::GenerateIntermediateTensorInfo() {
                fOtherTensorSize += 8 * length;
             }
          }
-         if (is_alias) {
-             tensor_declaration_block += ConvertTypeToString(i.second.type) + " * " + TensorMember(i.first) + " = nullptr;\n";
-         }
-
       }
 
       if (tensor_declaration_block.length()) {
@@ -969,6 +995,8 @@ void RModel::GenerateIntermediateTensorInfo() {
    if (!fDynamicTensorInfos.empty()) {
       fGC += "//--- declare the dynamic tensors\n";
       for (auto &i : fDynamicTensorInfos) {
+         if (IsAliasTensor(i.first))
+            continue;
          fGC += ConvertTypeToString(i.second.type) + " * " + TensorMember(i.first) + " = nullptr;\n";
       }
       fGC += "//--- dynamic tensors pool\n";
@@ -1541,7 +1569,11 @@ void RModel::GenerateSessionCode()
 
    // Collect all "tensor_*" data members that are not input or output tensors
    std::vector<std::string> tensorMemberNames = CollectTensorMemberNames(allOperatorCode);
+   const std::string prefix = "tensor_";
    for (auto const& name: tensorMemberNames) {
+      // alias tensors are not session members: the operator creating them declares a local pointer
+      if (IsAliasTensor(name.substr(prefix.size())))
+         continue;
       fGC += "    auto &" + name + " = session." + name + ";\n";
    }
    fGC += "\n";

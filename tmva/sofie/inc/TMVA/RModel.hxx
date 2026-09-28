@@ -166,8 +166,10 @@ public:
    void AddConstantTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape,
                              std::shared_ptr<void> data);
 
-   void AddAliasTensor(const std::string & tensor_name, const std::string & orig_tensor_name);
-
+   // Make tensor_name share the memory of orig_tensor_name, for operators such as Reshape
+   // whose output only reinterprets the shape of its input.
+   // Returns false, and registers nothing, when tensor_name needs storage of its own.
+   bool AddAliasTensor(const std::string &tensor_name, const std::string &orig_tensor_name);
 
    template<class T>
    void AddConstantTensor(const std::string & name, const std::vector<size_t> & shape, const T * data) {

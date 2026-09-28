@@ -26,6 +26,7 @@ private:
    bool fIsEndUndef = false;
    bool fIsStepUndef = false;
    bool fIdentitySlice = false;
+   bool fIsAlias = false;     // identity slice whose output shares the memory of the input
    std::string fNData;        // input data tensor name
    std::string fNOutput;      // output data name
    std::vector<std::string> fNames;       // tensor names for meta(axis) information
@@ -368,12 +369,15 @@ public:
          }
 
          model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
-         //if (fIdentitySlice)  model.AddAliasTensor(fNOutput, fNData);
+         // an identity slice does not change the data, so the output can share the memory of the input
+         if (fIdentitySlice)
+            fIsAlias = model.AddAliasTensor(fNOutput, fNData);
 
          if (model.Verbose()) {
             std::cout << "Slice " << fNData << "  " << ConvertDimShapeToString(fShapeInput)
                       << "---> " << fNOutput << " " <<  ConvertDimShapeToString(fShapeOutput);
-            if (fIdentitySlice) std::cout << " (using alias tensor since slice is an identity) ";
+            if (fIsAlias)
+               std::cout << " (using alias tensor since slice is an identity) ";
             std::cout << std::endl;
 
          }
@@ -403,9 +407,14 @@ public:
       size_t ndim = fShapeInput.size();
 
       if (fIdentitySlice) {
-         out << "/// Slice is just an identity (copy) \n";
-         //out << SP << "tensor_" << fNOutput << " = const_cast<" << ConvertTypeToString(fOutputType) << " *>(tensor_" << fNData << ");\n";
-         out << SP << "std::copy(tensor_" << fNData << ", tensor_" << fNData << " + " << ConvertDimShapeToLength(fShapeInput) << ", tensor_" << fNOutput << ");\n";
+         if (fIsAlias) {
+            out << "/// Slice is just an identity: the output points to the memory of the input\n";
+            out << SP << "auto * tensor_" << fNOutput << " = tensor_" << fNData << ";\n";
+         } else {
+            out << "/// Slice is just an identity (copy) \n";
+            out << SP << "std::copy(tensor_" << fNData << ", tensor_" << fNData << " + "
+                << ConvertDimShapeToLength(fShapeInput) << ", tensor_" << fNOutput << ");\n";
+         }
          return out.str();
       }
 

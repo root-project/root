@@ -5936,6 +5936,82 @@ def make_IdentityWeightOutput():
     return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
 
 
+def make_ReshapeAlias():
+    """Ops: Mul, Reshape, Mul. The Reshape only reinterprets the shape of an
+    intermediate tensor, so its output can share that tensor's memory. The
+    multiplications keep the input and the output intermediate tensors rather
+    than graph inputs and outputs."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Reshape", ["prod", "newshape"], ["reshaped"], name="reshape_0"),
+        helper.make_node("Mul", ["reshaped", "reshaped"], ["out"], name="mul_1"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "reshape_alias",
+        inputs=[_vi("x", FLOAT, [2, 3])],
+        outputs=[_vi("out", FLOAT, [3, 2])],
+        initializer=[_tensor("newshape", INT64, [2], [3, 2])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_ReshapeAliasGraphOutput():
+    """Ops: Mul, Reshape. The output of the Reshape is a graph output, written
+    into the buffer the caller provides, so the alias has to be refused."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Reshape", ["prod", "newshape"], ["out"], name="reshape_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "reshape_alias_graph_output",
+        inputs=[_vi("x", FLOAT, [2, 3])],
+        outputs=[_vi("out", FLOAT, [3, 2])],
+        initializer=[_tensor("newshape", INT64, [2], [3, 2])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_SliceIdentityAlias():
+    """Ops: Mul, Slice, Mul. The slice selects the whole tensor, so it does not
+    change the data and its output can share the input's memory."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Slice", ["prod", "starts", "ends", "axes"], ["sliced"], name="slice_0"),
+        helper.make_node("Mul", ["sliced", "sliced"], ["out"], name="mul_1"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "slice_identity_alias",
+        inputs=[_vi("x", FLOAT, [2, 3])],
+        outputs=[_vi("out", FLOAT, [2, 3])],
+        initializer=[
+            _tensor("starts", INT64, [2], [0, 0]),
+            _tensor("ends", INT64, [2], [2, 3]),
+            _tensor("axes", INT64, [2], [0, 1]),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_IdentityAlias():
+    """Ops: Mul, Identity, Mul. Identity of an intermediate tensor: the output
+    is the same data under another name and can share its memory."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Identity", ["prod"], ["ident"], name="identity_0"),
+        helper.make_node("Mul", ["ident", "ident"], ["out"], name="mul_1"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "identity_alias",
+        inputs=[_vi("x", FLOAT, [2, 3])],
+        outputs=[_vi("out", FLOAT, [2, 3])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
 MODELS = {
     "Abs": make_Abs,
     "Acosh": make_Acosh,
@@ -6042,6 +6118,7 @@ MODELS = {
     "BatchNormEpsilon": make_BatchNormEpsilon,
     "BatchNormReluEpsilon": make_BatchNormReluEpsilon,
     "IdentityWeightOutput": make_IdentityWeightOutput,
+    "IdentityAlias": make_IdentityAlias,
     "LayerNormalization2d": make_LayerNormalization2d,
     "LayerNormalization4d": make_LayerNormalization4d,
     "Less": make_Less,
@@ -6096,6 +6173,8 @@ MODELS = {
     "RangeWithDynShapeStart": make_RangeWithDynShapeStart,
     "RangeWithDynShapeStartDelta": make_RangeWithDynShapeStartDelta,
     "Range_ConstantFolding": make_Range_ConstantFolding,
+    "ReshapeAlias": make_ReshapeAlias,
+    "ReshapeAliasGraphOutput": make_ReshapeAliasGraphOutput,
     "Reciprocal": make_Reciprocal,
     "ReduceMax": make_ReduceMax,
     "ReduceMean": make_ReduceMean,
@@ -6115,6 +6194,7 @@ MODELS = {
     "Slice_Default_Axis": make_Slice_Default_Axis,
     "Slice_Default_Steps": make_Slice_Default_Steps,
     "Slice_Neg": make_Slice_Neg,
+    "SliceIdentityAlias": make_SliceIdentityAlias,
     "Softmax1d": make_Softmax1d,
     "Softmax2d": make_Softmax2d,
     "Softmax3d": make_Softmax3d,
@@ -6867,6 +6947,7 @@ TEST_INPUTS = {
     ],
     "HardSigmoid": [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
     "HardSwish": [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
+    "IdentityAlias": [rand_f32(41, (2, 3))],
     "IdentityWeightBatchNorm": [rand_f32(38, (1, 3, 2, 2))],
     "BatchNormEpsilon": [rand_f32(40, (1, 3, 2, 2))],
     "BatchNormReluEpsilon": [rand_f32(41, (1, 3, 2, 2))],
@@ -7344,8 +7425,11 @@ TEST_INPUTS = {
     ],
     "ReduceMean": [f32([5.0, 2.0, 3.0, 5.0, 5.0, 4.0], (1, 2, 3))],
     "ReduceProd": [f32([5.0, 2.0, 3.0, 5.0, 5.0, 4.0], (1, 2, 3))],
+    "ReshapeAlias": [rand_f32(42, (2, 3))],
+    "ReshapeAliasGraphOutput": [rand_f32(43, (2, 3))],
     "Shape": [f32([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], (1, 2, 3))],
     "Slice": [rand_f32(1, (20, 10, 5))],
+    "SliceIdentityAlias": [rand_f32(44, (2, 3))],
     "Slice_Default_Axis": [rand_f32(2, (20, 10, 5))],
     "Slice_Default_Steps": [rand_f32(3, (20, 10, 5))],
     "Slice_Neg": [rand_f32(4, (20, 10, 5))],
