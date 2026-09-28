@@ -281,6 +281,10 @@ static void ChainTest(const std::string &name, const std::string &fname)
    EXPECT_FLOAT_EQ(6.0, sumElectronPt.GetValue());
    // Trigger the event loop again
    EXPECT_FLOAT_EQ(6.0, sumElectronPt.GetValue());
+
+   std::remove(guardFile1.GetPath().c_str());
+   std::remove(guardFile2.GetPath().c_str());
+   std::remove(guardFile3.GetPath().c_str());
 }
 
 TEST_F(RNTupleProcessorDSTest, Read)
