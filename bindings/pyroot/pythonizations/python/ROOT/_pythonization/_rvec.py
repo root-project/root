@@ -245,6 +245,81 @@ def get_array_interface(self):
             }
 
 
+_buffer_format_map = {
+    # Integral types
+    "char": ("c", 1),
+    "signed char": ("b", 1),
+    "unsigned char": ("B", 1),
+    "bool": ("?", 1),
+    "Bool_t": ("?", 1),
+    "short": ("h", 2),
+    "short int": ("h", 2),
+    "signed short": ("h", 2),
+    "signed short int": ("h", 2),
+    "unsigned short": ("H", 2),
+    "unsigned short int": ("H", 2),
+    "Short_t": ("h", 2),
+    "UShort_t": ("H", 2),
+    "int": ("i", 4),
+    "signed": ("i", 4),
+    "signed int": ("i", 4),
+    "unsigned": ("I", 4),
+    "unsigned int": ("I", 4),
+    "Int_t": ("i", 4),
+    "UInt_t": ("I", 4),
+    "long": ("l", 8 if sys.platform != "win32" else 4),
+    "long int": ("l", 8 if sys.platform != "win32" else 4),
+    "signed long": ("l", 8 if sys.platform != "win32" else 4),
+    "signed long int": ("l", 8 if sys.platform != "win32" else 4),
+    "unsigned long": ("L", 8 if sys.platform != "win32" else 4),
+    "unsigned long int": ("L", 8 if sys.platform != "win32" else 4),
+    "Long_t": ("l", 8 if sys.platform != "win32" else 4),
+    "ULong_t": ("L", 8 if sys.platform != "win32" else 4),
+    "long long": ("q", 8),
+    "long long int": ("q", 8),
+    "signed long long": ("q", 8),
+    "signed long long int": ("q", 8),
+    "unsigned long long": ("Q", 8),
+    "unsigned long long int": ("Q", 8),
+    "Long64_t": ("q", 8),
+    "ULong64_t": ("Q", 8),
+    # Floating-point types
+    "float": ("f", 4),
+    "Float_t": ("f", 4),
+    "double": ("d", 8),
+    "Double_t": ("d", 8),
+}
+
+
+def _get_buffer_for_container(self, flags=0):
+    import ctypes
+    import ROOT
+
+    cppname = type(self).__cpp_name__
+    size = self.size()
+    if size == 0:
+        return memoryview(bytearray(0))
+
+    for dtype, (fmt, itemsize) in _buffer_format_map.items():
+        if cppname.endswith("<{}>".format(dtype)):
+            addr = ROOT._cppyy.ll.addressof(self.data())
+            total_bytes = size * itemsize
+            PyMemoryView_FromMemory = ctypes.pythonapi.PyMemoryView_FromMemory
+            PyMemoryView_FromMemory.restype = ctypes.py_object
+            PyMemoryView_FromMemory.argtypes = [ctypes.c_void_p, ctypes.c_ssize_t, ctypes.c_int]
+            raw_view = PyMemoryView_FromMemory(addr, total_bytes, 0x0200)
+            return raw_view.cast(fmt)
+
+    raise BufferError(f"Buffer protocol not supported for type {cppname}")
+
+
+def add_buffer_protocol_support(klass, name):
+    if True in [name.endswith("<{}>".format(dtype)) for dtype in _buffer_format_map]:
+        klass.to_memoryview = _get_buffer_for_container
+        if sys.version_info >= (3, 12):
+            klass.__buffer__ = _get_buffer_for_container
+
+
 def add_array_interface_property(klass, name):
     if True in [name.endswith("<{}>".format(dtype)) for dtype in _array_interface_dtype_map]:
         klass.__array_interface__ = property(get_array_interface)
@@ -258,3 +333,6 @@ def pythonize_rvec(klass, name):
 
     # Add numpy array interface
     add_array_interface_property(klass, name)
+
+    # Add Python buffer protocol support (PEP 688)
+    add_buffer_protocol_support(klass, name)

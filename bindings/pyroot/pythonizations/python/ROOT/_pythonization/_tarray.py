@@ -37,8 +37,42 @@ for elem in a:
 \endpythondoc
 '''
 
+import sys
+
 from . import pythonization
 from ._generic import _add_getitem_checked
+
+_tarray_format_map = {
+    "TArrayC": ("b", 1),
+    "TArrayS": ("h", 2),
+    "TArrayI": ("i", 4),
+    "TArrayL": ("l", 8 if sys.platform != "win32" else 4),
+    "TArrayL64": ("q", 8),
+    "TArrayF": ("f", 4),
+    "TArrayD": ("d", 8),
+}
+
+
+def _get_buffer_for_tarray(self, flags=0):
+    import ctypes
+    import ROOT
+
+    classname = type(self).__name__
+    size = self.GetSize()
+    if size == 0:
+        return memoryview(bytearray(0))
+
+    for name_prefix, (fmt, itemsize) in _tarray_format_map.items():
+        if classname.startswith(name_prefix):
+            addr = ROOT._cppyy.ll.addressof(self.GetArray())
+            total_bytes = size * itemsize
+            PyMemoryView_FromMemory = ctypes.pythonapi.PyMemoryView_FromMemory
+            PyMemoryView_FromMemory.restype = ctypes.py_object
+            PyMemoryView_FromMemory.argtypes = [ctypes.c_void_p, ctypes.c_ssize_t, ctypes.c_int]
+            raw_view = PyMemoryView_FromMemory(addr, total_bytes, 0x0200)
+            return raw_view.cast(fmt)
+
+    raise BufferError(f"Buffer protocol not supported for type {classname}")
 
 
 @pythonization("TArray", is_prefix=True)
@@ -53,3 +87,8 @@ def pythonize_tarray(klass, name):
         # The new __getitem__ allows to throw pythonic IndexError when index
         # is out of range and to iterate over the array.
         _add_getitem_checked(klass)
+
+        # Add Python buffer protocol support (PEP 688)
+        klass.to_memoryview = _get_buffer_for_tarray
+        if sys.version_info >= (3, 12):
+            klass.__buffer__ = _get_buffer_for_tarray

@@ -9,7 +9,7 @@
 ################################################################################
 
 from . import pythonization
-from ._rvec import add_array_interface_property
+from ._rvec import add_array_interface_property, add_buffer_protocol_support
 
 
 def _data_vec_char(self):
@@ -33,6 +33,9 @@ def pythonize_stl_vector(klass, name):
     # Add numpy array interface
     # NOTE: The pythonization is reused from ROOT::VecOps::RVec
     add_array_interface_property(klass, name)
+
+    # Add Python buffer protocol support (PEP 688)
+    add_buffer_protocol_support(klass, name)
 
     # Inject custom vector<char>::data()
     value_type = getattr(klass, 'value_type', None)
