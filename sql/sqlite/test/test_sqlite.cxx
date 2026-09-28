@@ -6,14 +6,19 @@
 #include "TSQLColumnInfo.h"
 #include "TSQLTableInfo.h"
 #include "TSystem.h"
+#include "TList.h"
 
 #include <memory>
+#include <string>
+
+#include "ROOT/TestSupport.hxx"
 
 TEST(SQLiteTest, ConnectAndQuery)
 {
-   gSystem->Unlink("test_sqlite.db");
+   ROOT::TestSupport::FileRaii dbFile{"test_sqlite.db"};
 
-   std::unique_ptr<TSQLServer> server(TSQLServer::Connect("sqlite://test_sqlite.db", "", ""));
+   std::string uri = std::string("sqlite://") + dbFile.GetPath();
+   std::unique_ptr<TSQLServer> server(TSQLServer::Connect(uri.c_str(), "", ""));
    ASSERT_NE(server, nullptr);
    ASSERT_FALSE(server->IsZombie());
 
@@ -25,7 +30,7 @@ TEST(SQLiteTest, ConnectAndQuery)
    // Test Query
    std::unique_ptr<TSQLResult> res(server->Query("SELECT id, name FROM test_table ORDER BY id;"));
    ASSERT_NE(res, nullptr);
-   
+
    EXPECT_EQ(res->GetFieldCount(), 2);
    EXPECT_STREQ(res->GetFieldName(0), "id");
    EXPECT_STREQ(res->GetFieldName(1), "name");
@@ -44,15 +49,14 @@ TEST(SQLiteTest, ConnectAndQuery)
 
    // No more rows
    EXPECT_EQ(res->Next(), nullptr);
-
-   gSystem->Unlink("test_sqlite.db");
 }
 
 TEST(SQLiteTest, TableInfo)
 {
-   gSystem->Unlink("test_sqlite2.db");
+   ROOT::TestSupport::FileRaii dbFile{"test_sqlite2.db"};
 
-   std::unique_ptr<TSQLServer> server(TSQLServer::Connect("sqlite://test_sqlite2.db", "", ""));
+   std::string uri = std::string("sqlite://") + dbFile.GetPath();
+   std::unique_ptr<TSQLServer> server(TSQLServer::Connect(uri.c_str(), "", ""));
    ASSERT_NE(server, nullptr);
    EXPECT_TRUE(server->Exec("CREATE TABLE test_table (id INTEGER PRIMARY KEY, name TEXT);"));
 
@@ -67,21 +71,20 @@ TEST(SQLiteTest, TableInfo)
    auto columns = info->GetColumns();
    ASSERT_NE(columns, nullptr);
    EXPECT_EQ(columns->GetSize(), 2);
-
-   gSystem->Unlink("test_sqlite2.db");
 }
 
 TEST(SQLiteTest, PreparedStatements)
 {
-   gSystem->Unlink("test_sqlite3.db");
+   ROOT::TestSupport::FileRaii dbFile{"test_sqlite3.db"};
 
-   std::unique_ptr<TSQLServer> server(TSQLServer::Connect("sqlite://test_sqlite3.db", "", ""));
+   std::string uri = std::string("sqlite://") + dbFile.GetPath();
+   std::unique_ptr<TSQLServer> server(TSQLServer::Connect(uri.c_str(), "", ""));
    ASSERT_NE(server, nullptr);
    EXPECT_TRUE(server->Exec("CREATE TABLE test_table (id INTEGER PRIMARY KEY, value REAL);"));
 
    std::unique_ptr<TSQLStatement> stmt(server->Statement("INSERT INTO test_table (id, value) VALUES (?, ?);"));
    ASSERT_NE(stmt, nullptr);
-   
+
    for (int i = 1; i <= 3; ++i) {
       EXPECT_TRUE(stmt->NextIteration());
       EXPECT_TRUE(stmt->SetInt(0, i));
@@ -94,6 +97,4 @@ TEST(SQLiteTest, PreparedStatements)
    std::unique_ptr<TSQLRow> countRow(res->Next());
    ASSERT_NE(countRow, nullptr);
    EXPECT_STREQ(countRow->GetField(0), "3");
-
-   gSystem->Unlink("test_sqlite3.db");
 }
