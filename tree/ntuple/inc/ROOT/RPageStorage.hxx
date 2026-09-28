@@ -693,6 +693,10 @@ private:
    bool fIsAttached = false;                 ///< Set to true once `Attach()` is called
    bool fHasStreamerInfosRegistered = false; ///< Set to true when RegisterStreamerInfos() is called.
 
+   /// The interpretation of page lists, set in Attach()
+   Internal::RNTupleSerializer::EDescriptorDeserializeMode fDeserializationMode =
+      Internal::RNTupleSerializer::EDescriptorDeserializeMode::kRaw;
+
    /// The active columns are implicitly defined by the model fields or views
    RActivePhysicalColumns fActivePhysicalColumns;
 
@@ -721,6 +725,9 @@ private:
    /// Must not be called when the descriptor guard is taken.
    void UpdateLastUsedCluster(ROOT::DescriptorId_t clusterId);
 
+   // Populate the cluster details of the given cluster group. Must hold an exclusive descriptor lock when calling.
+   // No-op if the cluster details are already present.
+   void LoadPageList(DescriptorId_t clusterGroupId, const RExclDescriptorGuard &exclGuard);
    // Common treatment of zero pages in LoadPageFromSummary()
    ROOT::Internal::RPageRef LoadZeroPage(ColumnHandle_t columnHandle, const RPageSummary &pageSummary);
    // Once the page is found to be missing in the page cache and all information about the page is collected,
