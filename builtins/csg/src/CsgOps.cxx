@@ -68,6 +68,7 @@
 #include "TBuffer3D.h"
 #include "Rtypes.h"
 #include "TMath.h"
+#define ROOT_CsgOps_cxx
 #include "CsgOps.h"
 
 namespace RootCsg {
