@@ -232,25 +232,36 @@ void ROOT::Internal::RPageSource::Attach(RNTupleSerializer::EDescriptorDeseriali
    if (fIsAttached)
       return;
 
+   fDeserializationMode = mode;
+
    LoadStructure();
 
    auto descGuard = GetExclDescriptorGuard();
    descGuard.MoveIn(AttachImpl());
    fStructureBuffer.Reset();
 
-   std::vector<unsigned char> buffer;
-   for (const auto &cgDesc : descGuard->GetClusterGroupIterable()) {
-      buffer.resize(cgDesc.GetPageListLength() + cgDesc.GetPageListLocator().GetNBytesOnStorage());
-      auto zipBuffer = buffer.data() + cgDesc.GetPageListLength();
-
-      LoadPageListImpl(cgDesc.GetPageListLocator(), zipBuffer);
-      RNTupleDecompressor::Unzip(zipBuffer, cgDesc.GetPageListLocator().GetNBytesOnStorage(),
-                                 cgDesc.GetPageListLength(), buffer.data());
-      RNTupleSerializer::DeserializePageList(buffer.data(), cgDesc.GetPageListLength(), cgDesc.GetId(), *descGuard,
-                                             mode);
+   // For a descriptor coming from disk, we know that cluster group IDs are issued consecutively
+   for (DescriptorId_t cgId = 0; cgId < descGuard->GetNClusterGroups(); ++cgId) {
+      LoadPageList(cgId, descGuard);
    }
 
    fIsAttached = true;
+}
+
+void ROOT::Internal::RPageSource::LoadPageList(DescriptorId_t clusterGroupId, const RExclDescriptorGuard &exclGuard)
+{
+   const auto &cgDesc = exclGuard->GetClusterGroupDescriptor(clusterGroupId);
+   if (cgDesc.HasClusterDetails())
+      return;
+
+   std::vector<unsigned char> buffer;
+   buffer.resize(cgDesc.GetPageListLength() + cgDesc.GetPageListLocator().GetNBytesOnStorage());
+   auto zipBuffer = buffer.data() + cgDesc.GetPageListLength();
+   LoadPageListImpl(cgDesc.GetPageListLocator(), zipBuffer);
+   RNTupleDecompressor::Unzip(zipBuffer, cgDesc.GetPageListLocator().GetNBytesOnStorage(), cgDesc.GetPageListLength(),
+                              buffer.data());
+   RNTupleSerializer::DeserializePageList(buffer.data(), cgDesc.GetPageListLength(), cgDesc.GetId(), *exclGuard,
+                                          fDeserializationMode);
 }
 
 std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Internal::RPageSource::Clone() const
@@ -260,6 +271,7 @@ std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Internal::RPageSource::Clone(
       clone->GetExclDescriptorGuard().MoveIn(GetSharedDescriptorGuard()->Clone());
       clone->fHasStructure = true;
       clone->fIsAttached = true;
+      clone->fDeserializationMode = fDeserializationMode;
    }
    return clone;
 }
