@@ -39,6 +39,10 @@ jobs:
             platform: macosx_arm64
             label: macosx_arm64
             deployment_target: "26.0"
+          - runner: xcode-27
+            platform: macosx_arm64
+            label: macosx_arm64
+            deployment_target: "27.0"
           - runner: ubuntu-latest
             platform: manylinux_x86_64
             label: manylinux_2_28_x86_64
@@ -81,6 +85,8 @@ jobs:
           - runner: macos-15
             build_label: macosx_arm64
           - runner: macos-26
+            build_label: macosx_arm64
+          - runner: xcode-27
             build_label: macosx_arm64
           - runner: ubuntu-latest
             build_label: manylinux_2_28_x86_64
