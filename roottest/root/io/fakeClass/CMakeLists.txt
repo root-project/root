@@ -23,21 +23,18 @@ ROOTTEST_ADD_TEST(forwardDeclAndFake
 
 ROOTTEST_ADD_TEST(checkLittle0
                   MACRO checkLittle0.C
+                  OUTCNVCMD sed -e s,offset=[[:space:]]*[0-9]*,offset=na,g
                   OUTREF checkLittle0.ref
-                  # There is an unresolved library loading order problem
-                  WILLFAIL
                   FIXTURES_REQUIRED root-io-fakeClass-produceLittleFile-fixture root-io-fakeClass-little-v2-fixture)
 
 ROOTTEST_ADD_TEST(checkLittle
                   MACRO checkLittle.C
+                  OUTCNVCMD sed -e s,offset=[[:space:]]*[0-9]*,offset=na,g
                   OUTREF checkLittle.ref
-                  # There is an unresolved library loading order problem
-                  WILLFAIL
                   FIXTURES_REQUIRED root-io-fakeClass-produceLittleFile-fixture root-io-fakeClass-little-v2-fixture)
 
 ROOTTEST_ADD_TEST(checkLittle1
                   MACRO checkLittle1.C
+                  OUTCNVCMD sed -e s,offset=[[:space:]]*[0-9]*,offset=na,g
                   OUTREF checkLittle1.ref
-                  # There is an unresolved library loading order problem
-                  WILLFAIL
                   FIXTURES_REQUIRED root-io-fakeClass-produceLittleFile-fixture root-io-fakeClass-little-v2-fixture)
