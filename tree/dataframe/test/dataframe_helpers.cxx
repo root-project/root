@@ -1021,7 +1021,8 @@ TEST(RDFHelpers, ProgressBarFinalRateIsFinite)
    EXPECT_EQ(out.find("nan"), std::string::npos) << "the events/s figure is not a number: " << out;
 }
 
-// Regression test for #15323: RDF Progress bar final stats report actual processed events even when Range is applied
+// Regression test for #15323: RDF Progress bar final stats report actual
+// processed events even when Range is applied
 TEST(RDFHelpers, ProgressBarFinalEventsWithRange)
 {
    std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
@@ -1038,8 +1039,10 @@ TEST(RDFHelpers, ProgressBarFinalEventsWithRange)
    std::cout.rdbuf(oldCoutStreamBuf);
 
    const std::string out = strCout.str();
-   EXPECT_NE(out.find("processed events: 20"), std::string::npos) << "the final statistics line should report 20 events: " << out;
-   EXPECT_EQ(out.find("processed events: 100"), std::string::npos) << "the final statistics line should not report 100 events: " << out;
+   EXPECT_NE(out.find("processed events: 20"), std::string::npos)
+      << "the final statistics line should report 20 events: " << out;
+   EXPECT_EQ(out.find("processed events: 100"), std::string::npos)
+      << "the final statistics line should not report 100 events: " << out;
 }
 
 // The code below is a unit test for a function called `ProgressHelper_Existence_MT` in the `RDFHelpers` class.
