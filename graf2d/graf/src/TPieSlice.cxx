@@ -32,12 +32,10 @@ This class describe the property of single
 ////////////////////////////////////////////////////////////////////////////////
 /// This is the default constructor, used to create the standard.
 
-TPieSlice::TPieSlice() : TNamed(), TAttFill(), TAttLine()
+TPieSlice::TPieSlice()
 {
    fPie = nullptr;
    fValue = 1;
-   fRadiusOffset = 0;
-   fIsActive = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,16 +43,15 @@ TPieSlice::TPieSlice() : TNamed(), TAttFill(), TAttLine()
 
 TPieSlice::TPieSlice(const char *name, const char *title,
                      TPie *pie, Double_t val) :
-                     TNamed(name, title), TAttFill(), TAttLine()
+                     TNamed(name, title)
 {
    fPie = pie;
    fValue = val;
-   fRadiusOffset = 0;
-   fIsActive = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Eval if the mouse is over the area associated with this slice.
+/// Return 0 only when mouse over the outer part of the slice to let activate context menu
 
 Int_t TPieSlice::DistancetoPrimitive(Int_t px, Int_t py)
 {
@@ -62,13 +59,21 @@ Int_t TPieSlice::DistancetoPrimitive(Int_t px, Int_t py)
 
    if (gPad && fPie) {
       auto info = fPie->FindSlice(*gPad, px, py);
-      if ((info.num >= 0) && (fPie->GetSlice(info.num) == this)) {
+      if ((info.num >= 0) && (fPie->GetSlice(info.num) == this) && (info.rad > 0.6) && (info.rad <= 1))
          dist = 0;
-         gPad->SetCursor(kHand); // FXIME, cursor should not be changed here
-      }
    }
 
    return dist;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Execute event,
+/// redirect to TPie object
+
+void TPieSlice::ExecuteEvent(Int_t event, Int_t px, Int_t py)
+{
+   if (fPie)
+      fPie->ExecuteEvent(event, px, py);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
