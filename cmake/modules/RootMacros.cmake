@@ -628,9 +628,20 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       # dependency below are independent of configuration order and expand to
       # nothing for a dictionary-less library.
       set(dep_has_dict "$<TARGET_EXISTS:G__${dep}>")
-      set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
+      
+      # Determine the true output library name if the target defines an OUTPUT_NAME property
+      if(TARGET ${dep})
+        get_target_property(dep_out_name ${dep} OUTPUT_NAME)
+        if(NOT dep_out_name)
+          set(dep_out_name ${dep})
+        endif()
+      else()
+        set(dep_out_name ${dep})
+      endif()
+
+      set(dependent_pcm ${libprefix}${dep_out_name}_rdict.pcm)
       if (runtime_cxxmodules AND NOT dep IN_LIST local_no_cxxmodules)
-        set(dependent_pcm ${dep}.pcm)
+        set(dependent_pcm ${dep_out_name}.pcm)
         list(APPEND pcm_dependencies "$<${dep_has_dict}:$<TARGET_PROPERTY:${dep},ROOT_PCM_FILENAME>>")
       endif()
       set(newargs ${newargs} "$<${dep_has_dict}:-m>" "$<${dep_has_dict}:${dependent_pcm}>")
