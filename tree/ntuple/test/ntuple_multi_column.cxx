@@ -27,7 +27,9 @@ TEST(RNTuple, MultiColumnRepresentationSimple)
       writer->Fill();
    }
 
-   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
    EXPECT_EQ(3u, reader->GetView<float>("px").GetFieldRange().size());
 
    const auto &desc = reader->GetDescriptor();

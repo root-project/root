@@ -275,7 +275,9 @@ TEST_F(RPageStorageDaos, DisabledSamePageMerging)
    writer->Fill();
    writer.reset();
 
-   auto reader = RNTupleReader::Open("ntpl", daosUri);
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("ntpl", daosUri, opts);
    EXPECT_EQ(1u, reader->GetNEntries());
 
    const auto &desc = reader->GetDescriptor();

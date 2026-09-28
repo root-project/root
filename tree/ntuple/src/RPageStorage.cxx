@@ -249,7 +249,8 @@ void ROOT::Internal::RPageSource::Attach(RNTupleSerializer::EDescriptorDeseriali
       }
    }
 
-   LoadAllPageLists();
+   if (fOptions.GetMetadataMode() == RNTupleReadOptions::EMetadataMode::kEager)
+      LoadAllPageLists();
 
    fIsAttached = true;
 }

@@ -633,7 +633,9 @@ TEST(RClusterGroupDescriptorIterable, Ordering)
       RNTupleWriter::Append(RNTupleModel::Create(), "empty", *f);
    }
 
-   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath(), opts);
    const auto &desc = reader->GetDescriptor();
 
    EXPECT_EQ(3u, desc.GetNClusterGroups());
@@ -674,7 +676,9 @@ TEST(RClusterDescriptor, GetNBytesOnStorage)
       writer->Fill();
    }
 
-   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath(), opts);
    const auto &desc = ntuple->GetDescriptor();
    EXPECT_EQ(8 + 8 + 8 + 3, desc.GetActiveClusterIterable().begin()->GetNBytesOnStorage());
 }
