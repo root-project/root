@@ -33,7 +33,8 @@ private:
 
    struct SliceInfo_t {
       Int_t num = 0;
-      Double_t x = 0, y = 0, ang = 0, phi1 = 0, phi2 = 0, rad = 0;
+      Double_t ang = 0; // angle to found slice
+      Double_t rad = 0; // relative radius
    };
 
    SliceInfo_t FindSlice(TVirtualPad &, Int_t, Int_t);
@@ -68,7 +69,7 @@ public:
    ~TPie() override;
 
    Int_t          DistancetoPrimitive(Int_t px, Int_t py) override;
-   Int_t          DistancetoSlice(Int_t,Int_t);
+   Int_t          DistancetoSlice(Int_t,Int_t) R__DEPRECATED(6, 46, "No longer used.");
    void           Draw(Option_t *option="l") override; // *MENU*
    void           ExecuteEvent(Int_t,Int_t,Int_t) override;
    Float_t        GetAngle3D() const { return fAngle3D; }

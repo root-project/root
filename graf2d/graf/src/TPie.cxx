@@ -266,34 +266,9 @@ TPie::SliceInfo_t TPie::FindSlice(TVirtualPad &parent, Int_t px, Int_t py)
            (phimax > TMath::TwoPi() && ang + TMath::TwoPi() >= phimin && ang + TMath::TwoPi() < phimax)) &&
           dist <= 1.) { // if true the pointer is in the slice region
 
-         res.x = dx;
-         res.y = dy;
+         res.num = i;
          res.ang = ang;
-         res.phi1 = phimin;
-         res.phi2 = phimax;
-         res.rad = dist * fRadius;
-
-         if (dist < .95 && dist > .65) {
-            Double_t range = phimax - phimin;
-            Double_t lang = ang - phimin;
-            Double_t rang = phimax - ang;
-            if (lang < 0)
-               lang += TMath::TwoPi();
-            else if (lang >= TMath::TwoPi())
-               lang -= TMath::TwoPi();
-            if (rang < 0)
-               rang += TMath::TwoPi();
-            else if (rang >= TMath::TwoPi())
-               rang -= TMath::TwoPi();
-
-            if (lang / range < .25 || rang / range < .25) {
-               res.num = -1;
-            } else
-               res.num = i;
-         } else {
-            res.num = i;
-         }
-
+         res.rad = dist;
          break;
       }
    }
@@ -323,17 +298,19 @@ void TPie::Draw(Option_t *option)
    TString soption(option);
    soption.ToLower();
 
-   if (soption.Length()==0) soption = "l";
+   if (soption.Length() == 0)
+      soption = "l";
 
-   if (gPad) {
-      if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
-      if (!soption.Contains("same")) {
-         gPad->Clear();
-         gPad->Range(0.,0.,1.,1.);
-      }
+   if (!gPad || !gPad->IsEditable())
+      gROOT->MakeDefCanvas();
+
+   if (!soption.Contains("same")) {
+      gPad->Clear();
+      gPad->Range(0.,0.,1.,1.);
    }
 
-   for (Int_t i=0;i<fNvals;++i) fPieSlices[i]->AppendPad();
+   for (Int_t i = 0; i < fNvals; ++i)
+      fPieSlices[i]->AppendPad();
    AppendPad(soption.Data());
 }
 
@@ -351,7 +328,6 @@ class TPieInteractive : public TVirtualPad::TInteractive {
    Double_t sliceOffset = 0; // offset for moving slice
    Double_t angle0 = 0;  // previous angle to mouse when rotating
 };
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -437,7 +413,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Bool_t opaque = parent.OpaqueMoving();
 
    // Portion of pie considered as "border"
-   const Double_t dr     = parent.PixeltoX(3);
+   const Double_t dr     = parent.PixeltoX(4) / GetRadius();
    const Double_t minRad = parent.PixeltoX(10);
 
    // Angular divisions in radial direction
@@ -467,7 +443,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    auto info = FindSlice(parent, px, py);
    if (info.num < 0)
-      info.rad = fRadius * 100; // far away to exclude any slection
+      info.rad = 100; // far away to exclude any slection
 
    switch(event) {
       case kArrowKeyPress:
@@ -483,7 +459,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          TPieInteractive dummy;
          if (!inter) inter = &dummy; //
 
-         if ((info.rad >= fRadius - 2. * dr) && (info.rad <= fRadius + dr)) {
+         if ((info.rad >= 1 - dr) && (info.rad <= 1 + dr)) {
             if (info.ang >= angstep8 || info.ang < angstep1)
                parent.SetCursor(kRightSide);
             else if (info.ang >= angstep1 && info.ang < angstep2)
@@ -501,7 +477,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             else if (info.ang >= angstep7 && info.ang < angstep8)
                parent.SetCursor(kBottomRight);
             inter->fMode = TPieInteractive::pResizing;
-         } else if ((info.rad > fRadius * 0.6) && (info.rad < fRadius)) {
+         } else if ((info.rad > 0.6) && (info.rad < 1.)) {
             if (info.num >= 0) {
                parent.SetCursor(kPointer);
                auto angles = GetSlicesAngles();
@@ -511,11 +487,11 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                inter->fMode = TPieInteractive::pMovingSlice;
             } else
                parent.Interactive(); // reject interactive
-         } else if ((info.rad >= fRadius * 0.3) && (info.rad <= fRadius * .6)) {
+         } else if ((info.rad >= 0.3) && (info.rad <= 0.6)) {
             parent.SetCursor(kRotate);
             inter->fMode = TPieInteractive::pRotating;
             inter->angle0 = calcAngle();
-         } else if (info.rad <= fRadius * 0.3) {
+         } else if (info.rad <= 0.3) {
             parent.SetCursor(kHand);
             inter->fMode = TPieInteractive::pMovingPie;
          }
