@@ -43,12 +43,15 @@ protected:
    TMultiGraph(const TMultiGraph&) = delete;
    TMultiGraph& operator=(const TMultiGraph&) = delete;
 
+   void BuildAndPaint(Option_t *chopt, Bool_t paint);
+
 public:
    TMultiGraph();
    TMultiGraph(const char *name, const char *title);
    ~TMultiGraph() override;
 
    virtual void      Add(TGraph *graph, Option_t *chopt = "");
+   void              BuildPrimitives(Option_t *chopt = "") { BuildAndPaint(chopt, kFALSE); }
    void              Browse(TBrowser *b) override;
    Int_t             DistancetoPrimitive(Int_t px, Int_t py) override;
    void              Draw(Option_t *chopt = "") override;

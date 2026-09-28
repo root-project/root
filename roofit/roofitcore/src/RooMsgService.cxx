@@ -27,8 +27,9 @@ RooMsgService allows to filter and redirect messages into streams
 according to message level, topic, (base) class of originating object, name of originating
 object and based on attribute labels attached to individual objects.
 The current default configuration creates streams for all messages at WARNING level
-or higher (e.g. ERROR and FATAL) and for all INFO message on topics Generation,Plotting,
-Integration and Minimization and redirects them to stdout. Users can create additional streams
+or higher (e.g. ERROR and FATAL) and for INFO messages on most topics (among others
+Generation, Plotting, Minimization, and FastEvaluations) and redirects them to stdout.
+Users can create additional streams
 for logging of e.g. DEBUG messages on particular topics or objects and/or redirect streams to
 C++ streams or files.
 
@@ -46,7 +47,6 @@ RooHelpers::LocalChangeMessageLevel changeMsgLvl(RooFit::WARNING);
 RooHelpers::HijackMessageStream allows to fully capture a message stream in a std::stringstream. With this,
 RooFit messages can be evaluated or suppressed.
 **/
-
 
 #include "RooMsgService.h"
 
@@ -123,7 +123,9 @@ void RooMsgService::reset() {
   // Old-style streams
   _streams.clear();
   addStream(RooFit::PROGRESS, Topic(RooFit::HistFactory - 1));//All before HistFactory
-  addStream(RooFit::INFO,Topic(RooFit::Eval|RooFit::Plotting|RooFit::Fitting|RooFit::Minimization|RooFit::Caching|RooFit::ObjectHandling|RooFit::NumericIntegration|RooFit::InputArguments|RooFit::DataHandling)) ;
+  addStream(RooFit::INFO, Topic(RooFit::Eval | RooFit::Plotting | RooFit::Fitting | RooFit::Minimization |
+                                RooFit::Caching | RooFit::ObjectHandling | RooFit::NumericIntegration |
+                                RooFit::InputArguments | RooFit::DataHandling | RooFit::FastEvaluations));
   addStream(RooFit::INFO, Topic(RooFit::HistFactory));
 }
 

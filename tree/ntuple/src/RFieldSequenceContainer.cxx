@@ -430,7 +430,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RRVecField::BeforeConnectPageSource(Inte
    if (GetOnDiskId() == kInvalidDescriptorId)
       return nullptr;
 
-   const auto descGuard = pageSource.GetSharedDescriptorGuard();
+   auto descGuard = pageSource.GetSharedDescriptorGuard();
    const auto &fieldDesc = descGuard->GetFieldDescriptor(GetOnDiskId());
    if (fieldDesc.GetTypeName().rfind("std::array<", 0) == 0) {
       auto substitute = std::make_unique<RArrayAsRVecField>(
@@ -681,7 +681,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RVectorField::BeforeConnectPageSource(In
    if (GetOnDiskId() == kInvalidDescriptorId)
       return nullptr;
 
-   const auto descGuard = pageSource.GetSharedDescriptorGuard();
+   auto descGuard = pageSource.GetSharedDescriptorGuard();
    const auto &fieldDesc = descGuard->GetFieldDescriptor(GetOnDiskId());
    if (fieldDesc.GetTypeName().rfind("std::array<", 0) == 0) {
       auto substitute = std::make_unique<RArrayAsVectorField>(

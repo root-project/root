@@ -66,8 +66,6 @@
 | **Tutorial** | **Description** |
 |--------------|-----------------|
 | createData.C | Plot the variables. |
-| tmva001_RTensor.C | Illustrate the basic features of the RTensor class, RTensor is a std::vector-like container with additional shape information. |
-| tmva002_RDataFrameAsTensor.C | Convert the content of an RDataFrame to an RTensor object. |
 | tmva003_RReader.C | Use modern interfaces models saved in TMVA XML files. |
 
 

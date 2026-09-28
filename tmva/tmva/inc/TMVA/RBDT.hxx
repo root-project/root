@@ -21,7 +21,6 @@
 #define TMVA_RBDT
 
 #include <ROOT/RSpan.hxx>
-#include <TMVA/RTensor.hxx>
 
 #include <array>
 #include <istream>
@@ -53,7 +52,14 @@ public:
    /// Compute model prediction on a single event.
    inline std::vector<Value_t> Compute(std::vector<Value_t> const &x) const { return Compute<std::vector<Value_t>>(x); }
 
-   RTensor<Value_t> Compute(RTensor<Value_t> const &x) const;
+   /// Compute model prediction on a flat batch of events.
+   ///
+   /// The input must be flat row-major with `cols` features per event and the
+   /// output is a flat row-major vector with one row of outputs per event,
+   /// contiguous at `y[row * nOut + k]`. `nOut` is the number of model output
+   /// values per event: one for regression and binary classification models,
+   /// the number of classes for multiclass ones.
+   std::vector<Value_t> Compute(std::span<const Value_t> x, unsigned int cols) const;
 
    static RBDT LoadXGBoost(std::string const &jsonPath);
 

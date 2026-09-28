@@ -23,7 +23,6 @@ else()
     TPosixMutex.h
     TPosixThread.h
     TPosixThreadFactory.h
-    PosixThreadInc.h
   )
 endif()
 

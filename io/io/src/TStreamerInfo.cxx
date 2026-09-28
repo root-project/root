@@ -56,7 +56,6 @@ element type.
 #include "TProcessID.h"
 #include "TSystem.h"
 #include "TObjString.h"
-#include "snprintf.h"
 
 #include "TStreamer.h"
 #include "TContainerConverters.h"
@@ -76,6 +75,7 @@ element type.
 #include "TStreamerInfoActions.h"
 #include "ROOT/BitUtils.hxx"
 
+#include <cstdio>
 #include <memory>
 #include <algorithm>
 #include <array>
@@ -4243,10 +4243,18 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *ext
       if (ltype < lt) ltype = lt;
       if (ldata < ld) ldata = ld;
 
-      //must include Riostream.h in case of an STL container
+      //must include streaming classes in case of an STL container
       if (!incRiostream && element->InheritsFrom(TStreamerSTL::Class())) {
          incRiostream = kTRUE;
-         TMakeProject::AddInclude( fp, "Riostream.h", kFALSE, inclist);
+#ifdef __APPLE__
+         // Workaround for https://github.com/llvm/llvm-project/issues/138683
+         // Include <chrono> before <fstream> to ensure _FilesystemClock is defined
+         // Can be removed once the upstream issue is fixed.
+         TMakeProject::AddInclude( fp, "chrono", kTRUE, inclist);
+#endif
+         TMakeProject::AddInclude( fp, "fstream", kTRUE, inclist);
+         TMakeProject::AddInclude( fp, "iostream", kTRUE, inclist);
+         TMakeProject::AddInclude( fp, "iomanip", kTRUE, inclist);
       }
 
       //get include file name if any

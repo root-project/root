@@ -61,7 +61,7 @@ public:
    };
 
    void send_back_task_result_from_worker(std::size_t task) override;
-   bool receive_task_result_on_master(const zmq::message_t &message) override;
+   bool receive_task_result_on_master(const RooFit::MultiProcess::Message &message) override;
 
    void enableOffsetting(bool flag) override;
 

@@ -50,7 +50,8 @@ of TUUIDs.
 #include "TExMap.h"
 #include "TVirtualMutex.h"
 #include "TError.h"
-#include "snprintf.h"
+
+#include <cstdio>
 
 TObjArray  *TProcessID::fgPIDs   = nullptr; //pointer to the list of TProcessID
 TProcessID *TProcessID::fgPID    = nullptr; //pointer to the TProcessID of the current session

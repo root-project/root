@@ -184,7 +184,7 @@ TEST(RNTuple, LargePages)
       auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
       const auto &desc = reader->GetDescriptor();
       const auto rndColId = desc.FindPhysicalColumnId(desc.FindFieldId("rnd"), 0, 0);
-      const auto &clusterDesc = desc.GetClusterDescriptor(desc.FindClusterId(rndColId, 0));
+      const auto &clusterDesc = *desc.GetActiveClusterIterable().begin();
       EXPECT_GT(clusterDesc.GetPageRange(rndColId).Find(0).GetLocator().GetNBytesOnStorage(), kMAXZIPBUF);
 
       auto viewRnd = reader->GetView<std::uint32_t>("rnd");

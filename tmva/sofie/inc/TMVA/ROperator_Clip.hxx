@@ -237,12 +237,20 @@ private:
    std::string ToStringHighPrec(T val) const {
       std::ostringstream ss;
       ss << std::setprecision(std::numeric_limits<T>::max_digits10) << val;
-      // add dot if missing
-      if (ss.str().find(".") == std::string::npos) ss << ".";
-      // append 'f' suffix for float literals so generated code compiles
-      // cleanly without implicit double→float conversion warnings
-      if (std::is_same<T, float>::value) ss << "f";
-      return ss.str();
+      if constexpr (std::is_floating_point_v<T>) {
+         // add dot if missing
+         if (ss.str().find(".") == std::string::npos)
+            ss << ".";
+         // append 'f' suffix for float literals so generated code compiles
+         // cleanly without implicit double→float conversion warnings
+         if (std::is_same<T, float>::value)
+            ss << "f";
+         return ss.str();
+      } else {
+         // give the literal the tensor's type: std::min and std::max deduce a single type
+         // from both arguments
+         return "static_cast<" + TensorType<T>::Name() + ">(" + ss.str() + ")";
+      }
    }
 };
 

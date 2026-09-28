@@ -30,7 +30,8 @@ actions list for both are the same.
 #include "TInterpreter.h"
 #include "TExMap.h"
 #include "TError.h"
-#include "snprintf.h"
+
+#include <cstdio>
 
 #include <cmath>
 

@@ -46,6 +46,10 @@ struct InterpreterInfo {
   // Owns the string arguments passed to clang during creation, since the
   // interpreter keeps the raw argv pointers for its whole lifetime
   std::vector<std::string> ArgvStorage;
+  // Names the synthesized odr-use anchors (EmitVariableViaOdrUse);
+  // per-interpreter so a fresh interpreter's AST does not depend on
+  // sibling interpreters' query history.
+  unsigned OdrUseCounter = 0;
 
   InterpreterInfo(compat::Interpreter* I, bool Owned,
                   std::vector<std::string> ArgvStrs = {})
@@ -53,7 +57,8 @@ struct InterpreterInfo {
 
   InterpreterInfo(InterpreterInfo&& Other) noexcept
       : Interpreter(Other.Interpreter), isOwned(Other.isOwned),
-        ArgvStorage(std::move(Other.ArgvStorage)) {
+        ArgvStorage(std::move(Other.ArgvStorage)),
+        OdrUseCounter(Other.OdrUseCounter) {
     Other.Interpreter = nullptr;
     Other.isOwned = false;
   }
@@ -64,6 +69,7 @@ struct InterpreterInfo {
       Interpreter = Other.Interpreter;
       isOwned = Other.isOwned;
       ArgvStorage = std::move(Other.ArgvStorage);
+      OdrUseCounter = Other.OdrUseCounter;
       Other.Interpreter = nullptr;
       Other.isOwned = false;
     }

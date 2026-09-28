@@ -88,9 +88,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <cstdlib>
-#include <iostream>
-#include <snprintf.h>
 #include <TSystem.h>
 #include <TFile.h>
 #include <TBenchmark.h>
@@ -119,6 +116,10 @@
 #include "TDecompBK.h"
 #include "TMatrixDEigen.h"
 #include "TMatrixDSymEigen.h"
+
+#include <cstdlib>
+#include <iostream>
+#include <cstdio>
 
 #ifdef __CLING__
 const auto tmp_vmatrix_file_name = "stress-vmatrix_interpreted.root";

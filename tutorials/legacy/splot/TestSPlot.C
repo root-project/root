@@ -28,7 +28,8 @@
 #include "TPaveLabel.h"
 #include "TPad.h"
 #include "TPaveText.h"
-#include "Riostream.h"
+
+#include <iostream>
 
 void TestSPlot()
 {

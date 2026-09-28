@@ -861,41 +861,38 @@ void TGraph::Draw(Option_t *option)
    TString opt = option;
    opt.ToLower();
 
-   if (opt.Contains("same")) {
+   if (opt.Contains("same"))
       opt.ReplaceAll("same", "");
-   }
 
    // in case of option *, set marker style to 3 (star) and replace
    // * option by option P.
-   Ssiz_t pos;
-   if ((pos = opt.Index("*")) != kNPOS) {
+   auto pos = opt.Index("*");
+   if (pos != kNPOS) {
       SetMarkerStyle(3);
-      opt.Replace(pos, 1, "p");
+      opt[pos] = 'p';
    }
 
    // If no option is specified, it is defined as "alp" in case there is
    // no current pad or if the current pad has no axis defined and if there is
    // no default option set using TGraph::SetOption. If fOption is set using
    // TGraph::SetOption, it is used as default option.
-   if ((!option || !strlen(option))) {
-      Option_t *topt = (!fOption.IsNull()) ? fOption.Data() : "alp";
-      if (gPad) {
-         if (!gPad->GetListOfPrimitives()->FindObject("TFrame"))
-            opt = topt;
-      } else {
-         opt = topt;
+   if (!option || !*option) {
+      if (!gPad || !gPad->GetListOfPrimitives()->FindObject("TFrame")) {
+         opt = !fOption.IsNull() ? fOption.Data() : "alp";
+         opt.ToLower();
       }
    }
 
    if (gPad) {
-      if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
-      if (opt.Contains("a")) gPad->Clear();
+      if (!gPad->IsEditable())
+         gROOT->MakeDefCanvas();
+      if (opt.Contains("a"))
+         gPad->Clear();
    }
 
    AppendPad(opt);
 
    gPad->IncrementPaletteColor(1, opt);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -18,7 +18,7 @@
 #include "TBuffer.h"
 #include "TAttMarker.h"
 #include "TVirtualPad.h"
-#include "TVirtualPadPainter.h"
+#include "TBoxInteractive.h"
 #include "TMath.h"
 #include "TPoint.h"
 
@@ -186,6 +186,41 @@ TEllipse *TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2
    return newellipse;
 }
 
+
+class TEllipseInteractive : public TBoxInteractive {
+   public:
+      using TBoxInteractive::TBoxInteractive;
+
+      void PaintOutline(TVirtualPad &parent) override
+      {
+         auto e = static_cast<TEllipse *> (GetObject());
+
+         std::vector<Double_t> x, y;
+         Bool_t fullcircle = e->FillPoints(parent, x, y, (newX1 + newX2) / 2, (newY1 + newY2) / 2, (newX2 - newX1) / 2, (newY2 - newY1) / 2, e->GetPhimin(), e->GetPhimax(), e->GetTheta());
+
+         // "i" is interactive painting, "diamond" is id
+         parent.PaintPolyLine(x.size(), x.data(), y.data(), "iellipse");
+
+         if(fullcircle && !e->GetTheta())
+            return;
+
+         // draw corner markers for better visualisation
+         // repeat logic of classical ROOT
+         Double_t xd[4] = { (newX1+newX2)/2, newX1, (newX1+newX2)/2, newX2 };
+         Double_t yd[4] = { newY2, (newY1+newY2)/2, newY1, (newY1+newY2)/2 };
+         // area around corner with 6 pixels
+         Double_t dx = (parent.GetX2() - parent.GetX1()) / parent.GetPadWidth() * 6;
+         Double_t dy = (parent.GetY2() - parent.GetY1()) / parent.GetPadHeight() * 6;
+
+         for (Int_t n = 0; n < 4; n++) {
+            Double_t xx[5] = { xd[n] - dx, xd[n] + dx, xd[n] + dx, xd[n] - dx, xd[n] - dx };
+            Double_t yy[5] = { yd[n] - dy, yd[n] - dy, yd[n] + dy, yd[n] + dy, yd[n] - dy };
+            parent.PaintPolyLine(5, xx, yy, TString::Format("iellipse%d",n).Data());
+         }
+      }
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
@@ -201,155 +236,80 @@ TEllipse *TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2
 
 void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   if (!gPad || !gPad->IsEditable()) return;
+   if (!gPad || !gPad->IsEditable())
+      return;
 
    auto &parent = *gPad;
 
-   constexpr Int_t kMaxDiff = 10;
+   auto inter = dynamic_cast<TEllipseInteractive *>(parent.Interactive(this));
 
-   static enum { pNone, pTop, pL, pR, pBot, pINSIDE } mode = pNone;
-   static Int_t sdx = 0, sdy = 0;
-   static Double_t oldX1, oldY1, oldR1, oldR2;
-   static Bool_t first_move = kTRUE;
-
-   auto paint_hollow = [this,&parent]() {
-      auto pp = parent.GetPainter();
-      pp->SetAttLine(*this);
-      std::vector<Double_t> x, y;
-      FillPoints(parent, x, y, GetX1(), GetY1(), GetR1(), GetR2(), GetPhimin(), GetPhimax(), GetTheta());
-      pp->DrawPolyLine(x.size(), x.data(), y.data());
-      pp->SetAttMarker({GetLineColor(), 25, 2});
-      Double_t xm[4] = { GetX1(), GetX1(), GetX1() - GetR1(), GetX1() + GetR1() };
-      Double_t ym[4] = { GetY1() + GetR2(), GetY1() - GetR2(), GetY1(), GetY1() };
-      for (Int_t i = 0; i < 4; ++i) {
-         xm[i] = parent.XtoPad(xm[i]);
-         ym[i] = parent.YtoPad(ym[i]);
-      }
-      pp->DrawPolyMarker(4, xm, ym);
+   auto setNewValues = [&inter, this]() {
+      SetX1((inter->newX1 + inter->newX2) / 2);
+      SetR1((inter->newX2 - inter->newX1) / 2);
+      SetY1((inter->newY1 + inter->newY2) / 2);
+      SetR2((inter->newY2 - inter->newY1) / 2);
    };
-
-   auto changeX = [this](Int_t px1, Int_t px2) {
-      auto x1 = GetXCoord(px1, kFALSE, kTRUE);
-      auto x2 = GetXCoord(px2, kFALSE, kTRUE);
-      SetX1((x1 + x2) * 0.5);
-      SetR1(TMath::Abs((x2 - x1) * 0.5));
-      if (x2 < x1)
-         mode = (mode == pL) ? pR : pL;
-   };
-
-   auto changeY = [this](Int_t py1, Int_t py2) {
-      auto y1 = GetYCoord(py1, kFALSE, kTRUE);
-      auto y2 = GetYCoord(py2, kFALSE, kTRUE);
-      SetY1((y1 + y2) * 0.5);
-      SetR2(TMath::Abs((y1 - y2) * 0.5));
-      if (y1 < y2)
-         mode = (mode == pTop) ? pBot : pTop;
-   };
-
-   Bool_t opaque  = parent.OpaqueMoving();
-   Int_t px1 = parent.XtoAbsPixel(parent.XtoPad(GetX1()));
-   Int_t py1 = parent.YtoAbsPixel(parent.YtoPad(GetY1()));
-   Int_t pLx = parent.XtoAbsPixel(parent.XtoPad(GetX1() - GetR1()));
-   Int_t pRx = parent.XtoAbsPixel(parent.XtoPad(GetX1() + GetR1()));
-   Int_t pBy = parent.YtoAbsPixel(parent.YtoPad(GetY1() - GetR2()));
-   Int_t pTy = parent.YtoAbsPixel(parent.YtoPad(GetY1() + GetR2()));
 
    switch (event) {
 
    case kArrowKeyPress:
    case kButton1Down:
-      oldX1 = GetX1();
-      oldY1 = GetY1();
-      oldR1 = GetR1();
-      oldR2 = GetR2();
-
-      sdx = px1 - px;
-      sdy = py1 - py;
+      inter = new TEllipseInteractive(kFALSE, GetX1() - GetR1(), GetY1() - GetR2(), GetX1() + GetR1(), GetY1() + GetR2());
+      parent.Interactive(this, inter);
 
       // No break !!!
 
    case kMouseMotion: {
-      mode = pNone;
-      if ((TMath::Abs(px - px1) < kMaxDiff) && (TMath::Abs(py - pTy) < kMaxDiff)) {
-         mode = pTop; // top edge
-         parent.SetCursor(kTopSide);
-      } else if ((TMath::Abs(px - px1) < kMaxDiff) && (TMath::Abs(py - pBy) < kMaxDiff)) {
-         mode = pBot; // bottom edge
-         parent.SetCursor(kBottomSide);
-      } else if ((TMath::Abs(py - py1) < kMaxDiff) && (TMath::Abs(px - pLx) < kMaxDiff)) {
-         mode = pL; // left edge
-         parent.SetCursor(kLeftSide);
-      } else if ((TMath::Abs(py - py1) < kMaxDiff) && (TMath::Abs(px - pRx) < kMaxDiff)) {
-         mode = pR; // right edge
-         parent.SetCursor(kRightSide);
+      TEllipseInteractive dummy(kFALSE);
+      if (!inter) inter = &dummy;
+      inter->CalcPixelCoord(parent, GetX1() - GetR1(), GetY1() - GetR2(), GetX1() + GetR1(), GetY1() + GetR2());
+
+      if (!inter->SelectDiamondCorner(px, py, kFALSE)) {
+         // refuse interactive changes
+         parent.Interactive();
       } else {
-         mode = pINSIDE;
-         parent.SetCursor(kMove);
+         inter->SetCursor(parent, event == kButton1Down);
       }
-      first_move = kTRUE;
       break;
    }
 
    case kArrowKeyRelease:
-   case kButton1Motion: {
-      if (mode == pNone)
-         break;
-      if (!opaque && !first_move)
-         paint_hollow();
-      char guide = 'i';
-      switch (mode) {
-      case pNone:
-         break;
-      case pL:
-         changeX(px, pRx);
-         guide = 'l';
-         break;
-      case pR:
-         changeX(pLx, px);
-         guide = 'r';
-         break;
-      case pTop:
-         changeY(py, pBy);
-         guide = 't';
-         break;
-      case pBot:
-         changeY(pTy, py);
-         guide = 'b';
-         break;
-      case pINSIDE:
-         SetX1(GetXCoord(px + sdx, kFALSE, kTRUE));
-         SetY1(GetYCoord(py + sdy, kFALSE, kTRUE));
-         guide = 'i';
-         break;
+   case kButton1Motion:
+      if (!inter)
+         return;
+
+      if (!inter->ProcessMouseMove(parent, px, py))
+         return;
+
+      inter->ApplyChanges(parent);
+
+      if (inter->IsOpaque(parent)) {
+         setNewValues();
+         parent.ShowGuidelines(this, event, inter->GetGuideChar(), true);
+         parent.Modified(kTRUE);
       }
-      first_move = kFALSE;
-      if (opaque) {
-         parent.ShowGuidelines(this, event, guide, true);
-         parent.ModifiedUpdate();
-      } else
-         paint_hollow();
+
       break;
-   }
 
    case kButton1Up:
+      if (inter && inter->IsOpaque(parent))
+         parent.ShowGuidelines(this, event);
+
       if (gROOT->IsEscaped()) {
-        gROOT->SetEscape(kFALSE);
-        if (opaque) {
-            parent.ShowGuidelines(this, event);
-            SetX1(oldX1);
-            SetY1(oldY1);
-            SetR1(oldR1);
-            SetR2(oldR2);
-            parent.ModifiedUpdate();
+         gROOT->SetEscape(kFALSE);
+         if (inter && inter->IsOpaque(parent)) {
+            SetX1((inter->oldX1 + inter->oldX2) / 2);
+            SetR1((inter->oldX2 - inter->oldX1) / 2);
+            SetY1((inter->oldY1 + inter->oldY2) / 2);
+            SetR2((inter->oldY2 - inter->oldY1) / 2);
          }
-         break;
+      } else if (inter && !inter->IsOpaque(parent) && (inter->newX1 != inter->newX2)) {
+         setNewValues();
       }
 
-      if (opaque)
-         parent.ShowGuidelines(this, event);
-      else
-         parent.Modified(kTRUE);
-      mode = pNone;
+      parent.Modified();
+      parent.Interactive(); // delete interactive object
+      break;
    }
 }
 

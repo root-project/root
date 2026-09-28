@@ -176,8 +176,6 @@ public:
    /// Return the object class used for user data OIDs in this ntuple.
    std::string GetObjectClass() const;
 
-   void LoadStreamerInfo() final;
-
    std::unique_ptr<RPageSource> OpenWithDifferentAnchor(const ROOT::Internal::RNTupleLink &anchorLink,
                                                         const ROOT::RNTupleReadOptions &options = {}) final;
 }; // class RPageSourceDaos

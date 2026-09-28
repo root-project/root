@@ -27,10 +27,10 @@ occur if parameters involve temporary object construction.
 #include "TMethod.h"
 #include "TClass.h"
 #include "TROOT.h"
-#include "Strlen.h"
 #include "TVirtualMutex.h"
 #include "TError.h"
 
+#include <cstring>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TMethodCall ctor. Use Init() to initialize the method call

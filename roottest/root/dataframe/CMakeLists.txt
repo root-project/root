@@ -70,9 +70,11 @@ endif()
 
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
 ROOTTEST_GENERATE_EXECUTABLE(test_hugeRDF test_hugeRDF.cxx
-                             COMPILE_FLAGS "-O2"  # too slow otherwise
                              LIBRARIES ${DFLIBRARIES}
                              FIXTURES_SETUP root-dataframe-hugeRDF-fixture)
+if(NOT MSVC)
+  set_source_files_properties(test_hugeRDF.cxx COMPILE_FLAGS "-O2") # too slow otherwise
+endif()
 
 ROOTTEST_ADD_TEST(test_hugeRDF
                   EXEC ./test_hugeRDF

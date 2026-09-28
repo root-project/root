@@ -79,9 +79,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseHardSigmoid.cxx
     src/ParseHardSwish.cxx
   DEPENDENCIES
-    TMVA
     ROOTTMVASofie
 )
-
-set_target_properties(ROOTTMVASofieParser PROPERTIES
-  POSITION_INDEPENDENT_CODE TRUE)

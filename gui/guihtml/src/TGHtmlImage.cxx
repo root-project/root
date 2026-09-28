@@ -33,16 +33,16 @@
 
 // Routines used for processing <IMG> markup
 
-#include <cstring>
-#include <cstdlib>
-
 #include "TGHtml.h"
-#include "snprintf.h"
 #include "TImage.h"
 #include "TUrl.h"
 #include "TSocket.h"
 #include "TSystem.h"
 #include "TError.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ctor.

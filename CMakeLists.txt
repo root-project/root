@@ -390,11 +390,13 @@ install(FILES ${CMAKE_BINARY_DIR}/etc/gitinfo.txt DESTINATION ${CMAKE_INSTALL_SY
 add_subdirectory (core)
 add_subdirectory (builtins/zip) # hard coded builtin for core/zip
 add_subdirectory (math)
+if (fortran AND CMAKE_Fortran_COMPILER)
+  add_subdirectory(builtins/cernlib) # hard coded builtin for hist and main
+endif()
 add_subdirectory (hist)
 add_subdirectory (tree)
 add_subdirectory (io)
 add_subdirectory (net)
-add_subdirectory (builtins/libmathtext) # hard coded builtin for graf2d
 if (x11)
   add_subdirectory (builtins/xvertext) # hard coded builtin for graf2d/x11
 endif()
@@ -403,6 +405,7 @@ if (opengl)
   add_subdirectory (builtins/glad) # hard coded builtin for graf3d
 endif()
 add_subdirectory (builtins/x3d) # hard coded builtin for graf3d
+add_subdirectory (builtins/csg) # hard coded builtin for graf3d
 add_subdirectory (graf3d)
 if(NOT minimal)
   add_subdirectory (gui)

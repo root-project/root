@@ -24,8 +24,8 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "JetEvent.h"
-#include "Riostream.h"
 
+#include <iostream>
 
 void write(Int_t nev=100)
 {

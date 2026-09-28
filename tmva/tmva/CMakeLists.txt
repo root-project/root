@@ -31,7 +31,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     TMVA/BinaryTree.h
     TMVA/CCPruner.h
     TMVA/CCTreeWrapper.h
-    TMVA/Classification.h
     TMVA/ClassifierFactory.h
     TMVA/ClassInfo.h
     TMVA/Config.h
@@ -222,7 +221,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     src/BinaryTree.cxx
     src/CCPruner.cxx
     src/CCTreeWrapper.cxx
-    src/Classification.cxx
     src/ClassifierFactory.cxx
     src/ClassInfo.cxx
     src/Config.cxx
@@ -434,8 +432,6 @@ if(dataframe)
 ROOT_STANDARD_LIBRARY_PACKAGE(TMVAUtils
   NO_INSTALL_HEADERS
   HEADERS
-  TMVA/RTensorUtils.hxx
-  TMVA/RStandardScaler.hxx
   TMVA/RReader.hxx
   TMVA/RInferenceUtils.hxx
   TMVA/RBDT.hxx

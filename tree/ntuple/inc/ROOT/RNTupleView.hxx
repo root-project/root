@@ -37,7 +37,7 @@ namespace Internal {
 /// by the number of elements of the first principal column found in the subfields searched by BFS.
 /// If the field hierarchy is empty on columns, the returned field range is invalid (start and end set to
 /// kInvalidNTupleIndex). An attempt to use such a field range in RNTupleViewBase::GetFieldRange will throw.
-ROOT::RNTupleGlobalRange GetFieldRange(const ROOT::RFieldBase &field, const ROOT::Internal::RPageSource &pageSource);
+ROOT::RNTupleGlobalRange GetFieldRange(const ROOT::RFieldBase &field, ROOT::Internal::RPageSource &pageSource);
 
 } // namespace Internal
 
@@ -92,7 +92,8 @@ protected:
       Internal::SetAllowFieldSubstitutions(fieldZero, true);
       std::unique_ptr<ROOT::RFieldBase> field;
       {
-         const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
+         auto descGuard = pageSource.GetSharedDescriptorGuard();
+         const auto &desc = descGuard.GetRef();
          const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
          if constexpr (std::is_void_v<T>) {
             if (typeName.empty())
@@ -145,7 +146,8 @@ public:
    ROOT::RNTupleGlobalRange GetFieldRange() const
    {
       if (!fFieldRange.IsValid()) {
-         throw RException(R__FAIL("field iteration over empty fields is unsupported: " + fField->GetFieldName()));
+         throw RException(R__FAIL("field iteration over empty fields in vectors or variants is unsupported: " +
+                                  fField->GetFieldName()));
       }
       return fFieldRange;
    }
@@ -272,7 +274,8 @@ protected:
 
    static ROOT::RField<T> CreateField(ROOT::DescriptorId_t fieldId, ROOT::Internal::RPageSource &pageSource)
    {
-      const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
+      auto descGuard = pageSource.GetSharedDescriptorGuard();
+      const auto &desc = descGuard.GetRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
       if (!Internal::IsMatchingFieldType<T>(fieldDesc.GetTypeName())) {
          throw RException(R__FAIL("type mismatch for field " + fieldDesc.GetFieldName() + ": " +
@@ -336,7 +339,8 @@ private:
    {
       std::string fieldName;
       {
-         const auto &desc = source->GetSharedDescriptorGuard().GetRef();
+         auto descGuard = source->GetSharedDescriptorGuard();
+         const auto &desc = descGuard.GetRef();
          const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
          if (fieldDesc.GetStructure() != ROOT::ENTupleStructure::kCollection) {
             throw RException(

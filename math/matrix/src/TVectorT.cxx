@@ -41,8 +41,8 @@ For usage examples see `$ROOTSYS/test/stressLinear.cxx`
 #include "TBuffer.h"
 #include "TMath.h"
 #include "TROOT.h"
-#include "Varargs.h"
 
+#include <cstdarg>
 #include <type_traits>
 
 

@@ -191,6 +191,13 @@ public:
    void BindRawPtr(FieldIndex_t fieldIdx, void *valuePtr);
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Bind a new value pointer to a field in the entry.
+   ///
+   /// \param[in] fieldIdx The index of the field in the entry.
+   /// \param[in] valuePtr Pointer to the value to bind to the field.
+   void Bind(FieldIndex_t fieldIdx, std::shared_ptr<void> valuePtr);
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Read the field value corresponding to the given field index for the provided entry index.
    ///
    /// \param[in] fieldIdx The index of the field in the entry.

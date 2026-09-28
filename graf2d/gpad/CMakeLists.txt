@@ -63,4 +63,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
     Hist
 )
 
+target_include_directories(Gpad PRIVATE ../graf/src)
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)

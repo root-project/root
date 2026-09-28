@@ -69,7 +69,6 @@
 ///
 /// \author Eddy Offermann
 
-#include "Riostream.h"
 #include "TMatrixD.h"
 #include "TVectorD.h"
 #include "TGraphErrors.h"
@@ -77,6 +76,7 @@
 #include "TDecompSVD.h"
 #include "TF1.h"
 
+#include <iostream>
 
 void solveLinear(Double_t eps = 1.e-12)
 {

@@ -108,5 +108,9 @@ manylinux-aarch64-image = "manylinux_2_28"
 
 # Install system libraries
 [tool.cibuildwheel.linux]
+# See https://github.com/pypa/manylinux/issues/1725 for the underlying image issue
+# and https://github.com/pypa/auditwheel/pull/535, which introduced both the ISA
+# check and this opt-out for wheels with executables built on manylinux_2_34
+repair-wheel-command = "auditwheel repair --disable-isa-ext-check -w {dest_dir} {wheel}"
 before-all = "dnf install -y epel-release && /usr/bin/crb enable && dnf install -y openssl-devel libX11-devel libXpm-devel libXft-devel libXext-devel libuuid-devel libjpeg-devel giflib-devel libtiff-devel"
 

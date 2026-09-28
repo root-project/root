@@ -22,6 +22,8 @@
 #include "TClass.h"
 #include "TError.h"
 
+#include "CsgOps.h"
+
 #include <stdexcept>
 
 // Clone from TGLUtil -- typedefs needed for portable tesselator function typedef.

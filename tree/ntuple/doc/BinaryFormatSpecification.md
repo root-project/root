@@ -1,4 +1,4 @@
-# RNTuple Binary Format Specification 1.1.0.0
+# RNTuple Binary Format Specification 1.1.0.1
 
 ## Versioning Notes
 
@@ -1199,9 +1199,15 @@ The anchor must provide the information to load the header and the footer **enve
 
 ### Cluster
 
-A cluster is a set of **pages** that contain all the data belonging to an entry range.
+A cluster is a non-empty set of **pages** that contain all the data belonging to an entry range.
 The data set is partitioned in clusters.
+Empty clusters are forbidden: writers must ensure that no empty clusters are committed to an RNTuple.
 A typical cluster size is tens to hundreds of megabytes.
+
+### Cluster Group
+A cluster group is a non-empty set of **clusters** associated to one page list envelope.
+In large RNTuples, clusters may be split into multiple cluster groups to allow streaming of page lists as needed, foregoing the need to keep all the RNTuple's metadata in memory at once.
+Empty cluster groups are forbidden: writers must ensure that no empty cluster groups are committed to an RNTuple.
 
 ### Column
 

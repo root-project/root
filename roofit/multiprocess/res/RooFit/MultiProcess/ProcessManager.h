@@ -14,7 +14,8 @@
 #define ROOT_ROOFIT_MultiProcess_ProcessManager
 
 #include <sys/types.h> // pid_t
-#include <csignal>     // sig_atomic_t and for sigterm handling on child processes (in ProcessManager.cxx)
+#include <array>
+#include <csignal> // sig_atomic_t and for sigterm handling on child processes (in ProcessManager.cxx)
 #include <vector>
 
 // forward declaration
@@ -45,6 +46,17 @@ public:
 
    static void handle_sigterm(int signum);
    static bool sigterm_received();
+   /// Read end of the self-pipe that the SIGTERM handler writes to (or -1 on
+   /// the master process, which installs no handler); used by Channel::wait.
+   static int sigterm_wake_fd();
+
+   // Interprocess channel file descriptors, created with socketpair() before
+   // forking. The Messenger claims the ends belonging to the current process
+   // and takes over their ownership; unclaimed descriptors are closed when
+   // this ProcessManager is destroyed.
+   int claim_mq_fd();
+   int claim_qw_fd(std::size_t worker_ix);
+   int claim_mw_fd(std::size_t worker_ix);
 
    // for debugging/testing:
    pid_t get_queue_pid() const { return queue_pid_; }
@@ -53,6 +65,9 @@ public:
 private:
    void initialize_processes(bool cpu_pinning = true);
    void shutdown_processes();
+   void create_channel_fds();
+   void close_unused_channel_fds();
+   void close_channel_fds();
 
    bool is_master_ = false;
    bool is_queue_ = false;
@@ -66,7 +81,16 @@ private:
 
    bool initialized_ = false;
 
+   // socketpair ends for the interprocess channels; in each array, index 0 is
+   // the end used by the process listed first in the member name (m: master,
+   // q: queue, w: worker), index 1 the other end
+   std::array<int, 2> mq_fds_{{-1, -1}};
+   std::vector<std::array<int, 2>> qw_fds_;
+   std::vector<std::array<int, 2>> mw_fds_;
+
    static volatile sig_atomic_t sigterm_received_;
+   static int sigterm_wake_read_fd_;
+   static int sigterm_wake_write_fd_;
 };
 
 } // namespace MultiProcess

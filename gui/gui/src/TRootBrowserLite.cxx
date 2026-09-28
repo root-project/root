@@ -67,7 +67,6 @@ Explorer). The widgets used are the new native ROOT GUI widgets.
 #include "TBufferFile.h"
 #include "TFolder.h"
 #include "Getline.h"
-#include "snprintf.h"
 #include "TVirtualX.h"
 
 #include "HelpText.h"
@@ -76,6 +75,7 @@ Explorer). The widgets used are the new native ROOT GUI widgets.
 #include "TWin32SplashThread.h"
 #endif
 
+#include <cstdio>
 // Browser menu command ids
 enum ERootBrowserCommands {
    kFileNewBrowserLite,

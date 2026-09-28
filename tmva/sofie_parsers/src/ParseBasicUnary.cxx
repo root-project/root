@@ -90,6 +90,19 @@ ParserFuncSignature ParseAtan = [](RModelParser_ONNX &parser, const onnx::NodePr
    return ParseBasicUnary<EBasicUnaryOperator::kAtan>(parser, nodeproto);
 };
 
+//Parse Asinh
+ParserFuncSignature ParseAsinh = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+   return ParseBasicUnary<EBasicUnaryOperator::kAsinh>(parser, nodeproto);
+};
+//Parse Acosh
+ParserFuncSignature ParseAcosh = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+   return ParseBasicUnary<EBasicUnaryOperator::kAcosh>(parser, nodeproto);
+};
+//Parse Atanh
+ParserFuncSignature ParseAtanh = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+   return ParseBasicUnary<EBasicUnaryOperator::kAtanh>(parser, nodeproto);
+};
+
 //Parse Floor
 ParserFuncSignature ParseFloor = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
    return ParseBasicUnary<EBasicUnaryOperator::kFloor>(parser, nodeproto);

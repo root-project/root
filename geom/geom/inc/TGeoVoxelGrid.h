@@ -15,6 +15,7 @@
 #include <array>
 #include <cmath>
 #include <limits>
+#include <vector>
 
 // a simple structure to encode voxel indices, to address
 // individual voxels in the 3D grid.

@@ -218,10 +218,11 @@ const PadButtonsHandler = {
 /** @summary Fill TWebObjectOptions for painter
   * @private */
 function createWebObjectOptions(painter) {
-   if (!painter?.getSnapId())
+   const snapid = painter?.getSnapId();
+   if (!snapid)
       return null;
 
-   const obj = { _typename: 'TWebObjectOptions', snapid: painter.getSnapId(), opt: painter.getDrawOpt(true), fcust: '', fopt: [] };
+   const obj = { _typename: 'TWebObjectOptions', snapid, opt: painter.getDrawOpt(true), fcust: '', fopt: [] };
    if (isFunc(painter.fillWebObjectOptions))
       painter.fillWebObjectOptions(obj);
    return obj;
@@ -605,13 +606,14 @@ class TPadPainter extends ObjectPainter {
    /** @summary Provides automatic color
     * @desc Uses ROOT colors palette if possible
     * @private */
-   getAutoColor(numprimitives) {
-      numprimitives = Math.max(numprimitives || (this.#num_primitives || 5) - (this.#num_specials || 0), 2);
-
-      let indx = this.#auto_color_cnt ?? 0;
-      this.#auto_color_cnt = (indx + 1) % numprimitives;
-      if (indx >= numprimitives)
-         indx = numprimitives - 1;
+   getAutoColor(numprimitives, indx) {
+      if (!numprimitives || indx === undefined) {
+         numprimitives = Math.max(numprimitives || (this.#num_primitives || 5) - (this.#num_specials || 0), 2);
+         indx = this.#auto_color_cnt ?? 0;
+         this.#auto_color_cnt = (indx + 1) % numprimitives;
+         if (indx >= numprimitives)
+            indx = numprimitives - 1;
+      }
 
       let indexes = this._getCustomPaletteIndexes();
       if (!indexes) {

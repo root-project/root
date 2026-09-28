@@ -30,7 +30,6 @@
 #include "TQObject.h"
 
 #include "GuiTypes.h"
-#include "TString.h"
 #include "Buttons.h"
 
 // forward declarations
@@ -44,6 +43,7 @@ class TH1F;
 class TFrame;
 class TLegend;
 class TBox;
+class TString;
 class TVirtualViewer3D;
 class TVirtualPadPainter;
 
@@ -70,6 +70,17 @@ public:
        void PadDeleted(TVirtualPad *pad);
    };
 
+   /** Helper class to store interactive parameters for individual objects
+    *  Should be used via gPad->Interactive() methods in the objects ExecuteEvent */
+   class TInteractive {
+      protected:
+         TObject *fObject = nullptr;
+      public:
+         TInteractive() = default;
+         virtual ~TInteractive() = default;
+         void SetObject(TObject *obj) { fObject = obj; }
+         TObject *GetObject() const { return fObject; }
+   };
 
    TVirtualPad();
    TVirtualPad(const char *name, const char *title, Double_t xlow,
@@ -96,12 +107,14 @@ public:
    virtual void     DrawClassObject(const TObject *obj, Option_t *option="") = 0;
    virtual TH1F    *DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title="") = 0;
    virtual void     ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis) = 0;
+   virtual void     FeedbackMode(Bool_t set) = 0;
    virtual void     UnZoomed() { Emit("UnZoomed()"); } // *SIGNAL*
    virtual Short_t  GetBorderMode() const = 0;
    virtual Short_t  GetBorderSize() const = 0;
    virtual Int_t    GetCanvasID() const = 0;
    virtual TCanvasImp *GetCanvasImp() const = 0;
    virtual TCanvas  *GetCanvas() const = 0;
+   virtual Int_t    GetDoubleBuffer() const  = 0;
    virtual TVirtualPad *GetVirtCanvas() const = 0;
    virtual Int_t    GetEvent() const  = 0;
    virtual Int_t    GetEventX() const = 0;
@@ -273,7 +286,9 @@ public:
    virtual void     XYtoPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const = 0;
    virtual void     XYtoPixel(Double_t x, Double_t y, Double_t &xpixel, Double_t &ypixel) const = 0;
 
-   virtual Int_t    IncrementPaletteColor(Int_t i, TString opt) = 0;
+   virtual TInteractive *Interactive(TObject * /* obj */ = nullptr, TInteractive * /* init */ = nullptr) = 0;
+
+   virtual Int_t    IncrementPaletteColor(Int_t i, const TString &opt) = 0;
    virtual Int_t    NextPaletteColor() = 0;
 
    virtual Bool_t   PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t &yb, Option_t* opt = "lb") = 0;

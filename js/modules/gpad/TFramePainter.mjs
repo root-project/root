@@ -454,9 +454,7 @@ class TooltipHandler extends ObjectPainter {
          // check if fully duplicated hint already exists
          for (let k = 0; k < n; ++k) {
             const hprev = hints[k];
-            let diff = false;
-            if (!hprev || (hprev.lines.length !== hint.lines.length))
-               continue;
+            let diff = hprev?.lines.length !== hint.lines.length;
             for (let l = 0; l < hint.lines.length && !diff; ++l) {
                if (hprev.lines[l] !== hint.lines[l])
                   diff = true;

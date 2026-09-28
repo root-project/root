@@ -12,13 +12,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "TClassEdit.h"
+#include "TSpinLockGuard.h"
+
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
 #include <cstring>
-#include "TClassEdit.h"
 #include <cctype>
-#include "Rstrstream.h"
+#include <sstream>
 #include <set>
 #include <stack>
 // for shared_ptr
@@ -26,8 +28,6 @@
 #include <string_view>
 #include <algorithm>
 #include <string>
-
-#include "TSpinLockGuard.h"
 
 using std::string, std::string_view, std::vector, std::set;
 

@@ -21,8 +21,9 @@
 #include <TRootCanvas.h>
 #include <TApplication.h>
 #include <TList.h>
-#include <snprintf.h>
 #include "Tetris.h"
+
+#include <cstdio>
 
 static Tetris *gTetris;                    // game manager
 

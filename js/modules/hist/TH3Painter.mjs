@@ -1,4 +1,4 @@
-import { gStyle, kInspect, clTF1, clTF3, clTProfile3D, BIT, isFunc } from '../core.mjs';
+import { gStyle, kInspect, clTF1, clTF3, clTProfile3D, clTH3D, BIT, isFunc } from '../core.mjs';
 import { TRandom, floatToString } from '../base/BasePainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
@@ -259,7 +259,8 @@ class TH3Painter extends THistPainter {
 
    /** @summary Provide text information (tooltips) for histogram bin */
    getBinTooltips(ix, iy, iz) {
-      const lines = [], histo = this.getHisto();
+      const lines = [], histo = this.getHisto(),
+            is_profile3d = this.matchObjectType(clTProfile3D);
 
       lines.push(this.getObjectHint(),
                  `x = ${this.getAxisBinTip('x', histo.fXaxis, ix)}  xbin=${ix + 1}`,
@@ -269,10 +270,12 @@ class TH3Painter extends THistPainter {
       const binz = histo.getBinContent(ix + 1, iy + 1, iz + 1);
       if (binz === Math.round(binz))
          lines.push(`entries = ${binz}`);
-      else
-         lines.push(`entries = ${floatToString(binz, gStyle.fStatFormat)}`);
+      else {
+         const is_dbl = is_profile3d || this.matchObjectType(clTH3D);
+         lines.push(`entries = ${floatToString(binz, is_dbl)}`);
+      }
 
-      if (this.matchObjectType(clTProfile3D)) {
+      if (is_profile3d) {
          const errz = histo.getBinError(histo.getBin(ix + 1, iy + 1, iz + 1));
          lines.push('error = ' + ((errz === Math.round(errz)) ? errz.toString() : floatToString(errz, gStyle.fPaintTextFormat)));
       }

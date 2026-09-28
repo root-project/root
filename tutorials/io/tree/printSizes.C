@@ -41,10 +41,11 @@
 
 #include "TTree.h"
 #include "TBranch.h"
-#include "Riostream.h"
 #include "TMemFile.h"
 #include "TKey.h"
 #include "TBranchRef.h"
+
+#include <iostream>
 
 Long64_t GetTotalSize(TBranch * b, bool ondisk, bool inclusive);
 Long64_t GetBasketSize(TBranch * b, bool ondisk, bool inclusive);

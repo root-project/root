@@ -10,8 +10,9 @@
 
 #include <TMVA/RReader.hxx>
 #include <TMVA/RInferenceUtils.hxx>
-#include <TMVA/RTensor.hxx>
-#include <TMVA/RTensorUtils.hxx>
+
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RSpan.hxx>
 
 using namespace TMVA::Experimental;
 
@@ -162,19 +163,18 @@ TEST(RReader, ClassificationComputeVector)
    EXPECT_EQ(y.size(), 1ul);
 }
 
-TEST(RReader, ClassificationComputeTensor)
+TEST(RReader, ClassificationComputeBatch)
 {
    TrainClassificationModel();
-   ROOT::RDataFrame df("TreeS", filenameClassification);
-   auto x = AsTensor<float>(df, variablesClassification);
+
+   // Batch of two events, each with the four input variables
+   const std::vector<float> x = {1.0, 2.0, 3.0, 4.0, //
+                                 5.0, 6.0, 7.0, 8.0};
 
    RReader model(modelClassification);
-   auto y = model.Compute(x);
+   auto y = model.Compute(std::span<const float>(x));
 
-   const auto shapeX = x.GetShape();
-   const auto shapeY = y.GetShape();
-   EXPECT_EQ(shapeY.size(), 1ul);
-   EXPECT_EQ(shapeY[0], shapeX[0]);
+   EXPECT_EQ(y.size(), 2ul);
 }
 
 TEST(RReader, ClassificationComputeDataFrame)
@@ -209,19 +209,18 @@ TEST(RReader, RegressionComputeVector)
    EXPECT_EQ(y.size(), 1ul);
 }
 
-TEST(RReader, RegressionComputeTensor)
+TEST(RReader, RegressionComputeBatch)
 {
    TrainRegressionModel();
-   ROOT::RDataFrame df("TreeR", filenameRegression);
-   auto x = AsTensor<float>(df, variablesRegression);
+
+   // Batch of two events, each with the two input variables
+   const std::vector<float> x = {1.0, 2.0, //
+                                 3.0, 4.0};
 
    RReader model(modelRegression);
-   auto y = model.Compute(x);
+   auto y = model.Compute(std::span<const float>(x));
 
-   const auto shapeX = x.GetShape();
-   const auto shapeY = y.GetShape();
-   EXPECT_EQ(shapeY.size(), 1ul);
-   EXPECT_EQ(shapeY[0], shapeX[0]);
+   EXPECT_EQ(y.size(), 2ul);
 }
 
 TEST(RReader, RegressionComputeDataFrame)
@@ -256,20 +255,19 @@ TEST(RReader, MulticlassComputeVector)
    EXPECT_EQ(y.size(), 4ul);
 }
 
-TEST(RReader, MulticlassComputeTensor)
+TEST(RReader, MulticlassComputeBatch)
 {
    TrainMulticlassModel();
-   ROOT::RDataFrame df("TreeS", filenameMulticlass);
-   auto x = AsTensor<float>(df, variablesMulticlass);
+
+   // Batch of two events, each with the four input variables
+   const std::vector<float> x = {1.0, 2.0, 3.0, 4.0, //
+                                 5.0, 6.0, 7.0, 8.0};
 
    RReader model(modelMulticlass);
-   auto y = model.Compute(x);
+   auto y = model.Compute(std::span<const float>(x));
 
-   const auto shapeX = x.GetShape();
-   const auto shapeY = y.GetShape();
-   EXPECT_EQ(shapeY.size(), 2ul);
-   EXPECT_EQ(shapeY[0], shapeX[0]);
-   EXPECT_EQ(shapeY[1], 4ul);
+   // The output is flat with one value per class and event
+   EXPECT_EQ(y.size(), 2ul * 4ul);
 }
 
 TEST(RReader, MulticlassComputeDataFrame)

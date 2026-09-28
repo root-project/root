@@ -3,11 +3,18 @@
 
 #include "TMVA/RModel_Base.hxx"
 #include "TMVA/SOFIE_common.hxx"
-#include "TMVA/ROperator.hxx"
 
-namespace TMVA {
-namespace Experimental {
-namespace SOFIE {
+#include "Rtypes.h" // for ClassDefNV
+
+#include <unordered_set>
+
+namespace TMVA::Experimental::SOFIE {
+
+// The ROperator interface is an implementation detail of the code generation
+// and deliberately not exposed to the public: only this forward declaration
+// is visible here, the full definition (TMVA/ROperator.hxx) is a private
+// header of the SOFIE libraries.
+class ROperator;
 
 class RModel final : public RModel_Base {
 
@@ -17,7 +24,6 @@ private:
    bool fUseVDT = false;
    int fVerbose = 0;
    int fBatchSize = -1;
-   long fReadPos = 0;  // reading file position
    size_t fConstantTensorSize = 0; // size  (in Bytes) of the allocated constant tensors
    size_t fWeightsTensorSize = 0;  // size  (in Bytes) of the allocated weight tensors
    size_t fOtherTensorSize = 0;    // size  (in Bytes) of intermediate tensors which are not managed by the memory pool
@@ -31,12 +37,21 @@ private:
    std::unordered_map<std::string, DynamicTensorInfo> fDynamicTensorInfos;
    std::unordered_map<std::string, std::pair<std::vector<Dim>, bool>> fShapeTensors; // constant tensors describing a shape
    std::unordered_map<std::string, std::string> fShapeParams; // parameters defining the dynamic shape (e.g. batch size), store also its default value
+   std::unordered_set<std::string> fComputedShapeParams;      ///<! shape parameters computed at run time by an operator
    std::unordered_map<std::string, std::string> fAliasTensors;   // list of alias tensors
    std::vector<std::string> fDimShapeNames; // parameter names used to define the shapes
    std::vector<std::string> fOutputTensorNames;
    std::vector<std::string> fInputTensorNames; // input tensor names using ONNX order
 
-   std::vector<std::unique_ptr<ROperator>> fOperators;
+   // A bare std::unique_ptr<ROperator> would require the complete ROperator
+   // type wherever a destroyed RModel is instantiated; with the
+   // out-of-line-deleter declared here and defined in RModel.cxx the
+   // forward declaration above is enough, so the ROperator interface can stay
+   // private.
+   struct ROperatorDeleter {
+      void operator()(ROperator *ptr) const;
+   };
+   std::vector<std::unique_ptr<ROperator, ROperatorDeleter>> fOperators;
 
    std::vector<std::shared_ptr<RModel>> fSubGraphs;    ///<!  sub-graph models (transient)
    RModel * fParentGraph = nullptr;
@@ -55,8 +70,13 @@ public:
    RModel() = default;
    RModel(std::string name, std::string parsedtime) : RModel_Base(name, parsedtime) {}
 
-   // For GNN Functions usage
-   RModel(std::string function_name) : RModel_Base(function_name) {}
+   // Defined out of line because ROperator is an incomplete type in this
+   // header (the definition is a private implementation header).
+   ~RModel();
+   RModel(RModel &&);
+   RModel &operator=(RModel &&);
+   RModel(RModel const &) = delete;
+   RModel &operator=(RModel const &) = delete;
 
    int Verbose() const { return fVerbose;}
 
@@ -133,6 +153,11 @@ public:
    void AddDynamicTensor(std::string tensor_name, ETensorType type, std::vector<Dim> shape);
    // void Add a shape parameter
    void AddShapeParam(const std::string & name, size_t def_value = 0);
+   /// Declare a shape parameter as computed at run time by an operator (e.g. the number of
+   /// non-zero elements found by NonZero): the operator declares it itself, so it is never a
+   /// Session constructor argument. A later AddShapeParam for the same name has no effect.
+   void AddComputedShapeParam(const std::string &name);
+   bool IsComputedShapeParam(const std::string &name) const { return fComputedShapeParams.count(name) != 0; }
    void AddInputTensorName(std::string name);
    void AddOutputTensorNameList(std::vector<std::string> output_tensor_names);
    void
@@ -147,10 +172,10 @@ public:
    void Initialize(int batchSize = -1, bool verbose = false);
    void Initialize(const std::map<std::string,size_t> & inputParams, bool verbose = false);
 
-   void Generate(std::underlying_type_t<Options> options, int batchSize = -1, long pos = 0, bool verbose = false);
-   void Generate(Options options = Options::kDefault, int batchSize = -1, int pos = 0, bool verbose = false)
+   void Generate(std::underlying_type_t<Options> options, int batchSize = -1, bool verbose = false);
+   void Generate(Options options = Options::kDefault, int batchSize = -1, bool verbose = false)
    {
-      Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize, pos, verbose);
+      Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize, verbose);
    }
    // generate the infer function signature. If isdecl= false generate the calling infer function
    // used to infer the sub-graphs
@@ -200,7 +225,7 @@ public:
    const std::vector<std::string> & GetOutputTensorNames() const { return fOutputTensorNames; }
    const std::vector<std::string> & GetDimShapeNames() const { return fDimShapeNames; }
 
-   void ReadInitializedTensorsFromFile(long);
+   void ReadInitializedTensorsFromFile();
    long WriteInitializedTensorsToFile(std::string filename = "");
 
    void PrintSummary() const;
@@ -208,19 +233,6 @@ public:
    void PrintOutputTensors() const;
    void OutputGenerated(std::string filename = "", bool append = false);
    void SetFilename(std::string filename) { fName = filename; }
-
-   /*
-      template <typename T>
-      void AddInitializedTensor(std::string tensor_name, RTensor<T> new_tensor){
-         //a view only
-         T obj;
-         if (fInitializedTensors.find(tensor_name) != fInitializedTensors.end()){
-            throw std::runtime_error("TMVA-SOFIE: initialized tensor with name " + tensor_name + " already exists \n");
-         }
-         InitializedTensor new_tensor_ {GetTemplatedType(obj), new_tensor.GetShape() ,
-      static_cast<void>(new_tensor.GetData())}; fInitializedTensors[tensor_name] = new_tensor_;
-      }
-   */
 
    void PrintRequiredInputTensors() const;
    void PrintInitializedTensors() const;
@@ -255,8 +267,6 @@ inline std::vector<Dim> RModel::GetTensorData<Dim>(const std::string & name) {
    return GetShapeTensorValues(name);
 }
 
-} // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA
+} // namespace TMVA::Experimental::SOFIE
 
 #endif // TMVA_SOFIE_RMODEL

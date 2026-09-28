@@ -21,15 +21,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Riostream.h"
-
 #include "TObject.h"
-
 #include "TCollection.h"
-
 #include "TString.h"
-
 #include "TROOT.h"
+
+#include <iostream>
 
 template <class AParamType>
 class TParameter : public TObject {

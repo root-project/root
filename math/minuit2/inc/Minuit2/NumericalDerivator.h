@@ -46,6 +46,18 @@ public:
 
    void SetupDifferentiate(unsigned int nDim, const FCNBase *function, const double *cx,
                            std::span<const ROOT::Fit::ParameterSettings> parameters);
+
+   /// Pre-seed the cache of the function value at the central point, so that a
+   /// subsequent SetupDifferentiate() at the same point \p cx (in Minuit-internal
+   /// coordinates) can skip its function evaluation. Callers that already know
+   /// the function value at the gradient point (e.g. from the line search that
+   /// Minuit just completed) can use this to avoid one full function call.
+   void PreseedFVal(double fval, std::span<const double> cx)
+   {
+      fVxFValCache.assign(cx.begin(), cx.end());
+      fVal = fval;
+   }
+
    std::vector<DerivatorElement> Differentiate(unsigned int nDim, const FCNBase *function, const double *x,
                                                std::span<const ROOT::Fit::ParameterSettings> parameters,
                                                std::span<const DerivatorElement> previous_gradient);

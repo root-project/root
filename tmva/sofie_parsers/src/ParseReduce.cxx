@@ -22,6 +22,10 @@ std::unique_ptr<ROperator> ParseReduce(RModelParser_ONNX &parser, const onnx::No
       op_mode = ReduceProd;
    else if (nodeproto.op_type() == "ReduceSum")
       op_mode = ReduceSum;
+   else if (nodeproto.op_type() == "ReduceMax")
+      op_mode = ReduceMax;
+   else if (nodeproto.op_type() == "ReduceMin")
+      op_mode = ReduceMin;
 
    if (op_mode == InvalidReduceOp) {
       throw std::runtime_error("TMVA::SOFIE - Reduce op mode not supported.");
@@ -91,6 +95,16 @@ ParserFuncSignature ParseReduceProd = [](RModelParser_ONNX &parser, const onnx::
 // Parse ReduceSum
 ParserFuncSignature ParseReduceSum = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
    return ParseReduce<EReduceOpMode::ReduceSum>(parser, nodeproto);
+};
+
+// Parse ReduceMax
+ParserFuncSignature ParseReduceMax = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+   return ParseReduce<EReduceOpMode::ReduceMax>(parser, nodeproto);
+};
+
+// Parse ReduceMin
+ParserFuncSignature ParseReduceMin = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+   return ParseReduce<EReduceOpMode::ReduceMin>(parser, nodeproto);
 };
 
 } // namespace SOFIE

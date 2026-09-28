@@ -15,6 +15,7 @@
 #include "TBranch.h"
 #include "TLeaf.h"
 #include "TBrowser.h"
+#define ROOT_TreeUtils_cxx
 #include "TreeUtils.h"
 #include "strlcpy.h"
 

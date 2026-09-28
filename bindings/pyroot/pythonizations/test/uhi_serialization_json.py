@@ -79,6 +79,31 @@ class TestTH1Serialization:
         # test that name is preserved
         assert h.GetName() == h_loaded.GetName() == h_loaded_cls.GetName()
 
+    def test_uhi_protocol_object(self):
+        values = np.arange(12.0)
+
+        class Dummy:
+            def _to_uhi_(self):
+                return {
+                    "uhi_schema": 1,
+                    "axes": [
+                        {
+                            "type": "regular",
+                            "lower": -5.0,
+                            "upper": 5.0,
+                            "bins": 10,
+                            "underflow": True,
+                            "overflow": True,
+                            "circular": False,
+                        }
+                    ],
+                    "storage": {"type": "double", "values": values},
+                }
+
+        h = ROOT.TH1D(Dummy())
+
+        assert np.array_equal(_bin_contents(h, flow=True), values)
+
     def test_invalid_schema(self):
         h = ROOT.TH1D("h_invalid", "h_invalid", 10, -5, 5)
         ir = h._to_uhi_()

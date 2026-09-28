@@ -101,6 +101,12 @@ void ROOT::Experimental::Internal::RNTupleProcessorEntry::BindRawPtr(FieldIndex_
    fProcessorValues[fieldIdx].fValue.BindRawPtr(valuePtr);
 }
 
+void ROOT::Experimental::Internal::RNTupleProcessorEntry::Bind(FieldIndex_t fieldIdx, std::shared_ptr<void> valuePtr)
+{
+   assert(fieldIdx < fProcessorValues.size());
+   fProcessorValues[fieldIdx].fValue.Bind(std::move(valuePtr));
+}
+
 void ROOT::Experimental::Internal::RNTupleProcessorEntry::ReadValue(FieldIndex_t fieldIdx, ROOT::NTupleSize_t entryIdx)
 {
    assert(fieldIdx < fProcessorValues.size());

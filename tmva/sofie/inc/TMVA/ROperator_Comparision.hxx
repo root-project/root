@@ -6,6 +6,7 @@
 #include "TMVA/ROperator.hxx"
 #include "TMVA/RModel.hxx"
 
+#include <algorithm> // for std::all_of
 #include <sstream>
 
 namespace TMVA{

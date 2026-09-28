@@ -289,6 +289,53 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsComplete) {
   EXPECT_FALSE(Cpp::IsComplete(nullptr));
 }
 
+TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetOrForceDefinition) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    class Complete { int x; };
+    struct Fwd;
+    enum EnumC : int { A, B };
+    int gVar = 5;
+    void func() {}
+    namespace NS {}
+    template <typename T> struct TS { T y; };
+    TS<int> makeTS() { return {}; }
+    extern int extVar;
+    void fwdFunc();
+    template <typename T> T fnTmpl(T x) { return x; }
+  )";
+  GetAllTopLevelDecls(code, Decls);
+
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(nullptr) == nullptr);
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[0]) != nullptr);
+  EXPECT_TRUE(Cpp::IsComplete(Cpp::GetOrForceDefinition(Decls[0])));
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[1]) == nullptr);
+  EXPECT_FALSE(Cpp::IsComplete(Decls[1]));
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[2]) != nullptr);
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[3]) != nullptr);
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[4]) != nullptr);
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[5]) == nullptr);
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[8]) == nullptr);
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(Decls[9]) == nullptr);
+
+  // TS<int> reached via makeTS's return type, completed on demand.
+  Cpp::TypeRef retTy = Cpp::GetFunctionReturnType(Decls[7]);
+  auto tsDef = Cpp::GetOrForceDefinition(Cpp::GetScopeFromType(retTy));
+  EXPECT_TRUE(tsDef != nullptr);
+  EXPECT_TRUE(Cpp::IsComplete(tsDef));
+
+  // InstantiateTemplate instantiates the prototype, not the body; the
+  // FunctionDecl branch forces the definition.
+  ASTContext& C = Interp->getCI()->getASTContext();
+  std::vector<Cpp::TemplateArgInfo> fnArgs = {C.IntTy.getAsOpaquePtr()};
+  Cpp::DeclRef fnInst = Cpp::InstantiateTemplate(Decls[10], fnArgs);
+  auto* fnFD = Cpp::unwrap<clang::FunctionDecl>(fnInst);
+  EXPECT_EQ(fnFD->getDefinition(), nullptr);
+  EXPECT_NE(fnFD->getTemplateInstantiationPattern(), nullptr);
+  EXPECT_TRUE(Cpp::GetOrForceDefinition(fnInst) != nullptr);
+  EXPECT_NE(fnFD->getDefinition(), nullptr);
+}
+
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_SizeOf) {
   std::vector<Decl*> Decls;
   std::string code = R"(namespace N {} class C{}; int I; struct S;
@@ -416,12 +463,31 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsAbstract) {
     int sum(int a, int b) {
       return a+b;
     }
+
+    class FwdDeclared;
+
+    template <typename T>
+    struct AbsT {
+      virtual void f() = 0;
+    };
+    AbsT<int>* makeAbsT();
   )";
 
   GetAllTopLevelDecls(code, Decls);
   EXPECT_FALSE(Cpp::IsAbstract(Decls[0]));
   EXPECT_TRUE(Cpp::IsAbstract(Decls[1]));
   EXPECT_FALSE(Cpp::IsAbstract(Decls[2]));
+  // A class with no definition anywhere answers false and must not crash.
+  EXPECT_FALSE(Cpp::IsAbstract(Decls[3]));
+
+  // An uninstantiated specialization is completed on demand before answering.
+  // (hasDefinition() is the passive check: IsComplete itself would force.)
+  Cpp::TypeRef PtrTy = Cpp::GetFunctionReturnType(Decls[5]);
+  Cpp::DeclRef Spec = Cpp::GetScopeFromType(Cpp::GetPointeeType(PtrTy));
+  auto* SpecRD = Cpp::unwrap<clang::CXXRecordDecl>(Spec);
+  EXPECT_FALSE(SpecRD->hasDefinition());
+  EXPECT_TRUE(Cpp::IsAbstract(Spec));
+  EXPECT_TRUE(SpecRD->hasDefinition());
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsVariable) {
@@ -702,6 +768,62 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetNamed) {
   EXPECT_EQ(Cpp::GetQualifiedName(std_ns), "std");
   EXPECT_EQ(Cpp::GetQualifiedName(std_string_class), "std::string");
   EXPECT_EQ(Cpp::GetQualifiedName(std_string_npos_var), "std::basic_string<char>::npos");
+}
+
+// GetNamed on a class scope must find inherited members per [class.qual].
+TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetNamedSearchesBaseClasses) {
+  std::string code = R"(struct GNBase {
+                          typedef int value_type;
+                          int ivalue;
+                        };
+                        struct GNDerived : GNBase {};
+                        struct GNGrandChild : GNDerived {};
+
+                        struct GNLeft  { typedef int T; };
+                        struct GNRight { typedef float T; };
+                        struct GNBoth : GNLeft, GNRight {};
+                        struct GNFwd;
+
+                        template <typename T> struct GNTBase { typedef T type; };
+                        template <typename T> struct GNT : GNTBase<T> {};
+                        GNT<int> gnt_provider();
+                       )";
+
+  std::vector<const char*> interpreter_args = {"-include", "new"};
+  TestFixture::CreateInterpreter(interpreter_args);
+  Interp->declare(code);
+
+  Cpp::DeclRef base = Cpp::GetNamed("GNBase", nullptr);
+  Cpp::DeclRef derived = Cpp::GetNamed("GNDerived", nullptr);
+  ASSERT_TRUE(base);
+  ASSERT_TRUE(derived);
+
+  Cpp::DeclRef vt = Cpp::GetNamed("value_type", derived);
+  ASSERT_TRUE(vt);
+  EXPECT_EQ(Cpp::GetQualifiedName(vt), "GNBase::value_type");
+  EXPECT_EQ(vt, Cpp::GetNamed("value_type", base));
+  EXPECT_EQ(Cpp::GetQualifiedName(Cpp::GetNamed("ivalue", derived)),
+            "GNBase::ivalue");
+
+  EXPECT_EQ(Cpp::GetNamed("value_type", Cpp::GetNamed("GNGrandChild", nullptr)),
+            vt);
+
+  // An ambiguous inherited name stays unresolved.
+  EXPECT_FALSE(Cpp::GetNamed("T", Cpp::GetNamed("GNBoth", nullptr)));
+
+  // A name absent from the class and all of its bases stays unresolved.
+  EXPECT_FALSE(Cpp::GetNamed("no_such_member", derived));
+
+  // A class with no definition reachable anywhere cannot be searched.
+  EXPECT_FALSE(Cpp::GetNamed("value_type", Cpp::GetNamed("GNFwd", nullptr)));
+
+  // A member of an uninstantiated specialization: complete it, then search.
+  Cpp::DeclRef gnt = Cpp::GetScopeFromType(Cpp::GetFunctionReturnType(
+      Cpp::FuncRef{Cpp::GetNamed("gnt_provider").data}));
+  ASSERT_TRUE(gnt);
+  Cpp::DeclRef gnt_type = Cpp::GetNamed("type", gnt);
+  ASSERT_TRUE(gnt_type);
+  EXPECT_EQ(Cpp::GetName(gnt_type), "type");
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetNamedWithUsing) {
@@ -1312,6 +1434,14 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 
   Cpp::GetClassTemplateInstantiationArgs(v3_class, instance_types);
   EXPECT_TRUE(instance_types.size() == 0);
+
+  // Null or non-specialization decls must degrade to "no args", not crash
+  // (a silently-failed trampoline instantiation reaches here with null).
+  instance_types.clear();
+  Cpp::GetClassTemplateInstantiationArgs(nullptr, instance_types);
+  EXPECT_TRUE(instance_types.empty());
+  Cpp::GetClassTemplateInstantiationArgs(v1, instance_types); // a VarDecl
+  EXPECT_TRUE(instance_types.empty());
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IncludeVector) {

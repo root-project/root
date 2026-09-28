@@ -5,12 +5,11 @@
 #include "TKey.h"
 #include "TChain.h"
 #include "TSystem.h"
-
 #include "TBranchElement.h"
 
-#include "Riostream.h"
-
 #include "dt_DrawTest.C"
+
+#include <iostream>
 
 Bool_t gInteractiveTest = kTRUE;
 Int_t gQuietLevel = 0;

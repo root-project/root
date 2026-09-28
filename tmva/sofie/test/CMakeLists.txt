@@ -149,8 +149,3 @@ if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND NOT broken_onnx)
   endif()
 endif()
 
-ROOT_EXECUTABLE(emitGNN GNN/EmitGNN.cxx LIBRARIES ROOTTMVASofie)
-ROOT_ADD_TEST(tmva-sofie-EmitGNN COMMAND emitGNN)
-
-ROOT_EXECUTABLE(EmitGraphIndependent GNN/EmitGraphIndependent.cxx LIBRARIES ROOTTMVASofie)
-ROOT_ADD_TEST(tmva-sofie-EmitGraphIndependent COMMAND EmitGraphIndependent)

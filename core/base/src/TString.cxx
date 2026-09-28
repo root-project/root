@@ -44,12 +44,7 @@ as a TString, construct a TString from it, eg:
 */
 
 #include <ROOT/RConfig.hxx>
-#include <cstdlib>
-#include <cctype>
-#include <list>
-#include <algorithm>
 
-#include "Varargs.h"
 #include "strlcpy.h"
 #include "TString.h"
 #include "TBuffer.h"
@@ -61,6 +56,12 @@ as a TString, construct a TString from it, eg:
 #include "TObjString.h"
 #include "TVirtualMutex.h"
 #include "ThreadLocalStorage.h"
+
+#include <cstdarg>
+#include <cstdlib>
+#include <cctype>
+#include <list>
+#include <algorithm>
 
 #if defined(R__WIN32)
 #define strtoull _strtoui64
@@ -2390,7 +2391,7 @@ TObjArray *TString::Tokenize(const TString &delim) const
 void TString::FormImp(const char *fmt, va_list ap)
 {
    va_list ap_len;
-   R__VA_COPY(ap_len, ap);
+   va_copy(ap_len, ap);
 
    // First pass: determine required size (excluding '\0')
    int n = vsnprintf(nullptr, 0, fmt, ap_len);
@@ -2412,7 +2413,7 @@ void TString::FormImp(const char *fmt, va_list ap)
    }
 
    va_list ap_out;
-   R__VA_COPY(ap_out, ap);
+   va_copy(ap_out, ap);
    vsnprintf(GetPointer(), needed, fmt, ap_out);
    va_end(ap_out);
 
@@ -2434,11 +2435,11 @@ void TString::FormImp(const char *fmt, va_list ap)
 /// Note: this is not to be confused with ::Format and ::Form (in the global namespace)
 /// which returns a const char* and relies on a thread-local static character buffer.
 
-void TString::Form(const char *va_(fmt), ...)
+void TString::Form(const char *fmt, ...)
 {
    va_list ap;
-   va_start(ap, va_(fmt));
-   FormImp(va_(fmt), ap);
+   va_start(ap, fmt);
+   FormImp(fmt, ap);
    va_end(ap);
 }
 
@@ -2456,12 +2457,12 @@ void TString::Form(const char *va_(fmt), ...)
 /// Note: this is not to be confused with ::Format and ::Form (in the global namespace)
 /// which returns a const char* and relies on a thread-local static character buffer.
 
-TString TString::Format(const char *va_(fmt), ...)
+TString TString::Format(const char *fmt, ...)
 {
    va_list ap;
-   va_start(ap, va_(fmt));
+   va_start(ap, fmt);
    TString str;
-   str.FormImp(va_(fmt), ap);
+   str.FormImp(fmt, ap);
    va_end(ap);
    return str;
 }
@@ -2491,7 +2492,7 @@ static char *SlowFormat(const char *format, va_list ap, int hint)
    }
 
    va_list sap;
-   R__VA_COPY(sap, ap);
+   va_copy(sap, ap);
 
    int n = vsnprintf(slowBuffer, slowBufferSize, format, ap);
    // old vsnprintf's return -1 if string is truncated new ones return
@@ -2504,7 +2505,7 @@ static char *SlowFormat(const char *format, va_list ap, int hint)
          return nullptr; // int overflow!
       }
       va_end(ap);
-      R__VA_COPY(ap, sap);
+      va_copy(ap, sap);
       char *buf = SlowFormat(format, ap, n);
       va_end(sap);
       va_end(ap);
@@ -2540,14 +2541,14 @@ static char *Format(const char *format, va_list ap)
       buf = gFormbuf;
 
    va_list sap;
-   R__VA_COPY(sap, ap);
+   va_copy(sap, ap);
 
    int n = vsnprintf(buf, fld_size, format, ap);
    // old vsnprintf's return -1 if string is truncated new ones return
    // total number of characters that would have been written
    if (n == -1 || n >= fld_size) {
       va_end(ap);
-      R__VA_COPY(ap, sap);
+      va_copy(ap, sap);
       buf = SlowFormat(format, ap, n);
       va_end(sap);
       va_end(ap);
@@ -2567,11 +2568,11 @@ static char *Format(const char *format, va_list ap)
 /// be overwritten downstream. Use Form() results immediately or use
 /// TString::Format() instead.
 
-char *Form(const char *va_(fmt), ...)
+char *Form(const char *fmt, ...)
 {
    va_list ap;
-   va_start(ap,va_(fmt));
-   char *b = Format(va_(fmt), ap);
+   va_start(ap, fmt);
+   char *b = Format(fmt, ap);
    va_end(ap);
    return b;
 }
@@ -2581,14 +2582,14 @@ char *Form(const char *va_(fmt), ...)
 /// Appends a newline. If gPrintViaErrorHandler is true it will print via the
 /// currently active ROOT error handler.
 
-void Printf(const char *va_(fmt), ...)
+void Printf(const char *fmt, ...)
 {
    va_list ap;
-   va_start(ap,va_(fmt));
+   va_start(ap, fmt);
    if (gPrintViaErrorHandler)
-      ErrorHandler(kPrint, nullptr, va_(fmt), ap);
+      ErrorHandler(kPrint, nullptr, fmt, ap);
    else {
-      char *b = Format(va_(fmt), ap);
+      char *b = Format(fmt, ap);
       printf("%s\n", b);
       fflush(stdout);
    }

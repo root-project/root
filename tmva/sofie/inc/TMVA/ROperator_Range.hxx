@@ -27,9 +27,12 @@ private:
 public:
    ROperator_Range(){}
 
-   ROperator_Range(std::string start, std::string limit, std::string delta, std::string nameOutput):
-      fNStart(start), fNLimit(limit), fNDelta(delta),
-      fNOutput(UTILITY::Clean_name(nameOutput)) {
+   ROperator_Range(std::string start, std::string limit, std::string delta, std::string nameOutput)
+      : fNStart(UTILITY::Clean_name(start)),
+        fNLimit(UTILITY::Clean_name(limit)),
+        fNDelta(UTILITY::Clean_name(delta)),
+        fNOutput(UTILITY::Clean_name(nameOutput))
+   {
       if (std::is_same<T, float>::value) {
           fType = "float";
       } else if (std::is_same<T, int64_t>::value) {

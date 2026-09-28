@@ -233,6 +233,7 @@ if(NOT xrootd)
                   analysis/dataframe/df105_WBosonAnalysis.py
                   analysis/dataframe/df106_HiggsToFourLeptons.py
                   analysis/dataframe/df107_SingleTopAnalysis.py
+                  analysis/tree/run_h1analysis.C
                   roofit/roofit/rf618_mixture_models.py # depends on df106_HiggsToFourLeptons.py
                   visualisation/rcanvas/df104.py
                   visualisation/rcanvas/df105.py
@@ -341,7 +342,7 @@ if(NOT TARGET Gui)
 endif()
 
 if (NOT tmva)
-  list(APPEND tmva_veto machine_learning/*.C machine_learning/*.py machine_learning/envelope/*.C machine_learning/keras/*.C machine_learning/keras/*.py machine_learning/pytorch/*.py )
+  list(APPEND tmva_veto machine_learning/*.C machine_learning/*.py machine_learning/keras/*.C machine_learning/keras/*.py machine_learning/pytorch/*.py )
 else()
   #copy input data files
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/data/tmva_class_example.root ${CMAKE_CURRENT_BINARY_DIR}/machine_learning/data COPYONLY)
@@ -351,14 +352,9 @@ else()
 
   #---These do not need to run for TMVA
   list(APPEND tmva_veto machine_learning/createData.C)
-  if(MSVC AND NOT win_broken_tests)
-    list(APPEND tmva_veto machine_learning/envelope/classification.C)
-  endif()
   #these depends on external packages
   ROOT_FIND_PYTHON_MODULE(torch)
   ROOT_FIND_PYTHON_MODULE(keras)
-  ROOT_FIND_PYTHON_MODULE(sonnet)
-  ROOT_FIND_PYTHON_MODULE(graph_nets)
   ROOT_FIND_PYTHON_MODULE(onnx)
 
 
@@ -380,7 +376,8 @@ else()
   endif()
   #veto this tutorial since it is added directly
   list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN_Parser.py)
-  if (NOT ROOT_SONNET_FOUND OR NOT ROOT_GRAPH_NETS_FOUND)
+  # The GNN tutorials define their model with PyTorch and export it to ONNX
+  if (NOT ROOT_TORCH_FOUND OR NOT ROOT_ONNX_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN.py)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN_Application.C)
   endif()
@@ -633,7 +630,6 @@ set (machine_learning-tmva101_Training-depends tutorial-machine_learning-tmva100
 set (machine_learning-tmva102_Testing-depends tutorial-machine_learning-tmva101_Training-py)
 set (machine_learning-tmva103_Application-depends tutorial-machine_learning-tmva101_Training-py)
 set (machine_learning-tmva003_RReader-depends tutorial-machine_learning-TMVAClassification)
-set (machine_learning-tmva004_RStandardScaler-depends tutorial-machine_learning-tmva003_RReader)
 set (machine_learning-pytorch-ApplicationClassificationPyTorch-depends tutorial-machine_learning-pytorch-ClassificationPyTorch-py)
 set (machine_learning-pytorch-RegressionPyTorch-depends tutorial-machine_learning-pytorch-ApplicationClassificationPyTorch-py)
 set (machine_learning-pytorch-ApplicationRegressionPyTorch-depends tutorial-machine_learning-pytorch-RegressionPyTorch-py)
@@ -683,7 +679,7 @@ if(geom)
                 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
 endif()
 # define Python GNN parsing tutorial needed to run before
-if (ROOT_SONNET_FOUND AND ROOT_GRAPH_NETS_FOUND)
+if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND)
   ROOT_ADD_TEST(tutorial-machine_learning-TMVA_SOFIE_GNN_Parser COMMAND ${Python3_EXECUTABLE}
   ${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/TMVA_SOFIE_GNN_Parser.py
   PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})

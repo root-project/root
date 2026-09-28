@@ -36,7 +36,7 @@ class RooFuncWrapper;
 class RooEvaluatorWrapper final : public RooAbsReal {
 public:
    RooEvaluatorWrapper(RooAbsReal &topNode, RooAbsData *data, bool useGPU, std::string const &rangeName,
-                       RooAbsPdf const *simPdf, bool takeGlobalObservablesFromData);
+                       RooAbsPdf const *simPdf, bool takeGlobalObservablesFromData, int nWorkers = 1);
 
    RooEvaluatorWrapper(const RooEvaluatorWrapper &other, const char *name = nullptr);
 

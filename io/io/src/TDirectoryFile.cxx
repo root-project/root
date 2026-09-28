@@ -23,8 +23,6 @@ End_Macro
  The structure of a file is shown in TFile::TFile
 */
 
-#include <iostream>
-#include "Strlen.h"
 #include "strlcpy.h"
 #include "TDirectoryFile.h"
 #include "TFile.h"
@@ -48,6 +46,9 @@ End_Macro
 #include "TProcessUUID.h"
 #include "TVirtualMutex.h"
 #include "TEmulatedCollectionProxy.h"
+
+#include <iostream>
+#include <cstring>
 
 const UInt_t kIsBigFile = BIT(16);
 const Int_t  kMaxLen = 2048;

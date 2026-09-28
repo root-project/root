@@ -385,8 +385,6 @@
 [9]: classTMultiDimFit.html#eq:dS2
 */
 
-
-#include "Riostream.h"
 #include "TMultiDimFit.h"
 #include "TMath.h"
 #include "TH1.h"
@@ -397,6 +395,9 @@
 #include "TDecompChol.h"
 #include "TDatime.h"
 
+#include <fstream>
+#include <iostream>
+#include <iomanip>
 
 #define RADDEG (180. / TMath::Pi())
 #define DEGRAD (TMath::Pi() / 180.)

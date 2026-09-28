@@ -608,22 +608,22 @@ public:
 
    /// An RAII wrapper used for the read-only access to `RPageSource::fDescriptor`. See `GetExclDescriptorGuard()``.
    class RSharedDescriptorGuard {
-      const ROOT::RNTupleDescriptor &fDescriptor;
-      std::shared_mutex &fLock;
+      const ROOT::RNTupleDescriptor *fDescriptor = nullptr;
+      std::shared_mutex *fLock = nullptr;
 
    public:
       RSharedDescriptorGuard(const ROOT::RNTupleDescriptor &desc, std::shared_mutex &lock)
-         : fDescriptor(desc), fLock(lock)
+         : fDescriptor(&desc), fLock(&lock)
       {
-         fLock.lock_shared();
+         fLock->lock_shared();
       }
       RSharedDescriptorGuard(const RSharedDescriptorGuard &) = delete;
       RSharedDescriptorGuard &operator=(const RSharedDescriptorGuard &) = delete;
-      RSharedDescriptorGuard(RSharedDescriptorGuard &&) = delete;
-      RSharedDescriptorGuard &operator=(RSharedDescriptorGuard &&) = delete;
-      ~RSharedDescriptorGuard() { fLock.unlock_shared(); }
-      const ROOT::RNTupleDescriptor *operator->() const { return &fDescriptor; }
-      const ROOT::RNTupleDescriptor &GetRef() const { return fDescriptor; }
+      RSharedDescriptorGuard(RSharedDescriptorGuard &&) = default;
+      RSharedDescriptorGuard &operator=(RSharedDescriptorGuard &&) = default;
+      ~RSharedDescriptorGuard() { fLock->unlock_shared(); }
+      const ROOT::RNTupleDescriptor *operator->() const { return fDescriptor; }
+      const ROOT::RNTupleDescriptor &GetRef() const { return *fDescriptor; }
    };
 
    /// An RAII wrapper used for the writable access to `RPageSource::fDescriptor`. See `GetSharedDescriptorGuard()`.
@@ -836,7 +836,7 @@ public:
    /// care in sections protected by `GetSharedDescriptorGuard()` and `GetExclDescriptorGuard()` especially to avoid
    /// that the locks are acquired indirectly. As a general guideline, no other
    /// method of the page source should be called (directly or indirectly) in a guarded section.
-   const RSharedDescriptorGuard GetSharedDescriptorGuard() const
+   RSharedDescriptorGuard GetSharedDescriptorGuard() const
    {
       return RSharedDescriptorGuard(fDescriptor, fDescriptorLock);
    }
@@ -852,8 +852,18 @@ public:
    /// Open the physical storage container and deserialize header and footer
    void Attach(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode mode =
                   ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
+
    ROOT::NTupleSize_t GetNEntries();
-   ROOT::NTupleSize_t GetNElements(ColumnHandle_t columnHandle);
+   ROOT::NTupleSize_t GetNElements(ROOT::DescriptorId_t physicalColumnId);
+   /// Returns a shared descriptor guard to ensure that the returned cluster id is useable, i.e. that the
+   /// corresponding cluster was not meanwhile evicted from the set of active clusters.
+   RSharedDescriptorGuard
+   FindClusterId(ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t index, ROOT::DescriptorId_t &cid);
+   /// An overload of FindClusterId that searches using a certain column element index.
+   RSharedDescriptorGuard FindClusterId(ROOT::NTupleSize_t entryIdx, ROOT::DescriptorId_t &cid);
+   /// Uses FindClusterId to search for the cluster with the entry index following the last entry index of the
+   /// given cluster.
+   RSharedDescriptorGuard FindNextClusterId(ROOT::DescriptorId_t clusterId, ROOT::DescriptorId_t &nextId);
 
    /// Promise to only read from the given entry range. If set, prevents the cluster pool from reading-ahead beyond
    /// the given range. The range needs to be within `[0, GetNEntries())`.
@@ -905,10 +915,6 @@ public:
    /// Builds the streamer info records from the descriptor's extra type info section. This is necessary when
    /// connecting streamer fields so that emulated classes can be read.
    void RegisterStreamerInfos();
-
-   /// Forces the loading of ROOT StreamerInfo from the underlying file. This currently only has an effect for
-   /// TFile-backed sources.
-   virtual void LoadStreamerInfo() = 0;
 
    /// Creates a new PageSource using the same underlying file as this but referring to a different RNTuple,
    /// described by `anchorLink`.

@@ -12,8 +12,6 @@ For more information, see:
 
 The following people have contributed to this new version:
 
-The following people have contributed to this new version:
-
  Bertrand Bellenot, CERN/EP-SFT,\
  Jakob Blomer, CERN/EP-SFT,\
  Lukas Breitwieser, CERN/EP-SFT,\
@@ -40,6 +38,7 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 
+* The `rootql` and `rootsl` (QuickLook and Spotlight) plugins for visualizing ROOT files in MacOS, that were developed for ROOT 5.24 are no longer supported in ROOT 6 and are thus removed from the codebase.
 * The build options `vc`, `veccore`, `builtin_vc`, `builtin_veccore` and `rpath` that were deprecated are now removed and will result in configuration errors if used.
 * The option `fail-on-missing=OFF` is no longer honored for opt-in (ie OFF by default) build options requiring external dependencies such as `arrow`, `cocoa`, `daos`, `daos_mock`, `dcache`, `experimental_adaptivecpp`, `fcgi`, `fortran`, `gviz`, `mpi`, `pythia8`, `qt6web`, `tmva-cudnn`, `tmva-pymva`, `tmva-sofie`, `uring` or `vecgeom`. If the respective associated package dependency is not installed, ROOT will always raise a configuration error independent of the value of `fail-on-missing`. The user has to take action by either providing the dependency or manually disabling that option via `-Darrow=OFF`.
   Note that `all=ON` enables several of these options, so building with `-Dall=ON` now requires all of their dependencies to be installed, or the unwanted ones to be disabled explicitly.
@@ -50,6 +49,7 @@ The following people have contributed to this new version:
 * The overloads of `RooAbsReal::createChi2()` and `RooAbsReal::chi2FitTo()` that take unbinned **RooDataSet** data objects were deprecated in ROOT 6.40 and are now removed.
 * The **RooStats::HybridPlot** class and the related **HybridResult::GetPlot** method were deprecated in ROOT 6.40 and are now removed.
 * The `builtin_zeromq` and `builtin_cppzmq` build options that were deprecated in ROOT 6.40 are now removed.
+* The `roofit_multiprocess` build option is deprecated and will be removed in ROOT 6.44. It has no effect anymore: RooFit's multi-process test statistics no longer depend on ZeroMQ and are now always built on non-Windows platforms, so there is no reason for an opt-in build option anymore (see the RooFit section below).
 * The ROOT **auth** package together with `TVirtualAuth` and `TROOT::GetListOfSecContexts()`, and the **authenticated sockets** (`TSocket::CreateAuthSocket()`) feature are now removed following deprecation in ROOT 6.40.
 * The `TSSLSocket` class is now removed following deprecation in ROOT 6.40.
 * The bindings to the R programming language that are enabled with the `r=ON` or `tmva-rmva=ON` build options (`TRInterface`, RMVA, and friends) are removed, following deprecation in ROOT 6.40. Their maintenance is no longer justified, given the broader adoption of the scientific Python ecosystem. Users who still rely on R from C++ are encouraged to call R directly via https://cran.r-project.org/package=RInside, which is what the ROOT bindings were using internally.
@@ -62,16 +62,51 @@ The following people have contributed to this new version:
 These parsers relied on private implementation details of Keras and PyTorch, which change faster than is appropriate for ROOT's stability standards.
 Users are encouraged to export their models to ONNX and use the retained ONNX parser instead.
 * **PyMVA**, the TMVA interface to Python machine-learning libraries (the `PyKeras`, `PyTorch`, `PyRandomForest`, `PyGTB` and `PyAdaBoost` methods), and the corresponding `tmva-pymva` build option are deprecated and will be removed in ROOT 6.44. Like the SOFIE Keras and PyTorch parsers, PyMVA relies on implementation details of the underlying Python libraries that change faster than is appropriate for ROOT's stability standards. Users are encouraged to train and evaluate their models directly with the Python machine-learning libraries, which integrate well with ROOT via the `ROOT::Experimental::ML::DataLoader`. For high-performance inference in C++, models can be exported to ONNX and evaluated with SOFIE (see `RSofieReader`).
+* The graph_nets-based SOFIE GNN support (`TMVA::Experimental::SOFIE::RModel_GNN`, `RModel_GraphIndependent`, the `RFunction` classes and the corresponding `ParseFromMemory` Python functions) is removed.
+It could only parse models built with DeepMind's *graph_nets* and *dm-sonnet* Python packages, which have been unmaintained since 2020 and can no longer be installed alongside current Python and TensorFlow versions; the parser also relied on private implementation details of those packages.
+The same graph-network models (following the formalism of Battaglia et al., [arXiv:1806.01261](https://arxiv.org/abs/1806.01261)) can be defined in PyTorch and deployed through the retained SOFIE ONNX parser, whose operator support (`Gather`, `ScatterElements` with add reduction, `ReduceSum`, `LayerNormalization`, ...) covers the graph-network building blocks, including graphs with a variable number of nodes and edges.
+The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce inference results identical to the removed implementation.
 * The ROOT IO capability for the `TMVA::Experimental::RBDT` class has been removed, along with the `TMVA.Experimental.SaveXGBoost` Python function. Experimental classes should not be persistified since their on-disk layout is not guaranteed to be stable. An `RBDT` is now built directly from an XGBoost model in its native JSON serialization with the new `TMVA::Experimental::RBDT::LoadXGBoost(jsonPath)`, which works both from C++ and Python. To convert a trained model, save it first with XGBoost's `Booster.save_model("model.json")` and then load it with `LoadXGBoost`.
 * The **JsMVA** feature for interactive TMVA training in Jupyter notebooks is now removed. It was not functional for years and was therefore already excluded from ROOT 6.38. This also removes the `TMVA::IPythonInteractive` class and the related interactive-training interfaces from the TMVA method and fitter classes, such as `MethodBase::ExitFromTraining()` or `FitterBase::SetIPythonInteractive()`.
+* The `TMVA::Experimental::RStandardScaler` has been removed. It computed means and standard deviations, which can be easily done without this class.
+* The `TMVA::Experimental::Classification` and `TMVA::Experimental::ClassificationResult` classes are removed. They were the two-class front-end of the 2016–2017 `TMVA::Envelope` modernization campaign that never graduated out of the experimental namespace and saw no adoption. The parts of that effort that did find adoption remain available: `TMVA::Envelope`, `TMVA::CrossValidation`, `TMVA::VariableImportance`, `TMVA::HyperParameterOptimisation` and `TMVA::ROCCurve`, the latter providing the ROC curves that were previously obtained via `ClassificationResult`.
+* The `TMVA::Experimental::RTensor` class was removed, since it was not much adopted by ROOTs own interfaces and is also getting redundant with `std::mdspan` in C++23.
 * The **RooStats::DebuggingSampler** and **RooStats::DebuggingTestStat** classes are removed. They were mock implementations of the `TestStatSampler` and `TestStatistic` interfaces that returned uniform random numbers independent of the data, only meant for debugging the RooStats framework itself during its initial development.
 * The `RooTrace` class is deprecated and will be removed in ROOT 6.44. It was a RooFit-specific memory tracer whose instrumentation hooks are compiled out by default, so it has been inert and untested for years. For memory debugging, please use general-purpose tools such as AddressSanitizer or Valgrind instead.
 * Support for the AIX operating system has been removed from the codebase. This support has not been tested since the late v5 releases and the LLVM JIT is not yet supporting AIX.
-* The headers Htypes.h and Gtypes.h that were deprecated in ROOT 6.20 will now emit warnings and will be fully removed in ROOT 6.44.
-* The header GLConstants.h is no longer part of ROOT installed headers.
+* The target `RCsg` (a library mixture of CSGLib and SOLID) is now private and the header `CsgOps.h` with the class `RootCsg::TBaseMesh` is no longer public.
 * The `ROOT::Math::ParamFunctionBase`, `ROOT::Math::ParamFunctorHandler` and `ROOT::Math::ParamMemFunHandler` classes in `Math/ParamFunctor.h` are removed, together with the `ParamFunctor::GetImpl()` and `ParamFunctor::SetFunction()` methods that exposed them. They implemented the type erasure that `ParamFunctor` now gets from `std::function`, mirroring what was already done for `ROOT::Math::Functor`. Constructing and calling a `ParamFunctor` is unchanged, except that the constructor from an object and one of its member functions now takes a plain pointer to the object instead of anything dereferenceable, so smart pointers are no longer accepted there.
+* The header `compiledata.h` will be renamed in ROOT 6.44. It did not have header guards and is not meant to be used directly. It is solely used by ROOT internally to setup `ACLiC`, consider using `gSystem` instead to access its content.
+* Including `RConfig.h` and `RVersion.h` is now deprecated and will be removed after ROOT 6.44, use instead `ROOT/RConfig.hxx` and `ROOT/RVersion.hxx`.
+* The header `Rpair.h` is deprecated and will be removed after ROOT 6.44, use `<utility>` instead.
+* The header `Hparam.h` and `Hoption.h` are now deprecated and will be removed in ROOT 6.44, use instead `THistPainter`, `TGraph2DPainter` public interfaces.
+* The headers `Htypes.h` and `Gtypes.h` that were deprecated in ROOT 6.20 will now emit warnings and will be fully removed in ROOT 6.44. Use instead `Rtypes.h`.
+* The header `GLConstants.h` is no longer part of ROOT installed headers.
+* The header `Bswapcpy.h` is deprecated and will be removed from the public interface after ROOT 6.44, it's an implementation detail for Unix i386 GNUC used by TBufferFile.
+* The header `VectorizedTMath.h` is deprecated and will be removed in ROOT 6.44. Use instead `TMathVectorized.h`.
+* The header `PosixThreadInc.h` is deprecated and will be removed after ROOT 6.44. Use instead `<ctime>` and `<cstdlib>`.
+* The header `RStringView.h` deprecated in ROOT 6.14  will now emit warnings and will be fully removed after ROOT 6.44. Use `ROOT/RStringView.hxx` instead.
+* The header `NetErrors.h` is an implementation detail, is deprecated and will be removed in ROOT 6.44. Use instead `TSocket` public interface.
+* The headers `strlcpy.h` and `strtok.h` are deprecated (but will not emit warnings) and will no longer be part of ROOT installed headers in ROOT 6.44.
+* The header `snprintf.h` is deprecated (will emit warnings) and will be removed in ROOT 6.44. Use instead `<cstdio>`.
+* The header `Strlen.h` is deprecated and will be removed in ROOT 6.44. Use `<cstring>` directly as a replacement. `NEED_STRING` macro should not be defined or an error will be raised.
+* The header `HelpTextTV.h` is deprecated and will be removed in ROOT 6.44.
+* The header `Varargs.h` and the macro `R__VA_COPY` are deprecated and will be removed in ROOT 6.46, use `<cstdarg>` instead.
+* The header `TreeUtils.h` is deprecated and will be removed in ROOT 6.44, use instead `TNtuple::ReadStream` or `TNtupleD::ReadStream`.
+* The header `Riostream.h` is deprecated and will be removed after ROOT 6.44, use `<iostream>` or `<fstream>` or `<iomanip>` instead.
+* The header `Rstrstream.h` is deprecated and will be removed after ROOT 6.44, use instead `<sstream>`.
+* The headers `ZipLZMA.h`, `ZipLZ4.h` and `ZipZSTD.h` are deprecated and will be removed in ROOT 6.46, use instead the public methods in the `RZip.h` interface.
 
 ## Build System
+
+### Optimization of ROOT header files
+
+In ROOT 6.22, many (but not all) unused includes were removed from ROOT header files. The remaining unused includes will be removed after ROOT 6.44.
+For instance, `#include "TBuffer.h"` will be removed from `TKey.h`. This change may cause errors during compilation of ROOT-based code if one was implicitly relying on this transitive include on downstream code using `TBuffer` without actually including `TBuffer.h`. Another example: `TStyle.h` no longer includes internally `TArrayI.h`.
+To fix it well in advance on your side in downstream code, since no warnings are emitted in the meantime, we recommend getting a `preview` of those to-be errors by adding in your code `#define R__LESS_INCLUDES`, adding this at the very top before including any ROOT header. An alternative is to define this on CMake side via `target_compile_definitions`.
+This may also improve compile time and reduce code inter-dependency; see https://github.com/include-what-you-use/include-what-you-use/blob/master/docs/WhyIWYU.md for a good overview of the motivation.
+The macro `R__LESS_INCLUDES` will no longer have an effect after ROOT 6.44 since it will be the new default behavior.
+Note: if you build ROOT with option `dev=ON`, the header `RConfigure.h` will already contain that definition, so in that case consider just including `RConfigure.h` at the very top, rather than redefining `R__LESS_INCLUDES` in downstream code, or alternatively guard the definition with `#ifndef`. 
 
 ### Moving from builtin dependencies to system-provided packages
 
@@ -80,6 +115,8 @@ Users are encouraged to export their models to ONNX and use the retained ONNX pa
 * For the builtin versions of `ftgl`, `gl2ps`, `gtest`, `nlohmann_json`, `unuran`, `civetweb`, `xxhash`, `pcre2`, the source tarballs are now fetched from [SPI](https://spi.web.cern.ch)'s [website](https://lcgpackages.web.cern.ch/), as for the vast majority of ROOT's builtins.
 
 ## Python Interface
+
+ROOT dropped support for Python 3.10, meaning ROOT now requires at least Python 3.11.
 
 ### Connecting Python callables to signals
 
@@ -133,6 +170,8 @@ The parameter indices in this interface always refer to the function's own full 
 
 * Added `RedefinePerSample` transformation. Works similarly to `DefinePerSample`, but allows to redefine existing values
   of a column on a per-sample basis. This operation is supported in local and distributed mode.
+* Added `Median` action. Computes the exact median of the input column. At the moment this action is supported in local
+  mode only.
 
 ## Trees
 
@@ -147,6 +186,13 @@ Note that in a selection, a NaN evaluates as `false`, so entries where the `sqrt
 the cut instead of being selected based on `sqrt(abs(x))`.
 
 ## RooFit
+
+### RooFit::MultiProcess without ZeroMQ, now enabled by default
+
+The `RooFit::MultiProcess` package that implements the parallel gradient minimization with `fitTo(..., RooFit::Parallelize(n))` previously communicated between the forked processes with ZeroMQ sockets, which required building ROOT with `roofit_multiprocess=ON` and the ZeroMQ (with draft API) and cppzmq dependencies.
+The interprocess communication is now implemented directly on top of plain `socketpair()` pipes that are inherited by the forked worker processes, so the ZeroMQ and cppzmq dependencies and the `RooFitZMQ` library are removed entirely.
+Since the feature no longer needs extra dependencies, it is now always built on non-Windows platforms and the `roofit_multiprocess` build option has no effect anymore; it is deprecated and will be removed in ROOT 6.44.
+For implementers of custom `RooFit::MultiProcess::Job` subclasses, the message type in the `Job` interface changed from `zmq::message_t` to the new `RooFit::MultiProcess::Message` byte-buffer class, which supports the same usage patterns.
 
 ### Small changes
 

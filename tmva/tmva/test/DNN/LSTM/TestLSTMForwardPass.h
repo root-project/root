@@ -244,9 +244,9 @@ auto CompareForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize, si
    if (useFixedInput) { // shuld use t = 2 input = 2 bs = 1
       Scalar1 xinput[] = {-0.1, 0.5, -0.5, 0.9, -0.3, 1.0};
       R__ASSERT(batchSize == 1);
-      R__ASSERT(Arch1::GetTensorLayout() == TMVA::Experimental::MemoryLayout::ColumnMajor);
+      R__ASSERT(Arch1::GetTensorLayout() == TMVA::DNN::MemoryLayout::ColumnMajor);
       // assume Arch1 is column major
-      XArch1 = Tensor1(xinput, {timeSteps, inputSize, 1}, TMVA::Experimental::MemoryLayout::ColumnMajor);
+      XArch1 = Tensor1(xinput, {timeSteps, inputSize, 1}, TMVA::DNN::MemoryLayout::ColumnMajor);
    } else {
       for (size_t i = 0; i < batchSize; ++i) {
          Matrix1 m = XArch1[i];

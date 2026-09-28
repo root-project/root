@@ -1,6 +1,7 @@
-#include <cmath>
-#include "Riostream.h"
 #include "Quad.h"
+
+#include <cmath>
+#include <iostream>
 
 Quad::Quad(Float_t a,Float_t b,Float_t c)
 {

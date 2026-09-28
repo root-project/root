@@ -48,7 +48,7 @@
 // Define a portable macro for c++11 in COOL (only for COOL290 and ROOT6!)
 #ifdef COOL290
 #if defined(__GXX_EXPERIMENTAL_CXX0X) || __cplusplus >= 201103L
-#include "RVersion.h"
+#include "ROOT/RVersion.hxx"
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,99,0)
 #define COOL_HAS_CPP11 1
 #else

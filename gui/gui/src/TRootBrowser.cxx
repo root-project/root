@@ -74,7 +74,6 @@ Here is the list of available options:
 #include "TGLayout.h"
 #include "TGSplitter.h"
 #include "TGStatusBar.h"
-#include "Varargs.h"
 #include "TInterpreter.h"
 #include "TGFileDialog.h"
 #include "TObjString.h"
@@ -93,7 +92,10 @@ Here is the list of available options:
 #include "Getline.h"
 #include "TVirtualX.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <cstdio>
+
+#include <cstdarg>
 
 #ifdef WIN32
 #include <TWin32SplashThread.h>

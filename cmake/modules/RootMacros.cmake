@@ -727,6 +727,20 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       ROOT_PCM_FILENAME "${cpp_module_file}")
   endif()
 
+  # Keep the byproducts (rdict pcm, rootmap, C++ module) newer than the
+  # generated .cxx.  The Makefile generator models secondary outputs of a
+  # multi-output custom command as a separate rule ending in
+  # 'cmake -E touch_nocreate', but that rule is not always re-evaluated after
+  # the recipe has run (make's depend/build phase split, issue #20907).  The
+  # byproduct then stays older than the .cxx until the next build, which fires
+  # the deferred touch and spuriously rebuilds everything that depends on the
+  # byproduct.  Doing the touch in the recipe itself makes the output ordering
+  # unconditional.
+  set(dictionary_byproducts ${pcm_name} ${rootmap_name} ${cpp_module_file})
+  if(dictionary_byproducts)
+    set(touch_byproducts_command COMMAND ${CMAKE_COMMAND} -E touch_nocreate ${dictionary_byproducts})
+  endif()
+
   #---call rootcling------------------------------------------
   add_custom_command(
     OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file}
@@ -742,6 +756,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                        # dictionaries will be rebuilt if the C++ standard is changed in an incremental build.
                        -DR__DUMMY_CXX_STANDARD_${CMAKE_CXX_STANDARD}
                        -MF ${depfile_path}
+    ${touch_byproducts_command}
     DEPFILE ${depfile_path}
     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCLINGDEP}
             ${pcm_dependencies}
@@ -858,7 +873,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
                         DllImport.h ESTLType.h Varargs.h
                         ThreadLocalStorage.h
                         TBranchProxyTemplate.h
-                        snprintf.h strlcpy.h)
+                        strlcpy.h)
 
    # Deprecated header files.
   set (excluded_headers "${excluded_headers}")
@@ -1223,60 +1238,69 @@ function(ROOT_FIND_DIRS_WITH_HEADERS result_dirs)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_INSTALL_HEADERS([dir1 dir2 ...] [FILTER <regex>])
-# Glob for headers in the folder where this target is defined, and install them in
-# <buildDir>/include
+#---ROOT_INSTALL_HEADERS([dir1 dir2 ...] [FILTER <regex>] [HEADERS <header1> ...])
+# Declare the install command for headers and copy them into <binary_dir>/include.
+# This function supports two modes to build the list of headers:
+# - [New] If headers are passed explicitly using HEADERS ..., install only these
+# - [Old] Otherwise, glob in the specified folders or where this target is defined
 #---------------------------------------------------------------------------------------------------
 function(ROOT_INSTALL_HEADERS)
-  CMAKE_PARSE_ARGUMENTS(ARG "OPTIONS" "" "FILTER" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "OPTIONS" "" "FILTER;HEADERS" ${ARGN})
   if (${ARG_OPTIONS})
     message(FATAL_ERROR "ROOT_INSTALL_HEADERS no longer supports the OPTIONS argument. Rewrite using the FILTER argument.")
   endif()
-  ROOT_FIND_DIRS_WITH_HEADERS(dirs ${ARG_UNPARSED_ARGUMENTS})
-  set (filter "LinkDef")
-  set (options REGEX "LinkDef" EXCLUDE)
-  foreach (f ${ARG_FILTER})
-    set (filter "${filter}|${f}")
-    set (options ${options} REGEX "${f}" EXCLUDE)
-  endforeach()
-  set (filter "(${filter})")
-  set(include_files "")
-  foreach(d ${dirs})
-    install(DIRECTORY ${d} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-                           COMPONENT headers
-                           ${options})
-    string(REGEX REPLACE "(.*)/$" "\\1" d ${d})
-    ROOT_GLOB_FILES(globbed_files
-      RECURSE
-      RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-      FILTER ${filter}
-      ${d}/*.h ${d}/*.hxx ${d}/*.icc )
-    list(APPEND include_files ${globbed_files})
-  endforeach()
 
-  string(REPLACE ${CMAKE_SOURCE_DIR} "" target_name ${CMAKE_CURRENT_SOURCE_DIR})
-  string(REPLACE / _ target_name "copy_header_${target_name}")
-  string(REGEX REPLACE "_$" "" target_name ${target_name})
+  unset(include_files)
+
+  if(ARG_HEADERS)
+    # Headers have been listed explicitly, find them one by one
+    foreach(regex ${ARG_FILTER} "LinkDef")
+      list(FILTER ARG_HEADERS EXCLUDE REGEX "${regex}")
+    endforeach()
+    foreach(header ${ARG_HEADERS})
+      file(GLOB globbed_header ${header} */${header})
+      if(globbed_header STREQUAL "")
+	     message(SEND_ERROR "No header corresponding to ${header} found in ${CMAKE_CURRENT_SOURCE_DIR}")
+      endif()
+      list(APPEND include_files ${globbed_header})
+    endforeach()
+  else()
+    # Glob across all include directories
+    ROOT_FIND_DIRS_WITH_HEADERS(dirs ${ARG_UNPARSED_ARGUMENTS})
+    set (filter "LinkDef")
+    foreach (f ${ARG_FILTER})
+      set (filter "${filter}|${f}")
+    endforeach()
+    set (filter "(${filter})")
+    foreach(d ${dirs})
+      string(REGEX REPLACE "(.*)/$" "\\1" d ${d})
+      ROOT_GLOB_FILES(globbed_files
+        RECURSE
+        FILTER ${filter}
+        ${d}/*.h ${d}/*.hxx ${d}/*.icc )
+      list(APPEND include_files ${globbed_files})
+    endforeach()
+  endif()
 
   # Register the files to be copied for each target directory (e.g. include/ include/ROOT include/v7/inc/ ...)
   list(REMOVE_DUPLICATES include_files)
   list(TRANSFORM include_files REPLACE "(.*)/[^/]*" "\\1/" OUTPUT_VARIABLE subdirs)
   list(REMOVE_DUPLICATES subdirs)
   foreach(subdir ${subdirs})
+    string(REGEX REPLACE ".*/inc/" "" destination_subdir ${subdir})
+
     set(input_files ${include_files})
     list(FILTER input_files INCLUDE REGEX "^${subdir}[^/]*$")
+
+    install(FILES ${input_files} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${destination_subdir} COMPONENT headers)
+
     set(output_files ${input_files})
+    list(TRANSFORM output_files REPLACE ".*/" "${CMAKE_BINARY_DIR}/include/${destination_subdir}")
 
-    string(REGEX REPLACE ".*/*inc/" "" destination ${subdir})
-
-    list(TRANSFORM input_files  PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/")
-    list(TRANSFORM output_files REPLACE ".*/" "${CMAKE_BINARY_DIR}/include/${destination}")
-
-    set(destination destination_${destination})
-
-    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_COPY_LISTS ${destination})
-    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_INPUT_${destination} ${input_files})
-    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_OUTPUT_${destination} ${output_files})
+    set(destination_target_name destination_${destination_subdir})
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_COPY_LISTS ${destination_target_name})
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_INPUT_${destination_target_name} ${input_files})
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_OUTPUT_${destination_target_name} ${output_files})
   endforeach()
 endfunction()
 
@@ -1317,6 +1341,7 @@ endmacro()
 #---------------------------------------------------------------------------------------------------
 #---ROOT_STANDARD_LIBRARY_PACKAGE(libname
 #                                 [NO_INSTALL_HEADERS]         : don't install headers for this package
+#                                 [NO_GLOB_HEADERS]            : don't glob for headers, only install listed ones
 #                                 [STAGE1]                     : use rootcling_stage1 for generating
 #                                 HEADERS header1 header2      : relative header path as #included; pass -I to find them. If not specified, globbing for *.h is used
 #                                 NODEPHEADERS header1 header2 : like HEADERS, but no dependency is generated
@@ -1335,7 +1360,7 @@ endmacro()
 #                                )
 #---------------------------------------------------------------------------------------------------
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
-  set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE)
+  set(options NO_INSTALL_HEADERS NO_GLOB_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE)
   set(oneValueArgs LINKDEF)
   set(multiValueArgs DEPENDENCIES HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS INSTALL_OPTIONS)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -1441,7 +1466,11 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   # Install headers if we have any headers and if the user didn't explicitly
   # disabled this.
   if (NOT ARG_NO_INSTALL_HEADERS OR ARG_NO_HEADERS)
-    ROOT_INSTALL_HEADERS(${ARG_INSTALL_OPTIONS})
+    if(ARG_NO_GLOB_HEADERS)
+      ROOT_INSTALL_HEADERS(${ARG_INSTALL_OPTIONS} HEADERS ${ARG_HEADERS})
+    else()
+      ROOT_INSTALL_HEADERS(${ARG_INSTALL_OPTIONS})
+    endif()
   endif()
 endfunction()
 
@@ -1570,7 +1599,8 @@ function(ROOT_PYTHON_PACKAGE pkgname)
     set(src ${CMAKE_CURRENT_SOURCE_DIR}/${py_source})
     set(tgt ${pkg_path_build}/${py_source})
 
-    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy_if_different ${src} ${tgt})
+    # Not copy_if_different: always refreshing the copies keeps the next build a no-op.
+    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${src} ${tgt})
 
     list(APPEND py_sources_in_source_dir ${src})
     list(APPEND py_sources_in_build_tree ${tgt})
@@ -1965,6 +1995,11 @@ function(ROOT_ADD_GTEST test_suite)
   # against. For example, tests in Core should link only against libCore. This could be tricky
   # to implement because some ROOT components create more than one library.
   ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
+  if(runtime_cxxmodules)
+    # Register the test so that the modules_idx dependency can be attached at
+    # the end of the top-level CMakeLists, where the modules_idx target exists.
+    set_property(GLOBAL APPEND PROPERTY ROOT_MODULES_IDX_GTESTS ${test_suite})
+  endif()
   target_link_libraries(${test_suite} PRIVATE GTest::gtest GTest::gmock GTest::gtest_main GTest::gmock_main)
   if(TARGET ROOT::TestSupport)
     target_link_libraries(${test_suite} PRIVATE ROOT::TestSupport)

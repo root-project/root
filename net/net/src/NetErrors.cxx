@@ -18,6 +18,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#define ROOT_NetErrors_cxx
 #include "NetErrors.h"
 
 // Must match order of ERootdErrors enum in NetErrors.h

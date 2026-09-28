@@ -15,9 +15,6 @@
 #include "RStl.h"
 #include "TClassEdit.h"
 #include "TClingUtils.h"
-using namespace TClassEdit;
-
-#include <cstdio>
 
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclTemplate.h"
@@ -29,7 +26,10 @@ using namespace TClassEdit;
 #include "clang/Sema/Template.h"
 #include "clang/Frontend/CompilerInstance.h"
 
-#include "Varargs.h"
+#include <cstdarg>
+#include <cstdio>
+
+using namespace TClassEdit;
 
 //
 // ROOT::Internal::RStl is the rootcint STL handling class.

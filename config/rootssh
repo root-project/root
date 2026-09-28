@@ -27,6 +27,7 @@ if [[ $# -eq 0 ]] ; then
    echo ""
    echo "    --port number      - port number on local node used for ssh tunnel to remote"
    echo "    --browser <name>   - name of web browser executable like firefox or chromium"
+   echo "    --csh              - csh or tsch used on remote machine, use setenv instead of export"
    echo ""
    echo " Thus one can call:"
    echo ""
@@ -102,16 +103,20 @@ else
    ssh_destination=""
    ssh_command=""
    ssh_args=""
+   exprt="export"
 
    ssh_array2=("-B -b -c -D -E -e -F -I -i -J -L -l -m -O -o -p -Q -R -S -W -w")
 
    while [ $# -gt 0 ] ; do
-      if [[ "$1" == "--port"  ]] ; then
+      if [[ "$1" == "--port" ]] ; then
          localport=$2
          shift 2
       elif [[ "$1" == "--browser" ]] ; then
          browser=$2
          shift 2
+      elif [[ "$1" == "--csh" || "$1" == "--tcsh" ]] ; then
+         exprt="setenv"
+         shift 1
       elif [[ " ${ssh_array2[*]} " =~ " $1 " ]]; then
          # arguments with extra option
          ssh_args+=" $1 $2"
@@ -175,7 +180,13 @@ else
       ssh_command="\$SHELL"
    fi
 
+   if [[ "$exprt" == "export" ]] ; then
+      root_exports="export ROOT_WEBDISPLAY=server; export ROOT_LISTENER_SOCKET=$listener_remote; export ROOT_WEBGUI_SOCKET=$root_socket"
+   else
+      root_exports="setenv ROOT_WEBDISPLAY server; setenv ROOT_LISTENER_SOCKET $listener_remote; setenv ROOT_WEBGUI_SOCKET $root_socket"
+   fi
+
    ssh -t -R $listener_remote:$listener_local -L $localport:$root_socket $ssh_destination $ssh_args \
-   "touch $listener_remote; chmod -f 0700 $listener_remote; export ROOT_WEBDISPLAY=server; export ROOT_LISTENER_SOCKET=$listener_remote; export ROOT_WEBGUI_SOCKET=$root_socket; $ssh_command; rm -f $listener_remote $root_socket"
+   "touch $listener_remote; chmod -f 0700 $listener_remote; $root_exports; $ssh_command; rm -f $listener_remote $root_socket"
 
 fi

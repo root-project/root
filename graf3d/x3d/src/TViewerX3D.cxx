@@ -22,7 +22,6 @@
 #include "TView.h"
 #include "TMath.h"
 #include "TROOT.h"
-#include "snprintf.h"
 
 #include "TRootHelpDialog.h"
 #include "TGClient.h"
@@ -38,6 +37,7 @@
 #include "HelpText.h"
 
 #include <cassert>
+#include <cstdio>
 
 const char gHelpX3DViewer[] = "\
      PRESS \n\

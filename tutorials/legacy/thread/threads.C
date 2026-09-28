@@ -16,7 +16,8 @@
 /// \author Victor Perevovchikov
 
 #include "TThread.h"
-#include <Riostream.h>
+
+#include <iostream>
 
 void *handle(void *ptr)
 {

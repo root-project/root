@@ -75,13 +75,6 @@ void Read(const std::vector<RNTupleOpenSpec> &ntuples)
 
    // The iterator value is the index of the current entry being processed.
    for (auto idx : *processor) {
-      // The RNTupleProcessor provides some additional bookkeeping information, such as the current processor number.
-      if (static_cast<int>(processor->GetCurrentProcessorNumber()) > prevProcessorNumber) {
-         prevProcessorNumber = processor->GetCurrentProcessorNumber();
-         std::cout << "Processing `ntuple" << prevProcessorNumber + 1 << "` (" << idx + 1
-                   << " total entries processed so far)" << std::endl;
-      }
-
       // We use the value returned from requesting the field to read its data for the current entry.
       for (auto x : *px) {
          hPx.Fill(x);

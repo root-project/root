@@ -20,8 +20,11 @@
 #include <vector>
 
 class TPoint;
+class TEllipseInteractive;
 
 class TEllipse : public TObject, public TAttLine, public TAttFill, public TAttBBox2D {
+
+   friend class TEllipseInteractive; // to access protected methods and members
 
 protected:
    Double_t    fX1;        ///< X coordinate of centre

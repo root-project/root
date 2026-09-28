@@ -17,7 +17,7 @@ This xRooNLLVar object has several special methods, e.g. for fitting and toy dat
 
  */
 
-#include "RVersion.h"
+#include "ROOT/RVersion.hxx"
 
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
 #define protected public

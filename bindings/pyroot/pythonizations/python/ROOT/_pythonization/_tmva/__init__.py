@@ -11,7 +11,7 @@
 ################################################################################
 
 from .. import pythonization
-from . import _gnn, _rbdt  # noqa: F401  # imported so @pythonization functions are found recursively
+from . import _rbdt  # noqa: F401  # imported so @pythonization functions are found recursively
 from ._crossvalidation import CrossValidation
 from ._dataloader import DataLoader
 from ._factory import Factory

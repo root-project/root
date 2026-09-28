@@ -19,7 +19,7 @@
  *                                                                       *
  *************************************************************************/
 
-#include "../RVersion.h"
+#include "RVersion.hxx"
 #include "RConfigure.h"
 
 
@@ -62,9 +62,6 @@
 #   ifdef __LP64__
 #      define R__B64
 #   endif
-#   ifdef R__HPUX10
-#      define NEED_SNPRINTF
-#   endif
 #endif
 
 #if defined(__linux) || defined(__linux__)
@@ -99,7 +96,6 @@
 #      include <cstdlib>
 #   endif
 #   define R__UNIX
-#   define NEED_STRING
 #   define NEED_SIGJMP
 #   if __SUNPRO_CC > 0x420
 #      define R__SOLARIS_CC50
@@ -117,7 +113,6 @@
 #   define R__SEEK64
 #   define ANSICPP
 #   define R__UNIX
-#   define NEED_STRING
 #   define NEED_SIGJMP
 #endif
 
@@ -253,7 +248,6 @@
 #   define ANSICPP
 #   define NEED_SIGJMP
 #   define NEED_STRCASECMP
-#   define NEED_SNPRINTF
 #endif
 
 #if defined(__FreeBSD__)
@@ -318,7 +312,6 @@
 #   define R__HIUX
 #   define R__UNIX
 #   define NEED_SIGJMP
-#   define NEED_SNPRINTF
 #   define ANSICPP
 #endif
 
@@ -384,9 +377,7 @@
 #   define SC
 #   define R__SC
 #   if defined(WIN32)
-#      define NEED_STRING
 #      define NEED_STRCASECMP
-#      define NEED_SNPRINTF
 #      define ANSICPP
 #   else
 #      define MSDOS
@@ -397,15 +388,8 @@
 
 #ifdef _MSC_VER
 #   define R__VISUAL_CPLUSPLUS
-#   define NEED_STRING
 #   define NEED_STRCASECMP
-#   if _MSC_VER < 1900
-#     define NEED_SNPRINTF
-#   endif
 #   define ANSICPP
-#   if _MSC_VER >= 1400
-#     define DONTNEED_VSNPRINTF
-#   endif
 #   if _MSC_VER < 1310
 #      define R__NO_CLASS_TEMPLATE_SPECIALIZATION
 #   endif

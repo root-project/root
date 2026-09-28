@@ -17,7 +17,7 @@
 #include <RooAbsReal.h>
 #include <RooFit/EvalContext.h>
 
-#include <RConfig.h>
+#include <ROOT/RConfig.hxx>
 
 #include <memory>
 
@@ -44,6 +44,8 @@ public:
    void setInput(std::string const &name, std::span<const double> inputArray, bool isOnDevice);
    RooArgSet getParameters() const;
    void print(std::ostream &os);
+
+   void setNThreads(int nThreads);
 
    void setOffsetMode(RooFit::EvalContext::OffsetMode);
 

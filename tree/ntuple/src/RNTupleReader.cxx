@@ -26,8 +26,8 @@
 
 void ROOT::RNTupleReader::RActiveEntryToken::ActivateEntry(NTupleSize_t entryNumber)
 {
-   const auto descGuard = fPtrControlBlock->fPageSource->GetSharedDescriptorGuard();
-   const auto clusterId = Internal::CallFindClusterIdOn(descGuard.GetRef(), entryNumber);
+   DescriptorId_t clusterId = ROOT::kInvalidDescriptorId;
+   auto descGuard = fPtrControlBlock->fPageSource->FindClusterId(entryNumber, clusterId);
    if (clusterId == kInvalidDescriptorId)
       throw RException(R__FAIL(std::string("entry number ") + std::to_string(entryNumber) + " out of range"));
 
@@ -38,8 +38,8 @@ void ROOT::RNTupleReader::RActiveEntryToken::ActivateEntry(NTupleSize_t entryNum
 
 void ROOT::RNTupleReader::RActiveEntryToken::DeactivateEntry(NTupleSize_t entryNumber)
 {
-   const auto descGuard = fPtrControlBlock->fPageSource->GetSharedDescriptorGuard();
-   const auto clusterId = Internal::CallFindClusterIdOn(descGuard.GetRef(), entryNumber);
+   DescriptorId_t clusterId = ROOT::kInvalidDescriptorId;
+   auto descGuard = fPtrControlBlock->fPageSource->FindClusterId(entryNumber, clusterId);
    // We acquired the given entry number so we must be able to find it back
    R__ASSERT(clusterId != kInvalidDescriptorId);
 

@@ -103,7 +103,7 @@ public:
    virtual void     SelectDrawable(Int_t device) = 0;//gVirtualX->SelectWindow
    virtual void     UpdateDrawable(Int_t /* mode */) {}
    virtual void     SetDrawMode(Int_t /* device */, Int_t /* mode */) {}
-   virtual void     SetDoubleBuffer(Int_t device, Int_t mode);
+   virtual void     SetDoubleBuffer(Int_t /* device */, Int_t /* mode */) {}
 
 
    //TASImage support.

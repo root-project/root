@@ -139,8 +139,6 @@ private:
    RNTupleDescriptorBuilder fDescriptorBuilder;
    /// Tracks the last read offset for seek distance calculation
    std::uint64_t fLastOffset = 0;
-   /// Set to true after the first call to LoadStreamerInfo()
-   bool fHasStreamerInfo = false;
 
    /// File-specific I/O performance counters
    struct RFileCounters {
@@ -191,8 +189,6 @@ public:
 
    std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
    LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) final;
-
-   void LoadStreamerInfo() final;
 }; // class RPageSourceFile
 
 } // namespace Internal

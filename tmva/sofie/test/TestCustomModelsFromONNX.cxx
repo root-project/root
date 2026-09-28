@@ -585,6 +585,86 @@ TEST(ONNX, ReduceMean_kFirst)
    expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, ReduceMax)
+{
+   // reduce over axis 1 of a [1,2,3] tensor, not keeping the dimension
+   std::vector<float> input({5, 2, 3, 5, 5, 4});
+   std::vector<float> correct_output({5, 5, 4});
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceMax", input);
+
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, ReduceMin)
+{
+   std::vector<float> input({5, 2, 3, 5, 5, 4});
+   std::vector<float> correct_output({5, 2, 3});
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReduceMin", input);
+
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
+}
+
+// Elu on a tensor whose first dimension is only known at run time.
+TEST(ONNX, EluDynShape)
+{
+   std::vector<float> input({-2.0, -0.5, 0.0, 0.5, 1.0, 2.0, -1.0, 3.0});
+   std::vector<float> correct_output;
+   for (float x : input)
+      correct_output.push_back(x >= 0 ? x : std::exp(x) - 1);
+
+   // model is dynamic in N, use N = 2
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "EluDynShape", "\"EluDynShape_FromONNX.dat\", 2", 2, input);
+
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
+}
+
+// K reaches TopK as a shape tensor: K = min(N, 4) with N the dynamic dimension.
+TEST(ONNX, TopKWithDynShapeK)
+{
+   std::vector<float> input({5, 1, 9, 2, 8, 3, 7, 4, 6, 0, 5, 5, 3, 3, 3});
+   std::vector<float> correct_values({7, 8, 9, 5, 5, 6, 3, 4, 5, 2, 3, 3});
+   std::vector<int64_t> correct_indices({2, 1, 0, 0, 3, 2, 4, 2, 3, 1, 4, 1});
+
+   // model is dynamic in N, use N = 5, so K = min(5, 4) = 4
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(TupleFloatInt64_t, "TopKWithDynShapeK", "\"TopKWithDynShapeK_FromONNX.dat\", 5",
+                                       5, input);
+
+   expectNear(std::get<0>(output), correct_values, DEFAULT_TOLERANCE);
+   expectEqual(std::get<1>(output), correct_indices);
+}
+
+// Reduction over an interior axis with a parametric outer dimension. The strides
+// are then expressions rather than single tokens, which used to be emitted
+// unparenthesised and gave wrong indices.
+TEST(ONNX, ReduceMean_kMiddle_DynShape)
+{
+   std::vector<float> input(24);
+   std::iota(input.begin(), input.end(), 0.0f);
+   std::vector<float> correct_output = {4, 5, 6, 7, 16, 17, 18, 19};
+
+   // model is dynamic in N, use N = 2
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "ReduceMean_kMiddle_DynShape",
+                                       "\"ReduceMean_kMiddle_DynShape_FromONNX.dat\", 2", 2, input);
+
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
+}
+
+// largest=1 with sorted=0 used to return the K smallest elements. ONNX leaves the
+// order unspecified for sorted=0; SOFIE returns them ordered, as for sorted=1.
+TEST(ONNX, TopKLargestUnsorted)
+{
+   std::vector<float> input({1, 6, 3, 2, 5, 4, 10, 40, 20, 60, 30, 50});
+   std::vector<float> correct_values({6, 5, 4, 60, 50, 40});
+   std::vector<int64_t> correct_indices({1, 4, 5, 3, 5, 1});
+
+   ASSERT_INCLUDE_AND_RUN(TupleFloatInt64_t, "TopKLargestUnsorted", input);
+
+   expectNear(std::get<0>(output), correct_values, DEFAULT_TOLERANCE);
+   expectEqual(std::get<1>(output), correct_indices);
+}
+
    TEST(ONNX, ReduceProd)
 {
    SofieReference ref = readReference("ReduceProd");
@@ -635,6 +715,30 @@ TEST(ONNX, Max)
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Max", ref.f32("input0"), ref.f32("input1"));
 
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, MinInt64)
+{
+   std::vector<int64_t> a({1, -7, 3, 100, 0});
+   std::vector<int64_t> b({2, -2, -3, 50, 0});
+   std::vector<int64_t> c({0, 5, 9, 75, 1});
+   std::vector<int64_t> correct_output({0, -7, -3, 50, 0});
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<int64_t>, "MinInt64", a, b, c);
+
+   expectEqual(output, correct_output);
+}
+
+TEST(ONNX, MaxInt64)
+{
+   std::vector<int64_t> a({1, -7, 3, 100, 0});
+   std::vector<int64_t> b({2, -2, -3, 50, 0});
+   std::vector<int64_t> c({0, 5, 9, 75, 1});
+   std::vector<int64_t> correct_output({2, 5, 9, 100, 1});
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<int64_t>, "MaxInt64", a, b, c);
+
+   expectEqual(output, correct_output);
 }
 
 TEST(ONNX, MaxMultidirectionalBroadcast)
@@ -737,6 +841,16 @@ TEST(ONNX, RNNDefaults)
    SofieReference ref = readReference("RNNDefaults");
 
    ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "RNNDefaults", ref.f32("input0"));
+
+   expectNear(output[0], ref.f32("output0"), DEFAULT_TOLERANCE);
+   expectNear(output[1], ref.f32("output1"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, RNNClip)
+{
+   SofieReference ref = readReference("RNNClip");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "RNNClip", ref.f32("input0"));
 
    expectNear(output[0], ref.f32("output0"), DEFAULT_TOLERANCE);
    expectNear(output[1], ref.f32("output1"), DEFAULT_TOLERANCE);
@@ -1397,6 +1511,50 @@ TEST(ONNX, Sin)
    expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, Asinh)
+{
+   std::vector<float> input({
+     -0.786738,-0.197796,-0.187787,0.142758,0.876096,-0.653239,0.145444,-1.107658,2.259171,-0.947054,-0.506689,1.801250
+   });
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Asinh", input);
+
+   std::vector<float> correct_output;
+   for (float x : input)
+      correct_output.push_back(std::asinh(x));
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, Acosh)
+{
+   // acosh is only defined for x >= 1
+   std::vector<float> input({
+     1.0, 1.001, 1.5, 2.0, 3.789, 5.234, 10.0, 1.234, 7.891, 2.345, 1.999, 100.0
+   });
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Acosh", input);
+
+   std::vector<float> correct_output;
+   for (float x : input)
+      correct_output.push_back(std::acosh(x));
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, Atanh)
+{
+   // atanh is only defined for |x| < 1
+   std::vector<float> input({
+     -0.99,-0.786738,-0.5,-0.197796,0.0,0.142758,0.5,0.876096,-0.653239,0.3,0.99,-0.142758
+   });
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Atanh", input);
+
+   std::vector<float> correct_output;
+   for (float x : input)
+      correct_output.push_back(std::atanh(x));
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
+}
+
 TEST(ONNX, Cos)
 {
    // Preparing the random input
@@ -1834,4 +1992,158 @@ TEST(ONNX, ComparisonBroadcast3d)
    ASSERT_EQ(output_greater, expected_greater);
    ASSERT_EQ(output_equal, expected_equal);
    ASSERT_EQ(output_less, expected_less);
+}
+
+// ---------------------------------------------------------------------------
+// Regression tests for operator and parser fixes: each model is the smallest
+// graph that exercises the bug.
+// ---------------------------------------------------------------------------
+
+// Two convolutions reading the same input: their private workspaces must not collide.
+TEST(ONNX, ConvSharedInput)
+{
+   SofieReference ref = readReference("ConvSharedInput");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvSharedInput", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// The same for the transposed convolution.
+TEST(ONNX, ConvTransposeSharedInput)
+{
+   SofieReference ref = readReference("ConvTransposeSharedInput");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvTransposeSharedInput", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// The Add after a bias-less Conv is a residual connection, not the bias of that
+// convolution, and must not be fused into it.
+TEST(ONNX, ConvResidualAdd)
+{
+   SofieReference ref = readReference("ConvResidualAdd");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ConvResidualAdd", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// Two NonZero nodes on the same input share the parameter holding the number of
+// non-zero elements, which is therefore declared once.
+TEST(ONNX, NonZeroTwice)
+{
+   std::vector<uint8_t> input = {0, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1}; // shape is (2x2x3)
+   std::vector<int64_t> correct_output = {0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 2, 1, 2};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<int64_t>>, "NonZeroTwice", input);
+
+   ASSERT_EQ(output.size(), 2u);
+   expectEqual(output[0], correct_output);
+   expectEqual(output[1], correct_output);
+}
+
+// Negative indices are resolved into locals, so the second gather reads the
+// index tensor unchanged.
+TEST(ONNX, GatherNDNegativeIndicesTwice)
+{
+   SofieReference ref = readReference("GatherNDNegativeIndicesTwice");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "GatherNDNegativeIndicesTwice", ref.f32("input0"), ref.f32("input1"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// The scale of the batch normalization is an Identity of a weight, which has to
+// still be resolvable when the code is generated.
+TEST(ONNX, IdentityWeightBatchNorm)
+{
+   SofieReference ref = readReference("IdentityWeightBatchNorm");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "IdentityWeightBatchNorm", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, BatchNormEpsilon)
+{
+   SofieReference ref = readReference("BatchNormEpsilon");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "BatchNormEpsilon", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, BatchNormReluEpsilon)
+{
+   SofieReference ref = readReference("BatchNormReluEpsilon");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "BatchNormReluEpsilon", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// Clip on an integer tensor: the bounds have to carry the type of the tensor.
+TEST(ONNX, ClipInt)
+{
+   std::vector<int> input = {-5, -2, 0, 3, 5, 9};
+   std::vector<int> correct_output = {-2, -2, 0, 3, 5, 5};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<int>, "ClipInt", input);
+
+   expectEqual(output, correct_output);
+}
+
+// Tanh of a tensor whose first dimension is only known at run time.
+TEST(ONNX, TanhDynShape)
+{
+   SofieReference ref = readReference("TanhDynShape");
+
+   // model is dynamic in N, use N = 2
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "TanhDynShape", "\"TanhDynShape_FromONNX.dat\", 2", 2,
+                                       ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// Range reading inputs whose ONNX names are not valid C++ identifiers.
+TEST(ONNX, RangeCleanName)
+{
+   std::vector<float> start = {0.0};
+   std::vector<float> limit = {5.0};
+   std::vector<float> delta = {1.0};
+   std::vector<float> correct_output = {0.0, 1.0, 2.0, 3.0, 4.0};
+
+   // the length of a Range output is only known at run time, so the Session is given
+   // an upper bound for it; this model has no weights, hence the empty file name
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "RangeCleanName", "\"\", 5", start, limit, delta);
+
+   expectNear(output, correct_output, DEFAULT_TOLERANCE);
+}
+
+// A Gemm bias that already has the shape of the output needs no broadcasting,
+// which Initialize cannot see while the output is dynamic.
+TEST(ONNX, GemmDynBias)
+{
+   SofieReference ref = readReference("GemmDynBias");
+
+   // model is dynamic in N, use N = 2
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "GemmDynBias", "\"GemmDynBias_FromONNX.dat\", 2", 2,
+                                       ref.f32("input0"), ref.f32("input1"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// The graph output s is an Identity of a weight: no operator writes it at run
+// time, so the model has to copy it into the output buffer.
+TEST(ONNX, IdentityWeightOutput)
+{
+   SofieReference ref = readReference("IdentityWeightOutput");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "IdentityWeightOutput", ref.f32("input0"));
+
+   ASSERT_EQ(output.size(), 2u);
+   expectNear(output[0], ref.f32("output0"), DEFAULT_TOLERANCE);
+   expectNear(output[1], ref.f32("output1"), DEFAULT_TOLERANCE);
 }

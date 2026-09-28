@@ -15,7 +15,8 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TRolke.h"
-#include "Riostream.h"
+
+#include <iostream>
 
 void Rolke()
 {

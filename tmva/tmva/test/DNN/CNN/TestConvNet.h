@@ -733,7 +733,7 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
 #ifdef DEBUG
       auto &outL = layer.GetOutput();
       auto & actGrad = layer.GetActivationGradients();
-      if (Architecture::GetTensorLayout() == TMVA::Experimental::MemoryLayout::ColumnMajor) {
+      if (Architecture::GetTensorLayout() == TMVA::DNN::MemoryLayout::ColumnMajor) {
          std::cout << "layer output size " << outL.GetFirstSize() << std::endl;
          if (outL.GetFirstSize() > 0) {
             if (outL.GetSize() < 100) {

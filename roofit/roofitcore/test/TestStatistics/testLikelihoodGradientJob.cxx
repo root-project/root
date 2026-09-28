@@ -651,7 +651,11 @@ TEST_P(LikelihoodGradientJobErrorTest, ErrorHandling)
 
    values.assign(savedValues);
 
-   std::unique_ptr<RooAbsReal> likelihoodAbsReal{pdf->createNLL(*data, RooFit::ModularL(true))};
+   // Explicitly request the legacy backend also here: this test compares
+   // bitwise against the legacy nominal fit above, so both likelihoods must
+   // use the same arithmetic.
+   std::unique_ptr<RooAbsReal> likelihoodAbsReal{
+      pdf->createNLL(*data, RooFit::ModularL(true), RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy))};
 
    RooMinimizer::Config cfg;
    cfg.parallelize = NWorkers;
@@ -709,8 +713,10 @@ TEST_P(LikelihoodGradientJobErrorTest, FitSimpleLinear)
    std::unique_ptr<RooFitResult> fitResult{minim.save()};
    auto a1Result = a1.getVal();
 
-   // now with multiprocess
-   std::unique_ptr<RooAbsReal> nll_mp(pdf.createNLL(*data, RooFit::ModularL(true)));
+   // now with multiprocess; explicitly request the legacy backend to compare
+   // bitwise against the legacy nominal fit above
+   std::unique_ptr<RooAbsReal> nll_mp(
+      pdf.createNLL(*data, RooFit::ModularL(true), RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy)));
 
    a1.setVal(-5.);
    a1.removeError();

@@ -10,13 +10,13 @@
 ///
 /// \author Stascek Jadach
 
-#include "Riostream.h"
 #include "TFile.h"
 #include "TFoam.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TFoamIntegrand.h"
 
+#include <iostream>
 
 Int_t foam_demopers()
 {

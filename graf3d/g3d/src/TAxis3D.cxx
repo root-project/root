@@ -227,8 +227,7 @@ void TAxis3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Up: {
       Int_t i;
-      gPad->SetDoubleBuffer(1);
-      gVirtualX->SetDrawMode(TVirtualX::kCopy); // set drawing mode back to normal (copy) mode
+      gPad->FeedbackMode(kFALSE); // set drawing mode back to normal (copy) mode
       TView *view = gPad->GetView();
       if (!view) break;                       // no 3D view yet
 

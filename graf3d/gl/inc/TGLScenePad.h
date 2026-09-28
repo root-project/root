@@ -14,7 +14,9 @@
 
 #include "TGLScene.h"
 #include "TVirtualViewer3D.h"
-#include "CsgOps.h"
+namespace RootCsg {
+class TBaseMesh;
+}
 #include <vector>
 #include <utility>
 

@@ -26,8 +26,8 @@
 #include <ROOT/RPagePool.hxx>
 #include <ROOT/RDaos.hxx>
 #include <ROOT/RPageStorageDaos.hxx>
+#include <ROOT/RVersion.hxx>
 
-#include <RVersion.h>
 #include <TError.h>
 
 #include <algorithm>
@@ -594,11 +594,6 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
    fCounters->fNRead.Add(readRequests.size());
 
    return clusters;
-}
-
-void ROOT::Experimental::Internal::RPageSourceDaos::LoadStreamerInfo()
-{
-   R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "DAOS-backed sources have no associated StreamerInfo to load.";
 }
 
 std::unique_ptr<ROOT::Internal::RPageSource>

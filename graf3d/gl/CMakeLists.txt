@@ -209,8 +209,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     Hist
     Gui
     Ged
-    RCsg
     ASImage
+  LIBRARIES
+    ROOTCsg
   INSTALL_OPTIONS
     ${installoptions}
 )

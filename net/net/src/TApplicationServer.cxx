@@ -20,9 +20,9 @@
 
 #include "RConfigure.h"
 #include <ROOT/RConfig.hxx>
-#include "snprintf.h"
-#include <iostream>
 
+#include <cstdio>
+#include <iostream>
 #ifdef WIN32
    #include <io.h>
    typedef long off_t;
@@ -62,6 +62,7 @@
 #include "TSystem.h"
 #include "TRemoteObject.h"
 #include "TUrl.h"
+#define ROOT_compiledata_cxx
 #include "compiledata.h"
 #include "TClass.h"
 

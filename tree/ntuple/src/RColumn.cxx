@@ -57,7 +57,6 @@ void ROOT::Internal::RColumn::ConnectPageSource(ROOT::DescriptorId_t fieldId, RP
 {
    fPageSource = &pageSource;
    fHandleSource = fPageSource->AddColumn(fieldId, *this);
-   fNElements = fPageSource->GetNElements(fHandleSource);
    fOnDiskId = fPageSource->GetColumnId(fHandleSource);
    {
       auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();

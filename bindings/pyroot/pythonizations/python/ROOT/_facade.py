@@ -564,9 +564,6 @@ class ROOTFacade(types.ModuleType):
             # This line is needed to import the pythonizations in _tmva directory.
             # The comment suppresses linter errors about unused imports.
             from ._pythonization import _tmva  # noqa: F401
-            from ._pythonization._tmva._rtensor import _AsRTensor
-
-            ns.Experimental.AsRTensor = _AsRTensor
         except ImportError:
             # _tmva submodule not available (expected for tmva=OFF)
             pass

@@ -39,7 +39,7 @@ TEST(THttpServer, main)
       return;
 
    server_hash = httpport;
-   server_url = TString::Format("http:/localhost:%d", httpport);
+   server_url = TString::Format("http://localhost:%d", httpport);
 
    test_suite(serv);
 }

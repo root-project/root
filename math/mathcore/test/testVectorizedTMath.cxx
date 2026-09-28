@@ -1,5 +1,5 @@
 #include "TMath.h"
-#include "VectorizedTMath.h"
+#include "TMathVectorized.h"
 
 #include <cmath>
 #include <random>

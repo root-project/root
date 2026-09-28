@@ -2005,6 +2005,32 @@ class TestSTLTUPLE:
         assert l2 == l1
 
 
+class TestSTLOPTIONAL:
+    def test01_optional_attribute_forwarding(self):
+        """An empty optional must not forward rich display attribute probes."""
+        import cppyy
+
+        cppyy.cppdef(
+            r"""
+            #include <optional>
+
+            namespace optional_attribute_forwarding {
+            struct Value {
+                int answer = 42;
+            };
+
+            std::optional<Value> empty_optional() { return std::nullopt; }
+            std::optional<Value> full_optional() { return Value{}; }
+            }
+            """
+        )
+        empty = cppyy.gbl.optional_attribute_forwarding.empty_optional()
+        full = cppyy.gbl.optional_attribute_forwarding.full_optional()
+
+        assert full.answer == 42
+        assert not hasattr(empty, "_repr_html_")
+
+
 class TestSTLPAIR:
     def setup_class(cls):
         cls.test_dct = test_dct

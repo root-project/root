@@ -53,8 +53,8 @@ It can be displayed with respect to any origin.
 #include "TError.h"
 #include "TMath.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <cerrno>
 #include <cstdlib>
 #include <climits>

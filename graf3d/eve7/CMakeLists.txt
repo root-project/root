@@ -136,11 +136,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     Physics
     EG
     TreePlayer
-    RCsg
     ROOTWebDisplay
     ROOTBrowserv7
     ROOTGeomViewer
   LIBRARIES
+    ROOTCsg
     ${EXTRA_GL_LIBS}
   ${EXTRA_DICT_OPTS}
 )

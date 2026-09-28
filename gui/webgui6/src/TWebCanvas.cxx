@@ -733,8 +733,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          }
       } else if (obj->InheritsFrom(TMultiGraph::Class())) {
          // workaround for TMultiGraph
+         auto mg = static_cast<TMultiGraph *>(obj);
+         // assign auto-colors if any
+         mg->BuildPrimitives(iter.GetOption());
          if (opt.Contains("A")) {
-            auto mg = static_cast<TMultiGraph *>(obj);
             TVirtualPad::TContext ctxt(kFALSE);
             mg->GetHistogram(); // force creation of histogram without any drawings
             has_histo = true;

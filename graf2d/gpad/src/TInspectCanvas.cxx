@@ -21,8 +21,8 @@
 #include "TDataType.h"
 #include "TRealData.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
+#include <cstdio>
 
 
 /** \class TInspectorObject

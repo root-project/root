@@ -102,6 +102,20 @@ public:
       return Gradient(parameters);
    };
 
+   /// Variant of GradientWithPrevResult() that additionally receives the
+   /// already-known function value at \p parameters (e.g. from the line search
+   /// that preceded the gradient request), so implementations can avoid
+   /// re-evaluating the function at the central point.
+   ///
+   /// \warning Not meant to be overridden! This is a requirement for an
+   /// internal optimization in RooFit that might go away with any refactoring.
+   virtual std::vector<double> GradientWithPrevResult(std::vector<double> const &parameters, double *previous_grad,
+                                                      double *previous_g2, double *previous_gstep,
+                                                      double /*fValAtParameters*/) const
+   {
+      return GradientWithPrevResult(parameters, previous_grad, previous_g2, previous_gstep);
+   };
+
    /// \warning Not meant to be overridden! This is a requirement for an
    /// internal optimization in RooFit that might go away with any refactoring.
    virtual GradientParameterSpace gradParameterSpace() const { return GradientParameterSpace::External; };

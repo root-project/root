@@ -73,7 +73,12 @@ def _TH1_Constructor(self, *args, **kwargs):
     If UHI IR is detected, use the UHI deserialization constructor
     else forward to the original
     """
+    import ROOT
+
     from .serialization import _is_uhi_dict
+
+    if len(args) == 1 and hasattr(args[0], "_to_uhi_") and not isinstance(args[0], ROOT.TH1):
+        args = (args[0]._to_uhi_(),)
 
     if len(args) == 1 and _is_uhi_dict(args[0]):
         from .indexing import _temporarily_disable_add_directory

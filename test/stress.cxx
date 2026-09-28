@@ -96,9 +96,9 @@
 #include <TApplication.h>
 #include <TClassTable.h>
 #include <Compression.h>
-#include <snprintf.h>
 #include "Event.h"
 
+#include <cstdio>
 #include <cstdlib>
 #include <iostream>
 

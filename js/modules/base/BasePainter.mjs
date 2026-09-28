@@ -84,10 +84,14 @@ function getAbsPosInCanvas(sel, pos) {
   * @return {string|Array} - converted value or array with value and actual format
   * @private */
 function floatToString(value, fmt, ret_fmt) {
-   if (!fmt)
-      fmt = '6.4g';
+   if ((fmt === true) || (fmt === 'double'))
+      fmt = settings.DoubleFormat || '10.8g';
+   else if ((fmt === false) || (fmt === 'float'))
+      fmt = settings.FloatFormat || '8.6g';
    else if (fmt === 'g')
       fmt = '7.5g';
+   else if (!fmt || !isStr(fmt))
+      fmt = '6.4g';
 
    fmt = fmt.trim();
    const len = fmt.length;

@@ -33,17 +33,17 @@
 
 // Routines used for processing HTML makeup for forms.
 
-#include <cstring>
-#include <cstdlib>
-#include <cstdarg>
-
 #include "TGHtml.h"
 #include "TGButton.h"
 #include "TGTextEntry.h"
 #include "TGListBox.h"
 #include "TGTextEdit.h"
 #include "TGComboBox.h"
-#include "snprintf.h"
+
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <cstdarg>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Unmap any input control that is currently mapped.

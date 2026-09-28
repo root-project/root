@@ -2,9 +2,6 @@
 name: 'ROOT 6.32'
 
 on:
-  schedule:
-    - cron: '15 1 * * *'
-
   workflow_dispatch:
     inputs:
       incremental:

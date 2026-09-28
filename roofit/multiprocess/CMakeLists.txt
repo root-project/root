@@ -5,6 +5,7 @@
 
 ROOT_LINKER_LIBRARY(RooFitMultiProcess
         src/worker.cxx
+        src/Channel.cxx
         src/Messenger.cxx
         src/ProcessManager.cxx
         src/util.cxx
@@ -18,11 +19,9 @@ ROOT_LINKER_LIBRARY(RooFitMultiProcess
         src/HeatmapAnalyzer.cxx
     LIBRARIES
         Core
-    DEPENDENCIES
-        RooFitZMQ
 )
 
-target_link_libraries(RooFitMultiProcess PUBLIC Hist RooFitZMQ)
+target_link_libraries(RooFitMultiProcess PUBLIC Hist)
 set(RooFitMultiProcess_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/res")
 target_include_directories(RooFitMultiProcess
         PRIVATE ${RooFitMultiProcess_INCLUDE_DIR}
@@ -41,10 +40,13 @@ if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
         inc/RooFit/MultiProcess/Config.h
         inc/RooFit/MultiProcess/HeatmapAnalyzer.h
         inc/RooFit/MultiProcess/types.h
+        res/RooFit/MultiProcess/Channel.h
         res/RooFit/MultiProcess/JobManager.h
         res/RooFit/MultiProcess/Job.h
+        res/RooFit/MultiProcess/Message.h
         res/RooFit/MultiProcess/Messenger.h
         res/RooFit/MultiProcess/Messenger_decl.h
+        res/RooFit/MultiProcess/Poller.h
         res/RooFit/MultiProcess/ProcessManager.h
         res/RooFit/MultiProcess/ProcessTimer.h
         res/RooFit/MultiProcess/Queue.h

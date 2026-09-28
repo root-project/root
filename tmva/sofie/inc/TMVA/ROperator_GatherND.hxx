@@ -189,18 +189,8 @@ public:
       // case input_index_shape == rank of input
       size_t ss = fShapeIndices.back().dim;
 
-      // check for negative indices
-      auto indicesLength = ConvertDimShapeToLength(fShapeIndices);
-      out << SP << "for (size_t i = 0; i < " << indicesLength << "; i++) {\n";
-      out << SP << SP << "if (tensor_" << fNIndices << "[i] < 0 ) {\n";
-      // corresponding input shape is  i % strides[N-1]
-      out << SP << SP << SP << "size_t s_i = " << fShapeX[fBatchDims] << ";\n";
-      for (size_t j = 1; j < ss; j++) {
-         out << SP << SP << SP << "if (i % " << ss << " == " << j << ") s_i = " <<  fShapeX[fBatchDims+j] << ";\n";
-      }
-      out << SP << SP << SP << "const_cast<int64_t &>(tensor_" << fNIndices << "[i]) +=  s_i;\n";
-      out << SP << SP << "}\n";
-      out << SP << "}\n";
+      // scope for the variables declared below
+      out << SP << "{\n";
       // loop on batch dims
       std::string outIndex;
       std::string inIndex;
@@ -240,16 +230,25 @@ public:
          if (stridesIndices[j].GetVal() != "1")
             idIndex += " * " + stridesIndices[j].GetVal();
       }
+      // read the index components, counting negative values from the end of the axis; the
+      // index tensor is left untouched, since it can be shared with other operators
+      for (size_t l = 0; l < ss; l++) {
+         std::string indexIndex =
+            idIndex.empty() ? std::to_string(l) : (l > 0 ? idIndex + " + " + std::to_string(l) : idIndex);
+         for (size_t k = 0; k <= q - 1; k++)
+            out << SP;
+         out << "int64_t index_" << l << " = tensor_" << fNIndices << "[" << indexIndex << "];\n";
+         for (size_t k = 0; k <= q - 1; k++)
+            out << SP;
+         out << "if (index_" << l << " < 0) index_" << l << " += " << fShapeX[fBatchDims + l] << ";\n";
+      }
       for (size_t k = 0; k <= q - 1; k++) out << SP;
       out << "size_t inputIndex = " << inIndex;
-      std::string indexIndex = idIndex;
       for (size_t l = 0; l < ss; l++) {
-         if (l > 0)
-            indexIndex = idIndex + " + " + std::to_string(l);
          // compute input index using index tensors
-         if (!indexIndex.empty() || l>0)
+         if (!inIndex.empty() || l > 0)
             out << " + ";
-         out << "tensor_" << fNIndices << "[" << indexIndex << "]";
+         out << "index_" << l;
          if (stridesX[fBatchDims + l].GetVal() != "1") out
              << " * " << stridesX[fBatchDims + l];
       }
@@ -272,6 +271,7 @@ public:
          for (size_t k = 0; k <j; k++) out << SP;
          out << "}\n";
       }
+      out << SP << "}\n"; // end of the scope
 
       return out.str();
    }

@@ -8,6 +8,7 @@ ROOT_ADD_GTEST(test_RooFit_MultiProcess_Job test_Job.cxx LIBRARIES RooFitMultiPr
 # link to the INTERFACE library separately, ROOT_EXECUTABLE cannot handle INTERFACE library properties:
 target_link_libraries(test_RooFit_MultiProcess_Job PUBLIC RooFit_multiprocess_testing_utils)
 
+ROOT_ADD_GTEST(test_RooFit_MultiProcess_Channel test_Channel.cxx LIBRARIES RooFitMultiProcess)
 ROOT_ADD_GTEST(test_RooFit_MultiProcess_ProcessManager test_ProcessManager.cxx LIBRARIES RooFitMultiProcess)
 ROOT_ADD_GTEST(test_RooFit_MultiProcess_Messenger test_Messenger.cxx LIBRARIES RooFitMultiProcess)
 

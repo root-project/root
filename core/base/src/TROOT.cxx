@@ -3101,7 +3101,7 @@ Int_t TROOT::ConvertVersionCode2Int(Int_t code)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert version as an integer to version code as used in RVersion.h.
+/// Convert version as an integer to version code as used in ROOT/RVersion.hxx.
 
 Int_t TROOT::ConvertVersionInt2Code(Int_t v)
 {
@@ -3112,7 +3112,7 @@ Int_t TROOT::ConvertVersionInt2Code(Int_t v)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return ROOT version code as defined in RVersion.h.
+/// Return ROOT version code as defined in ROOT/RVersion.hxx.
 
 Int_t TROOT::RootVersionCode()
 {

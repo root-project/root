@@ -815,26 +815,34 @@ std::unique_ptr<RooAbsReal> RooAddPdf::createExpectedEventsFunc(const RooArgSet 
          prodList.addOwned(std::unique_ptr<RooAbsReal>{createIntegral(*nset, _refCoefNorm)});
       }
 
-      // Optionally multiply with fractional normalization. I this case, we
+      // Optionally multiply with fractional normalization. In this case, we
       // replace the original factor stored in "out".
       if (!_normRange.IsNull()) {
-         std::unique_ptr<RooAbsReal> owner;
+         // Weight each coefficient with the fraction of the component inside
+         // the norm range, relative to the coefficient reference range
+         // (default range, unless fixed with selectNormalizationRange()).
+         // The ratio is invariant under constant rescaling of the
+         // components, e.g. by internal compilation normalization choices.
+         const char *const normRangeName = _normRange.Data();
+         std::string const refRangeName = _refCoefRangeName ? _refCoefRangeName->GetName() : "";
          RooArgList terms;
-         // The integrals own each other in a chain. We do this because it's
-         // not possible to add two objects with the same name via
-         // addOwnedComponents(), and it happens in some user models that some
-         // component pdfs are the same. Hence, the integrals might share names
-         // too and we can't add them all in one go as owned objects of the
-         // final integral sum.
+         std::unique_ptr<RooAbsReal> owner;
+         // The ratios own each other in a chain: components can share names
+         // in user models, so addOwnedComponents() can't take them at once.
          for (auto *pdf : static_range_cast<RooAbsPdf *>(_pdfList)) {
-            auto integrl = std::unique_ptr<RooAbsReal>{pdf->createIntegral(*nset, *nset)};
-            auto formulaName = std::string(pdf->GetName()) + "_formulaVar";
-            auto next = std::make_unique<RooFormulaVar>(formulaName.c_str(), "1./x[0]", RooArgList{*integrl});
-            next->addOwnedComponents(std::move(integrl));
-            terms.add(*next);
+            RooArgSet integObs;
+            pdf->getObservables(nset, integObs);
+            auto integNum = std::unique_ptr<RooAbsReal>{pdf->createIntegral(integObs, integObs, normRangeName)};
+            auto integDen = std::unique_ptr<RooAbsReal>{
+               refRangeName.empty() ? pdf->createIntegral(integObs, integObs)
+                                    : pdf->createIntegral(integObs, integObs, refRangeName.c_str())};
+            auto fracName = std::string(pdf->GetName()) + "_rangeFraction";
+            auto frac = std::make_unique<RooRatio>(fracName.c_str(), fracName.c_str(), *integNum, *integDen);
+            frac->addOwnedComponents(std::move(integNum), std::move(integDen));
+            terms.add(*frac);
             if (owner)
-               next->addOwnedComponents(std::move(owner));
-            owner = std::move(next);
+               frac->addOwnedComponents(std::move(owner));
+            owner = std::move(frac);
          }
          auto fracIntegName = std::string(GetName()) + "_integSum";
          auto fracInteg =

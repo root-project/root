@@ -15,6 +15,8 @@
 
 #include "RooFit/MultiProcess/Queue.h"
 #include <queue>
+#include <unordered_map>
+#include <vector>
 
 namespace RooFit {
 namespace MultiProcess {

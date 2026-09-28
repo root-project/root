@@ -15,65 +15,51 @@
 
 #include "./test_suite.cxx"
 
-void cleanup_files()
-{
-   gSystem->Unlink("server.pem");
-   gSystem->Unlink("server.crt");
-   gSystem->Unlink("server.key");
-   gSystem->Unlink("server.key.orig");
-}
-
 // main http server
 TEST(THttpServer, ssl)
 {
-   cleanup_files();
+   struct DoFilesCleanup {
+      ~DoFilesCleanup()
+      {
+         gSystem->Unlink("server.pem");
+         gSystem->Unlink("server.crt");
+         gSystem->Unlink("server.key");
+      }
+   } docleanup;
 
-   int res = gSystem->Exec("openssl genrsa -des3 -passout pass:aaaa -out server.key 2048");
+   int res = gSystem->Exec("openssl genrsa -out server.key 2048");
    EXPECT_EQ(res, 0) << "Generate new RSA key";
-   if (res) {
-      cleanup_files();
+   if (res)
+      return;
+
+   if (gSystem->AccessPathName("server.key")) {
+      std::cerr << "Fail to access server.key file";
       return;
    }
 
-   res = gSystem->Exec("openssl req -new -passin pass:aaaa -key server.key -subj \"/C=GE/ST=Hesse/L=Darmstadt/O=GSI/CN=localhost\" -out server.csr");
-   EXPECT_EQ(res, 0) << "Generate new server key";
-   if (res) {
-      cleanup_files();
+   res = gSystem->Exec("openssl req -x509 -new -key server.key"
+                       " -out server.crt"
+                       " -days 3650 -sha256"
+                       " -subj \"/C=GE/ST=Hesse/L=Darmstadt/O=GSI/CN=localhost\""
+                       " -addext \"subjectAltName=DNS:localhost,IP:127.0.0.1,IP:::1\""
+                       " -addext \"basicConstraints=critical,CA:TRUE\""
+                       " -addext \"keyUsage=critical,digitalSignature,keyEncipherment,keyCertSign\"");
+   EXPECT_EQ(res, 0) << "Generate new server certificate";
+   if (res)
       return;
-   }
 
-   gSystem->CopyFile("server.key", "server.key.orig");
-
-   res = gSystem->Exec("openssl rsa -in server.key.orig -passin pass:aaaa -out server.key");
-   EXPECT_EQ(res, 0) << "Convert key into RSA";
-   if (res) {
-      cleanup_files();
-      return;
-   }
-
-   res = gSystem->Exec("openssl x509 -req -days 3650 -in server.csr -signkey server.key -out server.crt");
-   EXPECT_EQ(res, 0) << "Generate server certificate";
-   if (res) {
-      cleanup_files();
+   if (gSystem->AccessPathName("server.crt")) {
+      std::cerr << "Fail to access server.crt file";
       return;
    }
 
    res = gSystem->Exec("cat server.crt server.key > server.pem");
-   EXPECT_EQ(res, 0) << "Generate server certificate";
-   if (res) {
-      cleanup_files();
+   EXPECT_EQ(res, 0) << "Generate server.pcm file for THttpServer";
+   if (res)
       return;
-   }
 
    if (gSystem->AccessPathName("server.pem")) {
       std::cerr << "Fail to access server.pem file";
-      cleanup_files();
-      return;
-   }
-
-   if (gSystem->AccessPathName("server.crt")) {
-      std::cerr << "Fail to access server.crt file";
-      cleanup_files();
       return;
    }
 
@@ -93,18 +79,15 @@ TEST(THttpServer, ssl)
       }
    }
 
-   EXPECT_NE(httpport, 0);
-
-   if (!httpport) {
-      cleanup_files();
+   EXPECT_NE(httpport, 0) << "Fail to allocate HTTP port for test";
+   if (!httpport)
       return;
-   }
 
    server_hash = httpport;
    unix_socket = "--cacert server.crt"; // curl argument
-   server_url = TString::Format("https:/localhost:%d", httpport);
+   server_url = TString::Format("https://localhost:%d", httpport);
 
    test_suite(serv);
 
-   cleanup_files();
+   (void) docleanup; // object used only for automatic files cleanup
 }

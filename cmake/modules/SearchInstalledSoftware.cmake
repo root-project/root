@@ -100,7 +100,7 @@ macro(ROOT_FIND_REQUIRED_DEP PACKAGE_NAME BUILTIN_CONFIG_OPTION)
       "Please install it in the system (preferred), set the corresponding CMake search variable, "
       "or opt in to downloading and auto-build it from externally provided source tarball using '-D${BUILTIN_CONFIG_OPTION}=ON'.")
       list(APPEND MISSING_PACKAGES ${PACKAGE_NAME})
-      list(APPEND HOTFIX_BUILD_FLAGS '-D${BUILTIN_CONFIG_OPTION}=ON')
+      list(APPEND HOTFIX_BUILD_FLAGS -D${BUILTIN_CONFIG_OPTION}=ON)
     endif()
   endif()
 endmacro()
@@ -283,7 +283,7 @@ if(mathmore OR (tmva-cpu AND use_gsl_cblas))
     endif()
   endif()
 endif()
-
+ROOT_FIND_REQUIRED_DEP(mathtext builtin_mathtext)
 
 if(NOT "${MISSING_PACKAGES}" STREQUAL "")
   list(REMOVE_DUPLICATES MISSING_PACKAGES)
@@ -481,7 +481,7 @@ endif()
 if(tmva-pymva)
   list(APPEND python_components NumPy)
 endif()
-find_package(Python3 3.10 COMPONENTS ${python_components})
+find_package(Python3 3.11 COMPONENTS ${python_components})
 
 # Detect whether the found Python interpreter is a free-threaded build
 # (Py_GIL_DISABLED is defined in pyconfig.h). The limited C API is not
@@ -756,6 +756,10 @@ if(opengl AND builtin_ftgl)
   add_subdirectory(builtins/ftgl)
 endif()
 
+if (builtin_mathtext)
+  add_subdirectory (builtins/libmathtext) # hard coded builtin for graf2d
+endif()
+
 #---Check for Davix library-----------------------------------------------------------
 foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
   unset(DAVIX_${suffix} CACHE)
@@ -1012,6 +1016,8 @@ if(tmva)
         message(SEND_ERROR "cudnn not found  while -Dtmva-cudnn=ON. Install it on the system, or disable option 'tmva-cudnn'")
       endif()
     endif()
+  else()
+    set(tmva-cudnn OFF CACHE BOOL "Disabled because 'tmva-gpu' unavailable (${tmva-cudnn_description})" FORCE)
   endif()
   if(tmva-pymva)
     if(NOT Python3_NumPy_FOUND OR NOT Python3_Development_FOUND)
@@ -1066,32 +1072,6 @@ if (mpi)
       " Example: CMAKE_PREFIX_PATH=<MPI_install_path> (e.g. \"/usr/local/mpich\"). Or disable option 'mpi'")
   endif()
 endif()
-
-#---Check for ZeroMQ when building RooFit::MultiProcess--------------------------------------------
-
-if (roofit_multiprocess)
-    message(STATUS "Looking for ZeroMQ (libzmq)")
-
-    # Temporarily prefer config mode over module mode, so that a CMake-installed system version
-    # gets detected before looking for an autotools-installed system version (which the
-    # FindZeroMQ.cmake module does).
-    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG_ORIGINAL_VALUE ${CMAKE_FIND_PACKAGE_PREFER_CONFIG})
-    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
-
-    # The fail-on-missing branching is not implemented, and we always look for
-    # ZeroMQ and cppzmq with REQUIRED to fail configuration if not available.
-    # That's because the roofit_multiprocess option can only be deliberately
-    # enabled by the user with roofit_multiprocess=ON, in which case it would
-    # be frustrating to get it auto-disabled on missing dependencies.
-    find_package(ZeroMQ 4.3.5 REQUIRED)
-
-    # Reset default find_package mode
-    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ${CMAKE_FIND_PACKAGE_PREFER_CONFIG_ORIGINAL_VALUE})
-    unset(CMAKE_FIND_PACKAGE_PREFER_CONFIG_ORIGINAL_VALUE)
-
-    message(STATUS "Looking for ZeroMQ C++ bindings (cppzmq)")
-    find_package(cppzmq REQUIRED)
-endif (roofit_multiprocess)
 
 #---Check for googletest---------------------------------------------------------------
 if (testing OR testsupport)

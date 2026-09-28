@@ -301,10 +301,11 @@ void ROperator_ConvTranspose<T>::Initialize(RModel &model)
 
    std::vector<size_t> shape1 = {fShapeW[0], fShapeW[1], kernelSize};
    std::vector<size_t> shape2 = {fShapeW[1], kernelSize, inputSize};
-   model.AddIntermediateTensor(fNX + "_f", ConvertStringToType(fType), shape1);
-   model.AddIntermediateTensor(fNX + "_xcol", ConvertStringToType(fType), shape2);
-   fConvK = fNX + "_f";
-   fImcol = fNX + "_xcol";
+   // private workspaces of this node, named after its output (see ROperator_Conv)
+   model.AddIntermediateTensor(fNY + "_f", ConvertStringToType(fType), shape1);
+   model.AddIntermediateTensor(fNY + "_xcol", ConvertStringToType(fType), shape2);
+   fConvK = fNY + "_f";
+   fImcol = fNY + "_xcol";
    fOutputTensorNames.emplace_back(fConvK);
    fOutputTensorNames.emplace_back(fImcol);
 
@@ -366,7 +367,7 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
       size_t kernelSize = fAttrKernelShape[0];
       if (fDim > 1)
          kernelSize *= fAttrKernelShape[1];
-      out << SP << fType << " tensor_" << fNX << "_f[" << fShapeW[0] * fShapeW[1] * kernelSize << "] = {0};\n";
+      out << SP << fType << " tensor_" << fConvK << "[" << fShapeW[0] * fShapeW[1] * kernelSize << "] = {0};\n";
    }
 
    // vectorize the (dilated)convolution kernels into a matrix
@@ -404,7 +405,7 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
       out << SP << SP << SP << "for (std::size_t kh = 0; kh < " << kHeight << "; kh++) {\n";
    out << SP << SP << SP << SP << "for (std::size_t kw = 0; kw < " << kWidth << "; kw++) {\n";
 
-   out << SP << SP << SP << SP << SP << "tensor_" << fNX << "_f[ic * " << ocstrideDil << " + oc * " << icstrideDil;
+   out << SP << SP << SP << SP << SP << "tensor_" << fConvK << "[ic * " << ocstrideDil << " + oc * " << icstrideDil;
    if (fDim > 2)
       out << " + kd * " << dstrideDil;
    if (fDim > 1)
@@ -439,7 +440,7 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
    out << SP << "float " << OpName << "_beta = 0.0;\n";
 
    if (!fUseSession) {
-      out << SP << fType << " tensor_" << fNX << "_xcol[" << fShapeW[0] * icstrideDil * oDepth * oHeight * oWidth
+      out << SP << fType << " tensor_" << fImcol << "[" << fShapeW[0] * icstrideDil * oDepth * oHeight * oWidth
           << "] = {0};\n";
    }
 
@@ -464,15 +465,15 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
           << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, "
           << "tensor_" << fNX << " + x_offset, &" << OpName
           << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-      out << SP << SP << SP << "tensor_" << fNX << "_f, &" << OpName << "_n, &" << OpName << "_beta, tensor_" << fNX
-          << "_xcol, &" << OpName << "_m);\n";
+      out << SP << SP << SP << "tensor_" << fConvK << ", &" << OpName << "_n, &" << OpName << "_beta, tensor_" << fImcol
+          << ", &" << OpName << "_m);\n";
 
       // when using im2col - resulting matrix is transposed, is (input_c * filter_h * filter_w,  output_h *
       // output_w)
       // before using col2im I need to transpose matrix
       if (fDim < 3) {
-         out << SP << SP << "UTILITY::col2im<float>(tensor_" << fNX
-             << "_xcol,"
+         out << SP << SP << "UTILITY::col2im<float>(tensor_" << fImcol
+             << ","
              //  channels, height, width, kernel_h, kernel_w, pad_h_begin, pad_h_end, pad_w_begin, pad_w_end,
              //  stride_h, stride_w, dilation_h, dilation_w,
              << fShapeY[1] << "," << oHeight << "," << oWidth << ",";
@@ -496,13 +497,13 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
              << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << "," << fAttrPads[0] << "," << fAttrPads[3] << ","
              << fAttrPads[1] << "," << fAttrPads[4] << "," << fAttrPads[2] << "," << fAttrPads[5] << ","
              << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << "," << fAttrDilations[0] << ","
-             << fAttrDilations[1] << "," << fAttrDilations[2] << ",tensor_" << fNX << "_xcol);\n\n ";
+             << fAttrDilations[1] << "," << fAttrDilations[2] << ",tensor_" << fImcol << ");\n\n ";
       }
       // // BLAS
       // out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
-      //     << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fNX << "_xcol, &" << OpName
+      //     << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fImcol << ", &" << OpName
       //     << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-      // out << SP << SP << SP <<"tensor_" << fNX << "_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
+      // out << SP << SP << SP <<"tensor_" << fConvK << ", &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
       //     << " + out_offset, &" << OpName << "_m);\n";
    } else {
       // case of group transposed convolution
@@ -519,12 +520,12 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
           << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, "
           << "tensor_" << fNX << " + x_offset, &" << OpName
           << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-      out << SP << SP << SP << "tensor_" << fNX << "_f, &" << OpName << "_n, &" << OpName << "_beta, tensor_" << fNX
-          << "_xcol , &" << OpName << "_m);\n";
+      out << SP << SP << SP << "tensor_" << fConvK << ", &" << OpName << "_n, &" << OpName << "_beta, tensor_" << fImcol
+          << " , &" << OpName << "_m);\n";
 
       if (fDim < 3) {
-         out << SP << SP << "UTILITY::col2im<float>(tensor_" << fNX
-             << "_xcol,"
+         out << SP << SP << "UTILITY::col2im<float>(tensor_" << fImcol
+             << ","
              //  channels, height, width, kernel_h, kernel_w, pad_h_begin, pad_h_end, pad_w_begin, pad_w_end,
              //  stride_h, stride_w, dilation_h, dilation_w,
              << fShapeY[1] << "," << oHeight << "," << oWidth << ",";
@@ -549,7 +550,7 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
              << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << "," << fAttrPads[0] << "," << fAttrPads[3] << ","
              << fAttrPads[1] << "," << fAttrPads[4] << "," << fAttrPads[2] << "," << fAttrPads[5] << ","
              << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << "," << fAttrDilations[0] << ","
-             << fAttrDilations[1] << "," << fAttrDilations[2] << "," << "tensor_" << fNX << "_xcol);\n\n ";
+             << fAttrDilations[1] << "," << fAttrDilations[2] << "," << "tensor_" << fImcol << ");\n\n ";
       }
 
       // // BLAS
@@ -557,9 +558,9 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
       // out << SP << SP << SP << "size_t offset_f = g * " << fShapeW[0] * fShapeW[1] * icstrideDil / fAttrGroup <<
       // ";\n"; out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName <<
       // "_m, &"
-      //     << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fNX << "_xcol, &" << OpName
+      //     << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fImcol << ", &" << OpName
       //     << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-      // out << SP << SP << SP << "tensor_" << fNX << "_f + offset_f, &" << OpName << "_k, &" << OpName << "_beta,
+      // out << SP << SP << SP << "tensor_" << fConvK << " + offset_f, &" << OpName << "_k, &" << OpName << "_beta,
       // tensor_" << fNY
       //     << " + out_offset"
       //     << ", &" << OpName << "_m);\n";

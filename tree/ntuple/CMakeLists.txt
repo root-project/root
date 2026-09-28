@@ -27,6 +27,7 @@ if(daos OR daos_mock)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTuple
+NO_GLOB_HEADERS # Ensure that the optional headers above only get installed when enabled
 HEADERS
   ROOT/RCluster.hxx
   ROOT/RClusterPool.hxx
@@ -122,6 +123,15 @@ DEPENDENCIES
   ROOTVecOps
   ${ROOTNTuple_OPTIONAL_DEPENDENCIES}
 )
+
+# Non-standalone headers must be left out of the dictionary, so a dedicated install command is required.
+ROOT_INSTALL_HEADERS(HEADERS
+  ROOT/RField/RFieldFundamental.hxx
+  ROOT/RField/RFieldProxiedCollection.hxx
+  ROOT/RField/RFieldRecord.hxx
+  ROOT/RField/RFieldSequenceContainer.hxx
+  ROOT/RField/RFieldSoA.hxx
+  ROOT/RField/RFieldSTLMisc.hxx)
 
 target_link_libraries(ROOTNTuple PRIVATE xxHash::xxHash)
 

@@ -39,7 +39,7 @@ TEST(RNTupleCompat, FeatureFlagSupported)
    descBuilder.SetNTuple("ntpl", "");
    for (unsigned int flag = 0; flag < RNTupleDescriptor::kFeatureFlag_COUNT; ++flag)
       descBuilder.SetFeature(flag);
-   descBuilder.AddField(RFieldDescriptorBuilder::FromField(ROOT::RFieldZero()).FieldId(0).MakeDescriptor().Unwrap());
+   descBuilder.AddField(ROOT::RFieldZero(), 0);
    ASSERT_TRUE(static_cast<bool>(descBuilder.EnsureValidDescriptor()));
 
    RNTupleWriteOptions options;
@@ -72,7 +72,7 @@ TEST(RNTupleCompat, FeatureFlagSupportedFooter)
    RNTupleDescriptorBuilder descBuilder;
    descBuilder.SetVersionForWriting();
    descBuilder.SetNTuple("ntpl", "");
-   descBuilder.AddField(RFieldDescriptorBuilder::FromField(ROOT::RFieldZero()).FieldId(0).MakeDescriptor().Unwrap());
+   descBuilder.AddField(ROOT::RFieldZero(), 0);
    ASSERT_TRUE(static_cast<bool>(descBuilder.EnsureValidDescriptor()));
 
    RNTupleWriteOptions options;
@@ -108,7 +108,7 @@ TEST(RNTupleCompat, FeatureFlagUnsupported)
    descBuilder.SetVersionForWriting();
    descBuilder.SetNTuple("ntpl", "");
    descBuilder.SetFeature(RNTupleDescriptor::kFeatureFlag_Test);
-   descBuilder.AddField(RFieldDescriptorBuilder::FromField(ROOT::RFieldZero()).FieldId(0).MakeDescriptor().Unwrap());
+   descBuilder.AddField(ROOT::RFieldZero(), 0);
    ASSERT_TRUE(static_cast<bool>(descBuilder.EnsureValidDescriptor()));
 
    RNTupleWriteOptions options;
@@ -145,7 +145,7 @@ TEST(RNTupleCompat, FeatureFlagUnsupportedInFooter)
    RNTupleDescriptorBuilder descBuilder;
    descBuilder.SetVersionForWriting();
    descBuilder.SetNTuple("ntpl", "");
-   descBuilder.AddField(RFieldDescriptorBuilder::FromField(ROOT::RFieldZero()).FieldId(0).MakeDescriptor().Unwrap());
+   descBuilder.AddField(ROOT::RFieldZero(), 0);
    ASSERT_TRUE(static_cast<bool>(descBuilder.EnsureValidDescriptor()));
 
    RNTupleWriteOptions options;
@@ -187,7 +187,7 @@ TEST(RNTupleCompat, FeatureFlagMixSupportedUnsupported)
    descBuilder.SetNTuple("ntpl", "");
    for (unsigned int flag = 0; flag < RNTupleDescriptor::kFeatureFlag_COUNT; ++flag)
       descBuilder.SetFeature(flag);
-   descBuilder.AddField(RFieldDescriptorBuilder::FromField(ROOT::RFieldZero()).FieldId(0).MakeDescriptor().Unwrap());
+   descBuilder.AddField(ROOT::RFieldZero(), 0);
    ASSERT_TRUE(static_cast<bool>(descBuilder.EnsureValidDescriptor()));
 
    RNTupleWriteOptions options;

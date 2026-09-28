@@ -52,8 +52,11 @@ public:
           SharedOffset offset);
 
    virtual void fillGradient(double *grad) = 0;
-   virtual void
-   fillGradientWithPrevResult(double *grad, double *previous_grad, double *previous_g2, double *previous_gstep) = 0;
+   /// \param[in] fValAtX The function value at the current parameter point, if known by the
+   ///            caller (e.g. from the preceding line search); NaN when unknown. Implementations
+   ///            can use it to avoid re-evaluating the function at the central point.
+   virtual void fillGradientWithPrevResult(double *grad, double *previous_grad, double *previous_g2,
+                                           double *previous_gstep, double fValAtX) = 0;
 
    /// Synchronize minimizer settings with calculators in child classes.
    virtual void synchronizeWithMinimizer(const ROOT::Math::MinimizerOptions &options);

@@ -285,11 +285,23 @@ public:
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
+namespace Internal {
+std::unique_ptr<RFieldBase> CreateEmulatedEnumField(std::string_view fieldName, std::string_view emulatedFromType,
+                                                    std::string_view underlyingIntType);
+}
+
 /// The field for an unscoped or scoped enum with dictionary
 class REnumField : public RFieldBase {
+   friend std::unique_ptr<RFieldBase> Internal::CreateEmulatedEnumField(std::string_view fieldName,
+                                                                        std::string_view emulatedFromType,
+                                                                        std::string_view underlyingIntType);
+
 private:
    REnumField(std::string_view fieldName, TEnum *enump);
+   // Used by CloneImpl()
    REnumField(std::string_view fieldName, std::string_view enumName, std::unique_ptr<RFieldBase> intField);
+   // Used by field emulation
+   REnumField(std::string_view fieldName, std::string_view emulatedFromType, std::string_view underlyingIntType);
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;

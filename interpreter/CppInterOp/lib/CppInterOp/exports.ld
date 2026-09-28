@@ -57,3 +57,4 @@
 -Wl,--export=_ZNK5clang8QualType11getAsStringERKNS_14PrintingPolicyE
 -Wl,--export=_ZN5clang11Interpreter6createENSt3__210unique_ptrINS_16CompilerInstanceENS1_14default_deleteIS3_EEEENS2_INS_26IncrementalExecutorBuilderENS4_IS7_EEEE
 -Wl,--export=_ZNK5clang7TagDecl13getDefinitionEv
+-Wl,--export=_ZNK5clang12FunctionDecl9isDefinedERPKS0_b

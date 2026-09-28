@@ -12,6 +12,9 @@
 #ifndef ROOT_HelpTextTV
 #define ROOT_HelpTextTV
 
+#if !defined(ROOT_HelpTextTV_cxx) && !defined(G__DICTIONARY)
+#warning "This header is deprecated and will be removed in ROOT 6.44"
+#endif
 #include <RtypesCore.h>
 
 R__EXTERN const char gTVHelpAbout[];

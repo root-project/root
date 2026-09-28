@@ -61,20 +61,48 @@ void tmva003_RReader()
    // The event-by-event inference takes the values of the variables as a std::vector<float>.
    // Note that the return value is as well a std::vector<float> since the reader
    // is also capable to process models with multiple outputs.
-   auto prediction = model.Compute({0.5, 1.0, -0.2, 1.5});
+   // Construct the std::vector explicitly: with the std::span batch-inference
+   // overload around, a braced-init-list argument is ambiguous when compiling
+   // against ROOT's pre-C++20 std::span backport.
+   auto prediction = model.Compute(std::vector<float>{0.5f, 1.0f, -0.2f, 1.5f});
    std::cout << "Single-event inference: " << prediction[0] << "\n\n";
 
    // 2) Batch inference on data of multiple events
-   // For batch inference, the data needs to be structured as a matrix. For this
-   // purpose, TMVA makes use of the RTensor class. For convenience, we use RDataFrame
-   // and the AsTensor utility to make the read-out from the ROOT file.
+   // For batch inference, the data is passed as a flat vector with the events
+   // concatenated in row-major order: {event0_var0, event0_var1, ...,
+   // event1_var0, ...}. The number of columns per event (variables plus
+   // spectators) is known internally by the reader. For convenience, we use
+   // RDataFrame to make the read-out from the ROOT file.
    ROOT::RDataFrame df("TreeS", filename);
    auto df2 = df.Range(3); // Read only a small subset of the dataset
-   auto x = AsTensor<float>(df2, variables);
-   auto y = model.Compute(x);
+   const std::size_t nEvents = 3;
+   const std::size_t nVars = variables.size();
+   std::vector<std::vector<float>> columns(nVars);
+   for (std::size_t v = 0; v < nVars; v++)
+      columns[v] = *df2.Take<float>(variables[v]);
 
-   std::cout << "RTensor input for inference on data of multiple events:\n" << x << "\n\n";
-   std::cout << "Prediction performed on multiple events: " << y << "\n\n";
+   // Interleave the columns to a flat, row-major input vector
+   std::vector<float> x(nEvents * nVars);
+   for (std::size_t i = 0; i < nEvents; i++)
+      for (std::size_t v = 0; v < nVars; v++)
+         x[i * nVars + v] = columns[v][i];
+
+   // Passing the data as std::span selects the batch-inference overload; the
+   // number of rows is inferred from the total number of elements.
+   auto y = model.Compute(std::span<const float>(x.data(), x.size()));
+
+   std::cout << "Flat input for inference on " << nEvents << " events with " << nVars << " variables each:\n";
+   for (std::size_t i = 0; i < nEvents; i++) {
+      std::cout << "   Event " << i << ":";
+      for (std::size_t v = 0; v < nVars; v++)
+         std::cout << " " << x[i * nVars + v];
+      std::cout << "\n";
+   }
+   std::cout << "\n";
+   std::cout << "Prediction performed on multiple events:\n";
+   for (std::size_t i = 0; i < nEvents; i++)
+      std::cout << "   Event " << i << ": " << y[i] << "\n";
+   std::cout << "\n";
 
    // 3) Perform inference as part of an RDataFrame graph
    // We write a small lambda function that performs for us the inference on

@@ -1,5 +1,9 @@
 #include "Byteswap.h"
 #include "TMVA/RModelParser_ONNX.hxx"
+// The operator base class is a private header: RModelParser_ONNX.hxx only
+// forward-declares it, but this translation unit manages ROperator instances
+// through std::unique_ptr and needs the complete type.
+#include "TMVA/ROperator.hxx"
 #include "onnx.hxx"
 
 #include <algorithm>
@@ -29,6 +33,9 @@ extern ParserFuncSignature ParseCos;
 extern ParserFuncSignature ParseAbs;
 extern ParserFuncSignature ParseSoftplus;
 extern ParserFuncSignature ParseAtan;
+extern ParserFuncSignature ParseAsinh;
+extern ParserFuncSignature ParseAcosh;
+extern ParserFuncSignature ParseAtanh;
 extern ParserFuncSignature ParseFloor;
 // Binary operators
 extern ParserFuncSignature ParseAdd;
@@ -57,6 +64,8 @@ extern ParserFuncSignature ParseReduceMean;
 extern ParserFuncSignature ParseReduceSum;
 extern ParserFuncSignature ParseReduceSumSquare;
 extern ParserFuncSignature ParseReduceProd;
+extern ParserFuncSignature ParseReduceMax;
+extern ParserFuncSignature ParseReduceMin;
 // Others
 extern ParserFuncSignature ParseBatchNormalization;
 extern ParserFuncSignature ParseConstant;
@@ -318,6 +327,9 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Abs", ParseAbs);
    RegisterOperator("Softplus", ParseSoftplus);
    RegisterOperator("Atan", ParseAtan);
+   RegisterOperator("Asinh", ParseAsinh);
+   RegisterOperator("Acosh", ParseAcosh);
+   RegisterOperator("Atanh", ParseAtanh);
    RegisterOperator("Floor", ParseFloor);
    // Binary operators
    RegisterOperator("Add", ParseAdd);
@@ -346,6 +358,8 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("ReduceSum", ParseReduceSum);
    RegisterOperator("ReduceSumSquare", ParseReduceSumSquare);
    RegisterOperator("ReduceProd", ParseReduceProd);
+   RegisterOperator("ReduceMax", ParseReduceMax);
+   RegisterOperator("ReduceMin", ParseReduceMin);
    // Others
    RegisterOperator("BatchNormalization", ParseBatchNormalization);
    RegisterOperator("Constant", ParseConstant);
@@ -447,6 +461,27 @@ ETensorType RModelParser_ONNX::GetTensorType(const std::string &name)
    return fTensorTypeMap[UTILITY::Clean_name(name)];
 }
 
+namespace {
+
+/// Is the Add following a Conv / ConvTranspose really that convolution's bias?
+///
+/// Only if the convolution has no bias yet and the added tensor is a rank-1 initializer, one
+/// value per output channel. Anything else - a residual connection, an operand computed at
+/// run time - is a genuine addition.
+bool IsConvBiasAdd(const onnx::GraphProto &graph, const onnx::NodeProto &convnode, const onnx::NodeProto &addnode)
+{
+   if (convnode.input_size() > 2 || addnode.input_size() != 2)
+      return false;
+   const std::string &added = (addnode.input(0) == convnode.output(0)) ? addnode.input(1) : addnode.input(0);
+   for (int i = 0; i < graph.initializer_size(); i++) {
+      if (graph.initializer(i).name() == added)
+         return graph.initializer(i).dims_size() == 1;
+   }
+   return false;
+}
+
+} // namespace
+
 // Parse an operator
 std::unique_ptr<ROperator>
 RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphproto, const std::vector<size_t> &nodes, const std::vector<int> & children)
@@ -489,8 +524,9 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
             return nullptr;
          }
       } else if (nodeproto.op_type() == "Conv" || nodeproto.op_type() == "ConvTranspose") {
-      // Fuse Conv or ConvTranspose without bias and Add
-         if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Add") {
+         // Fuse Conv or ConvTranspose without bias and Add, when the Add really is the bias
+         if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Add" &&
+             IsConvBiasAdd(graphproto, nodeproto, graphproto.node(idx2))) {
             if (nodeproto.op_type() == "Conv") {
                fFusedOperators[idx2] = { EFusedOp::kConvAdd, idx};
                return nullptr;

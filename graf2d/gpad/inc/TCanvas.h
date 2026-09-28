@@ -55,6 +55,7 @@ protected:
    TPad         *fSelectedPad;     ///<! Pad containing currently selected object
    TPad         *fClickSelectedPad;///<! Pad containing currently click-selected object
    TPad         *fPadSave;         ///<! Pointer to saved pad in HandleInput
+   Int_t         fHandlingInput;   ///<! use to implement posponded update of canvas
    TCanvasImp   *fCanvasImp;       ///<! Window system specific canvas implementation
    TContextMenu *fContextMenu;     ///<! Context menu pointer
    Bool_t        fBatch;           ///<! True when in batchmode
@@ -129,13 +130,13 @@ public:
    virtual void      EditorBar();
    void              EmbedInto(Int_t winid, Int_t ww, Int_t wh);
    void              EnterLeave(TPad *prevSelPad, TObject *prevSelObj);
-   void              FeedbackMode(Bool_t set);
+   void              FeedbackMode(Bool_t set) override;
    void              Flush();
    void              UseCurrentStyle() override; // *MENU*
    void              ForceUpdate();
    const char       *GetDISPLAY() const {return fDISPLAY.Data();}
    TContextMenu     *GetContextMenu() const {return fContextMenu;};
-   Int_t             GetDoubleBuffer() const {return fDoubleBuffer;}
+   Int_t             GetDoubleBuffer() const override { return fDoubleBuffer; }
    Int_t             GetEvent() const override { return fEvent; }
    Int_t             GetEventX() const override { return fEventX; }
    Int_t             GetEventY() const override { return fEventY; }

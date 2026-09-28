@@ -4,7 +4,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-add_library(mathtext STATIC
+add_library(BUILTIN_MATHTEXT STATIC
   fontembed.cc
   fontembedpdf.cc
   fontembedps.cc
@@ -17,7 +17,7 @@ add_library(mathtext STATIC
   mathtextparse.cc
   mathtextview.cc
 )
-target_include_directories(mathtext PUBLIC ./) # for mathtext/fontembed.h  mathtext/mathrender.h  mathtext/mathtext.h mathtext/geometry.h
+target_include_directories(BUILTIN_MATHTEXT PUBLIC ./) # for mathtext/fontembed.h  mathtext/mathrender.h  mathtext/mathtext.h mathtext/geometry.h
 
 check_cxx_compiler_flag(-Wbidi-chars=none GCC_HAS_BIDI_CHARS_FLAG)
 if(GCC_HAS_BIDI_CHARS_FLAG)
@@ -25,7 +25,9 @@ if(GCC_HAS_BIDI_CHARS_FLAG)
 endif()
 if (WIN32)
   if (CMAKE_C_BYTE_ORDER STREQUAL "LITTLE_ENDIAN" OR CMAKE_CXX_BYTE_ORDER STREQUAL "LITTLE_ENDIAN")
-    target_compile_definitions(mathtext PRIVATE LITTLE_ENDIAN=1)
+    target_compile_definitions(BUILTIN_MATHTEXT PRIVATE LITTLE_ENDIAN=1)
   endif()
 endif()
-set_property(TARGET mathtext PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET BUILTIN_MATHTEXT PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+add_library(mathtext::mathtext ALIAS BUILTIN_MATHTEXT)

@@ -21,7 +21,7 @@
 #include "RooDirItem.h"
 #include "RooArgList.h"
 
-#include "RVersion.h"
+#include "ROOT/RVersion.hxx"
 #include "TMatrixFfwd.h"
 #include "TMatrixDSym.h"
 #include "TList.h"

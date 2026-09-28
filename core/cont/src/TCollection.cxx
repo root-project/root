@@ -63,7 +63,6 @@ for (auto br : TRangeDynCast<TBranch>( tree->GetListOfBranches() )) {
 */
 
 #include "TCollection.h"
-#include "Varargs.h"
 #include "TBuffer.h"
 #include "TClass.h"
 #include "TROOT.h"
@@ -77,6 +76,7 @@ for (auto br : TRangeDynCast<TBranch>( tree->GetListOfBranches() )) {
 #include "TObjArray.h"
 #include "TMathBase.h"
 
+#include <cstdarg>
 #include <iostream>
 #include <sstream>
 
@@ -236,13 +236,13 @@ void TCollection::AddAll(const TCollection *col)
 /// Add all arguments to the collection. The list of objects must be
 /// terminated by 0, e.g.: l.AddVector(o1, o2, o3, o4, 0);
 
-void TCollection::AddVector(TObject *va_(obj1), ...)
+void TCollection::AddVector(TObject *obj1, ...)
 {
    va_list ap;
-   va_start(ap, va_(obj1));
+   va_start(ap, obj1);
    TObject *obj;
 
-   Add(va_(obj1));
+   Add(obj1);
    while ((obj = va_arg(ap, TObject *)))
       Add(obj);
    va_end(ap);

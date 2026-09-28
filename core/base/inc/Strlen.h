@@ -11,10 +11,11 @@
 #ifndef ROOT_Strlen
 #define ROOT_Strlen
 
-#include <ROOT/RConfig.hxx>
+#warning "This header is deprecated and will be removed in ROOT 6.44, use <cstring> instead"
 
 #ifdef NEED_STRING
-#include <cstring>
+#error "ROOT no longer provides implementation for strlen, NEED_STRING macro should not be defined."
 #endif
 
 #endif
+  

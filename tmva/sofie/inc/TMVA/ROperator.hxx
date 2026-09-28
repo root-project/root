@@ -1,22 +1,19 @@
 #ifndef TMVA_SOFIE_ROPERATOR
 #define TMVA_SOFIE_ROPERATOR
 
-#include <vector>
-#include <memory>
-
 #include "TMVA/SOFIE_common.hxx"
-//#include "RModel.hxx"
 
+#include <ROOT/RSpan.hxx>
 
+#include <memory>
+#include <string>
+#include <vector>
 
-namespace TMVA{
-namespace Experimental{
-namespace SOFIE{
+namespace TMVA::Experimental::SOFIE {
 
 class RModel;
 
-class ROperator{
-
+class ROperator {
 
 public:
    virtual std::vector<std::string> GetBlasRoutines() { return {}; }
@@ -61,11 +58,6 @@ public:
 
 };
 
-
-
-}//SOFIE
-}//Experimental
-}//TMVA
-
+} // namespace TMVA::Experimental::SOFIE
 
 #endif //TMVA_SOFIE_OPERATOR

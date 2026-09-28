@@ -9,9 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <cstdlib>
-#include <iostream>
-
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TVirtualPad.h"
@@ -20,8 +17,10 @@
 #include "TMath.h"
 #include "TPoint.h"
 #include "TText.h"
-#include "snprintf.h"
 
+#include <cstdlib>
+#include <iostream>
+#include <cstdio>
 
 
 /** \class TMarker

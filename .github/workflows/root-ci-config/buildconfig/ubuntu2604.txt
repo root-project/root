@@ -1,3 +1,4 @@
 CMAKE_CXX_STANDARD=23
 builtin_civetweb=ON
 davix=OFF
+qt6canv=ON

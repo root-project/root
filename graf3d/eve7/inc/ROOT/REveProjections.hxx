@@ -156,6 +156,9 @@ public:
 class REveRhoZProjection : public REveProjection {
 private:
    REveVector fProjectedCenter; // projected center of distortion.
+   REveVector fPlaneNormal;     // normal vector of projection plane
+   bool       fYAxis{true};     // cached flag to mark if plane normal has been rotated
+   Bool_t AcceptSegmentRotatedPlane(REveVector &v1, REveVector &v2, Float_t tolerance) const;
 
 public:
    REveRhoZProjection();
@@ -168,6 +171,9 @@ public:
 
    void SetCenter(REveVector &v) override;
    Float_t *GetProjectedCenter() override { return fProjectedCenter.Arr(); }
+
+   void SetPlaneNormal(REveVector &v);
+   Float_t *GetPlaneNormal() { return fPlaneNormal.Arr(); }
 
    Bool_t HasSeveralSubSpaces() const override { return kTRUE; }
    Bool_t AcceptSegment(REveVector &v1, REveVector &v2, Float_t tolerance) const override;

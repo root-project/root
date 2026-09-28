@@ -37,6 +37,8 @@
 
 #include "TGLPlot3D.h"
 
+#include "CsgOps.h"
+
 
 /** \class TGLScenePad
 \ingroup opengl

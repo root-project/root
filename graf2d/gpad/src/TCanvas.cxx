@@ -47,9 +47,10 @@
 #include "TMath.h"
 #include "TView.h"
 #include "strlcpy.h"
-#include "snprintf.h"
 
 #include "TVirtualMutex.h"
+
+#include <cstdio>
 
 class TCanvasInit {
 public:
@@ -180,6 +181,7 @@ TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
    fSelectedPad      = nullptr;
    fClickSelectedPad = nullptr;
    fPadSave          = nullptr;
+   fHandlingInput    = 0;
    fCanvasImp        = nullptr;
    fContextMenu      = nullptr;
 
@@ -217,6 +219,8 @@ void TCanvas::Constructor()
    fSelectedPad   = nullptr;
    fClickSelectedPad = nullptr;
    fPadSave       = nullptr;
+   fHandlingInput    = 0;
+
    SetBit(kAutoExec);
    SetBit(kShowEditor);
    SetBit(kShowToolBar);
@@ -582,6 +586,7 @@ void TCanvas::Init()
    fSelectedPad     = nullptr;
    fClickSelectedPad= nullptr;
    fPadSave         = nullptr;
+   fHandlingInput   = 0;
    fEvent           = -1;
    fEventX          = -1;
    fEventY          = -1;
@@ -813,16 +818,11 @@ void TCanvas::Close(Option_t *option)
       cd();
       TPad::Close(option);
 
-      if (!IsBatch() && !IsWeb()) {
-         //select current canvas
-         if (fPainter)
-            fPainter->SelectDrawable(fCanvasID);
+      DeleteCanvasPainter();
 
-         DeleteCanvasPainter();
+      if (fCanvasImp)
+         fCanvasImp->Close();
 
-         if (fCanvasImp)
-            fCanvasImp->Close();
-      }
       fCanvasID = -1;
       fBatch    = kTRUE;
 
@@ -1143,6 +1143,8 @@ void TCanvas::FeedbackMode(Bool_t set)
 
    SetDoubleBuffer(set ? 0 : 1);  // switch double buffer
 
+   // now direcly switch draw mode in painter,
+   // later move such special code to place where painting performed
    if (fPainter)
       fPainter->SetDrawMode(fCanvasID, set ? TVirtualX::kInvert : TVirtualX::kCopy);
 }
@@ -1243,6 +1245,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
    TPad    *prevSelPad = fSelectedPad;
    TObject *prevSelObj = fSelected;
 
+   fHandlingInput    = 1;
    fPadSave = (TPad*)gPad;
    cd();        // make sure this canvas is the current canvas
 
@@ -1255,7 +1258,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
    case kMouseMotion:
       // highlight object tracked over
       pad = Pick(px, py, prevSelObj);
-      if (!pad) return;
+      if (!pad) break;
 
       EnterLeave(prevSelPad, prevSelObj);
 
@@ -1297,7 +1300,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
    case kButton1Down:
       // find pad in which input occurred
       pad = Pick(px, py, prevSelObj);
-      if (!pad) return;
+      if (!pad) break;
 
       gPad = pad;   // don't use cd() because we won't draw in pad
                     // we will only use its coordinate system
@@ -1364,30 +1367,30 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
    case kButton2Down:
       // find pad in which input occurred
       pad = Pick(px, py, prevSelObj);
-      if (!pad) return;
+      if (!pad)
+         break;
 
       gPad = pad;   // don't use cd() because we won't draw in pad
                     // we will only use its coordinate system
 
+      fPadSave = nullptr; // don't want fPadSave->cd() to be executed at the end
       FeedbackMode(kTRUE);
 
-      if (fSelected) fSelected->Pop();  // pop object to foreground
+      if (fSelected)
+         fSelected->Pop();  // pop object to foreground
       pad->cd();                        // and make its pad the current pad
-      if (gDebug)
-         printf("Current Pad: %s / %s\n", pad->GetName(), pad->GetTitle());
 
       // loop over all canvases to make sure that only one pad is highlighted
       {
          TIter next(gROOT->GetListOfCanvases());
-         TCanvas *tc;
-         while ((tc = (TCanvas *)next()))
+         while (auto tc = dynamic_cast<TCanvas *>(next()))
             tc->Update();
       }
 
       //if (pad->GetGLDevice() != -1 && fSelected)
       //   fSelected->ExecuteEvent(event, px, py);
 
-      break;   // don't want fPadSave->cd() to be executed at the end
+      break;
 
    case kButton2Motion:
       //was empty!
@@ -1408,12 +1411,14 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
    case kButton3Down:
       // popup context menu
       pad = Pick(px, py, prevSelObj);
-      if (!pad) return;
+      if (!pad)
+         break;
 
-      if (!fDoubleBuffer) FeedbackMode(kFALSE);
+      if (!fDoubleBuffer)
+         FeedbackMode(kFALSE);
 
-      if (fContextMenu && fSelected && !fSelected->TestBit(kNoContextMenu) &&
-         !pad->TestBit(kNoContextMenu) && !TestBit(kNoContextMenu))
+      if (fContextMenu && fSelected && !fSelected->TestBit(kNoContextMenu) && !pad->TestBit(kNoContextMenu) &&
+          !TestBit(kNoContextMenu))
          fContextMenu->Popup(px, py, fSelected, this, pad);
 
       break;
@@ -1429,7 +1434,8 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       break;
 
    case kKeyPress:
-      if (!fSelectedPad || !fSelected) return;
+      if (!fSelectedPad || !fSelected)
+         break;
       gPad = fSelectedPad;   // don't use cd() because we won't draw in pad
                     // we will only use its coordinate system
       fSelected->ExecuteEvent(event, px, py);
@@ -1442,7 +1448,8 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       // Try to select
       pad = Pick(px, py, prevSelObj);
 
-      if (!pad) return;
+      if (!pad)
+         break;
 
       EnterLeave(prevSelPad, prevSelObj);
 
@@ -1458,7 +1465,8 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
    case kWheelUp:
    case kWheelDown:
       pad = Pick(px, py, prevSelObj);
-      if (!pad) return;
+      if (!pad)
+         break;
 
       gPad = pad;
       if (fSelected)
@@ -1469,13 +1477,21 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       break;
    }
 
-   if (fPadSave && event != kButton2Down)
+   if (fPadSave)
       fPadSave->cd();
 
    if (event != kMouseLeave) { // signal was already emitted for this event
       ProcessedEvent(event, px, py, fSelected);  // emit signal
       DrawEventStatus(event, px, py, fSelected);
    }
+
+   // When during input handling async update was requested
+   // only counter was increased. It may happen several times
+   // Now reset counter and really call update of the canvas
+   bool do_update = fHandlingInput > 1;
+   fHandlingInput = 0;
+   if (do_update)
+      UpdateAsync();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2541,11 +2557,30 @@ void TCanvas::Update()
 
    if (!fCanvasImp->PerformUpdate(kFALSE)) {
 
-      if (!IsBatch()) FeedbackMode(kFALSE); // Goto double buffer mode
+      if (!IsBatch())
+         FeedbackMode(kFALSE); // Goto double buffer mode
 
-      if (!UseGL() || fGLDevice == -1) PaintModified(); // Repaint all modified pad's
+      if (UseGL() && (fGLDevice != -1)) {
+         // TODO: try to reorganize GL part to follow normal painting rules
+         Flush();
+      } else {
+         Bool_t useXor = fPainter && fPainter->IsNative() && !fPainter->IsCocoa();
+         Int_t need_rapaint = IsAnyNeedRepaint();
+         Int_t mask = useXor ? 3 : 7; // if XOR not supported, pad repaint by any change
 
-      Flush(); // Copy all pad pixmaps to the screen
+         // TODO: verify why transparency is used
+         if (need_rapaint & mask) {
+            PaintModified();
+            Flush();
+         }
+
+         // real XOR only when supported
+         if (useXor && (need_rapaint & 4)) {
+            FeedbackMode(kTRUE);
+            PaintOperations(kTRUE);
+            FeedbackMode(kFALSE);
+         }
+      }
 
       SetCursor(kCross);
    }
@@ -2554,14 +2589,21 @@ void TCanvas::Update()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Asynchronous pad update.
+/// Asynchronous canvas update.
 /// In case of web-based canvas triggers update of the canvas on the client side,
 /// but does not wait that real update is completed. Avoids blocking of caller thread.
 /// Have to be used if called from other web-based widget to avoid logical dead-locks.
 /// In case of normal canvas just canvas->Update() is performed.
+/// Only when called from inside of HandleInput handler,
+/// canvas will be updated at the end.
 
 void TCanvas::UpdateAsync()
 {
+   if (fHandlingInput > 0) {
+      fHandlingInput++;
+      return;
+   }
+
    fUpdated = kTRUE;
 
    if (IsWeb())

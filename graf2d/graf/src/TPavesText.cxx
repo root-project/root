@@ -13,7 +13,6 @@
 #include "TROOT.h"
 #include "TPavesText.h"
 #include "TVirtualPad.h"
-#include "TBufferFile.h"
 #include "TError.h"
 
 
@@ -63,14 +62,9 @@ TPavesText::~TPavesText()
 ////////////////////////////////////////////////////////////////////////////////
 /// Pavestext copy constructor.
 
-TPavesText::TPavesText(const TPavesText &pavestext) : TPaveText()
+TPavesText::TPavesText(const TPavesText &pavestext) : TPaveText(pavestext)
 {
-   TBufferFile b(TBuffer::kWrite);
-   TPavesText *p = (TPavesText*)(&pavestext);
-   p->Streamer(b);
-   b.SetReadMode();
-   b.SetBufferOffset(0);
-   Streamer(b);
+   fNpaves = pavestext.fNpaves;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

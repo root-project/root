@@ -20,8 +20,8 @@
 
 #include "TPosixCondition.h"
 #include "TPosixMutex.h"
-#include "PosixThreadInc.h"
 
+#include <ctime>
 #include <cerrno>
 
 

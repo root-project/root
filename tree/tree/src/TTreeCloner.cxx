@@ -34,8 +34,8 @@ Class implementing or helping  the various TTree cloning method
 #include "TLeafC.h"
 #include "TFileCacheRead.h"
 #include "TTreeCache.h"
-#include "snprintf.h"
 
+#include <cstdio>
 #include <algorithm>
 
 ////////////////////////////////////////////////////////////////////////////////

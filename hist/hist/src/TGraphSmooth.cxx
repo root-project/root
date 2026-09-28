@@ -18,12 +18,11 @@
 *                                                                             *
 ******************************************************************************/
 
-
-#include "Riostream.h"
 #include "TMath.h"
 #include "TGraphSmooth.h"
 #include "TGraphErrors.h"
 
+#include <iostream>
 
 //______________________________________________________________________
 /** \class TGraphSmooth

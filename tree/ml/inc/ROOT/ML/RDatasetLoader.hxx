@@ -45,7 +45,7 @@ class RDatasetLoaderFunctor {
    int fNumColumns;
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief Copy the content of a column into RTensor when the column consits of vectors
+   /// \brief Copy the content of a column into RFlat2DMatrix when the column consits of vectors
    template <typename T, std::enable_if_t<ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
    void AssignToTensor(const T &vec, int i, int numColumns)
    {
@@ -64,7 +64,7 @@ class RDatasetLoaderFunctor {
    }
 
    //////////////////////////////////////////////////////////////////////////
-   /// \brief Copy the content of a column into RTensor when the column consits of single values
+   /// \brief Copy the content of a column into RFlat2DMatrix when the column consits of single values
    template <typename T, std::enable_if_t<!ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
    void AssignToTensor(const T &val, int i, int numColumns)
    {

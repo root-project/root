@@ -16,6 +16,8 @@
 #include "RooFit/MultiProcess/ProcessManager.h"
 #include "RooFit/MultiProcess/util.h"
 
+#include <cassert>
+
 namespace RooFit {
 namespace MultiProcess {
 
@@ -83,61 +85,37 @@ void Queue::process_worker_message(std::size_t this_worker_id, W2Q message)
 void Queue::loop()
 {
    assert(JobManager::instance()->process_manager().is_queue());
-   ZeroMQPoller poller;
+   Poller poller;
    std::size_t mq_index;
    std::tie(poller, mq_index) = JobManager::instance()->messenger().create_queue_poller();
 
-   // Before blocking SIGTERM, set the signal handler, so we can also check after blocking whether a signal occurred
-   // In our case, we already set it in the ProcessManager after forking to the queue and worker processes.
-
-   sigset_t sigmask;
-   sigemptyset(&sigmask);
-   sigaddset(&sigmask, SIGTERM);
-   sigprocmask(SIG_BLOCK, &sigmask, &JobManager::instance()->messenger().ppoll_sigmask);
-
-   // Before doing anything, check whether we have received a terminate signal while blocking signals!
-   // In this case, we also do that in the while condition.
+   // The SIGTERM handler was set in the ProcessManager after forking to the queue and worker
+   // processes; it wakes up any poll through the self-pipe, so no signal blocking is needed here.
    while (!ProcessManager::sigterm_received()) {
-      try { // watch for zmq_error from ppoll caused by SIGTERM from master
+      try { // watch for poll interruption caused by SIGTERM from master
          // poll: wait until status change (-1: infinite timeout)
-         auto poll_result = poller.ppoll(-1, &JobManager::instance()->messenger().ppoll_sigmask);
-         // then process incoming messages from sockets
-         for (auto readable_socket : poll_result) {
-            // message comes from the master/queue socket (first element):
-            if (readable_socket.first == mq_index) {
+         auto poll_result = poller.poll(-1);
+         // then process incoming messages from the channels
+         for (auto readable_index : poll_result) {
+            // message comes from the master/queue channel (first element):
+            if (readable_index == mq_index) {
                auto message = JobManager::instance()->messenger().receive_from_master_on_queue<M2Q>();
                process_master_message(message);
-            } else { // from a worker socket
-               auto this_worker_id = readable_socket.first - 1;
+            } else { // from a worker channel
+               // by construction of the queue poller: the master-queue channel is
+               // registered first (index 0), followed by the worker channels in
+               // worker-ID order
+               auto this_worker_id = readable_index - 1;
                auto message = JobManager::instance()->messenger().receive_from_worker_on_queue<W2Q>(this_worker_id);
                process_worker_message(this_worker_id, message);
             }
          }
-      } catch (ZMQ::ppoll_error_t &e) {
-         zmq_ppoll_error_response response;
-         try {
-            response = handle_zmq_ppoll_error(e);
-         } catch (std::logic_error &) {
-            printf("queue loop got unhandleable ZMQ::ppoll_error_t\n");
-            throw;
-         }
-         if (response == zmq_ppoll_error_response::abort) {
-            break;
-         } else if (response == zmq_ppoll_error_response::unknown_eintr) {
-            printf("EINTR in queue loop but no SIGTERM received, continuing\n");
-            continue;
-         } else if (response == zmq_ppoll_error_response::retry) {
-            printf("EAGAIN from ppoll in queue loop, continuing\n");
-            continue;
-         }
-      } catch (zmq::error_t &e) {
-         printf("unhandled zmq::error_t (not a ppoll_error_t) in queue loop with errno %d: %s\n", e.num(), e.what());
-         throw;
+      } catch (ppoll_error_t &) {
+         // SIGTERM received (benign signal interruptions are retried inside
+         // Channel::wait), so exit the loop
+         break;
       }
    }
-
-   // clean up signal management modifications
-   sigprocmask(SIG_SETMASK, &JobManager::instance()->messenger().ppoll_sigmask, nullptr);
 }
 
 } // namespace MultiProcess

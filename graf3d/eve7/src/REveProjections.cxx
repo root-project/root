@@ -543,6 +543,7 @@ REveRhoZProjection::REveRhoZProjection() :
 {
    fType = kPT_RhoZ;
    fName = "RhoZ";
+   fPlaneNormal.Set(0,1,0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -561,7 +562,11 @@ void REveRhoZProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
    if (proc == kPP_Plane || proc == kPP_Full)
    {
       // project
-      y = Sign((Float_t)Sqrt(x*x+y*y), y);
+      const Float_t side = fPlaneNormal.fX * x +
+                           fPlaneNormal.fY * y +
+                           fPlaneNormal.fZ * z;
+
+      y = TMath::Sign((Float_t)TMath::Sqrt(x * x + y * y), side);
       x = z;
    }
    if (proc == kPP_Distort || proc == kPP_Full)
@@ -642,6 +647,9 @@ void REveRhoZProjection::SetDirectionalVector(Int_t screenAxis, REveVector& vec)
 Bool_t REveRhoZProjection::AcceptSegment(REveVector& v1, REveVector& v2,
                                          Float_t tolerance) const
 {
+   if (fYAxis == false)
+      AcceptSegmentRotatedPlane(v1, v2, tolerance);
+
    Float_t a = fProjectedCenter.fY;
    Bool_t val = kTRUE;
    if ((v1.fY <  a && v2.fY > a) || (v1.fY > a && v2.fY < a))
@@ -661,6 +669,71 @@ Bool_t REveRhoZProjection::AcceptSegment(REveVector& v1, REveVector& v2,
       }
    }
    return val;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if segment of two projected points is valid on a rotated plane
+///
+/// Move slightly one of the points if by shifting it by no more than
+/// tolerance the segment can become acceptable.
+
+Bool_t REveRhoZProjection::AcceptSegmentRotatedPlane(REveVector& v1, REveVector& v2,
+                                         Float_t tolerance) const
+{
+   Float_t d1 = fPlaneNormal.Dot(v1 - fCenter);
+   Float_t d2 = fPlaneNormal.Dot(v2 - fCenter);
+
+   Bool_t val = kTRUE;
+
+   if ((d1 < 0 && d2 > 0) || (d1 > 0 && d2 < 0))
+   {
+      val = kFALSE;
+
+      if (tolerance > 0)
+      {
+         const Float_t a1 = TMath::Abs(d1);
+         const Float_t a2 = TMath::Abs(d2);
+
+         if (a1 < a2)
+         {
+            if (a1 < tolerance)
+            {
+               // Move v1 to the plane intersection.
+               const Float_t t = d1 / (d1 - d2);
+               v1 += t * (v2 - v1);
+
+               val = kTRUE;
+            }
+         }
+         else
+         {
+            if (a2 < tolerance)
+            {
+               // Move v2 to the plane intersection.
+               const Float_t t = d1 / (d1 - d2);
+               v2 = v1 + t * (v2 - v1);
+
+               val = kTRUE;
+            }
+         }
+      }
+   }
+
+   return val;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set normal of the projection plane
+/// Projection center must be on the plane
+/// The default plane normal value is Y axis (0, 1, 0)
+
+void REveRhoZProjection::SetPlaneNormal(REveVector &v)
+{
+   REveVector yAxis(0, 1, 0);
+   if (v != yAxis) {
+      fYAxis = false;
+   }
+   fPlaneNormal.Set(v);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

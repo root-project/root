@@ -1,3 +1,4 @@
+CMAKE_CXX_STANDARD=23
 builtin_cfitsio=ON
 builtin_civetweb=ON
 builtin_fftw3=ON
@@ -12,7 +13,6 @@ builtin_nlohmannjson=ON
 builtin_openssl=ON
 builtin_pcre=ON
 builtin_tbb=ON
-builtin_tiff=ON
 builtin_unuran=ON
 builtin_vdt=ON
 builtin_xrootd=ON

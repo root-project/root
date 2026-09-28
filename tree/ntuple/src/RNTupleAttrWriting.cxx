@@ -142,6 +142,7 @@ void ROOT::Experimental::RNTupleAttrSetWriter::CommitRange(ROOT::Experimental::R
 ROOT::Internal::RNTupleLink ROOT::Experimental::RNTupleAttrSetWriter::Commit()
 {
    fFillContext.FlushCluster();
-   fFillContext.fSink->CommitClusterGroup();
+   if (fFillContext.GetNEntries() > 0)
+      fFillContext.fSink->CommitClusterGroup();
    return fFillContext.fSink->CommitDataset();
 }

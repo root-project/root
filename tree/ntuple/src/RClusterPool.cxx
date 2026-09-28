@@ -181,11 +181,10 @@ ROOT::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId, const R
 
    std::unordered_set<ROOT::DescriptorId_t> keep{fPageSource.GetPinnedClusters()};
    for (auto cid : fPageSource.GetPinnedClusters()) {
-      auto descriptorGuard = fPageSource.GetSharedDescriptorGuard();
-
       for (ROOT::DescriptorId_t i = 1, next = cid; i < 2 * fClusterBunchSize; ++i) {
-         next = descriptorGuard->FindNextClusterId(next);
-         if (next == ROOT::kInvalidNTupleIndex ||
+         const auto currentId = next;
+         auto descriptorGuard = fPageSource.FindNextClusterId(currentId, next);
+         if (next == ROOT::kInvalidDescriptorId ||
              !fPageSource.GetEntryRange().IntersectsWith(descriptorGuard->GetClusterDescriptor(next))) {
             break;
          }
@@ -195,34 +194,30 @@ ROOT::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId, const R
    }
 
    RProvides provide;
-   {
-      auto descriptorGuard = fPageSource.GetSharedDescriptorGuard();
+   // Determine following cluster ids and the column ids that we want to make available
+   RProvides::RInfo provideInfo;
+   provideInfo.fPhysicalColumnSet = physicalColumns;
+   provideInfo.fBunchId = fBunchId;
+   provideInfo.fFlags = RProvides::kFlagRequired;
+   for (ROOT::DescriptorId_t i = 0, next = clusterId; i < 2 * fClusterBunchSize; ++i) {
+      if (i == fClusterBunchSize)
+         provideInfo.fBunchId = ++fBunchId;
 
-      // Determine following cluster ids and the column ids that we want to make available
-      RProvides::RInfo provideInfo;
-      provideInfo.fPhysicalColumnSet = physicalColumns;
-      provideInfo.fBunchId = fBunchId;
-      provideInfo.fFlags = RProvides::kFlagRequired;
-      for (ROOT::DescriptorId_t i = 0, next = clusterId; i < 2 * fClusterBunchSize; ++i) {
-         if (i == fClusterBunchSize)
-            provideInfo.fBunchId = ++fBunchId;
-
-         auto cid = next;
-         next = descriptorGuard->FindNextClusterId(cid);
-         if (next != ROOT::kInvalidNTupleIndex) {
-            if (!fPageSource.GetEntryRange().IntersectsWith(descriptorGuard->GetClusterDescriptor(next)))
-               next = ROOT::kInvalidNTupleIndex;
-         }
-         if (next == ROOT::kInvalidDescriptorId)
-            provideInfo.fFlags |= RProvides::kFlagLast;
-
-         provide.Insert(cid, provideInfo);
-
-         if (next == ROOT::kInvalidDescriptorId)
-            break;
-         provideInfo.fFlags = 0;
+      auto cid = next;
+      auto descriptorGuard = fPageSource.FindNextClusterId(cid, next);
+      if (next != ROOT::kInvalidNTupleIndex) {
+         if (!fPageSource.GetEntryRange().IntersectsWith(descriptorGuard->GetClusterDescriptor(next)))
+            next = ROOT::kInvalidDescriptorId;
       }
-   } // descriptorGuard
+      if (next == ROOT::kInvalidDescriptorId)
+         provideInfo.fFlags |= RProvides::kFlagLast;
+
+      provide.Insert(cid, provideInfo);
+
+      if (next == ROOT::kInvalidDescriptorId)
+         break;
+      provideInfo.fFlags = 0;
+   }
 
    // Clear the cache from clusters not the in the look-ahead window or the set of pinned clusters
    for (auto itr = fPool.begin(); itr != fPool.end();) {

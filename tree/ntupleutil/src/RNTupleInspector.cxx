@@ -50,6 +50,12 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
    fCompressedSize = 0;
    fUncompressedSize = 0;
 
+   std::vector<DescriptorId_t> clusterIds;
+   for (const auto &cgDesc : fDescriptor.GetClusterGroupIterable()) {
+      R__ASSERT(cgDesc.HasClusterDetails());
+      clusterIds.insert(clusterIds.end(), cgDesc.GetClusterIds().begin(), cgDesc.GetClusterIds().end());
+   }
+
    for (const auto &colDesc : fDescriptor.GetColumnIterable()) {
       if (colDesc.IsAliasColumn())
          continue;
@@ -62,7 +68,8 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
       std::uint64_t nElems = 0;
       std::vector<std::uint64_t> compressedPageSizes{};
 
-      for (const auto &clusterDescriptor : fDescriptor.GetClusterIterable()) {
+      for (auto cid : clusterIds) {
+         const auto &clusterDescriptor = fDescriptor.GetClusterDescriptor(cid);
          if (!clusterDescriptor.ContainsColumn(colId)) {
             continue;
          }

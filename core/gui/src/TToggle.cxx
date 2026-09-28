@@ -31,8 +31,8 @@ with name GetXXX, IsXXX or HasXXX for given object.
 #include "TMethodCall.h"
 #include "TToggle.h"
 #include "TDataMember.h"
-#include "snprintf.h"
 
+#include <cstdio>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TToggle default constructor. You have to initialize it before using

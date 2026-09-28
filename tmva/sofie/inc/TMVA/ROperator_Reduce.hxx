@@ -11,12 +11,21 @@
 #include <stdexcept>
 #include <vector>
 #include <cassert>
+#include <limits>
 
 namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
-enum EReduceOpMode { ReduceMean, ReduceSum, ReduceSumSquare, ReduceProd, InvalidReduceOp };
+enum EReduceOpMode {
+   ReduceMean,
+   ReduceSum,
+   ReduceSumSquare,
+   ReduceProd,
+   ReduceMax,
+   ReduceMin,
+   InvalidReduceOp
+};
 
 template <EReduceOpMode Op>
 class ROperator_Reduce final : public ROperator
@@ -33,17 +42,25 @@ private:
     std::vector<Dim> fShapeX;
     std::vector<Dim> fShapeY;
     std::vector<Dim> fShapeYNotPruned; // needed for fKeepdims=0
+    std::string fType;                 // type of the tensors (needed by ReduceMax/ReduceMin)
 
-
-public:
-
-   std::string Name() {
-      if (fReduceOpMode == ReduceMean)  return "ReduceMean";
-      else if (fReduceOpMode == ReduceSumSquare )  return "ReduceSumSquare";
-      else if (fReduceOpMode == ReduceProd ) return "ReduceProd";
-      else if (fReduceOpMode == ReduceSum) return "ReduceSum";
-      return "Invalid";
-   }
+ public:
+    std::string Name()
+    {
+       if (fReduceOpMode == ReduceMean)
+          return "ReduceMean";
+       else if (fReduceOpMode == ReduceSumSquare)
+          return "ReduceSumSquare";
+       else if (fReduceOpMode == ReduceProd)
+          return "ReduceProd";
+       else if (fReduceOpMode == ReduceSum)
+          return "ReduceSum";
+       else if (fReduceOpMode == ReduceMax)
+          return "ReduceMax";
+       else if (fReduceOpMode == ReduceMin)
+          return "ReduceMin";
+       return "Invalid";
+    }
 
    ROperator_Reduce(){}
    ROperator_Reduce(int keepdims, std::vector<int64_t> attrAxes, std::string nameX, std::string nameAxes, std::string nameY):
@@ -115,7 +132,10 @@ public:
       if (model.Verbose()){
          std::cout << Name() << " : " << fNX << " -> " << fNY << " shape " << ConvertDimShapeToString(fShapeY) << std::endl;
       }
+      fType = ConvertTypeToString(model.GetTensorType(fNX));
       model.AddNeededStdLib("algorithm");
+      if (fReduceOpMode == ReduceMax || fReduceOpMode == ReduceMin)
+         model.AddNeededStdLib("limits");
    }
 
    std::string Generate(std::string opName) override {
@@ -124,7 +144,6 @@ public:
       auto inputLength = TMVA::Experimental::SOFIE::ConvertDimShapeToLength(fShapeX);
       auto outputLength = TMVA::Experimental::SOFIE::ConvertDimShapeToLength(fShapeY);
 
-      auto inputStrides = TMVA::Experimental::SOFIE::UTILITY::ComputeStrideFromShape(fShapeX);
       // output stride (or not pruned vector)
       auto outputStrides = TMVA::Experimental::SOFIE::UTILITY::ComputeStrideFromShape(fShapeYNotPruned);
 
@@ -160,6 +179,15 @@ public:
             }
          }
       }
+      // neutral element used to initialize the accumulator
+      std::string initValue = "0";
+      if (fReduceOpMode == ReduceProd)
+         initValue = "1";
+      else if (fReduceOpMode == ReduceMax)
+         initValue = "std::numeric_limits<" + fType + ">::lowest()";
+      else if (fReduceOpMode == ReduceMin)
+         initValue = "std::numeric_limits<" + fType + ">::max()";
+
       std::string reducedLength;
       if (fInputDimShape) {
          reducedLength = "reducedLength_" + opName;
@@ -177,11 +205,16 @@ public:
          // loop on output dimensions
          out << SP << "for (size_t i = 0; i < " << outputLength << "; i++) {\n";
          // loop on reduce dimensions
-         std::string startingValue = (fReduceOpMode == ReduceProd) ? "1" : "0";
-         out << SP << SP << "tensor_" << fNY << "[i] = " << startingValue << ";\n";
+         out << SP << SP << "tensor_" << fNY << "[i] = " << initValue << ";\n";
          out << SP << SP << "for (size_t j = 0; j < " << reducedLength << "; j++) {\n";
 
-         if (fReduceOpMode == ReduceProd)
+         if (fReduceOpMode == ReduceMax)
+            out << SP << SP << SP << "tensor_" << fNY << "[i] = std::max(tensor_" << fNY << "[i], tensor_" << fNX
+                << "[i * " << reducedLength << " + j]);\n";
+         else if (fReduceOpMode == ReduceMin)
+            out << SP << SP << SP << "tensor_" << fNY << "[i] = std::min(tensor_" << fNY << "[i], tensor_" << fNX
+                << "[i * " << reducedLength << " + j]);\n";
+         else if (fReduceOpMode == ReduceProd)
             out << SP << SP << SP <<  "tensor_" << fNY << "[i] *= tensor_" << fNX << "[i * " << reducedLength << " + j];\n";
          else if (fReduceOpMode == ReduceSum || fReduceOpMode == ReduceMean)
             out << SP << SP << SP <<  "tensor_" << fNY << "[i] += tensor_" << fNX << "[i * " << reducedLength << " + j];\n";
@@ -197,15 +230,19 @@ public:
          //std::cout << "reduction for operator " << opName << " is first" << std::endl;
          // case reduction is at beginning
          // reset output tensors
-         if (fReduceOpMode == ReduceProd)
-            out << SP << "std::fill(tensor_" << fNY <<", tensor_"<< fNY <<" + "<< outputLength << ", 1);\n";
-         else
-            out << SP << "std::fill(tensor_" << fNY <<", tensor_"<< fNY <<" + "<< outputLength << ", 0);\n";
+         out << SP << "std::fill(tensor_" << fNY << ", tensor_" << fNY << " + " << outputLength << ", " << initValue
+             << ");\n";
 
          out << SP << "for (size_t i = 0; i < " << reducedLength << "; i++) {\n";
          out << SP << SP << "for (size_t j = 0; j < " << outputLength << "; j++) {\n";
 
-         if (fReduceOpMode == ReduceProd)
+         if (fReduceOpMode == ReduceMax)
+            out << SP << SP << SP << "tensor_" << fNY << "[j] = std::max(tensor_" << fNY << "[j], tensor_" << fNX
+                << "[i * " << outputLength << " + j]);\n";
+         else if (fReduceOpMode == ReduceMin)
+            out << SP << SP << SP << "tensor_" << fNY << "[j] = std::min(tensor_" << fNY << "[j], tensor_" << fNX
+                << "[i * " << outputLength << " + j]);\n";
+         else if (fReduceOpMode == ReduceProd)
             out << SP << SP << SP << "tensor_" << fNY << "[j] *= tensor_" << fNX << "[i * " << outputLength << " + j];\n";
          else if (fReduceOpMode == ReduceSum || fReduceOpMode == ReduceMean)
             out << SP << SP << SP << "tensor_" << fNY << "[j] += tensor_" << fNX << "[i * " << outputLength << " + j];\n";
@@ -224,33 +261,56 @@ public:
       { // standard case
          //std::cout << "reduction for operator " << opName << " is middle" << std::endl;
          // reset output tensors
-         if (fReduceOpMode == ReduceProd)
-            out << SP << "std::fill(tensor_" << fNY <<", tensor_"<< fNY <<" + "<< outputLength << ", 1);\n";
-         else
-            out << SP << "std::fill(tensor_" << fNY <<", tensor_"<< fNY <<" + "<< outputLength << ",0);\n";
-
-         out << SP << "for (size_t i = 0; i < " << inputLength << "; i++) {\n";
+         out << SP << "std::fill(tensor_" << fNY << ", tensor_" << fNY << " + " << outputLength << ", " << initValue
+             << ");\n";
 
          size_t dim = fShapeX.size(); // this is the input dimension (e.g. 2, 3 or 4 or more)
 
-         // here we find output index
-         out << SP << SP << "size_t outputIndex = 0;\n";
+         // Loop over the input in memory order with one nested loop per axis. Recovering the
+         // indices instead from a single flat loop would need a division and a modulo per
+         // element, and with dynamic shapes those are real integer divisions (the divisors are
+         // not known at compile time). Here the input index is just a running counter and the
+         // output index is accumulated one axis at a time, so the inner loop is division-free.
+         auto indent = [&](size_t n) {
+            for (size_t q = 0; q < n; q++)
+               out << SP;
+         };
+         // scope the loop counters, they are declared outside of the loop nest
+         out << SP << "{\n";
+         out << SP << SP << "size_t inputIndex = 0;\n";
+         std::string outputIndex = "0"; // output index accumulated so far
          for (size_t k = 0; k < dim; k++) {
+            indent(k + 2);
+            out << "for (size_t i_" << k << " = 0; i_" << k << " < (" << fShapeX[k] << "); i_" << k << "++) {\n";
             if (std::find(fAttrAxes.begin(), fAttrAxes.end(), k) == fAttrAxes.end()) {
-               // do for not reducing axes
-               out << SP << SP << "size_t i_" << k << " = i / " << inputStrides[k] << " % " << fShapeX[k] << ";\n";
-               out << SP << SP << "outputIndex += i_" << k << " * " << outputStrides[k] << ";\n";
+               // not a reduced axis: it contributes to the output index
+               std::string next = "outputIndex_" + std::to_string(k);
+               indent(k + 3);
+               out << "size_t " << next << " = " << outputIndex << " + i_" << k << " * (" << outputStrides[k] << ");\n";
+               outputIndex = next;
             }
          }
          // now compute reduction
-         out << SP << SP << "// compute reduction....\n";
-         if (fReduceOpMode == ReduceProd)
-            out << SP << SP << "tensor_" << fNY << "[outputIndex] *= tensor_" << fNX << "[i];\n";
+         indent(dim + 2);
+         out << "// compute reduction....\n";
+         std::string y = "tensor_" + fNY + "[" + outputIndex + "]";
+         std::string x = "tensor_" + fNX + "[inputIndex]";
+         indent(dim + 2);
+         if (fReduceOpMode == ReduceMax)
+            out << y << " = std::max(" << y << ", " << x << ");\n";
+         else if (fReduceOpMode == ReduceMin)
+            out << y << " = std::min(" << y << ", " << x << ");\n";
+         else if (fReduceOpMode == ReduceProd)
+            out << y << " *= " << x << ";\n";
          else if (fReduceOpMode == ReduceSum || fReduceOpMode == ReduceMean)
-            out << SP << SP << "tensor_" << fNY << "[outputIndex] += tensor_" << fNX << "[i];\n";
-         else if (fReduceOpMode == ReduceSumSquare) {
-            out << SP << SP << "tensor_" << fNY << "[outputIndex] += tensor_" << fNX << "[i] * tensor_" << fNX
-                << "[i];\n";
+            out << y << " += " << x << ";\n";
+         else if (fReduceOpMode == ReduceSumSquare)
+            out << y << " += " << x << " * " << x << ";\n";
+         indent(dim + 2);
+         out << "inputIndex++;\n";
+         for (size_t k = dim; k > 0; k--) {
+            indent(k + 1);
+            out << "}\n";
          }
          out << SP << "}\n"; // end loop on input elements
          // normalize for reduced mean
