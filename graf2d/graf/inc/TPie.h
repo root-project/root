@@ -2,7 +2,7 @@
 // Author: Guido Volpi, Olivier Couet  03/11/2006
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,9 +12,11 @@
 #ifndef ROOT_TPie
 #define ROOT_TPie
 
-#include <TNamed.h>
-#include <TAttText.h>
-#include <TString.h>
+#include "TNamed.h"
+#include "TAttText.h"
+#include "TString.h"
+
+#include <vector>
 
 class TH1;
 class TPieSlice;
@@ -36,7 +38,8 @@ private:
 
    SliceInfo_t FindSlice(TVirtualPad &, Int_t, Int_t);
 
-   Float_t *fSlices{nullptr}; ///<!Subdivisions of the slices
+   std::vector<Float_t> GetSlicesAngles() const;
+
    TLegend *fLegend{nullptr}; ///<!Legend for this piechart
 
 protected:
@@ -92,7 +95,7 @@ public:
    Double_t       GetX() const { return fX; }
    Double_t       GetY() const { return fY; }
    TLegend       *MakeLegend(Double_t x1=.65,Double_t y1=.65,Double_t x2=.95, Double_t y2=.95, const char *leg_header="");
-   void           MakeSlices(Bool_t force=kFALSE);
+   void           MakeSlices(Bool_t force = kFALSE) R__DEPRECATED(6, 46, "No longer necessary.");
    void           Paint(Option_t *) override;
    void           SavePrimitive(std::ostream &out, Option_t *opts="") override;
    void           SetAngle3D(Float_t val = 30.); // *MENU*

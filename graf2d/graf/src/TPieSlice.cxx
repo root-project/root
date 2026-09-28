@@ -1,5 +1,9 @@
+// @(#)root/graf:$Id$
+// Author: Guido Volpi, Olivier Couet 03/11/2006
+// Author: Sergey Linev 09/2026
+
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -9,6 +13,7 @@
 #include "TPieSlice.h"
 
 #include "TError.h"
+#include "TMath.h"
 #include "TVirtualPad.h"
 #include "TPie.h"
 
@@ -104,8 +109,7 @@ void TPieSlice::SavePrimitive(std::ostream &out, Option_t *opts)
 
 void TPieSlice::SetRadiusOffset(Double_t val)
 {
-   fRadiusOffset = val;
-   if (fRadiusOffset<.0) fRadiusOffset = .0;
+   fRadiusOffset = TMath::Max(val, 0.);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -115,12 +119,10 @@ void TPieSlice::SetRadiusOffset(Double_t val)
 void TPieSlice::SetValue(Double_t val)
 {
    fValue = val;
-   if (fValue<.0) {
+   if (fValue < .0) {
       Warning("SetValue","Invalid negative value. Absolute value taken");
       fValue *= -1;
    }
-
-   fPie->MakeSlices(kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
