@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -9,9 +9,9 @@
 #ifndef ROOT_TPieSlice
 #define ROOT_TPieSlice
 
-#include <TNamed.h>
-#include <TAttFill.h>
-#include <TAttLine.h>
+#include "TNamed.h"
+#include "TAttFill.h"
+#include "TAttLine.h"
 
 class TPie;
 
