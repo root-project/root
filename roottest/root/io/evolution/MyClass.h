@@ -12,7 +12,7 @@ class MyClass : public TObject {
 
   int n;
 #if (VERSION==2)
-  float *arr; //[n];
+  float *arr; //[n]
 #else
   float arr[20];
 #endif
@@ -58,7 +58,7 @@ MyClass::MyClass(int siz) : n(siz) {
 
 MyClass::~MyClass() {
 #if (VERSION==2)
-    delete arr;
+    delete[] arr;
 #endif
   }
 

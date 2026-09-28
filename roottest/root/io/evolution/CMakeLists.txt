@@ -2,6 +2,7 @@ ROOTTEST_ADD_TESTDIRS()
 
 if(ClingWorkAroundMissingDynamicScope)
   set(_myclassold_load -e "(void)gROOT->ProcessLine(\".L MyClassOld.cxx+\")")
+  set(_myclass_load -e "(void)gROOT->ProcessLine(\".L MyClass.C+\")")
 endif()
 
 ROOTTEST_COMPILE_MACRO(MyClassOld.cxx
@@ -21,13 +22,12 @@ ROOTTEST_ADD_TEST(readold
                   FIXTURES_REQUIRED root-io-evolution-write-fixture)
 
 
-# this test was failing in Makefile too
 ROOTTEST_COMPILE_MACRO(MyClass.C
                        FIXTURES_SETUP root-io-evolution-MyClass-fixture)
 
 ROOTTEST_ADD_TEST(readnew
                   MACRO readnew.C
-                  WILLFAIL
+                  ROOTEXE_OPTS ${_myclass_load}
                   LABELS longtest io
                   FIXTURES_REQUIRED root-io-evolution-write-fixture root-io-evolution-MyClass-fixture)
 
