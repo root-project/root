@@ -19,7 +19,9 @@ TEST(RNTuple, ReadString)
       }
    }
 
-   auto ntuple = RNTupleReader::Open(ntupleName, fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto ntuple = RNTupleReader::Open(ntupleName, fileGuard.GetPath(), opts);
    auto viewSt = ntuple->GetView<std::string>("st");
    if (ntuple->GetDescriptor().GetClusterDescriptor(0).GetPageRange(1).GetPageInfos().size() < 2) {
       FAIL(); // This means all entries are inside the same page and numEntries should be increased.
