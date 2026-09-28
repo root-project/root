@@ -1,4 +1,5 @@
 #include "CppInterOp/Dispatch.h"
+#include "TestPaths.h"
 
 #include "gtest/gtest.h"
 
@@ -39,18 +40,22 @@ TEST(DispatchTest, DlGetProcAddress_Unimplemented) {
 }
 
 TEST(DispatchTest, LoadUnloadCycle) {
+  std::string libPath = TestUtils::GetCppInterOpLibPath();
+  ASSERT_FALSE(libPath.empty())
+      << "Set CPPINTEROP_BIN_DIR to the CppInterOp artifacts prefix";
+
   Cpp::UnloadDispatchAPI(); // make sure we're not loaded already...
   EXPECT_FALSE(Cpp::LoadDispatchAPI("some/random/invalid/directory.so"));
 
   Cpp::UnloadDispatchAPI(); // should reset for next load to be successful
-  EXPECT_TRUE(Cpp::LoadDispatchAPI(CPPINTEROP_LIB_PATH));
+  EXPECT_TRUE(Cpp::LoadDispatchAPI(libPath.c_str()));
 
   Cpp::UnloadDispatchAPI(); // should reset for next load to fail
   EXPECT_FALSE(Cpp::LoadDispatchAPI("some/other/random/invalid/directory.so"));
 
   // NOTE: minimize side-effects: reload assuming the static set is still
   // and other test may depend on this being loaded
-  EXPECT_TRUE(Cpp::LoadDispatchAPI(CPPINTEROP_LIB_PATH));
+  EXPECT_TRUE(Cpp::LoadDispatchAPI(libPath.c_str()));
 }
 
 // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)

@@ -1,6 +1,8 @@
 
 #include "Utils.h"
 
+#include "../../lib/CppInterOp/CompatibilityGLIBC.h"
+
 #include "CppInterOp/CppInterOp.h"
 
 #ifdef CPPINTEROP_USE_CLING
@@ -25,6 +27,11 @@
 #include <algorithm>
 #include <csignal>
 #include <cstdlib>
+
+#ifndef _WIN32
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
 
 using ::testing::StartsWith;
 
@@ -420,6 +427,283 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_Process) {
   EXPECT_FALSE(Cpp::Process("error_here;") == 0);
   // Linker/JIT error.
   EXPECT_FALSE(Cpp::Process("int f(); int res = f();") == 0);
+}
+
+// libc_nonshared.a symbols are per-module and invisible to dlsym; jitted
+// calls resolve to this library's copy (pure code) or to the JIT-side
+// registration shims (at_quick_exit, pthread_atfork).
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_GlibcNonsharedSymbols) {
+#ifndef __GLIBC__
+  GTEST_SKIP() << "the libc_nonshared.a fallback targets glibc";
+#else
+#ifdef CPPINTEROP_USE_CLING
+  GTEST_SKIP() << "the fallback generator is wired into the clang-repl "
+                  "CppInternal::Interpreter path, not cling's interpreter";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "the libc_nonshared.a fallback is in-process only";
+
+  ASSERT_TRUE(TestFixture::CreateInterpreter());
+
+  // The registration must execute, not just materialize. The handler fires
+  // only at quick_exit or this interpreter's teardown.
+  // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
+  ASSERT_EQ(0, Cpp::Process(R"(
+    extern "C" int at_quick_exit(void (*)(void));
+    extern "C" void __stack_chk_fail_local();
+    extern "C" void glibc_nonshared_probe_handler() {}
+    extern "C" int glibc_nonshared_probe_register() {
+      return at_quick_exit(&glibc_nonshared_probe_handler);
+    }
+    extern "C" void* glibc_nonshared_probe_sibling() {
+      return reinterpret_cast<void*>(&__stack_chk_fail_local);
+    }
+  )"));
+
+  auto* Register = reinterpret_cast<int (*)()>(
+      Cpp::GetFunctionAddress("glibc_nonshared_probe_register"));
+  ASSERT_NE(Register, nullptr);
+  EXPECT_EQ(Register(), 0);
+
+  auto* Sibling = reinterpret_cast<void* (*)()>(
+      Cpp::GetFunctionAddress("glibc_nonshared_probe_sibling"));
+  ASSERT_NE(Sibling, nullptr);
+  EXPECT_NE(Sibling(), nullptr);
+  // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
+#endif
+}
+
+// Jitted at_quick_exit handlers live in a host-side registry scoped to the
+// interpreter; DeleteInterpreter runs them exactly once while the JIT can
+// still execute them.
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_JitAtQuickExitRunsBeforeTeardown) {
+#ifndef __GLIBC__
+  GTEST_SKIP() << "the libc_nonshared.a fallback targets glibc";
+#else
+#ifdef CPPINTEROP_USE_CLING
+  GTEST_SKIP() << "the fallback generator is wired into the clang-repl "
+                  "CppInternal::Interpreter path, not cling's interpreter";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "the libc_nonshared.a fallback is in-process only";
+
+  auto I = TestFixture::CreateInterpreter();
+  ASSERT_TRUE(I);
+
+  // Host-side counter the JIT writes to; survives the interpreter deletion.
+  // Reset explicitly for --gtest_repeat.
+  static int HostCount;
+  HostCount = 0;
+  // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
+  std::string Inject = R"(
+    extern "C" void* qe_sink = (void*)@SINK@;
+  )";
+  const std::string SinkTok = "@SINK@";
+  Inject.replace(Inject.find(SinkTok), SinkTok.size(),
+                 std::to_string(reinterpret_cast<uintptr_t>(&HostCount)));
+  // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
+  ASSERT_EQ(0, Cpp::Declare(Inject.c_str()));
+  ASSERT_EQ(0, Cpp::Process(R"(
+    extern "C" int at_quick_exit(void (*)(void));
+    extern "C" void qe_handler() { ++*static_cast<int*>(qe_sink); }
+    static int qe_reg = at_quick_exit(&qe_handler);
+  )"));
+
+  EXPECT_EQ(HostCount, 0);
+  Cpp::DeleteInterpreter(I);
+  EXPECT_EQ(HostCount, 1)
+      << "jitted at_quick_exit handler must run exactly once, pre-teardown";
+#endif
+}
+
+// A real quick_exit after DeleteInterpreter runs no jitted handlers: the
+// teardown flush removed them from every host-visible list, so the process
+// exits cleanly instead of calling freed JIT memory.
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_JitAtQuickExitSafeAfterTeardown) {
+#ifndef __GLIBC__
+  GTEST_SKIP() << "the libc_nonshared.a fallback targets glibc";
+#else
+#ifdef CPPINTEROP_USE_CLING
+  GTEST_SKIP() << "the fallback generator is wired into the clang-repl "
+                  "CppInternal::Interpreter path, not cling's interpreter";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "the libc_nonshared.a fallback is in-process only";
+
+  EXPECT_EXIT(
+      {
+        auto I = TestFixture::CreateInterpreter();
+        Cpp::Process(R"(
+          extern "C" int at_quick_exit(void (*)(void));
+          extern "C" void qe_noop_handler() {}
+          static int qe_reg = at_quick_exit(&qe_noop_handler);
+        )");
+        Cpp::DeleteInterpreter(I);
+        std::quick_exit(0);
+      },
+      ::testing::ExitedWithCode(0), "");
+#endif
+}
+
+// The hook glibc calls on quick_exit drains every live handler exactly
+// once; interpreter teardown then has nothing left to run.
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_JitAtQuickExitHookDrainsOnce) {
+#ifndef __GLIBC__
+  GTEST_SKIP() << "the libc_nonshared.a fallback targets glibc";
+#else
+// The body is excluded, not skipped at run time: it names a compat helper
+// that exists only on the clang-repl path.
+#ifdef CPPINTEROP_USE_CLING
+  GTEST_SKIP() << "the fallback generator is wired into the clang-repl "
+                  "CppInternal::Interpreter path, not cling's interpreter";
+#else
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "the libc_nonshared.a fallback is in-process only";
+
+  auto I = TestFixture::CreateInterpreter();
+  ASSERT_TRUE(I);
+
+  // Reset explicitly for --gtest_repeat.
+  static int HostCount;
+  HostCount = 0;
+  std::string Inject = R"(
+    extern "C" void* hook_sink = (void*)@SINK@;
+  )";
+  const std::string SinkTok = "@SINK@";
+  // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
+  Inject.replace(Inject.find(SinkTok), SinkTok.size(),
+                 std::to_string(reinterpret_cast<uintptr_t>(&HostCount)));
+  // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
+  ASSERT_EQ(0, Cpp::Declare(Inject.c_str()));
+  ASSERT_EQ(0, Cpp::Process(R"(
+    extern "C" int at_quick_exit(void (*)(void));
+    extern "C" void hook_handler() { ++*static_cast<int*>(hook_sink); }
+    static int hook_reg = at_quick_exit(&hook_handler);
+  )"));
+
+  EXPECT_EQ(HostCount, 0);
+  // Drive the registered quick_exit hook directly; a real quick_exit would
+  // end the test process.
+  compat::JitGlibcHandlerRegistry::runAllQuickExitHandlers();
+  EXPECT_EQ(HostCount, 1);
+  Cpp::DeleteInterpreter(I);
+  EXPECT_EQ(HostCount, 1) << "drained handlers must not run again at teardown";
+#endif
+#endif
+}
+
+// Jitted pthread_atfork handlers dispatch through host-resident hooks:
+// prepare/parent run in this process on fork, child runs in the child, and
+// DeleteInterpreter drops the entries.
+TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_JitPthreadAtforkHandlers) {
+#ifndef __GLIBC__
+  GTEST_SKIP() << "the libc_nonshared.a fallback targets glibc";
+#else
+#ifdef CPPINTEROP_USE_CLING
+  GTEST_SKIP() << "the fallback generator is wired into the clang-repl "
+                  "CppInternal::Interpreter path, not cling's interpreter";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "the libc_nonshared.a fallback is in-process only";
+
+  auto I = TestFixture::CreateInterpreter();
+  ASSERT_TRUE(I);
+
+  // Reset explicitly for --gtest_repeat.
+  static int PrepareCount;
+  static int ParentCount;
+  static int ChildCount;
+  PrepareCount = ParentCount = ChildCount = 0;
+  std::string Inject = R"(
+    extern "C" void* prep_sink = (void*)@PREP@;
+    extern "C" void* parent_sink = (void*)@PARENT@;
+    extern "C" void* child_sink = (void*)@CHILD@;
+  )";
+  // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
+  auto ReplaceTok = [&Inject](const std::string& Tok, int* Addr) {
+    Inject.replace(Inject.find(Tok), Tok.size(),
+                   std::to_string(reinterpret_cast<uintptr_t>(Addr)));
+  };
+  ReplaceTok("@PREP@", &PrepareCount);
+  ReplaceTok("@PARENT@", &ParentCount);
+  ReplaceTok("@CHILD@", &ChildCount);
+  // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
+  ASSERT_EQ(0, Cpp::Declare(Inject.c_str()));
+  ASSERT_EQ(0, Cpp::Process(R"(
+    extern "C" int pthread_atfork(void (*)(void), void (*)(void),
+                                  void (*)(void));
+    extern "C" void fork_prep() { ++*static_cast<int*>(prep_sink); }
+    extern "C" void fork_parent() { ++*static_cast<int*>(parent_sink); }
+    extern "C" void fork_child() { ++*static_cast<int*>(child_sink); }
+    static int fork_reg = pthread_atfork(&fork_prep, &fork_parent,
+                                         &fork_child);
+  )"));
+
+  const int Child = fork(); // pid_t is int on every glibc target
+  ASSERT_GE(Child, 0);
+  if (Child == 0) {
+    // The child hook ran here; report through the exit code. exit() (not
+    // _exit) also flushes coverage counters.
+    std::exit(ChildCount == 1 ? 0 : 7);
+  }
+  int Status = -1;
+  ASSERT_EQ(waitpid(Child, &Status, 0), Child);
+  // 0 == clean exit with code 0 == the jitted child hook ran in the child.
+  EXPECT_EQ(Status, 0);
+  EXPECT_EQ(PrepareCount, 1);
+  EXPECT_EQ(ParentCount, 1);
+
+  Cpp::DeleteInterpreter(I);
+  EXPECT_EQ(PrepareCount, 1);
+  EXPECT_EQ(ParentCount, 1);
+#endif
+}
+
+// A fork after DeleteInterpreter runs no jitted atfork handlers: the entries
+// are dropped at teardown, so the fork completes instead of calling freed
+// JIT memory.
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           Interpreter_JitPthreadAtforkSafeAfterTeardown) {
+#ifndef __GLIBC__
+  GTEST_SKIP() << "the libc_nonshared.a fallback targets glibc";
+#else
+#ifdef CPPINTEROP_USE_CLING
+  GTEST_SKIP() << "the fallback generator is wired into the clang-repl "
+                  "CppInternal::Interpreter path, not cling's interpreter";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "the libc_nonshared.a fallback is in-process only";
+
+  static int HostCount;
+  HostCount = 0;
+  EXPECT_EXIT(
+      {
+        auto I = TestFixture::CreateInterpreter();
+        std::string Inject = R"(
+          extern "C" void* fork_sink = (void*)@SINK@;
+        )";
+        const std::string SinkTok = "@SINK@";
+        // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
+        Inject.replace(Inject.find(SinkTok), SinkTok.size(),
+                       std::to_string(reinterpret_cast<uintptr_t>(&HostCount)));
+        // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
+        Cpp::Declare(Inject.c_str());
+        Cpp::Process(R"(
+          extern "C" int pthread_atfork(void (*)(void), void (*)(void),
+                                        void (*)(void));
+          extern "C" void fork_prep() { ++*static_cast<int*>(fork_sink); }
+          static int fork_reg = pthread_atfork(&fork_prep, nullptr, nullptr);
+        )");
+
+        Cpp::DeleteInterpreter(I);
+        const int Child = fork();
+        if (Child == 0)
+          _exit(0);
+        waitpid(Child, nullptr, 0);
+        std::_Exit(HostCount == 0 ? 0 : 5);
+      },
+      ::testing::ExitedWithCode(0), "");
+#endif
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_DeclareSilent) {

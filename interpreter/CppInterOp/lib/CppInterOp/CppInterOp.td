@@ -245,12 +245,20 @@ GetResourceDir() function.}];
 def LoadLibrary : CppInterOpAPI {
   let Doc = [{Finds \c lib_stem considering the list of search paths and loads it by
 calling dlopen.
+\param[out] error - if non-null, receives the reason a load failed (the
+           dlerror() text, or a not-found note when lookup fails). When it
+           is set the reason is not also written to stderr. The Cling
+           backend only reports a generic note.
 \returns true on success.}];
 
+  // std::string* cannot cross the C ABI; CXCppInterOp.cpp keeps the
+  // two-argument cppinterop_LoadLibrary wrapper by hand.
+  let NoCWrapper = true;
   let ReturnType = "bool";
   let Args = [
     Arg<"const char*", "lib_stem">,
-    Arg<"bool", "lookup", "true">
+    Arg<"bool", "lookup", "true">,
+    Arg<"std::string*", "error", "nullptr">
   ];
 }
 
@@ -783,6 +791,39 @@ def IsFunctionProtoType : CppInterOpAPI {
   ];
 }
 
+def GetOwnershipBehaviour : CppInterOpAPI {
+  let Doc = [{Returns the ownership behaviour the function declares, as a
+bitmask of OwnershipBehaviour flags read off its ownership_returns,
+ownership_takes and ownership_holds attributes.}];
+
+  let ReturnType = "OwnershipBehaviour";
+  let Args = [
+    Arg<"ConstFuncRef", "func">
+  ];
+}
+
+def GetDeallocationIndexes : CppInterOpAPI {
+  let Doc = [{Returns a bitmask of the parameters whose ownership the function
+takes or holds, as annotated by ownership_takes/ownership_holds: The mask is meaningful only when
+GetOwnershipBehaviour reports OwnershipTakes or OwnershipHolds.}];
+
+  let ReturnType = "uint64_t";
+  let Args = [
+    Arg<"ConstFuncRef", "func">
+  ];
+}
+
+def GetAllocationSizeParamIndex : CppInterOpAPI {
+  let Doc = [{Returns the 0-based index of the parameter carrying the allocation
+size for a function annotated with ownership_returns, or -1 if the function is
+not so annotated or the size argument was omitted.}];
+
+  let ReturnType = "int";
+  let Args = [
+    Arg<"ConstFuncRef", "func">
+  ];
+}
+
 def GetAllocType: CppInterOpAPI {
   let Doc = "Analyzes function's body to detect memory allocation behaviour";
 
@@ -1304,7 +1345,7 @@ def GetFunctionReturnType : CppInterOpAPI {
 
 def IsAllocator : CppInterOpAPI {
   let Doc = "Checks if the provided function is an allocator function";
-  let ReturnType = "bool";
+  let ReturnType = "AllocType";
   let Args = [
     Arg<"ConstFuncRef", "func">
   ];

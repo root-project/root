@@ -411,11 +411,10 @@ enum class AllocType : unsigned char {
   New,
   NewArr,
   Malloc,
-  Unknown,
-  CustomAlloc,
-  Null,
   OperatorNew,
-  OperatorNewArr
+  OperatorNewArr,
+  Null,
+  Unknown
 };
 
 enum class DeallocType : unsigned char {
@@ -430,6 +429,20 @@ enum class DeallocType : unsigned char {
 inline QualKind operator|(QualKind a, QualKind b) {
   return static_cast<QualKind>(static_cast<unsigned char>(a) |
                                static_cast<unsigned char>(b));
+}
+
+enum class OwnershipBehaviour : unsigned char {
+  Unknown = 0, // If function does not have any ownership attribute, it is
+               // assumed to be Unknown, not None
+  OwnershipReturns = 1 << 0,
+  OwnershipHolds = 1 << 1,
+  OwnershipTakes = 1 << 2
+};
+
+inline OwnershipBehaviour operator|(OwnershipBehaviour A,
+                                    OwnershipBehaviour B) {
+  return static_cast<OwnershipBehaviour>(static_cast<unsigned char>(A) |
+                                         static_cast<unsigned char>(B));
 }
 
 enum class ValueKind : std::uint8_t {

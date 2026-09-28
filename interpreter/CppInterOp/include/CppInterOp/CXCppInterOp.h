@@ -63,6 +63,10 @@ CPPINTEROP_API intptr_t cppinterop_Evaluate(const char* code, bool* HadError);
 CPPINTEROP_API CppInterOpArray
 cppinterop_GetClassTemplatedMethods(const char* name, CppConstDeclRef parent);
 
+/// C-ABI bridge for \c Cpp::LoadLibrary. The optional \c std::string*
+/// reason argument is C++-only, so the generated wrapper is suppressed.
+CPPINTEROP_API bool cppinterop_LoadLibrary(const char* lib_stem, bool lookup);
+
 #ifdef __cplusplus
 } // extern "C"
 #pragma clang diagnostic pop

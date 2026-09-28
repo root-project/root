@@ -86,7 +86,7 @@ if(TARGET CppInterOpTableGen)
 endif()
 target_link_libraries(CppInterOpTests PRIVATE CAPITestC)
 target_compile_definitions(CppInterOpTests PRIVATE
-  "CPPINTEROP_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/../../\""
+  "CPPINTEROP_SRC_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/../..\""
 )
 
 set_source_files_properties(InterpreterTest.cpp PROPERTIES COMPILE_DEFINITIONS
@@ -109,9 +109,12 @@ add_cppinterop_unittest(TracingTests
   TracingTests.cpp
   Utils.cpp
 )
+# Derive both prefixes from this directory: CMAKE_BINARY_DIR is the top
+# project's build dir when CppInterOp is a subproject. The CPPINTEROP_BIN_DIR
+# environment variable overrides the artifacts prefix at run time (TestPaths.h).
 target_compile_definitions(TracingTests PRIVATE
-  "CPPINTEROP_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/../../\""
-  "CPPINTEROP_BINARY_DIR=\"${CMAKE_CURRENT_BINARY_DIR}/../../\""
+  "CPPINTEROP_SRC_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/../..\""
+  "CPPINTEROP_BIN_DIR=\"${CMAKE_CURRENT_BINARY_DIR}/../..\""
 )
 # GCC 12 and (less often) 13/14 emit a -Wmaybe-uninitialized false positive
 # inside libstdc++'s <regex> headers when the std::function subobject of
@@ -185,8 +188,10 @@ if(NOT EMSCRIPTEN AND BUILD_SHARED_LIBS)
     ${CMAKE_CURRENT_BINARY_DIR} ${GTEST_INCLUDE_DIR})
   target_link_libraries(DispatchTests PRIVATE ${gtest_libs} ${link_pthreads_lib})
   # Deliberately no target_link_libraries(... clangCppInterOp).
+  # CMAKE_BINARY_DIR, not this directory: the shared library goes to the
+  # top-level lib/.
   target_compile_definitions(DispatchTests PRIVATE
-    CPPINTEROP_LIB_PATH="${CMAKE_BINARY_DIR}/lib/libclangCppInterOp${CMAKE_SHARED_LIBRARY_SUFFIX}"
+    CPPINTEROP_BIN_DIR="${CMAKE_BINARY_DIR}"
   )
   set_output_directory(DispatchTests
     BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/bin/$<CONFIG>/

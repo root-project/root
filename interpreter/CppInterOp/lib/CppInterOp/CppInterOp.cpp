@@ -79,6 +79,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Demangle/Demangle.h"
 #include "llvm/ExecutionEngine/JITSymbol.h"
@@ -656,13 +657,8 @@ static void InstantiateFunctionDefinition(Decl* D) {
     getSema().InstantiateFunctionDefinition(SourceLocation(), FD,
                                             /*Recursive=*/true,
                                             /*DefinitionRequired=*/true);
-    // FIXME: this can go into a RAII object
-    clang::DiagnosticsEngine& Diags = getSema().getDiagnostics();
-    if (!FD->isDefined() && Diags.hasErrorOccurred()) {
-      // instantiation failed, need to reset DiagnosticsEngine
-      Diags.Reset(/*soft=*/true);
-      Diags.getClient()->clear();
-    }
+    compat::DiagnosticsEngineRAII diagsRAII(getSema().getDiagnostics(),
+                                            !FD->isDefined());
   }
 }
 
@@ -1405,6 +1401,15 @@ DeclRef GetParentScope(ConstDeclRef DRef) {
   D = UnwrapUsingShadowToFunction(D);
   auto* ParentDC = D->getDeclContext();
 
+  // A linkage spec (`extern "C++" { ... }`) or C++20 `export` block is not a
+  // scope, skip to the enclosing scope. E.g. on Windows the canonical
+  // declaration of namespace std comes from an `extern "C++"` block in the
+  // MSVC CRT headers, which would otherwise become an "<unnamed>" parent of
+  // std.
+  while (ParentDC && (llvm::isa<LinkageSpecDecl>(ParentDC) ||
+                      llvm::isa<ExportDecl>(ParentDC)))
+    ParentDC = ParentDC->getParent();
+
   if (!ParentDC)
     return INTEROP_RETURN(nullptr);
 
@@ -1767,31 +1772,125 @@ TypeRef GetFunctionReturnType(ConstFuncRef func) {
   return INTEROP_RETURN(nullptr);
 }
 
-bool IsAllocator(ConstFuncRef Fn) {
+OwnershipBehaviour GetOwnershipBehaviour(ConstFuncRef Fn) {
   INTEROP_TRACE(Fn);
   if (!Fn)
-    return INTEROP_RETURN(false);
-  const auto* D = unwrap<clang::Decl>(Fn);
+    return INTEROP_RETURN(OwnershipBehaviour::Unknown);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(Fn));
+  if (const auto* FTD = dyn_cast<FunctionTemplateDecl>(D))
+    D = FTD->getTemplatedDecl();
+  const auto* FD = dyn_cast<FunctionDecl>(D);
+  if (!FD)
+    return INTEROP_RETURN(OwnershipBehaviour::Unknown);
+
+  OwnershipBehaviour result = OwnershipBehaviour::Unknown;
+  for (const auto* FDA : FD->specific_attrs<OwnershipAttr>()) {
+    switch (FDA->getOwnKind()) {
+    case OwnershipAttr::Returns:
+      result = result | OwnershipBehaviour::OwnershipReturns;
+      break;
+    case OwnershipAttr::Takes:
+      result = result | OwnershipBehaviour::OwnershipTakes;
+      break;
+    case OwnershipAttr::Holds:
+      result = result | OwnershipBehaviour::OwnershipHolds;
+      break;
+    }
+  }
+  return INTEROP_RETURN(result);
+}
+
+uint64_t GetDeallocationIndexes(ConstFuncRef Fn) {
+  INTEROP_TRACE(Fn);
+  if (!Fn)
+    return INTEROP_RETURN(uint64_t{0});
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(Fn));
+  if (const auto* FTD = dyn_cast<FunctionTemplateDecl>(D))
+    D = FTD->getTemplatedDecl();
+  const auto* FD = dyn_cast<FunctionDecl>(D);
+  if (!FD)
+    return INTEROP_RETURN(uint64_t{0});
+  uint64_t result = 0;
+  for (const auto* attr : FD->specific_attrs<OwnershipAttr>()) {
+    if (attr->getOwnKind() == OwnershipAttr::Returns)
+      continue;
+    for (const auto& Idx : attr->args()) {
+      unsigned index = Idx.getASTIndex();
+      if (index < 64)
+        result |= (uint64_t{1} << index);
+    }
+  }
+  return INTEROP_RETURN(result);
+}
+
+int GetAllocationSizeParamIndex(ConstFuncRef Fn) {
+  INTEROP_TRACE(Fn);
+  if (!Fn)
+    return INTEROP_RETURN(-1);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(Fn));
+  if (const auto* FTD = dyn_cast<FunctionTemplateDecl>(D))
+    D = FTD->getTemplatedDecl();
+  const auto* FD = dyn_cast<FunctionDecl>(D);
+  if (!FD)
+    return INTEROP_RETURN(-1);
+  for (const auto* attr : FD->specific_attrs<OwnershipAttr>()) {
+    if (attr->getOwnKind() != OwnershipAttr::Returns || attr->args().empty())
+      continue;
+    return INTEROP_RETURN(static_cast<int>(attr->args_begin()->getASTIndex()));
+  }
+  return INTEROP_RETURN(-1);
+}
+
+AllocType IsAllocator(ConstFuncRef Fn) {
+  INTEROP_TRACE(Fn);
+  if (!Fn)
+    return INTEROP_RETURN(AllocType::Unknown);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(Fn));
+  if (const auto* FTD = dyn_cast<FunctionTemplateDecl>(D))
+    D = FTD->getTemplatedDecl();
   if (const auto* FD = dyn_cast<FunctionDecl>(D)) {
     if (FD->getBuiltinID() == Builtin::ID::BImalloc)
-      return INTEROP_RETURN(true);
+      return INTEROP_RETURN(AllocType::Malloc);
     if (const auto* FDA = FD->getAttr<RestrictAttr>()) {
       if (FDA->getSemanticSpelling() != RestrictAttr::Declspec_restrict)
-        return INTEROP_RETURN(true);
+        return INTEROP_RETURN(AllocType::Malloc);
     }
 
     if (const auto* FDA = FD->getAttr<OwnershipAttr>()) {
       if (FDA->getOwnKind() == OwnershipAttr::Returns)
-        return INTEROP_RETURN(true);
+        return INTEROP_RETURN(AllocType::Malloc);
     }
 
     if (FD->hasAttr<CFReturnsRetainedAttr>() ||
         FD->hasAttr<NSReturnsRetainedAttr>() ||
         FD->hasAttr<OSReturnsRetainedAttr>())
-      return INTEROP_RETURN(true);
+      return INTEROP_RETURN(AllocType::Malloc);
+
+    for (const auto* attr : FD->attrs()) {
+      llvm::StringRef attrName;
+      if (const auto* swiftAttr = dyn_cast<clang::SwiftAttrAttr>(attr))
+        attrName = swiftAttr->getAttribute();
+      else if (const auto* annotateAttr = dyn_cast<clang::AnnotateAttr>(attr))
+        attrName = annotateAttr->getAnnotation();
+      else
+        continue;
+      attrName.consume_front("returns_");
+      if (attrName == "cppAllocNone")
+        return INTEROP_RETURN(AllocType::None);
+      if (attrName == "cppAllocNew")
+        return INTEROP_RETURN(AllocType::New);
+      if (attrName == "cppAllocNewArr")
+        return INTEROP_RETURN(AllocType::NewArr);
+      if (attrName == "cppAllocMalloc")
+        return INTEROP_RETURN(AllocType::Malloc);
+      if (attrName == "cppAllocOperatorNew")
+        return INTEROP_RETURN(AllocType::OperatorNew);
+      if (attrName == "cppAllocOperatorNewArr")
+        return INTEROP_RETURN(AllocType::OperatorNewArr);
+    }
   }
 
-  return INTEROP_RETURN(false);
+  return INTEROP_RETURN(AllocType::Unknown);
 }
 
 bool IsDeallocator(ConstFuncRef Fn) {
@@ -2007,7 +2106,10 @@ struct AllocationTraverser : RecursiveASTVisitor<AllocationTraverser> {
       }
       auto it = visitedFuncs.find(FD);
       if (it == visitedFuncs.end()) {
-        visitedFuncs[FD] = std::nullopt;
+        auto storedResult = IsAllocator(wrap<ConstFuncRef>(FD));
+        visitedFuncs[FD] = storedResult;
+        if (storedResult != AllocType::Unknown)
+          return storedResult;
         return AnalyzeAllocType(FD, visitedFuncs);
       }
       return it->second;
@@ -5746,10 +5848,26 @@ std::string LookupLibrary(const char* lib_name) {
       getInterp().getDynamicLibraryManager()->lookupLibrary(lib_name));
 }
 
-bool LoadLibrary(const char* lib_stem, bool lookup) {
-  INTEROP_TRACE(lib_stem, lookup);
+bool LoadLibrary(const char* lib_stem, bool lookup, std::string* error) {
+  INTEROP_TRACE(lib_stem, lookup, error);
+  if (error)
+    error->clear();
+#ifdef CPPINTEROP_USE_CLING
+  // cling::Interpreter::loadLibrary has no reason channel; report what the
+  // lookup alone can tell.
   compat::Interpreter::CompilationResult res =
       getInterp().loadLibrary(lib_stem, lookup);
+  if (res != compat::Interpreter::kSuccess && error) {
+    bool NotFound =
+        lookup &&
+        getInterp().getDynamicLibraryManager()->lookupLibrary(lib_stem).empty();
+    *error = std::string(lib_stem) +
+             (NotFound ? ": library not found" : ": failed to load");
+  }
+#else
+  compat::Interpreter::CompilationResult res =
+      getInterp().loadLibrary(lib_stem, lookup, error);
+#endif
 
   return INTEROP_RETURN(res == compat::Interpreter::kSuccess);
 }
@@ -6141,6 +6259,11 @@ std::string GetFunctionArgDefault(ConstFuncRef func, size_t param_index) {
     PI = (FD->getTemplatedDecl())->getNonObjectParameter(param_index);
 
   if (PI->hasDefaultArg()) {
+    // Print the AST with ConstantsAsWritten and the interpreter's ASTContext:
+    // literal leaves with valid source ranges then render from source text
+    // ("3.14", not the representation-precision "3.1400000000000001"). The
+    // previous std::stod normalization terminated the exception-free build on
+    // symbolic defaults such as `double ratio = kDefaultRatio`.
     std::string Result;
     llvm::raw_string_ostream OS(Result);
     const Expr* DefaultArgExpr = nullptr;
@@ -6149,20 +6272,30 @@ std::string GetFunctionArgDefault(ConstFuncRef func, size_t param_index) {
       DefaultArgExpr = PI->getUninstantiatedDefaultArg();
     else
       DefaultArgExpr = PI->getDefaultArg();
-    DefaultArgExpr->printPretty(OS, nullptr, PrintingPolicy(LangOptions()));
+    ASTContext& Ctx = getASTContext();
+    PrintingPolicy Policy(Ctx.getLangOpts());
+    Policy.ConstantsAsWritten = true;
+    DefaultArgExpr->printPretty(OS, nullptr, Policy, /*Indentation=*/0,
+                                /*NewlineSymbol=*/"\n", &Ctx);
 
-    // FIXME: Floats are printed in clang with the precision of their underlying
-    // representation and not as written. This is a deficiency in the printing
-    // mechanism of clang which we require extra work to mitigate. For example
-    // float PI = 3.14 is printed as 3.1400000000000001
-    if (PI->getType()->isFloatingType()) {
-      if (!Result.empty() && Result.back() == '.')
-        return INTEROP_RETURN(Result);
-      auto DefaultArgValue = std::stod(Result);
-      std::ostringstream oss;
-      oss << DefaultArgValue;
-      Result = oss.str();
-    }
+    // CPyCppyy evaluates numeric defaults in Python after stripping
+    // uppercase literal suffixes, so print the suffix in its canonical
+    // uppercase form ("5.f" -> "5.F"). The per-kind alphabets keep hex
+    // digits safe: 'f' in 0x1f is a digit of an IntegerLiteral, whose
+    // suffix alphabet has no 'f'.
+    const Expr* Leaf = DefaultArgExpr->IgnoreImpCasts();
+    if (const auto* UO = llvm::dyn_cast<clang::UnaryOperator>(Leaf))
+      Leaf = UO->getSubExpr()->IgnoreImpCasts();
+    const char* SuffixAlphabet = nullptr;
+    if (llvm::isa<IntegerLiteral>(Leaf))
+      SuffixAlphabet = "uUlLzZ";
+    else if (llvm::isa<FloatingLiteral>(Leaf))
+      SuffixAlphabet = "fFlL";
+    if (SuffixAlphabet)
+      for (size_t I = Result.find_last_not_of(SuffixAlphabet) + 1;
+           I < Result.size(); ++I)
+        Result[I] = llvm::toUpper(Result[I]);
+
     return INTEROP_RETURN(Result);
   }
   return INTEROP_RETURN("");

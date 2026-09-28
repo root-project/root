@@ -1,5 +1,7 @@
 #include "../../lib/CppInterOp/Tracing.h"
 
+#include "TestPaths.h"
+
 #include "clang/Basic/Version.h"
 
 #include "CppInterOp/CppInterOp.h"
@@ -1193,9 +1195,9 @@ TEST_F(TracingTest, ReproducerCompilesViaInterpreter) {
 
   // Create a fresh interpreter and #include the reproducer file as-is.
   Cpp::CreateInterpreter({});
-  Cpp::AddIncludePath(CPPINTEROP_DIR "/include");
-  // Generated .inc files live under the build tree.
-  Cpp::AddIncludePath(CPPINTEROP_BINARY_DIR "/include");
+  Cpp::AddIncludePath(CPPINTEROP_SRC_DIR "/include");
+  // Generated .inc files live under the artifacts prefix.
+  Cpp::AddIncludePath((TestUtils::GetCppInterOpDirPath() + "/include").c_str());
 
   std::string includeDirective = "#include \"" + Path + "\"";
   EXPECT_EQ(Cpp::Process(includeDirective.c_str()), 0)
@@ -1391,7 +1393,7 @@ static std::string ReadFileToString(const std::string& path) {
   return {std::istreambuf_iterator<char>(ifs),
           std::istreambuf_iterator<char>()};
 }
-// This test reads source files from the build tree via CPPINTEROP_DIR.
+// The tests below read source files via CPPINTEROP_SRC_DIR.
 TEST_F(TracingTest, StartStopTracingWritesToFile) {
   // StartTracing begins recording; StopTracing writes the file.
   std::string Path = CppInterOp::Tracing::StartTracing(/*WriteOnStdErr=*/false);
@@ -1545,13 +1547,14 @@ TEST(TracingCoverageTest, AllPublicAPIsAreTraced) {
   // 1. Parse the header and generated declarations to extract all
   //    CPPINTEROP_API function names.
   std::string Header =
-      ReadFileToString(CPPINTEROP_DIR "/include/CppInterOp/CppInterOp.h");
+      ReadFileToString(CPPINTEROP_SRC_DIR "/include/CppInterOp/CppInterOp.h");
   ASSERT_FALSE(Header.empty()) << "Could not read CppInterOp.h";
-  // Function declarations are generated into CppInterOpDecl.inc.
-  std::string DeclInc = ReadFileToString(
-      CPPINTEROP_BINARY_DIR "/include/CppInterOp/CppInterOpDecl.inc");
+  // CppInterOpDecl.inc is generated, so it lives under the artifacts prefix.
+  std::string DeclInc =
+      ReadFileToString(TestUtils::GetCppInterOpDirPath() +
+                       "/include/CppInterOp/CppInterOpDecl.inc");
   if (DeclInc.empty())
-    DeclInc = ReadFileToString(CPPINTEROP_DIR
+    DeclInc = ReadFileToString(CPPINTEROP_SRC_DIR
                                "/include/CppInterOp/CppInterOpDecl.inc");
   Header += DeclInc;
 
@@ -1580,7 +1583,7 @@ TEST(TracingCoverageTest, AllPublicAPIsAreTraced) {
   // 2. For each API name, find its definition in the implementation and
   //    verify INTEROP_TRACE appears shortly after the opening brace.
   std::string Impl =
-      ReadFileToString(CPPINTEROP_DIR "/lib/CppInterOp/CppInterOp.cpp");
+      ReadFileToString(CPPINTEROP_SRC_DIR "/lib/CppInterOp/CppInterOp.cpp");
   ASSERT_FALSE(Impl.empty()) << "Could not read CppInterOp.cpp";
 
   std::vector<std::string> Missing;
