@@ -125,7 +125,9 @@ TEST(RDFSnapshotRNTuple, WriteOpts)
 
    EXPECT_EQ(columns, sdf->GetColumnNames());
 
-   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   ROOT::RNTupleReadOptions ntplOpts;
+   ntplOpts.SetMetadataMode(ROOT::RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath(), ntplOpts);
    EXPECT_EQ(2, reader->GetDescriptor().GetNClusters());
    EXPECT_EQ(2, reader->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0).GetPageInfos().size());
    EXPECT_EQ(2, reader->GetDescriptor().GetClusterDescriptor(1).GetPageRange(0).GetPageInfos().size());
@@ -184,7 +186,9 @@ TEST(RDFSnapshotRNTuple, DefaultCompressionSettings)
 
    EXPECT_EQ(columns, sdf->GetColumnNames());
 
-   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   ROOT::RNTupleReadOptions ntplOpts;
+   ntplOpts.SetMetadataMode(ROOT::RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath(), ntplOpts);
    auto compSettings = *reader->GetDescriptor().GetClusterDescriptor(0).GetColumnRange(0).GetCompressionSettings();
    // The RNTuple default should be 505
    EXPECT_EQ(505, compSettings);
@@ -206,7 +210,9 @@ TEST(RDFSnapshotRNTuple, Compression)
 
    EXPECT_EQ(columns, sdf->GetColumnNames());
 
-   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   ROOT::RNTupleReadOptions ntplOpts;
+   ntplOpts.SetMetadataMode(ROOT::RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath(), ntplOpts);
    auto compSettings = *reader->GetDescriptor().GetClusterDescriptor(0).GetColumnRange(0).GetCompressionSettings();
    EXPECT_EQ(404, compSettings);
 }
