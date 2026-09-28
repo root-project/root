@@ -17,6 +17,7 @@ class ROperator_Identity final : public ROperator
 
 private:
    bool fIsOutputInitialized = false; // the output is the same weight as the input
+   bool fIsAlias = false;             // the output shares the memory of the input
    std::string fNX;
    std::string fNY;
    std::vector<Dim> fShape;
@@ -63,6 +64,7 @@ public:
          }
       } else {
          model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShape);
+         fIsAlias = model.AddAliasTensor(fNY, fNX);
       }
    }
 
@@ -75,8 +77,12 @@ public:
       }
       std::stringstream out;
       out << "\n//------ IDENTITY\n";
-      out << SP << "std::copy(tensor_" << fNX << ", tensor_" << fNX << " + " << ConvertDimShapeToLength(fShape)
-          << ", tensor_" << fNY << ");\n";
+      if (fIsAlias) {
+         out << SP << "auto * tensor_" << fNY << " = tensor_" << fNX << ";\n";
+      } else {
+         out << SP << "std::copy(tensor_" << fNX << ", tensor_" << fNX << " + " << ConvertDimShapeToLength(fShape)
+             << ", tensor_" << fNY << ");\n";
+      }
       return out.str();
    }
 

@@ -86,6 +86,26 @@ inline SofieReference readReference(std::string const &modelName)
    return ref;
 }
 
+/// The text of a generated model header, so a test can assert whether a code
+/// transformation fired, which the values alone do not show.
+/// `unoptimized` selects the OptimizationLevel::kBasic variant that
+/// EmitFromONNX.cxx.in writes next to the default one.
+inline std::string readGeneratedHeader(std::string const &modelName, bool unoptimized = false)
+{
+   const std::string path = modelName + (unoptimized ? "_FromONNX_unoptimized.hxx" : modelHeaderSuffix);
+   std::ifstream in(path);
+   if (!in)
+      throw std::runtime_error("cannot open generated header " + path);
+   std::stringstream buffer;
+   buffer << in.rdbuf();
+   return buffer.str();
+}
+
+inline bool headerContains(std::string const &header, std::string const &needle)
+{
+   return header.find(needle) != std::string::npos;
+}
+
 /// Element-wise |output - expected| <= tolerance
 template <typename T, typename U>
 void expectNear(std::vector<T> const &output, std::vector<U> const &expected, float tolerance)
