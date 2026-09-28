@@ -129,27 +129,30 @@ public:
 
          bool broadcast = !UTILITY::AreSameShape(fShapeX, fShapeY) || !UTILITY::AreSameShape(fShapeX, fShapeC);
          if (broadcast) {
-            // find shape to broadcast between X,Y,C looking for max length
-            size_t lengthX = ConvertShapeToLength(fShapeX);
-            size_t lengthY = ConvertShapeToLength(fShapeY);
-            size_t lengthC = ConvertShapeToLength(fShapeC);
-            bool broadcastX = false, broadcastY = false, broadcastC = false;
-            if (lengthX >= lengthY && lengthX >= lengthC) {
-               fShapeZ = fShapeX;
-               // broadcast Y and C if different than X
-               broadcastY = (lengthY != lengthX);
-               broadcastC = (lengthC != lengthX);
-            } else if (lengthY >= lengthX && lengthY >= lengthC) {
-               fShapeZ = fShapeY;
-               // broadcast X and C if different than Y
-               broadcastX = (lengthX != lengthY);
-               broadcastC = (lengthC != lengthY);
-            } else if (lengthC >= lengthX && lengthC >= lengthY) {
-               fShapeZ = fShapeC;
-               // broadcast X and Y if different than C
-               broadcastX = (lengthX != lengthC);
-               broadcastY = (lengthY != lengthC);
-            }
+            // the broadcast output can be larger than every input, or inputs can have the same
+            // number of elements but different shapes. Use MultidirectionalBroadcastShape() instead.
+            auto retXY = UTILITY::MultidirectionalBroadcastShape(fShapeX, fShapeY);
+            fShapeZ = retXY.second;
+            auto retCZ = UTILITY::MultidirectionalBroadcastShape(fShapeC, fShapeZ);
+            fShapeZ = retCZ.second;
+
+            // fShapeX, fShapeY and fShapeC have now been padded (in place, to be
+            // pairwise rank-compatible, but one of them can still have a smaller rank
+            // than the final fShapeZ (e.g. if C has the highest rank among the three):
+            // prepend the missing unit dimensions before comparing.
+            auto padToRank = [&](std::vector<size_t> &shape) {
+               if (shape.size() < fShapeZ.size()) {
+                  size_t nPrepend = fShapeZ.size() - shape.size();
+                  shape.insert(shape.begin(), nPrepend, 1);
+               }
+            };
+            padToRank(fShapeX);
+            padToRank(fShapeY);
+            padToRank(fShapeC);
+
+            bool broadcastX = !UTILITY::AreSameShape(fShapeX, fShapeZ);
+            bool broadcastY = !UTILITY::AreSameShape(fShapeY, fShapeZ);
+            bool broadcastC = !UTILITY::AreSameShape(fShapeC, fShapeZ);
 
             // Broadcast X to Z
             if (broadcastX) {
