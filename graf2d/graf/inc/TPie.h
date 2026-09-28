@@ -33,7 +33,8 @@ private:
 
    struct SliceInfo_t {
       Int_t num = 0;
-      Double_t ang = 0; // angle to found slice
+      Double_t ang = 0; // angle to mouse position
+      Double_t cphi = 0; // central angle of the slice
       Double_t rad = 0; // relative radius
    };
 
