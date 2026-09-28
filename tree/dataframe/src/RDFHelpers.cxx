@@ -353,13 +353,13 @@ void ProgressHelper::PrintProgressAndStats(std::ostream &stream, std::size_t cur
    stream << std::left << std::setw(fNColumns - 1) << buffer.str();
 }
 
-void ProgressHelper::PrintStatsFinal() const
+void ProgressHelper::PrintStatsFinal(std::size_t exactTotalEvents) const
 {
    auto &stream = std::cout;
    RestoreStreamState restore(stream);
    const std::chrono::duration<double> elapsed = std::chrono::system_clock::now() - fBeginTime;
    const auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(elapsed);
-   const auto totalEvents = ComputeTotalEvents();
+   const auto totalEvents = exactTotalEvents;
 
    // The next line resets the current line output in the terminal.
    // Brings the cursor at the beginning ('\r'), prints whitespace with the
@@ -436,18 +436,23 @@ public:
 private:
    std::shared_ptr<ProgressHelper> fHelper;
    std::shared_ptr<int> fDummyResult = std::make_shared<int>();
+   std::vector<unsigned long long> fCounts;
 
 public:
-   ProgressBarAction(std::shared_ptr<ProgressHelper> r) : fHelper(std::move(r)) {}
+   ProgressBarAction(std::shared_ptr<ProgressHelper> r) : fHelper(std::move(r)), fCounts(ROOT::IsImplicitMTEnabled() ? ROOT::GetThreadPoolSize() : 1, 0) {}
 
    std::shared_ptr<Result_t> GetResultPtr() const { return fDummyResult; }
 
    void Initialize() {}
    void InitTask(TTreeReader *, unsigned int) {}
 
-   void Exec(unsigned int) {}
+   void Exec(unsigned int slot) { fCounts[slot]++; }
 
-   void Finalize() { fHelper->PrintStatsFinal(); }
+   void Finalize() {
+      std::size_t exactTotal = 0;
+      for (auto c : fCounts) exactTotal += c;
+      fHelper->PrintStatsFinal(exactTotal);
+   }
 
    std::string GetActionName() { return "ProgressBar"; }
    // dummy implementation of PartialUpdate
