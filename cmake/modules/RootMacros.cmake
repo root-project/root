@@ -1448,6 +1448,18 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
       "dictionary will be empty. Consider using ROOT_LINKER_LIBRARY instead.")
   endif()
 
+
+  if (ARG_OUTPUT_NAME)
+     # this must go before ROOT_GENERATE_DICTIONARY since that function depends on OUTPUT_NAME target property
+    set_target_properties(${libname} PROPERTIES OUTPUT_NAME ${ARG_OUTPUT_NAME})
+    if (NOT ARG_OUTPUT_NAME STREQUAL "${libname}")
+      ROOT_SYMLINK_LIBRARY_NAME(${libname} ${ARG_OUTPUT_NAME} ${libname}) # historicalname matches libname
+    endif()
+  endif()
+  if (ARG_EXPORT_NAME)
+    set_target_properties(${libname} PROPERTIES EXPORT_NAME ${ARG_EXPORT_NAME})
+  endif()
+
   ROOT_GENERATE_DICTIONARY(G__${libname} ${ARG_HEADERS}
                           ${NO_CXXMODULE_FLAG}
                           ${STAGE1_FLAG}
@@ -1476,15 +1488,6 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
     endif()
   endif()
 
-  if (ARG_OUTPUT_NAME)
-    set_target_properties(${libname} PROPERTIES OUTPUT_NAME ${ARG_OUTPUT_NAME})
-    if (NOT ARG_OUTPUT_NAME STREQUAL "${libname}")
-      ROOT_SYMLINK_LIBRARY_NAME(${libname} ${ARG_OUTPUT_NAME} ${libname}) # historicalname matches libname
-    endif()
-  endif()
-  if (ARG_EXPORT_NAME)
-    set_target_properties(${libname} PROPERTIES EXPORT_NAME ${ARG_EXPORT_NAME})
-  endif()
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
