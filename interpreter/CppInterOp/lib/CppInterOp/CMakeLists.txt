@@ -67,6 +67,17 @@ if (LLVM_LINK_LLVM_DYLIB)
     )
   set(new_libs ${link_libs})
   set(libs ${new_libs})
+  # LLVM component libraries behind libLLVM.so that static clang archives
+  # reference without declaring them in their link interfaces (the dylib
+  # umbrella covered them). Substituted for the LLVM shared target below.
+  # Do NOT expand to every LLVM library: some (e.g. LLVMInterpreter) require
+  # optional dependencies (libffi) that may not be installed.
+  set(llvm_component_libs LLVMFrontendDriver)
+  foreach(component_lib ${llvm_component_libs})
+    if(NOT TARGET ${component_lib})
+      list(REMOVE_ITEM llvm_component_libs ${component_lib})
+    endif()
+  endforeach()
   while(NOT "${new_libs}" STREQUAL "")
     foreach(lib ${new_libs})
       if(TARGET ${lib})
@@ -75,22 +86,36 @@ if (LLVM_LINK_LLVM_DYLIB)
           continue()
         endif()
         foreach(transitive_lib ${transitive_libs})
-          if(NOT TARGET ${transitive_lib})
-            continue()
+          # Replace the LLVM shared library (libLLVM.so) that packages like
+          # Debian's declare as the link interface of the static clang archives
+          # with the static LLVM component libraries: some LLVM libs are only
+          # reachable through that umbrella (e.g. LLVMFrontendDriver for
+          # llvm::driver::createTLII in clangCodeGen), so dropping it outright
+          # produces unresolved symbols at link time.
+          # Everything else must be kept verbatim: plain items (rt, dl, m) and
+          # non-LLVM targets (e.g. ZLIB::ZLIB) are LLVM's system dependencies
+          # that the static archives still need.
+          if(TARGET ${transitive_lib}
+             AND "${transitive_lib}" MATCHES "^LLVM")
+            get_target_property(lib_type ${transitive_lib} TYPE)
+            if("${lib_type}" STREQUAL "SHARED_LIBRARY"
+               OR "${lib_type}" STREQUAL "MODULE_LIBRARY")
+              foreach(component_lib ${llvm_component_libs})
+                if(TARGET ${component_lib} AND NOT ${component_lib} IN_LIST static_transitive_libs)
+                  list(APPEND static_transitive_libs ${component_lib})
+                endif()
+              endforeach()
+              continue()
+            endif()
           endif()
-          get_target_property(lib_type ${transitive_lib} TYPE)
-          if("${lib_type}" STREQUAL "STATIC_LIBRARY")
-            list(APPEND static_transitive_libs ${transitive_lib})
-          else()
-            # Filter our libLLVM.so and friends.
-            continue()
-          endif()
-          if(NOT ${transitive_lib} IN_LIST libs)
+          list(APPEND static_transitive_libs ${transitive_lib})
+          if(TARGET ${transitive_lib} AND NOT ${transitive_lib} IN_LIST libs)
             list(APPEND newer_libs ${transitive_lib})
             list(APPEND libs ${transitive_lib})
           endif()
         endforeach(transitive_lib)
-        # Update the target properties with the list of only static libraries.
+        # Update the target properties with the filtered dependency list
+        # (shared LLVM umbrella replaced by static component libraries).
         set_target_properties(${lib} PROPERTIES INTERFACE_LINK_LIBRARIES "${static_transitive_libs}")
         set(static_transitive_libs "")
       endif()

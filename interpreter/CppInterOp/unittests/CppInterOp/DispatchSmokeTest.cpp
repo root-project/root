@@ -1,3 +1,4 @@
+#include "TestPaths.h"
 #include "CppInterOp/Dispatch.h"
 
 #include "gtest/gtest.h"
@@ -186,8 +187,11 @@ TEST(DispatchSmokeTest, CAPI_ScalarFunctions) {
   Cpp::CreateInterpreter({});
   Cpp::Declare("namespace DispCAPI { class Cls {}; int var = 1; }");
 
-  DlHandle lib(CPPINTEROP_LIB_PATH);
-  ASSERT_TRUE(lib) << "Failed to dlopen " << CPPINTEROP_LIB_PATH;
+  std::string libPath = TestUtils::GetCppInterOpLibPath();
+  ASSERT_FALSE(libPath.empty())
+      << "Set CPPINTEROP_BIN_DIR to the CppInterOp artifacts prefix";
+  DlHandle lib(libPath.c_str());
+  ASSERT_TRUE(lib) << "Failed to dlopen " << libPath;
 
   using IsClassFn = bool (*)(void*);
   using GetNameFn = char* (*)(void*);
@@ -215,8 +219,11 @@ TEST(DispatchSmokeTest, CAPI_CollectionFunctions) {
   Cpp::CreateInterpreter({});
   Cpp::Declare("enum DispCAPIEnum { DA, DB, DC };");
 
-  DlHandle lib(CPPINTEROP_LIB_PATH);
-  ASSERT_TRUE(lib) << "Failed to dlopen " << CPPINTEROP_LIB_PATH;
+  std::string libPath = TestUtils::GetCppInterOpLibPath();
+  ASSERT_FALSE(libPath.empty())
+      << "Set CPPINTEROP_BIN_DIR to the CppInterOp artifacts prefix";
+  DlHandle lib(libPath.c_str());
+  ASSERT_TRUE(lib) << "Failed to dlopen " << libPath;
 
   using GetNamedFn = void* (*)(const char*, void*);
   using GetEnumConstantsFn = Cpp::CppInterOpArray (*)(void*);

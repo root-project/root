@@ -18,6 +18,12 @@ TYPED_TEST(CppInterOpTest, CAPI_DeclareAndProcess) {
   EXPECT_EQ(0, cppinterop_Process("capi_var++;"));
 }
 
+TYPED_TEST(CppInterOpTest, CAPI_LoadLibrary) {
+  TestFixture::CreateInterpreter();
+  // The hand-written two-argument wrapper still exists and forwards.
+  EXPECT_FALSE(cppinterop_LoadLibrary("no-such-cppinterop-lib", true));
+}
+
 TYPED_TEST(CppInterOpTest, CAPI_ScopeQueries) {
   TestFixture::CreateInterpreter();
   Cpp::Declare("namespace CAPINs { class Foo {}; }");

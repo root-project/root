@@ -4,3 +4,7 @@ test --test_output=errors
 # The C++ toolchain (clang from the LLVM tree) and all ABI-critical flags are
 # centralized in the cppyy_bazel module, which registers @llvm//:cc_toolchain.
 # No per-repo compiler wiring needed.
+
+# The dispatch tests dlopen <CPPINTEROP_BIN_DIR>/lib/libclangCppInterOp.so.
+# In the standalone build the runfiles root (the test cwd) is that prefix.
+test --test_env=CPPINTEROP_BIN_DIR=.

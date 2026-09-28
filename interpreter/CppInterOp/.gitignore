@@ -28,8 +28,8 @@
 *.app
 
 # Directories
-build
-install
+build*
+install*
 
 # CLion files
 .idea
