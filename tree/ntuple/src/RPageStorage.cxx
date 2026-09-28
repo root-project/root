@@ -323,15 +323,17 @@ ROOT::NTupleSize_t ROOT::Internal::RPageSource::GetNEntries()
 
 ROOT::NTupleSize_t ROOT::Internal::RPageSource::GetNElements(ROOT::DescriptorId_t physicalColumnId)
 {
-   auto descGuard = GetSharedDescriptorGuard();
-   if (descGuard->GetNClusters() == 0)
+   auto sharedGuard = GetSharedDescriptorGuard();
+   if (sharedGuard->GetNClusters() == 0)
       return 0;
 
-   auto itr = descGuard->GetClusterGroupIterable().begin();
-   itr += descGuard->GetNClusterGroups() - 1;
-   R__ASSERT(itr->HasClusterDetails());
-   const auto &cd = descGuard->GetClusterDescriptor(itr->GetClusterIds().back());
+   const auto lastClusterGroupId = sharedGuard->GetNClusterGroups() - 1;
+   auto descGuard = EnsureClusterDetails(lastClusterGroupId, std::move(sharedGuard));
+
+   const auto &cgDesc = descGuard->GetClusterGroupDescriptor(lastClusterGroupId);
+   const auto &cd = descGuard->GetClusterDescriptor(cgDesc.GetClusterIds().back());
    R__ASSERT(cd.ContainsColumn(physicalColumnId));
+
    const auto &columnRange = cd.GetColumnRange(physicalColumnId);
    return columnRange.GetFirstElementIndex() + columnRange.GetNElements();
 }
@@ -488,7 +490,7 @@ void ROOT::Internal::RPageSource::UnzipClusterImpl(RCluster *cluster)
    RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
 
    const auto clusterId = cluster->GetId();
-   auto descriptorGuard = GetSharedDescriptorGuard();
+   auto descriptorGuard = EnsureClusterDetails(FindClusterGroupId(clusterId), GetSharedDescriptorGuard());
    const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
 
    fPreloadedClusters[clusterDescriptor.GetFirstEntryIndex()] = clusterId;
@@ -560,7 +562,7 @@ void ROOT::Internal::RPageSource::PrepareLoadCluster(
    const std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const ROOT::RClusterDescriptor::RPageInfo &)>
       &perPageFunc)
 {
-   auto descriptorGuard = GetSharedDescriptorGuard();
+   auto descriptorGuard = EnsureClusterDetails(FindClusterGroupId(clusterKey.fClusterId), GetSharedDescriptorGuard());
    const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterKey.fClusterId);
 
    for (auto physicalColumnId : clusterKey.fPhysicalColumnSet) {
@@ -587,8 +589,11 @@ void ROOT::Internal::RPageSource::UpdateLastUsedCluster(ROOT::DescriptorId_t clu
    if (fLastUsedCluster == clusterId)
       return;
 
-   ROOT::NTupleSize_t firstEntryIndex =
-      GetSharedDescriptorGuard()->GetClusterDescriptor(clusterId).GetFirstEntryIndex();
+   ROOT::NTupleSize_t firstEntryIndex = kInvalidNTupleIndex;
+   {
+      auto descGuard = EnsureClusterDetails(FindClusterGroupId(clusterId), GetSharedDescriptorGuard());
+      firstEntryIndex = descGuard->GetClusterDescriptor(clusterId).GetFirstEntryIndex();
+   }
    auto itr = fPreloadedClusters.begin();
    while ((itr != fPreloadedClusters.end()) && (itr->first < firstEntryIndex)) {
       if (fPinnedClusters.count(itr->second) > 0) {
@@ -623,7 +628,7 @@ void ROOT::Internal::RPageSource::LoadSealedPage(ROOT::DescriptorId_t physicalCo
 
    ROOT::RClusterDescriptor::RPageInfo pageInfo;
    {
-      auto descriptorGuard = GetSharedDescriptorGuard();
+      auto descriptorGuard = EnsureClusterDetails(FindClusterGroupId(clusterId), GetSharedDescriptorGuard());
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
       pageInfo = clusterDescriptor.GetPageRange(physicalColumnId).Find(localIndex.GetIndexInCluster());
    }
@@ -773,7 +778,7 @@ ROOT::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, RNTupleLocalI
 
    RPageSummary pageSummary;
    {
-      auto descriptorGuard = GetSharedDescriptorGuard();
+      auto descriptorGuard = EnsureClusterDetails(FindClusterGroupId(clusterId), GetSharedDescriptorGuard());
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
       const auto &columnRange = clusterDescriptor.GetColumnRange(columnId);
       if (columnRange.IsSuppressed())
