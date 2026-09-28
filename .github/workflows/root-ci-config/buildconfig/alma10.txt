@@ -1,3 +1,4 @@
 builtin_civetweb=ON
 builtin_vdt=ON
 pythia8=ON
+symlink_libs=OFF

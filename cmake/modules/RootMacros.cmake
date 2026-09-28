@@ -3731,15 +3731,23 @@ endfunction(ROOT_GET_CLANG_LIBRARIES)
 #---------------------------------------------------------------------------------------------------
 function (ROOT_SYMLINK_LIBRARY_NAME tgt outputname historicalname)
   if (symlink_libs)
-    install(CODE "
-      set(LIB_DIR \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}\")
-      set(NEW_NAME \"${CMAKE_SHARED_LIBRARY_PREFIX}${outputname}${CMAKE_SHARED_LIBRARY_SUFFIX}\")
-      set(OLD_NAME \"${CMAKE_SHARED_LIBRARY_PREFIX}${historicalname}${CMAKE_SHARED_LIBRARY_SUFFIX}\")
-      message(STATUS \"Creating symlink for target ${tgt}: \${OLD_NAME} -> \${NEW_NAME}\")
-      execute_process(
-        COMMAND \${CMAKE_COMMAND} -E create_symlink \${NEW_NAME} \${OLD_NAME}
-        WORKING_DIRECTORY \${LIB_DIR}
+    get_target_property(target_type ${tgt} TYPE)
+    if(NOT target_type STREQUAL "INTERFACE_LIBRARY")
+      add_custom_command(TARGET ${tgt} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_NAME:${tgt}> ${LIB_PREFIX}${historicalname}${LIB_SUFFIX}
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:${tgt}>
+        COMMENT "Creating bw-compatibility symlink for target ${tgt}: ${LIB_PREFIX}${historicalname}${LIB_SUFFIX} -> $<TARGET_FILE_NAME:${tgt}>"
       )
-    ")
+      install(CODE "
+        set(LIB_DIR \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}\")
+        set(NEW_NAME \"${CMAKE_SHARED_LIBRARY_PREFIX}${outputname}${CMAKE_SHARED_LIBRARY_SUFFIX}\")
+        set(OLD_NAME \"${CMAKE_SHARED_LIBRARY_PREFIX}${historicalname}${CMAKE_SHARED_LIBRARY_SUFFIX}\")
+        message(STATUS \"Creating symlink for target ${tgt}: \${OLD_NAME} -> \${NEW_NAME}\")
+        execute_process(
+          COMMAND \${CMAKE_COMMAND} -E create_symlink \${NEW_NAME} \${OLD_NAME}
+          WORKING_DIRECTORY \${LIB_DIR}
+        )
+      ")
+    endif()
   endif()
 endfunction(ROOT_SYMLINK_LIBRARY_NAME)
