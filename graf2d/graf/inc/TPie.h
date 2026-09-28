@@ -19,15 +19,19 @@
 class TH1;
 class TPieSlice;
 class TLegend;
+class TPieInteractive;
 
 class TPie : public TNamed , public TAttText {
 private:
+
+   friend class TPieSlice;
+
    void Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r);
    void DrawGhost(TVirtualPad &);
 
    struct SliceInfo_t {
-      Int_t num;
-      Double_t x, y, ang, phi1, phi2, rad;
+      Int_t num = 0;
+      Double_t x = 0, y = 0, ang = 0, phi1 = 0, phi2 = 0, rad = 0;
    };
 
    SliceInfo_t FindSlice(TVirtualPad &, Int_t, Int_t);

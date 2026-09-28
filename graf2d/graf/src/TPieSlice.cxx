@@ -51,15 +51,16 @@ TPieSlice::TPieSlice(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Eval if the mouse is over the area associated with this slice.
 
-Int_t TPieSlice::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
+Int_t TPieSlice::DistancetoPrimitive(Int_t px, Int_t py)
 {
    Int_t dist = 9999;
-   if (!gPad) return dist;
 
-   if (fIsActive) {
-      dist = 0;
-      fIsActive = kFALSE;
-      gPad->SetCursor(kHand);
+   if (gPad && fPie) {
+      auto info = fPie->FindSlice(*gPad, px, py);
+      if ((info.num >= 0) && (fPie->GetSlice(info.num) == this)) {
+         dist = 0;
+         gPad->SetCursor(kHand); // FXIME, cursor should not be changed here
+      }
    }
 
    return dist;

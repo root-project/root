@@ -96,23 +96,6 @@ End_Macro
 
 */
 
-Double_t gX             = 0; // Temporary pie X position.
-Double_t gY             = 0; // Temporary pie Y position.
-Double_t gRadius        = 0; // Temporary pie Radius of the TPie.
-Double_t gRadiusOffset  = 0; // Temporary slice's radial offset.
-Double_t gAngularOffset = 0; // Temporary slice's angular offset.
-Bool_t   gIsUptSlice    = kFALSE; // True if a slice in the TPie should
-                                  // be updated.
-Int_t    gCurrent_slice = -1;// Current slice under mouse.
-Double_t gCurrent_phi1  = 0; // Phimin of the current slice.
-Double_t gCurrent_phi2  = 0; // Phimax of the current slice.
-Double_t gCurrent_rad   = 0; // Current distance from the vertex of the
-                             // current slice.
-Double_t gCurrent_x     = 0; // Current x in the pad metric.
-Double_t gCurrent_y     = 0; // Current y in the pad metric.
-Double_t gCurrent_ang   = 0; // Current angular, within current_phi1
-                                    // and current_phi2.
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
@@ -226,11 +209,12 @@ Int_t TPie::DistancetoPrimitive(Int_t px, Int_t py)
 {
    Int_t dist = 9999;
 
-   gCurrent_slice = DistancetoSlice(px,py);
-   if ( gCurrent_slice>=0 ) {
-      if (gCurrent_rad <= fRadius) {
+   MakeSlices();
+
+   if (gPad) {
+      auto info = FindSlice(*gPad, px, py);
+      if ((info.num >= 0) && (info.rad <= fRadius))
          dist = 0;
-      }
    }
 
    return dist;
@@ -257,10 +241,6 @@ TPie::SliceInfo_t TPie::FindSlice(TVirtualPad &parent, Int_t px, Int_t py)
 
    Float_t dPxl = (parent.PixeltoY(0) - parent.PixeltoY(1)) / radY;
    for (Int_t i = 0; i < fNvals; ++i) {
-      fPieSlices[i]->SetIsActive(kFALSE);
-
-      if (gIsUptSlice && gCurrent_slice != i)
-         continue;
 
       // Angles' values for this slice
       Double_t phimin = fSlices[2 * i] * TMath::Pi() / 180.;
@@ -306,7 +286,6 @@ TPie::SliceInfo_t TPie::FindSlice(TVirtualPad &parent, Int_t px, Int_t py)
                rang -= TMath::TwoPi();
 
             if (lang / range < .25 || rang / range < .25) {
-               fPieSlices[i]->SetIsActive(kTRUE);
                res.num = -1;
             } else
                res.num = i;
@@ -333,15 +312,6 @@ Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
    MakeSlices();
 
    auto res = FindSlice(*gPad, px, py);
-
-   if (res.num >= 0) {
-      gCurrent_x    = res.x;
-      gCurrent_y    = res.y;
-      gCurrent_ang  = res.ang;
-      gCurrent_phi1 = res.phi1;
-      gCurrent_phi2 = res.phi2;
-      gCurrent_rad  = res.rad;
-   }
    return res.num;
 }
 
@@ -370,14 +340,27 @@ void TPie::Draw(Option_t *option)
    AppendPad(soption.Data());
 }
 
+class TPieInteractive : public TVirtualPad::TInteractive {
+   public:
+
+   enum EMode { pNone = 0, pMovingPie, pMovingSlice, pResizing, pRotating } fMode = pNone;
+
+   Int_t oldpx = 0, oldpy = 0;
+
+   Double_t angularOffset0  = 0; // Reference angular offset
+
+   Int_t    currentSlice = -1; // Current slice under mouse.
+   Double_t angle0 = 0;  // previous angle to mouse when rotating
+};
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// This method is for internal use. It is used by Execute event to draw the
 /// outline of "this" TPie. Used when the opaque movements are not permitted.
 
 void TPie::DrawGhost(TVirtualPad &parent)
 {
-   MakeSlices();
-
    TAttLine(kBlack, 1, 2).ModifyOn(parent);
 
    std::vector<Double_t> xx, yy;
@@ -394,14 +377,13 @@ void TPie::DrawGhost(TVirtualPad &parent)
       for (Int_t i = 0; i < fNvals; ++i) {
          xx.clear();
          yy.clear();
+         Float_t minphi = (fSlices[i * 2] + .5) * TMath::Pi() / 180.;
+         Float_t avgphi = fSlices[i * 2 + 1] * TMath::Pi() / 180.;
+         Float_t maxphi = (fSlices[i * 2 + 2] - .5) * TMath::Pi() / 180.;
 
-         Float_t minphi = (fSlices[i * 2] + gAngularOffset + .5) * TMath::Pi() / 180.;
-         Float_t avgphi = (fSlices[i * 2 + 1] + gAngularOffset) * TMath::Pi() / 180.;
-         Float_t maxphi = (fSlices[i * 2 + 2] + gAngularOffset - .5) * TMath::Pi() / 180.;
-
-         Double_t radOffset = (i == gCurrent_slice ? gRadiusOffset : fPieSlices[i]->GetRadiusOffset());
-         x0 = gX + radOffset * TMath::Cos(avgphi);
-         y0 = gY + radOffset * TMath::Sin(avgphi) * radXY - loop3d * fHeight; // draw layer beyond
+         Double_t radOffset = fPieSlices[i]->GetRadiusOffset();
+         x0 = fX + radOffset * TMath::Cos(avgphi);
+         y0 = fY + radOffset * TMath::Sin(avgphi) * radXY - loop3d * fHeight; // draw layer beyond
 
          addPoint(0, 0);
 
@@ -412,7 +394,7 @@ void TPie::DrawGhost(TVirtualPad &parent)
          // Loop to draw the arc
          for (Int_t j = 0; j <= ndiv; ++j) {
             Double_t phi = minphi + dphi * j;
-            addPoint(gRadius * TMath::Cos(phi), gRadius * TMath::Sin(phi) * radXY);
+            addPoint(fRadius * TMath::Cos(phi), fRadius * TMath::Sin(phi) * radXY);
          }
 
          addPoint(0, 0);
@@ -426,14 +408,14 @@ void TPie::DrawGhost(TVirtualPad &parent)
          if (loop3d) {
             xx.clear();
             yy.clear();
-            addPoint(gRadius * TMath::Cos(minphi), gRadius * TMath::Sin(minphi) * radXY);
-            addPoint(gRadius * TMath::Cos(minphi), gRadius * TMath::Sin(minphi) * radXY + fHeight);
+            addPoint(fRadius * TMath::Cos(minphi), fRadius * TMath::Sin(minphi) * radXY);
+            addPoint(fRadius * TMath::Cos(minphi), fRadius * TMath::Sin(minphi) * radXY + fHeight);
             parent.PaintPolyLine(xx.size(), xx.data(), yy.data(),
                                  TString::Format("ipiechart_slice%d_bindmin", i).Data());
             xx.clear();
             yy.clear();
-            addPoint(gRadius * TMath::Cos(maxphi), gRadius * TMath::Sin(maxphi) * radXY);
-            addPoint(gRadius * TMath::Cos(maxphi), gRadius * TMath::Sin(maxphi) * radXY + fHeight);
+            addPoint(fRadius * TMath::Cos(maxphi), fRadius * TMath::Sin(maxphi) * radXY);
+            addPoint(fRadius * TMath::Cos(maxphi), fRadius * TMath::Sin(maxphi) * radXY + fHeight);
             parent.PaintPolyLine(xx.size(), xx.data(), yy.data(),
                                  TString::Format("ipiechart_slice%d_bindmax", i).Data());
          }
@@ -451,27 +433,13 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    auto &parent = *gPad;
 
-   Bool_t opaque  = parent.OpaqueMoving();
-
-   if (gCurrent_slice <= -10) {
-      parent.SetCursor(kCross);
-      return;
-   }
+   Bool_t opaque = parent.OpaqueMoving();
 
    MakeSlices();
 
-   static bool isMovingPie = kFALSE;
-   static bool isMovingSlice = kFALSE;
-   static bool isResizing = kFALSE;
-   static bool isRotating = kFALSE;
-   static bool onBorder = kFALSE;
-   bool isRedrawing = kFALSE;
-   static Int_t prev_event = -1;
-   static Int_t oldpx, oldpy;
-
    // Portion of pie considered as "border"
-   const Double_t dr     = gPad->PixeltoX(3);
-   const Double_t minRad = gPad->PixeltoX(10);
+   const Double_t dr     = parent.PixeltoX(3);
+   const Double_t minRad = parent.PixeltoX(10);
 
    // Angular divisions in radial direction
    const Double_t angstep1 = 0.5*TMath::PiOver4();
@@ -484,176 +452,135 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    const Double_t angstep8 = 7.5*TMath::PiOver4();
 
    // XY metric
-   Double_t radXY = 1.;
-   if (fIs3D) {
-      radXY = TMath::Sin(fAngle3D/180.*TMath::Pi());
-   }
+   Double_t radXY = fIs3D ? TMath::Sin(fAngle3D/180.*TMath::Pi()) : 1.;
 
-   Int_t dx, dy;
-   Double_t mdx, mdy;
+   auto inter = dynamic_cast<TPieInteractive *>(parent.Interactive(this));
+
+   auto calcAngle = [this, &parent,px,py]() {
+      Double_t xx = parent.AbsPixeltoX(px);
+      Double_t yy = parent.AbsPixeltoY(py);
+
+      Double_t dx1  = xx - GetX();
+      Double_t dy1  = yy - GetY();
+
+      return TMath::ATan2(dy1, dx1) / TMath::Pi() * 180.;
+   };
+
+   auto info = FindSlice(parent, px, py);
+   if (info.num < 0)
+      info.rad = fRadius * 100; // far away to exclude any slection
 
    switch(event) {
       case kArrowKeyPress:
       case kButton1Down:
+         inter = new TPieInteractive();
+         parent.Interactive(this, inter);
+
          // Current center and radius.
-         gX             = fX;
-         gY             = fY;
-         gRadius        = fRadius;
-         gRadiusOffset  = fPieSlices[gCurrent_slice]->GetRadiusOffset();
-         gAngularOffset = 0;
-         gIsUptSlice    = kTRUE;
+         inter->currentSlice = info.num;
+         inter->angularOffset0 = fAngularOffset;
+         // no break
 
-         prev_event = kButton1Down;
+      case kMouseMotion: {
+         TPieInteractive dummy;
+         if (!inter) inter = &dummy; //
 
-      case kMouseMotion:
-         if (gCurrent_rad>=fRadius-2.*dr && gCurrent_rad<=fRadius+dr
-               && !isMovingPie && !isMovingSlice && !isResizing) {
-            if (gCurrent_ang>=angstep8 || gCurrent_ang<angstep1)
+         if ((info.rad >= fRadius - 2. * dr) && (info.rad <= fRadius + dr)) {
+            if (info.ang >= angstep8 || info.ang < angstep1)
                parent.SetCursor(kRightSide);
-            else if (gCurrent_ang>=angstep1 && gCurrent_ang<angstep2)
+            else if (info.ang >= angstep1 && info.ang < angstep2)
                parent.SetCursor(kTopRight);
-            else if (gCurrent_ang>=angstep2 && gCurrent_ang<angstep3)
+            else if (info.ang >= angstep2 && info.ang < angstep3)
                parent.SetCursor(kTopSide);
-            else if (gCurrent_ang>=angstep3 && gCurrent_ang<angstep4)
+            else if (info.ang >= angstep3 && info.ang < angstep4)
                parent.SetCursor(kTopLeft);
-            else if (gCurrent_ang>=angstep4 && gCurrent_ang<=angstep5)
+            else if (info.ang >= angstep4 && info.ang <= angstep5)
                parent.SetCursor(kLeftSide);
-            else if (gCurrent_ang>=angstep5 && gCurrent_ang<angstep6)
+            else if (info.ang >= angstep5 && info.ang < angstep6)
                parent.SetCursor(kBottomLeft);
-            else if (gCurrent_ang>=angstep6 && gCurrent_ang<angstep7)
+            else if (info.ang >= angstep6 && info.ang < angstep7)
                parent.SetCursor(kBottomSide);
-            else if (gCurrent_ang>=angstep7 && gCurrent_ang<angstep8)
+            else if (info.ang >= angstep7 && info.ang < angstep8)
                parent.SetCursor(kBottomRight);
-            onBorder = kTRUE;
-         } else {
-            onBorder = kFALSE;
-            if (gCurrent_rad>fRadius*.6) {
+            inter->fMode = TPieInteractive::pResizing;
+         } else if ((info.rad > fRadius * 0.6) && (info.rad < fRadius)) {
+            if (inter->currentSlice >= 0) {
                parent.SetCursor(kPointer);
-            } else if (gCurrent_rad<=fRadius*.3) {
-               parent.SetCursor(kHand);
-            } else if (gCurrent_rad<=fRadius*.6 && gCurrent_rad>=fRadius*.3) {
-               parent.SetCursor(kRotate);
-            }
+               inter->fMode = TPieInteractive::pMovingSlice;
+            } else
+               parent.Interactive(); // reject interactive
+         } else if ((info.rad >= fRadius * 0.3) && (info.rad <= fRadius * .6)) {
+            parent.SetCursor(kRotate);
+            inter->fMode = TPieInteractive::pRotating;
+            inter->angle0 = calcAngle();
+         } else if (info.rad <= fRadius * 0.3) {
+            parent.SetCursor(kHand);
+            inter->fMode = TPieInteractive::pMovingPie;
          }
-         oldpx = px;
-         oldpy = py;
-         if (isMovingPie || isMovingSlice)
-            parent.SetCursor(kMove);
+         inter->oldpx = px;
+         inter->oldpy = py;
          break;
+      }
 
       case kArrowKeyRelease:
-      case kButton1Motion:
-         if (!isMovingSlice || !isMovingPie || !isResizing || !isRotating) {
-            if (prev_event==kButton1Down) {
-               if (onBorder) {
-                  isResizing = kTRUE;
-               } else if (gCurrent_rad>=fRadius*.6 && gCurrent_slice>=0) {
-                  isMovingSlice = kTRUE;
-               } else if (gCurrent_rad<=fRadius*.3) {
-                  isMovingPie = kTRUE;
-               } else if (gCurrent_rad<fRadius*.6 && gCurrent_rad>fRadius*.3) {
-                  isRotating = kTRUE;
-               }
-            }
-         }
-
-         dx = px-oldpx;
-         dy = py-oldpy;
-
-         mdx = gPad->PixeltoX(dx);
-         mdy = gPad->PixeltoY(dy);
-
-         if (isMovingPie || isMovingSlice) {
-            parent.SetCursor(kMove);
-            if (isMovingSlice) {
-               Float_t avgphi = fSlices[gCurrent_slice*2+1]*TMath::Pi()/180.;
-
-               gRadiusOffset += TMath::Cos(avgphi)*mdx +TMath::Sin(avgphi)*mdy/radXY;
-               if (gRadiusOffset<0) gRadiusOffset = .0;
-               gIsUptSlice         = kTRUE;
-
-               if (!opaque)
-                  DrawGhost(parent);
-            } else {
-               gX += mdx;
-               gY += mdy;
-
-               if (!opaque)
-                  DrawGhost(parent);
-            }
-         } else if (isResizing) {
-            Float_t dr1 = mdx*TMath::Cos(gCurrent_ang)+mdy*TMath::Sin(gCurrent_ang)/radXY;
-            if (gRadius+dr1>=minRad) {
-               gRadius += dr1;
-            } else {
-               gRadius = minRad;
-            }
-
-            if (!opaque)
-               DrawGhost(parent);
-         } else if (isRotating) {
-            Double_t xx = gPad->AbsPixeltoX(px);
-            Double_t yy = gPad->AbsPixeltoY(py);
-
-            Double_t dx1  = xx-gX;
-            Double_t dy1  = yy-gY;
-
-            Double_t ang = TMath::ATan2(dy1,dx1);
-            if (ang < 0)
-               ang += TMath::TwoPi();
-
-            gAngularOffset = (ang-gCurrent_ang)*180/TMath::Pi();
-
-            if (!opaque)
-               DrawGhost(parent);
-         }
-
-         oldpx = px;
-         oldpy = py;
-
-         if ( ((isMovingPie || isMovingSlice || isRotating) && opaque) ||
-               (isResizing && gPad->OpaqueResizing()) ) {
-            isRedrawing = kTRUE;
-            // event = kButton1Up;
-            // intentionally no break to continue with kButton1Up handling
-         }
-         else break;
-
-      case kButton1Up:
-         if (!isRedrawing) {
-            prev_event = kButton1Up;
-            gIsUptSlice = kFALSE;
-         }
-
-         if (gROOT->IsEscaped()) {
-            gROOT->SetEscape(kFALSE);
-            gIsUptSlice = kFALSE;
+      case kButton1Motion: {
+         if (!inter)
             break;
-         }
 
-         fX      = gX;
-         fY      = gY;
-         fRadius = gRadius;
-         fPieSlices[gCurrent_slice]->SetRadiusOffset(gRadiusOffset);
-         SetAngularOffset(fAngularOffset+gAngularOffset);
+         Int_t dx = px - inter->oldpx;
+         Int_t dy = py - inter->oldpy;
 
-         if (isRedrawing && (isMovingPie || isMovingSlice))
+         Double_t mdx = parent.PixeltoX(dx);
+         Double_t mdy = parent.PixeltoY(dy);
+
+         if (inter->fMode == TPieInteractive::pMovingPie) {
             parent.SetCursor(kMove);
+            fX += mdx;
+            fY += mdy;
+         } else if (inter->fMode == TPieInteractive::pMovingSlice) {
+            parent.SetCursor(kMove);
+            Float_t avgphi = fSlices[inter->currentSlice*2+1] * TMath::Pi()/180.;
 
-         if (isMovingPie)   isMovingPie   = kFALSE;
-         if (isMovingSlice) isMovingSlice = kFALSE;
-         if (isResizing)    isResizing    = kFALSE;
-         if (isRotating)    {
-            isRotating = kFALSE;
-            // this is important mainly when OpaqueMoving == kTRUE
-            gCurrent_ang += gAngularOffset/180.*TMath::Pi();
+            Double_t offset = fPieSlices[inter->currentSlice]->GetRadiusOffset() + TMath::Cos(avgphi)*mdx + TMath::Sin(avgphi)*mdy/radXY;
+            if (offset < 0)
+               offset = 0;
+            fPieSlices[inter->currentSlice]->SetRadiusOffset(offset);
+         } else if (inter->fMode == TPieInteractive::pResizing) {
+            Float_t dr1 = mdx*TMath::Cos(info.ang) + mdy*TMath::Sin(info.ang)/radXY;
+            fRadius = TMath::Max(fRadius + dr1, minRad);
+         } else if (inter->fMode == TPieInteractive::pRotating) {
+            Double_t angle1 = calcAngle();
+            SetAngularOffset(GetAngularOffset() + angle1 - inter->angle0);
+            inter->angle0 = angle1;
          }
 
-         parent.Modified(kTRUE);
+         if (!opaque)
+            DrawGhost(parent);
+         else
+            parent.Modified();
 
-         gIsUptSlice = kFALSE;
+         parent.UpdateAsync();
+
+         inter->oldpx = px;
+         inter->oldpy = py;
 
          break;
+      }
+
+      case kButton1Up:
+         if (gROOT->IsEscaped()) {
+            gROOT->SetEscape(kFALSE);
+            fAngularOffset = inter->angularOffset0;
+            parent.Modified();
+         } else if (!opaque) {
+            parent.Modified();
+         }
+
+         parent.Interactive(); // remove interactive object
+         parent.UpdateAsync();
+
+         break;
+
       case kButton1Locate:
 
          ExecuteEvent(kButton1Down, px, py);
@@ -768,8 +695,6 @@ TPieSlice* TPie::GetSlice(Int_t id)
 
 void TPie::Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r)
 {
-   gIsUptSlice = kFALSE;
-
    fAngularOffset = ao;
    fX             = x;
    fY             = y;
@@ -1412,9 +1337,11 @@ void TPie::MakeSlices(Bool_t force)
       fSum += fPieSlices[i]->GetValue();
    }
 
-   if (fSum<=.0) return;
+   if (fSum<=.0)
+      return;
 
-   if (!fSlices) fSlices = new Float_t[2*fNvals+1];
+   if (!fSlices)
+      fSlices = new Float_t[2*fNvals+1];
 
    // Compute the slices size and position (2 angles for each slice)
    fSlices[0] = fAngularOffset;
