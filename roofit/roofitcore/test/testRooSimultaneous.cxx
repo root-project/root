@@ -9,6 +9,7 @@
 #include <RooConstVar.h>
 #include <RooDataSet.h>
 #include <RooExponential.h>
+#include <RooExtendPdf.h>
 #include <RooFitResult.h>
 #include <RooGaussian.h>
 #include <RooGenericPdf.h>
@@ -1010,3 +1011,78 @@ TEST(RooSimultaneous, ParameterIndexTopLevelNLL)
       EXPECT_THAT(nll->getVal(), RelativeNear(refNll1->getVal(), 1e-10)) << backend.name() << ", index 1";
    }
 }
+
+/// GitHub issue #23342.
+/// When calling expectedEvents() on a flattened nested RooSimultaneous with
+/// the constituent categories of the super-category (e.g. {analysis, region}),
+/// it should return the total expected events sum, just like when passing the
+/// super-category itself.
+TEST(RooSimultaneous, NestedSimultaneousExpectedEventsWithConstituentCategories)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x("x", "x", -10, 10);
+   RooRealVar mean("mean", "mean", 0);
+   RooRealVar sigma("sigma", "sigma", 1);
+   RooGaussian shape("shape", "shape", x, mean, sigma);
+
+   RooRealVar nA_SR("nA_SR", "nA_SR", 10);
+   RooRealVar nA_CR("nA_CR", "nA_CR", 50);
+   RooRealVar nB("nB", "nB", 40);
+
+   RooExtendPdf pdf_A_SR("pdf_A_SR", "pdf_A_SR", shape, nA_SR);
+   RooExtendPdf pdf_A_CR("pdf_A_CR", "pdf_A_CR", shape, nA_CR);
+   RooExtendPdf pdf_B("pdf_B", "pdf_B", shape, nB);
+
+   RooCategory region("region", "region", {{"SR", 0}, {"CR", 1}});
+   RooCategory analysis("analysis", "analysis", {{"A", 0}, {"B", 1}});
+
+   RooSimultaneous anaA("anaA", "anaA", {{"SR", &pdf_A_SR}, {"CR", &pdf_A_CR}}, region);
+   RooSimultaneous comb("comb", "comb", {{"A", &anaA}, {"B", &pdf_B}}, analysis);
+
+   // The total expected events when passing the super-category:
+   RooArgSet nsetSuper(x, comb.indexCat());
+   const double expectedWithSuperCat = comb.expectedEvents(&nsetSuper);
+
+   // When passing the constituent categories {analysis, region}, it should also return
+   // the total sum rather than just the current state's yield:
+   RooArgSet nsetConstituent(x, analysis, region);
+   const double expectedWithConstituentCats = comb.expectedEvents(&nsetConstituent);
+
+   EXPECT_DOUBLE_EQ(expectedWithConstituentCats, 140.0);
+   EXPECT_DOUBLE_EQ(expectedWithConstituentCats, expectedWithSuperCat);
+}
+
+/// GitHub issue #23342.
+/// Check that a warning is emitted when an extendable component p.d.f. does not depend
+/// on all index categories and is replicated across multiple super-category states during
+/// flattening in initialize().
+TEST(RooSimultaneous, NestedSimultaneousExtendedReplicationWarning)
+{
+   RooRealVar x("x", "x", -10, 10);
+   RooRealVar mean("mean", "mean", 0);
+   RooRealVar sigma("sigma", "sigma", 1);
+   RooGaussian shape("shape", "shape", x, mean, sigma);
+
+   RooRealVar nA_SR("nA_SR", "nA_SR", 10);
+   RooRealVar nA_CR("nA_CR", "nA_CR", 50);
+   RooRealVar nB("nB", "nB", 40);
+
+   RooExtendPdf pdf_A_SR("pdf_A_SR", "pdf_A_SR", shape, nA_SR);
+   RooExtendPdf pdf_A_CR("pdf_A_CR", "pdf_A_CR", shape, nA_CR);
+   RooExtendPdf pdf_B("pdf_B", "pdf_B", shape, nB);
+
+   RooCategory region("region", "region", {{"SR", 0}, {"CR", 1}});
+   RooCategory analysis("analysis", "analysis", {{"A", 0}, {"B", 1}});
+
+   RooSimultaneous anaA("anaA", "anaA", {{"SR", &pdf_A_SR}, {"CR", &pdf_A_CR}}, region);
+
+   testing::internal::CaptureStdout();
+   RooSimultaneous comb("comb", "comb", {{"A", &anaA}, {"B", &pdf_B}}, analysis);
+   std::string output = testing::internal::GetCapturedStdout();
+
+   EXPECT_NE(output.find("WARNING"), std::string::npos);
+   EXPECT_NE(output.find("pdf_B"), std::string::npos);
+   EXPECT_NE(output.find("can be extended and does not depend on category"), std::string::npos);
+}
+
