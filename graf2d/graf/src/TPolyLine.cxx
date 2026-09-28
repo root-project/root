@@ -15,8 +15,6 @@
 #include "TBuffer.h"
 #include "TMath.h"
 #include "TVirtualPad.h"
-#include "TVirtualPadPainter.h"
-#include "TAttMarker.h"
 #include "TPolyLine.h"
 
 
@@ -231,6 +229,12 @@ TPolyLine *TPolyLine::DrawPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *
    return newpolyline;
 }
 
+class TPolyLineInteractive : public TVirtualPad::TInteractive {
+   public:
+   Int_t sdx = 0, sdy = 0, ipoint = 0;
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
@@ -250,21 +254,18 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    constexpr Int_t kMaxDiff = 10;
    Bool_t opaque  = parent.OpaqueMoving();
-   static Int_t sdx, sdy, ipoint;
-   static Bool_t first_move;
 
    Int_t np = Size();
    Bool_t is_last_same = (np > 1) && (fX[0] == fX[np-1]) && (fY[0] == fY[np-1]);
    if (is_last_same)
       np--;
 
-   auto paint_hollow = [this,&parent,is_last_same] () {
-      auto pp = parent.GetPainter();
-      pp->SetAttLine({1,1,GetLineWidth()});
-      Double_t *x = fX, *y = fY;
+   auto paint_hollow = [this, &parent] () {
+      TAttLine::ModifyOn(parent);
       if (TestBit(kPolyLineNDC)) {
-         pp->DrawPolyLineNDC(Size(), x, y);
+         parent.PaintPolyLineNDC(Size(), fX, fY, "ipolyline");
       } else {
+         Double_t *x = fX, *y = fY;
          std::vector<Double_t> xx, yy;
          if (parent.GetLogx()) {
             xx.resize(Size());
@@ -278,10 +279,7 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                yy[iy] = parent.YtoPad(y[iy]);
             y = yy.data();
          }
-         pp->DrawPolyLine(Size(), x, y);
-
-         pp->SetAttMarker({1,25,1});
-         pp->DrawPolyMarker(is_last_same ? Size()-1 : Size(), x, y);
+         parent.PaintPolyLine(Size(), x, y, "ipolyline");
       }
    };
 
@@ -309,44 +307,49 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
    };
 
+   auto inter = dynamic_cast<TPolyLineInteractive *>(parent.Interactive(this));
+
    switch (event) {
 
    case kArrowKeyPress:
    case kButton1Down:
+      inter = new TPolyLineInteractive;
+      parent.Interactive(this, inter);
       // No break !!!
    case kMouseMotion: {
-
-      Int_t minDiff = kMaxDiff;
-      ipoint = -1;
+      Int_t minDiff = kMaxDiff, ipoint = -1;
       for (Int_t i = 0; i < np; i++) {
          Int_t pxp, pyp;
          get_point(i, pxp, pyp);
-         if (i == 0) {
-            sdx = pxp - px;
-            sdy = pyp - py;
+         if ((i == 0) && inter) {
+            inter->sdx = pxp - px;
+            inter->sdy = pyp - py;
          }
          Int_t d = TMath::Abs(pxp - px) + TMath::Abs(pyp - py);
          if (d < minDiff) {
             ipoint = i;
             minDiff = d;
-            sdx = pxp - px;
-            sdy = pyp - py;
+            if (inter) {
+               inter->sdx = pxp - px;
+               inter->sdy = pyp - py;
+            }
          }
       }
-      first_move = kTRUE;
       if (ipoint < 0)
          parent.SetCursor(kMove);
       else
          parent.SetCursor(kHand);
+      if (inter)
+         inter->ipoint = ipoint;
       break;
    }
 
    case kButton1Motion:
-      if (!opaque && !first_move)
-         paint_hollow();
+      if (!inter)
+         break;
 
-      if (ipoint < 0) {
-         Int_t pxp0{}, pyp0{}, pxp{}, pyp{};
+      if (inter->ipoint < 0) {
+         Int_t pxp0 = 0, pyp0 = 0, pxp = 0, pyp = 0;
          // move all points
          for (Int_t i = 0; i < np; i++) {
             get_point(i, pxp, pyp);
@@ -354,27 +357,30 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                pxp0 = pxp;
                pyp0 = pyp;
             }
-            set_point(i, px + sdx + pxp - pxp0, py + sdy + pyp - pyp0);
+            set_point(i, px + inter->sdx + pxp - pxp0, py + inter->sdy + pyp - pyp0);
          }
       } else {
          // move only selected point
-         set_point(ipoint, px + sdx, py + sdy);
+         set_point(inter->ipoint, px + inter->sdx, py + inter->sdy);
       }
       if (is_last_same) {
          fX[np] = fX[0];
          fY[np] = fY[0];
       }
 
-      first_move = kFALSE;
       if (!opaque)
          paint_hollow();
       else
-         parent.ModifiedUpdate();
+         parent.Modified();
+      parent.UpdateAsync();
       break;
 
    case kButton1Up:
-      if (!opaque)
-         parent.ModifiedUpdate();
+      if (!opaque) {
+         parent.Modified();
+         parent.UpdateAsync();
+      }
+      parent.Interactive(); // delete interactive object
       break;
    }
 }
