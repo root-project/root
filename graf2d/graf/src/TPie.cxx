@@ -610,7 +610,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the label of the entry number "i".
 
-const char* TPie::GetEntryLabel(Int_t i)
+const char* TPie::GetEntryLabel(Int_t i) const
 {
    return GetSlice(i)->GetTitle();
 }
@@ -618,7 +618,7 @@ const char* TPie::GetEntryLabel(Int_t i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the color of the slice number "i".
 
-Int_t TPie::GetEntryFillColor(Int_t i)
+Int_t TPie::GetEntryFillColor(Int_t i) const
 {
    return GetSlice(i)->GetFillColor();
 }
@@ -626,7 +626,7 @@ Int_t TPie::GetEntryFillColor(Int_t i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the style use to fill the slice number "i".
 
-Int_t TPie::GetEntryFillStyle(Int_t i)
+Int_t TPie::GetEntryFillStyle(Int_t i) const
 {
    return GetSlice(i)->GetFillStyle();
 }
@@ -634,7 +634,7 @@ Int_t TPie::GetEntryFillStyle(Int_t i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the line color used to outline thi "i" slice
 
-Int_t TPie::GetEntryLineColor(Int_t i)
+Int_t TPie::GetEntryLineColor(Int_t i) const
 {
    return GetSlice(i)->GetLineColor();
 }
@@ -642,7 +642,7 @@ Int_t TPie::GetEntryLineColor(Int_t i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the style used to outline thi "i" slice
 
-Int_t TPie::GetEntryLineStyle(Int_t i)
+Int_t TPie::GetEntryLineStyle(Int_t i) const
 {
    return GetSlice(i)->GetLineStyle();
 }
@@ -650,7 +650,7 @@ Int_t TPie::GetEntryLineStyle(Int_t i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the line width used to outline thi "i" slice
 
-Int_t TPie::GetEntryLineWidth(Int_t i)
+Int_t TPie::GetEntryLineWidth(Int_t i) const
 {
    return GetSlice(i)->GetLineWidth();
 }
@@ -658,7 +658,7 @@ Int_t TPie::GetEntryLineWidth(Int_t i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the radial offset's value for the slice number "i".
 
-Double_t TPie::GetEntryRadiusOffset(Int_t i)
+Double_t TPie::GetEntryRadiusOffset(Int_t i) const
 {
    return GetSlice(i)->GetRadiusOffset();
 }
@@ -666,27 +666,39 @@ Double_t TPie::GetEntryRadiusOffset(Int_t i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the value associated with the slice number "i".
 
-Double_t TPie::GetEntryVal(Int_t i)
+Double_t TPie::GetEntryVal(Int_t i) const
 {
    return GetSlice(i)->GetValue();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return sum of all entries.
+/// Absolute value for each entry will be used
+
+Double_t TPie::GetSumOfEntriesValues() const
+{
+   Double_t sum = 0;
+   for (Int_t i = 0; i < fNvals; ++i)
+      sum += TMath::Abs(fPieSlices[i]->GetValue());
+   return sum;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// If created before by Paint option or by MakeLegend method return
 /// the pointer to the legend, otherwise return 0;
 
-TLegend* TPie::GetLegend()
+TLegend* TPie::GetLegend() const
 {
    return fLegend;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the reference to the slice of index 'id'. There are no controls
-/// of memory corruption, be carefull.
+/// Return the reference to the slice of index 'id'.
 
-TPieSlice* TPie::GetSlice(Int_t id)
+TPieSlice* TPie::GetSlice(Int_t id) const
 {
-   return fPieSlices[id];
+   return (id >= 0) && (id < fNvals) ? fPieSlices[id] : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -700,7 +712,6 @@ void TPie::Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r)
    fY             = y;
    fRadius        = r;
    fNvals         = np;
-   fSum           = 0.;
    fSlices        = nullptr;
    fLegend        = nullptr;
    fHeight        = 0.08;
@@ -933,6 +944,9 @@ void TPie::Paint(Option_t *option)
    textlabel.SetTextSize(GetTextSize());
    textlabel.SetTextColor(GetTextColor());
 
+   Double_t sum = GetSumOfEntriesValues();
+   if (sum <= 0) sum = 1.; // just to avoid zero division
+
    // Loop to place the labels.
    for (Int_t i=0;i<fNvals;++i) {
       Float_t aphi = fSlices[2*i+1]*TMath::Pi()/180.;
@@ -940,14 +954,13 @@ void TPie::Paint(Option_t *option)
 
       Float_t label_off = fLabelsOffset;
 
-
       // Paint the text in the pad
       TString tmptxt  = fLabelFormat;
 
       tmptxt.ReplaceAll("%txt",fPieSlices[i]->GetTitle());
       tmptxt.ReplaceAll("%val",TString::Format(fValueFormat.Data(),fPieSlices[i]->GetValue()));
-      tmptxt.ReplaceAll("%frac",TString::Format(fFractionFormat.Data(),fPieSlices[i]->GetValue()/fSum));
-      tmptxt.ReplaceAll("%perc",TString::Format(TString::Format("%s %s",fPercentFormat.Data(),"%s").Data(),(fPieSlices[i]->GetValue()/fSum)*100,"%"));
+      tmptxt.ReplaceAll("%frac",TString::Format(fFractionFormat.Data(),fPieSlices[i]->GetValue()/sum));
+      tmptxt.ReplaceAll("%perc",TString::Format(TString::Format("%s %s",fPercentFormat.Data(),"%s").Data(),(fPieSlices[i]->GetValue()/sum)*100,"%"));
 
       textlabel.SetTitle(tmptxt.Data());
       Double_t h = textlabel.GetYsize();
@@ -1324,20 +1337,12 @@ void TPie::SetY(Double_t y)
 
 void TPie::MakeSlices(Bool_t force)
 {
-   if (fSlices && !force) return;
+   if (fSlices && !force)
+      return;
 
-   fSum = .0;
+   Double_t sum = GetSumOfEntriesValues();
 
-   for (Int_t i=0;i<fNvals;++i) {
-      if (fPieSlices[i]->GetValue()<0) {
-         Warning("MakeSlices",
-                 "Negative values in TPie, absolute value will be used");
-         fPieSlices[i]->SetValue(-1.*fPieSlices[i]->GetValue());
-      }
-      fSum += fPieSlices[i]->GetValue();
-   }
-
-   if (fSum<=.0)
+   if (sum <= 0)
       return;
 
    if (!fSlices)
@@ -1346,7 +1351,7 @@ void TPie::MakeSlices(Bool_t force)
    // Compute the slices size and position (2 angles for each slice)
    fSlices[0] = fAngularOffset;
    for (Int_t i=0;i<fNvals;++i) {
-      Float_t dphi   = fPieSlices[i]->GetValue()/fSum*360.;
+      Float_t dphi   = TMath::Abs(fPieSlices[i]->GetValue())/sum*360.;
       fSlices[2*i+1] = fSlices[2*i]+dphi/2.;
       fSlices[2*i+2] = fSlices[2*i]+dphi;
    }

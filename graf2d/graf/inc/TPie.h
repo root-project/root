@@ -36,7 +36,6 @@ private:
 
    SliceInfo_t FindSlice(TVirtualPad &, Int_t, Int_t);
 
-   Float_t  fSum;             ///<!Sum for the slice values
    Float_t *fSlices{nullptr}; ///<!Subdivisions of the slices
    TLegend *fLegend{nullptr}; ///<!Legend for this piechart
 
@@ -69,28 +68,29 @@ public:
    Int_t          DistancetoSlice(Int_t,Int_t);
    void           Draw(Option_t *option="l") override; // *MENU*
    void           ExecuteEvent(Int_t,Int_t,Int_t) override;
-   Float_t        GetAngle3D() { return fAngle3D; }
-   Double_t       GetAngularOffset() { return fAngularOffset; }
-   Int_t          GetEntryFillColor(Int_t);
-   Int_t          GetEntryFillStyle(Int_t);
-   const char*    GetEntryLabel(Int_t);
-   Int_t          GetEntryLineColor(Int_t);
-   Int_t          GetEntryLineStyle(Int_t);
-   Int_t          GetEntryLineWidth(Int_t);
-   Double_t       GetEntryRadiusOffset(Int_t);
-   Double_t       GetEntryVal(Int_t);
-   const char    *GetFractionFormat() { return fFractionFormat.Data(); }
-   Double_t       GetHeight() { return fHeight; }
-   const char    *GetLabelFormat() { return fLabelFormat.Data(); }
-   Float_t        GetLabelsOffset() { return fLabelsOffset; }
-   TLegend       *GetLegend();
-   Int_t          GetEntries() { return fNvals; }
-   const char    *GetPercentFormat() { return fPercentFormat.Data(); }
-   Double_t       GetRadius() { return fRadius;}
-   TPieSlice     *GetSlice(Int_t i);
-   const char    *GetValueFormat() { return fValueFormat.Data(); }
-   Double_t       GetX() { return fX; }
-   Double_t       GetY() { return fY; }
+   Float_t        GetAngle3D() const { return fAngle3D; }
+   Double_t       GetAngularOffset() const { return fAngularOffset; }
+   Int_t          GetEntryFillColor(Int_t) const;
+   Int_t          GetEntryFillStyle(Int_t) const;
+   const char*    GetEntryLabel(Int_t) const;
+   Int_t          GetEntryLineColor(Int_t) const;
+   Int_t          GetEntryLineStyle(Int_t) const;
+   Int_t          GetEntryLineWidth(Int_t) const;
+   Double_t       GetEntryRadiusOffset(Int_t) const;
+   Double_t       GetEntryVal(Int_t) const;
+   Double_t       GetSumOfEntriesValues() const;
+   const char    *GetFractionFormat() const { return fFractionFormat.Data(); }
+   Double_t       GetHeight() const { return fHeight; }
+   const char    *GetLabelFormat() const { return fLabelFormat.Data(); }
+   Float_t        GetLabelsOffset() const { return fLabelsOffset; }
+   TLegend       *GetLegend() const;
+   Int_t          GetEntries() const { return fNvals; }
+   const char    *GetPercentFormat() const { return fPercentFormat.Data(); }
+   Double_t       GetRadius() const { return fRadius;}
+   TPieSlice     *GetSlice(Int_t i) const;
+   const char    *GetValueFormat() const { return fValueFormat.Data(); }
+   Double_t       GetX() const { return fX; }
+   Double_t       GetY() const { return fY; }
    TLegend       *MakeLegend(Double_t x1=.65,Double_t y1=.65,Double_t x2=.95, Double_t y2=.95, const char *leg_header="");
    void           MakeSlices(Bool_t force=kFALSE);
    void           Paint(Option_t *) override;
