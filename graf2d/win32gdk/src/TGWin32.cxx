@@ -23,7 +23,6 @@ by Olivier Couet (package X11INT).
 */
 #define ROOT_TGWin32cxx
 #include "Windows4Root.h"
-#include <windows.h>
 #include "gdk/gdk.h"
 #include "gdk/win32/gdkwin32.h"
 #include "TGWin32.h"
