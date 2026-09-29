@@ -783,6 +783,7 @@ size_t SizeOf(ConstDeclRef DRef) {
 
   if (const auto* RD = dyn_cast<RecordDecl>(unwrap<Decl>(DRef))) {
     ASTContext& Context = RD->getASTContext();
+    compat::SynthesizingCodeRAII RAII(&getInterp());
     const ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
     return INTEROP_RETURN(Layout.getSize().getQuantity());
   }
@@ -1358,12 +1359,12 @@ bool HasReachableUsingDirective(const clang::DeclContext* DC) {
 
 DeclRef GetNamed(const std::string& name, ConstDeclRef parent /*= nullptr*/) {
   INTEROP_TRACE(name, parent);
-  clang::DeclContext* Within = 0;
+  clang::DeclContext* Within = nullptr;
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   if (parent) {
     auto* D = unwrap<clang::Decl>(GetUnderlyingScope(parent));
     Within = llvm::dyn_cast<clang::DeclContext>(D);
   }
-  compat::SynthesizingCodeRAII RAII(&getInterp());
   if (Within)
     Within->getPrimaryContext()->buildLookup();
 
@@ -1465,6 +1466,7 @@ size_t GetNumBases(ConstDeclRef DRef) {
       compat::InstantiateClassTemplateSpecialization(
           getInterp(), const_cast<ClassTemplateSpecializationDecl*>(CTSD));
   if (const auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D)) {
+    compat::SynthesizingCodeRAII RAII(&getInterp());
     if (CXXRD->hasDefinition())
       return INTEROP_RETURN(CXXRD->getNumBases());
   }
@@ -1476,6 +1478,7 @@ DeclRef GetBaseClass(ConstDeclRef DRef, size_t ibase) {
   INTEROP_TRACE(DRef, ibase);
   const auto* D = unwrap<Decl>(DRef);
   const auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D);
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   if (!CXXRD || CXXRD->getNumBases() <= ibase)
     return INTEROP_RETURN(nullptr);
 
@@ -1640,6 +1643,7 @@ static void GetClassDecls(ConstDeclRef DRef, std::vector<HandleType>& methods) {
   // operation on the AST, logically const for the caller.
   Decl* D = const_cast<Decl*>(unwrap<clang::Decl>(DRef));
 
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   if (auto* TD = dyn_cast<TypedefNameDecl>(D)) {
     DeclRef Scope = GetScopeFromType(TD->getUnderlyingType());
     D = unwrap<clang::Decl>(Scope);
@@ -1649,7 +1653,6 @@ static void GetClassDecls(ConstDeclRef DRef, std::vector<HandleType>& methods) {
     return;
 
   auto* CXXRD = dyn_cast<CXXRecordDecl>(D);
-  compat::SynthesizingCodeRAII RAII(&getInterp());
   if (auto* CTSD = dyn_cast<ClassTemplateSpecializationDecl>(CXXRD)) {
     QualType QT = compat::GetTypeFromDecl(CTSD);
     if (!getSema().isCompleteType(CTSD->getLocation(), QT))
@@ -3417,6 +3420,9 @@ void GetEnumConstantDatamembers(ConstDeclRef DRef,
                                 std::vector<DeclRef>& datamembers,
                                 bool include_enum_class) {
   INTEROP_TRACE(DRef, INTEROP_OUT(datamembers), include_enum_class);
+  // Iterating the enumerators may lazily deserialize them (PCH/modules),
+  // which requires an open transaction.
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   std::vector<DeclRef> EDs;
   GetClassDecls<EnumDecl>(DRef, EDs);
   for (DeclRef i : EDs) {
@@ -3454,6 +3460,7 @@ DeclRef LookupDatamember(const std::string& name, ConstDeclRef parent) {
 bool IsLambdaClass(ConstTypeRef TyRef) {
   INTEROP_TRACE(TyRef);
   QualType QT = QualType::getFromOpaquePtr(TyRef.data);
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   if (auto* CXXRD = QT->getAsCXXRecordDecl()) {
     return INTEROP_RETURN(CXXRD->isLambda());
   }
