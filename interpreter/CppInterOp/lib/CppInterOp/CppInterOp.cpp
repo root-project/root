@@ -1050,6 +1050,9 @@ static std::string GetCompleteNameImpl(ConstDeclRef DRef, bool qualified) {
         Policy.FullyQualifiedName = true;
         Policy.Suppress_Elab = true;
         Policy.SuppressDefaultTemplateArgs = true;
+        // no literal suffixes on non-type arguments ("array<unsigned int,3>",
+        // not "...3UL>"), matching the names ROOT and cppyy always exposed
+        Policy.AlwaysIncludeTypeForTemplateArgument = false;
         llvm::raw_string_ostream name_stream(type_name);
         TD->getNameForDiagnostic(name_stream, Policy, /*Qualified=*/false);
         name_stream.flush();
