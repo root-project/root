@@ -64,7 +64,48 @@ public:
 class Super : public Pad, public Frame {
 public:
    Super() = default;
-   ClassDef(Super, 1)
+   ClassDefOverride(Super, 1)
+};
+
+class Counter {
+public:
+   Counter() = default;
+   virtual ~Counter() = default;
+   int fN = 0;
+   ClassDef(Counter, 1)
+};
+
+class FrameInheritedCounter : public Counter {
+public:
+   FrameInheritedCounter() = default;
+   ~FrameInheritedCounter() override { delete[] fHits; }
+   FrameInheritedCounter(const FrameInheritedCounter &o) : Counter() { Set(o.fN, o.fHits); }
+   FrameInheritedCounter &operator=(const FrameInheritedCounter &o)
+   {
+      if (this != &o)
+         Set(o.fN, o.fHits);
+      return *this;
+   }
+   void Set(int n, const Hit *hits)
+   {
+      delete[] fHits;
+      fHits = nullptr;
+      fN = 0;
+      if (n > 0) {
+         fHits = new Hit[n];
+         for (int i = 0; i < n; ++i)
+            fHits[i] = hits[i];
+         fN = n;
+      }
+   }
+   Hit *fHits = nullptr; //[fN]
+   ClassDefOverride(FrameInheritedCounter, 1)
+};
+
+class SuperInheritedCounter : public Pad, public FrameInheritedCounter {
+public:
+   SuperInheritedCounter() = default;
+   ClassDefOverride(SuperInheritedCounter, 1)
 };
 
 } // namespace StreamerLoopMemberwise
