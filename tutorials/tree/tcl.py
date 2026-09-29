@@ -1,0 +1,279 @@
+## \file
+## \ingroup tutorial_tree
+## \notebook
+##
+##
+## How to write a TClonesArray object into a TTree object.
+##
+##
+## The following tests can be run before.
+## ~~~
+## IPython [1]: %run tcl.py        # no split  a.k.a. tcl(0)
+## IPython [2]: tcl(1)             # split level 1  
+## ~~~
+##
+##
+## \macro_code
+##
+## \author Rene Brun
+## \translator P. P.
+
+
+import ROOT
+import ctypes
+from array import array
+
+
+
+# standard library
+from ROOT import std
+from ROOT.std import (
+                       make_shared,
+                       unique_ptr,
+                       )
+
+# classes
+from ROOT import (
+                   TCanvas,
+                   TH1F,
+                   TGraph,
+                   TLatex,
+                   TBenchmark,
+                   TClonesArray,
+                   TFile,
+                   TH2,
+                   TH2F,
+                   TLine,
+                   TRandom,
+                   TTree,
+                   )
+
+# maths
+from ROOT import (
+                   sin,
+                   cos,
+                   sqrt,
+                   )
+
+# types
+from ROOT import (
+                   Double_t,
+                   Bool_t,
+                   Float_t,
+                   Int_t,
+                   nullptr,
+                   )
+#
+from ctypes import c_double
+
+# utils
+def to_c( ls ):
+   return (c_double * len(ls) )( * ls )
+def printf(string, *args):
+   print( string % args, end="")
+def sprintf(buffer, string, *args):
+   buffer = string % args 
+   return buffer
+
+# constants
+from ROOT import (
+                   kBlue,
+                   kRed,
+                   kGreen,
+                   )
+
+# globals
+from ROOT import (
+                   gStyle,
+                   gPad,
+                   gRandom,
+                   gBenchmark,
+                   gROOT,
+                   )
+
+
+
+
+# void
+def tclwrite(split : Int_t) :
+
+   """
+   Generate a Tree object with a TClonesArray object.
+
+   """
+
+   #
+   # The array can be split or not.
+   global f
+   f = TFile("tcl.root", "recreate")
+   f.SetCompressionLevel(1)  # try level 2 also
+
+   #
+   global T
+   T = TTree("T", "test tcl")
+
+   #
+   global arr
+   arr = TClonesArray("TLine")  # TClonesArray
+
+
+   # This is redundant and confusing. But the original .C version
+   # has it.
+   ar  = arr # TClonesArray * 
+   # "ar" and "arr" are the same object.
+
+   
+   #
+   T.Branch("tcl", arr, 256000, split)
+
+
+   # By default a TClonesArray is created with its BypassStreamer bit set.
+   # However, because TLine has a custom Streamer, this bit was reset
+   # by TTree::Branch above. We set again this bit because the current
+   # version of TLine uses the automatic Streamer.
+   # BypassingStreamer saves space and time.
+   #
+   arr.BypassStreamer()
+
+
+
+   #
+   #for (Int_t ev = 0; ev < 10000; ev++) {
+   #for ev in range(0, 10000, 1): # error 
+   #for ev in range(0, 40, 1): # ok 
+   #for ev in range(0, 60, 1): # ok 
+   #for ev in range(0, 1000, 1): # ok for nlines 2, error for rndm nlines.
+   for ev in range(0, 100, 1): # ok for nlines 2, oks for rndm lines.
+      #
+      #ar.Clear()
+      arr.Clear()
+      #
+      nlines = Int_t( gRandom.Gaus(50, 10) )  # Int_t
+      if (nlines < 0)  :
+         nlines = 1
+         
+      #
+      #for (Int_t i = 0; i < nlines; i++) {
+      for i in range(0, nlines, 1):
+      #for i in range(0, 2, 1):
+      #for i in range(0, 3, 1):
+         #
+         x1 = gRandom.Rndm()  # Float_t
+         y1 = gRandom.Rndm()  # Float_t
+         x2 = gRandom.Rndm()  # Float_t
+         y2 = gRandom.Rndm()  # Float_t
+
+         #
+         # Inherited from C++:
+         # new_line = TLine(x1, y1, x2, y2) # (ar[i]) 
+         # ar[i] = new_line 
+         #
+         # This gives error. No pythonizatino implemented yet.
+         # Doing it manually.
+         # ar[i] = TLine(x1, y1, x2, y2) # (ar[i])  # error
+         #
+         arr.ConstructedAt(i) 
+         #ar[i] # After using the method `.ConstructedAt(i)`,
+         #      # it is possible to access and modify the item.
+         #print( "i:", i )
+         arr[i].SetX1( x1 ) 
+         arr[i].SetY1( y1 ) 
+         arr[i].SetX2( x2 ) 
+         arr[i].SetY2( y2 ) 
+         ##ar[i].__assign__( TLine(x1, y1, x2, y2) ) # error
+         #
+         # Note :
+         #        Placement new.
+         #        Efficient, especially for cases where we need to create
+         #        and destruct objects repeatedly.
+         #            new ( array[i] ) TObject( ... );
+         #        Regular new.
+         #        Inefficient for constant creation and destruction
+         #        of objects. 
+         #            array[i] = new  TObject( ... );
+         #
+         #        Python, doesnt have an equivalent concetp.
+         #        So, creating and assigning in one line
+         #        would be the shortest approach.
+
+         
+      #
+      T.Fill()
+      
+   #
+   T.Print()
+   T.Write()
+
+   #
+   f.Close()
+   
+
+# void
+def tclread() :
+
+   """
+   Read file generated by "tclwrite" function.
+
+   """
+
+
+   #
+   global f, T
+   f = TFile("tcl.root")  # TFile
+   T = f.Get("T")  # (TTree *)
+   #
+   # Histogram of center of lines.
+   global h2
+   h2 = TH2F("h2", "center of lines", 40, 0, 1, 40, 0, 1)  # TH2F
+   
+
+   #
+   global arr
+   arr = TClonesArray("TLine")  # TClonesArray
+   #
+   T.GetBranch("tcl").SetAutoDelete(False)
+   T.SetBranchAddress("tcl", arr)
+
+
+   #
+   # Loop on all entries.
+   #
+   nentries = T.GetEntries()  # Long64_t
+   #for (Long64_t ev = 0; ev < nentries; ev++) {
+   for ev in range(0, nentries, 1):
+      #
+      arr.Clear()
+      T.GetEntry(ev)
+      #
+      nlines = arr.GetEntriesFast()  # Int_t
+      #for (Int_t i = 0; i < nlines; i++) {
+      for i in range(0, nlines, 1):
+         #
+         line = arr.At(i)  # (TLine *)
+         #
+         h2.Fill(
+                 0.5 * ( line.GetX1 ( ) + line.GetX2 ( )  ) ,
+                 0.5 * ( line.GetY1 ( ) + line.GetY2 ( )  ) ,
+                 )
+
+   
+   #
+   h2.Draw("lego")
+   
+
+# void
+def tcl(split : Int_t = 0) :
+   #
+   gBenchmark.Start("tcl")
+   # 
+   tclwrite( split )
+   tclread( )
+   #
+   print("\n")
+   gBenchmark.Show("tcl")
+   
+
+
+if __name__ == "__main__":
+   tcl()
+   # tcl( 1 )
