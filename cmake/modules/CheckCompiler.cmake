@@ -255,7 +255,3 @@ if(gcctoolchain)
      set(CMAKE_CXX_FLAGS "--gcc-toolchain=${gcctoolchain} ${CMAKE_CXX_FLAGS}")
   endif()
 endif()
-
-if(gnuinstall)
-  set(R__HAVE_CONFIG 1)
-endif()
