@@ -3,19 +3,19 @@
 /// \notebook -js
 /// \preview Example of canvas division into subpads
 ///
-/// ROOT 6.40.0 changed how the canvas are divided into subpads. Before, the TPad::Divide
+/// ROOT 6.42.0 changed how the canvas are divided into subpads. Before, the TPad::Divide
 /// with typical arguments (positive `xmargin` and `ymargin` values) function was not respecting
 /// canvas own margins for the inner area. This limited flexibility of defining canvas layout.
 ///
-/// As it was changed and fixed in 6.40.0, this macro demonstrates how the new TPad::Divide function
+/// As it was changed and fixed in 6.42.0, this macro demonstrates how the new TPad::Divide function
 /// works, what are the current default values, and how to reproduce the old behaviour.
 ///
 /// This example can be run with optional argument (default is 0):
 ///  * 0  - will demonstrate current custom layout behaviour,
-///  * 1  - will show default values (starting from 6.40.0) where the canvas margins are respected
+///  * 1  - will show default values (starting from 6.42.0) where the canvas margins are respected
 ///         and the subpad canvas are customised (the default values are put explicitly because we
 ///         also want to modify the pads background colour for better visibility of the layout),
-///  * 2 (or anything else than 0, 1) - will restore old default values (for root before 6.40.0).
+///  * 2 (or anything else than 0, 1) - will restore old default values (for root before 6.42.0).
 ///      Note that the `xmargin` and `ymargin` are doubled in TPad::Divide call in respect to the
 ///      old defaults, and the canvas margins also must be modified.
 /// ~~~{.cpp}
@@ -31,6 +31,10 @@
 /// \author Rafał Lalik
 void canvas_divide_example(int use_variant = 0)
 {
+   // Without this flag one needs to call TPad::DividePadded
+   // instead of Tpad::Divide later in the code.
+   gStyle->SetUseMarginsForPadDivide(1);
+
    const auto nx = 3; // top-level pad division
    const auto ny = 2;
 
