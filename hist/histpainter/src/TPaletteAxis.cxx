@@ -12,7 +12,6 @@
 #include "TROOT.h"
 #include "TPaletteAxis.h"
 #include "TVirtualPad.h"
-#include "TVirtualX.h"
 #include "TStyle.h"
 #include "TMath.h"
 #include "TView.h"
@@ -228,46 +227,40 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    if (!gPad) return;
 
+   auto &parent = *gPad;
+
    static Int_t kmode = 0;
-   Int_t plxmin = gPad->XtoAbsPixel(fX1);
-   Int_t plxmax = gPad->XtoAbsPixel(fX2);
+   // Int_t plxmin = parent.XtoAbsPixel(fX1);
+   Int_t plxmax = parent.XtoAbsPixel(fX2);
    if (kmode != 0 || px <= plxmax) {
       if (event == kButton1Down) kmode = 1;
       TBox::ExecuteEvent(event, px, py);
       if (event == kButton1Up) kmode = 0;
       // In case palette coordinates have been modified, recompute NDC coordinates
-      Double_t dpx  = gPad->GetX2() - gPad->GetX1();
-      Double_t dpy  = gPad->GetY2() - gPad->GetY1();
-      Double_t xp1  = gPad->GetX1();
-      Double_t yp1  = gPad->GetY1();
+      Double_t dpx  = parent.GetX2() - parent.GetX1();
+      Double_t dpy  = parent.GetY2() - parent.GetY1();
+      Double_t xp1  = parent.GetX1();
+      Double_t yp1  = parent.GetY1();
       fX1NDC = (fX1 - xp1) / dpx;
       fY1NDC = (fY1 - yp1) / dpy;
       fX2NDC = (fX2 - xp1) / dpx;
       fY2NDC = (fY2 - yp1) / dpy;
       return;
    }
-   gPad->SetCursor(kHand);
+   parent.SetCursor(kHand);
+
    static Double_t ratio1, ratio2;
-   static Int_t px1old, py1old, px2old, py2old;
-   Double_t temp, xmin, xmax;
 
    switch (event) {
 
       case kButton1Down:
-         ratio1 = (gPad->AbsPixeltoY(py) - fY1) / (fY2 - fY1);
-         py1old = gPad->YtoAbsPixel(fY1 + ratio1 * (fY2 - fY1));
-         px1old = plxmin;
-         px2old = plxmax;
-         py2old = py1old;
-         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
-         gVirtualX->SetLineColor(-1);
+         ratio1 = (parent.AbsPixeltoY(py) - fY1) / (fY2 - fY1);
          // No break !!!
 
       case kButton1Motion:
-         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
-         ratio2 = (gPad->AbsPixeltoY(py) - fY1) / (fY2 - fY1);
-         py2old = gPad->YtoAbsPixel(fY1 + ratio2 * (fY2 - fY1));
-         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
+         ratio2 = (parent.AbsPixeltoY(py) - fY1) / (fY2 - fY1);
+         parent.PaintBox(GetX1(), GetY1() + ratio1 * (GetY2() - GetY1()), GetX2(), GetY1() + ratio2 * (GetY2() - GetY1()), "ilpaletteaxis");
+         parent.UpdateAsync();
          break;
 
       case kButton1Up:
@@ -276,44 +269,33 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             break;
          }
 
-         ratio2 = (gPad->AbsPixeltoY(py) - fY1) / (fY2 - fY1);
-         xmin = ratio1;
-         xmax = ratio2;
-         if (xmin > xmax) {
-            temp   = xmin;
-            xmin   = xmax;
-            xmax   = temp;
-            temp   = ratio1;
-            ratio1 = ratio2;
-            ratio2 = temp;
-         }
-         if (ratio2 - ratio1 > 0.05) {
-            if (fH) {
-               if (fH->GetDimension() == 2) {
-                  Double_t zmin = fH->GetMinimum();
-                  Double_t zmax = fH->GetMaximum();
-                  if (GetLog()) {
-                     if (zmin <= 0 && zmax > 0) zmin = TMath::Min((Double_t)1,
-                                                                     (Double_t)0.001 * zmax);
-                     zmin = TMath::Log10(zmin);
-                     zmax = TMath::Log10(zmax);
-                  }
-                  Double_t newmin = zmin + (zmax - zmin) * ratio1;
-                  Double_t newmax = zmin + (zmax - zmin) * ratio2;
-                  if (newmin < zmin)newmin = fH->GetBinContent(fH->GetMinimumBin());
-                  if (newmax > zmax)newmax = fH->GetBinContent(fH->GetMaximumBin());
-                  if (GetLog()) {
-                     newmin = TMath::Exp(2.302585092994 * newmin);
-                     newmax = TMath::Exp(2.302585092994 * newmax);
-                  }
-                  fH->SetMinimum(newmin);
-                  fH->SetMaximum(newmax);
-                  fH->SetBit(TH1::kIsZoomed);
-               }
+         ratio2 = (parent.AbsPixeltoY(py) - fY1) / (fY2 - fY1);
+         if (ratio1 > ratio2)
+            std::swap(ratio1, ratio2);
+         if ((ratio2 - ratio1 > 0.05) && fH && (fH->GetDimension() == 2)) {
+            Double_t zmin = fH->GetMinimum();
+            Double_t zmax = fH->GetMaximum();
+            if (GetLog()) {
+               if (zmin <= 0 && zmax > 0)
+                  zmin = TMath::Min((Double_t)1, (Double_t)0.001 * zmax);
+               zmin = TMath::Log10(zmin);
+               zmax = TMath::Log10(zmax);
             }
-            gPad->Modified(kTRUE);
+            Double_t newmin = zmin + (zmax - zmin) * ratio1;
+            Double_t newmax = zmin + (zmax - zmin) * ratio2;
+            if (newmin < zmin)
+               newmin = fH->GetBinContent(fH->GetMinimumBin());
+            if (newmax > zmax)
+               newmax = fH->GetBinContent(fH->GetMaximumBin());
+            if (GetLog()) {
+               newmin = TMath::Exp(2.302585092994 * newmin);
+               newmax = TMath::Exp(2.302585092994 * newmax);
+            }
+            fH->SetMinimum(newmin);
+            fH->SetMaximum(newmax);
+            fH->SetBit(TH1::kIsZoomed);
+            parent.Modified(kTRUE);
          }
-         gVirtualX->SetLineColor(-1);
          kmode = 0;
          break;
    }
