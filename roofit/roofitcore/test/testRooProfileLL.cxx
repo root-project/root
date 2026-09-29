@@ -100,8 +100,4 @@ TEST_P(RooFitEvalBackendTest, ProfileLLMinimization)
 }
 
 INSTANTIATE_TEST_SUITE_P(RooProfileLL, RooFitEvalBackendTest, testing::Values(ROOFIT_EVAL_BACKENDS),
-                         [](testing::TestParamInfo<RooFitEvalBackendTest::ParamType> const &paramInfo) {
-                            std::stringstream ss;
-                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
-                            return ss.str();
-                         });
+                         EvalBackendParamName{});

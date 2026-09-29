@@ -153,8 +153,4 @@ TEST_P(RooFitEvalBackendTest, EffProdFit)
 }
 
 INSTANTIATE_TEST_SUITE_P(RooEfficiency, RooFitEvalBackendTest, testing::Values(ROOFIT_EVAL_BACKENDS_WITH_CODEGEN),
-                         [](testing::TestParamInfo<RooFitEvalBackendTest::ParamType> const &paramInfo) {
-                            std::stringstream ss;
-                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
-                            return ss.str();
-                         });
+                         EvalBackendParamName{});

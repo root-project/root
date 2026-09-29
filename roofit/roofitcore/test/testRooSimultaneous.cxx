@@ -173,26 +173,7 @@ TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
    EXPECT_FLOAT_EQ(nllSimBatchVal, nllSimRefVal) << "BatchMode and old RooFit don't agree!";
 }
 
-class TestStatisticTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
-public:
-   TestStatisticTest() : _evalBackend{RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy)} {}
-
-private:
-   void SetUp() override
-   {
-      RooRandom::randomGenerator()->SetSeed(1337ul);
-      _evalBackend = std::get<0>(GetParam());
-      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
-   }
-
-   void TearDown() override { _changeMsgLvl.reset(); }
-
-protected:
-   RooFit::EvalBackend _evalBackend;
-
-private:
-   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
-};
+using TestStatisticTest = RooFitEvalBackendTest;
 
 /// GitHub issue #8307.
 /// A likelihood with a model wrapped in a RooSimultaneous in one category
@@ -327,11 +308,7 @@ TEST_P(TestStatisticTest, RangedCategory)
 }
 
 INSTANTIATE_TEST_SUITE_P(RooSimultaneous, TestStatisticTest, testing::Values(ROOFIT_EVAL_BACKENDS),
-                         [](testing::TestParamInfo<TestStatisticTest::ParamType> const &paramInfo) {
-                            std::stringstream ss;
-                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
-                            return ss.str();
-                         });
+                         EvalBackendParamName{});
 
 /// Check that the dataset generation from a nested RooSimultaneous with
 /// protodata containing the category values works.

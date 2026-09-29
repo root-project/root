@@ -90,11 +90,7 @@ TEST_P(RooFitEvalBackendTest, RealSumPdfAmplitudeSum)
 }
 
 INSTANTIATE_TEST_SUITE_P(RooRealSumPdf, RooFitEvalBackendTest, testing::Values(ROOFIT_EVAL_BACKENDS),
-                         [](testing::TestParamInfo<RooFitEvalBackendTest::ParamType> const &paramInfo) {
-                            std::stringstream ss;
-                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
-                            return ss.str();
-                         });
+                         EvalBackendParamName{});
 
 /// The normalization set that is passed to createExpectedEventsFunc() can
 /// contain variables that the pdf does not depend on. Such variables must not
