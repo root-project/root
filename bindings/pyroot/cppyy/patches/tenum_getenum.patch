@@ -1,0 +1,13 @@
+diff --git a/bindings/pyroot/cppyy/cppyy-backend/clingwrapper/src/clingwrapper.cxx b/bindings/pyroot/cppyy/cppyy-backend/clingwrapper/src/clingwrapper.cxx
+index f7b5e9bdb6..8f838fb7fe 100644
+--- a/bindings/pyroot/cppyy/cppyy-backend/clingwrapper/src/clingwrapper.cxx
++++ b/bindings/pyroot/cppyy/cppyy-backend/clingwrapper/src/clingwrapper.cxx
+@@ -946,7 +946,7 @@ bool Cppyy::IsEnum(const std::string& type_name)
+     if (type_name.empty()) return false;
+     std::string tn_short = TClassEdit::ShortType(type_name.c_str(), 1);
+     if (tn_short.empty()) return false;
+-    return gInterpreter->ClassInfo_IsEnum(tn_short.c_str());
++    return TEnum::GetEnum(tn_short.c_str());
+ }
+ 
+ // helpers for stripping scope names
