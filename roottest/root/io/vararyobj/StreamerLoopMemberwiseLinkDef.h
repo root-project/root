@@ -9,5 +9,9 @@
 #pragma link C++ class ROOTTest::StreamerLoopMemberwise::Pad + ;
 #pragma link C++ class ROOTTest::StreamerLoopMemberwise::Super + ;
 #pragma link C++ class std::vector < ROOTTest::StreamerLoopMemberwise::Super> + ;
+#pragma link C++ class ROOTTest::StreamerLoopMemberwise::Counter + ;
+#pragma link C++ class ROOTTest::StreamerLoopMemberwise::FrameInheritedCounter + ;
+#pragma link C++ class ROOTTest::StreamerLoopMemberwise::SuperInheritedCounter + ;
+#pragma link C++ class std::vector < ROOTTest::StreamerLoopMemberwise::SuperInheritedCounter> + ;
 
 #endif
