@@ -2633,17 +2633,36 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
       ::Info("ACLiC", "%s", cmd.Data());
 
 #ifdef WIN32
-   FILE *pipe = gSystem->OpenPipe(cmd, "r");
+   TString wrapperCmd = "cmd.exe /c \"" + cmd + "\"";
+   FILE *pipe = gSystem->OpenPipe(wrapperCmd, "r");
    if (!pipe) {
       ::Warning("ACLiC", "Failed to open pipe dependencies for %s", filename.Data());
       return false;
    }
    std::ofstream depFile(depfilename, std::ios::out | std::ios::trunc);
    if (depFile) {
+      depFile << targetname << ": \\\n";
       char buffer[4096];
+      const char *prefix = "Note: including file:";
+      size_t prefixLen = strlen(prefix);
+
       while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
-         depFile.write(buffer, strlen(buffer));
+         std::string line(buffer);
+         // Find and strip "Note: including file:"
+         size_t pos = line.find(prefix);
+         if (pos != std::string::npos) {
+            std::string path = line.substr(pos + prefixLen);
+            // Trim leading/trailing spaces or newlines
+            path.erase(0, path.find_first_not_of(" \t"));
+            path.erase(path.find_last_not_of(" \r\n\t") + 1);
+            // Convert Windows backslashes to forward slashes for Makefile compatibility
+            std::replace(path.begin(), path.end(), '\\', '/');
+            if (!path.empty()) {
+               depFile << "  \"" << path << "\" \\\n";
+            }
+         }
       }
+      depFile << "\n"; // End the dependency rule cleanly
       depFile.close();
    }
    int retVal = gSystem->ClosePipe(pipe);
