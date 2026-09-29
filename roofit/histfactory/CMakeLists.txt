@@ -99,18 +99,16 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${prepareHistFactory_script}
 
 set(RELATIVE_INC_HEADERS ${HISTFACTORY_HEADERS} ${HISTFACTORY_XML_HEADERS})
 list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
-if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
-  target_sources(
-      HistFactory
-      PRIVATE
-      FILE_SET private_header_files
-      TYPE HEADERS
-      BASE_DIRS inc/
-      FILES
-          ${RELATIVE_INC_HEADERS}
-          inc/LinkDef.h # seemingly not being used by ROOT_STANDARD_LIBRARY_PACKAGE call
-          inc/HFMsgService.h # not part of list above
-  )
-endif()
+target_sources(
+    HistFactory
+    PRIVATE
+    FILE_SET private_header_files
+    TYPE HEADERS
+    BASE_DIRS inc/
+    FILES
+        ${RELATIVE_INC_HEADERS}
+        inc/LinkDef.h # seemingly not being used by ROOT_STANDARD_LIBRARY_PACKAGE call
+        inc/HFMsgService.h # not part of list above
+)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

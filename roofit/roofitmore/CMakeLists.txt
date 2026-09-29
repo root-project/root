@@ -66,20 +66,18 @@ endif()
 
 set(RELATIVE_INC_HEADERS ${ROOFITMORE_HEADERS})
 list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
-if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
-  target_sources(
-      RooFitMore
-      PRIVATE
-      FILE_SET private_header_files
-      TYPE HEADERS
-      BASE_DIRS inc/ src/
-      FILES
-          ${RELATIVE_INC_HEADERS}
-          inc/LinkDef.h
-          src/BracketAdapters.h
-          src/RooAdaptiveGaussKronrodIntegrator1D.h
-          src/RooGaussKronrodIntegrator1D.h
-  )
-endif()
+target_sources(
+    RooFitMore
+    PRIVATE
+    FILE_SET private_header_files
+    TYPE HEADERS
+    BASE_DIRS inc/ src/
+    FILES
+        ${RELATIVE_INC_HEADERS}
+        inc/LinkDef.h
+        src/BracketAdapters.h
+        src/RooAdaptiveGaussKronrodIntegrator1D.h
+        src/RooGaussKronrodIntegrator1D.h
+)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
