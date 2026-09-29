@@ -2591,25 +2591,40 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
                                             const TString &includes, const TString &defines)
 {
    TString compiler = gSystem->Getenv("CXX");
-   if (compiler.IsNull())
+   if (compiler.IsNull()) {
+#ifdef WIN32
+      compiler = "cl";
+#else
       compiler = "c++";
+#endif
+   }
 
    TString cmd = compiler;
+#ifdef WIN32
+   cmd += " /std:c++17"; // CMAKE_CXX_STANDARD minimum required
+   cmd += " /nologo /E /showIncludes";
+   cmd += " \"/I";
+#else
    cmd += " -std=c++17"; // CMAKE_CXX_STANDARD minimum required
    cmd += " -MM";
    cmd += " -MF \"" + depfilename + "\"";
    cmd += " -MT \"";
    R__AddPath(cmd, targetname);
    cmd += "\" ";
-
-   TString rootsysInclude = TROOT::GetIncludeDir();
    cmd += " \"-I";
+#endif
+   TString rootsysInclude = TROOT::GetIncludeDir();
    R__AddPath(cmd, rootsysInclude);
    cmd += "\" ";
 
    cmd += includes;
    cmd += defines;
+
+#ifdef WIN32
+   cmd += " /TP"; // avoid warning when header is .h but is C++ code
+#else
    cmd += " -x c++-header"; // avoid warning when header is .h but is C++ code
+#endif
    cmd += " \"";
    R__AddPath(cmd, filename);
    cmd += "\"";
@@ -2617,10 +2632,31 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
    if (gDebug > 4)
       ::Info("ACLiC", "%s", cmd.Data());
 
+#ifdef WIN32
+   FILE *pipe = gSystem->OpenPipe(cmd, "r");
+   if (!pipe) {
+      ::Warning("ACLiC", "Failed to open pipe dependencies for %s", filename.Data());
+      return false;
+   }
+   std::ofstream depFile(depfilename, std::ios::out | std::ios::trunc);
+   if (depFile) {
+      char buffer[4096];
+      while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+         depFile.write(buffer, strlen(buffer));
+      }
+      depFile.close();
+   }
+   int retVal = gSystem->ClosePipe(pipe);
+   if (retVal != 0) {
+      ::Warning("ACLiC", "Failed to close pipe dependencies for %s", filename.Data());
+      return false;
+   }
+#else
    if (gSystem->Exec(cmd)) {
       ::Warning("ACLiC", "Failed to generate dependencies for %s", filename.Data());
       return false;
    }
+#endif
 
    return true;
 }
