@@ -2625,8 +2625,7 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
    return true;
 }
 
-static TString R__GetRootDictionaryDependencies(const TString &targetname,
-                                                const TString &incPath)
+static TString R__GetRootDictionaryDependencies(const TString &targetname, const TString &incPath)
 {
    TString adddictdep;
    R__AddPath(adddictdep,targetname);
@@ -2702,11 +2701,7 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
    } else {
       targetname = library;
    }
-   if (!R__GenerateCompilerDependencies(depfilename,
-                                        filename,
-                                        targetname,
-                                        includes,
-                                        defines))
+   if (!R__GenerateCompilerDependencies(depfilename, filename, targetname, includes, defines))
       return;
 
    TString adddictdep = R__GetRootDictionaryDependencies(targetname, incPath);
