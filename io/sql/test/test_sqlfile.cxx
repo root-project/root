@@ -14,12 +14,14 @@ TEST(TSQLFileTest, WriteAndReadHistogram)
       TSQLFile f(uri.c_str(), "RECREATE");
       ASSERT_FALSE(f.IsZombie());
 
-      TH1I h("h1", "Test Histogram", 10, 0, 10);
-      h.Fill(3);
-      h.Write("myhist");
+      auto h = new TH1I("h1", "Test Histogram", 10, 0, 10);
+      h->Fill(3);
+      h->Write("myhist");
+      delete h;
 
-      TObjString str("Hello SQL!");
-      str.Write("mystr");
+      auto str = new TObjString("Hello SQL!");
+      str->Write("mystr");
+      delete str;
    }
 
    {
