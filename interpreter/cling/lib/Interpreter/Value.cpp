@@ -219,10 +219,16 @@ namespace cling {
     return *this;
   }
 
-  Value::~Value() {
+  void Value::clear() {
     if (needsManagedAllocation())
       AllocatedValue::getFromPayload(m_Storage.m_Ptr)->Release();
+    m_Type = nullptr;
+    m_NeedsManagedAlloc = false;
+    m_TypeKind = Value::kInvalid;
+    m_Interpreter = nullptr;
   }
+
+  Value::~Value() { clear(); }
 
   clang::QualType Value::getType() const {
     return clang::QualType::getFromOpaquePtr(m_Type);
