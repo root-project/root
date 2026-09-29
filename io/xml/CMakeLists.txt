@@ -24,3 +24,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(XMLIO
                                  src/TXMLPlayer.cxx
                                  src/TXMLSetup.cxx
                               DEPENDENCIES RIO)
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
