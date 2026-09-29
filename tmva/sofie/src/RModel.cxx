@@ -1492,13 +1492,11 @@ void RModel::GenerateSessionCode()
    // model output is not written by any operator: copy it into the output buffer before the
    // operator code, so that operators reading the weight also see its value (the output
    // parameter shadows the session member in doInfer)
-   if (fUseSession) {
-      for (auto const &name : fOutputTensorNames) {
-         if (IsInitializedTensor(name)) {
-            std::string t = "session.tensor_" + name;
-            size_t length = ConvertShapeToLength(fInitializedTensors[name].shape());
-            fGC += "    std::copy(" + t + ", " + t + " + " + std::to_string(length) + ", tensor_" + name + ");\n";
-         }
+   for (auto const &name : fOutputTensorNames) {
+      if (IsInitializedTensor(name)) {
+         std::string t = "session.tensor_" + name;
+         size_t length = ConvertShapeToLength(fInitializedTensors[name].shape());
+         fGC += "    std::copy(" + t + ", " + t + " + " + std::to_string(length) + ", tensor_" + name + ");\n";
       }
    }
 
