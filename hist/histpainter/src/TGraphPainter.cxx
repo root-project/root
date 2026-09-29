@@ -37,7 +37,6 @@
 #include "TFrame.h"
 #include "TMarker.h"
 #include "TVirtualPadEditor.h"
-#include "TVirtualX.h"
 #include "TRegexp.h"
 #include "strlcpy.h"
 
@@ -808,234 +807,180 @@ void TGraphPainter::DrawPanelHelper(TGraph *theGraph)
 }
 
 
+class TGraphInteractive : public TVirtualPad::TInteractive {
+   public:
+      Int_t ipoint = -1; // selected point
+      std::vector<Int_t> dx, dy;
+      std::vector<Double_t> drawX, drawY;
+      Bool_t badcase = kFALSE;
+      Bool_t isCutG = kFALSE;
+
+      TGraphInteractive(Int_t sz = 0, Bool_t opaque = kTRUE, Bool_t cutg = kFALSE)
+      {
+         dx.resize(sz);
+         dy.resize(sz);
+         if (!opaque) {
+            drawX.resize(sz, 0.);
+            drawY.resize(sz, 0.);
+         }
+         isCutG = cutg;
+      }
+
+      Int_t FindPoint(TVirtualPad &parent, TGraph *gr, Int_t px, Int_t py, Bool_t set_d = kFALSE)
+      {
+         Int_t theNpoints = gr->GetN();
+         Double_t *theX  = gr->GetX();
+         Double_t *theY  = gr->GetY();
+
+         const Int_t kMaxDiff =  10;//3;
+
+         Int_t best_diff2 = kMaxDiff * kMaxDiff, best_pnt = -1;
+         for (Int_t i = 0; i < theNpoints; i++) {
+            Int_t pxp = parent.XtoAbsPixel(parent.XtoPad(theX[i]));
+            Int_t pyp = parent.YtoAbsPixel(parent.YtoPad(theY[i]));
+            if (pxp < -kMaxPixel || pxp >= kMaxPixel || pyp < -kMaxPixel || pyp >= kMaxPixel) {
+               if (set_d)
+                  badcase = kTRUE;
+               continue;
+            }
+            Int_t d2 = (pxp - px) * (pxp - px) + (pyp - py) * (pyp - py);
+            if (d2 < best_diff2) {
+               best_pnt = i;
+               best_diff2 = d2;
+            }
+            if (set_d) {
+               dx[i] = pxp - px;
+               dy[i] = pyp - py;
+            }
+         }
+
+         if (set_d)
+            ipoint = best_pnt;
+
+         return best_pnt;
+      }
+
+      void RecalculatePoints(TVirtualPad &parent, Int_t px, Int_t py, Double_t *resX, Double_t *resY)
+      {
+         if (badcase)
+            return;
+         if (ipoint >= 0) {
+            resX[ipoint] = parent.PadtoX(parent.AbsPixeltoX(px + dx[ipoint]));
+            resY[ipoint] = parent.PadtoY(parent.AbsPixeltoY(py + dy[ipoint]));
+            if (isCutG) {
+               if (ipoint == 0){
+                  resX[dx.size() - 1] = resX[ipoint];
+                  resY[dx.size() - 1] = resY[ipoint];
+               }
+               if (ipoint == (int) dx.size() - 1) {
+                  resX[0] = resX[ipoint];
+                  resY[0] = resY[ipoint];
+               }
+            }
+         } else {
+            for (std::size_t i = 0; i < dx.size(); ++i) {
+               resX[i] = parent.PadtoX(parent.AbsPixeltoX(px + dx[i]));
+               resY[i] = parent.PadtoY(parent.AbsPixeltoY(py + dy[i]));
+            }
+         }
+      }
+
+      void PaintInteractive(TVirtualPad &parent, Int_t px, Int_t py)
+      {
+         RecalculatePoints(parent, px, py, drawX.data(), drawY.data());
+         if (ipoint >= 0) {
+            parent.PaintPolyMarker(1, &drawX[ipoint], &drawY[ipoint], "igraphmark");
+         } else {
+            TAttLine{kBlack, 1, 1}.ModifyOn(parent);
+            parent.PaintPolyLine(drawX.size(), drawX.data(), drawY.data(), "igraphline");
+            parent.PaintPolyMarker(drawX.size(), drawX.data(), drawY.data(), "igraphmark");
+         }
+      }
+
+      void AdjustRange(TVirtualPad &parent)
+      {
+         Double_t xmin = parent.GetUxmin();
+         Double_t xmax = parent.GetUxmax();
+         Double_t ymin = parent.GetUymin();
+         Double_t ymax = parent.GetUymax();
+         Double_t padxrange  = xmax-xmin;
+         Double_t padyrange  = ymax-ymin;
+         Double_t dxr  = padxrange / (1 - parent.GetLeftMargin() - parent.GetRightMargin());
+         Double_t dyr  = padyrange / (1 - parent.GetBottomMargin() - parent.GetTopMargin());
+
+         // Range() could change the size of the pad pixmap and therefore should
+         // be called before the other paint routines
+         parent.Range(xmin - dxr * parent.GetLeftMargin(),
+                      ymin - dyr * parent.GetBottomMargin(),
+                      xmax + dxr * parent.GetRightMargin(),
+                      ymax + dyr * parent.GetTopMargin());
+         parent.RangeAxis(xmin, ymin, xmax, ymax);
+      }
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
 /// This member function is called when a graph is clicked with the locator.
 ///
 /// If the left mouse button is clicked on one of the line end points, this point
-/// follows the cursor until button is released.
-///
-/// If the middle mouse button clicked, the line is moved parallel to itself
-/// until the button is released.
+/// follows the cursor until button is released. Is mouse click on the graph
+/// between points complete graph will be moved until button is released.
 
 void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, Int_t py)
 {
+   if (!gPad || !theGraph) return;
 
-   if (!gPad) return;
-
-   Int_t i, d;
-   Double_t xmin, xmax, ymin, ymax, dx, dy, dxr, dyr;
-   const Int_t kMaxDiff =  10;//3;
-   static Bool_t middle, badcase;
-   static Int_t ipoint, pxp, pyp;
-   static Int_t px1,px2,py1,py2;
-   static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
-   static Int_t dpx, dpy;
-   static std::vector<Int_t> x, y;
-   Bool_t opaque  = gPad->OpaqueMoving();
+   auto &parent = *gPad;
 
    if (!theGraph->IsEditable() || theGraph->InheritsFrom(TGraphPolar::Class())) {
-      gPad->SetCursor(kHand);
+      parent.SetCursor(kHand);
       return;
    }
-   if (!gPad->IsEditable()) return;
+   if (!parent.IsEditable())
+      return;
+
+   Bool_t opaque  = parent.OpaqueMoving();
    Int_t theNpoints = theGraph->GetN();
    Double_t *theX  = theGraph->GetX();
    Double_t *theY  = theGraph->GetY();
 
+   auto inter = dynamic_cast<TGraphInteractive *>(parent.Interactive(theGraph));
+
    switch (event) {
 
-   case kButton1Down:
-      badcase = kFALSE;
-      gVirtualX->SetLineColor(-1);
-      theGraph->TAttLine::Modify();  //Change line attributes only if necessary
-      px1 = gPad->XtoAbsPixel(gPad->GetX1());
-      py1 = gPad->YtoAbsPixel(gPad->GetY1());
-      px2 = gPad->XtoAbsPixel(gPad->GetX2());
-      py2 = gPad->YtoAbsPixel(gPad->GetY2());
-      ipoint = -1;
+   case kButton1Down: {
+      inter = new TGraphInteractive(theNpoints, opaque, theGraph->InheritsFrom("TCutG"));
+      parent.Interactive(theGraph, inter);
 
-
-      if (!x.empty() || !y.empty()) break;
-      x.resize(theNpoints+1);
-      y.resize(theNpoints+1);
-      for (i=0;i<theNpoints;i++) {
-         pxp = gPad->XtoAbsPixel(gPad->XtoPad(theX[i]));
-         pyp = gPad->YtoAbsPixel(gPad->YtoPad(theY[i]));
-         if (pxp < -kMaxPixel || pxp >= kMaxPixel ||
-             pyp < -kMaxPixel || pyp >= kMaxPixel) {
-            badcase = kTRUE;
-            continue;
-         }
-         if (!opaque) {
-            gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
-            gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
-            gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
-            gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
-         }
-         x[i] = pxp;
-         y[i] = pyp;
-         d   = TMath::Abs(pxp-px) + TMath::Abs(pyp-py);
-         if (d < kMaxDiff) ipoint =i;
+      inter->FindPoint(parent, theGraph, px, py, kTRUE);
+      if (!opaque) {
+         inter->PaintInteractive(parent, px, py);
+         parent.UpdateAsync();
       }
-      dpx = 0;
-      dpy = 0;
-      pxold = px;
-      pyold = py;
-      if (ipoint < 0) return;
-      if (ipoint == 0) {
-         px1old = 0;
-         py1old = 0;
-         px2old = gPad->XtoAbsPixel(theX[1]);
-         py2old = gPad->YtoAbsPixel(theY[1]);
-      } else if (ipoint == theNpoints-1) {
-         px1old = gPad->XtoAbsPixel(gPad->XtoPad(theX[theNpoints-2]));
-         py1old = gPad->YtoAbsPixel(gPad->YtoPad(theY[theNpoints-2]));
-         px2old = 0;
-         py2old = 0;
-      } else {
-         px1old = gPad->XtoAbsPixel(gPad->XtoPad(theX[ipoint-1]));
-         py1old = gPad->YtoAbsPixel(gPad->YtoPad(theY[ipoint-1]));
-         px2old = gPad->XtoAbsPixel(gPad->XtoPad(theX[ipoint+1]));
-         py2old = gPad->YtoAbsPixel(gPad->YtoPad(theY[ipoint+1]));
-      }
-      pxold = gPad->XtoAbsPixel(gPad->XtoPad(theX[ipoint]));
-      pyold = gPad->YtoAbsPixel(gPad->YtoPad(theY[ipoint]));
-
       break;
+   }
 
-
-   case kMouseMotion:
-
-      middle = kTRUE;
-      for (i=0;i<theNpoints;i++) {
-         pxp = gPad->XtoAbsPixel(gPad->XtoPad(theX[i]));
-         pyp = gPad->YtoAbsPixel(gPad->YtoPad(theY[i]));
-         d   = TMath::Abs(pxp-px) + TMath::Abs(pyp-py);
-         if (d < kMaxDiff) middle = kFALSE;
-      }
-
-
-   // check if point is close to an axis
-      if (middle) gPad->SetCursor(kMove);
-      else gPad->SetCursor(kHand);
+   case kMouseMotion: {
+      TGraphInteractive dummy(0);
+      if (dummy.FindPoint(parent, theGraph, px, py) >= 0)
+         parent.SetCursor(kHand);
+      else
+         parent.SetCursor(kMove);
       break;
+   }
 
    case kButton1Motion:
+      if (!inter)
+         break;
       if (!opaque) {
-         if (middle) {
-            for(i=0;i<theNpoints-1;i++) {
-               gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
-               pxp = x[i]+dpx;
-               pyp = y[i]+dpy;
-               if (pxp < -kMaxPixel || pxp >= kMaxPixel ||
-                   pyp < -kMaxPixel || pyp >= kMaxPixel) continue;
-               gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
-               gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
-               gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
-               gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
-            }
-            pxp = x[theNpoints-1]+dpx;
-            pyp = y[theNpoints-1]+dpy;
-            gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
-            gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
-            gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
-            gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
-            dpx += px - pxold;
-            dpy += py - pyold;
-            pxold = px;
-            pyold = py;
-            for(i=0;i<theNpoints-1;i++) {
-               gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
-               pxp = x[i]+dpx;
-               pyp = y[i]+dpy;
-               if (pxp < -kMaxPixel || pxp >= kMaxPixel ||
-                   pyp < -kMaxPixel || pyp >= kMaxPixel) continue;
-               gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
-               gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
-               gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
-               gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
-            }
-            pxp = x[theNpoints-1]+dpx;
-            pyp = y[theNpoints-1]+dpy;
-            gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
-            gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
-            gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
-            gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
-         } else {
-            if (px1old) gVirtualX->DrawLine(px1old, py1old, pxold,  pyold);
-            if (px2old) gVirtualX->DrawLine(pxold,  pyold,  px2old, py2old);
-            gVirtualX->DrawLine(pxold-4, pyold-4, pxold+4,  pyold-4);
-            gVirtualX->DrawLine(pxold+4, pyold-4, pxold+4,  pyold+4);
-            gVirtualX->DrawLine(pxold+4, pyold+4, pxold-4,  pyold+4);
-            gVirtualX->DrawLine(pxold-4, pyold+4, pxold-4,  pyold-4);
-            pxold = px;
-            pxold = TMath::Max(pxold, px1);
-            pxold = TMath::Min(pxold, px2);
-            pyold = py;
-            pyold = TMath::Max(pyold, py2);
-            pyold = TMath::Min(pyold, py1);
-            if (px1old) gVirtualX->DrawLine(px1old, py1old, pxold,  pyold);
-            if (px2old) gVirtualX->DrawLine(pxold,  pyold,  px2old, py2old);
-            gVirtualX->DrawLine(pxold-4, pyold-4, pxold+4,  pyold-4);
-            gVirtualX->DrawLine(pxold+4, pyold-4, pxold+4,  pyold+4);
-            gVirtualX->DrawLine(pxold+4, pyold+4, pxold-4,  pyold+4);
-            gVirtualX->DrawLine(pxold-4, pyold+4, pxold-4,  pyold-4);
-         }
+         inter->PaintInteractive(parent, px, py);
+         parent.UpdateAsync();
       } else {
-         xmin = gPad->GetUxmin();
-         xmax = gPad->GetUxmax();
-         ymin = gPad->GetUymin();
-         ymax = gPad->GetUymax();
-         dx   = xmax-xmin;
-         dy   = ymax-ymin;
-         dxr  = dx/(1 - gPad->GetLeftMargin() - gPad->GetRightMargin());
-         dyr  = dy/(1 - gPad->GetBottomMargin() - gPad->GetTopMargin());
-
-         if (theGraph->GetHistogram()) {
-            // Range() could change the size of the pad pixmap and therefore should
-            // be called before the other paint routines
-            gPad->Range(xmin - dxr*gPad->GetLeftMargin(),
-                         ymin - dyr*gPad->GetBottomMargin(),
-                         xmax + dxr*gPad->GetRightMargin(),
-                         ymax + dyr*gPad->GetTopMargin());
-            gPad->RangeAxis(xmin, ymin, xmax, ymax);
-         }
-         if (middle) {
-            dpx += px - pxold;
-            dpy += py - pyold;
-            pxold = px;
-            pyold = py;
-            for(i=0;i<theNpoints;i++) {
-               if (badcase) continue;  //do not update if big zoom and points moved
-               if (!x.empty()) theX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
-               if (!y.empty()) theY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
-            }
-         } else {
-            pxold = px;
-            pxold = TMath::Max(pxold, px1);
-            pxold = TMath::Min(pxold, px2);
-            pyold = py;
-            pyold = TMath::Max(pyold, py2);
-            pyold = TMath::Min(pyold, py1);
-            theX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(pxold));
-            theY[ipoint] = gPad->PadtoY(gPad->AbsPixeltoY(pyold));
-            if (theGraph->InheritsFrom("TCutG")) {
-               //make sure first and last point are the same
-               if (ipoint == 0) {
-                  theX[theNpoints-1] = theX[0];
-                  theY[theNpoints-1] = theY[0];
-               }
-               if (ipoint == theNpoints-1) {
-                  theX[0] = theX[theNpoints-1];
-                  theY[0] = theY[theNpoints-1];
-               }
-            }
-         }
-         badcase = kFALSE;
-         gPad->Modified(kTRUE);
-         //gPad->Update();
+         if (theGraph->GetHistogram())
+            inter->AdjustRange(parent);
+         inter->RecalculatePoints(parent, px, py, theX, theY);
+         parent.Modified();
       }
       break;
 
@@ -1043,56 +988,17 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
 
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
-         x.clear();
-         y.clear();
          break;
       }
 
-   // Compute x,y range
-      xmin = gPad->GetUxmin();
-      xmax = gPad->GetUxmax();
-      ymin = gPad->GetUymin();
-      ymax = gPad->GetUymax();
-      dx   = xmax-xmin;
-      dy   = ymax-ymin;
-      dxr  = dx/(1 - gPad->GetLeftMargin() - gPad->GetRightMargin());
-      dyr  = dy/(1 - gPad->GetBottomMargin() - gPad->GetTopMargin());
+      if (inter) {
+         if (theGraph->GetHistogram())
+            inter->AdjustRange(parent);
+         inter->RecalculatePoints(parent, px, py, theX, theY);
+         parent.Modified();
+      }
 
-      if (theGraph->GetHistogram()) {
-         // Range() could change the size of the pad pixmap and therefore should
-         // be called before the other paint routines
-         gPad->Range(xmin - dxr*gPad->GetLeftMargin(),
-                      ymin - dyr*gPad->GetBottomMargin(),
-                      xmax + dxr*gPad->GetRightMargin(),
-                      ymax + dyr*gPad->GetTopMargin());
-         gPad->RangeAxis(xmin, ymin, xmax, ymax);
-      }
-      if (middle) {
-         for(i=0;i<theNpoints;i++) {
-            if (badcase) continue;  //do not update if big zoom and points moved
-            if (!x.empty()) theX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
-            if (!y.empty()) theY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
-         }
-      } else {
-         theX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(pxold));
-         theY[ipoint] = gPad->PadtoY(gPad->AbsPixeltoY(pyold));
-         if (theGraph->InheritsFrom("TCutG")) {
-            //make sure first and last point are the same
-            if (ipoint == 0) {
-               theX[theNpoints-1] = theX[0];
-               theY[theNpoints-1] = theY[0];
-            }
-            if (ipoint == theNpoints-1) {
-               theX[0] = theX[theNpoints-1];
-               theY[0] = theY[theNpoints-1];
-            }
-         }
-      }
-      badcase = kFALSE;
-      x.clear();
-      y.clear();
-      gPad->Modified(kTRUE);
-      gVirtualX->SetLineColor(-1);
+      parent.Interactive(); // cleanup interactive object
    }
 }
 
