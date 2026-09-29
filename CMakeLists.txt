@@ -10,12 +10,12 @@ if("${CMAKE_VERSION}" VERSION_LESS "3.26.0")
     "Your CMake version is ${CMAKE_VERSION}. Starting with ROOT 6.44, the "
     "minimum version of CMake required to build ROOT will become 3.26.0, and "
     "using an older CMake will raise an error. After ROOT 6.44, the CMake version "
-    "is expected to rise to 3.31.0 in sync with LLVM 24.")
+    "may rise to 3.31.0 if an upgrade to LLVM 24 is performed.")
 elseif("${CMAKE_VERSION}" VERSION_LESS "3.31.0")
-  message(WARNING
+  message(STATUS
     "Your CMake version is ${CMAKE_VERSION}. After ROOT 6.44, the "
-    "minimum version of CMake required to build ROOT will become 3.31.0, and "
-    "using an older CMake will raise an error, in sync with LLVM 24.")
+    "minimum version of CMake required to build ROOT may become 3.31.0 if "
+    "an upgrade to LLVM 24 is performed.")
 endif()
 
 if(WIN32)
