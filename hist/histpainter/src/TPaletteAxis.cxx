@@ -205,21 +205,57 @@ void TPaletteAxis::Copy(TObject &obj) const
    ((TPaletteAxis&)obj).fH    = fH;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if mouse on the axis region.
 
 Int_t TPaletteAxis::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   Int_t plxmax = gPad->XtoAbsPixel(fX2);
-   Int_t plymin = gPad->YtoAbsPixel(fY1);
-   Int_t plymax = gPad->YtoAbsPixel(fY2);
-   if (px > plxmax && px < plxmax + 30 && py >= plymax && py <= plymin) return px - plxmax;
+   Bool_t isHorizontal = GetX2NDC() - GetX1NDC() > GetY2NDC() - GetY1NDC();
+   Int_t plxmin = gPad->XtoAbsPixel(GetX1());
+   Int_t plxmax = gPad->XtoAbsPixel(GetX2());
+   Int_t plymin = gPad->YtoAbsPixel(GetY1());
+   Int_t plymax = gPad->YtoAbsPixel(GetY2());
+
+   if (isHorizontal) {
+      if (px >= plxmin && px <= plxmax && py > plymin && py <= plymin + 30)
+         return py - plymin;
+   } else {
+      if (px > plxmax && px < plxmax + 30 && py >= plymax && py <= plymin)
+         return px - plxmax;
+   }
 
    //otherwise check if inside the box
    return TPave::DistancetoPrimitive(px, py);
 }
 
+class TPaletteAxisInteractive : public TVirtualPad::TInteractive {
+   public:
+      Double_t ratio1 = 0, ratio2 = 1;
+      Bool_t fHorizontal = kFALSE;
+      TPaletteAxisInteractive(Bool_t h) { fHorizontal = h; }
+      void SetPosition(TVirtualPad &parent, Int_t px, Int_t py, Double_t x1, Double_t y1, Double_t x2, Double_t y2, Bool_t first = kFALSE)
+      {
+         Double_t r = 0;
+         if (fHorizontal)
+            r = (parent.AbsPixeltoX(px) - x1) / (x2 - x1);
+         else
+            r = (parent.AbsPixeltoY(py) - y1) / (y2 - y1);
+
+         ratio2 = r;
+         if (first)
+            ratio1 = r;
+      }
+
+      void Paint(TVirtualPad &parent, Double_t x1, Double_t y1, Double_t x2, Double_t y2)
+      {
+         if (fHorizontal)
+            parent.PaintBox(x1 + ratio1 * (x2 - x1), y1, x1 + ratio2 * (x2 - x1), y2, "ilpaletteaxis");
+         else
+            parent.PaintBox(x1, y1 + ratio1 * (y2 - y1), x2, y1 + ratio2 * (y2 - y1), "ilpaletteaxis");
+      }
+
+
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if mouse on the axis region.
@@ -230,29 +266,34 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    auto &parent = *gPad;
 
-   static Int_t kmode = 0;
-   // Int_t plxmin = parent.XtoAbsPixel(fX1);
-   Int_t plxmax = parent.XtoAbsPixel(fX2);
-   if (kmode != 0 || px <= plxmax) {
-      if (event == kButton1Down) kmode = 1;
+   auto inter0 = parent.Interactive(this);
+   auto inter = dynamic_cast<TPaletteAxisInteractive *> (inter0);
+
+   Bool_t isHorizontal = GetX2NDC() - GetX1NDC() > GetY2NDC() - GetY1NDC();
+
+   // when mouse pointer over palette itself - use TBox interactivity
+   Bool_t useBoxHandler = isHorizontal ? (py <= parent.YtoAbsPixel(GetY1())) : (px <= parent.XtoAbsPixel(GetX2()));
+
+   if (!inter && (inter0 || useBoxHandler)) {
       TBox::ExecuteEvent(event, px, py);
-      if (event == kButton1Up) kmode = 0;
       return;
    }
-   parent.SetCursor(kHand);
 
-   static Double_t ratio1, ratio2;
+   parent.SetCursor(kHand);
 
    switch (event) {
 
       case kButton1Down:
-         ratio1 = (parent.AbsPixeltoY(py) - fY1) / (fY2 - fY1);
+         inter = new TPaletteAxisInteractive(isHorizontal);
+         parent.Interactive(this, inter);
          // No break !!!
 
       case kButton1Motion:
-         ratio2 = (parent.AbsPixeltoY(py) - fY1) / (fY2 - fY1);
-         parent.PaintBox(GetX1(), GetY1() + ratio1 * (GetY2() - GetY1()), GetX2(), GetY1() + ratio2 * (GetY2() - GetY1()), "ilpaletteaxis");
-         parent.UpdateAsync();
+         if (inter) {
+            inter->SetPosition(parent, px, py, GetX1(), GetY1(), GetX2(), GetY2(), event == kButton1Down);
+            inter->Paint(parent, GetX1(), GetY1(), GetX2(), GetY2());
+            parent.UpdateAsync();
+         }
          break;
 
       case kButton1Up:
@@ -260,11 +301,13 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             gROOT->SetEscape(kFALSE);
             break;
          }
+         if (!inter)
+            break;
 
-         ratio2 = (parent.AbsPixeltoY(py) - fY1) / (fY2 - fY1);
-         if (ratio1 > ratio2)
-            std::swap(ratio1, ratio2);
-         if ((ratio2 - ratio1 > 0.05) && fH && (fH->GetDimension() == 2)) {
+         inter->SetPosition(parent, px, py, GetX1(), GetY1(), GetX2(), GetY2());
+         if (inter->ratio1 > inter->ratio2)
+            std::swap(inter->ratio1, inter->ratio2);
+         if ((inter->ratio2 - inter->ratio1 > 0.05) && fH && (fH->GetDimension() == 2)) {
             Double_t zmin = fH->GetMinimum();
             Double_t zmax = fH->GetMaximum();
             if (GetLog()) {
@@ -273,8 +316,8 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                zmin = TMath::Log10(zmin);
                zmax = TMath::Log10(zmax);
             }
-            Double_t newmin = zmin + (zmax - zmin) * ratio1;
-            Double_t newmax = zmin + (zmax - zmin) * ratio2;
+            Double_t newmin = zmin + (zmax - zmin) * inter->ratio1;
+            Double_t newmax = zmin + (zmax - zmin) * inter->ratio2;
             if (newmin < zmin)
                newmin = fH->GetBinContent(fH->GetMinimumBin());
             if (newmax > zmax)
@@ -288,7 +331,7 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             fH->SetBit(TH1::kIsZoomed);
             parent.Modified(kTRUE);
          }
-         kmode = 0;
+         parent.Interactive(); // clear interactive object
          break;
    }
 }
