@@ -26,7 +26,7 @@ public:
 class Frame {
 public:
    Frame() = default;
-   ~Frame() { delete[] fHits; }
+   virtual ~Frame() { delete[] fHits; }
    Frame(const Frame &o) { Set(o.fN, o.fHits); }
    Frame &operator=(const Frame &o)
    {
@@ -55,6 +55,7 @@ public:
 class Pad {
 public:
    Pad() = default;
+   virtual ~Pad() = default;
    int fX = 0;
    ClassDef(Pad, 1)
 };
