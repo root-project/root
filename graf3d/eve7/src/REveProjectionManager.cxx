@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <ROOT/REveProjectionManager.hxx>
+#include <ROOT/REveProjectionAxis.hxx>
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveProjectionBases.hxx>
 #include <ROOT/REveCompound.hxx>
@@ -78,6 +79,30 @@ void REveProjectionManager::RemoveDependent(REveElement *el)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Updates name to have consistent information with projection.
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add `steps` * 1e-4 to the distortion of the current projection, clamped at
+/// zero, reproject, and refresh the REveProjectionAxis nieces. Called by MIR.
+
+void REveProjectionManager::BumpDistortion(Int_t steps)
+{
+   if (!fProjection) return;
+
+   Float_t d = fProjection->GetDistortion() + steps * 1e-4f;
+   if (d < 0.f) d = 0.f;
+   fProjection->SetDistortion(d);
+
+   UpdateName();
+   ProjectChildren();
+
+   // Refresh the axes among the nieces.
+   for (auto &n : fNieces) {
+      if (auto ax = dynamic_cast<REveProjectionAxis *>(n)) {
+         ax->UpdateTicks();
+         ax->UpdateDistortionLabel();
+      }
+   }
+}
 
 void REveProjectionManager::UpdateName()
 {

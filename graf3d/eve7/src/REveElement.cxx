@@ -862,6 +862,7 @@ void REveElement::DestroyMainTrans()
 void REveElement::SetTransMatrix(Double_t* carr)
 {
    RefMainTrans().SetFrom(carr);
+   StampTransBBox();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -870,6 +871,7 @@ void REveElement::SetTransMatrix(Double_t* carr)
 void REveElement::SetTransMatrix(const TGeoMatrix& mat)
 {
    RefMainTrans().SetFrom(mat);
+   StampTransBBox();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1484,6 +1486,39 @@ void REveElement::BuildRenderData()
    if (fMainTrans.get())
    {
       fRenderData->SetMatrix(fMainTrans->Array());
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write the main transformation and its motion for a kCBTransBBox update.
+/// No render data is written; the client applies it to the object it already
+/// has. It goes out as JSON, so no offset is reserved in the binary blob for a
+/// message that carries no geometry.
+
+void REveElement::WriteTransJson(nlohmann::json &cj)
+{
+   if (fMainTrans.get())
+   {
+      const Double_t *m = fMainTrans->Array();
+      cj["matrix"] = std::vector<double>(m, m + 16);
+   }
+
+   if (fMainTrans && fMainTrans->HasMotion())
+   {
+      const REveDeltaTrans &d = *fMainTrans->GetDeltaTrans();
+      const REveVectorD &v = d.fVel, &a = d.fAcc, &s = d.fSpinAxis;
+      cj["mot"] = { {"t0",     d.fMotionT0},
+                    {"vel",    {v.fX, v.fY, v.fZ}},
+                    {"acc",    {a.fX, a.fY, a.fZ}},
+                    {"axis",   {s.fX, s.fY, s.fZ}},
+                    {"rate",   d.fSpinRate},
+                    {"max_dt", d.fMaxDt} };
+   }
+   else
+   {
+      // Sent explicitly so that a stopped element cancels the client's
+      // trajectory: a missing field in a partial update means unchanged.
+      cj["mot"] = nullptr;
    }
 }
 

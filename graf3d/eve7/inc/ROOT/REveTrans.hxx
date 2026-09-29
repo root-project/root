@@ -15,12 +15,29 @@
 #include <ROOT/REveVector.hxx>
 #include "TVector3.h"
 
+#include <memory>
+
 class TGeoMatrix;
 class TGeoHMatrix;
 class TBuffer3D;
 
 namespace ROOT {
 namespace Experimental {
+
+////////////////////////////////////////////////////////////////////////////////
+/// How a transformation is changing: the state REveTrans::SetMotion() records.
+/// Held by pointer and allocated on demand, the way REveElement holds its
+/// REveTrans, because most transformations never move.
+
+struct REveDeltaTrans
+{
+   REveVectorD fVel;            ///< velocity, units/s
+   REveVectorD fAcc;            ///< acceleration, units/s^2
+   REveVectorD fSpinAxis;       ///< spin axis, unit length, local frame
+   Double_t    fSpinRate{0.};   ///< rad/s about fSpinAxis
+   Double_t    fMaxDt{0.};      ///< seconds the trajectory may be trusted
+   Double_t    fMotionT0{0.};   ///< REveUtil::ServerTimeMs() when set
+};
 
 /******************************************************************************/
 // REveTrans -- 3D transformation in generalised coordinates
@@ -42,6 +59,10 @@ protected:
    Bool_t fEditRotation; // edit rotation
    Bool_t fEditScale;    // edit scale
 
+   /// Streamed motion, null unless set. Transient: a velocity at an instant is
+   /// runtime state, not something a saved transformation should carry.
+   std::unique_ptr<REveDeltaTrans> fDeltaTrans;  ///<!
+
    Double_t Norm3Column(Int_t col);
    Double_t Orto3Column(Int_t col, Int_t ref);
 
@@ -52,6 +73,19 @@ public:
    REveTrans(const Float_t arr[16]);
    ~REveTrans() override {}
 
+   /// \name Streamed motion
+   /// How this transformation is changing, so the client can extrapolate between
+   /// updates. Spin is an axis and a rate in the local frame.
+   /// @{
+   void SetMotion(const REveVectorD &vel, const REveVectorD &acc, Double_t max_dt);
+   void SetMotion(const REveVectorD &vel, const REveVectorD &acc,
+                  const REveVectorD &spin_axis, Double_t spin_rate, Double_t max_dt);
+   void ClearMotion();
+
+   Bool_t HasMotion() const { return fDeltaTrans != nullptr; }
+   const REveDeltaTrans *GetDeltaTrans() const { return fDeltaTrans.get(); }
+   /// @}
+
    // General operations
 
    void UnitTrans();
@@ -60,9 +94,17 @@ public:
    void SetTrans(const REveTrans &t, Bool_t copyAngles = kTRUE);
    void SetFromArray(const Double_t arr[16]);
    void SetFromArray(const Float_t arr[16]);
+   /// The delta-trans is owned, so a copy gets its own. Assigning from a
+   /// transformation that is not moving clears the target's, rather than
+   /// leaving it to keep extrapolating a trajectory it no longer has.
    REveTrans &operator=(const REveTrans &t)
    {
-      SetTrans(t);
+      if (this != &t) {
+         SetTrans(t);
+         fDeltaTrans = t.fDeltaTrans
+                     ? std::make_unique<REveDeltaTrans>(*t.fDeltaTrans)
+                     : nullptr;
+      }
       return *this;
    }
    void SetupRotation(Int_t i, Int_t j, Double_t f);

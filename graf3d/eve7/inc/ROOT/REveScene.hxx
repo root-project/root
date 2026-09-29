@@ -104,6 +104,8 @@ public:
    void StreamJsonRecurse(REveElement *el, nlohmann::json &jobj);
 
    void StreamRepresentationChanges();
+
+   void StreamMotionChanges(nlohmann::json &arr);
    void SendChangesToSubscribers();
 
    Bool_t HasSubscribers() const { return !fSubscribers.empty(); }

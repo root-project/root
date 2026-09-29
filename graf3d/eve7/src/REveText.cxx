@@ -31,6 +31,46 @@ REveText::REveText(const Text_t* n, const Text_t* t) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation.
 
+////////////////////////////////////////////////////////////////////////////////
+/// Make this text a button: a click that does not become a drag sends `mir`
+/// to `target`, or to this element if null. The effect reaches every client.
+/// A target that is an REveAunt is tracked, and its destruction clears the
+/// action. Any other target is stored by id only.
+
+void REveText::SetClickAction(const std::string &mir, REveElement *target)
+{
+   if (fClickAunt) {
+      fClickAunt->RemoveNiece(this);
+      fClickAunt = nullptr;
+   }
+
+   fClickMir = mir;
+   fClickTargetId = target ? target->GetElementId() : 0;
+
+   if (target) {
+      if (auto au = dynamic_cast<REveAunt *>(target)) {
+         au->AddNiece(this);
+         fClickAunt = au;
+      }
+   }
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the click action when the click target is destroyed, so the button
+/// does not keep an id that may be reused by an unrelated element.
+
+void REveText::RemoveAunt(REveAunt *au)
+{
+   if (au == fClickAunt) {
+      fClickAunt = nullptr;
+      fClickMir.clear();
+      fClickTargetId = 0;
+      StampObjProps();
+   }
+   REveElement::RemoveAunt(au);
+}
+
 Int_t REveText::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
    Int_t ret = REveShape::WriteCoreJson(j, rnr_offset);
@@ -42,8 +82,14 @@ Int_t REveText::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    j["fPosZ"] = fPosition.fZ;
    j["fFontSize"] = fFontSize;
    j["fFontHinting"] = fFontHinting;
+   j["fFontWeight"] = fFontWeight;
    j["fExtraBorder"] = fExtraBorder;
    j["fMode"] = fMode;
+   j["fResizable"] = fResizable;
+   j["fAlignH"] = fAlignH;
+   j["fAlignV"] = fAlignV;
+   j["fClickMir"] = fClickMir;
+   j["fClickTargetId"] = fClickTargetId;
    j["fTextColor"] = fTextColor;
 
    return ret;
@@ -84,7 +130,7 @@ std::string REveText::sSdfFontDir;
 /// REveManager needs to be created before calling this function.
 /// Static function.
 
-bool REveText::SetSdfFontDir(std::string_view dir, bool require_write_access)
+bool REveText::SetSdfFontDir(const std::string &dir, bool require_write_access)
 {
    static const char* tpfx = "REveText::SetSdfFontDir";
 
@@ -113,9 +159,11 @@ bool REveText::SetSdfFontDir(std::string_view dir, bool require_write_access)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set default SDF font directory based on write permissions in $ROOTSYS and
-/// in the current working directory.
+/// Set default SDF font directory based on write permissions in the ui5
+/// directory, WebGui.RootUi5Path or else $ROOTSYS/ui5, and in the current
+/// working directory.
 /// Alternative fallback to /tmp or user's home directory is not attempted.
+/// Needs REveManager; called before it exists, it fails and can be retried.
 
 bool REveText::SetDefaultSdfFontDir()
 {
@@ -127,10 +175,22 @@ bool REveText::SetDefaultSdfFontDir()
       return false;
    }
 
+   // Both directories are registered with the manager. Without one, fail but
+   // do not mark the setup as failed, so a call after Create() can succeed.
+   if (gEve == nullptr) {
+      static bool s_have_warned = false;
+      if (!s_have_warned) {
+         ::Error(tpfx, "REveManager needs to be initialized before font setup can begin.");
+         s_have_warned = true;
+      }
+      return false;
+   }
+
    std::string dir( gEnv->GetValue("WebGui.RootUi5Path", gSystem->ExpandPathName("${ROOTSYS}/ui5")) );
+   dir += "/eve7/sdf-fonts/";
    s_font_init_failed = true;
-   if (SetSdfFontDir(dir + "/eve7/sdf-fonts/")) {
-      ::Info(tpfx, "Using install-wide SDF font dir $ROOTSYS/ui5/eve7/sdf-fonts");
+   if (SetSdfFontDir(dir)) {
+      ::Info(tpfx, "Using SDF font dir %s", dir.c_str());
    } else if (SetSdfFontDir("./sdf-fonts/")) {
       ::Info(tpfx, "Using SDF font dir sdf_fonts/ in current directory");
    } else {
@@ -150,7 +210,7 @@ bool REveText::SetDefaultSdfFontDir()
 /// Returns true if font files are present, false otherwise.
 /// Static function.
 
-bool REveText::AssertSdfFont(std::string_view font_name, std::string_view ttf_font)
+bool REveText::AssertSdfFont(const std::string &font_name, const std::string &ttf_font)
 {
    static const char* tpfx = "REveText::AssertSdfFont";
 

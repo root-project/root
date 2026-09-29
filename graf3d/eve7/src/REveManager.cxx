@@ -370,6 +370,41 @@ void REveManager::BrowseElement(ElementId_t id)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Ask every connected client to grab its GL viewers and POST each image to an
+/// image collector. Each client posts the views it shows, all tagged with the
+/// same `event_id`.
+///
+/// The body is `application/octet-stream`, width*height*4 bytes of RGBA8 with
+/// straight alpha and no background, so it composites onto any backdrop.
+/// Headers X-Width, X-Height, X-Event-ID and X-View-Type describe it; X-Flip-Y
+/// is 1 when the rows are in WebGL bottom-up order. RenderCore's
+/// util/image-gator.js is a reference receiver. The default collector is on
+/// loopback; a remote one needs TLS and authentication.
+///
+/// \param event_id  tag recorded with the image, e.g. run/lumi/event
+/// \param url       collector endpoint; empty takes rootrc `WebEve.ImageGatorUrl`,
+///                  which defaults to http://localhost:3000/capture
+/// \param scale     multiplier on the viewer viewport; 1 is what the operator sees
+/// \param viewers   restrict to these viewer names; empty means all of them
+
+void REveManager::GrabImages(std::string_view event_id, std::string_view url, int scale,
+                             const std::vector<std::string> &viewers)
+{
+   std::string dest(url);
+   if (dest.empty())
+      dest = gEnv->GetValue("WebEve.ImageGatorUrl", "http://localhost:3000/capture");
+
+   nlohmann::json msg = {};
+   msg["content"]  = "GrabImage";
+   msg["event_id"] = std::string(event_id);
+   msg["url"]      = dest;
+   msg["scale"]    = scale;
+   msg["viewers"]  = viewers;
+
+   fWebWindow->Send(0, msg.dump());
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Called from REveElement prior to its destruction so the
 /// framework components (like object editor) can unreference it.
 
@@ -831,7 +866,18 @@ void REveManager::WindowDisconnect(unsigned connid)
    // note if scene changes are in progess the new serverstate will be changes after finish those
    if (fServerState.fVal == ServerState::UpdatingClients && ClientConnectionsFree())
    {
-      fServerState.fVal = ServerState::Waiting;
+      if (fPendingSceneChanges && !fConnList.empty()) {
+         // The closed connection was the last one busy: send the changes held
+         // back for it, as its acknowledgement would have.
+         fPendingSceneChanges = false;
+         StreamSceneChangesToJson();
+         SendSceneChanges();
+      } else {
+         // No one left to send to; the stamps stay for the next EndChange().
+         fPendingSceneChanges = false;
+         fServerState.fVal = ServerState::Waiting;
+      }
+      fServerState.fCV.notify_all();
    }
 
    fServerStatus.fTLastDisconnect = std::time(nullptr);
@@ -876,7 +922,15 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
       }
 
       if (fServerState.fVal == ServerState::UpdatingClients && ClientConnectionsFree()) {
-         fServerState.fVal = ServerState::Waiting;
+         if (fPendingSceneChanges) {
+            // Changes stamped while the previous ones were in flight. Sending
+            // them leaves the clients busy again.
+            fPendingSceneChanges = false;
+            StreamSceneChangesToJson();
+            SendSceneChanges();
+         } else {
+            fServerState.fVal = ServerState::Waiting;
+         }
          fServerState.fCV.notify_all();
       }
 
@@ -1017,6 +1071,39 @@ void REveManager::StreamSceneChangesToJson()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Send transformation-only changes on the motion channel: the same websocket,
+/// outside the BeginChanges/EndChanges cycle, with no acknowledgement. A
+/// connection for which RWebWindow::CanSend(id, true) is false skips the
+/// message. Each message is absolute state, but a client that skips the last
+/// one keeps the old state until the element changes again.
+
+void REveManager::SendMotionChanges()
+{
+   nlohmann::json arr = nlohmann::json::array();
+
+   fWorld->StreamMotionChanges(arr);
+   for (auto &el : fScenes->RefChildren()) {
+      auto s = dynamic_cast<REveScene *>(el);
+      if (s) s->StreamMotionChanges(arr);
+   }
+
+   if (arr.empty() || fConnList.empty())
+      return;
+
+   nlohmann::json msg = {};
+   msg["content"] = "Motion";
+   msg["t"]       = REveUtil::ServerTimeMs();
+   msg["els"]     = arr;
+
+   std::string data = msg.dump();
+
+   for (auto &conn : fConnList)
+      if (fWebWindow->CanSend(conn.fId, true))
+         fWebWindow->Send(conn.fId, data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Send json and binary data to scene's connections
 void REveManager::SendSceneChanges()
 {
@@ -1170,6 +1257,24 @@ void REveManager::SendBinary(unsigned connid, const void *data, std::size_t len)
    fWebWindow->SendBinary(connid, data, len);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Is there anything stamped and not yet streamed?
+
+bool REveManager::AnySceneChanged() const
+{
+   if (fWorld->IsChanged())
+      return true;
+
+   for (auto &el : fScenes->RefChildren()) {
+      auto s = dynamic_cast<REveScene *>(el);
+      if (s && s->IsChanged())
+         return true;
+   }
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool REveManager::ClientConnectionsFree() const
 {
    for (auto &conn : fConnList) {
@@ -1225,17 +1330,39 @@ void REveManager::BeginChange()
 }
 
 //____________________________________________________________________
+/// Stop accepting changes and stream them. If the clients have not yet
+/// acknowledged the previous changes, keep the stamps and let the last
+/// acknowledgement in WindowData() flush them. Stamps coalesce per element.
+/// Motion changes are sent in either case. Changes made by a MIR are not held
+/// back.
+
 void REveManager::EndChange()
 {
    // tag scene to disable accepting chages, write the change json
    GetScenes()->EndAcceptingChanges();
    GetWorld()->EndAcceptingChanges();
 
-   StreamSceneChangesToJson();
-
-   // set new server state under lock
    std::unique_lock<std::mutex> lock(fServerState.fMutex);
+
+   // Motion is outside the change cycle, so it is sent even when changes
+   // are held.
+   SendMotionChanges();
+
+   if ( ! fConnList.empty() && ! ClientConnectionsFree())
+   {
+      // Previous changes not yet acknowledged. Leave everything stamped.
+      if (AnySceneChanged())
+         fPendingSceneChanges = true;
+
+      fServerState.fVal = ServerState::UpdatingClients;
+      fServerState.fCV.notify_all();
+      return;
+   }
+
+   StreamSceneChangesToJson();
    SendSceneChanges();
+   fPendingSceneChanges = false;
+
    fServerState.fVal = fConnList.empty() ? ServerState::Waiting : ServerState::UpdatingClients;
    fServerState.fCV.notify_all();
 }
