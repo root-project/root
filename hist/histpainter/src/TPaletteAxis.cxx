@@ -21,6 +21,7 @@
 
 #include <cstdio>
 #include <iostream>
+#include <memory>
 
 
 
@@ -426,10 +427,10 @@ void TPaletteAxis::Paint(Option_t *)
    ConvertNDCtoPad();
 
    SetFillStyle(1001);
-   Double_t ymin = fY1;
-   Double_t ymax = fY2;
-   Double_t xmin = fX1;
-   Double_t xmax = fX2;
+   Double_t ymin = GetY1();
+   Double_t ymax = GetY2();
+   Double_t xmin = GetX1();
+   Double_t xmax = GetX2();
    Double_t wmin, wmax;
    if (fH) {
       wmin = fH->GetMinimum();
@@ -441,7 +442,6 @@ void TPaletteAxis::Paint(Option_t *)
    Double_t wlmin = wmin;
    Double_t wlmax = wmax;
    Double_t b1, b2, w1, w2, zc;
-   Bool_t   kHorizontal = false;
 
    if ((wlmax - wlmin) <= 0) {
       Double_t mz = wlmin * 0.1;
@@ -452,7 +452,7 @@ void TPaletteAxis::Paint(Option_t *)
       wmax  = wlmax;
    }
 
-   if (GetX2NDC()-GetX1NDC() > GetY2NDC()-GetY1NDC()) kHorizontal = true;
+   Bool_t isHorizontal = GetX2NDC() - GetX1NDC() > GetY2NDC() - GetY1NDC();
 
    if (GetLog()) {
       if (wmin <= 0 && wmax > 0) wmin = TMath::Min((Double_t)1, (Double_t)0.001 * wmax);
@@ -462,17 +462,20 @@ void TPaletteAxis::Paint(Option_t *)
    Double_t ws    = wlmax - wlmin;
    Int_t ncolors = gStyle->GetNumberOfColors();
    Int_t ndivz;
-   if (fH) ndivz = fH->GetContour();
-   else    ndivz = ncolors;
-   if (ndivz == 0) return;
+   if (fH)
+      ndivz = fH->GetContour();
+   else
+      ndivz = ncolors;
+   if (ndivz == 0)
+      return;
    ndivz = TMath::Abs(ndivz);
    Int_t theColor, color;
    // import Attributes already here since we might need them for CJUST
    if (fH && fH->GetDimension() == 2) {
       fAxis.ImportAxisAttributes(fH->GetZaxis());
       TString ztit = fAxis.GetTitle();
-      if (ztit.Index(";")>0) {
-         ztit.Remove(ztit.Index(";"),ztit.Length());
+      if (ztit.Index(";") > 0) {
+         ztit.Remove(ztit.Index(";"), ztit.Length());
          fAxis.SetTitle(ztit.Data());
       }
    }
@@ -486,21 +489,25 @@ void TPaletteAxis::Paint(Option_t *)
       }
    }
    // case option "CJUST": put labels directly at color boundaries
-   TLatex *label = nullptr;
-   TLine *line = nullptr;
+   std::unique_ptr<TLatex> label;
+   std::unique_ptr<TLine> line;
    Double_t prevlab = 0;
    if (fH) {
       TString opt(fH->GetDrawOption());
       if (opt.Contains("CJUST", TString::kIgnoreCase)) {
-         label = new TLatex();
+         label = std::make_unique<TLatex>();
          label->SetTextFont(fAxis.GetLabelFont());
          label->SetTextColor(fAxis.GetLabelColor());
-         if (kHorizontal) label->SetTextAlign(kHAlignCenter+kVAlignTop);
-         else             label->SetTextAlign(kHAlignLeft+kVAlignCenter);
-         line = new TLine();
+         if (isHorizontal)
+            label->SetTextAlign(kHAlignCenter + kVAlignTop);
+         else
+            label->SetTextAlign(kHAlignLeft + kVAlignCenter);
+         line = std::make_unique<TLine>();
          line->SetLineColor(fAxis.GetLineColor());
-         if (kHorizontal) line->PaintLine(xmin, ymin, xmax, ymin);
-         else             line->PaintLine(xmax, ymin, xmax, ymax);
+         if (isHorizontal)
+            line->PaintLine(xmin, ymin, xmax, ymin);
+         else
+            line->PaintLine(xmax, ymin, xmax, ymax);
       }
    }
    Double_t scale = ndivz / (wlmax - wlmin);
@@ -524,7 +531,7 @@ void TPaletteAxis::Paint(Option_t *)
       }
 
       if (w2 <= wlmin) continue;
-      if (kHorizontal) {
+      if (isHorizontal) {
          b1 = xmin + (w1 - wlmin) * (xmax - xmin) / ws;
          b2 = xmin + (w2 - wlmin) * (xmax - xmin) / ws;
       } else {
@@ -541,8 +548,10 @@ void TPaletteAxis::Paint(Option_t *)
       theColor = Int_t((color + 0.99) * Double_t(ncolors) / Double_t(ndivz));
       SetFillColor(gStyle->GetColorPalette(theColor));
       TAttFill::Modify();
-      if (kHorizontal) gPad->PaintBox(b1, ymin, b2, ymax);
-      else             gPad->PaintBox(xmin, b1, xmax, b2);
+      if (isHorizontal)
+         gPad->PaintBox(b1, ymin, b2, ymax);
+      else
+         gPad->PaintBox(xmin, b1, xmax, b2);
       // case option "CJUST": put labels directly
       if (fH && label) {
          Double_t lof = fAxis.GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin());
@@ -551,60 +560,64 @@ void TPaletteAxis::Paint(Option_t *)
          Double_t lsize = fAxis.GetLabelSize();
          Double_t lsize_user = lsize*(gPad->GetUymax()-gPad->GetUymin());
          Double_t zlab = fH->GetContourLevel(i);
-         if (GetLog()&& !fH->TestBit(TH1::kUserContour)) {
+         if (GetLog() && !fH->TestBit(TH1::kUserContour)) {
             zlab = TMath::Power(10, zlab);
          }
          // make sure labels dont overlap
          if (i == 0 || (b1 - prevlab) > 1.5*lsize_user) {
-            if (kHorizontal) label->PaintLatex(b1, ymin - lof, 0, lsize, TString::Format("%g", zlab));
-            else             label->PaintLatex(xmax + lof, b1, 0, lsize, TString::Format("%g", zlab));
+            if (isHorizontal)
+               label->PaintLatex(b1, ymin - lof, 0, lsize, TString::Format("%g", zlab));
+            else
+               label->PaintLatex(xmax + lof, b1, 0, lsize, TString::Format("%g", zlab));
             prevlab = b1;
          }
-         if (kHorizontal) line->PaintLine(b2, ymin+tlength, b2, ymin);
-         else             line->PaintLine(xmax-tlength, b1, xmax, b1);
-         if (i == ndivz-1) {
+         if (isHorizontal)
+            line->PaintLine(b2, ymin + tlength, b2, ymin);
+         else
+            line->PaintLine(xmax - tlength, b1, xmax, b1);
+         if (i == ndivz - 1) {
             // label + tick at top of axis
             if (fH && (b2 - prevlab > 1.5*lsize_user)) {
-               if (kHorizontal) label->PaintLatex(b2, ymin - lof, 0, lsize, TString::Format("%g",fH->GetMaximum()));
-               else             label->PaintLatex(xmax + lof, b2, 0, lsize, TString::Format("%g",fH->GetMaximum()));
+               if (isHorizontal)
+                  label->PaintLatex(b2, ymin - lof, 0, lsize, TString::Format("%g", fH->GetMaximum()));
+               else
+                  label->PaintLatex(xmax + lof, b2, 0, lsize, TString::Format("%g", fH->GetMaximum()));
             }
-            if (kHorizontal) line->PaintLine(b1, ymin+tlength, b1, ymin);
-            else             line->PaintLine(xmax-tlength, b2, xmax, b2);
+            if (isHorizontal)
+               line->PaintLine(b1, ymin + tlength, b1, ymin);
+            else
+               line->PaintLine(xmax - tlength, b2, xmax, b2);
          }
       }
    }
 
+   // case option "CJUST" - just cleanup
+   if (label)
+      return;
+
    // Take primary divisions only
    Int_t ndiv;
-   if (fH) ndiv = fH->GetZaxis()->GetNdivisions();
-   else    ndiv = fAxis.GetNdiv();
-   Bool_t isOptimized = ndiv>0;
-   Int_t absDiv = abs(ndiv);
-   Int_t maxD = absDiv/1000000;
-   ndiv = absDiv%100 + maxD*1000000;
-   if (!isOptimized) ndiv  = -ndiv;
+   if (fH)
+      ndiv = fH->GetZaxis()->GetNdivisions();
+   else
+      ndiv = fAxis.GetNdiv();
+   Bool_t isOptimized = ndiv > 0;
+   Int_t absDiv = TMath::Abs(ndiv);
+   Int_t maxD = absDiv / 1000000;
+   ndiv = absDiv % 100 + maxD * 1000000;
 
-   char chopt[6] = "S   ";
-   chopt[1] = 0;
-   strncat(chopt, "+L", 3);
-   if (ndiv < 0) {
-      ndiv = TMath::Abs(ndiv);
-      strncat(chopt, "N", 2);
-   }
+   TString chopt = "S+L";
+   if (!isOptimized)
+      chopt.Append("N");
    if (GetLog()) {
       wmin = TMath::Power(10., wlmin);
       wmax = TMath::Power(10., wlmax);
-      strncat(chopt, "G", 2);
+      chopt.Append("G");
    }
-   if (label) {
-   // case option "CJUST", cleanup
-      delete label;
-      delete line;
-   } else {
-      // default
-      if (kHorizontal) fAxis.PaintAxis(xmin, ymin, xmax, ymin, wmin, wmax, ndiv, chopt);
-      else             fAxis.PaintAxis(xmax, ymin, xmax, ymax, wmin, wmax, ndiv, chopt);
-   }
+   if (isHorizontal)
+      fAxis.PaintAxis(xmin, ymin, xmax, ymin, wmin, wmax, ndiv, chopt);
+   else
+      fAxis.PaintAxis(xmax, ymin, xmax, ymax, wmin, wmax, ndiv, chopt);
 }
 
 
