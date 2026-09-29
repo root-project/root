@@ -445,13 +445,8 @@ ROOT::Internal::RPageSource::FindClusterId(DescriptorId_t physicalColumnId, NTup
       const auto &clusterIds = (cgIter + cgMidpoint)->GetClusterIds();
       R__ASSERT(!clusterIds.empty());
 
-      const auto &clusterDesc = desc.GetClusterDescriptor(clusterIds.front());
-      // this may happen if the RNTuple has an empty schema
-      if (!clusterDesc.ContainsColumn(physicalColumnId))
-         return descGuard;
-
-      const auto firstElementInGroup = clusterDesc.GetColumnRange(physicalColumnId).GetFirstElementIndex();
-      if (firstElementInGroup > index) {
+      const auto &firstColumnRange = desc.GetClusterDescriptor(clusterIds.front()).GetColumnRange(physicalColumnId);
+      if (firstColumnRange.GetFirstElementIndex() > index) {
          // Look into the lower half of cluster groups
          R__ASSERT(cgMidpoint > 0);
          cgRight = cgMidpoint - 1;
