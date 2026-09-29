@@ -1059,6 +1059,34 @@ TTree::~TTree()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// The virtual cloning inherited from TObject is disabled for TTree, because
+/// the streamer-based copy it performs is only meaningful as a building block
+/// of TTree::CloneTree(): for a tree associated to a file it duplicates only
+/// the in-memory metadata, so the "clone" still reads its baskets from the
+/// original file and is silently broken when written to another file.
+///
+/// Emits an error and returns nullptr. Use TTree::CloneTree() instead. Code
+/// that really wants the low-level metadata-only copy can still call
+/// `gDirectory->CloneObject(tree)` explicitly.
+
+TObject *TTree::Clone(const char *) const
+{
+   Error("Clone", "Not implemented, use TTree::CloneTree instead.");
+   return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Disabled for TTree, like the copy constructor and the copy assignment.
+///
+/// Emits an error and does nothing. Use TTree::CopyTree() or
+/// TTree::CopyEntries() instead.
+
+void TTree::Copy(TObject &) const
+{
+   Error("Copy", "Not implemented, use TTree::CopyTree or TTree::CopyEntries instead.");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Returns the transient buffer currently used by this TTree for reading/writing baskets.
 
 TBuffer* TTree::GetTransientBuffer(Int_t size)
@@ -3203,7 +3231,10 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
 
    // Note: For a chain, the returned clone will be
    //       a clone of the chain's first tree.
-   TTree* newtree = (TTree*) thistree->Clone();
+   // TTree::Clone() is disabled, so go through TNamed::Clone() to get the
+   // plain streamer-based metadata copy, which is exactly the intended first
+   // step here (the entries are copied separately below if requested).
+   TTree* newtree = (TTree*) thistree->TNamed::Clone();
    if (!newtree) {
       return nullptr;
    }
