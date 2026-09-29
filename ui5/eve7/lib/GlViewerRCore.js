@@ -6,6 +6,7 @@ sap.ui.define([
    "use strict";
 
    let RC;
+   let REveCameraControls;
    let datGUI;
 
    class GlViewerRCore extends GlViewer {
@@ -65,10 +66,14 @@ sap.ui.define([
          // import("https://desire.physics.ucsd.edu/matevz/alja.github.io/rootui5/eve7/rnr_core/RenderCore.js").then((module) => {
 
          if (!RC) {
-            import(this.eve_path + 'lib/RenderCore.js').then((module) => {
+            Promise.all([
+               import(this.eve_path + 'lib/RenderCore.js'),
+               import(this.eve_path + 'lib/REveCameraControls.js')
+            ]).then(([module, camModule]) => {
                if (this._logLevel >= 2)
                   console.log("GlViewerRCore.onInit - RenderCore.js loaded");
                RC = module;
+               REveCameraControls = camModule.REveCameraControls;
 
                RC.Canvas.prototype.generateCanvasDOM = function(id="eve7-rc-canvas") {
                   if (RC.Canvas.prototype._xxcount === undefined) { RC.Canvas.prototype._xxcount = 0; }
@@ -461,7 +466,7 @@ sap.ui.define([
          });
 
          // implement the camera control to client side (and look into how to locate the camera)
-         this.controls = new RC.REveCameraControls(this.camera, this.canvas.canvasDOM);
+         this.controls = new REveCameraControls(this.camera, this.canvas.canvasDOM);
          this.controls.addEventListener('change', this.render.bind(this));
 
          // sync camera trans to server after camera change have ended
