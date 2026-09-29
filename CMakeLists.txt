@@ -387,8 +387,8 @@ install(FILES ${CMAKE_BINARY_DIR}/etc/gitinfo.txt DESTINATION ${CMAKE_INSTALL_SY
 
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.
+add_subdirectory (builtins/zip) # hard coded C builtin for core/zip
 add_subdirectory (core)
-add_subdirectory (builtins/zip) # hard coded builtin for core/zip
 add_subdirectory (math)
 if (fortran AND CMAKE_Fortran_COMPILER)
   add_subdirectory(builtins/cernlib) # hard coded builtin for hist and main

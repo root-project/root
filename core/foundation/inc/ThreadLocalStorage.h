@@ -57,14 +57,6 @@
 
 #include <stddef.h>
 
-#ifdef __cplusplus
-#include "RtypesCore.h"
-#endif
-
-#include <ROOT/RConfig.hxx>
-
-#include "RConfigure.h"
-
 #if defined(R__MACOSX)
 #  if defined(__clang__) && defined(MAC_OS_X_VERSION_10_7) && (defined(__x86_64__) || defined(__i386__))
 #    define R__HAS___THREAD
@@ -81,7 +73,7 @@
 #if defined(R__WIN32)
 #  define R__HAS_DECLSPEC_THREAD
 #endif
-#if defined(R__FBSD)
+#if defined(R__FBSD) && !defined(R__HAS_PTHREAD)
 #  define R__HAS_PTHREAD
 #endif
 
@@ -130,10 +122,10 @@
 template <int marker, typename T>
 T &TTHREAD_TLS_INIT() {
    TTHREAD_TLS(T*) ptr = NULL;
-   TTHREAD_TLS(Bool_t) isInit(kFALSE);
+   TTHREAD_TLS(bool) isInit(false);
    if (!isInit) {
       ptr = new T;
-      isInit = kTRUE;
+      isInit = true;
    }
    return *ptr;
 }
@@ -141,10 +133,10 @@ T &TTHREAD_TLS_INIT() {
 template <int marker, typename Array, typename T>
 Array &TTHREAD_TLS_INIT_ARRAY() {
    TTHREAD_TLS(Array*) ptr = NULL;
-   TTHREAD_TLS(Bool_t) isInit(kFALSE);
+   TTHREAD_TLS(bool) isInit(false);
    if (!isInit) {
       ptr = new Array[sizeof(Array)/sizeof(T)];
-      isInit = kTRUE;
+      isInit = true;
    }
    return *ptr;
 }
@@ -152,10 +144,10 @@ Array &TTHREAD_TLS_INIT_ARRAY() {
 template <int marker, typename T, typename ArgType>
 T &TTHREAD_TLS_INIT(ArgType arg) {
    TTHREAD_TLS(T*) ptr = NULL;
-   TTHREAD_TLS(Bool_t) isInit(kFALSE);
+   TTHREAD_TLS(bool) isInit(false);
    if (!isInit) {
       ptr = new T(arg);
-      isInit = kTRUE;
+      isInit = true;
    }
    return *ptr;
 }
