@@ -23,10 +23,6 @@ typedef cppjit::cpyrt::Parameter Parameter;
 
 static inline size_t CALL_NARGS(size_t nargs) { return nargs & ~DIRECT_CALL; }
 
-#ifndef _WIN32
-#include <dlfcn.h>
-#endif
-
 // Standard
 #include <algorithm> // for std::count, std::remove
 #include <array>
@@ -34,7 +30,6 @@ static inline size_t CALL_NARGS(size_t nargs) { return nargs & ~DIRECT_CALL; }
 #include <csignal>
 #include <cstdlib> // for getenv
 #include <cstring>
-#include <filesystem>
 #include <iostream>
 #include <map>
 #include <mutex>
@@ -129,40 +124,18 @@ struct InterOpPaths {
   std::string ClangIncludeDir; // empty when no usable resource dir is known
 };
 
-// One set of coordinates, two anchors: prefer CppInterOp next to our own
-// load location so wheels relocate; fall back to the build-time install
-// prefix. An absolute coordinate (an external CppInterOp) replaces the
-// anchor in the join ([fs.path.append]).
+// In ROOT the dispatch API comes from libCling (loadDispatchAPI) and the
+// CppInterOp headers are staged under ROOT's etc directory, etc/cppinterop
+// in the build tree and in the install tree alike, so TROOT::GetEtcDir()
+// locates them in both.
 static InterOpPaths cppinterop_paths() {
-  std::filesystem::path anchor = CPPINTEROP_INSTALL_PREFIX;
-#ifndef _WIN32
-  Dl_info info;
-  if (dladdr((void*)&cppinterop_paths, &info) && info.dli_fname) {
-    const std::filesystem::path here =
-        std::filesystem::path(info.dli_fname).parent_path();
-    std::error_code ec;
-    if (std::filesystem::exists(here / CPPINTEROP_LIBRARY, ec))
-      anchor = here;
-  }
-#endif
   InterOpPaths Paths;
-  Paths.Library = (anchor / CPPINTEROP_LIBRARY).string();
-  // The include coordinate may carry several ':'-separated directories (an
-  // external CppInterOp build tree splits source and generated headers).
-  std::istringstream includeSpec{CPPINTEROP_INCLUDE_DIR};
-  for (std::string dir; std::getline(includeSpec, dir, ':');)
-    if (!dir.empty())
-      Paths.IncludeDirs.push_back((anchor / dir).string());
-  // A bundled install ships the build clang's builtin headers (see the
-  // CMake install rule); an empty coordinate or a missing directory falls
-  // back to resource-dir detection.
-  const std::string clangSpec = CPPJIT_CLANG_INCLUDE_DIR;
-  if (!clangSpec.empty()) {
-    const std::filesystem::path bundled = anchor / clangSpec;
-    std::error_code ec;
-    if (std::filesystem::exists(bundled / "include", ec))
-      Paths.ClangIncludeDir = bundled.string();
-  }
+  std::string dir = TROOT::GetEtcDir().Data();
+  dir += "/cppinterop";
+  if (gSystem->AccessPathName(dir.c_str()))
+    std::cerr << "[cppjit] CppInterOp headers not found in " << dir
+              << std::endl;
+  Paths.IncludeDirs.push_back(dir);
   return Paths;
 }
 
