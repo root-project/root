@@ -19,7 +19,7 @@
 #include "TMethodCall.h"
 #include "TObjString.h"
 #include "TError.h"
-#include "ROOT/v5/TFormulaPrimitive.h"
+#include "ROOT/v5/TFormulaPrimitive.hxx"
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
 #include "strlcpy.h"

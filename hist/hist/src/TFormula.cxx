@@ -17,7 +17,7 @@
 #include "TError.h"
 #include "TInterpreter.h"
 #include "TInterpreterValue.h"
-#include "TFormula.hxx"
+#include "TFormula.h"
 #include "TRegexp.h"
 
 #include "ROOT/StringUtils.hxx"
