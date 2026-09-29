@@ -56,30 +56,15 @@ This includes user-defined types that are related via a renaming rule.
 
 #### Plain fields
 
-| In-memory type              | Compatible on-disk types    | Comment                 |
-| --------------------------- | --------------------------- | ------------------------|
-| `bool`                      | `char`                      |                         |
-|                             | `std::[u]int[8,16,32,64]_t` |                         |
-|                             | enum                        |                         |
-|-----------------------------|-----------------------------|-------------------------|
-| `char`                      | `bool`                      |                         |
-|                             | `std::[u]int[8,16,32,64]_t` | with bounds check       |
-|                             | enum                        | with bounds check       |
-|-----------------------------|-----------------------------|-------------------------|
-| `std::[u]int[8,16,32,64]_t` | `bool`                      |                         |
-|                             | `char`                      |                         |
-|                             | `std::[u]int[8,16,32,64]_t` | with bounds check       |
-|                             | enum                        | with bounds check       |
-|-----------------------------|-----------------------------|-------------------------|
-| enum                        | enum of different type      | with bounds check       |
-|                             |                             | on underlying integer   |
-|-----------------------------|-----------------------------|-------------------------|
-| float                       | double                      | with fp class check[^1] |
-|-----------------------------|-----------------------------|-------------------------|
-| double                      | float                       |                         |
-|-----------------------------|-----------------------------|-------------------------|
-| `std::atomic<T>`            | `T'`                        |                         |
-
+| In-memory type | Compatible on-disk types | Comment |
+|---|---|---|
+| `bool` | `char`<br>`std::[u]int[8,16,32,64]_t`<br>`enum` | |
+| `char` | `bool`<br>`std::[u]int[8,16,32,64]_t`<br>`enum` | <br>with bounds check<br>with bounds check |
+| `std::[u]int[8,16,32,64]_t` | `bool`<br>`char`<br>`std::[u]int[8,16,32,64]_t`<br>`enum` | <br><br>with bounds check<br>with bounds check |
+| `enum` | enum of different type | with bounds check<br>on underlying integer |
+| `float` | `double` | with fp class check[^1] |
+| `double` | `float` | |
+| `std::atomic<T>` | `T'` | |
 [^1]: The floating point class check ensures that the on-disk value and the in-memory value are of the same nature
 (NaN, +/-inf, zero, underflow, or normal value).
 
@@ -91,47 +76,14 @@ and thus evolve naturally into one another.
 However, only those transformations that are guarantueed to work at runtime will be performed.
 For instance, a set can always be read as a vector but a vector does not necessarily fulfil the set property.
 
-| In-memory type                   | Compatible on-disk types             | Comment                               |
-| -------------------------------- | ------------------------------------ | ------------------------------------- |
-| `std::vector<T>`                 | `ROOT::RVec<T'>`                     |                                       |
-|                                  | `std::array<T', N>`                  |                                       |
-|                                  | `std::[unordered_][multi]set<T'>`    |                                       |
-|                                  | `std::[unordered_][multi]map<K',V'>` | only `T` = `std::[pair,tuple]<K,V>`   |
-|                                  | `std::optional<T'>`                  |                                       |
-|                                  | `std::unique_ptr<T'>`                |                                       |
-|                                  | User-defined collection of `T'`      |                                       |
-|                                  | Untyped collection of `T'`           |                                       |
-|----------------------------------|--------------------------------------|---------------------------------------|
-| `ROOT::RVec<T>`                  | `std::vector<T'>`                    | with size check                       |
-|                                  | `std::array<T', N>`                  | with size check                       |
-|                                  | `std::[unordered_][multi]set<T'>`    | with size check                       |
-|                                  | `std::[unordered_][multi]map<K',V'>` | only `T` = `std::[pair,tuple]<K,V>`,  |
-|                                  |                                      | with size check                       |
-|                                  | `std::optional<T'>`                  |                                       |
-|                                  | `std::unique_ptr<T'>`                |                                       |
-|                                  | User-defined collection of `T'`      | with size check                       |
-|                                  | Untyped collectionof `T'`            | with size check                       |
-|----------------------------------|--------------------------------------|---------------------------------------|
-| `std::[unordered_]set<T>`        | `std::[unordered_]set<T'>`           |                                       |
-|                                  | `std::[unordered_]map<K',V'>`        | only `T` = `std::[pair,tuple]<K,V>`   |
-|----------------------------------|--------------------------------------|---------------------------------------|
-| `std::[unordered_]multiset<T>`   | `ROOT::RVec<T'>`                     |                                       |
-|                                  | `std::vector<T'>`                    |                                       |
-|                                  | `std::array<T', N>`                  |                                       |
-|                                  | `std::[unordered_][multi]set<T'>`    |                                       |
-|                                  | `std::[unordered_][multi]map<K',V'>` | only `T` = `std::[pair,tuple]<K,V>`   |
-|                                  | User-defined collection of `T'`      |                                       |
-|                                  | Untyped collection of `T'`           |                                       |
-|----------------------------------|--------------------------------------|---------------------------------------|
-| `std::[unordered_]map<K,V>`      | `std::[unordered_]map<K',V'>`        |                                       |
-|----------------------------------|--------------------------------------|---------------------------------------|
-| `std::[unordered_]multimap<K,V>` | `ROOT::RVec<T>`                      | only `T` = `std::[pair,tuple]<K,V>`   |
-|                                  | `std::vector<T>`                     | only `T` = `std::[pair,tuple]<K,V>`   |
-|                                  | `std::array<T, N>`                   | only `T` = `std::[pair,tuple]<K,V>`   |
-|                                  | `std::[unordered_][multi]set<T>`     | only `T` = `std::[pair,tuple]<K,V>`   |
-|                                  | `std::[unordered_][multi]map<K',V'>` |                                       |
-|                                  | User-defined collection of `T`       | only `T` = `std::[pair,tuple]<K,V>`   |
-|                                  | Untyped collection of `T`            | only `T` = `std::[pair,tuple]<K,V>`   |
+| In-memory type | Compatible on-disk types | Comment |
+|---|---|---|
+| `std::vector<T>` | `ROOT::RVec<T'>`<br>`std::array<T', N>`<br>`std::[unordered_][multi]set<T'>`<br>`std::[unordered_][multi]map<K',V'>`<br>`std::optional<T'>`<br>`std::unique_ptr<T'>`<br>User-defined collection of `T'`<br>Untyped collection of `T'` | <br><br><br>only `T` = `std::[pair,tuple]<K,V>`<br><br><br><br> |
+| `ROOT::RVec<T>` | `std::vector<T'>`<br>`std::array<T', N>`<br>`std::[unordered_][multi]set<T'>`<br>`std::[unordered_][multi]map<K',V'>`<br>`std::optional<T'>`<br>`std::unique_ptr<T'>`<br>User-defined collection of `T'`<br>Untyped collection of `T'` | with size check<br>with size check<br>with size check<br>only `T` = `std::[pair,tuple]<K,V>`, with size check<br><br><br>with size check<br>with size check |
+| `std::[unordered_]set<T>` | `std::[unordered_]set<T'>`<br>`std::[unordered_]map<K',V'>` | <br>only `T` = `std::[pair,tuple]<K,V>` |
+| `std::[unordered_]multiset<T>` | `ROOT::RVec<T'>`<br>`std::vector<T'>`<br>`std::array<T', N>`<br>`std::[unordered_][multi]set<T'>`<br>`std::[unordered_][multi]map<K',V'>`<br>User-defined collection of `T'`<br>Untyped collection of `T'` | <br><br><br><br>only `T` = `std::[pair,tuple]<K,V>`<br><br> |
+| `std::[unordered_]map<K,V>` | `std::[unordered_]map<K',V'>` | |
+| `std::[unordered_]multimap<K,V>` | `ROOT::RVec<T>`<br>`std::vector<T>`<br>`std::array<T, N>`<br>`std::[unordered_][multi]set<T>`<br>`std::[unordered_][multi]map<K',V'>`<br>User-defined collection of `T`<br>Untyped collection of `T` | only `T` = `std::[pair,tuple]<K,V>`<br>only `T` = `std::[pair,tuple]<K,V>`<br>only `T` = `std::[pair,tuple]<K,V>`<br>only `T` = `std::[pair,tuple]<K,V>`<br><br>only `T` = `std::[pair,tuple]<K,V>`<br>only `T` = `std::[pair,tuple]<K,V>` |
 
 #### Fixed-size collections
 
@@ -142,22 +94,17 @@ C style arrays and `std::array<...>` of the same type and length can be used int
 
 #### Nullable fields
 
-| In-memory type       | Compatible on-disk types |
-| -------------------- | ------------------------ |
-| `std::optional<T>`   | `std::unique_ptr<T'>`    |
-|                      | `T'`                     |
-|----------------------|--------------------------|
-| `std::unique_ptr<T>` | `std::optional<T'>`      |
-|                      | `T'`                     |
+| In-memory type | Compatible on-disk types |
+|---|---|
+| `std::optional<T>` | `std::unique_ptr<T'>`<br>`T'` |
+| `std::unique_ptr<T>` | `std::optional<T'>`<br>`T'` |
 
 #### Records
 
 | In-memory type              | Compatible on-disk types               |
 | --------------------------- | -------------------------------------- |
 | `std::pair<T,U>`            | `std::tuple<T',U'>`                    |
-|-----------------------------|----------------------------------------|
 | `std::tuple<T,U>`           | `std::pair<T',U'>`                     |
-|-----------------------------|----------------------------------------|
 | Untyped record              | User-defined class of compatible shape |
 
 Note that for emulated classes, the in-memory untyped record is constructed from on-disk information.
