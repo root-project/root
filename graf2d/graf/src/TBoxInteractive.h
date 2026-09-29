@@ -43,7 +43,7 @@ class TBoxInteractive : public TVirtualPad::TInteractive {
 
       virtual void PaintOutline(TVirtualPad &parent);
 
-      void PaintDiamondCorners(TVirtualPad &parent, const char *id = "diamond");
+      void PaintDiamondCorners(TVirtualPad &parent, const char *id = "idiamond");
 
       void ApplyChanges(TVirtualPad &parent);
 

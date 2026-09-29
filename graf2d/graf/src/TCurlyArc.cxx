@@ -185,7 +185,7 @@ class TCurlyArcInteractive : public TBoxInteractive {
          parent.PaintPolyLine(np+1, x.data(), y.data(), "icurlyarc");
 
          if (!full_circle)
-            PaintDiamondCorners(parent, "curlyarc");
+            PaintDiamondCorners(parent, "icurlyarc");
       }
 
       void Apply(TCurlyArc *c, Bool_t usenew = kTRUE)

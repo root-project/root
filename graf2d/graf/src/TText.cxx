@@ -364,13 +364,7 @@ public:
       if (show_corner) {
          Double_t mX = parent.AbsPixeltoX(px1);
          Double_t mY = parent.AbsPixeltoY(py1);
-
-         Double_t dx = (parent.GetX2() - parent.GetX1()) / parent.GetPadWidth() * 6;
-         Double_t dy = (parent.GetY2() - parent.GetY1()) / parent.GetPadHeight() * 6;
-
-         Double_t xc[5] = { mX, mX + dx, mX, mX - dx, mX };
-         Double_t yc[5] = { mY - dy, mY, mY + dy, mY, mY - dy };
-         parent.PaintFillArea(5, xc, yc, "itextcorner");
+         parent.PaintPolyMarker(1, &mX, &mY, "iftextcorner");
       }
    }
 

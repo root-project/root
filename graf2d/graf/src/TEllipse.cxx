@@ -206,7 +206,7 @@ class TEllipseInteractive : public TBoxInteractive {
          parent.PaintPolyLine(x.size(), x.data(), y.data(), "iellipse");
 
          if(!fullcircle || e->GetTheta())
-            PaintDiamondCorners(parent, "ellipse");
+            PaintDiamondCorners(parent, "iellipse");
       }
 
       void Apply(TEllipse *e, Bool_t usenew = kTRUE)
