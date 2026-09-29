@@ -79,6 +79,10 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# Written when rootcling_stage1 and rootcling are linked, see ROOT_GENERATE_DICTIONARY().
+set(ROOTCLING_STAGE1_STAMP ${CMAKE_BINARY_DIR}/CMakeFiles/rootcling_stage1.stamp)
+set(ROOTCLING_STAMP ${CMAKE_BINARY_DIR}/CMakeFiles/rootcling.stamp)
+
 # Set permissions for installed folders and subfolders that come from the source tree in case
 # the permissions in the source tree are wrong since the install command will preserve them
 set(DIR_PERMISSIONS DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
