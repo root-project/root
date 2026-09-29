@@ -865,6 +865,13 @@ double stepFunctionIntegral(double xmin, double xmax, std::size_t nBins, DoubleA
 
 } // namespace RooFit::Detail::MathFuncs
 
+inline void fillFromWorkspace(double *out, std::size_t n, double const *wksp, double const *idx)
+{
+   for (std::size_t i = 0; i < n; ++i) {
+      out[i] += wksp[static_cast<int>(idx[i])];
+   }
+}
+
 namespace clad {
 // Only declared, never defined here: clad's own headers exist exclusively
 // inside the interpreter, but this header is also compiled normally.
@@ -873,6 +880,15 @@ struct ValueAndPushforward;
 } // namespace clad
 
 namespace clad::custom_derivatives {
+
+inline void fillFromWorkspace_pullback(double *, std::size_t n, double const *, double const *idx, double *d_out,
+                                       std::size_t *, double *d_wksp, double *)
+{
+   for (std::size_t i = 0; i < n; ++i) {
+      d_wksp[static_cast<int>(idx[i])] += d_out[i];
+   }
+}
+
 namespace RooFit::Detail::MathFuncs {
 
 // Clad can't generate the derivatives for binNumber because of the
@@ -909,6 +925,7 @@ binNumber_pushforward(double x, double coef, DoubleArray boundaries, unsigned in
 }
 
 } // namespace RooFit::Detail::MathFuncs
+
 } // namespace clad::custom_derivatives
 
 #endif
