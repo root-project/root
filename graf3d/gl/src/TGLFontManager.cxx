@@ -36,6 +36,8 @@
 # include "FTGLBitmapFont.h"
 #endif
 
+#include <fontconfig/fontconfig.h>
+
 namespace {
 #ifdef HAVE_UTF8
 // https://github.com/root-project/root/issues/22076#issuecomment-4342764706
@@ -481,16 +483,120 @@ void TGLFontManager::RegisterFont(Int_t sizeIn, Int_t fileID, TGLFont::EMode mod
    FontMap_i it = fFontMap.find(TGLFont(size, fileID, mode));
    if (it == fFontMap.end())
    {
-      TString ttpath, file;
-      ttpath = gEnv->GetValue("Root.TTGLFontPath", TROOT::GetTTFFontDir());
-      {
-         //For extenede we have both ttf and otf.
-         char *fp = gSystem->Which(ttpath, fileID < fgExtendedFontStart ?
-                                   ((TObjString*)fgFontFileArray[fileID])->String() + ".ttf" :
-                                   ((TObjString*)fgFontFileArray[fileID])->String());
-         file = fp;
-         delete [] fp;
+      TString file;
+
+      TString fontname = fileID < fgExtendedFontStart ?
+         ((TObjString*)fgFontFileArray[fileID])->String() + ".ttf" :
+         ((TObjString*)fgFontFileArray[fileID])->String();
+
+      FcPattern *pat = nullptr, *match;
+      FcResult result;
+
+      if (strcmp(fontname, "timesi.ttf") == 0 ||
+          strcmp(fontname, "FreeSerifItalic.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "freeserif:italic");
       }
+      else if (strcmp(fontname, "timesbd.ttf") == 0 ||
+               strcmp(fontname, "FreeSerifBold.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "freeserif:bold");
+      }
+      else if (strcmp(fontname, "timesbi.ttf") == 0 ||
+               strcmp(fontname, "FreeSerifBoldItalic.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "freeserif:bold:italic");
+      }
+      else if (strcmp(fontname, "arial.ttf") == 0 ||
+               strcmp(fontname, "FreeSans.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "freesans");
+      }
+      else if (strcmp(fontname, "ariali.ttf") == 0 ||
+               strcmp(fontname, "FreeSansOblique.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "freesans:italic");
+      }
+      else if (strcmp(fontname, "arialbd.ttf") == 0 ||
+               strcmp(fontname, "FreeSansBold.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "freesans:bold");
+      }
+      else if (strcmp(fontname, "arialbi.ttf") == 0 ||
+               strcmp(fontname, "FreeSansBoldOblique.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "freesans:bold:italic");
+      }
+      else if (strcmp(fontname, "cour.ttf") == 0 ||
+               strcmp(fontname, "FreeMono.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "freemono");
+      }
+      else if (strcmp(fontname, "couri.ttf") == 0 ||
+               strcmp(fontname, "FreeMonoOblique.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "freemono:italic");
+      }
+      else if (strcmp(fontname, "courbd.ttf") == 0 ||
+               strcmp(fontname, "FreeMonoBold.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "freemono:bold");
+      }
+      else if (strcmp(fontname, "courbi.ttf") == 0 ||
+               strcmp(fontname, "FreeMonoBoldOblique.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "freemono:bold:italic");
+      }
+      else if (strcmp(fontname, "symbol.ttf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "standardsymbolsps");
+      }
+      else if (strcmp(fontname, "times.ttf") == 0 ||
+               strcmp(fontname, "FreeSerif.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "freeserif");
+      }
+      else if (strcmp(fontname, "wingding.ttf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "dingbats");
+      }
+      else if (strcmp(fontname, "STIXGeneral.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "stixgeneral");
+      }
+      else if (strcmp(fontname, "STIXGeneralItalic.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "stixgeneral:italic");
+      }
+      else if (strcmp(fontname, "STIXGeneralBol.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "stixgeneral:bold");
+      }
+      else if (strcmp(fontname, "STIXGeneralBolIta.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "stixgeneral:bold:italic");
+      }
+      else if (strcmp(fontname, "STIXSiz1Sym.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "stixsize1");
+      }
+      else if (strcmp(fontname, "STIXSiz1SymBol.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "stixsize1:bold");
+      }
+      else if (strcmp(fontname, "STIXSiz2Sym.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "stixsize2");
+      }
+      else if (strcmp(fontname, "STIXSiz2SymBol.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "stixsize2:bold");
+      }
+      else if (strcmp(fontname, "STIXSiz3Sym.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "stixsize3");
+      }
+      else if (strcmp(fontname, "STIXSiz3SymBol.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "stixsize3:bold");
+      }
+      else if (strcmp(fontname, "STIXSiz4Sym.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "stixsize4");
+      }
+      else if (strcmp(fontname, "STIXSiz4SymBol.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "stixsize4:bold");
+      }
+      else if (strcmp(fontname, "STIXSiz5Sym.otf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "stixsize5");
+      }
+      else if (strcmp(fontname, "DroidSansFallback.ttf") == 0) {
+         pat = FcNameParse ((const FcChar8*) "droidsansfallback:charset=4e00 0410");
+      }
+
+      FcConfigSubstitute (nullptr, pat, FcMatchPattern);
+      FcDefaultSubstitute (pat);
+      match = FcFontMatch (nullptr, pat, &result);
+      char *ttfnt;
+      FcPatternGetString (match, FC_FILE, 0, (FcChar8**) &ttfnt);
+      file = ttfnt;
+      FcPatternDestroy (match);
+      FcPatternDestroy (pat);
 
       FTFont* ftfont = 0;
       switch (mode)

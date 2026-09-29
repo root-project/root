@@ -76,9 +76,10 @@ protected:
    static FT_BBox        fgCBox;                  ///< string control box
    static FT_CharMap     fgCharMap[kTTMaxFonts];  ///< font character map
    static Int_t          fgCurFontIdx;            ///< current font index
-   static Int_t          fgSymbItaFontIdx;        ///< Symbol italic font index
    static Int_t          fgFontCount;             ///< number of fonts loaded
    static char          *fgFontName[kTTMaxFonts]; ///< font name
+   static Int_t          fgFontIdx[kTTMaxFonts];  ///< font index in font file
+   static Int_t          fgFontIta[kTTMaxFonts];  ///< font slanted using transform
    static FT_Face        fgFace[kTTMaxFonts];     ///< font face
    static TTF::TTGlyph   fgGlyphs[kMaxGlyphs];    ///< glyphs
    static Bool_t         fgHinting;               ///< use hinting (true by default)

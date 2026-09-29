@@ -234,6 +234,7 @@ To change the color model use `gStyle->SetColorModelPS(c)`.
 #include <cctype>
 #include <cwchar>
 #include <fstream>
+#include <fontconfig/fontconfig.h>
 
 #include "strlcpy.h"
 #include "snprintf.h"
@@ -1584,56 +1585,60 @@ Bool_t TPostScript::FontEmbedType42(const char *filename)
 
 void TPostScript::FontEmbed(void)
 {
-   static const char *fonttable[32][2] = {
-      { "Root.TTFont.0", "FreeSansBold.otf" },
-      { "Root.TTFont.1", "FreeSerifItalic.otf" },
-      { "Root.TTFont.2", "FreeSerifBold.otf" },
-      { "Root.TTFont.3", "FreeSerifBoldItalic.otf" },
-      { "Root.TTFont.4", "FreeSans.otf" },
-      { "Root.TTFont.5", "FreeSansOblique.otf" },
-      { "Root.TTFont.6", "FreeSansBold.otf" },
-      { "Root.TTFont.7", "FreeSansBoldOblique.otf" },
-      { "Root.TTFont.8", "FreeMono.otf" },
-      { "Root.TTFont.9", "FreeMonoOblique.otf" },
-      { "Root.TTFont.10", "FreeMonoBold.otf" },
-      { "Root.TTFont.11", "FreeMonoBoldOblique.otf" },
-      { "Root.TTFont.12", "symbol.ttf" },
-      { "Root.TTFont.13", "FreeSerif.otf" },
-      { "Root.TTFont.14", "wingding.ttf" },
-      { "Root.TTFont.15", "symbol.ttf" },
-      { "Root.TTFont.STIXGen", "STIXGeneral.otf" },
-      { "Root.TTFont.STIXGenIt", "STIXGeneralItalic.otf" },
-      { "Root.TTFont.STIXGenBd", "STIXGeneralBol.otf" },
-      { "Root.TTFont.STIXGenBdIt", "STIXGeneralBolIta.otf" },
-      { "Root.TTFont.STIXSiz1Sym", "STIXSiz1Sym.otf" },
-      { "Root.TTFont.STIXSiz1SymBd", "STIXSiz1SymBol.otf" },
-      { "Root.TTFont.STIXSiz2Sym", "STIXSiz2Sym.otf" },
-      { "Root.TTFont.STIXSiz2SymBd", "STIXSiz2SymBol.otf" },
-      { "Root.TTFont.STIXSiz3Sym", "STIXSiz3Sym.otf" },
-      { "Root.TTFont.STIXSiz3SymBd", "STIXSiz3SymBol.otf" },
-      { "Root.TTFont.STIXSiz4Sym", "STIXSiz4Sym.otf" },
-      { "Root.TTFont.STIXSiz4SymBd", "STIXSiz4SymBol.otf" },
-      { "Root.TTFont.STIXSiz5Sym", "STIXSiz5Sym.otf" },
-      { "Root.TTFont.ME", "DroidSansFallback.ttf" },
-      { "Root.TTFont.CJKMing", "DroidSansFallback.ttf" },
-      { "Root.TTFont.CJKCothic", "DroidSansFallback.ttf" }
+   static const char *fonttable[] = {
+      "freesans:bold",
+      "freeserif:italic",
+      "freeserif:bold",
+      "freeserif:bold:italic",
+      "freesans",
+      "freesans:italic",
+      "freesans:bold",
+      "freesans:bold:italic",
+      "freemono",
+      "freemono:italic",
+      "freemono:bold",
+      "freemono:bold:italic",
+      "standardsymbolsps",
+      "freeserif",
+      "dingbats",
+      "standardsymbolsps",
+      "stixgeneral",
+      "stixgeneral:italic",
+      "stixgeneral:bold",
+      "stixgeneral:bold:italic",
+      "stixsize1",
+      "stixsize1:bold",
+      "stixsize2",
+      "stixsize2:bold",
+      "stixsize3",
+      "stixsize3:bold",
+      "stixsize4",
+      "stixsize4:bold",
+      "stixsize5",
+      "droidsansfallback:charset=4e00 0410",
+      "droidsansfallback:charset=4e00 0410",
+      "droidsansfallback:charset=4e00 0410"
    };
 
    PrintStr("%%IncludeResource: ProcSet (FontSetInit)@");
 
-   // try to load font (font must be in Root.TTFontPath resource)
-   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-                                       TROOT::GetTTFFontDir());
-
    for (Int_t fontid = 1; fontid < 30; fontid++) {
       if (fontid != 15 && MustEmbed[fontid-1]) {
-         const char *filename = gEnv->GetValue(
-                                               fonttable[fontid][0], fonttable[fontid][1]);
-         char *ttfont = gSystem->Which(ttpath, filename, kReadPermission);
+         char *ttfont = nullptr;
+
+         FcPattern *pat, *match;
+         FcResult result;
+
+         pat = FcNameParse ((const FcChar8*) fonttable[fontid]);
+
+         FcConfigSubstitute (nullptr, pat, FcMatchPattern);
+         FcDefaultSubstitute (pat);
+         match = FcFontMatch (nullptr, pat, &result);
+         FcPatternGetString (match, FC_FILE, 0, (FcChar8**) &ttfont);
+
          if (!ttfont) {
-            Error("TPostScript::FontEmbed",
-                  "font %d (filename `%s') not found in path",
-                  fontid, filename);
+            Error("TPostScript::FontEmbed", "font %d not found",
+                  fontid);
          } else {
             if (FontEmbedType2(ttfont)) {
                // nothing
@@ -1642,12 +1647,13 @@ void TPostScript::FontEmbed(void)
             } else if(FontEmbedType42(ttfont)) {
                // nothing
             } else {
-               Error("TPostScript::FontEmbed",
-                     "failed to embed font %d (filename `%s')",
-                     fontid, filename);
+               Error("TPostScript::FontEmbed", "failed to embed font %d)",
+                     fontid);
             }
-            delete [] ttfont;
          }
+
+         FcPatternDestroy (match);
+         FcPatternDestroy (pat);
       }
    }
    PrintStr("%%IncludeResource: font Times-Roman@");
@@ -2852,10 +2858,10 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
       { "Root.PSFont.9", "/FreeMonoOblique" },
       { "Root.PSFont.10", "/FreeMonoBold" },
       { "Root.PSFont.11", "/FreeMonoBoldOblique" },
-      { "Root.PSFont.12", "/SymbolMT" },
+      { "Root.PSFont.12", "/StandardSymbolsL" },
       { "Root.PSFont.13", "/FreeSerif" },
-      { "Root.PSFont.14", "/Wingdings-Regular" },
-      { "Root.PSFont.15", "/SymbolMT" },
+      { "Root.PSFont.14", "/Dingbats" },
+      { "Root.PSFont.15", "/StandardSymbolsL" },
       { "Root.PSFont.STIXGen", "/STIXGeneral" },
       { "Root.PSFont.STIXGenIt", "/STIXGeneral-Italic" },
       { "Root.PSFont.STIXGenBd", "/STIXGeneral-Bold" },
