@@ -942,9 +942,20 @@ static PyObject* op_str(CPPInstance* self) {
 
       PyObject* result = nullptr;
       if (pretty) {
-        const std::string& pv =
-            *(std::string*)((CPPInstance*)pretty)->GetObject();
-        if (!pv.empty() && pv.find("@0x") == std::string::npos)
+        // the std::string executor may return a Python string
+        std::string pv;
+        if (cpyrt_PyText_Check(pretty)) {
+          if (const char* s = cpyrt_PyText_AsString(pretty))
+            pv = s;
+          else
+            PyErr_Clear();
+        } else if (CPPInstance_Check(pretty) &&
+                   ((CPPInstance*)pretty)->GetObject()) {
+          pv = *(std::string*)((CPPInstance*)pretty)->GetObject();
+        }
+        // an address or the generic fallback means no usable pretty printer
+        if (!pv.empty() && pv.find("@0x") == std::string::npos &&
+            pv != "{not representable}")
           result = cpyrt_PyText_FromString(pv.c_str());
         Py_DECREF(pretty);
         if (result)
