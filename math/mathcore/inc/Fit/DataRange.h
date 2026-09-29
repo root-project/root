@@ -219,10 +219,11 @@ public:
 
 protected:
    /**
-       internal function to remove all the existing ranges between xmin and xmax
-       called when a new range is inserted
+       internal function to remove all the existing ranges overlapping with
+       [xmin,xmax], called when a new range is inserted. xmin and xmax are
+       widened to cover the removed ranges.
    */
-   void CleanRangeSet(unsigned int icoord, double xmin, double xmax);
+   void CleanRangeSet(unsigned int icoord, double & xmin, double & xmax);
 
    // get the full range (-inf, +inf)
    static void GetInfRange(double &x1, double &x2);
