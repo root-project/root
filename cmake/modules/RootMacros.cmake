@@ -620,6 +620,15 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
   endif()
 
+  # With single-configuration Ninja, all build edges are in one graph, so ROOT's
+  # dictionaries can depend on rootcling and the upstream pcms at file level.
+  # Target-level dependencies would make all sources of this and of downstream
+  # libraries wait for those links, serializing the build (issue #6432).
+  set(file_level_dependencies FALSE)
+  if(CMAKE_PROJECT_NAME STREQUAL ROOT AND CMAKE_GENERATOR STREQUAL "Ninja" AND NOT CMAKE_ROOTTEST_DICT)
+    set(file_level_dependencies TRUE)
+  endif()
+
   #---Get the library and module dependencies-----------------
   if(ARG_DEPENDENCIES)
     foreach(dep ${ARG_DEPENDENCIES})
@@ -631,7 +640,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
       if (runtime_cxxmodules AND NOT dep IN_LIST local_no_cxxmodules)
         set(dependent_pcm ${dep}.pcm)
-        list(APPEND pcm_dependencies "$<${dep_has_dict}:$<TARGET_PROPERTY:${dep},ROOT_PCM_FILENAME>>")
+        list(APPEND pcm_dependencies "$<${dep_has_dict}:$<TARGET_PROPERTY:G__${dep},ROOT_PCM_FILENAME>>")
       endif()
       set(newargs ${newargs} "$<${dep_has_dict}:-m>" "$<${dep_has_dict}:${dependent_pcm}>")
     endforeach()
@@ -642,26 +651,42 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   #---what rootcling command to use--------------------------
+  # For file-level dependencies, reference rootcling by path and depend on the
+  # stamp written when it is linked: any target reference would imply a
+  # target-level dependency.
   if(ARG_STAGE1)
-    if(APPLE)
-      set(command ${CMAKE_COMMAND} -E env SDKROOT=${CMAKE_OSX_SYSROOT} $<TARGET_FILE:rootcling_stage1>)
+    if(file_level_dependencies)
+      get_target_property(rootcling_dir rootcling_stage1 RUNTIME_OUTPUT_DIRECTORY)
+      set(rootcling_exe ${rootcling_dir}/rootcling_stage1${CMAKE_EXECUTABLE_SUFFIX})
+      set(ROOTCLINGDEP ${ROOTCLING_STAGE1_STAMP} rconfigure)
     else()
-      set(command $<TARGET_FILE:rootcling_stage1>)
+      set(rootcling_exe $<TARGET_FILE:rootcling_stage1>)
+      set(ROOTCLINGDEP rconfigure)
     endif()
-    set(ROOTCLINGDEP rconfigure)
+    if(APPLE)
+      set(command ${CMAKE_COMMAND} -E env SDKROOT=${CMAKE_OSX_SYSROOT} ${rootcling_exe})
+    else()
+      set(command ${rootcling_exe})
+    endif()
     set(pcm_name)
   else()
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       if(MSVC AND CMAKE_ROOTTEST_DICT)
         set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${CMAKE_BINARY_DIR}/bin/rootcling.exe -rootbuild)
       else()
-        if(APPLE)
-          set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" SDKROOT=${CMAKE_OSX_SYSROOT} $<TARGET_FILE:rootcling> -rootbuild)
-        else()
-          set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
-        endif()
         # Modules need RConfigure.h copied into include/.
-        set(ROOTCLINGDEP rootcling rconfigure)
+        if(file_level_dependencies)
+          set(rootcling_exe ${CMAKE_BINARY_DIR}/bin/rootcling${CMAKE_EXECUTABLE_SUFFIX})
+          set(ROOTCLINGDEP ${ROOTCLING_STAMP} rconfigure)
+        else()
+          set(rootcling_exe $<TARGET_FILE:rootcling>)
+          set(ROOTCLINGDEP rootcling rconfigure)
+        endif()
+        if(APPLE)
+          set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" SDKROOT=${CMAKE_OSX_SYSROOT} ${rootcling_exe} -rootbuild)
+        else()
+          set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${rootcling_exe} -rootbuild)
+        endif()
       endif()
     elseif(TARGET ROOT::rootcling)
       if(APPLE)
@@ -690,9 +715,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   # DEPFILE works with all generators (Ninja, Unix Makefiles, etc.)
   set(depfile_path ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.depfile)
 
-  if(ARG_MODULE)
+  if(ARG_MODULE AND NOT file_level_dependencies)
+    # rootcling only needs the upstream pcms, this ensures they exist first.
     set(MODULE_LIB_DEPENDENCY ${ARG_DEPENDENCIES})
+  endif()
 
+  if(ARG_MODULE)
     # get target properties added after call to ROOT_GENERATE_DICTIONARY()
     if(TARGET ${ARG_MODULE})
       # NOTE that module_sysincs is already part of ${module_sysincs}. But -isystem "wins",
@@ -721,11 +749,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   foreach(implinc IN LISTS CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES)
     list(APPEND compIncPaths "-compilerI${implinc}")
   endforeach()
-
-  if(cpp_module_file AND TARGET ${ARG_MODULE})
-    set_target_properties(${ARG_MODULE} PROPERTIES
-      ROOT_PCM_FILENAME "${cpp_module_file}")
-  endif()
 
   # Keep the byproducts (rdict pcm, rootmap, C++ module) newer than the
   # generated .cxx.  The Makefile generator models secondary outputs of a
@@ -772,7 +795,18 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   # the generated source at the same scope level as its owning target, something that
   # would not happen if we used target_sources() directly with the dictionary source.
   if(TARGET "${ARG_MODULE}" AND NOT "${ARG_MODULE}" STREQUAL "${dictionary}")
-    add_library(${dictionary} OBJECT ${dictionary}.cxx)
+    # Generated files might be headers, so the sources of the module and its
+    # dependents would wait for the dictionary. With CMP0154 (CMake 3.28), they
+    # are private in targets with file sets, and an empty one is enough.
+    if(file_level_dependencies AND POLICY CMP0154)
+      cmake_policy(PUSH)
+      cmake_policy(SET CMP0154 NEW)
+      add_library(${dictionary} OBJECT ${dictionary}.cxx)
+      target_sources(${dictionary} PRIVATE FILE_SET HEADERS)
+      cmake_policy(POP)
+    else()
+      add_library(${dictionary} OBJECT ${dictionary}.cxx)
+    endif()
     set_target_properties(${dictionary} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
     target_link_libraries(${ARG_MODULE} PRIVATE ${dictionary})
 
@@ -798,6 +832,13 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   else()
     get_filename_component(dictionary_name ${dictionary} NAME)
     add_custom_target(${dictionary_name} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
+  endif()
+
+  # The C++ module that downstream dictionaries load with '-m'. Set on the
+  # dictionary target, as the module target might only be created later.
+  if(cpp_module_file)
+    get_filename_component(dictionary_target ${dictionary} NAME)
+    set_target_properties(${dictionary_target} PROPERTIES ROOT_PCM_FILENAME "${cpp_module_file}")
   endif()
 
   if(PROJECT_NAME STREQUAL "ROOT")

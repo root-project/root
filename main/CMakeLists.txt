@@ -129,6 +129,15 @@ foreach(exe_name IN LISTS rootcling_exe_names)
   endif()
 endforeach()
 
+# With Ninja, dictionaries depend on this stamp instead of the executable, see
+# ROOT_GENERATE_DICTIONARY(). Not with MSBuild, which runs post-build events on
+# every build.
+if(CMAKE_GENERATOR STREQUAL "Ninja")
+  add_custom_command(TARGET rootcling POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} -E touch ${ROOTCLING_STAMP}
+                     BYPRODUCTS ${ROOTCLING_STAMP})
+endif()
+
 # To inherit the dependencies from rootcling
 add_dependencies(genreflex rootcling)
 add_dependencies(rootcint rootcint)
