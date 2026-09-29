@@ -920,7 +920,7 @@ static struct PyModuleDef moduledef = {
 namespace cppjit::cpyrt {
 
 //----------------------------------------------------------------------------
-extern "C" PyObject* PyInit_libcppjit() {
+PyObject* Init() {
   // Initialization of extension module libcppjit.
 
   // load commonly used python strings
