@@ -50,6 +50,14 @@ public:
       kAxesEdge
    };
 
+   /// Tone curve applied to the rendered buffer. Values match the shader.
+   enum EToneMapMode {
+      kToneReinhard = 0,
+      kToneExposure = 1,
+      kToneLinear   = 2,  ///< no curve; exact colours, but anything over 1 clips
+      kToneKnee     = 3   ///< identity below the knee, smooth roll-off above
+   };
+
 private:
    REveViewer(const REveViewer&) = delete;
    REveViewer& operator=(const REveViewer&) = delete;
@@ -57,7 +65,42 @@ private:
    REveCamera* fCamera{0};
 
    EAxesType fAxesType{kAxesNone};
+
+   /// Let the client extrapolate streamed motion between updates. Off holds
+   /// each object where the last update put it, which shows the raw update rate.
+   Bool_t fExtrapolateMotion{kTRUE};
+
+   /// Which axis points up: 0/1/2 for x/y/z, -1 (default) for none. When set,
+   /// the box axis draws the floor panel along it instead of the far face.
+   Int_t fAxesUpAxis{-1};
+
+   Bool_t  fHasAxesBBox{kFALSE};  ///< see SetAxesBBox()
+   Float_t fAxesBBox[6]{};        ///< xmin, ymin, zmin, xmax, ymax, zmax
+
+   Float_t fMotionMaxHz{60.f};    ///< see SetMotionMaxHz(); 0 freezes
+   Float_t fRenderMaxHz{0.f};     ///< see SetRenderMaxHz(); 0 is uncapped
    bool      fBlackBackground{false};
+
+   /// Distance attenuation of the 3D axis labels; see SetAxesAtten().
+   Float_t   fAxesAtten{1.f};
+
+   /// 3D axis label size, as a fraction of viewport height. Baked into the
+   /// glyph geometry, so a change costs a rebuild on the client.
+   Float_t   fAxesFontSize{0.015f};
+
+   /// Tooltip text size, same units as fAxesFontSize.
+   Float_t   fTooltipFontSize{0.012f};
+
+   /// Opacity of the plate behind the tooltip and kept annotations, in [0, 1].
+   /// Unlike the font size this does reach annotations already placed.
+   Float_t   fTooltipAlpha{0.85f};
+
+   /// Multiplier on the client's light intensities; see SetLightScale().
+   Float_t   fLightScale{0.85};
+   Int_t     fToneMapMode{kToneKnee};
+   Float_t   fToneMapKnee{0.95};
+   /// Bumped by AutoTuneLights(); the client re-measures when it changes.
+   Int_t     fAutoTuneSerial{0};
 
    bool fMandatory{true};
    std::string fPostStreamFlag;
@@ -86,8 +129,58 @@ public:
    void SyncCamera(bool s) {fSyncCamera = s;}
    bool GetSyncCamera() const {return fSyncCamera;}
 
+   // The getters return the value last sent to the clients, not what a client
+   // is showing.
+   EAxesType GetAxesType() const { return fAxesType; }
    void SetAxesType(int);
+
+   Bool_t GetExtrapolateMotion() const { return fExtrapolateMotion; }
+   void   SetExtrapolateMotion(bool);
+
+   Int_t GetAxesUpAxis() const { return fAxesUpAxis; }
+   void  SetAxesUpAxis(int);
+
+   void SetAxesBBox(Float_t xmin, Float_t ymin, Float_t zmin,
+                    Float_t xmax, Float_t ymax, Float_t zmax);
+   void ClearAxesBBox();
+   Bool_t HasAxesBBox() const { return fHasAxesBBox; }
+
+   /// Cap on how often this viewer applies streamed motion, in updates per
+   /// second, clamped to [0, 240]. Zero freezes motion; SetExtrapolateMotion()
+   /// only controls drawing between updates.
+   Float_t GetMotionMaxHz() const { return fMotionMaxHz; }
+   void    SetMotionMaxHz(Float_t);
+
+   /// Cap on how often the animation loop redraws this viewer, in frames per
+   /// second, clamped to [0, 240]. Zero means uncapped, unlike SetMotionMaxHz().
+   Float_t GetRenderMaxHz() const { return fRenderMaxHz; }
+   void    SetRenderMaxHz(Float_t);
+
+   bool GetBlackBackground() const { return fBlackBackground; }
    void SetBlackBackground(bool);
+
+   Float_t GetAxesAtten() const { return fAxesAtten; }
+   void SetAxesAtten(Float_t a);
+
+   Float_t GetAxesFontSize() const { return fAxesFontSize; }
+   void SetAxesFontSize(Float_t s);
+
+   Float_t GetTooltipFontSize() const { return fTooltipFontSize; }
+   void SetTooltipFontSize(Float_t s);
+
+   Float_t GetTooltipAlpha() const { return fTooltipAlpha; }
+   void SetTooltipAlpha(Float_t a);
+
+   Float_t GetLightScale() const { return fLightScale; }
+   void SetLightScale(Float_t s);
+
+   Int_t GetToneMapMode() const { return fToneMapMode; }
+   void SetToneMapMode(Int_t m);
+
+   Float_t GetToneMapKnee() const { return fToneMapKnee; }
+   void SetToneMapKnee(Float_t k);
+
+   void AutoTuneLights();
 
    void DisconnectClient();
    void ConnectClient();

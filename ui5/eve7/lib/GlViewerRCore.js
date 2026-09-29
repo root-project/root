@@ -1,7 +1,11 @@
 sap.ui.define([
    'rootui5/eve7/lib/GlViewer',
-   'rootui5/eve7/lib/EveElementsRCore'
-], function(GlViewer, EveElements) {
+   'rootui5/eve7/lib/EveElementsRCore',
+   'rootui5/eve7/lib/Axis3D',
+   'rootui5/eve7/lib/Annotations',
+   'rootui5/eve7/lib/Motion',
+   'rootui5/eve7/lib/Overlay'
+], function(GlViewer, EveElements, Axis3D, Annotations, Motion, Overlay) {
 
    "use strict";
 
@@ -15,11 +19,24 @@ sap.ui.define([
          super(viewer_class);
 
          const urlParams = new URLSearchParams(window.location.search);
+         if (urlParams.get('RQ_ShaderDbg')) window.__RC_SHADERDBG = urlParams.get('RQ_ShaderDbg');
 
          let mode_mm = /^(?:Direct|Simple|Full)$/.exec(urlParams.get('RQ_Mode'));
          let ssaa_mm = /^(1|2|4)$/.               exec(urlParams.get('RQ_SSAA'));
          let marker_scale = /^([\d\.]+)$/.        exec(urlParams.get('RQ_MarkerScale'));
          let line_scale = /^([\d\.]+)$/.          exec(urlParams.get('RQ_LineScale'));
+
+         // RQ_HdrStats=1 logs, once, the dynamic range of the buffer that feeds
+         // the final pass.
+         this.RQ_HdrStats = urlParams.get('RQ_HdrStats') == '1';
+
+         // Initial tone curve of the final pass, Simple mode only; the viewer's
+         // streamed ToneMapMode replaces it on the first updateViewerAttributes().
+         // "knee" passes colours through below the knee and rolls highlights off
+         // above it. "exposure" is 1-exp(-2c) and lightens the whole range.
+         // "linear" clamps.
+         let tm_mm = /^(knee|exposure|linear)$/.exec(urlParams.get('RQ_ToneMap'));
+         this.RQ_ToneMap = (tm_mm) ? tm_mm[0] : "knee";
 
          this.RQ_Mode = (mode_mm) ? mode_mm[0] : "Simple";
          this.RQ_SSAA = (ssaa_mm) ? ssaa_mm[0] : 2;
@@ -31,7 +48,11 @@ sap.ui.define([
          this.top_path = jsrp.substring(0, jsrp.length - 10);
          this.eve_path = this.top_path + 'rootui5sys/eve7/';
 
-         this._logLevel = 3; // 0 - error, 1 - warning, 2 - info, 3 - debug
+         // 0 - error, 1 - warning, 2 - info, 3 - debug; set with RQ_LogLevel.
+         // Level 3 logs every overlay pick and turns on RenderCore's per-pick
+         // diagnostics (window.__RC_PICKDBG), so it is off by default.
+         let log_mm = /^[0-3]$/.exec(urlParams.get('RQ_LogLevel'));
+         this._logLevel = (log_mm) ? parseInt(log_mm[0]) : 1;
 
          if (this._logLevel > 2) {
             console.log("GlViewerRCore RQ_Mode:", this.RQ_Mode, "RQ_SSAA:", this.RQ_SSAA,
@@ -40,15 +61,6 @@ sap.ui.define([
 
          this._selection_map = {};
          this._selection_list = [];
-
-         this.initialMouseX = 0;
-         this.initialMouseY = 0;
-         this.lastOffsetX = 0;
-         this.lastOffsetY = 0;
-         this.firstMouseDown = true;
-         this.scale = false;
-         this.pickedOverlayObj;
-         this.initialSize = 0;
       }
 
       init(controller)
@@ -156,7 +168,15 @@ sap.ui.define([
          let vid = this.get_view().sId + "--rcore";
          canvasParentDOM.setAttribute("id", vid);
          canvasParentDOM.style.width = "100%";
-         canvasParentDOM.style.height = "100%";
+
+         // The canvas div follows the view's toolbar, so it takes the leftover
+         // height as a flex item. height:100% would overhang the view's bottom
+         // edge by the toolbar height, and GL would draw into the hidden strip.
+         // min-height:0 lets the flex item shrink below its content.
+         this.get_view().getDomRef().style.display = "flex";
+         this.get_view().getDomRef().style.flexDirection = "column";
+         canvasParentDOM.style.flex = "1 1 0";
+         canvasParentDOM.style.minHeight = "0";
 
          // in case of openui5 rooter, the canvas element accumulates
          // destroy the old canvas element
@@ -183,6 +203,11 @@ sap.ui.define([
          //                "from", this.RQ_SSAA, "to", this.RQ_SSAA / this.canvas.pixelRatio);
          //    this.RQ_SSAA /= this.canvas.pixelRatio;
          // }
+
+         // Handles for the browser console and test harnesses: every RCore
+         // viewer in window.__RC_VIEWERS, and the RenderCore module in window.__RC.
+         (window.__RC_VIEWERS = window.__RC_VIEWERS || []).push(this);
+         window.__RC = RC;   // the module itself, so RC.Vector3 & co. work in the console
 
          this.renderer = new RC.MeshRenderer(this.canvas, RC.WEBGL2,
                                              { antialias: false, stencil: false });
@@ -216,9 +241,27 @@ sap.ui.define([
          this.lights.name = "Light container";
          this.scene.add(this.lights);
 
+         // Created once, here rather than in createCameraAndLights(), which runs
+         // again on every switch between perspective and orthographic cameras.
+         // The axis goes in the scene, not the overlay: the overlay always draws
+         // in front, which would put an axis line through the detector.
+         this.axis3d = new Axis3D(this, RC);
+         this.scene.add(this.axis3d.group);
+         // Evaluates streamed trajectories on its own frame clock.
+         this.motion = new Motion(this);
+         // Hover tooltip and kept annotations, as ZTexts in the overlay scene.
+         this.annotations = new Annotations(this, RC);
+         // Hover, drag and click on overlay elements.
+         this.overlay = new Overlay(this, RC);
+
          this.createCameraAndLights();
 
-         this.rqt = new RC.RendeQuTor(this.renderer, this.scene, this.camera, this.overlay_scene);
+         // The overlay is a (0,0)-(1,1) screen box with its own orthographic
+         // camera. Screen-mode ZText ignores this camera; other overlay meshes use it.
+         this.overlay_camera = new RC.OrthographicCamera(0, 1, 1, 0, -1000, 1000);
+
+         this.rqt = new RC.RendeQuTor(this.renderer, this.scene, this.camera,
+                                      this.overlay_scene, this.overlay_camera);
          if (this.RQ_Mode == "Direct")
          {
             this.rqt.initDirectToScreen();
@@ -226,6 +269,7 @@ sap.ui.define([
          else if (this.RQ_Mode == "Simple")
          {
             this.rqt.initSimple(this.RQ_SSAA);
+            this.rqt.set_tone_mapping(this.RQ_ToneMap);
          }
          else
          {
@@ -253,12 +297,6 @@ sap.ui.define([
          let light_3d_ctor = function(col, int, dist, decay, args) { return new RC.PointLight(col, int, dist, decay, args); };
          // let light_3d_ctor = function(col, int, dist, decay, args) { return new RC.DirectionalLight(col, int); };
          let light_2d_ctor = function(col, int) { return new RC.DirectionalLight(col, int); };
-
-         // guides
-         this.axis = new RC.Group();
-         this.axis.name = "Axis";
-         // this.overlay_scene.add(this.axis); // looks worse for now put to scene
-         this.scene.add(this.axis);
 
          let w = this.canvas.width;
          let h = this.canvas.height;
@@ -325,12 +363,8 @@ sap.ui.define([
       {
          let dome = this.canvas.canvasDOM;
 
-         // Setup tooltip
-         this.ttip = document.createElement('div');
-         this.ttip.setAttribute('class', 'eve_tooltip');
-         this.ttip_text = document.createElement('div');
-         this.ttip.appendChild(this.ttip_text);
-         this.canvas.parentDOM.appendChild(this.ttip)
+         // The hover tooltip is a ZText in the overlay scene, owned by
+         // Annotations, so it appears in image captures.
 
 
          // Setup some event pre-handlers
@@ -352,6 +386,7 @@ sap.ui.define([
          });
 
          dome.addEventListener('pointerleave', function() {
+            glc.overlay.clearHover();
 
             glc.removeMouseMoveTimeout();
             glc.clearHighlight();
@@ -378,9 +413,22 @@ sap.ui.define([
                {
                   EVE.JSR.createMenu(event2, glc).then(menu => glc.showContextMenu(event2, menu));
                }
+
             }
 
             this.addEventListener('pointerup', glc.mouseup_listener);
+         });
+
+         // Re-run the hover pick when a pointer interaction ends. pointermove
+         // arms the hover timeout only while no button is held, and any move
+         // removes mouseup_listener, so nothing else notices what a rotation
+         // brought under the cursor. Picking during the drag would send a
+         // highlight MIR per frame.
+         dome.addEventListener('pointerup', function(event) {
+            glc.removeMouseMoveTimeout();
+            glc.mousemove_timeout = setTimeout(
+               glc.onMouseMoveTimeout.bind(glc, event.offsetX, event.offsetY),
+               glc.controller.htimeout);
          });
 
          dome.addEventListener('dblclick', function() {
@@ -389,19 +437,19 @@ sap.ui.define([
          });
 
          dome.addEventListener("mouseup", function() {
-            glc.handleOverlayMouseUp();
+            glc.overlay.onMouseUp();
          });
 
          dome.addEventListener("mousedown", function(event) {
             if (event.button == 0 || event.button == 2)
             {
-               glc.handleOverlayMouseDown(event);
+               glc.overlay.onMouseDown(event);
 
             }
          });
 
          dome.addEventListener("mousemove", function(event) {
-            glc.handleOverlayMouseMove(event);
+            glc.overlay.onMouseMove(event);
          });
 
          // Key-handlers go on window ...
@@ -532,13 +580,35 @@ sap.ui.define([
 
       recalcSceneBBox()
       {
+         // Exclude the axis: it is built from this box, and its ticks reach past
+         // it, so including it would grow the box on every rebuild. Its label
+         // vertices are screen-space vec2, which expandByObject would read as 3D.
+         const ax = this.axis3d ? this.axis3d.group : null;
+         if (ax) this.scene.remove(ax);
          this.scene_bbox.setFromObject( this.scene );
+         if (ax) this.scene.add(ax);
          if (this.scene_bbox.isEmpty())
          {
             console.error("GlViewerRenderCore.positionCameraAndLights scene bbox empty", this.scene_bbox);
             const ext = 100;
             this.scene_bbox.expandByPoint(new RC.Vector3(-ext,-ext,-ext));
             this.scene_bbox.expandByPoint(new RC.Vector3( ext, ext, ext));
+         }
+         if (this.axis3d) this.axis3d.setBBox(this.axes_bbox || this.scene_bbox);
+
+         this.updateRenderBBox();
+      }
+
+      /** The box the camera's near and far planes are fitted to: axes_bbox or
+       * scene_bbox, widened by Axis3D.getRenderMargin() so that axis ticks and
+       * labels outside the box are not clipped. Call it when the scene extent
+       * or the axis style changes. */
+      updateRenderBBox()
+      {
+         this.render_bbox = (this.axes_bbox || this.scene_bbox).clone();
+         if (this.axis3d) {
+            const m = this.axis3d.getRenderMargin();
+            if (m > 0) this.render_bbox.expandByScalar(m);
          }
       }
 
@@ -642,10 +712,44 @@ sap.ui.define([
             this.fgCol = this.creator.ColorBlack;
          }
 
-         this.axis.clear();
-         if (eveView.AxesType > 0)
-            this.makeAxis();
+         this.applyRenderParams(eveView);
+         this.recolourFgElements();
 
+         // AxesType is REveViewer::EAxesType: kAxesNone, kAxesOrigin or kAxesEdge.
+         // Font size is set before the style because setStyle() rebuilds and the
+         // size is baked into the glyph geometry.
+         if (eveView.AxesFontSize !== undefined)
+            this.axis3d.font_size = eveView.AxesFontSize;
+         this.axis3d.setStyle(eveView.AxesType);
+         if (eveView.AxesUpAxis !== undefined)
+            this.axis3d.setUpAxis(eveView.AxesUpAxis);
+
+         // A declared axis volume replaces scene_bbox for the axis and the
+         // near/far fit only. Camera framing still follows scene_bbox.
+         if (eveView.AxesBBox) {
+            let b = eveView.AxesBBox;
+            this.axes_bbox = new RC.Box3(new RC.Vector3(b[0], b[1], b[2]),
+                                         new RC.Vector3(b[3], b[4], b[5]));
+         } else {
+            this.axes_bbox = null;
+         }
+         this.axis3d.setBBox(this.axes_bbox || this.scene_bbox);
+         this.updateRenderBBox();
+
+         if (eveView.MotionMaxHz !== undefined && this.motion)
+            this.motion.setMaxHz(eveView.MotionMaxHz);
+         if (eveView.RenderMaxHz !== undefined && this.motion)
+            this.motion.setRenderMaxHz(eveView.RenderMaxHz);
+         if (eveView.ExtrapolateMotion !== undefined && this.motion)
+            this.motion.setEnabled(eveView.ExtrapolateMotion);
+         if (eveView.AxesAtten !== undefined)
+            this.axis3d.setAttenuation(eveView.AxesAtten);
+         if (eveView.AxesFontSize !== undefined)
+            this.axis3d.setFontSize(eveView.AxesFontSize);
+         if (eveView.TooltipFontSize !== undefined && this.annotations)
+            this.annotations.setFontSize(eveView.TooltipFontSize);
+         if (eveView.TooltipAlpha !== undefined && this.annotations)
+            this.annotations.setPlateAlpha(eveView.TooltipAlpha);
 
          // compare cam base matrices
          let a = this.controls.getCamBase().elements;
@@ -682,83 +786,6 @@ sap.ui.define([
          this.request_render();
       }
 
-      makeAxis()
-      {
-         function formatFloat(val) {
-            let lg = Math.log10(Math.abs(val));
-            let fs = "undef";
-
-            if (lg < 0) {
-                if (lg > -1) {
-                    fs = val.toFixed(2);
-                }
-                else if (lg > -2) {
-                    fs = val.toFixed(3);
-                }
-                else {
-                    fs = val.toExponential(2);
-                }
-            }
-            else {
-                if (lg < 2)
-                    fs = val.toFixed(1);
-                else if (lg < 4)
-                    fs = Math.round(val);
-                else
-                    fs = val.toExponential(2);
-            }
-            return val > 0 ? "+" + fs : fs;
-         }
-
-         let bb = new RC.Box3();
-         bb.setFromObject(this.scene);
-
-         let lines = [];
-         lines.push({ "p": new RC.Vector3(bb.min.x, 0, 0), "c": new RC.Color(1, 0, 0), "text": "x " + formatFloat(bb.min.x) });
-         lines.push({ "p": new RC.Vector3(bb.max.x, 0, 0), "c": new RC.Color(1, 0, 0), "text": "x " + formatFloat(bb.max.x) });
-         lines.push({ "p": new RC.Vector3(0, bb.min.y, 0), "c": new RC.Color(0, 1, 0), "text": "y " + formatFloat(bb.min.y) });
-         lines.push({ "p": new RC.Vector3(0, bb.max.y, 0), "c": new RC.Color(0, 1, 0), "text": "y " + formatFloat(bb.max.y) });
-         if (this.controller.isEveCameraPerspective()) {
-            lines.push({ "p": new RC.Vector3(0, 0, bb.min.z), "c": new RC.Color(0, 0, 1), "text": "z " + formatFloat(bb.min.z) });
-            lines.push({ "p": new RC.Vector3(0, 0, bb.max.z), "c": new RC.Color(0, 0, 1), "text": "z " + formatFloat(bb.max.z) });
-         }
-
-         for (const ax of lines) {
-            let geom = new RC.Geometry();
-            let buf = new Float32Array([0, 0, 0, ax.p.x, ax.p.y, ax.p.z]);
-            geom.vertices = new RC.Float32Attribute(buf, 3);
-            let ss = this.creator.RcMakeStripes(geom, 2, ax.c);
-            this.axis.add(ss);
-         }
-
-         let url_base = this.eve_path + 'sdf-fonts/LiberationSerif-Regular';
-         this.tex_cache.deliver_font(url_base,
-            (texture, font_metrics) => {
-               let diag = new RC.Vector3;
-               bb.getSize(diag);
-               diag = diag.length() / 100;
-               let ag = this.axis;
-               for (const ax of lines) {
-                  const text = new RC.ZText({
-                     text: ax.text,
-                     fontTexture: texture,
-                     xPos: 0.0,
-                     yPos: 0.0,
-                     fontSize: 0.01,
-                     mode: RC.TEXT2D_SPACE_MIXED,
-                     fontHinting: 1.0,
-                     color: this.fgCol,
-                     font: font_metrics,
-                  });
-                  text.matrix.setPosition(ax.p);
-                  text.matrixChanged();
-                  text.material.side = RC.FRONT_SIDE;
-                  ag.add(text);
-               }
-            },
-            (img) => RC.ZText.createDefaultTexture(img)
-         );
-      };
 
       //==============================================================================
 
@@ -777,12 +804,17 @@ sap.ui.define([
          // console.log("RENDER", this.scene, this.camera, this.canvas, this.renderer);
 
          this.render_requested = false;
+         this.overlay.updatePixelScale();
+         this.overlay.updateProjectionAxes();
+         // Re-placed every frame; see Annotations.layout() for why.
+         if (this.annotations) this.annotations.layout();
+         if (this.axis3d) this.axis3d.updateForCamera(this.camera);
          if (this.render_requested_recalc_sbbox) {
             this.recalcSceneBBox();
             this.render_requested_recalc_sbbox = false;
          }
          if (this.camera.isPerspectiveCamera) {
-            this.camera.optimizeNearFar(this.scene_bbox);
+            this.camera.optimizeNearFar(this.render_bbox || this.scene_bbox);
          }
 
          if (this.canvas.width <= 0 || this.canvas.height <= 0) return;
@@ -812,7 +844,7 @@ sap.ui.define([
                } else {
                   for (let geo of el_entry.geom) {
                      if (geo === undefined)
-                        console.warning("Processing viewer selection, undefined object for element", this.mgr.GetElement(el_idx));
+                        console.warn("Processing viewer selection, undefined object for element", this.mgr.GetElement(el_idx));
                      else
                         obj_list.push(geo);
                   }
@@ -847,14 +879,27 @@ sap.ui.define([
          // Note that rgt.render_end() releases all std textures.
 
          if (this.rqt.queue.used_fail_count == 0) {
+            // Grab first: render_tone_map_to_screen() is the pass that composites
+            // the background colour in and forces alpha to 1, so anything read
+            // after it has an opaque background baked in.
+            if (this._capture_request)
+               this.rqt.render_tone_map_to_capture();
+
+            if (this.RQ_HdrStats) { this.RQ_HdrStats = false; this.rqt.hdr_stats(); }
+            if (this._autotune_pending) { this._autotune_pending = false; this.autoTuneLights(); }
+
             // AMT: All render passes are drawn with the black bg
             //      except of the tone map render pass
+
             this.renderer.clearColor = '#' +  this.bgCol.getHexString() + '00';
             this.rqt.render_tone_map_to_screen();
             this.renderer.clearColor = "#00000000";
          }
 
          this.rqt.render_end();
+
+         if (this._capture_request)
+            this.finishCapture();
 
          if (this.rqt.queue.used_fail_count > 0) {
             if (this._logLevel >= 2)
@@ -864,6 +909,82 @@ sap.ui.define([
 
          // if (this.controller.kind === "3D")
          //    window.requestAnimationFrame(this.render.bind(this));
+      }
+
+      //==============================================================================
+      // Image capture
+      //
+      // The image is grabbed from RendeQuTor after tone mapping but before the
+      // background colour is composited in, so it carries straight alpha and can
+      // be placed over any backdrop later. Pixels come back in WebGL orientation
+      // (bottom-left origin); the receiving service is expected to flip them.
+      //==============================================================================
+
+      /** Grab the next rendered frame. cfg.scale multiplies the screen viewport
+       * (use the viewer's RQ_SSAA to get the full supersampled image).
+       * Returns a Promise of { width, height, pixels, view_name }. */
+      grabImage(cfg = {})
+      {
+         if (this._capture_request)
+            return Promise.reject(new Error("GlViewerRCore.grabImage: a capture is already pending"));
+
+         if (cfg.scale && cfg.scale != this.rqt.capture_scale)
+            this.rqt.set_capture_scale(cfg.scale);
+
+         return new Promise((resolve, reject) => {
+            this._capture_request = { cfg, resolve, reject };
+            this.request_render();
+         });
+      }
+
+      /** Called from render() once the capture pass has run. */
+      finishCapture()
+      {
+         let req = this._capture_request;
+         this._capture_request = null;
+         if (!req) return;
+
+         try {
+            let img = this.rqt.grab_image();
+            if (!img) throw new Error("RendeQuTor.grab_image() returned null");
+
+            let eveView = this.get_manager().GetElement(this.controller.eveViewerId);
+            img.view_name = eveView ? eveView.fName : "unknown_view";
+            req.resolve(img);
+         } catch (e) {
+            req.reject(e);
+         }
+      }
+
+      /** Grab and POST to an image-gator style service. cfg: { url, event_id,
+       * view_type, scale }. The buffer is sent raw; X-Flip-Y tells the service
+       * the rows still need flipping. */
+      grabAndPostImage(cfg = {})
+      {
+         const url = cfg.url || "http://localhost:3000/capture";
+
+         return this.grabImage(cfg).then(img => {
+            return fetch(url, {
+               method: "POST",
+               headers: {
+                  "Content-Type": "application/octet-stream",
+                  "X-Width":      img.width.toString(),
+                  "X-Height":     img.height.toString(),
+                  "X-Event-ID":   String(cfg.event_id ?? "unknown_event"),
+                  "X-View-Type":  String(cfg.view_type ?? img.view_name),
+                  "X-Flip-Y":     "1"
+               },
+               body: img.pixels
+            }).then(rsp => {
+               if (!rsp.ok) throw new Error("capture POST failed: " + rsp.status + " " + rsp.statusText);
+               if (this._logLevel >= 2)
+                  console.log("GlViewerRCore: posted capture", img.width + "x" + img.height, "to", url);
+               return rsp;
+            });
+         }).catch(e => {
+            console.error("GlViewerRCore.grabAndPostImage failed:", e);
+            throw e;
+         });
       }
 
       render_for_picking(x, y, detect_depth)
@@ -924,29 +1045,36 @@ sap.ui.define([
             return null;
          }
 
+         // Walk up to the owning REve element, stopping at the root.
+         // Client-local overlay elements, such as kept annotations and their
+         // buttons, have no eve_el.
          let top_obj = state_overlay.object;
-            while (top_obj.eve_el === undefined)
-               top_obj = top_obj.parent;
+         while (top_obj && top_obj.eve_el === undefined)
+            top_obj = top_obj.parent;
 
-            state_overlay.top_object = top_obj;
-            state_overlay.eve_el = top_obj.eve_el;
+         state_overlay.top_object = top_obj || state_overlay.object;
+         state_overlay.eve_el = top_obj ? top_obj.eve_el : undefined;
 
-            if (state_overlay.eve_el.fSecondarySelect)
-               this.rqt.pick_instance_overlay(state_overlay);
+         if (state_overlay.eve_el && state_overlay.eve_el.fSecondarySelect)
+            this.rqt.pick_instance_overlay(state_overlay);
 
-            this.rqt.pick_end();
+         this.rqt.pick_end();
 
-            state_overlay.w = this.canvas.width;
-            state_overlay.h = this.canvas.height;
-            state_overlay.mouse = new RC.Vector2( ((x + 0.5) / state_overlay.w) * 2 - 1,
-                                         -((y + 0.5) / state_overlay.h) * 2 + 1 );
+         state_overlay.w = this.canvas.width;
+         state_overlay.h = this.canvas.height;
+         state_overlay.mouse = new RC.Vector2( ((x + 0.5) / state_overlay.w) * 2 - 1,
+                                      -((y + 0.5) / state_overlay.h) * 2 + 1 );
 
-            let ctrl_obj = state_overlay.object;
-            while (ctrl_obj.get_ctrl === undefined)
-               ctrl_obj = ctrl_obj.parent;
+         // A client-local element has no control either. Overlay drags and
+         // resizes it through ovlGetPos/ovlSetPos.
+         let ctrl_obj = state_overlay.object;
+         while (ctrl_obj && ctrl_obj.get_ctrl === undefined)
+            ctrl_obj = ctrl_obj.parent;
 
-            state_overlay.ctrl = ctrl_obj.get_ctrl(ctrl_obj, top_obj);
-            return state_overlay;
+         state_overlay.ctrl = ctrl_obj
+                            ? ctrl_obj.get_ctrl(ctrl_obj, state_overlay.top_object)
+                            : null;
+         return state_overlay;
       }
 
       //==============================================================================
@@ -1010,6 +1138,7 @@ sap.ui.define([
          //console.log("GlViewerRCore onResizeTimeout", w, h, "canvas=", this.canvas, this.canvas.width, this.canvas.height);
 
          this.camera.aspect = w / h;
+         this.overlay.updatePixelScale();
          this.rqt.updateViewport(w, h);
          this.controls.update();
 
@@ -1033,8 +1162,7 @@ sap.ui.define([
          {
             this.highlighted_top_object.scene.clearHighlight(); // XXXX should go through manager
             this.highlighted_top_object = null;
-
-            this.ttip.style.display = "none";
+            if (this.annotations) this.annotations.hideTooltip();
          }
       }
 
@@ -1062,65 +1190,47 @@ sap.ui.define([
          c.elementHighlighted(idx, null, pstate.object)
 
          if (this.highlighted_top_object !== pstate.top_object)
-         {
-            if (pstate.object && pstate.eve_el)
-               this.ttip_text.innerHTML = c.getTooltipText(idx);
-            else
-               this.ttip_text.innerHTML = "";
-         }
+            this._ttip_text = (pstate.object && pstate.eve_el) ? c.getTooltipText(idx) : "";
+         // Which pick the displayed text belongs to. Stamped on every hover, not
+         // only when the object changes, so that a server push landing after this
+         // hover is attributed to the index that asked for it.
+         this._ttip_key = GlViewerRCore.ttipKey(pstate, idx);
          this.highlighted_top_object = pstate.top_object;
 
-         let dome  = this.controller.getView().getDomRef();
-         let mouse = pstate.mouse;
-         let offs  = (mouse.x > 0 || mouse.y < 0) ? this.getRelativeOffsets(dome) : null;
+         // Annotations positions the tooltip and flips it at the viewport edges.
+         this.annotations.showTooltip(this._ttip_text, x, y);
+      }
 
-         if (mouse.x <= 0) {
-            this.ttip.style.left  = (x + dome.offsetLeft + 10) + "px";
-            this.ttip.style.right = null;
-         } else {
-            this.ttip.style.right = (this.canvas.canvasDOM.clientWidth - x + offs.right + 10) + "px";
-            this.ttip.style.left  = null;
-         }
-         if (mouse.y >= 0) {
-            this.ttip.style.top    = (y + dome.offsetTop + 10) + "px";
-            this.ttip.style.bottom = null;
-         } else {
-            this.ttip.style.bottom = (this.canvas.canvasDOM.clientHeight - y + offs.bottom + 10) + "px";
-            this.ttip.style.top = null;
-         }
+      /** Identity of a pick, for matching a displayed tooltip to a later pick. */
+      static ttipKey(pstate, idx)
+      {
+         if (!pstate || !pstate.eve_el) return null;
+         return pstate.eve_el.fElementId + ":" + idx;
+      }
 
-         this.ttip.style.display= "block";
+      /** The text an annotation should carry for this pick.
+       *
+       * Returns the displayed tooltip text when it belongs to this pick, since
+       * that text may have come from the server through remoteToolTip() and be
+       * longer than ctrl.getTooltipText(). The key check is needed because the
+       * context menu takes its own pick, which need not hit the last hovered
+       * element. */
+      tooltipTextForPick(pstate, idx)
+      {
+         const key = GlViewerRCore.ttipKey(pstate, idx);
+         if (key && key === this._ttip_key && this._ttip_text)
+            return this._ttip_text;
+         return (pstate.ctrl && typeof pstate.ctrl.getTooltipText === "function")
+              ? pstate.ctrl.getTooltipText(idx) : "";
       }
 
       remoteToolTip(msg)
       {
-         if (this.ttip_text)
-            this.ttip_text.innerHTML = msg;
-         if (this.highlighted_top_object && this.ttip)
-            this.ttip.style.display = "block";
-      }
-
-      getRelativeOffsets(elem)
-      {
-         // Based on:
-         // https://stackoverflow.com/questions/3000887/need-to-calculate-offsetright-in-javascript
-
-         let r = { left: 0, right: 0, top:0, bottom: 0 };
-
-         let parent = elem.offsetParent;
-
-         while (parent && getComputedStyle(parent).position === 'relative')
-         {
-            r.top    += elem.offsetTop;
-            r.left   += elem.offsetLeft;
-            r.right  += parent.offsetWidth  - (elem.offsetLeft + elem.offsetWidth);
-            r.bottom += parent.offsetHeight - (elem.offsetTop  + elem.offsetHeight);
-
-            elem   = parent;
-            parent = parent.offsetParent;
-         }
-
-         return r;
+         // Server-pushed text for the element already under the pointer. It
+         // carries no position, so the tooltip keeps the one it has.
+         this._ttip_text = msg;
+         if (this.highlighted_top_object && this.annotations)
+            this.annotations.updateText(msg);
       }
 
       //------------------------------------------------------------------------------
@@ -1154,6 +1264,32 @@ sap.ui.define([
 
             let data = { "p": pstate, "v": this, "cctrl": this.controls};
             menu.add("Set Camera Center", data, this.setCameraCenter.bind(data));
+
+            // Built from this pick, not from the hover tooltip: opening the menu
+            // fires pointerleave on the canvas, which hides the tooltip.
+            if (this.annotations) {
+               const idx = pstate.ctrl ? pstate.ctrl.extractIndex(pstate.instance) : null;
+               const txt = this.tooltipTextForPick(pstate, idx);
+               if (txt) {
+                  // The annotation's subject. Annotations removes the annotation
+                  // when this element goes away, typically on the next event.
+                  const tgt = { elementId: pstate.eve_el.fElementId,
+                                sceneId:   pstate.eve_el.fSceneId };
+                  const d = { a: this.annotations, txt: txt, tgt: tgt,
+                              ox: event.offsetX, oy: event.offsetY };
+                  menu.add("Annotate", d,
+                           function(q) { q.a.keepAt(q.txt, q.ox, q.oy, null, q.tgt); });
+
+                  // The pick was taken with depth, so it also gives a 3D anchor.
+                  const w = this.annotations.worldFromPick(pstate);
+                  if (w) {
+                     const dc = { a: this.annotations, txt: txt, tgt: tgt,
+                                  ox: event.offsetX, oy: event.offsetY, w: w };
+                     menu.add("Annotate & connect", dc,
+                              function(q) { q.a.keepAt(q.txt, q.ox, q.oy, q.w, q.tgt); });
+                  }
+               }
+            }
          }
 
          menu.add("Reset camera", this.resetCamera);
@@ -1203,6 +1339,12 @@ sap.ui.define([
 
       handleMouseSelect(event)
       {
+         // A press on an overlay element belongs to the overlay. pointerup runs
+         // before the compatibility mouseup that ends the overlay drag, so
+         // overlay.drag is still set here. Without this check a click on an
+         // overlay button would also clear the scene selection.
+         if (this.overlay.drag) return;
+
          let x = event.offsetX * this.canvas.pixelRatio;
          let y = event.offsetY * this.canvas.pixelRatio;
          let pstate = this.render_for_picking(x, y, false);
@@ -1220,89 +1362,82 @@ sap.ui.define([
 
       }
 
-      handleOverlayMouseUp()
+      /** Re-colour every object flagged use_fg_color with the viewer's
+       * foreground colour. The background can change after the object was
+       * built, so the colour cannot be fixed at construction. */
+      recolourFgElements()
       {
-         // console.log("handleOverlayMouseUp");
-         if(this.firstMouseDown == false)
-         {
-            this.firstMouseDown = true;
-            //this.overlay_scene.children[0].children[0].setNewPositionOffset(this.lastOffsetX, this.lastOffsetY);
-            this.pickedOverlayObj.setNewPositionOffset(this.lastOffsetX, this.lastOffsetY);
-            this.lastOffsetX = 0;
-            this.lastOffsetY = 0;
-            this.initialMouseX = 0;
-            this.initialMouseY = 0;
-            this.scale = false;
-            this.initialSize = 0;
-            this.controls.enablePan = true;
-            this.controls.enableRotate = true;
-         }
+         let fg = this.fgCol;
+         if (!fg) return;
+         let recolour = (o) => { if (o.use_fg_color && typeof o.setColors === "function")
+                                    o.setColors(fg, fg); };
+         if (this.overlay_scene) this.overlay_scene.traverse(recolour);
+         if (this.scene) this.scene.traverse(recolour);
       }
 
-      handleOverlayMouseDown(event)
+      /** Apply the viewer's light scale, tone curve and auto-tune request.
+       * The scale multiplies each light's intensity as first seen, so repeated
+       * updates do not compound. */
+      applyRenderParams(eveView)
       {
-         // console.log("handleOverlayMouseDown");
-         let x = event.offsetX * this.canvas.pixelRatio;
-         let y = event.offsetY * this.canvas.pixelRatio;
-         let overlay_pstate = this.render_for_Overlay_picking(x, y, false);
+         if (!eveView) return;
 
-
-
-         if(this.firstMouseDown && overlay_pstate)
-         {
-             this.initialMouseX = x;
-             this.initialMouseY = y;
-             //let c = overlay_pstate.ctrl;
-             this.pickedOverlayObj = overlay_pstate.object;
-             this.firstMouseDown = false;
-
-             if(event.button == 2)
-             {
-               this.scale = true;
-               this.controls.enablePan = false;
-               //this.initialSize = this.overlay_scene.children[0].children[0].fontSize;
-               this.initialSize = this.pickedOverlayObj.fontSize;
-             }
-             else
-               this.controls.enableRotate = false;
-
+         let scale = (eveView.LightScale === undefined) ? 1.0 : eveView.LightScale;
+         for (const l of this.lights.children) {
+            if (l._rc_base_intensity === undefined) l._rc_base_intensity = l.intensity;
+            l.intensity = l._rc_base_intensity * scale;
          }
+
+         if (this.rqt) {
+            if (eveView.ToneMapMode !== undefined) this.rqt.set_tone_mapping(eveView.ToneMapMode);
+            if (eveView.ToneMapKnee !== undefined) this.rqt.set_tone_knee(eveView.ToneMapKnee);
+         }
+
+         // AutoTuneLights() on the server bumps this; the measurement can only
+         // happen here, against a rendered buffer, so it is deferred to render().
+         if (eveView.AutoTuneSerial !== undefined &&
+             eveView.AutoTuneSerial !== this._autotune_serial) {
+            this._autotune_serial = eveView.AutoTuneSerial;
+            if (this._autotune_serial > 0) this._autotune_pending = true;
+         }
+
+         this.request_render();
       }
 
-      handleOverlayMouseMove(event)
+      /** Pick a light scale that puts the brightest channel just under white.
+       *
+       * Reported back through SetLightScale() rather than kept locally: the
+       * parameter belongs to the viewer, so every client of it should agree, and
+       * the value survives a reload. */
+      autoTuneLights()
       {
-         //console.log("handleOverlayMouseMove");
+         let st = this.rqt.hdr_stats();
+         if (!st || !st.covered_px || !(st.max_channel > 0)) return;
 
-         if(!this.firstMouseDown)
-         {
-            let x = event.offsetX * this.canvas.pixelRatio;
-            let y = event.offsetY * this.canvas.pixelRatio;
+         let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
+         let cur = (eveView && eveView.LightScale !== undefined) ? eveView.LightScale : 1.0;
 
-            if(!this.scale)
-            {
-               this.lastOffsetX = (x - this.initialMouseX)/this.canvas.width;
-               this.lastOffsetY = (this.initialMouseY - y)/this.canvas.height;
-               //this.overlay_scene.children[0].children[0].setOffset([this.lastOffsetX, this.lastOffsetY]);
-               this.pickedOverlayObj.setOffset([this.lastOffsetX, this.lastOffsetY]);
+         // Approximate: unlit and emissive colour does not scale with the
+         // lights. Aim just under white; a second request refines it.
+         const target = 0.98;
+         let next = cur * target / st.max_channel;
+         next = Math.min(Math.max(next, 0.05), 8.0);
 
-            }
-            else
-            {
-               //this.overlay_scene.children[0].children[0].fontSize = this.initialSize + (x - this.initialMouseX);
-               this.pickedOverlayObj.fontSize = this.initialSize + (x - this.initialMouseX);
-
-            }
-            this.render();
-
-
-
-         }
+         console.log("autoTuneLights: max_channel", st.max_channel.toFixed(3),
+                     "scale", cur.toFixed(3), "->", next.toFixed(3));
+         this.controller.mgr.SendMIR("SetLightScale(" + next.toFixed(4) + ")",
+                                     this.controller.eveViewerId,
+                                     "ROOT::Experimental::REveViewer");
       }
 
+      /** Age every GL buffer and texture before a scene rebuild. EveManager
+       * calls this, then clearAttributesAndTextures() after the rebuild, which
+       * drops whatever the rebuild did not touch. A GL resource is only a cache
+       * of its BufferAttribute or Texture, so no element has to track what it
+       * allocated. */
       timeStampAttributesAndTextures() {
          try {
-            this.renderer.glManager._textureManager.incrementTime();
-            this.renderer.glManager._attributeManager.incrementTime();
+            this.renderer.ageResources();
          }
          catch (e) {
             console.error("Exception caught in timeStampAttributesAndTextures.", e);
@@ -1311,9 +1446,9 @@ sap.ui.define([
 
       clearAttributesAndTextures() {
          try {
-            let delta = 2;
-            this.renderer.glManager._textureManager.deleteTextures(true, delta);
-            this.renderer.glManager._attributeManager.deleteBuffers(true, delta);
+            // One cycle of grace, so a resource used by every second update is
+            // not thrashed. Raise it if elements come and go on alternate events.
+            this.renderer.collectResources(2);
          }
          catch (e) {
             console.error("Exception caught in clearAttributesAndTextures.", e);

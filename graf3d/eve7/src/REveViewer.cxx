@@ -118,10 +118,150 @@ void REveViewer::SetAxesType(int at)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Fix the volume the 3D axis spans, as {min, max} per coordinate, instead of
+/// following the scene contents. Only the axis and the clip box use it; camera
+/// framing uses the content.
+
+void REveViewer::SetAxesBBox(Float_t xmin, Float_t ymin, Float_t zmin,
+                             Float_t xmax, Float_t ymax, Float_t zmax)
+{
+   fAxesBBox[0] = xmin; fAxesBBox[1] = ymin; fAxesBBox[2] = zmin;
+   fAxesBBox[3] = xmax; fAxesBBox[4] = ymax; fAxesBBox[5] = zmax;
+   fHasAxesBBox = kTRUE;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Let the 3D axis follow the scene bounding box again.
+
+void REveViewer::ClearAxesBBox()
+{
+   fHasAxesBBox = kFALSE;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Cap the redraw rate of this viewer, in frames per second; 0 is uncapped.
+
+void REveViewer::SetRenderMaxHz(Float_t hz)
+{
+   fRenderMaxHz = hz < 0.f ? 0.f : (hz > 240.f ? 240.f : hz);
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Cap the rate at which this viewer applies streamed motion; 0 freezes it.
+
+void REveViewer::SetMotionMaxHz(Float_t hz)
+{
+   fMotionMaxHz = hz < 0.f ? 0.f : (hz > 240.f ? 240.f : hz);
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the up axis, 0/1/2 for x/y/z; any other value means none.
+
+void REveViewer::SetAxesUpAxis(int a)
+{
+   fAxesUpAxis = (a >= 0 && a <= 2) ? a : -1;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Enable or disable client-side extrapolation of streamed motion.
+
+void REveViewer::SetExtrapolateMotion(bool x)
+{
+   fExtrapolateMotion = x;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Distance attenuation of the 3D axis labels. 0 keeps a constant pixel size
+/// and 1 scales them like geometry. The clamp is [-4, 8] because inside [0, 1]
+/// the effect is hard to see on a scene viewed from outside. Below 0 the far
+/// labels are the larger ones.
+
+void REveViewer::SetAxesAtten(Float_t a)
+{
+   fAxesAtten = a < -4.f ? -4.f : (a > 8.f ? 8.f : a);
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Label size for the 3D axis, as a fraction of viewport height, clamped to
+/// [0.004, 0.05]. Above 0.05 the labels of a box axis start to meet.
+
+void REveViewer::SetAxesFontSize(Float_t s)
+{
+   fAxesFontSize = s < 0.004f ? 0.004f : (s > 0.05f ? 0.05f : s);
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Label size for the hover tooltip, as a fraction of viewport height. Same
+/// range as the axis labels; see SetAxesFontSize.
+
+void REveViewer::SetTooltipFontSize(Float_t s)
+{
+   fTooltipFontSize = s < 0.004f ? 0.004f : (s > 0.05f ? 0.05f : s);
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Opacity of the plate behind the tooltip and kept annotations. 0 leaves the
+/// text floating on the scene, 1 hides whatever is behind it.
+
+void REveViewer::SetTooltipAlpha(Float_t a)
+{
+   fTooltipAlpha = a < 0.f ? 0.f : (a > 1.f ? 1.f : a);
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 //
 void REveViewer::SetBlackBackground(bool x)
 {
    fBlackBackground = x;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Multiplier on the client's light intensities, clamped at zero from below.
+
+void REveViewer::SetLightScale(Float_t s)
+{
+   fLightScale = s < 0.f ? 0.f : s;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Tone curve, as EToneMapMode.
+
+void REveViewer::SetToneMapMode(Int_t m)
+{
+   fToneMapMode = m;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Knee position for kToneKnee: colours below this pass through exactly, so
+/// raising it buys fidelity and spends highlight gradient.
+
+void REveViewer::SetToneMapKnee(Float_t k)
+{
+   fToneMapKnee = k < 0.f ? 0.f : (k > 0.99f ? 0.99f : k);
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Ask the clients to pick a light scale that keeps the brightest channel just
+/// below white. Only a client can measure that, so it reports its choice back
+/// through SetLightScale().
+
+void REveViewer::AutoTuneLights()
+{
+   ++fAutoTuneSerial;
    StampObjProps();
 }
 
@@ -134,7 +274,24 @@ int REveViewer::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
    j["Mandatory"] = fMandatory;
    j["AxesType"] = fAxesType;
+   j["ExtrapolateMotion"] = fExtrapolateMotion;
+   j["AxesUpAxis"] = fAxesUpAxis;
+   j["MotionMaxHz"] = fMotionMaxHz;
+   j["RenderMaxHz"] = fRenderMaxHz;
+   if (fHasAxesBBox)
+      j["AxesBBox"] = {fAxesBBox[0], fAxesBBox[1], fAxesBBox[2],
+                       fAxesBBox[3], fAxesBBox[4], fAxesBBox[5]};
+   else
+      j["AxesBBox"] = nullptr;
+   j["AxesAtten"] = fAxesAtten;
+   j["AxesFontSize"] = fAxesFontSize;
+   j["TooltipFontSize"] = fTooltipFontSize;
+   j["TooltipAlpha"] = fTooltipAlpha;
    j["BlackBg"] = fBlackBackground;
+   j["LightScale"] = fLightScale;
+   j["ToneMapMode"] = fToneMapMode;
+   j["ToneMapKnee"] = fToneMapKnee;
+   j["AutoTuneSerial"] = fAutoTuneSerial;
    j["fCameraId"] = fCamera ? fCamera->GetElementId() : 0;
    j["fSyncCam"] = fSyncCamera;
 

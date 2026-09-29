@@ -155,8 +155,14 @@ sap.ui.define([], function() {
                   });
                }
             }
+            else if (resp.content == "Motion") {
+               this.ImportMotion(resp);
+            }
             else if (resp.content == "BrowseElement") {
                this.BrowseElement(resp.id);
+            }
+            else if (resp.content == "GrabImage") {
+               this.GrabImages(resp);
             } else {
                console.error("OnWebsocketMsg Unhandled message type: msg len=", msg.length, " txt:", msg.substr(0, 120), "...");
             }
@@ -226,13 +232,31 @@ sap.ui.define([], function() {
          return this.childs[0].childs[2].childs;
       }
 
-      /** Invoke function on all receiver of scene events - when such function exists */
-      callSceneReceivers(scene, fname, arg) {
+      /** Dispatch an element change to the scene's receivers, skipping any whose
+        * `changeBitMask` excludes its bits. Summary masks out kCBTransBBox, which
+        * a moving element streams several times a second. */
+      callSceneElementChange(scene, em) {
+         if ( ! scene.$receivers) return;
+
+         for (let i = 0; i < scene.$receivers.length; i++) {
+            let receiver = scene.$receivers[i];
+            if (typeof receiver.sceneElementChange != "function") continue;
+
+            let mask = receiver.changeBitMask;
+            if (mask !== undefined && !(em.changeBit & mask)) continue;
+
+            receiver.sceneElementChange(em);
+         }
+      }
+
+      /** Invoke `fname` on every receiver of `scene` that implements it; a receiver
+        * may implement only some of the callbacks. */
+      callSceneReceivers(scene, fname, ...args) {
          if (scene.$receivers) {
              for (let i=0; i < scene.$receivers.length; i++) {
                  let receiver = scene.$receivers[i];
                  if (typeof receiver[fname] == "function")
-                    receiver[fname](arg);
+                    receiver[fname](...args);
              }
          }
      }
@@ -294,7 +318,7 @@ sap.ui.define([], function() {
             let elId = ids[i];
             let elem = this.GetElement(elId);
             if (!elem) {
-               console.warning("EveManager.removeElements REveElement not found in map, id = ", elId);
+               console.warn("EveManager.removeElements REveElement not found in map, id = ", elId);
                continue;
             }
 
@@ -311,7 +335,7 @@ sap.ui.define([], function() {
                }
             }
             else {
-               console.warning("EveManager.removeElements can't remove child from mother, mother id = ", elem.fMotherId);
+               console.warn("EveManager.removeElements can't remove child from mother, mother id = ", elem.fMotherId);
             }
             delete this.map[elId];
          }
@@ -430,8 +454,16 @@ sap.ui.define([], function() {
                delete em.render_data;
                Object.assign(obj, em);
             }
+            else if (em.changeBit & this.EChangeBits.kCBTransBBox) {
+               // Transformation-only update: no render data is streamed.
+               // render_data.matrix is updated here because a later rebuild,
+               // e.g. on a colour change, reads it.
+               Object.assign(obj, em);
+               if (em.matrix && obj.render_data)
+                  obj.render_data.matrix = em.matrix;
+            }
 
-            this.callSceneReceivers(scene, "sceneElementChange", em);
+            this.callSceneElementChange(scene, em);
          }
 
          this.listScenesToRedraw.push(scene);
@@ -701,12 +733,8 @@ sap.ui.define([], function() {
       SelectElement(selection_obj, element, sec_idcs, extra)
       {
          let scene = this.GetElement(element.fSceneId);
-         if (scene.$receivers) {
-            for (let r of scene.$receivers)
-            {
-               r.SelectElement(selection_obj, element.fElementId, sec_idcs, extra);
-            }
-         }
+         this.callSceneReceivers(scene, "SelectElement",
+                                 selection_obj, element.fElementId, sec_idcs, extra);
 
          // console.log("EveManager.SelectElement", element, scene.$receivers[0].viewer.outline_pass.id2obj_map);
       }
@@ -715,12 +743,8 @@ sap.ui.define([], function() {
       {
          let scene = this.GetElement(element.fSceneId);
 
-         if (scene.$receivers) {
-            for (let r of scene.$receivers)
-            {
-               r.UnselectElement(selection_obj, element.fElementId);
-            }
-         }
+         this.callSceneReceivers(scene, "UnselectElement",
+                                 selection_obj, element.fElementId);
 
          // console.log("EveManager.UnselectElement", element, scene.$receivers[0].viewer.outline_pass.id2obj_map);
       }
@@ -749,6 +773,9 @@ sap.ui.define([], function() {
          }
 
          for (let item of recs) {
+            // A receiver implements only the callbacks it needs;
+            // Annotations, for one, has no endChanges().
+            if (typeof item.endChanges !== "function") continue;
             try {
                item.endChanges();
             } catch (e) {
@@ -768,6 +795,65 @@ sap.ui.define([], function() {
          if (!this.handle.isStandalone())
             this.handle.send("__REveDoneChanges");
          this.busyProcessingChanges = false;
+      }
+
+      /** Apply a "Motion" message: transformation-only updates sent outside the
+        * BeginChanges/EndChanges cycle, with no acknowledgement.
+        * Only EveScene implements sceneElementMotion, so the element tree and
+        * the editor never see these. */
+      ImportMotion(resp)
+      {
+         let els = resp.els;
+         if (!els) return;
+
+         for (let i = 0; i < els.length; ++i) {
+            let em = els[i];
+            let obj = this.map[em.fElementId];
+            if (!obj) continue;   // removed, or not yet created
+
+            // The message's own timestamp, so a viewer's rate cap can decide
+            // once for the whole message rather than once per element.
+            em.msg_t = resp.t;
+
+            // Keep the model in step: a later rebuild reads render_data.matrix,
+            // and a stale one would put the object back where it used to be.
+            if (em.matrix && obj.render_data)
+               obj.render_data.matrix = em.matrix;
+            obj.mot = em.mot;
+
+            let scene = this.GetElement(em.fSceneId);
+            if (scene)
+               this.callSceneReceivers(scene, "sceneElementMotion", em);
+         }
+      }
+
+      /** Server-driven image capture: every GL viewer on this client, or those named
+        * in `req.viewers`, grabs its frame and posts it to `req.url`. */
+      GrabImages(req)
+      {
+         let want = (req.viewers && req.viewers.length) ? new Set(req.viewers) : null;
+         let n = 0;
+
+         for (let ctrl of this.gl_controllers)
+         {
+            let v = ctrl.viewer;
+            if (!v || typeof v.grabAndPostImage !== "function")
+               continue; // e.g. the JSRoot/Three viewers, which have no capture path
+
+            let eveView = this.GetElement(ctrl.eveViewerId);
+            let name = eveView ? eveView.fName : "unknown_view";
+            if (want && !want.has(name))
+               continue;
+
+            v.grabAndPostImage({ url:       req.url,
+                                 event_id:  req.event_id,
+                                 view_type: name,
+                                 scale:     req.scale });
+            ++n;
+         }
+
+         if (n === 0)
+            console.warn("EveManager.GrabImages: no capable GL viewer matched", req);
       }
 
       /** Method invoked from server message to browse to element elid */

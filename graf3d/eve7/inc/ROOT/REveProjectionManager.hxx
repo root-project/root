@@ -58,6 +58,8 @@ public:
 
    virtual void UpdateName();
 
+   void BumpDistortion(Int_t steps);
+
    void SetCenter(Float_t x, Float_t y, Float_t z);
    REveVector &GetCenter() { return fCenter; }
 

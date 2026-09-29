@@ -222,6 +222,13 @@
 
 // REveText
 #pragma link C++ class ROOT::Experimental::REveText+;
+#pragma link C++ class ROOT::Experimental::REveProjectionAxis+;
+
+// REveLogo
+#pragma link C++ class ROOT::Experimental::REveLogo+;
+
+// REveSMorph
+#pragma link C++ class ROOT::Experimental::REveSMorph+;
 
 // Ellipse
 #pragma link C++ class ROOT::Experimental::REveEllipsoid+;

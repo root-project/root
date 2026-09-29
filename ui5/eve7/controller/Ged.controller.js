@@ -315,6 +315,41 @@ sap.ui.define([
          }
       },
 
+      // REveSMorph. The Tx, Cx, Rz ([-2, 2]) and extent ([0, 1]) sliders match
+      // the clamps in the REveSMorph setters; the tessellation and texture
+      // sliders cover less than their clamps. Keep them in step by hand.
+      buildREveSMorphSetter : function(el)
+      {
+         this.buildREveElementSetter(el);
+
+         this.makeSliderSetter(el.fTLevel, "TLevel", null, {min: 2, max: 100, step: 1});
+         this.makeSliderSetter(el.fPLevel, "PLevel", null, {min: 3, max: 100, step: 1});
+
+         this.makeSliderSetter(el.fTx, "Tx", null,
+            {min: -2, max: 2, step: 0.01, tip: "Twist of phi, proportional to cos(theta)"});
+         this.makeSliderSetter(el.fCx, "Cx", null,
+            {min: -2, max: 2, step: 0.01, tip: "Radial convergence, proportional to cos(theta)"});
+         this.makeSliderSetter(el.fRz, "Rz", null,
+            {min: -2, max: 2, step: 0.01, tip: "Shear about z, proportional to the polar coordinate"});
+
+         this.makeSliderSetter(el.fThetaMin,  "ThetaMin",  null, {min: 0, max: 1, step: 0.001});
+         this.makeSliderSetter(el.fThetaMax,  "ThetaMax",  null, {min: 0, max: 1, step: 0.001});
+         this.makeSliderSetter(el.fPhiMean,   "PhiMean",   null, {min: 0, max: 1, step: 0.001});
+         this.makeSliderSetter(el.fPhiRange,  "PhiRange",  null, {min: 0, max: 1, step: 0.001,
+            tip: "1 closes the seam; below that the surface is an open patch"});
+
+         this.makeBoolSetter(el.fEquiSurf, "EquiSurf");
+
+         this.makeSliderSetter(el.fTexXC, "TexXC", null,
+            {min: -8, max: 8, step: 0.05, tip: "Texture wraps per turn in phi"});
+         this.makeSliderSetter(el.fTexYC, "TexYC", null,
+            {min: -8, max: 8, step: 0.05, tip: "Texture wraps per sweep in theta"});
+         this.makeSliderSetter(el.fTexX0, "TexX0", null, {min: -2, max: 2, step: 0.01});
+         this.makeSliderSetter(el.fTexY0, "TexY0", null, {min: -2, max: 2, step: 0.01});
+         this.makeSliderSetter(el.fTexYOff, "TexYOff", null,
+            {min: -1, max: 1, step: 0.01, tip: "Shift u per whole v, for a brick bond"});
+      },
+
       buildREveTrackSetter : function(el)
       {
          this.buildREveElementSetter(el);
@@ -323,8 +358,68 @@ sap.ui.define([
 
       buildREveViewerSetter: function(el)
       {
-         this.makeBoolSetter(Boolean(el.AxesType), "ShowAxes", "SetAxesType");
+         // AxesType is a three-value enum, REveViewer::EAxesType, so it gets a
+         // selector rather than a checkbox.
+         this.makeAxesTypeSelector(el);
+         // Shown whatever AxesType is: the panel is built on viewer selection,
+         // not on an AxesType change, so hidden rows would stay hidden after
+         // the axes are switched on.
+         //
+         // The axis sliders cover less than the server clamps (SetAxesAtten takes
+         // [-4, 8]), and their tooltips say where the useful values are.
+         this.makeSliderSetter(el.AxesAtten, "AxesAtten", "SetAxesAtten",
+                               { min: 0, max: 4, step: 0.2, tickmarks: false,
+                                 tip: "Label shrink with distance. 0 = constant "
+                                    + "pixel size, 1 = realistic (shrinks exactly "
+                                    + "like geometry), above that exaggerates. The "
+                                    + "setter clamps to [-4, 8], so inverse "
+                                    + "perspective -- far labels largest -- is "
+                                    + "reachable from a macro or a MIR, just not "
+                                    + "from this slider." });
+         this.makeSliderSetter(el.AxesFontSize, "AxesFontSize", "SetAxesFontSize",
+                               { min: 0.004, max: 0.05, step: 0.001,
+                                 tip: "Label height as a fraction of the viewport. "
+                                    + "0.015 is the default and about the smallest "
+                                    + "that stays crisp; by 0.05 the labels of a "
+                                    + "box axis start to meet." });
+         this.makeSliderSetter(el.TooltipFontSize, "TooltipFontSize",
+                               "SetTooltipFontSize",
+                               { min: 0.004, max: 0.05, step: 0.001,
+                                 tip: "Hover-tooltip label height, as a fraction "
+                                    + "of the viewport. Separate from the axis "
+                                    + "size because a tooltip is read, where an "
+                                    + "axis number is only glanced at." });
+         this.makeSliderSetter(el.TooltipAlpha, "TooltipAlpha", "SetTooltipAlpha",
+                               { min: 0, max: 1, step: 0.05,
+                                 tip: "Opacity of the plate behind the tooltip "
+                                    + "and kept annotations. 0 leaves the text "
+                                    + "floating on the scene, 1 hides whatever "
+                                    + "is behind it." });
          this.makeBoolSetter(el.BlackBg, "BlackBackground");
+
+         // Motion settings, in a collapsed panel since they matter only while
+         // something moves:
+         //
+         //   MotionMaxHz        how often the update stream is applied
+         //   RenderMaxHz        how often the result is drawn
+         //   ExtrapolateMotion  whether anything is drawn between updates
+         let motion = new sap.m.Panel({
+            headerText: "Motion",
+            expandable: true,
+            expanded: false,
+            width: "100%"
+         });
+         this.getView().byId("GED").addContent(motion);
+
+         this.makeSliderSetter(el.MotionMaxHz, "MotionMaxHz", null,
+            {min: 0, max: 60, step: 1,
+             tip: "Updates per second this viewer applies. 0 freezes the scene."},
+            motion);
+         this.makeSliderSetter(el.RenderMaxHz, "RenderMaxHz", null,
+            {min: 0, max: 120, step: 1,
+             tip: "Animation redraws per second. 0 is uncapped -- every display frame."},
+            motion);
+         this.makeBoolSetter(el.ExtrapolateMotion, "ExtrapolateMotion", null, motion);
 
          // camera type selector
          this.makeCameraTypeSelector(el);
@@ -634,14 +729,7 @@ sap.ui.define([
             }
          });
 
-         let label = new mText({ text: labelName });
-         label.addStyleClass("sapUiTinyMargin");
-
-         let frame = new HorizontalLayout({
-            content : [widget, label]
-         });
-
-         gedFrame.addContent(frame);
+         this.makeGedRow(labelName, widget, null, gedFrame);
       },
 
       makeColorSetter : function(val, labelName, funcName, gedFrame)
@@ -679,6 +767,146 @@ sap.ui.define([
          gedFrame.addContent(frame);
       },
 
+      /** One row of the editor: a label in a fixed 130px column, then the
+       * control, both vertically centred. The width must fit the longest label
+       * in use, currently "ExtrapolateMotion", or rows wrap and go ragged. */
+      makeGedRow : function(labelText, widget, tip, gedFrame) {
+         if (!gedFrame)
+            gedFrame = this.getView().byId("GED");
+
+         let label = new mText({ text: labelText, width: "130px" });
+         if (tip) label.setTooltip(tip);
+         label.addStyleClass("sapUiTinyMarginBegin");
+
+         let row = new sap.m.HBox({
+            alignItems: "Center",
+            items: [label, widget]
+         });
+         row.addStyleClass("sapUiTinyMarginBottom");
+         gedFrame.addContent(row);
+         return row;
+      },
+
+      /** A bounded continuous value, as a slider with a numeric readout. The
+       * slider shows the range and cannot leave it, so a server-side clamp never
+       * contradicts what was entered. The MIR is sent when the drag pauses for
+       * the idle delay, and again on release. */
+      makeSliderSetter : function(val, labelName, funcName, opts, gedFrame)
+      {
+         if (!gedFrame)
+            gedFrame = this.getView().byId("GED");
+         if (!funcName)
+            funcName = "Set" + labelName;
+         opts = opts || {};
+
+         let gcm = this;
+
+         // How long the drag must pause before the value is sent: the HTimeout
+         // user arg, which also sets the hover-highlight delay. 250 ms if unset,
+         // as in GL.controller.
+         let idle = this.mgr?.handle?.getUserArgs?.("HTimeout");
+         if (idle === undefined || !(idle > 0)) idle = 250;
+
+         let send = (v) => gcm.mgr.SendMIR(funcName + "(" + v + ")",
+                                           gcm.editorElement.fElementId,
+                                           gcm.editorElement._typename);
+
+         const min  = (opts.min  !== undefined) ? opts.min  : 0;
+         const max  = (opts.max  !== undefined) ? opts.max  : 1;
+         const step = (opts.step !== undefined) ? opts.step : 0.05;
+
+         // Decimals shown, derived from the step: 0.2 gives one, 0.001 three.
+         const dec = Math.max(0, -Math.floor(Math.log10(step)));
+
+         // A fixed readout beside the slider. showAdvancedTooltip is off because
+         // UI5 leaves its value chip over the handle after the drag ends.
+         let readout = new mText({
+            text: Number(val).toFixed(dec),
+            width: "42px",
+            textAlign: "End"
+         });
+         readout.addStyleClass("sapUiTinyMarginBegin");
+
+         let slider = new sap.m.Slider({
+            width: "150px",
+            tooltip: opts.tip,
+
+            min: min,
+            max: max,
+            step: step,
+            value: val,
+            enableTickmarks: !!opts.tickmarks,
+            showAdvancedTooltip: false,
+
+            // Send once the drag pauses for `idle` ms. Sending on every
+            // liveChange would be a round trip per step, and a font-size change
+            // rebuilds label geometry on every client of the viewer.
+            liveChange: function(event) {
+               const v = event.getParameter("value");
+               const sl = event.getSource();
+               gcm.beginInteraction();
+               // The readout follows the handle at once, ahead of the held-back MIR.
+               readout.setText(Number(v).toFixed(dec));
+               if (sl._ged_idle) clearTimeout(sl._ged_idle);
+               sl._ged_idle = setTimeout(() => { delete sl._ged_idle; send(v); }, idle);
+            },
+
+            // Release: send at once and drop any pending idle send, so the
+            // final value cannot be overtaken by a stale one still in flight.
+            change: function(event) {
+               const sl = event.getSource();
+               const v = event.getParameter("value");
+               readout.setText(Number(v).toFixed(dec));
+               if (sl._ged_idle) { clearTimeout(sl._ged_idle); delete sl._ged_idle; }
+               send(v);
+               gcm.endInteraction();
+            }
+         });
+
+         // The wheel over the slider moves it by one step, ten with shift, a
+         // hundred with ctrl+shift, for exact values a drag cannot hit.
+         const wheelBump = function(ev) {
+            ev.preventDefault();
+
+            let mult = 1;
+            if (ev.shiftKey && ev.ctrlKey) mult = 100;
+            else if (ev.shiftKey)          mult = 10;
+
+            const dir = (ev.deltaY < 0) ? 1 : -1;
+            let v = slider.getValue() + dir * step * mult;
+
+            // Snap to the step grid, or repeated bumps accumulate the float
+            // error until the readout shows something the step cannot express.
+            v = min + Math.round((v - min) / step) * step;
+            v = Math.max(min, Math.min(max, v));
+
+            if (v === slider.getValue()) return;
+
+            slider.setValue(v);
+            readout.setText(Number(v).toFixed(dec));
+            gcm.beginInteraction();
+            send(v);
+            gcm.endInteraction();
+         };
+
+         slider.addEventDelegate({
+            onAfterRendering: function() {
+               const dom = slider.getDomRef();
+               if (!dom || dom._ged_wheel) return;
+               dom._ged_wheel = true;
+               // Not passive: this has to preventDefault, or the page scrolls
+               // under the pointer at the same time.
+               dom.addEventListener("wheel", wheelBump, { passive: false });
+            }
+         });
+
+         // The tip goes on the label as well as on the slider.
+         this.makeGedRow(labelName,
+                         new sap.m.HBox({ alignItems: "Center",
+                                          items: [slider, readout] }),
+                         opts.tip, gedFrame);
+      },
+
       makeNumberSetter : function(val, labelName, funcName, gedFrame)
       {
          if (!gedFrame)
@@ -698,13 +926,8 @@ sap.ui.define([
             }
          });
          widget.setType(sap.m.InputType.Number);
-         let label = new mText({ text: labelName });
-         label.addStyleClass("sapUiTinyMargin");
-
-         let frame = new HorizontalLayout({
-            content : [widget, label]
-         });
-         gedFrame.addContent(frame);
+         widget.setWidth("160px");
+         this.makeGedRow(labelName, widget, null, gedFrame);
          return widget;
       },
 
@@ -739,9 +962,40 @@ sap.ui.define([
       },
 
       updateGED: function(elementId) {
-         if (this.ged_visible && this.editorElement && (this.editorElement.fElementId == elementId)) {
-            this.buildEditor();
+         if ( ! (this.ged_visible && this.editorElement &&
+                 this.editorElement.fElementId == elementId)) return;
+
+         // buildEditor() destroys and recreates every control, so a rebuild
+         // during a drag would reset the slider to the last streamed value.
+         // Defer it until the gesture ends; see beginInteraction().
+         if (this.interacting) { this.rebuild_pending = true; return; }
+
+         this.buildEditor();
+      },
+
+      /** Hold off editor rebuilds for the duration of a gesture. */
+      beginInteraction: function() {
+         this.interacting = true;
+         if (this._interaction_timer) {
+            clearTimeout(this._interaction_timer);
+            delete this._interaction_timer;
          }
+      },
+
+      /** End of gesture. The delay covers the server's echo of the last value,
+        * which would otherwise arrive just after the guard lifted and rebuild
+        * anyway. */
+      endInteraction: function() {
+         let gcm = this;
+         if (this._interaction_timer) clearTimeout(this._interaction_timer);
+         this._interaction_timer = setTimeout(function() {
+            delete gcm._interaction_timer;
+            gcm.interacting = false;
+            if (gcm.rebuild_pending) {
+               gcm.rebuild_pending = false;
+               if (gcm.ged_visible && gcm.editorElement) gcm.buildEditor();
+            }
+         }, 400);
       },
 
       updateSecondarySelectionGED:function(elementId, sec_idcs) {
@@ -815,16 +1069,42 @@ sap.ui.define([
          
          comboBox.setModel(cameraModel);
          
-         let labelWidget = new mText({ text: "Camera Type" });
-         labelWidget.addStyleClass("sapUiTinyMargin");
-         
-         let frame = new HorizontalLayout({
-            content: [labelWidget, comboBox]
-         });
-         
-         gedFrame.addContent(frame);
+         gcm.makeGedRow("Camera Type", comboBox, null, gedFrame);
       },
       
+      /** Axis style: none, from the origin, or a box round the scene. Keys are
+       * REveViewer::EAxesType values and go straight to SetAxesType(int). */
+      makeAxesTypeSelector: function(viewer) {
+         let gedFrame = this.getView().byId("GED");
+         let gcm = this;
+
+         let current = viewer.AxesType ? viewer.AxesType : 0;
+
+         // sap.m.Select rather than sap.m.ComboBox: a closed set needs no text
+         // field, and a ComboBox's editable value can disagree with selectedKey.
+         // The items are a plain array, so there is no model binding to sync.
+         let sel = new sap.m.Select({
+            // Fixed width, enough for the longest item plus the arrow.
+            width: "110px",
+            items: [
+               new sap.ui.core.Item({ key: "0", text: "None" }),
+               new sap.ui.core.Item({ key: "1", text: "Origin" }),
+               new sap.ui.core.Item({ key: "2", text: "Box" })
+            ],
+            selectedKey: current.toString(),
+            change: function(oEvent) {
+               let item = oEvent.getParameter("selectedItem");
+               if (item)
+                  gcm.mgr.SendMIR("SetAxesType(" + parseInt(item.getKey()) + ")",
+                                  viewer.fElementId, viewer._typename);
+            }
+         });
+
+         this.makeGedRow("Axes", sel,
+                         "None, rays from the origin, or a box round the scene.",
+                         gedFrame);
+      },
+
       onCameraTypeChange: function(viewer, newCameraType) {
       let mir = "SetCameraType(" + newCameraType + ")";
       this.mgr.SendMIR(mir, viewer.fElementId, viewer._typename);

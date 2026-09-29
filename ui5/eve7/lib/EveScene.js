@@ -202,19 +202,18 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
                this.need_visibility_update = false;
             }
 
-            // To improve when bbox info is streamed.
-            // Recalc scene bbox -- and update viewer total bbox, from scene boxes.
-            // 1. recalc-scene-bbox from known element bboxes (streamed)
-            //    [ this could really be done on the server ]
-            // 2. tell viewer to recalc-total-bbox ONLY from scene bboxes.
-
-            // For now just refresh the gl-viewer.
-            this.glctrl.viewer.request_render(true);
+            // Recompute the scene bounding box only after elements were added,
+            // removed or rebuilt, not after changes that only moved them. The
+            // 3D axis is sized from this box and would otherwise follow moving
+            // objects. REveViewer::SetAxesBBox() fixes the axis extent instead.
+            this.glctrl.viewer.request_render(this.need_bbox_update);
+            this.need_bbox_update = false;
          }
       }
 
       elementAdded(el)
       {
+         this.need_bbox_update = true;
          if ( ! this.glctrl) return;
 
          let obj3d =  this.makeGLRepresentation(el);
@@ -232,6 +231,11 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
       replaceElement(el) {
          if (!this.glctrl) return;
+
+         // Drop the trajectory: it refers to the object about to be replaced.
+         // The next transformation update registers it on the new object.
+         let mo = this.glctrl.viewer.motion;
+         if (mo) mo.remove(el.fElementId);
 
          let container = this.glctrl.getSceneContainer(this);
 
@@ -252,16 +256,70 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          this.need_visibility_update = true;
       }
 
+      /** Apply one element of a "Motion" message: the same update as a
+        * kCBTransBBox change, outside the BeginChanges/EndChanges cycle. */
+      sceneElementMotion(msg)
+      {
+         let el = this.mgr.GetElement(msg.fElementId);
+         if (!el) return;
+
+         // The viewer's rate cap. Dropping an update is safe because each
+         // carries absolute state.
+         let mo = this.glctrl ? this.glctrl.viewer.motion : null;
+         if (mo && !mo.acceptUpdate(msg.msg_t)) return;
+
+         this.updateElementTrans(el, msg);
+
+         // No endChanges() follows, so request the render here. Going through
+         // Motion applies the viewer's render cap.
+         if (mo)
+            mo.requestRender();
+         else if (this.glctrl && this.glctrl.viewer)
+            this.glctrl.viewer.request_render();
+      }
+
+      /** Apply a transformation-only change to the existing renderer object by
+        * setting msg.matrix on it. Requests no render; the callers do. */
+      updateElementTrans(el, msg)
+      {
+         let obj3d = this.getObj3D(msg.fElementId);
+         if (!obj3d) return;
+
+         let mot_viewer = this.glctrl ? this.glctrl.viewer : null;
+
+         if (msg.matrix) {
+            if (this.mgr.is_rcore) {
+               obj3d.setMatrixFromArray(msg.matrix);
+            } else {
+               obj3d.matrix.fromArray(msg.matrix);
+               obj3d.updateMatrixWorld(true);
+            }
+         }
+
+         // After the matrix is applied: Motion takes the start position from it.
+         // Every transformation update carries "mot"; null clears the trajectory.
+         if (mot_viewer && mot_viewer.motion && msg.mot !== undefined)
+            mot_viewer.motion.update(msg.fElementId, obj3d, msg.mot);
+      }
+
       elementsRemoved(ids)
       {
+         this.need_bbox_update = true;
+
+         let mo = this.glctrl ? this.glctrl.viewer.motion : null;
+
          for (let i = 0; i < ids.length; i++)
          {
             let elId  = ids[i];
+
+            // Drop the trajectory. Nothing else removes it, and a live
+            // trajectory keeps Motion's render loop running.
+            if (mo) mo.remove(elId);
             let obj3d = this.getObj3D(elId);
             if (!obj3d) {
                let el = this.mgr.GetElement(elId);
                if (el && el.render_data) {
-                  console.warning("EveScene.elementsRemoved can't find obj3d ", this.mgr.GetElement(el));
+                  console.warn("EveScene.elementsRemoved can't find obj3d ", this.mgr.GetElement(el));
                }
                continue;
             }
@@ -289,10 +347,18 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
             this.need_visibility_update = true;
          }
 
+         // Update the transformation in place. When kCBObjProps is also set the
+         // server sends render data instead of a matrix, and the rebuild below
+         // carries the new position.
+         if (msg.changeBit & this.mgr.EChangeBits.kCBTransBBox) {
+            this.updateElementTrans(el, msg);
+         }
+
          // other change bits
          if (el.render_data) {
             if ((el.changeBit & this.mgr.EChangeBits.kCBObjProps) || (el.changeBit & this.mgr.EChangeBits.kCBColorSelection))
             {
+               this.need_bbox_update = true;
                this.replaceElement(el);
             }
          }

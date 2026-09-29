@@ -232,6 +232,8 @@ void boxset()
    EBoxDemo_t demo = AxisAligned;
 
    auto eveMng = REveManager::Create();
+   eveMng->AllowMultipleRemoteConnections(false, false);
+
    REveBoxSet *b = nullptr;
    switch (demo) {
    case ScaledRotated: b = boxset_gentrans(); break;

@@ -23,6 +23,8 @@
 
 #include "TColor.h"
 
+#include <chrono>
+
 #include "TROOT.h"
 #include "TInterpreter.h"
 
@@ -32,6 +34,18 @@
 #include <regex>
 
 using namespace ROOT::Experimental;
+
+////////////////////////////////////////////////////////////////////////////////
+/// Milliseconds from a monotonic clock, counted from first use. Not a wall
+/// clock. Time base of the streamed motion stamps, see REveTrans::SetMotion().
+
+double REveUtil::ServerTimeMs()
+{
+   using clock = std::chrono::steady_clock;
+   static const clock::time_point origin = clock::now();
+   return std::chrono::duration<double, std::milli>(clock::now() - origin).count();
+}
+
 namespace REX = ROOT::Experimental;
 
 

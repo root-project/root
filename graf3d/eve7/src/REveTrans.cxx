@@ -11,6 +11,7 @@
 
 #include <ROOT/REveTrans.hxx>
 #include <ROOT/REveTypes.hxx>
+#include <ROOT/REveUtil.hxx>
 
 #include "TBuffer.h"
 #include "TClass.h"
@@ -39,6 +40,56 @@
 #define F33 15
 
 using namespace ROOT::Experimental;
+
+////////////////////////////////////////////////////////////////////////////////
+/// Declare how this transformation is changing; position still comes from the
+/// matrix. Does not stamp the owning element, which must be stamped with
+/// kCBTransBBox for the motion to be streamed.
+
+void REveTrans::SetMotion(const REveVectorD &vel, const REveVectorD &acc, Double_t max_dt)
+{
+   SetMotion(vel, acc, REveVectorD(0, 0, 1), 0., max_dt);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// As above, with a spin of `spin_rate` rad/s about `spin_axis`. The axis is
+/// in the local frame, as for RotateLF(), and is normalised here. A spin on a
+/// non-uniformly scaled transformation shears it. t0 is stamped now, not at
+/// stream time, so changes that are held back do not shift the trajectory.
+
+void REveTrans::SetMotion(const REveVectorD &vel, const REveVectorD &acc,
+                          const REveVectorD &spin_axis, Double_t spin_rate,
+                          Double_t max_dt)
+{
+   if (!fDeltaTrans)
+      fDeltaTrans = std::make_unique<REveDeltaTrans>();
+
+   REveDeltaTrans &d = *fDeltaTrans;
+   d.fVel = vel;
+   d.fAcc = acc;
+
+   const Double_t al = spin_axis.Mag();
+   if (al > 1e-9) {
+      d.fSpinAxis  = spin_axis;
+      d.fSpinAxis *= 1. / al;
+      d.fSpinRate  = spin_rate;
+   } else {
+      d.fSpinAxis.Set(0., 0., 1.);
+      d.fSpinRate = 0.;
+   }
+
+   d.fMaxDt    = max_dt;
+   d.fMotionT0 = REveUtil::ServerTimeMs();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Stop extrapolating: the element holds wherever the matrix puts it.
+
+void REveTrans::ClearMotion()
+{
+   fDeltaTrans.reset();
+}
+
 
 /** \class REveTrans
 \ingroup REve
@@ -92,6 +143,8 @@ REveTrans::REveTrans(const REveTrans& t) :
    fEditScale(kTRUE)
 {
    SetTrans(t, kFALSE);
+   if (t.fDeltaTrans)
+      fDeltaTrans = std::make_unique<REveDeltaTrans>(*t.fDeltaTrans);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
