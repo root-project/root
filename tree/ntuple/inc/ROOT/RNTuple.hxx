@@ -78,7 +78,7 @@ public:
    // NOTE: when this is changed also update ntuple_minifile.cxx!
    static constexpr std::uint16_t kVersionEpoch = 1;
    static constexpr std::uint16_t kVersionMajor = 1;
-   static constexpr std::uint16_t kVersionMinor = 0;
+   static constexpr std::uint16_t kVersionMinor = 1;
    static constexpr std::uint16_t kVersionPatch = 1;
 
    /// Returns the RNTuple version in the following form:
