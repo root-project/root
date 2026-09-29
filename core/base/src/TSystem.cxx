@@ -2587,11 +2587,8 @@ static void R__AddPath(TString &target, const TString &path) {
 }
 #endif
 
-static bool R__GenerateCompilerDependencies(const TString &depfilename,
-                                            const TString &filename,
-                                            const TString &targetname,
-                                            const TString &includes,
-                                            const TString &defines)
+static bool R__GenerateCompilerDependencies(const TString &depfilename, const TString &filename, const TString &targetname,
+                                            const TString &includes, const TString &defines)
 {
    TString compiler = gSystem->Getenv("CXX");
    if (compiler.IsNull())
@@ -2612,7 +2609,7 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename,
 
    cmd += includes;
    cmd += defines;
-
+   cmd += " -x c++-header"; // avoid warning when header is .h but is C++ code
    cmd += " \"";
    R__AddPath(cmd, filename);
    cmd += "\"";
