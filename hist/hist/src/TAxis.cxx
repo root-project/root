@@ -275,8 +275,8 @@ Int_t TAxis::DistancetoPrimitive(Int_t, Int_t)
 
 void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   if (!gPad) return;
-   gPad->ExecuteEventAxis(event,px,py,this);
+   if (gPad)
+      gPad->ExecuteEventAxis(event, px, py, this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

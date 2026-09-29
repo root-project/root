@@ -2193,6 +2193,52 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
+class TAxisInteractive : public TVirtualPad::TInteractive {
+   public:
+
+   Int_t axisNumber = 1;
+   Double_t ratio1 = 1, ratio2 = 1;
+   Double_t px1old = 0, py1old = 0, px2old = 0, py2old = 0;
+
+   void PaintZoomBox(TPad &pad)
+   {
+      Double_t zbx1 = pad.GetUxmin();
+      Double_t zbx2 = pad.GetUxmax();
+      Double_t zby1 = pad.GetUymin();
+      Double_t zby2 = pad.GetUymax();
+      if (axisNumber == 1) {
+         zbx1 = px1old;
+         zbx2 = px2old;
+      } else {
+         zby1 = py1old;
+         zby2 = py2old;
+      }
+
+      if (pad.OpaqueMoving()) {
+         TAttLine{kBlack, 1, 1}.ModifyOn(pad);
+         Double_t xx[4], yy[4];
+
+         if (axisNumber == 1) {
+            xx[0] = xx[1] = zbx1;
+            xx[2] = xx[3] = zbx2;
+            yy[0] = yy[2] = zby1;
+            yy[1] = yy[3] = zby2;
+         } else {
+            xx[0] = xx[2] = zbx1;
+            xx[1] = xx[3] = zbx2;
+            yy[0] = yy[1] = zby1;
+            yy[2] = yy[3] = zby2;
+         }
+         pad.PaintPolyLine(2, xx, yy, "iaxiszoom1");
+         pad.PaintPolyLine(2, xx+2, yy+2, "iaxiszoom2");
+      } else {
+         pad.PaintBox(zbx1, zby1, zbx2, zby2, "iaxiszoom");
+      }
+      pad.UpdateAsync();
+   }
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event for a TAxis object
 /// (called by TAxis::ExecuteEvent.)
@@ -2209,20 +2255,11 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
 {
-   if (!IsEditable()) return;
-   if (!axis) return;
+   if (!IsEditable() || !axis)
+      return;
    SetCursor(kHand);
 
    TView *view = GetView();
-   static Int_t axisNumber;
-   static Double_t ratio1, ratio2;
-   static Double_t px1old, py1old, px2old, py2old;
-   Int_t nbd, inc, bin1, bin2, first, last;
-   Double_t temp, xmin,xmax;
-   Bool_t opaque  = gPad->OpaqueMoving();
-   bool resetAxisRange = false;
-   static std::unique_ptr<TBox> zoombox;
-   Double_t zbx1=0,zbx2=0,zby1=0,zby2=0;
 
    // The CONT4 option, used to paint TH2, is a special case; it uses a 3D
    // drawing technique to paint a 2D plot.
@@ -2234,189 +2271,110 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
       kCont4 = kTRUE;
    }
 
-   auto pp = GetPainter();
+   auto inter = dynamic_cast<TAxisInteractive *>(Interactive(axis));
 
    switch (event) {
 
    case kButton1Down:
-      axisNumber = 1;
-      if (!strcmp(axis->GetName(),"xaxis"))
-         axisNumber = IsVertical() ? 1 : 2;
-      if (!strcmp(axis->GetName(),"yaxis"))
-         axisNumber = IsVertical() ? 2 : 1;
-      if (!strcmp(axis->GetName(),"zaxis"))
-         axisNumber = 3;
+      inter = new TAxisInteractive();
+      Interactive(axis, inter);
+
+      inter->axisNumber = 1;
+      if (!strcmp(axis->GetName(), "xaxis"))
+         inter->axisNumber = IsVertical() ? 1 : 2;
+      else if (!strcmp(axis->GetName(), "yaxis"))
+         inter->axisNumber = IsVertical() ? 2 : 1;
+      else if (!strcmp(axis->GetName(), "zaxis"))
+         inter->axisNumber = 3;
       if (view) {
-         view->GetDistancetoAxis(axisNumber, px, py, ratio1);
+         view->GetDistancetoAxis(inter->axisNumber, px, py, inter->ratio1);
+      } else if (inter->axisNumber == 1) {
+         inter->ratio1 = (AbsPixeltoX(px) - GetUxmin()) / (GetUxmax() - GetUxmin());
+         inter->px1old = GetUxmin() + inter->ratio1 * (GetUxmax() - GetUxmin());
+         inter->py1old = GetUymin();
+         inter->px2old = inter->px1old;
+         inter->py2old = GetUymax();
       } else {
-         if (axisNumber == 1) {
-            ratio1 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
-            px1old = GetUxmin()+ratio1*(GetUxmax() - GetUxmin());
-            py1old = GetUymin();
-            px2old = px1old;
-            py2old = GetUymax();
-         } else if (axisNumber == 2) {
-            ratio1 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
-            py1old = GetUymin()+ratio1*(GetUymax() - GetUymin());
-            px1old = GetUxmin();
-            px2old = GetUxmax();
-            py2old = py1old;
-         } else {
-            ratio1 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
-            py1old = GetUymin()+ratio1*(GetUymax() - GetUymin());
-            px1old = GetUxmax();
-            px2old = XtoAbsPixel(GetX2());
-            py2old = py1old;
-         }
-         if (!opaque) {
-            pp->DrawBox(px1old, py1old, px2old, py2old, TVirtualPadPainter::kHollow);
-         } else {
-            if (axisNumber == 1) {
-               zbx1 = px1old;
-               zbx2 = px2old;
-               zby1 = GetUymin();
-               zby2 = GetUymax();
-            } else if (axisNumber == 2) {
-               zbx1 = GetUxmin();
-               zbx2 = GetUxmax();
-               zby1 = py1old;
-               zby2 = py2old;
-            }
-            if (GetLogx()) {
-               zbx1 = TMath::Power(10,zbx1);
-               zbx2 = TMath::Power(10,zbx2);
-            }
-            if (GetLogy()) {
-               zby1 = TMath::Power(10,zby1);
-               zby2 = TMath::Power(10,zby2);
-            }
-            zoombox = std::make_unique<TBox>(zbx1, zby1, zbx2, zby2);
-            Int_t ci = TColor::GetColor("#7d7dff");
-            TColor *zoomcolor = gROOT->GetColor(ci);
-            if (!pp->IsSupportAlpha() || !zoomcolor)
-               zoombox->SetFillStyle(3002);
-            else
-               zoomcolor->SetAlpha(0.5);
-            zoombox->SetFillColor(ci);
-            zoombox->Draw();
-            gPad->Modified();
-            gPad->Update();
-         }
+         inter->ratio1 = (AbsPixeltoY(py) - GetUymin()) / (GetUymax() - GetUymin());
+         inter->px1old = GetUxmin();
+         inter->py1old = GetUymin() + inter->ratio1 * (GetUymax() - GetUymin());
+         inter->px2old = GetUxmax();
+         inter->py2old = inter->py1old;
       }
-      if (!opaque)
-         pp->SetAttLine({-1, 1, 1});
       // No break !!!
 
    case kButton1Motion:
+      if (!inter)
+         break;
       if (view) {
-         view->GetDistancetoAxis(axisNumber, px, py, ratio2);
+         view->GetDistancetoAxis(inter->axisNumber, px, py, inter->ratio2);
+      } else if (inter->axisNumber == 1) {
+         inter->ratio2 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
+         inter->px2old = GetUxmin() + inter->ratio2 * (GetUxmax() - GetUxmin());
       } else {
-         if (!opaque)
-            pp->DrawBox(px1old, py1old, px2old, py2old, TVirtualPadPainter::kHollow);
-         if (axisNumber == 1) {
-            ratio2 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
-            px2old = GetUxmin()+ratio2*(GetUxmax() - GetUxmin());
-         } else {
-            ratio2 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
-            py2old = GetUymin()+ratio2*(GetUymax() - GetUymin());
-         }
-         if (!opaque) {
-            pp->DrawBox(px1old, py1old, px2old, py2old, TVirtualPadPainter::kHollow);
-         } else {
-            if (axisNumber == 1) {
-               zbx1 = px1old;
-               zbx2 = px2old;
-               zby1 = GetUymin();
-               zby2 = GetUymax();
-            } else if (axisNumber == 2) {
-               zbx1 = GetUxmin();
-               zbx2 = GetUxmax();
-               zby1 = py1old;
-               zby2 = py2old;
-            }
-            if (GetLogx()) {
-               zbx1 = TMath::Power(10,zbx1);
-               zbx2 = TMath::Power(10,zbx2);
-            }
-            if (GetLogy()) {
-               zby1 = TMath::Power(10,zby1);
-               zby2 = TMath::Power(10,zby2);
-            }
-            if (zoombox) {
-               zoombox->SetX1(zbx1);
-               zoombox->SetY1(zby1);
-               zoombox->SetX2(zbx2);
-               zoombox->SetY2(zby2);
-            }
-            gPad->Modified();
-            gPad->Update();
-         }
+         inter->ratio2 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
+         inter->py2old = GetUymin() + inter->ratio2 * (GetUymax() - GetUymin());
       }
-   break;
+      inter->PaintZoomBox(*this);
+      break;
 
-   case kWheelUp:
-      nbd  = (axis->GetLast()-axis->GetFirst());
-      inc  = TMath::Max(nbd/100,1);
-      bin1 = axis->GetFirst()+inc;
-      bin2 = axis->GetLast()-inc;
-      bin1 = TMath::Max(bin1, 1);
-      bin2 = TMath::Min(bin2, axis->GetNbins());
-      if (bin2>bin1) {
-         axis->SetRange(bin1,bin2);
-         gPad->Modified();
-         gPad->Update();
+   case kWheelUp: {
+      Int_t nbd  = (axis->GetLast()-axis->GetFirst());
+      Int_t inc  = TMath::Max(nbd/100,1);
+      Int_t bin1 = TMath::Max(1, axis->GetFirst() + inc);
+      Int_t bin2 = TMath::Min(axis->GetNbins(), axis->GetLast() - inc);
+      if (bin2 > bin1) {
+         axis->SetRange(bin1, bin2);
+         Modified();
+         UpdateAsync();
       }
-   break;
+      break;
+   }
 
-   case kWheelDown:
-      nbd  = (axis->GetLast()-axis->GetFirst());
-      inc  = TMath::Max(nbd/100,1);
-      bin1 = axis->GetFirst()-inc;
-      bin2 = axis->GetLast()+inc;
-      bin1 = TMath::Max(bin1, 1);
-      bin2 = TMath::Min(bin2, axis->GetNbins());
-      resetAxisRange = (bin1 == 1 && axis->GetFirst() == 1 && bin2 == axis->GetNbins() && axis->GetLast() == axis->GetNbins());
-      if (bin2>bin1) {
+   case kWheelDown: {
+      Int_t nbd  = (axis->GetLast()-axis->GetFirst());
+      Int_t inc  = TMath::Max(nbd/100,1);
+      Int_t bin1 = TMath::Max(1, axis->GetFirst()-inc);
+      Int_t bin2 = TMath::Min(axis->GetNbins(), axis->GetLast()+inc);
+      Bool_t resetAxisRange = (bin1 == 1 && axis->GetFirst() == 1 && bin2 == axis->GetNbins() && axis->GetLast() == axis->GetNbins());
+      if (bin2 > bin1)
          axis->SetRange(bin1,bin2);
-      }
       if (resetAxisRange)
          axis->ResetBit(TAxis::kAxisRange);
-      if (bin2>bin1) {
-         gPad->Modified();
-         gPad->Update();
+      if (bin2 > bin1) {
+         Modified();
+         UpdateAsync();
       }
-   break;
+      break;
+   }
 
    case kButton1Up:
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
-         if (opaque && zoombox)
-            zoombox.reset();
          break;
       }
 
-      if (view) {
-         view->GetDistancetoAxis(axisNumber, px, py, ratio2);
-         if (ratio1 > ratio2) {
-            temp   = ratio1;
-            ratio1 = ratio2;
-            ratio2 = temp;
-         }
-         if (ratio2 - ratio1 > 0.05) {
-            TH1 *hobj = (TH1*)axis->GetParent();
-            if (axisNumber == 3 && hobj && hobj->GetDimension() != 3) {
+      if (view && inter) {
+         view->GetDistancetoAxis(inter->axisNumber, px, py, inter->ratio2);
+         if (inter->ratio1 > inter->ratio2)
+            std::swap(inter->ratio1, inter->ratio2);
+         if (inter->ratio2 - inter->ratio1 > 0.05) {
+            auto hobj = static_cast<TH1 *>(axis->GetParent());
+            if (inter->axisNumber == 3 && hobj && hobj->GetDimension() != 3) {
                Float_t zmin = hobj->GetMinimum();
                Float_t zmax = hobj->GetMaximum();
-               if(GetLogz()){
-                  if (zmin <= 0 && zmax > 0) zmin = TMath::Min((Double_t)1,
-                                                               (Double_t)0.001*zmax);
+               if (GetLogz()) {
+                  if (zmin <= 0 && zmax > 0)
+                     zmin = TMath::Min((Double_t)1, (Double_t)0.001 * zmax);
                   zmin = TMath::Log10(zmin);
                   zmax = TMath::Log10(zmax);
                }
-               Float_t newmin = zmin + (zmax-zmin)*ratio1;
-               Float_t newmax = zmin + (zmax-zmin)*ratio2;
-               if (newmin < zmin) newmin = hobj->GetBinContent(hobj->GetMinimumBin());
-               if (newmax > zmax) newmax = hobj->GetBinContent(hobj->GetMaximumBin());
+               Float_t newmin = zmin + (zmax - zmin) * inter->ratio1;
+               Float_t newmax = zmin + (zmax - zmin) * inter->ratio2;
+               if (newmin < zmin)
+                  newmin = hobj->GetBinContent(hobj->GetMinimumBin());
+               if (newmax > zmax)
+                  newmax = hobj->GetBinContent(hobj->GetMaximumBin());
                if (GetLogz()){
                   newmin = TMath::Exp(2.302585092994*newmin);
                   newmax = TMath::Exp(2.302585092994*newmax);
@@ -2425,47 +2383,42 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
                hobj->SetMaximum(newmax);
                hobj->SetBit(TH1::kIsZoomed);
             } else {
-               first = axis->GetFirst();
-               last  = axis->GetLast();
-               bin1 = first + Int_t((last-first+1)*ratio1);
-               bin2 = first + Int_t((last-first+1)*ratio2);
-               bin1 = TMath::Max(bin1, 1);
-               bin2 = TMath::Min(bin2, axis->GetNbins());
+               Int_t first = axis->GetFirst();
+               Int_t last  = axis->GetLast();
+               Int_t bin1 = TMath::Max(1, first + Int_t((last-first+1) * inter->ratio1));
+               Int_t bin2 = TMath::Min(axis->GetNbins(), first + Int_t((last-first+1) * inter->ratio2));
                axis->SetRange(bin1, bin2);
             }
             delete view;
             SetView(nullptr);
-            Modified(kTRUE);
+            Modified();
          }
-      } else {
-         if (axisNumber == 1) {
-            ratio2 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
-            xmin = GetUxmin() +ratio1*(GetUxmax() - GetUxmin());
-            xmax = GetUxmin() +ratio2*(GetUxmax() - GetUxmin());
+      } else if (inter) {
+         Double_t xmin, xmax;
+         if (inter->axisNumber == 1) {
+            inter->ratio2 = (AbsPixeltoX(px) - GetUxmin()) / (GetUxmax() - GetUxmin());
+            xmin = GetUxmin() + inter->ratio1 * (GetUxmax() - GetUxmin());
+            xmax = GetUxmin() + inter->ratio2 * (GetUxmax() - GetUxmin());
             if (GetLogx() && !kCont4) {
                xmin = PadtoX(xmin);
                xmax = PadtoX(xmax);
             }
-         } else if (axisNumber == 2) {
-            ratio2 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
-            xmin = GetUymin() +ratio1*(GetUymax() - GetUymin());
-            xmax = GetUymin() +ratio2*(GetUymax() - GetUymin());
+         } else if (inter->axisNumber == 2) {
+            inter->ratio2 = (AbsPixeltoY(py) - GetUymin()) / (GetUymax() - GetUymin());
+            xmin = GetUymin() + inter->ratio1 * (GetUymax() - GetUymin());
+            xmax = GetUymin() + inter->ratio2 * (GetUymax() - GetUymin());
             if (GetLogy() && !kCont4) {
                xmin = PadtoY(xmin);
                xmax = PadtoY(xmax);
             }
          } else {
-            ratio2 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
-            xmin = ratio1;
-            xmax = ratio2;
+            inter->ratio2 = (AbsPixeltoY(py) - GetUymin()) / (GetUymax() - GetUymin());
+            xmin = inter->ratio1;
+            xmax = inter->ratio2;
          }
          if (xmin > xmax) {
-            temp   = xmin;
-            xmin   = xmax;
-            xmax   = temp;
-            temp   = ratio1;
-            ratio1 = ratio2;
-            ratio2 = temp;
+            std::swap(xmin, xmax);
+            std::swap(inter->ratio1, inter->ratio2);
          }
 
          // xmin and xmax need to be adjusted in case of CONT4.
@@ -2474,21 +2427,22 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             Double_t up  = axis->GetBinUpEdge(axis->GetLast());
             Double_t xmi = GetUxmin();
             Double_t xma = GetUxmax();
-            xmin = ((xmin-xmi)/(xma-xmi))*(up-low)+low;
-            xmax = ((xmax-xmi)/(xma-xmi))*(up-low)+low;
+            xmin = ((xmin - xmi) / (xma - xmi)) * (up - low) + low;
+            xmax = ((xmax - xmi) / (xma - xmi)) * (up - low) + low;
          }
 
-         if (!strcmp(axis->GetName(),"xaxis")) axisNumber = 1;
-         if (!strcmp(axis->GetName(),"yaxis")) axisNumber = 2;
-         if (ratio2 - ratio1 > 0.05) {
+         if (!strcmp(axis->GetName(),"xaxis"))
+            inter->axisNumber = 1;
+         if (!strcmp(axis->GetName(),"yaxis"))
+            inter->axisNumber = 2;
+         if (inter->ratio2 - inter->ratio1 > 0.05) {
             //update object owning this axis
-            TH1 *hobj1 = (TH1*)axis->GetParent();
-            bin1 = axis->FindFixBin(xmin);
-            bin2 = axis->FindFixBin(xmax);
-            bin1 = TMath::Max(bin1, 1);
-            bin2 = TMath::Min(bin2, axis->GetNbins());
-            if (axisNumber == 1) axis->SetRange(bin1,bin2);
-            if (axisNumber == 2 && hobj1) {
+            TH1 *hobj1 = static_cast<TH1 *>(axis->GetParent());
+            Int_t bin1 = TMath::Max(1, axis->FindFixBin(xmin));
+            Int_t bin2 = TMath::Min(axis->GetNbins(), axis->FindFixBin(xmax));
+            if (inter->axisNumber == 1)
+               axis->SetRange(bin1,bin2);
+            if (inter->axisNumber == 2 && hobj1) {
                if (hobj1->GetDimension() == 1) {
                   if (hobj1->GetNormFactor() != 0) {
                      Double_t norm = hobj1->GetSumOfWeights()/hobj1->GetNormFactor();
@@ -2504,46 +2458,38 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             }
             //update all histograms in the pad
             TIter next(GetListOfPrimitives());
-            TObject *obj;
-            while ((obj= next())) {
-               if (!obj->InheritsFrom(TH1::Class())) continue;
-               TH1 *hobj = (TH1*)obj;
-               if (hobj == hobj1) continue;
-               bin1 = hobj->GetXaxis()->FindFixBin(xmin);
-               bin2 = hobj->GetXaxis()->FindFixBin(xmax);
-               if (axisNumber == 1) {
-                  hobj->GetXaxis()->SetRange(bin1,bin2);
-               } else if (axisNumber == 2) {
-                  if (hobj->GetDimension() == 1) {
-                     Double_t xxmin = xmin;
-                     Double_t xxmax = xmax;
-                     if (hobj->GetNormFactor() != 0) {
-                        Double_t norm = hobj->GetSumOfWeights()/hobj->GetNormFactor();
-                        xxmin *= norm;
-                        xxmax *= norm;
+            while (auto obj = next()) {
+               if (auto hobj = dynamic_cast<TH1 *> (obj)) {
+                  if (hobj == hobj1)
+                     continue;
+                  bin1 = hobj->GetXaxis()->FindFixBin(xmin);
+                  bin2 = hobj->GetXaxis()->FindFixBin(xmax);
+                  if (inter->axisNumber == 1) {
+                     hobj->GetXaxis()->SetRange(bin1,bin2);
+                  } else if (inter->axisNumber == 2) {
+                     if (hobj->GetDimension() == 1) {
+                        Double_t xxmin = xmin;
+                        Double_t xxmax = xmax;
+                        if (hobj->GetNormFactor() != 0) {
+                           Double_t norm = hobj->GetSumOfWeights()/hobj->GetNormFactor();
+                           xxmin *= norm;
+                           xxmax *= norm;
+                        }
+                        hobj->SetMinimum(xxmin);
+                        hobj->SetMaximum(xxmax);
+                        hobj->SetBit(TH1::kIsZoomed);
+                     } else {
+                        bin1 = hobj->GetYaxis()->FindFixBin(xmin);
+                        bin2 = hobj->GetYaxis()->FindFixBin(xmax);
+                        hobj->GetYaxis()->SetRange(bin1,bin2);
                      }
-                     hobj->SetMinimum(xxmin);
-                     hobj->SetMaximum(xxmax);
-                     hobj->SetBit(TH1::kIsZoomed);
-                  } else {
-                     bin1 = hobj->GetYaxis()->FindFixBin(xmin);
-                     bin2 = hobj->GetYaxis()->FindFixBin(xmax);
-                     hobj->GetYaxis()->SetRange(bin1,bin2);
                   }
                }
             }
-            Modified(kTRUE);
+            Modified();
          }
       }
-      if (!opaque) {
-         pp->SetAttLine({-1, 1, 1});
-      } else {
-         if (zoombox) {
-            zoombox.reset();
-            gPad->Modified();
-            gPad->Update();
-         }
-      }
+      Interactive(); // remove interactive object
       break;
    }
 }
