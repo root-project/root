@@ -120,14 +120,13 @@ jobs:
       matrix:
         # Specify platform + optional build option overrides
         # Build options: https://root.cern/install/build_from_source/#all-build-options
+        platform: [mac26, mac27, mac-beta]
+        arch: [ARM64]
         include:
           - platform: mac15
-            arch: X64
-          - platform: mac26
-            arch: ARM64
+            arch: X86
           - platform: mac-beta
             is_special: true
-            arch: ARM64
 
     runs-on:
       - self-hosted
