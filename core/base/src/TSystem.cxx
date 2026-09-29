@@ -58,6 +58,7 @@ allows a simple partial implementation for new OS'es.
 #include <set>
 
 #ifdef WIN32
+#include <algorithm>
 #include <io.h>
 #include "Windows4Root.h"
 #endif
