@@ -407,3 +407,72 @@ TEST(RField, StreamerClassMismatch)
                          false /* matchFullMessage */);
    reader->LoadEntry(0);
 }
+
+namespace {
+
+/// Used to create on-disk streamer fields with different field versions
+class RVersionedStreamerField : public RFieldBase {
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      return std::make_unique<RVersionedStreamerField>(newName, fCustomVersion);
+   }
+
+   const RColumnRepresentations &GetColumnRepresentations() const final
+   {
+      static RColumnRepresentations representations(
+         {{ROOT::ENTupleColumnType::kSplitIndex64, ROOT::ENTupleColumnType::kByte}}, {});
+      return representations;
+   }
+
+   void GenerateColumns() final { GenerateColumnsImpl<ROOT::Internal::RColumnIndex, std::byte>(); }
+   void GenerateColumns(const ROOT::RNTupleDescriptor &) final {}
+
+   void ConstructValue(void *) const final {}
+
+   std::size_t AppendImpl(const void *) final { return 0; }
+
+public:
+   std::uint32_t fCustomVersion = 0;
+
+   RVersionedStreamerField(std::string_view name, std::uint32_t version)
+      : RFieldBase(name, "VersionedStreamerField", ROOT::ENTupleStructure::kStreamer, /*isSimple=*/false),
+        fCustomVersion(version)
+   {
+   }
+
+   std::uint32_t GetFieldVersion() const final { return fCustomVersion; }
+   std::uint32_t GetTypeVersion() const final { return 137; }
+   std::size_t GetValueSize() const final { return 0; }
+   std::size_t GetAlignment() const final { return 0; }
+};
+
+} // anonymous namespace
+
+TEST(RField, StreamerFieldVersion)
+{
+   for (std::uint32_t version : {0, 1, 2}) {
+      FileRaii fileGuard("test_ntuple_rfield_streamer_version.root");
+      {
+         auto model = RNTupleModel::Create();
+         model->AddField(std::make_unique<RVersionedStreamerField>("f", version));
+         auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      }
+      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      if (version < 2) {
+         const auto &f = reader->GetModel().GetConstField("f");
+         EXPECT_TRUE(dynamic_cast<const ROOT::RStreamerField *>(&f));
+         EXPECT_EQ(0u, f.GetFieldVersion());
+         EXPECT_EQ(version, f.GetOnDiskFieldVersion());
+         EXPECT_EQ(2u, f.GetTypeVersion());
+         EXPECT_EQ(137u, f.GetOnDiskTypeVersion());
+      } else {
+         try {
+            reader->GetModel().GetConstField("f");
+            FAIL() << "creating model from unsupported field version should fail";
+         } catch (const ROOT::RException &e) {
+            EXPECT_THAT(e.what(), ::testing::HasSubstr("RStreamerField f has unsupported field version 2"));
+         }
+      }
+   }
+}

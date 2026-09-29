@@ -233,6 +233,9 @@ public:
 /// The field for a class using ROOT standard streaming
 class RStreamerField final : public RFieldBase {
 private:
+   ///< maximum buffer size for v0 streamer field (1 GiB)
+   static constexpr std::size_t kMaxSmallBuffer = 1024 * 1024 * 1024;
+
    class RStreamerFieldDeleter : public RDeleter {
    private:
       TClass *fClass;
@@ -279,6 +282,8 @@ public:
 
    size_t GetValueSize() const final;
    size_t GetAlignment() const final;
+   // As of field version 1, the byte stream contains the byte count stack for large objects (see binary specs)
+   std::uint32_t GetFieldVersion() const final { return 0; }
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
    TClass *GetClass() const { return fClass; }
