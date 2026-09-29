@@ -27,7 +27,7 @@ class SweepSahBuilder : public TopDownSahBuilder<Node> {
 public:
     using typename TopDownSahBuilder<Node>::Config;
 
-    BVH_ALWAYS_INLINE static Bvh<Node> build(
+    [[nodiscard]] BVH_ALWAYS_INLINE static Bvh<Node> build(
         std::span<const BBox> bboxes,
         std::span<const Vec> centers,
         const Config& config = {})
