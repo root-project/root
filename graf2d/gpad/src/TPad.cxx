@@ -129,40 +129,66 @@ The transformation coefficients are explained in TPad::ResizePad.
 */
 
 class TPadDrawOperation {
-   protected:
-      std::vector<Double_t> fX, fY;
-      Bool_t fHollow = kFALSE;
-      Width_t fLWidth = 1;
-      Bool_t fNDC = kFALSE;
+
    public:
+      enum EKind { drawLine, drawFill, drawMarker };
+
       template<typename T>
-      TPadDrawOperation(Int_t n, T *x, T *y, Bool_t hollow, Width_t lwidth = 1, Bool_t ndc = kFALSE)
+      TPadDrawOperation(Int_t n, T *x, T *y, EKind kind, Int_t arg = 1, Bool_t ndc = kFALSE)
       {
          fX.assign(x, x + n);
          fY.assign(y, y + n);
-         fHollow = hollow;
-         fLWidth = lwidth;
+         fKind = kind;
+         fArg = arg; // operation arg like line width
          fNDC = ndc;
       }
       virtual ~TPadDrawOperation() = default;
 
-      void Draw(TVirtualPadPainter *pp, Bool_t withXor)
+      void Draw(TPad &pad, TVirtualPadPainter *pp, Bool_t withXor)
       {
-         if (fHollow) {
-            pp->SetAttLine({kBlack, 1, fLWidth});
+         auto doFill = [pp, withXor](Int_t n, Double_t *xx, Double_t *yy) {
+            Color_t col = kBlack;
+            if (!withXor)
+               col = TColor::GetColor(0, 0, 0, 0.25);
+            pp->SetAttFill({col, 1001});
+            pp->DrawFillArea(n, xx, yy);
+         };
+
+         if (fKind == drawFill)
+            doFill(fX.size(), fX.data(), fY.data());
+         else if (fKind == drawLine) {
+            pp->SetAttLine({kBlack, 1, (Width_t)fArg});
             if (fNDC)
                pp->DrawPolyLineNDC(fX.size(), fX.data(), fY.data());
             else
                pp->DrawPolyLine(fX.size(), fX.data(), fY.data());
-         } else if (withXor) {
-            pp->SetAttFill({kBlack, 1001});
-            pp->DrawFillArea(fX.size(), fX.data(), fY.data());
          } else {
-            Color_t col = TColor::GetColor(0, 0, 0, 0.25);
-            pp->SetAttFill({col, 1001});
-            pp->DrawFillArea(fX.size(), fX.data(), fY.data());
+            Double_t dx = (pad.GetX2() - pad.GetX1()) / pad.GetPadWidth() * 5;
+            Double_t dy = (pad.GetY2() - pad.GetY1()) / pad.GetPadHeight() * 5;
+
+            for (std::size_t i = 0; i < fX.size(); ++i) {
+               Double_t mx = fX[i], my = fY[i];
+               if (!fArg) {
+                  // fill diamond
+                  Double_t xc[5] = { mx, mx + dx, mx, mx - dx, mx };
+                  Double_t yc[5] = { my - dy, my, my + dy, my, my - dy };
+                  doFill(5, xc, yc);
+               } else {
+                  // rectangle
+                  pp->SetAttLine({kBlack, 1, (Width_t)fArg});
+                  Double_t xl[5] = { mx - dx, mx + dx, mx + dx, mx - dx, mx - dx };
+                  Double_t yl[5] = { my - dy, my - dy, my + dy, my + dy, my - dy };
+                  pp->DrawPolyLine(5, xl, yl);
+               }
+            }
          }
       }
+
+   protected:
+      std::vector<Double_t> fX, fY;
+      EKind fKind = drawLine;
+      Int_t fArg = 1;
+      Bool_t fNDC = kFALSE;
 };
 
 
@@ -3836,12 +3862,12 @@ void TPad::PaintOperations(Bool_t withXor)
 
    if (withXor)
       for (auto &oper : fDrawOperXor)
-         oper.second->Draw(pp, withXor);
+         oper.second->Draw(*this, pp, withXor);
 
    fDrawOperXor.clear();
 
    for (auto &oper : fDrawOper)
-      oper.second->Draw(pp, withXor);
+      oper.second->Draw(*this, pp, withXor);
 
    if (withXor)
       std::swap(fDrawOperXor, fDrawOper);
@@ -3875,8 +3901,8 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
    if (option && *option == 'i') {
       Double_t x[5] = {x1, x2, x2, x1, x1};
       Double_t y[5] = {y1, y1, y2, y2, y1};
-      Bool_t drawLine = option[1] == 'l';
-      fDrawOper[option] = std::make_unique<TPadDrawOperation>(5, x, y, drawLine, pp->GetLineWidth());
+      auto drawKind = option[1] == 'l' ? TPadDrawOperation::drawLine : TPadDrawOperation::drawFill;
+      fDrawOper[option] = std::make_unique<TPadDrawOperation>(5, x, y, drawKind, pp->GetLineWidth());
       return;
    }
 
@@ -3976,7 +4002,7 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *option)
    }
 
    if (option && *option == 'i') {
-      fDrawOper[option] = std::make_unique<TPadDrawOperation>(nn, xx, yy, kFALSE);
+      fDrawOper[option] = std::make_unique<TPadDrawOperation>(nn, xx, yy, TPadDrawOperation::drawFill);
       return;
    }
 
@@ -4352,7 +4378,7 @@ void TPad::PaintPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
       if (iclip == 0 && i < n-2)
          continue;
       if (interactive)
-         fDrawOper[option] = std::make_unique<TPadDrawOperation>(np, &x[i1], &y[i1], kTRUE, pp->GetLineWidth());
+         fDrawOper[option] = std::make_unique<TPadDrawOperation>(np, &x[i1], &y[i1], TPadDrawOperation::drawLine, pp->GetLineWidth());
       else {
          pp->OnPad(this);
          pp->DrawPolyLine(np, &x[i1], &y[i1]);
@@ -4412,7 +4438,7 @@ void TPad::PaintPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       if (iclip == 0 && i < n-2)
          continue;
       if (interactive)
-         fDrawOper[option] = std::make_unique<TPadDrawOperation>(np, &x[i1], &y[i1], kTRUE, pp->GetLineWidth());
+         fDrawOper[option] = std::make_unique<TPadDrawOperation>(np, &x[i1], &y[i1], TPadDrawOperation::drawLine, pp->GetLineWidth());
       else {
          pp->OnPad(this);
          pp->DrawPolyLine(np, &x[i1], &y[i1]);
@@ -4441,7 +4467,7 @@ void TPad::PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       return;
 
    if (option && *option == 'i') {
-      fDrawOper[option] = std::make_unique<TPadDrawOperation>(n, x, y, kTRUE, pp->GetLineWidth(), kTRUE);
+      fDrawOper[option] = std::make_unique<TPadDrawOperation>(n, x, y, TPadDrawOperation::drawLine, pp->GetLineWidth(), kTRUE);
       return;
    }
 
@@ -4467,8 +4493,10 @@ void TPad::PaintPolyLine3D(Int_t n, Double_t *p)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint polymarker in CurrentPad World coordinates.
+///
+///  If option[0] == 'i' paint during ExecuteEvent (interactive)
 
-void TPad::PaintPolyMarker(Int_t nn, Float_t *x, Float_t *y, Option_t *)
+void TPad::PaintPolyMarker(Int_t nn, Float_t *x, Float_t *y, Option_t *option)
 {
    Int_t n = TMath::Abs(nn);
    Double_t xmin,xmax,ymin,ymax;
@@ -4486,7 +4514,9 @@ void TPad::PaintPolyMarker(Int_t nn, Float_t *x, Float_t *y, Option_t *)
       }
       if (np == 0)
          continue;
-      if (auto pp = GetPainter()) {
+      if (option && *option == 'i')
+         fDrawOper[option] = std::make_unique<TPadDrawOperation>(np, &x[i1], &y[i1], TPadDrawOperation::drawMarker, option[1] == 'f' ? 0 : 1);
+      else if (auto pp = GetPainter()) {
          pp->OnPad(this);
          pp->DrawPolyMarker(np, &x[i1], &y[i1]);
       }
@@ -4498,8 +4528,10 @@ void TPad::PaintPolyMarker(Int_t nn, Float_t *x, Float_t *y, Option_t *)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint polymarker in CurrentPad World coordinates.
+///
+///  If option[0] == 'i' paint during ExecuteEvent (interactive)
 
-void TPad::PaintPolyMarker(Int_t nn, Double_t *x, Double_t *y, Option_t *)
+void TPad::PaintPolyMarker(Int_t nn, Double_t *x, Double_t *y, Option_t *option)
 {
    Int_t n = TMath::Abs(nn);
    Double_t xmin,xmax,ymin,ymax;
@@ -4517,7 +4549,10 @@ void TPad::PaintPolyMarker(Int_t nn, Double_t *x, Double_t *y, Option_t *)
       }
       if (np == 0)
          continue;
-      if (auto pp = GetPainter()) {
+
+      if (option && *option == 'i')
+         fDrawOper[option] = std::make_unique<TPadDrawOperation>(np, &x[i1], &y[i1], TPadDrawOperation::drawMarker, option[1] == 'f' ? 0 : 1);
+      else if (auto pp = GetPainter()) {
          pp->OnPad(this);
          pp->DrawPolyMarker(np, &x[i1], &y[i1]);
       }
