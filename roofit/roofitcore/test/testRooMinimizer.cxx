@@ -16,26 +16,7 @@
 
 #include "gtest_wrapper.h"
 
-class EvalBackendParametrizedTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
-public:
-   EvalBackendParametrizedTest() : _evalBackend{RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy)} {}
-
-private:
-   void SetUp() override
-   {
-      RooRandom::randomGenerator()->SetSeed(1337ul);
-      _evalBackend = std::get<0>(GetParam());
-      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
-   }
-
-   void TearDown() override { _changeMsgLvl.reset(); }
-
-protected:
-   RooFit::EvalBackend _evalBackend;
-
-private:
-   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
-};
+using EvalBackendParametrizedTest = RooFitEvalBackendTest;
 
 // Unit test corresponding to the rf601 tutorial, but parametrized for the
 // different evaluation backends.
@@ -169,11 +150,7 @@ TEST_P(EvalBackendParametrizedTest, RF601)
 }
 
 INSTANTIATE_TEST_SUITE_P(RooMinimizer, EvalBackendParametrizedTest, testing::Values(ROOFIT_EVAL_BACKENDS_WITH_CODEGEN),
-                         [](testing::TestParamInfo<EvalBackendParametrizedTest::ParamType> const &paramInfo) {
-                            std::stringstream ss;
-                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
-                            return ss.str();
-                         });
+                         EvalBackendParamName{});
 
 // Check the vanishing-second-derivative optimization in MnHesse, which is
 // driven by the parameter independence information that RooMinimizerFcn

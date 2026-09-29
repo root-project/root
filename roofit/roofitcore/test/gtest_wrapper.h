@@ -45,6 +45,7 @@
 
 #include <cmath>
 #include <memory>
+#include <string>
 #include <tuple>
 
 /// Common fixture for tests that are parametrized over the RooFit evaluation
@@ -53,7 +54,7 @@ class RooFitEvalBackendTest : public testing::TestWithParam<std::tuple<RooFit::E
 public:
    RooFitEvalBackendTest() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
 
-private:
+protected:
    void SetUp() override
    {
       RooRandom::randomGenerator()->SetSeed(1337ul);
@@ -63,11 +64,20 @@ private:
 
    void TearDown() override { _changeMsgLvl.reset(); }
 
-protected:
    RooFit::EvalBackend _evalBackend;
 
 private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
+};
+
+/// Test name generator for test suites whose first parameter is the RooFit
+/// evaluation backend.
+struct EvalBackendParamName {
+   template <class ParamType>
+   std::string operator()(testing::TestParamInfo<ParamType> const &paramInfo) const
+   {
+      return "EvalBackend" + std::get<0>(paramInfo.param).name();
+   }
 };
 
 /// Check that the floating fit parameter with the given name is within
