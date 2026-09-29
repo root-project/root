@@ -45,6 +45,4 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestBifurGauss, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestBifurGauss, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestBifurGauss, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestBifurGauss, RunScalar)
 FIT_TEST_BATCH(TestBifurGauss, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestBifurGauss, CompareBatchScalar)

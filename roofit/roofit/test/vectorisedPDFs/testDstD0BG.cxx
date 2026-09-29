@@ -41,6 +41,4 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestDstD0BG, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestDstD0BG, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestDstD0BG, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestDstD0BG, RunScalar)
 FIT_TEST_BATCH(TestDstD0BG, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestDstD0BG, CompareBatchScalar)

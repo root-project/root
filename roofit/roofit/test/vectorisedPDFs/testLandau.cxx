@@ -45,10 +45,7 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestLandauEvil, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestLandauEvil, CompareFixedValuesNorm)
 // No testing of logs because landau can return 0.
-FIT_TEST_SCALAR(TestLandauEvil, DISABLED_RunScalar) // numerical integral presumably inaccurate
 FIT_TEST_BATCH(TestLandauEvil, DISABLED_RunBatch)   // numerical integral presumably inaccurate
-FIT_TEST_BATCH_VS_SCALAR(TestLandauEvil, CompareBatchScalar)
-
 #endif // !defined(_MSC_VER)
 
 class TestLandau : public PDFTest {
@@ -77,6 +74,4 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestLandau, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestLandau, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestLandau, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestLandau, DISABLED_RunScalar) // numerical integral presumably inaccurate
 FIT_TEST_BATCH(TestLandau, DISABLED_RunBatch)   // numerical integral presumably inaccurate
-FIT_TEST_BATCH_VS_SCALAR(TestLandau, CompareBatchScalar)

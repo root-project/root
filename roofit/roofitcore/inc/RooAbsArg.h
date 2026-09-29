@@ -575,7 +575,6 @@ protected:
    friend class RooTreeDataStore;
    friend class RooVectorDataStore;
    friend class RooDataSet;
-   friend class RooRealMPFE;
    virtual void syncCache(const RooArgSet *nset = nullptr) = 0;
    virtual void copyCache(const RooAbsArg *source, bool valueOnly = false, bool setValDirty = true) = 0;
 

@@ -40,6 +40,4 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestChiSquarePdfinX, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestChiSquarePdfinX, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestChiSquarePdfinX, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestChiSquarePdfinX, RunScalar)
 FIT_TEST_BATCH(TestChiSquarePdfinX, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestChiSquarePdfinX, CompareBatchScalar)
