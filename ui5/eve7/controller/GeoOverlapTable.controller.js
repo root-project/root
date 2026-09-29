@@ -240,6 +240,7 @@ sap.ui.define([
                   if (v.controls)
                      v.controls.centerCameraOnBBox = true;
                   v.resetCamera();
+                  this.frameContent(v);
                } catch (e) {
                   console.warn("GeoOverlapTable: camera reset skipped", e);
                }
@@ -247,6 +248,23 @@ sap.ui.define([
             if (++ticks >= 6)
                clearInterval(this._focusTimer);
          }, 250);
+      },
+
+      /** @summary Re-frame the camera on the drawn shapes alone.
+        *
+        * The viewer's own scene bbox also takes in the axis and the (hidden) pivot
+        * marker, which reach the origin, so for an overlap far from it resetCamera()
+        * frames the whole gap back to (0,0,0) and the shapes end up a speck off to
+        * one side. */
+      frameContent: function (v) {
+         let bbox = v.scene_bbox.clone().makeEmpty();
+         for (let c of v.scene.children)
+            if (c !== v.axis && c !== v.centerMarker)
+               bbox.expandByObject(c);
+         if (bbox.isEmpty()) return;
+         v.controls.setFromBBox(bbox);
+         v.controls.update();
+         v.request_render();
       },
 
       onExit: function () {

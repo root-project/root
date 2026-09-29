@@ -279,16 +279,11 @@ void REveGeoOverlapTable::CollectPlacements(TGeoManager *mgr)
 /// TGeoOverlap's TPolyMarker3D is filled in the frame of whichever node
 /// CheckOverlaps() was examining -- i.e. already the mother's own local frame,
 /// the same one fM1/fM2 are expressed in. There is no placement to guess and no
-/// conversion to do: the points already are what they need to be. (An earlier
-/// version of this function assumed they were global and ran them through a
-/// placement's matrix "to make them local" -- verified directly against a real
-/// geometry, that extra step takes a point that sits exactly on a daughter's
-/// surface and moves it hundreds of cm away, which is a worse bug than anything
-/// it was trying to fix.)
+/// conversion to do: the points already are what they need to be.
 ///
 /// What *is* still worth doing is dropping outliers: TGeoOverlap's own points
 /// can be finite and plausible-looking while sitting nowhere near either
-/// daughter, and for a flaw a fraction of a millimetre across that's glaring --
+/// daughter, and for a flaw a fraction of a millimeter across that's glaring --
 /// the crude "inside the world" fuse applied before this function is far too
 /// loose to catch it (it exists only to stop outright numeric garbage, not to
 /// judge plausibility). So each point is tested against the two daughter

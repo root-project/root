@@ -46,7 +46,7 @@ TGeoManager *load_geometry(const char *fname)
    return nullptr;
 }
 
-void geom_overlaps(const char *fname = "cmsSimGeo2026.root", double precision = 0.001)
+void geom_overlaps(const char *fname = "http://root.cern/files/cms.root", double precision = 0.001)
 {
    auto *geom = load_geometry(fname);
    if (!geom)
