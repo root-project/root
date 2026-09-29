@@ -1592,113 +1592,115 @@ Int_t TASImage::DistancetoPrimitive(Int_t px, Int_t py)
    return 999999;
 }
 
+class TASImageInteractive : public TVirtualPad::TInteractive {
+   Int_t px1, py1, px2, py2;                                     // pad coordinates
+   Int_t zoom_px1 = 0, zoom_py1 = 0, zoom_px2 = 0, zoom_py2 = 0; // zoom start/stop coordinates
+public:
+
+   Int_t zx1, zy1, zx2, zy2; // pixel coordinates of zoom area
+
+   TASImageInteractive(TVirtualPad &parent, Int_t px, Int_t py)
+   {
+      px1 = parent.XtoAbsPixel(parent.GetX1());
+      py1 = parent.YtoAbsPixel(parent.GetY1());
+      px2 = parent.XtoAbsPixel(parent.GetX2());
+      py2 = parent.YtoAbsPixel(parent.GetY2());
+      zoom_px2 = zoom_px1 = px;
+      zoom_py2 = zoom_py1 = py;
+   }
+
+   void PerformMove(Int_t px, Int_t py)
+   {
+      zoom_px2 = px;
+      zoom_py2 = py;
+      zx1 = TMath::Max(px1, TMath::Min(zoom_px1, zoom_px2));
+      zx2 = TMath::Min(px2, TMath::Max(zoom_px1, zoom_px2));
+      zy1 = TMath::Min(py1, TMath::Max(zoom_py1, zoom_py2));
+      zy2 = TMath::Max(py2, TMath::Min(zoom_py1, zoom_py2));
+   }
+
+   void PaintBox(TVirtualPad &parent)
+   {
+      TAttLine{kBlack, 1, 2}.ModifyOn(parent);
+      parent.PaintBox(parent.AbsPixeltoX(zx1), parent.AbsPixeltoY(zy1), parent.AbsPixeltoX(zx2),
+                        parent.AbsPixeltoY(zy2), "ilasimage");
+      parent.UpdateAsync();
+   }
+
+
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute mouse events.
 
 void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   static std::unique_ptr<TBox> ZoomBox;
-
    if (!gPad) return;
 
+   auto &parent = *gPad;
+
    if (IsEditable()) {
-      gPad->ExecuteEvent(event, px, py);
+      parent.ExecuteEvent(event, px, py);
       return;
    }
 
-   gPad->SetCursor(kCross);
+   parent.SetCursor(kCross);
 
-   static Int_t px1old, py1old, px2old, py2old;
-   static Int_t px1, py1, px2, py2, pxl, pyl, pxt, pyt;
+   if (event != kButton1Motion && event != kButton1Down  && event != kButton1Up)
+      return;
 
-   if (!IsValid()) return;
+   if (!IsValid())
+      return;
 
-   if (event == kButton1Motion || event == kButton1Down  ||
-       event == kButton1Up) {
+   auto inter = dynamic_cast<TASImageInteractive *> (parent.Interactive(this));
 
-      // convert to image pixel on screen
-      Int_t imgX = px - gPad->XtoAbsPixel(0);
-      Int_t imgY = py - gPad->YtoAbsPixel(1);
+   switch (event) {
 
-      if (imgX < 0)  px = px - imgX;
-      if (imgY < 0)  py = py - imgY;
+      case kButton1Down:
+         inter = new TASImageInteractive(parent, px, py);
+         parent.Interactive(this, inter);
+         break;
 
-      ASImage *image = fImage;
-      if (fScaledImage && fScaledImage->fImage) image = fScaledImage->fImage;
+      case kButton1Motion:
+         if (inter) {
+            inter->PerformMove(px, py);
+            inter->PaintBox(parent);
+         }
+         break;
 
-      if (imgX >= (int)image->width)  px = px - imgX + image->width - 1;
-      if (imgY >= (int)image->height) py = py - imgY + image->height - 1;
+      case kButton1Up: {
 
-      switch (event) {
+         Int_t imgX1 = 0, imgY1 = 0, imgW = 0, imgH = 0;
 
-         case kButton1Down:
-            px1 = gPad->XtoAbsPixel(gPad->GetX1());
-            py1 = gPad->YtoAbsPixel(gPad->GetY1());
-            px2 = gPad->XtoAbsPixel(gPad->GetX2());
-            py2 = gPad->YtoAbsPixel(gPad->GetY2());
-            px1old = px; py1old = py;
-            break;
+         ASImage *image = fScaledImage ? fScaledImage->fImage : fImage;
 
-         case kButton1Motion:
-            px2old = px;
-            px2old = TMath::Max(px2old, px1);
-            px2old = TMath::Min(px2old, px2);
-            py2old = py;
-            py2old = TMath::Max(py2old, py2);
-            py2old = TMath::Min(py2old, py1);
-            pxl = TMath::Min(px1old, px2old);
-            pxt = TMath::Max(px1old, px2old);
-            pyl = TMath::Max(py1old, py2old);
-            pyt = TMath::Min(py1old, py2old);
+         if (inter && image) {
+            inter->PerformMove(px, py);
+            imgX1 = inter->zx1 - parent.XtoAbsPixel(0);
+            imgY1 = image->height - 1 - inter->zy1 + parent.YtoAbsPixel(1);
+            imgW = inter->zx2 - inter->zx1;
+            imgH = inter->zy1 - inter->zy2;
+         }
 
-            if (ZoomBox) {
-               ZoomBox->SetX1(gPad->AbsPixeltoX(pxl));
-               ZoomBox->SetY1(gPad->AbsPixeltoY(pyl));
-               ZoomBox->SetX2(gPad->AbsPixeltoX(pxt));
-               ZoomBox->SetY2(gPad->AbsPixeltoY(pyt));
-            } else {
-               ZoomBox = std::make_unique<TBox>(pxl, pyl, pxt, pyt);
-               ZoomBox->SetFillStyle(0);
-               ZoomBox->Draw("l*");
-            }
-            gPad->Modified(kTRUE);
-            gPad->Update();
-            break;
+         parent.Interactive(); // delete interactive
 
-         case kButton1Up:
-            // do nothing if zoom area is too small
-            if ( TMath::Abs(pxl - pxt) < 5 || TMath::Abs(pyl - pyt) < 5)
-               return;
+         if ((imgW >= 5) && (imgH >= 5)) {
+            // do somthing if zoom area big enough
+            Double_t xfact = fScaledImage ? (Double_t)image->width  / fZoomWidth  : 1;
+            Double_t yfact = fScaledImage ? (Double_t)image->height / fZoomHeight : 1;
 
-            pxl = 0;
-            pxt = 0;
-            pyl = 0;
-            pyt = 0;
-
-            Double_t xfact = (fScaledImage) ? (Double_t)fScaledImage->fImage->width  / fZoomWidth  : 1;
-            Double_t yfact = (fScaledImage) ? (Double_t)fScaledImage->fImage->height / fZoomHeight : 1;
-
-            Int_t imgX1 = px1old - gPad->XtoAbsPixel(0);
-            Int_t imgY1 = py1old - gPad->YtoAbsPixel(1);
-            Int_t imgX2 = px  - gPad->XtoAbsPixel(0);
-            Int_t imgY2 = py  - gPad->YtoAbsPixel(1);
-
-            imgY1 = image->height - 1 - imgY1;
-            imgY2 = image->height - 1 - imgY2;
             imgX1 = (Int_t)(imgX1 / xfact) + fZoomOffX;
             imgY1 = (Int_t)(imgY1 / yfact) + fZoomOffY;
-            imgX2 = (Int_t)(imgX2 / xfact) + fZoomOffX;
-            imgY2 = (Int_t)(imgY2 / yfact) + fZoomOffY;
+            imgW = (Int_t)(imgW / xfact);
+            imgH = (Int_t)(imgH / yfact);
 
-            Zoom((imgX1 < imgX2) ? imgX1 : imgX2, (imgY1 < imgY2) ? imgY1 : imgY2,
-                 TMath::Abs(imgX1 - imgX2) + 1, TMath::Abs(imgY1 - imgY2) + 1);
+            Zoom(imgX1, imgY1, imgW + 1, imgH + 1);
 
-            if (ZoomBox)
-               ZoomBox.reset();
+            parent.Modified();
+            parent.Update();
+         }
 
-            gPad->Modified(kTRUE);
-            gPad->Update();
-            break;
+         break;
       }
    }
 }
