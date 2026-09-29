@@ -236,15 +236,6 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (event == kButton1Down) kmode = 1;
       TBox::ExecuteEvent(event, px, py);
       if (event == kButton1Up) kmode = 0;
-      // In case palette coordinates have been modified, recompute NDC coordinates
-      Double_t dpx  = parent.GetX2() - parent.GetX1();
-      Double_t dpy  = parent.GetY2() - parent.GetY1();
-      Double_t xp1  = parent.GetX1();
-      Double_t yp1  = parent.GetY1();
-      fX1NDC = (fX1 - xp1) / dpx;
-      fY1NDC = (fY1 - yp1) / dpy;
-      fX2NDC = (fX2 - xp1) / dpx;
-      fY2NDC = (fY2 - yp1) / dpy;
       return;
    }
    parent.SetCursor(kHand);
