@@ -280,12 +280,12 @@ class Regression14TPyException( MyTestCase ):
    def test1PythonAccessToTPyException( self ):
       """Load TPyException into python and make sure its usable"""
 
-      # In exp PyROOT, TPyException is called PyException and it belongs
-      # to the CPyCppyy namespace.
+      # In cppjit-based PyROOT, TPyException is called PyException and it
+      # belongs to the cppjit::cpyrt namespace.
       # Also, it is not included in the PCH, so we need to include the
       # header first
-      ROOT.gInterpreter.Declare("#include \"CPyCppyy/PyException.h\"")
-      e = ROOT.CPyCppyy.PyException()
+      ROOT.gInterpreter.Declare("#include \"cpyrt/PyException.h\"")
+      e = ROOT.cppjit.cpyrt.PyException()
       self.assertTrue( e )
       self.assertEqual( e.what(), "python exception" )
 

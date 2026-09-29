@@ -12,7 +12,7 @@
 #include <Python.h>
 
 // Bindings
-#include "CPyCppyy/API.h"
+#include "cpyrt/API.h"
 
 #include "PyROOTPythonize.h"
 #include "TBufferFile.h"
@@ -50,7 +50,7 @@ PyObject *PyROOT::CPPInstanceExpand(PyObject * /*self*/, PyObject *args)
       TBufferFile buf(TBuffer::kRead, PyBytes_Size(pybuf), PyBytes_AsString(pybuf), kFALSE);
       newObj = buf.ReadObjectAny(0);
    }
-   PyObject *result = CPyCppyy::Instance_FromVoidPtr(newObj, clname, /*python_owns=*/true);
+   PyObject *result = cppjit::cpyrt::Instance_FromVoidPtr(newObj, clname, /*python_owns=*/true);
    return result;
 }
 
@@ -68,11 +68,11 @@ PyObject *op_reduce(PyObject *self, PyObject * /*args*/)
    // TBuffer and its derived classes can't write themselves, but can be created
    // directly from the buffer, so handle them in a special case
    TBufferFile *buff = nullptr;
-   std::string className = CPyCppyy::Instance_GetScopedFinalName(self);
+   std::string className = cppjit::cpyrt::Instance_GetScopedFinalName(self);
    if (className == "TBufferFile") {
-      buff = (TBufferFile *)CPyCppyy::Instance_AsVoidPtr(self);
+      buff = (TBufferFile *)cppjit::cpyrt::Instance_AsVoidPtr(self);
    } else {
-      if (className.find("__cppyy_internal::Dispatcher") == 0) {
+      if (className.find("__cppjit_internal::Dispatcher") == 0) {
          PyErr_Format(PyExc_IOError,
                       "generic streaming of Python objects whose class derives from a C++ class is not supported. "
                       "Please refer to the Python pickle documentation for instructions on how to define "
@@ -84,7 +84,7 @@ PyObject *op_reduce(PyObject *self, PyObject * /*args*/)
       static TBufferFile s_buff(TBuffer::kWrite);
       s_buff.Reset();
       // to delete
-      if (s_buff.WriteObjectAny(CPyCppyy::Instance_AsVoidPtr(self), TClass::GetClass(className.c_str())) != 1) {
+      if (s_buff.WriteObjectAny(cppjit::cpyrt::Instance_AsVoidPtr(self), TClass::GetClass(className.c_str())) != 1) {
          PyErr_Format(PyExc_IOError, "could not stream object of type %s",
                       className.c_str());
          return 0;
@@ -116,6 +116,6 @@ PyObject *op_reduce(PyObject *self, PyObject * /*args*/)
 /// so that it can be injected in CPPInstance
 PyObject *PyROOT::AddCPPInstancePickling(PyObject * /*self*/, PyObject * /*args*/)
 {
-   CPyCppyy::Instance_SetReduceMethod((PyCFunction)op_reduce);
+   cppjit::cpyrt::Instance_SetReduceMethod((PyCFunction)op_reduce);
    Py_RETURN_NONE;
 }

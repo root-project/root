@@ -23,7 +23,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTPython
   DEPENDENCIES
     Core
   LIBRARIES
-    CPyCppyy
+    cpyrt
     # We link libTPython against Python libraries to compensate for the fact that libcppyy
     # is built with unresolved symbols. If we didn't do this, invoking TPython from C++
     # would not work.
