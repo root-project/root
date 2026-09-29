@@ -75,7 +75,7 @@ bool intersect(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2)
 RooArgSet getAllParameters(RooAbsReal const &funct)
 {
    RooArgSet out;
-   funct.getParameters(nullptr, out, /*stripDisconnected*/ false);
+   funct.getParameters(nullptr, out);
    return out;
 }
 
@@ -245,12 +245,17 @@ RooArgSet RooMinimizerFcn::freezeDisconnectedParameters() const
    RooArgSet paramsDisconnected;
    RooArgSet paramsConnected;
 
-   _funct->getParameters(nullptr, paramsDisconnected, /*stripDisconnected*/ false);
-   _funct->getParameters(nullptr, paramsConnected, /*stripDisconnected*/ true);
+   RooFit::GetParametersPolicy policy;
+   policy.stripDisconnected = false;
+   _funct->getParameters(nullptr, paramsDisconnected, policy);
+   policy.stripDisconnected = true;
+   _funct->getParameters(nullptr, paramsConnected, policy);
 
    paramsDisconnected.remove(paramsConnected, true, true);
 
    RooArgSet changedSet;
+
+   paramsDisconnected.Print();
 
    for (RooAbsArg *a : paramsDisconnected) {
       auto *v = dynamic_cast<RooRealVar *>(a);

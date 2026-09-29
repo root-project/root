@@ -41,22 +41,23 @@ Double_t RooMultiReal::evaluate() const
 }
 
 // Propagate parameter fetching to the current model
-void RooMultiReal::getParametersHook(const RooArgSet *nset, RooArgSet *list, bool stripDisconnected) const
+void RooMultiReal::addParameters(RooAbsCollection &params, const RooArgSet *nset,
+                                 RooFit::GetParametersPolicy const &policy) const
 {
-   if (!stripDisconnected)
+   if (!policy.stripDisconnected) {
+      RooAbsArg::addParameters(params, nset, policy);
       return;
-
-   list->removeAll();
+   }
 
    RooAbsReal *absReal = static_cast<RooAbsReal *>(_models.at(static_cast<int>(_index)));
 
    if (absReal->isFundamental()) {
       if (!nset || !absReal->dependsOn(*nset)) {
-         list->add(*absReal);
+         params.add(*absReal, /*silent=*/true);
       }
       return;
    }
 
-   absReal->getParameters(nset, *list, stripDisconnected);
-   list->add(*_index);
+   absReal->addParameters(params, nset, policy);
+   params.add(*_index, /*silent=*/true);
 }

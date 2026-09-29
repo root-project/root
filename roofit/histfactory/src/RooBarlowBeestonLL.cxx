@@ -298,15 +298,15 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool RooStats::HistFactory::RooBarlowBeestonLL::getParameters(const RooArgSet* depList,
-                                                              RooArgSet& outputSet,
-                                                              bool stripDisconnected) const {
-  bool errorInBaseCall = RooAbsArg::getParameters( depList, outputSet, stripDisconnected );
+void RooStats::HistFactory::RooBarlowBeestonLL::addParameters(RooAbsCollection &params, const RooArgSet *nset,
+                                                              RooFit::GetParametersPolicy const &policy) const
+{
+  RooAbsArg::addParameters(params, nset, policy);
 
   RooArgSet toRemove;
   toRemove.reserve( _statUncertParams.size());
 
-  for (auto const& arg : outputSet) {
+  for (auto const& arg : params) {
 
     // If there is a gamma in the name,
     // strip it from the list of dependencies
@@ -316,10 +316,7 @@ bool RooStats::HistFactory::RooBarlowBeestonLL::getParameters(const RooArgSet* d
     }
   }
 
-  for( auto& arg : toRemove) outputSet.remove( *arg, true );
-
-  return errorInBaseCall || false;
-
+  for( auto& arg : toRemove) params.remove( *arg, true );
 }
 
 
