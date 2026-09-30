@@ -6121,6 +6121,26 @@ def make_AliasDynShape():
     return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
 
 
+def make_AliasDynShapeAcrossNewTensor():
+    """Ops: Mul, Identity, Mul, Add. AliasAcrossNewTensor with a dynamic shape:
+    the lifetimes in the dynamic memory pool are computed separately from the
+    ones of the static pool, and the tensor the alias refers to has to stay
+    reserved there until the alias is read, or `other` is given its memory."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Identity", ["prod"], ["ident"], name="identity_0"),
+        helper.make_node("Mul", ["y", "y"], ["other"], name="mul_1"),
+        helper.make_node("Add", ["ident", "other"], ["out"], name="add_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "alias_dyn_shape_across_new_tensor",
+        inputs=[_vi("x", FLOAT, ["N", 3]), _vi("y", FLOAT, ["N", 3])],
+        outputs=[_vi("out", FLOAT, ["N", 3])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
 MODELS = {
     "Abs": make_Abs,
     "Acosh": make_Acosh,
@@ -6230,6 +6250,7 @@ MODELS = {
     "AliasChain": make_AliasChain,
     "AliasChainSingle": make_AliasChainSingle,
     "AliasDynShape": make_AliasDynShape,
+    "AliasDynShapeAcrossNewTensor": make_AliasDynShapeAcrossNewTensor,
     "AliasOwnerReadAfterAlias": make_AliasOwnerReadAfterAlias,
     "IdentityWeightOutput": make_IdentityWeightOutput,
     "IdentityAlias": make_IdentityAlias,
@@ -7065,6 +7086,7 @@ TEST_INPUTS = {
     "AliasChain": [rand_f32(47, (1, 2, 3))],
     "AliasChainSingle": [rand_f32(47, (1, 2, 3))],
     "AliasDynShape": [rand_f32(48, (2, 3))],
+    "AliasDynShapeAcrossNewTensor": [rand_f32(51, (2, 3)), rand_f32(52, (2, 3))],
     "AliasOwnerReadAfterAlias": [rand_f32(49, (2, 3)), rand_f32(50, (2, 3))],
     "IdentityAlias": [rand_f32(41, (2, 3))],
     "IdentityWeightBatchNorm": [rand_f32(38, (1, 3, 2, 2))],
