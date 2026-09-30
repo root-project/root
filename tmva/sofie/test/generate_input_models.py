@@ -6012,6 +6012,115 @@ def make_IdentityAlias():
     return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
 
 
+def make_AliasAcrossNewTensor():
+    """Ops: Mul, Reshape, Mul, Add. The alias is read after another intermediate
+    tensor of the same size has been created: the memory of the aliased tensor
+    must not be handed out to it while the alias is still live."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Reshape", ["prod", "newshape"], ["reshaped"], name="reshape_0"),
+        helper.make_node("Mul", ["y", "y"], ["other"], name="mul_1"),
+        helper.make_node("Add", ["reshaped", "other"], ["out"], name="add_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "alias_across_new_tensor",
+        inputs=[_vi("x", FLOAT, [2, 3]), _vi("y", FLOAT, [3, 2])],
+        outputs=[_vi("out", FLOAT, [3, 2])],
+        initializer=[_tensor("newshape", INT64, [2], [3, 2])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_AliasOwnerReadAfterAlias():
+    """Ops: Mul, Reshape, Mul, Mul, Add. The tensor the alias refers to is read
+    again after the last use of the alias, with another tensor created in
+    between: the memory the two share has to live until the later of the two,
+    or `other` is given it and overwrites what `prod` still holds."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Reshape", ["prod", "newshape"], ["reshaped"], name="reshape_0"),
+        helper.make_node("Mul", ["reshaped", "reshaped"], ["alias_out"], name="mul_1"),
+        helper.make_node("Mul", ["y", "y"], ["other"], name="mul_2"),
+        helper.make_node("Add", ["prod", "other"], ["owner_out"], name="add_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "alias_owner_read_after_alias",
+        inputs=[_vi("x", FLOAT, [2, 3]), _vi("y", FLOAT, [2, 3])],
+        outputs=[_vi("alias_out", FLOAT, [3, 2]), _vi("owner_out", FLOAT, [2, 3])],
+        initializer=[_tensor("newshape", INT64, [2], [3, 2])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_AliasChain():
+    """Ops: Mul, Squeeze, Unsqueeze, Flatten, Reshape, Mul, Mul, Add. Four shape-only
+    operators in a row: each alias refers to the previous one, and all of them
+    have to resolve to the single tensor that owns the memory: a resolution
+    stopping at the previous alias never releases the memory of `prod`, which
+    `sq` should be given once the chain has been read for the last time."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Squeeze", ["prod", "axis0"], ["squeezed"], name="squeeze_0"),
+        helper.make_node("Unsqueeze", ["squeezed", "axis0"], ["unsqueezed"], name="unsqueeze_0"),
+        helper.make_node("Flatten", ["unsqueezed"], ["flattened"], axis=1, name="flatten_0"),
+        helper.make_node("Reshape", ["flattened", "newshape"], ["reshaped"], name="reshape_0"),
+        helper.make_node("Mul", ["reshaped", "reshaped"], ["sum"], name="mul_1"),
+        helper.make_node("Mul", ["sum", "sum"], ["sq"], name="mul_2"),
+        helper.make_node("Add", ["sq", "sq"], ["out"], name="add_1"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "alias_chain",
+        inputs=[_vi("x", FLOAT, [1, 2, 3])],
+        outputs=[_vi("out", FLOAT, [2, 3])],
+        initializer=[
+            _tensor("axis0", INT64, [1], [0]),
+            _tensor("newshape", INT64, [2], [2, 3]),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_AliasChainSingle():
+    """The graph of AliasChain with the four shape-only operators replaced by the
+    single Reshape they amount to. It is the yardstick for the memory of
+    AliasChain: a chain of aliases has to cost exactly what one alias costs."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Reshape", ["prod", "newshape"], ["reshaped"], name="reshape_0"),
+        helper.make_node("Mul", ["reshaped", "reshaped"], ["sum"], name="mul_1"),
+        helper.make_node("Mul", ["sum", "sum"], ["sq"], name="mul_2"),
+        helper.make_node("Add", ["sq", "sq"], ["out"], name="add_1"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "alias_chain_single",
+        inputs=[_vi("x", FLOAT, [1, 2, 3])],
+        outputs=[_vi("out", FLOAT, [2, 3])],
+        initializer=[_tensor("newshape", INT64, [2], [2, 3])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_AliasDynShape():
+    """Ops: Mul, Identity, Mul. The aliased tensor is a dynamic one, whose shape
+    is only known at run time, so it comes from the dynamic memory pool."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Identity", ["prod"], ["ident"], name="identity_0"),
+        helper.make_node("Mul", ["ident", "ident"], ["out"], name="mul_1"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "alias_dyn_shape",
+        inputs=[_vi("x", FLOAT, ["N", 3])],
+        outputs=[_vi("out", FLOAT, ["N", 3])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
 MODELS = {
     "Abs": make_Abs,
     "Acosh": make_Acosh,
@@ -6117,6 +6226,11 @@ MODELS = {
     "IdentityWeightBatchNorm": make_IdentityWeightBatchNorm,
     "BatchNormEpsilon": make_BatchNormEpsilon,
     "BatchNormReluEpsilon": make_BatchNormReluEpsilon,
+    "AliasAcrossNewTensor": make_AliasAcrossNewTensor,
+    "AliasChain": make_AliasChain,
+    "AliasChainSingle": make_AliasChainSingle,
+    "AliasDynShape": make_AliasDynShape,
+    "AliasOwnerReadAfterAlias": make_AliasOwnerReadAfterAlias,
     "IdentityWeightOutput": make_IdentityWeightOutput,
     "IdentityAlias": make_IdentityAlias,
     "LayerNormalization2d": make_LayerNormalization2d,
@@ -6947,6 +7061,11 @@ TEST_INPUTS = {
     ],
     "HardSigmoid": [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
     "HardSwish": [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
+    "AliasAcrossNewTensor": [rand_f32(45, (2, 3)), rand_f32(46, (3, 2))],
+    "AliasChain": [rand_f32(47, (1, 2, 3))],
+    "AliasChainSingle": [rand_f32(47, (1, 2, 3))],
+    "AliasDynShape": [rand_f32(48, (2, 3))],
+    "AliasOwnerReadAfterAlias": [rand_f32(49, (2, 3)), rand_f32(50, (2, 3))],
     "IdentityAlias": [rand_f32(41, (2, 3))],
     "IdentityWeightBatchNorm": [rand_f32(38, (1, 3, 2, 2))],
     "BatchNormEpsilon": [rand_f32(40, (1, 3, 2, 2))],
