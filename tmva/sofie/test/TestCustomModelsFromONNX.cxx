@@ -1494,6 +1494,45 @@ TEST(ONNX, Where) {
 
    expectEqual(output, correct);
 }
+TEST(ONNX, WhereMultidirectionalBroadcast)
+{
+   // regression test for issue #23523:
+   // cond (2,1), inputA (1,3) and inputB (1) only agree via full multidirectional
+   // broadcasting, giving an output shape (2,3) that is larger than every input.
+   std::vector<float> input1 = {1, 2, 3};
+   std::vector<float> input2 = {-1};
+   std::vector<uint8_t> cond = {true, false};
+   std::vector<float> correct = {1, 2, 3, -1, -1, -1};
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "WhereMultidirectionalBroadcast", input1, input2, cond);
+
+   expectEqual(output, correct);
+}
+TEST(ONNX, WhereBroadcastHighRankCond)
+{
+   // regression test for issue #23523:
+   // cond (2,1,1), X (4,), and Y (1) broadcast to (2,1,4). X has the most elements,
+   // so the previous "choose largest input shape" logic incorrectly produced (4,).
+   std::vector<float> input1 = {10, 20, 30, 40};
+   std::vector<float> input2 = {-1};
+   std::vector<uint8_t> cond = {true, false}; // cond, shape (2,1,1)
+   std::vector<float> correct = {10, 20, 30, 40, -1, -1, -1, -1};
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "WhereBroadcastHighRankCond", input1, input2, cond);
+
+   expectEqual(output, correct);
+}
+TEST(ONNX, WhereBroadcastEqualElementCount)
+{
+   // regression test for issue #23523:
+   // cond (2,1), X (1,2) and Y (1,2) all have the same number of elements (2) but
+   // different shapes, so they only agree via multidirectional broadcasting to (2,2).
+   std::vector<float> input1 = {1, 2};
+   std::vector<float> input2 = {-1, -2};
+   std::vector<uint8_t> cond = {true, false};
+   std::vector<float> correct = {1, 2, -1, -2};
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "WhereBroadcastEqualElementCount", input1, input2, cond);
+
+   expectEqual(output, correct);
+}
 
 TEST(ONNX, Sin)
 {
