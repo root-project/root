@@ -741,13 +741,18 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
    std::pair<Long64_t, Long64_t> range = r.GetEntriesRange();
    R__ASSERT(range.first >= 0);
    if (range.second == -1) {
+      // If no explicit range was set, fBeginEntry is 0. The local range is the entire tree.
+      range.first = 0;
       range.second = tree->GetEntries(); // convert '-1', i.e. 'until the end', to the actual entry number
    } else if (auto chain = dynamic_cast<TChain*>(r.GetTree())) {
       // The reader is iterating over a TChain (e.g. from TTreeProcessorMT global clusters).
       // The entry range from the reader is global, but RSampleInfo expects local indices.
+      // TTreeProcessorMT guarantees that clusters do not cross tree boundaries.
       Long64_t treeOffset = chain->GetTreeOffset()[chain->GetTreeNumber()];
-      range.first -= treeOffset;
-      range.second -= treeOffset;
+      if (range.first >= treeOffset) {
+         range.first -= treeOffset;
+         range.second -= treeOffset;
+      }
    }
    // If the tree is stored in a subdirectory, treename will be the full path to it starting with the root directory '/'
    const std::string &id = fname + (treename.rfind('/', 0) == 0 ? "" : "/") + treename;
