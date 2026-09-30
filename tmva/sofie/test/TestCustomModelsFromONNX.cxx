@@ -2207,8 +2207,8 @@ TEST(ONNX, IdentityWeightOutput)
 
 // ---------------------------------------------------------------------------
 // Memory shared between an operator that only reinterprets its input and that
-// input. The assertions are on the generated source as well as on the values,
-// which an alias and a copy compute identically.
+// input. An alias and a copy have to compute the same values; whether the alias
+// was granted at all is checked in TestSofieAlias.cxx.
 // ---------------------------------------------------------------------------
 
 TEST(ONNX, ReshapeAlias)
@@ -2218,13 +2218,6 @@ TEST(ONNX, ReshapeAlias)
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReshapeAlias", ref.f32("input0"));
 
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
-
-   const std::string optimized = readGeneratedHeader("ReshapeAlias");
-   const std::string basic = readGeneratedHeader("ReshapeAlias", true);
-   EXPECT_TRUE(headerContains(optimized, "auto * tensor_reshaped = tensor_prod;"))
-      << "the reshaped tensor should point at the memory of its input";
-   EXPECT_FALSE(headerContains(optimized, "std::copy( tensor_prod")) << "no copy is emitted once the alias is granted";
-   EXPECT_TRUE(headerContains(basic, "std::copy( tensor_prod")) << "at kBasic every tensor keeps its own buffer";
 }
 
 TEST(ONNX, ReshapeAliasGraphOutput)
@@ -2234,11 +2227,6 @@ TEST(ONNX, ReshapeAliasGraphOutput)
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "ReshapeAliasGraphOutput", ref.f32("input0"));
 
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
-
-   // a graph output is written into the buffer the caller provides
-   const std::string optimized = readGeneratedHeader("ReshapeAliasGraphOutput");
-   EXPECT_TRUE(headerContains(optimized, "std::copy( tensor_prod"))
-      << "the alias must be refused when the output of the reshape is a graph output";
 }
 
 TEST(ONNX, SliceIdentityAlias)
@@ -2248,12 +2236,6 @@ TEST(ONNX, SliceIdentityAlias)
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "SliceIdentityAlias", ref.f32("input0"));
 
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
-
-   const std::string optimized = readGeneratedHeader("SliceIdentityAlias");
-   const std::string basic = readGeneratedHeader("SliceIdentityAlias", true);
-   EXPECT_TRUE(headerContains(optimized, "auto * tensor_sliced = tensor_prod;"))
-      << "a slice selecting everything should point at the memory of its input";
-   EXPECT_TRUE(headerContains(basic, "std::copy(tensor_prod")) << "at kBasic the slice still copies";
 }
 
 TEST(ONNX, IdentityAlias)
@@ -2263,10 +2245,58 @@ TEST(ONNX, IdentityAlias)
    ASSERT_INCLUDE_AND_RUN(std::vector<float>, "IdentityAlias", ref.f32("input0"));
 
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
 
-   const std::string optimized = readGeneratedHeader("IdentityAlias");
-   const std::string basic = readGeneratedHeader("IdentityAlias", true);
-   EXPECT_TRUE(headerContains(optimized, "auto * tensor_ident = tensor_prod;"))
-      << "the identity output should point at the memory of its input";
-   EXPECT_TRUE(headerContains(basic, "std::copy(tensor_prod")) << "at kBasic the identity still copies";
+// The memory shared with the alias has to stay reserved as long as either of the
+// two tensors is still read: these are the models where a wrong lifetime would
+// hand it out to somebody else, or release it too early.
+
+TEST(ONNX, AliasAcrossNewTensor)
+{
+   SofieReference ref = readReference("AliasAcrossNewTensor");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AliasAcrossNewTensor", ref.f32("input0"), ref.f32("input1"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, AliasOwnerReadAfterAlias)
+{
+   SofieReference ref = readReference("AliasOwnerReadAfterAlias");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "AliasOwnerReadAfterAlias", ref.f32("input0"),
+                          ref.f32("input1"));
+
+   ASSERT_EQ(output.size(), 2u);
+   expectNear(output[0], ref.f32("output0"), DEFAULT_TOLERANCE);
+   expectNear(output[1], ref.f32("output1"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, AliasChain)
+{
+   SofieReference ref = readReference("AliasChain");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AliasChain", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, AliasChainSingle)
+{
+   SofieReference ref = readReference("AliasChainSingle");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "AliasChainSingle", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, AliasDynShape)
+{
+   SofieReference ref = readReference("AliasDynShape");
+
+   // model is dynamic in N, use N = 2
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "AliasDynShape", "\"AliasDynShape_FromONNX.dat\", 2", 2,
+                                       ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
