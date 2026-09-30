@@ -123,10 +123,6 @@ public:
          fOutputTensorNames = { fNY };
    }
 
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override { return input; }
-
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override { return input; }
-
    void Initialize(RModel& model) override {
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw std::runtime_error("TMVA::SOFIE - Tensor " + fNX + " not found.");

@@ -49,15 +49,6 @@ public:
       }
 
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override  {
-      return input;
-   }
-
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-      auto ret = input; //suggest copy to compiler
-      return ret;
-   }
-
    void Initialize(RModel& model) override {
 
       model.AddIntermediateTensor(fNY, fType, fShapeY);

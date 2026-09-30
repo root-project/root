@@ -48,11 +48,6 @@ public:
       fOutputTensorNames = {fNOutput};
    }
 
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> inputShapes) override
-   {
-      return {inputShapes[0]};
-   }
-
    void Initialize(RModel &model) override
    {
       for (const std::string &name : {fNInput, fNScale, fNBias}) {

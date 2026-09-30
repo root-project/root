@@ -88,11 +88,6 @@ public:
       fOutputTensorNames = { fNY };
    }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-      ETensorType out = input[0];
-      return {out};
-   }
-
    // function returning output shape given input
    std::vector<Dim> DoShapeInference(const std::vector<Dim> & input, const std::vector<size_t> & weight) {
       // shape of convolution input has to be (according to ONNX): N x C x H x W

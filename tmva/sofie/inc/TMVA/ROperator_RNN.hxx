@@ -113,18 +113,12 @@ template <typename T> class ROperator_RNN final : public ROperator {
       }
    }
 
-   /*! \brief Infers the type of the output tensors
-    *
-    * \param input type of the input tensors
-    */
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override;
-
    /*! \brief Infers the shape of the output tensors
     *
     * \param input shape of the input tensors
     */
    std::vector<std::vector<size_t>>
-   ShapeInference(std::vector<std::vector<size_t>> input) override;
+   ShapeInference(std::vector<std::vector<size_t>> input);
 
    /*! \brief Initialize the model
     *
@@ -145,13 +139,6 @@ template <typename T> class ROperator_RNN final : public ROperator {
     */
    std::vector<std::string> GetBlasRoutines() override { return { std::string("Gemm"), std::string("Axpy") }; }
 };
-
-template <typename T>
-auto ROperator_RNN<T>::TypeInference(std::vector<ETensorType> input) -> std::vector<ETensorType>
-{
-   ETensorType out = input[0];
-   return {out, out};
-}
 
 template <typename T>
 auto ROperator_RNN<T>::ShapeInference(std::vector<std::vector<size_t>> input) -> std::vector<std::vector<size_t>>

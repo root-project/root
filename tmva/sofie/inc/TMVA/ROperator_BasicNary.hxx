@@ -144,17 +144,6 @@ public:
       fOutputTensorNames = { fNY };
    }
 
-   // type of output given input
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-      return input;
-   }
-
-   // shape of output tensors given input tensors
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-      auto ret = std::vector<std::vector<size_t>>(1, input[0]);
-      return ret;
-   }
-
    // Case where all inputs are rank <= 1 INT64 tensors known at initialization time and at least one of
    // them is a shape tensor. The output is then also a shape tensor (its values, possibly symbolic, are
    // computed here) and no code needs to be generated for this operator.
