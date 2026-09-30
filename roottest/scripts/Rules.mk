@@ -619,12 +619,6 @@ endif
 
 ##### utilities #####
 
-ifeq ($(PLATFORM),win32)
-MAKELIB       = $(ROOTTEST_HOME)/scripts/winmakelib.sh
-else
-MAKELIB       = $(ROOTSYS)/build/unix/makelib.sh $(MKLIBOPTIONS)
-endif
-
 ROOTCORELIBS_LIST = TreePlayer Tree Graf Hist Physics MathCore Core
 ROOTCORELIBS = $(addprefix $(ROOT_LOC)/lib/lib,$(addsuffix .$(LibSuf),$(ROOTCORELIBS_LIST)))
 ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
