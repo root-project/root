@@ -237,7 +237,7 @@ void TParallelCoordVar::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
    if (!parent.IsEditable() && entry != kMouseEnter)
       return;
 
-   if (fX1 == fX2) {
+   if (GetVert()) {
       if (parent.AbsPixeltoX(px) - fX1 > 0)
          parent.SetCursor(kArrowVer);
       else
@@ -255,7 +255,7 @@ void TParallelCoordVar::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
       case kButton1Down:
          inter = new TParallelCoordVarInteractive();
          parent.Interactive(this, inter);
-         inter->vertical = (fX1 == fX2);
+         inter->vertical = GetVert();
          parent.GetCanvas()->Selected(&parent, fParallel, 1);
          // no break
       case kButton1Motion:
@@ -267,7 +267,7 @@ void TParallelCoordVar::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
       case kButton1Up: {
          if (inter && inter->zooming) {
             Double_t min, max;
-            if (inter->vertical) {
+            if (GetVert()) {
                min = GetValuefromXY(fX1, inter->pzoom1);
                max = GetValuefromXY(fX1, inter->pzoom2);
             } else {
@@ -287,7 +287,7 @@ void TParallelCoordVar::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
          } else if (inter && !inter->zooming) {
             TFrame *frame = parent.GetFrame();
             Double_t pos = 0;
-            if (inter->vertical) {
+            if (GetVert()) {
                Double_t axisSpace = (frame->GetX2() - frame->GetX1())/(fParallel->GetNvar() - 1);
                pos = (inter->pmove - frame->GetX1()) / axisSpace;
             } else {
@@ -479,6 +479,14 @@ Double_t TParallelCoordVar::GetValuefromXY(Double_t x,Double_t y)
       else             pos = fMinCurrent + ((x-fX1)/(fX2-fX1))*(fMaxCurrent-fMinCurrent);
    }
    return pos;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Tells if the axis is vertical or not.
+
+bool TParallelCoordVar::GetVert() const
+{
+   return fX1 == fX2;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
