@@ -20,6 +20,9 @@
 #include <array>
 #include <memory>
 #include <vector>
+#include <map>
+#include <cstdlib>
+#include <string>
 
 // pin vtable
 ROOT::RLogHandler::~RLogHandler() {}
@@ -54,12 +57,82 @@ inline bool RLogHandlerDefault::Emit(const ROOT::RLogEntry &entry)
                           entry.fMessage.c_str());
    return true;
 }
+
+static ROOT::ELogLevel ParseVerbosityStr(const std::string &str) {
+   if (str == "Fatal") return ROOT::ELogLevel::kFatal;
+   if (str == "Error") return ROOT::ELogLevel::kError;
+   if (str == "Warning") return ROOT::ELogLevel::kWarning;
+   if (str == "Info") return ROOT::ELogLevel::kInfo;
+   if (str.compare(0, 5, "Debug") == 0) {
+      if (str.length() > 6 && str[5] == '(' && str.back() == ')') {
+         int level = std::stoi(str.substr(6, str.length() - 7));
+         return static_cast<ROOT::ELogLevel>(static_cast<int>(ROOT::ELogLevel::kDebug) + level);
+      }
+      return ROOT::ELogLevel::kDebug;
+   }
+   return ROOT::ELogLevel::kUnset;
+}
+
+namespace ROOT {
+namespace Internal {
+
+void ParseRootLogStr(const std::string& env, std::map<std::string, ROOT::ELogLevel>& sChannelVerbosities) {
+   std::string s = env;
+   size_t start = 0;
+   size_t end = s.find(',');
+   while (start != std::string::npos) {
+      std::string part = s.substr(start, end - start);
+      size_t eq = part.find('=');
+      if (eq != std::string::npos) {
+         sChannelVerbosities[part.substr(0, eq)] = ParseVerbosityStr(part.substr(eq + 1));
+      } else {
+         sChannelVerbosities[""] = ParseVerbosityStr(part);
+      }
+      if (end == std::string::npos) break;
+      start = end + 1;
+      end = s.find(',', start);
+   }
+}
+
+} // namespace Internal
+} // namespace ROOT
+
+static std::map<std::string, ROOT::ELogLevel>& GetChannelVerbosities() {
+   static std::map<std::string, ROOT::ELogLevel> sChannelVerbosities;
+   static bool parsed = false;
+   if (!parsed) {
+      parsed = true;
+      const char *env = std::getenv("ROOT_LOG");
+      if (env) {
+         ROOT::Internal::ParseRootLogStr(env, sChannelVerbosities);
+      }
+   }
+   return sChannelVerbosities;
+}
+
 } // unnamed namespace
 
 ROOT::RLogManager &ROOT::RLogManager::Get()
 {
    static RLogManager instance(std::make_unique<RLogHandlerDefault>());
+   static bool configured = false;
+   if (!configured) {
+      configured = true;
+      auto& cfg = GetChannelVerbosities();
+      if (cfg.count("")) {
+         instance.SetVerbosity(cfg[""]);
+      }
+   }
    return instance;
+}
+
+ROOT::ELogLevel ROOT::RLogManager::GetConfiguredVerbosity(const std::string &name) const
+{
+   auto& cfg = GetChannelVerbosities();
+   auto it = cfg.find(name);
+   if (it != cfg.end())
+      return it->second;
+   return ROOT::ELogLevel::kUnset;
 }
 
 std::unique_ptr<ROOT::RLogHandler> ROOT::RLogManager::Remove(RLogHandler *handler)
