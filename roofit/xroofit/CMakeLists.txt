@@ -58,3 +58,16 @@ if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
+
+if(webgui)
+  # provider for browsing of RooWorkspace
+
+  ROOT_LINKER_LIBRARY(ROOTFitWorkspaceProvider
+      src/xRooProvider.cxx
+    DEPENDENCIES
+      ROOTBrowsable
+      RooFitCore
+      RooFitXRooFit
+  )
+
+endif(webgui)
