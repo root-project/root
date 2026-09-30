@@ -2300,3 +2300,15 @@ TEST(ONNX, AliasDynShape)
 
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
+
+TEST(ONNX, AliasDynShapeAcrossNewTensor)
+{
+   SofieReference ref = readReference("AliasDynShapeAcrossNewTensor");
+
+   // model is dynamic in N, use N = 2
+   ASSERT_INCLUDE_AND_RUN_SESSION_ARGS(std::vector<float>, "AliasDynShapeAcrossNewTensor",
+                                       "\"AliasDynShapeAcrossNewTensor_FromONNX.dat\", 2", 2, ref.f32("input0"),
+                                       ref.f32("input1"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}

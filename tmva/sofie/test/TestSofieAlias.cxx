@@ -51,6 +51,8 @@ const std::vector<AliasCase> aliasCases = {
    {"AliasAcrossNewTensor", "reshaped", "prod", true, "the alias is read after another tensor was created"},
    {"AliasOwnerReadAfterAlias", "reshaped", "prod", true, "the aliased tensor is read after the last use of the alias"},
    {"AliasDynShape", "ident", "prod", true, "the aliased tensor comes from the dynamic memory pool"},
+   {"AliasDynShapeAcrossNewTensor", "ident", "prod", true,
+    "the alias is read after another tensor was created in the dynamic memory pool"},
    // one row per link of the chain, each alias referring to the previous one
    {"AliasChain", "squeezed", "prod", true, "Squeeze does not change the data"},
    {"AliasChain", "unsqueezed", "squeezed", true, "Unsqueeze does not change the data"},
