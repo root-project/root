@@ -3535,16 +3535,16 @@ def make_Log():
 def make_LogSoftmax1d():
     """Ops: LogSoftmax"""
     nodes = [
-        helper.make_node('LogSoftmax', ['X'], ['Y']),
+        helper.make_node("LogSoftmax", ["X"], ["Y"]),
     ]
     graph = helper.make_graph(
         nodes,
-        'LogSoftmax',
+        "LogSoftmax",
         inputs=[
-            _vi('X', FLOAT, [3]),
+            _vi("X", FLOAT, [3]),
         ],
         outputs=[
-            _vi('Y', FLOAT, [3]),
+            _vi("Y", FLOAT, [3]),
         ],
     )
     return _model(graph, opset=17, ir_version=8)
@@ -3553,16 +3553,16 @@ def make_LogSoftmax1d():
 def make_LogSoftmax2d():
     """Ops: LogSoftmax"""
     nodes = [
-        helper.make_node('LogSoftmax', ['X'], ['Y'], axis=-1),
+        helper.make_node("LogSoftmax", ["X"], ["Y"], axis=-1),
     ]
     graph = helper.make_graph(
         nodes,
-        'LogSoftmax',
+        "LogSoftmax",
         inputs=[
-            _vi('X', FLOAT, [2, 3]),
+            _vi("X", FLOAT, [2, 3]),
         ],
         outputs=[
-            _vi('Y', FLOAT, [2, 3]),
+            _vi("Y", FLOAT, [2, 3]),
         ],
     )
     return _model(graph, opset=17, ir_version=8)
@@ -3571,16 +3571,16 @@ def make_LogSoftmax2d():
 def make_LogSoftmax3d():
     """Ops: LogSoftmax"""
     nodes = [
-        helper.make_node('LogSoftmax', ['X'], ['Y'], axis=1),
+        helper.make_node("LogSoftmax", ["X"], ["Y"], axis=1),
     ]
     graph = helper.make_graph(
         nodes,
-        'LogSoftmax',
+        "LogSoftmax",
         inputs=[
-            _vi('X', FLOAT, [2, 3, 4]),
+            _vi("X", FLOAT, [2, 3, 4]),
         ],
         outputs=[
-            _vi('Y', FLOAT, [2, 3, 4]),
+            _vi("Y", FLOAT, [2, 3, 4]),
         ],
     )
     return _model(graph, opset=17, ir_version=8)
@@ -3593,16 +3593,16 @@ def make_LogSoftmaxLargeRange():
     float32 for all but the largest one. log(softmax(x)) is -inf there, while
     the stable form (x - max) - log(sum(exp(x - max))) stays finite."""
     nodes = [
-        helper.make_node('LogSoftmax', ['X'], ['Y'], axis=-1),
+        helper.make_node("LogSoftmax", ["X"], ["Y"], axis=-1),
     ]
     graph = helper.make_graph(
         nodes,
-        'LogSoftmax',
+        "LogSoftmax",
         inputs=[
-            _vi('X', FLOAT, [2, 3]),
+            _vi("X", FLOAT, [2, 3]),
         ],
         outputs=[
-            _vi('Y', FLOAT, [2, 3]),
+            _vi("Y", FLOAT, [2, 3]),
         ],
     )
     return _model(graph, opset=17, ir_version=8)
@@ -3614,16 +3614,16 @@ def make_LogSoftmaxLargeRangeAxis0():
     Same as LogSoftmaxLargeRange but with the reduction along the first axis,
     which takes the generic code path of the SOFIE Softmax operator."""
     nodes = [
-        helper.make_node('LogSoftmax', ['X'], ['Y'], axis=0),
+        helper.make_node("LogSoftmax", ["X"], ["Y"], axis=0),
     ]
     graph = helper.make_graph(
         nodes,
-        'LogSoftmax',
+        "LogSoftmax",
         inputs=[
-            _vi('X', FLOAT, [3, 2]),
+            _vi("X", FLOAT, [3, 2]),
         ],
         outputs=[
-            _vi('Y', FLOAT, [3, 2]),
+            _vi("Y", FLOAT, [3, 2]),
         ],
     )
     return _model(graph, opset=17, ir_version=8)

@@ -178,28 +178,39 @@ public:
          if (fLogSoftmax) {
             // same numerically stable form as in the last-axis case above:
             // (x - vmax) - log(sum(exp(x - vmax))), see #23547
-            for (size_t j = 0; j < size-1; j++) out << SP;
+            for (size_t j = 0; j < size - 1; j++)
+               out << SP;
             out << fType << " log_sum = " << logFunction << "(sum);\n";
-            for (size_t j = 0; j < size-1; j++) out << SP;
+            for (size_t j = 0; j < size - 1; j++)
+               out << SP;
             out << "for (int i = 0; i < " << fShape[axis] << "; i++) {\n";
-            for (size_t j = 0; j < size; j++) out << SP;
+            for (size_t j = 0; j < size; j++)
+               out << SP;
             out << "size_t id = index + i";
-            if (stride[axis].GetVal() != "1") out << "*(" << stride[axis] << ")";
+            if (stride[axis].GetVal() != "1")
+               out << "*(" << stride[axis] << ")";
             out << ";\n";
-            for (size_t j = 0; j < size; j++) out << SP;
+            for (size_t j = 0; j < size; j++)
+               out << SP;
             out << "tensor_" << fNY << "[id] = (tensor_" << fNX << "[id] - vmax) - log_sum;\n";
-            for (size_t j = 0; j < size-1; j++) out << SP;
+            for (size_t j = 0; j < size - 1; j++)
+               out << SP;
             out << "}\n";
          } else {
-            for (size_t j = 0; j < size-1; j++) out << SP;
+            for (size_t j = 0; j < size - 1; j++)
+               out << SP;
             out << "for (int i = 0; i < " << fShape[axis] << "; i++) {\n";
-            for (size_t j = 0; j < size; j++) out << SP;
+            for (size_t j = 0; j < size; j++)
+               out << SP;
             out << "size_t id = index + i";
-            if (stride[axis].GetVal() != "1") out << "*(" << stride[axis] << ")";
+            if (stride[axis].GetVal() != "1")
+               out << "*(" << stride[axis] << ")";
             out << ";\n";
-            for (size_t j = 0; j < size; j++) out << SP;
+            for (size_t j = 0; j < size; j++)
+               out << SP;
             out << "tensor_" << fNY << "[id] /= sum;\n";
-            for (size_t j = 0; j < size-1; j++) out << SP;
+            for (size_t j = 0; j < size - 1; j++)
+               out << SP;
             out << "}\n";
          }
          //end loops
