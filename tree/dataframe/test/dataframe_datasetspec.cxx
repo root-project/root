@@ -1088,6 +1088,37 @@ TEST_P(RDatasetSpecTest, CompareWithRNTupleReader)
    EXPECT_FLOAT_EQ(h.GetMean(), mean.GetValue());
 }
 
+TEST_P(RDatasetSpecTest, Issue22741_SampleEntryRangeLocalToSample)
+{
+   // Check that EntryRange of RSampleInfo is local to the sample (file) 
+   // when using multi-threading and friends (i.e. TTreeProcessorMT using global clusters)
+   auto makeTree = [](const std::string& fname, int offset) {
+       TFile f(fname.c_str(), "RECREATE");
+       TTree t("t", "t");
+       int x; t.Branch("x", &x);
+       x = offset; t.Fill(); x = offset+1; t.Fill();
+       f.Write(); f.Close();
+   };
+   makeTree("test_issue22741_main1.root", 0);
+   makeTree("test_issue22741_main2.root", 2);
+   makeTree("test_issue22741_friend1.root", 0);
+   makeTree("test_issue22741_friend2.root", 2);
+
+   ROOT::RDF::Experimental::RDatasetSpec spec;
+   spec.AddSample({"sample1", "t", "test_issue22741_main1.root"});
+   spec.AddSample({"sample2", "t", "test_issue22741_main2.root"});
+   spec.WithGlobalFriends(std::vector<std::string>{"t", "t"}, std::vector<std::string>{"test_issue22741_friend1.root", "test_issue22741_friend2.root"}, "friend");
+
+   ROOT::RDataFrame df(spec);
+   auto res = df.DefinePerSample("r2", [](unsigned int, const ROOT::RDF::RSampleInfo& info) {
+       return (int)info.EntryRange().second;
+   }).Take<int>("r2");
+   
+   for (auto v : *res) {
+       EXPECT_LE(v, 2);
+   }
+}
+
 // instantiate single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDatasetSpecTest, ::testing::Values(false));
 
