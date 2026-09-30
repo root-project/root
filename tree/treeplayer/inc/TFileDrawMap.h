@@ -41,7 +41,7 @@ protected:
    Int_t          fXsize = 0;           ///< Size in bytes of X axis
    Int_t          fYsize = 0;           ///< Size in K/Mbytes of Y axis
 
-   virtual void     DrawMarker(Int_t marker, Long64_t eseek);
+   virtual void     DrawMarker(Int_t marker, Long64_t eseek, const char *id);
    virtual bool     GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TString &info) const;
    virtual void     PaintBox(TBox &box, Long64_t bseek, Int_t nbytes);
    virtual void     PaintDir(TDirectory *dir, const char *keys);
