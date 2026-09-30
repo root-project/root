@@ -309,6 +309,8 @@ bool RModel::AddAliasTensor(const std::string &name, const std::string &origin)
    // The tensor must already be registered as an intermediate tensor.
    auto tensor_name = UTILITY::Clean_name(name);
    auto origin_name = UTILITY::Clean_name(origin);
+   // two operators writing the same tensor is a malformed graph rather than a case to refuse,
+   // so this comes before the checks below and the error does not depend on the optimization level
    if (fAliasTensors.count(tensor_name) != 0) {
       throw std::runtime_error("TMVA-SOFIE: alias tensor with name " + tensor_name + " already exists \n");
    }
@@ -327,7 +329,8 @@ bool RModel::AddAliasTensor(const std::string &name, const std::string &origin)
    // are managed by the session
    if (fIntermediateTensorInfos.count(origin_name) == 0 && fDynamicTensorInfos.count(origin_name) == 0)
       return false;
-   // boolean tensors are std::vector<uint8_t> members, which operators may access directly
+   // boolean tensors are std::vector<uint8_t> members accessed directly: ROperator_SubGraph
+   // reads fTensor_<cond>[0] and writes fTensor_<out>.begin(), which an alias does not have
    if (GetTensorType(origin_name) == ETensorType::BOOL || GetTensorType(tensor_name) != GetTensorType(origin_name))
       return false;
 
