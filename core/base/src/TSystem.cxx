@@ -2591,22 +2591,15 @@ static void R__AddPath(TString &target, const TString &path) {
 static bool R__GenerateCompilerDependencies(const TString &depfilename, const TString &filename, const TString &targetname,
                                             const TString &includes, const TString &defines)
 {
-   TString compiler = gSystem->Getenv("CXX");
-   if (compiler.IsNull()) {
-#ifdef WIN32
-      compiler = "cl";
-#else
-      compiler = "c++";
-#endif
-   }
+   TString compiler = COMPILER;
 
    TString cmd = compiler;
+   cmd += " " CXXOPT;
+   cmd += " " ROOT_CXX_STANDARD_OPTION;
 #ifdef WIN32
-   cmd += " /std:c++17"; // CMAKE_CXX_STANDARD minimum required
    cmd += " /nologo /E /showIncludes";
    cmd += " \"/I";
 #else
-   cmd += " -std=c++17"; // CMAKE_CXX_STANDARD minimum required
    cmd += " -MM";
    cmd += " -MF \"" + depfilename + "\"";
    cmd += " -MT \"";
