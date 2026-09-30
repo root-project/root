@@ -1024,6 +1024,56 @@ TEST(ONNX, Softmax4d)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, LogSoftmax1d)
+{
+   SofieReference ref = readReference("LogSoftmax1d");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LogSoftmax1d", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, LogSoftmax2d)
+{
+   SofieReference ref = readReference("LogSoftmax2d");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LogSoftmax2d", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, LogSoftmax3d)
+{
+   SofieReference ref = readReference("LogSoftmax3d");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LogSoftmax3d", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// Inputs more than ~88 apart from the maximum make exp(x - max) underflow to 0
+// in float32, so log(softmax(x)) returns -inf where the stable form
+// (x - max) - log(sum(exp(x - max))) returns a large negative number
+TEST(ONNX, LogSoftmaxLargeRange)
+{
+   SofieReference ref = readReference("LogSoftmaxLargeRange");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LogSoftmaxLargeRange", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+// same as above, but reducing along the first axis, which takes the generic
+// code path of the SOFIE Softmax operator
+TEST(ONNX, LogSoftmaxLargeRangeAxis0)
+{
+   SofieReference ref = readReference("LogSoftmaxLargeRangeAxis0");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LogSoftmaxLargeRangeAxis0", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 TEST(ONNX, ConvTranspose1d)
 {
    SofieReference ref = readReference("ConvTranspose1d");

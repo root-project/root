@@ -104,12 +104,21 @@ public:
          out << SP << SP << SP << "sum += y_ptr[j];\n";
          out << SP << SP << "}\n";
 
-         out << SP << SP << fType << " inv_sum = 1.0f / sum;\n";
-         out << SP << SP << "for (int j = 0; j < " << axis_size << "; ++j) {\n";
-         out << SP << SP << SP << "y_ptr[j] *= inv_sum;\n";
-         if (fLogSoftmax)
-            out << SP << SP << SP << "y_ptr[j] = " << logFunction << "(y_ptr[j]);\n";
-         out << SP << SP << "}\n";
+         if (fLogSoftmax) {
+            // evaluate (x - vmax) - log(sum(exp(x - vmax))) instead of
+            // log(exp(x - vmax) / sum): for inputs far apart from the maximum
+            // exp(x - vmax) underflows to 0 and its log is -inf, while the
+            // correct result is a large negative number (see #23547)
+            out << SP << SP << fType << " log_sum = " << logFunction << "(sum);\n";
+            out << SP << SP << "for (int j = 0; j < " << axis_size << "; ++j) {\n";
+            out << SP << SP << SP << "y_ptr[j] = (x_ptr[j] - vmax) - log_sum;\n";
+            out << SP << SP << "}\n";
+         } else {
+            out << SP << SP << fType << " inv_sum = 1.0f / sum;\n";
+            out << SP << SP << "for (int j = 0; j < " << axis_size << "; ++j) {\n";
+            out << SP << SP << SP << "y_ptr[j] *= inv_sum;\n";
+            out << SP << SP << "}\n";
+         }
          out << SP << "}\n";
 
       } else {
@@ -166,20 +175,33 @@ public:
          for (size_t j = 0; j < size-1; j++) out << SP;
          out << "}\n";
          // normalize
-         for (size_t j = 0; j < size-1; j++) out << SP;
-         out << "for (int i = 0; i < " << fShape[axis] << "; i++) {\n";
-         for (size_t j = 0; j < size; j++) out << SP;
-         out << "size_t id = index + i";
-         if (stride[axis].GetVal() != "1") out << "*(" << stride[axis] << ")";
-         out << ";\n";
-         for (size_t j = 0; j < size; j++) out << SP;
-         out << "tensor_" << fNY << "[id] /= sum;\n";
          if (fLogSoftmax) {
+            // same numerically stable form as in the last-axis case above:
+            // (x - vmax) - log(sum(exp(x - vmax))), see #23547
+            for (size_t j = 0; j < size-1; j++) out << SP;
+            out << fType << " log_sum = " << logFunction << "(sum);\n";
+            for (size_t j = 0; j < size-1; j++) out << SP;
+            out << "for (int i = 0; i < " << fShape[axis] << "; i++) {\n";
             for (size_t j = 0; j < size; j++) out << SP;
-            out << "tensor_" << fNY << "[id] = " << logFunction << "(tensor_" << fNY << "[id]);\n";
+            out << "size_t id = index + i";
+            if (stride[axis].GetVal() != "1") out << "*(" << stride[axis] << ")";
+            out << ";\n";
+            for (size_t j = 0; j < size; j++) out << SP;
+            out << "tensor_" << fNY << "[id] = (tensor_" << fNX << "[id] - vmax) - log_sum;\n";
+            for (size_t j = 0; j < size-1; j++) out << SP;
+            out << "}\n";
+         } else {
+            for (size_t j = 0; j < size-1; j++) out << SP;
+            out << "for (int i = 0; i < " << fShape[axis] << "; i++) {\n";
+            for (size_t j = 0; j < size; j++) out << SP;
+            out << "size_t id = index + i";
+            if (stride[axis].GetVal() != "1") out << "*(" << stride[axis] << ")";
+            out << ";\n";
+            for (size_t j = 0; j < size; j++) out << SP;
+            out << "tensor_" << fNY << "[id] /= sum;\n";
+            for (size_t j = 0; j < size-1; j++) out << SP;
+            out << "}\n";
          }
-         for (size_t j = 0; j < size-1; j++) out << SP;
-         out << "}\n";
          //end loops
          for (int i = static_cast<int>(k) - 1; i >= 0; i--) {
             for (int j = 0; j < i; j++) out << SP;

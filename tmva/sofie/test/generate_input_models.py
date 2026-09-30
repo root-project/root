@@ -3532,6 +3532,103 @@ def make_Log():
     return _model(graph, opset=14, ir_version=7, producer_name='pytorch', producer_version='1.13.1')
 
 
+def make_LogSoftmax1d():
+    """Ops: LogSoftmax"""
+    nodes = [
+        helper.make_node('LogSoftmax', ['X'], ['Y']),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'LogSoftmax',
+        inputs=[
+            _vi('X', FLOAT, [3]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [3]),
+        ],
+    )
+    return _model(graph, opset=17, ir_version=8)
+
+
+def make_LogSoftmax2d():
+    """Ops: LogSoftmax"""
+    nodes = [
+        helper.make_node('LogSoftmax', ['X'], ['Y'], axis=-1),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'LogSoftmax',
+        inputs=[
+            _vi('X', FLOAT, [2, 3]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [2, 3]),
+        ],
+    )
+    return _model(graph, opset=17, ir_version=8)
+
+
+def make_LogSoftmax3d():
+    """Ops: LogSoftmax"""
+    nodes = [
+        helper.make_node('LogSoftmax', ['X'], ['Y'], axis=1),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'LogSoftmax',
+        inputs=[
+            _vi('X', FLOAT, [2, 3, 4]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [2, 3, 4]),
+        ],
+    )
+    return _model(graph, opset=17, ir_version=8)
+
+
+def make_LogSoftmaxLargeRange():
+    """Ops: LogSoftmax
+
+    The inputs of each row are 100 apart, so exp(x - max) underflows to 0 in
+    float32 for all but the largest one. log(softmax(x)) is -inf there, while
+    the stable form (x - max) - log(sum(exp(x - max))) stays finite."""
+    nodes = [
+        helper.make_node('LogSoftmax', ['X'], ['Y'], axis=-1),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'LogSoftmax',
+        inputs=[
+            _vi('X', FLOAT, [2, 3]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [2, 3]),
+        ],
+    )
+    return _model(graph, opset=17, ir_version=8)
+
+
+def make_LogSoftmaxLargeRangeAxis0():
+    """Ops: LogSoftmax
+
+    Same as LogSoftmaxLargeRange but with the reduction along the first axis,
+    which takes the generic code path of the SOFIE Softmax operator."""
+    nodes = [
+        helper.make_node('LogSoftmax', ['X'], ['Y'], axis=0),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'LogSoftmax',
+        inputs=[
+            _vi('X', FLOAT, [3, 2]),
+        ],
+        outputs=[
+            _vi('Y', FLOAT, [3, 2]),
+        ],
+    )
+    return _model(graph, opset=17, ir_version=8)
+
+
 def make_MatMul_1D_Constant():
     """Ops: MatMul"""
     nodes = [
@@ -5955,6 +6052,11 @@ MODELS = {
     "Linear_32": make_Linear_32,
     "Linear_64": make_Linear_64,
     "Log": make_Log,
+    "LogSoftmax1d": make_LogSoftmax1d,
+    "LogSoftmax2d": make_LogSoftmax2d,
+    "LogSoftmax3d": make_LogSoftmax3d,
+    "LogSoftmaxLargeRange": make_LogSoftmaxLargeRange,
+    "LogSoftmaxLargeRangeAxis0": make_LogSoftmaxLargeRangeAxis0,
     "MatMul_1D_Constant": make_MatMul_1D_Constant,
     "MatMul_Stacked": make_MatMul_Stacked,
     "MatMul_Stacked2": make_MatMul_Stacked2,
@@ -6862,6 +6964,13 @@ TEST_INPUTS = {
     "Linear_32": [f32(np.full(3200, 1.0), (32, 100))],
     "Linear_64": [f32(np.full(6400, 1.0), (64, 100))],
     "Log": [f32([1.0, 2.0, 3.0, 4.0], (4,))],
+    "LogSoftmax1d": [f32([-1.0, 0.0, 1.0], (3,))],
+    "LogSoftmax2d": [f32([-1.0, 0.0, 1.0, 2.0, 1.0, 0.0], (2, 3))],
+    "LogSoftmax3d": [rand_f32(11, (2, 3, 4))],
+    # 100 apart per row: exp(x - max) underflows to 0 in float32 away from the
+    # maximum, which log(softmax(x)) turns into -inf
+    "LogSoftmaxLargeRange": [f32([0.0, 100.0, 200.0, 200.0, 100.0, 0.0], (2, 3))],
+    "LogSoftmaxLargeRangeAxis0": [f32([0.0, 100.0, 100.0, 200.0, 200.0, 300.0], (3, 2))],
     "Max": [
         f32([1.0, 2.0, -1.0], (1, 3)),
         f32([3.0, 0.0, 4.0], (1, 3)),
@@ -7698,6 +7807,23 @@ def _batchnorm_reference(model, feeds):
     return [y.astype(np.float32)]
 
 
+def _logsoftmax_reference(model, feeds):
+    """LogSoftmax evaluated with the numerically stable formula in double
+    precision.
+
+    The ReferenceEvaluator computes log(softmax(x)), whose exp(x - max)
+    underflows to 0 in float32 once the inputs are more than ~88 apart from the
+    maximum, so it yields -inf where the correct result is a large negative
+    number (see root-project/root#23547)."""
+    node = next(n for n in model.graph.node if n.op_type == "LogSoftmax")
+    axis = next((a.i for a in node.attribute if a.name == "axis"), -1)
+    x = np.asarray(feeds[node.input[0]], dtype=np.float64)
+    axis = axis % x.ndim
+    shifted = x - x.max(axis=axis, keepdims=True)
+    y = shifted - np.log(np.exp(shifted).sum(axis=axis, keepdims=True))
+    return [y.astype(np.float32)]
+
+
 EXPECTED_OVERRIDES = {
     "GRUBidirectional": _recurrent_reference,
     "LSTMBidirectional": _recurrent_reference,
@@ -7712,6 +7838,8 @@ EXPECTED_OVERRIDES = {
     "IdentityWeightBatchNorm": _batchnorm_reference,
     "BatchNormEpsilon": _batchnorm_reference,
     "BatchNormReluEpsilon": _batchnorm_reference,
+    "LogSoftmaxLargeRange": _logsoftmax_reference,
+    "LogSoftmaxLargeRangeAxis0": _logsoftmax_reference,
 }
 
 
