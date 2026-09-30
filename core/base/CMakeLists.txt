@@ -13,7 +13,7 @@ if(MSVC AND MSVC_VERSION GREATER_EQUAL 1925 AND MSVC_VERSION LESS 1929)
   # Try to re-enable /O2 after the upgrade of llvm & clang, or when upgrading Visual Studio
   string(REPLACE "-O2" "-O1 -Oi" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
   string(REPLACE "-O2" "-O1 -Oi" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-endif()
+endif() 
 
 set(BASE_HEADERS
   ROOT/RCryptoRandom.hxx
@@ -227,6 +227,11 @@ target_include_directories(Core PRIVATE ${CMAKE_SOURCE_DIR}/core/utils/inc)
 if(ROOT_NEED_STDCXXFS)
     target_link_libraries(Core PRIVATE stdc++fs)
 endif()
+
+# https://gitlab.kitware.com/cmake/cmake/-/work_items/18910
+set_property(SOURCE src/TSystem.cxx
+    APPEND PROPERTY COMPILE_DEFINITIONS "ROOT_CXX_STANDARD_OPTION=\"${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION}\""
+)
 
 # This code about the LIB_CORE_NAME define is important for TROOT::GetSharedLibDir()
 # On Linux, dl_iterate_phdr reports loaded libraries by their SONAME
