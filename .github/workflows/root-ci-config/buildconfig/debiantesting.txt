@@ -1,4 +1,5 @@
 CMAKE_CXX_STANDARD=23
+HONOR_EXTERNAL_LLVM_LINK_LLVM_DYLIB=ON
 builtin_llvm=OFF
 builtin_mathtext=OFF
 test_distrdf_pyspark=OFF
