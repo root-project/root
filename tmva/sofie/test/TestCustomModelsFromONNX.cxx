@@ -1520,6 +1520,19 @@ TEST(ONNX, WhereBroadcastHighRankCond)
 
    expectEqual(output, correct);
 }
+TEST(ONNX, WhereBroadcastEqualElementCount)
+{
+   // regression test for issue #23523:
+   // cond (2,1), X (1,2) and Y (1,2) all have the same number of elements (2) but
+   // different shapes, so they only agree via multidirectional broadcasting to (2,2).
+   std::vector<float> input1 = {1, 2};
+   std::vector<float> input2 = {-1, -2};
+   std::vector<uint8_t> cond = {true, false};
+   std::vector<float> correct = {1, 2, -1, -2};
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "WhereBroadcastEqualElementCount", input1, input2, cond);
+
+   expectEqual(output, correct);
+}
 
 TEST(ONNX, Sin)
 {

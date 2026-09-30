@@ -130,16 +130,12 @@ public:
          bool broadcast = !UTILITY::AreSameShape(fShapeX, fShapeY) || !UTILITY::AreSameShape(fShapeX, fShapeC);
          if (broadcast) {
             // the broadcast output can be larger than every input, or inputs can have the same
-            // number of elements but different shapes. Use MultidirectionalBroadcastShape() instead.
-            auto retXY = UTILITY::MultidirectionalBroadcastShape(fShapeX, fShapeY);
-            fShapeZ = retXY.second;
-            auto retCZ = UTILITY::MultidirectionalBroadcastShape(fShapeC, fShapeZ);
-            fShapeZ = retCZ.second;
+            // number of elements but different shapes.
+            fShapeZ = UTILITY::MultidirectionalBroadcastShape({fShapeC, fShapeX, fShapeY});
 
-            // fShapeX, fShapeY and fShapeC have now been padded (in place, to be
-            // pairwise rank-compatible, but one of them can still have a smaller rank
-            // than the final fShapeZ (e.g. if C has the highest rank among the three):
-            // prepend the missing unit dimensions before comparing.
+            // MultidirectionalBroadcastShape takes its inputs by value, so fShapeX, fShapeY and
+            // fShapeC keep their original rank: prepend the missing unit dimensions so the
+            // per-input broadcast checks below compare equal-rank shapes.
             auto padToRank = [&](std::vector<size_t> &shape) {
                if (shape.size() < fShapeZ.size()) {
                   size_t nPrepend = fShapeZ.size() - shape.size();
@@ -165,12 +161,6 @@ public:
                   // Update the data and the shape of X
                   model.AddConstantTensor(fNBroadcastedX, model.GetTensorType(fNX), fShapeZ, broadcastedData);
                   fShapeX = fShapeZ;
-               } else {
-                  // I need to prepend to shape of X the extra dimensions added for broadcasting to Z
-                  if (fShapeX.size() < fShapeZ.size()) {
-                     size_t nPrepend = fShapeZ.size() - fShapeX.size();
-                     fShapeX.insert(fShapeX.begin(), nPrepend, 1);
-                  }
                }
             }
             // Broadcast Y to Z
@@ -184,13 +174,6 @@ public:
                   // do not update tensor B but add broadcasted one (since it can be input to some other operators)
                   model.AddConstantTensor(fNBroadcastedY, model.GetTensorType(fNY), fShapeZ, broadcastedData);
                   fShapeY = fShapeZ;
-               } else {
-                  // I need to prepend to shape of Y the extra dimensions added for broadcasting to Z
-                  if (fShapeY.size() < fShapeZ.size()) {
-                     size_t nPrepend = fShapeZ.size() - fShapeY.size();
-                     fShapeY.insert(fShapeY.begin(), nPrepend, 1);
-                  }
-
                }
             }
             // Broadcast C to Z
@@ -204,12 +187,6 @@ public:
                   // do not update tensor C but add broadcasted one (since it can be input to some other operators)
                   model.AddConstantTensor(fNBroadcastedC, model.GetTensorType(fNC), fShapeZ, broadcastedData);
                   fShapeC = fShapeZ;
-               } else {
-                  // I need to prepend to shape of C the extra dimensions added for broadcasting to Z
-                  if (fShapeC.size() < fShapeZ.size()) {
-                     size_t nPrepend = fShapeZ.size() - fShapeC.size();
-                     fShapeC.insert(fShapeC.begin(), nPrepend, 1);
-                  }
                }
             }
          } else {

@@ -5618,6 +5618,29 @@ def make_WhereBroadcastHighRankCond():
     return _model(graph, opset=21, ir_version=10, producer_name="onnx-example")
 
 
+def make_WhereBroadcastEqualElementCount():
+    """Ops: Where. Regression test for issue #23523: cond (2,1), X (1,2) and
+    Y (1,2) all have the same number of elements but different shapes, so they
+    only agree via multidirectional broadcasting to (2,2), which is larger than
+    every individual input."""
+    nodes = [
+        helper.make_node("Where", ["cond", "inputA", "inputB"], ["output"]),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "WhereBroadcastEqualElementCountGraph",
+        inputs=[
+            _vi("inputA", FLOAT, [1, 2]),
+            _vi("inputB", FLOAT, [1, 2]),
+            _vi("cond", BOOL, [2, 1]),
+        ],
+        outputs=[
+            _vi("output", FLOAT, [2, 2]),
+        ],
+    )
+    return _model(graph, opset=21, ir_version=10, producer_name="onnx-example")
+
+
 def make_ConvSharedInput():
     """Ops: Conv, Add. Two convolutions read the same input tensor, each with
     its own reshaped-kernel and im2col workspaces."""
@@ -6083,6 +6106,7 @@ MODELS = {
     "Where": make_Where,
     "WhereMultidirectionalBroadcast": make_WhereMultidirectionalBroadcast,
     "WhereBroadcastHighRankCond": make_WhereBroadcastHighRankCond,
+    "WhereBroadcastEqualElementCount": make_WhereBroadcastEqualElementCount,
 }
 
 
