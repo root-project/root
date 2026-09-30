@@ -47,13 +47,13 @@ void ConvertPointsAndMergePassX(TVirtualPad *pad, unsigned nPoints, const T *x, 
 void ConvertPointsAndMergeInplacePassY(std::vector<TPoint> &dst);
 
 template<class T>
-void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T *xs, const T *ys, Bool_t add_first_point);
+void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Bool_t absCoord, Int_t nPoints, const T *xs, const T *ys, Bool_t add_first_point);
 
 template<typename T>
 void DrawPolyLineAux(TVirtualPad *pad, WinContext_t cont, Bool_t absCoord, unsigned nPoints, const T *xs, const T *ys);
 
 template<class T>
-void DrawPolyMarkerAux(TVirtualPad *pad, WinContext_t cont, Bool_t double_buffer, unsigned nPoints, const T *xs, const T *ys);
+void DrawPolyMarkerAux(TVirtualPad *pad, WinContext_t cont, Bool_t absCoord, unsigned nPoints, const T *xs, const T *ys);
 
 
 }
@@ -350,7 +350,7 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Double_t
    }
 
    // if fully transparent, add first point to draw line
-   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys, fFullyTransparent);
+   DrawFillAreaAux(gPad, fWinContext, !fDoubleBuffer, nPoints, xs, ys, fFullyTransparent);
 }
 
 
@@ -365,7 +365,7 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t *
    }
 
    // if fully transparent, add first point to draw line
-   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys, fFullyTransparent);
+   DrawFillAreaAux(gPad, fWinContext, !fDoubleBuffer, nPoints, xs, ys, fFullyTransparent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -499,7 +499,7 @@ void TPadPainter::DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y)
       return;
    }
 
-   DrawPolyMarkerAux(gPad, fWinContext, fDoubleBuffer, n, x, y);
+   DrawPolyMarkerAux(gPad, fWinContext, !fDoubleBuffer, n, x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -512,7 +512,7 @@ void TPadPainter::DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y)
       return;
    }
 
-   DrawPolyMarkerAux(gPad, fWinContext, fDoubleBuffer, n, x, y);
+   DrawPolyMarkerAux(gPad, fWinContext, !fDoubleBuffer, n, x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -796,7 +796,7 @@ void ConvertPointsAndMerge(TVirtualPad *pad, unsigned threshold, unsigned nPoint
 ////////////////////////////////////////////////////////////////////////////////
 
 template<class T>
-void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T *xs, const T *ys, Bool_t add_first_point)
+void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Bool_t absCoord, Int_t nPoints, const T *xs, const T *ys, Bool_t add_first_point)
 {
    std::vector<TPoint> xy;
 
@@ -809,8 +809,8 @@ void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T
       return;
    }
 
-   if (nPoints < threshold)
-      ConvertPoints(pad, nPoints, xs, ys, xy);
+   if (absCoord || (nPoints < threshold))
+      ConvertPoints(pad, nPoints, xs, ys, xy, absCoord);
    else
       ConvertPointsAndMerge(pad, threshold, nPoints, xs, ys, xy);
 
@@ -842,22 +842,19 @@ void DrawPolyLineAux(TVirtualPad *pad, WinContext_t cont, Bool_t absCoord, unsig
       ConvertPointsAndMerge(pad, threshold, nPoints, xs, ys, xy);
 
    if (xy.size() > 1)
-      gVirtualX->DrawPolyLineW(cont, xy.size(), &xy[0]);
+      gVirtualX->DrawPolyLineW(cont, xy.size(), xy.data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 template<class T>
-void DrawPolyMarkerAux(TVirtualPad *pad, WinContext_t cont, Bool_t double_buffer, unsigned nPoints, const T *xs, const T *ys)
+void DrawPolyMarkerAux(TVirtualPad *pad, WinContext_t cont, Bool_t absCoord, unsigned nPoints, const T *xs, const T *ys)
 {
-   std::vector<TPoint> xy(nPoints);
+   std::vector<TPoint> xy;
 
-   for (unsigned i = 0; i < nPoints; ++i) {
-      xy[i].fX = (SCoord_t) (double_buffer ? pad->XtoPixel(xs[i]) : pad->XtoAbsPixel(xs[i]));
-      xy[i].fY = (SCoord_t) (double_buffer ? pad->YtoPixel(ys[i]) : pad->YtoAbsPixel(ys[i]));
-   }
+   ConvertPoints(pad, nPoints, xs, ys, xy, absCoord);
 
-   gVirtualX->DrawPolyMarkerW(cont, nPoints, &xy[0]);
+   gVirtualX->DrawPolyMarkerW(cont, nPoints, xy.data());
 }
 
 }
