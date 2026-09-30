@@ -236,9 +236,9 @@ private:
    /// For deferred columns the absolute value is larger than zero.
    /// Negative values specify a suppressed and deferred column.
    std::int64_t fFirstElementIndex = 0U;
-   /// A field can be serialized into several columns, which are numbered from zero to $n$
    /// Optional value range (used e.g. by quantized real fields)
    std::unique_ptr<RValueRange> fValueRange;
+   /// A field can be serialized into several columns, which are numbered from zero to $n$
    std::uint32_t fIndex = 0;
    /// A field may use multiple column representations, which are numbered from zero to $m$.
    /// Every representation has the same number of columns.
