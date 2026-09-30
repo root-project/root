@@ -16,7 +16,6 @@
 #include "TLatex.h"
 #include "TLine.h"
 #include "TVirtualPad.h"
-#include "TVirtualX.h"
 #include "TMath.h"
 #include "TH1.h"
 #include "TStyle.h"
@@ -174,138 +173,140 @@ bool TParallelCoordVar::Eval(Long64_t evtidx, TParallelCoordSelect *select)
    else return true;
 }
 
+class TParallelCoordVarInteractive : public TVirtualPad::TInteractive {
+   public:
+   Bool_t vertical = kTRUE, zooming = kFALSE;
+   Double_t pzoom1 = 0, pzoom2 = 0, pmove = 0;
+
+   void HandleMouse(TVirtualPad &parent, Double_t x1, Double_t y1, Int_t px, Int_t py, Bool_t first = kFALSE)
+   {
+      Double_t valx = parent.AbsPixeltoX(px);
+      Double_t valy = parent.AbsPixeltoY(py);
+      if (first)
+         zooming = vertical ? (valx > x1) : (valy > y1);
+
+      if (zooming) {
+         pzoom2 = vertical ? valy : valx;
+         if (first)
+            pzoom1 = pzoom2;
+      } else {
+         pmove = vertical ? valx : valy;
+      }
+   }
+
+   void Paint(TVirtualPad &parent, Double_t x1, Double_t y1, Double_t x2, Double_t y2)
+   {
+      Double_t xx[4], yy[4];
+
+      if (!zooming && vertical) {
+         xx[0] = xx[1] = pmove;
+         yy[0] = y1; yy[1] = y2;
+      } else if (!zooming && !vertical) {
+         xx[0] = x1; xx[1] = x2;
+         yy[0] = yy[1] = pmove;
+      } else if (zooming && vertical) {
+         xx[0] = xx[2] = x1 - 0.05;
+         xx[1] = xx[3] = x1 + 0.05;
+         yy[0] = yy[1] = pzoom1;
+         yy[2] = yy[3] = pzoom2;
+      } else {
+         xx[0] = xx[1] = pzoom1;
+         xx[2] = xx[3] = pzoom2;
+         yy[0] = yy[2] = y1 - 0.05;
+         yy[1] = yy[3] = y1 + 0.05;
+
+      }
+      parent.PaintPolyLine(2, xx, yy, "iparallelvar1");
+      if (zooming)
+         parent.PaintPolyLine(2, xx+2, yy+2, "iparallelvar2");
+      parent.UpdateAsync();
+   }
+
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute the corresponding entry.
 
 void TParallelCoordVar::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
 {
-   if (!gPad) return;
-   if (!gPad->IsEditable() && entry!=kMouseEnter) return;
+   if (!gPad)
+      return;
 
-   static Int_t pxold, pyold;
-   static Int_t zoom; // -1:nothing zoomed or translated, 0:translating the axis, 1:zooming
-   static Int_t pzoomold;
-   static bool first = true;
+   auto &parent = *gPad;
 
-   Int_t px1,px2,py1,py2,n=-1;
-   px1 = gPad->XtoAbsPixel(fX1);
-   px2 = gPad->XtoAbsPixel(fX2);
-   py1 = gPad->YtoAbsPixel(fY1);
-   py2 = gPad->YtoAbsPixel(fY2);
+   if (!parent.IsEditable() && entry != kMouseEnter)
+      return;
 
-   if(fX1 == fX2) {
-      if(gPad->AbsPixeltoX(px)-fX1 > 0) gPad->SetCursor(kArrowVer);
-      else                              gPad->SetCursor(kArrowHor);
+   if (fX1 == fX2) {
+      if (parent.AbsPixeltoX(px) - fX1 > 0)
+         parent.SetCursor(kArrowVer);
+      else
+         parent.SetCursor(kArrowHor);
    } else {
-      if(gPad->AbsPixeltoY(py)-fY1 > 0) gPad->SetCursor(kArrowHor);
-      else                              gPad->SetCursor(kArrowVer);
+      if (parent.AbsPixeltoY(py) - fY1 > 0)
+         parent.SetCursor(kArrowHor);
+      else
+         parent.SetCursor(kArrowVer);
    }
 
-   gVirtualX->SetLineColor(-1);
+   auto inter = dynamic_cast<TParallelCoordVarInteractive *> (parent.Interactive(this));
+
    switch (entry) {
       case kButton1Down:
-         if (fX1==fX2){
-            ((TCanvas*)gPad)->Selected(gPad,fParallel,1);
-            if(gPad->AbsPixeltoX(px)-fX1 > 0){
-               zoom = 1;
-               gVirtualX->DrawLine(gPad->XtoAbsPixel(fX1-0.05),py,gPad->XtoAbsPixel(fX1+0.05),py);
-               first = true;
-               pzoomold = py;
-            } else {
-               zoom = 0;
-               gVirtualX->DrawLine(px,py1,px,py2);
-            }
-         } else {
-            if(gPad->AbsPixeltoY(py)-fY1 > 0){
-               zoom = 1;
-               gVirtualX->DrawLine(px,gPad->YtoAbsPixel(fY1-0.05),px,gPad->YtoAbsPixel(fY1+0.05));
-               first=true;
-               pzoomold = px;
-            } else {
-               zoom = 0;
-               gVirtualX->DrawLine(px1,py,px2,py);
-            }
+         inter = new TParallelCoordVarInteractive();
+         parent.Interactive(this, inter);
+         inter->vertical = (fX1 == fX2);
+         parent.GetCanvas()->Selected(&parent, fParallel, 1);
+         // no break
+      case kButton1Motion:
+         if (inter) {
+            inter->HandleMouse(parent, fX1, fY1, px, py, entry == kButton1Down);
+            inter->Paint(parent, fX1, fY1, fX2, fY2);
          }
-         pxold = px;
-         pyold = py;
          break;
       case kButton1Up: {
-         Double_t xx = gPad->AbsPixeltoX(px);
-         Double_t yy = gPad->AbsPixeltoY(py);
-         TFrame *frame = gPad->GetFrame();
-         if (fX1==fX2) {
-            if(zoom == 0){
-               Double_t axisSpace = (frame->GetX2() - frame->GetX1())/(fParallel->GetNvar() - 1);
-               Double_t pos = (xx - frame->GetX1())/axisSpace;
-               if (pos < 0) n = -1;
-               else         n = (Int_t)pos;
+         if (inter && inter->zooming) {
+            Double_t min, max;
+            if (inter->vertical) {
+               min = GetValuefromXY(fX1, inter->pzoom1);
+               max = GetValuefromXY(fX1, inter->pzoom2);
             } else {
-               Double_t min = GetValuefromXY(xx,yy);
-               Double_t max = GetValuefromXY(xx,gPad->AbsPixeltoY(pzoomold));
-               if(TMath::Abs(min-max) < 0.00001) return;       // Avoid zooming if the axis is just clicked.
-               if (fParallel->TestBit(TParallelCoord::kGlobalScale)) {
-                  if (min>max) {
-                     Double_t mem = min;
-                     min = max; max = mem;
-                  }
-                  fParallel->SetGlobalMin(min);
-                  fParallel->SetGlobalMax(max);
-               } else {
-                  SetCurrentLimits(min,max);
-               }
+               min = GetValuefromXY(inter->pzoom1, fY1);
+               max = GetValuefromXY(inter->pzoom2, fY1);
             }
-         } else {
-            if(zoom == 0) {
-               Double_t axisSpace = (frame->GetY2() - frame->GetY1())/(fParallel->GetNvar() - 1);
-               Double_t pos = (yy-frame->GetY1())/axisSpace;
-               if (pos < 0) n= -1;
-               else         n = (Int_t)pos;
+
+            if (min > max)
+               std::swap(min, max);
+
+            if (fParallel->TestBit(TParallelCoord::kGlobalScale)) {
+               fParallel->SetGlobalMin(min);
+               fParallel->SetGlobalMax(max);
             } else {
-               Double_t min = GetValuefromXY(xx,yy);
-               Double_t max = GetValuefromXY(gPad->AbsPixeltoX(pzoomold),yy);
                SetCurrentLimits(min,max);
             }
-         }
-         if(zoom == 0){
-            if (n>=0 && (UInt_t)n>=fParallel->GetNvar()) --n;
-            else if (n<fParallel->GetVarList()->IndexOf(this)) ++n;
+         } else if (inter && !inter->zooming) {
+            TFrame *frame = parent.GetFrame();
+            Double_t pos = 0;
+            if (inter->vertical) {
+               Double_t axisSpace = (frame->GetX2() - frame->GetX1())/(fParallel->GetNvar() - 1);
+               pos = (inter->pmove - frame->GetX1()) / axisSpace;
+            } else {
+               Double_t axisSpace = (frame->GetY2() - frame->GetY1())/(fParallel->GetNvar() - 1);
+               pos = (inter->pmove - frame->GetY1()) / axisSpace;
+            }
+            Int_t n = pos < 0 ? -1 : (Int_t) pos;
+            if (n >= 0 && (UInt_t)n >= fParallel->GetNvar())
+               --n;
+            else if (n < fParallel->GetVarList()->IndexOf(this))
+               ++n;
             fParallel->GetVarList()->Remove(this);
-            fParallel->GetVarList()->AddAt(this,n);
+            fParallel->GetVarList()->AddAt(this, n);
          }
-         gPad->Modified();
+
+         parent.Modified();
+         parent.Interactive();
          break;
       }
-      case kMouseMotion:
-         pxold=px;
-         pyold=py;
-         break;
-      case kButton1Motion:
-         if(fX1==fX2){
-            if(zoom==0){
-               gPad->SetCursor(kArrowHor);
-               gVirtualX->DrawLine(pxold,py1,pxold,py2);
-               gVirtualX->DrawLine(px,py1,px,py2);
-            } else if(zoom==1) {
-               gPad->SetCursor(kArrowVer);
-               if(!first) gVirtualX->DrawLine(gPad->XtoAbsPixel(fX1-0.05),pyold,gPad->XtoAbsPixel(fX1+0.05),pyold);
-               gVirtualX->DrawLine(gPad->XtoAbsPixel(fX1-0.05),py,gPad->XtoAbsPixel(fX1+0.05),py);
-               first = false;
-            }
-         } else {
-            if(zoom==0){
-               gPad->SetCursor(kArrowVer);
-               gVirtualX->DrawLine(px1,pyold,px2,pyold);
-               gVirtualX->DrawLine(px1,py,px2,py);
-            } else if(zoom==1){
-               gPad->SetCursor(kArrowHor);
-               if(!first) gVirtualX->DrawLine(pxold,gPad->YtoAbsPixel(fY1-0.05),pxold,gPad->YtoAbsPixel(fY1+0.05));
-               gVirtualX->DrawLine(px,gPad->YtoAbsPixel(fY1-0.05),px,gPad->YtoAbsPixel(fY1+0.05));
-               first = false;
-            }
-         }
-         pxold = px;
-         pyold = py;
-         break;
    }
 }
 
