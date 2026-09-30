@@ -38,6 +38,8 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 
+* The `rmkdepend` executable is deprecated and will be removed from the public executables shipped with the installation of ROOT 6.44. Use instead `CMake` for dependency tracking, or `makedepend` from system packages. If you need manual inspection, on `g++` or `clang`, a similar result can be achieved by using e.g. `-std=c++17 -MM -MF file.d -MT -I incs defines -x c++-header`; on Windows with  `/std:c++17 /nologo /E /showIncludes /I incs defines /TP`.
+* The outdated Windows scripts `misc/win/ld.sh`, `misc/win/makelib.sh` and `roottest/scripts/winmakelib.sh` are removed in ROOT 6.42.
 * The `rootql` and `rootsl` (QuickLook and Spotlight) plugins for visualizing ROOT files in MacOS, that were developed for ROOT 5.24 are no longer supported in ROOT 6 and are thus removed from the codebase.
 * The build options `vc`, `veccore`, `builtin_vc`, `builtin_veccore` and `rpath` that were deprecated are now removed and will result in configuration errors if used.
 * The option `fail-on-missing=OFF` is no longer honored for opt-in (ie OFF by default) build options requiring external dependencies such as `arrow`, `cocoa`, `daos`, `daos_mock`, `dcache`, `experimental_adaptivecpp`, `fcgi`, `fortran`, `gviz`, `mpi`, `pythia8`, `qt6web`, `tmva-cudnn`, `tmva-pymva`, `tmva-sofie`, `uring` or `vecgeom`. If the respective associated package dependency is not installed, ROOT will always raise a configuration error independent of the value of `fail-on-missing`. The user has to take action by either providing the dependency or manually disabling that option via `-Darrow=OFF`.
