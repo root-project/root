@@ -64,27 +64,6 @@ public:
    }
 
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-      ETensorType out = input[0];
-      return {out};
-   }
-
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-      if (input.size() != 5 ) {
-         throw
-         std::runtime_error("TMVA SOFIE BatchNormalization Op Shape inference need 5 input tensors");
-      }
-      for(size_t i = 0; i < input.size(); i++) {
-         if (input[i].size() != 4) {
-            throw
-            std::runtime_error("TMVA SOFIE BatchNormalization Op Shape inference only accept tensor with 4 dimensions");
-         }
-      }
-
-      auto ret = input;
-      return ret;
-   }
-
    void Initialize(RModel& model) override {
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw

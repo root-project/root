@@ -99,19 +99,10 @@ public:
       }
    }
 
-   /*! \brief Infers the type of the output tensor
-    * \param input type of the input tensors
-    */
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override
-   {
-      ETensorType out = input[0];
-      return {out};
-   }
-
    /*! \brief Infers the shape of the input tensors
     * \param input shape of the input tensors
     */
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> /*input*/) override;
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> /*input*/);
 
    /*! \brief Initialize the model
     * \param model Model

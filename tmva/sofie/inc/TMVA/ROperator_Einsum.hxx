@@ -111,18 +111,6 @@ public:
       return true;
    }
 
-   // type of output given input
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-      return input;
-   }
-
-   // shape of output tensors given input tensors
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-      // assume now inputs have same shape (no broadcasting)
-      auto ret = std::vector<std::vector<size_t>>(1, input[0]); // return vector size 1 with first input
-      return ret;
-   }
-
    void Initialize(RModel& model) override {
       // input must be a graph input, or already initialized intermediate tensor
       size_t i = 0;

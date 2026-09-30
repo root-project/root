@@ -41,15 +41,6 @@ public:
          fOutputTensorNames = { fNY };
    }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-      return input;
-   }
-
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-      auto ret = input;
-      return ret;
-   }
-
    void Initialize(RModel& model) override {
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw std::runtime_error("TMVA SOFIE Gather Op Input Tensor " + fNX + " is not found in model");

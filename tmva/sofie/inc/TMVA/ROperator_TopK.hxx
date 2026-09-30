@@ -42,11 +42,6 @@ public:
             fOutputTensorNames = { fNVal, fNInd };
         }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-      ETensorType ret = input[0];
-      return {ret, ret};
-   }
-
    void Initialize(RModel& model) override {
       if (model.CheckIfTensorAlreadyExist(fNX) == false) {
          // input must be a graph input, or already initialized intermediate tensor

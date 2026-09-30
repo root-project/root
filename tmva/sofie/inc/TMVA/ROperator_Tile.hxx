@@ -32,10 +32,6 @@ public:
          fOutputTensorNames = { fNY };
       }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-      return input;
-   }
-
    std::vector<Dim> DoShapeInference(const std::vector<Dim> & input, const std::vector<size_t> repeat)  {
       std::vector<Dim> ret = input;
       for(size_t i=0; i < repeat.size(); i++) {
