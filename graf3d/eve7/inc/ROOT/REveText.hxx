@@ -29,6 +29,7 @@ private:
    REveText &operator=(const REveText &) = delete;
 
 protected:
+   // clang-format off
    std::string fText {"<no-text>"};
    /// Default must be a face ROOT ships: only Liberation Mono and Serif are in
    /// $ROOTSYS/fonts, not Sans. Serif is also what the viewer axes hardcode.
@@ -46,6 +47,7 @@ protected:
    ElementId_t fClickTargetId{0}; // element the MIR is addressed to; 0 means this element
    REveAunt   *fClickAunt{nullptr}; //! target held as an aunt, so its death is noticed
    Color_t     fTextColor {kMagenta};
+   // clang-format on
    // UChar_t     fTextAlpha {255}; // Better than main transparency -- to be fixed.
 
    static std::string sSdfFontDir;
@@ -56,8 +58,10 @@ public:
    /// Anchoring: SetPosition() gives where the text goes, these give which point
    /// of it lands there. kOriginH/kOriginV, the default, is the text origin; the
    /// others are relative to the text box.
+   // clang-format off
    enum EAlignH_e { kOriginH = 0, kLeft, kCenterH, kRight };
    enum EAlignV_e { kOriginV = 0, kTop, kCenterV, kBottom };
+   // clang-format on
 
    REveText(const Text_t *n = "REveText", const Text_t *t = "");
    virtual ~REveText() {}
@@ -67,6 +71,7 @@ public:
 
    void ComputeBBox() override;
 
+   // clang-format off
    std::string GetText() const { return fText; }
    void SetText(const std::string &text) { fText = text; StampObjProps(); }
 
@@ -103,6 +108,7 @@ public:
 
    Float_t GetFontHinting() const { return fFontHinting; }
    void SetFontHinting(Float_t fontHinting) { fFontHinting = fontHinting; StampObjProps();}
+   // clang-format on
 
    Float_t GetExtraBorder() const { return fExtraBorder; }
    void SetExtraBorder(float size) { fExtraBorder = size; StampObjProps();}

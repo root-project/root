@@ -67,8 +67,8 @@ REveText *makeAnnotation(REveElement *holder, const char *name, const char *text
    auto t = new REveText(name);
    t->SetText(text);
    t->SetFont(kOvlFont);
-   t->SetFontWeight(0.05f);   // stands in for the bold face ROOT does not ship
-   t->SetMode(1); // 1 = screen mode: position is in the (0,1) overlay box
+   t->SetFontWeight(0.05f); // stands in for the bold face ROOT does not ship
+   t->SetMode(1);           // 1 = screen mode: position is in the (0,1) overlay box
    t->SetFontSize(size);
    t->SetPosition(REveVector(x, y, 0.0));
    t->SetTextColor(text_color);
@@ -151,18 +151,20 @@ void overlay_drag()
    REveLogo::SetImageDir(TROOT::GetIconPath().Data());
 
    auto logo = new REveLogo("Root6Icon.png", "Logo");
-   logo->SetPosition(0.88, 0.86);   // (0,1) overlay box; the image is centred here
-   logo->SetSize(110);              // height in CSS pixels; width follows the image
-   logo->SetOpacity(0.75);          // a watermark: it brightens when hovered
+   logo->SetPosition(0.88, 0.86); // (0,1) overlay box; the image is centred here
+   logo->SetSize(110);            // height in CSS pixels; width follows the image
+   logo->SetOpacity(0.75);        // a watermark: it brightens when hovered
    os->AddElement(logo);
 
    auto holder = new REveElement("annotations");
 
    // Muted colours, with a saturated blue frame marking the interactive boxes.
+   // clang-format off
    const Color_t kInk   = TColor::GetColor("#1f2d36"); // deep slate text
    const Color_t kIce   = TColor::GetColor("#f2f7f9"); // plate, a cool white
    const Color_t kQuiet = TColor::GetColor("#8fa6b2"); // frame, static label
    const Color_t kLive  = TColor::GetColor("#3f7d96"); // frame, interactive
+   // clang-format on
 
    makeAnnotation(holder, "Title", "Run 123456 / Event 42", 0.03, 0.95, 0.035, kInk, kQuiet, kIce, false);
    makeAnnotation(holder, "DragMe", "drag me anywhere", 0.03, 0.85, 0.030, kInk, kLive, kIce);
@@ -170,8 +172,7 @@ void overlay_drag()
 
    // Multi-line: embed newlines in the text. The box grows downwards, one line
    // height per line. The resize grip keeps its single-line size.
-   makeAnnotation(holder, "Legend", "legend\n  cyan  barrel\n  pink  jet cones", 0.03, 0.67, 0.030, kInk, kLive,
-                  kIce);
+   makeAnnotation(holder, "Legend", "legend\n  cyan  barrel\n  pink  jet cones", 0.03, 0.67, 0.030, kInk, kLive, kIce);
 
    makeAnnotation(holder, "InFront", "always in front of the geometry", 0.34, 0.28, 0.026, kInk, kQuiet, kIce, false);
 

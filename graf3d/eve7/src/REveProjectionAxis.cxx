@@ -52,7 +52,8 @@ namespace {
 /// exponent form outside [1e-4, 1e5).
 std::string FormatTickLabel(Double_t v, Double_t step)
 {
-   if (std::fabs(v) < 1e-12) return "0";
+   if (std::fabs(v) < 1e-12)
+      return "0";
 
    Int_t nd = 0;
    if (step > 0.0 && step < 1.0)
@@ -76,7 +77,7 @@ REveProjectionAxis::REveProjectionAxis(REveProjectionManager *m, const Text_t *n
    : REveText(n, t), fManager(m)
 {
    // Style defaults for tick labels rather than a free-standing text box.
-   SetMode(1);          // not read by makeProjectionAxis
+   SetMode(1); // not read by makeProjectionAxis
    // Larger and slightly bolder than the REveText default, for labels a few
    // pixels tall in a small projected pane.
    SetFontSize(0.028f);
@@ -94,9 +95,7 @@ REveProjectionAxis::REveProjectionAxis(REveProjectionManager *m, const Text_t *n
 /// Destructor. The aunt link is dropped by REveElement's own cleanup, which
 /// calls RemoveNieceInternal() on every aunt, so nothing to do here.
 
-REveProjectionAxis::~REveProjectionAxis()
-{
-}
+REveProjectionAxis::~REveProjectionAxis() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Recompute both tick sets. Call after the projection or the scene extent
@@ -117,16 +116,20 @@ void REveProjectionAxis::BuildTicks(Int_t ax)
 {
    fTicks[ax].clear();
 
-   if (!fManager) return;
+   if (!fManager)
+      return;
    REveProjection *proj = fManager->GetProjection();
-   if (!proj) return;
+   if (!proj)
+      return;
 
    fManager->AssertBBox();
    Float_t *bb = fManager->GetBBox();
-   if (!bb) return;
+   if (!bb)
+      return;
 
    Float_t pmin_t = bb[ax * 2], pmax_t = bb[ax * 2 + 1];
-   if (pmax_t <= pmin_t) return;
+   if (pmax_t <= pmin_t)
+      return;
 
    // The tick step comes from the true range and only the extent from the
    // widened one. A step derived from the widened range can jump to a coarser
@@ -148,12 +151,14 @@ void REveProjectionAxis::BuildTicks(Int_t ax)
       // them. Their screen spacing is uneven under a non-linear projection.
       Float_t v1 = proj->GetValForScreenPos(ax, pmin_t);
       Float_t v2 = proj->GetValForScreenPos(ax, pmax_t);
-      if (v2 <= v1) return;
+      if (v2 <= v1)
+         return;
 
       // Step from the true range (see above), extent from the widened one.
       THLimitsFinder::Optimize(v1, v2, n1a, bl1, bh1, bn1, bw1);
       THLimitsFinder::Optimize(bl1, bl1 + bw1, n2a, bl2, bh2, bn2, bw2);
-      if (bw1 <= 0) return;
+      if (bw1 <= 0)
+         return;
 
       Double_t vc = 0.5 * (v1 + v2), vh = 0.5 * (v2 - v1) * fRangeFactor;
       Int_t k1 = TMath::FloorNint((vc - vh - bl1) / bw1);
@@ -185,7 +190,8 @@ void REveProjectionAxis::BuildTicks(Int_t ax)
       // Step from the true range here too, for the same reason.
       THLimitsFinder::Optimize(pmin_t, pmax_t, n1a, bl1, bh1, bn1, bw1);
       THLimitsFinder::Optimize(bl1, bl1 + bw1, n2a, bl2, bh2, bn2, bw2);
-      if (bw1 <= 0) return;
+      if (bw1 <= 0)
+         return;
 
       Int_t k1 = TMath::CeilNint(pmin / bw1);
       Int_t k2 = TMath::FloorNint(pmax / bw1);
@@ -201,7 +207,8 @@ void REveProjectionAxis::BuildTicks(Int_t ax)
 
          for (Int_t k = 1; k < bn2; ++k) {
             Double_t pm = p + k * bw2;
-            if (pm > pmax) break;
+            if (pm > pmax)
+               break;
             Tick_t minor;
             minor.fPos = pm;
             minor.fMajor = kFALSE;
@@ -282,9 +289,11 @@ void REveProjectionAxis::RemoveAunt(REveAunt *au)
 
 void REveProjectionAxis::UpdateDistortionLabel()
 {
-   if (!fDistLabel || !fManager) return;
+   if (!fDistLabel || !fManager)
+      return;
    REveProjection *proj = fManager->GetProjection();
-   if (!proj) return;
+   if (!proj)
+      return;
 
    fDistLabel->SetText(TString::Format("%.1f", proj->GetDistortion() * 1000).Data());
 }

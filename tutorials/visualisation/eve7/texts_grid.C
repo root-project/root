@@ -48,9 +48,11 @@ const char *kRuler = "Ill1 OQ08 //\\\\ ..";
 
 // Every one of these ships in TROOT::GetDataDir()/fonts. ROOT has Liberation Mono
 // and Serif but no Liberation Sans.
+// clang-format off
 const char *kFonts[] = {"LiberationSerif-Regular", "LiberationMono-Regular", "verdana",
                         "georgia",                 "comic",                  "comicbd",
                         "BlackChancery"};
+// clang-format on
 const int kNFonts = sizeof(kFonts) / sizeof(char *);
 
 // Screen-mode font sizes, as fractions of viewport height.
@@ -82,10 +84,10 @@ static REveText *MakeText(REveElement *holder, const char *name, const std::stri
 static void AddBBoxAnchor(REveElement *holder, double lim)
 {
    auto b = new REveBox("bbox_anchor");
-   const double v[8][3] = {{-1,-1,-1},{-1,1,-1},{1,1,-1},{1,-1,-1},
-                           {-1,-1, 1},{-1,1, 1},{1,1, 1},{1,-1, 1}};
+   const double v[8][3] = {{-1, -1, -1}, {-1, 1, -1}, {1, 1, -1}, {1, -1, -1},
+                           {-1, -1, 1},  {-1, 1, 1},  {1, 1, 1},  {1, -1, 1}};
    for (int i = 0; i < 8; ++i)
-      b->SetVertex(i, lim*v[i][0], lim*v[i][1], lim*v[i][2]);
+      b->SetVertex(i, lim * v[i][0], lim * v[i][1], lim * v[i][2]);
    b->SetMainColor(kGray);
    b->SetMainTransparency(90);
    holder->AddElement(b);
@@ -204,6 +206,7 @@ void texts_grid(const char *panels = "ABCDE")
    auto *scWorld = eveMng->SpawnNewScene("World text", "Panels C, D -- world mode");
    auto *scMixed = eveMng->SpawnNewScene("Mixed text", "Panel E -- mixed mode");
 
+   // clang-format off
    struct { const char *key; const char *name; REveScene *scene; void (*fill)(REveElement *); } defs[] = {
       {"A", "A_screen_size_ladder",   scScreen, PanelA},
       {"B", "B_screen_fonts",         scScreen, PanelB},
@@ -211,6 +214,7 @@ void texts_grid(const char *panels = "ABCDE")
       {"D", "D_world_rotation_fan",   scWorld,  PanelD},
       {"E", "E_mixed_depth_ladder",   scMixed,  PanelE},
    };
+   // clang-format on
    for (auto &d : defs) {
       if (want.find(d.key) == std::string::npos)
          continue;

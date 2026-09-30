@@ -22,16 +22,14 @@
 namespace ROOT {
 namespace Experimental {
 
-
-class REveSMorph : public REveElement,
-                   public TAttBBox
-{
+class REveSMorph : public REveElement, public TAttBBox {
 private:
    REveSMorph(const REveSMorph &) = delete;
    REveSMorph &operator=(const REveSMorph &) = delete;
 
 protected:
    // Tessellation. GUI range [2, 100] / [3, 100], step 1.
+   // clang-format off
    Int_t   fTLevel{24};     ///< divisions in theta
    Int_t   fPLevel{32};     ///< divisions in phi
 
@@ -64,6 +62,7 @@ protected:
    Float_t fTexXC{1.f};     ///< u wraps per turn in phi
    Float_t fTexYC{-1.f};    ///< v wraps per sweep in theta
    Float_t fTexYOff{0.f};   ///< u shift per whole v, for a brick bond
+   // clang-format on
 
 public:
    REveSMorph(const std::string &n = "REveSMorph", const std::string &t = "");
@@ -72,6 +71,7 @@ public:
    /// Shape and texture parameters; each setter clamps and stamps kCBObjProps.
    /// Size is in the transformation, see SetRadius().
    /// @{
+   // clang-format off
    Int_t GetTLevel() const { return fTLevel; }
    Int_t GetPLevel() const { return fPLevel; }
    void  SetTLevel(Int_t l) { fTLevel = std::clamp(l, 2, 200); StampObjProps(); }
@@ -109,6 +109,7 @@ public:
    void    SetTexXC(Float_t v)   { fTexXC   = std::clamp(v, -1e3f, 1e3f); StampObjProps(); }
    void    SetTexYC(Float_t v)   { fTexYC   = std::clamp(v, -1e3f, 1e3f); StampObjProps(); }
    void    SetTexYOff(Float_t v) { fTexYOff = std::clamp(v, -1e3f, 1e3f); StampObjProps(); }
+   // clang-format on
    /// @}
 
    void SetRadius(Float_t r);
@@ -116,7 +117,7 @@ public:
    void ComputeBBox() override;
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
-   void  BuildRenderData() override;
+   void BuildRenderData() override;
 };
 
 } // namespace Experimental

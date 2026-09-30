@@ -29,14 +29,15 @@ namespace Experimental {
 /// Held by pointer and allocated on demand, the way REveElement holds its
 /// REveTrans, because most transformations never move.
 
-struct REveDeltaTrans
-{
+struct REveDeltaTrans {
+   // clang-format off
    REveVectorD fVel;            ///< velocity, units/s
    REveVectorD fAcc;            ///< acceleration, units/s^2
    REveVectorD fSpinAxis;       ///< spin axis, unit length, local frame
    Double_t    fSpinRate{0.};   ///< rad/s about fSpinAxis
    Double_t    fMaxDt{0.};      ///< seconds the trajectory may be trusted
    Double_t    fMotionT0{0.};   ///< REveUtil::ServerTimeMs() when set
+   // clang-format on
 };
 
 /******************************************************************************/
@@ -61,7 +62,7 @@ protected:
 
    /// Streamed motion, null unless set. Transient: a velocity at an instant is
    /// runtime state, not something a saved transformation should carry.
-   std::unique_ptr<REveDeltaTrans> fDeltaTrans;  ///<!
+   std::unique_ptr<REveDeltaTrans> fDeltaTrans; ///<!
 
    Double_t Norm3Column(Int_t col);
    Double_t Orto3Column(Int_t col, Int_t ref);
@@ -78,8 +79,10 @@ public:
    /// updates. Spin is an axis and a rate in the local frame.
    /// @{
    void SetMotion(const REveVectorD &vel, const REveVectorD &acc, Double_t max_dt);
+   // clang-format off
    void SetMotion(const REveVectorD &vel, const REveVectorD &acc,
                   const REveVectorD &spin_axis, Double_t spin_rate, Double_t max_dt);
+   // clang-format on
    void ClearMotion();
 
    Bool_t HasMotion() const { return fDeltaTrans != nullptr; }
@@ -101,9 +104,7 @@ public:
    {
       if (this != &t) {
          SetTrans(t);
-         fDeltaTrans = t.fDeltaTrans
-                     ? std::make_unique<REveDeltaTrans>(*t.fDeltaTrans)
-                     : nullptr;
+         fDeltaTrans = t.fDeltaTrans ? std::make_unique<REveDeltaTrans>(*t.fDeltaTrans) : nullptr;
       }
       return *this;
    }

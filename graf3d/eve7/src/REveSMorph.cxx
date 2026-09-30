@@ -80,6 +80,7 @@ Int_t REveSMorph::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
 
+   // clang-format off
    j["fTLevel"]   = fTLevel;
    j["fPLevel"]   = fPLevel;
 
@@ -99,6 +100,7 @@ Int_t REveSMorph::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    j["fTexXC"]    = fTexXC;
    j["fTexYC"]    = fTexYC;
    j["fTexYOff"]  = fTexYOff;
+   // clang-format on
 
    // Bounding box as JSON, min triple then max triple, for RC.Box3. The client
    // could measure its own geometry; the box is sent because it is known here.
@@ -118,8 +120,10 @@ Int_t REveSMorph::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 void REveSMorph::ComputeBBox()
 {
    BBoxInit();
+   // clang-format off
    BBoxCheckPoint(-1.f, -1.f, -1.f);
    BBoxCheckPoint( 1.f,  1.f,  1.f);
+   // clang-format on
 }
 
 ////////////////////////////////////////////////////////////////////////////////

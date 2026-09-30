@@ -51,12 +51,14 @@ public:
    };
 
    /// Tone curve applied to the rendered buffer. Values match the shader.
+   // clang-format off
    enum EToneMapMode {
       kToneReinhard = 0,
       kToneExposure = 1,
       kToneLinear   = 2,  ///< no curve; exact colours, but anything over 1 clips
       kToneKnee     = 3   ///< identity below the knee, smooth roll-off above
    };
+   // clang-format on
 
 private:
    REveViewer(const REveViewer&) = delete;
@@ -74,6 +76,7 @@ private:
    /// the box axis draws the floor panel along it instead of the far face.
    Int_t fAxesUpAxis{-1};
 
+   // clang-format off
    Bool_t  fHasAxesBBox{kFALSE};  ///< see SetAxesBBox()
    Float_t fAxesBBox[6]{};        ///< xmin, ymin, zmin, xmax, ymax, zmax
 
@@ -101,6 +104,7 @@ private:
    Float_t   fToneMapKnee{0.95};
    /// Bumped by AutoTuneLights(); the client re-measures when it changes.
    Int_t     fAutoTuneSerial{0};
+   // clang-format on
 
    bool fMandatory{true};
    std::string fPostStreamFlag;
@@ -134,6 +138,7 @@ public:
    EAxesType GetAxesType() const { return fAxesType; }
    void SetAxesType(int);
 
+   // clang-format off
    Bool_t GetExtrapolateMotion() const { return fExtrapolateMotion; }
    void   SetExtrapolateMotion(bool);
 
@@ -155,6 +160,7 @@ public:
    /// second, clamped to [0, 240]. Zero means uncapped, unlike SetMotionMaxHz().
    Float_t GetRenderMaxHz() const { return fRenderMaxHz; }
    void    SetRenderMaxHz(Float_t);
+   // clang-format on
 
    bool GetBlackBackground() const { return fBlackBackground; }
    void SetBlackBackground(bool);

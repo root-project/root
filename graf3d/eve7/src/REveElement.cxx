@@ -1497,25 +1497,23 @@ void REveElement::BuildRenderData()
 
 void REveElement::WriteTransJson(nlohmann::json &cj)
 {
-   if (fMainTrans.get())
-   {
+   if (fMainTrans.get()) {
       const Double_t *m = fMainTrans->Array();
       cj["matrix"] = std::vector<double>(m, m + 16);
    }
 
-   if (fMainTrans && fMainTrans->HasMotion())
-   {
+   if (fMainTrans && fMainTrans->HasMotion()) {
       const REveDeltaTrans &d = *fMainTrans->GetDeltaTrans();
       const REveVectorD &v = d.fVel, &a = d.fAcc, &s = d.fSpinAxis;
+      // clang-format off
       cj["mot"] = { {"t0",     d.fMotionT0},
                     {"vel",    {v.fX, v.fY, v.fZ}},
                     {"acc",    {a.fX, a.fY, a.fZ}},
                     {"axis",   {s.fX, s.fY, s.fZ}},
                     {"rate",   d.fSpinRate},
                     {"max_dt", d.fMaxDt} };
-   }
-   else
-   {
+      // clang-format on
+   } else {
       // Sent explicitly so that a stopped element cancels the client's
       // trajectory: a missing field in a partial update means unchanged.
       cj["mot"] = nullptr;

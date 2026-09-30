@@ -86,10 +86,12 @@ void REveProjectionManager::RemoveDependent(REveElement *el)
 
 void REveProjectionManager::BumpDistortion(Int_t steps)
 {
-   if (!fProjection) return;
+   if (!fProjection)
+      return;
 
    Float_t d = fProjection->GetDistortion() + steps * 1e-4f;
-   if (d < 0.f) d = 0.f;
+   if (d < 0.f)
+      d = 0.f;
    fProjection->SetDistortion(d);
 
    UpdateName();
