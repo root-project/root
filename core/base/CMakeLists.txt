@@ -229,9 +229,7 @@ if(ROOT_NEED_STDCXXFS)
 endif()
 
 # https://gitlab.kitware.com/cmake/cmake/-/work_items/18910
-set_property(SOURCE src/TSystem.cxx
-    APPEND PROPERTY COMPILE_DEFINITIONS "$<BUILD_INTERFACE:ROOT_CXX_STANDARD_OPTION=\"${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION}\">"
-)
+target_compile_definitions(Core PRIVATE ROOT_CXX_STANDARD_OPTION=\"${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION}\")
 
 # This code about the LIB_CORE_NAME define is important for TROOT::GetSharedLibDir()
 # On Linux, dl_iterate_phdr reports loaded libraries by their SONAME
