@@ -5318,6 +5318,36 @@ def make_Softmax4d():
     return _model(graph, opset=17, ir_version=8)
 
 
+def make_LogSoftmaxLargeRange():
+    """Ops: LogSoftmax over the last axis, with inputs that differ by up to 200 so that
+    exp(x - max) underflows to 0 in float."""
+    nodes = [
+        helper.make_node("LogSoftmax", ["X"], ["Y"], axis=-1),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "LogSoftmax",
+        inputs=[_vi("X", FLOAT, [2, 3])],
+        outputs=[_vi("Y", FLOAT, [2, 3])],
+    )
+    return _model(graph, opset=17, ir_version=8)
+
+
+def make_LogSoftmaxLargeRangeAxis0():
+    """Ops: LogSoftmax over axis 0 (the generic, non-last-axis code path), with inputs
+    that differ by up to 200."""
+    nodes = [
+        helper.make_node("LogSoftmax", ["X"], ["Y"], axis=0),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "LogSoftmax",
+        inputs=[_vi("X", FLOAT, [3, 2])],
+        outputs=[_vi("Y", FLOAT, [3, 2])],
+    )
+    return _model(graph, opset=17, ir_version=8)
+
+
 def make_Softplus():
     """Ops: Softplus"""
     nodes = [
@@ -6089,6 +6119,8 @@ MODELS = {
     "Softmax2d": make_Softmax2d,
     "Softmax3d": make_Softmax3d,
     "Softmax4d": make_Softmax4d,
+    "LogSoftmaxLargeRange": make_LogSoftmaxLargeRange,
+    "LogSoftmaxLargeRangeAxis0": make_LogSoftmaxLargeRangeAxis0,
     "Softplus": make_Softplus,
     "Split_0": make_Split_0,
     "Split_1": make_Split_1,
@@ -7405,6 +7437,8 @@ TEST_INPUTS = {
             (2, 3, 4, 2),
         )
     ],
+    "LogSoftmaxLargeRange": [f32([0.0, 100.0, 200.0, 1.0, 2.0, 3.0], (2, 3))],
+    "LogSoftmaxLargeRangeAxis0": [f32([0.0, 1.0, 100.0, 2.0, 200.0, 3.0], (3, 2))],
     "Sqrt": [
         f32(
             [
@@ -7769,6 +7803,19 @@ def _batchnorm_reference(model, feeds):
     return [y.astype(np.float32)]
 
 
+def _logsoftmax_reference(model, feeds):
+    """LogSoftmax computed as (x - max) - log(sum(exp(x - max))).
+
+    The ReferenceEvaluator takes the log of the softmax, which gives -inf where
+    exp(x - max) underflows to 0."""
+    node = next(n for n in model.graph.node if n.op_type == "LogSoftmax")
+    axis = next((a.i for a in node.attribute if a.name == "axis"), -1)
+    x = np.asarray(feeds[node.input[0]], dtype=np.float64)
+    shifted = x - x.max(axis=axis, keepdims=True)
+    y = shifted - np.log(np.exp(shifted).sum(axis=axis, keepdims=True))
+    return [y.astype(np.float32)]
+
+
 EXPECTED_OVERRIDES = {
     "GRUBidirectional": _recurrent_reference,
     "LSTMBidirectional": _recurrent_reference,
@@ -7783,6 +7830,8 @@ EXPECTED_OVERRIDES = {
     "IdentityWeightBatchNorm": _batchnorm_reference,
     "BatchNormEpsilon": _batchnorm_reference,
     "BatchNormReluEpsilon": _batchnorm_reference,
+    "LogSoftmaxLargeRange": _logsoftmax_reference,
+    "LogSoftmaxLargeRangeAxis0": _logsoftmax_reference,
 }
 
 

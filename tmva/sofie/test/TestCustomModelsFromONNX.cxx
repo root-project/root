@@ -1024,6 +1024,24 @@ TEST(ONNX, Softmax4d)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, LogSoftmaxLargeRange)
+{
+   SofieReference ref = readReference("LogSoftmaxLargeRange");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LogSoftmaxLargeRange", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, LogSoftmaxLargeRangeAxis0)
+{
+   SofieReference ref = readReference("LogSoftmaxLargeRangeAxis0");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "LogSoftmaxLargeRangeAxis0", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 TEST(ONNX, ConvTranspose1d)
 {
    SofieReference ref = readReference("ConvTranspose1d");

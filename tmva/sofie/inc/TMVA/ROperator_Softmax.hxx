@@ -104,12 +104,19 @@ public:
          out << SP << SP << SP << "sum += y_ptr[j];\n";
          out << SP << SP << "}\n";
 
-         out << SP << SP << fType << " inv_sum = 1.0f / sum;\n";
-         out << SP << SP << "for (int j = 0; j < " << axis_size << "; ++j) {\n";
-         out << SP << SP << SP << "y_ptr[j] *= inv_sum;\n";
-         if (fLogSoftmax)
-            out << SP << SP << SP << "y_ptr[j] = " << logFunction << "(y_ptr[j]);\n";
-         out << SP << SP << "}\n";
+         if (fLogSoftmax) {
+            // log(softmax(x)) = (x - max) - log(sum): taking the log of exp(x - max) / sum instead
+            // would give -inf wherever exp(x - max) underflows to 0
+            out << SP << SP << fType << " log_sum = " << logFunction << "(sum);\n";
+            out << SP << SP << "for (int j = 0; j < " << axis_size << "; ++j) {\n";
+            out << SP << SP << SP << "y_ptr[j] = x_ptr[j] - vmax - log_sum;\n";
+            out << SP << SP << "}\n";
+         } else {
+            out << SP << SP << fType << " inv_sum = 1.0f / sum;\n";
+            out << SP << SP << "for (int j = 0; j < " << axis_size << "; ++j) {\n";
+            out << SP << SP << SP << "y_ptr[j] *= inv_sum;\n";
+            out << SP << SP << "}\n";
+         }
          out << SP << "}\n";
 
       } else {
@@ -165,6 +172,12 @@ public:
          out << "sum += tensor_" << fNY << "[id];\n";
          for (size_t j = 0; j < size-1; j++) out << SP;
          out << "}\n";
+         if (fLogSoftmax) {
+            // log(softmax(x)) = (x - max) - log(sum), see the last-axis case above
+            for (size_t j = 0; j < size - 1; j++)
+               out << SP;
+            out << fType << " log_sum = " << logFunction << "(sum);\n";
+         }
          // normalize
          for (size_t j = 0; j < size-1; j++) out << SP;
          out << "for (int i = 0; i < " << fShape[axis] << "; i++) {\n";
@@ -173,11 +186,10 @@ public:
          if (stride[axis].GetVal() != "1") out << "*(" << stride[axis] << ")";
          out << ";\n";
          for (size_t j = 0; j < size; j++) out << SP;
-         out << "tensor_" << fNY << "[id] /= sum;\n";
-         if (fLogSoftmax) {
-            for (size_t j = 0; j < size; j++) out << SP;
-            out << "tensor_" << fNY << "[id] = " << logFunction << "(tensor_" << fNY << "[id]);\n";
-         }
+         if (fLogSoftmax)
+            out << "tensor_" << fNY << "[id] = tensor_" << fNX << "[id] - vmax - log_sum;\n";
+         else
+            out << "tensor_" << fNY << "[id] /= sum;\n";
          for (size_t j = 0; j < size-1; j++) out << SP;
          out << "}\n";
          //end loops
