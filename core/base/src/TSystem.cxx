@@ -2627,8 +2627,8 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
       ::Info("ACLiC", "%s", cmd.Data());
 
 #ifdef WIN32
-   TString wrapperCmd = "cmd.exe /c \"" + cmd + "\"";
-   FILE *pipe = gSystem->OpenPipe(wrapperCmd, "r");
+   cmd += " 2>&1"; // capture stderr
+   FILE *pipe = gSystem->OpenPipe(cmd, "r");
    if (!pipe) {
       ::Warning("ACLiC", "Failed to open pipe dependencies for %s", filename.Data());
       return false;
@@ -2656,7 +2656,7 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
             }
          }
       }
-      depFile << "\n"; // End the dependency rule cleanly
+      depFile << "#\n";
       depFile.close();
    }
    int retVal = gSystem->ClosePipe(pipe);
