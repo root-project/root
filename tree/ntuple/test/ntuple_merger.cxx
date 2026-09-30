@@ -158,21 +158,21 @@ TEST(RNTupleMerger, MergeSymmetric)
          opts.fMergingMode = ENTupleMergingMode::kFilter;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       {
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
          opts.fMergingMode = ENTupleMergingMode::kUnion;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       {
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
          opts.fMergingMode = ENTupleMergingMode::kStrict;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
    }
 
@@ -284,7 +284,7 @@ TEST(RNTupleMerger, MergeAsymmetric1)
          opts.fMergingMode = ENTupleMergingMode::kUnion;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         EXPECT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
    }
 }
@@ -355,7 +355,7 @@ TEST(RNTupleMerger, MergeAsymmetric2)
          opts.fMergingMode = ENTupleMergingMode::kUnion;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         EXPECT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
    }
 }
@@ -416,14 +416,14 @@ TEST(RNTupleMerger, MergeAsymmetric3)
          opts.fMergingMode = ENTupleMergingMode::kFilter;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         EXPECT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       {
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
          opts.fMergingMode = ENTupleMergingMode::kUnion;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         EXPECT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
    }
 }
@@ -490,7 +490,7 @@ TEST(RNTupleMerger, MergeVector)
          mopts.fMergingMode = mmode;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, mopts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
 
       // Now check some information
@@ -918,18 +918,18 @@ TEST(RNTupleMerger, ChangeCompression)
       {
          RNTupleMerger merger{std::move(destinationChecksum)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         EXPECT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       {
          RNTupleMerger merger{std::move(destinationNoChecksum)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         EXPECT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       {
          opts.fCompressionSettings = 0;
          RNTupleMerger merger{std::move(destinationUncomp)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         EXPECT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
    }
 
@@ -985,24 +985,24 @@ TEST(RNTupleMerger, ChangeCompressionMixed)
       {
          RNTupleMerger merger{std::move(destinationChecksum)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         EXPECT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       {
          RNTupleMerger merger{std::move(destinationNoChecksum)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         EXPECT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       {
          opts.fCompressionSettings = 101;
          RNTupleMerger merger{std::move(destinationDifferentComp)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         EXPECT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       {
          opts.fCompressionSettings = 0;
          RNTupleMerger merger{std::move(destinationUncomp)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         EXPECT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
    }
 
@@ -1075,7 +1075,7 @@ TEST(RNTupleMerger, MergeLateModelExtension)
       opts.fMergingMode = ENTupleMergingMode::kUnion;
       RNTupleMerger merger{std::move(destination)};
       auto res = merger.Merge(sourcePtrs, opts);
-      EXPECT_TRUE(bool(res));
+      ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
    }
 
    {
@@ -1165,7 +1165,7 @@ TEST(RNTupleMerger, MergeCompression)
          opts.fCompressionSettings = kOutCompSettings;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         EXPECT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
    }
 
@@ -1238,13 +1238,13 @@ TEST(RNTupleMerger, DifferentCompatibleRepresentations)
          opts.fCompressionSettings = 0;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         EXPECT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       {
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard4.GetPath(), RNTupleWriteOptions());
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs);
-         EXPECT_TRUE(bool(res));
+         EXPECT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
    }
 }
@@ -1305,7 +1305,7 @@ TEST(RNTupleMerger, MultipleRepresentations)
          auto opts = RNTupleMergeOptions();
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         EXPECT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
    }
 }
@@ -1373,7 +1373,7 @@ TEST(RNTupleMerger, MultipleRepresentations2)
          auto opts = RNTupleMergeOptions();
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
    }
 
@@ -1442,7 +1442,7 @@ TEST(RNTupleMerger, Double32)
          opts.fCompressionSettings = 0;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       {
          auto ntuple = RNTupleReader::Open("ntuple", fileGuard3.GetPath());
@@ -1461,7 +1461,7 @@ TEST(RNTupleMerger, Double32)
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard4.GetPath(), RNTupleWriteOptions());
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       {
          auto ntuple = RNTupleReader::Open("ntuple", fileGuard4.GetPath());
@@ -1511,7 +1511,7 @@ TEST(RNTupleMerger, MergeProjectedFields)
       auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard2.GetPath(), RNTupleWriteOptions());
       RNTupleMerger merger{std::move(destination)};
       auto res = merger.Merge(sourcePtrs);
-      EXPECT_TRUE(bool(res));
+      ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
    }
 
    {
@@ -1569,7 +1569,7 @@ TEST(RNTupleMerger, MergeProjectedFieldsMultiple)
       auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard2.GetPath(), RNTupleWriteOptions());
       RNTupleMerger merger{std::move(destination)};
       auto res = merger.Merge(sourcePtrs);
-      EXPECT_TRUE(bool(res));
+      ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
    }
 
    {
@@ -1659,7 +1659,7 @@ TEST(RNTupleMerger, MergeProjectedFieldsDifferentCompression)
       auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
       RNTupleMerger merger{std::move(destination)};
       auto res = merger.Merge(sourcePtrs);
-      EXPECT_TRUE(bool(res));
+      ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
    }
    {
       auto ntuple1 = RNTupleReader::Open("ntuple", fileGuard1.GetPath());
@@ -1764,7 +1764,7 @@ TEST(RNTupleMerger, MergeProjectedFieldsOnlyFirst)
             EXPECT_FALSE(bool(res));
             continue;
          }
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
 
          auto ntuple1 = RNTupleReader::Open("ntuple", fileGuard1.GetPath());
          auto ntuple2 = RNTupleReader::Open("ntuple", fileGuard2.GetPath());
@@ -1870,7 +1870,7 @@ TEST(RNTupleMerger, MergeProjectedFieldsOnlySecond)
             EXPECT_FALSE(bool(res));
             continue;
          }
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
 
          auto ntuple1 = RNTupleReader::Open("ntuple", fileGuard1.GetPath());
          auto ntuple2 = RNTupleReader::Open("ntuple", fileGuard2.GetPath());
@@ -2297,7 +2297,7 @@ TEST_P(RNTupleMergerDeferred, MergeSecondDeferred)
    auto opts = RNTupleMergeOptions();
    opts.fMergingMode = ENTupleMergingMode::kUnion;
    auto res = merger.Merge(sourcePtrs, opts);
-   EXPECT_TRUE(bool(res));
+   ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
    EXPECT_EQ(reader->GetNEntries(), 2 * nEntriesPerFile);
@@ -2375,7 +2375,7 @@ TEST_P(RNTupleMergerDeferred, MergeSecondDeferredTwoClusters)
    auto opts = RNTupleMergeOptions();
    opts.fMergingMode = ENTupleMergingMode::kUnion;
    auto res = merger.Merge(sourcePtrs, opts);
-   EXPECT_TRUE(bool(res));
+   ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
    EXPECT_EQ(reader->GetNEntries(), 2 * nEntriesPerFile);
@@ -2462,7 +2462,7 @@ TEST_P(RNTupleMergerDeferred, MergeSecondDeferredTwoClustersUnaligned)
    auto opts = RNTupleMergeOptions();
    opts.fMergingMode = ENTupleMergingMode::kUnion;
    auto res = merger.Merge(sourcePtrs, opts);
-   EXPECT_TRUE(bool(res));
+   ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
    EXPECT_EQ(reader->GetNEntries(), 2 * nEntriesPerFile);
@@ -2542,7 +2542,7 @@ TEST_P(RNTupleMergerDeferred, MergeFirstDeferred)
    auto opts = RNTupleMergeOptions();
    opts.fMergingMode = ENTupleMergingMode::kUnion;
    auto res = merger.Merge(sourcePtrs, opts);
-   EXPECT_TRUE(bool(res));
+   ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
    EXPECT_EQ(reader->GetNEntries(), 2 * nEntriesPerFile);
@@ -2622,7 +2622,7 @@ TEST_P(RNTupleMergerDeferred, MergeFirstDeferredTwoClusters)
    auto opts = RNTupleMergeOptions();
    opts.fMergingMode = ENTupleMergingMode::kUnion;
    auto res = merger.Merge(sourcePtrs, opts);
-   EXPECT_TRUE(bool(res));
+   ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
    EXPECT_EQ(reader->GetNEntries(), 2 * nEntriesPerFile);
@@ -2708,7 +2708,7 @@ TEST_P(RNTupleMergerDeferred, MergeFirstDeferredTwoClustersUnaligned)
    auto opts = RNTupleMergeOptions();
    opts.fMergingMode = ENTupleMergingMode::kUnion;
    auto res = merger.Merge(sourcePtrs, opts);
-   EXPECT_TRUE(bool(res));
+   ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
    EXPECT_EQ(reader->GetNEntries(), 2 * nEntriesPerFile);
@@ -2811,7 +2811,7 @@ TEST(RNTupleMerger, MergeDeferredAdvanced)
    auto opts = RNTupleMergeOptions();
    opts.fMergingMode = ENTupleMergingMode::kUnion;
    auto res = merger.Merge(sourcePtrs, opts);
-   EXPECT_TRUE(bool(res));
+   ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
    EXPECT_EQ(reader->GetNEntries(), 30);
@@ -2903,7 +2903,7 @@ TEST(RNTupleMerger, MergeDeferredAdvanced2)
    auto opts = RNTupleMergeOptions();
    opts.fMergingMode = ENTupleMergingMode::kUnion;
    auto res = merger.Merge(sourcePtrs, opts);
-   ASSERT_TRUE(bool(res));
+   ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
    EXPECT_EQ(reader->GetNEntries(), 20);
@@ -3207,7 +3207,7 @@ TEST(RNTupleMerger, MergeLMExtBig)
       auto opts = RNTupleMergeOptions();
       opts.fMergingMode = ENTupleMergingMode::kUnion;
       auto res = merger.Merge(sourcePtrs, opts);
-      ASSERT_TRUE(bool(res));
+      ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
    }
 
    // Now verify that the output file contains the expected data.
@@ -3291,7 +3291,7 @@ TEST(RNTupleMerger, MergeFirstNoEntries)
          opts.fMergingMode = ENTupleMergingMode::kUnion;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
    }
 
@@ -3364,7 +3364,7 @@ TEST(RNTupleMerger, MergeSecondNoEntries)
          opts.fMergingMode = mode;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
    }
 
@@ -3412,21 +3412,21 @@ TEST(RNTupleMerger, MergeEmptySchema)
          opts.fMergingMode = ENTupleMergingMode::kFilter;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       {
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
          opts.fMergingMode = ENTupleMergingMode::kUnion;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       {
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
          opts.fMergingMode = ENTupleMergingMode::kStrict;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
    }
 
@@ -3482,7 +3482,7 @@ TEST(RNTupleMerger, MergeFirstEmptySchema)
          opts.fMergingMode = ENTupleMergingMode::kFilter;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       // In Filter mode, we expect the output ntuple to have 20 entries but an empty schema
       {
@@ -3497,7 +3497,7 @@ TEST(RNTupleMerger, MergeFirstEmptySchema)
          opts.fMergingMode = ENTupleMergingMode::kUnion;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       // In Union mode, we expect the output ntuple to have the entries of the non-empty ntuple, set to zero
       // for the first 10 entries
@@ -3580,7 +3580,7 @@ TEST(RNTupleMerger, MergeSecondEmptySchema)
          opts.fMergingMode = ENTupleMergingMode::kUnion;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       // In Union mode we expect the output ntuple to have the same fields as the first
       {
@@ -3659,7 +3659,7 @@ TEST(RNTupleMerger, MergeSecondEmptySchema2)
          opts.fMergingMode = ENTupleMergingMode::kUnion;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       // In Union mode we expect the output ntuple to have the same fields as the first
       {
@@ -3802,21 +3802,21 @@ TEST(RNTupleMerger, MergeUntypedRecordEqual)
          opts.fMergingMode = ENTupleMergingMode::kFilter;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       {
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
          opts.fMergingMode = ENTupleMergingMode::kUnion;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
       {
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
          opts.fMergingMode = ENTupleMergingMode::kStrict;
          RNTupleMerger merger{std::move(destination)};
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
    }
 
@@ -4118,7 +4118,7 @@ TEST(RNTupleMerger, MergeStreamerFields)
             RNTupleMergeOptions opts;
             opts.fMergingMode = mmode;
             auto res = merger.Merge(sourcePtrs, opts);
-            ASSERT_TRUE(bool(res));
+            ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
          }
 
          auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
@@ -4195,7 +4195,7 @@ TEST(RNTupleMerger, MergeStreamerFieldsFirstMissing)
             opts.fMergingMode = mmode;
             auto res = merger.Merge(sourcePtrs, opts);
             if (mmode == ENTupleMergingMode::kFilter)
-               EXPECT_TRUE(bool(res));
+               ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
             else
                EXPECT_FALSE(bool(res));
          }
@@ -4323,7 +4323,7 @@ TEST(RNTupleMerger, MergeNewerVersion)
          RNTupleMergeOptions opts;
          opts.fMergingMode = mmode;
          auto res = merger.Merge(sourcePtrs, opts);
-         EXPECT_TRUE(bool(res));
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
       }
 
       // Now merge again but with VersionBehavior set to Abort.
@@ -4386,7 +4386,7 @@ TEST(RNTupleMerger, MergeReal32Trunc)
             RNTupleMergeOptions opts;
             opts.fMergingMode = mmode;
             auto res = merger.Merge(sourcePtrs, opts);
-            EXPECT_TRUE(bool(res));
+            ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
          }
          {
             auto reader = ROOT::RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
@@ -4451,7 +4451,7 @@ TEST(RNTupleMerger, MergeReal32Quant)
             RNTupleMergeOptions opts;
             opts.fMergingMode = mmode;
             auto res = merger.Merge(sourcePtrs, opts);
-            EXPECT_TRUE(bool(res));
+            ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
          }
          {
             auto reader = ROOT::RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
@@ -4516,7 +4516,7 @@ TEST(RNTupleMerger, MergeReal32TruncQuantMixed)
             RNTupleMergeOptions opts;
             opts.fMergingMode = mmode;
             auto res = merger.Merge(sourcePtrs, opts);
-            EXPECT_TRUE(bool(res));
+            ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
          }
          {
             auto reader = ROOT::RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
@@ -4578,7 +4578,7 @@ TEST(RNTupleMerger, MergeRealRegularQuantMixed)
             RNTupleMergeOptions opts;
             opts.fMergingMode = mmode;
             auto res = merger.Merge(sourcePtrs, opts);
-            EXPECT_TRUE(bool(res));
+            ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
          }
          {
             auto reader = ROOT::RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
