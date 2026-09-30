@@ -22,24 +22,28 @@ namespace Experimental {
 
 class REveProjectionManager;
 
-
-class REveProjectionAxis : public REveText
-{
+class REveProjectionAxis : public REveText {
 public:
    /// Where the labelled values come from.
    ///   kValue    round numbers in original space, unevenly spaced on screen
    ///   kPosition evenly spaced on screen, irregular label values
+   // clang-format off
    enum ELabMode_e { kValue = 0, kPosition };
+   // clang-format on
 
    /// Which edges of the viewport carry an axis.
+   // clang-format off
    enum EAxesMode_e { kHorizontal = 0, kVertical, kAll };
+   // clang-format on
 
    /// One tick: where it lands in projected space, what to write, and whether it
    /// is a labelled (major) tick or a bare subdivision.
    struct Tick_t {
+      // clang-format off
       Float_t     fPos{0};      ///< position along the axis, in projected coordinates
       std::string fLabel;       ///< empty for a minor tick
       Bool_t      fMajor{true};
+      // clang-format on
    };
 
 private:
@@ -49,6 +53,7 @@ private:
 protected:
    REveProjectionManager *fManager{nullptr}; ///<! held as an aunt, not owned
 
+   // clang-format off
    ELabMode_e  fLabMode{kValue};
    EAxesMode_e fAxesMode{kAll};
 
@@ -62,6 +67,7 @@ protected:
    Bool_t  fUseFgColor{kTRUE};
    Bool_t  fDrawCenter{kFALSE};
    Bool_t  fDrawOrigin{kFALSE};
+   // clang-format on
 
    std::vector<Tick_t> fTicks[2]; ///<! computed ticks, [0] horizontal, [1] vertical
 
@@ -70,12 +76,12 @@ protected:
    void BuildTicks(Int_t ax);
 
 public:
-   REveProjectionAxis(REveProjectionManager *m, const Text_t *n = "REveProjectionAxis",
-                      const Text_t *t = "");
+   REveProjectionAxis(REveProjectionManager *m, const Text_t *n = "REveProjectionAxis", const Text_t *t = "");
    ~REveProjectionAxis() override;
 
    REveProjectionManager *GetManager() const { return fManager; }
 
+   // clang-format off
    ELabMode_e GetLabMode() const { return fLabMode; }
    void SetLabMode(ELabMode_e m) { fLabMode = m; StampObjProps(); }
 
@@ -96,6 +102,7 @@ public:
 
    Bool_t GetDrawOrigin() const { return fDrawOrigin; }
    void SetDrawOrigin(Bool_t x) { fDrawOrigin = x; StampObjProps(); }
+   // clang-format on
 
    void UpdateTicks();
 

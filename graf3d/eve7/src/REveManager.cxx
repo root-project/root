@@ -395,11 +395,13 @@ void REveManager::GrabImages(std::string_view event_id, std::string_view url, in
       dest = gEnv->GetValue("WebEve.ImageGatorUrl", "http://localhost:3000/capture");
 
    nlohmann::json msg = {};
+   // clang-format off
    msg["content"]  = "GrabImage";
    msg["event_id"] = std::string(event_id);
    msg["url"]      = dest;
    msg["scale"]    = scale;
    msg["viewers"]  = viewers;
+   // clang-format on
 
    fWebWindow->Send(0, msg.dump());
 }
@@ -1085,16 +1087,19 @@ void REveManager::SendMotionChanges()
    fWorld->StreamMotionChanges(arr);
    for (auto &el : fScenes->RefChildren()) {
       auto s = dynamic_cast<REveScene *>(el);
-      if (s) s->StreamMotionChanges(arr);
+      if (s)
+         s->StreamMotionChanges(arr);
    }
 
    if (arr.empty() || fConnList.empty())
       return;
 
    nlohmann::json msg = {};
+   // clang-format off
    msg["content"] = "Motion";
    msg["t"]       = REveUtil::ServerTimeMs();
    msg["els"]     = arr;
+   // clang-format on
 
    std::string data = msg.dump();
 
@@ -1348,8 +1353,7 @@ void REveManager::EndChange()
    // are held.
    SendMotionChanges();
 
-   if ( ! fConnList.empty() && ! ClientConnectionsFree())
-   {
+   if (!fConnList.empty() && !ClientConnectionsFree()) {
       // Previous changes not yet acknowledged. Leave everything stamped.
       if (AnySceneChanged())
          fPendingSceneChanges = true;

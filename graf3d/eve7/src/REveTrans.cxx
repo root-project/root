@@ -57,6 +57,7 @@ void REveTrans::SetMotion(const REveVectorD &vel, const REveVectorD &acc, Double
 /// non-uniformly scaled transformation shears it. t0 is stamped now, not at
 /// stream time, so changes that are held back do not shift the trajectory.
 
+// clang-format off
 void REveTrans::SetMotion(const REveVectorD &vel, const REveVectorD &acc,
                           const REveVectorD &spin_axis, Double_t spin_rate,
                           Double_t max_dt)
@@ -81,6 +82,7 @@ void REveTrans::SetMotion(const REveVectorD &vel, const REveVectorD &acc,
    d.fMaxDt    = max_dt;
    d.fMotionT0 = REveUtil::ServerTimeMs();
 }
+// clang-format on
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stop extrapolating: the element holds wherever the matrix puts it.
@@ -89,7 +91,6 @@ void REveTrans::ClearMotion()
 {
    fDeltaTrans.reset();
 }
-
 
 /** \class REveTrans
 \ingroup REve

@@ -21,8 +21,10 @@
 using namespace ROOT::Experimental;
 
 class REveTransMover : public TTimer {
+   // clang-format off
    REveElement *fEl{nullptr};
    int          fStep{0};
+   // clang-format on
 
 public:
    REveTransMover(REveElement *el, Long_t ms) : TTimer(ms, kTRUE), fEl(el) {}
@@ -33,7 +35,7 @@ public:
 
       REveTrans t;
       t.SetPos(30.0 * TMath::Sin(0.4 * fStep), 0.0, 0.0);
-      fEl->SetTransMatrix(t.Array());   // a transformation-only change
+      fEl->SetTransMatrix(t.Array()); // a transformation-only change
 
       ++fStep;
       Reset();
@@ -47,10 +49,12 @@ static REveBox *make_box(const char *name, Color_t col, Float_t a, Float_t z)
    b->SetMainColor(col);
    b->SetMainTransparency(0);
 
+   // clang-format off
    b->SetVertex(0, -a, -a, z - a);   b->SetVertex(1, -a,  a, z - a);
    b->SetVertex(2,  a,  a, z - a);   b->SetVertex(3,  a, -a, z - a);
    b->SetVertex(4, -a, -a, z + a);   b->SetVertex(5, -a,  a, z + a);
    b->SetVertex(6,  a,  a, z + a);   b->SetVertex(7,  a, -a, z + a);
+   // clang-format on
 
    return b;
 }

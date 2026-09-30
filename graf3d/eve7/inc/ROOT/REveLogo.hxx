@@ -19,20 +19,21 @@
 namespace ROOT {
 namespace Experimental {
 
-
-class REveLogo : public REveElement
-{
+class REveLogo : public REveElement {
 public:
    /// Where the image comes from: a directory registered with SetImageDir()
    /// (the default), ui5/eve7/textures/, or an absolute URL fetched by the
    /// browser. The constructor selects kRemote for a URL; SetFile() does not.
+   // clang-format off
    enum EImageSource_e { kImageDir = 0, kTextures, kRemote };
+   // clang-format on
 
 private:
    REveLogo(const REveLogo &) = delete;
    REveLogo &operator=(const REveLogo &) = delete;
 
 protected:
+   // clang-format off
    std::string fFile;         ///< file name or URL, interpreted according to fSource
 
    Float_t fPosX{0.06};       ///< position in the (0,1) overlay box; the image is centred on it
@@ -42,6 +43,7 @@ protected:
 
    Bool_t fResizable{true};
    EImageSource_e fSource{kImageDir};
+   // clang-format on
 
    static std::string sImageDir;
 
@@ -57,6 +59,7 @@ public:
    /// Either a file name inside the registered image directory, or an absolute
    /// URL the client fetches directly. A remote URL fails silently on CORS,
    /// mixed content or a bad certificate; serve locally via SetImageDir().
+   // clang-format off
    const std::string &GetFile() const { return fFile; }
    void SetFile(std::string_view f) { fFile = f; StampObjProps(); }
 
@@ -75,6 +78,7 @@ public:
 
    Bool_t GetResizable() const { return fResizable; }
    void SetResizable(Bool_t r) { fResizable = r; StampObjProps(); }
+   // clang-format on
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
    void BuildRenderData() override;

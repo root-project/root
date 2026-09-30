@@ -56,7 +56,8 @@ void pa_distortion(float d)
 {
    REveManager::ChangeGuard ch;
    for (auto mng : {gPaRPhi, gPaRhoZ}) {
-      if (!mng) continue;
+      if (!mng)
+         continue;
       mng->GetProjection()->SetDistortion(d);
       mng->UpdateName();
       mng->ProjectChildren();
@@ -64,7 +65,8 @@ void pa_distortion(float d)
    // Update the ticks and the read-out, as REveProjectionManager::BumpDistortion()
    // does for the overlay buttons.
    for (auto ax : {gPaAxisRPhi, gPaAxisRhoZ}) {
-      if (!ax) continue;
+      if (!ax)
+         continue;
       ax->UpdateTicks();
       ax->UpdateDistortionLabel();
    }
@@ -132,7 +134,7 @@ static void makeProjectedView(REveManager *eveMng, REveElement *content, REvePro
          // tick labels to stay legible, and enough clearance from the bottom
          // edge that the frame is not clipped by the pane.
          b->SetFontSize(0.034);
-         b->SetMode(1);                 // relative screen coordinates
+         b->SetMode(1); // relative screen coordinates
          b->SetPosition(REveVector(x, 0.10f, 0.f));
          b->SetTextAlign(REveText::kCenterH, REveText::kBottom);
          b->SetTextColor(TColor::GetColor("#1f2d36"));
@@ -141,10 +143,11 @@ static void makeProjectedView(REveManager *eveMng, REveElement *content, REvePro
          b->SetFillAlpha(210);
          b->SetLineColor(TColor::GetColor("#6b8290"));
          b->SetLineAlpha(255);
-         b->SetLineWidth(0.06);         // in units of line height
-         b->SetExtraBorder(0.18);       // padding, in font-size units
-         b->SetResizable(false);        // a control is not a resizable annotation
-         if (mir) b->SetClickAction(mir, mng);
+         b->SetLineWidth(0.06);   // in units of line height
+         b->SetExtraBorder(0.18); // padding, in font-size units
+         b->SetResizable(false);  // a control is not a resizable annotation
+         if (mir)
+            b->SetClickAction(mir, mng);
          ovl->AddElement(b);
          return b;
       };
@@ -152,7 +155,7 @@ static void makeProjectedView(REveManager *eveMng, REveElement *content, REvePro
       // The x positions are set by hand, since only the client knows the glyph
       // metrics.
       mkbtn("<<<", 0.26f, "BumpDistortion(-1)");
-      auto val = mkbtn("0.0", 0.50f, nullptr);   // read-out, not a button
+      auto val = mkbtn("0.0", 0.50f, nullptr); // read-out, not a button
       mkbtn(">>>", 0.74f, "BumpDistortion(1)");
 
       axis->SetDistortionLabel(val);

@@ -122,11 +122,13 @@ void REveViewer::SetAxesType(int at)
 /// following the scene contents. Only the axis and the clip box use it; camera
 /// framing uses the content.
 
+// clang-format off
 void REveViewer::SetAxesBBox(Float_t xmin, Float_t ymin, Float_t zmin,
                              Float_t xmax, Float_t ymax, Float_t zmax)
 {
    fAxesBBox[0] = xmin; fAxesBBox[1] = ymin; fAxesBBox[2] = zmin;
    fAxesBBox[3] = xmax; fAxesBBox[4] = ymax; fAxesBBox[5] = zmax;
+   // clang-format on
    fHasAxesBBox = kTRUE;
    StampObjProps();
 }
@@ -278,11 +280,13 @@ int REveViewer::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    j["AxesUpAxis"] = fAxesUpAxis;
    j["MotionMaxHz"] = fMotionMaxHz;
    j["RenderMaxHz"] = fRenderMaxHz;
+   // clang-format off
    if (fHasAxesBBox)
       j["AxesBBox"] = {fAxesBBox[0], fAxesBBox[1], fAxesBBox[2],
                        fAxesBBox[3], fAxesBBox[4], fAxesBBox[5]};
    else
       j["AxesBBox"] = nullptr;
+   // clang-format on
    j["AxesAtten"] = fAxesAtten;
    j["AxesFontSize"] = fAxesFontSize;
    j["TooltipFontSize"] = fTooltipFontSize;

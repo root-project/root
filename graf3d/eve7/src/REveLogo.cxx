@@ -52,8 +52,7 @@ REveLogo::REveLogo(std::string_view file, const Text_t *n, const Text_t *t) : RE
 
 bool REveLogo::IsRemote(const std::string &f)
 {
-   return f.compare(0, 7, "http://") == 0 || f.compare(0, 8, "https://") == 0 ||
-          f.compare(0, 2, "//") == 0;
+   return f.compare(0, 7, "http://") == 0 || f.compare(0, 8, "https://") == 0 || f.compare(0, 2, "//") == 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

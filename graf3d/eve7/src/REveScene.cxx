@@ -245,16 +245,17 @@ void REveScene::StreamMotionChanges(nlohmann::json &arr)
 
    List_t keep;
 
-   for (auto &el : fChangedElements)
-   {
+   for (auto &el : fChangedElements) {
       if (el->GetChangeBits() != REveElement::kCBTransBBox) {
          keep.push_back(el);
          continue;
       }
 
       nlohmann::json jobj = {};
+      // clang-format off
       jobj["fElementId"] = el->GetElementId();
       jobj["fSceneId"]   = GetElementId();
+      // clang-format on
       el->WriteTransJson(jobj);
       arr.push_back(jobj);
 
@@ -323,7 +324,7 @@ void REveScene::StreamRepresentationChanges()
 
         if (bits & kCBTransBBox)
         {
-          el->WriteTransJson(jobj);
+           el->WriteTransJson(jobj);
         }
       }
 

@@ -71,8 +71,8 @@ public:
 
    Int_t GetNumFaces() const { return fNbPols; }
 
-   const std::vector<double>& Vertices() const { return fVertices; }
-   const std::vector<UInt_t>& PolyDesc() const { return fPolyDesc; }
+   const std::vector<double> &Vertices() const { return fVertices; }
+   const std::vector<UInt_t> &PolyDesc() const { return fPolyDesc; }
 
    void FillRenderData(REveRenderData &rd);
 
