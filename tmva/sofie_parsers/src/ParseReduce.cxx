@@ -77,35 +77,15 @@ std::unique_ptr<ROperator> ParseReduce(RModelParser_ONNX &parser, const onnx::No
    return op;
 }
 
-// Parse ReduceMean
-ParserFuncSignature ParseReduceMean = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseReduce<EReduceOpMode::ReduceMean>(parser, nodeproto);
-};
-
-// Parse ReduceSumSquare
-ParserFuncSignature ParseReduceSumSquare = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseReduce<EReduceOpMode::ReduceSumSquare>(parser, nodeproto);
-};
-
-// Parse ReduceProd
-ParserFuncSignature ParseReduceProd = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseReduce<EReduceOpMode::ReduceProd>(parser, nodeproto);
-};
-
-// Parse ReduceSum
-ParserFuncSignature ParseReduceSum = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseReduce<EReduceOpMode::ReduceSum>(parser, nodeproto);
-};
-
-// Parse ReduceMax
-ParserFuncSignature ParseReduceMax = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseReduce<EReduceOpMode::ReduceMax>(parser, nodeproto);
-};
-
-// Parse ReduceMin
-ParserFuncSignature ParseReduceMin = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseReduce<EReduceOpMode::ReduceMin>(parser, nodeproto);
-};
+void RegisterReduceParsers(RModelParser_ONNX &parser)
+{
+   parser.RegisterOperator("ReduceMean", ParseReduce<EReduceOpMode::ReduceMean>);
+   parser.RegisterOperator("ReduceSumSquare", ParseReduce<EReduceOpMode::ReduceSumSquare>);
+   parser.RegisterOperator("ReduceProd", ParseReduce<EReduceOpMode::ReduceProd>);
+   parser.RegisterOperator("ReduceSum", ParseReduce<EReduceOpMode::ReduceSum>);
+   parser.RegisterOperator("ReduceMax", ParseReduce<EReduceOpMode::ReduceMax>);
+   parser.RegisterOperator("ReduceMin", ParseReduce<EReduceOpMode::ReduceMin>);
+}
 
 } // namespace SOFIE
 } // namespace Experimental

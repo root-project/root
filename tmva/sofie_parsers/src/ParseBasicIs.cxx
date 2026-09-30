@@ -54,16 +54,11 @@ std::unique_ptr<ROperator> ParseBasicIs(RModelParser_ONNX &parser, const onnx::N
    return op;
 };
 
-// Parse IsNaN
-ParserFuncSignature ParseIsNaN = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseBasicIs<EBasicIsOperator::kIsNaN>(parser, nodeproto);
-};
-
-// Parse IsInf
-ParserFuncSignature ParseIsInf = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseBasicIs<EBasicIsOperator::kIsInf>(parser, nodeproto);
-};
-
+void RegisterBasicIsParsers(RModelParser_ONNX &parser)
+{
+   parser.RegisterOperator("IsNaN", ParseBasicIs<EBasicIsOperator::kIsNaN>);
+   parser.RegisterOperator("IsInf", ParseBasicIs<EBasicIsOperator::kIsInf>);
+}
 
 } // namespace SOFIE
 } // namespace Experimental
