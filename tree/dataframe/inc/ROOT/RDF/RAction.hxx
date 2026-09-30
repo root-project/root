@@ -99,31 +99,34 @@ public:
    }
 
    template <typename ColType>
-   auto GetValueChecked(unsigned int slot, std::size_t readerIdx, Long64_t entry) -> ColType &
+   auto GetValueChecked(unsigned int slot, std::size_t readerIdx, std::size_t idx) -> ColType &
    {
-      if (auto *val = fValues[slot][readerIdx]->template TryGet<ColType>(entry))
+      if (auto *val = fValues[slot][readerIdx]->template TryGet<ColType>(idx))
          return *val;
 
       throw std::out_of_range{"RDataFrame: Action (" + fHelper.GetActionName() +
                               ") could not retrieve value for column '" + fColumnNames[readerIdx] + "' for entry " +
-                              std::to_string(entry) +
+                              std::to_string(idx) +
                               ". You can use the DefaultValueFor operation to provide a default value, or "
                               "FilterAvailable/FilterMissing to discard/keep entries with missing values instead."};
    }
 
    template <typename... ColTypes, std::size_t... S>
-   void CallExec(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
+   void CallExec(unsigned int slot, std::size_t idx, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
       ROOT::Internal::RDF::CallGuaranteedOrder{[&](auto &&...args) { return fHelper.Exec(slot, args...); },
-                                               GetValueChecked<ColTypes>(slot, S, entry)...};
-      (void)entry; // avoid unused parameter warning (gcc 12.1)
+                                               GetValueChecked<ColTypes>(slot, S, idx)...};
+      (void)idx; // avoid unused parameter warning (gcc 12.1)
    }
 
-   void Run(unsigned int slot, Long64_t entry) final
+   void Run(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize) final
    {
-      // check if entry passes all filters
-      if (fPrevNode.CheckFilters(slot, entry))
-         CallExec(slot, entry, ColumnTypes_t{}, TypeInd_t{});
+      const auto mask = fPrevNode.CheckFilters(slot, bulkBeginEntry, bulkSize);
+      std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
+
+      // Assume 1-size bulk for now
+      if (mask[0])
+         CallExec(slot, /*idx=*/0u, ColumnTypes_t{}, TypeInd_t{});
    }
 
    void TriggerChildrenCount() final { fPrevNode.IncrChildrenCount(); }

@@ -850,6 +850,30 @@ void ROOT::Internal::TTreeReaderValueBase::ErrorAboutMissingProxyIfNeeded()
             fBranchName.Data());
 }
 
+std::size_t ROOT::Internal::TTreeReaderValueBase::GetValueSize() const
+{
+   // Try with available dictionary first
+   if (fDict) {
+      if (auto dataType = dynamic_cast<TDataType *>(fDict))
+         return dataType->Size();
+      if (auto cl = dynamic_cast<TClass *>(fDict))
+         return cl->Size();
+   }
+
+   // If that failed, try with TBranchProxy, needs to be initialized
+   if (!fProxy) {
+      Error("TTreeReaderValueBase::GetValueSize()", "Proxy not set for branch %s. Cannot determine value size.",
+            fBranchName.Data());
+      return 0;
+   }
+   if (!fProxy->Read()) {
+      Error("TTreeReaderValueBase::GetValueSize()",
+            "Failed to read from proxy for branch %s. Cannot determine value size.", fBranchName.Data());
+      return 0;
+   }
+   return fProxy->GetValueSize();
+}
+
 namespace cling {
 // The value printers of TTreeReaderValue and TTreeReaderArray rely on the
 // one of TTreeReaderValueBase, from which they both inherit.
