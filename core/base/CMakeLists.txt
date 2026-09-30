@@ -13,7 +13,7 @@ if(MSVC AND MSVC_VERSION GREATER_EQUAL 1925 AND MSVC_VERSION LESS 1929)
   # Try to re-enable /O2 after the upgrade of llvm & clang, or when upgrading Visual Studio
   string(REPLACE "-O2" "-O1 -Oi" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
   string(REPLACE "-O2" "-O1 -Oi" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-endif() 
+endif()
 
 set(BASE_HEADERS
   ROOT/RCryptoRandom.hxx
