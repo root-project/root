@@ -3616,18 +3616,16 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
       x  = gPad->XtoPad(theX[i]);
       y  = gPad->YtoPad(theY[i]);
 
-      if (!option0) {
-         if (option3) {
-            if (x < gPad->GetUxmin()) x = gPad->GetUxmin();
-            if (x > gPad->GetUxmax()) x = gPad->GetUxmax();
-            if (y < gPad->GetUymin()) y = gPad->GetUymin();
-            if (y > gPad->GetUymax()) y = gPad->GetUymax();
-         } else {
-            if (x < gPad->GetUxmin()) continue;
-            if (x > gPad->GetUxmax()) continue;
-            if (y < gPad->GetUymin()) continue;
-            if (y > gPad->GetUymax()) continue;
-         }
+      // the error band ("3" and "4") is a filled polygon: it is cut off at the
+      // frame by the clipping of the pad (TGraph::kClipFrame, set by default),
+      // like the band of a "F" TGraph. Clamping its vertices to the user range
+      // here would move them, so that the shape of the band would change with
+      // the axis range, see https://github.com/root-project/root/issues/23491
+      if (!option0 && !option3) {
+         if (x < gPad->GetUxmin()) continue;
+         if (x > gPad->GetUxmax()) continue;
+         if (y < gPad->GetUymin()) continue;
+         if (y > gPad->GetUymax()) continue;
       }
       ex = theEX[i];
       ey = theEY[i];
@@ -3670,8 +3668,10 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
       }
       yup  = yup2;
       ylow = ylow2;
-      if (yup2  > gPad->GetUymax()) yup2  =  gPad->GetUymax();
-      if (ylow2 < gPad->GetUymin()) ylow2 =  gPad->GetUymin();
+      if (!option3) {
+         if (yup2  > gPad->GetUymax()) yup2  =  gPad->GetUymax();
+         if (ylow2 < gPad->GetUymin()) ylow2 =  gPad->GetUymin();
+      }
 
       //  draw the error rectangles
       if (option2) {
