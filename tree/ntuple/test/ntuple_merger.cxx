@@ -1479,6 +1479,82 @@ TEST(RNTupleMerger, Double32)
    }
 }
 
+TEST(RNTupleMerger, Double32UncompressedSource)
+{
+   // Regression test: merging a Double32_t column that was written uncompressed (kReal32) into a compressed
+   // destination must keep the source representation. AutoAdjustColumnTypes() used to overwrite the
+   // representation pinned by RNTupleMerger::ExtendDestinationModel() with kSplitReal32, so the source pages
+   // were then copied as raw bytes and decoded under the wrong encoding, silently yielding wrong values.
+   //
+   // The Double32_t field must be a late model extension field, i.e. absent from the first source's model:
+   // ExtendDestinationModel() only pins representations for fields in fExtraSrcFields. A Double32_t field
+   // common to all sources is never pinned, hence never clobbered.
+   FileRaii fileGuard1("test_ntuple_merge_d32u_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto pE = model->MakeField<int>("e");
+      auto options = RNTupleWriteOptions();
+      options.SetCompression(0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath(), options);
+      for (size_t i = 0; i < 4; ++i) {
+         *pE = 100 + i;
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard2("test_ntuple_merge_d32u_in_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto pE = model->MakeField<int>("e");
+      model->AddField(RFieldBase::Create("d", "Double32_t").Unwrap());
+      auto options = RNTupleWriteOptions();
+      options.SetCompression(0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath(), options);
+      auto pD = ntuple->GetModel().GetDefaultEntry().GetPtr<double>("d");
+      for (size_t i = 0; i < 4; ++i) {
+         *pE = 200 + i;
+         *pD = 4.5 + i;
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard3("test_ntuple_merge_d32u_out.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      // Merge into a compressed destination
+      auto wopts = RNTupleWriteOptions();
+      wopts.SetCompression(505);
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), wopts);
+      RNTupleMerger merger{std::move(destination)};
+      RNTupleMergeOptions opts;
+      opts.fMergingMode = ENTupleMergingMode::kUnion;
+      opts.fCompressionSettings = 505;
+      auto res = merger.Merge(sourcePtrs, opts);
+      EXPECT_TRUE(bool(res));
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("ntuple", fileGuard3.GetPath());
+   EXPECT_EQ(8, reader->GetNEntries());
+   EXPECT_EQ(ROOT::ENTupleColumnType::kReal32, reader->GetModel().GetConstField("d").GetColumnRepresentatives()[0][0]);
+   auto pD = reader->GetModel().GetDefaultEntry().GetPtr<double>("d");
+   for (size_t i = 0; i < 4; ++i) {
+      reader->LoadEntry(i);
+      EXPECT_DOUBLE_EQ(0.0, *pD);
+   }
+   for (size_t i = 4; i < 8; ++i) {
+      reader->LoadEntry(i);
+      EXPECT_DOUBLE_EQ(4.5 + (i - 4), *pD);
+   }
+}
+
 TEST(RNTupleMerger, MergeProjectedFields)
 {
    // Verify that the projected fields get treated properly by the merge (i.e. we don't try and merge the alias columns
