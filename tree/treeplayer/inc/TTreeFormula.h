@@ -23,7 +23,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "ROOT/v5/TFormula.hxx"
+#include "ROOT/v5/TFormula.h"
 
 #include "TLeaf.h"
 

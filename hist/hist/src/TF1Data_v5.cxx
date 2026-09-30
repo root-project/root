@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/v5/TF1Data.hxx"
+#include "ROOT/v5/TF1Data.h"
 
 #include "TBuffer.h"
 #include "TH1.h"
