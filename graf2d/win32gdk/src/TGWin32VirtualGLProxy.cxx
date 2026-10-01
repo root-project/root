@@ -14,6 +14,7 @@
 #include "TGWin32.h"
 #include "TROOT.h"
 #include "TList.h"
+#include "Windows4Root.h"
 
 static TGLManager *gManager = 0;
 

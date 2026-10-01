@@ -126,7 +126,7 @@
 #undef ERROR
 #undef GetYValue
 
-#if !defined(ROOT_TGWin32Object) && !defined(ROOT_TGWin32)
+#if !defined(ROOT_TGWin32Object) && !defined(ROOT_TGWin32) && !defined(ROOT_TGWin32cxx)
 #   undef GetObject
 #   undef GetClassInfo
 #endif

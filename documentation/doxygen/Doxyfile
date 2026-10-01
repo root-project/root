@@ -1107,7 +1107,6 @@ EXCLUDE_PATTERNS       = */G__* \
                          */test/* \
                          */doc/v6* \
                          */doc/v5* \
-                         */win32gdk/gdk/* \
                          */bindings/pyroot/*.py \
                          *CsgOps* \
                          LinkDef*.h \
