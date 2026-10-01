@@ -66,7 +66,7 @@ TVirtualCollectionProxy* TEmulatedMapProxy::Generate() const
    return new TEmulatedMapProxy(*this);
 }
 
-void* TEmulatedMapProxy::At(UInt_t idx)
+void* TEmulatedMapProxy::At(TVirtualCollectionProxy::size_type idx)
 {
    // Return the address of the value at index 'idx'.
    if ( fEnv && fEnv->fObject )   {
@@ -77,7 +77,7 @@ void* TEmulatedMapProxy::At(UInt_t idx)
    return 0;
 }
 
-UInt_t TEmulatedMapProxy::Size() const
+TVirtualCollectionProxy::size_type TEmulatedMapProxy::Size() const
 {
    // Return the current size of the container.
    if ( fEnv && fEnv->fObject )   {

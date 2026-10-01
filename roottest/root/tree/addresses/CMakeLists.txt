@@ -238,6 +238,7 @@ ROOTTEST_ADD_TEST(BranchObjSplit0
 
 ROOTTEST_ADD_TEST(CheckErrors
                   MACRO execCheckErrors.C
+                  COPY_TO_BUILDDIR memleak.root
                   OUTREF execCheckErrors.ref)
 
 ROOTTEST_ADD_TEST(CMSobj

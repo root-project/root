@@ -362,16 +362,16 @@ public:
    TVirtualCollectionProxy *Generate() const final { return new CyclicCollectionProxy(); }
    Int_t GetCollectionType() const final { return 0; }
    ULong_t GetIncrement() const final { return 0; }
-   UInt_t Sizeof() const final { return 0; }
+   size_type Sizeof() const final { return 0; }
    bool HasPointers() const final { return false; }
    TClass *GetValueClass() const final;
    EDataType GetType() const final { return EDataType::kOther_t; }
    void PushProxy(void *) final {}
    void PopProxy() final {}
-   void *At(UInt_t) final { return nullptr; }
+   void *At(size_type) final { return nullptr; }
    void Clear(const char * = "") final {}
-   UInt_t Size() const final { return 0; }
-   void *Allocate(UInt_t, bool) final { return nullptr; }
+   size_type Size() const final { return 0; }
+   void *Allocate(size_type, bool) final { return nullptr; }
    void Commit(void *) final {}
    void Insert(const void *, void *, size_t) final {}
    TStreamerInfoActions::TActionSequence *GetConversionReadMemberWiseActions(TClass *, Int_t) final { return nullptr; }

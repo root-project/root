@@ -45,10 +45,12 @@ class TBuffer : public TObject {
 
 protected:
    typedef std::vector<TVirtualArray*> CacheList_t;
+   // FIXME: decide if this is signed or unsigned.
+   using Size_t = std::size_t;
 
    Bool_t           fMode;          //Read or write mode
    Int_t            fVersion;       //Buffer format version
-   Int_t            fBufSize;       //Size of buffer
+   Size_t           fBufSize;       //Size of buffer
    char            *fBuffer;        //Buffer used to store objects
    char            *fBufCur;        //Current position in buffer
    char            *fBufMax;        //End of buffer
@@ -88,8 +90,8 @@ public:
    enum { kInitialSize = 1024, kMinimalSize = 128 };
 
    TBuffer(EMode mode);
-   TBuffer(EMode mode, Long64_t bufsize);
-   TBuffer(EMode mode, Long64_t bufsize, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
+   TBuffer(EMode mode, ULong64_t bufsize);
+   TBuffer(EMode mode, ULong64_t bufsize, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
    virtual ~TBuffer();
 
    Int_t    GetBufferVersion() const { return fVersion; }
@@ -97,20 +99,20 @@ public:
    Bool_t   IsWriting() const { return (fMode & kWrite) != 0; }
    void     SetReadMode();
    void     SetWriteMode();
-   void     SetBuffer(void *buf, Long64_t bufsize = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
+   void     SetBuffer(void *buf, ULong64_t bufsize = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
    ReAllocCharFun_t GetReAllocFunc() const;
    void     SetReAllocFunc(ReAllocCharFun_t reallocfunc = nullptr);
-   void     SetBufferOffset(Long64_t offset = 0) { fBufCur = fBuffer+offset; }
+   void     SetBufferOffset(ULong64_t offset = 0) { fBufCur = fBuffer+offset; }
    void     SetParent(TObject *parent);
    TObject *GetParent()  const;
    char    *Buffer()     const { return fBuffer; }
    char    *GetCurrent() const { return fBufCur; }
-   Int_t    BufferSize() const { return fBufSize; }
+   Size_t   BufferSize() const { return fBufSize; }
    void     DetachBuffer() { fBuffer = nullptr; }
-   Int_t    Length()     const { return (Int_t)(fBufCur - fBuffer); }
-   void     Expand(Long64_t newsize, Bool_t copy = kTRUE);  // expand buffer to newsize
-   void     AutoExpand(Long64_t size_needed);  // expand buffer to newsize
-   Bool_t   ByteSwapBuffer(Long64_t n, EDataType type);  // Byte-swap N primitive-elements in the buffer
+   Size_t   Length()     const { return (Size_t)(fBufCur - fBuffer); }
+   void     Expand(ULong64_t newsize, Bool_t copy = kTRUE);  // expand buffer to newsize
+   void     AutoExpand(ULong64_t size_needed);  // expand buffer to newsize
+   Bool_t   ByteSwapBuffer(ULong64_t n, EDataType type);  // Byte-swap N primitive-elements in the buffer
 
    virtual Bool_t     CheckObject(const TObject *obj) = 0;
    virtual Bool_t     CheckObject(const void *obj, const TClass *ptrClass) = 0;
@@ -320,7 +322,7 @@ public:
    virtual   void     ReadFastArray(ULong_t   *l, Int_t n) = 0;
    virtual   void     ReadFastArray(Long64_t  *l, Int_t n) = 0;
    virtual   void     ReadFastArray(ULong64_t *l, Int_t n) = 0;
-   virtual   void     ReadFastArray(Float_t   *f, Int_t n) = 0;
+   virtual   void     ReadFastArray(Float_t   *f, Long64_t n) = 0;
    virtual   void     ReadFastArray(Double_t  *d, Int_t n) = 0;
    virtual   void     ReadFastArrayFloat16(Float_t  *f, Int_t n, TStreamerElement *ele = nullptr) = 0;
    virtual   void     ReadFastArrayDouble32(Double_t  *d, Int_t n, TStreamerElement *ele = nullptr) = 0;

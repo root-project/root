@@ -38,10 +38,10 @@ public:
    ~TEmulatedMapProxy() override;
 
    // Return the address of the value at index 'idx'
-   void *At(UInt_t idx) override;
+   void *At(size_type idx) override;
 
    // Return the current size of the container
-   UInt_t Size() const override;
+   size_type Size() const override;
 
    // Read portion of the streamer
    void ReadBuffer(TBuffer &buff, void *pObj) override;

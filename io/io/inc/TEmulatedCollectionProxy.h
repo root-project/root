@@ -157,29 +157,29 @@ public:
    TClass::ObjectPtr NewObject(void *memory) const override { return {New(memory), nullptr}; }
 
    // Virtual array constructor
-   void *NewArray(Int_t nElements) const override
+   void *NewArray(Long64_t nElements) const override
    {
       void *arr = ::operator new(nElements * sizeof(Cont_t));
-      for (Int_t i = 0; i < nElements; ++i)
+      for (Long64_t i = 0; i < nElements; ++i)
          WithCont(static_cast<char *>(arr) + i * sizeof(Cont_t),
                   [](auto *c, std::size_t) { new (c) std::decay_t<decltype(*c)>(); });
       return arr;
    }
 
    // Virtual in-place array constructor
-   void *NewArray(Int_t nElements, void *memory) const override
+   void *NewArray(Long64_t nElements, void *memory) const override
    {
-      for (Int_t i = 0; i < nElements; ++i)
+      for (Long64_t i = 0; i < nElements; ++i)
          WithCont(static_cast<char *>(memory) + i * sizeof(Cont_t),
                   [](auto *c, std::size_t) { new (c) std::decay_t<decltype(*c)>(); });
       return memory;
    }
 
    // Virtual array constructor
-   TClass::ObjectPtr NewObjectArray(Int_t nElements) const override { return {NewArray(nElements), nullptr}; }
+   TClass::ObjectPtr NewObjectArray(Long64_t nElements) const override { return {NewArray(nElements), nullptr}; }
 
    // Virtual in-place array constructor
-   TClass::ObjectPtr NewObjectArray(Int_t nElements, void *memory) const override
+   TClass::ObjectPtr NewObjectArray(Long64_t nElements, void *memory) const override
    {
       return {NewArray(nElements, memory), nullptr};
    }
@@ -191,22 +191,22 @@ public:
    void  DeleteArray(void* p, Bool_t dtorOnly = kFALSE) const override;
 
    // TVirtualCollectionProxy overload: Return the sizeof the collection object.
-   UInt_t Sizeof() const override { return sizeof(Cont_t); }
+   size_type Sizeof() const override { return sizeof(Cont_t); }
 
    // Return the address of the value at index 'idx'
-   void *At(UInt_t idx) override;
+   void *At(size_type idx) override;
 
    // Clear the container
    void Clear(const char *opt = "") override;
 
    // Resize the container
-   void Resize(UInt_t n, Bool_t force_delete) override;
+   void Resize(size_type n, Bool_t force_delete) override;
 
    // Return the current size of the container
-   UInt_t Size() const override;
+   size_type Size() const override;
 
    // Block allocation of containees
-   void* Allocate(UInt_t n, Bool_t forceDelete) override;
+   void* Allocate(size_type n, Bool_t forceDelete) override;
 
    // Block commit of containees
    void Commit(void* env) override;
