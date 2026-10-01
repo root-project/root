@@ -679,3 +679,101 @@ TEST_F(RegressionGH22652, AlternatingBranchWithDifferentEntryLayoutInMainAndFrie
    EXPECT_DOUBLE_EQ(m->GetMinimum("w"), -9.);
    EXPECT_DOUBLE_EQ(m->GetMaximum("w"), 9.);
 }
+
+// Regression tests for https://github.com/root-project/root/issues/23569
+struct RegressionGH23569 : public ::testing::Test {
+   using target_br_type = int;
+   TClass *fClass{nullptr}; // POD type, no TClass
+   EDataType fDataType{TDataType::GetType(typeid(target_br_type))};
+   static constexpr auto fMainTreeName{"main"};
+   static constexpr auto fMainFileName{"regression_gh_23569_main.root"};
+   static constexpr auto fFriendTreeName{"friend"};
+   static constexpr auto fFriendFileName{"regression_gh_23569_friend.root"};
+   static constexpr auto fBranchName{"x"};
+   static constexpr auto fMainTreeBranchValue{84};
+   static constexpr auto fFriendTreeBranchValue{42};
+
+   static void SetUpTestSuite()
+   {
+      {
+         int x = fMainTreeBranchValue;
+         auto f = std::make_unique<TFile>(fMainFileName, "recreate");
+         auto tree = std::make_unique<TTree>(fMainTreeName, fMainTreeName);
+         tree->Branch(fBranchName, &x);
+         tree->Fill();
+         f->Write();
+      }
+      {
+         int x = fFriendTreeBranchValue;
+         auto f = std::make_unique<TFile>(fFriendFileName, "recreate");
+         auto tree = std::make_unique<TTree>(fFriendTreeName, fFriendTreeName);
+         tree->Branch(fBranchName, &x);
+         tree->Fill();
+         f->Write();
+      }
+   }
+
+   static void TearDownTestSuite()
+   {
+      std::remove(fMainFileName);
+      std::remove(fFriendFileName);
+   }
+
+   void Check(TTree &tree)
+   {
+      target_br_type val{-999};
+      void *addr{&val};
+      auto targetBranchName = std::string(fFriendTreeName) + "." + std::string(fBranchName);
+      tree.SetBranchAddress(targetBranchName.c_str(), addr, /*branchPtr*/ nullptr, fClass, fDataType, /*isPtr*/ false);
+      tree.GetEntry(0);
+      EXPECT_EQ(val, fFriendTreeBranchValue);
+   }
+};
+
+TEST_F(RegressionGH23569, TTreeTTree)
+{
+   auto fmain = std::make_unique<TFile>(fMainFileName);
+   auto tmain = fmain->Get<TTree>(fMainTreeName);
+   auto ffriend = std::make_unique<TFile>(fFriendFileName);
+   auto tfriend = ffriend->Get<TTree>(fFriendTreeName);
+
+   tmain->AddFriend(tfriend);
+
+   Check(*tmain);
+}
+
+TEST_F(RegressionGH23569, TTreeTChain)
+{
+   auto fmain = std::make_unique<TFile>(fMainFileName);
+   auto tmain = fmain->Get<TTree>(fMainTreeName);
+   auto tfriend = std::make_unique<TChain>(fFriendTreeName);
+   tfriend->Add(fFriendFileName);
+
+   tmain->AddFriend(tfriend.get());
+
+   Check(*tmain);
+}
+
+TEST_F(RegressionGH23569, TChainTTree)
+{
+   auto tmain = std::make_unique<TChain>(fMainTreeName);
+   tmain->Add(fMainFileName);
+   auto ffriend = std::make_unique<TFile>(fFriendFileName);
+   auto tfriend = ffriend->Get<TTree>(fFriendTreeName);
+
+   tmain->AddFriend(tfriend);
+
+   Check(*tmain);
+}
+
+TEST_F(RegressionGH23569, TChainTChain)
+{
+   auto tmain = std::make_unique<TChain>(fMainTreeName);
+   tmain->Add(fMainFileName);
+   auto tfriend = std::make_unique<TChain>(fFriendTreeName);
+   tfriend->Add(fFriendFileName);
+
+   tmain->AddFriend(tfriend.get());
+
+   Check(*tmain);
+}
