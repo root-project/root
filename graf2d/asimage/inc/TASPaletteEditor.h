@@ -52,10 +52,9 @@ protected:
    class LimitLine : public TLine {
    private:
       TASPaletteEditor  *fGui;
-   protected:
-      void ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    public:
       LimitLine(Coord_t x, Coord_t y1, Coord_t y2, TASPaletteEditor *gui);
+      void ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
       void Paint(Option_t *option = "") override;
    };
 

@@ -948,41 +948,31 @@ void TASPaletteEditor::LimitLine::Paint(Option_t *option)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TASPaletteEditor::LimitLine::ExecuteEvent(Int_t event,
-                                               Int_t px, Int_t /*py*/)
+void TASPaletteEditor::LimitLine::ExecuteEvent(Int_t event, Int_t px, Int_t)
 {
-   static Int_t oldX;
-
    if (!gPad) return;
+
+   auto &parent = *gPad;
 
    switch(event) {
       case kMouseMotion:
-         gPad->SetCursor(kMove);
+         parent.SetCursor(kMove);
          break;
 
-      case kButton1Down:
-         gVirtualX->SetLineColor(-1);
-         TAttLine::Modify();  //Change line attributes only if necessary
-         oldX = gPad->XtoAbsPixel(fX1);
+      case kButton1Motion: {
+         Double_t xx[2], yy[2] = { GetY1(), GetY2() };
+         xx[0] = xx[1] = parent.AbsPixeltoX(px);
+         parent.PaintPolyLine(2, xx, yy, "iaspaletteline");
+         parent.UpdateAsync();
          break;
-
-      case kButton1Motion:
-         gVirtualX->DrawLine(oldX, gPad->YtoPixel(fY1), oldX, gPad->YtoPixel(fY2));
-         oldX = px;
-         gVirtualX->DrawLine(oldX, gPad->YtoPixel(fY1), oldX, gPad->YtoPixel(fY2));
-         gVirtualX->Update();
-         break;
-
+      }
       case kButton1Up:
-         gVirtualX->SetLineColor(-1);
-         TAttLine::Modify();  //Change line attributes only if necessary
-         fX1 = fX2 = gPad->AbsPixeltoX(oldX);
+         fX1 = fX2 = parent.AbsPixeltoX(px);
+         fY1 = parent.GetUymin();
+         fY2 = parent.GetUymax();
          fGui->UpdateRange();
-         gPad->Modified(kTRUE);
-         gPad->Update();
-         break;
-
-      default:
+         parent.Modified();
+         parent.UpdateAsync();
          break;
    }
 }
