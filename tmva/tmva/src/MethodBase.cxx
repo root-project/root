@@ -656,7 +656,7 @@ std::vector<float> TMVA::MethodBase::GetAllRegressionValues()
    if(nEvents >= totalProgressDraws) drawProgressEvery = nEvents/totalProgressDraws;
 
    size_t ntargets = Data()->GetEvent(0)->GetNTargets();
-   std::vector<float> output(nEvents*ntargets);
+   std::vector<float> output(nEvents * ntargets + ntargets);
    auto itr = output.begin();
    for (Int_t ievt=0; ievt<nEvents; ievt++) {
 
