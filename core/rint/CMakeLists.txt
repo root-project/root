@@ -16,12 +16,15 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Rint
   SOURCES
     src/TRint.cxx
     src/TTabCom.cxx
+  OUTPUT_NAME
+    ROOTRint
+  EXPORT_NAME
+    Rint
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
     Core
 )
-
 target_include_directories(Core PRIVATE inc)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

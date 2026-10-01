@@ -1339,7 +1339,7 @@ macro(ROOT_CREATE_HEADER_COPY_TARGETS)
 endmacro()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_STANDARD_LIBRARY_PACKAGE(libname
+#---ROOT_STANDARD_LIBRARY_PACKAGE(libname                      : the name of the CMake target. If OUTPUT_NAME not specified, will be also name on disk eg lib${libname}.so.
 #                                 [NO_INSTALL_HEADERS]         : don't install headers for this package
 #                                 [NO_GLOB_HEADERS]            : don't glob for headers, only install listed ones
 #                                 [STAGE1]                     : use rootcling_stage1 for generating
@@ -1351,6 +1351,9 @@ endmacro()
 #                                 [OBJECT_LIBRARY]             : use ROOT_OBJECT_LIBRARY to generate object files
 #                                                                and then use those for linking.
 #                                 LIBRARIES lib1 lib2          : private arguments for target_link_library()
+#                                 OUTPUT_NAME outname          : if specified, outname is the name of the lib when written do disk (eg "ROOTCore" so that libROOTCore.so is installed). If not set, libname will be used.
+#                                 EXPORT_NAME exportname       : if specified, exportname is the name of the CMake target when downstream projects find_package(ROOT) and want to
+#                                                                link against it. For example "Core" so that ROOT::Core can be linked against. If not set, libname will be used.
 #                                 DEPENDENCIES lib1 lib2       : PUBLIC arguments for target_link_library() such as Core, MathCore
 #                                 BUILTINS builtin1 builtin2   : builtins like xxhash
 #                                 LINKDEF LinkDef.h            : linkdef file, default value is "LinkDef.h"
@@ -1361,7 +1364,7 @@ endmacro()
 #---------------------------------------------------------------------------------------------------
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   set(options NO_INSTALL_HEADERS NO_GLOB_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE)
-  set(oneValueArgs LINKDEF)
+  set(oneValueArgs LINKDEF OUTPUT_NAME EXPORT_NAME)
   set(multiValueArgs DEPENDENCIES HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS INSTALL_OPTIONS)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -1471,6 +1474,16 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
     else()
       ROOT_INSTALL_HEADERS(${ARG_INSTALL_OPTIONS})
     endif()
+  endif()
+
+  if (ARG_OUTPUT_NAME)
+    set_target_properties(${libname} PROPERTIES OUTPUT_NAME ${ARG_OUTPUT_NAME})
+    if (NOT ARG_OUTPUT_NAME STREQUAL "${libname}")
+      ROOT_SYMLINK_LIBRARY_NAME(${libname} ${ARG_OUTPUT_NAME} ${libname}) # historicalname matches libname
+    endif()
+  endif()
+  if (ARG_EXPORT_NAME)
+    set_target_properties(${libname} PROPERTIES EXPORT_NAME ${ARG_EXPORT_NAME})
   endif()
 endfunction()
 
@@ -3704,3 +3717,37 @@ function (ROOT_GET_CLANG_LIBRARIES clang_libraries)
   endforeach(extra_lib)
   SET(${clang_libraries} "${found_libraries}" PARENT_SCOPE)
 endfunction(ROOT_GET_CLANG_LIBRARIES)
+
+#---------------------------------------------------------------------------------------------------
+# ROOT_SYMLINK_LIBRARY_NAME( tgt outputname historicalname )
+#
+# This function is used when the output name of a target, for example libROOTCore for the
+# ROOT::Core target does not match the CMake target name: for backward compatibility,
+# it creates a symlink to old historical name, if ROOT built with -Dsymlink_libs=ON (default)
+# tgt: the CMake target, for example "Core"
+# outputname: the name of the lib when written do disk (eg "ROOTCore" so that libROOTCore.so is installed)
+# historicalname: the output-name of the lib being written to disk in CMake target historically.
+#             Usually, this name was just the name of the CMake target since no separate outputname was set.
+#---------------------------------------------------------------------------------------------------
+function (ROOT_SYMLINK_LIBRARY_NAME tgt outputname historicalname)
+  if (symlink_libs)
+    get_target_property(target_type ${tgt} TYPE)
+    if(NOT target_type STREQUAL "INTERFACE_LIBRARY")
+      add_custom_command(TARGET ${tgt} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_NAME:${tgt}> ${LIB_PREFIX}${historicalname}${LIB_SUFFIX}
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:${tgt}>
+        COMMENT "Creating bw-compatibility symlink for target ${tgt}: ${LIB_PREFIX}${historicalname}${LIB_SUFFIX} -> $<TARGET_FILE_NAME:${tgt}>"
+      )
+      install(CODE "
+        set(LIB_DIR \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}\")
+        set(NEW_NAME \"${CMAKE_SHARED_LIBRARY_PREFIX}${outputname}${CMAKE_SHARED_LIBRARY_SUFFIX}\")
+        set(OLD_NAME \"${CMAKE_SHARED_LIBRARY_PREFIX}${historicalname}${CMAKE_SHARED_LIBRARY_SUFFIX}\")
+        message(STATUS \"Creating symlink for target ${tgt}: \${OLD_NAME} -> \${NEW_NAME}\")
+        execute_process(
+          COMMAND \${CMAKE_COMMAND} -E create_symlink \${NEW_NAME} \${OLD_NAME}
+          WORKING_DIRECTORY \${LIB_DIR}
+        )
+      ")
+    endif()
+  endif()
+endfunction(ROOT_SYMLINK_LIBRARY_NAME)
