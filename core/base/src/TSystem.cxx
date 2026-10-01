@@ -2591,23 +2591,26 @@ static void R__AddPath(TString &target, const TString &path) {
 static bool R__GenerateCompilerDependencies(const TString &depfilename, const TString &filename, const TString &targetname,
                                             const TString &includes, const TString &defines)
 {
+#ifdef WIN32
+   TString compiler = "\"" COMPILER "\""; // 'Program Files' contains spaces on Windows
+#else
    TString compiler = COMPILER;
+#endif
 
    TString cmd = compiler;
    cmd += " " CXXOPT;
    cmd += " " ROOT_CXX_STANDARD_OPTION;
 #ifdef WIN32
    cmd += " /nologo /EP /showIncludes";
-   cmd += " /I \"";
 #else
    cmd += " -MM";
    cmd += " -MF \"" + depfilename + "\"";
    cmd += " -MT \"";
    R__AddPath(cmd, targetname);
    cmd += "\" ";
-   cmd += " -I\"";
 #endif
    TString rootsysInclude = TROOT::GetIncludeDir();
+   cmd += " -I\"";
    R__AddPath(cmd, rootsysInclude);
    cmd += "\" ";
 
@@ -2634,7 +2637,7 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
       return false;
    }
    std::ofstream depFile(depfilename, std::ios::out | std::ios::trunc);
-   std::string allLines;
+   std::string allLines; // for error output
    if (depFile) {
       depFile << targetname << ": \\\n";
       char buffer[4096];
