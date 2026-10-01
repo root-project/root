@@ -2463,5 +2463,62 @@ class TestDATATYPES:
         for i, v in enumerate(a2):
             assert v == a2[i]
 
+    def test54_long_long_long_array_interchange(self):
+        """Arrays of 64b integers must convert to both 'long' and 'long long'
+        pointer parameters, as buffer producers do not distinguish them and the
+        mapping of int64_t differs across platforms."""
+
+        import array
+        import cppyy
+
+        try:
+            import numpy as np
+        except ImportError:
+            skip('numpy is not installed')
+
+        if array.array('l', []).itemsize != 8:   # 'long' and 'long long' must be same size
+            skip('test assumes 64b long')
+
+        cppyy.cppdef("""\
+        namespace ArrayInterchange {
+        long long sum_ll(const long long* a, int n) {
+            long long s = 0;
+            for (int i = 0; i < n; ++i) s += a[i];
+            return s;
+        }
+        long long sum_l(const long* a, int n) { return sum_ll((const long long*)a, n); }
+        unsigned long long sum_ull(const unsigned long long* a, int n) {
+            unsigned long long s = 0;
+            for (int i = 0; i < n; ++i) s += a[i];
+            return s;
+        }
+        unsigned long long sum_ul(const unsigned long* a, int n) { return sum_ull((const unsigned long long*)a, n); }
+        long long sum_i64(const int64_t* a, int n) { return sum_ll((const long long*)a, n); }
+        const long* data_l() { static long l[3] = {0, 1, 2}; return l; }
+        const long long* data_ll() { static long long l[3] = {0, 1, 2}; return l; }
+        }""")
+
+        ns = cppyy.gbl.ArrayInterchange
+        n = 3
+        isum = sum(range(n))
+
+        # numpy int64 is canonicalized to 'l' or 'q' by the platform
+        ia = np.arange(n, dtype=np.int64)
+        ua = np.arange(n, dtype=np.uint64)
+        for func in [ns.sum_ll, ns.sum_l, ns.sum_i64]:
+            assert func(ia, n) == isum
+        for func in [ns.sum_ull, ns.sum_ul]:
+            assert func(ua, n) == isum
+
+        # same through the standard 'array' module, which can express both formats
+        al, aq = array.array('l', range(n)), array.array('q', range(n))
+        assert ns.sum_ll(al, n) == isum and ns.sum_ll(aq, n) == isum
+        assert ns.sum_l(al, n) == isum and ns.sum_l(aq, n) == isum
+
+        # same for low-level views returned to Python with the other type
+        assert ns.sum_ll(ns.data_l(), n) == isum
+        assert ns.sum_l(ns.data_ll(), n) == isum
+
+
 if __name__ == "__main__":
     exit(pytest.main(args=['-v', '-ra', __file__]))

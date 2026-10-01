@@ -938,7 +938,7 @@ Py_ssize_t CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, v
         Py_buffer bufinfo;
         memset(&bufinfo, 0, sizeof(Py_buffer));
         if (PyObject_GetBuffer(pyobject, &bufinfo, PyBUF_FORMAT) == 0) {
-            if (tc == '*' || strchr(bufinfo.format, tc)
+            if (tc == '*' || FormatCodeCompatible(tc, bufinfo.format)
             // if `long int` and `int` are the same size (on Windows and 32bit Linux,
             // for example), `ctypes` isn't too picky about the type format, so make
             // sure both integer types pass the type check

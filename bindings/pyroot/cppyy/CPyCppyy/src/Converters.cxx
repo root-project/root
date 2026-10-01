@@ -449,7 +449,7 @@ static inline bool CArraySetArg(
 // protocol implementation is incomplete and PyObject_GetBuffer will fail.
     if (CPyCppyy::LowLevelView_Check(pyobject)) {
         auto llview = ((CPyCppyy::LowLevelView*)pyobject);
-        if (llview->fBufInfo.itemsize != size || !strchr(llview->fBufInfo.format, tc)) {
+        if (llview->fBufInfo.itemsize != size || !CPyCppyy::Utility::FormatCodeCompatible(tc, llview->fBufInfo.format)) {
             PyErr_Format(PyExc_TypeError,
                 "could not convert argument to buffer or nullptr");
             return false;
@@ -1802,7 +1802,7 @@ bool CPyCppyy::name##ArrayConverter::SetArg(                                 \
             convOk = true;                                                   \
         } else if (LowLevelView_Check(pyobject) &&                           \
                 ((LowLevelView*)pyobject)->fBufInfo.ndim == 2 &&             \
-                strchr(((LowLevelView*)pyobject)->fBufInfo.format, code)) {  \
+                Utility::FormatCodeCompatible(code, ((LowLevelView*)pyobject)->fBufInfo.format)) { \
             para.fValue.fVoidp = ((LowLevelView*)pyobject)->get_buf();       \
             para.fTypeCode = 'p';                                            \
             convOk = true;                                                   \
