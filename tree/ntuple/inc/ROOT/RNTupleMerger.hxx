@@ -30,8 +30,7 @@ namespace ROOT {
 class RNTuple;
 
 namespace Internal {
-class RPageAllocator;
-class RClusterPool;
+class RPageSource;
 } // namespace Internal
 
 namespace Experimental::Internal {
@@ -71,10 +70,6 @@ enum class ENTupleMergeVersionBehavior {
    kAbortOnHigherVersion
 };
 
-struct RColumnMergeInfo;
-struct RNTupleMergeData;
-struct RSealedPageMergeData;
-
 /// Set of merging options to pass to RNTupleMerger.
 /// If you're using the merger through TFileMerger you need to give it string-based options instead.
 /// Here is the mapping for the TFileMerger options:
@@ -112,22 +107,7 @@ class RNTupleMerger final {
    friend class ROOT::RNTuple;
 
    std::unique_ptr<ROOT::Internal::RPagePersistentSink> fDestination;
-   std::unique_ptr<ROOT::Internal::RPageAllocator> fPageAlloc;
-   std::optional<TTaskGroup> fTaskGroup;
    std::unique_ptr<ROOT::RNTupleModel> fModel;
-
-   [[nodiscard]]
-   ROOT::RResult<void>
-   MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool, const ROOT::RClusterDescriptor &clusterDesc,
-                      std::span<RColumnMergeInfo> commonColumns,
-                      const ROOT::Internal::RCluster::ColumnSet_t &commonColumnSet,
-                      RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData,
-                      ROOT::Internal::RPageAllocator &pageAlloc);
-
-   [[nodiscard]]
-   ROOT::RResult<void>
-   MergeSourceClusters(ROOT::Internal::RPageSource &source, std::span<RColumnMergeInfo> commonColumns,
-                       std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
 
    /// Creates a RNTupleMerger with the given destination.
    /// The model must be given if and only if `destination` has been initialized with that model
