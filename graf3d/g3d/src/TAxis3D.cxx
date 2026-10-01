@@ -186,6 +186,22 @@ class TAxis3DInteractive : public TVirtualPad::TInteractive {
    Double_t x0 = 0, y0 = 0, x1 = 0, y1 = 0;
    Int_t px0 = 0, py0 = 0;
 
+   TAxis3DInteractive(TVirtualPad &parent, Int_t px, Int_t py)
+   {
+      px0 = px;
+      py0 = py;
+      x0 = parent.AbsPixeltoX(px);
+      y0 = parent.AbsPixeltoY(py);
+   }
+
+   void MoveCursor(TVirtualPad &parent, Int_t px, Int_t py)
+   {
+      x1 = parent.AbsPixeltoX(px);
+      y1 = parent.AbsPixeltoY(py);
+      parent.PaintBox(x0, y0, x1, y1, "ilaxis3d");
+      parent.UpdateAsync();
+   }
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -205,36 +221,27 @@ void TAxis3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    auto &parent = *gPad;
 
-   // Execute action corresponding to the mouse event
+   auto view = parent.GetView();
+   if (!view)
+      return; // no 3D view yet
 
    parent.SetCursor(kCross);
-
-   auto inter = dynamic_cast<TAxis3DInteractive *>(parent.Interactive(this));
 
    switch (event) {
 
    case kButton1Down:
-      inter = new TAxis3DInteractive();
-      parent.Interactive(this, inter);
-      inter->x0 = parent.AbsPixeltoX(px);
-      inter->y0 = parent.AbsPixeltoY(py);
-      inter->px0 = px;
-      inter->py0 = py;
+      parent.MakeInteractive<TAxis3DInteractive>(this, parent, px, py);
       break;
 
    case kButton1Motion:
-      if (inter) {
-         inter->x1 = parent.AbsPixeltoX(px);
-         inter->y1 = parent.AbsPixeltoY(py);
-         parent.PaintBox(inter->x0, inter->y0, inter->x1, inter->y1, "ilaxis3d");
-         parent.UpdateAsync();
-      }
+      if (auto inter = parent.GetInteractive<TAxis3DInteractive>(this))
+         inter->MoveCursor(parent, px, py);
       break;
 
    case kButton1Up: {
-      TView *view = parent.GetView();
-      if (!view || !inter)
-         break; // no 3D view yet
+      auto inter = parent.GetInteractive<TAxis3DInteractive>(this);
+      if (!inter)
+         break;
 
       Double_t min[3], max[3], viewCenter[3], viewCenterNDC[3];
 
@@ -291,7 +298,7 @@ void TAxis3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (!fStickyZoom)
          SwitchZoom();
 
-      parent.Interactive(); // delete interactive
+      parent.FreeInteractive(this);
       parent.Modified();
       parent.UpdateAsync();
       break;
