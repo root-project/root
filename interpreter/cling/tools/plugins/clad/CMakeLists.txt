@@ -66,6 +66,19 @@ if (LLVM_FORCE_USE_OLD_TOOLCHAIN)
   list(APPEND _clad_extra_cmake_args -DLLVM_FORCE_USE_OLD_TOOLCHAIN=${LLVM_FORCE_USE_OLD_TOOLCHAIN})
 endif(LLVM_FORCE_USE_OLD_TOOLCHAIN)
 
+# LLVMConfig.cmake re-finds the libraries LLVMSupport links. For zlib it
+# carries the location along (set(ZLIB_ROOT @ZLIB_ROOT@) in
+# llvm/cmake/modules/LLVMConfig.cmake.in); for zstd it runs a bare
+# find_package(zstd). clad configures in its own cmake process without this
+# build's search paths, so a zstd outside the default prefixes is not found
+# and clad-tblgen, which links LLVMSupport, fails to generate on the
+# unresolved zstd::libzstd_shared. Hand it the zstd LLVM itself found.
+if(zstd_INCLUDE_DIR AND zstd_LIBRARY)
+  list(APPEND _clad_extra_cmake_args
+       -Dzstd_INCLUDE_DIR:PATH=${zstd_INCLUDE_DIR}
+       -Dzstd_LIBRARY:FILEPATH=${zstd_LIBRARY})
+endif()
+
 list(APPEND _clad_extra_cmake_args -DCLAD_BUILD_STATIC_ONLY=ON)
 
 # Wrap download, configure and build steps in a script to log output
