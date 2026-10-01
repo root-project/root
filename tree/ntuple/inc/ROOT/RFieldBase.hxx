@@ -64,11 +64,13 @@ void CallConnectPageSourceOnField(RFieldBase &, ROOT::Internal::RPageSource &);
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
 CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName, const ROOT::RCreateFieldOptions &options,
                     const ROOT::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
+void CallSetArtificialOnField(RFieldBase &);
 
 } // namespace Internal
 
 namespace Experimental::Internal {
 struct RNTupleAttrEntry;
+class RNTupleMerger;
 }
 
 // clang-format off
@@ -90,6 +92,7 @@ class RFieldBase {
    friend class RFieldZero;                                    // to reset fParent pointer in ReleaseSubfields()
    friend class ROOT::Detail::RRawPtrWriteEntry;               // to call Append()
    friend class ROOT::Experimental::RNTupleAttrSetReader;      // for field->Read() in LoadEntry()
+   friend class ROOT::Experimental::Internal::RNTupleMerger;
    friend struct ROOT::Internal::RFieldCallbackInjector;       // used for unit tests
    friend struct ROOT::Internal::RFieldRepresentationModifier; // used for unit tests
    friend void Internal::CallFlushColumnsOnField(RFieldBase &);
@@ -100,6 +103,7 @@ class RFieldBase {
    Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
                                  const ROOT::RCreateFieldOptions &options, const ROOT::RNTupleDescriptor *desc,
                                  ROOT::DescriptorId_t fieldId);
+   friend void Internal::CallSetArtificialOnField(RFieldBase &);
 
    using ReadCallback_t = std::function<void(void *)>;
 

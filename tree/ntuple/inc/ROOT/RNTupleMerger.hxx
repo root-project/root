@@ -27,6 +27,7 @@
 
 namespace ROOT {
 
+class REntry;
 class RNTuple;
 
 namespace Internal {
@@ -34,6 +35,10 @@ class RPageSource;
 } // namespace Internal
 
 namespace Experimental::Internal {
+
+class RNTupleMergeStrategySlow;
+struct RNTupleSlowMergeData;
+struct RDescriptorsComparison;
 
 enum class ENTupleMergingMode {
    /// The merger will discard all columns that aren't present in the prototype model (i.e. the model of the first
@@ -94,6 +99,56 @@ struct RNTupleMergeOptions {
    /// If true, the merger will emit further diagnostics and information.
    bool fExtraVerbose = false;
 };
+
+/// Information regarding the current slow merge process that gets passed to the SlowMergeActions
+struct RNTupleSlowMergeContext {
+   ROOT::NTupleSize_t fSourceEntryIndex = 0;
+   ROOT::NTupleSize_t fDestinationEntryIndex = 0;
+};
+
+enum class ENTupleSlowMergeResult {
+   // Don't emit this entry
+   kDrop,
+   // Emit this entry, then continue
+   kEmit,
+   // Emit this entry, then call the function again
+   kEmitMulti,
+};
+
+// clang-format off
+/**
+ * \class ROOT::Experimental::Internal::RNTupleSlowMergeActions
+ * \ingroup NTuple
+ * \brief Container for callbacks that are invoked during the "slow merge" process.
+ *        This allows customizing how the merging happens entry-by-entry, enabling things like dropping individual
+ *        entries from the destination RNTuple, modifying their values on the fly or creating new entries artificially.
+ */
+// clang-format on
+class RNTupleSlowMergeActions {
+public:
+   RNTupleSlowMergeActions() = default;
+   virtual ~RNTupleSlowMergeActions() = default;
+
+   RNTupleSlowMergeActions(const RNTupleSlowMergeActions &) = delete;
+   RNTupleSlowMergeActions &operator=(const RNTupleSlowMergeActions &) = delete;
+   RNTupleSlowMergeActions(RNTupleSlowMergeActions &&) = default;
+   RNTupleSlowMergeActions &operator=(RNTupleSlowMergeActions &&) = default;
+
+   /// Invoked every time an entry is merged from a source RNTuple to the destination RNTuple.
+   virtual ENTupleSlowMergeResult OnFill(ROOT::REntry &, const RNTupleSlowMergeContext &)
+   {
+      return ENTupleSlowMergeResult::kEmit;
+   }
+
+   /// Invoked at the end of the merge process, right before committing the dataset.
+   /// This allows appending more entries at the end of the merge.
+   virtual ENTupleSlowMergeResult BeforeCommit(ROOT::REntry &, const RNTupleSlowMergeContext &)
+   {
+      return ENTupleSlowMergeResult::kDrop;
+   }
+};
+
+// using RNTupleSlowMergeFn_t = std::function<RNTupleSlowMergeResult(ROOT::REntry &, const RNTupleSlowMergeContext &)>;
 
 // clang-format off
 /**
