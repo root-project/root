@@ -20,7 +20,6 @@
 #include "TPad.h"
 #include "TGaxis.h"
 #include "TView.h"
-#include "TVirtualX.h"
 #include "TBrowser.h"
 #include "TStyle.h"
 #include "strlcpy.h"
@@ -171,15 +170,23 @@ void TAxis3D::Browse(TBrowser *b)
 Int_t TAxis3D::DistancetoPrimitive(Int_t px, Int_t py)
 {
    Int_t dist = 9;
-   for (int i=0;i<3;i++) {
-      Int_t axDist = fAxis[i].DistancetoPrimitive(px,py);
-      if (dist > axDist) { dist = axDist; fSelected = &fAxis[i]; }
+   for (int i = 0; i < 3; i++) {
+      Int_t axDist = fAxis[i].DistancetoPrimitive(px, py);
+      if (dist > axDist) {
+         dist = axDist;
+         fSelected = &fAxis[i];
+      }
    }
-   if (fZoomMode)
-      return 0;
-   else
-      return dist;
+
+   return fZoomMode ? 0 : dist;
 }
+
+class TAxis3DInteractive : public TVirtualPad::TInteractive {
+   public:
+   Double_t x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+   Int_t px0 = 0, py0 = 0;
+
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
@@ -190,106 +197,105 @@ void TAxis3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    if (!gPad) return;
 
-   if (fSelected) fSelected->ExecuteEvent(event,px,py);
+   if (fSelected)
+      fSelected->ExecuteEvent(event, px, py);
+
+   if (!fZoomMode)
+      return;
+
+   auto &parent = *gPad;
 
    // Execute action corresponding to the mouse event
 
-   static Double_t x0, y0, x1, y1;
+   parent.SetCursor(kCross);
 
-   static Int_t pxold, pyold;
-   static Int_t px0, py0;
-   static Int_t linedrawn;
-
-   if (!fZoomMode) return;
-
-   // something to zoom ?
-
-   gPad->SetCursor(kCross);
+   auto inter = dynamic_cast<TAxis3DInteractive *>(parent.Interactive(this));
 
    switch (event) {
 
    case kButton1Down:
-      gVirtualX->SetLineColor(-1);
-      gPad->TAttLine::Modify();  //Change line attributes only if necessary
-      ((TPad *)gPad)->AbsPixeltoXY(px,py,x0,y0);
-      px0   = px; py0   = py;
-      pxold = px; pyold = py;
-      linedrawn = 0;
+      inter = new TAxis3DInteractive();
+      parent.Interactive(this, inter);
+      inter->x0 = parent.AbsPixeltoX(px);
+      inter->y0 = parent.AbsPixeltoY(py);
+      inter->px0 = px;
+      inter->py0 = py;
       break;
 
    case kButton1Motion:
-      if (linedrawn) gVirtualX->DrawBox(px0, py0, pxold, pyold, TVirtualX::kHollow);
-      pxold = px;
-      pyold = py;
-      linedrawn = 1;
-      gVirtualX->DrawBox(px0, py0, pxold, pyold, TVirtualX::kHollow);
+      if (inter) {
+         inter->x1 = parent.AbsPixeltoX(px);
+         inter->y1 = parent.AbsPixeltoY(py);
+         parent.PaintBox(inter->x0, inter->y0, inter->x1, inter->y1, "ilaxis3d");
+         parent.UpdateAsync();
+      }
       break;
 
    case kButton1Up: {
-      Int_t i;
-      gPad->FeedbackMode(kFALSE); // set drawing mode back to normal (copy) mode
-      TView *view = gPad->GetView();
-      if (!view) break;                       // no 3D view yet
+      TView *view = parent.GetView();
+      if (!view || !inter)
+         break; // no 3D view yet
 
-      Double_t min[3],max[3],viewCenter[3],viewCenterNDC[3];
+      Double_t min[3], max[3], viewCenter[3], viewCenterNDC[3];
 
-      view->GetRange(min,max);
-      for (i =0; i<3;i++) viewCenter[i] = (max[i]+min[i])/2;
-      view->WCtoNDC(viewCenter,viewCenterNDC);
+      view->GetRange(min, max);
+      for (Int_t i = 0; i < 3; i++)
+         viewCenter[i] = (max[i] + min[i]) / 2;
+      view->WCtoNDC(viewCenter, viewCenterNDC);
       // Define the center
-      Double_t center[3],pointNDC[3],size[3],oldSize[3];
-      ((TPad *)gPad)->AbsPixeltoXY(px,py,x1,y1);
-      pointNDC[0] = (x0+x1)/2; pointNDC[1] = (y0+y1)/2;
+      Double_t center[3], pointNDC[3], size[3], oldSize[3];
+      pointNDC[0] = (inter->x0 + inter->x1) / 2;
+      pointNDC[1] = (inter->y0 + inter->y1) / 2;
       pointNDC[2] = viewCenterNDC[2];
       view->NDCtoWC(pointNDC, center);
 
-      for (i =0; i<3;i++) oldSize[i] = size[i]= (max[i]-min[i])/2;
+      for (Int_t i = 0; i < 3; i++)
+         oldSize[i] = size[i] = (max[i] - min[i]) / 2;
 
       // If there was a small motion, move the center only, do not change a scale
-      if (TMath::Abs(px-px0)+TMath::Abs(py - py0) > 4 ) {
+      if (TMath::Abs(px - inter->px0) + TMath::Abs(py - inter->py0) > 4) {
          Double_t newEdge[3];
-         for (i =0; i<3;i++) size[i] = -1;
+         for (Int_t i = 0; i < 3; i++)
+            size[i] = -1;
 
-         pointNDC[0] = x0; pointNDC[1] = y0;
+         pointNDC[0] = inter->x0;
+         pointNDC[1] = inter->y0;
 
          view->NDCtoWC(pointNDC, newEdge);
-         for (i =0; i<3;i++) {
-            Double_t newSize = TMath::Abs(newEdge[i]-center[i]);
-            if ( newSize/oldSize[i] > 0.002)
+         for (Int_t i = 0; i < 3; i++) {
+            Double_t newSize = TMath::Abs(newEdge[i] - center[i]);
+            if (newSize / oldSize[i] > 0.002)
                size[i] = TMath::Max(size[i], newSize);
             else
                size[i] = oldSize[i];
          }
 
-         pointNDC[0] = x1; pointNDC[1] = y1;
+         pointNDC[0] = inter->x1;
+         pointNDC[1] = inter->y1;
 
          view->NDCtoWC(pointNDC, newEdge);
-         for (i =0; i<3;i++) {
-            Double_t newSize = TMath::Abs(newEdge[i]-center[i]);
-            if ( newSize/oldSize[i] > 0.002)
+         for (Int_t i = 0; i < 3; i++) {
+            Double_t newSize = TMath::Abs(newEdge[i] - center[i]);
+            if (newSize / oldSize[i] > 0.002)
                size[i] = TMath::Max(size[i], newSize);
             else
                size[i] = oldSize[i];
          }
-#if 0
-         if (fZooms == kMAXZOOMS) fZoom = 0;
-         fZooms++;
-         memcpy(fZoomMin[fZooms],min,3*sizeof(Float_t));
-         memcpy(fZoomMax[fZooms],max,3*sizeof(Float_t));
-#endif
       }
-      for (i =0; i<3;i++) {
+      for (Int_t i = 0; i < 3; i++) {
          max[i] = center[i] + size[i];
          min[i] = center[i] - size[i];
       }
-      view->SetRange(min,max);
+      view->SetRange(min, max);
 
-      if(!fStickyZoom)SwitchZoom();
-         gPad->Modified(kTRUE);
-         gPad->Update();
-         break;
-      }
-      default: break;
+      if (!fStickyZoom)
+         SwitchZoom();
+
+      parent.Interactive(); // delete interactive
+      parent.Modified();
+      parent.UpdateAsync();
+      break;
+   }
    }
 }
 
