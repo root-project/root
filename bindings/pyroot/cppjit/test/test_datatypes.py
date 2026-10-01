@@ -2777,6 +2777,83 @@ class TestDATATYPES:
         ns.take_int8(101)
         raises(TypeError, ns.take_int8, "e")
 
+    def test56_long_long_long_array_interchange(self):
+        """Arrays of 64b integers must convert to both 'long' and 'long long'
+        pointer parameters, as buffer producers do not distinguish them and the
+        mapping of int64_t differs across platforms."""
+
+        import array
+        import cppjit
+
+        try:
+            import numpy as np
+        except ImportError:
+            skip('numpy is not installed')
+
+        if array.array('l', []).itemsize != 8:   # 'long' and 'long long' must be same size
+            skip('test assumes 64b long')
+
+        cppjit.cppdef("""\
+        namespace ArrayInterchange {
+        long long sum_ll(const long long* a, int n) {
+            long long s = 0;
+            for (int i = 0; i < n; ++i) s += a[i];
+            return s;
+        }
+        long long sum_l(const long* a, int n) { return sum_ll((const long long*)a, n); }
+        unsigned long long sum_ull(const unsigned long long* a, int n) {
+            unsigned long long s = 0;
+            for (int i = 0; i < n; ++i) s += a[i];
+            return s;
+        }
+        unsigned long long sum_ul(const unsigned long* a, int n) { return sum_ull((const unsigned long long*)a, n); }
+        long long sum_i64(const int64_t* a, int n) { return sum_ll((const long long*)a, n); }
+        const long* data_l() { static long l[3] = {0, 1, 2}; return l; }
+        const long long* data_ll() { static long long l[3] = {0, 1, 2}; return l; }
+        }""")
+
+        ns = cppjit.gbl.ArrayInterchange
+        n = 3
+        isum = sum(range(n))
+
+        # numpy int64 is canonicalized to 'l' or 'q' by the platform
+        ia = np.arange(n, dtype=np.int64)
+        ua = np.arange(n, dtype=np.uint64)
+        for func in [ns.sum_ll, ns.sum_l, ns.sum_i64]:
+            assert func(ia, n) == isum
+        for func in [ns.sum_ull, ns.sum_ul]:
+            assert func(ua, n) == isum
+
+        # same through the standard 'array' module, which can express both formats
+        al, aq = array.array('l', range(n)), array.array('q', range(n))
+        assert ns.sum_ll(al, n) == isum and ns.sum_ll(aq, n) == isum
+        assert ns.sum_l(al, n) == isum and ns.sum_l(aq, n) == isum
+
+        # same for low-level views returned to Python with the other type
+        assert ns.sum_ll(ns.data_l(), n) == isum
+        assert ns.sum_l(ns.data_ll(), n) == isum
+
+        # same through std::span, if available (needs C++20 and <span>)
+        if cppjit.evaluate("""#if __cplusplus >= 202002L && __has_include(<span>)
+        1
+        #else
+        0
+        #endif""") == 1:
+            cppjit.cppdef("""\
+            #include <span>
+            namespace ArrayInterchange {
+            long long sum_span_ll(std::span<const long long> a) {
+                long long s = 0;
+                for (auto v : a) s += v;
+                return s;
+            }
+            long long sum_span_l(std::span<const long> a) {
+                return sum_span_ll(std::span<const long long>{reinterpret_cast<const long long*>(a.data()), a.size()});
+            }
+            }""")
+            assert ns.sum_span_ll(ia) == isum and ns.sum_span_l(ia) == isum
+            assert ns.sum_span_ll(al) == isum and ns.sum_span_ll(aq) == isum
+
 
 class TestANONENUM:
     def test01_anonymous_enum_repeated_access(self):
