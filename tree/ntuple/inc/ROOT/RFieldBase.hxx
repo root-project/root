@@ -70,6 +70,7 @@ void CallSetArtificialOnField(RFieldBase &);
 
 namespace Experimental::Internal {
 struct RNTupleAttrEntry;
+class RNTupleMerger;
 }
 
 // clang-format off
@@ -91,6 +92,7 @@ class RFieldBase {
    friend class RFieldZero;                                    // to reset fParent pointer in ReleaseSubfields()
    friend class ROOT::Detail::RRawPtrWriteEntry;               // to call Append()
    friend class ROOT::Experimental::RNTupleAttrSetReader;      // for field->Read() in LoadEntry()
+   friend class ROOT::Experimental::Internal::RNTupleMerger;
    friend struct ROOT::Internal::RFieldCallbackInjector;       // used for unit tests
    friend struct ROOT::Internal::RFieldRepresentationModifier; // used for unit tests
    friend void Internal::CallFlushColumnsOnField(RFieldBase &);

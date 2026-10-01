@@ -38,6 +38,7 @@ class RNTupleAttrSetReader;
 
 namespace Internal {
 struct RNTupleAttrEntry;
+class RNTupleMergeStrategySlow;
 }
 } // namespace Experimental
 
@@ -56,6 +57,7 @@ class REntry {
    friend class RNTupleModel;
    friend class RNTupleReader;
    friend class Experimental::RNTupleAttrSetReader;
+   friend class Experimental::Internal::RNTupleMergeStrategySlow;
    friend struct Experimental::Internal::RNTupleAttrEntry;
 
 private:
