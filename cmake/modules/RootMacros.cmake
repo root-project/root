@@ -2143,9 +2143,12 @@ function(ROOT_ADD_PYUNITTEST name file)
   endif()
 
   set(test_name pyunittests${clean_name_with_path})
+  # Don't write Python bytecode or pytest caches into the source directory,
+  # also for GENERIC tests, which don't run Python with -B.
   ROOT_ADD_TEST(${test_name}
               ${test_cmd}
-              ENVIRONMENT PYTHONPATH=${pythonpaths_native} ${ARG_ENVIRONMENT}
+              ENVIRONMENT PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS=-pno:cacheprovider
+                          PYTHONPATH=${pythonpaths_native} ${ARG_ENVIRONMENT}
               LABELS ${labels}
               ${copy_to_builddir}
               ${will_fail}
@@ -3359,7 +3362,11 @@ function(ROOTTEST_ADD_TEST testname)
   set(pythonpaths ${localruntimedir} $ENV{PYTHONPATH})
   cmake_path(CONVERT "${pythonpaths}" TO_NATIVE_PATH_LIST pythonpaths_native)
 
+  # Python (also when embedded in root.exe) and pytest must not write caches
+  # next to the test sources in the source directory.
   set(environment ENVIRONMENT
+                  PYTHONDONTWRITEBYTECODE=1
+                  PYTEST_ADDOPTS=-pno:cacheprovider
                   ${ROOTTEST_ENV_EXTRA}
                   ${ARG_ENVIRONMENT}
                   PYTHONPATH=${pythonpaths_native})
