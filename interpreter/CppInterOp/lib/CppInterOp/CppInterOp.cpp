@@ -11,6 +11,9 @@
 #include "Unwrap.h"
 #include "CppInterOp/Error.h"
 
+// Generated at configure time; defines CPPINTEROP_BAKED_INTERPRETER_ARGS
+// and CPPINTEROP_CLANG_RESOURCE_DIR when the build baked them in.
+#include "BakedArgs.h"
 #include "Compatibility.h"
 #include "ErrorInternal.h"
 #include "InterpreterInfo.h"
@@ -76,6 +79,7 @@
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/TemplateDeduction.h"
 
+#include "llvm/ADT/APInt.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
@@ -113,9 +117,9 @@
 #include <deque>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <set>
 #include <sstream>
@@ -3385,6 +3389,56 @@ TypeRef GetVariableType(ConstDeclRef var) {
   return INTEROP_RETURN(nullptr);
 }
 
+// Lay an evaluated constant array initializer out contiguously in
+// ASTContext-owned memory (stable for the interpreter's lifetime) and return
+// its address. Integral element types only; anything else returns 0 so the
+// caller falls back to the regular JIT lookup/codegen path. Cache is the
+// per-interpreter ConstArrayValueStore, so repeated queries return the same
+// address instead of re-evaluating and re-allocating on every call.
+static intptr_t
+MaterializeConstArrayValue(ASTContext& C, const VarDecl* VD, const APValue& Val,
+                           std::map<const VarDecl*, intptr_t>& Cache) {
+  const clang::ArrayType* AT =
+      Val.isArray() ? C.getAsArrayType(VD->getType()) : nullptr;
+  const uint64_t EltBytes =
+      AT ? C.getTypeSizeInChars(AT->getElementType()).getQuantity() : 0;
+  const size_t Count = AT ? Val.getArraySize() : 0;
+  if (!EltBytes || !Count ||
+      Count > std::numeric_limits<uint32_t>::max() / EltBytes)
+    return 0;
+  QualType EltTy = AT->getElementType();
+
+  // The buffer lives in the ASTContext bump allocator for the interpreter's
+  // lifetime, so re-laying out on every call would hand out unstable
+  // addresses (unlike the scalar path, which returns the cached APValue
+  // storage) and grow the allocator unboundedly.
+  auto [It, Inserted] = Cache.try_emplace(VD->getCanonicalDecl(), 0);
+  if (!Inserted)
+    return It->second;
+
+  uint8_t* Buf = static_cast<uint8_t*>(C.Allocate(
+      EltBytes * Count, (unsigned)C.getTypeAlignInChars(EltTy).getQuantity()));
+  for (size_t I = 0; I < Count; ++I) {
+    const APValue* Elt = nullptr;
+    if (I < Val.getArrayInitializedElts())
+      Elt = &Val.getArrayInitializedElt(I);
+    else if (Val.hasArrayFiller())
+      Elt = &Val.getArrayFiller();
+    if (!Elt || !Elt->isInt())
+      return 0; // cached 0: not fully evaluable, fall back to the JIT path
+    const llvm::APInt& Int = Elt->getInt();
+    // The raw layout only works if the APInt fills the element exactly;
+    // padded storage like _BitInt(24) (4-byte storage, 3-byte APInt) would
+    // trip StoreIntToMemory's width assert in assertions-enabled builds.
+    if (Int.getBitWidth() != EltBytes * 8)
+      return 0;
+    llvm::StoreIntToMemory(Int, Buf + (I * EltBytes), (unsigned)EltBytes);
+  }
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  It->second = reinterpret_cast<intptr_t>(Buf);
+  return It->second;
+}
+
 intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
                            CXXRecordDecl* BaseCXXRD) {
   if (!D)
@@ -3460,6 +3514,32 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
     compat::maybeMangleDeclName(GD, mangledName);
     void* address = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(
         mangledName.c_str());
+
+    // A const variable whose constant initializer is in the AST: serve the
+    // evaluated value before the JIT lookup. This must stay *after* the
+    // search in the loaded binaries above: a symbol that a binary does
+    // export keeps its real address. A missed lookup falls through to the
+    // symbol autoloader, which scans and parses every library on the
+    // search path (over a thousand file opens with ROOT, ~0.5 s), only to
+    // end up in the evaluate fallback below anyway: in-class initialized
+    // static members like TString::kNPOS are exported by no binary. Unlike
+    // that fallback, don't instantiate templates here, so no Sema work is
+    // added for variables the lookup would have found.
+    if (!address) {
+      const VarDecl* InitVD = VD->hasInit() ? VD : VD->getDefinition();
+      if (InitVD && InitVD->hasInit() &&
+          !InitVD->getType().isVolatileQualified() &&
+          (InitVD->isConstexpr() || InitVD->getType().isConstQualified())) {
+        if (const APValue* val = InitVD->evaluateValue()) {
+          if (InitVD->getType()->isIntegralType(C))
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+            return reinterpret_cast<intptr_t>(val->getInt().getRawData());
+          if (intptr_t ArrAddr = MaterializeConstArrayValue(
+                  C, InitVD, *val, getInterpInfo(&I).ConstArrayValueStore))
+            return ArrAddr;
+        }
+      }
+    }
 
     if (!address)
       address = I.getAddressOfGlobal(GD);
@@ -5349,6 +5429,13 @@ bool DefineAbsoluteSymbol(compat::Interpreter& I, const char* unmangled_name,
 #endif
 
 static std::string MakeResourcesPath() {
+#ifdef CPPINTEROP_CLANG_RESOURCE_DIR
+  // Recorded at configure time from the clang this library links against;
+  // the LLVM_BINARY_DIR derivation below misses whenever clang's headers
+  // are installed under a different prefix than LLVM's libraries.
+  if (sys::fs::is_directory(CPPINTEROP_CLANG_RESOURCE_DIR))
+    return CPPINTEROP_CLANG_RESOURCE_DIR;
+#endif
   StringRef Dir;
 #ifdef LLVM_BINARY_DIR
   Dir = LLVM_BINARY_DIR;
@@ -5441,13 +5528,37 @@ InterpRef CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
   // copies and move them into the interpreter's InterpreterInfo entry.
   std::vector<std::string> ArgvStorage;
   ArgvStorage.push_back(sys::fs::getMainExecutable(nullptr, nullptr));
+  // Arguments compiled in at configure time, e.g. a packager recording the
+  // toolchain header paths the in-process clang cannot probe for. They
+  // precede the embedder's arguments so they act as defaults: conflicts in
+  // the clang invocation are resolved later-wins, and the embedder's
+  // -resource-dir stays ahead of the baked one (ExtractArgument below).
+  // CPPINTEROP_EXTRA_INTERPRETER_ARGS from the environment follows both.
+  std::vector<const char*> AllArgs;
+#ifdef CPPINTEROP_BAKED_INTERPRETER_ARGS
+  // Storage for the split arguments; must outlive the pointers in AllArgs.
+  std::vector<std::string> BakedStorage;
+  StringRef Baked(CPPINTEROP_BAKED_INTERPRETER_ARGS);
+  while (!Baked.empty()) {
+    StringRef Arg;
+    std::tie(Arg, Baked) = Baked.split(' ');
+    if (!Arg.empty())
+      BakedStorage.push_back(Arg.str());
+  }
+  for (const std::string& Arg : BakedStorage)
+    AllArgs.push_back(Arg.c_str());
+#endif
+  AllArgs.insert(AllArgs.end(), Args.begin(), Args.end());
   // In some systems, CppInterOp cannot manually detect the correct resource.
   // Then the -resource-dir passed by the user is assumed to be the correct
   // location. Prioritising it over detecting it within CppInterOp. Extracting
   // the resource-dir from the arguments is required because we set the
   // necessary library search location explicitly below. Because by default,
   // linker flags are ignored in repl (issue #748)
+  // The embedder's -resource-dir wins over any baked one.
   std::string ResourceDir = ExtractArgument(Args, "-resource-dir");
+  if (ResourceDir.empty())
+    ResourceDir = ExtractArgument(AllArgs, "-resource-dir");
   if (ResourceDir.empty())
     ResourceDir = MakeResourcesPath();
   llvm::Triple T(llvm::sys::getProcessTriple());
@@ -5489,7 +5600,7 @@ InterpRef CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
     }
   }
 #endif
-  ArgvStorage.insert(ArgvStorage.end(), Args.begin(), Args.end());
+  ArgvStorage.insert(ArgvStorage.end(), AllArgs.begin(), AllArgs.end());
   // To keep the Interpreter creation interface between cling and clang-repl
   // to some extent compatible we should put Args and GpuArgs together. On the
   // receiving end we should check for -xcuda to know.

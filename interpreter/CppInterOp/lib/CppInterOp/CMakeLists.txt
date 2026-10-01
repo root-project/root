@@ -303,7 +303,54 @@ if(TARGET CppInterOpTableGen)
 endif()
 target_compile_definitions(clangCppInterOp PUBLIC "_CINDEX_LIB_") # workaround for the use of `CINDEX_LINKAGE`
 
+# Where clang keeps its builtin headers. MakeResourcesPath() derives this
+# from LLVM_BINARY_DIR at runtime, which misses wherever clang's headers are
+# installed under a different prefix than LLVM's libraries, leaving a probe
+# for a `clang` on PATH as the only fallback. Ask the clang this build links
+# against instead, while the answer is still knowable. The cache entry is
+# the override; the detected value stays local so it cannot outlive a
+# reconfigure against a different Clang_DIR.
+set(CPPINTEROP_CLANG_RESOURCE_DIR "" CACHE PATH
+  "Clang resource directory compiled into the library; detected when empty")
+
+set(_clang_resource_dir "${CPPINTEROP_CLANG_RESOURCE_DIR}")
+# Auto-detection is skipped for coverage-instrumented builds: a baked-in
+# directory makes MakeResourcesPath() return early at runtime, leaving the
+# runtime fallback paths below it uncovered. An explicit
+# CPPINTEROP_CLANG_RESOURCE_DIR override is always honored.
+if(NOT _clang_resource_dir AND NOT CODE_COVERAGE
+   AND EXISTS "${CLANG_INSTALL_PREFIX}/bin/clang")
+  execute_process(
+    COMMAND "${CLANG_INSTALL_PREFIX}/bin/clang" -print-resource-dir
+    OUTPUT_VARIABLE _detected_resource_dir OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET)
+  if(EXISTS "${_detected_resource_dir}/include")
+    set(_clang_resource_dir "${_detected_resource_dir}")
+  endif()
+endif()
+message(STATUS "Clang resource directory: ${_clang_resource_dir}")
+
 string(REPLACE ";" "\;" _VER CPPINTEROP_VERSION)
 set_source_files_properties(CppInterOp.cpp PROPERTIES COMPILE_DEFINITIONS
   "LLVM_BINARY_DIR=\"${LLVM_BINARY_DIR}\";CPPINTEROP_VERSION=\"${_VAR}\""
 )
+
+# The values land in C string literals, so escape for exactly that layer.
+# They are delivered through a generated header (see BakedArgs.h.in) instead
+# of -D definitions: with -D, the shell would apply another unescape layer
+# and corrupt literal backslashes on the way to the preprocessor.
+function(_baked_string_define OUT NAME VALUE)
+  string(REPLACE "\\" "\\\\" _v "${VALUE}")
+  string(REPLACE "\"" "\\\"" _v "${_v}")
+  set(${OUT} "${${OUT}}#define ${NAME} \"${_v}\"\n" PARENT_SCOPE)
+endfunction()
+set(_baked_defines "")
+if(CPPINTEROP_BAKED_INTERPRETER_ARGS)
+  _baked_string_define(_baked_defines CPPINTEROP_BAKED_INTERPRETER_ARGS
+    "${CPPINTEROP_BAKED_INTERPRETER_ARGS}")
+endif()
+if(_clang_resource_dir)
+  _baked_string_define(_baked_defines CPPINTEROP_CLANG_RESOURCE_DIR
+    "${_clang_resource_dir}")
+endif()
+configure_file(BakedArgs.h.in ${CMAKE_CURRENT_BINARY_DIR}/BakedArgs.h @ONLY)
