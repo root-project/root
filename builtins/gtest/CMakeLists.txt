@@ -12,7 +12,7 @@ set(_gtest_byproducts
 
 set(GTEST_CXX_FLAGS "${ROOT_EXTERNAL_CXX_FLAGS}")
 if(MSVC)
-   if(winrtdebug)
+  if(winrtdebug)
     set(GTEST_BUILD_TYPE Debug)
   else()
     set(GTEST_BUILD_TYPE Release)
