@@ -2564,8 +2564,9 @@ void TCanvas::Update()
 
       if (UseGL() && (fGLDevice != -1)) {
          // TODO: try to reorganize GL part to follow normal painting rules
-         if (need_rapaint & 5)
-            Flush();
+
+         // Always flush GL canvas, eventually  if (need_rapaint & 5)
+         Flush();
       } else {
          Bool_t useXor = fPainter && fPainter->IsNative() && !fPainter->IsCocoa();
          Int_t mask = useXor ? 3 : 7; // if XOR not supported, pad repaint by any change
