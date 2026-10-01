@@ -119,6 +119,15 @@ TVirtualPad::~TVirtualPad()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Release interactive instance for specified object
+
+void TVirtualPad::FreeInteractive(TObject *obj)
+{
+   if (Interactive(obj))
+      Interactive();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TVirtualPad.
 
 void TVirtualPad::Streamer(TBuffer &R__b)
@@ -222,3 +231,4 @@ TPickerStackGuard::~TPickerStackGuard()
 {
    gPad->PopTopLevelSelectable();
 }
+
