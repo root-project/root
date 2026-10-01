@@ -605,7 +605,6 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RFieldBase::Clone(std::string_view newNa
 {
    auto clone = CloneImpl(newName);
    clone->fTypeAlias = fTypeAlias;
-   clone->fOnDiskId = fOnDiskId;
    clone->fDescription = fDescription;
    // We can just copy the references because fColumnRepresentatives point into a static structure
    clone->fColumnRepresentatives = fColumnRepresentatives;
