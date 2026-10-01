@@ -19,6 +19,9 @@ ROOTTEST_GENERATE_EXECUTABLE(
     LIBRARIES Core RIO Tree TreePlayer Hist GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main ROOT::TestSupport
     FIXTURES_REQUIRED root-io-cpp11Containers-unorderedMapDict-fixture
     FIXTURES_SETUP root-io-cpp11Containers-unorderedMapUnitTests-fixture)
+if(MSVC)
+    set_source_files_properties(unorderedMapUnitTests.cxx COMPILE_FLAGS /bigobj)
+endif()
 
 ROOTTEST_ADD_TEST(unorderedMapUnitTests
     EXEC ${CMAKE_CURRENT_BINARY_DIR}/unorderedMapUnitTests
