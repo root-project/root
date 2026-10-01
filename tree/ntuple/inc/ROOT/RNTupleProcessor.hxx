@@ -288,6 +288,87 @@ class RNTupleProcessor {
    friend class RNTupleJoinProcessor;
 
 protected:
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Maps a processor's global (outer) entry index to its inner ones
+   class REntryMapping {
+      friend class RNTupleSingleProcessor;
+      friend class RNTupleChainProcessor;
+      friend class RNTupleJoinProcessor;
+
+   private:
+      ROOT::NTupleSize_t fEntryNumber = ROOT::kInvalidNTupleIndex;
+
+      // Used by chain processors
+      std::size_t fInnerProcessorIdx = 0;
+      std::unique_ptr<REntryMapping> fInnerMapping = nullptr;
+
+      // Used by join processors
+      std::unique_ptr<REntryMapping> fPrimaryMapping = nullptr;
+      std::unique_ptr<REntryMapping> fAuxiliaryMapping = nullptr;
+
+      void SetEntryNumber(ROOT::NTupleSize_t entryNumber) { fEntryNumber = entryNumber; }
+
+      std::size_t GetInnerProcessorIdx() const { return fInnerProcessorIdx; }
+      void SetInnerProcessorIdx(std::size_t idx) { fInnerProcessorIdx = idx; }
+
+      REntryMapping &GetInnerProcessorMapping()
+      {
+         if (!fInnerMapping)
+            fInnerMapping = std::make_unique<REntryMapping>();
+         return *fInnerMapping;
+      }
+
+      const REntryMapping &GetInnerProcessorMapping() const
+      {
+         assert(fInnerMapping);
+         return *fInnerMapping;
+      }
+
+      REntryMapping &GetPrimaryProcessorMapping()
+      {
+         if (!fPrimaryMapping)
+            fPrimaryMapping = std::make_unique<REntryMapping>();
+         return *fPrimaryMapping;
+      }
+
+      const REntryMapping &GetPrimaryProcessorMapping() const
+      {
+         assert(fPrimaryMapping);
+         return *fPrimaryMapping;
+      }
+
+      REntryMapping &GetAuxiliaryProcessorMapping()
+      {
+         if (!fAuxiliaryMapping)
+            fAuxiliaryMapping = std::make_unique<REntryMapping>();
+         return *fAuxiliaryMapping;
+      }
+
+      const REntryMapping &GetAuxiliaryProcessorMapping() const
+      {
+         assert(fAuxiliaryMapping);
+         return *fAuxiliaryMapping;
+      }
+
+      friend bool operator==(const REntryMapping &lhs, const REntryMapping &rhs)
+      {
+         return lhs.fEntryNumber == rhs.fEntryNumber && lhs.fInnerProcessorIdx == rhs.fInnerProcessorIdx &&
+                ((lhs.fInnerMapping == nullptr && rhs.fInnerMapping == nullptr) ||
+                 *lhs.fInnerMapping == *rhs.fInnerMapping) &&
+                ((lhs.fPrimaryMapping == nullptr && rhs.fPrimaryMapping == nullptr) ||
+                 *lhs.fPrimaryMapping == *rhs.fPrimaryMapping) &&
+                ((lhs.fAuxiliaryMapping == nullptr && rhs.fAuxiliaryMapping == nullptr) ||
+                 *lhs.fAuxiliaryMapping == *rhs.fAuxiliaryMapping);
+      }
+
+      friend bool operator!=(const REntryMapping &lhs, const REntryMapping &rhs) { return !(lhs == rhs); }
+
+   public:
+      ROOT::NTupleSize_t GetEntryNumber() const { return fEntryNumber; }
+
+      ROOT::NTupleSize_t operator*() const { return fEntryNumber; }
+   };
+
    RNTupleProcessorOptions fOptions;
 
    std::shared_ptr<Internal::RNTupleProcessorEntry> fEntry = nullptr;
