@@ -13,6 +13,7 @@
 ##
 ## \author
 
+import cppyy
 import time
 
 import numpy as np
@@ -200,6 +201,9 @@ class SofieGNN:
 
         receivers = np.ascontiguousarray(graphData["receivers"], dtype=np.int64)
         senders = np.ascontiguousarray(graphData["senders"], dtype=np.int64)
+        i64p = cppyy.ll.cast["const int64_t*"]
+        receivers_ptr = i64p(receivers.ctypes.data)
+        senders_ptr = i64p(senders.ctypes.data)
 
         latent = self._as_arrays(
             self.encoder_session.infer(c(graphData["nodes"]), c(graphData["edges"]), c(graphData["globals"])),
