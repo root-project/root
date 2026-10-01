@@ -376,7 +376,14 @@ const TLeaf::Counts_t *TLeaf::GetLeafCountValues(Long64_t start, Long64_t len)
           (start+len) <= (Long64_t)(fLeafCountValues->fStartEntry + fLeafCountValues->fValues.size()))
       {
          auto &values(fLeafCountValues->fValues);
-         values.erase(values.begin(), values.begin() + start-fLeafCountValues->fStartEntry);
+         const auto startEntry = fLeafCountValues->fStartEntry;
+         if (start > startEntry) {
+            const auto n = start - startEntry;
+            if (n < values.size())
+               values.erase(values.begin(), values.begin() + n);
+            else
+               values.clear();
+         }
          return &values;
       }
    } else {
