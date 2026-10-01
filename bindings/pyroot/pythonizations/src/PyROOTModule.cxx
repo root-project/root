@@ -183,12 +183,8 @@ void GetBuffer(PyObject *pyobject, void *&buf)
 static PyMethodDef gPyROOTMethods[] = {
    {"AddCPPInstancePickling", (PyCFunction)PyROOT::AddCPPInstancePickling, METH_NOARGS,
     "Add a custom pickling mechanism for Cppyy Python proxy objects"},
-   {"GetBranchAttr", (PyCFunction)PyROOT::GetBranchAttr, METH_VARARGS,
-    "Allow to access branches as tree attributes"},
    {"AddTClassDynamicCastPyz", (PyCFunction)PyROOT::AddTClassDynamicCastPyz, METH_VARARGS,
     "Cast the void* returned by TClass::DynamicCast to the right type"},
-   {"BranchPyz", (PyCFunction)PyROOT::BranchPyz, METH_VARARGS,
-    "Fully enable the use of TTree::Branch from Python"},
    {"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
     "Add pretty printing pythonization"},
    {"InitApplication", (PyCFunction)PyROOT::RPyROOTApplication::InitApplication, METH_VARARGS,
