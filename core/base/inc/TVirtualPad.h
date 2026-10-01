@@ -32,6 +32,8 @@
 #include "GuiTypes.h"
 #include "Buttons.h"
 
+#include <utility>
+
 // forward declarations
 class TAxis;
 class TObject;
@@ -287,6 +289,19 @@ public:
    virtual void     XYtoPixel(Double_t x, Double_t y, Double_t &xpixel, Double_t &ypixel) const = 0;
 
    virtual TInteractive *Interactive(TObject * /* obj */ = nullptr, TInteractive * /* init */ = nullptr) = 0;
+
+   template<typename T, typename... Rest>
+   T *MakeInteractive(TObject *obj, Rest&&... rest)
+   {
+      auto inter = new T(std::forward<Rest>(rest)...);
+      Interactive(obj, inter);
+      return inter;
+   }
+
+   template<typename T>
+   T *GetInteractive(TObject *obj) { return dynamic_cast<T *>(Interactive(obj)); }
+
+   void FreeInteractive(TObject *obj);
 
    virtual Int_t    IncrementPaletteColor(Int_t i, const TString &opt) = 0;
    virtual Int_t    NextPaletteColor() = 0;
