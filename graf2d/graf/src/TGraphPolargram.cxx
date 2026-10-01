@@ -220,8 +220,6 @@ void TGraphPolargram::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    Int_t kMaxDiff = 20;
 
-   auto inter = dynamic_cast<TGraphPolargramInteractive *>(parent.Interactive(this));
-
    switch (event) {
       case kMouseMotion:
       case kButton1Down: {
@@ -232,16 +230,14 @@ void TGraphPolargram::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
          if (d1 < kMaxDiff) {
             parent.SetCursor(kMove);
-            if (event == kButton1Down) {
-               inter = new TGraphPolargramInteractive();
-               parent.Interactive(this, inter);
-            }
+            if (event == kButton1Down)
+               parent.MakeInteractive<TGraphPolargramInteractive>(this);
          }
          break;
       }
 
       case kButton1Motion:
-         if (inter) {
+         if (auto inter = parent.GetInteractive<TGraphPolargramInteractive>(this)) {
             auto dx = parent.AbsPixeltoX(px);
             auto dy = parent.AbsPixeltoY(py);
             inter->angle = TMath::ATan2(dy, dx);
@@ -257,11 +253,11 @@ void TGraphPolargram::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          break;
 
       case kButton1Up:
-         if (inter) {
+         if (auto inter = parent.GetInteractive<TGraphPolargramInteractive>(this)) {
             fAxisAngle = inter->angle;
             parent.Modified();
+            parent.FreeInteractive(this); // remove interactive
          }
-         parent.Interactive(); // remove interactive
          break;
    }
 }
