@@ -198,93 +198,71 @@ Int_t TGraphPolargram::DistancetoPrimitive(Int_t px, Int_t py)
 
 void TGraphPolargram::Draw(Option_t* options)
 {
-   Paint(options);
+   Paint(options); // FIXME: why paint here ?
    AppendPad(options);
 }
+
+class TGraphPolargramInteractive : public TVirtualPad::TInteractive {
+   public:
+
+   Double_t angle = 0.;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Indicate that there is something to click here.
 
 void TGraphPolargram::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   if (!gPad) return;
+   if (!gPad || !gPad->IsEditable())
+      return;
+
+   auto &parent = *gPad;
 
    Int_t kMaxDiff = 20;
-   static Int_t d1, d2, d3, px1, py1, px3, py3;
-   static Bool_t p1, p2, p3, p4, p5, p6, p7, p8;
-   Double_t px2, py2;
-   p2 = p3 = p4 = p5 = p6 = p7 = p8 = kFALSE;
-   if (!gPad->IsEditable()) return;
+
+   auto inter = dynamic_cast<TGraphPolargramInteractive *>(parent.Interactive(this));
+
    switch (event) {
       case kMouseMotion:
-         px1 = gPad->XtoAbsPixel(TMath::Cos(GetAngle()));
-         py1 = gPad->YtoAbsPixel(TMath::Sin(GetAngle()));
-         d1  = TMath::Abs(px1 - px) + TMath::Abs(py1-py); //simply take sum of pixels differences
-         p1  = kFALSE;
-         px2 = gPad->XtoAbsPixel(-1);
-         py2 = gPad->YtoAbsPixel(1);
-         d2  = (Int_t)(TMath::Abs(px2 - px) + TMath::Abs(py2 - py)) ;
-         px3 = gPad->XtoAbsPixel(-1);
-         py3 = gPad->YtoAbsPixel(-1);
-         d3  = TMath::Abs(px3 - px) + TMath::Abs(py3 - py) ; //simply take sum of pixels differences
-         // check if point is close to the radial axis
+      case kButton1Down: {
+         Int_t px1 = parent.XtoAbsPixel(TMath::Cos(GetAngle()));
+         Int_t py1 = parent.YtoAbsPixel(TMath::Sin(GetAngle()));
+
+         Int_t d1  = TMath::Abs(px1 - px) + TMath::Abs(py1-py); //simply take sum of pixels differences
+
          if (d1 < kMaxDiff) {
-            gPad->SetCursor(kMove);
-            p1 = kTRUE;
-         }
-         // check if point is close to the left high axis
-         if ( d2 < kMaxDiff) {
-            gPad->SetCursor(kHand);
-            p7 = kTRUE;
-         }
-         // check if point is close to the left down axis
-         if ( d3 < kMaxDiff) {
-            gPad->SetCursor(kHand);
-            p8 = kTRUE;
-         }
-         // check if point is close to a main circle
-         if (!p1 && !p7 ) {
-            p6 = kTRUE;
-            gPad->SetCursor(kHand);
+            parent.SetCursor(kMove);
+            if (event == kButton1Down) {
+               inter = new TGraphPolargramInteractive();
+               parent.Interactive(this, inter);
+            }
          }
          break;
-
-      case kButton1Down:
-         // Record initial coordinates
-         //px4 = px;
-         //py4 = py;
+      }
 
       case kButton1Motion:
-         if (p1) {
-            px2 = gPad->AbsPixeltoX(px);
-            py2 = gPad->AbsPixeltoY(py);
-            if ( px2 < 0 && py2 < 0)  {p2 = kTRUE;};
-            if ( px2 < 0 && py2 > 0 ) {p3 = kTRUE;};
-            if ( px2 > 0 && py2 > 0 ) {p4 = kTRUE;};
-            if ( px2 > 0 && py2 < 0 ) {p5 = kTRUE;};
-            px2 = TMath::ACos(TMath::Abs(px2));
-            py2 = TMath::ASin(TMath::Abs(py2));
-            if (p2) {
-               fAxisAngle = TMath::Pi()+(px2+py2)/2;
-               p2 = kFALSE;
-            };
-            if (p3) {
-               fAxisAngle = TMath::Pi()-(px2+py2)/2;
-               p3 = kFALSE;
-            };
-            if (p4) {
-               fAxisAngle = (px2+py2)/2;
-               p4 = kFALSE;
-            };
-            if (p5) {
-               fAxisAngle = -(px2+py2)/2;
-               p5 = kFALSE;
-            };
+         if (inter) {
+            auto dx = parent.AbsPixeltoX(px);
+            auto dy = parent.AbsPixeltoY(py);
+            inter->angle = TMath::ATan2(dy, dx);
+
+            Double_t xx[2], yy[2];
+            xx[0] = yy[0] = 0;
+            xx[1] = TMath::Cos(inter->angle);
+            yy[1] = TMath::Sin(inter->angle);
+            TAttLine{kBlack, 1, 2}.ModifyOn(parent);
+            parent.PaintPolyLine(2, xx, yy, "ipolargram");
+            parent.UpdateAsync();
          }
          break;
 
       case kButton1Up:
-         Paint();
+         if (inter) {
+            fAxisAngle = inter->angle;
+            parent.Modified();
+         }
+         parent.Interactive(); // remove interactive
+         break;
    }
 }
 
