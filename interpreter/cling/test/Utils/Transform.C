@@ -184,6 +184,19 @@ namespace NS4 {
 }
 typedef NS4::Inner::ConcreteTypedef GlobalAlias;
 
+// https://github.com/root-project/root/issues/23055: an elaborated type keyword
+// on the target of an alias.  Note that the alias must be reachable without a
+// nested name specifier of its own -- with one, the keyword is already dropped
+// when the prefix is rebuilt further up in GetPartiallyDesugaredTypeImpl().
+namespace NS5 {
+  class Track {};
+  enum Color { kRed };
+}
+typedef typename std::vector<NS5::Track> ElaboratedSeq;
+typedef ElaboratedSeq                    ElaboratedSeqAlias;
+typedef struct NS5::Track                ElaboratedRecord;
+typedef enum NS5::Color                  ElaboratedEnum;
+
 .rawInput 0
 
 const cling::LookupHelper& lookup = gCling->getLookupHelper();
@@ -537,4 +550,26 @@ if (const clang::RecordDecl *rdecl = llvm::dyn_cast_or_null<clang::RecordDecl>(d
 QT = lookup.findType("const GlobalAlias&", diags);
 std::cout << Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str() << std::endl;
 // CHECK: NS4::Inner::TemplateClass<double> &
+
+// The elaborated type keyword is part of the spelling of the typedef target and
+// must not survive the normalization.
+QT = lookup.findType("ElaboratedSeq", diags);
+std::cout << Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str() << std::endl;
+// CHECK: std::vector<NS5::Track>
+
+// The desugaring loop unwraps the whole alias chain, so an alias of an alias
+// ends up on the same type and is stripped just the same.
+QT = lookup.findType("ElaboratedSeqAlias", diags);
+std::cout << Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str() << std::endl;
+// CHECK: std::vector<NS5::Track>
+
+// It is not specific to 'typename': the tag keywords are stored on the type the
+// same way since LLVM 22.
+QT = lookup.findType("ElaboratedRecord", diags);
+std::cout << Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str() << std::endl;
+// CHECK: NS5::Track
+
+QT = lookup.findType("ElaboratedEnum", diags);
+std::cout << Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str() << std::endl;
+// CHECK: NS5::Color
 
