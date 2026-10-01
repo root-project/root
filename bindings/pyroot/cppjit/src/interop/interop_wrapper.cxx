@@ -1367,7 +1367,20 @@ interop::TCppScope_t interop::GetBaseScope(TCppScope_t klass,
 
 bool interop::IsSubclass(TCppScope_t derived, TCppScope_t base) {
   std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
-  return Cpp::IsSubclass(derived, base);
+  // Checked on every method call that receives 'self' as its first argument
+  // (e.g. from pythonizations and protocol slots), so memoize per class
+  // pair. A class that is still incomplete can gain bases once its
+  // definition is loaded, so a negative answer is only cached for complete
+  // classes.
+  static std::map<std::pair<const void*, const void*>, bool> s_subclass_cache;
+  const auto cacheKey = std::make_pair(derived.data, base.data);
+  auto cached = s_subclass_cache.find(cacheKey);
+  if (cached != s_subclass_cache.end())
+    return cached->second;
+  bool result = Cpp::IsSubclass(derived, base);
+  if (result || (Cpp::IsComplete(derived) && Cpp::IsComplete(base)))
+    s_subclass_cache.emplace(cacheKey, result);
+  return result;
 }
 
 static std::set<std::string> gSmartPtrTypes = {
