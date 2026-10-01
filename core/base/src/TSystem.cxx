@@ -2597,15 +2597,15 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
    cmd += " " CXXOPT;
    cmd += " " ROOT_CXX_STANDARD_OPTION;
 #ifdef WIN32
-   cmd += " /nologo /E /showIncludes";
-   cmd += " \"/I";
+   cmd += " /nologo /EP /showIncludes";
+   cmd += " /I \"";
 #else
    cmd += " -MM";
    cmd += " -MF \"" + depfilename + "\"";
    cmd += " -MT \"";
    R__AddPath(cmd, targetname);
    cmd += "\" ";
-   cmd += " \"-I";
+   cmd += " -I\"";
 #endif
    TString rootsysInclude = TROOT::GetIncludeDir();
    R__AddPath(cmd, rootsysInclude);
