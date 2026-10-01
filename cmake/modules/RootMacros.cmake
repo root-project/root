@@ -2981,39 +2981,6 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
 endmacro()
 
 #-------------------------------------------------------------------------------
-#
-# function ROOTTEST_ADD_OLDTEST()
-#
-# This function defines a single tests in the current directory that calls the legacy
-# make system to run the defined tests.
-#
-#-------------------------------------------------------------------------------
-
-find_program(ROOT_GMAKE_PROGRAM gmake)
-if (${ROOT_GMAKE_PROGRAM} MATCHES NOTFOUND)
-  set(ROOT_GMAKE_PROGRAM make)
-endif()
-
-function(ROOTTEST_ADD_OLDTEST)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "LABELS;TIMEOUT" ${ARGN})
-
-  ROOTTEST_ADD_TEST( make
-                     COMMAND ${ROOT_GMAKE_PROGRAM} cleantest ${ROOTTEST_PARALLEL_MAKE}
-                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                     DEPENDS roottest-root-io-event
-                     FIXTURES_REQUIRED UtilsLibraryBuild
-                     # The Makefile breaks if these two variables are in the environment by accident:
-                     # If they are unset, root-config --arch --platform is invoked correctly
-                     ENVIRONMENT ARCH=;PLATFORM=
-                     LABELS ${ARG_LABELS} TIMEOUT ${ARG_TIMEOUT})
-  if(MSVC)
-    ROOTTEST_TARGETNAME_FROM_FILE(testprefix .)
-    set(fulltestname "${testprefix}-make")
-    set_property(TEST ${fulltestname} PROPERTY DISABLED true)
-  endif()
-endfunction()
-
-#-------------------------------------------------------------------------------
 # macro ROOTTEST_SETUP_MACROTEST()
 #
 # A helper macro to define the command to run a ROOT macro (.C, .C+ or .py)
