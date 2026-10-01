@@ -1093,16 +1093,22 @@ TEST_P(RDatasetSpecTest, Issue22741_SampleEntryRangeLocalToSample)
    // Check that EntryRange of RSampleInfo is local to the sample (file) 
    // when using multi-threading and friends (i.e. TTreeProcessorMT using global clusters)
    auto makeTree = [](const std::string& fname, int offset) {
-       TFile f(fname.c_str(), "RECREATE");
-       TTree t("t", "t");
-       int x; t.Branch("x", &x);
-       x = offset; t.Fill(); x = offset+1; t.Fill();
-       f.Write(); f.Close();
+       auto f = std::make_unique<TFile>(fname.c_str(), "RECREATE");
+       auto t = std::make_unique<TTree>("t", "t");
+       int x; t->Branch("x", &x);
+       x = offset; t->Fill(); x = offset+1; t->Fill();
+       f->Write();
    };
-   makeTree("test_issue22741_main1.root", 0);
-   makeTree("test_issue22741_main2.root", 2);
-   makeTree("test_issue22741_friend1.root", 0);
-   makeTree("test_issue22741_friend2.root", 2);
+
+   struct FileRAII {
+       std::vector<std::string> fPaths;
+       ~FileRAII() { for (const auto& p : fPaths) std::remove(p.c_str()); }
+   } filesRAII{{"test_issue22741_main1.root", "test_issue22741_main2.root", "test_issue22741_friend1.root", "test_issue22741_friend2.root"}};
+
+   makeTree(filesRAII.fPaths[0], 0);
+   makeTree(filesRAII.fPaths[1], 2);
+   makeTree(filesRAII.fPaths[2], 0);
+   makeTree(filesRAII.fPaths[3], 2);
 
    ROOT::RDF::Experimental::RDatasetSpec spec;
    spec.AddSample({"sample1", "t", "test_issue22741_main1.root"});
