@@ -2634,12 +2634,12 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
       return false;
    }
    std::ofstream depFile(depfilename, std::ios::out | std::ios::trunc);
+   std::string allLines;
    if (depFile) {
       depFile << targetname << ": \\\n";
       char buffer[4096];
       const char *prefix = "Note: including file:";
       size_t prefixLen = strlen(prefix);
-
       while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
          std::string line(buffer);
          // Find and strip "Note: including file:"
@@ -2654,6 +2654,8 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
             if (!path.empty()) {
                depFile << "  \"" << path << "\" \\\n";
             }
+         } else {
+            allLines += line + "\n";
          }
       }
       depFile << "#\n";
@@ -2661,7 +2663,8 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
    }
    int retVal = gSystem->ClosePipe(pipe);
    if (retVal != 0) {
-      ::Warning("ACLiC", "Failed to close pipe dependencies for %s", filename.Data());
+      ::Warning("ACLiC", "Failed to close pipe dependencies for %s when executing %s", filename.Data(), cmd.Data());
+      ::Warning("ACLiC", "%s", allLines.c_str());
       return false;
    }
 #else
