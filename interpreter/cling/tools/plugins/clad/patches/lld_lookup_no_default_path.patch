@@ -1,0 +1,49 @@
+From 8035758862f1be6bf3b80b4db5b686fbd7589f14 Mon Sep 17 00:00:00 2001
+From: Aaron Jomy <aaronjomyjoseph@gmail.com>
+Date: Thu, 1 Oct 2026 20:28:09 +0200
+Subject: [PATCH] [cmake] Look LLD up only in LLD_DIR and next to the found
+ LLVM.
+
+The LLD lookup hinted at the directories next to LLVM_DIR but still
+searched the default paths, PATH included. When the LLVM clad is given
+has no LLD, as ROOT's builtin LLVM has none, the hints find nothing and
+cmake takes whatever LLD the host has. With a clang on PATH that is the
+compiler's own, and its LLDConfig.cmake runs find_package(LLVM <its
+version> EXACT), which loads the compiler's LLVMConfig.cmake over the
+one clad found. Every LLVM_* variable then describes the compiler's
+LLVM; for ROOT built with clang 22 that sets LLVM_LINK_LLVM_DYLIB,
+clad-tblgen takes the libLLVM branch, and the link stops with "cannot
+find -lLLVM".
+
+Search LLD_DIR and the directories next to the found LLVM in one lookup
+with NO_DEFAULT_PATH, the way LLVM_DIR is searched above. An LLD built
+or installed next to that LLVM is still found, and one elsewhere can
+still be named with LLD_DIR.
+---
+ CMakeLists.txt | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 2ce58ea..be4f383 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -122,11 +122,13 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
+   # Emscripten builds of clangInterpreter link lldWasm/lldCommon
+   # (clang/lib/Interpreter/CMakeLists.txt), so ClangTargets.cmake references
+   # LLD targets and find_package(Clang) fails unless LLD is found first.
++  # Look only in LLD_DIR and next to the LLVM found above: the default paths
++  # include PATH, and the LLD of a clang on PATH loads that compiler's
++  # LLVMConfig.cmake over it.
+   if (DEFINED LLD_DIR)
+-    find_package(LLD QUIET CONFIG PATHS ${LLD_DIR} "${LLD_DIR}/lib/cmake/lld" "${LLD_DIR}/cmake" NO_DEFAULT_PATH)
+-  else()
+-    find_package(LLD QUIET CONFIG HINTS "${LLVM_DIR}/../lld" "${LLVM_BINARY_DIR}/lib/cmake/lld")
++    set(lld_search_paths ${LLD_DIR} "${LLD_DIR}/lib/cmake/lld" "${LLD_DIR}/cmake")
+   endif()
++  find_package(LLD QUIET CONFIG PATHS ${lld_search_paths} "${LLVM_DIR}/../lld" "${LLVM_BINARY_DIR}/lib/cmake/lld" NO_DEFAULT_PATH)
+ 
+   if (DEFINED CLANG_VERSION)
+     message(FATAL_ERROR "Clang's configuration is not versioned. Please set LLVM_VERSION instead.")
+-- 
+2.43.0
+
