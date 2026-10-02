@@ -1317,9 +1317,10 @@ bool TKey::ReadKeyBuffer(char *&buffer, std::size_t bufsize)
       }
    } ConsumeBufCapacity{this, bufsize};
 
-   // Min size of the buffer for reading the common key header data
+   // Min size of the buffer for reading the common key header data.
+   // TDatime is stored as a UInt_t; do not use sizeof(TDatime) (it has a vtable).
    constexpr std::size_t kMinBufSize =
-      sizeof(fNbytes) + sizeof(Version_t) + sizeof(fObjlen) + sizeof(fKeylen) + sizeof(fCycle);
+      sizeof(fNbytes) + sizeof(Version_t) + sizeof(fObjlen) + sizeof(UInt_t) + sizeof(fKeylen) + sizeof(fCycle);
    if (!ConsumeBufCapacity(kMinBufSize))
       return false;
 
