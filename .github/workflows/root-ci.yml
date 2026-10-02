@@ -186,6 +186,9 @@ jobs:
         env:
           OVERRIDES: ${{ github.event_name == 'push' && format('{0} {1} {2}', '--overrides', env.GLOBAL_OVERRIDES, join( matrix.overrides, ' ')) || '' }}
           BASE_REF:  ${{ github.event_name == 'push' && github.ref_name || inputs.ref_name }}
+          # For pushes, build exactly the pushed commit, not wherever the
+          # branch happens to be when the job starts (issue #14061).
+          SHA:       ${{ github.event_name == 'push' && format('--sha {0}', github.sha) || '' }}
         run: |
           [ -d "${VIRTUAL_ENV_DIR}" ] && source ${VIRTUAL_ENV_DIR}/bin/activate
           echo "Python is now $(which python3) $(python3 --version)"
@@ -196,6 +199,7 @@ jobs:
                     --upload_artifacts false                    \
                     --binaries         ${{ github.event_name == 'schedule' }} \
                     --base_ref         ${BASE_REF}              \
+                    ${SHA}                                      \
                     --repository       ${{ github.server_url }}/${{ github.repository }} \
                     ${OVERRIDES}
 
@@ -344,6 +348,7 @@ jobs:
                     --platform     windows10
                     --incremental  false
                     --base_ref     ${{ github.ref_name }}
+                    --sha          ${{ github.sha }}
                     --binaries     ${{ startsWith(github.ref, 'refs/tags/') }}
                     --repository   ${{ github.server_url }}/${{ github.repository }}
                     --architecture ${{ matrix.target_arch }}"
@@ -581,6 +586,7 @@ jobs:
                     --platform_config ${{ matrix.platform_config }}
                     --incremental    false
                     --base_ref       ${{ github.ref_name }}
+                    --sha            ${{ github.sha }}
                     --binaries       ${{ startsWith(github.ref, 'refs/tags/') }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
                     --overrides       ${GLOBAL_OVERRIDES} ${OVERRIDES}
