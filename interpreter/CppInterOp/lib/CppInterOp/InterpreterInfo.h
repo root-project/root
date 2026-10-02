@@ -23,6 +23,7 @@
 
 #include "llvm/ADT/StringMap.h"
 
+#include <cstdint>
 #include <deque>
 #include <map>
 #include <string>
@@ -40,6 +41,11 @@ struct InterpreterInfo {
   // interpreter, so the caches must be destroyed together with it.
   std::map<const clang::FunctionDecl*, void*> WrapperStore;
   std::map<const clang::Decl*, void*> DtorWrapperStore;
+  // Constant-array initializers materialized by GetVariableOffset, keyed on
+  // the AST node so each variable is laid out once (stable address per
+  // query, no bump-allocator growth). A 0 entry records a deterministic
+  // materialization failure.
+  std::map<const clang::VarDecl*, intptr_t> ConstArrayValueStore;
   // A deque keeps element addresses stable so DiagnosticRef::data
   // survives push_back.
   std::deque<StoredDiagView> StoredDiags;

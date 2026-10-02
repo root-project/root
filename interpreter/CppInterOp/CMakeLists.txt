@@ -23,6 +23,9 @@ option(CPPINTEROP_INSTALL "Generate install rules for CppInterOp" ON)
 # would otherwise materialize the SOVERSION namelink as a second full copy.
 option(CPPINTEROP_SHARED_LIBRARY_VERSIONING
   "Attach the LLVM SOVERSION and namelink to shared clangCppInterOp" ON)
+
+set(CPPINTEROP_BAKED_INTERPRETER_ARGS "" CACHE STRING
+  "Space-separated arguments passed at interpreter creation (no quoting: arguments containing spaces are not supported)")
 if(EMSCRIPTEN)
   set(CPPINTEROP_EXTRA_WASM_FLAGS "-fwasm-exceptions" CACHE STRING "Extra flags for wasm")
 endif()
