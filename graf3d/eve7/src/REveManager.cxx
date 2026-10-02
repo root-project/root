@@ -33,6 +33,7 @@
 #include "TMap.h"
 #include "TExMap.h"
 #include "TEnv.h"
+#include "TError.h"
 #include "TColor.h"
 #include "TPRegexp.h"
 #include "TClass.h"
@@ -42,11 +43,18 @@
 #include "TTimer.h"
 #include "TApplication.h"
 
+#include <exception>
 #include <fstream>
 #include <memory>
 #include <sstream>
 #include <iostream>
 #include <regex>
+#include <system_error>
+#include <thread>
+
+#if defined(R__LINUX) || defined(R__MACOSX)
+#include <pthread.h>
+#endif
 
 #include <nlohmann/json.hpp>
 
@@ -68,6 +76,28 @@ struct MIR_TL_Data_t
 
 thread_local std::vector<ROOT::RLogEntry> gEveLogEntries;
 thread_local MIR_TL_Data_t gMIRData;
+
+namespace {
+
+/// Stack size of the calling thread in bytes, or 0 if it cannot be determined.
+size_t CurrentThreadStackSize()
+{
+#if defined(R__LINUX)
+   size_t size = 0;
+   pthread_attr_t attr;
+   if (pthread_getattr_np(pthread_self(), &attr) == 0) {
+      pthread_attr_getstacksize(&attr, &size);
+      pthread_attr_destroy(&attr);
+   }
+   return size;
+#elif defined(R__MACOSX)
+   return pthread_get_stacksize_np(pthread_self());
+#else
+   return 0;
+#endif
+}
+
+} // namespace
 
 /** \class REveManager
 \ingroup REve
@@ -783,9 +813,55 @@ void REveManager::QuitRoot()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Process new connection from web window
+/// Process new connection from web window.
+///
+/// This is called in a web-server thread, which can have a small stack (the
+/// builtin civetweb uses 100 KB unless configured otherwise). Streaming the
+/// scenes can need much more: the first IsA() of an element class makes cling
+/// load declarations, which recurses deeply. If the current thread's stack is
+/// small, the streaming runs in a thread with the default stack size instead,
+/// and this thread waits for it.
 
 void REveManager::WindowConnect(unsigned connid)
+{
+   static constexpr size_t kMinStackSize = 1024 * 1024;
+
+   size_t stack_size = CurrentThreadStackSize();
+   if (stack_size == 0 || stack_size >= kMinStackSize) {
+      StreamToNewConnection(connid);
+      return;
+   }
+
+   // An exception is passed back to this thread, where it would have appeared before.
+   std::exception_ptr exc;
+   std::thread thrd;
+   try {
+      thrd = std::thread([this, connid, &exc] {
+#if defined(R__LINUX)
+         pthread_setname_np(pthread_self(), "eve_connect");
+#endif
+         try {
+            StreamToNewConnection(connid);
+         } catch (...) {
+            exc = std::current_exception();
+         }
+      });
+   } catch (const std::system_error &e) {
+      ::Warning("REveManager::WindowConnect",
+                "could not start streaming thread (%s), streaming in the web-server thread with stack size %zu",
+                e.what(), stack_size);
+      StreamToNewConnection(connid);
+      return;
+   }
+   thrd.join();
+   if (exc)
+      std::rethrow_exception(exc);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Register new connection and stream the world and the mandatory scenes to it.
+
+void REveManager::StreamToNewConnection(unsigned connid)
 {
    std::unique_lock<std::mutex> lock(fServerState.fMutex);
 

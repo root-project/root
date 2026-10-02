@@ -165,6 +165,7 @@ protected:
    bool              fHttpPublic{false};
 
    void WindowConnect(unsigned connid);
+   void StreamToNewConnection(unsigned connid);
    void WindowData(unsigned connid, const std::string &arg);
    void WindowDisconnect(unsigned connid);
 
