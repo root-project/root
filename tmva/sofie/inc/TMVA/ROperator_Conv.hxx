@@ -495,7 +495,6 @@ public:
                 << "," << fAttrDilations[1] << "," << fAttrDilations[2] << ","
                 << "tensor_" << imcol << ");\n\n ";
          }
-         // BLAS
          out << SP << "Gemm_Call("
              << "tensor_" << fNY << " + out_offset, false, false, " << OpName << "_m, " << OpName << "_n, " << OpName
              << "_k, " << OpName << "_alpha, " << "tensor_" << imcol << ", tensor_" << convK << ", " << OpName
@@ -506,11 +505,6 @@ public:
             out << "nullptr";
          out << ");\n";
 
-         // out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
-         //     << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, " << "tensor_" << imcol << ", &" <<
-         //     OpName << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-         // out << SP << SP << SP << "tensor_" << convK << ", &" << OpName << "_k, &" << OpName << "_beta, tensor_" <<
-         //     fNY << " + out_offset, &" << OpName << "_m);\n";
       } else {
          // case of group convolution
          // Unroll (IM2COL) the input tensor- make loop on groups and repeat operations (IM2COL + GEMM for each
@@ -552,7 +546,6 @@ public:
                 << "," << fAttrDilations[1] << "," << fAttrDilations[2] << ",tensor_" << imcol << ");\n\n ";
          }
 
-         // BLAS
          // n must be divided by the number of groups
          out << SP << SP << SP << OpName << "_n = " << fShapeW[0] / fAttrGroup << ";\n";
          // offset g must be  g * k * n
@@ -570,35 +563,13 @@ public:
             out << "nullptr";
          out << ");\n";
 
-         // out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
-         //     << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << imcol << ", &" << OpName
-         //     << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-         // out << SP << SP << SP << "tensor_" << convK << " + offset_f, &" << OpName << "_k, &" << OpName << "_beta,
-         // tensor_" << fNY
-         //     << " + out_offset"
-         //     << ", &" << OpName << "_m);\n";
-
          out << SP << SP << "}\n"; // end of group loop
       }
 
-      // if (fNB != "") {
-      //    out << SP << "int " << OpName << "_size = " << outputBatchStride << ";\n";
-      //    out << SP << "float " << OpName << "_gamma = 1.0;\n";
-      //    out << SP << "int " << OpName << "_incx = 1;\n";
-      //    out << SP << "int " << OpName << "_incy = 1;\n";
-
-      //    out << SP << "BLAS::saxpy_(&" << OpName << "_size, &" << OpName << "_gamma, tensor_" << fNB << ", &"
-      //        << OpName << "_incx, tensor_" << fNY << " + out_offset, &" << OpName << "_incy);\n";
-
-      // }
       out << SP << "}\n"; // end of batch size loop
 
       return out.str();
       }
-
-   /*! \brief Returns the blas routines needed to compile the generated code
-    */
-   std::vector<std::string> GetBlasRoutines() override { return { std::string("Gemm"), std::string("Axpy") }; }
 };
 
 } // namespace SOFIE

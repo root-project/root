@@ -28,6 +28,7 @@ The following people have contributed to this new version:
 * The TMVA deep learning methods `MethodDL` (`TMVA::Types::kDL`) and `MethodDNN` (`TMVA::Types::kDNN`), together with all classes in the `TMVA::DNN` namespace and their helper classes `TMVA::Monitoring` and `Pattern`, are deprecated and will be removed in ROOT 6.46. Neural networks are nowadays trained with dedicated machine learning libraries, so maintaining a separate implementation with its own CPU, CUDA and cuDNN backends is no longer justified. Users are encouraged to train their models directly with these libraries, which integrate well with ROOT via the `ROOT.Experimental.ML.RDataLoader`, and to use SOFIE for inference in C++. The `TMVA_CNN_Classification` and `TMVA_RNN_Classification` tutorials are removed already, and the other TMVA tutorials do not use these methods anymore.
   We are aware that models trained with these methods may be stored in TMVA XML weight files and still be evaluated via `TMVA::Reader` in production workflows. If you need to keep running such models after ROOT 6.46, please reach out to the ROOT team by opening a [GitHub issue](https://github.com/root-project/root/issues) or posting on the [ROOT forum](https://root-forum.cern.ch/), so that a migration path to SOFIE can be provided.
 * The build options `tmva-cpu`, `tmva-gpu`, `tmva-cudnn` and `use_gsl_cblas` only affect the deprecated TMVA deep learning methods, so they are deprecated as well and will be removed in ROOT 6.46. The `tmva-cpu` option is now `OFF` by default, also with `-Dall=ON`, so `MethodDL` runs on a single thread without BLAS and `MethodDNN` cannot be trained, unless ROOT is configured with `-Dtmva-cpu=ON`. Evaluating existing weight files with `TMVA::Reader` works in both cases.
+* The `test_tmva_sofie` build option was removed. The TMVA SOFIE tests don't need BLAS anymore, so they are now enabled by the `testing` option like all other tests.
 
 ## Build system
 
@@ -41,6 +42,12 @@ After ROOT 6.44, the minimum may rise to 3.31 if an upgrade to LLVM 24 or later 
 RenderCore, the WebGL engine of the REve client, is fetched at build time as the tarball of its release, from [SPI](https://spi.web.cern.ch)'s [website](https://lcgpackages.web.cern.ch/) first and from its GitHub release second, instead of being bundled in `builtins/rendercore/`. A build without a network takes the tarball from `ROOT_DOWNLOAD_DIR`, as for every builtin. The build option `builtin_rendercore`, ON by default, controls the download. REve has no web location of RenderCore to fall back to, so the option can be OFF only when REve is not built, that is with `root7` or `webgui` OFF; otherwise the configuration stops with an error.
 
 ## Python Interface
+
+## Machine Learning
+
+### SOFIE inference code without BLAS dependency
+
+The C++ code that SOFIE generates for the inference of ONNX models doesn't call BLAS anymore: the matrix multiplications are done by functions that are emitted into the generated header itself. The generated code is therefore self-contained and doesn't need to be linked against a BLAS library. For the per-event inference that SOFIE is mostly used for, for example in RDataFrame event loops, this is as fast as BLAS, but large batches are evaluated considerably slower.
 
 ## I/O
 
