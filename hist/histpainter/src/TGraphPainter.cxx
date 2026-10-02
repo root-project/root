@@ -945,13 +945,12 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
    Double_t *theX  = theGraph->GetX();
    Double_t *theY  = theGraph->GetY();
 
-   auto inter = dynamic_cast<TGraphInteractive *>(parent.Interactive(theGraph));
+   auto inter = parent.GetInteractive<TGraphInteractive>(theGraph);
 
    switch (event) {
 
    case kButton1Down: {
-      inter = new TGraphInteractive(theNpoints, opaque, theGraph->InheritsFrom("TCutG"));
-      parent.Interactive(theGraph, inter);
+      inter = parent.MakeInteractive<TGraphInteractive>(theGraph, theNpoints, opaque, theGraph->InheritsFrom("TCutG"));
 
       inter->FindPoint(parent, theGraph, px, py, kTRUE);
       if (!opaque) {
@@ -998,7 +997,7 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
          parent.Modified();
       }
 
-      parent.Interactive(); // cleanup interactive object
+      parent.FreeInteractive(theGraph);
    }
 }
 
