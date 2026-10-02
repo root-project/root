@@ -100,6 +100,7 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
 * The header `Riostream.h` is deprecated and will be removed after ROOT 6.44, use `<iostream>` or `<fstream>` or `<iomanip>` instead.
 * The header `Rstrstream.h` is deprecated and will be removed after ROOT 6.44, use instead `<sstream>`.
 * The headers `ZipLZMA.h`, `ZipLZ4.h` and `ZipZSTD.h` are deprecated and will be removed in ROOT 6.46, use instead the public methods in the `RZip.h` interface.
+* Remove outdated `TSQLFile` class, was not tested for very long time, not working with only supported sqlite DB
 
 ## Build System
 
@@ -117,7 +118,7 @@ For instance, `#include "TBuffer.h"` will be removed from `TKey.h`. This change 
 To fix it well in advance on your side in downstream code, since no warnings are emitted in the meantime, we recommend getting a `preview` of those to-be errors by adding in your code `#define R__LESS_INCLUDES`, adding this at the very top before including any ROOT header. An alternative is to define this on CMake side via `target_compile_definitions`.
 This may also improve compile time and reduce code inter-dependency; see https://github.com/include-what-you-use/include-what-you-use/blob/master/docs/WhyIWYU.md for a good overview of the motivation.
 The macro `R__LESS_INCLUDES` will no longer have an effect after ROOT 6.44 since it will be the new default behavior.
-Note: if you build ROOT with option `dev=ON`, the header `RConfigure.h` will already contain that definition, so in that case consider just including `RConfigure.h` at the very top, rather than redefining `R__LESS_INCLUDES` in downstream code, or alternatively guard the definition with `#ifndef`. 
+Note: if you build ROOT with option `dev=ON`, the header `RConfigure.h` will already contain that definition, so in that case consider just including `RConfigure.h` at the very top, rather than redefining `R__LESS_INCLUDES` in downstream code, or alternatively guard the definition with `#ifndef`.
 
 ### Moving from builtin dependencies to system-provided packages
 
