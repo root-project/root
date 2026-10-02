@@ -1,14 +1,8 @@
 import sys, pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, pylong, pyunicode, IS_MAC, IS_MAC_ARM, IS_WINDOWS, has_cpp_20
+from support import setup_make, pylong, pyunicode, IS_MAC, IS_MAC_ARM, IS_WINDOWS
 
 test_dct = "datatypes_cxx"
-
-
-def is_modules_off():
-    import cppyy
-
-    return "runtime_cxxmodules" not in cppyy.gbl.gROOT.GetConfigFeatures()
 
 
 class TestDATATYPES:
@@ -2345,8 +2339,7 @@ class TestDATATYPES:
         assert str(bt(1)) == 'True'
         assert str(bt(0)) == 'False'
 
-    @mark.xfail(strict=True, run=not IS_WINDOWS, condition=IS_MAC_ARM or (not has_cpp_20() and is_modules_off()), reason="Crashes on mac-beta ARM64 and fails on Windows \
-            assertion error for runtime_cxxmodules=OFF build that is explained in GitHub issue #21005")
+    @mark.xfail(strict=True, run=not IS_WINDOWS, condition=IS_MAC_ARM, reason="Crashes on mac-beta ARM64 and fails on Windows")
     def test49_addressof_method(self):
         """Use of addressof for (const) methods"""
 
