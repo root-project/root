@@ -58,6 +58,14 @@ TEST(StringUtils, JoinCStringArray)
    EXPECT_EQ(ROOT::Join(",", strings), "apple,,banana");
 }
 
+TEST(StringUtils, JoinStringViewSeparator)
+{
+   const std::string separators = "--::--";
+   const std::vector<std::string> strings = {"apple", "orange"};
+   EXPECT_EQ(ROOT::Join(std::string_view(separators).substr(2, 2), strings), "apple::orange");
+   EXPECT_EQ(ROOT::Join(std::string(", "), strings), "apple, orange");
+}
+
 TEST(StringUtils, Round)
 {
    EXPECT_EQ(ROOT::Round(0.000000014, 0.000000024), "(10#pm20)*1e-9");
