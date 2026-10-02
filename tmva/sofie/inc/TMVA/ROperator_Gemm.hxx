@@ -604,8 +604,6 @@ namespace SOFIE{
          return out.str();
       }
 
-      std::vector<std::string> GetBlasRoutines() override { return {"Gemm", "Gemv"}; }
-
    };
 
 

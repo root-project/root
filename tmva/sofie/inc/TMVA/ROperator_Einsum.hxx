@@ -112,6 +112,8 @@ public:
    }
 
    void Initialize(RModel& model) override {
+      // the matmul reduction emitted in Generate() uses Gemm_Ref
+      model.AddNeededHelperFunction("Gemm_Ref");
       // input must be a graph input, or already initialized intermediate tensor
       size_t i = 0;
       std::map<char, int> labelsMap;
@@ -305,7 +307,7 @@ public:
             return strst.str();
          };
          // only float type supported
-         out << SP << "BLAS::sgemm_(&" << opName << "_transB, &" << opName << "_transA, &" << opName
+         out << SP << "Gemm_Ref(&" << opName << "_transB, &" << opName << "_transA, &" << opName
              << "_n, &" << opName << "_m, &" << opName << "_k, &" << opName << "_alpha, "
              << "&tensor_" << fNInputs[1] << "[" << tensorOffset(inputStrideB, fInputLabels[1])
              << "], &" << opName << "_ldb, "
@@ -324,9 +326,6 @@ public:
       return out.str();
    }
 
-   std::vector<std::string> GetBlasRoutines() override {
-      return { std::string("Gemm") };
-   }
 };
 
 }//SOFIE
