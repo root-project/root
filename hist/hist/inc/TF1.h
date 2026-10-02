@@ -22,11 +22,15 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "RConfigure.h"
-#include <functional>
 #include <cassert>
+#include <cstddef>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
+#if __has_include(<span>)
+#include <span>
+#endif
 #include "TFormula.h"
 #include "TMethodCall.h"
 #include "TAttLine.h"
@@ -709,7 +713,22 @@ namespace ROOT {
 #endif
          {
             f->fType = TF1::EFType::kTemplScalar;
-            f->fFunctor.reset(new TF1::TF1FunctorPointerImpl(ROOT::Math::ParamFunctorTempl<double>(func)));
+#ifdef __cpp_lib_span
+            if constexpr (std::is_invocable_r_v<double, Func, std::span<const double>, std::span<const double>>) {
+               auto wrapper = [func, npar = f->fNpar, ndim = f->fNdim](const double *x, const double *p) -> double {
+                  return func(std::span<const double>(x, ndim), std::span<const double>(p, npar));
+               };
+               f->fFunctor = std::make_unique<TF1::TF1FunctorPointerImpl<double>>(ROOT::Math::ParamFunctorTempl<double>(wrapper));
+            } else
+#endif
+            if constexpr (std::is_invocable_r_v<double, Func, const double *, std::size_t, const double *, std::size_t>) {
+               auto wrapper = [func, npar = f->fNpar, ndim = f->fNdim](const double *x, const double *p) -> double {
+                  return func(x, static_cast<std::size_t>(ndim), p, static_cast<std::size_t>(npar));
+               };
+               f->fFunctor = std::make_unique<TF1::TF1FunctorPointerImpl<double>>(ROOT::Math::ParamFunctorTempl<double>(wrapper));
+            } else {
+               f->fFunctor.reset(new TF1::TF1FunctorPointerImpl(ROOT::Math::ParamFunctorTempl<double>(func)));
+            }
          }
 
          f->fParams = std::make_unique<TF1Parameters>(f->fNpar);
@@ -727,7 +746,22 @@ namespace ROOT {
 #endif
          {
             f->fType = TF1::EFType::kTemplScalar;
-            f->fFunctor.reset(new TF1::TF1FunctorPointerImpl(ROOT::Math::ParamFunctorTempl<double>(func)));
+#ifdef __cpp_lib_span
+            if constexpr (std::is_invocable_r_v<double, Func, std::span<const double>, std::span<const double>>) {
+               auto wrapper = [func, npar = f->fNpar, ndim = f->fNdim](const double *x, const double *p) -> double {
+                  return (*func)(std::span<const double>(x, ndim), std::span<const double>(p, npar));
+               };
+               f->fFunctor = std::make_unique<TF1::TF1FunctorPointerImpl<double>>(ROOT::Math::ParamFunctorTempl<double>(wrapper));
+            } else
+#endif
+            if constexpr (std::is_invocable_r_v<double, Func, const double *, std::size_t, const double *, std::size_t>) {
+               auto wrapper = [func, npar = f->fNpar, ndim = f->fNdim](const double *x, const double *p) -> double {
+                  return (*func)(x, static_cast<std::size_t>(ndim), p, static_cast<std::size_t>(npar));
+               };
+               f->fFunctor = std::make_unique<TF1::TF1FunctorPointerImpl<double>>(ROOT::Math::ParamFunctorTempl<double>(wrapper));
+            } else {
+               f->fFunctor.reset(new TF1::TF1FunctorPointerImpl(ROOT::Math::ParamFunctorTempl<double>(func)));
+            }
          }
 
          f->fParams = std::make_unique<TF1Parameters>(f->fNpar);
