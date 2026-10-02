@@ -34,11 +34,11 @@ int test2(const char *mode = "")
    //---------------------------------------------------------------------------
    // Load the dictionary
    //---------------------------------------------------------------------------
-   const char* dictname = "./libDataModelV2_dictcint";
+   const char* dictname = "libDataModelV2_dictcint";
 
    if( mode && mode[0] == 'r' )
    {
-      dictname = "./libDataModelV2_dictrflx";
+      dictname = "libDataModelV2_dictrflx";
       prefix = "reflex_";
    }
 
