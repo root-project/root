@@ -73,8 +73,10 @@ void Read(const std::vector<RNTupleOpenSpec> &ntuples)
    // returned value can be used to read the current entry's value for that particular field.
    auto px = processor->RequestField<std::vector<float>>("vpx");
 
-   // The iterator value is the index of the current entry being processed.
-   for (auto idx : *processor) {
+   // The iterator value gives access to the the current entry to process.
+   for (const auto &idx : *processor) {
+      // Load the entry.
+      processor->LoadEntry(idx);
       // We use the value returned from requesting the field to read its data for the current entry.
       for (auto x : *px) {
          hPx.Fill(x);

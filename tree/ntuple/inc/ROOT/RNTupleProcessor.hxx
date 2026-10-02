@@ -399,12 +399,17 @@ protected:
                         const Internal::RNTupleProcessorProvenance &provenance, bool updateFields) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Load the entry identified by the provided entry number.
+   /// \brief Set the local entry mapping (for nested processors), according to a global entry number.
    ///
-   /// \param[in] entryNumber Entry number to load
+   /// \param[in] entryNumber Global entry number to map to
+   /// \param[in] mapping Entry mapping to update
+   virtual void SetEntryMapping(ROOT::NTupleSize_t globalEntryNumber, REntryMapping &mapping) = 0;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Load the entry identified by the entry mapping.
    ///
-   /// \return `entryNumber` if the entry was successfully loaded, `kInvalidNTupleIndex` otherwise.
-   virtual ROOT::NTupleSize_t LoadEntry(ROOT::NTupleSize_t entryNumber) = 0;
+   /// \param[in] mapping Mapping to the entry to load
+   virtual void LoadEntryImpl(const REntryMapping &mapping) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor
@@ -522,6 +527,12 @@ public:
    }
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Load the entry identified by the entry mapping.
+   ///
+   /// \param[in] mapping Mapping to the entry to load
+   void LoadEntry(const REntryMapping &mapping) { LoadEntryImpl(mapping); }
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Print a graphical representation of the processor composition.
    ///
    /// \param[in,out] output Stream to print to (default is stdout).
@@ -552,14 +563,13 @@ public:
    private:
       RNTupleProcessor &fProcessor;
       ROOT::NTupleSize_t fCurrentEntryNumber;
+      RNTupleProcessor::REntryMapping fEntryMapping;
 
    public:
       using iterator_category = std::input_iterator_tag;
       using iterator = RIterator;
-      using value_type = ROOT::NTupleSize_t;
-      using difference_type = std::ptrdiff_t;
-      using pointer = ROOT::NTupleSize_t *;
-      using reference = ROOT::NTupleSize_t &;
+      using value_type = RNTupleProcessor::REntryMapping;
+      using reference = RNTupleProcessor::REntryMapping &;
 
       RIterator(RNTupleProcessor &processor, ROOT::NTupleSize_t entryNumber)
          : fProcessor(processor), fCurrentEntryNumber(entryNumber)
@@ -572,24 +582,30 @@ public:
          if (fCurrentEntryNumber != ROOT::kInvalidNTupleIndex) {
             fProcessor.Connect(fProcessor.fEntry->GetFieldIndices(), Internal::RNTupleProcessorProvenance(),
                                /*updateFields=*/false);
-            fCurrentEntryNumber = fProcessor.LoadEntry(fCurrentEntryNumber);
+            fProcessor.SetEntryMapping(fCurrentEntryNumber, fEntryMapping);
          }
       }
 
-      iterator operator++()
+      iterator &operator++()
       {
-         fCurrentEntryNumber = fProcessor.LoadEntry(fCurrentEntryNumber + 1);
+         fCurrentEntryNumber++;
+         fProcessor.SetEntryMapping(fCurrentEntryNumber, fEntryMapping);
+         if (fEntryMapping.GetEntryNumber() == kInvalidNTupleIndex) {
+            fCurrentEntryNumber = kInvalidNTupleIndex;
+         }
          return *this;
       }
 
-      iterator operator++(int)
+      const iterator &operator++(int)
       {
-         auto obj = *this;
+         auto &obj = *this;
          ++(*this);
          return obj;
       }
 
-      reference operator*() { return fCurrentEntryNumber; }
+      reference operator*() { return fEntryMapping; }
+
+      const value_type *operator->() const { return &fEntryMapping; }
 
       friend bool operator!=(const iterator &lh, const iterator &rh)
       {
@@ -709,11 +725,16 @@ private:
                 bool updateFields = false) final;
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Load the entry identified by the provided (global) entry number (i.e., considering all RNTuples in this
-   /// processor).
+   /// \brief Set the local entry mapping (for nested processors), according to a global entry number.
    ///
-   /// \sa ROOT::Experimental::RNTupleProcessor::LoadEntry
-   ROOT::NTupleSize_t LoadEntry(ROOT::NTupleSize_t entryNumber) final;
+   /// \sa ROOT::Experimental::RNTupleProcessor::SetEntryMapping
+   void SetEntryMapping(ROOT::NTupleSize_t globalEntryNumber, REntryMapping &mapping) final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Load the entry identified by the entry mapping.
+   ///
+   /// \sa ROOT::Experimental::RNTupleProcessor::LoadEntryImpl
+   void LoadEntryImpl(const REntryMapping &mapping) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor.
@@ -806,11 +827,16 @@ private:
    void ConnectInnerProcessor(std::size_t processorNumber);
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Load the entry identified by the provided (global) entry number (i.e., considering all RNTuples in this
-   /// processor).
+   /// \brief Set the local entry mapping (for nested processors), according to a global entry number.
    ///
-   /// \sa ROOT::Experimental::RNTupleProcessor::LoadEntry
-   ROOT::NTupleSize_t LoadEntry(ROOT::NTupleSize_t entryNumber) final;
+   /// \sa ROOT::Experimental::RNTupleProcessor::SetEntryMapping
+   void SetEntryMapping(ROOT::NTupleSize_t globalEntryNumber, REntryMapping &mapping) final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Load the entry identified by the entry mapping.
+   ///
+   /// \sa ROOT::Experimental::RNTupleProcessor::LoadEntryImpl
+   void LoadEntryImpl(const REntryMapping &mapping) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor.
@@ -899,10 +925,16 @@ private:
                 bool updateFields = false) final;
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Load the entry identified by the provided entry number of the primary processor.
+   /// \brief Set the local entry mapping (for nested processors), according to a global entry number.
    ///
-   /// \sa ROOT::Experimental::RNTupleProcessor::LoadEntry
-   ROOT::NTupleSize_t LoadEntry(ROOT::NTupleSize_t entryNumber) final;
+   /// \sa ROOT::Experimental::RNTupleProcessor::SetEntryMapping
+   void SetEntryMapping(ROOT::NTupleSize_t globalEntryNumber, REntryMapping &mapping) final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Load the entry identified by the entry mapping.
+   ///
+   /// \sa ROOT::Experimental::RNTupleProcessor::LoadEntryImpl
+   void LoadEntryImpl(const REntryMapping &mapping) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor.

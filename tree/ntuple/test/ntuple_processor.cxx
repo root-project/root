@@ -47,10 +47,11 @@ TEST(RNTupleProcessor, TMemFile)
 
    auto x = proc->RequestField<float>("x");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
 
-      EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
+      EXPECT_FLOAT_EQ(static_cast<float>(*idx), *x);
    }
 
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
@@ -76,10 +77,11 @@ TEST(RNTupleProcessor, TDirectory)
    auto proc = RNTupleProcessor::Create({"a/b/ntuple", file.get()});
    auto x = proc->RequestField<float>("x");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
 
-      EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
+      EXPECT_FLOAT_EQ(static_cast<float>(*idx), *x);
    }
 
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
@@ -203,11 +205,12 @@ TEST_F(RNTupleProcessorTest, RequestFieldWithPtr)
 
    auto xNewPtr = std::make_shared<float>();
 
-   for (auto idx : *proc) {
-      EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_FLOAT_EQ(static_cast<float>(*idx), *x);
       EXPECT_EQ(x.GetPtr(), xPtr);
 
-      if (idx == 2) {
+      if (*idx == 2) {
          x.Bind(xNewPtr);
          xPtr.swap(xNewPtr);
       }
@@ -223,11 +226,12 @@ TEST_F(RNTupleProcessorTest, RequestFieldWithVoidPtr)
 
    auto xNewPtr = std::make_shared<float>();
 
-   for (auto idx : *proc) {
-      EXPECT_FLOAT_EQ(static_cast<float>(idx), *std::static_pointer_cast<float>(x.GetPtr()));
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_FLOAT_EQ(static_cast<float>(*idx), *std::static_pointer_cast<float>(x.GetPtr()));
       EXPECT_EQ(x.GetPtr(), xPtr);
 
-      if (idx == 2) {
+      if (*idx == 2) {
          x.Bind(xNewPtr);
          xPtr.swap(xNewPtr);
       }
@@ -254,12 +258,13 @@ TEST_F(RNTupleProcessorTest, RequestFieldWithTypeString)
    auto yPtr = std::make_shared<std::vector<float>>();
    auto y = proc->RequestField("y", "std::vector<float>", yPtr.get());
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
 
-      EXPECT_FLOAT_EQ(static_cast<float>(idx), *std::static_pointer_cast<float>(x.GetPtr()));
+      EXPECT_FLOAT_EQ(static_cast<float>(*idx), *std::static_pointer_cast<float>(x.GetPtr()));
 
-      std::vector<float> yExp{static_cast<float>(idx), static_cast<float>((idx) * 2)};
+      std::vector<float> yExp{static_cast<float>(*idx), static_cast<float>((*idx) * 2)};
       EXPECT_EQ(yExp, *std::static_pointer_cast<std::vector<float>>(y.GetPtr()));
    }
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
@@ -281,12 +286,13 @@ TEST_F(RNTupleProcessorTest, AlternativeTypes)
 
    auto yAsRVec = proc->RequestField<ROOT::RVec<float>>("y");
 
-   for (auto idx : *proc) {
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
 
-      EXPECT_FLOAT_EQ(static_cast<double>(idx), *xAsDouble);
-      EXPECT_FLOAT_EQ(idx, *xAsFloat);
+      EXPECT_FLOAT_EQ(static_cast<double>(*idx), *xAsDouble);
+      EXPECT_FLOAT_EQ(*idx, *xAsFloat);
 
-      ROOT::RVec<float> yExp{static_cast<float>(idx), static_cast<float>((idx) * 2)};
+      ROOT::RVec<float> yExp{static_cast<float>(*idx), static_cast<float>((*idx) * 2)};
       for (std::size_t i = 0ul; i < yAsRVec->size(); ++i) {
          EXPECT_FLOAT_EQ(yExp[i], (*yAsRVec)[i]);
       }
@@ -300,8 +306,9 @@ TEST_F(RNTupleProcessorTest, Subfields)
    auto strct = proc->RequestField<CustomStruct>("struct");
    auto strct_a = proc->RequestField<float>("struct.a");
 
-   for (auto idx : *proc) {
-      EXPECT_FLOAT_EQ(idx, idx);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_FLOAT_EQ(*idx, *idx);
       EXPECT_FLOAT_EQ(strct->a, *strct_a);
    }
 }
@@ -334,14 +341,15 @@ TEST_F(RNTupleProcessorTest, ChainedChain)
    auto z = proc->RequestField<float>("z");
    auto strct_a = proc->RequestField<float>("struct.a");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      if ((idx >= 5 && idx < 10) || idx >= 15) {
-         EXPECT_EQ(*i, 4 - idx % 5);
-         EXPECT_EQ(*z, (4 - idx % 5) * 3.f);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+      if ((*idx >= 5 && *idx < 10) || *idx >= 15) {
+         EXPECT_EQ(*i, 4 - *idx % 5);
+         EXPECT_EQ(*z, (4 - *idx % 5) * 3.f);
       } else {
-         EXPECT_EQ(*i, idx % 5);
-         EXPECT_EQ(*z, (idx % 5) * 2.f);
+         EXPECT_EQ(*i, *idx % 5);
+         EXPECT_EQ(*z, (*idx % 5) * 2.f);
       }
 
       EXPECT_EQ(*strct_a, *z);
@@ -353,15 +361,16 @@ TEST_F(RNTupleProcessorTest, ChainedChain)
    auto aPtr = std::make_shared<float>();
    strct_a.Bind(aPtr);
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1 + 20, proc->GetNEntriesProcessed());
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1 + 20, proc->GetNEntriesProcessed());
 
-      if ((idx >= 5 && idx < 10) || idx >= 15) {
-         EXPECT_EQ(*i, 4 - idx % 5);
-         EXPECT_EQ(*z, (4 - idx % 5) * 3.f);
+      if ((*idx >= 5 && *idx < 10) || *idx >= 15) {
+         EXPECT_EQ(*i, 4 - *idx % 5);
+         EXPECT_EQ(*z, (4 - *idx % 5) * 3.f);
       } else {
-         EXPECT_EQ(*i, idx % 5);
-         EXPECT_EQ(*z, (idx % 5) * 2.f);
+         EXPECT_EQ(*i, *idx % 5);
+         EXPECT_EQ(*z, (*idx % 5) * 2.f);
       }
 
       EXPECT_EQ(*strct_a, *z);
@@ -386,9 +395,10 @@ TEST_F(RNTupleProcessorTest, ChainedJoin)
    auto z = proc->RequestField<float>("ntuple_aux.z");
    auto strct_a = proc->RequestField<float>("ntuple_aux.struct.a");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(*i, idx % 5);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(*i, *idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z);
@@ -412,9 +422,10 @@ TEST_F(RNTupleProcessorTest, ChainedJoinUnaligned)
    auto z = proc->RequestField<float>("ntuple_aux.z");
    auto strct_a = proc->RequestField<float>("ntuple_aux.struct.a");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(*i, idx % 5);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(*i, *idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 3, *z);
@@ -438,13 +449,14 @@ TEST_F(RNTupleProcessorTest, ChainedJoinMissingEntries)
    auto z = proc->RequestField<float>("ntuple_aux.z");
    auto strct_a = proc->RequestField<float>("ntuple_aux.struct.a");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(*i, idx % 5);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(*i, *idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
 
-      if ((idx % 5) % 2 == 1) {
+      if ((*idx % 5) % 2 == 1) {
          EXPECT_FALSE(z.HasValue());
          EXPECT_FALSE(strct_a.HasValue());
       } else {
@@ -472,9 +484,10 @@ TEST_F(RNTupleProcessorTest, JoinedChain)
    auto z = proc->RequestField<float>("ntuple_aux.z");
    auto strct_a = proc->RequestField<float>("ntuple_aux.struct.a");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(*i, idx % 5);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(*i, *idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z);
@@ -498,9 +511,10 @@ TEST_F(RNTupleProcessorTest, JoinedChainUnaligned)
    auto z = proc->RequestField<float>("ntuple_aux.z");
    auto strct_a = proc->RequestField<float>("ntuple_aux.struct.a");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(*i, idx % 5);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(*i, *idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 3, *z);
@@ -524,13 +538,14 @@ TEST_F(RNTupleProcessorTest, JoinedChainMissingEntries)
    auto z = proc->RequestField<float>("ntuple_aux.z");
    auto strct_a = proc->RequestField<float>("ntuple_aux.struct.a");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(*i, idx % 5);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(*i, *idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
 
-      if ((idx % 5) % 2 == 1) {
+      if ((*idx % 5) % 2 == 1) {
          EXPECT_FALSE(z.HasValue());
          EXPECT_FALSE(strct_a.HasValue());
       } else {
@@ -620,8 +635,9 @@ TEST(RNTupleProcessor, JoinedChainCrossedEntries)
    auto x = proc->RequestField<float>("x");
    auto y = proc->RequestField<float>("ntuple_aux.y");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx, static_cast<int>(*x));
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx, static_cast<int>(*x));
       EXPECT_FLOAT_EQ(*x, *y);
    }
 
@@ -647,9 +663,10 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimary)
    auto z2 = proc->RequestField<float>("ntuple_aux2.z");
    auto strct_a2 = proc->RequestField<float>("ntuple_aux2.struct.a");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(*i, idx % 5);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(*i, *idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z1);
@@ -678,15 +695,16 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimaryMissingEntries)
    auto z2 = proc->RequestField<float>("ntuple_aux2.z");
    auto strct_a2 = proc->RequestField<float>("ntuple_aux2.struct.a");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(*i, idx % 5);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(*i, *idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z1);
       EXPECT_EQ(*x * 2, *strct_a1);
 
-      if (idx % 2 == 1) {
+      if (*idx % 2 == 1) {
          EXPECT_FALSE(z2.HasValue());
          EXPECT_FALSE(strct_a2.HasValue());
       } else {
@@ -719,9 +737,10 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliary)
    auto z2 = proc->RequestField<float>("ntuple_aux.ntuple_aux2.z");
    auto strct_a2 = proc->RequestField<float>("ntuple_aux.ntuple_aux2.struct.a");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(*i, idx % 5);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(*i, *idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z1);
@@ -753,15 +772,16 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliaryMissingEntries)
    auto z2 = proc->RequestField<float>("ntuple_aux.ntuple_aux2.z");
    auto strct_a2 = proc->RequestField<float>("ntuple_aux.ntuple_aux2.struct.a");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(*i, idx % 5);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(*i, *idx % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z1);
       EXPECT_EQ(*x * 2, *strct_a1);
 
-      if (idx % 2 == 1) {
+      if (*idx % 2 == 1) {
          EXPECT_FALSE(z2.HasValue());
          EXPECT_FALSE(strct_a2.HasValue());
       } else {
@@ -991,8 +1011,9 @@ TEST_F(GH16805ProcessorTest, JoinReading)
 
    std::size_t i = 0;
 
-   for (auto idx : *joinedAll) {
-      EXPECT_EQ(i, idx);
+   for (auto &idx : *joinedAll) {
+      joinedAll->LoadEntry(idx);
+      EXPECT_EQ(i, *idx);
 
       EXPECT_EQ(static_cast<int>(i), *stepZeroBr1);
       EXPECT_EQ(static_cast<int>(2 * i), *stepZeroBr2);
@@ -1128,15 +1149,16 @@ TEST_P(GH20033ProcessorTest, Regression)
 
    std::size_t nEntries = 0;
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(nEntries, idx);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(nEntries, *idx);
 
-      EXPECT_EQ(static_cast<int>(400 + idx), *stepFourBr1);
-      EXPECT_EQ(static_cast<int>(300 + idx), *stepThreeBr1);
-      EXPECT_EQ(static_cast<int>(200 + idx), *stepTwoBr1);
-      EXPECT_EQ(static_cast<int>(100 + idx), *stepOneBr1);
-      EXPECT_EQ(static_cast<int>(idx), *stepZeroBr1);
-      EXPECT_EQ(static_cast<int>(2 * idx), *stepZeroBr2);
+      EXPECT_EQ(static_cast<int>(400 + *idx), *stepFourBr1);
+      EXPECT_EQ(static_cast<int>(300 + *idx), *stepThreeBr1);
+      EXPECT_EQ(static_cast<int>(200 + *idx), *stepTwoBr1);
+      EXPECT_EQ(static_cast<int>(100 + *idx), *stepOneBr1);
+      EXPECT_EQ(static_cast<int>(*idx), *stepZeroBr1);
+      EXPECT_EQ(static_cast<int>(2 * *idx), *stepZeroBr2);
 
       ++nEntries;
    }
@@ -1157,14 +1179,15 @@ TEST_P(GH20033ProcessorTest, SameFieldName)
 
    std::size_t nEntries = 0;
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(nEntries, idx);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(nEntries, *idx);
 
-      EXPECT_EQ(static_cast<int>(400 + idx), *stepFourValue);
-      EXPECT_EQ(static_cast<int>(300 + idx), *stepThreeValue);
-      EXPECT_EQ(static_cast<int>(200 + idx), *stepTwoValue);
-      EXPECT_EQ(static_cast<int>(100 + idx), *stepOneValue);
-      EXPECT_EQ(static_cast<int>(idx), *stepZeroValue);
+      EXPECT_EQ(static_cast<int>(400 + *idx), *stepFourValue);
+      EXPECT_EQ(static_cast<int>(300 + *idx), *stepThreeValue);
+      EXPECT_EQ(static_cast<int>(200 + *idx), *stepTwoValue);
+      EXPECT_EQ(static_cast<int>(100 + *idx), *stepOneValue);
+      EXPECT_EQ(static_cast<int>(*idx), *stepZeroValue);
 
       ++nEntries;
    }
