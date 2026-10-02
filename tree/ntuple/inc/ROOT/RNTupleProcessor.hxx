@@ -566,7 +566,7 @@ public:
       RNTupleProcessor::REntryMapping fEntryMapping;
 
    public:
-      using iterator_category = std::input_iterator_tag;
+      using iterator_category = std::forward_iterator_tag;
       using iterator = RIterator;
       using value_type = RNTupleProcessor::REntryMapping;
       using reference = RNTupleProcessor::REntryMapping &;

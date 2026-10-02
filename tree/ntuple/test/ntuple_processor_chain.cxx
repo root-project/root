@@ -260,3 +260,21 @@ TEST_F(RNTupleChainProcessorTest, PrintStructure)
                            "+-----------------------------+\n";
    EXPECT_EQ(exp, os.str());
 }
+
+TEST_F(RNTupleChainProcessorTest, IterateTwice)
+{
+   auto proc = RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}});
+   auto x = proc->RequestField<float>("x");
+
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(static_cast<float>(*idx), *x);
+   }
+   EXPECT_EQ(10, proc->GetNEntriesProcessed());
+
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(static_cast<float>(*idx), *x);
+   }
+   EXPECT_EQ(20, proc->GetNEntriesProcessed());
+}
