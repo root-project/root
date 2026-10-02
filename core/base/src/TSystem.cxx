@@ -2631,6 +2631,7 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
 
 #ifdef WIN32
    cmd += " 2>&1"; // capture stderr
+   cmd = "\"" + cmd + "\"";
    FILE *pipe = gSystem->OpenPipe(cmd, "r");
    if (!pipe) {
       ::Warning("ACLiC", "Failed to open pipe dependencies for %s", filename.Data());
