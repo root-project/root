@@ -1273,7 +1273,13 @@ again:
    delete[] buff;
 
    if (ier || ncopy != lx) {
-      ::Error("TSystem::ExpandFileName", "input: %s, output: %s", fname, xname);
+      if (fname && std::strstr(fname, "~$")) {
+         if (gDebug > 0)
+            Info("ExpandFileName", "detected MS temp file input: %s, output: %s", fname, xname);
+         return kFALSE;
+      } else {
+         ::Error("TSystem::ExpandFileName", "input: %s, output: %s", fname, xname);
+      }
       return kTRUE;
    }
 
