@@ -1,3 +1,4 @@
+
 // @(#)root/base:$Id$
 // Author: Rene Brun   05/09/99
 
@@ -17,8 +18,8 @@ TVirtualPS is an abstract interface to Postscript, PDF, SVG. TeX etc... drivers
 */
 
 #include <fstream>
-#include "strlcpy.h"
 #include "TVirtualPS.h"
+#include "strlcpy.h"
 
 TVirtualPS *gVirtualPS = nullptr;
 

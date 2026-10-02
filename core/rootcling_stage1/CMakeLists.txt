@@ -29,7 +29,7 @@ else()
 endif()
 
 ROOT_EXECUTABLE(rootcling_stage1 src/rootcling_stage1.cxx
-                              $<TARGET_OBJECTS:Clib>
+                              $<TARGET_OBJECTS:ROOTclib>
                               $<TARGET_OBJECTS:ClingUtils>
                               $<TARGET_OBJECTS:Dictgen>
                               $<TARGET_OBJECTS:Foundation_Stage1>

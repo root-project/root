@@ -38,27 +38,12 @@
 
 #include "mmalloc.h"
 
-#ifdef R__HAVE_LIMITS_H
-#  include <limits.h>
-#else
-#  ifndef CHAR_BIT
-#    define CHAR_BIT 8
-#  endif
-#endif
-
-#ifdef R__HAVE_STDDEF_H
-#  include <stddef.h>
-#else
-#  include <sys/types.h>   /* hope for the best -- ANSI C is your friend */
-#endif
-
+#include <limits.h>
+#include <stddef.h>
 #ifdef R__HAVE_UNISTD_H
-#   include <unistd.h>
+#include <unistd.h>
 #endif
-#ifdef R__HAVE_STDLIB_H
-#   include <stdlib.h>
-#endif
-
+#include <stdlib.h>
 #include <stdint.h>
 
 #ifndef MIN
@@ -303,7 +288,7 @@ struct mdesc
     by default if no open file is supplied by the client.  Also note that
     it may change each time the region is mapped and unmapped. */
 
-#ifndef WIN32
+#ifndef _WIN32
    int fd;
 #else
    HANDLE fd;

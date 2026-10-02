@@ -2,18 +2,16 @@
 /* Author: Fons Rademakers  20/9/2010 */
 
 /*
-   Inlcude file for strlcpy and strlcat. They are in string.h on systems
+   Include file for strlcpy and strlcat. They are in string.h on systems
    that have these function (BSD based systems).
 */
 
 #ifndef ROOT_strlcpy
 #define ROOT_strlcpy
 
-#include <ROOT/RConfig.hxx>
-
 #ifndef HAS_STRLCPY
 
-#ifndef WIN32
+#ifndef _WIN32
 #   include <unistd.h>
 #else
 #   include <sys/types.h>

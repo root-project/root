@@ -27,7 +27,6 @@
 
 #include <string_view>
 #include "ROOT/TypeTraits.hxx"
-
 #include <iosfwd>
 #include <cstdarg>
 #include <cstdio>

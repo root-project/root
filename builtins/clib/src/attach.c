@@ -23,7 +23,10 @@ License along with the GNU C Library; see the file COPYING.LIB.  If
 not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.  */
 
-
+#ifndef _WIN32
+#include <unistd.h>
+#include <stdlib.h>
+#endif
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -32,7 +35,7 @@ Boston, MA 02111-1307, USA.  */
 #include <string.h>
 #include "mmprivate.h"
 
-#ifndef WIN32
+#ifndef _WIN32
 #  include <sys/mman.h>
 #else
 #  include <io.h>
@@ -47,7 +50,7 @@ Boston, MA 02111-1307, USA.  */
 
 /* Forward declarations/prototypes for local functions */
 
-#ifndef WIN32
+#ifndef _WIN32
   static struct mdesc *reuse PARAMS ((int));
 #else
   static struct mdesc *reuse PARAMS ((HANDLE));
@@ -85,7 +88,7 @@ Boston, MA 02111-1307, USA.  */
    On failure returns NULL. */
 
 PTR
-#ifndef WIN32
+#ifndef _WIN32
 mmalloc_attach (int fd, PTR baseaddr, int minsize)
 #else
 mmalloc_attach (HANDLE fd, PTR baseaddr, int minsize)
@@ -95,7 +98,7 @@ mmalloc_attach (HANDLE fd, PTR baseaddr, int minsize)
   struct mdesc *mdp;
   PTR mbase;
   int coresize;
-#ifndef WIN32
+#ifndef _WIN32
   struct stat sbuf;
 #else
   BY_HANDLE_FILE_INFORMATION sbuf;
@@ -108,7 +111,7 @@ mmalloc_attach (HANDLE fd, PTR baseaddr, int minsize)
      obsolete version, or any other reason, then we fail to attach to
      this file. */
 
-#ifndef WIN32
+#ifndef _WIN32
   if (fd >= 0)
     {
       if (fstat (fd, &sbuf) < 0)
@@ -132,7 +135,7 @@ mmalloc_attach (HANDLE fd, PTR baseaddr, int minsize)
           return ((PTR) reuse (fd));
         }
     }
-#endif /* WIN32 */
+#endif /* _WIN32 */
 
   /* We start off with the malloc descriptor allocated on the stack, until
      we build it up enough to call _mmalloc_mmap_morecore() to allocate the
@@ -151,7 +154,7 @@ mmalloc_attach (HANDLE fd, PTR baseaddr, int minsize)
   /* If we have not been passed a valid open file descriptor for the file
      to map to, then open /dev/zero and use that to map to. */
 
-#ifndef WIN32
+#ifndef _WIN32
   if (mdp -> fd < 0)
     {
       if ((mdp -> fd = open ("/dev/zero", O_RDWR)) < 0)
@@ -165,7 +168,7 @@ mmalloc_attach (HANDLE fd, PTR baseaddr, int minsize)
     }
 #else
   if (mdp -> fd == (HANDLE)0xffffffff) mdp -> flags |= MMALLOC_DEVZERO;
-#endif /* WIN32 */
+#endif /* _WIN32 */
 
   /*  Now try to map in the first page, copy the malloc descriptor structure
       there, and arrange to return a pointer to this new copy.  If the mapping
@@ -181,7 +184,7 @@ mmalloc_attach (HANDLE fd, PTR baseaddr, int minsize)
     {
       mdp->breakval = mdp->base + sizeof(mtemp);
       memcpy (mbase, mdp, sizeof (mtemp));
-#ifndef WIN32
+#ifndef _WIN32
 #  ifndef VMS
 #  ifndef R__LYNXOS
 #  ifndef R__HURD
@@ -197,7 +200,7 @@ mmalloc_attach (HANDLE fd, PTR baseaddr, int minsize)
     {
       if (mdp -> flags & MMALLOC_DEVZERO)
         {
-#ifndef WIN32
+#ifndef _WIN32
           close (mdp -> fd);
 #else
           CloseHandle (mdp -> fd);
@@ -233,7 +236,7 @@ mmalloc_attach (HANDLE fd, PTR baseaddr, int minsize)
    unsuccessful for some reason. */
 
 static struct mdesc *
-#ifndef WIN32
+#ifndef _WIN32
 reuse(int cfd)
 #else
 reuse(HANDLE cfd)
@@ -242,7 +245,7 @@ reuse(HANDLE cfd)
   struct mdesc *mtemp = (struct mdesc*) malloc(sizeof(struct mdesc));
   struct mdesc *mdp = NULL;
 
-#ifdef WIN32
+#ifdef _WIN32
   int rdonly = 0;
   BY_HANDLE_FILE_INFORMATION FileInformation;
   DWORD lbuf;
@@ -289,7 +292,7 @@ reuse(HANDLE cfd)
             if (mtemp->offset != 0) goto end;
             mdp = (struct mdesc *) mtemp->base;
             mdp -> fd = cfd;
-#ifndef WIN32
+#ifndef _WIN32
 #  ifndef VMS
 #  ifndef R__LYNXOS
 #  ifndef R__HURD
@@ -328,7 +331,7 @@ end:
   mmalloc_attach (fd, baseaddr)
 #endif
 
-#ifndef WIN32
+#ifndef _WIN32
   int fd;
 #else
   HANDLE fd;
