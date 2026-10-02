@@ -2003,9 +2003,11 @@ void TPad::DrawColorTable()
 
 void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   if (!IsEditable() && event != kMouseEnter) return;
+   if (!IsEditable() && event != kMouseEnter)
+      return;
    TVirtualPad  &parent = *GetMother();
-   if (!parent.IsEditable()) return;
+   if (!parent.IsEditable())
+      return;
 
    HideToolTip(event);
 
@@ -2014,7 +2016,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    Int_t newcode = gROOT->GetEditorMode();
    if (newcode)
-      parent.Interactive(); // delete any interactive object
+      parent.FreeInteractive(this); // delete any interactive object
    switch (newcode) {
       case kPad:
          TCreatePrimitives::Pad(event,px,py,0);
@@ -2061,7 +2063,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (newcode)
       return;
 
-   auto inter = dynamic_cast<TBoxInteractive *>(parent.Interactive(this));
+   auto inter = parent.GetInteractive<TBoxInteractive>(this);
 
    auto setNewValues = [&inter, &parent, this]() {
       // Get parent corners pixels coordinates
@@ -2093,12 +2095,9 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kArrowKeyPress:
    case kButton1Down:
-
       fXUpNDC = fXlowNDC + fWNDC;
       fYUpNDC = fYlowNDC + fHNDC;
-      inter = new TBoxInteractive(kFALSE, fXlowNDC, fYlowNDC, fWNDC, fHNDC);
-      parent.Interactive(this, inter);
-
+      inter = parent.MakeInteractive<TBoxInteractive>(this, kFALSE, fXlowNDC, fYlowNDC, fWNDC, fHNDC);
       // No break !!!
 
    case kMouseMotion: {
@@ -2109,7 +2108,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       if (TestBit(kCannotMove) || !inter->SelectCorner(px, py)) {
          // refuse interactive changes
-         parent.Interactive();
+         parent.FreeInteractive(this);
       } else {
          inter->SetCursor(parent, event == kButton1Down);
          fResizing = inter->IsResizing() && (event != kMouseMotion);
@@ -2165,7 +2164,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       RangeChanged();
 
       fResizing = kFALSE;
-      parent.Interactive();
+      parent.FreeInteractive(this);
 
       break;
 
