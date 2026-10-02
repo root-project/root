@@ -701,21 +701,18 @@ void TMVA::MethodBase::AddRegressionOutput(Types::ETreeType type)
    // assume we have all number of targets for all events
    Data()->SetCurrentEvent(0);
    size_t nTargets = GetEvent()->GetNTargets();
-   auto regValuesBegin = output.begin();
-   auto regValuesEnd = regValuesBegin + nTargets;
 
+   // Log() << kFATAL throws, so after this check we can rely on
+   // output.size() == nTargets * nEvents when forming iterators below
    if (output.size() != nTargets * size_t(nEvents))
       Log() << kFATAL << "Output regression vector with size " << output.size() << " is not consistent with target size of "
             << nTargets << " and number of events " << nEvents << std::endl;
 
-
    for (Int_t ievt=0; ievt<nEvents; ievt++) {
-
-      std::vector< Float_t > vals(regValuesBegin, regValuesEnd);
-      regRes->SetValue( vals, ievt );
-
-      regValuesBegin += nTargets;
-      regValuesEnd += nTargets;
+      // Form the iterators per event so that they are never advanced past end()
+      auto valsBegin = output.begin() + size_t(ievt) * nTargets;
+      std::vector<Float_t> vals(valsBegin, valsBegin + nTargets);
+      regRes->SetValue(vals, ievt);
    }
 
    Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())
