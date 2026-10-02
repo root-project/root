@@ -108,6 +108,10 @@ public:
    void StreamMotionChanges(nlohmann::json &arr);
    void SendChangesToSubscribers();
 
+   /// Output of the last StreamElements() or StreamRepresentationChanges().
+   const std::string &GetOutputJson() const { return fOutputJson; }
+   const std::vector<char> &GetOutputBinary() const { return fOutputBinary; }
+
    Bool_t HasSubscribers() const { return !fSubscribers.empty(); }
    void AddSubscriber(std::unique_ptr<REveClient> &&sub);
    void RemoveSubscriber(unsigned int);
