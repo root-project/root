@@ -7,7 +7,11 @@ This is a new development in TMVA and is currently in early experimental stage. 
 
 
 ## Prerequisite
-- BLAS or Eigen (for execution of the generated code for inference)
+
+None: the generated inference code is self-contained C++ (the matrix
+multiplications it contains are reference implementations emitted into the
+generated header itself, so no BLAS or other external library has to be
+linked to run it).
 
 ## Installation
 

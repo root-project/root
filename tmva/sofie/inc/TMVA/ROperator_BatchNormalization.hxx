@@ -162,7 +162,6 @@ public:
       return out.str();
    }
 
-   std::vector<std::string> GetBlasRoutines() override { return {}; }
 };
 
 }//SOFIE
