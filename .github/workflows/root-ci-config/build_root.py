@@ -163,6 +163,11 @@ def main():
       head_ref_dst = head_ref_dst or "__tmp"
 
       rebase("src", "origin", base_head_sha, head_ref_dst, args.head_sha)
+    elif args.sha:
+      # Builds triggered by a push to a branch must build exactly the pushed
+      # commit: git_pull() picks up wherever the branch points to when this
+      # job starts, which may already be a later commit.
+      checkout_commit("src", args.repository, args.sha)
 
     testing: bool = options_dict['testing'] == "ON"
 
@@ -330,6 +335,29 @@ def git_pull(directory: str, repository: str, branch: str):
 
     if returncode != 0:
         die(returncode, f"Failed to pull {branch}")
+
+
+@github_log_group("Checkout pushed commit")
+def checkout_commit(directory: str, repository: str, sha: str):
+    """Reset the checkout to exactly the commit that triggered the build.
+
+    The commit normally arrives with the fetch of its branch in git_pull();
+    if it is missing (e.g. the branch was force-pushed in the meantime), it
+    is fetched explicitly.
+    """
+    targetdir = os.path.join(WORKDIR, directory)
+    returncode = subprocess_with_log(f"""
+        cd '{targetdir}'
+        git reset --hard {sha}
+    """)
+    if returncode != 0:
+        returncode = subprocess_with_log(f"""
+            cd '{targetdir}'
+            git fetch {repository} {sha}
+            git reset --hard {sha}
+        """)
+    if returncode != 0:
+        die(returncode, f"Failed to check out commit {sha}")
 
 
 @github_log_group("Download previous build artifacts")
