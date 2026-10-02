@@ -1111,6 +1111,10 @@ void TNetXNGFile::SetEnv()
    if (val != "")
       env->PutString("XrdClS3SecretKeyLocation", val.Data());
 
+   val = gEnv->GetValue("NetXNG.S3.XrdClS3ForceBasicReadV", "");
+   if (val != "")
+      env->PutString("XrdClS3ForceBasicReadV", val.Data());
+
    // Note: There are use cases where we want to directly provide the S3 keys
    // In this case they take priority versus the other S3 authorization methods
    val = gEnv->GetValue("NetXNG.S3.XrdClS3AccessKey", "");
