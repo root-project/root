@@ -580,7 +580,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       set(pcm_name ${library_output_dir}/${libprefix}${library_output_name}_${dictionary}_rdict.pcm)
       set(rootmap_name ${library_output_dir}/${libprefix}${library_output_name}32.rootmap)
     else()
-      set(cpp_module ${library_target_name})
+      set(cpp_module ${library_output_name})
     endif(ARG_MULTIDICT)
 
     if(runtime_cxxmodules)
@@ -607,7 +607,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     unset(cpp_module)
     unset(cpp_module_file)
   else()
-    list(APPEND local_modules_idx_deps ${cpp_module})
+    list(APPEND local_modules_idx_deps ${library_target_name})
     set_property(GLOBAL PROPERTY modules_idx_deps_property "${local_modules_idx_deps}")
   endif(ARG_NO_CXXMODULE)
 
@@ -628,9 +628,20 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       # dependency below are independent of configuration order and expand to
       # nothing for a dictionary-less library.
       set(dep_has_dict "$<TARGET_EXISTS:G__${dep}>")
-      set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
+      
+      # Determine the true output library name if the target defines an OUTPUT_NAME property
+      if(TARGET ${dep})
+        get_target_property(dep_out_name ${dep} OUTPUT_NAME)
+        if(NOT dep_out_name)
+          set(dep_out_name ${dep})
+        endif()
+      else()
+        set(dep_out_name ${dep})
+      endif()
+
+      set(dependent_pcm ${libprefix}${dep_out_name}_rdict.pcm)
       if (runtime_cxxmodules AND NOT dep IN_LIST local_no_cxxmodules)
-        set(dependent_pcm ${dep}.pcm)
+        set(dependent_pcm ${dep_out_name}.pcm)
         list(APPEND pcm_dependencies "$<${dep_has_dict}:$<TARGET_PROPERTY:${dep},ROOT_PCM_FILENAME>>")
       endif()
       set(newargs ${newargs} "$<${dep_has_dict}:-m>" "$<${dep_has_dict}:${dependent_pcm}>")
@@ -1339,7 +1350,7 @@ macro(ROOT_CREATE_HEADER_COPY_TARGETS)
 endmacro()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_STANDARD_LIBRARY_PACKAGE(libname
+#---ROOT_STANDARD_LIBRARY_PACKAGE(libname                      : the name of the CMake target. If OUTPUT_NAME not specified, will be also name on disk eg lib${libname}.so.
 #                                 [NO_INSTALL_HEADERS]         : don't install headers for this package
 #                                 [NO_GLOB_HEADERS]            : don't glob for headers, only install listed ones
 #                                 [STAGE1]                     : use rootcling_stage1 for generating
@@ -1351,6 +1362,9 @@ endmacro()
 #                                 [OBJECT_LIBRARY]             : use ROOT_OBJECT_LIBRARY to generate object files
 #                                                                and then use those for linking.
 #                                 LIBRARIES lib1 lib2          : private arguments for target_link_library()
+#                                 OUTPUT_NAME outname          : if specified, outname is the name of the lib when written do disk (eg "ROOTCore" so that libROOTCore.so is installed). If not set, libname will be used.
+#                                 EXPORT_NAME exportname       : if specified, exportname is the name of the CMake target when downstream projects find_package(ROOT) and want to
+#                                                                link against it. For example "Core" so that ROOT::Core can be linked against. If not set, libname will be used.
 #                                 DEPENDENCIES lib1 lib2       : PUBLIC arguments for target_link_library() such as Core, MathCore
 #                                 BUILTINS builtin1 builtin2   : builtins like xxhash
 #                                 LINKDEF LinkDef.h            : linkdef file, default value is "LinkDef.h"
@@ -1361,7 +1375,7 @@ endmacro()
 #---------------------------------------------------------------------------------------------------
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   set(options NO_INSTALL_HEADERS NO_GLOB_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_CXXMODULE)
-  set(oneValueArgs LINKDEF)
+  set(oneValueArgs LINKDEF OUTPUT_NAME EXPORT_NAME)
   set(multiValueArgs DEPENDENCIES HEADERS NODEPHEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS INSTALL_OPTIONS)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
@@ -1445,6 +1459,18 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
       "dictionary will be empty. Consider using ROOT_LINKER_LIBRARY instead.")
   endif()
 
+
+  if (ARG_OUTPUT_NAME)
+     # this must go before ROOT_GENERATE_DICTIONARY since that function depends on OUTPUT_NAME target property
+    set_target_properties(${libname} PROPERTIES OUTPUT_NAME ${ARG_OUTPUT_NAME})
+    if (NOT ARG_OUTPUT_NAME STREQUAL "${libname}")
+      ROOT_SYMLINK_LIBRARY_NAME(${libname} ${ARG_OUTPUT_NAME} ${libname}) # historicalname matches libname
+    endif()
+  endif()
+  if (ARG_EXPORT_NAME)
+    set_target_properties(${libname} PROPERTIES EXPORT_NAME ${ARG_EXPORT_NAME})
+  endif()
+
   ROOT_GENERATE_DICTIONARY(G__${libname} ${ARG_HEADERS}
                           ${NO_CXXMODULE_FLAG}
                           ${STAGE1_FLAG}
@@ -1472,6 +1498,7 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
       ROOT_INSTALL_HEADERS(${ARG_INSTALL_OPTIONS})
     endif()
   endif()
+
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
@@ -3678,3 +3705,37 @@ function (ROOT_GET_CLANG_LIBRARIES clang_libraries)
   endforeach(extra_lib)
   SET(${clang_libraries} "${found_libraries}" PARENT_SCOPE)
 endfunction(ROOT_GET_CLANG_LIBRARIES)
+
+#---------------------------------------------------------------------------------------------------
+# ROOT_SYMLINK_LIBRARY_NAME( tgt outputname historicalname )
+#
+# This function is used when the output name of a target, for example libROOTCore for the
+# ROOT::Core target does not match the CMake target name: for backward compatibility,
+# it creates a symlink to old historical name, if ROOT built with -Dsymlink_libs=ON (default)
+# tgt: the CMake target, for example "Core"
+# outputname: the name of the lib when written do disk (eg "ROOTCore" so that libROOTCore.so is installed)
+# historicalname: the output-name of the lib being written to disk in CMake target historically.
+#             Usually, this name was just the name of the CMake target since no separate outputname was set.
+#---------------------------------------------------------------------------------------------------
+function (ROOT_SYMLINK_LIBRARY_NAME tgt outputname historicalname)
+  if (symlink_libs)
+    get_target_property(target_type ${tgt} TYPE)
+    if(NOT target_type STREQUAL "INTERFACE_LIBRARY")
+      add_custom_command(TARGET ${tgt} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE_NAME:${tgt}> ${LIB_PREFIX}${historicalname}${LIB_SUFFIX}
+        WORKING_DIRECTORY $<TARGET_FILE_DIR:${tgt}>
+        COMMENT "Creating bw-compatibility symlink for target ${tgt}: ${LIB_PREFIX}${historicalname}${LIB_SUFFIX} -> $<TARGET_FILE_NAME:${tgt}>"
+      )
+      install(CODE "
+        set(LIB_DIR \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}\")
+        set(NEW_NAME \"${CMAKE_SHARED_LIBRARY_PREFIX}${outputname}${CMAKE_SHARED_LIBRARY_SUFFIX}\")
+        set(OLD_NAME \"${CMAKE_SHARED_LIBRARY_PREFIX}${historicalname}${CMAKE_SHARED_LIBRARY_SUFFIX}\")
+        message(STATUS \"Creating symlink for target ${tgt}: \${OLD_NAME} -> \${NEW_NAME}\")
+        execute_process(
+          COMMAND \${CMAKE_COMMAND} -E create_symlink \${NEW_NAME} \${OLD_NAME}
+          WORKING_DIRECTORY \${LIB_DIR}
+        )
+      ")
+    endif()
+  endif()
+endfunction(ROOT_SYMLINK_LIBRARY_NAME)
