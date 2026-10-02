@@ -307,14 +307,13 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
    };
 
-   auto inter = dynamic_cast<TPolyLineInteractive *>(parent.Interactive(this));
+   auto inter = parent.GetInteractive<TPolyLineInteractive>(this);
 
    switch (event) {
 
    case kArrowKeyPress:
    case kButton1Down:
-      inter = new TPolyLineInteractive;
-      parent.Interactive(this, inter);
+      inter = parent.MakeInteractive<TPolyLineInteractive>(this);
       // No break !!!
    case kMouseMotion: {
       Int_t minDiff = kMaxDiff, ipoint = -1;
@@ -380,7 +379,7 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          parent.Modified();
          parent.UpdateAsync();
       }
-      parent.Interactive(); // delete interactive object
+      parent.FreeInteractive(this);
       break;
    }
 }

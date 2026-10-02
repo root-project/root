@@ -116,11 +116,12 @@ class TDiamondInteractive : public TBoxInteractive {
 
 void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   if (!gPad || !gPad->IsEditable()) return;
+   if (!gPad || !gPad->IsEditable())
+      return;
 
    auto &parent = *gPad;
 
-   auto inter = dynamic_cast<TDiamondInteractive *>(parent.Interactive(this));
+   auto inter = parent.GetInteractive<TDiamondInteractive>(this);
 
    auto setNewValues = [&inter, this]() {
       SetX1(inter->newX1);
@@ -133,10 +134,7 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kArrowKeyPress:
    case kButton1Down:
-
-      inter = new TDiamondInteractive(kFALSE, GetX1(), GetY1(), GetX2(), GetY2());
-      parent.Interactive(this, inter);
-
+      inter = parent.MakeInteractive<TDiamondInteractive>(this, kFALSE, GetX1(), GetY1(), GetX2(), GetY2());
       // No break !!!
 
    case kMouseMotion: {
@@ -147,7 +145,7 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       if (!inter->SelectDiamondCorner(px, py)) {
          // refuse interactive changes
-         parent.Interactive();
+         parent.FreeInteractive(this);
       } else {
          inter->SetCursor(parent, event == kButton1Down);
          fResizing = inter->IsResizing() && (event != kMouseMotion);
@@ -194,7 +192,7 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
 
       parent.Modified();
-      parent.Interactive(); // delete interactive object
+      parent.FreeInteractive(this); // delete interactive object
       fResizing = kFALSE;
 
       break;

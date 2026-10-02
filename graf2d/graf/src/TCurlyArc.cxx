@@ -213,14 +213,13 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    auto &parent = *gPad;
 
-   auto inter = dynamic_cast<TCurlyArcInteractive *>(parent.Interactive(this));
+   auto inter = parent.GetInteractive<TCurlyArcInteractive>(this);
 
    switch (event) {
 
    case kArrowKeyPress:
    case kButton1Down:
-      inter = new TCurlyArcInteractive(this);
-      parent.Interactive(this, inter);
+      inter = parent.MakeInteractive<TCurlyArcInteractive>(this, this);
 
       // No break !!!
    case kMouseMotion: {
@@ -228,12 +227,10 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (!inter) inter = &dummy;
       inter->CalcPixelCoord(parent, dummy.oldX1, dummy.oldY1, dummy.oldX2, dummy.oldY2);
 
-      if (!inter->SelectDiamondCorner(px, py, kFALSE)) {
-         // refuse interactive changes
-         parent.Interactive();
-      } else {
+      if (!inter->SelectDiamondCorner(px, py, kFALSE))
+         parent.FreeInteractive(this); // refuse interactive changes
+      else
          inter->SetCursor(parent, event == kButton1Down);
-      }
       break;
    }
 
@@ -269,7 +266,7 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
 
       parent.Modified();
-      parent.Interactive(); // delete interactive object
+      parent.FreeInteractive(this);
       break;
    }
 }

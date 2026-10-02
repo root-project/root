@@ -239,14 +239,13 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    auto &parent = *gPad;
 
-   auto inter = dynamic_cast<TEllipseInteractive *>(parent.Interactive(this));
+   auto inter = parent.GetInteractive<TEllipseInteractive>(this);
 
    switch (event) {
 
    case kArrowKeyPress:
    case kButton1Down:
-      inter = new TEllipseInteractive(this);
-      parent.Interactive(this, inter);
+      inter = parent.MakeInteractive<TEllipseInteractive>(this, this);
       // No break !!!
 
    case kMouseMotion: {
@@ -255,8 +254,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       inter->CalcPixelCoord(parent, dummy.oldX1, dummy.oldY1, dummy.oldX2, dummy.oldY2);
 
       if (!inter->SelectDiamondCorner(px, py, kFALSE)) {
-         // refuse interactive changes
-         parent.Interactive();
+         parent.FreeInteractive(this); // remove interactive objects
       } else {
          inter->SetCursor(parent, event == kButton1Down);
       }
@@ -295,7 +293,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
 
       parent.Modified();
-      parent.Interactive(); // delete interactive object
+      parent.FreeInteractive(this);
       break;
    }
 }
