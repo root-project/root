@@ -1499,11 +1499,12 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
          return R__FORWARD_ERROR(res);
    } // end loop over sources
 
+   // Commit the output
    if (fDestination->GetNEntries() == 0)
       R__LOG_WARNING(NTupleMergeLog()) << "Output RNTuple '" << fDestination->GetNTupleName() << "' has no entries.";
+   else
+      fDestination->CommitClusterGroup();
 
-   // Commit the output
-   fDestination->CommitClusterGroup();
    fDestination->CommitDataset();
 
    return RResult<void>::Success();
