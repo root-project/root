@@ -2630,7 +2630,7 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
       ::Info("ACLiC", "%s", cmd.Data());
 
 #ifdef WIN32
-   cmd += " 2>&1"; // capture stderr
+   cmd += " > NUL 2>&1"; // ignore preprocessed C++ on stdout, redirect stderr to the pipe stream which includes the 'Note: including' part
    cmd = "\"" + cmd + "\"";
    FILE *pipe = gSystem->OpenPipe(cmd, "r");
    if (!pipe) {
@@ -2658,7 +2658,7 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
             if (!path.empty()) {
                depFile << "  \"" << path << "\" \\\n";
             }
-         } else {
+         } else { // other errors printed to stderr (for debugging)
             allLines += line + "\n";
          }
       }
@@ -2667,7 +2667,7 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
    }
    int retVal = gSystem->ClosePipe(pipe);
    if (retVal != 0) {
-      ::Warning("ACLiC", "Failed to close pipe dependencies for %s when executing %s", filename.Data(), cmd.Data());
+      ::Warning("ACLiC", "Failed to close pipe dependencies for %s, status '%d' when executing %s", retVal, filename.Data(), cmd.Data());
       ::Warning("ACLiC", "%s", allLines.c_str());
       return false;
    }
