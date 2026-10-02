@@ -59,11 +59,7 @@ namespace cling {
     ///\param[in] D - The declaration to unload
     ///\returns true on success.
     ///
-    bool UnloadDecl(clang::Decl* D) {
-      if (D->isFromASTFile())
-        return true;
-      return Visit(D);
-    }
+    bool UnloadDecl(clang::Decl* D);
 
     ///\brief If it falls back in the base class just remove the declaration
     /// only from the declaration context.
