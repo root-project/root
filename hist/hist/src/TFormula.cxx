@@ -37,7 +37,7 @@ using std::map, std::pair, std::make_pair, std::list, std::max, std::string;
 #ifdef WIN32
 #pragma optimize("",off)
 #endif
-#include "v5/TFormula.h"
+#include "ROOT/v5/TFormula.h"
 
 
 namespace {

@@ -12,14 +12,14 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TBuffer.h"
-#include "v5/TFormula.h"
+#include "ROOT/v5/TFormula.h"
 #include "TMath.h"
 #include "TRandom.h"
 #include "TFunction.h"
 #include "TMethodCall.h"
 #include "TObjString.h"
 #include "TError.h"
-#include "v5/TFormulaPrimitive.h"
+#include "ROOT/v5/TFormulaPrimitive.h"
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
 #include "strlcpy.h"
@@ -40,7 +40,7 @@ namespace ROOT {
 
    namespace v5 {
 
-/** \class TFormula  TFormula.h "inc/v5/TFormula.h"
+/** \class TFormula  TFormula.h "inc/ROOT/v5/TFormula.h"
      \ingroup Hist
 The FORMULA class (ROOT version 5)
 
