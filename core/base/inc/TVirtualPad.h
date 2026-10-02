@@ -52,11 +52,6 @@ class TVirtualPadPainter;
 class TVirtualPad : public TObject, public TAttLine, public TAttFill,
                     public TAttPad, public TQObject {
 
-protected:
-   Bool_t         fResizing;         ///<!true when resizing the pad
-
-   void  *GetSender() override { return this; }  //used to set gTQSender
-
 public:
 
    /** small helper class to store/restore gPad context in TPad methods */
@@ -73,7 +68,7 @@ public:
    };
 
    /** Helper class to store interactive parameters for individual objects
-    *  Should be used via gPad->Interactive() methods in the objects ExecuteEvent */
+    *  Should be used via MakeInteractive() / GetInteractive() / FreeInteractive() methods in the objects ExecuteEvent */
    class TInteractive {
       protected:
          TObject *fObject = nullptr;
@@ -83,6 +78,16 @@ public:
          void SetObject(TObject *obj) { fObject = obj; }
          TObject *GetObject() const { return fObject; }
    };
+
+protected:
+
+   Bool_t         fResizing;         ///<!true when resizing the pad
+
+   void  *GetSender() override { return this; }  //used to set gTQSender
+
+   virtual TInteractive *Interactive(TObject * /* obj */ = nullptr, TInteractive * /* init */ = nullptr) { return nullptr; }
+
+public:
 
    TVirtualPad();
    TVirtualPad(const char *name, const char *title, Double_t xlow,
@@ -287,8 +292,6 @@ public:
    virtual Int_t    YtoPixel(Double_t y) const = 0;
    virtual void     XYtoPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const = 0;
    virtual void     XYtoPixel(Double_t x, Double_t y, Double_t &xpixel, Double_t &ypixel) const = 0;
-
-   virtual TInteractive *Interactive(TObject * /* obj */ = nullptr, TInteractive * /* init */ = nullptr) = 0;
 
    template<typename T, typename... Rest>
    T *MakeInteractive(TObject *obj, Rest&&... rest)
