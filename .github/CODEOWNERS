@@ -10,13 +10,13 @@
 # Coarse-grained ownership
 * @dpiparo
 /bindings/ @guitargeek @vepadulano
-/bindings/pyroot/cppyy @aaronj0 @guitargeek
+/bindings/pyroot/cppyy @aaronj0 @guitargeek @siliataider
 /core/ @dpiparo @pcanal
-/documentation/ @couet @dpiparo
+/documentation/ @siliataider @dpiparo
 /fonts/ @bellenot @linev
 /geom/ @agheata
-/graf2d/ @couet @linev
-/graf3d/ @couet @linev
+/graf2d/ @silverweed @linev
+/graf3d/ @silverweed @linev
 /gui/ @bellenot @linev
 /hist/ @hageboeck @guitargeek
 /hist/histv7/ @hahnjo @hageboeck
@@ -41,7 +41,7 @@
 /sql/ @pcanal @linev
 /tmva/ @lmoneta
 /tree/ @pcanal @jblomer
-/tutorials/ @couet @dpiparo
+/tutorials/ @silverweed @dpiparo
 /tree/dataframe/ @vepadulano @hageboeck
 /tree/ml/ @vepadulano @siliataider
 /tree/readspeed/ @vepadulano @hageboeck
@@ -53,7 +53,7 @@
 # Projects that span over several code modules:
 /core/imt/ @dpiparo @hageboeck
 /core/multiproc/ @dpiparo @hageboeck
-/graf2d/cocoa/ @couet @linev
+/graf2d/cocoa/ @silverweed @linev
 /graf3d/eve/ @osschar @linev
 /graf3d/eve7/ @osschar @linev
 /tutorials/visualisation/eve/ @osschar @linev
