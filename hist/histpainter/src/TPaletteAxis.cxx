@@ -266,8 +266,8 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    auto &parent = *gPad;
 
-   auto inter0 = parent.Interactive(this);
-   auto inter = dynamic_cast<TPaletteAxisInteractive *> (inter0);
+   auto inter0 = parent.GetInteractive<TVirtualPad::TInteractive>(this);
+   auto inter = parent.GetInteractive<TPaletteAxisInteractive>(this);
 
    Bool_t isHorizontal = GetX2NDC() - GetX1NDC() > GetY2NDC() - GetY1NDC();
 
@@ -284,8 +284,7 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    switch (event) {
 
       case kButton1Down:
-         inter = new TPaletteAxisInteractive(isHorizontal);
-         parent.Interactive(this, inter);
+         inter = parent.MakeInteractive<TPaletteAxisInteractive>(this, isHorizontal);
          // No break !!!
 
       case kButton1Motion:
@@ -331,7 +330,7 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             fH->SetBit(TH1::kIsZoomed);
             parent.Modified(kTRUE);
          }
-         parent.Interactive(); // clear interactive object
+         parent.FreeInteractive(this);
          break;
    }
 }

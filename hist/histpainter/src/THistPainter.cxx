@@ -3537,26 +3537,28 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       return;
    }
 
+   auto &parent = *gPad;
+
    //     come here if we have a lego/surface in the pad
-   TView *view = gPad->GetView();
+   TView *view = parent.GetView();
 
    if (!fShowProjection && view && !view->TestBit(kCannotRotate)) {
       view->ExecuteRotateView(event, px, py);
       return;
    }
-   Bool_t opaque  = gPad->OpaqueMoving();
+   Bool_t opaque  = parent.OpaqueMoving();
 
    TAxis *xaxis    = fH->GetXaxis();
    TAxis *yaxis    = fH->GetYaxis();
    Int_t dimension = fH->GetDimension();
 
    // In case of option SAME the axis must be the ones of the first drawn histogram
-   TString IsSame = fH->GetDrawOption();
-   IsSame.ToLower();
-   if (IsSame.Index("same")>=0) {
-      TIter next(gPad->GetListOfPrimitives());
-      while (auto h1 = (TH1 *)next()) {
-         if (h1->InheritsFrom(TH1::Class())) {
+   TString hopt = fH->GetDrawOption();
+   hopt.ToLower();
+   if (hopt.Index("same") >= 0) {
+      TIter next(parent.GetListOfPrimitives());
+      while (auto obj = next()) {
+         if (auto h1 = dynamic_cast<TH1 *>(obj)) {
             xaxis    = h1->GetXaxis();
             yaxis    = h1->GetYaxis();
             break;
@@ -3564,18 +3566,14 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
    }
 
-   auto zoombox = dynamic_cast<TZoomInteractive *> (gPad->Interactive(this));
-   auto h1edit = dynamic_cast<TEditInteractive *> (gPad->Interactive(this));
+   auto zoombox = parent.GetInteractive<TZoomInteractive>(this);
+   auto h1edit = parent.GetInteractive<TEditInteractive>(this);
 
    switch (event) {
 
    case kButton1Down:
-
-      if (dimension == 2) {
-         zoombox = new TZoomInteractive(*gPad, px, py);
-         gPad->Interactive(this, zoombox);
-         // no need to paint while box is dummy
-      }
+      if (dimension == 2)
+         zoombox = parent.MakeInteractive<TZoomInteractive>(this, parent, px, py);
       // No break !!!
 
    case kMouseMotion:
@@ -3585,13 +3583,13 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          break;
       }
 
-      gPad->SetCursor(kPointer);
+      parent.SetCursor(kPointer);
       if ((dimension == 1) && gROOT->GetEditHistograms()) {
-         h1edit = new TEditInteractive();
+         h1edit = parent.MakeInteractive<TEditInteractive>(this);
 
          Double_t baroffset = Hoption.Bar ? fH->GetBarOffset() : 0;
          Double_t barwidth  = Hoption.Bar ? fH->GetBarWidth() : 1;
-         h1edit->bin      = fXaxis->FindFixBin(gPad->PadtoX(gPad->AbsPixeltoX(px)));
+         h1edit->bin      = fXaxis->FindFixBin(parent.PadtoX(parent.AbsPixeltoX(px)));
          Double_t binwidth = fXaxis->GetBinWidth(h1edit->bin);
          h1edit->xlow     = fXaxis->GetBinLowEdge(h1edit->bin) + baroffset*binwidth;
          h1edit->xup      = h1edit->xlow + barwidth*binwidth;
@@ -3600,8 +3598,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (!h1edit->factor)
             h1edit->factor = 1.;
 
-         gPad->Interactive(this, h1edit);
-         gPad->SetCursor(kArrowVer);
+         parent.SetCursor(kArrowVer);
       }
 
       break;
@@ -3609,14 +3606,14 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kButton1Motion:
 
       if ((dimension == 1) && h1edit) {
-         Double_t yup = gPad->PadtoY(gPad->AbsPixeltoY(py)) / h1edit->factor;
+         Double_t yup = parent.PadtoY(parent.AbsPixeltoY(py)) / h1edit->factor;
          fH->SetBinContent(h1edit->bin, yup);
 
          if (!opaque) {
-            gPad->PaintBox(gPad->XtoPad(h1edit->xlow), gPad->YtoPad(h1edit->y0), gPad->XtoPad(h1edit->xup), gPad->YtoPad(yup), "ilh1edit");  // Draw the new box
-            gPad->UpdateAsync();
+            parent.PaintBox(parent.XtoPad(h1edit->xlow), parent.YtoPad(h1edit->y0), parent.XtoPad(h1edit->xup), parent.YtoPad(yup), "ilh1edit");  // Draw the new box
+            parent.UpdateAsync();
          } else
-            gPad->Modified();
+            parent.Modified();
       }
 
       if (zoombox && dimension == 2)
@@ -3636,8 +3633,8 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (bin2 > bin1)
             yaxis->SetRange(bin1,bin2);
       }
-      gPad->Modified();
-      gPad->Update();
+      parent.Modified();
+      parent.Update();
 
       break;
 
@@ -3659,8 +3656,8 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (resetYaxisRange)
             yaxis->ResetBit(TAxis::kAxisRange);
       }
-      gPad->Modified();
-      gPad->Update();
+      parent.Modified();
+      parent.Update();
 
       break;
 
@@ -3672,8 +3669,8 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
       if ((dimension == 2) && zoombox)
          zoombox->ChangeRange(xaxis, yaxis);
-      gPad->Interactive(); // remove interactive object
-      gPad->Modified();
+      parent.FreeInteractive(this); // remove interactive object
+      parent.Modified();
 
       break;
 
@@ -3683,7 +3680,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       while (true) {
          px = py = 0;
-         event = gPad->GetCanvasImp()->RequestLocator(px, py);
+         event = parent.GetCanvasImp()->RequestLocator(px, py);
 
          ExecuteEvent(kButton1Motion, px, py);
 
