@@ -19,7 +19,7 @@ target_include_directories(root PRIVATE
   ${CMAKE_SOURCE_DIR}/core/foundation/inc
   ${CMAKE_SOURCE_DIR}/core/base/inc
   ${CMAKE_SOURCE_DIR}/core/base/res
-  ${CMAKE_SOURCE_DIR}/core/clib/inc    # for strtok.h
+  ${CMAKE_SOURCE_DIR}/builtins/clib/inc    # for strtok.h
   ${CMAKE_SOURCE_DIR}/core/meta/inc    # for TGenericClassInfo.h
   ${CMAKE_BINARY_DIR}/ginclude         # for RConfigure.h and rootCommandLineOptionsHelp.h
 )
