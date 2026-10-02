@@ -185,7 +185,7 @@ TEST_F(RNTupleProcessorTest, Base)
                                      "information of the RNTuple(s) this processor is created from"));
    }
 
-   for (const auto &idx : *proc) {
+   for (auto &idx : *proc) {
       proc->LoadEntry(idx);
       EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
 
@@ -195,6 +195,54 @@ TEST_F(RNTupleProcessorTest, Base)
       EXPECT_EQ(yExp, *std::static_pointer_cast<std::vector<float>>(y.GetPtr()));
    }
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
+}
+
+TEST_F(RNTupleProcessorTest, InputIteratorSemantics)
+{
+   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+   proc->RequestField<float>("x");
+
+   auto it1 = proc->begin();
+   auto it2 = proc->begin();
+
+   // i != j
+   EXPECT_FALSE(it1 != it2);
+   EXPECT_TRUE((it1 != it2) == !(it1 == it2));
+
+   // *i
+   EXPECT_EQ(it1->GetEntryNumber(), 0);
+   EXPECT_TRUE(((void)it1, *it1) == *it1);
+   EXPECT_EQ(it1->GetEntryNumber(), it2->GetEntryNumber());
+
+   // ++r
+   for (int i = 0; i < 5; i++) {
+      EXPECT_EQ(it1->GetEntryNumber(), i);
+      ++it1;
+   }
+   EXPECT_TRUE(it1 == proc->end());
+}
+
+TEST_F(RNTupleProcessorTest, MultipleIterators)
+{
+   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+   auto x = proc->RequestField<float>("x");
+
+   auto it1 = proc->begin();
+   auto it2 = proc->begin();
+
+   ROOT::NTupleSize_t entryIdx = 0;
+   EXPECT_TRUE(*it1 == *it2);
+   while (it1 != proc->end()) {
+      proc->LoadEntry(*it1);
+      EXPECT_EQ(static_cast<float>(it1->GetEntryNumber()), entryIdx);
+      EXPECT_EQ(static_cast<float>(it1->GetEntryNumber()), *x);
+      it1++;
+      proc->LoadEntry(*it2);
+      EXPECT_EQ(static_cast<float>(it2->GetEntryNumber()), 0);
+      EXPECT_EQ(static_cast<float>(it2->GetEntryNumber()), *x);
+
+      entryIdx++;
+   }
 }
 
 TEST_F(RNTupleProcessorTest, RequestFieldWithPtr)
