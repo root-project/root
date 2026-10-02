@@ -95,8 +95,9 @@ TEST_F(RNTupleJoinProcessorTest, Aligned)
 
    std::vector<float> yExpected;
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
 
       yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
       EXPECT_EQ(yExpected, *y);
@@ -115,6 +116,7 @@ TEST_F(RNTupleJoinProcessorTest, IdenticalFieldNames)
    auto iAux = proc->RequestField<int>("ntuple3.i");
 
    for (auto it = proc->begin(); it != proc->end(); it++) {
+      proc->LoadEntry(*it);
       EXPECT_NE(iPrimary.GetPtr(), iAux.GetPtr());
       EXPECT_EQ(*iPrimary, *iAux);
    }
@@ -174,8 +176,9 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedSingleJoinField)
 
    std::vector<float> yExpected;
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx * 2, *iPrimary);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx * 2, *iPrimary);
       EXPECT_EQ(*iPrimary, *iAux);
       EXPECT_FLOAT_EQ(*iPrimary * 0.5f, *x);
 
@@ -232,10 +235,11 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
    auto x = proc->RequestField<float>("x");
    auto a = proc->RequestField<float>("ntuple4.a");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(proc->GetNEntriesProcessed(), idx + 1);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(proc->GetNEntriesProcessed(), *idx + 1);
 
-      EXPECT_FLOAT_EQ(idx * 2, *i);
+      EXPECT_FLOAT_EQ(*idx * 2, *i);
       EXPECT_FLOAT_EQ(*i * 0.5f, *x);
       EXPECT_EQ(*i * 0.1f, *a);
    }
@@ -252,18 +256,23 @@ TEST_F(RNTupleJoinProcessorTest, MissingEntries)
    std::vector<float> yExpected;
 
    auto procIter = proc->begin();
+   proc->LoadEntry(*procIter);
    EXPECT_TRUE(a.HasValue());
    EXPECT_EQ(*i * 0.1f, *a);
    ++procIter;
+   proc->LoadEntry(*procIter);
    EXPECT_TRUE(a.HasValue());
    EXPECT_EQ(*i * 0.1f, *a);
    ++procIter;
+   proc->LoadEntry(*procIter);
    EXPECT_TRUE(a.HasValue());
    EXPECT_EQ(*i * 0.1f, *a);
    ++procIter;
+   proc->LoadEntry(*procIter);
    EXPECT_FALSE(a.HasValue());
    EXPECT_EQ(3ULL, *i);
    ++procIter;
+   proc->LoadEntry(*procIter);
    EXPECT_TRUE(a.HasValue());
    EXPECT_EQ(*i * 0.1f, *a);
 }
@@ -292,8 +301,9 @@ TEST_F(RNTupleJoinProcessorTest, TMemFile)
 
    std::vector<float> yExpected;
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx * 2, *i);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx * 2, *i);
 
       EXPECT_FLOAT_EQ(*i * 0.5f, *x);
 
