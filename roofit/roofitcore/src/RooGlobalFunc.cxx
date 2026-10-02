@@ -18,19 +18,23 @@
 
 #include <RooGlobalFunc.h>
 
+#include <RooAbsBinning.h>
 #include <RooAbsData.h>
 #include <RooAbsPdf.h>
 #include <RooBatchCompute.h>
 #include <RooCategory.h>
+#include <RooCmdConfig.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooFitResult.h>
 #include <RooFormulaVar.h>
 #include <RooHelpers.h>
+#include <RooHist.h>
 #include <RooMsgService.h>
 #include <RooNumIntConfig.h>
 #include <RooRealConstant.h>
 #include <RooRealVar.h>
+#include <RooUniformBinning.h>
 
 #include "RooEvaluatorWrapper.h"
 
@@ -38,6 +42,11 @@
 #include <TInterpreter.h>
 
 #include <algorithm>
+#include <atomic>
+#include <limits>
+#include <sstream>
+#include <stdexcept>
+#include <tuple>
 
 namespace RooFit {
 
@@ -1153,6 +1162,299 @@ RooCmdArg MultiArg(const RooCmdArg &arg1, const RooCmdArg &arg2, const RooCmdArg
 RooConstVar &RooConst(double val)
 {
    return RooRealConstant::value(val);
+}
+
+namespace {
+
+/// Implementation of RooFit::makeResidHist() and RooFit::makePullHist().
+std::unique_ptr<RooHist> makeResidOrPullHist(RooAbsReal &fitModel, RooAbsData const &data, bool normalize,
+                                             RooCmdArg const &arg1, RooCmdArg const &arg2, RooCmdArg const &arg3,
+                                             RooCmdArg const &arg4, RooCmdArg const &arg5, RooCmdArg const &arg6,
+                                             RooCmdArg const &arg7, RooCmdArg const &arg8)
+{
+   const char *funcName = normalize ? "RooFit::makePullHist" : "RooFit::makeResidHist";
+
+   RooCmdConfig pc(funcName);
+   pc.defineDouble("normScale", "Normalization", 0, 1.0);
+   pc.defineInt("normType", "Normalization", 0, 0);
+   pc.defineInt("etype", "DataError", 0, static_cast<int>(RooAbsData::Auto));
+   pc.defineString("name", "Name", 0, "");
+   pc.defineString("title", "Title", 0, "");
+   pc.defineObject("binning", "Binning", 0);
+   pc.defineString("binningName", "BinningName", 0, "");
+   pc.defineInt("nbins", "BinningSpec", 0, 0);
+   pc.defineDouble("xlo", "BinningSpec", 0, 0.0);
+   pc.defineDouble("xhi", "BinningSpec", 1, 0.0);
+   pc.defineMutex("Binning", "BinningName", "BinningSpec");
+   pc.defineDouble("rangeLo", "Range", 0, -999.);
+   pc.defineDouble("rangeHi", "Range", 1, -999.);
+   pc.defineString("rangeName", "RangeWithName", 0, "", true);
+   pc.defineMutex("Range", "RangeWithName");
+   pc.process(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+   if (!pc.ok(true)) {
+      throw std::invalid_argument(std::string(funcName) + "(): unrecognized arguments");
+   }
+
+   if (data.numEntries() == 0) {
+      throw std::invalid_argument(std::string(funcName) + "(): input data is empty");
+   }
+
+   // Only the pure scale-factor form of Normalization() is supported; the
+   // scale types Normalization(scale, type) like Relative or NumEvent are
+   // RooPlot-specific.
+   if (pc.hasProcessed("Normalization") && pc.getInt("normType") != static_cast<int>(RooAbsReal::Relative)) {
+      throw std::invalid_argument(std::string(funcName) +
+                                  "(): only Normalization(scaleFactor) is supported, without a scale type");
+   }
+
+   const auto etype = static_cast<RooAbsData::ErrorType>(pc.getInt("etype"));
+   if (etype != RooAbsData::Auto && etype != RooAbsData::Poisson && etype != RooAbsData::SumW2) {
+      throw std::invalid_argument(std::string(funcName) + "(): unsupported DataError(), only Auto, Poisson and "
+                                                          "SumW2 are supported");
+   }
+
+   // The observable must be a single RooRealVar (we need named ranges on it
+   // for the per-bin integration). This check will also catch multi-column
+   // datasets and RooDataHists with category dimensions (like reduced
+   // simultaneous-fit data).
+   RooRealVar *obs = nullptr;
+   {
+      const RooArgSet &coords = *data.get();
+      if (coords.size() != 1) {
+         throw std::invalid_argument(std::string(funcName) + "(): only 1-dimensional data is supported");
+      }
+      obs = dynamic_cast<RooRealVar *>(coords[0]);
+   }
+   if (!obs) {
+      throw std::invalid_argument(std::string(funcName) + "(): observable must be a RooRealVar");
+   }
+
+   // The observable instance found in the data is not necessarily the same
+   // object as the model's observable (a RooDataSet owns its own copies).
+   // For the model integration, we must use the model's own variable with
+   // the same name, otherwise the interpretation of the integration ranges
+   // is model-dependent (e.g. works for plain pdfs, but not for
+   // RooProjectedPdf). If the model doesn't have an observable with this
+   // name (e.g. it's a constant in the observable), we still use the
+   // data-side one and the model integral is analytic in that case.
+   RooRealVar *intVar = obs;
+   {
+      std::unique_ptr<RooArgSet> modelObs{fitModel.getObservables(*data.get())};
+      if (auto *modelVar = dynamic_cast<RooRealVar *>(modelObs->find(obs->GetName()))) {
+         intVar = modelVar;
+      }
+   }
+
+   // Resolve the optional Binning()/BinningName() arguments to the binning
+   // that should be used for the binning of unbinned data.
+   std::unique_ptr<RooAbsBinning> ownedBinning;
+   const RooAbsBinning *binning = nullptr;
+   if (pc.hasProcessed("Binning")) {
+      binning = static_cast<const RooAbsBinning *>(pc.getObject("binning"));
+   } else if (pc.hasProcessed("BinningName")) {
+      const char *binningName = pc.getString("binningName", nullptr, true);
+      // The named binning may live on the model-side or the data-side
+      // variable
+      if (intVar->hasBinning(binningName)) {
+         binning = &intVar->getBinning(binningName);
+      } else if (obs->hasBinning(binningName)) {
+         binning = &obs->getBinning(binningName);
+      } else {
+         throw std::invalid_argument(std::string(funcName) + "(): unknown binning '" + binningName + "'");
+      }
+   } else if (pc.hasProcessed("BinningSpec")) {
+      double xlo = pc.getDouble("xlo");
+      double xhi = pc.getDouble("xhi");
+      // The RooFit convention (see RooAbsData::plotOn) is that Binning(nbins)
+      // encodes equal xlo and xhi, meaning "take the range from the variable"
+      if (xlo == xhi) {
+         xlo = obs->getMin();
+         xhi = obs->getMax();
+      }
+      ownedBinning = std::make_unique<RooUniformBinning>(xlo, xhi, pc.getInt("nbins"));
+      binning = ownedBinning.get();
+   }
+
+   // If the input data is unbinned, bin it. A binning passed with the
+   // Binning() arguments is realized on a clone of the observable, so the
+   // binning of the user's variables are never modified.
+   std::unique_ptr<RooDataHist> ownedBinData;
+   std::unique_ptr<RooAbsArg> ownedObs;
+   RooDataHist const *binData = dynamic_cast<RooDataHist const *>(&data);
+   if (!binData) {
+      const RooAbsArg *usedObs = obs;
+      if (binning) {
+         ownedObs.reset(static_cast<RooAbsArg *>(obs->Clone()));
+         static_cast<RooRealVar &>(*ownedObs).setBinning(*binning);
+         usedObs = ownedObs.get();
+      }
+      std::string binnedName = std::string(data.GetName()) + "_binned";
+      ownedBinData = std::make_unique<RooDataHist>(binnedName, data.GetTitle(), RooArgSet{*usedObs}, data);
+      binData = ownedBinData.get();
+   } else if (binning) {
+      throw std::invalid_argument(std::string(funcName) +
+                                  "(): Binning() arguments are not supported for already binned data");
+   }
+
+   const double scaleFactor = pc.getDouble("normScale");
+
+   std::string name = pc.getString("name");
+   if (name.empty()) {
+      name = (normalize ? "pull_" : "resid_") + std::string(data.GetName()) + "_" + fitModel.GetName();
+   }
+   std::string title = pc.getString("title");
+   if (title.empty()) {
+      title = std::string(normalize ? "Pull of " : "Residual of ") + data.GetTitle() + " and " + fitModel.GetTitle() +
+              " (integrated per bin)";
+   }
+
+   // Use the binning that the bin contents were computed with, which can be
+   // different from the default binning of the observable.
+   const RooAbsBinning &dataBinning = *binData->getBinnings().front();
+   const int nBins = dataBinning.numBins();
+
+   auto out = std::make_unique<RooHist>();
+   out->SetName(name.c_str());
+   out->SetTitle(title.c_str());
+
+   RooArgSet obsSet{*intVar};
+   RooArgSet normSet{*intVar};
+
+   // Resolve the normalization ranges (default: the full range of the
+   // observable). Only bins fully inside one of the ranges get points in the
+   // residual/pull histogram, and the model expectation is normalized to
+   // the data weight in these ranges. Range("name") can be given multiple
+   // times for a union of ranges (sidebands); the names are concatenated
+   // into the comma-separated RangeWithName argument by the usual RooFit
+   // convention.
+   std::vector<std::pair<double, double>> ranges;
+   if (pc.hasProcessed("RangeWithName")) {
+      std::string rangeNames = pc.getString("rangeName", nullptr, true);
+      for (std::istringstream tn(rangeNames); tn.good();) {
+         std::string rname;
+         std::getline(tn, rname, ',');
+         if (rname.empty())
+            continue;
+         if (!intVar->hasRange(rname.c_str())) {
+            throw std::invalid_argument(std::string(funcName) + "(): unknown range '" + rname + "'");
+         }
+         ranges.push_back(intVar->getRange(rname.c_str()));
+      }
+   } else if (pc.hasProcessed("Range")) {
+      ranges.emplace_back(pc.getDouble("rangeLo"), pc.getDouble("rangeHi"));
+   } else {
+      ranges.emplace_back(obs->getMin(), obs->getMax());
+   }
+
+   // The numeric integration with createIntegral() is noisy on INFO level
+   // (it initializes an integrator for every bin); suppress it, but keep
+   // warnings visible.
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING};
+
+   // Scratch ranges on the model observable that are redefined for every
+   // bin, used to integrate the model exactly over each bin (same mechanism
+   // as RooBinSamplingPdf). The ranges are intentionally named uniquely per
+   // call to not clobber existing ranges of the same name on the user's
+   // variable; they are shared ranges and stay on the variable after the
+   // call.
+   static std::atomic<unsigned long> nScratchRanges{0};
+   const std::string scratchRange = "_binInt_" + std::to_string(nScratchRanges++);
+   const std::string rangeNameBin = scratchRange + "_bin";
+
+   RooAbsData::ErrorType errType =
+      etype == RooAbsData::Auto ? (binData->isNonPoissonWeighted() ? RooAbsData::SumW2 : RooAbsData::Poisson) : etype;
+
+   // The model integral over the (union of) normalization ranges
+   double normIntegral = 0.;
+   for (std::size_t iRange = 0; iRange < ranges.size(); ++iRange) {
+      std::string rangeNameRange = scratchRange + "_range" + std::to_string(iRange);
+      intVar->setRange(rangeNameRange.c_str(), ranges[iRange].first, ranges[iRange].second);
+      normIntegral += fitModel.createIntegral(obsSet, normSet, rangeNameRange.c_str())->getVal();
+   }
+   if (normIntegral == 0.) {
+      throw std::invalid_argument(std::string(funcName) + "(): model has no support in the normalization range(s)");
+   }
+
+   // Tolerate floating-point imprecision of bin boundaries in the range
+   // comparison
+   double epsMax = 0.;
+   for (auto const &range : ranges) {
+      epsMax = std::max(epsMax, std::max(std::abs(range.first), std::abs(range.second)));
+   }
+   const double eps = 10. * std::numeric_limits<double>::epsilon() * epsMax;
+
+   // The data weight inside the normalization ranges, summing only the kept
+   // bins (the convention for plotted curves is analogous: a curve is
+   // rescaled to the event count of the plotted, possibly cut, histogram).
+   double nData = 0.;
+   for (int iBin = 0; iBin < nBins; ++iBin) {
+      const double binLo = dataBinning.binLow(iBin);
+      const double binHi = dataBinning.binHigh(iBin);
+      const bool inRange = std::any_of(ranges.begin(), ranges.end(), [&](auto const &r) {
+         return binLo >= r.first - eps && binHi <= r.second + eps;
+      });
+      if (inRange) {
+         nData += binData->weight(iBin);
+      }
+   }
+
+   for (int iBin = 0; iBin < nBins; ++iBin) {
+      binData->get(iBin);
+
+      const double binLo = dataBinning.binLow(iBin);
+      const double binHi = dataBinning.binHigh(iBin);
+      // Only show points for bins inside the (union of) normalization ranges
+      const bool inRange = std::any_of(ranges.begin(), ranges.end(), [&](auto const &r) {
+         return binLo >= r.first - eps && binHi <= r.second + eps;
+      });
+      if (!inRange)
+         continue;
+
+      intVar->setRange(rangeNameBin.c_str(), binLo, binHi);
+      const double fraction = fitModel.createIntegral(obsSet, normSet, rangeNameBin.c_str())->getVal() / normIntegral;
+      const double expected = scaleFactor * nData * fraction;
+
+      const double actual = binData->weight(iBin);
+      double eylo, eyhi;
+      binData->weightError(eylo, eyhi, errType);
+
+      double resid = actual - expected;
+      if (normalize) {
+         const double norm = resid > 0 ? eylo : eyhi;
+         if (norm == 0.) {
+            oocoutW(&fitModel, Plotting) << funcName << "(" << fitModel.GetName() << ") WARNING: point " << iBin
+                                         << " has zero error, setting residual to zero" << std::endl;
+            resid = eyhi = eylo = 0.;
+         } else {
+            resid /= norm;
+            eyhi /= norm;
+            eylo /= norm;
+         }
+      }
+      out->addBinWithError(dataBinning.binCenter(iBin), resid, eylo, eyhi);
+   }
+
+   return out;
+}
+
+} // namespace
+
+/// \see RooFit::makeResidHist()
+std::unique_ptr<RooHist> makeResidHist(RooAbsReal &fitModel, RooAbsData const &data, RooCmdArg const &arg1,
+                                       RooCmdArg const &arg2, RooCmdArg const &arg3, RooCmdArg const &arg4,
+                                       RooCmdArg const &arg5, RooCmdArg const &arg6, RooCmdArg const &arg7,
+                                       RooCmdArg const &arg8)
+{
+   return makeResidOrPullHist(fitModel, data, false, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+}
+
+/// \see RooFit::makePullHist()
+std::unique_ptr<RooHist> makePullHist(RooAbsReal &fitModel, RooAbsData const &data, RooCmdArg const &arg1,
+                                      RooCmdArg const &arg2, RooCmdArg const &arg3, RooCmdArg const &arg4,
+                                      RooCmdArg const &arg5, RooCmdArg const &arg6, RooCmdArg const &arg7,
+                                      RooCmdArg const &arg8)
+{
+   return makeResidOrPullHist(fitModel, data, true, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 }
 
 namespace Detail {

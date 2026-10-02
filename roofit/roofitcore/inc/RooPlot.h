@@ -174,8 +174,14 @@ public:
   double chiSquare(int nFitParam=0) const { return chiSquare(nullptr,nullptr,nFitParam) ; }
   double chiSquare(const char* pdfname, const char* histname, int nFitParam=0) const ;
 
+  // NOTE for developers: residHist() and pullHist() are superseded by
+  // RooFit::makeResidHist() / RooFit::makePullHist(). They should be
+  // deprecated in ROOT v6.44 and removed in v6.46.
   RooHist* residHist(const char* histname=nullptr, const char* pdfname=nullptr,bool normalize=false, bool useAverage=true) const ;
-  ///Uses residHist() and sets normalize=true
+  ///Uses residHist() and sets normalize=true.
+  ///\note For pulls of binned data against a fitted model, the more accurate
+  ///RooFit::makePullHist() is the recommended interface: it integrates the
+  ///model itself exactly over each bin, instead of interpolating the curve.
   RooHist* pullHist(const char* histname=nullptr, const char* pdfname=nullptr, bool useAverage=true) const
     { return residHist(histname,pdfname,true,useAverage); }
 

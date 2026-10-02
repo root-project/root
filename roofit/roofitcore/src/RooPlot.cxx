@@ -43,6 +43,8 @@ object onto a one-dimensional plot.
 
 #include "RooPlot.h"
 
+#include <atomic>
+
 #include "RooAbsReal.h"
 #include "RooAbsRealLValue.h"
 #include "RooPlotable.h"
@@ -1064,8 +1066,22 @@ double RooPlot::chiSquare(const char* curvename, const char* histname, int nFitP
 /// of the histogram, effectively returning a pull histogram.
 /// \param useAverage If true, the histogram is compared with the curve averaged in each bin.
 /// Otherwise, the curve is evaluated at the bin centres, which is not accurate for strongly curved distributions.
+///
+/// \note For the comparison of binned data with a fitted model, the more
+/// accurate RooFit::makeResidHist() and RooFit::makePullHist() are the
+/// recommended interface: they integrate the model itself exactly over each
+/// bin, instead of interpolating the plotted curve.
 RooHist* RooPlot::residHist(const char* histname, const char* curvename, bool normalize, bool useAverage) const
 {
+  static std::atomic<bool> warned{false};
+  if (!warned.exchange(true)) {
+    coutW(Plotting) << "RooPlot::residHist/pullHist compare data with the interpolated curve, which is biased for "
+                       "sharply peaked models (systematic residual 'wiggle'). For binned data compared to a fitted "
+                       "model, use RooFit::makeResidHist() / RooFit::makePullHist(), which integrate the model exactly "
+                       "over each bin. These methods will be deprecated in ROOT v6.44."
+                    << std::endl;
+  }
+
   // Find all curve objects with the name "curvename" or the name of the last
   // plotted curve (there might be multiple in the case of multi-range fits).
   std::vector<RooCurve *> curves;

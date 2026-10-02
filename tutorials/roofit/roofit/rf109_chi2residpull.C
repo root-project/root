@@ -59,19 +59,25 @@ void rf109_chi2residpull()
    // S h o w   r e s i d u a l   a n d   p u l l   d i s t s
    // -------------------------------------------------------
 
-   // Construct a histogram with the residuals of the data w.r.t. the curve
-   RooHist *hresid = frame1->residHist();
+   // For the residuals and pulls, we compare the binned data with the model
+   // integrated exactly over each bin. This avoids the systematic "wiggle"
+   // that curve-based residuals show for sharply peaked pdfs.
 
-   // Construct a histogram with the pulls of the data w.r.t the curve
-   RooHist *hpull = frame1->pullHist();
+   // Construct a histogram with the residuals of the data w.r.t. the model.
+   // The Binning() argument selects how the unbinned dataset is binned.
+   std::unique_ptr<RooHist> hresid{makeResidHist(gauss, *data, Binning(40))};
 
-   // Create a new frame to draw the residual distribution and add the distribution to the frame
+   // Construct a histogram with the pulls of the data w.r.t the model
+   std::unique_ptr<RooHist> hpull{makePullHist(gauss, *data, Binning(40))};
+
+   // Create a new frame to draw the residual distribution and add the distribution to the frame.
+   // Note that addPlotable() transfers ownership of the histogram to the frame.
    RooPlot *frame2 = x.frame(Title("Residual Distribution"));
-   frame2->addPlotable(hresid, "P");
+   frame2->addPlotable(hresid.release(), "P");
 
    // Create a new frame to draw the pull distribution and add the distribution to the frame
    RooPlot *frame3 = x.frame(Title("Pull Distribution"));
-   frame3->addPlotable(hpull, "P");
+   frame3->addPlotable(hpull.release(), "P");
 
    TCanvas *c = new TCanvas("rf109_chi2residpull", "rf109_chi2residpull", 900, 300);
    c->Divide(3);
