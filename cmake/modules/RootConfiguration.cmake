@@ -255,7 +255,6 @@ set(gsllibdir)
 set(gslincdir ${GSL_INCLUDE_DIR})
 set(gslflags)
 
-set(shadowpw ${value${shadowpw}})
 set(buildmathmore ${value${mathmore}})
 set(buildroofit ${value${roofit}})
 set(buildunuran ${value${unuran}})
