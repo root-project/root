@@ -178,6 +178,11 @@ class TParallelCoordVarInteractive : public TVirtualPad::TInteractive {
    Bool_t vertical = kTRUE, zooming = kFALSE;
    Double_t pzoom1 = 0, pzoom2 = 0, pmove = 0;
 
+   TParallelCoordVarInteractive(Bool_t v)
+   {
+      vertical = v;
+   }
+
    void HandleMouse(TVirtualPad &parent, Double_t x1, Double_t y1, Int_t px, Int_t py, Bool_t first = kFALSE)
    {
       Double_t valx = parent.AbsPixeltoX(px);
@@ -249,13 +254,11 @@ void TParallelCoordVar::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
          parent.SetCursor(kArrowVer);
    }
 
-   auto inter = dynamic_cast<TParallelCoordVarInteractive *> (parent.Interactive(this));
+   auto inter = parent.GetInteractive<TParallelCoordVarInteractive>(this);
 
    switch (entry) {
       case kButton1Down:
-         inter = new TParallelCoordVarInteractive();
-         parent.Interactive(this, inter);
-         inter->vertical = GetVert();
+         inter = parent.MakeInteractive<TParallelCoordVarInteractive>(this, GetVert());
          parent.GetCanvas()->Selected(&parent, fParallel, 1);
          // no break
       case kButton1Motion:
@@ -304,7 +307,7 @@ void TParallelCoordVar::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
          }
 
          parent.Modified();
-         parent.Interactive();
+         parent.FreeInteractive(this);
          break;
       }
    }
