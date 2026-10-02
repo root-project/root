@@ -207,12 +207,11 @@ void TParallelCoordRange::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
 
    parent.SetCursor(kPointer);
 
-   auto inter = dynamic_cast<TParallelCoordRangeInteractive *> (parent.Interactive(this));
+   auto inter = parent.GetInteractive<TParallelCoordRangeInteractive>(this);
 
    switch (entry) {
       case kButton1Down:
-         inter = new TParallelCoordRangeInteractive();
-         parent.Interactive(this, inter);
+         inter = parent.MakeInteractive<TParallelCoordRangeInteractive>(this);
          parent.GetCanvas()->Selected(&parent, fVar->GetParallel(), 1);
          if (inter->GetValue(fVar, parent, px, py)) {
             if (inter->value < (fMin + fMax) /2)
@@ -221,7 +220,7 @@ void TParallelCoordRange::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
                inter->dragpoint = 2;
          } else {
             // not found reasonable value
-            parent.Interactive();
+            parent.FreeInteractive(this);
             break;
          }
          // no break
@@ -241,7 +240,7 @@ void TParallelCoordRange::ExecuteEvent(Int_t entry, Int_t px, Int_t py)
             fMax = max;
             parent.Modified();
          }
-         parent.Interactive(); // remove interactive object
+         parent.FreeInteractive(this);
          break;
    }
 }
