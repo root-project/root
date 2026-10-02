@@ -1183,6 +1183,11 @@ PyObject* Init()
 #if PY_VERSION_HEX >= 0x03000000
     Py_INCREF(gThisModule);
 #endif
+    // Avoid fallback to the GIL when importing this module in a free-threaded
+    // Python build.
+#ifdef Py_GIL_DISABLED
+    PyUnstable_Module_SetGIL(gThisModule, Py_MOD_GIL_NOT_USED);
+#endif
     return gThisModule;
 }
 
