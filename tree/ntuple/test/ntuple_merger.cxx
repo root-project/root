@@ -3382,6 +3382,60 @@ TEST(RNTupleMerger, MergeSecondNoEntries)
    }
 }
 
+TEST(RNTupleMerger, MergeNoEntries)
+{
+   // Try merging two empty ntuples with the same schema
+   FileRaii fileGuard1("test_ntuple_merge_both_noentries_1.root");
+   FileRaii fileGuard2("test_ntuple_merge_both_noentries_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<float>("foo");
+      model->MakeField<int>("bar");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+   }
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<float>("foo");
+      model->MakeField<int>("bar");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+   }
+
+   // Now merge the inputs
+   FileRaii fileGuardOut("test_ntuple_merge_both_noentries_out.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      for (auto mode : {ENTupleMergingMode::kFilter, ENTupleMergingMode::kStrict, ENTupleMergingMode::kUnion}) {
+         CheckDiagsRAII diagsRaii;
+         diagsRaii.requiredDiag(kWarning, "ROOT.NTuple.Merge", "has no entries", false);
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+         RNTupleMergeOptions opts;
+         opts.fMergingMode = mode;
+         RNTupleMerger merger{std::move(destination)};
+         auto res = merger.Merge(sourcePtrs, opts);
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
+      }
+   }
+
+   {
+      auto ntupleOut = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+      EXPECT_EQ(ntupleOut->GetDescriptor().GetNClusterGroups(), 0);
+      EXPECT_EQ(ntupleOut->GetNEntries(), 0);
+      EXPECT_EQ(ntupleOut->GetDescriptor().GetNFields(), 3); // zero field + the ones we added
+      auto pFoo = ntupleOut->GetModel().GetDefaultEntry().GetPtr<float>("foo");
+      auto pBar = ntupleOut->GetModel().GetDefaultEntry().GetPtr<int>("bar");
+      EXPECT_NE(pFoo, nullptr);
+      EXPECT_NE(pBar, nullptr);
+   }
+}
+
 TEST(RNTupleMerger, MergeEmptySchema)
 {
    // Try merging two ntuples with an empty schema
