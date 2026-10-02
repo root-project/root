@@ -36,6 +36,6 @@ result &= ReadToplevel();
 #ifdef ClingWorkAroundMissingDynamicScope
    gApplication->Terminate(gROOT->ProcessLine("!result"));
 #else
-   return !result; // invert value for Makefile purpose
+   return !result; // invert value so that the test exit code reflects success
 #endif
 }
