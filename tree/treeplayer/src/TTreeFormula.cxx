@@ -375,10 +375,22 @@ void TTreeFormula::DefineDimensions(Int_t code, Int_t size,
                                     Int_t& virt_dim) {
    if (info) {
       fManager->EnableMultiVarDims();
-      //if (fIndexes[code][info->fDim]<0) { // removed because the index might be out of bounds!
+      // When the primary (first) dimension is selected through a variable index
+      // (a "gather", fIndexes[code][0]==-2) and this inner variable-size dimension
+      // is itself pinned to a constant index, the formula does not iterate over the
+      // jagged sub-dimension: each gathered row yields a single value, so the number
+      // of instances is simply the length of the index variable.  Registering the
+      // dimension as a variable one would make the manager sum the physical
+      // sub-sizes (e.g. vv1[v2][0] would loop over the total size of vv1 instead of
+      // the length of v2).  So only register it when it actually varies during the
+      // iteration. See https://github.com/root-project/root/issues/19290
+      bool pinnedInnerDuringGather = (fIndexes[code][0] == -2) && (fIndexes[code][fNdimensions[code]] >= 0);
+      if (!pinnedInnerDuringGather) {
+         // NOTE: a dimension with a (constant) index is still registered here, because the
+         // index might be out of bounds and the dimension must still be tracked.
          info->fVirtDim = virt_dim;
          fManager->AddVarDims(virt_dim); // if (!fVarDims[virt_dim]) fVarDims[virt_dim] = new TArrayI;
-      //}
+      }
    }
 
    Int_t vsize = 0;
@@ -3631,8 +3643,11 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
                } else {
                   local_index = instance;
                }
-               if (info && local_index>=fCumulSizes[codeindex][max_dim]) {
+               if (info && fIndexes[codeindex][max_dim] != -2 && local_index >= fCumulSizes[codeindex][max_dim]) {
                   // We are out of bounds! [Multiple var dims, See same message a few line above]
+                  // For a variable index (-2) local_index is the instance number of the
+                  // index variable, not the physical position; the actual bounds are
+                  // checked below after evaluating the index variable.
                   return fNdata[0]+1;
                }
                if (fIndexes[codeindex][max_dim]==-2) {
