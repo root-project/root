@@ -2976,10 +2976,11 @@ void TPad::ls(Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create or provide interactive instance
-/// It is allowed the only instance of TInteractive per pad
+/// Internal method to create, provide or delete TInteractive instance
+/// It is allowed the only instance of TInteractive object per pad
 /// It can be assigned for the object when @param init is provided
 /// Otherwise returns existing instance for the @param obj
+/// If none of parameters are specified - existing instance will be deleted
 
 TVirtualPad::TInteractive *TPad::Interactive(TObject *obj, TInteractive *init)
 {
