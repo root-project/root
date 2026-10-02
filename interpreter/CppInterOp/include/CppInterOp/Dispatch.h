@@ -119,10 +119,22 @@ using namespace Cpp;
 // exclusive (#error guard at top) so only one body of Cpp::* exists per TU.
 // CN (CppName) may differ from DN (DispatchName) for overloaded functions,
 // e.g. CN=GetFunctionAddress, DN=GetFunctionAddress_fn.
+//
+// The wrappers have hidden visibility so that the funtion is not exported
+// from the client. Otherwise the dynamic linker could bind libclangCppInterOp's
+// own references to Cpp::*
+#if defined(__GNUC__) && !defined(_WIN32) && !defined(__CYGWIN__)
+#define CPPINTEROP_DISPATCH_HIDDEN __attribute__((__visibility__("hidden")))
+#else
+#define CPPINTEROP_DISPATCH_HIDDEN
+#endif
+
 namespace Cpp {
 
 #define CPPINTEROP_API_FUNC(DN, CN, Ret, DeclArgs, CallArgs, RawTypes)         \
-  inline Ret CN DeclArgs { return ::CppInternal::DispatchRaw::DN CallArgs; }
+  CPPINTEROP_DISPATCH_HIDDEN inline Ret CN DeclArgs {                          \
+    return ::CppInternal::DispatchRaw::DN CallArgs;                            \
+  }
 #include "CppInterOp/CppInterOpAPI.inc"
 
 /// Initialize all CppInterOp API from the dynamically loaded library.

@@ -395,6 +395,74 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE,
+           VariableReflection_GetVariableOffset_InClassConstInit) {
+  // External-linkage static members initialized in-class, which no binary
+  // exports (TString::kNPOS is the in-the-wild shape). The value is served
+  // from the evaluated initializer, without a JIT lookup that would fall
+  // through to scanning all libraries for the symbol.
+  TestFixture::CreateInterpreter();
+  Cpp::Declare(R"(
+    struct InClassConstInit {
+      static const long kNPOS = ~(long)0;
+      static constexpr int kN = 100;
+      static constexpr short kArr[3] = {1, -2, 3};
+      static constexpr short kFill[4] = {7, 8}; // zero-filler tail
+      // Not materializable from the evaluated value: non-integral element
+      // type, and _BitInt storage padded past the APInt width. The query
+      // must fail cleanly (0), not crash in JIT codegen for the array.
+      static constexpr double kF[2] = {1.5, -2.5};
+      static constexpr _BitInt(24) kBit[2] = {1, -2};
+    };
+  )");
+  Cpp::DeclRef klass = Cpp::GetNamed("InClassConstInit");
+  EXPECT_TRUE(klass);
+
+  // GetVariableOffset returns addresses as intptr_t; dereferencing them is
+  // the point of these assertions.
+  // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast,
+  //             performance-no-int-to-ptr)
+  intptr_t npos = Cpp::GetVariableOffset(Cpp::GetNamed("kNPOS", klass));
+  EXPECT_TRUE(npos);
+  EXPECT_EQ(*reinterpret_cast<const long*>(npos), ~(long)0);
+
+  intptr_t n = Cpp::GetVariableOffset(Cpp::GetNamed("kN", klass));
+  EXPECT_TRUE(n);
+  EXPECT_EQ(*reinterpret_cast<const int*>(n), 100);
+
+  intptr_t arr = Cpp::GetVariableOffset(Cpp::GetNamed("kArr", klass));
+  EXPECT_TRUE(arr);
+  EXPECT_EQ(reinterpret_cast<const short*>(arr)[0], 1);
+  EXPECT_EQ(reinterpret_cast<const short*>(arr)[1], -2);
+  EXPECT_EQ(reinterpret_cast<const short*>(arr)[2], 3);
+  // The materialization is cached per variable: a repeated query must return
+  // the same address, not a fresh bump allocation.
+  EXPECT_EQ(Cpp::GetVariableOffset(Cpp::GetNamed("kArr", klass)), arr);
+
+  Cpp::DeclRef filldecl = Cpp::GetNamed("kFill", klass);
+  EXPECT_TRUE(filldecl);
+  intptr_t fill = Cpp::GetVariableOffset(filldecl);
+  EXPECT_TRUE(fill);
+  EXPECT_EQ(reinterpret_cast<const short*>(fill)[0], 7);
+  EXPECT_EQ(reinterpret_cast<const short*>(fill)[1], 8);
+  EXPECT_EQ(reinterpret_cast<const short*>(fill)[2], 0); // APValue filler
+  EXPECT_EQ(reinterpret_cast<const short*>(fill)[3], 0);
+  EXPECT_EQ(Cpp::GetVariableOffset(filldecl), fill);
+
+  // Unsupported fast-path shapes fall back to JIT codegen of the constexpr
+  // inline static. The outcome is platform-dependent — resolvable on some
+  // targets (then the values must read back correctly), failing cleanly
+  // with 0 on others. Never a crash either way.
+  if (intptr_t f = Cpp::GetVariableOffset(Cpp::GetNamed("kF", klass))) {
+    EXPECT_EQ(reinterpret_cast<const double*>(f)[0], 1.5);
+    EXPECT_EQ(reinterpret_cast<const double*>(f)[1], -2.5);
+  }
+
+  Cpp::GetVariableOffset(Cpp::GetNamed("kBit", klass)); // outcome varies
+  // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast,
+  //           performance-no-int-to-ptr)
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE,
            VariableReflection_GetVariableOffset_NoStaleUsedHandle) {
 #ifdef __EMSCRIPTEN__
   // The stale-handle crash this test pins is native-JIT mechanics (ORC
@@ -909,10 +977,16 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   Cpp::GetEnumConstantDatamembers(MyEnumClass, datamembers);
   EXPECT_EQ(datamembers.size(), 9);
   EXPECT_TRUE(Cpp::IsEnumType(Cpp::GetVariableType(datamembers[0])));
+  EXPECT_EQ(Cpp::GetName(datamembers[0]), "FOUR");
+  EXPECT_EQ(Cpp::GetName(datamembers[3]), "ONE");
+  EXPECT_EQ(Cpp::GetName(datamembers[8]), "NINE");
+  EXPECT_EQ(Cpp::GetEnumConstantValue(datamembers[8]), 2);
 
   std::vector<Cpp::DeclRef> datamembers2;
   Cpp::GetEnumConstantDatamembers(MyEnumClass, datamembers2, false);
   EXPECT_EQ(datamembers2.size(), 6);
+  EXPECT_EQ(Cpp::GetName(datamembers2[5]), "THREE");
+  EXPECT_EQ(Cpp::GetEnumConstantValue(datamembers2[5]), 2);
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_Is_Get_Pointer) {
