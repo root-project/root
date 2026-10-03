@@ -131,17 +131,9 @@ public:
    size_t GetAlignment() const final { return 0; }
 }; // RInvalidField
 
-/// The field for a class with dictionary
-class RClassField : public RFieldBase {
-private:
-   enum ESubfieldRole {
-      kBaseClass,
-      kDataMember,
-   };
-   struct RSubfieldInfo {
-      ESubfieldRole fRole;
-      std::size_t fOffset;
-   };
+/// Base class for fields that are subject to I/O customization rules. Use by the class field and the SoA field.
+class RRuleField : public RFieldBase {
+protected:
    // Information to read into the staging area a field that is used as an input to an I/O customization rule
    struct RStagingItem {
       /// The field used to read the on-disk data. The fields type may be different from the on-disk type as long
@@ -151,6 +143,54 @@ private:
    };
    /// Prefix used in the subfield names generated for base classes
    static constexpr const char *kPrefixInherited{":"};
+
+   /// The staging area stores inputs to I/O rules according to the offsets given by the streamer info of
+   /// "TypeName@@Version". The area is allocated depending on I/O rules resp. the source members of the I/O rules.
+   std::unique_ptr<unsigned char[]> fStagingArea;
+   /// The TClass instance that corresponds to the staging area.
+   /// The staging class exists as <class name>@@<on-disk version> if the on-disk version is different from the
+   /// current in-memory version, or it can be accessed by the first @@alloc streamer element of the current streamer
+   /// info.
+   TClass *fStagingClass = nullptr;
+   std::unordered_map<std::string, RStagingItem> fStagingItems; ///< Lookup staging items by member name
+
+   RRuleField(std::string_view name, std::string_view type, ROOT::ENTupleStructure structure);
+
+   /// Derived classes should return the TClass instance representing the current in-memory layout.
+   virtual TClass *GetInMemoryClass() const = 0;
+
+   /// Returns the id of member 'name' in the class field given by 'fieldId', or kInvalidDescriptorId if no such
+   /// member exist. Looks recursively in base classes.
+   ROOT::DescriptorId_t LookupMember(const ROOT::RNTupleDescriptor &desc, std::string_view memberName,
+                                     ROOT::DescriptorId_t classFieldId) const;
+   /// Sets fStagingClass according to the given name and version
+   void SetStagingClass(const std::string &className, unsigned int classVersion);
+   /// If there are rules with inputs (source members), create the staging area according to the TClass instance
+   /// that corresponds to the on-disk field.
+   void PrepareStagingArea(const std::vector<const TSchemaRule *> &rules, const ROOT::RNTupleDescriptor &desc,
+                           const ROOT::RFieldDescriptor &classFieldId);
+   /// Register post-read callback corresponding to a ROOT I/O customization rules.
+   /// The sub object offset allows to apply the rule to a nested object within the passed target.
+   /// This is used to execute rules on base classes and nested classes in a SoA field.
+   void AddReadCallbacksFromIORule(const TSchemaRule *rule, std::size_t subObjectOffset = 0);
+   /// Given the on-disk information from the page source, find all the I/O customization rules that apply
+   /// to the class field at hand, to which the fieldDesc descriptor, if provided, must correspond.
+   /// Fields may not have an on-disk representation (e.g., when inserted by schema evolution), in which case the passed
+   /// field descriptor is nullptr.
+   std::vector<const TSchemaRule *> FindRules(const ROOT::RFieldDescriptor *fieldDesc) const;
+};
+
+/// The field for a class with dictionary
+class RClassField : public RRuleField {
+private:
+   enum ESubfieldRole {
+      kBaseClass,
+      kDataMember,
+   };
+   struct RSubfieldInfo {
+      ESubfieldRole fRole;
+      std::size_t fOffset;
+   };
 
    class RClassDeleter : public RDeleter {
    private:
@@ -165,38 +205,10 @@ private:
    /// Additional information kept for each entry in `fSubfields`
    std::vector<RSubfieldInfo> fSubfieldsInfo;
 
-   /// The staging area stores inputs to I/O rules according to the offsets given by the streamer info of
-   /// "TypeName@@Version". The area is allocated depending on I/O rules resp. the source members of the I/O rules.
-   std::unique_ptr<unsigned char[]> fStagingArea;
-   /// The TClass instance that corresponds to the staging area.
-   /// The staging class exists as <class name>@@<on-disk version> if the on-disk version is different from the
-   /// current in-memory version, or it can be accessed by the first @@alloc streamer element of the current streamer
-   /// info.
-   TClass *fStagingClass = nullptr;
-   std::unordered_map<std::string, RStagingItem> fStagingItems; ///< Lookup staging items by member name
-
 private:
    RClassField(std::string_view fieldName, const RClassField &source); ///< Used by CloneImpl
    RClassField(std::string_view fieldName, TClass *classp);
    void Attach(std::unique_ptr<RFieldBase> child, RSubfieldInfo info);
-
-   /// Returns the id of member 'name' in the class field given by 'fieldId', or kInvalidDescriptorId if no such
-   /// member exist. Looks recursively in base classes.
-   ROOT::DescriptorId_t
-   LookupMember(const ROOT::RNTupleDescriptor &desc, std::string_view memberName, ROOT::DescriptorId_t classFieldId);
-   /// Sets fStagingClass according to the given name and version
-   void SetStagingClass(const std::string &className, unsigned int classVersion);
-   /// If there are rules with inputs (source members), create the staging area according to the TClass instance
-   /// that corresponds to the on-disk field.
-   void PrepareStagingArea(const std::vector<const TSchemaRule *> &rules, const ROOT::RNTupleDescriptor &desc,
-                           const ROOT::RFieldDescriptor &classFieldId);
-   /// Register post-read callback corresponding to a ROOT I/O customization rules.
-   void AddReadCallbacksFromIORule(const TSchemaRule *rule);
-   /// Given the on-disk information from the page source, find all the I/O customization rules that apply
-   /// to the class field at hand, to which the fieldDesc descriptor, if provided, must correspond.
-   /// Fields may not have an on-disk representation (e.g., when inserted by schema evolution), in which case the passed
-   /// field descriptor is nullptr.
-   std::vector<const TSchemaRule *> FindRules(const ROOT::RFieldDescriptor *fieldDesc);
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -210,6 +222,8 @@ protected:
 
    std::unique_ptr<RFieldBase> BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
+   TClass *GetInMemoryClass() const final { return fClass; }
 
 public:
    RClassField(std::string_view fieldName, std::string_view className);
