@@ -194,9 +194,9 @@ try {
          // Get the compression of this RNTuple and use it as the output compression.
          // We currently assume all column ranges have the same compression, so we just peek at the first one.
          source->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kRaw);
-         auto descGuard = source->GetSharedDescriptorGuard();
-         auto clusterGroupIterable = descGuard->GetClusterGroupIterable();
-         if (clusterGroupIterable.empty()) {
+         DescriptorId_t firstClusterId = kInvalidDescriptorId;
+         auto descGuard = source->FindClusterId(0, firstClusterId);
+         if (firstClusterId == kInvalidDescriptorId) {
             R__LOG_ERROR(NTupleMergeLog())
                << "Asked to use the first source's compression as the output compression, but the "
                   "first source (file '"
@@ -205,9 +205,7 @@ try {
                   "determined.";
             return -1;
          }
-         const auto firstClusterGroup = clusterGroupIterable.begin();
-         R__ASSERT(firstClusterGroup->HasClusterDetails());
-         const auto &firstCluster = descGuard->GetClusterDescriptor(firstClusterGroup->GetClusterIds()[0]);
+         const auto &firstCluster = descGuard->GetClusterDescriptor(firstClusterId);
          auto colRangeIter = firstCluster.GetColumnRangeIterable();
          auto firstColRange = colRangeIter.begin();
          if (firstColRange == colRangeIter.end()) {
@@ -234,6 +232,7 @@ try {
    if (outNTuple) {
       auto outSource = RPageSourceFile::CreateFromAnchor(*outNTuple);
       outSource->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
+      outSource->LoadAllPageLists();
       auto desc = outSource->GetSharedDescriptorGuard();
       model = destination->InitFromDescriptor(desc.GetRef(), true /* copyClusters */);
    }
@@ -1389,6 +1388,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
    // Merge main loop
    for (RPageSource *source : sources) {
       source->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
+      source->LoadAllPageLists();
       auto srcDescriptor = source->GetSharedDescriptorGuard();
       mergeData.fSrcDescriptor = &srcDescriptor.GetRef();
 
