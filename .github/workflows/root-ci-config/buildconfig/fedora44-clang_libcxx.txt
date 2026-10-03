@@ -1,0 +1,38 @@
+# Build ROOT with Clang and libc++ instead of GNU libstdc++ on Linux.
+# The Fedora 44 image provides clang and libcxx/libcxxabi-devel packages.
+CMAKE_C_COMPILER=clang
+CMAKE_CXX_COMPILER=clang++
+CMAKE_GENERATOR=Ninja
+CMAKE_CXX_STANDARD=20
+soversion=ON
+libcxx=ON
+davix=OFF
+tpython=OFF
+minuit2_omp=OFF
+# All C++ dependencies must be built with the same toolchain: the ones
+# shipped by the distribution are compiled with libstdc++ and are ABI
+# incompatible with a libc++ ROOT build.
+builtin_civetweb=ON
+builtin_fftw3=ON
+builtin_freetype=ON
+builtin_ftgl=ON
+builtin_gif=ON
+builtin_gl2ps=ON
+builtin_gtest=ON
+builtin_gsl=ON
+builtin_jpeg=ON
+builtin_lz4=ON
+builtin_lzma=ON
+builtin_nlohmann=ON
+builtin_pcre=ON
+builtin_png=ON
+builtin_tbb=ON
+builtin_tiff=ON
+builtin_unuran=ON
+builtin_vdt=ON
+builtin_xrootd=ON
+builtin_xxhash=ON
+builtin_zlib=ON
+builtin_zstd=ON
+test_distrdf_dask=OFF
+test_distrdf_pyspark=OFF
