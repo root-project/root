@@ -934,7 +934,7 @@ void REveElement::RemoveElement(REveElement* el)
 
    RemoveElementLocal(el);
 
-   el->fScene->SceneElementRemoved(fElementId);
+   el->fScene->SceneElementRemoved(el->fElementId);
    el->fMother = nullptr;
    el->fScene  = nullptr;
 
