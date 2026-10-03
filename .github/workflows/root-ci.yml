@@ -124,6 +124,8 @@ jobs:
             arch: X64
           - platform: mac26
             arch: ARM64
+          - platform: mac27
+            arch: ARM64
           - platform: mac-beta
             is_special: true
             arch: ARM64
