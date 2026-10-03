@@ -100,6 +100,7 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
 * The header `Riostream.h` is deprecated and will be removed after ROOT 6.44, use `<iostream>` or `<fstream>` or `<iomanip>` instead.
 * The header `Rstrstream.h` is deprecated and will be removed after ROOT 6.44, use instead `<sstream>`.
 * The headers `ZipLZMA.h`, `ZipLZ4.h` and `ZipZSTD.h` are deprecated and will be removed in ROOT 6.46, use instead the public methods in the `RZip.h` interface.
+* Remove outdated `TSQLFile` class, was not tested for very long time, not working with only supported sqlite DB
 
 ## Build System
 
