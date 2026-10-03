@@ -79,6 +79,12 @@ namespace cling {
       assert(m_Source && "Can't wrap nullptr ExternalASTSource");
     }
 
+    void InitializeSema(Sema& S) override {
+      if (ExternalSemaSource* ExternalSema =
+              dyn_cast_or_null<ExternalSemaSource>(m_Source))
+        ExternalSema->InitializeSema(S);
+    }
+
     Decl* GetExternalDecl(GlobalDeclID ID) override {
       return m_Source->GetExternalDecl(ID);
     }
@@ -270,8 +276,11 @@ namespace cling {
     Sema& SemaRef = interp->getSema();
     ASTReader* Reader = m_Interpreter->getCI()->getASTReader().get();
     ExternalSemaSource* externalSemaSrc = SemaRef.getExternalSource();
+    ExternalASTSource* externalAstSrc =
+        SemaRef.getASTContext().getExternalSource();
     if (enableExternalSemaSourceCallbacks)
-      if (!externalSemaSrc || externalSemaSrc == Reader) {
+      if (!externalSemaSrc || externalSemaSrc == Reader ||
+          externalAstSrc == Reader) {
         // If the ExternalSemaSource is the PCH reader we still need to insert
         // our listener.
         m_ExternalSemaSource = new InterpreterExternalSemaSource(this);
@@ -304,7 +313,7 @@ namespace cling {
           // We don't have an existing source, so just set our own source.
           Ctx.setExternalSource(m_ExternalSemaSource);
         }
-    }
+      }
 
     if (enablePPCallbacks) {
       Preprocessor& PP = m_Interpreter->getCI()->getPreprocessor();
