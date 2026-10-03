@@ -139,6 +139,8 @@ protected:
    void          SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void          SetBatch(Bool_t batch=kTRUE) override;
 
+   TInteractive *Interactive(TObject *obj = nullptr, TInteractive *init = nullptr) override;
+
 private:
    TPad(const TPad &pad) = delete;
    TPad &operator=(const TPad &rhs) = delete;
@@ -408,8 +410,6 @@ public:
    void              DeleteToolTip(TObject *tip) override;
    void              ResetToolTip(TObject *tip) override;
    void              CloseToolTip(TObject *tip) override;
-
-   TInteractive     *Interactive(TObject *obj = nullptr, TInteractive *init = nullptr) override;
 
    Int_t             IncrementPaletteColor(Int_t i, const TString &opt) override;
    Int_t             NextPaletteColor() override;

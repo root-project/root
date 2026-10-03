@@ -137,15 +137,14 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    Bool_t opaque  = parent.OpaqueMoving();
 
-   auto inter = dynamic_cast<TLineInteractive *>(parent.Interactive(this));
+   auto inter = parent.GetInteractive<TLineInteractive>(this);
 
    switch (event) {
 
    case kArrowKeyPress:
    case kButton1Down:
       // create interactive object and assign it
-      inter = new TLineInteractive(GetX1(), GetY1(), GetX2(), GetY2(), TestBit(kLineNDC));
-      parent.Interactive(this, inter);
+      inter = parent.MakeInteractive<TLineInteractive>(this, GetX1(), GetY1(), GetX2(), GetY2(), TestBit(kLineNDC));
       // No break !!!
 
    case kMouseMotion:
@@ -186,7 +185,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          parent.Modified();
       }
       parent.UpdateAsync();
-      parent.Interactive(); // delete interactive object
+      parent.FreeInteractive(this);
       break;
 
    case kButton1Locate:

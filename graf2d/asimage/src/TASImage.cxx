@@ -1652,17 +1652,14 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (!IsValid())
       return;
 
-   auto inter = dynamic_cast<TASImageInteractive *> (parent.Interactive(this));
-
    switch (event) {
 
       case kButton1Down:
-         inter = new TASImageInteractive(parent, px, py);
-         parent.Interactive(this, inter);
+         parent.MakeInteractive<TASImageInteractive>(this, parent, px, py);
          break;
 
       case kButton1Motion:
-         if (inter) {
+         if (auto inter = parent.GetInteractive<TASImageInteractive>(this)) {
             inter->PerformMove(px, py);
             inter->PaintBox(parent);
          }
@@ -1674,15 +1671,16 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
          ASImage *image = fScaledImage ? fScaledImage->fImage : fImage;
 
-         if (inter && image) {
+         if (auto inter = parent.GetInteractive<TASImageInteractive>(this)) {
             inter->PerformMove(px, py);
-            imgX1 = inter->zx1 - parent.XtoAbsPixel(0);
-            imgY1 = image->height - 1 - inter->zy1 + parent.YtoAbsPixel(1);
-            imgW = inter->zx2 - inter->zx1;
-            imgH = inter->zy1 - inter->zy2;
+            if (image) {
+               imgX1 = inter->zx1 - parent.XtoAbsPixel(0);
+               imgY1 = image->height - 1 - inter->zy1 + parent.YtoAbsPixel(1);
+               imgW = inter->zx2 - inter->zx1;
+               imgH = inter->zy1 - inter->zy2;
+            }
+            parent.FreeInteractive(this);
          }
-
-         parent.Interactive(); // delete interactive
 
          if ((imgW >= 5) && (imgH >= 5)) {
             // do somthing if zoom area big enough
