@@ -73,6 +73,7 @@ in each category.
 #include <ROOT/StringUtils.hxx>
 
 #include <iostream>
+#include <algorithm>
 
 namespace {
 
@@ -274,6 +275,16 @@ RooSimultaneous::initialize(std::string const& name, RooAbsCategoryLValue &inInd
       // Entry is a plain p.d.f. assign it to every state permutation of the repliCats set
       RooSuperCategory repliSuperCat("tmp","tmp",repliCats) ;
 
+      if (citem.second.pdf->canBeExtended() && repliSuperCat.size() > 1) {
+        oocoutW(nullptr, InputArguments) << msgPrefix << "WARNING: Component p.d.f. '"
+                << citem.second.pdf->GetName() << "' associated with master index label '" << citem.first
+                << "' can be extended and does not depend on category '" << repliCats.contentsString()
+                << "'. In flattening to super-category '" << superIndex->GetName()
+                << "', this p.d.f. is replicated across " << repliSuperCat.size()
+                << " states. Its expected event yield will be counted " << repliSuperCat.size()
+                << " times in expectedEvents(), event generation, and extended fits." << std::endl ;
+      }
+
       // Iterator over all states of repliSuperCat
       for (const auto& nameIdx : repliSuperCat) {
         // Set value
@@ -332,6 +343,18 @@ RooSimultaneous::initialize(std::string const& name, RooAbsCategoryLValue &inInd
                   << stype.second << " for component RooSimultaneous p.d.f " << citem.second.pdf->GetName()
                   << "which is associated with master index label " << citem.first << std::endl ;
             }
+          }
+
+          RooAbsPdf* compPdf = citem.second.simPdf->getPdf(stype.first);
+          if (compPdf && compPdf->canBeExtended() && repliSuperCat.size() > 1) {
+            oocoutW(nullptr, InputArguments) << msgPrefix << "WARNING: Component p.d.f. '"
+                    << compPdf->GetName() << "' (member of " << citem.second.pdf->GetName()
+                    << " associated with master index label '" << citem.first
+                    << "') can be extended and does not depend on category '" << repliCats.contentsString()
+                    << "'. In flattening to super-category '" << superIndex->GetName()
+                    << "', this p.d.f. is replicated across " << repliSuperCat.size()
+                    << " states. Its expected event yield will be counted " << repliSuperCat.size()
+                    << " times in expectedEvents(), event generation, and extended fits." << std::endl ;
           }
         }
       }
@@ -503,7 +526,12 @@ double RooSimultaneous::evaluate() const
 
 double RooSimultaneous::expectedEvents(const RooArgSet* nset) const
 {
-  if (nset->contains(_indexCat.arg())) {
+  const bool allCatsInNset =
+     nset && !flattenedCatList().empty() &&
+     std::all_of(flattenedCatList().begin(), flattenedCatList().end(),
+                 [&](const RooAbsArg *cat) { return cat && nset->contains(*cat); });
+  const bool hasIndexCat = nset && (nset->contains(_indexCat.arg()) || allCatsInNset);
+  if (hasIndexCat) {
 
     double sum(0) ;
 
