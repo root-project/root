@@ -366,10 +366,10 @@ ROOT::Internal::RDF::FromTTree(std::string_view treeName, const std::vector<std:
 }
 
 ROOT::RDF::RSampleInfo ROOT::Internal::RDF::RTTreeDS::CreateSampleInfo(
-   unsigned int, const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap) const
+   TTreeReader &r, const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap)
 {
    // one GetTree to retrieve the TChain, another to retrieve the underlying TTree
-   auto *tree = fTreeReader->GetTree()->GetTree();
+   auto *tree = r.GetTree()->GetTree();
    // tree might be missing e.g. when a file in a chain does not exist
    if (!tree)
       return ROOT::RDF::RSampleInfo{};
@@ -378,20 +378,38 @@ ROOT::RDF::RSampleInfo ROOT::Internal::RDF::RTTreeDS::CreateSampleInfo(
    auto *file = tree->GetCurrentFile();
    const std::string fname = file != nullptr ? file->GetName() : "#inmemorytree#";
 
-   std::pair<Long64_t, Long64_t> range = fTreeReader->GetEntriesRange();
+   std::pair<Long64_t, Long64_t> range = r.GetEntriesRange();
    R__ASSERT(range.first >= 0);
    if (range.second == -1) {
+      // If no explicit range was set, fBeginEntry is 0. The local range is the entire tree.
+      range.first = 0;
       range.second = tree->GetEntries(); // convert '-1', i.e. 'until the end', to the actual entry number
+   } else if (auto chain = dynamic_cast<TChain*>(r.GetTree())) {
+      // The reader is iterating over a TChain (e.g. from TTreeProcessorMT global clusters).
+      // The entry range from the reader is global, but RSampleInfo expects local indices.
+      // TTreeProcessorMT guarantees that clusters do not cross tree boundaries.
+      Long64_t treeOffset = chain->GetTreeOffset()[chain->GetTreeNumber()];
+      if (range.first >= treeOffset) {
+         range.first -= treeOffset;
+         range.second -= treeOffset;
+      }
    }
+
    // If the tree is stored in a subdirectory, treename will be the full path to it starting with the root directory '/'
    const std::string &id = fname + (treename.rfind('/', 0) == 0 ? "" : "/") + treename;
    if (sampleMap.empty()) {
-      return RSampleInfo(id, range, nullptr, tree->GetEntries());
+      return ROOT::RDF::RSampleInfo(id, range, nullptr, tree->GetEntries());
    } else {
       if (sampleMap.find(id) == sampleMap.end())
          throw std::runtime_error("Full sample identifier '" + id + "' cannot be found in the available samples.");
-      return RSampleInfo(id, range, sampleMap.at(id), tree->GetEntries());
+      return ROOT::RDF::RSampleInfo(id, range, sampleMap.at(id), tree->GetEntries());
    }
+}
+
+ROOT::RDF::RSampleInfo ROOT::Internal::RDF::RTTreeDS::CreateSampleInfo(
+   unsigned int, const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap) const
+{
+   return CreateSampleInfo(*fTreeReader, sampleMap);
 }
 
 void ROOT::Internal::RDF::RTTreeDS::ProcessMT(ROOT::Detail::RDF::RLoopManager &lm)

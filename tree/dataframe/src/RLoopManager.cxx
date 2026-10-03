@@ -731,27 +731,7 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, const std::pair<ULong64_t
 }
 
 void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
-   // one GetTree to retrieve the TChain, another to retrieve the underlying TTree
-   auto *tree = r.GetTree()->GetTree();
-   R__ASSERT(tree != nullptr);
-   const std::string treename = ROOT::Internal::TreeUtils::GetTreeFullPaths(*tree)[0];
-   auto *file = tree->GetCurrentFile();
-   const std::string fname = file != nullptr ? file->GetName() : "#inmemorytree#";
-
-   std::pair<Long64_t, Long64_t> range = r.GetEntriesRange();
-   R__ASSERT(range.first >= 0);
-   if (range.second == -1) {
-      range.second = tree->GetEntries(); // convert '-1', i.e. 'until the end', to the actual entry number
-   }
-   // If the tree is stored in a subdirectory, treename will be the full path to it starting with the root directory '/'
-   const std::string &id = fname + (treename.rfind('/', 0) == 0 ? "" : "/") + treename;
-   if (fSampleMap.empty()) {
-      fSampleInfos[slot] = RSampleInfo(id, range, nullptr, tree->GetEntries());
-   } else {
-      if (fSampleMap.find(id) == fSampleMap.end())
-         throw std::runtime_error("Full sample identifier '" + id + "' cannot be found in the available samples.");
-      fSampleInfos[slot] = RSampleInfo(id, range, fSampleMap[id], tree->GetEntries());
-   }
+   fSampleInfos[slot] = ROOT::Internal::RDF::RTTreeDS::CreateSampleInfo(r, fSampleMap);
 }
 
 /// Create a slot stack with the desired number of slots or reuse a shared instance.
