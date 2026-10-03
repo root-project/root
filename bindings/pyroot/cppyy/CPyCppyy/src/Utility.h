@@ -2,6 +2,7 @@
 #define CPYCPPYY_UTILITY_H
 
 // Standard
+#include <cstring>
 #include <map>
 #include <memory>
 #include <string>
@@ -66,6 +67,21 @@ PyObject* FuncPtr2StdFunction(const std::string& retType, const std::string& sig
 bool InitProxy(PyObject* module, PyTypeObject* pytype, const char* name);
 
 std::map<std::string, char> const &TypecodeMap();
+
+// check whether a buffer's format supports the requested type code: exact match,
+// or interchangeable same-sized integer types for which buffer producers such as
+// numpy canonicalize the format char (e.g. int64 is reported as 'l' on 64b
+// platforms, even if the C++ parameter is 'long long', as it is for int64_t on macOS)
+static inline bool FormatCodeCompatible(char tc, const char* fmt)
+{
+    if (std::strchr(fmt, tc))
+        return true;
+    if (sizeof(long long) == sizeof(long int) &&
+        ((tc == 'l' && std::strchr(fmt, 'q')) || (tc == 'q' && std::strchr(fmt, 'l')) ||
+         (tc == 'L' && std::strchr(fmt, 'Q')) || (tc == 'Q' && std::strchr(fmt, 'L'))))
+        return true;
+    return false;
+}
 
 // retrieve the memory buffer from pyobject, return buflength, tc (optional) is python
 // array.array type code, size is type size, buf will point to buffer, and if check is
