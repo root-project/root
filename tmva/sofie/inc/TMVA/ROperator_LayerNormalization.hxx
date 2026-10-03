@@ -311,8 +311,6 @@ public:
       return out.str();
    }
 
-   std::vector<std::string> GetBlasRoutines() override { return { std::string("Axpy") }; }
-
    std::vector<std::string> GetStdLibs() override { return { std::string("cmath") }; }
 };
 

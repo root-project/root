@@ -82,7 +82,6 @@ ssl=ON
 test_distrdf_dask=ON
 test_distrdf_pyspark=ON
 test_roofit_hs3testsuite=ON
-test_tmva_sofie=ON
 testing=ON
 tmva-cpu=ON
 tmva-gpu=OFF

@@ -113,30 +113,26 @@ if (ONNX_MODELS_DIR)
                     FIXTURES_REQUIRED ${alias_test_fixtures})
 
   # Creating a Google Test
-  if (BLAS_FOUND)  # we need BLAS for compiling the models
-    ROOT_EXECUTABLE(TestCustomModelsFromONNX TestCustomModelsFromONNX.cxx
+  ROOT_EXECUTABLE(TestCustomModelsFromONNX TestCustomModelsFromONNX.cxx
+    LIBRARIES Core GTest::gtest GTest::gtest_main
+  )
+  ROOTTEST_ADD_TEST(TestCustomModelsFromONNX
+                    EXEC ./TestCustomModelsFromONNX
+                    FIXTURES_REQUIRED sofie-compile-models-onnx)
+
+  if (clad)
+    ROOT_EXECUTABLE(TestCladAutodiff TestCladAutodiff.cxx
       LIBRARIES Core GTest::gtest GTest::gtest_main
     )
-    ROOTTEST_ADD_TEST(TestCustomModelsFromONNX
-                      EXEC ./TestCustomModelsFromONNX
+    ROOTTEST_ADD_TEST(TestCladAutodiff
+                      EXEC ./TestCladAutodiff
                       FIXTURES_REQUIRED sofie-compile-models-onnx)
-
-    if (clad)
-      ROOT_EXECUTABLE(TestCladAutodiff TestCladAutodiff.cxx
-        LIBRARIES Core GTest::gtest GTest::gtest_main
-      )
-      ROOTTEST_ADD_TEST(TestCladAutodiff
-                        EXEC ./TestCladAutodiff
-                        FIXTURES_REQUIRED sofie-compile-models-onnx)
-    endif()
   endif()
 endif()
 
-if (BLAS_FOUND)
-  if (clad)
-    # Creating a Google Test for the automatic differentiation of Gemm_Call
-    ROOT_ADD_GTEST(TestGemmDerivative TestGemmDerivative.cxx LIBRARIES Core BLAS::BLAS ROOTTMVASofie)
-  endif()
+if (clad)
+  # Creating a Google Test for the automatic differentiation of Gemm_Call
+  ROOT_ADD_GTEST(TestGemmDerivative TestGemmDerivative.cxx LIBRARIES Core ROOTTMVASofie)
 endif()
 
 # Unit tests for the ONNX parser layer: the tests write the model files
@@ -157,15 +153,12 @@ if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND NOT broken_onnx)
     configure_file(${generator}ModelGenerator.py ${generator}ModelGenerator.py COPYONLY)
   endforeach()
 
-  if (BLAS_FOUND)
-    ROOT_ADD_GTEST(TestSofieModels TestSofieModels.cxx
-      LIBRARIES
-        ROOTTMVASofie
-        ROOTTMVASofieParser
-        BLAS::BLAS
-      INCLUDE_DIRS
-        ${CMAKE_CURRENT_BINARY_DIR}
-    )
-  endif()
+  ROOT_ADD_GTEST(TestSofieModels TestSofieModels.cxx
+    LIBRARIES
+      ROOTTMVASofie
+      ROOTTMVASofieParser
+    INCLUDE_DIRS
+      ${CMAKE_CURRENT_BINARY_DIR}
+  )
 endif()
 
