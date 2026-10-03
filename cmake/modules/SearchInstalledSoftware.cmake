@@ -683,16 +683,6 @@ if(fitsio OR builtin_cfitsio)
   endif()
 endif()
 
-#---Check Shadow password support----------------------------------------------------
-if(shadowpw)
-  if(NOT EXISTS /etc/shadow)  #---TODO--The test always succeeds because the actual file is protected
-    if(NOT CMAKE_SYSTEM_NAME MATCHES Linux)
-      message(STATUS "Support Shadow password not found. Switching off shadowpw option")
-      set(shadowpw OFF CACHE BOOL "Disabled because /etc/shadow not found (${shadowpw_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Configure Xrootd support---------------------------------------------------------
 if(xrootd AND NOT builtin_xrootd)
   if(XRootD_VERSION VERSION_LESS 5.8.4)

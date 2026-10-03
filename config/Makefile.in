@@ -242,10 +242,6 @@ LZMALIBDIR     := @lzmalibdir@
 LZMACLILIB     := @lzmalib@
 LZMAINCDIR     := $(filter-out /usr/include, @lzmaincdir@)
 
-SHADOWFLAGS    := @shadowpw@
-SHADOWLIB      :=
-SHADOWLIBDIR   :=
-
 BUILDMATHMORE  := @buildmathmore@
 GSLFLAGS       := $(filter-out -I/usr/include, @gslflags@)
 GSLLIBDIR      := @gsllibdir@
