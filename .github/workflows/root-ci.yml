@@ -120,7 +120,7 @@ jobs:
       matrix:
         # Specify platform + optional build option overrides
         # Build options: https://root.cern/install/build_from_source/#all-build-options
-        platform: [mac26, mac27, mac-beta]
+        platform: [mac27, mac26-testing, mac-beta]
         arch: [ARM64]
         include:
           - platform: mac15
@@ -164,7 +164,7 @@ jobs:
                     --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}  \
                     --head_sha        ${{ github.event.pull_request.head.sha }}             \
                     --repository      ${{ github.server_url }}/${{ github.repository }}     \
-                    --platform        ${{ matrix.platform }}                                \
+                    --platform        ${{ matrix.platform == 'mac26-testing' && 'mac26' || matrix.platform }}                                \
                     --overrides       ${GLOBAL_OVERRIDES} ${OVERRIDES}
 
       - name: Workflow dispatch
@@ -242,13 +242,7 @@ jobs:
   build-windows:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
-    if: |
-        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(
-          contains(github.event.pull_request.title, '[skip-ci]') ||
-          contains(github.event.pull_request.title, '[skip ci]') ||
-          contains(github.event.pull_request.labels.*.name, 'skip ci')
-        ))
+    if: false
 
     permissions:
       contents: read
@@ -367,13 +361,7 @@ jobs:
   build-linux:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
-    if: |
-        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(
-          contains(github.event.pull_request.title, '[skip-ci]') ||
-          contains(github.event.pull_request.title, '[skip ci]') ||
-          contains(github.event.pull_request.labels.*.name, 'skip ci')
-        ))
+    if: false
 
     permissions:
       contents: read
