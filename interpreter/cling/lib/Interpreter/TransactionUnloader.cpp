@@ -46,10 +46,14 @@ namespace cling {
 
       // The non templated classes come through HandleTopLevelDecl and
       // HandleTagDeclDefinition, this is why we need to filter.
+      // In addition, implicit class template instantiations should not be
+      // unloaded: their definitions belong to templates defined elsewhere and
+      // stripping their members corrupts ASTContext (ROOT issue #23439).
       if (Call == Transaction::kCCIHandleTagDeclDefinition) {
         if (const CXXRecordDecl* D
             = dyn_cast<CXXRecordDecl>(DGR.getSingleDecl()))
-          if (D->getTemplateSpecializationKind() == TSK_Undeclared)
+          if (D->getTemplateSpecializationKind() == TSK_Undeclared ||
+              D->getTemplateSpecializationKind() == TSK_ImplicitInstantiation)
             continue;
       }
 

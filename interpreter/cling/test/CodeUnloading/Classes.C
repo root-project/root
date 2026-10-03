@@ -41,4 +41,14 @@ auto p = std::make_unique<std::string>("string");
 (unsigned long)p->size()
 //CHECK: (unsigned long) 6
 
+// Test ROOT issue #23439: failure in an expression returning a template specialization
+// (e.g. std::unique_ptr) should not corrupt the implicit template instantiation.
+struct Target23439 { int val = 42; };
+std::unique_ptr<Target23439> getTarget23439(int x) { return std::make_unique<Target23439>(); }
+auto f_err = getTarget23439(); // expected-error{{no matching function for call to 'getTarget23439'}}
+auto f_ok = getTarget23439(1);
+f_ok->val
+//CHECK: (int) 42
+
 .q
+
