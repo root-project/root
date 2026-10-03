@@ -106,8 +106,9 @@ TEST(REveProjectionAxis, Ticks)
 
       bool has_zero = false;
       for (size_t i = 0; i < pos.size(); ++i) {
-         if (i > 0)
+         if (i > 0) {
             EXPECT_LT(pos[i - 1].get<float>(), pos[i].get<float>()) << key << " not sorted at " << i;
+         }
          std::string l = lab[i];
          if (maj[i].get<bool>()) {
             EXPECT_NEAR(std::stod(l), pos[i].get<float>(), 1e-3) << key << " label " << l;
