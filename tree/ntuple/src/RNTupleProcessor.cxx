@@ -211,17 +211,24 @@ ROOT::Experimental::RNTupleSingleProcessor::AddFieldToEntry(const std::string &f
    return *fieldIdx;
 }
 
-ROOT::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::LoadEntry(ROOT::NTupleSize_t entryNumber)
+void ROOT::Experimental::RNTupleSingleProcessor::SetEntryMapping(ROOT::NTupleSize_t globalEntryNumber,
+                                                                 REntryMapping &mapping)
 {
-   if (entryNumber >= fNEntries || !fEntry)
-      return kInvalidNTupleIndex;
+   if (globalEntryNumber >= fNEntries || !fEntry)
+      mapping.SetEntryNumber(kInvalidNTupleIndex);
+   else
+      mapping.SetEntryNumber(globalEntryNumber);
+}
+
+void ROOT::Experimental::RNTupleSingleProcessor::LoadEntryImpl(const REntryMapping &mapping)
+{
+   assert(mapping.GetEntryNumber() != kInvalidNTupleIndex);
 
    for (auto fieldIdx : fFieldIdxs) {
-      fEntry->ReadValue(fieldIdx, entryNumber);
+      fEntry->ReadValue(fieldIdx, mapping.GetEntryNumber());
    }
 
    fNEntriesProcessed++;
-   return entryNumber;
 }
 
 void ROOT::Experimental::RNTupleSingleProcessor::Connect(
@@ -333,6 +340,7 @@ void ROOT::Experimental::RNTupleChainProcessor::ConnectInnerProcessor(std::size_
    auto &innerProc = fInnerProcessors[processorNumber];
    innerProc->Initialize(fEntry);
    innerProc->Connect(fFieldIdxs, fProvenance, /*updateFields=*/true);
+   fCurrentProcessorNumber = processorNumber;
 }
 
 ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
@@ -343,46 +351,69 @@ ROOT::Experimental::RNTupleChainProcessor::AddFieldToEntry(const std::string &fi
    return fInnerProcessors[fCurrentProcessorNumber]->AddFieldToEntry(fieldName, typeName, valuePtr, provenance);
 }
 
-ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NTupleSize_t entryNumber)
+void ROOT::Experimental::RNTupleChainProcessor::SetEntryMapping(ROOT::NTupleSize_t globalEntryNumber,
+                                                                REntryMapping &mapping)
 {
+   std::size_t currProcessorIdx = mapping.GetInnerProcessorIdx();
+
    // If the requested entry number is lower than the current entry number, we have to again localise the correct local
    // entry number starting from the first processor in the chain. Otherwise, we can continue looking from the inner
    // processor that is currently connected, which is much faster when the chain consists of many inner processors.
-   if (entryNumber < fLastLoadedEntry) {
-      fCurrentProcessorNumber = 0;
-      ConnectInnerProcessor(fCurrentProcessorNumber);
+   if (globalEntryNumber < fLastLoadedEntry) {
+      currProcessorIdx = 0;
+      ConnectInnerProcessor(currProcessorIdx);
    }
 
-   std::size_t currProcessorNumber = fCurrentProcessorNumber;
    ROOT::NTupleSize_t entriesSeen = 0;
-   for (unsigned i = 0; i < currProcessorNumber; ++i) {
+   for (unsigned i = 0; i < currProcessorIdx; ++i) {
       if (fInnerNEntries[i] == kInvalidNTupleIndex) {
          fInnerNEntries[i] = fInnerProcessors[i]->GetNEntries();
       }
+
+      if (fInnerNEntries[i] >= globalEntryNumber) {
+         currProcessorIdx = 0;
+         ConnectInnerProcessor(currProcessorIdx);
+         break;
+      }
       entriesSeen += fInnerNEntries[i];
    }
-   ROOT::NTupleSize_t localEntryNumber = entryNumber - entriesSeen;
+
+   ROOT::NTupleSize_t localEntryNumber = globalEntryNumber - entriesSeen;
+   fInnerProcessors[currProcessorIdx]->SetEntryMapping(localEntryNumber, mapping.GetInnerProcessorMapping());
 
    // As long as the entry fails to load from the current processor, we decrement the local entry number with the number
    // of entries in this processor and try with the next processor until we find the correct local entry number.
-   while (fInnerProcessors[currProcessorNumber]->LoadEntry(localEntryNumber) == kInvalidNTupleIndex) {
-      if (fInnerNEntries[currProcessorNumber] == kInvalidNTupleIndex) {
-         fInnerNEntries[currProcessorNumber] = fInnerProcessors[currProcessorNumber]->GetNEntries();
+   while (mapping.GetInnerProcessorMapping().GetEntryNumber() == kInvalidNTupleIndex) {
+      if (fInnerNEntries[currProcessorIdx] == kInvalidNTupleIndex) {
+         fInnerNEntries[currProcessorIdx] = fInnerProcessors[currProcessorIdx]->GetNEntries();
       }
 
-      localEntryNumber -= fInnerNEntries[currProcessorNumber];
+      localEntryNumber -= fInnerNEntries[currProcessorIdx];
 
       // The provided global entry number is larger than the number of available entries.
-      if (++currProcessorNumber >= fInnerProcessors.size())
-         return kInvalidNTupleIndex;
+      if (++currProcessorIdx >= fInnerProcessors.size()) {
+         mapping.SetEntryNumber(kInvalidNTupleIndex);
+         mapping.SetInnerProcessorIdx(0);
+         return;
+      }
 
-      ConnectInnerProcessor(currProcessorNumber);
+      ConnectInnerProcessor(currProcessorIdx);
+      fInnerProcessors[currProcessorIdx]->SetEntryMapping(localEntryNumber, mapping.GetInnerProcessorMapping());
    }
 
-   fCurrentProcessorNumber = currProcessorNumber;
+   mapping.SetEntryNumber(globalEntryNumber);
+   mapping.SetInnerProcessorIdx(currProcessorIdx);
+}
+
+void ROOT::Experimental::RNTupleChainProcessor::LoadEntryImpl(const REntryMapping &mapping)
+{
+   assert(mapping.GetEntryNumber() != kInvalidNTupleIndex);
+
+   if (fCurrentProcessorNumber != mapping.GetInnerProcessorIdx())
+      ConnectInnerProcessor(mapping.GetInnerProcessorIdx());
+   fInnerProcessors[mapping.GetInnerProcessorIdx()]->LoadEntry(mapping.GetInnerProcessorMapping());
+   fLastLoadedEntry = mapping.GetEntryNumber();
    fNEntriesProcessed++;
-   fLastLoadedEntry = entryNumber;
-   return entryNumber;
 }
 
 void ROOT::Experimental::RNTupleChainProcessor::AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable,
@@ -513,22 +544,34 @@ void ROOT::Experimental::RNTupleJoinProcessor::SetAuxiliaryFieldValidity(bool is
    }
 }
 
-ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTupleSize_t entryNumber)
+void ROOT::Experimental::RNTupleJoinProcessor::SetEntryMapping(ROOT::NTupleSize_t globalEntryNumber,
+                                                               REntryMapping &mapping)
 {
-   if (fPrimaryProcessor->LoadEntry(entryNumber) == kInvalidNTupleIndex) {
+   fPrimaryProcessor->SetEntryMapping(globalEntryNumber, mapping.GetPrimaryProcessorMapping());
+   if (mapping.GetPrimaryProcessorMapping().GetEntryNumber() == kInvalidNTupleIndex) {
+      mapping.SetEntryNumber(kInvalidNTupleIndex);
       for (auto fieldIdx : fFieldIdxs) {
          fEntry->SetFieldValidity(fieldIdx, false);
       }
       SetAuxiliaryFieldValidity(false);
-      return kInvalidNTupleIndex;
+      return;
    }
+   if (!fJoinTable) {
+      fAuxiliaryProcessor->SetEntryMapping(globalEntryNumber, mapping.GetAuxiliaryProcessorMapping());
+   }
+   mapping.SetEntryNumber(globalEntryNumber);
+}
 
+void ROOT::Experimental::RNTupleJoinProcessor::LoadEntryImpl(const REntryMapping &mapping)
+{
+   assert(mapping.GetEntryNumber() != kInvalidNTupleIndex);
+
+   fPrimaryProcessor->LoadEntry(mapping.GetPrimaryProcessorMapping());
    fNEntriesProcessed++;
 
    if (!fJoinTable) {
-      // The auxiliary processor's fields are valid if the entry could be loaded.
-      fAuxiliaryProcessor->LoadEntry(entryNumber);
-      return entryNumber;
+      fAuxiliaryProcessor->LoadEntry(mapping.GetAuxiliaryProcessorMapping());
+      return;
    }
 
    if (!fJoinTableIsBuilt) {
@@ -547,15 +590,15 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
    // Find the entry index corresponding to the join field values for each auxiliary processor and load the
    // corresponding entry.
    const auto entryIdx = fJoinTable->GetEntryIndex(values);
+   REntryMapping auxMapping;
+   fAuxiliaryProcessor->SetEntryMapping(entryIdx, auxMapping);
 
    if (entryIdx == kInvalidNTupleIndex) {
       SetAuxiliaryFieldValidity(false);
    } else {
       SetAuxiliaryFieldValidity(true);
-      fAuxiliaryProcessor->LoadEntry(entryIdx);
+      fAuxiliaryProcessor->LoadEntry(auxMapping);
    }
-
-   return entryNumber;
 }
 
 ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::GetNEntries()
