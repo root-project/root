@@ -1107,7 +1107,8 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
       size_t prefix_offset = 0;
 
       if (full.compare(prefix_offset, 6, "const ") == 0) {
-         prefix_offset += isConst = true;
+         isConst = true;
+         prefix_offset += 6;
       }
       if (full.compare(prefix_offset, 5, "std::") == 0) {
          prefix_offset += 5;
