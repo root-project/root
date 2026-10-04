@@ -100,3 +100,21 @@ if(CMAKE_EXECUTABLE_FORMAT STREQUAL "ELF" AND NOT asan)
       ENVIRONMENT LD_PRELOAD=${canary})
   endif()
 endif()
+
+# On macOS, two-level namespaces keep libCling's imports private, so a canary
+# cannot reach them; what another LLVM can reach are libCling's exports.
+if(APPLE)
+  foreach(role PROVIDER LEAKY)
+    add_library(LLVMIsolationTest${role} SHARED LLVMIsolationTestLibrary.cxx)
+    target_compile_definitions(LLVMIsolationTest${role} PRIVATE ${role})
+  endforeach()
+  target_link_libraries(LLVMIsolationTestLEAKY PRIVATE LLVMIsolationTestPROVIDER)
+  ROOT_ADD_TEST(test-metacling-llvm-isolation-exports
+    COMMAND root.exe -l -b -q "${macro}(\"exports\")"
+    PASSREGEX "exports of libCling[.]so: llvm=0 weak=0 shared=0 twolevel=1 exports=[1-9]")
+  # The check must find what a library that does not keep LLVM private exports.
+  ROOT_ADD_TEST(test-metacling-llvm-isolation-exports-selftest
+    COMMAND root.exe -l -b -q "${macro}(\"exports\")"
+    ENVIRONMENT LLVM_ISOLATION_IMAGE=$<TARGET_FILE:LLVMIsolationTestLEAKY>
+    PASSREGEX "exports of libLLVMIsolationTestLEAKY[^:]*: llvm=2 weak=1 shared=1 twolevel=1 exports=[1-9]")
+endif()
