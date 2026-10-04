@@ -163,7 +163,7 @@ ROOT::Experimental::RNTupleSingleProcessor::CreateAndConnectField(const std::str
       qualifiedFieldName.find("R_rntproc_join_") == 0 ? qualifiedFieldName.substr(15) : qualifiedFieldName;
 
    auto descGuard = fPageSource->GetSharedDescriptorGuard();
-   const auto &desc = descGuard.GetRef();
+   const auto &desc = descGuard.GetConstRef();
 
    const auto onDiskFieldId = desc.FindFieldId(onDiskFieldName);
 
@@ -258,7 +258,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::AddAllFieldsToEntry(
 {
    Initialize();
    auto descGuard = fPageSource->GetSharedDescriptorGuard();
-   const auto &desc = descGuard.GetRef();
+   const auto &desc = descGuard.GetConstRef();
    auto fnAddSubfields = [this, &desc, &provenance](const ROOT::RFieldDescriptor &field, auto &fn) -> void {
       std::string fieldName = desc.GetQualifiedFieldName(field.GetId());
       if (auto prefix = provenance.Get(); !prefix.empty())
