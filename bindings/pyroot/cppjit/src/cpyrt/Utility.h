@@ -2,7 +2,6 @@
 #define CPYRT_UTILITY_H
 
 // Standard
-#include <cstring>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -74,22 +73,13 @@ bool InitProxy(PyObject* module, PyTypeObject* pytype, const char* name);
 
 std::unordered_map<std::string, char> const& TypecodeMap();
 
-// check whether a buffer's format supports the requested type code: exact
-// match, or interchangeable same-sized integer types for which buffer
-// producers such as numpy canonicalize the format char (e.g. int64 is
-// reported as 'l' on 64b platforms, even if the C++ parameter is 'long long',
-// as it is for int64_t on macOS)
-static inline bool FormatCodeCompatible(char tc, const char* fmt) {
-  if (std::strchr(fmt, tc))
-    return true;
-  if (sizeof(long long) == sizeof(long int) &&
-      ((tc == 'l' && std::strchr(fmt, 'q')) ||
-       (tc == 'q' && std::strchr(fmt, 'l')) ||
-       (tc == 'L' && std::strchr(fmt, 'Q')) ||
-       (tc == 'Q' && std::strchr(fmt, 'L'))))
-    return true;
-  return false;
-}
+// check whether a PEP 3118 buffer format string describes an element type
+// compatible with the requested type code: same kind (signed/unsigned
+// integer, floating point, complex, ...) and same native size, so e.g.
+// 'long' and 'long long' buffers are interchangeable where they coincide.
+// The type code may be a PEP 3118 character or a cppjit-internal code:
+// 'z' (std::complex<float>) or 'Z' (std::complex<double>).
+bool BufferFormatCompatible(char tc, const char* fmt);
 
 // retrieve the memory buffer from pyobject, return buflength, tc (optional) is
 // python array.array type code, size is type size, buf will point to buffer,

@@ -2854,6 +2854,107 @@ class TestDATATYPES:
             assert ns.sum_span_ll(ia) == isum and ns.sum_span_l(ia) == isum
             assert ns.sum_span_ll(al) == isum and ns.sum_span_ll(aq) == isum
 
+    def test57_buffer_format_parsing(self):
+        """Buffer-format matching parses PEP 3118 properly: byte-order
+        prefixes are skipped, the complex marker 'Z' is understood, and
+        elements match on kind (signed/unsigned/float/complex) and native
+        size rather than on the exact format character."""
+
+        import ctypes
+        import cppjit
+
+        try:
+            import numpy as np
+        except ImportError:
+            skip('numpy is not installed')
+
+        cppjit.cppdef("""\
+        #include <complex>
+        namespace BufferFormats {
+        double sum_d(const double* a, int n) {
+            double s = 0.;
+            for (int i = 0; i < n; ++i) s += a[i];
+            return s;
+        }
+        long sum_l(const long* a, int n) {
+            long s = 0;
+            for (int i = 0; i < n; ++i) s += a[i];
+            return s;
+        }
+        int sum_i(const int* a, int n) {
+            int s = 0;
+            for (int i = 0; i < n; ++i) s += a[i];
+            return s;
+        }
+        int count_true(const bool* a, int n) {
+            int s = 0;
+            for (int i = 0; i < n; ++i) if (a[i]) ++s;
+            return s;
+        }
+        std::complex<float> sum_cf(const std::complex<float>* a, int n) {
+            std::complex<float> s;
+            for (int i = 0; i < n; ++i) s += a[i];
+            return s;
+        }
+        const std::complex<float>* data_cf() {
+            static std::complex<float> c[2] = {{1.f, 1.f}, {1.f, -1.f}};
+            return c;
+        }
+        }""")
+
+        ns = cppjit.gbl.BufferFormats
+
+        # ctypes exports explicitly-endian formats
+        assert ns.sum_d((ctypes.c_double * 3)(0.5, 1.5, 1.0), 3) == 3.0
+        if ctypes.sizeof(ctypes.c_long) == 8:
+            assert ns.sum_l((ctypes.c_long * 3)(1, 2, 3), 3) == 6
+            # ctypes exports c_longlong as '<q', so this also crosses the
+            # 'q'/'l' character with equal size
+            assert ns.sum_l((ctypes.c_longlong * 3)(1, 2, 3), 3) == 6
+
+        # kind and size both matter: int16 is not int32, float is not int
+        assert ns.sum_i(np.arange(3, dtype=np.int32), 3) == 3
+        raises(TypeError, ns.sum_i, np.arange(3, dtype=np.int16), 3)
+        raises(TypeError, ns.sum_i, np.arange(3, dtype=np.int64), 3)
+        raises(TypeError, ns.sum_i, np.arange(3, dtype=np.float32), 3)
+
+        # bool accepts signed-char buffers (struct/array module convention)
+        assert ns.count_true(np.array([1, 0, 1], dtype=np.int8), 3) == 2
+
+        # complex buffers ('Zf'/'Zd') only match complex parameters of the
+        # same size
+        s = ns.sum_cf(np.array([1+1j, 1-1j], dtype=np.complex64), 2)
+        assert s.real == 2.0 and s.imag == 0.0
+        raises(TypeError, ns.sum_d, np.array([1+1j, 1], dtype=np.complex128), 2)
+
+        # a complex view returned from C++ round-trips back into complex
+        # pointer parameters
+        sv = ns.sum_cf(ns.data_cf(), 2)
+        assert sv.real == 2.0 and sv.imag == 0.0
+
+        # same-size integer kinds do not cross the signedness boundary
+        raises(TypeError, ns.sum_l, np.arange(3, dtype=np.uint64), 3)
+
+        # std::span performs no item-size check, so the format check alone
+        # must reject complex128 for span<const double>
+        if cppjit.evaluate("""#if __cplusplus >= 202002L && __has_include(<span>)
+        1
+        #else
+        0
+        #endif""") == 1:
+            cppjit.cppdef("""\
+            #include <span>
+            namespace BufferFormats {
+            double sum_span_d(std::span<const double> a) {
+                double s = 0.;
+                for (auto v : a) s += v;
+                return s;
+            }
+            }""")
+            assert ns.sum_span_d(np.arange(3, dtype=np.float64)) == 3.0
+            raises(TypeError, ns.sum_span_d,
+                   np.array([1+2j, 3+4j], dtype=np.complex128))
+
 
 class TestANONENUM:
     def test01_anonymous_enum_repeated_access(self):
