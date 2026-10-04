@@ -11,15 +11,21 @@
 ///              exports no LLVM or Clang symbols: dyld merges weak definitions across
 ///              images by name, and lookups by name, as with -undefined dynamic_lookup
 ///              or dlsym(), see all of them.
+///   "imports": on Windows, the DLL IMAGE (libCling by default) imports no LLVM or
+///              Clang DLL: the loader shares a DLL by name with every other module
+///              that imports a DLL of that name.
 
 #include "LLVMIsolationCanary.h"
 
+#include <algorithm>
 #include <cctype>
 #include <cstring>
 #include <fstream>
+#include <iterator>
 #include <set>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #ifdef __APPLE__
 #include <dlfcn.h>
@@ -77,6 +83,67 @@ LLVMIsolationMachOAudit LLVMIsolationAuditMachO(const mach_header_64 *header, co
          }
       }
    }
+   return audit;
+}
+#endif
+
+#ifdef _WIN32
+/// Whether `dll` is a shared LLVM or Clang library, such as LLVM-C.dll, libLLVM-22.dll,
+/// libclang.dll or clang-cpp.dll, but not clang's runtime libraries.
+bool LLVMIsolationIsLLVMDll(std::string dll)
+{
+   for (char &c : dll)
+      c = std::tolower(static_cast<unsigned char>(c));
+   for (const char *prefix : {"llvm", "libllvm", "libclang", "clang-cpp"})
+      if (dll.rfind(prefix, 0) == 0)
+         return true;
+   return false;
+}
+
+struct LLVMIsolationPEAudit {
+   int shared = 0;
+   std::vector<std::string> imports;
+};
+
+/// Audit a PE image, given as the contents of its file: the DLLs it imports, also
+/// with delayed loading, and the LLVM or Clang ones among them.
+LLVMIsolationPEAudit LLVMIsolationAuditPE(const std::string &file)
+{
+   LLVMIsolationPEAudit audit;
+   auto u32 = [&](uint32_t offset) {
+      uint32_t value = 0;
+      if (offset + 4 <= file.size())
+         std::memcpy(&value, file.data() + offset, 4);
+      return value;
+   };
+   auto u16 = [&](uint32_t offset) { return u32(offset) & 0xffff; };
+   uint32_t nt = u32(0x3c);
+   if (u32(nt) != 0x4550) // "PE\0\0"
+      return audit;
+   uint32_t optional = nt + 24, sections = optional + u16(nt + 20), numSections = u16(nt + 6);
+   uint32_t directories = optional + (u16(optional) == 0x20b ? 112 : 96); // PE32+ or PE32
+   // The file offset of a relative virtual address, through the section table.
+   auto offset = [&](uint32_t rva) {
+      for (uint32_t s = 0; s < numSections; ++s) {
+         uint32_t header = sections + 40 * s, address = u32(header + 12);
+         if (rva >= address && rva < address + (std::max)(u32(header + 8), u32(header + 16)))
+            return rva - address + u32(header + 20);
+      }
+      return rva;
+   };
+   auto import = [&](uint32_t nameRva) {
+      const char *name = offset(nameRva) < file.size() ? file.c_str() + offset(nameRva) : "";
+      audit.shared += LLVMIsolationIsLLVMDll(name);
+      audit.imports.push_back(name);
+   };
+   // IMAGE_IMPORT_DESCRIPTOR (20 bytes, Name at 12) and IMAGE_DELAYLOAD_DESCRIPTOR
+   // (32 bytes, DllNameRVA at 4), each array ending with a zero name.
+   if (uint32_t imports = u32(directories + 8))
+      for (uint32_t d = offset(imports); u32(d + 12); d += 20)
+         import(u32(d + 12));
+   if (uint32_t delayed = u32(directories + 8 * 13))
+      for (uint32_t d = offset(delayed); u32(d + 4); d += 32)
+         import(u32(d + 4));
    return audit;
 }
 #endif
@@ -167,6 +234,23 @@ void LLVMIsolation(const char *scenario = "jit")
          return;
       }
       Error("LLVMIsolation", "%s is not loaded", leaf.c_str());
+#endif
+   } else if (which == "imports") {
+#ifdef _WIN32
+      TString image = gSystem->Getenv("LLVM_ISOLATION_IMAGE") ? gSystem->Getenv("LLVM_ISOLATION_IMAGE") : "libCling";
+      if (!gSystem->FindDynamicLibrary(image, kTRUE)) {
+         Error("LLVMIsolation", "cannot find %s", image.Data());
+         return;
+      }
+      std::ifstream file(image.Data(), std::ios::binary);
+      const std::string contents{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
+      auto audit = LLVMIsolationAuditPE(contents);
+      printf("LLVM isolation imports: reading %s (%zu bytes)\n", image.Data(), contents.size());
+      for (const std::string &dll : audit.imports)
+         printf("LLVM isolation imports:   %s%s\n", dll.c_str(),
+                LLVMIsolationIsLLVMDll(dll) ? "  <- LLVM or Clang" : "");
+      printf("LLVM isolation imports of %s: shared=%d dlls=%zu\n", gSystem->BaseName(image.Data()), audit.shared,
+             audit.imports.size());
 #endif
    }
 }
