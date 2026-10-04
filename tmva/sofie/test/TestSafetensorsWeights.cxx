@@ -303,6 +303,15 @@ std::vector<float> ExpectedOutput()
 #define SOFIE_SKIP_ON_BIG_ENDIAN GTEST_SKIP() << "safetensors weights are little-endian only"
 #endif
 
+// On Windows, an exception thrown by cling-compiled (JIT) code is not caught:
+// the runtime finds no handler and terminates the process (0xE06D7363). The
+// tests expecting the session constructors to throw can only run elsewhere.
+#ifdef _MSC_VER
+#define SOFIE_SKIP_JIT_THROW_TESTS GTEST_SKIP() << "C++ exceptions from cling-JIT code cannot be caught on Windows"
+#else
+#define SOFIE_SKIP_JIT_THROW_TESTS
+#endif
+
 // The safetensors writer emits a well-formed file: 8-byte little-endian JSON
 // header size, the JSON header describing each tensor, and the raw payloads
 TEST(SOFIESafetensors, FileLayoutAndPayload)
@@ -391,6 +400,7 @@ TEST(SOFIESafetensors, DefaultWeightFileName)
 TEST(SOFIESafetensors, MissingFileThrows)
 {
    SOFIE_SKIP_ON_BIG_ENDIAN;
+   SOFIE_SKIP_JIT_THROW_TESTS;
    EXPECT_TRUE(SessionConstructorThrows("safetensors_mul", "safetensors_mul_bogus.safetensors"));
 }
 
@@ -399,6 +409,7 @@ TEST(SOFIESafetensors, MissingFileThrows)
 TEST(SOFIESafetensors, WrongDtypeThrows)
 {
    SOFIE_SKIP_ON_BIG_ENDIAN;
+   SOFIE_SKIP_JIT_THROW_TESTS;
    std::ifstream in("safetensors_mul.safetensors", std::ios::binary);
    std::string content{std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
    in.close();
@@ -453,6 +464,7 @@ TEST(SOFIESafetensors, ThirdPartyFileLayout)
 TEST(SOFIESafetensors, MalformedJsonThrows)
 {
    SOFIE_SKIP_ON_BIG_ENDIAN;
+   SOFIE_SKIP_JIT_THROW_TESTS;
    std::string headerStr = R"({"tensor_W": {"dtype": "F32", "data_offsets": [0, 24},)"; // note the broken bracket
    std::ofstream out("safetensors_mul_malformed.safetensors", std::ios::binary);
    for (int i = 0; i < 8; ++i)
@@ -489,6 +501,7 @@ TEST(SOFIESafetensors, InMemoryWriterMatchesFile)
 TEST(SOFIESafetensors, TruncatedBlobThrows)
 {
    SOFIE_SKIP_ON_BIG_ENDIAN;
+   SOFIE_SKIP_JIT_THROW_TESTS;
    const std::string full = ReadWholeFile("safetensors_mul.safetensors");
    ASSERT_GT(full.size(), 10u);
    EXPECT_TRUE(BlobSessionConstructorThrows("safetensors_mul", full.substr(0, full.size() - 10)));
@@ -516,6 +529,7 @@ TEST(SOFIESafetensors, WeightlessModelFromBlob)
 TEST(SOFIESafetensors, DeepNestingThrows)
 {
    SOFIE_SKIP_ON_BIG_ENDIAN;
+   SOFIE_SKIP_JIT_THROW_TESTS;
    std::string header = R"({"tensor_W":{"dtype":"F32","shape":[2,3],"data_offsets":[0,24]},"__metadata__":)";
    header += std::string(10000, '[') + std::string(10000, ']') + "}";
    EXPECT_TRUE(BlobSessionConstructorThrows("safetensors_mul", MakeSafetensorsPayload(header, std::string(24, '\0'))));
@@ -535,6 +549,7 @@ TEST(SOFIESafetensors, ModerateNestingAccepted)
 TEST(SOFIESafetensors, WrappingOffsetsThrow)
 {
    SOFIE_SKIP_ON_BIG_ENDIAN;
+   SOFIE_SKIP_JIT_THROW_TESTS;
    // payload base is 8 + header size; this end offset overflows when added
    const std::string header =
       R"({"tensor_W":{"dtype":"F32","shape":[2,3],"data_offsets":[0,18446744073709551600]}})";
@@ -545,6 +560,7 @@ TEST(SOFIESafetensors, WrappingOffsetsThrow)
 TEST(SOFIESafetensors, NonIntegerOffsetsThrow)
 {
    SOFIE_SKIP_ON_BIG_ENDIAN;
+   SOFIE_SKIP_JIT_THROW_TESTS;
    const std::string header = R"({"tensor_W":{"dtype":"F32","shape":[2,3],"data_offsets":[0,24.0]}})";
    EXPECT_TRUE(BlobSessionConstructorThrows("safetensors_mul", MakeSafetensorsPayload(header, std::string(24, '\0'))));
 }
