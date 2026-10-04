@@ -645,7 +645,7 @@ public:
             Release();
       }
       const ROOT::RNTupleDescriptor *operator->() const { return fDescriptor; }
-      const ROOT::RNTupleDescriptor &GetRef() const { return *fDescriptor; }
+      const ROOT::RNTupleDescriptor &GetConstRef() const { return *fDescriptor; }
       bool IsValid() const { return fLock; }
       void Release()
       {
@@ -714,9 +714,9 @@ public:
       RAnyDescriptorGuard &operator=(RAnyDescriptorGuard &&) = default;
       ~RAnyDescriptorGuard() = default;
 
-      const ROOT::RNTupleDescriptor &GetRef() const
+      const ROOT::RNTupleDescriptor &GetConstRef() const
       {
-         return (fAnyGuard.index() == 0) ? std::get<0>(fAnyGuard).GetRef() : std::get<1>(fAnyGuard).operator*();
+         return (fAnyGuard.index() == 0) ? std::get<0>(fAnyGuard).GetConstRef() : std::get<1>(fAnyGuard).operator*();
       }
       const ROOT::RNTupleDescriptor *operator->() const
       {

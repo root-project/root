@@ -234,7 +234,7 @@ try {
       outSource->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
       outSource->LoadAllPageLists();
       auto desc = outSource->GetSharedDescriptorGuard();
-      model = destination->InitFromDescriptor(desc.GetRef(), true /* copyClusters */);
+      model = destination->InitFromDescriptor(desc.GetConstRef(), true /* copyClusters */);
    }
 
    // Interface conversion
@@ -1390,7 +1390,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       source->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
       source->LoadAllPageLists();
       auto srcDescriptor = source->GetSharedDescriptorGuard();
-      mergeData.fSrcDescriptor = &srcDescriptor.GetRef();
+      mergeData.fSrcDescriptor = &srcDescriptor.GetConstRef();
 
       if (mergeData.fSrcDescriptor->GetVersion() > ROOT::RNTuple::GetCurrentVersion()) {
          if (mergeOpts.fVersionBehavior == ENTupleMergeVersionBehavior::kWarnOnHigherVersion) {
@@ -1407,13 +1407,13 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
 
       // Create sink and model from the input descriptor if not initialized
       if (!fModel) {
-         fModel = fDestination->InitFromDescriptor(srcDescriptor.GetRef(), false /* copyClusters */);
+         fModel = fDestination->InitFromDescriptor(srcDescriptor.GetConstRef(), false /* copyClusters */);
       }
 
       for (const auto &extraTypeInfoDesc : srcDescriptor->GetExtraTypeInfoIterable())
          fDestination->UpdateExtraTypeInfo(extraTypeInfoDesc);
 
-      auto descCmpRes = CompareDescriptorStructure(mergeData.fDstDescriptor, srcDescriptor.GetRef());
+      auto descCmpRes = CompareDescriptorStructure(mergeData.fDstDescriptor, srcDescriptor.GetConstRef());
       if (!descCmpRes) {
          SKIP_OR_ABORT(std::string("Source RNTuple has an incompatible schema with the destination:\n") +
                        descCmpRes.GetError()->GetReport())
@@ -1493,7 +1493,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       }
 
       // handle extra dst fields & common fields
-      auto columnInfos = GatherColumnInfos(descCmp, srcDescriptor.GetRef(), mergeData);
+      auto columnInfos = GatherColumnInfos(descCmp, srcDescriptor.GetConstRef(), mergeData);
       auto res = MergeSourceClusters(*source, columnInfos.fCommonColumns, columnInfos.fExtraDstColumns, mergeData);
       if (!res)
          return R__FORWARD_ERROR(res);
