@@ -234,7 +234,7 @@ try {
       outSource->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
       outSource->LoadAllPageLists();
       auto desc = outSource->GetSharedDescriptorGuard();
-      model = destination->InitFromDescriptor(desc.GetRef(), true /* copyClusters */);
+      model = destination->InitFromDescriptor(desc.GetConstRef(), true /* copyClusters */);
    }
 
    // Interface conversion
@@ -997,7 +997,7 @@ public:
    {
       source.Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
       source.LoadAllPageLists();
-      fSrcDescriptor = &source.GetSharedDescriptorGuard().GetRef();
+      fSrcDescriptor = &source.GetSharedDescriptorGuard().GetConstRef();
 
       if (!fDstModel) {
          constexpr bool copyClusters = false;
