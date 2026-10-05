@@ -580,11 +580,10 @@ TEST(RNTupleMerger, MergeInconsistentTypes)
       }
 
       // Create the output
-      auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
-      RNTupleMerger merger{std::move(destination)};
-
       // We expect this to fail since the fields between the sources do NOT match
       for (const auto mmode : {ENTupleMergingMode::kFilter, ENTupleMergingMode::kStrict, ENTupleMergingMode::kUnion}) {
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
+         RNTupleMerger merger{std::move(destination)};
          RNTupleMergeOptions opts;
          opts.fMergingMode = mmode;
          auto res = merger.Merge(sourcePtrs, opts);
@@ -4588,12 +4587,11 @@ TEST(RNTupleMerger, MergeNewerVersion)
       }
 
       // Create the output
-      auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
-      RNTupleMerger merger{std::move(destination)};
-
       for (const auto mmode : {ENTupleMergingMode::kFilter, ENTupleMergingMode::kStrict, ENTupleMergingMode::kUnion}) {
          CheckDiagsRAII diagsRaii;
          diagsRaii.requiredDiag(kWarning, "ROOT.NTuple.Merge", "has a higher format version", false);
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+         RNTupleMerger merger{std::move(destination)};
          RNTupleMergeOptions opts;
          opts.fMergingMode = mmode;
          auto res = merger.Merge(sourcePtrs, opts);
@@ -4602,6 +4600,8 @@ TEST(RNTupleMerger, MergeNewerVersion)
 
       // Now merge again but with VersionBehavior set to Abort.
       {
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+         RNTupleMerger merger{std::move(destination)};
          RNTupleMergeOptions opts;
          opts.fVersionBehavior = ROOT::Experimental::Internal::ENTupleMergeVersionBehavior::kAbortOnHigherVersion;
          auto res = merger.Merge(sourcePtrs, opts);
