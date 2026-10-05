@@ -10,7 +10,8 @@
 # Coarse-grained ownership
 * @dpiparo
 /bindings/ @guitargeek @vepadulano
-/bindings/pyroot/cppyy @aaronj0 @guitargeek @siliataider
+/bindings/pyroot/cppjit @aaronj0 @guitargeek
+/bindings/pyroot/pythonizations @guitargeek @siliataider @vepadulano
 /core/ @dpiparo @pcanal
 /documentation/ @siliataider @dpiparo
 /fonts/ @bellenot @linev
