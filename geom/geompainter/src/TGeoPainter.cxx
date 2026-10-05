@@ -1706,6 +1706,7 @@ void TGeoPainter::Raytrace(Option_t *opt)
    auto argb = img->GetArgbArray();
    if (!argb) {
       Error("Raytrace", "ARGB array of image is not present");
+      delete img;
       return;
    }
 
