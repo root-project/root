@@ -12,7 +12,6 @@
 #include "TBrowser.h"
 #include "TPoint.h"
 #include "TVirtualPad.h"
-#include "TVirtualX.h"
 #include "TView.h"
 #include "TGeoManager.h"
 #include "TVirtualGeoPainter.h"
@@ -505,7 +504,6 @@ void TGeoTrack::PaintCollectTrack(Double_t time, Double_t *box)
 
 void TGeoTrack::PaintMarker(Double_t *point, Option_t *)
 {
-   TPoint p;
    Double_t xndc[3];
    TView *view = gPad->GetView();
    if (!view)
@@ -515,10 +513,12 @@ void TGeoTrack::PaintMarker(Double_t *point, Option_t *)
       return;
    if (xndc[1] < gPad->GetY1() || xndc[1] > gPad->GetY2())
       return;
-   p.fX = gPad->XtoPixel(xndc[0]);
-   p.fY = gPad->YtoPixel(xndc[1]);
-   TAttMarker::Modify();
-   gVirtualX->DrawPolyMarker(1, &p);
+
+   Double_t px = xndc[0];
+   Double_t py = xndc[1];
+
+   TAttMarker::ModifyOn(*gPad);
+   gPad->PaintPolyMarker(1, &px, &py);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
