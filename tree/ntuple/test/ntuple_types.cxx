@@ -1778,6 +1778,11 @@ TEST(RNTuple, Double32)
    EXPECT_EQ("Double32_t", reader->GetModel().GetConstField("d2").GetTypeAlias());
    auto d1 = reader->GetModel().GetDefaultEntry().GetPtr<double>("d1");
    auto d2 = reader->GetModel().GetDefaultEntry().GetPtr<double>("d2");
+   // Packing converts the double to a float, which yields zero for a float denormal if the floating-point unit
+   // flushes denormals, e.g. because a library compiled with -ffast-math is loaded into the process. Do the same
+   // conversion at runtime to get the expected value.
+   volatile double denormMinDouble = std::numeric_limits<float>::denorm_min();
+   const float denormMin = denormMinDouble;
    reader->LoadEntry(0);
    EXPECT_DOUBLE_EQ(0.0, *d1);
    EXPECT_DOUBLE_EQ(*d1, *d2);
@@ -1794,7 +1799,7 @@ TEST(RNTuple, Double32)
    EXPECT_DOUBLE_EQ(std::numeric_limits<float>::infinity(), *d1);
    EXPECT_DOUBLE_EQ(*d1, *d2);
    reader->LoadEntry(5);
-   EXPECT_DOUBLE_EQ(std::numeric_limits<float>::denorm_min(), *d1);
+   EXPECT_DOUBLE_EQ(denormMin, *d1);
    EXPECT_DOUBLE_EQ(*d1, *d2);
 
    auto modelFloat = RNTupleModel::Create();
@@ -1811,7 +1816,7 @@ TEST(RNTuple, Double32)
    readerFloat->LoadEntry(4);
    EXPECT_DOUBLE_EQ(std::numeric_limits<float>::infinity(), *d2Float);
    readerFloat->LoadEntry(5);
-   EXPECT_DOUBLE_EQ(std::numeric_limits<float>::denorm_min(), *d2Float);
+   EXPECT_DOUBLE_EQ(denormMin, *d2Float);
 }
 
 TEST(RNTuple, Double32Uncompressed)
