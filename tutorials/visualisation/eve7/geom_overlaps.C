@@ -73,5 +73,9 @@ void geom_overlaps(const char *fname = "http://root.cern/files/cms.root", double
    // the shapes of whichever row is selected go into the event scene
    eveMng->GetEventScene()->AddElement(table->GetVizHolder());
 
+   // Overlaps can sit far from the origin, so look at and orbit around the shapes
+   // themselves; with the default origin center they swing out of frame on rotation.
+   eveMng->GetDefaultViewer()->SetCameraCenter(REveViewer::kCameraCenterBBox);
+
    eveMng->Show();
 }

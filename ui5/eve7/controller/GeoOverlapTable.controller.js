@@ -232,13 +232,8 @@ sap.ui.define([
                if (!v || !v.scene || !v.scene_bbox || typeof v.resetCamera !== "function")
                   continue;
                try {
-                  // Overlaps/extrusions can sit far from the origin (a ZDC piece
-                  // at z ~ -6000, say); without this the rotation pivot stays at
-                  // the origin and the shape swings out of frame as soon as you
-                  // orbit. Opt in just for this viewer -- other eve7 viewers keep
-                  // the pivot-stays-put default (see REveCameraControls.js).
-                  if (v.controls)
-                     v.controls.centerCameraOnBBox = true;
+                  // The orbit pivot follows the viewer's REveViewer::SetCameraCenter(),
+                  // which geom_overlaps.C sets to the bbox center.
                   v.resetCamera();
                   this.frameContent(v);
                } catch (e) {
