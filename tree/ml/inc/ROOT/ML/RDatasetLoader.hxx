@@ -102,7 +102,6 @@ validation sets with the user-defined validation split fraction.
 template <typename... Args>
 class RDatasetLoader {
 private:
-   std::size_t fNumEntries;
    float fValidationSplit;
 
    std::vector<std::size_t> fVecSizes;
@@ -125,10 +124,7 @@ private:
    std::size_t fNumCols;
    std::size_t fSetSeed;
 
-   bool fNotFiltered;
    bool fShuffle;
-
-   ROOT::RDF::RResultPtr<std::vector<ULong64_t>> fEntries;
 
 public:
    RDatasetLoader(const std::vector<ROOT::RDF::RNode> &rdfs, const float validationSplit,
@@ -220,7 +216,6 @@ public:
    /// \brief Split the dataframes in a training and validation dataset
    void SplitDatasets()
    {
-      fNumEntries = 0;
       fNumTrainingEntries = 0;
       fNumValidationEntries = 0;
 
@@ -232,7 +227,6 @@ public:
 
          fNumTrainingEntries += TrainingDataset.GetRows();
          fNumValidationEntries += ValidationDataset.GetRows();
-         fNumEntries += TrainingDataset.GetRows() + ValidationDataset.GetRows();
 
          fTrainingDatasets.push_back(std::move(TrainingDataset));
          fValidationDatasets.push_back(std::move(ValidationDataset));
