@@ -4,6 +4,7 @@
 #include <TTreeReaderArray.h>
 
 #include <bitset>
+#include <list>
 
 void *ROOT::Internal::RDF::RTreeOpaqueColumnReader::GetImpl(std::size_t)
 {
@@ -12,7 +13,7 @@ void *ROOT::Internal::RDF::RTreeOpaqueColumnReader::GetImpl(std::size_t)
 
 void ROOT::Internal::RDF::RTreeOpaqueColumnReader::LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask)
 {
-   // Assume size-1 bulk for now
+   // Assume 1-size bulk for now
    if (mask[0])
       fValuePtr = fTreeValue->GetAddress();
 }
@@ -24,16 +25,68 @@ ROOT::Internal::RDF::RTreeOpaqueColumnReader::RTreeOpaqueColumnReader(TTreeReade
 
 ROOT::Internal::RDF::RTreeOpaqueColumnReader::~RTreeOpaqueColumnReader() = default;
 
-void *ROOT::Internal::RDF::RTreeUntypedValueColumnReader::GetImpl(std::size_t)
+void *ROOT::Internal::RDF::RTreeUntypedValueColumnReader::GetImpl(std::size_t entryInBulk)
 {
-   return fValuePtr;
+
+   if (fAddrOfTypeThatCannotBeReadInBulk)
+      return fAddrOfTypeThatCannotBeReadInBulk;
+
+   assert(fValueSize > 0 && "Could not retrieve size of value type in RDataFrame column reader.");
+   if (fCachedResultsInvalidIndices.end() !=
+       std::find(fCachedResultsInvalidIndices.begin(), fCachedResultsInvalidIndices.end(), entryInBulk)) {
+      // This entry was marked as invalid during loading, return nullptr to signal this to the caller
+      return nullptr;
+   }
+
+   return fCachedResults.data() + entryInBulk * fValueSize;
 }
 
 void ROOT::Internal::RDF::RTreeUntypedValueColumnReader::LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask)
 {
-   // Assume size-1 bulk for now
-   if (mask[0])
-      fValuePtr = fTreeValue->Get();
+   // Early return for the case of TBranchObject with split level zero, which cannot be read in a bulk
+   if (fTreeValue->IsBranchObjectUnsplit()) {
+      fAddrOfTypeThatCannotBeReadInBulk = fTreeValue->Get();
+      return;
+   }
+
+   if (fLastEntry == mask.GetFirstEntry())
+      return;
+
+   if (fValueSize == 0)
+      fValueSize = fTreeValue->GetValueSize();
+   assert(fValueSize > 0 && "Could not retrieve size of value type in RDataFrame column reader.");
+
+   // Assume 1-size bulk for now
+   const auto validIndices = mask.GetValidIndices();
+   fLastEntry = mask.GetFirstEntry();
+   if (validIndices.empty())
+      return;
+
+   fCachedResultsInvalidIndices.clear();
+   if (fObjDeleter)
+      for (auto *addr : fCachedBranchAddresses)
+         fObjDeleter(addr);
+   fCachedBranchAddressesOfAddresses.clear();
+   fCachedBranchAddresses.clear();
+   fCachedResults.clear();
+
+   fCachedResultsInvalidIndices.reserve(validIndices.size());
+   fCachedBranchAddressesOfAddresses.reserve(validIndices.size() * fValueSize);
+   fCachedBranchAddresses.reserve(validIndices.size() * fValueSize);
+   fCachedResults.resize(validIndices.size() * fValueSize);
+
+   for (auto idx : validIndices) {
+      fCachedBranchAddresses.push_back(fCachedResults.data() + idx * fValueSize);
+      // Crucial for reading non-PODs. Also crucial that this specific address
+      // survives until the end of the Get method which reads the actual value
+      // from the branch into the memory location above
+      fCachedBranchAddressesOfAddresses.push_back(&fCachedBranchAddresses.back());
+
+      fObjDeleter = fTreeValue->SetAddress(fCachedBranchAddresses.back(), fCachedBranchAddressesOfAddresses.back());
+      auto *readAddress = fTreeValue->Get();
+      if (!readAddress)
+         fCachedResultsInvalidIndices.push_back(idx);
+   }
 }
 
 ROOT::Internal::RDF::RTreeUntypedValueColumnReader::RTreeUntypedValueColumnReader(TTreeReader &r,
@@ -43,7 +96,12 @@ ROOT::Internal::RDF::RTreeUntypedValueColumnReader::RTreeUntypedValueColumnReade
 {
 }
 
-ROOT::Internal::RDF::RTreeUntypedValueColumnReader::~RTreeUntypedValueColumnReader() = default;
+ROOT::Internal::RDF::RTreeUntypedValueColumnReader::~RTreeUntypedValueColumnReader()
+{
+   if (fObjDeleter)
+      for (auto *addr : fCachedBranchAddresses)
+         fObjDeleter(addr);
+};
 
 void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::LoadStdArray(Long64_t entry)
 {
@@ -176,7 +234,7 @@ void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::LoadRVec(Long64_t entr
 
 void ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask)
 {
-   // Assume size-1 bulk for now
+   // Assume 1-size bulk for now
    if (mask[0]) {
       if (fCollectionType == ECollectionType::kStdArray)
          fValuePtr = LoadStdArray(mask.GetFirstEntry());
