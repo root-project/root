@@ -29,9 +29,43 @@
 
 #ifdef __APPLE__
 #include <dlfcn.h>
-#include <mach-o/dyld.h>
-#include <mach-o/loader.h>
-#include <mach-o/nlist.h>
+
+// The Mach-O layouts of <mach-o/loader.h> and <mach-o/nlist.h>, which are not included:
+// building their module in the interpreter fails an LLVM assertion on x86_64.
+namespace LLVMIsolationMachO {
+struct Header {
+   uint32_t magic;
+   int32_t cputype, cpusubtype;
+   uint32_t filetype, ncmds, sizeofcmds, flags, reserved;
+};
+struct Command {
+   uint32_t cmd, cmdsize;
+};
+struct DylibCommand {
+   uint32_t cmd, cmdsize, nameOffset, timestamp, currentVersion, compatibilityVersion;
+};
+struct SymtabCommand {
+   uint32_t cmd, cmdsize, symoff, nsyms, stroff, strsize;
+};
+struct SegmentCommand {
+   uint32_t cmd, cmdsize;
+   char segname[16];
+   uint64_t vmaddr, vmsize, fileoff, filesize;
+   int32_t maxprot, initprot;
+   uint32_t nsects, flags;
+};
+struct Symbol {
+   uint32_t strx;
+   uint8_t type, sect;
+   uint16_t desc;
+   uint64_t value;
+};
+constexpr uint32_t kTwoLevel = 0x80;                                                      // MH_TWOLEVEL
+constexpr uint32_t kSymtab = 0x2, kSegment = 0x19;                                        // LC_SYMTAB, LC_SEGMENT_64
+constexpr uint32_t kLoadDylib = 0xc, kLoadWeakDylib = 0x80000018, kReexport = 0x8000001f; // LC_*_DYLIB
+constexpr uint8_t kStab = 0xe0, kPrivate = 0x10, kTypeMask = 0x0e, kExternal = 0x01, kSection = 0x0e;
+constexpr uint16_t kWeakDefinition = 0x80; // N_WEAK_DEF
+} // namespace LLVMIsolationMachO
 
 /// Whether `name` is part of LLVM's or libclang's C API, or an Itanium-mangled name
 /// involving the namespaces llvm or clang outside the cling API.
@@ -54,31 +88,31 @@ struct LLVMIsolationMachOAudit {
 /// Audit a 64-bit Mach-O image: its exported symbols, those involving LLVM or Clang
 /// and the weak ones among them, and the shared LLVM or Clang libraries it loads.
 /// `linkedit` is where the image's __LINKEDIT contents would start at file offset 0.
-LLVMIsolationMachOAudit LLVMIsolationAuditMachO(const mach_header_64 *header, const char *linkedit)
+LLVMIsolationMachOAudit LLVMIsolationAuditMachO(const LLVMIsolationMachO::Header *header, const char *linkedit)
 {
+   using namespace LLVMIsolationMachO;
    LLVMIsolationMachOAudit audit;
-   audit.twoLevel = header->flags & MH_TWOLEVEL;
+   audit.twoLevel = header->flags & kTwoLevel;
    const char *command = reinterpret_cast<const char *>(header + 1);
-   for (uint32_t i = 0; i < header->ncmds; ++i, command += reinterpret_cast<const load_command *>(command)->cmdsize) {
-      uint32_t cmd = reinterpret_cast<const load_command *>(command)->cmd;
-      if (cmd == LC_LOAD_DYLIB || cmd == LC_LOAD_WEAK_DYLIB || cmd == LC_REEXPORT_DYLIB) {
-         const auto *dylib = reinterpret_cast<const dylib_command *>(command);
-         const char *path = command + dylib->dylib.name.offset;
+   for (uint32_t i = 0; i < header->ncmds; ++i, command += reinterpret_cast<const Command *>(command)->cmdsize) {
+      uint32_t cmd = reinterpret_cast<const Command *>(command)->cmd;
+      if (cmd == kLoadDylib || cmd == kLoadWeakDylib || cmd == kReexport) {
+         const char *path = command + reinterpret_cast<const DylibCommand *>(command)->nameOffset;
          const char *leaf = std::strrchr(path, '/') ? std::strrchr(path, '/') + 1 : path;
          audit.shared += std::strncmp(leaf, "libLLVM", 7) == 0 || std::strncmp(leaf, "libclang-cpp", 12) == 0;
-      } else if (cmd == LC_SYMTAB && linkedit) {
-         const auto *symtab = reinterpret_cast<const symtab_command *>(command);
-         const auto *symbols = reinterpret_cast<const nlist_64 *>(linkedit + symtab->symoff);
+      } else if (cmd == kSymtab && linkedit) {
+         const auto *symtab = reinterpret_cast<const SymtabCommand *>(command);
+         const auto *symbols = reinterpret_cast<const Symbol *>(linkedit + symtab->symoff);
          for (uint32_t s = 0; s < symtab->nsyms; ++s) {
-            const nlist_64 &symbol = symbols[s];
-            if ((symbol.n_type & N_STAB) || (symbol.n_type & (N_EXT | N_PEXT)) != N_EXT ||
-                (symbol.n_type & N_TYPE) != N_SECT)
+            const Symbol &symbol = symbols[s];
+            if ((symbol.type & kStab) || (symbol.type & (kExternal | kPrivate)) != kExternal ||
+                (symbol.type & kTypeMask) != kSection)
                continue;
             ++audit.exports;
             // Mach-O prefixes names with an underscore.
-            if (LLVMIsolationIsLLVMSymbol(linkedit + symtab->stroff + symbol.n_un.n_strx + 1)) {
+            if (LLVMIsolationIsLLVMSymbol(linkedit + symtab->stroff + symbol.strx + 1)) {
                ++audit.llvm;
-               audit.weak += (symbol.n_desc & N_WEAK_DEF) != 0;
+               audit.weak += (symbol.desc & kWeakDefinition) != 0;
             }
          }
       }
@@ -206,6 +240,15 @@ void LLVMIsolation(const char *scenario = "jit")
       printf("LLVM isolation names: missing=%d of %zu\n", missing, std::size(names));
    } else if (which == "exports") {
 #ifdef __APPLE__
+      using namespace LLVMIsolationMachO;
+      auto imageCount = reinterpret_cast<uint32_t (*)()>(dlsym(RTLD_DEFAULT, "_dyld_image_count"));
+      auto imageName = reinterpret_cast<const char *(*)(uint32_t)>(dlsym(RTLD_DEFAULT, "_dyld_get_image_name"));
+      auto imageHeader = reinterpret_cast<const Header *(*)(uint32_t)>(dlsym(RTLD_DEFAULT, "_dyld_get_image_header"));
+      auto imageSlide = reinterpret_cast<intptr_t (*)(uint32_t)>(dlsym(RTLD_DEFAULT, "_dyld_get_image_vmaddr_slide"));
+      if (!imageCount || !imageName || !imageHeader || !imageSlide) {
+         Error("LLVMIsolation", "cannot find dyld's image functions");
+         return;
+      }
       std::string image =
          gSystem->Getenv("LLVM_ISOLATION_IMAGE") ? gSystem->Getenv("LLVM_ISOLATION_IMAGE") : "libCling.so";
       if (image != "libCling.so" && !dlopen(image.c_str(), RTLD_NOW | RTLD_LOCAL)) {
@@ -213,20 +256,18 @@ void LLVMIsolation(const char *scenario = "jit")
          return;
       }
       const std::string leaf = image.substr(image.rfind('/') + 1);
-      for (uint32_t i = 0; i < _dyld_image_count(); ++i) {
-         const std::string name = _dyld_get_image_name(i);
+      for (uint32_t i = 0; i < imageCount(); ++i) {
+         const std::string name = imageName(i);
          if (name.size() < leaf.size() + 1 ||
              name.compare(name.size() - leaf.size() - 1, std::string::npos, "/" + leaf) != 0)
             continue;
-         const auto *header = reinterpret_cast<const mach_header_64 *>(_dyld_get_image_header(i));
+         const Header *header = imageHeader(i);
          const char *linkedit = nullptr;
          const char *command = reinterpret_cast<const char *>(header + 1);
-         for (uint32_t c = 0; c < header->ncmds;
-              ++c, command += reinterpret_cast<const load_command *>(command)->cmdsize) {
-            const auto *segment = reinterpret_cast<const segment_command_64 *>(command);
-            if (segment->cmd == LC_SEGMENT_64 && std::strcmp(segment->segname, SEG_LINKEDIT) == 0)
-               linkedit =
-                  reinterpret_cast<const char *>(_dyld_get_image_vmaddr_slide(i) + segment->vmaddr - segment->fileoff);
+         for (uint32_t c = 0; c < header->ncmds; ++c, command += reinterpret_cast<const Command *>(command)->cmdsize) {
+            const auto *segment = reinterpret_cast<const SegmentCommand *>(command);
+            if (segment->cmd == kSegment && std::strcmp(segment->segname, "__LINKEDIT") == 0)
+               linkedit = reinterpret_cast<const char *>(imageSlide(i) + segment->vmaddr - segment->fileoff);
          }
          auto audit = LLVMIsolationAuditMachO(header, linkedit);
          printf("LLVM isolation exports of %s: llvm=%d weak=%d shared=%d twolevel=%d exports=%d\n", leaf.c_str(),
