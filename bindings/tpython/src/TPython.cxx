@@ -12,11 +12,12 @@
 #include <Python.h>
 
 // Bindings
-// cpyrt.h must be go first, since it includes Python.h, which must be
-// included before any standard header
+// cpyrt/API.h includes Python.h, which must be included before any standard
+// header
 #include "cpyrt/API.h"
 #include "TPython.h"
 #include "TPyClassGenerator.h"
+#include "PyGILRAII.h"
 
 // ROOT
 #include "TROOT.h"
@@ -100,18 +101,6 @@ static PyObject *gMainDict = 0;
 
 namespace {
 
-PyThreadState *mainThreadState;
-
-// To acquire the GIL as described here:
-// https://docs.python.org/3/c-api/init.html#non-python-created-threads
-class PyGILRAII {
-   PyGILState_STATE m_GILState;
-
-public:
-   PyGILRAII() : m_GILState(PyGILState_Ensure()) {}
-   ~PyGILRAII() { PyGILState_Release(m_GILState); }
-};
-
 struct PyObjDeleter {
     void operator()(PyObject* obj) const {
         Py_DecRef(obj);
@@ -155,7 +144,10 @@ Bool_t TPython::Initialize()
          return false;
       }
 
-      mainThreadState = PyEval_SaveThread();
+      // Release the GIL so that other threads can use the interpreter. The
+      // saved thread state is never restored: ROOT never finalizes the
+      // embedded interpreter.
+      (void)PyEval_SaveThread();
    }
 
    {
@@ -231,7 +223,8 @@ Bool_t TPython::Import(const char *mod_name)
       Py_IncRef(mod.get()); // PyModule_AddObject steals a reference
       PyModule_AddObject(cppjitModule.get(), mod_name, mod.get());
    } else {
-      PyErr_Clear();
+      PyErr_Print();
+      std::cerr << "Warning: cannot attach module \"" << mod_name << "\" to the cppjit module" << std::endl;
    }
 
    // force creation of the module as a namespace
