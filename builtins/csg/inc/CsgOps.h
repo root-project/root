@@ -4,14 +4,6 @@
 #ifndef ROOT_CsgOps
 #define ROOT_CsgOps
 
-#if !defined(ROOT_CsgOps_cxx) && !defined(G__DICTIONARY) && !defined(__ROOTCLING__) && !defined(__CLING__)
-#warning "This header and the TBaseMesh class are deprecated and will be removed after ROOT 6.44, together with the RCsg target. Use instead the 'TGeoTessellated' public interface. If that public interface doesn't provide what you need, contact the ROOT team to request its extension"
-#endif
-
-#include "RtypesCore.h"
-
-class TBuffer3D;
-
 namespace RootCsg {
 
 // I need TBaseMesh to have an opaque pointer
@@ -22,14 +14,15 @@ public:
    TBaseMesh() = default;
    virtual ~TBaseMesh() = default;
 
-   virtual UInt_t NumberOfPolys() const = 0;
-   virtual UInt_t NumberOfVertices() const = 0;
-   virtual UInt_t SizeOfPoly(UInt_t polyIndex) const = 0;
-   virtual const Double_t *GetVertex(UInt_t vertNum) const = 0;
-   virtual Int_t GetVertexIndex(UInt_t polyNum, UInt_t vertNum) const = 0;
+   virtual unsigned int NumberOfPolys() const = 0;
+   virtual unsigned int NumberOfVertices() const = 0;
+   virtual unsigned int SizeOfPoly(unsigned int polyIndex) const = 0;
+   virtual const double *GetVertex(unsigned int vertNum) const = 0;
+   virtual int GetVertexIndex(unsigned int polyNum, unsigned int vertNum) const = 0;
 };
 
-TBaseMesh *ConvertToMesh(const TBuffer3D &buff);
+TBaseMesh *ConvertToMesh(double *pnts, const int *segs, const int *pols, unsigned int nbPnts, unsigned int nbSegs,
+                         unsigned int nbPols);
 TBaseMesh *BuildUnion(const TBaseMesh *leftOperand, const TBaseMesh *rightOperand);
 TBaseMesh *BuildIntersection(const TBaseMesh *leftOperand, const TBaseMesh *rightOperand);
 TBaseMesh *BuildDifference(const TBaseMesh *leftOperand, const TBaseMesh *rightOperand);
