@@ -387,15 +387,14 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Short_t valign = GetTextAlign() % 10;
    Bool_t opaque  = parent.OpaqueMoving();
 
-   auto inter = dynamic_cast<TTextInteractive *>(parent.Interactive(this));
+   auto inter = parent.GetInteractive<TTextInteractive>(this);
 
    switch (event) {
 
    case kArrowKeyPress:
    case kButton1Down:
    case kMouseMotion: {
-      inter = new TTextInteractive(parent, TestBit(kTextNDC), GetX(), GetY(), GetTextAngle());
-      parent.Interactive(this, inter);
+      inter = parent.MakeInteractive<TTextInteractive>(this, parent, TestBit(kTextNDC), GetX(), GetY(), GetTextAngle());
       inter->pxold  = px;
       inter->pyold  = py;
       auto co = TMath::Cos(GetTextAngle()/180.*TMath::Pi());
@@ -441,7 +440,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          SetTextAngle(inter->theta);
       }
       parent.Modified(kTRUE);
-      parent.Interactive(); // delete interactive object
+      parent.FreeInteractive(this);
       break;
 
    case kButton1Locate:
