@@ -231,7 +231,7 @@ def _bindFunctionOrPdf(name, func, is_rooabspdf, *variables):
     import ROOT
 
     # use the C++ version if dealing with C++ function
-    if "cppjit" in repr(type(func)):
+    if isinstance(func, ROOT._cppyy.types.Function):
         return ROOT.RooFit._bindFunction(name, func, *variables)
 
     base_class_name = "RooAbsPdf" if is_rooabspdf else "RooAbsReal"
