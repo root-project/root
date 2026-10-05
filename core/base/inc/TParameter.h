@@ -106,14 +106,14 @@ public:
       return fName.CompareTo(obj->GetName());
    }
 
-   void ls(Option_t *) const override
+   void ls(Option_t * = "") const override
    {
       // Print this parameter content
       TROOT::IndentLevel();
       std::cout << "OBJ: " << IsA()->GetName() << "\t" << fName << " = " << fVal << std::endl;
    }
 
-   void Print(Option_t *) const override
+   void Print(Option_t * = "") const override
    {
       // Print this parameter content
       TROOT::IndentLevel();
