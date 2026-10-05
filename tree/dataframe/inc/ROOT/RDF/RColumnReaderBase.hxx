@@ -43,13 +43,13 @@ public:
    /// The caller is responsible for checking that the returned value actually
    /// exists.
    template <typename T>
-   T *TryGet(std::size_t idx)
+   T *TryGet(std::size_t entryInBulk)
    {
-      return static_cast<T *>(GetImpl(idx));
+      return static_cast<T *>(GetImpl(entryInBulk));
    }
 
 private:
-   virtual void *GetImpl(std::size_t idx) = 0;
+   virtual void *GetImpl(std::size_t entryInBulk) = 0;
    virtual void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) = 0;
 };
 

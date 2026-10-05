@@ -93,14 +93,21 @@ public:
    ESetupStatus GetSetupStatus() const { return fSetupStatus; }
    virtual EReadStatus GetReadStatus() const { return fReadStatus; }
 
+   virtual std::size_t GetValueSize() const;
+
    /// If we are reading a leaf, return the corresponding TLeaf.
    TLeaf *GetLeaf() { return fLeaf; }
 
    void *GetAddress();
+   std::function<void(void *)> SetAddress(void *addr, void *addrOfAddr);
 
    const char *GetBranchName() const { return fBranchName; }
 
    virtual ~TTreeReaderValueBase();
+
+   TTreeReader *GetTreeReader() const { return fTreeReader; }
+
+   bool IsBranchObjectUnsplit() const { return fIsBranchObjectUnsplit; }
 
 protected:
    TTreeReaderValueBase(TTreeReader *reader, const char *branchname, TDictionary *dict, bool opaqueRead = false);
@@ -136,7 +143,8 @@ protected:
    TString fBranchName;                        ///< Name of the branch to read data from.
    TString fLeafName;
    TTreeReader *fTreeReader;               ///< Tree reader we belong to
-   TDictionary *fDict;                     ///< Type that the branch should contain
+   TDictionary *fDict;                     ///< The user requests to read branch values as this type
+   TDictionary *fActualDict;               ///< On-disk type of the branch
    Detail::TBranchProxy *fProxy = nullptr; ///< Proxy for this branch, owned by TTreeReader
    TLeaf *fLeaf = nullptr;
    std::vector<Long64_t> fStaticClassOffsets;
@@ -149,6 +157,9 @@ protected:
     * \note Only used by TTreeReaderOpaqueValue.
     */
    bool fOpaqueRead{false};
+
+   // If true, the connected branch is a TBranchObject with split level zero, which cannot be read in a bulk
+   bool fIsBranchObjectUnsplit{false};
 
    // FIXME: re-introduce once we have ClassDefInline!
    // ClassDefOverride(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader

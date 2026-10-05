@@ -10296,3 +10296,12 @@ TBranch *ROOT::Internal::TreeUtils::CallBranchImp(TTree &tree, const char *branc
 {
    return tree.BranchImp(branchname, ptrClass, addobj, bufsize, splitlevel);
 }
+
+Int_t ROOT::Internal::TreeUtils::SetBranchAddress(TTree &tree, const char *bname, void *add, TBranch **ptr,
+                                                  TClass *realClass, EDataType datatype, bool isptr,
+                                                  bool suppressMissingBranchError)
+{
+   // We unconditionally call the overload that will not print errors related to branch address, assuming that the
+   // caller has a different way to detect and report the issue to the user when needed.
+   return tree.SetBranchAddress(bname, add, ptr, realClass, datatype, isptr, suppressMissingBranchError);
+}
