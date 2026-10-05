@@ -1600,13 +1600,23 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Raytrace current drawn geometry
 
-void TGeoPainter::Raytrace(Option_t *)
+void TGeoPainter::Raytrace(Option_t *opt)
 {
    TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view)
       return;
 
    auto &parent = *gPad;
+
+   auto img = dynamic_cast<TImage *>(parent.GetListOfPrimitives()->FindObject("RayTrace"));
+   if (img) {
+      parent.GetListOfPrimitives()->Remove(img);
+      delete img;
+   }
+
+   // only cleanup image
+   if (opt && !strcmp(opt, "cleanup"))
+      return;
 
    Int_t rtMode = fGeoManager->GetRTmode();
    TGeoVolume *top = fGeoManager->GetTopVolume();
@@ -1675,13 +1685,12 @@ void TGeoPainter::Raytrace(Option_t *)
 
    auto checker = fGeoManager->GetGeomChecker();
 
-   auto img = dynamic_cast<TImage *>(parent.GetListOfPrimitives()->FindObject("RayTrace"));
-   if (img) {
-      parent.GetListOfPrimitives()->Remove(img);
-      delete img;
+   img = TImage::Create();
+   if (!img) {
+      Error("Raytrace", "Fail to create TImage instance for painting");
+      return;
    }
 
-   img = TImage::Create();
    img->SetName("RayTrace");
 
    Int_t image_width = pxmax - pxmin;
