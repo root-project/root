@@ -156,6 +156,7 @@ export class REveCameraControls extends EventDispatcher {
    // pivot (see setCameraCenter()) at the framed bbox's center. Off by
    // default: the pivot stays wherever it was (the origin, until something
    // moves it), so content far from the origin swings out of frame on rotation.
+   // GlViewerRCore sets it from REveViewer::SetCameraCenter() on camera reset.
    centerCameraOnBBox = false;
 
    // Unused, left from OrbitControls.

@@ -161,6 +161,17 @@ void REveViewer::SetMotionMaxHz(Float_t hz)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set the point the camera looks at and orbits around, either the world
+/// origin or the center of the scene bounding box. Clients reset their camera
+/// when this changes.
+
+void REveViewer::SetCameraCenter(ECameraCenter c)
+{
+   fCameraCenter = c;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set the up axis, 0/1/2 for x/y/z; any other value means none.
 
 void REveViewer::SetAxesUpAxis(int a)
@@ -276,6 +287,7 @@ int REveViewer::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 
    j["Mandatory"] = fMandatory;
    j["AxesType"] = fAxesType;
+   j["CameraCenter"] = fCameraCenter;
    j["ExtrapolateMotion"] = fExtrapolateMotion;
    j["AxesUpAxis"] = fAxesUpAxis;
    j["MotionMaxHz"] = fMotionMaxHz;

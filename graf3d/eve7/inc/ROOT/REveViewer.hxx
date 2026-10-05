@@ -50,6 +50,12 @@ public:
       kAxesEdge
    };
 
+   /// Point the camera looks at and orbits around after a camera reset.
+   enum ECameraCenter {
+      kCameraCenterOrigin, ///< world origin, (0, 0, 0)
+      kCameraCenterBBox    ///< center of the scene bounding box
+   };
+
    /// Tone curve applied to the rendered buffer. Values match the shader.
    // clang-format off
    enum EToneMapMode {
@@ -67,6 +73,8 @@ private:
    REveCamera* fCamera{0};
 
    EAxesType fAxesType{kAxesNone};
+
+   ECameraCenter fCameraCenter{kCameraCenterOrigin};
 
    /// Let the client extrapolate streamed motion between updates. Off holds
    /// each object where the last update put it, which shows the raw update rate.
@@ -137,6 +145,9 @@ public:
    // is showing.
    EAxesType GetAxesType() const { return fAxesType; }
    void SetAxesType(int);
+
+   ECameraCenter GetCameraCenter() const { return fCameraCenter; }
+   void SetCameraCenter(ECameraCenter c);
 
    // clang-format off
    Bool_t GetExtrapolateMotion() const { return fExtrapolateMotion; }

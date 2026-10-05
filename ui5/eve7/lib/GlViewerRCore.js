@@ -621,17 +621,26 @@ sap.ui.define([
       {
          this.recalcSceneBBox();
 
+         let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
+
+         // The camera looks at and orbits around center: the origin, or the
+         // scene bbox center for REveViewer::kCameraCenterBBox.
+         let on_bbox = this.isCameraCenterOnBBox(eveView);
          let sbbox = this.scene_bbox;
-         let posV = new RC.Vector3; posV.subVectors(sbbox.max, this.rot_center);
-         let negV = new RC.Vector3; negV.subVectors(sbbox.min, this.rot_center);
+         let center = on_bbox ? sbbox.getCenter(new RC.Vector3) : this.rot_center;
+
+         let posV = new RC.Vector3; posV.subVectors(sbbox.max, center);
+         let negV = new RC.Vector3; negV.subVectors(sbbox.min, center);
 
          let extV = new RC.Vector3; extV = negV; extV.negate(); extV.max(posV);
          let extR = extV.length();
 
-         if (this._logLevel >= 2)
-            console.log("GlViewerRenderCore.positionCameraAndLights", sbbox, posV, negV, extV, extR);
+         // Box around center that holds the scene, for the camera to frame.
+         let frameBox = new RC.Box3(new RC.Vector3().subVectors(center, extV),
+                                    new RC.Vector3().addVectors(center, extV));
 
-         let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
+         if (this._logLevel >= 2)
+            console.log("GlViewerRenderCore.positionCameraAndLights", sbbox, center, posV, negV, extV, extR);
 
          // Try to use standalone REveCamera if available
          let cameraId = eveView.fCameraId;
@@ -659,12 +668,13 @@ sap.ui.define([
             this.controls.enableRotate = true;
 
             let lc = this.lights.children;
+            let c = center;
             // lights are const now -- no need to set decay and distance
-            lc[1].position.set( extR, extR, -extR);
-            lc[2].position.set(-extR, extR,  extR);
-            lc[3].position.set( extR, extR,  extR);
-            lc[4].position.set(-extR, extR, -extR);
-            lc[5].position.set(0, -extR, 0);
+            lc[1].position.set(c.x + extR, c.y + extR, c.z - extR);
+            lc[2].position.set(c.x - extR, c.y + extR, c.z + extR);
+            lc[3].position.set(c.x + extR, c.y + extR, c.z + extR);
+            lc[4].position.set(c.x - extR, c.y + extR, c.z - extR);
+            lc[5].position.set(c.x, c.y - extR, c.z);
          }
          else
          {
@@ -687,7 +697,8 @@ sap.ui.define([
             lc[1].position.set( 0, 0,  extR);
          }
 
-         this.controls.setFromBBox(sbbox);
+         this.controls.centerCameraOnBBox = on_bbox;
+         this.controls.setFromBBox(frameBox);
 
          // Apply saved camTrans (if initialized)
          if (camera.fInitialized) {
@@ -704,6 +715,14 @@ sap.ui.define([
          this.controls.update();
 
          this.centerMarker.visible = false;
+      }
+
+      /** True when the camera should look at and orbit around the scene bbox
+       * center rather than the origin. */
+      isCameraCenterOnBBox(eveView)
+      {
+         // CameraCenter is REveViewer::ECameraCenter: kCameraCenterOrigin or kCameraCenterBBox.
+         return eveView.CameraCenter === 1;
       }
 
       updateViewerAttributes() {
@@ -760,10 +779,14 @@ sap.ui.define([
          let a = this.controls.getCamBase().elements;
          let eveCamera = this.controller.mgr.GetElement(eveView.fCameraId);
 
-         // compare the base matrices
+         // compare the base matrices; skip the translation (elements 12-14),
+         // the orbit pivot, which the client sets itself (see
+         // isCameraCenterOnBBox() and "Set Camera Center")
          let b = eveCamera.camBase;
          let equal = true;
          for (let i = 0; i < 16; i++) {
+            if (i >= 12 && i <= 14)
+               continue;
             if (Math.abs(a[i] - b[i]) > 0.0000005) {
                equal = false;
             }
@@ -782,11 +805,17 @@ sap.ui.define([
             }
          }
 
+         let on_bbox = this.isCameraCenterOnBBox(eveView);
+         let center_changed = this.camera_on_bbox !== undefined && this.camera_on_bbox !== on_bbox;
+         this.camera_on_bbox = on_bbox;
+
          if (equal !== true) {
             this.lights.clear();
             delete this.camera;
             this.createCameraAndLights();
             this.positionCameraAndLights();
+         } else if (center_changed) {
+            this.resetCamera();
          }
          this.request_render();
       }
