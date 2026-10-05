@@ -32,6 +32,15 @@ public:
    bool &operator[](std::size_t idx) { return fMask.at(idx); }
    std::uint64_t GetFirstEntry() const { return fBegin; }
    void SetFirstEntry(std::uint64_t e) { fBegin = e; }
+   ROOT::RVec<std::size_t> GetValidIndices() const
+   {
+      ROOT::RVec<std::size_t> validIndices{};
+      for (std::size_t i = 0; i < fMask.size(); ++i) {
+         if (fMask[i])
+            validIndices.push_back(i);
+      }
+      return validIndices;
+   }
 };
 
 } // namespace ROOT::Internal::RDF

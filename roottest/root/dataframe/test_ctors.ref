@@ -11,8 +11,10 @@ running chain...
 ctor called
 filter
 foreach: 1
+dtor called
+ctor called
 filter
 foreach: 2
+dtor called
 done
 count: 2
-dtor called
