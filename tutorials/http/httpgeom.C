@@ -19,7 +19,8 @@
 #include "TPad.h"
 
 THttpServer *serv = nullptr;
-bool drawing = false;
+bool draw_geometry = false;
+bool set_time_interval = false;
 int interval = 2000;
 
 void create_geo()
@@ -63,27 +64,42 @@ void create_geo()
 
    gGeoManager->CloseGeometry();
 
+   if (set_time_interval)
+      gGeoManager->SetTminTmax(10, 30); // draw only part of tracks
+
    top->SetLineColor(kMagenta);
    if (rnd->Rndm() < 0.5)
       in->SetLineColor(kGreen);
    else
       in->SetLineColor(kBlack);
 
-   for (int j=0; j<50; j++)
-   {
-       Int_t track_index = gGeoManager->AddTrack(2,22);
-       auto track = gGeoManager->GetTrack(track_index);
-       if (rnd->Rndm() < 0.5)
-           track->SetLineColor(kRed);
-       else
-           track->SetLineColor(kBlue);
-       track->SetLineWidth(2);
+   for (int j = 0; j < 50; j++) {
+      Int_t track_index = gGeoManager->AddTrack(2,22);
+      auto track = gGeoManager->GetTrack(track_index);
+      if (rnd->Rndm() < 0.5)
+         track->SetLineColor(kRed);
+      else
+         track->SetLineColor(kBlue);
+      track->SetLineWidth(2);
 
-       track->AddPoint(x, y, z, 0);
-       track->AddPoint(-10 + 20*rnd->Rndm(), -10 + 20*rnd->Rndm(), -10 + 20*rnd->Rndm(), 0);
+      track->AddPoint(x, y, z, 0);
+      double x1 = -10 + 20*rnd->Rndm();
+      double y1 = -10 + 20*rnd->Rndm();
+      double z1 = -10 + 20*rnd->Rndm();
+      if (set_time_interval) {
+         for (int np = 1; np < 40; np++)
+            track->AddPoint(x + (x1-x)/40.*np, y + (y1-y)/40.*np, z + (z1-z)/40*np, np);
+
+         // make endmarker visible
+         track->SetMarkerColor(kGreen);
+         track->SetMarkerSize(1);
+         track->SetMarkerStyle(8);
+      } else {
+         track->AddPoint(x1, y1, z1, 0);
+      }
    }
 
-   if (drawing) {
+   if (draw_geometry) {
       // add "showtop" option to display top volume in JSROOT
       // gGeoManager->SetTopVisible();
 
@@ -95,9 +111,10 @@ void create_geo()
 }
 
 
-void httpgeom()
+void httpgeom(bool draw = false, bool tm = false)
 {
-   drawing = false; // to enable canvas drawing
+   draw_geometry = draw;
+   set_time_interval = tm;
 
    serv = new THttpServer("http:8090");
 
