@@ -13,6 +13,7 @@
 
 #include "TPyClassGenerator.h"
 #include "TPyReturn.h"
+#include "PyGILRAII.h"
 
 // ROOT
 #include "TClass.h"
@@ -26,14 +27,6 @@
 #include <typeinfo>
 
 namespace {
-
-class PyGILRAII {
-   PyGILState_STATE m_GILState;
-
-public:
-   PyGILRAII() : m_GILState(PyGILState_Ensure()) {}
-   ~PyGILRAII() { PyGILState_Release(m_GILState); }
-};
 
 #if (defined(Py_LIMITED_API) || PY_VERSION_HEX < 0x30d00f0)
 

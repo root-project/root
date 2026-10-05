@@ -13,6 +13,7 @@
 #include <Python.h>
 
 #include "TPyArg.h"
+#include "PyGILRAII.h"
 
 //______________________________________________________________________________
 //                        Generic wrapper for arguments
@@ -22,17 +23,6 @@
 // provides, from the selected constructor, the proper conversion to a PyObject.
 // In principle, there should be no need to use this class directly: it relies
 // on implicit conversions.
-
-//- data ---------------------------------------------------------------------
-
-namespace {
-   class PyGILRAII {
-      PyGILState_STATE m_GILState;
-   public:
-      PyGILRAII() : m_GILState(PyGILState_Ensure()) { }
-      ~PyGILRAII() { PyGILState_Release(m_GILState); }
-   };
-}
 
 //- constructor dispatcher ---------------------------------------------------
 void TPyArg::CallConstructor(PyObject *&pyself, PyObject *pyclass, const std::vector<TPyArg> &args)

@@ -14,6 +14,7 @@
 // Bindings
 #include "cpyrt/API.h"
 #include "TPyReturn.h"
+#include "PyGILRAII.h"
 
 // ROOT
 #include "TObject.h"
@@ -40,17 +41,6 @@
 //  root [3] double d = TPython::Eval( "1+3.1415" );
 //  root [4] d
 //  (double)4.14150000000000063e+00
-
-//- data ---------------------------------------------------------------------
-
-namespace {
-   class PyGILRAII {
-      PyGILState_STATE m_GILState;
-   public:
-      PyGILRAII() : m_GILState(PyGILState_Ensure()) { }
-      ~PyGILRAII() { PyGILState_Release(m_GILState); }
-   };
-}
 
 //- constructors/destructor --------------------------------------------------
 TPyReturn::TPyReturn()
