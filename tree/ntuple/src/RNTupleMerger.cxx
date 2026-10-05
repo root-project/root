@@ -551,6 +551,31 @@ FillCommonAndExtraFields(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTuple
    return res;
 }
 
+static void VerifyProjectedFieldsCompatibility(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTupleDescriptor &src,
+                                               const ROOT::RFieldDescriptor &dstField,
+                                               const ROOT::RFieldDescriptor &srcField, std::vector<std::string> &errors)
+{
+   bool projCompatible = srcField.IsProjectedField() == dstField.IsProjectedField();
+   if (!projCompatible) {
+      std::stringstream ss;
+      ss << "Field `" << dstField.GetFieldName()
+         << "` is incompatible with previously-seen field with that name because the "
+         << (srcField.IsProjectedField() ? "new" : "old") << " one is projected and the other isn't";
+      errors.push_back(ss.str());
+   } else if (srcField.IsProjectedField()) {
+      // if both fields are projected, verify that they point to the same real field
+      const auto srcName = src.GetQualifiedFieldName(srcField.GetProjectionSourceId());
+      const auto dstName = dst.GetQualifiedFieldName(dstField.GetProjectionSourceId());
+      if (srcName != dstName) {
+         std::stringstream ss;
+         ss << "Field `" << dstField.GetFieldName()
+            << "` is projected to a different field than a previously-seen field with the same name (old: " << dstName
+            << ", new: " << srcName << ")";
+         errors.push_back(ss.str());
+      }
+   }
+}
+
 /// Compares the top level fields of `dst` and `src` and determines whether they can be merged or not.
 /// In addition, returns the differences between `dst` and `src`'s structures
 static ROOT::RResult<RDescriptorsComparison>
@@ -575,24 +600,7 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
       const auto &fieldName = field.fSrc->GetFieldName();
 
       // Require that fields are both projected or both not projected
-      bool projCompatible = field.fSrc->IsProjectedField() == field.fDst->IsProjectedField();
-      if (!projCompatible) {
-         std::stringstream ss;
-         ss << "Field `" << fieldName << "` is incompatible with previously-seen field with that name because the "
-            << (field.fSrc->IsProjectedField() ? "new" : "old") << " one is projected and the other isn't";
-         errors.push_back(ss.str());
-      } else if (field.fSrc->IsProjectedField()) {
-         // if both fields are projected, verify that they point to the same real field
-         const auto srcName = src.GetQualifiedFieldName(field.fSrc->GetProjectionSourceId());
-         const auto dstName = dst.GetQualifiedFieldName(field.fDst->GetProjectionSourceId());
-         if (srcName != dstName) {
-            std::stringstream ss;
-            ss << "Field `" << fieldName
-               << "` is projected to a different field than a previously-seen field with the same name (old: "
-               << dstName << ", new: " << srcName << ")";
-            errors.push_back(ss.str());
-         }
-      }
+      VerifyProjectedFieldsCompatibility(dst, src, *field.fDst, *field.fSrc, errors);
 
       // Require that fields types match
       // TODO(gparolini): allow non-identical but compatible types
@@ -1573,6 +1581,7 @@ public:
       if (!fDstModel) {
          ROOT::RNTupleDescriptor::RCreateModelOptions cmOpts;
          cmOpts.SetCreateBare(true);
+         cmOpts.SetReconstructProjections(true);
          fDstModel = source.GetSharedDescriptorGuard()->CreateModel(cmOpts);
          fDestination.Init(*fDstModel);
          fDstEntry = fDstModel->CreateEntry();
@@ -1581,7 +1590,22 @@ public:
 
    ROOT::RResult<RDescriptorsComparison> CompareSrcAndDstDescriptors() final
    {
-      return FillCommonAndExtraFields(fDstDescriptor, *fSrcDescriptor);
+      auto res = FillCommonAndExtraFields(fDstDescriptor, *fSrcDescriptor);
+
+      // Verify that projected fields are consistent
+      std::vector<std::string> errors;
+      for (const auto &[srcF, dstF] : res.fCommonFields) {
+         VerifyProjectedFieldsCompatibility(fDstDescriptor, *fSrcDescriptor, *dstF, *srcF, errors);
+      }
+      if (!errors.empty()) {
+         std::string errMsg = "Schemas of merged RNTuples is incompatible:";
+         for (const auto &err : errors) {
+            errMsg += std::string("\n  * ") + err;
+         }
+         return R__FAIL(errMsg);
+      }
+
+      return res;
    }
 
    [[nodiscard]] ROOT::RResult<void> ExtendDestinationModel(RDescriptorsComparison &descCmp) final
@@ -1676,13 +1700,16 @@ ROOT::RResult<void> RNTupleMergeStrategySlow::MergeSource(RPageSource &source, R
    // Create and connect fields to source and sink and bind them together.
    // This causes a read on the src entry to populate the same memory used by the dst entry to write.
    for (const auto &[srcFieldDesc, _dstFieldDesc] : descCmp.fCommonFields) {
-      srcEntry->BindValue(srcFieldDesc->GetFieldName(), fDstEntry->GetPtr<void>(srcFieldDesc->GetFieldName()));
+      if (!srcFieldDesc->IsProjectedField())
+         srcEntry->BindValue(srcFieldDesc->GetFieldName(), fDstEntry->GetPtr<void>(srcFieldDesc->GetFieldName()));
    }
    // reset the extraDstfields, to make sure any subfield that's missing from the current source
    // is default-initialized (rather than keeping its previous value).
    for (const auto *field : descCmp.fExtraDstFields) {
-      srcEntry->EmplaceNewValue(field->GetFieldName());
-      fDstEntry->EmplaceNewValue(field->GetFieldName());
+      if (!field->IsProjectedField()) {
+         srcEntry->EmplaceNewValue(field->GetFieldName());
+         fDstEntry->EmplaceNewValue(field->GetFieldName());
+      }
    }
 
    // Do the actual data reading/writing
