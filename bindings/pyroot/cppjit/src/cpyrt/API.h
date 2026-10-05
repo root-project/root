@@ -2,7 +2,7 @@
 #define CPYRT_API_H
 
 //
-// Access to the python interpreter and API onto cpyrt.
+// API onto cpyrt: access to cppjit proxies from Cling and C++.
 //
 
 // Python
@@ -52,7 +52,6 @@ typedef void* TCppFuncAddr_t;
 
 // Standard
 #include <string>
-#include <vector>
 
 namespace cppjit::cpyrt {
 
@@ -232,20 +231,9 @@ CPYRT_EXTERN bool Overload_CheckExact(PyObject* pyobject);
 // support IO of arbitrary C++ objects, like ROOT.
 CPYRT_EXTERN void Instance_SetReduceMethod(PyCFunction reduceMethod);
 
-//- access to the python interpreter ----------------------------------------
-
-// import a python module, making its classes available to Cling
-CPYRT_EXTERN bool Import(const std::string& name);
-
-// execute a python statement (e.g. "import sys")
-CPYRT_EXTERN bool Exec(const std::string& cmd);
-
-// execute a python stand-alone script, with argv CLI arguments
-CPYRT_EXTERN void ExecScript(const std::string& name,
-                             const std::vector<std::string>& args);
-
-// enter an interactive python session (exit with ^D)
-CPYRT_EXTERN void Prompt();
+// the cppjit extension module itself, as a borrowed reference; frameworks
+// embedding Python (e.g. TPython) can attach imported python modules to it
+CPYRT_EXTERN PyObject* GetThisModule();
 
 } // namespace cppjit::cpyrt
 

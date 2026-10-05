@@ -11,12 +11,9 @@ using namespace cppjit;
 #include "CPPOverload.h"
 #include "CPPScope.h"
 #include "ProxyWrappers.h"
-#include "PyStrings.h"
 #include "cpyrt/DispatchPtr.h"
 
 // Standard
-#include <iostream>
-#include <stdio.h>
 #include <string>
 
 //______________________________________________________________________________
@@ -25,11 +22,6 @@ using namespace cppjit;
 //
 // Access to cppjit Python objects from Cling and C++: allows conversion for
 // instances and type checking for scopes, instances, etc.
-// Adds a few convenience functions to call Python from Cling and expose Python
-// classes to Cling for use in inheritance etc.
-
-//- data ---------------------------------------------------------------------
-static PyObject* gMainDict = nullptr;
 
 namespace cppjit::cpyrt {
 extern PyObject* gThisModule;
@@ -39,27 +31,17 @@ extern PyObject* gThisModule;
 namespace {
 
 static bool Initialize() {
-  // Private initialization method: setup the python interpreter and load the
-  // cppjit module.
+  // Private initialization method: load the cppjit module. Expects the Python
+  // interpreter to be already initialized.
   static bool isInitialized = false;
   if (isInitialized)
     return true;
 
-  if (!Py_IsInitialized()) {
-    // this happens if Cling comes in first
-    PyConfig config;
-    PyConfig_InitPythonConfig(&config);
-    PyConfig_SetString(&config, &config.program_name, L"cppjit");
-    Py_InitializeFromConfig(&config);
-
-    // try again to see if the interpreter is initialized
-    if (!Py_IsInitialized()) {
-      // give up ...
-      std::cerr << "Error: python has not been initialized; returning."
-                << std::endl;
-      return false;
-    }
-  }
+  // cppjit is a Python extension library, not an embedding library: the
+  // Python interpreter must be initialized by the embedding application
+  // (e.g. TPython) before any cpyrt API function is called.
+  if (!Py_IsInitialized())
+    return false;
 
   // Importing the extension module is what runs the cpyrt initialization
   // that sets gThisModule.
@@ -68,17 +50,6 @@ static bool Initialize() {
     if (!cppjitmod)
       return false;
     Py_DECREF(cppjitmod);
-  }
-
-  if (!gMainDict) {
-    cpyrt::PythonGILRAII python_gil_raii;
-    // retrieve the main dictionary
-    gMainDict =
-        PyModule_GetDict(PyImport_AddModule(const_cast<char*>("__main__")));
-    // The gMainDict is borrowed, i.e. we are not calling Py_INCREF(gMainDict).
-    // Like this, we avoid unexpectedly affecting how long __main__ is kept
-    // alive. The gMainDict is only used in Exec(), ExecScript(), and Eval(),
-    // which should not be called after __main__ is garbage collected anyway.
   }
 
   // declare success ...
@@ -306,172 +277,12 @@ void cpyrt::Instance_SetReduceMethod(PyCFunction reduceMethod) {
   CPPInstance::ReduceMethod() = reduceMethod;
 }
 
-//- access to the python interpreter ----------------------------------------
-bool cpyrt::Import(const std::string& mod_name) {
-  // Import the named python module and create Cling equivalents for its
-  // classes.
-  if (!Initialize())
-    return false;
-
-  PythonGILRAII python_gil_raii;
-
-  PyObject* mod = PyImport_ImportModule(mod_name.c_str());
-  if (!mod) {
-    PyErr_Print();
-    return false;
-  }
-
-  // allow finding to prevent creation of a python proxy for the C++ proxy
-  Py_INCREF(mod);
-  PyModule_AddObject(gThisModule, mod_name.c_str(), mod);
-
-  // force creation of the module as a namespace
-  // TODO: the following is broken (and should live in cppjit_interop.cxx)
-  //   TClass::GetClass(mod_name, true);
-
-  PyObject* dct = PyModule_GetDict(mod);
-
-  // create Cling classes for all new python classes
-  PyObject* values = PyDict_Values(dct);
-  for (int i = 0; i < PyList_GET_SIZE(values); ++i) {
-    PyObject* value = PyList_GET_ITEM(values, i);
-    Py_INCREF(value);
-
-    // collect classes
-    if (PyClass_Check(value) || PyObject_HasAttr(value, PyStrings::gBases)) {
-      // get full class name (including module)
-      PyObject* pyClName = PyObject_GetAttr(value, PyStrings::gName);
-      if (PyErr_Occurred())
-        PyErr_Clear();
-
-      // build full, qualified name
-      std::string fullname = mod_name;
-      fullname += ".";
-      fullname += cpyrt_PyText_AsString(pyClName);
-
-      Py_XDECREF(pyClName);
-    }
-
-    Py_DECREF(value);
-  }
-
-  Py_DECREF(values);
-
-  // TODO: mod "leaks" here
-  if (PyErr_Occurred())
-    return false;
-  return true;
-}
-
 //-----------------------------------------------------------------------------
-void cpyrt::ExecScript(const std::string& name,
-                       const std::vector<std::string>& args) {
-  // Execute a python stand-alone script, with argv CLI arguments.
-  //
-  // example of use:
-  //    cpyrt::ExecScript("test.py", {"1", "2", "3"});
-
+PyObject* cpyrt::GetThisModule() {
+  // Return the cppjit extension module as a borrowed reference. Frameworks
+  // embedding Python (e.g. TPython) can use it to attach imported python
+  // modules, so that no python proxy is created for the C++ proxy.
   if (!Initialize())
-    return;
-
-  PythonGILRAII python_gil_raii;
-
-  // verify arguments
-  if (name.empty()) {
-    std::cerr << "Error: no file name specified." << std::endl;
-    return;
-  }
-
-  FILE* fp = fopen(name.c_str(), "r");
-  if (!fp) {
-    std::cerr << "Error: could not open file \"" << name << "\"." << std::endl;
-    return;
-  }
-
-  // store a copy of the old cli for restoration
-  PyObject* oldargv = PySys_GetObject("argv"); // borrowed
-  if (oldargv) {
-    PyObject* copy = PyList_GetSlice(oldargv, 0, PyList_Size(oldargv));
-    oldargv = copy; // now owned
-  } else {
-    PyErr_Clear();
-  }
-
-  // build new argv
-  const int argc = (int)args.size() + 1;
-  std::vector<wchar_t*> wargv(argc);
-  wargv[0] = Py_DecodeLocale(name.c_str(), nullptr);
-
-  for (int i = 1; i < argc; ++i) {
-    wargv[i] = Py_DecodeLocale(args[i - 1].c_str(), nullptr);
-  }
-
-  // set sys.argv
-  PyObject* sysmod = PyImport_ImportModule("sys"); // new reference
-  if (sysmod) {
-    PyObject* argv_obj = PyList_New(argc);
-    for (int i = 0; i < argc; ++i) {
-      PyList_SET_ITEM(argv_obj, i, PyUnicode_FromWideChar(wargv[i], -1));
-    }
-    PyObject_SetAttrString(sysmod, "argv", argv_obj);
-    Py_DECREF(argv_obj);
-    Py_DECREF(sysmod);
-  } else {
-    PyErr_Print();
-  }
-
-  // actual script execution
-  PyObject* gbl = PyDict_Copy(gMainDict);
-  PyObject* result = // PyRun_FileEx closes fp (b/c of last argument "1")
-      PyRun_FileEx(fp, const_cast<char*>(name.c_str()), Py_file_input, gbl, gbl,
-                   1);
-
-  if (!result)
-    PyErr_Print();
-
-  Py_XDECREF(result);
-  Py_DECREF(gbl);
-
-  // restore original command line
-  if (oldargv) {
-    PySys_SetObject("argv", oldargv);
-    Py_DECREF(oldargv);
-  }
-
-  // free memory from Py_DecodeLocale
-  for (auto ptr : wargv)
-    PyMem_RawFree(ptr);
-}
-
-//-----------------------------------------------------------------------------
-bool cpyrt::Exec(const std::string& cmd) {
-  // Execute a python statement (e.g. "import noddy").
-  if (!Initialize())
-    return false;
-
-  PythonGILRAII python_gil_raii;
-  // execute the command
-  PyObject* result = PyRun_String(const_cast<char*>(cmd.c_str()), Py_file_input,
-                                  gMainDict, gMainDict);
-
-  // test for error
-  if (result) {
-    Py_DECREF(result);
-    return true;
-  }
-
-  PyErr_Print();
-  return false;
-}
-
-//-----------------------------------------------------------------------------
-void cpyrt::Prompt() {
-  // Enter an interactive python session (exit with ^D). State is preserved
-  // between successive calls.
-  if (!Initialize())
-    return;
-
-  PythonGILRAII python_gil_raii;
-  // enter i/o interactive mode
-  PyRun_InteractiveLoop(stdin, const_cast<char*>("\0"));
+    return nullptr;
+  return gThisModule;
 }

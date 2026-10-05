@@ -29,6 +29,7 @@
 #include <cstdio>
 #include <iostream>
 #include <string>
+#include <vector>
 
 /// \class TPython
 /// Accessing the Python interpreter from C++.
@@ -135,8 +136,18 @@ Bool_t TPython::Initialize()
       return true;
 
    if (!Py_IsInitialized()) {
-      // Trigger the Python initialization indirectly via cpyrt
-      cppjit::cpyrt::Scope_Check(nullptr);
+      // This happens if Cling comes in first: embed the Python interpreter
+      PyConfig config;
+      PyConfig_InitPythonConfig(&config);
+      PyConfig_SetString(&config, &config.program_name, L"TPython");
+      Py_InitializeFromConfig(&config);
+      PyConfig_Clear(&config);
+
+      if (!Py_IsInitialized()) {
+         // give up ...
+         std::cerr << "Error: python has not been initialized; returning." << std::endl;
+         return false;
+      }
 
       mainThreadState = PyEval_SaveThread();
    }
@@ -202,15 +213,22 @@ Bool_t TPython::Import(const char *mod_name)
 
    PyGILRAII gilRaii;
 
-   if (!cppjit::cpyrt::Import(mod_name)) {
+   PyObjectRef mod{PyImport_ImportModule(mod_name)};
+   if (!mod) {
+      PyErr_Print();
       return false;
+   }
+
+   // attach to the cppjit module to prevent the creation of a python proxy
+   // for the C++ proxy
+   if (PyObject *thisModule = cppjit::cpyrt::GetThisModule()) {
+      Py_IncRef(mod.get()); // PyModule_AddObject steals a reference
+      PyModule_AddObject(thisModule, mod_name, mod.get());
    }
 
    // force creation of the module as a namespace
    TClass::GetClass(mod_name, true);
 
-   PyObjectRef modNameObj{PyUnicode_FromString(mod_name)};
-   PyObjectRef mod{PyImport_GetModule(modNameObj.get())};
    PyObject *dct = PyModule_GetDict(mod.get());
 
    PyObjectRef basesStr{PyUnicode_FromString("__bases__")};
@@ -347,11 +365,62 @@ void TPython::ExecScript(const char *name, int argc, const char **argv)
       return;
    }
 
-   std::vector<std::string> args(argc);
-   for (int i = 0; i < argc; ++i) {
-      args[i] = argv[i];
+   FILE *fp = fopen(name, "r");
+   if (!fp) {
+      std::cerr << "Error: could not open file \"" << name << "\"." << std::endl;
+      return;
    }
-   cppjit::cpyrt::ExecScript(name, args);
+
+   // store a copy of the old cli for restoration
+   PyObject *oldargv = PySys_GetObject("argv"); // borrowed
+   if (oldargv) {
+      oldargv = PyList_GetSlice(oldargv, 0, PyList_Size(oldargv)); // now owned
+   } else {
+      PyErr_Clear();
+   }
+
+   // build new argv
+   const int wargc = argc + 1;
+   std::vector<wchar_t *> wargv(wargc);
+   wargv[0] = Py_DecodeLocale(name, nullptr);
+   for (int i = 1; i < wargc; ++i) {
+      wargv[i] = Py_DecodeLocale(argv[i - 1], nullptr);
+   }
+
+   // set sys.argv
+   PyObject *sysmod = PyImport_ImportModule("sys"); // new reference
+   if (sysmod) {
+      PyObject *argvObj = PyList_New(wargc);
+      for (int i = 0; i < wargc; ++i) {
+         PyList_SET_ITEM(argvObj, i, PyUnicode_FromWideChar(wargv[i], -1));
+      }
+      PyObject_SetAttrString(sysmod, "argv", argvObj);
+      Py_DecRef(argvObj);
+      Py_DecRef(sysmod);
+   } else {
+      PyErr_Print();
+   }
+
+   // actual script execution
+   PyObject *gbl = PyDict_Copy(gMainDict);
+   PyObject *pyresult = // PyRun_FileEx closes fp (b/c of last argument "1")
+      PyRun_FileEx(fp, const_cast<char *>(name), Py_file_input, gbl, gbl, 1);
+
+   if (!pyresult)
+      PyErr_Print();
+   else
+      Py_DecRef(pyresult);
+   Py_DecRef(gbl);
+
+   // restore original command line
+   if (oldargv) {
+      PySys_SetObject("argv", oldargv);
+      Py_DecRef(oldargv);
+   }
+
+   // free memory from Py_DecodeLocale
+   for (auto ptr : wargv)
+      PyMem_RawFree(ptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -394,7 +463,14 @@ Bool_t TPython::Exec(const char *cmd, std::any *result, std::string const &resul
    }
 
    // execute the command
-   return cppjit::cpyrt::Exec(command.str());
+   PyObject *pyresult = PyRun_String(command.str().c_str(), Py_file_input, gMainDict, gMainDict);
+   if (pyresult) {
+      Py_DecRef(pyresult);
+      return true;
+   }
+
+   PyErr_Print();
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -437,7 +513,7 @@ void TPython::Prompt()
    PyGILRAII gilRaii;
 
    // enter i/o interactive mode
-   cppjit::cpyrt::Prompt();
+   PyRun_InteractiveLoop(stdin, const_cast<char *>("\0"));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
