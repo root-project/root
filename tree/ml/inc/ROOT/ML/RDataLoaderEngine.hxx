@@ -57,10 +57,8 @@ private:
    std::size_t fSetSeed;
 
    // buffer quantities
-   std::size_t fBatchesInMemory;
    std::size_t fBufferCapacity;
    std::size_t fLowWatermark;
-   std::size_t fHighWatermark;
 
    std::size_t fTrainingClusterIdx{0};
    std::size_t fValidationClusterIdx{0};
@@ -91,7 +89,6 @@ private:
 
    bool fIsActive{false}; // Whether the loading thread is active
 
-   bool fEpochActive{false};
    bool fTrainingEpochActive{false};
    bool fValidationEpochActive{false};
 
@@ -170,7 +167,6 @@ public:
         fCols(cols),
         fVecSizes(vecSizes),
         fBatchSize(batchSize),
-        fBatchesInMemory(batchesInMemory),
         fTestSize(testSize),
         fDropRemainder(dropRemainder),
         fSetSeed(setSeed),
@@ -221,10 +217,9 @@ public:
                                                                     fShuffle, fSetSeed);
 
          // derive buffer quantities
-         fBufferCapacity = fBatchSize * fBatchesInMemory;
+         fBufferCapacity = fBatchSize * batchesInMemory;
          // at least one batch, otherwise the refill threshold rounds down to 0 and nothing is ever loaded
          fLowWatermark = std::max(fBufferCapacity / 2, fBatchSize);
-         fHighWatermark = fBufferCapacity;
 
          // split cluster list into training and validation
          fClusterLoader->SplitDataset();
