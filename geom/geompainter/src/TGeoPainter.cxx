@@ -1866,7 +1866,9 @@ void TGeoPainter::Raytrace(Option_t *)
 
    img->EndPaint();
 
-   parent.Add(img);
+   img->SetBit(kCanDelete);
+
+   parent.Add(img, "x");
    parent.Modified();
 }
 
