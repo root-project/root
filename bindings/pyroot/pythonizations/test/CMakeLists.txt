@@ -85,7 +85,8 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_decorator pythonization_decorator.py)
 
 # Miscellaneous small pythonizations grouped in a single file to avoid paying the
 # Python-startup + import-ROOT overhead once per tiny test: TClass::DynamicCast,
-# TContext context manager, TComplex operators, TIter iteration and TGraph getters.
+# TContext context manager, TComplex operators, TIter iteration, TGraph getters
+# and TParameter arithmetic instantiations.
 ROOT_ADD_PYUNITTEST(pyroot_pyz_misc misc_pyz.py)
 
 # RVec and subclasses pythonizations

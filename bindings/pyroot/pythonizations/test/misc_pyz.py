@@ -372,5 +372,62 @@ class TGraphGetters(unittest.TestCase):
         self.assertEqual(list(eyhigh), list(aeyh))
 
 
+class TParameterTemplateInstantiations(unittest.TestCase):
+    """
+    Instantiating TParameter<T> for a type without a dictionary (e.g. char)
+    from the interpreter used to fail with unresolved
+    TParameter<T>::Class() and TParameter<T>::Streamer(TBuffer&) symbols,
+    see https://github.com/root-project/root/issues/10724. Check that all
+    standard arithmetic types can be constructed, printed and serialized
+    from the interpreter.
+    """
+
+    # (type name, value passed to the constructor, value expected from GetVal())
+    # cppyy maps the character types to Python str, so 42 comes back as "*"
+    instantiations = [
+        ("bool", True, True),
+        ("char", 42, "*"),
+        ("signed char", 42, "*"),
+        ("unsigned char", 42, "*"),
+        ("short", 42, 42),
+        ("unsigned short", 42, 42),
+        ("int", 42, 42),
+        ("unsigned int", 42, 42),
+        ("long", 42, 42),
+        ("unsigned long", 42, 42),
+        ("long long", 42, 42),
+        ("unsigned long long", 42, 42),
+        ("float", 0.5, 0.5),
+        ("double", 0.5, 0.5),
+    ]
+
+    def test_construct_and_print(self):
+        for typename, val, expected in self.instantiations:
+            with self.subTest(typename=typename):
+                param = ROOT.TParameter[typename]("p", val)
+                self.assertEqual(param.GetVal(), expected)
+                # Print and ls write to std::cout; exercise the code path
+                # (they used to be uncallable without arguments)
+                param.Print()
+                param.ls()
+
+    def test_has_dictionary(self):
+        for typename, _, _ in self.instantiations:
+            with self.subTest(typename=typename):
+                tclass = ROOT.TClass.GetClass(f"TParameter<{typename}>")
+                self.assertIsNotNone(tclass)
+                self.assertTrue(tclass.HasDictionary())
+
+    def test_io_roundtrip(self):
+        for typename, val, expected in self.instantiations:
+            with self.subTest(typename=typename):
+                param = ROOT.TParameter[typename]("p", val)
+                memfile = ROOT.TMemFile("TParameterTemplateInstantiations.root", "recreate")
+                memfile.WriteObject(param, "p")
+                param_read = memfile.Get("p")
+                self.assertEqual(param_read.GetVal(), expected)
+                memfile.Close()
+
+
 if __name__ == '__main__':
     unittest.main()
