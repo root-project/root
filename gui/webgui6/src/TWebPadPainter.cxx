@@ -315,12 +315,13 @@ void TWebPadPainter::DrawTextNDC(Double_t  u , Double_t v, const wchar_t * /*tex
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Produce image from WebPadPainter
 
-void TWebPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t /* gtype */) const
+Int_t TWebPadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t gtype) const
 {
-   TWebCanvas::ProduceImage(dynamic_cast<TPad *>(pad), fileName);
+   if ((gtype == TImage::kSvg) || (gtype == TImage::kHtml) || (gtype == TImage::kPdf) || (gtype == TImage::kJpeg) ||
+       (gtype == TImage::kPng))
+      return TWebCanvas::ProduceImage(dynamic_cast<TPad *>(pad), fileName);
+   return -1;
 }
-
