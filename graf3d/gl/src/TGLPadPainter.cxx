@@ -882,22 +882,34 @@ Int_t TGLPadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t t
    if (!canvas)
       return 0;
 
-   // GL canvas requires extra update to correctly flush image, fix #22157
-   canvas->UpdateAsync();
+   // special mode to request window attributes, implemented only in TRootCanvas
+   Int_t update_arg = 101;
+   // on Mac redo update again - no other way found to get GL image updated
+   if (IsCocoa()) {
+      canvas->Update();
+      update_arg = 1;
+   }
 
-   const_cast<TGLPadPainter *>(this)->SelectDrawable(pad->GetCanvasID());
+   canvas->GetCanvasImp()->UpdateDisplay(update_arg, kFALSE);
 
-   canvas->GetCanvasImp()->UpdateDisplay(1, kTRUE);
+   const Int_t width  = canvas->GetWw();
+   const Int_t height = canvas->GetWh();
 
-   // is it really necessary here???
-   canvas->Flush();
+   std::vector<unsigned> buff(width * height);
 
-   std::vector<unsigned> buff(canvas->GetWw() * canvas->GetWh());
+#ifndef WIN32
+   // crash on Windows
+   glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+#endif
+
    glPixelStorei(GL_PACK_ALIGNMENT, 1);
    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+   glReadBuffer(GL_BACK);
+
    //In case GL_BGRA is not in gl.h (old windows' gl) - comment/uncomment lines.
    //glReadPixels(0, 0, canvas->GetWw(), canvas->GetWh(), GL_BGRA, GL_UNSIGNED_BYTE, (char *)&buff[0]);
-   glReadPixels(0, 0, canvas->GetWw(), canvas->GetWh(), GL_RGBA, GL_UNSIGNED_BYTE, (char *)&buff[0]);
+
+   glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (char *) buff.data());
 
    std::unique_ptr<TImage> image(TImage::Create());
    if (!image.get()) {
@@ -913,24 +925,22 @@ Int_t TGLPadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t t
       return 0;
    }
 
-   const Int_t nLines  = canvas->GetWh();
-   const Int_t nPixels = canvas->GetWw();
-
-   for (Int_t i = 0; i < nLines; ++i) {
-     Int_t base = (nLines - 1 - i) * nPixels;
-     for (Int_t j = 0; j < nPixels; ++j, ++base) {
+   for (Int_t i = 0; i < height; ++i) {
+     Int_t base = (height - 1 - i) * width;
+     for (Int_t j = 0; j < width; ++j, ++base) {
         //Uncomment/comment if you don't have GL_BGRA.
 
         const UInt_t pix  = buff[base];
         const UInt_t bgra = ((pix & 0xff) << 16) | (pix & 0xff00) |
                             ((pix & 0xff0000) >> 16) | (pix & 0xff000000);
 
-        //argb[i * nPixels + j] = buff[base];
-        argb[i * nPixels + j] = bgra;
+        //argb[i * width + j] = buff[base];
+        argb[i * width + j] = bgra;
      }
    }
 
    image->WriteImage(fileName, (TImage::EImageFileTypes)type);
+
    return 1;
 }
 
