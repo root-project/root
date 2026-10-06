@@ -263,8 +263,9 @@ auto processor = RNTupleProcessor::CreateChain(ntuples);
 
 auto pt = processor->RequestField<float>("pt");
 
-for (const auto idx : *processor) {
-   std::cout << "event = " << idx << ", pt = " << *pt << std::endl;
+for (const auto &idx : *processor) {
+   processor->LoadEntry(idx);
+   std::cout << "event = " << idx.GetEntryNumber() << ", pt = " << *pt << std::endl;
 }
 ~~~
 
