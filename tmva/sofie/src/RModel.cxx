@@ -1381,8 +1381,23 @@ void RModel::GenerateSessionCode()
    // forward declare inference implementation
    fGC += doInferSignature + ";\n";
 
-   // define the Session struct
-   fGC += "struct " + sessionName + " {\n";
+   // define the Session struct: copying is not allowed because some members
+   // are pointers to memory owned by the std::vector members of the session
+   // struct. Since the std::vector-owned memory is not relocated when moving,
+   // move contruction and assignment is allowed.
+   std::string sessionCode = R"(struct @SESSION@ {
+
+      ~@SESSION@() = default;
+
+      @SESSION@(@SESSION@ const&) = delete;
+      @SESSION@(@SESSION@ &&) = default;
+
+      @SESSION@& operator=(@SESSION@ const&) = delete;
+      @SESSION@& operator=(@SESSION@ &&) = default;
+
+   )";
+   ReplaceAll(sessionCode, "@SESSION@", sessionName);
+   fGC += sessionCode;
 
    // generate code for declaring the initialized tensors
    GenerateInitializedTensorInfo();
