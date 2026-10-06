@@ -119,7 +119,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::Initialize(
    std::shared_ptr<ROOT::Experimental::Internal::RNTupleProcessorEntry> entry)
 {
    // The processor has already been initialized.
-   if (IsInitialized())
+   if (IsInitialized() && fPageSource)
       return;
 
    if (!entry)
@@ -228,7 +228,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect(
    const std::unordered_set<ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
    const Internal::RNTupleProcessorProvenance & /* provenance */, bool updateFields)
 {
-   Initialize();
+   Initialize(fEntry);
 
    fFieldIdxs = fieldIdxs;
 
@@ -239,6 +239,14 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect(
 
          fEntry->UpdateField(fieldIdx, std::move(newField));
       }
+   }
+}
+
+void ROOT::Experimental::RNTupleSingleProcessor::Disconnect()
+{
+   if (fPageSource) {
+      fEntry->ResetFields(fFieldIdxs);
+      fPageSource.reset();
    }
 }
 
@@ -328,8 +336,20 @@ void ROOT::Experimental::RNTupleChainProcessor::Connect(
    ConnectInnerProcessor(fCurrentProcessorNumber);
 }
 
+void ROOT::Experimental::RNTupleChainProcessor::Disconnect()
+{
+   for (const auto &innerProc : fInnerProcessors) {
+      innerProc->Disconnect();
+   }
+}
+
 void ROOT::Experimental::RNTupleChainProcessor::ConnectInnerProcessor(std::size_t processorNumber)
 {
+   if (fCurrentProcessorNumber != processorNumber) {
+      fInnerProcessors[fCurrentProcessorNumber]->Disconnect();
+      fCurrentProcessorNumber = processorNumber;
+   }
+
    auto &innerProc = fInnerProcessors[processorNumber];
    innerProc->Initialize(fEntry);
    innerProc->Connect(fFieldIdxs, fProvenance, /*updateFields=*/true);
@@ -348,7 +368,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NT
    // If the requested entry number is lower than the current entry number, we have to again localise the correct local
    // entry number starting from the first processor in the chain. Otherwise, we can continue looking from the inner
    // processor that is currently connected, which is much faster when the chain consists of many inner processors.
-   if (entryNumber < fLastLoadedEntry) {
+   if (fLastLoadedEntry != ROOT::kInvalidNTupleIndex && entryNumber < fLastLoadedEntry) {
       fCurrentProcessorNumber = 0;
       ConnectInnerProcessor(fCurrentProcessorNumber);
    }
@@ -473,6 +493,12 @@ void ROOT::Experimental::RNTupleJoinProcessor::Connect(
 
    fPrimaryProcessor->Connect(fFieldIdxs, provenance, updateFields);
    fAuxiliaryProcessor->Connect(fAuxiliaryFieldIdxs, auxProvenance, updateFields);
+}
+
+void ROOT::Experimental::RNTupleJoinProcessor::Disconnect()
+{
+   fPrimaryProcessor->Disconnect();
+   fAuxiliaryProcessor->Disconnect();
 }
 
 ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
