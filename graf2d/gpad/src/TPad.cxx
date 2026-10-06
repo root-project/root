@@ -4968,7 +4968,8 @@ static Bool_t ContainsTImage(TList *li)
 
 void TPad::Print(const char *filename, Option_t *option)
 {
-   if (!GetCanvas())
+   auto canv = GetCanvas();
+   if (!canv)
       return;
 
    TString psname, fs1 = filename;
@@ -4992,9 +4993,7 @@ void TPad::Print(const char *filename, Option_t *option)
 
    TString opt = !option ? opt_default : option;
    Bool_t image = kFALSE;
-
-   Bool_t title = kFALSE;
-   if (strstr(opt,"Title:")) title = kTRUE;
+   Bool_t title = opt.Contains("Title:");
 
    if (!fs1.Length())  {
       psname = GetName();
@@ -5013,45 +5012,53 @@ void TPad::Print(const char *filename, Option_t *option)
 
    // Save pad/canvas in alternative formats
    TImage::EImageFileTypes gtype = TImage::kUnknown;
-   if (!title && strstr(opt, "gif+")) {
+   if (!title && opt.Contains("gif+")) {
       gtype = TImage::kAnimGif;
       image = kTRUE;
-   } else if (!title && strstr(opt, "gif")) {
+   } else if (!title && opt.Contains("gif")) {
       gtype = TImage::kGif;
       image = kTRUE;
-   } else if (!title && strstr(opt, "png")) {
+   } else if (!title && opt.Contains("png")) {
       gtype = TImage::kPng;
       image = kTRUE;
-   } else if (!title && strstr(opt, "jpg")) {
+   } else if (!title && opt.Contains("jpg")) {
       gtype = TImage::kJpeg;
       image = kTRUE;
-   } else if (!title && strstr(opt, "tiff")) {
+   } else if (!title && opt.Contains("tiff")) {
       gtype = TImage::kTiff;
       image = kTRUE;
-   } else if (!title && strstr(opt, "xpm")) {
+   } else if (!title && opt.Contains("xpm")) {
       gtype = TImage::kXpm;
       image = kTRUE;
-   } else if (!title && strstr(opt, "bmp")) {
+   } else if (!title && opt.Contains("bmp")) {
       gtype = TImage::kBmp;
       image = kTRUE;
+   } else if (!title && opt.Contains("svg")) {
+      gtype = TImage::kSvg;
+   } else if (!title && opt.Contains("pdf")) {
+      gtype = TImage::kPdf;
+   } else if (!title && opt.Contains("html")) {
+      gtype = TImage::kHtml;
    }
 
-   if (GetCanvas()->IsWeb() && GetPainter() &&
-       (strstr(opt,"svg") || strstr(opt,"html") || strstr(opt,"pdf") || (gtype == TImage::kJpeg) || (gtype == TImage::kPng))) {
-      GetPainter()->SaveImage(this, psname.Data(), gtype);
-      return;
-   }
+   auto pp = GetPainter();
+
+   // for a moment special handling of web canvas - check if can save directly
+   if (canv->IsWeb() && pp)
+      if (pp->SaveAsImage(this, psname.Data(), gtype) >= 0)
+         return;
 
    // to create HTML file web-based canvas functionality is invoked
-   if (strstr(opt, "html")) {
+   if (gtype == TImage::kHtml) {
       auto cmd = TString::Format("TWebCanvas::ProduceImage((TPad *) 0x%zx, \"%s\");", (size_t) this, psname.Data());
-      gROOT->ProcessLine(cmd);
+      Long_t res = gROOT->ProcessLine(cmd);
+      if (!res)
+         Error("Print", "Fail create HTML file %s", psname.Data());
       return;
    }
 
-   if (!GetCanvas()->IsBatch() && GetPainter())
-      GetPainter()->SelectDrawable(GetCanvasID());
-
+   if (!canv->IsBatch() && pp)
+      pp->SelectDrawable(GetCanvasID());
 
    if (!gROOT->IsBatch() && image) {
       if ((gtype == TImage::kGif) && !ContainsTImage(fPrimitives)) {
@@ -5059,7 +5066,7 @@ void TPad::Print(const char *filename, Option_t *option)
          Color_t hc = gPad->GetCanvas()->GetHighLightColor();
          gPad->GetCanvas()->SetHighLightColor(-1);
          gPad->ModifiedUpdate();
-         if (auto pp = GetPainter()) {
+         if (pp) {
             pp->SelectDrawable(wid);
             pp->SaveImage(this, psname.Data(), gtype);
          }
@@ -5077,7 +5084,7 @@ void TPad::Print(const char *filename, Option_t *option)
          if (gPad->GetCanvas()->UseGL())
             gPad->UpdateAsync();
          gPad->GetCanvasImp()->UpdateDisplay(1, kTRUE);
-         if (auto pp = GetPainter())
+         if (pp)
             pp->SaveImage(this, psname, gtype);
          if (!gSystem->AccessPathName(psname)) {
             Info("Print", "file %s has been created", psname.Data());
@@ -5090,32 +5097,32 @@ void TPad::Print(const char *filename, Option_t *option)
    }
 
    //==============Save pad/canvas as a C++ script==============================
-   if (!title && strstr(opt,"cxx")) {
+   if (!title && opt.Contains("cxx")) {
       GetCanvas()->SaveSource(psname, "");
       return;
    }
 
    //==============Save pad/canvas as a root file===============================
-   if (!title && strstr(opt,"root")) {
+   if (!title && opt.Contains("root")) {
       if (gDirectory) gDirectory->SaveObjectAs(this,psname.Data(),"");
       return;
    }
 
    //==============Save pad/canvas as a XML file================================
-   if (!title && strstr(opt,"xml")) {
+   if (!title && opt.Contains("xml")) {
       // Plugin XML driver
       if (gDirectory) gDirectory->SaveObjectAs(this,psname.Data(),"");
       return;
    }
 
    //==============Save pad/canvas as a JSON file================================
-   if (!title && strstr(opt,"json")) {
+   if (!title && opt.Contains("json")) {
       if (gDirectory) gDirectory->SaveObjectAs(this,psname.Data(),"");
       return;
    }
 
    //==============Save pad/canvas as a SVG file================================
-   if (!title && strstr(opt,"svg")) {
+   if (gtype == TImage::kSvg) {
       gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
 
       Bool_t noScreen = kFALSE, wasModified = IsModified();
@@ -5159,7 +5166,7 @@ void TPad::Print(const char *filename, Option_t *option)
    }
 
    //==============Save pad/canvas as a TeX file================================
-   if (!title && (strstr(opt,"tex") || strstr(opt,"Standalone"))) {
+   if (!title && (opt.Contains("tex") || opt.Contains("Standalone"))) {
       gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
 
       Bool_t noScreen = kFALSE, wasModified = IsModified();
@@ -5250,7 +5257,7 @@ void TPad::Print(const char *filename, Option_t *option)
    if (!gVirtualPS || mustOpen) {
 
       const char *pluginName = "ps"; // Plugin Postscript driver
-      if (strstr(opt,"pdf") || title || strstr(opt,"EmbedFonts"))
+      if (opt.Contains("pdf") || title || opt.Contains("EmbedFonts"))
          pluginName = "pdf";
       else if (image)
          pluginName = "image"; // Plugin TImageDump driver
@@ -5275,7 +5282,7 @@ void TPad::Print(const char *filename, Option_t *option)
       if (gVirtualPS)
          gVirtualPS->SetBit(kPrintingPS);
       if (!copenb) {
-         if (!strstr(opt,"pdf") || image) {
+         if (!opt.Contains("pdf") || image) {
             if (gVirtualPS) gVirtualPS->NewPage();
          }
          Paint();
@@ -5303,8 +5310,8 @@ void TPad::Print(const char *filename, Option_t *option)
       }
       const Ssiz_t titlePos = opt.Index("Title:");
       if (titlePos != kNPOS) {
-         gVirtualPS->SetTitle(opt.Data()+titlePos+6);
-         opt.Replace(titlePos,opt.Length(),"pdf");
+         gVirtualPS->SetTitle(opt.Data() + titlePos + 6);
+         opt.Replace(titlePos, opt.Length(), "pdf");
       } else if (!ccloseb) {
          gVirtualPS->SetTitle("PDF");
       }
@@ -5323,9 +5330,9 @@ void TPad::Print(const char *filename, Option_t *option)
    if (wasModified && !IsBatch())
       Modified(kTRUE);
 
-   if (strstr(opt,"Preview"))
+   if (opt.Contains("Preview"))
       gSystem->Exec(TString::Format("epstool --quiet -t6p %s %s", psname.Data(), psname.Data()).Data());
-   if (strstr(opt,"EmbedFonts")) {
+   if (opt.Contains("EmbedFonts")) {
       gSystem->Exec(TString::Format("gs -quiet -dSAFER -dNOPLATFONTS -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/printer -dCompatibilityLevel=1.4 -dMaxSubsetPct=100 -dSubsetFonts=true -dEmbedAllFonts=true -sOutputFile=pdf_temp.pdf -f %s",
                           psname.Data()).Data());
       gSystem->Rename("pdf_temp.pdf", psname.Data());
