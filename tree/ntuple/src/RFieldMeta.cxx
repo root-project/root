@@ -191,8 +191,9 @@ std::string BuildMapTypeName(ROOT::RMapField::EMapType mapType, const ROOT::RFie
 
 } // anonymous namespace
 
-ROOT::RRuleField::RRuleField(std::string_view fieldName, std::string_view typeName, ROOT::ENTupleStructure structure)
-   : RFieldBase(fieldName, typeName, structure, false /* isSimple */)
+ROOT::RRuleField::RRuleField(std::string_view fieldName, std::string_view typeName, TClass *classp,
+                             ROOT::ENTupleStructure structure)
+   : RFieldBase(fieldName, typeName, structure, false /* isSimple */), fClass(classp)
 {
 }
 
@@ -225,7 +226,7 @@ void ROOT::RRuleField::SetStagingClass(const std::string &className, unsigned in
          fStagingClass = TClass::GetClass(className.c_str());
       }
    } else {
-      fStagingClass = GetInMemoryClass();
+      fStagingClass = fClass;
    }
    R__ASSERT(fStagingClass);
    R__ASSERT(static_cast<unsigned int>(fStagingClass->GetClassVersion()) == classVersion);
@@ -284,16 +285,15 @@ void ROOT::RRuleField::PrepareStagingArea(const std::vector<const TSchemaRule *>
 std::vector<const ROOT::TSchemaRule *> ROOT::RRuleField::FindRules(const ROOT::RFieldDescriptor *fieldDesc) const
 {
    ROOT::Detail::TSchemaRuleSet::TMatches rules;
-   auto cl = GetInMemoryClass();
 
-   const auto ruleset = cl->GetSchemaRules();
+   const auto ruleset = fClass->GetSchemaRules();
    if (!ruleset)
       return rules;
 
    if (!fieldDesc) {
       // If we have no on-disk information for the field, we still process the rules on the current in-memory version
       // of the class
-      rules = ruleset->FindRules(cl->GetName(), cl->GetClassVersion(), cl->GetCheckSum());
+      rules = ruleset->FindRules(fClass->GetName(), fClass->GetClassVersion(), fClass->GetCheckSum());
    } else {
       // We need to change (back) the name normalization from RNTuple to ROOT Meta
       std::string normalizedName;
@@ -373,8 +373,7 @@ void ROOT::RRuleField::AddReadCallbacksFromIORule(const TSchemaRule *rule, std::
 //------------------------------------------------------------------------------
 
 ROOT::RClassField::RClassField(std::string_view fieldName, const RClassField &source)
-   : ROOT::RRuleField(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kRecord),
-     fClass(source.fClass),
+   : ROOT::RRuleField(fieldName, source.GetTypeName(), source.fClass, ROOT::ENTupleStructure::kRecord),
      fSubfieldsInfo(source.fSubfieldsInfo)
 {
    for (const auto &f : source.GetConstSubfields()) {
@@ -389,8 +388,7 @@ ROOT::RClassField::RClassField(std::string_view fieldName, std::string_view clas
 }
 
 ROOT::RClassField::RClassField(std::string_view fieldName, TClass *classp)
-   : ROOT::RRuleField(fieldName, GetRenormalizedTypeName(classp->GetName()), ROOT::ENTupleStructure::kRecord),
-     fClass(classp)
+   : ROOT::RRuleField(fieldName, GetRenormalizedTypeName(classp->GetName()), classp, ROOT::ENTupleStructure::kRecord)
 {
    EnsureValidUserClass(fClass, *this, "RClassField");
 
@@ -691,8 +689,7 @@ void ROOT::RClassField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) cons
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, const RSoAField &source)
-   : ROOT::RRuleField(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kCollection),
-     fSoAClass(source.fSoAClass),
+   : ROOT::RRuleField(fieldName, source.GetTypeName(), source.fClass, ROOT::ENTupleStructure::kCollection),
      fSoAMemberOffsets(source.fSoAMemberOffsets)
 {
    fTraits = source.GetTraits();
@@ -782,13 +779,13 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
    }
 
    // Base classes are treated as unrolled nested SoA classes
-   const auto *soaBases = fSoAClass->GetListOfBases();
+   const auto *soaBases = fClass->GetListOfBases();
    if (soaBases->GetSize() != static_cast<Int_t>(nDirectRecordBases)) {
       throw RException(R__FAIL(std::string("number of base classes don't match between SoA class ") + GetFieldName() +
                                " and its underlying record type"));
    }
    unsigned int baseIdx = 0;
-   for (auto base : ROOT::Detail::TRangeStaticCast<TBaseClass>(*fSoAClass->GetListOfBases())) {
+   for (auto base : ROOT::Detail::TRangeStaticCast<TBaseClass>(*fClass->GetListOfBases())) {
       if (base->GetDelta() < 0) {
          throw RException(R__FAIL(std::string("virtual inheritance is not supported: ") + GetTypeName() +
                                   " virtually inherits from " + base->GetName()));
@@ -827,7 +824,7 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
    }
 
    unsigned int nMembers = 0;
-   for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*fSoAClass->GetListOfDataMembers())) {
+   for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*fClass->GetListOfDataMembers())) {
       // NOTE: ReconstructSplitFields() will also traverse the data members and need to apply the same rules for
       // skipping members
 
@@ -849,7 +846,7 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
       assert(dmField->GetFieldName() == underlyingField->GetFieldName());
 
       if (auto soaField = dynamic_cast<RSoAField *>(dmField.get())) {
-         if (ROOT::Internal::GetRNTupleSoARecord(soaField->fSoAClass) != underlyingField->GetTypeName()) {
+         if (ROOT::Internal::GetRNTupleSoARecord(soaField->fClass) != underlyingField->GetTypeName()) {
             throw RException(R__FAIL(std::string("nested SoA field ") + soaField->GetQualifiedFieldName() + " [" +
                                      soaField->GetTypeName() + "] does not match underlying type " +
                                      underlyingField->GetTypeName()));
@@ -895,16 +892,15 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
 }
 
 ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clSoA)
-   : ROOT::RRuleField(fieldName, GetRenormalizedTypeName(clSoA->GetName()), ROOT::ENTupleStructure::kCollection),
-     fSoAClass(clSoA)
+   : ROOT::RRuleField(fieldName, GetRenormalizedTypeName(clSoA->GetName()), clSoA, ROOT::ENTupleStructure::kCollection)
 {
    static std::once_flag once;
    std::call_once(once, []() {
       R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "The SoA field is experimental and still under development.";
    });
 
-   EnsureValidUserClass(fSoAClass, *this, "RSoAField");
-   const auto recordTypeName = ROOT::Internal::GetRNTupleSoARecord(fSoAClass);
+   EnsureValidUserClass(fClass, *this, "RSoAField");
+   const auto recordTypeName = ROOT::Internal::GetRNTupleSoARecord(fClass);
    if (recordTypeName.empty()) {
       throw ROOT::RException(R__FAIL(std::string("class ") + GetTypeName() +
                                      " is not marked with the rntupleSoARecord "
@@ -915,17 +911,17 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clS
    } catch (ROOT::RException &e) {
       throw RException(R__FAIL("invalid record type of SoA field " + GetTypeName() + " [" + e.what() + "]"));
    }
-   R__ASSERT(fSoAClass->GetClassVersion() >= 0);
-   if (static_cast<std::uint32_t>(fSoAClass->GetClassVersion()) != fSubfields[0]->GetTypeVersion()) {
+   R__ASSERT(fClass->GetClassVersion() >= 0);
+   if (static_cast<std::uint32_t>(fClass->GetClassVersion()) != fSubfields[0]->GetTypeVersion()) {
       throw RException(R__FAIL(std::string("version mismatch between SoA type and underlying record type: ") +
-                               std::to_string(fSoAClass->GetClassVersion()) + " vs. " +
+                               std::to_string(fClass->GetClassVersion()) + " vs. " +
                                std::to_string(fSubfields[0]->GetTypeVersion())));
    }
 
    CollectRecordMemberFields();
 
    std::string renormalizedAlias;
-   if (ROOT::Internal::NeedsMetaNameAsAlias(fSoAClass->GetName(), renormalizedAlias))
+   if (ROOT::Internal::NeedsMetaNameAsAlias(fClass->GetName(), renormalizedAlias))
       fTypeAlias = renormalizedAlias;
 
    fTraits |= kTraitSoACollection | kTraitTypeChecksum;
@@ -1077,7 +1073,7 @@ void ROOT::Experimental::RSoAField::ReconcileOnDiskField(const RNTupleDescriptor
 
 void ROOT::Experimental::RSoAField::ConstructValue(void *where) const
 {
-   fSoAClass->New(where);
+   fClass->New(where);
 }
 
 ROOT::Experimental::RSoAField::RSoADeleter::RSoADeleter(TClass *cl) : RDeleter(cl->GetClassAlignment()), fSoAClass(cl)
@@ -1100,7 +1096,7 @@ void ROOT::Experimental::RSoAField::ReconstructSplitFields() const
    fSplitOffsets = std::make_unique<std::vector<std::size_t>>();
 
    unsigned int baseIdx = 0;
-   for (auto base : ROOT::Detail::TRangeStaticCast<TBaseClass>(*fSoAClass->GetListOfBases())) {
+   for (auto base : ROOT::Detail::TRangeStaticCast<TBaseClass>(*fClass->GetListOfBases())) {
       TClass *cl = base->GetClassPointer();
       auto baseField = RFieldBase::Create(std::string(":_" + std::to_string(baseIdx)), cl->GetName()).Unwrap();
       fSplitFields->emplace_back(std::move(baseField));
@@ -1108,7 +1104,7 @@ void ROOT::Experimental::RSoAField::ReconstructSplitFields() const
       baseIdx++;
    }
 
-   for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*fSoAClass->GetListOfDataMembers())) {
+   for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*fClass->GetListOfDataMembers())) {
       if ((dataMember->Property() & kIsStatic) || !dataMember->IsPersistent())
          continue;
 
@@ -1136,22 +1132,22 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::Experimental::RSoAField::SplitValue(
 
 std::size_t ROOT::Experimental::RSoAField::GetValueSize() const
 {
-   return fSoAClass->GetClassSize();
+   return fClass->GetClassSize();
 }
 
 std::uint32_t ROOT::Experimental::RSoAField::GetTypeVersion() const
 {
-   return fSoAClass->GetClassVersion();
+   return fClass->GetClassVersion();
 }
 
 std::uint32_t ROOT::Experimental::RSoAField::GetTypeChecksum() const
 {
-   return fSoAClass->GetCheckSum();
+   return fClass->GetCheckSum();
 }
 
 std::size_t ROOT::Experimental::RSoAField::GetAlignment() const
 {
-   const auto align = fSoAClass->GetClassAlignment();
+   const auto align = fClass->GetClassAlignment();
    EnsureValidAlignment(align);
    return align;
 }
@@ -1159,11 +1155,11 @@ std::size_t ROOT::Experimental::RSoAField::GetAlignment() const
 const std::type_info *ROOT::Experimental::RSoAField::GetPolymorphicTypeInfo() const
 {
    // TODO(jblomer): factor out
-   bool polymorphic = fSoAClass->ClassProperty() & kClassHasVirtual;
+   bool polymorphic = fClass->ClassProperty() & kClassHasVirtual;
    if (!polymorphic) {
       return nullptr;
    }
-   return fSoAClass->GetTypeInfo();
+   return fClass->GetTypeInfo();
 }
 
 void ROOT::Experimental::RSoAField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
