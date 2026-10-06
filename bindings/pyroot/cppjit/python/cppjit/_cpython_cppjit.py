@@ -41,7 +41,10 @@ def _preload_backend_library():
         libdir = os.path.dirname(os.path.dirname(spec.origin))
         lib = ctypes.CDLL(os.path.join(libdir, "libcpyrt.dll"))
     if not lib.LoadCppInterOp():
-        raise RuntimeError("failed to load CppInterOp (LoadCppInterOp returned 0)")
+        raise RuntimeError(
+            "cppjit could not initialize its C++ interpreter, see the diagnostic "
+            "above (LoadCppInterOp failed)"
+        )
     return lib
 
 

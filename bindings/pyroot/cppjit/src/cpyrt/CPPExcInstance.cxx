@@ -36,7 +36,7 @@ static PyObject* ep_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds) {
       PyErr_Clear();
       if (PyTuple_GET_SIZE(args) == 1) {
         PyObject* msg = PyTuple_GET_ITEM(args, 0);
-        if (cpyrt_PyText_Check(msg)) {
+        if (PyUnicode_Check(msg)) {
           Py_INCREF(msg);
           excobj->fTopMessage = msg;
         }
@@ -72,7 +72,7 @@ static PyObject* ep_str(CPPExcInstance* self) {
       if (self->fTopMessage) {
         Py_INCREF(self->fTopMessage);
         PyObject* top = self->fTopMessage;
-        cpyrt_PyText_Append(&top, what);
+        PyUnicode_Append(&top, what);
         Py_DECREF(what);
         what = top;
       }
@@ -218,7 +218,7 @@ PyTypeObject CPPExcInstance_Type = {
     (setattrofunc)ep_setattro, // tp_setattro
     0,                         // tp_as_buffer
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_BASE_EXC_SUBCLASS |
-        Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_CHECKTYPES,    // tp_flags
+        Py_TPFLAGS_HAVE_GC,                            // tp_flags
     (char*)"cppjit exception object proxy (internal)", // tp_doc
     (traverseproc)ep_traverse,                         // tp_traverse
     (inquiry)ep_clear,                                 // tp_clear

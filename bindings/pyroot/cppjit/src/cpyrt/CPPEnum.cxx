@@ -11,12 +11,12 @@ using namespace cppjit;
 //- private helpers ----------------------------------------------------------
 static PyObject* pytype_from_enum_type(const std::string& enum_type) {
   if (enum_type == "char")
-    return (PyObject*)&cpyrt_PyText_Type;
+    return (PyObject*)&PyUnicode_Type;
   else if (enum_type == "bool")
-    return (PyObject*)&PyInt_Type; // can't use PyBool_Type as base
+    return (PyObject*)&PyLong_Type; // can't use PyBool_Type as base
   else if (strstr("long", enum_type.c_str()))
     return (PyObject*)&PyLong_Type;
-  return (PyObject*)&PyInt_Type; // covers most cases
+  return (PyObject*)&PyLong_Type; // covers most cases
 }
 
 //----------------------------------------------------------------------------
@@ -37,7 +37,7 @@ PyObject* cpyrt::pyval_from_enum(const std::string& enum_type, PyObject* pytype,
     char val = (char)llval;
     bval = PyUnicode_FromOrdinal((int)val);
   } else if (enum_type == "int" || enum_type == "unsigned int")
-    bval = PyInt_FromLong((long)llval);
+    bval = PyLong_FromLong((long)llval);
   else
     bval = PyLong_FromLongLong(llval);
 
@@ -82,10 +82,10 @@ static PyObject* enum_repr(PyObject* self) {
   if (kls_cppname && obj_cppname && obj_str) {
     const std::string resolved =
         interop::ResolveEnum(PyLong_AsVoidPtr(kls_scope));
-    repr = cpyrt_PyText_FromFormat(
-        "(%s::%s) : (%s) %s", cpyrt_PyText_AsString(kls_cppname),
-        cpyrt_PyText_AsString(obj_cppname), resolved.c_str(),
-        cpyrt_PyText_AsString(obj_str));
+    repr = PyUnicode_FromFormat("(%s::%s) : (%s) %s",
+                                PyUnicode_AsUTF8(kls_cppname),
+                                PyUnicode_AsUTF8(obj_cppname), resolved.c_str(),
+                                PyUnicode_AsUTF8(obj_str));
   }
   Py_XDECREF(obj_cppname);
   Py_XDECREF(kls_cppname);
@@ -144,7 +144,7 @@ static PyObject* enum_ctype(PyObject* cls, PyObject* args, PyObject* kwds) {
   if (!pyres)
     PyErr_Clear();
 
-  std::string underlying = pyres ? cpyrt_PyText_AsString(pyres) : "int";
+  std::string underlying = pyres ? PyUnicode_AsUTF8(pyres) : "int";
   PyTypeObject* ct = GetCTypesType(underlying);
   if (!ct)
     return nullptr;
@@ -185,12 +185,12 @@ cpyrt::CPPEnum* cpyrt::CPPEnum_New(const std::string& name,
 
     // create the __cpp_name__ for templates
     PyObject* dct = PyDict_New();
-    PyObject* pycppname = cpyrt_PyText_FromString(ename.c_str());
+    PyObject* pycppname = PyUnicode_FromString(ename.c_str());
     PyObject* pycppscope = PyLong_FromVoidPtr(etype.data);
     PyDict_SetItem(dct, PyStrings::gCppName, pycppname);
     PyDict_SetItem(dct, PyStrings::gThisModule, pycppscope);
     Py_DECREF(pycppname);
-    PyObject* pyresolved = cpyrt_PyText_FromString(resolved.c_str());
+    PyObject* pyresolved = PyUnicode_FromString(resolved.c_str());
     PyDict_SetItem(dct, PyStrings::gUnderlying, pyresolved);
     Py_DECREF(pyresolved);
 
@@ -200,7 +200,7 @@ cpyrt::CPPEnum* cpyrt::CPPEnum_New(const std::string& name,
     if (!modname.empty())
       modname = "." + modname;
     PyObject* pymodname =
-        cpyrt_PyText_FromString(("cppjit.gbl" + modname).c_str());
+        PyUnicode_FromString(("cppjit.gbl" + modname).c_str());
     PyDict_SetItem(dct, PyStrings::gModule, pymodname);
     Py_DECREF(pymodname);
 
@@ -228,10 +228,10 @@ cpyrt::CPPEnum* cpyrt::CPPEnum_New(const std::string& name,
         break;
       }
       const std::string& dname = interop::GetFinalName(econstant);
-      PyObject* pydname = cpyrt_PyText_FromString(dname.c_str());
+      PyObject* pydname = PyUnicode_FromString(dname.c_str());
       PyObject_SetAttr(pyenum, pydname, val);
       Py_DECREF(pydname);
-      PyObject* pydcppname = cpyrt_PyText_FromString(
+      PyObject* pydcppname = PyUnicode_FromString(
           (ename.empty() ? dname : (ename + "::" + dname)).c_str());
       PyObject_SetAttr(val, PyStrings::gCppName, pydcppname);
       Py_DECREF(pydcppname);
@@ -255,8 +255,8 @@ cpyrt::CPPEnum* cpyrt::CPPEnum_New(const std::string& name,
 
   } else {
     // presumably not a class enum; simply pretend int
-    Py_INCREF(&PyInt_Type);
-    pyenum = (PyObject*)&PyInt_Type;
+    Py_INCREF(&PyLong_Type);
+    pyenum = (PyObject*)&PyLong_Type;
   }
 
   return pyenum;

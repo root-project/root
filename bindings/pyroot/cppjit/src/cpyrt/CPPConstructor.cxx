@@ -33,7 +33,7 @@ PyObject* cpyrt::CPPConstructor::GetDocString() {
   // GetMethod() may return an empty function if this is just a special case
   // place holder
   const std::string& clName = interop::GetFinalName(this->GetScope());
-  return cpyrt_PyText_FromFormat(
+  return PyUnicode_FromFormat(
       "%s::%s%s", clName.c_str(), clName.c_str(),
       this->GetMethod() ? this->GetSignatureString().c_str() : "()");
 }
@@ -49,7 +49,7 @@ PyObject* cpyrt::CPPConstructor::Reflex(interop::Reflex::RequestId_t request,
         format == interop::Reflex::AS_TYPE)
       return CreateScopeProxy(this->GetScope());
     else if (format == interop::Reflex::AS_STRING)
-      return cpyrt_PyText_FromString(fn.c_str());
+      return PyUnicode_FromString(fn.c_str());
   }
 
   return PyCallable::Reflex(request, format);

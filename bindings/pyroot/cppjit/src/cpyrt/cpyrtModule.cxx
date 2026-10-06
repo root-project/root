@@ -16,6 +16,7 @@ using namespace cppjit;
 #include "PyStrings.h"
 #include "TemplateProxy.h"
 #include "TupleOfInstances.h"
+#include "TypeManip.h"
 #include "Utility.h"
 #include "cppjit_interop.h"
 #include <unordered_map>
@@ -43,7 +44,7 @@ std::unordered_map<interop::TCppType_t, interop::TCppType_t> TypeReductionMap;
 
 //- data -----------------------------------------------------------------------
 static PyObject* nullptr_repr(PyObject*) {
-  return cpyrt_PyText_FromString("nullptr");
+  return PyUnicode_FromString("nullptr");
 }
 
 static void nullptr_dealloc(PyObject*) {
@@ -147,7 +148,7 @@ static PyTypeObject PyNullPtr_t_Type = {
     CPYRT_PYTYPE_TAIL};
 
 static PyObject* default_repr(PyObject*) {
-  return cpyrt_PyText_FromString("type default");
+  return PyUnicode_FromString("type default");
 }
 
 static void default_dealloc(PyObject*) {
@@ -282,7 +283,7 @@ static PyObject* MakeCppTemplateClass(PyObject* /* self */, PyObject* args) {
     PyErr_Format(PyExc_TypeError,
                  "Template instantiation failed: '%s' with args: '%s\n'",
                  interop::GetScopedFinalName(tmpl).c_str(),
-                 cpyrt_PyText_AsString(PyObject_Repr(args)));
+                 PyUnicode_AsUTF8(PyObject_Repr(args)));
     return nullptr;
   }
 
@@ -300,8 +301,8 @@ static void* GetCPPInstanceAddress(const char* fname, PyObject* args,
   PyObject* pyname = 0;
   int byref = 0;
   if (PyArg_ParseTupleAndKeywords(args, kwds, const_cast<char*>("O|O!b"),
-                                  GCIA_kwlist, &pyobj, &cpyrt_PyText_Type,
-                                  &pyname, &byref)) {
+                                  GCIA_kwlist, &pyobj, &PyUnicode_Type, &pyname,
+                                  &byref)) {
 
     if (CPPInstance_Check(pyobj)) {
       if (pyname != 0) {
@@ -323,7 +324,7 @@ static void* GetCPPInstanceAddress(const char* fname, PyObject* args,
         Py_XDECREF(pyprop);
 
         PyErr_Format(PyExc_TypeError, "%s is not a valid data member",
-                     cpyrt_PyText_AsString(pyname));
+                     PyUnicode_AsUTF8(pyname));
         return nullptr;
       }
 
@@ -333,9 +334,9 @@ static void* GetCPPInstanceAddress(const char* fname, PyObject* args,
         return ((CPPInstance*)pyobj)->GetObject();
       return &((CPPInstance*)pyobj)->GetObjectRaw();
 
-    } else if (cpyrt_PyText_Check(pyobj)) {
+    } else if (PyUnicode_Check(pyobj)) {
       // special cases for access to the cpyrt API
-      std::string req = cpyrt_PyText_AsString((PyObject*)pyobj);
+      std::string req = PyUnicode_AsUTF8((PyObject*)pyobj);
       if (req == "Instance_AsVoidPtr")
         return (void*)&Instance_AsVoidPtr;
       else if (req == "Instance_FromVoidPtr")
@@ -364,7 +365,7 @@ static PyObject* addressof(PyObject* /* dummy */, PyObject* args,
 
     // nullptr special case
     if (arg0 == gNullPtrObject ||
-        (PyInt_Check(arg0) && PyInt_AsLong(arg0) == 0))
+        (PyLong_Check(arg0) && PyLong_AsLong(arg0) == 0))
       return PyLong_FromLong(0);
 
     // overload if unambiguous
@@ -401,9 +402,9 @@ static PyObject* addressof(PyObject* /* dummy */, PyObject* args,
   if (!PyErr_Occurred()) {
     if (PyTuple_CheckExact(args) && PyTuple_GET_SIZE(args)) {
       PyObject* str = PyObject_Str(PyTuple_GET_ITEM(args, 0));
-      if (str && cpyrt_PyText_Check(str))
+      if (str && PyUnicode_Check(str))
         PyErr_Format(PyExc_TypeError, "unknown object %s",
-                     cpyrt_PyText_AsString(str));
+                     PyUnicode_AsUTF8(str));
       else
         PyErr_Format(PyExc_TypeError, "unknown object at %p",
                      (void*)PyTuple_GET_ITEM(args, 0));
@@ -419,7 +420,7 @@ static PyObject* AsCObject(PyObject* /* unused */, PyObject* args,
   // Return object proxy as an opaque CObject.
   void* addr = GetCPPInstanceAddress("as_cobject", args, kwds);
   if (addr)
-    return cpyrt_PyCapsule_New((void*)addr, nullptr, nullptr);
+    return PyCapsule_New((void*)addr, nullptr, nullptr);
   return nullptr;
 }
 
@@ -514,7 +515,7 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds) {
   // convert 2nd argument first (used for both pointer value and instance cases)
   interop::TCppScope_t cast_type = nullptr;
   PyObject* arg1 = PyTuple_GET_ITEM(args, 1);
-  if (!cpyrt_PyText_Check(arg1)) { // not string, then class
+  if (!PyUnicode_Check(arg1)) { // not string, then class
     if (CPPScope_Check(arg1))
       cast_type = ((CPPClass*)arg1)->fCppType;
     else
@@ -523,8 +524,7 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds) {
     Py_INCREF(arg1);
 
   if (!cast_type && arg1) {
-    cast_type =
-        (interop::TCppScope_t)interop::GetScope(cpyrt_PyText_AsString(arg1));
+    cast_type = (interop::TCppScope_t)interop::GetScope(PyUnicode_AsUTF8(arg1));
     Py_DECREF(arg1);
   }
 
@@ -633,7 +633,7 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds) {
   // not a pre-existing object; get the address and bind
   void* addr = nullptr;
   if (arg0 != gNullPtrObject) {
-    addr = cpyrt_PyCapsule_GetPointer(arg0, nullptr);
+    addr = PyCapsule_GetPointer(arg0, nullptr);
     if (PyErr_Occurred()) {
       PyErr_Clear();
 
@@ -667,6 +667,95 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds) {
 }
 
 //----------------------------------------------------------------------------
+static PyObject* BindValue(PyObject*, PyObject* args, PyObject* kwds) {
+  // Read through the converter for the given type name, at the given address.
+  static const char* kwlist[] = {(char*)"type_name", (char*)"address",
+                                 (char*)"dims", nullptr};
+
+  const char* type_name = nullptr;
+  PyObject* pyaddress = nullptr;
+  PyObject* pydims = nullptr;
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "sO|O:bind_value",
+                                   (char**)kwlist, &type_name, &pyaddress,
+                                   &pydims))
+    return nullptr;
+
+  void* address = PyLong_AsVoidPtr(pyaddress);
+  if (PyErr_Occurred())
+    return nullptr;
+
+  std::vector<cpyrt::dim_t> dims;
+  if (pydims && pydims != Py_None) {
+    PyObject* seq =
+        PySequence_Fast(pydims, "dims must be a sequence of integers");
+    if (!seq)
+      return nullptr;
+    Py_ssize_t ndim = PySequence_Fast_GET_SIZE(seq);
+    if (ndim == 0) {
+      Py_DECREF(seq);
+      PyErr_SetString(PyExc_ValueError, "dims must be a non-empty sequence");
+      return nullptr;
+    }
+    dims.reserve(ndim);
+    for (Py_ssize_t i = 0; i < ndim; ++i) {
+      cpyrt::dim_t d =
+          (cpyrt::dim_t)PyLong_AsSsize_t(PySequence_Fast_GET_ITEM(seq, i));
+      if (d == (cpyrt::dim_t)-1 && PyErr_Occurred()) {
+        Py_DECREF(seq);
+        return nullptr;
+      }
+      // an UNKNOWN_SIZE view would keep the address of the pointer slot on
+      // our expired stack frame as its data
+      if (d < 0) {
+        Py_DECREF(seq);
+        PyErr_SetString(PyExc_ValueError, "dims entries must be non-negative");
+        return nullptr;
+      }
+      dims.push_back(d);
+    }
+    Py_DECREF(seq);
+
+    // scalar converters ignore dims entirely and would silently read the
+    // pointer bits; only array and pointer type names can take a shape
+    const std::string cpd = cpyrt::TypeManip::compound(type_name);
+    if (cpd != "[]" && cpd != "*") {
+      PyErr_Format(PyExc_TypeError,
+                   "dims given but \'%s\' is not an array or pointer type",
+                   type_name);
+      return nullptr;
+    }
+  }
+
+  // an unresolvable name crashes deeper down in the type lookup instead of
+  // producing a nullptr converter, so validate first
+  const std::string resolvedType = interop::ResolveName(type_name);
+  const std::string baseType =
+      cpyrt::TypeManip::clean_type(resolvedType, false, true);
+  if (!interop::GetType(baseType, /* enable_slow_lookup */ true)) {
+    PyErr_Format(PyExc_TypeError, "no converter available for type \'%s\'",
+                 type_name);
+    return nullptr;
+  }
+
+  cpyrt::Converter* cnv = cpyrt::CreateConverter(
+      type_name, cpyrt::Dimensions((cpyrt::dim_t)dims.size(), dims.data()));
+
+  // an array converter reads through the data pointer, so it wants the
+  // address of that pointer; a scalar converter wants the address of the
+  // value itself
+  PyObject* result =
+      dims.empty() ? cnv->FromMemory(address) : cnv->FromMemory(&address);
+  cpyrt::DestroyConverter(cnv);
+
+  if (!result && !PyErr_Occurred())
+    PyErr_Format(PyExc_TypeError,
+                 "failed to convert a value of type \'%s\' from memory",
+                 type_name);
+
+  return result;
+}
+
+//----------------------------------------------------------------------------
 static PyObject* Move(PyObject*, PyObject* pyobject) {
   // Prepare the given C++ object for moving.
   if (!CPPInstance_Check(pyobject)) {
@@ -690,7 +779,7 @@ static PyObject* AddPythonization(PyObject*, PyObject* args) {
   if (!PyCallable_Check(pythonizor)) {
     PyObject* pystr = PyObject_Str(pythonizor);
     PyErr_Format(PyExc_TypeError, "given \'%s\' object is not callable",
-                 cpyrt_PyText_AsString(pystr));
+                 PyUnicode_AsUTF8(pystr));
     Py_DECREF(pystr);
     return nullptr;
   }
@@ -777,7 +866,7 @@ static PyObject* SetOwnership(PyObject*, PyObject* args) {
   CPPInstance* pyobj = nullptr;
   PyObject* pykeep = nullptr;
   if (!PyArg_ParseTuple(args, const_cast<char*>("O!O!"), &CPPInstance_Type,
-                        (void*)&pyobj, &PyInt_Type, &pykeep))
+                        (void*)&pyobj, &PyLong_Type, &pykeep))
     return nullptr;
 
   (bool)PyLong_AsLong(pykeep) ? pyobj->PythonOwns() : pyobj->CppOwns();
@@ -858,6 +947,8 @@ static PyMethodDef gcpyrtMethods[] = {
     {(char*)"bind_object", (PyCFunction)BindObject,
      METH_VARARGS | METH_KEYWORDS,
      (char*)"Create an object of given type, from given address."},
+    {(char*)"bind_value", (PyCFunction)BindValue, METH_VARARGS | METH_KEYWORDS,
+     (char*)"Read a value of given type, from given address."},
     {(char*)"move", (PyCFunction)Move, METH_O,
      (char*)"Cast the C++ object to become movable."},
     {(char*)"add_pythonization", (PyCFunction)AddPythonization, METH_VARARGS,

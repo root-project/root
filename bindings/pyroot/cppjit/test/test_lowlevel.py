@@ -1167,6 +1167,147 @@ class TestMULTIDIMARRAYS:
         raises(TypeError, v.reshape, ())
 
 
+class TestBINDVALUE:
+    def _buffer_of(self, ctype, *values):
+        import ctypes
+
+        buf = (ctype * len(values))(*values)
+        return buf, ctypes.addressof(buf)
+
+    def test01_scalar(self):
+        """A builtin type yields the stored Python value"""
+
+        import ctypes
+
+        from cppjit import ll
+
+        buf, addr = self._buffer_of(ctypes.c_double, 3.5)
+        v = ll.bind_value("double", addr)
+        assert isinstance(v, float)
+        assert v == 3.5
+
+        ibuf, iaddr = self._buffer_of(ctypes.c_int32, -7)
+        assert ll.bind_value("int", iaddr) == -7
+
+    def test02_class(self):
+        """A class type yields a bound proxy for the same object
+
+        The object comes from C++ so the test does not depend on the
+        platform's set of std::string constructors (libc++ vs libstdc++).
+        """
+
+        import cppjit
+        from cppjit import ll
+
+        cppjit.cppdef("""
+        std::string bind_value_make_string() { return "hello"; }
+        std::string bind_value_string_object = bind_value_make_string();
+        """)
+        # ROOT returns std::string values as Python str; the address comes
+        # from a C++ object
+        assert cppjit.gbl.bind_value_make_string() == "hello"
+        s = cppjit.gbl.bind_value_string_object
+        ps = ll.bind_value("std::string", cppjit.addressof(s))
+        assert type(ps) is type(s)
+        assert ps == "hello"
+
+    def test03_array_with_dims(self):
+        """'T[]' with dims yields a shaped LowLevelView over the data"""
+
+        import ctypes
+
+        from cppjit import ll
+
+        buf, addr = self._buffer_of(ctypes.c_double, *[float(i) for i in range(6)])
+
+        flat = ll.bind_value("double[]", addr, (6,))
+        assert flat.shape == (6,)
+        assert flat[4] == 4.0
+
+        matrix = ll.bind_value("double[]", addr, (2, 3))
+        assert matrix.shape == (2, 3)
+        assert matrix[1][2] == 5.0
+
+    def test04_pointer_type_with_dims(self):
+        """'T*' with dims is accepted as an array denotation"""
+
+        import ctypes
+
+        from cppjit import ll
+
+        buf, addr = self._buffer_of(ctypes.c_int, 11, 22, 33)
+        view = ll.bind_value("int*", addr, (3,))
+        assert view.shape == (3,)
+        assert [view[i] for i in range(3)] == [11, 22, 33]
+
+    def test05_unknown_type_raises(self):
+        """An unresolvable type name raises TypeError, not a crash"""
+
+        import ctypes
+
+        from cppjit import ll
+
+        buf, addr = self._buffer_of(ctypes.c_double, 1.0)
+        with raises(TypeError):
+            ll.bind_value("nosuchtype_xyz", addr)
+
+    def test06_dims_require_array_type(self):
+        """dims with a scalar type raise TypeError (scalars ignore dims)"""
+
+        import ctypes
+
+        from cppjit import ll
+
+        buf, addr = self._buffer_of(ctypes.c_double, 1.0, 2.0)
+        with raises(TypeError):
+            ll.bind_value("double", addr, (2,))
+
+    def test07_bad_dims_raise(self):
+        """Empty and negative dims are rejected"""
+
+        import ctypes
+
+        from cppjit import ll
+
+        buf, addr = self._buffer_of(ctypes.c_double, 1.0, 2.0)
+        with raises(ValueError):
+            ll.bind_value("double[]", addr, ())
+        with raises(ValueError):
+            # -1 is the UNKNOWN_SIZE sentinel, which has no meaning here
+            ll.bind_value("double[]", addr, (-1,))
+        with raises(ValueError):
+            ll.bind_value("double[]", addr, (2, -3))
+
+    def test08_cstring_pointer_as_str(self):
+        """'char*' yields a str, like a char*-returning bound function does
+
+        This is the motivating case from the TTree leaf pythonization:
+        the address points at the char* slot, whose target is read as a
+        C string.
+        """
+
+        import ctypes
+
+        from cppjit import ll
+
+        cp = ctypes.c_char_p(b"hello leaf")
+        v = ll.bind_value("char*", ctypes.addressof(cp))
+        assert type(v) is str
+        assert v == "hello leaf"
+
+    def test09_char_array_with_dims(self):
+        """'char[]' with dims yields a view of one-character strings"""
+
+        import ctypes
+
+        from cppjit import ll
+
+        buf = ctypes.create_string_buffer(b"abcd")
+        v = ll.bind_value("char[]", ctypes.addressof(buf), (4,))
+        assert v.shape == (4,)
+        assert [v[i] for i in range(4)] == ["a", "b", "c", "d"]
+
+
 class TestCSTRINGARRAY:
     def test01_cstring_array_from_str(self):
         """A Python string can be assigned to a const char** data member"""

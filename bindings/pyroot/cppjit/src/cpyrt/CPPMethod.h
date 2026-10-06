@@ -116,6 +116,8 @@ private:
   // representation
   interop::TCppMethod_t fMethod;
   interop::TCppScope_t fScope;
+  // class that declares fMethod, which may be a base of fScope (set by Call)
+  interop::TCppScope_t fDeclaringScope;
   Executor* fExecutor;
 
   // call dispatch buffers

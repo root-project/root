@@ -111,7 +111,7 @@ CPYRT_LL_FLAG_GETSET(cpparray,  cpyrt::LowLevelView::kIsCppArray, __cpp_array__)
 
 //---------------------------------------------------------------------------
 static PyObject* ll_typecode(cpyrt::LowLevelView* self, void*) {
-  return cpyrt_PyText_FromString((char*)self->fBufInfo.format);
+  return PyUnicode_FromString((char*)self->fBufInfo.format);
 }
 
 //- Copy memoryview buffers =================================================
@@ -694,7 +694,7 @@ static PyObject* ll_shape(cpyrt::LowLevelView* self) {
   if (!shape)
     return nullptr;
   for (Py_ssize_t idim = 0; idim < view.ndim; ++idim) {
-    PyObject* pydim = PyInt_FromSsize_t(view.shape[idim]);
+    PyObject* pydim = PyLong_FromSsize_t(view.shape[idim]);
     if (!pydim) {
       Py_DECREF(shape);
       return nullptr;
@@ -734,7 +734,7 @@ static PyObject* ll_reshape(cpyrt::LowLevelView* self, PyObject* shape) {
       PyObject* pystr = PyObject_Str(shape);
       if (pystr) {
         PyErr_Format(PyExc_TypeError, "tuple object expected, received %s",
-                     cpyrt_PyText_AsStringChecked(pystr));
+                     PyUnicode_AsUTF8(pystr));
         Py_DECREF(pystr);
         return nullptr;
       }
@@ -762,7 +762,7 @@ static PyObject* ll_reshape(cpyrt::LowLevelView* self, PyObject* shape) {
   Py_ssize_t ndim = PyTuple_GET_SIZE(shape);
   cpyrt::dims_t dims(ndim);
   for (Py_ssize_t idim = 0; idim < ndim; ++idim) {
-    Py_ssize_t nlen = PyInt_AsSsize_t(PyTuple_GET_ITEM(shape, idim));
+    Py_ssize_t nlen = PyLong_AsSsize_t(PyTuple_GET_ITEM(shape, idim));
     if (nlen == -1 && PyErr_Occurred())
       return nullptr;
     if (nlen < cpyrt::UNKNOWN_SIZE) {
@@ -893,7 +893,7 @@ static PyObject* ll_as_string(cpyrt::LowLevelView* self) {
 
   char* buf = (char*)self->get_buf();
   size_t sz = strnlen(buf, (size_t)view.shape[0]);
-  return cpyrt_PyText_FromStringAndSize(buf, sz);
+  return PyUnicode_FromStringAndSize(buf, sz);
 }
 
 //---------------------------------------------------------------------------
@@ -921,57 +921,57 @@ static PyGetSetDef ll_getset[] = {
 namespace cppjit::cpyrt {
 
 //= cpyrt low level view type ============================================
-PyTypeObject LowLevelView_Type = {PyVarObject_HEAD_INIT(&PyType_Type, 0)(
-                                      char*) "cppjit.LowLevelView", // tp_name
-                                  sizeof(cpyrt::LowLevelView), // tp_basicsize
-                                  0,                           // tp_itemsize
-                                  (destructor)ll_dealloc,      // tp_dealloc
-                                  0, // tp_vectorcall_offset / tp_print
-                                  0, // tp_getattr
-                                  0, // tp_setattr
-                                  0, // itp_as_async / tp_compare
-                                  0, // tp_repr
-                                  0, // tp_as_number
-                                  &ll_as_sequence, // tp_as_sequence
-                                  &ll_as_mapping,  // tp_as_mapping
-                                  0,               // tp_hash
-                                  0,               // tp_call
-                                  0,               // tp_str
-                                  0,               // tp_getattro
-                                  0,               // tp_setattro
-                                  &ll_as_buffer,   // tp_as_buffer
-                                  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_CHECKTYPES |
-                                      Py_TPFLAGS_BASETYPE, // tp_flags
-                                  (char*)"memory view on C++ pointer", // tp_doc
-                                  0,                    // tp_traverse
-                                  0,                    // tp_clear
-                                  0,                    // tp_richcompare
-                                  0,                    // tp_weaklistoffset
-                                  (getiterfunc)ll_iter, // tp_iter
-                                  0,                    // tp_iternext
-                                  ll_methods,           // tp_methods
-                                  0,                    // tp_members
-                                  ll_getset,            // tp_getset
-                                  0,                    // tp_base
-                                  0,                    // tp_dict
-                                  0,                    // tp_descr_get
-                                  0,                    // tp_descr_set
-                                  0,                    // tp_dictoffset
-                                  0,                    // tp_init
-                                  0,                    // tp_alloc
-                                  (newfunc)ll_new,      // tp_new
-                                  0,                    // tp_free
-                                  0,                    // tp_is_gc
-                                  0,                    // tp_bases
-                                  0,                    // tp_mro
-                                  0,                    // tp_cache
-                                  0,                    // tp_subclasses
-                                  0,                    // tp_weaklist
-                                  0,                    // tp_del
-                                  0,                    // tp_version_tag
-                                  0,                    // tp_finalize
-                                  0                     // tp_vectorcall
-                                  CPYRT_PYTYPE_TAIL};
+PyTypeObject LowLevelView_Type = {
+    PyVarObject_HEAD_INIT(&PyType_Type,
+                          0)(char*) "cppjit.LowLevelView", // tp_name
+    sizeof(cpyrt::LowLevelView),                           // tp_basicsize
+    0,                                                     // tp_itemsize
+    (destructor)ll_dealloc,                                // tp_dealloc
+    0,                                        // tp_vectorcall_offset / tp_print
+    0,                                        // tp_getattr
+    0,                                        // tp_setattr
+    0,                                        // itp_as_async / tp_compare
+    0,                                        // tp_repr
+    0,                                        // tp_as_number
+    &ll_as_sequence,                          // tp_as_sequence
+    &ll_as_mapping,                           // tp_as_mapping
+    0,                                        // tp_hash
+    0,                                        // tp_call
+    0,                                        // tp_str
+    0,                                        // tp_getattro
+    0,                                        // tp_setattro
+    &ll_as_buffer,                            // tp_as_buffer
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, // tp_flags
+    (char*)"memory view on C++ pointer",      // tp_doc
+    0,                                        // tp_traverse
+    0,                                        // tp_clear
+    0,                                        // tp_richcompare
+    0,                                        // tp_weaklistoffset
+    (getiterfunc)ll_iter,                     // tp_iter
+    0,                                        // tp_iternext
+    ll_methods,                               // tp_methods
+    0,                                        // tp_members
+    ll_getset,                                // tp_getset
+    0,                                        // tp_base
+    0,                                        // tp_dict
+    0,                                        // tp_descr_get
+    0,                                        // tp_descr_set
+    0,                                        // tp_dictoffset
+    0,                                        // tp_init
+    0,                                        // tp_alloc
+    (newfunc)ll_new,                          // tp_new
+    0,                                        // tp_free
+    0,                                        // tp_is_gc
+    0,                                        // tp_bases
+    0,                                        // tp_mro
+    0,                                        // tp_cache
+    0,                                        // tp_subclasses
+    0,                                        // tp_weaklist
+    0,                                        // tp_del
+    0,                                        // tp_version_tag
+    0,                                        // tp_finalize
+    0                                         // tp_vectorcall
+    CPYRT_PYTYPE_TAIL};
 
 } // namespace cppjit::cpyrt
 

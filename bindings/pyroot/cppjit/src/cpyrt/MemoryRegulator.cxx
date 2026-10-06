@@ -44,7 +44,7 @@ struct Initcpyrt_NoneType_t {
     ((PyVarObject&)cpyrt_NoneType).ob_size = 0;
 
     cpyrt_NoneType.tp_name = const_cast<char*>("cpyrt_NoneType");
-    cpyrt_NoneType.tp_flags = Py_TPFLAGS_HAVE_RICHCOMPARE;
+    cpyrt_NoneType.tp_flags = 0;
 
     cpyrt_NoneType.tp_traverse = (traverseproc)0;
     cpyrt_NoneType.tp_clear = (inquiry)0;

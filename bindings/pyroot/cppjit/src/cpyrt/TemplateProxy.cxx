@@ -21,7 +21,7 @@ namespace cppjit::cpyrt {
 static inline std::string targs2str(TemplateProxy* pytmpl) {
   if (!pytmpl || !pytmpl->fTemplateArgs)
     return "";
-  return cpyrt_PyText_AsString(pytmpl->fTemplateArgs);
+  return PyUnicode_AsUTF8(pytmpl->fTemplateArgs);
 }
 
 //----------------------------------------------------------------------------
@@ -206,7 +206,7 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
                 nullptr, subtypes, itemi, pref, 0, nullptr);
             Py_DECREF(subtypes);
             if (!PyErr_Occurred() && 2 < sub.size())
-              entry = cpyrt_PyText_FromString(("std::pair" + sub).c_str());
+              entry = PyUnicode_FromString(("std::pair" + sub).c_str());
             else
               PyErr_Clear();
           }
@@ -292,7 +292,7 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
     // lookup on existing name in case this was an overload, not a caching,
     // failure
     PyObject* dct = PyObject_GetAttr(fTI->fPyClass, PyStrings::gDict);
-    PyObject* pycachename = cpyrt_PyText_InternFromString(fname.c_str());
+    PyObject* pycachename = PyUnicode_InternFromString(fname.c_str());
     PyObject* pyol = PyObject_GetItem(dct, pycachename);
     if (!pyol)
       PyErr_Clear();
@@ -301,7 +301,7 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
 
     // find the full name if the requested one was partial
     PyObject* exact = nullptr;
-    PyObject* pyresname = cpyrt_PyText_FromString(resname.c_str());
+    PyObject* pyresname = PyUnicode_FromString(resname.c_str());
     if (!bExactMatch) {
       exact = PyObject_GetItem(dct, pyresname);
       if (!exact)
@@ -461,8 +461,8 @@ static PyObject* tpp_doc(TemplateProxy* pytmpl, void*) {
     PyObject* doc2 =
         PyObject_GetAttrString((PyObject*)pytmpl->fTI->fTemplated, "__doc__");
     if (doc && doc2) {
-      cpyrt_PyText_AppendAndDel(&doc, cpyrt_PyText_FromString("\n"));
-      cpyrt_PyText_AppendAndDel(&doc, doc2);
+      PyUnicode_AppendAndDel(&doc, PyUnicode_FromString("\n"));
+      PyUnicode_AppendAndDel(&doc, doc2);
     } else if (!doc && doc2) {
       doc = doc2;
     }
@@ -471,8 +471,8 @@ static PyObject* tpp_doc(TemplateProxy* pytmpl, void*) {
     PyObject* doc2 =
         PyObject_GetAttrString((PyObject*)pytmpl->fTI->fLowPriority, "__doc__");
     if (doc && doc2) {
-      cpyrt_PyText_AppendAndDel(&doc, cpyrt_PyText_FromString("\n"));
-      cpyrt_PyText_AppendAndDel(&doc, doc2);
+      PyUnicode_AppendAndDel(&doc, PyUnicode_FromString("\n"));
+      PyUnicode_AppendAndDel(&doc, doc2);
     } else if (!doc && doc2) {
       doc = doc2;
     }
@@ -481,7 +481,7 @@ static PyObject* tpp_doc(TemplateProxy* pytmpl, void*) {
   if (doc)
     return doc;
 
-  return cpyrt_PyText_FromString(TemplateProxy_Type.tp_doc);
+  return PyUnicode_FromString(TemplateProxy_Type.tp_doc);
 }
 
 static int tpp_doc_set(TemplateProxy* pytmpl, PyObject* val, void*) {
@@ -650,9 +650,8 @@ static PyObject* tpp_vectorcall(TemplateProxy* pytmpl, PyObject* const* args,
   // case 1: explicit template previously selected through subscript
   if (pytmpl->fTemplateArgs) {
     // instantiate explicitly
-    PyObject* pyfullname =
-        cpyrt_PyText_FromString(pytmpl->fTI->fCppName.c_str());
-    cpyrt_PyText_Append(&pyfullname, pytmpl->fTemplateArgs);
+    PyObject* pyfullname = PyUnicode_FromString(pytmpl->fTI->fCppName.c_str());
+    PyUnicode_Append(&pyfullname, pytmpl->fTemplateArgs);
 
     // first, lookup by full name, if previously stored
     bool isNS =
@@ -686,8 +685,8 @@ static PyObject* tpp_vectorcall(TemplateProxy* pytmpl, PyObject* const* args,
       PyErr_Clear();
 
     // not cached or failed call; try instantiation
-    pymeth = pytmpl->Instantiate(cpyrt_PyText_AsString(pyfullname), args,
-                                 nargsf, Utility::kNone);
+    pymeth = pytmpl->Instantiate(PyUnicode_AsUTF8(pyfullname), args, nargsf,
+                                 Utility::kNone);
     if (pymeth) {
       // attempt actual call; same as above, allow implicit conversion of
       // arguments
@@ -702,9 +701,9 @@ static PyObject* tpp_vectorcall(TemplateProxy* pytmpl, PyObject* const* args,
     // no drop through if failed (if implicit was desired, don't provide
     // template args)
     Utility::FetchError(errors);
-    PyObject* topmsg = cpyrt_PyText_FromFormat(
+    PyObject* topmsg = PyUnicode_FromFormat(
         "Could not find \"%s\" (set cppjit.set_debug() for C++ errors):",
-        cpyrt_PyText_AsString(pyfullname));
+        PyUnicode_AsUTF8(pyfullname));
     Py_DECREF(pyfullname);
     Utility::SetDetailedException(std::move(errors), topmsg /* steals */,
                                   PyExc_TypeError /* default error */);
@@ -757,7 +756,7 @@ static PyObject* tpp_vectorcall(TemplateProxy* pytmpl, PyObject* const* args,
   // seems better
   if (!errors.empty()) {
     PyObject* topmsg =
-        cpyrt_PyText_FromString("Template method resolution failed:");
+        PyUnicode_FromString("Template method resolution failed:");
     Utility::SetDetailedException(std::move(errors), topmsg /* steals */,
                                   PyExc_TypeError /* default error */);
   } else {
@@ -804,7 +803,7 @@ static PyObject* tpp_subscript(TemplateProxy* pytmpl, PyObject* args) {
   TemplateProxy* typeBoundMethod =
       tpp_descr_get(pytmpl, pytmpl->fSelf, nullptr);
   Py_XDECREF(typeBoundMethod->fTemplateArgs);
-  typeBoundMethod->fTemplateArgs = cpyrt_PyText_FromString(
+  typeBoundMethod->fTemplateArgs = PyUnicode_FromString(
       Utility::ConstructTemplateArgs(nullptr, args).c_str());
   // Propagate the error that occurs if we can't construct the C++ name
   // from the provided template argument
@@ -816,7 +815,7 @@ static PyObject* tpp_subscript(TemplateProxy* pytmpl, PyObject* args) {
 
 //-----------------------------------------------------------------------------
 static PyObject* tpp_getuseffi(CPPOverload*, void*) {
-  return PyInt_FromLong(0); // dummy (__useffi__ unused)
+  return PyLong_FromLong(0); // dummy (__useffi__ unused)
 }
 
 //-----------------------------------------------------------------------------
@@ -943,12 +942,12 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args) {
     Py_ssize_t n = PyTuple_Size(sigarg_tuple);
     for (int i = 0; i < n; i++) {
       PyObject* pItem = PyTuple_GetItem(sigarg_tuple, i);
-      if (!cpyrt_PyText_Check(pItem)) {
+      if (!PyUnicode_Check(pItem)) {
         PyErr_Format(PyExc_LookupError,
                      "argument types should be in string format");
         return (PyObject*)nullptr;
       }
-      proto.append(cpyrt_PyText_AsString(pItem));
+      proto.append(PyUnicode_AsUTF8(pItem));
       if (i < n - 1)
         proto.push_back(',');
     }

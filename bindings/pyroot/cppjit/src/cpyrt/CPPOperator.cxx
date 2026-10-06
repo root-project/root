@@ -15,7 +15,7 @@ cpyrt::CPPOperator::CPPOperator(interop::TCppScope_t scope,
   // order
   if (name == "__mul__")
     fStub = CPPInstance_Type.tp_as_number->nb_multiply;
-  else if (name == CPPJIT__div__)
+  else if (name == "__truediv__")
     fStub = CPPInstance_Type.tp_as_number->nb_true_divide;
   else if (name == "__add__")
     fStub = CPPInstance_Type.tp_as_number->nb_add;
