@@ -98,6 +98,12 @@ TImage::EImageFileTypes TImage::GetImageFileTypeFromFilename(const char* filenam
       return kXml;
    else if (sFilename.EndsWith(".anim.gif", TString::kIgnoreCase))
       return kAnimGif;
+   else if (sFilename.EndsWith(".html", TString::kIgnoreCase))
+      return kHtml;
+   else if (sFilename.EndsWith(".svg", TString::kIgnoreCase))
+      return kSvg;
+   else if (sFilename.EndsWith(".pdf", TString::kIgnoreCase))
+      return kPdf;
 
    return kUnknown;
 }
