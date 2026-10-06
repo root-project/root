@@ -42,6 +42,12 @@ set(TUTORIAL_ENV
     ROOT_BATCH=1
     ROOT_INCLUDE_PATH=${root_includepaths_escaped}
 )
+# On macOS, Python embedded in a C++ process doesn't use the virtual
+# environment that the Python executable belongs to, so it would not find the
+# Python modules that CMake detected. Tell it which Python executable to use.
+if(APPLE AND Python3_EXECUTABLE)
+  list(APPEND TUTORIAL_ENV PYTHONEXECUTABLE=${Python3_EXECUTABLE})
+endif()
 
 #---Copy the CTestCustom.cmake file into the build directory--------
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
