@@ -52,7 +52,10 @@ public:
       kTga,
       kXml,
       kUnknown,
-      kAnimGif
+      kAnimGif,
+      kHtml,
+      kSvg,
+      kPdf
    };
 
    enum EText3DType {
