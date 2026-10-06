@@ -119,7 +119,7 @@ public:
    void     DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags = 0) override;
 
    //jpg, png, gif and bmp output.
-   void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const override;
+   Int_t    SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t type) const override;
 
    //TASImage support.
    void     DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,

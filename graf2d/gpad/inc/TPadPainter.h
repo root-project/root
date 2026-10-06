@@ -82,7 +82,7 @@ public:
    void     DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags = 0) override;
 
    //jpg, png, bmp, gif output.
-   void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const override;
+   Int_t    SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t type) const override;
 
    Bool_t   IsNative() const override { return kTRUE; }
 

@@ -22,6 +22,7 @@
 #include "TROOT.h"
 #include "TPad.h"
 #include "TCanvas.h"
+#include "TCanvasImp.h"
 #include "TImage.h"
 
 #include "TColorGradient.h"
@@ -875,12 +876,20 @@ void TGLPadPainter::DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags)
 ////////////////////////////////////////////////////////////////////////////////
 /// Using TImage save frame-buffer contents as a picture.
 
-void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const
+Int_t TGLPadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t type) const
 {
    auto canvas = pad->GetCanvas();
    if (!canvas)
-      return;
+      return 0;
 
+   // GL canvas requires extra update to correctly flush image, fix #22157
+   canvas->UpdateAsync();
+
+   const_cast<TGLPadPainter *>(this)->SelectDrawable(pad->GetCanvasID());
+
+   canvas->GetCanvasImp()->UpdateDisplay(1, kTRUE);
+
+   // is it really necessary here???
    canvas->Flush();
 
    std::vector<unsigned> buff(canvas->GetWw() * canvas->GetWh());
@@ -893,7 +902,7 @@ void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type
    std::unique_ptr<TImage> image(TImage::Create());
    if (!image.get()) {
       ::Error("TGLPadPainter::SaveImage", "TImage creation failed");
-      return;
+      return 0;
    }
 
    image->DrawRectangle(0, 0, canvas->GetWw(), canvas->GetWh());
@@ -901,7 +910,7 @@ void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type
 
    if (!argb) {
       ::Error("TGLPadPainter::SaveImage", "null argb array in TImage object");
-      return;
+      return 0;
    }
 
    const Int_t nLines  = canvas->GetWh();
@@ -922,6 +931,7 @@ void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type
    }
 
    image->WriteImage(fileName, (TImage::EImageFileTypes)type);
+   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

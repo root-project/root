@@ -17,6 +17,7 @@
 #include "TPadPainter.h"
 #include "TVirtualX.h"
 #include "TCanvas.h"
+#include "TCanvasImp.h"
 #include "TPoint.h"
 #include "TError.h"
 #include "TImage.h"
@@ -526,12 +527,19 @@ void TPadPainter::DrawTTFglyphs(Int_t x, Int_t y, TTFhandle &ttf, ETextMode mode
 ////////////////////////////////////////////////////////////////////////////////
 /// Save the image displayed in the canvas pointed by "pad" into a binary file.
 
-void TPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const
+Int_t TPadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t type) const
 {
-   if (gVirtualX->InheritsFrom("TGCocoa") && !gROOT->IsBatch() &&
-      pad->GetCanvas() && pad->GetCanvas()->GetCanvasID() != -1) {
+   auto canvas = pad->GetCanvas();
+   if (!canvas || (canvas->GetCanvasID() == -1))
+      return 0;
 
-      TCanvas * const canvas = pad->GetCanvas();
+   // to be checked if necessary here
+   canvas->GetCanvasImp()->UpdateDisplay(1, kTRUE);
+
+   const_cast<TPadPainter *>(this)->SelectDrawable(pad->GetCanvasID());
+
+   if (IsCocoa()) {
+
       //Force TCanvas::CopyPixmaps.
       canvas->Flush();
 
@@ -568,24 +576,29 @@ void TPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) 
 
                image->WriteImage(fileName, (TImage::EImageFileTypes)type);
                //Success.
-               return;
+               return 1;
             }
          }
       }
    }
 
    if (type == TImage::kGif) {
-      Int_t wid = (pad == pad->GetCanvas()) ? pad->GetCanvasID() : pad->GetPixmapID();
+      Int_t wid = (pad == canvas) ? canvas->GetCanvasID() : pad->GetPixmapID();
       auto ctxt = gVirtualX->GetWindowContext(wid);
-      // TODO: if fail, one can use TImage functionality instead
-      gVirtualX->WriteGIFW(ctxt, fileName);
-   } else {
-      const std::unique_ptr<TImage> img(TImage::Create());
-      if (img.get()) {
-         img->FromPad(pad);
-         img->WriteImage(fileName, (TImage::EImageFileTypes)type);
-      }
+      // TODO: GIF image is special, if fail - try use TImage functionality
+      Int_t res = gVirtualX->WriteGIFW(ctxt, fileName);
+      if (res > 0)
+         return 1;
    }
+
+   const std::unique_ptr<TImage> img(TImage::Create());
+   if (!img)
+      return 0;
+   img->FromPad(pad);
+   if (!img->IsValid())
+      return 0;
+   img->WriteImage(fileName, (TImage::EImageFileTypes)type);
+   return 1;
 }
 
 

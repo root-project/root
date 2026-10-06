@@ -4790,26 +4790,6 @@ void TPad::Print(const char *filename) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Auxiliary function. Returns kTRUE if list contains an object inherited
-/// from TImage
-
-static Bool_t ContainsTImage(TList *li)
-{
-   TIter next(li);
-
-   while (auto obj = next()) {
-      if (obj->InheritsFrom(TImage::Class())) {
-         return kTRUE;
-      } else if (obj->InheritsFrom(TPad::Class())) {
-         if (ContainsTImage(((TPad*)obj)->GetListOfPrimitives())) {
-            return kTRUE;
-         }
-      }
-   }
-   return kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Save Canvas contents in a file in one of various formats.
 ///
 /// \anchor TPadPrint
@@ -5043,10 +5023,8 @@ void TPad::Print(const char *filename, Option_t *option)
 
    auto pp = GetPainter();
 
-   // for a moment special handling of web canvas - check if can save directly
-   if (canv->IsWeb() && pp)
-      if (pp->SaveAsImage(this, psname.Data(), gtype) >= 0)
-         return;
+   Bool_t isweb = canv->IsWeb();
+   Bool_t isbatch = gROOT->IsBatch() || canv->IsBatch();
 
    // to create HTML file web-based canvas functionality is invoked
    if (gtype == TImage::kHtml) {
@@ -5057,43 +5035,27 @@ void TPad::Print(const char *filename, Option_t *option)
       return;
    }
 
-   if (!canv->IsBatch() && pp)
-      pp->SelectDrawable(GetCanvasID());
+   if (((!isbatch && image) || isweb) && pp) {
+      Color_t hc = canv->GetHighLightColor();
 
-   if (!gROOT->IsBatch() && image) {
-      if ((gtype == TImage::kGif) && !ContainsTImage(fPrimitives)) {
-         Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
-         Color_t hc = gPad->GetCanvas()->GetHighLightColor();
-         gPad->GetCanvas()->SetHighLightColor(-1);
-         gPad->ModifiedUpdate();
-         if (pp) {
-            pp->SelectDrawable(wid);
-            pp->SaveImage(this, psname.Data(), gtype);
-         }
-         if (!gSystem->AccessPathName(psname.Data())) {
-            Info("Print", "GIF file %s has been created", psname.Data());
-         }
-         gPad->GetCanvas()->SetHighLightColor(hc);
+      if (!isweb) {
+         canv->SetHighLightColor(-1);
+         Modified();
+      }
+      canv->Update();
+
+      Int_t res = pp->SaveAsImage(this, psname.Data(), gtype);
+
+      if (!isweb)
+         canv->SetHighLightColor(hc);
+
+      if (res < 0)
+         Warning("Print", "Unsupported image format %s, fallback to TImageDump", psname.Data());
+      else if ((res > 0) && !gSystem->AccessPathName(psname.Data()))
+         Info("Print", "file %s has been created", psname.Data());
+
+      if (res >= 0)
          return;
-      }
-      if (gtype != TImage::kUnknown) {
-         Color_t hc = gPad->GetCanvas()->GetHighLightColor();
-         gPad->GetCanvas()->SetHighLightColor(-1);
-         gPad->ModifiedUpdate();
-         // GL canvas requires extra update to correctly flush image, fix #22157
-         if (gPad->GetCanvas()->UseGL())
-            gPad->UpdateAsync();
-         gPad->GetCanvasImp()->UpdateDisplay(1, kTRUE);
-         if (pp)
-            pp->SaveImage(this, psname, gtype);
-         if (!gSystem->AccessPathName(psname)) {
-            Info("Print", "file %s has been created", psname.Data());
-         }
-         gPad->GetCanvas()->SetHighLightColor(hc);
-      } else {
-         Warning("Print", "Unsupported image format %s", psname.Data());
-      }
-      return;
    }
 
    //==============Save pad/canvas as a C++ script==============================
