@@ -1837,6 +1837,48 @@ TEST(RNTuple, Double32Uncompressed)
    EXPECT_DOUBLE_EQ(1.25, *reader->GetModel().GetDefaultEntry().GetPtr<double>("d"));
 }
 
+TEST(RNTuple, Double32Explicit64BitRejected)
+{
+   // An explicit 64-bit-only representation on a Double32_t field must be rejected: the field promises
+   // Double32_t (32-bit) precision, so storing full doubles would silently break that contract.
+   // A multi-column selection that also includes a reduced-precision representative stays legal.
+   {
+      FileRaii fileGuard("test_ntuple_double32_explicit64_split_rejected.root");
+      auto model = RNTupleModel::Create();
+      auto fld = RFieldBase::Create("d", "Double32_t").Unwrap();
+      fld->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kSplitReal64}});
+      model->AddField(std::move(fld));
+      EXPECT_THROW(RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath()), ROOT::RException);
+   }
+   {
+      FileRaii fileGuard("test_ntuple_double32_explicit64_rejected.root");
+      auto model = RNTupleModel::Create();
+      auto fld = RFieldBase::Create("d", "Double32_t").Unwrap();
+      fld->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal64}});
+      model->AddField(std::move(fld));
+      EXPECT_THROW(RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath()), ROOT::RException);
+   }
+
+   {
+      FileRaii fileGuard("test_ntuple_double32_explicit64_multi.root");
+      auto model = RNTupleModel::Create();
+      auto fld = RFieldBase::Create("d", "Double32_t").Unwrap();
+      fld->SetColumnRepresentatives(
+         {{ROOT::ENTupleColumnType::kSplitReal64}, {ROOT::ENTupleColumnType::kSplitReal32}});
+      model->AddField(std::move(fld));
+      {
+         auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+         auto d = writer->GetModel().GetDefaultEntry().GetPtr<double>("d");
+         *d = 1.25;
+         writer->Fill();
+      }
+
+      auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+      reader->LoadEntry(0);
+      EXPECT_DOUBLE_EQ(1.25, *reader->GetModel().GetDefaultEntry().GetPtr<double>("d"));
+   }
+}
+
 TEST(RNTuple, Double32Extended)
 {
    FileRaii fileGuard("test_ntuple_double32_extended.root");
