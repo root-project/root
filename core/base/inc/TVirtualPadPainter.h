@@ -38,6 +38,8 @@ public:
 #endif
       kOpaque};
 
+   enum ESaveImageResult  {kSaveNotImplemented, kSaveFail, kSaveOk};
+
    virtual ~TVirtualPadPainter();
 
    //Line attributes to be set up in TPad.
@@ -154,7 +156,10 @@ public:
    virtual void     DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags = 0);
 
    //gif, jpg, png, bmp output.
-   virtual void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const = 0;
+   virtual void     R__DEPRECATED(7,00, "Old method, replaced by SaveAsImage") SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const ;
+
+   // New API for all kind of image formats.
+   virtual ESaveImageResult   SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t type) const;
 
    virtual void     OnPad(TVirtualPad *) {}
 
