@@ -308,7 +308,7 @@ std::vector<const ROOT::TSchemaRule *> ROOT::RRuleField::FindRules(const ROOT::R
    }
 
    // Cleanup and sort rules
-   // Check that any any given source member uses the same type in all rules
+   // Check that any given source member uses the same type in all rules
    std::unordered_map<std::string, std::string> sourceNameAndType;
    std::size_t nskip = 0; // skip whole-object-rules that were moved to the end of the rules vector
    for (auto itr = rules.begin(); itr != rules.end() - nskip;) {
