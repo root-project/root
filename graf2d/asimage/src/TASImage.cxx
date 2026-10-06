@@ -1096,7 +1096,7 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    DestroyImage();
    DestroyScaledImage();
 
-   if (gROOT->IsBatch()) { // in batch mode
+   if (gROOT->IsBatch() || pad->IsBatch() || pad->IsWeb() ) { // in batch mode
       TVirtualPS *psave = gVirtualPS;
       gVirtualPS = new TImageDump();
       gVirtualPS->Open(pad->GetName(), 114); // in memory
