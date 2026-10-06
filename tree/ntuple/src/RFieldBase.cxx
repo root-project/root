@@ -947,6 +947,27 @@ void ROOT::RFieldBase::AutoAdjustColumnTypes(const ROOT::RNTupleWriteOptions &op
       else
          SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}});
    }
+
+   // An explicit representation pinned on a Double32_t field must contain a reduced-precision encoding:
+   // a 64-bit-only selection would store full doubles while the field promises Double32_t precision.
+   // A multi-column selection that also includes a reduced-precision representative stays legal.
+   if ((fTypeAlias == "Double32_t") && !hadDefaultRepresentative) {
+      bool hasSubDoubleRep = false;
+      for (const auto &rep : GetColumnRepresentatives()) {
+         for (const auto colType : rep) {
+            if ((colType != ROOT::ENTupleColumnType::kReal64) && (colType != ROOT::ENTupleColumnType::kSplitReal64)) {
+               hasSubDoubleRep = true;
+               break;
+            }
+         }
+         if (hasSubDoubleRep)
+            break;
+      }
+      if (!hasSubDoubleRep) {
+         throw RException(R__FAIL("explicit column representations of Double32_t field `" + GetFieldName() +
+                                  "` must include a reduced-precision representation"));
+      }
+   }
 }
 
 void ROOT::RFieldBase::ConnectPageSink(ROOT::Internal::RPageSink &pageSink, ROOT::NTupleSize_t firstEntry)
