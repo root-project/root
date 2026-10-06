@@ -102,7 +102,12 @@ endif()
 ROOT_FIND_PYTHON_MODULE(torch)
 ROOT_FIND_PYTHON_MODULE(keras)
 
-
+# On macOS, a Python interpreter embedded in a C++ process doesn't use the
+# virtual environment that the Python executable belongs to, so it would not
+# find the Python modules detected above. Tell it which Python executable to use.
+if(APPLE)
+  set(embedded_python_env PYTHONEXECUTABLE=${Python3_EXECUTABLE})
+endif()
 
 # onnx 1.19.0 has a bug that makes this version unusable:
 # https://github.com/onnx/onnx/issues/7249
@@ -151,6 +156,7 @@ if (tpython AND ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND BLAS_FOUND AND NOT brok
         INCLUDE_DIRS
         SYSTEM
         ${CMAKE_CURRENT_BINARY_DIR}
+        ENVIRONMENT ${embedded_python_env}
   )
 endif()
 
@@ -169,7 +175,7 @@ if (tpython AND ROOT_KERAS_FOUND AND BLAS_FOUND)
        INCLUDE_DIRS
        SYSTEM
        ${CMAKE_CURRENT_BINARY_DIR}
-       ENVIRONMENT PYTHONPATH=${localruntimedir}
+       ENVIRONMENT PYTHONPATH=${localruntimedir} ${embedded_python_env}
    )
 
 endif()
