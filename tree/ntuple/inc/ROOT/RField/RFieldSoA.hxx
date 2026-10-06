@@ -70,7 +70,6 @@ class RSoAField : public RRuleField {
       std::size_t fOffset = 0;
    };
 
-   TClass *fSoAClass = nullptr;
    /// Direct access to the member fields of the underlying record. In case of a nested SoA type, this vector
    /// contains the contents of the inner fRecordMemberFields, too. Effectively, this record will contain all the
    /// fields of the underlying record type that correspond to terminal RVec members in a nested SoA type.
@@ -82,7 +81,7 @@ class RSoAField : public RRuleField {
    std::vector<std::unique_ptr<RDeleter>> fRecordMemberDeleters;
    ROOT::Internal::RColumnIndex fNWritten;
 
-   /// Contains the I/O customization rules for fSoAClass and all nested SoA classes and base classes,
+   /// Contains the I/O customization rules for fClass and all nested SoA classes and base classes,
    /// and the relative offset at which the rule needs to be applied.
    std::vector<RRule> fRules;
 
@@ -118,7 +117,7 @@ protected:
    void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final;
 
    void ConstructValue(void *where) const final;
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RSoADeleter>(fSoAClass); }
+   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RSoADeleter>(fClass); }
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
@@ -127,8 +126,6 @@ protected:
 
    std::unique_ptr<RFieldBase> BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
-
-   TClass *GetInMemoryClass() const final { return fSoAClass; }
 
 public:
    RSoAField(std::string_view fieldName, std::string_view className);
@@ -147,7 +144,7 @@ public:
    const std::type_info *GetPolymorphicTypeInfo() const;
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 
-   TClass *GetSoAClass() const { return fSoAClass; }
+   TClass *GetSoAClass() const { return fClass; }
 };
 
 } // namespace Experimental

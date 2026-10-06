@@ -144,6 +144,9 @@ protected:
    /// Prefix used in the subfield names generated for base classes
    static constexpr const char *kPrefixInherited{":"};
 
+   /// Set by derived class to the TClass instance representing the current in-memory layout.
+   TClass *fClass = nullptr;
+
    /// The staging area stores inputs to I/O rules according to the offsets given by the streamer info of
    /// "TypeName@@Version". The area is allocated depending on I/O rules resp. the source members of the I/O rules.
    std::unique_ptr<unsigned char[]> fStagingArea;
@@ -154,10 +157,7 @@ protected:
    TClass *fStagingClass = nullptr;
    std::unordered_map<std::string, RStagingItem> fStagingItems; ///< Lookup staging items by member name
 
-   RRuleField(std::string_view name, std::string_view type, ROOT::ENTupleStructure structure);
-
-   /// Derived classes should return the TClass instance representing the current in-memory layout.
-   virtual TClass *GetInMemoryClass() const = 0;
+   RRuleField(std::string_view name, std::string_view type, TClass *classp, ROOT::ENTupleStructure structure);
 
    /// Returns the id of member 'name' in the class field given by 'fieldId', or kInvalidDescriptorId if no such
    /// member exist. Looks recursively in base classes.
@@ -201,7 +201,6 @@ private:
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
-   TClass *fClass;
    /// Additional information kept for each entry in `fSubfields`
    std::vector<RSubfieldInfo> fSubfieldsInfo;
 
@@ -222,8 +221,6 @@ protected:
 
    std::unique_ptr<RFieldBase> BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
-
-   TClass *GetInMemoryClass() const final { return fClass; }
 
 public:
    RClassField(std::string_view fieldName, std::string_view className);
