@@ -2195,6 +2195,28 @@ void TRootCanvas::UpdateViewWithMenu()
       fViewWithMenu->EnableEntry(kViewX3D);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update canvas display
+
+void TRootCanvas::UpdateDisplay(Int_t mode, Bool_t sleep)
+{
+   if (gVirtualX)
+      gVirtualX->Update(mode % 100);
+
+   if (mode == 101) {
+      // used by TGLPadPainter
+      // when requesting window atributes sync works better
+      // workaround for issue #22157
+      WindowAttributes_t attributes;
+      gVirtualX->GetWindowAttributes(GetMainFrame()->GetId(), attributes);
+   }
+
+   if (sleep)
+      gSystem->Sleep(30);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Save a canvas container as a C++ statement(s) on output stream out.
 
@@ -2207,3 +2229,5 @@ void TRootContainer::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out << "   TGCompositeFrame *" << GetName() << " = new TGCompositeFrame(gClient, winC, " << GetParent()->GetName()
        << ");\n";
 }
+
+
