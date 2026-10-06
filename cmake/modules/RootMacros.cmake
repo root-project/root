@@ -631,7 +631,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   #---Get the library and module dependencies-----------------
   # Every dictionary implicitly depends on Core's pcm, except the one for Core itself.
-  if(ARG_MODULE AND NOT ARG_MODULE STREQUAL "Core")
+  # Only when building ROOT itself: downstream projects have no plain 'Core' target
+  # (only ROOT::Core), and a bare 'Core' in DEPENDS would be treated as a file.
+  if(ARG_MODULE AND NOT ARG_MODULE STREQUAL "Core" AND TARGET Core)
     list(INSERT ARG_DEPENDENCIES 0 Core)
     list(REMOVE_DUPLICATES ARG_DEPENDENCIES)
   endif()
