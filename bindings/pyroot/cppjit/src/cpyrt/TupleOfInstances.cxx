@@ -35,11 +35,11 @@ static PyObject* ia_iternext(ia_iterobject* ia) {
 static int ia_traverse(ia_iterobject*, visitproc, void*) { return 0; }
 
 static PyObject* ia_getsize(ia_iterobject* ia, void*) {
-  return PyInt_FromSsize_t(ia->ia_len);
+  return PyLong_FromSsize_t(ia->ia_len);
 }
 
 static int ia_setsize(ia_iterobject* ia, PyObject* pysize, void*) {
-  Py_ssize_t size = PyInt_AsSsize_t(pysize);
+  Py_ssize_t size = PyLong_AsSsize_t(pysize);
   if (size == (Py_ssize_t)-1 && PyErr_Occurred())
     return -1;
   ia->ia_len = size;
@@ -57,7 +57,7 @@ static PyObject* ia_subscript(ia_iterobject* ia, PyObject* pyidx) {
   // Subscripting the iterator allows direct access through indexing on arrays
   // that do not have a defined length. This way, the return from accessing such
   // an array as a data member can both be used in a loop and directly.
-  Py_ssize_t idx = PyInt_AsSsize_t(pyidx);
+  Py_ssize_t idx = PyLong_AsSsize_t(pyidx);
   if (idx == (Py_ssize_t)-1 && PyErr_Occurred())
     return nullptr;
 
@@ -216,51 +216,50 @@ PyTypeObject TupleOfInstances_Type = {
     0,                                                       // tp_basicsize
     0,                                                       // tp_itemsize
     0,                                                       // tp_dealloc
-    0, // tp_vectorcall_offset / tp_print
-    0, // tp_getattr
-    0, // tp_setattr
-    0, // tp_as_async / tp_compare
-    0, // tp_repr
-    0, // tp_as_number
-    0, // tp_as_sequence
-    0, // tp_as_mapping
-    0, // tp_hash
-    0, // tp_call
-    0, // tp_str
-    0, // tp_getattro
-    0, // tp_setattro
-    0, // tp_as_buffer
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_CHECKTYPES |
-        Py_TPFLAGS_BASETYPE,         // tp_flags
-    (char*)"array of C++ instances", // tp_doc
-    0,                               // tp_traverse
-    0,                               // tp_clear
-    0,                               // tp_richcompare
-    0,                               // tp_weaklistoffset
-    0,                               // tp_iter
-    0,                               // tp_iternext
-    0,                               // tp_methods
-    0,                               // tp_members
-    0,                               // tp_getset
-    &PyTuple_Type,                   // tp_base
-    0,                               // tp_dict
-    0,                               // tp_descr_get
-    0,                               // tp_descr_set
-    0,                               // tp_dictoffset
-    0,                               // tp_init
-    0,                               // tp_alloc
-    0,                               // tp_new
-    0,                               // tp_free
-    0,                               // tp_is_gc
-    0,                               // tp_bases
-    0,                               // tp_mro
-    0,                               // tp_cache
-    0,                               // tp_subclasses
-    0,                               // tp_weaklist
-    0,                               // tp_del
-    0,                               // tp_version_tag
-    0,                               // tp_finalize
-    0                                // tp_vectorcall
+    0,                                        // tp_vectorcall_offset / tp_print
+    0,                                        // tp_getattr
+    0,                                        // tp_setattr
+    0,                                        // tp_as_async / tp_compare
+    0,                                        // tp_repr
+    0,                                        // tp_as_number
+    0,                                        // tp_as_sequence
+    0,                                        // tp_as_mapping
+    0,                                        // tp_hash
+    0,                                        // tp_call
+    0,                                        // tp_str
+    0,                                        // tp_getattro
+    0,                                        // tp_setattro
+    0,                                        // tp_as_buffer
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, // tp_flags
+    (char*)"array of C++ instances",          // tp_doc
+    0,                                        // tp_traverse
+    0,                                        // tp_clear
+    0,                                        // tp_richcompare
+    0,                                        // tp_weaklistoffset
+    0,                                        // tp_iter
+    0,                                        // tp_iternext
+    0,                                        // tp_methods
+    0,                                        // tp_members
+    0,                                        // tp_getset
+    &PyTuple_Type,                            // tp_base
+    0,                                        // tp_dict
+    0,                                        // tp_descr_get
+    0,                                        // tp_descr_set
+    0,                                        // tp_dictoffset
+    0,                                        // tp_init
+    0,                                        // tp_alloc
+    0,                                        // tp_new
+    0,                                        // tp_free
+    0,                                        // tp_is_gc
+    0,                                        // tp_bases
+    0,                                        // tp_mro
+    0,                                        // tp_cache
+    0,                                        // tp_subclasses
+    0,                                        // tp_weaklist
+    0,                                        // tp_del
+    0,                                        // tp_version_tag
+    0,                                        // tp_finalize
+    0                                         // tp_vectorcall
     CPYRT_PYTYPE_TAIL};
 
 } // namespace cppjit::cpyrt

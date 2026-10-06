@@ -48,12 +48,12 @@ public:
   }
 
   PyObject* GetSignature(bool /*show_formalargs*/ = true) override {
-    return cpyrt_PyText_FromString("*args, **kwargs");
+    return PyUnicode_FromString("*args, **kwargs");
   }
   PyObject* GetSignatureNames() override { return PyTuple_New(0); }
   PyObject* GetSignatureTypes() override { return PyTuple_New(0); }
   PyObject* GetPrototype(bool /*show_formalargs*/ = true) override {
-    return cpyrt_PyText_FromString("<callback>");
+    return PyUnicode_FromString("<callback>");
   }
   PyObject* GetDocString() override {
     if (PyObject_HasAttrString(fCallable, "__doc__")) {
@@ -212,7 +212,7 @@ static inline PyObject* HandleReturn(CPPOverload* pymeth, CPPInstance* im_self,
 
 //= cpyrt method proxy object behaviour ===================================
 static PyObject* mp_name(CPPOverload* pymeth, void*) {
-  return cpyrt_PyText_FromString(pymeth->GetName().c_str());
+  return PyUnicode_FromString(pymeth->GetName().c_str());
 }
 
 //----------------------------------------------------------------------------
@@ -242,10 +242,10 @@ static PyObject* mp_doc(CPPOverload* pymeth, void*) {
     return doc;
 
   // overloaded method
-  PyObject* separator = cpyrt_PyText_FromString("\n");
+  PyObject* separator = PyUnicode_FromString("\n");
   for (CPPOverload::Methods_t::size_type i = 1; i < nMethods; ++i) {
-    cpyrt_PyText_Append(&doc, separator);
-    cpyrt_PyText_AppendAndDel(&doc, methods[i]->GetDocString());
+    PyUnicode_Append(&doc, separator);
+    PyUnicode_AppendAndDel(&doc, methods[i]->GetDocString());
   }
   Py_DECREF(separator);
 
@@ -436,7 +436,7 @@ static inline int set_flag(CPPOverload* pymeth, PyObject* value,
 //----------------------------------------------------------------------------
 static PyObject* mp_getcreates(CPPOverload* pymeth, void*) {
   // Get '__creates__' boolean, which determines ownership of return values.
-  return PyInt_FromLong((long)IsCreator(pymeth->fMethodInfo->fFlags));
+  return PyLong_FromLong((long)IsCreator(pymeth->fMethodInfo->fFlags));
 }
 
 //----------------------------------------------------------------------------
@@ -486,16 +486,16 @@ CPPJIT_BOOLEAN_PROPERTY(sig2exc,  CallContext::kProtected,   "__sig2exc__")
 
 static PyObject* mp_getcppname(CPPOverload* pymeth, void*) {
   if ((void*)pymeth == (void*)&CPPOverload_Type)
-    return cpyrt_PyText_FromString("CPPOverload_Type");
+    return PyUnicode_FromString("CPPOverload_Type");
 
   auto& methods = pymeth->fMethodInfo->fMethods;
   if (methods.empty())
-    return cpyrt_PyText_FromString("void (*)()"); // debatable
+    return PyUnicode_FromString("void (*)()"); // debatable
 
   if (methods.size() == 1)
     return methods[0]->GetTypeName();
 
-  return cpyrt_PyText_FromString("void* (*)(...)"); // id.
+  return PyUnicode_FromString("void* (*)(...)"); // id.
 }
 
 //----------------------------------------------------------------------------
@@ -670,8 +670,7 @@ static PyObject* mp_vectorcall(CPPOverload* pymeth, PyObject* const* args,
       if (!PyErr_Occurred()) {
         // this should not happen; set an error to prevent core dump and report
         PyObject* sig = methods[i]->GetPrototype();
-        PyErr_Format(PyExc_SystemError, "%s =>\n    %s",
-                     cpyrt_PyText_AsString(sig),
+        PyErr_Format(PyExc_SystemError, "%s =>\n    %s", PyUnicode_AsUTF8(sig),
                      (char*)"nullptr result without error in overload call");
         Py_DECREF(sig);
       }
@@ -697,7 +696,7 @@ static PyObject* mp_vectorcall(CPPOverload* pymeth, PyObject* const* args,
   }
 
   // first summarize, then add details
-  PyObject* topmsg = cpyrt_PyText_FromFormat(
+  PyObject* topmsg = PyUnicode_FromFormat(
       "none of the %d overloaded methods succeeded. Full details:",
       (int)nMethods);
   SetDetailedException(std::move(errors), topmsg /* steals */,
@@ -713,7 +712,7 @@ static PyObject* mp_str(CPPOverload* cppinst) {
   std::ostringstream s;
   s << "<C++ overload \"" << cppinst->fMethodInfo->fName << "\" at "
     << (void*)cppinst << ">";
-  return cpyrt_PyText_FromString(s.str().c_str());
+  return PyUnicode_FromString(s.str().c_str());
 }
 
 //----------------------------------------------------------------------------
@@ -1025,7 +1024,7 @@ PyObject* cpyrt::CPPOverload::FindOverload(const std::string& signature,
     bool found = accept_any;
     if (!found) {
       PyObject* pysig2 = meth->GetSignature(false);
-      std::string sig2(cpyrt_PyText_AsString(pysig2));
+      std::string sig2(PyUnicode_AsUTF8(pysig2));
       sig2.erase(std::remove(sig2.begin(), sig2.end(), ' '), std::end(sig2));
       Py_DECREF(pysig2);
       if (sig1 == sig2)
@@ -1033,7 +1032,7 @@ PyObject* cpyrt::CPPOverload::FindOverload(const std::string& signature,
 
       if (!found) {
         pysig2 = meth->GetSignature(true);
-        std::string sig3(cpyrt_PyText_AsString(pysig2));
+        std::string sig3(PyUnicode_AsUTF8(pysig2));
         sig3.erase(std::remove(sig3.begin(), sig3.end(), ' '), std::end(sig3));
         Py_DECREF(pysig2);
         if (sig1 == sig3)
@@ -1109,12 +1108,12 @@ PyObject* cpyrt::CPPOverload::FindOverload(PyObject* args_tuple,
 
     for (int i = 0; i < n; i++) {
       PyObject* pItem = PyTuple_GetItem(args_tuple, i);
-      if (!cpyrt_PyText_Check(pItem)) {
+      if (!PyUnicode_Check(pItem)) {
         PyErr_Format(PyExc_LookupError,
                      "argument types should be in string format");
         return (PyObject*)nullptr;
       }
-      std::string arg_type(cpyrt_PyText_AsString(pItem));
+      std::string arg_type(PyUnicode_AsUTF8(pItem));
       sigargs += arg_type + ", ";
     }
     sigargs += ")";

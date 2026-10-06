@@ -40,69 +40,16 @@ namespace cppjit::cpyrt {
 typedef Py_ssize_t dim_t;
 } // namespace cppjit::cpyrt
 
-typedef Py_ssize_t (*dict_lookup_func)(PyDictObject*, PyObject*, Py_hash_t,
-                                       PyObject**);
-
-// for 3.0 support (backwards compatibility, really)
-#define cpyrt_PyText_Check PyUnicode_Check
-#define cpyrt_PyText_CheckExact PyUnicode_CheckExact
-#define cpyrt_PyText_AsString PyUnicode_AsUTF8
-#define cpyrt_PyText_AsStringChecked PyUnicode_AsUTF8
-#define cpyrt_PyText_GetSize PyUnicode_GetSize
-#define cpyrt_PyText_GET_SIZE PyUnicode_GET_LENGTH
-#define cpyrt_PyUnicode_GET_SIZE PyUnicode_GET_LENGTH
-#define cpyrt_PyText_FromFormat PyUnicode_FromFormat
-#define cpyrt_PyText_FromString PyUnicode_FromString
-#define cpyrt_PyText_InternFromString PyUnicode_InternFromString
-#define cpyrt_PyText_Append PyUnicode_Append
-#define cpyrt_PyText_AppendAndDel PyUnicode_AppendAndDel
-#define cpyrt_PyText_FromStringAndSize PyUnicode_FromStringAndSize
-
-#define _cpyrt_PyText_AsStringAndSize PyUnicode_AsUTF8AndSize
-
+// like PyUnicode_AsUTF8AndSize, but also accepts bytes
 static inline const char* cpyrt_PyText_AsStringAndSize(PyObject* pystr,
                                                        Py_ssize_t* size) {
-  const char* cstr = _cpyrt_PyText_AsStringAndSize(pystr, size);
+  const char* cstr = PyUnicode_AsUTF8AndSize(pystr, size);
   if (!cstr && PyBytes_CheckExact(pystr)) {
     PyErr_Clear();
     PyBytes_AsStringAndSize(pystr, (char**)&cstr, size);
   }
   return cstr;
 }
-
-#define cpyrt_PyText_Type PyUnicode_Type
-
-#define PyIntObject PyLongObject
-#define PyInt_Check PyLong_Check
-#define PyInt_AsLong PyLong_AsLong
-#define PyInt_AS_LONG PyLong_AsLong
-#define PyInt_AsSsize_t PyLong_AsSsize_t
-#define PyInt_CheckExact PyLong_CheckExact
-#define PyInt_FromLong PyLong_FromLong
-#define PyInt_FromSsize_t PyLong_FromSsize_t
-
-#define PyInt_Type PyLong_Type
-
-#define cpyrt_PyCapsule_New PyCapsule_New
-#define cpyrt_PyCapsule_CheckExact PyCapsule_CheckExact
-#define cpyrt_PyCapsule_GetPointer PyCapsule_GetPointer
-
-#define CPPJIT__long__ "__int__"
-#define CPPJIT__idiv__ "__itruediv__"
-#define CPPJIT__div__ "__truediv__"
-#define CPPJIT__next__ "__next__"
-
-#define Py_TPFLAGS_HAVE_RICHCOMPARE 0
-#define Py_TPFLAGS_CHECKTYPES 0
-
-#define PyClass_Check PyType_Check
-
-#define PyBuffer_Type PyMemoryView_Type
-
-#define cpyrt_PySliceCast PyObject*
-#define PyUnicode_GetSize PyUnicode_GetLength
-
-#define cpyrt_PyUnicode_AsWideChar PyUnicode_AsWideChar
 
 #ifdef R__MACOSX
 #if SIZEOF_SIZE_T == SIZEOF_INT
@@ -129,9 +76,6 @@ static inline const char* cpyrt_PyText_AsStringAndSize(PyObject* pystr,
 #ifndef Py_RETURN_FALSE
 #define Py_RETURN_FALSE return Py_INCREF(Py_False), Py_False
 #endif
-
-// vector call support
-#define cpyrt_PyCFunction_Call PyObject_Call
 
 // vector call support
 typedef PyObject* const* cpyrt_PyArgs_t;

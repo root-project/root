@@ -51,7 +51,7 @@ cppjit::cpyrt::PyException::PyException() {
 
     PyObject* msg = PyObject_Str(pyvalue);
     if (msg) {
-      fMsg += cpyrt_PyText_AsString(msg);
+      fMsg += PyUnicode_AsUTF8(msg);
       Py_DECREF(msg);
     }
   }
@@ -69,13 +69,13 @@ cppjit::cpyrt::PyException::PyException() {
     Py_DECREF(code);
 
     PyObject* filenameStr = PyObject_Str(filename);
-    locFile = cpyrt_PyText_AsString(filenameStr);
+    locFile = PyUnicode_AsUTF8(filenameStr);
     Py_DECREF(filenameStr);
     Py_DECREF(filename);
 
     PyObject* name = PyObject_GetAttrString(code, "co_name");
     PyObject* nameStr = PyObject_Str(name);
-    locName = cpyrt_PyText_AsString(nameStr);
+    locName = PyUnicode_AsUTF8(nameStr);
     Py_DECREF(nameStr);
     Py_DECREF(name);
 

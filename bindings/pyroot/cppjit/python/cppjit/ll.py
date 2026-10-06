@@ -25,6 +25,7 @@ __all__ = [
     "free",
     "array_new",
     "array_delete",
+    "bind_value",
     "signals_as_exception",
     "set_signals_as_exception",
     "FatalError",
@@ -44,6 +45,30 @@ def argv():
 
 def argc():
     return len(sys.argv)
+
+
+def bind_value(type_name, address, dims=None):
+    """Read a value of the C++ type `type_name` from `address`.
+
+    Hands back the object that cppjit's converters would produce reading the
+    same memory themselves: a bound proxy for a class type, a Python value
+    for a builtin. Meant for code that has a type name and an address in hand
+    but no C++ entity to read them from, such as a framework exposing its own
+    data description.
+
+    `address` is an integer, as returned by `addressof`. If `dims` is given,
+    it is a non-empty sequence of non-negative integers describing the shape
+    of an array starting at `address`, and the type name must end in `[]` or
+    `*` (scalar converters ignore `dims`); a `LowLevelView` of that shape is
+    returned.
+
+        v = ll.bind_value('double', addr)             # a float
+        a = ll.bind_value('double[]', addr, (2, 3))   # a 2x3 view
+
+    No lifetime or bounds checking is or can be done: the caller vouches for
+    the address, the type and the shape.
+    """
+    return cppjit._backend.bind_value(type_name, address, dims)
 
 
 # import low-level python converters

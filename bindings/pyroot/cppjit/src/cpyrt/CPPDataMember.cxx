@@ -251,7 +251,7 @@ static PyObject* dm_reflex(CPPDataMember* dm, PyObject* args) {
   if (request == interop::Reflex::TYPE) {
     if (format == interop::Reflex::OPTIMAL ||
         format == interop::Reflex::AS_STRING)
-      return cpyrt_PyText_FromString(dm->fFullType.c_str());
+      return PyUnicode_FromString(dm->fFullType.c_str());
   } else if (request == interop::Reflex::OFFSET) {
     if (format == interop::Reflex::OPTIMAL)
       return PyLong_FromLong(dm->fOffset);
@@ -350,7 +350,7 @@ void cpyrt::CPPDataMember::Set(interop::TCppScope_t scope,
     if (fFullType.find("(anonymous)") == std::string::npos &&
         fFullType.find("(unnamed)") == std::string::npos) {
       // repurpose fDescription for lazy lookup of the enum later
-      fDescription = cpyrt_PyText_FromString((fFullType + "::" + name).c_str());
+      fDescription = PyUnicode_FromString((fFullType + "::" + name).c_str());
       fFlags |= kIsEnumPrep;
     }
     type = interop::ResolveType(type);
@@ -379,14 +379,14 @@ void cpyrt::CPPDataMember::Set(interop::TCppScope_t scope,
     fConverter = CreateConverter(type, {(dim_t)dims.size(), dims.data()});
 
   if (!(fFlags & kIsEnumPrep))
-    fDescription = cpyrt_PyText_FromString(name.c_str());
+    fDescription = PyUnicode_FromString(name.c_str());
 }
 
 //-----------------------------------------------------------------------------
 void cpyrt::CPPDataMember::Set(interop::TCppScope_t scope,
                                const std::string& name, void* address) {
   fEnclosingScope = scope;
-  fDescription = cpyrt_PyText_FromString(name.c_str());
+  fDescription = PyUnicode_FromString(name.c_str());
   fOffset = (intptr_t)address;
   fFlags = kIsStaticData | kIsConstData;
   fConverter = CreateConverter("internal_enum_type_t");
@@ -435,16 +435,16 @@ std::string cpyrt::CPPDataMember::GetName() {
   if (fFlags & kIsEnumType) {
     PyObject* repr = PyObject_Repr(fDescription);
     if (repr) {
-      std::string res = cpyrt_PyText_AsString(repr);
+      std::string res = PyUnicode_AsUTF8(repr);
       Py_DECREF(repr);
       return res;
     }
     PyErr_Clear();
     return "<unknown>";
   } else if (fFlags & kIsEnumPrep) {
-    std::string fullName = cpyrt_PyText_AsString(fDescription);
+    std::string fullName = PyUnicode_AsUTF8(fDescription);
     return fullName.substr(fullName.rfind("::") + 2, std::string::npos);
   }
 
-  return cpyrt_PyText_AsString(fDescription);
+  return PyUnicode_AsUTF8(fDescription);
 }

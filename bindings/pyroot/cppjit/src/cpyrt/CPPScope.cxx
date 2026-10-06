@@ -35,7 +35,7 @@ add_template(PyObject* pyclass, const std::string& name,
   // specific lookup must be the current overload, if already found.
 
   const std::string& ncl = TypeManip::clean_type(name);
-  PyObject* pyncl = cpyrt_PyText_FromString(ncl.c_str());
+  PyObject* pyncl = PyUnicode_FromString(ncl.c_str());
   TemplateProxy* pytmpl =
       (TemplateProxy*)PyType_Type.tp_getattro(pyclass, pyncl);
   if (!pytmpl) {
@@ -95,23 +95,23 @@ static void meta_dealloc(CPPScope* scope) {
 //-----------------------------------------------------------------------------
 static PyObject* meta_getcppname(CPPScope* scope, void*) {
   if ((void*)scope == (void*)&CPPInstance_Type)
-    return cpyrt_PyText_FromString("CPPInstance_Type");
-  return cpyrt_PyText_FromString(
+    return PyUnicode_FromString("CPPInstance_Type");
+  return PyUnicode_FromString(
       interop::GetScopedFinalName(scope->fCppType).c_str());
 }
 
 //-----------------------------------------------------------------------------
 static PyObject* meta_getmodule(CPPScope* scope, void*) {
   if ((void*)scope == (void*)&CPPInstance_Type)
-    return cpyrt_PyText_FromString("cppjit.gbl");
+    return PyUnicode_FromString("cppjit.gbl");
 
   if (scope->fModuleName)
-    return cpyrt_PyText_FromString(scope->fModuleName);
+    return PyUnicode_FromString(scope->fModuleName);
 
   // get C++ representation of outer scope
   interop::TCppScope_t parent_scope = interop::GetParentScope(scope->fCppType);
   if (parent_scope == interop::GetGlobalScope())
-    return cpyrt_PyText_FromString(const_cast<char*>("cppjit.gbl"));
+    return PyUnicode_FromString(const_cast<char*>("cppjit.gbl"));
 
   // now peel scopes one by one, pulling in the python naming (which will
   // simply recurse if not overridden in python)
@@ -124,8 +124,8 @@ static PyObject* meta_getmodule(CPPScope* scope, void*) {
       // append name of our module
       PyObject* pymodname = PyObject_GetAttr(pyscope, PyStrings::gName);
       if (pymodname) {
-        cpyrt_PyText_AppendAndDel(&pymodule, cpyrt_PyText_FromString("."));
-        cpyrt_PyText_AppendAndDel(&pymodule, pymodname);
+        PyUnicode_AppendAndDel(&pymodule, PyUnicode_FromString("."));
+        PyUnicode_AppendAndDel(&pymodule, pymodname);
       }
     }
     Py_DECREF(pyscope);
@@ -138,7 +138,7 @@ static PyObject* meta_getmodule(CPPScope* scope, void*) {
   // lookup through python failed, so simply cook up a '::' -> '.' replacement
   std::string modname = interop::GetScopedFinalName(parent_scope);
   TypeManip::cppscope_to_pyscope(modname);
-  return cpyrt_PyText_FromString(("cppjit.gbl." + modname).c_str());
+  return PyUnicode_FromString(("cppjit.gbl." + modname).c_str());
 }
 
 //-----------------------------------------------------------------------------
@@ -150,12 +150,12 @@ static int meta_setmodule(CPPScope* scope, PyObject* value, void*) {
     return -1;
   }
 
-  const char* newname = cpyrt_PyText_AsStringChecked(value);
+  const char* newname = PyUnicode_AsUTF8(value);
   if (!value)
     return -1;
 
   free(scope->fModuleName);
-  Py_ssize_t sz = cpyrt_PyText_GET_SIZE(value);
+  Py_ssize_t sz = PyUnicode_GET_LENGTH(value);
   scope->fModuleName = (char*)malloc(sz + 1);
   memcpy(scope->fModuleName, newname, sz + 1);
 
@@ -167,7 +167,7 @@ static PyObject* meta_repr(CPPScope* scope) {
   // Specialized b/c type_repr expects __module__ to live in the dictionary,
   // whereas it is a property (to save memory).
   if ((void*)scope == (void*)&CPPInstance_Type)
-    return cpyrt_PyText_FromFormat(
+    return PyUnicode_FromFormat(
         const_cast<char*>("<class cppjit.CPPInstance at %p>"), scope);
 
   if (scope->fFlags & (CPPScope::kIsMeta | CPPScope::kIsPython)) {
@@ -185,9 +185,9 @@ static PyObject* meta_repr(CPPScope* scope) {
   const char* kind =
       (scope->fFlags & CPPScope::kIsNamespace) ? "namespace" : "class";
 
-  PyObject* repr = cpyrt_PyText_FromFormat("<%s %s.%s at %p>", kind,
-                                           cpyrt_PyText_AsString(modname),
-                                           clName.c_str(), scope);
+  PyObject* repr =
+      PyUnicode_FromFormat("<%s %s.%s at %p>", kind, PyUnicode_AsUTF8(modname),
+                           clName.c_str(), scope);
 
   Py_DECREF(modname);
   return repr;
@@ -242,7 +242,7 @@ static PyObject* pt_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds) {
     // there has been a user meta class override in a derived class, so do
     // the consistent thing, thus allowing user control over naming
     result->fCppType =
-        interop::GetScope(cpyrt_PyText_AsString(PyTuple_GET_ITEM(args, 0)));
+        interop::GetScope(PyUnicode_AsUTF8(PyTuple_GET_ITEM(args, 0)));
   } else {
     // coming here from cppjit or from sub-classing in python; take the
     // C++ type from the meta class to make sure that the latter category
@@ -272,7 +272,7 @@ static PyObject* pt_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds) {
           // the direct base can be useful for some templates, such as
           // shared_ptrs, so make it accessible (the __cpp_cross__ data member
           // also signals that this is a cross-inheritance class)
-          PyObject* bname = cpyrt_PyText_FromString(
+          PyObject* bname = PyUnicode_FromString(
               interop::GetBaseName(result->fCppType, 0).c_str());
           if (!bname)
             PyErr_Clear();
@@ -359,11 +359,11 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname) {
       return attr;
   }
 
-  if (!cpyrt_PyText_CheckExact(pyname) || !CPPScope_Check(pyclass))
+  if (!PyUnicode_CheckExact(pyname) || !CPPScope_Check(pyclass))
     return possibly_shadowed;
 
   // filter for python specials
-  std::string name = cpyrt_PyText_AsString(pyname);
+  std::string name = PyUnicode_AsUTF8(pyname);
   if (name.size() >= 5 && name.compare(0, 2, "__") == 0 &&
       name.compare(name.size() - 2, name.size(), "__") == 0)
     return possibly_shadowed;
@@ -500,7 +500,7 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname) {
           klass->fImp.fUsing->push_back(PyWeakref_NewRef(pyuscope, nullptr));
           // the namespace may not otherwise be held, so tie the lifetimes
           PyObject* llname =
-              cpyrt_PyText_FromString(("__lifeline_" + uname).c_str());
+              PyUnicode_FromString(("__lifeline_" + uname).c_str());
           PyType_Type.tp_setattro(pyclass, llname, pyuscope);
           Py_DECREF(llname);
           Py_DECREF(pyuscope);
@@ -548,14 +548,13 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname) {
     PyObject* sklass = PyObject_Str(pyclass);
     PyErr_Restore(pytype, pyvalue, pytrace);
     if (sklass) {
-      topmsg = cpyrt_PyText_FromFormat(
-          "%s has no attribute \'%s\'. Full details:",
-          cpyrt_PyText_AsString(sklass), cpyrt_PyText_AsString(pyname));
+      topmsg = PyUnicode_FromFormat(
+          "%s has no attribute \'%s\'. Full details:", PyUnicode_AsUTF8(sklass),
+          PyUnicode_AsUTF8(pyname));
       Py_DECREF(sklass);
     } else {
-      topmsg =
-          cpyrt_PyText_FromFormat("no such attribute \'%s\'. Full details:",
-                                  cpyrt_PyText_AsString(pyname));
+      topmsg = PyUnicode_FromFormat("no such attribute \'%s\'. Full details:",
+                                    PyUnicode_AsUTF8(pyname));
     }
     SetDetailedException(std::move(errors), topmsg /* steals */,
                          PyExc_AttributeError /* default error */);
@@ -574,7 +573,7 @@ static int meta_setattro(PyObject* pyclass, PyObject* pyname, PyObject* pyval) {
   // skip if the given pyval is a descriptor already, or an unassignable class
   if (((CPPScope*)pyclass)->fFlags & CPPScope::kIsNamespace &&
       !cpyrt::CPPDataMember_Check(pyval) && !cpyrt::CPPScope_Check(pyval)) {
-    std::string name = cpyrt_PyText_AsString(pyname);
+    std::string name = PyUnicode_AsUTF8(pyname);
     if (interop::GetNamed(name, ((CPPScope*)pyclass)->fCppType)) {
       PyObject* attr = meta_getattro(pyclass, pyname); // triggers creation
       if (!attr)
@@ -656,7 +655,7 @@ static PyObject* meta_dir(CPPScope* klass) {
 
   // get rid of duplicates
   for (Py_ssize_t i = 0; i < PyList_GET_SIZE(dirlist); ++i)
-    dir_cppnames.insert(cpyrt_PyText_AsString(PyList_GET_ITEM(dirlist, i)));
+    dir_cppnames.insert(PyUnicode_AsUTF8(PyList_GET_ITEM(dirlist, i)));
 
   Py_DECREF(dirlist);
   dirlist = PyList_New(dir_cppnames.size());
@@ -664,7 +663,7 @@ static PyObject* meta_dir(CPPScope* klass) {
   // copy total onto python list
   Py_ssize_t i = 0;
   for (const auto& name : dir_cppnames) {
-    PyList_SET_ITEM(dirlist, i++, cpyrt_PyText_FromString(name.c_str()));
+    PyList_SET_ITEM(dirlist, i++, PyUnicode_FromString(name.c_str()));
   }
   return dirlist;
 }

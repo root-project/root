@@ -210,7 +210,7 @@ static void configureInterpreter(const InterOpPaths& Paths) {
   Cpp::LoadLibrary("libstdc++", /* lookup= */ true);
 }
 
-static void preloadHeaders() {
+static bool preloadHeaders() {
   const char* code = "#include <algorithm>\n"
                      "#include <numeric>\n"
                      "#include <complex>\n"
@@ -235,7 +235,7 @@ static void preloadHeaders() {
                      "#include <optional>\n"
                      "#endif\n"
                      "#include <CppInterOp/Dispatch.h>\n";
-  Cpp::Process(code);
+  return Cpp::Process(code) == 0;
 }
 
 static void defineRuntimeHelpers() {
@@ -272,9 +272,18 @@ extern "C" int LoadCppInterOp() {
     if (!loadDispatchAPI(Paths))
       return;
 
-    acquireOrCreateInterpreter(Paths);
+    if (!acquireOrCreateInterpreter(Paths)) {
+      std::cerr << "[cppjit] Failed to create the C++ interpreter" << std::endl;
+      return;
+    }
     configureInterpreter(Paths);
-    preloadHeaders();
+    if (!preloadHeaders()) {
+      std::cerr << "[cppjit] The C++ standard headers do not parse, see the "
+                   "diagnostic above. Install a C++ toolchain such as g++ or "
+                   "the conda package cxx-compiler."
+                << std::endl;
+      return;
+    }
     defineRuntimeHelpers();
 
     Loaded = 1;
@@ -860,8 +869,14 @@ interop::TCppType_t interop::GetTypeFromScope(TCppScope_t klass) {
 }
 
 interop::TCppScope_t interop::GetGlobalScope() {
-  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
-  return Cpp::GetGlobalScope();
+  // The global scope (the first declaration of the interpreter's translation
+  // unit) never changes, but this is called on every method call that
+  // receives 'self' as its first argument, so avoid the lock and the query.
+  static const TCppScope_t s_global = [] {
+    std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
+    return Cpp::GetGlobalScope();
+  }();
+  return s_global;
 }
 
 bool interop::IsTemplate(TCppScope_t handle) { return Cpp::IsTemplate(handle); }
@@ -1320,6 +1335,9 @@ bool interop::HasVirtualDestructor(TCppScope_t scope) {
 interop::TCppIndex_t interop::GetNumBases(TCppScope_t klass) {
   // Get the total number of base classes that this class has.
   std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
+  // Autoloading may have registered only a forward declaration of the class;
+  // complete it, or the proxy is built without its bases.
+  Cpp::GetOrForceDefinition(klass);
   return Cpp::GetNumBases(klass);
 }
 

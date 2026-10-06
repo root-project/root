@@ -82,7 +82,7 @@ PyObject* cpyrt::PyStrings::gFromBuffer = nullptr;
 
 //-----------------------------------------------------------------------------
 #define CPPJIT_INITIALIZE_STRING(var, str)                                     \
-  if (!(PyStrings::var = cpyrt_PyText_InternFromString((char*)#str)))          \
+  if (!(PyStrings::var = PyUnicode_InternFromString((char*)#str)))             \
   return false
 
 bool cpyrt::CreatePyStrings() {
@@ -102,7 +102,7 @@ bool cpyrt::CreatePyStrings() {
   CPPJIT_INITIALIZE_STRING(gPreInc, __preinc__);
   CPPJIT_INITIALIZE_STRING(gPostInc, __postinc__);
   CPPJIT_INITIALIZE_STRING(gDict, __dict__);
-  if (!(PyStrings::gEmptyString = cpyrt_PyText_FromString((char*)"")))
+  if (!(PyStrings::gEmptyString = PyUnicode_FromString((char*)"")))
     return false;
   CPPJIT_INITIALIZE_STRING(gEq, __eq__);
   CPPJIT_INITIALIZE_STRING(gFollow, __follow__);
@@ -131,7 +131,7 @@ bool cpyrt::CreatePyStrings() {
   CPPJIT_INITIALIZE_STRING(gAdd, __add__);
   CPPJIT_INITIALIZE_STRING(gSub, __sub__);
   CPPJIT_INITIALIZE_STRING(gMul, __mul__);
-  CPPJIT_INITIALIZE_STRING(gDiv, CPPJIT__div__);
+  CPPJIT_INITIALIZE_STRING(gDiv, __truediv__);
 
   CPPJIT_INITIALIZE_STRING(gLShift, __lshift__);
   CPPJIT_INITIALIZE_STRING(gLShiftC, __lshiftc__);

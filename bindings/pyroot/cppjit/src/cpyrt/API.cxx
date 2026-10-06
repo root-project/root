@@ -338,7 +338,7 @@ bool cpyrt::Import(const std::string& mod_name) {
     Py_INCREF(value);
 
     // collect classes
-    if (PyClass_Check(value) || PyObject_HasAttr(value, PyStrings::gBases)) {
+    if (PyType_Check(value) || PyObject_HasAttr(value, PyStrings::gBases)) {
       // get full class name (including module)
       PyObject* pyClName = PyObject_GetAttr(value, PyStrings::gName);
       if (PyErr_Occurred())
@@ -347,7 +347,7 @@ bool cpyrt::Import(const std::string& mod_name) {
       // build full, qualified name
       std::string fullname = mod_name;
       fullname += ".";
-      fullname += cpyrt_PyText_AsString(pyClName);
+      fullname += PyUnicode_AsUTF8(pyClName);
 
       Py_XDECREF(pyClName);
     }

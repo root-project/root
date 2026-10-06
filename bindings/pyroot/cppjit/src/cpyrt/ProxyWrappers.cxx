@@ -94,7 +94,7 @@ static inline void AddPropertyToClass(PyObject* pyclass,
                                       interop::TCppScope_t scope,
                                       interop::TCppScope_t data) {
   cpyrt::CPPDataMember* property = cpyrt::CPPDataMember_New(scope, data);
-  PyObject* pname = cpyrt_PyText_InternFromString(
+  PyObject* pname = PyUnicode_InternFromString(
       const_cast<char*>(property->GetName().c_str()));
 
   // allow access at the instance level
@@ -121,7 +121,7 @@ static inline void AddPropertyToClass(PyObject* pyclass,
 
 static inline void AddScopeToParent(PyObject* parent, const std::string& name,
                                     PyObject* newscope) {
-  PyObject* pyname = cpyrt_PyText_InternFromString((char*)name.c_str());
+  PyObject* pyname = PyUnicode_InternFromString((char*)name.c_str());
   if (CPPScope_Check(parent))
     PyType_Type.tp_setattro(parent, pyname, newscope);
   else
@@ -149,7 +149,7 @@ static inline void sync_templates(PyObject* pyclass,
                                   const std::string& mtCppName,
                                   const std::string& mtName) {
   PyObject* dct = PyObject_GetAttr(pyclass, PyStrings::gDict);
-  PyObject* pyname = cpyrt_PyText_FromString(const_cast<char*>(mtName.c_str()));
+  PyObject* pyname = PyUnicode_FromString(const_cast<char*>(mtName.c_str()));
   PyObject* attr = PyObject_GetItem(dct, pyname);
   if (!attr)
     PyErr_Clear();
@@ -399,7 +399,7 @@ static int BuildScopeProxyDict(interop::TCppScope_t scope, PyObject* pyclass,
     // add this method flagged as a generic one (to be picked up by the
     // templated one as appropriate) if a template exists
     PyObject* pyname =
-        cpyrt_PyText_FromString(const_cast<char*>(imd->first.c_str()));
+        PyUnicode_FromString(const_cast<char*>(imd->first.c_str()));
     PyObject* attr = PyObject_GetItem(dct, pyname);
     Py_DECREF(pyname);
     if (TemplateProxy_Check(attr)) {
@@ -411,7 +411,7 @@ static int BuildScopeProxyDict(interop::TCppScope_t scope, PyObject* pyclass,
         PyErr_Clear();
       // normal case, add a new method
       CPPOverload* method = CPPOverload_New(imd->first, imd->second);
-      PyObject* pymname = cpyrt_PyText_InternFromString(
+      PyObject* pymname = PyUnicode_InternFromString(
           const_cast<char*>(method->GetName().c_str()));
       PyType_Type.tp_setattro(pyclass, pymname, (PyObject*)method);
       Py_DECREF(pymname);
@@ -597,7 +597,7 @@ PyObject* CppType_To_PyObject(interop::TCppType_t type, std::string name,
 //----------------------------------------------------------------------------
 PyObject* cpyrt::CreateScopeProxy(PyObject*, PyObject* args) {
   // Build a python shadow class for the named C++ class.
-  std::string cname = cpyrt_PyText_AsString(PyTuple_GetItem(args, 0));
+  std::string cname = PyUnicode_AsUTF8(PyTuple_GetItem(args, 0));
   if (PyErr_Occurred())
     return nullptr;
 
@@ -623,7 +623,7 @@ PyObject* cpyrt::CreateScopeProxy(const std::string& name, PyObject* parent,
       }
 
       // should be a string
-      std::string scName = cpyrt_PyText_AsString(parname);
+      std::string scName = PyUnicode_AsUTF8(parname);
       Py_DECREF(parname);
       if (PyErr_Occurred())
         return nullptr;
@@ -771,9 +771,9 @@ PyObject* cpyrt::CreateScopeProxy(interop::TCppScope_t scope, PyObject* parent,
       } else {
         // add to sys.modules to allow importing from this namespace
         PyObject* pyfullname = PyObject_GetAttr(pyscope, PyStrings::gModule);
-        cpyrt_PyText_AppendAndDel(&pyfullname, cpyrt_PyText_FromString("."));
-        cpyrt_PyText_AppendAndDel(&pyfullname,
-                                  PyObject_GetAttr(pyscope, PyStrings::gName));
+        PyUnicode_AppendAndDel(&pyfullname, PyUnicode_FromString("."));
+        PyUnicode_AppendAndDel(&pyfullname,
+                               PyObject_GetAttr(pyscope, PyStrings::gName));
         PyObject* modules = PySys_GetObject(const_cast<char*>("modules"));
         if (modules && PyDict_Check(modules))
           PyDict_SetItem(modules, pyfullname, pyscope);
