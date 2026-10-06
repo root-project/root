@@ -197,3 +197,21 @@ const TAttText &TVirtualPadPainter::GetAttText() const
 void TVirtualPadPainter::DrawImage(TImage *, Int_t, Int_t, Int_t)
 {
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Store image as file of specified format
+/// @deprecated
+
+void TVirtualPadPainter::SaveImage(TVirtualPad *, const char *, Int_t) const
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Store pad as image of specified format
+/// Returns 1 if image stored, 0 - in case of failure, -1 - when image format not implemented
+
+Int_t TVirtualPadPainter::SaveAsImage(TVirtualPad * /* pad */, const char * /* fileName */ , Int_t /* type */) const
+{
+   return -1;
+}
