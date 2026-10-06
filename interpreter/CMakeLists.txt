@@ -21,6 +21,7 @@ set(LLVM_ENABLE_FFI OFF CACHE BOOL "")
 set(LLVM_ENABLE_OCAMLDOC OFF CACHE BOOL "")
 set(LLVM_ENABLE_Z3_SOLVER OFF CACHE BOOL "")
 set(LLVM_ENABLE_WARNINGS OFF CACHE BOOL "")
+set(HONOR_EXTERNAL_LLVM_LINK_LLVM_DYLIB OFF CACHE BOOL "Setting this to ON could break ROOT and is not officially supported. If disabled, it force-overwrites all LLVM_LINK_LLVM_DYLIB to OFF. It enabled with builtin_llvm, it follows whatever find_package sets this variable to.")
 
 # When ROOT provides zlib as a builtin, disable it in the bundled LLVM so it
 # cannot discover and link the *system* copy (mixing two versions in one
@@ -391,21 +392,21 @@ else()
     # install-clang-cpp target defined by LLVM's cmake module
     set(CLANG_LINKS_TO_CREATE clang++ clang-cl)
 
-    # Disable linking against shared LLVM
-    set(LLVM_LINK_LLVM_DYLIB OFF)
-    # To ensure this override stays constant, we need to avoid subdirectories calling find_package(LLVM),
-    # which would set it to ON again if system was compiled that way
-    # Define a macro with a toggle flag to override find_package, that will only be visible in this scope, not in parent one.
-    # TEMPORARY: remove this workaround once ROOT can link against the shared
-    # libLLVM.so for builtin_llvm=OFF
-    macro(find_package _package_name)
-      if(ROOT_SKIP_FIND_LLVM_WITHIN_CLANG AND "${_package_name}" STREQUAL "LLVM")
-        message(STATUS "[ROOT] Suppressed find_package(LLVM) at ${CMAKE_CURRENT_LIST_FILE}:${CMAKE_CURRENT_LIST_LINE}"
-                       " to keep LLVM_LINK_LLVM_DYLIB=OFF.")
-      else()
-        _find_package(${_package_name} ${ARGN})
-      endif()
-    endmacro()
+    if (NOT HONOR_EXTERNAL_LLVM_LINK_LLVM_DYLIB)
+      set(LLVM_LINK_LLVM_DYLIB OFF)
+      # Disable linking against shared LLVM in case system-version has shared libs, forces static choice of ROOT
+      # To ensure this override stays constant, we need to avoid subdirectories calling find_package(LLVM),
+      # which would set it to ON again if system was compiled that way
+      # Define a macro with a toggle flag to override find_package, that will only be visible in this scope, not in parent one.
+      macro(find_package _package_name)
+        if(ROOT_SKIP_FIND_LLVM_WITHIN_CLANG AND "${_package_name}" STREQUAL "LLVM")
+          message(STATUS "[ROOT] Suppressed find_package(LLVM) at ${CMAKE_CURRENT_LIST_FILE}:${CMAKE_CURRENT_LIST_LINE}"
+                         " to keep LLVM_LINK_LLVM_DYLIB=OFF.")
+        else()
+          _find_package(${_package_name} ${ARGN})
+        endif()
+      endmacro()
+    endif()
 
     # Always build LLVM with C++17. It is not necessary to compile with the same
     # C++ standard as the rest of ROOT and sometimes it doesn't even work.
