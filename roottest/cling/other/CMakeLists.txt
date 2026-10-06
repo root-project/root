@@ -46,6 +46,13 @@ ROOTTEST_ADD_TEST(execValuePrint
                   OUTREF execValuePrint.ref
                   LABELS roottest regression cling)
 
+ROOT_EXECUTABLE(testNameEndingWithcl testNameEndingWithcl.cxx LIBRARIES Core)
+ROOTTEST_ADD_TEST(testNameEndingWithcl
+                  EXEC ./testNameEndingWithcl
+                  FAILREGEX "unknown argument"
+                  LABELS roottest regression cling)
+ROOT_SET_OUTPUT_DIRECTORIES(testNameEndingWithcl)
+
 if(MSVC)
     set(ERREF_FILE checkMissingSymbolExitCode_win32.eref)
 else()
