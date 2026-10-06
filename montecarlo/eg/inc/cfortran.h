@@ -5,6 +5,10 @@
 #ifndef __CFORTRAN_LOADED
 #define __CFORTRAN_LOADED
 
+#if !defined(ROOT_TGenerator_cxx) && !defined(G__DICTIONARY)
+#warning "This header is an implementation detail, is deprecated and will be removed in ROOT 6.44. Use instead the `cfortran.h` header from `cfitsio` library"
+#endif
+
 /*
    THIS FILE IS PROPERTY OF BURKHARD BUROW. IF YOU ARE USING THIS FILE YOU
    SHOULD ALSO HAVE ACCESS TO CFORTRAN.DOC WHICH PROVIDES TERMS FOR USING,
