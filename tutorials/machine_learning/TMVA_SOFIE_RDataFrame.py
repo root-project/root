@@ -39,9 +39,8 @@ ROOT.gInterpreter.Declare('#include "Higgs_trained_model_generated.hxx"\n#includ
 # the slot number. This tutorial runs single-threaded, so a single Session is enough.
 # The weights file name is passed explicitly because the generated header was
 # written under a custom name.
-ROOT.gInterpreter.Declare(
-    'std::vector<TMVA_SOFIE_' + modelName + '::Session> sofie_sessions{TMVA_SOFIE_' + modelName +
-    '::Session("Higgs_trained_model_generated.dat")};')
+ROOT.gInterpreter.ProcessLine("std::vector<TMVA_SOFIE_" + modelName + "::Session> sofie_sessions;")
+ROOT.sofie_sessions.emplace_back("Higgs_trained_model_generated.dat")
 
 # Declare the inference function for RDataFrame: it assembles the model input
 # tensor from the columns and evaluates the model. The column order must match
