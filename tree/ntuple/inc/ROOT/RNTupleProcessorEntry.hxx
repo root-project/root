@@ -126,6 +126,18 @@ public:
    }
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Reset the specified fields to a proto field, disconnected from any physical storage.
+   ///
+   /// \param[in] fieldIdx Fields to reset.
+   void ResetFields(const std::unordered_set<FieldIndex_t> &fieldIdxs)
+   {
+      for (auto fieldIdx : fieldIdxs) {
+         auto &value = fProcessorValues[fieldIdx];
+         UpdateField(fieldIdx, value.fField->Clone(value.fField->GetFieldName()));
+      }
+   }
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Set the validity of a field, i.e. whether it is possible to read its value in the current entry.
    ///
    /// \param[in] fieldIdx The index of the field in the entry.

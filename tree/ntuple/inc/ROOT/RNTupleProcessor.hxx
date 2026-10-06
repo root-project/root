@@ -318,6 +318,10 @@ protected:
                         const Internal::RNTupleProcessorProvenance &provenance, bool updateFields) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Disconnect the processor from associated physical storage.
+   virtual void Disconnect() = 0;
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Load the entry identified by the provided entry number.
    ///
    /// \param[in] entryNumber Entry number to load
@@ -628,6 +632,10 @@ private:
                 bool updateFields = false) final;
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Disconnect the processor from associated physical storage.
+   void Disconnect() final;
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Load the entry identified by the provided (global) entry number (i.e., considering all RNTuples in this
    /// processor).
    ///
@@ -725,6 +733,10 @@ private:
    void ConnectInnerProcessor(std::size_t processorNumber);
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Disconnect the processor from associated physical storage.
+   void Disconnect() final;
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Load the entry identified by the provided (global) entry number (i.e., considering all RNTuples in this
    /// processor).
    ///
@@ -816,6 +828,10 @@ private:
    void Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
                 const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance(),
                 bool updateFields = false) final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Disconnect the processor from associated physical storage.
+   void Disconnect() final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Load the entry identified by the provided entry number of the primary processor.
