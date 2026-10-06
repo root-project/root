@@ -16,8 +16,8 @@
 
 #include "TPadPainter.h"
 #include "TVirtualX.h"
+#include "TSystem.h"
 #include "TCanvas.h"
-#include "TCanvasImp.h"
 #include "TPoint.h"
 #include "TError.h"
 #include "TImage.h"
@@ -533,15 +533,15 @@ Int_t TPadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t typ
    if (!canvas || (canvas->GetCanvasID() == -1))
       return 0;
 
-   // to be checked if necessary here
-   canvas->GetCanvasImp()->UpdateDisplay(1, kTRUE);
-
-   const_cast<TPadPainter *>(this)->SelectDrawable(pad->GetCanvasID());
+   // just sync display with short timeout
+   gVirtualX->Update(1);
+   gSystem->Sleep(30);
+   gSystem->ProcessEvents();
 
    if (IsCocoa()) {
 
       //Force TCanvas::CopyPixmaps.
-      canvas->Flush();
+      // canvas->Flush();
 
       const UInt_t w = canvas->GetWw();
       const UInt_t h = canvas->GetWh();
@@ -549,35 +549,34 @@ Int_t TPadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t typ
       const std::unique_ptr<unsigned char[]>
                pixelData(gVirtualX->GetColorBits(canvas->GetCanvasID(), 0, 0, w, h));
 
-      if (pixelData.get()) {
-         const std::unique_ptr<TImage> image(TImage::Create());
-         if (image.get()) {
-            image->DrawRectangle(0, 0, w, h);
-            if (unsigned char *argb = (unsigned char *)image->GetArgbArray()) {
-               //Ohhh.
-               if (sizeof(UInt_t) == 4) {
-                  //For sure the data returned from TGCocoa::GetColorBits,
-                  //it's 4 * w * h bytes with what TASImage considers to be argb.
-                  std::copy(pixelData.get(), pixelData.get() + 4 * w * h, argb);
-               } else {
-                  //A bit paranoid, don't you think so?
-                  //Will Quartz/TASImage work at all on such a fancy platform? ;)
-                  const unsigned shift = std::numeric_limits<unsigned char>::digits;
-                  //
-                  unsigned *dstPixel = (unsigned *)argb, *end = dstPixel + w * h;
-                  const unsigned char *srcPixel = pixelData.get();
-                  for (;dstPixel != end; ++dstPixel, srcPixel += 4) {
-                     //Looks fishy but should work, trust me :)
-                     *dstPixel = srcPixel[0] & (srcPixel[1] << shift) &
-                                               (srcPixel[2] << 2 * shift) &
-                                               (srcPixel[3] << 3 * shift);
-                  }
-               }
+      const std::unique_ptr<TImage> image(TImage::Create());
 
-               image->WriteImage(fileName, (TImage::EImageFileTypes)type);
-               //Success.
-               return 1;
+      if (pixelData && image) {
+         image->DrawRectangle(0, 0, w, h);
+         if (unsigned char *argb = (unsigned char *)image->GetArgbArray()) {
+            //Ohhh.
+            if (sizeof(UInt_t) == 4) {
+               //For sure the data returned from TGCocoa::GetColorBits,
+               //it's 4 * w * h bytes with what TASImage considers to be argb.
+               std::copy(pixelData.get(), pixelData.get() + 4 * w * h, argb);
+            } else {
+               //A bit paranoid, don't you think so?
+               //Will Quartz/TASImage work at all on such a fancy platform? ;)
+               const unsigned shift = std::numeric_limits<unsigned char>::digits;
+               //
+               unsigned *dstPixel = (unsigned *)argb, *end = dstPixel + w * h;
+               const unsigned char *srcPixel = pixelData.get();
+               for (;dstPixel != end; ++dstPixel, srcPixel += 4) {
+                  //Looks fishy but should work, trust me :)
+                  *dstPixel = srcPixel[0] & (srcPixel[1] << shift) &
+                                             (srcPixel[2] << 2 * shift) &
+                                             (srcPixel[3] << 3 * shift);
+               }
             }
+
+            image->WriteImage(fileName, (TImage::EImageFileTypes)type);
+            //Success.
+            return 1;
          }
       }
    }
