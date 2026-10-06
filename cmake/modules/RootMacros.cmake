@@ -633,10 +633,14 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   # Every dictionary implicitly depends on Core's pcm, except the one for Core itself.
   # Only when building ROOT itself: downstream projects have no plain 'Core' target
   # (only ROOT::Core), and a bare 'Core' in DEPENDS would be treated as a file.
-  if(ARG_MODULE AND NOT ARG_MODULE STREQUAL "Core" AND TARGET Core)
-    list(INSERT ARG_DEPENDENCIES 0 Core)
-    list(REMOVE_DUPLICATES ARG_DEPENDENCIES)
-  endif()
+  if(ARG_MODULE AND NOT ARG_MODULE STREQUAL "Core")
+    if(TARGET Core)
+	    list(INSERT ARG_DEPENDENCIES 0 Core)
+    elseif(TARGET ROOT::Core)
+	    list(INSERT ARG_DEPENDENCIES 0 ROOT::Core)
+	endif()
+	list(REMOVE_DUPLICATES ARG_DEPENDENCIES)
+ endif()
   foreach(dep ${ARG_DEPENDENCIES})
     # Whether <dep> provides a dictionary/pcm is decided at generation time
     # via $<TARGET_EXISTS:G__<dep>>, so the '-m' flag and the module-file
