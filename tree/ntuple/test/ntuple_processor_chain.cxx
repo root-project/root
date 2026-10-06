@@ -254,3 +254,18 @@ TEST_F(RNTupleChainProcessorTest, PrintStructure)
                            "+-----------------------------+\n";
    EXPECT_EQ(exp, os.str());
 }
+
+TEST_F(RNTupleChainProcessorTest, OpenFileLimit)
+{
+   // Assuming the open file limit is 1024, this should exceed that. Only one RNTuple page source at the should be
+   // attached, so this should not be an issue.
+   std::vector<RNTupleOpenSpec> chain(2000, {fNTupleName, fFileNames[0]});
+   auto proc = RNTupleProcessor::CreateChain(std::move(chain));
+   auto x = proc->RequestField<float>("x");
+
+   for (auto idx : *proc) {
+      EXPECT_EQ(static_cast<float>(idx % 5), *x);
+   }
+
+   EXPECT_EQ(proc->GetNEntriesProcessed(), 2000 * 5);
+}
