@@ -62,6 +62,7 @@ ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader *reader /
      fBranchName(branchname),
      fTreeReader(reader),
      fDict(dict),
+     fActualDict(nullptr),
      fOpaqueRead(opaqueRead)
 {
    auto * cl = dynamic_cast<TClass *>(dict);
@@ -84,6 +85,7 @@ ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(const TTreeReaderValu
      fLeafName(rhs.fLeafName),
      fTreeReader(rhs.fTreeReader),
      fDict(rhs.fDict),
+     fActualDict(rhs.fActualDict),
      fProxy(rhs.fProxy),
      fLeaf(rhs.fLeaf),
      fStaticClassOffsets(rhs.fStaticClassOffsets)
@@ -295,6 +297,68 @@ void *ROOT::Internal::TTreeReaderValueBase::GetAddress()
       return address + fStaticClassOffsets.back();
    }
    return (Byte_t *)fProxy->GetWhere();
+}
+
+std::function<void(void *)> ROOT::Internal::TTreeReaderValueBase::SetAddress(void *addr, void *addrOfAddr)
+{
+   // assume we are connected to a TTreeReader and in turn it is connected to a TTree and we have information about
+   // the data type of the branch
+   assert(fTreeReader);
+   assert(fTreeReader->fTree);
+   assert(fDict);
+
+   if (!fProxy) {
+      // Most probably this is a case of a missing branch that has not been found yet, we can just return early
+      return nullptr;
+   }
+
+   TClass *cl{nullptr};
+   EDataType dt{EDataType::kOther_t};
+   auto *selectedDict = [&] { return (fActualDict && fDict && fActualDict != fDict) ? fActualDict : fDict; }();
+
+   if (fHaveLeaf && fLeaf) {
+      // Case of a leaf data member
+      fLeaf->SetAddress(addr);
+      // prepare_proxy();
+      fProxy->fRead = -1;
+      fProxy->fWhere = addr;
+      return nullptr;
+   } else if (auto dictAsClass = dynamic_cast<TClass *>(selectedDict)) {
+      // Case of non-POD top-level branch
+      cl = dictAsClass;
+      if (strcmp(cl->GetName(), "TClonesArray") != 0) {
+         cl->New(addr);
+      }
+      TBranch *brPtr{nullptr};
+      TBranch **brPtrPtr{&brPtr};
+      ROOT::Internal::TreeUtils::SetBranchAddress(*(GetTreeReader()->GetTree()), fBranchName, addrOfAddr, brPtrPtr, cl,
+                                                  dt,
+                                                  /*isPtr*/ true, /*suppressErrorsForThisBranch*/ true);
+      assert(brPtr);
+      brPtr->SetAutoDelete(false);
+      if (strcmp(cl->GetName(), "TClonesArray") == 0) {
+         auto *be = dynamic_cast<TBranchElement *>(brPtr);
+         if (be)
+            new (addr) TClonesArray(be->GetClonesName());
+      }
+      // prepare_proxy();
+      fProxy->fRead = -1;
+      fProxy->fWhere = addr;
+      return [cl](void *p) { cl->Destructor(p, /*dtorOnly=*/true); };
+   } else if (auto dictAsDataType = dynamic_cast<TDataType *>(selectedDict)) {
+      // Case of POD top-level branch
+      dt = static_cast<EDataType>(dictAsDataType->GetType()); // returns Int_t but the data member is an EDataType
+      ROOT::Internal::TreeUtils::SetBranchAddress(*(GetTreeReader()->GetTree()), fBranchName, addr,
+                                                  /*branchPtr*/ nullptr, cl, dt, /*isPtr*/ false,
+                                                  /*suppressErrorsForThisBranch*/ true);
+      // prepare_proxy();
+      fProxy->fRead = -1;
+      fProxy->fWhere = addr;
+      return nullptr;
+   }
+
+   Error("TTreeReaderValueBase::SetAddress", "Unrecognized TTreeReaderValue branch (or leaf) setup.");
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -639,6 +703,18 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy()
       }
    }
 
+   // At this point we may have found a type for the branch which is different than the type stored in fDict. This
+   // may happen for example when the user explicitly requests a reader with a different type than the on-disk one
+   // hoping to read it as such. We record the information of the true on-disk type and let other code detect and use
+   // it appropriately.
+   fActualDict = branchActualType;
+
+   // We also take the chance to record information on whether the branch is a TBranchObject with split level 0, which
+   // cannot be read in bulk
+   if (dynamic_cast<TBranchObject *>(branch) && branch->GetSplitLevel() == 0) {
+      fIsBranchObjectUnsplit = true;
+   }
+
    if (!namedProxy) {
       // Search for the branchname, determine what it contains, and wire the
       // TBranchProxy representing it to us so we can access its data.
@@ -848,6 +924,38 @@ void ROOT::Internal::TTreeReaderValueBase::ErrorAboutMissingProxyIfNeeded()
             "Value reader for branch %s not properly initialized, did you call "
             "TTreeReader::Set(Next)Entry() or TTreeReader::Next()?",
             fBranchName.Data());
+}
+
+std::size_t ROOT::Internal::TTreeReaderValueBase::GetValueSize() const
+{
+   // Prioritize true on-disk type information over user-requested type information
+   if (fActualDict && fDict && fActualDict != fDict) {
+      if (auto dataType = dynamic_cast<TDataType *>(fActualDict))
+         return dataType->Size();
+      if (auto cl = dynamic_cast<TClass *>(fActualDict))
+         return cl->Size();
+   }
+
+   // Attempt querying size information from available dictionary
+   if (fDict) {
+      if (auto dataType = dynamic_cast<TDataType *>(fDict))
+         return dataType->Size();
+      if (auto cl = dynamic_cast<TClass *>(fDict))
+         return cl->Size();
+   }
+
+   // If that failed, try with TBranchProxy, needs to be initialized
+   if (!fProxy) {
+      Error("TTreeReaderValueBase::GetValueSize()", "Proxy not set for branch %s. Cannot determine value size.",
+            fBranchName.Data());
+      return 0;
+   }
+   if (!fProxy->Read()) {
+      Error("TTreeReaderValueBase::GetValueSize()",
+            "Failed to read from proxy for branch %s. Cannot determine value size.", fBranchName.Data());
+      return 0;
+   }
+   return fProxy->GetValueSize();
 }
 
 namespace cling {
