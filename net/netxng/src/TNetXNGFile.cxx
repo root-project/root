@@ -1023,7 +1023,7 @@ void TNetXNGFile::SetEnv()
       "XrdClS3BucketConfigs",
       "XrdClS3AccessKeyLocation",
       "XrdClS3SecretKeyLocation",
-      "XrdClS3ForceBasicReadV",
+      "HttpForceBasicReadV",
    };
    for (const char *name : s3Params) {
       val = gEnv->GetValue((TString("NetXNG.S3.") + name).Data(), "");
