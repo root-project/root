@@ -344,7 +344,7 @@ Bool_t TMVA::MethodFDA::HasAnalysisType( Types::EAnalysisType type, UInt_t numbe
 
 void TMVA::MethodFDA::ClearAll( void )
 {
-   // if there is more than one output dimension, the paramater ranges are the same again (object has been copied).
+   // if there is more than one output dimension, the parameter ranges are the same again (object has been copied).
    // hence, ... erase the copied pointers to assure, that they are deleted only once.
    //   fParRange.erase( fParRange.begin()+(fNPars), fParRange.end() );
    for (UInt_t ipar=0; ipar<fParRange.size() && ipar<fNPars; ipar++) {
