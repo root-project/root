@@ -27,6 +27,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseConv.cxx
     src/ParseConvTranspose.cxx
     src/ParseGemm.cxx
+    src/ParseGPU.cxx
     src/ParseGRU.cxx
     src/ParseIdentity.cxx
     src/ParseLeakyRelu.cxx

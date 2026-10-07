@@ -504,6 +504,7 @@ private:
 class NodeProto {
 public:
    const std::string &op_type() const { return fOpType; }
+   const std::string &domain() const { return fDomain; }
    const std::string &name() const { return fName; }
    int input_size() const { return int(fInput.size()); }
    const std::string &input(int i) const { return fInput[i]; }
@@ -523,6 +524,7 @@ public:
          case 2: fOutput.push_back(detail::Str(r.ReadLen())); break;
          case 3: fName = detail::Str(r.ReadLen()); break;
          case 4: fOpType = detail::Str(r.ReadLen()); break;
+         case 7: fDomain = detail::Str(r.ReadLen()); break;
          case 5: {
             auto s = r.ReadLen();
             fAttribute.emplace_back();
@@ -536,7 +538,7 @@ public:
 
 private:
    std::vector<std::string> fInput, fOutput;
-   std::string fName, fOpType;
+   std::string fName, fOpType, fDomain;
    std::vector<AttributeProto> fAttribute;
 };
 
