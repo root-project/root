@@ -4651,7 +4651,7 @@ TEST(RNTupleMerger, MergeNewerVersion)
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
          RNTupleMerger merger{std::move(destination)};
          RNTupleMergeOptions opts;
-         opts.fVersionBehavior = ROOT::Experimental::Internal::ENTupleMergeVersionBehavior::kAbortOnHigherVersion;
+         opts.fVersionBehavior = ROOT::Internal::ENTupleMergeVersionBehavior::kAbortOnHigherVersion;
          auto res = merger.Merge(sourcePtrs, opts);
          EXPECT_FALSE(bool(res));
          EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("has a higher format version"));

@@ -50,7 +50,7 @@ using ROOT::Internal::RPageSource;
 using ROOT::Internal::RPageSourceFile;
 using ROOT::Internal::RPageStorage;
 
-using namespace ROOT::Experimental::Internal;
+using namespace ROOT::Internal;
 
 static ROOT::RLogChannel &NTupleMergeLog()
 {
@@ -404,10 +404,6 @@ struct RColumnInfoGroup {
    std::vector<RColumnMergeInfo> fCommonColumns;
 };
 
-} // namespace
-
-// These structs cannot be in the anon namespace becase they're used in RNTupleMerger's private interface.
-namespace ROOT::Experimental::Internal {
 template <typename T>
 using FieldCollectionMap_t = std::unordered_map<const ROOT::RFieldDescriptor *, std::vector<T>>;
 
@@ -428,7 +424,8 @@ struct RDescriptorsComparison {
    FieldCollectionMap_t<RColReprMapping> fColReprMappings;
    FieldCollectionMap_t<RColReprExtension> fColReprExtensions;
 };
-} // namespace ROOT::Experimental::Internal
+
+} // namespace
 
 // Subprocedure of CompareDescriptorStructure, extracted for readability.
 // Given two fields, attempts to match their column representations and schedules column extensions if necessary.
@@ -1652,7 +1649,7 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeSource(RPageSource &source
 // MergeStrategySlow
 //
 // =========================================================================================
-namespace ROOT::Experimental::Internal {
+namespace ROOT::Internal {
 // Strategy used for L4 merging (https://github.com/root-project/root/blob/master/tree/ntuple/doc/Merging.md#glossary).
 // This class must be in ROOT::Experimental::Internal because it befriends ROOT::REntry
 class RNTupleMergeStrategySlow final : public RNTupleMergeStrategy {
@@ -1723,7 +1720,7 @@ public:
       }
    }
 };
-} // namespace ROOT::Experimental::Internal
+} // namespace ROOT::Internal
 
 ROOT::RResult<void> RNTupleMergeStrategySlow::MergeSource(RPageSource &source, RDescriptorsComparison &descCmp)
 {
@@ -1848,7 +1845,7 @@ RNTupleMerger::RNTupleMerger(std::unique_ptr<ROOT::Internal::RPagePersistentSink
 }
 
 RNTupleMerger::RNTupleMerger(std::unique_ptr<ROOT::Internal::RPagePersistentSink> destination)
-   : ROOT::Experimental::Internal::RNTupleMerger(std::move(destination), nullptr)
+   : ROOT::Internal::RNTupleMerger(std::move(destination), nullptr)
 {
 }
 

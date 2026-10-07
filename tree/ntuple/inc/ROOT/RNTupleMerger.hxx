@@ -31,14 +31,10 @@ class REntry;
 class RNTuple;
 
 namespace Internal {
+
 class RPageSource;
-} // namespace Internal
-
-namespace Experimental::Internal {
-
 class RNTupleMergeStrategySlow;
 struct RNTupleSlowMergeData;
-struct RDescriptorsComparison;
 
 enum class ENTupleMergingMode {
    /// The merger will discard all columns that aren't present in the prototype model (i.e. the model of the first
@@ -156,7 +152,7 @@ public:
 
 // clang-format off
 /**
- * \class ROOT::Experimental::Internal::RNTupleMerger
+ * \class ROOT::Internal::RNTupleMerger
  * \ingroup NTuple
  * \brief Given a set of RPageSources merge them into an RPagePersistentSink, optionally changing their compression.
  *        This can also be used to change the compression of a single RNTuple by just passing a single source.
@@ -186,7 +182,7 @@ public:
 
 }; // end of class RNTupleMerger
 
-} // namespace Experimental::Internal
+} // namespace Internal
 } // namespace ROOT
 
 #endif
