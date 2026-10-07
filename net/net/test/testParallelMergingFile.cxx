@@ -128,7 +128,6 @@ TEST(TParallelMergingFile, UploadAndResetNonTObject)
 
    ROOT::TestSupport::CheckDiagsRAII diags;
    diags.optionalDiag(kWarning, "TParallelMergingFile::ResetObjects", "can not be ResetAfterMerge", false);
-   diags.requiredDiag(kWarning, "TFileMerger::MergeRecursive", "Merging RNTuples is experimental");
 
    constexpr auto kNEntries = 10000;
    constexpr auto kNUploads = 4;

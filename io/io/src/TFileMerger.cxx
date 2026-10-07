@@ -613,8 +613,6 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
    } else if (!cl->IsTObject() && cl->GetMerge()) {
       // merge objects that don't derive from TObject
       if (cl->InheritsFrom(R__RNTuple_Class)) {
-         Warning("MergeRecursive", "Merging RNTuples is experimental");
-
          // Collect all the data to be passed on to the merger
          TList mergeData;
          // First entry is the TKey of the ntuple
