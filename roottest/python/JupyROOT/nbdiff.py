@@ -1,9 +1,15 @@
 import difflib
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
+
+# Free-threaded Python re-enabling the GIL to load a C extension that isn't GIL-safe
+GIL_WARNING_RE = re.compile(
+    r"^<frozen importlib\._bootstrap>:\d+: RuntimeWarning: The global interpreter lock \(GIL\) has been enabled"
+)
 
 
 # Replace the criterion according to which a line shall be skipped
@@ -22,6 +28,26 @@ def should_keep_line(line):
         if pattern in line:
             return False
     return True
+
+
+def removeGilWarnings(nb):
+    """Remove the warning about the GIL being enabled from the stderr outputs,
+    dropping the outputs that contained nothing else. This is important for
+    the tests to work with the free-threaded Python build, at least as long as
+    the ROOT and cppyy CPython extensions don't support free threading yet.
+    """
+    for cell in nb.cells:
+        if "outputs" not in cell:
+            continue
+        outputs = []
+        for output in cell.outputs:
+            if output.get("output_type") == "stream" and output.get("name") == "stderr":
+                lines = output.text.splitlines(keepends=True)
+                output.text = "".join(line for line in lines if not GIL_WARNING_RE.match(line))
+                if not output.text:
+                    continue
+            outputs.append(output)
+        cell.outputs = outputs
 
 
 def removeCellMetadata(lines):
@@ -160,6 +186,7 @@ def canReproduceNotebook(inNBName, needsCompare):
 
     # Run the notebook
     ep.preprocess(nb, {"metadata": {"path": os.path.dirname(inNBName)}})
+    removeGilWarnings(nb)
 
     # Export executed notebook
     with open(outNBName, "w", encoding="utf-8") as f:
