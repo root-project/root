@@ -998,7 +998,7 @@ void TNetXNGFile::SetEnv()
    //
    bool gridmode = false;
    val = gEnv->GetValue("XSec.GSI.GridMode", "y");
-   gridmode = (val[0] == 'y');
+   gridmode = (val.Length() && (val[0] == 'y'));
 
 
    // Now set the CAFile/CADir. Use the default if we are in grid mode. CAFile has the precedence, if there.
