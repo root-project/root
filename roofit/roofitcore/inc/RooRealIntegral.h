@@ -103,6 +103,9 @@ protected:
   double evaluate() const override ;
   bool isValidReal(double value, bool printError=false) const override ;
 
+  void doEval(RooFit::EvalContext &) const override;
+  bool canOptimizeLogarithm() const override { return true; }
+
   bool redirectServersHook(const RooAbsCollection& newServerList,
                  bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
 
