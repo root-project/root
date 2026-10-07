@@ -30,14 +30,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTPython
     Python3::Python
 )
 
-# On Windows we can't use the stable ABI yet: it requires linking against a
-# different libpython, so as long as we don't build all translation units in
-# the ROOT Pythonization library with the stable ABI we should not use it.
-# Free-threaded (Py_GIL_DISABLED) interpreters don't support the limited API.
-if(NOT MSVC AND NOT Python3_GIL_DISABLED)
-  target_compile_options(ROOTTPython PRIVATE -DPy_LIMITED_API=0x030A0000)
-endif()
-
 if(MSVC)
   target_link_options(ROOTTPython PRIVATE "-ignore:4197")
 endif()

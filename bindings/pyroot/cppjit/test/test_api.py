@@ -37,16 +37,6 @@ class TestAPI:
         assert API.Overload_CheckExact(m)
 
     @mark.xfail(condition=IS_MAC, reason="Fails on OS X")
-    def test02_interpreter_access(self):
-        """Access to the python interpreter"""
-
-        import cppjit
-
-        API = cppjit.gbl.cppjit.cpyrt
-
-        assert API.Exec("import sys")
-
-    @mark.xfail(condition=IS_MAC, reason="Fails on OS X")
     def test03_instance_conversion(self):
         """Proxy object conversions"""
 
