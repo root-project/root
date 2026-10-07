@@ -24,6 +24,7 @@
 #include <array>
 #include <cstdio>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <utility>
@@ -139,6 +140,8 @@ private:
    RNTupleDescriptorBuilder fDescriptorBuilder;
    /// Tracks the last read offset for seek distance calculation
    std::uint64_t fLastOffset = 0;
+   /// Protects the raw file, the reader, and fLastOffset
+   std::mutex fReaderLock;
 
    /// File-specific I/O performance counters
    struct RFileCounters {

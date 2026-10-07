@@ -34,12 +34,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <functional>
 #include <iterator>
 #include <limits>
-#include <utility>
-
-#include <functional>
 #include <mutex>
+#include <utility>
 
 using ROOT::Experimental::Detail::RNTupleAtomicCounter;
 using ROOT::Experimental::Detail::RNTupleAtomicTimer;
@@ -493,6 +492,7 @@ ROOT::RNTupleDescriptor ROOT::Internal::RPageSourceFile::AttachImpl()
 
 void ROOT::Internal::RPageSourceFile::LoadPageListImpl(const RNTupleLocator &locator, unsigned char *buffer)
 {
+   std::lock_guard lockGuard(fReaderLock);
    fReader.ReadBuffer(buffer, locator.GetNBytesOnStorage(), locator.GetPosition<std::uint64_t>());
 }
 
@@ -500,6 +500,7 @@ void ROOT::Internal::RPageSourceFile::LoadSealedPageImpl(const RNTupleLocator &l
 {
    RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
    const auto offset = locator.GetPosition<std::uint64_t>();
+   std::lock_guard lockGuard(fReaderLock);
    // Track seek distance (excluding file structure reads)
    if (fLastOffset != 0) {
       R__ASSERT(fFileCounters);
@@ -682,6 +683,8 @@ ROOT::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterK
             }
          }
       }
+
+      std::lock_guard lockGuard(fReaderLock);
 
       // Track seek distance for each read request (excluding file structure reads)
       R__ASSERT(fFileCounters);
