@@ -43,9 +43,12 @@
 #pragma link C++ class RecordBaseNew+;
 #pragma link C++ class RecordIntermediateNew+;
 #pragma link C++ class RecordLeafNew+;
+#pragma link C++ class RecordLeafLikeNew+;
 #pragma link C++ options=rntupleSoARecord(RecordBaseNew) class SoABaseNew+;
 #pragma link C++ options=rntupleSoARecord(RecordIntermediateNew) class SoAIntermediateNew+;
 #pragma link C++ options=rntupleSoARecord(RecordLeafNew) class SoALeafNew+;
+#pragma link C++ options=rntupleSoARecord(RecordLeafNew) class SoALeafNewNoRenameRule+;
+#pragma link C++ options=rntupleSoARecord(RecordLeafLikeNew) class SoALeafLikeNew+;
 
 #pragma read sourceClass = "RecordBaseOld" targetClass = "RecordBaseNew" version = "[1-]";
 #pragma read sourceClass = "RecordIntermediateOld" targetClass = "RecordIntermediateNew" version = "[1-]";
