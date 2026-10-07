@@ -204,7 +204,7 @@ std::pair<std::string_view, std::string_view> ROOT::Experimental::Detail::Decomp
 std::unique_ptr<RFile> RFile::Open(std::string_view path)
 {
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
-   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
+   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "READ"));
    EnsureFileOpenAndBinary(tfile.get(), path);
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
@@ -214,7 +214,7 @@ std::unique_ptr<RFile> RFile::Open(std::string_view path)
 std::unique_ptr<RFile> RFile::Update(std::string_view path)
 {
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
-   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "UPDATE_WITHOUT_GLOBALREGISTRATION"));
+   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "UPDATE"));
    EnsureFileOpenAndBinary(tfile.get(), path);
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
@@ -224,8 +224,8 @@ std::unique_ptr<RFile> RFile::Update(std::string_view path)
 std::unique_ptr<RFile> RFile::Recreate(std::string_view path, const RRecreateOptions &opts)
 {
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
-   auto tfile = std::unique_ptr<TFile>(
-      TFile::Open(std::string(path).c_str(), "RECREATE_WITHOUT_GLOBALREGISTRATION", "", opts.fCompressionSettings));
+   auto tfile =
+      std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "RECREATE", "", opts.fCompressionSettings));
    EnsureFileOpenAndBinary(tfile.get(), path);
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
