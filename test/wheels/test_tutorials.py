@@ -75,6 +75,8 @@ def test_tutorial(tutorial):
         pytest.skip(f"Tutorial {tutorial} timed out")
 
     except subprocess.CalledProcessError as e:
+        print("Test stdout:", e.stdout)
+        print("Test stderr:", e.stderr)
         # read stderr to see if EOFError occurred
         if "EOFError" in e.stderr:
             pytest.skip(f"Skipping {tutorial.name} (requires user input)")
@@ -118,6 +120,8 @@ def test_cpp_tutorial(tutorial):
         pytest.skip(f"Tutorial {tutorial} timed out")
 
     except subprocess.CalledProcessError as e:
+        print("Test stdout:", e.stdout)
+        print("Test stderr:", e.stderr)
         if e.returncode == -signal.SIGILL or e.returncode == 132:
             pytest.fail(f"Failing {tutorial.name} (illegal instruction on this platform)")
         elif "EOFError" in e.stderr:
