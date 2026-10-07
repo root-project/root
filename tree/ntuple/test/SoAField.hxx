@@ -227,9 +227,24 @@ struct RecordLeafNew : public RecordIntermediateNew {
    ClassDefNV(RecordLeafNew, 2);
 };
 
+struct RecordLeafLikeNew : public RecordIntermediateNew {
+   float fLeaf;
+   ClassDefNV(RecordLeafLikeNew, 2);
+};
+
 struct SoALeafNew : public SoAIntermediateNew {
    ROOT::RVec<float> fLeaf;
    ClassDefNV(SoALeafNew, 2);
+};
+
+struct SoALeafNewNoRenameRule : public SoAIntermediateNew {
+   ROOT::RVec<float> fLeaf;
+   ClassDefNV(SoALeafNewNoRenameRule, 2);
+};
+
+struct SoALeafLikeNew : public SoAIntermediateNew {
+   ROOT::RVec<float> fLeaf;
+   ClassDefNV(SoALeafLikeNew, 2);
 };
 
 struct RecordNested {
