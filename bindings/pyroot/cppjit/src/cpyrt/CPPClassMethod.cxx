@@ -53,8 +53,7 @@ PyObject* cpyrt::CPPClassMethod::Call(CPPInstance*& self, cpyrt_PyArgs_t args,
 //----------------------------------------------------------------------------
 PyObject* cpyrt::CPPClassMethod::GetTypeName() {
   PyObject* cppname =
-      cpyrt_PyText_FromString((GetReturnTypeName() + " (*)").c_str());
-  cpyrt_PyText_AppendAndDel(&cppname,
-                            GetSignature(false /* show_formalargs */));
+      PyUnicode_FromString((GetReturnTypeName() + " (*)").c_str());
+  PyUnicode_AppendAndDel(&cppname, GetSignature(false /* show_formalargs */));
   return cppname;
 }

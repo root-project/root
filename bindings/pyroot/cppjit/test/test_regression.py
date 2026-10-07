@@ -1716,3 +1716,20 @@ class TestREGRESSION:
 
         # a standard conversion outranks a user-defined one, as in C++
         assert ns.pick(ns.Color.Blue) == 2
+
+    def test56_enum_arg_typedefed_underlying_type(self):
+        """An enum whose underlying type is spelled through a typedef converts"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        #include <cstdint>
+        namespace EnumArgTypedefUnderlying {
+            struct S { enum L : std::int32_t { A = 1, B = 5 }; };
+            int pick(S::L l) { return (int)l; }
+        }""")
+
+        ns = cppjit.gbl.EnumArgTypedefUnderlying
+
+        assert ns.pick(ns.S.A) == 1
+        assert ns.pick(ns.S.B) == 5

@@ -1,5 +1,7 @@
 #include "Utils.h"
 
+#include "../../lib/CppInterOp/Unwrap.h"
+
 #include "CppInterOp/CppInterOp.h"
 
 #include "clang/AST/ASTContext.h"
@@ -8,15 +10,21 @@
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/GlobalDecl.h"
 #include "clang/AST/Type.h"
+#include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/Version.h"
 #include "clang/Frontend/CompilerInstance.h"
+#include "clang/Sema/ExternalSemaSource.h"
 #include "clang/Sema/Sema.h"
+
+#include "llvm/ADT/IntrusiveRefCntPtr.h"
 
 #include "gtest/gtest.h"
 
 #include <CppInterOp/CppInterOpTypes.h>
+#include <map>
 #include <memory>
 #include <string>
+#include <utility>
 
 using namespace TestUtils;
 using namespace llvm;
@@ -289,6 +297,51 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsComplete) {
   EXPECT_FALSE(Cpp::IsComplete(nullptr));
 }
 
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           ScopeReflection_IsCompleteSilentFailedInstantiation) {
+  // IsComplete() runs isCompleteType(), which attempts implicit
+  // instantiation. A failing attempt must neither print an error nor advance
+  // the engine's trap counters (suppressed diagnostics still increment
+  // TrapNumErrorsOccurred), and it must leave the interpreter usable.
+  TestFixture::CreateInterpreter();
+  // The specializations are only pointed to, so they are declared but not
+  // instantiated yet: the instantiation attempt happens inside IsComplete().
+  ASSERT_EQ(Interp->declare(R"(
+    template <typename T> struct FwdOnly;
+    template <typename T> struct Broken { typename T::missing_type m; };
+    FwdOnly<int>* g_pf;
+    Broken<int>* g_pb;
+  )"),
+            0);
+
+  auto spec_of = [&](const char* var) {
+    Cpp::DeclRef V = Cpp::GetNamed(var);
+    if (!V)
+      return Cpp::DeclRef{};
+    return Cpp::GetScopeFromType(
+        Cpp::GetPointeeType(Cpp::GetVariableType(V)));
+  };
+  Cpp::DeclRef FwdSpec = spec_of("g_pf");
+  Cpp::DeclRef BrokenSpec = spec_of("g_pb");
+  ASSERT_TRUE(FwdSpec);
+  ASSERT_TRUE(BrokenSpec);
+
+  auto& Diags = Interp->getCI()->getSema().getDiagnostics();
+
+  // Declaration-only template: no definition exists.
+  EXPECT_FALSE(Cpp::IsComplete(FwdSpec));
+
+  // A definition exists but its instantiation fails. IsComplete()'s result
+  // follows clang's semantics for invalid specializations; what IsComplete
+  // must guarantee is that the query leaves no trace.
+  clang::DiagnosticErrorTrap Trap(Diags);
+  Cpp::IsComplete(BrokenSpec);
+  EXPECT_FALSE(Trap.hasErrorOccurred());
+
+  // Nothing above left the interpreter in an error state.
+  EXPECT_EQ(Interp->declare("int valid_after_failed_instantiation = 1;"), 0);
+}
+
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetOrForceDefinition) {
   std::vector<Decl*> Decls;
   std::string code = R"(
@@ -435,6 +488,33 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsTemplateSpecialization) {
   EXPECT_FALSE(Cpp::IsTemplateSpecialization(Decls[1]));
   EXPECT_TRUE(Cpp::IsTemplateSpecialization(
           Cpp::GetScopeFromType(Cpp::GetVariableType(Decls[1]))));
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetTemplatedDecl) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    template <typename T> struct MyTmpl { T value; };
+    MyTmpl<int> inst_int;
+    MyTmpl<double> inst_double;
+    template <typename T> T func_template(T t) { return t; }
+    )";
+
+  GetAllTopLevelDecls(code, Decls);
+  ASSERT_EQ(Decls.size(), 4U);
+
+  auto Pattern = Cpp::GetTemplatedDecl(Decls[0]);
+  auto GetScopeOfVar = [](Decl* D) {
+    return Cpp::GetScopeFromType(Cpp::GetVariableType(D));
+  };
+
+  EXPECT_EQ(Cpp::GetTemplatedDecl(GetScopeOfVar(Decls[1])), Pattern);
+  EXPECT_EQ(Cpp::GetTemplatedDecl(GetScopeOfVar(Decls[2])), Pattern);
+
+  ASSERT_TRUE(Cpp::GetTemplatedDecl(Decls[3]));
+  ASSERT_TRUE(Cpp::IsFunction((Cpp::GetTemplatedDecl(Decls[3]))));
+  ASSERT_NE(Cpp::GetTemplatedDecl(Decls[3]), Decls[3]);
+
+  EXPECT_FALSE(Cpp::GetTemplatedDecl(nullptr));
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsTypedefed) {
@@ -1127,6 +1207,89 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetBaseClass) {
   auto A_class = Cpp::GetBaseClass(TC3_A_Decl, 0);
   EXPECT_EQ(Cpp::GetCompleteName(A_class), "A");
 }
+
+namespace {
+// Mimics ROOT's runtime-dictionary autoloading: the interpreter knows a
+// class only as a forward declaration (as injected by a non-ACLiC
+// dictionary), and the definition is materialized lazily through the
+// external source when Sema asks to complete the type. Reproduces
+// https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit/issues/1289,
+// where cppjit built the Python proxy from the incomplete declaration and
+// silently dropped the entire base hierarchy.
+class LazyDefinitionSource : public clang::ExternalSemaSource {
+public:
+  explicit LazyDefinitionSource(std::map<std::string, std::string> Defs)
+      : Pending(std::move(Defs)) {}
+
+  void CompleteType(clang::TagDecl* Tag) override {
+    auto It = Pending.find(Tag->getName().str());
+    if (It == Pending.end())
+      return;
+    // Erase before declaring: Declare re-enters Sema, which may ask again.
+    std::string Code = std::move(It->second);
+    Pending.erase(It);
+    Cpp::Declare(Code.c_str());
+  }
+
+private:
+  std::map<std::string, std::string> Pending;
+};
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetBasesOfLazilyDefinedClass) {
+  TestFixture::CreateInterpreter();
+  Cpp::Declare("class LateBoundBase {};"
+               "class LateBoundDerived;"
+               "class LateBoundOther;");
+  Cpp::DeclRef Derived = Cpp::GetNamed("LateBoundDerived");
+  Cpp::DeclRef Other = Cpp::GetNamed("LateBoundOther");
+  ASSERT_TRUE(Derived);
+  ASSERT_TRUE(Other);
+  ASSERT_FALSE(Cpp::IsComplete(Derived));
+  ASSERT_FALSE(Cpp::IsComplete(Other));
+
+  // RequireCompleteTypeImpl consults the ASTContext's external source, not
+  // Sema's; the IntrusiveRefCntPtr hands ownership to the context, which
+  // releases the source at interpreter teardown.
+  ASTContext& Ctx = Interp->getCI()->getASTContext();
+  if (Ctx.getExternalSource())
+    GTEST_SKIP() << "Interpreter already has an external source installed";
+  Ctx.setExternalSource(llvm::IntrusiveRefCntPtr<clang::ExternalASTSource>(
+      new LazyDefinitionSource(
+          {{"LateBoundDerived",
+            "class LateBoundDerived : public LateBoundBase {};"},
+           {"LateBoundOther",
+            "class LateBoundOther : public LateBoundBase {};"}})));
+
+  // Sema only routes a type to the external source when the declaration is
+  // marked as externally stored (as deserialized autoload stubs are). The
+  // AST drops that mark once the external source was asked for the lexical
+  // contents, which may happen while another class is materialized, so
+  // mark each class right before it is first queried.
+  auto MarkAsAutoloadStub = [](Cpp::DeclRef Fwd) {
+    for (auto* RD : Cpp::unwrap<clang::TagDecl>(Fwd)->redecls())
+      RD->setHasExternalLexicalStorage();
+  };
+
+  // Without resolving the definition through Sema, both queries operated
+  // on the forward declaration and saw an empty base list. Each class is
+  // first queried through a different entry point, so that each of them
+  // has to complete the type on its own.
+  MarkAsAutoloadStub(Derived);
+  EXPECT_EQ(Cpp::GetNumBases(Derived), 1U);
+  EXPECT_TRUE(Cpp::IsComplete(Derived));
+  Cpp::DeclRef Base = Cpp::GetBaseClass(Derived, 0);
+  ASSERT_TRUE(Base);
+  EXPECT_EQ(Cpp::GetQualifiedName(Base), "LateBoundBase");
+
+  MarkAsAutoloadStub(Other);
+  Base = Cpp::GetBaseClass(Other, 0);
+  ASSERT_TRUE(Base);
+  EXPECT_EQ(Cpp::GetQualifiedName(Base), "LateBoundBase");
+  EXPECT_TRUE(Cpp::IsComplete(Other));
+  EXPECT_EQ(Cpp::GetNumBases(Other), 1U);
+  EXPECT_FALSE(Cpp::GetBaseClass(Other, 1));
+}
+} // namespace
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsSubclass) {
   std::vector<Decl *> Decls;

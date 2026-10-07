@@ -130,29 +130,27 @@ _specialized_dir_type(PyObject *obj)
 
 static PyObject* _generic_dir(PyObject *obj)
 {
-    if (PyType_Check(obj) || PyClass_Check(obj))
-        return _specialized_dir_type(obj);
+  if (PyType_Check(obj))
+    return _specialized_dir_type(obj);
 
-    PyObject *result = NULL;
-    PyObject *dict = NULL;
-    PyObject *itsclass = NULL;
+  PyObject* result = NULL;
+  PyObject* dict = NULL;
+  PyObject* itsclass = NULL;
 
-    /* Get __dict__ (which may or may not be a real dict...) */
-    dict = PyObject_GetAttrString(obj, "__dict__");
-    if (dict == NULL) {
-        PyErr_Clear();
-        dict = PyDict_New();
-    }
-    else if (!PyDict_Check(dict)) {
-        Py_DECREF(dict);
-        dict = PyDict_New();
-    }
-    else {
-        /* Copy __dict__ to avoid mutating it. */
-        PyObject *temp = PyDict_Copy(dict);
-        Py_DECREF(dict);
-        dict = temp;
-    }
+  /* Get __dict__ (which may or may not be a real dict...) */
+  dict = PyObject_GetAttrString(obj, "__dict__");
+  if (dict == NULL) {
+    PyErr_Clear();
+    dict = PyDict_New();
+  } else if (!PyDict_Check(dict)) {
+    Py_DECREF(dict);
+    dict = PyDict_New();
+  } else {
+    /* Copy __dict__ to avoid mutating it. */
+    PyObject* temp = PyDict_Copy(dict);
+    Py_DECREF(dict);
+    dict = temp;
+  }
 
     if (dict == NULL)
         goto error;

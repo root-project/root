@@ -12,7 +12,9 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+import contextvars
 import queue
+import sys
 from threading import Thread
 from time import sleep as timeSleep
 
@@ -67,7 +69,14 @@ class IOHandler(object):
 
 class Poller(Thread):
     def __init__(self):
-        Thread.__init__(self, group=None, target=None, name="JupyROOT Poller Thread")
+        # Run in a fresh context instead of a copy of the creator's, which is
+        # the default since Python 3.14 in free-threaded builds. The ipykernel
+        # output streams keep the parent message header in a context variable,
+        # and a copy taken at kernel startup would pin it to an empty header
+        # for the lifetime of this thread. Output written from here would then
+        # not be associated with the executing cell, and therefore be lost.
+        kwargs = {"context": contextvars.Context()} if sys.version_info >= (3, 14) else {}
+        Thread.__init__(self, group=None, target=None, name="JupyROOT Poller Thread", **kwargs)
         self.daemon = True
         self.poll = True
         self.is_running = False

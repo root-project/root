@@ -1,6 +1,7 @@
 #include "Utils.h"
 
 #include "CppInterOp/CppInterOp.h"
+#include "../../lib/CppInterOp/Unwrap.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/PrettyPrinter.h"
@@ -880,6 +881,50 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionReturnType) {
           Cpp::GetNamed("func", Cpp::InstantiateTemplate(Decls[15], args2))
               .data})),
       "double");
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           FunctionReflection_GetFunctionReturnTypeUnsatisfiedConstraint) {
+  TestFixture::CreateInterpreter({"-std=c++20"});
+  Cpp::Declare(R"(
+    template <typename T> struct ConstrainedAuto {
+      T m_value;
+      auto size() const requires requires { m_value.size(); } {
+        return m_value.size();
+      }
+      decltype(auto) key() const requires requires { m_value.key(); } {
+        return m_value.key();
+      }
+    };
+    struct WithKey { int key() const { return 1; } };
+  )");
+
+  ASTContext& C = Interp->getCI()->getASTContext();
+  std::vector<Cpp::TemplateArgInfo> int_arg = {C.IntTy.getAsOpaquePtr()};
+  Cpp::DeclRef inst =
+      Cpp::InstantiateTemplate(Cpp::GetNamed("ConstrainedAuto"), int_arg);
+  ASSERT_TRUE(inst);
+
+  testing::internal::CaptureStderr();
+  Cpp::DeclRef size = Cpp::GetNamed("size", inst);
+  Cpp::DeclRef key = Cpp::GetNamed("key", inst);
+  ASSERT_TRUE(size);
+  ASSERT_TRUE(key);
+  Cpp::GetFunctionReturnType(Cpp::FuncRef{size.data});
+  Cpp::GetFunctionReturnType(Cpp::FuncRef{key.data});
+  std::string err = testing::internal::GetCapturedStderr();
+  EXPECT_EQ(err, "");
+  EXPECT_FALSE(Cpp::unwrap<Decl>(size)->isInvalidDecl());
+  EXPECT_FALSE(Cpp::unwrap<Decl>(key)->isInvalidDecl());
+
+  std::vector<Cpp::TemplateArgInfo> with_key_arg = {
+      Cpp::GetTypeFromScope(Cpp::GetNamed("WithKey")).data};
+  Cpp::DeclRef inst2 =
+      Cpp::InstantiateTemplate(Cpp::GetNamed("ConstrainedAuto"), with_key_arg);
+  ASSERT_TRUE(inst2);
+  EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetFunctionReturnType(
+                Cpp::FuncRef{Cpp::GetNamed("key", inst2).data})),
+            "int");
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsAllocator) {
@@ -5535,6 +5580,46 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_PrivateTypedefReturn) {
   ASSERT_EQ(Fns.size(), 1);
   EXPECT_EQ(Cpp::MakeFunctionCallable(Fns[0]).getKind(),
             Cpp::JitCall::kGenericCall);
+}
+
+// The private path desugars to a public typedef of a private class: that
+// typedef is spellable, the canonical type is not.
+TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_PrivateTypedefChainReturn) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscripten builds";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    struct Res {
+    private:
+      struct PC { int v = 5; };
+    public:
+      typedef PC PP;
+    private:
+      struct Helper { typedef PP Iterator_t; };
+    public:
+      Helper::Iterator_t get() { return {}; }
+    };
+  )";
+
+  GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
+                      /*interpreter_args=*/{"-include", "new"});
+  ASSERT_EQ(Decls.size(), 1);
+  auto Fns = Cpp::GetFunctionsUsingName(Decls[0], "get");
+  ASSERT_EQ(Fns.size(), 1);
+  Cpp::JitCall JC = Cpp::MakeFunctionCallable(Fns[0]);
+  ASSERT_EQ(JC.getKind(), Cpp::JitCall::kGenericCall);
+
+  Cpp::ObjectRef obj = Cpp::Construct(Decls[0]);
+  struct {
+    int v;
+  } result = {0};
+  JC.Invoke(&result, {}, obj.data);
+  EXPECT_EQ(result.v, 5);
+  Cpp::Destruct(obj, Decls[0]);
 }
 
 // decltype sugar is spelled as its expression: a call in it keeps its

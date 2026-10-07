@@ -122,8 +122,8 @@ static inline PyObject* cpyrt_PyText_FromLong(long cl) {
   }
   int c = (int)cl;
   if (c < 0)
-    return cpyrt_PyText_FromFormat("%c", 256 - std::abs(c));
-  return cpyrt_PyText_FromFormat("%c", c);
+    return PyUnicode_FromFormat("%c", 256 - std::abs(c));
+  return PyUnicode_FromFormat("%c", c);
 }
 
 static inline PyObject* cpyrt_PyText_FromULong(unsigned long uc) {
@@ -133,7 +133,7 @@ static inline PyObject* cpyrt_PyText_FromULong(unsigned long uc) {
     return nullptr;
   }
   int c = (int)uc;
-  return cpyrt_PyText_FromFormat("%c", c);
+  return PyUnicode_FromFormat("%c", c);
 }
 
 static inline PyObject* cpyrt_PyBool_FromLong(long b) {
@@ -206,14 +206,14 @@ PyObject* cpyrt::UCharConstRefExecutor::Execute(interop::TCppMethod_t method,
 PyObject* cpyrt::Int8ConstRefExecutor::Execute(interop::TCppMethod_t method,
                                                interop::TCppObject_t self,
                                                CallContext* ctxt) {
-  return PyInt_FromLong(*((int8_t*)GILCallR(method, self, ctxt)));
+  return PyLong_FromLong(*((int8_t*)GILCallR(method, self, ctxt)));
 }
 
 //----------------------------------------------------------------------------
 PyObject* cpyrt::UInt8ConstRefExecutor::Execute(interop::TCppMethod_t method,
                                                 interop::TCppObject_t self,
                                                 CallContext* ctxt) {
-  return PyInt_FromLong(*((uint8_t*)GILCallR(method, self, ctxt)));
+  return PyLong_FromLong(*((uint8_t*)GILCallR(method, self, ctxt)));
 }
 
 //----------------------------------------------------------------------------
@@ -254,7 +254,7 @@ PyObject* cpyrt::IntExecutor::Execute(interop::TCppMethod_t method,
                                       CallContext* ctxt) {
   // execute <method> with argument <self, ctxt>, construct python int return
   // value
-  return PyInt_FromLong((int)GILCallI(method, self, ctxt));
+  return PyLong_FromLong((int)GILCallI(method, self, ctxt));
 }
 
 //----------------------------------------------------------------------------
@@ -263,7 +263,7 @@ PyObject* cpyrt::Int8Executor::Execute(interop::TCppMethod_t method,
                                        CallContext* ctxt) {
   // execute <method> with argument <self, ctxt>, construct python int return
   // value
-  return PyInt_FromLong((int8_t)GILCallC(method, self, ctxt));
+  return PyLong_FromLong((int8_t)GILCallC(method, self, ctxt));
 }
 
 //----------------------------------------------------------------------------
@@ -272,7 +272,7 @@ PyObject* cpyrt::UInt8Executor::Execute(interop::TCppMethod_t method,
                                         CallContext* ctxt) {
   // execute <method> with argument <self, ctxt>, construct python int return
   // value
-  return PyInt_FromLong((uint8_t)GILCallB(method, self, ctxt));
+  return PyLong_FromLong((uint8_t)GILCallB(method, self, ctxt));
 }
 
 //----------------------------------------------------------------------------
@@ -281,7 +281,7 @@ PyObject* cpyrt::ShortExecutor::Execute(interop::TCppMethod_t method,
                                         CallContext* ctxt) {
   // execute <method> with argument <self, ctxt>, construct python int return
   // value
-  return PyInt_FromLong((short)GILCallH(method, self, ctxt));
+  return PyLong_FromLong((short)GILCallH(method, self, ctxt));
 }
 
 //----------------------------------------------------------------------------
@@ -390,11 +390,11 @@ bool cpyrt::RefExecutor::SetAssignable(PyObject* pyobject) {
 CPPJIT_IMPL_REFEXEC(Bool,       bool,           long,           cpyrt_PyBool_FromLong,    PyLong_AsLong)
 CPPJIT_IMPL_REFEXEC(Char,       char,           long,           cpyrt_PyText_FromLong,    PyLong_AsLong)
 CPPJIT_IMPL_REFEXEC(UChar,      unsigned char,  unsigned long,  cpyrt_PyText_FromULong,   PyLongOrInt_AsULong)
-CPPJIT_IMPL_REFEXEC(Int8,       int8_t,         long,           PyInt_FromLong,              PyLong_AsLong)
-CPPJIT_IMPL_REFEXEC(UInt8,      uint8_t,        unsigned long,  PyInt_FromLong,              PyLongOrInt_AsULong)
-CPPJIT_IMPL_REFEXEC(Short,      short,          long,           PyInt_FromLong,              PyLong_AsLong)
-CPPJIT_IMPL_REFEXEC(UShort,     unsigned short, unsigned long,  PyInt_FromLong,              PyLongOrInt_AsULong)
-CPPJIT_IMPL_REFEXEC(Int,        int,            long,           PyInt_FromLong,              PyLong_AsLong)
+CPPJIT_IMPL_REFEXEC(Int8,       int8_t,         long,           PyLong_FromLong,              PyLong_AsLong)
+CPPJIT_IMPL_REFEXEC(UInt8,      uint8_t,        unsigned long,  PyLong_FromLong,              PyLongOrInt_AsULong)
+CPPJIT_IMPL_REFEXEC(Short,      short,          long,           PyLong_FromLong,              PyLong_AsLong)
+CPPJIT_IMPL_REFEXEC(UShort,     unsigned short, unsigned long,  PyLong_FromLong,              PyLongOrInt_AsULong)
+CPPJIT_IMPL_REFEXEC(Int,        int,            long,           PyLong_FromLong,              PyLong_AsLong)
 CPPJIT_IMPL_REFEXEC(UInt,       unsigned int,   unsigned long,  PyLong_FromUnsignedLong,     PyLongOrInt_AsULong)
 CPPJIT_IMPL_REFEXEC(Long,       long,           long,           PyLong_FromLong,             PyLong_AsLong)
 CPPJIT_IMPL_REFEXEC(ULong,      unsigned long,  unsigned long,  PyLong_FromUnsignedLong,     PyLongOrInt_AsULong)
@@ -427,16 +427,16 @@ PyObject* cpyrt::STLStringRefExecutor::Execute(interop::TCppMethod_t method,
   // value
   std::string* result = (std::string*)GILCallR(method, self, ctxt);
   if (!fAssignable) {
-    return cpyrt_PyText_FromStringAndSize(result->c_str(), result->size());
+    return PyUnicode_FromStringAndSize(result->c_str(), result->size());
   }
 
-  if (!cpyrt_PyText_Check(fAssignable)) {
+  if (!PyUnicode_Check(fAssignable)) {
     PyErr_Format(PyExc_TypeError, "wrong type in assignment (string expected)");
     return nullptr;
   }
 
-  *result = std::string(cpyrt_PyText_AsString(fAssignable),
-                        cpyrt_PyText_GET_SIZE(fAssignable));
+  *result = std::string(PyUnicode_AsUTF8(fAssignable),
+                        PyUnicode_GET_LENGTH(fAssignable));
 
   Py_DECREF(fAssignable);
   fAssignable = nullptr;
@@ -467,7 +467,7 @@ PyObject* cpyrt::CStringExecutor::Execute(interop::TCppMethod_t method,
     return PyStrings::gEmptyString;
   }
 
-  return cpyrt_PyText_FromString(result);
+  return PyUnicode_FromString(result);
 }
 
 //----------------------------------------------------------------------------
@@ -482,7 +482,7 @@ PyObject* cpyrt::CStringRefExecutor::Execute(interop::TCppMethod_t method,
     return PyStrings::gEmptyString;
   }
 
-  return cpyrt_PyText_FromString(*result);
+  return PyUnicode_FromString(*result);
 }
 
 //----------------------------------------------------------------------------
@@ -627,7 +627,7 @@ PyObject* cpyrt::STLStringExecutor::Execute(interop::TCppMethod_t method,
   }
 
   PyObject* pyresult =
-      cpyrt_PyText_FromStringAndSize(result->c_str(), result->size());
+      PyUnicode_FromStringAndSize(result->c_str(), result->size());
   delete result; // interop::CallO allocates and constructs a string, so it must
                  // be properly destroyed
 
@@ -719,9 +719,9 @@ PyObject* cpyrt::InstanceRefExecutor::Execute(interop::TCppMethod_t method,
     if (!assign) {
       PyErr_Clear();
       PyObject* descr = PyObject_Str(result);
-      if (descr && cpyrt_PyText_CheckExact(descr)) {
+      if (descr && PyUnicode_CheckExact(descr)) {
         PyErr_Format(PyExc_TypeError, "cannot assign to return object (%s)",
-                     cpyrt_PyText_AsString(descr));
+                     PyUnicode_AsUTF8(descr));
       } else {
         PyErr_SetString(PyExc_TypeError, "cannot assign to result");
       }
@@ -754,7 +754,7 @@ static inline PyObject* SetInstanceCheckError(PyObject* pyobj) {
   PyObject* pystr = PyObject_Str(pyobj);
   if (pystr) {
     PyErr_Format(PyExc_TypeError, "C++ object expected, got %s",
-                 cpyrt_PyText_AsString(pystr));
+                 PyUnicode_AsUTF8(pystr));
     Py_DECREF(pystr);
   } else
     PyErr_SetString(PyExc_TypeError, "C++ object expected");

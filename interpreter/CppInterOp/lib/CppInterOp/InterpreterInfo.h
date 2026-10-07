@@ -19,13 +19,14 @@
 #include "ErrorInternal.h"
 
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclBase.h"
 #include "clang/AST/Type.h"
 
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/StringMap.h"
 
 #include <cstdint>
 #include <deque>
-#include <map>
 #include <string>
 #include <utility>
 #include <vector>
@@ -39,13 +40,13 @@ struct InterpreterInfo {
   llvm::StringMap<clang::QualType> BuiltinMap;
   // Per-interpreter wrapper caches. Keyed on AST nodes that belong to this
   // interpreter, so the caches must be destroyed together with it.
-  std::map<const clang::FunctionDecl*, void*> WrapperStore;
-  std::map<const clang::Decl*, void*> DtorWrapperStore;
+  llvm::DenseMap<const clang::FunctionDecl*, void*> WrapperStore;
+  llvm::DenseMap<const clang::Decl*, void*> DtorWrapperStore;
   // Constant-array initializers materialized by GetVariableOffset, keyed on
   // the AST node so each variable is laid out once (stable address per
   // query, no bump-allocator growth). A 0 entry records a deterministic
   // materialization failure.
-  std::map<const clang::VarDecl*, intptr_t> ConstArrayValueStore;
+  llvm::DenseMap<const clang::VarDecl*, intptr_t> ConstArrayValueStore;
   // A deque keeps element addresses stable so DiagnosticRef::data
   // survives push_back.
   std::deque<StoredDiagView> StoredDiags;
