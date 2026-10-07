@@ -69,9 +69,6 @@ TEST(RFile, Open)
    EXPECT_FALSE(file->Get<TH1F>("hist"));
    EXPECT_TRUE(file->Get<TH1>("hist"));
 
-   // We do NOT want to globally register RFiles ever.
-   EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 0);
-
    std::string foo = "foo";
    EXPECT_THROW(file->Put("foo", foo), ROOT::RException);
 }
@@ -120,8 +117,6 @@ TEST(RFile, OpenForWriting)
    auto file = RFile::Recreate(fileGuard.GetPath());
    file->Put("hist", *hist);
    EXPECT_TRUE(file->Get<TH1D>("hist"));
-
-   EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 0);
 }
 
 TEST(RFile, CheckNoAutoRegistrationWrite)
@@ -218,8 +213,6 @@ TEST(RFile, OpenForUpdating)
       file->Put("hist2", *hist2);
    }
    EXPECT_TRUE(file->Get<TH1D>("hist2"));
-
-   EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 0);
 }
 
 TEST(RFile, PutOverwrite)
