@@ -1,8 +1,10 @@
 ROOTTEST_ADD_TEST(getFuncBody
                   MACRO getFuncBody.C)
 
-ROOTTEST_ADD_TEST(countIncludePaths
-                  MACRO countIncludePaths.C)
+ROOTTEST_ADD_TEST(checkRuntimeIncludePaths
+                  MACRO checkRuntimeIncludePaths.C
+                  ENVIRONMENT ROOTTEST_ROOT_SOURCE_DIR=${ROOT_SOURCE_DIR}
+                              ROOTTEST_ROOT_BINARY_DIR=${ROOT_BINARY_DIR})
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(expressiveErrorMessages
                                     expressiveErrorMessages.h
