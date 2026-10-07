@@ -93,8 +93,10 @@ void Read()
    // Fields from auxiliary ntuples are requested by prepending the name of the auxiliary ntuple.
    auto py = processor->RequestField<float>(kAuxNTupleName + ".vpy");
 
-   // The iterator value is the index of the current entry being processed. In this example, we don't use it.
-   for (auto _ : *processor) {
+   // The iterator value gives access to the the current entry to process.
+   for (const auto &idx : *processor) {
+      // Load the entry.
+      processor->LoadEntry(idx);
       hPy.Fill(*px + *py);
    }
 

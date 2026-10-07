@@ -87,9 +87,10 @@ TEST_F(RNTupleChainProcessorTest, SingleNTuple)
 
    auto x = proc->RequestField<float>("x");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_FLOAT_EQ(static_cast<float>(*idx), *x);
    }
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
@@ -111,11 +112,12 @@ TEST_F(RNTupleChainProcessorTest, Basic)
    auto x = proc->RequestField<float>("x");
    auto y = proc->RequestField<std::vector<float>>("y");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(static_cast<float>(idx), *x);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(static_cast<float>(*idx), *x);
 
-      std::vector<float> yExp = {static_cast<float>(idx), static_cast<float>((idx) * 2)};
+      std::vector<float> yExp = {static_cast<float>(*idx), static_cast<float>(*idx * 2)};
       EXPECT_EQ(yExp, *y);
    }
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
@@ -129,10 +131,11 @@ TEST_F(RNTupleChainProcessorTest, MissingFields)
    auto x = proc->RequestField<float>("x");
    auto y = proc->RequestField<std::vector<float>>("y");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx % 5, static_cast<int>(*x) % 5);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx % 5, static_cast<int>(*x) % 5);
 
-      if (idx < 5 || idx >= 10) {
+      if (*idx < 5 || *idx >= 10) {
          EXPECT_TRUE(y.HasValue());
       } else {
          EXPECT_FALSE(y.HasValue());
@@ -161,23 +164,24 @@ TEST_F(RNTupleChainProcessorTest, EmptyNTuples)
 
    auto x = proc->RequestField<float>("x");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(static_cast<float>(idx), *x);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(static_cast<float>(*idx), *x);
    }
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
 
 namespace ROOT::Experimental::Internal {
 struct RNTupleProcessorEntryLoader {
-   static ROOT::NTupleSize_t LoadEntry(RNTupleProcessor &processor, ROOT::NTupleSize_t entryNumber)
+   static ROOT::RResult<void> LoadEntry(RNTupleProcessor &processor, ROOT::NTupleSize_t entryNumber)
    {
       processor.Connect(processor.fEntry->GetFieldIndices(), RNTupleProcessorProvenance(), /*updateFields=*/false);
-      return processor.LoadEntry(entryNumber);
-   }
-
-   static void LoadUnfrozenEntry(RNTupleProcessor &processor, ROOT::NTupleSize_t entryNumber)
-   {
-      processor.LoadEntry(entryNumber);
+      RNTupleProcessor::REntryMapping entryMapping;
+      processor.SetEntryMapping(entryNumber, entryMapping);
+      if (entryMapping.GetEntryNumber() == kInvalidNTupleIndex)
+         return R__FAIL("entry does not exist");
+      processor.LoadEntry(entryMapping);
+      return RResult<void>::Success();
    }
 };
 } // namespace ROOT::Experimental::Internal
@@ -202,7 +206,8 @@ TEST_F(RNTupleChainProcessorTest, LoadRandomEntry)
    RNTupleProcessorEntryLoader::LoadEntry(*proc, 2);
    EXPECT_EQ(2.f, *x);
 
-   EXPECT_EQ(ROOT::kInvalidNTupleIndex, RNTupleProcessorEntryLoader::LoadEntry(*proc, 10));
+   auto res = RNTupleProcessorEntryLoader::LoadEntry(*proc, 10);
+   EXPECT_FALSE(res);
 }
 
 TEST_F(RNTupleChainProcessorTest, TMemFile)
@@ -225,9 +230,10 @@ TEST_F(RNTupleChainProcessorTest, TMemFile)
 
    auto x = proc->RequestField<float>("x");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(static_cast<float>(idx), *x);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(static_cast<float>(*idx), *x);
    }
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
@@ -253,4 +259,22 @@ TEST_F(RNTupleChainProcessorTest, PrintStructure)
                            "| test_ntuple_chain_proces... |\n"
                            "+-----------------------------+\n";
    EXPECT_EQ(exp, os.str());
+}
+
+TEST_F(RNTupleChainProcessorTest, IterateTwice)
+{
+   auto proc = RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}});
+   auto x = proc->RequestField<float>("x");
+
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(static_cast<float>(*idx), *x);
+   }
+   EXPECT_EQ(10, proc->GetNEntriesProcessed());
+
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(static_cast<float>(*idx), *x);
+   }
+   EXPECT_EQ(20, proc->GetNEntriesProcessed());
 }
