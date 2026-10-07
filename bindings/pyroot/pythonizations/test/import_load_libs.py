@@ -78,6 +78,8 @@ class ImportLoadLibs(unittest.TestCase):
         "libffi",
         "libgcc_s",
         "libatomic",
+        "libc\\+\\+",  # C++ runtime of libc++ builds
+        "libc\\+\\+abi",
         # AddressSanitizer runtime and ROOT configuration
         "libclang_rt.asan-.*",
         "libasan",
