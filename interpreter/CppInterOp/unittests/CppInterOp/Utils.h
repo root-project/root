@@ -62,9 +62,9 @@ void GetAllSubDecls(clang::Decl* D, std::vector<clang::Decl*>& SubDecls,
 
 bool IsTargetX86();
 
-// OOP-JIT is incompatible with two configurations and is excluded
+// OOP-JIT is incompatible with three configurations and is excluded
 // from the typed-test matrix wholesale (rather than per-test) when
-// either applies:
+// any applies:
 //   * Any sanitizer (ASan/MSan/TSan): upstream LLVM ORC trips
 //     `Resolving symbol with incorrect flags`
 //     (`llvm/lib/ExecutionEngine/Orc/Core.cpp`, the JITSymbolFlags
@@ -74,6 +74,10 @@ bool IsTargetX86();
 //     mismatch. In-process JIT is unaffected.
 //   * Emscripten: the OOP path requires fork/exec + a separate
 //     executor binary, which the wasm runtime doesn't provide.
+//   * Cling: the backend has no out-of-process executor and does not
+//     know `--use-oop-jit`; the flag reaches cling as an unknown
+//     argument and the variant runs in-process, repeating every
+//     InProcessJIT test under the other name.
 #if defined(__has_feature)
 #  if __has_feature(address_sanitizer) ||                                      \
       __has_feature(memory_sanitizer) ||                                       \
@@ -85,6 +89,9 @@ bool IsTargetX86();
 #  define CPPINTEROP_OOP_DISABLED 1
 #endif
 #if defined(__EMSCRIPTEN__)
+#  define CPPINTEROP_OOP_DISABLED 1
+#endif
+#if defined(CPPINTEROP_USE_CLING)
 #  define CPPINTEROP_OOP_DISABLED 1
 #endif
 

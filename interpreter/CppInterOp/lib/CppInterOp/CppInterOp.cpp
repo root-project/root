@@ -80,6 +80,7 @@
 #include "clang/Sema/TemplateDeduction.h"
 
 #include "llvm/ADT/APInt.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
@@ -720,6 +721,28 @@ static SourceLocation GetValidSLoc(Sema& semaRef) {
   return SM.getLocForStartOfFile(SM.getMainFileID());
 }
 
+namespace {
+class clangSilent {
+public:
+  explicit clangSilent(clang::DiagnosticsEngine& diag)
+      : fDiagEngine(&diag),
+        fOldDiagValue(fDiagEngine->getSuppressAllDiagnostics()) {
+    fDiagEngine->setSuppressAllDiagnostics(true);
+  }
+
+  ~clangSilent() { fDiagEngine->setSuppressAllDiagnostics(fOldDiagValue); }
+
+  clangSilent(const clangSilent&) = delete;
+  clangSilent& operator=(const clangSilent&) = delete;
+  clangSilent(clangSilent&&) = delete;
+  clangSilent& operator=(clangSilent&&) = delete;
+
+private:
+  clang::DiagnosticsEngine* fDiagEngine;
+  bool fOldDiagValue;
+};
+} // namespace
+
 // See TClingClassInfo::IsLoaded
 bool IsComplete(ConstDeclRef DRef) {
   INTEROP_TRACE(DRef);
@@ -733,7 +756,21 @@ bool IsComplete(ConstDeclRef DRef) {
     clang::Sema& S = getSema();
     SourceLocation fakeLoc = GetValidSLoc(S);
     compat::SynthesizingCodeRAII RAII(&getInterp());
-    return INTEROP_RETURN(S.isCompleteType(fakeLoc, QT));
+    // Query only: attempting the implicit instantiation of a specialization
+    // that can never be defined (its template is only declared) must neither
+    // print an error nor leave the diagnostics engine in an error state that
+    // poisons the next translation unit. Suppressed diagnostics still bump
+    // the engine's trap counters (DiagnosticsEngine::ProcessDiag increments
+    // TrapNumErrorsOccurred before the suppression check), and a prior
+    // operation may already have flagged an error, so carry a trap over the
+    // query and reset on any sign of diagnostics.
+    clangSilent Silence(S.getDiagnostics());
+    bool HadError = S.getDiagnostics().hasErrorOccurred();
+    clang::DiagnosticErrorTrap Trap(S.getDiagnostics());
+    bool complete = S.isCompleteType(fakeLoc, QT);
+    if (HadError || Trap.hasErrorOccurred())
+      S.getDiagnostics().Reset(/*soft=*/true);
+    return INTEROP_RETURN(complete);
   }
 
   if (const auto* CXXRD = dyn_cast<CXXRecordDecl>(D))
@@ -1221,6 +1258,20 @@ DeclRef GetUnderlyingScope(ConstDeclRef DRef) {
       GetUnderlyingScopeImpl(unwrap<clang::Decl>(DRef))));
 }
 
+DeclRef GetTemplatedDecl(DeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  auto* D = unwrap<clang::Decl>(DRef);
+  if (auto* CTSD =
+          llvm::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(D))
+    return INTEROP_RETURN(
+        CTSD->getSpecializedTemplate()->getTemplatedDecl()->getCanonicalDecl());
+  if (auto* CTD = llvm::dyn_cast_or_null<clang::ClassTemplateDecl>(D))
+    return INTEROP_RETURN(CTD->getTemplatedDecl()->getCanonicalDecl());
+  if (auto* FTD = llvm::dyn_cast_or_null<clang::FunctionTemplateDecl>(D))
+    return INTEROP_RETURN(FTD->getTemplatedDecl()->getCanonicalDecl());
+  return INTEROP_RETURN(DRef);
+}
+
 DeclRef GetScope(const std::string& name, ConstDeclRef parent) {
   INTEROP_TRACE(name, parent);
   // FIXME: GetScope should be replaced by a general purpose lookup
@@ -1464,19 +1515,25 @@ DeclRef GetParentScope(ConstDeclRef DRef) {
 
 size_t GetNumBases(ConstDeclRef DRef) {
   INTEROP_TRACE(DRef);
-  const auto* D = unwrap<Decl>(DRef);
+  // const_cast: completing the definition mutates the AST, but the base list
+  // is logically a read-only property of the class. Taking a mutable DeclRef
+  // would make unqualified calls in downstream wrappers ambiguous via ADL.
+  auto* D = const_cast<Decl*>(unwrap<Decl>(DRef));
 
   // hasDefinition() completes the redecl chain (dataPtr), which may
   // deserialize it; so does getNumBases() below.
   compat::SynthesizingCodeRAII RAII(&getInterp());
-  if (const auto* CTSD =
-          llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(D))
+  if (auto* CTSD = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(D))
     if (!CTSD->hasDefinition())
-      compat::InstantiateClassTemplateSpecialization(
-          getInterp(), const_cast<ClassTemplateSpecializationDecl*>(CTSD));
-  if (const auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D)) {
-    if (CXXRD->hasDefinition())
-      return INTEROP_RETURN(CXXRD->getNumBases());
+      compat::InstantiateClassTemplateSpecialization(getInterp(), CTSD);
+  if (llvm::isa_and_nonnull<CXXRecordDecl>(D)) {
+    // A class known only as an autoload-annotated forward declaration
+    // (e.g., injected by a runtime ROOT dictionary) is not completed by
+    // hasDefinition(); resolve its definition through Sema first, or the
+    // base list is silently empty.
+    if (const auto* Def = llvm::dyn_cast_or_null<CXXRecordDecl>(
+            unwrap<Decl>(GetOrForceDefinition(D))))
+      return INTEROP_RETURN(Def->getNumBases());
   }
 
   return INTEROP_RETURN(0);
@@ -1484,9 +1541,16 @@ size_t GetNumBases(ConstDeclRef DRef) {
 
 DeclRef GetBaseClass(ConstDeclRef DRef, size_t ibase) {
   INTEROP_TRACE(DRef, ibase);
-  const auto* D = unwrap<Decl>(DRef);
-  const auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D);
+  // const_cast: see GetNumBases.
+  auto* D = const_cast<Decl*>(unwrap<Decl>(DRef));
+  if (!llvm::isa_and_nonnull<CXXRecordDecl>(D))
+    return INTEROP_RETURN(nullptr);
+
   compat::SynthesizingCodeRAII RAII(&getInterp());
+  // See GetNumBases: autoload-annotated forward declarations need Sema to
+  // resolve their definition before bases are visible.
+  const auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(
+      unwrap<Decl>(GetOrForceDefinition(D)));
   if (!CXXRD || CXXRD->getNumBases() <= ibase)
     return INTEROP_RETURN(nullptr);
 
@@ -1847,6 +1911,14 @@ TypeRef GetFunctionReturnType(ConstFuncRef func) {
       if (const auto* MD = llvm::dyn_cast<clang::CXXMethodDecl>(FD)) {
         if (IsTemplateSpecialization(MD->getParent()))
           needInstantiation = true;
+      }
+
+      if (needInstantiation && FD->getTrailingRequiresClause()) {
+        compat::SynthesizingCodeRAII RAII(&getInterp());
+        clang::ConstraintSatisfaction Satisfaction;
+        if (getSema().CheckFunctionConstraints(FD, Satisfaction) ||
+            !Satisfaction.IsSatisfied)
+          needInstantiation = false;
       }
 
       if (needInstantiation) {
@@ -3524,7 +3596,7 @@ TypeRef GetVariableType(ConstDeclRef var) {
 // address instead of re-evaluating and re-allocating on every call.
 static intptr_t
 MaterializeConstArrayValue(ASTContext& C, const VarDecl* VD, const APValue& Val,
-                           std::map<const VarDecl*, intptr_t>& Cache) {
+                           llvm::DenseMap<const VarDecl*, intptr_t>& Cache) {
   const clang::ArrayType* AT =
       Val.isArray() ? C.getAsArrayType(VD->getType()) : nullptr;
   const uint64_t EltBytes =
@@ -3665,7 +3737,7 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
         if (VD->hasInit() &&
             (VD->isConstexpr() || VD->getType().isConstQualified())) {
           if (const APValue* val = VD->evaluateValue()) {
-            if (VD->getType()->isIntegralType(C))
+            if (VD->getType()->isIntegralOrEnumerationType())
               return (intptr_t)val->getInt().getRawData();
             if (intptr_t ArrAddr = MaterializeConstArrayValue(
                     C, VD, *val, getInterpInfo(&I).ConstArrayValueStore))
@@ -3693,7 +3765,7 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
             !InitVD->getType().isVolatileQualified() &&
             (InitVD->isConstexpr() || InitVD->getType().isConstQualified())) {
           if (const APValue* val = InitVD->evaluateValue()) {
-            if (InitVD->getType()->isIntegralType(C))
+            if (InitVD->getType()->isIntegralOrEnumerationType())
               // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
               return reinterpret_cast<intptr_t>(val->getInt().getRawData());
             if (intptr_t ArrAddr = MaterializeConstArrayValue(
@@ -3725,7 +3797,7 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
         if (VD->hasInit() &&
             (VD->isConstexpr() || VD->getType().isConstQualified())) {
           if (const APValue* val = VD->evaluateValue()) {
-            if (VD->getType()->isIntegralType(C)) {
+            if (VD->getType()->isIntegralOrEnumerationType()) {
               return (intptr_t)val->getInt().getRawData();
             }
             if (intptr_t ArrAddr = MaterializeConstArrayValue(
@@ -4761,7 +4833,7 @@ void make_narg_ctor_with_return(const FunctionDecl* FD, const unsigned N,
 // public, and decltype/typeof sugar is spelled as its expression, whose
 // names may only resolve in the declaring scope. Builtins and compound types
 // keep the status quo.
-static bool isWrapperSpellable(QualType QT) {
+bool isWrapperSpellable(QualType QT) {
   for (const clang::Type* T = QT.getTypePtr();;) {
     if (isa<DecltypeType, TypeOfExprType>(T))
       return false;
@@ -4783,6 +4855,23 @@ static bool isWrapperSpellable(QualType QT) {
     D = llvm::dyn_cast<NamedDecl>(D->getDeclContext());
   }
   return true;
+}
+
+// The type the wrapper spells for QT: the first reachable spelling when
+// desugaring QT one step at a time, or QT unchanged when there is none. A
+// typedef nested in a private helper class desugars to the type it names;
+// a public typedef of a private class is reachable as written and stays,
+// and its canonical type could not be spelled at all.
+QualType getWrapperSpellableType(QualType QT) {
+  const ASTContext& C = getASTContext();
+  for (QualType T = QT;;) {
+    if (isWrapperSpellable(T))
+      return T;
+    QualType Next = T.getSingleStepDesugaredType(C);
+    if (Next == T)
+      return QT;
+    T = Next;
+  }
 }
 
 void make_narg_call_with_return(compat::Interpreter& I, const FunctionDecl* FD,
@@ -4813,13 +4902,7 @@ void make_narg_call_with_return(compat::Interpreter& I, const FunctionDecl* FD,
     make_narg_ctor_with_return(FD, N, class_name, buf, indent_level);
     return;
   }
-  QualType QT = FD->getReturnType();
-  // A return type spelled through a non-public path (e.g. a typedef nested
-  // in a private helper class) cannot be named in the wrapper; fall back to
-  // the canonical type when that one is spellable (the inverse also exists:
-  // a public typedef of a private class must keep its sugared name).
-  if (!isWrapperSpellable(QT) && isWrapperSpellable(QT.getCanonicalType()))
-    QT = QT.getCanonicalType();
+  QualType QT = getWrapperSpellableType(FD->getReturnType());
   if (QT->isVoidType()) {
     std::ostringstream typedefbuf;
     std::ostringstream callbuf;
@@ -6065,22 +6148,6 @@ void GetIncludePaths(std::vector<std::string>& IncludePaths, bool withSystem,
   return INTEROP_VOID_RETURN();
 }
 
-namespace {
-class clangSilent {
-public:
-  clangSilent(clang::DiagnosticsEngine& diag) : fDiagEngine(diag) {
-    fOldDiagValue = fDiagEngine.getSuppressAllDiagnostics();
-    fDiagEngine.setSuppressAllDiagnostics(true);
-  }
-
-  ~clangSilent() { fDiagEngine.setSuppressAllDiagnostics(fOldDiagValue); }
-
-protected:
-  clang::DiagnosticsEngine& fDiagEngine;
-  bool fOldDiagValue;
-};
-} // namespace
-
 static int Declare(compat::Interpreter& I, const char* code, bool silent) {
   // Trap diagnostics on both paths: I.declare's rc is 0 even when
   // Parse recovered from emitted errors, so callers need the trap to
@@ -6107,7 +6174,14 @@ int Declare(const char* code, bool silent) {
 
 int Process(const char* code) {
   INTEROP_TRACE(code);
-  return INTEROP_RETURN(getInterp().process(code));
+  // Trap diagnostics like Declare: process's rc is kSuccess even when the
+  // parse recovered from emitted errors or a wrapped expression failed at
+  // run time, so callers cannot rely on it alone.
+  clang::DiagnosticsEngine& Diag = getSema().getDiagnostics();
+  clang::DiagnosticErrorTrap Trap(Diag);
+  if (getInterp().process(code) != compat::Interpreter::kSuccess)
+    return INTEROP_RETURN(1);
+  return INTEROP_RETURN(Trap.hasErrorOccurred() ? 1 : 0);
 }
 
 // Classify the QualType of a successfully-evaluated value into a
