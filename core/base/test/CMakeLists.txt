@@ -9,6 +9,7 @@ ROOT_ADD_GTEST(CoreBaseTests
   TQObjectTests.cxx
   TExceptionHandlerTests.cxx
   TStringTest.cxx
+  TDatimeTest.cxx
   TUrlTest.cxx
   TBitsTests.cxx
   TRefTests.cxx
