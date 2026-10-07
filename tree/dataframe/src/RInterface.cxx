@@ -166,3 +166,9 @@ void ROOT::Internal::RDF::SetTTreeLifeline(ROOT::RDF::RNode &node, std::any life
 {
    node.GetLoopManager()->SetTTreeLifeline(std::move(lifeline));
 }
+
+ROOT::RDF::RResultPtr<ROOT::RVecF>
+ROOT::Internal::RDF::LoadCustomValues(ROOT::RDF::RNode &node, const std::vector<std::string> &cols)
+{
+   return node.LoadValuesCustom(cols);
+}
