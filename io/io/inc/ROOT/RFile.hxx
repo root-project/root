@@ -25,7 +25,6 @@ class TKey;
 class TTree;
 
 namespace ROOT {
-namespace Experimental {
 
 class RKeyInfo;
 class RFile;
@@ -59,7 +58,7 @@ std::pair<std::string_view, std::string_view> DecomposePath(std::string_view pat
 class RFileKeyIterable;
 
 /**
-\class ROOT::Experimental::RKeyInfo
+\class ROOT::RKeyInfo
 \ingroup io_files
 \brief Information about an RFile object's Key.
 
@@ -69,8 +68,8 @@ Querying this information can be done via RFile::ListKeys(). Reading an object's
 doesn't deserialize the full object, so it's a relatively lightweight operation.
 */
 class RKeyInfo final {
-   friend class ROOT::Experimental::RFile;
-   friend class ROOT::Experimental::RFileKeyIterable;
+   friend class ROOT::RFile;
+   friend class ROOT::RFileKeyIterable;
 
 public:
    enum class ECategory : std::uint16_t {
@@ -186,7 +185,7 @@ public:
 };
 
 /**
-\class ROOT::Experimental::RFile
+\class ROOT::RFile
 \ingroup io_files
 \brief An interface to read from, or write to, a ROOT file, as well as performing other common operations.
 
@@ -434,7 +433,6 @@ public:
    void Print(std::ostream &out = std::cout) const;
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

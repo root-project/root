@@ -234,9 +234,6 @@ def _RNTupleWriter_Append(model, *args):
     model = model.Clone()
     import ROOT
 
-    if len(args) > 1 and isinstance(args[1], ROOT.Experimental.RFile):
-        return RNTupleContextWrapper(ROOT.Experimental.RNTupleWriter_Append(model, *args), "RNTupleWriter", on_ctx_exit = _RNTupleWriter_exit)
-
     return RNTupleContextWrapper(ROOT.RNTupleWriter._Append(model, *args), "RNTupleWriter", on_ctx_exit = _RNTupleWriter_exit)
 
 

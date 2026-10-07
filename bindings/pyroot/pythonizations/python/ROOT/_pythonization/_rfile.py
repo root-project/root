@@ -32,7 +32,7 @@ class _RFile_Get:
 
         key = self._rfile.GetKeyInfo(namecycle)
         if key:
-            obj = ROOT.Experimental.Internal.RFile_GetObjectFromKey(self._rfile, key)
+            obj = ROOT.Internal.RFile_GetObjectFromKey(self._rfile, key)
             return ROOT._cppyy.bind_object(obj, key.GetClassName())
         # No key
         return None
@@ -151,7 +151,7 @@ def _ListKeys(rfile, basePath="", **kwargs):
         print(key.GetPath())
     ~~~
     """
-    from ROOT.Experimental import RFile
+    from ROOT import RFile
 
     listObjects = kwargs['listObjects'] if 'listObjects' in kwargs else True
     listDirs = kwargs['listDirs'] if 'listDirs' in kwargs else False
@@ -162,7 +162,7 @@ def _ListKeys(rfile, basePath="", **kwargs):
     return iter
 
 
-@pythonization("RFile", ns="ROOT::Experimental")
+@pythonization("RFile", ns="ROOT")
 def pythonize_rfile(klass):
     # Explicitly prevent to create a RFile via ctor
     klass.__init__ = _RFileInit

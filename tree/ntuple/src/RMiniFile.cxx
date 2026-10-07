@@ -1218,7 +1218,7 @@ std::uint64_t ROOT::Internal::RNTupleFileWriter::RImplTFile::ReserveBlobKey(size
 
 void ROOT::Internal::RNTupleFileWriter::RImplRFile::Write(const void *buffer, size_t nbytes, std::int64_t offset)
 {
-   auto *file = ROOT::Experimental::Internal::GetRFileTFile(*fFile);
+   auto *file = ROOT::Internal::GetRFileTFile(*fFile);
    file->Seek(offset);
    bool rv = file->WriteBuffer((char *)(buffer), nbytes);
    if (rv)
@@ -1228,7 +1228,7 @@ void ROOT::Internal::RNTupleFileWriter::RImplRFile::Write(const void *buffer, si
 std::uint64_t ROOT::Internal::RNTupleFileWriter::RImplRFile::ReserveBlobKey(size_t nbytes, size_t len,
                                                                             unsigned char keyBuffer[kBlobKeyLen])
 {
-   auto *file = ROOT::Experimental::Internal::GetRFileTFile(*fFile);
+   auto *file = ROOT::Internal::GetRFileTFile(*fFile);
    auto offsetData = RNTupleFileWriter::ReserveBlobKey(*this, *file, nbytes, len, keyBuffer);
    return offsetData;
 }
@@ -1319,8 +1319,8 @@ ROOT::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, TDirector
 }
 
 std::unique_ptr<ROOT::Internal::RNTupleFileWriter>
-ROOT::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, ROOT::Experimental::RFile &file,
-                                          std::string_view ntupleDir, std::uint64_t maxKeySize)
+ROOT::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, ROOT::RFile &file, std::string_view ntupleDir,
+                                          std::uint64_t maxKeySize)
 {
    auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize, /*isHidden=*/false));
    auto &rfile = writer->fFile.emplace<RImplRFile>();
@@ -1400,7 +1400,7 @@ ROOT::Internal::RNTupleLink ROOT::Internal::RNTupleFileWriter::Commit(int compre
    } else if (auto fileRFile = std::get_if<RImplRFile>(&fFile)) {
       // Same as the case above but handled via RFile
       fileRFile->fFile->Put(fileRFile->fDir + fNTupleName, fNTupleAnchor);
-      WriteStreamerInfoToFile(ROOT::Experimental::Internal::GetRFileTFile(*fileRFile->fFile));
+      WriteStreamerInfoToFile(ROOT::Internal::GetRFileTFile(*fileRFile->fFile));
       auto key = fileRFile->fFile->GetKeyInfo(fNTupleName);
       R__ASSERT(key);
       anchorInfo.fLocator.SetPosition(key->GetSeekKey() + key->GetNBytesKey());
