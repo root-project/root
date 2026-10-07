@@ -3,10 +3,63 @@
 r"""
 \pythondoc RFile
 
-TODO: document RFile
+RFile is a modern, minimal interface to ROOT files with a focus on simplicity.
+It allows to perform the basic actions of getting objects from a file, putting objects into it and query the file
+for metadata.
+
+Here is a typical use of RFile:
 
 \code{.py}
-# TODO code example
+# Reading an object from a file. Note that Get will return None if no object is stored under the given path.
+with ROOT.Experimental.RFile.Open("myfile.root") as file:
+    myHisto = file.Get("myHisto")
+    # file will be closed upon exiting the with statement, but all objects retrieved from it remain valid.
+
+print(f"{myHisto.GetName()} has {myHisto.GetNbins()} bins.")
+
+# Writing an object to a new file
+with ROOT.Experimental.RFile.Recreate("myfile2.root") as file:
+    file.Put("myHisto", myHisto)
+    # file will be written upon exiting the with statement, or explicitly with:
+    # file.Flush()
+\endcode
+
+The Put method will raise an error if an object is already present at the given path; if you want to overwrite an
+existing object use the Overwrite method instead:
+
+\code{.py}
+file.Overwrite("myHisto", myOtherHisto)
+\endcode
+
+You can iterate the metadata of all objects inside an RFile using the ListKeys method:
+\code{.py}
+for key in file.ListKeys():
+    print(key.GetBaseName())
+    # We can use the key to get information about the object without loading it from storage
+    if key.GetClassName() == "TH1D":
+        histo = file.Get(key.GetPath())
+        histos.append(histo)
+\endcode
+
+ListKeys is recursive by default. If you want non-recursive behavior, you can specify it with a keyword argument:
+\code{.py}
+for key in file.ListKeys("", recursive=False):
+    # this will only print the top-level objects.
+    print(key.GetBaseName())
+\endcode
+
+See the documentation of ListKeys for more options.
+
+## Directories and paths
+Objects in an RFile are organized in a hierarchical structure represented by their "path". A path is the string you
+pass to Get or Put (like in the examples above) and it uses '/' as the directory separator. A directory is useful to
+group multiple related objects and it can be used alongside ListKeys:
+
+\code{.py}
+# lists all objects under the "myDir" directory. 
+for key in file.ListKeys("myDir"):
+    # will print something like "myDir/myObjName"
+    print(key.GetPath())
 \endcode
 
 \endpythondoc
