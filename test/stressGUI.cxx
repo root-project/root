@@ -2011,6 +2011,7 @@ const char *excluded[] = {
    "customContextMenu.C",
    "customTH1Fmenu",
    "exec_macro",
+   "games",
    "guitest0",
    0
 };
