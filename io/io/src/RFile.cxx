@@ -201,20 +201,22 @@ std::pair<std::string_view, std::string_view> ROOT::Experimental::Detail::Decomp
    return {dirName, pathName};
 }
 
-std::unique_ptr<RFile> RFile::Open(std::string_view path)
+std::unique_ptr<RFile> RFile::Open(std::string_view path, const ROpenOptions &opts)
 {
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
-   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "READ"));
+   const char *mode = opts.fEnableFileBrowsability ? "READ" : "READ_WITHOUT_GLOBALREGISTRATION";
+   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), mode));
    EnsureFileOpenAndBinary(tfile.get(), path);
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
    return rfile;
 }
 
-std::unique_ptr<RFile> RFile::Update(std::string_view path)
+std::unique_ptr<RFile> RFile::Update(std::string_view path, const RUpdateOptions &opts)
 {
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
-   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "UPDATE"));
+   const char *mode = opts.fEnableFileBrowsability ? "UPDATE" : "UPDATE_WITHOUT_GLOBALREGISTRATION";
+   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), mode));
    EnsureFileOpenAndBinary(tfile.get(), path);
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
@@ -224,8 +226,8 @@ std::unique_ptr<RFile> RFile::Update(std::string_view path)
 std::unique_ptr<RFile> RFile::Recreate(std::string_view path, const RRecreateOptions &opts)
 {
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
-   auto tfile =
-      std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "RECREATE", "", opts.fCompressionSettings));
+   const char *mode = opts.fEnableFileBrowsability ? "RECREATE" : "RECREATE_WITHOUT_GLOBALREGISTRATION";
+   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), mode, "", opts.fCompressionSettings));
    EnsureFileOpenAndBinary(tfile.get(), path);
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
@@ -580,3 +582,5 @@ TFile *ROOT::Experimental::Internal::GetRFileTFile(RFile &file)
 }
 
 RFile::RRecreateOptions::RRecreateOptions() = default;
+RFile::ROpenOptions::ROpenOptions() = default;
+RFile::RUpdateOptions::RUpdateOptions() = default;
