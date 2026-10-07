@@ -2267,7 +2267,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
    //
    // root [1] var.a.b.c[TAB]
    //
-   // will generate the sucessive calls:
+   // will generate the successive calls:
    // MakeClassFromVarName("var.a.b.c", context, 0) returns the class of "c"
    // MakeClassFromVarName("var.a.b", context, 1)   returns the class of "b"
    // MakeClassFromVarName("var.a", context, 2)     returns the class of "a"
