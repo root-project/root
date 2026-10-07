@@ -697,6 +697,65 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
    return ROOT::RResult(res);
 }
 
+// Restores the truncation/quantization parameters (bit width, value range) of a field recreated
+// from an on-disk descriptor, e.g. by ExtendDestinationModel(). RFieldDescriptor::CreateField only
+// rebuilds the type structure; the parameters live in the in-memory field (RRealField::fBitWidth,
+// fValueMin, fValueMax), so pinning the column representative alone leaves stale defaults behind,
+// which are out of range for kReal32Trunc. Recurses into subfields, matched by on-disk ID, so that
+// truncated/quantized members of late records and collections are restored as well. Nodes whose
+// source column is not truncated/quantized, or which span several representations, are left alone.
+static ROOT::RResult<void> RestoreRealFieldParams(ROOT::RFieldBase &field, const ROOT::RFieldDescriptor &fieldDesc,
+                                                  const ROOT::RNTupleDescriptor &srcDesc)
+{
+   const auto &logicalIds = fieldDesc.GetLogicalColumnIds();
+   if (logicalIds.size() == 1) {
+      const auto &column = srcDesc.GetColumnDescriptor(logicalIds[0]);
+      const auto type = column.GetType();
+      if (type == ROOT::ENTupleColumnType::kReal32Trunc || type == ROOT::ENTupleColumnType::kReal32Quant) {
+         auto *realFloat = dynamic_cast<ROOT::RRealField<float> *>(&field);
+         auto *realDouble = dynamic_cast<ROOT::RRealField<double> *>(&field);
+         if (!realFloat && !realDouble) {
+            return R__FAIL("field `" + field.GetQualifiedFieldName() +
+                           "` has a Real32Trunc/Real32Quant column but is not an RRealField");
+         }
+         const auto bits = column.GetBitsOnStorage();
+         try {
+            if (type == ROOT::ENTupleColumnType::kReal32Trunc) {
+               if (realFloat)
+                  realFloat->SetTruncated(bits);
+               else
+                  realDouble->SetTruncated(bits);
+            } else {
+               const auto valueRange = column.GetValueRange();
+               if (!valueRange) {
+                  return R__FAIL("field `" + field.GetQualifiedFieldName() +
+                                 "` has a Real32Quant column with no value range");
+               }
+               if (realFloat) {
+                  realFloat->SetQuantized(bits,
+                                          {static_cast<float>(valueRange->fMin), static_cast<float>(valueRange->fMax)});
+               } else {
+                  realDouble->SetQuantized(bits, {valueRange->fMin, valueRange->fMax});
+               }
+            }
+         } catch (const ROOT::RException &ex) {
+            return R__FAIL(ex.what());
+         }
+      }
+   }
+   for (auto *subfield : field.GetMutableSubfields()) {
+      // CreateField() may materialize in-memory class members that the source descriptor does not
+      // have (e.g. members added to the class after the file was written); those keep an invalid
+      // on-disk ID and carry no source column, so there is nothing to restore for them.
+      if (subfield->GetOnDiskId() == ROOT::kInvalidDescriptorId)
+         continue;
+      auto restored = RestoreRealFieldParams(*subfield, srcDesc.GetFieldDescriptor(subfield->GetOnDiskId()), srcDesc);
+      if (!restored)
+         return R__FORWARD_ERROR(restored);
+   }
+   return ROOT::RResult<void>::Success();
+}
+
 // Applies late model extension to `mergeData.fDestination`, adding all `descCmp.fExtraSrcFields` to it.
 [[nodiscard]]
 static ROOT::RResult<void>
@@ -735,6 +794,11 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
          representatives.push_back(column.GetType());
       }
       field->SetColumnRepresentatives({representatives});
+      // Pinning the representative is not enough for truncated/quantized columns: their parameters
+      // are stored in the in-memory field, which CreateField() leaves at defaults.
+      auto restored = RestoreRealFieldParams(*field, *fieldDesc, *mergeData.fSrcDescriptor);
+      if (!restored)
+         return R__FORWARD_ERROR(restored);
       changeset.AddField(std::move(field));
    }
    // ...then add all projected fields.

@@ -1555,6 +1555,151 @@ TEST(RNTupleMerger, Double32UncompressedSource)
    }
 }
 
+TEST(RNTupleMerger, MergeLateExtensionReal32TruncQuant)
+{
+   // Regression test: truncation/quantization parameters of a late model extension field must survive
+   // merging. ExtendDestinationModel() recreates the field from the descriptor and pins only the column
+   // type; without restoring the parameters, the destination column gets default (for kReal32Trunc
+   // out-of-range) values.
+   //
+   // Like Double32UncompressedSource above, the low-precision fields must be late model extension fields,
+   // i.e. absent from the first source's model. Truncated/quantized fields common to all sources take a
+   // different path (MatchColumnRepresentations, covered by MergeReal32Trunc/MergeReal32Quant).
+   // truncF / quantD / truncVec / quantF / truncD cover float-truncation, double-quantization,
+   // recursive float-truncation inside a collection, float-quantization (whose default bit width is
+   // legal, so only the range is wrong), and double-truncation. The vector item field must stay
+   // named "_0".
+   FileRaii fileGuard1("test_ntuple_merge_late_trunc_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto pE = model->MakeField<int>("e");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      for (size_t i = 0; i < 4; ++i) {
+         *pE = 100 + i;
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard2("test_ntuple_merge_late_trunc_in_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto pE = model->MakeField<int>("e");
+      auto fldTrunc = std::make_unique<RField<float>>("truncF");
+      fldTrunc->SetTruncated(14);
+      model->AddField(std::move(fldTrunc));
+      auto fldQuant = std::make_unique<RField<double>>("quantD");
+      fldQuant->SetQuantized(12, {0., 100.});
+      model->AddField(std::move(fldQuant));
+      auto truncItem = std::make_unique<RField<float>>("_0");
+      truncItem->SetTruncated(14);
+      model->AddField(std::make_unique<ROOT::RVectorField>("truncVec", std::move(truncItem)));
+      auto fldQuantFloat = std::make_unique<RField<float>>("quantF");
+      fldQuantFloat->SetQuantized(20, {0., 100.});
+      model->AddField(std::move(fldQuantFloat));
+      auto fldTruncDouble = std::make_unique<RField<double>>("truncD");
+      fldTruncDouble->SetTruncated(14);
+      model->AddField(std::move(fldTruncDouble));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      auto pTruncF = ntuple->GetModel().GetDefaultEntry().GetPtr<float>("truncF");
+      auto pQuantD = ntuple->GetModel().GetDefaultEntry().GetPtr<double>("quantD");
+      auto pTruncVec = ntuple->GetModel().GetDefaultEntry().GetPtr<std::vector<float>>("truncVec");
+      auto pQuantF = ntuple->GetModel().GetDefaultEntry().GetPtr<float>("quantF");
+      auto pTruncD = ntuple->GetModel().GetDefaultEntry().GetPtr<double>("truncD");
+      for (size_t i = 0; i < 4; ++i) {
+         *pE = 200 + i;
+         *pTruncF = i;
+         *pQuantD = 10. * i;
+         pTruncVec->clear();
+         pTruncVec->push_back(i);
+         pTruncVec->push_back(i + 1);
+         *pQuantF = 10. * i;
+         *pTruncD = i;
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard3("test_ntuple_merge_late_trunc_out.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
+      RNTupleMerger merger{std::move(destination)};
+      RNTupleMergeOptions opts;
+      opts.fMergingMode = ENTupleMergingMode::kUnion;
+      auto res = merger.Merge(sourcePtrs, opts);
+      ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("ntuple", fileGuard3.GetPath());
+   EXPECT_EQ(8, reader->GetNEntries());
+   const auto &desc = reader->GetDescriptor();
+   const auto truncFIds = desc.GetFieldDescriptor(desc.FindFieldId("truncF")).GetLogicalColumnIds();
+   ASSERT_EQ(1u, truncFIds.size());
+   const auto &truncCol = desc.GetColumnDescriptor(truncFIds[0]);
+   EXPECT_EQ(ROOT::ENTupleColumnType::kReal32Trunc, truncCol.GetType());
+   EXPECT_EQ(14, truncCol.GetBitsOnStorage());
+   const auto quantDIds = desc.GetFieldDescriptor(desc.FindFieldId("quantD")).GetLogicalColumnIds();
+   ASSERT_EQ(1u, quantDIds.size());
+   const auto &quantCol = desc.GetColumnDescriptor(quantDIds[0]);
+   EXPECT_EQ(ROOT::ENTupleColumnType::kReal32Quant, quantCol.GetType());
+   EXPECT_EQ(12, quantCol.GetBitsOnStorage());
+   ASSERT_TRUE(quantCol.GetValueRange().has_value());
+   EXPECT_DOUBLE_EQ(0., quantCol.GetValueRange()->fMin);
+   EXPECT_DOUBLE_EQ(100., quantCol.GetValueRange()->fMax);
+   const auto vecLinks = desc.GetFieldDescriptor(desc.FindFieldId("truncVec")).GetLinkIds();
+   ASSERT_EQ(1u, vecLinks.size());
+   const auto vecItemIds = desc.GetFieldDescriptor(vecLinks[0]).GetLogicalColumnIds();
+   ASSERT_EQ(1u, vecItemIds.size());
+   const auto &vecItemCol = desc.GetColumnDescriptor(vecItemIds[0]);
+   EXPECT_EQ(ROOT::ENTupleColumnType::kReal32Trunc, vecItemCol.GetType());
+   EXPECT_EQ(14, vecItemCol.GetBitsOnStorage());
+   const auto quantFIds = desc.GetFieldDescriptor(desc.FindFieldId("quantF")).GetLogicalColumnIds();
+   ASSERT_EQ(1u, quantFIds.size());
+   const auto &quantFloatCol = desc.GetColumnDescriptor(quantFIds[0]);
+   EXPECT_EQ(ROOT::ENTupleColumnType::kReal32Quant, quantFloatCol.GetType());
+   EXPECT_EQ(20, quantFloatCol.GetBitsOnStorage());
+   ASSERT_TRUE(quantFloatCol.GetValueRange().has_value());
+   EXPECT_DOUBLE_EQ(0., quantFloatCol.GetValueRange()->fMin);
+   EXPECT_DOUBLE_EQ(100., quantFloatCol.GetValueRange()->fMax);
+   const auto truncDIds = desc.GetFieldDescriptor(desc.FindFieldId("truncD")).GetLogicalColumnIds();
+   ASSERT_EQ(1u, truncDIds.size());
+   const auto &truncDCol = desc.GetColumnDescriptor(truncDIds[0]);
+   EXPECT_EQ(ROOT::ENTupleColumnType::kReal32Trunc, truncDCol.GetType());
+   EXPECT_EQ(14, truncDCol.GetBitsOnStorage());
+   auto pTruncF = reader->GetModel().GetDefaultEntry().GetPtr<float>("truncF");
+   auto pQuantD = reader->GetModel().GetDefaultEntry().GetPtr<double>("quantD");
+   auto pTruncVec = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<float>>("truncVec");
+   auto pQuantF = reader->GetModel().GetDefaultEntry().GetPtr<float>("quantF");
+   auto pTruncD = reader->GetModel().GetDefaultEntry().GetPtr<double>("truncD");
+   // Entries 0..3 predate the extension: scalars read back zero (quantized zeros unpack to the range
+   // minimum, which is 0 here) and the late collection reads back empty.
+   for (size_t i = 0; i < 4; ++i) {
+      reader->LoadEntry(i);
+      EXPECT_FLOAT_EQ(0.0f, *pTruncF);
+      EXPECT_DOUBLE_EQ(0.0, *pQuantD);
+      EXPECT_TRUE(pTruncVec->empty());
+      EXPECT_FLOAT_EQ(0.0f, *pQuantF);
+      EXPECT_DOUBLE_EQ(0.0, *pTruncD);
+   }
+   for (size_t i = 4; i < 8; ++i) {
+      reader->LoadEntry(i);
+      EXPECT_NEAR(*pTruncF, i - 4, 0.01f);
+      EXPECT_NEAR(*pQuantD, 10. * (i - 4), 0.1);
+      ASSERT_EQ(2u, pTruncVec->size());
+      EXPECT_NEAR(pTruncVec->at(0), i - 4, 0.01f);
+      EXPECT_NEAR(pTruncVec->at(1), i - 3, 0.01f);
+      EXPECT_NEAR(*pQuantF, 10. * (i - 4), 0.1);
+      EXPECT_NEAR(*pTruncD, i - 4, 0.01);
+   }
+}
+
 TEST(RNTupleMerger, MergeProjectedFields)
 {
    // Verify that the projected fields get treated properly by the merge (i.e. we don't try and merge the alias columns
