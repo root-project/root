@@ -839,75 +839,39 @@ void TNetXNGFile::SetEnv()
    const char *cenv = 0;
    TString     val;
 
-   val = gEnv->GetValue("NetXNG.ConnectionWindow",     "");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XRD_CONNECTIONWINDOW"))
-                            || strlen(cenv) <= 0))
-      env->PutInt("ConnectionWindow", val.Atoi());
-
-   val = gEnv->GetValue("NetXNG.ConnectionRetry",      "");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XRD_CONNECTIONRETRY"))
-                            || strlen(cenv) <= 0))
-      env->PutInt("RequestTimeout", val.Atoi());
-
-   val = gEnv->GetValue("NetXNG.RequestTimeout",       "");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XRD_REQUESTTIMEOUT"))
-                            || strlen(cenv) <= 0))
-      env->PutInt("RequestTimeout", val.Atoi());
-
-   val = gEnv->GetValue("NetXNG.SubStreamsPerChannel", "");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XRD_SUBSTREAMSPERCHANNEL"))
-                            || strlen(cenv) <= 0))
-      env->PutInt("SubStreamsPerChannel", val.Atoi());
-
-   val = gEnv->GetValue("NetXNG.TimeoutResolution",    "");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XRD_TIMEOUTRESOLUTION"))
-                            || strlen(cenv) <= 0))
-      env->PutInt("TimeoutResolution", val.Atoi());
-
-   val = gEnv->GetValue("NetXNG.StreamErrorWindow",    "");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XRD_STREAMERRORWINDOW"))
-                            || strlen(cenv) <= 0))
-      env->PutInt("StreamErrorWindow", val.Atoi());
-
-   val = gEnv->GetValue("NetXNG.RunForkHandler",       "");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XRD_RUNFORKHANDLER"))
-                            || strlen(cenv) <= 0))
-      env->PutInt("RunForkHandler", val.Atoi());
-
-   val = gEnv->GetValue("NetXNG.RedirectLimit",        "");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XRD_REDIRECTLIMIT"))
-                            || strlen(cenv) <= 0))
-      env->PutInt("RedirectLimit", val.Atoi());
-
-   val = gEnv->GetValue("NetXNG.WorkerThreads",        "");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XRD_WORKERTHREADS"))
-                            || strlen(cenv) <= 0))
-      env->PutInt("WorkerThreads", val.Atoi());
-
-   val = gEnv->GetValue("NetXNG.CPChunkSize",          "");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XRD_CPCHUNKSIZE"))
-                            || strlen(cenv) <= 0))
-      env->PutInt("CPChunkSize", val.Atoi());
-
-   val = gEnv->GetValue("NetXNG.CPParallelChunks",     "");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XRD_CPPARALLELCHUNKS"))
-                            || strlen(cenv) <= 0))
-      env->PutInt("CPParallelChunks", val.Atoi());
-
-   val = gEnv->GetValue("NetXNG.PollerPreference",     "");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XRD_POLLERPREFERENCE"))
-                            || strlen(cenv) <= 0))
-      env->PutString("PollerPreference", val.Data());
-
-   val = gEnv->GetValue("NetXNG.ClientMonitor",        "");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XRD_CLIENTMONITOR"))
-                            || strlen(cenv) <= 0))
-      env->PutString("ClientMonitor", val.Data());
-
-   val = gEnv->GetValue("NetXNG.ClientMonitorParam",   "");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XRD_CLIENTMONITORPARAM"))
-                            || strlen(cenv) <= 0))
-      env->PutString("ClientMonitorParam", val.Data());
+   // XrdCl parameters: the ROOT setting is applied only if the corresponding
+   // XRD_* environment variable is not set (the latter takes precedence)
+   struct XrdClParam {
+      const char *rootName; // Name in the ROOT env
+      const char *xrdName;  // Name in the XrdCl env
+      const char *envVar;   // Overriding environment variable
+      bool        isInt;    // Integer or string parameter
+   };
+   static const XrdClParam xrdClParams[] = {
+      {"NetXNG.ConnectionWindow",     "ConnectionWindow",     "XRD_CONNECTIONWINDOW",     true},
+      {"NetXNG.ConnectionRetry",      "ConnectionRetry",      "XRD_CONNECTIONRETRY",      true},
+      {"NetXNG.RequestTimeout",       "RequestTimeout",       "XRD_REQUESTTIMEOUT",       true},
+      {"NetXNG.SubStreamsPerChannel", "SubStreamsPerChannel", "XRD_SUBSTREAMSPERCHANNEL", true},
+      {"NetXNG.TimeoutResolution",    "TimeoutResolution",    "XRD_TIMEOUTRESOLUTION",    true},
+      {"NetXNG.StreamErrorWindow",    "StreamErrorWindow",    "XRD_STREAMERRORWINDOW",    true},
+      {"NetXNG.RunForkHandler",       "RunForkHandler",       "XRD_RUNFORKHANDLER",       true},
+      {"NetXNG.RedirectLimit",        "RedirectLimit",        "XRD_REDIRECTLIMIT",        true},
+      {"NetXNG.WorkerThreads",        "WorkerThreads",        "XRD_WORKERTHREADS",        true},
+      {"NetXNG.CPChunkSize",          "CPChunkSize",          "XRD_CPCHUNKSIZE",          true},
+      {"NetXNG.CPParallelChunks",     "CPParallelChunks",     "XRD_CPPARALLELCHUNKS",     true},
+      {"NetXNG.PollerPreference",     "PollerPreference",     "XRD_POLLERPREFERENCE",     false},
+      {"NetXNG.ClientMonitor",        "ClientMonitor",        "XRD_CLIENTMONITOR",        false},
+      {"NetXNG.ClientMonitorParam",   "ClientMonitorParam",   "XRD_CLIENTMONITORPARAM",   false},
+   };
+   for (const auto &p : xrdClParams) {
+      val = gEnv->GetValue(p.rootName, "");
+      if (val.Length() > 0 && (!(cenv = gSystem->Getenv(p.envVar)) || strlen(cenv) <= 0)) {
+         if (p.isInt)
+            env->PutInt(p.xrdName, val.Atoi());
+         else
+            env->PutString(p.xrdName, val.Data());
+      }
+   }
 
    fQueryReadVParams = gEnv->GetValue("NetXNG.QueryReadVParams", 1);
    env->PutInt( "MultiProtocol", gEnv->GetValue("TFile.CrossProtocolRedirects", 1));
@@ -917,76 +881,40 @@ void TNetXNGFile::SetEnv()
    netrc.Form("%s/.rootnetrc", gSystem->HomeDirectory());
    gSystem->Setenv("XrdSecNETRC", netrc.Data());
 
-   // For authentication
-   val = gEnv->GetValue("XSec.Pwd.ALogFile",     "");
-   if (val.Length() > 0)
-      gSystem->Setenv("XrdSecPWDALOGFILE",     val.Data());
-
-   val = gEnv->GetValue("XSec.Pwd.ServerPuk",    "");
-   if (val.Length() > 0)
-      gSystem->Setenv("XrdSecPWDSRVPUK",       val.Data());
-
-   val = gEnv->GetValue("XSec.GSI.CAdir",        "");
-   if (val.Length() > 0)
-      gSystem->Setenv("XrdSecGSICADIR",        val.Data());
-
-   val = gEnv->GetValue("XSec.GSI.CRLdir",       "");
-   if (val.Length() > 0)
-      gSystem->Setenv("XrdSecGSICRLDIR",       val.Data());
-
-   val = gEnv->GetValue("XSec.GSI.CRLextension", "");
-   if (val.Length() > 0)
-      gSystem->Setenv("XrdSecGSICRLEXT",       val.Data());
-
-   val = gEnv->GetValue("XSec.GSI.UserCert",     "");
-   if (val.Length() > 0)
-      gSystem->Setenv("XrdSecGSIUSERCERT",     val.Data());
-
-   val = gEnv->GetValue("XSec.GSI.UserKey",      "");
-   if (val.Length() > 0)
-      gSystem->Setenv("XrdSecGSIUSERKEY",      val.Data());
-
-   val = gEnv->GetValue("XSec.GSI.UserProxy",    "");
-   if (val.Length() > 0)
-      gSystem->Setenv("XrdSecGSIUSERPROXY",    val.Data());
-
-   val = gEnv->GetValue("XSec.GSI.ProxyValid",   "");
-   if (val.Length() > 0)
-      gSystem->Setenv("XrdSecGSIPROXYVALID",   val.Data());
-
-   val = gEnv->GetValue("XSec.GSI.ProxyKeyBits", "");
-   if (val.Length() > 0)
-      gSystem->Setenv("XrdSecGSIPROXYKEYBITS", val.Data());
-
-   val = gEnv->GetValue("XSec.GSI.ProxyForward", "0");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XrdSecGSIPROXYDEPLEN"))
-                            || strlen(cenv) <= 0))
-      gSystem->Setenv("XrdSecGSIPROXYDEPLEN",  val.Data());
-
-   val = gEnv->GetValue("XSec.GSI.CheckCRL",     "1");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XrdSecGSICRLCHECK"))
-                            || strlen(cenv) <= 0))
-      gSystem->Setenv("XrdSecGSICRLCHECK",     val.Data());
-
-   val = gEnv->GetValue("XSec.GSI.DelegProxy",   "0");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XrdSecGSIDELEGPROXY"))
-                            || strlen(cenv) <= 0))
-      gSystem->Setenv("XrdSecGSIDELEGPROXY",   val.Data());
-
-   val = gEnv->GetValue("XSec.GSI.SignProxy",    "1");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XrdSecGSISIGNPROXY"))
-                            || strlen(cenv) <= 0))
-      gSystem->Setenv("XrdSecGSISIGNPROXY",    val.Data());
-
-   val = gEnv->GetValue("XSec.Pwd.AutoLogin",    "1");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XrdSecPWDAUTOLOG"))
-                            || strlen(cenv) <= 0))
-      gSystem->Setenv("XrdSecPWDAUTOLOG",      val.Data());
-
-   val = gEnv->GetValue("XSec.Pwd.VerifySrv",    "1");
-   if (val.Length() > 0 && (!(cenv = gSystem->Getenv("XrdSecPWDVERIFYSRV"))
-                            || strlen(cenv) <= 0))
-      gSystem->Setenv("XrdSecPWDVERIFYSRV",    val.Data());
+   // For authentication: map the ROOT XSec settings to the XrdSec environment variables.
+   // If keepExisting is set, an already set (non-empty) environment variable takes precedence.
+   struct XrdSecParam {
+      const char *rootName;     // Name in the ROOT env
+      const char *defValue;     // Default value if not set in the ROOT env
+      const char *envVar;       // Environment variable to set
+      bool        keepExisting; // Don't override the environment variable if already set
+   };
+   static const XrdSecParam xrdSecParams[] = {
+      {"XSec.Pwd.ALogFile",     "",  "XrdSecPWDALOGFILE",     false},
+      {"XSec.Pwd.ServerPuk",    "",  "XrdSecPWDSRVPUK",       false},
+      {"XSec.GSI.CAdir",        "",  "XrdSecGSICADIR",        false},
+      {"XSec.GSI.CRLdir",       "",  "XrdSecGSICRLDIR",       false},
+      {"XSec.GSI.CRLextension", "",  "XrdSecGSICRLEXT",       false},
+      {"XSec.GSI.UserCert",     "",  "XrdSecGSIUSERCERT",     false},
+      {"XSec.GSI.UserKey",      "",  "XrdSecGSIUSERKEY",      false},
+      {"XSec.GSI.UserProxy",    "",  "XrdSecGSIUSERPROXY",    false},
+      {"XSec.GSI.ProxyValid",   "",  "XrdSecGSIPROXYVALID",   false},
+      {"XSec.GSI.ProxyKeyBits", "",  "XrdSecGSIPROXYKEYBITS", false},
+      {"XSec.GSI.ProxyForward", "0", "XrdSecGSIPROXYDEPLEN",  true},
+      {"XSec.GSI.CheckCRL",     "1", "XrdSecGSICRLCHECK",     true},
+      {"XSec.GSI.DelegProxy",   "0", "XrdSecGSIDELEGPROXY",   true},
+      {"XSec.GSI.SignProxy",    "1", "XrdSecGSISIGNPROXY",    true},
+      {"XSec.Pwd.AutoLogin",    "1", "XrdSecPWDAUTOLOG",      true},
+      {"XSec.Pwd.VerifySrv",    "1", "XrdSecPWDVERIFYSRV",    true},
+   };
+   for (const auto &p : xrdSecParams) {
+      val = gEnv->GetValue(p.rootName, p.defValue);
+      if (val.Length() <= 0)
+         continue;
+      if (p.keepExisting && (cenv = gSystem->Getenv(p.envVar)) && strlen(cenv) > 0)
+         continue;
+      gSystem->Setenv(p.envVar, val.Data());
+   }
 
 
    // Ugliness of the day.
@@ -1083,54 +1011,35 @@ void TNetXNGFile::SetEnv()
    // NetXNG.S3.XrdClS3BucketConfigs: A list of *lines* containing bucket names. Credentials for these buckets will be fetched from properly named config files. See the XrdClS3 documentation.
    // NetXNG.S3.XrdClS3AccessKeyLocation: absolute path to a file that contains the S3 access key
    // NetXNG.S3.XrdClS3SecretKeyLocation: absolute path to a file that contains the S3 secret key
+   // NetXNG.S3.XrdClS3ForceBasicReadV: do vector reads as individual reads
    // NetXNG.S3.XrdClS3AccessKey: the S3 access key
    // NetXNG.S3.XrdClS3SecretKey: the S3 secret key
-
-
-   val = gEnv->GetValue("NetXNG.S3.XrdClS3MkdirSentinel", "");
-   if (val != "")
-      env->PutString("XrdClS3MkdirSentinel", val.Data());
-
-   val = gEnv->GetValue("NetXNG.S3.XrdClS3UrlStyle", "");
-   if (val != "")
-      env->PutString("XrdClS3UrlStyle", val.Data());
-
-   val = gEnv->GetValue("NetXNG.S3.XrdClS3Region", "");
-   if (val != "")
-      env->PutString("XrdClS3Region", val.Data());
-
-   val = gEnv->GetValue("NetXNG.S3.XrdClS3BucketConfigs", "");
-   if (val != "")
-      env->PutString("XrdClS3BucketConfigs", val.Data());
-
-   val = gEnv->GetValue("NetXNG.S3.XrdClS3AccessKeyLocation", "");
-   if (val != "")
-      env->PutString("XrdClS3AccessKeyLocation", val.Data());
-
-   val = gEnv->GetValue("NetXNG.S3.XrdClS3SecretKeyLocation", "");
-   if (val != "")
-      env->PutString("XrdClS3SecretKeyLocation", val.Data());
-
-   val = gEnv->GetValue("NetXNG.S3.XrdClS3ForceBasicReadV", "");
-   if (val != "")
-      env->PutString("XrdClS3ForceBasicReadV", val.Data());
+   //
+   // Each NetXNG.S3.<name> ROOT setting is passed as is to the XrdCl parameter <name>
+   static const char *s3Params[] = {
+      "XrdClS3MkdirSentinel",
+      "XrdClS3UrlStyle",
+      "XrdClS3Region",
+      "XrdClS3BucketConfigs",
+      "XrdClS3AccessKeyLocation",
+      "XrdClS3SecretKeyLocation",
+      "XrdClS3ForceBasicReadV",
+   };
+   for (const char *name : s3Params) {
+      val = gEnv->GetValue((TString("NetXNG.S3.") + name).Data(), "");
+      if (val != "")
+         env->PutString(name, val.Data());
+   }
 
    // Note: There are use cases where we want to directly provide the S3 keys
    // In this case they take priority versus the other S3 authorization methods
-   val = gEnv->GetValue("NetXNG.S3.XrdClS3AccessKey", "");
-   if (val != "") {
-      env->PutString("XrdClS3AccessKey", val.Data());
-      env->PutString("XrdClS3AccessKeyLocation", "");
-      env->PutString("XrdClS3BucketConfigs", "");
+   static const char *s3Keys[] = {"XrdClS3AccessKey", "XrdClS3SecretKey"};
+   for (const char *name : s3Keys) {
+      val = gEnv->GetValue((TString("NetXNG.S3.") + name).Data(), "");
+      if (val != "") {
+         env->PutString(name, val.Data());
+         env->PutString((TString(name) + "Location").Data(), "");
+         env->PutString("XrdClS3BucketConfigs", "");
+      }
    }
-
-   val = gEnv->GetValue("NetXNG.S3.XrdClS3SecretKey", "");
-   if (val != "") {
-      env->PutString("XrdClS3SecretKey", val.Data());
-      env->PutString("XrdClS3SecretKeyLocation", "");
-      env->PutString("XrdClS3BucketConfigs", "");
-   }
-
-
-
 }
