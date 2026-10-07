@@ -104,8 +104,7 @@ std::string RGPUModel::GenerateSource(Backend backend) const
    out << std::scientific << std::setprecision(std::numeric_limits<float>::max_digits10);
    out << "#include <" << (backend == Backend::HIP ? "hip/hip_runtime.h" : "cuda_runtime.h") << ">\n"
        << "#include <" << (backend == Backend::HIP ? "hip/hip_fp16.h" : "cuda_fp16.h") << ">\n"
-       << "#include <cstddef>\n#include <cstdint>
-#include <cstdlib>\n"
+       << "#include <cstddef>\n#include <cstdint>\n#include <cstdlib>\n"
        << "using Scalar = " << (fPrecision == Precision::Float16 ? "__half" : "float") << ";\n"
        << "using Stream = " << api << "Stream_t;\n";
    out << R"cpp(
