@@ -7,6 +7,8 @@
 
 #include "gmock/gmock.h"
 
+#include <cstdio>
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -491,6 +493,57 @@ TEST_F(TClingTests, DeclareReportsFailedStaticInit)
    EXPECT_EQ(7L, gInterpreter->ProcessLine("TClingTests_w;"));
    EXPECT_TRUE(gInterpreter->Declare("int TClingTests_v = 2;"));
    EXPECT_EQ(2L, gInterpreter->ProcessLine("TClingTests_v;"));
+}
+
+TEST_F(TClingTests, ToString)
+{
+   std::vector<int> v{1, 2};
+   EXPECT_EQ(gInterpreter->ToString("std::vector<int>", &v), "{ 1, 2 }");
+   // The second call reuses the printer compiled by the first
+   v.push_back(3);
+   EXPECT_EQ(gInterpreter->ToString("std::vector<int>", &v), "{ 1, 2, 3 }");
+
+   int i = 42;
+   EXPECT_EQ(gInterpreter->ToString("int", &i), "42");
+
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "cling", "error: expected expression", /*matchFullMessage=*/false);
+   diags.requiredDiag(kError, "TInterpreter::ToString", "cannot print an object of type TClingTests_NoSuchType");
+   EXPECT_EQ(gInterpreter->ToString("TClingTests_NoSuchType", &i), "");
+}
+
+// A type that is unloaded and reloaded with changes gets a new printer.
+TEST_F(TClingTests, ToStringAfterReload)
+{
+   // Each version has a header of its own: cling cannot reload a changed file
+   // after unloading it, it trips over the diagnostic state that clang keeps
+   // for the old contents of that file.
+   auto loadVersion = [](const char *header, const char *members, const char *label) {
+      std::ofstream(header) << "#include <string>\n"
+                            << "struct TClingTests_Reloaded { " << members << " };\n"
+                            << "namespace cling {\n"
+                            << "std::string printValue(TClingTests_Reloaded *p)\n"
+                            << "{ return \"" << label << " \" + std::to_string(p->fX); }\n"
+                            << "}\n";
+      gInterpreter->ProcessLine((std::string(".L ") + header).c_str());
+   };
+
+   const char *header1 = "TClingTests_ToStringAfterReload1.h";
+   loadVersion(header1, "int fX = 1;", "v1");
+   EXPECT_EQ(gInterpreter->ProcessLine("auto *TClingTests_r1 = new TClingTests_Reloaded;"
+                                       "gInterpreter->ToString(\"TClingTests_Reloaded\", TClingTests_r1) == \"v1 1\";"),
+             1);
+   gInterpreter->ProcessLine((std::string(".U ") + header1).c_str());
+
+   const char *header2 = "TClingTests_ToStringAfterReload2.h";
+   loadVersion(header2, "double fY = 0.5; int fX = 2;", "v2");
+   EXPECT_EQ(gInterpreter->ProcessLine("auto *TClingTests_r2 = new TClingTests_Reloaded;"
+                                       "gInterpreter->ToString(\"TClingTests_Reloaded\", TClingTests_r2) == \"v2 2\";"),
+             1);
+   gInterpreter->ProcessLine((std::string(".U ") + header2).c_str());
+
+   std::remove(header1);
+   std::remove(header2);
 }
 
 // https://github.com/root-project/root/issues/15818
