@@ -26,6 +26,7 @@
 
 #pragma link C++ options = rntupleStreamerMode(true) class TemperatureCelsius + ;
 #pragma link C++ options = rntupleStreamerMode(true) class TemperatureKelvin + ;
+#pragma link C++ options = rntupleStreamerMode(true) class VersionedStreamerField + ;
 
 #pragma link C++ options = rntupleStreamerMode(true) class MEtoEDMStreamer<long long>+;
 #pragma link C++ class MEtoEDMClass<long long>+;

@@ -111,4 +111,8 @@ struct MEtoEDMClass {
    T fMember;
 };
 
+struct VersionedStreamerField {
+   ClassDefNV(VersionedStreamerField, 2);
+};
+
 #endif // ROOT_RNTuple_Test_StreamerField
