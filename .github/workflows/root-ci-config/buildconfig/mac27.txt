@@ -1,5 +1,6 @@
 CMAKE_CXX_STANDARD=23
 cocoa=ON
 davix=OFF
+libcxx=ON
 x11=OFF
 
