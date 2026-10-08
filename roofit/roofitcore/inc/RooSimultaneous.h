@@ -70,6 +70,7 @@ public:
   ExtendMode extendMode() const override ;
 
   double expectedEvents(const RooArgSet* nset) const override ;
+  std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet *nset) const override;
 
   bool forceAnalyticalInt(const RooAbsArg&) const override { return true ; }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
