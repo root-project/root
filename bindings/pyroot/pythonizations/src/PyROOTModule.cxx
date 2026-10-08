@@ -11,7 +11,6 @@
 
 // Bindings
 #include "PyROOTPythonize.h"
-#include "RPyROOTApplication.h"
 
 // Cppyy
 #include "cpyrt/API.h"
@@ -100,10 +99,6 @@ PyObject *PyObjRefCounterAsStdAny(PyObject * /*self*/, PyObject *args)
 static PyMethodDef gPyROOTMethods[] = {
    {"AddCPPInstancePickling", (PyCFunction)PyROOT::AddCPPInstancePickling, METH_NOARGS,
     "Add a custom pickling mechanism for Cppyy Python proxy objects"},
-   {"InitApplication", (PyCFunction)PyROOT::RPyROOTApplication::InitApplication, METH_VARARGS,
-    "Initialize interactive ROOT use from Python"},
-   {"InstallGUIEventInputHook", (PyCFunction)PyROOT::RPyROOTApplication::InstallGUIEventInputHook, METH_NOARGS,
-    "Install an input hook to process GUI events"},
    {"_CPPInstance__expand__", (PyCFunction)PyROOT::CPPInstanceExpand, METH_VARARGS,
     "Deserialize a pickled object"},
    {"JupyROOTExecutor", (PyCFunction)JupyROOTExecutor, METH_VARARGS, "Create JupyROOTExecutor"},

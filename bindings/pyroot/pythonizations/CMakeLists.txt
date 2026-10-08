@@ -10,7 +10,6 @@
 
 set(cpp_sources
     src/PyROOTModule.cxx
-    src/RPyROOTApplication.cxx
     src/CPPInstancePyz.cxx
 )
 

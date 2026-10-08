@@ -8,23 +8,100 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+import ctypes
+import os
 import sys
 import time
+import warnings
+
+
+def _warning_handler(location, msg):
+    # Turns ROOT warnings into Python warnings, see the call to
+    # ROOT::Internal::SetWarningHandler()
+    warnings.warn_explicit(msg, RuntimeWarning, location, 0, module="ROOT")
 
 
 class PyROOTApplication(object):
     """
     Application class for PyROOT.
     Configures the interactive usage of ROOT from Python.
+
+    It is created while the ROOT module is set up, so it reaches C++ through
+    cppyy.gbl: attribute lookups on the ROOT module would start the setup
+    again.
     """
 
-    def __init__(self, config, is_ipython):
-        from ROOT.libROOTPythonizations import InitApplication
+    # The PyOS_InputHook, kept alive as long as Python may call it
+    _input_hook = None
 
-        # Construct a TApplication for PyROOT
-        InitApplication(config.IgnoreCommandLineOptions)
+    def __init__(self, config, is_ipython):
+        import cppyy
+
+        if not cppyy.gbl.gApplication:
+            self._create_application(config.IgnoreCommandLineOptions)
+            self._init_root_globals()
+            cppyy.gbl.ROOT.Internal.SetWarningHandler(_warning_handler)
 
         self._is_ipython = is_ipython
+
+    @staticmethod
+    def _create_application(ignore_cmd_line_opts):
+        """
+        Create the TApplication. Unless ignore_cmd_line_opts is set, it gets
+        the command line options in sys.argv, up to a "-" or "--" that
+        separates them from the options for the Python script. For example,
+        to enable batch mode from the command line:
+
+            python script_name.py -b -- user_arg1 ... user_argn
+
+        or, if the script takes no options:
+
+            python script_name.py -b
+        """
+        import cppyy
+
+        gbl = cppyy.gbl
+
+        args = ["python"]
+        if not ignore_cmd_line_opts:
+            for arg in getattr(sys, "argv", [])[1:]:
+                if arg in ("-", "--"):
+                    break
+                args.append(arg)
+
+        # The arguments as they were given, and argv[argc] null like for main()
+        args = [os.fsencode(arg) for arg in args]
+        argc = ctypes.c_int(len(args))
+        argv = (ctypes.c_char_p * (len(args) + 1))(*args, None)
+        app = gbl.TApplication("PyROOT", argc, ctypes.cast(argv, ctypes.POINTER(ctypes.c_char_p)))
+        # It is gApplication from now on
+        cppyy._backend.SetOwnership(app, False)
+
+        # Prevent crashes on accessing history
+        gbl.Gl_histinit("-")
+
+        # Prevent ROOT from exiting Python
+        app.SetReturnFromRun(True)
+
+    @staticmethod
+    def _init_root_globals():
+        """Set up the basic ROOT globals, where not set already"""
+        import cppyy
+
+        gbl = cppyy.gbl
+
+        # The globals own their objects, so Python must not delete them
+        if not gbl.gBenchmark:
+            benchmark = gbl.TBenchmark()
+            cppyy._backend.SetOwnership(benchmark, False)
+            gbl.gBenchmark = benchmark
+        if not gbl.gStyle:
+            style = gbl.TStyle()
+            cppyy._backend.SetOwnership(style, False)
+            gbl.gStyle = style
+        # Should have been set by TApplication
+        if not gbl.gProgName:
+            gbl.gSystem.SetProgname("python")
 
     @staticmethod
     def _ipython_config():
@@ -51,14 +128,34 @@ class PyROOTApplication(object):
         if ipy and isinstance(ipy, TerminalInteractiveShell):
             get_ipython().run_line_magic("gui", "ROOT")
 
-    @staticmethod
-    def _inputhook_config():
+    @classmethod
+    def _inputhook_config(cls):
         # PyOS_InputHook-based mechanism
         # Point to a function which will be called when Python's interpreter prompt
         # is about to become idle and wait for user input from the terminal
-        from ROOT.libROOTPythonizations import InstallGUIEventInputHook
+        if cls._input_hook is not None:
+            return
 
-        InstallGUIEventInputHook()
+        hook_type = ctypes.CFUNCTYPE(ctypes.c_int)
+        hook_ptr = ctypes.c_void_p.in_dll(ctypes.pythonapi, "PyOS_InputHook")
+        previous_hook = hook_type(hook_ptr.value) if hook_ptr.value else None
+
+        import cppyy
+
+        gbl = cppyy.gbl
+
+        def process_gui_events():
+            # Being a ctypes callback, this runs with the GIL held like any
+            # other Python code
+            pad = gbl.TVirtualPad.Pad()
+            if pad and pad.IsWeb():
+                pad.UpdateAsync()
+            gbl.gSystem.ProcessEvents()
+
+            return previous_hook() if previous_hook else 0
+
+        cls._input_hook = hook_type(process_gui_events)
+        hook_ptr.value = ctypes.cast(cls._input_hook, ctypes.c_void_p).value
 
     @staticmethod
     def _set_display_hook():
