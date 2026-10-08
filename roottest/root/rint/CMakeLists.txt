@@ -62,3 +62,10 @@ if(NOT MSVC) # test does not work on Windows
                   INPUT 21457_input.txt
                   FAILREGEX "Execution of your code was aborted.")
 endif()
+
+# issue 23648
+ROOTTEST_ADD_TEST(fileBeforeCommand
+                  COMMAND ${ROOT_root_CMD} t_ddsimUserPlugins.root -e "EVENT->GetEntries()" -q
+                  COPY_TO_BUILDDIR t_ddsimUserPlugins.root
+                  FAILREGEX "undeclared identifier 'EVENT'"
+                  PASSRC 10)
