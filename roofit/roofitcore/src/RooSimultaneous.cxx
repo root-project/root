@@ -46,6 +46,12 @@ See RooAbsPdf::generate(const RooArgSet&,const RooDataSet&,Int_t,bool,bool,bool)
 \note This requires that the PDFs building the simultaneous are extended. In this way,
 the relative probability of each category can be calculated from the number of events
 in each category.
+
+###Switch mode
+If the index category is not an observable, but a parameter, the RooSimultaneous
+acts as a "switch" that evaluates to the component selected by the current index
+state, like a RooMultiPdf. Its expected number of events is then the one of the
+selected component.
 **/
 
 #include "RooSimultaneous.h"
@@ -61,6 +67,7 @@ in each category.
 #include "RooCompositeDataStore.h"
 #include "RooDataHist.h"
 #include "RooDataSet.h"
+#include "RooFormulaVar.h"
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
 #include "RooNameReg.h"
@@ -77,6 +84,7 @@ in each category.
 
 #include <algorithm>
 #include <iostream>
+#include <map>
 
 namespace {
 
@@ -468,8 +476,9 @@ double RooSimultaneous::evaluate() const
    double nEvtTot = 1.0;
    double nEvtCat = 1.0;
 
-   // Calculate relative weighting factor for sim-pdfs of all extendable components
-   if (canBeExtended()) {
+   // Relative yield weight only if normalized over the index states. In
+   // "switch mode", the value is the one of the selected component.
+   if (canBeExtended() && indexCatIsInNormSet(_normSet)) {
 
       nEvtTot = 0;
       nEvtCat = 0;
@@ -531,6 +540,78 @@ double RooSimultaneous::expectedEvents(const RooArgSet* nset) const
 }
 
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Expected events function for the new evaluation backends: the sum over all
+/// components, or the selected component in "switch mode" (see expectedEvents()).
+
+std::unique_ptr<RooAbsReal> RooSimultaneous::createExpectedEventsFunc(const RooArgSet *nset) const
+{
+   const std::string name = std::string(GetName()) + "_expectedEvents";
+
+   // One function per distinct component, because the same pdf can be used in
+   // several states. Components that can't be extended contribute zero, like
+   // in expectedEvents().
+   RooArgList formulaArgs;
+   RooArgSet ownedFuncs;
+   std::map<RooAbsPdf const *, std::string> funcRefs;
+   bool failed = false;
+   auto ref = [&](RooAbsPdf const &pdf) -> std::string {
+      if (!pdf.canBeExtended()) {
+         return "0.0";
+      }
+      auto found = funcRefs.find(&pdf);
+      if (found != funcRefs.end()) {
+         return found->second;
+      }
+      std::unique_ptr<RooAbsReal> func = pdf.createExpectedEventsFunc(nset);
+      if (!func) {
+         failed = true;
+         return "0.0";
+      }
+      // Different components can have the same name
+      func->SetName((std::string(func->GetName()) + "_" + std::to_string(funcRefs.size())).c_str());
+      std::string const funcRef = "x[" + std::to_string(formulaArgs.size()) + "]";
+      formulaArgs.add(*func);
+      ownedFuncs.addOwned(std::move(func));
+      return funcRefs[&pdf] = funcRef;
+   };
+
+   std::string formula;
+   if (indexCatIsInNormSet(nset)) {
+      for (auto *proxy : static_range_cast<RooRealProxy *>(_pdfProxyList)) {
+         formula += (formula.empty() ? "" : " + ") + ref(static_cast<RooAbsPdf const &>(proxy->arg()));
+      }
+      if (formula.empty()) {
+         formula = "0.0";
+      }
+   } else {
+      // Nested ternary expression that selects the component matching the
+      // index state, keyed on the state index numbers.
+      formulaArgs.add(_indexCat.arg());
+      std::size_t numStates = 0;
+      for (auto const &nameIdx : _indexCat.arg()) {
+         auto *proxy = static_cast<RooRealProxy *>(_pdfProxyList.FindObject(nameIdx.first.c_str()));
+         if (!proxy) {
+            continue;
+         }
+         formula += "x[0] == " + std::to_string(nameIdx.second) + " ? " +
+                    ref(static_cast<RooAbsPdf const &>(proxy->arg())) + " : (";
+         ++numStates;
+      }
+      formula += "0.0" + std::string(numStates, ')');
+   }
+
+   // Like the default implementation, return nullptr if a component can't
+   // create the function.
+   if (failed) {
+      return nullptr;
+   }
+
+   auto out = std::make_unique<RooFormulaVar>(name.c_str(), name.c_str(), formula.c_str(), formulaArgs);
+   out->addOwnedComponents(std::move(ownedFuncs));
+   return out;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Forward determination of analytical integration capabilities to component p.d.f.s

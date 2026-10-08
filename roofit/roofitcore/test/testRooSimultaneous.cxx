@@ -435,7 +435,9 @@ TEST(RooSimultaneous, DuplicateExtendedPdfs)
    ws.factory("SIMUL::simPdf( c[A=0,B=1], A=pdf_a, B=pdf_a)");
    ws.factory("SIMUL::simPdfRef( c, A=pdf_a, B=pdf_b)");
 
-   RooArgSet normSet{*ws.var("x")};
+   // The relative yields of the channels only enter if the index category is
+   // in the normalization set.
+   RooArgSet normSet{*ws.var("x"), *ws.cat("c")};
 
    RooAbsPdf &simPdf = *ws.pdf("simPdf");
    RooAbsPdf &simPdfRef = *ws.pdf("simPdfRef");
@@ -987,6 +989,69 @@ TEST(RooSimultaneous, ParameterIndexTopLevelNLL)
       EXPECT_THAT(nll->getVal(), RelativeNear(refNll0->getVal(), 1e-10)) << backend.name() << ", index 0";
       cat.setIndex(1);
       EXPECT_THAT(nll->getVal(), RelativeNear(refNll1->getVal(), 1e-10)) << backend.name() << ", index 1";
+   }
+}
+
+/// Like ParameterIndexSwitchMode, but with extended components. The value of
+/// the RooSimultaneous in "switch mode" must not be weighted by the relative
+/// yield of the selected component, and the extended term must use the
+/// expected events of the selected component.
+TEST(RooSimultaneous, ParameterIndexSwitchModeExtended)
+{
+   using namespace RooFit;
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x("x", "x", 0, 10);
+   RooRealVar mean("mean", "mean", 5, 0, 10);
+   RooRealVar sigma("sigma", "sigma", 1, 0.1, 5);
+   RooGaussian gauss("gauss", "gauss", x, mean, sigma);
+   RooRealVar c0("c0", "c0", 0.3, -1.0, 1.0);
+   RooChebychev cheb("cheb", "cheb", x, {c0});
+
+   // Different yields, such that a relative yield weight would be noticed
+   RooRealVar nGauss("nGauss", "nGauss", 500, 0, 1e5);
+   RooRealVar nCheb("nCheb", "nCheb", 300, 0, 1e5);
+   RooExtendPdf gaussExt("gaussExt", "gaussExt", gauss, nGauss);
+   RooExtendPdf chebExt("chebExt", "chebExt", cheb, nCheb);
+
+   RooCategory cat("cat", "cat", {{"gauss", 0}, {"cheb", 1}});
+   RooSimultaneous sim("sim", "sim", {{"gauss", &gaussExt}, {"cheb", &chebExt}}, cat);
+   // The same pdf in several states, and a component that can't be extended
+   RooSimultaneous simDup("simDup", "simDup", {{"gauss", &gaussExt}, {"cheb", &gaussExt}}, cat);
+   RooSimultaneous simMixed("simMixed", "simMixed", {{"gauss", &gaussExt}, {"cheb", &cheb}}, cat);
+
+   std::unique_ptr<RooDataSet> data{gauss.generate(x, 500)};
+
+   std::vector<RooFit::EvalBackend> backends;
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+   backends.push_back(RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy));
+#endif
+   backends.push_back(RooFit::EvalBackend::Cpu());
+   backends.push_back(RooFit::EvalBackend::CodegenNoGrad());
+
+   for (auto &backend : backends) {
+      std::unique_ptr<RooAbsReal> refNll0{gaussExt.createNLL(*data, backend, Extended(true))};
+      std::unique_ptr<RooAbsReal> refNll1{chebExt.createNLL(*data, backend, Extended(true))};
+
+      // The likelihoods are created one after the other, because the index
+      // category can't be shared by several RooFit::Evaluator instances.
+      {
+         cat.setIndex(0);
+         std::unique_ptr<RooAbsReal> nll{sim.createNLL(*data, backend, Extended(true))};
+         EXPECT_THAT(nll->getVal(), RelativeNear(refNll0->getVal(), 1e-10)) << backend.name() << ", index 0";
+         cat.setIndex(1);
+         EXPECT_THAT(nll->getVal(), RelativeNear(refNll1->getVal(), 1e-10)) << backend.name() << ", index 1";
+      }
+      {
+         std::unique_ptr<RooAbsReal> nll{simDup.createNLL(*data, backend, Extended(true))};
+         EXPECT_THAT(nll->getVal(), RelativeNear(refNll0->getVal(), 1e-10)) << backend.name() << ", duplicate";
+      }
+      {
+         cat.setIndex(0);
+         std::unique_ptr<RooAbsReal> nll{simMixed.createNLL(*data, backend, Extended(true))};
+         EXPECT_THAT(nll->getVal(), RelativeNear(refNll0->getVal(), 1e-10)) << backend.name() << ", mixed";
+      }
    }
 }
 
