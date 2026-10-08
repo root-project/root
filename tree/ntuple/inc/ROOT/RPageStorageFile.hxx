@@ -163,6 +163,9 @@ private:
    std::unique_ptr<ROOT::Internal::RCluster>
    PrepareSingleCluster(const ROOT::Internal::RCluster::RKey &clusterKey, std::vector<RRawFile::RIOVec> &readRequests);
 
+   // Helper to calculate the distance between fLastOffset and offset and to update the skip counter accordingly
+   void UpdateSkipCounter(std::uint64_t offset);
+
 protected:
    void LoadStructureImpl() final;
    ROOT::RNTupleDescriptor AttachImpl() final;
