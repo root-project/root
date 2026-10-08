@@ -359,6 +359,9 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     if isinstance(func, ROOT._cppyy.types.Instance):
         return rdf._OriginalFilter(func, *args)
 
+    if not hasattr(func, "__cpp_wrapper__"):  # not decorated with ROOT.Numba.Declare
+        return rdf._OriginalFilter(func, *args)
+
     _WarnOnce.warn()
     jitter = FunctionJitter(rdf)
     func.__annotations__["return"] = (
@@ -423,7 +426,10 @@ def _PyDefine(rdf, col_name, callable_or_str, cols=[], extra_args={}):
     if isinstance(func, ROOT._cppyy.types.Instance):
         return rdf._OriginalDefine(col_name, func, cols)
 
-    _WarnOnce.warn()
+    if not hasattr(func, "__cpp_wrapper__"):  # not decorated with ROOT.Numba.Declare
+        return rdf._OriginalDefine(col_name, func, cols)
+
+    # _WarnOnce.warn()
     jitter = FunctionJitter(rdf)
     func_call = jitter.jit_function(func, cols, extra_args)
     return rdf._OriginalDefine(col_name, "Numba::" + func_call)
