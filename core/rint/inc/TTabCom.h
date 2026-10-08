@@ -218,7 +218,7 @@ private: // data members
    char* fBuf;  // initialized by Hook()
    int*  fpLoc; // initialized by Hook()
 
-   Pattern_t   fPat[ kNUM_PAT ][ MAX_LEN_PAT ];  // array of patterns
+   unsigned short fPat[ kNUM_PAT ][ MAX_LEN_PAT ];  // array of patterns
    const char* fRegExp[ kNUM_PAT ];              // corresponding regular expression plain text
    Bool_t fVarIsPointer;                         // frodo: pointer or not flag
    Int_t  fLastIter;                             // frodo: iteration counter for recursive MakeClassFromVarName
