@@ -29,6 +29,13 @@ public:
          fOutputTensorNames = { fNY };
       }
 
+      void LowerGPU(RModel &, std::vector<RGPUModel::Layer> &layers) const override
+      {
+         if (layers.empty() || layers.back().relu)
+            throw std::runtime_error("SOFIE GPU: Relu must follow Gemm");
+         layers.back().relu = true;
+      }
+
    void Initialize(RModel& model) override {
       if (model.CheckIfTensorAlreadyExist(fNX) == false){   //input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA SOFIE Relu Op Input Tensor " + fNX + " is not found in model");

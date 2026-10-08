@@ -1,6 +1,7 @@
 #ifndef TMVA_SOFIE_RMODEL
 #define TMVA_SOFIE_RMODEL
 
+#include "TMVA/RGPUModel.hxx"
 #include "TMVA/SOFIE_common.hxx"
 
 #include "Rtypes.h" // for ClassDefNV
@@ -236,6 +237,7 @@ public:
    template<class T>
    std::vector<T> GetTensorData(const std::string & name);
 
+   RGPUModel MakeGPUModel(RGPUModel::Precision precision, std::size_t fixedBatch = 0);
    void Initialize(int batchSize = -1, bool verbose = false);
    void Initialize(const std::map<std::string,size_t> & inputParams, bool verbose = false);
 

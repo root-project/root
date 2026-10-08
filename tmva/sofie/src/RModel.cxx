@@ -659,6 +659,26 @@ void RModel::CheckAndFlushIntermediateMemory(std::span<const std::string_view> o
    }
 }
 
+RGPUModel RModel::MakeGPUModel(RGPUModel::Precision precision, std::size_t fixedBatch)
+{
+   if (fInputTensorNames.size() != 1)
+      throw std::runtime_error("SOFIE GPU: expected a single input");
+   Initialize();
+   std::vector<RGPUModel::Layer> layers;
+   std::string current = fInputTensorNames.front();
+   for (const auto &op : fOperators) {
+      const auto inputs = op->GetOpInputTensors();
+      const auto outputs = op->GetOpOutputTensors();
+      if (inputs.empty() || inputs.front() != current || outputs.size() != 1)
+         throw std::runtime_error("SOFIE GPU: unsupported graph connectivity");
+      op->LowerGPU(*this, layers);
+      current = outputs.front();
+   }
+   if (fOutputTensorNames.size() != 1 || fOutputTensorNames.front() != current)
+      throw std::runtime_error("SOFIE GPU: expected the sequential graph output");
+   return RGPUModel(precision, std::move(layers), fixedBatch);
+}
+
 void RModel::Initialize(int batchSize, bool verbose) {
    std::map<std::string, size_t> inputParams;
    if (batchSize > 0) {

@@ -1,3 +1,5 @@
+#include "TMVA/ROperator.hxx"
+#include "TMVA/ROperator_Gemm.hxx"
 // For the licensing terms see $ROOTSYS/LICENSE.
 #include "TMVA/RGPUModel.hxx"
 #include "TMVA/RModelParser_ONNX.hxx"
@@ -80,4 +82,31 @@ TEST(SofieGPU, CapacityAndShapes)
    EXPECT_GT(fixed.WorkspaceSize(4), 0u);
    layer.weights.pop_back();
    EXPECT_THROW((RGPUModel(RGPUModel::Precision::Float32, {layer})), std::invalid_argument);
+}
+
+TEST(SofieGPU, UsesSharedOperatorRegistry)
+{
+   RModelParser_ONNX parser;
+   bool called = false;
+   parser.RegisterOperator("Gemm", [&](RModelParser_ONNX &, const onnx::NodeProto &) -> std::unique_ptr<ROperator> {
+      called = true;
+      throw std::runtime_error("custom registry entry");
+   });
+   std::istringstream input(TinyModel(false));
+   EXPECT_THROW(parser.ParseGPU(input), std::runtime_error);
+   EXPECT_TRUE(called);
+}
+
+TEST(SofieGPU, LowerExistingRModel)
+{
+   RModel model;
+   model.AddInputTensorInfo("x", ETensorType::FLOAT, std::vector<size_t>{1, 2});
+   model.AddInputTensorName("x");
+   float weights[] = {1.f, 2.f};
+   model.AddInitializedTensor("w", ETensorType::FLOAT, {2, 1}, weights);
+   model.AddOperator(std::make_unique<ROperator_Gemm<float>>(1.f, 1.f, 0, 0, "x", "w", "y"));
+   model.AddOutputTensorNameList({"y"});
+   auto gpu = model.MakeGPUModel(RGPUModel::Precision::Float32);
+   EXPECT_EQ(gpu.InputSize(), 2u);
+   EXPECT_EQ(gpu.OutputSize(), 1u);
 }

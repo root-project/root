@@ -2,6 +2,8 @@
 #define TMVA_SOFIE_ROPERATOR
 
 #include "TMVA/SOFIE_common.hxx"
+#include "TMVA/RGPUModel.hxx"
+#include <stdexcept>
 
 #include <ROOT/RSpan.hxx>
 
@@ -19,6 +21,10 @@ public:
    virtual std::vector<std::string> GetBlasRoutines() { return {}; }
    virtual std::vector<std::string> GetStdLibs() { return {}; }
    virtual void Initialize(RModel&) = 0;
+   virtual void LowerGPU(RModel &, std::vector<RGPUModel::Layer> &) const
+   {
+      throw std::runtime_error("SOFIE GPU: operator has no GPU lowering");
+   }
    virtual std::string Generate(std::string OpName) = 0;  //expect unique opName for each operator within the same RModel
    // generate initialization code for session constructor
    virtual std::string GenerateInitCode() { return "";}

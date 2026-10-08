@@ -2,6 +2,7 @@
 // For the licensing terms see $ROOTSYS/LICENSE.
 #include "TMVA/RModelParser_ONNX.hxx"
 #include "TMVA/RGPUModel.hxx"
+#include "TMVA/ROperator.hxx"
 #include "onnx.hxx"
 
 #include <cmath>
@@ -85,75 +86,61 @@ RGPUModel RModelParser_ONNX::ParseGPU(std::istream &input)
    if (batch.value_case() != outputBatch.value_case() || batch.dim_value() != outputBatch.dim_value() ||
        batch.dim_param() != outputBatch.dim_param() || (batch.dim_param().empty() && batch.dim_value() <= 0))
       throw std::runtime_error("SOFIE GPU: invalid or inconsistent batch dimension");
-   std::unordered_map<std::string, const onnx::TensorProto *> constants;
+   fTensorTypeMap.clear();
+   fFusedOperators.clear();
+   RModel model;
+   // GPU tensors retain their requested precision; operator shape inference uses promoted FP32 values.
+   model.AddInputTensorInfo(graph.input(0).name(), ETensorType::FLOAT,
+                            std::vector<size_t>{1, size_t(in.shape().dim(1).dim_value())});
+   model.AddInputTensorName(graph.input(0).name());
+   RegisterTensorType(graph.input(0).name(), ETensorType::FLOAT);
    std::unordered_set<std::string> names{graph.input(0).name()};
    for (int i = 0; i < graph.initializer_size(); ++i) {
       const auto &tensor = graph.initializer(i);
-      if (!constants.emplace(tensor.name(), &tensor).second || !names.insert(tensor.name()).second)
+      if (!names.insert(tensor.name()).second)
          throw std::runtime_error("SOFIE GPU: duplicate initializer name");
+      auto values = ReadWeights(tensor, type);
+      std::vector<size_t> shape;
+      for (int d = 0; d < tensor.dims_size(); ++d)
+         shape.push_back(size_t(tensor.dims(d)));
+      model.AddInitializedTensor(tensor.name(), ETensorType::FLOAT, shape, values.data());
+      RegisterTensorType(tensor.name(), ETensorType::FLOAT);
    }
    std::string current = graph.input(0).name();
-   std::size_t width = in.shape().dim(1).dim_value();
-   std::vector<RGPUModel::Layer> layers;
-   for (int i = 0; i < graph.node_size(); ++i) {
-      const auto &node = graph.node(i);
+   std::vector<size_t> nodes;
+   for (int i = 0; i < graph.node_size(); ++i)
+      nodes.push_back(size_t(i));
+   for (size_t i = 0; i < nodes.size(); ++i) {
+      const auto &node = graph.node(int(i));
       if ((!node.domain().empty() && node.domain() != "ai.onnx") || node.output_size() != 1 || node.input_size() < 1 ||
           node.input(0) != current || !names.insert(node.output(0)).second)
          throw std::runtime_error("SOFIE GPU: unsupported graph connectivity/domain at " + node.name());
-      if (node.op_type() == "Relu") {
-         if (node.input_size() != 1 || node.attribute_size() || layers.empty() || layers.back().relu)
-            throw std::runtime_error("SOFIE GPU: Relu must directly follow Gemm");
-         layers.back().relu = true;
-      } else if (node.op_type() == "Gemm") {
-         if (node.input_size() < 2 || node.input_size() > 3 || !constants.count(node.input(1)))
-            throw std::runtime_error("SOFIE GPU: Gemm requires constant weights");
-         RGPUModel::Layer layer;
-         int transposeB = 0;
+      if (node.op_type() == "Gemm") {
+         if (node.input_size() < 2 || node.input_size() > 3)
+            throw std::runtime_error("SOFIE GPU: invalid Gemm input count");
          std::unordered_set<std::string> attrs;
          for (int a = 0; a < node.attribute_size(); ++a) {
             const auto &attr = node.attribute(a);
-            if (!attrs.insert(attr.name()).second)
-               throw std::runtime_error("SOFIE GPU: duplicate Gemm attribute");
-            if (attr.name() == "alpha" && attr.type() == onnx::AttributeProto::FLOAT)
-               layer.alpha = attr.f();
-            else if (attr.name() == "beta" && attr.type() == onnx::AttributeProto::FLOAT)
-               layer.beta = attr.f();
-            else if (attr.name() == "transB" && attr.type() == onnx::AttributeProto::INT &&
-                     (attr.i() == 0 || attr.i() == 1))
-               transposeB = attr.i();
-            else if (attr.name() != "transA" || attr.type() != onnx::AttributeProto::INT || attr.i() != 0)
-               throw std::runtime_error("SOFIE GPU: unsupported Gemm attribute " + attr.name());
+            if (!attrs.insert(attr.name()).second ||
+                !((attr.name() == "alpha" || attr.name() == "beta") && attr.type() == onnx::AttributeProto::FLOAT) &&
+                   !((attr.name() == "transA" || attr.name() == "transB") && attr.type() == onnx::AttributeProto::INT))
+               throw std::runtime_error("SOFIE GPU: unsupported or duplicate Gemm attribute " + attr.name());
          }
-         const auto &weights = *constants.at(node.input(1));
-         if (weights.dims_size() != 2 || weights.dims(transposeB ? 1 : 0) != std::int64_t(width) ||
-             weights.dims(transposeB ? 0 : 1) <= 0)
-            throw std::runtime_error("SOFIE GPU: inconsistent Gemm shape");
-         layer.inputs = width;
-         layer.outputs = weights.dims(transposeB ? 0 : 1);
-         auto values = ReadWeights(weights, type);
-         layer.weights.resize(values.size());
-         for (std::size_t n = 0; n < layer.outputs; ++n)
-            for (std::size_t k = 0; k < width; ++k)
-               layer.weights[n * width + k] = values[transposeB ? n * width + k : k * layer.outputs + n];
-         layer.bias.assign(layer.outputs, 0.f);
-         if (node.input_size() == 3 && !node.input(2).empty()) {
-            if (!constants.count(node.input(2)))
-               throw std::runtime_error("SOFIE GPU: Gemm requires constant bias");
-            const auto &bias = *constants.at(node.input(2));
-            if (bias.dims_size() != 1 || bias.dims(0) != std::int64_t(layer.outputs))
-               throw std::runtime_error("SOFIE GPU: expected vector bias");
-            layer.bias = ReadWeights(bias, type);
-         }
-         width = layer.outputs;
-         layers.push_back(std::move(layer));
-      } else {
-         throw std::runtime_error("SOFIE GPU: unsupported operator " + node.op_type());
+      } else if (node.op_type() == "Relu" && (node.input_size() != 1 || node.attribute_size())) {
+         throw std::runtime_error("SOFIE GPU: invalid Relu inputs or attributes");
       }
+      auto op = ParseOperator(i, graph, nodes, {});
+      if (!op)
+         throw std::runtime_error("SOFIE GPU: unexpected operator fusion");
+      model.AddOperator(std::move(op));
       current = node.output(0);
    }
-   if (current != graph.output(0).name() || out.shape().dim(1).dim_value() != std::int64_t(width))
+   model.AddOutputTensorNameList({graph.output(0).name()});
+   auto gpu = model.MakeGPUModel(type == onnx::TensorProto::FLOAT ? RGPUModel::Precision::Float32
+                                                                  : RGPUModel::Precision::Float16,
+                                 batch.dim_param().empty() ? batch.dim_value() : 0);
+   if (current != graph.output(0).name() || out.shape().dim(1).dim_value() != std::int64_t(gpu.OutputSize()))
       throw std::runtime_error("SOFIE GPU: inconsistent output shape");
-   return RGPUModel(type == onnx::TensorProto::FLOAT ? RGPUModel::Precision::Float32 : RGPUModel::Precision::Float16,
-                    std::move(layers), batch.dim_param().empty() ? batch.dim_value() : 0);
+   return gpu;
 }
 } // namespace TMVA::Experimental::SOFIE

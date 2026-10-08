@@ -147,7 +147,39 @@ namespace SOFIE{
          return DoShapeInference<Dim>(input);
       }
 
-
+      void LowerGPU(RModel &model, std::vector<RGPUModel::Layer> &layers) const override
+      {
+         if (model.GetTensorType(fNB) != ETensorType::FLOAT ||
+             (!fNC.empty() && model.GetTensorType(fNC) != ETensorType::FLOAT))
+            throw std::runtime_error("SOFIE GPU: lowering requires FP32 weight storage");
+         const auto a = model.GetTensorShape(fNA);
+         const auto b = model.GetTensorShape(fNB);
+         if (a.size() != 2 || b.size() != 2 || fAttrTransA || !model.IsInitializedTensor(fNB))
+            throw std::runtime_error("SOFIE GPU: Gemm requires rank-two input and constant weights");
+         RGPUModel::Layer layer;
+         layer.inputs = a[1];
+         layer.outputs = b[fAttrTransB ? 0 : 1];
+         if (b[fAttrTransB ? 1 : 0] != layer.inputs)
+            throw std::runtime_error("SOFIE GPU: inconsistent Gemm dimensions");
+         layer.alpha = fAttrAlpha;
+         layer.beta = fAttrBeta;
+         layer.relu = fActivation == EActivationType::RELU;
+         const auto *weights = static_cast<const float *>(model.GetInitializedTensorData(fNB).get());
+         layer.weights.resize(layer.inputs * layer.outputs);
+         for (size_t n = 0; n < layer.outputs; ++n)
+            for (size_t k = 0; k < layer.inputs; ++k)
+               layer.weights[n * layer.inputs + k] =
+                  weights[fAttrTransB ? n * layer.inputs + k : k * layer.outputs + n];
+         layer.bias.assign(layer.outputs, 0.f);
+         if (!fNC.empty()) {
+            const auto c = model.GetTensorShape(fNC);
+            if (!model.IsInitializedTensor(fNC) || c != std::vector<size_t>{layer.outputs})
+               throw std::runtime_error("SOFIE GPU: Gemm requires constant vector bias");
+            const auto *bias = static_cast<const float *>(model.GetInitializedTensorData(fNC).get());
+            layer.bias.assign(bias, bias + layer.outputs);
+         }
+         layers.push_back(std::move(layer));
+      }
 
       void Initialize(RModel& model) override {
          //TODO: propagate A or B as specified by ONNX standard

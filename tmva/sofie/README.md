@@ -194,6 +194,16 @@ parser.CheckModel("example_model.ONNX");
 
 ## Experimental CUDA/HIP dense inference
 
+GPU parsing uses SOFIE's existing operator registry and builds an `RModel`.
+`RModel::MakeGPUModel()` runs the existing operator initialization and shape
+inference, then dispatches `ROperator::LowerGPU()`. The existing Gemm and Relu
+operators implement the lowering; other operators reject it explicitly.
+The GPU execution plan currently remains a sequential dense-layer plan.
+FP16 constants are promoted exactly to FP32 for the shared operator representation;
+the execution plan retains FP16 input, output and intermediate tensor precision.
+Direct conversion of an existing FP32 `RModel` is also supported.
+
+
 `RModelParser_ONNX::ParseGPU()` parses sequential, rank-two `Gemm`/`Relu`
 networks with embedded FP32 or FP16 weights. `Gemm` supports constant matrix
 weights, optional vector bias, alpha/beta, transB=0/1 and transA=0. Other graphs
