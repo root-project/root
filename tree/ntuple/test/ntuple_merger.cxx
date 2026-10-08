@@ -759,7 +759,6 @@ TEST(RNTupleMerger, MergeThroughTFileMergerIncremental)
 TEST(RNTupleMerger, MergeThroughTFileMergerKey)
 {
    ROOT::TestSupport::CheckDiagsRAII diags;
-   diags.requiredDiag(kWarning, "TFileMerger", "Merging RNTuples is experimental");
    diags.requiredDiag(kError, "ROOT.NTuple.Merge", "Output file already has key, but not of type RNTuple!");
    diags.requiredDiag(kError, "TFileMerger", "Could NOT merge RNTuples!");
    diags.requiredDiag(kError, "TFileMerger", "error during merge of your ROOT files");
@@ -797,7 +796,6 @@ TEST(RNTupleMerger, MergeThroughTFileMergerKey)
 TEST(RNTupleMerger, MergeThroughTBufferMerger)
 {
    ROOT::TestSupport::CheckDiagsRAII diags;
-   diags.requiredDiag(kWarning, "TFileMerger", "Merging RNTuples is experimental");
    diags.requiredDiag(kWarning, "TBufferMergerFile", "not attached to the directory", false);
 
    FileRaii fileGuard("test_ntuple_merge_TBufferMerger.root");
@@ -2233,7 +2231,6 @@ TEST(RNTupleMerger, MergeAsymmetric1TFileMerger)
          diags.requiredDiag(kError, "TFileMerger::Merge", "error during merge", false);
          diags.requiredDiag(kError, "ROOT.NTuple.Merge", "missing the following field", false);
          diags.requiredDiag(kError, "TFileMerger::MergeRecursive", "Could NOT merge RNTuples!", false);
-         diags.optionalDiag(kWarning, "TFileMerger::MergeRecursive", "Merging RNTuples is experimental", false);
          auto res = fileMerger.Merge();
          EXPECT_FALSE(res);
       }
@@ -2249,7 +2246,6 @@ TEST(RNTupleMerger, MergeAsymmetric1TFileMerger)
          diags.requiredDiag(kError, "TFileMerger::Merge", "error during merge", false);
          diags.requiredDiag(kError, "ROOT.NTuple.Merge", "missing the following field", false);
          diags.requiredDiag(kError, "TFileMerger::MergeRecursive", "Could NOT merge RNTuples!", false);
-         diags.optionalDiag(kWarning, "TFileMerger::MergeRecursive", "Merging RNTuples is experimental", false);
          auto res = fileMerger.Merge();
          EXPECT_FALSE(res);
       }
@@ -2262,7 +2258,6 @@ TEST(RNTupleMerger, MergeAsymmetric1TFileMerger)
          fileMerger.AddFile(nt2.get());
          fileMerger.SetMergeOptions(TString("rntuple.MergingMode=Union"));
          CheckDiagsRAII diags;
-         diags.optionalDiag(kWarning, "TFileMerger::MergeRecursive", "Merging RNTuples is experimental", false);
          auto res = fileMerger.Merge();
          EXPECT_TRUE(res);
       }
@@ -4459,7 +4454,7 @@ TEST(RNTupleMerger, MergeNewerVersion)
       // Now merge again but with VersionBehavior set to Abort.
       {
          RNTupleMergeOptions opts;
-         opts.fVersionBehavior = ROOT::Experimental::Internal::ENTupleMergeVersionBehavior::kAbortOnHigherVersion;
+         opts.fVersionBehavior = ROOT::Internal::ENTupleMergeVersionBehavior::kAbortOnHigherVersion;
          auto res = merger.Merge(sourcePtrs, opts);
          EXPECT_FALSE(bool(res));
          EXPECT_THAT(res.GetError()->GetReport(), testing::HasSubstr("has a higher format version"));

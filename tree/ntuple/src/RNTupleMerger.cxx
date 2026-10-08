@@ -49,7 +49,7 @@ using ROOT::Internal::RPageSource;
 using ROOT::Internal::RPageSourceFile;
 using ROOT::Internal::RPageStorage;
 
-using namespace ROOT::Experimental::Internal;
+using namespace ROOT::Internal;
 
 static ROOT::RLogChannel &NTupleMergeLog()
 {
@@ -392,7 +392,7 @@ struct RColumnInfoGroup {
 } // namespace
 
 // These structs cannot be in the anon namespace becase they're used in RNTupleMerger's private interface.
-namespace ROOT::Experimental::Internal {
+namespace ROOT::Internal {
 struct RColumnMergeInfo {
    // This column name is built as a dot-separated concatenation of the ancestry of
    // the columns' parent fields' names plus the index of the column itself.
@@ -437,7 +437,7 @@ struct RSealedPageMergeData {
    std::vector<std::unique_ptr<std::byte[]>> fBuffers;
 };
 
-} // namespace ROOT::Experimental::Internal
+} // namespace ROOT::Internal
 
 // Subprocedure of CompareDescriptorStructure, extracted for readability.
 // Given two fields, attempts to match their column representations and schedules column extensions if necessary.
@@ -1328,7 +1328,7 @@ RNTupleMerger::RNTupleMerger(std::unique_ptr<ROOT::Internal::RPagePersistentSink
 
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled())
-      fTaskGroup = TTaskGroup();
+      fTaskGroup = ROOT::Experimental::TTaskGroup();
 #endif
 }
 
