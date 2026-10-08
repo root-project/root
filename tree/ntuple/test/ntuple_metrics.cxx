@@ -137,24 +137,28 @@ TEST(Metrics, IOMetrics)
       ntupleReader->EnableMetrics();
       EXPECT_TRUE(ntupleReader->GetMetrics().IsEnabled());
 
-      auto view = ntupleReader->GetView<int>("ints");
-      for (auto i : *ntupleReader) {
-         (void)view(i);
-      }
-
       const auto &metrics = ntupleReader->GetMetrics();
       auto *randomness = metrics.GetCounter("RNTupleReader.RPageSourceFile.randomness");
       auto *sparseness = metrics.GetCounter("RNTupleReader.RPageSourceFile.sparseness");
       auto *szSkip = metrics.GetCounter("RNTupleReader.RPageSourceFile.szSkip");
       auto *szFile = metrics.GetCounter("RNTupleReader.RPageSourceFile.szFile");
-
       ASSERT_NE(randomness, nullptr);
       ASSERT_NE(sparseness, nullptr);
       ASSERT_NE(szSkip, nullptr);
       ASSERT_NE(szFile, nullptr);
 
-      EXPECT_GE(szSkip->GetValueAsInt(), 0);
+      EXPECT_EQ(szSkip->GetValueAsInt(), 0);
       EXPECT_GT(szFile->GetValueAsInt(), 0);
+
+      auto view = ntupleReader->GetView<int>("ints");
+      const auto pageListSkip = szSkip->GetValueAsInt();
+      EXPECT_GE(pageListSkip, 0);
+
+      for (auto i : *ntupleReader) {
+         (void)view(i);
+      }
+
+      EXPECT_GE(szSkip->GetValueAsInt(), pageListSkip);
    }
 }
 
