@@ -22,7 +22,6 @@
 #include "RConfigure.h"
 
 // Standard
-#include <any>
 #include <string>
 #include <sstream>
 #include <utility>
@@ -32,67 +31,6 @@ namespace PyROOT {
 
 PyObject *gRootModule = nullptr;
 
-/// \brief A PyObject wrapper to track reference counting of external objects
-///
-/// This wrapper can be useful in shared ownership scenarios when a C++ object
-/// is created on the Python side and there is no easy way to track its ownership
-/// on the C++ side. If multiple instances of this class are given the same
-/// Python proxy, they will increase/decrease its reference counting following
-/// Python rules and ensure proper destruction of the underlying C++ object when
-/// no other Python objects are referencing it.
-class PyObjRefCounter final {
-   PyObject *fObject{nullptr};
-
-   void Reset(PyObject *object)
-   {
-      if (fObject) {
-         Py_DecRef(fObject);
-         fObject = nullptr;
-      }
-      if (object) {
-         Py_INCREF(object);
-         fObject = object;
-      }
-   }
-
-public:
-   PyObjRefCounter(PyObject *object) { Reset(object); }
-
-   ~PyObjRefCounter() { Reset(nullptr); }
-
-   PyObjRefCounter(const PyObjRefCounter &other) { Reset(other.fObject); }
-
-   PyObjRefCounter &operator=(const PyObjRefCounter &other)
-   {
-      Reset(other.fObject);
-      return *this;
-   }
-
-   PyObjRefCounter(PyObjRefCounter &&other)
-   {
-      fObject = other.fObject;
-      other.fObject = nullptr;
-   }
-
-   PyObjRefCounter &operator=(PyObjRefCounter &&other)
-   {
-      fObject = other.fObject;
-      other.fObject = nullptr;
-      return *this;
-   }
-};
-
-PyObject *PyObjRefCounterAsStdAny(PyObject * /*self*/, PyObject *args)
-{
-   PyObject *object = nullptr;
-
-   PyArg_ParseTuple(args, "O:PyObjRefCounterAsStdAny", &object);
-
-   // The std::any is managed by Python
-   return cppjit::cpyrt::Instance_FromVoidPtr(new std::any{std::in_place_type<PyObjRefCounter>, object}, "std::any",
-                                         /*python_owns=*/true);
-}
-
 } // namespace PyROOT
 
 // Methods offered by the interface
@@ -101,26 +39,6 @@ static PyMethodDef gPyROOTMethods[] = {
     "Add a custom pickling mechanism for Cppyy Python proxy objects"},
    {"_CPPInstance__expand__", (PyCFunction)PyROOT::CPPInstanceExpand, METH_VARARGS,
     "Deserialize a pickled object"},
-   {"JupyROOTExecutor", (PyCFunction)JupyROOTExecutor, METH_VARARGS, "Create JupyROOTExecutor"},
-   {"JupyROOTDeclarer", (PyCFunction)JupyROOTDeclarer, METH_VARARGS, "Create JupyROOTDeclarer"},
-   {"JupyROOTExecutorHandler_Clear", (PyCFunction)JupyROOTExecutorHandler_Clear, METH_NOARGS,
-    "Clear JupyROOTExecutorHandler"},
-   {"JupyROOTExecutorHandler_Ctor", (PyCFunction)JupyROOTExecutorHandler_Ctor, METH_NOARGS,
-    "Create JupyROOTExecutorHandler"},
-   {"JupyROOTExecutorHandler_Poll", (PyCFunction)JupyROOTExecutorHandler_Poll, METH_NOARGS,
-    "Poll JupyROOTExecutorHandler"},
-   {"JupyROOTExecutorHandler_EndCapture", (PyCFunction)JupyROOTExecutorHandler_EndCapture, METH_NOARGS,
-    "End capture JupyROOTExecutorHandler"},
-   {"JupyROOTExecutorHandler_InitCapture", (PyCFunction)JupyROOTExecutorHandler_InitCapture, METH_NOARGS,
-    "Init capture JupyROOTExecutorHandler"},
-   {"JupyROOTExecutorHandler_GetStdout", (PyCFunction)JupyROOTExecutorHandler_GetStdout, METH_NOARGS,
-    "Get stdout JupyROOTExecutorHandler"},
-   {"JupyROOTExecutorHandler_GetStderr", (PyCFunction)JupyROOTExecutorHandler_GetStderr, METH_NOARGS,
-    "Get stderr JupyROOTExecutorHandler"},
-   {"JupyROOTExecutorHandler_Dtor", (PyCFunction)JupyROOTExecutorHandler_Dtor, METH_NOARGS,
-    "Destruct JupyROOTExecutorHandler"},
-   {"PyObjRefCounterAsStdAny", (PyCFunction)PyROOT::PyObjRefCounterAsStdAny, METH_VARARGS,
-    "Wrap a reference count to any Python object in a std::any for resource management in C++"},
    {NULL, NULL, 0, NULL}};
 
 struct module_state {
