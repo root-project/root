@@ -1382,3 +1382,25 @@ class TestASSTDANY:
         assert ref() is not None
         ns.clear_in_thread()
         assert ref() is None
+
+
+class TestREDUCEMETHOD:
+    def test01_set_and_unset(self):
+        """The __reduce__ method of all instances can be set and unset"""
+
+        import pickle
+
+        import cppjit
+
+        cppjit.cppdef("namespace ReduceMethod { struct S { int x = 3; }; }")
+
+        def reduce_s(obj):
+            return (int, (obj.x,))
+
+        cppjit._backend._set_reduce_method(reduce_s)
+        try:
+            assert pickle.loads(pickle.dumps(cppjit.gbl.ReduceMethod.S())) == 3
+        finally:
+            cppjit._backend._set_reduce_method(None)
+        raises(NotImplementedError, pickle.dumps, cppjit.gbl.ReduceMethod.S())
+        raises(TypeError, cppjit._backend._set_reduce_method, 42)

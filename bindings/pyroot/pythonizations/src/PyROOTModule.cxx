@@ -9,9 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// Bindings
-#include "PyROOTPythonize.h"
-
 // Cppyy
 #include "cpyrt/API.h"
 
@@ -90,14 +87,10 @@ PyObject *InstallGUIEventInputHook(PyObject * /*self*/, PyObject * /*args*/)
 
 // Methods offered by the interface
 static PyMethodDef gPyROOTMethods[] = {
-   {"AddCPPInstancePickling", (PyCFunction)PyROOT::AddCPPInstancePickling, METH_NOARGS,
-    "Add a custom pickling mechanism for Cppyy Python proxy objects"},
    {"InstallWarningHandler", (PyCFunction)InstallWarningHandler, METH_NOARGS,
     "Turn ROOT warnings into Python warnings"},
    {"InstallGUIEventInputHook", (PyCFunction)InstallGUIEventInputHook, METH_NOARGS,
     "Install an input hook to process GUI events"},
-   {"_CPPInstance__expand__", (PyCFunction)PyROOT::CPPInstanceExpand, METH_VARARGS,
-    "Deserialize a pickled object"},
    {NULL, NULL, 0, NULL}};
 
 struct module_state {
