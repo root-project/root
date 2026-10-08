@@ -229,8 +229,9 @@ CPYRT_EXTERN bool Overload_CheckExact(PyObject* pyobject);
 
 // Sets the __reduce__ method for the CPPInstance class, which is by default not
 // implemented by cppjit but might make sense to implement by frameworks that
-// support IO of arbitrary C++ objects, like ROOT.
-CPYRT_EXTERN void Instance_SetReduceMethod(PyCFunction reduceMethod);
+// support IO of arbitrary C++ objects, like ROOT. reduceMethod is a Python
+// callable taking the instance, or nullptr to unset it.
+CPYRT_EXTERN void Instance_SetReduceMethod(PyObject* reduceMethod);
 
 //- access to the python interpreter ----------------------------------------
 

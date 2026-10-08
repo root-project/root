@@ -9,9 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// Bindings
-#include "PyROOTPythonize.h"
-
 // Cppyy
 #include "cpyrt/API.h"
 
@@ -35,10 +32,6 @@ PyObject *gRootModule = nullptr;
 
 // Methods offered by the interface
 static PyMethodDef gPyROOTMethods[] = {
-   {"AddCPPInstancePickling", (PyCFunction)PyROOT::AddCPPInstancePickling, METH_NOARGS,
-    "Add a custom pickling mechanism for Cppyy Python proxy objects"},
-   {"_CPPInstance__expand__", (PyCFunction)PyROOT::CPPInstanceExpand, METH_VARARGS,
-    "Deserialize a pickled object"},
    {NULL, NULL, 0, NULL}};
 
 struct module_state {

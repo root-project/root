@@ -668,6 +668,22 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds) {
 }
 
 //----------------------------------------------------------------------------
+static PyObject* SetReduceMethod(PyObject*, PyObject* reducer) {
+  // Set the __reduce__ method of all instances; None unsets it.
+  if (reducer == Py_None)
+    reducer = nullptr;
+  else if (!PyCallable_Check(reducer)) {
+    PyErr_SetString(PyExc_TypeError, "reduce method must be callable or None");
+    return nullptr;
+  }
+  Py_XINCREF(reducer);
+  PyObject* previous = CPPInstance::ReduceMethod();
+  CPPInstance::ReduceMethod() = reducer;
+  Py_XDECREF(previous);
+  Py_RETURN_NONE;
+}
+
+//----------------------------------------------------------------------------
 namespace {
 // A reference to a Python object, held by C++. Copies hold references of
 // their own. C++ may copy or destroy it on any thread, so it takes the GIL to
@@ -1003,6 +1019,8 @@ static PyMethodDef gcpyrtMethods[] = {
      METH_VARARGS, (char*)"Remove a pythonizor."},
     {(char*)"_pin_type", (PyCFunction)PinType, METH_O,
      (char*)"Install a type pinning."},
+    {(char*)"_set_reduce_method", (PyCFunction)SetReduceMethod, METH_O,
+     (char*)"Set the __reduce__ method of all instances."},
     {(char*)"_add_type_reducer", (PyCFunction)AddTypeReducer, METH_VARARGS,
      (char*)"Add a type reducer."},
     {(char*)"SetHeuristicMemoryPolicy", (PyCFunction)SetHeuristicMemoryPolicy,
