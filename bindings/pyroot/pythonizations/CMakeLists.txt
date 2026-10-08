@@ -12,7 +12,6 @@ set(cpp_sources
     src/PyROOTModule.cxx
     src/RPyROOTApplication.cxx
     src/GenericPyz.cxx
-    src/TClassPyz.cxx
     src/CPPInstancePyz.cxx
 )
 
