@@ -408,4 +408,10 @@ inline Int_t TBuffer::WriteObject(const T *objptr, Bool_t cacheReuse)
    return WriteObjectAny(objptr, cl, cacheReuse);
 }
 
+namespace ROOT::Internal {
+// For the Python bindings, which see the char* that TBuffer::Buffer() returns
+// as a string.
+Longptr_t GetBufferAddress(const TBuffer &buffer);
+} // namespace ROOT::Internal
+
 #endif // ROOT_TBuffer
