@@ -52,6 +52,13 @@ If the index category is not an observable, but a parameter, the RooSimultaneous
 acts as a "switch" that evaluates to the component selected by the current index
 state, like a RooMultiPdf. Its expected number of events is then the one of the
 selected component.
+
+###Nesting simultaneous PDFs
+RooSimultaneous components are currently flattened into a RooSimultaneous over a
+RooSuperCategory of all index categories. This is deprecated: from ROOT 6.44,
+they are kept as they are and only supported if their index category is a
+parameter (switch mode). To combine channels, use one RooSimultaneous over a
+RooCategory with one state per channel.
 **/
 
 #include "RooSimultaneous.h"
@@ -238,11 +245,31 @@ RooSimultaneous::initialize(std::string const& name, RooAbsCategoryLValue &inInd
 
   std::string msgPrefix = "RooSimultaneous::initialize(" + name + ") ";
 
-  // Issue info message that we are about to do some rearranging
-  oocoutI(nullptr, InputArguments) << msgPrefix << "INFO: one or more input component of simultaneous p.d.f.s are"
-         << " simultaneous p.d.f.s themselves, rewriting composite expressions as one-level simultaneous p.d.f. in terms of"
-         << " final constituents and extended index category" << std::endl;
+  std::string nestedNames;
+  std::size_t nNested = 0;
+  for (auto const &item : pdfMap) {
+    if (dynamic_cast<RooSimultaneous *>(item.second)) {
+      nestedNames += (nNested++ ? ", \"" : "\"") + std::string(item.second->GetName()) + "\"";
+    }
+  }
+  oocoutW(nullptr, InputArguments)
+     << msgPrefix << (nNested > 1 ? "the components " : "the component ") << nestedNames
+     << (nNested > 1 ? " are RooSimultaneous themselves and get" : " is a RooSimultaneous itself and gets")
+     << " flattened into a\nRooSimultaneous over a RooSuperCategory. This is deprecated: from ROOT 6.44, nested "
+        "RooSimultaneous are only\nsupported if their index category is a parameter (switch mode), and until then the "
+        "flattening breaks such\nswitches. To combine channels, use one RooSimultaneous over a RooCategory with one "
+        "state per channel."
+     << std::endl;
 
+  // Replicating a component to several states of the flattened index category
+  // silently changes the model (GitHub issue #23342).
+  auto warnReplication = [&](RooAbsPdf const &pdf, std::string const &label, RooArgSet const &repliCats,
+                             std::size_t nReplicas) {
+    oocoutW(nullptr, InputArguments)
+       << msgPrefix << "\"" << pdf.GetName() << "\" (state \"" << label << "\") doesn't depend on " << repliCats
+       << " and is copied into " << nReplicas << " states; if it is extended, its expected events are counted "
+       << nReplicas << " times (GitHub issue #23342)." << std::endl;
+  };
 
   RooArgSet allAuxCats ;
   std::map<string,RooSimultaneousAux::CompInfo> compMap ;
@@ -285,6 +312,9 @@ RooSimultaneous::initialize(std::string const& name, RooAbsCategoryLValue &inInd
 
       // Entry is a plain p.d.f. assign it to every state permutation of the repliCats set
       RooSuperCategory repliSuperCat("tmp","tmp",repliCats) ;
+      if (repliSuperCat.size() > 1) {
+        warnReplication(*citem.second.pdf, citem.first, repliCats, repliSuperCat.size());
+      }
 
       // Iterator over all states of repliSuperCat
       for (const auto& nameIdx : repliSuperCat) {
@@ -326,6 +356,9 @@ RooSimultaneous::initialize(std::string const& name, RooAbsCategoryLValue &inInd
 
         // Make replication supercat
         RooSuperCategory repliSuperCat("tmp","tmp",repliCats) ;
+        if (repliSuperCat.size() > 1) {
+          warnReplication(*citem.second.pdf, citem.first, repliCats, repliSuperCat.size());
+        }
 
         for (const auto& stype : *citem.second.subIndex) {
           const_cast<RooAbsCategoryLValue*>(citem.second.subIndex)->setLabel(stype.first.c_str());

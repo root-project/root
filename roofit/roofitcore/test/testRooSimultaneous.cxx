@@ -1095,3 +1095,43 @@ TEST(RooSimultaneous, ExpectedEventsSuperCategory)
    RooArgSet nsetPartial{m.x, m.analysis};
    EXPECT_DOUBLE_EQ(simPdf.expectedEvents(&nsetPartial), 50.);
 }
+
+/// The flattening of nested RooSimultaneous is deprecated. Replicating a
+/// component to several states of the flattened index category, which double
+/// counts extended components, gets an extra warning. Covers GitHub issue
+/// #23342.
+TEST(RooSimultaneous, NestedSimultaneousFlatteningIsDeprecated)
+{
+   AnalysisCombination m;
+
+   RooSimultaneous anaA{"anaA", "anaA", {{"SR", &m.pdf_A_SR}, {"CR", &m.pdf_A_CR}}, m.region};
+
+   {
+      // A plain pdf alongside a nested RooSimultaneous gets replicated
+      RooHelpers::HijackMessageStream hijack(RooFit::WARNING, RooFit::InputArguments);
+      RooSimultaneous comb{"comb", "comb", {{"A", &anaA}, {"B", &m.pdf_B}}, m.analysis};
+      EXPECT_NE(hijack.str().find("deprecated"), std::string::npos) << hijack.str();
+      EXPECT_NE(hijack.str().find("\"pdf_B\" (state \"B\")"), std::string::npos) << hijack.str();
+   }
+
+   {
+      // Nested RooSimultaneous components over different categories are
+      // replicated over each other's categories
+      RooCategory period{"period", "period", {{"P1", 0}, {"P2", 1}}};
+      RooSimultaneous anaB{"anaB", "anaB", {{"P1", &m.pdf_B}, {"P2", &m.pdf_B}}, period};
+      RooHelpers::HijackMessageStream hijack(RooFit::WARNING, RooFit::InputArguments);
+      RooSimultaneous comb{"comb", "comb", {{"A", &anaA}, {"B", &anaB}}, m.analysis};
+      EXPECT_NE(hijack.str().find("\"anaA\" (state \"A\")"), std::string::npos) << hijack.str();
+      EXPECT_NE(hijack.str().find("\"anaB\" (state \"B\")"), std::string::npos) << hijack.str();
+   }
+
+   {
+      // No replication if all nested RooSimultaneous have the same index
+      // category, but the flattening is deprecated nonetheless
+      RooSimultaneous anaB{"anaB", "anaB", {{"SR", &m.pdf_B}}, m.region};
+      RooHelpers::HijackMessageStream hijack(RooFit::WARNING, RooFit::InputArguments);
+      RooSimultaneous comb{"comb", "comb", {{"A", &anaA}, {"B", &anaB}}, m.analysis};
+      EXPECT_NE(hijack.str().find("deprecated"), std::string::npos) << hijack.str();
+      EXPECT_EQ(hijack.str().find("copied"), std::string::npos) << hijack.str();
+   }
+}
