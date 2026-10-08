@@ -1093,14 +1093,18 @@ cpyrt::Executor* cpyrt::CreateExecutor(interop::TCppType_t type, cdims_t dims) {
       result = new InstancePtrExecutor(klass);
   } else if (realTypeStr.find("(*)") != std::string::npos ||
              (realTypeStr.find("::*)") != std::string::npos)) {
-    // this is a function pointer
+    // this is a function pointer; the executor compiles the return type and
+    // signature, so take them from the type as spelled: realTypeStr has its
+    // spaces removed for the lookups above, which turns e.g. "const char"
+    // into "constchar"
     // TODO: find better way of finding the type
-    auto pos1 = realTypeStr.find('(');
-    auto pos2 = realTypeStr.find("*)");
-    auto pos3 = realTypeStr.rfind(')');
+    const std::string fnTypeStr = interop::GetTypeAsString(resolvedType);
+    auto pos1 = fnTypeStr.find('(');
+    auto pos2 = fnTypeStr.find("*)");
+    auto pos3 = fnTypeStr.rfind(')');
     result = new FunctionPointerExecutor(
-        realTypeStr.substr(0, pos1),
-        realTypeStr.substr(pos2 + 2, pos3 - pos2 - 1));
+        fnTypeStr.substr(0, pos1),
+        fnTypeStr.substr(pos2 + 2, pos3 - pos2 - 1));
   } else {
     // unknown: void* may work ("user knows best"), void will fail on use of
     // return value
