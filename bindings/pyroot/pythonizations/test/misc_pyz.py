@@ -28,6 +28,34 @@ class TClassDynamicCast(unittest.TestCase):
         o_downcast = tobjstr_class.DynamicCast(tobj_class, o_upcast, False)
         self.assertEqual(type(o_downcast), TObjString)
 
+    def test_dynamiccast_offset(self):
+        # The second base of a class with multiple inheritance is at a non-zero
+        # offset, which the cast has to apply in both directions.
+        ROOT.gInterpreter.Declare("""
+        struct DynamicCastBase1 { virtual ~DynamicCastBase1() {} int fBase1 = 1; };
+        struct DynamicCastBase2 { virtual ~DynamicCastBase2() {} int fBase2 = 2; };
+        struct DynamicCastDerived : DynamicCastBase1, DynamicCastBase2 {};
+        """)
+        base_class = TClass.GetClass("DynamicCastBase2")
+        derived_class = TClass.GetClass("DynamicCastDerived")
+
+        o = ROOT.DynamicCastDerived()
+
+        # Upcast: DynamicCastBase2 <- DynamicCastDerived
+        o_upcast = derived_class.DynamicCast(base_class, o)
+        self.assertEqual(type(o_upcast), ROOT.DynamicCastBase2)
+        self.assertNotEqual(ROOT.addressof(o_upcast), ROOT.addressof(o))
+        self.assertEqual(o_upcast.fBase2, 2)
+
+        # Downcast: DynamicCastBase2 -> DynamicCastDerived
+        o_downcast = derived_class.DynamicCast(base_class, o_upcast, False)
+        self.assertEqual(type(o_downcast), ROOT.DynamicCastDerived)
+        self.assertEqual(ROOT.addressof(o_downcast), ROOT.addressof(o))
+
+        # The object can also be given by its address
+        o_upcast = derived_class.DynamicCast(base_class, ROOT.addressof(o))
+        self.assertEqual(o_upcast.fBase2, 2)
+
 
 class TContextContextManager(unittest.TestCase):
     """

@@ -96,47 +96,12 @@ PyObject *PyObjRefCounterAsStdAny(PyObject * /*self*/, PyObject *args)
                                          /*python_owns=*/true);
 }
 
-// Helper function to get the pointer to a buffer (heavily simplified copy of
-// cppjit::cpyrt::Utility::GetBuffer).
-void GetBuffer(PyObject *pyobject, void *&buf)
-{
-   buf = nullptr;
-
-   // Exclude text-like objects (policy decision)
-   if (PyBytes_Check(pyobject) || PyUnicode_Check(pyobject))
-      return;
-
-   // Fast path: bytearray
-   if (PyByteArray_CheckExact(pyobject)) {
-      buf = PyByteArray_AsString(pyobject);
-      return;
-   }
-
-   // Buffer protocol
-   if (PyObject_CheckBuffer(pyobject)) {
-      // Avoid potential issues with empty sequences
-      if (PySequence_Check(pyobject) && PySequence_Size(pyobject) == 0)
-         return;
-
-      Py_buffer view;
-      if (PyObject_GetBuffer(pyobject, &view, PyBUF_SIMPLE) == 0) {
-         if (view.buf && view.len > 0)
-            buf = view.buf;
-         PyBuffer_Release(&view);
-      } else {
-         PyErr_Clear();
-      }
-   }
-}
-
 } // namespace PyROOT
 
 // Methods offered by the interface
 static PyMethodDef gPyROOTMethods[] = {
    {"AddCPPInstancePickling", (PyCFunction)PyROOT::AddCPPInstancePickling, METH_NOARGS,
     "Add a custom pickling mechanism for Cppyy Python proxy objects"},
-   {"AddTClassDynamicCastPyz", (PyCFunction)PyROOT::AddTClassDynamicCastPyz, METH_VARARGS,
-    "Cast the void* returned by TClass::DynamicCast to the right type"},
    {"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
     "Add pretty printing pythonization"},
    {"InitApplication", (PyCFunction)PyROOT::RPyROOTApplication::InitApplication, METH_VARARGS,
