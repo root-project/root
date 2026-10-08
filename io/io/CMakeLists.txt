@@ -66,7 +66,7 @@ ROOT_LINKER_LIBRARY(RIO
     Core
 )
 
-target_include_directories(RIO PRIVATE ${CMAKE_SOURCE_DIR}/core/clib/res)
+target_include_directories(RIO PRIVATE ${CMAKE_SOURCE_DIR}/builtins/clib/res)
 # PUBLIC so that dependent libraries e.g. ROOTDataFrame may find the internal header too
 target_include_directories(RIO PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 target_link_libraries(RIO PUBLIC ${ROOT_ATOMIC_LIBS})
