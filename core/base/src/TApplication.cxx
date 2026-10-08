@@ -459,21 +459,26 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
       gROOT->SetWebDisplay(std::string(web).c_str());
    }
 
-   for (auto cmd : opts.GetFlagValues("e")) {
-      if (!fFiles) fFiles = new TObjArray;
-      TObjString *expr = new TObjString(std::string(cmd).c_str());
-      expr->SetBit(kExpression);
-      fFiles->Add(expr);
+   std::vector<std::pair<std::size_t, TObject *>> filesToAdd;
+   // NOTE: "-e" expressions and positional arguments (actual files) must be added in exact order of appearance, so
+   // we cannot process them separately right away. We instead add them to the `filesToAdd` vector and sort them
+   // by appearance order before adding them to fFiles.
+   for (const auto &flag : opts.GetFlags()) {
+      if (flag.fName == "e" || flag.fName == "execute") {
+         auto *expr = new TObjString(std::string(flag.fValue).c_str());
+         expr->SetBit(kExpression);
+         filesToAdd.emplace_back(flag.fIndex, expr);
+      }
    }
 
-   const auto &positionalArgs = opts.GetArgs();
-   const auto lastArgBeforeDashDash = opts.GetFirstPostDashDashArg().value_or(positionalArgs.size());
+   const auto positionalArgsWithIndices = opts.GetArgsWithIndices();
+   const auto lastArgBeforeDashDash = opts.GetFirstPostDashDashArg().value_or(positionalArgsWithIndices.size());
 
    TString pwd;
 
    // Process all positional arguments before `--`
    for (std::size_t i = 0; i < lastArgBeforeDashDash; ++i) {
-      std::string arg = positionalArgs[i];
+      const auto [argIdx, arg] = positionalArgsWithIndices[i];
       Long64_t size;
       Long_t id, flags, modtime;
 
@@ -507,8 +512,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
             }
          } else if (size > 0) {
             // if file add to list of files to be processed
-            if (!fFiles) fFiles = new TObjArray;
-            fFiles->Add(new TObjString(path.Data()));
+            filesToAdd.emplace_back(argIdx, new TObjString(path.Data()));
          } else {
             Warning("GetOptions", "file %s has size 0, skipping", expandedDir.Data());
          }
@@ -521,22 +525,20 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                   Warning("GetOptions", "file %s not found", expandedDir.Data());
             } else {
                // remote file, give it the benefit of the doubt and add it to list of files
-               if (!fFiles) fFiles = new TObjArray;
-               fFiles->Add(new TObjString(arg.c_str()));
+               filesToAdd.emplace_back(argIdx, new TObjString(arg.c_str()));
             }
          } else {
             TString mode,fargs,io;
             TString fname = gSystem->SplitAclicMode(expandedDir,mode,fargs,io);
             char *mac;
-            if (!fFiles) fFiles = new TObjArray;
             if ((mac = gSystem->Which(TROOT::GetMacroPath(), fname,
                                       kReadPermission))) {
                // if file add to list of files to be processed
-               fFiles->Add(new TObjString(arg.c_str()));
+               filesToAdd.emplace_back(argIdx, new TObjString(arg.c_str()));
                delete [] mac;
             } else {
                // if file add an invalid entry to list of files to be processed
-               fFiles->Add(new TNamed("NOT FOUND!", arg));
+               filesToAdd.emplace_back(argIdx, new TNamed("NOT FOUND!", arg.c_str()));
                // only warn if we're plain root,
                // other progs might have their own params
                if (!strcmp(gROOT->GetName(), "Rint")) {
@@ -550,9 +552,18 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
       }
    }
 
+   if (!filesToAdd.empty()) {
+      std::sort(filesToAdd.begin(), filesToAdd.end(), [](const auto &a, const auto &b) { return a.first < b.first; });
+      assert(!fFiles);
+      fFiles = new TObjArray;
+      for (const auto &[_idx, file] : filesToAdd) {
+         fFiles->Add(file);
+      }
+   }
+
    // Process positional arguments after `--` as arguments for the macro.
    // This is only valid if we passed at least one macro and will be considered arguments for the last one passed.
-   if (lastArgBeforeDashDash != positionalArgs.size()) {
+   if (lastArgBeforeDashDash != positionalArgsWithIndices.size()) {
       TObjString* macro = nullptr;
       bool warnShown = false;
       if (fFiles) {
@@ -586,6 +597,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
 
       if (macro) {
          TString& str = macro->String();
+         const auto &positionalArgs = opts.GetArgs();
          str += '(' + ROOT::Join(",", positionalArgs.begin() + lastArgBeforeDashDash, positionalArgs.end()) + ')';
       } else {
          Warning("GetOptions", "no macro to pass arguments to was provided. "
