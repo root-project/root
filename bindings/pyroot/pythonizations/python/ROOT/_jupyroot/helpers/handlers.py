@@ -12,14 +12,96 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+import codecs
 import contextvars
+import ctypes
+import os
 import queue
 import sys
+import threading
+import time
 from threading import Thread
 from time import sleep as timeSleep
 
-import ROOT.libROOTPythonizations as _lib
 from ROOT._jupyroot import helpers
+
+# C stdio, whose buffers have to be flushed for output to reach the pipes
+if sys.platform == "win32":
+    _crt = ctypes.cdll.ucrtbase
+else:
+    _crt = ctypes.CDLL(None)
+_crt.fflush.argtypes = [ctypes.c_void_p]
+
+# How long to wait at the end of a capture for the rest of the output. It only
+# takes this long when a process started during the capture still holds the
+# pipe, so that its end is never reached.
+_END_CAPTURE_TIMEOUT = 1.0
+
+
+class _FileDescriptorCapture(object):
+    """Redirects a file descriptor into a pipe and collects what is written
+    to it, also by C and C++ code.
+
+    A thread reads the pipe for as long as the capture runs, so that writers
+    never wait on a full pipe. A writer of C stdio does so holding the lock of
+    the stream, and flushing the stream to get its output would then wait for
+    that lock forever.
+    """
+
+    def __init__(self, fd):
+        self._fd = fd
+        self._saved_fd = None
+        self._write_fd = None
+        self._reader = None
+        self._lock = threading.Lock()
+        self._text = ""
+
+    @property
+    def text(self):
+        with self._lock:
+            return self._text
+
+    def clear(self):
+        with self._lock:
+            self._text = ""
+
+    def start(self):
+        self._saved_fd = os.dup(self._fd)
+        read_fd, self._write_fd = os.pipe()
+        os.dup2(self._write_fd, self._fd)
+        self._reader = threading.Thread(target=self._read, args=(read_fd,), name="JupyROOT capture", daemon=True)
+        self._reader.start()
+
+    def _read(self, read_fd):
+        # Decode incrementally: a read can end in the middle of a character
+        decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
+        try:
+            while True:
+                chunk = os.read(read_fd, 65536)
+                text = decoder.decode(chunk, final=not chunk)
+                with self._lock:
+                    # After a timeout in stop(), the output belongs to no
+                    # capture anymore
+                    if self._reader is threading.current_thread():
+                        self._text += text
+                if not chunk:
+                    break
+        finally:
+            os.close(read_fd)
+
+    def stop(self):
+        """Restore the file descriptor; call wait() for the rest of the output"""
+        os.dup2(self._saved_fd, self._fd)
+        os.close(self._saved_fd)
+        os.close(self._write_fd)
+        self._saved_fd = self._write_fd = None
+
+    def wait(self, deadline):
+        """Wait until the output written before stop() is collected, or until
+        the deadline (from time.monotonic()) has passed"""
+        self._reader.join(max(0.0, deadline - time.monotonic()))
+        with self._lock:
+            self._reader = None
 
 
 class IOHandler(object):
@@ -36,28 +118,48 @@ class IOHandler(object):
     """
 
     def __init__(self):
-        _lib.JupyROOTExecutorHandler_Ctor()
+        import ROOT
+
+        # Fixes for ROOT-7999
+        ROOT.SetErrorHandler(ROOT.DefaultErrorHandler)
+
+        self._stdout = _FileDescriptorCapture(1)
+        self._stderr = _FileDescriptorCapture(2)
+        self._capturing = False
 
     def __del__(self):
-        _lib.JupyROOTExecutorHandler_Dtor()
+        self.EndCapture()
 
     def Clear(self):
-        _lib.JupyROOTExecutorHandler_Clear()
+        self._stdout.clear()
+        self._stderr.clear()
 
     def Poll(self):
-        _lib.JupyROOTExecutorHandler_Poll()
+        if self._capturing:
+            # The reader threads collect what reaches the pipes
+            _crt.fflush(None)
 
     def InitCapture(self):
-        _lib.JupyROOTExecutorHandler_InitCapture()
+        if not self._capturing:
+            self._stdout.start()
+            self._stderr.start()
+            self._capturing = True
 
     def EndCapture(self):
-        _lib.JupyROOTExecutorHandler_EndCapture()
+        if self._capturing:
+            _crt.fflush(None)
+            self._stdout.stop()
+            self._stderr.stop()
+            deadline = time.monotonic() + _END_CAPTURE_TIMEOUT
+            self._stdout.wait(deadline)
+            self._stderr.wait(deadline)
+            self._capturing = False
 
     def GetStdout(self):
-        return _lib.JupyROOTExecutorHandler_GetStdout()
+        return self._stdout.text
 
     def GetStderr(self):
-        return _lib.JupyROOTExecutorHandler_GetStderr()
+        return self._stderr.text
 
     def GetStreamsDicts(self):
         out = self.GetStdout()
@@ -145,6 +247,46 @@ class Runner(object):
         return not self.poller.is_running
 
 
+def _report_exception(location, e):
+    # Report exceptions that escape the interpreted code like TRint does at
+    # the ROOT prompt (see TRint::HandleTermInput), instead of swallowing them
+    # silently (ROOT-10589)
+    import ROOT
+
+    if isinstance(e, ROOT.std.exception):
+        message = "{} caught: {}".format(type(e).__cpp_name__, e.what())
+        ROOT.Error(location, message.replace("%", "%%"))
+    else:
+        ROOT.Error(location, "Exception caught!")
+
+
+def _jupyroot_execute(code):
+    import ROOT
+
+    status = False
+    try:
+        err = ctypes.c_uint(ROOT.TInterpreter.kNoError)
+        if ROOT.gInterpreter.ProcessLine(code, err):
+            status = True
+        if err.value == ROOT.TInterpreter.kProcessing:
+            ROOT.gInterpreter.ProcessLine(".@")
+            ROOT.gInterpreter.ProcessLine('cerr << "Unbalanced braces. This cell was not processed." << endl;')
+    except Exception as e:
+        _report_exception("JupyROOTExecutor", e)
+    return int(status)
+
+
+def _jupyroot_declare(code):
+    import ROOT
+
+    status = False
+    try:
+        status = bool(ROOT.gInterpreter.Declare(code))
+    except Exception as e:
+        _report_exception("JupyROOTDeclarer", e)
+    return int(status)
+
+
 class JupyROOTDeclarer(Runner):
     """Asynchrously execute declarations
     >>> import ROOT
@@ -158,7 +300,7 @@ class JupyROOTDeclarer(Runner):
     """
 
     def __init__(self, poller):
-        super(JupyROOTDeclarer, self).__init__(_lib.JupyROOTDeclarer, poller)
+        super(JupyROOTDeclarer, self).__init__(_jupyroot_declare, poller)
 
 
 class JupyROOTExecutor(Runner):
@@ -172,7 +314,7 @@ class JupyROOTExecutor(Runner):
     """
 
     def __init__(self, poller):
-        super(JupyROOTExecutor, self).__init__(_lib.JupyROOTExecutor, poller)
+        super(JupyROOTExecutor, self).__init__(_jupyroot_execute, poller)
 
 
 def display_drawables(displayFunction):

@@ -29,8 +29,6 @@
 #include <utility>
 #include <vector>
 
-#include "IOHandler.cxx"
-
 namespace PyROOT {
 
 PyObject *gRootModule = nullptr;
