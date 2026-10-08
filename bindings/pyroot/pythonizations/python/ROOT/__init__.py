@@ -42,11 +42,9 @@ if _major_minor(_runtime_version) != _major_minor(_root_python_version):
     """
     raise ImportError(textwrap.dedent(message))
 
-# The libROOTPythonizations CPython extension is in the same directory as the
-# ROOT Python module, but to find the other ROOT libraries we need to also add
-# the path of the ROOT library directory (only needed on Windows). For example,
-# if the ROOT Python module is in $ROOTSYS/bin/ROOT/__init__.py, the libraries
-# are usually in $ROOTSYS/bin.
+# To find the ROOT libraries, we need to add the path of the ROOT library
+# directory (only needed on Windows). For example, if the ROOT Python module is
+# in $ROOTSYS/bin/ROOT/__init__.py, the libraries are usually in $ROOTSYS/bin.
 if "win32" in sys.platform:
     root_module_path = os.path.dirname(__file__)  # expected to be ${CMAKE_INSTALL_PYTHONDIR}/ROOT
     root_install_pythondir = os.path.dirname(root_module_path)  # expected to be ${CMAKE_INSTALL_PYTHONDIR}

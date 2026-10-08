@@ -32,7 +32,7 @@ target_compile_definitions(cppjit_backend PRIVATE
   # through the dispatch mechanism. Disable them in this translation unit.
   NDEBUG
   # libcpyrt owns the dispatch table (cppinterop_dispatch.cxx); consumers in
-  # other DLLs (ROOTPythonizations, tpython) import it. On Windows the data
+  # other DLLs (tpython) import it. On Windows the data
   # symbols need explicit dllexport - WINDOWS_EXPORT_ALL_SYMBOLS covers
   # functions only.
   CPPINTEROP_DISPATCH_EXPORTS
