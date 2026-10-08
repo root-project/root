@@ -426,3 +426,10 @@ Bool_t TBuffer::ByteSwapBuffer(Long64_t n, EDataType type)
 
    return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+Longptr_t ROOT::Internal::GetBufferAddress(const TBuffer &buffer)
+{
+   return reinterpret_cast<Longptr_t>(buffer.Buffer());
+}
