@@ -210,6 +210,8 @@ For implementers of custom `RooFit::MultiProcess::Job` subclasses, the message t
 
 * The `RooMinimizer::Strategy` enum has been removed. It named the Minuit strategies that are usually referred to just by integers, but caused confusion because it didn't include the unnamed "Strategy 3". Since people usually set the strategy with integer values anyway, it was decided that the simplest solution to avoid the confusion was simply to remove the `RooMinimizer::Strategy` enum
 
+* `RooSimultaneous::expectedEvents()` with a **RooSuperCategory** index now sums over all components if its input categories are in the normalization set, as for dataset variables. Before, it returned the selected component's yield, which also gave the wrong total in extended toy generation.
+
 ### Faster Hesse for likelihoods with many independent parameters
 
 RooFit now analyzes the computation graph of the minimized function to find pairs of parameters that never appear in the same additive term of the likelihood, meaning their mixed second derivative is identically zero.

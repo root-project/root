@@ -118,6 +118,7 @@ protected:
   createAsymmetryComponent(const RooAbsCategoryLValue &asymCat, const RooAbsCategoryLValue &asymCatState) const override;
 
   RooArgSet const& flattenedCatList() const;
+  bool indexCatIsInNormSet(RooArgSet const *nset) const;
 
   mutable RooSetProxy _plotCoefNormSet ;
   const TNamed* _plotCoefNormRange = nullptr;

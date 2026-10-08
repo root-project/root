@@ -9,6 +9,7 @@
 #include <RooConstVar.h>
 #include <RooDataSet.h>
 #include <RooExponential.h>
+#include <RooExtendPdf.h>
 #include <RooFitResult.h>
 #include <RooGaussian.h>
 #include <RooGenericPdf.h>
@@ -19,6 +20,7 @@
 #include <RooRandom.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
+#include <RooSuperCategory.h>
 #include <RooThresholdCategory.h>
 #include <RooUniform.h>
 #include <RooWorkspace.h>
@@ -986,4 +988,45 @@ TEST(RooSimultaneous, ParameterIndexTopLevelNLL)
       cat.setIndex(1);
       EXPECT_THAT(nll->getVal(), RelativeNear(refNll1->getVal(), 1e-10)) << backend.name() << ", index 1";
    }
+}
+
+namespace {
+
+/// Extended pdfs and categories for a combination where analysis A has a
+/// signal and a control region, and analysis B has only one region. Taken from
+/// GitHub issue #23342.
+struct AnalysisCombination {
+   RooRealVar x{"x", "x", -8, 8};
+   RooGaussian shape{"shape", "shape", x, RooFit::RooConst(0.), RooFit::RooConst(2.)};
+   RooRealVar nA_SR{"nA_SR", "nA_SR", 10, 0, 1e6};
+   RooRealVar nA_CR{"nA_CR", "nA_CR", 50, 0, 1e6};
+   RooRealVar nB{"nB", "nB", 40, 0, 1e6};
+   RooExtendPdf pdf_A_SR{"pdf_A_SR", "pdf_A_SR", shape, nA_SR};
+   RooExtendPdf pdf_A_CR{"pdf_A_CR", "pdf_A_CR", shape, nA_CR};
+   RooExtendPdf pdf_B{"pdf_B", "pdf_B", shape, nB};
+   RooCategory region{"region", "region", {{"SR", 0}, {"CR", 1}}};
+   RooCategory analysis{"analysis", "analysis", {{"A", 0}, {"B", 1}}};
+};
+
+} // namespace
+
+/// The expected events of a RooSimultaneous with a RooSuperCategory index are
+/// the sum over all components if the input categories are in the
+/// normalization set, like for the variables of a dataset.
+TEST(RooSimultaneous, ExpectedEventsSuperCategory)
+{
+   AnalysisCombination m;
+
+   RooSuperCategory sc{"sc", "sc", {m.analysis, m.region}};
+   RooSimultaneous simPdf{
+      "simPdf", "simPdf", {{"{A;SR}", &m.pdf_A_SR}, {"{A;CR}", &m.pdf_A_CR}, {"{B;SR}", &m.pdf_B}}, sc};
+
+   RooArgSet nsetInputCats{m.x, m.analysis, m.region};
+   EXPECT_DOUBLE_EQ(simPdf.expectedEvents(&nsetInputCats), 100.);
+
+   // Without all input categories, only the selected component counts
+   m.analysis.setLabel("A");
+   m.region.setLabel("CR");
+   RooArgSet nsetPartial{m.x, m.analysis};
+   EXPECT_DOUBLE_EQ(simPdf.expectedEvents(&nsetPartial), 50.);
 }

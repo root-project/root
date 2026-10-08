@@ -27,8 +27,11 @@ the value of the PDF that is associated with the current value
 of the index category.
 
 Extended likelihood fitting is supported if all components support
-extended likelihood mode. The expected number of events by a RooSimultaneous
-is that of the component p.d.f. selected by the index category.
+extended likelihood mode. If the index category is among the normalization
+variables, the expected number of events by a RooSimultaneous is the sum over
+all components. Otherwise, it is that of the component p.d.f. selected by the
+index category. For a RooSuperCategory index, it counts as being among the
+normalization variables if all of its input categories are.
 
 The index category can be accessed using indexCategory().
 
@@ -72,6 +75,7 @@ in each category.
 
 #include <ROOT/StringUtils.hxx>
 
+#include <algorithm>
 #include <iostream>
 
 namespace {
@@ -503,7 +507,7 @@ double RooSimultaneous::evaluate() const
 
 double RooSimultaneous::expectedEvents(const RooArgSet* nset) const
 {
-  if (nset->contains(_indexCat.arg())) {
+  if (indexCatIsInNormSet(nset)) {
 
     double sum(0) ;
 
@@ -1248,6 +1252,22 @@ RooArgSet const& RooSimultaneous::flattenedCatList() const
       _indexCatSet = std::make_unique<RooArgSet>(_indexCat.arg());
    }
    return *_indexCatSet;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the index category is in the normalization set `nset`, matching by
+/// name. For a RooSuperCategory index, it's enough if all its input categories
+/// are in `nset`, which is the case for the variables of a dataset.
+bool RooSimultaneous::indexCatIsInNormSet(RooArgSet const *nset) const
+{
+   if (!nset) {
+      return false;
+   }
+   if (nset->contains(_indexCat.arg())) {
+      return true;
+   }
+   RooArgSet const &cats = flattenedCatList();
+   return std::all_of(cats.begin(), cats.end(), [&](RooAbsArg const *cat) { return nset->contains(*cat); });
 }
 
 ////////////////////////////////////////////////////////////////////////////////
