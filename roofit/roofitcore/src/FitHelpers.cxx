@@ -54,11 +54,42 @@
 #endif
 #endif
 
+#include <sstream>
+
 using RooFit::Detail::RooNLLVarNew;
 
 namespace {
 
 constexpr int extendedFitDefault = 2;
+
+/// Nested RooSimultaneous are only supported in "switch mode", i.e., if their
+/// index category is not an observable. Throw an error otherwise.
+void checkNestedSimultaneous(RooAbsArg const &top, RooArgSet const &observables)
+{
+   RooArgList branches;
+   top.branchNodeServerList(&branches);
+   for (RooAbsArg *outer : branches) {
+      if (!dynamic_cast<RooSimultaneous const *>(outer)) {
+         continue;
+      }
+      RooArgList outerBranches;
+      outer->branchNodeServerList(&outerBranches);
+      for (RooAbsArg *arg : outerBranches) {
+         auto *nested = dynamic_cast<RooSimultaneous const *>(arg);
+         if (arg == outer || !nested || !nested->indexCatIsObservable(observables)) {
+            continue;
+         }
+         std::stringstream errMsg;
+         errMsg << "RooSimultaneous \"" << outer->GetName() << "\" contains the RooSimultaneous \"" << nested->GetName()
+                << "\", whose index category \"" << nested->indexCat().GetName()
+                << "\" is in the dataset. Nested RooSimultaneous are only supported if their index category is a "
+                   "parameter (switch mode). To combine channels, use one RooSimultaneous over a RooCategory with one "
+                   "state per channel.";
+         oocoutE(&top, InputArguments) << errMsg.str() << std::endl;
+         throw std::runtime_error(errMsg.str());
+      }
+   }
+}
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 /// Print a deprecation warning when the legacy evaluation backend is selected for a fit.
@@ -756,6 +787,8 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
 
 std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const RooLinkedList &cmdList)
 {
+   checkNestedSimultaneous(pdf, *data.get());
+
    auto timingScope = std::make_unique<ROOT::Math::Util::TimingScope>(
       [&pdf](std::string const &msg) { oocoutI(&pdf, Fitting) << msg << std::endl; }, "Creation of NLL object took");
 
@@ -1061,6 +1094,8 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
 
 std::unique_ptr<RooAbsReal> createChi2(RooAbsReal &real, RooDataHist &data, const RooLinkedList &cmdList)
 {
+   checkNestedSimultaneous(real, *data.get());
+
    RooCmdConfig pc("createChi2(" + std::string(real.GetName()) + ")");
 
    pc.defineInt("EvalBackend", "EvalBackend", 0, static_cast<int>(RooFit::EvalBackend::defaultValue()));

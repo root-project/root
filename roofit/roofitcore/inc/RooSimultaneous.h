@@ -35,23 +35,9 @@ class RooFitResult ;
 class RooPlot ;
 class RooAbsData ;
 class RooLinkedList ;
-class RooSuperCategory ;
 
 class RooSimultaneous : public RooAbsPdf {
 public:
-
-  /// Internal struct used for initialization.
-  struct InitializationOutput {
-
-     ~InitializationOutput();
-
-     void addPdf(const RooAbsPdf &pdf, std::string const &catLabel);
-
-     std::vector<RooAbsPdf const *> finalPdfs;
-     std::vector<std::string> finalCatLabels;
-     RooAbsCategoryLValue *indexCat = nullptr;
-     std::unique_ptr<RooSuperCategory> superIndex;
-  };
 
   // Constructors, assignment etc
   inline RooSimultaneous() : _partIntMgr(this,10) {}
@@ -141,12 +127,7 @@ protected:
 
 private:
 
-  /// Private internal constructor.
-  RooSimultaneous(const char *name, const char *title, InitializationOutput && initInfo);
-
-  static std::unique_ptr<RooSimultaneous::InitializationOutput>
-  initialize(std::string const& name, RooAbsCategoryLValue &inIndexCat,
-             std::map<std::string, RooAbsPdf *> const &pdfMap);
+  static RooAbsPdf *resolveSwitchMode(RooAbsPdf *pdf, RooArgSet const &vars);
 
   mutable std::unique_ptr<RooArgSet> _indexCatSet ; ///<! Index category wrapped in a RooArgSet if needed internally
 
