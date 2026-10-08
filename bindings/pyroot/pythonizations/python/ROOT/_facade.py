@@ -234,30 +234,6 @@ class ROOTFacade(types.ModuleType):
                 return res
         raise AttributeError("Failed to get attribute {} from ROOT".format(name))
 
-    def _register_converters_and_executors(self):
-        converter_aliases = {
-            "Float16_t": "float",
-            "const Float16_t&": "const float&",
-            "Double32_t": "double",
-            "Double32_t&": "double&",
-            "const Double32_t&": "const double&",
-        }
-
-        executor_aliases = {
-            "Float16_t": "float",
-            "Float16_t&": "float&",
-            "Double32_t": "double",
-            "Double32_t&": "double&",
-        }
-
-        from ROOT.libROOTPythonizations import CPyCppyyRegisterConverterAlias, CPyCppyyRegisterExecutorAlias
-
-        for name, target in converter_aliases.items():
-            CPyCppyyRegisterConverterAlias(name, target)
-
-        for name, target in executor_aliases.items():
-            CPyCppyyRegisterExecutorAlias(name, target)
-
     def _finalSetup(self):
         """
         Perform the final ROOT initialization.
@@ -331,9 +307,6 @@ class ROOTFacade(types.ModuleType):
         # Redirect lookups to cppyy's global namespace
         self.__class__.__getattr__ = self._fallback_getattr
         self.__class__.__setattr__ = lambda self, name, val: setattr(self._cppyy.gbl, name, val)
-
-        # Register custom converters and executors
-        self._register_converters_and_executors()
 
         # Run rootlogon if exists
         self._run_rootlogon()

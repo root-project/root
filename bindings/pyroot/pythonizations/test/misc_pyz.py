@@ -429,5 +429,53 @@ class TParameterTemplateInstantiations(unittest.TestCase):
                 memfile.Close()
 
 
+class Float16Double32Conversions(unittest.TestCase):
+    """
+    Float16_t and Double32_t are typedefs to float and double that only
+    differ in how ROOT I/O stores them. They have to convert to and from
+    Python like the types they alias, by value and by reference.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        ROOT.gInterpreter.Declare("""
+        struct Float16Double32Holder {
+           Float16_t fF = 0.5f;
+           Double32_t fD = 1.5;
+           Float16_t GetF() { return fF; }
+           Double32_t GetD() { return fD; }
+           Float16_t &RefF() { return fF; }
+           Double32_t &RefD() { return fD; }
+           float TakeF(Float16_t x) { return x; }
+           double TakeD(Double32_t x) { return x; }
+           float TakeConstRefF(const Float16_t &x) { return x; }
+           double TakeConstRefD(const Double32_t &x) { return x; }
+        };
+        """)
+
+    def test_conversions(self):
+        h = ROOT.Float16Double32Holder()
+        self.assertAlmostEqual(h.fF, 0.5)
+        self.assertAlmostEqual(h.fD, 1.5)
+        self.assertAlmostEqual(h.GetF(), 0.5)
+        self.assertAlmostEqual(h.GetD(), 1.5)
+        self.assertAlmostEqual(h.RefF(), 0.5)
+        self.assertAlmostEqual(h.RefD(), 1.5)
+        self.assertAlmostEqual(h.TakeF(2.5), 2.5)
+        self.assertAlmostEqual(h.TakeD(3.5), 3.5)
+        self.assertAlmostEqual(h.TakeConstRefF(4.5), 4.5)
+        self.assertAlmostEqual(h.TakeConstRefD(5.5), 5.5)
+
+    def test_vector(self):
+        # Spell the template argument both as a string and as the Python
+        # proxy of the typedef, which may resolve through different code paths
+        for tp in ["Float16_t", "Double32_t", ROOT.Float16_t, ROOT.Double32_t]:
+            with self.subTest(tp=tp):
+                v = ROOT.std.vector[tp]([0.5, 1.5])
+                self.assertEqual(len(v), 2)
+                self.assertAlmostEqual(v[0], 0.5)
+                self.assertAlmostEqual(v[1], 1.5)
+
+
 if __name__ == '__main__':
     unittest.main()

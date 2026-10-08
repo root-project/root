@@ -35,54 +35,6 @@ namespace PyROOT {
 
 PyObject *gRootModule = nullptr;
 
-PyObject *RegisterConverterAlias(PyObject * /*self*/, PyObject *args)
-{
-   PyObject *name = nullptr;
-   PyObject *target = nullptr;
-
-   if (!PyArg_ParseTuple(args, "UU:RegisterConverterAlias", &name, &target)) {
-      return nullptr;
-   }
-
-   const char *nameStr = PyUnicode_AsUTF8AndSize(name, nullptr);
-   if (!nameStr) {
-      return nullptr;
-   }
-
-   const char *targetStr = PyUnicode_AsUTF8AndSize(target, nullptr);
-   if (!targetStr) {
-      return nullptr;
-   }
-
-   cppjit::cpyrt::RegisterConverterAlias(nameStr, targetStr);
-
-   Py_RETURN_NONE;
-}
-
-PyObject *RegisterExecutorAlias(PyObject * /*self*/, PyObject *args)
-{
-   PyObject *name = nullptr;
-   PyObject *target = nullptr;
-
-   if (!PyArg_ParseTuple(args, "UU:RegisterExecutorAlias", &name, &target)) {
-      return nullptr;
-   }
-
-   const char *nameStr = PyUnicode_AsUTF8AndSize(name, nullptr);
-   if (!nameStr) {
-      return nullptr;
-   }
-
-   const char *targetStr = PyUnicode_AsUTF8AndSize(target, nullptr);
-   if (!targetStr) {
-      return nullptr;
-   }
-
-   cppjit::cpyrt::RegisterExecutorAlias(nameStr, targetStr);
-
-   Py_RETURN_NONE;
-}
-
 /// \brief A PyObject wrapper to track reference counting of external objects
 ///
 /// This wrapper can be useful in shared ownership scenarios when a C++ object
@@ -211,10 +163,6 @@ static PyMethodDef gPyROOTMethods[] = {
     "Get stderr JupyROOTExecutorHandler"},
    {"JupyROOTExecutorHandler_Dtor", (PyCFunction)JupyROOTExecutorHandler_Dtor, METH_NOARGS,
     "Destruct JupyROOTExecutorHandler"},
-   {"CPyCppyyRegisterConverterAlias", (PyCFunction)PyROOT::RegisterConverterAlias, METH_VARARGS,
-    "Register a custom converter that is a reference to an existing converter"},
-   {"CPyCppyyRegisterExecutorAlias", (PyCFunction)PyROOT::RegisterExecutorAlias, METH_VARARGS,
-    "Register a custom executor that is a reference to an existing executor"},
    {"PyObjRefCounterAsStdAny", (PyCFunction)PyROOT::PyObjRefCounterAsStdAny, METH_VARARGS,
     "Wrap a reference count to any Python object in a std::any for resource management in C++"},
    {NULL, NULL, 0, NULL}};
