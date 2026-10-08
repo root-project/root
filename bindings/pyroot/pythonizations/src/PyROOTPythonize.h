@@ -18,8 +18,6 @@ namespace PyROOT {
 
 PyObject *AddCPPInstancePickling(PyObject *self, PyObject *args);
 
-PyObject *AddPrettyPrintingPyz(PyObject *self, PyObject *args);
-
 PyObject *CPPInstanceExpand(PyObject *self, PyObject *args);
 
 } // namespace PyROOT
