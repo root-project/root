@@ -71,10 +71,10 @@ RGPUModel RModelParser_ONNX::ParseGPU(const std::string &filename)
 }
 RGPUModel RModelParser_ONNX::ParseGPU(std::istream &input)
 {
-   auto model = LoadModel(input);
-   if (!model)
+   auto proto = LoadModel(input);
+   if (!proto)
       throw std::runtime_error("SOFIE GPU: malformed ONNX input");
-   const auto &graph = model->graph();
+   const auto &graph = proto->graph();
    if (graph.input_size() != 1 || graph.output_size() != 1 || graph.node_size() == 0)
       throw std::runtime_error("SOFIE GPU: expected one input, one output and a nonempty sequential graph");
    const auto &in = graph.input(0).type().tensor_type(), &out = graph.output(0).type().tensor_type();
@@ -121,9 +121,11 @@ RGPUModel RModelParser_ONNX::ParseGPU(std::istream &input)
          std::unordered_set<std::string> attrs;
          for (int a = 0; a < node.attribute_size(); ++a) {
             const auto &attr = node.attribute(a);
-            if (!attrs.insert(attr.name()).second ||
-                !((attr.name() == "alpha" || attr.name() == "beta") && attr.type() == onnx::AttributeProto::FLOAT) &&
-                   !((attr.name() == "transA" || attr.name() == "transB") && attr.type() == onnx::AttributeProto::INT))
+            const bool scalar = (attr.name() == "alpha" || attr.name() == "beta") &&
+                                attr.type() == onnx::AttributeProto::FLOAT;
+            const bool transpose = (attr.name() == "transA" || attr.name() == "transB") &&
+                                   attr.type() == onnx::AttributeProto::INT;
+            if (!attrs.insert(attr.name()).second || (!scalar && !transpose))
                throw std::runtime_error("SOFIE GPU: unsupported or duplicate Gemm attribute " + attr.name());
          }
       } else if (node.op_type() == "Relu" && (node.input_size() != 1 || node.attribute_size())) {
