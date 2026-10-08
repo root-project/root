@@ -65,6 +65,16 @@ ErrorSystemMsgHandlerFunc_t SetErrorSystemMsgHandler(ErrorSystemMsgHandlerFunc_t
 
 void MinimalErrorHandler(int level, Bool_t abort, const char *location, const char *msg);
 
+using WarningHandlerFunc_t = void (*)(const char *location, const char *msg);
+
+/// For the Python bindings: install an error handler that passes warnings to
+/// `handler` and all other messages to DefaultErrorHandler(). While ROOT runs
+/// multithreaded (gGlobalMutex is set), warnings go to DefaultErrorHandler()
+/// too: a warning can be reported by a thread that holds ROOT's lock, and the
+/// handler of the Python bindings takes the GIL, which a thread waiting for
+/// ROOT's lock might hold.
+void SetWarningHandler(WarningHandlerFunc_t handler);
+
 } // namespace Internal
 } // namespace ROOT
 
