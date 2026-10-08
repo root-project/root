@@ -497,8 +497,4 @@ struct AlignmentEnvelope {
    std::array<OverAligned, 2> fArr;
 };
 
-struct VersionedStreamerField {
-   ClassDefNV(VersionedStreamerField, 2);
-};
-
 #endif
