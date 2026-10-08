@@ -7,6 +7,11 @@ import ROOT
 # numba is not used directly, but tests can crash when ROOT is built with
 # builtin_llvm=OFF and numba is not imported at the beginning
 
+# C++ type names, used as type annotations of the Python callables passed to Define
+DOUBLE = "double"
+ULONG64 = "ULong64_t"
+RVEC_ULONG64 = "ROOT::VecOps::RVec<ULong64_t>"
+
 
 class PyDefine(unittest.TestCase):
     """
@@ -22,7 +27,12 @@ class PyDefine(unittest.TestCase):
         for type in numba_declare_dtypes:
             col_name = "col_" + type.replace(" ", "")
             rdf = rdf.Define(col_name, f"({type}) rdfentry_")
-            rdf = rdf.Define(col_name + "_arr", lambda col: np.array([col, col]), [col_name])
+
+            def to_array(col):
+                return np.array([col, col])
+
+            to_array.__annotations__ = {"col": type, "return": f"ROOT::VecOps::RVec<{type}>"}
+            rdf = rdf.Define(col_name + "_arr", to_array, [col_name])
             arr = np.arange(0, 10)
             if type == "bool":
                 arr = np.array(arr, dtype="bool")
@@ -35,14 +45,22 @@ class PyDefine(unittest.TestCase):
 
     def test_define_overload1(self):
         rdf = ROOT.RDataFrame(10).Define("x", "rdfentry_")
-        rdf = rdf.Define("x2", lambda y: y * y, ["x"])
+
+        def square(y: ULONG64) -> ULONG64:
+            return y * y
+
+        rdf = rdf.Define("x2", square, ["x"])
         arr = np.arange(0, 10)
         flag = np.array_equal(rdf.AsNumpy()["x2"], arr * arr)
         self.assertTrue(flag)
 
     def test_define_overload2(self):
         rdf = ROOT.RDataFrame(10).Define("x", "rdfentry_")
-        rdf = rdf.Define("x2", lambda x: x * x)
+
+        def square(x: ULONG64) -> ULONG64:
+            return x * x
+
+        rdf = rdf.Define("x2", square, ["x"])
         arr = np.arange(0, 10)
         flag = np.array_equal(rdf.AsNumpy()["x2"], arr * arr)
         self.assertTrue(flag)
@@ -50,7 +68,7 @@ class PyDefine(unittest.TestCase):
     def test_define_extra_args(self):
         rdf = ROOT.RDataFrame(10).Define("x", "rdfentry_")
 
-        def x_y(x, y):
+        def x_y(x: ULONG64, y: DOUBLE) -> DOUBLE:
             return x * y
 
         rdf = rdf.Define("x_y", x_y, extra_args={"y": 0.5})
@@ -62,22 +80,26 @@ class PyDefine(unittest.TestCase):
         rdf = ROOT.RDataFrame(10).Define("x", "rdfentry_")
         y = 0.5
 
-        def x_times_y(x):
+        def x_times_y(x: ULONG64) -> DOUBLE:
             return x * y
 
-        rdf = rdf.Define("x_y", x_times_y)
+        rdf = rdf.Define("x_y", x_times_y, ["x"])
         arr = np.arange(0, 10)
         flag = np.array_equal(rdf.AsNumpy()["x_y"], arr * 0.5)
         self.assertTrue(flag)
 
     def test_arrays(self):
         rdf = ROOT.RDataFrame(5).Define("x", "rdfentry_")
-        rdf = rdf.Define("x_arr", lambda x: np.array([x, x]))
 
-        def norm(x_arr):
+        def to_array(x: ULONG64) -> RVEC_ULONG64:
+            return np.array([x, x])
+
+        rdf = rdf.Define("x_arr", to_array, ["x"])
+
+        def norm(x_arr: RVEC_ULONG64) -> DOUBLE:
             return np.sqrt(x_arr[0] ** 2 + x_arr[1] ** 2)
 
-        rdf = rdf.Define("mag", norm)
+        rdf = rdf.Define("mag", norm, ["x_arr"])
         arr = np.arange(0, 5)
         arr = np.sqrt(arr * arr + arr * arr)
         flag = np.array_equal(rdf.AsNumpy()["mag"], arr)
