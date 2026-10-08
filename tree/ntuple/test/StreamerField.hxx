@@ -101,4 +101,8 @@ struct TemperatureKelvin {
    float fValue;
 };
 
+struct VersionedStreamerField {
+   ClassDefNV(VersionedStreamerField, 2);
+};
+
 #endif // ROOT_RNTuple_Test_StreamerField

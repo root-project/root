@@ -26,5 +26,6 @@
 
 #pragma link C++ options = rntupleStreamerMode(true) class TemperatureCelsius + ;
 #pragma link C++ options = rntupleStreamerMode(true) class TemperatureKelvin + ;
+#pragma link C++ options = rntupleStreamerMode(true) class VersionedStreamerField + ;
 
 #endif
