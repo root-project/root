@@ -156,8 +156,6 @@ PyObject *InstallGUIEventInputHook(PyObject * /*self*/, PyObject * /*args*/)
 static PyMethodDef gPyROOTMethods[] = {
    {"AddCPPInstancePickling", (PyCFunction)PyROOT::AddCPPInstancePickling, METH_NOARGS,
     "Add a custom pickling mechanism for Cppyy Python proxy objects"},
-   {"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
-    "Add pretty printing pythonization"},
    {"InstallWarningHandler", (PyCFunction)InstallWarningHandler, METH_NOARGS,
     "Turn ROOT warnings into Python warnings"},
    {"InstallGUIEventInputHook", (PyCFunction)InstallGUIEventInputHook, METH_NOARGS,
