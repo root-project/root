@@ -471,10 +471,12 @@ void ROOT::Internal::RPageSource::UnzipCluster(RCluster *cluster)
       if (!fActivePhysicalColumns.HasColumnInfos(columnId))
          continue;
       const auto &columnInfos = fActivePhysicalColumns.GetColumnInfos(columnId);
+      const auto indexOffset = clusterDescriptor.GetColumnRange(columnId).GetFirstElementIndex();
 
       allElements.reserve(allElements.size() + columnInfos.size());
       for (const auto &info : columnInfos) {
          allElements.emplace_back(GenerateColumnElement(info.fElementId));
+         const auto element = allElements.back().get();
 
          const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
          std::uint64_t pageNo = 0;
@@ -488,9 +490,8 @@ void ROOT::Internal::RPageSource::UnzipCluster(RCluster *cluster)
             sealedPage.SetBuffer(onDiskPage->GetAddress());
             R__ASSERT(onDiskPage->GetSize() == sealedPage.GetBufferSize());
 
-            auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),
-                             iPage, &foundChecksumFailure, &allPages,
-                             indexOffset = clusterDescriptor.GetColumnRange(columnId).GetFirstElementIndex()]() {
+            auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element, iPage, indexOffset,
+                             &foundChecksumFailure, &allPages]() {
                auto rv = UnsealPage(sealedPage, *element);
                if (!rv) {
                   foundChecksumFailure = true;
@@ -505,7 +506,11 @@ void ROOT::Internal::RPageSource::UnzipCluster(RCluster *cluster)
                allPages[iPage] = std::make_pair(std::move(newPage), keyPagePool);
             };
 
-            fTaskScheduler->AddTask(taskFunc);
+            if (sealedPage.GetNElements() * element->GetSize() < kInlineDecompressionThreshold) {
+               taskFunc();
+            } else {
+               fTaskScheduler->AddTask(taskFunc);
+            }
 
             firstInPage += pi.GetNElements();
             pageNo++;

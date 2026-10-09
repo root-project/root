@@ -591,6 +591,9 @@ The page source also gives access to the ntuple's metadata.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
+   // Decompress pages smaller than 4kB directly in the main thread, not in a TBB thread
+   static constexpr std::size_t kInlineDecompressionThreshold = 4096;
+
    /// Summarizes meta-data necessary to load a certain page. Used by LoadPageFromSummary().
    struct RPageSummary {
       ROOT::DescriptorId_t fClusterId = 0;
