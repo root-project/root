@@ -174,8 +174,8 @@ float sig_outer(TMVA_SOFIE_LinearWithSigmoid::Session const &session, float cons
 // H * dinput (in the input adjoint) and the gradient (in the dinput adjoint).
 // Both pointer arguments must be requested as active: for a non-varied
 // argument clad would look up the custom Gemm_Call pullback with a
-// reduced signature, not find it, and silently fall back to differentiating
-// the BLAS call, which yields zero.
+// reduced signature, not find it, and fall back to differentiating
+// Gemm_Call's loop body directly instead of using the exact custom pullback.
 float sig_dir(TMVA_SOFIE_LinearWithSigmoid::Session const &session,
               TMVA_SOFIE_LinearWithSigmoid::Session const &zeroSession, float const *input, float const *dinput)
 {

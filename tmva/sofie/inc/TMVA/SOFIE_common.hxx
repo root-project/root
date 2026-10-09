@@ -513,13 +513,6 @@ std::vector<Dim> ComputeStrideFromShape(const std::vector<Dim> & shape);
 
 }  // end namespace UTILITY
 
-namespace BLAS{
-extern "C" void sgemm_(const char * transa, const char * transb, const int * m, const int * n, const int * k,
-                       const float * alpha, const float * A, const int * lda, const float * B, const int * ldb,
-                       const float * beta, float * C, const int * ldc);
-}//BLAS
-
-
 //Utility functions to generate code
 void EmitNestedLoops(std::stringstream &out, size_t loopRank, const std::vector<Dim> shape);
 void CloseNestedLoops(std::stringstream &out, size_t loopRank);
@@ -539,19 +532,14 @@ struct HelperFunctionsCode {
 /// in `neededHelpers` (see RModel::AddNeededHelperFunction), resolving
 /// their inter-dependencies. Recognised keys are: "Im2col", "Im2col_3d",
 /// "col2im", "UnidirectionalBroadcast", "BroadcastConvBias", "Gemm_Call",
-/// "Relu", "Fill", "Copy", "ReadTensorFromStream", "SafetensorsBlob",
-/// "SafetensorsReader", "InputTensorDims", "DynamicMemory".
+/// "Gemm_Ref", "Axpy_Ref", "Relu", "Fill", "Copy", "ReadTensorFromStream",
+/// "SafetensorsBlob", "SafetensorsReader", "InputTensorDims", "DynamicMemory".
 ///
 /// `modelNamespace` (e.g. "TMVA_SOFIE_MyModel") is the generated model namespace;
 /// the Clad pullbacks are emitted into clad::custom_derivatives::<modelNamespace>
 /// so the model stays differentiable without SOFIE_common.hxx / CladDerivator.h.
-///
-/// `sgemmAlreadyDeclared`: set true if the caller already emitted the `extern "C"`
-/// sgemm_ declaration (fNeededBlasRoutines block), so Gemm_Call skips its own and
-/// avoids a duplicate. Default false emits it, keeping the returned code self-contained.
 HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> & neededHelpers,
-                                                const std::string & modelNamespace,
-                                                bool sgemmAlreadyDeclared = false);
+                                                const std::string & modelNamespace);
 
 
 } // namespace TMVA::Experimental::SOFIE

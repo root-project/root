@@ -15,17 +15,93 @@ namespace {
 
 // Standalone helper snippets, each emitted verbatim inside the generated model
 // namespace. They depend only on the C++ stdlib (headers collected in
-// GenerateHelperFunctionsCode) and, for Gemm, on the local BLAS::sgemm_ below.
+// GenerateHelperFunctionsCode); the matrix routines below are self-contained
+// reference implementations, so the generated code has no BLAS dependency.
 
-// extern "C" declaration of the BLAS routine Gemm_Call needs, in a nested BLAS
-// namespace. Skipped when the caller already declared sgemm_ (see the
-// sgemmAlreadyDeclared parameter of GenerateHelperFunctionsCode).
-constexpr const char *kBlasSgemm = R"SOFIE(
-namespace BLAS {
-extern "C" void sgemm_(const char *transa, const char *transb, const int *m, const int *n, const int *k,
-                       const float *alpha, const float *A, const int *lda, const float *B, const int *ldb,
-                       const float *beta, float *C, const int *ldc);
-} // namespace BLAS
+// Reference implementation of the BLAS sgemm contract:
+//   C := alpha * op(A) * op(B) + beta * C,   op(X) = X or X^T
+// with A, B, C in BLAS column-major storage and the given leading dimensions.
+// It is a drop-in replacement for the Fortran sgemm_ symbol: all SOFIE
+// operators call it with the same arguments they used to pass to BLAS (SOFIE
+// tensors are row-major, so the call sites hand over the operands swapped —
+// that stays unchanged here). The j-l-i loop nest walks C column by column
+// with unit stride so the compiler can auto-vectorize the innermost loop.
+constexpr const char *kGemmRef = R"SOFIE(
+inline void Gemm_Ref(const char *transa, const char *transb, const int *m, const int *n, const int *k,
+                     const float *alpha, const float *A, const int *lda, const float *B, const int *ldb,
+                     const float *beta, float *C, const int *ldc)
+{
+   const bool ta = *transa == 't' || *transa == 'T' || *transa == 'c' || *transa == 'C';
+   const bool tb = *transb == 't' || *transb == 'T' || *transb == 'c' || *transb == 'C';
+   const int M = *m, N = *n, K = *k;
+   const int LDA = *lda, LDB = *ldb, LDC = *ldc;
+   const float alpha_ = *alpha, beta_ = *beta;
+   for (int j = 0; j < N; ++j) {
+      float *Cj = C + j * LDC;
+      // beta == 0 must overwrite C without reading it (BLAS semantics), so
+      // that a C filled with NaNs or left uninitialized is not propagated.
+      if (beta_ == 0.0f) {
+         for (int i = 0; i < M; ++i)
+            Cj[i] = 0.0f;
+      } else if (beta_ != 1.0f) {
+         for (int i = 0; i < M; ++i)
+            Cj[i] *= beta_;
+      }
+      if (!ta) {
+         // accumulate over l into a contiguous C column: unit stride on A, C
+         for (int l = 0; l < K; ++l) {
+            const float ab = alpha_ * (tb ? B[j + l * LDB] : B[l + j * LDB]);
+            const float *Al = A + l * LDA;
+            for (int i = 0; i < M; ++i)
+               Cj[i] += ab * Al[i];
+         }
+      } else {
+         // transposed A: switch to a dot-product nest so the innermost loop
+         // reads both a row of A and a column of B with unit stride (the
+         // B column stays in cache across the i loop). The 8 independent
+         // accumulators vectorize and keep the FMA latency hidden: a single
+         // accumulator would be latency-bound at ~1 add/cycle.
+         for (int i = 0; i < M; ++i) {
+            const float *Ai = A + i * LDA;
+            const float *Bj = tb ? B + j : B + j * LDB;
+            const int strideB = tb ? LDB : 1;
+            float sum;
+            if (strideB == 1) {
+               float acc[8] = {};
+               int l = 0;
+               for (; l + 8 <= K; l += 8)
+                  for (int u = 0; u < 8; ++u)
+                     acc[u] += Ai[l + u] * Bj[l + u];
+               sum = ((acc[0] + acc[1]) + (acc[2] + acc[3])) + ((acc[4] + acc[5]) + (acc[6] + acc[7]));
+               for (; l < K; ++l)
+                  sum += Ai[l] * Bj[l];
+            } else {
+               sum = 0.0f;
+               for (int l = 0; l < K; ++l)
+                  sum += Ai[l] * Bj[l * strideB];
+            }
+            Cj[i] += alpha_ * sum;
+         }
+      }
+   }
+}
+)SOFIE";
+
+// Reference implementation of the BLAS saxpy contract:
+//   y += alpha * x   (elementwise, with BLAS vector strides)
+constexpr const char *kAxpyRef = R"SOFIE(
+inline void Axpy_Ref(const int *n, const float *alpha, const float *x, const int *incx, float *y, const int *incy)
+{
+   const int N = *n;
+   const float alpha_ = *alpha;
+   if (*incx == 1 && *incy == 1) {
+      for (int i = 0; i < N; ++i)
+         y[i] += alpha_ * x[i];
+   } else {
+      for (int i = 0, px = 0, py = 0; i < N; ++i, px += *incx, py += *incy)
+         y[py] += alpha_ * x[px];
+   }
+}
 )SOFIE";
 
 constexpr const char *kConvertShapeToLength = R"SOFIE(
@@ -62,7 +138,7 @@ inline bool is_a_ge_zero_and_a_lt_b(int a, int b)
 }
 )SOFIE";
 
-// im2col: re-arrange convolution input into a matrix usable directly by BLAS.
+// im2col: re-arrange convolution input into a matrix usable directly by Gemm_Ref.
 // It loops over each element of the filtered region first, following the input
 // layout, so reads/writes stay consecutive in memory; the result is already
 // transposed -- a (channels*kernel_h*kernel_w , output_h*output_w) matrix.
@@ -357,14 +433,17 @@ inline void Gemm_Call(float *output, bool transa, bool transb, int m, int n, int
    if (C != nullptr) {
       std::copy(C, C + m * n, output);
    }
-   BLAS::sgemm_(transa ? &ct : &cn, transb ? &ct : &cn, &m, &n, &k, &alpha, A, lda, B, ldb, &beta, output, ldc);
+   Gemm_Ref(transa ? &ct : &cn, transb ? &ct : &cn, &m, &n, &k, &alpha, A, lda, B, ldb, &beta, output, ldc);
 }
 )SOFIE";
 
 // Custom Clad reverse-mode pullbacks for the helpers (they used to live in
-// Math/CladDerivator.h). Gemm_Call and Copy need a hand-written pullback because
-// their bodies call bodyless routines (sgemm_, std::copy -> memmove) that Clad
-// cannot differentiate; Fill and Relu are included for completeness so a
+// Math/CladDerivator.h). Gemm_Call gets a hand-written pullback in terms of
+// Gemm_Call itself, which is both more accurate and much cheaper than the
+// (correct but tape-heavy) code Clad would generate for its inner loops.
+// Copy needs one because its body calls a bodyless routine (std::copy ->
+// memmove) that Clad cannot differentiate; Fill and Relu are included for
+// completeness so a
 // differentiated model needs neither SOFIE_common.hxx nor CladDerivator.h. How
 // they are placed and found is explained at the emission site
 // (GenerateHelperFunctionsCode).
@@ -1158,7 +1237,7 @@ inline MemoryResult OrganizeMemory(const std::vector<TensorLifeInfo> &tensorsInf
 } // anonymous namespace
 
 HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &neededHelpers,
-                                                const std::string &modelNamespace, bool sgemmAlreadyDeclared)
+                                                const std::string &modelNamespace)
 {
    auto need = [&](const char *key) { return neededHelpers.count(key) > 0; };
 
@@ -1168,6 +1247,9 @@ HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &nee
    const bool uniBroadcast = need("UnidirectionalBroadcast");
    const bool convBias = need("BroadcastConvBias");
    const bool gemm = need("Gemm_Call");
+   // Gemm_Call forwards to Gemm_Ref, so requesting Gemm_Call pulls it in too.
+   const bool gemmRef = gemm || need("Gemm_Ref");
+   const bool axpyRef = need("Axpy_Ref");
    const bool relu = need("Relu");
    const bool fill = need("Fill");
    const bool copy = need("Copy");
@@ -1214,9 +1296,10 @@ HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &nee
    std::string defs;
    defs += "\n// --- Standalone SOFIE inference helper functions ---\n";
 
-   // sgemm_ declaration for Gemm_Call, unless the caller already emitted one.
-   if (gemm && !sgemmAlreadyDeclared)
-      defs += kBlasSgemm;
+   if (axpyRef)
+      defs += kAxpyRef;
+   if (gemmRef)
+      defs += kGemmRef;
 
    if (needConvertLength)
       defs += kConvertShapeToLength;
@@ -1262,8 +1345,8 @@ HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &nee
    defs += "// --- End of SOFIE inference helper functions ---\n\n";
 
    // ---- Clad custom derivatives (pullbacks and pushforwards) --------------
-   // Some helpers cannot be differentiated automatically by Clad (Gemm_Call
-   // calls the bodyless BLAS routine sgemm_). For those we emit a hand-written
+   // Some helpers cannot be differentiated efficiently or at all by Clad
+   // (see the comment at kGemmCallPullback). For those we emit a hand-written
    // pullback (reverse mode) and pushforward (forward mode). Clad looks up
    // custom derivatives in
    // clad::custom_derivatives::<function-namespace>, so they are placed

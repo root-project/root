@@ -117,10 +117,6 @@ public:
     * \param opName name of the operator
     */
    std::string Generate(std::string opName) override;
-
-   /*! \brief Returns the blas routines needed to compile the generated code
-    */
-   std::vector<std::string> GetBlasRoutines() override { return {std::string("Gemm"), std::string("Axpy")}; }
 };
 
 template <typename T>
@@ -288,6 +284,8 @@ void ROperator_ConvTranspose<T>::Initialize(RModel &model)
    // register the inference helper functions used by the generated code
    // (only the <3D case is supported, which uses col2im)
    model.AddNeededHelperFunction("col2im");
+   model.AddNeededHelperFunction("Gemm_Ref");
+   model.AddNeededHelperFunction("Axpy_Ref");
    if (!fNB.empty())
       model.AddNeededHelperFunction("BroadcastConvBias");
 }
@@ -422,9 +420,7 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
       out << SP << SP << "size_t x_offset = n * " << fShapeX[1] * iDepth * iHeight * iWidth << ";\n";
       out << SP << SP << "size_t out_offset = n * " << fShapeY[1] * oDepth * oHeight * oWidth << ";\n";
 
-      // DO BLAS before:
-      // BLAS
-      out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
+      out << SP << SP << "Gemm_Ref(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
           << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, "
           << "tensor_" << fNX << " + x_offset, &" << OpName
           << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
@@ -462,12 +458,6 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
              << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << "," << fAttrDilations[0] << ","
              << fAttrDilations[1] << "," << fAttrDilations[2] << ",tensor_" << fImcol << ");\n\n ";
       }
-      // // BLAS
-      // out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
-      //     << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fImcol << ", &" << OpName
-      //     << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-      // out << SP << SP << SP <<"tensor_" << fConvK << ", &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
-      //     << " + out_offset, &" << OpName << "_m);\n";
    } else {
       // case of group transposed convolution
       // Unroll (IM2COL) the input tensor- make loop on groups and repeat operations (IM2COL + GEMM for each
@@ -478,8 +468,8 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
       out << SP << SP << "size_t out_offset = n * " << fShapeY[1] * oHeight * oWidth << " + g * "
           << fShapeY[1] * oHeight * oWidth / fAttrGroup << ";\n ";
 
-      // do BLAS here (LM: probably need an offset for op_f the kernels)
-      out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
+      // (LM: probably need an offset for op_f the kernels)
+      out << SP << SP << "Gemm_Ref(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
           << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, "
           << "tensor_" << fNX << " + x_offset, &" << OpName
           << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
@@ -516,18 +506,6 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
              << fAttrDilations[1] << "," << fAttrDilations[2] << "," << "tensor_" << fImcol << ");\n\n ";
       }
 
-      // // BLAS
-      // // offset g must be  g * k * n
-      // out << SP << SP << SP << "size_t offset_f = g * " << fShapeW[0] * fShapeW[1] * icstrideDil / fAttrGroup <<
-      // ";\n"; out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName <<
-      // "_m, &"
-      //     << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fImcol << ", &" << OpName
-      //     << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-      // out << SP << SP << SP << "tensor_" << fConvK << " + offset_f, &" << OpName << "_k, &" << OpName << "_beta,
-      // tensor_" << fNY
-      //     << " + out_offset"
-      //     << ", &" << OpName << "_m);\n";
-
       out << SP << SP << "}\n"; // end of group loop
    }
 
@@ -539,7 +517,7 @@ std::string ROperator_ConvTranspose<T>::Generate(std::string OpName)
       out << SP << "int " << OpName << "_incx = 1;\n";
       out << SP << "int " << OpName << "_incy = 1;\n";
 
-      out << SP << "BLAS::saxpy_(&" << OpName << "_size, &" << OpName << "_gamma, tensor_" << fNBroadcastedB << ", &"
+      out << SP << "Axpy_Ref(&" << OpName << "_size, &" << OpName << "_gamma, tensor_" << fNBroadcastedB << ", &"
           << OpName << "_incx, tensor_" << fNY << ", &" << OpName << "_incy);\n";
    }
 

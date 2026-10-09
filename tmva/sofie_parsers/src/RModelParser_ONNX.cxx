@@ -517,11 +517,14 @@ RModel RModelParser_ONNX::Parse(std::string const &filename, bool verbose)
    std::string parsetime(std::asctime(gmt_time));
 
    // get name of model (filename without directory name)
-   char sep = '/';
 #ifdef _WIN32
-   sep = '\\';
+   // The Windows file APIs accept both separators, and forward-slash paths
+   // do get passed (e.g. from Python or CMake)
+   size_t isep = filename.find_last_of("/\\");
+#else
+   // On POSIX, a backslash is a valid filename character, not a separator
+   size_t isep = filename.rfind('/', filename.length());
 #endif
-   size_t isep = filename.rfind(sep, filename.length());
    std::string filename_nodir = filename;
    if (isep != std::string::npos) {
       filename_nodir = (filename.substr(isep + 1, filename.length() - isep));

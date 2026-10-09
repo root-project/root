@@ -55,12 +55,6 @@ private:
 
    WeightFileType fWeightFile = WeightFileType::Text;
 
-   std::unordered_set<std::string> fNeededBlasRoutines;
-   // Set to true once GenerateHeaderInfo has emitted the extern "C" declaration
-   // of the BLAS sgemm_ routine (from fNeededBlasRoutines). It lets the
-   // standalone Gemm_Call helper skip emitting a second, duplicate declaration.
-   bool fBlasSgemmDeclared = false;
-
    std::unordered_set<std::string> fNeededStdLib = {"vector"};
    std::unordered_set<std::string> fCustomOpHeaders;
 
@@ -307,12 +301,6 @@ public:
    std::string GetFilename() { return fName; }
    const std::string &GetName() const { return fName; }
 
-   void AddBlasRoutines(std::vector<std::string> routines)
-   {
-      for (auto &routine : routines) {
-         fNeededBlasRoutines.insert(routine);
-      }
-   }
    void AddNeededStdLib(std::string libname)
    {
       // if the library is already in the set, insert does nothing, so we don't need to check before inserting
