@@ -160,10 +160,12 @@ public:
 
    // New API for all kind of image formats.
    virtual ESaveImageResult   SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t type) const;
+   virtual Bool_t   FillImageFromPad(TImage *image, TVirtualPad *pad) const;
 
    virtual void     OnPad(TVirtualPad *) {}
 
    virtual Bool_t   IsNative() const { return kFALSE; }
+   virtual Bool_t   IsX11() const { return kFALSE; }
    virtual Bool_t   IsCocoa() const { return kFALSE; }
    virtual TVirtualPS *GetPS() const { return nullptr; }
    virtual Bool_t   IsSupportAlpha() const { return kFALSE; }
