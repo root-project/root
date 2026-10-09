@@ -1076,6 +1076,23 @@ void TASImage::SetImage(const TVectorD &imageData, UInt_t width, TImagePalette *
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create an image from the given X11 window
+/// Can only be used on platforms where X11 is supported
+
+void TASImage::FromX11Window(Window_t win, Int_t x, Int_t y, Int_t width, Int_t height)
+{
+   DestroyImage();
+   DestroyScaledImage();
+
+   if (!InitVisual()) {
+      Warning("FromX11Window", "Visual not initiated");
+      return;
+   }
+
+   fImage = pixmap2asimage(fgVisual, win, x, y, width, height, kAllPlanes, 0, 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Create an image from the given pad, afterwards this image can be
 /// saved in any of the supported image formats.
 
@@ -1096,7 +1113,7 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    DestroyImage();
    DestroyScaledImage();
 
-   if (gROOT->IsBatch() || pad->IsBatch() || pad->IsWeb() ) { // in batch mode
+   if (gROOT->IsBatch() || pad->IsBatch() || pad->IsWeb()) { // in batch mode
       TVirtualPS *psave = gVirtualPS;
       gVirtualPS = new TImageDump();
       gVirtualPS->Open(pad->GetName(), 114); // in memory
@@ -6360,22 +6377,30 @@ void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Creates an image (screenshot) from a RGBA buffer.
+/// Creates an image (screenshot) from a RGBA buffer provided by GL.
 
 void TASImage::FromGLBuffer(UChar_t* buf, UInt_t w, UInt_t h)
+{
+   // swap lines in the buffer provided by GL
+   std::vector<UChar_t> xx(4 * w);
+   for (UInt_t i = 0; i < h / 2; ++i) {
+      memcpy(xx.data(), buf + 4*w*i, 4*w);
+      memcpy(buf + 4*w*i, buf + 4*w*(h-i-1), 4*w);
+      memcpy(buf + 4*w*(h-i-1), xx.data(), 4*w);
+   }
+
+   FromBitmap(buf, w, h);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Creates an image from a RGBA buffer
+
+void TASImage::FromBitmap(const UChar_t *buf, UInt_t width, UInt_t height)
 {
    DestroyImage();
    DestroyScaledImage();
 
-   UChar_t* xx = new UChar_t[4*w];
-   for (UInt_t i = 0; i < h/2; ++i) {
-      memcpy(xx, buf + 4*w*i, 4*w);
-      memcpy(buf + 4*w*i, buf + 4*w*(h-i-1), 4*w);
-      memcpy(buf + 4*w*(h-i-1), xx, 4*w);
-   }
-   delete [] xx;
-
-   fImage = bitmap2asimage(buf, w, h, 0, nullptr);
+   fImage = bitmap2asimage(const_cast<unsigned char *>(buf), width, height, 0, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

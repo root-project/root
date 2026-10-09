@@ -100,11 +100,15 @@ public:
    void  Browse(TBrowser *) override;
    void  SetTitle(const char *title = "") override;                              // *MENU*
    const char *GetTitle() const override;
-   const char *GetIconName() const override {  return GetTitle(); }
+   const char *GetIconName() const override { return GetTitle(); }
+
+   void  FromBitmap(const UChar_t *buf, UInt_t width, UInt_t height) override;
+   void  FromPad(TVirtualPad *pad, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0) override;
+   void  FromX11Window(Window_t win , Int_t x, Int_t y, Int_t width, Int_t height) override;
+   void  FromWindow(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0) override;
+   void  FromGLBuffer(UChar_t *buf, UInt_t width, UInt_t height) override;
 
    // Pad conversions
-   void  FromPad(TVirtualPad *pad, Int_t x = 0, Int_t y = 0,
-                 UInt_t w = 0, UInt_t h = 0) override;
    void  Draw(Option_t *option = "") override;
    void  Paint(Option_t *option = "") override;
    Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
@@ -178,8 +182,6 @@ public:
    void  SetImage(const TArrayD &imageData, UInt_t width, TImagePalette *palette = nullptr) override;
    void  SetImage(const TVectorD &imageData, UInt_t width, TImagePalette *palette = nullptr) override;
    void  SetImage(Pixmap_t pxm, Pixmap_t mask = 0) override;
-   void  FromWindow(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0) override;
-   void  FromGLBuffer(UChar_t* buf, UInt_t w, UInt_t h) override;
 
    // Utilities
    UInt_t     GetWidth() const override;
