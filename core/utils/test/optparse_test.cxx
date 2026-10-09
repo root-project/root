@@ -810,3 +810,32 @@ TEST(OptParse, PostDashDash)
    EXPECT_EQ(opts.GetArgs(), std::vector<std::string>({"first", "second", "third", "-c", "fourth", "-a", "--"}));
    EXPECT_EQ(opts.GetFirstPostDashDashArg(), 2);
 }
+
+TEST(OptParse, FlagAndArgsWithIndex)
+{
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"--foo", "-f"}, ROOT::RCmdLineOpts::EFlagType::kSwitch, "", ROOT::RCmdLineOpts::EFlagOpt::kFlagAllowMultiple);
+   opts.AddFlag({"--with-arg"}, ROOT::RCmdLineOpts::EFlagType::kWithArg);
+
+   const char *args[] = {"--foo", "-f", "first", "second", "--with-arg", "arg", "--",    "third" };
+   opts.Parse(args, std::size(args));
+
+   const auto &flags = opts.GetFlags();
+   ASSERT_EQ(flags.size(), 3);
+   EXPECT_EQ(flags[0].fIndex, 0);
+   EXPECT_EQ(flags[0].fName, "foo");
+   EXPECT_EQ(flags[1].fIndex, 1);
+   // NOTE: aliases always have the original flag's name (meaning the first one)
+   EXPECT_EQ(flags[1].fName, "foo");
+   EXPECT_EQ(flags[2].fIndex, 4);
+   EXPECT_EQ(flags[2].fName, "with-arg");
+
+   const auto argsIdx = opts.GetArgsWithIndices();
+   ASSERT_EQ(argsIdx.size(), 3);
+   EXPECT_EQ(argsIdx[0].first, 2);
+   EXPECT_EQ(argsIdx[0].second, "first");
+   EXPECT_EQ(argsIdx[1].first, 3);
+   EXPECT_EQ(argsIdx[1].second, "second");
+   EXPECT_EQ(argsIdx[2].first, 7);
+   EXPECT_EQ(argsIdx[2].second, "third");
+}

@@ -126,6 +126,8 @@ public:
       std::string fName;
       std::string fValue;
       std::string fHelp;
+      // Index into the given array of arguments
+      std::size_t fIndex = 0;
    };
 
    // Technically these are bit flags, but EFlagFlag is confusing, so let's call them opts.
@@ -143,6 +145,7 @@ private:
    std::vector<RFlag> fFlags;
    /// Positional arguments, in order of appearance
    std::vector<std::string> fArgs;
+   std::vector<std::size_t> fArgIndices;
    /// Index of the first element in fArgs that appeared after `--`.
    std::optional<std::size_t> fFirstPostDashDashArg;
    /// Indices of all args passed to Parse() that were skipped.
@@ -187,8 +190,21 @@ public:
 
    /// Returns all parsing errors
    const std::vector<std::string> &GetErrors() const { return fErrors; }
+
    /// Retrieves all positional arguments
    const std::vector<std::string> &GetArgs() const { return fArgs; }
+
+   /// Retrieves all positional arguments alongside their original position in the given args array.
+   std::vector<std::pair<std::size_t, std::string>> GetArgsWithIndices() const {
+      assert(fArgs.size() == fArgIndices.size());
+      std::vector<std::pair<std::size_t, std::string>> res;
+      res.reserve(fArgs.size());
+      for (std::size_t i = 0; i < fArgs.size(); ++i) {
+         res.emplace_back(fArgIndices[i], fArgs[i]);
+      }
+      return res;
+   }
+
    /// Retrieves all parsed flags
    const std::vector<RFlag> &GetFlags() const { return fFlags; }
 
@@ -460,6 +476,7 @@ public:
             if (forcePositional && !fFirstPostDashDashArg)
                fFirstPostDashDashArg = fArgs.size();
             fArgs.push_back(arg);
+            fArgIndices.push_back(argIndex);
             continue;
          }
 
@@ -560,6 +577,7 @@ public:
             std::string_view nxtArg = (j == argStr.size() - 1) ? nxtArgStr : "";
 
             RCmdLineOpts::RFlag flag;
+            flag.fIndex = argIndexOrig;
             flag.fHelp = exp->fHelp;
             // If the flag is an alias (e.g. long version of a short one), save its name as the aliased one, so we
             // can fetch the value later by using any of the aliases.
