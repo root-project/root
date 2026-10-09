@@ -5,7 +5,9 @@
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Fit/Fitter.h"
+#include "Fit/PoissonLikelihoodFCN.h"
 #include "HFitInterface.h"
+#include "TH1.h"
 #include "TH2.h"
 #include "TF2.h"
 #include "TROOT.h"
@@ -290,6 +292,111 @@ REGISTER_TYPED_TEST_SUITE_P(GradientFittingTest,Sequential);
 #endif
 
 INSTANTIATE_TYPED_TEST_SUITE_P(GradientFitting, GradientFittingTest, TestTypes);
+
+// Linear 1D function p0 + p1 * (x - 0.5), normalized in [0,1] for p0 = 1, with a zero
+// parameter Hessian, or failing to compute it if goodHessian is false
+class LinearFunc : public ROOT::Math::IParamMultiGradFunction {
+public:
+   explicit LinearFunc(bool goodHessian = true) : fGoodHessian(goodHessian) {}
+   void SetParameters(const double *p) override { std::copy(p, p + 2, fParameters); }
+   const double *Parameters() const override { return fParameters; }
+   ROOT::Math::IMultiGenFunction *Clone() const override
+   {
+      auto f = new LinearFunc(fGoodHessian);
+      f->SetParameters(fParameters);
+      return f;
+   }
+   unsigned int NDim() const override { return 1; }
+   unsigned int NPar() const override { return 2; }
+   bool HasParameterHessian() const override { return true; }
+   bool ParameterHessian(const double *, const double *, double *h) const override
+   {
+      std::fill(h, h + 3, 0.);
+      return fGoodHessian;
+   }
+
+private:
+   double DoEvalPar(const double *x, const double *p) const override
+   {
+      if (p == nullptr)
+         p = fParameters;
+      return p[0] + p[1] * (x[0] - 0.5);
+   }
+   double DoParameterDerivative(const double *x, const double *, unsigned int ipar) const override
+   {
+      return ipar == 0 ? 1. : x[0] - 0.5;
+   }
+
+   double fParameters[2] = {1., 0.};
+   bool fGoodHessian = true;
+};
+
+// Test that FitMethodFunction::Hessian() reports a failure of the model function Hessian
+TEST(GradientFitting, HessianFailure)
+{
+   TH1D h("hHessianFailure", "", 10, 0., 1.);
+   for (int i = 1; i <= 10; ++i)
+      h.SetBinContent(i, 10.);
+   ROOT::Fit::BinData data;
+   ROOT::Fit::FillData(data, &h);
+   LinearFunc func(false);
+   ROOT::Fit::PoissonLLGradFunction fcn(data, func);
+   ASSERT_TRUE(fcn.HasHessian());
+   const double params[2] = {10., 0.};
+   double hess[3];
+   EXPECT_FALSE(fcn.Hessian(params, hess));
+}
+
+// Test that the parameter errors of fits with and without gradient agree when the full
+// Hessian is not available (bin integral and unbinned fits)
+TEST(GradientFitting, ErrorsWithoutFullHessian)
+{
+   TRandom rng(1);
+   ROOT::Fit::DataOptions opt;
+   opt.fIntegral = true;
+   ROOT::Fit::BinData binData(opt);
+   ROOT::Fit::UnBinData unbinData(5000);
+   TH1D h("hGradientFitting", "", 20, 0., 1.);
+   for (int i = 0; i < 5000; ++i) {
+      double x = rng.Uniform();
+      // accept-reject sampling of the pdf 1 + 0.8 * (x - 0.5)
+      while (rng.Uniform(1.4) > 1. + 0.8 * (x - 0.5))
+         x = rng.Uniform();
+      h.Fill(x);
+      unbinData.Add(x);
+   }
+   ROOT::Fit::FillData(binData, &h);
+   ASSERT_TRUE(binData.HasBinEdges());
+
+   enum class EFit {
+      kChi2,
+      kPoisson,
+      kUnbinned
+   };
+   auto parErrors = [&](EFit fit, bool useGradient) {
+      ROOT::Fit::Fitter fitter;
+      fitter.Config().SetMinimizer("Minuit2");
+      fitter.SetFunction(LinearFunc(), useGradient);
+      bool ok = false;
+      if (fit == EFit::kUnbinned) {
+         fitter.Config().ParSettings(0).Fix();
+         ok = fitter.LikelihoodFit(unbinData);
+      } else {
+         fitter.Config().ParSettings(0).SetValue(250.);
+         ok = fit == EFit::kChi2 ? fitter.Fit(binData) : fitter.LikelihoodFit(binData);
+      }
+      EXPECT_TRUE(ok);
+      return fitter.Result().Errors();
+   };
+
+   for (EFit fit : {EFit::kChi2, EFit::kPoisson, EFit::kUnbinned}) {
+      const auto expected = parErrors(fit, false);
+      const auto errors = parErrors(fit, true);
+      for (unsigned int i = 0; i < 2; ++i) {
+         EXPECT_NEAR(errors[i], expected[i], 1e-2 * expected[i]) << "fit type " << int(fit) << ", parameter " << i;
+      }
+   }
+}
 
 int main(int argc, char** argv) {
 
