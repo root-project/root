@@ -17,56 +17,10 @@
 #include "RooAbsPdf.h"
 #include "RooNaNPacker.h"
 
-#include <Minuit2/Minuit2Minimizer.h>
-#include <Minuit2/FCNBase.h>
-
 #include <iomanip> // std::setprecision
 
 namespace RooFit {
 namespace TestStatistics {
-
-namespace {
-
-class MinuitGradFunctor : public ROOT::Minuit2::FCNBase {
-public:
-   MinuitGradFunctor(MinuitFcnGrad const &fcn, double errorLevel) : _fcn{fcn}, _up{errorLevel} {}
-
-   double operator()(std::vector<double> const &v) const override { return _fcn(v.data()); }
-   double Up() const override { return _up; }
-   void SetErrorDef(double val) override { _up = val; }
-   bool HasGradient() const override { return true; }
-   std::vector<double> Gradient(std::vector<double> const &params) const override
-   {
-      std::vector<double> grad(_fcn.getNDim());
-      _fcn.Gradient(params.data(), grad.data());
-      return grad;
-   }
-   // Unhide the 4-argument overload from FCNBase, which forwards to Gradient().
-   // Otherwise GCC's -Woverloaded-virtual (enabled with -Werror on some CI
-   // targets) complains because we only override the 5-argument overload here.
-   using FCNBase::GradientWithPrevResult;
-   std::vector<double> GradientWithPrevResult(std::vector<double> const &v, double *previous_grad, double *previous_g2,
-                                              double *previous_gstep, double fValAtV) const override
-   {
-      std::vector<double> output(v.size());
-      _fcn.GradientWithPrevResult(v.data(), output.data(), previous_grad, previous_g2, previous_gstep, fValAtV);
-      return output;
-   }
-   ROOT::Minuit2::GradientParameterSpace gradParameterSpace() const override
-   {
-      return _fcn.returnsInMinuit2ParameterSpace() ? ROOT::Minuit2::GradientParameterSpace::Internal
-                                                   : ROOT::Minuit2::GradientParameterSpace::External;
-   }
-
-   // TODO: Implement this
-   bool SecondDerivativeAlwaysVanishes(unsigned int /*i*/, unsigned int /*j*/) const override { return false; }
-
-private:
-   MinuitFcnGrad const &_fcn;
-   double _up;
-};
-
-} // namespace
 
 /** \class MinuitFcnGrad
  *
@@ -77,8 +31,8 @@ private:
  * calculator classes to evaluate likelihood and likelihood gradient values and returns them to Minuit. The Wrapper
  * objects do the actual calculations. These are constructed inside the MinuitFcnGrad constructor using the RooAbsL
  * likelihood passed in to the constructor, usually directly from RooMinimizer, with which this class is intimately
- * coupled, being a RooAbsMinimizerFcn implementation. MinuitFcnGrad inherits from ROOT::Math::IMultiGradFunction as
- * well, which allows it to be used as the FCN and GRAD parameters Minuit expects.
+ * coupled, being a RooAbsMinimizerFcn implementation. Like all RooAbsMinimizerFcn classes, MinuitFcnGrad implements
+ * the ROOT::Minuit2::FCNBase interface, which allows it to be used as the FCN and GRAD parameters Minuit expects.
  *
  * \note The class is not intended for use by end-users. We recommend to either use RooMinimizer with a RooAbsL derived
  * likelihood object, or to use a higher level entry point like RooAbsPdf::fitTo() or RooAbsPdf::createNLL().
@@ -283,10 +237,31 @@ bool MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &param
    return returnee;
 }
 
-void MinuitFcnGrad::initMinimizer(ROOT::Math::Minimizer &minim, RooMinimizer * /*context*/)
+std::vector<double> MinuitFcnGrad::Gradient(std::vector<double> const &x) const
 {
-   auto &minuit = dynamic_cast<ROOT::Minuit2::Minuit2Minimizer &>(minim);
-   minuit.SetFCN(getNDim(), std::make_unique<MinuitGradFunctor>(*this, minim.ErrorDef()));
+   std::vector<double> grad(getNDim());
+   Gradient(x.data(), grad.data());
+   return grad;
+}
+
+std::vector<double> MinuitFcnGrad::GradientWithPrevResult(std::vector<double> const &x, double *previous_grad,
+                                                          double *previous_g2, double *previous_gstep,
+                                                          double fValAtX) const
+{
+   std::vector<double> grad(getNDim());
+   GradientWithPrevResult(x.data(), grad.data(), previous_grad, previous_g2, previous_gstep, fValAtX);
+   return grad;
+}
+
+ROOT::Minuit2::GradientParameterSpace MinuitFcnGrad::gradParameterSpace() const
+{
+   return returnsInMinuit2ParameterSpace() ? ROOT::Minuit2::GradientParameterSpace::Internal
+                                           : ROOT::Minuit2::GradientParameterSpace::External;
+}
+
+void MinuitFcnGrad::initMinimizer(ROOT::Math::Minimizer & /*minim*/, RooMinimizer * /*context*/)
+{
+   throw std::logic_error("MinuitFcnGrad can only be used with Minuit2, which RooMinimizer uses directly");
 }
 
 } // namespace TestStatistics

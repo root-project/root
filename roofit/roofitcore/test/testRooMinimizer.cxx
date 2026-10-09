@@ -159,7 +159,7 @@ INSTANTIATE_TEST_SUITE_P(RooMinimizer, EvalBackendParametrizedTest, testing::Val
 // parameter is fixed after the RooMinimizer was constructed. The latter case
 // is a regression test for the translation between Minuit-internal parameter
 // indices (which exclude fixed parameters) and the external indices that
-// RooMinimizerFcn::secondDerivativeAlwaysVanishes() is defined in.
+// RooMinimizerFcn::SecondDerivativeAlwaysVanishes() is defined in.
 TEST(RooMinimizer, SecondDerivativeAlwaysVanishesHesse)
 {
    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING};

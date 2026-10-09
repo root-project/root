@@ -49,12 +49,23 @@ public:
 
    RooArgSet freezeDisconnectedParameters() const override;
 
-   bool secondDerivativeAlwaysVanishes(unsigned int i, unsigned int j) const;
+   /// \name ROOT::Minuit2::FCNBase interface
+   /// @{
+   double operator()(std::vector<double> const &x) const override { return (*this)(x.data()); }
+   bool HasGradient() const override { return _useGradient; }
+   std::vector<double> Gradient(std::vector<double> const &x) const override;
+   bool HasHessian() const override { return _useHessian; }
+   std::vector<double> Hessian(std::vector<double> const &x) const override;
+   bool SecondDerivativeAlwaysVanishes(unsigned int i, unsigned int j) const override;
+   /// @}
 
 private:
    void buildSecondDerivMask() const;
 
    RooAbsReal *_funct = nullptr;
+   bool _useGradient = false; ///< Whether to provide the analytic gradient to the minimizer.
+   bool _useHessian = false;  ///< Whether to provide the analytic Hessian to the minimizer.
+   /// Adapter to ROOT::Math::Minimizer, only used for minimizers other than Minuit2.
    std::unique_ptr<ROOT::Math::IBaseFunctionMultiDim> _multiGenFcn;
    mutable std::vector<double> _gradientOutput;
    mutable std::vector<double> _hessianOutput;
