@@ -14,12 +14,14 @@ if(NOT WIN32)
     src/TestStatistics/LikelihoodGradientJob.cxx
     src/TestStatistics/LikelihoodJob.cxx
     src/TestStatistics/MinuitFcnGrad.cxx
+    src/TestStatistics/NumericalDerivator.cxx
   )
   set(RooFitMPTestStatisticsHeaders
     src/TestStatistics/LikelihoodGradientJob.h
     src/TestStatistics/LikelihoodSerial.h
     src/TestStatistics/MinuitFcnGrad.h
     src/TestStatistics/LikelihoodJob.h
+    src/TestStatistics/NumericalDerivator.h
   )
   list(APPEND EXTRA_LIBRARIES RooFitMultiProcess)
   #FIXME: The ProcessTimer.h exposes json in its interface:

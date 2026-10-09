@@ -82,15 +82,6 @@ public:
    /// set the function implementing Hessian computation
    void SetHessianFunction(std::function<bool(std::span<const double>, double *)> hfunc) override;
 
-   /// Set a predicate advertising which mixed second derivatives of the
-   /// minimized function are identically zero, so that MnHesse can skip the
-   /// corresponding finite-difference evaluations. The predicate must
-   /// fulfill the contract documented for
-   /// FCNBase::SecondDerivativeAlwaysVanishes(); in particular, the indices
-   /// refer to the full (external) parameter space. Like SetHessianFunction,
-   /// this must be called after SetFunction.
-   void SetSecondDerivativeAlwaysVanishesFunc(std::function<bool(unsigned int, unsigned int)> func);
-
    /// set free variable
    bool SetVariable(unsigned int ivar, const std::string &name, double val, double step) override;
 
@@ -287,12 +278,6 @@ public:
 
    /// return the minimizer state (containing values, step size , etc..)
    const ROOT::Minuit2::MnUserParameterState &State() { return fState; }
-
-   /// To set the function directly to a Minuit 2 function.
-   void SetFCN(unsigned int nDim, std::unique_ptr<ROOT::Minuit2::FCNBase> fcn);
-
-   const ROOT::Minuit2::FCNBase *GetFCN() const { return fMinuitFCN.get(); }
-   ROOT::Minuit2::FCNBase *GetFCN() { return fMinuitFCN.get(); }
 
 protected:
    // protected function for accessing the internal Minuit2 object. Needed for derived classes
