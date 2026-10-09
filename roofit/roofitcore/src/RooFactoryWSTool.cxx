@@ -1873,7 +1873,14 @@ const char* RooFactoryWSTool::asSTRING(const char* arg)
 
 Int_t RooFactoryWSTool::asINT(const char* arg)
 {
-  return atoi(arg) ;
+   // This is also the conversion used for bool constructor arguments, where
+   // atoi() would silently turn the spelled-out literals into zero.
+   const std::string s{arg};
+   if (s == "true")
+      return 1;
+   if (s == "false")
+      return 0;
+   return atoi(arg);
 }
 
 

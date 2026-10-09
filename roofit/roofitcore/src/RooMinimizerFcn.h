@@ -22,6 +22,8 @@
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 
+#include <Math/Minimizer.h>
+
 #include <fstream>
 #include <mutex>
 #include <vector>
@@ -36,7 +38,10 @@ class RooMinimizerFcn : public RooAbsMinimizerFcn {
 public:
    RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context);
 
-   void initMinimizer(ROOT::Math::Minimizer &, RooMinimizer *context) override;
+   /// Set this function on a ROOT::Math::Minimizer. Only used for minimizers
+   /// other than Minuit2, which RooMinimizer drives directly via the
+   /// ROOT::Minuit2::FCNBase interface.
+   void initMinimizer(ROOT::Math::Minimizer &minim) const;
 
    std::string getFunctionName() const override;
    std::string getFunctionTitle() const override;
@@ -45,16 +50,26 @@ public:
 
    double operator()(const double *x) const;
    void evaluateGradient(const double *x, double *out) const;
-   bool evaluateHessian(std::span<const double> x, double *out) const;
 
    RooArgSet freezeDisconnectedParameters() const override;
 
-   bool secondDerivativeAlwaysVanishes(unsigned int i, unsigned int j) const;
+   /// \name ROOT::Minuit2::FCNBase interface
+   /// @{
+   double operator()(std::vector<double> const &x) const override { return (*this)(x.data()); }
+   bool HasGradient() const override { return _useGradient; }
+   std::vector<double> Gradient(std::vector<double> const &x) const override;
+   bool HasHessian() const override { return _useHessian; }
+   std::vector<double> Hessian(std::vector<double> const &x) const override;
+   bool SecondDerivativeAlwaysVanishes(unsigned int i, unsigned int j) const override;
+   /// @}
 
 private:
    void buildSecondDerivMask() const;
 
    RooAbsReal *_funct = nullptr;
+   bool _useGradient = false; ///< Whether to provide the analytic gradient to the minimizer.
+   bool _useHessian = false;  ///< Whether to provide the analytic Hessian to the minimizer.
+   /// Adapter to ROOT::Math::Minimizer, only used for minimizers other than Minuit2.
    std::unique_ptr<ROOT::Math::IBaseFunctionMultiDim> _multiGenFcn;
    mutable std::vector<double> _gradientOutput;
    mutable std::vector<double> _hessianOutput;

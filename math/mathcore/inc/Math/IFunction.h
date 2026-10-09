@@ -33,6 +33,7 @@
 
 #include "Math/IFunctionfwd.h"
 
+#include <stdexcept>
 
 namespace ROOT {
    namespace Math {
@@ -111,6 +112,15 @@ namespace ROOT {
             Gradient(x, df);
          }
 
+         // Indicate whether this class supports second derivative (Hessian) calculations,
+         // i.e., if the Hessian() method is implemented.
+         virtual bool HasHessian() const { return false; }
+
+         /// Evaluate all second derivatives (the Hessian matrix) at a point x,
+         /// filling hess as a row-major NDim() * NDim() array.
+         /// Return false if the second derivatives are not implemented (see HasHessian()).
+         virtual bool Hessian(const T * /*x*/, T * /*hess*/) const { return false; }
+
          /// Return the partial derivative with respect to the passed coordinate.
          T Derivative(const T *x, unsigned int icoord = 0) const { return DoDerivative(x, icoord); }
 
@@ -178,6 +188,10 @@ namespace ROOT {
          // if it inherits from ROOT::Math::IGradientFunctionOneDim.
          virtual bool HasGradient() const { return false; }
 
+         // Indicate whether this class supports second derivative calculations,
+         // i.e., if the SecondDerivative() method is implemented.
+         virtual bool HasHessian() const { return false; }
+
          /// Return the derivative of the function at a point x
          /// Use the private method DoDerivative
          double Derivative(double x) const { return DoDerivative(x); }
@@ -187,6 +201,21 @@ namespace ROOT {
 
          /// Compatibility method with multi-dimensional interface for Gradient.
          void Gradient(const double *x, double *g) const { g[0] = DoDerivative(*x); }
+
+         /// Return the second derivative of the function at a point x.
+         /// Check HasHessian() to see whether it is implemented.
+         double SecondDerivative(double x) const { return DoSecondDerivative(x); }
+
+         /// Compatibility method with multi-dimensional interface for the Hessian.
+         /// Return false if the second derivative is not implemented (see HasHessian()).
+         bool Hessian(const double *x, double *hess) const
+         {
+            if (!HasHessian()) {
+               return false;
+            }
+            hess[0] = DoSecondDerivative(*x);
+            return true;
+         }
 
          /// Optimized method to evaluate at the same time the function value and derivative at a point x.
          /// Often both value and derivatives are needed and it is often more efficient to compute them at the same time.
@@ -208,6 +237,13 @@ namespace ROOT {
 
          /// Function to evaluate the derivative with respect each coordinate. To be implemented by the derived class.
          virtual double  DoDerivative(double) const { return 0.; }
+
+         /// Function to evaluate the second derivative. To be implemented by the derived class (see HasHessian()).
+         virtual double DoSecondDerivative(double) const
+         {
+            throw std::runtime_error(
+               "The second derivative evaluation is not implemented for this function (see HasHessian())");
+         }
       };
 
 

@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <memory>
 #include <functional>
+#include <stdexcept>
 #include <type_traits>
 #include <vector>
 
@@ -202,10 +203,13 @@ public:
     * @param f  : function object computing the function value
     * @param dim : number of function dimension
     * @param g   : function object computing the function gradient
+    * @param h   : optional function object computing the function Hessian,
+    *              filling its second argument as a row-major dim * dim array
     */
-   GradFunctor(std::function<double(double const *)> const&f, unsigned int dim,
-               std::function<void(double const *, double *)> const& g)
-      : fDim{dim}, fFunc{f}, fGradFunc{g}
+   GradFunctor(std::function<double(double const *)> const &f, unsigned int dim,
+               std::function<void(double const *, double *)> const &g,
+               std::function<void(double const *, double *)> const &h = nullptr)
+      : fDim{dim}, fFunc{f}, fGradFunc{g}, fHessFunc{h}
    {}
 
    // Clone of the function handler (use copy-ctor).
@@ -222,6 +226,17 @@ public:
          return;
       }
       fGradFunc(x, g);
+   }
+
+   bool HasHessian() const override { return bool(fHessFunc); }
+
+   bool Hessian(const double *x, double *hess) const override
+   {
+      if (!fHessFunc) {
+         return false;
+      }
+      fHessFunc(x, hess);
+      return true;
    }
 
 private :
@@ -246,6 +261,7 @@ private :
    std::function<double(const double *)> fFunc;
    std::function<double(double const *, unsigned int)> fDerivFunc;
    std::function<void(const double *, double*)> fGradFunc;
+   std::function<void(const double *, double *)> fHessFunc;
 };
 
 
@@ -285,29 +301,42 @@ public:
        the function evaluation and the other for the derivative.
        The member functions must take a double as argument and return a double
     */
-   template <class PtrObj, typename MemFn, typename GradMemFn>
-   GradFunctor1D(const PtrObj& p, MemFn memFn, GradMemFn gradFn)
+   template <class PtrObj, typename MemFn, typename GradMemFn,
+             std::enable_if_t<std::is_member_pointer<MemFn>::value, bool> = true>
+   GradFunctor1D(const PtrObj &p, MemFn memFn, GradMemFn gradFn)
       : fFunc{std::bind(memFn, p, std::placeholders::_1)}, fDerivFunc{std::bind(gradFn, p, std::placeholders::_1)}
    {}
 
-
    /// Specialized constructor from 2 function objects implementing double
    /// operator()(double x). The first one for the function evaluation and the
-   /// second one implementing the function derivative.
-   GradFunctor1D(std::function<double(double)> const& f, std::function<double(double)> const& g)
-      : fFunc{f}, fDerivFunc{g}
+   /// second one implementing the function derivative. Optionally, a third
+   /// function object implementing the second derivative can be passed.
+   GradFunctor1D(std::function<double(double)> const &f, std::function<double(double)> const &g,
+                 std::function<double(double)> const &g2 = nullptr)
+      : fFunc{f}, fDerivFunc{g}, fSecondDerivFunc{g2}
    {}
 
    // clone of the function handler (use copy-ctor)
    GradFunctor1D * Clone() const override { return new GradFunctor1D(*this); }
 
+   bool HasHessian() const override { return bool(fSecondDerivFunc); }
+
 private :
 
    inline double DoEval (double x) const override { return fFunc(x); }
    inline double DoDerivative (double x) const override { return fDerivFunc(x); }
+   inline double DoSecondDerivative(double x) const override
+   {
+      if (!fSecondDerivFunc) {
+         throw std::runtime_error(
+            "The second derivative evaluation is not implemented for this function (see HasHessian())");
+      }
+      return fSecondDerivFunc(x);
+   }
 
    std::function<double(double)> fFunc;
    std::function<double(double)> fDerivFunc;
+   std::function<double(double)> fSecondDerivFunc;
 };
 
 
