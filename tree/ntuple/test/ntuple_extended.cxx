@@ -181,7 +181,9 @@ TEST(RNTuple, LargePages)
          writer.reset();
       }
 
-      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      RNTupleReadOptions opts;
+      opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
       const auto &desc = reader->GetDescriptor();
       const auto rndColId = desc.FindPhysicalColumnId(desc.FindFieldId("rnd"), 0, 0);
       const auto &clusterDesc = *desc.GetActiveClusterIterable().begin();

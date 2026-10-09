@@ -1052,7 +1052,9 @@ TEST_F(RPageSourceS3Wire, RoundTripManyPagesPerCluster)
       }
    }
 
-   auto reader = ROOT::RNTupleReader::Open("manypages", uri);
+   ROOT::RNTupleReadOptions opts;
+   opts.SetMetadataMode(ROOT::RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = ROOT::RNTupleReader::Open("manypages", uri, opts);
    EXPECT_EQ(1000u, reader->GetNEntries());
 
    // Guard the premise of the test: one cluster, many pages per column.

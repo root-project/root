@@ -826,7 +826,9 @@ static bool VerifyPageCompression(const std::string_view fileName, std::uint32_t
    // Check that the advertised compression is correct
    bool ok = true;
    {
-      auto reader = RNTupleReader::Open("ntuple", fileName);
+      RNTupleReadOptions opts;
+      opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+      auto reader = RNTupleReader::Open("ntuple", fileName, opts);
       auto compSettings = *reader->GetDescriptor().GetClusterDescriptor(0).GetColumnRange(0).GetCompressionSettings();
       if (compSettings != expectedComp) {
          std::cerr << "Advertised compression is wrong: " << compSettings << " instead of " << expectedComp << "\n";
@@ -837,9 +839,6 @@ static bool VerifyPageCompression(const std::string_view fileName, std::uint32_t
    // Check that the actual compression is correct
    auto source = RPageSource::Create("ntuple", fileName);
    source->Attach();
-   auto descriptor = source->GetSharedDescriptorGuard();
-   const auto &columnDesc = descriptor->GetColumnDescriptor(0);
-   const auto colElement = ROOT::Internal::RColumnElementBase::Generate(columnDesc.GetType());
    RPageStorage::RSealedPage sealedPage;
    source->LoadSealedPage(0, {0, 0}, sealedPage);
    auto buffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());

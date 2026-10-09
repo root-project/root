@@ -282,7 +282,10 @@ void ROOT::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output
       output << std::flush;
       break;
    }
-   case ENTupleInfo::kStorageDetails: fSource->GetSharedDescriptorGuard()->PrintInfo(output); break;
+   case ENTupleInfo::kStorageDetails:
+      fSource->LoadAllPageLists();
+      fSource->GetSharedDescriptorGuard()->PrintInfo(output);
+      break;
    case ENTupleInfo::kMetrics: fMetrics.Print(output); break;
    default:
       // Unhandled case, internal error

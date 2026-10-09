@@ -24,6 +24,7 @@
 #include <array>
 #include <cstdio>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <utility>
@@ -139,6 +140,8 @@ private:
    RNTupleDescriptorBuilder fDescriptorBuilder;
    /// Tracks the last read offset for seek distance calculation
    std::uint64_t fLastOffset = 0;
+   /// Protects the raw file, the reader, and fLastOffset
+   std::mutex fReaderLock;
 
    /// File-specific I/O performance counters
    struct RFileCounters {
@@ -159,6 +162,9 @@ private:
    /// sending them to RRawFile::ReadV().
    std::unique_ptr<ROOT::Internal::RCluster>
    PrepareSingleCluster(const ROOT::Internal::RCluster::RKey &clusterKey, std::vector<RRawFile::RIOVec> &readRequests);
+
+   // Helper to calculate the distance between fLastOffset and offset and to update the skip counter accordingly
+   void UpdateSkipCounter(std::uint64_t offset);
 
 protected:
    void LoadStructureImpl() final;

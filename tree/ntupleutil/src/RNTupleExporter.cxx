@@ -118,13 +118,15 @@ RNTupleExporter::ExportPages(ROOT::Internal::RPageSource &source, const RPagesOp
 
    // make sure the source is attached
    source.Attach();
+   source.LoadAllPageLists();
 
    auto desc = source.GetSharedDescriptorGuard();
    ROOT::Internal::RClusterPool clusterPool{source};
 
    // Collect column info
    std::vector<RColumnExportInfo> columnInfos;
-   const RAddColumnsResult addColRes = AddColumnsFromField(columnInfos, desc.GetRef(), desc->GetFieldZero(), options);
+   const RAddColumnsResult addColRes =
+      AddColumnsFromField(columnInfos, desc.GetConstRef(), desc->GetFieldZero(), options);
 
    // Collect ColumnSet for the cluster pool query
    ROOT::Internal::RCluster::ColumnSet_t columnSet;
@@ -133,7 +135,7 @@ RNTupleExporter::ExportPages(ROOT::Internal::RPageSource &source, const RPagesOp
       columnSet.emplace(colInfo.fColDesc->GetPhysicalId());
    }
 
-   const auto nPages = CountPages(desc.GetRef(), columnInfos);
+   const auto nPages = CountPages(desc.GetConstRef(), columnInfos);
 
    const bool showProgress = (options.fFlags & RPagesOptions::kShowProgressBar) != 0;
    res.fExportedFileNames.reserve(nPages);

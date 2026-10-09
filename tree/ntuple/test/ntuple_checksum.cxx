@@ -61,7 +61,9 @@ TEST(RNTupleChecksum, VerifyOnLoad)
    ROOT::DescriptorId_t pyColId;
    ROOT::DescriptorId_t pzColId;
    ROOT::DescriptorId_t clusterId;
-   auto pageSource = RPageSource::Create("ntpl", fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto pageSource = RPageSource::Create("ntpl", fileGuard.GetPath(), opts);
    pageSource->Attach();
    {
       auto descGuard = pageSource->GetSharedDescriptorGuard();
@@ -97,7 +99,9 @@ TEST(RNTupleChecksum, OmitPageChecksum)
    writer->Fill();
    writer.reset();
 
-   auto pageSource = RPageSource::Create("ntpl", fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto pageSource = RPageSource::Create("ntpl", fileGuard.GetPath(), opts);
    pageSource->Attach();
    auto descGuard = pageSource->GetSharedDescriptorGuard();
    const auto pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0, 0);

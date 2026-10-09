@@ -77,7 +77,6 @@ TEST(RNTuple, Limits_ManyClusters)
 
    EXPECT_EQ(reader->GetNEntries(), NumClusters);
    EXPECT_EQ(descriptor.GetNClusters(), NumClusters);
-   EXPECT_EQ(descriptor.GetNActiveClusters(), NumClusters);
 
    auto id = model.GetDefaultEntry().GetPtr<int>("id");
    for (int i = 0; i < NumClusters; i++) {
@@ -147,7 +146,9 @@ TEST(RNTuple, Limits_ManyPages)
       }
    }
 
-   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath(), opts);
    const auto &descriptor = reader->GetDescriptor();
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("id");
@@ -189,7 +190,9 @@ TEST(RNTuple, Limits_ManyPagesOneEntry)
       writer->Fill();
    }
 
-   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath(), opts);
    const auto &descriptor = reader->GetDescriptor();
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("ids");

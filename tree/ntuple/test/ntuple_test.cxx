@@ -32,7 +32,9 @@ void CreateCorruptedRNTuple(const std::string &uri)
    writer.reset();
 
    // Load sealed pages to memory
-   auto pageSource = RPageSource::Create("ntpl", uri);
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto pageSource = RPageSource::Create("ntpl", uri, opts);
    pageSource->Attach();
    auto descGuard = pageSource->GetSharedDescriptorGuard();
    const auto pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0, 0);

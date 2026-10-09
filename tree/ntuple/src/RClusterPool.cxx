@@ -205,7 +205,7 @@ ROOT::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId, const R
 
       auto cid = next;
       auto descriptorGuard = fPageSource.FindNextClusterId(cid, next);
-      if (next != ROOT::kInvalidNTupleIndex) {
+      if (next != ROOT::kInvalidDescriptorId) {
          if (!fPageSource.GetEntryRange().IntersectsWith(descriptorGuard->GetClusterDescriptor(next)))
             next = ROOT::kInvalidDescriptorId;
       }

@@ -275,7 +275,9 @@ TEST_F(RPageStorageDaos, DisabledSamePageMerging)
    writer->Fill();
    writer.reset();
 
-   auto reader = RNTupleReader::Open("ntpl", daosUri);
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("ntpl", daosUri, opts);
    EXPECT_EQ(1u, reader->GetNEntries());
 
    const auto &desc = reader->GetDescriptor();
@@ -324,6 +326,7 @@ TEST_F(RPageStorageDaos, Checksum)
    ROOT::DescriptorId_t clusterId;
    auto pageSource = RPageSource::Create("ntpl", daosUri);
    pageSource->Attach();
+   pageSource->LoadAllPageLists();
    {
       auto descGuard = pageSource->GetSharedDescriptorGuard();
       pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0, 0);
