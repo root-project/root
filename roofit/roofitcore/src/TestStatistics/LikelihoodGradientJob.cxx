@@ -169,9 +169,8 @@ void LikelihoodGradientJob::update_state()
       auto gradient_message =
          get_manager()->messenger().receive_from_master_on_worker<RooFit::MultiProcess::Message>(&more);
       assert(more);
-      auto gradient_message_begin = gradient_message.data<ROOT::Minuit2::DerivatorElement>();
-      auto gradient_message_end =
-         gradient_message_begin + gradient_message.size() / sizeof(ROOT::Minuit2::DerivatorElement);
+      auto gradient_message_begin = gradient_message.data<DerivatorElement>();
+      auto gradient_message_end = gradient_message_begin + gradient_message.size() / sizeof(DerivatorElement);
       std::copy(gradient_message_begin, gradient_message_end, grad_.begin());
 
       auto minuit_internal_x_message =

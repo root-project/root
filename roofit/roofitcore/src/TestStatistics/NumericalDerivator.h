@@ -1,4 +1,3 @@
-// @(#)root/mathcore:$Id$
 // Authors: L. Moneta, J.T. Offermann, E.G.P. Bos    2013-2018
 //
 /**********************************************************************
@@ -13,10 +12,13 @@
  *      Authors: L. Moneta, J. T. Offermann
  *  Modified version created on: Sep 27, 2017
  *      Author: E. G. P. Bos
+ *
+ *  Lived in Minuit2 as ROOT::Minuit2::NumericalDerivator until it was moved
+ *  to RooFit, its only user.
  */
 
-#ifndef ROOT_Minuit2_NumericalDerivator
-#define ROOT_Minuit2_NumericalDerivator
+#ifndef ROOT_ROOFIT_TESTSTATISTICS_NumericalDerivator
+#define ROOT_ROOFIT_TESTSTATISTICS_NumericalDerivator
 
 #include "Fit/ParameterSettings.h"
 #include "Minuit2/MnParameterTransformation.h"
@@ -27,8 +29,8 @@
 
 #include <vector>
 
-namespace ROOT {
-namespace Minuit2 {
+namespace RooFit {
+namespace TestStatistics {
 
 // Holds all necessary derivatives and associated numbers (per parameter) used in the NumericalDerivator class.
 struct DerivatorElement {
@@ -44,7 +46,7 @@ public:
    NumericalDerivator(double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level,
                       bool always_exactly_mimic_minuit2 = true);
 
-   void SetupDifferentiate(unsigned int nDim, const FCNBase *function, const double *cx,
+   void SetupDifferentiate(unsigned int nDim, const ROOT::Minuit2::FCNBase *function, const double *cx,
                            std::span<const ROOT::Fit::ParameterSettings> parameters);
 
    /// Pre-seed the cache of the function value at the central point, so that a
@@ -58,17 +60,18 @@ public:
       fVal = fval;
    }
 
-   std::vector<DerivatorElement> Differentiate(unsigned int nDim, const FCNBase *function, const double *x,
+   std::vector<DerivatorElement> Differentiate(unsigned int nDim, const ROOT::Minuit2::FCNBase *function,
+                                               const double *x,
                                                std::span<const ROOT::Fit::ParameterSettings> parameters,
                                                std::span<const DerivatorElement> previous_gradient);
 
-   DerivatorElement PartialDerivative(unsigned int nDim, const FCNBase *function, const double *x,
+   DerivatorElement PartialDerivative(unsigned int nDim, const ROOT::Minuit2::FCNBase *function, const double *x,
                                       std::span<const ROOT::Fit::ParameterSettings> parameters,
                                       unsigned int i_component, DerivatorElement previous);
-   DerivatorElement FastPartialDerivative(const FCNBase *function,
+   DerivatorElement FastPartialDerivative(const ROOT::Minuit2::FCNBase *function,
                                           std::span<const ROOT::Fit::ParameterSettings> parameters,
                                           unsigned int i_component, const DerivatorElement &previous);
-   DerivatorElement operator()(unsigned int nDim, const FCNBase *function, const double *x,
+   DerivatorElement operator()(unsigned int nDim, const ROOT::Minuit2::FCNBase *function, const double *x,
                                std::span<const ROOT::Fit::ParameterSettings> parameters, unsigned int i_component,
                                const DerivatorElement &previous);
 
@@ -114,7 +117,7 @@ private:
 
 std::ostream &operator<<(std::ostream &out, const DerivatorElement &value);
 
-} // namespace Minuit2
-} // namespace ROOT
+} // namespace TestStatistics
+} // namespace RooFit
 
-#endif // ROOT_Minuit2_NumericalDerivator
+#endif // ROOT_ROOFIT_TESTSTATISTICS_NumericalDerivator
