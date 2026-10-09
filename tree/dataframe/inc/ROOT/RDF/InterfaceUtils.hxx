@@ -402,12 +402,13 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
 template <typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &colNames, const std::vector<const std::type_info *> &colTypeIDs,
-            const std::shared_ptr<ROOT::RVecF> &location, std::shared_ptr<PrevNodeType> prevNode,
-            const RColumnRegister &colRegister)
+            const std::shared_ptr<ROOT::RVecF> &location, const std::vector<std::size_t> &vecSizes, float vecPadding,
+            std::shared_ptr<PrevNodeType> prevNode, const RColumnRegister &colRegister)
 {
    using Helper_t = ROOT::Internal::RDF::CustomLoaderHelper;
    using Action_t = ROOT::Internal::RDF::RActionCustomLoader<Helper_t, PrevNodeType>;
-   return std::make_unique<Action_t>(Helper_t(location, colTypeIDs), colNames, colTypeIDs, prevNode, colRegister);
+   return std::make_unique<Action_t>(Helper_t(location, colTypeIDs, vecSizes, vecPadding), colNames, colTypeIDs,
+                                     prevNode, colRegister);
 }
 
 // Book with custom helper type
