@@ -97,12 +97,13 @@ class FactoryTestParams {
 public:
    FactoryTestParams() = default;
    FactoryTestParams(std::string const &name, WorkspaceSetupFunc setupWorkspace, CreateNLLFunc createNLL,
-                     double fitResultTolerance, bool randomizeParameters)
+                     double fitResultTolerance, bool randomizeParameters, std::size_t nEvents = 100)
       : _name{name},
         _setupWorkspace{setupWorkspace},
         _createNLL{createNLL},
         _fitResultTolerance{fitResultTolerance},
-        _randomizeParameters{randomizeParameters}
+        _randomizeParameters{randomizeParameters},
+        _nEvents{nEvents}
    {
    }
 
@@ -111,6 +112,7 @@ public:
    CreateNLLFunc _createNLL;
    double _fitResultTolerance = 1e-4;
    bool _randomizeParameters = true;
+   std::size_t _nEvents = 100;
 };
 
 class FactoryTest : public testing::TestWithParam<FactoryTestParams> {
@@ -151,7 +153,7 @@ TEST_P(FactoryTest, NLLFit)
    RooAbsData *data = ws.data("data");
    RooAbsPdf &model = *ws.pdf("model");
 
-   std::size_t nEvents = 100;
+   std::size_t nEvents = _params._nEvents;
    if (!data) {
       std::unique_ptr<RooDataSet> data0{model.generate(observables, nEvents)};
       ownedData = std::unique_ptr<RooAbsData>{data0->binnedClone()};
@@ -580,7 +582,7 @@ FactoryTestParams param13{"RooFunctor",
                           /*randomizeParameters=*/true};
 
 FactoryTestParams makeTestParams(const char *name, std::vector<std::string> const &expressions,
-                                 double fitResultTolerance, bool randomizeParameters = true)
+                                 double fitResultTolerance, bool randomizeParameters = true, std::size_t nEvents = 100)
 {
    return {name,
            [=](RooWorkspace &ws) {
@@ -593,7 +595,9 @@ FactoryTestParams makeTestParams(const char *name, std::vector<std::string> cons
               using namespace RooFit;
               return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
            },
-           fitResultTolerance, randomizeParameters};
+           fitResultTolerance,
+           randomizeParameters,
+           nEvents};
 }
 
 auto testValues = testing::Values(
@@ -603,7 +607,7 @@ auto testValues = testing::Values(
       {"x[0, -10, 10]", "mu[0, -10, 10]", "BifurGauss::model(x, mu, sigmaL[3.0, 0.01, 10], sigmaR[2.0, 0.01, 10])"},
       1e-4, false),
    makeTestParams("RooFormulaVar",
-                  {"expr::mu_shifted('mu+shift',{mu[0, -10, 10], shift[1.0, -10, 10]})",
+                  {"expr::mu_shifted('mu+shift',{mu[0, -10, 10], shift[1.0]})",
                    "expr::sigma_scaled('sigma*1.5',{sigma[3.0, 0.01, 10]})",
                    "Gaussian::model(x[0, -10, 10], mu_shifted, sigma_scaled)"},
                   1e-4, false),
@@ -633,7 +637,13 @@ auto testValues = testing::Values(
    // all possible code paths in the pullback.
    makeTestParams("RooLandau1", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[1., 0.01, 50.])"}, 7e-3, false),
    makeTestParams("RooLandau2", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[2.1, 0.01, 50.])"}, 7e-3, false),
-   makeTestParams("RooLandau3", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[10., 0.01, 50.])"}, 7e-3, false),
+   // With sl = 10, the Landau is nearly uniform over the observable window, so
+   // with only 100 events the fit is unidentifiable: the minimizers stop at
+   // arbitrary points in an almost flat valley, and the fitted values can't be
+   // meaningfully compared. Generate more events to make the minimum
+   // well-defined.
+   makeTestParams("RooLandau3", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[10., 0.01, 50.])"}, 7e-3, false,
+                  10000),
    makeTestParams("RooLandau4", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.3, 0.01, 50.])"}, 7e-3, false),
    makeTestParams("RooLandau5", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.07, 0.01, 50.])"}, 7e-3, false),
    makeTestParams(
