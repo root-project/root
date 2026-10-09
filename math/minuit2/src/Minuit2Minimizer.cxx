@@ -416,15 +416,6 @@ void Minuit2Minimizer::SetHessianFunction(std::function<bool(std::span<const dou
    fcn->SetHessianFunction(hfunc);
 }
 
-void Minuit2Minimizer::SetSecondDerivativeAlwaysVanishesFunc(std::function<bool(unsigned int, unsigned int)> func)
-{
-   // not supported for Fumili, whose FCN is not an FCNAdapter
-   if (fUseFumili) return;
-   auto fcn = static_cast<ROOT::Minuit2::FCNAdapter *>(fMinuitFCN.get());
-   if (!fcn) return;
-   fcn->SetSecondDerivativeAlwaysVanishesFunc(std::move(func));
-}
-
 namespace {
 
 ROOT::Minuit2::MnStrategy customizedStrategy(unsigned int strategyLevel, ROOT::Math::MinimizerOptions const &options)
@@ -1370,12 +1361,6 @@ void Minuit2Minimizer::SetStorageLevel(int level)
    // set storage level
    if (fMinimizer)
       fMinimizer->Builder().SetStorageLevel(level);
-}
-
-void Minuit2Minimizer::SetFCN(unsigned int nDim, std::unique_ptr<ROOT::Minuit2::FCNBase> fcn)
-{
-   fDim = nDim;
-   fMinuitFCN = std::move(fcn);
 }
 
 } // end namespace Minuit2
