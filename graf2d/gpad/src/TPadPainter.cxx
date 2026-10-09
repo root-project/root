@@ -553,12 +553,9 @@ static Bool_t ContainsTImage(const TVirtualPad *pad)
 
 TVirtualPadPainter::ESaveImageResult TPadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t type) const
 {
-   if (!pad)
-      return kSaveFail;
-
    // for X11 and Winows there is special GIF, which works only with maximal 256-colors
    // Do not try to use it for pads with TImage inside - it most probably fails
-   if ((type == TImage::kGif) && !IsCocoa() && !ContainsTImage(pad)) {
+   if ((type == TImage::kGif) && pad && !IsCocoa() && !ContainsTImage(pad)) {
       gVirtualX->Update(1);
       gSystem->Sleep(30);
       gSystem->ProcessEvents();
@@ -571,15 +568,7 @@ TVirtualPadPainter::ESaveImageResult TPadPainter::SaveAsImage(TVirtualPad *pad, 
          return kSaveOk;
    }
 
-   const std::unique_ptr<TImage> img(TImage::Create());
-   if (!img)
-      return kSaveFail;
-   if (!FillImageFromPad(img.get(), pad))
-      return kSaveFail;
-   if (!img->IsValid())
-      return kSaveFail;
-   img->WriteImage(fileName, (TImage::EImageFileTypes)type);
-   return kSaveOk;
+   return TPadPainterBase::SaveAsImage(pad, fileName, type);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
