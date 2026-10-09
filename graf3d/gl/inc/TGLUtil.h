@@ -1052,6 +1052,8 @@ public:
    static void SetSimpleAxisWidthScale(Float_t s);
    static void SetSimpleAxisBBoxScale(Float_t s);
 
+   static void SwapPixelBuffer(UChar_t *buf, UInt_t width, UInt_t height);
+
    // Frequently used colors.
    static const UChar_t fgRed[4];
    static const UChar_t fgGreen[4];

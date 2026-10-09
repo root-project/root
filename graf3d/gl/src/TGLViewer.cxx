@@ -865,9 +865,13 @@ Bool_t TGLViewer::SavePictureUsingBB(const TString &fileName)
    glReadPixels(0, 0, fViewport.Width(), fViewport.Height(),
                 GL_BGRA, GL_UNSIGNED_BYTE, xx);
 
+   TGLUtil::SwapPixelBuffer(xx, fViewport.Width(), fViewport.Height());
+
    std::unique_ptr<TImage> image(TImage::Create());
-   image->FromGLBuffer(xx, fViewport.Width(), fViewport.Height());
-   image->WriteImage(fileName);
+   if (image) {
+      image->FromBitmap(xx, fViewport.Width(), fViewport.Height());
+      image->WriteImage(fileName);
+   }
 
    delete [] xx;
 
@@ -957,9 +961,13 @@ Bool_t TGLViewer::SavePictureUsingFBO(const TString &fileName, Int_t w, Int_t h,
    glReadPixels(0, 0, fViewport.Width(), fViewport.Height(),
                 GL_BGRA, GL_UNSIGNED_BYTE, xx);
 
+   TGLUtil::SwapPixelBuffer(xx, fViewport.Width(), fViewport.Height());
+
    std::unique_ptr<TImage> image(TImage::Create());
-   image->FromGLBuffer(xx, fViewport.Width(), fViewport.Height());
-   image->WriteImage(fileName);
+   if (image) {
+      image->FromBitmap(xx, fViewport.Width(), fViewport.Height());
+      image->WriteImage(fileName);
+   }
 
    delete [] xx;
 
@@ -1009,8 +1017,11 @@ TImage* TGLViewer::GetPictureUsingBB()
     glReadPixels(0, 0, fViewport.Width(), fViewport.Height(),
                  GL_BGRA, GL_UNSIGNED_BYTE, xx);
 
-    TImage *image(TImage::Create());
-    image->FromGLBuffer(xx, fViewport.Width(), fViewport.Height());
+    TGLUtil::SwapPixelBuffer(xx, fViewport.Width(), fViewport.Height());
+
+    TImage *image = TImage::Create();
+    if (image)
+       image->FromBitmap(xx, fViewport.Width(), fViewport.Height());
 
     delete [] xx;
 
@@ -1090,8 +1101,11 @@ TImage* TGLViewer::GetPictureUsingFBO(Int_t w, Int_t h,Float_t pixel_object_scal
     glReadPixels(0, 0, fViewport.Width(), fViewport.Height(),
                  GL_BGRA, GL_UNSIGNED_BYTE, xx);
 
-    TImage *image(TImage::Create());
-    image->FromGLBuffer(xx, fViewport.Width(), fViewport.Height());
+    TGLUtil::SwapPixelBuffer(xx, fViewport.Width(), fViewport.Height());
+
+    TImage *image = TImage::Create();
+    if (image)
+       image->FromBitmap(xx, fViewport.Width(), fViewport.Height());
 
     delete [] xx;
     delete fbo;
