@@ -1330,8 +1330,22 @@ template <typename T> Bool_t TMath::IsInside(T xp, T yp, Int_t np, T *x, T *y)
 
    for (i=0; i<np; i++) {
       if ((y[i]<yp && y[j]>=yp) || (y[j]<yp && y[i]>=yp)) {
-         if (x[i]+(yp-y[i])/(y[j]-y[i])*(x[j]-x[i])<xp) {
-            oddNodes = !oddNodes;
+         if constexpr (std::numeric_limits<T>::is_integer) {
+            const Long64_t dx = static_cast<Long64_t>(x[j]) - x[i];
+            const Long64_t dy = static_cast<Long64_t>(y[j]) - y[i];
+            const Long64_t py = static_cast<Long64_t>(yp) - y[i];
+            const Long64_t px = static_cast<Long64_t>(xp) - x[i];
+
+            const Long64_t lhs = py * dx;
+            const Long64_t rhs = px * dy;
+
+            if ((dy > 0 && lhs < rhs) || (dy < 0 && lhs > rhs)) {
+               oddNodes = !oddNodes;
+            }
+         } else {
+            if (x[i]+(yp-y[i])/(y[j]-y[i])*(x[j]-x[i])<xp) {
+               oddNodes = !oddNodes;
+            }
          }
       }
       j=i;
