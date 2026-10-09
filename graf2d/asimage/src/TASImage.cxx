@@ -1096,7 +1096,7 @@ void TASImage::FromX11Window(Window_t win, Int_t x, Int_t y, Int_t width, Int_t 
 /// Create an image from the given pad, afterwards this image can be
 /// saved in any of the supported image formats.
 
-void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
+void TASImage::FromPad(TVirtualPad *pad, Int_t /* x */, Int_t /* y */, UInt_t /* w */, UInt_t  /* h */)
 {
    if (!pad) {
       Error("FromPad", "pad cannot be 0");
@@ -1143,39 +1143,9 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
       return;
    }
 
-   // X11 Synchronization
-   gVirtualX->Update(1);
-   if (!gThreadXAR) {
-      gSystem->Sleep(100);
-      gSystem->ProcessEvents();
-      gSystem->Sleep(10);
-      gSystem->ProcessEvents();
-   }
-
-   TVirtualPad *canvas = (TVirtualPad*)pad->GetCanvas();
-   Int_t wid = (pad == canvas) ? pad->GetCanvasID() : pad->GetPixmapID();
-   gVirtualX->SelectWindow(wid);
-
-   Window_t wd = (Window_t)gVirtualX->GetCurrentWindow();
-   if (!wd) return;
-
-   if (w == 0) w = TMath::Abs(pad->UtoPixel(1.));
-   if (h == 0) h = pad->VtoPixel(0.);
-
-   static int x11 = -1;
-   if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
-
-   if (x11) { //use built-in optimized version
-      fImage = pixmap2asimage(fgVisual, wd, x, y, w, h, kAllPlanes, 0, 0);
-   } else {
-      unsigned char *bits = gVirtualX->GetColorBits(wd, 0, 0, w, h);
-
-      if (!bits) { // error
-         return;
-      }
-      fImage = bitmap2asimage(bits, w, h, 0, nullptr);
-      delete [] bits;
-   }
+   auto pp = pad->GetPainter();
+   if (pp)
+      pp->FillImageFromPad(this, pad);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
