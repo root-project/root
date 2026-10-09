@@ -176,7 +176,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
 
         # RooStats.HypoTestInvTool.SetParameter(name, value):
         # def SetParameter(self, name, value):
-        elif (type(name) is str) and (type(value) is bool):
+        elif (type(name) is str) and (type(value) is int):
 
             #
             # set integer parameters
@@ -220,7 +220,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
 
         # RooStats.HypoTestInvTool.SetParameter(name, value):
         # def SetParameter(self, name, value):
-        elif (type(name) is str) and (type(value) is (float or double)):
+        elif (type(name) is str) and (type(value) is float):
 
             #
             # set string parameters
@@ -524,7 +524,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
         doFit = self.mInitialFit
         if testStatType == 0 and self.mInitialFit == -1:
             doFit = False  # case of LEP test statistic
-        if type == 3 and self.mInitialFit == -1:
+        if Type == 3 and self.mInitialFit == -1:
             doFit = False  # case of Asymptoticcalculator with nominal Asimov
         poihat = 0
 
@@ -765,7 +765,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
             hhc = HybridCalculator(hc)
             assert hhc
 
-            hhc.SetToys(ntoys, ntoys / self.mNToysRatio)  # can use less ntoys for b hypothesis
+            hhc.SetToys(ntoys, int(ntoys / self.mNToysRatio))  # can use less ntoys for b hypothesis
 
             # remove global observables from ModelConfig (this is probably not needed anymore in 5.32)
             bModel.SetGlobalObservables(RooArgSet())
@@ -813,11 +813,11 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
                 nuisPdf.Print()
 
                 nuisParams = (
-                    ibModel.GetNuisanceParameters()
+                    bModel.GetNuisanceParameters()
                     if (bModel.GetNuisanceParameters())
                     else (sbModel.GetNuisanceParameters())
                 )
-                npnuisPdf.getObservables(nuisParams)
+                np = npnuisPdf.getObservables(nuisParams)
                 if np.getSize() == 0:
                     ROOT.Warning(
                         "StandardHypoTestInvDemo",
@@ -827,7 +827,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
                 hhc.ForcePriorNuisanceAlt(nuisPdf)
                 hhc.ForcePriorNuisanceNull(nuisPdf)
 
-        elif type == 2 or type == 3:
+        elif Type == 2 or Type == 3:
             if testStatType == 3:
                 hc.SetOneSided(True)
             if testStatType != 2 and testStatType != 3:
@@ -835,13 +835,13 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
                     "StandardHypoTestInvDemo",
                     "Only the PL test statistic can be used with AsymptoticCalculator - use by default a two-sided PL",
                 )
-        elif type == 0:
-            hc.SetToys(ntoys, ntoys / self.mNToysRatio)
+        elif Type == 0:
+            hc.SetToys(ntoys, int(ntoys / self.mNToysRatio))
             # store also the fit information for each poi point used by calculator based on toys
             if self.mEnableDetOutput:
                 hc.StoreFitInfo(True)
-        elif type == 1:
-            hc.SetToys(ntoys, ntoys / self.mNToysRatio)
+        elif Type == 1:
+            hc.SetToys(ntoys, int(ntoys / self.mNToysRatio))
             # store also the fit information for each poi point used by calculator based on toys
             # if (self.mEnableDetOutput):
             #    hc.StoreFitInfo(True)
