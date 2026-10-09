@@ -1200,6 +1200,139 @@ std::unordered_map<std::string, char> const& cpyrt::Utility::TypecodeMap() {
   return typecodeMap;
 }
 
+namespace {
+
+// classification of PEP 3118 format characters
+enum class EBufferKind {
+  kSInt,
+  kUInt,
+  kFloat,
+  kComplex,
+  kChar,
+  kWChar,
+  kBool,
+  kString,
+  kVoidPtr,
+  kUnknown
+};
+
+struct BufferElem {
+  EBufferKind kind;
+  std::size_t size;
+  char code; // the underlying format character
+};
+
+BufferElem ClassifyFormatChar(char c) {
+  switch (c) {
+  case 'b':
+    return {EBufferKind::kSInt, sizeof(char), c};
+  case 'h':
+    return {EBufferKind::kSInt, sizeof(short), c};
+  case 'i':
+    return {EBufferKind::kSInt, sizeof(int), c};
+  case 'l':
+    return {EBufferKind::kSInt, sizeof(long), c};
+  case 'q':
+    return {EBufferKind::kSInt, sizeof(long long), c};
+  case 'n':
+    return {EBufferKind::kSInt, sizeof(Py_ssize_t), c};
+  case 'B':
+    return {EBufferKind::kUInt, sizeof(unsigned char), c};
+  case 'H':
+    return {EBufferKind::kUInt, sizeof(unsigned short), c};
+  case 'I':
+    return {EBufferKind::kUInt, sizeof(unsigned int), c};
+  case 'L':
+    return {EBufferKind::kUInt, sizeof(unsigned long), c};
+  case 'Q':
+    return {EBufferKind::kUInt, sizeof(unsigned long long), c};
+  case 'N':
+    return {EBufferKind::kUInt, sizeof(std::size_t), c};
+  case 'e':
+    return {EBufferKind::kFloat, 2, c}; // IEEE 754 half
+  case 'f':
+    return {EBufferKind::kFloat, sizeof(float), c};
+  case 'd':
+    return {EBufferKind::kFloat, sizeof(double), c};
+  case 'g':
+    return {EBufferKind::kFloat, sizeof(long double), c};
+  case '?':
+    return {EBufferKind::kBool, sizeof(bool), c};
+  case 'c':
+    return {EBufferKind::kChar, sizeof(char), c};
+  case 'u':
+    return {EBufferKind::kWChar, sizeof(wchar_t), c};
+  case 'w':
+    return {EBufferKind::kWChar, sizeof(char32_t), c}; // UCS-4
+  case 's':
+  case 'p':
+    return {EBufferKind::kString, 0, c};
+  case 'P':
+    return {EBufferKind::kVoidPtr, sizeof(void*), c};
+  default:
+    return {EBufferKind::kUnknown, 0, c};
+  }
+}
+
+// reduce a PEP 3118 format string to its element type, skipping an optional
+// byte-order/alignment prefix ("<q") and repeat count ("10q"); fail for
+// formats without a single scalar element (e.g. structured "T{...}" ones)
+bool ParseBufferFormat(const char* fmt, BufferElem& elemOut) {
+  if (!fmt)
+    return false;
+  // strchr also matches on the terminating NUL, so must check for the empty
+  // string first
+  if (*fmt && strchr("@=<>!^", *fmt))
+    ++fmt;
+  while ('0' <= *fmt && *fmt <= '9')
+    ++fmt;
+  bool isComplex = *fmt == 'Z';
+  if (isComplex)
+    ++fmt;
+  if (!*fmt || fmt[1] != '\0')
+    return false;
+
+  BufferElem elem = ClassifyFormatChar(*fmt);
+  if (isComplex) {
+    if (elem.kind != EBufferKind::kFloat)
+      return false;
+    elem = {EBufferKind::kComplex, 2 * elem.size, *fmt};
+  }
+  elemOut = elem;
+  return true;
+}
+
+} // namespace
+
+//----------------------------------------------------------------------------
+bool cpyrt::Utility::BufferFormatCompatible(char tc, const char* fmt) {
+  // the requested type code: a PEP 3118 character, or a cppjit-internal
+  // code ('z' = std::complex<float>, 'Z' = std::complex<double>)
+  BufferElem want;
+  if (tc == 'z')
+    want = {EBufferKind::kComplex, 2 * sizeof(float), tc};
+  else if (tc == 'Z')
+    want = {EBufferKind::kComplex, 2 * sizeof(double), tc};
+  else
+    want = ClassifyFormatChar(tc);
+  if (want.kind == EBufferKind::kUnknown)
+    return false;
+
+  BufferElem got;
+  if (!ParseBufferFormat(fmt, got) || got.kind == EBufferKind::kUnknown)
+    return false;
+
+  // the struct/array modules express bool-ish values as 'signed char' ('b')
+  if (want.kind == EBufferKind::kBool && got.code == 'b')
+    return true;
+
+  // 's' and 'p' are both strings but not interchangeable
+  if (want.kind == EBufferKind::kString)
+    return got.code == want.code;
+
+  return want.kind == got.kind && want.size == got.size;
+}
+
 //----------------------------------------------------------------------------
 Py_ssize_t cpyrt::Utility::GetBuffer(PyObject* pyobject, char tc, int size,
                                      void*& buf, bool check) {
@@ -1230,19 +1363,7 @@ Py_ssize_t cpyrt::Utility::GetBuffer(PyObject* pyobject, char tc, int size,
     Py_buffer bufinfo;
     memset(&bufinfo, 0, sizeof(Py_buffer));
     if (PyObject_GetBuffer(pyobject, &bufinfo, PyBUF_FORMAT) == 0) {
-      if (tc == '*' ||
-          strchr(bufinfo.format, tc)
-          // if `long int` and `int` are the same size (on Windows and 32bit
-          // Linux, for example), `ctypes` isn't too picky about the type
-          // format, so make sure both integer types pass the type check
-          || (sizeof(long int) == sizeof(int) &&
-              ((tc == 'I' && strchr(bufinfo.format, 'L')) ||
-               (tc == 'i' && strchr(bufinfo.format, 'l'))))
-          // complex float is 'Zf' in bufinfo.format, but 'z' in single char
-          || (tc == 'z' && strstr(bufinfo.format, "Zf"))
-          // allow 'signed char' ('b') from array to pass through '?' (bool as
-          // from struct)
-          || (tc == '?' && strchr(bufinfo.format, 'b'))) {
+      if (tc == '*' || BufferFormatCompatible(tc, bufinfo.format)) {
         buf = bufinfo.buf;
 
         if (check && bufinfo.itemsize != size) {

@@ -2777,6 +2777,184 @@ class TestDATATYPES:
         ns.take_int8(101)
         raises(TypeError, ns.take_int8, "e")
 
+    def test56_long_long_long_array_interchange(self):
+        """Arrays of 64b integers must convert to both 'long' and 'long long'
+        pointer parameters, as buffer producers do not distinguish them and the
+        mapping of int64_t differs across platforms."""
+
+        import array
+        import cppjit
+
+        try:
+            import numpy as np
+        except ImportError:
+            skip('numpy is not installed')
+
+        if array.array('l', []).itemsize != 8:   # 'long' and 'long long' must be same size
+            skip('test assumes 64b long')
+
+        cppjit.cppdef("""\
+        namespace ArrayInterchange {
+        long long sum_ll(const long long* a, int n) {
+            long long s = 0;
+            for (int i = 0; i < n; ++i) s += a[i];
+            return s;
+        }
+        long long sum_l(const long* a, int n) { return sum_ll((const long long*)a, n); }
+        unsigned long long sum_ull(const unsigned long long* a, int n) {
+            unsigned long long s = 0;
+            for (int i = 0; i < n; ++i) s += a[i];
+            return s;
+        }
+        unsigned long long sum_ul(const unsigned long* a, int n) { return sum_ull((const unsigned long long*)a, n); }
+        long long sum_i64(const int64_t* a, int n) { return sum_ll((const long long*)a, n); }
+        const long* data_l() { static long l[3] = {0, 1, 2}; return l; }
+        const long long* data_ll() { static long long l[3] = {0, 1, 2}; return l; }
+        }""")
+
+        ns = cppjit.gbl.ArrayInterchange
+        n = 3
+        isum = sum(range(n))
+
+        # numpy int64 is canonicalized to 'l' or 'q' by the platform
+        ia = np.arange(n, dtype=np.int64)
+        ua = np.arange(n, dtype=np.uint64)
+        for func in [ns.sum_ll, ns.sum_l, ns.sum_i64]:
+            assert func(ia, n) == isum
+        for func in [ns.sum_ull, ns.sum_ul]:
+            assert func(ua, n) == isum
+
+        # same through the standard 'array' module, which can express both formats
+        al, aq = array.array('l', range(n)), array.array('q', range(n))
+        assert ns.sum_ll(al, n) == isum and ns.sum_ll(aq, n) == isum
+        assert ns.sum_l(al, n) == isum and ns.sum_l(aq, n) == isum
+
+        # same for low-level views returned to Python with the other type
+        assert ns.sum_ll(ns.data_l(), n) == isum
+        assert ns.sum_l(ns.data_ll(), n) == isum
+
+        # same through std::span, if available (needs C++20 and <span>)
+        if cppjit.evaluate("""#if __cplusplus >= 202002L && __has_include(<span>)
+        1
+        #else
+        0
+        #endif""") == 1:
+            cppjit.cppdef("""\
+            #include <span>
+            namespace ArrayInterchange {
+            long long sum_span_ll(std::span<const long long> a) {
+                long long s = 0;
+                for (auto v : a) s += v;
+                return s;
+            }
+            long long sum_span_l(std::span<const long> a) {
+                return sum_span_ll(std::span<const long long>{reinterpret_cast<const long long*>(a.data()), a.size()});
+            }
+            }""")
+            assert ns.sum_span_ll(ia) == isum and ns.sum_span_l(ia) == isum
+            assert ns.sum_span_ll(al) == isum and ns.sum_span_ll(aq) == isum
+
+    def test57_buffer_format_parsing(self):
+        """Buffer-format matching parses PEP 3118 properly: byte-order
+        prefixes are skipped, the complex marker 'Z' is understood, and
+        elements match on kind (signed/unsigned/float/complex) and native
+        size rather than on the exact format character."""
+
+        import ctypes
+        import cppjit
+
+        try:
+            import numpy as np
+        except ImportError:
+            skip('numpy is not installed')
+
+        cppjit.cppdef("""\
+        #include <complex>
+        namespace BufferFormats {
+        double sum_d(const double* a, int n) {
+            double s = 0.;
+            for (int i = 0; i < n; ++i) s += a[i];
+            return s;
+        }
+        long sum_l(const long* a, int n) {
+            long s = 0;
+            for (int i = 0; i < n; ++i) s += a[i];
+            return s;
+        }
+        int sum_i(const int* a, int n) {
+            int s = 0;
+            for (int i = 0; i < n; ++i) s += a[i];
+            return s;
+        }
+        int count_true(const bool* a, int n) {
+            int s = 0;
+            for (int i = 0; i < n; ++i) if (a[i]) ++s;
+            return s;
+        }
+        std::complex<float> sum_cf(const std::complex<float>* a, int n) {
+            std::complex<float> s;
+            for (int i = 0; i < n; ++i) s += a[i];
+            return s;
+        }
+        const std::complex<float>* data_cf() {
+            static std::complex<float> c[2] = {{1.f, 1.f}, {1.f, -1.f}};
+            return c;
+        }
+        }""")
+
+        ns = cppjit.gbl.BufferFormats
+
+        # ctypes exports explicitly-endian formats
+        assert ns.sum_d((ctypes.c_double * 3)(0.5, 1.5, 1.0), 3) == 3.0
+        if ctypes.sizeof(ctypes.c_long) == 8:
+            assert ns.sum_l((ctypes.c_long * 3)(1, 2, 3), 3) == 6
+            # ctypes exports c_longlong as '<q', so this also crosses the
+            # 'q'/'l' character with equal size
+            assert ns.sum_l((ctypes.c_longlong * 3)(1, 2, 3), 3) == 6
+
+        # kind and size both matter: int16 is not int32, float is not int
+        assert ns.sum_i(np.arange(3, dtype=np.int32), 3) == 3
+        raises(TypeError, ns.sum_i, np.arange(3, dtype=np.int16), 3)
+        raises(TypeError, ns.sum_i, np.arange(3, dtype=np.int64), 3)
+        raises(TypeError, ns.sum_i, np.arange(3, dtype=np.float32), 3)
+
+        # bool accepts signed-char buffers (struct/array module convention)
+        assert ns.count_true(np.array([1, 0, 1], dtype=np.int8), 3) == 2
+
+        # complex buffers ('Zf'/'Zd') only match complex parameters of the
+        # same size
+        s = ns.sum_cf(np.array([1+1j, 1-1j], dtype=np.complex64), 2)
+        assert s.real == 2.0 and s.imag == 0.0
+        raises(TypeError, ns.sum_d, np.array([1+1j, 1], dtype=np.complex128), 2)
+
+        # a complex view returned from C++ round-trips back into complex
+        # pointer parameters
+        sv = ns.sum_cf(ns.data_cf(), 2)
+        assert sv.real == 2.0 and sv.imag == 0.0
+
+        # same-size integer kinds do not cross the signedness boundary
+        raises(TypeError, ns.sum_l, np.arange(3, dtype=np.uint64), 3)
+
+        # std::span performs no item-size check, so the format check alone
+        # must reject complex128 for span<const double>
+        if cppjit.evaluate("""#if __cplusplus >= 202002L && __has_include(<span>)
+        1
+        #else
+        0
+        #endif""") == 1:
+            cppjit.cppdef("""\
+            #include <span>
+            namespace BufferFormats {
+            double sum_span_d(std::span<const double> a) {
+                double s = 0.;
+                for (auto v : a) s += v;
+                return s;
+            }
+            }""")
+            assert ns.sum_span_d(np.arange(3, dtype=np.float64)) == 3.0
+            raises(TypeError, ns.sum_span_d,
+                   np.array([1+2j, 3+4j], dtype=np.complex128))
+
 
 class TestANONENUM:
     def test01_anonymous_enum_repeated_access(self):

@@ -73,6 +73,14 @@ bool InitProxy(PyObject* module, PyTypeObject* pytype, const char* name);
 
 std::unordered_map<std::string, char> const& TypecodeMap();
 
+// check whether a PEP 3118 buffer format string describes an element type
+// compatible with the requested type code: same kind (signed/unsigned
+// integer, floating point, complex, ...) and same native size, so e.g.
+// 'long' and 'long long' buffers are interchangeable where they coincide.
+// The type code may be a PEP 3118 character or a cppjit-internal code:
+// 'z' (std::complex<float>) or 'Z' (std::complex<double>).
+bool BufferFormatCompatible(char tc, const char* fmt);
+
 // retrieve the memory buffer from pyobject, return buflength, tc (optional) is
 // python array.array type code, size is type size, buf will point to buffer,
 // and if check is true, some heuristics will be applied to check buffer
