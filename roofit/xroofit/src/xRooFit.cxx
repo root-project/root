@@ -1185,7 +1185,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
          }*/
 
          // std::cout << "nIterations = " << _minimizer->fitter()->GetMinimizer()->NIterations() << std::endl;
-         // std::cout << "covQual before hesse = " << _minimizer->fitter()->GetMinimizer()->CovMatrixStatus() <<
+         // std::cout << "covQual before hesse = " << _minimizer->fitter()->Result().CovMatrixStatus() <<
          // std::endl;
          sIdx = -1;
          if (hesseStrategy == -1) {
@@ -1204,7 +1204,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
 
             if (strategy == 2 && hesseStrategy == 2) {
                // don't repeat hesse if strategy=2 and hesseStrategy=2, and the matrix was valid
-               if (_minimizer->fitter()->GetMinimizer()->CovMatrixStatus() == 3) {
+               if (_minimizer->fitter()->Result().CovMatrixStatus() == 3) {
                   break;
                }
                if (sIdx >= m_hessestrategy.Length() - 1) {
@@ -1260,19 +1260,19 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
                delete _nll;
                throw std::runtime_error("Keyboard interrupt while hesse calculating");
             }
-            if ((_status != 0 || _minimizer->fitter()->GetMinimizer()->CovMatrixStatus() != 3) && status == 0 &&
+            if ((_status != 0 || _minimizer->fitter()->Result().CovMatrixStatus() != 3) && status == 0 &&
                 printLevel >= -1) {
                printCerr(TString::Format("Warning: %s hesse status is %d, covQual=%d", fitName.Data(), _status,
-                                         _minimizer->fitter()->GetMinimizer()->CovMatrixStatus())
+                                         _minimizer->fitter()->Result().CovMatrixStatus())
                             .Data());
             }
 
-            if (_status == 0 && _minimizer->fitter()->GetMinimizer()->CovMatrixStatus() == 3) {
+            if (_status == 0 && _minimizer->fitter()->Result().CovMatrixStatus() == 3) {
                // covariance is valid!
                break;
             } else if (_status == 0) {
                // set the statusHistory to the cov status, since that's more informative
-               statusHistory.back().second = _minimizer->fitter()->GetMinimizer()->CovMatrixStatus();
+               statusHistory.back().second = _minimizer->fitter()->Result().CovMatrixStatus();
             }
 
             if (sIdx >= m_hessestrategy.Length() - 1) {

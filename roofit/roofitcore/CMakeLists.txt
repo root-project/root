@@ -486,8 +486,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   ${EXTRA_DICT_OPTS}
 )
 
-# Minuit2 is needed in the implementation of RooMinimizerFcn, to advertise
-# vanishing second derivatives to Minuit2Minimizer.
+# RooMinimizer drives Minuit2 directly via its library interface, without
+# going through the ROOT::Math::Minimizer plugin layer.
 target_link_libraries(RooFitCore PRIVATE Minuit2)
 
 # The following definitions are PUBLIC so they can also be used in ROOT-internal tests
