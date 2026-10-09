@@ -48,11 +48,11 @@ RBatchLoader) are combined, allowing batches from the training and validation se
 in an RDataFrame.
 */
 
-template <typename... Args>
 class RDataLoaderEngine {
 private:
    std::vector<std::string> fCols;
    std::vector<std::size_t> fVecSizes;
+   std::vector<RColumnLayout> fColumnLayout;
    std::size_t fBatchSize;
    std::size_t fSetSeed;
 
@@ -65,8 +65,8 @@ private:
 
    float fTestSize;
 
-   std::unique_ptr<RDatasetLoader<Args...>> fDatasetLoader;
-   std::unique_ptr<RClusterLoader<Args...>> fClusterLoader;
+   std::unique_ptr<RDatasetLoader> fDatasetLoader;
+   std::unique_ptr<RClusterLoader> fClusterLoader;
    std::unique_ptr<RBatchLoader> fTrainingBatchLoader;
    std::unique_ptr<RBatchLoader> fValidationBatchLoader;
    std::unique_ptr<RSampler> fTrainingSampler;
@@ -109,22 +109,19 @@ private:
    std::size_t fValidationEpochCount{0};
 
    /// \brief Describe how the loader's columns map onto a batch-tensor row.
-   std::vector<RColumnLayout> MakeColumnLayout() const
+   std::vector<RColumnLayout> MakeColumnLayout()
    {
       std::vector<RColumnLayout> layout;
-      layout.reserve(sizeof...(Args));
+      layout.reserve(fCols.size());
 
-      std::size_t colIdx = 0;
       std::size_t vecIdx = 0;
       std::size_t offset = 0;
-      (
-         [&] {
-            const bool isVector = ROOT::Internal::VecOps::IsRVec<Args>::value;
-            const std::size_t width = isVector ? fVecSizes[vecIdx++] : 1;
-            layout.push_back({fCols[colIdx++], offset, width, isVector});
-            offset += width;
-         }(),
-         ...);
+      for (const auto &col : fCols) {
+         const bool isVector = fRdfs[0].GetColumnType(col).find("RVec") != std::string::npos;
+         const std::size_t width = isVector ? fVecSizes[vecIdx++] : 1;
+         layout.push_back({col, offset, width, isVector});
+         offset += width;
+      }
 
       return layout;
    }
@@ -178,9 +175,12 @@ public:
    {
       fTensorOperators = std::make_unique<RFlat2DMatrixOperators>(fShuffle, fSetSeed);
 
+      // describe the columns before the eager path releases the dataframes
+      fColumnLayout = MakeColumnLayout();
+
       if (fLoadEager) {
-         fDatasetLoader = std::make_unique<RDatasetLoader<Args...>>(fRdfs, fTestSize, fCols, fVecSizes, vecPadding,
-                                                                    fShuffle, fSetSeed);
+         fDatasetLoader =
+            std::make_unique<RDatasetLoader>(fRdfs, fTestSize, fCols, fVecSizes, vecPadding, fShuffle, fSetSeed);
          fDatasetLoader->SplitDatasets();
 
          if (fSampleType == "") {
@@ -213,8 +213,8 @@ public:
 
       else {
          // scan cluster boundaries
-         fClusterLoader = std::make_unique<RClusterLoader<Args...>>(fRdfs, fCols, fVecSizes, vecPadding, fTestSize,
-                                                                    fShuffle, fSetSeed);
+         fClusterLoader =
+            std::make_unique<RClusterLoader>(fRdfs, fCols, fVecSizes, vecPadding, fTestSize, fShuffle, fSetSeed);
 
          // derive buffer quantities
          fBufferCapacity = fBatchSize * batchesInMemory;
@@ -287,7 +287,7 @@ public:
                                   "(e.g. inside a training loop). Finish or stop that iteration before saving.");
 
       REpochGuard epoch(*this, isTraining);
-      auto sink = CreateBatchSink(dataset_name, filename, MakeColumnLayout(), outputFormat);
+      auto sink = CreateBatchSink(dataset_name, filename, fColumnLayout, outputFormat);
 
       while (true) {
          RFlat2DMatrix batch = isTraining ? GetTrainBatch() : GetValidationBatch();

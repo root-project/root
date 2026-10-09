@@ -26,71 +26,6 @@
 namespace ROOT::Experimental::Internal::ML {
 
 /**
-\class ROOT::Experimental::Internal::ML::RDatasetLoaderFunctor
-
-\brief Loading chunks made in RDatasetLoader into tensors from data from RDataFrame.
-*/
-
-template <typename... ColTypes>
-class RDatasetLoaderFunctor {
-   std::size_t fOffset{};
-   std::size_t fVecSizeIdx{};
-   float fVecPadding{};
-   std::vector<std::size_t> fMaxVecSizes{};
-   RFlat2DMatrix &fDatasetTensor;
-
-   std::size_t fNumDatasetCols;
-
-   int fI;
-   int fNumColumns;
-
-   //////////////////////////////////////////////////////////////////////////
-   /// \brief Copy the content of a column into RFlat2DMatrix when the column consits of vectors
-   template <typename T, std::enable_if_t<ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
-   void AssignToTensor(const T &vec, int i, int numColumns)
-   {
-      std::size_t max_vec_size = fMaxVecSizes[fVecSizeIdx++];
-      std::size_t vec_size = vec.size();
-      if (vec_size < max_vec_size) // Padding vector column to max_vec_size with fVecPadding
-      {
-         std::copy(vec.begin(), vec.end(), &fDatasetTensor.GetData()[fOffset + numColumns * i]);
-         std::fill(&fDatasetTensor.GetData()[fOffset + numColumns * i + vec_size],
-                   &fDatasetTensor.GetData()[fOffset + numColumns * i + max_vec_size], fVecPadding);
-      } else // Copy only max_vec_size length from vector column
-      {
-         std::copy(vec.begin(), vec.begin() + max_vec_size, &fDatasetTensor.GetData()[fOffset + numColumns * i]);
-      }
-      fOffset += max_vec_size;
-   }
-
-   //////////////////////////////////////////////////////////////////////////
-   /// \brief Copy the content of a column into RFlat2DMatrix when the column consits of single values
-   template <typename T, std::enable_if_t<!ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
-   void AssignToTensor(const T &val, int i, int numColumns)
-   {
-      fDatasetTensor.GetData()[fOffset + numColumns * i] = val;
-      fOffset++;
-   }
-
-public:
-   RDatasetLoaderFunctor(RFlat2DMatrix &datasetTensor, std::size_t numColumns,
-                         const std::vector<std::size_t> &maxVecSizes, float vecPadding, int i)
-      : fDatasetTensor(datasetTensor),
-        fMaxVecSizes(maxVecSizes),
-        fVecPadding(vecPadding),
-        fI(i),
-        fNumColumns(numColumns)
-   {
-   }
-
-   void operator()(const ColTypes &...cols)
-   {
-      fVecSizeIdx = 0;
-      (AssignToTensor(cols, fI, fNumColumns), ...);
-   }
-};
-
-/**
 \class ROOT::Experimental::Internal::ML::RDatasetLoader
 
 \brief Load the whole dataset into memory.
@@ -99,7 +34,6 @@ In this class the whole dataset is loaded into memory. The dataset is further sh
 validation sets with the user-defined validation split fraction.
 */
 
-template <typename... Args>
 class RDatasetLoader {
 private:
    float fValidationSplit;
@@ -184,16 +118,16 @@ public:
       RFlat2DMatrix Dataset({NumEntries, fNumDatasetCols});
 
       if (NotFiltered) {
-         RDatasetLoaderFunctor<Args...> func(Dataset, fNumDatasetCols, fVecSizes, fVecPadding, 0);
-         rdf.Foreach(func, fCols);
+         auto values = ROOT::Internal::RDF::LoadCustomValues(rdf, fCols, fVecSizes, fVecPadding);
+         std::copy(values->begin(), values->end(), Dataset.GetData());
       }
 
       else {
          std::size_t datasetEntry = 0;
          for (std::size_t j = 0; j < NumEntries; j++) {
-            RDatasetLoaderFunctor<Args...> func(Dataset, fNumDatasetCols, fVecSizes, fVecPadding, datasetEntry);
             ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, (*Entries)[j], (*Entries)[j + 1]);
-            rdf.Foreach(func, fCols);
+            auto values = ROOT::Internal::RDF::LoadCustomValues(rdf, fCols, fVecSizes, fVecPadding);
+            std::copy(values->begin(), values->end(), Dataset.GetData() + datasetEntry * fNumDatasetCols);
             datasetEntry++;
          }
       }
