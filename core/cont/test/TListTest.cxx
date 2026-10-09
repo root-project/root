@@ -24,6 +24,7 @@ TEST(TList, BasicAddRemove)
    EXPECT_EQ(s1, removed);
    EXPECT_EQ(1, list.GetSize());
    EXPECT_EQ(s2, list.First());
+   EXPECT_EQ(s2, list.Last());
 
    delete s1;
 
