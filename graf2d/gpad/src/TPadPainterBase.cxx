@@ -17,6 +17,7 @@
 #include "TMathBase.h"
 #include "TError.h"
 #include "TTFhandle.h"
+#include "TImage.h"
 
 /** \class TPadPainterBase
 \ingroup gpad
@@ -260,4 +261,24 @@ void TPadPainterBase::DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, E
       gVirtualX->DrawTextW(fWinContext, px, py, att.GetTextAngle(), GetTextMagnitude(), text,
                            (TVirtualX::ETextMode)mode);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Store pad image into the file
+/// One should provide FillImageFromPad implementation in the subclass
+
+Int_t TPadPainterBase::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t type) const
+{
+   std::unique_ptr<TImage> image(TImage::Create());
+   if (!image.get()) {
+      ::Error("TGLPadPainter::SaveImage", "TImage creation failed");
+      return 0;
+   }
+
+   if (!FillImageFromPad(image.get(), pad))
+      return 0;
+
+   image->WriteImage(fileName, (TImage::EImageFileTypes)type);
+
+   return 1;
 }

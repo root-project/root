@@ -882,25 +882,6 @@ void TGLPadPainter::DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Using TImage save frame-buffer contents as a picture.
-
-Int_t TGLPadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t type) const
-{
-   std::unique_ptr<TImage> image(TImage::Create());
-   if (!image.get()) {
-      ::Error("TGLPadPainter::SaveImage", "TImage creation failed");
-      return 0;
-   }
-
-   if (!FillImageFromPad(image.get(), pad))
-      return 0;
-
-   image->WriteImage(fileName, (TImage::EImageFileTypes)type);
-
-   return 1;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Fill image object with the pixel data from the pad
 /// Implements special handling for X11 where ASImage has native implementation
 
