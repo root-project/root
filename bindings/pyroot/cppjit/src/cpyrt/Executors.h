@@ -39,8 +39,6 @@ CPYRT_EXPORT Executor* CreateExecutor(interop::TCppType_t type, cdims_t = 0);
 CPYRT_EXPORT void DestroyExecutor(Executor* p);
 typedef Executor* (*ef_t)(cdims_t);
 CPYRT_EXPORT bool RegisterExecutor(const std::string& name, ef_t fac);
-CPYRT_EXPORT bool RegisterExecutorAlias(const std::string& name,
-                                        const std::string& target);
 CPYRT_EXPORT bool UnregisterExecutor(const std::string& name);
 
 // helper for the actual call

@@ -3987,23 +3987,6 @@ bool cpyrt::RegisterConverter(const std::string& name, cf_t fac) {
 
 //----------------------------------------------------------------------------
 CPYRT_EXPORT
-bool cpyrt::RegisterConverterAlias(const std::string& name,
-                                   const std::string& target) {
-  // register a custom converter that is a reference to an existing converter
-  auto f = gConvFactories.find(name);
-  if (f != gConvFactories.end())
-    return false;
-
-  auto t = gConvFactories.find(target);
-  if (t == gConvFactories.end())
-    return false;
-
-  gConvFactories[name] = t->second;
-  return true;
-}
-
-//----------------------------------------------------------------------------
-CPYRT_EXPORT
 bool cpyrt::UnregisterConverter(const std::string& name) {
   // remove a custom converter
   auto f = gConvFactories.find(name);

@@ -40,8 +40,6 @@ CPYRT_EXPORT Converter* CreateConverter(interop::TCppType_t type,
 CPYRT_EXPORT void DestroyConverter(Converter* p);
 typedef Converter* (*cf_t)(cdims_t d);
 CPYRT_EXPORT bool RegisterConverter(const std::string& name, cf_t fac);
-CPYRT_EXPORT bool RegisterConverterAlias(const std::string& name,
-                                         const std::string& target);
 CPYRT_EXPORT bool UnregisterConverter(const std::string& name);
 
 // converters for special cases (only here b/c of external use of
