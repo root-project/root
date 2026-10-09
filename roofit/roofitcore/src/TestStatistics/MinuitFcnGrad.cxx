@@ -95,9 +95,9 @@ void MinuitFcnGrad::syncOffsets() const
    }
 }
 
-double MinuitFcnGrad::operator()(const double *x) const
+double MinuitFcnGrad::operator()(std::vector<double> const &x) const
 {
-   syncParameterValuesFromMinuitCalls(x, false);
+   syncParameterValuesFromMinuitCalls(x.data(), false);
 
    syncOffsets();
 
@@ -207,40 +207,14 @@ bool MinuitFcnGrad::syncParameterValuesFromMinuitCalls(const double *x, bool min
    return aParamWasUpdated;
 }
 
-void MinuitFcnGrad::Gradient(const double *x, double *grad) const
-{
-   _calculatingGradient = true;
-   syncParameterValuesFromMinuitCalls(x, returnsInMinuit2ParameterSpace());
-   syncOffsets();
-   _gradient->fillGradient(grad);
-   _calculatingGradient = false;
-}
-
-void MinuitFcnGrad::GradientWithPrevResult(const double *x, double *grad, double *previous_grad, double *previous_g2,
-                                           double *previous_gstep, double fValAtX) const
-{
-   _calculatingGradient = true;
-   syncParameterValuesFromMinuitCalls(x, returnsInMinuit2ParameterSpace());
-   syncOffsets();
-   _gradient->fillGradientWithPrevResult(grad, previous_grad, previous_g2, previous_gstep, fValAtX);
-   _calculatingGradient = false;
-}
-
-bool MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters)
-{
-   bool returnee = synchronizeParameterSettings(parameters);
-   applyToLikelihood([&](auto &l) { l.synchronizeParameterSettings(parameters); });
-   _gradient->synchronizeParameterSettings(parameters);
-
-   applyToLikelihood([&](auto &l) { l.synchronizeWithMinimizer(_context->fitter()->Config().MinimizerOptions()); });
-   _gradient->synchronizeWithMinimizer(_context->fitter()->Config().MinimizerOptions());
-   return returnee;
-}
-
 std::vector<double> MinuitFcnGrad::Gradient(std::vector<double> const &x) const
 {
    std::vector<double> grad(getNDim());
-   Gradient(x.data(), grad.data());
+   _calculatingGradient = true;
+   syncParameterValuesFromMinuitCalls(x.data(), returnsInMinuit2ParameterSpace());
+   syncOffsets();
+   _gradient->fillGradient(grad.data());
+   _calculatingGradient = false;
    return grad;
 }
 
@@ -249,19 +223,29 @@ std::vector<double> MinuitFcnGrad::GradientWithPrevResult(std::vector<double> co
                                                           double fValAtX) const
 {
    std::vector<double> grad(getNDim());
-   GradientWithPrevResult(x.data(), grad.data(), previous_grad, previous_g2, previous_gstep, fValAtX);
+   _calculatingGradient = true;
+   syncParameterValuesFromMinuitCalls(x.data(), returnsInMinuit2ParameterSpace());
+   syncOffsets();
+   _gradient->fillGradientWithPrevResult(grad.data(), previous_grad, previous_g2, previous_gstep, fValAtX);
+   _calculatingGradient = false;
    return grad;
+}
+
+bool MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters)
+{
+   bool returnee = synchronizeParameterSettings(parameters);
+   applyToLikelihood([&](auto &l) { l.synchronizeParameterSettings(parameters); });
+   _gradient->synchronizeParameterSettings(parameters);
+
+   applyToLikelihood([&](auto &l) { l.synchronizeWithMinimizer(minimizerOptions()); });
+   _gradient->synchronizeWithMinimizer(minimizerOptions());
+   return returnee;
 }
 
 ROOT::Minuit2::GradientParameterSpace MinuitFcnGrad::gradParameterSpace() const
 {
    return returnsInMinuit2ParameterSpace() ? ROOT::Minuit2::GradientParameterSpace::Internal
                                            : ROOT::Minuit2::GradientParameterSpace::External;
-}
-
-void MinuitFcnGrad::initMinimizer(ROOT::Math::Minimizer & /*minim*/, RooMinimizer * /*context*/)
-{
-   throw std::logic_error("MinuitFcnGrad can only be used with Minuit2, which RooMinimizer uses directly");
 }
 
 } // namespace TestStatistics

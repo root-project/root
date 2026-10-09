@@ -203,7 +203,7 @@ void LikelihoodGradientJob::update_state()
       // note: the next call must stay after the (possible) update of the offset, because it
       // calls the likelihood function, so the offset must be correct at this point
       gradf_.SetupDifferentiate(minimizer_->getNPar(), minimizer_->_fcn.get(), minuit_internal_x_.data(),
-                                minimizer_->fitter()->Config().ParamsSettings());
+                                minimizer_->_config.ParamsSettings());
    }
 }
 
@@ -215,8 +215,8 @@ void LikelihoodGradientJob::update_state()
 void LikelihoodGradientJob::run_derivator(unsigned int i_component) const
 {
    // Calculate the derivative etc for these parameters
-   grad_[i_component] = gradf_.FastPartialDerivative(
-      minimizer_->_fcn.get(), minimizer_->fitter()->Config().ParamsSettings(), i_component, grad_[i_component]);
+   grad_[i_component] = gradf_.FastPartialDerivative(minimizer_->_fcn.get(), minimizer_->_config.ParamsSettings(),
+                                                     i_component, grad_[i_component]);
 }
 
 void LikelihoodGradientJob::calculate_all()

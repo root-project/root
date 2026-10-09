@@ -1232,11 +1232,6 @@ bool RooMinimizer::calculateHessErrors()
    if (!ret)
       coutE(Minimization) << "RooMinimizer::calculateHessErrors() Error when calculating Hessian" << std::endl;
 
-   // update minimizer results with what comes out from Hesse
-   // in case is empty - create from a FitConfig
-   if (_result->fParams.empty())
-      _result = std::make_unique<FitResult>(_config);
-
    // re-give a minimizer instance in case it has been changed
    ret |= update(ret);
 
@@ -1320,8 +1315,16 @@ void RooMinimizer::initMinimizer()
       initMinuit2();
       return;
    }
+   // Only RooMinimizerFcn supports minimizers other than Minuit2: the
+   // multiprocess MinuitFcnGrad is tied to Minuit2, which the constructor
+   // enforces.
+   auto *fcn = dynamic_cast<RooMinimizerFcn *>(_fcn.get());
+   if (!fcn) {
+      throw std::logic_error("RooMinimizer: minimizer type " + _cfg.minimizerType +
+                             " is only supported with the default (non-parallel) likelihood function");
+   }
    _minimizer = std::unique_ptr<ROOT::Math::Minimizer>(_config.CreateMinimizer());
-   _fcn->initMinimizer(*_minimizer, this);
+   fcn->initMinimizer(*_minimizer);
    _minimizer->SetVariables(_config.ParamsSettings().begin(), _config.ParamsSettings().end());
 
    if (_cfg.setInitialCovariance) {
@@ -1373,34 +1376,6 @@ void RooMinimizer::updateFitConfig()
       par.SetValue(_result->fParams[i]);
       if (_result->error(i) > 0)
          par.SetStepSize(_result->error(i));
-   }
-}
-
-RooMinimizer::FitResult::FitResult(const ROOT::Fit::FitConfig &fconfig)
-   : fStatus(-99), // use this special convention to flag it when printing result
-     fCovStatus(0),
-     fParams(fconfig.NPar()),
-     fErrors(fconfig.NPar())
-{
-   // create a Fit result from a fit config (i.e. with initial parameter values
-   // and errors equal to step values
-   // The model function is NULL in this case
-
-   // set minimizer type and algorithm
-   fMinimType = fconfig.MinimizerType();
-   // append algorithm name for minimizer that support it
-   if ((fMinimType.find("Fumili") == std::string::npos) && (fMinimType.find("GSLMultiFit") == std::string::npos)) {
-      if (!fconfig.MinimizerAlgoType().empty())
-         fMinimType += " / " + fconfig.MinimizerAlgoType();
-   }
-
-   // get parameter values and errors (step sizes)
-   for (unsigned int i = 0; i < fconfig.NPar(); ++i) {
-      const ROOT::Fit::ParameterSettings &par = fconfig.ParSettings(i);
-      fParams[i] = par.Value();
-      fErrors[i] = par.StepSize();
-      if (par.IsFixed())
-         fFixedParams[i] = true;
    }
 }
 
