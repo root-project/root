@@ -18,10 +18,10 @@
 
 #include "RFileTestIncludes.hxx"
 
-using ROOT::Experimental::RFile;
+using ROOT::RFile;
 using ROOT::TestSupport::FileRaii;
 
-static std::string JoinKeyNames(const ROOT::Experimental::RFileKeyIterable &iterable)
+static std::string JoinKeyNames(const ROOT::RFileKeyIterable &iterable)
 {
    auto beg = iterable.begin();
    if (beg == iterable.end())
@@ -32,7 +32,7 @@ static std::string JoinKeyNames(const ROOT::Experimental::RFileKeyIterable &iter
 
 TEST(RFile, DecomposePath)
 {
-   using ROOT::Experimental::Detail::DecomposePath;
+   using ROOT::Detail::DecomposePath;
 
    auto Pair = [](std::string_view a, std::string_view b) { return std::make_pair(a, b); };
 
@@ -68,9 +68,6 @@ TEST(RFile, Open)
    EXPECT_FALSE(file->Get<TH1D>("inexistent"));
    EXPECT_FALSE(file->Get<TH1F>("hist"));
    EXPECT_TRUE(file->Get<TH1>("hist"));
-
-   // We do NOT want to globally register RFiles ever.
-   EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 0);
 
    std::string foo = "foo";
    EXPECT_THROW(file->Put("foo", foo), ROOT::RException);
@@ -120,8 +117,6 @@ TEST(RFile, OpenForWriting)
    auto file = RFile::Recreate(fileGuard.GetPath());
    file->Put("hist", *hist);
    EXPECT_TRUE(file->Get<TH1D>("hist"));
-
-   EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 0);
 }
 
 TEST(RFile, CheckNoAutoRegistrationWrite)
@@ -218,8 +213,6 @@ TEST(RFile, OpenForUpdating)
       file->Put("hist2", *hist2);
    }
    EXPECT_TRUE(file->Get<TH1D>("hist2"));
-
-   EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 0);
 }
 
 TEST(RFile, PutOverwrite)
@@ -583,7 +576,7 @@ TEST(RFile, GetAfterOverwriteNoBackup)
    auto ss = file->Get<std::string>("s");
    EXPECT_EQ(*ss, s);
 
-   std::vector<ROOT::Experimental::RKeyInfo> keys;
+   std::vector<ROOT::RKeyInfo> keys;
    for (const auto &key : file->ListKeys())
       keys.push_back(key);
 
@@ -713,7 +706,7 @@ TEST(RFile, RNTuple)
       auto model = ROOT::RNTupleModel::Create();
       *model->MakeField<float>("x") = 42;
 
-      auto writer = ROOT::Experimental::RNTupleWriter_Append(std::move(model), "data", *file);
+      auto writer = ROOT::RNTupleWriter::Append(std::move(model), "data", *file);
       writer->Fill();
    }
 
@@ -743,7 +736,7 @@ TEST(RFile, TTreeRead)
    }
 
    {
-      auto file = ROOT::Experimental::RFile::Open(fileGuard.GetPath());
+      auto file = ROOT::RFile::Open(fileGuard.GetPath());
       auto tree = file->Get<TTree>("tree");
       ASSERT_NE(tree, nullptr);
       EXPECT_EQ(tree->GetEntries(), 10);
@@ -773,7 +766,7 @@ TEST(RFile, TTreeReadAfterClose)
    }
 
    {
-      auto file = ROOT::Experimental::RFile::Open(fileGuard.GetPath());
+      auto file = ROOT::RFile::Open(fileGuard.GetPath());
       auto tree = file->Get<TTree>("tree");
       file.reset(); // close the file
       ASSERT_NE(tree, nullptr);
@@ -802,7 +795,7 @@ TEST(RFile, TTreeNoDoubleFree)
    EXPECT_EQ(TTreeDestructorCounter::GetTimesDestructed(), 1);
 
    {
-      auto file = ROOT::Experimental::RFile::Open(fileGuard.GetPath());
+      auto file = ROOT::RFile::Open(fileGuard.GetPath());
       auto tree = file->Get<TTreeDestructorCounter>("tree");
       file.reset(); // close the file (does not delete the three)
       // tree is deleted here

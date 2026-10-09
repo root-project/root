@@ -33,12 +33,7 @@ class TVirtualStreamerInfo;
 namespace ROOT {
 
 class RNTupleWriteOptions;
-
-namespace Experimental {
-
 class RFile;
-
-}
 
 namespace Internal {
 
@@ -139,7 +134,7 @@ private:
    };
 
    struct RImplRFile {
-      ROOT::Experimental::RFile *fFile = nullptr;
+      ROOT::RFile *fFile = nullptr;
       std::string fDir;
       /// Low-level writing using a TFile
       void Write(const void *buffer, size_t nbytes, std::int64_t offset);
@@ -273,8 +268,8 @@ public:
    static std::unique_ptr<RNTupleFileWriter>
    Append(std::string_view ntupleName, TDirectory &fileOrDirectory, std::uint64_t maxKeySize, bool isHidden);
 
-   static std::unique_ptr<RNTupleFileWriter> Append(std::string_view ntupleName, ROOT::Experimental::RFile &file,
-                                                    std::string_view dirPath, std::uint64_t maxKeySize);
+   static std::unique_ptr<RNTupleFileWriter>
+   Append(std::string_view ntupleName, ROOT::RFile &file, std::string_view dirPath, std::uint64_t maxKeySize);
 
    RNTupleFileWriter(const RNTupleFileWriter &other) = delete;
    RNTupleFileWriter(RNTupleFileWriter &&other) = delete;

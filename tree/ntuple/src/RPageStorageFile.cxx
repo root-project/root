@@ -71,8 +71,8 @@ ROOT::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, TDirec
    fWriter = RNTupleFileWriter::Append(ntupleName, fileOrDirectory, options.GetMaxKeySize(), /*isHidden=*/false);
 }
 
-ROOT::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, ROOT::Experimental::RFile &file,
-                                             std::string_view ntupleDir, const ROOT::RNTupleWriteOptions &options)
+ROOT::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, ROOT::RFile &file, std::string_view ntupleDir,
+                                             const ROOT::RNTupleWriteOptions &options)
    : RPageSinkFile(ntupleName, options)
 {
    fWriter = RNTupleFileWriter::Append(ntupleName, file, ntupleDir, options.GetMaxKeySize());

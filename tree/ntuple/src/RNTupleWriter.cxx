@@ -163,11 +163,11 @@ ROOT::Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model,
    return std::unique_ptr<ROOT::RNTupleWriter>(new ROOT::RNTupleWriter(std::move(model), std::move(sink)));
 }
 
-std::unique_ptr<ROOT::RNTupleWriter>
-ROOT::Experimental::RNTupleWriter_Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName,
-                                         ROOT::Experimental::RFile &file, const ROOT::RNTupleWriteOptions &options)
+std::unique_ptr<ROOT::RNTupleWriter> ROOT::RNTupleWriter::Append(std::unique_ptr<ROOT::RNTupleModel> model,
+                                                                 std::string_view ntupleName, ROOT::RFile &file,
+                                                                 const ROOT::RNTupleWriteOptions &options)
 {
-   auto [ntupleDir, ntupleBasename] = ROOT::Experimental::Detail::DecomposePath(ntupleName);
+   auto [ntupleDir, ntupleBasename] = ROOT::Detail::DecomposePath(ntupleName);
    auto sink = std::make_unique<ROOT::Internal::RPageSinkFile>(ntupleBasename, file, ntupleDir, options);
    return ROOT::RNTupleWriter::Create(std::move(model), std::move(sink), options);
 }

@@ -21,14 +21,14 @@
 #include <algorithm>
 #include <cstring>
 
-ROOT::RLogChannel &ROOT::Experimental::Internal::RFileLog()
+ROOT::RLogChannel &ROOT::Internal::RFileLog()
 {
    static ROOT::RLogChannel sLog("ROOT.File");
    return sLog;
 }
 
-using ROOT::Experimental::RFile;
-using ROOT::Experimental::Internal::RFileLog;
+using ROOT::RFile;
+using ROOT::Internal::RFileLog;
 
 namespace {
 enum class ENameCycleError {
@@ -190,7 +190,7 @@ static std::string ReconstructFullKeyPath(const TKey &key)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-std::pair<std::string_view, std::string_view> ROOT::Experimental::Detail::DecomposePath(std::string_view path)
+std::pair<std::string_view, std::string_view> ROOT::Detail::DecomposePath(std::string_view path)
 {
    auto lastSlashIdx = path.rfind('/');
    if (lastSlashIdx == std::string_view::npos)
@@ -204,7 +204,7 @@ std::pair<std::string_view, std::string_view> ROOT::Experimental::Detail::Decomp
 std::unique_ptr<RFile> RFile::Open(std::string_view path)
 {
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
-   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
+   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "READ"));
    EnsureFileOpenAndBinary(tfile.get(), path);
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
@@ -214,7 +214,7 @@ std::unique_ptr<RFile> RFile::Open(std::string_view path)
 std::unique_ptr<RFile> RFile::Update(std::string_view path)
 {
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
-   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "UPDATE_WITHOUT_GLOBALREGISTRATION"));
+   auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "UPDATE"));
    EnsureFileOpenAndBinary(tfile.get(), path);
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
@@ -224,8 +224,8 @@ std::unique_ptr<RFile> RFile::Update(std::string_view path)
 std::unique_ptr<RFile> RFile::Recreate(std::string_view path, const RRecreateOptions &opts)
 {
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
-   auto tfile = std::unique_ptr<TFile>(
-      TFile::Open(std::string(path).c_str(), "RECREATE_WITHOUT_GLOBALREGISTRATION", "", opts.fCompressionSettings));
+   auto tfile =
+      std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "RECREATE", "", opts.fCompressionSettings));
    EnsureFileOpenAndBinary(tfile.get(), path);
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
@@ -397,14 +397,14 @@ void RFile::PutUntyped(std::string_view pathSV, const std::type_info &type, cons
    }
 }
 
-ROOT::Experimental::RFileKeyIterable::RIterator::RIterStackElem::RIterStackElem(TIterator *it, const std::string &path)
+ROOT::RFileKeyIterable::RIterator::RIterStackElem::RIterStackElem(TIterator *it, const std::string &path)
    : fIter(it), fDirPath(path)
 {
 }
 
-ROOT::Experimental::RFileKeyIterable::RIterator::RIterStackElem::~RIterStackElem() = default;
+ROOT::RFileKeyIterable::RIterator::RIterStackElem::~RIterStackElem() = default;
 
-ROOT::Experimental::RFileKeyIterable::RIterator::RIterator(TIterator *iter, Pattern_t pattern, std::uint32_t flags)
+ROOT::RFileKeyIterable::RIterator::RIterator(TIterator *iter, Pattern_t pattern, std::uint32_t flags)
    : fPattern(pattern), fFlags(flags)
 {
    if (iter) {
@@ -423,17 +423,17 @@ ROOT::Experimental::RFileKeyIterable::RIterator::RIterator(TIterator *iter, Patt
    }
 }
 
-ROOT::Experimental::RFileKeyIterable::RIterator ROOT::Experimental::RFileKeyIterable::begin() const
+ROOT::RFileKeyIterable::RIterator ROOT::RFileKeyIterable::begin() const
 {
    return {fFile->GetListOfKeys()->MakeIterator(), fPattern, fFlags};
 }
 
-ROOT::Experimental::RFileKeyIterable::RIterator ROOT::Experimental::RFileKeyIterable::end() const
+ROOT::RFileKeyIterable::RIterator ROOT::RFileKeyIterable::end() const
 {
    return {nullptr, fPattern, fFlags};
 }
 
-void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
+void ROOT::RFileKeyIterable::RIterator::Advance()
 {
    fCurKey = nullptr;
 
@@ -496,7 +496,7 @@ void ROOT::Experimental::RFileKeyIterable::RIterator::Advance()
    }
 }
 
-ROOT::Experimental::RKeyInfo ROOT::Experimental::RFileKeyIterable::RIterator::operator*()
+ROOT::RKeyInfo ROOT::RFileKeyIterable::RIterator::operator*()
 {
    if (fIterStack.empty())
       throw ROOT::RException(R__FAIL("tried to dereference an invalid iterator"));
@@ -545,7 +545,7 @@ void RFile::Close()
    fFile.reset();
 }
 
-ROOT::Experimental::RKeyInfo::RKeyInfo(const TKey &key)
+ROOT::RKeyInfo::RKeyInfo(const TKey &key)
    : fPath(ReconstructFullKeyPath(key)),
      fTitle(key.GetTitle()),
      fClassName(key.GetClassName()),
@@ -558,7 +558,7 @@ ROOT::Experimental::RKeyInfo::RKeyInfo(const TKey &key)
 {
 }
 
-std::optional<ROOT::Experimental::RKeyInfo> RFile::GetKeyInfo(std::string_view path) const
+std::optional<ROOT::RKeyInfo> RFile::GetKeyInfo(std::string_view path) const
 {
    const TKey *key = GetTKey(path);
    if (!key)
@@ -568,13 +568,13 @@ std::optional<ROOT::Experimental::RKeyInfo> RFile::GetKeyInfo(std::string_view p
    return keyInfo;
 }
 
-void *ROOT::Experimental::Internal::RFile_GetObjectFromKey(RFile &file, const RKeyInfo &key)
+void *ROOT::Internal::RFile_GetObjectFromKey(RFile &file, const RKeyInfo &key)
 {
    void *obj = file.GetUntyped(key.GetPath(), key.GetClassName().c_str());
    return obj;
 }
 
-TFile *ROOT::Experimental::Internal::GetRFileTFile(RFile &file)
+TFile *ROOT::Internal::GetRFileTFile(RFile &file)
 {
    return file.fFile.get();
 }
