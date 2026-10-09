@@ -686,10 +686,10 @@ static PyObject* vector_iter(PyObject* v) {
   if (!vi)
     return nullptr;
 
-  Py_INCREF(v);
   vi->ii_container = v;
 
   // tell the iterator code to set a life line if this container is a temporary
+  // (checked before taking the iterator's own reference)
   vi->vi_flags = vectoriterobject::kDefault;
 #if PY_VERSION_HEX >= 0x030e0000
   if (PyUnstable_Object_IsUniqueReferencedTemporary(v) ||
