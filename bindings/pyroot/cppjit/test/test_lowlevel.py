@@ -1325,3 +1325,82 @@ class TestCSTRINGARRAY:
 
         s.names = "abc"
         assert ns.as_chars(s) == "abc"
+
+
+class TestASSTDANY:
+    def setup_class(cls):
+        import cppjit
+
+        cppjit.cppdef(r"""\
+        #include <any>
+        #include <thread>
+        #include <vector>
+        namespace AsStdAny {
+            std::vector<std::any> gStore;
+            void store(std::any a) { gStore.push_back(a); }
+            void clear() { gStore.clear(); }
+            void clear_in_thread() { std::thread([] { gStore.clear(); }).join(); }
+        }""")
+        # clearing in another thread takes the GIL, so it must not be held
+        cppjit.gbl.AsStdAny.clear_in_thread.__release_gil__ = True
+
+    def _holder(self):
+        import weakref
+
+        class Holder:
+            pass
+
+        obj = Holder()
+        return obj, weakref.ref(obj)
+
+    def test01_keeps_alive(self):
+        """The std::any and its copies in C++ keep the object alive"""
+
+        import cppjit
+        import cppjit.ll
+
+        ns = cppjit.gbl.AsStdAny
+        obj, ref = self._holder()
+        a = cppjit.ll.as_std_any(obj)
+        assert type(a) is cppjit.gbl.std.any
+        ns.store(a)
+        del obj, a
+        assert ref() is not None
+        ns.clear()
+        assert ref() is None
+
+    def test02_released_in_other_thread(self):
+        """The last reference can be released by a thread without the GIL"""
+
+        import cppjit
+        import cppjit.ll
+
+        ns = cppjit.gbl.AsStdAny
+        obj, ref = self._holder()
+        ns.store(cppjit.ll.as_std_any(obj))
+        del obj
+        assert ref() is not None
+        ns.clear_in_thread()
+        assert ref() is None
+
+
+class TestREDUCEMETHOD:
+    def test01_set_and_unset(self):
+        """The __reduce__ method of all instances can be set and unset"""
+
+        import pickle
+
+        import cppjit
+
+        cppjit.cppdef("namespace ReduceMethod { struct S { int x = 3; }; }")
+
+        def reduce_s(obj):
+            return (int, (obj.x,))
+
+        cppjit._backend._set_reduce_method(reduce_s)
+        try:
+            assert pickle.loads(pickle.dumps(cppjit.gbl.ReduceMethod.S())) == 3
+        finally:
+            cppjit._backend._set_reduce_method(None)
+        raises(NotImplementedError, pickle.dumps, cppjit.gbl.ReduceMethod.S())
+        raises(TypeError, cppjit._backend._set_reduce_method, 42)

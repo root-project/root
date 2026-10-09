@@ -577,8 +577,9 @@ def _MakeNumpyDataFrame(np_dict):
     This function takes a dictionary of numpy arrays and creates an RDataFrame
     using the keys as column names and the numpy arrays as data.
     """
+    import cppyy.ll
+
     import ROOT
-    from ROOT.libROOTPythonizations import PyObjRefCounterAsStdAny
 
     if not isinstance(np_dict, dict):
         raise RuntimeError("Object not convertible: Python object is not a dictionary.")
@@ -594,4 +595,4 @@ def _MakeNumpyDataFrame(np_dict):
     # original dict, because otherwise the caller of _MakeNumpyDataFrame can
     # invalidate our cache by mutating the np_dict after the call.
 
-    return ROOT.Internal.RDF.MakeRVecDataFrame(PyObjRefCounterAsStdAny(dict(**np_dict)), *args)
+    return ROOT.Internal.RDF.MakeRVecDataFrame(cppyy.ll.as_std_any(dict(**np_dict)), *args)

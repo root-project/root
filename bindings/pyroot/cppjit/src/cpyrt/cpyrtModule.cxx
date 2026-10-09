@@ -32,6 +32,7 @@ PyObject* Instance_FromVoidPtr(void* addr, const std::string& classname,
 
 // Standard
 #include <algorithm>
+#include <any>
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -667,6 +668,65 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds) {
 }
 
 //----------------------------------------------------------------------------
+static PyObject* SetReduceMethod(PyObject*, PyObject* reducer) {
+  // Set the __reduce__ method of all instances; None unsets it.
+  if (reducer == Py_None)
+    reducer = nullptr;
+  else if (!PyCallable_Check(reducer)) {
+    PyErr_SetString(PyExc_TypeError, "reduce method must be callable or None");
+    return nullptr;
+  }
+  Py_XINCREF(reducer);
+  PyObject* previous = CPPInstance::ReduceMethod();
+  CPPInstance::ReduceMethod() = reducer;
+  Py_XDECREF(previous);
+  Py_RETURN_NONE;
+}
+
+//----------------------------------------------------------------------------
+namespace {
+// A reference to a Python object, held by C++. Copies hold references of
+// their own. C++ may copy or destroy it on any thread, so it takes the GIL to
+// change the reference count; once Python is finalized it can't, and leaves
+// the reference be.
+class PyObjectRef {
+  PyObject* fObject;
+
+public:
+  // called from Python, with the GIL held
+  explicit PyObjectRef(PyObject* object) : fObject(object) {
+    Py_INCREF(fObject);
+  }
+  PyObjectRef(const PyObjectRef& other) : fObject(other.fObject) {
+    if (Py_IsInitialized()) {
+      cpyrt::PythonGILRAII python_gil_raii;
+      Py_INCREF(fObject);
+    }
+  }
+  PyObjectRef(PyObjectRef&& other) noexcept : fObject(other.fObject) {
+    other.fObject = nullptr;
+  }
+  PyObjectRef& operator=(PyObjectRef other) noexcept {
+    std::swap(fObject, other.fObject);
+    return *this;
+  }
+  ~PyObjectRef() {
+    if (fObject && Py_IsInitialized()) {
+      cpyrt::PythonGILRAII python_gil_raii;
+      Py_DECREF(fObject);
+    }
+  }
+};
+} // unnamed namespace
+
+static PyObject* AsStdAny(PyObject*, PyObject* pyobject) {
+  // Wrap a reference to pyobject in a std::any owned by Python.
+  return cpyrt::Instance_FromVoidPtr(
+      new std::any{std::in_place_type<PyObjectRef>, pyobject}, "std::any",
+      /*python_owns=*/true);
+}
+
+//----------------------------------------------------------------------------
 static PyObject* BindValue(PyObject*, PyObject* args, PyObject* kwds) {
   // Read through the converter for the given type name, at the given address.
   static const char* kwlist[] = {(char*)"type_name", (char*)"address",
@@ -949,6 +1009,8 @@ static PyMethodDef gcpyrtMethods[] = {
      (char*)"Create an object of given type, from given address."},
     {(char*)"bind_value", (PyCFunction)BindValue, METH_VARARGS | METH_KEYWORDS,
      (char*)"Read a value of given type, from given address."},
+    {(char*)"as_std_any", (PyCFunction)AsStdAny, METH_O,
+     (char*)"Wrap a reference to a Python object in a std::any."},
     {(char*)"move", (PyCFunction)Move, METH_O,
      (char*)"Cast the C++ object to become movable."},
     {(char*)"add_pythonization", (PyCFunction)AddPythonization, METH_VARARGS,
@@ -957,6 +1019,8 @@ static PyMethodDef gcpyrtMethods[] = {
      METH_VARARGS, (char*)"Remove a pythonizor."},
     {(char*)"_pin_type", (PyCFunction)PinType, METH_O,
      (char*)"Install a type pinning."},
+    {(char*)"_set_reduce_method", (PyCFunction)SetReduceMethod, METH_O,
+     (char*)"Set the __reduce__ method of all instances."},
     {(char*)"_add_type_reducer", (PyCFunction)AddTypeReducer, METH_VARARGS,
      (char*)"Add a type reducer."},
     {(char*)"SetHeuristicMemoryPolicy", (PyCFunction)SetHeuristicMemoryPolicy,

@@ -17,6 +17,7 @@
 #include <TError.h>
 #include <ThreadLocalStorage.h>
 #include <TSystem.h>
+#include <TVirtualMutex.h>
 
 #include <cstdarg>
 #include <cstdio>
@@ -180,4 +181,39 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
          abort();
       }
    }
+}
+
+namespace {
+ROOT::Internal::WarningHandlerFunc_t gWarningHandler = nullptr;
+
+void WarningHandlerErrorHandler(Int_t level, Bool_t abort, const char *location, const char *msg)
+{
+   // Initialize gErrorIgnoreLevel from gEnv: the default handler prints
+   // nothing for a level that low
+   if (gErrorIgnoreLevel == kUnset)
+      DefaultErrorHandler(kUnset - 1, kFALSE, "", "");
+
+   if (level < gErrorIgnoreLevel)
+      return;
+
+   if (level >= kWarning && level < kError && !gGlobalMutex) {
+      try {
+         gWarningHandler(location ? location : "", msg);
+      } catch (...) {
+         // The code that reported the warning does not expect an exception.
+         // The Python bindings throw one when the warning is turned into an
+         // error, leaving the Python error set: it is raised once the call
+         // into C++ returns to Python.
+      }
+      return;
+   }
+
+   DefaultErrorHandler(level, abort, location, msg);
+}
+} // namespace
+
+void ROOT::Internal::SetWarningHandler(WarningHandlerFunc_t handler)
+{
+   gWarningHandler = handler;
+   SetErrorHandler(&WarningHandlerErrorHandler);
 }

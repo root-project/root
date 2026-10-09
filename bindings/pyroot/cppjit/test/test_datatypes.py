@@ -2777,6 +2777,22 @@ class TestDATATYPES:
         ns.take_int8(101)
         raises(TypeError, ns.take_int8, "e")
 
+    def test56_function_pointer_return_multiword_types(self):
+        """A returned function pointer whose signature has multi-word types"""
+
+        import cppjit
+
+        cppjit.cppdef(r"""\
+        namespace ns56 {
+            typedef unsigned long (*func_t)(const char *, unsigned int);
+            unsigned long add_len(const char *s, unsigned int n) { return std::string(s).size() + n; }
+            func_t get() { return add_len; }
+        }""")
+
+        # the std::function wrapping the returned pointer is compiled from
+        # its signature, which must keep "const char" and "unsigned int"
+        assert cppjit.gbl.ns56.get()("abc", 4) == 7
+
 
 class TestANONENUM:
     def test01_anonymous_enum_repeated_access(self):
