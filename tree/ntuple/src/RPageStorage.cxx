@@ -433,12 +433,9 @@ ROOT::Internal::RPageSource::FindClusterId(DescriptorId_t physicalColumnId, NTup
 
 void ROOT::Internal::RPageSource::UnzipCluster(RCluster *cluster)
 {
-   if (fTaskScheduler)
-      UnzipClusterImpl(cluster);
-}
+   if (!fTaskScheduler)
+      return;
 
-void ROOT::Internal::RPageSource::UnzipClusterImpl(RCluster *cluster)
-{
    RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
 
    const auto clusterId = cluster->GetId();
