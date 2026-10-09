@@ -51,74 +51,6 @@ struct RClusterRange {
 };
 
 /**
- * \class ROOT::Experimental::Internal::ML::RClusterLoaderFunctor
- * \brief Functor invoked by RDataFrame::Foreach to fill one row of an RFlat2DMatrix.
- *
- */
-
-template <typename... ColTypes>
-class RClusterLoaderFunctor {
-   std::size_t fOffset{};
-   std::size_t fVecSizeIdx{};
-   float fVecPadding{};
-   std::vector<std::size_t> fMaxVecSizes{};
-   RFlat2DMatrix &fChunkTensor;
-
-   std::size_t fNumChunkCols;
-
-   int fI;
-   int fNumColumns;
-
-   //////////////////////////////////////////////////////////////////////////
-   /// \brief \brief Copy the content of a column into the current tensor when the column consists of vectors
-   template <typename T, std::enable_if_t<ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
-   void AssignToTensor(const T &vec, int i, int numColumns)
-   {
-      std::size_t max_vec_size = fMaxVecSizes[fVecSizeIdx++];
-      std::size_t vec_size = vec.size();
-
-      float *dst = fChunkTensor.GetData() + fOffset + numColumns * i;
-      if (vec_size < max_vec_size) // Padding vector column to max_vec_size with fVecPadding
-      {
-         std::copy(vec.begin(), vec.end(), dst);
-         std::fill(dst + vec_size, dst + max_vec_size, fVecPadding);
-      } else // Copy only max_vec_size length from vector column
-      {
-         std::copy(vec.begin(), vec.begin() + max_vec_size, dst);
-      }
-      fOffset += max_vec_size;
-   }
-
-   //////////////////////////////////////////////////////////////////////////
-   /// \brief Copy the content of a column into the current tensor when the column consists of scalar values
-   template <typename T, std::enable_if_t<!ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
-   void AssignToTensor(const T &val, int i, int numColumns)
-   {
-      fChunkTensor.GetData()[fOffset + numColumns * i] = val;
-      fOffset++;
-   }
-
-public:
-   RClusterLoaderFunctor(RFlat2DMatrix &chunkTensor, std::size_t numColumns,
-                         const std::vector<std::size_t> &maxVecSizes, float vecPadding, int i,
-                         std::size_t rowOffset = 0)
-      : fChunkTensor(chunkTensor),
-        fMaxVecSizes(maxVecSizes),
-        fVecPadding(vecPadding),
-        fI(i),
-        fNumColumns(numColumns),
-        fOffset(rowOffset * numColumns)
-   {
-   }
-
-   void operator()(const ColTypes &...cols)
-   {
-      fVecSizeIdx = 0;
-      (AssignToTensor(cols, fI, fNumColumns), ...);
-   }
-};
-
-/**
  * \class ROOT::Experimental::Internal::ML::RClusterLoader
  * \brief Loads TTree/RNTuple clusters from one or more RDataFrames into RFlat2DMatrix
  *        buffers for ML training and validation.
@@ -145,7 +77,6 @@ public:
  * After the first epoch FinaliseSplitDiscovery() marks the split as stable and
  * all subsequent epochs use the same pre-computed ranges.
  */
-template <typename... Args>
 class RClusterLoader {
 private:
    std::vector<ROOT::RDF::RNode> &fRdfs;
@@ -338,8 +269,8 @@ public:
    {
       ROOT::RDF::RNode &rdf = fRdfs[rdfIdx];
       ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, startRow, endRow);
-      RClusterLoaderFunctor<Args...> func(dest, fNumChunkCols, fVecSizes, fVecPadding, 0, rowOffset);
-      rdf.Foreach(func, fCols);
+      auto values = ROOT::Internal::RDF::LoadCustomValues(rdf, fCols, fVecSizes, fVecPadding);
+      std::copy(values->begin(), values->end(), dest.GetData() + rowOffset * fNumChunkCols);
       ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, 0, fRdfSizes[rdfIdx]);
    }
 
