@@ -13,6 +13,7 @@
 #include <RooGaussian.h>
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>
+#include <RooLognormal.h>
 #include <RooPlot.h>
 #include <RooProdPdf.h>
 #include <RooProduct.h>
@@ -268,6 +269,29 @@ TEST(RooWorkspace, Issue_7809)
    ASSERT_EQ(static_cast<RooProduct *>(ws.function("p2"))->components().size(), 2);
    ASSERT_EQ(static_cast<RooProdPdf *>(ws.pdf("p3"))->pdfList().size(), 2);
    ASSERT_EQ(static_cast<RooProduct *>(ws.function("p4"))->components().size(), 2);
+}
+
+/// The factory converted bool constructor arguments with atoi(), so the
+/// spelled-out literals `true` and `false` were both silently read as false.
+TEST(RooWorkspace, FactoryBoolArguments)
+{
+   RooWorkspace ws;
+   ws.factory("Lognormal::lnDefault(x[1.0, 0.1, 10], mu[0.7, 0.1, 2.3], k[0.7, 0.1, 0.95])");
+   ws.factory("Lognormal::lnTrue(x, mu, k, true)");
+   ws.factory("Lognormal::lnFalse(x, mu, k, false)");
+   ws.factory("Lognormal::lnOne(x, mu, k, 1)");
+   ws.factory("Lognormal::lnZero(x, mu, k, 0)");
+
+   auto flag = [&](const char *name) {
+      auto *pdf = dynamic_cast<RooLognormal *>(ws.pdf(name));
+      EXPECT_NE(pdf, nullptr) << name;
+      return pdf && pdf->useStandardParametrization();
+   };
+   EXPECT_FALSE(flag("lnDefault"));
+   EXPECT_TRUE(flag("lnTrue"));
+   EXPECT_FALSE(flag("lnFalse"));
+   EXPECT_TRUE(flag("lnOne"));
+   EXPECT_FALSE(flag("lnZero"));
 }
 
 /// Check if handles to the owning RooWorkspace are correctly updated when
