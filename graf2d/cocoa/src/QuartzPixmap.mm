@@ -370,9 +370,9 @@ namespace Quartz = ROOT::Quartz;
 
    for (unsigned i = 0; i < area.fHeight; ++i) {
       for (unsigned j = 0; j < area.fWidth; ++j, srcPixel += 4, dstPixel += 4) {
-         dstPixel[0] = srcPixel[0];
+         dstPixel[0] = srcPixel[2];
          dstPixel[1] = srcPixel[1];
-         dstPixel[2] = srcPixel[2];
+         dstPixel[2] = srcPixel[0];
          dstPixel[3] = srcPixel[3];
       }
 
