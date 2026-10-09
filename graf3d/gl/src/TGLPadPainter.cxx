@@ -22,6 +22,7 @@
 #include "TROOT.h"
 #include "TPad.h"
 #include "TCanvas.h"
+#include "TCanvasImp.h"
 #include "TImage.h"
 
 #include "TColorGradient.h"
@@ -169,6 +170,14 @@ void TGLPadPainter::ClearWindow(Int_t device)
    auto ctxt = gVirtualX->GetWindowContext(device);
    if (ctxt)
       gVirtualX->ClearWindowW(ctxt);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true when X11 backend is used
+
+Bool_t TGLPadPainter::IsX11() const
+{
+   return gVirtualX->InheritsFrom("TGX11");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -873,56 +882,78 @@ void TGLPadPainter::DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Using TImage save frame-buffer contents as a picture.
+/// Fill image object with the pixel data from the pad
+/// Implements special handling for X11 where ASImage has native implementation
 
-void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const
+Bool_t TGLPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
 {
-   auto canvas = pad->GetCanvas();
-   if (!canvas)
-      return;
+   auto canvas = pad ? pad->GetCanvas() : nullptr;
+   if (!canvas || !image)
+      return kFALSE;
 
-   canvas->Flush();
+   UInt_t width  = canvas->GetPadWidth(), height = canvas->GetPadHeight();
+   Int_t x0 = 0, y0 = 0;
 
-   std::vector<unsigned> buff(canvas->GetWw() * canvas->GetWh());
+   if (pad != canvas) {
+      // GL always paint complete canvas - just extract part out of the complete buffer
+      UInt_t pad_width = pad->GetPadWidth();
+      UInt_t pad_height = pad->GetPadHeight();
+      if (!pad_width || !pad_height) {
+         Error("FillImageFromPad", "Pad dimensions are zero");
+         return kFALSE;
+      }
+
+      x0 = TMath::Max(0, pad->UtoAbsPixel(0));
+      y0 = TMath::Max(0, pad->VtoAbsPixel(1));
+      if ((x0 + pad_width > width) || (y0 + pad_height > height)) {
+         Error("FillImageFromPad", "Pad dimensions exceed canvas size");
+         return kFALSE;
+      }
+
+      // because of GL lines swapping need to recalculate first line
+      y0 = height - (y0 + pad_height);
+
+      width = pad_width;
+      height = pad_height;
+   }
+
+   // special mode to request window attributes, implemented only in TRootCanvas
+   Int_t update_arg = 101;
+   // on Mac redo update again - no other way found to get GL image updated
+   if (IsCocoa()) {
+      canvas->Update();
+      update_arg = 1;
+   }
+
+   canvas->GetCanvasImp()->UpdateDisplay(update_arg, kFALSE);
+
+#ifndef WIN32
+   // crash on Windows
+   glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+#endif
+
    glPixelStorei(GL_PACK_ALIGNMENT, 1);
    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+   glReadBuffer(GL_BACK);
+
    //In case GL_BGRA is not in gl.h (old windows' gl) - comment/uncomment lines.
    //glReadPixels(0, 0, canvas->GetWw(), canvas->GetWh(), GL_BGRA, GL_UNSIGNED_BYTE, (char *)&buff[0]);
-   glReadPixels(0, 0, canvas->GetWw(), canvas->GetWh(), GL_RGBA, GL_UNSIGNED_BYTE, (char *)&buff[0]);
 
-   std::unique_ptr<TImage> image(TImage::Create());
-   if (!image.get()) {
-      ::Error("TGLPadPainter::SaveImage", "TImage creation failed");
-      return;
-   }
+   std::vector<unsigned> buff(width * height);
 
-   image->DrawRectangle(0, 0, canvas->GetWw(), canvas->GetWh());
-   UInt_t *argb = image->GetArgbArray();
+   glReadPixels(x0, y0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (char *) buff.data());
 
-   if (!argb) {
-      ::Error("TGLPadPainter::SaveImage", "null argb array in TImage object");
-      return;
-   }
+   TGLUtil::SwapPixelBuffer((UChar_t *) buff.data(), width, height);
 
-   const Int_t nLines  = canvas->GetWh();
-   const Int_t nPixels = canvas->GetWw();
+   // convert rgba into bgra
+   for (auto &pix : buff)
+      pix = ((pix & 0xff) << 16) | (pix & 0xff00) | ((pix & 0xff0000) >> 16) | (pix & 0xff000000);
 
-   for (Int_t i = 0; i < nLines; ++i) {
-     Int_t base = (nLines - 1 - i) * nPixels;
-     for (Int_t j = 0; j < nPixels; ++j, ++base) {
-        //Uncomment/comment if you don't have GL_BGRA.
+   image->FromBitmap((UChar_t *) buff.data(), width, height);
 
-        const UInt_t pix  = buff[base];
-        const UInt_t bgra = ((pix & 0xff) << 16) | (pix & 0xff00) |
-                            ((pix & 0xff0000) >> 16) | (pix & 0xff000000);
-
-        //argb[i * nPixels + j] = buff[base];
-        argb[i * nPixels + j] = bgra;
-     }
-   }
-
-   image->WriteImage(fileName, (TImage::EImageFileTypes)type);
+   return image->IsValid();
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

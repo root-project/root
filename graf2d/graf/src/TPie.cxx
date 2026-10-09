@@ -426,7 +426,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    // XY metric
    Double_t radXY = fIs3D ? TMath::Sin(fAngle3D/180.*TMath::Pi()) : 1.;
 
-   auto inter = dynamic_cast<TPieInteractive *>(parent.Interactive(this));
+   auto inter = parent.GetInteractive<TPieInteractive>(this);
 
    auto calcAngle = [this, &parent,px,py]() {
       Double_t xx = parent.AbsPixeltoX(px);
@@ -445,8 +445,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    switch(event) {
       case kArrowKeyPress:
       case kButton1Down:
-         inter = new TPieInteractive();
-         parent.Interactive(this, inter);
+         inter = parent.MakeInteractive<TPieInteractive>(this);
 
          // Current center and radius.
          inter->angularOffset0 = fAngularOffset;
@@ -482,7 +481,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                inter->sliceOffset = fPieSlices[inter->currentSlice]->GetRadiusOffset();
                inter->fMode = TPieInteractive::pMovingSlice;
             } else
-               parent.Interactive(); // reject interactive
+               parent.FreeInteractive(this); // reject interactive
          } else if ((info.rad >= 0.3) && (info.rad <= 0.6)) {
             parent.SetCursor(kRotate);
             inter->fMode = TPieInteractive::pRotating;
@@ -546,7 +545,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             parent.Modified();
          }
 
-         parent.Interactive(); // remove interactive object
+         parent.FreeInteractive(this);
          parent.UpdateAsync();
 
          break;

@@ -198,15 +198,13 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    Bool_t opaque  = parent.OpaqueMoving();
 
-   auto inter = dynamic_cast<TCurlyLineInteractive *>(parent.Interactive(this));
+   auto inter = parent.GetInteractive<TCurlyLineInteractive>(this);
 
    switch (event) {
 
    case kArrowKeyPress:
    case kButton1Down:
-      // create interactive object and assign it
-      inter = new TCurlyLineInteractive(GetStartX(), GetStartY(), GetEndX(), GetEndY());
-      parent.Interactive(this, inter);
+      inter = parent.MakeInteractive<TCurlyLineInteractive>(this, GetStartX(), GetStartY(), GetEndX(), GetEndY());
       // No break !!!
 
    case kMouseMotion:
@@ -247,7 +245,7 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          parent.Modified();
       }
       parent.UpdateAsync();
-      parent.Interactive(); // delete interactive object
+      parent.FreeInteractive(this);
       break;
    }
 }

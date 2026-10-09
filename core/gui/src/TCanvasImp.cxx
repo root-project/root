@@ -61,8 +61,4 @@ void TCanvasImp::ResizeCanvasWindow(Int_t wid)
 
 void TCanvasImp::UpdateDisplay(Int_t mode, Bool_t sleep)
 {
-   if (gVirtualX)
-      gVirtualX->Update(mode);
-   if (sleep)
-      gSystem->Sleep(30);
 }

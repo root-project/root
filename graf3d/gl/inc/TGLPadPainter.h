@@ -119,16 +119,15 @@ public:
    void     DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags = 0) override;
 
    //jpg, png, gif and bmp output.
-   void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const override;
+   Bool_t   FillImageFromPad(TImage *image, TVirtualPad *pad) const override;
 
    //TASImage support.
    void     DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
                        Int_t dstX, Int_t dstY, Bool_t enableBlending) override;
 
-   Bool_t IsNative() const override { return kTRUE; }
-
+   Bool_t   IsNative() const override { return kTRUE; }
+   Bool_t   IsX11() const override;
    Bool_t   IsCocoa() const override;
-
    Bool_t   IsSupportAlpha() const override { return kTRUE; }
 
 private:

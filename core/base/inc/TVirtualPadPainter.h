@@ -154,11 +154,16 @@ public:
    virtual void     DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags = 0);
 
    //gif, jpg, png, bmp output.
-   virtual void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const = 0;
+   virtual void     R__DEPRECATED(7,00, "Old method, replaced by SaveAsImage") SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const ;
+
+   // New API for all kind of image formats.
+   virtual Int_t    SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t type) const;
+   virtual Bool_t   FillImageFromPad(TImage *image, TVirtualPad *pad) const;
 
    virtual void     OnPad(TVirtualPad *) {}
 
    virtual Bool_t   IsNative() const { return kFALSE; }
+   virtual Bool_t   IsX11() const { return kFALSE; }
    virtual Bool_t   IsCocoa() const { return kFALSE; }
    virtual TVirtualPS *GetPS() const { return nullptr; }
    virtual Bool_t   IsSupportAlpha() const { return kFALSE; }

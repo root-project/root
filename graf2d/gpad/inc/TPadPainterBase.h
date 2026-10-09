@@ -127,6 +127,8 @@ public:
    void DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode mode) override;
    void DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, ETextMode mode) override;
 
+   Int_t SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t type) const override;
+
    ClassDefOverride(TPadPainterBase, 0)//Pad painter with attributes handling
 };
 
