@@ -363,6 +363,42 @@ FindColumnReprMapping(const std::vector<RColReprMapping> &mappings, std::uint32_
    return std::nullopt;
 }
 
+struct RColumnOutInfo {
+   ROOT::DescriptorId_t fColumnId = ROOT::kInvalidDescriptorId;
+};
+
+struct RColumnMergeInfo {
+   // This column name is built as a dot-separated concatenation of the ancestry of
+   // the columns' parent fields' names plus the index of the column itself.
+   // e.g. "Muon.pt.x._0"
+   std::string fColumnName;
+   // The column id in the source RNTuple
+   ROOT::DescriptorId_t fInputId = ROOT::kInvalidDescriptorId;
+   // The corresponding column id in the destination RNTuple (the mapping happens in AddColumnsFromField())
+   ROOT::DescriptorId_t fOutputId = ROOT::kInvalidDescriptorId;
+   std::uint16_t fOutputReprIndex = 0;
+   // If nullopt, use the default in-memory type
+   std::optional<std::type_index> fInMemoryType;
+   const ROOT::RFieldDescriptor *fParentFieldDescriptor = nullptr;
+   const ROOT::RNTupleDescriptor *fParentNTupleDescriptor = nullptr;
+};
+
+// { ".fully.qualified.fieldName.colInputIndex.colOutputReprIndex" => colOutputInfo }
+using ColumnIdMap_t = std::unordered_map<std::string, RColumnOutInfo>;
+
+struct RColumnInfoGroup {
+   std::vector<RColumnMergeInfo> fExtraDstColumns;
+   std::vector<RColumnMergeInfo> fCommonColumns;
+};
+
+struct RSealedPageMergeData {
+   // We use a std::deque so that references to the contained SealedPageSequence_t, and its iterators, are
+   // never invalidated.
+   std::deque<RPageStorage::SealedPageSequence_t> fPagesV;
+   std::vector<RPageStorage::RSealedPageGroup> fGroups;
+   std::vector<std::unique_ptr<std::byte[]>> fBuffers;
+};
+
 template <typename T>
 using FieldCollectionMap_t = std::unordered_map<const ROOT::RFieldDescriptor *, std::vector<T>>;
 
@@ -377,67 +413,7 @@ struct RDescriptorsComparison {
    FieldCollectionMap_t<RColReprExtension> fColReprExtensions;
 };
 
-struct RColumnOutInfo {
-   ROOT::DescriptorId_t fColumnId = ROOT::kInvalidDescriptorId;
-};
-
-// { ".fully.qualified.fieldName.colInputIndex.colOutputReprIndex" => colOutputInfo }
-using ColumnIdMap_t = std::unordered_map<std::string, RColumnOutInfo>;
-
-struct RColumnInfoGroup {
-   std::vector<RColumnMergeInfo> fExtraDstColumns;
-   std::vector<RColumnMergeInfo> fCommonColumns;
-};
-
 } // namespace
-
-// These structs cannot be in the anon namespace becase they're used in RNTupleMerger's private interface.
-namespace ROOT::Experimental::Internal {
-struct RColumnMergeInfo {
-   // This column name is built as a dot-separated concatenation of the ancestry of
-   // the columns' parent fields' names plus the index of the column itself.
-   // e.g. "Muon.pt.x._0"
-   std::string fColumnName;
-   // The column id in the source RNTuple
-   ROOT::DescriptorId_t fInputId = kInvalidDescriptorId;
-   // The corresponding column id in the destination RNTuple (the mapping happens in AddColumnsFromField())
-   ROOT::DescriptorId_t fOutputId = kInvalidDescriptorId;
-   std::uint16_t fOutputReprIndex = 0;
-   // If nullopt, use the default in-memory type
-   std::optional<std::type_index> fInMemoryType;
-   const ROOT::RFieldDescriptor *fParentFieldDescriptor = nullptr;
-   const ROOT::RNTupleDescriptor *fParentNTupleDescriptor = nullptr;
-};
-
-// Data related to a single call of RNTupleMerger::Merge()
-struct RNTupleMergeData {
-   std::span<RPageSource *> fSources;
-   RPageSink &fDestination;
-   const RNTupleMergeOptions &fMergeOpts;
-   const ROOT::RNTupleDescriptor &fDstDescriptor;
-   const ROOT::RNTupleDescriptor *fSrcDescriptor = nullptr;
-
-   std::vector<RColumnMergeInfo> fColumns;
-   // Maps input column IDs to output IDs
-   ColumnIdMap_t fColumnIdMap;
-
-   ROOT::NTupleSize_t fNumDstEntries = 0;
-
-   RNTupleMergeData(std::span<RPageSource *> sources, RPageSink &destination, const RNTupleMergeOptions &mergeOpts)
-      : fSources{sources}, fDestination{destination}, fMergeOpts{mergeOpts}, fDstDescriptor{destination.GetDescriptor()}
-   {
-   }
-};
-
-struct RSealedPageMergeData {
-   // We use a std::deque so that references to the contained SealedPageSequence_t, and its iterators, are
-   // never invalidated.
-   std::deque<RPageStorage::SealedPageSequence_t> fPagesV;
-   std::vector<RPageStorage::RSealedPageGroup> fGroups;
-   std::vector<std::unique_ptr<std::byte[]>> fBuffers;
-};
-
-} // namespace ROOT::Experimental::Internal
 
 // Subprocedure of CompareDescriptorStructure, extracted for readability.
 // Given two fields, attempts to match their column representations and schedules column extensions if necessary.
@@ -543,27 +519,16 @@ static void MatchColumnRepresentations(const ROOT::RNTupleDescriptor &srcDesc, c
    }
 }
 
-/// Compares the top level fields of `dst` and `src` and determines whether they can be merged or not.
-/// In addition, returns the differences between `dst` and `src`'s structures
-static ROOT::RResult<RDescriptorsComparison>
-CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTupleDescriptor &src)
+static RDescriptorsComparison
+FillCommonAndExtraFields(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTupleDescriptor &src)
 {
-   // Cases:
-   // 1. dst == src
-   // 2. dst has fields that src hasn't
-   // 3. src has fields that dst hasn't
-   // 4. dst and src have fields that differ (compatible or incompatible)
-
-   std::vector<std::string> errors;
    RDescriptorsComparison res;
-
-   std::vector<RCommonField> commonFields;
 
    for (const auto &dstField : dst.GetTopLevelFields()) {
       const auto srcFieldId = src.FindFieldId(dstField.GetFieldName());
       if (srcFieldId != ROOT::kInvalidDescriptorId) {
          const auto &srcField = src.GetFieldDescriptor(srcFieldId);
-         commonFields.push_back({srcField, dstField});
+         res.fCommonFields.push_back({srcField, dstField});
       } else {
          res.fExtraDstFields.emplace_back(&dstField);
       }
@@ -575,8 +540,25 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
       }
    }
 
+   return res;
+}
+
+/// Compares the top level fields of `dst` and `src` and determines whether they can be merged or not.
+/// In addition, returns the differences between `dst` and `src`'s structures
+static ROOT::RResult<RDescriptorsComparison>
+CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTupleDescriptor &src)
+{
+   // Cases:
+   // 1. dst == src
+   // 2. dst has fields that src hasn't
+   // 3. src has fields that dst hasn't
+   // 4. dst and src have fields that differ (compatible or incompatible)
+
+   RDescriptorsComparison res = FillCommonAndExtraFields(dst, src);
+   std::vector<std::string> errors;
+
    // Check compatibility of common fields
-   auto fieldsToCheck = commonFields;
+   auto fieldsToCheck = res.fCommonFields;
    // NOTE: using index-based for loop because the collection may get extended by the iteration
    for (std::size_t fieldIdx = 0; fieldIdx < fieldsToCheck.size(); ++fieldIdx) {
       const auto &field = fieldsToCheck[fieldIdx];
@@ -692,15 +674,14 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
    if (errMsg.length())
       return R__FAIL(errMsg);
 
-   res.fCommonFields = std::move(commonFields);
-
    return ROOT::RResult(res);
 }
 
 // Applies late model extension to `mergeData.fDestination`, adding all `descCmp.fExtraSrcFields` to it.
 [[nodiscard]]
 static ROOT::RResult<void>
-ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstModel, RNTupleMergeData &mergeData)
+ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstModel,
+                       ROOT::Internal::RPageSink &destination, const ROOT::RNTupleDescriptor &srcDesc, bool verbose)
 {
    const auto &newFields = descCmp.fExtraSrcFields;
    auto &commonFields = descCmp.fCommonFields;
@@ -708,7 +689,7 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
    dstModel.Unfreeze();
    ROOT::Internal::RNTupleModelChangeset changeset{dstModel};
 
-   if (mergeData.fMergeOpts.fExtraVerbose) {
+   if (verbose) {
       std::string msg = "destination doesn't contain field";
       if (newFields.size() > 1)
          msg += 's';
@@ -717,7 +698,7 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
          return acc + (acc.length() ? ", " : "") + '`' + field->GetFieldName() + '`';
       });
       R__LOG_INFO(NTupleMergeLog()) << msg << ": adding " << (newFields.size() > 1 ? "them" : "it")
-                                    << " to the destination model (entry #" << mergeData.fNumDstEntries << ").";
+                                    << " to the destination model (entry #" << destination.GetNEntries() << ").";
    }
 
    changeset.fAddedFields.reserve(newFields.size());
@@ -726,12 +707,12 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
       if (fieldDesc->IsProjectedField())
          continue;
 
-      auto field = fieldDesc->CreateField(*mergeData.fSrcDescriptor);
+      auto field = fieldDesc->CreateField(srcDesc);
       // Explicitly set the field representatives. This prevents UpdateSchema() from changing our column
       // representations via AutoAdjustColumnTypes.
       ROOT::RFieldBase::ColumnRepresentation_t representatives;
       for (const auto &colId : fieldDesc->GetLogicalColumnIds()) {
-         const auto &column = mergeData.fSrcDescriptor->GetColumnDescriptor(colId);
+         const auto &column = srcDesc.GetColumnDescriptor(colId);
          representatives.push_back(column.GetType());
       }
       field->SetColumnRepresentatives({representatives});
@@ -743,16 +724,15 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
          continue;
 
       ROOT::Internal::RProjectedFields::FieldMap_t fieldMap;
-      auto field = fieldDesc->CreateField(*mergeData.fSrcDescriptor);
+      auto field = fieldDesc->CreateField(srcDesc);
       const auto sourceId = fieldDesc->GetProjectionSourceId();
-      const auto &sourceField = dstModel.GetConstField(mergeData.fSrcDescriptor->GetQualifiedFieldName(sourceId));
+      const auto &sourceField = dstModel.GetConstField(srcDesc.GetQualifiedFieldName(sourceId));
       fieldMap[field.get()] = &sourceField;
 
       for (const auto &subfield : *field) {
-         const auto &subFieldDesc = mergeData.fSrcDescriptor->GetFieldDescriptor(subfield.GetOnDiskId());
+         const auto &subFieldDesc = srcDesc.GetFieldDescriptor(subfield.GetOnDiskId());
          const auto subSourceId = subFieldDesc.GetProjectionSourceId();
-         const auto &subSourceField =
-            dstModel.GetConstField(mergeData.fSrcDescriptor->GetQualifiedFieldName(subSourceId));
+         const auto &subSourceField = dstModel.GetConstField(srcDesc.GetQualifiedFieldName(subSourceId));
          fieldMap[&subfield] = &subSourceField;
       }
       changeset.fAddedProjectedFields.emplace_back(field.get());
@@ -765,7 +745,7 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
       // need to connect these either in principle).
       // NOTE: this calls AutoAdjustColumnTypes, but we have set the column representations of all fields
       // explicitly, so it will not change it under the hood.
-      mergeData.fDestination.UpdateSchema(changeset, mergeData.fNumDstEntries);
+      destination.UpdateSchema(changeset, destination.GetNEntries());
    } catch (const ROOT::RException &ex) {
       return R__FAIL(ex.what());
    }
@@ -798,22 +778,305 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
    // However, in GatherColumnInfos, the new column output ids are added sequentially in *field* order and the fields
    // containing the new column representations are already in that list from earlier! So, to make sure the new output
    // ids are assigned to our extended fields first, we push them in from on the list so they are visited first.
+   const auto &dstDesc = destination.GetDescriptor();
    for (auto it = newFields.rbegin(); it != newFields.rend(); ++it) {
       const auto *field = *it;
-      const auto newFieldInDstId = mergeData.fDstDescriptor.FindFieldId(field->GetFieldName());
-      const auto &newFieldInDst = mergeData.fDstDescriptor.GetFieldDescriptor(newFieldInDstId);
+      const auto newFieldInDstId = dstDesc.FindFieldId(field->GetFieldName());
+      const auto &newFieldInDst = dstDesc.GetFieldDescriptor(newFieldInDstId);
       commonFields.insert(commonFields.begin(), RCommonField{*field, newFieldInDst});
    }
 
    return ROOT::RResult<void>::Success();
 }
 
+static std::optional<std::type_index> ColumnInMemoryType(std::string_view fieldType, ENTupleColumnType onDiskType)
+{
+   if (onDiskType == ENTupleColumnType::kIndex32 || onDiskType == ENTupleColumnType::kSplitIndex32 ||
+       onDiskType == ENTupleColumnType::kIndex64 || onDiskType == ENTupleColumnType::kSplitIndex64)
+      return typeid(ROOT::Internal::RColumnIndex);
+
+   if (onDiskType == ENTupleColumnType::kSwitch)
+      return typeid(ROOT::Internal::RColumnSwitch);
+
+   // clang-format off
+   if (fieldType == "bool")          return typeid(bool);
+   if (fieldType == "std::byte")     return typeid(std::byte);
+   if (fieldType == "char")          return typeid(char);
+   if (fieldType == "std::int8_t")   return typeid(std::int8_t);
+   if (fieldType == "std::uint8_t")  return typeid(std::uint8_t);
+   if (fieldType == "std::int16_t")  return typeid(std::int16_t);
+   if (fieldType == "std::uint16_t") return typeid(std::uint16_t);
+   if (fieldType == "std::int32_t")  return typeid(std::int32_t);
+   if (fieldType == "std::uint32_t") return typeid(std::uint32_t);
+   if (fieldType == "std::int64_t")  return typeid(std::int64_t);
+   if (fieldType == "std::uint64_t") return typeid(std::uint64_t);
+   if (fieldType == "float")         return typeid(float);
+   if (fieldType == "double")        return typeid(double);
+   // clang-format on
+
+   // if the type is not one of those above, we use the default in-memory type.
+   return std::nullopt;
+}
+
+static void PrefillColumnMap(const ROOT::RNTupleDescriptor &desc, const ROOT::RFieldDescriptor &fieldDesc,
+                             ColumnIdMap_t &colIdMap, const std::string &prefix = "")
+{
+   std::string name = prefix + '.' + fieldDesc.GetFieldName();
+   for (const auto &colId : fieldDesc.GetLogicalColumnIds()) {
+      const auto &colDesc = desc.GetColumnDescriptor(colId);
+      RColumnOutInfo info{};
+      info.fColumnId = colDesc.GetLogicalId();
+      const auto colName =
+         name + '.' + std::to_string(colDesc.GetIndex()) + '.' + std::to_string(colDesc.GetRepresentationIndex());
+      colIdMap[colName] = info;
+   }
+
+   for (const auto &subId : fieldDesc.GetLinkIds()) {
+      const auto &subfield = desc.GetFieldDescriptor(subId);
+      PrefillColumnMap(desc, subfield, colIdMap, name);
+   }
+}
+
+static void AddColumnExtensionsInFieldOrder(
+   const ROOT::RFieldDescriptor &field, const ROOT::RNTupleDescriptor &desc,
+   const FieldCollectionMap_t<RColReprExtension> &extensions,
+   std::vector<std::pair<const ROOT::RFieldDescriptor *, std::vector<RColReprExtension>>> &outExtensions,
+   std::unordered_map<ROOT::DescriptorId_t, std::vector<const ROOT::RFieldDescriptor *>> &outProjectionPointees)
+{
+   const auto it = extensions.find(&field);
+   if (it != extensions.end())
+      outExtensions.emplace_back(it->first, it->second);
+
+   if (field.IsProjectedField())
+      outProjectionPointees[field.GetProjectionSourceId()].push_back(&field);
+
+   for (auto childId : field.GetLinkIds()) {
+      const auto &child = desc.GetFieldDescriptor(childId);
+      AddColumnExtensionsInFieldOrder(child, desc, extensions, outExtensions, outProjectionPointees);
+   }
+}
+
+namespace {
+class RNTupleMergeStrategy {
+protected:
+   // Fixed during the whole merging
+   std::unique_ptr<ROOT::RNTupleModel> &fDstModel;
+   ROOT::Internal::RPagePersistentSink &fDestination;
+   const ROOT::RNTupleDescriptor &fDstDescriptor;
+   RNTupleMergeOptions fMergeOpts;
+
+   // Changes at every source
+   const ROOT::RNTupleDescriptor *fSrcDescriptor = nullptr;
+
+public:
+   RNTupleMergeStrategy(std::unique_ptr<RNTupleModel> &dstModel, ROOT::Internal::RPagePersistentSink &dst,
+                        const RNTupleMergeOptions &mergeOpts)
+      : fDstModel(dstModel), fDestination(dst), fDstDescriptor(dst.GetDescriptor()), fMergeOpts(mergeOpts)
+   {
+   }
+
+   virtual ~RNTupleMergeStrategy() = default;
+
+   virtual void InitSource(RPageSource &source) = 0;
+   [[nodiscard]] virtual ROOT::RResult<RDescriptorsComparison> CompareSrcAndDstDescriptors() = 0;
+   [[nodiscard]] virtual ROOT::RResult<void> ExtendDestinationModel(RDescriptorsComparison &descCmp) = 0;
+   [[nodiscard]] virtual ROOT::RResult<void> MergeSource(RPageSource &source, RDescriptorsComparison &descCmp) = 0;
+   virtual void BeforeCommit() = 0;
+};
+
+class RNTupleMergeStrategyDefault final : public RNTupleMergeStrategy {
+   std::unique_ptr<ROOT::Internal::RPageAllocator> fPageAlloc = std::make_unique<ROOT::Internal::RPageAllocatorHeap>();
+   std::optional<ROOT::Experimental::TTaskGroup> fTaskGroup;
+   std::unordered_map<ROOT::DescriptorId_t, std::vector<const ROOT::RFieldDescriptor *>> fProjectionPointees;
+
+   std::vector<RColumnMergeInfo> fColumns;
+   // Maps input column IDs to output IDs
+   ColumnIdMap_t fColumnIdMap;
+
+   [[nodiscard]] ROOT::RResult<void>
+   MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool, const ROOT::RClusterDescriptor &clusterDesc,
+                      std::span<RColumnMergeInfo> commonColumns, const RCluster::ColumnSet_t &commonColumnSet,
+                      RSealedPageMergeData &sealedPageData);
+   [[nodiscard]]
+   ROOT::RResult<void> GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<const RColumnMergeInfo> columns,
+                                                   RSealedPageMergeData &sealedPageData);
+
+   void AddColumnsFromField(std::vector<RColumnMergeInfo> &columns, const ROOT::RNTupleDescriptor &srcDesc,
+                            const FieldCollectionMap_t<RColReprMapping> &colReprMappings,
+                            const ROOT::RFieldDescriptor &srcFieldDesc, const ROOT::RFieldDescriptor &dstFieldDesc,
+                            const std::string &prefix = "");
+
+   RColumnInfoGroup GatherColumnInfos(const RDescriptorsComparison &descCmp, const ROOT::RNTupleDescriptor &srcDesc);
+
+   [[nodiscard]] ROOT::RResult<void> MergeSourceClusters(RPageSource &source, std::span<RColumnMergeInfo> commonColumns,
+                                                         std::span<const RColumnMergeInfo> extraDstColumns);
+
+public:
+   RNTupleMergeStrategyDefault(std::unique_ptr<RNTupleModel> &dstModel, ROOT::Internal::RPagePersistentSink &dst,
+                               const RNTupleMergeOptions &mergeOpts)
+      : RNTupleMergeStrategy(dstModel, dst, mergeOpts)
+   {
+#ifdef R__USE_IMT
+      if (ROOT::IsImplicitMTEnabled())
+         fTaskGroup = ROOT::Experimental::TTaskGroup();
+#endif
+
+      if (dstModel) {
+         // If this is an incremental merging, pre-fill the column id map with the existing destination ids.
+         // Otherwise we would generate new output ids that may not match the ones in the destination!
+         for (const auto &field : dst.GetDescriptor().GetTopLevelFields()) {
+            PrefillColumnMap(dst.GetDescriptor(), field, fColumnIdMap);
+         }
+      }
+   }
+
+   void InitSource(RPageSource &source) final
+   {
+      source.Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
+      fSrcDescriptor = &source.GetSharedDescriptorGuard().GetRef();
+
+      if (!fDstModel) {
+         constexpr bool copyClusters = false;
+         fDstModel = fDestination.InitFromDescriptor(*fSrcDescriptor, copyClusters);
+      }
+   }
+
+   ROOT::RResult<RDescriptorsComparison> CompareSrcAndDstDescriptors() final
+   {
+      return CompareDescriptorStructure(fDstDescriptor, *fSrcDescriptor);
+   }
+
+   [[nodiscard]] ROOT::RResult<void> ExtendDestinationModel(RDescriptorsComparison &descCmp) final
+   {
+      // late model extension for all fExtraSrcFields in Union mode
+      auto res = ::ExtendDestinationModel(descCmp, *fDstModel, fDestination, *fSrcDescriptor, fMergeOpts.fExtraVerbose);
+      return res;
+   }
+
+   void BeforeCommit() final {}
+
+   [[nodiscard]] ROOT::RResult<void> MergeSource(RPageSource &source, RDescriptorsComparison &descCmp) final;
+};
+
+} // namespace
+
+// Given a field, fill `columns` and `mergeData.fColumnIdMap` with information about all columns belonging to it and
+// its subfields. `fColumnIdMap` is used to map matching columns from different sources to the same output
+// column in the destination. We match columns by their "fully qualified name", which is the concatenation of their
+// ancestor fields' names and the column index. By this point, since we called `CompareDescriptorStructure()`
+// earlier, we should be guaranteed that two matching columns will have at least compatible representations.
+// This function is recursive as it needs to call itself on the entire subfield hierarchy of the source field.
+// NOTE: srcFieldDesc and dstFieldDesc may alias.
+void RNTupleMergeStrategyDefault::AddColumnsFromField(std::vector<RColumnMergeInfo> &columns,
+                                                      const ROOT::RNTupleDescriptor &srcDesc,
+                                                      const FieldCollectionMap_t<RColReprMapping> &colReprMappings,
+                                                      const ROOT::RFieldDescriptor &srcFieldDesc,
+                                                      const ROOT::RFieldDescriptor &dstFieldDesc,
+                                                      const std::string &prefix)
+{
+   std::string name = prefix + '.' + srcFieldDesc.GetFieldName();
+
+   // We don't want to try and merge alias columns. Note that subfields of projected fields
+   // must also be projected, so we don't need to check them.
+   if (srcFieldDesc.IsProjectedField())
+      return;
+
+   const auto &columnIds = srcFieldDesc.GetLogicalColumnIds();
+   columns.reserve(columns.size() + columnIds.size());
+
+   for (auto i = 0u; i < srcFieldDesc.GetLogicalColumnIds().size(); ++i) {
+      auto srcColumnId = srcFieldDesc.GetLogicalColumnIds()[i];
+      const auto &srcColumn = srcDesc.GetColumnDescriptor(srcColumnId);
+
+      RColumnMergeInfo info{};
+      info.fInputId = srcColumn.GetPhysicalId();
+      // NOTE(gparolini): the parent field is used when synthesizing zero pages, which happens in 2 situations:
+      // 1. when adding extra dst columns (in which case we need to synthesize zero pages for the incoming src), and
+      // 2. when merging a deferred column into an existing column (in which case we need to fill the "hole" with
+      // zeroes). For the first case srcFieldDesc and dstFieldDesc are the same (see the calling site of this
+      // function), but for the second case they're not, and we need to pick the source field because we will then
+      // check the column's *input* id inside fParentFieldDescriptor to see if it's a suppressed column (see
+      // GenerateZeroPagesForColumns()).
+      info.fParentFieldDescriptor = &srcFieldDesc;
+      // Save the parent field descriptor since this may be either the source or destination descriptor depending on
+      // whether this is an extraDstField or a commonField. We will need this in GenerateZeroPagesForColumns() to
+      // properly walk up the field hierarchy.
+      info.fParentNTupleDescriptor = &srcDesc;
+
+      const auto mappingsIt = colReprMappings.find(&dstFieldDesc);
+      std::uint16_t reprIndex = srcColumn.GetRepresentationIndex();
+      if (mappingsIt != colReprMappings.end()) {
+         if (auto outReprIdx = FindColumnReprMapping(mappingsIt->second, reprIndex); outReprIdx)
+            reprIndex = *outReprIdx;
+      }
+
+      info.fColumnName = name + '.' + std::to_string(srcColumn.GetIndex()) + '.' + std::to_string(reprIndex);
+
+      ENTupleColumnType columnType = ENTupleColumnType::kUnknown;
+
+      if (auto it = fColumnIdMap.find(info.fColumnName); it != fColumnIdMap.end()) {
+         // We had already added this column to the column id map: just copy its data.
+         info.fOutputId = it->second.fColumnId;
+         info.fOutputReprIndex = reprIndex;
+      } else {
+         // New column: assign it the next ouput id.
+         info.fOutputId = fColumnIdMap.size();
+         // NOTE(gparolini): map the representation index of src column to that of dst column.
+         // This mapping is only relevant for common columns and it's done to ensure we have the correct representation
+         // index in the output column metadata.
+         assert(dstFieldDesc.GetColumnCardinality() == srcFieldDesc.GetColumnCardinality());
+         const auto dstColumnIndex = reprIndex * dstFieldDesc.GetColumnCardinality() + srcColumn.GetIndex();
+         const auto dstColumnId = dstFieldDesc.GetLogicalColumnIds()[dstColumnIndex];
+         const auto &dstColumn = fDstDescriptor.GetColumnDescriptor(dstColumnId);
+         columnType = dstColumn.GetType();
+         info.fOutputReprIndex = reprIndex;
+         fColumnIdMap[info.fColumnName] = RColumnOutInfo{info.fOutputId};
+      }
+
+      if (fMergeOpts.fExtraVerbose) {
+         R__LOG_INFO(NTupleMergeLog()) << "Adding column " << info.fColumnName << " with log.id " << srcColumnId
+                                       << ", phys.id " << srcColumn.GetPhysicalId() << ", type "
+                                       << RColumnElementBase::GetColumnTypeName(srcColumn.GetType()) << " -> log.id "
+                                       << info.fOutputId << ", type "
+                                       << RColumnElementBase::GetColumnTypeName(columnType);
+      }
+
+      // Since we disallow merging fields of different types, src and dstFieldDesc must have the same type name.
+      assert(srcDesc.GetTypeNameForComparison(srcFieldDesc) == dstFieldDesc.GetTypeName());
+      info.fInMemoryType = ColumnInMemoryType(dstFieldDesc.GetTypeName(), columnType);
+      columns.emplace_back(info);
+   }
+
+   const auto &srcChildrenIds = srcFieldDesc.GetLinkIds();
+   const auto &dstChildrenIds = dstFieldDesc.GetLinkIds();
+   assert(srcChildrenIds.size() == dstChildrenIds.size());
+   for (auto i = 0u; i < srcChildrenIds.size(); ++i) {
+      const auto &srcChild = srcDesc.GetFieldDescriptor(srcChildrenIds[i]);
+      const auto &dstChild = fDstDescriptor.GetFieldDescriptor(dstChildrenIds[i]);
+      AddColumnsFromField(columns, srcDesc, colReprMappings, srcChild, dstChild, name);
+   }
+}
+
+// Converts the fields comparison data to the corresponding column information.
+// While doing so, it collects such information in `fColumnIdMap`, which is used by later calls to this
+// function to map already-seen column names to their chosen outputId, type and so on.
+RColumnInfoGroup RNTupleMergeStrategyDefault::GatherColumnInfos(const RDescriptorsComparison &descCmp,
+                                                                const ROOT::RNTupleDescriptor &srcDesc)
+{
+   RColumnInfoGroup res;
+   for (const ROOT::RFieldDescriptor *field : descCmp.fExtraDstFields) {
+      AddColumnsFromField(res.fExtraDstColumns, fDstDescriptor, descCmp.fColReprMappings, *field, *field);
+   }
+   for (const auto &[srcField, dstField] : descCmp.fCommonFields) {
+      AddColumnsFromField(res.fCommonColumns, srcDesc, descCmp.fColReprMappings, *srcField, *dstField);
+   }
+   return res;
+}
+
 // Generates default (zero) values for the given columns
-[[nodiscard]]
-static ROOT::RResult<void>
-GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<const RColumnMergeInfo> columns,
-                            RSealedPageMergeData &sealedPageData, ROOT::Internal::RPageAllocator &pageAlloc,
-                            const ROOT::RNTupleDescriptor &dstDescriptor, const RNTupleMergeData &mergeData)
+ROOT::RResult<void> RNTupleMergeStrategyDefault::GenerateZeroPagesForColumns(size_t nEntriesToGenerate,
+                                                                             std::span<const RColumnMergeInfo> columns,
+                                                                             RSealedPageMergeData &sealedPageData)
 {
    if (!nEntriesToGenerate)
       return ROOT::RResult<void>::Success();
@@ -856,7 +1119,7 @@ GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<const RColumnMe
       R__ASSERT(structure == ROOT::ENTupleStructure::kCollection || structure == ROOT::ENTupleStructure::kVariant ||
                 structure == ROOT::ENTupleStructure::kPlain);
 
-      const auto &columnDesc = dstDescriptor.GetColumnDescriptor(column.fOutputId);
+      const auto &columnDesc = fDstDescriptor.GetColumnDescriptor(column.fOutputId);
       const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
       const auto nElements = nEntriesToGenerate * nRepetitions;
       const auto nBytesOnStorage = colElement->GetPackedSize(nElements);
@@ -870,7 +1133,7 @@ GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<const RColumnMe
          const auto bufSize = pageSize + checksumSize;
          assert(pageSize % colElement->GetSize() == 0);
          const auto nElementsPerPage = pageSize / colElement->GetSize();
-         auto page = pageAlloc.NewPage(colElement->GetSize(), nElementsPerPage);
+         auto page = fPageAlloc->NewPage(colElement->GetSize(), nElementsPerPage);
          page.GrowUnchecked(nElementsPerPage);
          memset(page.GetBuffer(), 0, page.GetNBytes());
 
@@ -879,8 +1142,8 @@ GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<const RColumnMe
          sealConf.fElement = colElement.get();
          sealConf.fPage = &page;
          sealConf.fBuffer = buffer.get();
-         sealConf.fCompressionSettings = mergeData.fMergeOpts.fCompressionSettings.value();
-         sealConf.fWriteChecksum = mergeData.fDestination.GetWriteOptions().GetEnablePageChecksums();
+         sealConf.fCompressionSettings = fMergeOpts.fCompressionSettings.value();
+         sealConf.fWriteChecksum = fDestination.GetWriteOptions().GetEnablePageChecksums();
          auto sealedPage = RPageSink::SealPage(sealConf);
 
          sealedPageData.fPagesV.push_back({sealedPage});
@@ -893,12 +1156,11 @@ GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<const RColumnMe
 
 // Merges all columns appearing both in the source and destination RNTuples, just copying them if their
 // compression matches ("fast merge") or by unsealing and resealing them with the proper compression.
-ROOT::RResult<void>
-RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
-                                  const ROOT::RClusterDescriptor &clusterDesc,
-                                  std::span<RColumnMergeInfo> commonColumns,
-                                  const RCluster::ColumnSet_t &commonColumnSet, RSealedPageMergeData &sealedPageData,
-                                  const RNTupleMergeData &mergeData, ROOT::Internal::RPageAllocator &pageAlloc)
+ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
+                                                                    const ROOT::RClusterDescriptor &clusterDesc,
+                                                                    std::span<RColumnMergeInfo> commonColumns,
+                                                                    const RCluster::ColumnSet_t &commonColumnSet,
+                                                                    RSealedPageMergeData &sealedPageData)
 {
    const auto nCommonColumnsInCluster = commonColumnSet.size();
    assert(nCommonColumnsInCluster <= commonColumns.size());
@@ -911,14 +1173,14 @@ RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
    // validated by CompareDescriptorStructure() and MergeSourceClusters().
    assert(cluster);
 
-   const std::uint32_t outCompression = mergeData.fMergeOpts.fCompressionSettings.value();
+   const std::uint32_t outCompression = fMergeOpts.fCompressionSettings.value();
 
    for (size_t colIdx = 0; colIdx < nCommonColumnsInCluster; ++colIdx) {
       const auto &column = commonColumns[colIdx];
       const auto &columnId = column.fInputId;
       R__ASSERT(clusterDesc.ContainsColumn(columnId));
 
-      const auto &columnDesc = mergeData.fSrcDescriptor->GetColumnDescriptor(columnId);
+      const auto &columnDesc = fSrcDescriptor->GetColumnDescriptor(columnId);
       const auto srcColElement = column.fInMemoryType
                                     ? ROOT::Internal::GenerateColumnElement(*column.fInMemoryType, columnDesc.GetType())
                                     : RColumnElementBase::Generate(columnDesc.GetType());
@@ -941,10 +1203,10 @@ RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
       // append a new column representation to the field.
       const bool needsRecompressing = colRangeCompressionSettings != outCompression;
 
-      if (needsRecompressing && mergeData.fMergeOpts.fExtraVerbose) {
+      if (needsRecompressing && fMergeOpts.fExtraVerbose) {
          R__LOG_INFO(NTupleMergeLog()) << "Recompressing column " << column.fColumnName
                                        << ": { compression: " << colRangeCompressionSettings << " => "
-                                       << mergeData.fMergeOpts.fCompressionSettings.value() << ", onDiskType: "
+                                       << fMergeOpts.fCompressionSettings.value() << ", onDiskType: "
                                        << RColumnElementBase::GetColumnTypeName(
                                              srcColElement->GetIdentifier().fOnDiskType)
                                        << "}";
@@ -961,10 +1223,9 @@ RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
       // As an optimization, we don't do this for the first source (since we can rely on the FirstElementIndex and
       // deferred column mechanism in that case).
       // TODO: also avoid doing this if we added no real page of this column to the destination yet.
-      if (columnDesc.GetFirstElementIndex() > clusterDesc.GetFirstEntryIndex() && mergeData.fNumDstEntries > 0) {
+      if (columnDesc.GetFirstElementIndex() > clusterDesc.GetFirstEntryIndex() && fDestination.GetNEntries() > 0) {
          const auto nMissingEntries = columnDesc.GetFirstElementIndex() - clusterDesc.GetFirstEntryIndex();
-         auto res = GenerateZeroPagesForColumns(nMissingEntries, {&column, 1}, sealedPageData, pageAlloc,
-                                                mergeData.fDstDescriptor, mergeData);
+         auto res = GenerateZeroPagesForColumns(nMissingEntries, {&column, 1}, sealedPageData);
          if (!res)
             return R__FORWARD_ERROR(res);
       }
@@ -974,7 +1235,7 @@ RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
       for (const auto &pageInfo : pages.GetPageInfos()) {
          assert(pageIdx < sealedPages.size());
          assert(sealedPageData.fBuffers.size() == 0 || pageIdx < sealedPageData.fBuffers.size());
-         assert(pageInfo.GetLocator().GetType() != RNTupleLocator::kTypePageZero);
+         assert(pageInfo.GetLocator().GetType() != ROOT::RNTupleLocator::kTypePageZero);
 
          ROOT::Internal::ROnDiskPage::Key key{columnId, pageIdx};
          auto onDiskPage = cluster->GetOnDiskPage(key);
@@ -1006,7 +1267,7 @@ RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
                *fPageAlloc,
                buffer.get(),
                bufSize,
-               mergeData.fDestination.GetWriteOptions()
+               fDestination.GetWriteOptions()
             });
             // clang-format on
          }
@@ -1031,16 +1292,16 @@ RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
 // the destination's schemas.
 // The pages may be "fast-merged" (i.e. simply copied with no decompression/recompression) if the target
 // compression is unspecified or matches the original compression settings.
-ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std::span<RColumnMergeInfo> commonColumns,
-                                                       std::span<const RColumnMergeInfo> extraDstColumns,
-                                                       RNTupleMergeData &mergeData)
+ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeSourceClusters(RPageSource &source,
+                                                                     std::span<RColumnMergeInfo> commonColumns,
+                                                                     std::span<const RColumnMergeInfo> extraDstColumns)
 {
    ROOT::Internal::RClusterPool clusterPool{source};
 
    std::vector<RColumnMergeInfo> missingColumns{extraDstColumns.begin(), extraDstColumns.end()};
 
-   R__ASSERT(mergeData.fSrcDescriptor->GetNClusters() == mergeData.fSrcDescriptor->GetNActiveClusters());
-   for (const auto &clusterDesc : mergeData.fSrcDescriptor->GetActiveClusterIterable()) {
+   R__ASSERT(fSrcDescriptor->GetNClusters() == fSrcDescriptor->GetNActiveClusters());
+   for (const auto &clusterDesc : fSrcDescriptor->GetActiveClusterIterable()) {
       const auto nClusterEntries = clusterDesc.GetNEntries();
       R__ASSERT(nClusterEntries > 0);
 
@@ -1072,7 +1333,7 @@ ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std:
                commonColumnSet.emplace(column.fInputId);
                return true;
             }
-            mergeData.fDestination.CommitSuppressedColumn(ColumnHandle_t{column.fOutputId});
+            fDestination.CommitSuppressedColumn(ColumnHandle_t{column.fOutputId});
          }
          return false;
       });
@@ -1088,24 +1349,23 @@ ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std:
       // specifically only query those columns that belong to a field that has at least 1 column in commonColumns
       // (remember that commonColumns contains all columns associated to the common fields for this source).
       for (const auto &[fieldDesc, columnIds] : columnsInCluster) {
-         const auto &fieldFQName = mergeData.fSrcDescriptor->GetQualifiedFieldName(fieldDesc->GetId());
+         const auto &fieldFQName = fSrcDescriptor->GetQualifiedFieldName(fieldDesc->GetId());
          const auto cardinality = fieldDesc->GetColumnCardinality();
          for (auto i = 0u; i < fieldDesc->GetLogicalColumnIds().size(); ++i) {
             const auto colIndex = i % cardinality;
             const auto reprIndex = i / cardinality;
             const auto colName = "." + fieldFQName + '.' + std::to_string(colIndex) + '.' + std::to_string(reprIndex);
-            const auto colIt = mergeData.fColumnIdMap.find(colName);
-            assert(colIt != mergeData.fColumnIdMap.end());
+            const auto colIt = fColumnIdMap.find(colName);
+            assert(colIt != fColumnIdMap.end());
             const auto colOutId = colIt->second.fColumnId;
             if (std::find(columnIds.begin(), columnIds.end(), colOutId) == columnIds.end()) {
-               mergeData.fDestination.CommitSuppressedColumn(ColumnHandle_t{colOutId});
+               fDestination.CommitSuppressedColumn(ColumnHandle_t{colOutId});
             }
          }
       }
 
       RSealedPageMergeData sealedPageData;
-      auto res = MergeCommonColumns(clusterPool, clusterDesc, commonColumns, commonColumnSet, sealedPageData, mergeData,
-                                    *fPageAlloc);
+      auto res = MergeCommonColumns(clusterPool, clusterDesc, commonColumns, commonColumnSet, sealedPageData);
       if (!res)
          return R__FORWARD_ERROR(res);
 
@@ -1117,15 +1377,13 @@ ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std:
       for (size_t i = nCommonColumnsInCluster; i < commonColumns.size(); ++i)
          missingColumns.push_back(commonColumns[i]);
 
-      res = GenerateZeroPagesForColumns(nClusterEntries, missingColumns, sealedPageData, *fPageAlloc,
-                                        mergeData.fDstDescriptor, mergeData);
+      res = GenerateZeroPagesForColumns(nClusterEntries, missingColumns, sealedPageData);
       if (!res)
          return R__FORWARD_ERROR(res);
 
       // Commit the pages and the clusters
-      mergeData.fDestination.CommitSealedPageV(sealedPageData.fGroups);
-      mergeData.fDestination.CommitCluster(nClusterEntries);
-      mergeData.fNumDstEntries += nClusterEntries;
+      fDestination.CommitSealedPageV(sealedPageData.fGroups);
+      fDestination.CommitCluster(nClusterEntries);
    }
 
    // TODO(gparolini): when we get serious about huge file support (>~ 100GB) we might want to check here
@@ -1137,203 +1395,68 @@ ROOT::RResult<void> RNTupleMerger::MergeSourceClusters(RPageSource &source, std:
    return ROOT::RResult<void>::Success();
 }
 
-static std::optional<std::type_index> ColumnInMemoryType(std::string_view fieldType, ENTupleColumnType onDiskType)
+ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeSource(RPageSource &source, RDescriptorsComparison &descCmp)
 {
-   if (onDiskType == ENTupleColumnType::kIndex32 || onDiskType == ENTupleColumnType::kSplitIndex32 ||
-       onDiskType == ENTupleColumnType::kIndex64 || onDiskType == ENTupleColumnType::kSplitIndex64)
-      return typeid(ROOT::Internal::RColumnIndex);
-
-   if (onDiskType == ENTupleColumnType::kSwitch)
-      return typeid(ROOT::Internal::RColumnSwitch);
-
-   // clang-format off
-   if (fieldType == "bool")          return typeid(bool);
-   if (fieldType == "std::byte")     return typeid(std::byte);
-   if (fieldType == "char")          return typeid(char);
-   if (fieldType == "std::int8_t")   return typeid(std::int8_t);
-   if (fieldType == "std::uint8_t")  return typeid(std::uint8_t);
-   if (fieldType == "std::int16_t")  return typeid(std::int16_t);
-   if (fieldType == "std::uint16_t") return typeid(std::uint16_t);
-   if (fieldType == "std::int32_t")  return typeid(std::int32_t);
-   if (fieldType == "std::uint32_t") return typeid(std::uint32_t);
-   if (fieldType == "std::int64_t")  return typeid(std::int64_t);
-   if (fieldType == "std::uint64_t") return typeid(std::uint64_t);
-   if (fieldType == "float")         return typeid(float);
-   if (fieldType == "double")        return typeid(double);
-   // clang-format on
-
-   // if the type is not one of those above, we use the default in-memory type.
-   return std::nullopt;
-}
-
-// Given a field, fill `columns` and `mergeData.fColumnIdMap` with information about all columns belonging to it and
-// its subfields. `mergeData.fColumnIdMap` is used to map matching columns from different sources to the same output
-// column in the destination. We match columns by their "fully qualified name", which is the concatenation of their
-// ancestor fields' names and the column index. By this point, since we called `CompareDescriptorStructure()`
-// earlier, we should be guaranteed that two matching columns will have at least compatible representations.
-// This function is recursive as it needs to call itself on the entire subfield hierarchy of the source field.
-// NOTE: srcFieldDesc and dstFieldDesc may alias.
-static void AddColumnsFromField(std::vector<RColumnMergeInfo> &columns, const ROOT::RNTupleDescriptor &srcDesc,
-                                const FieldCollectionMap_t<RColReprMapping> &colReprMappings,
-                                RNTupleMergeData &mergeData, const ROOT::RFieldDescriptor &srcFieldDesc,
-                                const ROOT::RFieldDescriptor &dstFieldDesc, const std::string &prefix = "")
-{
-   std::string name = prefix + '.' + srcFieldDesc.GetFieldName();
-
-   // We don't want to try and merge alias columns. Note that subfields of projected fields
-   // must also be projected, so we don't need to check them.
-   if (srcFieldDesc.IsProjectedField())
-      return;
-
-   const auto &columnIds = srcFieldDesc.GetLogicalColumnIds();
-   columns.reserve(columns.size() + columnIds.size());
-
-   for (auto i = 0u; i < srcFieldDesc.GetLogicalColumnIds().size(); ++i) {
-      auto srcColumnId = srcFieldDesc.GetLogicalColumnIds()[i];
-      const auto &srcColumn = srcDesc.GetColumnDescriptor(srcColumnId);
-
-      RColumnMergeInfo info{};
-      info.fInputId = srcColumn.GetPhysicalId();
-      // NOTE(gparolini): the parent field is used when synthesizing zero pages, which happens in 2 situations:
-      // 1. when adding extra dst columns (in which case we need to synthesize zero pages for the incoming src), and
-      // 2. when merging a deferred column into an existing column (in which case we need to fill the "hole" with
-      // zeroes). For the first case srcFieldDesc and dstFieldDesc are the same (see the calling site of this
-      // function), but for the second case they're not, and we need to pick the source field because we will then
-      // check the column's *input* id inside fParentFieldDescriptor to see if it's a suppressed column (see
-      // GenerateZeroPagesForColumns()).
-      info.fParentFieldDescriptor = &srcFieldDesc;
-      // Save the parent field descriptor since this may be either the source or destination descriptor depending on
-      // whether this is an extraDstField or a commonField. We will need this in GenerateZeroPagesForColumns() to
-      // properly walk up the field hierarchy.
-      info.fParentNTupleDescriptor = &srcDesc;
-
-      const auto mappingsIt = colReprMappings.find(&dstFieldDesc);
-      std::uint16_t reprIndex = srcColumn.GetRepresentationIndex();
-      if (mappingsIt != colReprMappings.end()) {
-         if (auto outReprIdx = FindColumnReprMapping(mappingsIt->second, reprIndex); outReprIdx)
-            reprIndex = *outReprIdx;
+   //// Extend columns if needed
+   if (!descCmp.fColReprExtensions.empty()) {
+      for (const auto &field : descCmp.fExtraDstFields) {
+         if (field->IsProjectedField())
+            fProjectionPointees[field->GetProjectionSourceId()].push_back(field);
       }
 
-      info.fColumnName = name + '.' + std::to_string(srcColumn.GetIndex()) + '.' + std::to_string(reprIndex);
-
-      ENTupleColumnType columnType = ENTupleColumnType::kUnknown;
-
-      if (auto it = mergeData.fColumnIdMap.find(info.fColumnName); it != mergeData.fColumnIdMap.end()) {
-         // We had already added this column to the column id map: just copy its data.
-         info.fOutputId = it->second.fColumnId;
-         info.fOutputReprIndex = reprIndex;
-      } else {
-         // New column: assign it the next ouput id.
-         info.fOutputId = mergeData.fColumnIdMap.size();
-         // NOTE(gparolini): map the representation index of src column to that of dst column.
-         // This mapping is only relevant for common columns and it's done to ensure we have the correct representation
-         // index in the output column metadata.
-         assert(dstFieldDesc.GetColumnCardinality() == srcFieldDesc.GetColumnCardinality());
-         const auto dstColumnIndex = reprIndex * dstFieldDesc.GetColumnCardinality() + srcColumn.GetIndex();
-         const auto dstColumnId = dstFieldDesc.GetLogicalColumnIds()[dstColumnIndex];
-         const auto &dstColumn = mergeData.fDstDescriptor.GetColumnDescriptor(dstColumnId);
-         columnType = dstColumn.GetType();
-         info.fOutputReprIndex = reprIndex;
-         mergeData.fColumnIdMap[info.fColumnName] = RColumnOutInfo{info.fOutputId};
+      // We need to extend the columns in the proper order, i.e. so that they appear in the same order as
+      // their first representation. This is to ensure that the pages we write to the cluster are in a consistent
+      // order as their column descriptors. The page creation order is determined by the order of
+      // columnInfos.fCommonColumns, which in turn depends on the common fields order (see GatherColumnInfos).
+      // XXX: do we need this separate sort step? Why not just create this vector directly in
+      // CompareDescriptorStructure?
+      std::vector<std::pair<const ROOT::RFieldDescriptor *, std::vector<RColReprExtension>>> colExtensions;
+      colExtensions.reserve(descCmp.fColReprExtensions.size());
+      for (const auto &commonField : descCmp.fCommonFields) {
+         const auto *field = commonField.fDst;
+         AddColumnExtensionsInFieldOrder(*field, fDstDescriptor, descCmp.fColReprExtensions, colExtensions,
+                                         fProjectionPointees);
+      }
+      for (const auto &field : descCmp.fExtraSrcFields) {
+         if (field->IsProjectedField())
+            fProjectionPointees[field->GetProjectionSourceId()].push_back(field);
       }
 
-      if (mergeData.fMergeOpts.fExtraVerbose) {
-         R__LOG_INFO(NTupleMergeLog()) << "Adding column " << info.fColumnName << " with log.id " << srcColumnId
-                                       << ", phys.id " << srcColumn.GetPhysicalId() << ", type "
-                                       << RColumnElementBase::GetColumnTypeName(srcColumn.GetType()) << " -> log.id "
-                                       << info.fOutputId << ", type "
-                                       << RColumnElementBase::GetColumnTypeName(columnType);
+      for (const auto &[fieldDesc, extensions] : colExtensions) {
+         auto &mappings = descCmp.fColReprMappings[fieldDesc];
+         for (const auto &extension : extensions) {
+            const auto firstColumnId = fDestination.AddColumnRepresentation(*fieldDesc, extension.fSourceRepr,
+                                                                            extension.fOrigFirstElementIndex);
+
+            // When adding new column representations to an existing field which is the source of some projected
+            // fields, we need to also add new alias columns to those fields so that they can point to the proper
+            // representation.
+            if (auto it = fProjectionPointees.find(fieldDesc->GetId()); it != fProjectionPointees.end()) {
+               for (const auto &projection : it->second) {
+                  for (auto colIdx = 0u; colIdx < extension.fSourceRepr.size(); ++colIdx)
+                     fDestination.AddAliasColumn(fDstDescriptor, *projection, firstColumnId + colIdx);
+               }
+            }
+            mappings.push_back(extension);
+         }
       }
-
-      // Since we disallow merging fields of different types, src and dstFieldDesc must have the same type name.
-      assert(srcDesc.GetTypeNameForComparison(srcFieldDesc) == dstFieldDesc.GetTypeName());
-      info.fInMemoryType = ColumnInMemoryType(dstFieldDesc.GetTypeName(), columnType);
-      columns.emplace_back(info);
    }
 
-   const auto &srcChildrenIds = srcFieldDesc.GetLinkIds();
-   const auto &dstChildrenIds = dstFieldDesc.GetLinkIds();
-   assert(srcChildrenIds.size() == dstChildrenIds.size());
-   for (auto i = 0u; i < srcChildrenIds.size(); ++i) {
-      const auto &srcChild = srcDesc.GetFieldDescriptor(srcChildrenIds[i]);
-      const auto &dstChild = mergeData.fDstDescriptor.GetFieldDescriptor(dstChildrenIds[i]);
-      AddColumnsFromField(columns, srcDesc, colReprMappings, mergeData, srcChild, dstChild, name);
-   }
-}
-
-// Converts the fields comparison data to the corresponding column information.
-// While doing so, it collects such information in `mergeData.fColumnIdMap`, which is used by later calls to this
-// function to map already-seen column names to their chosen outputId, type and so on.
-static RColumnInfoGroup GatherColumnInfos(const RDescriptorsComparison &descCmp, const ROOT::RNTupleDescriptor &srcDesc,
-                                          RNTupleMergeData &mergeData)
-{
-   RColumnInfoGroup res;
-   for (const ROOT::RFieldDescriptor *field : descCmp.fExtraDstFields) {
-      AddColumnsFromField(res.fExtraDstColumns, mergeData.fDstDescriptor, descCmp.fColReprMappings, mergeData, *field,
-                          *field);
-   }
-   for (const auto &[srcField, dstField] : descCmp.fCommonFields) {
-      AddColumnsFromField(res.fCommonColumns, srcDesc, descCmp.fColReprMappings, mergeData, *srcField, *dstField);
-   }
+   // handle extra dst fields & common fields
+   auto columnInfos = GatherColumnInfos(descCmp, *fSrcDescriptor);
+   auto res = MergeSourceClusters(source, columnInfos.fCommonColumns, columnInfos.fExtraDstColumns);
    return res;
-}
-
-static void PrefillColumnMap(const ROOT::RNTupleDescriptor &desc, const ROOT::RFieldDescriptor &fieldDesc,
-                             ColumnIdMap_t &colIdMap, const std::string &prefix = "")
-{
-   std::string name = prefix + '.' + fieldDesc.GetFieldName();
-   for (const auto &colId : fieldDesc.GetLogicalColumnIds()) {
-      const auto &colDesc = desc.GetColumnDescriptor(colId);
-      RColumnOutInfo info{};
-      info.fColumnId = colDesc.GetLogicalId();
-      const auto colName =
-         name + '.' + std::to_string(colDesc.GetIndex()) + '.' + std::to_string(colDesc.GetRepresentationIndex());
-      colIdMap[colName] = info;
-   }
-
-   for (const auto &subId : fieldDesc.GetLinkIds()) {
-      const auto &subfield = desc.GetFieldDescriptor(subId);
-      PrefillColumnMap(desc, subfield, colIdMap, name);
-   }
-}
-
-static void AddColumnExtensionsInFieldOrder(
-   const ROOT::RFieldDescriptor &field, const ROOT::RNTupleDescriptor &desc,
-   const FieldCollectionMap_t<RColReprExtension> &extensions,
-   std::vector<std::pair<const ROOT::RFieldDescriptor *, std::vector<RColReprExtension>>> &outExtensions,
-   std::unordered_map<ROOT::DescriptorId_t, std::vector<const ROOT::RFieldDescriptor *>> &outProjectionPointees)
-{
-   const auto it = extensions.find(&field);
-   if (it != extensions.end())
-      outExtensions.emplace_back(it->first, it->second);
-
-   if (field.IsProjectedField())
-      outProjectionPointees[field.GetProjectionSourceId()].push_back(&field);
-
-   for (auto childId : field.GetLinkIds()) {
-      const auto &child = desc.GetFieldDescriptor(childId);
-      AddColumnExtensionsInFieldOrder(child, desc, extensions, outExtensions, outProjectionPointees);
-   }
 }
 
 RNTupleMerger::RNTupleMerger(std::unique_ptr<ROOT::Internal::RPagePersistentSink> destination,
                              std::unique_ptr<ROOT::RNTupleModel> model)
-   // TODO(gparolini): consider using an arena allocator instead, since we know the precise lifetime
-   // of the RNTuples we are going to handle (e.g. we can reset the arena at every source)
-   : fDestination(std::move(destination)),
-     fPageAlloc(std::make_unique<ROOT::Internal::RPageAllocatorHeap>()),
-     fModel(std::move(model))
+   : fDestination(std::move(destination)), fModel(std::move(model))
 {
    R__ASSERT(fDestination);
-
-#ifdef R__USE_IMT
-   if (ROOT::IsImplicitMTEnabled())
-      fTaskGroup = TTaskGroup();
-#endif
 }
 
 RNTupleMerger::RNTupleMerger(std::unique_ptr<ROOT::Internal::RPagePersistentSink> destination)
-   : RNTupleMerger(std::move(destination), nullptr)
+   : ROOT::Experimental::Internal::RNTupleMerger(std::move(destination), nullptr)
 {
 }
 
@@ -1356,25 +1479,11 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       }
    }
 
-   // Maps projection source fields to all their projections.
-   std::unordered_map<ROOT::DescriptorId_t, std::vector<const ROOT::RFieldDescriptor *>> projectionPointees;
-
    // we should have a model if and only if the destination is initialized.
    if (!!fModel != fDestination->IsInitialized()) {
       return R__FAIL(
          "passing an already-initialized destination to RNTupleMerger::Merge (i.e. trying to do incremental "
          "merging) can only be done by providing a valid ROOT::RNTupleModel when constructing the RNTupleMerger.");
-   }
-
-   RNTupleMergeData mergeData{sources, *fDestination, mergeOpts};
-   mergeData.fNumDstEntries = mergeData.fDestination.GetNEntries();
-
-   if (fModel) {
-      // If this is an incremental merging, pre-fill the column id map with the existing destination ids.
-      // Otherwise we would generate new output ids that may not match the ones in the destination!
-      for (const auto &field : mergeData.fDstDescriptor.GetTopLevelFields()) {
-         PrefillColumnMap(fDestination->GetDescriptor(), field, mergeData.fColumnIdMap);
-      }
    }
 
    // NOTE: don't wrap this in a do {} while (0)! It uses continue!
@@ -1386,34 +1495,33 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       return R__FAIL(errMsg);                                                      \
    }
 
+   auto strat =
+      std::unique_ptr<RNTupleMergeStrategy>(new RNTupleMergeStrategyDefault(fModel, *fDestination, mergeOpts));
+
    // Merge main loop
    for (RPageSource *source : sources) {
-      source->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
-      auto srcDescriptor = source->GetSharedDescriptorGuard();
-      mergeData.fSrcDescriptor = &srcDescriptor.GetRef();
+      strat->InitSource(*source);
 
-      if (mergeData.fSrcDescriptor->GetVersion() > ROOT::RNTuple::GetCurrentVersion()) {
-         if (mergeOpts.fVersionBehavior == ENTupleMergeVersionBehavior::kWarnOnHigherVersion) {
-            R__LOG_WARNING(NTupleMergeLog())
-               << "RNTuple '" << mergeData.fSrcDescriptor->GetName()
-               << "' has a higher format version than the latest supported by this version "
-                  "of ROOT. Merging will work but some features may be dropped.";
-         } else {
-            return R__FAIL("RNTuple '" + mergeData.fSrcDescriptor->GetName() +
-                           "' has a higher format version than the latest supported by this version. Refusing to "
-                           "merge, since RNTupleMergeOptions::fVersionBehavior is set to AbortOnHigherVersion.");
+      {
+         auto srcDescriptor = source->GetSharedDescriptorGuard();
+         if (srcDescriptor->GetVersion() > ROOT::RNTuple::GetCurrentVersion()) {
+            if (mergeOpts.fVersionBehavior == ENTupleMergeVersionBehavior::kWarnOnHigherVersion) {
+               R__LOG_WARNING(NTupleMergeLog())
+                  << "RNTuple '" << srcDescriptor->GetName()
+                  << "' has a higher format version than the latest supported by this version "
+                     "of ROOT. Merging will work but some features may be dropped.";
+            } else {
+               return R__FAIL("RNTuple '" + srcDescriptor->GetName() +
+                              "' has a higher format version than the latest supported by this version. Refusing to "
+                              "merge, since RNTupleMergeOptions::fVersionBehavior is set to AbortOnHigherVersion.");
+            }
          }
+
+         for (const auto &extraTypeInfoDesc : srcDescriptor->GetExtraTypeInfoIterable())
+            fDestination->UpdateExtraTypeInfo(extraTypeInfoDesc);
       }
 
-      // Create sink and model from the input descriptor if not initialized
-      if (!fModel) {
-         fModel = fDestination->InitFromDescriptor(srcDescriptor.GetRef(), false /* copyClusters */);
-      }
-
-      for (const auto &extraTypeInfoDesc : srcDescriptor->GetExtraTypeInfoIterable())
-         fDestination->UpdateExtraTypeInfo(extraTypeInfoDesc);
-
-      auto descCmpRes = CompareDescriptorStructure(mergeData.fDstDescriptor, srcDescriptor.GetRef());
+      auto descCmpRes = strat->CompareSrcAndDstDescriptors();
       if (!descCmpRes) {
          SKIP_OR_ABORT(std::string("Source RNTuple has an incompatible schema with the destination:\n") +
                        descCmpRes.GetError()->GetReport())
@@ -1434,7 +1542,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       if (!descCmp.fExtraSrcFields.empty()) {
          if (mergeOpts.fMergingMode == ENTupleMergingMode::kUnion) {
             // late model extension for all fExtraSrcFields in Union mode
-            auto res = ExtendDestinationModel(descCmp, *fModel, mergeData);
+            auto res = strat->ExtendDestinationModel(descCmp);
             if (!res)
                return R__FORWARD_ERROR(res);
          } else if (mergeOpts.fMergingMode == ENTupleMergingMode::kStrict) {
@@ -1447,59 +1555,14 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
          }
       }
 
-      //// Extend columns if needed
-      if (!descCmp.fColReprExtensions.empty()) {
-         for (const auto &field : descCmp.fExtraDstFields) {
-            if (field->IsProjectedField())
-               projectionPointees[field->GetProjectionSourceId()].push_back(field);
-         }
-
-         // We need to extend the columns in the proper order, i.e. so that they appear in the same order as
-         // their first representation. This is to ensure that the pages we write to the cluster are in a consistent
-         // order as their column descriptors. The page creation order is determined by the order of
-         // columnInfos.fCommonColumns, which in turn depends on the common fields order (see GatherColumnInfos).
-         // XXX: do we need this separate sort step? Why not just create this vector directly in
-         // CompareDescriptorStructure?
-         std::vector<std::pair<const RFieldDescriptor *, std::vector<RColReprExtension>>> colExtensions;
-         colExtensions.reserve(descCmp.fColReprExtensions.size());
-         for (const auto &commonField : descCmp.fCommonFields) {
-            const auto *field = commonField.fDst;
-            AddColumnExtensionsInFieldOrder(*field, mergeData.fDstDescriptor, descCmp.fColReprExtensions, colExtensions,
-                                            projectionPointees);
-         }
-         for (const auto &field : descCmp.fExtraSrcFields) {
-            if (field->IsProjectedField())
-               projectionPointees[field->GetProjectionSourceId()].push_back(field);
-         }
-
-         for (const auto &[fieldDesc, extensions] : colExtensions) {
-            auto &mappings = descCmp.fColReprMappings[fieldDesc];
-            for (const auto &extension : extensions) {
-               const auto firstColumnId = fDestination->AddColumnRepresentation(*fieldDesc, extension.fSourceRepr,
-                                                                                extension.fOrigFirstElementIndex);
-
-               // When adding new column representations to an existing field which is the source of some projected
-               // fields, we need to also add new alias columns to those fields so that they can point to the proper
-               // representation.
-               if (auto it = projectionPointees.find(fieldDesc->GetId()); it != projectionPointees.end()) {
-                  for (const auto &projection : it->second) {
-                     for (auto colIdx = 0u; colIdx < extension.fSourceRepr.size(); ++colIdx)
-                        fDestination->AddAliasColumn(mergeData.fDstDescriptor, *projection, firstColumnId + colIdx);
-                  }
-               }
-               mappings.push_back(extension);
-            }
-         }
-      }
-
-      // handle extra dst fields & common fields
-      auto columnInfos = GatherColumnInfos(descCmp, srcDescriptor.GetRef(), mergeData);
-      auto res = MergeSourceClusters(*source, columnInfos.fCommonColumns, columnInfos.fExtraDstColumns, mergeData);
+      auto res = strat->MergeSource(*source, descCmp);
       if (!res)
          return R__FORWARD_ERROR(res);
    } // end loop over sources
 
    // Commit the output
+   strat->BeforeCommit();
+
    if (fDestination->GetNEntries() == 0)
       R__LOG_WARNING(NTupleMergeLog()) << "Output RNTuple '" << fDestination->GetNTupleName() << "' has no entries.";
    else
