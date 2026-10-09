@@ -22,7 +22,7 @@
 #include "RooMinimizer.h"
 #include "RooRealVar.h"
 
-#include <Math/Minimizer.h>
+#include <Math/MinimizerOptions.h>
 #include <Minuit2/FCNBase.h>
 #include <TMatrixDSym.h>
 
@@ -40,11 +40,6 @@ class RooAbsMinimizerFcn : public ROOT::Minuit2::FCNBase {
 public:
    RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *context);
    ~RooAbsMinimizerFcn() override = default;
-
-   /// Set this function on a ROOT::Math::Minimizer. Only used for minimizers
-   /// other than Minuit2, which RooMinimizer uses directly via the FCNBase
-   /// interface that this class implements.
-   virtual void initMinimizer(ROOT::Math::Minimizer &, RooMinimizer *context) = 0;
 
    /// \name ROOT::Minuit2::FCNBase interface
    /// @{
@@ -94,6 +89,7 @@ public:
    virtual void setOffsetting(bool flag) = 0;
 
    RooMinimizer::Config const &cfg() const { return _context->_cfg; }
+   ROOT::Math::MinimizerOptions const &minimizerOptions() const { return _context->_config.MinimizerOptions(); }
 
    inline RooRealVar &floatableParam(std::size_t i) const
    {
