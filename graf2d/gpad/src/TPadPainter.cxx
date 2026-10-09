@@ -532,66 +532,38 @@ void TPadPainter::DrawTTFglyphs(Int_t x, Int_t y, TTFhandle &ttf, ETextMode mode
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Helper method to check if TImage is present in list of primitives
+
+static Bool_t ContainsTImage(const TVirtualPad *pad)
+{
+   TIter next(pad->GetListOfPrimitives());
+
+   while (auto obj = next()) {
+      if (obj->InheritsFrom(TImage::Class()))
+         return kTRUE;
+      if (auto subpad = dynamic_cast<TPad *>(obj))
+         if (ContainsTImage(subpad))
+            return kTRUE;
+   }
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Save the image displayed in the canvas pointed by "pad" into a binary file.
 
 Int_t TPadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t type) const
 {
-   auto canvas = pad->GetCanvas();
-   if (!canvas || (canvas->GetCanvasID() == -1))
+   if (!pad)
       return 0;
 
-   // just sync display with short timeout
-   gVirtualX->Update(1);
-   gSystem->Sleep(30);
-   gSystem->ProcessEvents();
+   // for X11 and Winows there is special GIF, which works only with maximal 256-colors
+   // Do not try to use it for pads with TImage inside - it most probably fails
+   if ((type == TImage::kGif) && !IsCocoa() && !ContainsTImage(pad)) {
+      gVirtualX->Update(1);
+      gSystem->Sleep(30);
+      gSystem->ProcessEvents();
 
-   if (IsCocoa()) {
-
-      // TODO: reuse FillImageFromPad
-
-      //Force TCanvas::CopyPixmaps.
-      // canvas->Flush();
-
-      const UInt_t w = canvas->GetWw();
-      const UInt_t h = canvas->GetWh();
-
-      const std::unique_ptr<unsigned char[]>
-               pixelData(gVirtualX->GetColorBits(canvas->GetCanvasID(), 0, 0, w, h));
-
-      const std::unique_ptr<TImage> image(TImage::Create());
-
-      if (pixelData && image) {
-         image->DrawRectangle(0, 0, w, h);
-         if (unsigned char *argb = (unsigned char *)image->GetArgbArray()) {
-            //Ohhh.
-            if (sizeof(UInt_t) == 4) {
-               //For sure the data returned from TGCocoa::GetColorBits,
-               //it's 4 * w * h bytes with what TASImage considers to be argb.
-               std::copy(pixelData.get(), pixelData.get() + 4 * w * h, argb);
-            } else {
-               //A bit paranoid, don't you think so?
-               //Will Quartz/TASImage work at all on such a fancy platform? ;)
-               const unsigned shift = std::numeric_limits<unsigned char>::digits;
-               //
-               unsigned *dstPixel = (unsigned *)argb, *end = dstPixel + w * h;
-               const unsigned char *srcPixel = pixelData.get();
-               for (;dstPixel != end; ++dstPixel, srcPixel += 4) {
-                  //Looks fishy but should work, trust me :)
-                  *dstPixel = srcPixel[0] & (srcPixel[1] << shift) &
-                                             (srcPixel[2] << 2 * shift) &
-                                             (srcPixel[3] << 3 * shift);
-               }
-            }
-
-            image->WriteImage(fileName, (TImage::EImageFileTypes)type);
-            //Success.
-            return 1;
-         }
-      }
-   }
-
-   if (type == TImage::kGif) {
-      Int_t wid = (pad == canvas) ? canvas->GetCanvasID() : pad->GetPixmapID();
+      Int_t wid = (pad == pad->GetCanvas()) ? pad->GetCanvasID() : pad->GetPixmapID();
       auto ctxt = gVirtualX->GetWindowContext(wid);
       // TODO: GIF image is special, if fail - try use TImage functionality
       Int_t res = gVirtualX->WriteGIFW(ctxt, fileName);
@@ -602,7 +574,8 @@ Int_t TPadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t typ
    const std::unique_ptr<TImage> img(TImage::Create());
    if (!img)
       return 0;
-   img->FromPad(pad);
+   if (!FillImageFromPad(img.get(), pad))
+      return 0;
    if (!img->IsValid())
       return 0;
    img->WriteImage(fileName, (TImage::EImageFileTypes)type);
