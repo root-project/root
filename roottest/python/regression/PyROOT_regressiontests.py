@@ -245,7 +245,11 @@ class Regression10CoralAttributeListIterators( MyTestCase ):
 
       b = a.begin()
       e = a.end()
-      self.assertNotEqual( a, e )
+      self.assertNotEqual( b, e )
+
+      # the AttributeList itself has no equality operator with an iterator
+      with self.assertRaises(TypeError):
+         a == e
 
       b.__preinc__()
       self.assertEqual( b, e )

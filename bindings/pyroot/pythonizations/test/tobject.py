@@ -44,8 +44,10 @@ class TObjectComparisonOps(unittest.TestCase):
     """
     Test for the comparison operators of TObject and subclasses:
     __eq__, __ne__, __lt__, __le__, __gt__, __ge__.
-    Such pythonizations rely on TObject::IsEqual and TObject::Compare,
-    which can be reimplemented in subclasses.
+    The ordering pythonizations rely on TObject::Compare, which can be
+    reimplemented in subclasses. There is no __eq__/__ne__ pythonization:
+    equality follows C++ semantics, so comparing objects of a class without
+    a C++ equality operator raises a TypeError.
     """
 
     num_elems = 3
@@ -54,8 +56,11 @@ class TObjectComparisonOps(unittest.TestCase):
     def test_eq(self):
         o = ROOT.TObject()
 
-        # TObject::IsEqual compares internal address
-        self.assertTrue(o == o)
+        # TObject has no C++ operator==, so the comparison is not supported.
+        # To compare by address, TObject::IsEqual can be used explicitly.
+        with self.assertRaises(TypeError):
+            o == o
+        self.assertTrue(o.IsEqual(o))
 
         # Test comparison with no TObject
         self.assertFalse(o == 1)
@@ -66,8 +71,11 @@ class TObjectComparisonOps(unittest.TestCase):
     def test_ne(self):
         o = ROOT.TObject()
 
-        # TObject::IsEqual compares internal address
-        self.assertFalse(o != o)
+        # TObject has no C++ operator!=, so the comparison is not supported.
+        # To compare by address, TObject::IsEqual can be used explicitly.
+        with self.assertRaises(TypeError):
+            o != o
+        self.assertFalse(not o.IsEqual(o))
 
         # Test comparison with no TObject
         self.assertTrue(o != 1)
