@@ -173,6 +173,14 @@ void TGLPadPainter::ClearWindow(Int_t device)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns true when X11 backend is used
+
+Bool_t TGLPadPainter::IsX11() const
+{
+   return gVirtualX->InheritsFrom("TGX11");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Returns true when cocoa backend is used
 
 Bool_t TGLPadPainter::IsCocoa() const
@@ -878,9 +886,29 @@ void TGLPadPainter::DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags)
 
 Int_t TGLPadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t type) const
 {
-   auto canvas = pad->GetCanvas();
-   if (!canvas)
+   std::unique_ptr<TImage> image(TImage::Create());
+   if (!image.get()) {
+      ::Error("TGLPadPainter::SaveImage", "TImage creation failed");
       return 0;
+   }
+
+   if (!FillImageFromPad(image.get(), pad))
+      return 0;
+
+   image->WriteImage(fileName, (TImage::EImageFileTypes)type);
+
+   return 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill image object with the pixel data from the pad
+/// Implements special handling for X11 where ASImage has native implementation
+
+Bool_t TGLPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
+{
+   auto canvas = pad ? pad->GetCanvas() : nullptr;
+   if (!canvas || !image)
+      return kFALSE;
 
    // special mode to request window attributes, implemented only in TRootCanvas
    Int_t update_arg = 101;
@@ -911,38 +939,11 @@ Int_t TGLPadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t t
 
    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (char *) buff.data());
 
-   std::unique_ptr<TImage> image(TImage::Create());
-   if (!image.get()) {
-      ::Error("TGLPadPainter::SaveImage", "TImage creation failed");
-      return 0;
-   }
+   image->FromGLBuffer((UChar_t *) buff.data(), width, height);
 
-   image->DrawRectangle(0, 0, canvas->GetWw(), canvas->GetWh());
-   UInt_t *argb = image->GetArgbArray();
-
-   if (!argb) {
-      ::Error("TGLPadPainter::SaveImage", "null argb array in TImage object");
-      return 0;
-   }
-
-   for (Int_t i = 0; i < height; ++i) {
-     Int_t base = (height - 1 - i) * width;
-     for (Int_t j = 0; j < width; ++j, ++base) {
-        //Uncomment/comment if you don't have GL_BGRA.
-
-        const UInt_t pix  = buff[base];
-        const UInt_t bgra = ((pix & 0xff) << 16) | (pix & 0xff00) |
-                            ((pix & 0xff0000) >> 16) | (pix & 0xff000000);
-
-        //argb[i * width + j] = buff[base];
-        argb[i * width + j] = bgra;
-     }
-   }
-
-   image->WriteImage(fileName, (TImage::EImageFileTypes)type);
-
-   return 1;
+   return image->IsValid();
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

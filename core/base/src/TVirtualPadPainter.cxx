@@ -215,3 +215,12 @@ Int_t TVirtualPadPainter::SaveAsImage(TVirtualPad * /* pad */, const char * /* f
 {
    return -1;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill TImage object by data from the pad
+/// Returns kFALSE if not supported or in case of failures
+
+Bool_t TVirtualPadPainter::FillImageFromPad(TImage * /* image */, TVirtualPad * /* pad */) const
+{
+   return kFALSE;
+}

@@ -115,6 +115,13 @@ Int_t TPadPainter::ResizeDrawable(Int_t device, UInt_t w, UInt_t h)
    return gVirtualX->ResizePixmap(device, w, h);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true when X11 backend is used
+
+Bool_t TPadPainter::IsX11() const
+{
+   return gVirtualX->InheritsFrom("TGX11");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns true when cocoa backend is used
@@ -540,6 +547,8 @@ Int_t TPadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t typ
 
    if (IsCocoa()) {
 
+      // TODO: reuse FillImageFromPad
+
       //Force TCanvas::CopyPixmaps.
       // canvas->Flush();
 
@@ -598,6 +607,45 @@ Int_t TPadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t typ
       return 0;
    img->WriteImage(fileName, (TImage::EImageFileTypes)type);
    return 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill image object with the pixel data from the pad
+/// Implements special handling for X11 where ASImage has native implementation
+
+Bool_t TPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
+{
+   if (!image || !pad)
+      return kFALSE;
+
+   gVirtualX->Update(1);
+   if (!gThreadXAR) {
+      gSystem->Sleep(10);
+      gSystem->ProcessEvents();
+      gSystem->Sleep(10);
+      gSystem->ProcessEvents();
+   }
+
+   auto width = pad->GetPadWidth();
+   auto height = pad->GetPadHeight();
+
+   Int_t wid = (pad == pad->GetCanvas()) ? pad->GetCanvasID() : pad->GetPixmapID();
+   gVirtualX->SelectWindow(wid);
+
+   Window_t wd = (Window_t)gVirtualX->GetCurrentWindow();
+
+   if (IsX11()) { //use built-in optimized version
+      image->FromX11Window(wd, 0, 0, width, height);
+   } else {
+      unsigned char *bits = gVirtualX->GetColorBits(wd, 0, 0, width, height);
+      if (!bits)
+         return kFALSE;
+
+      image->FromBitmap(bits, width, height);
+      delete [] bits;
+   }
+
+   return image->IsValid();
 }
 
 
