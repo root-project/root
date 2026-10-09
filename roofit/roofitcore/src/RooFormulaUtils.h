@@ -57,7 +57,10 @@ std::unique_ptr<RooFormulaEvaluator> cloneEvaluator(RooFormulaEvaluator const &o
 
 double evalFormula(RooFormulaEvaluator const &evaluator, RooAbsCollection const &vars, RooArgSet const *nset = nullptr);
 
-void doEvalFormula(RooFormulaEvaluator const &evaluator, RooArgList const &actualVars, RooFit::EvalContext &ctx);
+void doEvalFormula(RooAbsArg const &caller, RooFormulaEvaluator const &evaluator, RooArgList const &actualVars,
+                   RooFit::EvalContext &ctx);
+
+bool formulaCanComputeBatchWithCuda(RooFormulaEvaluator const &evaluator);
 
 void printFormula(std::ostream &os, TString indent, std::string const &formula, RooArgList const &actualVars);
 
@@ -82,6 +85,14 @@ std::list<double> *plotSamplingHint(BinningMap const &binnings, RooArgList const
                                     RooAbsRealLValue const &obs, double xlo, double xhi);
 
 } // namespace RooFormulaUtils
+
+namespace RooFormulaInternal {
+
+/// Testing hook: discard the cached ROOFIT_FORMULA_BACKEND setting so that it
+/// is read again from the environment on the next evaluator creation.
+void resetFormulaBackendForTesting();
+
+} // namespace RooFormulaInternal
 
 #endif
 
