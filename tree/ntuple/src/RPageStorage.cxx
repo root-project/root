@@ -470,7 +470,7 @@ void ROOT::Internal::RPageSource::UnzipCluster(RCluster *cluster)
             sealedPage.SetHasChecksum(pi.HasChecksum());
             sealedPage.SetBufferSize(pi.GetLocator().GetNBytesOnStorage() + pi.HasChecksum() * kNBytesPageChecksum);
             sealedPage.SetBuffer(onDiskPage->GetAddress());
-            R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
+            R__ASSERT(onDiskPage->GetSize() == sealedPage.GetBufferSize());
 
             auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),
                              &foundChecksumFailure,
