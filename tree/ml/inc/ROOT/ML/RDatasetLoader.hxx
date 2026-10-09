@@ -106,7 +106,7 @@ private:
 
    std::vector<std::size_t> fVecSizes;
    std::size_t fSumVecSizes;
-   std::size_t fVecPadding;
+   float fVecPadding;
    std::size_t fNumDatasetCols;
 
    std::vector<RFlat2DMatrix> fTrainingDatasets;
