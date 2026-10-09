@@ -121,8 +121,21 @@ public:
    virtual void SetImage(const TVectorD & /*imageData*/, UInt_t /*width*/, TImagePalette * /*palette*/ = nullptr) {}
    virtual void SetImage(Pixmap_t /*pxm*/, Pixmap_t /*mask*/ = 0) {}
 
+
+   // Create an image from bitmap. (See TASImage::FromBitmap)
+   virtual void FromBitmap(const UChar_t * /*buf*/, UInt_t /*w*/, UInt_t /*h*/) {}
+
    // Create an image from the given pad. (See TASImage::FromPad)
    virtual void FromPad(TVirtualPad * /*pad*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) {}
+
+   // Create an image from X11 window handle. (See TASImage::FromX11Window)
+   virtual void FromX11Window(Window_t /* win */ , Int_t /* x */, Int_t  /* y */, Int_t /* width */, Int_t /* height */) {}
+
+   // Create an image from gVirtualX window. (See TASImage::FromWindow)
+   virtual void FromWindow(Drawable_t /*wid*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) {}
+
+   // Create an image from GL buffer. (See TASImage::FromGLBuffer)
+   virtual void R__DEPRECATED(7,00, "Method will be removed, use FromBitmap instead") FromGLBuffer(UChar_t * /*buf*/, UInt_t /*w*/, UInt_t /*h*/) {}
 
    // Restore the image original size. (See TASImage::UnZoom)
    virtual void UnZoom() {}
@@ -245,8 +258,6 @@ public:
    virtual void      GetImageBuffer(char ** /*buffer*/, int* /*size*/, EImageFileTypes /*type*/ = TImage::kPng) {}
    virtual Bool_t    SetImageBuffer(char ** /*buffer*/, EImageFileTypes /*type*/ = TImage::kPng) { return kFALSE; }
    virtual void      PaintImage(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/, Int_t /*xsrc*/ = 0, Int_t /*ysrc*/ = 0, UInt_t /*wsrc*/ = 0, UInt_t /*hsrc*/ = 0, Option_t * /*opt*/ = "") { }
-   virtual void      FromWindow(Drawable_t /*wid*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) {}
-   virtual void      FromGLBuffer(UChar_t* /*buf*/, UInt_t /*w*/, UInt_t /*h*/) {}
    static EImageFileTypes GetImageFileTypeFromFilename(const char* opt);
 
    static TImage *Create();
