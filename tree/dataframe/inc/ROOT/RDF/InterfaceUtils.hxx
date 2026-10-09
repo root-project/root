@@ -15,6 +15,8 @@
 #include <ROOT/RDF/RActionSnapshot.hxx>
 #include <ROOT/RDF/ActionHelpers.hxx> // for BuildAction
 #include <ROOT/RDF/SnapshotHelpers.hxx>
+#include <ROOT/RDF/RActionCustomLoader.hxx>
+#include <ROOT/RDF/CustomLoaderHelpers.hxx>
 #include <ROOT/RDF/RColumnRegister.hxx>
 #include <ROOT/RDF/RDefine.hxx>
 #include <ROOT/RDF/RDefinePerSample.hxx>
@@ -395,6 +397,24 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
    }
 
    return actionPtr;
+}
+
+template <typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &colNames, const std::vector<const std::type_info *> &colTypeIDs,
+            const std::shared_ptr<ROOT::RVecF> &location, const std::vector<std::size_t> &vecSizes, float vecPadding,
+            const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode, const RColumnRegister &colRegister)
+{
+
+   auto sz = colNames.size();
+   std::vector<bool> isDefine(sz);
+   for (auto i = 0u; i < sz; ++i)
+      isDefine[i] = colRegister.IsDefineOrAlias(colNames[i]);
+
+   using Helper_t = ROOT::Internal::RDF::CustomLoaderHelper;
+   using Action_t = ROOT::Internal::RDF::RActionCustomLoader<Helper_t, PrevNodeType>;
+   return std::make_unique<Action_t>(Helper_t(location, nSlots, colTypeIDs, vecSizes, vecPadding), colNames, colTypeIDs,
+                                     prevNode, colRegister);
 }
 
 // Book with custom helper type

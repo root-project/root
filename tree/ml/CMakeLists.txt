@@ -15,6 +15,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTMLDataLoader
   SOURCES
     src/RBatchLoader.cxx
     src/RBatchSink.cxx
+    src/RClusterLoader.cxx
+    src/RDataLoaderEngine.cxx
+    src/RDatasetLoader.cxx
     src/RFlat2DMatrixOperators.cxx
     src/RSampler.cxx
   DEPENDENCIES
