@@ -920,7 +920,13 @@ Bool_t TGLPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
 
    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (char *) buff.data());
 
-   image->FromGLBuffer((UChar_t *) buff.data(), width, height);
+   TGLUtil::SwapPixelBuffer((UChar_t *) buff.data(), width, height);
+
+   // convert rgba into bgra
+   for (auto &pix : buff)
+      pix = ((pix & 0xff) << 16) | (pix & 0xff00) | ((pix & 0xff0000) >> 16) | (pix & 0xff000000);
+
+   image->FromBitmap((UChar_t *) buff.data(), width, height);
 
    return image->IsValid();
 }

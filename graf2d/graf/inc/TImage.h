@@ -135,7 +135,7 @@ public:
    virtual void FromWindow(Drawable_t /*wid*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) {}
 
    // Create an image from GL buffer. (See TASImage::FromGLBuffer)
-   virtual void R__DEPRECATED(7,00, "Method will be removed, use FromBitmap instead") FromGLBuffer(UChar_t * /*buf*/, UInt_t /*w*/, UInt_t /*h*/) {}
+   virtual void R__DEPRECATED(7,00, "Use FromBitmap instead") FromGLBuffer(UChar_t * /*buf*/, UInt_t /*w*/, UInt_t /*h*/) {}
 
    // Restore the image original size. (See TASImage::UnZoom)
    virtual void UnZoom() {}
