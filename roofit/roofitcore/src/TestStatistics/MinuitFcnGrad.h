@@ -33,24 +33,14 @@ public:
                  std::vector<ROOT::Fit::ParameterSettings> &parameters, LikelihoodMode likelihoodMode,
                  LikelihoodGradientMode likelihoodGradientMode);
 
-   /// Not supported: this function can only be used with Minuit2, which
-   /// RooMinimizer drives directly via the ROOT::Minuit2::FCNBase interface.
-   void initMinimizer(ROOT::Math::Minimizer &, RooMinimizer *context) override;
-
    /// Overridden from RooAbsMinimizerFcn to include gradient strategy synchronization.
    bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) override;
 
    bool returnsInMinuit2ParameterSpace() const { return _gradient->usesMinuitInternalValues(); }
 
-   double operator()(const double *x) const;
-
-   void Gradient(const double *x, double *grad) const;
-   void GradientWithPrevResult(const double *x, double *grad, double *previous_grad, double *previous_g2,
-                               double *previous_gstep, double fValAtX) const;
-
    /// \name ROOT::Minuit2::FCNBase interface
    /// @{
-   double operator()(std::vector<double> const &x) const override { return (*this)(x.data()); }
+   double operator()(std::vector<double> const &x) const override;
    bool HasGradient() const override { return true; }
    std::vector<double> Gradient(std::vector<double> const &x) const override;
    // Unhide the 4-argument overload from FCNBase, which forwards to Gradient().

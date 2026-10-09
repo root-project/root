@@ -49,7 +49,6 @@ public:
    struct FitResult {
 
       FitResult() = default;
-      FitResult(const ROOT::Fit::FitConfig &fconfig);
 
       double error(unsigned int i) const { return (i < fErrors.size()) ? fErrors[i] : 0; }
       double lowerError(unsigned int i) const;
