@@ -446,8 +446,24 @@ void ROOT::Internal::RPageSource::UnzipCluster(RCluster *cluster)
 
    std::atomic<bool> foundChecksumFailure{false};
 
-   std::vector<std::unique_ptr<RColumnElementBase>> allElements;
    const auto &columnsInCluster = cluster->GetAvailPhysicalColumns();
+
+   std::vector<std::pair<Internal::RPage, Internal::RPagePool::RKey>> allPages;
+   // We allocate the space for all the pages upfront so that the TBB tasks do not need to lock the vector.
+   // In general, the number of uncompressed pages is larger than the number of sealed pages because we
+   // may decompress the same page into different in-memory representations.
+   std::size_t nPages = 0;
+   // We run a short version of the main loop to determine the number of uncompressed pages
+   for (const auto columnId : columnsInCluster) {
+      if (fActivePhysicalColumns.HasColumnInfos(columnId)) {
+         nPages += fActivePhysicalColumns.GetColumnInfos(columnId).size() *
+                   clusterDescriptor.GetPageRange(columnId).GetPageInfos().size();
+      }
+   }
+   allPages.resize(nPages);
+   std::size_t iPage = 0;
+
+   std::vector<std::unique_ptr<RColumnElementBase>> allElements;
    for (const auto columnId : columnsInCluster) {
       // By the time we unzip a cluster, the set of active columns may have already changed wrt. to the moment when
       // we requested reading the cluster. That doesn't matter much, we simply decompress what is now in the list
@@ -473,9 +489,8 @@ void ROOT::Internal::RPageSource::UnzipCluster(RCluster *cluster)
             R__ASSERT(onDiskPage->GetSize() == sealedPage.GetBufferSize());
 
             auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),
-                             &foundChecksumFailure,
+                             iPage, &foundChecksumFailure, &allPages,
                              indexOffset = clusterDescriptor.GetColumnRange(columnId).GetFirstElementIndex()]() {
-               const ROOT::Internal::RPagePool::RKey keyPagePool{columnId, element->GetIdentifier().fInMemoryType};
                auto rv = UnsealPage(sealedPage, *element);
                if (!rv) {
                   foundChecksumFailure = true;
@@ -486,24 +501,27 @@ void ROOT::Internal::RPageSource::UnzipCluster(RCluster *cluster)
 
                newPage.SetWindow(indexOffset + firstInPage,
                                  ROOT::Internal::RPage::RClusterInfo(clusterId, indexOffset));
-               fPagePool.PreloadPage(std::move(newPage), keyPagePool);
+               const ROOT::Internal::RPagePool::RKey keyPagePool{columnId, element->GetIdentifier().fInMemoryType};
+               allPages[iPage] = std::make_pair(std::move(newPage), keyPagePool);
             };
 
             fTaskScheduler->AddTask(taskFunc);
 
             firstInPage += pi.GetNElements();
             pageNo++;
+            iPage++;
          } // for all pages in column
-
-         fCounters->fNPageUnsealed.Add(pageNo);
       } // for all in-memory types of the column
    } // for all columns in cluster
 
    fTaskScheduler->Wait();
+   fCounters->fNPageUnsealed.Add(nPages);
 
    if (foundChecksumFailure) {
       throw RException(R__FAIL("page checksum verification failed, data corruption detected"));
    }
+
+   fPagePool.PreloadPageV(allPages);
 }
 
 void ROOT::Internal::RPageSource::PrepareLoadCluster(
