@@ -1411,23 +1411,21 @@ bool interop::IsSmartPtr(TCppScope_t klass) {
   return false;
 }
 
-bool interop::GetSmartPtrInfo(const std::string& tname, TCppScope_t* raw,
+bool interop::GetSmartPtrInfo(TCppScope_t klass, TCppScope_t* raw,
                               TCppMethod_t* deref) {
-  // TODO: We can directly accept scope instead of name
-  const std::string& rn = ResolveName(tname);
-  if (gSmartPtrTypes.find(rn.substr(0, rn.find("<"))) == gSmartPtrTypes.end())
+  TCppScope_t scope = interop::GetUnderlyingScope(klass);
+  if (!scope || !interop::IsSmartPtr(scope))
     return false;
 
   if (!raw && !deref)
     return true;
 
-  TCppScope_t scope = interop::GetScope(rn);
-  if (!scope)
-    return false;
-
   std::vector<TCppMethod_t> ops;
   {
     std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
+    // the operator can only be found once the specialization is instantiated
+    if (!Cpp::IsComplete(scope))
+      return false;
     Cpp::GetOperator(scope, Cpp::Operator::OP_Arrow, ops,
                      /*kind=*/Cpp::OperatorArity::kBoth);
     if (ops.size() != 1)

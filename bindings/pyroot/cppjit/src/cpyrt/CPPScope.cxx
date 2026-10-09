@@ -207,16 +207,11 @@ static PyObject* pt_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds) {
   // creation of the python-side class; extend the size if this is a smart ptr
   //
   // A namespace can never be a smart pointer, so skip the check for namespaces.
-  // This matters beyond performance: GetSmartPtrInfo() resolves the scope name
-  // through a slow interpreter lookup that triggers autoloading of the library
-  // providing the scope, which we don't want to do unnecessarily.
   interop::TCppScope_t raw;
   interop::TCppMethod_t deref;
   if (CPPScope_CheckExact(subtype) &&
       !interop::IsNamespace(((CPPScope*)subtype)->fCppType)) {
-    if (interop::GetSmartPtrInfo(
-            interop::GetScopedFinalName(((CPPScope*)subtype)->fCppType), &raw,
-            &deref))
+    if (interop::GetSmartPtrInfo(((CPPScope*)subtype)->fCppType, &raw, &deref))
       subtype->tp_basicsize = sizeof(CPPSmartClass);
   }
 

@@ -3639,7 +3639,7 @@ cppjit::cpyrt::CreateConverter(const std::string& fullType, cdims_t dims) {
   Converter* result = nullptr;
   if (interop::TCppScope_t klass = interop::GetFullScope(realType)) {
     interop::TCppScope_t raw;
-    if (interop::GetSmartPtrInfo(realType, &raw, nullptr)) {
+    if (interop::GetSmartPtrInfo(klass, &raw, nullptr)) {
       if (cpd == "") {
         result = new SmartPtrConverter(klass, raw, control);
       } else if (cpd == "&") {
@@ -3902,7 +3902,7 @@ cppjit::cpyrt::CreateConverter(interop::TCppType_t type, cdims_t dims) {
              (klass || (klass = interop::GetFullScope(realTypeStr)))) {
     // std::byte is a special enum class used to access raw memory
     interop::TCppScope_t raw;
-    if (interop::GetSmartPtrInfo(realTypeStr, &raw, nullptr)) {
+    if (interop::GetSmartPtrInfo(klass, &raw, nullptr)) {
       if (cpd == "") {
         result = new SmartPtrConverter(klass, raw, control);
       } else if (cpd == "&") {

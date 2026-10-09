@@ -248,7 +248,7 @@ bool IsSubclass(TCppScope_t derived, TCppScope_t base);
 RPY_EXPORTED
 bool IsSmartPtr(TCppScope_t klass);
 RPY_EXPORTED
-bool GetSmartPtrInfo(const std::string&, TCppScope_t* raw, TCppMethod_t* deref);
+bool GetSmartPtrInfo(TCppScope_t klass, TCppScope_t* raw, TCppMethod_t* deref);
 // calculate offsets between declared and actual type, up-cast: direction > 0;
 // down-cast: direction < 0
 RPY_EXPORTED
