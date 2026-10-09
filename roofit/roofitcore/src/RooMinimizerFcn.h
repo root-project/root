@@ -22,6 +22,8 @@
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 
+#include <Math/Minimizer.h>
+
 #include <fstream>
 #include <mutex>
 #include <vector>
@@ -36,7 +38,10 @@ class RooMinimizerFcn : public RooAbsMinimizerFcn {
 public:
    RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context);
 
-   void initMinimizer(ROOT::Math::Minimizer &, RooMinimizer *context) override;
+   /// Set this function on a ROOT::Math::Minimizer. Only used for minimizers
+   /// other than Minuit2, which RooMinimizer drives directly via the
+   /// ROOT::Minuit2::FCNBase interface.
+   void initMinimizer(ROOT::Math::Minimizer &minim) const;
 
    std::string getFunctionName() const override;
    std::string getFunctionTitle() const override;
@@ -45,7 +50,6 @@ public:
 
    double operator()(const double *x) const;
    void evaluateGradient(const double *x, double *out) const;
-   bool evaluateHessian(std::span<const double> x, double *out) const;
 
    RooArgSet freezeDisconnectedParameters() const override;
 

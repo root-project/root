@@ -968,10 +968,10 @@ TEST(MinuitFcnGrad, DISABLED_CompareToRooMinimizerFcn)
                                     RFTS::LikelihoodGradientMode::multiprocess);
    RooMinimizerFcn vanilla_fcn(nll_vanilla.get(), &m_vanilla);
 
-   EXPECT_EQ(vanilla_fcn(getParamVals(vanilla_fcn).data()), modularL_fcn(getParamVals(modularL_fcn).data()));
+   EXPECT_EQ(vanilla_fcn(getParamVals(vanilla_fcn)), modularL_fcn(getParamVals(modularL_fcn)));
    // let's also check with absolutely certain same parameter values, both of them
-   EXPECT_EQ(vanilla_fcn(getParamVals(vanilla_fcn).data()), modularL_fcn(getParamVals(vanilla_fcn).data()));
-   EXPECT_EQ(vanilla_fcn(getParamVals(modularL_fcn).data()), modularL_fcn(getParamVals(modularL_fcn).data()));
+   EXPECT_EQ(vanilla_fcn(getParamVals(vanilla_fcn)), modularL_fcn(getParamVals(vanilla_fcn)));
+   EXPECT_EQ(vanilla_fcn(getParamVals(modularL_fcn)), modularL_fcn(getParamVals(modularL_fcn)));
 
    // reset static variables to automatic
    RFMP::Config::LikelihoodJob::defaultNEventTasks = RFMP::Config::LikelihoodJob::automaticNEventTasks;

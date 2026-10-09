@@ -279,7 +279,7 @@ RooArgSet RooMinimizerFcn::freezeDisconnectedParameters() const
    return changedSet;
 }
 
-bool RooMinimizerFcn::evaluateHessian(std::span<const double> x, double *out) const
+std::vector<double> RooMinimizerFcn::Hessian(std::vector<double> const &x) const
 {
    // Set the parameter values for this iteration
    for (unsigned index = 0; index < getNDim(); index++) {
@@ -292,6 +292,7 @@ bool RooMinimizerFcn::evaluateHessian(std::span<const double> x, double *out) co
 
    std::size_t m = _allParamsInit.size();
    std::size_t n = getNDim();
+   std::vector<double> out(n * n);
    std::size_t iAll = 0;
    std::size_t iFloating = 0;
    for (RooAbsArg *param_i : _allParamsInit) {
@@ -320,7 +321,7 @@ bool RooMinimizerFcn::evaluateHessian(std::span<const double> x, double *out) co
          std::cout << std::endl;
       }
    }
-   return true;
+   return out;
 }
 
 std::vector<double> RooMinimizerFcn::Gradient(std::vector<double> const &x) const
@@ -330,21 +331,9 @@ std::vector<double> RooMinimizerFcn::Gradient(std::vector<double> const &x) cons
    return out;
 }
 
-std::vector<double> RooMinimizerFcn::Hessian(std::vector<double> const &x) const
-{
-   const std::size_t n = getNDim();
-   std::vector<double> out(n * n);
-   evaluateHessian(x, out.data());
-   return out;
-}
-
-void RooMinimizerFcn::initMinimizer(ROOT::Math::Minimizer &minim, RooMinimizer * /*context*/)
+void RooMinimizerFcn::initMinimizer(ROOT::Math::Minimizer &minim) const
 {
    minim.SetFunction(*_multiGenFcn);
-   if (_useHessian) {
-      minim.SetHessianFunction(
-         std::bind(&RooMinimizerFcn::evaluateHessian, this, std::placeholders::_1, std::placeholders::_2));
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
