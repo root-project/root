@@ -2667,6 +2667,20 @@ void TGLUtil::DrawNumber(const TString    & num,
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Swap rows in pixel buffer returned by glReadPixels function
+/// To be able create ASImage from it
+
+void TGLUtil::SwapPixelBuffer(UChar_t *buf, UInt_t width, UInt_t height)
+{
+   std::vector<UChar_t> xx(4 * width);
+   for (UInt_t i = 0; i < height / 2; ++i) {
+      memcpy(xx.data(), buf + 4 * width * i, 4 * width);
+      memcpy(buf + 4 * width * i, buf + 4 * width * (height - i - 1), 4 * width);
+      memcpy(buf + 4 * width * (height - i - 1), xx.data(), 4 * width);
+   }
+}
+
 /**************************************************************************/
 /**************************************************************************/
 
