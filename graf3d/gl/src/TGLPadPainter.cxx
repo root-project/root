@@ -891,6 +891,32 @@ Bool_t TGLPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
    if (!canvas || !image)
       return kFALSE;
 
+   UInt_t width  = canvas->GetPadWidth(), height = canvas->GetPadHeight();
+   Int_t x0 = 0, y0 = 0;
+
+   if (pad != canvas) {
+      // GL always paint complete canvas - just extract part out of the complete buffer
+      UInt_t pad_width = pad->GetPadWidth();
+      UInt_t pad_height = pad->GetPadHeight();
+      if (!pad_width || !pad_height) {
+         Error("FillImageFromPad", "Pad dimensions are zero");
+         return kFALSE;
+      }
+
+      x0 = TMath::Max(0, pad->UtoAbsPixel(0));
+      y0 = TMath::Max(0, pad->VtoAbsPixel(1));
+      if ((x0 + pad_width > width) || (y0 + pad_height > height)) {
+         Error("FillImageFromPad", "Pad dimensions exceed canvas size");
+         return kFALSE;
+      }
+
+      // because of GL lines swapping need to recalculate first line
+      y0 = height - (y0 + pad_height);
+
+      width = pad_width;
+      height = pad_height;
+   }
+
    // special mode to request window attributes, implemented only in TRootCanvas
    Int_t update_arg = 101;
    // on Mac redo update again - no other way found to get GL image updated
@@ -900,11 +926,6 @@ Bool_t TGLPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
    }
 
    canvas->GetCanvasImp()->UpdateDisplay(update_arg, kFALSE);
-
-   const Int_t width  = canvas->GetWw();
-   const Int_t height = canvas->GetWh();
-
-   std::vector<unsigned> buff(width * height);
 
 #ifndef WIN32
    // crash on Windows
@@ -918,7 +939,9 @@ Bool_t TGLPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
    //In case GL_BGRA is not in gl.h (old windows' gl) - comment/uncomment lines.
    //glReadPixels(0, 0, canvas->GetWw(), canvas->GetWh(), GL_BGRA, GL_UNSIGNED_BYTE, (char *)&buff[0]);
 
-   glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (char *) buff.data());
+   std::vector<unsigned> buff(width * height);
+
+   glReadPixels(x0, y0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (char *) buff.data());
 
    TGLUtil::SwapPixelBuffer((UChar_t *) buff.data(), width, height);
 
