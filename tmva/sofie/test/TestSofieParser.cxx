@@ -125,8 +125,9 @@ struct TestTensor {
    std::vector<std::string> dims;
 };
 
-// ValueInfoProto for a float tensor.
-std::string FloatValueInfo(const TestTensor &tensor)
+// ValueInfoProto for a tensor of type FLOAT, or of the TensorProto.DataType
+// given as elemType.
+std::string FloatValueInfo(const TestTensor &tensor, int elemType = 1)
 {
    std::string shape;
    for (const std::string &dim : tensor.dims) {
@@ -139,7 +140,7 @@ std::string FloatValueInfo(const TestTensor &tensor)
    }
 
    std::string tensorType;
-   AppendVarintField(tensorType, 1, 1);    // elem_type: FLOAT
+   AppendVarintField(tensorType, 1, elemType); // elem_type
    AppendBytesField(tensorType, 2, shape); // shape
    std::string type;
    AppendBytesField(type, 1, tensorType); // tensor_type
@@ -279,4 +280,35 @@ TEST(SOFIEParser, GemmDoesNotBroadcastABiasThatHasTheOutputShape)
 
    EXPECT_EQ(code.find("Copy(tensor_y"), std::string::npos);
    EXPECT_NE(code.find(",tensor_c);"), std::string::npos);
+}
+
+// An input of a type that SOFIE does not support (FLOAT16) must make
+// Generate() throw, instead of producing code that does not compile.
+TEST(SOFIEParser, InputOfUnsupportedTypeThrows)
+{
+   std::string node;
+   AppendBytesField(node, 1, "x");       // input
+   AppendBytesField(node, 2, "y");       // output
+   AppendBytesField(node, 3, "shape_0"); // name
+   AppendBytesField(node, 4, "Shape");   // op_type
+
+   std::string graph;
+   AppendBytesField(graph, 1, node);                                   // node
+   AppendBytesField(graph, 2, "test_graph");                           // name
+   AppendBytesField(graph, 11, FloatValueInfo({"x", {"2", "3"}}, 10)); // input: FLOAT16
+   AppendBytesField(graph, 12, FloatValueInfo({"y", {"2"}}, 7));       // output: INT64
+
+   std::string opset;
+   AppendVarintField(opset, 2, 13); // version
+   std::string model;
+   AppendVarintField(model, 1, 10);   // ir_version
+   AppendBytesField(model, 7, graph); // graph
+   AppendBytesField(model, 8, opset); // opset_import
+
+   std::ofstream file("float16_input.onnx", std::ios::binary);
+   file.write(model.data(), model.size());
+   file.close();
+
+   RModel rmodel = RModelParser_ONNX{}.Parse("float16_input.onnx");
+   EXPECT_THROW(rmodel.Generate(Options::kNoWeightFile), std::runtime_error);
 }
