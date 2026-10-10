@@ -21,12 +21,13 @@ class TEnvParser;
 class TReadEnvParser;
 class TWriteEnvParser;
 
+/// Refers to the resource file location (settings in higher level overwrite lower levels)
 enum EEnvLevel {
-   kEnvGlobal,
-   kEnvUser,
-   kEnvLocal,
-   kEnvChange,
-   kEnvAll
+   kEnvGlobal, // The resource file in the etc subdirectory of the ROOT installation.
+   kEnvUser,   // The resource file in the user home directory.
+   kEnvLocal,  // The resource file in the current working directory. For gEnv, the local level is disabled by default.
+   kEnvChange, // Artificial level to indicate modified resource entries.
+   kEnvAll,    // Artificial level to operate on global, user, and local level.
 };
 
 
@@ -79,9 +80,10 @@ public:
 class TEnv : public TObject {
 
 private:
-   THashList        *fTable;     // hash table containing env records
-   TString           fRcName;    // resource file base name
-   Bool_t            fIgnoreDup; // ignore duplicates, don't issue warning
+   THashList        *fTable = nullptr;            // hash table containing env records
+   TString           fRcName;                     // resource file base name
+   Bool_t            fIgnoreDup = false;          // ignore duplicates, don't issue warning
+   Bool_t            fIsLocalLevelEnabled = true; //! By default, gEnv does not allow use of the local level
 
    TEnv(const TEnv&) = delete;
    TEnv& operator=(const TEnv&) = delete;
@@ -90,7 +92,7 @@ private:
    const char       *GetUserDirectory() const;
 
 public:
-   TEnv(const char *name="");
+   TEnv(const char *name = "", bool isLocalLevelEnabled = true);
    virtual ~TEnv();
 
    THashList          *GetTable() const { return fTable; }
@@ -119,6 +121,8 @@ public:
    void                Print(Option_t *option="") const override;
    virtual void        PrintEnv(EEnvLevel level = kEnvAll) const;
    Bool_t              IgnoreDuplicates(Bool_t ignore);
+
+   Bool_t              IsLocalLevelEnabled() const { return fIsLocalLevelEnabled; }
 
    ClassDefOverride(TEnv,2)  // Handle ROOT configuration resources
 };

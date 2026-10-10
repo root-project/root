@@ -70,6 +70,7 @@ of a main program creating an interactive version is shown below:
 #include <ROOT/RVersion.hxx>
 #include "RConfigure.h"
 #include "RConfigOptions.h"
+#include <algorithm>
 #include <atomic>
 #include <filesystem>
 #include <string>
@@ -2163,7 +2164,19 @@ void TROOT::InitSystem()
       }
 
       // read default files
-      gEnv = new TEnv(".rootrc");
+      const auto useLocalEnv = gSystem->Getenv("ROOTENV_USE_LOCAL");
+      bool isLocalLevelEnabled = useLocalEnv && useLocalEnv[0];
+      if (isLocalLevelEnabled) {
+         std::string useLocalEnvStr = useLocalEnv;
+         std::transform(useLocalEnvStr.begin(), useLocalEnvStr.end(), useLocalEnvStr.begin(), ::toupper);
+         for (const auto &s : {"0", "FALSE", "NO", "OFF"}) {
+            if (useLocalEnvStr == s) {
+               isLocalLevelEnabled = false;
+               break;
+            }
+         }
+      }
+      gEnv = new TEnv(".rootrc", isLocalLevelEnabled);
 
       ROOT::Internal::SetErrorSystemMsgHandler([](){ return gSystem->GetError(); });
       SetErrorHandler(DefaultErrorHandler);
