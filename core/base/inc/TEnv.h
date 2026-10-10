@@ -80,10 +80,10 @@ public:
 class TEnv : public TObject {
 
 private:
-   THashList        *fTable = nullptr;              // hash table containing env records
-   TString           fRcName;                       // resource file base name
-   Bool_t            fIgnoreDup = false;            // ignore duplicates, don't issue warning
-   Bool_t            fIsLocalLevelDisabled = false; //! By default, gEnv does not allow use of the local level
+   THashList        *fTable = nullptr;            // hash table containing env records
+   TString           fRcName;                     // resource file base name
+   Bool_t            fIgnoreDup = false;          // ignore duplicates, don't issue warning
+   Bool_t            fIsLocalLevelEnabled = true; //! By default, gEnv does not allow use of the local level
 
    TEnv(const TEnv&) = delete;
    TEnv& operator=(const TEnv&) = delete;
@@ -92,7 +92,7 @@ private:
    const char       *GetUserDirectory() const;
 
 public:
-   TEnv(const char *name = "", bool disableLocalLevel = false);
+   TEnv(const char *name = "", bool isLocalLevelEnabled = true);
    virtual ~TEnv();
 
    THashList          *GetTable() const { return fTable; }
@@ -122,7 +122,7 @@ public:
    virtual void        PrintEnv(EEnvLevel level = kEnvAll) const;
    Bool_t              IgnoreDuplicates(Bool_t ignore);
 
-   Bool_t              IsLocalLevelDisabled() const { return fIsLocalLevelDisabled; }
+   Bool_t              IsLocalLevelEnabled() const { return fIsLocalLevelEnabled; }
 
    ClassDefOverride(TEnv,2)  // Handle ROOT configuration resources
 };
