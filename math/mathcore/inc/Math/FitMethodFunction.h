@@ -16,6 +16,7 @@
 #include "Math/IFunction.h"
 #include <vector>
 #include <limits>
+#include <cmath>
 
 // #ifndef ROOT_Math_IParamFunctionfwd
 // #include "Math/IParamFunctionfwd.h"
@@ -90,7 +91,8 @@ public:
       std::vector<double> h(nh);  // hessian of F(i)
       for (unsigned int i = 0; i < np; i++) {
          double f = DataElement(x,i,g.data(),h.data(),true);
-         if (f == std::numeric_limits<double>::quiet_NaN() ) return false;
+         if (std::isnan(f))
+            return false;
          for (unsigned int j = 0; j < nh; j++) {
             hess[j] += h[j];
          }
