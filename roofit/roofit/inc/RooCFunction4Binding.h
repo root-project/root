@@ -17,13 +17,10 @@
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
 #include "RooMsgService.h"
+#include "RooFit/Detail/CFunctionBinding.h"
 
 #include "TBuffer.h"
 #include "TString.h"
-
-#include <string>
-#include <map>
-#include <vector>
 
 namespace RooFit {
 
@@ -41,54 +38,8 @@ RooAbsPdf* bindPdf(const char* name,CFUNCD4DDDB func,RooAbsReal& x, RooAbsReal& 
 }
 
 
-template<class VO, class VI1, class VI2, class VI3, class VI4>
-class RooCFunction4Map {
- public:
-  RooCFunction4Map() {} ;
-
-  void add(const char* name, VO (*ptr)(VI1,VI2,VI3,VI4), const char* arg1name="x", const char* arg2name="y",
-                                                       const char* arg3name="z", const char* arg4name="w") {
-    // Register function with given name and argument name
-    _ptrmap[name] = ptr ;
-    _namemap[ptr] = name ;
-    _argnamemap[ptr].push_back(arg1name) ;
-    _argnamemap[ptr].push_back(arg2name) ;
-    _argnamemap[ptr].push_back(arg3name) ;
-    _argnamemap[ptr].push_back(arg4name) ;
-  }
-
-
-  const char* lookupName(VO (*ptr)(VI1,VI2,VI3,VI4)) {
-    // Return name of function given by pointer
-    return _namemap[ptr].c_str() ;
-  }
-
-  VO (*lookupPtr(const char* name))(VI1,VI2,VI3,VI4) {
-    // Return pointer of function given by name
-    return _ptrmap[name] ;
-  }
-
-  const char* lookupArgName(VO (*ptr)(VI1,VI2,VI3,VI4), UInt_t iarg) {
-    // Return name of i-th argument of function. If function is
-    // not registered, argument names 0,1,2 are x,y,z
-    if (iarg<_argnamemap[ptr].size()) {
-      return (_argnamemap[ptr])[iarg].c_str() ;
-    }
-    switch (iarg) {
-    case 0: return "x" ;
-    case 1: return "y" ;
-    case 2: return "z" ;
-    case 3: return "w" ;
-    }
-    return "v" ;
-  }
-
- private:
-
-  std::map<std::string,VO (*)(VI1,VI2,VI3,VI4)> _ptrmap ; // Pointer-to-name map
-  std::map<VO (*)(VI1,VI2,VI3,VI4),std::string> _namemap ; // Name-to-pointer map
-  std::map<VO (*)(VI1,VI2,VI3,VI4),std::vector<std::string> > _argnamemap ; // Pointer-to-argnamelist map
-} ;
+template <class VO, class VI1, class VI2, class VI3, class VI4>
+using RooCFunction4Map = RooFit::Detail::CFunctionMap<VO (*)(VI1, VI2, VI3, VI4)>;
 
 
 
@@ -108,17 +59,7 @@ class RooCFunction4Ref : public TObject {
     // Return registered name of embedded function. If function
     // is not registered return string with hex presentation
     // of function pointer value
-    const char* result = fmap().lookupName(_ptr) ;
-    if (result && strlen(result)) {
-      return result ;
-    }
-    // This union is to avoid a warning message:
-    union {
-       void *_ptr;
-       func_t _funcptr;
-    } temp;
-    temp._funcptr = _ptr;
-    return Form("(%p)",temp._ptr) ;
+    return fmap().nameOrAddress(_ptr);
   }
 
   const char* argName(Int_t iarg) {

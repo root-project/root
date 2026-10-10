@@ -38,6 +38,7 @@ set(ROOFIT_HEADERS
   RooDecay.h
   RooDstD0BG.h
   RooExponential.h
+  RooFit/Detail/CFunctionBinding.h
   RooFunctor1DBinding.h
   RooFunctorBinding.h
   RooGExpModel.h
