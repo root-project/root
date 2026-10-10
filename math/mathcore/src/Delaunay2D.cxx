@@ -15,11 +15,14 @@
 #include "Rtypes.h"
 #include "TError.h"
 
-//#include <thread>
-
-// use the CDT library if we do not use CGAL
-#ifndef HAS_CGAL
+// workaround for https://github.com/artem-ogre/CDT/issues/228
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#endif
 #include "CDT/CDT.h"
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
 #endif
 
 #include <algorithm>
@@ -96,10 +99,8 @@ void Delaunay2D::SetInputPoints(int n, const double * x, const double * y, const
       fInit = true;
    }
 
-#ifndef HAS_CGAL
    fXCellStep    = 0.;
    fYCellStep    = 0.;
-#endif
 }
 
 //______________________________________________________________________________
@@ -157,11 +158,9 @@ void Delaunay2D::FindAllTriangles()
 
 // backend specific implementations
 
-#ifndef HAS_CGAL
+// CDT implementation (default case)
 
-// Triangle implementation (default case)
-
-/// Triangle implementation for points normalization
+/// CDT implementation for points normalization
 void Delaunay2D::DoNormalizePoints() {
    for (Int_t n = 0; n < fNpoints; n++) {
       fXN.push_back(Linear_transform(fX[n], fOffsetX, fScaleFactorX));
@@ -173,12 +172,12 @@ void Delaunay2D::DoNormalizePoints() {
    fYCellStep = fNCells / (fYNmax - fYNmin);
 }
 
-/// Triangle implementation for finding all the triangles
+/// CDT implementation for finding all the triangles
 void Delaunay2D::DoFindTriangles() {
 
    int i;
    std::vector<CDT::V2d<double>> points(fNpoints);
-   for (i = 0; i < fNpoints; ++i) points[i] = CDT::V2d<double>::make(fXN[i], fYN[i]);
+   for (i = 0; i < fNpoints; ++i) points[i] = CDT::V2d<double>(fXN[i], fYN[i]);
    CDT::RemoveDuplicates(points);
    if (fNpoints-points.size() > 0)
       Warning("DoFindTriangles",
@@ -213,7 +212,6 @@ void Delaunay2D::DoFindTriangles() {
       tri.y[2]   = v2.y;
       tri.idx[2] = t.vertices[2];
 
-      // see comment in header for CGAL fallback section
       tri.invDenom = 1 / ( (tri.y[1] - tri.y[2])*(tri.x[0] - tri.x[2]) + (tri.x[2] - tri.x[1])*(tri.y[0] - tri.y[2]) );
 
       fTriangles[i] = tri;
@@ -292,75 +290,6 @@ double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
    // no triangle found return standard value
    return fZout;
 }
-
-#else //HAS_CGAL: case of using GCAL
-
-/// CGAL implementation of normalize points
-void Delaunay2D::DonormalizePoints() {
-   for (Int_t n = 0; n < fNpoints; n++) {
-      //Point p(xTransformer(fX[n]), yTransformer(fY[n]));
-      Point p(linear_transform(fX[n], fOffsetX, fScaleFactorX),
-              linear_transform(fY[n], fOffsetY, fScaleFactorY));
-
-      fNormalizedPoints.insert(std::make_pair(p, n));
-   }
-}
-
-/// CGAL implementation for finding triangles
-void Delaunay2D::DoFindTriangles() {
-   fCGALdelaunay.insert(fNormalizedPoints.begin(), fNormalizedPoints.end());
-
-   std::transform(fCGALdelaunay.finite_faces_begin(),
-                  fCGALdelaunay.finite_faces_end(), std::back_inserter(fTriangles),
-                  [] (const Delaunay::Face face) -> Triangle {
-
-                     Triangle tri;
-
-                     auto transform = [&] (const unsigned int i) {
-                        tri.x[i] = face.vertex(i)->point().x();
-                        tri.y[i] = face.vertex(i)->point().y();
-                        tri.idx[i] = face.vertex(i)->info();
-                     };
-
-                     transform(0);
-                     transform(1);
-                     transform(2);
-
-                     return tri;
-
-                  });
-}
-
-/// CGAL implementation for interpolation
-double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
-{
-   // Finds the Delaunay triangle that the point (xi,yi) sits in (if any) and
-   // calculate a z-value for it by linearly interpolating the z-values that
-   // make up that triangle.
-
-   // initialise the Delaunay algorithm if needed
-    FindAllTriangles();
-
-   //coordinate computation
-   Point p(xx, yy);
-
-   std::vector<std::pair<Point, Coord_type> > coords;
-   auto nn = CGAL::natural_neighbor_coordinates_2(fCGALdelaunay, p,
-                                                  std::back_inserter(coords));
-
-   //std::cout << std::this_thread::get_id() << ": Found " << coords.size() << " points" << std::endl;
-
-   if(!nn.third) // neighbour finding was NOT successful, return standard value
-      return fZout;
-
-   Coord_type res = CGAL::linear_interpolation(coords.begin(), coords.end(),
-                                               nn.second, Value_access(fNormalizedPoints, fZ));
-
-   //std::cout << std::this_thread::get_id() << ": Result " << res << std::endl;
-
-   return res;
-}
-#endif // HAS_GCAL
 
 } // namespace Math
 } // namespace ROOT

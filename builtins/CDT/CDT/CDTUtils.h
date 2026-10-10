@@ -24,6 +24,15 @@ typedef char CDT_DONT_USE_BOOST_RTREE__was__replaced__with__CDT_USE_BOOST[-1];
 typedef char couldnt_parse_cxx_standard[-1]; ///< Error: couldn't parse standard
 #endif
 
+// 'noexcept' is only available since c++11 and its c++98 spelling 'throw()'
+// is in turn removed in c++20
+#ifdef CDT_CXX11_IS_SUPPORTED
+/// Portable 'noexcept': falls back to 'throw()' when only c++98 is available
+#define CDT_NOEXCEPT noexcept
+#else
+#define CDT_NOEXCEPT throw()
+#endif
+
 // Functions defined outside the class need to be 'inline'
 // if CDT is configured to be used as header-only library:
 // single-definition rule is violated otherwise
@@ -44,7 +53,14 @@ typedef char couldnt_parse_cxx_standard[-1]; ///< Error: couldn't parse standard
 #include <cassert>
 #include <cmath>
 #include <limits>
+#include <queue>
 #include <vector>
+
+#ifdef M_PI
+#define CDT_M_PI M_PI
+#else
+#define CDT_M_PI 3.14159265358979323846
+#endif
 
 #ifdef CDT_USE_STRONG_TYPING
 #include <boost/serialization/strong_typedef.hpp>
@@ -55,15 +71,22 @@ typedef char couldnt_parse_cxx_standard[-1]; ///< Error: couldn't parse standard
 
 #include <array>
 #include <functional>
+#include <string>
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
+
+#ifdef CDT_DISABLE_EXCEPTIONS
+#include <exception>
+#endif
+
 namespace CDT
 {
 using std::array;
 using std::get;
 using std::make_tuple;
 using std::tie;
+using std::to_string;
 using std::tuple;
 using std::unordered_map;
 using std::unordered_set;
@@ -72,6 +95,7 @@ using std::unordered_set;
 #else
 #include <boost/array.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/unordered_set.hpp>
@@ -84,11 +108,83 @@ using boost::tie;
 using boost::tuple;
 using boost::unordered_map;
 using boost::unordered_set;
+
+template <typename T>
+std::string to_string(const T& value)
+{
+    return boost::lexical_cast<std::string>(value);
+}
 } // namespace CDT
+#endif
+
+/// Ensure precise floating-point math without contraction to fused multiply-add operations.
+#ifdef _MSC_VER
+#define CDT_ENSURE_PRECISE_MATH \
+    __pragma(float_control(push)) \
+    __pragma(float_control(precise, on)) \
+    __pragma(fp_contract(off))
+#elif defined(__clang__)
+#define CDT_ENSURE_PRECISE_MATH \
+    _Pragma("float_control(push)") \
+    _Pragma("float_control(precise, on)") \
+    _Pragma("clang fp contract(off)")
+#elif defined(__GNUC__)
+#define CDT_ENSURE_PRECISE_MATH \
+    _Pragma("GCC push_options") \
+    _Pragma("GCC optimize(\"no-fast-math\")") \
+    _Pragma("GCC optimize(\"fp-contract=off\")")
+#else
+#define CDT_ENSURE_PRECISE_MATH _Pragma("STDC FP_CONTRACT OFF")
+#endif
+
+/// Restore default state for floating-point math.
+#if defined(_MSC_VER)
+#define CDT_RESTORE_MATH_SETTINGS __pragma(float_control(pop))
+#elif defined(__clang__)
+#define CDT_RESTORE_MATH_SETTINGS _Pragma("float_control(pop)")
+#elif defined(__GNUC__)
+#define CDT_RESTORE_MATH_SETTINGS _Pragma("GCC pop_options")
+#else
+#define CDT_RESTORE_MATH_SETTINGS _Pragma("STDC FP_CONTRACT DEFAULT")
+#endif
+
+/// Precise math for constructions (non-predicate code): opt-in
+#ifdef CDT_ENSURE_PRECISE_MATH_IN_CONSTRUCTIONS
+#define CDT_ENSURE_PRECISE_MATH_FOR_CONSTRUCTIONS CDT_ENSURE_PRECISE_MATH
+#define CDT_RESTORE_MATH_SETTINGS_FOR_CONSTRUCTIONS CDT_RESTORE_MATH_SETTINGS
+#else
+#define CDT_ENSURE_PRECISE_MATH_FOR_CONSTRUCTIONS
+#define CDT_RESTORE_MATH_SETTINGS_FOR_CONSTRUCTIONS
 #endif
 
 namespace CDT
 {
+
+template <typename T>
+void handleException(const T& error)
+{
+#ifdef CDT_DISABLE_EXCEPTIONS
+    std::terminate();
+#else
+    throw error;
+#endif
+}
+
+/// Needed for c++03 compatibility (no uniform initialization available)
+template <typename T>
+array<T, 3> arr3(const T& v0, const T& v1, const T& v2)
+{
+    const array<T, 3> out = {v0, v1, v2};
+    return out;
+}
+
+/// Needed for c++03 compatibility (no uniform initialization available)
+template <typename T>
+array<T, 3> arr3(const T& v)
+{
+    const array<T, 3> out = {v, v, v};
+    return out;
+}
 
 /// 2D vector
 template <typename T>
@@ -97,8 +193,17 @@ struct CDT_EXPORT V2d
     T x; ///< X-coordinate
     T y; ///< Y-coordinate
 
-    /// Create vector from X and Y coordinates
-    static V2d make(T x, T y);
+    /// Vertex with zero coordinates
+    V2d()
+        : x(T(0))
+        , y(T(0))
+    {}
+
+    /// Vertex with given coordinates
+    V2d(const T x, const T y)
+        : x(x)
+        , y(y)
+    {}
 };
 
 /// X- coordinate getter for V2d
@@ -120,6 +225,13 @@ template <typename T>
 bool operator==(const CDT::V2d<T>& lhs, const CDT::V2d<T>& rhs)
 {
     return lhs.x == rhs.x && lhs.y == rhs.y;
+}
+
+/// If two 2D vectors are not exactly equal
+template <typename T>
+bool operator!=(const CDT::V2d<T>& lhs, const CDT::V2d<T>& rhs)
+{
+    return !(lhs == rhs);
 }
 
 #ifdef CDT_USE_64_BIT_INDEX_TYPE
@@ -145,12 +257,17 @@ typedef IndexSizeType TriInd;
 #endif
 
 /// Constant representing no valid value for index
+const static Index invalidIndex(std::numeric_limits<Index>::max());
+/// Constant representing no valid value for index size
 const static IndexSizeType
-    invalidIndex(std::numeric_limits<IndexSizeType>::max());
+    invalidIndexSizeType(std::numeric_limits<IndexSizeType>::max());
+/// Number of super triangle vertices
+/// @note placed in a constant so that it's easier to find usages in code
+const static IndexSizeType nSuperTriVerts(3);
 /// Constant representing no valid neighbor for a triangle
-const static TriInd noNeighbor(invalidIndex);
+const static TriInd noNeighbor(invalidIndexSizeType);
 /// Constant representing no valid vertex for a triangle
-const static VertInd noVertex(invalidIndex);
+const static VertInd noVertex(invalidIndexSizeType);
 
 typedef std::vector<TriInd> TriIndVec;  ///< Vector of triangle indices
 typedef array<VertInd, 3> VerticesArr3; ///< array of three vertex indices
@@ -163,62 +280,100 @@ struct CDT_EXPORT Box2d
     V2d<T> min; ///< min box corner
     V2d<T> max; ///< max box corner
 
+    /// Box that doesn't contain any point
+    Box2d()
+        : min(std::numeric_limits<T>::max(), std::numeric_limits<T>::max())
+        , max(-std::numeric_limits<T>::max(), -std::numeric_limits<T>::max())
+    {}
+
     /// Envelop box around a point
-    void envelopPoint(const V2d<T>& p)
+    Box2d<T>& envelopPoint(const V2d<T>& p)
     {
-        envelopPoint(p.x, p.y);
+        return envelopPoint(p.x, p.y);
     }
+
     /// Envelop box around a point with given coordinates
-    void envelopPoint(const T x, const T y)
+    Box2d<T>& envelopPoint(const T x, const T y)
     {
         min.x = std::min(x, min.x);
         max.x = std::max(x, max.x);
         min.y = std::min(y, min.y);
         max.y = std::max(y, max.y);
+        return *this;
+    }
+
+    /// Envelop box around a collection of custom points
+    template <
+        typename TVertexIter,
+        typename TGetVertexCoordX,
+        typename TGetVertexCoordY>
+    Box2d<T>& envelopPoints(
+        TVertexIter first,
+        TVertexIter last,
+        TGetVertexCoordX getX,
+        TGetVertexCoordY getY)
+    {
+        for(; first != last; ++first)
+        {
+            envelopPoint(getX(*first), getY(*first));
+        }
+        return *this;
+    }
+
+    /// Envelop box around a collection of points
+    Box2d<T>& envelopPoints(const std::vector<V2d<T> >& vertices)
+    {
+        return envelopPoints(
+            vertices.begin(), vertices.end(), getX_V2d<T>, getY_V2d<T>);
     }
 };
 
-/// Bounding box of a collection of custom 2D points given coordinate getters
-template <
-    typename T,
-    typename TVertexIter,
-    typename TGetVertexCoordX,
-    typename TGetVertexCoordY>
-Box2d<T> envelopBox(
-    TVertexIter first,
-    TVertexIter last,
-    TGetVertexCoordX getX,
-    TGetVertexCoordY getY)
-{
-    const T max = std::numeric_limits<T>::max();
-    Box2d<T> box = {{max, max}, {-max, -max}};
-    for(; first != last; ++first)
-    {
-        box.envelopPoint(getX(*first), getY(*first));
-    }
-    return box;
-}
-
-/// Bounding box of a collection of 2D points
-template <typename T>
-CDT_EXPORT Box2d<T> envelopBox(const std::vector<V2d<T> >& vertices);
-
 /// Edge connecting two vertices: vertex with smaller index is always first
-/// \note: hash Edge is specialized at the bottom
+/// @note: hash Edge is specialized at the bottom
 struct CDT_EXPORT Edge
 {
     /// Constructor
-    Edge(VertInd iV1, VertInd iV2);
+    Edge(const VertInd iV1, const VertInd iV2)
+        : m_vertices(
+              iV1 < iV2 ? std::make_pair(iV1, iV2) : std::make_pair(iV2, iV1))
+    {}
+
     /// Equals operator
-    bool operator==(const Edge& other) const;
+    bool operator==(const Edge& other) const
+    {
+        return m_vertices == other.m_vertices;
+    }
+
     /// Not-equals operator
-    bool operator!=(const Edge& other) const;
+    bool operator!=(const Edge& other) const
+    {
+        return !(this->operator==(other));
+    }
+
+    /// Less-than operator: orders by (v1, v2); used to get a deterministic
+    /// order out of hash-set iteration (which is platform-dependent)
+    bool operator<(const Edge& other) const
+    {
+        return m_vertices < other.m_vertices;
+    }
+
     /// V1 getter
-    VertInd v1() const;
+    VertInd v1() const
+    {
+        return m_vertices.first;
+    }
+
     /// V2 getter
-    VertInd v2() const;
+    VertInd v2() const
+    {
+        return m_vertices.second;
+    }
+
     /// Edges' vertices
-    const std::pair<VertInd, VertInd>& verts() const;
+    const std::pair<VertInd, VertInd>& verts() const
+    {
+        return m_vertices;
+    }
 
 private:
     std::pair<VertInd, VertInd> m_vertices;
@@ -243,6 +398,8 @@ inline Edge edge_make(VertInd iV1, VertInd iV2)
 }
 
 typedef std::vector<Edge> EdgeVec;                ///< Vector of edges
+typedef std::queue<Edge> EdgeQueue;               ///< Queue of edges
+typedef std::queue<TriInd> TriIndQueue;           ///< Queue of triangles
 typedef unordered_set<Edge> EdgeUSet;             ///< Hash table of edges
 typedef unordered_set<TriInd> TriIndUSet;         ///< Hash table of triangles
 typedef unordered_map<TriInd, TriInd> TriIndUMap; ///< Triangle hash map
@@ -260,17 +417,17 @@ struct CDT_EXPORT Triangle
     VerticesArr3 vertices;   ///< triangle's three vertices
     NeighborsArr3 neighbors; ///< triangle's three neighbors
 
-    /**
-     * Factory method
-     * @note needed for c++03 compatibility (no uniform initialization
-     * available)
-     */
-    static Triangle
-    make(const array<VertInd, 3>& vertices, const array<TriInd, 3>& neighbors)
-    {
-        Triangle t = {vertices, neighbors};
-        return t;
-    }
+    /// Triangle with no vertices and no neighbors
+    Triangle()
+        : vertices(arr3(noVertex))
+        , neighbors(arr3(noNeighbor))
+    {}
+
+    /// Triangle with given vertices and neighbors
+    Triangle(const VerticesArr3& vertices, const NeighborsArr3& neighbors)
+        : vertices(vertices)
+        , neighbors(neighbors)
+    {}
 
     /// Next triangle adjacent to a vertex (clockwise)
     /// @returns pair of next triangle and the other vertex of a common edge
@@ -287,6 +444,7 @@ struct CDT_EXPORT Triangle
         }
         return std::make_pair(neighbors[2], vertices[0]);
     }
+
     /// Previous triangle adjacent to a vertex (counter-clockwise)
     /// @returns pair of previous triangle and the other vertex of a common edge
     std::pair<TriInd, VertInd> prev(const VertInd i) const
@@ -299,6 +457,7 @@ struct CDT_EXPORT Triangle
         return std::make_pair(neighbors[1], vertices[1]);
     }
 
+    /// Check if triangle contains a vertex
     bool containsVertex(const VertInd i) const
     {
         return std::find(vertices.begin(), vertices.end(), i) != vertices.end();
@@ -332,7 +491,7 @@ struct CDT_EXPORT PtTriLocation
 CDT_EXPORT bool isOnEdge(PtTriLocation::Enum location);
 
 /// Neighbor index from a on-edge location
-/// \note Call only if located on the edge!
+/// @note Call only if located on the edge!
 CDT_EXPORT Index edgeNeighbor(PtTriLocation::Enum location);
 
 /// Relative location of point to a line
@@ -383,7 +542,7 @@ CDT_EXPORT CDT_INLINE_IF_HEADER_ONLY Index
 opposedTriangleInd(const VerticesArr3& vv, VertInd iVert);
 
 /// Index of triangle's neighbor opposed to an edge
-CDT_INLINE_IF_HEADER_ONLY Index
+CDT_EXPORT CDT_INLINE_IF_HEADER_ONLY Index
 edgeNeighborInd(const VerticesArr3& vv, VertInd iVedge1, VertInd iVedge2);
 
 /// Index of triangle's vertex opposed to a triangle
@@ -427,7 +586,44 @@ template <typename T>
 CDT_EXPORT T distanceSquared(const V2d<T>& a, const V2d<T>& b);
 
 /// Check if any of triangle's vertices belongs to a super-triangle
-CDT_INLINE_IF_HEADER_ONLY bool touchesSuperTriangle(const Triangle& t);
+CDT_EXPORT CDT_INLINE_IF_HEADER_ONLY bool
+touchesSuperTriangle(const Triangle& t);
+
+namespace detail
+{
+
+/// Check if vertex V is encroaching on diametral circle of an edge
+template <typename T>
+bool isEncroachingOnEdge(
+    const V2d<T>& v,
+    const V2d<T>& edgeStart,
+    const V2d<T>& edgeEnd);
+
+/// Doubled surface area of a triangle ABC
+template <typename T>
+T doubledArea(const V2d<T>& a, const V2d<T>& b, const V2d<T>& c);
+
+/// Sine of smallest angle of triangle ABC
+template <typename T>
+T sineOfSmallestAngle(const V2d<T>& a, const V2d<T>& b, const V2d<T>& c);
+
+} // namespace detail
+
+/// Surface area of a triangle ABC
+template <typename T>
+CDT_EXPORT T area(const V2d<T>& a, const V2d<T>& b, const V2d<T>& c);
+
+/// Position of ABC triangle circumcenter
+template <typename T>
+CDT_EXPORT V2d<T> circumcenter(V2d<T> a, V2d<T> b, V2d<T> c);
+
+/// Smallest angle of triangle ABC in radians
+template <typename T>
+CDT_EXPORT T smallestAngle(const V2d<T>& a, const V2d<T>& b, const V2d<T>& c);
+
+/// Convert an angle from degrees to radians
+template <typename T>
+CDT_EXPORT T degToRad(T degrees);
 
 } // namespace CDT
 
@@ -491,18 +687,16 @@ private:
 #endif
         seed ^= Hasher()(key) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
+
     static std::size_t hashEdge(const CDT::Edge& e)
     {
-        const std::pair<CDT::VertInd, CDT::VertInd>& vv = e.verts();
-        std::size_t seed1(0);
-        hashCombine(seed1, vv.first);
-        hashCombine(seed1, vv.second);
-        std::size_t seed2(0);
-        hashCombine(seed2, vv.second);
-        hashCombine(seed2, vv.first);
-        return std::min(seed1, seed2);
+        std::size_t seed(0);
+        hashCombine(seed, e.v1());
+        hashCombine(seed, e.v2());
+        return seed;
     }
 };
+
 } // namespace std/boost
 
 #endif // header guard
