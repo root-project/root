@@ -21,12 +21,13 @@ class TEnvParser;
 class TReadEnvParser;
 class TWriteEnvParser;
 
+/// Refers to the resource file location (settings in higher level overwrite lower levels)
 enum EEnvLevel {
-   kEnvGlobal,
-   kEnvUser,
-   kEnvLocal, // For gEnv, the local level is disabled by default
-   kEnvChange,
-   kEnvAll
+   kEnvGlobal, // The resource file in the etc subdirectory of the ROOT installation.
+   kEnvUser,   // The resource file in the user home directory.
+   kEnvLocal,  // The resource file in the current working directory. For gEnv, the local level is disabled by default.
+   kEnvChange, // Artificial level to indicate modified resource entries.
+   kEnvAll,    // Artificial level to operate on global, user, and local level.
 };
 
 
