@@ -654,15 +654,17 @@ class NumbaDeclareInferred(unittest.TestCase):
 
         with self.subTest("function"):
 
+            @ROOT.Numba.Declare(["unsigned long"])
             def is_even(x):
                 return x % 2 == 0
 
-            df = df.Define("is_even_x_1", is_even, ["x"])
+            df = df.Define("is_even_x_1", "Numba::is_even(x)")
             results = df.Take["bool"]("is_even_x_1").GetValue()[0]
             self.assertEqual(results, True)
 
         with self.subTest("lambda"):
-            df = df.Define("is_even_x_2", lambda x: x % 2 == 0, ["x"])
+            ROOT.Numba.Declare(["unsigned long"], name="is_even_lambda")(lambda x: x % 2 == 0)
+            df = df.Define("is_even_x_2", "Numba::is_even_lambda(x)")
             results = df.Take["bool"]("is_even_x_2").GetValue()[0]
             self.assertEqual(results, True)
 
@@ -674,15 +676,17 @@ class NumbaDeclareInferred(unittest.TestCase):
 
         with self.subTest("function"):
 
+            @ROOT.Numba.Declare(["RVec<int>"])
             def square_rvec(v):
                 return v * v
 
-            df = df.Define("square_rvec_1", square_rvec, ["x"])
+            df = df.Define("square_rvec_1", "Numba::square_rvec(x)")
             results = df.Take["RVec<int>"]("square_rvec_1").GetValue()[0]
             self.assertTrue(np.array_equal(results, np.array([1, 4, 9])))
 
         with self.subTest("lambda"):
-            df = df.Define("square_rvec_2", lambda v: v * v, ["x"])
+            ROOT.Numba.Declare(["RVec<int>"], name="square_rvec_lambda")(lambda v: v * v)
+            df = df.Define("square_rvec_2", "Numba::square_rvec_lambda(x)")
             results = df.Take["RVec<int>"]("square_rvec_2").GetValue()[0]
             self.assertTrue(np.array_equal(results, np.array([1, 4, 9])))
 
@@ -694,15 +698,17 @@ class NumbaDeclareInferred(unittest.TestCase):
 
         with self.subTest("function"):
 
+            @ROOT.Numba.Declare(["std::vector<int>"])
             def square_std_vec(v):
                 return v * v
 
-            df = df.Define("square_std_vec_1", square_std_vec, ["x"])
+            df = df.Define("square_std_vec_1", "Numba::square_std_vec(x)")
             results = df.Take["RVec<int>"]("square_std_vec_1").GetValue()[0]
             self.assertTrue(np.array_equal(results, np.array([1, 4, 9])))
 
         with self.subTest("lambda"):
-            df = df.Define("square_std_vec_2", lambda v: v * v, ["x"])
+            ROOT.Numba.Declare(["std::vector<int>"], name="square_std_vec_lambda")(lambda v: v * v)
+            df = df.Define("square_std_vec_2", "Numba::square_std_vec_lambda(x)")
             results = df.Take["RVec<int>"]("square_std_vec_2").GetValue()[0]
             self.assertTrue(np.array_equal(results, np.array([1, 4, 9])))
 
@@ -714,15 +720,17 @@ class NumbaDeclareInferred(unittest.TestCase):
 
         with self.subTest("function"):
 
+            @ROOT.Numba.Declare(["std::array<int, 3>"])
             def square_std_arr(v):
                 return v * v
 
-            df = df.Define("square_std_arr_1", square_std_arr, ["x"])
+            df = df.Define("square_std_arr_1", "Numba::square_std_arr(x)")
             results = df.Take["RVec<int>"]("square_std_arr_1").GetValue()[0]
             self.assertTrue(np.array_equal(results, np.array([1, 4, 9])))
 
         with self.subTest("lambda"):
-            df = df.Define("square_std_arr_2", lambda v: v * v, ["x"])
+            ROOT.Numba.Declare(["std::array<int, 3>"], name="square_std_arr_lambda")(lambda v: v * v)
+            df = df.Define("square_std_arr_2", "Numba::square_std_arr_lambda(x)")
             results = df.Take["RVec<int>"]("square_std_arr_2").GetValue()[0]
             self.assertTrue(np.array_equal(results, np.array([1, 4, 9])))
 
@@ -732,11 +740,11 @@ class NumbaDeclareInferred(unittest.TestCase):
         and no explicit signature is provided in the decorator.
         """
 
-        def f(x):
-            return x.M()
-
         with self.assertRaises(Exception):
-            ROOT.RDataFrame(4).Define("v", "ROOT::Math::PtEtaPhiMVector(1, 2, 3, 4)").Define("m", f, ["v"])
+
+            @ROOT.Numba.Declare(["ROOT::Math::PtEtaPhiMVector"])
+            def f(x):
+                return x.M()
 
 
 if __name__ == "__main__":
