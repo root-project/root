@@ -7,6 +7,7 @@
 #include <RooCategory.h>
 #include <RooChebychev.h>
 #include <RooConstVar.h>
+#include <RooCurve.h>
 #include <RooDataSet.h>
 #include <RooExponential.h>
 #include <RooExtendPdf.h>
@@ -1096,42 +1097,97 @@ TEST(RooSimultaneous, ExpectedEventsSuperCategory)
    EXPECT_DOUBLE_EQ(simPdf.expectedEvents(&nsetPartial), 50.);
 }
 
-/// The flattening of nested RooSimultaneous is deprecated. Replicating a
-/// component to several states of the flattened index category, which double
-/// counts extended components, gets an extra warning. Covers GitHub issue
-/// #23342.
-TEST(RooSimultaneous, NestedSimultaneousFlatteningIsDeprecated)
+/// A RooSimultaneous whose index category is a parameter ("switch mode") can
+/// be nested in another RooSimultaneous over the channels, for example to
+/// select the shape in one channel.
+TEST(RooSimultaneous, NestedSwitchMode)
 {
+   using namespace RooFit;
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x("x", "x", 0, 10);
+   RooRealVar mean("mean", "mean", 5, 0, 10);
+   RooRealVar sigma("sigma", "sigma", 1, 0.1, 5);
+   RooGaussian gauss("gauss", "gauss", x, mean, sigma);
+   RooRealVar c0("c0", "c0", 0.3, -1.0, 1.0);
+   RooChebychev cheb("cheb", "cheb", x, {c0});
+
+   RooRealVar nA("nA", "nA", 300, 0, 1e5);
+   RooRealVar nB("nB", "nB", 700, 0, 1e5);
+   RooExtendPdf gaussA("gaussA", "gaussA", gauss, nA);
+   RooExtendPdf chebA("chebA", "chebA", cheb, nA);
+   RooExtendPdf gaussB("gaussB", "gaussB", gauss, nB);
+
+   RooCategory channel("channel", "channel", {{"A", 0}, {"B", 1}});
+   RooCategory shape("shape", "shape", {{"gauss", 0}, {"cheb", 1}});
+
+   RooSimultaneous shapeSwitch("shapeSwitch", "shapeSwitch", {{"gauss", &gaussA}, {"cheb", &chebA}}, shape);
+   RooSimultaneous simPdf("simPdf", "simPdf", {{"A", &shapeSwitch}, {"B", &gaussB}}, channel);
+
+   // Reference models with the switch resolved by hand
+   RooSimultaneous refPdf0("refPdf0", "refPdf0", {{"A", &gaussA}, {"B", &gaussB}}, channel);
+   RooSimultaneous refPdf1("refPdf1", "refPdf1", {{"A", &chebA}, {"B", &gaussB}}, channel);
+
+   shape.setIndex(0);
+   std::unique_ptr<RooDataSet> data{simPdf.generate({x, channel}, Extended())};
+   ASSERT_NE(data, nullptr);
+
+   std::vector<RooFit::EvalBackend> backends;
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+   backends.push_back(RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy));
+#endif
+   backends.push_back(RooFit::EvalBackend::Cpu());
+   backends.push_back(RooFit::EvalBackend::CodegenNoGrad());
+
+   for (auto &backend : backends) {
+      shape.setIndex(0);
+      std::unique_ptr<RooAbsReal> nll{simPdf.createNLL(*data, backend)};
+      std::unique_ptr<RooAbsReal> refNll0{refPdf0.createNLL(*data, backend)};
+      std::unique_ptr<RooAbsReal> refNll1{refPdf1.createNLL(*data, backend)};
+
+      shape.setIndex(0);
+      EXPECT_THAT(nll->getVal(), RelativeNear(refNll0->getVal(), 1e-10)) << backend.name() << ", index 0";
+      shape.setIndex(1);
+      EXPECT_THAT(nll->getVal(), RelativeNear(refNll1->getVal(), 1e-10)) << backend.name() << ", index 1";
+   }
+
+   // Plotting a slice of the outer RooSimultaneous plots the selected component
+   std::unique_ptr<RooPlot> frame{x.frame()};
+   std::unique_ptr<RooPlot> refFrame{x.frame()};
+   simPdf.plotOn(frame.get(), Slice(channel, "A"), ProjWData(channel, *data));
+   refPdf1.plotOn(refFrame.get(), Slice(channel, "A"), ProjWData(channel, *data));
+   ASSERT_EQ(frame->numItems(), 1);
+   EXPECT_TRUE(frame->getCurve()->isIdentical(*refFrame->getCurve()));
+}
+
+/// Nested RooSimultaneous whose index category is an observable are not
+/// supported, also below a RooSimultaneous in switch mode. Creating the
+/// likelihood should fail with a clear error instead of silently giving wrong
+/// results. Covers GitHub issue #23342.
+TEST(RooSimultaneous, NestedObservableIndexThrows)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::FATAL);
+
    AnalysisCombination m;
 
    RooSimultaneous anaA{"anaA", "anaA", {{"SR", &m.pdf_A_SR}, {"CR", &m.pdf_A_CR}}, m.region};
+   RooSimultaneous comb{"comb", "comb", {{"A", &anaA}, {"B", &m.pdf_B}}, m.analysis};
 
-   {
-      // A plain pdf alongside a nested RooSimultaneous gets replicated
-      RooHelpers::HijackMessageStream hijack(RooFit::WARNING, RooFit::InputArguments);
-      RooSimultaneous comb{"comb", "comb", {{"A", &anaA}, {"B", &m.pdf_B}}, m.analysis};
-      EXPECT_NE(hijack.str().find("deprecated"), std::string::npos) << hijack.str();
-      EXPECT_NE(hijack.str().find("\"pdf_B\" (state \"B\")"), std::string::npos) << hijack.str();
-   }
+   RooCategory model{"model", "model", {{"nominal", 0}, {"alternative", 1}}};
+   RooSimultaneous anaAlt{"anaAlt", "anaAlt", {{"SR", &m.pdf_A_CR}, {"CR", &m.pdf_A_SR}}, m.region};
+   RooSimultaneous modelSwitch{"modelSwitch", "modelSwitch", {{"nominal", &anaA}, {"alternative", &anaAlt}}, model};
 
-   {
-      // Nested RooSimultaneous components over different categories are
-      // replicated over each other's categories
-      RooCategory period{"period", "period", {{"P1", 0}, {"P2", 1}}};
-      RooSimultaneous anaB{"anaB", "anaB", {{"P1", &m.pdf_B}, {"P2", &m.pdf_B}}, period};
-      RooHelpers::HijackMessageStream hijack(RooFit::WARNING, RooFit::InputArguments);
-      RooSimultaneous comb{"comb", "comb", {{"A", &anaA}, {"B", &anaB}}, m.analysis};
-      EXPECT_NE(hijack.str().find("\"anaA\" (state \"A\")"), std::string::npos) << hijack.str();
-      EXPECT_NE(hijack.str().find("\"anaB\" (state \"B\")"), std::string::npos) << hijack.str();
-   }
+   RooDataSet data{"data", "data", {m.x, m.analysis, m.region}};
+   data.add({m.x, m.analysis, m.region});
 
-   {
-      // No replication if all nested RooSimultaneous have the same index
-      // category, but the flattening is deprecated nonetheless
-      RooSimultaneous anaB{"anaB", "anaB", {{"SR", &m.pdf_B}}, m.region};
-      RooHelpers::HijackMessageStream hijack(RooFit::WARNING, RooFit::InputArguments);
-      RooSimultaneous comb{"comb", "comb", {{"A", &anaA}, {"B", &anaB}}, m.analysis};
-      EXPECT_NE(hijack.str().find("deprecated"), std::string::npos) << hijack.str();
-      EXPECT_EQ(hijack.str().find("copied"), std::string::npos) << hijack.str();
+   for (RooAbsPdf *pdf : std::initializer_list<RooAbsPdf *>{&comb, &modelSwitch}) {
+      EXPECT_THROW(std::unique_ptr<RooAbsReal>{pdf->createNLL(data)}, std::runtime_error) << pdf->GetName();
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+      EXPECT_THROW(
+         std::unique_ptr<RooAbsReal>{pdf->createNLL(data, RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy))},
+         std::runtime_error)
+         << pdf->GetName();
+#endif
    }
 }
