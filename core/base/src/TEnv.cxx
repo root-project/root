@@ -428,33 +428,29 @@ const char *TEnv::GetUserDirectory() const
 /// can be created where where the environment can be set through an
 /// invocation of TEnv::ReadFile.
 
-TEnv::TEnv(const char *name, bool disableLocalLevel)
+TEnv::TEnv(const char *name, bool disableLocalLevel) : fIsLocalLevelDisabled(disableLocalLevel)
 {
-   fIgnoreDup = kFALSE;
-   fIsLocalLevelDisabled = disableLocalLevel;
-
    if (!name || !name[0] || !gSystem)
-      fTable = nullptr;
-   else {
-      fTable  = new THashList(1000);
-      fRcName = name;
+      return;
 
-      TString sname = "system";
-      sname += name;
-      const char *s = gSystem->PrependPathName(TROOT::GetEtcDir(), sname);
-      ReadFile(s, kEnvGlobal);
-      if (!gSystem->Getenv("ROOTENV_NO_HOME")) {
-         TString temp(name);
-         gSystem->PrependPathName(GetUserDirectory(), temp);
-         ReadFile(temp.Data(), kEnvUser);
-         if (strcmp(GetUserDirectory(), gSystem->WorkingDirectory())) {
-            if (!IsLocalLevelDisabled())
-               ReadFile(name, kEnvLocal);
-         }
-      } else {
+   fTable  = new THashList(1000);
+   fRcName = name;
+
+   TString sname = "system";
+   sname += name;
+   const char *s = gSystem->PrependPathName(TROOT::GetEtcDir(), sname);
+   ReadFile(s, kEnvGlobal);
+   if (!gSystem->Getenv("ROOTENV_NO_HOME")) {
+      TString temp(name);
+      gSystem->PrependPathName(GetUserDirectory(), temp);
+      ReadFile(temp.Data(), kEnvUser);
+      if (strcmp(GetUserDirectory(), gSystem->WorkingDirectory())) {
          if (!IsLocalLevelDisabled())
             ReadFile(name, kEnvLocal);
       }
+   } else {
+      if (!IsLocalLevelDisabled())
+         ReadFile(name, kEnvLocal);
    }
 }
 
