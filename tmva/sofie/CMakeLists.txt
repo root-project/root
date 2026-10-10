@@ -19,9 +19,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
   NO_GLOB_HEADERS
   HEADERS
    TMVA/RModel.hxx
+   TMVA/RGPUModel.hxx
    TMVA/SOFIE_common.hxx
   SOURCES
     src/RModel.cxx
+    src/RGPUModel.cxx
     src/SOFIE_common.cxx
     src/SOFIE_common_helpers.cxx
   DEPENDENCIES
@@ -32,3 +34,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
 if(test_tmva_sofie)
   ROOT_ADD_TEST_SUBDIRECTORY(test)
 endif()
+
+target_link_libraries(ROOTTMVASofie PRIVATE ${CMAKE_DL_LIBS})

@@ -2,6 +2,7 @@
 #define TMVA_SOFIE_RMODELPARSER_ONNX
 
 #include "TMVA/RModel.hxx"
+#include "TMVA/RGPUModel.hxx"
 
 #include <memory>
 #include <functional>
@@ -57,6 +58,10 @@ private:
 
 
 public:
+   /// Parse sequential Gemm/Relu models for CUDA/HIP code generation.
+   RGPUModel ParseGPU(const std::string &filename);
+   RGPUModel ParseGPU(std::istream &input);
+
    // Register an ONNX operator
    void RegisterOperator(const std::string &name, ParserFuncSignature func);
 

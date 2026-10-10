@@ -191,3 +191,59 @@ parser.CheckModel("example_model.ONNX");
     - [TMVA_SOFIE_RDataFrame_JIT](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_RDataFrame_JIT.C)
     - [TMVA_SOFIE_RSofieReader](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_RSofieReader.C)
 
+
+## Experimental CUDA/HIP dense inference
+
+GPU parsing uses SOFIE's existing operator registry and builds an `RModel`.
+`RModel::MakeGPUModel()` runs the existing operator initialization and shape
+inference, then dispatches `ROperator::LowerGPU()`. The existing Gemm and Relu
+operators implement the lowering; other operators reject it explicitly.
+The GPU execution plan currently remains a sequential dense-layer plan.
+FP16 constants are promoted exactly to FP32 for the shared operator representation;
+the execution plan retains FP16 input, output and intermediate tensor precision.
+Direct conversion of an existing FP32 `RModel` is also supported.
+
+
+`RModelParser_ONNX::ParseGPU()` parses sequential, rank-two `Gemm`/`Relu`
+networks with embedded FP32 or FP16 weights. `Gemm` supports constant matrix
+weights, optional vector bias, alpha/beta, transB=0/1 and transA=0. Other graphs
+are rejected rather than falling back to CPU. FP16 uses FP32 accumulation and
+rounds every layer output to FP16. This is an initial scalar-kernel implementation,
+not a tuned BLAS/tensor-core backend.
+
+```cpp
+#include <TMVA/RModelParser_ONNX.hxx>
+
+auto model = TMVA::Experimental::SOFIE::RModelParser_ONNX{}.ParseGPU("network.onnx");
+using Model = TMVA::Experimental::SOFIE::RGPUModel;
+model.Compile({Model::Backend::HIP, "/path/to/hipcc", "gfx90a"});
+auto session = model.CreateSession(nativeStream, deviceId, maxBatch);
+// The framework allocates an aligned device arena of session->WorkspaceSize() bytes.
+session->SetWorkspace(deviceArena, arenaBytes);
+session->Infer(deviceInput, deviceOutput, batch);
+```
+
+Use `Backend::CUDA`, `nvcc`, and the device architecture (e.g. `sm_80`) for CUDA.
+`Compile()` runs the compiler once using an argument vector, loads a private
+shared library, and removes its temporary files. The runtime compiler must be
+available on the execution host; ROOT itself needs no GPU toolkit to build this
+host API. Compilation currently requires a POSIX host. Compiler failures include
+the compiler output. No compilation takes place in `Infer()`.
+
+Streams are passed as opaque native CUDA/HIP stream handles. The current device
+must match the supplied device ID. The arena is 256-byte aligned and contains
+weights plus two intermediate buffers sized for `maxBatch`. Input, output and
+arena must be disjoint. Their precision must match the model. No CUDA/HIP device
+allocation is emitted. `SetWorkspace()` uploads weights on the saved stream;
+`Infer()` enqueues work without synchronizing. GPU faults are observed by the
+caller's normal stream/event synchronization. The framework must finish queued
+work before destroying a session or reclaiming its storage. Separate concurrent
+streams need separate sessions and workspaces; they may share a compiled model.
+
+Tests (not run as part of implementation): with ROOT testing enabled,
+`TestSofieGPU` checks parsing, rejection and capacity handling without a GPU.
+Set `SOFIE_GPU_TEST_BACKEND=CUDA` or `HIP` to additionally build
+`TestSofieGPUDevice`, which needs the corresponding toolkit and compiler. It
+compiles models when the test runs and checks six-layer FP32/FP16 inference,
+external nonblocking streams, several batch sizes, and invalid workspaces.
+The device test skips when no GPU is available.
