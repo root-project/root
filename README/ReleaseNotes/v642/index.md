@@ -103,6 +103,7 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
 * The header `Rstrstream.h` is deprecated and will be removed after ROOT 6.44, use instead `<sstream>`.
 * The headers `ZipLZMA.h`, `ZipLZ4.h` and `ZipZSTD.h` are deprecated and will be removed in ROOT 6.46, use instead the public methods in the `RZip.h` interface.
 * Remove outdated `TSQLFile` class, was not tested for very long time, not working with only supported sqlite DB
+* A .rootrc in the current working directory (different from the home directory) is no longer processed to prevent injection of malicious config files. To restore the previous behavior, set the `ROOTENV_USE_LOCAL` environment variable to anything other than `0`, `off`, `no`, or `false`.
 
 ## Build System
 
