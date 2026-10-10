@@ -263,7 +263,7 @@ namespace {
     bool needsToReserveAllocationSpace() override { return true; }
   };
 
-  /// A JITLinkMemoryManager for Cling that never frees its allocations.
+  /// A JITLinkMemoryManager for Cling.
   class ClingJITLinkMemoryManager : public InProcessMemoryManager {
   public:
     using InProcessMemoryManager::InProcessMemoryManager;
@@ -273,16 +273,28 @@ namespace {
       // Disabled until CallFunc is informed about unloading, and can
       // re-generate the wrapper (if the decl is still available). See
       // https://github.com/root-project/root/issues/10898
-
-      // We still have to release the allocations which resets their addresses
-      // to FinalizedAlloc::InvalidAddr, or the assertion in ~FinalizedAlloc
-      // will be unhappy...
-      for (auto &Alloc : Allocs) {
-        Alloc.release();
-      }
-      // Pretend we successfully deallocated everything...
+      //
+      // Releasing the handles orphans each allocation's vector of JITLink
+      // dealloc actions. Retain them (required for CallFunc) and let the
+      // base class free everything when this manager is destroyed at
+      // interpreter teardown.
+      std::lock_guard<std::mutex> G(m_RetainedMutex);
+      for (auto& Alloc : Allocs)
+        m_Retained.push_back(std::move(Alloc));
       OnDeallocated(Error::success());
     }
+
+    ~ClingJITLinkMemoryManager() override {
+      if (!m_Retained.empty())
+        InProcessMemoryManager::deallocate(std::move(m_Retained),
+                                           [](Error Err) {
+                                             consumeError(std::move(Err));
+                                           });
+    }
+
+  private:
+    std::mutex m_RetainedMutex;
+    std::vector<FinalizedAlloc> m_Retained;
   };
 
   /// A DynamicLibrarySearchGenerator that uses ResourceTracker to remember
