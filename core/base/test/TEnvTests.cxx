@@ -85,12 +85,12 @@ TEST_F(TEnvTest, ROOTENV_USER_PATH)
 
 TEST_F(TEnvTest, DisableLocalLevel)
 {
-   EXPECT_TRUE(gEnv->IsLocalLevelDisabled());
+   EXPECT_FALSE(gEnv->IsLocalLevelEnabled());
 
    gEnv->WriteFile(fLocalConfig.Data());
    EXPECT_FALSE(gSystem->AccessPathName(fLocalConfig.Data()));
 
-   TEnv env(fRcName, /*disableLocalLevel=*/true);
+   TEnv env(fRcName, /*isLocalLevelEnabled=*/false);
    {
       ROOT::TestSupport::CheckDiagsRAII checkDiag;
       checkDiag.requiredDiag(kError, "TEnv::ReadFile", "local level disabled, won't read", /*matchFullMessage=*/false);

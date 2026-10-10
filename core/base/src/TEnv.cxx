@@ -420,7 +420,7 @@ const char *TEnv::GetUserDirectory() const
 /// and ROOTENV_NO_HOME is not set, then `$ROOTENV_USER_PATH/<name>`
 /// is considered instead of `$HOME/<name>`.
 /// The file corresponding to `kEnvLocal` is read only if the local level
-/// is not disabled. The local level is disabled by default for gEnv but
+/// is enabled. The local level is disabled by default for gEnv but
 /// not for other instances of TEnv. Setting the `ROOTENV_USE_LOCAL`
 /// environment variable to a non-empty value will enable the local level for
 /// gEnv.
@@ -428,7 +428,7 @@ const char *TEnv::GetUserDirectory() const
 /// can be created where where the environment can be set through an
 /// invocation of TEnv::ReadFile.
 
-TEnv::TEnv(const char *name, bool disableLocalLevel) : fIsLocalLevelDisabled(disableLocalLevel)
+TEnv::TEnv(const char *name, bool isLocalLevelEnabled) : fIsLocalLevelEnabled(isLocalLevelEnabled)
 {
    if (!name || !name[0] || !gSystem)
       return;
@@ -445,11 +445,11 @@ TEnv::TEnv(const char *name, bool disableLocalLevel) : fIsLocalLevelDisabled(dis
       gSystem->PrependPathName(GetUserDirectory(), temp);
       ReadFile(temp.Data(), kEnvUser);
       if (strcmp(GetUserDirectory(), gSystem->WorkingDirectory())) {
-         if (!IsLocalLevelDisabled())
+         if (IsLocalLevelEnabled())
             ReadFile(name, kEnvLocal);
       }
    } else {
-      if (!IsLocalLevelDisabled())
+      if (IsLocalLevelEnabled())
          ReadFile(name, kEnvLocal);
    }
 }
@@ -626,7 +626,7 @@ Int_t TEnv::ReadFile(const char *fname, EEnvLevel level)
       return -1;
    }
 
-   if (IsLocalLevelDisabled() && (level == kEnvLocal)) {
+   if (!IsLocalLevelEnabled() && (level == kEnvLocal)) {
       Error("ReadFile", "local level disabled, won't read");
       return -1;
    }
@@ -688,7 +688,7 @@ void TEnv::Save()
       return;
    }
 
-   if (!IsLocalLevelDisabled())
+   if (IsLocalLevelEnabled())
       SaveLevel(kEnvLocal); // By default, new items will be put into Local.
    SaveLevel(kEnvUser);
    SaveLevel(kEnvGlobal);
@@ -709,7 +709,7 @@ void TEnv::SaveLevel(EEnvLevel level)
       return;
    }
 
-   if (IsLocalLevelDisabled() && (level == kEnvLocal)) {
+   if (!IsLocalLevelEnabled() && (level == kEnvLocal)) {
       Error("SaveLevel", "local level disabled, won't save");
       return;
    }
@@ -774,7 +774,7 @@ void TEnv::SaveLevel(EEnvLevel level)
 void TEnv::SetValue(const char *name, const char *value, EEnvLevel level,
                     const char *type)
 {
-   if (IsLocalLevelDisabled() && (level == kEnvLocal)) {
+   if (!IsLocalLevelEnabled() && (level == kEnvLocal)) {
       Error("SetValue", "local level disabled, won't set or change value");
       return;
    }
