@@ -80,10 +80,10 @@ public:
 class TEnv : public TObject {
 
 private:
-   THashList        *fTable;                // hash table containing env records
-   TString           fRcName;               // resource file base name
-   Bool_t            fIgnoreDup;            // ignore duplicates, don't issue warning
-   Bool_t            fIsLocalLevelDisabled; //! By default, gEnv does not allow use of the local level
+   THashList        *fTable = nullptr;              // hash table containing env records
+   TString           fRcName;                       // resource file base name
+   Bool_t            fIgnoreDup = false;            // ignore duplicates, don't issue warning
+   Bool_t            fIsLocalLevelDisabled = false; //! By default, gEnv does not allow use of the local level
 
    TEnv(const TEnv&) = delete;
    TEnv& operator=(const TEnv&) = delete;
