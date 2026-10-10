@@ -62,10 +62,18 @@ ROOT::Internal::RPageRef ROOT::Internal::RPagePool::RegisterPage(RPage page, RKe
 
 void ROOT::Internal::RPagePool::PreloadPage(RPage page, RKey key)
 {
+   auto p = std::make_pair(std::move(page), key);
+   PreloadPageV(std::span<std::pair<RPage, RKey>>(&p, 1));
+}
+
+void ROOT::Internal::RPagePool::PreloadPageV(std::span<std::pair<RPage, RKey>> pages)
+{
    std::lock_guard<std::mutex> lockGuard(fLock);
-   const auto &entry = AddPage(std::move(page), key, 0);
-   if (entry.fRefCounter == 0)
-      AddToUnusedPages(entry.fPage);
+   for (auto &p : pages) {
+      const auto &entry = AddPage(std::move(p.first), p.second, 0);
+      if (entry.fRefCounter == 0)
+         AddToUnusedPages(entry.fPage);
+   }
 }
 
 void ROOT::Internal::RPagePool::ErasePage(std::size_t entryIdx, decltype(fLookupByBuffer)::iterator lookupByBufferItr)
