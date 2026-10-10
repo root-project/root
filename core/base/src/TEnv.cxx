@@ -21,7 +21,8 @@ For gEnv, the local level is disabled to prevent environment poisoning,
 i.e. prevent ROOT from reading a config file in the current working directory
 that has not been deliberately placed there by the user.
 The behavior can be changed to be backwards-compatible by setting
-`ROOTENV_USE_LOCAL=1`.
+`ROOTENV_USE_LOCAL=1`. Conversely, setting ROOTENV_USE_LOCAL to "0", "false",
+"no", or "off" will disable the local level.
 
 By setting the shell variable `ROOTENV_NO_HOME=1` the reading of
 the `$HOME/<name>` resource file will be skipped. This might be useful
