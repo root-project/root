@@ -44,6 +44,8 @@ enum class ENTupleMergingMode {
    kStrict,
    /// The merger will update the output model to include all columns from all sources. Entries corresponding to columns
    /// that are not present in a source will be set to the default value of the type.
+   /// When a field first appears in a later source, its class dictionary must match its on-disk schema and class
+   /// version. Detected schema mismatches or field creation errors are skipped or rejected according to fErrBehavior.
    kUnion
 };
 
