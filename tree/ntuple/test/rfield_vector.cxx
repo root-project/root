@@ -154,7 +154,6 @@ TEST(RNTuple, InsideCollection)
    // TODO: test reading of "klassVec.v1"
 }
 
-
 TEST(RNTuple, RVec)
 {
    FileRaii fileGuard("test_ntuple_rvec.root");
@@ -302,6 +301,46 @@ TEST(RNTuple, ReadVectorAsRVec)
    EXPECT_TRUE(All(*rvec == ROOT::RVec<float>({1.f, 2.f, 3.f, 4.f})));
    r->LoadEntry(2);
    EXPECT_TRUE(rvec->empty());
+}
+
+TEST(RNTuple, RVecGeometricGrowth)
+{
+   FileRaii fileGuard("test_ntuple_rvec_geometric_growth.root");
+
+   {
+      auto m = RNTupleModel::Create();
+      auto rvec = m->MakeField<ROOT::RVec<int>>("v");
+      auto w = RNTupleWriter::Recreate(std::move(m), "ntpl", fileGuard.GetPath());
+
+      *rvec = {1, 2};
+      w->Fill();
+      *rvec = {1, 2, 3};
+      w->Fill();
+      *rvec = {1, 2, 3, 4};
+      w->Fill();
+      *rvec = {10};
+      w->Fill();
+   }
+
+   auto m = RNTupleModel::Create();
+   auto rvec = m->MakeField<ROOT::RVec<int>>("v");
+   auto reader = RNTupleReader::Open(std::move(m), "ntpl", fileGuard.GetPath());
+
+   reader->LoadEntry(0);
+   EXPECT_EQ(rvec->size(), 2u);
+   EXPECT_EQ(rvec->capacity(), 2u);
+
+   reader->LoadEntry(1);
+   EXPECT_EQ(rvec->size(), 3u);
+   EXPECT_GE(rvec->capacity(), 4u);
+
+   reader->LoadEntry(2);
+   EXPECT_EQ(rvec->size(), 4u);
+   EXPECT_GE(rvec->capacity(), 4u);
+
+   reader->LoadEntry(3);
+   EXPECT_EQ(rvec->size(), 1u);
+   EXPECT_GE(rvec->capacity(), 4u);
 }
 
 TEST(RNTuple, BoolVector)
