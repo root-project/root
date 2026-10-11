@@ -291,13 +291,21 @@ unsigned char *ROOT::RRVecField::ResizeRVec(void *rvec, std::size_t nItems, std:
          }
       }
 
-      // TODO Increment capacity by a factor rather than just enough to fit the elements.
+      // Increment capacity geometrically rather than just enough to fit the elements.
+      std::size_t newCapacity = nItems;
+      if (*capacityPtr > 0) {
+         constexpr std::size_t maxSize = static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max());
+         const std::size_t oldCap = static_cast<std::size_t>(*capacityPtr);
+         const std::size_t grown = oldCap <= maxSize / 2 ? oldCap * 2 : maxSize;
+         newCapacity = std::min(maxSize, std::max(nItems, grown));
+      }
+
       Internal::DestroyRVecWithChecks(itemField->GetAlignment(), beginPtr, capacityPtr);
       // We trust that malloc returns a buffer with large enough alignment.
       // This might not be the case if T in RVec<T> is over-aligned.
-      *beginPtr = static_cast<unsigned char *>(malloc(nItems * itemSize));
+      *beginPtr = static_cast<unsigned char *>(malloc(newCapacity * itemSize));
       R__ASSERT(*beginPtr != nullptr);
-      *capacityPtr = nItems;
+      *capacityPtr = static_cast<std::int32_t>(newCapacity);
 
       // Placement new for elements that were already there before the resize
       if (needsConstruct) {
