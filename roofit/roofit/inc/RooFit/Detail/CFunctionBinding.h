@@ -16,10 +16,16 @@
 
 // Implementation details shared by the RooCFunction[1-4]Binding classes.
 
+#include <RooAbsArg.h>
+#include <RooAbsProxy.h>
+#include <RooMsgService.h>
+
+#include <TBuffer.h>
 #include <TString.h>
 
 #include <cstring>
 #include <map>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -90,6 +96,82 @@ private:
    std::map<Func, std::string> _namemap;                 // Pointer-to-name map
    std::map<Func, std::vector<std::string>> _argnamemap; // Pointer-to-argnamelist map
 };
+
+/// Custom streamer for function pointer reference objects. When writing,
+/// the function pointer is substituted by its registered name. When function
+/// is unregistered name 'UNKNOWN' is written and a warning is issued. When
+/// reading back, the embedded name is converted back to a function pointer
+/// using the mapping service. When name UNKNOWN is encountered a warning is
+/// issued and a dummy null function is substituted. When the registered function
+/// name can not be mapped to a function pointer an ERROR is issued.
+template <class Func>
+void streamCFunctionRef(TBuffer &R__b, TObject const &self, Func &ptr, Func dummyFunction, CFunctionMap<Func> &fmap)
+{
+   if (R__b.IsReading()) {
+
+      UInt_t R__s;
+      UInt_t R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+
+      // Read name from file
+      TString tmpName;
+      tmpName.Streamer(R__b);
+
+      if (tmpName == "UNKNOWN" && R__v > 0) {
+
+         oocoutW(&self, ObjectHandling)
+            << "WARNING: Objected embeds function pointer to unknown function, object will not be functional"
+            << std::endl;
+         ptr = dummyFunction;
+
+      } else {
+
+         // Lookup pointer to C function with given name
+         ptr = fmap.lookupPtr(tmpName.Data());
+
+         if (ptr == nullptr) {
+            oocoutW(&self, ObjectHandling)
+               << "ERROR: Objected embeds pointer to function named " << tmpName
+               << " but no such function is registered, object will not be functional" << std::endl;
+         }
+      }
+
+      R__b.CheckByteCount(R__s, R__c, self.IsA());
+
+   } else {
+
+      UInt_t R__c;
+      R__c = R__b.WriteVersion(self.IsA(), true);
+
+      // Lookup name of reference C function
+      TString tmpName = fmap.lookupName(ptr);
+      if (tmpName.Length() == 0) {
+         oocoutW(&self, ObjectHandling) << "WARNING: Cannot persist unknown function pointer "
+                                        << Form("%p", CFunctionMap<Func>::toVoidPtr(ptr))
+                                        << " written object will not be functional when read back" << std::endl;
+         tmpName = "UNKNOWN";
+      }
+
+      // Persist the name
+      tmpName.Streamer(R__b);
+
+      R__b.SetByteCount(R__c, true);
+   }
+}
+
+/// Print arguments of a function binding and name/address of the function pointer.
+inline void printCFunctionArgs(std::ostream &os, RooAbsArg const &arg, const char *funcName)
+{
+   os << "[ function=" << funcName << " ";
+   for (Int_t i = 0; i < arg.numProxies(); i++) {
+      RooAbsProxy *p = arg.getProxy(i);
+      if (!TString(p->name()).BeginsWith("!")) {
+         p->print(os);
+         os << " ";
+      }
+   }
+   os << "]";
+}
 
 } // namespace Detail
 } // namespace RooFit
