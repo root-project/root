@@ -5,8 +5,180 @@
 
 #include <TInterpreter.h>
 
+#include <array>
 #include <string>
 #include <string_view>
+
+TEST(RNTupleEvolution, UnionMergeLateClassSchema)
+{
+   struct SchemaCase {
+      const char *fName;
+      const char *fMembers;
+      bool fMatches;
+      bool fNested;
+      bool fProjected = false;
+      bool fSkip = false;
+      bool fStreamer = false;
+   };
+   const std::array<SchemaCase, 16> cases{{
+      {"matching", "int fA = 11; int fC = 33;", true, false},
+      {"inserted", "int fA = 11; int fB = 22; int fC = 33;", false, false},
+      {"appended", "int fA = 11; int fC = 33; int fB = 22;", false, false},
+      {"removed", "int fA = 11;", false, false},
+      {"reordered", "int fC = 33; int fA = 11;", false, false},
+      {"type_changed", "float fA = 11; int fC = 33;", false, false},
+      {"nested_matching", "int fA = 11; int fC = 33;", true, true},
+      {"nested_inserted", "int fA = 11; int fB = 22; int fC = 33;", false, true},
+      {"projected_matching", "int fA = 11; int fC = 33;", true, false, true},
+      {"projected_inserted", "int fA = 11; int fB = 22; int fC = 33;", false, false, true},
+      {"skip_inserted", "int fA = 11; int fB = 22; int fC = 33;", false, false, false, true},
+      {"version_changed", "int fA = 11; int fC = 33; ClassDefNV(LateMergeClass, 2)", false, false},
+      {"streamer_common_matching", "int fA = 11; int fC = 33;", true, false, false, false, true},
+      {"streamer_evolved", "int fA = 11; int fB = 22; int fC = 33; ClassDefNV(LateMergeClass, 2)", false, false, false,
+       false, true},
+      {"missing_dictionary", nullptr, false, false},
+      {"skip_missing_dictionary", nullptr, false, false, false, true},
+   }};
+   for (const auto &testCase : cases) {
+      SCOPED_TRACE(testCase.fName);
+      // Each process gets its own dictionary; only the source writer sees the original definition.
+      ExecInFork(([&] {
+         FileRaii first("test_ntuple_merge_class_schema_first.root");
+         FileRaii second("test_ntuple_merge_class_schema_second.root");
+         FileRaii third("test_ntuple_merge_class_schema_third.root");
+         FileRaii output("test_ntuple_merge_class_schema_output.root");
+         const std::string typeName = testCase.fNested ? "std::vector<LateMergeClass>" : "LateMergeClass";
+         ExecInFork([&] {
+            first.PreserveFile();
+            second.PreserveFile();
+            ASSERT_TRUE(gInterpreter->Declare("struct LateMergeClass { int fA = 11; int fC = 33; };"));
+            {
+               auto model = RNTupleModel::Create();
+               model->MakeField<int>("e");
+               // Adding late streamer fields is unsupported; check matching streamer fields present from the start.
+               if (testCase.fStreamer && testCase.fMatches)
+                  model->AddField(std::make_unique<ROOT::RStreamerField>("record", typeName));
+               else if (testCase.fProjected)
+                  model->AddField(RFieldBase::Create("record", typeName).Unwrap());
+               auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", first.GetPath());
+               writer->Fill();
+            }
+            auto model = RNTupleModel::Create();
+            model->MakeField<int>("e");
+            *model->MakeField<int>("before_record") = 77;
+            if (testCase.fStreamer)
+               model->AddField(std::make_unique<ROOT::RStreamerField>("record", typeName));
+            else
+               model->AddField(RFieldBase::Create("record", typeName).Unwrap());
+            if (testCase.fProjected) {
+               model->AddProjectedField(RFieldBase::Create("alias", typeName).Unwrap(), [](const std::string &name) {
+                  auto mapped = name;
+                  mapped.replace(0, 5, "record");
+                  return mapped;
+               });
+            }
+            auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", second.GetPath());
+            if (testCase.fNested) {
+               void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("record").get();
+               DeclarePointer(typeName, "values", ptr);
+               ProcessLine("values->emplace_back();");
+            }
+            writer->Fill();
+         });
+         if (testCase.fMembers) {
+            ASSERT_TRUE(
+               gInterpreter->Declare((std::string("struct LateMergeClass { ") + testCase.fMembers + " };").c_str()));
+         }
+         auto firstSource = RPageSource::Create("ntpl", first.GetPath());
+         auto secondSource = RPageSource::Create("ntpl", second.GetPath());
+         std::vector<RPageSource *> sources{firstSource.get(), secondSource.get()};
+         std::unique_ptr<RPageSource> thirdSource;
+         if (testCase.fSkip) {
+            {
+               auto model = RNTupleModel::Create();
+               model->MakeField<int>("e");
+               *model->MakeField<int>("before_record") = 99;
+               auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", third.GetPath());
+               writer->Fill();
+            }
+            thirdSource = RPageSource::Create("ntpl", third.GetPath());
+            sources.push_back(thirdSource.get());
+         }
+         auto destination = std::make_unique<RPageSinkFile>("ntpl", output.GetPath(), RNTupleWriteOptions());
+         auto *sink = destination.get();
+         RNTupleMerger merger{std::move(destination)};
+         RNTupleMergeOptions options;
+         options.fMergingMode = ENTupleMergingMode::kUnion;
+         if (testCase.fSkip)
+            options.fErrBehavior = ROOT::Experimental::Internal::ENTupleMergeErrBehavior::kSkip;
+         auto result = [&] {
+            ROOT::TestSupport::CheckDiagsRAII diags;
+            diags.optionalDiag(kWarning, "RIoUring", "io_uring is not available because:", false);
+            diags.optionalDiag(kWarning, "RRawFileUnix",
+                               "io_uring setup failed, falling back to blocking I/O in ReadV");
+            if (!testCase.fMembers)
+               diags.optionalDiag(kWarning, "TClass::Init", "no dictionary for class LateMergeClass is available");
+            if (testCase.fSkip) {
+               diags.requiredDiag(kWarning, "ROOT.NTuple.Merge",
+                                  "Skipping RNTuple due to: cannot extend destination with field `record`", false);
+            }
+            return merger.Merge(sources, options);
+         }();
+         ASSERT_FALSE(::testing::Test::HasFailure());
+         if (testCase.fSkip) {
+            ASSERT_TRUE(bool(result)) << result.GetError()->GetReport();
+            auto reader = RNTupleReader::Open("ntpl", output.GetPath());
+            ASSERT_EQ(2u, reader->GetNEntries());
+            ASSERT_EQ(ROOT::kInvalidDescriptorId, reader->GetDescriptor().FindFieldId("record"));
+            auto before = reader->GetView<int>("before_record");
+            ASSERT_EQ(0, before(0));
+            ASSERT_EQ(99, before(1));
+         } else if (!testCase.fMatches) {
+            ASSERT_FALSE(bool(result));
+            ASSERT_NE(std::string::npos,
+                      result.GetError()->GetReport().find(testCase.fMembers ? "does not match the source schema"
+                                                                            : "unknown type: LateMergeClass"));
+            ASSERT_EQ(ROOT::kInvalidDescriptorId,
+                      sink->GetDescriptor().FindFieldId(testCase.fProjected ? "alias" : "record"));
+            ASSERT_EQ(ROOT::kInvalidDescriptorId, sink->GetDescriptor().FindFieldId("before_record"));
+         } else {
+            ASSERT_TRUE(bool(result)) << result.GetError()->GetReport();
+            auto reader = RNTupleReader::Open("ntpl", output.GetPath());
+            ASSERT_EQ(2u, reader->GetNEntries());
+            if (testCase.fStreamer) {
+               void *ptr = reader->GetModel().GetDefaultEntry().GetPtr<void>("record").get();
+               DeclarePointer(typeName, "mergedRecord", ptr);
+               reader->LoadEntry(1);
+               ASSERT_EQ(11, gInterpreter->Calc("mergedRecord->fA"));
+               ASSERT_EQ(33, gInterpreter->Calc("mergedRecord->fC"));
+            } else if (!testCase.fNested) {
+               auto a = reader->GetView<int>("record.fA");
+               auto c = reader->GetView<int>("record.fC");
+               ASSERT_EQ(testCase.fProjected ? 11 : 0, a(0));
+               ASSERT_EQ(testCase.fProjected ? 33 : 0, c(0));
+               ASSERT_EQ(11, a(1));
+               ASSERT_EQ(33, c(1));
+               if (testCase.fProjected) {
+                  auto aliasA = reader->GetView<int>("alias.fA");
+                  auto aliasC = reader->GetView<int>("alias.fC");
+                  ASSERT_EQ(11, aliasA(0));
+                  ASSERT_EQ(33, aliasC(0));
+                  ASSERT_EQ(11, aliasA(1));
+                  ASSERT_EQ(33, aliasC(1));
+               }
+            } else {
+               auto records = reader->GetCollectionView("record");
+               ASSERT_EQ(0u, records(0));
+               ASSERT_EQ(1u, records(1));
+               auto a = records.GetView<int>("_0.fA");
+               auto c = records.GetView<int>("_0.fC");
+               ASSERT_EQ(11, a(0));
+               ASSERT_EQ(33, c(0));
+            }
+         }
+      }));
+   }
+}
 
 TEST(RNTupleEvolution, AddedMember)
 {
