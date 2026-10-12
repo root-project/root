@@ -64,11 +64,12 @@ void rf109_chi2residpull()
    // that curve-based residuals show for sharply peaked pdfs.
 
    // Construct a histogram with the residuals of the data w.r.t. the model.
-   // The Binning() argument selects how the unbinned dataset is binned.
-   std::unique_ptr<RooHist> hresid{RooFit::makeResidHist(gauss, *data, Binning(40))};
+   // The Binning() argument selects how the unbinned dataset is binned, and
+   // DataError() selects the same error model as in the data plot above.
+   std::unique_ptr<RooHist> hresid{RooFit::makeResidHist(gauss, *data, Binning(40), DataError(RooAbsData::SumW2))};
 
    // Construct a histogram with the pulls of the data w.r.t the model
-   std::unique_ptr<RooHist> hpull{RooFit::makePullHist(gauss, *data, Binning(40))};
+   std::unique_ptr<RooHist> hpull{RooFit::makePullHist(gauss, *data, Binning(40), DataError(RooAbsData::SumW2))};
 
    // Create a new frame to draw the residual distribution and add the distribution to the frame.
    // Note that addPlotable() transfers ownership of the histogram to the frame.

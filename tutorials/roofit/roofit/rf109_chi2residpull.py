@@ -53,13 +53,14 @@ print("chi^2 = ", frame1.chiSquare())
 # For the residuals and pulls, we compare the binned data with the model
 # integrated exactly over each bin. This avoids the systematic "wiggle"
 # that curve-based residuals show for sharply peaked pdfs. The Binning()
-# argument selects how the unbinned dataset is binned.
+# argument selects how the unbinned dataset is binned, and DataError()
+# selects the same error model as in the data plot above.
 
 # Construct a histogram with the residuals of the data w.r.t. the model
-hresid = ROOT.RooFit.makeResidHist(gauss, data, ROOT.RooFit.Binning(40))
+hresid = ROOT.RooFit.makeResidHist(gauss, data, ROOT.RooFit.Binning(40), ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2))
 
 # Construct a histogram with the pulls of the data w.r.t the model
-hpull = ROOT.RooFit.makePullHist(gauss, data, ROOT.RooFit.Binning(40))
+hpull = ROOT.RooFit.makePullHist(gauss, data, ROOT.RooFit.Binning(40), ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2))
 
 # Create a frame to draw the residual distribution and add the
 # distribution to the frame. Note that addPlotable() transfers ownership

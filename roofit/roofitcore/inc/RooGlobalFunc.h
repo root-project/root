@@ -490,17 +490,19 @@ RooConstVar& RooConst(double val) ;
 /// Creates a RooHist with the per-bin residuals `data` - `fitModel`.
 ///
 /// For each bin, the model expectation is the model integrated exactly over
-/// the bin (with RooAbsReal::createIntegral()), normalized to
-/// the data inside the normalization range. Unbinned input data is binned
-/// internally. The supported RooCmdArgs are:
+/// the bin (with RooAbsReal::createIntegral()), normalized to the data in
+/// the used bins. Unbinned input data is binned internally. The supported
+/// RooCmdArgs are:
 ///   - `Binning(binning)` / `Binning(nbins)` / `Binning(nbins, xlo, xhi)` :
 ///     the binning used to bin unbinned input data (default: the current
-///     binning of the observable)
-///   - `Range(lo, hi)` / `Range("name")` : compute residuals only in this range.
-///     The model expectation is normalized in this range. Multiple
-///     comma-separated range names can be specified for a union of named
-///     ranges (sidebands). Use it for sideband fits or blinded data, so that
-///     the model is normalized in the same range as the fitted data.
+///     binning of the model's observable). Entries outside of the binning
+///     range are dropped. Not supported for binned input data.
+///   - `Range(lo, hi)` / `Range("name")` : compute residuals only for the
+///     bins fully inside this range. The model expectation is normalized to
+///     the data in these bins. Multiple comma-separated range names can be
+///     specified for a union of named ranges (sidebands). Use it for sideband
+///     fits or blinded data, so that the model is normalized to the data
+///     outside of the blinded region.
 ///   - `Normalization(double)` : additional scale factor for the expectation
 ///     (default 1.0). The scale types of Normalization(scale, type) are not
 ///     supported.
@@ -521,9 +523,9 @@ RooConstVar& RooConst(double val) ;
 ///
 /// Only 1-dimensional data is supported, otherwise std::invalid_argument is
 /// thrown; the same exception is thrown for empty input data, unknown named
-/// ranges or binnings, or when the model has no support in the normalization
-/// range. For higher-dimensional fits, project both the data and the
-/// model onto the observable of interest:
+/// ranges or binnings, ranges that don't fully contain any bin, or when the
+/// model has no support in the used bins. For higher-dimensional fits,
+/// project both the data and the model onto the observable of interest:
 /// ~~~{.cpp}
 /// std::unique_ptr<RooAbsData> projData{data.reduce(RooArgSet{x})};
 /// std::unique_ptr<RooAbsPdf> projModel{model.createProjection(RooArgSet{y})};

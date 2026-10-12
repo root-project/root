@@ -9,6 +9,7 @@
 #include <RooHelpers.h>
 #include <RooHist.h>
 #include <RooHistPdf.h>
+#include <RooProdPdf.h>
 #include <RooPlot.h>
 #include <RooRandom.h>
 #include <RooRealVar.h>
@@ -323,6 +324,87 @@ TEST(RooHist, MakeResidAndPullHistUnbinned)
    EXPECT_GT(nChecked, 30);
    EXPECT_GT(chi2 / nChecked, 0.5);
    EXPECT_LT(chi2 / nChecked, 1.5);
+
+   // Without Binning(), the current binning of the observable is used, not
+   // the binning stored in the dataset at the time of its creation
+   x.setBins(25);
+   std::unique_ptr<RooHist> residDefault{makeResidHist(gauss, *data)};
+   EXPECT_EQ(residDefault->GetN(), 25);
+}
+
+/// With Binning(nbins, xlo, xhi) narrower than the observable range, the
+/// entries outside of the binning range must be dropped (and not clamped
+/// into the edge bins, as RooDataHist::add() does).
+TEST(RooHist, MakeResidAndPullHistBinningRange)
+{
+   using namespace RooFit;
+
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING};
+   RooRandom::randomGenerator()->SetSeed(1337);
+
+   RooRealVar x("x", "x", -10, 10);
+   RooRealVar mean("mean", "mean", 0.);
+   RooRealVar sigma("sigma", "sigma", 3.);
+   RooGenericPdf gauss("gauss", "gauss", "exp(-0.5 * pow((x - mean) / sigma, 2))", RooArgSet{x, mean, sigma});
+
+   std::unique_ptr<RooDataSet> data{gauss.generate(x, 10000)};
+
+   const int nBins = 20;
+   const double xlo = -2.;
+   const double xhi = 2.;
+
+   // With Normalization(0.), the model expectation is zero and the residuals
+   // are the binned data contents
+   std::unique_ptr<RooHist> resid{makeResidHist(gauss, *data, Binning(nBins, xlo, xhi), Normalization(0.))};
+   ASSERT_EQ(resid->GetN(), nBins);
+
+   TH1D ref("ref", "ref", nBins, xlo, xhi);
+   for (int i = 0; i < data->numEntries(); ++i) {
+      ref.Fill(static_cast<RooAbsReal const &>(*data->get(i)->find("x")).getVal());
+   }
+   EXPECT_LT(ref.Integral(), 0.6 * data->numEntries()); // a large fraction of the data is outside the range
+   for (int i = 0; i < nBins; ++i) {
+      EXPECT_DOUBLE_EQ(resid->GetPointX(i), ref.GetBinCenter(i + 1)) << "bin " << i;
+      EXPECT_DOUBLE_EQ(resid->GetPointY(i), ref.GetBinContent(i + 1)) << "bin " << i;
+   }
+}
+
+/// Composite models cache the integrals of their components by range name,
+/// and the integration strategy of a RooHistPdf (full sum vs. partial sum)
+/// is fixed when the integral is created. The per-bin integration must not
+/// be affected by this: a RooHistPdf wrapped in a RooProdPdf or projected
+/// with createProjection() must give the same residuals as the bare
+/// RooHistPdf.
+TEST(RooHist, MakeResidAndPullHistWrappedModel)
+{
+   using namespace RooFit;
+
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING};
+
+   GaussModel model;
+   RooRealVar y("y", "y", -1., 1.);
+   RooGenericPdf gy("gy", "gy", "1 + y * y", RooArgSet{y});
+   RooProdPdf prod("prod", "prod", RooArgList{model.gaussAnalytic, gy});
+   std::unique_ptr<RooAbsPdf> proj{prod.createProjection(RooArgSet{y})};
+
+   TH1D hist("hist", "hist", kNBins, kGaussX0, kGaussX1);
+   fillExactGauss(hist, 1e6, {{kGaussX0, kGaussX1}});
+   RooDataHist binData("binData", "binData", RooArgSet(model.x), &hist);
+
+   for (RooAbsPdf *pdf : {static_cast<RooAbsPdf *>(&prod), proj.get()}) {
+      std::unique_ptr<RooHist> resid{makeResidHist(*pdf, binData)};
+      ASSERT_EQ(resid->GetN(), kNBins) << pdf->GetName();
+      expectExactResiduals(*resid, hist, kTolAnalytic);
+      // Also with a sub-range, and in a second call with the same model
+      std::unique_ptr<RooHist> residRange{makeResidHist(*pdf, binData, Range(119.6, 123.6))};
+      ASSERT_EQ(residRange->GetN(), 10) << pdf->GetName();
+      expectExactResiduals(*residRange, hist, kTolAnalytic);
+   }
+
+   // The user's variable must not keep any scratch range
+   for (auto const &name : model.x.getBinningNames()) {
+      EXPECT_EQ(name.find("_binInt_"), std::string::npos) << "leftover range " << name;
+   }
 }
 
 /// The Range() argument of RooFit::makeResidHist()/makePullHist(): only bins
@@ -356,6 +438,14 @@ TEST(RooHist, MakeResidAndPullHistRange)
    std::unique_ptr<RooHist> residNumeric{makeResidHist(model.gaussNumeric, binData, Range(rlo, rhi))};
    EXPECT_EQ(residNumeric->GetN(), 10);
    expectExactResiduals(*residNumeric, hist, kTolNumeric);
+
+   // With a range that is not aligned with the bin edges, only the bins
+   // fully inside the range are used, and the expectation is normalized to
+   // the data in these bins (so the residuals of the exact data are still
+   // zero)
+   std::unique_ptr<RooHist> residUnaligned{makeResidHist(model.gaussAnalytic, binData, Range(rlo - 0.1, rhi + 0.1))};
+   EXPECT_EQ(residUnaligned->GetN(), 10);
+   expectExactResiduals(*residUnaligned, hist, kTolAnalytic);
 
    // With named range
    model.x.setRange("central", rlo, rhi);
@@ -391,6 +481,16 @@ TEST(RooHist, MakeResidAndPullHistMultiRange)
    std::unique_ptr<RooHist> resid{makeResidHist(model.gaussAnalytic, binData, Range("sb1,sb2"))};
    ASSERT_EQ(resid->GetN(), 8);
    expectExactResiduals(*resid, hist, kTolAnalytic);
+
+   // Overlapping ranges must not double count the model expectation: bins
+   // 13..18 with the overlapping ranges sb1 and [116.0, 117.6]
+   model.x.setRange("sbo", 116.0, 117.6);
+   TH1D hist2("hist2", "hist2", kNBins, kGaussX0, kGaussX1);
+   fillExactGauss(hist2, 1e6, {{115.2, 117.6}}, 3.e6);
+   RooDataHist binData2("binData2", "binData2", RooArgSet(model.x), &hist2);
+   std::unique_ptr<RooHist> residOverlap{makeResidHist(model.gaussAnalytic, binData2, Range("sb1,sbo"))};
+   ASSERT_EQ(residOverlap->GetN(), 6);
+   expectExactResiduals(*residOverlap, hist2, kTolAnalytic);
 }
 
 /// The documented failure modes of RooFit::makeResidHist() and
@@ -427,6 +527,9 @@ TEST(RooHist, MakeResidAndPullHistErrors)
 
    // Unknown named ranges
    EXPECT_THROW(makeResidHist(gauss, *data, Range("unknown")), std::invalid_argument);
+
+   // A range that doesn't fully contain any bin (bins are 0.5 wide)
+   EXPECT_THROW(makeResidHist(gauss, *data, Range(0.1, 0.4)), std::invalid_argument);
 
    // Unsupported Normalization scale types
    EXPECT_THROW(makeResidHist(gauss, *data, Normalization(0.5, RooAbsReal::NumEvent)), std::invalid_argument);
