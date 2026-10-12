@@ -1307,6 +1307,9 @@ Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 ///    to twice the ymargin value.
 ///  - color is the color of the new pads. If 0, color is the canvas color.
 ///
+/// Since ROOT 6.42.0, if `TStyle::GetUseMarginsForPadDivide()` is set, the pads are divided
+/// using TPad::DividePadded.
+///
 /// Pads are automatically named `canvasname_n` where `n` is the division number
 /// starting from top left pad.
 ///
@@ -1360,6 +1363,11 @@ Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 
 void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t color)
 {
+   if (gStyle->GetUseMarginsForPadDivide()) {
+      DividePadded(nx, ny, xmargin, ymargin, color);
+      return;
+   }
+
    if (!IsEditable()) return;
 
    if (gThreadXAR) {
@@ -1431,6 +1439,175 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
             name.Form("%s_%d", GetName(), number);
             title.Form("%s_%d", GetTitle(), number);
             pad = new TPad(name.Data(), title.Data(), x1, y1, x2, y2, color);
+            pad->SetNumber(number);
+            pad->SetBorderMode(0);
+            if (i == 0)    pad->SetLeftMargin(xl*nx);
+            else           pad->SetLeftMargin(0);
+            pad->SetRightMargin(0);
+            pad->SetTopMargin(0);
+            if (j == ny-1) pad->SetBottomMargin(yb*ny);
+            else           pad->SetBottomMargin(0);
+            pad->Draw();
+         }
+      }
+   }
+   Modified();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Automatic pad generation by division.
+///
+///  - The current canvas is divided in nx by ny equal divisions (pads).
+///  - xmargin defines the horizontal spacing between each pad as a percentage of the canvas
+///    width.
+///  - ymargin defines the vertical spacing between each pad as a percentage of the canvas
+///    height.
+///  - color is the color of the new pads. If 0, color is the canvas color.
+///  - All pads are contained within the inner area defined by the canvas margins.
+///
+/// Since ROOT 6.42.0, this function is called internally from TPad::Divide if
+/// `TStyle::GetUseMarginsForPadDivide()` is set.
+///
+/// Note that, if you don't have a background color of your pad, the spacing between pads
+/// might look larger than specified, since in the default case, each pad has internally
+/// an empty space on the right equal to the space filled on the left for the y axis labels.
+///
+/// Pads are automatically named `canvasname_n` where `n` is the division number
+/// starting from top left pad.
+///
+/// Example if canvasname=c1 , nx=2, ny=3:
+///
+/// \image html gpad_pad3.png
+///
+/// Example if:
+/// /// ~~~ {.cpp}
+/// c->SetMargin(0.30, 0.05, 0.10, 0.10);
+/// c->DividePadded(nx, ny, 0.03, 0.05, 46);
+/// ~~~
+/// \image html canvas_divide.png
+///
+/// More examples are in `tutorials/visualisation/graphics/canvas_divide_example.C`
+///
+/// Once a pad is divided into sub-pads, one can set the current pad
+/// to a subpad with a given division number as illustrated above
+/// with TPad::cd(subpad_number).
+///
+/// For example, to set the current pad to c1_4, one can do:
+/// ~~~ {.cpp}
+///    c1->cd(4)
+/// ~~~
+/// __Note1:__  c1.cd() is equivalent to c1.cd(0) and sets the current pad
+///             to c1 itself.
+///
+/// __Note2:__  after a statement like c1.cd(6), the global variable gPad
+///             points to the current pad. One can use gPad to set attributes
+///             of the current pad.
+///
+/// __Note3:__  in case xmargin < 0 or ymargin < 0, there is no space
+///             between pads. The current pad margins are recomputed to
+///             optimize the layout in order to have similar frames' areas.
+///             See the following example:
+///
+/// ~~~ {.cpp}
+///    void divpad(Int_t nx=3, Int_t ny=2) {
+///       gStyle->SetOptStat(0);
+///       auto C = new TCanvas();
+///       C->SetMargin(0.3, 0.3, 0.3, 0.3);
+///       C->Divide(nx,ny,-1);
+///       Int_t number = 0;
+///       auto h = new TH1F("","",100,-3.3,3.3);
+///       h->GetXaxis()->SetLabelFont(43);
+///       h->GetXaxis()->SetLabelSize(12);
+///       h->GetYaxis()->SetLabelFont(43);
+///       h->GetYaxis()->SetLabelSize(12);
+///       h->GetYaxis()->SetNdivisions(505);
+///       h->SetMaximum(30*nx*ny);
+///       h->SetFillColor(42);
+///       for (Int_t i=0;i<nx*ny;i++) {
+///          number++;
+///          C->cd(number);
+///          h->FillRandom("gaus",1000);
+///          h->DrawCopy();
+///       }
+///    }
+/// ~~~
+
+void TPad::DividePadded(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t color)
+{
+   if (!IsEditable()) return;
+
+   if (gThreadXAR) {
+      void *arr[7];
+      arr[1] = this; arr[2] = (void*)&nx;arr[3] = (void*)& ny;
+      arr[4] = (void*)&xmargin; arr[5] = (void *)& ymargin; arr[6] = (void *)&color;
+      if ((*gThreadXAR)("PDCD", 7, arr, nullptr)) return;
+   }
+
+   TContext ctxt(kTRUE);
+
+   cd();
+   if (nx <= 0)
+      nx = 1;
+   if (ny <= 0)
+      ny = 1;
+
+   Double_t xl = GetLeftMargin();
+   Double_t xr = GetRightMargin();
+   Double_t yb = GetBottomMargin();
+   Double_t yt = GetTopMargin();
+
+   TString name, title;
+   if (color == 0) color = GetFillColor();
+   if (xmargin >= 0 && ymargin >= 0) {
+      //general case
+      auto dx = (1 - xl - xr - xmargin * (nx - 1)) / nx; // width of a subpad
+      auto dy = (1 - yt - yb - ymargin * (ny - 1)) / ny; // height of a subpad
+
+      Int_t n = 0;
+      for (auto iy = 0; iy < ny; iy++) {
+         auto y2 = 1 - yt - iy * (dy + ymargin);
+         auto y1 = y2 - dy;
+         if (y1 < yb)
+            y1 = yb;
+         for (auto ix = 0; ix < nx; ix++) {
+            auto x1 = xl + ix * (dx + xmargin);
+            auto x2 = x1 + dx;
+            if (x2 > (1 - xr))
+               xr = 1 - xr;
+            n++;
+            name.Form("%s_%d", GetName(), n);
+            auto pad = new TPad(name.Data(), name.Data(), x1, y1, x2, y2, color);
+            pad->SetNumber(n);
+            pad->Draw();
+         }
+      }
+   } else {
+      // special case when xmargin < 0 or ymargin < 0
+      xl /= (1-xl+xr)*nx;
+      xr /= (1-xl+xr)*nx;
+      yb /= (1-yb+yt)*ny;
+      yt /= (1-yb+yt)*ny;
+      SetLeftMargin(xl);
+      SetRightMargin(xr);
+      SetBottomMargin(yb);
+      SetTopMargin(yt);
+      auto dx = (1 - xl - xr) / nx;
+      auto dy = (1 - yb - yt) / ny;
+      Int_t number = 0;
+      for (Int_t i=0;i<nx;i++) {
+         auto x1 = i * dx + xl;
+         auto x2 = x1 + dx;
+         if (i == 0) x1 = 0;
+         if (i == nx-1) x2 = 1-xr;
+         for (Int_t j=0;j<ny;j++) {
+            number = j*nx + i +1;
+            auto y2 = 1 - j * dy - yt;
+            auto y1 = y2 - dy;
+            if (j == 0)    y2 = 1-yt;
+            if (j == ny-1) y1 = 0;
+            name.Form("%s_%d", GetName(), number);
+            title.Form("%s_%d", GetTitle(), number);
+            auto pad = new TPad(name.Data(), title.Data(), x1, y1, x2, y2, color);
             pad->SetNumber(number);
             pad->SetBorderMode(0);
             if (i == 0)    pad->SetLeftMargin(xl*nx);
