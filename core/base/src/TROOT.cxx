@@ -394,7 +394,7 @@ namespace Internal {
       //
       // The order of loading for is:
       //    libCore.so
-      //    libRint.so
+      //    libROOTRint.so
       //    ... anything other library hard linked to the executable ...
       //    ... for example libEvent
       //    libCling.so

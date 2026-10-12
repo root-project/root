@@ -59,7 +59,7 @@ set cxxflags=!cxxflags:-FIsehmap.h=-FI"sehmap.h"!
 
 set rootglibs=libGui.lib
 set rootevelibs=libEve.lib libEG.lib libGeom.lib libGed.lib libRGL.lib
-set rootlibs=libCore.lib libImt.lib libRIO.lib libNet.lib libHist.lib libGraf.lib libGraf3d.lib libGpad.lib libROOTVecOps.lib libTree.lib libTreePlayer.lib libRint.lib libPostscript.lib libMatrix.lib libPhysics.lib libMathCore.lib libThread.lib
+set rootlibs=libCore.lib libImt.lib libRIO.lib libNet.lib libHist.lib libGraf.lib libGraf3d.lib libGpad.lib libROOTVecOps.lib libTree.lib libTreePlayer.lib libROOTRint.lib libPostscript.lib libMatrix.lib libPhysics.lib libMathCore.lib libThread.lib
 
 set out=
 set err=0

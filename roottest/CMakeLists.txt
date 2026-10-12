@@ -55,7 +55,7 @@ if(MSVC)
   if(CMAKE_GENERATOR MATCHES Ninja)
     set(ROOT_LIBRARIES Core RIO Net Hist Gpad Graf Tree Rint Matrix MathCore)
   else()
-    set(ROOT_LIBRARIES libCore libRIO libNet libHist libGpad libGraf libTree libRint libMatrix libMathCore)
+    set(ROOT_LIBRARIES libCore libRIO libNet libHist libGpad libGraf libTree libROOTRint libMatrix libMathCore)
   endif()
 else()
   # We can not use CMAKE_SHARED_LIBRARY_SUFFIX as on macos it uses the standard dylib rather than the .so

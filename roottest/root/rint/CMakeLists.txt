@@ -2,7 +2,7 @@ if (NOT MSVC)
 # ROOT-5843
 ROOTTEST_ADD_TEST(dotLibraries
                   COMMAND $<TARGET_FILE:root> -b -q -e ".libraries"
-                  PASSREGEX "libRint")
+                  PASSREGEX "libROOTRint")
 
 ROOTTEST_ADD_TEST(TabCom
                   COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py

@@ -2005,7 +2005,7 @@ bool TCling::RegisterPrebuiltModulePath(const std::string &FullPath,
 ////////////////////////////////////////////////////////////////////////////////
 /// List of dicts that have the PCM information already in the PCH.
 static const std::unordered_set<std::string> gIgnoredPCMNames = {"libCore",
-                                                                 "libRint",
+                                                                 "libROOTRint",
                                                                  "libThread",
                                                                  "libRIO",
                                                                  "libImt",
