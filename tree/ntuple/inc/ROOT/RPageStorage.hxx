@@ -40,6 +40,7 @@
 #include <shared_mutex>
 #include <unordered_map>
 #include <unordered_set>
+#include <variant>
 #include <vector>
 
 namespace ROOT {
@@ -616,6 +617,7 @@ public:
       std::shared_mutex *fLock = nullptr;
 
    public:
+      RSharedDescriptorGuard() = default;
       RSharedDescriptorGuard(const ROOT::RNTupleDescriptor &desc, std::shared_mutex &lock)
          : fDescriptor(&desc), fLock(&lock)
       {
@@ -623,35 +625,114 @@ public:
       }
       RSharedDescriptorGuard(const RSharedDescriptorGuard &) = delete;
       RSharedDescriptorGuard &operator=(const RSharedDescriptorGuard &) = delete;
-      RSharedDescriptorGuard(RSharedDescriptorGuard &&) = default;
-      RSharedDescriptorGuard &operator=(RSharedDescriptorGuard &&) = default;
-      ~RSharedDescriptorGuard() { fLock->unlock_shared(); }
+      RSharedDescriptorGuard(RSharedDescriptorGuard &&other)
+      {
+         std::swap(fDescriptor, other.fDescriptor);
+         std::swap(fLock, other.fLock);
+      }
+      RSharedDescriptorGuard &operator=(RSharedDescriptorGuard &&other)
+      {
+         if (this == &other)
+            return *this;
+         R__ASSERT(!fLock || !other.fLock);
+         std::swap(fDescriptor, other.fDescriptor);
+         std::swap(fLock, other.fLock);
+         return *this;
+      }
+      ~RSharedDescriptorGuard()
+      {
+         if (IsValid())
+            Release();
+      }
       const ROOT::RNTupleDescriptor *operator->() const { return fDescriptor; }
-      const ROOT::RNTupleDescriptor &GetRef() const { return *fDescriptor; }
+      const ROOT::RNTupleDescriptor &GetConstRef() const { return *fDescriptor; }
+      bool IsValid() const { return fLock; }
+      void Release()
+      {
+         fLock->unlock_shared();
+         fLock = nullptr;
+         fDescriptor = nullptr;
+      }
    };
 
    /// An RAII wrapper used for the writable access to `RPageSource::fDescriptor`. See `GetSharedDescriptorGuard()`.
    class RExclDescriptorGuard {
-      ROOT::RNTupleDescriptor &fDescriptor;
-      std::shared_mutex &fLock;
+      ROOT::RNTupleDescriptor *fDescriptor = nullptr;
+      std::shared_mutex *fLock = nullptr;
 
    public:
-      RExclDescriptorGuard(ROOT::RNTupleDescriptor &desc, std::shared_mutex &lock) : fDescriptor(desc), fLock(lock)
+      RExclDescriptorGuard() = default;
+      RExclDescriptorGuard(ROOT::RNTupleDescriptor &desc, std::shared_mutex &lock) : fDescriptor(&desc), fLock(&lock)
       {
-         fLock.lock();
+         fLock->lock();
       }
       RExclDescriptorGuard(const RExclDescriptorGuard &) = delete;
       RExclDescriptorGuard &operator=(const RExclDescriptorGuard &) = delete;
-      RExclDescriptorGuard(RExclDescriptorGuard &&) = delete;
-      RExclDescriptorGuard &operator=(RExclDescriptorGuard &&) = delete;
+      RExclDescriptorGuard(RExclDescriptorGuard &&other)
+      {
+         std::swap(fDescriptor, other.fDescriptor);
+         std::swap(fLock, other.fLock);
+      }
+      RExclDescriptorGuard &operator=(RExclDescriptorGuard &&other)
+      {
+         if (this == &other)
+            return *this;
+         R__ASSERT(!fLock || !other.fLock);
+         std::swap(fDescriptor, other.fDescriptor);
+         std::swap(fLock, other.fLock);
+         return *this;
+      }
       ~RExclDescriptorGuard()
       {
-         fDescriptor.IncGeneration();
-         fLock.unlock();
+         if (IsValid())
+            Release();
       }
-      ROOT::RNTupleDescriptor &operator*() const { return fDescriptor; }
-      ROOT::RNTupleDescriptor *operator->() const { return &fDescriptor; }
-      void MoveIn(ROOT::RNTupleDescriptor desc) { fDescriptor = std::move(desc); }
+      ROOT::RNTupleDescriptor &operator*() const { return *fDescriptor; }
+      ROOT::RNTupleDescriptor *operator->() const { return fDescriptor; }
+      void MoveIn(ROOT::RNTupleDescriptor desc) { *fDescriptor = std::move(desc); }
+      bool IsValid() const { return fLock; }
+      void Release()
+      {
+         fDescriptor->IncGeneration();
+         fLock->unlock();
+         fLock = nullptr;
+         fDescriptor = nullptr;
+      }
+   };
+
+   /// Either a shared or an exclusive lock guard
+   class RAnyDescriptorGuard {
+   private:
+      std::variant<RSharedDescriptorGuard, RExclDescriptorGuard> fAnyGuard;
+
+   public:
+      RAnyDescriptorGuard(RSharedDescriptorGuard sharedGuard) : fAnyGuard(std::move(sharedGuard)) {}
+      RAnyDescriptorGuard(RExclDescriptorGuard exclGuard) : fAnyGuard(std::move(exclGuard)) {}
+      RAnyDescriptorGuard(const RAnyDescriptorGuard &) = delete;
+      RAnyDescriptorGuard &operator=(const RAnyDescriptorGuard &) = delete;
+      RAnyDescriptorGuard(RAnyDescriptorGuard &&) = default;
+      RAnyDescriptorGuard &operator=(RAnyDescriptorGuard &&) = default;
+      ~RAnyDescriptorGuard() = default;
+
+      const ROOT::RNTupleDescriptor &GetConstRef() const
+      {
+         return (fAnyGuard.index() == 0) ? std::get<0>(fAnyGuard).GetConstRef() : std::get<1>(fAnyGuard).operator*();
+      }
+      const ROOT::RNTupleDescriptor *operator->() const
+      {
+         return (fAnyGuard.index() == 0) ? std::get<0>(fAnyGuard).operator->() : std::get<1>(fAnyGuard).operator->();
+      }
+      bool IsValid() const
+      {
+         return (fAnyGuard.index() == 0) ? std::get<0>(fAnyGuard).IsValid() : std::get<1>(fAnyGuard).IsValid();
+      }
+      void Release()
+      {
+         if (fAnyGuard.index() == 0)
+            std::get<0>(fAnyGuard).Release();
+         else
+            std::get<1>(fAnyGuard).Release();
+      }
    };
 
 private:
@@ -693,6 +774,17 @@ private:
    bool fIsAttached = false;                 ///< Set to true once `Attach()` is called
    bool fHasStreamerInfosRegistered = false; ///< Set to true when RegisterStreamerInfos() is called.
 
+   /// The interpretation of page lists, set in Attach()
+   Internal::RNTupleSerializer::EDescriptorDeserializeMode fDeserializationMode =
+      Internal::RNTupleSerializer::EDescriptorDeserializeMode::kRaw;
+
+   /// This vector is aligned with the cluster groups in the descriptor. It stores the cumulative number of clusters
+   /// in the cluster groups. Given a cluster ID, we can thus quickly determine the cluster group that the cluster
+   /// comes from. While descriptor IDs in a descriptor in general are arbitrary, for the descriptor in the page source,
+   /// that was created from a serialized on-disk representation, we know that cluster and cluster group IDs are
+   /// issued consecutively.
+   std::vector<NTupleSize_t> fCumulativeClusterCounts;
+
    /// The active columns are implicitly defined by the model fields or views
    RActivePhysicalColumns fActivePhysicalColumns;
 
@@ -716,11 +808,21 @@ private:
    /// Pages of pinned clusters won't be evicted from the page pool.
    std::unordered_set<ROOT::DescriptorId_t> fPinnedClusters;
 
+   /// Ensures that fDescriptor has cluster details loaded for the given cluster group ID. This method is expected
+   /// to be called while holding the lock passed by descGuard. The returned descriptor guard is either the
+   /// passed one or a new, exclusive guard if cluster details needed to be loaded.
+   RAnyDescriptorGuard EnsureClusterDetails(DescriptorId_t cgId, RAnyDescriptorGuard descGuard);
+   /// Uses binary search in fCumulativeClusterCounts to determine the cluster group that the cluster ID belongs in.
+   DescriptorId_t FindClusterGroupId(DescriptorId_t clusterId) const;
+
    /// Does nothing if fLastUsedCluster == clusterId. Otherwise, updated fLastUsedCluster
    /// and evict unused paged from the page pool of all previous clusters.
    /// Must not be called when the descriptor guard is taken.
    void UpdateLastUsedCluster(ROOT::DescriptorId_t clusterId);
 
+   // Populate the cluster details of the given cluster group. Must hold an exclusive descriptor lock when calling.
+   // No-op if the cluster details are already present.
+   void LoadPageList(DescriptorId_t clusterGroupId, const RExclDescriptorGuard &exclGuard);
    // Common treatment of zero pages in LoadPageFromSummary()
    ROOT::Internal::RPageRef LoadZeroPage(ColumnHandle_t columnHandle, const RPageSummary &pageSummary);
    // Once the page is found to be missing in the page cache and all information about the page is collected,
@@ -856,18 +958,20 @@ public:
    /// Open the physical storage container and deserialize header and footer
    void Attach(ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode mode =
                   ROOT::Internal::RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
+   /// Load all remaining cluster details
+   void LoadAllPageLists();
 
    ROOT::NTupleSize_t GetNEntries();
    ROOT::NTupleSize_t GetNElements(ROOT::DescriptorId_t physicalColumnId);
    /// Returns a shared descriptor guard to ensure that the returned cluster id is useable, i.e. that the
    /// corresponding cluster was not meanwhile evicted from the set of active clusters.
-   RSharedDescriptorGuard
+   RAnyDescriptorGuard
    FindClusterId(ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t index, ROOT::DescriptorId_t &cid);
    /// An overload of FindClusterId that searches using a certain column element index.
-   RSharedDescriptorGuard FindClusterId(ROOT::NTupleSize_t entryIdx, ROOT::DescriptorId_t &cid);
+   RAnyDescriptorGuard FindClusterId(ROOT::NTupleSize_t entryIdx, ROOT::DescriptorId_t &cid);
    /// Uses FindClusterId to search for the cluster with the entry index following the last entry index of the
    /// given cluster.
-   RSharedDescriptorGuard FindNextClusterId(ROOT::DescriptorId_t clusterId, ROOT::DescriptorId_t &nextId);
+   RAnyDescriptorGuard FindNextClusterId(ROOT::DescriptorId_t clusterId, ROOT::DescriptorId_t &nextId);
 
    /// Promise to only read from the given entry range. If set, prevents the cluster pool from reading-ahead beyond
    /// the given range. The range needs to be within `[0, GetNEntries())`.

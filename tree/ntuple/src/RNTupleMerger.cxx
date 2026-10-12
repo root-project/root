@@ -194,9 +194,9 @@ try {
          // Get the compression of this RNTuple and use it as the output compression.
          // We currently assume all column ranges have the same compression, so we just peek at the first one.
          source->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kRaw);
-         auto descGuard = source->GetSharedDescriptorGuard();
-         auto clusterGroupIterable = descGuard->GetClusterGroupIterable();
-         if (clusterGroupIterable.empty()) {
+         DescriptorId_t firstClusterId = kInvalidDescriptorId;
+         auto descGuard = source->FindClusterId(0, firstClusterId);
+         if (firstClusterId == kInvalidDescriptorId) {
             R__LOG_ERROR(NTupleMergeLog())
                << "Asked to use the first source's compression as the output compression, but the "
                   "first source (file '"
@@ -205,9 +205,7 @@ try {
                   "determined.";
             return -1;
          }
-         const auto firstClusterGroup = clusterGroupIterable.begin();
-         R__ASSERT(firstClusterGroup->HasClusterDetails());
-         const auto &firstCluster = descGuard->GetClusterDescriptor(firstClusterGroup->GetClusterIds()[0]);
+         const auto &firstCluster = descGuard->GetClusterDescriptor(firstClusterId);
          auto colRangeIter = firstCluster.GetColumnRangeIterable();
          auto firstColRange = colRangeIter.begin();
          if (firstColRange == colRangeIter.end()) {
@@ -234,8 +232,9 @@ try {
    if (outNTuple) {
       auto outSource = RPageSourceFile::CreateFromAnchor(*outNTuple);
       outSource->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
+      outSource->LoadAllPageLists();
       auto desc = outSource->GetSharedDescriptorGuard();
-      model = destination->InitFromDescriptor(desc.GetRef(), true /* copyClusters */);
+      model = destination->InitFromDescriptor(desc.GetConstRef(), true /* copyClusters */);
    }
 
    // Interface conversion
@@ -1389,8 +1388,9 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
    // Merge main loop
    for (RPageSource *source : sources) {
       source->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
+      source->LoadAllPageLists();
       auto srcDescriptor = source->GetSharedDescriptorGuard();
-      mergeData.fSrcDescriptor = &srcDescriptor.GetRef();
+      mergeData.fSrcDescriptor = &srcDescriptor.GetConstRef();
 
       if (mergeData.fSrcDescriptor->GetVersion() > ROOT::RNTuple::GetCurrentVersion()) {
          if (mergeOpts.fVersionBehavior == ENTupleMergeVersionBehavior::kWarnOnHigherVersion) {
@@ -1407,13 +1407,13 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
 
       // Create sink and model from the input descriptor if not initialized
       if (!fModel) {
-         fModel = fDestination->InitFromDescriptor(srcDescriptor.GetRef(), false /* copyClusters */);
+         fModel = fDestination->InitFromDescriptor(srcDescriptor.GetConstRef(), false /* copyClusters */);
       }
 
       for (const auto &extraTypeInfoDesc : srcDescriptor->GetExtraTypeInfoIterable())
          fDestination->UpdateExtraTypeInfo(extraTypeInfoDesc);
 
-      auto descCmpRes = CompareDescriptorStructure(mergeData.fDstDescriptor, srcDescriptor.GetRef());
+      auto descCmpRes = CompareDescriptorStructure(mergeData.fDstDescriptor, srcDescriptor.GetConstRef());
       if (!descCmpRes) {
          SKIP_OR_ABORT(std::string("Source RNTuple has an incompatible schema with the destination:\n") +
                        descCmpRes.GetError()->GetReport())
@@ -1493,7 +1493,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       }
 
       // handle extra dst fields & common fields
-      auto columnInfos = GatherColumnInfos(descCmp, srcDescriptor.GetRef(), mergeData);
+      auto columnInfos = GatherColumnInfos(descCmp, srcDescriptor.GetConstRef(), mergeData);
       auto res = MergeSourceClusters(*source, columnInfos.fCommonColumns, columnInfos.fExtraDstColumns, mergeData);
       if (!res)
          return R__FORWARD_ERROR(res);

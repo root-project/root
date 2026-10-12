@@ -34,12 +34,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <functional>
 #include <iterator>
 #include <limits>
-#include <utility>
-
-#include <functional>
 #include <mutex>
+#include <utility>
 
 using ROOT::Experimental::Detail::RNTupleAtomicCounter;
 using ROOT::Experimental::Detail::RNTupleAtomicTimer;
@@ -491,24 +490,35 @@ ROOT::RNTupleDescriptor ROOT::Internal::RPageSourceFile::AttachImpl()
    return fDescriptorBuilder.MoveDescriptor();
 }
 
+void ROOT::Internal::RPageSourceFile::UpdateSkipCounter(std::uint64_t offset)
+{
+   // Track seek distance (excluding file structure reads)
+   if (fLastOffset == 0)
+      return;
+
+   assert(fFileCounters);
+   const auto distance = static_cast<std::uint64_t>(
+      std::abs(static_cast<std::int64_t>(offset) - static_cast<std::int64_t>(fLastOffset)));
+   fFileCounters->fSzSkip.Add(distance);
+}
+
 void ROOT::Internal::RPageSourceFile::LoadPageListImpl(const RNTupleLocator &locator, unsigned char *buffer)
 {
-   fReader.ReadBuffer(buffer, locator.GetNBytesOnStorage(), locator.GetPosition<std::uint64_t>());
+   RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
+   std::lock_guard lockGuard(fReaderLock);
+   const auto offset = locator.GetPosition<std::uint64_t>();
+   UpdateSkipCounter(offset);
+   fReader.ReadBuffer(buffer, locator.GetNBytesOnStorage(), offset);
+   fLastOffset = offset + locator.GetNBytesOnStorage();
 }
 
 void ROOT::Internal::RPageSourceFile::LoadSealedPageImpl(const RNTupleLocator &locator, RSealedPage &sealedPage)
 {
    RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
+   std::lock_guard lockGuard(fReaderLock);
    const auto offset = locator.GetPosition<std::uint64_t>();
-   // Track seek distance (excluding file structure reads)
-   if (fLastOffset != 0) {
-      R__ASSERT(fFileCounters);
-      const auto distance = static_cast<std::uint64_t>(
-         std::abs(static_cast<std::int64_t>(offset) - static_cast<std::int64_t>(fLastOffset)));
-      fFileCounters->fSzSkip.Add(distance);
-   }
-   fReader.ReadBuffer(const_cast<void *>(sealedPage.GetBuffer()), sealedPage.GetBufferSize(),
-                      locator.GetPosition<std::uint64_t>());
+   UpdateSkipCounter(offset);
+   fReader.ReadBuffer(const_cast<void *>(sealedPage.GetBuffer()), sealedPage.GetBufferSize(), offset);
    fLastOffset = offset + sealedPage.GetBufferSize();
 }
 
@@ -683,15 +693,12 @@ ROOT::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterK
          }
       }
 
+      std::lock_guard lockGuard(fReaderLock);
+
       // Track seek distance for each read request (excluding file structure reads)
-      R__ASSERT(fFileCounters);
       for (std::size_t i = 0; i < nBatch; ++i) {
          const auto offset = readRequests[iReq + i].fOffset;
-         if (fLastOffset != 0) {
-            const auto distance = static_cast<std::uint64_t>(std::abs(
-               static_cast<std::int64_t>(offset) - static_cast<std::int64_t>(fLastOffset)));
-            fFileCounters->fSzSkip.Add(distance);
-         }
+         UpdateSkipCounter(offset);
          fLastOffset = offset + readRequests[iReq + i].fSize;
       }
 
