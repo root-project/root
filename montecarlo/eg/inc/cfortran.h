@@ -6,7 +6,7 @@
 #define __CFORTRAN_LOADED
 
 #if !defined(ROOT_TGenerator_cxx) && !defined(G__DICTIONARY)
-#warning "This header is an implementation detail, is deprecated and will be removed in ROOT 6.44. Use instead the `cfortran.h` header from `cfitsio` library"
+#warning "This header is an implementation detail, is deprecated and will be moved to ROOT/cfortran.h in ROOT 6.44, and may be removed later on from public inteface. Use instead the `cfortran.h` header from `cfitsio` library"
 #endif
 
 /*
