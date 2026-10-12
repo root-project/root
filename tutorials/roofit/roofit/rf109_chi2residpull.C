@@ -65,10 +65,10 @@ void rf109_chi2residpull()
 
    // Construct a histogram with the residuals of the data w.r.t. the model.
    // The Binning() argument selects how the unbinned dataset is binned.
-   std::unique_ptr<RooHist> hresid{makeResidHist(gauss, *data, Binning(40))};
+   std::unique_ptr<RooHist> hresid{RooFit::makeResidHist(gauss, *data, Binning(40))};
 
    // Construct a histogram with the pulls of the data w.r.t the model
-   std::unique_ptr<RooHist> hpull{makePullHist(gauss, *data, Binning(40))};
+   std::unique_ptr<RooHist> hpull{RooFit::makePullHist(gauss, *data, Binning(40))};
 
    // Create a new frame to draw the residual distribution and add the distribution to the frame.
    // Note that addPlotable() transfers ownership of the histogram to the frame.

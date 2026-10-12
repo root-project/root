@@ -6,8 +6,6 @@
 #include <RooDataSet.h>
 #include <RooGenericPdf.h>
 #include <RooGlobalFunc.h>
-#include <algorithm>
-#include <cmath>
 #include <RooHelpers.h>
 #include <RooHist.h>
 #include <RooHistPdf.h>
@@ -21,8 +19,12 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <cmath>
 #include <memory>
 #include <stdexcept>
+#include <string>
+#include <utility>
 
 /// Check that the values returned by `RooHist::getFitRangeNEvt(double xmin,
 /// double xmax)` are correct also for non-uniform binning. Covers ROOT-9649.
@@ -146,16 +148,6 @@ double gaussIntegral(double lo, double hi)
    return phi((hi - kGaussMean) / kGaussSigma) - phi((lo - kGaussMean) / kGaussSigma);
 }
 
-/// The Gaussian as a model plus observable; members are in construction order.
-struct GaussModel {
-   RooRealVar x{"x", "x", kGaussX0, kGaussX1};
-   RooRealVar mean{"mean", "mean", kGaussMean};
-   RooRealVar sigma{"sigma", "sigma", kGaussSigma};
-   RooGenericPdf gauss{"gauss", "gauss", "exp(-0.5 * pow((x - mean) / sigma, 2))", RooArgSet{x, mean, sigma}};
-
-   GaussModel() { x.setBins(kNBins); }
-};
-
 /// Fill the histogram with the exact Gaussian bin contents on the given
 /// ranges, normalized to nEvents on those ranges. Bins outside get the
 /// (constant) otherContent fill, which must not influence the in-range
@@ -178,10 +170,42 @@ void fillExactGauss(TH1D &hist, double nEvents, std::vector<std::pair<double, do
    }
 }
 
+/// The exact Gaussian as a RooDataHist with kNBins bins, normalized to unity.
+RooDataHist makeExactGaussDataHist(RooRealVar &x)
+{
+   TH1D hist("modelHist", "modelHist", kNBins, kGaussX0, kGaussX1);
+   fillExactGauss(hist, 1., {{kGaussX0, kGaussX1}});
+   return RooDataHist{"modelDataHist", "modelDataHist", RooArgSet(x), &hist};
+}
+
+/// The Gaussian as a model plus observable; members are in construction order.
+/// The model exists in two variants: a RooHistPdf with the exact per-bin
+/// Gaussian integrals as bin contents, whose integrals over bins and ranges
+/// are analytic (partial sums of the histogram), and a RooGenericPdf that is
+/// integrated numerically.
+struct GaussModel {
+   RooRealVar x{"x", "x", kGaussX0, kGaussX1};
+   RooRealVar mean{"mean", "mean", kGaussMean};
+   RooRealVar sigma{"sigma", "sigma", kGaussSigma};
+   RooDataHist modelDataHist{makeExactGaussDataHist(x)};
+   RooHistPdf gaussAnalytic{"gaussAnalytic", "gaussAnalytic", RooArgSet(x), modelDataHist};
+   RooGenericPdf gaussNumeric{"gaussNumeric", "gaussNumeric", "exp(-0.5 * pow((x - mean) / sigma, 2))",
+                              RooArgSet{x, mean, sigma}};
+
+   GaussModel() { x.setBins(kNBins); }
+};
+
+/// Tolerance (relative to the bin content) for the residuals of the exact
+/// model. With the analytic integrals of the RooHistPdf, the comparison is
+/// limited only by floating-point precision.
+constexpr double kTolAnalytic = 1e-10;
+/// For the numerically integrated RooGenericPdf, the relative precision of
+/// the per-bin integrals is limited to ~1e-3 in the far tails.
+constexpr double kTolNumeric = 1e-3;
+
 /// Check that all residuals in the histogram are consistent with zero, given
 /// the exact per-bin contents of `hist`. The tolerance is relative to the bin
-/// content, with an absolute floor to tolerate the ~1e-3 precision of the
-/// numeric integration in the far tails.
+/// content, with an absolute floor for the nearly empty bins in the far tails.
 void expectExactResiduals(RooHist const &resid, TH1D const &hist, double tolerance)
 {
    for (int i = 0; i < resid.GetN(); ++i) {
@@ -212,25 +236,37 @@ TEST(RooHist, MakeResidAndPullHist)
    fillExactGauss(hist, 1e6, {{kGaussX0, kGaussX1}});
    RooDataHist binData("binData", "binData", RooArgSet(model.x), &hist);
 
-   // The residuals of the exact model must be (numerically) zero
-   std::unique_ptr<RooHist> resid{makeResidHist(model.gauss, binData)};
-   std::unique_ptr<RooHist> pull{makePullHist(model.gauss, binData)};
-   ASSERT_EQ(resid->GetN(), kNBins);
-   ASSERT_EQ(pull->GetN(), kNBins);
-   expectExactResiduals(*resid, hist, 1e-3);
-   for (int i = 0; i < pull->GetN(); ++i) {
-      EXPECT_LT(std::abs(pull->GetPointY(i)), 1e-3) << "bin " << i;
+   // The residuals of the exact model must be zero up to the precision of
+   // the model integration: floating-point precision for the analytic
+   // integrals of the RooHistPdf, and the numeric integration precision for
+   // the RooGenericPdf.
+   for (auto const &[pdf, tol] : {std::pair<RooAbsPdf *, double>{&model.gaussAnalytic, kTolAnalytic},
+                                  std::pair<RooAbsPdf *, double>{&model.gaussNumeric, kTolNumeric}}) {
+      std::unique_ptr<RooHist> resid{makeResidHist(*pdf, binData)};
+      std::unique_ptr<RooHist> pull{makePullHist(*pdf, binData)};
+      ASSERT_EQ(resid->GetN(), kNBins);
+      ASSERT_EQ(pull->GetN(), kNBins);
+      expectExactResiduals(*resid, hist, tol);
+      for (int i = 0; i < pull->GetN(); ++i) {
+         EXPECT_LT(std::abs(pull->GetPointY(i)), tol) << pdf->GetName() << " bin " << i;
+      }
    }
 
    // The Name() and Normalization() command args
-   std::unique_ptr<RooHist> scaled{makeResidHist(model.gauss, binData, Name("scaled"), Normalization(0.5))};
+   std::unique_ptr<RooHist> scaled{makeResidHist(model.gaussAnalytic, binData, Name("scaled"), Normalization(0.5))};
    ASSERT_EQ(scaled->GetN(), kNBins);
    EXPECT_STREQ(scaled->GetName(), "scaled");
    for (int i = 0; i < scaled->GetN(); ++i) {
       const double content = hist.GetBinContent(i + 1);
       if (content == 0.)
          continue;
-      EXPECT_NEAR(scaled->GetPointY(i), 0.5 * content, 1e-3 * std::max(content, 1e-6)) << "bin " << i;
+      EXPECT_NEAR(scaled->GetPointY(i), 0.5 * content, kTolAnalytic * std::max(content, 1e-6)) << "bin " << i;
+   }
+
+   // The scratch range used for the per-bin integration must not be left on
+   // the observable
+   for (auto const &name : model.x.getBinningNames()) {
+      EXPECT_EQ(name.find("_binInt_"), std::string::npos) << "leftover range " << name;
    }
 }
 
@@ -251,20 +287,42 @@ TEST(RooHist, MakeResidAndPullHistUnbinned)
    std::unique_ptr<RooDataSet> data{gauss.generate(x, 10000)};
 
    // The Binning() argument overrides the default binning of the observable
-   std::unique_ptr<RooHist> resid{makeResidHist(gauss, *data, Binning(40))};
-   std::unique_ptr<RooHist> pull{makePullHist(gauss, *data, Binning(40))};
-   EXPECT_EQ(resid->GetN(), 40);
-   EXPECT_EQ(pull->GetN(), 40);
+   const int nBins = 40;
+   std::unique_ptr<RooHist> resid{makeResidHist(gauss, *data, Binning(nBins))};
+   std::unique_ptr<RooHist> pull{makePullHist(gauss, *data, Binning(nBins))};
+   EXPECT_EQ(resid->GetN(), nBins);
+   EXPECT_EQ(pull->GetN(), nBins);
 
-   // The correct model should give small pulls
+   // The pulls must be the residuals divided by the data error of the
+   // corresponding residual point
+   for (int i = 0; i < pull->GetN(); ++i) {
+      EXPECT_DOUBLE_EQ(pull->GetPointX(i), resid->GetPointX(i));
+      const double r = resid->GetPointY(i);
+      const double err = r > 0 ? resid->GetErrorYlow(i) : resid->GetErrorYhigh(i);
+      if (err == 0.) {
+         EXPECT_DOUBLE_EQ(pull->GetPointY(i), 0.) << "point " << i;
+         continue;
+      }
+      EXPECT_NEAR(pull->GetPointY(i), r / err, 1e-9) << "point " << i;
+   }
+
+   // The pulls of the true model must be standard-normal like: no outliers
+   // (the seed is fixed), and a chi2/ndf around one. The chi2 is a strong
+   // check of the per-bin expectations, since with a wrong normalization or
+   // bin-center evaluation it would be far off.
    int nChecked = 0;
+   double chi2 = 0.;
    for (int i = 0; i < pull->GetN(); ++i) {
       if (pull->GetErrorYhigh(i) == 0.)
          continue;
-      EXPECT_LT(std::abs(pull->GetPointY(i)), 5.) << "point " << i;
+      const double p = pull->GetPointY(i);
+      EXPECT_LT(std::abs(p), 3.5) << "point " << i;
+      chi2 += p * p;
       ++nChecked;
    }
    EXPECT_GT(nChecked, 30);
+   EXPECT_GT(chi2 / nChecked, 0.5);
+   EXPECT_LT(chi2 / nChecked, 1.5);
 }
 
 /// The Range() argument of RooFit::makeResidHist()/makePullHist(): only bins
@@ -289,16 +347,19 @@ TEST(RooHist, MakeResidAndPullHistRange)
    fillExactGauss(hist, 1e6, {{rlo, rhi}}, 2.e6);
    RooDataHist binData("binData", "binData", RooArgSet(model.x), &hist);
 
-   // With coordinate range. RooGenericPdf is integrated numerically, whose
-   // precision is limited to ~1e-3 relative in the far tails, hence the 5e-3
-   // tolerance.
-   std::unique_ptr<RooHist> resid{makeResidHist(model.gauss, binData, Range(rlo, rhi))};
+   // With coordinate range
+   std::unique_ptr<RooHist> resid{makeResidHist(model.gaussAnalytic, binData, Range(rlo, rhi))};
    EXPECT_EQ(resid->GetN(), 10);
-   expectExactResiduals(*resid, hist, 5e-3);
+   expectExactResiduals(*resid, hist, kTolAnalytic);
+
+   // Same with the numerically integrated model
+   std::unique_ptr<RooHist> residNumeric{makeResidHist(model.gaussNumeric, binData, Range(rlo, rhi))};
+   EXPECT_EQ(residNumeric->GetN(), 10);
+   expectExactResiduals(*residNumeric, hist, kTolNumeric);
 
    // With named range
    model.x.setRange("central", rlo, rhi);
-   std::unique_ptr<RooHist> resid2{makeResidHist(model.gauss, binData, Range("central"))};
+   std::unique_ptr<RooHist> resid2{makeResidHist(model.gaussAnalytic, binData, Range("central"))};
    ASSERT_EQ(resid2->GetN(), resid->GetN());
    for (int i = 0; i < resid2->GetN(); ++i) {
       EXPECT_DOUBLE_EQ(resid2->GetPointX(i), resid->GetPointX(i));
@@ -306,11 +367,11 @@ TEST(RooHist, MakeResidAndPullHistRange)
    }
 
    // An unknown named range must throw
-   EXPECT_THROW(makeResidHist(model.gauss, binData, Range("unknown")), std::invalid_argument);
+   EXPECT_THROW(makeResidHist(model.gaussAnalytic, binData, Range("unknown")), std::invalid_argument);
 }
 
-/// The Range("name") argument of RooFit::makeResidHist() can be passed
-/// multiple times for a union of named ranges (sidebands).
+/// The Range() argument of RooFit::makeResidHist() accepts multiple
+/// comma-separated range names for a union of named ranges (sidebands).
 TEST(RooHist, MakeResidAndPullHistMultiRange)
 {
    using namespace RooFit;
@@ -327,9 +388,9 @@ TEST(RooHist, MakeResidAndPullHistMultiRange)
    fillExactGauss(hist, 1e6, {{115.2, 116.8}, {123.2, 124.8}}, 3.e6);
    RooDataHist binData("binData", "binData", RooArgSet(model.x), &hist);
 
-   std::unique_ptr<RooHist> resid{makeResidHist(model.gauss, binData, Range("sb1"), Range("sb2"))};
+   std::unique_ptr<RooHist> resid{makeResidHist(model.gaussAnalytic, binData, Range("sb1,sb2"))};
    ASSERT_EQ(resid->GetN(), 8);
-   expectExactResiduals(*resid, hist, 5e-3);
+   expectExactResiduals(*resid, hist, kTolAnalytic);
 }
 
 /// The documented failure modes of RooFit::makeResidHist() and

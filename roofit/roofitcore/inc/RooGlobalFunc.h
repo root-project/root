@@ -490,17 +490,17 @@ RooConstVar& RooConst(double val) ;
 /// Creates a RooHist with the per-bin residuals `data` - `fitModel`.
 ///
 /// For each bin, the model expectation is the model integrated exactly over
-/// the bin (with RooAbsReal::createIntegral()), normalized to the weight of
+/// the bin (with RooAbsReal::createIntegral()), normalized to
 /// the data inside the normalization range. Unbinned input data is binned
 /// internally. The supported RooCmdArgs are:
 ///   - `Binning(binning)` / `Binning(nbins)` / `Binning(nbins, xlo, xhi)` :
 ///     the binning used to bin unbinned input data (default: the current
 ///     binning of the observable)
-///   - `Range(lo, hi)` / `Range("name")` : the range that the model
-///     expectation is normalized in. Only bins inside this range get points
-///     in the result. Range("name") can be passed multiple times for a union
-///     of named ranges (sidebands). Use it for sideband fits or blinded data,
-///     so that the model is normalized in the same range as the fitted data.
+///   - `Range(lo, hi)` / `Range("name")` : compute residuals only in this range.
+///     The model expectation is normalized in this range. Multiple
+///     comma-separated range names can be specified for a union of named
+///     ranges (sidebands). Use it for sideband fits or blinded data, so that
+///     the model is normalized in the same range as the fitted data.
 ///   - `Normalization(double)` : additional scale factor for the expectation
 ///     (default 1.0). The scale types of Normalization(scale, type) are not
 ///     supported.
@@ -519,9 +519,6 @@ RooConstVar& RooConst(double val) ;
 /// (e.g. a conditional pdf), they are evaluated at their current values.
 /// There is no exact equivalent for a projection with ProjWData().
 ///
-/// \note For internal use of RooAbsReal::createIntegral(), a scratch named
-/// range is left on the model's observable after the call.
-///
 /// Only 1-dimensional data is supported, otherwise std::invalid_argument is
 /// thrown; the same exception is thrown for empty input data, unknown named
 /// ranges or binnings, or when the model has no support in the normalization
@@ -539,17 +536,13 @@ RooConstVar& RooConst(double val) ;
 /// auto pulls = RooFit::makePullHist(background, data,
 ///                                   RooFit::Normalization(bkgFraction.getVal()));
 /// ~~~
-std::unique_ptr<RooHist>
-makeResidHist(RooAbsReal &fitModel, RooAbsData const &data, RooCmdArg const &arg1 = {}, RooCmdArg const &arg2 = {},
-              RooCmdArg const &arg3 = {}, RooCmdArg const &arg4 = {}, RooCmdArg const &arg5 = {},
-              RooCmdArg const &arg6 = {}, RooCmdArg const &arg7 = {}, RooCmdArg const &arg8 = {});
+template <typename... CmdArgs_t>
+std::unique_ptr<RooHist> makeResidHist(RooAbsReal &fitModel, RooAbsData const &data, CmdArgs_t const &...cmdArgs);
 
 /// Like makeResidHist(), but the residuals are divided by the corresponding
 /// data uncertainty, creating a pull distribution.
-std::unique_ptr<RooHist>
-makePullHist(RooAbsReal &fitModel, RooAbsData const &data, RooCmdArg const &arg1 = {}, RooCmdArg const &arg2 = {},
-             RooCmdArg const &arg3 = {}, RooCmdArg const &arg4 = {}, RooCmdArg const &arg5 = {},
-             RooCmdArg const &arg6 = {}, RooCmdArg const &arg7 = {}, RooCmdArg const &arg8 = {});
+template <typename... CmdArgs_t>
+std::unique_ptr<RooHist> makePullHist(RooAbsReal &fitModel, RooAbsData const &data, CmdArgs_t const &...cmdArgs);
 
 /**
  * @}
@@ -607,7 +600,23 @@ RooCmdArg ImportFlatMap(FlatMap<std::string, TH1 *> const &args);
 RooCmdArg ImportFlatMap(FlatMap<std::string, RooDataSet *> const &args);
 RooCmdArg LinkFlatMap(FlatMap<std::string, RooAbsData *> const &args);
 
+// Implementation of RooFit::makeResidHist() and RooFit::makePullHist().
+std::unique_ptr<RooHist>
+makeResidOrPullHist(RooAbsReal &fitModel, RooAbsData const &data, bool normalize, RooLinkedList const &cmdList);
+
 } // namespace Detail
+
+template <typename... CmdArgs_t>
+std::unique_ptr<RooHist> makeResidHist(RooAbsReal &fitModel, RooAbsData const &data, CmdArgs_t const &...cmdArgs)
+{
+   return Detail::makeResidOrPullHist(fitModel, data, false, *Detail::createCmdList(&cmdArgs...));
+}
+
+template <typename... CmdArgs_t>
+std::unique_ptr<RooHist> makePullHist(RooAbsReal &fitModel, RooAbsData const &data, CmdArgs_t const &...cmdArgs)
+{
+   return Detail::makeResidOrPullHist(fitModel, data, true, *Detail::createCmdList(&cmdArgs...));
+}
 
 } // namespace RooFit
 

@@ -42,11 +42,9 @@
 #include <TInterpreter.h>
 
 #include <algorithm>
-#include <atomic>
 #include <limits>
 #include <sstream>
 #include <stdexcept>
-#include <tuple>
 
 namespace RooFit {
 
@@ -1164,13 +1162,11 @@ RooConstVar &RooConst(double val)
    return RooRealConstant::value(val);
 }
 
-namespace {
+namespace Detail {
 
 /// Implementation of RooFit::makeResidHist() and RooFit::makePullHist().
-std::unique_ptr<RooHist> makeResidOrPullHist(RooAbsReal &fitModel, RooAbsData const &data, bool normalize,
-                                             RooCmdArg const &arg1, RooCmdArg const &arg2, RooCmdArg const &arg3,
-                                             RooCmdArg const &arg4, RooCmdArg const &arg5, RooCmdArg const &arg6,
-                                             RooCmdArg const &arg7, RooCmdArg const &arg8)
+std::unique_ptr<RooHist>
+makeResidOrPullHist(RooAbsReal &fitModel, RooAbsData const &data, bool normalize, RooLinkedList const &cmdList)
 {
    const char *funcName = normalize ? "RooFit::makePullHist" : "RooFit::makeResidHist";
 
@@ -1190,7 +1186,7 @@ std::unique_ptr<RooHist> makeResidOrPullHist(RooAbsReal &fitModel, RooAbsData co
    pc.defineDouble("rangeHi", "Range", 1, -999.);
    pc.defineString("rangeName", "RangeWithName", 0, "", true);
    pc.defineMutex("Range", "RangeWithName");
-   pc.process(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+   pc.process(cmdList);
    if (!pc.ok(true)) {
       throw std::invalid_argument(std::string(funcName) + "(): unrecognized arguments");
    }
@@ -1323,10 +1319,8 @@ std::unique_ptr<RooHist> makeResidOrPullHist(RooAbsReal &fitModel, RooAbsData co
    // Resolve the normalization ranges (default: the full range of the
    // observable). Only bins fully inside one of the ranges get points in the
    // residual/pull histogram, and the model expectation is normalized to
-   // the data weight in these ranges. Range("name") can be given multiple
-   // times for a union of ranges (sidebands); the names are concatenated
-   // into the comma-separated RangeWithName argument by the usual RooFit
-   // convention.
+   // the data weight in these ranges. Multiple comma-separated range names
+   // select a union of ranges (sidebands), by the usual RooFit convention.
    std::vector<std::pair<double, double>> ranges;
    if (pc.hasProcessed("RangeWithName")) {
       std::string rangeNames = pc.getString("rangeName", nullptr, true);
@@ -1351,25 +1345,43 @@ std::unique_ptr<RooHist> makeResidOrPullHist(RooAbsReal &fitModel, RooAbsData co
    // warnings visible.
    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING};
 
-   // Scratch ranges on the model observable that are redefined for every
-   // bin, used to integrate the model exactly over each bin (same mechanism
-   // as RooBinSamplingPdf). The ranges are intentionally named uniquely per
-   // call to not clobber existing ranges of the same name on the user's
-   // variable; they are shared ranges and stay on the variable after the
-   // call.
-   static std::atomic<unsigned long> nScratchRanges{0};
-   const std::string scratchRange = "_binInt_" + std::to_string(nScratchRanges++);
-   const std::string rangeNameBin = scratchRange + "_bin";
+   // A scratch range on the model observable that is redefined before each
+   // integration, used to integrate the model exactly over the normalization
+   // ranges and over each bin (same mechanism as RooBinSamplingPdf). To not
+   // clobber an existing range of the user's variable, the first name that
+   // is not in use yet is taken, and the range is removed again at the end
+   // of this function.
+   std::string scratchRange;
+   for (unsigned int i = 0;; ++i) {
+      scratchRange = "_binInt_" + std::to_string(i);
+      if (!intVar->hasRange(scratchRange.c_str()))
+         break;
+   }
+   struct ScratchRangeGuard {
+      RooRealVar &var;
+      std::string name;
+      ~ScratchRangeGuard() { var.removeBinning(name.c_str()); }
+   } scratchRangeGuard{*intVar, scratchRange};
+
+   // Integrates the model over the current bounds of the scratch range. A new
+   // integral object is created for each integration on purpose: the
+   // integration strategy of a RooRealIntegral (e.g. the analytical integral
+   // code of the integrand) is fixed at creation and may depend on the range
+   // bounds. RooHistPdf for instance only sums bin contents in a sub-range if
+   // the range was not the full range at creation time.
+   auto integrate = [&](double lo, double hi) {
+      intVar->setRange(scratchRange.c_str(), lo, hi);
+      std::unique_ptr<RooAbsReal> integral{fitModel.createIntegral(obsSet, normSet, scratchRange.c_str())};
+      return integral->getVal();
+   };
 
    RooAbsData::ErrorType errType =
       etype == RooAbsData::Auto ? (binData->isNonPoissonWeighted() ? RooAbsData::SumW2 : RooAbsData::Poisson) : etype;
 
    // The model integral over the (union of) normalization ranges
    double normIntegral = 0.;
-   for (std::size_t iRange = 0; iRange < ranges.size(); ++iRange) {
-      std::string rangeNameRange = scratchRange + "_range" + std::to_string(iRange);
-      intVar->setRange(rangeNameRange.c_str(), ranges[iRange].first, ranges[iRange].second);
-      normIntegral += fitModel.createIntegral(obsSet, normSet, rangeNameRange.c_str())->getVal();
+   for (auto const &range : ranges) {
+      normIntegral += integrate(range.first, range.second);
    }
    if (normIntegral == 0.) {
       throw std::invalid_argument(std::string(funcName) + "(): model has no support in the normalization range(s)");
@@ -1410,8 +1422,7 @@ std::unique_ptr<RooHist> makeResidOrPullHist(RooAbsReal &fitModel, RooAbsData co
       if (!inRange)
          continue;
 
-      intVar->setRange(rangeNameBin.c_str(), binLo, binHi);
-      const double fraction = fitModel.createIntegral(obsSet, normSet, rangeNameBin.c_str())->getVal() / normIntegral;
+      const double fraction = integrate(binLo, binHi) / normIntegral;
       const double expected = scaleFactor * nData * fraction;
 
       const double actual = binData->weight(iBin);
@@ -1436,28 +1447,6 @@ std::unique_ptr<RooHist> makeResidOrPullHist(RooAbsReal &fitModel, RooAbsData co
 
    return out;
 }
-
-} // namespace
-
-/// \see RooFit::makeResidHist()
-std::unique_ptr<RooHist> makeResidHist(RooAbsReal &fitModel, RooAbsData const &data, RooCmdArg const &arg1,
-                                       RooCmdArg const &arg2, RooCmdArg const &arg3, RooCmdArg const &arg4,
-                                       RooCmdArg const &arg5, RooCmdArg const &arg6, RooCmdArg const &arg7,
-                                       RooCmdArg const &arg8)
-{
-   return makeResidOrPullHist(fitModel, data, false, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-}
-
-/// \see RooFit::makePullHist()
-std::unique_ptr<RooHist> makePullHist(RooAbsReal &fitModel, RooAbsData const &data, RooCmdArg const &arg1,
-                                      RooCmdArg const &arg2, RooCmdArg const &arg3, RooCmdArg const &arg4,
-                                      RooCmdArg const &arg5, RooCmdArg const &arg6, RooCmdArg const &arg7,
-                                      RooCmdArg const &arg8)
-{
-   return makeResidOrPullHist(fitModel, data, true, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-}
-
-namespace Detail {
 
 RooCmdArg SliceFlatMap(FlatMap<RooCategory *, std::string> const &args)
 {
