@@ -2108,8 +2108,13 @@ class THistPainter extends ObjectPainter {
          menu.addchk(this.toggleTitle(kOnlyCheck), 'Show', () => this.toggleTitle());
          menu.add('Edit', () => menu.input('Enter histogram title', histo.fTitle).then(res => {
             setHistogramTitle(histo, res);
-            this.interactiveRedraw();
+            this.interactiveRedraw('pad', `exec:SetTitle("${res}")`);
          }));
+         menu.add('Copy', () => navigator.clipboard.writeText(histo.fTitle), 'Copy histogram title into clipboard');
+         menu.add('Paste', () => navigator.clipboard.readText().then(res => {
+            setHistogramTitle(histo, res);
+            this.interactiveRedraw('pad', `exec:SetTitle("${res}")`);
+         }), 'Set histogram title from clipboard');
          menu.endsub();
       }
 

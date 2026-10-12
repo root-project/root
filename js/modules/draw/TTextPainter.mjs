@@ -115,10 +115,15 @@ class TTextPainter extends ObjectPainter {
 
    fillContextMenuItems(menu) {
       const text = this.getObject();
-      menu.add('Change text', () => menu.input('Enter new text', text.fTitle).then(t => {
+      menu.add('Edit', () => menu.input('Enter new text', text.fTitle).then(t => {
          text.fTitle = t;
          this.interactiveRedraw('pad', `exec:SetTitle("${t}")`);
-      }));
+      }), `Edit ${text._typename} text`);
+      menu.add('Copy', () => navigator.clipboard.writeText(text.fTitle), 'Copy text into clipboard');
+      menu.add('Paste', () => navigator.clipboard.readText().then(t => {
+         text.fTitle = t;
+         this.interactiveRedraw('pad', `exec:SetTitle("${t}")`);
+      }), 'Set text from clipboard');
    }
 
    /** @summary draw TText-derived object */
