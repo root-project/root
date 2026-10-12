@@ -22,8 +22,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-using ROOT::Experimental::RSoAField;
-
 TEST(RNTuple, SoADict)
 {
    auto cl = TClass::GetClass("Record");
@@ -45,71 +43,67 @@ TEST(RNTuple, SoADict)
 
 TEST(RNTuple, SoACheck)
 {
-   ROOT::TestSupport::CheckDiagsRAII diagRAII;
-   diagRAII.requiredDiag(kWarning, "[ROOT.NTuple]", "The SoA field is experimental and still under development.",
-                         true /* matchFullMessage */);
-
    try {
-      auto f = std::make_unique<RSoAField>("f", "Record");
+      auto f = std::make_unique<ROOT::RSoAField>("f", "Record");
       FAIL() << "creating SoA field for untagged class should fail";
    } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), ::testing::HasSubstr("not marked with the rntupleSoARecord dictionary option"));
    }
 
    try {
-      auto f = std::make_unique<RSoAField>("f", "SoAUnknownRecord");
+      auto f = std::make_unique<ROOT::RSoAField>("f", "SoAUnknownRecord");
       FAIL() << "creating SoA field with unknown underlying record type should fail";
    } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), ::testing::HasSubstr("invalid record type of SoA field SoAUnknownRecord"));
    }
 
    try {
-      auto f = std::make_unique<RSoAField>("f", "SoAVersionMismatch");
+      auto f = std::make_unique<ROOT::RSoAField>("f", "SoAVersionMismatch");
       FAIL() << "creating SoA field with a class version different from the underlying record type's should fail";
    } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), ::testing::HasSubstr("version mismatch between SoA type and underlying record type"));
    }
 
    try {
-      auto f = std::make_unique<RSoAField>("f", "SoAUnversioned");
+      auto f = std::make_unique<ROOT::RSoAField>("f", "SoAUnversioned");
       FAIL() << "creating unversioned SoA field should fail";
    } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), ::testing::HasSubstr("is transient or unversioned"));
    }
 
    try {
-      auto f = std::make_unique<RSoAField>("f", "SoASimpleBadArray");
+      auto f = std::make_unique<ROOT::RSoAField>("f", "SoASimpleBadArray");
       FAIL() << "creating SoA field with arrays should fail";
    } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), ::testing::HasSubstr("unsupported array type in SoA class: fY"));
    }
    try {
-      auto f = std::make_unique<RSoAField>("f", "SoASimpleBadType");
+      auto f = std::make_unique<ROOT::RSoAField>("f", "SoASimpleBadType");
       FAIL() << "creating SoA field with vectors instead of RVecs should fail";
    } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), ::testing::HasSubstr("invalid field type in SoA class: std::vector<float>"));
    }
    try {
-      auto f = std::make_unique<RSoAField>("f", "SoASimpleUnexpectedMember");
+      auto f = std::make_unique<ROOT::RSoAField>("f", "SoASimpleUnexpectedMember");
       FAIL() << "creating SoA field with an unexpected member should fail";
    } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), ::testing::HasSubstr("unexpected SoA member: fZ"));
    }
    try {
-      auto f = std::make_unique<RSoAField>("f", "SoASimpleMissingMember");
+      auto f = std::make_unique<ROOT::RSoAField>("f", "SoASimpleMissingMember");
       FAIL() << "creating SoA field with a missing member should fail";
    } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), ::testing::HasSubstr("missing SoA members"));
    }
    try {
-      auto f = std::make_unique<RSoAField>("f", "SoASimpleWrongMember");
+      auto f = std::make_unique<ROOT::RSoAField>("f", "SoASimpleWrongMember");
       FAIL() << "creating SoA field with a member of wrong type should fail";
    } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), ::testing::HasSubstr("SoA member type mismatch: fY (double [Double32_t] vs. float)"));
    }
 
    {
-      EXPECT_NO_THROW(auto f = std::make_unique<RSoAField>("f", "SoASimple"));
+      EXPECT_NO_THROW(auto f = std::make_unique<ROOT::RSoAField>("f", "SoASimple"));
    }
 
    try {
@@ -126,7 +120,7 @@ TEST(RNTuple, SoADescriptor)
 
    {
       auto model = ROOT::RNTupleModel::Create();
-      auto f1 = std::make_unique<RSoAField>("f1", "SoA");
+      auto f1 = std::make_unique<ROOT::RSoAField>("f1", "SoA");
       EXPECT_TRUE(f1->GetTraits() & ROOT::RFieldBase::kTraitSoACollection);
       model->AddField(std::move(f1));
       auto f2 = ROOT::RFieldBase::Create("f2", "SoA").Unwrap();
@@ -162,7 +156,7 @@ TEST(RNTuple, SoAStreamerInfo)
    ROOT::TestSupport::FileRaii fileGuard("test_ntuple_soa_streamer_info.root");
 
    auto model = ROOT::RNTupleModel::Create();
-   model->AddField(std::make_unique<ROOT::Experimental::RSoAField>("f", "SoASimple"));
+   model->AddField(std::make_unique<ROOT::RSoAField>("f", "SoASimple"));
    auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
    writer.reset();
 
@@ -176,7 +170,7 @@ TEST(RNTuple, SoAEmpty)
 
    {
       auto model = ROOT::RNTupleModel::Create();
-      model->AddField(std::make_unique<RSoAField>("f", "SoA"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("f", "SoA"));
       auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
       writer->CommitCluster();
@@ -198,7 +192,7 @@ TEST(RNTuple, SoASimple)
 
    {
       auto model = ROOT::RNTupleModel::Create();
-      model->AddField(std::make_unique<RSoAField>("f", "SoASimple"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("f", "SoASimple"));
       auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       auto soa = writer->GetModel().GetDefaultEntry().GetPtr<SoASimple>("f");
       soa->fX.push_back(1.0);
@@ -242,7 +236,7 @@ TEST(RNTuple, SoASimpleSwapped)
 
    {
       auto model = ROOT::RNTupleModel::Create();
-      model->AddField(std::make_unique<RSoAField>("f", "SoASimpleSwapped"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("f", "SoASimpleSwapped"));
       auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       auto soa = writer->GetModel().GetDefaultEntry().GetPtr<SoASimpleSwapped>("f");
       soa->fX.push_back(1.0);
@@ -264,8 +258,8 @@ TEST(RNTuple, SoABasicWriteRead)
 
    {
       auto model = ROOT::RNTupleModel::Create();
-      model->AddField(std::make_unique<RSoAField>("simple", "SoASimple"));
-      model->AddField(std::make_unique<RSoAField>("empty", "SoA"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("simple", "SoASimple"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("empty", "SoA"));
 
       auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       auto simpleSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoASimple>("simple");
@@ -316,7 +310,7 @@ TEST(RNTuple, SoAReadAdopted)
 
    {
       auto model = ROOT::RNTupleModel::Create();
-      model->AddField(std::make_unique<RSoAField>("simple", "SoASimple"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("simple", "SoASimple"));
 
       auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       auto simpleSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoASimple>("simple");
@@ -353,7 +347,7 @@ TEST(RNTuple, SoAReadComplex)
 
    {
       auto model = ROOT::RNTupleModel::Create();
-      model->AddField(std::make_unique<RSoAField>("complex", "SoAComplex"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("complex", "SoAComplex"));
 
       auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       auto complexSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoAComplex>("complex");
@@ -418,8 +412,8 @@ TEST(RNTuple, SoAShow)
 
    {
       auto model = ROOT::RNTupleModel::Create();
-      model->AddField(std::make_unique<RSoAField>("simple", "SoASimple"));
-      model->AddField(std::make_unique<RSoAField>("empty", "SoA"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("simple", "SoASimple"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("empty", "SoA"));
 
       auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       auto simpleSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoASimple>("simple");
@@ -470,14 +464,14 @@ TEST(RNTuple, SoANested)
    {
       auto model = ROOT::RNTupleModel::Create();
       try {
-         model->AddField(std::make_unique<RSoAField>("dot", "SoADotBadNestedType"));
+         model->AddField(std::make_unique<ROOT::RSoAField>("dot", "SoADotBadNestedType"));
          FAIL() << "SoADotBadNestedType should fail";
       } catch (const ROOT::RException &e) {
          EXPECT_THAT(e.what(), testing::HasSubstr("nested SoA field fProperties [SoA] does not match underlying type "
                                                   "RecordProperties"));
       }
 
-      model->AddField(std::make_unique<RSoAField>("dot", "SoADot"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("dot", "SoADot"));
       auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       auto dotSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoADot>("dot");
       dotSoA->fX = {1.0, 2.0};
@@ -517,21 +511,21 @@ TEST(RNTuple, SoADerived)
       auto model = ROOT::RNTupleModel::Create();
 
       try {
-         model->AddField(std::make_unique<RSoAField>("x", "SoADerivedFail1"));
+         model->AddField(std::make_unique<ROOT::RSoAField>("x", "SoADerivedFail1"));
          FAIL() << "SoADerivedFail1 should fail";
       } catch (const ROOT::RException &e) {
          EXPECT_THAT(e.what(),
                      testing::HasSubstr("inheritance of SoA class x does not match its underlying record type"));
       }
       try {
-         model->AddField(std::make_unique<RSoAField>("x", "SoADerivedFail2"));
+         model->AddField(std::make_unique<ROOT::RSoAField>("x", "SoADerivedFail2"));
          FAIL() << "SoADerivedFail2 should fail";
       } catch (const ROOT::RException &e) {
          EXPECT_THAT(e.what(), testing::HasSubstr("missing SoA members"));
       }
 
-      model->AddField(std::make_unique<RSoAField>("derived", "SoADerived"));
-      model->AddField(std::make_unique<RSoAField>("multi", "SoADerivedMulti"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("derived", "SoADerived"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("multi", "SoADerivedMulti"));
       auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
 
       auto derivedSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoADerived>("derived");
@@ -594,7 +588,7 @@ TEST(RNTuple, SoARename)
    {
       auto model = ROOT::RNTupleModel::Create();
 
-      model->AddField(std::make_unique<RSoAField>("leaf", "SoALeafOld"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("leaf", "SoALeafOld"));
       auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
 
       auto leafSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoALeafOld>("leaf");
@@ -607,7 +601,7 @@ TEST(RNTuple, SoARename)
 
    {
       auto model = ROOT::RNTupleModel::Create();
-      model->AddField(std::make_unique<RSoAField>("leaf", "SoALeafNew"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("leaf", "SoALeafNew"));
       auto reader = ROOT::RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
 
       // We cannot use "Show()" because that will reconstruct the original model as a display model, it will not
@@ -632,7 +626,7 @@ TEST(RNTuple, SoARename)
 
    {
       auto model = ROOT::RNTupleModel::Create();
-      model->AddField(std::make_unique<RSoAField>("leaf", "SoALeafNewNoRenameRule"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("leaf", "SoALeafNewNoRenameRule"));
       auto reader = ROOT::RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
 
       // We cannot use "Show()" because that will reconstruct the original model as a display model, it will not
@@ -657,7 +651,7 @@ TEST(RNTuple, SoARename)
 
    {
       auto model = ROOT::RNTupleModel::Create();
-      model->AddField(std::make_unique<RSoAField>("leaf", "SoALeafLikeNew"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("leaf", "SoALeafLikeNew"));
       try {
          auto reader = ROOT::RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
          FAIL() << "mismatch in underlying record field should fail";
@@ -674,8 +668,8 @@ TEST(RNTuple, SoARuleFailures)
    {
       auto model = ROOT::RNTupleModel::Create();
 
-      model->AddField(std::make_unique<RSoAField>("source", "SoARuleFailSource"));
-      model->AddField(std::make_unique<RSoAField>("target", "SoARuleFailSource"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("source", "SoARuleFailSource"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("target", "SoARuleFailSource"));
       auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
    }
 
@@ -703,7 +697,7 @@ TEST(RNTuple, SoAWholeObjectRule)
    {
       auto model = ROOT::RNTupleModel::Create();
 
-      model->AddField(std::make_unique<RSoAField>("outer", "SoAOuter"));
+      model->AddField(std::make_unique<ROOT::RSoAField>("outer", "SoAOuter"));
       auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
 
       auto outerSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoAOuter>("outer");

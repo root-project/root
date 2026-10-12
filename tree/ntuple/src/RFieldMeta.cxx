@@ -689,7 +689,7 @@ void ROOT::RClassField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) cons
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, const RSoAField &source)
+ROOT::RSoAField::RSoAField(std::string_view fieldName, const RSoAField &source)
    : ROOT::RRuleField(fieldName, source.GetTypeName(), source.fClass, ROOT::ENTupleStructure::kCollection),
      fSoAMemberOffsets(source.fSoAMemberOffsets)
 {
@@ -702,12 +702,12 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, const RSoAF
    fLockSplitFields = std::make_unique<std::mutex>();
 }
 
-ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, std::string_view className)
+ROOT::RSoAField::RSoAField(std::string_view fieldName, std::string_view className)
    : RSoAField(fieldName, EnsureValidClass(className))
 {
 }
 
-void ROOT::Experimental::RSoAField::GraftNestedMemberFields(
+void ROOT::RSoAField::GraftNestedMemberFields(
    const RSoAField &nestedSoA, std::size_t offsetInParent,
    const std::function<RFieldBase *(const std::string &)> &fnRecordFieldFinder)
 {
@@ -742,7 +742,7 @@ void ROOT::Experimental::RSoAField::GraftNestedMemberFields(
    }
 }
 
-void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
+void ROOT::RSoAField::CollectRecordMemberFields()
 {
    // Build a map of all subfields (nested) of the underlying record type. Map the fully qualified name of the
    // subfields to their field pointer, so that we can later match the subfields of the SoA class to their corresponding
@@ -892,14 +892,9 @@ void ROOT::Experimental::RSoAField::CollectRecordMemberFields()
       fRules.emplace_back(RRule{r, 0});
 }
 
-ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clSoA)
+ROOT::RSoAField::RSoAField(std::string_view fieldName, TClass *clSoA)
    : ROOT::RRuleField(fieldName, GetRenormalizedTypeName(clSoA->GetName()), clSoA, ROOT::ENTupleStructure::kCollection)
 {
-   static std::once_flag once;
-   std::call_once(once, []() {
-      R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "The SoA field is experimental and still under development.";
-   });
-
    EnsureValidUserClass(fClass, *this, "RSoAField");
    const auto recordTypeName = ROOT::Internal::GetRNTupleSoARecord(fClass);
    if (recordTypeName.empty()) {
@@ -931,12 +926,12 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clS
    fLockSplitFields = std::make_unique<std::mutex>();
 }
 
-std::unique_ptr<ROOT::RFieldBase> ROOT::Experimental::RSoAField::CloneImpl(std::string_view newName) const
+std::unique_ptr<ROOT::RFieldBase> ROOT::RSoAField::CloneImpl(std::string_view newName) const
 {
    return std::unique_ptr<RSoAField>(new RSoAField(newName, *this));
 }
 
-const ROOT::RFieldBase::RColumnRepresentations &ROOT::Experimental::RSoAField::GetColumnRepresentations() const
+const ROOT::RFieldBase::RColumnRepresentations &ROOT::RSoAField::GetColumnRepresentations() const
 {
    static RColumnRepresentations representations({{ENTupleColumnType::kSplitIndex64},
                                                   {ENTupleColumnType::kIndex64},
@@ -946,17 +941,17 @@ const ROOT::RFieldBase::RColumnRepresentations &ROOT::Experimental::RSoAField::G
    return representations;
 }
 
-void ROOT::Experimental::RSoAField::GenerateColumns()
+void ROOT::RSoAField::GenerateColumns()
 {
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>();
 }
 
-void ROOT::Experimental::RSoAField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
+void ROOT::RSoAField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
-std::size_t ROOT::Experimental::RSoAField::AppendImpl(const void *from)
+std::size_t ROOT::RSoAField::AppendImpl(const void *from)
 {
    const std::size_t nSoAMembers = fSoAMemberOffsets.size();
 
@@ -998,7 +993,7 @@ std::size_t ROOT::Experimental::RSoAField::AppendImpl(const void *from)
    return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
-void ROOT::Experimental::RSoAField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+void ROOT::RSoAField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
    // Read collection info for this entry
    ROOT::NTupleSize_t N;
@@ -1036,8 +1031,7 @@ void ROOT::Experimental::RSoAField::ReadGlobalImpl(ROOT::NTupleSize_t globalInde
    }
 }
 
-std::unique_ptr<ROOT::RFieldBase>
-ROOT::Experimental::RSoAField::BeforeConnectPageSource(ROOT::Internal::RPageSource & /*pageSource*/)
+std::unique_ptr<ROOT::RFieldBase> ROOT::RSoAField::BeforeConnectPageSource(ROOT::Internal::RPageSource & /*pageSource*/)
 {
    // Most of the heavy lifting is done by the actual subfields that map onto the on-disk AoS schema.
    // In the SoA field itself, we only need to take care of the in-memory part of the rule processing.
@@ -1069,27 +1063,25 @@ ROOT::Experimental::RSoAField::BeforeConnectPageSource(ROOT::Internal::RPageSour
    return nullptr;
 }
 
-void ROOT::Experimental::RSoAField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+void ROOT::RSoAField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    EnsureMatchingOnDiskField(desc, kDiffTypeName | kDiffTypeVersion).ThrowOnError();
 }
 
-void ROOT::Experimental::RSoAField::ConstructValue(void *where) const
+void ROOT::RSoAField::ConstructValue(void *where) const
 {
    fClass->New(where);
 }
 
-ROOT::Experimental::RSoAField::RSoADeleter::RSoADeleter(TClass *cl) : RDeleter(cl->GetClassAlignment()), fSoAClass(cl)
-{
-}
+ROOT::RSoAField::RSoADeleter::RSoADeleter(TClass *cl) : RDeleter(cl->GetClassAlignment()), fSoAClass(cl) {}
 
-void ROOT::Experimental::RSoAField::RSoADeleter::operator()(void *objPtr, bool dtorOnly)
+void ROOT::RSoAField::RSoADeleter::operator()(void *objPtr, bool dtorOnly)
 {
    fSoAClass->Destructor(objPtr, true /* dtorOnly */);
    RDeleter::operator()(objPtr, dtorOnly);
 }
 
-void ROOT::Experimental::RSoAField::ReconstructSplitFields() const
+void ROOT::RSoAField::ReconstructSplitFields() const
 {
    std::lock_guard<std::mutex> lockGuard(*fLockSplitFields);
    if (fSplitFields)
@@ -1118,7 +1110,7 @@ void ROOT::Experimental::RSoAField::ReconstructSplitFields() const
    }
 }
 
-std::vector<ROOT::RFieldBase::RValue> ROOT::Experimental::RSoAField::SplitValue(const RValue &value) const
+std::vector<ROOT::RFieldBase::RValue> ROOT::RSoAField::SplitValue(const RValue &value) const
 {
    ReconstructSplitFields();
    const auto nSplitFields = fSplitFields->size();
@@ -1133,29 +1125,29 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::Experimental::RSoAField::SplitValue(
    return values;
 }
 
-std::size_t ROOT::Experimental::RSoAField::GetValueSize() const
+std::size_t ROOT::RSoAField::GetValueSize() const
 {
    return fClass->GetClassSize();
 }
 
-std::uint32_t ROOT::Experimental::RSoAField::GetTypeVersion() const
+std::uint32_t ROOT::RSoAField::GetTypeVersion() const
 {
    return fClass->GetClassVersion();
 }
 
-std::uint32_t ROOT::Experimental::RSoAField::GetTypeChecksum() const
+std::uint32_t ROOT::RSoAField::GetTypeChecksum() const
 {
    return fClass->GetCheckSum();
 }
 
-std::size_t ROOT::Experimental::RSoAField::GetAlignment() const
+std::size_t ROOT::RSoAField::GetAlignment() const
 {
    const auto align = fClass->GetClassAlignment();
    EnsureValidAlignment(align);
    return align;
 }
 
-const std::type_info *ROOT::Experimental::RSoAField::GetPolymorphicTypeInfo() const
+const std::type_info *ROOT::RSoAField::GetPolymorphicTypeInfo() const
 {
    // TODO(jblomer): factor out
    bool polymorphic = fClass->ClassProperty() & kClassHasVirtual;
@@ -1165,7 +1157,7 @@ const std::type_info *ROOT::Experimental::RSoAField::GetPolymorphicTypeInfo() co
    return fClass->GetTypeInfo();
 }
 
-void ROOT::Experimental::RSoAField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
+void ROOT::RSoAField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitSoAField(*this);
 }

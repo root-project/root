@@ -32,8 +32,6 @@ class TClass;
 
 namespace ROOT {
 
-namespace Experimental {
-
 /// The SoA field provides I/O for an in-memory SoA layout linked to an on-disk collection of the underlying record.
 /// As a concrete example, for an underlying record type
 /// \code{.cpp}
@@ -147,7 +145,6 @@ public:
    TClass *GetSoAClass() const { return fClass; }
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif // ROOT_RField_SoA
