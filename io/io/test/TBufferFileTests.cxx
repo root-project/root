@@ -5,8 +5,12 @@
 #include "TClass.h"
 #include "TInterpreter.h"
 #include "TKey.h"
+#include "TClonesArray.h"
+#include "TObjString.h"
 #include <vector>
 #include <iostream>
+#include <iostream>
+
 
 // Tests ROOT-8367
 TEST(TBufferFile, ROOT_8367)
@@ -48,4 +52,20 @@ TEST(TBufferFile, ForeignZeroVersionClass)
    EXPECT_NE(f.Get<MyS0>("s0"), nullptr); // Before the fix, even if return was already not nullptr, this line was raising an Error thus test would fail with unexpected diagnostic
    EXPECT_NE(f.Get<MyS1>("s1"), nullptr);
    EXPECT_EQ(f.GetKey("s0")->GetObjlen(), 10);
+}
+
+// https://its.cern.ch/jira/browse/ROOT-6788
+TEST(TBufferFile, ROOT_6788)
+{  
+   TClonesArray clArray(TObjString::Class(), 100);
+   for (Int_t i=0; i<28; i++) {
+       new (clArray[i]) TObjString();
+   }
+   TBufferFile buf(TBuffer::kWrite, 10000);
+   for (Int_t i=0; i<27; i++) {
+       delete clArray.RemoveAt(i);
+   }
+   buf.SetBufferOffset(0);
+   buf.MapObject(&clArray);
+   clArray.Streamer(buf);
 }
