@@ -3,7 +3,7 @@
 #include <ROOT/RNTupleAttrReading.hxx>
 #include <TKey.h>
 
-static std::size_t Count(ROOT::Experimental::RNTupleAttrEntryIterable iterable)
+static std::size_t Count(ROOT::RNTupleAttrEntryIterable iterable)
 {
    std::size_t n = 0;
    for ([[maybe_unused]] auto _ : iterable)
@@ -894,7 +894,7 @@ TEST(RNTupleAttributes, InvalidPendingRange)
    auto attrModel = RNTupleModel::Create();
    auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttributes");
 
-   ROOT::Experimental::RNTupleAttrPendingRange attrRange;
+   ROOT::RNTupleAttrPendingRange attrRange;
    EXPECT_FALSE(attrRange);
    try {
       attrSet->CommitRange(std::move(attrRange));

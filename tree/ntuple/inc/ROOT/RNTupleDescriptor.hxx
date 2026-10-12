@@ -58,6 +58,7 @@ class RClusterGroupDescriptorBuilder;
 class RExtraTypeInfoDescriptorBuilder;
 class RFieldDescriptorBuilder;
 class RNTupleDescriptorBuilder;
+class RNTupleAttrSetDescriptorBuilder;
 
 RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc);
 struct RNTupleClusterBoundaries {
@@ -68,18 +69,16 @@ struct RNTupleClusterBoundaries {
 std::vector<ROOT::Internal::RNTupleClusterBoundaries> GetClusterBoundaries(const RNTupleDescriptor &desc);
 } // namespace Internal
 
-namespace Experimental {
-
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleAttrSetDescriptor
+\class ROOT::RNTupleAttrSetDescriptor
 \ingroup NTuple
 \brief Metadata stored for every Attribute Set linked to an RNTuple.
 */
 // clang-format on
 class RNTupleAttrSetDescriptor final {
-   friend class Experimental::Internal::RNTupleAttrSetDescriptorBuilder;
-
+   friend class Internal::RNTupleAttrSetDescriptorBuilder;
+   
    std::uint16_t fSchemaVersionMajor = 0;
    std::uint16_t fSchemaVersionMinor = 0;
    std::uint32_t fAnchorLength = 0; ///< uncompressed size of the linked anchor
@@ -107,10 +106,6 @@ public:
 
    RNTupleAttrSetDescriptor Clone() const;
 };
-
-class RNTupleAttrSetDescriptorIterable;
-
-} // namespace Experimental
 
 // clang-format off
 /**
@@ -765,7 +760,7 @@ private:
    /// Potentially a subset of all the available clusters
    std::unordered_map<ROOT::DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
    /// List of AttributeSets linked to this RNTuple
-   std::vector<Experimental::RNTupleAttrSetDescriptor> fAttributeSets;
+   std::vector<RNTupleAttrSetDescriptor> fAttributeSets;
 
    // We don't expose this publicly because when we add sharded clusters, this interface does not make sense anymore
    ROOT::DescriptorId_t FindClusterId(ROOT::NTupleSize_t entryIdx) const;
@@ -806,7 +801,7 @@ public:
    class RClusterGroupDescriptorIterable;
    class RClusterDescriptorIterable;
    class RExtraTypeInfoDescriptorIterable;
-   friend class Experimental::RNTupleAttrSetDescriptorIterable;
+   class RNTupleAttrSetDescriptorIterable;
 
    /// Modifiers passed to CreateModel()
    struct RCreateModelOptions {
@@ -907,7 +902,7 @@ public:
 
    RExtraTypeInfoDescriptorIterable GetExtraTypeInfoIterable() const;
 
-   ROOT::Experimental::RNTupleAttrSetDescriptorIterable GetAttrSetIterable() const;
+   RNTupleAttrSetDescriptorIterable GetAttrSetIterable() const;
 
    const std::string &GetName() const { return fName; }
    const std::string &GetDescription() const { return fDescription; }
@@ -1316,16 +1311,15 @@ public:
    RIterator end() { return RIterator(fNTuple.fExtraTypeInfoDescriptors.cend()); }
 };
 
-namespace Experimental {
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleAttrSetDescriptorIterable
+\class ROOT::RNTupleAttrSetDescriptorIterable
 \ingroup NTuple
 \brief Used to loop over all the Attribute Sets linked to an RNTuple
 */
 // clang-format on
 // TODO: move this to RNTupleDescriptor::RNTupleAttrSetDescriptorIterable when it moves out of Experimental.
-class RNTupleAttrSetDescriptorIterable final {
+class RNTupleDescriptor::RNTupleAttrSetDescriptorIterable final {
 private:
    /// The associated RNTuple for this range.
    const RNTupleDescriptor &fNTuple;
@@ -1368,7 +1362,6 @@ public:
    RIterator begin() { return RIterator(fNTuple.fAttributeSets.cbegin()); }
    RIterator end() { return RIterator(fNTuple.fAttributeSets.cend()); }
 };
-} // namespace Experimental
 
 // clang-format off
 /**
@@ -1444,9 +1437,9 @@ public:
    }
 };
 
-namespace Experimental::Internal {
+namespace Internal {
 class RNTupleAttrSetDescriptorBuilder final {
-   ROOT::Experimental::RNTupleAttrSetDescriptor fDesc;
+   ROOT::RNTupleAttrSetDescriptor fDesc;
 
 public:
    RNTupleAttrSetDescriptorBuilder &Name(std::string_view name)
@@ -1473,11 +1466,8 @@ public:
 
    /// Attempt to make an AttributeSet descriptor. This may fail if the builder
    /// was not given enough information to make a proper descriptor.
-   RResult<ROOT::Experimental::RNTupleAttrSetDescriptor> MoveDescriptor();
+   RResult<ROOT::RNTupleAttrSetDescriptor> MoveDescriptor();
 };
-} // namespace Experimental::Internal
-
-namespace Internal {
 
 // clang-format off
 /**
@@ -1884,7 +1874,7 @@ public:
    RResult<void> AddExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
    void ReplaceExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
 
-   RResult<void> AddAttributeSet(Experimental::RNTupleAttrSetDescriptor &&attrSetDesc);
+   RResult<void> AddAttributeSet(RNTupleAttrSetDescriptor &&attrSetDesc);
 
    /// Mark the beginning of the header extension; any fields and columns added after a call to this function are
    /// annotated as begin part of the header extension.

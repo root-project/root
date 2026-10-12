@@ -172,7 +172,7 @@ std::unique_ptr<ROOT::RNTupleWriter> ROOT::RNTupleWriter::Append(std::unique_ptr
    return ROOT::RNTupleWriter::Create(std::move(model), std::move(sink), options);
 }
 
-ROOT::Experimental::RNTupleAttrSetWriterHandle
+ROOT::RNTupleAttrSetWriterHandle
 ROOT::RNTupleWriter::CreateAttributeSet(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view name,
                                         const ROOT::RNTupleWriteOptions *optsPtr)
 {
@@ -188,7 +188,7 @@ ROOT::RNTupleWriter::CreateAttributeSet(std::unique_ptr<ROOT::RNTupleModel> mode
    auto attrSink = fFillContext.fSink->CloneAsHidden(name, opts);
 
    std::string nameStr{name};
-   auto attrSet = Experimental::RNTupleAttrSetWriter::Create(fFillContext, std::move(attrSink), std::move(model));
+   auto attrSet = RNTupleAttrSetWriter::Create(fFillContext, std::move(attrSink), std::move(model));
 
    // check for duplicates
    auto existingIt = std::find_if(fAttributeSets.begin(), fAttributeSets.end(),
@@ -198,16 +198,16 @@ ROOT::RNTupleWriter::CreateAttributeSet(std::unique_ptr<ROOT::RNTupleModel> mode
                                      "', but one already exists with that name"));
 
    auto &addedSet = fAttributeSets.emplace_back(std::move(attrSet));
-   return Experimental::RNTupleAttrSetWriterHandle{addedSet};
+   return RNTupleAttrSetWriterHandle{addedSet};
 }
 
-void ROOT::RNTupleWriter::CloseAttributeSetImpl(ROOT::Experimental::RNTupleAttrSetWriter &attrSet)
+void ROOT::RNTupleWriter::CloseAttributeSetImpl(ROOT::RNTupleAttrSetWriter &attrSet)
 {
    auto attrAnchorInfo = attrSet.Commit();
    fFillContext.fSink->CommitAttributeSet(attrSet.GetDescriptor().GetName(), attrAnchorInfo);
 }
 
-void ROOT::RNTupleWriter::CloseAttributeSet(ROOT::Experimental::RNTupleAttrSetWriterHandle handle)
+void ROOT::RNTupleWriter::CloseAttributeSet(ROOT::RNTupleAttrSetWriterHandle handle)
 {
    auto writer = handle.fWriter.lock();
    if (writer) {
