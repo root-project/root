@@ -408,7 +408,7 @@ void ROOT::Internal::RPrintValueVisitor::VisitRVecField(const ROOT::RRVecField &
    PrintCollection(field);
 }
 
-void ROOT::Internal::RPrintValueVisitor::VisitSoAField(const ROOT::Experimental::RSoAField &field)
+void ROOT::Internal::RPrintValueVisitor::VisitSoAField(const ROOT::RSoAField &field)
 {
    PrintRecord(field);
 }

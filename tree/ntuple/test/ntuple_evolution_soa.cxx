@@ -33,10 +33,6 @@ TEST(RNTupleEvolutionSoA, RemovedMember)
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
 
-      ROOT::TestSupport::CheckDiagsRAII diagRAII;
-      diagRAII.requiredDiag(kWarning, "[ROOT.NTuple]", "The SoA field is experimental and still under development.",
-                            true /* matchFullMessage */);
-
       ASSERT_TRUE(gInterpreter->Declare(R"(
 struct RemovedMemberRecord {
    int fInt1;
@@ -83,10 +79,6 @@ struct RemovedMemberSoA {
 };
 )"));
    MakeSoALink("RemovedMemberRecord", "RemovedMemberSoA");
-
-   ROOT::TestSupport::CheckDiagsRAII diagRAII;
-   diagRAII.requiredDiag(kWarning, "[ROOT.NTuple]", "The SoA field is experimental and still under development.",
-                         true /* matchFullMessage */);
 
    auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
    ASSERT_EQ(2, reader->GetNEntries());
