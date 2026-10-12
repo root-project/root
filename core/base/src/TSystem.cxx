@@ -2646,6 +2646,7 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
       size_t prefixLen = strlen(prefix);
       while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
          std::string line(buffer);
+         // MSVC prints "Note: including file: Windows_Full_Path_To_include"
          // Find and strip "Note: including file:"
          size_t pos = line.find(prefix);
          if (pos != std::string::npos) {
@@ -2666,8 +2667,8 @@ static bool R__GenerateCompilerDependencies(const TString &depfilename, const TS
       depFile.close();
    }
    int retVal = gSystem->ClosePipe(pipe);
-   if (retVal != 0) {
-      ::Warning("ACLiC", "Failed to close pipe dependencies for %s, status '%d' when executing %s", retVal, filename.Data(), cmd.Data());
+   if (retVal == -1) {
+      ::Warning("ACLiC", "Failed to close pipe dependencies for %s, status '%d' when executing %s", filename.Data(), retVal, cmd.Data());
       ::Warning("ACLiC", "%s", allLines.c_str());
       return false;
    }
