@@ -82,7 +82,14 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
   // Generate index category and all registered PDFS
   _allVarsPdf.add(allPdfVars) ;
   for(auto * proxy : static_range_cast<RooRealProxy*>(model._pdfProxyList)) {
-    auto pdf = static_cast<RooAbsPdf*>(proxy->absArg());
+    auto pdf = RooSimultaneous::resolveSwitchMode(static_cast<RooAbsPdf*>(proxy->absArg()), pdfVars);
+    if (!pdf) {
+      oocoutE(_pdf,Generation) << "RooSimSplitGenContext::ctor(" << GetName() << ") ERROR: the nested RooSimultaneous for the state "
+                << proxy->name() << " has no pdf for its selected state" << std::endl ;
+      _isValid = false ;
+      _numPdf = 0 ;
+      return ;
+    }
 
     // Create generator context for this PDF
     std::unique_ptr<RooArgSet> compVars{pdf->getObservables(pdfVars)};

@@ -94,6 +94,18 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
   Int_t i(1) ;
   for(auto * proxy : static_range_cast<RooRealProxy*>(model._pdfProxyList)) {
     auto* pdf = static_cast<RooAbsPdf*>(proxy->absArg());
+    RooArgSet genVars{pdfVars};
+    if (prototype) {
+      genVars.add(*prototype->get(), true);
+    }
+    pdf = RooSimultaneous::resolveSwitchMode(pdf, genVars);
+    if (!pdf) {
+      oocoutE(_pdf,Generation) << "RooSimGenContext::ctor(" << GetName() << ") ERROR: the nested RooSimultaneous for the state "
+                << proxy->name() << " has no pdf for its selected state" << std::endl ;
+      _isValid = false ;
+      _numPdf = 0 ;
+      return ;
+    }
 
     // Name the context after the associated state and add to list
     _gcList.emplace_back(pdf->genContext(pdfVars,prototype,auxProto,verbose)) ;
