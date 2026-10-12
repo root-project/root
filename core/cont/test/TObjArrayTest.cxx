@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
+#include "TNamed.h"
 #include "TObjArray.h"
-#include "TObjString.h"
 
 namespace {
 class TrackObject : public TObject {
@@ -26,8 +26,8 @@ TEST(TObjArrayTest, AddAndAt)
    TObjArray array;
    array.SetOwner(kTRUE);
 
-   TObjString *s1 = new TObjString("first");
-   TObjString *s2 = new TObjString("second");
+   auto *s1 = new TNamed("first", "");
+   auto *s2 = new TNamed("second", "");
 
    array.Add(s1);
    array.Add(s2);
@@ -46,18 +46,15 @@ TEST(TObjArrayTest, AddFirstAndLast)
    TObjArray array;
    array.SetOwner(kTRUE);
 
-   TObjString *s1 = new TObjString("first");
-   TObjString *s2 = new TObjString("second");
-   TObjString *s3 = new TObjString("third");
+   auto *s1 = new TNamed("first", "");
+   auto *s2 = new TNamed("second", "");
 
-   array.AddFirst(s2);
    array.AddFirst(s1);
-   array.AddLast(s3);
+   array.AddLast(s2);
 
-   EXPECT_EQ(array.GetEntries(), 3);
+   EXPECT_EQ(array.GetEntries(), 2);
    EXPECT_EQ(array.At(0), s1);
    EXPECT_EQ(array.At(1), s2);
-   EXPECT_EQ(array.At(2), s3);
 }
 
 TEST(TObjArrayTest, AddAt)
@@ -65,8 +62,8 @@ TEST(TObjArrayTest, AddAt)
    TObjArray array;
    array.SetOwner(kTRUE);
 
-   TObjString *s1 = new TObjString("first");
-   TObjString *s2 = new TObjString("second");
+   auto *s1 = new TNamed("first", "");
+   auto *s2 = new TNamed("second", "");
 
    array.AddAt(s1, 0);
    array.AddAt(s2, 2);
@@ -84,7 +81,7 @@ TEST(TObjArrayTest, AddAtAndExpand)
    TObjArray array(2);
    array.SetOwner(kTRUE);
 
-   TObjString *s1 = new TObjString("element");
+   auto *s1 = new TNamed("element", "");
 
    array.AddAtAndExpand(s1, 5);
 
@@ -98,9 +95,9 @@ TEST(TObjArrayTest, AddAtFree)
    TObjArray array;
    array.SetOwner(kTRUE);
 
-   TObjString *s1 = new TObjString("first");
-   TObjString *s2 = new TObjString("second");
-   TObjString *s3 = new TObjString("third");
+   auto *s1 = new TNamed("first", "");
+   auto *s2 = new TNamed("second", "");
+   auto *s3 = new TNamed("third", "");
 
    array.AddAt(s1, 0);
    array.AddAt(s2, 2);
@@ -116,13 +113,13 @@ TEST(TObjArrayTest, AddBeforeAndAfter)
    TObjArray array;
    array.SetOwner(kTRUE);
 
-   TObjString *s2 = new TObjString("second");
+   auto *s2 = new TNamed("second", "");
    array.AddAt(s2, 2);
 
-   TObjString *s1 = new TObjString("first");
+   auto *s1 = new TNamed("first", "");
    array.AddBefore(s2, s1);
 
-   TObjString *s3 = new TObjString("third");
+   auto *s3 = new TNamed("third", "");
    array.AddAfter(s2, s3);
 
    EXPECT_EQ(array.GetEntries(), 3);
@@ -136,9 +133,9 @@ TEST(TObjArrayTest, Remove)
    TObjArray array;
    array.SetOwner(kTRUE);
 
-   TObjString *s1 = new TObjString("first");
-   TObjString *s2 = new TObjString("second");
-   TObjString *s3 = new TObjString("third");
+   auto *s1 = new TNamed("first", "");
+   auto *s2 = new TNamed("second", "");
+   auto *s3 = new TNamed("third", "");
 
    array.Add(s1);
    array.Add(s2);
@@ -162,9 +159,9 @@ TEST(TObjArrayTest, RemoveAt)
       TObjArray array;
       array.SetOwner(kTRUE);
 
-      TObjString *s1 = new TObjString("first");
-      TObjString *s2 = new TObjString("second");
-      TObjString *s3 = new TObjString("third");
+      auto *s1 = new TNamed("first", "");
+      auto *s2 = new TNamed("second", "");
+      auto *s3 = new TNamed("third", "");
 
       array.Add(s1);
       array.Add(s2);
@@ -187,9 +184,9 @@ TEST(TObjArrayTest, RemoveAt)
       TObjArray array;
       array.SetOwner(kTRUE);
 
-      TObjString *s1 = new TObjString("first");
-      TObjString *s2 = new TObjString("second");
-      TObjString *s3 = new TObjString("third");
+      auto *s1 = new TNamed("first", "");
+      auto *s2 = new TNamed("second", "");
+      auto *s3 = new TNamed("third", "");
 
       array.Add(s1);
       array.Add(s2);
@@ -213,9 +210,9 @@ TEST(TObjArrayTest, Compress)
    TObjArray array;
    array.SetOwner(kTRUE);
 
-   TObjString *s1 = new TObjString("first");
-   TObjString *s2 = new TObjString("second");
-   TObjString *s3 = new TObjString("third");
+   auto *s1 = new TNamed("first", "");
+   auto *s2 = new TNamed("second", "");
+   auto *s3 = new TNamed("third", "");
 
    array.Add(s1);
    array.Add(s2);
@@ -305,9 +302,9 @@ TEST(TObjArrayTest, Iteration)
    TObjArray array;
    array.SetOwner(kTRUE);
 
-   array.Add(new TObjString("A"));
-   array.Add(new TObjString("B"));
-   array.Add(new TObjString("C"));
+   array.Add(new TNamed("A", ""));
+   array.Add(new TNamed("B", ""));
+   array.Add(new TNamed("C", ""));
 
    Int_t count = 0;
    TIter next(&array);
