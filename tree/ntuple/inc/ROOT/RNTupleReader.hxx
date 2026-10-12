@@ -530,7 +530,7 @@ public:
    /// Looks for an attribute set with the given name and creates an RNTupleAttrSetReader for it, with the provided
    /// read options.
    /// The returned reader has an independent lifetime from this RNTupleReader.
-   std::unique_ptr<Experimental::RNTupleAttrSetReader>
+   std::unique_ptr<RNTupleAttrSetReader>
    OpenAttributeSet(std::string_view attrSetName, const ROOT::RNTupleReadOptions &options = {});
 }; // class RNTupleReader
 
