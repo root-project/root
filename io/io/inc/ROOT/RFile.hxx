@@ -16,11 +16,13 @@
 #include <memory>
 #include <string_view>
 #include <typeinfo>
+#include <type_traits>
 #include <variant>
 
 class TFile;
 class TIterator;
 class TKey;
+class TTree;
 
 namespace ROOT {
 namespace Experimental {
@@ -365,6 +367,7 @@ public:
    template <typename T>
    void Put(std::string_view path, const T &obj)
    {
+      static_assert(!std::is_base_of_v<TTree, T>, "Writing TTree with RFile is unsupported.");
       PutInternal(path, obj, /* flags = */ 0);
    }
 
@@ -379,6 +382,7 @@ public:
    template <typename T>
    void Overwrite(std::string_view path, const T &obj, bool backupPrevious = true)
    {
+      static_assert(!std::is_base_of_v<TTree, T>, "Writing TTree with RFile is unsupported.");
       std::uint32_t flags = kPutAllowOverwrite;
       flags |= backupPrevious * kPutOverwriteKeepCycle;
       PutInternal(path, obj, flags);
