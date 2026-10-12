@@ -4,6 +4,7 @@
 #include <RooAbsPdf.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
+#include <RooExtendPdf.h>
 #include <RooGenericPdf.h>
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>
@@ -493,6 +494,69 @@ TEST(RooHist, MakeResidAndPullHistMultiRange)
    expectExactResiduals(*residOverlap, hist2, kTolAnalytic);
 }
 
+/// The scale types of the Normalization() argument of
+/// RooFit::makeResidHist()/makePullHist(), following RooAbsPdf::plotOn().
+TEST(RooHist, MakeResidAndPullHistNormalization)
+{
+   using namespace RooFit;
+
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING};
+
+   GaussModel model;
+   const double nEvents = 1e6;
+   TH1D hist("hist", "hist", kNBins, kGaussX0, kGaussX1);
+   fillExactGauss(hist, nEvents, {{kGaussX0, kGaussX1}});
+   RooDataHist binData("binData", "binData", RooArgSet(model.x), &hist);
+
+   // Checks that the residuals are (-factor) times the exact bin contents,
+   // i.e. the expectation is (1 + factor) times the data
+   auto expectScaledResiduals = [&](RooHist const &resid, double factor, double tol) {
+      for (int i = 0; i < resid.GetN(); ++i) {
+         const int iBin = int((resid.GetPointX(i) - kGaussX0) * kNBins / (kGaussX1 - kGaussX0));
+         const double content = hist.GetBinContent(iBin + 1);
+         if (content == 0.)
+            continue;
+         EXPECT_NEAR(resid.GetPointY(i), -factor * content, tol * std::max(content, 1e-6)) << "bin " << iBin;
+      }
+   };
+
+   // An extended pdf with a yield of 1.5 times the data
+   RooRealVar nExpected("nExpected", "nExpected", 1.5 * nEvents);
+   RooExtendPdf ext("ext", "ext", model.gaussAnalytic, nExpected);
+
+   // The default Relative scale type normalizes to the data also for an
+   // extended pdf
+   std::unique_ptr<RooHist> resid{makeResidHist(ext, binData)};
+   ASSERT_EQ(resid->GetN(), kNBins);
+   expectScaledResiduals(*resid, 0., kTolAnalytic);
+
+   // RelativeExpected: the expectation is the expected number of events
+   std::unique_ptr<RooHist> residExp{makeResidHist(ext, binData, Normalization(1.0, RooAbsReal::RelativeExpected))};
+   ASSERT_EQ(residExp->GetN(), kNBins);
+   expectScaledResiduals(*residExp, 0.5, kTolAnalytic);
+
+   // Also in a sub-range, the expectation is not renormalized to the data
+   std::unique_ptr<RooHist> residExpRange{
+      makeResidHist(ext, binData, Normalization(2.0, RooAbsReal::RelativeExpected), Range(119.6, 123.6))};
+   ASSERT_EQ(residExpRange->GetN(), 10);
+   expectScaledResiduals(*residExpRange, 2., kTolAnalytic);
+
+   // NumEvent: the expectation is normalized to the given number of events
+   std::unique_ptr<RooHist> residNum{
+      makeResidHist(model.gaussAnalytic, binData, Normalization(2. * nEvents, RooAbsReal::NumEvent))};
+   ASSERT_EQ(residNum->GetN(), kNBins);
+   expectScaledResiduals(*residNum, 1., kTolAnalytic);
+
+   // Raw: the integral of the unnormalized model. The RooGenericPdf
+   // exp(-0.5 u^2) integrates to sigma * sqrt(2 pi) times the Gaussian
+   // probability in each bin.
+   const double rawScale = nEvents / (kGaussSigma * std::sqrt(2. * M_PI));
+   std::unique_ptr<RooHist> residRaw{
+      makeResidHist(model.gaussNumeric, binData, Normalization(rawScale, RooAbsReal::Raw))};
+   ASSERT_EQ(residRaw->GetN(), kNBins);
+   expectScaledResiduals(*residRaw, 0., kTolNumeric);
+}
+
 /// The documented failure modes of RooFit::makeResidHist() and
 /// RooFit::makePullHist() that throw exceptions.
 TEST(RooHist, MakeResidAndPullHistErrors)
@@ -531,8 +595,8 @@ TEST(RooHist, MakeResidAndPullHistErrors)
    // A range that doesn't fully contain any bin (bins are 0.5 wide)
    EXPECT_THROW(makeResidHist(gauss, *data, Range(0.1, 0.4)), std::invalid_argument);
 
-   // Unsupported Normalization scale types
-   EXPECT_THROW(makeResidHist(gauss, *data, Normalization(0.5, RooAbsReal::NumEvent)), std::invalid_argument);
+   // The RelativeExpected scale type requires an extendable pdf
+   EXPECT_THROW(makeResidHist(gauss, *data, Normalization(1.0, RooAbsReal::RelativeExpected)), std::invalid_argument);
 
    // Unsupported DataError types
    EXPECT_THROW(makeResidHist(gauss, *data, DataError(99)), std::invalid_argument);
