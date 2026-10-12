@@ -580,6 +580,10 @@ void ROOT::Experimental::RNTupleJoinProcessor::SetEntryMapping(ROOT::NTupleSize_
       SetAuxiliaryFieldValidity(false);
       return;
    }
+   // We only set the entry mapping of the auxiliary ntuple here if the join is aligned. For unaligne joins, we need to
+   // first get the correct entry number from the join table, which requires reading join field data from disk. Because
+   // we want to do this only when the entry is actually loaded to avoid unnecessary reads, we postpone this to the
+   // actual `LoadEntry` call.
    if (!fJoinTable) {
       fAuxiliaryProcessor->SetEntryMapping(globalEntryNumber, mapping.GetAuxiliaryProcessorMapping());
    }
