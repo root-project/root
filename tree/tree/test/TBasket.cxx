@@ -10,6 +10,8 @@
 #include "ROOT/TestSupport.hxx"
 #include "gtest/gtest.h"
 
+#include <memory>
+#include <string>
 #include <vector>
 
 static const Int_t gSampleEvents = 100;
@@ -410,4 +412,80 @@ TEST(TBasket, TestSettingIOBits)
    EXPECT_EQ(*readEntryOffset, false);
    readEntryOffset = reinterpret_cast<bool *>(reinterpret_cast<char *>(basket2) + offset);
    EXPECT_EQ(*readEntryOffset, true);
+}
+
+// Fast clone a tree holding one `true` in branch "b" and check that the copy reads back.
+void ExpectFastCloneReadsBack(TTree &tree)
+{
+   TMemFile output("tbasket_fastclone_output.root", "RECREATE");
+   TTree *clone = tree.CloneTree(-1, "fast");
+   ASSERT_NE(clone, nullptr);
+   output.Write();
+   output.Close();
+   std::vector<char> memBuffer(output.GetSize());
+   output.CopyTo(memBuffer.data(), memBuffer.size());
+
+   TMemFile reread("tbasket_fastclone_output.root", memBuffer.data(), memBuffer.size(), "READ");
+   auto savedTree = reread.Get<TTree>(tree.GetName());
+   ASSERT_NE(savedTree, nullptr);
+   bool savedValue = false;
+   savedTree->SetBranchAddress("b", &savedValue);
+   EXPECT_GT(savedTree->GetEntry(0), 0);
+   EXPECT_TRUE(savedValue);
+   savedTree->ResetBranchAddresses();
+}
+
+// https://github.com/root-project/root/issues/23550
+TEST(TBasket, FastCloneSmallBasketWithLongKey)
+{
+   // Fast cloning copies baskets with TBasket::CopyTo(), which rewrites the key header into the buffer filled by
+   // LoadBasketBuffers(). A long key (here from a long tree name) next to a tiny payload used to make that buffer grow,
+   // and the freed buffer was then written to the output file.
+   for (int nameLength : {40, 57, 60, 64, 100}) {
+      SCOPED_TRACE(nameLength);
+      const std::string treeName(nameLength, 't');
+
+      TMemFile source("tbasket_fastclone_source.root", "RECREATE");
+      TTree tree(treeName.c_str(), treeName.c_str(), 99, &source);
+      bool value = true;
+      auto branch = tree.Branch("b", &value);
+      tree.Fill();
+      source.Write();
+
+      // Whether the freed buffer still holds the right bytes depends on the allocator, so also check that the header
+      // fits without growing the buffer.
+      TBasket loaded;
+      ASSERT_EQ(loaded.LoadBasketBuffers(branch->GetBasketSeek(0), branch->GetBasketBytes()[0], &source, &tree), 0);
+      loaded.SetWriteMode();
+      EXPECT_GE(loaded.GetBufferRef()->BufferSize(), loaded.GetKeylen());
+
+      ExpectFastCloneReadsBack(tree);
+   }
+}
+
+TEST(TBasket, FastCloneUnwrittenSmallBasketWithLongKey)
+{
+   // A basket still in memory is fast cloned with Clone(), which reads the copy through TBasket::Streamer(), and the
+   // copy is then written by WriteBuffer(). With a small basket size, a long key used to make that buffer grow in the
+   // same way.
+   for (int nameLength : {40, 57, 60, 64, 100}) {
+      SCOPED_TRACE(nameLength);
+      const std::string treeName(nameLength, 't');
+      // The source file is never written, so fast cloning finds no StreamerInfo record in it.
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.optionalDiag(kInfo, "TMemFile::GetStreamerInfoList", "cannot find the StreamerInfo record", false);
+
+      TMemFile source("tbasket_fastclone_source.root", "RECREATE");
+      TTree tree(treeName.c_str(), treeName.c_str(), 99, &source);
+      bool value = true;
+      auto branch = tree.Branch("b", &value);
+      branch->SetBasketSize(128);
+      tree.Fill();
+
+      std::unique_ptr<TBasket> copy{static_cast<TBasket *>(branch->GetBasket(0)->Clone())};
+      copy->SetWriteMode();
+      EXPECT_GE(copy->GetBufferRef()->BufferSize(), copy->GetKeylen());
+
+      ExpectFastCloneReadsBack(tree);
+   }
 }
