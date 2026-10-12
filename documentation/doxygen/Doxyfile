@@ -1081,7 +1081,6 @@ EXCLUDE                = ../../interpreter/ \
     ../../cmake \
     ../../etc \
     ../../js \
-    ../../core/clib/ \
     ../../core/lzma/ \
     ../../core/lz4/ \
     ../../core/newdelete/ \
