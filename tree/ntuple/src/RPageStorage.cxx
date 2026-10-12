@@ -51,7 +51,7 @@ using ROOT::Internal::RColumnDescriptorBuilder;
 using ROOT::Internal::RColumnElementBase;
 using ROOT::Internal::RExtraTypeInfoDescriptorBuilder;
 
-using ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder;
+using ROOT::Internal::RNTupleAttrSetDescriptorBuilder;
 
 using ROOT::Internal::RCluster;
 using ROOT::Internal::ROnDiskPage;
@@ -1758,7 +1758,7 @@ void ROOT::Internal::RPagePersistentSink::CommitClusterGroup()
 void ROOT::Internal::RPagePersistentSink::CommitAttributeSet(std::string_view attrSetName,
                                                              const RNTupleLink &attrAnchorInfo)
 {
-   using namespace ROOT::Experimental::Internal::RNTupleAttributes;
+   using namespace ROOT::Internal::RNTupleAttributes;
 
    RNTupleAttrSetDescriptorBuilder attrSetDescBuilder;
    auto attrSetDesc = attrSetDescBuilder.SchemaVersion(kSchemaVersionMajor, kSchemaVersionMinor)
