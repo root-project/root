@@ -84,6 +84,8 @@ public:
 
    void     DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags = 0) override;
 
+   ESaveImageResult  SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t type) const override;
+
 private:
    //Let's make this clear:
    TQt6PadPainter(const TQt6PadPainter &rhs) = delete;

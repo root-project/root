@@ -465,6 +465,9 @@ void TQt6PadPainter::DrawTTFglyphs(Int_t px, Int_t py, TTFhandle &ttf, [[maybe_u
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw image on the pad
+
 void TQt6PadPainter::DrawImage(TImage *img, Int_t px, Int_t py, Int_t)
 {
    // position inside the pad is provided, therefore shift it to global image
@@ -494,4 +497,29 @@ void TQt6PadPainter::DrawImage(TImage *img, Int_t px, Int_t py, Int_t)
     painter->drawImage(px, py, image);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw image on the pad
+
+TVirtualPadPainter::ESaveImageResult TQt6PadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t type) const
+{
+
+   if (type == TImage::kUnknown)
+      type = TImage::GetImageFileTypeFromFilename(fileName);
+
+   // indicate if image format not supported
+   if ((type != TImage::kPng) &&
+       (type != TImage::kJpeg) &&
+       (type != TImage::kPpm) &&
+       (type != TImage::kBmp) &&
+       (type != TImage::kIco) &&
+       (type != TImage::kGif) &&
+       (type != TImage::kXbm))
+       return kSaveNotImplemented;
+
+   QPixmap pixmap = fPaintWidget->grab();
+
+   pixmap.save(fileName);
+
+   return kSaveOk;
+}
 
