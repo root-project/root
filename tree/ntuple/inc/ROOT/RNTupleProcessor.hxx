@@ -411,6 +411,12 @@ protected:
    virtual void SetEntryMapping(ROOT::NTupleSize_t globalEntryNumber, REntryMapping &mapping) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Increment the local entry mapping by one.
+   ///
+   /// \param[in] mapping Entry mapping to increment
+   void IncrementEntryMapping(REntryMapping &mapping) { SetEntryMapping(mapping.GetEntryNumber() + 1, mapping); }
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Load the entry identified by the entry mapping.
    ///
    /// \param[in] mapping Mapping to the entry to load
@@ -567,7 +573,6 @@ public:
    class RIterator {
    private:
       RNTupleProcessor &fProcessor;
-      ROOT::NTupleSize_t fCurrentEntryNumber;
       RNTupleProcessor::REntryMapping fEntryMapping;
 
    public:
@@ -576,28 +581,19 @@ public:
       using value_type = RNTupleProcessor::REntryMapping;
       using reference = RNTupleProcessor::REntryMapping &;
 
-      RIterator(RNTupleProcessor &processor, ROOT::NTupleSize_t entryNumber)
-         : fProcessor(processor), fCurrentEntryNumber(entryNumber)
+      RIterator(RNTupleProcessor &processor, ROOT::NTupleSize_t firstEntryIdx) : fProcessor(processor)
       {
-         if (!fProcessor.fEntry) {
-            fCurrentEntryNumber = ROOT::kInvalidNTupleIndex;
-         }
-         // This constructor is called with kInvalidNTupleIndex for RNTupleProcessor::end(). In that case, we already
-         // know there is nothing to load.
-         if (fCurrentEntryNumber != ROOT::kInvalidNTupleIndex) {
+         if (fProcessor.fEntry && firstEntryIdx != ROOT::kInvalidNTupleIndex) {
             fProcessor.Connect(fProcessor.fEntry->GetFieldIndices(), Internal::RNTupleProcessorProvenance(),
                                /*updateFields=*/false);
-            fProcessor.SetEntryMapping(fCurrentEntryNumber, fEntryMapping);
+            fProcessor.SetEntryMapping(firstEntryIdx, fEntryMapping);
          }
       }
 
       iterator &operator++()
       {
-         fCurrentEntryNumber++;
-         fProcessor.SetEntryMapping(fCurrentEntryNumber, fEntryMapping);
-         if (fEntryMapping.GetEntryNumber() == kInvalidNTupleIndex) {
-            fCurrentEntryNumber = kInvalidNTupleIndex;
-         }
+         fProcessor.IncrementEntryMapping(fEntryMapping);
+
          return *this;
       }
 
@@ -614,11 +610,11 @@ public:
 
       friend bool operator!=(const iterator &lh, const iterator &rh)
       {
-         return lh.fCurrentEntryNumber != rh.fCurrentEntryNumber;
+         return lh.fEntryMapping.GetEntryNumber() != rh.fEntryMapping.GetEntryNumber();
       }
       friend bool operator==(const iterator &lh, const iterator &rh)
       {
-         return lh.fCurrentEntryNumber == rh.fCurrentEntryNumber;
+         return lh.fEntryMapping.GetEntryNumber() == rh.fEntryMapping.GetEntryNumber();
       }
    };
 
