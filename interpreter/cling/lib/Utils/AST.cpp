@@ -1337,6 +1337,67 @@ namespace utils {
     return nullptr;
   }
 
+  // Return QT stripped of its elaborated type keyword ('typename', 'struct',
+  // 'class', 'enum'), leaving everything else - in particular the nested name
+  // specifier and the qualifiers - alone.  QT is returned unchanged if it
+  // carries no keyword.
+  //
+  // Up to LLVM 20 the keyword was not stored on the type itself: a type written
+  // with a keyword was wrapped in an ElaboratedType, and dropping the wrapper
+  // (QualType(etype->getNamedType().getTypePtr(), 0)) dropped the keyword along
+  // with it.  LLVM 22 removed ElaboratedType and moved the keyword onto the
+  // types that used to be wrapped, so the equivalent operation is to rebuild
+  // the type with ElaboratedTypeKeyword::None.  The list below is exactly the
+  // set of types that used to be wrapped; DependentNameType and
+  // DependentTemplateSpecializationType are deliberately absent, as they owned
+  // their keyword before LLVM 22 as well and it was never stripped: for a
+  // dependent name the 'typename' is not redundant spelling but the only thing
+  // that says the name denotes a type.
+  static QualType RemoveElaboratedKeyword(const ASTContext& Ctx, QualType QT) {
+    constexpr auto None = ElaboratedTypeKeyword::None;
+    const Type* Ty = QT.getTypePtr();
+
+    QualType stripped;
+    if (const auto* TT = dyn_cast<TagType>(Ty)) {
+      if (TT->getKeyword() == None)
+        return QT;
+      stripped = Ctx.getTagType(None, TT->getQualifier(), TT->getDecl(),
+                                TT->isTagOwned());
+    } else if (const auto* TT = dyn_cast<TypedefType>(Ty)) {
+      if (TT->getKeyword() == None)
+        return QT;
+      stripped = Ctx.getTypedefType(None, TT->getQualifier(), TT->getDecl(),
+                                    TT->desugar());
+    } else if (const auto* UT = dyn_cast<UsingType>(Ty)) {
+      if (UT->getKeyword() == None)
+        return QT;
+      stripped = Ctx.getUsingType(None, UT->getQualifier(), UT->getDecl(),
+                                  UT->desugar());
+    } else if (const auto* UT = dyn_cast<UnresolvedUsingType>(Ty)) {
+      if (UT->getKeyword() == None)
+        return QT;
+      stripped =
+          Ctx.getUnresolvedUsingType(None, UT->getQualifier(), UT->getDecl());
+    } else if (const auto* TST = dyn_cast<TemplateSpecializationType>(Ty)) {
+      if (TST->getKeyword() == None)
+        return QT;
+      stripped = Ctx.getTemplateSpecializationType(
+          None, TST->getTemplateName(), TST->template_arguments(),
+          /*CanonicalArgs=*/{}, TST->getCanonicalTypeInternal());
+    } else if (const auto* DTST =
+                   dyn_cast<DeducedTemplateSpecializationType>(Ty)) {
+      if (DTST->getKeyword() == None)
+        return QT;
+      stripped = Ctx.getDeducedTemplateSpecializationType(
+          None, DTST->getTemplateName(), DTST->getDeducedType(),
+          DTST->isDependentType());
+    } else {
+      return QT;
+    }
+
+    return Ctx.getQualifiedType(stripped, QT.getLocalQualifiers());
+  }
+
   static QualType GetPartiallyDesugaredTypeImpl(const ASTContext& Ctx,
     QualType QT, const Transform::Config& TypeConfig,
     bool fullyQualifyType, bool fullyQualifyTmpltArg)
@@ -1544,6 +1605,21 @@ namespace utils {
         break;
       }
     }
+
+    // Removing the elaborated type keyword is part of the normalization: it is
+    // spelling, not identity, so 'typename std::vector<Track*>' and
+    // 'std::vector<Track*>' have to normalize to the same name.  Before LLVM 22
+    // this happened right here as a side effect of unwrapping the
+    // ElaboratedType (see RemoveElaboratedKeyword); that unwrapping was lost
+    // when ElaboratedType was removed, so do it explicitly.
+    //
+    // Note that this cannot be folded into the prefix handling above: that one
+    // only looks at the type we were called with, whereas the keyword we have
+    // to remove here is the one of the type the desugaring loop ended on, e.g.
+    //    typedef typename std::vector<T*> seq_type;
+    // where 'seq_type' itself carries no keyword and the 'typename' only shows
+    // up once the typedef has been resolved.
+    QT = RemoveElaboratedKeyword(Ctx, QT);
 
     // If we have a reference, array or pointer we still need to
     // desugar what they point to.
