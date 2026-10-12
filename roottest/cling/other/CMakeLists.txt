@@ -28,9 +28,8 @@ ROOTTEST_ADD_TEST(runStaticDataMember
                   LABELS roottest regression cling)
 
 ROOTTEST_ADD_TEST(runmissingXFunc
-                  MACRO runmissingXFunc.C
+                  MACRO runmissingXFunc.C(12)
                   OUTREF missingXFunc.ref
-                  WILLFAIL
                   LABELS roottest regression cling)
 
 ROOTTEST_ADD_TEST(assertBaseMembers

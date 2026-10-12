@@ -1,7 +1,6 @@
 ROOTTEST_ADD_TEST(runarrayhist
                   MACRO runarrayhist.C
                   OUTREF arrayhist.ref
-                  WILLFAIL
                   LABELS roottest regression cling)
 
 ROOTTEST_ADD_TEST(runcomplex

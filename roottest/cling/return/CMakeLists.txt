@@ -1,6 +1,5 @@
 ROOTTEST_ADD_TEST(constRetrunTest
                   MACRO run.C
-                  WILLFAIL
                   LABELS roottest regression cling)
 
 ROOTTEST_ADD_TEST(barna
