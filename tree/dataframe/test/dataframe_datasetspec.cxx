@@ -532,19 +532,11 @@ TEST_P(RDatasetSpecTest, FilterDependingOnVariation)
    ROOT::RDataFrame df(spec);
 
    auto sum = df.Vary(
-                   "x",
-                   [](ULong64_t x) {
-                      return ROOT::RVec<ULong64_t>{x + 5, x + 6};
-                   },
-                   {"x"}, 2)
+                   "x", [](ULong64_t x) { return ROOT::RVec<ULong64_t>{x + 5, x + 6}; }, {"x"}, 2)
                  .Filter([](ULong64_t x) { return x > 5u; }, {"x"})
                  .Sum<ULong64_t>("x");
    auto fr_sum = df.Vary(
-                      "friend.x",
-                      [](ULong64_t w) {
-                         return ROOT::RVec<ULong64_t>{w + 1, w + 2};
-                      },
-                      {"friend.x"}, 2, "w")
+                      "friend.x", [](ULong64_t w) { return ROOT::RVec<ULong64_t>{w + 1, w + 2}; }, {"friend.x"}, 2, "w")
                     .Filter([](ULong64_t w) { return w > 5u; }, {"friend.x"})
                     .Sum<ULong64_t>("friend.x");
    EXPECT_EQ(*sum, 90);
@@ -1090,20 +1082,29 @@ TEST_P(RDatasetSpecTest, CompareWithRNTupleReader)
 
 TEST_P(RDatasetSpecTest, Issue22741_SampleEntryRangeLocalToSample)
 {
-   // Check that EntryRange of RSampleInfo is local to the sample (file) 
+   // Check that EntryRange of RSampleInfo is local to the sample (file)
    // when using multi-threading and friends (i.e. TTreeProcessorMT using global clusters)
-   auto makeTree = [](const std::string& fname, int offset) {
-       auto f = std::make_unique<TFile>(fname.c_str(), "RECREATE");
-       auto t = std::make_unique<TTree>("t", "t");
-       int x; t->Branch("x", &x);
-       x = offset; t->Fill(); x = offset+1; t->Fill();
-       f->Write();
+   auto makeTree = [](const std::string &fname, int offset) {
+      auto f = std::make_unique<TFile>(fname.c_str(), "RECREATE");
+      auto t = std::make_unique<TTree>("t", "t");
+      int x;
+      t->Branch("x", &x);
+      x = offset;
+      t->Fill();
+      x = offset + 1;
+      t->Fill();
+      f->Write();
    };
 
    struct FileRAII {
-       std::vector<std::string> fPaths;
-       ~FileRAII() { for (const auto& p : fPaths) std::remove(p.c_str()); }
-   } filesRAII{{"test_issue22741_main1.root", "test_issue22741_main2.root", "test_issue22741_friend1.root", "test_issue22741_friend2.root"}};
+      std::vector<std::string> fPaths;
+      ~FileRAII()
+      {
+         for (const auto &p : fPaths)
+            std::remove(p.c_str());
+      }
+   } filesRAII{{"test_issue22741_main1.root", "test_issue22741_main2.root", "test_issue22741_friend1.root",
+                "test_issue22741_friend2.root"}};
 
    makeTree(filesRAII.fPaths[0], 0);
    makeTree(filesRAII.fPaths[1], 2);
@@ -1113,15 +1114,17 @@ TEST_P(RDatasetSpecTest, Issue22741_SampleEntryRangeLocalToSample)
    ROOT::RDF::Experimental::RDatasetSpec spec;
    spec.AddSample({"sample1", "t", "test_issue22741_main1.root"});
    spec.AddSample({"sample2", "t", "test_issue22741_main2.root"});
-   spec.WithGlobalFriends(std::vector<std::string>{"t", "t"}, std::vector<std::string>{"test_issue22741_friend1.root", "test_issue22741_friend2.root"}, "friend");
+   spec.WithGlobalFriends(std::vector<std::string>{"t", "t"},
+                          std::vector<std::string>{"test_issue22741_friend1.root", "test_issue22741_friend2.root"},
+                          "friend");
 
    ROOT::RDataFrame df(spec);
-   auto res = df.DefinePerSample("r2", [](unsigned int, const ROOT::RDF::RSampleInfo& info) {
-       return (int)info.EntryRange().second;
-   }).Take<int>("r2");
-   
+   auto res = df.DefinePerSample(
+                   "r2", [](unsigned int, const ROOT::RDF::RSampleInfo &info) { return (int)info.EntryRange().second; })
+                 .Take<int>("r2");
+
    for (auto v : *res) {
-       EXPECT_LE(v, 2);
+      EXPECT_LE(v, 2);
    }
 }
 

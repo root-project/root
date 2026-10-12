@@ -384,7 +384,7 @@ ROOT::RDF::RSampleInfo ROOT::Internal::RDF::RTTreeDS::CreateSampleInfo(
       // If no explicit range was set, fBeginEntry is 0. The local range is the entire tree.
       range.first = 0;
       range.second = tree->GetEntries(); // convert '-1', i.e. 'until the end', to the actual entry number
-   } else if (auto chain = dynamic_cast<TChain*>(r.GetTree())) {
+   } else if (auto chain = dynamic_cast<TChain *>(r.GetTree())) {
       // The reader is iterating over a TChain (e.g. from TTreeProcessorMT global clusters).
       // The entry range from the reader is global, but RSampleInfo expects local indices.
       // TTreeProcessorMT guarantees that clusters do not cross tree boundaries.
