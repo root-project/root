@@ -490,9 +490,9 @@ RooConstVar& RooConst(double val) ;
 /// Creates a RooHist with the per-bin residuals `data` - `fitModel`.
 ///
 /// For each bin, the model expectation is the model integrated exactly over
-/// the bin (with RooAbsReal::createIntegral()), normalized to the data in
-/// the used bins. Unbinned input data is binned internally. The supported
-/// RooCmdArgs are:
+/// the bin (with RooAbsReal::createIntegral()), by default normalized to the
+/// data in the used bins (see `Normalization()`). Unbinned input data is
+/// binned internally. The supported RooCmdArgs are:
 ///   - `Binning(binning)` / `Binning(nbins)` / `Binning(nbins, xlo, xhi)` :
 ///     the binning used to bin unbinned input data (default: the current
 ///     binning of the model's observable). Entries outside of the binning
@@ -503,9 +503,19 @@ RooConstVar& RooConst(double val) ;
 ///     specified for a union of named ranges (sidebands). Use it for sideband
 ///     fits or blinded data, so that the model is normalized to the data
 ///     outside of the blinded region.
-///   - `Normalization(double)` : additional scale factor for the expectation
-///     (default 1.0). The scale types of Normalization(scale, type) are not
-///     supported.
+///   - `Normalization(scale, type)` : scale factor and scale type of the
+///     expectation, with the RooAbsReal::ScaleType semantics of
+///     RooAbsPdf::plotOn() (default: `Normalization(1.0, RooAbsReal::Relative)`):
+///     - `Relative` : the expectation is normalized to the data in the used
+///       bins, and multiplied by `scale`
+///     - `RelativeExpected` : the expectation is the expected number of
+///       events of the extended model, multiplied by `scale`. Use it to
+///       compare the data with the fitted yield, e.g. for blinded or
+///       sideband fits. Throws if the model is not an extendable pdf.
+///     - `NumEvent` : the expectation is normalized to `scale` events in
+///       the full range of the observable
+///     - `Raw` : the expectation is the integral of the unnormalized model
+///       over the bin, multiplied by `scale`
 ///   - `DataError(RooAbsData::ErrorType)` : error model used for the point errors,
 ///     one of Poisson, SumW2 or Auto
 ///     (default: Auto, meaning SumW2 for weighted and Poisson for unweighted data)
@@ -515,7 +525,10 @@ RooConstVar& RooConst(double val) ;
 /// with respect to the curve of a plotted pdf. Make sure that the arguments
 /// are consistent with what is plotted (same normalization and range, same
 /// error model via DataError()), or the residual/pull histogram will not
-/// match the displayed data and curve.
+/// match the displayed data and curve. In particular, RooAbsPdf::plotOn()
+/// normalizes an extended pdf to its expected number of events unless a
+/// range is given, which corresponds to `Normalization(1.0,
+/// RooAbsReal::RelativeExpected)` here.
 ///
 /// \note If the model depends on observables beyond the data's observable
 /// (e.g. a conditional pdf), they are evaluated at their current values.

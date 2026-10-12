@@ -1172,7 +1172,7 @@ makeResidOrPullHist(RooAbsReal &fitModel, RooAbsData const &data, bool normalize
 
    RooCmdConfig pc(funcName);
    pc.defineDouble("normScale", "Normalization", 0, 1.0);
-   pc.defineInt("normType", "Normalization", 0, 0);
+   pc.defineInt("normType", "Normalization", 0, static_cast<int>(RooAbsReal::Relative));
    pc.defineInt("etype", "DataError", 0, static_cast<int>(RooAbsData::Auto));
    pc.defineString("name", "Name", 0, "");
    pc.defineString("title", "Title", 0, "");
@@ -1195,12 +1195,17 @@ makeResidOrPullHist(RooAbsReal &fitModel, RooAbsData const &data, bool normalize
       throw std::invalid_argument(std::string(funcName) + "(): input data is empty");
    }
 
-   // Only the pure scale-factor form of Normalization() is supported; the
-   // scale types Normalization(scale, type) like Relative or NumEvent are
-   // RooPlot-specific.
-   if (pc.hasProcessed("Normalization") && pc.getInt("normType") != static_cast<int>(RooAbsReal::Relative)) {
-      throw std::invalid_argument(std::string(funcName) +
-                                  "(): only Normalization(scaleFactor) is supported, without a scale type");
+   const auto stype = static_cast<RooAbsReal::ScaleType>(pc.getInt("normType"));
+   if (stype != RooAbsReal::Relative && stype != RooAbsReal::RelativeExpected && stype != RooAbsReal::NumEvent &&
+       stype != RooAbsReal::Raw) {
+      throw std::invalid_argument(std::string(funcName) + "(): unsupported scale type in Normalization()");
+   }
+   if (stype == RooAbsReal::RelativeExpected) {
+      auto *pdf = dynamic_cast<RooAbsPdf *>(&fitModel);
+      if (!pdf || !pdf->canBeExtended()) {
+         throw std::invalid_argument(std::string(funcName) +
+                                     "(): the RelativeExpected scale type requires an extendable pdf");
+      }
    }
 
    const auto etype = static_cast<RooAbsData::ErrorType>(pc.getInt("etype"));
@@ -1424,21 +1429,41 @@ makeResidOrPullHist(RooAbsReal &fitModel, RooAbsData const &data, bool normalize
       }
    } scratchRangeGuard{*intVar, scratchRanges};
 
-   // The model integrals over the used bins
+   // The model integrals over the used bins. For the Raw scale type, the
+   // integrals of the unnormalized model are used.
    std::vector<double> binIntegrals(usedBins.size());
    double sumBinIntegrals = 0.;
    for (std::size_t j = 0; j < usedBins.size(); ++j) {
       intVar->setRange(scratchRanges[j].c_str(), dataBinning.binLow(usedBins[j]), dataBinning.binHigh(usedBins[j]));
-      std::unique_ptr<RooAbsReal> integral{model->createIntegral(obsSet, normSet, scratchRanges[j].c_str())};
+      std::unique_ptr<RooAbsReal> integral{stype == RooAbsReal::Raw
+                                              ? model->createIntegral(obsSet, scratchRanges[j].c_str())
+                                              : model->createIntegral(obsSet, normSet, scratchRanges[j].c_str())};
       binIntegrals[j] = integral->getVal();
       sumBinIntegrals += binIntegrals[j];
    }
-   if (sumBinIntegrals == 0.) {
-      throw std::invalid_argument(std::string(funcName) + "(): model has no support in the used bins");
-   }
 
-   // The expectation is normalized to the data in the used bins
-   const double expectedNorm = scaleFactor * nData / sumBinIntegrals;
+   // The normalization of the expectation, following the scale types of
+   // RooAbsPdf::plotOn()
+   double expectedNorm = scaleFactor;
+   if (stype == RooAbsReal::Relative) {
+      // Normalized to the data in the used bins
+      if (sumBinIntegrals == 0.) {
+         throw std::invalid_argument(std::string(funcName) + "(): model has no support in the used bins");
+      }
+      expectedNorm *= nData / sumBinIntegrals;
+   } else if (stype == RooAbsReal::NumEvent || stype == RooAbsReal::RelativeExpected) {
+      // Normalized to the given or the expected number of events in the
+      // full range of the observable
+      std::unique_ptr<RooAbsReal> fullIntegral{model->createIntegral(obsSet, normSet)};
+      const double full = fullIntegral->getVal();
+      if (full == 0.) {
+         throw std::invalid_argument(std::string(funcName) + "(): model has no support in the observable range");
+      }
+      expectedNorm /= full;
+      if (stype == RooAbsReal::RelativeExpected) {
+         expectedNorm *= static_cast<RooAbsPdf &>(*model).expectedEvents(normSet);
+      }
+   }
 
    RooAbsData::ErrorType errType =
       etype == RooAbsData::Auto ? (binData->isNonPoissonWeighted() ? RooAbsData::SumW2 : RooAbsData::Poisson) : etype;
