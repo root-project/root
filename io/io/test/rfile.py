@@ -4,8 +4,6 @@ import unittest
 
 import ROOT
 
-RFile = ROOT.Experimental.RFile
-
 
 class RFileTests(unittest.TestCase):
     def test_open_for_reading(self):
@@ -19,7 +17,7 @@ class RFileTests(unittest.TestCase):
                 hist.FillRandom("gaus", 100)
                 tfile.WriteObject(hist, "hist")
 
-            with RFile.Open(fileName) as rfile:
+            with ROOT.RFile.Open(fileName) as rfile:
                 hist = rfile.Get("hist")
                 self.assertNotEqual(hist, None)
                 self.assertEqual(rfile.Get[ROOT.TH1D]("inexistent"), None)
@@ -39,7 +37,7 @@ class RFileTests(unittest.TestCase):
 
         fileName = "test_rfile_writeread_py.root"
         try:
-            with RFile.Recreate(fileName) as rfile:
+            with ROOT.RFile.Recreate(fileName) as rfile:
                 hist = ROOT.TH1D("hist", "", 100, -10, 10)
                 hist.FillRandom("gaus", 10)
                 rfile.Put("hist", hist)
@@ -48,7 +46,7 @@ class RFileTests(unittest.TestCase):
                     with self.assertRaises(ROOT.RException):
                         rfile.Put("hist/2", hist)
 
-            with RFile.Open(fileName) as rfile:
+            with ROOT.RFile.Open(fileName) as rfile:
                 hist = rfile.Get("hist")
                 self.assertNotEqual(hist, None)
 
@@ -60,7 +58,7 @@ class RFileTests(unittest.TestCase):
 
         fileName = "test_rfile_getkeyinfo_py.root"
         try:
-            with RFile.Recreate(fileName) as rfile:
+            with ROOT.RFile.Recreate(fileName) as rfile:
                 hist = ROOT.TH1D("hist", "", 100, -10, 10)
                 hist.FillRandom("gaus", 10)
                 rfile.Put("hist", hist)
@@ -69,7 +67,7 @@ class RFileTests(unittest.TestCase):
                 rfile.Put("foo/bar/hist2", hist)
                 rfile.Put("foo/hist2", hist)
 
-            with RFile.Open(fileName) as rfile:
+            with ROOT.RFile.Open(fileName) as rfile:
                 key = rfile.GetKeyInfo("hist")
                 self.assertEqual(key.GetPath(), "hist")
                 self.assertEqual(key.GetClassName(), "TH1D")
@@ -85,7 +83,7 @@ class RFileTests(unittest.TestCase):
 
         fileName = "test_rfile_listkeys_py.root"
         try:
-            with RFile.Recreate(fileName) as rfile:
+            with ROOT.RFile.Recreate(fileName) as rfile:
                 hist = ROOT.TH1D("hist", "", 100, -10, 10)
                 hist.FillRandom("gaus", 10)
                 rfile.Put("hist", hist)
@@ -94,7 +92,7 @@ class RFileTests(unittest.TestCase):
                 rfile.Put("foo/bar/hist2", hist)
                 rfile.Put("foo/hist2", hist)
 
-            with RFile.Open(fileName) as rfile:
+            with ROOT.RFile.Open(fileName) as rfile:
                 keys = [key.GetPath() for key in rfile.ListKeys()]
                 self.assertEqual(keys, ["hist", "foo/hist", "foo/bar/hist", "foo/bar/hist2", "foo/hist2"])
 
@@ -128,7 +126,7 @@ class RFileTests(unittest.TestCase):
     def test_putUnsupportedType(self):
         fileName = "test_rfile_putunsupported_py.root"
         try:
-            with RFile.Recreate(fileName) as rfile:
+            with ROOT.RFile.Recreate(fileName) as rfile:
                 # Storing integers is unsupported
                 with self.assertRaises(TypeError):
                     rfile.Put("foo", 2)
@@ -143,7 +141,7 @@ class RFileTests(unittest.TestCase):
                 # Storing strings is supported
                 rfile.Put("str", "foobar")
 
-            with RFile.Open(fileName) as rfile:
+            with ROOT.RFile.Open(fileName) as rfile:
                 self.assertEqual(rfile.Get("str"), b"foobar")
         finally:
             os.remove(fileName)
@@ -162,7 +160,7 @@ class RFileTests(unittest.TestCase):
                     tree.Fill()
                 tree.Write()
 
-            with RFile.Open(fileName) as rfile:
+            with ROOT.RFile.Open(fileName) as rfile:
                 tree = rfile.Get("tree")
                 self.assertIsNot(tree, None)
                 self.assertEqual(tree.GetEntries(), 10)

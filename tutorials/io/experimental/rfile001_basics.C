@@ -18,7 +18,7 @@ void write_hist_to_rfile(const char *fileName)
    hist.FillRandom("gaus", 1000);
 
    // Create a new ROOT file for writing
-   auto file = ROOT::Experimental::RFile::Recreate(fileName);
+   auto file = ROOT::RFile::Recreate(fileName);
 
    // Put objects into the file (in this case we write the same object multiple times
    // under different paths). Note that the ownership of `hist` is untouched by `file->Put`.
@@ -33,7 +33,7 @@ void write_hist_to_rfile(const char *fileName)
 void read_hist_from_rfile(const char *fileName)
 {
    // Open an existing ROOT file for reading (will throw an exception if `fileName` cannot be read).
-   auto file = ROOT::Experimental::RFile::Open(fileName);
+   auto file = ROOT::RFile::Open(fileName);
    // Iterate all keys of all objects in the file (this excludes directories by default - see the documentation of
    // ListKeys() for all the options).
    for (auto key : file->ListKeys()) {
