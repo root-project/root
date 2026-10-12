@@ -14,7 +14,7 @@
 #include "TStyle.h"
 #include "TEnv.h"
 #include "TMath.h"
-#include "TPad.h"
+#include "TCanvas.h"
 #include "TPoint.h"
 #include "TROOT.h"
 #include "TColor.h"
@@ -498,15 +498,40 @@ void TQt6PadPainter::DrawImage(TImage *img, Int_t px, Int_t py, Int_t)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw image on the pad
+/// Fill TImage from specified pad
+
+Bool_t TQt6PadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
+{
+ auto canv = pad->GetCanvas();
+
+   if (canv != fPaintWidget->getCanvas()) {
+      ::Error("TQt6PadPainter::FillImageFromPad", "Provided pad does not belong to the canvas");
+      return kFALSE;
+   }
+
+   QPixmap pixmap;
+
+   if (pad != canv)
+      pixmap = fPaintWidget->grab(QRect(pad->UtoAbsPixel(0), pad->VtoAbsPixel(1), pad->GetPadWidth(), pad->GetPadHeight()));
+   else
+      pixmap = fPaintWidget->grab();
+
+   QImage qimage = pixmap.toImage().convertToFormat(QImage::Format_ARGB32);
+
+   image->FromBitmap((const UChar_t *) qimage.bits(), qimage.width(), qimage.height());
+
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save pad as image
 
 TVirtualPadPainter::ESaveImageResult TQt6PadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t type) const
 {
-
    if (type == TImage::kUnknown)
       type = TImage::GetImageFileTypeFromFilename(fileName);
 
-   // indicate if image format not supported
+   // if image format not supported by qt6 - try to use ASImage
    if ((type != TImage::kPng) &&
        (type != TImage::kJpeg) &&
        (type != TImage::kPpm) &&
@@ -514,9 +539,21 @@ TVirtualPadPainter::ESaveImageResult TQt6PadPainter::SaveAsImage(TVirtualPad *pa
        (type != TImage::kIco) &&
        (type != TImage::kGif) &&
        (type != TImage::kXbm))
-       return kSaveNotImplemented;
+       return TPadPainterBase::SaveAsImage(pad, fileName, type);
 
-   QPixmap pixmap = fPaintWidget->grab();
+   auto canv = pad->GetCanvas();
+
+   if (canv != fPaintWidget->getCanvas()) {
+      ::Error("TQt6PadPainter::SaveAsImage", "Provided pad does not belong to the canvas");
+      return kSaveFail;
+   }
+
+   QPixmap pixmap;
+
+   if (pad != canv)
+      pixmap = fPaintWidget->grab(QRect(pad->UtoAbsPixel(0), pad->VtoAbsPixel(1), pad->GetPadWidth(), pad->GetPadHeight()));
+   else
+      pixmap = fPaintWidget->grab();
 
    pixmap.save(fileName);
 
