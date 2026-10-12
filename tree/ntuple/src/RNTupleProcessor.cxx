@@ -412,7 +412,6 @@ void ROOT::Experimental::RNTupleChainProcessor::SetEntryMapping(ROOT::NTupleSize
       // The provided global entry number is larger than the number of available entries.
       if (++currProcessorIdx >= fInnerProcessors.size()) {
          mapping.SetEntryNumber(kInvalidNTupleIndex);
-         mapping.SetInnerProcessorIdx(0);
          return;
       }
 
