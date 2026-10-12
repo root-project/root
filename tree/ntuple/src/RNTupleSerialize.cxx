@@ -1906,7 +1906,7 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(
 }
 
 ROOT::RResult<std::uint32_t>
-ROOT::Internal::RNTupleSerializer::SerializeAttributeSet(const Experimental::RNTupleAttrSetDescriptor &attrDesc,
+ROOT::Internal::RNTupleSerializer::SerializeAttributeSet(const RNTupleAttrSetDescriptor &attrDesc,
                                                          void *buffer)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
@@ -2093,7 +2093,7 @@ ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeFooter(const v
                                         "back in the future (but your main data is)";
       }
       for (std::uint32_t attrSetId = 0; attrSetId < nAttributeSets; ++attrSetId) {
-         Experimental::Internal::RNTupleAttrSetDescriptorBuilder attrSetDescBld;
+         Internal::RNTupleAttrSetDescriptorBuilder attrSetDescBld;
          if (auto res = DeserializeAttributeSet(bytes, fnBufSizeLeft(), attrSetDescBld)) {
             descBuilder.AddAttributeSet(attrSetDescBld.MoveDescriptor().Unwrap());
             bytes += res.Unwrap();
@@ -2108,7 +2108,7 @@ ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeFooter(const v
 }
 
 ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::DeserializeAttributeSet(
-   const void *buffer, std::uint64_t bufSize, Experimental::Internal::RNTupleAttrSetDescriptorBuilder &attrSetDescBld)
+   const void *buffer, std::uint64_t bufSize, Internal::RNTupleAttrSetDescriptorBuilder &attrSetDescBld)
 {
    auto base = reinterpret_cast<const unsigned char *>(buffer);
    auto bytes = base;

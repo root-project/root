@@ -20,15 +20,13 @@ class RNTupleModel;
 class RNTuple;
 class RNTupleWriter;
 
-namespace Experimental {
-
 class RNTupleAttrSetWriter;
 
 namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RNTupleAttrEntry
+\class ROOT::Internal::RNTupleAttrEntry
 \ingroup NTuple
 \brief A pair of scoped + meta entry used by the RNTupleAttrSetWriter.
 
@@ -49,7 +47,7 @@ struct RNTupleAttrEntry {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleAttrPendingRange
+\class ROOT::RNTupleAttrPendingRange
 \ingroup NTuple
 \brief A not-yet-finalized Attribute Range used for writing
 
@@ -59,7 +57,7 @@ For the same reason, it can only be created by the AttrSetWriter.
 */
 // clang-format on
 class RNTupleAttrPendingRange final {
-   friend class ROOT::Experimental::RNTupleAttrSetWriter;
+   friend class ROOT::RNTupleAttrSetWriter;
 
    ROOT::NTupleSize_t fStart = 0;
    std::uint64_t fModelId = 0;
@@ -113,7 +111,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleAttrSetWriter
+\class ROOT::RNTupleAttrSetWriter
 \ingroup NTuple
 \brief Class used to write an RNTupleAttrSet in the context of an RNTupleWriter.
 
@@ -205,7 +203,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleAttrSetWriterHandle
+\class ROOT::RNTupleAttrSetWriterHandle
 \ingroup NTuple
 \brief Non-owning handle to an RNTupleAttrSetWriter
 
@@ -238,7 +236,6 @@ public:
    }
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

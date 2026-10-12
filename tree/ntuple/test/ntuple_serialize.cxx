@@ -2207,7 +2207,7 @@ TEST(RNTuple, SerializeAttrSets)
    RNTupleLocator locator;
    locator.SetType(ROOT::RNTupleLocator::kTypeFile);
    locator.SetPosition(128ul);
-   ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder builder;
+   ROOT::Internal::RNTupleAttrSetDescriptorBuilder builder;
    builder.SchemaVersion(1, 0).AnchorLength(1024).AnchorLocator(locator).Name("AttrSetName");
    auto attrSetDesc = builder.MoveDescriptor().Unwrap();
 
@@ -2217,7 +2217,7 @@ TEST(RNTuple, SerializeAttrSets)
    res = RNTupleSerializer::SerializeAttributeSet(attrSetDesc, buf.get());
    ASSERT_TRUE(bool(buf));
 
-   ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder deserializedDescBld;
+   ROOT::Internal::RNTupleAttrSetDescriptorBuilder deserializedDescBld;
    RNTupleSerializer::DeserializeAttributeSet(buf.get(), res.Unwrap(), deserializedDescBld);
 
    ASSERT_EQ(attrSetDesc, deserializedDescBld.MoveDescriptor().Unwrap());
@@ -2269,7 +2269,7 @@ TEST(RNTuple, SerializeDescriptorWithAttrSets)
    locator.SetType(ROOT::RNTupleLocator::kTypeFile);
    locator.SetPosition(128ul);
 
-   ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder attrBuilder;
+   ROOT::Internal::RNTupleAttrSetDescriptorBuilder attrBuilder;
    attrBuilder.SchemaVersion(1, 0).AnchorLength(1024).AnchorLocator(locator).Name("AttrSetName");
 
    // First cluster
