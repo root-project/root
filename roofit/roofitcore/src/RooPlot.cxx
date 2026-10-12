@@ -43,8 +43,6 @@ object onto a one-dimensional plot.
 
 #include "RooPlot.h"
 
-#include <atomic>
-
 #include "RooAbsReal.h"
 #include "RooAbsRealLValue.h"
 #include "RooPlotable.h"
@@ -1073,8 +1071,9 @@ double RooPlot::chiSquare(const char* curvename, const char* histname, int nFitP
 /// bin, instead of interpolating the plotted curve.
 RooHist* RooPlot::residHist(const char* histname, const char* curvename, bool normalize, bool useAverage) const
 {
-  static std::atomic<bool> warned{false};
-  if (!warned.exchange(true)) {
+  static bool warned = false;
+  if (!warned) {
+    warned = true;
     coutW(Plotting) << "RooPlot::residHist/pullHist compare data with the interpolated curve, which is biased for "
                        "sharply peaked models (systematic residual 'wiggle'). For binned data compared to a fitted "
                        "model, use RooFit::makeResidHist() / RooFit::makePullHist(), which integrate the model exactly "
