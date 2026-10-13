@@ -33,7 +33,7 @@ ROOT_ADD_GTEST(
 ROOT_ADD_GTEST(TClingLoadUnloadFile TClingLoadUnloadFileTests.cxx LIBRARIES Core RIO)
 
 if(NOT MSVC)
-  ROOT_ADD_GTEST(TClingDispatch TClingDispatchTests.cxx LIBRARIES Core)
+  ROOT_ADD_GTEST(TClingDispatch TClingDispatchTests.cxx LIBRARIES Core ${CMAKE_DL_LIBS})
   target_compile_definitions(TClingDispatch PRIVATE ROOT_LIBCORE="$<TARGET_FILE:Core>"
                                                     ROOT_LIBCLING="$<TARGET_FILE:Cling>")
 endif()
