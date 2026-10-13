@@ -801,6 +801,58 @@ static PyObject* GetWarningHandler(PyObject*, PyObject* args, PyObject* kwds) {
 }
 
 //----------------------------------------------------------------------------
+namespace {
+
+void (*gInputHookFunc)() = nullptr;
+int (*gPreviousInputHook)() = nullptr;
+
+int InputHook() {
+  // The PyOS_InputHook set_input_hook() installs: calls the C++ function
+  // with the GIL, then the previous hook. Runs no Python code, so a Ctrl-C
+  // arriving meanwhile stays pending for the prompt.
+  {
+    cpyrt::PythonGILRAII gil;
+    gInputHookFunc();
+  }
+  return gPreviousInputHook ? gPreviousInputHook() : 0;
+}
+
+} // unnamed namespace
+
+static PyObject* SetInputHook(PyObject*, PyObject* pyfunc) {
+  // Install the PyOS_InputHook that calls the compiled C++ function pyfunc,
+  // a void() overload, while the interactive prompt waits for input; None
+  // restores the previous hook.
+  if (pyfunc == Py_None) {
+    if (PyOS_InputHook == &InputHook) {
+      PyOS_InputHook = gPreviousInputHook;
+      gPreviousInputHook = nullptr;
+    }
+    gInputHookFunc = nullptr;
+    Py_RETURN_NONE;
+  }
+
+  interop::TCppFuncAddr_t addr = 0;
+  if (CPPOverload_CheckExact(pyfunc)) {
+    const auto& methods = ((CPPOverload*)pyfunc)->fMethodInfo->fMethods;
+    if (methods.size() == 1 && methods[0]->GetMaxArgs() == 0)
+      addr = methods[0]->GetFunctionAddress();
+  }
+  if (!addr) {
+    PyErr_SetString(PyExc_TypeError,
+                    "a C++ function taking no arguments expected");
+    return nullptr;
+  }
+
+  gInputHookFunc = (void (*)())addr;
+  if (PyOS_InputHook != &InputHook) {
+    gPreviousInputHook = PyOS_InputHook;
+    PyOS_InputHook = &InputHook;
+  }
+  Py_RETURN_NONE;
+}
+
+//----------------------------------------------------------------------------
 static PyObject* BindValue(PyObject*, PyObject* args, PyObject* kwds) {
   // Read through the converter for the given type name, at the given address.
   static const char* kwlist[] = {(char*)"type_name", (char*)"address",
@@ -1089,6 +1141,9 @@ static PyMethodDef gcpyrtMethods[] = {
      METH_VARARGS | METH_KEYWORDS,
      (char*)"Get a C function pointer that issues Python warnings for "
             "warnings reported by C++."},
+    {(char*)"set_input_hook", (PyCFunction)SetInputHook, METH_O,
+     (char*)"Call a C++ function while the interactive prompt waits for "
+            "input."},
     {(char*)"move", (PyCFunction)Move, METH_O,
      (char*)"Cast the C++ object to become movable."},
     {(char*)"add_pythonization", (PyCFunction)AddPythonization, METH_VARARGS,
