@@ -360,6 +360,7 @@ Int_t TMessage::Compress()
    Int_t hdrlen   = 2*sizeof(UInt_t);
    Int_t messlen  = Length() - hdrlen;
    Int_t nbuffers = 1 + (messlen - 1) / kMAXZIPBUF;
+   const Int_t blockSize = ROOT::Internal::GetZipBlockSize(messlen);
    Int_t chdrlen  = 3*sizeof(UInt_t);   // compressed buffer header length
    Int_t buflen   = std::max(512, chdrlen + messlen + 9*nbuffers);
    fBufComp       = new char[buflen];
@@ -372,7 +373,7 @@ Int_t TMessage::Compress()
       if (i == nbuffers - 1)
          bufmax = messlen - nzip;
       else
-         bufmax = kMAXZIPBUF;
+         bufmax = blockSize;
       R__zipMultipleAlgorithm(compressionLevel, &bufmax, messbuf, &bufmax, bufcur, &nout,
                               static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compressionAlgorithm));
       if (nout == 0 || nout >= messlen) {
@@ -385,8 +386,8 @@ Int_t TMessage::Compress()
          return -1;
       }
       bufcur  += nout;
-      messbuf += kMAXZIPBUF;
-      nzip    += kMAXZIPBUF;
+      messbuf += blockSize;
+      nzip += blockSize;
    }
    fBufCompCur = bufcur;
    fCompPos    = fBufCur;
