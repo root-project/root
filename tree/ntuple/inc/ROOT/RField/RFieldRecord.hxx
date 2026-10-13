@@ -38,10 +38,11 @@ class RFieldVisitor;
 } // namespace Detail
 
 namespace Internal {
+// TODO(gparolini): consider using a different type than RFieldDescriptor to pass around type name/version/checksum
+// to CreateEmulated* functions
 std::unique_ptr<RFieldBase> CreateEmulatedRecordField(std::string_view fieldName,
                                                       std::vector<std::unique_ptr<RFieldBase>> itemFields,
-                                                      std::string_view emulatedFromType, std::uint32_t typeVersion,
-                                                      std::optional<std::uint32_t> typeChecksum);
+                                                      const RFieldDescriptor &emulatedFrom);
 // Used by to late-model-extend fields to untyped records
 void AddItemToRecord(RRecordField &record, std::unique_ptr<RFieldBase> newItem);
 } // namespace Internal
@@ -51,8 +52,7 @@ void AddItemToRecord(RRecordField &record, std::unique_ptr<RFieldBase> newItem);
 class RRecordField : public RFieldBase {
    friend std::unique_ptr<RFieldBase>
    Internal::CreateEmulatedRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
-                                       std::string_view emulatedFromType, std::uint32_t typeVersion,
-                                       std::optional<std::uint32_t> typeChecksum);
+                                       const RFieldDescriptor &emulatedFrom);
    friend void Internal::AddItemToRecord(RRecordField &record, std::unique_ptr<RFieldBase> newItem);
 
    class RRecordDeleter : public RDeleter {
@@ -70,17 +70,17 @@ class RRecordField : public RFieldBase {
    };
 
    std::unordered_set<std::string> fSubfieldNames; ///< Efficient detection of duplicate field names
+   // These are only valid if the record field is emulated (i.e. (fTraits & kTraitEmulatedField) != 0).
    std::uint32_t fEmulatedTypeVersion = 0;
    std::uint32_t fEmulatedTypeChecksum = 0;
 
    RRecordField(std::string_view name, const RRecordField &source); // Used by CloneImpl()
 
-   /// If `emulatedFromType` is non-empty, this field was created as a replacement for a ClassField that we lack a
+   /// If `emulatedFrom` is non-null, this field was created as a replacement for a ClassField that we lack a
    /// dictionary for and reconstructed from the on-disk information.
    /// Used by the public constructor and by Internal::CreateEmulatedRecordField().
    RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
-                std::string_view emulatedFromType, std::uint32_t typeVersion = 0,
-                std::optional<std::uint32_t> typeChecksum = {});
+                const RFieldDescriptor *emulatedFrom);
 
    bool IsPairOrTuple() const
    {

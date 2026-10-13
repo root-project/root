@@ -217,10 +217,61 @@ TEST(RNTupleMergeEmulated, MergeLateEmulated)
 
       writer2.reset();
 
-      DoMerge({fileGuard1, fileGuard2}, fileGuardOut2, ENTupleMergingMode::kUnion);
+      DoMerge({fileGuard1, fileGuard2}, fileGuardOut, ENTupleMergingMode::kUnion);
    });
 
    // Gather the input sources
-   DoMerge({fileGuard1, fileGuard2}, fileGuardOut, ENTupleMergingMode::kUnion);
-   CompareOnDiskInfo(fileGuardOut2, fileGuardOut);
+   DoMerge({fileGuard1, fileGuard2}, fileGuardOut2, ENTupleMergingMode::kUnion);
+   CompareOnDiskInfo(fileGuardOut, fileGuardOut2);
+}
+
+TEST(RNTupleMergeEmulated, MergeLateEmulatedVector)
+{
+   // Union-merge two files, the first containing an empty ntuple and the second a simple class field with no dictionary
+   FileRaii fileGuard1("test_ntuple_merge_late_emulated_vec1.root");
+   FileRaii fileGuard2("test_ntuple_merge_late_emulated_vec2.root");
+   FileRaii fileGuardOut("test_ntuple_merge_late_emulated_out.root");
+   FileRaii fileGuardOut2("test_ntuple_merge_late_emulated_out2.root");
+
+   EXPECT_NO_STREAMER_OR_DICTIONARY();
+
+   ExecInFork([&] {
+      fileGuard1.PreserveFile();
+      fileGuard2.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+         struct Custom {
+            int fInt1 = 1;
+            ClassDefNV(Custom, 2);
+         };
+      )"));
+
+      {
+         auto writer = RNTupleWriter::Recreate(ROOT::RNTupleModel::Create(), "ntuple", fileGuard1.GetPath());
+         writer->Fill();
+         writer->Fill();
+         writer->Fill();
+      }
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "std::vector<Custom>").Unwrap());
+      auto writer2 = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+
+      void *ptr2 = writer2->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+      DeclarePointer("std::vector<Custom>", "ptr2", ptr2);
+
+      ProcessLine("ptr2->push_back(Custom{11});");
+      writer2->Fill();
+
+      ProcessLine("ptr2->push_back(Custom{22});");
+      writer2->Fill();
+
+      writer2.reset();
+
+      DoMerge({fileGuard1, fileGuard2}, fileGuardOut, ENTupleMergingMode::kUnion);
+   });
+
+   // Gather the input sources
+   DoMerge({fileGuard1, fileGuard2}, fileGuardOut2, ENTupleMergingMode::kUnion);
+   CompareOnDiskInfo(fileGuardOut, fileGuardOut2);
 }
