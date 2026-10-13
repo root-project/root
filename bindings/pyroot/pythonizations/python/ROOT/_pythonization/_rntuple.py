@@ -30,9 +30,9 @@ model.MakeField['int']("foo")
 
 # Create a writer as a context manager
 with ROOT.RNTupleWriter.Recreate(model, "myNtuple", "file.root") as writer:
-    # create entries and write them to the RNTuple
+    # create an entry and use it to write data to the RNTuple
+    entry = writer.CreateEntry()
     for i in range(0,10):
-        entry = writer.CreateEntry()
         entry['foo'] = i
         writer.Fill(entry)
 # On destruction, the writer will flush the written data to disk
