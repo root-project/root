@@ -227,7 +227,8 @@ if(NOT APPLE AND NOT MSVC)
   # the problem reported for Julia in
   # https://github.com/JuliaHEP/ROOT.jl/issues/17#issuecomment-882719292
   # and by ALICE in https://github.com/root-project/root/issues/19889
-  # Only needed for Linux: Mac uses linker namespaces and  Windows explicit export/import
+  # Only needed for Linux: Windows uses explicit export/import, and Mac
+  # two-level namespaces, but see the exported symbols list below.
   target_link_libraries(Cling PRIVATE -Wl,-Bsymbolic)
   # We compile with -fvisibility=hidden in interpreter/, but some symbols of
   # instantiated templates remain. Use a version script to hide them.
@@ -240,6 +241,26 @@ if(NOT APPLE AND NOT MSVC)
   add_custom_command(TARGET Cling POST_BUILD
     COMMAND $<$<CONFIG:Release>:${CMAKE_STRIP}>
     ARGS $<TARGET_FILE:Cling>)
+endif()
+
+if(APPLE)
+  # Two-level namespaces keep libCling's own imports private, but dyld merges
+  # weak definitions across images by name, and lookups by name, as with
+  # -undefined dynamic_lookup or dlsym(), see every export. Export what
+  # libCling.script does: ld64 takes no version script, but a list of its
+  # globals in Mach-O spelling.
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS libCling.script)
+  file(READ ${CMAKE_CURRENT_SOURCE_DIR}/libCling.script script)
+  string(REGEX MATCH "global:([^}]*)local:" _ "${script}")
+  string(REGEX MATCHALL "[^ \t\r\n;]+" exports "${CMAKE_MATCH_1}")
+  if(NOT exports)
+    message(FATAL_ERROR "No global symbols found in libCling.script")
+  endif()
+  list(TRANSFORM exports PREPEND "_")
+  list(JOIN exports "\n" exports)
+  file(CONFIGURE OUTPUT libCling.exports CONTENT "${exports}\n" @ONLY)
+  target_link_libraries(Cling PRIVATE -Wl,-exported_symbols_list,${CMAKE_CURRENT_BINARY_DIR}/libCling.exports)
+  set_target_properties(Cling PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/libCling.exports)
 endif()
 
 if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
