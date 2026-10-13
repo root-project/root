@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "ROOT/ML/RFlat2DMatrix.hxx"
-#include "ROOT/ML/RFlat2DMatrixOperators.hxx"
+#include "RFlat2DMatrixOperators.hxx"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDF/Utils.hxx"
 

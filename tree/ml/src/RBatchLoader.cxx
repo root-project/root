@@ -1,5 +1,5 @@
 
-#include "ROOT/ML/RBatchLoader.hxx"
+#include "RBatchLoader.hxx"
 
 #include <algorithm>
 #include <numeric>

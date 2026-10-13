@@ -5,13 +5,7 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTMLDataLoader
   HEADERS
     ROOT/ML/RDataLoaderEngine.hxx
-    ROOT/ML/RBatchLoader.hxx
-    ROOT/ML/RBatchSink.hxx
-    ROOT/ML/RClusterLoader.hxx
     ROOT/ML/RFlat2DMatrix.hxx
-    ROOT/ML/RFlat2DMatrixOperators.hxx
-    ROOT/ML/RDatasetLoader.hxx
-    ROOT/ML/RSampler.hxx
   SOURCES
     src/RBatchLoader.cxx
     src/RBatchSink.cxx
