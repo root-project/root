@@ -225,7 +225,8 @@ class FunctionJitter:
             return self.func_call
 
         self.get_function_params_args_call(func, cols_list, extra_args)
-        _NumbaDeclareDecorator(self.func_sign, self.return_type)(self.func)
+        if not hasattr(self.func, "__cpp_wrapper__"):  # not already declared with ROOT.Numba.Declare
+            _NumbaDeclareDecorator(self.func_sign, self.return_type)(self.func)
         FunctionJitter.function_cache[self.func.__name__] = (self.func_call, self.func_sign)
         return self.func_call
 
