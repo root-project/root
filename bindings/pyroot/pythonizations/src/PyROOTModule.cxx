@@ -11,15 +11,16 @@
 
 // Bindings
 #include "PyROOTPythonize.h"
-#include "RPyROOTApplication.h"
 
 // Cppyy
 #include "cpyrt/API.h"
 
 // ROOT
+#include "TError.h"
 #include "TInterpreter.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TVirtualPad.h"
 #include "RConfigure.h"
 
 // Standard
@@ -98,15 +99,68 @@ PyObject *PyObjRefCounterAsStdAny(PyObject * /*self*/, PyObject *args)
 
 } // namespace PyROOT
 
+namespace {
+
+/// Turns a ROOT warning into a Python warning, see ROOT::Internal::SetWarningHandler().
+bool WarningHandler(const char *location, const char *msg)
+{
+   PyGILState_STATE state = PyGILState_Ensure();
+   // Python code can't run while an exception is pending, e.g. a previous
+   // warning turned into an error: decline, and ROOT prints the warning.
+   bool handled = !PyErr_Occurred();
+   if (handled) {
+      // Prints or, per the warnings filters, raises: the exception stays
+      // pending until the call into C++ returns to Python.
+      PyErr_WarnExplicit(nullptr, msg, location, 0, "ROOT", nullptr);
+   }
+   PyGILState_Release(state);
+   return handled;
+}
+
+int (*gPreviousInputHook)() = nullptr;
+
+/// Processes GUI events while the Python prompt waits for input. Runs no
+/// Python code, so a Ctrl-C arriving meanwhile stays pending for the prompt.
+int GUIEventInputHook()
+{
+   PyGILState_STATE state = PyGILState_Ensure();
+   if (gPad && gPad->IsWeb())
+      gPad->UpdateAsync();
+   gSystem->ProcessEvents();
+   PyGILState_Release(state);
+
+   return gPreviousInputHook ? gPreviousInputHook() : 0;
+}
+
+/// Turn ROOT warnings into Python warnings.
+PyObject *InstallWarningHandler(PyObject * /*self*/, PyObject * /*args*/)
+{
+   ROOT::Internal::SetWarningHandler(&WarningHandler);
+   Py_RETURN_NONE;
+}
+
+/// Install the PyOS_InputHook that processes GUI events, chaining to the
+/// previous hook.
+PyObject *InstallGUIEventInputHook(PyObject * /*self*/, PyObject * /*args*/)
+{
+   if (PyOS_InputHook != &GUIEventInputHook) {
+      gPreviousInputHook = PyOS_InputHook;
+      PyOS_InputHook = &GUIEventInputHook;
+   }
+   Py_RETURN_NONE;
+}
+
+} // namespace
+
 // Methods offered by the interface
 static PyMethodDef gPyROOTMethods[] = {
    {"AddCPPInstancePickling", (PyCFunction)PyROOT::AddCPPInstancePickling, METH_NOARGS,
     "Add a custom pickling mechanism for Cppyy Python proxy objects"},
    {"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
     "Add pretty printing pythonization"},
-   {"InitApplication", (PyCFunction)PyROOT::RPyROOTApplication::InitApplication, METH_VARARGS,
-    "Initialize interactive ROOT use from Python"},
-   {"InstallGUIEventInputHook", (PyCFunction)PyROOT::RPyROOTApplication::InstallGUIEventInputHook, METH_NOARGS,
+   {"InstallWarningHandler", (PyCFunction)InstallWarningHandler, METH_NOARGS,
+    "Turn ROOT warnings into Python warnings"},
+   {"InstallGUIEventInputHook", (PyCFunction)InstallGUIEventInputHook, METH_NOARGS,
     "Install an input hook to process GUI events"},
    {"_CPPInstance__expand__", (PyCFunction)PyROOT::CPPInstanceExpand, METH_VARARGS,
     "Deserialize a pickled object"},
