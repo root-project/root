@@ -4,6 +4,8 @@
 
 #include <TMemFile.h>
 
+using ROOT::Experimental::CreateRNTupleJoinProcessor;
+
 class RNTupleJoinProcessorTest : public testing::Test {
 protected:
    const std::array<std::string, 4> fFileNames{"test_ntuple_join_processor1.root", "test_ntuple_join_processor2.root",
@@ -87,7 +89,7 @@ protected:
 
 TEST_F(RNTupleJoinProcessorTest, Aligned)
 {
-   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
+   auto proc = CreateRNTupleJoinProcessor({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
 
    auto i = proc->RequestField<int>("i");
    auto y = proc->RequestField<std::vector<float>>("y");
@@ -110,7 +112,7 @@ TEST_F(RNTupleJoinProcessorTest, Aligned)
 
 TEST_F(RNTupleJoinProcessorTest, IdenticalFieldNames)
 {
-   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
+   auto proc = CreateRNTupleJoinProcessor({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
 
    auto iPrimary = proc->RequestField<int>("i");
    auto iAux = proc->RequestField<int>("ntuple3.i");
@@ -152,7 +154,7 @@ TEST(RNTupleJoinProcessor, NameConflict)
       }
    }
 
-   auto proc = RNTupleProcessor::CreateJoin({"ntuple", fileGuard.GetPath()}, {"struct", fileGuard.GetPath()}, {});
+   auto proc = CreateRNTupleJoinProcessor({"ntuple", fileGuard.GetPath()}, {"struct", fileGuard.GetPath()}, {});
 
    try {
       proc->RequestField<float>("struct.a");
@@ -167,7 +169,7 @@ TEST(RNTupleJoinProcessor, NameConflict)
 
 TEST_F(RNTupleJoinProcessorTest, UnalignedSingleJoinField)
 {
-   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {"i"});
+   auto proc = CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {"i"});
 
    auto iPrimary = proc->RequestField<int>("i");
    auto iAux = proc->RequestField<int>("ntuple2.i");
@@ -192,23 +194,22 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedSingleJoinField)
 TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
 {
    try {
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]},
-                                   {"i", "j", "k", "l", "m"});
+      CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]},
+                                 {"i", "j", "k", "l", "m"});
       FAIL() << "trying to create a join processor with more than four join fields should throw";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("a maximum of four join fields is allowed"));
    }
 
    try {
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]}, {"i", "i"});
+      CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]}, {"i", "i"});
       FAIL() << "trying to create a join processor with duplicate join fields should throw";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("join fields must be unique"));
    }
 
    try {
-      auto proc =
-         RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {"l"});
+      auto proc = CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {"l"});
       // Without registering a field, the processor won't be initialized.
       proc->RequestField<float>("x");
       FAIL() << "trying to use a join processor where not all join fields are present in the primary processor should "
@@ -218,8 +219,8 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
    }
 
    try {
-      auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]},
-                                               {"i", "j", "k"});
+      auto proc = CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]},
+                                             {"i", "j", "k"});
       // Without registering a field, the processor won't be initialized.
       proc->RequestField<float>("x");
       FAIL() << "trying to use a join processor where not all join fields are present in the auxiliary processor "
@@ -229,7 +230,7 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
    }
 
    auto proc =
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]}, {"i", "j", "k"});
+      CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]}, {"i", "j", "k"});
 
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
@@ -249,7 +250,7 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
 
 TEST_F(RNTupleJoinProcessorTest, MissingEntries)
 {
-   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[3], fFileNames[3]}, {"i"});
+   auto proc = CreateRNTupleJoinProcessor({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[3], fFileNames[3]}, {"i"});
 
    auto i = proc->RequestField<int>("i");
    auto a = proc->RequestField<float>("ntuple4.a");
@@ -293,7 +294,7 @@ TEST_F(RNTupleJoinProcessorTest, TMemFile)
       }
    }
 
-   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {"ntuple_aux", &memFile}, {"i"});
+   auto proc = CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {"ntuple_aux", &memFile}, {"i"});
 
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
@@ -316,7 +317,7 @@ TEST_F(RNTupleJoinProcessorTest, TMemFile)
 
 TEST_F(RNTupleJoinProcessorTest, PrintStructure)
 {
-   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
+   auto proc = CreateRNTupleJoinProcessor({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
 
    std::ostringstream os;
    proc->PrintStructure(os);

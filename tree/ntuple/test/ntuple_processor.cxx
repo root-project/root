@@ -5,10 +5,10 @@
 #include <TMemFile.h>
 
 #include <array>
-
 #include <cstdio>
-
 #include <tuple>
+
+using ROOT::Experimental::CreateRNTupleJoinProcessor;
 
 TEST(RNTupleProcessor, EmptyNTuple)
 {
@@ -433,9 +433,9 @@ TEST_F(RNTupleProcessorTest, ChainedJoin)
 {
    std::vector<std::unique_ptr<RNTupleProcessor>> innerProcs;
    innerProcs.push_back(
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {}));
+      CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {}));
    innerProcs.push_back(
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {}));
+      CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {}));
 
    auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
 
@@ -460,9 +460,9 @@ TEST_F(RNTupleProcessorTest, ChainedJoinUnaligned)
 {
    std::vector<std::unique_ptr<RNTupleProcessor>> innerProcs;
    innerProcs.push_back(
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[2], fFileNames[2]}, {"i"}));
+      CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[2], fFileNames[2]}, {"i"}));
    innerProcs.push_back(
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[2], fFileNames[2]}, {"i"}));
+      CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[2], fFileNames[2]}, {"i"}));
 
    auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
 
@@ -487,9 +487,9 @@ TEST_F(RNTupleProcessorTest, ChainedJoinMissingEntries)
 {
    std::vector<std::unique_ptr<RNTupleProcessor>> innerProcs;
    innerProcs.push_back(
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]}, {"i"}));
+      CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]}, {"i"}));
    innerProcs.push_back(
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]}, {"i"}));
+      CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]}, {"i"}));
 
    auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
 
@@ -526,7 +526,7 @@ TEST_F(RNTupleProcessorTest, JoinedChain)
    auto auxiliaryChain =
       RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[1], fFileNames[1]}});
 
-   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {});
+   auto proc = CreateRNTupleJoinProcessor(std::move(primaryChain), std::move(auxiliaryChain), {});
 
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
@@ -553,7 +553,7 @@ TEST_F(RNTupleProcessorTest, JoinedChainUnaligned)
    auto auxiliaryChain =
       RNTupleProcessor::CreateChain({{fNTupleNames[2], fFileNames[2]}, {fNTupleNames[2], fFileNames[2]}});
 
-   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {"i"});
+   auto proc = CreateRNTupleJoinProcessor(std::move(primaryChain), std::move(auxiliaryChain), {"i"});
 
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
@@ -580,7 +580,7 @@ TEST_F(RNTupleProcessorTest, JoinedChainMissingEntries)
    auto auxiliaryChain =
       RNTupleProcessor::CreateChain({{fNTupleNames[3], fFileNames[3]}, {fNTupleNames[3], fFileNames[3]}});
 
-   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {"i"});
+   auto proc = CreateRNTupleJoinProcessor(std::move(primaryChain), std::move(auxiliaryChain), {"i"});
 
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
@@ -679,7 +679,7 @@ TEST(RNTupleProcessor, JoinedChainCrossedEntries)
       RNTupleProcessor::CreateChain({{"ntuple", fileGuard1.GetPath()}, {"ntuple", fileGuard2.GetPath()}});
    auto chain_auxiliary =
       RNTupleProcessor::CreateChain({{"ntuple_aux", fileGuard1.GetPath()}, {"ntuple_aux", fileGuard2.GetPath()}});
-   auto proc = RNTupleProcessor::CreateJoin(std::move(chain_primary), std::move(chain_auxiliary), {"i"});
+   auto proc = CreateRNTupleJoinProcessor(std::move(chain_primary), std::move(chain_auxiliary), {"i"});
 
    auto x = proc->RequestField<float>("x");
    auto y = proc->RequestField<float>("ntuple_aux.y");
@@ -696,14 +696,14 @@ TEST(RNTupleProcessor, JoinedChainCrossedEntries)
 TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimary)
 {
    auto primaryProc =
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {});
+      CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {});
 
    RNTupleProcessorOptions opts;
    opts.SetProcessorName("ntuple_aux2");
    auto auxProc = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, opts);
 
    opts.SetProcessorName("joined_ntuple");
-   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {"i"}, opts);
+   auto proc = CreateRNTupleJoinProcessor(std::move(primaryProc), std::move(auxProc), {"i"}, opts);
 
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
@@ -729,13 +729,13 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimary)
 TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimaryMissingEntries)
 {
    auto primaryProc =
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {});
+      CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {});
 
    RNTupleProcessorOptions opts;
    opts.SetProcessorName("ntuple_aux2");
    auto auxProc = RNTupleProcessor::Create({fNTupleNames[3], fFileNames[3]}, opts);
 
-   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {"i"});
+   auto proc = CreateRNTupleJoinProcessor(std::move(primaryProc), std::move(auxProc), {"i"});
 
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
@@ -774,10 +774,10 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliary)
    opts.SetProcessorName("ntuple_aux2");
    auto auxProcIntermediate = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, opts);
 
-   auto auxProc = RNTupleProcessor::CreateJoin(RNTupleProcessor::Create({fNTupleNames[1], fFileNames[1]}),
-                                               std::move(auxProcIntermediate), {"i"});
+   auto auxProc = CreateRNTupleJoinProcessor(RNTupleProcessor::Create({fNTupleNames[1], fFileNames[1]}),
+                                             std::move(auxProcIntermediate), {"i"});
 
-   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {});
+   auto proc = CreateRNTupleJoinProcessor(std::move(primaryProc), std::move(auxProc), {});
 
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
@@ -809,10 +809,10 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliaryMissingEntries)
    opts.SetProcessorName("ntuple_aux2");
    auto auxProcIntermediate = RNTupleProcessor::Create({fNTupleNames[3], fFileNames[3]}, opts);
 
-   auto auxProc = RNTupleProcessor::CreateJoin(RNTupleProcessor::Create({fNTupleNames[1], fFileNames[1]}),
-                                               std::move(auxProcIntermediate), {"i"});
+   auto auxProc = CreateRNTupleJoinProcessor(RNTupleProcessor::Create({fNTupleNames[1], fFileNames[1]}),
+                                             std::move(auxProcIntermediate), {"i"});
 
-   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {});
+   auto proc = CreateRNTupleJoinProcessor(std::move(primaryProc), std::move(auxProc), {});
 
    auto i = proc->RequestField<int>("i");
    auto x = proc->RequestField<float>("x");
@@ -847,10 +847,10 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliaryMissingEntries)
 TEST_F(RNTupleProcessorTest, JoinedJoinComposedSameName)
 {
    auto primaryProc =
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {});
+      CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {});
 
    auto auxProc = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]});
-   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {"i"});
+   auto proc = CreateRNTupleJoinProcessor(std::move(primaryProc), std::move(auxProc), {"i"});
 
    try {
       proc->RequestField<float>("ntuple_aux.z");
@@ -868,9 +868,9 @@ TEST_F(RNTupleProcessorTest, PrintStructureChainedJoin)
 {
    std::vector<std::unique_ptr<RNTupleProcessor>> innerProcs;
    innerProcs.push_back(
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {}));
+      CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {}));
    innerProcs.push_back(
-      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {}));
+      CreateRNTupleJoinProcessor({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {}));
 
    auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
 
@@ -895,7 +895,7 @@ TEST_F(RNTupleProcessorTest, PrintStructureJoinedChain)
    auto auxiliaryChain =
       RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[1], fFileNames[1]}});
 
-   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {});
+   auto proc = CreateRNTupleJoinProcessor(std::move(primaryChain), std::move(auxiliaryChain), {});
 
    std::ostringstream os;
    proc->PrintStructure(os);
@@ -917,7 +917,7 @@ TEST_F(RNTupleProcessorTest, PrintStructureJoinedChainAsymmetric)
       RNTupleProcessor::CreateChain({{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[0], fFileNames[0]}});
    auto auxiliaryChain = RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}});
 
-   auto proc1 = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {});
+   auto proc1 = CreateRNTupleJoinProcessor(std::move(primaryChain), std::move(auxiliaryChain), {});
 
    std::ostringstream os1;
    proc1->PrintStructure(os1);
@@ -935,7 +935,7 @@ TEST_F(RNTupleProcessorTest, PrintStructureJoinedChainAsymmetric)
    primaryChain = RNTupleProcessor::CreateChain({{fNTupleNames[0], fFileNames[0]}});
    auxiliaryChain = RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[1], fFileNames[1]}});
 
-   auto proc2 = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {});
+   auto proc2 = CreateRNTupleJoinProcessor(std::move(primaryChain), std::move(auxiliaryChain), {});
 
    std::ostringstream os2;
    proc2->PrintStructure(os2);
@@ -1048,9 +1048,9 @@ TEST_F(GH16805ProcessorTest, JoinReading)
 
    auto joinProc = RNTupleProcessor::CreateChain(joinSpecs);
 
-   auto joinedWithJoin = RNTupleProcessor::CreateJoin(std::move(stepOneProc), std::move(joinProc), {});
+   auto joinedWithJoin = CreateRNTupleJoinProcessor(std::move(stepOneProc), std::move(joinProc), {});
 
-   auto joinedAll = RNTupleProcessor::CreateJoin(std::move(joinedWithJoin), std::move(stepZeroProc), {});
+   auto joinedAll = CreateRNTupleJoinProcessor(std::move(joinedWithJoin), std::move(stepZeroProc), {});
 
    auto stepOneBr1 = joinedAll->RequestField<int>("stepOneBr1");
    auto joinBr1 = joinedAll->RequestField<int>("topLevelJoin.joinBr1");
@@ -1176,10 +1176,10 @@ protected:
       auto stepThreeProc = CreateStepProcessor("stepthree", fStepThreeFile, chainStepThree);
       auto stepFourProc = CreateStepProcessor("stepfour", fStepFourFile, chainStepFour);
 
-      auto joined = RNTupleProcessor::CreateJoin(std::move(stepFourProc), std::move(stepThreeProc), {});
-      joined = RNTupleProcessor::CreateJoin(std::move(joined), std::move(stepTwoProc), {});
-      joined = RNTupleProcessor::CreateJoin(std::move(joined), std::move(stepOneProc), {});
-      joined = RNTupleProcessor::CreateJoin(std::move(joined), std::move(stepZeroProc), {});
+      auto joined = CreateRNTupleJoinProcessor(std::move(stepFourProc), std::move(stepThreeProc), {});
+      joined = CreateRNTupleJoinProcessor(std::move(joined), std::move(stepTwoProc), {});
+      joined = CreateRNTupleJoinProcessor(std::move(joined), std::move(stepOneProc), {});
+      joined = CreateRNTupleJoinProcessor(std::move(joined), std::move(stepZeroProc), {});
 
       return joined;
    }

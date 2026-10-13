@@ -67,9 +67,9 @@ ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<std::unique_ptr<RN
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::CreateJoin(RNTupleOpenSpec primaryNTuple, RNTupleOpenSpec auxNTuple,
-                                                 const std::vector<std::string> &joinFields,
-                                                 const RNTupleProcessorOptions &options)
+ROOT::Experimental::CreateRNTupleJoinProcessor(RNTupleOpenSpec primaryNTuple, RNTupleOpenSpec auxNTuple,
+                                               const std::vector<std::string> &joinFields,
+                                               const RNTupleProcessorOptions &options)
 {
    if (joinFields.size() > 4) {
       throw RException(R__FAIL("a maximum of four join fields is allowed"));
@@ -79,18 +79,18 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(RNTupleOpenSpec primaryNTuple, 
       throw RException(R__FAIL("join fields must be unique"));
    }
 
-   std::unique_ptr<RNTupleProcessor> primaryProcessor = Create(std::move(primaryNTuple), options);
+   std::unique_ptr<RNTupleProcessor> primaryProcessor = RNTupleProcessor::Create(std::move(primaryNTuple), options);
 
-   std::unique_ptr<RNTupleProcessor> auxProcessor = Create(std::move(auxNTuple));
+   std::unique_ptr<RNTupleProcessor> auxProcessor = RNTupleProcessor::Create(std::move(auxNTuple));
 
-   return CreateJoin(std::move(primaryProcessor), std::move(auxProcessor), joinFields, options);
+   return CreateRNTupleJoinProcessor(std::move(primaryProcessor), std::move(auxProcessor), joinFields, options);
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::CreateJoin(std::unique_ptr<RNTupleProcessor> primaryProcessor,
-                                                 std::unique_ptr<RNTupleProcessor> auxProcessor,
-                                                 const std::vector<std::string> &joinFields,
-                                                 const RNTupleProcessorOptions &options)
+ROOT::Experimental::CreateRNTupleJoinProcessor(std::unique_ptr<RNTupleProcessor> primaryProcessor,
+                                               std::unique_ptr<RNTupleProcessor> auxProcessor,
+                                               const std::vector<std::string> &joinFields,
+                                               const RNTupleProcessorOptions &options)
 {
    if (joinFields.size() > 4) {
       throw RException(R__FAIL("a maximum of four join fields is allowed"));

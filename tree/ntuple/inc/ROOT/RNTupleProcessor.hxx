@@ -31,6 +31,7 @@
 
 namespace ROOT {
 namespace Experimental {
+class RNTupleProcessor;
 
 namespace Internal {
 struct RNTupleProcessorEntryLoader;
@@ -244,6 +245,44 @@ public:
    /// its data through this interface, to ensure that only valid data can be read.
    void Bind(std::shared_ptr<void> valuePtr) { fProcessorEntry->Bind(fFieldIndex, std::move(valuePtr)); }
 };
+
+/////////////////////////////////////////////////////////////////////////////
+/// \brief Create an RNTupleProcessor for a *join* (i.e., a horizontal combination) of RNTuples.
+///
+/// \param[in] primaryNTuple The name and location of the primary RNTuple. Its entries are processed in sequential
+/// order.
+/// \param[in] auxNTuple The name and location of the RNTuple to join the primary RNTuple with. The order in which
+/// its entries are processed is determined by the primary RNTuple and doesn't necessarily have to be sequential.
+/// \param[in] joinFields The names of the fields on which to join, in case the specified RNTuples are unaligned.
+/// The join is made based on the combined join field values, and therefore each field has to be present in each
+/// specified RNTuple. If an empty list is provided, it is assumed that the specified ntuple are fully aligned.
+/// \param[in] opts Options for the processor.
+///
+/// \return A pointer to the newly created RNTupleProcessor.
+// TODO(fdegeus) Move back to RNTupleProcessor::CreateJoin once RNTupleProcessor moves out of Experimental.
+std::unique_ptr<RNTupleProcessor>
+CreateRNTupleJoinProcessor(RNTupleOpenSpec primaryNTuple, RNTupleOpenSpec auxNTuple,
+                           const std::vector<std::string> &joinFields,
+                           const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
+
+/////////////////////////////////////////////////////////////////////////////
+/// \brief Create an RNTupleProcessor for a *join* (i.e., a horizontal combination) of RNTuples.
+///
+/// \param[in] primaryProcessor The primary processor. Its entries are processed in sequential order.
+/// \param[in] auxProcessor The processor to join the primary processor with. The order in which its entries are
+/// processed is determined by the primary processor and doesn't necessarily have to be sequential.
+/// \param[in] joinFields The names of the fields on which to join, in case the specified processors are unaligned.
+/// The join is made based on the combined join field values, and therefore each field has to be present in each
+/// specified processors. If an empty list is provided, it is assumed that the specified processors are fully
+/// aligned.
+/// \param[in] opts Options for the processor.
+///
+/// \return A pointer to the newly created RNTupleProcessor.
+// TODO(fdegeus) Move back to RNTupleProcessor::CreateJoin once RNTupleProcessor moves out of Experimental.
+std::unique_ptr<RNTupleProcessor>
+CreateRNTupleJoinProcessor(std::unique_ptr<RNTupleProcessor> primaryProcessor,
+                           std::unique_ptr<RNTupleProcessor> auxProcessor, const std::vector<std::string> &joinFields,
+                           const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
 
 // clang-format off
 /**
@@ -651,41 +690,6 @@ public:
    static std::unique_ptr<RNTupleProcessor>
    CreateChain(std::vector<std::unique_ptr<RNTupleProcessor>> innerProcessors,
                const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Create an RNTupleProcessor for a *join* (i.e., a horizontal combination) of RNTuples.
-   ///
-   /// \param[in] primaryNTuple The name and location of the primary RNTuple. Its entries are processed in sequential
-   /// order.
-   /// \param[in] auxNTuple The name and location of the RNTuple to join the primary RNTuple with. The order in which
-   /// its entries are processed is determined by the primary RNTuple and doesn't necessarily have to be sequential.
-   /// \param[in] joinFields The names of the fields on which to join, in case the specified RNTuples are unaligned.
-   /// The join is made based on the combined join field values, and therefore each field has to be present in each
-   /// specified RNTuple. If an empty list is provided, it is assumed that the specified ntuple are fully aligned.
-   /// \param[in] opts Options for the processor.
-   ///
-   /// \return A pointer to the newly created RNTupleProcessor.
-   static std::unique_ptr<RNTupleProcessor> CreateJoin(RNTupleOpenSpec primaryNTuple, RNTupleOpenSpec auxNTuple,
-                                                       const std::vector<std::string> &joinFields,
-                                                       const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Create an RNTupleProcessor for a *join* (i.e., a horizontal combination) of RNTuples.
-   ///
-   /// \param[in] primaryProcessor The primary processor. Its entries are processed in sequential order.
-   /// \param[in] auxProcessor The processor to join the primary processor with. The order in which its entries are
-   /// processed is determined by the primary processor and doesn't necessarily have to be sequential.
-   /// \param[in] joinFields The names of the fields on which to join, in case the specified processors are unaligned.
-   /// The join is made based on the combined join field values, and therefore each field has to be present in each
-   /// specified processors. If an empty list is provided, it is assumed that the specified processors are fully
-   /// aligned.
-   /// \param[in] opts Options for the processor.
-   ///
-   /// \return A pointer to the newly created RNTupleProcessor.
-   static std::unique_ptr<RNTupleProcessor> CreateJoin(std::unique_ptr<RNTupleProcessor> primaryProcessor,
-                                                       std::unique_ptr<RNTupleProcessor> auxProcessor,
-                                                       const std::vector<std::string> &joinFields,
-                                                       const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
 };
 
 // clang-format off
@@ -909,6 +913,10 @@ public:
 // clang-format on
 class RNTupleJoinProcessor : public RNTupleProcessor {
    friend class RNTupleProcessor;
+   friend std::unique_ptr<RNTupleProcessor>
+   CreateRNTupleJoinProcessor(std::unique_ptr<RNTupleProcessor> primaryProcessor,
+                              std::unique_ptr<RNTupleProcessor> auxProcessor,
+                              const std::vector<std::string> &joinFields, const RNTupleProcessorOptions &opts);
 
 private:
    std::unique_ptr<RNTupleProcessor> fPrimaryProcessor;
