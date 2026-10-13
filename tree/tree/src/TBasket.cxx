@@ -1299,6 +1299,7 @@ Int_t TBasket::WriteBuffer()
       cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(file->GetCompressionAlgorithm());
    if (cxlevel > 0) {
       Int_t nbuffers = 1 + (fObjlen - 1) / kMAXZIPBUF;
+      const Int_t blockSize = ROOT::Internal::GetZipBlockSize(fObjlen);
       Int_t buflen = fKeylen + fObjlen + 9 * nbuffers + 28; //add 28 bytes in case object is placed in a deleted gap
       InitializeCompressedBuffer(buflen, file);
       if (!fCompressedBufferRef) {
@@ -1313,7 +1314,8 @@ Int_t TBasket::WriteBuffer()
       nzip   = 0;
       for (Int_t i = 0; i < nbuffers; ++i) {
          if (i == nbuffers - 1) bufmax = fObjlen - nzip;
-         else bufmax = kMAXZIPBUF;
+         else
+            bufmax = blockSize;
          // Compress the buffer.  Note that we allow multiple TBasket compressions to occur at once
          // for a given TFile: that's because the compression buffer when we use IMT is no longer
          // shared amongst several threads.
@@ -1348,8 +1350,8 @@ Int_t TBasket::WriteBuffer()
          }
          bufcur += nout;
          noutot += nout;
-         objbuf += kMAXZIPBUF;
-         nzip   += kMAXZIPBUF;
+         objbuf += blockSize;
+         nzip += blockSize;
       }
       nout = noutot;
       Create(noutot,file);

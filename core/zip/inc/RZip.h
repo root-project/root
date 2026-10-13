@@ -39,4 +39,19 @@ extern "C" int R__unzip_header(int *srcsize, const unsigned char *src, int *tgts
 
 enum { kMAXZIPBUF = 0xffffff }; // 16 MB
 
+namespace ROOT::Internal {
+
+/// Size of the blocks in which a buffer of `nbytes` > 0 bytes is compressed. The buffer is cut into the fewest
+/// blocks of at most kMAXZIPBUF bytes, `1 + (nbytes - 1) / kMAXZIPBUF`, all of this size but the last, which is
+/// smaller by less than the number of blocks. Full blocks followed by the remainder would end a buffer just above a
+/// multiple of kMAXZIPBUF in a block of a few bytes, which cannot be compressed, so that the whole buffer would be
+/// stored uncompressed.
+constexpr int GetZipBlockSize(long long nbytes)
+{
+   const long long nblocks = 1 + (nbytes - 1) / kMAXZIPBUF;
+   return static_cast<int>((nbytes + nblocks - 1) / nblocks);
+}
+
+} // namespace ROOT::Internal
+
 #endif
