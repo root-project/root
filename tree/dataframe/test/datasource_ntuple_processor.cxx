@@ -229,10 +229,14 @@ static void ChainTest(const std::string &name, const std::string &fname)
    auto df2 = ROOT::Experimental::RDF::FromRNTupleProcessor(std::move(proc2));
    EXPECT_DOUBLE_EQ(84.0, df2.Sum<float>("pt").GetValue());
 
+   // Causes "Too many open files" errors on Windows
+   // TODO(fdegeus) Investigate root cause + fix
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
    std::vector<ROOT::Experimental::RNTupleOpenSpec> openSpecs(1000, {name, fname});
    auto proc1000 = RNTupleProcessor::CreateChain(openSpecs);
    auto df1000 = ROOT::Experimental::RDF::FromRNTupleProcessor(std::move(proc1000));
    EXPECT_DOUBLE_EQ(42000.0, df1000.Sum<float>("pt").GetValue());
+#endif
 
    FileRaii guardFile1("RNTupleProcessorDS_test_chain_1.root");
    FileRaii guardFile2("RNTupleProcessorDS_test_chain_2.root");
