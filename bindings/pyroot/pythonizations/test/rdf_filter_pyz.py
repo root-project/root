@@ -9,6 +9,9 @@ from rdf_filter_pyz_helper import TYPE_TO_SYMBOL, CreateData, filter_dict
 # numba is not used directly, but tests can crash when ROOT is built with
 # builtin_llvm=OFF and numba is not imported at the beginning
 
+# C++ type name, used as type annotation of the Python callables passed to Filter
+DOUBLE = "double"
+
 
 class PyFilter(unittest.TestCase):
     """
@@ -27,7 +30,11 @@ class PyFilter(unittest.TestCase):
             x = rdf.Mean(col_name).GetValue()
             if col_name == "Bool_t":
                 x = True
-            filtered = rdf.Filter(func, extra_args={"x": x})
+
+            def filter_x(col: rdf.GetColumnType(col_name)) -> bool:
+                return func(col, x)  # x is referenced from the enclosing scope
+
+            filtered = rdf.Filter(filter_x, [col_name])
             res_root = filtered.AsNumpy()[col_name]
             if not isinstance(x, bool):
                 filtered2 = rdf.Filter(f"{col_name} > {x}")
@@ -49,7 +56,7 @@ class PyFilter(unittest.TestCase):
         """
         rdf = ROOT.RDataFrame(5).Define("x", "(double) rdfentry_")
 
-        def x_greater_than_2(x):
+        def x_greater_than_2(x: DOUBLE) -> bool:
             return x > 2
 
         fil1 = rdf.Filter(x_greater_than_2, ["x"], "x is more than 2")
@@ -61,7 +68,11 @@ class PyFilter(unittest.TestCase):
         Filter(callable, col_list)
         """
         rdf = ROOT.RDataFrame(5).Define("x", "(double) rdfentry_")
-        fil1 = rdf.Filter(lambda x: x > 2, ["x"])
+
+        def x_greater_than_2(x: DOUBLE) -> bool:
+            return x > 2
+
+        fil1 = rdf.Filter(x_greater_than_2, ["x"])
         self.assertTrue(np.array_equal(fil1.AsNumpy()["x"], np.array([3, 4])))
 
     def test_filter_overload1_c(self):
@@ -71,7 +82,7 @@ class PyFilter(unittest.TestCase):
         """
         rdf = ROOT.RDataFrame(5).Define("x", "(double) rdfentry_")
 
-        def x_greater_than_2(x):
+        def x_greater_than_2(x: DOUBLE) -> bool:
             return x > 2
 
         fil1 = rdf.Filter(x_greater_than_2)
@@ -85,7 +96,7 @@ class PyFilter(unittest.TestCase):
         """
         rdf = ROOT.RDataFrame(5).Define("x", "(double) rdfentry_")
 
-        def x_greater_than_2(x):
+        def x_greater_than_2(x: DOUBLE) -> bool:
             return x > 2
 
         fil1 = rdf.Filter(x_greater_than_2, "x is greater than 2")
@@ -95,10 +106,23 @@ class PyFilter(unittest.TestCase):
         rdf = ROOT.RDataFrame(5).Define("x", "(double) rdfentry_")
         y = 2
 
-        def x_greater_than_y(x):
+        def x_greater_than_y(x: DOUBLE) -> bool:
             return x > y
 
         fil1 = rdf.Filter(x_greater_than_y, "x is greater than 2")
+        self.assertTrue(np.array_equal(fil1.AsNumpy()["x"], np.array([3, 4])))
+
+    def test_numba_declare_extra_args(self):
+        """
+        Test a callable decorated with ROOT.Numba.Declare with extra_args.
+        """
+        rdf = ROOT.RDataFrame(5).Define("x", "(double) rdfentry_")
+
+        @ROOT.Numba.Declare(["double", "double"], "bool")
+        def x_greater_than_y(x, y):
+            return x > y
+
+        fil1 = rdf.Filter(x_greater_than_y, ["x"], extra_args={"y": 2})
         self.assertTrue(np.array_equal(fil1.AsNumpy()["x"], np.array([3, 4])))
 
     def test_cpp_functor(self):
