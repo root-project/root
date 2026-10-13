@@ -18,6 +18,7 @@
 
 #include <TH1D.h>
 #include <TH2D.h>
+#include <TMath.h>
 
 #include <gtest/gtest.h>
 
@@ -550,7 +551,7 @@ TEST(RooHist, MakeResidAndPullHistNormalization)
    // Raw: the integral of the unnormalized model. The RooGenericPdf
    // exp(-0.5 u^2) integrates to sigma * sqrt(2 pi) times the Gaussian
    // probability in each bin.
-   const double rawScale = nEvents / (kGaussSigma * std::sqrt(2. * M_PI));
+   const double rawScale = nEvents / (kGaussSigma * std::sqrt(TMath::TwoPi()));
    std::unique_ptr<RooHist> residRaw{
       makeResidHist(model.gaussNumeric, binData, Normalization(rawScale, RooAbsReal::Raw))};
    ASSERT_EQ(residRaw->GetN(), kNBins);
