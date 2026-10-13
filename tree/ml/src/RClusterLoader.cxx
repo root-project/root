@@ -1,4 +1,4 @@
-#include "ROOT/ML/RClusterLoader.hxx"
+#include "RClusterLoader.hxx"
 
 namespace ROOT::Experimental::Internal::ML {
 

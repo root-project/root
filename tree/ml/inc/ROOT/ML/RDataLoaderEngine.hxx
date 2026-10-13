@@ -16,7 +16,6 @@
 #ifndef ROOT_INTERNAL_ML_RDATALOADERENGINE
 #define ROOT_INTERNAL_ML_RDATALOADERENGINE
 
-#include <algorithm>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
@@ -25,20 +24,34 @@
 #include <thread>
 #include <vector>
 
-#include "ROOT/ML/RBatchLoader.hxx"
-#include "ROOT/ML/RBatchSink.hxx"
-#include "ROOT/ML/RClusterLoader.hxx"
-#include "ROOT/ML/RDatasetLoader.hxx"
 #include "ROOT/ML/RFlat2DMatrix.hxx"
-#include "ROOT/ML/RFlat2DMatrixOperators.hxx"
-#include "ROOT/ML/RSampler.hxx"
-#include "ROOT/RDF/InterfaceUtils.hxx"
+
+namespace ROOT {
+namespace Detail {
+namespace RDF {
+class RNodeBase;
+}
+} // namespace Detail
+namespace RDF {
+template <typename Proxied>
+class RInterface;
+using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase>;
+} // namespace RDF
+} // namespace ROOT
 
 // Empty namespace to create a hook for the Pythonization
 namespace ROOT::Experimental::ML {
 }
 
 namespace ROOT::Experimental::Internal::ML {
+
+class RBatchLoader;
+class RClusterLoader;
+class RDatasetLoader;
+class RFlat2DMatrixOperators;
+class RSampler;
+struct RColumnLayout;
+
 /**
  \class ROOT::Experimental::Internal::ML::RDataLoaderEngine
 \brief

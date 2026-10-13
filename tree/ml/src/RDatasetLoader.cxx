@@ -1,4 +1,4 @@
-#include "ROOT/ML/RDatasetLoader.hxx"
+#include "RDatasetLoader.hxx"
 
 namespace ROOT::Experimental::Internal::ML {
 

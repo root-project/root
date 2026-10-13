@@ -1,5 +1,14 @@
 #include "ROOT/ML/RDataLoaderEngine.hxx"
 
+#include "RBatchLoader.hxx"
+#include "RBatchSink.hxx"
+#include "RClusterLoader.hxx"
+#include "RDatasetLoader.hxx"
+#include "RFlat2DMatrixOperators.hxx"
+#include "RSampler.hxx"
+
+#include <algorithm>
+
 namespace ROOT::Experimental::Internal::ML {
 
 /// \brief Describe how the loader's columns map onto a batch-tensor row.

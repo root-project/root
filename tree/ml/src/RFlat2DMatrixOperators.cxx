@@ -1,4 +1,4 @@
-#include "ROOT/ML/RFlat2DMatrixOperators.hxx"
+#include "RFlat2DMatrixOperators.hxx"
 
 #include <algorithm>
 #include <numeric>

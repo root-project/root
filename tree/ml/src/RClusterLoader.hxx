@@ -23,7 +23,7 @@
 #include <vector>
 
 #include "ROOT/ML/RFlat2DMatrix.hxx"
-#include "ROOT/ML/RFlat2DMatrixOperators.hxx"
+#include "RFlat2DMatrixOperators.hxx"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDFHelpers.hxx"
 #include "ROOT/RDF/Utils.hxx"
@@ -40,9 +40,9 @@ namespace ROOT::Experimental::Internal::ML {
  * discovered and set lazily during the first epoch.
  */
 struct RClusterRange {
-   std::size_t rdfIdx;                  // which rdf this cluster belongs to
-   std::uint64_t start;                 // first raw entry (incl)
-   std::uint64_t end;                   // one-past-last entry (excl)
+   std::size_t rdfIdx;  // which rdf this cluster belongs to
+   std::uint64_t start; // first raw entry (incl)
+   std::uint64_t end;   // one-past-last entry (excl)
    std::size_t numEntries{
       static_cast<std::size_t>(end - start)}; // number of entries in the cluster (that pass filters, if any)
 
