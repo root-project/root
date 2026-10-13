@@ -4047,8 +4047,15 @@ int RootClingMain(int argc,
    for (const std::string &PPUndefine : gOptPPUndefines)
       clingArgs.push_back(std::string("-U") + PPUndefine);
 
-   for (const std::string &IncludePath : gOptIncludePaths)
-      clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(IncludePath));
+   for (const std::string &IncludePath : gOptIncludePaths) {
+      // Do not promote compiler default include directories (e.g. the macOS SDK's
+      // usr/include, which find_package(ZLIB) reports) to -I: they would then be
+      // searched before clang's resource directory, and be stored in the
+      // dictionary payload for the runtime interpreter to do the same.
+      if (std::find(gOptCompDefaultIncludePaths.begin(), gOptCompDefaultIncludePaths.end(), IncludePath)
+          == gOptCompDefaultIncludePaths.end())
+         clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(IncludePath));
+   }
 
    for (const std::string &IncludePath : gOptSysIncludePaths) {
       // Prevent mentioning compiler default include directories as -isystem
