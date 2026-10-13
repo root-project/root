@@ -7,10 +7,9 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
+import inspect
 import re
-import textwrap
 import typing
-import warnings
 
 from .._numbadeclare import _NumbaDeclareDecorator
 
@@ -257,30 +256,36 @@ def _resolve_overload_based_on_cols(func, rdf, cols):
         return func.__overload__(signature)
 
 
-class _WarnOnce:
-    called = False
+# The C++ wrapper of a Python callable only holds a weak reference to it, but the event loop calls it later,
+# so we keep the callables alive here
+_python_callables = set()
 
-    @classmethod
-    def warn(cls):
-        if not cls.called:
-            msg = """
-                RDataFrame is implicitly calling numba to JIT compile your Python functions. This behaviour will be in the
-                future only opt-in. You can silence this warning and achieve the same behaviour by explicitly calling the
-                ROOT.Numba.Declare decorator on your Python function and pass a string expression to RDataFrame that calls
-                the same function, for example:
+_PYTHON_TO_CPP_TYPES = {bool: "bool", int: "int", float: "double", str: "std::string"}
 
-                ```
-                @ROOT.Numba.Declare([input_type_1, input_type_2], ret_type)
-                def foo(x, y):
-                    return x + y
-                
-                df.Define("sum", "Numba::foo(x, y)")
-                ```
-                
-                See more details at https://root.cern/doc/master/classROOT_1_1RDataFrame.html#python
-            """
-            warnings.warn(textwrap.dedent(msg), FutureWarning)
-        cls.called = True
+
+def _cpp_type_name(func, annotation):
+    if isinstance(annotation, str):  # already a C++ type name
+        return annotation
+    if annotation in _PYTHON_TO_CPP_TYPES:
+        return _PYTHON_TO_CPP_TYPES[annotation]
+    if hasattr(annotation, "__cpp_name__"):  # ROOT class
+        return annotation.__cpp_name__
+    raise TypeError(f"Cannot convert the type annotation {annotation!r} of '{func.__name__}' to a C++ type.")
+
+
+def _function_pointer_type(func):
+    """
+    Returns the C++ function pointer type of an annotated Python callable, e.g. "double (*)(int, double)".
+    """
+    signature = inspect.signature(func)
+    params = [p.annotation for p in signature.parameters.values()]
+    if signature.return_annotation is inspect.Signature.empty or any(p is inspect.Parameter.empty for p in params):
+        raise TypeError(
+            f"The Python callable '{func.__name__}' needs type annotations for all its parameters and for its "
+            "return value, e.g. 'def f(x: float) -> float'."
+        )
+    ret = _cpp_type_name(func, signature.return_annotation)
+    return f"{ret} (*)({', '.join(_cpp_type_name(func, p) for p in params)})"
 
 
 def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
@@ -359,7 +364,16 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     if isinstance(func, ROOT._cppyy.types.Instance):
         return rdf._OriginalFilter(func, *args)
 
-    _WarnOnce.warn()
+    if not hasattr(func, "__cpp_wrapper__"):  # not decorated with ROOT.Numba.Declare
+        if extra_args:
+            raise TypeError(
+                "extra_args is only supported for callables decorated with ROOT.Numba.Declare. "
+                "A Python callable can reference the values directly, e.g. from the enclosing scope."
+            )
+        _python_callables.add(func)
+        col_list = col_list or list(inspect.signature(func).parameters)  # map the parameters to columns by name
+        return rdf._OriginalFilter[_function_pointer_type(func)](func, col_list, filter_name)
+
     jitter = FunctionJitter(rdf)
     func.__annotations__["return"] = (
         "bool"  # return type for Filters is bool # Note: You can keep double and Filter still works.
@@ -423,7 +437,16 @@ def _PyDefine(rdf, col_name, callable_or_str, cols=[], extra_args={}):
     if isinstance(func, ROOT._cppyy.types.Instance):
         return rdf._OriginalDefine(col_name, func, cols)
 
-    _WarnOnce.warn()
+    if not hasattr(func, "__cpp_wrapper__"):  # not decorated with ROOT.Numba.Declare
+        if extra_args:
+            raise TypeError(
+                "extra_args is only supported for callables decorated with ROOT.Numba.Declare. "
+                "A Python callable can reference the values directly, e.g. from the enclosing scope."
+            )
+        _python_callables.add(func)
+        cols = cols or list(inspect.signature(func).parameters)  # map the parameters to columns by name
+        return rdf._OriginalDefine[_function_pointer_type(func)](col_name, func, cols)
+
     jitter = FunctionJitter(rdf)
     func_call = jitter.jit_function(func, cols, extra_args)
     return rdf._OriginalDefine(col_name, "Numba::" + func_call)
