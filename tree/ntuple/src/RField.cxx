@@ -589,36 +589,36 @@ ROOT::RRecordField::RRecordField(std::string_view fieldName, std::string_view ty
 std::unique_ptr<ROOT::RFieldBase>
 ROOT::Internal::CreateEmulatedRecordField(std::string_view fieldName,
                                           std::vector<std::unique_ptr<RFieldBase>> itemFields,
-                                          std::string_view emulatedFromType, std::uint32_t typeVersion,
-                                          std::optional<std::uint32_t> typeChecksum)
+                                          const RFieldDescriptor &emulatedFrom)
 {
-   R__ASSERT(!emulatedFromType.empty());
-   return std::unique_ptr<RFieldBase>(
-      new RRecordField(fieldName, std::move(itemFields), emulatedFromType, typeVersion, typeChecksum));
+   R__ASSERT(!emulatedFrom.GetTypeName().empty());
+   return std::unique_ptr<RFieldBase>(new RRecordField(fieldName, std::move(itemFields), &emulatedFrom));
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::Internal::CreateEmulatedVectorField(std::string_view fieldName,
                                                                             std::unique_ptr<RFieldBase> itemField,
-                                                                            std::string_view emulatedFromType)
+                                                                            const RFieldDescriptor &emulatedFrom)
 {
-   R__ASSERT(!emulatedFromType.empty());
-   return std::unique_ptr<RFieldBase>(new RVectorField(fieldName, std::move(itemField), emulatedFromType));
+   R__ASSERT(!emulatedFrom.GetTypeName().empty());
+   return std::unique_ptr<RFieldBase>(new RVectorField(fieldName, std::move(itemField), &emulatedFrom));
 }
 
 ROOT::RRecordField::RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
-                                 std::string_view emulatedFromType, std::uint32_t typeVersion,
-                                 std::optional<std::uint32_t> typeChecksum)
-   : ROOT::RFieldBase(fieldName, emulatedFromType, ROOT::ENTupleStructure::kRecord, false /* isSimple */)
+                                 const ROOT::RFieldDescriptor *emulatedFrom)
+   : ROOT::RFieldBase(fieldName, emulatedFrom ? emulatedFrom->GetTypeName() : "", ROOT::ENTupleStructure::kRecord,
+                      false /* isSimple */)
 {
    AttachItemFields(std::move(itemFields));
-   fTraits |= !emulatedFromType.empty() * kTraitEmulatedField;
-   fTraits |= typeChecksum.has_value() * kTraitTypeChecksum;
-   fEmulatedTypeVersion = typeVersion;
-   fEmulatedTypeChecksum = typeChecksum.value_or(0);
+   if (emulatedFrom) {
+      fTraits |= kTraitEmulatedField;
+      fTraits |= emulatedFrom->GetTypeChecksum().has_value() * kTraitTypeChecksum;
+      fEmulatedTypeVersion = emulatedFrom->GetTypeVersion();
+      fEmulatedTypeChecksum = emulatedFrom->GetTypeChecksum().value_or(0);
+   }
 }
 
 ROOT::RRecordField::RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields)
-   : ROOT::RRecordField(fieldName, std::move(itemFields), "")
+   : ROOT::RRecordField(fieldName, std::move(itemFields), nullptr)
 {
    fTraits |= kTraitExtensible;
 }

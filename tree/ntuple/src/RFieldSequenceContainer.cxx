@@ -531,8 +531,9 @@ void ROOT::RRVecField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 //------------------------------------------------------------------------------
 
 ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
-                                 std::optional<std::string_view> emulatedFromType)
-   : ROOT::RFieldBase(fieldName, emulatedFromType ? *emulatedFromType : "std::vector<" + itemField->GetTypeName() + ">",
+                                 const ROOT::RFieldDescriptor *emulatedFrom)
+   : ROOT::RFieldBase(fieldName,
+                      emulatedFrom ? emulatedFrom->GetTypeName() : "std::vector<" + itemField->GetTypeName() + ">",
                       ROOT::ENTupleStructure::kCollection, false /* isSimple */),
      fItemSize(itemField->GetValueSize()),
      fNWritten(0)
@@ -542,8 +543,11 @@ ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFi
          R__FAIL(std::string("Unsupported vector item alignment: ") + std::to_string(itemField->GetAlignment())));
    }
 
-   if (emulatedFromType && !emulatedFromType->empty())
+   if (emulatedFrom && !emulatedFrom->GetTypeName().empty()) {
       fTraits |= kTraitEmulatedField;
+      fEmulatedTypeVersion = emulatedFrom->GetTypeVersion();
+      fEmulatedTypeChecksum = emulatedFrom->GetTypeChecksum().value_or(0);
+   }
 
    if (!itemField->GetTypeAlias().empty())
       fTypeAlias = "std::vector<" + itemField->GetTypeAlias() + ">";
@@ -554,22 +558,36 @@ ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFi
 }
 
 ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
-   : RVectorField(fieldName, std::move(itemField), {})
+   : RVectorField(fieldName, std::move(itemField), nullptr)
 {
 }
 
 std::unique_ptr<ROOT::RVectorField>
 ROOT::RVectorField::CreateUntyped(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
 {
-   return std::unique_ptr<ROOT::RVectorField>(new RVectorField(fieldName, itemField->Clone("_0"), ""));
+   ROOT::RFieldDescriptor desc;
+   return std::unique_ptr<ROOT::RVectorField>(new RVectorField(fieldName, itemField->Clone("_0"), &desc));
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RVectorField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
    auto isUntyped = GetTypeName().empty() || ((fTraits & kTraitEmulatedField) != 0);
-   auto emulatedFromType = isUntyped ? std::make_optional(GetTypeName()) : std::nullopt;
-   return std::unique_ptr<ROOT::RVectorField>(new RVectorField(newName, std::move(newItemField), emulatedFromType));
+   ROOT::RFieldDescriptor desc;
+   if (isUntyped) {
+      ROOT::Internal::RFieldDescriptorBuilder builder;
+      desc = builder.TypeVersion(GetTypeVersion())
+                .TypeChecksum(GetTypeChecksum())
+                .TypeName(GetTypeName())
+                // we need an Id for MoveDescriptor to succeed, but we're not going to use it.
+                .FieldId(42)
+                // we also need a Structure for the same reason.
+                .Structure(ENTupleStructure::kCollection)
+                .MoveDescriptor()
+                .Unwrap();
+   }
+   return std::unique_ptr<ROOT::RVectorField>(
+      new RVectorField(newName, std::move(newItemField), isUntyped ? &desc : nullptr));
 }
 
 std::size_t ROOT::RVectorField::AppendImpl(const void *from)
