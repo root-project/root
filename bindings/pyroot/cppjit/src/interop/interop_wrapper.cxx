@@ -1793,16 +1793,84 @@ bool interop::IsNonStaticMethod(interop::TCppMethod_t func) {
   return Cpp::IsMethod(func) && !Cpp::IsStaticMethod(func);
 }
 
+static bool IsEquivalentTypesImpl(interop::TCppType_t typ1,
+                                  interop::TCppType_t typ2, Cpp::QualKind& qual,
+                                  Cpp::ValueKind& ref, bool& pointer) {
+  // check if same type
+  if (Cpp::IsSameType(typ1, typ2) || Cpp::IsTypeDerivedFrom(typ1, typ2) ||
+      Cpp::IsTypeDerivedFrom(typ2, typ1))
+    return true;
+
+  // check if same type after removing qualifiers; canonicalize first so that
+  // qualifiers hidden behind a typedef are removed too
+  if (Cpp::IsSameType(Cpp::RemoveTypeQualifier(Cpp::GetCanonicalType(typ1),
+                                               Cpp::QualKind::All),
+                      Cpp::RemoveTypeQualifier(Cpp::GetCanonicalType(typ2),
+                                               Cpp::QualKind::All))) {
+    for (Cpp::QualKind q : {Cpp::QualKind::Const, Cpp::QualKind::Volatile,
+                            Cpp::QualKind::Restrict})
+      if (Cpp::HasTypeQualifier(typ1, q) != Cpp::HasTypeQualifier(typ2, q))
+        qual = qual | q;
+    return true;
+  }
+
+  // check if same type after removing references
+  if (Cpp::IsReferenceType(typ1) &&
+      IsEquivalentTypesImpl(Cpp::GetNonReferenceType(typ1), typ2, qual, ref,
+                            pointer)) {
+    ref = Cpp::GetValueKind(typ1);
+    return true;
+  }
+  if (Cpp::IsReferenceType(typ2) &&
+      IsEquivalentTypesImpl(Cpp::GetNonReferenceType(typ2), typ1, qual, ref,
+                            pointer)) {
+    ref = Cpp::GetValueKind(typ2);
+    return true;
+  }
+
+  // check if same type after removing pointers
+  if (Cpp::IsPointerType(typ1) &&
+      IsEquivalentTypesImpl(Cpp::GetPointeeType(typ1), typ2, qual, ref,
+                            pointer)) {
+    pointer = true;
+    return true;
+  }
+  if (Cpp::IsPointerType(typ2) &&
+      IsEquivalentTypesImpl(Cpp::GetPointeeType(typ2), typ1, qual, ref,
+                            pointer)) {
+    pointer = true;
+    return true;
+  }
+  return false;
+}
+
+// Checks if two types are equivalent up to CVR qualifiers, references and
+// pointers, or if one type derives from the other. On return, qual holds the
+// CVR qualifiers that differ between the two types, ref the kind of reference
+// that was stripped and pointer whether a pointer was stripped.
+static bool IsEquivalentTypes(interop::TCppType_t typ1,
+                              interop::TCppType_t typ2, Cpp::QualKind& qual,
+                              Cpp::ValueKind& ref, bool& pointer) {
+  qual = static_cast<Cpp::QualKind>(0);
+  ref = Cpp::ValueKind::None;
+  pointer = false;
+  if (!typ1 || !typ2)
+    return false;
+  return IsEquivalentTypesImpl(typ1, typ2, qual, ref, pointer);
+}
+
 bool IsTemplateParamEquivalentTypes(interop::TCppType_t typ1,
                                     interop::TCppType_t typ2,
                                     Cpp::QualKind& qual, Cpp::ValueKind& ref,
                                     bool& pointer) {
-  qual = Cpp::QualKind::None;
+  qual = static_cast<Cpp::QualKind>(0);
   ref = Cpp::ValueKind::None;
   pointer = false;
 
-  ref = ref ^ Cpp::GetValueKind(typ1);
-  ref = ref ^ Cpp::GetValueKind(typ2);
+  Cpp::ValueKind ref1 = Cpp::GetValueKind(typ1);
+  Cpp::ValueKind ref2 = Cpp::GetValueKind(typ2);
+  if (ref1 != ref2)
+    ref = ref1 != Cpp::ValueKind::None ? ref1 : ref2;
   typ2 = Cpp::IsReferenceType(typ2) ? Cpp::GetNonReferenceType(typ2) : typ2;
 
   pointer ^= Cpp::IsPointerType(typ1);
@@ -1856,13 +1924,13 @@ interop::TCppMethod_t BestOverloadFunctionMatch(
         I++;
         continue;
       }
-      Cpp::QualKind qual = Cpp::QualKind::None;
+      Cpp::QualKind qual = static_cast<Cpp::QualKind>(0);
       Cpp::ValueKind ref = Cpp::ValueKind::None;
       bool pointer = false;
       static interop::TCppScope_t initializer_list_scope =
           Cpp::GetTemplatedDecl(interop::GetScope("std::initializer_list"));
-      static interop::TCppScope_t vector_scope =
-          interop::GetScope("std::vector");
+      // static interop::TCppScope_t vector_scope =
+      //     interop::GetScope("std::vector");
       static interop::TCppType_t string_type = interop::GetRealType(
           interop::GetTypeFromScope(interop::GetScope("std::string")));
       static interop::TCppType_t wstring_type = interop::GetRealType(
@@ -1876,65 +1944,65 @@ interop::TCppMethod_t BestOverloadFunctionMatch(
           Cpp::GetFunctionArgType(fn, skipThis ? I - 1 : I);
       assert(string_type);
       interop::TCppType_t old_type = nullptr;
-      if (Cpp::IsEquivalentTypes(arg.m_Type, fn_arg_type, qual, ref, pointer) &&
+      if (IsEquivalentTypes(arg.m_Type, fn_arg_type, qual, ref, pointer) &&
           pointer) {
         // Only promotion to pointer should be allowed.
         old_type = arg.m_Type;
         arg.m_Type = interop::GetPointerType(arg.m_Type).data;
         if (ref != Cpp::ValueKind::None)
           arg.m_Type = interop::GetNonReferenceType(arg.m_Type).data;
-      } else if (Cpp::IsEquivalentTypes(string_type, arg.m_Type, qual, ref,
-                                        pointer) &&
-                 (Cpp::IsEquivalentTypes(char_pointer_type, fn_arg_type, qual,
-                                         ref, pointer)) &&
-                 (Cpp::IsPointerType(
-                     interop::GetNonReferenceType(interop::ResolveType(fn_arg_type))))) {
+      } else if (IsEquivalentTypes(string_type, arg.m_Type, qual, ref,
+                                   pointer) &&
+                 (IsEquivalentTypes(char_pointer_type, fn_arg_type, qual, ref,
+                                    pointer)) &&
+                 (Cpp::IsPointerType(interop::GetNonReferenceType(
+                     interop::ResolveType(fn_arg_type))))) {
         // promote std::string to char*
         old_type = arg.m_Type;
         arg.m_Type = char_pointer_type.data;
-      } else if (Cpp::IsEquivalentTypes(string_type, arg.m_Type, qual, ref,
-                                        pointer) &&
-                 (Cpp::IsEquivalentTypes(char_type, fn_arg_type, qual, ref,
-                                         pointer))) {
+      } else if (IsEquivalentTypes(string_type, arg.m_Type, qual, ref,
+                                   pointer) &&
+                 (IsEquivalentTypes(char_type, fn_arg_type, qual, ref,
+                                    pointer))) {
         // promote std::string to char
         // is this fine?
         old_type = arg.m_Type;
         arg.m_Type = char_type.data;
-      } else if (Cpp::IsEquivalentTypes(string_type, fn_arg_type, qual, ref,
-                                        pointer) &&
-                 (Cpp::IsEquivalentTypes(char_pointer_type, arg.m_Type, qual,
-                                         ref, pointer)) &&
-                 (Cpp::IsPointerType(
-                     interop::GetNonReferenceType(interop::ResolveType(arg.m_Type))))) {
+      } else if (IsEquivalentTypes(string_type, fn_arg_type, qual, ref,
+                                   pointer) &&
+                 (IsEquivalentTypes(char_pointer_type, arg.m_Type, qual, ref,
+                                    pointer)) &&
+                 (Cpp::IsPointerType(interop::GetNonReferenceType(
+                     interop::ResolveType(arg.m_Type))))) {
         // promote char* to std::string
         old_type = arg.m_Type;
         arg.m_Type = string_type.data;
-      } else if (Cpp::IsEquivalentTypes(string_type, arg.m_Type, qual, ref,
-                                        pointer) &&
-                 (Cpp::IsEquivalentTypes(wchar_pointer_type, fn_arg_type, qual,
-                                         ref, pointer)) &&
-                 (Cpp::IsPointerType(
-                     interop::GetNonReferenceType(interop::ResolveType(fn_arg_type))))) {
+      } else if (IsEquivalentTypes(string_type, arg.m_Type, qual, ref,
+                                   pointer) &&
+                 (IsEquivalentTypes(wchar_pointer_type, fn_arg_type, qual, ref,
+                                    pointer)) &&
+                 (Cpp::IsPointerType(interop::GetNonReferenceType(
+                     interop::ResolveType(fn_arg_type))))) {
         // promote std::string to wchar_t*
         old_type = arg.m_Type;
         arg.m_Type = wchar_pointer_type.data;
-      } else if (Cpp::IsEquivalentTypes(wstring_type, fn_arg_type, qual, ref,
-                                        pointer) &&
-                 (Cpp::IsEquivalentTypes(wchar_pointer_type, arg.m_Type, qual,
-                                         ref, pointer)) &&
-                 (Cpp::IsPointerType(
-                     interop::GetNonReferenceType(interop::ResolveType(arg.m_Type))))) {
+      } else if (IsEquivalentTypes(wstring_type, fn_arg_type, qual, ref,
+                                   pointer) &&
+                 (IsEquivalentTypes(wchar_pointer_type, arg.m_Type, qual, ref,
+                                    pointer)) &&
+                 (Cpp::IsPointerType(interop::GetNonReferenceType(
+                     interop::ResolveType(arg.m_Type))))) {
         // promote wchar_t* to std::wstring
         old_type = arg.m_Type;
         arg.m_Type = wstring_type.data;
-        // } else if (Cpp::IsEquivalentTypes(string_type, arg.m_Type, qual, ref,
-        // pointer) && (Cpp::IsEquivalentTypes(wstring_type, fn_arg_type, qual,
+        // } else if (IsEquivalentTypes(string_type, arg.m_Type, qual, ref,
+        // pointer) && (IsEquivalentTypes(wstring_type, fn_arg_type, qual,
         // ref, pointer))) {
         //     // promote std::string to std::wstring
         //     old_type = arg.m_Type;
         //     arg.m_Type = wstring_type.data;
-        // } else if (Cpp::IsEquivalentTypes(char_pointer_type, arg.m_Type,
-        // qual, ref, pointer) && (Cpp::IsEquivalentTypes(wstring_type,
+        // } else if (IsEquivalentTypes(char_pointer_type, arg.m_Type,
+        // qual, ref, pointer) && (IsEquivalentTypes(wstring_type,
         // fn_arg_type, qual, ref, pointer)) &&
         // (Cpp::IsPointerType(Cpp::GetNonReferenceType(interop::ResolveType(arg.m_Type))))
         // &&
