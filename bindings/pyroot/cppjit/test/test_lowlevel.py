@@ -1480,3 +1480,61 @@ class TestWARNINGHANDLER:
             with raises(RuntimeWarning, match="message 1"):
                 ns.warn_twice()
         assert ns.gHandled == 1
+
+
+class TestINPUTHOOK:
+    def setup_class(cls):
+        import cppjit
+
+        cppjit.cppdef(r"""\
+        namespace InputHook {
+            int gCalls = 0;
+            void hook() { ++gCalls; }
+            void with_arg(int) {}
+        }""")
+
+    def test01_install_and_chain(self):
+        """The hook calls the C++ function, then the previous hook"""
+
+        import ctypes
+
+        import cppjit
+
+        ns = cppjit.gbl.InputHook
+        hook_type = ctypes.CFUNCTYPE(ctypes.c_int)
+        hook_ptr = ctypes.c_void_p.in_dll(ctypes.pythonapi, "PyOS_InputHook")
+        original = hook_ptr.value
+
+        previous_calls = []
+        previous_hook = hook_type(lambda: previous_calls.append(1) or 42)
+        previous_address = ctypes.cast(previous_hook, ctypes.c_void_p).value
+        hook_ptr.value = previous_address
+        try:
+            cppjit._backend.set_input_hook(ns.hook)
+            installed = hook_ptr.value
+            assert installed != previous_address
+            assert hook_type(installed)() == 42
+            assert ns.gCalls == 1
+            assert previous_calls == [1]
+
+            # installing again replaces the function, not the chain
+            cppjit._backend.set_input_hook(ns.hook)
+            assert hook_ptr.value == installed
+            assert hook_type(installed)() == 42
+            assert ns.gCalls == 2
+            assert previous_calls == [1, 1]
+
+            cppjit._backend.set_input_hook(None)
+            assert hook_ptr.value == previous_address
+        finally:
+            hook_ptr.value = original
+
+    def test02_rejects_other_arguments(self):
+        """Only a C++ function taking no arguments can be the hook"""
+
+        import cppjit
+
+        ns = cppjit.gbl.InputHook
+        raises(TypeError, cppjit._backend.set_input_hook, ns.with_arg)
+        raises(TypeError, cppjit._backend.set_input_hook, lambda: None)
+        raises(TypeError, cppjit._backend.set_input_hook, 42)
