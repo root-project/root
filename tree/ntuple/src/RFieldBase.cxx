@@ -542,7 +542,8 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
             }
             R__ASSERT(typeName == fieldDesc.GetTypeName());
             auto recordField =
-               Internal::CreateEmulatedRecordField(fieldName, std::move(memberFields), fieldDesc.GetTypeName());
+               Internal::CreateEmulatedRecordField(fieldName, std::move(memberFields), fieldDesc.GetTypeName(),
+                                                   fieldDesc.GetTypeVersion(), fieldDesc.GetTypeChecksum());
             recordField->fTypeAlias = fieldDesc.GetTypeAlias();
             return recordField;
          } else if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {

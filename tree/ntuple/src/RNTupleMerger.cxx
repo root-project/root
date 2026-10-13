@@ -766,7 +766,9 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
       if (fieldDesc->IsProjectedField())
          continue;
 
-      auto field = fieldDesc->CreateField(srcDesc);
+      ROOT::RCreateFieldOptions cfOpts;
+      cfOpts.SetEmulateUnknownTypes(true);
+      auto field = fieldDesc->CreateField(srcDesc, cfOpts);
       // Explicitly set the field representatives. This prevents UpdateSchema() from changing our column
       // representations via AutoAdjustColumnTypes.
       ROOT::RFieldBase::ColumnRepresentation_t representatives;
@@ -788,7 +790,9 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
          continue;
 
       ROOT::Internal::RProjectedFields::FieldMap_t fieldMap;
-      auto field = fieldDesc->CreateField(srcDesc);
+      ROOT::RCreateFieldOptions cfOpts;
+      cfOpts.SetEmulateUnknownTypes(true);
+      auto field = fieldDesc->CreateField(srcDesc, cfOpts);
       const auto sourceId = fieldDesc->GetProjectionSourceId();
       const auto &sourceField = dstModel.GetConstField(srcDesc.GetQualifiedFieldName(sourceId));
       fieldMap[field.get()] = &sourceField;
