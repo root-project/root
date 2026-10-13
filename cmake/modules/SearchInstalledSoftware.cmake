@@ -153,6 +153,14 @@ if(webgui AND root7 AND geom)
     list(APPEND HOTFIX_BUILD_FLAGS '-Dbuiltin_glu=ON')
   endif()
 endif()
+if (geom)
+  ROOT_FIND_REQUIRED_DEP(bvh builtin_bvh)
+  if (bvh_FOUND AND CMAKE_CXX_STANDARD LESS 20 AND NOT builtin_bvh)
+    message(SEND_ERROR "'bvh' found but needs C++20, either bump CXX standard or fall back to -Dbuiltin_bvh=ON")
+    list(APPEND MISSING_PACKAGES 'bvh')
+    list(APPEND HOTFIX_BUILD_FLAGS '-Dbuiltin_bvh=ON')
+  endif()
+endif()
 foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES VERSION)
   unset(OPENSSL_${suffix} CACHE)
 endforeach()
@@ -871,6 +879,11 @@ if(vdt OR builtin_vdt)
   if(builtin_vdt)
     add_subdirectory(builtins/vdt)
   endif()
+endif()
+
+#---Check for bvh--------------------------------------------------------------------
+if(geom AND builtin_bvh)
+  add_subdirectory (builtins/bvh) # hard coded builtin for geom/geom TODO mv to full builtin ROOT build option
 endif()
 
 #---Check for VecGeom--------------------------------------------------------------------
