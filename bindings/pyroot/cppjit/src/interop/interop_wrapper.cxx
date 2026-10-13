@@ -1891,6 +1891,15 @@ interop::TCppMethod_t BestOverloadFunctionMatch(
     interop::TCppScope_t parent_scope, bool is_operator) {
   std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
 
+  auto remove_duplicate_methods = [](std::vector<interop::TCppMethod_t>& methods) {
+    std::set<void*> seen;
+    methods.erase(std::remove_if(methods.begin(), methods.end(),
+                                 [&seen](interop::TCppMethod_t m) {
+                                   return !seen.insert(m.data).second;
+                                 }),
+                  methods.end());
+  };
+
   interop::TCppMethod_t cppmeth = Cpp::BestOverloadFunctionMatch(
       candidates, templ_params, arg_types, ambiguous_candidates, is_operator);
   if (cppmeth)
@@ -2064,13 +2073,17 @@ interop::TCppMethod_t BestOverloadFunctionMatch(
     if (!promoted)
       continue;
 
-    // FIXME: How to handle ambiguous_candidates in this case?
     interop::TCppMethod_t new_meth = Cpp::BestOverloadFunctionMatch(
         candidates, {}, promoted_arg_types, ambiguous_candidates, is_operator);
     if (!cppmeth)
       cppmeth = new_meth;
-    else if (new_meth && new_meth != cppmeth)
-      return nullptr; // ambiguous, raise diagnostic
+    else if (new_meth && new_meth != cppmeth) {
+      // ambiguous
+      ambiguous_candidates.push_back(cppmeth);
+      ambiguous_candidates.push_back(new_meth);
+      remove_duplicate_methods(ambiguous_candidates);
+      return nullptr;
+    }
   }
 
   // proper argument type match failed
@@ -2078,6 +2091,8 @@ interop::TCppMethod_t BestOverloadFunctionMatch(
   if (!cppmeth && !potential_cppmeth_ambiguous &&
       !Cpp::IsTemplatedFunction(potential_cppmeth))
     cppmeth = potential_cppmeth;
+  if (!cppmeth)
+    remove_duplicate_methods(ambiguous_candidates);
   return cppmeth;
 }
 } // namespace

@@ -499,3 +499,23 @@ class TestOVERLOADS:
         # a single promotion
         assert ns.join_mixed("ab", 1) == "ab1"
         assert ns.join_mixed(1, "ab") == "1ab"
+
+    def test19_ambiguous_set_has_no_duplicates(self):
+        """Verify that an ambiguous call reports each candidate only once."""
+
+        import cppjit
+
+        cppjit.cppdef("""
+        namespace DupAmbiguity {
+        int f(char* a, double b) { return 1; }
+        int f(char* a, float b) { return 2; }
+        }""")
+
+        # the str argument needs a promotion to char*, which is retried for
+        # each candidate, and every retry is ambiguous on the int argument
+        with raises(cppjit.OverloadAmbiguityException) as exc:
+            cppjit.gbl.DupAmbiguity.f("x", 1)
+
+        msg = str(exc.value)
+        assert msg.count("double b)") == 1
+        assert msg.count("float b)") == 1
