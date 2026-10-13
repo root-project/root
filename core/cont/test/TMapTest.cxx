@@ -10,6 +10,14 @@ public:
    ~TrackNamed() override { fgCount--; }
 };
 int TrackNamed::fgCount = 0;
+
+class CollideNamed : public TNamed {
+   ULong_t fForcedHash;
+
+public:
+   CollideNamed(const char *name, const char *title, ULong_t h = 42) : TNamed(name, title), fForcedHash(h) {}
+   ULong_t Hash() const override { return fForcedHash; }
+};
 } // namespace
 
 TEST(TMapTest, DefaultConstructor)
@@ -76,6 +84,48 @@ TEST(TMapTest, AddAndLookup)
    EXPECT_GE(map.Collisions("key1"), 1);
    EXPECT_GE(map.Collisions(k2), 1);
    EXPECT_EQ(map.Collisions("nonexistent"), 0);
+}
+
+TEST(TMapTest, HashCollision)
+{
+   TMap map;
+   map.SetOwnerKeyValue(kTRUE, kTRUE);
+
+   auto *k1 = new CollideNamed("col_a", "First", 99);
+   auto *v1 = new TNamed("val_a", "Value A");
+   auto *k2 = new CollideNamed("col_b", "Second", 99);
+   auto *v2 = new TNamed("val_b", "Value B");
+
+   map.Add(k1, v1);
+   map.Add(k2, v2);
+
+   EXPECT_EQ(map.GetSize(), 2);
+
+   // Both keys force the exact same hash (99), creating a deliberate collision in the bucket
+   EXPECT_EQ(map.Collisions("col_a"), 2);
+   EXPECT_EQ(map.Collisions("col_b"), 2);
+   EXPECT_EQ(map.Collisions(k1), 2);
+   EXPECT_EQ(map.Collisions(k2), 2);
+
+   // Despite hash collision, lookups should correctly resolve both distinct items
+   EXPECT_EQ(map.GetValue("col_a"), v1);
+   EXPECT_EQ(map.GetValue("col_b"), v2);
+   EXPECT_EQ(map.GetValue(k1), v1);
+   EXPECT_EQ(map.GetValue(k2), v2);
+
+   // Removing one collided item should leave the other intact and reduce collision count
+   TPair *entry = map.RemoveEntry(k1);
+   ASSERT_NE(entry, nullptr);
+   EXPECT_EQ(entry->Key(), k1);
+   EXPECT_EQ(entry->Value(), v1);
+   delete entry;
+   delete k1;
+   delete v1;
+
+   EXPECT_EQ(map.GetSize(), 1);
+   EXPECT_EQ(map.Collisions("col_b"), 1);
+   EXPECT_EQ(map.GetValue("col_a"), nullptr);
+   EXPECT_EQ(map.GetValue("col_b"), v2);
 }
 
 TEST(TMapTest, Remove)
@@ -176,6 +226,92 @@ TEST(TMapTest, Rehash)
       TObject *val = map.GetValue(Form("key_%d", i));
       ASSERT_NE(val, nullptr);
       EXPECT_STREQ(val->GetName(), Form("val_%d", i));
+   }
+}
+
+TEST(TMapTest, OwnershipIndependent)
+{
+   TrackNamed::fgCount = 0;
+
+   // 1. Only keys owned: SetOwner(kTRUE), SetOwnerValue(kFALSE)
+   {
+      TMap map;
+      map.SetOwner(kTRUE);
+      map.SetOwnerValue(kFALSE);
+      EXPECT_TRUE(map.IsOwner());
+      EXPECT_FALSE(map.IsOwnerValue());
+
+      auto *k = new TrackNamed("k_only", "");
+      auto *v = new TrackNamed("v_only", "");
+      map.Add(k, v);
+
+      EXPECT_EQ(TrackNamed::fgCount, 2);
+
+      map.Clear(); // deletes key, leaves value alive
+      EXPECT_EQ(TrackNamed::fgCount, 1);
+
+      delete v;
+      EXPECT_EQ(TrackNamed::fgCount, 0);
+   }
+
+   // 2. Only values owned: SetOwner(kFALSE), SetOwnerValue(kTRUE)
+   {
+      TMap map;
+      map.SetOwner(kFALSE);
+      map.SetOwnerValue(kTRUE);
+      EXPECT_FALSE(map.IsOwner());
+      EXPECT_TRUE(map.IsOwnerValue());
+
+      auto *k = new TrackNamed("k_only", "");
+      auto *v = new TrackNamed("v_only", "");
+      map.Add(k, v);
+
+      EXPECT_EQ(TrackNamed::fgCount, 2);
+
+      map.Clear(); // deletes value, leaves key alive
+      EXPECT_EQ(TrackNamed::fgCount, 1);
+
+      delete k;
+      EXPECT_EQ(TrackNamed::fgCount, 0);
+   }
+
+   // 3. Removal with value ownership enabled deletes value
+   {
+      TMap map;
+      map.SetOwnerValue(kTRUE);
+
+      auto *k = new TrackNamed("k_rm", "");
+      auto *v = new TrackNamed("v_rm", "");
+      map.Add(k, v);
+
+      EXPECT_EQ(TrackNamed::fgCount, 2);
+
+      TObject *retKey = map.Remove(k);
+      EXPECT_EQ(retKey, k);
+      // Remove() deletes value if IsOwnerValue() is true
+      EXPECT_EQ(TrackNamed::fgCount, 1);
+
+      delete k;
+      EXPECT_EQ(TrackNamed::fgCount, 0);
+   }
+
+   // 4. DeleteEntry with independent ownership
+   {
+      TMap map;
+      map.SetOwner(kTRUE);
+      map.SetOwnerValue(kFALSE);
+
+      auto *k = new TrackNamed("k_del", "");
+      auto *v = new TrackNamed("v_del", "");
+      map.Add(k, v);
+
+      EXPECT_EQ(TrackNamed::fgCount, 2);
+
+      EXPECT_TRUE(map.DeleteEntry(k)); // deletes key, value stays alive
+      EXPECT_EQ(TrackNamed::fgCount, 1);
+
+      delete v;
+      EXPECT_EQ(TrackNamed::fgCount, 0);
    }
 }
 
