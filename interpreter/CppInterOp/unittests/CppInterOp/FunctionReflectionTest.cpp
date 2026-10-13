@@ -4858,6 +4858,92 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsExplicitDeductionGuide) {
             "Wrapper<T *>");
 }
 
+TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsOperator) {
+  std::vector<Decl*> Decls, BaseDecls, DerivedDecls;
+  std::string code = R"(
+    struct OpBase {
+      OpBase& operator+=(const OpBase&) { return *this; }
+      operator int() const { return 0; }
+      void method() {}
+    };
+    struct OpDerived : OpBase {
+      using OpBase::operator+=;
+    };
+    bool operator==(const OpBase&, const OpBase&) { return true; }
+    template <typename T> bool operator<(const T&, const OpBase&) {
+      return true;
+    }
+    template <typename T> void free_template(T) {}
+    void free_function() {}
+    )";
+
+  GetAllTopLevelDecls(code, Decls);
+  ASSERT_EQ(Decls.size(), 6U);
+  GetAllSubDecls(Decls[0], BaseDecls, /*filter_implicitGenerated=*/true);
+  ASSERT_EQ(BaseDecls.size(), 3U);
+  GetAllSubDecls(Decls[1], DerivedDecls);
+
+  EXPECT_TRUE(Cpp::IsOperator(BaseDecls[0]));  // operator+=
+  EXPECT_FALSE(Cpp::IsOperator(BaseDecls[1])); // operator int
+  EXPECT_FALSE(Cpp::IsOperator(BaseDecls[2])); // method
+
+  // using OpBase::operator+=;
+  Decl* Shadow = nullptr;
+  for (auto* D : DerivedDecls)
+    if (llvm::isa<UsingShadowDecl>(D))
+      Shadow = D;
+  ASSERT_TRUE(Shadow);
+  EXPECT_TRUE(Cpp::IsOperator(Shadow));
+
+  EXPECT_FALSE(Cpp::IsOperator(Decls[0])); // not a function
+  EXPECT_TRUE(Cpp::IsOperator(Decls[2]));  // operator==
+  EXPECT_TRUE(Cpp::IsOperator(Decls[3]));  // template operator<
+  EXPECT_FALSE(Cpp::IsOperator(Decls[4])); // free_template
+  EXPECT_FALSE(Cpp::IsOperator(Decls[5])); // free_function
+  EXPECT_FALSE(Cpp::IsOperator(nullptr));
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsConversionOperator) {
+  std::vector<Decl*> Decls, BaseDecls, DerivedDecls;
+  std::string code = R"(
+    struct ConvBase {
+      operator int() const { return 0; }
+      explicit operator bool() const { return true; }
+      template <typename T> operator T*() const { return nullptr; }
+      bool operator!() const { return false; }
+      void method() {}
+    };
+    struct ConvDerived : ConvBase {
+      using ConvBase::operator int;
+    };
+    void free_function() {}
+    )";
+
+  GetAllTopLevelDecls(code, Decls);
+  ASSERT_EQ(Decls.size(), 3U);
+  GetAllSubDecls(Decls[0], BaseDecls, /*filter_implicitGenerated=*/true);
+  ASSERT_EQ(BaseDecls.size(), 5U);
+  GetAllSubDecls(Decls[1], DerivedDecls);
+
+  EXPECT_TRUE(Cpp::IsConversionOperator(BaseDecls[0]));  // operator int
+  EXPECT_TRUE(Cpp::IsConversionOperator(BaseDecls[1]));  // operator bool
+  EXPECT_TRUE(Cpp::IsConversionOperator(BaseDecls[2]));  // operator T*
+  EXPECT_FALSE(Cpp::IsConversionOperator(BaseDecls[3])); // operator!
+  EXPECT_FALSE(Cpp::IsConversionOperator(BaseDecls[4])); // method
+
+  // using ConvBase::operator int;
+  Decl* Shadow = nullptr;
+  for (auto* D : DerivedDecls)
+    if (llvm::isa<UsingShadowDecl>(D))
+      Shadow = D;
+  ASSERT_TRUE(Shadow);
+  EXPECT_TRUE(Cpp::IsConversionOperator(Shadow));
+
+  EXPECT_FALSE(Cpp::IsConversionOperator(Decls[0])); // not a function
+  EXPECT_FALSE(Cpp::IsConversionOperator(Decls[2])); // free_function
+  EXPECT_FALSE(Cpp::IsConversionOperator(nullptr));
+}
+
 // C++23 "deducing this" (explicit object parameters, P0847R7): the object
 // parameter binds to the receiver, not the argument list.
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_DeducingThisIntrospection) {

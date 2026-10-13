@@ -592,6 +592,23 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsTemplateParmType) {
   EXPECT_FALSE(Cpp::IsTemplateParmType(Cpp::GetFunctionArgType(Decls[0], 2)));
 }
 
+TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsPackExpansionType) {
+  std::vector<Decl*> Decls;
+
+  std::string code = R"(
+    template <typename T, typename... Ts> void f(T t, Ts... ts) {}
+    template <typename... Ts> void g(const Ts&... ts) {}
+    )";
+
+  GetAllTopLevelDecls(code, Decls);
+
+  EXPECT_FALSE(Cpp::IsPackExpansionType(Cpp::GetFunctionArgType(Decls[0], 0)));
+  EXPECT_TRUE(Cpp::IsPackExpansionType(Cpp::GetFunctionArgType(Decls[0], 1)));
+  EXPECT_TRUE(Cpp::IsPackExpansionType(Cpp::GetFunctionArgType(Decls[1], 0)));
+  EXPECT_FALSE(Cpp::IsPackExpansionType(Cpp::GetType("int")));
+  EXPECT_FALSE(Cpp::IsPackExpansionType(nullptr));
+}
+
 TYPED_TEST(CPPINTEROP_TEST_MODE, TypeReflection_IsSmartPtrType) {
 #if CLANG_VERSION_MAJOR == 20 && defined(CPPINTEROP_USE_CLING) && defined(_WIN32)
   GTEST_SKIP() << "Test fails with Cling on Windows";

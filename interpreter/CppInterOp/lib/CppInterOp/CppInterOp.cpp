@@ -2665,6 +2665,13 @@ bool IsTemplateParmType(ConstTypeRef TyRef) {
   return INTEROP_RETURN(QT->isTemplateTypeParmType());
 }
 
+bool IsPackExpansionType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  clang::QualType QT = clang::QualType::getFromOpaquePtr(TyRef.data);
+  return INTEROP_RETURN(
+      llvm::isa_and_nonnull<clang::PackExpansionType>(QT.getTypePtrOrNull()));
+}
+
 std::string GetFunctionSignature(ConstFuncRef func) {
   INTEROP_TRACE(func);
   if (!func)
@@ -3067,6 +3074,24 @@ bool IsExplicit(ConstFuncRef method) {
     return INTEROP_RETURN(DGD->isExplicit());
 
   return INTEROP_RETURN(false);
+}
+
+bool IsOperator(ConstFuncRef func) {
+  INTEROP_TRACE(func);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<Decl>(func));
+  if (const auto* FTD = llvm::dyn_cast_or_null<FunctionTemplateDecl>(D))
+    D = FTD->getTemplatedDecl();
+  if (const auto* FD = llvm::dyn_cast_or_null<FunctionDecl>(D))
+    return INTEROP_RETURN(FD->isOverloadedOperator());
+  return INTEROP_RETURN(false);
+}
+
+bool IsConversionOperator(ConstFuncRef func) {
+  INTEROP_TRACE(func);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<Decl>(func));
+  if (const auto* FTD = llvm::dyn_cast_or_null<FunctionTemplateDecl>(D))
+    D = FTD->getTemplatedDecl();
+  return INTEROP_RETURN(llvm::isa_and_nonnull<CXXConversionDecl>(D));
 }
 
 void* GetFunctionAddress(const char* mangled_name) {

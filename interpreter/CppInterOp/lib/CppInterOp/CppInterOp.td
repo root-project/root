@@ -1503,6 +1503,14 @@ def IsTemplateParmType : CppInterOpAPI {
   ];
 }
 
+def IsPackExpansionType : CppInterOpAPI {
+  let Doc = "Checks if the given type is a pack expansion type (e.g. `Ts...`).";
+  let ReturnType = "bool";
+  let Args = [
+    Arg<"ConstTypeRef", "TyRef">
+  ];
+}
+
 def IsFunction : CppInterOpAPI {
   let Doc = "Checks if the scope is a function.";
   let ReturnType = "bool";
@@ -1519,6 +1527,20 @@ def IsMethod : CppInterOpAPI {
   let Doc = "Checks if the provided parameter is a method.";
   let ReturnType = "bool";
   let Args = [Arg<"ConstFuncRef", "method">];
+}
+
+def IsOperator : CppInterOpAPI {
+  let Doc = [{Checks if the provided function (or function template) is an
+overloaded operator.}];
+  let ReturnType = "bool";
+  let Args = [Arg<"ConstFuncRef", "func">];
+}
+
+def IsConversionOperator : CppInterOpAPI {
+  let Doc = [{Checks if the provided function (or function template) is a
+conversion operator, e.g. `operator int()`.}];
+  let ReturnType = "bool";
+  let Args = [Arg<"ConstFuncRef", "func">];
 }
 
 def IsPODType : CppInterOpAPI {
