@@ -477,3 +477,25 @@ class TestOVERLOADS:
         assert constness("static_fn") == {
             "static int OverloadConstness::Probe::static_fn(int x)": False
         }
+
+    def test18_promote_multiple_arguments(self):
+        """Verify that an overload needing several argument promotions resolves."""
+
+        import cppjit
+
+        cppjit.cppdef("""
+        namespace MultiPromotion {
+        std::string join(char* a, char* b) { return std::string(a) + b; }
+        std::string join(int a, int b) { return std::to_string(a + b); }
+        std::string join_mixed(char* a, int b) { return a + std::to_string(b); }
+        std::string join_mixed(int a, char* b) { return std::to_string(a) + b; }
+        }""")
+
+        ns = cppjit.gbl.MultiPromotion
+
+        # both str arguments have to be promoted to char* at the same time
+        assert ns.join("ab", "cd") == "abcd"
+        assert ns.join(1, 2) == "3"
+        # a single promotion
+        assert ns.join_mixed("ab", 1) == "ab1"
+        assert ns.join_mixed(1, "ab") == "1ab"

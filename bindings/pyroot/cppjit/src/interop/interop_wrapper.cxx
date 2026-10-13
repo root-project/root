@@ -1885,7 +1885,7 @@ bool IsTemplateParamEquivalentTypes(interop::TCppType_t typ1,
 namespace {
 interop::TCppMethod_t BestOverloadFunctionMatch(
     const std::vector<interop::TCppMethod_t>& candidates,
-    std::vector<Cpp::TemplateArgInfo>& arg_types,
+    const std::vector<Cpp::TemplateArgInfo>& arg_types,
     const std::vector<Cpp::TemplateArgInfo>& templ_params,
     std::vector<interop::TCppMethod_t>& ambiguous_candidates,
     interop::TCppScope_t parent_scope, bool is_operator) {
@@ -1917,8 +1917,13 @@ interop::TCppMethod_t BestOverloadFunctionMatch(
     else
       potential_cppmeth_ambiguous = true;
 
+    // promote the arguments towards the parameters of fn, then resolve the
+    // overload once with all of them promoted
+    // ???: Can this cause ambiguity
+    std::vector<Cpp::TemplateArgInfo> promoted_arg_types = arg_types;
+    bool promoted = false;
     size_t I = 0;
-    for (auto& arg : arg_types) {
+    for (auto& arg : promoted_arg_types) {
       if (I == 0 && skipThis) {
         // ignore the this parameter
         I++;
@@ -2052,23 +2057,20 @@ interop::TCppMethod_t BestOverloadFunctionMatch(
           old_type = nullptr;
         }
       }
-      if (old_type) {
-        if (!cppmeth) {
-          // FIXME: this call should happen outside the inner for loop?
-          // FIXME: How to handle ambiguous_candidates in this case?
-          cppmeth = Cpp::BestOverloadFunctionMatch(
-              candidates, {}, arg_types, ambiguous_candidates, is_operator);
-        } else if (interop::TCppMethod_t new_meth =
-                       Cpp::BestOverloadFunctionMatch(candidates, {}, arg_types,
-                                                      ambiguous_candidates,
-                                                      is_operator);
-                   new_meth && new_meth != cppmeth) {
-          return nullptr; // ambiguous, raise diagnostic
-        }
-        arg.m_Type = old_type.data;
-      }
+      if (old_type)
+        promoted = true;
       I++;
     }
+    if (!promoted)
+      continue;
+
+    // FIXME: How to handle ambiguous_candidates in this case?
+    interop::TCppMethod_t new_meth = Cpp::BestOverloadFunctionMatch(
+        candidates, {}, promoted_arg_types, ambiguous_candidates, is_operator);
+    if (!cppmeth)
+      cppmeth = new_meth;
+    else if (new_meth && new_meth != cppmeth)
+      return nullptr; // ambiguous, raise diagnostic
   }
 
   // proper argument type match failed
