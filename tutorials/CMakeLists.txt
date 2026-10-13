@@ -154,6 +154,8 @@ if (NOT dataframe)
     # RNTuple tutorials depending on RDataFrame
     list(APPEND dataframe_veto io/ntuple/ntpl004_dimuon.C)
     list(APPEND dataframe_veto io/ntuple/ntpl008_import.C)
+    # RFile tutorials depending on RDataFrame
+    list(APPEND dataframe_veto io/experimental/rfile/rfile003_ttree.C)
 endif()
 
 if(NOT sqlite)
