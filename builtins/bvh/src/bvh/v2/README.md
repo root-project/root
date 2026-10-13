@@ -10,4 +10,5 @@ Minor changes have been subsequently been applied to achieve compilation with C+
 - old-style struct construction for objects of type "Reinsertion"
 - use of std::inner_product instead of std::transform_reduce (gcc 8.5 had problems)
 
-This is needed since ROOT should compile with C++17.
+This is needed since ROOT should compile with C++17. TODO: remove these patches
+when minimum required is C++20 and move builtin source to LCG.

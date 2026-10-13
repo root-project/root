@@ -7,7 +7,12 @@
 #include "bvh/v2/split_heuristic.h"
 
 #include <stack>
+#if __has_include(<span>)
 #include <span>
+#else
+// Falling back to ROOT span
+#include "ROOT/span.hxx"
+#endif
 #include <algorithm>
 #include <optional>
 #include <numeric>

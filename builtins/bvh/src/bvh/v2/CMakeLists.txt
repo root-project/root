@@ -12,6 +12,11 @@ target_include_directories(bvh INTERFACE
 
 set_target_properties(bvh PROPERTIES CXX_STANDARD 20)
 
+if (CMAKE_CXX_STANDARD LESS 20)
+  # backup implementation of span
+  target_include_directories(bvh INTERFACE ${CMAKE_SOURCE_DIR}/core/foundation/inc) # for ROOT/span.hxx
+endif()
+
 add_library(bvh::bvh ALIAS bvh)
 
 if (BVH_BUILD_C_API)

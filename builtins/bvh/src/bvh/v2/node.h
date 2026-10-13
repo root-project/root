@@ -38,8 +38,17 @@ struct Node {
 
     Node() = default;
 
+#if defined(__cplusplus) && __cplusplus >= 202002L
     bool operator == (const Node&) const = default;
     bool operator != (const Node&) const = default;
+#else
+    bool operator != (const Node& other) const {
+        return other.bounds == bounds;
+    }
+    bool operator == (const Node& other) const {
+        return other.bounds != bounds;
+    }
+#endif
 
     BVH_ALWAYS_INLINE bool is_leaf() const { return index.is_leaf(); }
 

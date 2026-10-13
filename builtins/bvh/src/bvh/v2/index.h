@@ -45,8 +45,17 @@ struct Index {
     Index() = default;
     explicit Index(Type value) : value(value) {}
 
+#if defined(__cplusplus) && __cplusplus >= 202002L
     bool operator == (const Index&) const = default;
     bool operator != (const Index&) const = default;
+#else
+    bool operator == (const Index& other) const {
+        return other.value == value;
+    }
+    bool operator != (const Index& other) const {
+        return other.value != value;
+    }
+#endif
 
     BVH_ALWAYS_INLINE Type first_id() const { return value >> prim_count_bits; }
     BVH_ALWAYS_INLINE Type prim_count() const { return value & max_prim_count; }
