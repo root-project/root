@@ -2857,8 +2857,11 @@ bool GetClassTemplatedMethods(const std::string& name, ConstDeclRef parent,
 FuncRef
 BestOverloadFunctionMatch(const std::vector<FuncRef>& candidates,
                           const std::vector<TemplateArgInfo>& explicit_types,
-                          const std::vector<TemplateArgInfo>& arg_types) {
-  INTEROP_TRACE(candidates, explicit_types, arg_types);
+                          const std::vector<TemplateArgInfo>& arg_types,
+                          std::vector<FuncRef>& ambiguous_candidates,
+                          bool is_operator) {
+  INTEROP_TRACE(candidates, explicit_types, arg_types,
+                INTEROP_OUT(ambiguous_candidates), is_operator);
   auto& S = getSema();
   auto& C = S.getASTContext();
 
@@ -2874,6 +2877,7 @@ BestOverloadFunctionMatch(const std::vector<FuncRef>& candidates,
   };
   auto* Exprs = new WrapperExpr[arg_types.size()];
   llvm::SmallVector<Expr*> Args;
+
   Args.reserve(arg_types.size());
   size_t idx = 0;
   for (auto i : arg_types) {
@@ -2916,25 +2920,34 @@ BestOverloadFunctionMatch(const std::vector<FuncRef>& candidates,
   Sema::SFINAETrap Trap(S, /*ForValidityCheck=*/true);
 
   OverloadCandidateSet Overloads(
-      Loc, OverloadCandidateSet::CandidateSetKind::CSK_Normal);
+      Loc, is_operator ? OverloadCandidateSet::CandidateSetKind::CSK_Operator
+                       : OverloadCandidateSet::CandidateSetKind::CSK_Normal);
+
+  // check if this function requires the this/self argument
+  auto IsCalledOnObject = [&Args](const CXXMethodDecl* CXXMD) {
+    return CXXMD && !Cpp::IsConstructor(CXXMD) && !CXXMD->isStatic() &&
+           !Args.empty();
+  };
 
   for (auto i : candidates) {
-    auto* D = const_cast<Decl*>(unwrap<Decl>(i));
-    if (auto* FD = dyn_cast<FunctionDecl>(D)) {
-      S.AddOverloadCandidate(FD, DeclAccessPair::make(FD, FD->getAccess()),
-                             Args, Overloads);
+    auto* Found = const_cast<Decl*>(unwrap<Decl>(i));
+    auto FoundDeclAccessPair =
+        DeclAccessPair::make(cast<NamedDecl>(Found), Found->getAccess());
+    auto* D = UnwrapUsingShadowToFunction(Found);
+    if (auto* CXXMD = dyn_cast<CXXMethodDecl>(D); IsCalledOnObject(CXXMD)) {
+      S.AddMethodCandidate(FoundDeclAccessPair, Args.front()->getType(),
+                           Args.front()->Classify(C),
+                           llvm::ArrayRef<Expr*>(Args).slice(1), Overloads);
+    } else if (auto* FD = dyn_cast<FunctionDecl>(D)) {
+      S.AddOverloadCandidate(FD, FoundDeclAccessPair, Args, Overloads);
     } else if (auto* FTD = dyn_cast<FunctionTemplateDecl>(D)) {
-      auto* MD = dyn_cast<CXXMethodDecl>(FTD->getTemplatedDecl());
-      if (MD && MD->isExplicitObjectMemberFunction()) {
-        // The explicit object parameter isn't in Args, so deduce it via the
-        // method-template path with a synthesized receiver of the record type.
-        CXXRecordDecl* RD = MD->getParent();
-        QualType ObjectType = compat::GetTypeFromDecl(RD);
-        OpaqueValueExpr ObjectExpr(SourceLocation::getFromRawEncoding(1),
-                                   ObjectType, ExprValueKind::VK_LValue);
+      if (auto* CXXMD = dyn_cast<CXXMethodDecl>(FTD->getTemplatedDecl());
+          IsCalledOnObject(CXXMD)) {
         S.AddMethodTemplateCandidate(
-            FTD, DeclAccessPair::make(FTD, FTD->getAccess()), RD,
-            &ExplicitTemplateArgs, ObjectType, ObjectExpr.Classify(C), Args,
+            FTD, FoundDeclAccessPair,
+            Args.front()->getType()->getAsCXXRecordDecl(),
+            &ExplicitTemplateArgs, Args.front()->getType(),
+            Args.front()->Classify(C), llvm::ArrayRef<Expr*>(Args).slice(1),
             Overloads);
       } else {
         // AddTemplateOverloadCandidate is causing a memory leak
@@ -2942,17 +2955,23 @@ BestOverloadFunctionMatch(const std::vector<FuncRef>& candidates,
         // call stack: AddTemplateOverloadCandidate -> MakeDeductionFailureInfo
         // source:
         // https://github.com/llvm/llvm-project/blob/release/19.x/clang/lib/Sema/SemaOverload.cpp#L731-L756
-        S.AddTemplateOverloadCandidate(
-            FTD, DeclAccessPair::make(FTD, FTD->getAccess()),
-            &ExplicitTemplateArgs, Args, Overloads);
+        S.AddTemplateOverloadCandidate(FTD, FoundDeclAccessPair,
+                                       &ExplicitTemplateArgs, Args, Overloads);
       }
     }
   }
 
   OverloadCandidateSet::iterator Best;
-  Overloads.BestViableFunction(S, Loc, Best);
-
-  FunctionDecl* Result = Best != Overloads.end() ? Best->Function : nullptr;
+  auto res = Overloads.BestViableFunction(S, Loc, Best);
+  FunctionDecl* Result = nullptr;
+  if (res == clang::OR_Success) {
+    Result = Best->Function;
+  } else if (res == clang::OR_Ambiguous) {
+    for (const auto& i : Overloads) {
+      if (i.Best)
+        ambiguous_candidates.emplace_back(i.Function);
+    }
+  }
 
   // If the winner is a not-yet-instantiated template specialization, force
   // the instantiation of its body now, with diagnostics suppressed, and

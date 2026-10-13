@@ -869,11 +869,12 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionReturnType) {
   std::vector<Cpp::TemplateArgInfo> args = {C.IntTy.getAsOpaquePtr(),
                                             C.DoubleTy.getAsOpaquePtr()};
   std::vector<Cpp::TemplateArgInfo> explicit_args;
+  std::vector<Cpp::FuncRef> ambiguous_candidates;
   std::vector<Cpp::FuncRef> candidates = {Decls[14]};
-  EXPECT_EQ(
-      Cpp::GetTypeAsString(Cpp::GetFunctionReturnType(
-          Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args))),
-      "RTTest_TemplatedList<int, double>");
+  EXPECT_EQ(Cpp::GetTypeAsString(
+                Cpp::GetFunctionReturnType(Cpp::BestOverloadFunctionMatch(
+                    candidates, explicit_args, args, ambiguous_candidates))),
+            "RTTest_TemplatedList<int, double>");
 
   std::vector<Cpp::TemplateArgInfo> args2 = {C.DoubleTy.getAsOpaquePtr()};
   EXPECT_EQ(
@@ -2510,6 +2511,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   GetAllTopLevelDecls(code, Decls);
   EXPECT_EQ(Decls.size(), 1);
 
+  std::vector<Cpp::FuncRef> ambiguous_candidates;
   std::vector<Cpp::FuncRef> candidates;
   candidates.reserve(Decls.size());
   for (auto* i : Decls)
@@ -2530,15 +2532,16 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
       C.IntTy.getAsOpaquePtr(),
   };
 
-  Cpp::FuncRef fn0 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args0, args0);
+  Cpp::FuncRef fn0 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args0, args0, ambiguous_candidates);
   EXPECT_TRUE(fn0);
 
-  Cpp::FuncRef fn =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args1, args0);
+  Cpp::FuncRef fn = Cpp::BestOverloadFunctionMatch(candidates, explicit_args1,
+                                                   args0, ambiguous_candidates);
   EXPECT_EQ(fn, fn0);
 
-  fn = Cpp::BestOverloadFunctionMatch(candidates, explicit_args2, args0);
+  fn = Cpp::BestOverloadFunctionMatch(candidates, explicit_args2, args0,
+                                      ambiguous_candidates);
   EXPECT_EQ(fn, fn0);
 
   fn = Cpp::FuncRef{Cpp::InstantiateTemplate(Decls[0], explicit_args1).data};
@@ -2588,6 +2591,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   )";
 
   GetAllTopLevelDecls(code, Decls);
+  std::vector<Cpp::FuncRef> ambiguous_candidates;
   std::vector<Cpp::FuncRef> candidates;
 
   for (auto decl : Decls)
@@ -2596,27 +2600,35 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 
   ASTContext& C = Interp->getCI()->getASTContext();
 
-  std::vector<Cpp::TemplateArgInfo> args0;
+  Cpp::DeclRef ScopeKlass = Cpp::GetNamed("MyTemplatedMethodClass");
+  EXPECT_TRUE(ScopeKlass);
+
+  Cpp::TypeRef TypeKlass = Cpp::GetTypeFromScope(ScopeKlass);
+  EXPECT_TRUE(TypeKlass);
+
+  std::vector<Cpp::TemplateArgInfo> args0 = {TypeKlass.data};
   std::vector<Cpp::TemplateArgInfo> args1 = {
-      C.getLValueReferenceType(C.IntTy).getAsOpaquePtr()};
-  std::vector<Cpp::TemplateArgInfo> args2 = {C.CharTy.getAsOpaquePtr(), C.FloatTy.getAsOpaquePtr()};
-  std::vector<Cpp::TemplateArgInfo> args3 = {C.FloatTy.getAsOpaquePtr()};
+      TypeKlass.data, C.getLValueReferenceType(C.IntTy).getAsOpaquePtr()};
+  std::vector<Cpp::TemplateArgInfo> args2 = {
+      TypeKlass.data, C.CharTy.getAsOpaquePtr(), C.FloatTy.getAsOpaquePtr()};
+  std::vector<Cpp::TemplateArgInfo> args3 = {TypeKlass.data,
+                                             C.FloatTy.getAsOpaquePtr()};
 
   std::vector<Cpp::TemplateArgInfo> explicit_args0;
   std::vector<Cpp::TemplateArgInfo> explicit_args1 = {C.IntTy.getAsOpaquePtr()};
   std::vector<Cpp::TemplateArgInfo> explicit_args2 = {
       {C.IntTy.getAsOpaquePtr(), "1"}, C.IntTy.getAsOpaquePtr()};
 
-  Cpp::FuncRef func1 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args0, args1);
-  Cpp::FuncRef func2 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args1, args0);
-  Cpp::FuncRef func3 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args0, args2);
-  Cpp::FuncRef func4 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args1, args3);
-  Cpp::FuncRef func5 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args2, args3);
+  Cpp::FuncRef func1 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args0, args1, ambiguous_candidates);
+  Cpp::FuncRef func2 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args1, args0, ambiguous_candidates);
+  Cpp::FuncRef func3 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args0, args2, ambiguous_candidates);
+  Cpp::FuncRef func4 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args1, args3, ambiguous_candidates);
+  Cpp::FuncRef func5 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args2, args3, ambiguous_candidates);
 
   EXPECT_EQ(Cpp::GetFunctionSignature(func1),
             "template<> long MyTemplatedMethodClass::get_size<int>(int &)");
@@ -2656,6 +2668,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 
   GetAllTopLevelDecls(code, Decls);
   std::vector<Cpp::FuncRef> candidates;
+  std::vector<Cpp::FuncRef> ambiguous_candidates;
 
   for (auto decl : Decls)
     if (Cpp::IsFunction(decl) || Cpp::IsTemplatedFunction(decl))
@@ -2678,16 +2691,16 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 
   std::vector<Cpp::TemplateArgInfo> explicit_args;
 
-  Cpp::FuncRef func1 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args1);
-  Cpp::FuncRef func2 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args2);
-  Cpp::FuncRef func3 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args3);
-  Cpp::FuncRef func4 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args4);
-  Cpp::FuncRef func5 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args5);
+  Cpp::FuncRef func1 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args, args1, ambiguous_candidates);
+  Cpp::FuncRef func2 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args, args2, ambiguous_candidates);
+  Cpp::FuncRef func3 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args, args3, ambiguous_candidates);
+  Cpp::FuncRef func4 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args, args4, ambiguous_candidates);
+  Cpp::FuncRef func5 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args, args5, ambiguous_candidates);
 
   EXPECT_EQ(Cpp::GetFunctionSignature(func1),
             "template<> void somefunc<int>(int arg)");
@@ -2730,6 +2743,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 
   GetAllTopLevelDecls(code, Decls);
   std::vector<Cpp::FuncRef> candidates;
+  std::vector<Cpp::FuncRef> ambiguous_candidates;
 
   for (auto decl : Decls)
     if (Cpp::IsTemplatedFunction(decl))
@@ -2749,12 +2763,12 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
       C.DoubleTy.getAsOpaquePtr()};
   std::vector<Cpp::TemplateArgInfo> explicit_args;
 
-  Cpp::FuncRef func1 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args1);
-  Cpp::FuncRef func2 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args2);
-  Cpp::FuncRef func3 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args3);
+  Cpp::FuncRef func1 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args, args1, ambiguous_candidates, true);
+  Cpp::FuncRef func2 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args, args2, ambiguous_candidates, true);
+  Cpp::FuncRef func3 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args, args3, ambiguous_candidates, true);
 
   candidates.clear();
   Cpp::GetOperator(
@@ -2764,10 +2778,11 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   EXPECT_EQ(candidates.size(), 1);
 
   std::vector<Cpp::TemplateArgInfo> args4 = {
+      Cpp::GetVariableType(Cpp::GetNamed("a")).data,
       Cpp::GetVariableType(Cpp::GetNamed("a")).data};
 
-  Cpp::FuncRef func4 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args4);
+  Cpp::FuncRef func4 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args, args4, ambiguous_candidates, true);
 
   EXPECT_EQ(Cpp::GetFunctionSignature(func1),
             "template<> A<int> operator+<int>(A<int> lhs, A<int> rhs)");
@@ -2838,6 +2853,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 
   GetAllTopLevelDecls(code, Decls);
   GetAllSubDecls(Decls[1], SubDecls);
+  std::vector<Cpp::FuncRef> ambiguous_candidates;
   std::vector<Cpp::FuncRef> candidates;
   for (auto i : SubDecls) {
     if ((Cpp::IsFunction(i) || Cpp::IsTemplatedFunction(i)) &&
@@ -2849,31 +2865,38 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 
   ASTContext& C = Interp->getCI()->getASTContext();
 
-  std::vector<Cpp::TemplateArgInfo> args1 = {};
-  std::vector<Cpp::TemplateArgInfo> args2 = {C.IntTy.getAsOpaquePtr()};
+  Cpp::DeclRef ScopeB = Cpp::GetNamed("B");
+  EXPECT_TRUE(ScopeB);
+
+  Cpp::TypeRef TypeB = Cpp::GetTypeFromScope(ScopeB);
+  EXPECT_TRUE(TypeB);
+
+  std::vector<Cpp::TemplateArgInfo> args1 = {TypeB.data};
+  std::vector<Cpp::TemplateArgInfo> args2 = {TypeB.data,
+                                             C.IntTy.getAsOpaquePtr()};
   std::vector<Cpp::TemplateArgInfo> args3 = {
-      Cpp::GetVariableType(Cpp::GetNamed("a")).data};
+      TypeB.data, Cpp::GetVariableType(Cpp::GetNamed("a")).data};
   std::vector<Cpp::TemplateArgInfo> args4 = {
-      Cpp::GetVariableType(Cpp::GetNamed("a")).data,
+      TypeB.data, Cpp::GetVariableType(Cpp::GetNamed("a")).data,
       Cpp::GetVariableType(Cpp::GetNamed("b")).data};
   std::vector<Cpp::TemplateArgInfo> args5 = {
-      Cpp::GetVariableType(Cpp::GetNamed("a")).data,
+      TypeB.data, Cpp::GetVariableType(Cpp::GetNamed("a")).data,
       Cpp::GetVariableType(Cpp::GetNamed("a")).data};
 
   std::vector<Cpp::TemplateArgInfo> explicit_args1;
   std::vector<Cpp::TemplateArgInfo> explicit_args2 = {C.IntTy.getAsOpaquePtr(),
                                                       C.IntTy.getAsOpaquePtr()};
 
-  Cpp::FuncRef func1 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args1, args1);
-  Cpp::FuncRef func2 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args1, args2);
-  Cpp::FuncRef func3 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args1, args3);
-  Cpp::FuncRef func4 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args1, args4);
-  Cpp::FuncRef func5 =
-      Cpp::BestOverloadFunctionMatch(candidates, explicit_args2, args5);
+  Cpp::FuncRef func1 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args1, args1, ambiguous_candidates);
+  Cpp::FuncRef func2 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args1, args2, ambiguous_candidates);
+  Cpp::FuncRef func3 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args1, args3, ambiguous_candidates);
+  Cpp::FuncRef func4 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args1, args4, ambiguous_candidates);
+  Cpp::FuncRef func5 = Cpp::BestOverloadFunctionMatch(
+      candidates, explicit_args2, args5, ambiguous_candidates);
 
   EXPECT_EQ(Cpp::GetFunctionSignature(func1), "void B::fn()");
   EXPECT_EQ(Cpp::GetFunctionSignature(func2),
@@ -2902,6 +2925,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   EXPECT_EQ(Decls.size(), 2);
 
   std::vector<Cpp::FuncRef> candidates;
+  std::vector<Cpp::FuncRef> ambiguous_candidates;
   candidates.push_back(Decls[1]);
 
   ASTContext& C = Interp->getCI()->getASTContext();
@@ -2919,13 +2943,134 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
       C.getLValueReferenceType(C.IntTy).getAsOpaquePtr(),
   };
 
-  Cpp::FuncRef callback =
-      Cpp::BestOverloadFunctionMatch(candidates, empty_templ_args, arg_types);
+  Cpp::FuncRef callback = Cpp::BestOverloadFunctionMatch(
+      candidates, empty_templ_args, arg_types, ambiguous_candidates);
   EXPECT_TRUE(callback);
 
   EXPECT_EQ(Cpp::GetFunctionSignature(callback),
             "template<> void callback<void (*)(double, int), <double &, int "
             "&>>(void (*callable)(double, int), double &args, int &args)");
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           FunctionReflection_BestOverloadFunctionMatch6) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+        struct A0 {
+            A0(int) {}
+        };
+
+        struct B0 {
+            B0(int) {}
+        };
+
+        struct C0 {};
+
+        void consume(A0) {}
+        void consume(B0) {}
+        void consume(C0) {}
+    )";
+  GetAllTopLevelDecls(code, Decls);
+  EXPECT_EQ(Decls.size(), 6);
+
+  std::vector<Cpp::FuncRef> ambiguous_candidates;
+  std::vector<Cpp::FuncRef> candidates;
+  for (auto i : Decls) {
+    if (Cpp::IsFunction(i))
+      candidates.push_back(i);
+  }
+  EXPECT_EQ(candidates.size(), 3);
+
+  Cpp::TypeRef TypeA = Cpp::GetTypeFromScope(Cpp::GetScope("A0"));
+  EXPECT_TRUE(TypeA);
+  Cpp::TypeRef TypeB = Cpp::GetTypeFromScope(Cpp::GetScope("B0"));
+  EXPECT_TRUE(TypeB);
+
+  Cpp::FuncRef meth = Cpp::BestOverloadFunctionMatch(
+      candidates, {}, {Cpp::GetType("int").data}, ambiguous_candidates);
+  EXPECT_FALSE(meth);
+  EXPECT_EQ(ambiguous_candidates.size(), 2);
+
+  // the following might fail due to ordering
+  EXPECT_EQ(Cpp::GetFunctionSignature(ambiguous_candidates[0]),
+            "void consume(A0)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(ambiguous_candidates[1]),
+            "void consume(B0)");
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           FunctionReflection_BestOverloadFunctionMatch_CandidateKinds) {
+  std::vector<Decl*> Decls, SubDecls, DerivedDecls;
+  std::string code = R"(
+    struct BOKinds {
+      BOKinds(int) {}
+      template <typename T> BOKinds(T*) {}
+      static int s(int) { return 0; }
+      template <typename T> static T st(T t) { return t; }
+      int m(int) { return 0; }
+      int get() { return 0; }
+    };
+    struct BOKindsDerived : BOKinds {
+      using BOKinds::m;
+      int m(double) { return 1; }
+    };
+    int bo_var = 0;
+  )";
+  GetAllTopLevelDecls(code, Decls);
+  ASSERT_EQ(Decls.size(), 3U);
+  GetAllSubDecls(Decls[0], SubDecls, /*filter_implicitGenerated=*/true);
+  ASSERT_EQ(SubDecls.size(), 6U);
+  GetAllSubDecls(Decls[1], DerivedDecls);
+
+  Cpp::TypeRef Int = Cpp::GetType("int");
+  Cpp::TypeRef Double = Cpp::GetType("double");
+  Cpp::TypeRef KindsTy = Cpp::GetTypeFromScope(Decls[0]);
+  Cpp::TypeRef DerivedTy = Cpp::GetTypeFromScope(Decls[1]);
+  std::vector<Cpp::FuncRef> ambiguous_candidates;
+  auto Match = [&](std::vector<Cpp::FuncRef> candidates,
+                   std::vector<Cpp::TemplateArgInfo> arg_types) {
+    return Cpp::GetFunctionSignature(Cpp::BestOverloadFunctionMatch(
+        candidates, {}, arg_types, ambiguous_candidates));
+  };
+
+  // Constructors and static member functions take no object argument.
+  std::vector<Cpp::FuncRef> ctors = {SubDecls[0], SubDecls[1]};
+  EXPECT_EQ(Match(ctors, {Int.data}), "BOKinds::BOKinds(int)");
+  EXPECT_EQ(Match(ctors, {Cpp::GetPointerType(Double).data}),
+            "template<> BOKinds::BOKinds<double>(double *)");
+  std::vector<Cpp::FuncRef> statics = {SubDecls[2], SubDecls[3]};
+  EXPECT_EQ(Match(statics, {Int.data}), "static int BOKinds::s(int)");
+  EXPECT_EQ(Match(statics, {Double.data}),
+            "template<> static double BOKinds::st<double>(double t)");
+
+  // No viable candidate.
+  EXPECT_FALSE(Cpp::BestOverloadFunctionMatch({SubDecls[2]}, {}, {KindsTy.data},
+                                              ambiguous_candidates));
+  EXPECT_TRUE(ambiguous_candidates.empty());
+
+  // A method brought in by a using-declaration is a candidate too.
+  Decl* Shadow = nullptr;
+  Decl* DerivedM = nullptr;
+  for (auto* D : DerivedDecls) {
+    if (llvm::isa<UsingShadowDecl>(D))
+      Shadow = D;
+    else if (Cpp::IsMethod(D) && !D->isImplicit())
+      DerivedM = D;
+  }
+  ASSERT_TRUE(Shadow);
+  ASSERT_TRUE(DerivedM);
+  EXPECT_EQ(Match({Shadow, DerivedM}, {DerivedTy.data, Int.data}),
+            "int BOKinds::m(int)");
+  EXPECT_EQ(Match({Shadow, DerivedM}, {DerivedTy.data, Double.data}),
+            "int BOKindsDerived::m(double)");
+
+  // Candidates that are not functions are ignored.
+  EXPECT_EQ(Match({Decls[2], SubDecls[2]}, {Int.data}),
+            "static int BOKinds::s(int)");
+
+  // Without argument types there is no object to call a method on; the
+  // method is resolved with an implicit object argument.
+  EXPECT_EQ(Match({SubDecls[5]}, {}), "int BOKinds::get()");
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsPublicMethod) {
@@ -3504,6 +3649,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionCallWrapper) {
   FCI_TOperatorCtor.Invoke((void*)&toperator);
 
   EXPECT_TRUE(toperator);
+  std::vector<Cpp::FuncRef> ambiguous_candidates;
   std::vector<Cpp::FuncRef> operators;
   Cpp::GetOperator(TOperator, Cpp::Operator::OP_Less, operators);
   EXPECT_EQ(operators.size(), 1);
@@ -3553,7 +3699,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionCallWrapper) {
                    Cpp::Operator::OP_Plus, operators);
   EXPECT_EQ(operators.size(), 1);
   Cpp::FuncRef kop = Cpp::BestOverloadFunctionMatch(operators, empty_templ_args,
-                                                    {K1.data, K2.data});
+                                                    {K1.data, K2.data},
+                                                    ambiguous_candidates, true);
   auto chrono_op_fn_callable = Cpp::MakeFunctionCallable(kop);
   EXPECT_EQ(chrono_op_fn_callable.getKind(), Cpp::JitCall::kGenericCall);
 
@@ -3632,8 +3779,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionCallWrapper) {
   EXPECT_TRUE(p);
 
   Cpp::FuncRef fn = Cpp::BestOverloadFunctionMatch(
-      unresolved_candidate_methods, {{Cpp::GetType("int").data, "0"}},
-      {p.data});
+      unresolved_candidate_methods, {{Cpp::GetType("int").data, "0"}}, {p.data},
+      ambiguous_candidates);
   EXPECT_TRUE(fn);
 
   auto fn_callable = Cpp::MakeFunctionCallable(fn);
@@ -3653,7 +3800,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionCallWrapper) {
 
   Cpp::FuncRef call_move = Cpp::BestOverloadFunctionMatch(
       unresolved_candidate_methods, {},
-      {Cpp::GetReferencedType(Cpp::GetType("int"), true).data});
+      {Cpp::GetReferencedType(Cpp::GetType("int"), true).data},
+      ambiguous_candidates);
   EXPECT_TRUE(call_move);
 
   auto call_move_callable = Cpp::MakeFunctionCallable(call_move);
@@ -3668,7 +3816,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionCallWrapper) {
   EXPECT_EQ(unresolved_candidate_methods.size(), 1);
 
   Cpp::FuncRef instantiation_in_host = Cpp::BestOverloadFunctionMatch(
-      unresolved_candidate_methods, {Cpp::GetType("int").data}, {});
+      unresolved_candidate_methods, {Cpp::GetType("int").data}, {},
+      ambiguous_candidates);
   EXPECT_TRUE(instantiation_in_host);
 
   Cpp::JitCall instantiation_in_host_callable =
@@ -3677,7 +3826,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionCallWrapper) {
             Cpp::JitCall::kGenericCall);
 
   instantiation_in_host = Cpp::BestOverloadFunctionMatch(
-      unresolved_candidate_methods, {Cpp::GetType("double").data}, {});
+      unresolved_candidate_methods, {Cpp::GetType("double").data}, {},
+      ambiguous_candidates);
   EXPECT_TRUE(instantiation_in_host);
 
   Cpp::BeginStdStreamCapture(Cpp::CaptureStreamKind::kStdErr);
@@ -3707,7 +3857,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionCallWrapper) {
   Cpp::FuncRef tuple_tuple = Cpp::BestOverloadFunctionMatch(
       unresolved_candidate_methods, {},
       {Cpp::GetVariableType(Cpp::GetNamed("tuple_one")).data,
-       Cpp::GetVariableType(Cpp::GetNamed("tuple_two")).data});
+       Cpp::GetVariableType(Cpp::GetNamed("tuple_two")).data},
+      ambiguous_candidates);
   EXPECT_TRUE(tuple_tuple);
 
   auto tuple_tuple_callable = Cpp::MakeFunctionCallable(tuple_tuple);
@@ -3747,7 +3898,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionCallWrapper) {
 
   Cpp::FuncRef consume = Cpp::BestOverloadFunctionMatch(
       unresolved_candidate_methods, {},
-      {Cpp::GetVariableType(Cpp::GetNamed("consumable")).data});
+      {Cpp::GetVariableType(Cpp::GetNamed("consumable")).data},
+      ambiguous_candidates);
   EXPECT_TRUE(consume);
 
   auto consume_callable = Cpp::MakeFunctionCallable(consume);
@@ -3783,11 +3935,14 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionCallWrapper) {
   Cpp::GetOperator(KlassProduct_int, Cpp::Operator::OP_Star, operators);
   EXPECT_EQ(operators.size(), 2);
 
-  Cpp::FuncRef op2 = Cpp::BestOverloadFunctionMatch(
-      operators, {}, {{Cpp::GetTypeFromScope(KlassProduct_float).data}});
-  EXPECT_TRUE(op2);
+  Cpp::FuncRef op_fn = Cpp::BestOverloadFunctionMatch(
+      operators, {},
+      {Cpp::GetTypeFromScope(KlassProduct_int).data,
+       Cpp::GetTypeFromScope(KlassProduct_float).data},
+      ambiguous_candidates, true);
+  EXPECT_TRUE(op_fn);
 
-  auto op_callable = Cpp::MakeFunctionCallable(op2);
+  auto op_callable = Cpp::MakeFunctionCallable(op_fn);
   EXPECT_EQ(op_callable.getKind(), Cpp::JitCall::kGenericCall);
 
   Cpp::Declare(R"(
@@ -3861,9 +4016,11 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionCallWrapper) {
                                 unresolved_candidate_methods);
   EXPECT_EQ(unresolved_candidate_methods.size(), 1);
 
+  ambiguous_candidates.clear();
   Cpp::FuncRef callback_func = Cpp::BestOverloadFunctionMatch(
       unresolved_candidate_methods, {},
-      {Cpp::GetVariableType(Cpp::GetNamed("fn_ptr")).data});
+      {Cpp::GetVariableType(Cpp::GetNamed("fn_ptr")).data},
+      ambiguous_candidates);
   EXPECT_TRUE(callback_func);
 
   auto callback_callable = Cpp::MakeFunctionCallable(callback_func);
@@ -5100,17 +5257,17 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   GetAllSubDecls(Decls[0], SubDecls, /*filter_implicitGenerated=*/true);
 
   std::vector<Cpp::FuncRef> candidates;
+  std::vector<Cpp::FuncRef> ambiguous_candidates;
   for (auto* decl : SubDecls)
     if (Cpp::IsTemplatedFunction(decl))
       candidates.push_back((Cpp::FuncRef)decl);
   ASSERT_EQ(candidates.size(), (size_t)1);
 
-  // No explicit template/call args: `Self` deduces from the synthesized
-  // receiver (only the AddMethodTemplateCandidate path can do this).
   std::vector<Cpp::TemplateArgInfo> no_explicit_args;
-  std::vector<Cpp::TemplateArgInfo> no_args;
-  Cpp::FuncRef matched =
-      Cpp::BestOverloadFunctionMatch(candidates, no_explicit_args, no_args);
+  Cpp::TypeRef widget_type = Cpp::GetTypeFromScope(Cpp::GetScope("TWidget"));
+  std::vector<Cpp::TemplateArgInfo> args = {widget_type.data};
+  Cpp::FuncRef matched = Cpp::BestOverloadFunctionMatch(
+      candidates, no_explicit_args, args, ambiguous_candidates);
   ASSERT_TRUE(matched);
   EXPECT_NE(Cpp::GetFunctionSignature(matched).find("via"), std::string::npos);
 }
@@ -5134,15 +5291,17 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   GetAllSubDecls(Decls[0], SubDecls, /*filter_implicitGenerated=*/true);
 
   std::vector<Cpp::FuncRef> candidates;
+  std::vector<Cpp::FuncRef> ambiguous_candidates;
   for (auto* decl : SubDecls)
     if (Cpp::IsTemplatedFunction(decl))
       candidates.push_back((Cpp::FuncRef)decl);
   ASSERT_EQ(candidates.size(), (size_t)1);
 
   std::vector<Cpp::TemplateArgInfo> no_explicit_args;
-  std::vector<Cpp::TemplateArgInfo> no_args;
-  Cpp::FuncRef matched =
-      Cpp::BestOverloadFunctionMatch(candidates, no_explicit_args, no_args);
+  Cpp::TypeRef aawidget_type = Cpp::GetTypeFromScope(Cpp::GetScope("AAWidget"));
+  std::vector<Cpp::TemplateArgInfo> args = {aawidget_type.data};
+  Cpp::FuncRef matched = Cpp::BestOverloadFunctionMatch(
+      candidates, no_explicit_args, args, ambiguous_candidates);
   ASSERT_TRUE(matched);
   EXPECT_NE(Cpp::GetFunctionSignature(matched).find("get"), std::string::npos);
 }
