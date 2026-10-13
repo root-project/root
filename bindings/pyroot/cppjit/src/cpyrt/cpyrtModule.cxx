@@ -727,6 +727,80 @@ static PyObject* AsStdAny(PyObject*, PyObject* pyobject) {
 }
 
 //----------------------------------------------------------------------------
+namespace {
+
+PyObject* gWarningCategory = nullptr; // nullptr: RuntimeWarning
+std::string gWarningModule;
+
+bool WarningHandler(const char* location, const char* msg) {
+  // Issue a Python warning for a warning that C++ reports, see
+  // warning_handler() below. Called from C++, maybe without the GIL.
+  cpyrt::PythonGILRAII gil;
+
+  // Python code can't run while an exception is pending, e.g. a previous
+  // warning that the filters turned into an error during the same call into
+  // C++: decline, so that C++ reports the warning its own way.
+  if (PyErr_Occurred())
+    return false;
+
+  // Prints or, per the filters, raises; a raised exception stays pending
+  // until the call into C++ returns to Python.
+  PyErr_WarnExplicit(gWarningCategory, msg, location, 0,
+                     gWarningModule.empty() ? nullptr : gWarningModule.c_str(),
+                     nullptr);
+  return true;
+}
+
+} // unnamed namespace
+
+static PyObject* GetWarningHandler(PyObject*, PyObject* args, PyObject* kwds) {
+  // Configure the compiled warning handler and hand it out as a ctypes
+  // function pointer, for C++ libraries that report warnings to a callback.
+  static const char* kwlist[] = {(char*)"category", (char*)"module", nullptr};
+
+  PyObject* category = nullptr;
+  const char* module = nullptr;
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oz:warning_handler",
+                                   (char**)kwlist, &category, &module))
+    return nullptr;
+
+  if (category == Py_None)
+    category = nullptr;
+  if (category && PyObject_IsSubclass(category, PyExc_Warning) != 1) {
+    if (!PyErr_Occurred())
+      PyErr_SetString(PyExc_TypeError,
+                      "category must be a subclass of Warning");
+    return nullptr;
+  }
+
+  Py_XINCREF(category);
+  Py_XSETREF(gWarningCategory, category);
+  gWarningModule = module ? module : "";
+
+  // ctypes.CFUNCTYPE(c_bool, c_char_p, c_char_p)(address)
+  PyObject* ctmod = PyImport_ImportModule("ctypes");
+  if (!ctmod)
+    return nullptr;
+  PyObject* c_bool = PyObject_GetAttrString(ctmod, "c_bool");
+  PyObject* c_char_p = PyObject_GetAttrString(ctmod, "c_char_p");
+  PyObject* fntype = nullptr;
+  if (c_bool && c_char_p)
+    fntype = PyObject_CallMethod(ctmod, "CFUNCTYPE", "OOO", c_bool, c_char_p,
+                                 c_char_p);
+  Py_XDECREF(c_char_p);
+  Py_XDECREF(c_bool);
+  Py_DECREF(ctmod);
+  if (!fntype)
+    return nullptr;
+
+  PyObject* address = PyLong_FromVoidPtr((void*)&WarningHandler);
+  PyObject* result = PyObject_CallOneArg(fntype, address);
+  Py_DECREF(address);
+  Py_DECREF(fntype);
+  return result;
+}
+
+//----------------------------------------------------------------------------
 static PyObject* BindValue(PyObject*, PyObject* args, PyObject* kwds) {
   // Read through the converter for the given type name, at the given address.
   static const char* kwlist[] = {(char*)"type_name", (char*)"address",
@@ -1011,6 +1085,10 @@ static PyMethodDef gcpyrtMethods[] = {
      (char*)"Read a value of given type, from given address."},
     {(char*)"as_std_any", (PyCFunction)AsStdAny, METH_O,
      (char*)"Wrap a reference to a Python object in a std::any."},
+    {(char*)"warning_handler", (PyCFunction)GetWarningHandler,
+     METH_VARARGS | METH_KEYWORDS,
+     (char*)"Get a C function pointer that issues Python warnings for "
+            "warnings reported by C++."},
     {(char*)"move", (PyCFunction)Move, METH_O,
      (char*)"Cast the C++ object to become movable."},
     {(char*)"add_pythonization", (PyCFunction)AddPythonization, METH_VARARGS,
