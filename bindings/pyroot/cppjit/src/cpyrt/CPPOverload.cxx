@@ -606,14 +606,10 @@ static PyObject* mp_vectorcall(CPPOverload* pymeth, PyObject* const* args,
 
   std::vector<interop::TCppMethod_t> overloads;
   bool is_operator = false;
-  bool is_conversion_operator = false;
   bool is_static = false;
   for (auto i : pymeth->fMethodInfo->fMethods) {
     if (is_operator || dynamic_cast<cpyrt::CPPMethod*>(i)->IsOperator())
       is_operator = true;
-    if (is_conversion_operator ||
-        dynamic_cast<cpyrt::CPPMethod*>(i)->IsConversionOperator())
-      is_conversion_operator = true;
     if (is_static || dynamic_cast<cpyrt::CPPMethod*>(i)->IsStaticMethod())
       is_static = true;
     overloads.push_back(i->GetMethod());

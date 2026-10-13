@@ -974,8 +974,6 @@ static bool AddTypeName(std::vector<Cpp::TemplateArgInfo>& types, PyObject* tn,
           throw std::runtime_error(
               "This path is not yet implemented (AddTypeName) \n");
 
-          return true;
-
         } else
           PyErr_Clear();
       }
@@ -1612,17 +1610,6 @@ cpyrt::Utility::PyOperators::~PyOperators() {
   Py_XDECREF(fRMul);
   Py_XDECREF(fDiv);
   Py_XDECREF(fHash);
-}
-
-//----------------------------------------------------------------------------
-PyObject* cpyrt::Utility::PyErr_Occurred_WithGIL() {
-  // Re-acquire the GIL before calling PyErr_Occurred() in case it has been
-  // released; note that the p2.2 code assumes that there are no callbacks in
-  // C++ to python (or at least none returning errors).
-  PythonGILRAII python_gil_raii;
-  PyObject* e = PyErr_Occurred();
-
-  return e;
 }
 
 //----------------------------------------------------------------------------

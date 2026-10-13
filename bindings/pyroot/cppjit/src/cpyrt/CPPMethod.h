@@ -75,9 +75,6 @@ public:
   }
   // extra info methods
   bool IsOperator() { return interop::IsOperator(fMethod.data); }
-  bool IsConversionOperator() {
-    return interop::IsConversionOperator(fMethod.data);
-  }
   bool IsStaticMethod() { return interop::IsStaticMethod(fMethod); }
 
 public:

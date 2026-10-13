@@ -864,18 +864,15 @@ static PyObject* ll_array(cpyrt::LowLevelView* self, PyObject* args,
     Py_DECREF(npfrombuf);
 
     return view;
-
-  } else { // copy requested
-    PyObject* npcopy = PyObject_GetAttr(npmod, cpyrt::PyStrings::gCopy);
-    PyObject* newarr =
-        PyObject_CallFunctionObjArgs(npcopy, (PyObject*)self, nullptr);
-    Py_DECREF(npcopy);
-
-    return newarr;
   }
 
-  // never get here
-  return nullptr;
+  // copy requested
+  PyObject* npcopy = PyObject_GetAttr(npmod, cpyrt::PyStrings::gCopy);
+  PyObject* newarr =
+      PyObject_CallFunctionObjArgs(npcopy, (PyObject*)self, nullptr);
+  Py_DECREF(npcopy);
+
+  return newarr;
 }
 
 //---------------------------------------------------------------------------

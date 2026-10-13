@@ -26,7 +26,6 @@ using namespace cppjit;
 #include <cstddef>
 #include <limits.h>
 #include <locale> // for wstring_convert
-#include <regex>
 #include <sstream>
 #include <stddef.h> // for ptrdiff_t
 #include <string.h>
@@ -359,8 +358,6 @@ static inline bool ImplicitBool(PyObject* pyobject, cpyrt::CallContext* ctxt) {
   if (!AllowImplicit(ctxt) &&
       (PyBool_Check(pyobject) ||
        (IsCPPEnumInstance(pyobject) && !NoImplicit(ctxt)))) {
-    if (!NoImplicit(ctxt))
-      ctxt->fFlags |= CallContext::kHaveImplicit;
     return false;
   }
   return true;
@@ -369,8 +366,6 @@ static inline bool ImplicitBool(PyObject* pyobject, cpyrt::CallContext* ctxt) {
 static inline bool StrictBool(PyObject* pyobject, cpyrt::CallContext* ctxt) {
   using namespace cppjit::cpyrt;
   if (!AllowImplicit(ctxt) && !PyBool_Check(pyobject)) {
-    if (!NoImplicit(ctxt))
-      ctxt->fFlags |= CallContext::kHaveImplicit;
     return false;
   }
   return true;
@@ -538,8 +533,6 @@ static inline cpyrt::CPPInstance* ConvertImplicit(interop::TCppScope_t klass,
     PyTypeObject* pytype = (PyTypeObject*)Py_TYPE(pyobject);
     if (!(pytype == &PyList_Type ||
           pytype == &PyTuple_Type)) { // || !CPPInstance_Check(pyobject))) {
-      if (!NoImplicit(ctxt))
-        ctxt->fFlags |= CallContext::kHaveImplicit;
       return nullptr;
     }
   }
@@ -1321,8 +1314,6 @@ bool cpyrt::EnumConverter::SetArg(PyObject* pyobject, Parameter& para,
         PyErr_Clear();
     }
     if (!exact) {
-      if (!NoImplicit(ctxt))
-        ctxt->fFlags |= CallContext::kHaveImplicit;
       return false;
     }
     // the base integer converter defers enum instances, so lift the gate
@@ -3145,16 +3136,8 @@ bool cpyrt::SmartPtrConverter::SetArg(PyObject* pyobject, Parameter& para,
                                       CallContext* ctxt) {
   char typeCode = fIsRef ? 'p' : 'V';
 
-  if (!CPPInstance_Check(pyobject)) {
-    // TODO: not sure how this is correct for pass-by-ref nor does it help with
-    // implicit conversions for pass-by-value
-    if (fIsRef && GetAddressSpecialCase(pyobject, para.fValue.fVoidp)) {
-      para.fTypeCode = typeCode; // allow special cases such as nullptr
-      return true;
-    }
-
+  if (!CPPInstance_Check(pyobject))
     return false;
-  }
 
   CPPInstance* pyobj = (CPPInstance*)pyobject;
   interop::TCppScope_t oisa = pyobj->ObjectIsA();

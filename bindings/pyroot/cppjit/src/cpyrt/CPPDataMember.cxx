@@ -383,17 +383,6 @@ void cpyrt::CPPDataMember::Set(interop::TCppScope_t scope,
 }
 
 //-----------------------------------------------------------------------------
-void cpyrt::CPPDataMember::Set(interop::TCppScope_t scope,
-                               const std::string& name, void* address) {
-  fEnclosingScope = scope;
-  fDescription = PyUnicode_FromString(name.c_str());
-  fOffset = (intptr_t)address;
-  fFlags = kIsStaticData | kIsConstData;
-  fConverter = CreateConverter("internal_enum_type_t");
-  fFullType = "unsigned int";
-}
-
-//-----------------------------------------------------------------------------
 void* cpyrt::CPPDataMember::GetAddress(CPPInstance* pyobj) {
   // class attributes, global properties
   if (fFlags & kIsStaticData)

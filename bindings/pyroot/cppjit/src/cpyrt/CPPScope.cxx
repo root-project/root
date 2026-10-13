@@ -590,7 +590,6 @@ static PyObject* meta_reflex(CPPScope* klass, PyObject* args) {
     if (klass->fFlags & CPPScope::kIsNamespace)
       Py_RETURN_TRUE;
     Py_RETURN_FALSE;
-    break;
   case interop::Reflex::IS_AGGREGATE:
     // this is not the strict C++ definition of aggregates, but is closer to
     // what is needed for Numba and C calling conventions (TODO: probably have
@@ -599,7 +598,6 @@ static PyObject* meta_reflex(CPPScope* klass, PyObject* args) {
         !interop::HasVirtualDestructor(klass->fCppType))
       Py_RETURN_TRUE;
     Py_RETURN_FALSE;
-    break;
   }
 
   PyErr_Format(PyExc_ValueError, "unsupported reflex request %d or format %d",

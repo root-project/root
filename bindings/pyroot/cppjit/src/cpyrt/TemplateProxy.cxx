@@ -1,6 +1,5 @@
 // Bindings
 #include "cpyrt.h"
-#include "unicodeobject.h"
 
 using namespace cppjit;
 #include "CPPClassMethod.h"
@@ -73,18 +72,6 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
     assert(addedSelf);
     (void)addedSelf;
   }
-
-  // adjust arguments for self if this is a rebound global function
-  // bool isNS = (((CPPScope*)fTI->fPyClass)->fFlags & CPPScope::kIsNamespace);
-  // if (!fTI->fIsConstructor && !isNS && cpyrt_PyArgs_GET_SIZE(args, nargsf) &&
-  // \
-    //         (!fSelf ||
-  //         (fSelf == Py_None &&
-  //         !interop::IsStaticTemplate(((CPPScope*)fTI->fPyClass)->fCppType,
-  //         fname)))) {
-  //     args   += 1;
-  //     nargsf -= 1;
-  // }
 
   Py_ssize_t argc = cpyrt_PyArgs_GET_SIZE(args, nargsf);
   if (argc != 0) {
@@ -500,32 +487,6 @@ static inline void UpdateDispatchMap(TemplateProxy* pytmpl, bool use_targs,
   }
   if (!bInserted)
     v.push_back(std::make_pair(sighash, pymeth));
-}
-
-static inline PyObject*
-SelectAndForward(TemplateProxy* pytmpl, CPPOverload* pymeth,
-                 cpyrt_PyArgs_t args, size_t nargsf, PyObject* kwds,
-                 bool implicitOkay, bool use_targs, uint64_t sighash,
-                 std::vector<Utility::PyError_t>& errors) {
-  // Forward a call to known overloads, if any.
-  if (pymeth->HasMethods()) {
-    PyObject* pycall = CPPOverload_Type.tp_descr_get(
-        (PyObject*)pymeth, pytmpl->fSelf, (PyObject*)&CPPOverload_Type);
-
-    if (!implicitOkay)
-      ((CPPOverload*)pycall)->fFlags |= CallContext::kNoImplicit;
-
-    // now call the method with the arguments (loops internally)
-    PyObject* result = cpyrt_tp_call(pycall, args, nargsf, kwds);
-    Py_DECREF(pycall);
-    if (result) {
-      UpdateDispatchMap(pytmpl, use_targs, sighash, pymeth);
-      TPPCALL_RETURN;
-    }
-    Utility::FetchError(errors);
-  }
-
-  return nullptr;
 }
 
 static inline PyObject* CallMethodImp(TemplateProxy* pytmpl, PyObject*& pymeth,

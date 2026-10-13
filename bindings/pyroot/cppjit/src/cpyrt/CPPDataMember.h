@@ -14,7 +14,6 @@ class CPPInstance;
 class CPPDataMember {
 public:
   void Set(interop::TCppScope_t scope, interop::TCppScope_t var);
-  void Set(interop::TCppScope_t scope, const std::string& name, void* address);
 
   std::string GetName();
   void* GetAddress(CPPInstance* pyobj /* owner */);
@@ -54,16 +53,6 @@ inline CPPDataMember* CPPDataMember_New(interop::TCppScope_t scope,
   CPPDataMember* pyprop = (CPPDataMember*)CPPDataMember_Type.tp_new(
       &CPPDataMember_Type, nullptr, nullptr);
   pyprop->Set(scope, var);
-  return pyprop;
-}
-
-inline CPPDataMember* CPPDataMember_NewConstant(interop::TCppScope_t scope,
-                                                const std::string& name,
-                                                void* address) {
-  // Create an initialize a new property descriptor, given the C++ datum.
-  CPPDataMember* pyprop = (CPPDataMember*)CPPDataMember_Type.tp_new(
-      &CPPDataMember_Type, nullptr, nullptr);
-  pyprop->Set(scope, name, address);
   return pyprop;
 }
 

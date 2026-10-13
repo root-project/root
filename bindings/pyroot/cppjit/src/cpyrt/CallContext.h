@@ -30,12 +30,8 @@ struct CallContext {
 
   enum ECallFlags {
     kNone = 0x000000,
-    // UNUSED with new overload resolution
-    // kIsSorted                    = 0x000001, // if method overload priority
-    // determined
     kIsCreator = 0x000002,     // if method creates python-owned objects
     kIsConstructor = 0x000004, // if method is a C++ constructor
-    kHaveImplicit = 0x000008, // indicate that implicit converters are available
     kAllowImplicit = 0x000010, // indicate that implicit conversions are allowed
     kNoImplicit = 0x000020,    // disable implicit to prevent recursion
     kCallDirect = 0x000040,    // call wrapped method directly, no inheritance
@@ -52,8 +48,6 @@ struct CallContext {
     kUseFFI = 0x010000,         // not implemented
     kIsPseudoFunc = 0x020000,   // internal, used for introspection
     kUseStrict = 0x040000,      // if method applies strict memory policy
-    kIsMethod = 0x080000,       // If this is a class method
-    kIsSatticMethod = 0x100000, // If this is a static class method
   };
 
   // Policies about memory handling and signal safety
@@ -111,12 +105,6 @@ inline bool IsCreator(uint64_t flags) {
 
 inline bool IsConstructor(uint64_t flags) {
   return flags & CallContext::kIsConstructor;
-}
-
-inline bool HaveImplicit(CallContext* ctxt) {
-  return ctxt ? (!(ctxt->fFlags & CallContext::kNoImplicit) &&
-                 (ctxt->fFlags & CallContext::kHaveImplicit))
-              : false;
 }
 
 inline bool AllowImplicit(CallContext* ctxt) {

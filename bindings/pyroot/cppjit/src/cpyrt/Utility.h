@@ -109,9 +109,6 @@ struct PyOperators {
 std::string ClassName(PyObject* pyobj);
 bool IsSTLIterator(const std::string& classname);
 
-// for threading: save call to PyErr_Occurred()
-PyObject* PyErr_Occurred_WithGIL();
-
 // helpers for collecting/maintaining python exception data
 struct PyError_t {
   struct PyObjectDeleter {
