@@ -123,6 +123,21 @@ public:
          Internal::AtomicAdd(&fSum, rhs.fSum);
          Internal::AtomicAdd(&fSum2, rhs.fSum2);
       }
+
+      /// Compute the arithmetic mean in this bin.
+      ///
+      /// \f[
+      /// \mu = \frac{\sum w_i \cdot x_i}{\sum w_i}
+      /// \f]
+      ///
+      /// \return the arithmetic mean in this bin
+      double ComputeMean() const
+      {
+         if (fSum == 0) {
+            return std::numeric_limits<double>::signaling_NaN();
+         }
+         return fSumValues / fSum;
+      }
    };
 
 private:
