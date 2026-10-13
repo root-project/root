@@ -67,6 +67,8 @@ TCppType_t ResolveEnumReferenceType(TCppType_t type);
 RPY_EXPORTED
 TCppType_t ResolveEnumPointerType(TCppType_t type);
 RPY_EXPORTED
+TCppType_t GetNonReferenceType(TCppType_t type);
+RPY_EXPORTED
 TCppType_t GetRealType(TCppType_t type);
 RPY_EXPORTED
 TCppType_t GetPointerType(TCppType_t type);

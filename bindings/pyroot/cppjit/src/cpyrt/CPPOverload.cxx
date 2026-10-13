@@ -794,10 +794,7 @@ static PyObject* mp_vectorcall(CPPOverload* pymeth, PyObject* const* args,
     // __cppjit_internal namespace
     std::string self_type_name = "";
     // only prepend self and retry when there are real value args to forward to
-    // a generated/forwarding ctor. with no value args this is default
-    // construction: prepending self would then spuriously match the implicit
-    // copy ctor (self binds const T&) instead of failing, which is what the
-    // base-second dispatcher hit.
+    // a generated/forwarding ctor.
     if (PyVectorcall_NARGS(nargsf) > 0 && !proto.empty()) {
       PyObject* obj = cpyrt_PyArgs_GET_ITEM(args, 0);
       PyObject* typ = (PyObject*)Py_TYPE(obj);
@@ -838,7 +835,7 @@ static PyObject* mp_vectorcall(CPPOverload* pymeth, PyObject* const* args,
   }
   if (meth) {
     for (auto i : pymeth->fMethodInfo->fMethods) {
-      if (i->GetMethod() == meth) {
+      if (interop::GetUnderlyingScope(i->GetMethod().data).data == meth) {
         PyObject* result = i->Call(im_self, args, nargsf, kwds, &ctxt);
         if (result) {
           // success: update the dispatch map for subsequent calls

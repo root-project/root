@@ -31,7 +31,6 @@ using namespace cppjit;
 //- data _____________________________________________________________________
 typedef std::unordered_map<std::string, std::string> TC2POperatorMapping_t;
 static TC2POperatorMapping_t gC2POperatorMapping;
-static std::set<std::string> gOpSkip;
 static std::set<std::string> gOpRemove;
 
 extern PyTypeObject PyNullPtr_t_Type;
@@ -50,13 +49,6 @@ struct InitOperatorMapping_t {
 public:
   InitOperatorMapping_t() {
     // Initialize the global map of operator names C++ -> python.
-
-    gOpSkip.insert("[]"); // __s/getitem__, depends on return type
-    gOpSkip.insert("+");  // __add__, depends on # of args (see __pos__)
-    gOpSkip.insert("-");  // __sub__, id. (eq. __neg__)
-    gOpSkip.insert("*");  // __mul__ or __deref__
-    gOpSkip.insert("++"); // __postinc__ or __preinc__
-    gOpSkip.insert("--"); // __postdec__ or __predec__
 
     gOpRemove.insert("new"); // this and the following not handled at all
     gOpRemove.insert("new[]");

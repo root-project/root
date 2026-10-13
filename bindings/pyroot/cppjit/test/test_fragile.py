@@ -656,7 +656,7 @@ class TestFRAGILE:
                 int add42(int i) { return i + 42; }
             }""")
 
-    @mark.xfail(condition=IS_CLANG_REPL, reason="Fails with ClangRepl")
+    @mark.xfail(condition=IS_CLANG_REPL, reason="Fails with ClangRepl (passes with LLVM 23)")
     @mark.xfail(
         run=False,
         reason="rolling back a failed declaration asserts in ROOT's unload "

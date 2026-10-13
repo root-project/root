@@ -3013,13 +3013,10 @@ static void* PyFunction_AsCPointer(PyObject* pyobject,
         return nullptr;
 
       // TODO: is there no easier way?
-      // FIXME: cache the scope handle again (llvm/llvm-project#201844): on
-      // released LLVM a static handle to __cppjit_internal goes stale across
-      // incremental PTUs and the lookup below comes back empty.
-      interop::TCppScope_t scope = interop::GetScope("__cppjit_internal");
+      static interop::TCppScope_t scope =
+          interop::GetScope("__cppjit_internal");
       const auto& methods = interop::GetMethodsFromName(scope, wname.str());
-      if (methods.empty())
-        return nullptr;
+      assert(methods.size() == 1);
       wpraddress = interop::GetFunctionAddress(methods[0], false);
       sWrapperReference[wpraddress] = ref;
 
