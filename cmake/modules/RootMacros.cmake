@@ -358,7 +358,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     list(INSERT incdirs 0 ${CMAKE_BINARY_DIR}/include)
 
     # this instruct rootcling do not store such paths in dictionary
-    set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/ginclude ${CMAKE_BINARY_DIR}/externals ${CMAKE_BINARY_DIR}/builtins)
+    set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
 
     set(headerfiles)
     set(_list_of_header_dependencies)
