@@ -294,30 +294,38 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     Arguments:
         callable_or_str: The condition according to which the RDF is to be filtered.
             It can be either a python callable or a c style string.
+            A python callable runs in the Python interpreter and needs type annotations for its parameters and
+            return value, unless it is decorated with ROOT.Numba.Declare to be JIT compiled with Numba.
         *args:
             Can be at most two of them.
             a. List of columns that the callable will receive as argument.
                 If not provided then it tries maps the name of the parameter to a column name of the RDF.
             b. The name of the Filter as a string.
-        extra_args: non-columnar arguments to be passed to the callable.
+        extra_args: non-columnar arguments to be passed to a callable decorated with ROOT.Numba.Declare.
     Returns:
         RDataFrame: result of transforming the rdf argument by applying the requested filter operation.
 
     Examples:
-    1. rdf.Filter(lambda x,y: x>y)
+    1. def x_more_than_y(x: float, y: float) -> bool:
+            return x>y
+       rdf.Filter(x_more_than_y)
         Filter using a python callable.
-    2. rdf.Filter(lambda x,y: x>y, ["y", "x"])
+    2. rdf.Filter(x_more_than_y, ["y", "x"])
         Filter using a python callable with column list passed explicitly.
         When the column list is passed, the function maps the starting input parameters to those columns instead.
         Here the function param x is mapped to column y, and the second function param y is mapped to column x.
         This is equivalent to the filter "y>x".
-    3. rdf.Filter(lambda col1, const1: col1>const1, ["x"], extra_args = {"const1":0.5})
+    3. @ROOT.Numba.Declare(["double", "double"], "bool")
+       def col1_more_than_const1(col1, const1):
+            return col1>const1
+       rdf.Filter(col1_more_than_const1, ["x"], extra_args = {"const1":0.5})
         Filter using a python callable with column list passed explicitly and extra_args.
         Here the function parameter col1 is mapped to col "x" of the RDF, and the const1 parameter is mapped to the float value 0.5
         This is equivalent to the filter x>0.5"
     4. y = 0.5
+       @ROOT.Numba.Declare(["double"], "bool")
        def x_more_than_y(x):
-            x>y
+            return x>y
        rdf.Filter(x_more_than_y)
        Here the value of y is captured from scope. Thus this is equivalent to the filter "x>0.5".
        Note: Any modifications to the value of y will not be reflected in the function as y would be treated as a compile time constant during the first jit.
@@ -390,24 +398,32 @@ def _PyDefine(rdf, col_name, callable_or_str, cols=[], extra_args={}):
     1. col_name: The name of the new column to be defined
     2. callable_or_str: The definition of the contents of the new columns
         It can be either a python callable or a c style string.
+        A python callable runs in the Python interpreter and needs type annotations for its parameters and
+        return value, unless it is decorated with ROOT.Numba.Declare to be JIT compiled with Numba.
     3. cols: list of columns that the callable will receive as argument.
                 If not provided then it tries maps the name of the parameter to a column name of the RDF.
-    4. extra_args: non-columnar arguments to be passed to the callable.
+    4. extra_args: non-columnar arguments to be passed to a callable decorated with ROOT.Numba.Declare.
     Returns:
         RDataFrame: rdf with new column defined
 
     Examples:
-    1. rdf.Define("x", lambda: np.random.rand())
-        Define using a python lambda
-    2. rdf.Define("x2", lambda x: x*x, ["y"])
+    1. def random() -> float:
+            return np.random.rand()
+       rdf.Define("x", random)
+        Define using a python callable
+    2. def square(x: float) -> float:
+            return x*x
+       rdf.Define("x2", square, ["y"])
         Maps the function argument to column y.
     3. scale = 0.5
+        @ROOT.Numba.Declare(["double"], "double")
         def x_scaled(x):
             return x*scale
        rdf.Define("X_scaled", x_scaled)
        The scale is captured from scope and treated as a compile time constant during first jit.
        Note: Any changes to scale will not be reflected in the jitted function as jitting is a one time operation.
-    4. def x_scaled(x, u):
+    4. @ROOT.Numba.Declare(["double", "double"], "double")
+       def x_scaled(x, u):
             return x*u
        rdf.Define("x_scaled", x_scaled, extra_args = {"u":0.5})
 
