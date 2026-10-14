@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup ROOT7 tutorial_io
 /// Demonstrate how to read a TTree with RFile.
-/// 
+///
 /// Note that, due to how TTree handles lifetime and its relationship with TDirectory, writing TTree through RFile
 /// is currently unsupported.
 ///
