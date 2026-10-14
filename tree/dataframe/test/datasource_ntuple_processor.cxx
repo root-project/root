@@ -19,6 +19,7 @@ using ROOT::TestSupport::FileRaii;
 
 using ROOT::RNTupleModel;
 using ROOT::RNTupleWriter;
+using ROOT::Experimental::CreateRNTupleJoinProcessor;
 using ROOT::Experimental::RNTupleProcessor;
 using ROOT::Experimental::Internal::RDF::RNTupleProcessorDS;
 
@@ -313,7 +314,7 @@ TEST(RNTupleProcessorDS, Join)
       }
    }
 
-   auto proc = RNTupleProcessor::CreateJoin({"primary", guardFile1.GetPath()}, {"auxiliary", guardFile2.GetPath()}, {});
+   auto proc = CreateRNTupleJoinProcessor({"primary", guardFile1.GetPath()}, {"auxiliary", guardFile2.GetPath()}, {});
    auto df = ROOT::Experimental::RDF::FromRNTupleProcessor(std::move(proc));
 
    auto count = df.Count();
@@ -364,7 +365,7 @@ TEST(RNTupleProcessorDS, JoinUnaligned)
    }
 
    auto proc =
-      RNTupleProcessor::CreateJoin({"primary", guardFile1.GetPath()}, {"auxiliary", guardFile2.GetPath()}, {"idx"});
+      CreateRNTupleJoinProcessor({"primary", guardFile1.GetPath()}, {"auxiliary", guardFile2.GetPath()}, {"idx"});
    auto df = ROOT::Experimental::RDF::FromRNTupleProcessor(std::move(proc));
 
    auto count = df.Count();

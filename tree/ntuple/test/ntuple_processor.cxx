@@ -912,11 +912,11 @@ TEST_F(RNTupleProcessorTest, AddAllFieldsComposed)
    opts.SetProcessorName("ntuple_aux2");
    auto auxProcIntermediate = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, opts);
 
-   auto auxProc = RNTupleProcessor::CreateJoin(
+   auto auxProc = CreateRNTupleJoinProcessor(
       RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}),
       std::move(auxProcIntermediate), {"i"});
 
-   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {});
+   auto proc = CreateRNTupleJoinProcessor(std::move(primaryProc), std::move(auxProc), {});
 
    auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/false);
    auto fieldIdxs = entry->GetFieldIndices();
@@ -933,11 +933,11 @@ TEST_F(RNTupleProcessorTest, AddAllFieldsAndSubfieldsComposed)
    opts.SetProcessorName("ntuple_aux2");
    auto auxProcIntermediate = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, opts);
 
-   auto auxProc = RNTupleProcessor::CreateJoin(
+   auto auxProc = CreateRNTupleJoinProcessor(
       RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}),
       std::move(auxProcIntermediate), {"i"});
 
-   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {});
+   auto proc = CreateRNTupleJoinProcessor(std::move(primaryProc), std::move(auxProc), {});
 
    auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/true);
    auto fieldIdxs = entry->GetFieldIndices();

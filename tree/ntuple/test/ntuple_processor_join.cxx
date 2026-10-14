@@ -169,7 +169,7 @@ TEST(RNTupleJoinProcessor, NameConflict)
 
 TEST_F(RNTupleJoinProcessorTest, AddAllFields)
 {
-   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
+   auto proc = CreateRNTupleJoinProcessor({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
    auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/false);
    auto fieldIdxs = entry->GetFieldIndices();
 
@@ -178,7 +178,7 @@ TEST_F(RNTupleJoinProcessorTest, AddAllFields)
 
 TEST_F(RNTupleJoinProcessorTest, AddAllFieldsAndSubfields)
 {
-   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
+   auto proc = CreateRNTupleJoinProcessor({fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}, {});
    auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/true);
    auto fieldIdxs = entry->GetFieldIndices();
 
