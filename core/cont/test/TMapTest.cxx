@@ -10,14 +10,6 @@ public:
    ~TrackNamed() override { fgCount--; }
 };
 int TrackNamed::fgCount = 0;
-
-class CollideNamed : public TNamed {
-   ULong_t fForcedHash;
-
-public:
-   CollideNamed(const char *name, const char *title, ULong_t h = 42) : TNamed(name, title), fForcedHash(h) {}
-   ULong_t Hash() const override { return fForcedHash; }
-};
 } // namespace
 
 TEST(TMapTest, DefaultConstructor)
@@ -88,28 +80,30 @@ TEST(TMapTest, AddAndLookup)
 
 TEST(TMapTest, HashCollision)
 {
-   TMap map;
+   // Use a small fixed capacity table without automatic rehash so collisions are guaranteed
+   TMap map(3, 0);
    map.SetOwnerKeyValue(kTRUE, kTRUE);
 
-   auto *k1 = new CollideNamed("col_a", "First", 99);
-   auto *v1 = new TNamed("val_a", "Value A");
-   auto *k2 = new CollideNamed("col_b", "Second", 99);
-   auto *v2 = new TNamed("val_b", "Value B");
+   // "k0" (Hash=27504, 27504 % 3 == 0) and "k3" (Hash=27507, 27507 % 3 == 0) collide in slot 0
+   auto *k1 = new TNamed("k0", "First");
+   auto *v1 = new TNamed("v0", "Value 0");
+   auto *k2 = new TNamed("k3", "Second");
+   auto *v2 = new TNamed("v3", "Value 3");
 
    map.Add(k1, v1);
    map.Add(k2, v2);
 
    EXPECT_EQ(map.GetSize(), 2);
 
-   // Both keys force the exact same hash (99), creating a deliberate collision in the bucket
-   EXPECT_EQ(map.Collisions("col_a"), 2);
-   EXPECT_EQ(map.Collisions("col_b"), 2);
+   // Both keys hash to the same bucket (slot 0) in the 3-slot table, creating a deliberate collision
+   EXPECT_EQ(map.Collisions("k0"), 2);
+   EXPECT_EQ(map.Collisions("k3"), 2);
    EXPECT_EQ(map.Collisions(k1), 2);
    EXPECT_EQ(map.Collisions(k2), 2);
 
    // Despite hash collision, lookups should correctly resolve both distinct items
-   EXPECT_EQ(map.GetValue("col_a"), v1);
-   EXPECT_EQ(map.GetValue("col_b"), v2);
+   EXPECT_EQ(map.GetValue("k0"), v1);
+   EXPECT_EQ(map.GetValue("k3"), v2);
    EXPECT_EQ(map.GetValue(k1), v1);
    EXPECT_EQ(map.GetValue(k2), v2);
 
@@ -123,9 +117,9 @@ TEST(TMapTest, HashCollision)
    delete v1;
 
    EXPECT_EQ(map.GetSize(), 1);
-   EXPECT_EQ(map.Collisions("col_b"), 1);
-   EXPECT_EQ(map.GetValue("col_a"), nullptr);
-   EXPECT_EQ(map.GetValue("col_b"), v2);
+   EXPECT_EQ(map.Collisions("k3"), 1);
+   EXPECT_EQ(map.GetValue("k0"), nullptr);
+   EXPECT_EQ(map.GetValue("k3"), v2);
 }
 
 TEST(TMapTest, Remove)
