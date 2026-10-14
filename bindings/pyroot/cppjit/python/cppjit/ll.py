@@ -26,6 +26,7 @@ __all__ = [
     "array_new",
     "array_delete",
     "bind_value",
+    "as_std_any",
     "signals_as_exception",
     "set_signals_as_exception",
     "FatalError",
@@ -69,6 +70,20 @@ def bind_value(type_name, address, dims=None):
     the address, the type and the shape.
     """
     return cppjit._backend.bind_value(type_name, address, dims)
+
+
+def as_std_any(obj):
+    """Wrap a reference to the Python object `obj` in a `std::any`.
+
+    For C++ code that has to keep `obj` alive, such as a data source reading
+    from the memory of a NumPy array: the `std::any`, and each copy that C++
+    makes of it, holds a reference to `obj`, which is released when that copy
+    is destroyed. The reference count is changed with the GIL taken, so C++
+    may do this from any thread.
+
+        keepalive = ll.as_std_any(array)
+    """
+    return cppjit._backend.as_std_any(obj)
 
 
 # import low-level python converters

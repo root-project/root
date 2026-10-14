@@ -27,11 +27,10 @@ class PyROOTApplication(object):
         import cppyy
 
         if not cppyy.gbl.gApplication:
-            from ROOT.libROOTPythonizations import InstallWarningHandler
-
             self._create_application(config.IgnoreCommandLineOptions)
             self._init_root_globals()
-            InstallWarningHandler()
+            # Turn ROOT warnings into Python warnings
+            cppyy.gbl.ROOT.Internal.SetWarningHandler(cppyy._backend.warning_handler(module="ROOT"))
 
         self._is_ipython = is_ipython
 
@@ -117,9 +116,9 @@ class PyROOTApplication(object):
         # PyOS_InputHook-based mechanism
         # Point to a function which will be called when Python's interpreter prompt
         # is about to become idle and wait for user input from the terminal
-        from ROOT.libROOTPythonizations import InstallGUIEventInputHook
+        import cppyy
 
-        InstallGUIEventInputHook()
+        cppyy._backend.set_input_hook(cppyy.gbl.ROOT.Internal.ProcessGUIEvents)
 
     @staticmethod
     def _set_display_hook():

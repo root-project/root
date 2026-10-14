@@ -32,6 +32,7 @@ PyObject* Instance_FromVoidPtr(void* addr, const std::string& classname,
 
 // Standard
 #include <algorithm>
+#include <any>
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -667,6 +668,191 @@ static PyObject* BindObject(PyObject*, PyObject* args, PyObject* kwds) {
 }
 
 //----------------------------------------------------------------------------
+static PyObject* SetReduceMethod(PyObject*, PyObject* reducer) {
+  // Set the __reduce__ method of all instances; None unsets it.
+  if (reducer == Py_None)
+    reducer = nullptr;
+  else if (!PyCallable_Check(reducer)) {
+    PyErr_SetString(PyExc_TypeError, "reduce method must be callable or None");
+    return nullptr;
+  }
+  Py_XINCREF(reducer);
+  PyObject* previous = CPPInstance::ReduceMethod();
+  CPPInstance::ReduceMethod() = reducer;
+  Py_XDECREF(previous);
+  Py_RETURN_NONE;
+}
+
+//----------------------------------------------------------------------------
+namespace {
+// A reference to a Python object, held by C++. Copies hold references of
+// their own. C++ may copy or destroy it on any thread, so it takes the GIL to
+// change the reference count; once Python is finalized it can't, and leaves
+// the reference be.
+class PyObjectRef {
+  PyObject* fObject;
+
+public:
+  // called from Python, with the GIL held
+  explicit PyObjectRef(PyObject* object) : fObject(object) {
+    Py_INCREF(fObject);
+  }
+  PyObjectRef(const PyObjectRef& other) : fObject(other.fObject) {
+    if (Py_IsInitialized()) {
+      cpyrt::PythonGILRAII python_gil_raii;
+      Py_INCREF(fObject);
+    }
+  }
+  PyObjectRef(PyObjectRef&& other) noexcept : fObject(other.fObject) {
+    other.fObject = nullptr;
+  }
+  PyObjectRef& operator=(PyObjectRef other) noexcept {
+    std::swap(fObject, other.fObject);
+    return *this;
+  }
+  ~PyObjectRef() {
+    if (fObject && Py_IsInitialized()) {
+      cpyrt::PythonGILRAII python_gil_raii;
+      Py_DECREF(fObject);
+    }
+  }
+};
+} // unnamed namespace
+
+static PyObject* AsStdAny(PyObject*, PyObject* pyobject) {
+  // Wrap a reference to pyobject in a std::any owned by Python.
+  return cpyrt::Instance_FromVoidPtr(
+      new std::any{std::in_place_type<PyObjectRef>, pyobject}, "std::any",
+      /*python_owns=*/true);
+}
+
+//----------------------------------------------------------------------------
+namespace {
+
+PyObject* gWarningCategory = nullptr; // nullptr: RuntimeWarning
+std::string gWarningModule;
+
+bool WarningHandler(const char* location, const char* msg) {
+  // Issue a Python warning for a warning that C++ reports, see
+  // warning_handler() below. Called from C++, maybe without the GIL.
+  cpyrt::PythonGILRAII gil;
+
+  // Python code can't run while an exception is pending, e.g. a previous
+  // warning that the filters turned into an error during the same call into
+  // C++: decline, so that C++ reports the warning its own way.
+  if (PyErr_Occurred())
+    return false;
+
+  // Prints or, per the filters, raises; a raised exception stays pending
+  // until the call into C++ returns to Python.
+  PyErr_WarnExplicit(gWarningCategory, msg, location, 0,
+                     gWarningModule.empty() ? nullptr : gWarningModule.c_str(),
+                     nullptr);
+  return true;
+}
+
+} // unnamed namespace
+
+static PyObject* GetWarningHandler(PyObject*, PyObject* args, PyObject* kwds) {
+  // Configure the compiled warning handler and hand it out as a ctypes
+  // function pointer, for C++ libraries that report warnings to a callback.
+  static const char* kwlist[] = {(char*)"category", (char*)"module", nullptr};
+
+  PyObject* category = nullptr;
+  const char* module = nullptr;
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oz:warning_handler",
+                                   (char**)kwlist, &category, &module))
+    return nullptr;
+
+  if (category == Py_None)
+    category = nullptr;
+  if (category && PyObject_IsSubclass(category, PyExc_Warning) != 1) {
+    if (!PyErr_Occurred())
+      PyErr_SetString(PyExc_TypeError,
+                      "category must be a subclass of Warning");
+    return nullptr;
+  }
+
+  Py_XINCREF(category);
+  Py_XSETREF(gWarningCategory, category);
+  gWarningModule = module ? module : "";
+
+  // ctypes.CFUNCTYPE(c_bool, c_char_p, c_char_p)(address)
+  PyObject* ctmod = PyImport_ImportModule("ctypes");
+  if (!ctmod)
+    return nullptr;
+  PyObject* c_bool = PyObject_GetAttrString(ctmod, "c_bool");
+  PyObject* c_char_p = PyObject_GetAttrString(ctmod, "c_char_p");
+  PyObject* fntype = nullptr;
+  if (c_bool && c_char_p)
+    fntype = PyObject_CallMethod(ctmod, "CFUNCTYPE", "OOO", c_bool, c_char_p,
+                                 c_char_p);
+  Py_XDECREF(c_char_p);
+  Py_XDECREF(c_bool);
+  Py_DECREF(ctmod);
+  if (!fntype)
+    return nullptr;
+
+  PyObject* address = PyLong_FromVoidPtr((void*)&WarningHandler);
+  PyObject* result = PyObject_CallOneArg(fntype, address);
+  Py_DECREF(address);
+  Py_DECREF(fntype);
+  return result;
+}
+
+//----------------------------------------------------------------------------
+namespace {
+
+void (*gInputHookFunc)() = nullptr;
+int (*gPreviousInputHook)() = nullptr;
+
+int InputHook() {
+  // The PyOS_InputHook set_input_hook() installs: calls the C++ function
+  // with the GIL, then the previous hook. Runs no Python code, so a Ctrl-C
+  // arriving meanwhile stays pending for the prompt.
+  {
+    cpyrt::PythonGILRAII gil;
+    gInputHookFunc();
+  }
+  return gPreviousInputHook ? gPreviousInputHook() : 0;
+}
+
+} // unnamed namespace
+
+static PyObject* SetInputHook(PyObject*, PyObject* pyfunc) {
+  // Install the PyOS_InputHook that calls the compiled C++ function pyfunc,
+  // a void() overload, while the interactive prompt waits for input; None
+  // restores the previous hook.
+  if (pyfunc == Py_None) {
+    if (PyOS_InputHook == &InputHook) {
+      PyOS_InputHook = gPreviousInputHook;
+      gPreviousInputHook = nullptr;
+    }
+    gInputHookFunc = nullptr;
+    Py_RETURN_NONE;
+  }
+
+  interop::TCppFuncAddr_t addr = 0;
+  if (CPPOverload_CheckExact(pyfunc)) {
+    const auto& methods = ((CPPOverload*)pyfunc)->fMethodInfo->fMethods;
+    if (methods.size() == 1 && methods[0]->GetMaxArgs() == 0)
+      addr = methods[0]->GetFunctionAddress();
+  }
+  if (!addr) {
+    PyErr_SetString(PyExc_TypeError,
+                    "a C++ function taking no arguments expected");
+    return nullptr;
+  }
+
+  gInputHookFunc = (void (*)())addr;
+  if (PyOS_InputHook != &InputHook) {
+    gPreviousInputHook = PyOS_InputHook;
+    PyOS_InputHook = &InputHook;
+  }
+  Py_RETURN_NONE;
+}
+
+//----------------------------------------------------------------------------
 static PyObject* BindValue(PyObject*, PyObject* args, PyObject* kwds) {
   // Read through the converter for the given type name, at the given address.
   static const char* kwlist[] = {(char*)"type_name", (char*)"address",
@@ -949,6 +1135,15 @@ static PyMethodDef gcpyrtMethods[] = {
      (char*)"Create an object of given type, from given address."},
     {(char*)"bind_value", (PyCFunction)BindValue, METH_VARARGS | METH_KEYWORDS,
      (char*)"Read a value of given type, from given address."},
+    {(char*)"as_std_any", (PyCFunction)AsStdAny, METH_O,
+     (char*)"Wrap a reference to a Python object in a std::any."},
+    {(char*)"warning_handler", (PyCFunction)GetWarningHandler,
+     METH_VARARGS | METH_KEYWORDS,
+     (char*)"Get a C function pointer that issues Python warnings for "
+            "warnings reported by C++."},
+    {(char*)"set_input_hook", (PyCFunction)SetInputHook, METH_O,
+     (char*)"Call a C++ function while the interactive prompt waits for "
+            "input."},
     {(char*)"move", (PyCFunction)Move, METH_O,
      (char*)"Cast the C++ object to become movable."},
     {(char*)"add_pythonization", (PyCFunction)AddPythonization, METH_VARARGS,
@@ -957,6 +1152,8 @@ static PyMethodDef gcpyrtMethods[] = {
      METH_VARARGS, (char*)"Remove a pythonizor."},
     {(char*)"_pin_type", (PyCFunction)PinType, METH_O,
      (char*)"Install a type pinning."},
+    {(char*)"_set_reduce_method", (PyCFunction)SetReduceMethod, METH_O,
+     (char*)"Set the __reduce__ method of all instances."},
     {(char*)"_add_type_reducer", (PyCFunction)AddTypeReducer, METH_VARARGS,
      (char*)"Add a type reducer."},
     {(char*)"SetHeuristicMemoryPolicy", (PyCFunction)SetHeuristicMemoryPolicy,
