@@ -11,4 +11,5 @@ Minor changes have been subsequently been applied to achieve compilation with C+
 - use of std::inner_product instead of std::transform_reduce (gcc 8.5 had problems)
 
 This is needed since ROOT should compile with C++17. TODO: remove these patches
-when minimum required is C++20 and move builtin source to LCG.
+when minimum required is C++20 and move builtin source to LCG. Or move to LCG link
+and use PATCH_COMMAND in ExternalProject_Add to apply these C++17 fallback patches.
