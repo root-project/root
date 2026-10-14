@@ -2822,7 +2822,9 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   ASSERT_EQ(ops.size(), 1);
   EXPECT_TRUE(Cpp::IsTemplatedFunction(ops[0]));
 
-  Cpp::FuncRef Deref = Cpp::BestOverloadFunctionMatch(ops, {}, {});
+  std::vector<Cpp::FuncRef> ambiguous_candidates;
+  Cpp::FuncRef Deref =
+      Cpp::BestOverloadFunctionMatch(ops, {}, {}, ambiguous_candidates);
   ASSERT_TRUE(Deref);
   // The match is an instantiation with the defaulted template parameter, not
   // the template pattern itself: its return type is concrete.
