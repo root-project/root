@@ -353,10 +353,10 @@ void TGHtml::AddStyle(TGHtmlElement *p)
                      // unsigned int mask;
 
                      // mask = kGCTile | kGCFillStyle | kGCGraphicsExposures;
-                     gcv.fTile = img->GetPixmap();
+                     gcv.fTile = TGWindow::GetImagePixmap(img);
                      gcv.fFillStyle = kFillTiled;
                      gcv.fGraphicsExposures = kTRUE;
-                     fCanvas->SetBackgroundPixmap(img->GetPixmap());
+                     fCanvas->SetBackgroundPixmap(TGWindow::GetImagePixmap(img));
 
                      gVirtualX->ChangeGC(fWhiteGC.GetGC(), &gcv);
 
