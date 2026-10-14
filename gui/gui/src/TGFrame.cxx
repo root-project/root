@@ -1556,8 +1556,6 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage()
 
 Bool_t TGMainFrame::SaveFrameAsCodeOrImage(const TString &fileName)
 {
-   static TString dir(".");
-
    const TString fname = gSystem->UnixPathName(fileName);
    if (fname.EndsWith(".C")) {
       TGMainFrame *main = (TGMainFrame*)GetMainFrame();
@@ -1580,12 +1578,11 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage(const TString &fileName)
       if (gtype != TImage::kUnknown) {
          Int_t saver = gErrorIgnoreLevel;
          gErrorIgnoreLevel = kFatal;
-         TImage *img = TImage::Create();
          RaiseWindow();
-         img->FromWindow(GetId());
-         img->WriteImage(fname, gtype);
+         auto img = TGWindow::CreateImageFromWindow(GetId());
+         if (img)
+            img->WriteImage(fname, gtype);
          gErrorIgnoreLevel = saver;
-         delete img;
       } else {
          Error("SaveFrameAsCodeOrImage", "File cannot be saved with this extension");
          return kFALSE;
