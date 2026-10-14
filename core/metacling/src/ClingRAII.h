@@ -30,8 +30,8 @@ namespace ROOT {
           // follow the swap: when we are called during a template instantiation,
           // Sema::ContextRAII has set them to the depth of the outer stack, which
           // is past the end of our fresh FunctionScopes.
-          unsigned fFunctionScopesStart = 0;
-          unsigned fInventedParameterInfosStart;
+          decltype(clang::Sema::FunctionScopesStart) fFunctionScopesStart = 0;
+          decltype(clang::Sema::InventedParameterInfosStart) fInventedParameterInfosStart; // Set by the constructor to the size of Sema::InventedParameterInfos
           clang::Sema& fSema;
           void Swapem() {
              std::swap(fCleanup, fSema.Cleanup);
