@@ -2192,42 +2192,41 @@ Pixmap_t TASImage::GetPixmap()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns image mask pixmap (alpha channel).
-/// The pixmap must deleted by user.
+/// Returns image mask bits - only alpha channel of the image.
+/// Also provides width and height which is aligned to 8 bits
+/// Returns kTRUE if operation was successful
 
-Pixmap_t TASImage::GetMask()
+Bool_t TASImage::GetMaskBits(UInt_t &width, UInt_t &height, std::vector<char> &bits)
 {
-   Pixmap_t pxmap = 0;
-
    if (!InitVisual()) {
-      Warning("GetMask", "Visual not initiated");
-      return pxmap;
+      Warning("GetMaskBits", "Visual not initiated");
+      return kFALSE;
    }
 
    ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
 
    if (!img) {
-      Warning("GetMask", "No image");
-      return pxmap;
+      Warning("GetMaskBits", "No image");
+      return kFALSE;
    }
 
-   UInt_t hh = img->height;
-   UInt_t ow = img->width%8;
-   UInt_t ww = img->width - ow + (ow ? 8 : 0);
+   height = img->height;
+   UInt_t ow = img->width % 8;
+   width = img->width - ow + (ow ? 8 : 0);
 
    ASImageDecoder *imdec = start_image_decoding(fgVisual, img, SCL_DO_ALPHA,
-                                                0, 0, ww, 0, nullptr);
+                                                0, 0, width, 0, nullptr);
    if (!imdec)
-      return pxmap;
+      return kFALSE;
 
-   std::vector<char> bits(ww * hh / 8); //an array of bits
+   bits.resize(height * width / 8); //an array of bits
 
    UInt_t bit = 0, i = 0;
-   for (UInt_t y = 0; y < hh; y++) {
+   for (UInt_t y = 0; y < height; y++) {
       imdec->decode_image_scanline(imdec);
       CARD32 *a = imdec->buffer.alpha;
 
-      for (UInt_t x = 0; x < ww; x++) {
+      for (UInt_t x = 0; x < width; x++) {
          if (a[x]) {
             SETBIT(bits[i], bit);
          } else {
@@ -2241,8 +2240,25 @@ Pixmap_t TASImage::GetMask()
    }
 
    stop_image_decoding(&imdec);
-   pxmap = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), bits.data(), ww, hh);
-   return pxmap;
+
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// DEPRECATED! Method left for backward compatibility and will be removed in ROOT7!
+/// Returns image mask pixmap (alpha channel).
+/// The pixmap must deleted by user.
+
+Pixmap_t TASImage::GetMask()
+{
+   Pixmap_t pixmap = 0;
+
+   UInt_t ww = 0, hh = 0;
+   std::vector<char> bits;
+   if (GetMaskBits(ww, hh, bits))
+      pixmap = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), bits.data(), ww, hh);
+
+   return pixmap;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
