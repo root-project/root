@@ -312,35 +312,61 @@ TEST(RNTuple, RVecGeometricGrowth)
       auto rvec = m->MakeField<ROOT::RVec<int>>("v");
       auto w = RNTupleWriter::Recreate(std::move(m), "ntpl", fileGuard.GetPath());
 
-      *rvec = {1, 2};
-      w->Fill();
-      *rvec = {1, 2, 3};
-      w->Fill();
-      *rvec = {1, 2, 3, 4};
-      w->Fill();
+      for (int i = 0; i < 6; ++i) {
+         w->Fill();
+         rvec->push_back(i);
+      }
+
       *rvec = {10};
+      w->Fill();
+
+      *rvec = ROOT::RVec(11, 0);
+      w->Fill();
+
+      *rvec = ROOT::RVec(23, 0);
       w->Fill();
    }
 
    auto m = RNTupleModel::Create();
    auto rvec = m->MakeField<ROOT::RVec<int>>("v");
    auto reader = RNTupleReader::Open(std::move(m), "ntpl", fileGuard.GetPath());
+   EXPECT_EQ(9u, reader->GetNEntries());
 
    reader->LoadEntry(0);
+   EXPECT_EQ(rvec->size(), 0u);
+   EXPECT_EQ(rvec->capacity(), 0u);
+
+   reader->LoadEntry(1);
+   EXPECT_EQ(rvec->size(), 1u);
+   EXPECT_EQ(rvec->capacity(), 1u);
+
+   reader->LoadEntry(2);
    EXPECT_EQ(rvec->size(), 2u);
    EXPECT_EQ(rvec->capacity(), 2u);
 
-   reader->LoadEntry(1);
-   EXPECT_EQ(rvec->size(), 3u);
-   EXPECT_GE(rvec->capacity(), 4u);
-
-   reader->LoadEntry(2);
-   EXPECT_EQ(rvec->size(), 4u);
-   EXPECT_GE(rvec->capacity(), 4u);
-
    reader->LoadEntry(3);
+   EXPECT_EQ(rvec->size(), 3u);
+   EXPECT_EQ(rvec->capacity(), 4u);
+
+   reader->LoadEntry(4);
+   EXPECT_EQ(rvec->size(), 4u);
+   EXPECT_EQ(rvec->capacity(), 4u);
+
+   reader->LoadEntry(5);
+   EXPECT_EQ(rvec->size(), 5u);
+   EXPECT_EQ(rvec->capacity(), 8u);
+
+   reader->LoadEntry(6);
    EXPECT_EQ(rvec->size(), 1u);
-   EXPECT_GE(rvec->capacity(), 4u);
+   EXPECT_GE(rvec->capacity(), 8u);
+
+   reader->LoadEntry(7);
+   EXPECT_EQ(rvec->size(), 11u);
+   EXPECT_GE(rvec->capacity(), 16u);
+
+   reader->LoadEntry(8);
+   EXPECT_EQ(rvec->size(), 23u);
+   EXPECT_GE(rvec->capacity(), 24u);
 }
 
 TEST(RNTuple, BoolVector)

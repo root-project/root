@@ -282,6 +282,8 @@ unsigned char *ROOT::RRVecField::ResizeRVec(void *rvec, std::size_t nItems, std:
    }
 
    // Resize RVec (capacity and size)
+   // In the regime between 0 and 16 items, grow by doubling the size. Grow larger vectors by a factor 1.5
+   static constexpr std::int32_t kSmallThreshold = 16;
    if (std::int32_t(nItems) > *capacityPtr) { // must reallocate
       // Destroy old elements: useless work for trivial types, but in case the element type's constructor
       // allocates memory we need to release it here to avoid memleaks (e.g. if this is an RVec<RVec<int>>)
@@ -296,7 +298,7 @@ unsigned char *ROOT::RRVecField::ResizeRVec(void *rvec, std::size_t nItems, std:
       if (*capacityPtr > 0) {
          constexpr std::size_t maxSize = static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max());
          const std::size_t oldCap = static_cast<std::size_t>(*capacityPtr);
-         const std::size_t grown = oldCap <= maxSize / 2 ? oldCap * 2 : maxSize;
+         const std::size_t grown = oldCap + ((oldCap < kSmallThreshold) ? oldCap : (oldCap / 2));
          newCapacity = std::min(maxSize, std::max(nItems, grown));
       }
 
