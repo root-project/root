@@ -193,6 +193,7 @@ public:
    ASImage   *GetImage() const { return fImage; }
    void       SetImage(ASImage *image) { DestroyImage(); fImage = image; }
    TImage    *GetScaledImage() const override { return fScaledImage; }
+   Pixmap_t   GetX11Pixmap(Window_t root_window) override;
    Pixmap_t   GetPixmap() override;
    Bool_t     GetMaskBits(UInt_t &width, UInt_t &height, std::vector<char> &bits) override;
    Pixmap_t   GetMask() override;
