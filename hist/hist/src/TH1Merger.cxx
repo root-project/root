@@ -1032,7 +1032,7 @@ Bool_t TH1Merger::LabelMerge(bool newLimits) {
          // here only in the case of bins with labels
          const char * labelX = hist->GetXaxis()->GetBinLabel(binx);
          const char * labelY = (fH0->fDimension > 1) ? hist->GetYaxis()->GetBinLabel(biny) : nullptr;
-         const char * labelZ = (fH0->fDimension > 2) ? hist->GetYaxis()->GetBinLabel(binz) : nullptr;
+         const char * labelZ = (fH0->fDimension > 2) ? hist->GetZaxis()->GetBinLabel(binz) : nullptr;
 
          // do we need to support case when there are bins with labels and bins without them ??
          // this case should have been detected before when examining the histograms

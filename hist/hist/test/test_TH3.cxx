@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "TH3D.h"
+#include "TList.h"
 
 #include <random>
 #include <thread>
@@ -95,4 +96,38 @@ TEST(TH3D, InterpolateCloseToEdge)
    EXPECT_DOUBLE_EQ(hist.Interpolate(0., 0., 5.), 10000. * 4.5);
    EXPECT_DOUBLE_EQ(hist.Interpolate(0.3, 19.9, 5.), 100. * 19 + 10000. * 4.5);
    EXPECT_DOUBLE_EQ(hist.Interpolate(0.8, 19.9, 5.), 0.3 + 100. * 19 + 10000. * 4.5);
+}
+
+// Test merging of 3D histos with axes with labels
+TEST(TH3D, axesLabels)
+{
+   const auto Nbins = 16;
+   TH3F h("labelHisto", "lh", Nbins, 0, Nbins, Nbins, 0, Nbins, Nbins, 0, Nbins);
+   for (int i = 1; i <= Nbins; ++i) {
+      h.GetXaxis()->SetBinLabel(i, Form("labelx%d", i));
+   }
+   for (int i = 1; i <= Nbins; ++i) {
+      h.GetYaxis()->SetBinLabel(i, Form("labely%d", i));
+   }
+   for (int i = 1; i <= Nbins; ++i) {
+      h.GetZaxis()->SetBinLabel(i, Form("labelz%d", i));
+   }
+   for (int i = 1; i <= h.GetNcells(); ++i) {
+      h.SetBinContent(i, 1); // prevent shortcut at TH1Merger.cxx#L1027
+   }
+
+   auto hSum = h;
+   TList l;
+   l.Add(&h);
+   hSum.Merge(&l);
+
+   for (int ix = 1; ix <= Nbins; ++ix) {
+      for (int iy = 1; iy <= Nbins; ++iy) {
+         for (int iz = 1; iz <= Nbins; ++iz) {
+            const auto h_bin_xyz_cont = h.GetBinContent(ix, iy, iz);
+            const auto hSum_bin_xyz_cont = hSum.GetBinContent(ix, iy, iz);
+            EXPECT_FLOAT_EQ(hSum_bin_xyz_cont, h_bin_xyz_cont + h_bin_xyz_cont);
+         }
+      }
+   }
 }
