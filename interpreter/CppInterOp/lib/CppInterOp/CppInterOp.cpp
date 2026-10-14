@@ -2859,7 +2859,7 @@ BestOverloadFunctionMatch(const std::vector<FuncRef>& candidates,
                           const std::vector<TemplateArgInfo>& explicit_types,
                           const std::vector<TemplateArgInfo>& arg_types,
                           std::vector<FuncRef>& ambiguous_candidates,
-                          bool is_operator) {
+                          bool is_operator /*= false*/) {
   INTEROP_TRACE(candidates, explicit_types, arg_types,
                 INTEROP_OUT(ambiguous_candidates), is_operator);
   auto& S = getSema();
@@ -2930,7 +2930,7 @@ BestOverloadFunctionMatch(const std::vector<FuncRef>& candidates,
   };
 
   for (auto i : candidates) {
-    auto* Found = const_cast<Decl*>(unwrap<Decl>(i));
+    auto* Found = unwrap<Decl>(i);
     auto FoundDeclAccessPair =
         DeclAccessPair::make(cast<NamedDecl>(Found), Found->getAccess());
     auto* D = UnwrapUsingShadowToFunction(Found);
