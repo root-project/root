@@ -245,6 +245,8 @@ public:
 
    virtual UInt_t GetWidth() const { return 0; }
    virtual UInt_t GetHeight() const { return 0; }
+   virtual UInt_t GetScaledWidth() const { return 0; }
+   virtual UInt_t GetScaledHeight() const { return 0; }
    virtual Bool_t IsValid() const { return kTRUE; }
    virtual TImage *GetScaledImage() const { return nullptr; }
 

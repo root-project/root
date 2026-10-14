@@ -186,8 +186,8 @@ public:
    // Utilities
    UInt_t     GetWidth() const override;
    UInt_t     GetHeight() const override;
-   UInt_t     GetScaledWidth() const;
-   UInt_t     GetScaledHeight() const;
+   UInt_t     GetScaledWidth() const override;
+   UInt_t     GetScaledHeight() const override;
    Bool_t     IsValid() const override { return fImage ? kTRUE : kFALSE; }
    Bool_t     IsGray() const override { return fIsGray; }
    ASImage   *GetImage() const { return fImage; }
