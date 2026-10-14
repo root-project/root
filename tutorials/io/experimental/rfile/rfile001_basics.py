@@ -15,6 +15,7 @@ import ROOT
 
 import os
 
+
 def write_hist_to_rfile(fileName):
     # Create a histogram to write to the file
     hist = ROOT.TH1D("hist", "hist", 10, 0, 100)
@@ -30,7 +31,7 @@ def write_hist_to_rfile(fileName):
 
     # When the `with` statement is exited the file will write itself to disk and close itself.
     # To manually write the file without closing it, one can use `file.Flush()`.
-        
+
 
 def read_hist_from_rfile(fileName):
     # Open an existing ROOT file for reading (will raise an exception if `fileName` cannot be read).
