@@ -503,11 +503,11 @@ void TRootIconBox::GetObjPictures(const TGPicture **pic, const TGPicture **spic,
 
    if (!(*pic) && xpm) {
       if (im && im->SetImageBuffer((char**)&name, TImage::kXpm)) {
-         *pic = fClient->GetPicturePool()->GetPicture(iconname, im->GetPixmap(),
-                                                      im->GetMask());
+         *pic = fClient->GetPicturePool()->GetPicture(iconname, GetImagePixmap(im),
+                                                      GetImageMask(im));
          im->Scale(im->GetWidth()/2, im->GetHeight()/2);
-         *spic = fClient->GetPicturePool()->GetPicture(iconname, im->GetPixmap(),
-                                                      im->GetMask());
+         *spic = fClient->GetPicturePool()->GetPicture(iconname, GetImagePixmap(im),
+                                                      GetImageMask(im));
       }
 
       fClient->GetMimeTypeList()->AddType("[thumbnail]", iconname, iconname, iconname, "->Browse()");
@@ -1746,9 +1746,9 @@ void TRootBrowserLite::ExecuteDefaultAction(TObject *obj)
             img->Merge(img, "tint");   // contrasting
             img->DrawBox(0, 0, w, h, "#ffff00", 1); // yellow frame
 
-            pic = fClient->GetPicturePool()->GetPicture(path.Data(), img->GetPixmap(), 0);
+            pic = fClient->GetPicturePool()->GetPicture(path.Data(), GetImagePixmap(img), 0);
             img->Scale(w/3, h/3);
-            spic = fClient->GetPicturePool()->GetPicture(path.Data(), img->GetPixmap(), 0);
+            spic = fClient->GetPicturePool()->GetPicture(path.Data(), GetImagePixmap(img), 0);
 
             thumb = new TIconBoxThumb(path.Data(), spic, pic);
             fIconBox->fThumbnails->Add(thumb);

@@ -136,7 +136,7 @@ void TGSpeedo::Build()
 
    if (fImage && fImage->IsValid()) {
       fBase = fClient->GetPicturePool()->GetPicture(gSystem->BaseName(fPicName.Data()),
-              fImage->GetPixmap(), fImage->GetMask());
+              GetImagePixmap(fImage), GetImageMask(fImage));
       // center of the image
       Float_t xc = (Float_t)(fBase ? (fBase->GetWidth() + 1) / 2 : 96.0);
       Float_t yc = (Float_t)(fBase ? (fBase->GetHeight() + 1) / 2 : 96.0);

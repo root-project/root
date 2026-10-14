@@ -704,7 +704,7 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
             lnk_name = ((const TGPicture *)*pic)->GetName();
             lnk_name.Prepend("lnk_");
             *pic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(),
-                                 img1->GetPixmap(), img1->GetMask());
+                                 GetImagePixmap(img1), GetImageMask(img1));
             fCleanups->Add(((TObject *)*pic));
             if (img2) delete img2;
             delete img1;
@@ -718,7 +718,7 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
             lnk_name = ((const TGPicture *)*lpic)->GetName();
             lnk_name.Prepend("lnk_");
             *lpic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(),
-                                 img1->GetPixmap(), img1->GetMask());
+                                 GetImagePixmap(img1), GetImageMask(img1));
             fCleanups->Add(((TObject *)*lpic));
             if (img2) delete img2;
             delete img1;

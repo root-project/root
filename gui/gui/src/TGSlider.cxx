@@ -140,13 +140,12 @@ void TGSlider::CreateDisabledPicture()
    img2->FillRectangle(back.Data(), 0, 0, fSliderPic->GetWidth(),
                        fSliderPic->GetHeight());
    img->SetImage(fSliderPic->GetPicture(), fSliderPic->GetMask());
-   Pixmap_t mask = img->GetMask();
+   Pixmap_t mask = GetImageMask(img);
    img2->Merge(img, "overlay");
 
    TString name = "disbl_";
    name += fSliderPic->GetName();
-   fDisabledPic = fClient->GetPicturePool()->GetPicture(name.Data(),
-                                             img2->GetPixmap(), mask);
+   fDisabledPic = fClient->GetPicturePool()->GetPicture(name.Data(), GetImagePixmap(img2), mask);
    delete img;
    delete img2;
 }
