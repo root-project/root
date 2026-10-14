@@ -8,3 +8,4 @@ ExternalProject_Add(
     SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/distribution
     TIMEOUT 600
 )
+install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/distribution/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/distribution/ COMPONENT libraries FILES_MATCHING PATTERN "*")
