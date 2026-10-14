@@ -918,7 +918,7 @@ TGuiBldDragManager::TGuiBldDragManager() : TVirtualDragManager() ,
    TString tmpfile = gSystem->TempDirectory();
    fPasteFileName = TString::Format("RootGuiBldClipboard%d.C", gSystem->GetPid());
    gSystem->PrependPathName(tmpfile.Data(), fPasteFileName);
-   
+
 
    fTmpBuildFile = TString::Format("RootGuiBldTmpFile%d.C", gSystem->GetPid());
    gSystem->PrependPathName(tmpfile.Data(), fTmpBuildFile);
@@ -3294,12 +3294,9 @@ Bool_t TGuiBldDragManager::Save(const char *file)
 
    root->SetEditable(kFALSE);
 
-   static TImage *img = 0;
+   static std::unique_ptr<TImage> img;
 
-   if (!img) {
-      img = TImage::Create();
-   }
-   img->FromWindow(main->GetId());
+   img = TGWindow::CreateImageFromWindow(main->GetId());
 
    if (!file || !file[0]) {
       static TString dir(".");
@@ -3329,7 +3326,7 @@ Bool_t TGuiBldDragManager::Save(const char *file)
       main->SaveSource(fname.Data(), file ? "keep_names quiet" : "keep_names");
 
       if (fBuilder)
-         fBuilder->AddMacro(fname.Data(), img);
+         fBuilder->AddMacro(fname.Data(), img.get());
 
    } else {
       Int_t retval;
@@ -3363,12 +3360,9 @@ Bool_t TGuiBldDragManager::SaveFrame(const char *file)
    TGFrame *frame = fPimpl->fGrab;
    SetEditable(kFALSE);
 
-   static TImage *img = 0;
+   static std::unique_ptr<TImage> img;
 
-   if (!img) {
-      img = TImage::Create();
-   }
-   img->FromWindow(frame->GetId());
+   img = TGWindow::CreateImageFromWindow(frame->GetId());
 
    static TString dir(".");
    static Bool_t overwr = kFALSE;
@@ -3412,7 +3406,7 @@ Bool_t TGuiBldDragManager::SaveFrame(const char *file)
       HandleCopy(kFALSE);
       fStop = kTRUE;
 
-      fBuilder->AddMacro(fname.Data(), img);
+      fBuilder->AddMacro(fname.Data(), img.get());
    } else {
       Int_t retval;
       TString msg = TString::Format("file (%s) must have extension .C", fname.Data());
