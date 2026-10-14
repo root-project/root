@@ -250,6 +250,7 @@ public:
 
    virtual TArrayL  *GetPixels(Int_t /*x*/= 0, Int_t /*y*/= 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) { return nullptr; }
    virtual TArrayD  *GetArray(UInt_t /*w*/ = 0, UInt_t /*h*/ = 0, TImagePalette * = gWebImagePalette) { return nullptr; }
+   virtual Pixmap_t  GetX11Pixmap(Window_t /* root_window */) { return 0; }
    virtual Pixmap_t  GetPixmap() { return 0; }
    virtual Bool_t    GetMaskBits(UInt_t & /* width */, UInt_t & /* height */, std::vector<char> & /* bits */) { return kFALSE; }
    virtual Pixmap_t  GetMask() { return 0; }

@@ -2159,36 +2159,43 @@ void TASImage::StartPaletteEditor()
    TAttImage::StartPaletteEditor();
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns image X11 pixmap.
+/// Workrs only on the platforms with support of X11
+/// The pixmap must deleted by user.
+
+Pixmap_t TASImage::GetX11Pixmap(Window_t root_window)
+{
+   if (!InitVisual()) {
+      Warning("GetX11Pixmap", "Visual not initiated");
+      return 0;
+   }
+
+   ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
+
+   return (Pixmap_t)asimage2pixmap(fgVisual, root_window, img, nullptr, kTRUE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// DEPRECATED. Method left for backward compatibility and will be removed in ROOT7!
 /// Returns image pixmap.
 /// The pixmap must deleted by user.
 
 Pixmap_t TASImage::GetPixmap()
 {
-   if (!InitVisual()) {
-      Warning("GetPixmap", "Visual not initiated");
+   static Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
+
+   if (x11)
+      return GetX11Pixmap(gVirtualX->GetDefaultRootWindow());
+
+   auto argb = GetArgbArray();
+   if (!argb) {
+      Error("GetPixmap", "ARGB array is not exists");
       return 0;
    }
 
-   Pixmap_t ret;
-
-   ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
-
-   static int x11 = -1;
-   if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
-
-   if (x11) {   // use builtin version
-      ret = (Pixmap_t)asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(),
-                                       img, nullptr, kTRUE);
-   } else {
-      if (!fImage->alt.argb32) {
-         BeginPaint();
-      }
-      ret = gVirtualX->CreatePixmapFromData((unsigned char*)fImage->alt.argb32,
-                                             fImage->width, fImage->height);
-   }
-
-   return ret;
+   return gVirtualX->CreatePixmapFromData((unsigned char*) argb, GetScaledWidth(), GetScaledHeight());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
