@@ -57,7 +57,7 @@ TGIcon::TGIcon(const TGWindow *p, const char *image) : TGFrame(p, 1, 1)
    fImage = TImage::Open(path);
    if (fImage) {
       fPic = fClient->GetPicturePool()->GetPicture(gSystem->BaseName(path),
-                                   fImage->GetPixmap(), fImage->GetMask());
+                                   GetImagePixmap(fImage), GetImageMask(fImage));
       TGFrame::Resize(fImage->GetWidth(), fImage->GetHeight());
    }
    SetWindowName();
@@ -155,7 +155,7 @@ void TGIcon::Resize(UInt_t w, UInt_t h)
 
    fImage->Scale(w - 2*border, h - 2*border);
    fPic = fClient->GetPicturePool()->GetPicture(fImage->GetName(),
-                                                fImage->GetPixmap(), fImage->GetMask());
+                                                GetImagePixmap(fImage), GetImageMask(fImage));
    DoRedraw();
 }
 

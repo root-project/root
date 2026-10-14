@@ -1833,7 +1833,7 @@ void TGMainFrame::SetIconPixmap(char **xpm_array)
    TImage *img = TImage::Create();
    if (!img) return;
    img->SetImageBuffer(xpm_array, TImage::kXpm);
-   Pixmap_t pic = img->GetPixmap();
+   Pixmap_t pic = GetImagePixmap(img);
    if (pic) {
       gVirtualX->SetIconPixmap(fId, pic);
    } else {
