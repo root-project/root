@@ -106,7 +106,6 @@ public:
    const char *GetMsgPrefix() const { return fMsgPrefix; }
    void        SetMsgPrefix(const char *prefix);
    const char *GetMergeOptions() { return fMergeOptions; }
-   void        SetMergeOptions(const TString &options) { fMergeOptions = options; }
    void        SetMergeOptions(const std::string_view &options) { fMergeOptions = options; }
    void        SetIOFeatures(ROOT::TIOFeatures &features) { fIOFeatures = &features; }
    /// Add object names for PartialMerge().

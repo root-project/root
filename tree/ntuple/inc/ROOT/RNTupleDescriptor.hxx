@@ -1626,22 +1626,22 @@ public:
       fField.fProjectionSourceId = id;
       return *this;
    }
-   RFieldDescriptorBuilder &FieldName(const std::string &fieldName)
+   RFieldDescriptorBuilder &FieldName(std::string_view fieldName)
    {
       fField.fFieldName = fStringPool->Intern(fieldName);
       return *this;
    }
-   RFieldDescriptorBuilder &FieldDescription(const std::string &fieldDescription)
+   RFieldDescriptorBuilder &FieldDescription(std::string_view fieldDescription)
    {
       fField.fFieldDescription = fStringPool->Intern(fieldDescription);
       return *this;
    }
-   RFieldDescriptorBuilder &TypeName(const std::string &typeName)
+   RFieldDescriptorBuilder &TypeName(std::string_view typeName)
    {
       fField.fTypeName = fStringPool->Intern(typeName);
       return *this;
    }
-   RFieldDescriptorBuilder &TypeAlias(const std::string &typeAlias)
+   RFieldDescriptorBuilder &TypeAlias(std::string_view typeAlias)
    {
       fField.fTypeAlias = fStringPool->Intern(typeAlias);
       return *this;
@@ -1812,12 +1812,12 @@ public:
       fExtraTypeInfo.fTypeVersion = typeVersion;
       return *this;
    }
-   RExtraTypeInfoDescriptorBuilder &TypeName(const std::string &typeName)
+   RExtraTypeInfoDescriptorBuilder &TypeName(std::string_view typeName)
    {
       fExtraTypeInfo.fTypeName = typeName;
       return *this;
    }
-   RExtraTypeInfoDescriptorBuilder &Content(const std::string &content)
+   RExtraTypeInfoDescriptorBuilder &Content(std::string_view content)
    {
       fExtraTypeInfo.fContent = content;
       return *this;

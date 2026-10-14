@@ -59,7 +59,7 @@ std::string ROOT::Experimental::Detail::RNTuplePerfCounter::ToString() const
    return fName + kFieldSeparator + fUnit + kFieldSeparator + fDescription + kFieldSeparator + GetValueAsString();
 }
 
-bool ROOT::Experimental::Detail::RNTupleMetrics::Contains(const std::string &name) const
+bool ROOT::Experimental::Detail::RNTupleMetrics::Contains(std::string_view name) const
 {
   return GetLocalCounter(name) != nullptr;
 }
@@ -94,7 +94,7 @@ ROOT::Experimental::Detail::RNTupleMetrics::GetCounter(std::string_view name) co
    return nullptr;
 }
 
-void ROOT::Experimental::Detail::RNTupleMetrics::Print(std::ostream &output, const std::string &prefix) const
+void ROOT::Experimental::Detail::RNTupleMetrics::Print(std::ostream &output, std::string_view prefix) const
 {
    if (!fIsEnabled) {
       output << fName << " metrics disabled!\n";
@@ -105,7 +105,7 @@ void ROOT::Experimental::Detail::RNTupleMetrics::Print(std::ostream &output, con
       output << prefix << fName << kNamespaceSeparator << c->ToString() << '\n';
    }
    for (const auto c : fObservedMetrics) {
-      c->Print(output, prefix + fName + ".");
+      c->Print(output, std::string(prefix) + fName + ".");
    }
 }
 
