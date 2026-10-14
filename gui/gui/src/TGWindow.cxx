@@ -32,9 +32,11 @@ ROOT GUI Window base class.
 #include "TGWindow.h"
 #include <iostream>
 #include "TVirtualX.h"
+#include "TVirtualPad.h"
 #include "TApplication.h"
 #include "TError.h"
 #include "TSystem.h"
+#include "TImage.h"
 
 
 Int_t TGWindow::fgCounter = 0;
@@ -353,4 +355,48 @@ const char *TGWindow::GetName()const
       w->fName.ReplaceAll(":", "");
 
    return fName.Data();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create TImage object with content of displayed window
+
+std::unique_ptr<TImage> TGWindow::CreateImageFromWindow(Drawable_t wid)
+{
+   std::unique_ptr<TImage> img(TImage::Create());
+   if (!img) {
+      ::Error("TGWindow::CreateImageFromWindow", "Fail to create TImage object");
+      return nullptr;
+   }
+   gVirtualX->Update(1);
+   if (!gThreadXAR) {
+      gSystem->Sleep(10);
+      gSystem->ProcessEvents();
+      gSystem->Sleep(10);
+      gSystem->ProcessEvents();
+   }
+
+   Int_t x = 0, y = 0;
+   UInt_t w = 0, h = 0;
+
+   gVirtualX->GetWindowSize(wid, x, y, w, h);
+
+   (void) x; // position of window is not used
+   (void) y;
+
+   static Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
+
+   if (x11) {
+      img->FromX11Window(wid, 0, 0, w, h);
+   } else {
+      unsigned char *bits = gVirtualX->GetColorBits(wid, 0, 0, w, h);
+      if (!bits) {
+        ::Error("TGWindow::CreateImageFromWindow", "Fail to extract color bits for specified window");
+        return nullptr;
+      }
+      img->FromBitmap(bits, w, h);
+      delete [] bits;
+   }
+
+   return img;
 }
