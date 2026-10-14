@@ -264,11 +264,19 @@ if (UNIX)
     endif()
   endif()
 
+  # If CMAKE_CXX_FLAGS selects the C++ standard library (e.g. -stdlib=libc++
+  # with a clang that defaults to libstdc++), cling has to look up the headers
+  # of that library, not the ones of the compiler default.
+  string(REGEX MATCH "-stdlib=[^ ]+" cling_cxx_stdlib "${CMAKE_CXX_FLAGS}")
+  if (cling_cxx_stdlib AND CLING_CXX_RLTV)
+    set(CLING_CXX_RLTV "${CLING_CXX_RLTV} ${cling_cxx_stdlib}")
+  endif()
+
   if(NOT CLING_CXX_HEADERS)
     if (CLING_CXX_PATH)
-      execute_process(COMMAND ${CLING_CXX_PATH} ${CLING_CXX_PATH_ARGS} -xc++ -E -v /dev/null
+      execute_process(COMMAND ${CLING_CXX_PATH} ${CLING_CXX_PATH_ARGS} ${cling_cxx_stdlib} -xc++ -E -v /dev/null
                       OUTPUT_QUIET ERROR_VARIABLE CLING_CXX_HEADERS)
-      set(CLING_CXX_PATH "${CLING_CXX_PATH} ${CLING_CXX_PATH_ARGS}")
+      set(CLING_CXX_PATH "${CLING_CXX_PATH} ${CLING_CXX_PATH_ARGS} ${cling_cxx_stdlib}")
     else()
       # convert CMAKE_CXX_FLAGS to a list for execute_process
       string(REPLACE "-fdiagnostics-color=always" "" cling_tmp_arg_list ${CMAKE_CXX_FLAGS})
