@@ -15,37 +15,38 @@ import ROOT
 
 import os
 
-def write_rntuple_to_rfile(fileName):
-   # Create a new ROOT file for writing
-   with ROOT.Experimental.RFile.Recreate(fileName) as file:
-      # Define the RNTuple schema
-      model = ROOT.RNTupleModel.Create()
-      model.MakeField["int"]("intField")
-      # Create an RNTupleWriter to append to the RFile
-      with ROOT.RNTupleWriter.Append(model, "ntuple", file) as writer:
-         entry = writer.CreateEntry()
-         
-         # Fill the RNTuple with data
-         for i in range(10):
-            entry["intField"] = i
-            writer.Fill(entry)
 
-         # `writer` will write the data to file upon exiting the with statement....
-      # ...then `file` will write itself to disk in turn when exiting the outer with statement.
+def write_rntuple_to_rfile(fileName):
+    # Create a new ROOT file for writing
+    with ROOT.Experimental.RFile.Recreate(fileName) as file:
+        # Define the RNTuple schema
+        model = ROOT.RNTupleModel.Create()
+        model.MakeField["int"]("intField")
+        # Create an RNTupleWriter to append to the RFile
+        with ROOT.RNTupleWriter.Append(model, "ntuple", file) as writer:
+            entry = writer.CreateEntry()
+
+            # Fill the RNTuple with data
+            for i in range(10):
+                entry["intField"] = i
+                writer.Fill(entry)
+
+            # `writer` will write the data to file upon exiting the with statement....
+        # ...then `file` will write itself to disk in turn when exiting the outer with statement.
 
 
 def read_rntuple_from_rfile(fileName):
-   # Open an existing ROOT file for reading (will throw an exception if `fileName` cannot be read).
-   with ROOT.Experimental.RFile.Open(fileName) as file:
-      # Get back the RNTuple anchor from the file
-      rntuple = file.Get("ntuple")
+    # Open an existing ROOT file for reading (will throw an exception if `fileName` cannot be read).
+    with ROOT.Experimental.RFile.Open(fileName) as file:
+        # Get back the RNTuple anchor from the file
+        rntuple = file.Get("ntuple")
 
-      # Create an RNTupleReader from the anchor
-      with ROOT.RNTupleReader.Open(rntuple) as reader:
-         entry = reader.CreateEntry()
-         for i in reader.GetEntryRange():
-            reader.LoadEntry(i, entry)
-            print(f"value[{i}] = {entry['intField']}")
+        # Create an RNTupleReader from the anchor
+        with ROOT.RNTupleReader.Open(rntuple) as reader:
+            entry = reader.CreateEntry()
+            for i in reader.GetEntryRange():
+                reader.LoadEntry(i, entry)
+                print(f"value[{i}] = {entry['intField']}")
 
 
 fileName = "rfile_rntuple_py.root"
