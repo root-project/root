@@ -26,15 +26,24 @@ namespace ROOT {
           decltype(clang::Sema::MaybeODRUseExprs) fMaybeODRUseExprs;
           decltype(clang::Sema::FunctionScopes) fFunctionScopes;
           decltype(clang::Sema::UndefinedButUsed) fUndefinedButUsed;
+          // The start indices into FunctionScopes and InventedParameterInfos must
+          // follow the swap: when we are called during a template instantiation,
+          // Sema::ContextRAII has set them to the depth of the outer stack, which
+          // is past the end of our fresh FunctionScopes.
+          unsigned fFunctionScopesStart = 0;
+          unsigned fInventedParameterInfosStart;
           clang::Sema& fSema;
           void Swapem() {
              std::swap(fCleanup, fSema.Cleanup);
              std::swap(fExprCleanupObjects, fSema.ExprCleanupObjects);
              std::swap(fMaybeODRUseExprs, fSema.MaybeODRUseExprs);
              std::swap(fFunctionScopes, fSema.FunctionScopes);
+             std::swap(fFunctionScopesStart, fSema.FunctionScopesStart);
+             std::swap(fInventedParameterInfosStart, fSema.InventedParameterInfosStart);
              std::swap(fUndefinedButUsed, fSema.UndefinedButUsed);
           }
-          SemaExprCleanupsRAII(clang::Sema& S): fSema(S) {
+          SemaExprCleanupsRAII(clang::Sema& S):
+             fInventedParameterInfosStart(S.InventedParameterInfos.size()), fSema(S) {
              fFunctionScopes.push_back(new clang::sema::FunctionScopeInfo(S.Diags));
              Swapem();
           };
