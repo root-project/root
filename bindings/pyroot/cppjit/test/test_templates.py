@@ -1466,7 +1466,101 @@ class TestTEMPLATES:
         assert a.m([1, 2, 3])
         assert not a.m(42)
 
-    def test40_instantiation_failure_error_message(self):
+    def test40_annotated_callables_select_instantiation(self):
+            """Annotated Python callables each deduce their own instantiation"""
+    
+            import cppjit
+    
+            cppjit.cppdef("""\
+            #include <functional>
+            namespace AnnotatedCallables {
+            template <typename F>
+            auto call(F f) { return f(2.5); }
+    
+            int which(int (*f)(int)) { return 1000 + f(2); }
+            int which(int (*f)(float)) { return 2000 + f(2.5f); }
+    
+            double via_std_function(std::function<double(int)> f) { return f(3); }
+            template <typename T>
+            double via_std_function_t(std::function<double(int)> f, T x) { return f(x); }
+    
+            void run(void (*f)(int), int x) { f(x); }
+    
+            struct Holder {
+                Holder(std::function<double(int)> f) : value(f(4)) {}
+                double value;
+            };
+            double via_holder(const Holder& h) { return h.value; }
+            }""")
+    
+            ns = cppjit.gbl.AnnotatedCallables
+    
+            def A(x: int) -> int:
+                return x * 10
+    
+            def B(x: float) -> int:
+                return int(x * 2)
+    
+            def C(x: float) -> float:
+                return x * 2.0
+    
+            def D(x):
+                return x
+    
+            class K:
+                def m(self, x: float) -> float:
+                    return x * 3
+    
+            assert ns.call(A) == 20
+    
+            # an unannotated callable cannot be wrapped, as the signature is not
+            # avaiable on both C++ nor Python side
+            with raises(Exception):
+                ns.call(D)
+    
+            # the first instantiation (from A) used to be reused for B, which was
+            # then called with its argument truncated to int; repeat to also cover
+            # the memoized dispatch
+            for _ in range(2):
+                assert ns.call(A) == 20
+                assert ns.call(B) == 5
+                assert ns.call(C) == 5.0
+                assert ns.call(K().m) == 7.5
+    
+            assert ns.call["int (*)(float)"](B) == 5
+    
+            # non-template overloads likewise go by the annotations
+            for _ in range(2):
+                assert ns.which(A) == 1020
+                assert ns.which(B) == 2005
+    
+            # std::function takes any callable whose arguments and result convert
+            def F(x: int) -> float:
+                return x * 1.5
+    
+            assert ns.via_std_function(F) == 4.5
+            assert ns.via_std_function(A) == 30.0
+    
+            # also when selecting among known instantiations, which disallows
+            # implicit conversions
+            assert ns.via_std_function_t["int"](F, 2) == 3.0
+            assert ns.via_std_function_t(F, 2) == 3.0
+            assert ns.via_std_function_t(A, 2) == 20.0
+    
+            # or when converting implicitly through a constructor
+            assert ns.via_holder(F) == 6.0
+            assert ns.via_holder(A) == 40.0
+    
+            # a None annotation declares a void return
+            seen = []
+    
+            def G(x: int) -> None:
+                seen.append(x)
+    
+            ns.run(G, 7)
+            assert seen == [7]
+
+    def test41_instantiation_failure_error_message(self):
         """Rejected instantiation names the template, not garbage"""
 
         import cppjit

@@ -423,6 +423,45 @@ static inline std::string AnnotationAsText(PyObject* pyobj) {
   return PyUnicode_AsUTF8(pyobj);
 }
 
+std::string cpyrt::Utility::GetPyCallableAnnotation(PyObject* pyobj) {
+    assert(PyCallable_Check(pyobj));
+
+    PyObject* annot = PyObject_GetAttr(pyobj, PyStrings::gAnnotations);
+    if (!annot) {
+      PyErr_Clear();
+      return {};
+    }
+
+    if (!PyDict_Check(annot)) {
+      PyErr_Clear();
+      Py_DECREF(annot);
+      return {};
+    }
+    
+    PyObject* ret = PyDict_GetItemString(annot, "return");
+    if (!ret) {
+      Py_DECREF(annot);
+      return {};
+    }
+
+    // dict is ordered, with the last value being the return type
+    std::ostringstream tpn;
+    tpn << (CPPScope_Check(ret) ? ClassName(ret) : AnnotationAsText(ret))
+        << " (*)(";
+
+    PyObject* values = PyDict_Values(annot);
+    for (Py_ssize_t i = 0; i < (PyList_GET_SIZE(values) - 1); ++i) {
+      if (i)
+        tpn << ", ";
+      PyObject* item = PyList_GET_ITEM(values, i);
+      tpn << (CPPScope_Check(item) ? full_scope(ClassName(item)) : AnnotationAsText(item));
+    }
+    tpn << ')';
+    Py_DECREF(values);
+    Py_DECREF(annot);
+    return tpn.str();
+}
+
 bool cpyrt::Utility::AddTypeName(std::string& tmpl_name, PyObject* tn,
                                  PyObject* arg,
                                  cpyrt::Utility::ArgPreference pref,
@@ -638,38 +677,11 @@ bool cpyrt::Utility::AddTypeName(std::string& tmpl_name, PyObject* tn,
 
   if (arg && PyCallable_Check(arg)) {
     // annotated/typed Python function
-    PyObject* annot = PyObject_GetAttr(arg, PyStrings::gAnnotations);
-    if (annot) {
-      if (PyDict_Check(annot)) {
-        PyObject* ret = PyDict_GetItemString(annot, "return");
-        if (ret) {
-          // dict is ordered, with the last value being the return type
-          std::ostringstream tpn;
-          tpn << (CPPScope_Check(ret) ? ClassName(ret) : AnnotationAsText(ret))
-              << " (*)(";
-
-          PyObject* values = PyDict_Values(annot);
-          for (Py_ssize_t i = 0; i < (PyList_GET_SIZE(values) - 1); ++i) {
-            if (i)
-              tpn << ", ";
-            PyObject* item = PyList_GET_ITEM(values, i);
-            tpn << (CPPScope_Check(item) ? full_scope(ClassName(item))
-                                         : AnnotationAsText(item));
-          }
-          Py_DECREF(values);
-
-          tpn << ')';
-          tmpl_name.append(tpn.str());
-
-          Py_DECREF(annot);
-          return true;
-
-        } else
-          PyErr_Clear();
-      }
-      Py_DECREF(annot);
-    } else
-      PyErr_Clear();
+    std::string sig = GetPyCallableAnnotation(arg);
+    if (!sig.empty()) {
+      tmpl_name.append(sig);
+      return true;
+    }
 
     // ctypes function pointer
     PyObject* argtypes = nullptr;

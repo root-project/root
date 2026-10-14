@@ -37,6 +37,7 @@ PyCallable* FindBinaryOperator(
 
 // helper for template classes and methods
 enum ArgPreference { kNone, kPointer, kReference, kValue };
+std::string GetPyCallableAnnotation(PyObject* pyobj);
 bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
                  ArgPreference pref, int* pcnt = nullptr);
 std::string ConstructTemplateArgs(PyObject* pyname, PyObject* tpArgs,

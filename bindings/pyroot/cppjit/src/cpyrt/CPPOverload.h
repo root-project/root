@@ -3,6 +3,7 @@
 
 // Bindings
 #include "PyCallable.h"
+#include "Utility.h"
 #include "cppjit_interop.h"
 
 // Standard
@@ -111,10 +112,20 @@ inline uint64_t HashSignature(cpyrt_PyArgs_t args, size_t nargsf) {
 #else
     hash += (uint64_t)(Py_REFCNT(pyobj) == 1 ? 1 : 0);
 #endif
-    if (CPPOverload_CheckExact(pyobj)) {
+    if (PyCallable_Check(pyobj)) {
       static std::hash<std::string> hash_string;
-      CPPOverload* overload = (CPPOverload*)pyobj;
-      hash += hash_string(overload->fMethodInfo->fName);
+      if (CPPOverload_CheckExact(pyobj)) {
+        CPPOverload* overload = (CPPOverload*)pyobj;
+        hash += hash_string(overload->fMethodInfo->fName);
+      } else {
+        // This is a python function. Hash based on the function annotation if
+        // avaiable, otherwise the object itself.
+        std::string sig = Utility::GetPyCallableAnnotation(pyobj);
+        if (!sig.empty())
+          hash += hash_string(sig);
+        else
+          hash += (uint64_t)pyobj;
+      }
     }
     hash += (hash << 10);
     hash ^= (hash >> 6);
