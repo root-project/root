@@ -285,7 +285,7 @@ unsigned char *ROOT::RRVecField::ResizeRVec(void *rvec, std::size_t nItems, std:
    // In the regime between 0 and 16 items, grow by doubling the size. Grow larger vectors by a factor 1.5 at most.
    // If the new size is larger than the grown capacity, set the new capacity to the new size (i.e., don't allocate
    // a larger capacity for vectors the are suddenly vastly larger than their previous state).
-   // TODO: investigate a longer look back window to avoid shrinking for an unusual small entry
+   // TODO: investigate a longer look back window to avoid shrinking for an unusual small entry and consider returning to average or median size.
    // (see TBasket::WriteReset()).
    static constexpr std::int32_t kSmallThreshold = 16;
    if ((std::int32_t(nItems) > *capacityPtr) || /* must grow */
