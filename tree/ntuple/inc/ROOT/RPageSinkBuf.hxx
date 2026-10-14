@@ -152,6 +152,10 @@ public:
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
 
+   std::uint32_t GetColumnProfileId(ROOT::DescriptorId_t physicalColumnId) const override;
+   std::uint32_t EnsureColumnProfile(ROOT::DescriptorId_t physicalColumnId, const ROOT::Internal::RPage &page,
+                                     const ROOT::Internal::RColumnElementBase &element) override;
+
    std::unique_ptr<RPageSink> CloneAsHidden(std::string_view name, const RNTupleWriteOptions &opts) const final;
 }; // RPageSinkBuf
 

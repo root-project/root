@@ -282,7 +282,8 @@ protected:
    /// compressionSetting is 0 (uncompressed) and the page is mappable and not checksummed, the returned sealed page
    /// will point directly to the input page buffer. Otherwise, the sealed page references fSealPageBuffer.  Thus,
    /// the buffer pointed to by the RSealedPage should never be freed.
-   RSealedPage SealPage(const ROOT::Internal::RPage &page, const ROOT::Internal::RColumnElementBase &element);
+   RSealedPage SealPage(const ROOT::Internal::RPage &page, const ROOT::Internal::RColumnElementBase &element,
+                        std::uint32_t profileId = 0);
 
 private:
    std::vector<Callback_t> fOnDatasetCommitCallbacks;
@@ -307,6 +308,14 @@ public:
    void DropColumn(ColumnHandle_t /*columnHandle*/) final {}
 
    bool IsInitialized() const { return fIsInitialized; }
+
+   /// Returns the custom compression profile id (if any) for the specified column
+   virtual std::uint32_t GetColumnProfileId(ROOT::DescriptorId_t /*physicalColumnId*/) const { return 0; }
+   virtual std::uint32_t EnsureColumnProfile(ROOT::DescriptorId_t physicalColumnId, const ROOT::Internal::RPage & /*page*/,
+                                             const ROOT::Internal::RColumnElementBase & /*element*/)
+   {
+      return GetColumnProfileId(physicalColumnId);
+   }
 
    /// Return the RNTupleDescriptor being constructed.
    virtual const ROOT::RNTupleDescriptor &GetDescriptor() const = 0;
@@ -341,6 +350,8 @@ public:
       /// If false, the output buffer must not point to the input page buffer, which would otherwise be an option
       /// if the page is mappable and should not be compressed
       bool fAllowAlias = false;
+      /// Custom compression profile ID (for learned profiles in LHC4 / Crystal)
+      std::uint32_t fCompressionProfileId = 0;
       /// Location for sealed output. The memory buffer has to be large enough.
       void *fBuffer = nullptr;
    };
@@ -469,6 +480,14 @@ protected:
 
    RFeatures fFeatures;
    ROOT::Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
+   bool fHeaderCommitted = false;
+   std::unique_ptr<std::mutex> fProfileMutex = std::make_unique<std::mutex>();
+   /// Learned compression profiles: uncompressed page bytes of a column collected until the training sample
+   /// (RNTupleWriteOptions::GetLearnedProfileSampleSize()) is complete. Indexed by physical column id; an entry is
+   /// released once the column's profile is trained.
+   std::unordered_map<ROOT::DescriptorId_t, std::vector<unsigned char>> fProfileSamples;
+   /// Sum of the bytes held in fProfileSamples
+   std::size_t fProfileSampleBytes = 0;
 
    /// Default I/O performance counters that get registered in fMetrics
    struct RCounters {
@@ -575,6 +594,18 @@ public:
    void CommitStagedClusters(std::span<RStagedCluster> clusters) final;
    void CommitClusterGroup() final;
    void CommitAttributeSet(std::string_view attrSetName, const RNTupleLink &attrAnchorInfo) final;
+
+   std::uint32_t GetColumnProfileId(ROOT::DescriptorId_t physicalColumnId) const override;
+   std::uint32_t EnsureColumnProfile(ROOT::DescriptorId_t physicalColumnId, const ROOT::Internal::RPage &page,
+                                     const ROOT::Internal::RColumnElementBase &element) override;
+   /// Trains and registers the learned profile of a column from `sample`; returns the profile id (0 if no model).
+   /// Requires fProfileMutex to be held and the header to be uncommitted.
+   std::uint32_t TrainColumnProfile(ROOT::DescriptorId_t physicalColumnId, const unsigned char *sample,
+                                    std::size_t sampleSize, int stride);
+   /// Trains the columns whose samples are still incomplete on what they have. Called before the header is
+   /// committed: the column compression contexts live in the header, so a profile has to exist by then or never.
+   void TrainPendingColumnProfiles();
+   void CommitHeader();
 }; // class RPagePersistentSink
 
 // clang-format off
@@ -907,6 +938,9 @@ public:
    /// Builds the streamer info records from the descriptor's extra type info section. This is necessary when
    /// connecting streamer fields so that emulated classes can be read.
    void RegisterStreamerInfos();
+
+   /// Registers learned compression profiles (LHC4 Crystal) in the codec runtime.
+   static void RegisterCompressionProfiles(const ROOT::RNTupleDescriptor &desc);
 
    /// Creates a new PageSource using the same underlying file as this but referring to a different RNTuple,
    /// described by `anchorLink`.

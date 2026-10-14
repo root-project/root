@@ -155,6 +155,8 @@ Re-encode an RNTuple with different page compressors:
                                  filters, same kind of compressor as Beam)
   <outputBase>_lhc4_crystal_profileN.root lhc4codec Crystal with pretrained per-column
                                  profiles (Real32=float, Index32/UInt32=poisson, Char=text)
+  <outputBase>_lhc4_crystal_learnedN.root lhc4codec Crystal with learned column
+                                 profiles stored once in metadata (header/footer)
   <outputBase>_lhc4_oracleN.root lhc4codec filters + Oracle (not raced by Auto)
   <outputBase>_lhc4_flashN.root  lhc4codec filters + Flash (byte-aligned LZ without an
                                  entropy stage, fastest decoder; not raced by Auto)
@@ -1084,6 +1086,7 @@ struct Variant {
    int fLHC4Codec = 0;
    bool fRequireCodecAvailable = false;
    bool fLHC4ProfilePerColumn = false;
+   bool fLearnedProfiles = false;
 };
 
 RNTupleWriteOptions MakeNativeWriteOptions(ROOT::RCompressionSetting::EAlgorithm::EValues algorithm, int level)
@@ -1119,6 +1122,10 @@ std::vector<Variant> MakeVariants(const RunOptions &runOpts)
    variants.push_back({"lhc4_crystal5", "_lhc4_crystal" + lv, lhc4Opts, true, true, kLHC4CodecCrystal, false});
    variants.push_back({"lhc4_crystal_profile5", "_lhc4_crystal_profile" + lv, lhc4Opts, true, true, kLHC4CodecCrystal,
                        false, true});
+   auto learnedOpts = lhc4Opts;
+   learnedOpts.SetEnableLearnedProfiles(true);
+   variants.push_back({"lhc4_crystal_learned5", "_lhc4_crystal_learned" + lv, learnedOpts, true, true,
+                       kLHC4CodecCrystal, false, true, true});
    variants.push_back({"lhc4_oracle5", "_lhc4_oracle" + lv, lhc4Opts, true, true, kLHC4CodecOracle, false});
    variants.push_back({"lhc4_flash5", "_lhc4_flash" + lv, lhc4Opts, true, true, kLHC4CodecFlash, false});
    variants.push_back({"lhc4_laser5", "_lhc4_laser" + lv, lhc4Opts, true, true, kLHC4CodecLaser, false});
@@ -1318,8 +1325,9 @@ std::optional<VariantResult> ReencodeVariant(const std::string &inputFile, const
             std::cerr << "Skipping " << variant.fLabel << ": lhc4codec backend is not available in this build\n";
          return std::nullopt;
       }
+      int effectiveProfile = variant.fLearnedProfiles ? kLHC4ProfileNone : profile;
       ConfigureLHC4FilterGlobals(variant.fLHC4Codec, variant.fEnableLHC4ByteFilters, autoMinGainPct, autoMaxLevel,
-                                 autoCodecs, profile, profileId, variant.fLHC4ProfilePerColumn);
+                                autoCodecs, effectiveProfile, profileId, variant.fLHC4ProfilePerColumn);
    } else {
       ResetLHC4Globals(autoMinGainPct, autoMaxLevel, autoCodecs);
    }

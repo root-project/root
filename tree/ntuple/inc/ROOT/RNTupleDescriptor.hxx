@@ -31,6 +31,7 @@
 #include <memory>
 #include <optional>
 #include <ostream>
+#include <span>
 #include <vector>
 #include <set>
 #include <string>
@@ -199,6 +200,55 @@ public:
 
 // clang-format off
 /**
+\class ROOT::RCompressionContext
+\ingroup NTuple
+\brief Compression context (trained profile model or dictionary) for a column
+*/
+// clang-format on
+class RCompressionContext {
+public:
+   enum class EType : std::uint16_t {
+      kUnknown = 0,
+      kLHC4CrystalProfile = 1,
+      kZstdDictionary = 2,
+   };
+
+private:
+   std::uint16_t fAlgorithm = 0;
+   EType fContextType = EType::kUnknown;
+   std::vector<unsigned char> fPayload;
+
+public:
+   RCompressionContext() = default;
+   RCompressionContext(std::uint16_t algo, EType type, std::vector<unsigned char> payload)
+      : fAlgorithm(algo), fContextType(type), fPayload(std::move(payload)) {}
+
+   std::uint16_t GetAlgorithm() const { return fAlgorithm; }
+   EType GetContextType() const { return fContextType; }
+   std::span<const unsigned char> GetPayload() const { return fPayload; }
+   std::size_t GetSize() const { return fPayload.size(); }
+
+   std::uint32_t GetProfileId() const
+   {
+      if (fPayload.empty())
+         return 0;
+      std::uint32_t hash = 2166136261u;
+      for (auto b : fPayload) {
+         hash ^= b;
+         hash *= 16777619u;
+      }
+      return 256u + (hash & 0x7FFFFFFFu);
+   }
+
+   bool operator==(const RCompressionContext &other) const
+   {
+      return fAlgorithm == other.fAlgorithm && fContextType == other.fContextType && fPayload == other.fPayload;
+   }
+   bool operator!=(const RCompressionContext &other) const { return !(*this == other); }
+};
+
+// clang-format off
+/**
 \class ROOT::RColumnDescriptor
 \ingroup NTuple
 \brief Metadata stored for every column of an RNTuple
@@ -243,6 +293,8 @@ private:
    ROOT::ENTupleColumnType fType = ROOT::ENTupleColumnType::kUnknown;
    /// Optional value range (used e.g. by quantized real fields)
    std::optional<RValueRange> fValueRange;
+   /// Optional compression context (trained profile model or dictionary)
+   std::optional<RCompressionContext> fCompressionContext;
 
 public:
    RColumnDescriptor() = default;
@@ -264,6 +316,7 @@ public:
    std::uint16_t GetBitsOnStorage() const { return fBitsOnStorage; }
    ROOT::ENTupleColumnType GetType() const { return fType; }
    std::optional<RValueRange> GetValueRange() const { return fValueRange; }
+   const std::optional<RCompressionContext> &GetCompressionContext() const { return fCompressionContext; }
    bool IsAliasColumn() const { return fPhysicalColumnId != fLogicalColumnId; }
    bool IsDeferredColumn() const { return fFirstElementIndex != 0; }
    bool IsSuppressedDeferredColumn() const { return fFirstElementIndex < 0; }
@@ -784,6 +837,8 @@ public:
       /// in the first ntuple and by Real32 in the second.
       /// Added in version 1.1.0.0 of the binary format.
       kFeatureFlag_NestedDeferredColumns = 0,
+      /// Signals that the RNTuple contains at least one column with a compression context (e.g. trained Crystal profile or Zstd dictionary).
+      kFeatureFlag_CompressionContext = 1,
       // Insert new feature flags here, with contiguous values. If at any point a "hole" appears in the valid feature
       // flags values, the check in RNTupleSerialize must be updated.
 
@@ -1490,6 +1545,16 @@ public:
       fColumn.fValueRange = valueRange;
       return *this;
    }
+   RColumnDescriptorBuilder &CompressionContext(RCompressionContext context)
+   {
+      fColumn.fCompressionContext = std::move(context);
+      return *this;
+   }
+   RColumnDescriptorBuilder &CompressionContext(std::optional<RCompressionContext> context)
+   {
+      fColumn.fCompressionContext = std::move(context);
+      return *this;
+   }
    ROOT::DescriptorId_t GetFieldId() const { return fColumn.fFieldId; }
    ROOT::DescriptorId_t GetRepresentationIndex() const { return fColumn.fRepresentationIndex; }
    /// Attempt to make a column descriptor. This may fail if the column
@@ -1800,6 +1865,7 @@ public:
    // The field that the column belongs to has to be already available. For fields with multiple columns,
    // the columns need to be added in order of the column index
    RResult<void> AddColumn(RColumnDescriptor &&columnDesc);
+   void SetColumnCompressionContext(ROOT::DescriptorId_t columnId, RCompressionContext ctx);
 
    RResult<void> AddClusterGroup(RClusterGroupDescriptor &&clusterGroup);
    RResult<void> AddCluster(RClusterDescriptor &&clusterDesc);

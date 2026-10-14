@@ -11,6 +11,7 @@
 #include "ZipLHC4.h"
 
 #include "lhc4codec/lhc4codec.hpp"
+#include "lhc4codec/lhc4codec_c.h"
 
 #include <atomic>
 #include <cstddef>
@@ -359,12 +360,39 @@ static int EffectiveLHC4Profile()
 
 extern "C" int R__LHC4TrainAndRegisterProfile(unsigned profileId, const void *sample, size_t sampleSize, int stride)
 {
+   return R__LHC4TrainAndRegisterProfileLevel(profileId, sample, sampleSize, stride, 5);
+}
+
+extern "C" int R__LHC4TrainAndRegisterProfileLevel(unsigned profileId, const void *sample, size_t sampleSize, int stride, int level)
+{
    if (!sample || sampleSize == 0)
       return 0;
    return lhc4codec::train_and_register_profile(
-             profileId, std::span<const std::byte>(static_cast<const std::byte *>(sample), sampleSize), stride)
+             profileId, std::span<const std::byte>(static_cast<const std::byte *>(sample), sampleSize), stride, level)
              ? 1
              : 0;
+}
+
+extern "C" int R__LHC4TrainProfileModel(const void *sample, size_t sampleSize, int stride,
+                                        void *outModel, size_t *outModelSize)
+{
+   return R__LHC4TrainProfileModelLevel(sample, sampleSize, stride, 5, outModel, outModelSize);
+}
+
+extern "C" int R__LHC4TrainProfileModelLevel(const void *sample, size_t sampleSize, int stride, int level,
+                                             void *outModel, size_t *outModelSize)
+{
+   return lhc4codec_train_profile_model_level(sample, sampleSize, stride, level, outModel, outModelSize);
+}
+
+extern "C" int R__LHC4RegisterProfileModel(unsigned profileId, const void *modelBytes, size_t modelSize)
+{
+   return lhc4codec_register_profile_model(profileId, modelBytes, modelSize);
+}
+
+extern "C" int R__LHC4ExportProfileModel(unsigned profileId, void *outModel, size_t *outModelSize)
+{
+   return lhc4codec_export_profile_model(profileId, outModel, outModelSize);
 }
 
 extern "C" void R__SetLHC4Bwt(int enable)
@@ -400,8 +428,12 @@ static lhc4codec::CompressParams MakeLHC4CompressParams(int cxlevel)
    params.auto_max_level = R__LHC4AutoMaxLevel != 0;
    params.auto_codecs = R__LHC4AutoCodecs;
    params.profile = static_cast<lhc4codec::Profile>(EffectiveLHC4Profile());
-   // A per-call profile is a builtin id. The process-wide id applies only to the forced profile.
-   params.profile_id = R__LHC4CallProfile >= 0 ? 0u : R__LHC4ProfileId;
+   // A per-call profile is a builtin id unless call profile ID is set. The process-wide id applies only to the forced profile.
+   if (R__LHC4CallProfile >= 0) {
+      params.profile_id = R__LHC4CallProfileId ? R__LHC4CallProfileId : static_cast<unsigned>(R__LHC4CallProfile);
+   } else {
+      params.profile_id = R__LHC4ProfileId;
+   }
    return params;
 }
 
@@ -542,6 +574,8 @@ extern "C" void R__GetLHC4CompressStatsSummary(R__LHC4CompressStatsSummary *out)
    out->no_transform_pages = stats.no_transform_pages;
    out->stored_fallback_pages = stats.stored_fallback_pages;
    out->plain_pages = stats.plain_pages;
+   out->crystal_profile_blocks = stats.crystal_profile_blocks;
+   out->crystal_profile_escapes = stats.crystal_profile_escapes;
 }
 
 extern "C" void R__GetLHC4AutoCodecStatsSummary(R__LHC4AutoCodecStatsSummary *out)

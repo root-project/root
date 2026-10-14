@@ -78,6 +78,7 @@ public:
 
    static constexpr std::uint16_t kFlagDeferredColumn = 0x01;
    static constexpr std::uint16_t kFlagHasValueRange = 0x02;
+   static constexpr std::uint16_t kFlagHasCompressionContext = 0x04;
 
    static constexpr ROOT::DescriptorId_t kZeroFieldId = std::uint64_t(-2);
 

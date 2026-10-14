@@ -254,6 +254,8 @@ ROOT::RResult<std::uint32_t> SerializePhysicalColumn(const ROOT::RColumnDescript
       flags |= RNTupleSerializer::kFlagDeferredColumn;
    if (columnDesc.GetValueRange().has_value())
       flags |= RNTupleSerializer::kFlagHasValueRange;
+   if (columnDesc.GetCompressionContext().has_value())
+      flags |= RNTupleSerializer::kFlagHasCompressionContext;
    std::int64_t firstElementIdx = columnDesc.GetFirstElementIndex();
    if (columnDesc.IsSuppressedDeferredColumn())
       firstElementIdx = -firstElementIdx;
@@ -269,6 +271,16 @@ ROOT::RResult<std::uint32_t> SerializePhysicalColumn(const ROOT::RColumnDescript
       memcpy(&intMax, &max, sizeof(max));
       pos += RNTupleSerializer::SerializeUInt64(intMin, *where);
       pos += RNTupleSerializer::SerializeUInt64(intMax, *where);
+   }
+   if (flags & RNTupleSerializer::kFlagHasCompressionContext) {
+      const auto &ctx = *columnDesc.GetCompressionContext();
+      pos += RNTupleSerializer::SerializeUInt16(ctx.GetAlgorithm(), *where);
+      pos += RNTupleSerializer::SerializeUInt16(static_cast<std::uint16_t>(ctx.GetContextType()), *where);
+      pos += RNTupleSerializer::SerializeUInt32(ctx.GetSize(), *where);
+      if (*where != nullptr) {
+         memcpy(pos, ctx.GetPayload().data(), ctx.GetSize());
+      }
+      pos += ctx.GetSize();
    }
 
    if (auto res = RNTupleSerializer::SerializeFramePostscript(buffer ? base : nullptr, pos - base)) {
@@ -374,6 +386,24 @@ DeserializeColumn(const void *buffer, std::uint64_t bufSize, ROOT::Internal::RCo
       memcpy(&min, &minInt, sizeof(min));
       memcpy(&max, &maxInt, sizeof(max));
       columnDesc.ValueRange(min, max);
+   }
+   if (flags & RNTupleSerializer::kFlagHasCompressionContext) {
+      if (fnFrameSizeLeft() < 2 * sizeof(std::uint16_t) + sizeof(std::uint32_t))
+         return R__FAIL("column record frame too short");
+      std::uint16_t algo;
+      std::uint16_t ctxType;
+      std::uint32_t ctxSize;
+      bytes += RNTupleSerializer::DeserializeUInt16(bytes, algo);
+      bytes += RNTupleSerializer::DeserializeUInt16(bytes, ctxType);
+      bytes += RNTupleSerializer::DeserializeUInt32(bytes, ctxSize);
+      if (fnFrameSizeLeft() < ctxSize)
+         return R__FAIL("column record frame too short");
+      std::vector<unsigned char> payload(ctxSize);
+      if (ctxSize > 0) {
+         memcpy(payload.data(), bytes, ctxSize);
+         bytes += ctxSize;
+      }
+      columnDesc.CompressionContext(ROOT::RCompressionContext(algo, static_cast<ROOT::RCompressionContext::EType>(ctxType), std::move(payload)));
    }
 
    columnDesc.FieldId(fieldId).BitsOnStorage(bitsOnStorage).Type(type).RepresentationIndex(representationIndex);

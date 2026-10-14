@@ -136,6 +136,8 @@ Convert a TTree into RNTuple files:
                                  filters, same kind of compressor as Beam)
   <outputBase>_lhc4_crystal_profileN.root lhc4codec Crystal with pretrained per-column
                                  profiles (Real32=float, Index32/UInt32=poisson, Char=text)
+  <outputBase>_lhc4_crystal_learnedN.root lhc4codec Crystal with learned column
+                                 profiles stored once in metadata (header/footer)
   <outputBase>_lhc4_oracleN.root lhc4codec filters + Oracle (not raced by Auto)
   <outputBase>_lhc4_flashN.root  lhc4codec filters + Flash (byte-aligned LZ without an
                                  entropy stage, fastest decoder; not raced by Auto)
@@ -601,7 +603,8 @@ int TrailingVariantLevel(const std::string &label)
 
 bool IsDedicatedLevelVariant(const std::string &label)
 {
-   return label == "lhc4_crystal7" || label == "lhc4_crystal9";
+   return label == "lhc4_crystal7" || label == "lhc4_crystal9" || label == "lhc4_crystal_learned7" ||
+          label == "lhc4_crystal_learned9";
 }
 
 std::string TrimCopy(const std::string &text)
@@ -1084,6 +1087,7 @@ struct Variant {
    int fLHC4Codec = 0;
    bool fRequireCodecAvailable = false;
    bool fLHC4ProfilePerColumn = false;
+   bool fLearnedProfiles = false;
 };
 
 const Variant *FindVariant(const std::vector<Variant> &variants, const std::string &label);
@@ -1121,14 +1125,26 @@ std::vector<Variant> MakeVariants(const RunOptions &runOpts)
    variants.push_back({"lhc4_crystal5", "_lhc4_crystal" + lv, lhc4Opts, true, true, kLHC4CodecCrystal, false});
    variants.push_back({"lhc4_crystal_profile5", "_lhc4_crystal_profile" + lv, lhc4Opts, true, true, kLHC4CodecCrystal,
                        false, true});
+   auto learnedOpts5 = lhc4Opts;
+   learnedOpts5.SetEnableLearnedProfiles(true);
+   variants.push_back({"lhc4_crystal_learned5", "_lhc4_crystal_learned" + lv, learnedOpts5, true, true,
+                       kLHC4CodecCrystal, false, true, true});
 
    // Extra Crystal 7/9 comparison variants only at the default level so suffixes do not collide.
    if (kLevel == kDefaultLHC4Level) {
       const auto lhc4Opts7 = MakeLHC4WriteOptions(7, runOpts.fKeepColumnEncoding);
       variants.push_back({"lhc4_crystal7", "_lhc4_crystal7", lhc4Opts7, true, true, kLHC4CodecCrystal, false});
+      auto learnedOpts7 = lhc4Opts7;
+      learnedOpts7.SetEnableLearnedProfiles(true);
+      variants.push_back({"lhc4_crystal_learned7", "_lhc4_crystal_learned7", learnedOpts7, true, true, kLHC4CodecCrystal,
+                          false, true, true});
 
       const auto lhc4Opts9 = MakeLHC4WriteOptions(9, runOpts.fKeepColumnEncoding);
       variants.push_back({"lhc4_crystal9", "_lhc4_crystal9", lhc4Opts9, true, true, kLHC4CodecCrystal, false});
+      auto learnedOpts9 = lhc4Opts9;
+      learnedOpts9.SetEnableLearnedProfiles(true);
+      variants.push_back({"lhc4_crystal_learned9", "_lhc4_crystal_learned9", learnedOpts9, true, true, kLHC4CodecCrystal,
+                          false, true, true});
    }
 
    variants.push_back({"lhc4_oracle5", "_lhc4_oracle" + lv, lhc4Opts, true, true, kLHC4CodecOracle, false});
@@ -1208,8 +1224,9 @@ std::optional<VariantResult> ImportVariant(const std::string &inputFile, const s
             std::cerr << "Skipping " << variant.fLabel << ": lhc4codec backend is not available in this build\n";
          return std::nullopt;
       }
+      int effectiveProfile = variant.fLearnedProfiles ? kLHC4ProfileNone : profile;
       ConfigureLHC4FilterGlobals(variant.fLHC4Codec, variant.fEnableLHC4ByteFilters, autoMinGainPct, autoMaxLevel,
-                                 autoCodecs, profile, profileId, variant.fLHC4ProfilePerColumn);
+                                autoCodecs, effectiveProfile, profileId, variant.fLHC4ProfilePerColumn);
    } else {
       ResetLHC4Globals(autoMinGainPct, autoMaxLevel, autoCodecs);
    }
@@ -1257,6 +1274,19 @@ std::optional<VariantResult> ImportVariant(const std::string &inputFile, const s
 
    if (!quiet)
       std::cout << "  done\n";
+#ifdef R__HAS_LHC4CODEC
+   if (!quiet && variant.fUsesLHC4Globals) {
+      R__LHC4CompressStatsSummary stats{};
+      R__GetLHC4CompressStatsSummary(&stats);
+      if (const auto total = stats.crystal_profile_blocks + stats.crystal_profile_escapes; total > 0) {
+         std::cout << "  Crystal profile blocks: " << stats.crystal_profile_blocks << " coded with profile, "
+                   << stats.crystal_profile_escapes << " escaped to dynamic ("
+                   << FormatPct(100.0 * static_cast<double>(stats.crystal_profile_escapes) /
+                                static_cast<double>(total))
+                   << ")\n";
+      }
+   }
+#endif
 
    VariantResult result;
    result.fLabel = variant.fLabel;

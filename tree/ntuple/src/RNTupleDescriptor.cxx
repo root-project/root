@@ -155,7 +155,7 @@ bool ROOT::RColumnDescriptor::operator==(const RColumnDescriptor &other) const
    return fLogicalColumnId == other.fLogicalColumnId && fPhysicalColumnId == other.fPhysicalColumnId &&
           fBitsOnStorage == other.fBitsOnStorage && fType == other.fType && fFieldId == other.fFieldId &&
           fIndex == other.fIndex && fRepresentationIndex == other.fRepresentationIndex &&
-          fValueRange == other.fValueRange;
+          fValueRange == other.fValueRange && fCompressionContext == other.fCompressionContext;
 }
 
 ROOT::RColumnDescriptor ROOT::RColumnDescriptor::Clone() const
@@ -170,6 +170,7 @@ ROOT::RColumnDescriptor ROOT::RColumnDescriptor::Clone() const
    clone.fFirstElementIndex = fFirstElementIndex;
    clone.fRepresentationIndex = fRepresentationIndex;
    clone.fValueRange = fValueRange;
+   clone.fCompressionContext = fCompressionContext;
    return clone;
 }
 
@@ -1140,6 +1141,12 @@ void ROOT::Internal::RNTupleDescriptorBuilder::SetFeature(unsigned int flag)
    if (flag > 0 && flag % 64 == 0)
       throw RException(R__FAIL("invalid feature flag: " + std::to_string(flag)));
    fDescriptor.fFeatureFlags.insert(flag);
+}
+
+void ROOT::Internal::RNTupleDescriptorBuilder::SetColumnCompressionContext(ROOT::DescriptorId_t columnId,
+                                                                           RCompressionContext ctx)
+{
+   fDescriptor.fColumnDescriptors.at(columnId).fCompressionContext = std::move(ctx);
 }
 
 ROOT::RResult<ROOT::Experimental::RNTupleAttrSetDescriptor>

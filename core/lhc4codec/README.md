@@ -268,6 +268,21 @@ must be >= 5 and come from `R__LHC4TrainAndRegisterProfile()`.
 choice. `--profile float|poisson|monotonic|text|custom` forces that one model on
 `lhc4_crystal_profile5` only.
 
+### Learned column compression profiles (`lhc4_crystal_learned`)
+
+Rather than relying on hard-coded heuristics or paying the overhead of repeating dynamic
+frequency tables on every page (~1.5 KiB/page), RNTuple supports data-learned column
+compression profiles:
+- **Empirical Training**: Trained from initial column data (Cluster 0) using
+  `R__LHC4TrainProfileModelLevel(sample, n, stride, level, ...)` with configurable
+  levels (5, 7, 9) and order-1/2 context predictors (`C1`, `C2`, `Lat1`, `Trend`, `RecEq`).
+- **Metadata Persistence**: The trained model (130–550 bytes) is stored in the RNTuple
+  Header via `RCompressionContext` (Feature Flag `kFeatureFlag_CompressionContext`,
+  record flag `0x04`), eliminating per-page table headers.
+- **Precomputed Decoder Tables**: Decode tables (`dec_tab`, `q_scaled`, `DecLane`) are
+  precomputed once during profile registration and cached in `StaticProfileHolder`.
+  This delivers line-rate SIMD rANS decompression without per-page reconstruction overhead.
+
 Decompression does **not** need these flags; the inner frame type and filter path are
 restored automatically on read.
 

@@ -158,6 +158,7 @@ void ROOT::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const
 {
    auto colId = columnHandle.fPhysicalId;
    const auto &element = *columnHandle.fColumn->GetElement();
+   std::uint32_t profileId = EnsureColumnProfile(colId, page, element);
 
    // Safety: References are guaranteed to be valid until the element is destroyed. In other words, all buffered page
    // elements are valid until DropBufferedPages().
@@ -195,6 +196,7 @@ void ROOT::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const
       config.fPage = &page;
       config.fElement = &element;
       config.fCompressionSettings = GetWriteOptions().GetCompression();
+      config.fCompressionProfileId = profileId;
       config.fWriteChecksum = GetWriteOptions().GetEnablePageChecksums();
       config.fAllowAlias = false;
       config.fBuffer = zipItem.fBuf.get();
@@ -221,7 +223,7 @@ void ROOT::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const
    fCounters->fParallelZip.SetValue(1);
    // Thread safety: Each thread works on a distinct zipItem which owns its
    // compression buffer.
-   fTaskScheduler->AddTask([this, &zipItem, &sealedPage, &element, allocateBuf, shrinkSealedPage] {
+   fTaskScheduler->AddTask([this, &zipItem, &sealedPage, &element, allocateBuf, shrinkSealedPage, profileId] {
       // The task will consume the uncompressed page. Decrease the atomic counter early so that more work has arrived
       // when we are done.
       fBufferedUncompressed -= zipItem.fPage.GetNBytes();
@@ -231,6 +233,7 @@ void ROOT::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const
       config.fPage = &zipItem.fPage;
       config.fElement = &element;
       config.fCompressionSettings = GetWriteOptions().GetCompression();
+      config.fCompressionProfileId = profileId;
       config.fWriteChecksum = GetWriteOptions().GetEnablePageChecksums();
       // Make sure the page buffer is not aliased so that we can free the uncompressed page.
       config.fAllowAlias = false;
@@ -338,4 +341,16 @@ ROOT::Internal::RPageSinkBuf::CloneAsHidden(std::string_view name, const RNTuple
 void ROOT::Internal::RPageSinkBuf::CommitAttributeSet(std::string_view attrSetName, const RNTupleLink &attrAnchorInfo)
 {
    fInnerSink->CommitAttributeSet(attrSetName, attrAnchorInfo);
+}
+
+std::uint32_t ROOT::Internal::RPageSinkBuf::GetColumnProfileId(ROOT::DescriptorId_t physicalColumnId) const
+{
+   return fInnerSink ? fInnerSink->GetColumnProfileId(physicalColumnId) : 0;
+}
+
+std::uint32_t ROOT::Internal::RPageSinkBuf::EnsureColumnProfile(ROOT::DescriptorId_t physicalColumnId,
+                                                               const ROOT::Internal::RPage &page,
+                                                               const ROOT::Internal::RColumnElementBase &element)
+{
+   return fInnerSink ? fInnerSink->EnsureColumnProfile(physicalColumnId, page, element) : 0;
 }

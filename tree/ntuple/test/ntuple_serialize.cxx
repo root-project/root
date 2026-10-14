@@ -736,6 +736,68 @@ TEST(RNTuple, SerializeHeader)
    EXPECT_FALSE(desc.GetFieldDescriptor(ptFieldId).IsProjectedField());
 }
 
+TEST(RNTuple, SerializeHeaderCompressionContext)
+{
+   RNTupleDescriptorBuilder builder;
+   builder.SetVersionForWriting();
+   builder.SetNTuple("ntpl", "");
+   builder.SetFeature(ROOT::RNTupleDescriptor::kFeatureFlag_CompressionContext);
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(0)
+                       .FieldName("")
+                       .Structure(ROOT::ENTupleStructure::kRecord)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(1)
+                       .FieldName("pt")
+                       .Structure(ROOT::ENTupleStructure::kPlain)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddFieldLink(0, 1);
+
+   std::vector<unsigned char> fakePayload = {0x04, 0x01, 0x02, 0x03, 0x04, 0xAA, 0xBB};
+   ROOT::RCompressionContext compCtx(
+      ROOT::RCompressionSetting::EAlgorithm::kLHC4,
+      ROOT::RCompressionContext::EType::kLHC4CrystalProfile,
+      fakePayload
+   );
+   EXPECT_GE(compCtx.GetProfileId(), 256u);
+
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(0)
+                        .PhysicalColumnId(0)
+                        .FieldId(1)
+                        .BitsOnStorage(32)
+                        .Type(ROOT::ENTupleColumnType::kReal32)
+                        .Index(0)
+                        .CompressionContext(compCtx)
+                        .MakeDescriptor()
+                        .Unwrap());
+
+   auto desc = builder.MoveDescriptor();
+   auto context = RNTupleSerializer::SerializeHeader(nullptr, desc).Unwrap();
+   EXPECT_GT(context.GetHeaderSize(), 0);
+   auto buffer = MakeUninitArray<unsigned char>(context.GetHeaderSize());
+   context = RNTupleSerializer::SerializeHeader(buffer.get(), desc).Unwrap();
+
+   RNTupleDescriptorBuilder readBuilder;
+   readBuilder.SetVersionForWriting();
+   RNTupleSerializer::DeserializeHeader(buffer.get(), context.GetHeaderSize(), readBuilder);
+
+   auto readDesc = readBuilder.MoveDescriptor();
+   auto readCol = readDesc.GetColumnDescriptor(0);
+   EXPECT_TRUE(readCol.GetCompressionContext().has_value());
+   EXPECT_EQ(readCol.GetCompressionContext()->GetAlgorithm(), ROOT::RCompressionSetting::EAlgorithm::kLHC4);
+   EXPECT_EQ(readCol.GetCompressionContext()->GetContextType(), ROOT::RCompressionContext::EType::kLHC4CrystalProfile);
+   EXPECT_EQ(readCol.GetCompressionContext()->GetSize(), fakePayload.size());
+   EXPECT_EQ(readCol.GetCompressionContext()->GetPayload().size(), fakePayload.size());
+   EXPECT_EQ(std::vector<unsigned char>(readCol.GetCompressionContext()->GetPayload().begin(),
+                                        readCol.GetCompressionContext()->GetPayload().end()),
+             fakePayload);
+   EXPECT_EQ(readCol.GetCompressionContext()->GetProfileId(), compCtx.GetProfileId());
+}
+
 TEST(RNTuple, SerializeFooter)
 {
    RNTupleDescriptorBuilder builder;

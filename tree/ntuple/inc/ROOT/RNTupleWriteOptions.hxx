@@ -218,6 +218,13 @@ protected:
    bool fEnablePageChecksums = true;
    bool fEnableSamePageMerging = true;
    bool fEnableColumnEncoding = true;
+   bool fEnableLearnedProfiles = false;
+   /// Uncompressed bytes of a column collected before its learned profile is trained. Pages written before the
+   /// sample is complete use the per-page (dynamic) Crystal model.
+   std::size_t fLearnedProfileSampleSize = 256 * 1024;
+   /// Lane-search level used to train learned profiles; the effective level is the maximum of this value and the
+   /// write level. Levels >= 7 run the exhaustive pair search (~10x the training time of level 6).
+   int fLearnedProfileTrainLevel = 6;
    /// Specifies the max size of a payload storeable into a single TKey. When writing an RNTuple to a ROOT file,
    /// any payload whose size exceeds this will be split into multiple keys.
    std::uint64_t fMaxKeySize = kDefaultMaxKeySize;
@@ -277,6 +284,15 @@ public:
    bool GetEnableColumnEncoding() const { return fEnableColumnEncoding; }
    void SetEnableColumnEncoding(bool val) { fEnableColumnEncoding = val; }
 
+   bool GetEnableLearnedProfiles() const { return fEnableLearnedProfiles; }
+   void SetEnableLearnedProfiles(bool val) { fEnableLearnedProfiles = val; }
+
+   std::size_t GetLearnedProfileSampleSize() const { return fLearnedProfileSampleSize; }
+   void SetLearnedProfileSampleSize(std::size_t val) { fLearnedProfileSampleSize = val; }
+
+   int GetLearnedProfileTrainLevel() const { return fLearnedProfileTrainLevel; }
+   void SetLearnedProfileTrainLevel(int val) { fLearnedProfileTrainLevel = val; }
+
    std::uint64_t GetMaxKeySize() const { return fMaxKeySize; }
 
    friend bool operator==(const RNTupleWriteOptions &lhs, const RNTupleWriteOptions &rhs)
@@ -289,7 +305,10 @@ public:
              lhs.fWriteBufferSize == rhs.fWriteBufferSize && lhs.fUseImplicitMT == rhs.fUseImplicitMT &&
              lhs.fEnablePageChecksums == rhs.fEnablePageChecksums &&
              lhs.fEnableSamePageMerging == rhs.fEnableSamePageMerging &&
-             lhs.fEnableColumnEncoding == rhs.fEnableColumnEncoding && lhs.fMaxKeySize == rhs.fMaxKeySize;
+             lhs.fEnableColumnEncoding == rhs.fEnableColumnEncoding &&
+             lhs.fEnableLearnedProfiles == rhs.fEnableLearnedProfiles &&
+             lhs.fLearnedProfileSampleSize == rhs.fLearnedProfileSampleSize &&
+             lhs.fLearnedProfileTrainLevel == rhs.fLearnedProfileTrainLevel && lhs.fMaxKeySize == rhs.fMaxKeySize;
    }
 
    friend bool operator!=(const RNTupleWriteOptions &lhs, const RNTupleWriteOptions &rhs) { return !(lhs == rhs); }

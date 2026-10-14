@@ -242,6 +242,8 @@ void ROOT::Internal::RPageSource::Attach(RNTupleSerializer::EDescriptorDeseriali
    descGuard.MoveIn(AttachImpl());
    fStructureBuffer.Reset();
 
+   RegisterCompressionProfiles(*descGuard);
+
    std::vector<unsigned char> buffer;
    for (const auto &cgDesc : descGuard->GetClusterGroupIterable()) {
       buffer.resize(cgDesc.GetPageListLength() + cgDesc.GetPageListLocator().GetNBytesOnStorage());
@@ -742,6 +744,26 @@ void ROOT::Internal::RPageSource::RegisterStreamerInfos()
    fHasStreamerInfosRegistered = true;
 }
 
+void ROOT::Internal::RPageSource::RegisterCompressionProfiles(const ROOT::RNTupleDescriptor &desc)
+{
+#ifdef R__HAS_LHC4CODEC
+   for (const auto &col : desc.GetColumnIterable()) {
+      if (const auto &ctxOpt = col.GetCompressionContext(); ctxOpt.has_value()) {
+         const auto &ctx = *ctxOpt;
+         if (ctx.GetAlgorithm() == ROOT::RCompressionSetting::EAlgorithm::kLHC4 &&
+             ctx.GetContextType() == ROOT::RCompressionContext::EType::kLHC4CrystalProfile) {
+            auto profileId = ctx.GetProfileId();
+            if (profileId != 0 && ctx.GetSize() > 0) {
+               R__LHC4RegisterProfileModel(profileId, ctx.GetPayload().data(), ctx.GetSize());
+            }
+         }
+      }
+   }
+#else
+   (void)desc;
+#endif
+}
+
 //------------------------------------------------------------------------------
 
 bool ROOT::Internal::RWritePageMemoryManager::RColumnInfo::operator>(const RColumnInfo &other) const
@@ -865,22 +887,71 @@ int LHC4ProfileForColumnType(ROOT::ENTupleColumnType type)
    }
 }
 
+/// Stride in bytes for empirical profile training based on column layout.
+unsigned DetermineStrideForColumnType(ROOT::ENTupleColumnType type)
+{
+   switch (type) {
+   case ROOT::ENTupleColumnType::kReal32:
+   case ROOT::ENTupleColumnType::kIndex32:
+   case ROOT::ENTupleColumnType::kUInt32:
+   case ROOT::ENTupleColumnType::kInt32:
+   case ROOT::ENTupleColumnType::kSplitInt32:
+   case ROOT::ENTupleColumnType::kSplitUInt32:
+   case ROOT::ENTupleColumnType::kSplitReal32:
+   case ROOT::ENTupleColumnType::kSplitIndex32:
+      return 4;
+   case ROOT::ENTupleColumnType::kReal64:
+   case ROOT::ENTupleColumnType::kIndex64:
+   case ROOT::ENTupleColumnType::kUInt64:
+   case ROOT::ENTupleColumnType::kInt64:
+   case ROOT::ENTupleColumnType::kSplitInt64:
+   case ROOT::ENTupleColumnType::kSplitUInt64:
+   case ROOT::ENTupleColumnType::kSplitReal64:
+   case ROOT::ENTupleColumnType::kSplitIndex64:
+      return 8;
+   case ROOT::ENTupleColumnType::kInt16:
+   case ROOT::ENTupleColumnType::kUInt16:
+   case ROOT::ENTupleColumnType::kReal16:
+   case ROOT::ENTupleColumnType::kSplitInt16:
+   case ROOT::ENTupleColumnType::kSplitUInt16:
+      return 2;
+   case ROOT::ENTupleColumnType::kByte:
+   case ROOT::ENTupleColumnType::kChar:
+   case ROOT::ENTupleColumnType::kInt8:
+   case ROOT::ENTupleColumnType::kUInt8:
+   case ROOT::ENTupleColumnType::kBit:
+      return 1;
+   default:
+      return 0;
+   }
+}
+
 /// Sets the zip profile for this thread and restores it when the page seal returns.
 struct LHC4CallProfileGuard {
    int fPrevious{-1};
+   unsigned fPreviousId{0};
    bool fActive{false};
-   explicit LHC4CallProfileGuard(int profile)
+   explicit LHC4CallProfileGuard(int profile, unsigned profileId = 0)
    {
-      if (profile < 0)
+      if (profile < 0 && profileId == 0)
          return;
       fPrevious = R__GetLHC4CallProfile();
-      R__SetLHC4CallProfile(profile);
+      fPreviousId = R__GetLHC4CallProfileId();
+      if (profileId != 0) {
+         R__SetLHC4CallProfile(kLHC4ProfileCustom);
+         R__SetLHC4CallProfileId(profileId);
+      } else {
+         R__SetLHC4CallProfile(profile);
+         R__SetLHC4CallProfileId(0);
+      }
       fActive = true;
    }
    ~LHC4CallProfileGuard()
    {
-      if (fActive)
+      if (fActive) {
          R__SetLHC4CallProfile(fPrevious);
+         R__SetLHC4CallProfileId(fPreviousId);
+      }
    }
    LHC4CallProfileGuard(const LHC4CallProfileGuard &) = delete;
    LHC4CallProfileGuard &operator=(const LHC4CallProfileGuard &) = delete;
@@ -922,7 +993,9 @@ ROOT::Internal::RPageStorage::RSealedPage ROOT::Internal::RPageSink::SealPage(co
    auto nBytesZipped = nBytesPacked;
 
 #ifdef R__HAS_LHC4CODEC
-   LHC4CallProfileGuard columnProfile(LHC4CallProfileForPage(*config.fElement, config.fCompressionSettings));
+   unsigned profileId = config.fCompressionProfileId;
+   int stdProfile = profileId ? kLHC4ProfileCustom : LHC4CallProfileForPage(*config.fElement, config.fCompressionSettings);
+   LHC4CallProfileGuard columnProfile(stdProfile, profileId);
 #endif
    if ((config.fCompressionSettings != 0) || !config.fElement->IsMappable() || !config.fAllowAlias ||
        config.fWriteChecksum) {
@@ -943,7 +1016,8 @@ ROOT::Internal::RPageStorage::RSealedPage ROOT::Internal::RPageSink::SealPage(co
 }
 
 ROOT::Internal::RPageStorage::RSealedPage
-ROOT::Internal::RPageSink::SealPage(const ROOT::Internal::RPage &page, const RColumnElementBase &element)
+ROOT::Internal::RPageSink::SealPage(const ROOT::Internal::RPage &page, const RColumnElementBase &element,
+                                    std::uint32_t profileId)
 {
    const auto nBytes = page.GetNBytes() + GetWriteOptions().GetEnablePageChecksums() * kNBytesPageChecksum;
    if (fSealPageBuffer.size() < nBytes)
@@ -953,6 +1027,7 @@ ROOT::Internal::RPageSink::SealPage(const ROOT::Internal::RPage &page, const RCo
    config.fPage = &page;
    config.fElement = &element;
    config.fCompressionSettings = GetWriteOptions().GetCompression();
+   config.fCompressionProfileId = profileId;
    config.fWriteChecksum = GetWriteOptions().GetEnablePageChecksums();
    config.fAllowAlias = true;
    config.fBuffer = fSealPageBuffer.data();
@@ -1150,7 +1225,6 @@ void ROOT::Internal::RPagePersistentSink::InitImpl(ROOT::RNTupleModel &model)
 {
    fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription());
    fDescriptorBuilder.SetVersionForWriting();
-   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    auto &fieldZero = ROOT::Internal::GetFieldZeroOfModel(model);
    fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(fieldZero).FieldId(0).MakeDescriptor().Unwrap());
@@ -1167,11 +1241,28 @@ void ROOT::Internal::RPagePersistentSink::InitImpl(ROOT::RNTupleModel &model)
       initialChangeset.fAddedProjectedFields.emplace_back(f);
    UpdateSchema(initialChangeset, 0U);
 
+   if (GetWriteOptions().GetEnableLearnedProfiles()) {
+      fHeaderCommitted = false;
+   } else {
+      CommitHeader();
+   }
+}
+
+void ROOT::Internal::RPagePersistentSink::CommitHeader()
+{
+   if (fHeaderCommitted)
+      return;
+
+   // Last chance for learned profiles: their models go into the header's column records.
+   TrainPendingColumnProfiles();
+
+   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
    fSerializationContext = RNTupleSerializer::SerializeHeader(nullptr, descriptor).Unwrap();
    auto buffer = MakeUninitArray<unsigned char>(fSerializationContext.GetHeaderSize());
    fSerializationContext = RNTupleSerializer::SerializeHeader(buffer.get(), descriptor).Unwrap();
    InitImpl(buffer.get(), fSerializationContext.GetHeaderSize());
 
+   fHeaderCommitted = true;
    fDescriptorBuilder.BeginHeaderExtension();
 }
 
@@ -1371,10 +1462,13 @@ void ROOT::Internal::RPagePersistentSink::CommitPage(ColumnHandle_t columnHandle
    fOpenColumnRanges.at(columnHandle.fPhysicalId).IncrementNElements(page.GetNElements());
 
    auto element = columnHandle.fColumn->GetElement();
+   auto colId = columnHandle.fPhysicalId;
+   std::uint32_t profileId = EnsureColumnProfile(colId, page, *element);
+
    RPageStorage::RSealedPage sealedPage;
    {
       RNTupleAtomicTimer timer(fCounters->fTimeWallZip, fCounters->fTimeCpuZip);
-      sealedPage = SealPage(page, *element);
+      sealedPage = SealPage(page, *element, profileId);
    }
    fCounters->fSzZip.Add(page.GetNBytes());
 
@@ -1383,6 +1477,137 @@ void ROOT::Internal::RPagePersistentSink::CommitPage(ColumnHandle_t columnHandle
    pageInfo.SetLocator(CommitSealedPageImpl(columnHandle.fPhysicalId, sealedPage));
    pageInfo.SetHasChecksum(GetWriteOptions().GetEnablePageChecksums());
    fOpenPageRanges.at(columnHandle.fPhysicalId).GetPageInfos().emplace_back(pageInfo);
+}
+
+std::uint32_t ROOT::Internal::RPagePersistentSink::EnsureColumnProfile(
+   ROOT::DescriptorId_t physicalColumnId, const ROOT::Internal::RPage &page,
+   const ROOT::Internal::RColumnElementBase &element)
+{
+   std::lock_guard<std::mutex> lock(*fProfileMutex);
+   std::uint32_t profileId = GetColumnProfileId(physicalColumnId);
+#ifdef R__HAS_LHC4CODEC
+   if (profileId != 0)
+      return profileId;
+   // The column compression contexts are serialized with the header, which is committed with the first cluster
+   // (TrainPendingColumnProfiles runs just before). A profile trained later would be known to this writer only, so
+   // columns without a profile by then stay on the per-page model.
+   if (fHeaderCommitted)
+      return 0;
+   if (!(GetWriteOptions().GetEnableLearnedProfiles() || R__GetLHC4Profile() == kLHC4ProfileCustom))
+      return 0;
+   const auto algo = ROOT::RCompressionSetting::AlgorithmFromCompressionSettings(GetWriteOptions().GetCompression());
+   if (algo != ROOT::RCompressionSetting::EAlgorithm::kLHC4)
+      return 0;
+   const auto stride = DetermineStrideForColumnType(element.GetIdentifier().fOnDiskType);
+   if (stride <= 0)
+      return 0;
+
+   // The profile is trained once per column on a sample of the column's uncompressed bytes. Pages committed
+   // before the sample is complete are written with the per-page (dynamic) Crystal model, so the profile is
+   // trained on real data instead of the small first page of the column.
+   const std::size_t minSample = static_cast<std::size_t>(stride) * 16;
+   const std::size_t target = std::max(GetWriteOptions().GetLearnedProfileSampleSize(), minSample);
+   // Memory held by partial samples across all columns; above this, columns train on the sample they have.
+   constexpr std::size_t kSampleBudget = 64 * 1024 * 1024;
+
+   const auto *pageBytes = static_cast<const unsigned char *>(page.GetBuffer());
+   const unsigned char *sample = pageBytes;
+   std::size_t sampleSize = page.GetNBytes();
+   auto itSample = fProfileSamples.find(physicalColumnId);
+   const bool haveBuffered = (itSample != fProfileSamples.end()) && !itSample->second.empty();
+   if (haveBuffered || sampleSize < target) {
+      auto &buf = fProfileSamples[physicalColumnId];
+      const std::size_t take = std::min(page.GetNBytes(), target - std::min(target, buf.size()));
+      buf.insert(buf.end(), pageBytes, pageBytes + take);
+      fProfileSampleBytes += take;
+      const bool complete = buf.size() >= target;
+      const bool forced = (fProfileSampleBytes >= kSampleBudget) && (buf.size() >= minSample);
+      if (!complete && !forced)
+         return 0;
+      sample = buf.data();
+      sampleSize = buf.size();
+   }
+   if (sampleSize < minSample)
+      return 0;
+
+   profileId = TrainColumnProfile(physicalColumnId, sample, sampleSize, stride);
+   if (auto it = fProfileSamples.find(physicalColumnId); it != fProfileSamples.end()) {
+      fProfileSampleBytes -= std::min(fProfileSampleBytes, it->second.size());
+      fProfileSamples.erase(it);
+   }
+#endif
+   return profileId;
+}
+
+std::uint32_t ROOT::Internal::RPagePersistentSink::TrainColumnProfile(ROOT::DescriptorId_t physicalColumnId,
+                                                                      const unsigned char *sample,
+                                                                      std::size_t sampleSize, int stride)
+{
+#ifdef R__HAS_LHC4CODEC
+   // The lane search level is decoupled from the write level: the profile is trained once per column and reused
+   // for every page, so a deeper search than the per-page encode is affordable. The write level is the floor.
+   const int trainLevel =
+      std::max(GetWriteOptions().GetLearnedProfileTrainLevel(), static_cast<int>(GetWriteOptions().GetCompression() % 100));
+   std::vector<unsigned char> modelBytes(64 * 1024);
+   std::size_t modelSize = modelBytes.size();
+   bool trained = R__LHC4TrainProfileModelLevel(sample, sampleSize, stride, trainLevel, modelBytes.data(), &modelSize);
+   if (!trained) {
+      // The initial buffer may have been too small for the model
+      modelSize = 0;
+      if (R__LHC4TrainProfileModelLevel(sample, sampleSize, stride, trainLevel, nullptr, &modelSize) &&
+          modelSize > modelBytes.size()) {
+         modelBytes.resize(modelSize);
+         trained = R__LHC4TrainProfileModelLevel(sample, sampleSize, stride, trainLevel, modelBytes.data(), &modelSize);
+      }
+   }
+   if (!trained || modelSize == 0)
+      return 0;
+   modelBytes.resize(modelSize);
+   ROOT::RCompressionContext ctx(ROOT::RCompressionSetting::EAlgorithm::kLHC4,
+                                 ROOT::RCompressionContext::EType::kLHC4CrystalProfile, std::move(modelBytes));
+   const std::uint32_t profileId = ctx.GetProfileId();
+   R__LHC4RegisterProfileModel(profileId, ctx.GetPayload().data(), ctx.GetSize());
+   fDescriptorBuilder.SetFeature(ROOT::RNTupleDescriptor::kFeatureFlag_CompressionContext);
+   fDescriptorBuilder.SetColumnCompressionContext(physicalColumnId, std::move(ctx));
+   return profileId;
+#else
+   (void)physicalColumnId;
+   (void)sample;
+   (void)sampleSize;
+   (void)stride;
+   return 0;
+#endif
+}
+
+void ROOT::Internal::RPagePersistentSink::TrainPendingColumnProfiles()
+{
+   std::lock_guard<std::mutex> lock(*fProfileMutex);
+#ifdef R__HAS_LHC4CODEC
+   if (!fHeaderCommitted) {
+      const auto &descriptor = fDescriptorBuilder.GetDescriptor();
+      for (auto &[columnId, sample] : fProfileSamples) {
+         if (GetColumnProfileId(columnId) != 0 || columnId >= descriptor.GetNPhysicalColumns())
+            continue;
+         const auto stride = DetermineStrideForColumnType(descriptor.GetColumnDescriptor(columnId).GetType());
+         if (stride <= 0 || sample.size() < static_cast<std::size_t>(stride) * 16)
+            continue;
+         TrainColumnProfile(columnId, sample.data(), sample.size(), stride);
+      }
+   }
+#endif
+   fProfileSamples.clear();
+   fProfileSampleBytes = 0;
+}
+
+std::uint32_t ROOT::Internal::RPagePersistentSink::GetColumnProfileId(ROOT::DescriptorId_t physicalColumnId) const
+{
+   if (physicalColumnId < fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns()) {
+      const auto &colDesc = fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(physicalColumnId);
+      if (const auto &ctx = colDesc.GetCompressionContext(); ctx.has_value()) {
+         return ctx->GetProfileId();
+      }
+   }
+   return 0;
 }
 
 void ROOT::Internal::RPagePersistentSink::CommitSealedPage(ROOT::DescriptorId_t physicalColumnId,
@@ -1486,6 +1711,8 @@ void ROOT::Internal::RPagePersistentSink::CommitSealedPageV(std::span<RPageStora
 ROOT::Internal::RPageSink::RStagedCluster
 ROOT::Internal::RPagePersistentSink::StageCluster(ROOT::NTupleSize_t nNewEntries)
 {
+   CommitHeader();
+
    RStagedCluster stagedCluster;
    stagedCluster.fNBytesWritten = StageClusterImpl();
    stagedCluster.fNEntries = nNewEntries;
@@ -1609,6 +1836,8 @@ void ROOT::Internal::RPagePersistentSink::CommitAttributeSet(std::string_view at
 
 ROOT::Internal::RNTupleLink ROOT::Internal::RPagePersistentSink::CommitDatasetImpl()
 {
+   CommitHeader();
+
    if (!fInfosOfStreamerFields.empty()) {
       // De-duplicate extra type infos before writing. Usually we won't have them already in the descriptor, but
       // this may happen when we are writing back an already-existing RNTuple, e.g. when doing incremental merging.
