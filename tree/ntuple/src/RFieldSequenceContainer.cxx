@@ -282,24 +282,34 @@ unsigned char *ROOT::RRVecField::ResizeRVec(void *rvec, std::size_t nItems, std:
    }
 
    // Resize RVec (capacity and size)
-   // In the regime between 0 and 16 items, grow by doubling the size. Grow larger vectors by a factor 1.5
+   // In the regime between 0 and 16 items, grow by doubling the size. Grow larger vectors by a factor 1.5 at most.
+   // If the new size is larger than the grown capacity, set the new capacity to the new size (i.e., don't allocate
+   // a larger capacity for vectors the are suddenly vastly larger than their previous state).
+   // TODO: investigate a longer look back window to avoid shrinking for an unusual small entry
+   // (see TBasket::WriteReset()).
    static constexpr std::int32_t kSmallThreshold = 16;
-   if (std::int32_t(nItems) > *capacityPtr) { // must reallocate
+   if ((std::int32_t(nItems) > *capacityPtr) || /* must grow */
+       ((std::int32_t(nItems) > kSmallThreshold) && (std::int32_t(nItems) < *capacityPtr / 4))) /* must shrink */ {
       // Destroy old elements: useless work for trivial types, but in case the element type's constructor
       // allocates memory we need to release it here to avoid memleaks (e.g. if this is an RVec<RVec<int>>)
       if (needsDestruct) {
-         for (std::size_t i = 0u; i < oldSize; ++i) {
+         for (std::size_t i = 0u; i < std::min(oldSize, nItems); ++i) {
             itemDeleter->operator()(*beginPtr + (i * itemSize), true /* dtorOnly */);
          }
       }
 
-      // Increment capacity geometrically rather than just enough to fit the elements.
+      // Increment / decrement capacity geometrically
       std::size_t newCapacity = nItems;
       if (*capacityPtr > 0) {
          constexpr std::size_t maxSize = static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max());
          const std::size_t oldCap = static_cast<std::size_t>(*capacityPtr);
-         const std::size_t grown = oldCap + ((oldCap < kSmallThreshold) ? oldCap : (oldCap / 2));
-         newCapacity = std::min(maxSize, std::max(nItems, grown));
+         if (nItems > oldCap) {
+            const std::size_t grown = oldCap + ((oldCap < kSmallThreshold) ? oldCap : (oldCap / 2));
+            newCapacity = std::min(maxSize, std::max(nItems, grown));
+         } else {
+            newCapacity = oldCap / 2;
+            assert(nItems <= newCapacity);
+         }
       }
 
       Internal::DestroyRVecWithChecks(itemField->GetAlignment(), beginPtr, capacityPtr);
@@ -309,9 +319,12 @@ unsigned char *ROOT::RRVecField::ResizeRVec(void *rvec, std::size_t nItems, std:
       R__ASSERT(*beginPtr != nullptr);
       *capacityPtr = static_cast<std::int32_t>(newCapacity);
 
-      // Placement new for elements that were already there before the resize
+      // Placement new for elements that were already there before the resize. When shrank, we only need to construct
+      // nItems items, because that's what we going to read. When grown, the remaining elements from oldSize until
+      // nItems is constructed a few lines down (we need to do this always when the size grows, even when not changing
+      // the capacity).
       if (needsConstruct) {
-         for (std::size_t i = 0u; i < oldSize; ++i)
+         for (std::size_t i = 0u; i < std::min(oldSize, nItems); ++i)
             CallConstructValueOn(*itemField, *beginPtr + (i * itemSize));
       }
    }
