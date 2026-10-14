@@ -285,14 +285,15 @@ unsigned char *ROOT::RRVecField::ResizeRVec(void *rvec, std::size_t nItems, std:
    // In the regime between 0 and 16 items, grow by doubling the size. Grow larger vectors by a factor 1.5 at most.
    // If the new size is larger than the grown capacity, set the new capacity to the new size (i.e., don't allocate
    // a larger capacity for vectors the are suddenly vastly larger than their previous state).
-   // TODO: investigate a longer look back window to avoid shrinking for an unusual small entry and consider returning to average or median size.
-   // (see TBasket::WriteReset()).
+   // TODO(jblomer): investigate a longer look back window to avoid shrinking for an unusual small entry and consider
+   // returning to average or median size (see TBasket::WriteReset()).
    static constexpr std::int32_t kSmallThreshold = 16;
    if ((std::int32_t(nItems) > *capacityPtr) || /* must grow */
        ((std::int32_t(nItems) > kSmallThreshold) && (std::int32_t(nItems) < *capacityPtr / 4))) /* must shrink */ {
       // Destroy old elements: useless work for trivial types, but in case the element type's constructor
       // allocates memory we need to release it here to avoid memleaks (e.g. if this is an RVec<RVec<int>>)
       if (needsDestruct) {
+         // Excess elements were destructed earlier.
          for (std::size_t i = 0u; i < std::min(oldSize, nItems); ++i) {
             itemDeleter->operator()(*beginPtr + (i * itemSize), true /* dtorOnly */);
          }
