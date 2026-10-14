@@ -194,6 +194,7 @@ public:
    void       SetImage(ASImage *image) { DestroyImage(); fImage = image; }
    TImage    *GetScaledImage() const override { return fScaledImage; }
    Pixmap_t   GetPixmap() override;
+   Bool_t     GetMaskBits(UInt_t &width, UInt_t &height, std::vector<char> &bits) override;
    Pixmap_t   GetMask() override;
    TArrayL   *GetPixels(Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0) override;
    TArrayD   *GetArray(UInt_t w = 0, UInt_t h = 0, TImagePalette *pal = gWebImagePalette) override;
