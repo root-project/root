@@ -28,8 +28,11 @@ struct ASVisual;
 class TBrowser;
 class THashTable;
 class TTFhandle;
+class TASPaletteEditor;
 
 class TASImage : public TImage {
+
+friend class TASPaletteEditor; // to access FromGradient method
 
 private:
    enum { kNoZoom = 0, kZoom = 1, kZoomOps = -1 };
@@ -81,6 +84,8 @@ protected:
 
    static Bool_t InitVisual();
    Bool_t InitImage(const char *caller);
+
+   void FromGradient(struct ASGradient *as_gradient, UInt_t width, UInt_t height);
 
 public:
    TASImage();
