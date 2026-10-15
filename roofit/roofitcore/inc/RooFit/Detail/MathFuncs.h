@@ -564,13 +564,62 @@ inline double bifurGaussIntegral(double xMin, double xMax, double mean, double s
    }
 }
 
+/// (exp(x) - 1) / x with the removable singularity at x = 0 filled in. The
+/// derivative is expm1OverXDerivative(), also registered with clad at the end
+/// of this header: differentiating the branches would give zero at x = 0.
+inline double expm1OverX(double x)
+{
+   return x == 0.0 ? 1.0 : std::expm1(x) / x;
+}
+
+/// Derivative of expm1OverX(). The closed form (x * exp(x) - expm1(x)) / x^2
+/// cancels for small x, so a Taylor expansion is used there. Both branches are
+/// accurate to about 1e-15 at the switching point.
+inline double expm1OverXDerivative(double x)
+{
+   if (std::abs(x) < 0.25) {
+      // Sum over n of (n + 1) x^n / (n + 2)!, up to n = 10 in Horner form.
+      // clang-format off
+      return 1. / 2 + x * (1. / 3 + x * (1. / 8 + x * (1. / 30 + x * (1. / 144 + x * (1. / 840
+             + x * (1. / 5760 + x * (1. / 45360 + x * (1. / 403200 + x * (1. / 3991680 + x * (1. / 43545600))))))))));
+      // clang-format on
+   }
+   return (std::exp(x) - expm1OverX(x)) / x;
+}
+
+/// Integral of exp(constant * x) from xMin to xMax. The naive form
+/// (exp(constant * xMax) - exp(constant * xMin)) / constant cancels when
+/// constant * (xMax - xMin) is small. Factoring out the larger exponential and
+/// using std::expm1 for the rest is accurate for any constant and only
+/// overflows if the integral itself does. The derivative with respect to the
+/// constant is exponentialIntegralDConstant(), also registered with clad at
+/// the end of this header (https://github.com/root-project/root/issues/23724).
 inline double exponentialIntegral(double xMin, double xMax, double constant)
 {
    if (constant == 0.0) {
       return xMax - xMin;
    }
 
-   return (std::exp(constant * xMax) - std::exp(constant * xMin)) / constant;
+   const double z = constant * (xMax - xMin);
+   if (z > 0.0) {
+      return -std::exp(constant * xMax) * std::expm1(-z) / constant;
+   }
+   return std::exp(constant * xMin) * std::expm1(z) / constant;
+}
+
+/// Derivative of exponentialIntegral() with respect to the constant, i.e. the
+/// integral of x * exp(constant * x). With a the endpoint where constant * x is
+/// larger and d the signed distance to the other one, substituting x = a + s
+/// gives exp(constant * a) * d * (a * expm1OverX(w) + d * expm1OverXDerivative(w))
+/// with w = constant * d <= 0, so the helpers only see bounded arguments.
+inline double exponentialIntegralDConstant(double xMin, double xMax, double constant)
+{
+   const bool fromMin = constant * (xMax - xMin) <= 0.0;
+   const double a = fromMin ? xMin : xMax;
+   const double d = fromMin ? xMax - xMin : xMin - xMax;
+   const double w = constant * d;
+   // The prefactor (xMax - xMin) instead of d absorbs the sign flip for a == xMax.
+   return std::exp(constant * a) * (xMax - xMin) * (a * expm1OverX(w) + d * expm1OverXDerivative(w));
 }
 
 /// In pdfMode, a coefficient for the constant term of 1.0 is implied if lowestOrder > 0.
@@ -906,6 +955,46 @@ binNumber_pushforward(double x, double coef, DoubleArray boundaries, unsigned in
                       Types...)
 {
    return {::RooFit::Detail::MathFuncs::binNumber(x, coef, boundaries, nBoundaries, nbins, blo), 0};
+}
+
+// Custom derivatives of exponentialIntegral and its helper expm1OverX, as
+// pullbacks for gradients and pushforwards for Hessians. Clad's derivatives of
+// the function bodies would be inaccurate for small constant * (xMax - xMin)
+// and identically zero in the == 0 branches
+// (https://github.com/root-project/root/issues/23724). The helper needs its
+// own because clad builds the Hessian by differentiating the pushforward body.
+//
+// The template parameters only keep the return types dependent, see
+// ValueAndPushforwardOf above. They are deliberately not deduced: clad passes
+// integer literals as derivatives of the integer literals in generated code.
+
+inline void expm1OverX_pullback(double x, double d_out, double *d_x)
+{
+   *d_x += d_out * ::RooFit::Detail::MathFuncs::expm1OverXDerivative(x);
+}
+
+template <typename T = double>
+typename ValueAndPushforwardOf<double, T>::type expm1OverX_pushforward(double x, double d_x)
+{
+   return {::RooFit::Detail::MathFuncs::expm1OverX(x), ::RooFit::Detail::MathFuncs::expm1OverXDerivative(x) * d_x};
+}
+
+inline void exponentialIntegral_pullback(double xMin, double xMax, double constant, double d_out, double *d_xMin,
+                                         double *d_xMax, double *d_constant)
+{
+   *d_xMin -= d_out * std::exp(constant * xMin);
+   *d_xMax += d_out * std::exp(constant * xMax);
+   *d_constant += d_out * ::RooFit::Detail::MathFuncs::exponentialIntegralDConstant(xMin, xMax, constant);
+}
+
+template <typename T = double>
+typename ValueAndPushforwardOf<double, T>::type
+exponentialIntegral_pushforward(double xMin, double xMax, double constant, double d_xMin, double d_xMax,
+                                double d_constant)
+{
+   return {::RooFit::Detail::MathFuncs::exponentialIntegral(xMin, xMax, constant),
+           -std::exp(constant * xMin) * d_xMin + std::exp(constant * xMax) * d_xMax +
+              ::RooFit::Detail::MathFuncs::exponentialIntegralDConstant(xMin, xMax, constant) * d_constant};
 }
 
 } // namespace RooFit::Detail::MathFuncs
