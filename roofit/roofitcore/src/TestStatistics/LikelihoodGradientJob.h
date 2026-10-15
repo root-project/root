@@ -17,8 +17,9 @@
 #include "RooFit/TestStatistics/LikelihoodGradientWrapper.h"
 
 #include "Math/MinimizerOptions.h"
-#include "Minuit2/NumericalDerivator.h"
 #include "Minuit2/MnMatrix.h"
+
+#include "NumericalDerivator.h"
 
 #include <limits>
 #include <vector>
@@ -63,7 +64,7 @@ private:
    struct task_result_t {
       std::size_t job_id;
       std::size_t task_id;
-      ROOT::Minuit2::DerivatorElement grad;
+      DerivatorElement grad;
    };
    void send_back_task_result_from_worker(std::size_t task) override;
    bool receive_task_result_on_master(const RooFit::MultiProcess::Message &message) override;
@@ -75,8 +76,8 @@ private:
    // members
 
    // mutables below are because ROOT::Math::IMultiGradFunction::DoDerivative is const
-   mutable std::vector<ROOT::Minuit2::DerivatorElement> grad_;
-   mutable ROOT::Minuit2::NumericalDerivator gradf_;
+   mutable std::vector<DerivatorElement> grad_;
+   mutable NumericalDerivator gradf_;
 
    std::size_t N_tasks_ = 0;
    std::size_t N_tasks_at_workers_ = 0;
