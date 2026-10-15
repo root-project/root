@@ -75,6 +75,7 @@ protected:
    static THashTable *fgPlugList;   ///<! hash table containing loaded plugins
 
    static ASVisual *fgVisual;      ///< pointer to visual structure
+   static ASVisual *fgBatchVisual; ///< pointer to "batch" visual structure
    static Bool_t    fgInit;        ///< global flag to init afterimage only once
    static Bool_t    fgBatch;       ///< global flag to signal if batch mode is active ie fgVisual->dpy was set to nullptr
 
@@ -82,7 +83,7 @@ protected:
    void MapFileTypes(EImageFileTypes &type, UInt_t &astype, Bool_t toas = kTRUE);
    void MapQuality(EImageQuality &quality, UInt_t &asquality, Bool_t toas = kTRUE);
 
-   static Bool_t InitVisual();
+   static ASVisual *InitVisual(Bool_t plain = kFALSE);
    Bool_t InitImage(const char *caller);
 
    void FromGradient(struct ASGradient *as_gradient, UInt_t width, UInt_t height);
