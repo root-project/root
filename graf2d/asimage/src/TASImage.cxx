@@ -117,6 +117,7 @@ extern "C" {
 
 
 ASVisual *TASImage::fgVisual = nullptr;
+ASVisual *TASImage::fgBatchVisual = nullptr;
 Bool_t TASImage::fgInit = kFALSE;
 Bool_t TASImage::fgBatch = kFALSE;
 
@@ -2003,7 +2004,8 @@ void TASImage::Mirror(Bool_t vert)
       return;
    }
 
-   if (!InitVisual()) {
+   auto vis = InitVisual(true);
+   if (!vis) {
       Warning("Mirror", "Visual not initiated");
       return;
    }
@@ -2013,7 +2015,7 @@ void TASImage::Mirror(Bool_t vert)
       return;
    }
 
-   ASImage *img = mirror_asimage(fgVisual, fImage, 0, 0,
+   ASImage *img = mirror_asimage(vis, fImage, 0, 0,
                                  fImage->width, fImage->height, vert,
                                  ASA_ASImage, GetImageCompression(),
                                  GetImageQuality());
@@ -2071,14 +2073,19 @@ void TASImage::GetZoomPosition(UInt_t &x, UInt_t &y, UInt_t &w, UInt_t &h) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function to initialize the ASVisual.
+/// Static internal method to initialize the ASVisual
+/// Many operations do not require X11 display so plain "batch" visual can be used
 
-Bool_t TASImage::InitVisual()
+ASVisual *TASImage::InitVisual(Bool_t plain)
 {
-   Bool_t noX = gROOT->IsBatch() || !gVirtualX->InheritsFrom("TGX11");
+   // this is new API, means return value must be used
+   if (fgBatchVisual && plain)
+      return fgBatchVisual;
 
-   if (fgVisual && (noX == fgBatch))
-      return kTRUE;
+   Bool_t noX = plain || gROOT->IsBatch() || !gVirtualX->InheritsFrom("TGX11");
+
+   if (fgVisual && !noX && !fgBatch)
+      return fgVisual;
 
    fgVisual = nullptr;
    fgBatch = false;
@@ -2102,20 +2109,17 @@ Bool_t TASImage::InitVisual()
 #endif
 #endif
 
-   static ASVisual *vis_batch = nullptr;
-
    if (!fgVisual) {
-      if (!vis_batch) {
+      if (!fgBatchVisual) {
          // create dummy visual for batch mode
-         vis_batch = create_asvisual(nullptr, 0, 0, nullptr);
-         vis_batch->dpy = nullptr; // fake (not used)
+         fgBatchVisual = create_asvisual(nullptr, 0, 0, nullptr);
+         fgBatchVisual->dpy = nullptr; // fake (not used)
       }
-
-      fgVisual = vis_batch;
+      fgVisual = fgBatchVisual;
       fgBatch = true;
    }
 
-   return kTRUE;
+   return fgVisual;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
