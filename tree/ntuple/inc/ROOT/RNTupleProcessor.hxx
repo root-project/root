@@ -31,9 +31,17 @@
 
 namespace ROOT {
 namespace Experimental {
+class RNTupleProcessor;
 
 namespace Internal {
-struct RNTupleProcessorEntryLoader;
+struct RNTupleProcessorEntryLoader; // for unit tests
+const RNTupleProcessorEntry *
+LoadFullRNTupleProcessorEntry(ROOT::Experimental::RNTupleProcessor &processor, bool includeSubfields); // for unit tests
+
+namespace RDF {
+class RNTupleProcessorColumnReader;
+class RNTupleProcessorDS;
+} // namespace RDF
 } // namespace Internal
 
 // clang-format off
@@ -172,6 +180,11 @@ public:
          throw RException(R__FAIL("cannot read \"" + fProcessorEntry->FindFieldName(fFieldIndex) +
                                   "\" because it has no value for the current entry"));
    }
+
+   friend bool operator==(const RNTupleProcessorOptionalPtr<T> &lhs, const RNTupleProcessorOptionalPtr<T> &rhs)
+   {
+      return lhs.fProcessorEntry == rhs.fProcessorEntry && lhs.fFieldIndex == rhs.fFieldIndex;
+   }
 };
 
 // clang-format off
@@ -243,7 +256,50 @@ public:
    /// invalid data. After binding a pointer to an `RNTupleProcessorOptionalPtr`, we *strongly* recommend only accessing
    /// its data through this interface, to ensure that only valid data can be read.
    void Bind(std::shared_ptr<void> valuePtr) { fProcessorEntry->Bind(fFieldIndex, std::move(valuePtr)); }
+
+   friend bool operator==(const RNTupleProcessorOptionalPtr<void> &lhs, const RNTupleProcessorOptionalPtr<void> &rhs)
+   {
+      return lhs.fProcessorEntry == rhs.fProcessorEntry && lhs.fFieldIndex == rhs.fFieldIndex;
+   }
 };
+
+/////////////////////////////////////////////////////////////////////////////
+/// \brief Create an RNTupleProcessor for a *join* (i.e., a horizontal combination) of RNTuples.
+///
+/// \param[in] primaryNTuple The name and location of the primary RNTuple. Its entries are processed in sequential
+/// order.
+/// \param[in] auxNTuple The name and location of the RNTuple to join the primary RNTuple with. The order in which
+/// its entries are processed is determined by the primary RNTuple and doesn't necessarily have to be sequential.
+/// \param[in] joinFields The names of the fields on which to join, in case the specified RNTuples are unaligned.
+/// The join is made based on the combined join field values, and therefore each field has to be present in each
+/// specified RNTuple. If an empty list is provided, it is assumed that the specified ntuple are fully aligned.
+/// \param[in] opts Options for the processor.
+///
+/// \return A pointer to the newly created RNTupleProcessor.
+// TODO(fdegeus) Move back to RNTupleProcessor::CreateJoin once RNTupleProcessor moves out of Experimental.
+std::unique_ptr<RNTupleProcessor>
+CreateRNTupleJoinProcessor(RNTupleOpenSpec primaryNTuple, RNTupleOpenSpec auxNTuple,
+                           const std::vector<std::string> &joinFields,
+                           const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
+
+/////////////////////////////////////////////////////////////////////////////
+/// \brief Create an RNTupleProcessor for a *join* (i.e., a horizontal combination) of RNTuples.
+///
+/// \param[in] primaryProcessor The primary processor. Its entries are processed in sequential order.
+/// \param[in] auxProcessor The processor to join the primary processor with. The order in which its entries are
+/// processed is determined by the primary processor and doesn't necessarily have to be sequential.
+/// \param[in] joinFields The names of the fields on which to join, in case the specified processors are unaligned.
+/// The join is made based on the combined join field values, and therefore each field has to be present in each
+/// specified processors. If an empty list is provided, it is assumed that the specified processors are fully
+/// aligned.
+/// \param[in] opts Options for the processor.
+///
+/// \return A pointer to the newly created RNTupleProcessor.
+// TODO(fdegeus) Move back to RNTupleProcessor::CreateJoin once RNTupleProcessor moves out of Experimental.
+std::unique_ptr<RNTupleProcessor>
+CreateRNTupleJoinProcessor(std::unique_ptr<RNTupleProcessor> primaryProcessor,
+                           std::unique_ptr<RNTupleProcessor> auxProcessor, const std::vector<std::string> &joinFields,
+                           const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
 
 // clang-format off
 /**
@@ -284,9 +340,13 @@ that is returned by RequestField().
 // clang-format on
 class RNTupleProcessor {
    friend struct ROOT::Experimental::Internal::RNTupleProcessorEntryLoader; // for unit tests
+   friend const Internal::RNTupleProcessorEntry *
+   ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(RNTupleProcessor &processor,
+                                                               bool includeSubfields); // For unit tests
    friend class RNTupleSingleProcessor;
    friend class RNTupleChainProcessor;
    friend class RNTupleJoinProcessor;
+   friend class Internal::RDF::RNTupleProcessorDS;
 
 protected:
    /////////////////////////////////////////////////////////////////////////////
@@ -423,6 +483,14 @@ protected:
    virtual void LoadEntryImpl(const REntryMapping &mapping) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a reference to the processor's internal entry.
+   Internal::RNTupleProcessorEntry &GetEntry() { return *fEntry; }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a reference to the processor's internal entry.
+   const Internal::RNTupleProcessorEntry &GetEntry() const { return *fEntry; }
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor
    virtual ROOT::NTupleSize_t GetNEntries() = 0;
 
@@ -436,7 +504,8 @@ protected:
    /// \brief Add a field to the entry.
    ///
    ///
-   /// \param[in] fieldName Name of the field to add.
+   /// \param[in] canonicalFieldName Canonical name of the field to add. This includes the prefix of any parent fields,
+   /// as well as the auxiliary processor name prefix, if present.
    /// \param[in] typeName Type of the field to add.
    /// \param[in] valuePtr Pointer to bind to the field's value in the entry. If this is a `nullptr`, a pointer will be
    /// created.
@@ -446,8 +515,34 @@ protected:
    ///
    /// In case the field was already present in the entry, the index of the existing field is returned.
    virtual Internal::RNTupleProcessorEntry::FieldIndex_t
-   AddFieldToEntry(const std::string &fieldName, const std::string &typeName, void *valuePtr,
+   AddFieldToEntry(const std::string &canonicalFieldName, const std::string &typeName, void *valuePtr,
                    const Internal::RNTupleProcessorProvenance &provenance) = 0;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add a field to the entry.
+   ///
+   ///
+   /// \param[in] field The field to add.
+   /// \param[in] canonicalFieldName Canonical name of the field to add. This includes the prefix of any parent fields,
+   /// as well as the auxiliary processor name prefix, if present. This is different from the field name stored in
+   /// `field`.
+   /// \param[in] valuePtr Pointer to bind to the field's value in the entry. If this is a `nullptr`, a pointer will be
+   /// created.
+   /// \param[in] provenance Provenance of the processor.
+   ///
+   /// \return The index of the newly added field in the entry.
+   ///
+   /// In case the field was already present in the entry, the index of the existing field is returned.
+   virtual Internal::RNTupleProcessorEntry::FieldIndex_t
+   AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field, const std::string &canonicalFieldName, void *valuePtr,
+                   const Internal::RNTupleProcessorProvenance &provenance) = 0;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add all known fields (from on-disk information) to the entry.
+   ///
+   /// \param[in] provenance Provenance of the processor.
+   /// \param[in] addFieldMode Bitfield indicating how the fields should be added.
+   virtual void AddAllFieldsToEntry(const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add the entry mappings for this processor to the provided join table.
@@ -510,6 +605,21 @@ public:
       if constexpr (!std::is_void_v<T>) {
          typeName = ROOT::Internal::GetRenormalizedTypeName(typeid(T));
       }
+
+      // The field already exists, so return the existing one.
+      if (auto fieldIdx = fEntry->FindFieldIndex(fieldName, typeName)) {
+         auto value = fEntry->GetValue(*fieldIdx);
+         // Need to check that the provided pointer is not conflicting with the existing one
+
+         if (valuePtr != nullptr && valuePtr != value.GetPtr<void>().get()) {
+            throw RException(R__FAIL("attempted to request a field with user-provided value pointer to field \"" +
+                                     fieldName +
+                                     "\", which already exists in the entry. To change the underlying value pointer, "
+                                     "use RNTupleProcessorOptionalPtr::Bind instead."));
+         }
+         return RNTupleProcessorOptionalPtr<T>(fEntry.get(), *fieldIdx);
+      }
+
       auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, Internal::RNTupleProcessorProvenance());
       return RNTupleProcessorOptionalPtr<T>(fEntry.get(), fieldIdx);
    }
@@ -651,41 +761,6 @@ public:
    static std::unique_ptr<RNTupleProcessor>
    CreateChain(std::vector<std::unique_ptr<RNTupleProcessor>> innerProcessors,
                const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Create an RNTupleProcessor for a *join* (i.e., a horizontal combination) of RNTuples.
-   ///
-   /// \param[in] primaryNTuple The name and location of the primary RNTuple. Its entries are processed in sequential
-   /// order.
-   /// \param[in] auxNTuple The name and location of the RNTuple to join the primary RNTuple with. The order in which
-   /// its entries are processed is determined by the primary RNTuple and doesn't necessarily have to be sequential.
-   /// \param[in] joinFields The names of the fields on which to join, in case the specified RNTuples are unaligned.
-   /// The join is made based on the combined join field values, and therefore each field has to be present in each
-   /// specified RNTuple. If an empty list is provided, it is assumed that the specified ntuple are fully aligned.
-   /// \param[in] opts Options for the processor.
-   ///
-   /// \return A pointer to the newly created RNTupleProcessor.
-   static std::unique_ptr<RNTupleProcessor> CreateJoin(RNTupleOpenSpec primaryNTuple, RNTupleOpenSpec auxNTuple,
-                                                       const std::vector<std::string> &joinFields,
-                                                       const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Create an RNTupleProcessor for a *join* (i.e., a horizontal combination) of RNTuples.
-   ///
-   /// \param[in] primaryProcessor The primary processor. Its entries are processed in sequential order.
-   /// \param[in] auxProcessor The processor to join the primary processor with. The order in which its entries are
-   /// processed is determined by the primary processor and doesn't necessarily have to be sequential.
-   /// \param[in] joinFields The names of the fields on which to join, in case the specified processors are unaligned.
-   /// The join is made based on the combined join field values, and therefore each field has to be present in each
-   /// specified processors. If an empty list is provided, it is assumed that the specified processors are fully
-   /// aligned.
-   /// \param[in] opts Options for the processor.
-   ///
-   /// \return A pointer to the newly created RNTupleProcessor.
-   static std::unique_ptr<RNTupleProcessor> CreateJoin(std::unique_ptr<RNTupleProcessor> primaryProcessor,
-                                                       std::unique_ptr<RNTupleProcessor> auxProcessor,
-                                                       const std::vector<std::string> &joinFields,
-                                                       const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
 };
 
 // clang-format off
@@ -712,6 +787,16 @@ private:
    /// \throws ROOT::RException In case the requested field cannot be found on disk.
    std::unique_ptr<ROOT::RFieldBase>
    CreateAndConnectField(const std::string &qualifiedFieldName, const std::string &typeName);
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Connect an existing field to the processor's page source.
+   ///
+   /// \param[in] field Pointer to the field to add
+   ///
+   /// \return The same field, but wrapped in a new unique pointer. This is needed, because in order to add the field to
+   /// the page source it first needs to be attached to its zero field, in order to correctly handle field
+   /// substitutions. Afterwards, we release the field again from the zero field.
+   std::unique_ptr<ROOT::RFieldBase> ConnectField(std::unique_ptr<ROOT::RFieldBase> field);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Initialize the processor by creating an (initially empty) `fEntry`, or setting an existing one.
@@ -763,6 +848,20 @@ private:
    Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
       const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
       const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add a field to the entry.
+   ///
+   /// \sa RNTupleProcessor::AddFieldToEntry()
+   Internal::RNTupleProcessorEntry::FieldIndex_t
+   AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field, const std::string &fieldName, void *valuePtr,
+                   const Internal::RNTupleProcessorProvenance &provenance) final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add all known fields (from on-disk information) to the entry.
+   ///
+   /// \sa RNTupleProcessor::AddAllFieldsToEntry()
+   void AddAllFieldsToEntry(const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add the entry mappings for this processor to the provided join table.
@@ -871,6 +970,20 @@ private:
       const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add a field to the entry.
+   ///
+   /// \sa RNTupleProcessor::AddFieldToEntry()
+   Internal::RNTupleProcessorEntry::FieldIndex_t
+   AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field, const std::string &fieldName, void *valuePtr,
+                   const Internal::RNTupleProcessorProvenance &provenance) final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add all known fields (from on-disk information) to the entry.
+   ///
+   /// \sa RNTupleProcessor::AddAllFieldsToEntry()
+   void AddAllFieldsToEntry(const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields) final;
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Add the entry mappings for this processor to the provided join table.
    ///
    /// \sa ROOT::Experimental::RNTupleProcessor::AddEntriesToJoinTable
@@ -909,6 +1022,10 @@ public:
 // clang-format on
 class RNTupleJoinProcessor : public RNTupleProcessor {
    friend class RNTupleProcessor;
+   friend std::unique_ptr<RNTupleProcessor>
+   CreateRNTupleJoinProcessor(std::unique_ptr<RNTupleProcessor> primaryProcessor,
+                              std::unique_ptr<RNTupleProcessor> auxProcessor,
+                              const std::vector<std::string> &joinFields, const RNTupleProcessorOptions &opts);
 
 private:
    std::unique_ptr<RNTupleProcessor> fPrimaryProcessor;
@@ -979,6 +1096,20 @@ private:
    Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
       const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
       const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add a field to the entry.
+   ///
+   /// \sa RNTupleProcessor::AddFieldToEntry()
+   Internal::RNTupleProcessorEntry::FieldIndex_t
+   AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field, const std::string &fieldName, void *valuePtr,
+                   const Internal::RNTupleProcessorProvenance &provenance) final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add all known fields (from on-disk information) to the entry.
+   ///
+   /// \sa RNTupleProcessor::AddAllFieldsToEntry()
+   void AddAllFieldsToEntry(const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add the entry mappings for this processor to the provided join table.

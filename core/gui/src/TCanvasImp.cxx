@@ -57,12 +57,8 @@ void TCanvasImp::ResizeCanvasWindow(Int_t wid)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Update gVirtualX display, also optionally sleep to wait until operation finished
+/// Update canvas display, also optionally sleep to wait until operation finished
 
-void TCanvasImp::UpdateDisplay(Int_t mode, Bool_t sleep)
+void TCanvasImp::UpdateDisplay(Int_t /* mode */, Bool_t /* sleep */)
 {
-   if (gVirtualX)
-      gVirtualX->Update(mode);
-   if (sleep)
-      gSystem->Sleep(30);
 }

@@ -124,6 +124,8 @@ public:
    void     SetStatusText(const char *txt = nullptr, Int_t partidx = 0) override;
    void     UpdateViewWithMenu();
 
+   void     UpdateDisplay(Int_t mode = 0, Bool_t sleep = kFALSE) override;
+
    void     Show() override { MapRaised(); }
    void     ShowMenuBar(Bool_t show = kTRUE) override;
    void     ShowStatusBar(Bool_t show = kTRUE) override;

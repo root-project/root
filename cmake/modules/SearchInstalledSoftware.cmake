@@ -284,6 +284,7 @@ if(mathmore OR (tmva-cpu AND use_gsl_cblas))
   endif()
 endif()
 ROOT_FIND_REQUIRED_DEP(mathtext builtin_mathtext)
+ROOT_FIND_REQUIRED_DEP(CDT builtin_cdt)
 
 if(NOT "${MISSING_PACKAGES}" STREQUAL "")
   list(REMOVE_DUPLICATES MISSING_PACKAGES)
@@ -748,6 +749,10 @@ endif()
 
 if (builtin_mathtext)
   add_subdirectory (builtins/libmathtext) # hard coded builtin for graf2d
+endif()
+
+if (builtin_cdt)
+  add_subdirectory (builtins/CDT) # hard coded builtin for math/mathcore
 endif()
 
 #---Check for Davix library-----------------------------------------------------------
