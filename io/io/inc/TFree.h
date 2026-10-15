@@ -22,6 +22,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TObject.h"
+#include <cstddef>
 
 
 class TFree : public TObject {
@@ -41,6 +42,7 @@ public:
            Long64_t  GetLast() const {return fLast;}
            void      ls(Option_t * = "") const override;
    virtual void      ReadBuffer(char *&buffer);
+           bool      ReadBuffer(char *&buffer, std::size_t bufsize);
            void      SetFirst(Long64_t first) {fFirst=first;}
            void      SetLast(Long64_t last) {fLast=last;}
            Int_t     Sizeof() const;
