@@ -58,6 +58,7 @@ protected:
 
   double evaluate() const override;
   void doEval(RooFit::EvalContext &) const override;
+  bool canOptimizeLogarithm() const override { return true; }
   inline bool canComputeBatchWithCuda() const override { return true; }
 
 private:
