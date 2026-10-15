@@ -650,6 +650,15 @@ auto testValues = testing::Values(
       "RooRealSumPdf1",
       {"Gaussian::gx(x[-10,10],m[0],1.0)", "Chebychev::ch(x,{0.1,0.2,-0.3})", "RealSumPdf::model({gx, ch}, {f[0,1]})"},
       6e-3, false),
+   // Extended RooRealSumPdf (one coefficient per function, like in HistFactory
+   // models). The expected number of events is the integral of the sum, which
+   // the NLL reads after the event loop. Here, the same integral is also the
+   // normalization of the pdf inside the loop, so this checks that the
+   // generated integral code is placed outside the loop.
+   makeTestParams("RooRealSumPdfExtended",
+                  {"Gaussian::gx(x[-10,10],m[0,-3,3],1.5)", "Exponential::ex(x,-0.1)",
+                   "ASUM::model(n1[100,0,1000]*gx, n2[100,0,1000]*ex)"},
+                  6e-3, true),
    // Express a Gaussian as a RooFormulaVar/expr and put in a RooWrapper pdf to
    // get test coverage for RooWrapperPdf.
    makeTestParams("RooWrapperPdf",
