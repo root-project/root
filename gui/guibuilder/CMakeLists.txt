@@ -29,4 +29,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GuiBld
     Gui
     Graf
     MathCore
+  LIBRARIES
+    ROOTclib # strlcpy.h
 )

@@ -12,25 +12,17 @@
 #ifndef MMALLOC_H
 #define MMALLOC_H 1
 
-/*  FIXME:  If <stddef.h> doesn't exist, you'll need to do something
-            to define size_t before including this file.  Like upgrading
-            to a system with an ANSI C environment. */
-
-#include "mmconfig.h"
-
-#ifdef WIN32
+#ifdef _WIN32
 #  include <windows.h>
 #endif
 
-#ifdef R__HAVE_STDDEF_H
 #  include <stddef.h>
-#endif
 
 #define PTR                 void *
 #define PARAMS(paramlist)   paramlist
 
-#ifdef WIN32
-   extern struct mmstats_t mmstats PARAMS ((PTR));
+#ifdef _WIN32
+extern struct mmstats_t mmstats PARAMS((PTR));
 #endif
 
 #ifdef  __cplusplus
@@ -80,8 +72,8 @@ include/mmalloc.h:73:25: warning: 'mmstats' has C-linkage specified, but returns
 */
    // extern struct mmstats_t mmstats PARAMS ((PTR));
 
-#ifndef WIN32
-   extern PTR mmalloc_attach PARAMS ((int, PTR, int));
+#ifndef _WIN32
+extern PTR mmalloc_attach PARAMS((int, PTR, int));
 #else
    extern PTR mmalloc_attach PARAMS ((HANDLE, PTR, int));
 #endif
