@@ -343,7 +343,13 @@
 #pragma link C++ options=nomap class std::map<string,TH1*>+ ;
 #pragma link off class RooErrorHandler+ ;
 #pragma link C++ class RooBinSamplingPdf+;
-#pragma link C++ class RooBinWidthFunction+;
+#pragma link C++ class RooBinWidthFunction-;
+#pragma read sourceClass="RooBinWidthFunction" targetClass="RooBinWidthFunction" version="[1]" \
+             source="RooTemplateProxy<const RooHistFunc> _histFunc" target="_observables" \
+             include="RooHistFunc.h,RooTemplateProxy.h" \
+             code="{ \
+                 _observables.RooArgList::add(onfile._histFunc->variables()); \
+             }"
 #pragma link C++ class RooFit::Detail::RooNLLVarNew+;
 #pragma link C++ class RooFit::Detail::RooNormalizedPdf+ ;
 
