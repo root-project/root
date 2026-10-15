@@ -30,6 +30,18 @@ ROOTTEST_ADD_TEST(includeInLinkdef
                   COPY_TO_BUILDDIR headerForLdef.h
                   FIXTURES_REQUIRED root-meta-roocling-includeInLinkdefDict-fixture)
 
+# Directory names must not make ordinary headers look like LinkDef files.
+ROOTTEST_GENERATE_DICTIONARY(includeDirectoryDict
+                             includeDirectory.h
+                             LINKDEF includeDirectoryLinkDef.h)
+
+ROOTTEST_GENERATE_DICTIONARY(includeDirectoryFromSelectionDict
+                             LINKDEF includeDirectoryFromSelectionLinkDef.h)
+
+ROOTTEST_GENERATE_DICTIONARY(includeNestedDict
+                             includeNested.h
+                             LINKDEF NestedSelection/OuterLinkDef.h)
+
 # ROOT-8492
 ROOTTEST_ADD_TEST(selectUnion
                   COMMAND ${ROOT_rootcling_CMD} -f NestedClassOff.Dict.cc ${CMAKE_CURRENT_SOURCE_DIR}/NestedClassOff.h ${CMAKE_CURRENT_SOURCE_DIR}/NestedClassOff.LinkDef.h
