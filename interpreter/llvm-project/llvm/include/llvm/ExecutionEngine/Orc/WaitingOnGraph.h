@@ -266,9 +266,9 @@ public:
     }
 
     SuperNodeDepsMap SuperNodeDeps;
-    hoistDeps(SuperNodeDeps, SNs, ElemToSN);
-    propagateSuperNodeDeps(SuperNodeDeps);
-    sinkDeps(SNs, SuperNodeDeps);
+    for (auto &SN : SNs)
+      hoistDeps(SN.get(), SuperNodeDeps, ElemToSN);
+    propagateDeps(SuperNodeDeps);
 
     // Pre-coalesce nodes.
     Coalescer().coalesce(SNs, ElemToSN);
@@ -296,25 +296,16 @@ public:
     // First process any dependencies on nodes with external state.
     auto FailedSNs = processExternalDeps(NewSNs, GetExternalState);
 
-    // Collect the PendingSNs whose dep sets are about to be modified.
+    SuperNodeDepsMap SuperNodeDeps;
+
+    // Collect the PendingSNs whose dep sets are about to be modified. Hoisting
+    // the deps tells us whether the node was affected by this emit.
     std::vector<std::unique_ptr<SuperNode>> ModifiedPendingSNs;
+    DenseSet<SuperNode *> ModifiedPendingSNSet;
     for (size_t I = 0; I != PendingSNs.size();) {
       auto &SN = PendingSNs[I];
-      bool Remove = false;
-      for (auto &[Container, Elems] : SN->Deps) {
-        auto I = ElemToNewSN.find(Container);
-        if (I == ElemToNewSN.end())
-          continue;
-        for (auto Elem : Elems) {
-          if (I->second.contains(Elem)) {
-            Remove = true;
-            break;
-          }
-        }
-        if (Remove)
-          break;
-      }
-      if (Remove) {
+      if (hoistDeps(SN.get(), SuperNodeDeps, ElemToNewSN)) {
+        ModifiedPendingSNSet.insert(SN.get());
         ModifiedPendingSNs.push_back(std::move(SN));
         std::swap(SN, PendingSNs.back());
         PendingSNs.pop_back();
@@ -322,25 +313,22 @@ public:
         ++I;
     }
 
-    // Remove cycles from the graphs.
-    SuperNodeDepsMap SuperNodeDeps;
-    hoistDeps(SuperNodeDeps, ModifiedPendingSNs, ElemToNewSN);
-
+    // Remove SNs whose deps have been modified from the coalescer.
     CoalesceToPendingSNs.remove(
-        [&](SuperNode *SN) { return SuperNodeDeps.count(SN); });
+        [&](SuperNode *SN) { return ModifiedPendingSNSet.count(SN); });
 
-    hoistDeps(SuperNodeDeps, NewSNs, ElemToPendingSN);
-    propagateSuperNodeDeps(SuperNodeDeps);
-    sinkDeps(NewSNs, SuperNodeDeps);
-    sinkDeps(ModifiedPendingSNs, SuperNodeDeps);
+    for (auto &SN : NewSNs)
+      hoistDeps(SN.get(), SuperNodeDeps, ElemToPendingSN);
+
+    propagateDeps(SuperNodeDeps);
+    propagateFailures(FailedSNs, SuperNodeDeps);
 
     // Process supernodes. Pending first, since we'll update PendingSNs when we
     // incorporate NewSNs.
     std::vector<std::unique_ptr<SuperNode>> ReadyNodes, FailedNodes;
-    processReadyOrFailed(ModifiedPendingSNs, ReadyNodes, FailedNodes,
-                         SuperNodeDeps, FailedSNs, &ElemToPendingSN);
-    processReadyOrFailed(NewSNs, ReadyNodes, FailedNodes, SuperNodeDeps,
-                         FailedSNs, nullptr);
+    processReadyOrFailed(ModifiedPendingSNs, ReadyNodes, FailedNodes, FailedSNs,
+                         &ElemToPendingSN);
+    processReadyOrFailed(NewSNs, ReadyNodes, FailedNodes, FailedSNs, nullptr);
 
     CoalesceToPendingSNs.coalesce(ModifiedPendingSNs, ElemToPendingSN);
     CoalesceToPendingSNs.coalesce(NewSNs, ElemToPendingSN);
@@ -488,73 +476,129 @@ public:
   }
 
 private:
-  // Replace individual dependencies with supernode dependencies.
+  // Replace individual dependencies on SN with supernode dependencies.
   //
-  // For all dependencies in SNs, if the corresponding node is defined in
-  // ElemToSN then remove the individual dependency and record the dependency
-  // on the corresponding supernode in SuperNodeDeps.
-  static void hoistDeps(SuperNodeDepsMap &SuperNodeDeps,
-                        std::vector<std::unique_ptr<SuperNode>> &SNs,
+  // For all dependencies of SN, if the corresponding node is defined in
+  // ElemToSN then remove the individual dependency and record SN as a
+  // *dependant* of the defining supernode in SuperNodeDeps.
+  //
+  // Note that SuperNodeDeps maps a node to the nodes that depend on *it*
+  // (i.e. edges point in the direction that information flows during
+  // propagation). This lets propagateDeps push each node's dep set forward
+  // to its dependants exactly once per change, rather than recomputing a
+  // reachable set per node.
+  //
+  // Returns true if any dependencies were hoisted.
+  static bool hoistDeps(SuperNode *SN, SuperNodeDepsMap &SuperNodeDeps,
                         ElemToSuperNodeMap &ElemToSN) {
-    for (auto &SN : SNs) {
-      auto &SNDeps = SuperNodeDeps[SN.get()];
-      for (auto &[DefContainer, DefElems] : ElemToSN) {
-        auto I = SN->Deps.find(DefContainer);
-        if (I == SN->Deps.end())
+    bool Changed = false;
+    SmallVector<ContainerId> ContainersToRemove;
+    for (auto &[Container, Elems] : SN->Deps) {
+      auto I = ElemToSN.find(Container);
+      if (I == ElemToSN.end())
+        continue;
+      auto &ContainerElemToSN = I->second;
+
+      SmallVector<ElementId> ElemsToRemove;
+      for (auto &Elem : Elems) {
+        auto J = ContainerElemToSN.find(Elem);
+        if (J == ContainerElemToSN.end())
           continue;
-        for (auto &[DefElem, DefSN] : DefElems)
-          if (I->second.erase(DefElem) && DefSN != SN.get())
-            SNDeps.insert(DefSN);
-        if (I->second.empty())
-          SN->Deps.erase(I);
+        if (J->second != SN)
+          SuperNodeDeps[J->second].insert(SN);
+        ElemsToRemove.push_back(Elem);
       }
+
+      for (auto &Elem : ElemsToRemove)
+        Elems.erase(Elem);
+      Changed |= !ElemsToRemove.empty();
+
+      if (Elems.empty())
+        ContainersToRemove.push_back(Container);
     }
+    for (auto &Container : ContainersToRemove)
+      SN->Deps.erase(Container);
+
+    return Changed;
   }
 
-  // Compute transitive closure of deps for each node.
-  static void propagateSuperNodeDeps(SuperNodeDepsMap &SuperNodeDeps) {
-    for (auto &[SN, Deps] : SuperNodeDeps) {
-      DenseSet<SuperNode *> Reachable;
-      SmallVector<SuperNode *> Worklist(Deps.begin(), Deps.end());
+  // Merge Src into Dst. Returns true if any new elements were added to Dst.
+  static bool mergeDeps(ContainerElementsMap &Dst,
+                        const ContainerElementsMap &Src) {
+    bool Changed = false;
+    for (auto &[Container, Elems] : Src) {
+      auto &DstElems = Dst[Container];
+      size_t OrigSize = DstElems.size();
+      DstElems.insert(Elems.begin(), Elems.end());
+      Changed |= DstElems.size() != OrigSize;
+    }
+    return Changed;
+  }
+
+  // Compute the transitive closure of deps for each node.
+  //
+  // This is a monotone fixpoint: each node's dep set only grows, so a node
+  // only needs to be revisited when its dep set actually changed. Because
+  // the closure is accumulated directly into SuperNode::Deps there is no
+  // separate "sink" step, and the cost no longer depends on the (address
+  // determined) order in which SuperNodeDeps happens to be enumerated.
+  static void propagateDeps(SuperNodeDepsMap &SuperNodeDeps) {
+    // Early exit for self-contained emits.
+    if (SuperNodeDeps.empty())
+      return;
+
+    SmallVector<SuperNode *> Worklist;
+    Worklist.reserve(SuperNodeDeps.size());
+    for (auto &[SN, SNDependants] : SuperNodeDeps)
+      Worklist.push_back(SN);
+
+    while (true) {
+      DenseSet<SuperNode *> ToVisitNext;
 
       while (!Worklist.empty()) {
-        auto *DepSN = Worklist.pop_back_val();
-        if (DepSN == SN)
-          continue;
-        if (!Reachable.insert(DepSN).second)
-          continue;
-        auto I = SuperNodeDeps.find(DepSN);
+        auto *SN = Worklist.pop_back_val();
+        auto I = SuperNodeDeps.find(SN);
         if (I == SuperNodeDeps.end())
           continue;
-        for (auto *DepSNDep : I->second)
-          Worklist.push_back(DepSNDep);
+
+        for (auto *DependantSN : I->second)
+          if (mergeDeps(DependantSN->Deps, SN->Deps))
+            ToVisitNext.insert(DependantSN);
       }
 
-      Deps = std::move(Reachable);
+      if (ToVisitNext.empty())
+        break;
+
+      Worklist.append(ToVisitNext.begin(), ToVisitNext.end());
     }
   }
 
-  // Sink SuperNode dependencies back to dependencies on individual nodes.
-  static void sinkDeps(std::vector<std::unique_ptr<SuperNode>> &SNs,
-                       SuperNodeDepsMap &SuperNodeDeps) {
-    for (auto &SN : SNs) {
-      auto I = SuperNodeDeps.find(SN.get());
+  // Propagate failure along the dependant edges: anything that (transitively)
+  // depends on a failed node has also failed.
+  static void propagateFailures(DenseSet<SuperNode *> &FailedNodes,
+                                SuperNodeDepsMap &SuperNodeDeps) {
+    if (FailedNodes.empty())
+      return;
+
+    SmallVector<SuperNode *> Worklist(FailedNodes.begin(), FailedNodes.end());
+
+    while (!Worklist.empty()) {
+      auto *SN = Worklist.pop_back_val();
+      auto I = SuperNodeDeps.find(SN);
       if (I == SuperNodeDeps.end())
         continue;
 
-      for (auto *DepSN : I->second) {
-        assert(DepSN != SN.get() && "Unexpected self-dependence for SN");
-        for (auto &[Container, Elems] : DepSN->Deps)
-          SN->Deps[Container].insert(Elems.begin(), Elems.end());
-      }
+      for (auto *DependantSN : I->second)
+        if (FailedNodes.insert(DependantSN).second)
+          Worklist.push_back(DependantSN);
     }
   }
 
   template <typename GetExternalStateFn>
-  static std::vector<SuperNode *>
+  static DenseSet<SuperNode *>
   processExternalDeps(std::vector<std::unique_ptr<SuperNode>> &SNs,
                       GetExternalStateFn &GetExternalState) {
-    std::vector<SuperNode *> FailedSNs;
+    DenseSet<SuperNode *> FailedSNs;
     for (auto &SN : SNs) {
       bool SNHasError = false;
       SmallVector<ContainerId> ContainersToRemove;
@@ -581,7 +625,7 @@ private:
       for (auto &Container : ContainersToRemove)
         SN->Deps.erase(Container);
       if (SNHasError)
-        FailedSNs.push_back(SN.get());
+        FailedSNs.insert(SN.get());
     }
 
     return FailedSNs;
@@ -590,8 +634,7 @@ private:
   void processReadyOrFailed(std::vector<std::unique_ptr<SuperNode>> &SNs,
                             std::vector<std::unique_ptr<SuperNode>> &Ready,
                             std::vector<std::unique_ptr<SuperNode>> &Failed,
-                            SuperNodeDepsMap &SuperNodeDeps,
-                            const std::vector<SuperNode *> &FailedSNs,
+                            const DenseSet<SuperNode *> &FailedSNs,
                             ElemToSuperNodeMap *ElemToSNs) {
 
     SmallVector<SuperNode *> ToRemoveFromElemToSNs;
@@ -599,15 +642,9 @@ private:
     for (size_t I = 0; I != SNs.size();) {
       auto &SN = SNs[I];
 
-      bool SNFailed = false;
-      assert(SuperNodeDeps.count(SN.get()));
-      auto &SNSuperNodeDeps = SuperNodeDeps[SN.get()];
-      for (auto *FailedSN : FailedSNs) {
-        if (FailedSN == SN.get() || SNSuperNodeDeps.count(FailedSN)) {
-          SNFailed = true;
-          break;
-        }
-      }
+      // Failure has already been propagated transitively by
+      // propagateFailures, so a direct lookup is sufficient here.
+      bool SNFailed = FailedSNs.count(SN.get());
 
       bool SNReady = SN->Deps.empty();
 
