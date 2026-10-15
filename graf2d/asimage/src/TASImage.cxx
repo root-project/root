@@ -6374,6 +6374,22 @@ void TASImage::FromBitmap(const UChar_t *buf, UInt_t width, UInt_t height)
    fImage = bitmap2asimage(const_cast<unsigned char *>(buf), width, height, 0, nullptr);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Creates an image from ASGradient
+
+void TASImage::FromGradient(ASGradient *as_gradient, UInt_t width, UInt_t height)
+{
+   DestroyImage();
+   DestroyScaledImage();
+
+   if (!InitVisual())
+      Warning("FromGradient", "Visual not initiated");
+   else
+      fImage = make_gradient(fgVisual, as_gradient, width, height, SCL_DO_COLOR, ASA_ARGB32, 0, GetImageQuality());
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Switch on/off the image palette.
 /// That also invokes calling vectorization of image.
