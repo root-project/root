@@ -111,7 +111,7 @@ std::unique_ptr<RooAbsReal> createConstraintTerm(std::string const &name, RooAbs
    if (constrainedParameters) {
       cPars.add(*constrainedParameters);
    } else {
-      pdf.getParameters(&observables, cPars, false);
+      pdf.getParameters(&observables, cPars);
       doStripDisconnected = true;
    }
 
