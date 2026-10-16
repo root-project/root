@@ -830,8 +830,9 @@ static PyObject* mp_vectorcall(CPPOverload* pymeth, PyObject* const* args,
     }
   }
   if (meth) {
+    interop::TCppScope_t canon_meth = interop::GetUnderlyingScope(meth.data);
     for (auto i : pymeth->fMethodInfo->fMethods) {
-      if (interop::GetUnderlyingScope(i->GetMethod().data).data == meth) {
+      if (interop::GetUnderlyingScope(i->GetMethod().data) == canon_meth) {
         PyObject* result = i->Call(im_self, args, nargsf, kwds, &ctxt);
         if (result) {
           // success: update the dispatch map for subsequent calls
