@@ -2570,6 +2570,18 @@ def make_LinearWithSelu():
     return _model(graph, opset=9, ir_version=6, producer_name='pytorch', producer_version='1.9')
 
 
+def make_SeluAttributes():
+    """Ops: Selu with non-default alpha and gamma."""
+    nodes = [helper.make_node("Selu", ["x"], ["y"], name="selu_0", alpha=2.0, gamma=3.0)]
+    graph = helper.make_graph(
+        nodes,
+        "selu_attributes",
+        inputs=[_vi("x", FLOAT, [1, 4])],
+        outputs=[_vi("y", FLOAT, [1, 4])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
 def make_LinearWithSigmoid():
     """Ops: Gemm, Sigmoid, Gemm, Sigmoid"""
     nodes = [
@@ -6323,6 +6335,7 @@ MODELS = {
     "ScatterND_1": make_ScatterND_1,
     "ScatterND_2": make_ScatterND_2,
     "ScatterND_3": make_ScatterND_3,
+    "SeluAttributes": make_SeluAttributes,
     "Shape": make_Shape,
     "Sin": make_Sin,
     "Slice": make_Slice,
@@ -7568,6 +7581,7 @@ TEST_INPUTS = {
     "ReduceProd": [f32([5.0, 2.0, 3.0, 5.0, 5.0, 4.0], (1, 2, 3))],
     "ReshapeAlias": [rand_f32(42, (2, 3))],
     "ReshapeAliasGraphOutput": [rand_f32(43, (2, 3))],
+    "SeluAttributes": [f32([-2.0, -0.5, 0.5, 2.0], (1, 4))],
     "Shape": [f32([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], (1, 2, 3))],
     "Slice": [rand_f32(1, (20, 10, 5))],
     "SliceIdentityAlias": [rand_f32(44, (2, 3))],
