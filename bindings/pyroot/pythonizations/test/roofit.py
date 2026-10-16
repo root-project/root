@@ -307,6 +307,14 @@ class TestRooArgList(unittest.TestCase):
 
         self.assertEqual(len(ROOT.RooArgSet([x, a0])), 2)
 
+    def test_python_collection_in_pythonized_function(self):
+        # RooAbsPdf::generate() has several overloads taking a RooArgSet and a
+        # second argument, so the list needs to be converted up-front.
+        x = ROOT.RooRealVar("x", "x", 0.0, 10.0)
+        gauss = ROOT.RooGaussian("gauss", "gauss", x, ROOT.RooFit.RooConst(5.0), ROOT.RooFit.RooConst(1.0))
+        data = gauss.generate([x], 10)
+        self.assertEqual(data.numEntries(), 10)
+
 
 # Necessary inside the "eval" call
 RooArgSet = ROOT.RooArgSet
