@@ -5,6 +5,7 @@ using namespace cppjit;
 #include "CPPClassMethod.h"
 #include "CPPConstructor.h"
 #include "CPPFunction.h"
+#include "CPPInstance.h"
 #include "CPPMethod.h"
 #include "CPPOverload.h"
 #include "PyCallable.h"
@@ -67,8 +68,9 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
   bool skipSelf = fTI->fIsConstructor && (!fSelf || fSelf == Py_None);
   if (fSelf && (fSelf != Py_None) && (!fTI->fIsConstructor)) {
     PyObject* self = (PyObject*)fSelf;
-    bool addedSelf =
-        AddTypeName(proto, (PyObject*)Py_TYPE(self), self, Utility::kNone);
+    bool addedSelf = Utility::AddTypeName(proto, (PyObject*)Py_TYPE(self), self,
+                                          Utility::kNone, nullptr,
+                                          /*smart_as_pointee=*/true);
     assert(addedSelf);
     (void)addedSelf;
   }

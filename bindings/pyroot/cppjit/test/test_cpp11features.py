@@ -695,3 +695,31 @@ class TestCPP11FEATURES:
             gbl.pass_val_overloaded(gbl.create_unique_ptr_to_derived())
             == "PubDerivedTestSmartPtr"
         )
+
+    def test22_smart_ptr_overloaded_methods(self):
+        """Overloaded and templated methods called through a smart pointer"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace SmartPtrMethods {
+          struct Tok { int i = 0; };
+          struct Obj {
+            int get(int) { return 1; }
+            int get(const std::string&) { return 2; }
+            int get(Tok) { return 3; }
+            template <class T> int tget(const std::string&, T) { return 4; }
+            int tget(const std::string&, const std::string&) { return 5; }
+          };
+          std::unique_ptr<Obj> make_unique() { return std::make_unique<Obj>(); }
+          std::shared_ptr<Obj> make_shared() { return std::make_shared<Obj>(); }
+        }""")
+
+        ns = cppjit.gbl.SmartPtrMethods
+        for p in (ns.make_unique(), ns.make_shared()):
+            assert p.get(1) == 1
+            assert p.get("x") == 2
+            assert p.get(ns.Tok()) == 3
+            assert p.tget("x", 1.0) == 4
+            assert ns.Obj.get(p, 1) == 1
+            assert ns.Obj.tget(p, "x", 1.0) == 4

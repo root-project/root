@@ -618,10 +618,18 @@ static PyObject* mp_vectorcall(CPPOverload* pymeth, PyObject* const* args,
   std::string proto = "";
   if (im_self && !(ctxt.fFlags & CallContext::kIsConstructor)) {
     PyObject* self = (PyObject*)im_self;
+    // methods reached through a smart pointer proxy are those of the pointee
+    // (the methods of the smart pointer itself are reached through
+    // __smartptr__()), so the object is the pointee
     [[maybe_unused]] auto res =
-        AddTypeName(proto, (PyObject*)Py_TYPE(self), self, Utility::kNone);
+        AddTypeName(proto, (PyObject*)Py_TYPE(self), self, Utility::kNone,
+                    nullptr, /*smart_as_pointee=*/true);
     assert(res);
   }
+  // in an unbound call of non-static methods, the first argument is the object
+  const bool self_is_first_arg = !im_self && !IsConstructor(ctxt.fFlags) &&
+                                 !is_static && !overloads.empty() &&
+                                 interop::IsNonStaticMethod(overloads.front());
 
   ctxt.fFlags |= CallContext::kAllowImplicit;
   {
@@ -761,6 +769,11 @@ static PyObject* mp_vectorcall(CPPOverload* pymeth, PyObject* const* args,
       }
       if (!proto.empty())
         proto += ", ";
+      if (i == 0 && self_is_first_arg) {
+        AddTypeName(proto, typ, obj, Utility::kNone, nullptr,
+                    /*smart_as_pointee=*/true);
+        continue;
+      }
       if (!AddTypeName(proto, typ, obj, Utility::kNone)) {
         proto += "__cppjit_internal::UnknownType";
         // break; // ???: do we need to raise error here
