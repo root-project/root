@@ -1296,7 +1296,30 @@ bool cpyrt::ULLongConverter::ToMemory(PyObject* value, void* address,
 }
 
 //----------------------------------------------------------------------------
-cpyrt::EnumConverter::~EnumConverter() { DestroyConverter(fBase); }
+cpyrt::EnumConverter::~EnumConverter() {
+  DestroyConverter(fBase);
+  Py_XDECREF(fEnumType);
+}
+
+PyObject* cpyrt::EnumConverter::GetEnumType() {
+  // the Python class of the enum, an attribute of its enclosing scope
+  if (fEnumType)
+    return fEnumType;
+
+  PyObject* pyparent = CreateScopeProxy(interop::GetParentScope(fEnumScope));
+  if (pyparent) {
+    PyObject* pyenum = PyObject_GetAttrString(
+        pyparent, interop::GetFinalName(fEnumScope).c_str());
+    if (pyenum && PyType_Check(pyenum) &&
+        PyObject_HasAttr(pyenum, PyStrings::gUnderlying))
+      fEnumType = pyenum;
+    else
+      Py_XDECREF(pyenum);
+    Py_DECREF(pyparent);
+  }
+  PyErr_Clear();
+  return fEnumType;
+}
 
 bool cpyrt::EnumConverter::SetArg(PyObject* pyobject, Parameter& para,
                                   CallContext* ctxt) {
@@ -1324,7 +1347,19 @@ bool cpyrt::EnumConverter::SetArg(PyObject* pyobject, Parameter& para,
 }
 
 PyObject* cpyrt::EnumConverter::FromMemory(void* address) {
-  return fBase->FromMemory(address);
+  PyObject* pyval = fBase->FromMemory(address);
+  PyTypeObject* pyenum = (PyTypeObject*)GetEnumType();
+  if (!pyval || !pyenum || !PyObject_TypeCheck(pyval, pyenum->tp_base))
+    return pyval;
+  PyObject* args = PyTuple_Pack(1, pyval);
+  PyObject* result = pyenum->tp_base->tp_new(pyenum, args, nullptr);
+  Py_DECREF(args);
+  if (!result) {
+    PyErr_Clear();
+    return pyval;
+  }
+  Py_DECREF(pyval);
+  return result;
 }
 
 bool cpyrt::EnumConverter::ToMemory(PyObject* value, void* address,
@@ -3746,9 +3781,8 @@ cppjit::cpyrt::CreateConverter(interop::TCppType_t type, cdims_t dims) {
       h = gConvFactories.find(
           interop::GetTypeAsString(interop::ResolveType(resolvedType)));
     if (h != gConvFactories.end())
-      return new EnumConverter(
-          (h->second)(dims),
-          interop::GetScopedFinalName(interop::GetScopeFromType(type)));
+      return new EnumConverter((h->second)(dims),
+                               interop::GetScopeFromType(type));
   }
 
   // a full, qualified matching converter is preferred

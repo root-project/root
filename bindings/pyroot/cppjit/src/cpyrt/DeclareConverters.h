@@ -140,8 +140,9 @@ CPPJIT_DECLARE_REFCONVERTER(LDouble);
 // first resolution round, delegate storage to the underlying integer converter
 class EnumConverter : public Converter {
 public:
-  EnumConverter(Converter* base, const std::string& enum_name)
-      : fBase(base), fEnumName(enum_name) {}
+  EnumConverter(Converter* base, interop::TCppScope_t enum_scope)
+      : fBase(base), fEnumScope(enum_scope),
+        fEnumName(interop::GetScopedFinalName(enum_scope)) {}
   ~EnumConverter() override;
 
 public:
@@ -153,8 +154,13 @@ public:
   std::string GetFailureMsg() override;
 
 private:
+  PyObject* GetEnumType();
+
+private:
   Converter* fBase;
+  interop::TCppScope_t fEnumScope;
   std::string fEnumName;
+  PyObject* fEnumType = nullptr;
 };
 
 class VoidConverter : public Converter {

@@ -359,8 +359,7 @@ void cpyrt::CPPDataMember::Set(interop::TCppScope_t scope,
     type = interop::GetDatamemberType(fScope);
     fFullType = interop::GetTypeAsString(type);
 
-    // Get the integer type if it's an enum
-    if (interop::IsEnumType(type))
+    if (interop::IsEnumType(type) && fFullType == "std::byte")
       type = interop::ResolveType(type);
 
     if (interop::IsConstVar(fScope))

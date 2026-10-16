@@ -582,3 +582,30 @@ class TestOVERLOADS:
         v = cppjit.gbl.std.vector[ns.Variant]()
         v.push_back(a)
         assert len(v) == 1 and v[0].n == 3
+
+    def test23_enum_data_member_argument(self):
+        """Enum data members keep their type when passed on"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace EnumDataMembers {
+          enum E { A = 1, B = 2 };
+          enum class EC { X = 1, Y = 2 };
+          struct S { static const E e = B; static constexpr EC ec = EC::Y; E m = A; };
+          int f(E) { return 1; }
+          int f(const char*) { return 2; }
+          int g(EC) { return 3; }
+          int g(const char*) { return 4; }
+        }""")
+
+        ns = cppjit.gbl.EnumDataMembers
+        assert type(ns.S.e) is ns.E and ns.S.e == 2
+        assert type(ns.S().m) is ns.E and ns.S().m == 1
+        assert ns.f(ns.S.e) == 1
+        assert ns.f(ns.S().m) == 1
+        assert ns.g(ns.S.ec) == 3
+
+        s = ns.S()
+        s.m = ns.B
+        assert s.m == 2
