@@ -15,7 +15,7 @@
 
 #include <ROOT/RNTupleProcessorEntry.hxx>
 
-const std::string &ROOT::Experimental::Internal::RNTupleProcessorEntry::FindFieldName(FieldIndex_t fieldIdx) const
+const std::string &ROOT::Internal::RNTupleProcessorEntry::FindFieldName(FieldIndex_t fieldIdx) const
 {
    assert(fieldIdx < fProcessorValues.size());
 
@@ -30,9 +30,9 @@ const std::string &ROOT::Experimental::Internal::RNTupleProcessorEntry::FindFiel
    return empty;
 }
 
-std::optional<ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t>
-ROOT::Experimental::Internal::RNTupleProcessorEntry::FindFieldIndex(std::string_view canonicalFieldName,
-                                                                    std::string_view typeName) const
+std::optional<ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t>
+ROOT::Internal::RNTupleProcessorEntry::FindFieldIndex(std::string_view canonicalFieldName,
+                                                      std::string_view typeName) const
 {
    auto it = fFieldName2Index.find(std::string(canonicalFieldName));
    if (it == fFieldName2Index.end()) {
@@ -51,10 +51,10 @@ ROOT::Experimental::Internal::RNTupleProcessorEntry::FindFieldIndex(std::string_
    return std::nullopt;
 }
 
-ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
-ROOT::Experimental::Internal::RNTupleProcessorEntry::AddField(const std::string &qualifiedFieldName,
-                                                              std::unique_ptr<ROOT::RFieldBase> field, void *valuePtr,
-                                                              const RNTupleProcessorProvenance &provenance)
+ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t
+ROOT::Internal::RNTupleProcessorEntry::AddField(const std::string &qualifiedFieldName,
+                                                std::unique_ptr<ROOT::RFieldBase> field, void *valuePtr,
+                                                const RNTupleProcessorProvenance &provenance)
 {
    auto fieldNameWithProcessorPrefix = qualifiedFieldName;
    if (const auto &processorPrefix = provenance.Get(); !processorPrefix.empty())
@@ -76,14 +76,13 @@ ROOT::Experimental::Internal::RNTupleProcessorEntry::AddField(const std::string 
    return fieldIdx;
 }
 
-const ROOT::RFieldBase &ROOT::Experimental::Internal::RNTupleProcessorEntry::GetField(FieldIndex_t fieldIdx) const
+const ROOT::RFieldBase &ROOT::Internal::RNTupleProcessorEntry::GetField(FieldIndex_t fieldIdx) const
 {
    assert(fieldIdx < fProcessorValues.size());
    return *fProcessorValues[fieldIdx].fField;
 }
 
-void ROOT::Experimental::Internal::RNTupleProcessorEntry::UpdateField(FieldIndex_t fieldIdx,
-                                                                      std::unique_ptr<ROOT::RFieldBase> field)
+void ROOT::Internal::RNTupleProcessorEntry::UpdateField(FieldIndex_t fieldIdx, std::unique_ptr<ROOT::RFieldBase> field)
 {
    assert(fieldIdx < fProcessorValues.size());
 
@@ -101,19 +100,19 @@ void ROOT::Experimental::Internal::RNTupleProcessorEntry::UpdateField(FieldIndex
    }
 }
 
-void ROOT::Experimental::Internal::RNTupleProcessorEntry::BindRawPtr(FieldIndex_t fieldIdx, void *valuePtr)
+void ROOT::Internal::RNTupleProcessorEntry::BindRawPtr(FieldIndex_t fieldIdx, void *valuePtr)
 {
    assert(fieldIdx < fProcessorValues.size());
    fProcessorValues[fieldIdx].fValue.BindRawPtr(valuePtr);
 }
 
-void ROOT::Experimental::Internal::RNTupleProcessorEntry::Bind(FieldIndex_t fieldIdx, std::shared_ptr<void> valuePtr)
+void ROOT::Internal::RNTupleProcessorEntry::Bind(FieldIndex_t fieldIdx, std::shared_ptr<void> valuePtr)
 {
    assert(fieldIdx < fProcessorValues.size());
    fProcessorValues[fieldIdx].fValue.Bind(std::move(valuePtr));
 }
 
-void ROOT::Experimental::Internal::RNTupleProcessorEntry::ReadValue(FieldIndex_t fieldIdx, ROOT::NTupleSize_t entryIdx)
+void ROOT::Internal::RNTupleProcessorEntry::ReadValue(FieldIndex_t fieldIdx, ROOT::NTupleSize_t entryIdx)
 {
    assert(fieldIdx < fProcessorValues.size());
 
@@ -122,8 +121,8 @@ void ROOT::Experimental::Internal::RNTupleProcessorEntry::ReadValue(FieldIndex_t
    }
 }
 
-std::unordered_set<ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t>
-ROOT::Experimental::Internal::RNTupleProcessorEntry::GetFieldIndices() const
+std::unordered_set<ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t>
+ROOT::Internal::RNTupleProcessorEntry::GetFieldIndices() const
 {
    // Field indices are sequentially assigned, and the entry (currently) offers no way to remove fields, so we can just
    // generate and return a set {0, ..., |fProcessorValues| - 1}.

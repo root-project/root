@@ -148,7 +148,7 @@ TEST_F(RNTupleChainProcessorTest, AddAllFields)
 {
    auto proc = RNTupleProcessor::CreateChain(
       {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[2]}, {fNTupleName, fFileNames[1]}});
-   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/false);
+   auto entry = ROOT::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/false);
    auto fieldIdxs = entry->GetFieldIndices();
 
    EXPECT_EQ(fieldIdxs.size(), 2);
@@ -158,7 +158,7 @@ TEST_F(RNTupleChainProcessorTest, AddAllFieldsAndSubfields)
 {
    auto proc = RNTupleProcessor::CreateChain(
       {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[2]}, {fNTupleName, fFileNames[1]}});
-   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/true);
+   auto entry = ROOT::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/true);
    auto fieldIdxs = entry->GetFieldIndices();
 
    EXPECT_EQ(fieldIdxs.size(), 3);
@@ -191,7 +191,7 @@ TEST_F(RNTupleChainProcessorTest, EmptyNTuples)
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
 
-namespace ROOT::Experimental::Internal {
+namespace ROOT::Internal {
 struct RNTupleProcessorEntryLoader {
    static ROOT::RResult<void> LoadEntry(RNTupleProcessor &processor, ROOT::NTupleSize_t entryNumber)
    {
@@ -204,11 +204,11 @@ struct RNTupleProcessorEntryLoader {
       return RResult<void>::Success();
    }
 };
-} // namespace ROOT::Experimental::Internal
+} // namespace ROOT::Internal
 
 TEST_F(RNTupleChainProcessorTest, LoadRandomEntry)
 {
-   using ROOT::Experimental::Internal::RNTupleProcessorEntryLoader;
+   using ROOT::Internal::RNTupleProcessorEntryLoader;
 
    auto proc = RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}});
 

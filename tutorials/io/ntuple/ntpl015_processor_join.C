@@ -22,7 +22,6 @@
 
 // Import classes from the `Experimental` namespace for the time being.
 using ROOT::Experimental::CreateRNTupleJoinProcessor;
-using ROOT::Experimental::RNTupleOpenSpec;
 
 const std::string kPrimaryNTupleName = "mainNTuple";
 const std::string kMainNTuplePath = "main_ntuple.root";

@@ -49,7 +49,7 @@ RNTupleProcessorDS::~RNTupleProcessorDS() = default;
 
 // TODO: see if common parts of this and RNTupleDS::AddField can be factored out.
 void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_view colName,
-                                  Internal::RNTupleProcessorProvenance procProvenance,
+                                  ROOT::Internal::RNTupleProcessorProvenance procProvenance,
                                   std::deque<RNTupleProcessorDS::RFieldInfo> &fieldInfos, bool convertToRVec)
 {
    // As an example for the mapping of RNTuple fields to RDF columns, let's consider an RNTuple
@@ -208,7 +208,7 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
       fColumnNames.emplace_back(cardinalityFieldName);
       fColumnTypes.emplace_back(cardinalityField->GetTypeName());
       fProcessor->AddFieldToEntry(std::move(cardinalityField), cardinalityFieldName, nullptr,
-                                  Internal::RNTupleProcessorProvenance());
+                                  ROOT::Internal::RNTupleProcessorProvenance());
    }
 
    fieldInfos.emplace_back(field.GetOnDiskId(), field.GetFieldName(), field.GetTypeName(), nRepetitions);
@@ -220,7 +220,7 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
    // Add nested fields explicitly to the entry, because they may be mapped differently.
    if (fieldInfos.size() > 1) {
       fProcessor->AddFieldToEntry(std::move(valueField), canonicalName, nullptr,
-                                  Internal::RNTupleProcessorProvenance());
+                                  ROOT::Internal::RNTupleProcessorProvenance());
    }
 
    for (std::uint16_t i = 0; i < nFieldInfosAdded; i++) {
@@ -228,11 +228,11 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
    }
 }
 
-RNTupleProcessorDS::RNTupleProcessorDS(std::unique_ptr<ROOT::Experimental::RNTupleProcessor> processor)
+RNTupleProcessorDS::RNTupleProcessorDS(std::unique_ptr<ROOT::RNTupleProcessor> processor)
    : fProcessor(std::move(processor))
 {
    // Do not add the subfields now, this is handled by AddField.
-   fProcessor->AddAllFieldsToEntry(Internal::RNTupleProcessorProvenance(), /*includeSubfields=*/false);
+   fProcessor->AddAllFieldsToEntry(ROOT::Internal::RNTupleProcessorProvenance(), /*includeSubfields=*/false);
    const auto &entry = fProcessor->GetEntry();
    for (auto fieldIdx : entry.GetFieldIndices()) {
       const auto &field = entry.GetValue(fieldIdx).GetField();
@@ -321,7 +321,7 @@ RNTupleProcessorDS::GetColumnReaders(unsigned int /* slot */, std::string_view n
    newField->SetOnDiskId(field.GetOnDiskId());
 
    try {
-      fProcessor->AddFieldToEntry(std::move(newField), strName, nullptr, Internal::RNTupleProcessorProvenance());
+      fProcessor->AddFieldToEntry(std::move(newField), strName, nullptr, ROOT::Internal::RNTupleProcessorProvenance());
    } catch (const ROOT::RException &) {
       std::string msg = "RNTupleProcessorDS: invalid type \"" + requestedType + "\" for column \"" + strName +
                         "\" with on-disk type \"" + field.GetTypeName() + "\"";
@@ -375,7 +375,7 @@ bool RNTupleProcessorDS::HasColumn(std::string_view colName) const
 void RNTupleProcessorDS::Initialize()
 {
    fCurrentRanges.clear();
-   fProcessor->Connect(fProcessor->GetEntry().GetFieldIndices(), Internal::RNTupleProcessorProvenance(),
+   fProcessor->Connect(fProcessor->GetEntry().GetFieldIndices(), ROOT::Internal::RNTupleProcessorProvenance(),
                        /*updateFields=*/false);
 }
 
@@ -425,8 +425,7 @@ ROOT::RDF::RSampleInfo RNTupleProcessorDS::CreateSampleInfo(
 }
 } // namespace ROOT::Experimental::Internal::RDF
 
-ROOT::RDataFrame
-ROOT::Experimental::RDF::FromRNTupleProcessor(std::unique_ptr<ROOT::Experimental::RNTupleProcessor> processor)
+ROOT::RDataFrame ROOT::Experimental::RDF::FromRNTupleProcessor(std::unique_ptr<ROOT::RNTupleProcessor> processor)
 {
    return ROOT::RDataFrame(
       std::make_unique<ROOT::Experimental::Internal::RDF::RNTupleProcessorDS>(std::move(processor)));
