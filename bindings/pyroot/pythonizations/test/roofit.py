@@ -329,6 +329,17 @@ class TestRooArgList(unittest.TestCase):
         gauss.plotOn(frame, VisualizeError=(res, [mean], 1))
         self.assertEqual(frame.numItems(), 1)
 
+    def test_workspace_import_python_collection(self):
+        # A list of objects is imported as a RooArgSet of objects, not as a
+        # generic TObject.
+        x = ROOT.RooRealVar("x", "x", 0.0, 10.0)
+        gauss = ROOT.RooGaussian("gauss", "gauss", x, ROOT.RooFit.RooConst(5.0), ROOT.RooFit.RooConst(1.0))
+        cat = ROOT.RooCategory("cat", "cat")
+        ws = ROOT.RooWorkspace("ws", "ws")
+        ws.Import([gauss, cat])
+        self.assertEqual(ws.pdf("gauss").GetName(), "gauss")
+        self.assertEqual(ws.cat("cat").GetName(), "cat")
+
     def test_python_collection_in_pythonized_function(self):
         # RooAbsPdf::generate() has several overloads taking a RooArgSet and a
         # second argument, so the list needs to be converted up-front.

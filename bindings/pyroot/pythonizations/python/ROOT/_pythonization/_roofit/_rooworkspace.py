@@ -125,6 +125,12 @@ def RooWorkspace_import(self, *args, **kwargs):
     The keywords must correspond to the CmdArg of the `import()` function.
     """
     # Redefinition of `RooWorkspace.import()` for keyword arguments.
+    import ROOT
+
+    # A sequence of objects to import is a RooArgSet, like `import({a, b})`
+    # in C++. As a RooArgList, it would select the TObject overload instead.
+    if args and isinstance(args[0], (list, tuple)):
+        args = (ROOT.RooArgSet(args[0]),) + args[1:]
     args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
     return self._import(*args, **kwargs)
 
