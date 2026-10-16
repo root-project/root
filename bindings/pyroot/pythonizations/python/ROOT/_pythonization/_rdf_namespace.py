@@ -85,6 +85,25 @@ def _fromspec(distributed_fromspec, local_fromspec):
     return fromspec
 
 
+def _iterators_to_lists(args):
+    """
+    Turn iterators (e.g. generators) among the arguments into lists, which
+    the overload resolution matches with the std::initializer_list and
+    std::vector parameters of the RDataFrame constructors, e.g. for
+    `RDataFrame("tree", (prefix + f for f in files))`.
+    """
+    import collections.abc
+
+    import ROOT
+
+    return tuple(
+        list(arg)
+        if isinstance(arg, collections.abc.Iterator) and not isinstance(arg, ROOT._cppyy.types.Instance)
+        else arg
+        for arg in args
+    )
+
+
 def _rdataframe(local_rdf, distributed_rdf):
     """
     Create a callable that correctly dispatches either to the local or
@@ -100,7 +119,7 @@ def _rdataframe(local_rdf, distributed_rdf):
             rdf = distributed_rdf(*args, **kwargs)
             rnode = ROOT.RDF.AsRNode(rdf._headnode.rdf_node)
         else:
-            rdf = local_rdf(*args, **kwargs)
+            rdf = local_rdf(*_iterators_to_lists(args), **kwargs)
             rnode = ROOT.RDF.AsRNode(rdf)
 
         if args and isinstance(args[0], ROOT.TTree):

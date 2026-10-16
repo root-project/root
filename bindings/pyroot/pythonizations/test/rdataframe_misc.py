@@ -84,6 +84,18 @@ class RDataFrameMisc(unittest.TestCase):
     def _filter_x(self, rdf):
         return rdf.Filter("x > 2")
 
+    def test_filenames_from_generator(self):
+        """
+        The list of input files can be given as a generator
+        """
+        filename = "rdataframe_misc_generator.root"
+        ROOT.RDataFrame(5).Define("x", "1.").Snapshot("events", filename)
+        try:
+            rdf = ROOT.RDataFrame("events", (f for f in [filename, filename]))
+            self.assertEqual(rdf.Count().GetValue(), 10)
+        finally:
+            os.remove(filename)
+
     def _test_rdf_in_function(self, chain):
         rdf = ROOT.RDataFrame(chain)
         meanx = rdf.Mean("x")
