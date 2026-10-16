@@ -761,6 +761,13 @@ static PyObject* vector_iter(PyObject* v) {
                         ? ((CPPInstance*)pydata)->GetObjectRaw()
                         : nullptr;
     Py_XDECREF(pydata);
+    // __real_data() may fail: e.g. for std::vector<char>, data() returns a
+    // char*, which is converted to a Python str and so fails if the bytes up
+    // to the next null (the data isn't null-terminated) aren't valid UTF-8.
+    // Without a data pointer, the iterator indexes the vector instead, so
+    // don't leave the error set.
+    if (!vi->vi_data)
+      PyErr_Clear();
 
   } else {
     PyErr_Clear();
