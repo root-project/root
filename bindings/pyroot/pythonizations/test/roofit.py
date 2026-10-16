@@ -737,6 +737,16 @@ class TestRooGlobalFunc(unittest.TestCase):
         # ROOT-9516
         minimizer = ROOT.RooFit.Minimizer("Minuit2", "migrad")  # noqa: F841
 
+    def test_components(self):
+        """RooFit::Components() with a component name and with RooFit objects"""
+        cmd = ROOT.RooFit.Components("bkg")
+        self.assertEqual(str(cmd.getString(0)), "bkg")
+
+        x = ROOT.RooRealVar("x", "x", 0.0, 1.0)
+        gauss = ROOT.RooGaussian("gauss", "gauss", x, ROOT.RooFit.RooConst(0.5), ROOT.RooFit.RooConst(0.1))
+        cmd = ROOT.RooFit.Components(gauss)
+        self.assertEqual(cmd.getSet(0).size(), 1)
+
 
 class TestRooJSONFactoryWSTool(unittest.TestCase):
     """
