@@ -307,6 +307,16 @@ class TestRooArgList(unittest.TestCase):
 
         self.assertEqual(len(ROOT.RooArgSet([x, a0])), 2)
 
+    def test_python_collection_in_constructor(self):
+        # RooAddPdf has several constructors with five parameters, so the
+        # lists need to be converted up-front.
+        x = ROOT.RooRealVar("x", "x", 0.0, 10.0)
+        g1 = ROOT.RooGaussian("g1", "g1", x, ROOT.RooFit.RooConst(3.0), ROOT.RooFit.RooConst(1.0))
+        g2 = ROOT.RooGaussian("g2", "g2", x, ROOT.RooFit.RooConst(6.0), ROOT.RooFit.RooConst(1.0))
+        frac = ROOT.RooRealVar("frac", "frac", 0.5, 0.0, 1.0)
+        model = ROOT.RooAddPdf("model", "model", [g1, g2], [frac], True)
+        self.assertEqual(len(model.pdfList()), 2)
+
     def test_python_collection_in_pythonized_function(self):
         # RooAbsPdf::generate() has several overloads taking a RooArgSet and a
         # second argument, so the list needs to be converted up-front.
