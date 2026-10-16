@@ -1110,7 +1110,7 @@ PyObject* Init() {
       PyErr_NewException((char*)"cppjit.ll.AbortSignal", cppfatal, nullptr);
   PyModule_AddObject(gThisModule, (char*)"AbortSignal", gAbrtException);
   gOverloadResolutionException = PyErr_NewException(
-      (char*)"cppjit.OverloadResolutionException", nullptr, nullptr);
+      (char*)"cppjit.OverloadResolutionException", PyExc_TypeError, nullptr);
   PyModule_AddObject(gThisModule, (char*)"OverloadResolutionException",
                      gOverloadResolutionException);
   gOverloadAmbiguityException =
