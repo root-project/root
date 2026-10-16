@@ -120,7 +120,7 @@ public:
    virtual void SetImage(const Double_t * /*imageData*/, UInt_t /*width*/, UInt_t /*height*/, TImagePalette * /*palette*/ = nullptr) {}
    virtual void SetImage(const TArrayD & /*imageData*/, UInt_t /*width*/, TImagePalette * /*palette*/ = nullptr) {}
    virtual void SetImage(const TVectorD & /*imageData*/, UInt_t /*width*/, TImagePalette * /*palette*/ = nullptr) {}
-   virtual void SetImage(Pixmap_t /*pxm*/, Pixmap_t /*mask*/ = 0) {}
+   virtual void R__DEPRECATED(7,00, "Use TASUtil::FromPixmap instead") SetImage(Pixmap_t /*pxm*/, Pixmap_t /*mask*/ = 0) {}
 
 
    // Create an image from bitmap. (See TASImage::FromBitmap)
