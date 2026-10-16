@@ -21,6 +21,10 @@ def _TClass_DynamicCast(self, base, obj, up=True):
 
     if isinstance(obj, int):
         obj = cppyy.ll.cast["void*"](obj)
+    elif isinstance(obj, cppyy.types.Instance):
+        # A proxy doesn't convert to void* in the overload resolution (like
+        # an object doesn't in C++), so pass its address explicitly.
+        obj = cppyy.ll.cast["void*"](cppyy.addressof(obj))
 
     address = cppyy.addressof(self._TClass__DynamicCast(base, obj, up))
     return cppyy.bind_object(address, (base if up else self).GetName())
