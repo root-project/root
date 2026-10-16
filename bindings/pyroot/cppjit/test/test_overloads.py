@@ -609,3 +609,20 @@ class TestOVERLOADS:
         s = ns.S()
         s.m = ns.B
         assert s.m == 2
+
+    def test24_unknown_explicit_template_argument(self):
+        """An unresolvable explicit template argument is an error"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace UnknownTemplateArg {
+          struct Entry {
+            template <class T> int size(int) { return (int)sizeof(T); }
+          };
+        }""")
+
+        e = cppjit.gbl.UnknownTemplateArg.Entry()
+        assert e.size["double"](1) == 8
+        with raises(TypeError):
+            e.size["NoSuchType<int>"](1)

@@ -2142,8 +2142,13 @@ interop::TCppMethod_t ResolveMethodTemplate(
   // cpyrt assumes that we attempt instantiation here
   std::vector<Cpp::TemplateArgInfo> arg_types;
   std::vector<Cpp::TemplateArgInfo> templ_params;
-  interop::AppendTypesSlow(proto, arg_types, scope, true);
-  interop::AppendTypesSlow(explicit_params, templ_params, scope, true);
+  if (!proto.empty() && interop::AppendTypesSlow(proto, arg_types, scope,
+                                                 /*append_unknown=*/true))
+    return nullptr;
+  if (!explicit_params.empty() &&
+      interop::AppendTypesSlow(explicit_params, templ_params, scope,
+                               /*append_unknown=*/false))
+    return nullptr;
 
   std::vector<interop::TCppMethod_t> candidate_methods;
   for (auto fn : candidates)
