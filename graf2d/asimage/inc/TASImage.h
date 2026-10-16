@@ -114,7 +114,6 @@ public:
 
    void  FromBitmap(const UChar_t *buf, UInt_t width, UInt_t height) override;
    void  FromPad(TVirtualPad *pad, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0) override;
-   void  FromX11Window(Window_t win , Int_t x, Int_t y, Int_t width, Int_t height) override;
    void  FromWindow(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0) override;
    void  FromGLBuffer(UChar_t *buf, UInt_t width, UInt_t height) override;
 
@@ -203,7 +202,6 @@ public:
    ASImage   *GetImage() const { return fImage; }
    void       SetImage(ASImage *image) { DestroyImage(); fImage = image; }
    TImage    *GetScaledImage() const override { return fScaledImage; }
-   Pixmap_t   GetX11Pixmap(Window_t root_window) override;
    Pixmap_t   GetPixmap() override;
    Bool_t     GetMaskBits(UInt_t &width, UInt_t &height, std::vector<char> &bits) override;
    Pixmap_t   GetMask() override;
