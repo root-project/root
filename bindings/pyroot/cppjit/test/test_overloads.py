@@ -519,3 +519,22 @@ class TestOVERLOADS:
         msg = str(exc.value)
         assert msg.count("double b)") == 1
         assert msg.count("float b)") == 1
+
+    def test20_empty_list_argument(self):
+        """An empty list selects an initializer_list overload"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace EmptyListArg {
+          int f(const std::string&, std::initializer_list<std::string> l) { return (int)l.size(); }
+          int f(const std::string&, const std::string&) { return -1; }
+          int g(std::initializer_list<int> l) { return (int)l.size(); }
+          int g(double) { return -1; }
+        }""")
+
+        ns = cppjit.gbl.EmptyListArg
+        assert ns.f("t", []) == 0
+        assert ns.f("t", ["a"]) == 1
+        assert ns.g([]) == 0
+        assert ns.g(()) == 0
