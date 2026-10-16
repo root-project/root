@@ -63,8 +63,8 @@ public:
   void AdoptMethod(PyCallable* pc);
   PyObject* Instantiate(const std::string& fname, cpyrt_PyArgs_t tmplArgs,
                         size_t nargsf, Utility::ArgPreference,
-                        int* pcnt = nullptr,
-                        bool include_non_templated = false);
+                        int* pcnt = nullptr, bool include_non_templated = false,
+                        PyObject* kwnames = nullptr);
 
 private: // private, as the python C-API will handle creation
   TemplateProxy() = delete;

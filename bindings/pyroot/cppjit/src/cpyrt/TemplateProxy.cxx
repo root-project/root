@@ -61,7 +61,8 @@ void TemplateProxy::AdoptMethod(PyCallable* pc) {
 PyObject* TemplateProxy::Instantiate(const std::string& fname,
                                      cpyrt_PyArgs_t args, size_t nargsf,
                                      Utility::ArgPreference pref, int* pcnt,
-                                     bool include_non_templated) {
+                                     bool include_non_templated,
+                                     PyObject* kwnames) {
   // Instantiate (and cache) templated methods, return method if any
   std::string proto = "";
   std::string protoPair = "";
@@ -75,7 +76,10 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
     (void)addedSelf;
   }
 
-  Py_ssize_t argc = cpyrt_PyArgs_GET_SIZE(args, nargsf);
+  // the values of keyword arguments follow the positional ones; they are
+  // matched to the parameters by name in the overload resolution
+  Py_ssize_t argc = cpyrt_PyArgs_GET_SIZE(args, nargsf) +
+                    (kwnames ? PyTuple_GET_SIZE(kwnames) : 0);
   if (argc != 0) {
     PyObject* tpArgs = PyTuple_New(skipSelf ? argc - 1 : argc);
     for (Py_ssize_t i = skipSelf ? 1 : 0, j = 0; i < argc; ++i, ++j) {
@@ -231,15 +235,19 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
 
   // the following causes instantiation as necessary
   interop::TCppScope_t scope = ((CPPClass*)fTI->fPyClass)->fCppType;
+  std::vector<std::string> kw_names;
+  for (Py_ssize_t i = 0; kwnames && i < PyTuple_GET_SIZE(kwnames); i++)
+    kw_names.push_back(PyUnicode_AsUTF8(PyTuple_GET_ITEM(kwnames, i)));
   std::vector<interop::TCppMethod_t> ambiguous_candidates;
-  interop::TCppMethod_t cppmeth = interop::GetMethodTemplate(
-      scope, fname, proto, ambiguous_candidates, include_non_templated);
+  interop::TCppMethod_t cppmeth =
+      interop::GetMethodTemplate(scope, fname, proto, ambiguous_candidates,
+                                 include_non_templated, kw_names);
   if (!cppmeth && !protoPair.empty() && protoPair != proto) {
     // retry with 2-tuples typed as std::pair instead of std::initializer_list
     ambiguous_candidates.clear();
     cppmeth = interop::GetMethodTemplate(scope, fname, protoPair,
                                          ambiguous_candidates,
-                                         include_non_templated);
+                                         include_non_templated, kw_names);
     if (cppmeth)
       proto = protoPair;
   }
@@ -270,8 +278,9 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
         pos = proto.find("initializer_list", pos + 6);
       }
 
-      interop::TCppMethod_t m2 = interop::GetMethodTemplate(
-          scope, fname, proto, ambiguous_candidates, include_non_templated);
+      interop::TCppMethod_t m2 =
+          interop::GetMethodTemplate(scope, fname, proto, ambiguous_candidates,
+                                     include_non_templated, kw_names);
       if (m2 && m2 != cppmeth) {
         // replace if the new method with vector was found; otherwise just
         // continue with the previously found method with initializer_list.
@@ -630,8 +639,8 @@ static PyObject* tpp_vectorcall(TemplateProxy* pytmpl, PyObject* const* args,
       PyErr_Clear();
 
     // not cached or failed call; try instantiation
-    pymeth = pytmpl->Instantiate(PyUnicode_AsUTF8(pyfullname), args,
-                                 nargsf, Utility::kNone, nullptr, false);
+    pymeth = pytmpl->Instantiate(PyUnicode_AsUTF8(pyfullname), args, nargsf,
+                                 Utility::kNone, nullptr, false, kwds);
     if (pymeth) {
       // attempt actual call; same as above, allow implicit conversion of
       // arguments
@@ -659,7 +668,7 @@ static PyObject* tpp_vectorcall(TemplateProxy* pytmpl, PyObject* const* args,
   // case 2: create a template instantiation
   int pcnt = 0; // FIXME: this is unused and can be removed
   pymeth = pytmpl->Instantiate(pytmpl->fTI->fCppName, args, nargsf,
-                               Utility::kReference, &pcnt, true);
+                               Utility::kReference, &pcnt, true, kwds);
   if (pymeth) {
     // attempt actual call; even if argument based, allow implicit conversions,
     // for example for non-template arguments

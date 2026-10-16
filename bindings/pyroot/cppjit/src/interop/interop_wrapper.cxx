@@ -1888,7 +1888,8 @@ interop::TCppMethod_t BestOverloadFunctionMatch(
     const std::vector<Cpp::TemplateArgInfo>& arg_types,
     const std::vector<Cpp::TemplateArgInfo>& templ_params,
     std::vector<interop::TCppMethod_t>& ambiguous_candidates,
-    interop::TCppScope_t parent_scope, bool is_operator) {
+    interop::TCppScope_t parent_scope, bool is_operator,
+    bool count_fallback = true) {
   std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
 
   auto remove_duplicate_methods = [](std::vector<interop::TCppMethod_t>& methods) {
@@ -2088,12 +2089,151 @@ interop::TCppMethod_t BestOverloadFunctionMatch(
 
   // proper argument type match failed
   // trying improper argument length match
-  if (!cppmeth && !potential_cppmeth_ambiguous &&
+  if (!cppmeth && count_fallback && !potential_cppmeth_ambiguous &&
       !Cpp::IsTemplatedFunction(potential_cppmeth))
     cppmeth = potential_cppmeth;
   if (!cppmeth)
     remove_duplicate_methods(ambiguous_candidates);
   return cppmeth;
+}
+
+// Overload resolution for a call with keyword arguments, whose values are the
+// last kw_names.size() entries of arg_types. As in the call itself
+// (CPPMethod::ProcessKwds), the keyword arguments are matched to the
+// parameters by name, so each candidate gets its own argument list: the
+// positional arguments, then the keyword values at the positions of their
+// parameters, with the skipped (defaulted) parameters in between taking an
+// argument of their own type. Candidates that lack one of the names, would get
+// an argument twice, or would skip a required parameter (or one of a dependent
+// type) are not viable. The candidates with the same argument list are
+// resolved together; of the best candidates of the different lists, the one
+// that skips the fewest parameters wins (it is ambiguous on a tie). Only if no
+// list has a match, the fallback to a candidate by argument count is used. If
+// the names fit no candidate, resolve with the keyword values in the order
+// given, so that the call reports the unexpected or repeated keyword.
+interop::TCppMethod_t BestOverloadFunctionMatch(
+    const std::vector<interop::TCppMethod_t>& candidates,
+    const std::vector<Cpp::TemplateArgInfo>& arg_types,
+    const std::vector<std::string>& kw_names,
+    const std::vector<Cpp::TemplateArgInfo>& templ_params,
+    std::vector<interop::TCppMethod_t>& ambiguous_candidates,
+    interop::TCppScope_t parent_scope, bool is_operator) {
+  if (kw_names.empty())
+    return BestOverloadFunctionMatch(candidates, arg_types, templ_params,
+                                     ambiguous_candidates, parent_scope,
+                                     is_operator);
+  if (arg_types.size() < kw_names.size())
+    return nullptr;
+
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
+
+  struct ArgList {
+    std::vector<Cpp::TemplateArgInfo> fArgs;
+    size_t fSkipped;
+    std::vector<interop::TCppMethod_t> fCandidates;
+  };
+  auto same_args = [](const std::vector<Cpp::TemplateArgInfo>& a,
+                      const std::vector<Cpp::TemplateArgInfo>& b) {
+    return std::equal(
+        a.begin(), a.end(), b.begin(), b.end(),
+        [](const Cpp::TemplateArgInfo& x, const Cpp::TemplateArgInfo& y) {
+          return x.m_Type == y.m_Type && x.m_IntegralValue == y.m_IntegralValue;
+        });
+  };
+
+  const size_t npos = arg_types.size() - kw_names.size();
+  std::vector<ArgList> arg_lists;
+  for (auto fn : candidates) {
+    // the object of a method call is the first argument
+    const size_t self =
+        interop::IsNonStaticMethod(fn) && !interop::IsConstructor(fn) ? 1 : 0;
+    const size_t nparams = Cpp::GetFunctionNumArgs(fn);
+    if (npos < self || npos > nparams + self)
+      continue;
+
+    std::vector<const Cpp::TemplateArgInfo*> slots(nparams + self, nullptr);
+    for (size_t i = 0; i < npos; ++i)
+      slots[i] = &arg_types[i];
+    size_t nargs = npos;
+    bool viable = true;
+    for (size_t k = 0; viable && k < kw_names.size(); ++k) {
+      size_t p = 0;
+      while (p < nparams && Cpp::GetFunctionArgName(fn, p) != kw_names[k])
+        ++p;
+      viable = p < nparams && !slots[p + self];
+      if (viable) {
+        slots[p + self] = &arg_types[npos + k];
+        nargs = std::max(nargs, p + self + 1);
+      }
+    }
+
+    ArgList list{{}, 0, {fn}};
+    const size_t nrequired = Cpp::GetFunctionRequiredArgs(fn);
+    for (size_t i = 0; viable && i < nargs; ++i) {
+      if (slots[i]) {
+        list.fArgs.push_back(*slots[i]);
+        continue;
+      }
+      // a skipped parameter takes its default; spell it as its own type
+      interop::TCppType_t type = nullptr;
+      if (i - self >= nrequired) {
+        type = Cpp::GetFunctionArgType(fn, i - self);
+        // the parameter type of a template may depend on its parameters
+        if (type && Cpp::IsTemplatedFunction(fn))
+          type = interop::GetType(interop::GetTypeAsString(type));
+      }
+      viable = (bool)type;
+      list.fArgs.emplace_back(type.data);
+      list.fSkipped += 1;
+    }
+    if (!viable)
+      continue;
+
+    auto same = std::find_if(arg_lists.begin(), arg_lists.end(),
+                             [&](const ArgList& other) {
+                               return same_args(other.fArgs, list.fArgs);
+                             });
+    if (same != arg_lists.end())
+      same->fCandidates.push_back(fn);
+    else
+      arg_lists.push_back(std::move(list));
+  }
+
+  if (arg_lists.empty())
+    return BestOverloadFunctionMatch(candidates, arg_types, templ_params,
+                                     ambiguous_candidates, parent_scope,
+                                     is_operator);
+
+  interop::TCppMethod_t best = nullptr;
+  std::vector<interop::TCppMethod_t> best_tied, not_resolved;
+  for (bool count_fallback : {false, true}) {
+    size_t best_skipped = 0;
+    for (const ArgList& list : arg_lists) {
+      std::vector<interop::TCppMethod_t> ambiguous;
+      interop::TCppMethod_t method = BestOverloadFunctionMatch(
+          list.fCandidates, list.fArgs, templ_params, ambiguous, parent_scope,
+          is_operator, count_fallback);
+      if (!method) {
+        if (count_fallback)
+          not_resolved.insert(not_resolved.end(), ambiguous.begin(),
+                              ambiguous.end());
+      } else if (!best || list.fSkipped < best_skipped) {
+        best = method;
+        best_skipped = list.fSkipped;
+        best_tied = {method};
+      } else if (list.fSkipped == best_skipped && method != best) {
+        best_tied.push_back(method);
+      }
+    }
+    if (best)
+      break;
+  }
+  if (best && best_tied.size() == 1)
+    return best;
+  const auto& ambiguous = best ? best_tied : not_resolved;
+  ambiguous_candidates.insert(ambiguous_candidates.end(), ambiguous.begin(),
+                              ambiguous.end());
+  return nullptr;
 }
 } // namespace
 
@@ -2132,11 +2272,13 @@ GetMethodCandidates(interop::TCppScope_t scope, const std::string& name,
 
 // Select (instantiating as necessary) the best of the candidates for the
 // argument types in proto and the explicit template arguments.
-interop::TCppMethod_t ResolveMethodTemplate(
-    interop::TCppScope_t scope,
-    const std::vector<interop::TCppMethod_t>& candidates,
-    const std::string& proto, const std::string& explicit_params,
-    std::vector<interop::TCppMethod_t>& ambiguous_candidates) {
+interop::TCppMethod_t
+ResolveMethodTemplate(interop::TCppScope_t scope,
+                      const std::vector<interop::TCppMethod_t>& candidates,
+                      const std::string& proto,
+                      const std::string& explicit_params,
+                      std::vector<interop::TCppMethod_t>& ambiguous_candidates,
+                      const std::vector<std::string>& kw_names = {}) {
   std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
 
   // cpyrt assumes that we attempt instantiation here
@@ -2156,8 +2298,8 @@ interop::TCppMethod_t ResolveMethodTemplate(
       candidate_methods.push_back(fn);
 
   interop::TCppMethod_t cppmeth = ::BestOverloadFunctionMatch(
-      candidate_methods, arg_types, templ_params, ambiguous_candidates, scope,
-      /*is_operator=*/false);
+      candidate_methods, arg_types, kw_names, templ_params,
+      ambiguous_candidates, scope, /*is_operator=*/false);
   if (cppmeth)
     return cppmeth;
 
@@ -2176,12 +2318,12 @@ interop::TCppMethod_t ResolveMethodTemplate(
 interop::TCppMethod_t interop::GetMethodTemplate(
     TCppScope_t scope, const std::string& name, const std::string& proto,
     std::vector<interop::TCppMethod_t>& ambiguous_candidates,
-    bool include_non_templated) {
+    bool include_non_templated, const std::vector<std::string>& kw_names) {
   auto [pure_name, explicit_params] = SplitTemplateName(name);
   std::vector<interop::TCppMethod_t> candidates = GetMethodCandidates(
       scope, pure_name, include_non_templated && explicit_params.empty());
   return ResolveMethodTemplate(scope, candidates, proto, explicit_params,
-                               ambiguous_candidates);
+                               ambiguous_candidates, kw_names);
 }
 
 interop::TCppMethod_t interop::GetMethodBySignature(
@@ -2227,7 +2369,8 @@ interop::TCppMethod_t interop::BestOverloadFunctionMatch(
     const std::vector<interop::TCppMethod_t>& candidates,
     const std::string& proto,
     std::vector<interop::TCppMethod_t>& ambiguous_candidates,
-    TCppScope_t parent_scope, bool is_operator) {
+    TCppScope_t parent_scope, bool is_operator,
+    const std::vector<std::string>& kw_names) {
   std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   std::vector<Cpp::TemplateArgInfo> arg_types;
   if (!proto.empty() &&
@@ -2237,7 +2380,7 @@ interop::TCppMethod_t interop::BestOverloadFunctionMatch(
   for (auto fn : candidates)
     if (!interop::IsDeletedMethod(fn))
       non_deleted.push_back(fn);
-  return ::BestOverloadFunctionMatch(non_deleted, arg_types, {},
+  return ::BestOverloadFunctionMatch(non_deleted, arg_types, kw_names, {},
                                      ambiguous_candidates, parent_scope,
                                      is_operator);
 }

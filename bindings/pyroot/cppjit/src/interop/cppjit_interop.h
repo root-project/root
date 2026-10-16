@@ -325,10 +325,13 @@ bool IsTemplatedMethod(TCppMethod_t method);
 RPY_EXPORTED
 bool IsStaticTemplate(TCppScope_t scope, const std::string& name);
 RPY_EXPORTED
+// The arguments in proto end with the values of the keyword arguments named
+// kw_names (if any), which are matched to the parameters by name.
 TCppMethod_t GetMethodTemplate(TCppScope_t scope, const std::string& name,
                                const std::string& proto,
                                std::vector<TCppMethod_t>& ambiguous_candidates,
-                               bool include_non_templated = false);
+                               bool include_non_templated = false,
+                               const std::vector<std::string>& kw_names = {});
 // Select the overload of the (templated) method set name of scope that takes
 // the parameters in the comma-separated signature sig (without the object of
 // non-static methods), instantiating it as necessary.
@@ -344,7 +347,8 @@ RPY_EXPORTED
 TCppMethod_t BestOverloadFunctionMatch(
     const std::vector<TCppMethod_t>& candidates, const std::string& proto,
     std::vector<TCppMethod_t>& ambiguous_candidates,
-    TCppScope_t parent_scope = nullptr, bool is_operator = false);
+    TCppScope_t parent_scope = nullptr, bool is_operator = false,
+    const std::vector<std::string>& kw_names = {});
 RPY_EXPORTED
 bool IsOperator(TCppScope_t scope);
 RPY_EXPORTED

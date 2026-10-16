@@ -785,17 +785,22 @@ static PyObject* mp_vectorcall(CPPOverload* pymeth, PyObject* const* args,
           proto += ", ";
         PyObject* obj = cpyrt_PyArgs_GET_ITEM(args, i + nArgs);
         PyObject* typ = (PyObject*)Py_TYPE(obj);
-        if (!AddTypeName(proto, typ, obj, Utility::kNone)) {
+        if (!AddTypeName(proto, typ, obj, Utility::kNone))
           proto += "__cppjit_internal::UnknownType";
-          break; // ???: do we need to raise error here
-        }
       }
     }
   }
 
+  // the values of keyword arguments, at the end of proto, are matched to the
+  // parameters by name
+  std::vector<std::string> kw_names;
+  for (Py_ssize_t i = 0; kwds && i < PyTuple_GET_SIZE(kwds); i++)
+    kw_names.push_back(PyUnicode_AsUTF8(PyTuple_GET_ITEM(kwds, i)));
+
   std::vector<interop::TCppMethod_t> ambiguous_candidates;
   interop::TCppMethod_t meth = interop::BestOverloadFunctionMatch(
-      overloads, proto, ambiguous_candidates, /*TODO:*/ nullptr, is_operator);
+      overloads, proto, ambiguous_candidates, /*TODO:*/ nullptr, is_operator,
+      kw_names);
   if (!meth && (ctxt.fFlags & CallContext::kIsConstructor)) {
     // this might be a POD class/struct
     // and might need the self* for the overload resolution
@@ -809,9 +814,9 @@ static PyObject* mp_vectorcall(CPPOverload* pymeth, PyObject* const* args,
       PyObject* typ = (PyObject*)Py_TYPE(obj);
       AddTypeName(self_type_name, typ, nullptr, Utility::kNone);
       proto = self_type_name + "**, " + proto;
-      meth = interop::BestOverloadFunctionMatch(overloads, proto,
-                                                ambiguous_candidates,
-                                                /*TODO:*/ nullptr, is_operator);
+      meth = interop::BestOverloadFunctionMatch(
+          overloads, proto, ambiguous_candidates, /*TODO:*/ nullptr,
+          is_operator, kw_names);
     }
   }
   // Subscript tie-break: cppjit maps both operator[] and operator() into the

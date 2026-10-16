@@ -626,3 +626,50 @@ class TestOVERLOADS:
         assert e.size["double"](1) == 8
         with raises(TypeError):
             e.size["NoSuchType<int>"](1)
+
+    def test25_keyword_arguments(self):
+        """Keyword arguments are matched to the parameters by name"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace KwArgs {
+          int f(int a, int b = 5, int c = 7) { return 100*a + 10*b + c; }
+          int f(const std::string&) { return -1; }
+          int g(int x) { return 1; }
+          int g(double y) { return 2; }
+          int h(int a, double b = 0., const char* c = "") { return 1; }
+          int h(int a, const char* c) { return 2; }
+          struct S {
+            template <class T> int g(const char*, T* add, void* p = nullptr) { return 1; }
+            int g(const char*, void* add, void* p, int x, bool y) { return 2; }
+            template <class T> int t(T a, int b = 1, int c = 2) { return 10*b + c; }
+            int t(const std::string&, int c) { return -1; }
+          };
+        }""")
+
+        ns = cppjit.gbl.KwArgs
+        # in and out of order, and skipping a defaulted parameter
+        assert ns.f(1, b=2, c=3) == 123
+        assert ns.f(1, c=3, b=2) == 123
+        assert ns.f(1, c=3) == 153
+        assert ns.f(c=3, a=1) == 153
+        # the name selects the overload
+        assert ns.g(x=1) == 1
+        assert ns.g(y=1) == 2
+        # the overload that skips fewer defaulted parameters wins
+        assert ns.h(1, c="x") == 2
+        assert ns.h(1, b=2.0, c="x") == 1
+        # unknown names and arguments given twice
+        with raises(TypeError, match="unexpected keyword argument"):
+            ns.f(1, d=3)
+        with raises(TypeError, match="multiple values"):
+            ns.f(1, a=3)
+
+        # sets of templated and non-templated methods
+        s = ns.S()
+        assert s.g("n", cppjit.nullptr, p=cppjit.nullptr, x=1, y=True) == 2
+        assert s.g("n", cppjit.nullptr, y=True, x=1, p=cppjit.nullptr) == 2
+        assert s.t(1.5, c=3) == 13
+        assert s.t(1.5, c=3, b=2) == 23
+        assert s.t("a", c=3) == -1
