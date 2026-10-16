@@ -433,12 +433,9 @@ ROOT::Internal::RPageSource::FindClusterId(DescriptorId_t physicalColumnId, NTup
 
 void ROOT::Internal::RPageSource::UnzipCluster(RCluster *cluster)
 {
-   if (fTaskScheduler)
-      UnzipClusterImpl(cluster);
-}
+   if (!fTaskScheduler)
+      return;
 
-void ROOT::Internal::RPageSource::UnzipClusterImpl(RCluster *cluster)
-{
    RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
 
    const auto clusterId = cluster->GetId();
@@ -449,8 +446,24 @@ void ROOT::Internal::RPageSource::UnzipClusterImpl(RCluster *cluster)
 
    std::atomic<bool> foundChecksumFailure{false};
 
-   std::vector<std::unique_ptr<RColumnElementBase>> allElements;
    const auto &columnsInCluster = cluster->GetAvailPhysicalColumns();
+
+   std::vector<std::pair<Internal::RPage, Internal::RPagePool::RKey>> allPages;
+   // We allocate the space for all the pages upfront so that the TBB tasks do not need to lock the vector.
+   // In general, the number of uncompressed pages is larger than the number of sealed pages because we
+   // may decompress the same page into different in-memory representations.
+   std::size_t nPages = 0;
+   // We run a short version of the main loop to determine the number of uncompressed pages
+   for (const auto columnId : columnsInCluster) {
+      if (fActivePhysicalColumns.HasColumnInfos(columnId)) {
+         nPages += fActivePhysicalColumns.GetColumnInfos(columnId).size() *
+                   clusterDescriptor.GetPageRange(columnId).GetPageInfos().size();
+      }
+   }
+   allPages.resize(nPages);
+   std::size_t iPage = 0;
+
+   std::vector<std::unique_ptr<RColumnElementBase>> allElements;
    for (const auto columnId : columnsInCluster) {
       // By the time we unzip a cluster, the set of active columns may have already changed wrt. to the moment when
       // we requested reading the cluster. That doesn't matter much, we simply decompress what is now in the list
@@ -458,10 +471,12 @@ void ROOT::Internal::RPageSource::UnzipClusterImpl(RCluster *cluster)
       if (!fActivePhysicalColumns.HasColumnInfos(columnId))
          continue;
       const auto &columnInfos = fActivePhysicalColumns.GetColumnInfos(columnId);
+      const auto indexOffset = clusterDescriptor.GetColumnRange(columnId).GetFirstElementIndex();
 
       allElements.reserve(allElements.size() + columnInfos.size());
       for (const auto &info : columnInfos) {
          allElements.emplace_back(GenerateColumnElement(info.fElementId));
+         const auto element = allElements.back().get();
 
          const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
          std::uint64_t pageNo = 0;
@@ -473,12 +488,10 @@ void ROOT::Internal::RPageSource::UnzipClusterImpl(RCluster *cluster)
             sealedPage.SetHasChecksum(pi.HasChecksum());
             sealedPage.SetBufferSize(pi.GetLocator().GetNBytesOnStorage() + pi.HasChecksum() * kNBytesPageChecksum);
             sealedPage.SetBuffer(onDiskPage->GetAddress());
-            R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
+            R__ASSERT(onDiskPage->GetSize() == sealedPage.GetBufferSize());
 
-            auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),
-                             &foundChecksumFailure,
-                             indexOffset = clusterDescriptor.GetColumnRange(columnId).GetFirstElementIndex()]() {
-               const ROOT::Internal::RPagePool::RKey keyPagePool{columnId, element->GetIdentifier().fInMemoryType};
+            auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element, iPage, indexOffset,
+                             &foundChecksumFailure, &allPages]() {
                auto rv = UnsealPage(sealedPage, *element);
                if (!rv) {
                   foundChecksumFailure = true;
@@ -489,24 +502,31 @@ void ROOT::Internal::RPageSource::UnzipClusterImpl(RCluster *cluster)
 
                newPage.SetWindow(indexOffset + firstInPage,
                                  ROOT::Internal::RPage::RClusterInfo(clusterId, indexOffset));
-               fPagePool.PreloadPage(std::move(newPage), keyPagePool);
+               const ROOT::Internal::RPagePool::RKey keyPagePool{columnId, element->GetIdentifier().fInMemoryType};
+               allPages[iPage] = std::make_pair(std::move(newPage), keyPagePool);
             };
 
-            fTaskScheduler->AddTask(taskFunc);
+            if (sealedPage.GetNElements() * element->GetSize() < kInlineDecompressionThreshold) {
+               taskFunc();
+            } else {
+               fTaskScheduler->AddTask(taskFunc);
+            }
 
             firstInPage += pi.GetNElements();
             pageNo++;
+            iPage++;
          } // for all pages in column
-
-         fCounters->fNPageUnsealed.Add(pageNo);
       } // for all in-memory types of the column
    } // for all columns in cluster
 
    fTaskScheduler->Wait();
+   fCounters->fNPageUnsealed.Add(nPages);
 
    if (foundChecksumFailure) {
       throw RException(R__FAIL("page checksum verification failed, data corruption detected"));
    }
+
+   fPagePool.PreloadPageV(allPages);
 }
 
 void ROOT::Internal::RPageSource::PrepareLoadCluster(

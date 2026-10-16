@@ -591,6 +591,9 @@ The page source also gives access to the ntuple's metadata.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
+   // Decompress pages smaller than 4kB directly in the main thread, not in a TBB thread
+   static constexpr std::size_t kInlineDecompressionThreshold = 4096;
+
    /// Summarizes meta-data necessary to load a certain page. Used by LoadPageFromSummary().
    struct RPageSummary {
       ROOT::DescriptorId_t fClusterId = 0;
@@ -707,7 +710,7 @@ private:
 
    /// Remembers the last cluster id from which a page was requested
    ROOT::DescriptorId_t fLastUsedCluster = ROOT::kInvalidDescriptorId;
-   /// Clusters from where pages got preloaded in UnzipClusterImpl(), ordered by first entry number
+   /// Clusters from where pages got preloaded in UnzipCluster(), ordered by first entry number
    /// of the clusters. If the last used cluster changes in LoadPage(), all unused pages from
    /// previous clusters are evicted from the page pool. Pinned clusters won't be evicted.
    std::map<ROOT::NTupleSize_t, ROOT::DescriptorId_t> fPreloadedClusters;
@@ -778,8 +781,6 @@ protected:
    /// but simply clone the existing descriptor. This means that CloneImpl(), for an attached page source, needs to
    /// redo any operation other than loading the descriptor that may be done in LoadStructureImpl() and AttachImpl().
    virtual std::unique_ptr<RPageSource> CloneImpl() const = 0;
-   // Only called if a task scheduler is set. No-op be default.
-   virtual void UnzipClusterImpl(ROOT::Internal::RCluster *cluster);
    // Loads a page list into the provided buffer. The buffer parameter needs to point to a memory region
    // that has space for at least locator.GetNBytesOnStorage() bytes to hold the compressed page list.
    virtual void LoadPageListImpl(const RNTupleLocator &locator, unsigned char *buffer) = 0;
@@ -902,8 +903,8 @@ public:
    /// Parallel decompression and unpacking of the pages in the given cluster. The unzipped pages are supposed
    /// to be preloaded in a page pool attached to the source. The method is triggered by the cluster pool's
    /// unzip thread. It is an optional optimization, the method can safely do nothing. In particular, the
-   /// actual implementation will only run if a task scheduler is set. In practice, a task scheduler is set
-   /// if implicit multi-threading is turned on.
+   /// unzipping will only run if a task scheduler is set. In practice, a task scheduler is set if
+   /// implicit multi-threading is turned on.
    void UnzipCluster(ROOT::Internal::RCluster *cluster);
 
    /// Instructs the cluster pool and page pool to consider the given cluster as active (should stay cached).
