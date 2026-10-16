@@ -106,6 +106,14 @@ class RDataFrameMisc(unittest.TestCase):
         self.assertEqual(ROOT.RDF.RunGraphs([h, s]), 1)
         self.assertEqual(s.GetValue(), 10.0)
 
+    def test_histond_model_from_tuple(self):
+        """
+        The model of HistoND can be given as a tuple of constructor arguments
+        """
+        rdf = ROOT.RDataFrame(10).Define("x0", "1.").Define("x1", "2.")
+        h = rdf.HistoND(("name", "title", 2, [4, 4], [0.0, 0.0], [5.0, 5.0]), ("x0", "x1"))
+        self.assertEqual(h.GetEntries(), 10)
+
     def _test_rdf_in_function(self, chain):
         rdf = ROOT.RDataFrame(chain)
         meanx = rdf.Mean("x")
