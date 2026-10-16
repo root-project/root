@@ -11,7 +11,7 @@
 import sys
 
 from . import pythonization
-from ._rvec import _array_interface_dtype_map
+from ._rvec import _add_numpy_array_constructor, _array_interface_dtype_map
 
 
 def _data_vec_char(self):
@@ -63,6 +63,9 @@ def pythonize_stl_vector(klass, name):
 
     # Add numpy array interface
     _add_array_interface_property(klass)
+
+    # Allow the construction from a numpy array (by copy)
+    _add_numpy_array_constructor(klass)
 
     # Inject custom vector<char>::data()
     value_type = getattr(klass, 'value_type', None)

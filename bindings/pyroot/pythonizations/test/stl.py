@@ -170,6 +170,24 @@ class STL_vector(unittest.TestCase):
             for entry_array_i, entry_root_i in zip(entry_array, entry_root):
                 self.assertEqual(entry_array_i, entry_root_i)
 
+    def test_stl_vector_from_numpy(self):
+        """Constructing a std::vector or RVec from a numpy array copies it"""
+        try:
+            import numpy as np
+        except ImportError:
+            self.skipTest("numpy is not available")
+
+        arr = np.arange(4.0)
+        v = ROOT.std.vector["double"](arr)
+        self.assertEqual(list(v), [0.0, 1.0, 2.0, 3.0])
+        arr[0] = 42.0  # it's a copy
+        self.assertEqual(v[0], 0.0)
+
+        # with conversion of the element type
+        self.assertEqual(list(ROOT.std.vector["int"](np.arange(3.0))), [0, 1, 2])
+        self.assertEqual(list(ROOT.std.vector["bool"](np.array([True, False]))), [True, False])
+        self.assertEqual(list(ROOT.VecOps.RVec["signed char"](np.array([1, 2], dtype=np.int8))), [1, 2])
+        self.assertEqual(len(ROOT.VecOps.RVec["std::string"](np.array(["a", "b"]))), 2)
 
 class STL_set(unittest.TestCase):
     """

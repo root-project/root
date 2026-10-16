@@ -130,6 +130,56 @@ _array_interface_dtype_map = {
 }
 
 
+def _is_numpy_array(obj):
+    """Check if obj is a numpy array, without importing numpy."""
+    np = sys.modules.get("numpy")
+    return np is not None and isinstance(obj, np.ndarray)
+
+
+def _fill_from_numpy_array(self, arr):
+    """Copy the elements of the numpy array arr into the empty std::vector or
+    RVec self.
+
+    The overload resolution does not convert a numpy array into a container
+    implicitly, as that would be a hidden deep copy. Constructing a container
+    from an array is explicit though, so the copy is done here: with a single
+    memory copy if the element type is a numerical one, converting the array
+    to that type first if needed, and element-wise otherwise.
+    """
+    import ctypes
+
+    import numpy as np
+
+    import ROOT
+
+    flat = arr.ravel()
+    value_type = getattr(type(self), "value_type", None)
+    kind = _array_interface_dtype_map.get(value_type)
+    if kind in ("i", "u", "f"):
+        dtype = np.dtype("{}{}".format(kind, ROOT._cppyy.sizeof(value_type)))
+        src = np.ascontiguousarray(flat, dtype=dtype)
+        self.resize(src.size)
+        if src.size:
+            ctypes.memmove(ROOT._cppyy.ll.addressof(self.data()), src.ctypes.data, src.nbytes)
+    else:
+        for elem in flat.tolist():
+            self.push_back(elem)
+
+
+def _container_init(self, *args, **kwargs):
+    """Constructor of std::vector and RVec that also accepts a numpy array."""
+    if len(args) == 1 and not kwargs and _is_numpy_array(args[0]):
+        self._original_init()
+        _fill_from_numpy_array(self, args[0])
+        return
+    self._original_init(*args, **kwargs)
+
+
+def _add_numpy_array_constructor(klass):
+    klass._original_init = klass.__init__
+    klass.__init__ = _container_init
+
+
 def _get_cpp_type_from_numpy_type(dtype):
     cpptypes = {
         "i1": "signed char",
@@ -258,3 +308,6 @@ def pythonize_rvec(klass, name):
 
     # Add numpy array interface
     add_array_interface_property(klass, name)
+
+    # Allow the construction from a numpy array (by copy)
+    _add_numpy_array_constructor(klass)
