@@ -96,8 +96,11 @@ BVH_ALWAYS_INLINE Vec<T, N> robust_max(const Vec<T, N>& a, const Vec<T, N>& b) {
 
 template <typename T, size_t N>
 BVH_ALWAYS_INLINE T dot(const Vec<T, N>& a, const Vec<T, N>& b) {
-    // return std::transform_reduce(a.values, a.values + N, b.values, T(0));
+#if defined(__cpp_lib_parallel_algorithm) && (__cpp_lib_parallel_algorithm >= 201603L)
+    return std::transform_reduce(a.values, a.values + N, b.values, T(0));
+#else 
     return std::inner_product(a.values, a.values + N, b.values, T(0));
+#endif
 }
 
 template <typename T>
@@ -124,7 +127,7 @@ BVH_ALWAYS_INLINE T length(const Vec<T, N>& v) {
 }
 
 template <typename T, size_t N>
-BVH_ALWAYS_INLINE Vec<T, N> normalize(const Vec<T, N>& v) {
+[[nodiscard]] BVH_ALWAYS_INLINE Vec<T, N> normalize(const Vec<T, N>& v) {
     return v * (static_cast<T>(1.) / length(v));
 }
 

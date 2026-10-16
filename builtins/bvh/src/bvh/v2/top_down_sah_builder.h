@@ -5,6 +5,7 @@
 #include "bvh/v2/vec.h"
 #include "bvh/v2/bbox.h"
 #include "bvh/v2/split_heuristic.h"
+
 #include <stack>
 #if __has_include(<span>)
 #include <span>
@@ -68,6 +69,7 @@ protected:
         assert(config.min_leaf_size <= config.max_leaf_size);
     }
 
+    virtual ~TopDownSahBuilder() = default;
     virtual std::vector<size_t>& get_prim_ids() = 0;
     virtual std::optional<size_t> try_split(const BBox& bbox, size_t begin, size_t end) = 0;
 

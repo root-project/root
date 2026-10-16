@@ -136,7 +136,7 @@ private:
          *     -SA(A U C)                                              : For the parent of A and C
          */
 
-        Reinsertion best_reinsertion { /*.from */ node_id, 0, 0 };
+        Reinsertion best_reinsertion { .from = node_id };
         auto node_area   = bvh_.nodes[node_id].get_bbox().get_half_area();
         auto parent_area = bvh_.nodes[parents_[node_id]].get_bbox().get_half_area();
         auto area_diff = parent_area;

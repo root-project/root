@@ -9,6 +9,8 @@ namespace bvh::v2 {
 /// Stream of data that can be used to deserialize data structures.
 class InputStream {
 public:
+    virtual ~InputStream() = default;
+
     template <typename T>
     T read(T&& default_val = {}) {
         T data;
@@ -16,7 +18,6 @@ public:
             data = std::move(default_val);
         return data;
     }
-
 protected:
     virtual size_t read_raw(void*, size_t) = 0;
 };
@@ -24,6 +25,8 @@ protected:
 /// Stream of data that can be used to serialize data structures.
 class OutputStream {
 public:
+    virtual ~OutputStream() = default;
+
     template <typename T>
     bool write(const T& data) { return write_raw(&data, sizeof(T)); }
 
