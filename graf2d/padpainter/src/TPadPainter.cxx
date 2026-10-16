@@ -25,6 +25,10 @@
 #include "TMath.h"
 #include "TPad.h"
 
+#ifdef USE_ASIMAGEUTILS
+#include "TASUtils.h"
+#endif
+
 namespace {
 
 //Typedef is fine, but let's pretend we look cool and modern:
@@ -594,10 +598,15 @@ Bool_t TPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
    Int_t wid = (pad == pad->GetCanvas()) ? pad->GetCanvasID() : pad->GetPixmapID();
    gVirtualX->SelectWindow(wid);
 
-   Window_t wd = (Window_t)gVirtualX->GetCurrentWindow();
+   Window_t wd = gVirtualX->GetCurrentWindow();
 
-   if (IsX11()) { //use built-in optimized version
-      image->FromX11Window(wd, 0, 0, width, height);
+   if (IsX11()) {
+#ifdef USE_ASIMAGEUTILS
+      if (!TASUtils::FromX11Window(image, gVirtualX->GetCurrentWindow(), 0, 0, pad->GetPadWidth(), pad->GetPadHeight()))
+         return kFALSE;
+#else
+      return kFALSE;
+#endif
    } else {
       unsigned char *bits = gVirtualX->GetColorBits(wd, 0, 0, width, height);
       if (!bits)
@@ -609,7 +618,6 @@ Bool_t TPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
 
    return image->IsValid();
 }
-
 
 //Aux. private functions.
 namespace {
