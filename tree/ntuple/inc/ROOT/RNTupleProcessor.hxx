@@ -103,10 +103,9 @@ public:
    void SetProcessorName(std::string_view name) { fProcessorName = name; }
 };
 
-namespace Experimental {
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleProcessorOptionalPtr<T>
+\class ROOT::RNTupleProcessorOptionalPtr<T>
 \ingroup NTuple
 \brief The RNTupleProcessorOptionalPtr provides access to values from fields present in an RNTupleProcessor, with support
 and checks for missing values.
@@ -117,11 +116,11 @@ class RNTupleProcessorOptionalPtr {
    friend class RNTupleProcessor;
 
 private:
-   ROOT::Internal::RNTupleProcessorEntry *fProcessorEntry;
-   ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fFieldIndex;
+   Internal::RNTupleProcessorEntry *fProcessorEntry;
+   Internal::RNTupleProcessorEntry::FieldIndex_t fFieldIndex;
 
-   RNTupleProcessorOptionalPtr(ROOT::Internal::RNTupleProcessorEntry *processorEntry,
-                               ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fieldIdx)
+   RNTupleProcessorOptionalPtr(Internal::RNTupleProcessorEntry *processorEntry,
+                               Internal::RNTupleProcessorEntry::FieldIndex_t fieldIdx)
       : fProcessorEntry(processorEntry), fFieldIndex(fieldIdx)
    {
    }
@@ -209,7 +208,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleProcessorOptionalPtr<void>
+\class ROOT::RNTupleProcessorOptionalPtr<void>
 \ingroup NTuple
 \brief Specialization of RNTupleProcessorOptionalPtr<T> for `void`-type pointers.
 */
@@ -219,11 +218,11 @@ class RNTupleProcessorOptionalPtr<void> {
    friend class RNTupleProcessor;
 
 private:
-   ROOT::Internal::RNTupleProcessorEntry *fProcessorEntry;
-   ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fFieldIndex;
+   Internal::RNTupleProcessorEntry *fProcessorEntry;
+   Internal::RNTupleProcessorEntry::FieldIndex_t fFieldIndex;
 
-   RNTupleProcessorOptionalPtr(ROOT::Internal::RNTupleProcessorEntry *processorEntry,
-                               ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fieldIdx)
+   RNTupleProcessorOptionalPtr(Internal::RNTupleProcessorEntry *processorEntry,
+                               Internal::RNTupleProcessorEntry::FieldIndex_t fieldIdx)
       : fProcessorEntry(processorEntry), fFieldIndex(fieldIdx)
    {
    }
