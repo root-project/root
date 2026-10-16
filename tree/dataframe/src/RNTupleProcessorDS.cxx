@@ -224,8 +224,9 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
    }
 
    if (cardinalityField) {
+      // FIXME(fdegeus): Make cardinality field name work properly with "#colname"
       std::string cardinalityFieldName =
-         (procProvenance.Empty() ? "R_rdf_sizeof_" : procProvenance.Get() + "_R_rdf_sizeof_") + std::string(colName);
+         (procProvenance.Empty() ? "R_rdf_sizeof_" : procProvenance.Get() + ".R_rdf_sizeof_") + std::string(colName);
       fColumnNames.emplace_back(cardinalityFieldName);
       fColumnTypes.emplace_back(cardinalityField->GetTypeName());
       auto cardinalityFieldIdx = fProcessor->AddFieldToEntry(std::move(cardinalityField), cardinalityFieldName, nullptr,
