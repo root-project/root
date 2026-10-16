@@ -61,15 +61,17 @@ static const char *gFileTypes[] = {
    nullptr,              nullptr
 };
 
-static UShort_t gRedRainbow[12] = {
+constexpr size_t kNRainbowElems = 10;
+
+static UShort_t gRedRainbow[kNRainbowElems] = {
    0x0000, 0x7000, 0x0000, 0x0000, 0x0000,
    0xffff, 0xffff, 0x7000, 0x8000, 0xffff
 };
-static UShort_t gGreenRainbow[12] = {
+static UShort_t gGreenRainbow[kNRainbowElems] = {
    0x0000, 0x0000, 0x0000, 0xffff, 0xffff,
    0xffff, 0x0000, 0x0000, 0x8000, 0xffff
 };
-static UShort_t gBlueRainbow[12] = {
+static UShort_t gBlueRainbow[kNRainbowElems] = {
    0x0000, 0x7000, 0xffff, 0xffff, 0x0000,
    0x0000, 0x0000, 0x0000, 0xa000, 0xffff
 };
@@ -687,9 +689,9 @@ void TASPaletteEditor::NewPalette(Long_t id)
 
    switch (id) {
       case 0:  // rainbow
-         memcpy(newPalette->fColorRed + 1,   gRedRainbow,   12 * sizeof(UShort_t));
-         memcpy(newPalette->fColorGreen + 1, gGreenRainbow, 12 * sizeof(UShort_t));
-         memcpy(newPalette->fColorBlue + 1,  gBlueRainbow,  12 * sizeof(UShort_t));
+         memcpy(newPalette->fColorRed + 1,   gRedRainbow,   kNRainbowElems * sizeof(UShort_t));
+         memcpy(newPalette->fColorGreen + 1, gGreenRainbow, kNRainbowElems * sizeof(UShort_t));
+         memcpy(newPalette->fColorBlue + 1,  gBlueRainbow,  kNRainbowElems * sizeof(UShort_t));
          break;
 
       case 1:  // gray
