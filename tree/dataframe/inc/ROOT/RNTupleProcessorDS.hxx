@@ -92,7 +92,7 @@ class RNTupleProcessorDS final : public ROOT::RDF::RDataSource {
    /// be added as `ROOT::VecOps::RVec` (e.g., `std::set<Jet> will be added as a `std::set`, but `Jet.[pt|eta] will be
    /// added as `ROOT::VecOps::RVec<float>).
    void AddField(const ROOT::RFieldBase &field, std::string_view colName,
-                 Internal::RNTupleProcessorProvenance procProvenance, std::deque<RFieldInfo> &fieldInfos,
+                 ROOT::Internal::RNTupleProcessorProvenance procProvenance, std::deque<RFieldInfo> &fieldInfos,
                  bool convertToRVec = true);
 
 public:
