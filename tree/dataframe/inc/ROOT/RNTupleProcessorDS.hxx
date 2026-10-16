@@ -101,7 +101,7 @@ class RNTupleProcessorDS final : public ROOT::RDF::RDataSource {
                  bool convertToRVec = true);
 
 public:
-   RNTupleProcessorDS(std::unique_ptr<ROOT::Experimental::RNTupleProcessor> processor);
+   RNTupleProcessorDS(std::unique_ptr<ROOT::RNTupleProcessor> processor);
    RNTupleProcessorDS(const RNTupleProcessorDS &) = delete;
    RNTupleProcessorDS &operator=(const RNTupleProcessorDS &) = delete;
    RNTupleProcessorDS(RNTupleProcessorDS &&) = delete;
@@ -137,7 +137,7 @@ protected:
 } // namespace ROOT::Experimental::Internal::RDF
 
 namespace ROOT::Experimental::RDF {
-RDataFrame FromRNTupleProcessor(std::unique_ptr<ROOT::Experimental::RNTupleProcessor> processor);
+RDataFrame FromRNTupleProcessor(std::unique_ptr<ROOT::RNTupleProcessor> processor);
 } // namespace ROOT::Experimental::RDF
 
 #endif // ROOT_RNTupleProcessorDS

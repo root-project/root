@@ -326,11 +326,6 @@ namespace Internal {
 class RPageSource; // For RNTupleInputSpec
 }
 
-namespace Experimental {
-class RNTupleProcessor; // for RNTupleInputSpec
-class RNTupleSingleProcessor; // for RNTupleInputSpec
-}
-
 // clang-format off
    /**
    \class ROOT::Experimental::RNTupleInputSpec
@@ -344,8 +339,8 @@ class RNTupleSingleProcessor; // for RNTupleInputSpec
    */
 // clang-format on
 class RNTupleInputSpec {
-   friend class Experimental::RNTupleProcessor;
-   friend class Experimental::RNTupleSingleProcessor;
+   friend class RNTupleProcessor;
+   friend class RNTupleSingleProcessor;
 
 public:
    using Storage_t = std::variant<std::string, TDirectory *>;
