@@ -204,6 +204,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gui
     Gpad
     Graf
     MathCore
+    ASImageUtils
     ROOTNTupleBrowse
 )
 
