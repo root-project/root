@@ -131,6 +131,7 @@ set(py_sources
   ROOT/_pythonization/_tseqcollection.py
   ROOT/_pythonization/_tstring.py
   ROOT/_pythonization/_tstyle.py
+  ROOT/_pythonization/_ttext.py
   ROOT/_pythonization/_ttree.py
   ROOT/_pythonization/_tvector3.py
   ROOT/_pythonization/_tvectort.py

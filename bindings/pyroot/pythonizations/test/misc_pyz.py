@@ -162,6 +162,23 @@ class TColorGetColor(unittest.TestCase):
         c_int = ROOT.TColor.GetColor(255, 128, 0)
         self.assertEqual(ROOT.TColor.GetColor("#ff8000"), c_int)
 
+class TTextStringOverloads(unittest.TestCase):
+    """
+    A Python string selects the `const char*` overloads of TText, which also
+    has `const wchar_t*` ones
+    """
+
+    def test_text(self):
+        t = ROOT.TText(0.5, 0.5, "Signal")
+        self.assertEqual(t.GetTitle(), "Signal")
+        t.SetText(0.1, 0.2, "Background")
+        self.assertEqual(t.GetTitle(), "Background")
+        self.assertEqual(t.GetX(), 0.1)
+
+    def test_latex(self):
+        latex = ROOT.TLatex(0.5, 0.5, "#alpha")
+        self.assertEqual(latex.GetTitle(), "#alpha")
+
 class TestTComplexOperators(unittest.TestCase):
     """
     Test for the operators of TComplex:
