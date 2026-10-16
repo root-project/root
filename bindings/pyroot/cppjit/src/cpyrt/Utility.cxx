@@ -462,6 +462,165 @@ std::string cpyrt::Utility::GetPyCallableAnnotation(PyObject* pyobj) {
     return tpn.str();
 }
 
+namespace {
+struct CTypesTypes {
+  PyObject* fSimple = nullptr;  // ctypes._SimpleCData
+  PyObject* fPointer = nullptr; // ctypes._Pointer
+  PyObject* fArray = nullptr;   // ctypes.Array
+  PyObject* fCArg = nullptr;    // type of ctypes.byref(...)
+};
+
+const CTypesTypes& GetCTypesTypes() {
+  // kept alive for the lifetime of the module
+  static CTypesTypes types = []() {
+    CTypesTypes t;
+    PyObject* ctypes = PyImport_ImportModule("ctypes");
+    if (!ctypes) {
+      PyErr_Clear();
+      return t;
+    }
+    t.fSimple = PyObject_GetAttrString(ctypes, "_SimpleCData");
+    t.fPointer = PyObject_GetAttrString(ctypes, "_Pointer");
+    t.fArray = PyObject_GetAttrString(ctypes, "Array");
+    PyObject* cint = PyObject_GetAttrString(ctypes, "c_int");
+    PyObject* byref = PyObject_GetAttrString(ctypes, "byref");
+    if (cint && byref) {
+      PyObject* i = PyObject_CallNoArgs(cint);
+      PyObject* ref = i ? PyObject_CallOneArg(byref, i) : nullptr;
+      if (ref) {
+        t.fCArg = (PyObject*)Py_TYPE(ref);
+        Py_INCREF(t.fCArg);
+      }
+      Py_XDECREF(ref);
+      Py_XDECREF(i);
+    }
+    Py_XDECREF(byref);
+    Py_XDECREF(cint);
+    Py_DECREF(ctypes);
+    PyErr_Clear();
+    return t;
+  }();
+  return types;
+}
+
+inline bool IsSubType(PyObject* tn, PyObject* base) {
+  return base && PyType_Check(tn) &&
+         PyType_IsSubtype((PyTypeObject*)tn, (PyTypeObject*)base);
+}
+
+bool CTypesCppName(std::string& name, PyObject* tn) {
+  const CTypesTypes& ct = GetCTypesTypes();
+  if (IsSubType(tn, ct.fSimple)) {
+    PyObject* pytc =
+        PyObject_GetAttr(tn, cppjit::cpyrt::PyStrings::gCTypesType);
+    const char* tc =
+        pytc && PyUnicode_Check(pytc) ? PyUnicode_AsUTF8(pytc) : nullptr;
+    const char* cname = nullptr;
+    switch (tc ? tc[0] : '\0') {
+    case '?':
+      cname = "bool";
+      break;
+    case 'c':
+      cname = "char";
+      break;
+    case 'u':
+      cname = "wchar_t";
+      break;
+    case 'b':
+      cname = "signed char";
+      break;
+    case 'B':
+      cname = "unsigned char";
+      break;
+    case 'h':
+      cname = "short";
+      break;
+    case 'H':
+      cname = "unsigned short";
+      break;
+    case 'i':
+      cname = "int";
+      break;
+    case 'I':
+      cname = "unsigned int";
+      break;
+    case 'l':
+      cname = "long";
+      break;
+    case 'L':
+      cname = "unsigned long";
+      break;
+    case 'q':
+      cname = "long long";
+      break;
+    case 'Q':
+      cname = "unsigned long long";
+      break;
+    case 'f':
+      cname = "float";
+      break;
+    case 'd':
+      cname = "double";
+      break;
+    case 'g':
+      cname = "long double";
+      break;
+    case 'z':
+      cname = "char*";
+      break;
+    case 'Z':
+      cname = "wchar_t*";
+      break;
+    case 'P':
+      cname = "void*";
+      break;
+    }
+    Py_XDECREF(pytc);
+    PyErr_Clear();
+    if (!cname)
+      return false;
+    name.append(cname);
+    return true;
+  }
+  if (IsSubType(tn, ct.fPointer) || IsSubType(tn, ct.fArray)) {
+    // the _type_ of pointers and arrays is the ctypes type of the elements
+    PyObject* elem =
+        PyObject_GetAttr(tn, cppjit::cpyrt::PyStrings::gCTypesType);
+    bool ok = elem && CTypesCppName(name, elem);
+    Py_XDECREF(elem);
+    PyErr_Clear();
+    if (ok)
+      name.push_back('*');
+    return ok;
+  }
+  return false;
+}
+
+// Spell a ctypes object arg of type tn: it is a C object owned by Python, so
+// an lvalue of its C type (e.g. c_int -> int&, POINTER(c_int)() -> int*&).
+// Arrays are spelled as pointers to their first element, and the result of
+// ctypes.byref(obj) as a pointer to obj.
+bool AddCTypesTypeName(std::string& name, PyObject* tn, PyObject* arg) {
+  const CTypesTypes& ct = GetCTypesTypes();
+  if (IsSubType(tn, ct.fArray))
+    return CTypesCppName(name, tn);
+  if (ct.fCArg && tn == ct.fCArg) {
+    PyObject* obj = PyObject_GetAttrString(arg, "_obj");
+    bool ok = obj && CTypesCppName(name, (PyObject*)Py_TYPE(obj));
+    Py_XDECREF(obj);
+    PyErr_Clear();
+    if (ok)
+      name.push_back('*');
+    return ok;
+  }
+  if (CTypesCppName(name, tn)) {
+    name.push_back('&');
+    return true;
+  }
+  return false;
+}
+} // unnamed namespace
+
 bool cpyrt::Utility::AddTypeName(std::string& tmpl_name, PyObject* tn,
                                  PyObject* arg,
                                  cpyrt::Utility::ArgPreference pref,
@@ -579,6 +738,10 @@ bool cpyrt::Utility::AddTypeName(std::string& tmpl_name, PyObject* tn,
   }
   Py_XDECREF(array_module);
   Py_XDECREF(array_type);
+
+  // ctypes objects are C objects held by Python
+  if (arg && AddCTypesTypeName(tmpl_name, tn, arg))
+    return true;
 
   if (tn == (PyObject*)&PyList_Type || tn == (PyObject*)&PyTuple_Type) {
     if (arg && PySequence_Size(arg)) {
