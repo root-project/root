@@ -340,6 +340,26 @@ class TestRooArgList(unittest.TestCase):
         self.assertEqual(ws.pdf("gauss").GetName(), "gauss")
         self.assertEqual(ws.cat("cat").GetName(), "cat")
 
+    def test_python_collection_in_methods(self):
+        # Methods taking a `const RooArgSet&` that are overloaded with other
+        # signatures of the same arity.
+        x = ROOT.RooRealVar("x", "x", 0.0, 10.0)
+        cat = ROOT.RooCategory("cat", "cat")
+        cat.defineType("a")
+        cat.defineType("b")
+        data = ROOT.RooDataSet("data", "data", [x, cat])
+        data.add([x, cat])
+        self.assertIsInstance(data.table([cat]), ROOT.Roo1DTable)
+
+        hist = ROOT.RooDataHist("hist", "hist", [x])
+        self.assertEqual(hist.get([x]).size(), 1)
+
+        mc = ROOT.RooStats.ModelConfig("mc")
+        ws = ROOT.RooWorkspace("ws_modelconfig", "ws_modelconfig")
+        mc.SetWorkspace(ws)
+        mc.SetParametersOfInterest([x])
+        self.assertEqual(mc.GetParametersOfInterest().size(), 1)
+
     def test_python_collection_in_pythonized_function(self):
         # RooAbsPdf::generate() has several overloads taking a RooArgSet and a
         # second argument, so the list needs to be converted up-front.

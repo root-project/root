@@ -12,7 +12,7 @@
 ################################################################################
 
 
-from ._utils import _kwargs_to_roocmdargs, cpp_signature
+from ._utils import _kwargs_to_roocmdargs, _sequences_to_roo_collections, cpp_signature
 
 
 class RooAbsData(object):
@@ -29,6 +29,12 @@ class RooAbsData(object):
     """
     
     __cpp_name__ = 'RooAbsData'
+
+    def table(self, *args, **kwargs):
+        r"""The RooAbsData::table function accepts a Python sequence of
+        categories for its `const RooArgSet&` parameter.
+        """
+        return self._table(*_sequences_to_roo_collections(args), **kwargs)
 
     @cpp_signature(
         "RooPlot *RooAbsData::plotOn(RooPlot* frame,"

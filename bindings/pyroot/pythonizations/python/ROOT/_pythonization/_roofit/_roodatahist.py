@@ -11,7 +11,7 @@
 ################################################################################
 
 
-from ._utils import _dict_to_flat_map, _kwargs_to_roocmdargs, cpp_signature
+from ._utils import _dict_to_flat_map, _kwargs_to_roocmdargs, _sequences_to_roo_collections, cpp_signature
 
 
 class RooDataHist(object):
@@ -46,6 +46,12 @@ class RooDataHist(object):
 
         args, kwargs = _kwargs_to_roocmdargs(*args, **kwargs)
         self._init(*args, **kwargs)
+
+    def get(self, *args, **kwargs):
+        r"""The RooDataHist::get function accepts a Python sequence of
+        coordinates for its `const RooArgSet&` parameter.
+        """
+        return self._get(*_sequences_to_roo_collections(args), **kwargs)
 
     @property
     def shape(self):
