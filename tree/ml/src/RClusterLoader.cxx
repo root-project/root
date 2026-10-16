@@ -160,12 +160,12 @@ void RClusterLoader::ShuffleValidationClusters(std::size_t epochIdx)
 }
 
 void RClusterLoader::LoadClusterInto(RFlat2DMatrix &dest, std::size_t rdfIdx, std::uint64_t startRow,
-                                     std::uint64_t endRow, std::size_t rowOffset)
+                                     std::uint64_t endRow)
 {
    ROOT::RDF::RNode &rdf = fRdfs[rdfIdx];
    ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, startRow, endRow);
-   auto values = ROOT::Internal::RDF::LoadCustomValues(rdf, fCols, fVecSizes, fVecPadding);
-   std::copy(values->begin(), values->end(), dest.GetData() + rowOffset * fNumChunkCols);
+   // the values are appended after the rows already in dest
+   ROOT::Internal::RDF::LoadCustomValues(rdf, fCols, fVecSizes, fVecPadding, dest.fRVec);
    ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, 0, fRdfSizes[rdfIdx]);
 }
 
@@ -184,7 +184,7 @@ void RClusterLoader::LoadClusterInto(RFlat2DMatrix &dest, std::size_t rdfIdx, st
 ///  - Only the train rows are written into \p dest.
 ///  -All subsequent epochs: delegates directly to `LoadClusterInto()`
 std::size_t RClusterLoader::LoadTrainingClusterInto(RFlat2DMatrix &dest, std::size_t rdfIdx, std::uint64_t startRow,
-                                                    std::uint64_t endRow, std::size_t rowOffset)
+                                                    std::uint64_t endRow)
 {
    if (fIsFiltered && !fSplitDiscovered) {
       // First call: discover total filtered count and set split targets.
@@ -263,21 +263,21 @@ std::size_t RClusterLoader::LoadTrainingClusterInto(RFlat2DMatrix &dest, std::si
       fAccumulatedFilteredForVal += valCount;
 
       if (trainCount > 0)
-         LoadClusterInto(dest, rdfIdx, trainStart, trainEnd, rowOffset);
+         LoadClusterInto(dest, rdfIdx, trainStart, trainEnd);
 
       return trainCount;
    }
 
-   LoadClusterInto(dest, rdfIdx, startRow, endRow, rowOffset);
+   LoadClusterInto(dest, rdfIdx, startRow, endRow);
    return endRow - startRow;
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// \brief Load one validation cluster into \p dest starting at \p rowOffset
+/// \brief Load one validation cluster at the end of \p dest
 void RClusterLoader::LoadValidationClusterInto(RFlat2DMatrix &dest, std::size_t rdfIdx, std::uint64_t startRow,
-                                               std::uint64_t endRow, std::size_t rowOffset)
+                                               std::uint64_t endRow)
 {
-   LoadClusterInto(dest, rdfIdx, startRow, endRow, rowOffset);
+   LoadClusterInto(dest, rdfIdx, startRow, endRow);
 }
 
 //////////////////////////////////////////////////////////////////////////

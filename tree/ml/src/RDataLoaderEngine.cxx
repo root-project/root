@@ -332,12 +332,14 @@ void RDataLoaderEngine::LoadData()
             // parallel. The loading thread re-acquires the lock in CreateBatches when it needs to push batches to
             // the queue.
             lock.unlock();
-            RFlat2DMatrix stagingBuffer(accumulatedEntries, fClusterLoader->GetNumChunkCols());
+            // reserve the buffer and let the clusters be appended to it, filters can only make them smaller
+            RFlat2DMatrix stagingBuffer;
+            stagingBuffer.fRVec.reserve(accumulatedEntries * fClusterLoader->GetNumChunkCols());
             std::size_t rowOffset = 0;
 
             for (auto &cluster : trainClustersToLoad) {
-               auto loadedEntries = fClusterLoader->LoadTrainingClusterInto(stagingBuffer, cluster.rdfIdx,
-                                                                            cluster.start, cluster.end, rowOffset);
+               auto loadedEntries =
+                  fClusterLoader->LoadTrainingClusterInto(stagingBuffer, cluster.rdfIdx, cluster.start, cluster.end);
                if (discovering) {
                   // For the first epoch, we might discover that the cluster has fewer entries than expected because
                   // of filters
@@ -353,9 +355,7 @@ void RDataLoaderEngine::LoadData()
                fValidationBatchLoader->RecalculateBatchCounts(fNumValidationEntries);
             }
 
-            if (rowOffset < static_cast<std::size_t>(accumulatedEntries)) {
-               stagingBuffer.Resize(rowOffset, stagingBuffer.GetCols());
-            }
+            stagingBuffer.Resize(rowOffset, fClusterLoader->GetNumChunkCols());
 
             RFlat2DMatrix shuffledStagingBuffer;
             fTrainingBatchLoader->CreateBatches(fTensorOperators->ShuffleTensor(shuffledStagingBuffer, stagingBuffer),
@@ -407,14 +407,15 @@ void RDataLoaderEngine::LoadData()
 
             lock.unlock();
 
-            RFlat2DMatrix stagingBuffer(accumulatedEntries, fClusterLoader->GetNumChunkCols());
+            RFlat2DMatrix stagingBuffer;
+            stagingBuffer.fRVec.reserve(accumulatedEntries * fClusterLoader->GetNumChunkCols());
             std::size_t rowOffset = 0;
 
             for (const auto &cluster : valClustersToLoad) {
-               fClusterLoader->LoadValidationClusterInto(stagingBuffer, cluster.rdfIdx, cluster.start, cluster.end,
-                                                         rowOffset);
+               fClusterLoader->LoadValidationClusterInto(stagingBuffer, cluster.rdfIdx, cluster.start, cluster.end);
                rowOffset += cluster.GetNumEntries();
             }
+            stagingBuffer.Resize(rowOffset, fClusterLoader->GetNumChunkCols());
 
             RFlat2DMatrix shuffledStagingBuffer;
             fValidationBatchLoader->CreateBatches(fTensorOperators->ShuffleTensor(shuffledStagingBuffer, stagingBuffer),

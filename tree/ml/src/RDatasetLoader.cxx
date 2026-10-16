@@ -57,22 +57,21 @@ void RDatasetLoader::SplitDataframe(ROOT::RDF::RNode &rdf, RFlat2DMatrix &Traini
    std::size_t NumValidationEntries = static_cast<std::size_t>(fValidationSplit * NumEntries);
    std::size_t NumTrainingEntries = NumEntries - NumValidationEntries;
 
-   RFlat2DMatrix Dataset({NumEntries, fNumDatasetCols});
+   // reserve the dataset and let the values be appended to it
+   RFlat2DMatrix Dataset;
+   Dataset.fRVec.reserve(NumEntries * fNumDatasetCols);
 
    if (NotFiltered) {
-      auto values = ROOT::Internal::RDF::LoadCustomValues(rdf, fCols, fVecSizes, fVecPadding);
-      std::copy(values->begin(), values->end(), Dataset.GetData());
+      ROOT::Internal::RDF::LoadCustomValues(rdf, fCols, fVecSizes, fVecPadding, Dataset.fRVec);
    }
 
    else {
-      std::size_t datasetEntry = 0;
       for (std::size_t j = 0; j < NumEntries; j++) {
          ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, (*Entries)[j], (*Entries)[j + 1]);
-         auto values = ROOT::Internal::RDF::LoadCustomValues(rdf, fCols, fVecSizes, fVecPadding);
-         std::copy(values->begin(), values->end(), Dataset.GetData() + datasetEntry * fNumDatasetCols);
-         datasetEntry++;
+         ROOT::Internal::RDF::LoadCustomValues(rdf, fCols, fVecSizes, fVecPadding, Dataset.fRVec);
       }
    }
+   Dataset.Resize(NumEntries, fNumDatasetCols);
 
    // reset dataframe, only the filtered path changed the entry range
    if (!NotFiltered) {

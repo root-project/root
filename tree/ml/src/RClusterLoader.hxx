@@ -116,14 +116,13 @@ public:
 
    void ShuffleValidationClusters(std::size_t epochIdx);
 
-   void LoadClusterInto(RFlat2DMatrix &dest, std::size_t rdfIdx, std::uint64_t startRow, std::uint64_t endRow,
-                        std::size_t rowOffset = 0);
+   void LoadClusterInto(RFlat2DMatrix &dest, std::size_t rdfIdx, std::uint64_t startRow, std::uint64_t endRow);
 
-   std::size_t LoadTrainingClusterInto(RFlat2DMatrix &dest, std::size_t rdfIdx, std::uint64_t startRow,
-                                       std::uint64_t endRow, std::size_t rowOffset = 0);
+   std::size_t
+   LoadTrainingClusterInto(RFlat2DMatrix &dest, std::size_t rdfIdx, std::uint64_t startRow, std::uint64_t endRow);
 
-   void LoadValidationClusterInto(RFlat2DMatrix &dest, std::size_t rdfIdx, std::uint64_t startRow, std::uint64_t endRow,
-                                  std::size_t rowOffset = 0);
+   void
+   LoadValidationClusterInto(RFlat2DMatrix &dest, std::size_t rdfIdx, std::uint64_t startRow, std::uint64_t endRow);
 
    void FinaliseSplitDiscovery();
 
