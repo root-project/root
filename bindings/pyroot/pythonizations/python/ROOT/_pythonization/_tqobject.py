@@ -142,6 +142,14 @@ def _print_errors(callable_):
     return wrapper
 
 
+def _receiver_address(dispatcher):
+    """The receiver as the void* TQObject expects: a proxy doesn't convert to
+    void* in the overload resolution (like an object doesn't in C++)."""
+    import cppyy
+
+    return cppyy.ll.cast["void*"](cppyy.addressof(dispatcher))
+
+
 def _is_new_style_args(args, kwargs):
     return not kwargs and len(args) == 2 and not isinstance(args[1], str) and callable(args[1])
 
@@ -162,7 +170,10 @@ def _TQObject_Connect(self, *args, **kwargs):
         # callable, so tie the wrapper's lifetime to the dispatcher
         dispatcher._callable = wrapper
         result = self._OriginalConnect(
-            signal, type(dispatcher).__cpp_name__, dispatcher, "Dispatch({})".format(", ".join(arg_types))
+            signal,
+            type(dispatcher).__cpp_name__,
+            _receiver_address(dispatcher),
+            "Dispatch({})".format(", ".join(arg_types)),
         )
         if result:
             _dispatchers.setdefault(_connection_key(self, signal, callable_), []).append(dispatcher)
@@ -182,7 +193,7 @@ def _TQObject_Disconnect(self, *args, **kwargs):
             return False
         result = False
         for dispatcher in dispatchers:
-            result = self._OriginalDisconnect(signal, dispatcher) or result
+            result = self._OriginalDisconnect(signal, _receiver_address(dispatcher)) or result
         return result
     return self._OriginalDisconnect(*args, **kwargs)
 
