@@ -122,6 +122,7 @@ set(py_sources
   ROOT/_pythonization/_th3.py
   ROOT/_pythonization/_thistpainter.py
   ROOT/_pythonization/_titer.py
+  ROOT/_pythonization/_tlegend.py
   ROOT/_pythonization/_tobject.py
   ROOT/_pythonization/_tobjstring.py
   ROOT/_pythonization/_tqobject.py

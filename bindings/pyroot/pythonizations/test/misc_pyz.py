@@ -129,6 +129,25 @@ class TContextContextManager(unittest.TestCase):
         self.constructor_twoargs()
 
 
+class TLegendAddEntry(unittest.TestCase):
+    """
+    Test the pythonization of TLegend::AddEntry
+    """
+
+    def test_entry_without_object(self):
+        leg = ROOT.TLegend(0.1, 0.1, 0.3, 0.3)
+        for null in (0, None, ROOT.nullptr):
+            entry = leg.AddEntry(null, "header", "")
+            self.assertEqual(entry.GetLabel(), "header")
+            self.assertFalse(entry.GetObject())
+
+    def test_entry_with_object(self):
+        leg = ROOT.TLegend(0.1, 0.1, 0.3, 0.3)
+        h = ROOT.TH1F("h_tlegend_addentry", "", 1, 0, 1)
+        entry = leg.AddEntry(h, "histogram", "l")
+        self.assertEqual(entry.GetLabel(), "histogram")
+        self.assertEqual(entry.GetObject(), h)
+
 class TestTComplexOperators(unittest.TestCase):
     """
     Test for the operators of TComplex:
