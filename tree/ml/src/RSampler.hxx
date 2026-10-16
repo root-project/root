@@ -68,6 +68,9 @@ public:
 
    void RandomOversampler(RFlat2DMatrix &ShuffledTensor);
 
+   void GatherSamples(RFlat2DMatrix &ShuffledTensor, const RFlat2DMatrix &ResampledDataset, std::size_t numResampled,
+                      const RFlat2DMatrix &OtherDataset);
+
    void SampleWithReplacement(std::size_t n_samples, std::size_t max);
 
    void SampleWithoutReplacement(std::size_t n_samples, std::size_t max);

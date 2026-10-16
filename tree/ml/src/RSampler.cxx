@@ -107,24 +107,7 @@ void RSampler::RandomUndersampler(RFlat2DMatrix &ShuffledTensor)
       SampleWithoutReplacement(fNumResampledMajor, fNumMajor);
    }
 
-   std::size_t cols = fDatasets[0].GetCols();
-   RFlat2DMatrix SampledTensor(fNumEntries, cols);
-   RFlat2DMatrix UndersampledMajorTensor(fNumResampledMajor, cols);
-
-   std::size_t index = 0;
-   for (std::size_t i = 0; i < fNumResampledMajor; i++) {
-      std::copy(fDatasets[fMajor].GetData() + fSamples[i] * cols,
-                fDatasets[fMajor].GetData() + (fSamples[i] + 1) * cols,
-                UndersampledMajorTensor.GetData() + index * cols);
-      index++;
-   }
-
-   fTensorOperators->ConcatenateTensors(SampledTensor, {UndersampledMajorTensor, fDatasets[fMinor]});
-   if (fShuffle) {
-      fTensorOperators->ShuffleTensor(ShuffledTensor, SampledTensor);
-   } else {
-      ShuffledTensor = std::move(SampledTensor);
-   }
+   GatherSamples(ShuffledTensor, fDatasets[fMajor], fNumResampledMajor, fDatasets[fMinor]);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -134,23 +117,29 @@ void RSampler::RandomOversampler(RFlat2DMatrix &ShuffledTensor)
 {
    SampleWithReplacement(fNumResampledMinor, fNumMinor);
 
+   GatherSamples(ShuffledTensor, fDatasets[fMinor], fNumResampledMinor, fDatasets[fMajor]);
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// \brief Fill the sampled entries: the resampled entries followed by all the other ones, in shuffled order
+/// \param[in] ShuffledTensor Tensor with all the sampled entries
+/// \param[in] ResampledDataset Dataset the entries in fSamples are taken from
+/// \param[in] numResampled Number of resampled entries
+/// \param[in] OtherDataset Dataset whose entries are all taken
+void RSampler::GatherSamples(RFlat2DMatrix &ShuffledTensor, const RFlat2DMatrix &ResampledDataset,
+                             std::size_t numResampled, const RFlat2DMatrix &OtherDataset)
+{
    std::size_t cols = fDatasets[0].GetCols();
-   RFlat2DMatrix SampledTensor(fNumEntries, cols);
-   RFlat2DMatrix OversampledMinorTensor(fNumResampledMinor, cols);
+   const auto permutation = fTensorOperators->MakePermutation(fNumEntries);
 
-   std::size_t index = 0;
-   for (std::size_t i = 0; i < fNumResampledMinor; i++) {
-      std::copy(fDatasets[fMinor].GetData() + fSamples[i] * cols,
-                fDatasets[fMinor].GetData() + (fSamples[i] + 1) * cols,
-                OversampledMinorTensor.GetData() + index * cols);
-      index++;
-   }
-
-   fTensorOperators->ConcatenateTensors(SampledTensor, {OversampledMinorTensor, fDatasets[fMajor]});
-   if (fShuffle) {
-      fTensorOperators->ShuffleTensor(ShuffledTensor, SampledTensor);
-   } else {
-      ShuffledTensor = std::move(SampledTensor);
+   // read the entries straight from the datasets, instead of concatenating and shuffling copies of them
+   ShuffledTensor.Resize(fNumEntries, cols);
+   float *out = ShuffledTensor.GetData();
+   for (std::size_t i = 0; i < fNumEntries; i++) {
+      const std::size_t entry = permutation.empty() ? i : permutation[i];
+      const float *row = entry < numResampled ? ResampledDataset.GetData() + fSamples[entry] * cols
+                                              : OtherDataset.GetData() + (entry - numResampled) * cols;
+      out = std::copy_n(row, cols, out);
    }
 }
 

@@ -77,11 +77,9 @@ RDataLoaderEngine::RDataLoaderEngine(const std::vector<ROOT::RDF::RNode> &rdfs, 
    if (fLoadEager) {
       fDatasetLoader =
          std::make_unique<RDatasetLoader>(fRdfs, fTestSize, fCols, fVecSizes, vecPadding, fShuffle, fSetSeed);
-      fDatasetLoader->SplitDatasets();
+      fDatasetLoader->SplitDatasets(fSampleType == "");
 
       if (fSampleType == "") {
-         fDatasetLoader->ConcatenateDatasets();
-
          fTrainingDataset = fDatasetLoader->ReleaseTrainingDataset();
          fValidationDataset = fDatasetLoader->ReleaseValidationDataset();
 

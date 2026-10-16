@@ -21,12 +21,10 @@ RDatasetLoader::RDatasetLoader(const std::vector<ROOT::RDF::RNode> &rdfs, const 
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// \brief Split an individual dataframe into a training and validation dataset
-/// \param[in] rdf Dataframe that will be split into training and validation
-/// \param[in] TrainingDataset Tensor for the training dataset
-/// \param[in] ValidationDataset Tensor for the validation dataset
-void RDatasetLoader::SplitDataframe(ROOT::RDF::RNode &rdf, RFlat2DMatrix &TrainingDataset,
-                                    RFlat2DMatrix &ValidationDataset)
+/// \brief Load all the entries of an individual dataframe
+/// \param[in] rdf Dataframe to load
+/// \return Tensor with the dataset
+RFlat2DMatrix RDatasetLoader::LoadDataframe(ROOT::RDF::RNode &rdf)
 {
    const bool NotFiltered = rdf.GetFilterNames().empty();
 
@@ -53,10 +51,6 @@ void RDatasetLoader::SplitDataframe(ROOT::RDF::RNode &rdf, RFlat2DMatrix &Traini
       Entries->push_back((*Entries)[NumEntries - 1] + 1);
    }
 
-   // number of training and validation entries after the split
-   std::size_t NumValidationEntries = static_cast<std::size_t>(fValidationSplit * NumEntries);
-   std::size_t NumTrainingEntries = NumEntries - NumValidationEntries;
-
    // reserve the dataset and let the values be appended to it
    RFlat2DMatrix Dataset;
    Dataset.fRVec.reserve(NumEntries * fNumDatasetCols);
@@ -78,48 +72,86 @@ void RDatasetLoader::SplitDataframe(ROOT::RDF::RNode &rdf, RFlat2DMatrix &Traini
       ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, (*Entries)[0], (*Entries)[NumEntries]);
    }
 
-   // copy out the validation tail, then shrink the (shuffled) buffer to the training rows and move it
-   RFlat2DMatrix ShuffledDataset;
-   RFlat2DMatrix &Source = fTensorOperators->ShuffleTensor(ShuffledDataset, Dataset);
-   fTensorOperators->SliceTensor(ValidationDataset, Source, {{NumTrainingEntries, NumEntries}, {0, fNumDatasetCols}});
-   Source.Resize(NumTrainingEntries, fNumDatasetCols);
-   TrainingDataset = std::move(Source);
+   return Dataset;
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// \brief Split a loaded dataset into training and validation entries, appended to the given datasets
+/// \param[in] Dataset Tensor with the loaded dataset
+/// \param[in] TrainingDataset Tensor for the training dataset
+/// \param[in] ValidationDataset Tensor for the validation dataset
+void RDatasetLoader::SplitDataset(RFlat2DMatrix &Dataset, RFlat2DMatrix &TrainingDataset,
+                                  RFlat2DMatrix &ValidationDataset)
+{
+   // number of training and validation entries after the split
+   std::size_t NumEntries = Dataset.GetRows();
+   std::size_t NumValidationEntries = static_cast<std::size_t>(fValidationSplit * NumEntries);
+   std::size_t NumTrainingEntries = NumEntries - NumValidationEntries;
+
+   // read the entries in shuffled order, instead of copying the dataset into a shuffled one first
+   const auto permutation = fTensorOperators->MakePermutation(NumEntries);
+
+   ValidationDataset.fRVec.reserve(ValidationDataset.GetSize() + NumValidationEntries * fNumDatasetCols);
+   RFlat2DMatrixOperators::AppendRows(ValidationDataset, Dataset, permutation, NumTrainingEntries, NumEntries);
+
+   TrainingDataset.fRVec.reserve(TrainingDataset.GetSize() + NumTrainingEntries * fNumDatasetCols);
+   RFlat2DMatrixOperators::AppendRows(TrainingDataset, Dataset, permutation, 0, NumTrainingEntries);
 }
 
 //////////////////////////////////////////////////////////////////////////
 /// \brief Split the dataframes in a training and validation dataset
-void RDatasetLoader::SplitDatasets()
+/// \param[in] concatenate Whether to concatenate the datasets of all the dataframes into one
+void RDatasetLoader::SplitDatasets(bool concatenate)
 {
+   std::vector<RFlat2DMatrix> Datasets;
+   for (auto &rdf : f_rdfs) {
+      Datasets.push_back(LoadDataframe(rdf));
+   }
+
+   if (concatenate && Datasets.size() > 1) {
+      // split every dataset directly into the concatenated ones, sized for all of them
+      std::size_t NumValidationEntries = 0;
+      std::size_t NumEntries = 0;
+      for (const auto &Dataset : Datasets) {
+         NumEntries += Dataset.GetRows();
+         NumValidationEntries += static_cast<std::size_t>(fValidationSplit * Dataset.GetRows());
+      }
+      fTrainingDataset.fRVec.reserve((NumEntries - NumValidationEntries) * fNumDatasetCols);
+      fValidationDataset.fRVec.reserve(NumValidationEntries * fNumDatasetCols);
+
+      for (auto &Dataset : Datasets) {
+         SplitDataset(Dataset, fTrainingDataset, fValidationDataset);
+         Dataset = RFlat2DMatrix();
+      }
+   } else {
+      for (auto &Dataset : Datasets) {
+         RFlat2DMatrix TrainingDataset;
+         RFlat2DMatrix ValidationDataset;
+         SplitDataset(Dataset, TrainingDataset, ValidationDataset);
+         Dataset = RFlat2DMatrix();
+         fTrainingDatasets.push_back(std::move(TrainingDataset));
+         fValidationDatasets.push_back(std::move(ValidationDataset));
+      }
+
+      if (concatenate) {
+         fTrainingDataset = std::move(fTrainingDatasets[0]);
+         fValidationDataset = std::move(fValidationDatasets[0]);
+         fTrainingDatasets.clear();
+         fValidationDatasets.clear();
+      }
+   }
+
    fNumTrainingEntries = 0;
    fNumValidationEntries = 0;
-
-   for (auto &rdf : f_rdfs) {
-      RFlat2DMatrix TrainingDataset;
-      RFlat2DMatrix ValidationDataset;
-
-      SplitDataframe(rdf, TrainingDataset, ValidationDataset);
-
-      fNumTrainingEntries += TrainingDataset.GetRows();
-      fNumValidationEntries += ValidationDataset.GetRows();
-
-      fTrainingDatasets.push_back(std::move(TrainingDataset));
-      fValidationDatasets.push_back(std::move(ValidationDataset));
-   }
-}
-
-//////////////////////////////////////////////////////////////////////////
-/// \brief Concatenate the datasets to a dataset
-void RDatasetLoader::ConcatenateDatasets()
-{
-   if (fTrainingDatasets.size() == 1) {
-      fTrainingDataset = std::move(fTrainingDatasets[0]);
-      fValidationDataset = std::move(fValidationDatasets[0]);
+   if (concatenate) {
+      fNumTrainingEntries = fTrainingDataset.GetRows();
+      fNumValidationEntries = fValidationDataset.GetRows();
    } else {
-      fTensorOperators->ConcatenateTensors(fTrainingDataset, fTrainingDatasets);
-      fTensorOperators->ConcatenateTensors(fValidationDataset, fValidationDatasets);
+      for (std::size_t i = 0; i < fTrainingDatasets.size(); i++) {
+         fNumTrainingEntries += fTrainingDatasets[i].GetRows();
+         fNumValidationEntries += fValidationDatasets[i].GetRows();
+      }
    }
-   fTrainingDatasets.clear();
-   fValidationDatasets.clear();
 }
 
 } // namespace ROOT::Experimental::Internal::ML

@@ -36,20 +36,12 @@ public:
 
    ~RFlat2DMatrixOperators();
 
-   // returns the tensor to read from: the permuted copy, or Tensor itself when shuffling is off
-   RFlat2DMatrix &ShuffleTensor(RFlat2DMatrix &ShuffledTensor, RFlat2DMatrix &Tensor);
-
    // returns the order in which to read the rows of a tensor, empty when shuffling is off
    std::vector<std::size_t> MakePermutation(std::size_t rows);
 
    // appends the rows [begin, end) of Tensor to Dest, read in the order of the permutation unless it is empty
    static void AppendRows(RFlat2DMatrix &Dest, const RFlat2DMatrix &Tensor, const std::vector<std::size_t> &permutation,
                           std::size_t begin, std::size_t end);
-
-   void
-   SliceTensor(RFlat2DMatrix &SlicedTensor, RFlat2DMatrix &Tensor, const std::vector<std::vector<std::size_t>> &slice);
-
-   void ConcatenateTensors(RFlat2DMatrix &ConcatTensor, const std::vector<RFlat2DMatrix> &Tensors);
 };
 
 } // namespace ROOT::Experimental::Internal::ML
