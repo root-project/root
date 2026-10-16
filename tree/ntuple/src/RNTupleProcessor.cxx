@@ -32,7 +32,7 @@ ROOT::Internal::LoadFullRNTupleProcessorEntry(ROOT::Experimental::RNTupleProcess
 
 //------------------------------------------------------------------------------
 
-std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Experimental::RNTupleOpenSpec::CreatePageSource() const
+std::unique_ptr<ROOT::Internal::RPageSource> ROOT::RNTupleOpenSpec::CreatePageSource() const
 {
    if (const std::string *storagePath = std::get_if<std::string>(&fStorage))
       return ROOT::Internal::RPageSource::Create(fNTupleName, *storagePath);

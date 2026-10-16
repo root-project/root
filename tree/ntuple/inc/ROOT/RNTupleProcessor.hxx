@@ -32,6 +32,7 @@
 namespace ROOT {
 namespace Experimental {
 class RNTupleProcessor;
+class RNTupleSingleProcessor;
 
 namespace Internal {
 namespace RDF {
@@ -47,10 +48,9 @@ const RNTupleProcessorEntry *
 LoadFullRNTupleProcessorEntry(ROOT::Experimental::RNTupleProcessor &processor, bool includeSubfields); // for unit tests
 } // namespace Internal
 
-namespace Experimental {
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleOpenSpec
+\class ROOT::RNTupleOpenSpec
 \ingroup NTuple
 \brief Specification of the name and location of an RNTuple, used for creating a new RNTupleProcessor.
 
@@ -61,9 +61,8 @@ Note that the RNTupleOpenSpec is *write-only*, to prevent usability issues with 
 */
 // clang-format on
 class RNTupleOpenSpec {
-   friend class RNTupleProcessor;
-   friend class RNTupleSingleProcessor;
-   friend class RNTupleJoinProcessor;
+   friend class Experimental::RNTupleProcessor;
+   friend class Experimental::RNTupleSingleProcessor;
 
 private:
    std::string fNTupleName;
@@ -73,9 +72,10 @@ public:
    RNTupleOpenSpec(std::string_view n, TDirectory *s) : fNTupleName(n), fStorage(s) {}
    RNTupleOpenSpec(std::string_view n, const std::string &s) : fNTupleName(n), fStorage(s) {}
 
-   std::unique_ptr<ROOT::Internal::RPageSource> CreatePageSource() const;
+   std::unique_ptr<Internal::RPageSource> CreatePageSource() const;
 };
 
+namespace Experimental {
 class RNTupleProcessorOptions {
 private:
    /// By default, the processor name is the name of the underlying RNTuple for RNTupleSingleProcessor, the name of the
@@ -317,9 +317,8 @@ Example usage (see ntpl012_processor_chain.C and ntpl015_processor_join.C for bi
 ~~~{.cpp}
 #include <ROOT/RNTupleProcessor.hxx>
 using ROOT::Experimental::RNTupleProcessor;
-using ROOT::Experimental::RNTupleOpenSpec;
 
-std::vector<RNTupleOpenSpec> ntuples = {{"ntuple1", "ntuple1.root"}, {"ntuple2", "ntuple2.root"}};
+std::vector<ROOT::RNTupleOpenSpec> ntuples = {{"ntuple1", "ntuple1.root"}, {"ntuple2", "ntuple2.root"}};
 auto processor = RNTupleProcessor::CreateChain(ntuples);
 
 auto pt = processor->RequestField<float>("pt");
