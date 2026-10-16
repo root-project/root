@@ -1077,23 +1077,6 @@ void TASImage::SetImage(const TVectorD &imageData, UInt_t width, TImagePalette *
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create an image from the given X11 window
-/// Can only be used on platforms where X11 is supported
-
-void TASImage::FromX11Window(Window_t win, Int_t x, Int_t y, Int_t width, Int_t height)
-{
-   DestroyImage();
-   DestroyScaledImage();
-
-   if (!InitVisual()) {
-      Warning("FromX11Window", "Visual not initiated");
-      return;
-   }
-
-   fImage = pixmap2asimage(fgVisual, win, x, y, width, height, kAllPlanes, 0, 0);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Create an image from the given pad, afterwards this image can be
 /// saved in any of the supported image formats.
 
@@ -2165,33 +2148,24 @@ void TASImage::StartPaletteEditor()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns image X11 pixmap.
-/// Workrs only on the platforms with support of X11
-/// The pixmap must deleted by user.
-
-Pixmap_t TASImage::GetX11Pixmap(Window_t root_window)
-{
-   if (!InitVisual()) {
-      Warning("GetX11Pixmap", "Visual not initiated");
-      return 0;
-   }
-
-   ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
-
-   return (Pixmap_t)asimage2pixmap(fgVisual, root_window, img, nullptr, kTRUE);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// DEPRECATED. Method left for backward compatibility and will be removed in ROOT7!
 /// Returns image pixmap.
 /// The pixmap must deleted by user.
 
 Pixmap_t TASImage::GetPixmap()
 {
+   if (!InitVisual()) {
+      Warning("GetPixmap", "Visual not initiated");
+      return 0;
+   }
+
    static Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
 
-   if (x11)
-      return GetX11Pixmap(gVirtualX->GetDefaultRootWindow());
+   if (x11) {
+      ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
+
+      return (Pixmap_t)asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(), img, nullptr, kTRUE);
+   }
 
    auto argb = GetArgbArray();
    if (!argb) {

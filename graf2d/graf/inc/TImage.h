@@ -129,9 +129,6 @@ public:
    // Create an image from the given pad. (See TASImage::FromPad)
    virtual void FromPad(TVirtualPad * /*pad*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) {}
 
-   // Create an image from X11 window handle. (See TASImage::FromX11Window)
-   virtual void FromX11Window(Window_t /* win */ , Int_t /* x */, Int_t  /* y */, Int_t /* width */, Int_t /* height */) {}
-
    // Create an image from gVirtualX window. (See TASImage::FromWindow)
    virtual void R__DEPRECATED(7,00, "Use TGWindow::CreateImageFromWindow instead") FromWindow(Drawable_t /*wid*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) {}
 
@@ -252,7 +249,6 @@ public:
 
    virtual TArrayL  *GetPixels(Int_t /*x*/= 0, Int_t /*y*/= 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) { return nullptr; }
    virtual TArrayD  *GetArray(UInt_t /*w*/ = 0, UInt_t /*h*/ = 0, TImagePalette * = gWebImagePalette) { return nullptr; }
-   virtual Pixmap_t  GetX11Pixmap(Window_t /* root_window */) { return 0; }
    virtual Pixmap_t  R__DEPRECATED(7,00, "Use TGWindow::GetImagePixmap instead") GetPixmap() { return 0; }
    virtual Bool_t    GetMaskBits(UInt_t & /* width */, UInt_t & /* height */, std::vector<char> & /* bits */) { return kFALSE; }
    virtual Pixmap_t  R__DEPRECATED(7,00, "Use TGWindow::GetImageMask instead") GetMask() { return 0; }
