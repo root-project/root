@@ -90,7 +90,10 @@ def _TDirectory_WriteObject(self, obj, *args):
     if isinstance(obj, ROOT.TObject):
         return self.WriteTObject(obj, *args)
 
-    return self.WriteObjectAny(obj, type(obj).__cpp_name__, *args)
+    # A proxy doesn't convert to the void* parameter in the overload
+    # resolution (like an object doesn't in C++), so pass its address
+    address = ROOT._cppyy.ll.cast["void*"](ROOT._cppyy.addressof(obj))
+    return self.WriteObjectAny(address, type(obj).__cpp_name__, *args)
 
 
 def _ipython_key_completions_(self):
