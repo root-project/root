@@ -34,7 +34,7 @@ class RPageAllocator;
 class RClusterPool;
 } // namespace Internal
 
-namespace Experimental::Internal {
+namespace Internal {
 
 enum class ENTupleMergingMode {
    /// The merger will discard all columns that aren't present in the prototype model (i.e. the model of the first
@@ -102,7 +102,7 @@ struct RNTupleMergeOptions {
 
 // clang-format off
 /**
- * \class ROOT::Experimental::Internal::RNTupleMerger
+ * \class ROOT::Internal::RNTupleMerger
  * \ingroup NTuple
  * \brief Given a set of RPageSources merge them into an RPagePersistentSink, optionally changing their compression.
  *        This can also be used to change the compression of a single RNTuple by just passing a single source.
@@ -113,7 +113,7 @@ class RNTupleMerger final {
 
    std::unique_ptr<ROOT::Internal::RPagePersistentSink> fDestination;
    std::unique_ptr<ROOT::Internal::RPageAllocator> fPageAlloc;
-   std::optional<TTaskGroup> fTaskGroup;
+   std::optional<ROOT::Experimental::TTaskGroup> fTaskGroup;
    std::unique_ptr<ROOT::RNTupleModel> fModel;
 
    [[nodiscard]]
@@ -147,7 +147,7 @@ public:
 
 }; // end of class RNTupleMerger
 
-} // namespace Experimental::Internal
+} // namespace Internal
 } // namespace ROOT
 
 #endif
