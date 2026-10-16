@@ -37,7 +37,7 @@ class RSoAField;
 
 namespace Internal {
 std::unique_ptr<RFieldBase> CreateEmulatedVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
-                                                      std::string_view emulatedFromType);
+                                                      const RFieldDescriptor &emulatedFrom);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -214,7 +214,7 @@ class RVectorField : public RFieldBase {
    friend class RArrayAsVectorField; // to get access to the RVectorDeleter
    friend std::unique_ptr<RFieldBase> Internal::CreateEmulatedVectorField(std::string_view fieldName,
                                                                           std::unique_ptr<RFieldBase> itemField,
-                                                                          std::string_view emulatedFromType);
+                                                                          const RFieldDescriptor &emulatedFrom);
 
    class RVectorDeleter : public RDeleter {
    private:
@@ -231,6 +231,9 @@ class RVectorField : public RFieldBase {
    std::size_t fItemSize;
    ROOT::Internal::RColumnIndex fNWritten;
    std::unique_ptr<RDeleter> fItemDeleter;
+   // These are only valid if the record field is emulated (i.e. (fTraits & kTraitEmulatedField) != 0).
+   std::uint32_t fEmulatedTypeVersion = 0;
+   std::uint32_t fEmulatedTypeChecksum = 0;
 
    // Ensures that the std::vector pointed to by vec has at least nItems valid elements.
    static void ResizeVector(void *vec, std::size_t nItems, std::size_t itemSize, const RFieldBase &itemField,
@@ -238,10 +241,10 @@ class RVectorField : public RFieldBase {
 
 protected:
    /// Creates a possibly-untyped VectorField.
-   /// If `emulatedFromType` is not nullopt, the field is untyped. If the string is empty, it is a "regular"
+   /// If `emulatedFrom` is not null, the field is untyped. If emulatedFrom->GetTypeName() is empty, it is a "regular"
    /// untyped vector field; otherwise, it was created as an emulated field from the given type name.
    RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
-                std::optional<std::string_view> emulatedFromType);
+                const ROOT::RFieldDescriptor *emulatedFrom);
 
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 

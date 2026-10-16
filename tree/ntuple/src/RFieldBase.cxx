@@ -541,8 +541,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
                memberFields.emplace_back(std::move(field));
             }
             R__ASSERT(typeName == fieldDesc.GetTypeName());
-            auto recordField =
-               Internal::CreateEmulatedRecordField(fieldName, std::move(memberFields), fieldDesc.GetTypeName());
+            auto recordField = Internal::CreateEmulatedRecordField(fieldName, std::move(memberFields), fieldDesc);
             recordField->fTypeAlias = fieldDesc.GetTypeAlias();
             return recordField;
          } else if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
@@ -553,8 +552,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
             const auto &itemFieldDesc = desc->GetFieldDescriptor(itemFieldId);
             auto itemField =
                Create(itemFieldDesc.GetFieldName(), itemFieldDesc.GetTypeName(), options, desc, itemFieldId).Unwrap();
-            auto vecField =
-               ROOT::Internal::CreateEmulatedVectorField(fieldName, std::move(itemField), fieldDesc.GetTypeName());
+            auto vecField = ROOT::Internal::CreateEmulatedVectorField(fieldName, std::move(itemField), fieldDesc);
             vecField->fTypeAlias = fieldDesc.GetTypeAlias();
             return vecField;
          } else if (ROOT::Internal::IsCustomEnumFieldDesc(*desc, fieldDesc)) {
