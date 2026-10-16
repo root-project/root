@@ -45,9 +45,7 @@ class RFieldVisitor;
 class RRawPtrWriteEntry;
 } // namespace Detail
 
-namespace Experimental {
 class RNTupleAttrSetReader;
-}
 
 namespace Internal {
 
@@ -65,11 +63,8 @@ ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
 CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName, const ROOT::RCreateFieldOptions &options,
                     const ROOT::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
 
-} // namespace Internal
-
-namespace Experimental::Internal {
 struct RNTupleAttrEntry;
-}
+} // namespace Internal
 
 // clang-format off
 /**
@@ -89,7 +84,7 @@ This is and can only be partially enforced through C++.
 class RFieldBase {
    friend class RFieldZero;                                    // to reset fParent pointer in ReleaseSubfields()
    friend class ROOT::Detail::RRawPtrWriteEntry;               // to call Append()
-   friend class ROOT::Experimental::RNTupleAttrSetReader;      // for field->Read() in LoadEntry()
+   friend class ROOT::RNTupleAttrSetReader;      // for field->Read() in LoadEntry()
    friend struct ROOT::Internal::RFieldCallbackInjector;       // used for unit tests
    friend struct ROOT::Internal::RFieldRepresentationModifier; // used for unit tests
    friend void Internal::CallFlushColumnsOnField(RFieldBase &);
@@ -771,7 +766,7 @@ public:
 class RFieldBase::RValue final {
    friend class RFieldBase;
    friend class ROOT::REntry;
-   friend struct ROOT::Experimental::Internal::RNTupleAttrEntry;
+   friend struct ROOT::Internal::RNTupleAttrEntry;
 
 private:
    RFieldBase *fField = nullptr;  ///< The field that created the RValue

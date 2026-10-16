@@ -11,7 +11,7 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/StringUtils.hxx>
 
-using namespace ROOT::Experimental::Internal::RNTupleAttributes;
+using namespace ROOT::Internal::RNTupleAttributes;
 
 static ROOT::RResult<void> ValidateAttributeModel(const ROOT::RNTupleModel &model)
 {
@@ -30,7 +30,7 @@ static ROOT::RResult<void> ValidateAttributeModel(const ROOT::RNTupleModel &mode
 //
 //  RNTupleAttrEntry
 //
-std::size_t ROOT::Experimental::Internal::RNTupleAttrEntry::Append()
+std::size_t ROOT::Internal::RNTupleAttrEntry::Append()
 {
    std::size_t bytesWritten = 0;
    // Write the meta entry values
@@ -53,10 +53,10 @@ std::size_t ROOT::Experimental::Internal::RNTupleAttrEntry::Append()
 //
 //  RNTupleAttrSetWriter
 //
-std::unique_ptr<ROOT::Experimental::RNTupleAttrSetWriter>
-ROOT::Experimental::RNTupleAttrSetWriter::Create(const RNTupleFillContext &mainFillContext,
-                                                 std::unique_ptr<ROOT::Internal::RPageSink> sink,
-                                                 std::unique_ptr<RNTupleModel> userModel)
+std::unique_ptr<ROOT::RNTupleAttrSetWriter>
+ROOT::RNTupleAttrSetWriter::Create(const RNTupleFillContext &mainFillContext,
+                                   std::unique_ptr<ROOT::Internal::RPageSink> sink,
+                                   std::unique_ptr<RNTupleModel> userModel)
 
 {
    ValidateAttributeModel(*userModel).ThrowOnError();
@@ -90,12 +90,12 @@ ROOT::Experimental::RNTupleAttrSetWriter::Create(const RNTupleFillContext &mainF
                                std::move(rangeStartPtr), std::move(rangeLenPtr)));
 }
 
-ROOT::Experimental::RNTupleAttrSetWriter::RNTupleAttrSetWriter(const RNTupleFillContext &mainFillContext,
-                                                               std::unique_ptr<ROOT::Internal::RPageSink> sink,
-                                                               std::unique_ptr<RNTupleModel> metaModel,
-                                                               std::unique_ptr<RNTupleModel> userModel,
-                                                               std::shared_ptr<ROOT::NTupleSize_t> rangeStartPtr,
-                                                               std::shared_ptr<ROOT::NTupleSize_t> rangeLenPtr)
+ROOT::RNTupleAttrSetWriter::RNTupleAttrSetWriter(const RNTupleFillContext &mainFillContext,
+                                                 std::unique_ptr<ROOT::Internal::RPageSink> sink,
+                                                 std::unique_ptr<RNTupleModel> metaModel,
+                                                 std::unique_ptr<RNTupleModel> userModel,
+                                                 std::shared_ptr<ROOT::NTupleSize_t> rangeStartPtr,
+                                                 std::shared_ptr<ROOT::NTupleSize_t> rangeLenPtr)
    : fFillContext(std::move(metaModel), std::move(sink)),
      fMainFillContext(&mainFillContext),
      fUserModel(std::move(userModel)),
@@ -104,14 +104,13 @@ ROOT::Experimental::RNTupleAttrSetWriter::RNTupleAttrSetWriter(const RNTupleFill
 {
 }
 
-ROOT::Experimental::RNTupleAttrPendingRange ROOT::Experimental::RNTupleAttrSetWriter::BeginRange()
+ROOT::RNTupleAttrPendingRange ROOT::RNTupleAttrSetWriter::BeginRange()
 {
    const auto start = fMainFillContext->GetNEntries();
    return RNTupleAttrPendingRange{start, fFillContext.GetModel().GetModelId()};
 }
 
-void ROOT::Experimental::RNTupleAttrSetWriter::CommitRange(ROOT::Experimental::RNTupleAttrPendingRange pendingRange,
-                                                           REntry &entry)
+void ROOT::RNTupleAttrSetWriter::CommitRange(ROOT::RNTupleAttrPendingRange pendingRange, REntry &entry)
 {
    // NOTE: this has to happen before potentially throwing the exception, otherwise the pending range will log its
    // "was not committed" warning in addition to it.
@@ -134,12 +133,12 @@ void ROOT::Experimental::RNTupleAttrSetWriter::CommitRange(ROOT::Experimental::R
    fFillContext.FillImpl(pair);
 }
 
-void ROOT::Experimental::RNTupleAttrSetWriter::CommitRange(ROOT::Experimental::RNTupleAttrPendingRange pendingRange)
+void ROOT::RNTupleAttrSetWriter::CommitRange(ROOT::RNTupleAttrPendingRange pendingRange)
 {
    CommitRange(std::move(pendingRange), fUserModel->GetDefaultEntry());
 }
 
-ROOT::Internal::RNTupleLink ROOT::Experimental::RNTupleAttrSetWriter::Commit()
+ROOT::Internal::RNTupleLink ROOT::RNTupleAttrSetWriter::Commit()
 {
    fFillContext.FlushCluster();
    if (fFillContext.GetNEntries() > 0)
