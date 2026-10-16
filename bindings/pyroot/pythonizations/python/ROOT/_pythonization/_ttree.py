@@ -424,7 +424,15 @@ def _try_branch_ptr_to_ptr_overloads(self, args):
         # give as a base or equivalent spelling of it.
         proxy_type = type(address).__cpp_name__
         brancher = _lookups().helpers.BranchPtrToPtr[proxy_type]
-        return brancher(self, name, class_name or proxy_type, address, *rest)
+        try:
+            # a reference proxy (to the caller's pointer) is taken as a T*
+            # and promoted to the T** by the overload resolution
+            return brancher(self, name, class_name or proxy_type, address, *rest)
+        except TypeError:
+            # a proxy owning its pointer doesn't convert to T** in the overload
+            # resolution, so pass the address of that pointer explicitly
+            ptr_to_ptr = ROOT._cppyy.ll.cast[proxy_type + "**"](ROOT._cppyy.addressof(address, byref=True))
+            return brancher(self, name, class_name or proxy_type, ptr_to_ptr, *rest)
 
     buf = _get_address_of(address)
     if not buf or not class_name:
