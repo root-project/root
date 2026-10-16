@@ -340,7 +340,14 @@ def _SetBranchAddress(self, bname, addr, *args, **kwargs):
     elif "ptr" in kwargs:
         tbranch_ptr = kwargs["ptr"]
 
-    return self._OriginalSetBranchAddress(bname, addr, ptr=tbranch_ptr, realClass=cl, datatype=tp, isptr=False)
+    # Pass the buffer as the void* the non-template overload takes: as a typed
+    # pointer, the array would select the template overloads instead. The
+    # arguments are passed positionally, as the overload resolution doesn't
+    # match keyword arguments to parameters.
+    import ctypes
+
+    buf = ctypes.c_void_p(_get_address_of(addr))
+    return self._OriginalSetBranchAddress(bname, buf, tbranch_ptr, cl, tp, False)
 
 
 def _get_address_of(obj):
