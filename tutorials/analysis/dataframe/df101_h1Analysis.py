@@ -63,7 +63,7 @@ def FitAndPlotHdmd(hdmd: ROOT.TH1):
 
     # Fit histogram hdmd with function f5 using the loglikelihood option
     formula = f"{dxbin} * ([0] * pow(x - 0.13957, [1]) + [2] / 2.5066 / [4] * exp(-{xp3} / 2 / [4] / [4]))"
-    f5 = ROOT.TF1("f5", f"{condition} ? {formula} : 0", 0.139, 0.17, 5)
+    f5 = ROOT.TF1("f5", f"{condition} ? {formula} : 0", 0.139, 0.17)
     f5.SetParameters(1000000, 0.25, 2000, 0.1454, 0.001)
     hdraw.Fit(f5, "lr")
 
@@ -87,7 +87,7 @@ def FitAndPlotH2(h2: ROOT.TH2):
     formula = f"{dxbin} * ([0] * pow(x - 0.13957, 0.25) + [1] / 2.5066 / {sigma} * exp(-{xp3} / 2 / {sigma} / {sigma}))"
     print(f"TWO: {condition} ? {formula} : 0")
 
-    f2 = ROOT.TF1("f2", f"{condition} ? {formula} : 0", 0.139, 0.17, 2)
+    f2 = ROOT.TF1("f2", f"{condition} ? {formula} : 0", 0.139, 0.17)
     f2.SetParameters(10000, 10)
     h2.FitSlicesX(f2, 0, -1, 1, "qln")
 
