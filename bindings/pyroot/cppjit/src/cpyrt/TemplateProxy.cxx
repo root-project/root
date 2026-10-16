@@ -822,16 +822,19 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args) {
     }
 
     scope = ((CPPClass*)pytmpl->fTI->fPyClass)->fCppType;
-    cppmeth = interop::GetMethodTemplate(scope, pytmpl->fTI->fCppName,
-                                         proto.substr(1, proto.size() - 2),
-                                         ambiguous_candidates);  // ???: include_non_templated
+    cppmeth = interop::GetMethodBySignature(scope, pytmpl->fTI->fCppName,
+                                            proto.substr(1, proto.size() - 2),
+                                            ambiguous_candidates,
+                                            /*include_non_templated=*/true);
   } else if (PyArg_ParseTuple(args, const_cast<char*>("ss:__overload__"),
                               &sigarg, &tmplarg)) {
     scope = ((CPPClass*)pytmpl->fTI->fPyClass)->fCppType;
     std::string full_name =
         std::string(pytmpl->fTI->fCppName) + "<" + tmplarg + ">";
 
-    cppmeth = interop::GetMethodTemplate(scope, full_name, sigarg, ambiguous_candidates); // ???: include_non_templated
+    cppmeth = interop::GetMethodBySignature(scope, full_name, sigarg,
+                                            ambiguous_candidates,
+                                            /*include_non_templated=*/false);
   } else if (PyArg_ParseTuple(args, const_cast<char*>("O|i:__overload__"),
                               &sigarg_tuple, &want_const)) {
     PyErr_Clear();
@@ -861,9 +864,10 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args) {
     proto.push_back('>');
 
     scope = ((CPPClass*)pytmpl->fTI->fPyClass)->fCppType;
-    cppmeth = interop::GetMethodTemplate(scope, pytmpl->fTI->fCppName,
-                                         proto.substr(1, proto.size() - 2),
-                                         ambiguous_candidates);
+    cppmeth = interop::GetMethodBySignature(scope, pytmpl->fTI->fCppName,
+                                            proto.substr(1, proto.size() - 2),
+                                            ambiguous_candidates,
+                                            /*include_non_templated=*/true);
   } else {
     PyErr_Format(PyExc_TypeError, "Unexpected arguments to __overload__");
     return nullptr;
@@ -871,6 +875,9 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args) {
 
   // else attempt instantiation
   if (!cppmeth) {
+    if (!PyErr_Occurred())
+      PyErr_Format(PyExc_LookupError, "signature \"%s\" not found",
+                   sigarg ? sigarg : proto.c_str());
     return nullptr;
   }
 

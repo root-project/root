@@ -538,3 +538,28 @@ class TestOVERLOADS:
         assert ns.f("t", ["a"]) == 1
         assert ns.g([]) == 0
         assert ns.g(()) == 0
+
+    def test21_overload_by_signature_on_method_set(self):
+        """__overload__ on a set of templated and non-templated methods"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace OverloadBySignature {
+          typedef int Int_type;
+          struct Tree {
+            template <class U> int Branch(const char* name, U* obj, Int_type bufsize = 32000) { return 1; }
+            int Branch(const char* folder, Int_type bufsize = 32000, Int_type split = 99) { return 3; }
+            static int Branch(double) { return 4; }
+          };
+        }""")
+
+        t = cppjit.gbl.OverloadBySignature.Tree()
+        # the signature doesn't match the declaration textually (typedef), so
+        # it goes through the overload resolution
+        m = t.Branch.__overload__("const char*, int, int")
+        assert m(t, "a", 0, 99) == 3
+        # a static method doesn't take the object
+        assert t.Branch.__overload__("double")(1.0) == 4
+        with raises(LookupError):
+            t.Branch.__overload__("double, double, double, double")

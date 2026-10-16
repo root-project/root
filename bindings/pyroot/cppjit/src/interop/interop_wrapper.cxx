@@ -2097,39 +2097,47 @@ interop::TCppMethod_t BestOverloadFunctionMatch(
 }
 } // namespace
 
-interop::TCppMethod_t interop::GetMethodTemplate(
-    TCppScope_t scope, const std::string& name, const std::string& proto,
-    std::vector<interop::TCppMethod_t>& ambiguous_candidates,
-    bool include_non_templated) {
-  std::string pureName;
-  std::string explicit_params;
+namespace {
+// Split \c name into the name proper and its explicit template arguments (empty
+// if there are none), e.g. "f<int, double>" into "f" and "int, double".
+std::pair<std::string, std::string> SplitTemplateName(const std::string& name) {
+  size_t start = name.find('<');
+  if (name.find("operator<") == 0 || start == std::string::npos)
+    return {name, ""};
+  size_t end = name.rfind('>');
+  return {name.substr(0, start), name.substr(start + 1, end - start - 1)};
+}
 
-  if ((name.find("operator<") != 0) && (name.find('<') != std::string::npos)) {
-    pureName = name.substr(0, name.find('<'));
-    size_t start = name.find('<');
-    size_t end = name.rfind('>');
-    explicit_params = name.substr(start + 1, end - start - 1);
-  } else {
-    pureName = name;
-  }
-
+// Find templated methods of \c name in \c scope.
+// If \c include_non_templated is true,
+// then non-templated overloads are also included.
+std::vector<interop::TCppMethod_t>
+GetMethodCandidates(interop::TCppScope_t scope, const std::string& name,
+                    bool include_non_templated) {
   std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
 
-  std::vector<interop::TCppMethod_t> unresolved_candidate_methods;
-  {
-    std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
-    Cpp::GetClassTemplatedMethods(pureName, scope,
-                                  unresolved_candidate_methods);
-    if (include_non_templated) {
-      auto fns = Cpp::GetFunctionsUsingName(scope, pureName);
-      for (auto i : fns)
-        unresolved_candidate_methods.push_back(i);
-    }
+  std::vector<interop::TCppMethod_t> candidates;
+  Cpp::GetClassTemplatedMethods(name, scope, candidates);
+  if (include_non_templated) {
+    auto fns = Cpp::GetFunctionsUsingName(scope, name);
+    for (auto i : fns)
+      candidates.push_back(i);
   }
-  if (unresolved_candidate_methods.empty() && name.find("operator") == 0) {
+  if (candidates.empty() && name.find("operator") == 0) {
     // try operators
-    interop::GetClassOperators(scope, pureName, unresolved_candidate_methods);
+    interop::GetClassOperators(scope, name, candidates);
   }
+  return candidates;
+}
+
+// Select (instantiating as necessary) the best of the candidates for the
+// argument types in proto and the explicit template arguments.
+interop::TCppMethod_t ResolveMethodTemplate(
+    interop::TCppScope_t scope,
+    const std::vector<interop::TCppMethod_t>& candidates,
+    const std::string& proto, const std::string& explicit_params,
+    std::vector<interop::TCppMethod_t>& ambiguous_candidates) {
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
 
   // cpyrt assumes that we attempt instantiation here
   std::vector<Cpp::TemplateArgInfo> arg_types;
@@ -2138,29 +2146,76 @@ interop::TCppMethod_t interop::GetMethodTemplate(
   interop::AppendTypesSlow(explicit_params, templ_params, scope, true);
 
   std::vector<interop::TCppMethod_t> candidate_methods;
-  for (auto fn : unresolved_candidate_methods)
+  for (auto fn : candidates)
     if (!interop::IsDeletedMethod(fn))
       candidate_methods.push_back(fn);
 
-  interop::TCppMethod_t cppmeth = nullptr;
-  {
-    cppmeth = ::BestOverloadFunctionMatch(candidate_methods, arg_types,
-                                          templ_params, ambiguous_candidates,
-                                          scope, /*is_operator=*/false);
-  }
+  interop::TCppMethod_t cppmeth = ::BestOverloadFunctionMatch(
+      candidate_methods, arg_types, templ_params, ambiguous_candidates, scope,
+      /*is_operator=*/false);
   if (cppmeth)
     return cppmeth;
 
-  if (unresolved_candidate_methods.size() == 1 && !templ_params.empty()) {
-    cppmeth = Cpp::InstantiateTemplate(
-                  TCppScope_t(unresolved_candidate_methods[0].data),
-                  templ_params.data(), templ_params.size(),
-                  /*instantiate_body=*/false)
+  if (candidates.size() == 1 && !templ_params.empty()) {
+    cppmeth = Cpp::InstantiateTemplate(interop::TCppScope_t(candidates[0].data),
+                                       templ_params.data(), templ_params.size(),
+                                       /*instantiate_body=*/false)
                   .data;
   }
 
-  return TCppMethod_t(cppmeth.data);
+  return interop::TCppMethod_t(cppmeth.data);
   // if it fails, use Sema to propogate info about why it failed (DeductionInfo)
+}
+} // namespace
+
+interop::TCppMethod_t interop::GetMethodTemplate(
+    TCppScope_t scope, const std::string& name, const std::string& proto,
+    std::vector<interop::TCppMethod_t>& ambiguous_candidates,
+    bool include_non_templated) {
+  auto [pure_name, explicit_params] = SplitTemplateName(name);
+  std::vector<interop::TCppMethod_t> candidates = GetMethodCandidates(
+      scope, pure_name, include_non_templated && explicit_params.empty());
+  return ResolveMethodTemplate(scope, candidates, proto, explicit_params,
+                               ambiguous_candidates);
+}
+
+interop::TCppMethod_t interop::GetMethodBySignature(
+    TCppScope_t scope, const std::string& name, const std::string& sig,
+    std::vector<interop::TCppMethod_t>& ambiguous_candidates,
+    bool include_non_templated) {
+  auto [pure_name, explicit_params] = SplitTemplateName(name);
+  std::vector<interop::TCppMethod_t> candidates = GetMethodCandidates(
+      scope, pure_name, include_non_templated && explicit_params.empty());
+
+  // The signature lists the parameters only. Non-static methods are called on
+  // an object, which is the first argument of the overload resolution, while
+  // static methods and functions don't take it, so resolve them separately.
+  std::vector<interop::TCppMethod_t> on_object, others;
+  for (auto fn : candidates)
+    (interop::IsNonStaticMethod(fn) && !interop::IsConstructor(fn) ? on_object
+                                                                   : others)
+        .push_back(fn);
+
+  interop::TCppMethod_t method = nullptr;
+  if (!on_object.empty()) {
+    std::string self_sig = "::" + interop::GetScopedFinalName(scope) + "&";
+    if (!sig.empty())
+      self_sig += ", " + sig;
+    method = ResolveMethodTemplate(scope, on_object, self_sig, explicit_params,
+                                   ambiguous_candidates);
+  }
+  if (!others.empty()) {
+    interop::TCppMethod_t other = ResolveMethodTemplate(
+        scope, others, sig, explicit_params, ambiguous_candidates);
+    if (method && other && method != other) {
+      ambiguous_candidates.push_back(method);
+      ambiguous_candidates.push_back(other);
+      return nullptr;
+    }
+    if (!method)
+      method = other;
+  }
+  return method;
 }
 
 interop::TCppMethod_t interop::BestOverloadFunctionMatch(

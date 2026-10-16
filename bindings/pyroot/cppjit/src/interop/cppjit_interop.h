@@ -329,6 +329,15 @@ TCppMethod_t GetMethodTemplate(TCppScope_t scope, const std::string& name,
                                const std::string& proto,
                                std::vector<TCppMethod_t>& ambiguous_candidates,
                                bool include_non_templated = false);
+// Select the overload of the (templated) method set name of scope that takes
+// the parameters in the comma-separated signature sig (without the object of
+// non-static methods), instantiating it as necessary.
+RPY_EXPORTED
+TCppMethod_t
+GetMethodBySignature(TCppScope_t scope, const std::string& name,
+                     const std::string& sig,
+                     std::vector<TCppMethod_t>& ambiguous_candidates,
+                     bool include_non_templated = false);
 RPY_EXPORTED
 bool IsNonStaticMethod(TCppMethod_t func);
 RPY_EXPORTED
