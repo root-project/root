@@ -181,10 +181,12 @@ inline PyObject* cpyrt::CPPMethod::ExecuteFast(void* self, ptrdiff_t offset,
     result = nullptr;
   }
 
-// TODO: covers the PyException throw case, which does not seem to work on
-// Windows, so instead leaves the error be
-#ifdef _WIN32
+#if CPYRT_CALLBACK_NOTHROW
+  // the callback wrappers leave the Python error set instead of throwing a
+  // PyException (see CommonDefs.h), so pick it up here, as the catch above
+  // would have, and flag it as the callee's error for overload resolution
   if (PyErr_Occurred()) {
+    ctxt->fFlags |= CallContext::kPyException;
     if (ResultIsPyObject())
       Py_XDECREF(result);
     result = nullptr;
