@@ -92,7 +92,7 @@ public:
    virtual void VisitVectorField(const ROOT::RVectorField &field) { VisitField(field); }
    virtual void VisitVectorBoolField(const ROOT::RField<std::vector<bool>> &field) { VisitField(field); }
    virtual void VisitRVecField(const ROOT::RRVecField &field) { VisitField(field); }
-   virtual void VisitSoAField(const ROOT::Experimental::RSoAField &field) { VisitField(field); }
+   virtual void VisitSoAField(const ROOT::RSoAField &field) { VisitField(field); }
 }; // class RFieldVisitor
 
 } // namespace Detail
@@ -238,7 +238,7 @@ public:
    void VisitNullableField(const ROOT::RNullableField &field) final;
    void VisitEnumField(const ROOT::REnumField &field) final;
    void VisitAtomicField(const ROOT::RAtomicField &field) final;
-   void VisitSoAField(const ROOT::Experimental::RSoAField &field) final;
+   void VisitSoAField(const ROOT::RSoAField &field) final;
 };
 
 // clang-format off

@@ -106,7 +106,7 @@ void ROOT::Internal::RPageSinkFile::UpdateSchema(const ROOT::Internal::RNTupleMo
          cl = classField->GetClass();
       } else if (auto streamerField = dynamic_cast<const RStreamerField *>(field)) {
          cl = streamerField->GetClass();
-      } else if (auto soaField = dynamic_cast<const ROOT::Experimental::RSoAField *>(field)) {
+      } else if (auto soaField = dynamic_cast<const RSoAField *>(field)) {
          cl = soaField->GetSoAClass();
       }
       if (!cl)

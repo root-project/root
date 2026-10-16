@@ -7,9 +7,6 @@
 /// An RNTuple SoA class consists of persistent members of type `RVec` corresponding to
 /// and underlying record type, as shown in this tutorial.
 ///
-/// NOTE: The RNTuple SoA I/O is still experimental at this point.
-/// Functionality and interface are subject to changes.
-///
 /// \macro_code
 ///
 /// \date April 2026
