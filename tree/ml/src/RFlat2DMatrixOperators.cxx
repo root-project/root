@@ -10,21 +10,6 @@ namespace ROOT::Experimental::Internal::ML {
 
 RFlat2DMatrixOperators::~RFlat2DMatrixOperators() = default;
 
-RFlat2DMatrix &RFlat2DMatrixOperators::ShuffleTensor(RFlat2DMatrix &ShuffledTensor, RFlat2DMatrix &Tensor)
-{
-   const auto permutation = MakePermutation(Tensor.GetRows());
-   // nothing to permute, no copy
-   if (permutation.empty()) {
-      return Tensor;
-   }
-
-   ShuffledTensor.fRVec.clear();
-   ShuffledTensor.fRVec.reserve(Tensor.GetSize());
-   AppendRows(ShuffledTensor, Tensor, permutation, 0, Tensor.GetRows());
-
-   return ShuffledTensor;
-}
-
 std::vector<std::size_t> RFlat2DMatrixOperators::MakePermutation(std::size_t rows)
 {
    if (!fShuffle) {
@@ -77,41 +62,4 @@ void RFlat2DMatrixOperators::AppendRows(RFlat2DMatrix &Dest, const RFlat2DMatrix
    Dest.Reshape(values.size() / cols, cols);
 }
 
-void RFlat2DMatrixOperators::SliceTensor(RFlat2DMatrix &SlicedTensor, RFlat2DMatrix &Tensor,
-                                         const std::vector<std::vector<std::size_t>> &slice)
-{
-   const auto &rowSlice = slice[0];
-   const auto &colSlice = slice[1];
-
-   std::size_t rowStart = rowSlice[0];
-   std::size_t rowEnd = rowSlice[1];
-   std::size_t colStart = colSlice[0];
-   std::size_t colEnd = colSlice[1];
-
-   std::size_t rows = rowEnd - rowStart;
-   std::size_t cols = colEnd - colStart;
-
-   SlicedTensor.Resize(rows, cols);
-   std::copy(Tensor.GetData() + rowStart * cols, Tensor.GetData() + rowStart * cols + rows * cols,
-             SlicedTensor.GetData());
-}
-
-void RFlat2DMatrixOperators::ConcatenateTensors(RFlat2DMatrix &ConcatTensor, const std::vector<RFlat2DMatrix> &Tensors)
-{
-   std::size_t cols = Tensors[0].GetCols();
-   std::size_t rows = 0;
-
-   for (const auto &t : Tensors) {
-      rows += t.GetRows();
-   }
-
-   ConcatTensor.Resize(rows, cols);
-
-   std::size_t index = 0;
-   for (std::size_t i = 0; i < Tensors.size(); i++) {
-      std::size_t tensorRows = Tensors[i].GetRows();
-      std::copy(Tensors[i].GetData(), Tensors[i].GetData() + tensorRows * cols, ConcatTensor.GetData() + index * cols);
-      index += tensorRows;
-   }
-}
 } // namespace ROOT::Experimental::Internal::ML

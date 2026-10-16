@@ -65,11 +65,11 @@ public:
                   const std::vector<std::string> &cols, const std::vector<std::size_t> &vecSizes = {},
                   const float vecPadding = 0.0, bool shuffle = true, const std::size_t setSeed = 0);
 
-   void SplitDataframe(ROOT::RDF::RNode &rdf, RFlat2DMatrix &TrainingDataset, RFlat2DMatrix &ValidationDataset);
+   RFlat2DMatrix LoadDataframe(ROOT::RDF::RNode &rdf);
 
-   void SplitDatasets();
+   void SplitDataset(RFlat2DMatrix &Dataset, RFlat2DMatrix &TrainingDataset, RFlat2DMatrix &ValidationDataset);
 
-   void ConcatenateDatasets();
+   void SplitDatasets(bool concatenate);
 
    std::vector<RFlat2DMatrix> ReleaseTrainingDatasets() { return std::move(fTrainingDatasets); }
    std::vector<RFlat2DMatrix> ReleaseValidationDatasets() { return std::move(fValidationDatasets); }
