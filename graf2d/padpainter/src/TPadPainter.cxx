@@ -228,9 +228,13 @@ Bool_t TPadPainter::HasTTFonts() const
 
 void TPadPainter::DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags)
 {
-   Window_t wid = (Window_t)gVirtualX->GetWindowID(fPad->GetPixmapID());
+   Window_t wid = gVirtualX->GetWindowID(fPad->GetPixmapID());
+
    // use old API to draw image on gVirtualX window
-   img->PaintImage(wid, x, y, 0, 0, 0, 0, flags ? "" : "opaque");
+   // img->PaintImage(wid, x, y, 0, 0, 0, 0, flags ? "" : "opaque");
+
+   // new API invokes
+   TASUtils::PaintImage(img, wid, x, y, !flags);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
