@@ -166,6 +166,15 @@ TEST(ONNX, Tanh)
    expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, SeluAttributes)
+{
+   SofieReference ref = readReference("SeluAttributes");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "SeluAttributes", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 TEST(ONNX, Erf)
 {
    SofieReference ref = readReference("Erf");
