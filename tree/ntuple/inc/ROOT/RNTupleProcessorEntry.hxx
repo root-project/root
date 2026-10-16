@@ -1,8 +1,6 @@
 /// \file ROOT/RNTupleProcessor.hxx
 /// \author Florine de Geus <florine.de.geus@cern.ch>
 /// \date 2025-06-25
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
@@ -24,10 +22,9 @@
 #include <vector>
 
 namespace ROOT {
-namespace Experimental {
 namespace Internal {
 /**
-\class ROOT::Experimental::RNTupleProcessorProvenance
+\class ROOT::RNTupleProcessorProvenance
 \ingroup NTuple
 \brief Identifies how a processor is composed.
 
@@ -84,7 +81,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RNTupleProcessorEntry
+\class ROOT::Internal::RNTupleProcessorEntry
 \ingroup NTuple
 \brief Collection of values in an RNTupleProcessor, analogous to REntry, with checks and support for missing values.
 */
@@ -290,7 +287,6 @@ public:
    std::unordered_set<FieldIndex_t> GetFieldIndices() const;
 };
 } // namespace Internal
-} // namespace Experimental
 } // namespace ROOT
 
 #endif // ROOT_RNTupleProcessorEntry

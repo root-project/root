@@ -58,10 +58,10 @@ class RNTupleProcessorDS final : public ROOT::RDF::RDataSource {
       std::string fFieldName;
       std::string fTypeName;
       std::size_t fNRepetitions;
-      RNTupleProcessorEntry::FieldIndex_t fEntryFieldIdx;
+      ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fEntryFieldIdx;
       // Enable `std::vector::emplace_back` for this type
       RFieldInfo(ROOT::DescriptorId_t onDiskId, std::string_view fieldName, std::string_view typeName,
-                 std::size_t nRepetitions, Internal::RNTupleProcessorEntry::FieldIndex_t entryFieldIdx)
+                 std::size_t nRepetitions, ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t entryFieldIdx)
          : fOnDiskId(onDiskId),
            fFieldName(fieldName),
            fTypeName(typeName),
@@ -97,7 +97,7 @@ class RNTupleProcessorDS final : public ROOT::RDF::RDataSource {
    /// be added as `ROOT::VecOps::RVec` (e.g., `std::set<Jet> will be added as a `std::set`, but `Jet.[pt|eta] will be
    /// added as `ROOT::VecOps::RVec<float>).
    void AddField(const ROOT::RFieldBase &field, std::string_view colName,
-                 Internal::RNTupleProcessorProvenance procProvenance, std::deque<RFieldInfo> &fieldInfos,
+                 ROOT::Internal::RNTupleProcessorProvenance procProvenance, std::deque<RFieldInfo> &fieldInfos,
                  bool convertToRVec = true);
 
 public:

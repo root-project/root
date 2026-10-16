@@ -34,16 +34,20 @@ namespace Experimental {
 class RNTupleProcessor;
 
 namespace Internal {
-struct RNTupleProcessorEntryLoader; // for unit tests
-const RNTupleProcessorEntry *
-LoadFullRNTupleProcessorEntry(ROOT::Experimental::RNTupleProcessor &processor, bool includeSubfields); // for unit tests
-
 namespace RDF {
 class RNTupleProcessorColumnReader;
 class RNTupleProcessorDS;
 } // namespace RDF
 } // namespace Internal
+} // namespace Experimental
 
+namespace Internal {
+struct RNTupleProcessorEntryLoader; // for unit tests
+const RNTupleProcessorEntry *
+LoadFullRNTupleProcessorEntry(ROOT::Experimental::RNTupleProcessor &processor, bool includeSubfields); // for unit tests
+} // namespace Internal
+
+namespace Experimental {
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleOpenSpec
@@ -97,11 +101,11 @@ class RNTupleProcessorOptionalPtr {
    friend class RNTupleProcessor;
 
 private:
-   Internal::RNTupleProcessorEntry *fProcessorEntry;
-   Internal::RNTupleProcessorEntry::FieldIndex_t fFieldIndex;
+   ROOT::Internal::RNTupleProcessorEntry *fProcessorEntry;
+   ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fFieldIndex;
 
-   RNTupleProcessorOptionalPtr(Internal::RNTupleProcessorEntry *processorEntry,
-                               Internal::RNTupleProcessorEntry::FieldIndex_t fieldIdx)
+   RNTupleProcessorOptionalPtr(ROOT::Internal::RNTupleProcessorEntry *processorEntry,
+                               ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fieldIdx)
       : fProcessorEntry(processorEntry), fFieldIndex(fieldIdx)
    {
    }
@@ -199,11 +203,11 @@ class RNTupleProcessorOptionalPtr<void> {
    friend class RNTupleProcessor;
 
 private:
-   Internal::RNTupleProcessorEntry *fProcessorEntry;
-   Internal::RNTupleProcessorEntry::FieldIndex_t fFieldIndex;
+   ROOT::Internal::RNTupleProcessorEntry *fProcessorEntry;
+   ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fFieldIndex;
 
-   RNTupleProcessorOptionalPtr(Internal::RNTupleProcessorEntry *processorEntry,
-                               Internal::RNTupleProcessorEntry::FieldIndex_t fieldIdx)
+   RNTupleProcessorOptionalPtr(ROOT::Internal::RNTupleProcessorEntry *processorEntry,
+                               ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fieldIdx)
       : fProcessorEntry(processorEntry), fFieldIndex(fieldIdx)
    {
    }
@@ -277,7 +281,7 @@ public:
 ///
 /// \return A pointer to the newly created RNTupleProcessor.
 // TODO(fdegeus) Move back to RNTupleProcessor::CreateJoin once RNTupleProcessor moves out of Experimental.
-std::unique_ptr<RNTupleProcessor>
+std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
 CreateRNTupleJoinProcessor(RNTupleOpenSpec primaryNTuple, RNTupleOpenSpec auxNTuple,
                            const std::vector<std::string> &joinFields,
                            const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
@@ -296,9 +300,10 @@ CreateRNTupleJoinProcessor(RNTupleOpenSpec primaryNTuple, RNTupleOpenSpec auxNTu
 ///
 /// \return A pointer to the newly created RNTupleProcessor.
 // TODO(fdegeus) Move back to RNTupleProcessor::CreateJoin once RNTupleProcessor moves out of Experimental.
-std::unique_ptr<RNTupleProcessor>
-CreateRNTupleJoinProcessor(std::unique_ptr<RNTupleProcessor> primaryProcessor,
-                           std::unique_ptr<RNTupleProcessor> auxProcessor, const std::vector<std::string> &joinFields,
+std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
+CreateRNTupleJoinProcessor(std::unique_ptr<ROOT::Experimental::RNTupleProcessor> primaryProcessor,
+                           std::unique_ptr<ROOT::Experimental::RNTupleProcessor> auxProcessor,
+                           const std::vector<std::string> &joinFields,
                            const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
 
 // clang-format off
@@ -339,10 +344,10 @@ that is returned by RequestField().
 */
 // clang-format on
 class RNTupleProcessor {
-   friend struct ROOT::Experimental::Internal::RNTupleProcessorEntryLoader; // for unit tests
-   friend const Internal::RNTupleProcessorEntry *
-   ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(RNTupleProcessor &processor,
-                                                               bool includeSubfields); // For unit tests
+   friend struct ROOT::Internal::RNTupleProcessorEntryLoader; // for unit tests
+   friend const ROOT::Internal::RNTupleProcessorEntry *
+   ROOT::Internal::LoadFullRNTupleProcessorEntry(RNTupleProcessor &processor,
+                                                 bool includeSubfields); // For unit tests
    friend class RNTupleSingleProcessor;
    friend class RNTupleChainProcessor;
    friend class RNTupleJoinProcessor;
@@ -432,8 +437,8 @@ protected:
 
    RNTupleProcessorOptions fOptions;
 
-   std::shared_ptr<Internal::RNTupleProcessorEntry> fEntry = nullptr;
-   std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> fFieldIdxs;
+   std::shared_ptr<ROOT::Internal::RNTupleProcessorEntry> fEntry = nullptr;
+   std::unordered_set<ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t> fFieldIdxs;
 
    /// Total number of entries. Only to be used internally by the processor, not meant to be exposed in the public
    /// interface.
@@ -443,7 +448,7 @@ protected:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Initialize the processor by creating an (initially empty) `fEntry`, or setting an existing one.
-   virtual void Initialize(std::shared_ptr<Internal::RNTupleProcessorEntry> entry) = 0;
+   virtual void Initialize(std::shared_ptr<ROOT::Internal::RNTupleProcessorEntry> entry) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Check if the processor already has been initialized.
@@ -456,8 +461,8 @@ protected:
    /// \param[in] provenance Provenance of the processor.
    /// \param[in] updateFields Whether the fields in the entry need to be updated, because the current underlying
    /// RNTuple source changed.
-   virtual void Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
-                        const Internal::RNTupleProcessorProvenance &provenance, bool updateFields) = 0;
+   virtual void Connect(const std::unordered_set<ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
+                        const ROOT::Internal::RNTupleProcessorProvenance &provenance, bool updateFields) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Disconnect the processor from associated physical storage.
@@ -484,11 +489,11 @@ protected:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get a reference to the processor's internal entry.
-   Internal::RNTupleProcessorEntry &GetEntry() { return *fEntry; }
+   ROOT::Internal::RNTupleProcessorEntry &GetEntry() { return *fEntry; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get a reference to the processor's internal entry.
-   const Internal::RNTupleProcessorEntry &GetEntry() const { return *fEntry; }
+   const ROOT::Internal::RNTupleProcessorEntry &GetEntry() const { return *fEntry; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor
@@ -514,9 +519,9 @@ protected:
    /// \return The index of the newly added field in the entry.
    ///
    /// In case the field was already present in the entry, the index of the existing field is returned.
-   virtual Internal::RNTupleProcessorEntry::FieldIndex_t
+   virtual ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t
    AddFieldToEntry(const std::string &canonicalFieldName, const std::string &typeName, void *valuePtr,
-                   const Internal::RNTupleProcessorProvenance &provenance) = 0;
+                   const ROOT::Internal::RNTupleProcessorProvenance &provenance) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add a field to the entry.
@@ -533,16 +538,17 @@ protected:
    /// \return The index of the newly added field in the entry.
    ///
    /// In case the field was already present in the entry, the index of the existing field is returned.
-   virtual Internal::RNTupleProcessorEntry::FieldIndex_t
+   virtual ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t
    AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field, const std::string &canonicalFieldName, void *valuePtr,
-                   const Internal::RNTupleProcessorProvenance &provenance) = 0;
+                   const ROOT::Internal::RNTupleProcessorProvenance &provenance) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add all known fields (from on-disk information) to the entry.
    ///
    /// \param[in] provenance Provenance of the processor.
    /// \param[in] addFieldMode Bitfield indicating how the fields should be added.
-   virtual void AddAllFieldsToEntry(const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields) = 0;
+   virtual void
+   AddAllFieldsToEntry(const ROOT::Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add the entry mappings for this processor to the provided join table.
@@ -620,7 +626,7 @@ public:
          return RNTupleProcessorOptionalPtr<T>(fEntry.get(), *fieldIdx);
       }
 
-      auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, Internal::RNTupleProcessorProvenance());
+      auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, ROOT::Internal::RNTupleProcessorProvenance());
       return RNTupleProcessorOptionalPtr<T>(fEntry.get(), fieldIdx);
    }
 
@@ -643,7 +649,7 @@ public:
    RequestField(const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr)
    {
       Initialize(fEntry);
-      auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, Internal::RNTupleProcessorProvenance());
+      auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, ROOT::Internal::RNTupleProcessorProvenance());
       return RNTupleProcessorOptionalPtr<void>(fEntry.get(), fieldIdx);
    }
 
@@ -694,7 +700,7 @@ public:
       RIterator(RNTupleProcessor &processor, ROOT::NTupleSize_t firstEntryIdx) : fProcessor(processor)
       {
          if (fProcessor.fEntry && firstEntryIdx != ROOT::kInvalidNTupleIndex) {
-            fProcessor.Connect(fProcessor.fEntry->GetFieldIndices(), Internal::RNTupleProcessorProvenance(),
+            fProcessor.Connect(fProcessor.fEntry->GetFieldIndices(), ROOT::Internal::RNTupleProcessorProvenance(),
                                /*updateFields=*/false);
             fProcessor.SetEntryMapping(firstEntryIdx, fEntryMapping);
          }
@@ -802,13 +808,14 @@ private:
    /// \brief Initialize the processor by creating an (initially empty) `fEntry`, or setting an existing one.
    ///
    /// At this point, the page source for the underlying RNTuple of the processor will be created and opened.
-   void Initialize(std::shared_ptr<Internal::RNTupleProcessorEntry> entry = nullptr) final;
+   void Initialize(std::shared_ptr<ROOT::Internal::RNTupleProcessorEntry> entry = nullptr) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the provided fields indices in the entry to their on-disk fields.
-   void Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
-                const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance(),
-                bool updateFields = false) final;
+   void
+   Connect(const std::unordered_set<ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
+           const ROOT::Internal::RNTupleProcessorProvenance &provenance = ROOT::Internal::RNTupleProcessorProvenance(),
+           bool updateFields = false) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Disconnect the processor from associated physical storage.
@@ -845,23 +852,24 @@ private:
    /// \brief Add a field to the entry.
    ///
    /// \sa RNTupleProcessor::AddFieldToEntry()
-   Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
-      const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
-      const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
+   ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t
+   AddFieldToEntry(const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
+                   const ROOT::Internal::RNTupleProcessorProvenance &provenance =
+                      ROOT::Internal::RNTupleProcessorProvenance()) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add a field to the entry.
    ///
    /// \sa RNTupleProcessor::AddFieldToEntry()
-   Internal::RNTupleProcessorEntry::FieldIndex_t
+   ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t
    AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field, const std::string &fieldName, void *valuePtr,
-                   const Internal::RNTupleProcessorProvenance &provenance) final;
+                   const ROOT::Internal::RNTupleProcessorProvenance &provenance) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add all known fields (from on-disk information) to the entry.
    ///
    /// \sa RNTupleProcessor::AddAllFieldsToEntry()
-   void AddAllFieldsToEntry(const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields) final;
+   void AddAllFieldsToEntry(const ROOT::Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add the entry mappings for this processor to the provided join table.
@@ -912,19 +920,20 @@ private:
    ROOT::NTupleSize_t fLastLoadedEntry = 0; //< Last (global) entry number that was loaded
    std::size_t fCurrentProcessorNumber = 0; //< Number of the currently open inner processor
 
-   Internal::RNTupleProcessorProvenance fProvenance;
+   ROOT::Internal::RNTupleProcessorProvenance fProvenance;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Initialize the processor by creating an (initially empty) `fEntry`, or setting an existing one.
-   void Initialize(std::shared_ptr<Internal::RNTupleProcessorEntry> entry = nullptr) final;
+   void Initialize(std::shared_ptr<ROOT::Internal::RNTupleProcessorEntry> entry = nullptr) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the provided fields indices in the entry to their on-disk fields.
    ///
    /// \sa RNTupleProcessor::Connect()
-   void Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
-                const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance(),
-                bool updateFields = false) final;
+   void
+   Connect(const std::unordered_set<ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
+           const ROOT::Internal::RNTupleProcessorProvenance &provenance = ROOT::Internal::RNTupleProcessorProvenance(),
+           bool updateFields = false) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Update the entry to reflect any missing fields in the current inner processor.
@@ -965,23 +974,24 @@ private:
    /// \brief Add a field to the entry.
    ///
    /// \sa RNTupleProcessor::AddFieldToEntry()
-   Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
-      const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
-      const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
+   ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t
+   AddFieldToEntry(const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
+                   const ROOT::Internal::RNTupleProcessorProvenance &provenance =
+                      ROOT::Internal::RNTupleProcessorProvenance()) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add a field to the entry.
    ///
    /// \sa RNTupleProcessor::AddFieldToEntry()
-   Internal::RNTupleProcessorEntry::FieldIndex_t
+   ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t
    AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field, const std::string &fieldName, void *valuePtr,
-                   const Internal::RNTupleProcessorProvenance &provenance) final;
+                   const ROOT::Internal::RNTupleProcessorProvenance &provenance) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add all known fields (from on-disk information) to the entry.
    ///
    /// \sa RNTupleProcessor::AddAllFieldsToEntry()
-   void AddAllFieldsToEntry(const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields) final;
+   void AddAllFieldsToEntry(const ROOT::Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add the entry mappings for this processor to the provided join table.
@@ -1032,23 +1042,24 @@ private:
    std::unique_ptr<RNTupleProcessor> fAuxiliaryProcessor;
 
    std::vector<std::string> fJoinFieldNames;
-   std::set<Internal::RNTupleProcessorEntry::FieldIndex_t> fJoinFieldIdxs;
+   std::set<ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t> fJoinFieldIdxs;
 
    std::unique_ptr<Internal::RNTupleJoinTable> fJoinTable;
    bool fJoinTableIsBuilt = false;
 
-   std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> fAuxiliaryFieldIdxs;
+   std::unordered_set<ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t> fAuxiliaryFieldIdxs;
 
    /// \brief Initialize the processor by creating an (initially empty) `fEntry`, or setting an existing one.
-   void Initialize(std::shared_ptr<Internal::RNTupleProcessorEntry> entry = nullptr) final;
+   void Initialize(std::shared_ptr<ROOT::Internal::RNTupleProcessorEntry> entry = nullptr) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the provided fields indices in the entry to their on-disk fields.
    ///
    /// \sa RNTupleProcessor::Connect()
-   void Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
-                const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance(),
-                bool updateFields = false) final;
+   void
+   Connect(const std::unordered_set<ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
+           const ROOT::Internal::RNTupleProcessorProvenance &provenance = ROOT::Internal::RNTupleProcessorProvenance(),
+           bool updateFields = false) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Disconnect the processor from associated physical storage.
@@ -1093,23 +1104,24 @@ private:
    /// \brief Add a field to the entry.
    ///
    /// \sa RNTupleProcessor::AddFieldToEntry()
-   Internal::RNTupleProcessorEntry::FieldIndex_t AddFieldToEntry(
-      const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
-      const Internal::RNTupleProcessorProvenance &provenance = Internal::RNTupleProcessorProvenance()) final;
+   ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t
+   AddFieldToEntry(const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr,
+                   const ROOT::Internal::RNTupleProcessorProvenance &provenance =
+                      ROOT::Internal::RNTupleProcessorProvenance()) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add a field to the entry.
    ///
    /// \sa RNTupleProcessor::AddFieldToEntry()
-   Internal::RNTupleProcessorEntry::FieldIndex_t
+   ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t
    AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field, const std::string &fieldName, void *valuePtr,
-                   const Internal::RNTupleProcessorProvenance &provenance) final;
+                   const ROOT::Internal::RNTupleProcessorProvenance &provenance) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add all known fields (from on-disk information) to the entry.
    ///
    /// \sa RNTupleProcessor::AddAllFieldsToEntry()
-   void AddAllFieldsToEntry(const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields) final;
+   void AddAllFieldsToEntry(const ROOT::Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add the entry mappings for this processor to the provided join table.
@@ -1143,7 +1155,6 @@ public:
    RNTupleJoinProcessor operator=(RNTupleJoinProcessor &&) = delete;
    ~RNTupleJoinProcessor() override = default;
 };
-
 } // namespace Experimental
 } // namespace ROOT
 
