@@ -324,15 +324,19 @@ TEST(REveStreaming, BoxSetBBoxHoldsInstances)
 
    auto fixed = new REX::REveBoxSet("fixed");
    fixed->Reset(REX::REveBoxSet::kBT_Instanced, kFALSE, 4);
-   fixed->SetDefWidth(2);
+   fixed->SetDefHalfWidth(2);
+   fixed->SetDefHeight(2);
+   fixed->SetDefDepth(2);
    fixed->AddInstance(10, 10, 10);
    expectBox(fixed, {8, 9, 9}, {12, 11, 11});
 
    auto scaled = new REX::REveBoxSet("scaled");
    scaled->Reset(REX::REveBoxSet::kBT_InstancedScaled, kFALSE, 4);
+   // Each instance adds its own box: the small one at -10 does not take the
+   // half sizes of the large one.
    scaled->AddInstanceScaled(10, 10, 10, 1, 2, 3);
    scaled->AddInstanceScaled(-10, 0, 0, 1, 1, 1);
-   expectBox(scaled, {-11, -2, -3}, {11, 12, 13});
+   expectBox(scaled, {-11, -1, -1}, {11, 12, 13});
 
    // A cone with its apex at the origin, 60 long along y, radius 5. Its box is
    // that of the template cube [-1, 1]^3 under the cone's matrix.
@@ -344,6 +348,56 @@ TEST(REveStreaming, BoxSetBBoxHoldsInstances)
    delete fixed;
    delete scaled;
    delete cone;
+}
+
+// An axis-aligned instance added by its corner and full size is stored as its
+// centre and half size, which the client draws. The set's box is the union of
+// the instances' boxes.
+TEST(REveStreaming, BoxSetCornerAdders)
+{
+   REX::REveManager::Create();
+   auto expectBox = [](REX::REveElement *e, REX::REveVector lo, REX::REveVector hi) {
+      ASSERT_EQ(e->AssertBBox(), REX::REveElement::kBBoxSet);
+      for (int k = 0; k < 3; ++k) {
+         EXPECT_NEAR(e->GetBBoxMin()[k], lo[k], 1e-4) << e->GetCName() << " min " << k;
+         EXPECT_NEAR(e->GetBBoxMax()[k], hi[k], 1e-4) << e->GetCName() << " max " << k;
+      }
+   };
+
+   // SetDefWidth() & co. take the full size, SetDefHalfWidth() & co. the half.
+   auto fixed = new REX::REveBoxSet("fixed");
+   fixed->Reset(REX::REveBoxSet::kBT_Instanced, kFALSE, 4);
+   EXPECT_FLOAT_EQ(fixed->GetDefWidth(), 1.f);
+   EXPECT_FLOAT_EQ(fixed->GetDefHalfWidth(), 0.5f);
+   fixed->SetDefWidth(4);
+   fixed->SetDefHalfHeight(1);
+   fixed->SetDefDepth(2);
+   EXPECT_FLOAT_EQ(fixed->GetDefHalfWidth(), 2.f);
+   EXPECT_FLOAT_EQ(fixed->GetDefHeight(), 2.f);
+   fixed->AddInstanceCorner(10, 10, 10);
+   expectBox(fixed, {10, 10, 10}, {14, 12, 12});
+
+   // Boxes from (10, 10, 10) to (11, 12, 13) and from (-10, 0, 0) to (-9, 1, 1).
+   auto scaled = new REX::REveBoxSet("scaled");
+   scaled->Reset(REX::REveBoxSet::kBT_InstancedScaled, kFALSE, 4);
+   scaled->UseSingleColor();
+   scaled->AddInstanceScaledCorner(10, 10, 10, 1, 2, 3);
+   scaled->AddInstanceScaledCorner(-10, 0, 0, 1, 1, 1);
+   expectBox(scaled, {-10, 0, 0}, {11, 12, 13});
+
+   // The first texel holds the centre and the second the half size.
+   nlohmann::json j;
+   const int bin = scaled->WriteCoreJson(j, 0);
+   std::vector<float> buf(bin / sizeof(float));
+   scaled->GetRenderData()->Write(reinterpret_cast<char *>(buf.data()), bin);
+   EXPECT_FLOAT_EQ(buf[0], 10.5f);
+   EXPECT_FLOAT_EQ(buf[1], 11.f);
+   EXPECT_FLOAT_EQ(buf[2], 11.5f);
+   EXPECT_FLOAT_EQ(buf[4], 0.5f);
+   EXPECT_FLOAT_EQ(buf[6], 1.5f);
+
+   delete fixed;
+   delete scaled;
 }
 
 // An element emptied of its contents sends no render data, not the render data

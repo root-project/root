@@ -30,7 +30,7 @@ REveBoxSet *boxset_free(Int_t num = 100)
 
    auto q = new REveBoxSet("BoxSet");
    q->SetPalette(pal);
-   q->Reset(REveBoxSet::kBT_FreeBox, kFALSE, 64);
+   q->Reset(REveBoxSet::kBT_Vertices, kFALSE, 64);
 
 #define RND_BOX(x) (Float_t) r.Uniform(-(x), (x))
 
@@ -49,7 +49,7 @@ REveBoxSet *boxset_free(Int_t num = 100)
                          x - a + RND_BOX(d), y - a + RND_BOX(d), z + a + RND_BOX(d), x - a + RND_BOX(d),
                          y + a + RND_BOX(d), z + a + RND_BOX(d), x + a + RND_BOX(d), y + a + RND_BOX(d),
                          z + a + RND_BOX(d), x + a + RND_BOX(d), y - a + RND_BOX(d), z + a + RND_BOX(d)};
-      q->AddFreeBox(verts);
+      q->AddVertices(verts);
       q->DigitValue(r.Uniform(0, 130));
    }
    q->RefitPlex();
