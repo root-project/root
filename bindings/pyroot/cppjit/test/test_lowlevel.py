@@ -826,6 +826,34 @@ class TestLOWLEVEL:
         assert ns.a((ctypes.c_int * 3)(1, 2, 3)) == 2
         assert ns.s(ctypes.c_char_p(b"A")) == ord("A")
 
+    def test20_numpy_overloads(self):
+        """numpy scalars and arrays select the matching overload"""
+
+        try:
+            import numpy as np
+        except ImportError:
+            skip("numpy is not installed")
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace NumpyOverloads {
+          int f(double, double) { return 1; }
+          int f(const char*, double) { return 2; }
+          double a(int n, const double* x) { double s = 0; for (int i = 0; i < n; ++i) s += x[i]; return s; }
+          double a(int n, const float* x) { return -1.; }
+          int v(const std::vector<double>& v) { return (int)v.size(); }
+          int v(int) { return -1; }
+        }""")
+
+        ns = cppjit.gbl.NumpyOverloads
+        assert ns.f(np.float64(1.0), np.float64(2.0)) == 1
+        assert ns.a(3, np.array([1.0, 2.0, 3.0])) == 6.0
+        assert ns.a(2, np.array([1.0, 2.0], dtype=np.float32)) == -1.0
+        # no implicit copy of an array into a std::vector
+        with raises(cppjit.OverloadResolutionException):
+            ns.v(np.array([1.0, 2.0]))
+
 
 class TestMULTIDIMARRAYS:
     def setup_class(cls):

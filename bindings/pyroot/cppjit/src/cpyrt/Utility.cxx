@@ -619,6 +619,94 @@ bool AddCTypesTypeName(std::string& name, PyObject* tn, PyObject* arg) {
   }
   return false;
 }
+
+// C++ type for a numpy dtype character code
+const char* NumpyCharToCpp(char tc) {
+  switch (tc) {
+  case '?':
+    return "bool";
+  case 'b':
+    return "signed char";
+  case 'B':
+    return "unsigned char";
+  case 'h':
+    return "short";
+  case 'H':
+    return "unsigned short";
+  case 'i':
+    return "int";
+  case 'I':
+    return "unsigned int";
+  case 'l':
+    return "long";
+  case 'L':
+    return "unsigned long";
+  case 'q':
+    return "long long";
+  case 'Q':
+    return "unsigned long long";
+  case 'f':
+    return "float";
+  case 'd':
+    return "double";
+  case 'g':
+    return "long double";
+  case 'F':
+    return "std::complex<float>";
+  case 'D':
+    return "std::complex<double>";
+  case 'G':
+    return "std::complex<long double>";
+  }
+  return nullptr;
+}
+
+// Spell a numpy scalar as a value of its C type, and a numpy array as a
+// pointer to its elements (the equivalent of a C array decaying into a
+// pointer).
+bool AddNumpyTypeName(std::string& name, PyObject* tn, PyObject* arg) {
+  // kept alive for the module lifetime
+  static PyObject* np_generic = nullptr;
+  static PyObject* np_ndarray = nullptr;
+  if (!np_generic) {
+    PyObject* modname = PyUnicode_FromString("numpy");
+    // numpy is only looked up if it was already imported.
+    PyObject* numpy = PyImport_GetModule(modname);
+    Py_DECREF(modname);
+    if (!numpy) {
+      PyErr_Clear();
+      return false;
+    }
+    np_generic = PyObject_GetAttrString(numpy, "generic");
+    np_ndarray = PyObject_GetAttrString(numpy, "ndarray");
+    Py_DECREF(numpy);
+    if (!np_generic || !np_ndarray) {
+      Py_CLEAR(np_generic);
+      Py_CLEAR(np_ndarray);
+      PyErr_Clear();
+      return false;
+    }
+  }
+  bool is_array = IsSubType(tn, np_ndarray);
+  if (!is_array && !IsSubType(tn, np_generic))
+    return false;
+
+  const char* cname = nullptr;
+  PyObject* dtype = PyObject_GetAttrString(arg, "dtype");
+  PyObject* dchar = dtype ? PyObject_GetAttrString(dtype, "char") : nullptr;
+  if (dchar && PyUnicode_Check(dchar))
+    cname = NumpyCharToCpp(PyUnicode_AsUTF8(dchar)[0]);
+  Py_XDECREF(dchar);
+  Py_XDECREF(dtype);
+  PyErr_Clear();
+  if (!cname)
+    return false;
+
+  name.append(cname);
+  if (is_array)
+    name.push_back('*');
+  return true;
+}
 } // unnamed namespace
 
 bool cpyrt::Utility::AddTypeName(std::string& tmpl_name, PyObject* tn,
@@ -741,6 +829,10 @@ bool cpyrt::Utility::AddTypeName(std::string& tmpl_name, PyObject* tn,
 
   // ctypes objects are C objects held by Python
   if (arg && AddCTypesTypeName(tmpl_name, tn, arg))
+    return true;
+
+  // numpy scalars and arrays
+  if (arg && AddNumpyTypeName(tmpl_name, tn, arg))
     return true;
 
   if (tn == (PyObject*)&PyList_Type || tn == (PyObject*)&PyTuple_Type) {
