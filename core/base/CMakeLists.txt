@@ -228,6 +228,9 @@ if(ROOT_NEED_STDCXXFS)
     target_link_libraries(Core PRIVATE stdc++fs)
 endif()
 
+# https://gitlab.kitware.com/cmake/cmake/-/work_items/18910
+target_compile_definitions(Core PRIVATE ROOT_CXX_STANDARD_OPTION=\"${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION}\")
+
 # This code about the LIB_CORE_NAME define is important for TROOT::GetSharedLibDir()
 # On Linux, dl_iterate_phdr reports loaded libraries by their SONAME
 # (e.g. libCore.so.6.38), not their full filename (libCore.so.6.38.02).
