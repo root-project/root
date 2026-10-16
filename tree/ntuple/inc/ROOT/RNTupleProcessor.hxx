@@ -75,7 +75,13 @@ public:
    std::unique_ptr<Internal::RPageSource> CreatePageSource() const;
 };
 
-namespace Experimental {
+// clang-format off
+/**
+\class ROOT::RNTupleProcessorOptions
+\ingroup NTuple
+\brief Options to pass to an RNTupleProcessor upon creation
+*/
+// clang-format on
 class RNTupleProcessorOptions {
 private:
    /// By default, the processor name is the name of the underlying RNTuple for RNTupleSingleProcessor, the name of the
@@ -83,11 +89,21 @@ private:
    std::string fProcessorName = "";
 
 public:
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get the processor's name.
    const std::string &GetProcessorName() const { return fProcessorName; }
 
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Set the processor's name.
+   ///
+   /// \param[in] name Name to assign to the processor.
+   ///
+   /// By default, the processor name is the name of the underlying RNTuple for RNTupleSingleProcessor, the name of the
+   /// first processor for RNTupleChainProcessor, or the name of the primary RNTuple for RNTupleJoinProcessor.
    void SetProcessorName(std::string_view name) { fProcessorName = name; }
 };
 
+namespace Experimental {
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleProcessorOptionalPtr<T>
