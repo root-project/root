@@ -440,7 +440,10 @@ Long64_t TBufferFile::CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const T
       // The position is above 4GB but was cached using a 32 bit variable.
       startpos = fByteCountStack.back().locator;
       // See below
-      R__ASSERT((fByteCountStack.back().cl == nullptr || clss == fByteCountStack.back().cl)
+      R__ASSERT((fByteCountStack.back().cl == nullptr ||
+                (clss == nullptr && (classname == nullptr || classname[0] == '\0')) ||
+                (clss && clss == fByteCountStack.back().cl) ||
+                (classname && strcmp(classname, fByteCountStack.back().cl->GetName()) == 0))
                 && "Class on the byte count position stack does not match the passed class");
    } else {
       // This assert allows to reject cases that used to be valid (missing or
@@ -2658,12 +2661,28 @@ void TBufferFile::SkipObjectAny(Long64_t start, UInt_t count)
 /// real beginning of the object in memory.  You will need to use a
 /// dynamic_cast later if you need to retrieve it.
 
+
+
 void *TBufferFile::ReadObjectAny(const TClass *clCast)
 {
    R__ASSERT(IsReading());
 
    // make sure fMap is initialized
    InitMap();
+
+   struct CaptureAndCheck {
+      using ByteCountStack_t = TBufferFile::ByteCountStack_t;
+      size_t fCurrent;
+      ByteCountStack_t *fByteCountStack;
+
+      CaptureAndCheck(ByteCountStack_t *stack) : fCurrent(stack->size()), fByteCountStack(stack) {}
+      ~CaptureAndCheck() {
+         if (fCurrent != fByteCountStack->size()) {
+            ::Fatal("CaptureAndCheck", "Byte count stack was not properly cleaned up. Current size is %zu but should be %zu", fByteCountStack->size(), fCurrent);
+         }
+      }
+   };
+   CaptureAndCheck checker(&(this->fByteCountStack));
 
    // before reading object save start position
    ULong64_t startpos = static_cast<ULong64_t>(fBufCur-fBuffer);
@@ -3015,6 +3034,14 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, ULong64_t *objTag)
    // return bytecount in objTag
    if (objTag) {
       *objTag = (bcnt & ~kByteCountMask);
+      if (*objTag == 0) {
+         // The byte count was stored but is zero, this means the data
+         // did not fit and thus we stored it in 'fByteCounts' instead.
+         // Mark this case by setting startpos to kOverflowCount.
+         *objTag = kOverflowCount;
+         // We do not have access to the caller's "cntpos" and can not
+         // update to kOverflowPosition (unlike the same code in ReadVersion).
+      }
       if (cl)
         fByteCountStack.back().alt = cl;
    }
@@ -3159,7 +3186,8 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
       // before reading object save start position
       auto full_startpos = fBufCur - fBuffer;
       *startpos = full_startpos <= kMaxCountPosition ? UInt_t(full_startpos) : kOverflowPosition;
-      fByteCountStack.push_back({(size_t)full_startpos, cl, nullptr});
+      if (bcnt)
+         fByteCountStack.push_back({(size_t)full_startpos, cl, nullptr});
    }
 
    // read byte count (older files don't have byte count)
@@ -3196,7 +3224,8 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
             // did not fit and thus we stored it in 'fByteCounts' instead.
             // Mark this case by setting startpos to kOverflowCount.
             *bcnt = kOverflowCount;
-            *startpos = kOverflowPosition;
+            if (startpos)
+               *startpos = kOverflowPosition;
          }
       }
    }
@@ -3302,7 +3331,8 @@ Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
       auto full_startpos = fBufCur - fBuffer;
       *startpos = full_startpos < kMaxCountPosition ? UInt_t(full_startpos) : kOverflowPosition;
       // TODO: Extend ReadVersionNoCheckSum to take the class pointer.
-      fByteCountStack.push_back({(size_t)full_startpos, nullptr, nullptr});
+      if (bcnt)
+         fByteCountStack.push_back({(size_t)full_startpos, nullptr, nullptr});
    }
 
    // read byte count (older files don't have byte count)
@@ -3338,7 +3368,8 @@ Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
             // did not fit and thus we stored it in 'fByteCounts' instead.
             // Mark this case by setting startpos to kOverflowCount.
             *bcnt = kOverflowCount;
-            *startpos = kOverflowPosition;
+            if (startpos)
+               *startpos = kOverflowPosition;
          }
       }
    }
@@ -3847,6 +3878,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    else
       version = ReadVersion(&R__s, &R__c, cl);
 
+   size_t current = fByteCountStack.size();
    Bool_t v2file = kFALSE;
    TFile *file = (TFile*)GetParent();
    if (file && file->GetVersion() < 30000) {
@@ -3865,6 +3897,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
          Error("ReadClassBuffer",
                "Could not find the right streamer info to convert %s version %d into a %s, object skipped at offset %d",
                onFileClass->GetName(), version, cl->GetName(), Length() );
+         --current;
          CheckByteCount(R__s, R__c, onFileClass);
          return 0;
       }
@@ -3889,6 +3922,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
                if (version < -1 || version >= infocapacity) {
                   Error("ReadClassBuffer","class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
                         cl->GetName(), version, Length());
+                  --current;
                   CheckByteCount(R__s, R__c, cl);
                   return 0;
                }
@@ -3947,11 +3981,13 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
                // When the object was written the class was version zero, so
                // there is no StreamerInfo to be found.
                // Check that the buffer position corresponds to the byte count.
+               --current;
                CheckByteCount(R__s, R__c, cl);
                return 0;
             } else {
                Error( "ReadClassBuffer", "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
                      version, cl->GetName(), Length() );
+               --current;
                CheckByteCount(R__s, R__c, cl);
                return 0;
             }
@@ -3963,6 +3999,9 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    ApplySequence(*(sinfo->GetReadObjectWiseActions()), (char*)pointer );
    if (sinfo->TStreamerInfo::IsRecovered()) R__c=0; // 'TStreamerInfo::' avoids going via a virtual function.
 
+   if (current != fByteCountStack.size())
+      Fatal("ReadClassBuffer", "We are out of sync at level %lld vs %zu for %s", current, fByteCountStack.size(), cl->GetName());
+   --current;
    // Check that the buffer position corresponds to the byte count.
    CheckByteCount(R__s, R__c, cl);
 
@@ -4031,8 +4070,11 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
       for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
           iter != end;
           ++iter) {
+         auto current = fByteCountStack.size();
          (*iter).PrintDebug(*this,obj);
          (*iter)(*this,obj);
+         if (current != fByteCountStack.size())
+            Fatal("ApplySequence", "We are out of sync starting at level %lld vs %zu", current, fByteCountStack.size());
       }
 
    } else {
@@ -4041,7 +4083,10 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
       for(TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin();
           iter != end;
           ++iter) {
+         auto current = fByteCountStack.size();
          (*iter)(*this,obj);
+         if (current != fByteCountStack.size())
+            Fatal("ApplySequence", "ByteCountStack is out of sync starting at level %zu vs %zu", current, fByteCountStack.size());
       }
    }
 

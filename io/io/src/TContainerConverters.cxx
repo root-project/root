@@ -72,9 +72,8 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
    Int_t   nobjects, dummy;
    char    nch;
    TString s;
-   char classv[256];
-   void *env;
-   UInt_t start, bytecount;
+   char    classv[256];
+   void   *env;
 
    R__ASSERT(b.IsReading());
 
@@ -95,6 +94,9 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
    if (size==0) size=1;
    for(Int_t k=0; k<size; ++k, addr += fOffset ) {
 
+      ULong64_t tag    = 0; // either tag or byte count, set when 'needAlloc' is true
+      UInt_t    cntpos = 0; // position where to store byte count, set when 'needAlloc' is true
+
       if (needAlloc) {
          // Read the class name.
 
@@ -104,8 +106,9 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
          // before reading object save start position
          ULong64_t startpos = b.Length();
 
+         cntpos = startpos; // <= kMaxCountPosition ? startpos : kOverflowPosition;
+
          // attempt to load next object as TClass clCast
-         ULong64_t tag;       // either tag or byte count
          TClass *clRef = b.ReadClass(TClonesArray::Class(), &tag);
 
          if (clRef==0) {
@@ -175,7 +178,8 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
       if (fIsPointer) obj = *(void**)addr;
       else obj = addr;
 
-      TObject objdummy;
+      TObject   objdummy;
+      UInt_t    start, bytecount;
       Version_t v = b.ReadVersion(&start, &bytecount);
 
       //if (v == 3) {
@@ -197,6 +201,10 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
       if (!cl) {
          printf("TClonesArray::Streamer expecting class %s\n", classv);
          b.CheckByteCount(start, bytecount, TClonesArray::Class());
+         if (needAlloc) {
+            // Balance/check for the ReadClass byte count.
+            b.CheckByteCount(cntpos, tag, TClonesArray::Class());
+         }
          return;
       }
 
@@ -224,6 +232,10 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
       }
       proxy->Commit(env);
       b.CheckByteCount(start, bytecount,TClonesArray::Class());
+      if (needAlloc) {
+         // Balance/check for the ReadClass byte count.
+         b.CheckByteCount(cntpos, tag, TClonesArray::Class());
+      }
    }
 }
 
