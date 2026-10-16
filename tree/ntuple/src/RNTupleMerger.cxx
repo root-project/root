@@ -756,10 +756,77 @@ static ROOT::RResult<void> RestoreRealFieldParams(ROOT::RFieldBase &field, const
    return ROOT::RResult<void>::Success();
 }
 
+// Late extension connects reconstructed fields to a sink, so reader-side schema evolution cannot
+// reconcile dictionary changes. Require the source layout before copying pages by field order.
+[[nodiscard]]
+static ROOT::RResult<void>
+ValidateLateFieldSchema(const ROOT::RFieldBase &field, const ROOT::RFieldDescriptor &fieldDesc,
+                        const ROOT::RNTupleDescriptor &srcDesc)
+{
+   const auto &children = field.GetConstSubfields();
+   const auto &childIds = fieldDesc.GetLinkIds();
+   const auto checksum = fieldDesc.GetTypeChecksum();
+   std::string difference;
+   if (field.GetTypeName() != srcDesc.GetTypeNameForComparison(fieldDesc))
+      difference = "type name";
+   else if (field.GetStructure() != fieldDesc.GetStructure())
+      difference = "structure";
+   else if (field.GetNRepetitions() != fieldDesc.GetNRepetitions())
+      difference = "repetitions";
+   else if (field.GetFieldVersion() != fieldDesc.GetFieldVersion())
+      difference = "field version";
+   else if (field.GetTypeVersion() != fieldDesc.GetTypeVersion())
+      difference = "type version";
+   else if (checksum && *checksum != field.GetTypeChecksum())
+      difference = "type checksum";
+   else if (children.size() != childIds.size())
+      difference = "number of members";
+   if (!difference.empty()) {
+      return R__FAIL("cannot extend destination with field `" + srcDesc.GetQualifiedFieldName(fieldDesc.GetId()) +
+                     "` of type `" + fieldDesc.GetTypeName() +
+                     "`: its in-memory schema does not match the source schema (" + difference + ")");
+   }
+   for (std::size_t i = 0; i < children.size(); ++i) {
+      const auto &childDesc = srcDesc.GetFieldDescriptor(childIds[i]);
+      if (children[i]->GetFieldName() != childDesc.GetFieldName()) {
+         return R__FAIL("cannot extend destination with field `" + srcDesc.GetQualifiedFieldName(fieldDesc.GetId()) +
+                        "` of type `" + fieldDesc.GetTypeName() +
+                        "`: its in-memory member order does not match the source schema");
+      }
+      auto validated = ValidateLateFieldSchema(*children[i], childDesc, srcDesc);
+      if (!validated)
+         return R__FORWARD_ERROR(validated);
+   }
+   return ROOT::RResult<void>::Success();
+}
+
+[[nodiscard]]
+static ROOT::RResult<std::vector<std::unique_ptr<ROOT::RFieldBase>>>
+CreateLateFields(const std::vector<const ROOT::RFieldDescriptor *> &fieldDescs, const ROOT::RNTupleDescriptor &srcDesc)
+{
+   std::vector<std::unique_ptr<ROOT::RFieldBase>> fields;
+   fields.reserve(fieldDescs.size());
+   for (const auto *fieldDesc : fieldDescs) {
+      std::unique_ptr<ROOT::RFieldBase> field;
+      try {
+         field = fieldDesc->CreateField(srcDesc);
+      } catch (const ROOT::RException &ex) {
+         return R__FAIL("cannot extend destination with field `" + srcDesc.GetQualifiedFieldName(fieldDesc->GetId()) +
+                        "` of type `" + fieldDesc->GetTypeName() + "`: " + ex.what());
+      }
+      auto validated = ValidateLateFieldSchema(*field, *fieldDesc, srcDesc);
+      if (!validated)
+         return R__FORWARD_ERROR(validated);
+      fields.emplace_back(std::move(field));
+   }
+   return ROOT::RResult(std::move(fields));
+}
+
 // Applies late model extension to `mergeData.fDestination`, adding all `descCmp.fExtraSrcFields` to it.
 [[nodiscard]]
 static ROOT::RResult<void>
-ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstModel, RNTupleMergeData &mergeData)
+ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstModel, RNTupleMergeData &mergeData,
+                       std::vector<std::unique_ptr<ROOT::RFieldBase>> fields)
 {
    const auto &newFields = descCmp.fExtraSrcFields;
    auto &commonFields = descCmp.fCommonFields;
@@ -781,11 +848,12 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
 
    changeset.fAddedFields.reserve(newFields.size());
    // First add all non-projected fields...
-   for (const auto *fieldDesc : newFields) {
+   for (std::size_t i = 0; i < newFields.size(); ++i) {
+      const auto *fieldDesc = newFields[i];
       if (fieldDesc->IsProjectedField())
          continue;
 
-      auto field = fieldDesc->CreateField(*mergeData.fSrcDescriptor);
+      auto field = std::move(fields[i]);
       // Explicitly set the field representatives. This prevents UpdateSchema() from changing our column
       // representations via AutoAdjustColumnTypes.
       ROOT::RFieldBase::ColumnRepresentation_t representatives;
@@ -802,12 +870,13 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
       changeset.AddField(std::move(field));
    }
    // ...then add all projected fields.
-   for (const auto *fieldDesc : newFields) {
+   for (std::size_t i = 0; i < newFields.size(); ++i) {
+      const auto *fieldDesc = newFields[i];
       if (!fieldDesc->IsProjectedField())
          continue;
 
       ROOT::Internal::RProjectedFields::FieldMap_t fieldMap;
-      auto field = fieldDesc->CreateField(*mergeData.fSrcDescriptor);
+      auto field = std::move(fields[i]);
       const auto sourceId = fieldDesc->GetProjectionSourceId();
       const auto &sourceField = dstModel.GetConstField(mergeData.fSrcDescriptor->GetQualifiedFieldName(sourceId));
       fieldMap[field.get()] = &sourceField;
@@ -1498,7 +1567,11 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       if (!descCmp.fExtraSrcFields.empty()) {
          if (mergeOpts.fMergingMode == ENTupleMergingMode::kUnion) {
             // late model extension for all fExtraSrcFields in Union mode
-            auto res = ExtendDestinationModel(descCmp, *fModel, mergeData);
+            auto fields = CreateLateFields(descCmp.fExtraSrcFields, *mergeData.fSrcDescriptor);
+            if (!fields) {
+               SKIP_OR_ABORT(fields.GetError()->GetReport())
+            }
+            auto res = ExtendDestinationModel(descCmp, *fModel, mergeData, fields.Unwrap());
             if (!res)
                return R__FORWARD_ERROR(res);
          } else if (mergeOpts.fMergingMode == ENTupleMergingMode::kStrict) {
