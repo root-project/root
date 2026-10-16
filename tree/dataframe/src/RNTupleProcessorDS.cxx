@@ -127,7 +127,13 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
 
    // The fieldID could be the root field or the class of fieldId might not be loaded.
    // In these cases, only the inner fields are exposed as RDF columns.
-   auto fieldOrException = ROOT::RFieldBase::Create(field.GetFieldName(), field.GetTypeName());
+   std::string fieldName = field.GetFieldName();
+   auto fieldInfoIt = fieldInfos.begin();
+   while (fieldName == "_0") {
+      fieldName = fieldInfoIt->fFieldName;
+      fieldInfoIt++;
+   }
+   auto fieldOrException = ROOT::RFieldBase::Create(fieldName, field.GetTypeName());
    if (!fieldOrException)
       return;
    auto valueField = fieldOrException.Unwrap();
