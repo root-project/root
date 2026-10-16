@@ -259,13 +259,13 @@ class Cpp4InheritanceTreeOverloadResolution(MyTestCase):
         """
         Test the behaviour of a scenario that would be ambiguous in C++.
 
-        In PyROOT, the function with the highest priority in the overload
-        resolution will be called. Would be nice to throw an error in this kind
-        of scenario.
+        Like in C++, where calling myfunc(C(), Z()) is an error ("call to
+        'myfunc' is ambiguous"), the overload resolution raises an error.
         """
-        # In C++ calling myfunc(C(), Z()) would throw
-        # error: call to 'myfunc' is ambiguous
-        self.assertEqual(ROOT.Cpp4.myfunc(ROOT.Cpp4.C(), ROOT.Cpp4.Z()), 1)
+        import cppjit
+
+        with self.assertRaises(cppjit.OverloadAmbiguityException):
+            ROOT.Cpp4.myfunc(ROOT.Cpp4.C(), ROOT.Cpp4.Z())
 
 
 ## actual test run
