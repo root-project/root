@@ -1,4 +1,4 @@
-#include "ROOT/ML/RSampler.hxx"
+#include "RSampler.hxx"
 
 #include <algorithm>
 #include <cmath>
@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <utility>
 
-#include "ROOT/ML/RFlat2DMatrixOperators.hxx"
+#include "RFlat2DMatrixOperators.hxx"
 
 namespace ROOT::Experimental::Internal::ML {
 

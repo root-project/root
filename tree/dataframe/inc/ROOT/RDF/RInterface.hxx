@@ -104,6 +104,8 @@ std::vector<std::pair<std::uint64_t, std::uint64_t>> GetDatasetGlobalClusterBoun
 void TriggerRun(ROOT::RDF::RNode node);
 std::string GetDataSourceLabel(const ROOT::RDF::RNode &node);
 void SetTTreeLifeline(ROOT::RDF::RNode &node, std::any lifeline);
+void LoadCustomValues(ROOT::RDF::RNode &node, const std::vector<std::string> &cols,
+                      const std::vector<std::size_t> &vecSizes, float vecPadding, ROOT::RVecF &dest);
 } // namespace RDF
 } // namespace Internal
 
@@ -139,7 +141,39 @@ class RInterface : public RInterfaceBase {
    RDFInternal::GetDatasetGlobalClusterBoundaries(const RNode &node);
    friend std::string ROOT::Internal::RDF::GetDataSourceLabel(const RNode &node);
    friend void ROOT::Internal::RDF::SetTTreeLifeline(ROOT::RDF::RNode &node, std::any lifeline);
+   friend void ROOT::Internal::RDF::LoadCustomValues(ROOT::RDF::RNode &node, const std::vector<std::string> &cols,
+                                                     const std::vector<std::size_t> &vecSizes, float vecPadding,
+                                                     ROOT::RVecF &dest);
+
    std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this RInterface.
+
+   void LoadValuesCustom(const ColumnNames_t &columnList, const std::vector<std::size_t> &vecSizes, float vecPadding,
+                         ROOT::RVecF &dest)
+   {
+      const auto validColumnNames = GetValidatedColumnNames(columnList.size(), columnList);
+
+      auto nColumns = columnList.size();
+      std::vector<const std::type_info *> colTypeIDs;
+      colTypeIDs.reserve(nColumns);
+      for (decltype(nColumns) i{}; i < nColumns; i++) {
+         const auto &colName = validColumnNames[i];
+         const auto colTypeName = ROOT::Internal::RDF::ColumnName2ColumnTypeName(
+            colName, /*tree*/ nullptr, GetDataSource(), fColRegister.GetDefine(colName), /*vector2RVec*/ true);
+         const std::type_info *colTypeID = &ROOT::Internal::RDF::TypeName2TypeID(colTypeName);
+         colTypeIDs.push_back(colTypeID);
+      }
+      // Crucial e.g. if the column names do not correspond to already-available column readers created by the data
+      // source
+      CheckAndFillDSColumns(validColumnNames, colTypeIDs);
+
+      // the values are appended to the caller's buffer, which outlives the event loop run below
+      auto location = std::shared_ptr<ROOT::RVecF>(&dest, [](ROOT::RVecF *) {});
+      auto action = RDFInternal::BuildAction(validColumnNames, colTypeIDs, location, vecSizes, vecPadding, fProxiedPtr,
+                                             fColRegister);
+      auto resPtr = MakeResultPtr(location, *GetLoopManager(), std::move(action));
+
+      *resPtr;
+   }
 
 public:
    ////////////////////////////////////////////////////////////////////////////
