@@ -228,7 +228,7 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
    }
 }
 
-RNTupleProcessorDS::RNTupleProcessorDS(std::unique_ptr<ROOT::Experimental::RNTupleProcessor> processor)
+RNTupleProcessorDS::RNTupleProcessorDS(std::unique_ptr<ROOT::RNTupleProcessor> processor)
    : fProcessor(std::move(processor))
 {
    // Do not add the subfields now, this is handled by AddField.
@@ -425,8 +425,7 @@ ROOT::RDF::RSampleInfo RNTupleProcessorDS::CreateSampleInfo(
 }
 } // namespace ROOT::Experimental::Internal::RDF
 
-ROOT::RDataFrame
-ROOT::Experimental::RDF::FromRNTupleProcessor(std::unique_ptr<ROOT::Experimental::RNTupleProcessor> processor)
+ROOT::RDataFrame ROOT::Experimental::RDF::FromRNTupleProcessor(std::unique_ptr<ROOT::RNTupleProcessor> processor)
 {
    return ROOT::RDataFrame(
       std::make_unique<ROOT::Experimental::Internal::RDF::RNTupleProcessorDS>(std::move(processor)));

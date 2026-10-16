@@ -18,9 +18,9 @@
 using ROOT::TestSupport::FileRaii;
 
 using ROOT::RNTupleModel;
+using ROOT::RNTupleProcessor;
 using ROOT::RNTupleWriter;
 using ROOT::Experimental::CreateRNTupleJoinProcessor;
-using ROOT::Experimental::RNTupleProcessor;
 using ROOT::Experimental::Internal::RDF::RNTupleProcessorDS;
 
 /*

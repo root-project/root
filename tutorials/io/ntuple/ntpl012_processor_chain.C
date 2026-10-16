@@ -20,9 +20,6 @@
 #include <TH1F.h>
 #include <TRandom.h>
 
-// Import classes from the `Experimental` namespace for the time being.
-using ROOT::Experimental::RNTupleProcessor;
-
 // Number of events to generate for each ntuple.
 constexpr int kNEvents = 10000;
 
@@ -65,7 +62,7 @@ void Read(const std::vector<ROOT::RNTupleOpenSpec> &ntuples)
 
    // The chain-based processor can be created by passing a list of RNTupleOpenSpecs, describing the name and location
    // of each ntuple in the chain.
-   auto processor = RNTupleProcessor::CreateChain(ntuples);
+   auto processor = ROOT::RNTupleProcessor::CreateChain(ntuples);
    int prevProcessorNumber{-1};
 
    // Access to the processor's fields is done by first requesting them through RNTupleProcessor::RequestField(). The
