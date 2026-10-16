@@ -435,6 +435,21 @@ def _try_branch_ptr_to_ptr_overloads(self, args):
     return self._OriginalBranch(name, class_name, ctypes.c_void_p(buf), *rest)
 
 
+def _try_branch_folder_overload(self, args):
+    """Try to match TTree::Branch(const char* folder, Int_t = 32000, Int_t = 99).
+
+    The overload resolution of cppjit considers this call ambiguous with the
+    `Branch(const char*, T*, ...)` templates, which C++ doesn't (an int can't
+    deduce a T*), so select the overload explicitly.
+    """
+    if not (2 <= len(args) <= 3) or not isinstance(args[0], str):
+        return None
+    if any(not isinstance(arg, int) or isinstance(arg, bool) for arg in args[1:]):
+        return None
+
+    return self._OriginalBranch.__overload__("const char*, Int_t, Int_t")(self, *args)
+
+
 def _Branch(self, *args):
     """
     Pythonization for TTree::Branch.
@@ -453,6 +468,7 @@ def _Branch(self, *args):
     - ( const char*, void*, const char*, Int_t = 32000 )
     - ( const char*, const char*, T**, Int_t = 32000, Int_t = 99 )
     - ( const char*, T**, Int_t = 32000, Int_t = 99 )
+    - ( const char*, Int_t = 32000, Int_t = 99 )
     """
     if len(args) >= 2:
         res = _try_branch_leaf_list_overload(self, args)
@@ -460,6 +476,10 @@ def _Branch(self, *args):
             return res
 
         res = _try_branch_ptr_to_ptr_overloads(self, args)
+        if res is not None:
+            return res
+
+        res = _try_branch_folder_overload(self, args)
         if res is not None:
             return res
 
