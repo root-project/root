@@ -327,6 +327,10 @@ class RPageSource; // For RNTupleInputSpec
 }
 
 namespace Experimental {
+class RNTupleProcessor; // for RNTupleInputSpec
+class RNTupleSingleProcessor; // for RNTupleInputSpec
+}
+
 // clang-format off
    /**
    \class ROOT::Experimental::RNTupleInputSpec
@@ -340,8 +344,8 @@ namespace Experimental {
    */
 // clang-format on
 class RNTupleInputSpec {
-   friend class RNTupleProcessor;
-   friend class RNTupleSingleProcessor;
+   friend class Experimental::RNTupleProcessor;
+   friend class Experimental::RNTupleSingleProcessor;
 
 public:
    using Storage_t = std::variant<std::string, TDirectory *>;
@@ -357,7 +361,6 @@ public:
    const std::string &GetNTupleName() const { return fNTupleName; }
    const Storage_t &GetStorage() const { return fStorage; }
 };
-} // namespace Experimental
 
 namespace Internal {
 
