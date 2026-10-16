@@ -14,7 +14,9 @@
 #include "TVirtualX.h"
 #include "TError.h"
 
-#include <afterimage.h>
+// using only builtin version of ASImage
+#include "afterimage.h"
+#include "bmp.h"
 
 const unsigned long kAllPlanes = ~0;
 
@@ -110,4 +112,52 @@ Bool_t TASUtils::FromX11Window(TImage *timg, Window_t win, Int_t x, Int_t y, Int
    asimg->fImage = pixmap2asimage(vis, win, x, y, width, height, kAllPlanes, 0, 0);
 
    return asimg->fImage != nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set image data from pixmap.
+
+Bool_t TASUtils::FromPixmap(TImage *timg, Pixmap_t pxm, Pixmap_t mask)
+{
+   auto asimg = dynamic_cast<TASImage *>(timg);
+   if (!asimg) {
+      ::Warning("TASUtils::FromPixmap", "Image not provided");
+      return kFALSE;
+   }
+
+   asimg->DestroyImage();
+   asimg->DestroyScaledImage();
+
+   Int_t xy;
+   UInt_t w, h;
+   gVirtualX->GetWindowSize(pxm, xy, xy, w, h);
+
+   const char *name = asimg->GetName();
+   if (!name || !*name)
+      asimg->SetName(TString::Format("img_%dx%d",w, h));
+
+   if (gVirtualX->InheritsFrom("TGX11")) { //use built-in optimized version
+      auto vis = holder();
+
+      if (!vis) {
+         ::Warning("TASUtils::FromPixmap", "Visual not initiated");
+         return kFALSE;
+      }
+
+      asimg->fImage = picture2asimage(vis, pxm, mask, 0, 0, w, h, kAllPlanes, 1, 0);
+   } else {
+      unsigned char *bits = gVirtualX->GetColorBits(pxm, 0, 0, w, h);
+      if (!bits)    // error
+         return kFALSE;
+
+      unsigned char *mask_bits = mask ? gVirtualX->GetColorBits(mask, 0, 0, w, h) : nullptr;
+
+      asimg->fImage = bitmap2asimage(bits, w, h, 0, mask_bits);
+
+      if (mask_bits)
+         delete [] mask_bits;
+      delete [] bits;
+   }
+
+   return asimg->IsValid();
 }
