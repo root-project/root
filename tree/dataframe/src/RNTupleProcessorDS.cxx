@@ -89,7 +89,9 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
       // The field is a collection or a fixed-size array.
       // We open a new collection scope with fieldID being the inner most collection. E.g. for "event.tracks.hits",
       // fieldInfos would already contain the fieldID of "event.tracks"
-      fieldInfos.emplace_back(field.GetOnDiskId(), field.GetFieldName(), field.GetTypeName(), nRepetitions);
+      const std::string name = (procProvenance.Empty() ? "" : procProvenance.Get() + ".") + std::string(colName);
+      fieldInfos.emplace_back(field.GetOnDiskId(), field.GetFieldName(), field.GetTypeName(), nRepetitions,
+                              *fProcessor->GetEntry().FindFieldIndex(name));
       nFieldInfosAdded++;
    }
 
@@ -127,7 +129,13 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
 
    // The fieldID could be the root field or the class of fieldId might not be loaded.
    // In these cases, only the inner fields are exposed as RDF columns.
-   auto fieldOrException = ROOT::RFieldBase::Create(field.GetFieldName(), field.GetTypeName());
+   std::string fieldName = field.GetFieldName();
+   auto fieldInfoIt = fieldInfos.begin();
+   while (fieldName == "_0") {
+      fieldName = fieldInfoIt->fFieldName;
+      fieldInfoIt++;
+   }
+   auto fieldOrException = ROOT::RFieldBase::Create(fieldName, field.GetTypeName());
    if (!fieldOrException)
       return;
    auto valueField = fieldOrException.Unwrap();
@@ -160,7 +168,7 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
       } else {
          cardinalityField = std::make_unique<ROOT::Internal::RDF::RRDFCardinalityField<std::size_t>>(name);
       }
-      cardinalityField->SetOnDiskId(info.fFieldId);
+      cardinalityField->SetOnDiskId(info.fOnDiskId);
    }
 
    for (auto i = fieldInfos.rbegin(); i != fieldInfos.rend(); ++i) {
@@ -183,7 +191,7 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
          }
       }
 
-      valueField->SetOnDiskId(fieldInfo.fFieldId);
+      valueField->SetOnDiskId(fieldInfo.fOnDiskId);
 
       // Skip the inner-most collection level to construct the cardinality column
       // It's taken care of by the `if (!fieldInfos.empty())` scope above
@@ -198,29 +206,36 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
             cardinalityField = std::make_unique<ROOT::RRVecField>(cardinalityFieldName, cardinalityField->Clone("_0"));
          }
 
-         cardinalityField->SetOnDiskId(fieldInfo.fFieldId);
+         cardinalityField->SetOnDiskId(fieldInfo.fOnDiskId);
       }
    }
 
-   if (cardinalityField) {
-      std::string cardinalityFieldName =
-         (procProvenance.Empty() ? "R_rdf_sizeof_" : procProvenance.Get() + "_R_rdf_sizeof_") + std::string(colName);
-      fColumnNames.emplace_back(cardinalityFieldName);
-      fColumnTypes.emplace_back(cardinalityField->GetTypeName());
-      fProcessor->AddFieldToEntry(std::move(cardinalityField), cardinalityFieldName, nullptr,
-                                  Internal::RNTupleProcessorProvenance());
-   }
-
-   fieldInfos.emplace_back(field.GetOnDiskId(), field.GetFieldName(), field.GetTypeName(), nRepetitions);
-   nFieldInfosAdded++;
    std::string canonicalName = (procProvenance.Empty() ? "" : procProvenance.Get() + ".") + std::string(colName);
    fColumnNames.emplace_back(canonicalName);
    fColumnTypes.emplace_back(valueField->GetTypeName());
 
-   // Add nested fields explicitly to the entry, because they may be mapped differently.
-   if (fieldInfos.size() > 1) {
-      fProcessor->AddFieldToEntry(std::move(valueField), canonicalName, nullptr,
-                                  Internal::RNTupleProcessorProvenance());
+   RNTupleProcessorEntry::FieldIndex_t fieldIdx;
+   if (auto optFieldIdx = fProcessor->GetEntry().FindFieldIndex(canonicalName);
+       optFieldIdx && fProcessor->GetEntry().GetField(*optFieldIdx).GetTypeName() == field.GetTypeName()) {
+      fieldIdx = *optFieldIdx;
+   } else {
+      fieldIdx = fProcessor->AddFieldToEntry(std::move(valueField), canonicalName, nullptr,
+                                             Internal::RNTupleProcessorProvenance());
+   }
+
+   if (cardinalityField) {
+      // FIXME(fdegeus): Make cardinality field name work properly with "#colname"
+      std::string cardinalityFieldName =
+         (procProvenance.Empty() ? "R_rdf_sizeof_" : procProvenance.Get() + ".R_rdf_sizeof_") + std::string(colName);
+      fColumnNames.emplace_back(cardinalityFieldName);
+      fColumnTypes.emplace_back(cardinalityField->GetTypeName());
+      auto cardinalityFieldIdx = fProcessor->AddFieldToEntry(std::move(cardinalityField), cardinalityFieldName, nullptr,
+                                                             Internal::RNTupleProcessorProvenance());
+      if (!fieldInfos.empty()) {
+         const auto &fieldInfo = fieldInfos.back();
+         fieldIdx = fieldInfo.fEntryFieldIdx;
+      }
+      fProcessor->GetEntry().SetFieldOriginIdx(cardinalityFieldIdx, fieldIdx);
    }
 
    for (std::uint16_t i = 0; i < nFieldInfosAdded; i++) {

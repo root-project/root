@@ -303,6 +303,26 @@ void ROOT::Experimental::RNTupleSingleProcessor::LoadEntryImpl(const REntryMappi
    fNEntriesProcessed++;
 }
 
+namespace {
+void ResetColumnRepresentative(ROOT::RFieldBase &field)
+{
+   field.SetColumnRepresentatives(ROOT::RFieldBase::RColumnRepresentations::Selection_t{});
+   for (auto &subfield : field.GetMutableSubfields()) {
+      ResetColumnRepresentative(*subfield);
+   }
+}
+
+void SetOnDiskId(ROOT::RFieldBase &field, ROOT::DescriptorId_t onDiskId, const ROOT::RNTupleDescriptor &desc)
+{
+   field.SetOnDiskId(onDiskId);
+
+   for (auto &subfield : field.GetMutableSubfields()) {
+      onDiskId = desc.FindFieldId(subfield->GetQualifiedFieldName());
+      SetOnDiskId(*subfield, onDiskId, desc);
+   }
+}
+} // anonymous namespace
+
 void ROOT::Experimental::RNTupleSingleProcessor::Connect(
    const std::unordered_set<ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
    const Internal::RNTupleProcessorProvenance & /* provenance */, bool updateFields)
@@ -312,9 +332,36 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect(
    fFieldIdxs = fieldIdxs;
 
    if (updateFields) {
+      auto descGuard = fPageSource->GetSharedDescriptorGuard();
+      const auto &desc = descGuard.GetRef();
+
       for (const auto &fieldIdx : fFieldIdxs) {
          const auto &currField = fEntry->GetValue(fieldIdx).GetField();
-         auto newField = CreateAndConnectField(fEntry->GetQualifiedFieldName(fieldIdx), currField.GetTypeName());
+
+         auto onDiskId = desc.FindFieldId(currField.GetQualifiedFieldName());
+         bool needsClone = onDiskId != ROOT::kInvalidDescriptorId &&
+                           currField.GetTypeName() == desc.GetFieldDescriptor(onDiskId).GetTypeName();
+         if (const auto fieldOriginIdx = fEntry->GetFieldOriginIdx(fieldIdx);
+             fieldOriginIdx != ROOT::kInvalidDescriptorId) {
+            const auto &originField = fEntry->GetField(fieldOriginIdx);
+            onDiskId = desc.FindFieldId(originField.GetQualifiedFieldName());
+            needsClone = true;
+         }
+
+         std::unique_ptr<ROOT::RFieldBase> newField;
+         if (needsClone) {
+            // We have enough information to clone the existing field.
+            newField = currField.Clone(currField.GetFieldName());
+            // The clone's column representatives (+ its subfields') need to be reset before it can be connected to the
+            // new page source.
+            ResetColumnRepresentative(*newField);
+            SetOnDiskId(*newField, onDiskId, desc);
+            newField = ConnectField(std::move(newField));
+         } else {
+            // We need to create the new field from scratch (e.g. because it is a subfield without a parent field
+            // attached).
+            newField = CreateAndConnectField(fEntry->GetQualifiedFieldName(fieldIdx), currField.GetTypeName());
+         }
 
          fEntry->UpdateField(fieldIdx, std::move(newField));
       }
