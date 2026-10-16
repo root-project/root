@@ -37,7 +37,7 @@ class RSoAField;
 
 namespace Internal {
 std::unique_ptr<RFieldBase> CreateEmulatedVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
-                                                      std::string_view emulatedFromType);
+                                                      std::string_view emulatedFromType, bool isSoA);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -212,9 +212,9 @@ public:
 /// The field can be constructed as untyped collection through CreateUntyped().
 class RVectorField : public RFieldBase {
    friend class RArrayAsVectorField; // to get access to the RVectorDeleter
-   friend std::unique_ptr<RFieldBase> Internal::CreateEmulatedVectorField(std::string_view fieldName,
-                                                                          std::unique_ptr<RFieldBase> itemField,
-                                                                          std::string_view emulatedFromType);
+   friend std::unique_ptr<RFieldBase>
+   Internal::CreateEmulatedVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
+                                       std::string_view emulatedFromType, bool isSoA);
 
    class RVectorDeleter : public RDeleter {
    private:
@@ -237,11 +237,16 @@ class RVectorField : public RFieldBase {
                             RDeleter *itemDeleter);
 
 protected:
-   /// Creates a possibly-untyped VectorField.
-   /// If `emulatedFromType` is not nullopt, the field is untyped. If the string is empty, it is a "regular"
-   /// untyped vector field; otherwise, it was created as an emulated field from the given type name.
-   RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
-                std::optional<std::string_view> emulatedFromType);
+   enum class ECollectionType {
+      kRegular,
+      kUntyped,
+      kEmulatedProxy,
+      kEmulatedSoA
+   };
+   /// Creates a possibly untyped or emulated VectorField.
+   /// The emulatedFromType information is only needed for the non-regular vectors.
+   RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField, ECollectionType collectionType,
+                std::string_view enforcedTypeName);
 
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 

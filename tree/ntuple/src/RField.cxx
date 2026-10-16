@@ -595,12 +595,14 @@ ROOT::Internal::CreateEmulatedRecordField(std::string_view fieldName,
    return std::unique_ptr<RFieldBase>(new RRecordField(fieldName, std::move(itemFields), emulatedFromType));
 }
 
-std::unique_ptr<ROOT::RFieldBase> ROOT::Internal::CreateEmulatedVectorField(std::string_view fieldName,
-                                                                            std::unique_ptr<RFieldBase> itemField,
-                                                                            std::string_view emulatedFromType)
+std::unique_ptr<ROOT::RFieldBase>
+ROOT::Internal::CreateEmulatedVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
+                                          std::string_view emulatedFromType, bool isSoA)
 {
    R__ASSERT(!emulatedFromType.empty());
-   return std::unique_ptr<RFieldBase>(new RVectorField(fieldName, std::move(itemField), emulatedFromType));
+   const RVectorField::ECollectionType type =
+      isSoA ? RVectorField::ECollectionType::kEmulatedSoA : RVectorField::ECollectionType::kEmulatedProxy;
+   return std::unique_ptr<RFieldBase>(new RVectorField(fieldName, std::move(itemField), type, emulatedFromType));
 }
 
 ROOT::RRecordField::RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
