@@ -104,8 +104,8 @@ std::vector<std::pair<std::uint64_t, std::uint64_t>> GetDatasetGlobalClusterBoun
 void TriggerRun(ROOT::RDF::RNode node);
 std::string GetDataSourceLabel(const ROOT::RDF::RNode &node);
 void SetTTreeLifeline(ROOT::RDF::RNode &node, std::any lifeline);
-ROOT::RDF::RResultPtr<ROOT::RVecF> LoadCustomValues(ROOT::RDF::RNode &node, const std::vector<std::string> &cols,
-                                                    const std::vector<std::size_t> &vecSizes, float vecPadding);
+void LoadCustomValues(ROOT::RDF::RNode &node, const std::vector<std::string> &cols,
+                      const std::vector<std::size_t> &vecSizes, float vecPadding, ROOT::RVecF &dest);
 } // namespace RDF
 } // namespace Internal
 
@@ -141,14 +141,14 @@ class RInterface : public RInterfaceBase {
    RDFInternal::GetDatasetGlobalClusterBoundaries(const RNode &node);
    friend std::string ROOT::Internal::RDF::GetDataSourceLabel(const RNode &node);
    friend void ROOT::Internal::RDF::SetTTreeLifeline(ROOT::RDF::RNode &node, std::any lifeline);
-   friend ROOT::RDF::RResultPtr<ROOT::RVecF>
-   ROOT::Internal::RDF::LoadCustomValues(ROOT::RDF::RNode &node, const std::vector<std::string> &cols,
-                                         const std::vector<std::size_t> &vecSizes, float vecPadding);
+   friend void ROOT::Internal::RDF::LoadCustomValues(ROOT::RDF::RNode &node, const std::vector<std::string> &cols,
+                                                     const std::vector<std::size_t> &vecSizes, float vecPadding,
+                                                     ROOT::RVecF &dest);
 
    std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this RInterface.
 
-   RResultPtr<ROOT::RVecF>
-   LoadValuesCustom(const ColumnNames_t &columnList, const std::vector<std::size_t> &vecSizes, float vecPadding)
+   void LoadValuesCustom(const ColumnNames_t &columnList, const std::vector<std::size_t> &vecSizes, float vecPadding,
+                         ROOT::RVecF &dest)
    {
       const auto validColumnNames = GetValidatedColumnNames(columnList.size(), columnList);
 
@@ -166,13 +166,13 @@ class RInterface : public RInterfaceBase {
       // source
       CheckAndFillDSColumns(validColumnNames, colTypeIDs);
 
-      auto location = std::make_shared<ROOT::RVecF>();
+      // the values are appended to the caller's buffer, which outlives the event loop run below
+      auto location = std::shared_ptr<ROOT::RVecF>(&dest, [](ROOT::RVecF *) {});
       auto action = RDFInternal::BuildAction(validColumnNames, colTypeIDs, location, vecSizes, vecPadding, fProxiedPtr,
                                              fColRegister);
       auto resPtr = MakeResultPtr(location, *GetLoopManager(), std::move(action));
 
       *resPtr;
-      return resPtr;
    }
 
 public:
