@@ -104,6 +104,7 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
 * The headers `ZipLZMA.h`, `ZipLZ4.h` and `ZipZSTD.h` are deprecated and will be removed in ROOT 6.46, use instead the public methods in the `RZip.h` interface.
 * The headers `Hepevt.h` and `cfortran.h` are deprecated and will be moved to  `ROOT/Hepevt.h` and `ROOT/cfortran.h` in ROOT 6.44. At a later time point they may be fully removed from ROOT public headers, consider using instead the `TGenerator.h` public interface or the `cfortran.h` header of the `cfitsio` library, respectively.
 * Remove outdated `TSQLFile` class, was not tested for very long time, not working with only supported sqlite DB
+* A .rootrc in the current working directory (different from the home directory) is no longer processed to prevent injection of malicious config files. To restore the previous behavior, set the `ROOTENV_USE_LOCAL` environment variable to anything other than `0`, `off`, `no`, or `false`.
 
 ## Build System
 

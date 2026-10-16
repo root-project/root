@@ -2666,6 +2666,7 @@ function(ROOTTEST_COMPILE_MACRO filename)
   set(root_compile_macro ${CMAKE_COMMAND} -E env
       ROOT_LIBRARY_PATH=${NATIVE_BINARY_DIR}
       ROOT_INCLUDE_PATH=${CMAKE_CURRENT_BINARY_DIR}:${DEFAULT_ROOT_INCLUDE_PATH}
+      ROOTENV_USE_LOCAL=yes
       ${ROOT_root_CMD}
       -e "gSystem->SetBuildDir(\"${CMAKE_CURRENT_BINARY_DIR}\", true)"
       ${RootMacroDirDefines}
@@ -3381,9 +3382,12 @@ function(ROOTTEST_ADD_TEST testname)
 
   # Python (also when embedded in root.exe) and pytest must not write caches
   # next to the test sources in the source directory.
+  # Also, we use a .rootrc in the current workind directory to customize the
+  # roottest behavior
   set(environment ENVIRONMENT
                   PYTHONDONTWRITEBYTECODE=1
                   PYTEST_ADDOPTS=-pno:cacheprovider
+                  ROOTENV_USE_LOCAL=yes
                   ${ROOTTEST_ENV_EXTRA}
                   ${ARG_ENVIRONMENT}
                   PYTHONPATH=${pythonpaths_native})
