@@ -85,6 +85,10 @@ void ROOT::Internal::CallConnectPageSourceOnField(RFieldBase &field, ROOT::Inter
 {
    field.ConnectPageSource(source);
 }
+void ROOT::Internal::CallSetArtificialOnField(RFieldBase &field)
+{
+   field.SetArtificial();
+}
 
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
 ROOT::Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
@@ -605,7 +609,6 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RFieldBase::Clone(std::string_view newNa
 {
    auto clone = CloneImpl(newName);
    clone->fTypeAlias = fTypeAlias;
-   clone->fOnDiskId = fOnDiskId;
    clone->fDescription = fDescription;
    // We can just copy the references because fColumnRepresentatives point into a static structure
    clone->fColumnRepresentatives = fColumnRepresentatives;
