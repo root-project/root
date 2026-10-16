@@ -307,7 +307,7 @@ static inline char* cppstring_to_cstring(const std::string& cppstr) {
 bool interop::Compile(const std::string& code, bool silent) {
   std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   // Declare returns an enum which equals 0 on success
-  return !Cpp::Declare(code.c_str(), false);
+  return !Cpp::Declare(code.c_str(), silent);
 }
 
 void interop::LockInterpreter() { InterOpMutex.lock(); }
