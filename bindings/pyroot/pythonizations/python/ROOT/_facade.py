@@ -430,11 +430,17 @@ class ROOTFacade(types.ModuleType):
         ns = self._fallback_getattr("RDF")
 
         def MakeCSVDataFrame(fileName, readHeaders=True, delimiter=",", linesChunkSize=-1, colTypes={}, **kwargs):
+            import ROOT
+
             options = ns.RCsvDS.ROptions()
             options.fHeaders = readHeaders
             options.fDelimiter = delimiter
             options.fLinesChunkSize = linesChunkSize
-            options.fColumnTypes = colTypes
+            # Fill the std::unordered_map<std::string, char> element-wise: a
+            # Python dict doesn't convert to it in the overload resolution
+            column_type = ROOT.std.pair["std::string", "char"]
+            for column, column_type_code in colTypes.items():
+                options.fColumnTypes.insert(column_type(column, column_type_code))
             for key, val in kwargs.items():
                 structMemberName = "f" + key[0].upper() + key[1:]
                 if hasattr(options, structMemberName):
