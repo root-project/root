@@ -161,3 +161,79 @@ Bool_t TASUtils::FromPixmap(TImage *timg, Pixmap_t pxm, Pixmap_t mask)
 
    return asimg->IsValid();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint image on specified window
+
+Bool_t TASUtils::PaintImage(TImage *timg, Drawable_t wid, Int_t x, Int_t y, Bool_t opaque)
+{
+   auto asimg = dynamic_cast<TASImage *>(timg);
+   if (!asimg) {
+      ::Warning("TASUtils::PaintImage", "Image not provided");
+      return kFALSE;
+   }
+
+   Pixmap_t mask = kNone;
+
+   Bool_t isX11 = gVirtualX->InheritsFrom("TGX11");
+
+   if (isX11) {
+      UInt_t mwidth = 0, mheight = 0;
+      std::vector<char> bits;
+      if (asimg->GetMaskBits(mwidth, mheight, bits))
+         mask = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), bits.data(), mwidth, mheight);
+   }
+
+   GCValues_t gv;
+   static GContext_t gc = 0;
+
+   gv.fMask = kGCClipMask | kGCClipXOrigin | kGCClipYOrigin;
+   gv.fClipMask = mask;
+   gv.fClipXOrigin = x;
+   gv.fClipYOrigin = y;
+
+   if (!gc) {
+      gc = gVirtualX->CreateGC(gVirtualX->GetDefaultRootWindow(), &gv);
+   } else {
+      gVirtualX->ChangeGC(gc, &gv);
+   }
+
+   UInt_t width = asimg->GetScaledWidth();
+   UInt_t height = asimg->GetScaledHeight();
+
+   Bool_t res = kTRUE;
+
+   if (isX11) { //use built-in optimized version
+      ASImage *im = asimg->fScaledImage ? asimg->fScaledImage->fImage : asimg->fImage;
+      auto vis = holder();
+      if (vis && im)
+         asimage2drawable(vis, wid, im, (GC)gc, 0, 0, x, y, width, height, 1);
+      else
+         res = kFALSE;
+   } else {
+       auto argb =  asimg->GetArgbArray();
+
+       Pixmap_t pic = argb ? gVirtualX->CreatePixmapFromData((unsigned char *) argb, width, height) : 0;
+
+       if (pic) {
+          if (!opaque) {
+             SETBIT(width, 31);
+             SETBIT(height, 31);
+          }
+          gVirtualX->CopyArea(pic, wid, gc, 0, 0, width, height, x, y);
+          gVirtualX->DeletePixmap(pic);
+       } else
+          res = kFALSE;
+   }
+
+   // free mask pixmap
+   if (mask != kNone)
+      gVirtualX->DeletePixmap(mask);
+
+   gv.fMask = kGCClipMask;
+   gv.fClipMask = kNone;
+   if (gc)
+      gVirtualX->ChangeGC(gc, &gv);
+
+   return res;
+}
