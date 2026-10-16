@@ -63,7 +63,6 @@ private:
 
    // primary and secondary leftover batches used to create batches from a chunk
    std::unique_ptr<RFlat2DMatrix> fPrimaryLeftoverBatch;
-   std::unique_ptr<RFlat2DMatrix> fSecondaryLeftoverBatch;
 
 public:
    RBatchLoader(std::size_t batchSize, const std::vector<std::string> &cols, std::mutex &sharedMutex,
@@ -75,9 +74,10 @@ public:
    void Reset();
    void MarkProducerDone();
 
-   std::unique_ptr<RFlat2DMatrix> CreateBatch(RFlat2DMatrix &chunkTensor, std::size_t idxs);
+   std::unique_ptr<RFlat2DMatrix>
+   CreateBatch(const RFlat2DMatrix &chunkTensor, const std::vector<std::size_t> &permutation, std::size_t idxs);
    RFlat2DMatrix GetBatch();
-   void CreateBatches(RFlat2DMatrix &chunkTensor, bool isLastBatch);
+   void CreateBatches(const RFlat2DMatrix &chunkTensor, const std::vector<std::size_t> &permutation, bool isLastBatch);
    void RecalculateBatchCounts(std::size_t numEntries);
 
    bool isProducerDone() { return fProducerDone; }
