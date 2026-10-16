@@ -777,7 +777,7 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
       field->SetColumnRepresentatives({representatives});
       // Pinning the representative is not enough for truncated/quantized columns: their parameters
       // are stored in the in-memory field, which CreateField() leaves at defaults.
-      auto restored = RestoreRealFieldParams(*field, *fieldDesc, *mergeData.fSrcDescriptor);
+      auto restored = RestoreRealFieldParams(*field, *fieldDesc, srcDesc);
       if (!restored)
          return R__FORWARD_ERROR(restored);
       changeset.AddField(std::move(field));
