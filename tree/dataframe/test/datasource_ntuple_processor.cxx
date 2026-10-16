@@ -235,7 +235,7 @@ static void ChainTest(const std::string &name, const std::string &fname)
    // Causes "Too many open files" errors on Windows
    // TODO(fdegeus) Investigate root cause + fix
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
-   std::vector<ROOT::Experimental::RNTupleInputSpec> inputSpecs(1000, {name, fname});
+   std::vector<ROOT::RNTupleInputSpec> inputSpecs(1000, {name, fname});
    auto proc1000 = RNTupleProcessor::CreateChain(inputSpecs);
    auto df1000 = ROOT::Experimental::RDF::FromRNTupleProcessor(std::move(proc1000));
    EXPECT_DOUBLE_EQ(42000.0, df1000.Sum<float>("pt").GetValue());

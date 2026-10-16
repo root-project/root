@@ -289,9 +289,8 @@ Example usage (see ntpl012_processor_chain.C and ntpl015_processor_join.C for bi
 ~~~{.cpp}
 #include <ROOT/RNTupleProcessor.hxx>
 using ROOT::Experimental::RNTupleProcessor;
-using ROOT::Experimental::RNTupleInputSpec;
 
-std::vector<RNTupleInputSpec> ntuples = {{"ntuple1", "ntuple1.root"}, {"ntuple2", "ntuple2.root"}};
+std::vector<ROOT::RNTupleInputSpec> ntuples = {{"ntuple1", "ntuple1.root"}, {"ntuple2", "ntuple2.root"}};
 auto processor = RNTupleProcessor::CreateChain(ntuples);
 
 auto pt = processor->RequestField<float>("pt");

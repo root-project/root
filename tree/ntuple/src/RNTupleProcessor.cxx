@@ -115,7 +115,7 @@ ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(RNTupleInputS
 }
 
 namespace {
-std::unique_ptr<ROOT::Internal::RPageSource> CreatePageSource(const ROOT::Experimental::RNTupleInputSpec &inputSpec)
+std::unique_ptr<ROOT::Internal::RPageSource> CreatePageSource(const ROOT::RNTupleInputSpec &inputSpec)
 {
    if (const std::string *storagePath = std::get_if<std::string>(&inputSpec.GetStorage()))
       return ROOT::Internal::RPageSource::Create(inputSpec.GetNTupleName(), *storagePath);
