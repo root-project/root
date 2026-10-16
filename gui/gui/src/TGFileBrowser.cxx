@@ -1161,18 +1161,16 @@ static Bool_t IsTextFile(const char *candidate)
 static const TGPicture *MakeLinkPic(const TGPicture *pic)
 {
    if (pic) {
-      auto img1 = TImage::Create();
-      if (!img1) return pic;
-      img1->SetImage(((const TGPicture *)pic)->GetPicture(),
-                     ((const TGPicture *)pic)->GetMask());
-      auto img2 = TImage::Open("slink_t.xpm");
-      if (img2) img1->Merge(img2);
-      TString lnk_name = ((const TGPicture *)pic)->GetName();
+      auto img1 = TGWindow::CreateImageFromPixmap(pic->GetPicture(), pic->GetMask());
+      if (!img1)
+         return pic;
+      std::unique_ptr<TImage> img2(TImage::Open("slink_t.xpm"));
+      if (img2)
+         img1->Merge(img2.get());
+      TString lnk_name = pic->GetName();
       lnk_name.Prepend("lnk_");
       auto merged = gClient->GetPicturePool()->GetPicture(lnk_name.Data(),
-                                          TGWindow::GetImagePixmap(img1), TGWindow::GetImageMask(img1));
-      if (img2) delete img2;
-      delete img1;
+                                          TGWindow::GetImagePixmap(img1.get()), TGWindow::GetImageMask(img1.get()));
       return merged;
    }
    return pic;

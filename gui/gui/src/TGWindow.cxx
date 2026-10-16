@@ -406,6 +406,24 @@ std::unique_ptr<TImage> TGWindow::CreateImageFromWindow(Drawable_t wid)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create image from from pixmap.
+
+std::unique_ptr<TImage> TGWindow::CreateImageFromPixmap(Pixmap_t pxm, Pixmap_t mask)
+{
+   std::unique_ptr<TImage> img(TImage::Create());
+   if (!img) {
+      ::Error("TGWindow::CreateImageFromPixmap", "Fail to create TImage object");
+      return nullptr;
+   }
+
+   if (!TASUtils::FromPixmap(img.get(), pxm, mask))
+      return nullptr;
+
+   return img;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Returns image pixmap.
 /// The pixmap must deleted by user.
 /// Replacement for deprecated TImage::GetPixmap method

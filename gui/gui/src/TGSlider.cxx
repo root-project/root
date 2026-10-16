@@ -129,25 +129,21 @@ void TGSlider::CreateDisabledPicture()
 {
    if (!fSliderPic) return;
 
-   TImage *img = TImage::Create();
-   if (!img) return;
-   TImage *img2 = TImage::Create();
-   if (!img2) {
-      if (img) delete img;
+   std::unique_ptr<TImage> img2(TImage::Create());
+   if (!img2)
       return;
-   }
    TString back = gEnv->GetValue("Gui.BackgroundColor", "#c0c0c0");
    img2->FillRectangle(back.Data(), 0, 0, fSliderPic->GetWidth(),
                        fSliderPic->GetHeight());
-   img->SetImage(fSliderPic->GetPicture(), fSliderPic->GetMask());
-   Pixmap_t mask = GetImageMask(img);
-   img2->Merge(img, "overlay");
+   auto img = CreateImageFromPixmap(fSliderPic->GetPicture(), fSliderPic->GetMask());
+   if (!img)
+      return;
+   Pixmap_t mask = GetImageMask(img.get());
+   img2->Merge(img.get(), "overlay");
 
    TString name = "disbl_";
-   name += fSliderPic->GetName();
-   fDisabledPic = fClient->GetPicturePool()->GetPicture(name.Data(), GetImagePixmap(img2), mask);
-   delete img;
-   delete img2;
+   name.Append(fSliderPic->GetName());
+   fDisabledPic = fClient->GetPicturePool()->GetPicture(name.Data(), GetImagePixmap(img2.get()), mask);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
