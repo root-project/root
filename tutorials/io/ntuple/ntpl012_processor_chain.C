@@ -63,7 +63,6 @@ void Read(const std::vector<ROOT::RNTupleInputSpec> &ntuples)
    // The chain-based processor can be created by passing a list of RNTupleInputSpecs, describing the name and location
    // of each ntuple in the chain.
    auto processor = ROOT::RNTupleProcessor::CreateChain(ntuples);
-   int prevProcessorNumber{-1};
 
    // Access to the processor's fields is done by first requesting them through RNTupleProcessor::RequestField(). The
    // returned value can be used to read the current entry's value for that particular field.
