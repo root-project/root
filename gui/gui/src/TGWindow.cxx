@@ -37,6 +37,7 @@ ROOT GUI Window base class.
 #include "TError.h"
 #include "TSystem.h"
 #include "TImage.h"
+#include "TASUtils.h"
 
 
 Int_t TGWindow::fgCounter = 0;
@@ -387,7 +388,10 @@ std::unique_ptr<TImage> TGWindow::CreateImageFromWindow(Drawable_t wid)
    static Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
 
    if (x11) {
-      img->FromX11Window(wid, 0, 0, w, h);
+      if (!TASUtils::FromX11Window(img.get(), wid, 0, 0, w, h)) {
+         ::Error("TGWindow::CreateImageFromWindow", "Fail to create image from X11 window");
+        return nullptr;
+      }
    } else {
       unsigned char *bits = gVirtualX->GetColorBits(wid, 0, 0, w, h);
       if (!bits) {
@@ -415,7 +419,7 @@ Pixmap_t TGWindow::GetImagePixmap(TImage *img)
    static Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
 
    if (x11)
-      return img->GetX11Pixmap(gVirtualX->GetDefaultRootWindow());
+      return TASUtils::GetX11Pixmap(img);
 
    auto argb = img->GetArgbArray();
    if (!argb) {
