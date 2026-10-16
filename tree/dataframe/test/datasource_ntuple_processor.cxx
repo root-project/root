@@ -6,6 +6,8 @@
 #include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RPageStorage.hxx>
 
+#include <TFile.h>
+
 #include <ROOT/TestSupport.hxx>
 
 #include <gtest/gtest.h>
@@ -290,31 +292,39 @@ TEST_F(RNTupleProcessorDSTest, Chain)
    ChainTest(fNtplName, fFileName);
 }
 
-TEST(RNTupleProcessorDS, Join)
+class RNTupleProcessorDSAlignedJoinsTest : public ::testing::Test {
+protected:
+   std::vector<std::string> fFiles = {"RNTupleProcessorDSJoins1.root", "RNTupleProcessorDSJoins2.root"};
+
+   void SetUp() override
+   {
+      for (unsigned i = 0; i < fFiles.size(); i++) {
+         {
+            auto model = RNTupleModel::Create();
+            auto fldElectron = model->MakeField<Electron>("electrons");
+            auto writer = RNTupleWriter::Recreate(std::move(model), "primary", fFiles[i]);
+            for (unsigned n = 10 * i; n < (10 * i) + 10; ++n) {
+               fldElectron->pt = static_cast<float>(n);
+               writer->Fill();
+            }
+         }
+         {
+            auto file = std::unique_ptr<TFile>(TFile::Open(fFiles[i].c_str(), "UPDATE"));
+            auto model = RNTupleModel::Create();
+            auto fldJets = model->MakeField<std::vector<float>>("jets");
+            auto writer = RNTupleWriter::Append(std::move(model), "auxiliary", *file);
+            for (unsigned n = 10 * i; n < (10 * i) + 10; ++n) {
+               *fldJets = {static_cast<float>(n) * .1f, static_cast<float>(n) * .2f};
+               writer->Fill();
+            }
+         }
+      }
+   }
+};
+
+TEST_F(RNTupleProcessorDSAlignedJoinsTest, SingleJoin)
 {
-   FileRaii guardFile1("RNTupleProcessorDS_test_join_1.root");
-   FileRaii guardFile2("RNTupleProcessorDS_test_join_2.root");
-
-   {
-      auto model = RNTupleModel::Create();
-      auto fldElectron = model->MakeField<Electron>("electrons");
-      auto writer = RNTupleWriter::Recreate(std::move(model), "primary", guardFile1.GetPath());
-      for (unsigned i = 0; i < 10; ++i) {
-         fldElectron->pt = static_cast<float>(i);
-         writer->Fill();
-      }
-   }
-   {
-      auto model = RNTupleModel::Create();
-      auto fldJets = model->MakeField<std::vector<float>>("jets");
-      auto writer = RNTupleWriter::Recreate(std::move(model), "auxiliary", guardFile2.GetPath());
-      for (unsigned i = 0; i < 10; ++i) {
-         *fldJets = {static_cast<float>(i) * .1f, static_cast<float>(i) * .2f};
-         writer->Fill();
-      }
-   }
-
-   auto proc = CreateRNTupleJoinProcessor({"primary", guardFile1.GetPath()}, {"auxiliary", guardFile2.GetPath()}, {});
+   auto proc = CreateRNTupleJoinProcessor({"primary", fFiles[0]}, {"auxiliary", fFiles[0]}, {});
    auto df = ROOT::Experimental::RDF::FromRNTupleProcessor(std::move(proc));
 
    auto count = df.Count();
@@ -330,42 +340,102 @@ TEST(RNTupleProcessorDS, Join)
       },
       [](float a, float b) { return a + b; }, "auxiliary.jets");
    EXPECT_FLOAT_EQ(13.5, jetSum.GetValue());
+
+   auto nJetSum = df.Sum("auxiliary.R_rdf_sizeof_jets");
+   EXPECT_FLOAT_EQ(20, nJetSum.GetValue());
 }
 
-TEST(RNTupleProcessorDS, JoinUnaligned)
+TEST_F(RNTupleProcessorDSAlignedJoinsTest, ChainedJoin)
 {
-   FileRaii guardFile1("RNTupleProcessorDS_test_join_unaligned_1.root");
-   FileRaii guardFile2("RNTupleProcessorDS_test_join_unaligned_2.root");
+   std::vector<std::unique_ptr<RNTupleProcessor>> joins;
+   joins.emplace_back(CreateRNTupleJoinProcessor({"primary", fFiles[0]}, {"auxiliary", fFiles[0]}, {}));
+   joins.emplace_back(CreateRNTupleJoinProcessor({"primary", fFiles[1]}, {"auxiliary", fFiles[1]}, {}));
+   auto chain = RNTupleProcessor::CreateChain(std::move(joins));
+   auto df = ROOT::Experimental::RDF::FromRNTupleProcessor(std::move(chain));
 
+   auto count = df.Count();
+   EXPECT_EQ(20, count.GetValue());
+
+   auto electronFilterCount = df.Filter([](float pt) { return pt > 4.f; }, {"electrons.pt"}).Count();
+   EXPECT_EQ(15, electronFilterCount.GetValue());
+
+   auto jetSum = df.Aggregate(
+      [](float &acc, const ROOT::RVec<float> &jets) {
+         for (const auto &jet : jets)
+            acc += jet;
+      },
+      [](float a, float b) { return a + b; }, "auxiliary.jets");
+   EXPECT_FLOAT_EQ(57, jetSum.GetValue());
+
+   auto nJetSum = df.Sum("auxiliary.R_rdf_sizeof_jets");
+   EXPECT_FLOAT_EQ(40, nJetSum.GetValue());
+}
+
+TEST_F(RNTupleProcessorDSAlignedJoinsTest, JoinedChain)
+{
+   auto chain_primary = RNTupleProcessor::CreateChain({{"primary", fFiles[0]}, {"primary", fFiles[1]}});
+   auto chain_auxiliary = RNTupleProcessor::CreateChain({{"auxiliary", fFiles[0]}, {"auxiliary", fFiles[1]}});
+   auto join = CreateRNTupleJoinProcessor(std::move(chain_primary), std::move(chain_auxiliary), {});
+   auto df = ROOT::Experimental::RDF::FromRNTupleProcessor(std::move(join));
+
+   auto count = df.Count();
+   EXPECT_EQ(20, count.GetValue());
+
+   auto electronFilterCount = df.Filter([](float pt) { return pt > 4.f; }, {"electrons.pt"}).Count();
+   EXPECT_EQ(15, electronFilterCount.GetValue());
+
+   auto jetSum = df.Aggregate(
+      [](float &acc, const ROOT::RVec<float> &jets) {
+         for (const auto &jet : jets)
+            acc += jet;
+      },
+      [](float a, float b) { return a + b; }, "auxiliary.jets");
+   EXPECT_FLOAT_EQ(57, jetSum.GetValue());
+
+   auto nJetSum = df.Sum("auxiliary.R_rdf_sizeof_jets");
+   EXPECT_FLOAT_EQ(40, nJetSum.GetValue());
+}
+
+class RNTupleProcessorDSUnalignedJoinsTest : public ::testing::Test {
+protected:
+   std::vector<std::string> fFiles = {"RNTupleProcessorDSJoins1.root", "RNTupleProcessorDSJoins2.root"};
+
+   void SetUp() override
    {
-      auto model = RNTupleModel::Create();
-      auto fldId = model->MakeField<std::uint32_t>("idx");
-      auto fldElectron = model->MakeField<Electron>("electrons");
-      auto writer = RNTupleWriter::Recreate(std::move(model), "primary", guardFile1.GetPath());
-      for (unsigned i = 0; i < 10; ++i) {
-         // only fill odd events
-         if (i % 2 == 0)
-            continue;
-         *fldId = i;
-         fldElectron->pt = static_cast<float>(i);
-         writer->Fill();
+      for (unsigned i = 0; i < fFiles.size(); i++) {
+         {
+            auto model = RNTupleModel::Create();
+            auto fldIdx = model->MakeField<int>("idx");
+            auto fldElectron = model->MakeField<Electron>("electrons");
+            auto writer = RNTupleWriter::Recreate(std::move(model), "primary", fFiles[i]);
+            for (unsigned n = 10 * i; n < (10 * i) + 10; ++n) {
+               // only fill odd events
+               if (n % 2 == 0)
+                  continue;
+               *fldIdx = n;
+               fldElectron->pt = static_cast<float>(n);
+               writer->Fill();
+            }
+         }
+         {
+            auto file = std::unique_ptr<TFile>(TFile::Open(fFiles[i].c_str(), "UPDATE"));
+            auto model = RNTupleModel::Create();
+            auto fldIdx = model->MakeField<int>("idx");
+            auto fldJets = model->MakeField<std::vector<float>>("jets");
+            auto writer = RNTupleWriter::Append(std::move(model), "auxiliary", *file);
+            for (unsigned n = 10 * i; n < (10 * i) + 10; ++n) {
+               *fldIdx = n;
+               *fldJets = {static_cast<float>(n) * .1f, static_cast<float>(n) * .2f};
+               writer->Fill();
+            }
+         }
       }
    }
-   {
-      auto model = RNTupleModel::Create();
-      auto fldId = model->MakeField<std::uint32_t>("idx");
-      auto fldJets = model->MakeField<std::vector<float>>("jets");
-      auto writer = RNTupleWriter::Recreate(std::move(model), "auxiliary", guardFile2.GetPath());
-      // fill in reverse
-      for (int i = 9; i >= 0; --i) {
-         *fldId = i;
-         *fldJets = {static_cast<float>(i) * .1f, static_cast<float>(i) * .2f};
-         writer->Fill();
-      }
-   }
+};
 
-   auto proc =
-      CreateRNTupleJoinProcessor({"primary", guardFile1.GetPath()}, {"auxiliary", guardFile2.GetPath()}, {"idx"});
+TEST_F(RNTupleProcessorDSUnalignedJoinsTest, SingleJoin)
+{
+   auto proc = CreateRNTupleJoinProcessor({"primary", fFiles[0]}, {"auxiliary", fFiles[0]}, {"idx"});
    auto df = ROOT::Experimental::RDF::FromRNTupleProcessor(std::move(proc));
 
    auto count = df.Count();
@@ -381,6 +451,60 @@ TEST(RNTupleProcessorDS, JoinUnaligned)
       },
       [](float a, float b) { return a + b; }, "auxiliary.jets");
    EXPECT_FLOAT_EQ(7.5, jetSum.GetValue());
+
+   auto nJetSum = df.Sum("auxiliary.R_rdf_sizeof_jets");
+   EXPECT_FLOAT_EQ(10, nJetSum.GetValue());
+}
+
+TEST_F(RNTupleProcessorDSUnalignedJoinsTest, ChainedJoin)
+{
+   std::vector<std::unique_ptr<RNTupleProcessor>> joins;
+   joins.emplace_back(CreateRNTupleJoinProcessor({"primary", fFiles[0]}, {"auxiliary", fFiles[0]}, {"idx"}));
+   joins.emplace_back(CreateRNTupleJoinProcessor({"primary", fFiles[1]}, {"auxiliary", fFiles[1]}, {"idx"}));
+   auto chain = RNTupleProcessor::CreateChain(std::move(joins));
+   auto df = ROOT::Experimental::RDF::FromRNTupleProcessor(std::move(chain));
+
+   auto count = df.Count();
+   EXPECT_EQ(10, count.GetValue());
+
+   auto electronFilterCount = df.Filter([](float pt) { return pt > 4.f; }, {"electrons.pt"}).Count();
+   EXPECT_EQ(8, electronFilterCount.GetValue());
+
+   auto jetSum = df.Aggregate(
+      [](float &acc, const ROOT::RVec<float> &jets) {
+         for (const auto &jet : jets)
+            acc += jet;
+      },
+      [](float a, float b) { return a + b; }, "auxiliary.jets");
+   EXPECT_FLOAT_EQ(30, jetSum.GetValue());
+
+   auto nJetSum = df.Sum("auxiliary.R_rdf_sizeof_jets");
+   EXPECT_FLOAT_EQ(20, nJetSum.GetValue());
+}
+
+TEST_F(RNTupleProcessorDSUnalignedJoinsTest, JoinedChain)
+{
+   auto chain_primary = RNTupleProcessor::CreateChain({{"primary", fFiles[0]}, {"primary", fFiles[1]}});
+   auto chain_auxiliary = RNTupleProcessor::CreateChain({{"auxiliary", fFiles[0]}, {"auxiliary", fFiles[1]}});
+   auto join = CreateRNTupleJoinProcessor(std::move(chain_primary), std::move(chain_auxiliary), {"idx"});
+   auto df = ROOT::Experimental::RDF::FromRNTupleProcessor(std::move(join));
+
+   auto count = df.Count();
+   EXPECT_EQ(10, count.GetValue());
+
+   auto electronFilterCount = df.Filter([](float pt) { return pt > 4.f; }, {"electrons.pt"}).Count();
+   EXPECT_EQ(8, electronFilterCount.GetValue());
+
+   auto jetSum = df.Aggregate(
+      [](float &acc, const ROOT::RVec<float> &jets) {
+         for (const auto &jet : jets)
+            acc += jet;
+      },
+      [](float a, float b) { return a + b; }, "auxiliary.jets");
+   EXPECT_FLOAT_EQ(30, jetSum.GetValue());
+
+   auto nJetSum = df.Sum("auxiliary.R_rdf_sizeof_jets");
+   EXPECT_FLOAT_EQ(20, nJetSum.GetValue());
 }
 
 #ifdef R__USE_IMT
