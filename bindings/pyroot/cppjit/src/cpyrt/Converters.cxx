@@ -2530,7 +2530,23 @@ bool cpyrt::InstanceMoveConverter::SetArg(PyObject* pyobject, Parameter& para,
   // convert <pyobject> to C++ instance&&, set arg for call
   CPPInstance* pyobj =
       GetCppInstance(pyobject, fClass, true /* accept_rvalue */);
-  if (!pyobj || (pyobj->fFlags & CPPInstance::kIsLValue)) {
+  // An object of a class other than fClass (or one derived from it) binds
+  // through a temporary of fClass converted from it, as in C++.
+  // 
+  // Example:
+  // struct Axis {};
+  // struct Variant { Variant(const Axis& a); };
+  // void take(Variant&&);
+  //
+  // Python
+  // a = gbl.Axis()
+  // gbl.take(a) # fine, as `a` is converted to temporary Variant
+  bool other_class = false;
+  if (pyobj && !pyobj->IsSmart()) {
+    interop::TCppScope_t cls = pyobj->ObjectIsA();
+    other_class = !(cls && interop::IsSubclass(cls, fClass));
+  }
+  if (!pyobj || (pyobj->fFlags & CPPInstance::kIsLValue) || other_class) {
     // implicit conversion is fine as the temporary by definition is moveable
     return (bool)ConvertImplicit(fClass, pyobject, para, ctxt);
   }

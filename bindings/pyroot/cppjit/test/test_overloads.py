@@ -563,3 +563,22 @@ class TestOVERLOADS:
         assert t.Branch.__overload__("double")(1.0) == 4
         with raises(LookupError):
             t.Branch.__overload__("double, double, double, double")
+
+    def test22_rvalue_reference_from_other_class(self):
+        """An object of another class binds to T&& through a temporary"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace RvalueFromOther {
+          struct Axis { int n = 3; };
+          struct Variant { Variant(const Axis& a) : n(a.n) {} int n; };
+          int take(Variant&& v) { return v.n; }
+        }""")
+
+        ns = cppjit.gbl.RvalueFromOther
+        a = ns.Axis()
+        assert ns.take(a) == 3
+        v = cppjit.gbl.std.vector[ns.Variant]()
+        v.push_back(a)
+        assert len(v) == 1 and v[0].n == 3
