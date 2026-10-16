@@ -224,8 +224,8 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
    fColumnNames.emplace_back(canonicalName);
    fColumnTypes.emplace_back(valueField->GetTypeName());
 
-   // Add nested fields explicitly to the entry, because they may be mapped differently.
-   if (fieldInfos.size() > 1) {
+   auto optFieldIdx = fProcessor->GetEntry().FindFieldIndex(canonicalName);
+   if (!optFieldIdx || fProcessor->GetEntry().GetField(*optFieldIdx).GetTypeName() != field.GetTypeName()) {
       fProcessor->AddFieldToEntry(std::move(valueField), canonicalName, nullptr,
                                   Internal::RNTupleProcessorProvenance());
    }
