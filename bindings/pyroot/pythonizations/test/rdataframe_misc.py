@@ -96,6 +96,16 @@ class RDataFrameMisc(unittest.TestCase):
         finally:
             os.remove(filename)
 
+    def test_rungraphs_with_list(self):
+        """
+        RunGraphs accepts a Python list of result pointers
+        """
+        rdf = ROOT.RDataFrame(10).Define("x", "1.")
+        h = rdf.Histo1D("x")
+        s = rdf.Sum("x")
+        self.assertEqual(ROOT.RDF.RunGraphs([h, s]), 1)
+        self.assertEqual(s.GetValue(), 10.0)
+
     def _test_rdf_in_function(self, chain):
         rdf = ROOT.RDataFrame(chain)
         meanx = rdf.Mean("x")

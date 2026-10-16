@@ -31,6 +31,24 @@ def _create_distributed_module(parent, experimental: bool = False):
     return ROOT._distrdf.create_distributed_module(parent, experimental)
 
 
+def _to_result_handles(handles):
+    """
+    Convert a Python sequence of result pointers to the
+    std::vector<RResultHandle> taken by RunGraphs. The overload resolution
+    doesn't treat a Python list like a C++ braced-init-list, so it doesn't
+    convert the elements to RResultHandle by itself.
+    """
+    import ROOT
+
+    if not isinstance(handles, (list, tuple)):
+        return handles
+    vec = ROOT.std.vector["ROOT::RDF::RResultHandle"]()
+    vec.reserve(len(handles))
+    for handle in handles:
+        vec.push_back(ROOT.RDF.RResultHandle(handle))
+    return vec
+
+
 def _rungraphs(distrdf_rungraphs, rdf_rungraphs):
     """
     Create a callable that correctly dispatches either to the local or
@@ -43,7 +61,7 @@ def _rungraphs(distrdf_rungraphs, rdf_rungraphs):
         if len(handles) > 0 and "_distrdf" in str(type(handles[0])):
             return distrdf_rungraphs(handles)
         else:
-            return rdf_rungraphs(handles)
+            return rdf_rungraphs(_to_result_handles(handles))
 
     return rungraphs
 
