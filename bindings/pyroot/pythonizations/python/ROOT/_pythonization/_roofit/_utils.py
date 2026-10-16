@@ -53,6 +53,24 @@ def _kwargs_to_roocmdargs(*args, **kwargs):
     return args, {}
 
 
+def _roo_collection_elements(seq):
+    """Helper function to prepare the elements of a Python sequence for the
+    variadic constructors of RooArgList and RooArgSet.
+
+    Numbers are replaced by RooFit::RooConst(), which is what the C++
+    collections do for doubles. This is needed because the constructor taking
+    a double first is explicit and therefore not usable in implicit
+    conversions, e.g. of a list of coefficients to a `const RooArgList&`.
+    """
+    import numbers
+
+    import ROOT
+
+    return tuple(
+        ROOT.RooFit.RooConst(float(e)) if isinstance(e, numbers.Real) and not isinstance(e, bool) else e for e in seq
+    )
+
+
 def _pack_cmd_args(*args, **kwargs):
     # Pack command arguments passed into a RooLinkedList.
 

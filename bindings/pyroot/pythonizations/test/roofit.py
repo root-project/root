@@ -291,6 +291,22 @@ class TestRooArgList(unittest.TestCase):
         l3 = ROOT.RooArgList([1.0, 2.0, 2.0])
         self.assertEqual(len(l3), 3)
 
+    def test_implicit_conversion_from_python_collection(self):
+        # Lists of RooFit objects or of numbers passed where a RooFit
+        # collection is expected.
+        x = ROOT.RooRealVar("x", "x", 0.0, 10.0)
+        a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0.0, 1.0)
+        frac = ROOT.RooRealVar("frac", "frac", 0.5, 0.0, 1.0)
+
+        poly = ROOT.RooPolynomial("poly", "poly", x, [-0.1, 0.004])
+        self.assertEqual(len(poly.coefList()), 2)
+
+        cheb = ROOT.RooChebychev("cheb", "cheb", x, [a0])
+        model = ROOT.RooAddPdf("model", "model", [poly, cheb], [frac])
+        self.assertEqual(len(model.pdfList()), 2)
+
+        self.assertEqual(len(ROOT.RooArgSet([x, a0])), 2)
+
 
 # Necessary inside the "eval" call
 RooArgSet = ROOT.RooArgSet

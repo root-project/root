@@ -14,6 +14,7 @@ import operator
 import warnings
 
 from ._rooabscollection import RooAbsCollection
+from ._utils import _roo_collection_elements
 
 
 class RooArgSet(RooAbsCollection):
@@ -21,7 +22,7 @@ class RooArgSet(RooAbsCollection):
 
     def __init__(self, *args, **kwargs):
         """Pythonization of RooArgSet constructor to support implicit
-        conversion from Python sets.
+        conversion from Python sets, lists and tuples.
         """
         # Note: This simple Pythonization caused me days of headache.
         # Initially, I was also checking of `len(kwargs) == 0`, but it just
@@ -41,6 +42,10 @@ class RooArgSet(RooAbsCollection):
                 stacklevel=2,
             )
             self._init(*args[0], **kwargs)
+            return
+        # Same for lists and tuples, see the RooArgList pythonization.
+        if len(args) >= 1 and isinstance(args[0], (list, tuple)):
+            self._init(*_roo_collection_elements(args[0]), *args[1:], **kwargs)
             return
         self._init(*args, **kwargs)
 
