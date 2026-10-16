@@ -40,7 +40,7 @@ def _kwargs_to_roocmdargs(*args, **kwargs):
             # function. If this doesn't succeed, the tuple, list, or dict,
             # will be passed directly to the function as it's only argument.
             if isinstance(v, (tuple, list, set)):
-                return func(*v)
+                return func(*_sequences_to_roo_collections(v))
             elif isinstance(v, (dict,)):
                 return func(**v)
         except Exception:

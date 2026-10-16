@@ -317,6 +317,18 @@ class TestRooArgList(unittest.TestCase):
         model = ROOT.RooAddPdf("model", "model", [g1, g2], [frac], True)
         self.assertEqual(len(model.pdfList()), 2)
 
+    def test_python_collection_in_keyword_argument(self):
+        # The tuple given as a keyword argument is unpacked into the arguments
+        # of the RooCmdArg function, which can include a list of RooFit objects.
+        x = ROOT.RooRealVar("x", "x", 0.0, 10.0)
+        mean = ROOT.RooRealVar("mean", "mean", 5.0, 0.0, 10.0)
+        gauss = ROOT.RooGaussian("gauss", "gauss", x, mean, ROOT.RooFit.RooConst(1.0))
+        data = gauss.generate([x], 100)
+        res = gauss.fitTo(data, Save=True, PrintLevel=-1)
+        frame = x.frame()
+        gauss.plotOn(frame, VisualizeError=(res, [mean], 1))
+        self.assertEqual(frame.numItems(), 1)
+
     def test_python_collection_in_pythonized_function(self):
         # RooAbsPdf::generate() has several overloads taking a RooArgSet and a
         # second argument, so the list needs to be converted up-front.
