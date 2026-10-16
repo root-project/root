@@ -20,6 +20,7 @@ endif()
 if(asimage)
   add_subdirectory(asimage)     # special CMakeLists.txt
 endif()
+add_subdirectory(padpainter)
 if(gviz)
   add_subdirectory(gviz)
 endif()

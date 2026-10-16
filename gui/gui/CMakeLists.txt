@@ -205,6 +205,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gui
     Graf
     MathCore
     ASImageUtils
+    ROOTPadPainter
     ROOTNTupleBrowse
 )
 
