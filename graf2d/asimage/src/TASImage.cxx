@@ -2247,6 +2247,7 @@ Pixmap_t TASImage::GetMask()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// DEPRECATED. Method left for backward compatibility and will be removed in ROOT7!
 /// Create image from pixmap.
 
 void TASImage::SetImage(Pixmap_t pxm, Pixmap_t mask)
@@ -2263,10 +2264,10 @@ void TASImage::SetImage(Pixmap_t pxm, Pixmap_t mask)
    UInt_t w, h;
    gVirtualX->GetWindowSize(pxm, xy, xy, w, h);
 
-   if (fName.IsNull()) fName.Form("img_%dx%d",w, h);
+   if (fName.IsNull())
+      fName.Form("img_%dx%d",w, h);
 
-   static int x11 = -1;
-   if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
+   static Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
 
    if (x11) { //use built-in optimized version
       fImage = picture2asimage(fgVisual, pxm, mask, 0, 0, w, h, kAllPlanes, 1, 0);
@@ -6297,6 +6298,7 @@ void TASImage::Gray(Bool_t on)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// DEPRECATED. Method left for backward compatibility and will be removed in ROOT7!
 /// Create an image (screenshot) from specified window.
 
 void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
@@ -6348,6 +6350,7 @@ void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// DEPRECATED. Method left for backward compatibility and will be removed in ROOT7!
 /// Creates an image (screenshot) from a RGBA buffer provided by GL.
 
 void TASImage::FromGLBuffer(UChar_t* buf, UInt_t w, UInt_t h)
