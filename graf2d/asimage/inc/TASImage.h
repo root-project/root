@@ -29,10 +29,12 @@ class TBrowser;
 class THashTable;
 class TTFhandle;
 class TASPaletteEditor;
+class TASUtils;
 
 class TASImage : public TImage {
 
 friend class TASPaletteEditor; // to access FromGradient method
+friend class TASUtils; // to implement gVirtualX-specific methods
 
 private:
    enum { kNoZoom = 0, kZoom = 1, kZoomOps = -1 };
