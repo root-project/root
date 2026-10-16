@@ -9,7 +9,8 @@
 # ACLiC into the test working directory (the suite's own Makefile is disabled
 # via CPPJIT_TEST_SKIP_MAKE).
 
-set(pythonpaths ${localruntimedir} $ENV{PYTHONPATH})
+# The test directory is on the path for the root_ci_diagnostics pytest plugin.
+set(pythonpaths ${localruntimedir} ${CMAKE_CURRENT_SOURCE_DIR} $ENV{PYTHONPATH})
 cmake_path(CONVERT "${pythonpaths}" TO_NATIVE_PATH_LIST pythonpaths_native)
 
 set(common_env PYTHONPATH=${pythonpaths_native} CPPJIT_TEST_SKIP_MAKE=1)
@@ -35,11 +36,21 @@ elseif(MSVC)
     -e "gSystem->AddLinkedLibs(\"${Python3_LIBRARIES}\")")
 endif()
 
+# CRASH_DIAGNOSTICS loads root_ci_diagnostics.py (next to this file) as a
+# pytest plugin and runs the test under Python's debug allocator hooks, to get
+# an actionable report out of a crash that only happens in CI. See the plugin's
+# docstring for what it does and why.
 function(CPPJIT_ADD_PYTEST name)
   cmake_parse_arguments(ARG
-    "DROP_ROOTMAP" "SUFFIX" "DICTS;FIXTURES_SETUP;FIXTURES_REQUIRED" ${ARGN})
+    "DROP_ROOTMAP;CRASH_DIAGNOSTICS" "SUFFIX" "DICTS;FIXTURES_SETUP;FIXTURES_REQUIRED" ${ARGN})
 
   set(extra)
+  set(env ${common_env})
+  set(pytest_args)
+  if(ARG_CRASH_DIAGNOSTICS)
+    list(APPEND pytest_args -p root_ci_diagnostics)
+    list(APPEND env PYTHONMALLOC=debug)
+  endif()
   if(ARG_DICTS)
     set(copy_files)
     set(precmd_args)
@@ -67,10 +78,10 @@ function(CPPJIT_ADD_PYTEST name)
     # patches fix many of them on the ROOT stack, so an xpass must not fail
     # the suite (pyproject.toml sets xfail_strict=true for upstream CI).
     COMMAND ${Python3_EXECUTABLE} -B -m pytest -v -p no:cacheprovider
-            -o xfail_strict=false
+            -o xfail_strict=false ${pytest_args}
             ${CMAKE_CURRENT_SOURCE_DIR}/${name}.py
     WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
-    ENVIRONMENT ${common_env}
+    ENVIRONMENT ${env}
     LABELS python
     PYTHON_DEPS pytest
     ${extra})
@@ -113,13 +124,15 @@ CPPJIT_ADD_PYTEST(test_aclassloader
   FIXTURES_REQUIRED cppjit_example01_dict_fixture)
 CPPJIT_ADD_PYTEST(test_basic_api
   FIXTURES_REQUIRED cppjit_example01_dict_fixture)
-CPPJIT_ADD_PYTEST(test_datatypes
+# Sporadic crash in the garbage collector during test26_function_pointers on
+# the mac-beta ARM64 CI runner; collect diagnostics until it is understood.
+CPPJIT_ADD_PYTEST(test_datatypes CRASH_DIAGNOSTICS
   FIXTURES_REQUIRED cppjit_datatypes_dict_fixture)
 # TEMP: 300 more copies of test_datatypes, run by ctest in parallel in this
 # directory like the real suite does, to measure its sporadic crash on the
 # mac-beta CI runner (about 3% of runs).
 foreach(i RANGE 1 300)
-  CPPJIT_ADD_PYTEST(test_datatypes SUFFIX -rep${i}
+  CPPJIT_ADD_PYTEST(test_datatypes CRASH_DIAGNOSTICS SUFFIX -rep${i}
     FIXTURES_REQUIRED cppjit_datatypes_dict_fixture)
 endforeach()
 
