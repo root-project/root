@@ -339,11 +339,17 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect(
          const auto &currField = fEntry->GetValue(fieldIdx).GetField();
 
          auto onDiskId = desc.FindFieldId(currField.GetQualifiedFieldName());
+         bool needsClone = onDiskId != ROOT::kInvalidDescriptorId &&
+                           currField.GetTypeName() == desc.GetFieldDescriptor(onDiskId).GetTypeName();
+         if (const auto fieldOriginIdx = fEntry->GetFieldOriginIdx(fieldIdx);
+             fieldOriginIdx != ROOT::kInvalidDescriptorId) {
+            const auto &originField = fEntry->GetField(fieldOriginIdx);
+            onDiskId = desc.FindFieldId(originField.GetQualifiedFieldName());
+            needsClone = true;
+         }
 
          std::unique_ptr<ROOT::RFieldBase> newField;
-
-         if (onDiskId != ROOT::kInvalidDescriptorId &&
-             currField.GetTypeName() == desc.GetFieldDescriptor(onDiskId).GetTypeName()) {
+         if (needsClone) {
             // We have enough information to clone the existing field.
             newField = currField.Clone(currField.GetFieldName());
             // The clone's column representatives (+ its subfields') need to be reset before it can be connected to the
