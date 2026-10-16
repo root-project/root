@@ -49,7 +49,7 @@ RNTupleProcessorDS::~RNTupleProcessorDS() = default;
 
 // TODO: see if common parts of this and RNTupleDS::AddField can be factored out.
 void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_view colName,
-                                  Internal::RNTupleProcessorProvenance procProvenance,
+                                  ROOT::Internal::RNTupleProcessorProvenance procProvenance,
                                   std::deque<RNTupleProcessorDS::RFieldInfo> &fieldInfos, bool convertToRVec)
 {
    // As an example for the mapping of RNTuple fields to RDF columns, let's consider an RNTuple
@@ -215,13 +215,13 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
    fColumnNames.emplace_back(canonicalName);
    fColumnTypes.emplace_back(valueField->GetTypeName());
 
-   RNTupleProcessorEntry::FieldIndex_t fieldIdx;
+   ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fieldIdx;
    if (auto optFieldIdx = fProcessor->GetEntry().FindFieldIndex(canonicalName);
        optFieldIdx && fProcessor->GetEntry().GetField(*optFieldIdx).GetTypeName() == field.GetTypeName()) {
       fieldIdx = *optFieldIdx;
    } else {
       fieldIdx = fProcessor->AddFieldToEntry(std::move(valueField), canonicalName, nullptr,
-                                             Internal::RNTupleProcessorProvenance());
+                                             ROOT::Internal::RNTupleProcessorProvenance());
    }
 
    if (cardinalityField) {
@@ -231,7 +231,7 @@ void RNTupleProcessorDS::AddField(const ROOT::RFieldBase &field, std::string_vie
       fColumnNames.emplace_back(cardinalityFieldName);
       fColumnTypes.emplace_back(cardinalityField->GetTypeName());
       auto cardinalityFieldIdx = fProcessor->AddFieldToEntry(std::move(cardinalityField), cardinalityFieldName, nullptr,
-                                                             Internal::RNTupleProcessorProvenance());
+                                                             ROOT::Internal::RNTupleProcessorProvenance());
       if (!fieldInfos.empty()) {
          const auto &fieldInfo = fieldInfos.back();
          fieldIdx = fieldInfo.fEntryFieldIdx;
@@ -248,7 +248,7 @@ RNTupleProcessorDS::RNTupleProcessorDS(std::unique_ptr<ROOT::Experimental::RNTup
    : fProcessor(std::move(processor))
 {
    // Do not add the subfields now, this is handled by AddField.
-   fProcessor->AddAllFieldsToEntry(Internal::RNTupleProcessorProvenance(), /*includeSubfields=*/false);
+   fProcessor->AddAllFieldsToEntry(ROOT::Internal::RNTupleProcessorProvenance(), /*includeSubfields=*/false);
    const auto &entry = fProcessor->GetEntry();
    for (auto fieldIdx : entry.GetFieldIndices()) {
       const auto &field = entry.GetValue(fieldIdx).GetField();
@@ -337,7 +337,7 @@ RNTupleProcessorDS::GetColumnReaders(unsigned int /* slot */, std::string_view n
    newField->SetOnDiskId(field.GetOnDiskId());
 
    try {
-      fProcessor->AddFieldToEntry(std::move(newField), strName, nullptr, Internal::RNTupleProcessorProvenance());
+      fProcessor->AddFieldToEntry(std::move(newField), strName, nullptr, ROOT::Internal::RNTupleProcessorProvenance());
    } catch (const ROOT::RException &) {
       std::string msg = "RNTupleProcessorDS: invalid type \"" + requestedType + "\" for column \"" + strName +
                         "\" with on-disk type \"" + field.GetTypeName() + "\"";
@@ -391,7 +391,7 @@ bool RNTupleProcessorDS::HasColumn(std::string_view colName) const
 void RNTupleProcessorDS::Initialize()
 {
    fCurrentRanges.clear();
-   fProcessor->Connect(fProcessor->GetEntry().GetFieldIndices(), Internal::RNTupleProcessorProvenance(),
+   fProcessor->Connect(fProcessor->GetEntry().GetFieldIndices(), ROOT::Internal::RNTupleProcessorProvenance(),
                        /*updateFields=*/false);
 }
 
