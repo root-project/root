@@ -148,6 +148,20 @@ class TLegendAddEntry(unittest.TestCase):
         self.assertEqual(entry.GetLabel(), "histogram")
         self.assertEqual(entry.GetObject(), h)
 
+class TColorGetColor(unittest.TestCase):
+    """
+    Test the pythonization of TColor::GetColor
+    """
+
+    def test_float_and_int_components(self):
+        c_float = ROOT.TColor.GetColor(1.0, 0.25, 0.0)
+        color = ROOT.gROOT.GetColor(c_float)
+        self.assertAlmostEqual(color.GetGreen(), 0.25, places=2)
+        self.assertEqual(ROOT.TColor.GetColor(1.0, 0.25, 0.0, 1.0), c_float)
+
+        c_int = ROOT.TColor.GetColor(255, 128, 0)
+        self.assertEqual(ROOT.TColor.GetColor("#ff8000"), c_int)
+
 class TestTComplexOperators(unittest.TestCase):
     """
     Test for the operators of TComplex:
