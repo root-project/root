@@ -30,36 +30,37 @@
 #include "afterimage.h"
 #include "bmp.h"
 
+#ifndef X_DISPLAY_MISSING
 const unsigned long kAllPlanes = ~0;
+#endif
 
 // Holder of ASVisual instance, destroyed when application closed
 class ASVisualHolder {
-    ASVisual *fVisual = nullptr;
-    public:
+   ASVisual *fVisual = nullptr;
 
-    ASVisual *operator()()
-    {
-        if (!fVisual) {
-#ifndef WIN32
-#ifndef R__HAS_COCOA
-           Display *disp = (Display*) gVirtualX->GetDisplay();
-           Int_t screen  = gVirtualX->GetScreen();
-           Int_t depth   = gVirtualX->GetDepth();
-           Visual *vis   = (Visual*) gVirtualX->GetVisual();
-           Colormap cmap = (Colormap) gVirtualX->GetColormap();
+public:
 
-           if (vis && cmap)
-              fVisual = create_asvisual_for_id(disp, screen, depth, XVisualIDFromVisual(vis), cmap, nullptr);
+   ASVisual *operator()()
+   {
+#ifndef X_DISPLAY_MISSING
+      if (!fVisual) {
+         Display *disp = (Display*) gVirtualX->GetDisplay();
+         Int_t screen  = gVirtualX->GetScreen();
+         Int_t depth   = gVirtualX->GetDepth();
+         Visual *vis   = (Visual*) gVirtualX->GetVisual();
+         Colormap cmap = (Colormap) gVirtualX->GetColormap();
+
+         if (vis && cmap)
+            fVisual = create_asvisual_for_id(disp, screen, depth, XVisualIDFromVisual(vis), cmap, nullptr);
+      }
 #endif
-#endif
-           if (!fVisual) {
-              fVisual = create_asvisual(nullptr, 0, 0, nullptr);
-              fVisual->dpy = nullptr; // fake (not used)
-            }
-        }
+      if (!fVisual) {
+         fVisual = create_asvisual(nullptr, 0, 0, nullptr);
+         fVisual->dpy = nullptr; // fake (not used)
+      }
 
-        return fVisual;
-    }
+      return fVisual;
+   }
 
    ~ASVisualHolder()
    {
@@ -123,4 +124,48 @@ Bool_t TASUtils::FromX11Window(TImage *timg, Window_t win, Int_t x, Int_t y, Int
    asimg->fImage = pixmap2asimage(vis, win, x, y, width, height, kAllPlanes, 0, 0);
 
    return asimg->fImage != nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set image data from pixmap.
+
+std::unique_ptr<TImage> TASUtils::FromPixmap(Pixmap_t pxm, Pixmap_t mask)
+{
+   auto asimg = std::make_unique<TASImage>();
+
+   Int_t xy;
+   UInt_t w, h;
+   gVirtualX->GetWindowSize(pxm, xy, xy, w, h);
+
+   asimg->SetName(TString::Format("img_%dx%d",w, h));
+
+   if (gVirtualX->InheritsFrom("TGX11")) { //use built-in optimized version
+      auto vis = holder();
+
+      if (!vis) {
+         ::Warning("TASUtils::FromPixmap", "Visual not initiated");
+         return nullptr;
+      }
+
+#ifndef X_DISPLAY_MISSING
+      asimg->fImage = picture2asimage(vis, pxm, mask, 0, 0, w, h, kAllPlanes, 1, 0);
+#endif
+   } else {
+      unsigned char *bits = gVirtualX->GetColorBits(pxm, 0, 0, w, h);
+      if (!bits)    // error
+         return nullptr;
+
+      unsigned char *mask_bits = mask ? gVirtualX->GetColorBits(mask, 0, 0, w, h) : nullptr;
+
+      asimg->fImage = bitmap2asimage(bits, w, h, 0, mask_bits);
+
+      if (mask_bits)
+         delete [] mask_bits;
+      delete [] bits;
+   }
+
+   if (!asimg->IsValid())
+      return nullptr;
+
+   return asimg;
 }

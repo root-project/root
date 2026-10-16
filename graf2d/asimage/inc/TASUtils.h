@@ -22,13 +22,15 @@
 
 #include "Rtypes.h"
 #include "GuiTypes.h"
+#include <memory>
 
 class TImage;
 
 class TASUtils {
 public:
-   static Pixmap_t GetX11Pixmap(TImage *img);
-   static Bool_t FromX11Window(TImage *timg, Window_t win, Int_t x, Int_t y, Int_t width, Int_t height);
+   static Pixmap_t GetX11Pixmap(TImage *timg);
+   static Bool_t   FromX11Window(TImage *timg, Window_t win, Int_t x, Int_t y, Int_t width, Int_t height);
+   static std::unique_ptr<TImage> FromPixmap(Pixmap_t pxm, Pixmap_t mask);
 };
 
 #endif
