@@ -813,15 +813,21 @@ template <typename Word_t>
 static void BitsetAppendImpl(const void *from, size_t nBits, ROOT::Internal::RColumn &column)
 {
    constexpr auto kBitsPerWord = sizeof(Word_t) * 8;
+   // Process bits in stack-buffered chunks using AppendV to reduce per-element call overhead.
+   constexpr std::size_t kChunkSize = 256;
+   bool buffer[kChunkSize];
 
    const auto *asWordArray = static_cast<const Word_t *>(from);
-   bool elementValue;
-   std::size_t i = 0;
-   for (std::size_t word = 0; word < (nBits + kBitsPerWord - 1) / kBitsPerWord; ++word) {
-      for (std::size_t mask = 0; (mask < kBitsPerWord) && (i < nBits); ++mask, ++i) {
-         elementValue = (asWordArray[word] & (static_cast<Word_t>(1) << mask)) != 0;
-         column.Append(&elementValue);
+   std::size_t bitIdx = 0;
+   while (bitIdx < nBits) {
+      const std::size_t nBatch = std::min(kChunkSize, nBits - bitIdx);
+      for (std::size_t b = 0; b < nBatch; ++b) {
+         const std::size_t currentBit = bitIdx + b;
+         buffer[b] =
+            (asWordArray[currentBit / kBitsPerWord] & (static_cast<Word_t>(1) << (currentBit % kBitsPerWord))) != 0;
       }
+      column.AppendV(buffer, nBatch);
+      bitIdx += nBatch;
    }
 }
 
@@ -836,14 +842,22 @@ static void
 BitsetReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to, size_t nBits, ROOT::Internal::RColumn &column)
 {
    constexpr auto kBitsPerWord = sizeof(Word_t) * 8;
+   // Read column values into a local buffer in chunks via ReadV, then unpack them into bitset words.
+   constexpr std::size_t kChunkSize = 256;
+   bool buffer[kChunkSize];
 
    auto *asWordArray = static_cast<Word_t *>(to);
-   bool elementValue;
-   for (std::size_t i = 0; i < nBits; ++i) {
-      column.Read(globalIndex * nBits + i, &elementValue);
-      Word_t mask = static_cast<Word_t>(1) << (i % kBitsPerWord);
-      Word_t bit = static_cast<Word_t>(elementValue) << (i % kBitsPerWord);
-      asWordArray[i / kBitsPerWord] = (asWordArray[i / kBitsPerWord] & ~mask) | bit;
+   std::size_t bitIdx = 0;
+   while (bitIdx < nBits) {
+      const std::size_t nBatch = std::min(kChunkSize, nBits - bitIdx);
+      column.ReadV(globalIndex * nBits + bitIdx, nBatch, buffer);
+      for (std::size_t b = 0; b < nBatch; ++b) {
+         const std::size_t currentBit = bitIdx + b;
+         const Word_t mask = static_cast<Word_t>(1) << (currentBit % kBitsPerWord);
+         const Word_t bit = static_cast<Word_t>(buffer[b]) << (currentBit % kBitsPerWord);
+         asWordArray[currentBit / kBitsPerWord] = (asWordArray[currentBit / kBitsPerWord] & ~mask) | bit;
+      }
+      bitIdx += nBatch;
    }
 }
 
@@ -857,15 +871,22 @@ static void
 BitsetReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to, size_t nBits, ROOT::Internal::RColumn &column)
 {
    constexpr auto kBitsPerWord = sizeof(Word_t) * 8;
+   constexpr std::size_t kChunkSize = 256;
+   bool buffer[kChunkSize];
 
    auto *asWordArray = static_cast<Word_t *>(to);
-   bool elementValue;
-   for (std::size_t i = 0; i < nBits; ++i) {
-      column.Read(ROOT::RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() * nBits) + i,
-                  &elementValue);
-      Word_t mask = static_cast<Word_t>(1) << (i % kBitsPerWord);
-      Word_t bit = static_cast<Word_t>(elementValue) << (i % kBitsPerWord);
-      asWordArray[i / kBitsPerWord] = (asWordArray[i / kBitsPerWord] & ~mask) | bit;
+   std::size_t bitIdx = 0;
+   while (bitIdx < nBits) {
+      const std::size_t nBatch = std::min(kChunkSize, nBits - bitIdx);
+      column.ReadV(ROOT::RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() * nBits + bitIdx),
+                   nBatch, buffer);
+      for (std::size_t b = 0; b < nBatch; ++b) {
+         const std::size_t currentBit = bitIdx + b;
+         const Word_t mask = static_cast<Word_t>(1) << (currentBit % kBitsPerWord);
+         const Word_t bit = static_cast<Word_t>(buffer[b]) << (currentBit % kBitsPerWord);
+         asWordArray[currentBit / kBitsPerWord] = (asWordArray[currentBit / kBitsPerWord] & ~mask) | bit;
+      }
+      bitIdx += nBatch;
    }
 }
 
