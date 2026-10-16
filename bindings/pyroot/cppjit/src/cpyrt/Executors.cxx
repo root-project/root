@@ -1136,23 +1136,6 @@ bool cpyrt::RegisterExecutor(const std::string& name, ef_t fac) {
 
 //----------------------------------------------------------------------------
 CPYRT_EXPORT
-bool cpyrt::RegisterExecutorAlias(const std::string& name,
-                                  const std::string& target) {
-  // register a custom executor that is a reference to an existing converter
-  auto f = gExecFactories.find(name);
-  if (f != gExecFactories.end())
-    return false;
-
-  auto t = gExecFactories.find(target);
-  if (t == gExecFactories.end())
-    return false;
-
-  gExecFactories[name] = t->second;
-  return true;
-}
-
-//----------------------------------------------------------------------------
-CPYRT_EXPORT
 bool cpyrt::UnregisterExecutor(const std::string& name) {
   // remove a custom executor
   auto f = gExecFactories.find(name);

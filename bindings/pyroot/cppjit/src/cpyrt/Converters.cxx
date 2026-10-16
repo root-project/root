@@ -26,7 +26,6 @@ using namespace cppjit;
 #include <cstddef>
 #include <limits.h>
 #include <locale> // for wstring_convert
-#include <regex>
 #include <sstream>
 #include <stddef.h> // for ptrdiff_t
 #include <string.h>
@@ -359,8 +358,6 @@ static inline bool ImplicitBool(PyObject* pyobject, cpyrt::CallContext* ctxt) {
   if (!AllowImplicit(ctxt) &&
       (PyBool_Check(pyobject) ||
        (IsCPPEnumInstance(pyobject) && !NoImplicit(ctxt)))) {
-    if (!NoImplicit(ctxt))
-      ctxt->fFlags |= CallContext::kHaveImplicit;
     return false;
   }
   return true;
@@ -369,8 +366,6 @@ static inline bool ImplicitBool(PyObject* pyobject, cpyrt::CallContext* ctxt) {
 static inline bool StrictBool(PyObject* pyobject, cpyrt::CallContext* ctxt) {
   using namespace cppjit::cpyrt;
   if (!AllowImplicit(ctxt) && !PyBool_Check(pyobject)) {
-    if (!NoImplicit(ctxt))
-      ctxt->fFlags |= CallContext::kHaveImplicit;
     return false;
   }
   return true;
@@ -538,8 +533,6 @@ static inline cpyrt::CPPInstance* ConvertImplicit(interop::TCppScope_t klass,
     PyTypeObject* pytype = (PyTypeObject*)Py_TYPE(pyobject);
     if (!(pytype == &PyList_Type ||
           pytype == &PyTuple_Type)) { // || !CPPInstance_Check(pyobject))) {
-      if (!NoImplicit(ctxt))
-        ctxt->fFlags |= CallContext::kHaveImplicit;
       return nullptr;
     }
   }
@@ -1321,8 +1314,6 @@ bool cpyrt::EnumConverter::SetArg(PyObject* pyobject, Parameter& para,
         PyErr_Clear();
     }
     if (!exact) {
-      if (!NoImplicit(ctxt))
-        ctxt->fFlags |= CallContext::kHaveImplicit;
       return false;
     }
     // the base integer converter defers enum instances, so lift the gate
@@ -2483,7 +2474,12 @@ bool cpyrt::InstanceRefConverter::SetArg(PyObject* pyobject, Parameter& para,
     interop::TCppScope_t cls;
     if (pyobj->IsSmart()) {
       cls = pyobj->ObjectIsA(false);
-      if (cls && interop::IsSubclass(cls, fClass)) {
+      interop::TCppScope_t deref_cls = nullptr;
+      interop::TCppScope_t deref_fClass = nullptr;
+      interop::GetSmartPtrInfo(cls, &deref_cls, nullptr);
+      interop::GetSmartPtrInfo(fClass, &deref_fClass, nullptr);
+      if (deref_cls && deref_fClass &&
+          interop::IsSubclass(deref_cls, deref_fClass)) {
         para.fValue.fVoidp = pyobj->GetObjectRaw();
         argset = true;
       }
@@ -2506,7 +2502,7 @@ bool cpyrt::InstanceRefConverter::SetArg(PyObject* pyobject, Parameter& para,
       }
 
       // calculate offset between formal and actual arguments
-      if (cls != fClass) {
+      if ((cls != fClass) && (!pyobj->IsSmart())) {
         para.fValue.fIntPtr += interop::GetBaseOffset(
             cls, fClass, para.fValue.fVoidp, 1 /* up-cast */);
       }
@@ -2896,10 +2892,12 @@ static void* PyFunction_AsCPointer(PyObject* pyobject,
     if (pytmpl->fTemplateArgs)
       fullname += PyUnicode_AsUTF8(pytmpl->fTemplateArgs);
     interop::TCppScope_t scope = ((CPPClass*)pytmpl->fTI->fPyClass)->fCppType;
+
     std::string ret{}, sig{};
     GetSignatureFromFnType(fn_type, ret, sig);
+    std::vector<interop::TCppMethod_t> ambiguous_candidates;
     interop::TCppMethod_t cppmeth = interop::GetMethodTemplate(
-        scope, fullname, sig.substr(1, sig.size() - 2));
+        scope, fullname, sig.substr(1, sig.size() - 2), ambiguous_candidates);
     if (cppmeth) {
       void* fptr = (void*)interop::GetFunctionAddress(cppmeth, false);
       if (fptr)
@@ -3009,6 +3007,7 @@ static void* PyFunction_AsCPointer(PyObject* pyobject,
       static interop::TCppScope_t scope =
           interop::GetScope("__cppjit_internal");
       const auto& methods = interop::GetMethodsFromName(scope, wname.str());
+      assert(methods.size() == 1);
       wpraddress = interop::GetFunctionAddress(methods[0], false);
       sWrapperReference[wpraddress] = ref;
 
@@ -3086,17 +3085,23 @@ bool cpyrt::FunctionPointerConverter::ToMemory(PyObject* pyobject,
 //- std::function converter --------------------------------------------------
 bool cpyrt::StdFunctionConverter::SetArg(PyObject* pyobject, Parameter& para,
                                          CallContext* ctxt) {
-  // prefer normal "object" conversion
-  CallContextRAII<CallContext::kNoImplicit> noimp(ctxt);
-  if (fConverter->SetArg(pyobject, para, ctxt))
-    return true;
+  // prefer normal "object" conversion; keep kNoImplicit scoped to this attempt
+  // only, so it does not suppress the implicit copy the wrapper-fallback relies
+  // on
+  {
+    CallContextRAII<CallContext::kNoImplicit> noimp(ctxt);
+    if (fConverter->SetArg(pyobject, para, ctxt))
+      return true;
+  }
 
   PyErr_Clear();
 
   // else create a wrapper function
   if (this->FunctionPointerConverter::SetArg(pyobject, para, ctxt)) {
     // retrieve the wrapper pointer and capture it in a temporary std::function,
-    // then try normal conversion a second time
+    // then convert again with implicit conversion allowed (kNoImplicit scoped
+    // out above): the wrapper is flagged kIsLValue for reuse, so binding it to
+    // a std::function&& parameter needs an implicit copy, not a move.
     PyObject* func =
         this->FunctionPointerConverter::FromMemory(&para.fValue.fVoidp);
     if (func) {
@@ -3131,16 +3136,8 @@ bool cpyrt::SmartPtrConverter::SetArg(PyObject* pyobject, Parameter& para,
                                       CallContext* ctxt) {
   char typeCode = fIsRef ? 'p' : 'V';
 
-  if (!CPPInstance_Check(pyobject)) {
-    // TODO: not sure how this is correct for pass-by-ref nor does it help with
-    // implicit conversions for pass-by-value
-    if (fIsRef && GetAddressSpecialCase(pyobject, para.fValue.fVoidp)) {
-      para.fTypeCode = typeCode; // allow special cases such as nullptr
-      return true;
-    }
-
+  if (!CPPInstance_Check(pyobject))
     return false;
-  }
 
   CPPInstance* pyobj = (CPPInstance*)pyobject;
   interop::TCppScope_t oisa = pyobj->ObjectIsA();
@@ -3639,7 +3636,7 @@ cppjit::cpyrt::CreateConverter(const std::string& fullType, cdims_t dims) {
   Converter* result = nullptr;
   if (interop::TCppScope_t klass = interop::GetFullScope(realType)) {
     interop::TCppScope_t raw;
-    if (interop::GetSmartPtrInfo(realType, &raw, nullptr)) {
+    if (interop::GetSmartPtrInfo(klass, &raw, nullptr)) {
       if (cpd == "") {
         result = new SmartPtrConverter(klass, raw, control);
       } else if (cpd == "&") {
@@ -3902,7 +3899,7 @@ cppjit::cpyrt::CreateConverter(interop::TCppType_t type, cdims_t dims) {
              (klass || (klass = interop::GetFullScope(realTypeStr)))) {
     // std::byte is a special enum class used to access raw memory
     interop::TCppScope_t raw;
-    if (interop::GetSmartPtrInfo(realTypeStr, &raw, nullptr)) {
+    if (interop::GetSmartPtrInfo(klass, &raw, nullptr)) {
       if (cpd == "") {
         result = new SmartPtrConverter(klass, raw, control);
       } else if (cpd == "&") {
@@ -3982,23 +3979,6 @@ bool cpyrt::RegisterConverter(const std::string& name, cf_t fac) {
     return false;
 
   gConvFactories[name] = fac;
-  return true;
-}
-
-//----------------------------------------------------------------------------
-CPYRT_EXPORT
-bool cpyrt::RegisterConverterAlias(const std::string& name,
-                                   const std::string& target) {
-  // register a custom converter that is a reference to an existing converter
-  auto f = gConvFactories.find(name);
-  if (f != gConvFactories.end())
-    return false;
-
-  auto t = gConvFactories.find(target);
-  if (t == gConvFactories.end())
-    return false;
-
-  gConvFactories[name] = t->second;
   return true;
 }
 

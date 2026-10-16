@@ -570,8 +570,9 @@ class TestNUMBA:
         a = np.random.randint(1, 100, size=10000, dtype=np.int64)
         b = np.random.randint(1, 4, size=10, dtype=np.int64)
 
-        x = cppjit.gbl.std.vector["long"](a.flatten())
-        y = cppjit.gbl.std.vector["long"](b.flatten())
+        # std::vector no longer fill-constructs from a raw buffer; go via list
+        x = cppjit.gbl.std.vector["long"](a.flatten().tolist())
+        y = cppjit.gbl.std.vector["long"](b.flatten().tolist())
 
         t0 = time.time()
         add_vec_fast(ns.BoxVector(x))
@@ -658,8 +659,9 @@ class TestNUMBA:
         # for i in a:
         #     vec_list.append([vector['long'](i[0]), vector['long'](i[1])])
 
-        x = cppjit.gbl.std.vector["long"](a.flatten())
-        y = cppjit.gbl.std.vector["long"](b.flatten())
+        # std::vector no longer fill-constructs from a raw buffer; go via list
+        x = cppjit.gbl.std.vector["long"](a.flatten().tolist())
+        y = cppjit.gbl.std.vector["long"](b.flatten().tolist())
         d = ns.DotVector(x, y)
         dot_product_fast(d)
         res = 0

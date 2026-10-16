@@ -504,8 +504,6 @@ public:
   std::string GetFailureMsg() override { return "[SmartPtrConverter]"; };
 
 protected:
-  virtual bool GetAddressSpecialCase(PyObject*, void*&) { return false; }
-
   interop::TCppScope_t fSmartPtrType;
   interop::TCppScope_t fUnderlyingType;
   bool fKeepControl;

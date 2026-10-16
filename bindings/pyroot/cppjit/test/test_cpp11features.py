@@ -495,7 +495,7 @@ class TestCPP11FEATURES:
         assert not not uptr_out
 
         uptr_in = cppjit.gbl.std.make_unique["int"]()
-        with raises(ValueError):  # not an RValue
+        with raises(TypeError):  # not an RValue # TODO: This should be Overload Error
             cppjit.gbl.UniqueTempl.returnptr[int](uptr_in)
 
     @mark.xfail(condition=IS_MAC, reason="Fails on Mac platforms")
@@ -524,7 +524,7 @@ class TestCPP11FEATURES:
         up = ns.returnptr_move(cppjit.gbl.std.move(up))
         assert up and up.get()[0] == 42
 
-        with raises(TypeError):
+        with raises(cppjit.OverloadResolutionException):
             ns.returnptr_move(up)
 
     def test17_unique_ptr_data(self):

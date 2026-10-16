@@ -247,9 +247,13 @@ static void defineRuntimeHelpers() {
                " bool is_not_equal(const C1& c1, const C2& c2) { return "
                "(bool)(c1 != c2); } }",
                /*silent=*/false);
+  Cpp::Declare(R"(namespace __cppjit_internal {
+                    class UnknownType {};
+                    })",
+               /*silent=*/false);
 
   // helper for multiple inheritance
-  Cpp::Declare("namespace __cppjit_internal { struct Sep; }",
+  Cpp::Declare("namespace __cppjit_internal { struct Sep {}; }",
                /*silent=*/false);
 }
 
@@ -303,7 +307,7 @@ static inline char* cppstring_to_cstring(const std::string& cppstr) {
 bool interop::Compile(const std::string& code, bool silent) {
   std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   // Declare returns an enum which equals 0 on success
-  return !Cpp::Declare(code.c_str(), silent);
+  return !Cpp::Declare(code.c_str(), false);
 }
 
 void interop::LockInterpreter() { InterOpMutex.lock(); }
@@ -357,6 +361,10 @@ interop::TCppType_t interop::ResolveEnumPointerType(TCppType_t type) {
   return type;
 }
 
+interop::TCppType_t interop::GetNonReferenceType(interop::TCppType_t type) {
+  return (type && Cpp::IsReferenceType(type)) ? Cpp::GetNonReferenceType(type) : type;
+}
+
 interop::TCppType_t int_like_type(interop::TCppType_t type) {
   interop::TCppType_t check_int_typedefs = type;
   if (Cpp::IsPointerType(check_int_typedefs))
@@ -404,7 +412,14 @@ interop::TCppType_t interop::GetRealType(TCppType_t type) {
 
 interop::TCppType_t interop::GetPointerType(TCppType_t type) {
   std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
-  return Cpp::GetPointerType(type);
+  Cpp::ValueKind ref = Cpp::GetValueKind(type);
+  TCppType_t pointer_type = type;
+  pointer_type = Cpp::GetPointerType(interop::GetNonReferenceType(type));
+  if (ref == Cpp::ValueKind::LValue)
+    return Cpp::GetReferencedType(pointer_type, false);
+  if (ref == Cpp::ValueKind::RValue)
+    return Cpp::GetReferencedType(pointer_type, true);
+  return pointer_type;
 }
 
 interop::TCppType_t interop::GetReferencedType(TCppType_t type, bool rvalue) {
@@ -521,7 +536,8 @@ static bool is_identifier(std::string_view s) {
 // returns true if no new type was added.
 bool interop::AppendTypesSlow(const std::string& name,
                               std::vector<Cpp::TemplateArgInfo>& types,
-                              interop::TCppScope_t parent) {
+                              interop::TCppScope_t parent,
+                              bool append_unknown) {
 
   // Add no new type if string is empty
   if (name.empty())
@@ -549,8 +565,8 @@ bool interop::AppendTypesSlow(const std::string& name,
   };
 
   std::string resolved_name = name;
-  replace_all(resolved_name, "std::initializer_list<",
-              "std::vector<"); // replace initializer_list with vector
+  // replace_all(resolved_name, "std::initializer_list<", "std::vector<"); //
+  // replace initializer_list with vector
 
   // If we have a single identifier, we don't need anything complicated.
   // Try scoped lookup first (catches type aliases / nested types declared
@@ -579,7 +595,7 @@ bool interop::AppendTypesSlow(const std::string& name,
   std::string code =
       "template<typename ...T> struct __cppjit_interop_AppendTypesSlow {};\n";
   if (!struct_count)
-    Cpp::Declare(code.c_str(), /*silent=*/true); // initialize the trampoline
+    Cpp::Declare(code.c_str(), /*silent=*/false); // initialize the trampoline
 
   // Perform the lookup from within the innermost (reopenable) namespace
   // enclosing `parent` -- `parent` itself if it is a namespace, else the
@@ -667,8 +683,14 @@ bool interop::AppendTypesSlow(const std::string& name,
     }
 
     if (!type) {
-      types.clear();
-      return true;
+      static interop::TCppType_t unknown_type = Cpp::GetTypeFromScope(
+          interop::GetScope("__cppjit_internal::UnknownType"));
+      if (append_unknown) {
+        types.emplace_back(unknown_type.data);
+        continue;
+      } else {
+        return true;
+      }
     }
 
     if (is_integral(i))
@@ -710,9 +732,10 @@ interop::TCppType_t interop::GetType(const std::string& name,
   }
 
   if (!enable_slow_lookup) {
-    if (name.find("::") != std::string::npos)
-      throw std::runtime_error(
-          "Calling interop::GetType with qualified name '" + name + "'\n");
+    // if (name.find("::") != std::string::npos)
+    //     throw std::runtime_error("Calling interop::GetType with qualified
+    //     name '"
+    //                         + name + "'\n");
     return nullptr;
   }
 
@@ -1411,6 +1434,47 @@ bool interop::IsSmartPtr(TCppScope_t klass) {
   return false;
 }
 
+bool interop::GetSmartPtrInfo(TCppScope_t klass, TCppScope_t* raw,
+                              TCppMethod_t* deref) {
+  TCppScope_t scope = interop::GetUnderlyingScope(klass);
+  if (!scope || !interop::IsSmartPtr(scope))
+    return false;
+
+  if (!raw && !deref)
+    return true;
+
+  std::vector<TCppMethod_t> ops;
+  {
+    std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
+    // the operator can only be found once the specialization is instantiated
+    if (!Cpp::IsComplete(scope))
+      return false;
+    Cpp::GetOperator(scope, Cpp::Operator::OP_Arrow, ops,
+                     /*kind=*/Cpp::OperatorArity::kBoth);
+    if (ops.size() != 1)
+      return false;
+
+    // The dereference operator can be a member template: MSVC's
+    // std::shared_ptr::operator-> is SFINAE-constrained on the element
+    // type not being an array. Its return type is dependent, so it has
+    // to be instantiated (it takes no arguments) before the pointee
+    // type can be determined - and before it can be called.
+    if (Cpp::IsTemplatedFunction(ops[0])) {
+      std::vector<TCppMethod_t> ambiguous_candidates;
+      ops[0] = Cpp::BestOverloadFunctionMatch(ops, {}, {},
+                                              ambiguous_candidates);
+    }
+    if (!ops[0])
+      return false;
+  }
+
+  if (deref)
+    *deref = ops[0];
+  if (raw)
+    *raw = interop::GetScopeFromType(interop::GetMethodReturnType(ops[0]));
+  return (!deref || *deref) && (!raw || *raw);
+}
+
 bool interop::GetSmartPtrInfo(const std::string& tname, TCppScope_t* raw,
                               TCppMethod_t* deref) {
   // TODO: We can directly accept scope instead of name
@@ -1422,33 +1486,7 @@ bool interop::GetSmartPtrInfo(const std::string& tname, TCppScope_t* raw,
     return true;
 
   TCppScope_t scope = interop::GetScope(rn);
-  if (!scope)
-    return false;
-
-  std::vector<TCppMethod_t> ops;
-  {
-    std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
-    Cpp::GetOperator(scope, Cpp::Operator::OP_Arrow, ops,
-                     /*kind=*/Cpp::OperatorArity::kBoth);
-    if (ops.size() != 1)
-      return false;
-
-    // The dereference operator can be a member template: MSVC's
-    // std::shared_ptr::operator-> is SFINAE-constrained on the element
-    // type not being an array. Its return type is dependent, so it has
-    // to be instantiated (it takes no arguments) before the pointee
-    // type can be determined - and before it can be called.
-    if (Cpp::IsTemplatedFunction(ops[0]))
-      ops[0] = Cpp::BestOverloadFunctionMatch(ops, {}, {});
-    if (!ops[0])
-      return false;
-  }
-
-  if (deref)
-    *deref = ops[0];
-  if (raw)
-    *raw = interop::GetScopeFromType(interop::GetMethodReturnType(ops[0]));
-  return (!deref || *deref) && (!raw || *raw);
+  return GetSmartPtrInfo(scope, raw, deref);
 }
 
 // type offsets --------------------------------------------------------------
@@ -1751,9 +1789,318 @@ bool interop::IsStaticTemplate(TCppScope_t scope, const std::string& name) {
   return is_static;
 }
 
-interop::TCppMethod_t interop::GetMethodTemplate(TCppScope_t scope,
-                                                 const std::string& name,
-                                                 const std::string& proto) {
+bool interop::IsNonStaticMethod(interop::TCppMethod_t func) {
+  return Cpp::IsMethod(func) && !Cpp::IsStaticMethod(func);
+}
+
+static bool IsEquivalentTypesImpl(interop::TCppType_t typ1,
+                                  interop::TCppType_t typ2, Cpp::QualKind& qual,
+                                  Cpp::ValueKind& ref, bool& pointer) {
+  // check if same type
+  if (Cpp::IsSameType(typ1, typ2) || Cpp::IsTypeDerivedFrom(typ1, typ2) ||
+      Cpp::IsTypeDerivedFrom(typ2, typ1))
+    return true;
+
+  // check if same type after removing qualifiers; canonicalize first so that
+  // qualifiers hidden behind a typedef are removed too
+  if (Cpp::IsSameType(Cpp::RemoveTypeQualifier(Cpp::GetCanonicalType(typ1),
+                                               Cpp::QualKind::All),
+                      Cpp::RemoveTypeQualifier(Cpp::GetCanonicalType(typ2),
+                                               Cpp::QualKind::All))) {
+    for (Cpp::QualKind q : {Cpp::QualKind::Const, Cpp::QualKind::Volatile,
+                            Cpp::QualKind::Restrict})
+      if (Cpp::HasTypeQualifier(typ1, q) != Cpp::HasTypeQualifier(typ2, q))
+        qual = qual | q;
+    return true;
+  }
+
+  // check if same type after removing references
+  if (Cpp::IsReferenceType(typ1) &&
+      IsEquivalentTypesImpl(Cpp::GetNonReferenceType(typ1), typ2, qual, ref,
+                            pointer)) {
+    ref = Cpp::GetValueKind(typ1);
+    return true;
+  }
+  if (Cpp::IsReferenceType(typ2) &&
+      IsEquivalentTypesImpl(Cpp::GetNonReferenceType(typ2), typ1, qual, ref,
+                            pointer)) {
+    ref = Cpp::GetValueKind(typ2);
+    return true;
+  }
+
+  // check if same type after removing pointers
+  if (Cpp::IsPointerType(typ1) &&
+      IsEquivalentTypesImpl(Cpp::GetPointeeType(typ1), typ2, qual, ref,
+                            pointer)) {
+    pointer = true;
+    return true;
+  }
+  if (Cpp::IsPointerType(typ2) &&
+      IsEquivalentTypesImpl(Cpp::GetPointeeType(typ2), typ1, qual, ref,
+                            pointer)) {
+    pointer = true;
+    return true;
+  }
+  return false;
+}
+
+// Checks if two types are equivalent up to CVR qualifiers, references and
+// pointers, or if one type derives from the other. On return, qual holds the
+// CVR qualifiers that differ between the two types, ref the kind of reference
+// that was stripped and pointer whether a pointer was stripped.
+static bool IsEquivalentTypes(interop::TCppType_t typ1,
+                              interop::TCppType_t typ2, Cpp::QualKind& qual,
+                              Cpp::ValueKind& ref, bool& pointer) {
+  qual = static_cast<Cpp::QualKind>(0);
+  ref = Cpp::ValueKind::None;
+  pointer = false;
+  if (!typ1 || !typ2)
+    return false;
+  return IsEquivalentTypesImpl(typ1, typ2, qual, ref, pointer);
+}
+
+bool IsTemplateParamEquivalentTypes(interop::TCppType_t typ1,
+                                    interop::TCppType_t typ2,
+                                    Cpp::QualKind& qual, Cpp::ValueKind& ref,
+                                    bool& pointer) {
+  qual = static_cast<Cpp::QualKind>(0);
+  ref = Cpp::ValueKind::None;
+  pointer = false;
+
+  Cpp::ValueKind ref1 = Cpp::GetValueKind(typ1);
+  Cpp::ValueKind ref2 = Cpp::GetValueKind(typ2);
+  if (ref1 != ref2)
+    ref = ref1 != Cpp::ValueKind::None ? ref1 : ref2;
+  typ2 = Cpp::IsReferenceType(typ2) ? Cpp::GetNonReferenceType(typ2) : typ2;
+
+  pointer ^= Cpp::IsPointerType(typ1);
+  pointer ^= Cpp::IsPointerType(typ2);
+  typ2 = Cpp::IsPointerType(typ2) ? Cpp::GetPointeeType(typ2) : typ2;
+
+  if (Cpp::IsTemplateParmType(typ2))
+    return true; // we assume template parameter type is equivalent to any type
+  return false;
+}
+
+namespace {
+interop::TCppMethod_t BestOverloadFunctionMatch(
+    const std::vector<interop::TCppMethod_t>& candidates,
+    const std::vector<Cpp::TemplateArgInfo>& arg_types,
+    const std::vector<Cpp::TemplateArgInfo>& templ_params,
+    std::vector<interop::TCppMethod_t>& ambiguous_candidates,
+    interop::TCppScope_t parent_scope, bool is_operator) {
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
+
+  auto remove_duplicate_methods = [](std::vector<interop::TCppMethod_t>& methods) {
+    std::set<void*> seen;
+    methods.erase(std::remove_if(methods.begin(), methods.end(),
+                                 [&seen](interop::TCppMethod_t m) {
+                                   return !seen.insert(m.data).second;
+                                 }),
+                  methods.end());
+  };
+
+  interop::TCppMethod_t cppmeth = Cpp::BestOverloadFunctionMatch(
+      candidates, templ_params, arg_types, ambiguous_candidates, is_operator);
+  if (cppmeth)
+    return cppmeth;
+
+  interop::TCppMethod_t potential_cppmeth = nullptr;
+  bool potential_cppmeth_ambiguous = false;
+  for (auto fn : candidates) {
+    size_t required_arg_count = Cpp::GetFunctionRequiredArgs(fn);
+    size_t arg_count = Cpp::GetFunctionNumArgs(fn);
+    bool skipThis =
+        interop::IsNonStaticMethod(fn) && !interop::IsConstructor(fn);
+    if (skipThis) {
+      arg_count++;
+      required_arg_count++;
+    }
+    if (arg_types.size() > arg_count || arg_types.size() < required_arg_count)
+      continue;
+
+    // we track potential_cppmeth based on number of args only
+    // and not the type of these arguments
+    if (!potential_cppmeth)
+      potential_cppmeth = fn;
+    else
+      potential_cppmeth_ambiguous = true;
+
+    // promote the arguments towards the parameters of fn, then resolve the
+    // overload once with all of them promoted
+    // ???: Can this cause ambiguity
+    std::vector<Cpp::TemplateArgInfo> promoted_arg_types = arg_types;
+    bool promoted = false;
+    size_t I = 0;
+    for (auto& arg : promoted_arg_types) {
+      if (I == 0 && skipThis) {
+        // ignore the this parameter
+        I++;
+        continue;
+      }
+      Cpp::QualKind qual = static_cast<Cpp::QualKind>(0);
+      Cpp::ValueKind ref = Cpp::ValueKind::None;
+      bool pointer = false;
+      static interop::TCppScope_t initializer_list_scope =
+          Cpp::GetTemplatedDecl(interop::GetScope("std::initializer_list"));
+      // static interop::TCppScope_t vector_scope =
+      //     interop::GetScope("std::vector");
+      static interop::TCppType_t string_type = interop::GetRealType(
+          interop::GetTypeFromScope(interop::GetScope("std::string")));
+      static interop::TCppType_t wstring_type = interop::GetRealType(
+          interop::GetTypeFromScope(interop::GetScope("std::wstring")));
+      static interop::TCppType_t char_type = interop::GetType("char");
+      static interop::TCppType_t char_pointer_type =
+          interop::GetPointerType(char_type);
+      static interop::TCppType_t wchar_pointer_type =
+          interop::GetPointerType(interop::GetType("wchar_t"));
+      interop::TCppType_t fn_arg_type =
+          Cpp::GetFunctionArgType(fn, skipThis ? I - 1 : I);
+      assert(string_type);
+      interop::TCppType_t old_type = nullptr;
+      if (IsEquivalentTypes(arg.m_Type, fn_arg_type, qual, ref, pointer) &&
+          pointer) {
+        // Only promotion to pointer should be allowed.
+        old_type = arg.m_Type;
+        arg.m_Type = interop::GetPointerType(arg.m_Type).data;
+        if (ref != Cpp::ValueKind::None)
+          arg.m_Type = interop::GetNonReferenceType(arg.m_Type).data;
+      } else if (IsEquivalentTypes(string_type, arg.m_Type, qual, ref,
+                                   pointer) &&
+                 (IsEquivalentTypes(char_pointer_type, fn_arg_type, qual, ref,
+                                    pointer)) &&
+                 (Cpp::IsPointerType(interop::GetNonReferenceType(
+                     interop::ResolveType(fn_arg_type))))) {
+        // promote std::string to char*
+        old_type = arg.m_Type;
+        arg.m_Type = char_pointer_type.data;
+      } else if (IsEquivalentTypes(string_type, arg.m_Type, qual, ref,
+                                   pointer) &&
+                 (IsEquivalentTypes(char_type, fn_arg_type, qual, ref,
+                                    pointer))) {
+        // promote std::string to char
+        // is this fine?
+        old_type = arg.m_Type;
+        arg.m_Type = char_type.data;
+      } else if (IsEquivalentTypes(string_type, fn_arg_type, qual, ref,
+                                   pointer) &&
+                 (IsEquivalentTypes(char_pointer_type, arg.m_Type, qual, ref,
+                                    pointer)) &&
+                 (Cpp::IsPointerType(interop::GetNonReferenceType(
+                     interop::ResolveType(arg.m_Type))))) {
+        // promote char* to std::string
+        old_type = arg.m_Type;
+        arg.m_Type = string_type.data;
+      } else if (IsEquivalentTypes(string_type, arg.m_Type, qual, ref,
+                                   pointer) &&
+                 (IsEquivalentTypes(wchar_pointer_type, fn_arg_type, qual, ref,
+                                    pointer)) &&
+                 (Cpp::IsPointerType(interop::GetNonReferenceType(
+                     interop::ResolveType(fn_arg_type))))) {
+        // promote std::string to wchar_t*
+        old_type = arg.m_Type;
+        arg.m_Type = wchar_pointer_type.data;
+      } else if (IsEquivalentTypes(wstring_type, fn_arg_type, qual, ref,
+                                   pointer) &&
+                 (IsEquivalentTypes(wchar_pointer_type, arg.m_Type, qual, ref,
+                                    pointer)) &&
+                 (Cpp::IsPointerType(interop::GetNonReferenceType(
+                     interop::ResolveType(arg.m_Type))))) {
+        // promote wchar_t* to std::wstring
+        old_type = arg.m_Type;
+        arg.m_Type = wstring_type.data;
+        // } else if (IsEquivalentTypes(string_type, arg.m_Type, qual, ref,
+        // pointer) && (IsEquivalentTypes(wstring_type, fn_arg_type, qual,
+        // ref, pointer))) {
+        //     // promote std::string to std::wstring
+        //     old_type = arg.m_Type;
+        //     arg.m_Type = wstring_type.data;
+        // } else if (IsEquivalentTypes(char_pointer_type, arg.m_Type,
+        // qual, ref, pointer) && (IsEquivalentTypes(wstring_type,
+        // fn_arg_type, qual, ref, pointer)) &&
+        // (Cpp::IsPointerType(Cpp::GetNonReferenceType(interop::ResolveType(arg.m_Type))))
+        // &&
+        // (Cpp::IsPointerType(Cpp::GetNonReferenceType(interop::ResolveType(fn_arg_type)))))
+        // {
+        //     // promote char* to wchar_t*
+        //     old_type = arg.m_Type;
+        //     arg.m_Type = wstring_type.data;
+      } else if (auto ArgD = interop::GetScopeFromType(arg.m_Type),
+                 ParamD = interop::GetScopeFromType(fn_arg_type);
+                 (ArgD && ParamD) &&
+                 Cpp::GetTemplatedDecl(ArgD) == Cpp::GetTemplatedDecl(ParamD) &&
+                 Cpp::GetTemplatedDecl(ArgD) == initializer_list_scope &&
+                 !Cpp::IsTemplateParmType(fn_arg_type)) {
+        // cast from std::initializer_list<python int> to
+        // std::initializer_list<T> where T is the actual concrete C++ side type
+        // for this function
+        old_type = arg.m_Type;
+        arg.m_Type = fn_arg_type.data;
+      } else if (IsTemplateParamEquivalentTypes(arg.m_Type, fn_arg_type, qual,
+                                                ref, pointer)) {
+        // this is a templated type, we want to cast references/pointers
+        old_type = arg.m_Type;
+        if (ref != Cpp::ValueKind::None) {
+          if (Cpp::GetValueKind(arg.m_Type) == ref) {
+            // remove reference
+            arg.m_Type = interop::GetNonReferenceType(arg.m_Type).data;
+          } else {
+            // create a reference
+            arg.m_Type = Cpp::GetReferencedType(interop::GetNonReferenceType(arg.m_Type),
+                                                ref == Cpp::ValueKind::RValue)
+                             .data;
+          }
+        }
+        if (pointer) {
+          if (Cpp::IsPointerType(arg.m_Type)) {
+            // remove pointer
+            arg.m_Type = Cpp::GetPointeeType(arg.m_Type).data;
+          } else {
+            // add pointer
+            arg.m_Type = Cpp::GetPointerType(arg.m_Type).data;
+          }
+        }
+        if (old_type == arg.m_Type) {
+          assert(false && "This should be unreachable according to the author "
+                          "of this code");
+          old_type = nullptr;
+        }
+      }
+      if (old_type)
+        promoted = true;
+      I++;
+    }
+    if (!promoted)
+      continue;
+
+    interop::TCppMethod_t new_meth = Cpp::BestOverloadFunctionMatch(
+        candidates, {}, promoted_arg_types, ambiguous_candidates, is_operator);
+    if (!cppmeth)
+      cppmeth = new_meth;
+    else if (new_meth && new_meth != cppmeth) {
+      // ambiguous
+      ambiguous_candidates.push_back(cppmeth);
+      ambiguous_candidates.push_back(new_meth);
+      remove_duplicate_methods(ambiguous_candidates);
+      return nullptr;
+    }
+  }
+
+  // proper argument type match failed
+  // trying improper argument length match
+  if (!cppmeth && !potential_cppmeth_ambiguous &&
+      !Cpp::IsTemplatedFunction(potential_cppmeth))
+    cppmeth = potential_cppmeth;
+  if (!cppmeth)
+    remove_duplicate_methods(ambiguous_candidates);
+  return cppmeth;
+}
+} // namespace
+
+interop::TCppMethod_t interop::GetMethodTemplate(
+    TCppScope_t scope, const std::string& name, const std::string& proto,
+    std::vector<interop::TCppMethod_t>& ambiguous_candidates,
+    bool include_non_templated) {
   std::string pureName;
   std::string explicit_params;
 
@@ -1769,7 +2116,16 @@ interop::TCppMethod_t interop::GetMethodTemplate(TCppScope_t scope,
   std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
 
   std::vector<interop::TCppMethod_t> unresolved_candidate_methods;
-  Cpp::GetClassTemplatedMethods(pureName, scope, unresolved_candidate_methods);
+  {
+    std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
+    Cpp::GetClassTemplatedMethods(pureName, scope,
+                                  unresolved_candidate_methods);
+    if (include_non_templated) {
+      auto fns = Cpp::GetFunctionsUsingName(scope, pureName);
+      for (auto i : fns)
+        unresolved_candidate_methods.push_back(i);
+    }
+  }
   if (unresolved_candidate_methods.empty() && name.find("operator") == 0) {
     // try operators
     interop::GetClassOperators(scope, pureName, unresolved_candidate_methods);
@@ -1778,33 +2134,52 @@ interop::TCppMethod_t interop::GetMethodTemplate(TCppScope_t scope,
   // cpyrt assumes that we attempt instantiation here
   std::vector<Cpp::TemplateArgInfo> arg_types;
   std::vector<Cpp::TemplateArgInfo> templ_params;
-  interop::AppendTypesSlow(proto, arg_types, scope);
-  interop::AppendTypesSlow(explicit_params, templ_params, scope);
-  interop::TCppMethod_t cppmeth = nullptr;
-  cppmeth = Cpp::BestOverloadFunctionMatch(unresolved_candidate_methods,
-                                           templ_params, arg_types);
+  interop::AppendTypesSlow(proto, arg_types, scope, true);
+  interop::AppendTypesSlow(explicit_params, templ_params, scope, true);
 
-  // If overload resolution failed but explicit template arguments were
-  // supplied, fall back to direct template-argument substitution: ask Sema
-  // to instantiate each candidate with the explicit args. Sema's SFINAE
-  // rejects overloads whose substitution fails (e.g. the initializer_list
-  // form of std::make_any with non-init-list explicit args), so iterating
-  // gives back exactly the viable specialisation. The wrapper-side argument
-  // conversion then handles e.g. taking the address of an instance when the
-  // substituted parameter is a pointer.
-  if (!cppmeth && !templ_params.empty()) {
-    for (const auto& cand : unresolved_candidate_methods) {
-      if (Cpp::DeclRef spec = Cpp::InstantiateTemplate(
-              TCppScope_t(cand.data), templ_params.data(), templ_params.size(),
-              /*instantiate_body=*/false)) {
-        cppmeth = spec.data;
-        break;
-      }
-    }
+  std::vector<interop::TCppMethod_t> candidate_methods;
+  for (auto fn : unresolved_candidate_methods)
+    if (!interop::IsDeletedMethod(fn))
+      candidate_methods.push_back(fn);
+
+  interop::TCppMethod_t cppmeth = nullptr;
+  {
+    cppmeth = ::BestOverloadFunctionMatch(candidate_methods, arg_types,
+                                          templ_params, ambiguous_candidates,
+                                          scope, /*is_operator=*/false);
+  }
+  if (cppmeth)
+    return cppmeth;
+
+  if (unresolved_candidate_methods.size() == 1 && !templ_params.empty()) {
+    cppmeth = Cpp::InstantiateTemplate(
+                  TCppScope_t(unresolved_candidate_methods[0].data),
+                  templ_params.data(), templ_params.size(),
+                  /*instantiate_body=*/false)
+                  .data;
   }
 
   return TCppMethod_t(cppmeth.data);
   // if it fails, use Sema to propogate info about why it failed (DeductionInfo)
+}
+
+interop::TCppMethod_t interop::BestOverloadFunctionMatch(
+    const std::vector<interop::TCppMethod_t>& candidates,
+    const std::string& proto,
+    std::vector<interop::TCppMethod_t>& ambiguous_candidates,
+    TCppScope_t parent_scope, bool is_operator) {
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
+  std::vector<Cpp::TemplateArgInfo> arg_types;
+  if (!proto.empty() &&
+      interop::AppendTypesSlow(proto, arg_types, parent_scope, true))
+    return nullptr;
+  std::vector<interop::TCppMethod_t> non_deleted;
+  for (auto fn : candidates)
+    if (!interop::IsDeletedMethod(fn))
+      non_deleted.push_back(fn);
+  return ::BestOverloadFunctionMatch(non_deleted, arg_types, {},
+                                     ambiguous_candidates, parent_scope,
+                                     is_operator);
 }
 
 static inline bool is_basic_string_of(const std::string& n, const char* charT) {
@@ -1839,6 +2214,13 @@ static inline std::string type_remap(const std::string& n1,
   return n1;
 }
 
+bool interop::IsOperator(interop::TCppScope_t scope) {
+  return Cpp::IsOperator(scope.data);
+}
+bool interop::IsConversionOperator(interop::TCppScope_t scope) {
+  return Cpp::IsConversionOperator(scope.data);
+}
+
 void interop::GetClassOperators(interop::TCppScope_t klass,
                                 const std::string& opname,
                                 std::vector<TCppMethod_t>& operators) {
@@ -1848,14 +2230,16 @@ void interop::GetClassOperators(interop::TCppScope_t klass,
                    /*kind=*/Cpp::OperatorArity::kBoth);
 }
 
-interop::TCppMethod_t interop::GetGlobalOperator(TCppScope_t scope,
-                                                 const std::string& lc,
-                                                 const std::string& rc,
-                                                 const std::string& opname) {
+interop::TCppMethod_t interop::GetGlobalOperator(
+    interop::TCppScope_t scope, const std::string& lc, const std::string& rc,
+    const std::string& opname,
+    std::vector<interop::TCppMethod_t>& ambiguous_candidates) {
   std::string rc_type = type_remap(rc, lc);
   std::string lc_type = type_remap(lc, rc);
 
-  std::vector<TCppMethod_t> overloads;
+  std::vector<interop::TCppMethod_t> unresolved_candidate_methods;
+  std::vector<interop::TCppMethod_t> overloads;
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
   Cpp::GetOperator(scope, Cpp::GetOperatorFromSpelling(opname), overloads,
                    /*kind=*/Cpp::OperatorArity::kBoth);
 
@@ -1880,8 +2264,8 @@ interop::TCppMethod_t interop::GetGlobalOperator(TCppScope_t scope,
     else
       return nullptr;
   }
-  interop::TCppMethod_t cppmeth =
-      Cpp::BestOverloadFunctionMatch(overloads, {}, arg_types);
+  interop::TCppMethod_t cppmeth = Cpp::BestOverloadFunctionMatch(
+      overloads, {}, arg_types, ambiguous_candidates, true);
   if (cppmeth)
     return cppmeth;
   return nullptr;
@@ -1889,6 +2273,8 @@ interop::TCppMethod_t interop::GetGlobalOperator(TCppScope_t scope,
 
 // method properties ---------------------------------------------------------
 bool interop::IsDeletedMethod(TCppMethod_t method) {
+  if (Cpp::IsTemplatedFunction(method))
+      method = Cpp::GetTemplatedDecl(method.data).data;
   return Cpp::IsFunctionDeleted(method);
 }
 

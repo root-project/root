@@ -1211,13 +1211,24 @@ def BeginStdStreamCapture : CppInterOpAPI {
 }
 
 def BestOverloadFunctionMatch : CppInterOpAPI {
-  let Doc = [{Finds best overload match based on explicit template parameters
-(if any) and argument types.}];
+  let Doc = [{Finds the best overload match among \c candidates based on the
+explicit template arguments (if any) and the argument types.
+
+For a non-static member function candidate, the first entry of \c arg_types
+is the type of the object the function is called on, and the remaining
+entries are the call arguments. With \c is_operator set, the call is
+resolved as an operator call.
+
+\returns the best match, or nullptr if there is none. If the call is
+ambiguous, the best viable candidates are appended to
+\c ambiguous_candidates.}];
   let ReturnType = "FuncRef";
   let Args = [
     Arg<"const std::vector<FuncRef>&", "candidates">,
     Arg<"const std::vector<TemplateArgInfo>&", "explicit_types">,
-    Arg<"const std::vector<TemplateArgInfo>&", "arg_types">
+    Arg<"const std::vector<TemplateArgInfo>&", "arg_types">,
+    Arg<"std::vector<FuncRef>&", "ambiguous_candidates">,
+    Arg<"bool", "is_operator", "false">
   ];
 }
 
@@ -1503,6 +1514,14 @@ def IsTemplateParmType : CppInterOpAPI {
   ];
 }
 
+def IsPackExpansionType : CppInterOpAPI {
+  let Doc = "Checks if the given type is a pack expansion type (e.g. `Ts...`).";
+  let ReturnType = "bool";
+  let Args = [
+    Arg<"ConstTypeRef", "TyRef">
+  ];
+}
+
 def IsFunction : CppInterOpAPI {
   let Doc = "Checks if the scope is a function.";
   let ReturnType = "bool";
@@ -1519,6 +1538,20 @@ def IsMethod : CppInterOpAPI {
   let Doc = "Checks if the provided parameter is a method.";
   let ReturnType = "bool";
   let Args = [Arg<"ConstFuncRef", "method">];
+}
+
+def IsOperator : CppInterOpAPI {
+  let Doc = [{Checks if the provided function (or function template) is an
+overloaded operator.}];
+  let ReturnType = "bool";
+  let Args = [Arg<"ConstFuncRef", "func">];
+}
+
+def IsConversionOperator : CppInterOpAPI {
+  let Doc = [{Checks if the provided function (or function template) is a
+conversion operator, e.g. `operator int()`.}];
+  let ReturnType = "bool";
+  let Args = [Arg<"ConstFuncRef", "func">];
 }
 
 def IsPODType : CppInterOpAPI {

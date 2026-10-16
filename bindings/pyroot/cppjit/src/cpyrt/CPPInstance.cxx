@@ -42,51 +42,6 @@ extern PyObject* gNullPtrObject;
 // pointer to the smart pointer. They carry a pointer to the Python-sode smart
 // class for dereferencing to get to the actual instance pointer.
 
-//- private helpers ----------------------------------------------------------
-namespace {
-
-// Several specific use cases require extra data in a CPPInstance, but can not
-// be a new type. E.g. cross-inheritance derived types are by definition added
-// a posterio, and caching of datamembers is up to the datamember, not the
-// instance type. To not have normal use of CPPInstance take extra memory, this
-// extended data can slot in place of fObject for those use cases.
-
-struct ExtendedData {
-  ExtendedData()
-      : fObject(nullptr), fSmartClass(nullptr), fDispatchPtr(nullptr),
-        fArraySize(0) {}
-  ~ExtendedData() {
-    for (auto& pc : fDatamemberCache)
-      Py_XDECREF(pc.second);
-    fDatamemberCache.clear();
-  }
-
-  // the original object reference it replaces (Note: has to be first data
-  // member, see usage in GetObjectRaw(), e.g. for ptr-ptr passing)
-  void* fObject;
-
-  // for caching expensive-to-create data member representations
-  cpyrt::CI_DatamemberCache_t fDatamemberCache;
-
-  // for smart pointer types
-  cpyrt::CPPSmartClass* fSmartClass;
-
-  // for back-referencing from Python-derived instances
-  cpyrt::DispatchPtr* fDispatchPtr;
-
-  // for representing T* as a low-level array
-  Py_ssize_t fArraySize;
-};
-
-} // unnamed namespace
-
-#define EXT_OBJECT(pyobj) ((ExtendedData*)((pyobj)->fObject))->fObject
-#define DATA_CACHE(pyobj) ((ExtendedData*)((pyobj)->fObject))->fDatamemberCache
-#define SMART_CLS(pyobj) ((ExtendedData*)((pyobj)->fObject))->fSmartClass
-#define SMART_TYPE(pyobj) SMART_CLS(pyobj)->fCppType
-#define DISPATCHPTR(pyobj) ((ExtendedData*)((pyobj)->fObject))->fDispatchPtr
-#define ARRAY_SIZE(pyobj) ((ExtendedData*)((pyobj)->fObject))->fArraySize
-
 inline void cpyrt::CPPInstance::CreateExtension() {
   if (fFlags & kIsExtended)
     return;
@@ -549,7 +504,8 @@ static inline PyObject* eqneq_binop(CPPClass* klass, PyObject* self,
     const char* cppop = op == Py_EQ ? "==" : "!=";
     PyCallable* pyfunc = FindBinaryOperator(self, obj, cppop);
     if (pyfunc)
-      binop = (PyObject*)CPPOverload_New(cppop, pyfunc);
+      binop = (PyObject*)CPPOverload_New(
+          cppop, interop::GetParentScope(pyfunc->GetMethod().data), pyfunc);
     else {
       Py_INCREF(Py_None);
       binop = Py_None;
@@ -613,7 +569,8 @@ static inline void* cast_actual(void* obj) {
     PyCallable* pyfunc =                                                       \
         Utility::FindBinaryOperator((PyObject*)self, other, #op);              \
     if (pyfunc)                                                                \
-      ometh = (PyObject*)CPPOverload_New(#label, pyfunc);                      \
+      ometh = (PyObject*)CPPOverload_New(                                      \
+          #label, interop::GetParentScope(pyfunc->GetMethod().data), pyfunc);  \
   }                                                                            \
   meth = ometh;
 
@@ -1005,7 +962,8 @@ static PyGetSetDef op_getset[] = {
     PyErr_Clear();                                                             \
     PyCallable* pyfunc = Utility::FindBinaryOperator(left, right, #op);        \
     if (pyfunc)                                                                \
-      meth = (PyObject*)CPPOverload_New(#name, pyfunc);                        \
+      meth = (PyObject*)CPPOverload_New(                                       \
+          #name, interop::GetParentScope(pyfunc->GetMethod().data), pyfunc);   \
     else {                                                                     \
       PyErr_SetString(PyExc_NotImplementedError, "");                          \
       return nullptr;                                                          \

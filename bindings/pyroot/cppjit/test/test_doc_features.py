@@ -743,7 +743,7 @@ return static_cast<C>(a * b);
         assert raises(TypeError, mul[int, int], 1, 1.0)
         assert type(mul[int, int, float](1, 1)) == float
         # TODO: the following error message is rather confusing :(
-        assert raises(TypeError, mul[int, int], 1, "a")
+        assert raises(cppjit.OverloadResolutionException, mul[int, int], 1, "a")
 
         assert mul["double, double, double"](1.0, 5) == 5.0
 

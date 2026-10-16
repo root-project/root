@@ -89,7 +89,7 @@ class TestOVERLOADS:
         assert more_overloads().call(bb) == "bb_ol"
         assert more_overloads().call(cc_ol()) == "cc_ol"
         dd = cppjit.bind_object(cppjit.nullptr, dd_ol)
-        with raises(TypeError):
+        with raises(ReferenceError):
             more_overloads().call(dd)
         dd = cppjit.gbl.get_dd_ol()
         assert more_overloads().call(dd) == "dd_ol"
@@ -102,10 +102,12 @@ class TestOVERLOADS:
         more_overloads2 = cppjit.gbl.more_overloads2
 
         bb = cppjit.bind_object(cppjit.nullptr, cppjit.gbl.bb_ol)
-        assert more_overloads2().call(bb) == "bb_olptr"
+        with raises(ReferenceError):
+            more_overloads2().call(bb)
 
         dd = cppjit.bind_object(cppjit.nullptr, cppjit.gbl.dd_ol)
-        assert more_overloads2().call(dd, 1) == "dd_olptr"
+        with raises(ReferenceError):
+            more_overloads2().call(dd, 1)
 
     def test05_array_overloads(self):
         """Test functions overloaded on different arrays"""
@@ -260,10 +262,10 @@ class TestOVERLOADS:
         with raises(ns.ConfigFileNotFoundError):
             ns.MyClass1("some_file")
 
-        with raises(TypeError):
+        with raises(ns.ConfigFileNotFoundError):
             ns.MyClass2("some_file")
 
-        with raises(TypeError):
+        with raises(cppjit.OverloadResolutionException):
             ns.MyClass3("some_file")
 
     def test11_deep_inheritance(self):
@@ -475,3 +477,45 @@ class TestOVERLOADS:
         assert constness("static_fn") == {
             "static int OverloadConstness::Probe::static_fn(int x)": False
         }
+
+    def test18_promote_multiple_arguments(self):
+        """Verify that an overload needing several argument promotions resolves."""
+
+        import cppjit
+
+        cppjit.cppdef("""
+        namespace MultiPromotion {
+        std::string join(char* a, char* b) { return std::string(a) + b; }
+        std::string join(int a, int b) { return std::to_string(a + b); }
+        std::string join_mixed(char* a, int b) { return a + std::to_string(b); }
+        std::string join_mixed(int a, char* b) { return std::to_string(a) + b; }
+        }""")
+
+        ns = cppjit.gbl.MultiPromotion
+
+        # both str arguments have to be promoted to char* at the same time
+        assert ns.join("ab", "cd") == "abcd"
+        assert ns.join(1, 2) == "3"
+        # a single promotion
+        assert ns.join_mixed("ab", 1) == "ab1"
+        assert ns.join_mixed(1, "ab") == "1ab"
+
+    def test19_ambiguous_set_has_no_duplicates(self):
+        """Verify that an ambiguous call reports each candidate only once."""
+
+        import cppjit
+
+        cppjit.cppdef("""
+        namespace DupAmbiguity {
+        int f(char* a, double b) { return 1; }
+        int f(char* a, float b) { return 2; }
+        }""")
+
+        # the str argument needs a promotion to char*, which is retried for
+        # each candidate, and every retry is ambiguous on the int argument
+        with raises(cppjit.OverloadAmbiguityException) as exc:
+            cppjit.gbl.DupAmbiguity.f("x", 1)
+
+        msg = str(exc.value)
+        assert msg.count("double b)") == 1
+        assert msg.count("float b)") == 1

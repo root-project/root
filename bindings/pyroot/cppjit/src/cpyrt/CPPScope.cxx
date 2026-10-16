@@ -50,13 +50,8 @@ add_template(PyObject* pyclass, const std::string& name,
   }
 
   if (overloads) {
-    // adopt the new overloads
-    if (ncl != name)
-      for (auto clb : *overloads)
-        pytmpl->AdoptTemplate(clb);
-    else
-      for (auto clb : *overloads)
-        pytmpl->AdoptMethod(clb);
+    for (auto clb : *overloads)
+      pytmpl->AdoptMethod(clb);
   }
 
   // the caller expects a method matching the full name, thus is a
@@ -207,16 +202,11 @@ static PyObject* pt_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds) {
   // creation of the python-side class; extend the size if this is a smart ptr
   //
   // A namespace can never be a smart pointer, so skip the check for namespaces.
-  // This matters beyond performance: GetSmartPtrInfo() resolves the scope name
-  // through a slow interpreter lookup that triggers autoloading of the library
-  // providing the scope, which we don't want to do unnecessarily.
   interop::TCppScope_t raw;
   interop::TCppMethod_t deref;
   if (CPPScope_CheckExact(subtype) &&
       !interop::IsNamespace(((CPPScope*)subtype)->fCppType)) {
-    if (interop::GetSmartPtrInfo(
-            interop::GetScopedFinalName(((CPPScope*)subtype)->fCppType), &raw,
-            &deref))
+    if (interop::GetSmartPtrInfo(((CPPScope*)subtype)->fCppType, &raw, &deref))
       subtype->tp_basicsize = sizeof(CPPSmartClass);
   }
 
@@ -406,7 +396,7 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname) {
         if (interop::ExistsMethodTemplate(scope, name))
           attr = add_template(pyclass, name, &overloads);
         else
-          attr = (PyObject*)CPPOverload_New(name, overloads);
+          attr = (PyObject*)CPPOverload_New(name, scope, overloads);
         templated_functions_checked = true;
       }
     }
@@ -600,7 +590,6 @@ static PyObject* meta_reflex(CPPScope* klass, PyObject* args) {
     if (klass->fFlags & CPPScope::kIsNamespace)
       Py_RETURN_TRUE;
     Py_RETURN_FALSE;
-    break;
   case interop::Reflex::IS_AGGREGATE:
     // this is not the strict C++ definition of aggregates, but is closer to
     // what is needed for Numba and C calling conventions (TODO: probably have
@@ -609,7 +598,6 @@ static PyObject* meta_reflex(CPPScope* klass, PyObject* args) {
         !interop::HasVirtualDestructor(klass->fCppType))
       Py_RETURN_TRUE;
     Py_RETURN_FALSE;
-    break;
   }
 
   PyErr_Format(PyExc_ValueError, "unsupported reflex request %d or format %d",

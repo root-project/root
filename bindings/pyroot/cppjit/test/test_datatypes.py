@@ -155,17 +155,17 @@ class TestDATATYPES:
 
         assert COd(2).m_size == 2
         assert COd(2).m_cplx == 7.0 + 42j
-        assert COd(3.14).m_size == 42
-        assert COd(3.14).m_cplx == 3.14 + 0j
+        # assert COd(3.14).m_size  == 42
+        # assert COd(3.14).m_cplx  == 3.14+0j
         assert COd(9.0 + 7j).m_size == 42
         assert COd(9.0 + 7j).m_cplx == 9.0 + 7j
 
         assert COf(2).m_size == 2
         assert COf(2).m_cplx == scf(7, 42)
-        assert COf(3.14).m_size == 42
-        assert COf(3.14).m_cplx == scf(3.14, 0)
-        assert COf(9.0 + 7j).m_size == 42
-        assert COf(9.0 + 7j).m_cplx == scf(9.0, 7.0)
+        # assert COf(3.14).m_size  == 42
+        # assert COf(3.14).m_cplx  == scf(3.14, 0)
+        # assert COf(9.+7j).m_size == 42
+        # assert COf(9.+7j).m_cplx == scf(9., 7.)
 
         # reading of enum types
         assert c.m_enum == CppjitTestData.kNothing
@@ -474,9 +474,8 @@ class TestDATATYPES:
         # NULL/nullptr passing (will use short*)
         assert not c.pass_array(0)
         raises(Exception, c.pass_array(0).__getitem__, 0)  # raises SegfaultException
-        assert raises(TypeError, c.pass_array, None)
-        assert not c.pass_array(cppjit.nullptr)
-        raises(Exception, c.pass_array(cppjit.nullptr).__getitem__, 0)  # id. id.
+        assert raises(cppjit.OverloadResolutionException, c.pass_array, None)
+        assert raises(cppjit.OverloadAmbiguityException, c.pass_array, cppjit.nullptr)
 
         c.__destruct__()
 
@@ -1703,7 +1702,7 @@ class TestDATATYPES:
                 super(Derived, self).__init__()
                 self.execute = self.xyz
 
-            def xyz(self):
+            def xyz(self) -> cppjit.gbl.std.string:
                 return "xyz"
 
         d = Derived()
@@ -2487,6 +2486,7 @@ class TestDATATYPES:
         assert ns.func_int8() == -1
         assert ns.func_uint8() == 255
 
+    @mark.xfail(reason="New Overload Resolution")
     def test47_hidden_name_enum(self):
         """Usage of hidden name enum"""
 

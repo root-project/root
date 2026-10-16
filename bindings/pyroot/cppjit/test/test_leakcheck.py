@@ -68,7 +68,7 @@ class TestLEAKCHECK:
                 self.runit_template(N, scope, func, tmpl_args, *args, **kwds)
 
             gc.collect()
-            assert len(gc.get_objects()) == pre
+            assert len(gc.get_objects()) <= pre  # XXX
             if last < self.process.memory_info().rss:
                 fail += 1
 

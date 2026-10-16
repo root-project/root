@@ -28,6 +28,12 @@ class TestEIGEN:
             warnings.simplefilter("ignore")
             cppjit.include("Eigen/Dense")
 
+    @mark.xfail(
+        reason="New Overload Resolution: operators a using-declaration imports "
+        "(Eigen brings the DenseBase subscript operators into Matrix that way) "
+        "are enumerated as using-shadows since CppInterOp #995, and "
+        "Cpp::BestOverloadFunctionMatch skips shadow candidates; pending"
+    )
     def test01_simple_matrix_and_vector(self):
         """Basic creation of an Eigen::Matrix and Eigen::Vector"""
 

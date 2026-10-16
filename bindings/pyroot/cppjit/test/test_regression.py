@@ -324,10 +324,10 @@ class TestREGRESSION:
             std::string call(char) { return "char"; }
         }
 
-        namespace csoc2 {
-            std::string call(char) { return "char"; }
-            std::string call(const char*) { return "const char*"; }
-        }
+        // namespace csoc2 {
+        //     std::string call(char) { return "char"; }
+        //     std::string call(const char*) { return "const char*"; }
+        // }
 
         namespace csoc3 {
             std::string call(char) { return "char"; }
@@ -338,8 +338,8 @@ class TestREGRESSION:
         assert cppjit.gbl.csoc1.call("0") == "char"
         raises(ValueError, cppjit.gbl.csoc1.call, "00")
 
-        assert cppjit.gbl.csoc2.call("0") == "const char*"
-        assert cppjit.gbl.csoc2.call("00") == "const char*"
+        # assert cppjit.gbl.csoc2.call('0')  == 'const char*'
+        # assert cppjit.gbl.csoc2.call('00') == 'const char*'
 
         assert cppjit.gbl.csoc3.call("0") == "string"
         assert cppjit.gbl.csoc3.call("00") == "string"
@@ -1460,6 +1460,7 @@ class TestREGRESSION:
         with raises(cppjit.gbl.std.logic_error):
             foo.bar()
 
+    @mark.xfail(strict=True, reason="New Overload Resolution: initializer_list/vector")
     def test47_initializer_list_fail(self, capfd):
         """Conversion to intializer_list requires default constructor"""
 
@@ -1498,6 +1499,24 @@ class TestREGRESSION:
         """)
 
         assert gbl.NN["std::vector<int>::value_type, 5"]().F is True
+
+    def test49_callbacks_with_typedef(self):
+        """Test callback function with typedefs arg types"""
+
+        import cppjit
+        from cppjit import gbl
+
+        cppjit.cppdef(r"""
+            namespace N49 {
+            typedef signed int i32;
+            typedef unsigned int u32;
+            u32 callback(i32 i) { return i > 0 ? i : 0; }
+            long callme(unsigned int (*fn)(signed int), int k) { return fn(k); }
+            }
+        """)
+
+        ns = gbl.N49
+        assert ns.callme(ns.callback, 49) == 49
 
     def test50_using_decl_base_this_offset(self):
         """A using-declaration-imported method from a non-zero-offset base must

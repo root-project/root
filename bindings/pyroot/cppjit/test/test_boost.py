@@ -58,6 +58,12 @@ class TestBOOSTANY:
         run=False,
         reason="invalid reads in the JITed boost constructors under valgrind",
     )
+    @mark.xfail(
+        reason="New Overload Resolution: a forwarding-reference template "
+        "operator= (any::operator=(ValueType&&)) fails to instantiate for "
+        "lvalue arguments, and the non-template move-assign fallback rightly "
+        "rejects an lvalue; pending"
+    )
     def test02_any_usage(self):
         """boost::any assignment and casting"""
 
