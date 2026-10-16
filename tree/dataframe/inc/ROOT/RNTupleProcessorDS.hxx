@@ -54,14 +54,19 @@ class RNTupleProcessorDS final : public ROOT::RDF::RDataSource {
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Holds useful information about fields added to the RNTupleProcessorDS
    struct RFieldInfo {
-      ROOT::DescriptorId_t fFieldId;
+      ROOT::DescriptorId_t fOnDiskId;
       std::string fFieldName;
       std::string fTypeName;
       std::size_t fNRepetitions;
+      RNTupleProcessorEntry::FieldIndex_t fEntryFieldIdx;
       // Enable `std::vector::emplace_back` for this type
-      RFieldInfo(ROOT::DescriptorId_t fieldId, std::string_view fieldName, std::string_view typeName,
-                 std::size_t nRepetitions)
-         : fFieldId(fieldId), fFieldName(fieldName), fTypeName(typeName), fNRepetitions(nRepetitions)
+      RFieldInfo(ROOT::DescriptorId_t onDiskId, std::string_view fieldName, std::string_view typeName,
+                 std::size_t nRepetitions, Internal::RNTupleProcessorEntry::FieldIndex_t entryFieldIdx)
+         : fOnDiskId(onDiskId),
+           fFieldName(fieldName),
+           fTypeName(typeName),
+           fNRepetitions(nRepetitions),
+           fEntryFieldIdx(entryFieldIdx)
       {
       }
    };
