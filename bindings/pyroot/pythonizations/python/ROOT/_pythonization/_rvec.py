@@ -167,11 +167,22 @@ def _fill_from_numpy_array(self, arr):
 
 
 def _container_init(self, *args, **kwargs):
-    """Constructor of std::vector and RVec that also accepts a numpy array."""
-    if len(args) == 1 and not kwargs and _is_numpy_array(args[0]):
-        self._original_init()
-        _fill_from_numpy_array(self, args[0])
-        return
+    """Constructor of std::vector and RVec that also accepts a numpy array or
+    an iterator (e.g. a generator) of elements."""
+    import collections.abc
+
+    import ROOT
+
+    if len(args) == 1 and not kwargs:
+        if _is_numpy_array(args[0]):
+            self._original_init()
+            _fill_from_numpy_array(self, args[0])
+            return
+        if isinstance(args[0], collections.abc.Iterator) and not isinstance(args[0], ROOT._cppyy.types.Instance):
+            # an iterator has no C++ type in the overload resolution, unlike
+            # a list of its elements
+            self._original_init(list(args[0]))
+            return
     self._original_init(*args, **kwargs)
 
 
