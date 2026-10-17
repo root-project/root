@@ -21,7 +21,7 @@
 #include "RooMsgService.h"
 #include "RooMinimizer.h"
 
-#include "Minuit2/Minuit2Minimizer.h"
+#include "../RooAbsMinimizerFcn.h"
 #include "Minuit2/MnStrategy.h"
 
 #include <cmath>
@@ -169,9 +169,8 @@ void LikelihoodGradientJob::update_state()
       auto gradient_message =
          get_manager()->messenger().receive_from_master_on_worker<RooFit::MultiProcess::Message>(&more);
       assert(more);
-      auto gradient_message_begin = gradient_message.data<ROOT::Minuit2::DerivatorElement>();
-      auto gradient_message_end =
-         gradient_message_begin + gradient_message.size() / sizeof(ROOT::Minuit2::DerivatorElement);
+      auto gradient_message_begin = gradient_message.data<DerivatorElement>();
+      auto gradient_message_end = gradient_message_begin + gradient_message.size() / sizeof(DerivatorElement);
       std::copy(gradient_message_begin, gradient_message_end, grad_.begin());
 
       auto minuit_internal_x_message =
@@ -193,9 +192,6 @@ void LikelihoodGradientJob::update_state()
          std::copy(offsets_message_begin, offsets_message_end, shared_offset_.offsets().begin());
       }
 
-      // Since the gradient parallelization only support Minuit 2, we can do this cast
-      auto &minim = static_cast<ROOT::Minuit2::Minuit2Minimizer &>(*minimizer_->_minimizer);
-
       // The master already knows the function value at the current point from
       // the line search that Minuit just completed; pre-seeding the derivator's
       // cache with it makes the SetupDifferentiate call below skip its full
@@ -206,8 +202,8 @@ void LikelihoodGradientJob::update_state()
 
       // note: the next call must stay after the (possible) update of the offset, because it
       // calls the likelihood function, so the offset must be correct at this point
-      gradf_.SetupDifferentiate(minimizer_->getNPar(), minim.GetFCN(), minuit_internal_x_.data(),
-                                minimizer_->fitter()->Config().ParamsSettings());
+      gradf_.SetupDifferentiate(minimizer_->getNPar(), minimizer_->_fcn.get(), minuit_internal_x_.data(),
+                                minimizer_->_config.ParamsSettings());
    }
 }
 
@@ -218,11 +214,8 @@ void LikelihoodGradientJob::update_state()
 
 void LikelihoodGradientJob::run_derivator(unsigned int i_component) const
 {
-   // Since the gradient parallelization only support Minuit 2, we can do this cast
-   auto &minim = static_cast<ROOT::Minuit2::Minuit2Minimizer &>(*minimizer_->_minimizer);
-
    // Calculate the derivative etc for these parameters
-   grad_[i_component] = gradf_.FastPartialDerivative(minim.GetFCN(), minimizer_->fitter()->Config().ParamsSettings(),
+   grad_[i_component] = gradf_.FastPartialDerivative(minimizer_->_fcn.get(), minimizer_->_config.ParamsSettings(),
                                                      i_component, grad_[i_component]);
 }
 

@@ -1,4 +1,3 @@
-// @(#)root/mathcore:$Id$
 // Authors: L. Moneta, J.T. Offermann, E.G.P. Bos    2013-2018
 //
 /**********************************************************************
@@ -23,18 +22,20 @@
  *      Modified things (w.r.t. original) are indicated by MODIFIED.
  */
 
-#include "Minuit2/NumericalDerivator.h"
-#include <cmath>
-#include <algorithm>
-#include <iostream>
+#include "NumericalDerivator.h"
+
+#include <Fit/ParameterSettings.h>
 #include <TMath.h>
+
+#include <algorithm>
 #include <cassert>
-#include "Fit/ParameterSettings.h"
+#include <cmath>
+#include <iostream>
 
-#include <Math/Minimizer.h> // needed here because in Fitter is only a forward declaration
+namespace RooFit {
+namespace TestStatistics {
 
-namespace ROOT {
-namespace Minuit2 {
+using ROOT::Minuit2::FCNBase;
 
 NumericalDerivator::NumericalDerivator(bool always_exactly_mimic_minuit2)
    : fAlwaysExactlyMimicMinuit2(always_exactly_mimic_minuit2)
@@ -286,5 +287,5 @@ std::ostream &operator<<(std::ostream &out, const DerivatorElement &value)
               << ", step_size: " << value.step_size << ")";
 }
 
-} // namespace Minuit2
-} // namespace ROOT
+} // namespace TestStatistics
+} // namespace RooFit

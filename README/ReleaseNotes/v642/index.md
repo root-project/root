@@ -104,6 +104,7 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
 * The headers `ZipLZMA.h`, `ZipLZ4.h` and `ZipZSTD.h` are deprecated and will be removed in ROOT 6.46, use instead the public methods in the `RZip.h` interface.
 * The headers `Hepevt.h` and `cfortran.h` are deprecated and will be moved to  `ROOT/Hepevt.h` and `ROOT/cfortran.h` in ROOT 6.44. At a later time point they may be fully removed from ROOT public headers, consider using instead the `TGenerator.h` public interface or the `cfortran.h` header of the `cfitsio` library, respectively.
 * Remove outdated `TSQLFile` class, was not tested for very long time, not working with only supported sqlite DB
+* The `ROOT::Minuit2::Minuit2Minimizer::SetFCN(unsigned int, std::unique_ptr<FCNBase>)` and `GetFCN()` methods are removed. They were added for RooFit, which drives Minuit2 directly now and doesn't need them anymore. To minimize an `FCNBase` object, use the Minuit2 library interface (`MnMigrad`, `MnMinimize`, etc.) directly. The `ROOT::Minuit2::NumericalDerivator` class, which was only used by RooFit, is moved to RooFit as well and is no longer part of the public Minuit2 headers.
 
 ## Build System
 
@@ -177,7 +178,7 @@ maps) will now obtain different, mathematically consistent values.
 
 ### Skipping identically-vanishing second derivatives in numerical Hessian evaluation
 
-Minuit2 objective functions can now advertise pairs of parameters whose mixed second derivative is identically zero, via the new virtual function `ROOT::Minuit2::FCNBase::SecondDerivativeAlwaysVanishes()` (with corresponding setters on `ROOT::Minuit2::FCNAdapter` and `ROOT::Minuit2::Minuit2Minimizer`).
+Minuit2 objective functions can now advertise pairs of parameters whose mixed second derivative is identically zero, via the new virtual function `ROOT::Minuit2::FCNBase::SecondDerivativeAlwaysVanishes()` (with a corresponding setter on `ROOT::Minuit2::FCNAdapter`).
 The numerical Hessian computation in Minuit2 (`MnHesse`) skips the finite-difference evaluations for such parameter pairs, which can speed up Hesse significantly for likelihoods with many mutually independent parameters.
 The parameter indices in this interface always refer to the function's own full (external) parameter space, including parameters that are fixed in the minimizer, and the advertised information must hold for all parameter values; see the `FCNBase` documentation for the full contract.
 
