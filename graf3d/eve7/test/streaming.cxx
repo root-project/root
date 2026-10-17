@@ -15,7 +15,14 @@
 #include <ROOT/REvePointSet.hxx>
 #include <ROOT/REveStraightLineSet.hxx>
 #include <ROOT/REveText.hxx>
+#include <ROOT/REveBox.hxx>
+#include <ROOT/REveBoxSet.hxx>
+#include <ROOT/REveGeoShape.hxx>
+#include <ROOT/REveUtil.hxx>
+#include <ROOT/REveTrans.hxx>
 #include <ROOT/REveRenderData.hxx>
+
+#include "TGeoTube.h"
 
 #include <nlohmann/json.hpp>
 
@@ -62,15 +69,19 @@ TEST(REveStreaming, PointSet)
    EXPECT_EQ(bin % 4, 0);
 
    if (eve->IsRCore()) {
-      // One texel of 4 floats per point, and the bbox, min then max, as normals.
+      // One texel of 4 floats per point.
       EXPECT_EQ(j["fSize"], 10);
       int tx = j["fTexX"], ty = j["fTexY"];
       EXPECT_GE(tx * ty, 10);
       EXPECT_EQ(rd["vert_size"], 4 * tx * ty);
-      EXPECT_EQ(rd["norm_size"], 6);
+      EXPECT_EQ(rd["norm_size"], 0);
    } else {
       EXPECT_EQ(rd["vert_size"], 30);
    }
+
+   // The bounding box, min then max, in the core fields.
+   ASSERT_TRUE(j.contains("bbox"));
+   EXPECT_EQ(j["bbox"], nlohmann::json({0, 0, 0, 9, 18, 27}));
 
    delete ps;
 }
@@ -159,4 +170,209 @@ TEST(REveStreaming, SceneStream)
       EXPECT_FLOAT_EQ(v[1], 2.f);
       EXPECT_FLOAT_EQ(v[2], 3.f);
    }
+}
+
+// Stamping kCBObjProps invalidates the bounding box; the next AssertBBox()
+// computes it from the current geometry.
+TEST(REveStreaming, BBoxInvalidatedByObjProps)
+{
+   REX::REveManager::Create();
+   auto ps = MakePoints("points", 3);
+
+   EXPECT_EQ(ps->GetBBoxState(), REX::REveElement::kBBoxInvalid);
+   ASSERT_EQ(ps->AssertBBox(), REX::REveElement::kBBoxSet);
+   EXPECT_FLOAT_EQ(ps->GetBBoxMax().fZ, 6.f);
+
+   ps->SetNextPoint(10, 20, 30);
+   ps->StampObjProps();
+   EXPECT_EQ(ps->GetBBoxState(), REX::REveElement::kBBoxInvalid);
+   ASSERT_EQ(ps->AssertBBox(), REX::REveElement::kBBoxSet);
+   EXPECT_FLOAT_EQ(ps->GetBBoxMax().fZ, 30.f);
+
+   delete ps;
+}
+
+// The box covers the points set, not the capacity: SetNextPoint() doubles it
+// with zero-filled slots, and Reset() keeps the old values.
+TEST(REveStreaming, PointSetBBoxCoversPointsOnly)
+{
+   REX::REveManager::Create();
+   auto ps = new REX::REvePointSet("points");
+   for (int i = 0; i < 3; ++i)
+      ps->SetNextPoint(10 + i, 20 + i, 30 + i);
+
+   ASSERT_EQ(ps->AssertBBox(), REX::REveElement::kBBoxSet);
+   EXPECT_FLOAT_EQ(ps->GetBBoxMin().fX, 10.f);
+   EXPECT_FLOAT_EQ(ps->GetBBoxMin().fZ, 30.f);
+
+   ps->Reset(8);
+   ps->SetNextPoint(5, 5, 5);
+   ASSERT_EQ(ps->AssertBBox(), REX::REveElement::kBBoxSet);
+   EXPECT_FLOAT_EQ(ps->GetBBoxMax().fX, 5.f);
+   EXPECT_FLOAT_EQ(ps->GetBBoxMin().fX, 5.f);
+
+   delete ps;
+}
+
+// An empty element has no box, so the projection manager's box does not take
+// it in, and it sends neither render data nor a box.
+TEST(REveStreaming, EmptyElementsHaveNoBox)
+{
+   REX::REveManager::Create();
+   auto ps = new REX::REvePointSet("points");
+   auto ls = new REX::REveStraightLineSet("lines");
+
+   for (REX::REveElement *e : {(REX::REveElement *)ps, (REX::REveElement *)ls}) {
+      EXPECT_EQ(e->AssertBBox(), REX::REveElement::kBBoxNone);
+      nlohmann::json j;
+      EXPECT_EQ(e->WriteCoreJson(j, 0), 0);
+      EXPECT_FALSE(j.contains("render_data"));
+      EXPECT_FALSE(j.contains("bbox"));
+   }
+
+   delete ps;
+   delete ls;
+}
+
+// Text has no box, and the client is told so.
+TEST(REveStreaming, TextNotInWorld)
+{
+   REX::REveManager::Create();
+   auto t = new REX::REveText("label");
+   t->SetText("hello");
+
+   nlohmann::json j;
+   t->WriteCoreJson(j, 0);
+   EXPECT_FALSE(j.contains("bbox"));
+   EXPECT_EQ(j["bbox_not_in_world"], true);
+
+   delete t;
+}
+
+// An REveBox streams its transformation, and its box stays in its own frame.
+TEST(REveStreaming, BoxTransAndBBox)
+{
+   REX::REveManager::Create();
+   auto b = new REX::REveBox("box");
+   const float h = 0.5f;
+   const float v[8][3] = {{-h, -h, -h}, {-h, h, -h}, {h, h, -h}, {h, -h, -h},
+                          {-h, -h, h},  {-h, h, h},  {h, h, h},  {h, -h, h}};
+   for (int i = 0; i < 8; ++i)
+      b->SetVertex(i, v[i][0], v[i][1], v[i][2]);
+   b->RefMainTrans().SetPos(100, 200, 300);
+
+   nlohmann::json j;
+   b->WriteCoreJson(j, 0);
+   ASSERT_TRUE(j.contains("render_data"));
+   EXPECT_EQ(j["render_data"]["trans_size"], 16);
+   EXPECT_EQ(j["bbox"], nlohmann::json({-h, -h, -h, h, h, h}));
+
+   delete b;
+}
+
+// A geo shape's box is the TGeoBBox of its shape, about the shape's origin on
+// each axis. A tube segment from 0 to 90 degrees has its origin off zero in x
+// and y.
+TEST(REveStreaming, GeoShapeBBoxAboutOrigin)
+{
+   REX::REveManager::Create();
+   auto gs = new REX::REveGeoShape("tubeseg");
+   {
+      // Register the shape with REve's geo manager, which REveGeoShape deletes
+      // it from; another manager would keep a dangling pointer to it.
+      REX::REveGeoManagerHolder gmgr(REX::REveGeoShape::GetGeoManager());
+      gs->SetShape(new TGeoTubeSeg(5, 10, 3, 0, 90));
+   }
+
+   ASSERT_EQ(gs->AssertBBox(), REX::REveElement::kBBoxSet);
+   EXPECT_FLOAT_EQ(gs->GetBBoxMin().fX, 0.f);
+   EXPECT_FLOAT_EQ(gs->GetBBoxMin().fY, 0.f);
+   EXPECT_FLOAT_EQ(gs->GetBBoxMin().fZ, -3.f);
+   EXPECT_FLOAT_EQ(gs->GetBBoxMax().fX, 10.f);
+   EXPECT_FLOAT_EQ(gs->GetBBoxMax().fY, 10.f);
+   EXPECT_FLOAT_EQ(gs->GetBBoxMax().fZ, 3.f);
+
+   delete gs;
+}
+
+// The box of an instanced box set holds what the client draws: each instance
+// at its position, reaching ShapeSize times its scale, or its matrix applied to
+// ShapeSize, either way.
+TEST(REveStreaming, BoxSetBBoxHoldsInstances)
+{
+   REX::REveManager::Create();
+   auto expectBox = [](REX::REveElement *e, REX::REveVector lo, REX::REveVector hi) {
+      ASSERT_EQ(e->AssertBBox(), REX::REveElement::kBBoxSet);
+      for (int k = 0; k < 3; ++k) {
+         EXPECT_NEAR(e->GetBBoxMin()[k], lo[k], 1e-4) << e->GetCName() << " min " << k;
+         EXPECT_NEAR(e->GetBBoxMax()[k], hi[k], 1e-4) << e->GetCName() << " max " << k;
+      }
+   };
+
+   auto fixed = new REX::REveBoxSet("fixed");
+   fixed->Reset(REX::REveBoxSet::kBT_Instanced, kFALSE, 4);
+   fixed->SetDefWidth(2);
+   fixed->AddInstance(10, 10, 10);
+   expectBox(fixed, {8, 9, 9}, {12, 11, 11});
+
+   auto scaled = new REX::REveBoxSet("scaled");
+   scaled->Reset(REX::REveBoxSet::kBT_InstancedScaled, kFALSE, 4);
+   scaled->AddInstanceScaled(10, 10, 10, 1, 2, 3);
+   scaled->AddInstanceScaled(-10, 0, 0, 1, 1, 1);
+   expectBox(scaled, {-11, -2, -3}, {11, 12, 13});
+
+   // A cone with its apex at the origin, 60 long along y, radius 5. Its box is
+   // that of the template cube [-1, 1]^3 under the cone's matrix.
+   auto cone = new REX::REveBoxSet("cone");
+   cone->Reset(REX::REveBoxSet::kBT_InstancedScaledRotated, kFALSE, 4);
+   cone->AddCone(REX::REveVector(0, 0, 0), REX::REveVector(0, 60, 0), 5);
+   expectBox(cone, {-5, -60, -5}, {5, 60, 5});
+
+   delete fixed;
+   delete scaled;
+   delete cone;
+}
+
+// An element with no geometry of its own has no render data and sends no box.
+namespace {
+// Fills its box from no points at all.
+class EmptyBoxElement : public REX::REveElement {
+public:
+   EmptyBoxElement() : REX::REveElement("empty") {}
+   void ComputeBBox() override { BBoxInit(); }
+};
+} // namespace
+
+// BBoxInit() starts from +-infinity: a box no point reached is reported as
+// kBBoxNone and not streamed, and a point beyond any finite start sets the box.
+TEST(REveStreaming, BBoxFromInfinity)
+{
+   REX::REveManager::Create();
+
+   auto e = new EmptyBoxElement;
+   EXPECT_EQ(e->AssertBBox(), REX::REveElement::kBBoxNone);
+
+   auto ps = new REX::REvePointSet("far");
+   ps->SetNextPoint(2e6, -3e6, 4e6);
+   ASSERT_EQ(ps->AssertBBox(), REX::REveElement::kBBoxSet);
+   EXPECT_FLOAT_EQ(ps->GetBBoxMin().fX, 2e6);
+   EXPECT_FLOAT_EQ(ps->GetBBoxMax().fY, -3e6);
+   EXPECT_FLOAT_EQ(ps->GetBBoxMin().fZ, 4e6);
+
+   delete e;
+   delete ps;
+}
+
+TEST(REveStreaming, GroupingElementNoBBox)
+{
+   REX::REveManager::Create();
+   auto g = new REX::REveElement("group");
+
+   nlohmann::json j;
+   g->WriteCoreJson(j, 0);
+   EXPECT_FALSE(j.contains("render_data"));
+   EXPECT_FALSE(j.contains("bbox"));
+   EXPECT_EQ(g->AssertBBox(), REX::REveElement::kBBoxNone);
+
+   delete g;
 }

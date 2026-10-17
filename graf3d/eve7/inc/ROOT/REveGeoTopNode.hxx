@@ -168,6 +168,7 @@ public:
    void SetGeoData(REveGeoTopNodeData *d, bool rebuild = true);
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
    void BuildRenderData() override;
+   void ComputeBBox() override;
    void GetIndicesFromBrowserStack(const std::vector<int> &stack, std::set<int>& outStack);
 
    void SetVisLevel(int);

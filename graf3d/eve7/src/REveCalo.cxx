@@ -702,7 +702,7 @@ void REveCalo3D::BuildCellIdCache()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill bounding-box information of the base-class TAttBBox (virtual method).
+/// Fill the bounding box (virtual from REveElement).
 /// If member 'REveFrameBox* fFrame' is set, frame's corners are used as bbox.
 
 void REveCalo3D::ComputeBBox()
@@ -710,13 +710,10 @@ void REveCalo3D::ComputeBBox()
    BBoxInit();
 
    Float_t th = (fData) ? GetValToHeight() * fData->GetMaxVal(fPlotEt) : 0;
+   Float_t r = fBarrelRadius + th;
 
-   fBBox[0] = -fBarrelRadius - th;
-   fBBox[1] =  fBarrelRadius + th;
-   fBBox[2] =  fBBox[0];
-   fBBox[3] =  fBBox[1];
-   fBBox[4] =  fEndCapPosB - th;
-   fBBox[5] =  fEndCapPosF + th;
+   fBBoxMin.Set(-r, -r, fEndCapPosB - th);
+   fBBoxMax.Set(r, r, fEndCapPosF + th);
 }
 
 /** \class REveCalo2D
@@ -981,7 +978,7 @@ Float_t REveCalo2D::GetValToHeight() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill bounding-box information of the base-class TAttBBox (virtual method).
+/// Fill the bounding box (virtual from REveElement).
 /// If member 'REveFrameBox* fFrame' is set, frame's corners are used as bbox.
 
 void REveCalo2D::ComputeBBox()
@@ -1493,24 +1490,21 @@ void REveCaloLego::BuildCellIdCache()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill bounding-box information of the base-class TAttBBox (virtual method).
+/// Fill the bounding box (virtual from REveElement).
 /// If member 'REveFrameBox* fFrame' is set, frame's corners are used as bbox.
 
 void REveCaloLego::ComputeBBox()
 {
-
-   // fBBox = Float_t[6] X(min,max), Y(min,max), Z(min,max)
-
    BBoxZero();
 
    Float_t ex = 1.2; // 20% offset for axis labels
 
    Float_t a = 0.5*ex;
 
-   fBBox[0] = -a;
-   fBBox[1] =  a;
-   fBBox[2] = -a;
-   fBBox[3] =  a;
+   fBBoxMin.fX = -a;
+   fBBoxMax.fX = a;
+   fBBoxMin.fY = -a;
+   fBBoxMax.fY = a;
 
    // scaling is relative to shortest XY axis
    Double_t em, eM, pm, pM;
@@ -1519,19 +1513,18 @@ void REveCaloLego::ComputeBBox()
    Double_t r = (eM-em)/(pM-pm);
    if (r<1)
    {
-      fBBox[2] /= r;
-      fBBox[3] /= r;
+      fBBoxMin.fY /= r;
+      fBBoxMax.fY /= r;
    }
    else
    {
-      fBBox[0] *= r;
-      fBBox[1] *= r;
+      fBBoxMin.fX *= r;
+      fBBoxMax.fX *= r;
    }
 
-   fBBox[4] =  0;
+   fBBoxMin.fZ = 0;
    if (fScaleAbs && !fData->Empty())
-      fBBox[5] = GetMaxVal()*GetValToHeight();
+      fBBoxMax.fZ = GetMaxVal() * GetValToHeight();
    else
-      fBBox[5] = fMaxTowerH;
+      fBBoxMax.fZ = fMaxTowerH;
 }
-

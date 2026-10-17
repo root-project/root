@@ -331,7 +331,7 @@ sap.ui.define([
          this.rebuild = true;
       },
 
-      /** Everything except kCBTransBBox: the tree shows structure and
+      /** Everything except kCBTrans: the tree shows structure and
         * properties, and a moving element's transform is neither. See
         * EveManager.callSceneElementChange. */
       changeBitMask: 1 | 4 | 8 | 16,   // ColorSelection | ObjProps | Visibility | Added

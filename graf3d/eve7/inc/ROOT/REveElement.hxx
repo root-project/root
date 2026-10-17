@@ -17,6 +17,7 @@
 #include <ROOT/REveProjectionBases.hxx>
 #include "TString.h"
 
+#include <algorithm>
 #include <memory>
 #include <list>
 #include <ostream>
@@ -98,6 +99,38 @@ protected:
    void            *fUserData{nullptr};     ///<! Externally assigned and controlled user data.
 
    std::unique_ptr<REveRenderData> fRenderData;///<! Vertex / normal / triangle index information for rendering.
+
+public:
+   enum EBBoxState : UChar_t {
+      kBBoxInvalid,   // Not computed since the last change.
+      kBBoxNone,      // No geometry of its own.
+      kBBoxSet,       // fBBoxMin and fBBoxMax hold the box.
+      kBBoxNotInWorld // Screen-space or overlay content: not bounded, not culled.
+   };
+
+protected:
+   REveVector fBBoxMin;                 ///<! Bounding box in the element's own frame.
+   REveVector fBBoxMax;                 ///<!
+   EBBoxState fBBoxState{kBBoxInvalid}; ///<!
+
+   void BBoxInit();
+   void BBoxZero(Float_t epsilon = 0, Float_t x = 0, Float_t y = 0, Float_t z = 0);
+   void BBoxClear() { fBBoxState = kBBoxInvalid; }
+   void BBoxNotInWorld() { fBBoxState = kBBoxNotInWorld; }
+   void BBoxCheckPoint(const REveVector &v)
+   {
+      fBBoxMin.SetMin(v);
+      fBBoxMax.SetMax(v);
+   }
+   void BBoxCheckPoint(Float_t x, Float_t y, Float_t z) { BBoxCheckPoint(REveVector(x, y, z)); }
+   void BBoxCheckPoint(const Float_t *p) { BBoxCheckPoint(p[0], p[1], p[2]); }
+   /// Grow the box to hold the axis-aligned box with centre `c` and half sizes `h`.
+   void BBoxCheckBox(const REveVector &c, const REveVector &h)
+   {
+      BBoxCheckPoint(c - h);
+      BBoxCheckPoint(c + h);
+   }
+   void AssertBBoxExtents(Float_t epsilon = 0.005);
 
    virtual void PreDeleteElement();
    virtual void RemoveElementsInternal();
@@ -262,6 +295,13 @@ public:
    virtual void  BuildRenderData();
    // clang-format on
 
+   virtual void ComputeBBox();
+   EBBoxState AssertBBox();
+   void ResetBBox() { fBBoxState = kBBoxInvalid; }
+   EBBoxState GetBBoxState() const { return fBBoxState; }
+   const REveVector &GetBBoxMin() const { return fBBoxMin; }
+   const REveVector &GetBBoxMax() const { return fBBoxMax; }
+
    void* GetUserData() const   { return fUserData; }
    void  SetUserData(void* ud) { fUserData = ud;   }
 
@@ -327,15 +367,15 @@ public:
 
    // Change-stamping and change bits
    //---------------------------------
-   // kCBTransBBox streams the transformation as JSON only, and the client
-   // applies it to the object it already has. A change that invalidates
-   // geometry must stamp kCBObjProps. No bounding box is sent despite the name.
+   // kCBTrans streams the transformation as JSON only, and the client applies
+   // it to the object it already has. A change that invalidates geometry must
+   // stamp kCBObjProps, which also invalidates the bounding box.
 
    // clang-format off
    enum EChangeBits
    {
       kCBColorSelection =  BIT(0), // Main color or select/hilite state changed.
-      kCBTransBBox      =  BIT(1), // Transformation changed; cheap update, no rebuild.
+      kCBTrans          =  BIT(1), // Transformation changed; cheap update, no rebuild.
       kCBObjProps       =  BIT(2), // Object changed, requires dropping its display-lists.
       kCBVisibility     =  BIT(3), // Rendering of self/children changed.
       kCBElementAdded   =  BIT(4)  // Element was added to a new parent.
@@ -359,8 +399,13 @@ protected:
 
 public:
    void StampColorSelection() { AddStamp(kCBColorSelection); }
-   void StampTransBBox()      { AddStamp(kCBTransBBox); }
-   void StampObjProps()       { if ( ! (fChangeBits & kCBObjProps)) AddStamp(kCBObjProps); }
+   void StampTrans() { AddStamp(kCBTrans); }
+   void StampObjProps()
+   {
+      fBBoxState = kBBoxInvalid;
+      if (!(fChangeBits & kCBObjProps))
+         AddStamp(kCBObjProps);
+   }
    void StampVisibility()     { AddStamp(kCBVisibility); }
    void StampElementAdded()   { AddStamp(kCBElementAdded); }
    // void StampElementRemoved() { AddStamp(kCBElementRemoved); }

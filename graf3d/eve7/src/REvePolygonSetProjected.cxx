@@ -154,17 +154,13 @@ void REvePolygonSetProjected::BuildRenderData()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Override of virtual method from TAttBBox.
+/// Fill the bounding box (virtual from REveElement).
 
 void REvePolygonSetProjected::ComputeBBox()
 {
-   if (!fPnts.empty()) {
-      BBoxInit();
-      for (unsigned pi = 0; pi < fPnts.size(); ++pi)
-         BBoxCheckPoint(fPnts[pi].fX, fPnts[pi].fY, fPnts[pi].fZ);
-   } else {
-      BBoxZero();
-   }
+   BBoxInit();
+   for (unsigned pi = 0; pi < fPnts.size(); ++pi)
+      BBoxCheckPoint(fPnts[pi]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -185,7 +181,7 @@ void REvePolygonSetProjected::SetProjection(REveProjectionManager* mng,
 
 void REvePolygonSetProjected::SetDepthLocal(Float_t d)
 {
-   SetDepthCommon(d, this, fBBox);
+   SetDepthCommon(d, this);
 
    for (unsigned i = 0; i < fPnts.size(); ++i)
       fPnts[i].fZ = fDepth;

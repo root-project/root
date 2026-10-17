@@ -17,7 +17,9 @@
 #include "ROOT/REveTrans.hxx"
 
 #include "TRandom.h"
+#include <algorithm>
 #include <cassert>
+#include <cmath>
 
 #include <nlohmann/json.hpp>
 
@@ -243,7 +245,7 @@ void REveBoxSet::AddHex(const REveVector& pos, Float_t r, Float_t angle, Float_t
    hex->fMat[i] = t[i];
 }
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill bounding-box information of the base-class TAttBBox (virtual method).
+/// Fill the bounding box (virtual from REveElement).
 /// If member 'REveFrameBox* fFrame' is set, frame's corners are used as bbox.
 
 void REveBoxSet::ComputeBBox()
@@ -268,6 +270,13 @@ void REveBoxSet::ComputeBBox()
 
    BBoxInit();
 
+   // The client draws an instance as pos + M * (def * v), with v in the shape
+   // template, which is within [-1, 1]^3, and M the instance's scale or matrix.
+   // The box of the positions is widened on each axis by the largest reach of
+   // any instance along that axis.
+   Float_t reach[3] = {0, 0, 0};
+   const Float_t def[3] = {std::abs(fDefWidth), std::abs(fDefHeight), std::abs(fDefDepth)};
+
    REveChunkManager::iterator bi(fPlex);
    switch (fBoxType)
    {
@@ -287,7 +296,9 @@ void REveBoxSet::ComputeBBox()
          while (bi.next()) {
             InstancedScaled_t& b = * (InstancedScaled_t*) bi();
             BBoxCheckPoint(b.fX, b.fY, b.fZ);
-            BBoxCheckPoint(b.fX + b.fW, b.fY + b.fH , b.fZ + b.fD);
+            reach[0] = std::max(reach[0], def[0] * std::abs(b.fW));
+            reach[1] = std::max(reach[1], def[1] * std::abs(b.fH));
+            reach[2] = std::max(reach[2], def[2] * std::abs(b.fD));
          }
          break;
       }
@@ -297,8 +308,9 @@ void REveBoxSet::ComputeBBox()
          while (bi.next()) {
             Instanced_t& b = * (Instanced_t*) bi();
             BBoxCheckPoint(b.fX, b.fY, b.fZ);
-            BBoxCheckPoint(b.fX + fDefWidth, b.fY + fDefHeight , b.fZ + fDefDepth);
          }
+         for (Int_t k = 0; k < 3; ++k)
+            reach[k] = def[k];
          break;
       }
 
@@ -308,6 +320,10 @@ void REveBoxSet::ComputeBBox()
             InstancedScaledRotated_t& b = * (InstancedScaledRotated_t*) bi();
             float* a = b.fMat;
             BBoxCheckPoint(a[12], a[13], a[14]);
+            // Column-major: column j of M is a[4j], a[4j+1], a[4j+2].
+            for (Int_t k = 0; k < 3; ++k)
+               reach[k] = std::max(reach[k],
+                                   std::abs(a[k]) * def[0] + std::abs(a[4 + k]) * def[1] + std::abs(a[8 + k]) * def[2]);
          }
          break;
       }
@@ -318,6 +334,11 @@ void REveBoxSet::ComputeBBox()
       }
 
    } // end switch box-type
+
+   for (Int_t k = 0; k < 3; ++k) {
+      fBBoxMin[k] -= reach[k];
+      fBBoxMax[k] += reach[k];
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -410,12 +431,6 @@ void REveBoxSet::BuildRenderData()
       // printf(" >>> resize render data %d \n", 4 * fTexX * fTexY);
       fRenderData->ResizeV(4 * fTexX * fTexY);
    }
-
-   // save bbox in render data normals
-   ComputeBBox();
-   float* bb = GetBBox();
-   fRenderData->PushN(bb[0], bb[1], bb[2]);
-   fRenderData->PushN(bb[3], bb[4], bb[5]);
 
    REveElement::BuildRenderData();
 }

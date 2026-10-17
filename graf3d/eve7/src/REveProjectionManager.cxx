@@ -20,6 +20,8 @@
 
 #include "TClass.h"
 
+#include <functional>
+
 #include <list>
 
 /** \class REveProjectionManager
@@ -211,11 +213,8 @@ Bool_t REveProjectionManager::ShouldImport(REveElement *el)
 
 void REveProjectionManager::UpdateDependentElements(REveElement * /*root*/)
 {
-   for (auto &d: fDependentEls) {
-      TAttBBox* bbox = dynamic_cast<TAttBBox *>(d);
-      if (bbox)
-         bbox->ComputeBBox();
-   }
+   for (auto &d : fDependentEls)
+      d->ComputeBBox();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -289,7 +288,7 @@ REveElement* REveProjectionManager::ImportElements(REveElement* el,
       AssertBBox();
       ProjectChildrenRecurse(new_el);
       AssertBBoxExtents(0.1);
-      StampTransBBox();
+      StampTrans();
 
       UpdateDependentElements(new_el);
 
@@ -321,7 +320,7 @@ REveElement* REveProjectionManager::SubImportElements(REveElement* el,
       AssertBBox();
       ProjectChildrenRecurse(new_el);
       AssertBBoxExtents(0.1);
-      StampTransBBox();
+      StampTrans();
 
       UpdateDependentElements(new_el);
    }
@@ -356,7 +355,7 @@ Int_t REveProjectionManager::SubImportChildren(REveElement* el, REveElement* pro
       for (auto &nel: new_els)
          ProjectChildrenRecurse(nel);
       AssertBBoxExtents(0.1);
-      StampTransBBox();
+      StampTrans();
 
       UpdateDependentElements(proj_parent);
    }
@@ -374,14 +373,11 @@ void REveProjectionManager::ProjectChildrenRecurse(REveElement* el)
    if (pted)
    {
       pted->UpdateProjection();
-      TAttBBox* bb = dynamic_cast<TAttBBox*>(pted);
-      if (bb)
-      {
-         Float_t* b = bb->AssertBBox();
-         BBoxCheckPoint(b[0], b[2], b[4]);
-         BBoxCheckPoint(b[1], b[3], b[5]);
-      }
       el->StampObjProps();
+      if (el->AssertBBox() == kBBoxSet) {
+         BBoxCheckPoint(el->GetBBoxMin());
+         BBoxCheckPoint(el->GetBBoxMax());
+      }
    }
 
    for (auto &c : el->RefChildren())  ProjectChildrenRecurse(c);
@@ -400,22 +396,18 @@ void REveProjectionManager::ProjectChildren()
    for (auto &n : fNieces)    ProjectChildrenRecurse(n);
 
    AssertBBoxExtents(0.1);
-   StampTransBBox();
+   StampTrans();
 
    UpdateDependentElements(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Virtual from TAttBBox; fill bounding-box information.
-///
-/// The bounding-box information is kept coherent during addition of
-/// projected elements and projection parameter updates. This is
-/// called only in case the manager has not been populated at all.
+/// Fill the bounding box (virtual from REveElement) with the union of the
+/// boxes of the projected elements below the children and the nieces.
+/// ImportElements() and ProjectChildren() also widen it as they project.
 
 void REveProjectionManager::ComputeBBox()
 {
-   static const REveException eH("REveProjectionManager::ComputeBBox ");
-
    if ( ! HasChildren() && ! HasNieces())
    {
       BBoxZero();
@@ -423,4 +415,20 @@ void REveProjectionManager::ComputeBBox()
    }
 
    BBoxInit();
+
+   std::function<void(REveElement *)> add = [&](REveElement *el) {
+      if (dynamic_cast<REveProjected *>(el) && el->AssertBBox() == kBBoxSet &&
+          el->GetBBoxMin().fX <= el->GetBBoxMax().fX) {
+         BBoxCheckPoint(el->GetBBoxMin());
+         BBoxCheckPoint(el->GetBBoxMax());
+      }
+      for (auto &c : el->RefChildren())
+         add(c);
+   };
+   for (auto &c : fChildren)
+      add(c);
+   for (auto &n : fNieces)
+      add(n);
+
+   AssertBBoxExtents(0.1);
 }
