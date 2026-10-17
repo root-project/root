@@ -36,7 +36,6 @@
 #include "TObjArray.h"
 #include "TVirtualPadEditor.h"
 #include "TVirtualViewer3D.h"
-#include "TPadPainter.h"
 #include "TPadPainterPS.h"
 #include "TVirtualGL.h"
 #include "TVirtualPS.h"
@@ -2659,18 +2658,21 @@ void TCanvas::CreatePainter()
 {
    //Even for batch mode painter is still required, just to delegate
    //some calls to batch "virtual X".
-   if (!UseGL() || fBatch || IsWeb()) {
-      fPainter = nullptr;
-      if (fCanvasImp) fPainter = fCanvasImp->CreatePadPainter();
-      if (!fPainter) fPainter = new TPadPainter; // Do not need plugin manager for this!
-   } else {
+
+   fPainter = nullptr;
+   if (UseGL() && !IsBatch() && !IsWeb()) {
       fPainter = TVirtualPadPainter::PadPainter("gl");
       if (!fPainter) {
          Error("CreatePainter", "GL Painter creation failed! Will use default!");
-         fPainter = new TPadPainter;
          fUseGL = kFALSE;
       }
    }
+   if (!fPainter && fCanvasImp)
+      fPainter = fCanvasImp->CreatePadPainter();
+   if (!fPainter)
+      fPainter = TVirtualPadPainter::PadPainter("native");
+   if (!fPainter)
+      Error("CreatePainter", "Fail to create any pad painter");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

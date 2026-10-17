@@ -28,8 +28,13 @@ struct ASVisual;
 class TBrowser;
 class THashTable;
 class TTFhandle;
+class TASPaletteEditor;
+class TASUtils;
 
 class TASImage : public TImage {
+
+friend class TASPaletteEditor; // to access FromGradient method
+friend class TASUtils; // to implement gVirtualX-specific methods
 
 private:
    enum { kNoZoom = 0, kZoom = 1, kZoomOps = -1 };
@@ -72,6 +77,7 @@ protected:
    static THashTable *fgPlugList;   ///<! hash table containing loaded plugins
 
    static ASVisual *fgVisual;      ///< pointer to visual structure
+   static ASVisual *fgBatchVisual; ///< pointer to "batch" visual structure
    static Bool_t    fgInit;        ///< global flag to init afterimage only once
    static Bool_t    fgBatch;       ///< global flag to signal if batch mode is active ie fgVisual->dpy was set to nullptr
 
@@ -79,8 +85,10 @@ protected:
    void MapFileTypes(EImageFileTypes &type, UInt_t &astype, Bool_t toas = kTRUE);
    void MapQuality(EImageQuality &quality, UInt_t &asquality, Bool_t toas = kTRUE);
 
-   static Bool_t InitVisual();
+   static ASVisual *InitVisual(Bool_t plain = kFALSE);
    Bool_t InitImage(const char *caller);
+
+   void FromGradient(void *as_gradient, UInt_t width, UInt_t height);
 
 public:
    TASImage();
@@ -104,7 +112,6 @@ public:
 
    void  FromBitmap(const UChar_t *buf, UInt_t width, UInt_t height) override;
    void  FromPad(TVirtualPad *pad, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0) override;
-   void  FromX11Window(Window_t win , Int_t x, Int_t y, Int_t width, Int_t height) override;
    void  FromWindow(Drawable_t wid, Int_t x = 0, Int_t y = 0, UInt_t w = 0, UInt_t h = 0) override;
    void  FromGLBuffer(UChar_t *buf, UInt_t width, UInt_t height) override;
 
@@ -193,7 +200,6 @@ public:
    ASImage   *GetImage() const { return fImage; }
    void       SetImage(ASImage *image) { DestroyImage(); fImage = image; }
    TImage    *GetScaledImage() const override { return fScaledImage; }
-   Pixmap_t   GetX11Pixmap(Window_t root_window) override;
    Pixmap_t   GetPixmap() override;
    Bool_t     GetMaskBits(UInt_t &width, UInt_t &height, std::vector<char> &bits) override;
    Pixmap_t   GetMask() override;

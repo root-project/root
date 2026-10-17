@@ -891,36 +891,30 @@ void TASPaletteEditor::UpdateRange()
 
 void TASPaletteEditor::PaintPalette::Paint(Option_t *)
 {
-   // get geometry of pad
-   Int_t to_w = TMath::Abs(gPad->XtoPixel(gPad->GetX2()) -
-                           gPad->XtoPixel(gPad->GetX1()));
-   Int_t to_h = TMath::Abs(gPad->YtoPixel(gPad->GetY2()) -
-                           gPad->YtoPixel(gPad->GetY1()));
+   auto &pal = **fPalette;
 
    ASGradient grad;
+   grad.npoints = pal.fNumPoints - 2;
+   std::vector<ARGB32> color(grad.npoints);
+   std::vector<double> offset(grad.npoints);
 
-   grad.npoints = (*fPalette)->fNumPoints - 2;
-   grad.type = GRADIENT_Left2Right;
-   grad.color = new ARGB32[grad.npoints];
-   grad.offset = new double[grad.npoints];
    for (Int_t pt = 0; pt < grad.npoints; pt++) {
-      grad.offset[pt] = ((*fPalette)->fPoints[pt + 1] - (*fPalette)->fPoints[1]) /
-                        ((*fPalette)->fPoints[(*fPalette)->fNumPoints - 2] - (*fPalette)->fPoints[1]);
-      grad.color[pt] = (((ARGB32)((*fPalette)->fColorBlue[pt + 1]   & 0xff00)) >>  8) |
-                        (((ARGB32)((*fPalette)->fColorGreen[pt + 1] & 0xff00))      ) |
-                        (((ARGB32)((*fPalette)->fColorRed[pt + 1]   & 0xff00)) <<  8) |
-                        (((ARGB32)((*fPalette)->fColorAlpha[pt + 1] & 0xff00)) << 16);
+      offset[pt] = (pal.fPoints[pt + 1] - pal.fPoints[1]) /
+                   (pal.fPoints[pal.fNumPoints - 2] - pal.fPoints[1]);
+      color[pt] = (((ARGB32)(pal.fColorBlue[pt + 1]  & 0xff00)) >>  8) |
+                  (((ARGB32)(pal.fColorGreen[pt + 1] & 0xff00))      ) |
+                  (((ARGB32)(pal.fColorRed[pt + 1]   & 0xff00)) <<  8) |
+                  (((ARGB32)(pal.fColorAlpha[pt + 1] & 0xff00)) << 16);
    }
 
-   ASImage * grad_im = make_gradient((ASVisual*)TASImage::GetVisual(), &grad , to_w, to_h,
-                                     SCL_DO_COLOR, ASA_ARGB32, 0,
-                                     fAttImage->GetImageQuality());
-   delete [] grad.color;
-   delete [] grad.offset;
+   grad.color = color.data();
+   grad.offset = offset.data();
+   grad.type = GRADIENT_Left2Right;
 
-   Window_t wid = (Window_t)gVirtualX->GetWindowID(gPad->GetPixmapID());
-   TASImage::Image2Drawable(grad_im, wid, 0, 0);
-   destroy_asimage(&grad_im);
+   TASImage img;
+   img.SetImageQuality(fAttImage->GetImageQuality());
+   img.FromGradient(&grad, gPad->GetPadWidth(), gPad->GetPadHeight());
+   img.Paint("x"); // x mean expand to full pad
 }
 
 ////////////////////////////////////////////////////////////////////////////////

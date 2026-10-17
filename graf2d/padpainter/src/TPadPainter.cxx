@@ -16,6 +16,7 @@
 
 #include "TPadPainter.h"
 #include "TVirtualX.h"
+#include "TASUtils.h"
 #include "TSystem.h"
 #include "TCanvas.h"
 #include "TPoint.h"
@@ -24,6 +25,7 @@
 #include "TROOT.h"
 #include "TMath.h"
 #include "TPad.h"
+
 
 namespace {
 
@@ -226,9 +228,13 @@ Bool_t TPadPainter::HasTTFonts() const
 
 void TPadPainter::DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags)
 {
-   Window_t wid = (Window_t)gVirtualX->GetWindowID(fPad->GetPixmapID());
+   Window_t wid = gVirtualX->GetWindowID(fPad->GetPixmapID());
+
    // use old API to draw image on gVirtualX window
-   img->PaintImage(wid, x, y, 0, 0, 0, 0, flags ? "" : "opaque");
+   // img->PaintImage(wid, x, y, 0, 0, 0, 0, flags ? "" : "opaque");
+
+   // new API invokes
+   TASUtils::PaintImage(img, wid, x, y, !flags);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -594,10 +600,11 @@ Bool_t TPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
    Int_t wid = (pad == pad->GetCanvas()) ? pad->GetCanvasID() : pad->GetPixmapID();
    gVirtualX->SelectWindow(wid);
 
-   Window_t wd = (Window_t)gVirtualX->GetCurrentWindow();
+   Window_t wd = gVirtualX->GetCurrentWindow();
 
-   if (IsX11()) { //use built-in optimized version
-      image->FromX11Window(wd, 0, 0, width, height);
+   if (IsX11()) {
+     if (!TASUtils::FromX11Window(image, gVirtualX->GetCurrentWindow(), 0, 0, pad->GetPadWidth(), pad->GetPadHeight()))
+        return kFALSE;
    } else {
       unsigned char *bits = gVirtualX->GetColorBits(wd, 0, 0, width, height);
       if (!bits)
@@ -609,7 +616,6 @@ Bool_t TPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
 
    return image->IsValid();
 }
-
 
 //Aux. private functions.
 namespace {

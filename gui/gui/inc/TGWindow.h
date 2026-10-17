@@ -127,6 +127,7 @@ public:
    static Int_t   GetCounter();
 
    static std::unique_ptr<TImage> CreateImageFromWindow(Drawable_t wid);
+   static std::unique_ptr<TImage> CreateImageFromPixmap(Pixmap_t pxm, Pixmap_t mask);
    static Pixmap_t GetImagePixmap(TImage *img);
    static Pixmap_t GetImageMask(TImage *img);
 
