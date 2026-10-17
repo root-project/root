@@ -136,9 +136,6 @@ template <typename T> class ROperator_GRU final : public ROperator {
     */
    std::string Generate(std::string /*OpName*/) override;
 
-   /*! \brief Returns the blas routines needed to compile the generated code
-    */
-   std::vector<std::string> GetBlasRoutines() override { return { std::string("Gemm"), std::string("Axpy") }; }
 };
 
 template <typename T>
@@ -164,6 +161,9 @@ auto ROperator_GRU<T>::ShapeInference(std::vector<std::vector<size_t>> input) ->
 template <typename T>
 void ROperator_GRU<T>::Initialize(RModel &model)
 {
+   // the gate updates emitted in Generate() use Gemm_Ref and Axpy_Ref
+   model.AddNeededHelperFunction("Gemm_Ref");
+   model.AddNeededHelperFunction("Axpy_Ref");
 
    // Check the input and output tensors
    if (!model.CheckIfTensorAlreadyExist(fNX)) {
@@ -414,19 +414,19 @@ auto ROperator_GRU<T>::Generate(std::string OpName) -> std::string
       if (direction == 0) {
          if (fType == "float") {
             // f_update_gate = input * weight_z^T
-            out << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
+            out << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
                 << OpName << "_m, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fNW << ", &" << OpName
                 << "_k, " << OpName << "_input, &" << OpName << "_k, &" << OpName << "_beta, " << OpName
                 << "_f_update_gate, &" << OpName << "_n);\n";
             // f_reset_gate = input * weight_r^T
             size_t wr_offset = fAttrHiddenSize * input_size;
-            out << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
+            out << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
                 << OpName << "_m, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fNW << " + " << wr_offset
                 << ", &" << OpName << "_k, " << OpName << "_input, &" << OpName << "_k, &" << OpName << "_beta, "
                 << OpName << "_f_reset_gate, &" << OpName << "_n);\n";
             // f_hidden_gate = input * weight_h^T
             size_t wh_offset = 2 * fAttrHiddenSize * input_size;
-            out << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
+            out << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
                 << OpName << "_m, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fNW << " + " << wh_offset
                 << ", &" << OpName << "_k, " << OpName << "_input, &" << OpName << "_k, &" << OpName << "_beta, "
                 << OpName << "_f_hidden_gate, &" << OpName << "_n);\n";
@@ -435,19 +435,19 @@ auto ROperator_GRU<T>::Generate(std::string OpName) -> std::string
          if (fType == "float") {
             // f_update_gate = input * weight_z^T
             size_t wz_offset = 3 * fAttrHiddenSize * input_size;
-            out << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
+            out << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
                 << OpName << "_m, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fNW << " + " << wz_offset
                 << ", &" << OpName << "_k, " << OpName << "_input, &" << OpName << "_k, &" << OpName << "_beta, "
                 << OpName << "_f_update_gate, &" << OpName << "_n);\n";
             // f_reset_gate = input * weight_r^T
             size_t wr_offset = 3 * fAttrHiddenSize * input_size + fAttrHiddenSize * input_size;
-            out << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
+            out << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
                 << OpName << "_m, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fNW << " + " << wr_offset
                 << ", &" << OpName << "_k, " << OpName << "_input, &" << OpName << "_k, &" << OpName << "_beta, "
                 << OpName << "_f_reset_gate, &" << OpName << "_n);\n";
             // f_hidden_gate = input * weight_h^T
             size_t wh_offset = 3 * fAttrHiddenSize * input_size + 2 * fAttrHiddenSize * input_size;
-            out << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
+            out << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
                 << OpName << "_m, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fNW << " + " << wh_offset
                 << ", &" << OpName << "_k, " << OpName << "_input, &" << OpName << "_k, &" << OpName << "_beta, "
                 << OpName << "_f_hidden_gate, &" << OpName << "_n);\n";
@@ -458,33 +458,33 @@ auto ROperator_GRU<T>::Generate(std::string OpName) -> std::string
          if (direction == 0) {
             if (fType == "float") {
                // Add the bias of the weight to f_update_gate
-               out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << ", &"
+               out << SP << "Axpy_Ref(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << ", &"
                    << OpName << "_incx, " << OpName << "_f_update_gate, &" << OpName << "_incy);\n";
                // Add the bias of the recurrence to f_update_gate
                size_t rbz_offset = 3 * batch_size * seq_length * fAttrHiddenSize;
-               out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
+               out << SP << "Axpy_Ref(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
                    << rbz_offset << ", &" << OpName << "_incx, " << OpName << "_f_update_gate, &" << OpName
                    << "_incy);\n";
                // Add the bias of the weight to f_reset_gate
                size_t wbr_offset = batch_size * seq_length * fAttrHiddenSize;
-               out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
+               out << SP << "Axpy_Ref(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
                    << wbr_offset << ", &" << OpName << "_incx, " << OpName << "_f_reset_gate, &" << OpName
                    << "_incy);\n";
                // Add the bias of the recurrence to f_reset_gate
                // size_t rbr_offset = fAttrHiddenSize * fAttrHiddenSize + 3 * batch_size * fAttrHiddenSize;
                size_t rbr_offset = 4 * batch_size * seq_length * fAttrHiddenSize;
-               out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
+               out << SP << "Axpy_Ref(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
                    << rbr_offset << ", &" << OpName << "_incx, " << OpName << "_f_reset_gate, &" << OpName
                    << "_incy);\n";
                // Add the bias of the weight to f_hidden_gate
                size_t wbh_offset = 2 * batch_size * seq_length * fAttrHiddenSize;
-               out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
+               out << SP << "Axpy_Ref(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
                    << wbh_offset << ", &" << OpName << "_incx, " << OpName << "_f_hidden_gate, &" << OpName
                    << "_incy);\n";
                if (fAttrLinearBeforeReset == 0) {
                   // Add the bias of the recurrence to f_hidden_gate
                   size_t rbh_offset = 5 * batch_size * seq_length * fAttrHiddenSize;
-                  out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB
+                  out << SP << "Axpy_Ref(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB
                       << " + " << rbh_offset << ", &" << OpName << "_incx, " << OpName << "_f_hidden_gate, &" << OpName
                       << "_incy);\n";
                }
@@ -493,34 +493,34 @@ auto ROperator_GRU<T>::Generate(std::string OpName) -> std::string
             if (fType == "float") {
                // Add the bias of the weight to f_update_gate
                size_t wbz_offset = 6 * batch_size * seq_length * fAttrHiddenSize;
-               out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
+               out << SP << "Axpy_Ref(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
                    << wbz_offset << ", &" << OpName << "_incx, " << OpName << "_f_update_gate, &" << OpName
                    << "_incy);\n";
                // Add the bias of the recurrence to f_update_gate
                // size_t rbz_offset = 3 * fAttrHiddenSize * fAttrHiddenSize + 3 * batch_size * fAttrHiddenSize;
                size_t rbz_offset = 9 * batch_size * seq_length * fAttrHiddenSize;
-               out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
+               out << SP << "Axpy_Ref(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
                    << rbz_offset << ", &" << OpName << "_incx, " << OpName << "_f_update_gate, &" << OpName
                    << "_incy);\n";
                // Add the bias of the weight to f_reset_gate
                size_t wbr_offset = 7 * batch_size * seq_length * fAttrHiddenSize;
-               out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
+               out << SP << "Axpy_Ref(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
                    << wbr_offset << ", &" << OpName << "_incx, " << OpName << "_f_reset_gate, &" << OpName
                    << "_incy);\n";
                // Add the bias of the recurrence to f_reset_gate
                size_t rbr_offset = 10 * batch_size * seq_length * fAttrHiddenSize;
-               out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
+               out << SP << "Axpy_Ref(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
                    << rbr_offset << ", &" << OpName << "_incx, " << OpName << "_f_reset_gate, &" << OpName
                    << "_incy);\n";
                // Add the bias of the weight to f_hidden_gate
                size_t wbh_offset = 8 * batch_size * seq_length * fAttrHiddenSize;
-               out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
+               out << SP << "Axpy_Ref(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
                    << wbh_offset << ", &" << OpName << "_incx, " << OpName << "_f_hidden_gate, &" << OpName
                    << "_incy);\n";
                if (fAttrLinearBeforeReset == 0) {
                   // Add the bias of the recurrence to f_hidden_gate
                   size_t rbh_offset = 11 * batch_size * seq_length * fAttrHiddenSize;
-                  out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB
+                  out << SP << "Axpy_Ref(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB
                       << " + " << rbh_offset << ", &" << OpName << "_incx, " << OpName << "_f_hidden_gate, &" << OpName
                       << "_incy);\n";
                }
@@ -565,12 +565,12 @@ auto ROperator_GRU<T>::Generate(std::string OpName) -> std::string
       if (!fNInitial_h.empty()) {
          if (direction == 0) {
             if (fType == "float") {
-               out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
+               out << SP << SP << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
                    << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << ", &" << OpName
                    << "_n, " << OpName << "_initial_hidden_state, &" << OpName << "_n, &" << OpName << "_alpha, "
                    << OpName << "_update_gate + offset, &" << OpName << "_n);\n";
                size_t rr_offset = fAttrHiddenSize * fAttrHiddenSize;
-               out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
+               out << SP << SP << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
                    << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + " << rr_offset
                    << ", &" << OpName << "_n, " << OpName << "_initial_hidden_state, &" << OpName << "_n, &" << OpName
                    << "_alpha, " << OpName << "_reset_gate + offset, &" << OpName << "_n);\n";
@@ -578,12 +578,12 @@ auto ROperator_GRU<T>::Generate(std::string OpName) -> std::string
          } else { // direction=1
             if (fType == "float") {
                size_t rz_offset = 3 * fAttrHiddenSize * fAttrHiddenSize;
-               out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
+               out << SP << SP << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
                    << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + " << rz_offset
                    << ", &" << OpName << "_n, " << OpName << "_initial_hidden_state, &" << OpName << "_n, &" << OpName
                    << "_alpha, " << OpName << "_update_gate + offset, &" << OpName << "_n);\n";
                size_t rr_offset = 4 * fAttrHiddenSize * fAttrHiddenSize;
-               out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
+               out << SP << SP << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
                    << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + " << rr_offset
                    << ", &" << OpName << "_n, " << OpName << "_initial_hidden_state, &" << OpName << "_n, &" << OpName
                    << "_alpha, " << OpName << "_reset_gate + offset, &" << OpName << "_n);\n";
@@ -601,12 +601,12 @@ auto ROperator_GRU<T>::Generate(std::string OpName) -> std::string
                 << num_directions * batch_size * fAttrHiddenSize << ";\n";
          }
          if (fType == "float") {
-            out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
+            out << SP << SP << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
                 << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << ", &" << OpName << "_n, "
                 << OpName << "_hidden_state + previous_offset, &" << OpName << "_n, &" << OpName << "_alpha, " << OpName
                 << "_update_gate + offset, &" << OpName << "_n);\n";
             size_t rr_offset = fAttrHiddenSize * fAttrHiddenSize;
-            out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
+            out << SP << SP << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
                 << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + " << rr_offset
                 << ", &" << OpName << "_n, " << OpName << "_hidden_state + previous_offset, &" << OpName << "_n, &"
                 << OpName << "_alpha, " << OpName << "_reset_gate + offset, &" << OpName << "_n);\n";
@@ -616,12 +616,12 @@ auto ROperator_GRU<T>::Generate(std::string OpName) -> std::string
              << num_directions * batch_size * fAttrHiddenSize << " + " << batch_size * fAttrHiddenSize << ";\n";
          if (fType == "float") {
             size_t rz_offset = 3 * fAttrHiddenSize * fAttrHiddenSize;
-            out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
+            out << SP << SP << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
                 << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + " << rz_offset
                 << ", &" << OpName << "_n, " << OpName << "_hidden_state + previous_offset, &" << OpName << "_n, &"
                 << OpName << "_alpha, " << OpName << "_update_gate + offset, &" << OpName << "_n);\n";
             size_t rr_offset = 4 * fAttrHiddenSize * fAttrHiddenSize;
-            out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
+            out << SP << SP << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
                 << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + " << rr_offset
                 << ", &" << OpName << "_n, " << OpName << "_hidden_state + previous_offset, &" << OpName << "_n, &"
                 << OpName << "_alpha, " << OpName << "_reset_gate + offset, &" << OpName << "_n);\n";
@@ -781,7 +781,7 @@ auto ROperator_GRU<T>::Generate(std::string OpName) -> std::string
          size_t rh_offset = (direction == 0)
                                ? 2 * fAttrHiddenSize * fAttrHiddenSize
                                : 3 * fAttrHiddenSize * fAttrHiddenSize + 2 * fAttrHiddenSize * fAttrHiddenSize;
-         out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
+         out << SP << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
              << OpName << "_m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + " << rh_offset
              << ", &" << OpName << "_n, " << OpName << "_feedback, &" << OpName << "_n, &" << OpName << "_beta, "
              << OpName << "_feedback, &" << OpName << "_n);\n";
@@ -794,7 +794,7 @@ auto ROperator_GRU<T>::Generate(std::string OpName) -> std::string
          out << SP << SP << "if (seq == 0) {\n";
          if (!fNInitial_h.empty()) {
             // feedback = W * initial_hidden_state + bias
-            out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
+            out << SP << SP << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
                 << "_n, &" << OpName << "_m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + "
                 << rh_offset << ", &" << OpName << "_n, " << OpName << "_initial_hidden_state, &" << OpName << "_n, &"
                 << OpName << "_beta, " << OpName << "_feedback, &" << OpName << "_n);\n";
@@ -813,7 +813,7 @@ auto ROperator_GRU<T>::Generate(std::string OpName) -> std::string
             out << SP << SP << SP << "size_t previous_offset = (index + 1) * "
                 << num_directions * batch_size * fAttrHiddenSize << " + " << batch_size * fAttrHiddenSize << ";\n";
          }
-         out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
+         out << SP << SP << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
              << "_n, &" << OpName << "_m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + "
              << rh_offset << ", &" << OpName << "_n, " << OpName << "_hidden_state + previous_offset, &" << OpName
              << "_n, &" << OpName << "_beta, " << OpName << "_feedback, &" << OpName << "_n);\n";
@@ -823,7 +823,7 @@ auto ROperator_GRU<T>::Generate(std::string OpName) -> std::string
          if (!fNB.empty()) {
             size_t rbh_offset = (direction == 0) ? 5 * batch_size * seq_length * fAttrHiddenSize
                                                  : 11 * batch_size * seq_length * fAttrHiddenSize;
-            out << SP << SP << "BLAS::saxpy_(&" << OpName << "_feedback_size, &" << OpName << "_alpha, tensor_" << fNB
+            out << SP << SP << "Axpy_Ref(&" << OpName << "_feedback_size, &" << OpName << "_alpha, tensor_" << fNB
                 << " + " << rbh_offset << ", &" << OpName << "_incx, " << OpName << "_feedback, &" << OpName
                 << "_incy);\n";
          }
@@ -834,7 +834,7 @@ auto ROperator_GRU<T>::Generate(std::string OpName) -> std::string
       }
 
       // hidden_gate = hidden_gate + feedback
-      out << SP << SP << "BLAS::saxpy_(&" << OpName << "_feedback_size, &" << OpName << "_alpha, " << OpName
+      out << SP << SP << "Axpy_Ref(&" << OpName << "_feedback_size, &" << OpName << "_alpha, " << OpName
           << "_feedback, &" << OpName << "_incx, " << OpName << "_hidden_gate + offset, &" << OpName << "_incy);\n";
 
       // Clip the elements of the hidden gate into the range [-fClip, fClip]
