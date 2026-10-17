@@ -188,6 +188,8 @@ public:
 
    virtual void AddAunt(REveAunt *au);
    virtual void RemoveAunt(REveAunt *au);
+   /// Called by an aunt that holds this element when the aunt has changed.
+   virtual void AuntChanged(REveAunt * /*au*/) {}
    virtual void CheckReferenceCount(const std::string &from = "<unknown>");
 
    AuntList_t       &RefAunts()       { return fAunts; }
@@ -288,6 +290,7 @@ public:
 
    virtual void SetTransMatrix(Double_t *carr);
    virtual void SetTransMatrix(const TGeoMatrix &mat);
+   Int_t        ComposeSceneTrans(REveTrans &t) const;
 
    // clang-format off
    virtual Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset);
@@ -367,14 +370,13 @@ public:
 
    // Change-stamping and change bits
    //---------------------------------
-   // kCBTrans streams the transformation as JSON only, and the client applies
-   // it to the object it already has. A change that invalidates geometry must
-   // stamp kCBObjProps, which also invalidates the bounding box.
+   // A change that invalidates geometry must stamp kCBObjProps, which also
+   // invalidates the bounding box. kCBCoreJson and kCBTrans send no render data.
 
    // clang-format off
    enum EChangeBits
    {
-      kCBColorSelection =  BIT(0), // Main color or select/hilite state changed.
+      kCBCoreJson       =  BIT(0), // Core JSON changed (colour, name, ...); render data did not.
       kCBTrans          =  BIT(1), // Transformation changed; cheap update, no rebuild.
       kCBObjProps       =  BIT(2), // Object changed, requires dropping its display-lists.
       kCBVisibility     =  BIT(3), // Rendering of self/children changed.
@@ -398,7 +400,7 @@ protected:
    static void AppendMirErrorString(std::string_view err_str);
 
 public:
-   void StampColorSelection() { AddStamp(kCBColorSelection); }
+   void StampCoreJson() { AddStamp(kCBCoreJson); }
    void StampTrans() { AddStamp(kCBTrans); }
    void StampObjProps()
    {

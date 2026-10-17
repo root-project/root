@@ -125,6 +125,30 @@ TEST(REveChangeCycle, AddedElementIsStreamed)
    EXPECT_EQ((int)out.fBinarySize, bin);
 }
 
+// A name change stamps kCBCoreJson, which streams the new name without
+// render data.
+TEST(REveChangeCycle, NameStreamsCoreJson)
+{
+   auto eve = REX::REveManager::Create();
+   auto s = NewScene("cc_name");
+   auto ps = MakePoints("points", 3);
+   s->AddElement(ps);
+
+   eve->BeginChange();
+   ps->SetName("renamed");
+   EXPECT_EQ(ps->GetChangeBits(), REX::REveElement::kCBCoreJson);
+   auto out = EndChangeKeepingOutput(s);
+
+   auto &j = out.fJson;
+   ASSERT_EQ(j["arr"].size(), 1u);
+   auto &e = j["arr"][0];
+   EXPECT_EQ(e["fElementId"], ps->GetElementId());
+   EXPECT_EQ(e["changeBit"], REX::REveElement::kCBCoreJson);
+   EXPECT_EQ(e["fName"], "renamed");
+   EXPECT_FALSE(e.contains("render_data"));
+   EXPECT_EQ(out.fBinarySize, 0u);
+}
+
 // The id reported as removed is the removed element's, not its mother's.
 TEST(REveChangeCycle, RemovedElementIsReported)
 {

@@ -147,7 +147,8 @@ void REveEllipsoidProjected::DrawArchProjected(float phiStart, float phiEnd, flo
 float REveEllipsoidProjected::GetEllipseSurface (const REveVector& v1, const REveVector& v2)
 {
    REveEllipsoid&     orig  = * dynamic_cast<REveEllipsoid*>(fProjectable);
-   REveTrans *    trans = orig.PtrMainTrans(kFALSE);
+   REveTrans mt;
+   const REveTrans *trans = fManager->GetModelTrans(&orig, mt);
    REveProjection&  proj  = * fManager->GetProjection();
 
    // project center of ellipse
@@ -244,7 +245,8 @@ void REveEllipsoidProjected::UpdateProjection()
    REveProjection&      proj = * fManager->GetProjection();
    REveEllipsoid& orig = * dynamic_cast<REveEllipsoid*>(fProjectable);
 
-   REveTrans *trans = orig.PtrMainTrans(kFALSE);
+   REveTrans mt;
+   const REveTrans *trans = fManager->GetModelTrans(&orig, mt);
 
    // Lines
    Int_t num_lines = (int)fArchPnts.size();

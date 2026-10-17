@@ -108,6 +108,7 @@ public:
 
    void SetDistortionLabel(REveText *t);
    void RemoveAunt(REveAunt *au) override;
+   void AuntChanged(REveAunt *au) override;
    void UpdateDistortionLabel();
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;

@@ -350,10 +350,19 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
             this.updateElementTrans(el, msg);
          }
 
-         // other change bits
+         // New render data needs a new drawing. A core JSON change keeps the
+         // render data: a drawing whose maker attached refresh(el) updates
+         // itself, any other is rebuilt from the cached render data.
          if (el.render_data) {
-            if ((el.changeBit & this.mgr.EChangeBits.kCBObjProps) || (el.changeBit & this.mgr.EChangeBits.kCBColorSelection))
-            {
+            let rebuild = !!(el.changeBit & this.mgr.EChangeBits.kCBObjProps);
+            if (!rebuild && (el.changeBit & this.mgr.EChangeBits.kCBCoreJson)) {
+               let obj3d = this.getObj3D(el.fElementId);
+               if (obj3d && typeof obj3d.refresh === 'function')
+                  obj3d.refresh(el);
+               else
+                  rebuild = true;
+            }
+            if (rebuild) {
                this.need_bbox_update = true;
                this.replaceElement(el);
             }

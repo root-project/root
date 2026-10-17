@@ -14,6 +14,7 @@
 #include <ROOT/REveProjectionManager.hxx>
 #include <ROOT/REveGluTess.hxx>
 #include <ROOT/REveRenderData.hxx>
+#include <ROOT/REveTrans.hxx>
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
@@ -217,11 +218,18 @@ std::vector<UInt_t> REvePolygonSetProjected::ProjectAndReducePoints()
 {
    REveProjection* projection = fManager->GetProjection();
 
+   // The buffer is in the model's frame.
+   REveTrans mt;
+   const REveTrans *trans = fManager->GetModelTrans(dynamic_cast<REveElement *>(fProjectable), mt);
+
    Int_t buffN = fBuff->NbPnts();
    std::vector<REveVector> pnts; pnts.resize(buffN);
    for (Int_t i = 0; i < buffN; ++i)
    {
-      pnts[i].Set(fBuff->fPnts[3*i],fBuff->fPnts[3*i+1], fBuff->fPnts[3*i+2]);
+      Double_t p[3] = {fBuff->fPnts[3 * i], fBuff->fPnts[3 * i + 1], fBuff->fPnts[3 * i + 2]};
+      if (trans)
+         trans->MultiplyIP(p);
+      pnts[i].Set(p[0], p[1], p[2]);
       projection->ProjectPoint(pnts[i].fX, pnts[i].fY, pnts[i].fZ, 0,
                                REveProjection::kPP_Plane);
    }

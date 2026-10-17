@@ -25,7 +25,7 @@ sap.ui.define([], function() {
          this.global_selection_id = null;
          this.global_highlight_id = null;
 
-         this.EChangeBits = { "kCBColorSelection": 1, "kCBTrans": 2, "kCBObjProps": 4, "kCBVisibility": 8,  "kCBAdded": 16 };
+         this.EChangeBits = { "kCBCoreJson": 1, "kCBTrans": 2, "kCBObjProps": 4, "kCBVisibility": 8,  "kCBAdded": 16 };
 
          this.controllers = [];
          this.gl_controllers = [];
@@ -457,18 +457,15 @@ sap.ui.define([], function() {
             }
 
             if (em.changeBit & this.EChangeBits.kCBObjProps) {
+               // Optional keys: clear the old values; the message brings the
+               // current ones, if any.
                delete obj.render_data;
-               // AMT note ... the REveSelection changes fall here
-               // I think this should be a separate change bit
-               // Yes, or maybe Color should be be json only, ObjProps for RnrData.
-               // Although some classes might have an extended json part --
-               // and this case could be separated out.
                delete obj.sel_list;
                jQuery.extend(obj, em);
                this.ParseUpdateTriggersAndProcessPostStream(obj);
             }
             else {
-               if (em.changeBit & this.EChangeBits.kCBColorSelection) {
+               if (em.changeBit & this.EChangeBits.kCBCoreJson) {
                   delete em.render_data;
                   Object.assign(obj, em);
                }

@@ -557,7 +557,8 @@ void REvePointSetProjected::UpdateProjection()
 {
    REveProjection &proj = * fManager->GetProjection();
    REvePointSet   &ps   = * dynamic_cast<REvePointSet*>(fProjectable);
-   REveTrans      *tr   =   ps.PtrMainTrans(kFALSE);
+   REveTrans mt;
+   const REveTrans *tr = fManager->GetModelTrans(&ps, mt);
 
    fAlwaysSecSelect = ps.GetAlwaysSecSelect();
 

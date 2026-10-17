@@ -74,6 +74,8 @@ public:
    virtual void ProjectChildren();
    virtual void ProjectChildrenRecurse(REveElement *el);
 
+   const REveTrans *GetModelTrans(REveElement *model, REveTrans &t);
+
    void ComputeBBox() override;
 };
 

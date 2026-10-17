@@ -62,14 +62,6 @@ void pa_distortion(float d)
       mng->UpdateName();
       mng->ProjectChildren();
    }
-   // Update the ticks and the read-out, as REveProjectionManager::BumpDistortion()
-   // does for the overlay buttons.
-   for (auto ax : {gPaAxisRPhi, gPaAxisRhoZ}) {
-      if (!ax)
-         continue;
-      ax->UpdateTicks();
-      ax->UpdateDistortionLabel();
-   }
 }
 
 //------------------------------------------------------------------------------
