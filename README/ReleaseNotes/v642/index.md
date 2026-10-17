@@ -152,6 +152,7 @@ Replace `obj.Connect(signal, "TPyDispatcher", disp, "Dispatch()")` with
 ## I/O
 
 * Reading a collection without its dictionary no longer crashes when the elements hold a `std::string` or a `TString`. The emulated collection proxy relocated its elements with a raw memory copy when its buffer had to grow, which corrupts an object that points into itself, such as a `std::string` using the small string optimization; the invalid pointer was then freed when the object was destroyed. Such elements are now destroyed and reconstructed at the new location instead. This affected for instance a `std::vector<std::pair<std::string,double>>` read back without a dictionary.
+* The LZ4 compression levels now follow those of the `lz4` command line tool. Level 1 uses the fast compressor as before. Level 2 uses the faster high-compression mode introduced in LZ4 1.10.0, or the fast compressor with older LZ4 versions. Level 3 now uses the high-compression (HC) compressor, like levels 4 to 9. Previously, levels 1 to 3 all used the fast compressor and produced identical output. Files written with levels 2 and 3 can be read by older ROOT versions, since the on-disk format is unchanged.
 
 * An `RNTupleReader` will now by default not load all metadata on open. Metadata related to the on-disk location of data pages will instead be loaded during iteration. To restore the old behavior, set the metadata mode in the `RNTupleReadOptions` to `kEager`.
 
