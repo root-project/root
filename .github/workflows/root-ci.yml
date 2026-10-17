@@ -120,11 +120,10 @@ jobs:
       matrix:
         # Specify platform + optional build option overrides
         # Build options: https://root.cern/install/build_from_source/#all-build-options
-        platform: [mac26, mac27, mac-beta]
+        # TEMP: only mac-beta, to measure the sporadic cppjit test_datatypes crash
+        platform: [mac-beta]
         arch: [ARM64]
         include:
-          - platform: mac15
-            arch: X86
           - platform: mac-beta
             is_special: true
 
@@ -246,13 +245,7 @@ jobs:
   build-windows:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
-    if: |
-        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(
-          contains(github.event.pull_request.title, '[skip-ci]') ||
-          contains(github.event.pull_request.title, '[skip ci]') ||
-          contains(github.event.pull_request.labels.*.name, 'skip ci')
-        ))
+    if: false # TEMP: only mac-beta runs, see build-macos
 
     permissions:
       contents: read
@@ -372,13 +365,7 @@ jobs:
   build-linux:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
-    if: |
-        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(
-          contains(github.event.pull_request.title, '[skip-ci]') ||
-          contains(github.event.pull_request.title, '[skip ci]') ||
-          contains(github.event.pull_request.labels.*.name, 'skip ci')
-        ))
+    if: false # TEMP: only mac-beta runs, see build-macos
 
     permissions:
       contents: read
