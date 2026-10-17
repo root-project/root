@@ -1065,7 +1065,12 @@ void cpyrt::Utility::ConstructCallbackPreamble(
     }
     code << "    } catch(int) {\n"
          << "      for (auto pyarg : pyargs) Py_XDECREF(pyarg);\n"
+#if CPYRT_CALLBACK_NOTHROW
+         // error is set; see CPYRT_CALLBACK_NOTHROW in CommonDefs.h
+         << (isVoid ? "      return;\n" : "      return ret;\n")
+#else
          << "      cppjit::cpyrt::PyException pyexc; throw pyexc;\n"
+#endif
          << "    }\n";
   }
 }
@@ -1095,9 +1100,9 @@ void cpyrt::Utility::ConstructCallbackReturn(const std::string& retType,
   if (isPtr)
     code << "  }\n";
   code << "    if (!cOk) {" // assume error set when converter failed
-// TODO: On Windows, throwing a C++ exception here makes the code hang; leave
-// the error be which allows at least one layer of propagation
-#ifdef _WIN32
+// see CPYRT_CALLBACK_NOTHROW in CommonDefs.h: leave the error be, which allows
+// at least one layer of propagation
+#if CPYRT_CALLBACK_NOTHROW
           " /* do nothing */ }\n"
 #else
           " cppjit::cpyrt::PyException pyexc; throw pyexc; }\n"
