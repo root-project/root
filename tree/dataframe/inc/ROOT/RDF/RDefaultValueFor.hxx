@@ -93,7 +93,7 @@ public:
    {
       fValues[slot] =
          RDFInternal::GetColumnReader(slot, fColRegister.GetReader(slot, fColumnNames[0], fVariation, typeid(T)),
-                                      *fLoopManager, r, fColumnNames[0], typeid(T));
+                                      fColRegister, *fLoopManager, r, fColumnNames[0], typeid(T));
       fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
    }
 
