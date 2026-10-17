@@ -55,9 +55,6 @@ int REveRenderData::Write(char *msg, int maxlen)
       off += len;
    };
 
-   if (!fMatrix.empty())
-      append(&fMatrix[0], fMatrix.size() * sizeof(float));
-
    if (!fVertexBuffer.empty())
       append(&fVertexBuffer[0], fVertexBuffer.size() * sizeof(float));
 
@@ -68,17 +65,6 @@ int REveRenderData::Write(char *msg, int maxlen)
       append(&fIndexBuffer[0], fIndexBuffer.size() * sizeof(int));
 
    return off;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-/// Set transformation matrix
-
-void REveRenderData::SetMatrix(const double *arr)
-{
-   fMatrix.reserve(16);
-   for (int i = 0; i < 16; ++i) {
-      fMatrix.push_back(arr[i]);
-   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

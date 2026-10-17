@@ -90,6 +90,7 @@ sap.ui.define([], function() {
                   m[o] = r[cIdx*3]; m[o+1] = r[cIdx*3+1]; m[o+2] = r[cIdx*3+2];
                }
                e.obj3d.matrixChanged();
+               if (e.scene) ++e.scene.trans_stamp;
             }
             this.viewer.request_render();
          }
@@ -126,8 +127,10 @@ sap.ui.define([], function() {
 
       //--------------------------------------------------------------------
 
-      /** Take the `mot` block of a transformation update. Null clears it. */
-      update(id, obj3d, mot) {
+      /** Take the `mot` block of a transformation update. Null clears it.
+        * `scene` is the EveScene of `obj3d`; moving the object raises its
+        * trans_stamp. */
+      update(id, obj3d, mot, scene) {
          if (!mot) { this.remove(id); return; }
 
          this.noteServerTime(mot.t0);
@@ -137,6 +140,7 @@ sap.ui.define([], function() {
 
          this.objects.set(id, {
             obj3d:  obj3d,
+            scene:  scene,
             // Where the server says it was at t0 -- the matrix it sent in the
             // same message, before anything here has touched it. The rotation
             // is kept as the three basis columns, scale and all.
@@ -155,6 +159,13 @@ sap.ui.define([], function() {
 
       remove(id) {
          this.objects.delete(id);
+      }
+
+      /** Move the trajectory of element `id` to `obj3d`, which takes over the
+        * element's matrix, as when EveScene gives a leaf a group node. */
+      retarget(id, obj3d) {
+         const e = this.objects.get(id);
+         if (e) e.obj3d = obj3d;
       }
 
       clear() {
@@ -246,7 +257,11 @@ sap.ui.define([], function() {
                touched = true;
             }
 
-            if (touched) { e.obj3d.matrixChanged(); moved = true; }
+            if (touched) {
+               e.obj3d.matrixChanged();
+               if (e.scene) ++e.scene.trans_stamp;
+               moved = true;
+            }
          }
          return moved;
       }

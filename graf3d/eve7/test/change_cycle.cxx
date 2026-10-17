@@ -21,9 +21,12 @@
 #include <ROOT/REveRenderData.hxx>
 #include <ROOT/REveTrans.hxx>
 
+#include "TBase64.h"
+
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <cstring>
 #include <memory>
 
 namespace REX = ROOT::Experimental;
@@ -191,11 +194,15 @@ TEST(REveChangeCycle, TransOnlyGoesToMotion)
    ASSERT_EQ(arr.size(), 1u);
    EXPECT_EQ(arr[0]["fElementId"], moved->GetElementId());
    EXPECT_EQ(arr[0]["fSceneId"], s->GetElementId());
-   ASSERT_EQ(arr[0]["matrix"].size(), 16u);
-   // Column-major, translation in elements 12 to 14.
-   EXPECT_DOUBLE_EQ(arr[0]["matrix"][12].get<double>(), 1.);
-   EXPECT_DOUBLE_EQ(arr[0]["matrix"][13].get<double>(), 2.);
-   EXPECT_DOUBLE_EQ(arr[0]["matrix"][14].get<double>(), 3.);
+   // Base64 of 16 doubles, column-major, translation in elements 12 to 14.
+   ASSERT_TRUE(arr[0]["matrix"].is_string());
+   const TString bytes = TBase64::Decode(arr[0]["matrix"].get<std::string>().c_str());
+   ASSERT_EQ(bytes.Length(), 16 * (int)sizeof(Double_t));
+   Double_t m[16];
+   std::memcpy(m, bytes.Data(), sizeof(m));
+   EXPECT_DOUBLE_EQ(m[12], 1.);
+   EXPECT_DOUBLE_EQ(m[13], 2.);
+   EXPECT_DOUBLE_EQ(m[14], 3.);
    EXPECT_TRUE(arr[0]["mot"].is_null());
 
    EXPECT_EQ(moved->GetChangeBits(), 0);

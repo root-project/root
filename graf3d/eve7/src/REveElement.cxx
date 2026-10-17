@@ -25,6 +25,7 @@
 #include "TClass.h"
 #include "TPRegexp.h"
 #include "TROOT.h"
+#include "TBase64.h"
 #include "TColor.h"
 
 #include <cassert>
@@ -1568,15 +1569,26 @@ REveElement::EBBoxState REveElement::AssertBBox()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write transformation Matrix to render data
-////////////////////////////////////////////////////////////////////////////////
+/// Build fRenderData, what the client draws. An element with nothing to draw
+/// leaves it empty, as this base does. The matrix goes as JSON, see
+/// WriteCoreJson().
 
 void REveElement::BuildRenderData()
 {
-   if (fMainTrans && fRenderData) {
-      fRenderData->SetMatrix(fMainTrans->Array());
-   }
 }
+
+namespace {
+
+////////////////////////////////////////////////////////////////////////////////
+/// The 16 doubles of `t`, column-major, as base64 of their bytes. Exact, and
+/// about half the size of the numbers as text.
+
+std::string TransBase64(const REveTrans &t)
+{
+   return TBase64::Encode(reinterpret_cast<const char *>(t.Array()), 16 * sizeof(Double_t)).Data();
+}
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write the main transformation and its motion for a kCBTrans update.
@@ -1586,10 +1598,8 @@ void REveElement::BuildRenderData()
 
 void REveElement::WriteTransJson(nlohmann::json &cj)
 {
-   if (fMainTrans.get()) {
-      const Double_t *m = fMainTrans->Array();
-      cj["matrix"] = std::vector<double>(m, m + 16);
-   }
+   if (fMainTrans)
+      cj["matrix"] = TransBase64(*fMainTrans);
 
    if (fMainTrans && fMainTrans->HasMotion()) {
       const REveDeltaTrans &d = *fMainTrans->GetDeltaTrans();
@@ -1646,6 +1656,9 @@ Int_t REveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    Int_t ret = 0;
 
    if (rnr_offset >= 0) {
+      // An element with nothing to draw builds no render data. Without the
+      // reset it would send the render data of its previous contents again.
+      fRenderData.reset();
       BuildRenderData();
 
       if (fRenderData) {
@@ -1656,7 +1669,6 @@ Int_t REveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
          rd["vert_size"]  = fRenderData->SizeV();
          rd["norm_size"]  = fRenderData->SizeN();
          rd["index_size"] = fRenderData->SizeI();
-         rd["trans_size"] = fRenderData->SizeT();
 
          j["render_data"] = rd;
 
@@ -1677,6 +1689,10 @@ Int_t REveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
          }
          }
       }
+
+      // With or without render data: the client sets it on the element's node.
+      if (fMainTrans)
+         j["matrix"] = TransBase64(*fMainTrans);
    }
 
    return ret;

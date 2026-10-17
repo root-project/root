@@ -15,7 +15,11 @@
 #include <ROOT/REveTrans.hxx>
 #include <ROOT/REveUtil.hxx>
 
+#include "TBase64.h"
+
 #include <nlohmann/json.hpp>
+
+#include <cstring>
 
 namespace REX = ROOT::Experimental;
 
@@ -102,8 +106,13 @@ TEST(REveTransMotion, TransJson)
 
    nlohmann::json j;
    el->WriteTransJson(j);
-   ASSERT_EQ(j["matrix"].size(), 16u);
-   EXPECT_DOUBLE_EQ(j["matrix"][12].get<double>(), 4.);
+   // Base64 of 16 doubles, translation in elements 12 to 14.
+   ASSERT_TRUE(j["matrix"].is_string());
+   const TString bytes = TBase64::Decode(j["matrix"].get<std::string>().c_str());
+   ASSERT_EQ(bytes.Length(), 16 * (int)sizeof(Double_t));
+   Double_t mt[16];
+   std::memcpy(mt, bytes.Data(), sizeof(mt));
+   EXPECT_DOUBLE_EQ(mt[12], 4.);
    auto &m = j["mot"];
    ASSERT_TRUE(m.is_object());
    EXPECT_EQ(m["vel"], nlohmann::json({1., 2., 3.}));

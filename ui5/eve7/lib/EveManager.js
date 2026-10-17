@@ -9,6 +9,16 @@ sap.ui.define([], function() {
 
    class EveManager {
 
+      /** An element's matrix as streamed by REveElement: base64 of its 16
+        * doubles, column-major. Returns a Float64Array, or null for none. */
+      static decodeMatrix(m) {
+         if (!m) return null;
+         const bin = atob(m), bytes = new Uint8Array(bin.length);
+         for (let i = 0; i < bin.length; ++i)
+            bytes[i] = bin.charCodeAt(i);
+         return new Float64Array(bytes.buffer, 0, 16);
+      }
+
       constructor()
       {
          this.map    = {}; // use object, not array
@@ -460,7 +470,10 @@ sap.ui.define([], function() {
                // Optional keys: clear the old values; the message brings the
                // current ones, if any.
                delete obj.render_data;
+               delete obj.bbox;
+               delete obj.bbox_not_in_world;
                delete obj.sel_list;
+               delete obj.matrix;
                jQuery.extend(obj, em);
                this.ParseUpdateTriggersAndProcessPostStream(obj);
             }
@@ -470,12 +483,9 @@ sap.ui.define([], function() {
                   Object.assign(obj, em);
                }
                if (em.changeBit & this.EChangeBits.kCBTrans) {
-                  // Transformation update: no render data is streamed.
-                  // render_data.matrix is updated here because a later rebuild,
-                  // e.g. on a colour change in the same message, reads it.
+                  // Matrix and motion; EveScene sets them on the element's node.
+                  delete obj.matrix;
                   Object.assign(obj, em);
-                  if (em.matrix && obj.render_data)
-                     obj.render_data.matrix = em.matrix;
                }
             }
 
@@ -530,20 +540,18 @@ sap.ui.define([], function() {
             if (off !== lastoff)
                console.error('Element ' + elem.fName + ' offset mismatch ' + off + ' != ' + lastoff);
 
-            if (rd.trans_size) {
-               rd.matrix = new Float32Array(rawdata, off, rd.trans_size);
-               off += rd.trans_size*4;
-            }
+            // Copies, not views: the message's buffer is then freed, and each
+            // element's arrays go with the element.
             if (rd.vert_size) {
-               rd.vtxBuff = new Float32Array(rawdata, off, rd.vert_size);
+               rd.vtxBuff = new Float32Array(rawdata, off, rd.vert_size).slice();
                off += rd.vert_size*4;
             }
             if (rd.norm_size) {
-               rd.nrmBuff = new Float32Array(rawdata, off, rd.norm_size);
+               rd.nrmBuff = new Float32Array(rawdata, off, rd.norm_size).slice();
                off += rd.norm_size*4;
             }
             if (rd.index_size) {
-               rd.idxBuff = new Uint32Array(rawdata, off, rd.index_size);
+               rd.idxBuff = new Uint32Array(rawdata, off, rd.index_size).slice();
                off += rd.index_size*4;
             }
 
@@ -827,10 +835,9 @@ sap.ui.define([], function() {
             let obj = this.map[em.fElementId];
             if (!obj) continue;   // removed, or not yet created
 
-            // Keep the model in step: a later rebuild reads render_data.matrix,
-            // and a stale one would put the object back where it used to be.
-            if (em.matrix && obj.render_data)
-               obj.render_data.matrix = em.matrix;
+            // The element mirrors what the server sent; a view that is built
+            // again, see EveScene.redrawScene(), places its node from it.
+            if (em.matrix) obj.matrix = em.matrix; else delete obj.matrix;
             obj.mot = em.mot;
 
             let scene = this.GetElement(em.fSceneId);
