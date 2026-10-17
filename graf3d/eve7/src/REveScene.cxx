@@ -228,7 +228,7 @@ void REveScene::StreamJsonRecurse(REveElement *el, nlohmann::json &jarr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Move every element whose only pending change is kCBTransBBox from the change
+/// Move every element whose only pending change is kCBTrans from the change
 /// list into `arr`, for REveManager::SendMotionChanges(). The remaining
 /// elements are streamed as ordinary, acknowledged scene changes.
 
@@ -240,7 +240,7 @@ void REveScene::StreamMotionChanges(nlohmann::json &arr)
    List_t keep;
 
    for (auto &el : fChangedElements) {
-      if (el->GetChangeBits() != REveElement::kCBTransBBox) {
+      if (el->GetChangeBits() != REveElement::kCBTrans) {
          keep.push_back(el);
          continue;
       }
@@ -320,8 +320,7 @@ void REveScene::StreamRepresentationChanges()
           el->WriteCoreJson(jobj, -1);
         }
 
-        if (bits & kCBTransBBox)
-        {
+        if (bits & kCBTrans) {
            el->WriteTransJson(jobj);
         }
       }

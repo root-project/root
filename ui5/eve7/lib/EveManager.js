@@ -25,7 +25,7 @@ sap.ui.define([], function() {
          this.global_selection_id = null;
          this.global_highlight_id = null;
 
-         this.EChangeBits = { "kCBColorSelection": 1, "kCBTransBBox": 2, "kCBObjProps": 4, "kCBVisibility": 8,  "kCBAdded": 16 };
+         this.EChangeBits = { "kCBColorSelection": 1, "kCBTrans": 2, "kCBObjProps": 4, "kCBVisibility": 8,  "kCBAdded": 16 };
 
          this.controllers = [];
          this.gl_controllers = [];
@@ -233,7 +233,7 @@ sap.ui.define([], function() {
       }
 
       /** Dispatch an element change to the scene's receivers, skipping any whose
-        * `changeBitMask` excludes its bits. Summary masks out kCBTransBBox, which
+        * `changeBitMask` excludes its bits. Summary masks out kCBTrans, which
         * a moving element streams several times a second. */
       callSceneElementChange(scene, em) {
          if ( ! scene.$receivers) return;
@@ -455,7 +455,7 @@ sap.ui.define([], function() {
                   delete em.render_data;
                   Object.assign(obj, em);
                }
-               if (em.changeBit & this.EChangeBits.kCBTransBBox) {
+               if (em.changeBit & this.EChangeBits.kCBTrans) {
                   // Transformation update: no render data is streamed.
                   // render_data.matrix is updated here because a later rebuild,
                   // e.g. on a colour change in the same message, reads it.

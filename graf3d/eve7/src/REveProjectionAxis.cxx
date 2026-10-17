@@ -122,12 +122,10 @@ void REveProjectionAxis::BuildTicks(Int_t ax)
    if (!proj)
       return;
 
-   fManager->AssertBBox();
-   Float_t *bb = fManager->GetBBox();
-   if (!bb)
+   if (fManager->AssertBBox() != REveElement::kBBoxSet)
       return;
 
-   Float_t pmin_t = bb[ax * 2], pmax_t = bb[ax * 2 + 1];
+   Float_t pmin_t = fManager->GetBBoxMin()[ax], pmax_t = fManager->GetBBoxMax()[ax];
    if (pmax_t <= pmin_t)
       return;
 

@@ -88,7 +88,7 @@ protected:
    REveProjectable *fProjectable{nullptr};   // link to original object
    Float_t fDepth{0.};                       // z coordinate
 
-   void SetDepthCommon(Float_t d, REveElement *el, Float_t *bbox);
+   void SetDepthCommon(Float_t d, REveElement *el);
    virtual void SetDepthLocal(Float_t d);
 
 public:

@@ -224,19 +224,14 @@ void REveProjected::SetDepth(Float_t d)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Utility function to update the z-values of the bounding-box.
-/// As this is an abstract interface, the element and bbox pointers
-/// must be passed from outside.
+/// Set the depth and invalidate the bounding box of `el`, whose vertices the
+/// caller moves to the new depth.
 
-void REveProjected::SetDepthCommon(Float_t d, REveElement* el, Float_t* bbox)
+void REveProjected::SetDepthCommon(Float_t d, REveElement *el)
 {
-   Float_t delta = d - fDepth;
    fDepth = d;
-   if (bbox) {
-      bbox[4] += delta;
-      bbox[5] += delta;
-      el->StampTransBBox();
-   }
+   el->ResetBBox();
+   el->StampTrans();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

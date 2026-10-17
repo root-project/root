@@ -331,7 +331,7 @@ void REveJetConeProjected::BuildRenderData()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute bounding-box, virtual from TAttBBox.
+/// Fill the bounding box (virtual from REveElement).
 
 void REveJetConeProjected::ComputeBBox()
 {
@@ -352,7 +352,7 @@ void REveJetConeProjected::ComputeBBox()
 
 void REveJetConeProjected::SetDepthLocal(Float_t d)
 {
-   SetDepthCommon(d, this, fBBox);
+   SetDepthCommon(d, this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

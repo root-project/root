@@ -257,7 +257,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       }
 
       /** Apply one element of a "Motion" message: the same update as a
-        * kCBTransBBox change, outside the BeginChanges/EndChanges cycle. */
+        * kCBTrans change, outside the BeginChanges/EndChanges cycle. */
       sceneElementMotion(msg)
       {
          let el = this.mgr.GetElement(msg.fElementId);
@@ -346,7 +346,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          // Update the transformation in place. When kCBObjProps is also set the
          // server sends render data instead of a matrix, and the rebuild below
          // carries the new position.
-         if (msg.changeBit & this.mgr.EChangeBits.kCBTransBBox) {
+         if (msg.changeBit & this.mgr.EChangeBits.kCBTrans) {
             this.updateElementTrans(el, msg);
          }
 

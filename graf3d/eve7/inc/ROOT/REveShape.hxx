@@ -15,7 +15,6 @@
 #include <ROOT/REveElement.hxx>
 #include <ROOT/REveVector.hxx>
 
-#include "TAttBBox.h"
 #include "TColor.h"
 
 namespace ROOT {
@@ -26,9 +25,7 @@ namespace Experimental {
 // Abstract base-class for 2D/3D shapes.
 // =========================================================================
 
-class REveShape : public REveElement,
-                  public TAttBBox
-{
+class REveShape : public REveElement {
 private:
    REveShape(const REveShape &) = delete;
    REveShape &operator=(const REveShape &) = delete;
@@ -81,7 +78,7 @@ public:
 
    // ----------------------------------------------------------------
 
-   // Abstract function from TAttBBox:
+   // From REveElement:
    // virtual void ComputeBBox();
 
    // ----------------------------------------------------------------

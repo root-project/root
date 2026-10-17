@@ -52,7 +52,7 @@ void REveTrackProjected::SetProjection(REveProjectionManager* mng, REveProjectab
 
 void REveTrackProjected::SetDepthLocal(Float_t d)
 {
-   SetDepthCommon(d, this, fBBox);
+   SetDepthCommon(d, this);
 
    for (Int_t i = 0; i < fSize; ++i)
    {

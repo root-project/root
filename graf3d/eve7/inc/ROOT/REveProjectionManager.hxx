@@ -14,7 +14,6 @@
 
 #include <ROOT/REveElement.hxx>
 #include <ROOT/REveProjections.hxx>
-#include <TAttBBox.h>
 
 namespace ROOT {
 namespace Experimental {
@@ -24,10 +23,7 @@ namespace Experimental {
 /// Manager class for steering of projections and managing projected objects.
 ////////////////////////////////////////////////////////////////////////////////
 
-class REveProjectionManager : public REveElement,
-                              public REveAuntAsList,
-                              public TAttBBox
-{
+class REveProjectionManager : public REveElement, public REveAuntAsList {
 private:
    REveProjectionManager(const REveProjectionManager &) = delete;
    REveProjectionManager &operator=(const REveProjectionManager &) = delete;

@@ -222,14 +222,11 @@ void REveGeoShape::SetShape(TGeoShape *s)
 
 void REveGeoShape::ComputeBBox()
 {
+   BBoxInit();
    TGeoBBox *bb = dynamic_cast<TGeoBBox *>(fShape);
    if (bb) {
-      BBoxInit();
       const Double_t *o = bb->GetOrigin();
-      BBoxCheckPoint(o[0] - bb->GetDX(), o[0] - bb->GetDY(), o[0] - bb->GetDZ());
-      BBoxCheckPoint(o[0] + bb->GetDX(), o[0] + bb->GetDY(), o[0] + bb->GetDZ());
-   } else {
-      BBoxZero();
+      BBoxCheckBox(REveVector(o[0], o[1], o[2]), REveVector(bb->GetDX(), bb->GetDY(), bb->GetDZ()));
    }
 }
 
@@ -474,22 +471,17 @@ void REveGeoShapeProjected::UpdateProjection()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Override of virtual method from TAttBBox.
+/// Fill the bounding box (virtual from REveElement).
 
 void REveGeoShapeProjected::ComputeBBox()
 {
+   BBoxInit();
    if (fBuff && fBuff->NbPnts() > 0)
    {
-      BBoxInit();
-
       Double_t *p = fBuff->fPnts;
       for (UInt_t i = 0; i < fBuff->NbPnts(); ++i, p+=3)
       {
          BBoxCheckPoint(p[0], p[1], p[2]);
       }
-   }
-   else
-   {
-      BBoxZero();
    }
 }

@@ -29,6 +29,9 @@
 
 #include <cassert>
 #include <algorithm>
+#include <limits>
+#include <mutex>
+#include <set>
 
 #include <nlohmann/json.hpp>
 
@@ -862,7 +865,7 @@ void REveElement::DestroyMainTrans()
 void REveElement::SetTransMatrix(Double_t* carr)
 {
    RefMainTrans().SetFrom(carr);
-   StampTransBBox();
+   StampTrans();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -871,7 +874,7 @@ void REveElement::SetTransMatrix(Double_t* carr)
 void REveElement::SetTransMatrix(const TGeoMatrix& mat)
 {
    RefMainTrans().SetFrom(mat);
-   StampTransBBox();
+   StampTrans();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1463,6 +1466,9 @@ void REveElement::RecheckImpliedSelections()
 
 void REveElement::AddStamp(UChar_t bits)
 {
+   if (bits & kCBObjProps)
+      fBBoxState = kBBoxInvalid;
+
    if (fDestructing == kNone && fScene && fScene->IsAcceptingChanges())
    {
       if (gDebug > 0)
@@ -1478,6 +1484,71 @@ void REveElement::AddStamp(UChar_t bits)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Start filling the bounding box with BBoxCheckPoint(): min at +infinity,
+/// max at -infinity, so the first point sets both. A box that no point
+/// reached stays inverted, and AssertBBox() reports it as kBBoxNone.
+
+void REveElement::BBoxInit()
+{
+   const Float_t inf = std::numeric_limits<Float_t>::infinity();
+   fBBoxMin.Set(inf, inf, inf);
+   fBBoxMax.Set(-inf, -inf, -inf);
+   fBBoxState = kBBoxSet;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the bounding box to a cube of half-side `epsilon` at (`x`, `y`, `z`);
+/// with the defaults, a point at the origin.
+
+void REveElement::BBoxZero(Float_t epsilon, Float_t x, Float_t y, Float_t z)
+{
+   fBBoxMin.Set(x - epsilon, y - epsilon, z - epsilon);
+   fBBoxMax.Set(x + epsilon, y + epsilon, z + epsilon);
+   fBBoxState = kBBoxSet;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Widen every side of the bounding box shorter than `epsilon` to `epsilon`,
+/// keeping its centre.
+
+void REveElement::AssertBBoxExtents(Float_t epsilon)
+{
+   if (fBBoxMin.fX > fBBoxMax.fX)
+      return; // empty, see BBoxInit()
+   for (Int_t i = 0; i < 3; ++i) {
+      if (fBBoxMax[i] - fBBoxMin[i] < epsilon) {
+         Float_t c = 0.5f * (fBBoxMin[i] + fBBoxMax[i]);
+         fBBoxMin[i] = c - 0.5f * epsilon;
+         fBBoxMax[i] = c + 0.5f * epsilon;
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the bounding box in the element's own frame, before fMainTrans.
+/// Overrides fill it with BBoxInit() and BBoxCheckPoint(), or BBoxZero(), or
+/// call BBoxNotInWorld() for screen-space content. This default is for an
+/// element with no geometry of its own.
+
+void REveElement::ComputeBBox()
+{
+   fBBoxState = kBBoxNone;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the bounding box if it is invalid, and return its state.
+
+REveElement::EBBoxState REveElement::AssertBBox()
+{
+   if (fBBoxState == kBBoxInvalid) {
+      ComputeBBox();
+      if (fBBoxState == kBBoxSet && fBBoxMin.fX > fBBoxMax.fX)
+         fBBoxState = kBBoxNone; // no point reached the box, see BBoxInit()
+   }
+   return fBBoxState;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Write transformation Matrix to render data
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1489,7 +1560,7 @@ void REveElement::BuildRenderData()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write the main transformation and its motion for a kCBTransBBox update.
+/// Write the main transformation and its motion for a kCBTrans update.
 /// No render data is written; the client applies it to the object it already
 /// has. It goes out as JSON, so no offset is reserved in the binary blob for a
 /// message that carries no geometry.
@@ -1571,6 +1642,21 @@ Int_t REveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
          j["render_data"] = rd;
 
          ret = fRenderData->GetBinarySize();
+
+         // kCBObjProps invalidates the box, see AddStamp().
+         switch (AssertBBox()) {
+         case kBBoxSet:
+            j["bbox"] = {fBBoxMin.fX, fBBoxMin.fY, fBBoxMin.fZ, fBBoxMax.fX, fBBoxMax.fY, fBBoxMax.fZ};
+            break;
+         case kBBoxNotInWorld: j["bbox_not_in_world"] = true; break;
+         default: {
+            static std::mutex mtx;
+            static std::set<std::string> warned;
+            std::lock_guard<std::mutex> lock(mtx);
+            if (warned.insert(IsA()->GetName()).second)
+               ::Warning("REveElement::WriteCoreJson", "%s has render data but no bounding box.", IsA()->GetName());
+         }
+         }
       }
    }
 

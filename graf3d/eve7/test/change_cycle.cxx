@@ -158,7 +158,7 @@ TEST(REveChangeCycle, TransOnlyGoesToMotion)
 
    eve->BeginChange();
    moved->RefMainTrans().SetPos(1, 2, 3);
-   moved->StampTransBBox();
+   moved->StampTrans();
    edited->StampObjProps();
 
    nlohmann::json arr = nlohmann::json::array();

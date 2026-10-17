@@ -587,6 +587,16 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
          return mat;
       }
 
+      /** Give `geo` the element's box, `el.bbox` (min, then max, in the
+        * element's own frame, computed on the server). Does nothing for an
+        * element without one. */
+      RcSetElementBBox(geo, el) {
+         let bb = el.bbox;
+         if (bb && bb.length === 6)
+            geo.setExternalBoundingBox(new RC.Box3(new RC.Vector3(bb[0], bb[1], bb[2]),
+                                                   new RC.Vector3(bb[3], bb[4], bb[5])));
+      }
+
       RcMakeZSprite(colIdx, sSize, nInstance, vbuff, instX, instY, textureName) {
          let col = RcCol(colIdx);
          sSize *= this.POINT_SIZE_FAC;
@@ -784,9 +794,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
             rnr_data.vtxBuff, hit.fTexX, hit.fTexY,
             txName);
 
-         // bounding box
-         let bb = rnr_data.nrmBuff;
-         s.geometry.setExternalBoundingBox(new RC.Box3(new RC.Vector3(bb[0], bb[2], bb[4]), new RC.Vector3(bb[1], bb[3], bb[5])));
+         this.RcSetElementBBox(s.geometry, hit);
 
          this.RcPickable(hit, s);
 
@@ -1045,12 +1053,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
          mat._specular = new RC.Color(0.12, 0.12, 0.12);
          mat._shininess = 24;
 
-         // The server's analytic bounding box, sent as JSON in min-then-max
-         // order rather than in the normals channel that makeBoxSet and makeHit use.
-         let bb = el.bbox;
-         if (bb && bb.length >= 6)
-            geo.setExternalBoundingBox(new RC.Box3(new RC.Vector3(bb[0], bb[1], bb[2]),
-                                                   new RC.Vector3(bb[3], bb[4], bb[5])));
+         this.RcSetElementBBox(geo, el);
 
          let mesh = new RC.Mesh(geo, mat);
 
@@ -1373,9 +1376,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
          else
             mesh = this.makeFreeBoxSet(boxset, rnr_data);
 
-         // bounding box
-         let bb = rnr_data.nrmBuff;
-         mesh.geometry.setExternalBoundingBox(new RC.Box3(new RC.Vector3(bb[0], bb[2], bb[4]), new RC.Vector3(bb[1], bb[3], bb[5])));
+         this.RcSetElementBBox(mesh.geometry, boxset);
 
          return mesh;
       }
@@ -1711,9 +1712,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
 
          let g = new RC.Geometry();
 
-         // bounding box
-         let bb = topNode.bbox;
-         g.setExternalBoundingBox(new RC.Box3(new RC.Vector3(bb[0], bb[2], bb[4]), new RC.Vector3(bb[1], bb[3], bb[5])));
+         this.RcSetElementBBox(g, topNode);
 
          // let vatt = new RC.BufferAttribute(topNode.shapeVertices, 3);
          // g.vertices = new RC.BufferAttribute(topNode.shapeVertices, 3);

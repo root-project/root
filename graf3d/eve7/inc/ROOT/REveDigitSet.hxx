@@ -13,8 +13,6 @@
 #define ROOT_REveDigitSet
 
 #include "TNamed.h"
-#include "TAtt3D.h"
-#include "TAttBBox.h"
 
 #include "ROOT/REveUtil.hxx"
 #include "ROOT/REveElement.hxx"
@@ -28,11 +26,7 @@ class TRefArray;
 namespace ROOT {
 namespace Experimental {
 
-class REveDigitSet : public REveElement,
-                     public TAtt3D,
-                     public TAttBBox,
-                     public REveSecondarySelectable
-{
+class REveDigitSet : public REveElement, public REveSecondarySelectable {
    friend class REveDigitSetEditor;
    friend class REveDigitSetGL;
 
