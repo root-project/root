@@ -23,6 +23,10 @@ struct SoAVersionMismatch {
    ClassDefNV(SoAVersionMismatch, 4);
 };
 
+struct RecordUnversioned {};
+
+struct SoAUnversioned {};
+
 struct RecordSimple {
    float fX;
    float fY;

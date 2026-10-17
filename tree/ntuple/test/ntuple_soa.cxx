@@ -71,6 +71,13 @@ TEST(RNTuple, SoACheck)
    }
 
    try {
+      auto f = std::make_unique<RSoAField>("f", "SoAUnversioned");
+      FAIL() << "creating unversioned SoA field should fail";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), ::testing::HasSubstr("is transient or unversioned"));
+   }
+
+   try {
       auto f = std::make_unique<RSoAField>("f", "SoASimpleBadArray");
       FAIL() << "creating SoA field with arrays should fail";
    } catch (const ROOT::RException &e) {
