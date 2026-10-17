@@ -12,6 +12,7 @@
 #include <ROOT/REveBox.hxx>
 #include <ROOT/REveProjectionManager.hxx>
 #include <ROOT/REveRenderData.hxx>
+#include <ROOT/REveTrans.hxx>
 
 #include "TClass.h"
 
@@ -198,7 +199,8 @@ void REveBoxProjected::UpdateProjection()
    vVector2_t pp[2];
    {
       REveProjection *projection = fManager->GetProjection();
-      REveTrans      *trans      = box->PtrMainTrans(kFALSE);
+      REveTrans mt;
+      const REveTrans *trans = fManager->GetModelTrans(box, mt);
 
       REveVector pbuf;
       for (Int_t i = 0; i < 8; ++i)

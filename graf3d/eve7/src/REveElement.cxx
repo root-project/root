@@ -290,12 +290,12 @@ void REveElement::SetNameTitle(const std::string& name, const std::string& title
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual function called when a name or title of the element has
-/// been changed.
+/// been changed. Stamps kCBCoreJson, which streams both to the client.
 /// If you override this, call also the version of your direct base-class.
 
 void REveElement::NameTitleChanged()
 {
-   // Should send out some message. Need a new stamp type?
+   StampCoreJson();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -408,7 +408,7 @@ void REveElement::CopyVizParams(const REveElement* el)
    fMainTransparency        = el->fMainTransparency;
    if (fMainColorPtr == & fDefaultColor) fDefaultColor = el->GetMainColor();
 
-   AddStamp(kCBColorSelection | kCBObjProps);
+   AddStamp(kCBCoreJson | kCBObjProps);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -731,7 +731,7 @@ void REveElement::SetMainColor(Color_t color)
    if (fMainColorPtr)
    {
       *fMainColorPtr = color;
-      StampColorSelection();
+      StampCoreJson();
    }
 
    PropagateMainColorToProjecteds(color, old_color);
@@ -783,7 +783,7 @@ void REveElement::SetMainTransparency(Char_t t)
 
    if (t > 100) t = 100;
    fMainTransparency = t;
-   StampColorSelection();
+   StampCoreJson();
 
    PropagateMainTransparencyToProjecteds(t, old_t);
 }
@@ -875,6 +875,25 @@ void REveElement::SetTransMatrix(const TGeoMatrix& mat)
 {
    RefMainTrans().SetFrom(mat);
    StampTrans();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compose into `t` the matrices of this element and of its mothers up to,
+/// not including, its REveScene: the frame the client draws the element in.
+/// Returns the number of matrices; `t` is set only when it is non-zero.
+
+Int_t REveElement::ComposeSceneTrans(REveTrans &t) const
+{
+   Int_t n = 0;
+   for (const REveElement *el = this; el && !dynamic_cast<const REveScene *>(el); el = el->fMother) {
+      if (const REveTrans *m = el->fMainTrans.get()) {
+         if (n++ == 0)
+            t = *m;
+         else
+            t.MultLeft(*m);
+      }
+   }
+   return n;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -304,7 +304,8 @@ void REveStraightLineSetProjected::UpdateProjection()
    REveProjection&      proj = * fManager->GetProjection();
    REveStraightLineSet& orig = * dynamic_cast<REveStraightLineSet*>(fProjectable);
 
-   REveTrans *trans = orig.PtrMainTrans(kFALSE);
+   REveTrans mt;
+   const REveTrans *trans = fManager->GetModelTrans(&orig, mt);
 
    BBoxClear();
 

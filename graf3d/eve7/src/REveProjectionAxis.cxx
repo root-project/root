@@ -282,6 +282,18 @@ void REveProjectionAxis::RemoveAunt(REveAunt *au)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Follow the projection manager: its box and distortion set the ticks and the
+/// distortion read-out.
+
+void REveProjectionAxis::AuntChanged(REveAunt *au)
+{
+   if (au != fManager)
+      return;
+   UpdateTicks();
+   UpdateDistortionLabel();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Rewrite the read-out. Shown as distortion * 1000, the same scaling
 /// REveProjectionManager uses in its own name.
 

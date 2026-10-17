@@ -315,9 +315,8 @@ void REveScene::StreamRepresentationChanges()
           jobj["fRnrChildren"] = el->GetRnrChildren();
         }
 
-        if (bits & kCBColorSelection)
-        {
-          el->WriteCoreJson(jobj, -1);
+        if (bits & kCBCoreJson) {
+           el->WriteCoreJson(jobj, -1);
         }
 
         if (bits & kCBTrans) {

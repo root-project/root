@@ -176,7 +176,7 @@ void REveDigitSet::SetMainColor(Color_t color)
    else if (fFrame)
    {
       fFrame->SetFrameColor(color);
-      fFrame->StampBackPtrElements(kCBColorSelection);
+      fFrame->StampBackPtrElements(kCBCoreJson);
    }
 }
 

@@ -115,7 +115,8 @@ Int_t REveTrackProjected::GetBreakPointIdx(Int_t start)
 void REveTrackProjected::MakeTrack(Bool_t recurse)
 {
    REveTrack      *otrack     = dynamic_cast<REveTrack*>(fProjectable);
-   REveTrans      *trans      = otrack->PtrMainTrans(kFALSE);
+   REveTrans mt;
+   const REveTrans *trans = fManager->GetModelTrans(otrack, mt);
    REveProjection *projection = fManager->GetProjection();
 
    fBreakPoints.clear();
