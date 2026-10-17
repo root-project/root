@@ -22,3 +22,4 @@ cocoa=ON
 davix=OFF
 minuit2_omp=OFF
 x11=OFF
+ROOT_CTEST_CUSTOM_FLAGS=-R ^pyunittests-bindings-cppjit-

@@ -37,7 +37,7 @@ endif()
 
 function(CPPJIT_ADD_PYTEST name)
   cmake_parse_arguments(ARG
-    "DROP_ROOTMAP" "" "DICTS;FIXTURES_SETUP;FIXTURES_REQUIRED" ${ARGN})
+    "DROP_ROOTMAP" "SUFFIX" "DICTS;FIXTURES_SETUP;FIXTURES_REQUIRED" ${ARGN})
 
   set(extra)
   if(ARG_DICTS)
@@ -60,7 +60,7 @@ function(CPPJIT_ADD_PYTEST name)
   endif()
 
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
-  set(test_name pyunittests-bindings-cppjit-${good_name})
+  set(test_name pyunittests-bindings-cppjit-${good_name}${ARG_SUFFIX})
 
   ROOT_ADD_TEST(${test_name}
     # Upstream marks platform xfails without explicit strict=; the in-tree
@@ -115,6 +115,13 @@ CPPJIT_ADD_PYTEST(test_basic_api
   FIXTURES_REQUIRED cppjit_example01_dict_fixture)
 CPPJIT_ADD_PYTEST(test_datatypes
   FIXTURES_REQUIRED cppjit_datatypes_dict_fixture)
+# TEMP: 300 more copies of test_datatypes, run by ctest in parallel in this
+# directory like the real suite does, to measure its sporadic crash on the
+# mac-beta CI runner (about 3% of runs).
+foreach(i RANGE 1 300)
+  CPPJIT_ADD_PYTEST(test_datatypes SUFFIX -rep${i}
+    FIXTURES_REQUIRED cppjit_datatypes_dict_fixture)
+endforeach()
 
 CPPJIT_ADD_PYTEST(test_api)
 CPPJIT_ADD_PYTEST(test_boost)
