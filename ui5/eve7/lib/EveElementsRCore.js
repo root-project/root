@@ -588,13 +588,14 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
       }
 
       /** Give `geo` the element's box, `el.bbox` (min, then max, in the
-        * element's own frame, computed on the server). Does nothing for an
+        * element's own frame, computed on the server). Returns false for an
         * element without one. */
       RcSetElementBBox(geo, el) {
          let bb = el.bbox;
-         if (bb && bb.length === 6)
-            geo.setExternalBoundingBox(new RC.Box3(new RC.Vector3(bb[0], bb[1], bb[2]),
-                                                   new RC.Vector3(bb[3], bb[4], bb[5])));
+         if (!bb || bb.length !== 6) return false;
+         geo.setExternalBoundingBox(new RC.Box3(new RC.Vector3(bb[0], bb[1], bb[2]),
+                                                new RC.Vector3(bb[3], bb[4], bb[5])));
+         return true;
       }
 
       RcMakeZSprite(colIdx, sSize, nInstance, vbuff, instX, instY, textureName) {
@@ -794,7 +795,9 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
             rnr_data.vtxBuff, hit.fTexX, hit.fTexY,
             txName);
 
-         this.RcSetElementBBox(s.geometry, hit);
+         // The instances are placed from a texture, so only the server's box
+         // bounds them; with it the object can be culled.
+         if (this.RcSetElementBBox(s.geometry, hit)) s.frustumCulled = true;
 
          this.RcPickable(hit, s);
 
@@ -886,8 +889,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
             () => this.viewer.request_render()
          );
 
-         // No position here: REveElement::BuildRenderData writes fMainTrans into
-         // the render data and EveScene applies it with setMatrixFromArray().
+         // No position here: EveScene sets the element's matrix on its node.
          // Movable if pickable; resizable unless the element turns it off.
          text.resizable = (el.fResizable === undefined) ? true : !!el.fResizable;
          if (el.fPickable) this.RcPickable(el, text);
@@ -1376,7 +1378,9 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
          else
             mesh = this.makeFreeBoxSet(boxset, rnr_data);
 
-         this.RcSetElementBBox(mesh.geometry, boxset);
+         // Instanced boxes are placed from a texture, so only the server's box
+         // bounds them; with it the object can be culled.
+         if (this.RcSetElementBBox(mesh.geometry, boxset)) mesh.frustumCulled = true;
 
          return mesh;
       }

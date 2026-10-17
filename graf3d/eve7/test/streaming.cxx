@@ -24,6 +24,8 @@
 
 #include "TGeoTube.h"
 
+#include "TBase64.h"
+
 #include <nlohmann/json.hpp>
 
 #include <cstring>
@@ -249,7 +251,8 @@ TEST(REveStreaming, TextNotInWorld)
    delete t;
 }
 
-// An REveBox streams its transformation, and its box stays in its own frame.
+// An REveBox streams its transformation as JSON, base64 of 16 doubles, and its
+// box stays in its own frame.
 TEST(REveStreaming, BoxTransAndBBox)
 {
    REX::REveManager::Create();
@@ -264,7 +267,15 @@ TEST(REveStreaming, BoxTransAndBBox)
    nlohmann::json j;
    b->WriteCoreJson(j, 0);
    ASSERT_TRUE(j.contains("render_data"));
-   EXPECT_EQ(j["render_data"]["trans_size"], 16);
+   EXPECT_FALSE(j["render_data"].contains("trans_size"));
+   ASSERT_TRUE(j["matrix"].is_string());
+   const TString bytes = TBase64::Decode(j["matrix"].get<std::string>().c_str());
+   ASSERT_EQ(bytes.Length(), 16 * (int)sizeof(Double_t));
+   Double_t m[16];
+   std::memcpy(m, bytes.Data(), sizeof(m));
+   EXPECT_DOUBLE_EQ(m[12], 100);
+   EXPECT_DOUBLE_EQ(m[13], 200);
+   EXPECT_DOUBLE_EQ(m[14], 300);
    EXPECT_EQ(j["bbox"], nlohmann::json({-h, -h, -h, h, h, h}));
 
    delete b;
@@ -331,6 +342,27 @@ TEST(REveStreaming, BoxSetBBoxHoldsInstances)
    delete fixed;
    delete scaled;
    delete cone;
+}
+
+// An element emptied of its contents sends no render data, not the render data
+// of what it held before.
+TEST(REveStreaming, EmptiedElementSendsNoRenderData)
+{
+   REX::REveManager::Create();
+   auto ps = MakePoints("points", 5);
+
+   nlohmann::json j;
+   ps->WriteCoreJson(j, 0);
+   ASSERT_TRUE(j.contains("render_data"));
+
+   ps->Reset(0);
+   nlohmann::json je;
+   EXPECT_EQ(ps->WriteCoreJson(je, 0), 0);
+   EXPECT_FALSE(je.contains("render_data"));
+   EXPECT_FALSE(je.contains("bbox"));
+   EXPECT_EQ(ps->GetRenderData(), nullptr);
+
+   delete ps;
 }
 
 // An element with no geometry of its own has no render data and sends no box.

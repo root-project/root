@@ -241,6 +241,8 @@ sap.ui.define([
          this.scene = new RC.Scene();
          this.overlay_scene = new RC.Scene();
          this.scene_bbox = new RC.Box3();
+         this.scene_bboxes = new WeakMap(); // EveScene -> { stamp, box }, see sceneBBox()
+         this.moved_bboxes = new WeakMap(); // EveScene -> { stamp, trans, box }, see nearFarBBox()
 
          this.lights = new RC.Group;
          this.lights.name = "Light container";
@@ -583,17 +585,17 @@ sap.ui.define([
          setTimeout(this.syncCamTransTimer.bind(this), 5000);
       }
 
-      /** Set scene_bbox from the scene. An empty scene gets a fallback box of
-       * +-100. Returns true when the scene was empty. */
+      /** Set scene_bbox to the union of the boxes of the scenes this viewer
+        * shows. Lights, the axis and the centre marker are outside the scenes
+        * and do not count. An empty union gets a fallback box of +-100.
+        * Returns true when the union was empty. */
       recalcSceneBBox()
       {
-         // Exclude the axis: it is built from this box, and its ticks reach past
-         // it, so including it would grow the box on every rebuild. Its label
-         // vertices are screen-space vec2, which expandByObject would read as 3D.
-         const ax = this.axis3d ? this.axis3d.group : null;
-         if (ax) this.scene.remove(ax);
-         this.scene_bbox.setFromObject( this.scene );
-         if (ax) this.scene.add(ax);
+         this.scene.updateMatrixWorld();
+         this.scene_bbox.makeEmpty();
+         for (const s of this.controller.created_scenes || [])
+            if (!s.IsOverlay)
+               this.scene_bbox.union(this.sceneBBox(s));
          const empty = this.scene_bbox.isEmpty();
          if (empty)
          {
@@ -606,6 +608,62 @@ sap.ui.define([
 
          this.updateRenderBBox();
          return empty;
+      }
+
+      /** The box of EveScene `s`: the boxes the server sent for its elements,
+        * in each element's frame, moved into world space by the matrix of the
+        * element's node. Elements count whether visible or not; text and other
+        * screen-space elements send no box. Kept until s.content_stamp changes. */
+      sceneBBox(s)
+      {
+         let c = this.scene_bboxes.get(s);
+         if (c && c.stamp === s.content_stamp) return c.box;
+
+         const box = this.computeSceneBBox(s);
+         this.scene_bboxes.set(s, { stamp: s.content_stamp, trans: s.trans_stamp, box: box });
+         return box;
+      }
+
+      /** The box near and far are fitted to: render_bbox, grown by the box of
+        * every scene whose elements moved since its sceneBBox() was made, at
+        * their current matrices. A declared axes_bbox is used as it is. */
+      nearFarBBox()
+      {
+         const base = this.render_bbox || this.scene_bbox;
+         if (this.axes_bbox) return base;
+
+         let box = null;
+         for (const s of this.controller.created_scenes || []) {
+            if (s.IsOverlay) continue;
+            const c = this.scene_bboxes.get(s);
+            if (!c || (c.stamp === s.content_stamp && c.trans === s.trans_stamp)) continue;
+
+            let m = this.moved_bboxes.get(s);
+            if (!m || m.stamp !== s.content_stamp || m.trans !== s.trans_stamp) {
+               this.scene.updateMatrixWorld();
+               m = { stamp: s.content_stamp, trans: s.trans_stamp, box: this.computeSceneBBox(s) };
+               this.moved_bboxes.set(s, m);
+            }
+            (box ||= base.clone()).union(m.box);
+         }
+         return box || base;
+      }
+
+      /** The boxes the server sent for the elements of EveScene `s`, moved
+        * into world space by the matrices of the elements' nodes. */
+      computeSceneBBox(s)
+      {
+         const mgr = this.get_manager();
+         let box = new RC.Box3(), eb = new RC.Box3();
+         for (const [id, node] of s.id2node_map) {
+            const el = mgr.GetElement(id);
+            const bb = el && el.bbox;
+            if (!Array.isArray(bb)) continue;
+            eb.min.set(bb[0], bb[1], bb[2]);
+            eb.max.set(bb[3], bb[4], bb[5]);
+            box.union(eb.applyMatrix4(node.matrixWorld));
+         }
+         return box;
       }
 
       /** The box the camera's near and far planes are fitted to: axes_bbox or
@@ -685,7 +743,8 @@ sap.ui.define([
          else
          {
             this.controls.setCamBaseMtx(new RC.Vector3(v1[0], v1[1], v1[2]), new RC.Vector3(v2[0], v2[1], v2[2]));
-            let ey = 1.02 * extV.y;
+            // Fit the height, or the width if that is what limits the panel.
+            let ey = 1.02 * Math.max(extV.y, extV.x * this.get_height() / this.get_width());
             let ex = ey / this.get_height() * this.get_width();
             this.camera._left   = -ex;
             this.camera._right  =  ex;
@@ -854,7 +913,7 @@ sap.ui.define([
                this.positionCameraAndLights();
          }
          if (this.camera.isPerspectiveCamera) {
-            this.camera.optimizeNearFar(this.render_bbox || this.scene_bbox);
+            this.camera.optimizeNearFar(this.nearFarBBox());
          }
 
          if (this.canvas.width <= 0 || this.canvas.height <= 0) return;
