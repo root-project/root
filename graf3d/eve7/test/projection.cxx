@@ -16,6 +16,7 @@
 #include <ROOT/REveProjections.hxx>
 #include <ROOT/REveProjectionBases.hxx>
 #include <ROOT/REveProjectionManager.hxx>
+#include <ROOT/REveTrans.hxx>
 
 namespace REX = ROOT::Experimental;
 
@@ -79,6 +80,22 @@ TEST(REveProjection, ScreenValRoundTrip)
          }
       }
    }
+}
+
+// ProjectPointdv() may project in place, as REveTrackProjected does for path
+// marks; a rotation must not read coordinates it has already overwritten.
+TEST(REveProjection, ProjectPointdvInPlace)
+{
+   REX::REveRPhiProjection p;
+   REX::REveTrans t;
+   t.RotateLF(1, 2, 0.5);
+   t.SetPos(10, 20, 0);
+
+   Double_t in[3] = {3, 4, 0}, out[3];
+   p.ProjectPointdv(&t, in, out, 0.f);
+   p.ProjectPointdv(&t, in, in, 0.f);
+   for (int i = 0; i < 3; ++i)
+      EXPECT_DOUBLE_EQ(in[i], out[i]) << "coordinate " << i;
 }
 
 TEST(REveProjection, ImportAndUpdate)
