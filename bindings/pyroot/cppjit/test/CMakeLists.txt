@@ -132,24 +132,14 @@ CPPJIT_ADD_PYTEST(test_basic_api
 # the mac-beta ARM64 CI runner; collect diagnostics until it is understood.
 CPPJIT_ADD_PYTEST(test_datatypes CRASH_DIAGNOSTICS
   FIXTURES_REQUIRED cppjit_datatypes_dict_fixture)
-# TEMP: copies of test_datatypes, run by ctest in parallel in this directory
-# like the real suite does, to measure its sporadic crash on the mac-beta CI
-# runner. All keep Python's production allocator, because the debug allocator
-# made the crash disappear.
-#   -gc:    a full gc.collect() after every test and after every line of
-#           test24 to test29, so the collector finds a damaged container at
-#           the test or line that leaves it behind instead of wherever the
-#           incremental collector happens to reach it (always test26 so far).
-#   -plain: faulthandler only, the production behaviour, for the base rate
-#           and the Python line at which the collector trips.
+# TEMP: 700 copies of test_datatypes, run by ctest in parallel in this
+# directory like the real suite does, to measure its sporadic crash on the
+# mac-beta CI runner. Production allocator (the debug allocator hides the bug),
+# a full gc.collect() after every test, and the plugin's reference count watch
+# on pytest's TestReport objects, which the crash was seen to hit.
 foreach(i RANGE 1 700)
-  CPPJIT_ADD_PYTEST(test_datatypes CRASH_DIAGNOSTICS SUFFIX -gc${i}
+  CPPJIT_ADD_PYTEST(test_datatypes CRASH_DIAGNOSTICS SUFFIX -rc${i}
     ENV PYTHONMALLOC=default
-    FIXTURES_REQUIRED cppjit_datatypes_dict_fixture)
-endforeach()
-foreach(i RANGE 1 300)
-  CPPJIT_ADD_PYTEST(test_datatypes CRASH_DIAGNOSTICS SUFFIX -plain${i}
-    ENV PYTHONMALLOC=default ROOT_CI_DIAGNOSTICS_NO_GC=1
     FIXTURES_REQUIRED cppjit_datatypes_dict_fixture)
 endforeach()
 

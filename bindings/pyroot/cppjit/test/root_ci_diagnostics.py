@@ -36,6 +36,8 @@ import gc
 import os
 import sys
 
+import pytest
+
 _stderr_fd = None
 
 # The crash always surfaces in test26_function_pointers, in a collection that
@@ -98,6 +100,55 @@ def pytest_terminal_summary(terminalreporter):
     )
 
 
+# Watch the reference counts of pytest's own TestReport objects. The crash on
+# mac-beta tripped over a report in the terminal reporter's stats lists: a
+# plain Python object cpyrt never sees, so the suspect is a stale Py_DECREF
+# through a pointer to a dead object whose memory the report reused. Such a
+# decrement shows up as a refcount drop of a report that is still referenced
+# from the stats list, and checking after every test names the test during
+# which it happened, without depending on a later crash.
+_report_refcounts = {}
+
+
+def _check_reports(config, where, current_nodeid=None):
+    tr = config.pluginmanager.get_plugin("terminalreporter")
+    if tr is None:
+        return
+    # announce first: if the scan itself crashes on a dead report, the
+    # faulthandler output follows this line
+    os.write(_stderr_fd, f"ROOT CI diagnostics: {where}\n".encode())
+    for key, reports in tr.stats.items():
+        for rep in reports:
+            ident = id(rep)
+            known = _report_refcounts.get(ident)
+            try:
+                tname = type(rep).__name__
+                rc = sys.getrefcount(rep)
+                if tname not in ("TestReport", "CollectReport"):
+                    raise TypeError(f"{tname} is not a report")
+                if known is None:
+                    # the runner still holds temporaries to the reports of the
+                    # test being torn down; take their baseline at the next check
+                    if rep.nodeid != current_nodeid:
+                        _report_refcounts[ident] = (rc, rep.nodeid, rep.when)
+                    continue
+            except Exception as exc:  # a freed report may raise anything
+                _report(
+                    f"report at {ident:#x} in stats[{key!r}] is unreadable ({exc!r}), {where}"
+                )
+            if rc < known[0]:
+                _report(
+                    f"refcount of the {known[2]} report of {known[1]} dropped "
+                    f"from {known[0]} to {rc}, {where}"
+                )
+
+
+def _report(msg):
+    os.write(_stderr_fd, f"ROOT CI diagnostics: {msg}\n".encode())
+    faulthandler.dump_traceback(file=_stderr_fd, all_threads=False)
+    os._exit(99)  # make ctest show this output
+
+
 def pytest_runtest_setup(item):
     _rearm_faulthandler()
 
@@ -107,6 +158,12 @@ def pytest_runtest_teardown(item, nextitem):
     if not _NO_GC:
         gc.collect()
         _rearm_faulthandler()
+    _check_reports(item.config, f"checked after {item.nodeid}", item.nodeid)
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_sessionfinish(session, exitstatus):
+    _check_reports(session.config, "checked at session finish")
 
 
 def pytest_unconfigure(config):
