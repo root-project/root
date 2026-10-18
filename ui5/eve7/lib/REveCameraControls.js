@@ -308,9 +308,11 @@ export class REveCameraControls extends EventDispatcher {
       camTrans.setPosition(localCenter);
 
       if (this.object.isPerspectiveCamera) {
-         const fovDefault = 30;
-         const fov = Math.min(fovDefault, this.object.aspect * fovDefault);
-         const dollyDefault = bb_R / (2.0 * Math.tan(fov * Math.PI * 0.8 / 180));
+         // Far enough for the box's bounding sphere to fit the narrower of the
+         // vertical and the horizontal field of view.
+         const vHalf = 0.5 * this.object.fov * Math.PI / 180;
+         const hHalf = Math.atan(Math.tan(vHalf) * this.object.aspect);
+         const dollyDefault = bb_R / Math.sin(Math.min(vHalf, hHalf));
 
          camTrans.moveLF(1, dollyDefault);
       } else {
