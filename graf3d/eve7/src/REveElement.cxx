@@ -1483,8 +1483,7 @@ void REveElement::AddStamp(UChar_t bits)
 
 void REveElement::BuildRenderData()
 {
-   if (fMainTrans.get())
-   {
+   if (fMainTrans && fRenderData) {
       fRenderData->SetMatrix(fMainTrans->Array());
    }
 }
