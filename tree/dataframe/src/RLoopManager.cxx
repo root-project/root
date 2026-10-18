@@ -1378,10 +1378,14 @@ void ROOT::Detail::RDF::RLoopManager::RNTupleThreadTask(const std::pair<ULong64_
       {fDataSource->GetLabel(), begin - columnReaderOffset, end - columnReaderOffset, slot});
 
    try {
-      for (auto entry = begin; entry < end; ++entry) {
-         if (fDataSource->SetEntry(slot, entry)) {
-            RunAndCheckFilters(slot, entry);
+      auto bulkBeginEntry = begin;
+      std::size_t bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(end - bulkBeginEntry));
+      while (bulkBeginEntry < end) {
+         if (fDataSource->SetEntry(slot, bulkBeginEntry)) {
+            RunAndCheckFilters(slot, bulkBeginEntry, bulkSize);
          }
+         bulkBeginEntry += bulkSize;
+         bulkSize = std::min(GetCurrentBulkSize(), static_cast<std::size_t>(end - bulkBeginEntry));
       }
    } catch (...) {
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";
