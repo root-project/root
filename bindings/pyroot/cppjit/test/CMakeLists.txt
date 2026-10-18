@@ -135,8 +135,10 @@ CPPJIT_ADD_PYTEST(test_datatypes CRASH_DIAGNOSTICS
 # TEMP: 700 copies of test_datatypes, run by ctest in parallel in this
 # directory like the real suite does, to measure its sporadic crash on the
 # mac-beta CI runner. Production allocator (the debug allocator hides the bug),
-# a full gc.collect() after every test, and the plugin's reference count watch
-# on pytest's TestReport objects, which the crash was seen to hit.
+# a full gc.collect() after every test, and the plugin's watch on pytest's
+# TestReport objects, which the crash was seen to hit: their reference counts
+# are checked around every test, and a finalizer reports the stack of the
+# decrement that deallocates one while the stats lists still hold it.
 foreach(i RANGE 1 700)
   CPPJIT_ADD_PYTEST(test_datatypes CRASH_DIAGNOSTICS SUFFIX -rc${i}
     ENV PYTHONMALLOC=default

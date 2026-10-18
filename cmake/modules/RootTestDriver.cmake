@@ -248,7 +248,12 @@ if(CMD)
   else()
     execute_process(COMMAND ${_cmd} ${_out} ${_err} ${_cwd} RESULT_VARIABLE _rc)
 
-    if(_rc STREQUAL "Segmentation fault" OR _rc EQUAL 11)
+    # TEMP: no second attempt after a segmentation fault. The cppjit crash
+    # diagnostics re-arm Python's faulthandler, so the process dies by the
+    # raw signal instead of ROOT's handler, and the retry below then hid two
+    # crashes in 700 copies behind a passing second run (the first attempt's
+    # output stays in the log, but ctest reports success).
+    if(FALSE AND (_rc STREQUAL "Segmentation fault" OR _rc EQUAL 11))
        message(STATUS "Got ${_rc}, retrying again once more... with coredump enabled")
        string (REPLACE ";" " " _cmd_str "${_cmd}")
        file(WRITE run_with_coredump.sh "

@@ -50,11 +50,15 @@ _stderr_fd = None
 # must leave the allocation pattern of the test untouched.
 _NO_GC = bool(os.environ.get("ROOT_CI_DIAGNOSTICS_NO_GC"))
 _TRACE_FILE = "test_datatypes.py"
-# The report watch below found the damage done during test20 (or test21), so
-# the tracer now works there, and runs the report check after every line.
-_TRACE_TESTS = ("test19_", "test20_", "test21_", "test22_")
+# The report watch below found the damage done during test20 (or test21);
+# collecting after every line there changed the allocation pattern enough to
+# make the damage rare (2 in 700 instead of 33 in 700), so the tracer stays
+# where it was for the run that found it, and the report finalizer below
+# catches the culprit in the act instead.
+_TRACE_TESTS = ("test24_", "test25_", "test26_", "test27_", "test28_", "test29_")
 _forced_collections = 0
 _config = None
+_session_active = False
 
 
 def _line_tracer(frame, event, arg):
@@ -67,13 +71,6 @@ def _line_tracer(frame, event, arg):
         global _forced_collections
         gc.collect()
         _forced_collections += 1
-        if _config is not None:
-            _check_reports(
-                _config,
-                f"checked before line {frame.f_lineno} of {code.co_name}",
-                quiet=True,
-                record=False,
-            )
     return _line_tracer
 
 
@@ -86,10 +83,12 @@ def _rearm_faulthandler():
 
 def pytest_configure(config):
     # Capture starts after configuration, so fd 2 is still the real stderr.
-    global _stderr_fd, _config
+    global _stderr_fd, _config, _session_active
     _config = config
     _stderr_fd = os.dup(2)
     _rearm_faulthandler()
+    _install_report_finalizer()
+    _session_active = True
     if not _NO_GC:
         sys.settrace(_line_tracer)
 
@@ -101,7 +100,8 @@ def pytest_report_header(config):
         else f"gc.collect() after each test and after every line of {_TRACE_FILE} {_TRACE_TESTS}"
     )
     return (
-        f"ROOT CI diagnostics: faulthandler re-armed, {gc_mode}, "
+        f"ROOT CI diagnostics: faulthandler re-armed, report finalizer "
+        f"installed, {gc_mode}, "
         f"PYTHONMALLOC={os.environ.get('PYTHONMALLOC', '<unset>')}, "
         f"Malloc*={[k for k in os.environ if k.startswith('Malloc')]}"
     )
@@ -197,6 +197,45 @@ def _report(msg):
     os._exit(99)  # make ctest show this output
 
 
+# The checks above only see the damage after the fact. A finalizer on the
+# report classes runs inside the very Py_DECREF that drops the last reference,
+# so when a report that the stats lists still hold is deallocated, the Python
+# traceback names the statement of the test and the C stack (Python 3.14+)
+# names the cpyrt code that performed the decrement.
+def _install_report_finalizer():
+    from _pytest.reports import CollectReport, TestReport
+
+    for cls in (TestReport, CollectReport):
+        cls.__del__ = _report_finalizer
+
+
+def _report_finalizer(self):
+    if not _session_active or _config is None:
+        return
+    tr = _config.pluginmanager.get_plugin("terminalreporter")
+    if tr is None:
+        return
+    for key, reports in tr.stats.items():
+        for index, rep in enumerate(reports):
+            if rep is self:
+                break
+        else:
+            continue
+        os.write(
+            _stderr_fd,
+            (
+                f"ROOT CI diagnostics: the {getattr(self, 'when', '?')} report of "
+                f"{getattr(self, 'nodeid', '?')} at {id(self):#x} is being "
+                f"deallocated while stats[{key!r}][{index}] still holds it; "
+                f"Python and C stacks of the decrement follow\n"
+            ).encode(),
+        )
+        faulthandler.dump_traceback(file=_stderr_fd, all_threads=False)
+        if hasattr(faulthandler, "dump_c_stack"):
+            faulthandler.dump_c_stack(file=_stderr_fd)
+        os._exit(98)  # make ctest show this output
+
+
 def pytest_runtest_setup(item):
     _rearm_faulthandler()
     # the previous test's protocol is complete here: a stable point to take
@@ -214,7 +253,10 @@ def pytest_runtest_teardown(item, nextitem):
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_sessionfinish(session, exitstatus):
+    global _session_active
     _check_reports(session.config, "checked at session finish")
+    # from here on pytest drops its reports legitimately
+    _session_active = False
 
 
 def pytest_unconfigure(config):
