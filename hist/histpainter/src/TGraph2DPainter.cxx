@@ -22,7 +22,6 @@
 #include "TView.h"
 #include "THLimitsFinder.h"
 #include "TStyle.h"
-#define ROOT_Hoption_cxx
 #include "Hoption.h"
 #include "TH1.h"
 #include <vector>
