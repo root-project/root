@@ -32,6 +32,7 @@ public:
    bool &operator[](std::size_t idx) { return fMask.at(idx); }
    std::uint64_t GetFirstEntry() const { return fBegin; }
    void SetFirstEntry(std::uint64_t e) { fBegin = e; }
+   std::size_t GetBulkSize() const { return fMask.size(); }
    ROOT::RVec<std::size_t> GetValidIndices() const
    {
       ROOT::RVec<std::size_t> validIndices{};
