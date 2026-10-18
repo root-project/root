@@ -8,6 +8,7 @@ using namespace cppjit;
 #include "ProxyWrappers.h"
 
 // Standard
+#include <algorithm>
 #include <assert.h>
 #include <iostream>
 #include <string.h>
@@ -199,10 +200,8 @@ bool cpyrt::MemoryRegulator::UnregisterPyObject(CPPInstance* pyobj,
 
   interop::TCppObject_t cppobj =
       pyobj->IsSmart() ? pyobj->GetObjectRaw() : pyobj->GetObject();
-  if (!cppobj)
-    return false;
 
-  if (unregisterHook) {
+  if (cppobj && unregisterHook) {
     auto res = unregisterHook(cppobj, ((CPPClass*)pyclass)->fCppType);
     if (!res.second)
       return res.first;
@@ -212,9 +211,26 @@ bool cpyrt::MemoryRegulator::UnregisterPyObject(CPPInstance* pyobj,
   if (!cppobjs)
     return false;
 
-  // erase if tracked
-  if (cppobjs->erase(cppobj)) {
-    pyobj->fFlags &= ~CPPInstance::kIsRegulated;
+  // The proxy is normally tracked under the address it holds now. That
+  // address can have changed since registration, though: a function taking
+  // the object as T** (or void**) may delete it and write a new object into
+  // the proxy, and cross-inheritance can null the held pointer. Only erase an
+  // entry that belongs to this proxy, because another proxy may be tracked
+  // under the new address by now, and otherwise search the map, because an
+  // entry left behind under the old address would dangle once this proxy is
+  // gone: a later C++ object at that address would be matched with the dead
+  // proxy, and re-registering the address writes into its freed memory.
+  auto ppo = cppobj ? cppobjs->find(cppobj) : cppobjs->end();
+  if (ppo == cppobjs->end() || ppo->second != (PyObject*)pyobj) {
+    ppo = std::find_if(cppobjs->begin(), cppobjs->end(),
+                       [pyobj](const CppToPyMap_t::value_type& entry) {
+                         return entry.second == (PyObject*)pyobj;
+                       });
+  }
+
+  pyobj->fFlags &= ~CPPInstance::kIsRegulated;
+  if (ppo != cppobjs->end()) {
+    cppobjs->erase(ppo);
     return true;
   }
 

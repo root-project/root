@@ -1733,3 +1733,47 @@ class TestREGRESSION:
 
         assert ns.pick(ns.S.A) == 1
         assert ns.pick(ns.S.B) == 5
+
+    def test57_regulator_follows_replaced_object(self):
+        """A proxy whose object a T** argument replaced unregisters cleanly"""
+
+        import gc
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace RegulatorReplaced {
+            struct Pod { int m_int; };
+            // allocate the replacement first, so its address always differs
+            void replace(Pod** pp) {
+                Pod* fresh = new Pod(**pp);
+                delete *pp;
+                *pp = fresh;
+            }
+        }""")
+
+        ns = cppjit.gbl.RegulatorReplaced
+
+        p = ns.Pod()
+        old = cppjit.addressof(p)
+        ns.replace(p)
+        new = cppjit.addressof(p)
+        assert new != old
+
+        # a second proxy for the object at the new address
+        q = cppjit.bind_object(new, ns.Pod)
+        assert q is not p
+
+        # p must not take q's entry along when it dies (the C++ object stays
+        # alive for q)
+        p.__python_owns__ = False
+        del p
+        gc.collect()
+        assert cppjit.bind_object(new, ns.Pod) is q
+
+        # nor leave its own entry behind under the old address, where a later
+        # object at that address would be matched with the dead proxy (binding
+        # does not dereference the address)
+        r = cppjit.bind_object(old, ns.Pod)
+        assert cppjit.addressof(r) == old
+        assert r is not q
