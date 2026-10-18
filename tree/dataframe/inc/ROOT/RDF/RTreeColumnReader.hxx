@@ -107,29 +107,26 @@ private:
    std::unique_ptr<ROOT::Internal::TTreeReaderUntypedArray> fTreeArray;
    ECollectionType fCollectionType;
 
-   using Byte_t = std::byte;
-   /// We return a reference to this RVec to clients, to guarantee a stable address and contiguous memory layout.
-   RVec<Byte_t> fRVec{};
-
-   /// When the user explicitly requests std::vector<T>, we use this std::vector as a stable storage.
-   std::vector<Byte_t> fStdVector{};
-
-   Long64_t fLastEntry = -1;
+   std::uint64_t fLastEntry{std::numeric_limits<std::uint64_t>::max()};
 
    /// The size of the collection value type.
    std::size_t fValueSize{};
 
+   // We absolutely require stable addresses for all collections in the bulk, so we need to instantiate a bulk of
+   // collections at construction time (currrently fixed to size 1) and then always reuse those collections.
+   using CacheStorage_t = std::variant<std::vector<ROOT::RVec<std::byte>>, std::vector<std::vector<std::byte>>>;
+   CacheStorage_t fCachedValues{};
+   ROOT::RVec<std::size_t> fCachedValuesInvalidIndices{};
+
    /// Whether we already printed a warning about performing a copy of the TTreeReaderArray contents
    bool fCopyWarningPrinted = false;
-
-   void *fValuePtr{nullptr};
 
    void *GetImpl(std::size_t) override;
    void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) override;
 
-   void *LoadStdArray(Long64_t entry);
-   void *LoadStdVector(Long64_t entry);
-   void *LoadRVec(Long64_t entry);
+   void LoadStdArray(std::size_t entryInBulk);
+   void LoadStdVector(std::size_t entryInBulk);
+   void LoadRVec(std::size_t entryInBulk);
 };
 
 class R__CLING_PTRCHECK(off) RMaskedColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
