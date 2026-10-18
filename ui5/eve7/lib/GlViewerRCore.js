@@ -766,8 +766,6 @@ sap.ui.define([
          this.axis3d.setBBox(this.axes_bbox || this.scene_bbox);
          this.updateRenderBBox();
 
-         if (eveView.MotionMaxHz !== undefined && this.motion)
-            this.motion.setMaxHz(eveView.MotionMaxHz);
          if (eveView.RenderMaxHz !== undefined && this.motion)
             this.motion.setRenderMaxHz(eveView.RenderMaxHz);
          if (eveView.ExtrapolateMotion !== undefined && this.motion)

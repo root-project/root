@@ -400,7 +400,6 @@ sap.ui.define([
          // Motion settings, in a collapsed panel since they matter only while
          // something moves:
          //
-         //   MotionMaxHz        how often the update stream is applied
          //   RenderMaxHz        how often the result is drawn
          //   ExtrapolateMotion  whether anything is drawn between updates
          let motion = new sap.m.Panel({
@@ -411,10 +410,6 @@ sap.ui.define([
          });
          this.getView().byId("GED").addContent(motion);
 
-         this.makeSliderSetter(el.MotionMaxHz, "MotionMaxHz", null,
-            {min: 0, max: 60, step: 1,
-             tip: "Updates per second this viewer applies. 0 freezes the scene."},
-            motion);
          this.makeSliderSetter(el.RenderMaxHz, "RenderMaxHz", null,
             {min: 0, max: 120, step: 1,
              tip: "Animation redraws per second. 0 is uncapped -- every display frame."},
