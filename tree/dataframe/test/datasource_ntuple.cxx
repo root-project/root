@@ -337,6 +337,54 @@ TEST_F(RNTupleDSTest, ChainTailScheduling)
    auto sumX = df.Aggregate([](int &acc, int x) { acc += x; }, [](int a, int b) { return a + b; }, "x");
    EXPECT_EQ(56, sumX.GetValue());
 }
+
+TEST(RNTupleDS, MoreFilesThanFileDescriptorLimit)
+{
+   // Test that MT runs keep a limited number of open page sources at the same time
+   struct DatasetRAII {
+      std::string fDatasetName{"events"};
+      std::string fFileName{"datasource_ntuple_more_files_than_file_descriptor_limit.root"};
+      unsigned fNEntriesPerFile{10};
+
+      DatasetRAII()
+      {
+         auto model = RNTupleModel::Create();
+         auto ptrX = model->MakeField<unsigned>("x");
+         *ptrX = 1;
+         auto writer = RNTupleWriter::Recreate(std::move(model), fDatasetName, fFileName);
+         for (unsigned j = 0; j < fNEntriesPerFile; j++) {
+            writer->Fill();
+            writer->CommitCluster();
+         }
+      }
+
+      ~DatasetRAII() { std::remove(fFileName.c_str()); }
+
+   } dataset;
+
+   auto test_fn = [&](unsigned nFiles) {
+      std::vector<std::string> fileNames(nFiles, dataset.fFileName);
+      ROOT::RDataFrame df{dataset.fDatasetName, fileNames};
+      auto sum = df.Sum<unsigned>("x");
+      EXPECT_EQ(*sum, nFiles * dataset.fNEntriesPerFile);
+   };
+
+   {
+      // Run with the number of threads decided by the RAII struct
+      IMTRAII _;
+      test_fn(10000);
+   }
+
+   {
+      // Run with one thread, but with IMT turned on. This caught an issue
+      // with the implementation that was distinguishing the MT vs non-MT case
+      // based on the number of active slots (fNSlots == 1)
+      ROOT::EnableImplicitMT(1);
+      test_fn(5);
+      ROOT::DisableImplicitMT();
+   }
+}
+
 #endif
 
 TEST_F(RNTupleDSTest, ModifyColumnValues)

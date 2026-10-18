@@ -214,3 +214,53 @@ unsigned TThreadExecutor::GetPoolSize() const
 }
 
 } // namespace ROOT
+
+namespace {
+/// \brief The Range used in the TThreadExecutor::ParallelFor call below
+///
+/// A simple struct in an anonymous namespace to be able to use the tbb::split tag in the basic splitting constructor.
+/// https://oneapi-spec.uxlfoundation.org/specifications/oneapi/latest/elements/onetbb/source/named_requirements/algorithms/range
+///
+/// The struct implements the Range requirements:
+/// - Copy constructor and destructor (implicitly done by using rule of zero)
+/// - "Basic splitting constructor", a constructor taking tbb::split tag which calls the SplitWork method of the
+/// implementation to create a new task with roughly half the work of the original one.
+/// - is_divisible to check if the task can be divided in two.
+/// - empty to check if the task is empty.
+struct TThreadExecutorTBBRange {
+
+   std::shared_ptr<ROOT::Internal::IMTUtils::RAbstractTBBRangeImpl> fImpl;
+
+   // Constructor to capture implementation from outside
+   TThreadExecutorTBBRange(std::unique_ptr<ROOT::Internal::IMTUtils::RAbstractTBBRangeImpl> impl)
+      : fImpl(std::move(impl))
+   {
+   }
+   // Basic splitting constructor
+   TThreadExecutorTBBRange(TThreadExecutorTBBRange &r, tbb::split) : fImpl(r.fImpl->SplitWork()) {}
+   // True if range can be partitioned into two subranges
+   bool is_divisible() const { return fImpl->IsDivisible(); }
+   // True if range is empty
+   bool empty() const { return fImpl->Empty(); }
+};
+
+} // namespace
+
+void ROOT::TThreadExecutor::ParallelFor(
+   std::unique_ptr<ROOT::Internal::IMTUtils::RAbstractTBBRangeImpl> rangeImpl,
+   const std::function<void(const ROOT::Internal::IMTUtils::RAbstractTBBRangeImpl &)> &body)
+{
+   fTaskArenaW->Access().execute([&] {
+      tbb::this_task_arena::isolate([&] {
+         tbb::parallel_for(TThreadExecutorTBBRange{std::move(rangeImpl)},
+                           [body](const TThreadExecutorTBBRange &r) { body(*r.fImpl); });
+      });
+   });
+}
+
+void ROOT::Internal::IMTUtils::ParallelFor(
+   ROOT::TThreadExecutor &pool, std::unique_ptr<ROOT::Internal::IMTUtils::RAbstractTBBRangeImpl> rangeImpl,
+   const std::function<void(const ROOT::Internal::IMTUtils::RAbstractTBBRangeImpl &)> &body)
+{
+   pool.ParallelFor(std::move(rangeImpl), body);
+}

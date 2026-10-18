@@ -35,6 +35,36 @@
 namespace ROOT {
 class RDataFrame;
 }
+
+namespace ROOT::Detail::RDF {
+class RLoopManager;
+}
+
+namespace ROOT::Internal {
+class RSlotStack;
+}
+
+namespace ROOT {
+class RFieldBase;
+class RDataFrame;
+class RNTuple;
+} // namespace ROOT
+namespace ROOT::Detail::RDF {
+class RNodeBase;
+}
+namespace ROOT::RDF {
+template <typename T>
+class RInterface;
+}
+namespace ROOT::Internal::RDF {
+class RNTupleColumnReader;
+std::vector<std::pair<std::uint64_t, std::uint64_t>>
+GetDatasetGlobalClusterBoundaries(const ROOT::RDF::RInterface<ROOT::Detail::RDF::RNodeBase> &node);
+} // namespace ROOT::Internal::RDF
+namespace ROOT::Internal {
+class RPageSource;
+}
+
 namespace ROOT::Internal::RDF {
 /**
  * \brief Internal overload of the function that allows passing a range of entries
@@ -57,39 +87,43 @@ std::pair<std::vector<ROOT::Internal::RNTupleClusterBoundaries>, ROOT::NTupleSiz
 GetClustersAndEntries(std::string_view ntupleName, std::string_view location);
 } // namespace ROOT::Internal::RDF
 
+#ifdef R__USE_IMT
 namespace ROOT {
-class RFieldBase;
-class RDataFrame;
-class RNTuple;
-} // namespace ROOT
-namespace ROOT::Detail::RDF {
-class RNodeBase;
+class TThreadExecutor;
 }
-namespace ROOT::RDF {
-template <typename T>
-class RInterface;
+namespace ROOT::Internal::IMTUtils {
+class RAbstractTBBRangeImpl;
 }
-namespace ROOT::Internal::RDF {
-class RNTupleColumnReader;
-std::vector<std::pair<std::uint64_t, std::uint64_t>>
-GetDatasetGlobalClusterBoundaries(const ROOT::RDF::RInterface<ROOT::Detail::RDF::RNodeBase> &node);
-}
-namespace ROOT::Internal {
-class RPageSource;
-}
+#endif
 
 namespace ROOT::RDF {
 class RNTupleDS final : public ROOT::RDF::RDataSource {
    friend class ROOT::Internal::RDF::RNTupleColumnReader;
 
-   /// The PrepareNextRanges() method populates the fNextRanges list with REntryRangeDS records.
-   /// The GetEntryRanges() swaps fNextRanges and fCurrentRanges and uses the list of
-   /// REntryRangeDS records to return the list of ranges ready to use by the RDF loop manager.
+   /// \brief Page source information consumed while running the computation graph
+   ///
+   /// REntryRangeDS objects are populated differently in single-thread and multi-thread mode.
+   ///
+   /// In single-thread mode, the PrepareNextRanges() method populates the fNextRanges list with REntryRangeDS records.
+   /// The GetEntryRanges() swaps fNextRanges and fCurrentRanges and uses the list of REntryRangeDS records to return
+   /// the list of ranges ready to use by the RDF loop manager.
+   ///
+   /// In multi-thread mode, the task being executed by a thread injects an REntryRangeDS into the fActiveRangesPerSlot
+   /// member, which is then retrievable for relevant operations e.g. connecting the column readers to the page source
+   /// and populating the sample information.
    struct REntryRangeDS {
-      std::unique_ptr<ROOT::Internal::RPageSource> fSource;
+      /// The page source. It can be shared between this object and other multithreaded tasks.
+      std::shared_ptr<ROOT::Internal::RPageSource> fSource;
       ULong64_t fFirstEntry = 0; ///< First entry index in fSource
       /// End entry index in fSource, e.g. the number of entries in the range is fLastEntry - fFirstEntry
       ULong64_t fLastEntry = 0;
+
+      // TODO(vpadulan): Having to have the entry offset is ugly, currently it's necessary because the implementation of
+      // RNTupleColumnReader::GetImpl interprets the 'entry' input argument as a "global" entry w.r.t. some offset. For
+      // lack of a better communication strategy at the moment, we carry this offset over with REntryRangeDS as it is
+      // also used by the RLoopManager e.g. to decide the values for rdfentry_ for a given slot
+
+      ULong64_t fEntryOffset = 0; /// Offset of both first and last entries w.r.t. the page source
       std::string_view fFileName; ///< Storage location of the current RNTuple
    };
 
@@ -115,7 +149,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    ///         and
    ///      c) trigger staging of the next batch of files in the I/O background thread.
    ///   4. On `Finalize()`, the I/O background thread is stopped.
-   std::vector<std::unique_ptr<ROOT::Internal::RPageSource>> fStagingArea;
+   std::vector<std::shared_ptr<ROOT::Internal::RPageSource>> fStagingArea;
    std::size_t fNextFileIndex = 0; ///< Index into fFileNames to the next file to process
 
    /// We prepare a prototype field for every column. If a column reader is actually requested
@@ -143,14 +177,15 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
 
    std::vector<REntryRangeDS> fCurrentRanges; ///< Basis for the ranges returned by the last GetEntryRanges() call
    std::vector<REntryRangeDS> fNextRanges;    ///< Basis for the ranges populated by the PrepareNextRanges() call
+
+   /// The page source and entry window seen by an active thread task in multi-threaded runs
+   std::vector<REntryRangeDS> fActiveRangesPerSlot;
    /// Maps the first entries from the ranges of the last GetEntryRanges() call to their corresponding index in
    /// the fCurrentRanges vectors.  This is necessary because the returned ranges get distributed arbitrarily
    /// onto slots.  In the InitSlot method, the column readers use this map to find the correct range to connect to.
    std::unordered_map<ULong64_t, std::size_t> fFirstEntry2RangeIdx;
    // Keep track of the scheduled entries - necessary for processing of GlobalEntries
    std::vector<std::pair<ULong64_t, ULong64_t>> fOriginalRanges;
-   /// One element per slot, corresponding to the current range index for that slot, as filled by InitSlot
-   std::vector<std::size_t> fSlotsToRangeIdxs;
 
    /// The background thread that runs StageNextSources()
    std::thread fThreadStaging;
@@ -221,7 +256,36 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
 
    explicit RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames,
                       const std::pair<ULong64_t, ULong64_t> &range);
+#ifdef R__USE_IMT
 
+   // Helpers for the MT scheduling
+
+   void InsertActiveEntryRange(unsigned int slot, std::string_view fileName,
+                               std::shared_ptr<ROOT::Internal::RPageSource> pageSource, std::uint64_t beginEntry,
+                               std::uint64_t endEntry, std::uint64_t offset);
+   void ParallelForBody(std::shared_ptr<ROOT::Internal::RPageSource> pageSource,
+                        const ROOT::Internal::IMTUtils::RAbstractTBBRangeImpl &rangeImpl,
+                        ROOT::Detail::RDF::RLoopManager &lm, std::string_view fileName,
+                        ROOT::Internal::RSlotStack &slotStack, std::atomic<ULong64_t> &processedEntries,
+                        ULong64_t columnReaderOffset);
+   void ScheduleTaskForPageSource(ROOT::TThreadExecutor &pool, std::unique_ptr<ROOT::Internal::RPageSource> pageSource,
+                                  std::string_view fileName,
+                                  std::span<const ROOT::Internal::RNTupleClusterBoundaries> clusterBoundaries,
+                                  std::uint64_t nEntries, ROOT::Detail::RDF::RLoopManager &lm,
+                                  ROOT::Internal::RSlotStack &slotStack, std::atomic<ULong64_t> &processedEntries,
+                                  std::atomic<ULong64_t> &globalEntries);
+   std::vector<std::uint64_t> ComputeGlobalEntryOffsets(ROOT::TThreadExecutor &pool) const;
+   void ScheduleTasksForFileWithGlobalOffset(std::size_t fileIdx, const std::vector<std::uint64_t> &globalFileOffsets,
+                                             ROOT::TThreadExecutor &pool, ROOT::Detail::RDF::RLoopManager &lm,
+                                             ROOT::Internal::RSlotStack &slotStack,
+                                             std::atomic<ULong64_t> &processedEntries,
+                                             std::atomic<ULong64_t> &globalEntries);
+   void ScheduleTasksForFile(std::size_t fileIdx, ROOT::TThreadExecutor &pool, ROOT::Detail::RDF::RLoopManager &lm,
+                             ROOT::Internal::RSlotStack &slotStack, std::atomic<ULong64_t> &processedEntries,
+                             std::atomic<ULong64_t> &globalEntries);
+   void ProcessMT(ROOT::Detail::RDF::RLoopManager &lm) final;
+
+#endif
 public:
    RNTupleDS(std::string_view ntupleName, std::string_view fileName);
    RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames);

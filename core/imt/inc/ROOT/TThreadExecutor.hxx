@@ -27,6 +27,7 @@
 #include "ROOT/TypeTraits.hxx" // InvokeResult
 #include "RTaskArena.hxx"
 #include "TError.h"
+#include <ROOT/InternalIMTUtils.hxx>
 
 #include <functional> //std::function
 #include <initializer_list>
@@ -40,6 +41,9 @@ namespace ROOT {
 
    class TThreadExecutor: public TExecutorCRTP<TThreadExecutor> {
       friend TExecutorCRTP;
+      friend void ROOT::Internal::IMTUtils::ParallelFor(
+         TThreadExecutor &pool, std::unique_ptr<ROOT::Internal::IMTUtils::RAbstractTBBRangeImpl> rangeImpl,
+         const std::function<void(const ROOT::Internal::IMTUtils::RAbstractTBBRangeImpl &)> &body);
 
    public:
 
@@ -124,6 +128,8 @@ namespace ROOT {
 
       // Functions that interface with the parallel library used as a backend
       void   ParallelFor(unsigned start, unsigned end, unsigned step, const std::function<void(unsigned int i)> &f);
+      void ParallelFor(std::unique_ptr<ROOT::Internal::IMTUtils::RAbstractTBBRangeImpl> rangeImpl,
+                       const std::function<void(const ROOT::Internal::IMTUtils::RAbstractTBBRangeImpl &)> &body);
       double ParallelReduce(const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc);
       float  ParallelReduce(const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc);
       template<class T, class R>
