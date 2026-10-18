@@ -42,6 +42,9 @@ _stderr_fd = None
 # an allocation happens to trigger; collecting after every line of the tests
 # around it pins the damage to the statement that first leaves a corrupted
 # container behind, instead of wherever the GC threshold is crossed.
+# ROOT_CI_DIAGNOSTICS_NO_GC=1 keeps only the faulthandler part, for runs that
+# must leave the allocation pattern of the test untouched.
+_NO_GC = bool(os.environ.get("ROOT_CI_DIAGNOSTICS_NO_GC"))
 _TRACE_FILE = "test_datatypes.py"
 _TRACE_TESTS = ("test24_", "test25_", "test26_", "test27_", "test28_", "test29_")
 _forced_collections = 0
@@ -72,14 +75,20 @@ def pytest_configure(config):
     global _stderr_fd
     _stderr_fd = os.dup(2)
     _rearm_faulthandler()
-    sys.settrace(_line_tracer)
+    if not _NO_GC:
+        sys.settrace(_line_tracer)
 
 
 def pytest_report_header(config):
+    gc_mode = (
+        "forced collections disabled"
+        if _NO_GC
+        else f"gc.collect() after each test and after every line of {_TRACE_FILE} {_TRACE_TESTS}"
+    )
     return (
-        "ROOT CI diagnostics: faulthandler re-armed and gc.collect() after "
-        f"each test and after every line of {_TRACE_FILE} {_TRACE_TESTS}, "
-        f"PYTHONMALLOC={os.environ.get('PYTHONMALLOC', '<unset>')}"
+        f"ROOT CI diagnostics: faulthandler re-armed, {gc_mode}, "
+        f"PYTHONMALLOC={os.environ.get('PYTHONMALLOC', '<unset>')}, "
+        f"Malloc*={[k for k in os.environ if k.startswith('Malloc')]}"
     )
 
 
@@ -95,8 +104,9 @@ def pytest_runtest_setup(item):
 
 def pytest_runtest_teardown(item, nextitem):
     _rearm_faulthandler()
-    gc.collect()
-    _rearm_faulthandler()
+    if not _NO_GC:
+        gc.collect()
+        _rearm_faulthandler()
 
 
 def pytest_unconfigure(config):

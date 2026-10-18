@@ -42,7 +42,8 @@ endif()
 # docstring for what it does and why.
 function(CPPJIT_ADD_PYTEST name)
   cmake_parse_arguments(ARG
-    "DROP_ROOTMAP;CRASH_DIAGNOSTICS" "SUFFIX" "DICTS;FIXTURES_SETUP;FIXTURES_REQUIRED" ${ARGN})
+    "DROP_ROOTMAP;CRASH_DIAGNOSTICS" "SUFFIX"
+    "DICTS;FIXTURES_SETUP;FIXTURES_REQUIRED;ENV;PYTEST_ARGS" ${ARGN})
 
   set(extra)
   set(env ${common_env})
@@ -51,6 +52,9 @@ function(CPPJIT_ADD_PYTEST name)
     list(APPEND pytest_args -p root_ci_diagnostics)
     list(APPEND env PYTHONMALLOC=debug)
   endif()
+  # TEMP: per-test overrides; later entries win in the test driver
+  list(APPEND env ${ARG_ENV})
+  list(APPEND pytest_args ${ARG_PYTEST_ARGS})
   if(ARG_DICTS)
     set(copy_files)
     set(precmd_args)
@@ -128,11 +132,23 @@ CPPJIT_ADD_PYTEST(test_basic_api
 # the mac-beta ARM64 CI runner; collect diagnostics until it is understood.
 CPPJIT_ADD_PYTEST(test_datatypes CRASH_DIAGNOSTICS
   FIXTURES_REQUIRED cppjit_datatypes_dict_fixture)
-# TEMP: 600 more copies of test_datatypes, run by ctest in parallel in this
-# directory like the real suite does, to measure its sporadic crash on the
-# mac-beta CI runner (about 3% of runs).
-foreach(i RANGE 1 600)
-  CPPJIT_ADD_PYTEST(test_datatypes CRASH_DIAGNOSTICS SUFFIX -rep${i}
+# TEMP: two groups of 300 copies of test_datatypes, run by ctest in parallel in
+# this directory like the real suite does, to measure its sporadic crash on the
+# mac-beta CI runner. Both groups keep Python's production allocator and no
+# forced collections, because the debug allocator made the crash disappear.
+#   -malloc: macOS malloc debugging for the C++ heap (scribble freed and fresh
+#            blocks, guard pages around large ones), to turn a C++ heap misuse
+#            into a crash at the culprit.
+#   -only26: test26_function_pointers alone, to learn whether the damage is
+#            done by test26 itself or left behind by an earlier test.
+foreach(i RANGE 1 300)
+  CPPJIT_ADD_PYTEST(test_datatypes CRASH_DIAGNOSTICS SUFFIX -malloc${i}
+    ENV PYTHONMALLOC=default ROOT_CI_DIAGNOSTICS_NO_GC=1
+        MallocScribble=1 MallocPreScribble=1 MallocGuardEdges=1
+    FIXTURES_REQUIRED cppjit_datatypes_dict_fixture)
+  CPPJIT_ADD_PYTEST(test_datatypes CRASH_DIAGNOSTICS SUFFIX -only26-${i}
+    ENV PYTHONMALLOC=default ROOT_CI_DIAGNOSTICS_NO_GC=1
+    PYTEST_ARGS -k test26_function_pointers
     FIXTURES_REQUIRED cppjit_datatypes_dict_fixture)
 endforeach()
 
