@@ -23,7 +23,6 @@ TUnixSystem or TWinNTSystem).
 
 #include "Bytes.h"
 #include "Compression.h"
-#define ROOT_NetErrors_cxx
 #include "NetErrors.h"
 #include "TError.h"
 #include "TMessage.h"

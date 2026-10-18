@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#define ROOT_HelpTextTV_cxx
 #include "HelpTextTV.h"
 
 const char gTVHelpAbout[] = "\
