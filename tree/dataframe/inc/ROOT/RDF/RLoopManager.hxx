@@ -330,12 +330,19 @@ public:
       return fSuppressErrorsForMissingBranches;
    }
 
+   // TODO(vpadulan): it seems undesirable that we need different "thread tasks" depending on the data source. It would
+   // be nice to merge everything into one, potentially opening up the possibility to making the MT processing interface
+   // of the data source public.
+
    /// The task run by every thread on the input entry range, for the generic RDataSource.
    void DataSourceThreadTask(const std::pair<ULong64_t, ULong64_t> &entryRange, ROOT::Internal::RSlotStack &slotStack,
                              std::atomic<ULong64_t> &entryCount);
    /// The task run by every thread on an entry range (known by the input TTreeReader), for the TTree data source.
    void
    TTreeThreadTask(TTreeReader &treeReader, ROOT::Internal::RSlotStack &slotStack, std::atomic<ULong64_t> &entryCount);
+   /// The task run by every thread on the input entry range, for the RNTuple data source.
+   void RNTupleThreadTask(const std::pair<ULong64_t, ULong64_t> &entryRange, unsigned int slot,
+                          std::uint64_t columnReaderOffset);
 };
 
 /// \brief Create an RLoopManager that reads a TChain.
