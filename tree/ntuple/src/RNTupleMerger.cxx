@@ -1248,6 +1248,7 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeCommonColumns(ROOT::Intern
       const auto srcColElement = column.fInMemoryType
                                     ? ROOT::Internal::GenerateColumnElement(*column.fInMemoryType, columnDesc.GetType())
                                     : RColumnElementBase::Generate(columnDesc.GetType());
+      srcColElement->SetBitsOnStorage(columnDesc.GetBitsOnStorage());
 
       // Now get the pages for this column in this cluster
       const auto &pages = clusterDesc.GetPageRange(columnId);
