@@ -354,10 +354,8 @@ void REveLineProjected::SetDepthLocal(Float_t d)
 {
    SetDepthCommon(d, this, fBBox);
 
-   Int_t    n = fSize;
-   Float_t *p = & fPoints[0].fZ;
-   for (Int_t i = 0; i < n; ++i, p+=3)
-      *p = fDepth;
+   for (Int_t i = 0; i < fSize; ++i)
+      fPoints[i].fZ = fDepth;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
