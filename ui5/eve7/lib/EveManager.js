@@ -450,17 +450,19 @@ sap.ui.define([], function() {
                jQuery.extend(obj, em);
                this.ParseUpdateTriggersAndProcessPostStream(obj);
             }
-            else if (em.changeBit & this.EChangeBits.kCBColorSelection) {
-               delete em.render_data;
-               Object.assign(obj, em);
-            }
-            else if (em.changeBit & this.EChangeBits.kCBTransBBox) {
-               // Transformation-only update: no render data is streamed.
-               // render_data.matrix is updated here because a later rebuild,
-               // e.g. on a colour change, reads it.
-               Object.assign(obj, em);
-               if (em.matrix && obj.render_data)
-                  obj.render_data.matrix = em.matrix;
+            else {
+               if (em.changeBit & this.EChangeBits.kCBColorSelection) {
+                  delete em.render_data;
+                  Object.assign(obj, em);
+               }
+               if (em.changeBit & this.EChangeBits.kCBTransBBox) {
+                  // Transformation update: no render data is streamed.
+                  // render_data.matrix is updated here because a later rebuild,
+                  // e.g. on a colour change in the same message, reads it.
+                  Object.assign(obj, em);
+                  if (em.matrix && obj.render_data)
+                     obj.render_data.matrix = em.matrix;
+               }
             }
 
             this.callSceneElementChange(scene, em);
