@@ -31,10 +31,12 @@ Three measures:
   symbols) at the point of the crash.
 """
 
+import ctypes
 import faulthandler
 import gc
 import os
 import sys
+import sysconfig
 
 import pytest
 
@@ -48,8 +50,11 @@ _stderr_fd = None
 # must leave the allocation pattern of the test untouched.
 _NO_GC = bool(os.environ.get("ROOT_CI_DIAGNOSTICS_NO_GC"))
 _TRACE_FILE = "test_datatypes.py"
-_TRACE_TESTS = ("test24_", "test25_", "test26_", "test27_", "test28_", "test29_")
+# The report watch below found the damage done during test20 (or test21), so
+# the tracer now works there, and runs the report check after every line.
+_TRACE_TESTS = ("test19_", "test20_", "test21_", "test22_")
 _forced_collections = 0
+_config = None
 
 
 def _line_tracer(frame, event, arg):
@@ -62,6 +67,13 @@ def _line_tracer(frame, event, arg):
         global _forced_collections
         gc.collect()
         _forced_collections += 1
+        if _config is not None:
+            _check_reports(
+                _config,
+                f"checked before line {frame.f_lineno} of {code.co_name}",
+                quiet=True,
+                record=False,
+            )
     return _line_tracer
 
 
@@ -74,7 +86,8 @@ def _rearm_faulthandler():
 
 def pytest_configure(config):
     # Capture starts after configuration, so fd 2 is still the real stderr.
-    global _stderr_fd
+    global _stderr_fd, _config
+    _config = config
     _stderr_fd = os.dup(2)
     _rearm_faulthandler()
     if not _NO_GC:
@@ -109,37 +122,72 @@ def pytest_terminal_summary(terminalreporter):
 # which it happened, without depending on a later crash.
 _report_refcounts = {}
 
+# Everything below reads object memory through ctypes instead of touching the
+# objects: a freed report has a zero reference count, and even iterating the
+# list or calling sys.getrefcount on it would increment and decrement that
+# count and deallocate the block a second time. The raw layout is that of a
+# default (GIL) build: ob_refcnt, ob_type, ob_size, ob_item.
+_RAW_LAYOUT_KNOWN = not sysconfig.get_config_var("Py_GIL_DISABLED")
 
-def _check_reports(config, where, current_nodeid=None):
+
+def _raw_items(lst):
+    ob_item = ctypes.c_void_p.from_address(
+        id(lst) + 3 * ctypes.sizeof(ctypes.c_void_p)
+    ).value
+    n = len(lst)
+    if not ob_item or n == 0:
+        return []
+    return list((ctypes.c_void_p * n).from_address(ob_item))
+
+
+def _raw_refcnt(p):
+    return ctypes.c_ssize_t.from_address(p).value
+
+
+def _raw_type(p):
+    return ctypes.c_void_p.from_address(p + ctypes.sizeof(ctypes.c_void_p)).value
+
+
+def _check_reports(config, where, current_nodeid=None, quiet=False, record=True):
+    if not _RAW_LAYOUT_KNOWN:
+        return
     tr = config.pluginmanager.get_plugin("terminalreporter")
     if tr is None:
         return
     # announce first: if the scan itself crashes on a dead report, the
     # faulthandler output follows this line
-    os.write(_stderr_fd, f"ROOT CI diagnostics: {where}\n".encode())
+    if not quiet:
+        os.write(_stderr_fd, f"ROOT CI diagnostics: {where}\n".encode())
+    from _pytest.reports import CollectReport, TestReport
+
+    report_types = {id(TestReport), id(CollectReport)}
     for key, reports in tr.stats.items():
-        for rep in reports:
-            ident = id(rep)
-            known = _report_refcounts.get(ident)
-            try:
-                tname = type(rep).__name__
-                rc = sys.getrefcount(rep)
-                if tname not in ("TestReport", "CollectReport"):
-                    raise TypeError(f"{tname} is not a report")
-                if known is None:
-                    # the runner still holds temporaries to the reports of the
-                    # test being torn down; take their baseline at the next check
-                    if rep.nodeid != current_nodeid:
-                        _report_refcounts[ident] = (rc, rep.nodeid, rep.when)
-                    continue
-            except Exception as exc:  # a freed report may raise anything
-                _report(
-                    f"report at {ident:#x} in stats[{key!r}] is unreadable ({exc!r}), {where}"
+        for index, p in enumerate(_raw_items(reports)):
+            known = _report_refcounts.get(p)
+            tp = _raw_type(p)
+            rc = _raw_refcnt(p)
+            if tp not in report_types or rc <= 0:
+                was = (
+                    f"the {known[2]} report of {known[1]}"
+                    if known
+                    else "a report not seen before"
                 )
-            if rc < known[0]:
+                _report(
+                    f"stats[{key!r}][{index}] at {p:#x} is no longer a report "
+                    f"(type {tp:#x}, refcount {rc}); it was {was}; {where}"
+                )
+            if known is None:
+                # baselines only at the teardown checks, and not for the
+                # reports of the test being torn down: the runner still
+                # holds temporaries to recent reports
+                if record:
+                    rep = reports[index]  # alive: type and refcount checked above
+                    if rep.nodeid != current_nodeid:
+                        _report_refcounts[p] = (rc, rep.nodeid, rep.when)
+            elif rc < known[0]:
                 _report(
                     f"refcount of the {known[2]} report of {known[1]} dropped "
-                    f"from {known[0]} to {rc}, {where}"
+                    f"from {known[0]} to {rc}; {where}"
                 )
 
 
@@ -151,6 +199,9 @@ def _report(msg):
 
 def pytest_runtest_setup(item):
     _rearm_faulthandler()
+    # the previous test's protocol is complete here: a stable point to take
+    # the baselines of its reports
+    _check_reports(item.config, f"checked at setup of {item.nodeid}")
 
 
 def pytest_runtest_teardown(item, nextitem):
