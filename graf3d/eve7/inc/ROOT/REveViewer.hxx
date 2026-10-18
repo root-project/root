@@ -88,7 +88,6 @@ private:
    Bool_t  fHasAxesBBox{kFALSE};  ///< see SetAxesBBox()
    Float_t fAxesBBox[6]{};        ///< xmin, ymin, zmin, xmax, ymax, zmax
 
-   Float_t fMotionMaxHz{60.f};    ///< see SetMotionMaxHz(); 0 freezes
    Float_t fRenderMaxHz{0.f};     ///< see SetRenderMaxHz(); 0 is uncapped
    bool      fBlackBackground{false};
 
@@ -161,14 +160,8 @@ public:
    void ClearAxesBBox();
    Bool_t HasAxesBBox() const { return fHasAxesBBox; }
 
-   /// Cap on how often this viewer applies streamed motion, in updates per
-   /// second, clamped to [0, 240]. Zero freezes motion; SetExtrapolateMotion()
-   /// only controls drawing between updates.
-   Float_t GetMotionMaxHz() const { return fMotionMaxHz; }
-   void    SetMotionMaxHz(Float_t);
-
    /// Cap on how often the animation loop redraws this viewer, in frames per
-   /// second, clamped to [0, 240]. Zero means uncapped, unlike SetMotionMaxHz().
+   /// second, clamped to [0, 240]. Zero means uncapped.
    Float_t GetRenderMaxHz() const { return fRenderMaxHz; }
    void    SetRenderMaxHz(Float_t);
    // clang-format on

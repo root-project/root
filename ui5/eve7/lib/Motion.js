@@ -23,34 +23,10 @@ sap.ui.define([], function() {
          this.raf     = 0;
          this.enabled = true;
 
-         /** Cap on applied updates per second; 0 freezes. See setMaxHz(). */
-         this.max_hz    = 60;
-         this._last_app = 0;
-         /** Server timestamp of the message the last accept/drop decision was
-           * made for, and that decision. Every element of one message shares it. */
-         this._msg_t    = null;
-         this._msg_ok   = false;
-
          /** Cap on animation-driven redraws per second; 0 is uncapped. */
          this.render_max_hz = 0;
          this._last_render  = 0;
          this._pending      = 0;
-      }
-
-      /** How often this viewer may apply streamed motion, from
-        * REveViewer::SetMotionMaxHz. A negative value means 60.
-        *
-        * Zero freezes the viewer: updates are dropped and extrapolation stops.
-        * setEnabled(false) differs: it stops only the extrapolation, and
-        * objects still step at the server's update rate.
-        */
-      setMaxHz(hz) {
-         hz = (hz >= 0) ? hz : 60;
-         if (hz === this.max_hz) return;
-         this.max_hz = hz;
-
-         if (hz === 0) this.stop();
-         else          this.start();
       }
 
       /** How often the animation loop may redraw, from
@@ -88,28 +64,6 @@ sap.ui.define([], function() {
                this.viewer.request_render();
             }, wait);
          }
-      }
-
-      /** Gate for an incoming motion update: false means drop it.
-        *
-        * `t` is the server timestamp of the whole message (msg_t, set in
-        * EveManager). The decision is made once per message and reused for
-        * every element in it. Deciding per element would let the first element
-        * spend the budget and refuse the rest every time.
-        */
-      acceptUpdate(t) {
-         if (this.max_hz === 0) return false;
-
-         if (t !== undefined && t === this._msg_t)
-            return this._msg_ok;
-
-         const now = performance.now();
-         const ok  = (now - this._last_app) >= 1000 / this.max_hz;
-         if (ok) this._last_app = now;
-
-         this._msg_t  = t;
-         this._msg_ok = ok;
-         return ok;
       }
 
       /** Per-viewer switch for extrapolation, from
@@ -211,7 +165,7 @@ sap.ui.define([], function() {
       //--------------------------------------------------------------------
 
       start() {
-         if (this.raf || this.objects.size === 0 || !this.enabled || this.max_hz === 0) return;
+         if (this.raf || this.objects.size === 0 || !this.enabled) return;
          this.raf = requestAnimationFrame(this.tick.bind(this));
       }
 

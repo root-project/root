@@ -263,18 +263,14 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          let el = this.mgr.GetElement(msg.fElementId);
          if (!el) return;
 
-         // The viewer's rate cap. Dropping an update is safe because each
-         // carries absolute state.
-         let mo = this.glctrl ? this.glctrl.viewer.motion : null;
-         if (mo && !mo.acceptUpdate(msg.msg_t)) return;
-
          this.updateElementTrans(el, msg);
 
          // No endChanges() follows, so request the render here. Going through
          // Motion applies the viewer's render cap.
+         let mo = this.glctrl.viewer.motion;
          if (mo)
             mo.requestRender();
-         else if (this.glctrl && this.glctrl.viewer)
+         else
             this.glctrl.viewer.request_render();
       }
 
