@@ -128,10 +128,10 @@ CPPJIT_ADD_PYTEST(test_basic_api
 # the mac-beta ARM64 CI runner; collect diagnostics until it is understood.
 CPPJIT_ADD_PYTEST(test_datatypes CRASH_DIAGNOSTICS
   FIXTURES_REQUIRED cppjit_datatypes_dict_fixture)
-# TEMP: 300 more copies of test_datatypes, run by ctest in parallel in this
+# TEMP: 600 more copies of test_datatypes, run by ctest in parallel in this
 # directory like the real suite does, to measure its sporadic crash on the
 # mac-beta CI runner (about 3% of runs).
-foreach(i RANGE 1 300)
+foreach(i RANGE 1 600)
   CPPJIT_ADD_PYTEST(test_datatypes CRASH_DIAGNOSTICS SUFFIX -rep${i}
     FIXTURES_REQUIRED cppjit_datatypes_dict_fixture)
 endforeach()

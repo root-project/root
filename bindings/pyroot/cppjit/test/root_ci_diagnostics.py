@@ -38,6 +38,27 @@ import sys
 
 _stderr_fd = None
 
+# The crash always surfaces in test26_function_pointers, in a collection that
+# an allocation happens to trigger; collecting after every line of the tests
+# around it pins the damage to the statement that first leaves a corrupted
+# container behind, instead of wherever the GC threshold is crossed.
+_TRACE_FILE = "test_datatypes.py"
+_TRACE_TESTS = ("test24_", "test25_", "test26_", "test27_", "test28_", "test29_")
+_forced_collections = 0
+
+
+def _line_tracer(frame, event, arg):
+    code = frame.f_code
+    if not code.co_filename.endswith(_TRACE_FILE) or not code.co_name.startswith(
+        _TRACE_TESTS
+    ):
+        return None
+    if event == "line":
+        global _forced_collections
+        gc.collect()
+        _forced_collections += 1
+    return _line_tracer
+
 
 def _rearm_faulthandler():
     # enable() is a no-op while already enabled, so cycle it to take the
@@ -51,12 +72,20 @@ def pytest_configure(config):
     global _stderr_fd
     _stderr_fd = os.dup(2)
     _rearm_faulthandler()
+    sys.settrace(_line_tracer)
 
 
 def pytest_report_header(config):
     return (
         "ROOT CI diagnostics: faulthandler re-armed and gc.collect() after "
-        f"each test, PYTHONMALLOC={os.environ.get('PYTHONMALLOC', '<unset>')}"
+        f"each test and after every line of {_TRACE_FILE} {_TRACE_TESTS}, "
+        f"PYTHONMALLOC={os.environ.get('PYTHONMALLOC', '<unset>')}"
+    )
+
+
+def pytest_terminal_summary(terminalreporter):
+    terminalreporter.write_line(
+        f"ROOT CI diagnostics: {_forced_collections} collections forced by the line tracer"
     )
 
 
@@ -72,6 +101,7 @@ def pytest_runtest_teardown(item, nextitem):
 
 def pytest_unconfigure(config):
     global _stderr_fd
+    sys.settrace(None)
     if _stderr_fd is not None:
         faulthandler.disable()
         faulthandler.enable(file=sys.__stderr__, all_threads=True)
