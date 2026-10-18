@@ -583,6 +583,8 @@ sap.ui.define([
          setTimeout(this.syncCamTransTimer.bind(this), 5000);
       }
 
+      /** Set scene_bbox from the scene. An empty scene gets a fallback box of
+       * +-100. Returns true when the scene was empty. */
       recalcSceneBBox()
       {
          // Exclude the axis: it is built from this box, and its ticks reach past
@@ -592,7 +594,8 @@ sap.ui.define([
          if (ax) this.scene.remove(ax);
          this.scene_bbox.setFromObject( this.scene );
          if (ax) this.scene.add(ax);
-         if (this.scene_bbox.isEmpty())
+         const empty = this.scene_bbox.isEmpty();
+         if (empty)
          {
             console.error("GlViewerRenderCore.positionCameraAndLights scene bbox empty", this.scene_bbox);
             const ext = 100;
@@ -602,6 +605,7 @@ sap.ui.define([
          if (this.axis3d) this.axis3d.setBBox(this.axes_bbox || this.scene_bbox);
 
          this.updateRenderBBox();
+         return empty;
       }
 
       /** The box the camera's near and far planes are fitted to: axes_bbox or
@@ -619,7 +623,9 @@ sap.ui.define([
 
       positionCameraAndLights()
       {
-         this.recalcSceneBBox();
+         // An empty scene leaves the camera framing the fallback box; render()
+         // fits it again when content arrives.
+         this.camera_needs_fit = this.recalcSceneBBox();
 
          let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
 
@@ -844,8 +850,10 @@ sap.ui.define([
          if (this.annotations) this.annotations.layout();
          if (this.axis3d) this.axis3d.updateForCamera(this.camera);
          if (this.render_requested_recalc_sbbox) {
-            this.recalcSceneBBox();
+            const empty = this.recalcSceneBBox();
             this.render_requested_recalc_sbbox = false;
+            if (this.camera_needs_fit && !empty)
+               this.positionCameraAndLights();
          }
          if (this.camera.isPerspectiveCamera) {
             this.camera.optimizeNearFar(this.render_bbox || this.scene_bbox);
