@@ -938,6 +938,54 @@ TEST(RNTupleMerger, ChangeCompression)
    EXPECT_TRUE(VerifyPageCompression(fileGuardOutUncomp.GetPath(), 0));
 }
 
+TEST(RNTupleMerger, ChangeCompressionLowPrecision)
+{
+   FileRaii input("test_ntuple_merge_changecomp_lowprecision_in.root");
+   FileRaii output("test_ntuple_merge_changecomp_lowprecision_out.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto truncated = std::make_unique<RField<float>>("truncated");
+      truncated->SetTruncated(20);
+      model->AddField(std::move(truncated));
+      auto quantized = std::make_unique<RField<float>>("quantized");
+      quantized->SetQuantized(20, {0., 20.});
+      model->AddField(std::move(quantized));
+      RNTupleWriteOptions writeOptions;
+      writeOptions.SetCompression(505);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", input.GetPath(), writeOptions);
+      auto truncatedValue = writer->GetModel().GetDefaultEntry().GetPtr<float>("truncated");
+      auto quantizedValue = writer->GetModel().GetDefaultEntry().GetPtr<float>("quantized");
+      for (unsigned int i = 0; i < 1000; ++i) {
+         *truncatedValue = *quantizedValue = (i % 100) / 7.f;
+         writer->Fill();
+      }
+   }
+
+   auto source = RPageSource::Create("ntuple", input.GetPath());
+   std::vector<RPageSource *> sources{source.get()};
+   RNTupleWriteOptions writeOptions;
+   writeOptions.SetCompression(101);
+   auto destination = std::make_unique<RPageSinkFile>("ntuple", output.GetPath(), writeOptions);
+   RNTupleMerger merger{std::move(destination)};
+   RNTupleMergeOptions mergeOptions;
+   mergeOptions.fCompressionSettings = 101;
+   auto result = merger.Merge(sources, mergeOptions);
+   ASSERT_TRUE(bool(result)) << result.GetError()->GetReport();
+
+   auto original = RNTupleReader::Open("ntuple", input.GetPath());
+   auto merged = RNTupleReader::Open("ntuple", output.GetPath());
+   ASSERT_EQ(original->GetNEntries(), merged->GetNEntries());
+   for (const auto *name : {"truncated", "quantized"}) {
+      SCOPED_TRACE(name);
+      auto originalValue = original->GetView<float>(name);
+      auto mergedValue = merged->GetView<float>(name);
+      for (auto i : original->GetEntryRange()) {
+         SCOPED_TRACE(i);
+         EXPECT_EQ(originalValue(i), mergedValue(i));
+      }
+   }
+}
+
 TEST(RNTupleMerger, ChangeCompressionMixed)
 {
    FileRaii fileGuard("test_ntuple_merge_changecomp_mixed_in.root");
