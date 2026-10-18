@@ -126,6 +126,7 @@ if(NOT CMAKE_VERSION VERSION_LESS "3.23.0")
       BASE_DIRS res/
       FILES
           res/RooBatchCompute.h
+          res/RooExprProgram.h
   )
   target_sources(
         RooBatchCompute_GENERIC
