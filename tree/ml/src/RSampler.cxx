@@ -12,9 +12,11 @@ namespace ROOT::Experimental::Internal::ML {
 
 RSampler::~RSampler() = default;
 
-RSampler::RSampler(std::vector<RFlat2DMatrix> &datasets, const std::string &sampleType, float sampleRatio,
-                   bool replacement, bool shuffle, std::size_t setSeed)
-   : fDatasets(datasets),
+RSampler::RSampler(const RFlat2DMatrix &dataset, std::vector<std::vector<std::size_t>> &rows,
+                   const std::string &sampleType, float sampleRatio, bool replacement, bool shuffle,
+                   std::size_t setSeed)
+   : fDataset(dataset),
+     fRows(rows),
      fSampleType(sampleType),
      fSampleRatio(sampleRatio),
      fReplacement(replacement),
@@ -54,7 +56,7 @@ void RSampler::Sampler(RFlat2DMatrix &SampledTensor)
 /// \brief Calculate fNumEntries and major/minor variables for the random undersampler
 void RSampler::SetupRandomUndersampler()
 {
-   if (fDatasets[0].GetRows() > fDatasets[1].GetRows()) {
+   if (fRows[0].size() > fRows[1].size()) {
       fMajor = 0;
       fMinor = 1;
    } else {
@@ -62,8 +64,8 @@ void RSampler::SetupRandomUndersampler()
       fMinor = 0;
    }
 
-   fNumMajor = fDatasets[fMajor].GetRows();
-   fNumMinor = fDatasets[fMinor].GetRows();
+   fNumMajor = fRows[fMajor].size();
+   fNumMinor = fRows[fMinor].size();
    fNumResampledMajor = static_cast<std::size_t>(fNumMinor / fSampleRatio);
    if (!fReplacement && fNumResampledMajor > fNumMajor) {
       auto minRatio = std::to_string(std::round(double(fNumMinor) / double(fNumMajor) * 100.0) / 100.0);
@@ -80,7 +82,7 @@ void RSampler::SetupRandomUndersampler()
 /// \brief Calculate fNumEntries and major/minor variables for the random oversampler
 void RSampler::SetupRandomOversampler()
 {
-   if (fDatasets[0].GetRows() > fDatasets[1].GetRows()) {
+   if (fRows[0].size() > fRows[1].size()) {
       fMajor = 0;
       fMinor = 1;
    } else {
@@ -88,8 +90,8 @@ void RSampler::SetupRandomOversampler()
       fMinor = 0;
    }
 
-   fNumMajor = fDatasets[fMajor].GetRows();
-   fNumMinor = fDatasets[fMinor].GetRows();
+   fNumMajor = fRows[fMajor].size();
+   fNumMinor = fRows[fMinor].size();
    fNumResampledMinor = static_cast<std::size_t>(fSampleRatio * fNumMajor);
    fNumEntries = fNumMajor + fNumResampledMinor;
 }
@@ -107,7 +109,7 @@ void RSampler::RandomUndersampler(RFlat2DMatrix &ShuffledTensor)
       SampleWithoutReplacement(fNumResampledMajor, fNumMajor);
    }
 
-   GatherSamples(ShuffledTensor, fDatasets[fMajor], fNumResampledMajor, fDatasets[fMinor]);
+   GatherSamples(ShuffledTensor, fRows[fMajor], fNumResampledMajor, fRows[fMinor]);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -117,19 +119,19 @@ void RSampler::RandomOversampler(RFlat2DMatrix &ShuffledTensor)
 {
    SampleWithReplacement(fNumResampledMinor, fNumMinor);
 
-   GatherSamples(ShuffledTensor, fDatasets[fMinor], fNumResampledMinor, fDatasets[fMajor]);
+   GatherSamples(ShuffledTensor, fRows[fMinor], fNumResampledMinor, fRows[fMajor]);
 }
 
 //////////////////////////////////////////////////////////////////////////
 /// \brief Fill the sampled entries: the resampled entries followed by all the other ones, in shuffled order
 /// \param[in] ShuffledTensor Tensor with all the sampled entries
-/// \param[in] ResampledDataset Dataset the entries in fSamples are taken from
+/// \param[in] ResampledRows Rows of the class the entries in fSamples are taken from
 /// \param[in] numResampled Number of resampled entries
-/// \param[in] OtherDataset Dataset whose entries are all taken
-void RSampler::GatherSamples(RFlat2DMatrix &ShuffledTensor, const RFlat2DMatrix &ResampledDataset,
-                             std::size_t numResampled, const RFlat2DMatrix &OtherDataset)
+/// \param[in] OtherRows Rows of the class whose entries are all taken
+void RSampler::GatherSamples(RFlat2DMatrix &ShuffledTensor, const std::vector<std::size_t> &ResampledRows,
+                             std::size_t numResampled, const std::vector<std::size_t> &OtherRows)
 {
-   std::size_t cols = fDatasets[0].GetCols();
+   std::size_t cols = fDataset.GetCols();
    const auto permutation = fTensorOperators->MakePermutation(fNumEntries);
 
    // read the entries straight from the datasets, instead of concatenating and shuffling copies of them
@@ -137,9 +139,8 @@ void RSampler::GatherSamples(RFlat2DMatrix &ShuffledTensor, const RFlat2DMatrix 
    float *out = ShuffledTensor.GetData();
    for (std::size_t i = 0; i < fNumEntries; i++) {
       const std::size_t entry = permutation.empty() ? i : permutation[i];
-      const float *row = entry < numResampled ? ResampledDataset.GetData() + fSamples[entry] * cols
-                                              : OtherDataset.GetData() + (entry - numResampled) * cols;
-      out = std::copy_n(row, cols, out);
+      const std::size_t row = entry < numResampled ? ResampledRows[fSamples[entry]] : OtherRows[entry - numResampled];
+      out = std::copy_n(fDataset.GetData() + row * cols, cols, out);
    }
 }
 
