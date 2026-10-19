@@ -674,13 +674,11 @@ void TASPaletteEditor::NewPalette(Long_t id)
    if (id == 5) // empty entry
       return;
 
-   TImagePalette *newPalette;
-
    Double_t delta = fPalette->fPoints[fPalette->fNumPoints-2] - fPalette->fPoints[1];
-   UInt_t   numPt;
 
-   numPt = id == 0 ? 12 : 13;
-   newPalette = new TImagePalette(numPt);
+   UInt_t numPt = id == 0 ? kNRainbowElems + 2 : 13;
+   TImagePalette *newPalette = new TImagePalette(numPt);
+
    Int_t pt;
    for (pt = 1; pt < Int_t(numPt - 1); pt++) {
       newPalette->fPoints[pt] = fPalette->fPoints[1] + (pt - 1) * delta / (numPt - 3);
