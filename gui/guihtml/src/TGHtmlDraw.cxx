@@ -903,7 +903,7 @@ void TGHtml::DrawTableBgnd(int l, int t, int w, int h,
       w -= sw;
    }
 #else
-   auto img_pixmap = TGWindow::GetImagePixmap(image);
+   auto img_pixmap = TASUtils::GetPixmap(image);
    if (!img_pixmap) return;
    GContext_t gc = GetAnyGC();
    GCValues_t gcv;

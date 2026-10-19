@@ -27,6 +27,7 @@
 
 #include "TGHtml.h"
 #include "TImage.h"
+#include "TASUtils.h"
 #include "TVirtualX.h"
 
 #include <cstring>
@@ -353,10 +354,10 @@ void TGHtml::AddStyle(TGHtmlElement *p)
                      // unsigned int mask;
 
                      // mask = kGCTile | kGCFillStyle | kGCGraphicsExposures;
-                     gcv.fTile = TGWindow::GetImagePixmap(img);
+                     gcv.fTile = TASUtils::GetPixmap(img);
                      gcv.fFillStyle = kFillTiled;
                      gcv.fGraphicsExposures = kTRUE;
-                     fCanvas->SetBackgroundPixmap(TGWindow::GetImagePixmap(img));
+                     fCanvas->SetBackgroundPixmap(TASUtils::GetPixmap(img));
 
                      gVirtualX->ChangeGC(fWhiteGC.GetGC(), &gcv);
 

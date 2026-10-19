@@ -30,6 +30,7 @@
 
 #include <TGFrame.h>
 #include <TImage.h>
+#include <TASUtils.h>
 #include <TCanvas.h>
 
 #include <TMD5.h>
@@ -175,7 +176,7 @@ void ProcessFrame(TGFrame *f, const char *title)
       outfile.Form("sgui_%02d.png", gTestNum);
 
    f->RaiseWindow();
-   auto img = TGWindow::CreateImageFromWindow(f->GetId());
+   auto img = TASUtils::FromWindow(f->GetId());
    if (img)
       img->WriteImage(outfile);
 

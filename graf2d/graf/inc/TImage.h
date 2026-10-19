@@ -120,7 +120,7 @@ public:
    virtual void SetImage(const Double_t * /*imageData*/, UInt_t /*width*/, UInt_t /*height*/, TImagePalette * /*palette*/ = nullptr) {}
    virtual void SetImage(const TArrayD & /*imageData*/, UInt_t /*width*/, TImagePalette * /*palette*/ = nullptr) {}
    virtual void SetImage(const TVectorD & /*imageData*/, UInt_t /*width*/, TImagePalette * /*palette*/ = nullptr) {}
-   virtual void R__DEPRECATED(7,00, "Use TASUtil::FromPixmap instead") SetImage(Pixmap_t /*pxm*/, Pixmap_t /*mask*/ = 0) {}
+   virtual void R__DEPRECATED(7,00, "Use TASUtils::FromPixmap instead") SetImage(Pixmap_t /*pxm*/, Pixmap_t /*mask*/ = 0) {}
 
 
    // Create an image from bitmap. (See TASImage::FromBitmap)
@@ -130,7 +130,7 @@ public:
    virtual void FromPad(TVirtualPad * /*pad*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) {}
 
    // Create an image from gVirtualX window. (See TASImage::FromWindow)
-   virtual void R__DEPRECATED(7,00, "Use TGWindow::CreateImageFromWindow instead") FromWindow(Drawable_t /*wid*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) {}
+   virtual void R__DEPRECATED(7,00, "Use TASUtils::FromWindow instead") FromWindow(Drawable_t /*wid*/, Int_t /*x*/ = 0, Int_t /*y*/ = 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) {}
 
    // Create an image from GL buffer. (See TASImage::FromGLBuffer)
    virtual void R__DEPRECATED(7,00, "Use FromBitmap instead") FromGLBuffer(UChar_t * /*buf*/, UInt_t /*w*/, UInt_t /*h*/) {}
@@ -249,9 +249,9 @@ public:
 
    virtual TArrayL  *GetPixels(Int_t /*x*/= 0, Int_t /*y*/= 0, UInt_t /*w*/ = 0, UInt_t /*h*/ = 0) { return nullptr; }
    virtual TArrayD  *GetArray(UInt_t /*w*/ = 0, UInt_t /*h*/ = 0, TImagePalette * = gWebImagePalette) { return nullptr; }
-   virtual Pixmap_t  R__DEPRECATED(7,00, "Use TGWindow::GetImagePixmap instead") GetPixmap() { return 0; }
+   virtual Pixmap_t  R__DEPRECATED(7,00, "Use TASUtils::GetPixmap instead") GetPixmap() { return 0; }
    virtual Bool_t    GetMaskBits(UInt_t & /* width */, UInt_t & /* height */, std::vector<char> & /* bits */) { return kFALSE; }
-   virtual Pixmap_t  R__DEPRECATED(7,00, "Use TGWindow::GetImageMask instead") GetMask() { return 0; }
+   virtual Pixmap_t  R__DEPRECATED(7,00, "Use TASUtils::GetMask instead") GetMask() { return 0; }
    virtual UInt_t   *GetArgbArray() { return nullptr; }
    virtual UInt_t   *GetRgbaArray() { return nullptr; }
    virtual Double_t *GetVecArray() { return nullptr; }

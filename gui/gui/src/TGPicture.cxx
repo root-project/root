@@ -40,6 +40,7 @@ destroyed by the TGPicturePool.
 #include "TGWindow.h"
 #include "TVirtualX.h"
 #include "TImage.h"
+#include "TASUtils.h"
 #include "TROOT.h"
 #include <cstdlib>
 
@@ -116,7 +117,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
       return nullptr;
    }
 
-   pic = new TGPicture(pname, TGWindow::GetImagePixmap(img), TGWindow::GetImageMask(img));
+   pic = new TGPicture(pname, TASUtils::GetPixmap(img), TASUtils::GetMask(img));
    delete img;
    fPicList->Add(pic);
    return pic;
@@ -192,7 +193,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
 
    img->Scale(new_width, new_height);
 
-   pic = new TGPicture(hname, TGWindow::GetImagePixmap(img), TGWindow::GetImageMask(img));
+   pic = new TGPicture(hname, TASUtils::GetPixmap(img), TASUtils::GetMask(img));
    delete [] picnam;
    delete img;
    fPicList->Add(pic);
@@ -271,7 +272,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name, char **xpm)
       return 0;
    }
 
-   pic = new TGPicture(hname, TGWindow::GetImagePixmap(img), TGWindow::GetImageMask(img));
+   pic = new TGPicture(hname, TASUtils::GetPixmap(img), TASUtils::GetMask(img));
    delete img;
    return pic;
 }

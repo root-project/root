@@ -702,7 +702,7 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
             TString lnk_name = (*pic)->GetName();
             lnk_name.Prepend("lnk_");
             *pic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(),
-                                 GetImagePixmap(img1.get()), GetImageMask(img1.get()));
+                                 TASUtils::GetPixmap(img1.get()), TASUtils::GetMask(img1.get()));
             fCleanups->Add(((TObject *)*pic));
          }
          img1 = TASUtils::FromPixmap((*lpic)->GetPicture(), (*lpic)->GetMask());
@@ -713,7 +713,7 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
             TString lnk_name = (*lpic)->GetName();
             lnk_name.Prepend("lnk_");
             *lpic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(),
-                                 GetImagePixmap(img1.get()), GetImageMask(img1.get()));
+                                 TASUtils::GetPixmap(img1.get()), TASUtils::GetMask(img1.get()));
             fCleanups->Add(((TObject *)*lpic));
          }
       }
