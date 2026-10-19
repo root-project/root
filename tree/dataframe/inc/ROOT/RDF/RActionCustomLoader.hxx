@@ -34,6 +34,9 @@ class R__CLING_PTRCHECK(off) RActionCustomLoader final : public RActionBase {
    /// Column readers per slot and per input column
    std::vector<std::vector<RColumnReaderBase *>> fValues;
 
+   /// Value addresses of the current entry per slot, reused for every entry
+   std::vector<std::vector<void *>> fValueAddresses;
+
    // Types of input columns
    std::vector<const std::type_info *> fColTypeIDs;
 
@@ -47,6 +50,7 @@ public:
         fHelper(std::move(h)),
         fPrevNodes{std::static_pointer_cast<PrevNodeCommon_t>(pd)},
         fValues(GetNSlots()),
+        fValueAddresses(GetNSlots()),
         fColTypeIDs(colTypeIDs)
    {
       fLoopManager->Register(this);
@@ -93,11 +97,11 @@ public:
 
    void CallExec(unsigned int slot, Long64_t entry)
    {
-      std::vector<void *> untypedValues;
+      auto &untypedValues = fValueAddresses[slot];
       auto nReaders = fValues[slot].size();
-      untypedValues.reserve(nReaders);
+      untypedValues.resize(nReaders);
       for (decltype(nReaders) readerIdx{}; readerIdx < nReaders; readerIdx++)
-         untypedValues.push_back(GetValue(slot, readerIdx, entry));
+         untypedValues[readerIdx] = GetValue(slot, readerIdx, entry);
 
       fHelper.Exec(slot, untypedValues);
    }
