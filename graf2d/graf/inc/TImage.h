@@ -258,7 +258,7 @@ public:
    virtual UInt_t   *GetScanline(UInt_t /*y*/) { return nullptr; }
    virtual void      GetImageBuffer(char ** /*buffer*/, int* /*size*/, EImageFileTypes /*type*/ = TImage::kPng) {}
    virtual Bool_t    SetImageBuffer(char ** /*buffer*/, EImageFileTypes /*type*/ = TImage::kPng) { return kFALSE; }
-   virtual void      PaintImage(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/, Int_t /*xsrc*/ = 0, Int_t /*ysrc*/ = 0, UInt_t /*wsrc*/ = 0, UInt_t /*hsrc*/ = 0, Option_t * /*opt*/ = "") { }
+   virtual void      R__DEPRECATED(7,00, "Use TASUtils::PaintImage instead") PaintImage(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/, Int_t /*xsrc*/ = 0, Int_t /*ysrc*/ = 0, UInt_t /*wsrc*/ = 0, UInt_t /*hsrc*/ = 0, Option_t * /*opt*/ = "") { }
    static EImageFileTypes GetImageFileTypeFromFilename(const char* opt);
 
    static TImage *Create();
