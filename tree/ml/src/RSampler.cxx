@@ -150,20 +150,22 @@ void RSampler::GatherSamples(RFlat2DMatrix &ShuffledTensor, const RFlat2DMatrix 
 void RSampler::SampleWithReplacement(std::size_t n_samples, std::size_t max)
 {
    std::uniform_int_distribution<> dist(0, max - 1);
+   // a single generator for all the samples: seeding one per sample was slow, and with a fixed seed it drew the same
+   // sample every time
+   std::random_device rd;
+   std::mt19937 g;
+
+   if (fSetSeed == 0) {
+      g.seed(rd());
+   } else {
+      g.seed(fSetSeed);
+   }
+
    fSamples.clear();
    fSamples.reserve(n_samples);
    for (std::size_t i = 0; i < n_samples; ++i) {
       std::size_t sample;
       if (fShuffle) {
-         std::random_device rd;
-         std::mt19937 g;
-
-         if (fSetSeed == 0) {
-            g.seed(rd());
-         } else {
-            g.seed(fSetSeed);
-         }
-
          sample = dist(g);
       }
 
