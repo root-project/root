@@ -1246,7 +1246,7 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeCommonColumns(ROOT::Intern
 
       const auto &columnDesc = fSrcDescriptor->GetColumnDescriptor(columnId);
       const auto srcColElement = column.fInMemoryType
-                                    ? ROOT::Internal::GenerateColumnElement(*column.fInMemoryType, columnDesc.GetType())
+                                    ? ROOT::Internal::GenerateColumnElement(*column.fInMemoryType, columnDesc)
                                     : RColumnElementBase::Generate(columnDesc);
 
       // Now get the pages for this column in this cluster
