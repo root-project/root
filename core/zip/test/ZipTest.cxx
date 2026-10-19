@@ -68,3 +68,10 @@ TEST(RZip, ZipBufferSizesZSTD)
 {
    testZipBufferSizes(ROOT::RCompressionSetting::EAlgorithm::kZSTD);
 }
+
+#ifdef R__HAS_LHC4CODEC
+TEST(RZip, ZipBufferSizesLHC4)
+{
+   testZipBufferSizes(ROOT::RCompressionSetting::EAlgorithm::kLHC4);
+}
+#endif

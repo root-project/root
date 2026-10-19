@@ -34,6 +34,10 @@
 #include <Compression.h>
 #include <TError.h>
 
+#ifdef R__HAS_LHC4CODEC
+#include "ZipLHC4.h"
+#endif
+
 #include <algorithm>
 #include <atomic>
 #include <cassert>
@@ -829,9 +833,74 @@ ROOT::Internal::RPageSink::RPageSink(std::string_view name, const ROOT::RNTupleW
    : RPageStorage(name), fOptions(options.Clone()), fWritePageMemoryManager(options.GetPageBufferBudget())
 {
    ROOT::Internal::EnsureValidNameForRNTuple(name, "RNTuple").ThrowOnError();
+
+#ifdef R__HAS_LHC4CODEC
+   if (!fOptions->GetEnableColumnEncoding()) {
+      const auto algorithm = ROOT::RCompressionSetting::AlgorithmFromCompressionSettings(fOptions->GetCompression());
+      if (algorithm == ROOT::RCompressionSetting::EAlgorithm::kLHC4)
+         R__SetLHC4Filters(1);
+   }
+#endif
 }
 
 ROOT::Internal::RPageSink::~RPageSink() {}
+
+#ifdef R__HAS_LHC4CODEC
+namespace {
+
+/// Pretrained Crystal profile for one column layout. Stride-4 models match 32-bit
+/// columns; text matches byte columns. Other layouts stay on the dynamic model.
+int LHC4ProfileForColumnType(ROOT::ENTupleColumnType type)
+{
+   switch (type) {
+   case ROOT::ENTupleColumnType::kReal32:
+      return kLHC4ProfileFloatKinematics;
+   case ROOT::ENTupleColumnType::kIndex32:
+   case ROOT::ENTupleColumnType::kUInt32:
+      return kLHC4ProfilePoissonCounts;
+   case ROOT::ENTupleColumnType::kChar:
+      return kLHC4ProfileText;
+   default:
+      return kLHC4ProfileNone;
+   }
+}
+
+/// Sets the zip profile for this thread and restores it when the page seal returns.
+struct LHC4CallProfileGuard {
+   int fPrevious{-1};
+   bool fActive{false};
+   explicit LHC4CallProfileGuard(int profile)
+   {
+      if (profile < 0)
+         return;
+      fPrevious = R__GetLHC4CallProfile();
+      R__SetLHC4CallProfile(profile);
+      fActive = true;
+   }
+   ~LHC4CallProfileGuard()
+   {
+      if (fActive)
+         R__SetLHC4CallProfile(fPrevious);
+   }
+   LHC4CallProfileGuard(const LHC4CallProfileGuard &) = delete;
+   LHC4CallProfileGuard &operator=(const LHC4CallProfileGuard &) = delete;
+};
+
+/// Column profile for the profile flavour. Standard Crystal leaves this inactive so
+/// byte filters and the dynamic model stay in use.
+int LHC4CallProfileForPage(const ROOT::Internal::RColumnElementBase &element, std::uint32_t compressionSettings)
+{
+   if (!R__GetLHC4ProfilePerColumn() || R__GetLHC4Codec() != kLHC4CodecCrystal ||
+       R__GetLHC4Profile() != kLHC4ProfileNone)
+      return -1;
+   const auto algorithm = ROOT::RCompressionSetting::AlgorithmFromCompressionSettings(compressionSettings);
+   if (algorithm != ROOT::RCompressionSetting::EAlgorithm::kLHC4)
+      return -1;
+   return LHC4ProfileForColumnType(element.GetIdentifier().fOnDiskType);
+}
+
+} // namespace
+#endif
 
 ROOT::Internal::RPageStorage::RSealedPage ROOT::Internal::RPageSink::SealPage(const RSealPageConfig &config)
 {
@@ -852,6 +921,9 @@ ROOT::Internal::RPageStorage::RSealedPage ROOT::Internal::RPageSink::SealPage(co
    }
    auto nBytesZipped = nBytesPacked;
 
+#ifdef R__HAS_LHC4CODEC
+   LHC4CallProfileGuard columnProfile(LHC4CallProfileForPage(*config.fElement, config.fCompressionSettings));
+#endif
    if ((config.fCompressionSettings != 0) || !config.fElement->IsMappable() || !config.fAllowAlias ||
        config.fWriteChecksum) {
       nBytesZipped =
@@ -1104,10 +1176,13 @@ void ROOT::Internal::RPagePersistentSink::InitImpl(ROOT::RNTupleModel &model)
 }
 
 std::unique_ptr<ROOT::RNTupleModel>
-ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescriptor &srcDescriptor, bool copyClusters)
+ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescriptor &srcDescriptor, bool copyClusters,
+                                                        bool dropColumnEncoding)
 {
    // Create new descriptor
    fDescriptorBuilder.SetSchemaFromExisting(srcDescriptor);
+   if (dropColumnEncoding)
+      fDescriptorBuilder.DemoteSplitColumnTypes();
    // This is needed to be able to use GetTypeNameForComparison()
    fDescriptorBuilder.SetVersionForWriting();
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
@@ -1152,15 +1227,18 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
       }
    }
 
-   // Create model
-   auto modelOpts = ROOT::RNTupleDescriptor::RCreateModelOptions();
-   modelOpts.SetReconstructProjections(true);
-   // We want to emulate unknown types to allow merging RNTuples containing types that we lack dictionaries for.
-   modelOpts.SetEmulateUnknownTypes(true);
-   auto model = descriptor.CreateModel(modelOpts);
-   if (!copyClusters) {
-      auto &projectedFields = ROOT::Internal::GetProjectedFieldsOfModel(*model);
-      projectedFields.GetFieldZero().SetOnDiskId(model->GetConstFieldZero().GetOnDiskId());
+   // Recode-without-model skips C++ field reconstruction (streamer fields would otherwise need dictionaries).
+   std::unique_ptr<ROOT::RNTupleModel> model;
+   if (!dropColumnEncoding) {
+      auto modelOpts = ROOT::RNTupleDescriptor::RCreateModelOptions();
+      modelOpts.SetReconstructProjections(true);
+      // We want to emulate unknown types to allow merging RNTuples containing types that we lack dictionaries for.
+      modelOpts.SetEmulateUnknownTypes(true);
+      model = descriptor.CreateModel(modelOpts);
+      if (!copyClusters) {
+         auto &projectedFields = ROOT::Internal::GetProjectedFieldsOfModel(*model);
+         projectedFields.GetFieldZero().SetOnDiskId(model->GetConstFieldZero().GetOnDiskId());
+      }
    }
 
    // Serialize header and init from it

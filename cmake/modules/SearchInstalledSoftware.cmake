@@ -404,6 +404,31 @@ if(builtin_lz4)
   add_subdirectory(builtins/lz4)
 endif()
 
+#---Check for LHC4CODEC--------------------------------------------------------------
+set(LHC4CODEC_SOURCE_DIR "" CACHE PATH
+    "Optional path to an lhc4codec checkout; if empty and builtin_lhc4codec=ON, the source is git-cloned")
+
+if(lhc4codec)
+  if(builtin_lhc4codec)
+    list(APPEND ROOT_BUILTINS LHC4CODEC)
+    add_subdirectory(builtins/lhc4codec)
+  else()
+    find_package(LHC4CODEC QUIET)
+    if(NOT LHC4CODEC_FOUND)
+      if(NOT LHC4CODEC_INSTALL_HELP)
+        set(LHC4CODEC_INSTALL_HELP
+            "lhc4codec was not found. Install lhc4codec-devel / brew tap apeters/lhc4codec, set -DLHC4CODEC_ROOT, or use -Dbuiltin_lhc4codec=ON.")
+      endif()
+      message(FATAL_ERROR "${LHC4CODEC_INSTALL_HELP}")
+    endif()
+    if(LHC4CODEC_VERSION)
+      message(STATUS "Found LHC4CODEC: ${LHC4CODEC_LIBRARIES} (version ${LHC4CODEC_VERSION})")
+    else()
+      message(STATUS "Found LHC4CODEC: ${LHC4CODEC_LIBRARIES}")
+    endif()
+  endif()
+endif()
+
 #---Check for X11 which is mandatory lib on Unix--------------------------------------
 if(x11)
   message(STATUS "Looking for X11")

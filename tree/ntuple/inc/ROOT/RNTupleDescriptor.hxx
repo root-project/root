@@ -1775,6 +1775,10 @@ public:
    /// This resets the builder's descriptor.
    void SetSchemaFromExisting(const RNTupleDescriptor &descriptor);
 
+   /// Replace split/delta/zigzag on-disk column types with their plain counterparts.
+   /// Packed page size is unchanged; only the on-disk encoding stored in the descriptor is demoted.
+   void DemoteSplitColumnTypes();
+
    void SetVersion(std::uint16_t versionEpoch, std::uint16_t versionMajor, std::uint16_t versionMinor,
                    std::uint16_t versionPatch);
    void SetVersionForWriting();

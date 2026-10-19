@@ -175,6 +175,18 @@ Requires `EnablePageChecksums` and will throw if previously disabled.
 </td>
 </tr>
 
+<tr>
+<td>`EnableColumnEncoding`</td>
+<td>`bool`</td>
+<td>`true`</td>
+<td>
+If set, columns use RNTuple's on-storage encodings (split, zigzag, delta) where applicable.
+If disabled, columns are stored in plain physical layout. When compression uses the LHC4
+algorithm, lhc4codec byte filters are enabled automatically (see ZipLHC4.h: filters,
+filter RLE, and dict toggles; codec defaults to Beam).
+</td>
+</tr>
+
 </table>
 */
 // clang-format on
@@ -205,6 +217,7 @@ protected:
    EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
    bool fEnablePageChecksums = true;
    bool fEnableSamePageMerging = true;
+   bool fEnableColumnEncoding = true;
    /// Specifies the max size of a payload storeable into a single TKey. When writing an RNTuple to a ROOT file,
    /// any payload whose size exceeds this will be split into multiple keys.
    std::uint64_t fMaxKeySize = kDefaultMaxKeySize;
@@ -261,6 +274,9 @@ public:
    bool GetEnableSamePageMerging() const { return fEnableSamePageMerging; }
    void SetEnableSamePageMerging(bool val);
 
+   bool GetEnableColumnEncoding() const { return fEnableColumnEncoding; }
+   void SetEnableColumnEncoding(bool val) { fEnableColumnEncoding = val; }
+
    std::uint64_t GetMaxKeySize() const { return fMaxKeySize; }
 
    friend bool operator==(const RNTupleWriteOptions &lhs, const RNTupleWriteOptions &rhs)
@@ -272,7 +288,8 @@ public:
              lhs.fUseBufferedWrite == rhs.fUseBufferedWrite && lhs.fUseDirectIO == rhs.fUseDirectIO &&
              lhs.fWriteBufferSize == rhs.fWriteBufferSize && lhs.fUseImplicitMT == rhs.fUseImplicitMT &&
              lhs.fEnablePageChecksums == rhs.fEnablePageChecksums &&
-             lhs.fEnableSamePageMerging == rhs.fEnableSamePageMerging && lhs.fMaxKeySize == rhs.fMaxKeySize;
+             lhs.fEnableSamePageMerging == rhs.fEnableSamePageMerging &&
+             lhs.fEnableColumnEncoding == rhs.fEnableColumnEncoding && lhs.fMaxKeySize == rhs.fMaxKeySize;
    }
 
    friend bool operator!=(const RNTupleWriteOptions &lhs, const RNTupleWriteOptions &rhs) { return !(lhs == rhs); }

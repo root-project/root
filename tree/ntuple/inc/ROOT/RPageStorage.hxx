@@ -541,10 +541,12 @@ public:
 
    /// Initialize sink based on an existing descriptor and fill into the descriptor builder, optionally copying over
    /// the descriptor's clusters to this sink's descriptor.
-   /// \return The model created from the new sink's descriptor. This model should be kept alive
-   /// for at least as long as the sink.
+   /// If `dropColumnEncoding` is true, split/delta/zigzag column types are demoted to plain types and no C++ model
+   /// is reconstructed (so streamer fields do not require dictionaries).
+   /// \return The model created from the new sink's descriptor, or `nullptr` when `dropColumnEncoding` is true.
+   ///         A non-null model should be kept alive for at least as long as the sink.
    [[nodiscard]] std::unique_ptr<RNTupleModel>
-   InitFromDescriptor(const ROOT::RNTupleDescriptor &descriptor, bool copyClusters);
+   InitFromDescriptor(const ROOT::RNTupleDescriptor &descriptor, bool copyClusters, bool dropColumnEncoding = false);
 
    /// Adds a new column representation to the given field. It is NOT marked as suppressed.
    /// The first element index of the added column will be computed as the sum of the first element index of the

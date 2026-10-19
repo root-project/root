@@ -1356,6 +1356,26 @@ void ROOT::Internal::RNTupleDescriptorBuilder::SetSchemaFromExisting(const RNTup
    fDescriptor = descriptor.CloneSchema();
 }
 
+void ROOT::Internal::RNTupleDescriptorBuilder::DemoteSplitColumnTypes()
+{
+   for (auto &[id, col] : fDescriptor.fColumnDescriptors) {
+      (void)id;
+      switch (col.fType) {
+      case ENTupleColumnType::kSplitIndex64: col.fType = ENTupleColumnType::kIndex64; break;
+      case ENTupleColumnType::kSplitIndex32: col.fType = ENTupleColumnType::kIndex32; break;
+      case ENTupleColumnType::kSplitReal64: col.fType = ENTupleColumnType::kReal64; break;
+      case ENTupleColumnType::kSplitReal32: col.fType = ENTupleColumnType::kReal32; break;
+      case ENTupleColumnType::kSplitInt64: col.fType = ENTupleColumnType::kInt64; break;
+      case ENTupleColumnType::kSplitInt32: col.fType = ENTupleColumnType::kInt32; break;
+      case ENTupleColumnType::kSplitInt16: col.fType = ENTupleColumnType::kInt16; break;
+      case ENTupleColumnType::kSplitUInt64: col.fType = ENTupleColumnType::kUInt64; break;
+      case ENTupleColumnType::kSplitUInt32: col.fType = ENTupleColumnType::kUInt32; break;
+      case ENTupleColumnType::kSplitUInt16: col.fType = ENTupleColumnType::kUInt16; break;
+      default: break;
+      }
+   }
+}
+
 void ROOT::Internal::RNTupleDescriptorBuilder::BeginHeaderExtension()
 {
    if (!fDescriptor.fHeaderExtension)

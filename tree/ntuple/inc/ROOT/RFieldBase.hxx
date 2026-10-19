@@ -427,8 +427,8 @@ protected:
    const ColumnRepresentation_t &
    EnsureCompatibleColumnTypes(const ROOT::RNTupleDescriptor &desc, std::uint16_t representationIndex) const;
    /// When connecting a field to a page sink, the field's default column representation is subject
-   /// to adjustment according to the write options. E.g., if compression is turned off, encoded columns
-   /// are changed to their unencoded counterparts.
+   /// to adjustment according to the write options. E.g., if compression is turned off or column encoding
+   /// is disabled, encoded columns are changed to their unencoded counterparts.
    void AutoAdjustColumnTypes(const ROOT::RNTupleWriteOptions &options);
 
    /// Called by Clone(), which additionally copies the on-disk ID
