@@ -872,13 +872,60 @@ void TGLPadPainter::RestoreViewport()
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw image on the GL window
 
-void TGLPadPainter::DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags)
+void TGLPadPainter::DrawImage(TImage *img, Int_t dstX, Int_t dstY, Int_t flags)
 {
-   Int_t width = img->GetWidth();
-   Int_t height = img->GetHeight();
-   auto bits = img->GetArgbArray();
-   if (bits)
-      DrawPixels((unsigned char *)bits, width, height, x, y, flags);
+   if (fLocked)
+      return;
+
+   auto width = img->GetWidth();
+   auto height = img->GetHeight();
+   auto pixelData = (unsigned char *) img->GetArgbArray();
+
+   if (!pixelData) {
+      ::Error("TGLPadPainter::DrawImage", "pixel data is null");
+      return;
+   }
+
+   if (!width || !height) {
+      //Assert is better.
+      ::Error("TGLPadPainter::DrawImage", "invalid image dimentsion");
+      return;
+   }
+
+   if (!gPad) {
+      ::Error("TGLPadPainter::DrawImage", "pad is not provided");
+      return;
+   }
+
+   const Double_t rasterX = Double_t(dstX) / gPad->GetPadWidth() * (gPad->GetX2() - gPad->GetX1()) + gPad->GetX1();
+
+   const Double_t yRange = gPad->GetY2() - gPad->GetY1();
+   const Double_t rasterY = yRange - Double_t(dstY + height) / gPad->GetPadHeight() * yRange + gPad->GetY1();
+
+   GLdouble oldPos[4] = {};
+   // Save the previous raster pos.
+   glGetDoublev(GL_CURRENT_RASTER_POSITION, oldPos);
+
+   glRasterPos2d(rasterX, rasterY);
+   // Stupid asimage provides us upside-down image.
+   std::vector<unsigned char> upsideDownImage(4 * width * height);
+   const unsigned char *srcLine = pixelData + 4 * width * (height - 1);
+   unsigned char *dstLine = &upsideDownImage[0];
+   for (UInt_t i = 0; i < height; ++i, srcLine -= 4 * width, dstLine += 4 * width)
+      std::copy(srcLine, srcLine + 4 * width, dstLine);
+
+   if (flags) {
+      glEnable(GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   }
+
+   glDrawPixels(width, height, GL_BGRA, GL_UNSIGNED_BYTE, &upsideDownImage[0]);
+
+   if (flags)
+      glDisable(GL_BLEND);
+
+   //Restore raster pos.
+   glRasterPos2d(oldPos[0], oldPos[1]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -957,75 +1004,9 @@ Bool_t TGLPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TGLPadPainter::DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
-                               Int_t dstX, Int_t dstY, Bool_t enableBlending)
+void TGLPadPainter::DrawPixels(const unsigned char *, UInt_t, UInt_t,
+                               Int_t, Int_t, Bool_t)
 {
-   if (fLocked)
-      return;
-
-   if (!pixelData) {
-      //I'd prefer an assert.
-      ::Error("TGLPadPainter::DrawPixels", "pixel data is null");
-      return;
-   }
-
-   if (std::numeric_limits<UInt_t>::digits >= 32) {
-      //TASImage uses bit 31 as ...
-      //alpha channel flag! FUUUUUUUUUUUUU .....   !!!
-      CLRBIT(width, 31);
-      CLRBIT(height, 31);
-   }
-
-   if (!width) {
-      //Assert is better.
-      ::Error("TGLPadPainter::DrawPixels", "invalid width");
-      return;
-   }
-
-   if (!height) {
-      //Assert is better.
-      ::Error("TGLPadPainter::DrawPixels", "invalid height");
-      return;
-   }
-
-   if (TPad *pad = dynamic_cast<TPad *>(gPad)) {
-      //TASImage passes pixel coordinates in pad's pixmap coordinate space.
-      //While glRasterPosX said to work with 'window' coordinates,
-      //that's a lie :) it does not :)
-
-      const Double_t rasterX = Double_t(dstX) / (pad->GetAbsWNDC() * pad->GetWw()) *
-                                (pad->GetX2() - pad->GetX1()) + pad->GetX1();
-
-      const Double_t yRange = pad->GetY2() - pad->GetY1();
-      const Double_t rasterY = yRange - Double_t(dstY + height) / (pad->GetAbsHNDC() * pad->GetWh()) * yRange +
-                               pad->GetY1();
-
-      GLdouble oldPos[4] = {};
-      //Save the previous raster pos.
-      glGetDoublev(GL_CURRENT_RASTER_POSITION, oldPos);
-
-      glRasterPos2d(rasterX, rasterY);
-      //Stupid asimage provides us upside-down image.
-      std::vector<unsigned char> upsideDownImage(4 * width * height);
-      const unsigned char *srcLine = pixelData + 4 * width * (height - 1);
-      unsigned char *dstLine = &upsideDownImage[0];
-      for (UInt_t i = 0; i < height; ++i, srcLine -= 4 * width, dstLine += 4 * width)
-         std::copy(srcLine, srcLine + 4 * width, dstLine);
-
-      if (enableBlending) {
-         glEnable(GL_BLEND);
-         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      }
-
-      glDrawPixels(width, height, GL_BGRA, GL_UNSIGNED_BYTE, &upsideDownImage[0]);
-
-      if (enableBlending)
-         glDisable(GL_BLEND);
-
-      //Restore raster pos.
-      glRasterPos2d(oldPos[0], oldPos[1]);
-   } else
-      ::Error("TGLPadPainter::DrawPixels", "no pad found to draw");
 }
 
 //Aux. functions - gradient and solid fill of arbitrary area.
