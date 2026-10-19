@@ -60,6 +60,23 @@ sap.ui.define([], function() {
          handle.connect();
       }
 
+      /** For a router page (expanded view) of viewer viewName: the manager and
+       * viewer element id of the main page in the same app, what switchSingle()
+       * passes in EVE.$eve7tmp. Needed when the page is reached without it,
+       * e.g. by browser forward. The name can be shortened at the first space
+       * (Views menu), so a prefix also matches. Returns null when there is no
+       * main page or no such viewer. */
+      static FindMainPageViewer(view, viewName)
+      {
+         let app = view.getParent();
+         let main = app?.getPages?.().find(p => p.getViewName?.() === "rootui5.eve7.view.Main");
+         let mgr = main?.getController()?.mgr;
+         let viewers = (viewName && mgr?.FindViewers()) || [];
+         let viewer = viewers.find(v => v.fName === viewName) ||
+                      viewers.find(v => v.fName.indexOf(viewName) === 0);
+         return viewer ? { mgr: mgr, eveViewerId: viewer.fElementId } : null;
+      }
+
       onWebsocketClosed() {
          this.controllers.forEach(ctrl => {
             if (typeof ctrl.onDisconnect === "function")

@@ -4,8 +4,9 @@ sap.ui.define([
    'sap/ui/table/Column',
    'sap/m/Text',
    'sap/m/Label',
-   'sap/ui/core/UIComponent'
-], function (Controller, JSONModel, tableColumn, mText, mLabel, UIComponent) {
+   'sap/ui/core/UIComponent',
+   'rootui5/eve7/lib/EveManager'
+], function (Controller, JSONModel, tableColumn, mText, mLabel, UIComponent, EveManager) {
 
    "use strict";
 
@@ -25,9 +26,19 @@ sap.ui.define([
          }
       },
 
-      onViewObjectMatched: function () {
-         this.setupManagerAndViewType(EVE.$eve7tmp.eveViewerId, EVE.$eve7tmp.mgr);
+      onViewObjectMatched: function (oEvent) {
+         let args = oEvent.getParameter("arguments");
+         // Main's switchSingle() passes the manager in EVE.$eve7tmp. Without it
+         // (browser forward, or this address opened directly) take it from the
+         // main page; if there is none yet, go there: this view has no
+         // standalone mode.
+         let moredata = EVE.$eve7tmp || EveManager.FindMainPageViewer(this.getView(), args.viewName);
          delete EVE.$eve7tmp;
+         if (!moredata) {
+            UIComponent.getRouterFor(this).navTo("Default", {}, true);
+            return;
+         }
+         this.setupManagerAndViewType(moredata.eveViewerId, moredata.mgr);
       },
 
       setupManagerAndViewType: function (eveViewerId, mgr) {
