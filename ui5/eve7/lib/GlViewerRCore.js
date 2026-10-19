@@ -178,8 +178,10 @@ sap.ui.define([
          // height as a flex item. height:100% would overhang the view's bottom
          // edge by the toolbar height, and GL would draw into the hidden strip.
          // min-height:0 lets the flex item shrink below its content.
-         this.get_view().getDomRef().style.display = "flex";
-         this.get_view().getDomRef().style.flexDirection = "column";
+         // The flex layout comes from the eveGlView class (css/eve.css), not an
+         // inline style: when the view is a router page, an inline display
+         // would override the display:none that hides it after navigating back.
+         this.get_view().addStyleClass("eveGlView");
          canvasParentDOM.style.flex = "1 1 0";
          canvasParentDOM.style.minHeight = "0";
 
