@@ -572,10 +572,12 @@ void TGHtml::DrawImage(TGHtmlImageMarkup *image, Drawable_t drawable,
       imageX = 0;
    }
 
-   TImage *img = image->fPImage->fImage;
+   // no need to paint if any visisble dimension is not-positive
+   // this happens when image is not shown on currently painted region
+   if ((imageH <= 0) || (imageW <= 0))
+      return;
 
-   imageH = imageH < 0 ? -imageH : imageH;
-   imageW = imageW < 0 ? -imageW : imageW;
+   TImage *img = image->fPImage->fImage;
 
    img->PaintImage(drawable, x, y, imageX, imageY, imageW, imageH);
    //gVirtualX->Update(kFALSE);
