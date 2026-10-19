@@ -28,49 +28,32 @@ RFlat2DMatrix RDatasetLoader::LoadDataframe(ROOT::RDF::RNode &rdf)
 {
    const bool NotFiltered = rdf.GetFilterNames().empty();
 
-   // size the buffer from the cluster metadata, Count() is only the fallback for sources without it
-   ROOT::RDF::RResultPtr<std::vector<ULong64_t>> Entries;
+   // size the buffer from the cluster metadata, Count() is only the fallback for sources without it. With filters
+   // this is an upper bound: the memory reserved for the entries that don't pass them is never touched
    std::size_t NumEntries = 0;
-   if (NotFiltered) {
-      try {
-         for (const auto &cluster : ROOT::Internal::RDF::GetDatasetGlobalClusterBoundaries(rdf)) {
-            NumEntries += cluster.second - cluster.first;
-         }
-      } catch (const std::runtime_error &) {
-         // GetDatasetGlobalClusterBoundaries() throws when the RDataFrame has no cluster
-         // metadata to query (a source other than TTree/RNTuple or no data source at all).
-         // Those paths fall back to Count() below.
+   try {
+      for (const auto &cluster : ROOT::Internal::RDF::GetDatasetGlobalClusterBoundaries(rdf)) {
+         NumEntries += cluster.second - cluster.first;
       }
-      if (NumEntries == 0) {
-         NumEntries = static_cast<std::size_t>(*rdf.Count());
-      }
-   } else {
-      Entries = rdf.Take<ULong64_t>("rdfentry_");
-      NumEntries = Entries->size();
-      // add the last element in entries to not go out of range when filling chunks
-      Entries->push_back((*Entries)[NumEntries - 1] + 1);
+   } catch (const std::runtime_error &) {
+      // GetDatasetGlobalClusterBoundaries() throws when the RDataFrame has no cluster
+      // metadata to query (a source other than TTree/RNTuple or no data source at all).
+      // Those paths fall back to Count() below.
+   }
+   if (NumEntries == 0) {
+      NumEntries = static_cast<std::size_t>(*rdf.Count());
    }
 
    // reserve the dataset and let the values be appended to it
    RFlat2DMatrix Dataset;
    Dataset.fRVec.reserve(NumEntries * fNumDatasetCols);
 
-   if (NotFiltered) {
-      ROOT::Internal::RDF::LoadCustomValues(rdf, fCols, fVecSizes, fVecPadding, Dataset.fRVec);
-   }
-
-   else {
-      for (std::size_t j = 0; j < NumEntries; j++) {
-         ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, (*Entries)[j], (*Entries)[j + 1]);
-         ROOT::Internal::RDF::LoadCustomValues(rdf, fCols, fVecSizes, fVecPadding, Dataset.fRVec);
-      }
+   // a single event loop, the filters only let the passing entries through
+   ROOT::Internal::RDF::LoadCustomValues(rdf, fCols, fVecSizes, fVecPadding, Dataset.fRVec);
+   if (!NotFiltered) {
+      NumEntries = Dataset.GetSize() / fNumDatasetCols;
    }
    Dataset.Resize(NumEntries, fNumDatasetCols);
-
-   // reset dataframe, only the filtered path changed the entry range
-   if (!NotFiltered) {
-      ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, (*Entries)[0], (*Entries)[NumEntries]);
-   }
 
    return Dataset;
 }
