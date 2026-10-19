@@ -139,6 +139,9 @@ struct RTestFutureColumn {
 std::unique_ptr<RColumnElementBase>
 GenerateColumnElement(std::type_index inMemoryType, ROOT::ENTupleColumnType onDiskType);
 
+std::unique_ptr<RColumnElementBase>
+GenerateColumnElement(std::type_index inMemoryType, const ROOT::RColumnDescriptor &onDisk);
+
 std::unique_ptr<RColumnElementBase> GenerateColumnElement(const RColumnElementBase::RIdentifier &elementId);
 
 template <typename CppT>
