@@ -65,7 +65,7 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
 
       // We generate the default memory representation for the given column type in order
       // to report the size _in memory_ of column elements.
-      std::uint32_t elemSize = RColumnElementBase::Generate(colDesc.GetType())->GetSize();
+      std::uint32_t elemSize = RColumnElementBase::Generate(colDesc)->GetSize();
       std::uint64_t nElems = 0;
       std::vector<std::uint64_t> compressedPageSizes{};
 

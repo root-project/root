@@ -1188,7 +1188,7 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::GenerateZeroPagesForColumns(siz
                 structure == ROOT::ENTupleStructure::kPlain);
 
       const auto &columnDesc = fDstDescriptor.GetColumnDescriptor(column.fOutputId);
-      const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
+      const auto colElement = RColumnElementBase::Generate(columnDesc);
       const auto nElements = nEntriesToGenerate * nRepetitions;
       const auto nBytesOnStorage = colElement->GetPackedSize(nElements);
       // TODO(gparolini): make this configurable
@@ -1251,7 +1251,7 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeCommonColumns(ROOT::Intern
       const auto &columnDesc = fSrcDescriptor->GetColumnDescriptor(columnId);
       const auto srcColElement = column.fInMemoryType
                                     ? ROOT::Internal::GenerateColumnElement(*column.fInMemoryType, columnDesc.GetType())
-                                    : RColumnElementBase::Generate(columnDesc.GetType());
+                                    : RColumnElementBase::Generate(columnDesc);
 
       // Now get the pages for this column in this cluster
       const auto &pages = clusterDesc.GetPageRange(columnId);

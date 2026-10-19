@@ -101,7 +101,7 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
 
       // We generate the default memory representation for the given column type in order
       // to report the size _in memory_ of column elements
-      auto elementSize = ROOT::Internal::RColumnElementBase::Generate(column.second.GetType())->GetSize();
+      auto elementSize = ROOT::Internal::RColumnElementBase::Generate(column.second)->GetSize();
 
       ColumnInfo info;
       info.fPhysicalColumnId = column.second.GetPhysicalId();

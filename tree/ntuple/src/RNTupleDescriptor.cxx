@@ -994,7 +994,7 @@ ROOT::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges(const RNTuple
                   if (!columnRange.IsSuppressed()) {
                      auto &pageRange = fCluster.fPageRanges[physicalId];
                      pageRange.fPhysicalColumnId = physicalId;
-                     const auto element = ROOT::Internal::RColumnElementBase::Generate<void>(c.GetType());
+                     const auto element = ROOT::Internal::RColumnElementBase::Generate(c);
                      pageRange.ExtendToFitColumnRange(columnRange, *element, ROOT::Internal::RPage::kPageZeroSize);
                   }
                } else if (!columnRange.IsSuppressed()) {
