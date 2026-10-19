@@ -3288,13 +3288,19 @@ void TASImage::Crop(Int_t x, Int_t y, UInt_t width, UInt_t height)
    x = x < 0 ? 0 : x;
    y = y < 0 ? 0 : y;
 
+   if ((x >= (Int_t) fImage->width) || (y >= (Int_t) fImage->height)) {
+      Warning("Crop", "specified x/y position larger than image");
+      return;
+   }
+
    width = x + width > fImage->width ? fImage->width - x : width;
    height = y + height > fImage->height ? fImage->height - y : height;
 
    if ((width == fImage->width) && (height == fImage->height)) {
-      Warning("Crop", "input size larger than image");
+      Warning("Crop", "specified size larger than image");
       return;
    }
+
    ASImageDecoder *imdec = start_image_decoding(fgVisual, fImage, SCL_DO_ALL,
                                                 x, y, width, height, nullptr);
 
@@ -3306,7 +3312,7 @@ void TASImage::Crop(Int_t x, Int_t y, UInt_t width, UInt_t height)
    ASImage *img = create_asimage(width, height, 0);
 
    if (!img) {
-      delete [] imdec;
+      stop_image_decoding(&imdec);
       Warning("Crop", "Failed to create image");
       return;
    }
@@ -3317,7 +3323,7 @@ void TASImage::Crop(Int_t x, Int_t y, UInt_t width, UInt_t height)
    if (!imout) {
       Warning("Crop", "Failed to start image output");
       destroy_asimage(&img);
-      if (imdec) delete [] imdec;
+      stop_image_decoding(&imdec);
       return;
    }
 
@@ -3527,22 +3533,22 @@ UInt_t *TASImage::GetRgbaArray()
 
 UInt_t *TASImage::GetScanline(UInt_t y)
 {
-   if (!fImage) {
+   ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
+
+   if (!img) {
       Warning("GetScanline", "no image");
       return nullptr;
    }
-
-   ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
-   CARD32 *ret = new CARD32[img->width];
 
    ASImageDecoder *imdec = start_image_decoding(fgVisual, img, SCL_DO_ALL,
                                                 0, y, img->width, 1, nullptr);
 
    if (!imdec) {
-      delete [] ret;
       Warning("GetScanline", "Failed to start image decoding");
       return nullptr;
    }
+
+   CARD32 *ret = new CARD32[img->width];
 
 #ifdef HAVE_MMX
    mmx_init();
