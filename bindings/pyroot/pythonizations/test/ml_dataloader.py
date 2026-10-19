@@ -7838,6 +7838,37 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             self.teardown_file(self.file_name5)
             raise
 
+    def test17_set_seed_resamples_different_entries(self):
+        # with a fixed seed, the resampled minority entries used to all be the same one
+        self.create_file_major()
+        self.create_file_minor()
+
+        try:
+            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
+            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
+
+            dl = ROOT.Experimental.ML.RDataLoader(
+                [df_major, df_minor],
+                batch_size=2,
+                target="b2",
+                shuffle=True,
+                drop_remainder=False,
+                set_seed=42,
+                load_eager=True,
+                sampling_type="oversampling",
+                sampling_ratio=1.0,
+            )
+
+            x = np.concatenate([x for x, _ in dl.as_numpy()]).flatten()
+            minor = x[x % 2 == 1]
+
+            self.assertEqual(len(minor), 10)
+            self.assertGreater(len(np.unique(minor)), 1)
+
+        finally:
+            self.teardown_file(self.file_name1)
+            self.teardown_file(self.file_name2)
+
 
 class DataLoaderSave(unittest.TestCase):
     file_name = "dataloader_save_input.root"
