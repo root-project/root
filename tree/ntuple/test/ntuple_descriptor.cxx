@@ -422,7 +422,7 @@ TEST(RNTupleDescriptor, AttributeSets)
    RNTupleLocator locator;
    locator.SetType(ROOT::RNTupleLocator::kTypeFile);
    locator.SetPosition(128ul);
-   ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder builder;
+   ROOT::Internal::RNTupleAttrSetDescriptorBuilder builder;
    builder.SchemaVersion(1, 0).AnchorLength(1024).AnchorLocator(locator).Name("AttrSetName");
    RNTupleDescriptorBuilder descBuilder;
    descBuilder.SetVersion(1, 0, 1, 0);

@@ -10,7 +10,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace ROOT::Experimental::Internal::RNTupleAttributes {
+namespace ROOT::Internal::RNTupleAttributes {
 
 /*
 Attribute RNTuples have a fixed Model schema that looks like this:
@@ -48,6 +48,6 @@ enum : std::size_t {
 inline constexpr const char *kMetaFieldNames[] = {"_rangeStart", "_rangeLen", "_userData"};
 static_assert(kMetaFieldIndex_Count == sizeof(kMetaFieldNames) / sizeof(kMetaFieldNames[0]));
 
-} // namespace ROOT::Experimental::Internal::RNTupleAttributes
+} // namespace ROOT::Internal::RNTupleAttributes
 
 #endif

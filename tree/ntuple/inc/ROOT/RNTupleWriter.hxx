@@ -35,9 +35,9 @@ class TDirectory;
 namespace ROOT {
 
 class RNTupleWriteOptions;
+class RNTupleAttrSetWriterHandle;
 
 namespace Experimental {
-class RNTupleAttrSetWriterHandle;
 class RFile;
 
 /// Creates an RNTupleWriter that writes into the given `file`, appending to it. The RNTuple is written under the
@@ -126,7 +126,7 @@ private:
    RNTupleFillContext fFillContext;
    Experimental::Detail::RNTupleMetrics fMetrics;
    /// All the Attribute Sets created from this Writer.
-   std::vector<std::shared_ptr<Experimental::RNTupleAttrSetWriter>> fAttributeSets;
+   std::vector<std::shared_ptr<RNTupleAttrSetWriter>> fAttributeSets;
 
    ROOT::NTupleSize_t fLastCommittedClusterGroup = 0;
 
@@ -138,7 +138,7 @@ private:
    // Helper function that is called from CommitCluster() when necessary
    void CommitClusterGroup();
 
-   void CloseAttributeSetImpl(ROOT::Experimental::RNTupleAttrSetWriter &attrSet);
+   void CloseAttributeSetImpl(ROOT::RNTupleAttrSetWriter &attrSet);
 
    /// Create a writer, potentially wrapping the sink in a RPageSinkBuf.
    static std::unique_ptr<RNTupleWriter> Create(std::unique_ptr<ROOT::RNTupleModel> model,
@@ -271,14 +271,14 @@ public:
    /// the main writer.
    /// \warning Currently this is only supported for writers created via RNTupleWriter::Append(). This limitation
    /// will be lifted in the future.
-   ROOT::Experimental::RNTupleAttrSetWriterHandle
+   ROOT::RNTupleAttrSetWriterHandle
    CreateAttributeSet(std::unique_ptr<RNTupleModel> model, std::string_view name,
                       const ROOT::RNTupleWriteOptions *options = nullptr);
 
    /// Writes the given AttributeSet to the underlying storage and closes it. This method is only useful if you
    /// want to close the AttributeSet early: otherwise it will automatically closed when the RNTupleWriter gets
    /// destroyed.
-   void CloseAttributeSet(ROOT::Experimental::RNTupleAttrSetWriterHandle handle);
+   void CloseAttributeSet(ROOT::RNTupleAttrSetWriterHandle handle);
 }; // class RNTupleWriter
 
 } // namespace ROOT
