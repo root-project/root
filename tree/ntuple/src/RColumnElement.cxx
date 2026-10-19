@@ -105,10 +105,11 @@ const char *ROOT::Internal::RColumnElementBase::GetColumnTypeName(ENTupleColumnT
    }
 }
 
-template <>
 std::unique_ptr<ROOT::Internal::RColumnElementBase>
-ROOT::Internal::RColumnElementBase::Generate<void>(ENTupleColumnType onDiskType)
+ROOT::Internal::RColumnElementBase::Generate(const ROOT::RColumnDescriptor &onDisk)
 {
+   const auto onDiskType = onDisk.GetType();
+
    //clang-format off
    switch (onDiskType) {
    case ENTupleColumnType::kIndex64: return std::make_unique<RColumnElement<RColumnIndex, ENTupleColumnType::kIndex64>>();
@@ -139,8 +140,18 @@ ROOT::Internal::RColumnElementBase::Generate<void>(ENTupleColumnType onDiskType)
    case ENTupleColumnType::kSplitUInt32: return std::make_unique<RColumnElement<std::uint32_t, ENTupleColumnType::kSplitUInt32>>();
    case ENTupleColumnType::kSplitInt16: return std::make_unique<RColumnElement<std::int16_t, ENTupleColumnType::kSplitInt16>>();
    case ENTupleColumnType::kSplitUInt16: return std::make_unique<RColumnElement<std::uint16_t, ENTupleColumnType::kSplitUInt16>>();
-   case ENTupleColumnType::kReal32Trunc: return std::make_unique<RColumnElement<float, ENTupleColumnType::kReal32Trunc>>();
-   case ENTupleColumnType::kReal32Quant: return std::make_unique<RColumnElement<float, ENTupleColumnType::kReal32Quant>>();
+   case ENTupleColumnType::kReal32Trunc: {
+      auto elem = std::make_unique<RColumnElement<float, ENTupleColumnType::kReal32Trunc>>();
+      elem->SetBitsOnStorage(onDisk.GetBitsOnStorage());
+      return elem;
+   }
+   case ENTupleColumnType::kReal32Quant: {
+      auto elem = std::make_unique<RColumnElement<float, ENTupleColumnType::kReal32Quant>>();
+      elem->SetBitsOnStorage(onDisk.GetBitsOnStorage());
+      if (auto range = onDisk.GetValueRange())
+         elem->SetValueRange(range->fMin, range->fMax);
+      return elem;
+   }
    default:
       if (onDiskType == kTestFutureColumnType)
          return std::make_unique<RColumnElement<Internal::RTestFutureColumn, kTestFutureColumnType>>();
