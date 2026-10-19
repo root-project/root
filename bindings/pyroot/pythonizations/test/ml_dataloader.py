@@ -3606,6 +3606,23 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
             self.teardown_file(self.file_name5)
             raise
 
+    def test17_dataframes_without_cluster_metadata(self):
+        # the dataframes are not read from a file, so their entries are counted with Count()
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [self.define_rdf1(), self.define_rdf2()],
+            batch_size=3,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+        )
+        gen_train, gen_validation = dl.train_test_split(0.4)
+
+        x_train = [v for x, _ in gen_train.as_numpy() for v in x.flatten().tolist()]
+        x_val = [v for x, _ in gen_validation.as_numpy() for v in x.flatten().tolist()]
+        self.assertEqual(x_train, [0.0, 1.0, 2.0, 5.0, 6.0, 7.0])
+        self.assertEqual(x_val, [3.0, 4.0, 8.0, 9.0])
+
 
 class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
     file_name1 = "first_half.root"

@@ -43,11 +43,11 @@ private:
    float fVecPadding;
    std::size_t fNumDatasetCols;
 
-   std::vector<RFlat2DMatrix> fTrainingDatasets;
-   std::vector<RFlat2DMatrix> fValidationDatasets;
+   RFlat2DMatrix fDataset;
 
-   RFlat2DMatrix fTrainingDataset;
-   RFlat2DMatrix fValidationDataset;
+   // rows of fDataset in the training and validation sets, one set per dataframe or a single one if concatenated
+   std::vector<std::vector<std::size_t>> fTrainingRows;
+   std::vector<std::vector<std::size_t>> fValidationRows;
 
    std::size_t fNumTrainingEntries;
    std::size_t fNumValidationEntries;
@@ -65,17 +65,19 @@ public:
                   const std::vector<std::string> &cols, const std::vector<std::size_t> &vecSizes = {},
                   const float vecPadding = 0.0, bool shuffle = true, const std::size_t setSeed = 0);
 
-   RFlat2DMatrix LoadDataframe(ROOT::RDF::RNode &rdf);
+   std::vector<std::size_t> CountEntries(std::vector<ROOT::RDF::RNode> &rdfs);
 
-   void SplitDataset(RFlat2DMatrix &Dataset, RFlat2DMatrix &TrainingDataset, RFlat2DMatrix &ValidationDataset);
+   void LoadDataframe(ROOT::RDF::RNode &rdf, std::size_t NumEntries);
+
+   void
+   SplitRows(std::size_t firstRow, std::vector<std::size_t> &TrainingRows, std::vector<std::size_t> &ValidationRows);
 
    void SplitDatasets(bool concatenate);
 
-   std::vector<RFlat2DMatrix> ReleaseTrainingDatasets() { return std::move(fTrainingDatasets); }
-   std::vector<RFlat2DMatrix> ReleaseValidationDatasets() { return std::move(fValidationDatasets); }
+   RFlat2DMatrix ReleaseDataset() { return std::move(fDataset); }
 
-   RFlat2DMatrix ReleaseTrainingDataset() { return std::move(fTrainingDataset); }
-   RFlat2DMatrix ReleaseValidationDataset() { return std::move(fValidationDataset); }
+   std::vector<std::vector<std::size_t>> ReleaseTrainingRows() { return std::move(fTrainingRows); }
+   std::vector<std::vector<std::size_t>> ReleaseValidationRows() { return std::move(fValidationRows); }
 
    std::size_t GetNumTrainingEntries() { return fNumTrainingEntries; }
    std::size_t GetNumValidationEntries() { return fNumValidationEntries; }

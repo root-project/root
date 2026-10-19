@@ -39,6 +39,9 @@ public:
    // returns the order in which to read the rows of a tensor, empty when shuffling is off
    std::vector<std::size_t> MakePermutation(std::size_t rows);
 
+   // shuffles the indices in place, nothing when shuffling is off
+   void ShuffleIndices(std::vector<std::size_t> &indices);
+
    // appends the rows [begin, end) of Tensor to Dest, read in the order of the permutation unless it is empty
    static void AppendRows(RFlat2DMatrix &Dest, const RFlat2DMatrix &Tensor, const std::vector<std::size_t> &permutation,
                           std::size_t begin, std::size_t end);

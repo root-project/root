@@ -16,6 +16,22 @@ std::vector<std::size_t> RFlat2DMatrixOperators::MakePermutation(std::size_t row
       return {};
    }
 
+   // make an identity permutation map
+   std::vector<std::size_t> indices(rows);
+   std::iota(indices.begin(), indices.end(), 0);
+
+   // shuffle the identity permutation to create a new permutation
+   ShuffleIndices(indices);
+
+   return indices;
+}
+
+void RFlat2DMatrixOperators::ShuffleIndices(std::vector<std::size_t> &indices)
+{
+   if (!fShuffle) {
+      return;
+   }
+
    std::random_device rd;
    std::mt19937 g;
 
@@ -25,14 +41,7 @@ std::vector<std::size_t> RFlat2DMatrixOperators::MakePermutation(std::size_t row
       g.seed(fSetSeed);
    }
 
-   // make an identity permutation map
-   std::vector<std::size_t> indices(rows);
-   std::iota(indices.begin(), indices.end(), 0);
-
-   // shuffle the identity permutation to create a new permutation
    std::shuffle(indices.begin(), indices.end(), g);
-
-   return indices;
 }
 
 void RFlat2DMatrixOperators::AppendRows(RFlat2DMatrix &Dest, const RFlat2DMatrix &Tensor,
