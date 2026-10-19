@@ -38,6 +38,7 @@
 
 #include "TGHtml.h"
 #include "TImage.h"
+#include "TASUtils.h"
 #include "TVirtualX.h"
 #include "strlcpy.h"
 
@@ -578,8 +579,17 @@ void TGHtml::DrawImage(TGHtmlImageMarkup *image, Drawable_t drawable,
       return;
 
    TImage *img = image->fPImage->fImage;
+   if (!img)
+      return;
 
-   img->PaintImage(drawable, x, y, imageX, imageY, imageW, imageH);
+   if ((imageX == 0) && (imageY == 0) && (imageW == image->fW) && (imageH == image->fH)) {
+      TASUtils::PaintImage(img, drawable, x, y);
+   } else {
+      std::unique_ptr<TImage> cloned((TImage *) img->Clone("crop_img"));
+      cloned->Crop(imageX, imageY, imageW, imageH);
+      TASUtils::PaintImage(cloned.get(), drawable, x, y);
+   }
+
    //gVirtualX->Update(kFALSE);
 
    image->fRedrawNeeded = 0;
