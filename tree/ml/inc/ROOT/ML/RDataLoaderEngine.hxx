@@ -121,6 +121,18 @@ private:
    std::size_t fTrainingEpochCount{0};
    std::size_t fValidationEpochCount{0};
 
+   /// \brief Rows of an eager epoch, turned into batches as they are requested
+   struct REagerEpoch {
+      const RFlat2DMatrix *fSource = nullptr;
+      std::vector<std::size_t> fPermutation;
+      std::size_t fNextRow = 0;
+   };
+
+   REagerEpoch fTrainingEagerEpoch;
+   REagerEpoch fValidationEagerEpoch;
+
+   void CreateNextEagerBatch(RBatchLoader &batchLoader, REagerEpoch &epoch);
+
    std::vector<RColumnLayout> MakeColumnLayout();
 
    /// \brief Opens a training or validation epoch and closes it again when done

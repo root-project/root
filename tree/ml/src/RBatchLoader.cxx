@@ -84,14 +84,15 @@ void RBatchLoader::MarkProducerDone()
 /// After the batch has been processed, it should be destroyed.
 /// \param[in] chunkTensor Tensor with the data from the chunk
 /// \param[in] permutation Order in which to read the rows of the chunk, empty to read them in order
-/// \param[in] idxs Index of batch in the chunk
+/// \param[in] firstRow First row of the batch in the chunk
 /// \return Batch
 std::unique_ptr<RFlat2DMatrix> RBatchLoader::CreateBatch(const RFlat2DMatrix &chunkTensor,
-                                                         const std::vector<std::size_t> &permutation, std::size_t idxs)
+                                                         const std::vector<std::size_t> &permutation,
+                                                         std::size_t firstRow)
 {
    auto batch = std::make_unique<RFlat2DMatrix>();
    batch->Reserve(fBatchSize, fNumColumns);
-   RFlat2DMatrixOperators::AppendRows(*batch, chunkTensor, permutation, idxs * fBatchSize, (idxs + 1) * fBatchSize);
+   RFlat2DMatrixOperators::AppendRows(*batch, chunkTensor, permutation, firstRow, firstRow + fBatchSize);
 
    return batch;
 }
@@ -126,11 +127,13 @@ RFlat2DMatrix RBatchLoader::GetBatch()
 /// \brief Creating the batches from a chunk and add them to the queue.
 /// \param[in] chunkTensor Tensor with the data from the chunk
 /// \param[in] permutation Order in which to read the rows of the chunk, empty to read them in order
+/// \param[in] beginRow First row of the chunk to create batches from
+/// \param[in] endRow End of the rows of the chunk to create batches from
 /// \param[in] isLastBatch Check if the batch in the chunk is the last one
 void RBatchLoader::CreateBatches(const RFlat2DMatrix &chunkTensor, const std::vector<std::size_t> &permutation,
-                                 bool isLastBatch)
+                                 std::size_t beginRow, std::size_t endRow, bool isLastBatch)
 {
-   std::size_t chunkSize = chunkTensor.GetRows();
+   std::size_t chunkSize = endRow - beginRow;
    std::size_t numBatches = chunkSize / fBatchSize;
 
    // create a vector of batches
@@ -138,12 +141,12 @@ void RBatchLoader::CreateBatches(const RFlat2DMatrix &chunkTensor, const std::ve
 
    // fill the full batches from the chunk into a vector
    for (std::size_t i = 0; i < numBatches; i++) {
-      batches.emplace_back(CreateBatch(chunkTensor, permutation, i));
+      batches.emplace_back(CreateBatch(chunkTensor, permutation, beginRow + i * fBatchSize));
    }
 
    // append the remaining entries of the chunk to fPrimaryLeftoverBatch, and add it to the batches once it is full
-   for (std::size_t row = numBatches * fBatchSize; row < chunkSize;) {
-      const std::size_t numRows = std::min(chunkSize - row, fBatchSize - fPrimaryLeftoverBatch->GetRows());
+   for (std::size_t row = beginRow + numBatches * fBatchSize; row < endRow;) {
+      const std::size_t numRows = std::min(endRow - row, fBatchSize - fPrimaryLeftoverBatch->GetRows());
       fPrimaryLeftoverBatch->Reserve(fBatchSize, fNumColumns);
       RFlat2DMatrixOperators::AppendRows(*fPrimaryLeftoverBatch, chunkTensor, permutation, row, row + numRows);
       row += numRows;

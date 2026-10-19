@@ -75,12 +75,14 @@ public:
    void MarkProducerDone();
 
    std::unique_ptr<RFlat2DMatrix>
-   CreateBatch(const RFlat2DMatrix &chunkTensor, const std::vector<std::size_t> &permutation, std::size_t idxs);
+   CreateBatch(const RFlat2DMatrix &chunkTensor, const std::vector<std::size_t> &permutation, std::size_t firstRow);
    RFlat2DMatrix GetBatch();
-   void CreateBatches(const RFlat2DMatrix &chunkTensor, const std::vector<std::size_t> &permutation, bool isLastBatch);
+   void CreateBatches(const RFlat2DMatrix &chunkTensor, const std::vector<std::size_t> &permutation,
+                      std::size_t beginRow, std::size_t endRow, bool isLastBatch);
    void RecalculateBatchCounts(std::size_t numEntries);
 
    bool isProducerDone() { return fProducerDone; }
+   std::size_t GetBatchSize() { return fBatchSize; }
    std::size_t GetNumBatches() { return fNumBatches; }
    std::size_t GetNumEntries() { return fNumEntries; }
    std::size_t GetNumRemainderRows() { return fLeftoverBatchSize; }
