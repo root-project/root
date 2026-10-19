@@ -139,12 +139,12 @@ void TGSlider::CreateDisabledPicture()
    auto img = TASUtils::FromPixmap(fSliderPic->GetPicture(), fSliderPic->GetMask());
    if (!img)
       return;
-   Pixmap_t mask = GetImageMask(img.get());
+   Pixmap_t mask = TASUtils::GetMask(img.get());
    img2->Merge(img.get(), "overlay");
 
    TString name = "disbl_";
    name.Append(fSliderPic->GetName());
-   fDisabledPic = fClient->GetPicturePool()->GetPicture(name.Data(), GetImagePixmap(img2.get()), mask);
+   fDisabledPic = fClient->GetPicturePool()->GetPicture(name.Data(), TASUtils::GetPixmap(img2.get()), mask);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

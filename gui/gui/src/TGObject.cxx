@@ -34,6 +34,7 @@ is based on the XClass'95 code (see Copyleft in source).
 #include "TGObject.h"
 #include "TGWindow.h"
 #include "TImage.h"
+#include "TASUtils.h"
 #include "TROOT.h"
 
 
@@ -55,7 +56,7 @@ void TGObject::SaveAs(const char* filename /*= ""*/, Option_t* option /*= ""*/) 
 {
    TImage::EImageFileTypes type = TImage::GetImageFileTypeFromFilename(filename);
    if (type != TImage::kUnknown) {
-      auto img = TGWindow::CreateImageFromWindow(GetId());
+      auto img = TASUtils::FromWindow(GetId());
       if (img)
          img->WriteImage(filename, type);
       return;

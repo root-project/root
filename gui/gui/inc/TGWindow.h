@@ -19,7 +19,6 @@
 
 class TGClient;
 class TGIdleHandler;
-class TImage;
 
 class TGWindow : public TGObject {
 
@@ -125,10 +124,6 @@ public:
    virtual Bool_t IsMapSubwindows() const { return kTRUE; }
 
    static Int_t   GetCounter();
-
-   static std::unique_ptr<TImage> CreateImageFromWindow(Drawable_t wid);
-   static Pixmap_t GetImagePixmap(TImage *img);
-   static Pixmap_t GetImageMask(TImage *img);
 
    ClassDefOverride(TGWindow, 0);  // GUI Window base class
 };

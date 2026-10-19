@@ -166,12 +166,12 @@ void TGScrollBarElement::SetEnabled(Bool_t on)
          auto img = TASUtils::FromPixmap(fPicN->GetPicture(), fPicN->GetMask());
          if (!img)
             return;
-         Pixmap_t mask = GetImageMask(img.get());
+         Pixmap_t mask = TASUtils::GetMask(img.get());
          img2->Merge(img.get(), "overlay");
 
          TString name = "disbl_";
          name += fPic->GetName();
-         fPicD = fClient->GetPicturePool()->GetPicture(name.Data(), GetImagePixmap(img2.get()),
+         fPicD = fClient->GetPicturePool()->GetPicture(name.Data(), TASUtils::GetPixmap(img2.get()),
                                                        mask);
       }
       fPic = fPicD;

@@ -28,10 +28,14 @@ class TImage;
 
 class TASUtils {
 public:
-   static Pixmap_t GetX11Pixmap(TImage *timg);
-   static Bool_t   FromX11Window(TImage *timg, Window_t win, Int_t x, Int_t y, Int_t width, Int_t height);
-   static std::unique_ptr<TImage> FromPixmap(Pixmap_t pxm, Pixmap_t mask);
+   static Pixmap_t GetPixmap(TImage *timg);
+   static Pixmap_t GetMask(TImage *timg);
+
    static Bool_t   PaintImage(TImage *timg, Drawable_t wid, Int_t x, Int_t y, Bool_t opaque = kFALSE);
+   static Bool_t   FillImageFromWindow(TImage *img, Window_t wid, Int_t width, Int_t height);
+
+   static std::unique_ptr<TImage> FromWindow(Window_t wid);
+   static std::unique_ptr<TImage> FromPixmap(Pixmap_t pxm, Pixmap_t mask);
 };
 
 #endif

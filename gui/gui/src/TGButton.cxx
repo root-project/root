@@ -1109,12 +1109,12 @@ void TGPictureButton::CreateDisabledPicture()
    img2->FillRectangle(back.Data(), 0, 0, fPic->GetWidth(), fPic->GetHeight());
    auto img = TASUtils::FromPixmap(fPic->GetPicture(), fPic->GetMask());
    if (img) {
-      Pixmap_t mask = GetImageMask(img.get());
+      Pixmap_t mask = TASUtils::GetMask(img.get());
       img2->Merge(img.get(), "overlay");
 
       TString name = "disbl_";
       name += fPic->GetName();
-      fPicD = fClient->GetPicturePool()->GetPicture(name.Data(), GetImagePixmap(img2.get()),
+      fPicD = fClient->GetPicturePool()->GetPicture(name.Data(), TASUtils::GetPixmap(img2.get()),
                                                     mask);
       fOwnDisabledPic = kTRUE;
    }

@@ -33,6 +33,7 @@ This class handles GUI icons.
 #include "TGPicture.h"
 #include "TSystem.h"
 #include "TImage.h"
+#include "TASUtils.h"
 #include "TVirtualDragManager.h"
 #include "TVirtualX.h"
 
@@ -57,7 +58,7 @@ TGIcon::TGIcon(const TGWindow *p, const char *image) : TGFrame(p, 1, 1)
    fImage = TImage::Open(path);
    if (fImage) {
       fPic = fClient->GetPicturePool()->GetPicture(gSystem->BaseName(path),
-                                   GetImagePixmap(fImage), GetImageMask(fImage));
+                                   TASUtils::GetPixmap(fImage), TASUtils::GetMask(fImage));
       TGFrame::Resize(fImage->GetWidth(), fImage->GetHeight());
    }
    SetWindowName();
@@ -154,8 +155,8 @@ void TGIcon::Resize(UInt_t w, UInt_t h)
                    (GetOptions() & kDoubleBorder);
 
    fImage->Scale(w - 2*border, h - 2*border);
-   fPic = fClient->GetPicturePool()->GetPicture(fImage->GetName(),
-                                                GetImagePixmap(fImage), GetImageMask(fImage));
+   fPic =
+      fClient->GetPicturePool()->GetPicture(fImage->GetName(), TASUtils::GetPixmap(fImage), TASUtils::GetMask(fImage));
    DoRedraw();
 }
 

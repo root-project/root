@@ -61,7 +61,7 @@ Int_t exec_macro(const char *macro, Bool_t comp = kFALSE, Bool_t save = kTRUE)
             outfile.ReplaceAll(".C", TString::Format("_%d.png", ++nMainFrames));
             win->RaiseWindow();
 
-            auto img = TGWindow::CreateImageFromWindow(win->GetId());
+            auto img = TASUtils::FromWindow(win->GetId());
             if (img)
                img->WriteImage(outfile.Data());
          }

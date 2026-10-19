@@ -1170,8 +1170,8 @@ static const TGPicture *MakeLinkPic(const TGPicture *pic)
          img1->Merge(img2.get());
       TString lnk_name = pic->GetName();
       lnk_name.Prepend("lnk_");
-      auto merged = gClient->GetPicturePool()->GetPicture(lnk_name.Data(),
-                                          TGWindow::GetImagePixmap(img1.get()), TGWindow::GetImageMask(img1.get()));
+      auto merged = gClient->GetPicturePool()->GetPicture(lnk_name.Data(), TASUtils::GetPixmap(img1.get()),
+                                                          TASUtils::GetMask(img1.get()));
       return merged;
    }
    return pic;
@@ -1613,7 +1613,7 @@ void TGFileBrowser::GetObjPicture(const TGPicture **pic, TObject *obj)
    if (!(*pic) && xpm) {
       if (im && im->SetImageBuffer((char**)&name, TImage::kXpm)) {
          im->Scale(im->GetWidth()/4, im->GetHeight()/4);
-         *pic = gClient->GetPicturePool()->GetPicture(iconname, TGWindow::GetImagePixmap(im), TGWindow::GetImageMask(im));
+         *pic = gClient->GetPicturePool()->GetPicture(iconname, TASUtils::GetPixmap(im), TASUtils::GetMask(im));
       }
       gClient->GetMimeTypeList()->AddType("[thumbnail]", iconname, iconname, iconname, "->Browse()");
       return;

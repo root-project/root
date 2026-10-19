@@ -77,60 +77,148 @@ public:
 
 thread_local ASVisualHolder holder;
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns image X11 pixmap.
-/// Workrs only on the platforms with support of X11
+/// Returns image pixmap.
 /// The pixmap must deleted by user.
+/// Replacement for deprecated TImage::GetPixmap method
+/// Special handling for X11-based displays where ASImage has optimized implementation
 
-Pixmap_t TASUtils::GetX11Pixmap(TImage *timg)
+Pixmap_t TASUtils::GetPixmap(TImage *timg)
 {
-   auto asimg = dynamic_cast<TASImage *>(timg);
-   if (!asimg) {
-      ::Warning("TASUtils::GetX11Pixmap", "Image not provided");
+   if (!timg) {
+      ::Error("TASUtils::GetPixmap", "Image not provided");
+      return 0;
+   }
+   static Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
+
+   if (x11) {
+#ifndef X_DISPLAY_MISSING
+      auto asimg = dynamic_cast<TASImage *>(timg);
+      if (!asimg) {
+         ::Warning("TASUtils::GetPixmap", "ASImage not provided");
+         return 0;
+      }
+
+      auto vis = holder();
+
+      if (!vis) {
+         ::Warning("TASUtils::GetPixmap", "Visual not initiated");
+         return 0;
+      }
+
+      ASImage *img = asimg->fScaledImage ? asimg->fScaledImage->fImage : asimg->fImage;
+
+      return (Pixmap_t)asimage2pixmap(vis, gVirtualX->GetDefaultRootWindow(), img, nullptr, kTRUE);
+#else
+      ::Error("TASUtils::GetPixmap", "Invoke X11-specific methods on unsupported platform");
+      return 0;
+#endif
+   }
+
+   auto argb = timg->GetArgbArray();
+   if (!argb) {
+      ::Error("TASUtils::GetPixmap", "ARGB array is not exists");
       return 0;
    }
 
-   auto vis = holder();
-
-   if (!vis) {
-      ::Warning("TASUtils::GetX11Pixmap", "Visual not initiated");
-      return 0;
-   }
-
-   ASImage *img = asimg->fScaledImage ? asimg->fScaledImage->fImage : asimg->fImage;
-
-   return (Pixmap_t)asimage2pixmap(vis, gVirtualX->GetDefaultRootWindow(), img, nullptr, kTRUE);
+   return gVirtualX->CreatePixmapFromData((unsigned char*) argb, timg->GetScaledWidth(), timg->GetScaledHeight());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create an image from the given X11 window
-/// Can only be used on platforms where X11 is supported
+/// Returns image mask pixmap (alpha channel).
+/// The pixmap must deleted by user.
+/// Replacement for deprecated TImage::GetMask() method
 
-Bool_t TASUtils::FromX11Window(TImage *timg, Window_t win, Int_t x, Int_t y, Int_t width, Int_t height)
+Pixmap_t TASUtils::GetMask(TImage *img)
 {
-   auto asimg = dynamic_cast<TASImage *>(timg);
-   if (!asimg) {
-      ::Warning("TASUtils::FromX11Window", "Image not provided");
-      return kFALSE;
-   }
+   Pixmap_t pixmap = 0;
 
-   auto vis = holder();
+   UInt_t width = 0, height = 0;
+   std::vector<char> bits;
 
-   if (!vis) {
-      ::Warning("TASUtils::FromX11Window", "Visual not initiated");
+   if (!img)
+      ::Error("TGWindow::GetImageMask", "Image not provided");
+   else if (img->GetMaskBits(width, height, bits))
+      pixmap = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), bits.data(), width, height);
+
+   return pixmap;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create an image from the given window
+
+Bool_t TASUtils::FillImageFromWindow(TImage *img, Window_t wid, Int_t width, Int_t height)
+{
+   auto asimg = dynamic_cast<TASImage *> (img);
+   if (!asimg)
       return kFALSE;
-   }
 
    asimg->DestroyImage();
    asimg->DestroyScaledImage();
 
-   asimg->fImage = pixmap2asimage(vis, win, x, y, width, height, kAllPlanes, 0, 0);
+   gVirtualX->Update(1);
+   if (!gThreadXAR) {
+      gSystem->Sleep(10);
+      gSystem->ProcessEvents();
+      gSystem->Sleep(10);
+      gSystem->ProcessEvents();
+   }
 
-   return asimg->fImage != nullptr;
+   static Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
+
+   if (x11) {
+      auto vis = holder();
+
+      if (!vis) {
+         ::Error("TASUtils::FillImageFromWindow", "Visual not initiated");
+         return kFALSE;
+      }
+
+#ifndef X_DISPLAY_MISSING
+      asimg->fImage = pixmap2asimage(vis, wid, 0, 0, width, height, kAllPlanes, 0, 0);
+#else
+      ::Error("TASUtils::FillImageFromWindow", "Invoke X11-specific methods on unsupported platform");
+#endif
+   } else {
+      unsigned char *bits = gVirtualX->GetColorBits(wid, 0, 0, width, height);
+      if (!bits) {
+        ::Error("TASUtils::FillImageFromWindow", "Fail to extract color bits for specified window");
+        return kFALSE;
+      }
+      asimg->FromBitmap(bits, width, height);
+      delete [] bits;
+   }
+
+   if (!asimg->IsValid())
+      return kFALSE;
+
+   return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set image data from pixmap.
+/// Create an image from the given window
+
+std::unique_ptr<TImage> TASUtils::FromWindow(Window_t wid)
+{
+   Int_t x = 0, y = 0;
+   UInt_t w = 0, h = 0;
+
+   gVirtualX->GetWindowSize(wid, x, y, w, h);
+
+   (void) x; // position of window is not used
+   (void) y;
+
+   auto asimg = std::make_unique<TASImage>();
+
+   if (!FillImageFromWindow(asimg.get(), wid, w, h))
+      return nullptr;
+
+   return asimg;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create image from pixmap.
 
 std::unique_ptr<TImage> TASUtils::FromPixmap(Pixmap_t pxm, Pixmap_t mask)
 {
@@ -152,6 +240,8 @@ std::unique_ptr<TImage> TASUtils::FromPixmap(Pixmap_t pxm, Pixmap_t mask)
 
 #ifndef X_DISPLAY_MISSING
       asimg->fImage = picture2asimage(vis, pxm, mask, 0, 0, w, h, kAllPlanes, 1, 0);
+#else
+      ::Error("TASUtils::FromPixmap", "Invoke X11-specific methods on unsupported platform");
 #endif
    } else {
       unsigned char *bits = gVirtualX->GetColorBits(pxm, 0, 0, w, h);
@@ -221,7 +311,7 @@ Bool_t TASUtils::PaintImage(TImage *timg, Drawable_t wid, Int_t x, Int_t y, Bool
       else
          res = kFALSE;
       #else
-      ::Error("TASUtils::PaintImage", "Invoke X11-specific methods on unsupported platforms");
+      ::Error("TASUtils::PaintImage", "Invoke X11-specific methods on unsupported platform");
       res = kFALSE;
       #endif
    } else {
