@@ -205,13 +205,14 @@ std::size_t RClusterLoader::LoadTrainingClusterInto(RFlat2DMatrix &dest, std::si
       }
 
       ROOT::RDF::RNode &rdf = fRdfs[rdfIdx];
+      const std::size_t numLoadedValues = dest.fRVec.size();
 
-      std::vector<ULong64_t> rdfEntries;
-      rdfEntries.reserve(endRow - startRow);
-
+      // load the whole cluster and capture rdfentry_ in the same event loop
       ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, startRow, endRow);
-      rdf.Foreach([&](ULong64_t entry) { rdfEntries.push_back(entry); }, {"rdfentry_"});
+      auto entries = rdf.Take<ULong64_t>("rdfentry_");
+      ROOT::Internal::RDF::LoadCustomValues(rdf, fCols, fVecSizes, fVecPadding, dest.fRVec);
       ROOT::Internal::RDF::ChangeBeginAndEndEntries(rdf, 0, fRdfSizes[rdfIdx]);
+      auto &rdfEntries = *entries;
 
       const std::size_t totalFiltered = rdfEntries.size();
       if (totalFiltered == 0) {
@@ -262,8 +263,11 @@ std::size_t RClusterLoader::LoadTrainingClusterInto(RFlat2DMatrix &dest, std::si
       fAccumulatedFilteredForTrain += trainCount;
       fAccumulatedFilteredForVal += valCount;
 
-      if (trainCount > 0)
-         LoadClusterInto(dest, rdfIdx, trainStart, trainEnd);
+      // keep only the training rows of the cluster, the validation ones are loaded by the validation epoch
+      float *rows = dest.fRVec.data() + numLoadedValues;
+      if (!trainIsPrefix)
+         std::copy(rows + valCount * fNumChunkCols, rows + totalFiltered * fNumChunkCols, rows);
+      dest.fRVec.resize(numLoadedValues + trainCount * fNumChunkCols);
 
       return trainCount;
    }
