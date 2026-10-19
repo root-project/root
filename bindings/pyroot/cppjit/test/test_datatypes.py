@@ -3,9 +3,24 @@ import sys
 import py
 from pytest import mark, raises, skip
 from support import IS_CLANG_REPL, IS_MAC, IS_WINDOWS, pylong, pyunicode, setup_make
+import subprocess
 
 currpath = py.path.local(__file__).dirpath()
 test_dct = "datatypes_cxx"
+
+IS_MACOS_27_PLUS = False
+
+try:
+    vers = subprocess.check_output(["xcrun", "--sdk", "macosx", "--show-sdk-version"]).decode().strip()
+    if int(vers.split(".")[0]) >= 27:
+        IS_MACOS_27_PLUS = True
+except ModuleNotFoundError:
+    pass
+except FileNotFoundError:
+    pass
+
+if IS_MACOS_27_PLUS:
+    raise RuntimeError("Hi")
 
 
 def setup_module(mod):
@@ -1009,6 +1024,7 @@ class TestDATATYPES:
         assert c.get_pod_ptrref().m_int == 666
         assert c.get_pod_ptrref().m_double == 3.14
 
+    @mark.xfail(condition=IS_MACOS_27_PLUS, reason="Mutating proxy pointee via T** confuses memory regulator, resulting in crashes on newer macOS")
     def test16_object_arguments(self):
         """Test setting and returning of a POD through arguments"""
 
