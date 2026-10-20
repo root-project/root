@@ -3,6 +3,8 @@
 #include "TNamed.h"
 #include "TObjString.h"
 
+#include <ROOT/TestSupport.hxx>
+
 #include <string>
 #include <vector>
 
@@ -11,11 +13,6 @@ TEST(TOrdCollectionTest, DefaultConstructor)
    TOrdCollection col;
    EXPECT_EQ(0, col.GetSize());
    EXPECT_TRUE(col.IsEmpty());
-   EXPECT_EQ(nullptr, col.First());
-   EXPECT_EQ(nullptr, col.Last());
-   EXPECT_EQ(nullptr, col.At(0));
-   EXPECT_EQ(nullptr, col.At(-1));
-   EXPECT_EQ(nullptr, col.At(5));
    EXPECT_FALSE(col.IsOwner());
 }
 
@@ -208,6 +205,47 @@ TEST(TOrdCollectionTest, SortAndBinarySearch)
    TNamed notFound("epsilon", "5");
    EXPECT_EQ(-1, col.BinarySearch(&notFound));
    EXPECT_EQ(-1, col.BinarySearch(nullptr));
+}
+
+TEST(TOrdCollectionTest, OutOfBoundsAndIllegalIndices)
+{
+   TOrdCollection col;
+   TObjString a("A");
+   col.Add(&a);
+
+   // At() with illegal index emits Error("At", "index error ...")
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, "At", "index error", /*matchFullMessage=*/false);
+      EXPECT_EQ(nullptr, col.At(-1));
+   }
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, "At", "index error", /*matchFullMessage=*/false);
+      EXPECT_EQ(nullptr, col.At(5));
+   }
+
+   // PutAt() with illegal index emits Error("PutAt", "index error ...")
+   TObjString b("B");
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, "PutAt", "index error", /*matchFullMessage=*/false);
+      col.PutAt(&b, -1);
+   }
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, "PutAt", "index error", /*matchFullMessage=*/false);
+      col.PutAt(&b, 2);
+   }
+
+   // Unsorted BinarySearch emits Error("BinarySearch", "collection must first be sorted")
+   TOrdCollection unsortedCol;
+   unsortedCol.Add(&a);
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, "BinarySearch", "collection must first be sorted", /*matchFullMessage=*/false);
+      EXPECT_EQ(-1, unsortedCol.BinarySearch(&a));
+   }
 }
 
 namespace {
