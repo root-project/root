@@ -5,9 +5,6 @@
 # \macro_code
 # \macro_output
 #
-# \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-# is welcome!
-#
 # \date 2026-10-12
 # \author Giacomo Parolini <giacomo.parolini@cern.ch>
 
@@ -18,7 +15,7 @@ import os
 
 def write_rntuple_to_rfile(fileName):
     # Create a new ROOT file for writing
-    with ROOT.Experimental.RFile.Recreate(fileName) as file:
+    with ROOT.RFile.Recreate(fileName) as file:
         # Define the RNTuple schema
         model = ROOT.RNTupleModel.Create()
         model.MakeField["int"]("intField")
@@ -37,7 +34,7 @@ def write_rntuple_to_rfile(fileName):
 
 def read_rntuple_from_rfile(fileName):
     # Open an existing ROOT file for reading (will throw an exception if `fileName` cannot be read).
-    with ROOT.Experimental.RFile.Open(fileName) as file:
+    with ROOT.RFile.Open(fileName) as file:
         # Get back the RNTuple anchor from the file
         rntuple = file.Get("ntuple")
 

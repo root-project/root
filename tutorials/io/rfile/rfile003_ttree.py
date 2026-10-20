@@ -8,9 +8,6 @@
 # \macro_code
 # \macro_output
 #
-# \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-# is welcome!
-#
 # \date 2026-10-12
 # \author Giacomo Parolini <giacomo.parolini@cern.ch>
 
@@ -23,7 +20,7 @@ import ROOT
 def read_ttree_from_rfile(fileName):
     # Open an existing ROOT file for reading (will throw an exception if `fileName` cannot be read).
     # IMPORTANT! This file must remain open while reading data from the tree.
-    with ROOT.Experimental.RFile.Open(fileName) as file:
+    with ROOT.RFile.Open(fileName) as file:
         # Get back the TTree from the file
         tree = file.Get("tree")
         floatVal = array.array("f", [0])
