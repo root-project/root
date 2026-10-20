@@ -1,17 +1,23 @@
 # JSROOT changelog
 
 
-## Changes in 7.11.x
-1. Fix - exclude @resvg/resvg-js from browser bundlers #421
-2. Fix - hstack autocolor handling in TWebCanvas
+## Changes in 7.11.3
+1. Fix - reading of negative 64-bit integers #422 (thanks to @Prafyl)
+2. Fix - include first value in TTree::Draw histogram range #427 (thanks to @auraseb)
+3. Fix - `TH2` scat drawing for large histogram stats #428 (thanks to @Prafyl)
+
+
+## Changes in 7.11.2
+1. Fix - exclude @resvg/resvg-js from browser bundlers #421 (thanks to @wiso)
+2. Fix - hstack autocolor handling in `TWebCanvas`
 
 
 ## Changes in 7.11.1
 1. Fix - prevent very long header in context menu
 2. Fix - JSON production for TWebCanvas
-3. Fix - check evaluated value of TF1
+3. Fix - check evaluated value of `TF1`
 4. Fix - corrupted page layout in SWAN after calling %rootbrowse
-5. Fix - RNtuple decodeZigzag64 for SplitInt64 columns #410
+5. Fix - RNtuple decodeZigzag64 for SplitInt64 columns #410 (thanks to @undefined-panda)
 
 
 ## Changes in 7.11.0
