@@ -837,27 +837,32 @@ REveTrans &REveElement::RefMainTrans()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Initialize the main transformation to identity matrix.
+/// Initialize the main transformation to identity matrix, without motion.
 /// If can_edit is true (default), the user will be able to edit the
 /// transformation parameters via GUI.
 
 void REveElement::InitMainTrans(Bool_t can_edit)
 {
-   if (fMainTrans)
+   if (fMainTrans) {
       fMainTrans->UnitTrans();
-   else
+      fMainTrans->ClearMotion();
+   } else {
       fMainTrans = std::make_unique<REveTrans>();
+   }
    fCanEditMainTrans = can_edit;
+   StampTrans();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destroy the main transformation matrix, it will always be taken
 /// as identity. Editing of transformation parameters is disabled.
+/// The motion goes with it.
 
 void REveElement::DestroyMainTrans()
 {
    fMainTrans.reset(nullptr);
    fCanEditMainTrans = kFALSE;
+   StampTrans();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1588,6 +1593,23 @@ std::string TransBase64(const REveTrans &t)
    return TBase64::Encode(reinterpret_cast<const char *>(t.Array()), 16 * sizeof(Double_t)).Data();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// The motion of `d` as JSON: start time, velocity, acceleration, spin and
+/// trust window, see REveTrans::SetMotion().
+
+nlohmann::json MotionJson(const REveDeltaTrans &d)
+{
+   const REveVectorD &v = d.fVel, &a = d.fAcc, &s = d.fSpinAxis;
+   // clang-format off
+   return { {"t0",     d.fMotionT0},
+            {"vel",    {v.fX, v.fY, v.fZ}},
+            {"acc",    {a.fX, a.fY, a.fZ}},
+            {"axis",   {s.fX, s.fY, s.fZ}},
+            {"rate",   d.fSpinRate},
+            {"max_dt", d.fMaxDt} };
+   // clang-format on
+}
+
 } // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1602,20 +1624,11 @@ void REveElement::WriteTransJson(nlohmann::json &cj)
       cj["matrix"] = TransBase64(*fMainTrans);
 
    if (fMainTrans && fMainTrans->HasMotion()) {
-      const REveDeltaTrans &d = *fMainTrans->GetDeltaTrans();
-      const REveVectorD &v = d.fVel, &a = d.fAcc, &s = d.fSpinAxis;
-      // clang-format off
-      cj["mot"] = { {"t0",     d.fMotionT0},
-                    {"vel",    {v.fX, v.fY, v.fZ}},
-                    {"acc",    {a.fX, a.fY, a.fZ}},
-                    {"axis",   {s.fX, s.fY, s.fZ}},
-                    {"rate",   d.fSpinRate},
-                    {"max_dt", d.fMaxDt} };
-      // clang-format on
+      cj["motion"] = MotionJson(*fMainTrans->GetDeltaTrans());
    } else {
       // Sent explicitly so that a stopped element cancels the client's
       // trajectory: a missing field in a partial update means unchanged.
-      cj["mot"] = nullptr;
+      cj["motion"] = nullptr;
    }
 }
 
@@ -1691,8 +1704,12 @@ Int_t REveElement::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
       }
 
       // With or without render data: the client sets it on the element's node.
-      if (fMainTrans)
+      // A full write holds the whole transformation, so no motion means none.
+      if (fMainTrans) {
          j["matrix"] = TransBase64(*fMainTrans);
+         if (fMainTrans->HasMotion())
+            j["motion"] = MotionJson(*fMainTrans->GetDeltaTrans());
+      }
    }
 
    return ret;

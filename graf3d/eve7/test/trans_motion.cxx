@@ -19,7 +19,10 @@
 
 #include <nlohmann/json.hpp>
 
+#include <chrono>
 #include <cstring>
+#include <string>
+#include <thread>
 
 namespace REX = ROOT::Experimental;
 
@@ -99,7 +102,7 @@ TEST(REveTransMotion, TransJson)
    nlohmann::json j0;
    el->WriteTransJson(j0);
    EXPECT_FALSE(j0.contains("matrix"));
-   EXPECT_TRUE(j0["mot"].is_null());
+   EXPECT_TRUE(j0["motion"].is_null());
 
    el->RefMainTrans().SetPos(4, 5, 6);
    el->RefMainTrans().SetMotion({1, 2, 3}, {0, -1, 0}, {2, 0, 0}, 0.5, 0.25);
@@ -113,7 +116,7 @@ TEST(REveTransMotion, TransJson)
    Double_t mt[16];
    std::memcpy(mt, bytes.Data(), sizeof(mt));
    EXPECT_DOUBLE_EQ(mt[12], 4.);
-   auto &m = j["mot"];
+   auto &m = j["motion"];
    ASSERT_TRUE(m.is_object());
    EXPECT_EQ(m["vel"], nlohmann::json({1., 2., 3.}));
    EXPECT_EQ(m["acc"], nlohmann::json({0., -1., 0.}));
@@ -126,8 +129,34 @@ TEST(REveTransMotion, TransJson)
    el->RefMainTrans().ClearMotion();
    nlohmann::json j2;
    el->WriteTransJson(j2);
-   EXPECT_TRUE(j2.contains("mot"));
-   EXPECT_TRUE(j2["mot"].is_null());
+   EXPECT_TRUE(j2.contains("motion"));
+   EXPECT_TRUE(j2["motion"].is_null());
 
    delete el;
 }
+
+// The server time goes last, as a key of an object message or as a trailer
+// entry of an array message, and is set again in place before each send. The
+// size does not change and nothing else in the message does.
+TEST(REveTransMotion, ServerTimeStampedInPlace)
+{
+   for (std::string msg : {std::string(R"({"a":1})"), std::string(R"([{"a":1},{"b":2}])")}) {
+      REX::REveUtil::AppendServerTime(msg);
+      auto before = nlohmann::json::parse(msg);
+      auto &tb = before.is_array() ? before.back() : before;
+      const double t0 = tb["server_time"].get<double>();
+      const auto size = msg.size();
+
+      std::this_thread::sleep_for(std::chrono::milliseconds(20));
+      REX::REveUtil::StampServerTime(msg);
+      EXPECT_EQ(msg.size(), size);
+      auto after = nlohmann::json::parse(msg);
+      auto &ta = after.is_array() ? after.back() : after;
+      EXPECT_GE(ta["server_time"].get<double>(), t0 + 20.);
+
+      tb.erase("server_time");
+      ta.erase("server_time");
+      EXPECT_EQ(after, before);
+   }
+}
+

@@ -24,6 +24,7 @@
 #include "TColor.h"
 
 #include <chrono>
+#include <cstdio>
 
 #include "TROOT.h"
 #include "TInterpreter.h"
@@ -44,6 +45,40 @@ double REveUtil::ServerTimeMs()
    using clock = std::chrono::steady_clock;
    static const clock::time_point origin = clock::now();
    return std::chrono::duration<double, std::milli>(clock::now() - origin).count();
+}
+
+namespace {
+// Width of the server_time value in characters: up to 12 integer digits of ms,
+// the point and three decimals.
+constexpr int kServerTimeWidth = 16;
+} // namespace
+
+////////////////////////////////////////////////////////////////////////////////
+/// Append "server_time" to the JSON message `msg`, a non-empty object or array:
+/// as its last key, or as a last entry, a trailer. The value has a fixed width,
+/// padded with spaces, so StampServerTime() finds it from the end and sets it
+/// in place just before the message is sent. The client takes it as the server
+/// clock at send-out, see ServerTimeMs().
+
+void REveUtil::AppendServerTime(std::string &msg)
+{
+   const bool is_array = msg.back() == ']';
+   msg.pop_back();
+   msg += is_array ? ",{\"server_time\":" : ",\"server_time\":";
+   msg.append(kServerTimeWidth, ' ');
+   msg += is_array ? "}]" : "}";
+   StampServerTime(msg);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the "server_time" that AppendServerTime() put at the end of `msg` to now.
+
+void REveUtil::StampServerTime(std::string &msg)
+{
+   const std::size_t tail = msg.back() == ']' ? 2 : 1;
+   char buf[kServerTimeWidth + 1];
+   snprintf(buf, sizeof(buf), "%*.3f", kServerTimeWidth, ServerTimeMs());
+   msg.replace(msg.size() - tail - kServerTimeWidth, kServerTimeWidth, buf, kServerTimeWidth);
 }
 
 namespace REX = ROOT::Experimental;

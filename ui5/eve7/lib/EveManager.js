@@ -22,6 +22,7 @@ sap.ui.define([], function() {
       constructor()
       {
          this.map    = {}; // use object, not array
+         this.server_time_offset = null; // performance.now() - server ms
          this.childs = [];
          this.last_json = null;
          this.scene_changes = null;
@@ -161,9 +162,13 @@ sap.ui.define([], function() {
             }
 
             else if (resp[0] && resp[0].content == "REveScene::StreamElements") {
+               // The last entry is a trailer with the server time, see
+               // REveScene::AppendServerTime(); the rest are header and elements.
+               this.noteServerTime(resp.pop().server_time);
                this.ImportSceneJson(resp);
             }
             else if (resp.header && resp.header.content == "ElementsRepresentaionChanges") {
+               this.noteServerTime(resp.server_time);
                this.ImportSceneChangeJson(resp);
             }
             else if (resp.content == "BeginChanges") {
@@ -183,6 +188,7 @@ sap.ui.define([], function() {
                }
             }
             else if (resp.content == "Motion") {
+               this.noteServerTime(resp.server_time);
                this.ImportMotion(resp);
             }
             else if (resp.content == "BrowseElement") {
@@ -287,6 +293,40 @@ sap.ui.define([], function() {
              }
          }
      }
+
+      //==============================================================================
+      // The server clock, for motion
+      //==============================================================================
+
+      /** Feed one observation of the server clock: `t` is the server time, in
+        * ms, at which the message carrying it was sent.
+        *
+        * A sample is performance.now() - t: the true offset plus the one-way
+        * delay plus local processing delay. The additions are positive, so the
+        * smallest sample is the best estimate, as in NTP. A sample above the
+        * estimate pulls it up by 0.0005 of the difference, so one fast outlier
+        * does not pin it low and clock drift is followed.
+        *
+        * The residual error is a constant lag of about the one-way latency. It
+        * shifts every object equally, so objects do not jitter against each
+        * other.
+        */
+      noteServerTime(t) {
+         if (t === undefined) return;
+         const s = performance.now() - t;
+
+         if (this.server_time_offset === null || s < this.server_time_offset)
+            this.server_time_offset = s;
+         else
+            this.server_time_offset += (s - this.server_time_offset) * 0.0005;
+      }
+
+      /** The server's time now, in ms; 0 before the first message. */
+      serverNow() {
+         return (this.server_time_offset === null) ? 0 : performance.now() - this.server_time_offset;
+      }
+
+      //==============================================================================
 
       ImportSceneJson(arr)
       {
@@ -474,6 +514,7 @@ sap.ui.define([], function() {
                delete obj.bbox_not_in_world;
                delete obj.sel_list;
                delete obj.matrix;
+               delete obj.motion;
                jQuery.extend(obj, em);
                this.ParseUpdateTriggersAndProcessPostStream(obj);
             }
@@ -838,7 +879,7 @@ sap.ui.define([], function() {
             // The element mirrors what the server sent; a view that is built
             // again, see EveScene.redrawScene(), places its node from it.
             if (em.matrix) obj.matrix = em.matrix; else delete obj.matrix;
-            obj.mot = em.mot;
+            obj.motion = em.motion;
 
             let scene = this.GetElement(em.fSceneId);
             if (scene)

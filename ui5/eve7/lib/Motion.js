@@ -19,7 +19,6 @@ sap.ui.define([], function() {
       constructor(viewer) {
          this.viewer  = viewer;
          this.objects = new Map();   // element id -> entry
-         this.offset  = null;        // performance.now() - server ms
          this.raf     = 0;
          this.enabled = true;
 
@@ -96,44 +95,18 @@ sap.ui.define([], function() {
          }
       }
 
-      //--------------------------------------------------------------------
-      // The shared clock
-      //--------------------------------------------------------------------
-
-      /** Feed one observation of the server clock; t0 is in server ms.
-        *
-        * A sample is performance.now() - t0: the true offset plus the one-way
-        * delay plus local processing delay. The additions are positive, so the
-        * smallest sample is the best estimate, as in NTP. A sample above the
-        * estimate pulls it up by 0.0005 of the difference, so one fast outlier
-        * does not pin it low and clock drift is followed.
-        *
-        * The residual error is a constant lag of about the one-way latency. It
-        * shifts every object equally, so objects do not jitter against each
-        * other.
-        */
-      noteServerTime(t0) {
-         const s = performance.now() - t0;
-
-         if (this.offset === null || s < this.offset)
-            this.offset = s;
-         else
-            this.offset += (s - this.offset) * 0.0005;
-      }
-
+      /** The server's time now, in ms, from EveManager's clock. */
       serverNow() {
-         return (this.offset === null) ? 0 : performance.now() - this.offset;
+         return this.viewer.get_manager().serverNow();
       }
 
       //--------------------------------------------------------------------
 
-      /** Take the `mot` block of a transformation update. Null clears it.
+      /** Take the `motion` block of a transformation update. Null clears it.
         * `scene` is the EveScene of `obj3d`; moving the object raises its
         * trans_stamp. */
-      update(id, obj3d, mot, scene) {
-         if (!mot) { this.remove(id); return; }
-
-         this.noteServerTime(mot.t0);
+      update(id, obj3d, motion, scene) {
+         if (!motion) { this.remove(id); return; }
 
          const m = obj3d._matrix ? obj3d._matrix.elements : null;
          if (!m) return;
@@ -146,12 +119,12 @@ sap.ui.define([], function() {
             // is kept as the three basis columns, scale and all.
             p0:     [m[12], m[13], m[14]],
             r0:     [m[0], m[1], m[2],  m[4], m[5], m[6],  m[8], m[9], m[10]],
-            t0:     mot.t0,
-            vel:    mot.vel,
-            acc:    mot.acc,
-            axis:   mot.axis  || [0, 0, 1],
-            rate:   mot.rate  || 0,
-            max_dt: mot.max_dt
+            t0:     motion.t0,
+            vel:    motion.vel,
+            acc:    motion.acc,
+            axis:   motion.axis  || [0, 0, 1],
+            rate:   motion.rate  || 0,
+            max_dt: motion.max_dt
          });
 
          this.start();

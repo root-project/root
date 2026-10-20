@@ -186,7 +186,21 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          }
          this.nodeAdd(parentNode, node);
          this.id2node_map.set(elem.fElementId, node);
+         this.applyMotion(elem, node);
          return node;
+      }
+
+      /** Register the trajectory of `elem` on `node`, or drop it when `elem`
+        * does not move. The node must hold the matrix the server sent, which
+        * is the start of the trajectory. */
+      applyMotion(elem, node)
+      {
+         let mo = this.glctrl.viewer.motion;
+         if (!mo) return;
+         if (elem.motion)
+            mo.update(elem.fElementId, node, elem.motion, this);
+         else
+            mo.remove(elem.fElementId);
       }
 
       /** Give `elem`, a leaf, a group node, so that it can hold children. */
@@ -353,11 +367,8 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       /** Rebuild the drawing of `el`. With `keepMatrix`, for a rebuild without
         * new state, the node keeps its matrix. */
       replaceElement(el, keepMatrix) {
-         // Drop the trajectory: it refers to the object about to be replaced.
-         // The next transformation update registers it on the new object.
-         let mo = this.glctrl.viewer.motion;
-         if (mo) mo.remove(el.fElementId);
-
+         // The trajectory stays with the node; a new leaf node registers it
+         // again, see addElementNode().
          ++this.content_stamp;
 
          let node = this.id2node_map.get(el.fElementId);
@@ -436,9 +447,9 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          ++this.trans_stamp;
 
          // After the matrix is applied: Motion takes the start position from it.
-         // Every transformation update carries "mot"; null clears the trajectory.
-         if (mo && msg.mot !== undefined)
-            mo.update(msg.fElementId, node, msg.mot, this);
+         // Every transformation update carries "motion"; null clears the trajectory.
+         if (mo && msg.motion !== undefined)
+            mo.update(msg.fElementId, node, msg.motion, this);
       }
 
       elementsRemoved(ids)
@@ -514,6 +525,13 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
                this.need_bbox_update = true;
                this.replaceElement(el, !(msg.changeBit & this.mgr.EChangeBits.kCBObjProps));
             }
+         }
+
+         // A full update carries the whole transformation, motion included,
+         // and has just set the node to the matrix the server sent.
+         if (msg.changeBit & this.mgr.EChangeBits.kCBObjProps) {
+            let node = this.id2node_map.get(el.fElementId);
+            if (node) this.applyMotion(el, node);
          }
       }
 

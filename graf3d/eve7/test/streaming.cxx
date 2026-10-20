@@ -142,7 +142,9 @@ TEST(REveStreaming, SceneStream)
 
    auto j = nlohmann::json::parse(s->GetOutputJson());
    ASSERT_TRUE(j.is_array());
-   ASSERT_EQ(j.size(), 4u);
+   // Header, scene, two elements, and the trailer with the server time.
+   ASSERT_EQ(j.size(), 5u);
+   EXPECT_TRUE(j[4]["server_time"].is_number());
 
    EXPECT_EQ(j[0]["content"], "REveScene::StreamElements");
    EXPECT_EQ(j[0]["fSceneId"], s->GetElementId());
