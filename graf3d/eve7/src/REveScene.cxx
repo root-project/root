@@ -15,6 +15,7 @@
 #include <ROOT/REveTrans.hxx>
 #include <ROOT/REveRenderData.hxx>
 #include <ROOT/REveClient.hxx>
+#include <ROOT/REveUtil.hxx>
 #include <ROOT/RWebWindow.hxx>
 
 #include <cassert>
@@ -181,6 +182,7 @@ void REveScene::StreamElements()
    jarr.front()["fTotalBinarySize"] = fTotalBinarySize;
 
    fOutputJson = jarr.dump();
+   REveUtil::AppendServerTime(fOutputJson); // stamped again just before each send
 }
 
 void REveScene::StreamJsonRecurse(REveElement *el, nlohmann::json &jarr)
@@ -347,6 +349,7 @@ void REveScene::StreamRepresentationChanges()
 
    nlohmann::json msg = { {"header", jhdr}, {"arr", jarr}};
    fOutputJson = msg.dump();
+   REveUtil::AppendServerTime(fOutputJson); // stamped again just before each send
 
    if (gDebug > 0)
       Info("REveScene::StreamRepresentationChanges", "class: %s  changes %s ...", GetCName(),  msg.dump(1).c_str() );
@@ -356,6 +359,7 @@ void REveScene::SendChangesToSubscribers()
 {
    for (auto && client : fSubscribers) {
       if (!fOutputJson.empty()) {
+         REveUtil::StampServerTime(fOutputJson);
          if (gDebug > 0)
             printf("   sending json, len = %d --> to conn_id = %d\n", (int) fOutputJson.size(), client->fId);
          client->fWebWindow->Send(client->fId, fOutputJson);

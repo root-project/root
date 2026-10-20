@@ -378,7 +378,8 @@ public:
    {
       kCBCoreJson       =  BIT(0), // Core JSON changed (colour, name, ...); render data did not.
       kCBTrans          =  BIT(1), // Transformation changed; cheap update, no rebuild.
-      kCBObjProps       =  BIT(2), // Object changed, requires dropping its display-lists.
+      kCBObjProps       =  BIT(2), // Full rebuild: render data and the full state, transformation included.
+      kCBFullRebuild    =  kCBObjProps,
       kCBVisibility     =  BIT(3), // Rendering of self/children changed.
       kCBElementAdded   =  BIT(4)  // Element was added to a new parent.
       // kCBElementRemoved = BIT() // Element was removed from a parent.
