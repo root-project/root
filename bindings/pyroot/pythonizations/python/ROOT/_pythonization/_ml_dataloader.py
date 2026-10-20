@@ -16,16 +16,20 @@
 from __future__ import annotations
 
 import atexit
+import os
 from typing import TYPE_CHECKING, Any, Callable, Tuple
 
 if TYPE_CHECKING:
-    import os
+    from collections.abc import Iterable
 
     import numpy as np
     import tensorflow as tf
     import torch
 
     import ROOT
+
+    # a dataset read from files: the name of its TTree or RNTuple, and one or more file paths
+    Spec = Tuple[str, str | os.PathLike | Iterable[str | os.PathLike]]
 
 
 def _normalize_target(target: str | list[str] | None) -> list[str]:
@@ -52,6 +56,30 @@ def _raise_if_implicit_mt(rdfs: list) -> None:
         raise RuntimeError(
             "Cannot use RDataLoader with implicit multi-threading enabled, call ROOT.DisableImplicitMT() before creating the data loader and its inputs."
         )
+
+
+def _is_spec(item: Any) -> bool:
+    """Whether `item` is a `(dataset_name, files)` tuple."""
+    return isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], str)
+
+
+def _open_files(inputs: Any) -> list:
+    """Return the inputs as a list of RDataFrames, each `(dataset_name, files)` tuple being read into one RDataFrame."""
+    import ROOT
+
+    if _is_spec(inputs) or not hasattr(inputs, "__iter__"):
+        inputs = [inputs]
+
+    rdataframes = []
+    for item in inputs:
+        if isinstance(item, (str, os.PathLike)):
+            raise TypeError("File paths are given together with the dataset to read, as (dataset_name, files) tuples")
+        if _is_spec(item):
+            dataset_name, files = item
+            files = [files] if isinstance(files, (str, os.PathLike)) else list(files)
+            item = ROOT.RDataFrame(dataset_name, [os.fspath(f) for f in files])
+        rdataframes.append(item)
+    return rdataframes
 
 
 class _RDataLoader:
@@ -135,7 +163,7 @@ class _RDataLoader:
 
     def __init__(
         self,
-        rdataframes: ROOT.RDF.RNode | list[ROOT.RDF.RNode] | None = None,
+        inputs: ROOT.RDF.RNode | Spec | Iterable[ROOT.RDF.RNode | Spec] | None = None,
         batch_size: int = 0,
         batches_in_memory: int = 1,
         columns: list[str] | None = None,
@@ -155,8 +183,9 @@ class _RDataLoader:
         """Wrapper around the C++ DataLoader
 
         Args:
-            rdataframes (ROOT.RDF.RNode | list[ROOT.RDF.RNode] | None):
-                RDataFrame or list of RDataFrames to load from.
+            inputs (ROOT.RDF.RNode | Spec | Iterable[ROOT.RDF.RNode | Spec] | None):
+                RDataFrame or ``(dataset_name, files)`` tuple, or a list of them, to load from.
+                A tuple is used to construct a single RDataFrame to read ``dataset_name`` from one or more files.
             batch_size (int):
                 Number of entries per batch returned by the generator.
             batches_in_memory (int):
@@ -209,11 +238,10 @@ class _RDataLoader:
 
         from ROOT import RDF
 
-        if rdataframes is None:
-            rdataframes = []
+        if inputs is None:
+            inputs = []
 
-        if not hasattr(rdataframes, "__iter__"):
-            rdataframes = [rdataframes]
+        rdataframes = _open_files(inputs)
         self.noded_rdfs = [RDF.AsRNode(rdf) for rdf in rdataframes]
         _raise_if_implicit_mt(self.noded_rdfs)
 
@@ -596,7 +624,7 @@ class RDataLoader:
 
     def __init__(
         self,
-        rdataframes: ROOT.RDF.RNode | list[ROOT.RDF.RNode],
+        inputs: ROOT.RDF.RNode | Spec | Iterable[ROOT.RDF.RNode | Spec],
         batch_size: int = 64,
         batches_in_memory: int = 10,
         columns: list[str] | None = None,
@@ -616,8 +644,9 @@ class RDataLoader:
         \ingroup Py_ML
 
         Args:
-            rdataframes:
-                RDataFrame or list of RDataFrames to load from.
+            inputs:
+                RDataFrame or (dataset_name, files) tuple, or a list of them, to load from.
+                A tuple is used to construct a single RDataFrame to read dataset_name from one or more files.
             batch_size:
                 Number of entries per batch.
             batches_in_memory:
@@ -660,7 +689,7 @@ class RDataLoader:
         # created lazily on the first call to as_torch/as_numpy/as_tensorflow or
         # train_test_split.
         self._params = dict(
-            rdataframes=rdataframes,
+            inputs=inputs,
             batch_size=batch_size,
             batches_in_memory=batches_in_memory,
             columns=columns,
