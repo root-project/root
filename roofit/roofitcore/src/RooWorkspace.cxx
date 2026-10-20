@@ -75,9 +75,6 @@ and try reading again.
 #include "TClass.h"
 #include "strlcpy.h"
 
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-#include "RooAbsOptTestStatistic.h"
-#endif
 
 #include "ROOT/StringUtils.hxx"
 
@@ -2546,15 +2543,6 @@ void RooWorkspace::Streamer(TBuffer &R__b)
       for (RooAbsArg *node : _allOwnedNodes) {
          node->setExpensiveObjectCache(_eocache);
          node->setWorkspace(*this);
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-         if (dynamic_cast<RooAbsOptTestStatistic *>(node)) {
-            RooAbsOptTestStatistic *tmp = static_cast<RooAbsOptTestStatistic *>(node);
-            if (tmp->isSealed() && tmp->sealNotice() && strlen(tmp->sealNotice()) > 0) {
-               std::cout << "RooWorkspace::Streamer(" << GetName() << ") " << node->ClassName() << "::" << node->GetName()
-                    << " : " << tmp->sealNotice() << std::endl;
-            }
-         }
-#endif
       }
 
       for(TObject * gobj : allGenericObjects()) {

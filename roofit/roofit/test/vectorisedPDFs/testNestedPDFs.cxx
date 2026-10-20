@@ -78,6 +78,4 @@ COMPARE_FIXED_VALUES_UNNORM(TestNestedPDFs, CompareFixedUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestNestedPDFs, CompareFixedNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestNestedPDFs, CompareFixedNormLog)
 
-FIT_TEST_SCALAR(TestNestedPDFs, RunScalar)
 FIT_TEST_BATCH(TestNestedPDFs, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestNestedPDFs, CompareBatchScalar)

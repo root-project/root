@@ -45,6 +45,4 @@ protected:
 COMPARE_FIXED_VALUES_UNNORM(TestNovosibirsk, CompareFixedValuesUnnorm)
 COMPARE_FIXED_VALUES_NORM(TestNovosibirsk, CompareFixedValuesNorm)
 COMPARE_FIXED_VALUES_NORM_LOG(TestNovosibirsk, CompareFixedNormLog)
-FIT_TEST_SCALAR(TestNovosibirsk, RunScalar)
 FIT_TEST_BATCH(TestNovosibirsk, RunBatch)
-FIT_TEST_BATCH_VS_SCALAR(TestNovosibirsk, CompareBatchScalar)
