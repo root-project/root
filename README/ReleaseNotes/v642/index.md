@@ -153,6 +153,10 @@ Replace `obj.Connect(signal, "TPyDispatcher", disp, "Dispatch()")` with
 
 * Reading a collection without its dictionary no longer crashes when the elements hold a `std::string` or a `TString`. The emulated collection proxy relocated its elements with a raw memory copy when its buffer had to grow, which corrupts an object that points into itself, such as a `std::string` using the small string optimization; the invalid pointer was then freed when the object was destroyed. Such elements are now destroyed and reconstructed at the new location instead. This affected for instance a `std::vector<std::pair<std::string,double>>` read back without a dictionary.
 
+### RFile
+
+RFile, ROOT's modern interface to ROOT file, has moved out of the `ROOT::Experimental` namespace.
+
 ### RNTupleProcessor
 
 The RNTupleProcessor is a new, standalone interface for creating *chains* (similar to TTree's `TChain`) and *joins* (similar to TTree friends) from RNTuples in a composable way, and iterating over their entries.
