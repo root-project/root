@@ -10,7 +10,7 @@ except ImportError:
     nopsutil = True
 
 
-@mark.skip(reason="disabled due to its sporadic nature, especially fragile on VMs")
+# @mark.skip(reason="disabled due to its sporadic nature, especially fragile on VMs")
 class TestLEAKCHECK:
     def setup_class(cls):
         import psutil
