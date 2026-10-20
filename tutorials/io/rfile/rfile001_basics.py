@@ -5,9 +5,6 @@
 # \macro_code
 # \macro_output
 #
-# \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-# is welcome!
-#
 # \date 2025-11-06
 # \author Giacomo Parolini <giacomo.parolini@cern.ch>
 
@@ -22,7 +19,7 @@ def write_hist_to_rfile(fileName):
     hist.FillRandom("gaus", 1000)
 
     # Create a new ROOT file for writing
-    with ROOT.Experimental.RFile.Recreate(fileName) as file:
+    with ROOT.RFile.Recreate(fileName) as file:
         # Put objects into the file (in this case we write the same object multiple times
         # under different paths). Note that the ownership of `hist` is untouched by `file.Put`.
         file.Put(hist.GetName(), hist)
@@ -35,7 +32,7 @@ def write_hist_to_rfile(fileName):
 
 def read_hist_from_rfile(fileName):
     # Open an existing ROOT file for reading (will raise an exception if `fileName` cannot be read).
-    with ROOT.Experimental.RFile.Open(fileName) as file:
+    with ROOT.RFile.Open(fileName) as file:
         # Iterate all keys of all objects in the file (this excludes directories by default - see the documentation of
         # ListKeys() for all the options).
         for key in file.ListKeys():

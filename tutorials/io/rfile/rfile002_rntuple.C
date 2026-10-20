@@ -5,23 +5,20 @@
 /// \macro_code
 /// \macro_output
 ///
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-///
 /// \date 2026-10-12
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 
 void write_rntuple_to_rfile(const char *fileName)
 {
    // Create a new ROOT file for writing
-   auto file = ROOT::Experimental::RFile::Recreate(fileName);
+   auto file = ROOT::RFile::Recreate(fileName);
 
    // Define the RNTuple schema
    auto model = ROOT::RNTupleModel::Create();
    auto pInt = model->MakeField<int>("intField");
 
    // Create an RNTupleWriter to append to the RFile
-   auto writer = ROOT::Experimental::RNTupleWriter_Append(std::move(model), "ntuple", *file);
+   auto writer = ROOT::RNTupleWriter::Append(std::move(model), "ntuple", *file);
 
    // Fill the RNTuple with data
    for (int i = 0; i < 10; ++i) {
@@ -35,7 +32,7 @@ void write_rntuple_to_rfile(const char *fileName)
 void read_rntuple_from_rfile(const char *fileName)
 {
    // Open an existing ROOT file for reading (will throw an exception if `fileName` cannot be read).
-   auto file = ROOT::Experimental::RFile::Open(fileName);
+   auto file = ROOT::RFile::Open(fileName);
 
    // Get back the RNTuple anchor from the file
    auto rntuple = file->Get<ROOT::RNTuple>("ntuple");

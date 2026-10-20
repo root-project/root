@@ -8,9 +8,6 @@
 /// \macro_code
 /// \macro_output
 ///
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
-///
 /// \date 2026-10-12
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 #include <iostream>
@@ -23,7 +20,7 @@ void read_tree_from_rfile(const char *fileName)
 {
    // Open an existing ROOT file for reading (will throw an exception if `fileName` cannot be read).
    // IMPORTANT! This file must remain open while reading data from the tree.
-   auto file = ROOT::Experimental::RFile::Open(fileName);
+   auto file = ROOT::RFile::Open(fileName);
 
    // Get back the TTree from the file
    auto tree = file->Get<TTree>("tree");

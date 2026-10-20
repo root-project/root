@@ -9,7 +9,7 @@
 - [SQL](\ref tutorial_sql)
 - [XML](\ref tutorial_xml)
 - [Various I/O related topics](\ref miscl)
-- [New experimental ROOT File interface](\ref rfile)
+- [New ROOT File interface](\ref rfile)
 
 \anchor file
 ## ROOT File
@@ -45,7 +45,7 @@ The following tutorials illustrate various useful ROOT I/O features.
 | |  tfile_context_manager.py |  Usage of TFile class as a Python context manager.|
 
 \anchor rfile
-## New experimental ROOT file interface
+## New ROOT file interface
 The following tutorials illustrate how to use RFile, the new interface to ROOT files.
 RFile is a simpler alternative to TFile that makes operations and object ownership explicit.
 | **Tutorial** | **Description** |
