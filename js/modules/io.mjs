@@ -2478,7 +2478,9 @@ class TBuffer {
       this.o += 4;
       if (high < 0x80000000)
          return (high < 0x200000) ? (high * 0x100000000 + low) : (BigInt(high) * BigInt(0x100000000) + BigInt(low));
-      return (~high < 0x200000) ? (-1 - ((~high) * 0x100000000 + ~low)) : (BigInt(-1) - (BigInt(~high) * BigInt(0x100000000) + BigInt(~low)));
+      // ~ returns signed int32, convert back to unsigned
+      const nhigh = ~high >>> 0, nlow = ~low >>> 0;
+      return (nhigh < 0x200000) ? (-1 - (nhigh * 0x100000000 + nlow)) : (BigInt(-1) - (BigInt(nhigh) * BigInt(0x100000000) + BigInt(nlow)));
    }
 
    /** @summary read float */

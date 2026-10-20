@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.11.2
+// https://root.cern/js/ v7.11.3
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -10,11 +10,11 @@ var _documentCurrentScript = typeof document !== 'undefined' ? document.currentS
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = '7.11.x',
+const version_id = '7.11.3',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '10/09/2026',
+version_date = '20/10/2026',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -80701,7 +80701,7 @@ function setStoragePrefix(prefix) {
 /** @summary Save object in local storage
   * @private */
 function saveLocalStorage(obj, expires, name) {
-   if (typeof localStorage === 'undefined')
+   if (isNodeJs() || (typeof localStorage === 'undefined'))
       return;
    if (Number.isFinite(expires) && (expires < 0))
       localStorage.removeItem(_storage_prefix + name);
@@ -80712,7 +80712,7 @@ function saveLocalStorage(obj, expires, name) {
 /** @summary Read object from storage with specified name
   * @private */
 function readLocalStorage(name) {
-   if (typeof localStorage === 'undefined')
+   if (isNodeJs() || (typeof localStorage === 'undefined'))
       return null;
    const v = localStorage.getItem(_storage_prefix + name),
          s = v ? JSON.parse(atob_func(v)) : null;
@@ -101174,7 +101174,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       }
 
       const pp = this.getPadPainter(),
-            layer = pp.selectChild('.main_layer');
+            layer = pp.getFrameSvg().selectChild('.main_layer');
       let defs = layer.selectChild('defs');
       if (defs.empty() && colPaths.length)
          defs = layer.insert('svg:defs', ':first-child');
@@ -125950,7 +125950,9 @@ class TBuffer {
       this.o += 4;
       if (high < 0x80000000)
          return (high < 0x200000) ? (high * 0x100000000 + low) : (BigInt(high) * BigInt(0x100000000) + BigInt(low));
-      return (~high < 0x200000) ? (-1 - ((~high) * 0x100000000 + ~low)) : (BigInt(-1) - (BigInt(~high) * BigInt(0x100000000) + BigInt(~low)));
+      // ~ returns signed int32, convert back to unsigned
+      const nhigh = ~high >>> 0, nlow = ~low >>> 0;
+      return (nhigh < 0x200000) ? (-1 - (nhigh * 0x100000000 + nlow)) : (BigInt(-1) - (BigInt(nhigh) * BigInt(0x100000000) + BigInt(nlow)));
    }
 
    /** @summary read float */
@@ -128863,7 +128865,7 @@ class TDrawSelector extends TSelector {
          res.max = this.hist_args[axisid * 3 + 2];
       } else {
          let is_any = false;
-         for (let i = 1; i < arr.length; ++i) {
+         for (let i = 0; i < arr.length; ++i) {
             const v = arr[i];
             if (!Number.isFinite(v))
                continue;

@@ -1230,7 +1230,7 @@ class TDrawSelector extends TSelector {
          res.max = this.hist_args[axisid * 3 + 2];
       } else {
          let is_any = false;
-         for (let i = 1; i < arr.length; ++i) {
+         for (let i = 0; i < arr.length; ++i) {
             const v = arr[i];
             if (!Number.isFinite(v))
                continue;
