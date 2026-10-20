@@ -155,9 +155,13 @@ Replace `obj.Connect(signal, "TPyDispatcher", disp, "Dispatch()")` with
 
 ### RNTupleProcessor
 
+The RNTupleProcessor is a new, standalone interface for creating *chains* (similar to TTree's `TChain`) and *joins* (similar to TTree friends) from RNTuples in a composable way, and iterating over their entries.
+Until this release, it was available in the experimental namespace.
+With ROOT v6.42:
+
 * The RNTupleProcessor for single RNTuples and chained RNTuples has moved out of `ROOT::Experimental`.
-They can be created with `ROOT::RNTupleProcessor::Create()` and `ROOT::RNTupleProcessor::CreatChain()`, respectively.
-Processing joined RNTuples will remain available in the experimental name for this release, in order to address a few additional (potentially interface-breaking) improvements.
+They can be created with `ROOT::RNTupleProcessor::Create()` and `ROOT::RNTupleProcessor::CreateChain()`, respectively.
+Processing joined RNTuples will remain available in the experimental namespace for this release, in order to address a few additional (potentially interface-breaking) improvements.
 Creating an RNTupleProcessor for joins can (for now) be done by calling `ROOT::Experimental::CreateRNTupleJoinProcessor`.
 * An experimental RDataFrame datasource using the RNTupleProcessor has been added.
 RDataFrames can be created from an existing RNTupleProcessor by calling `ROOT::Experimental::RDF::FromRNTupleProcessor()`.
