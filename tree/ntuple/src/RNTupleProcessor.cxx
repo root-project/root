@@ -333,7 +333,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect(
 
    if (updateFields) {
       auto descGuard = fPageSource->GetSharedDescriptorGuard();
-      const auto &desc = descGuard.GetRef();
+      const auto &desc = descGuard.GetConstRef();
 
       for (const auto &fieldIdx : fFieldIdxs) {
          const auto &currField = fEntry->GetValue(fieldIdx).GetField();
