@@ -550,8 +550,6 @@ public:
    RHistFillHelper &operator=(RHistFillHelper &&) = default;
    ~RHistFillHelper() = default;
 
-   std::shared_ptr<Result_t> GetResultPtr() const { return fFiller.GetHist(); }
-
    void Initialize() {}
    void InitTask(TTreeReader *, unsigned int) {}
 
@@ -610,8 +608,6 @@ public:
    RHistEngineFillHelper &operator=(const RHistEngineFillHelper &) = delete;
    RHistEngineFillHelper &operator=(RHistEngineFillHelper &&) = default;
    ~RHistEngineFillHelper() = default;
-
-   std::shared_ptr<Result_t> GetResultPtr() const { return fHist; }
 
    void Initialize() {}
    void InitTask(TTreeReader *, unsigned int) {}
@@ -1521,8 +1517,6 @@ public:
    void Finalize();
 
    std::string GetActionName() { return "Median"; }
-
-   std::shared_ptr<double> GetResultPtr() const { return fResult; }
 
    MedianHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
