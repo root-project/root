@@ -44,32 +44,36 @@ class TMethod;
 #include "TMethod.h"
 #endif
 
+class TDataMember;
+
 class TToggle: public TNamed {
 
 private:
-   Bool_t       fState;        //Object's state - "a local copy"
-   Long_t       fOnValue;      //Value recognized as switched ON (Def=1)
-   Long_t       fOffValue;     //Value recognized as switched OFF(Def=0)
-   Longptr_t    fValue;        //Local copy of a value returned by called function
+   Bool_t       fState = kFALSE;    //Object's state - "a local copy"
+   Long_t       fOnValue = 1;       //Value recognized as switched ON (Def=1)
+   Long_t       fOffValue = 0;      //Value recognized as switched OFF(Def=0)
+   Longptr_t    fValue = -1;        //Local copy of a value returned by called function
 
 protected:
-   Bool_t       fInitialized;  //True if either SetToggledObject or SetToggledVariable called - enables Toggle() method.
-   TObject     *fObject;       //The object this Toggle belongs to
-   TMethodCall *fGetter;       //Method to Get a value of fObject;
-   TMethodCall *fSetter;       //Method to Set a value of fObject;
+   Int_t       fInitialized = 0;    //0 - off, 1 - only object and member is set, 2 - also getters and setters for the object is set
+   TObject     *fObject = nullptr;  //The object this Toggle belongs to
+   TDataMember *fMember = nullptr;  //Data member which will be toggled
+   TMethodCall *fGetter = nullptr;  //Method to Get a value of fObject;
+   TMethodCall *fSetter = nullptr;  //Method to Set a value of fObject;
 
-   Int_t       *fTglVariable;  //Alternatively: pointer to an integer value to be Toggled instead of TObjectl
+   Int_t       *fTglVariable = nullptr;  //Alternatively: pointer to an integer value to be Toggled instead of TObjectl
 
 public:
    TToggle();
    virtual void    SetToggledObject(TObject *obj, TMethod *anymethod);
+   virtual void    SetToggledObject(TObject *obj, TDataMember *member);
 
    // you just provide any method which has got an initialized pointer
    // to TDataMember... The rest is done automatically...
 
    virtual void    SetToggledVariable(Int_t &var);
 
-   virtual Bool_t  IsInitialized(){ return fInitialized; }
+   virtual Bool_t  IsInitialized() { return fInitialized > 0; }
 
    virtual Bool_t  GetState();
    virtual void    SetState(Bool_t state);
@@ -83,8 +87,8 @@ public:
    virtual Int_t   GetValue() { return fValue; }
    virtual void    SetValue(Long_t val);
 
-   TMethodCall    *GetGetter() const { return fGetter; }
-   TMethodCall    *GetSetter() const { return fSetter; }
+   TMethodCall    *GetGetter() const;
+   TMethodCall    *GetSetter() const;
 
    ClassDefOverride(TToggle,0)  //Facility for toggling datamembers on/off
 };

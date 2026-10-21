@@ -27,9 +27,10 @@ automaticaly find a matching "get-method" by lookin for a method
 with name GetXXX, IsXXX or HasXXX for given object.
 */
 
+#include "TToggle.h"
+
 #include "TMethod.h"
 #include "TMethodCall.h"
-#include "TToggle.h"
 #include "TDataMember.h"
 
 #include <cstdio>
@@ -40,15 +41,6 @@ with name GetXXX, IsXXX or HasXXX for given object.
 
 TToggle::TToggle()
 {
-   fState       =  kFALSE;
-   fValue       = -1;
-   fOnValue     =  1;
-   fOffValue    =  0;
-   fInitialized =  0;
-   fObject      =  nullptr;
-   fGetter      =  nullptr;
-   fSetter      =  nullptr;
-   fTglVariable =  nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,8 +49,8 @@ TToggle::TToggle()
 
 void TToggle::SetToggledVariable(Int_t &var)
 {
-   fTglVariable=&var;
-   fValue=var;
+   fTglVariable = &var;
+   fValue = var;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,9 +59,11 @@ void TToggle::SetToggledVariable(Int_t &var)
 
 Bool_t TToggle::GetState()
 {
-   if (fInitialized)
-      if (fGetter) fGetter->Execute(fObject, fValue);
-   return (fState = (fValue == fOnValue));
+   if (auto fget = GetGetter())
+      fget->Execute(fObject, fValue);
+
+   fState = (fValue == fOnValue);
+   return fState;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -78,16 +72,7 @@ Bool_t TToggle::GetState()
 
 void TToggle::SetState(Bool_t state)
 {
-   if (fInitialized) {
-      char stringon[20];
-      char stringoff[20];
-      snprintf(stringon,sizeof(stringon),"%li",fOnValue);
-      snprintf(stringoff,sizeof(stringoff),"%li",fOffValue);
-
-      fSetter->Execute(fObject, state ? stringon:stringoff);
-      fState=state;
-      fValue= ( state ? fOnValue : fOffValue);
-   }
+   SetValue(state ? fOnValue : fOffValue);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,12 +81,10 @@ void TToggle::SetState(Bool_t state)
 
 void TToggle::SetValue(Long_t val)
 {
-   if (fInitialized) {
-      char stringval[20];
-      snprintf(stringval,sizeof(stringval),"%li",val);
-      fSetter->Execute(fObject, stringval);
-      fState=(val==fOnValue);
-      fValue= val;
+   if (auto fset = GetSetter()) {
+      fset->Execute(fObject, TString::Format("%li", val).Data());
+      fState = (val == fOnValue);
+      fValue = val;
    }
 }
 
@@ -110,43 +93,81 @@ void TToggle::SetValue(Long_t val)
 
 void TToggle::Toggle()
 {
-   if (fInitialized){
+   if (IsInitialized()) {
       if (fTglVariable){
          *fTglVariable = !(*fTglVariable);
-         fValue=(*fTglVariable);
-         fState=*fTglVariable;
+         fValue = (*fTglVariable);
+         fState = *fTglVariable;
       }
-      if (fGetter && fSetter){
-         fGetter->Execute(fObject,fValue);
-         fValue=( (fValue==fOnValue) ? fOffValue:fOnValue);
-         fState=(!(fValue!=fOnValue));
-         char stringon[20];
-         snprintf(stringon,sizeof(stringon),"%zi",(size_t)fValue);
-         fSetter->Execute(fObject, stringon);
+      auto fget = GetGetter();
+      auto fset = GetSetter();
+      if (fget && fset) {
+         fget->Execute(fObject, fValue);
+         fValue = (fValue == fOnValue) ? fOffValue : fOnValue;
+         fState = (fValue == fOnValue);
+         fset->Execute(fObject, TString::Format("%zi", (size_t)fValue).Data());
       }
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Initializes it to toggle an object's datamember using this object's
-/// method.
+/// Initializes it to toggle an object's datamember using this object's method.
 
 void TToggle::SetToggledObject(TObject *obj, TMethod *anymethod)
 {
-   fObject = obj;
-   TDataMember *m = anymethod->FindDataMember();
-   if (!m) {
-      // try to see if the TMethod has a getter associated via the *GETTER=
-      // comment string
-      if (anymethod->GetterMethod()) {
-         fGetter = anymethod->GetterMethod();
-         fSetter = anymethod->SetterMethod();
-         fInitialized = 1;
-      } else
-         Error("SetToggledObject", "cannot determine getter method for %s", anymethod->GetName());
-   } else {
-      fGetter = m->GetterMethod(obj->IsA());
-      fSetter = m->SetterMethod(obj->IsA());
-      fInitialized = 1;
+   TDataMember *member = anymethod->FindDataMember();
+   if (member)
+      TToggle::SetToggledObject(obj, member);
+   else if (!anymethod)
+      Error("SetToggledObject", "Method pointer not provided");
+   else if (!anymethod->GetterMethod())
+      Error("SetToggledObject", "cannot determine getter method for %s", anymethod->GetName());
+   else {
+      // try to see if the TMethod has a getter associated via the *GETTER= comment string
+      fObject = obj;
+      // TMethodCall pointer can be stored - it is not recerated
+      fGetter = anymethod->GetterMethod();
+      fSetter = anymethod->SetterMethod();
+      fInitialized = 2;
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Initializes it to toggle an object's datamember
+
+void TToggle::SetToggledObject(TObject *obj, TDataMember *member)
+{
+   fObject = obj;
+   fMember = member;
+   fInitialized = 1;
+
+   // one cannot remember TMethodCall pointers from TDataMember
+   // while they will be recreated any time they requested again
+   fGetter = nullptr;
+   fSetter = nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// return getter method
+/// request new for the TDataMember while it can be recreated at any time
+
+TMethodCall *TToggle::GetGetter() const
+{
+   if ((fInitialized == 1) && fMember && fObject)
+      return const_cast<TDataMember *>(fMember)->GetterMethod(fObject->IsA());
+
+   return fGetter;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// return setter method
+/// request new for the TDataMember while it can be recreated at any time
+
+TMethodCall *TToggle::GetSetter() const
+{
+   if ((fInitialized == 1) && fMember && fObject)
+      return const_cast<TDataMember *>(fMember)->SetterMethod(fObject->IsA());
+
+   return fSetter;
 }
