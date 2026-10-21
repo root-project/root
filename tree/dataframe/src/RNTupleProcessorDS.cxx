@@ -29,11 +29,11 @@
 namespace ROOT::Experimental::Internal::RDF {
 /// Every RDF column is represented by exactly one RNTuple field
 class RNTupleProcessorColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
-   RNTupleProcessorOptionalPtr<void> fValuePtr; ///< Container for the value of the column
+   RNTupleProcessorValuePtr<void> fValuePtr; ///< Container for the value of the column
    Long64_t fLastLoadedEntry = ROOT::kInvalidNTupleIndex;
 
 public:
-   RNTupleProcessorColumnReader(RNTupleProcessorOptionalPtr<void> &valuePtr) : fValuePtr(std::move(valuePtr)) {}
+   RNTupleProcessorColumnReader(RNTupleProcessorValuePtr<void> &valuePtr) : fValuePtr(std::move(valuePtr)) {}
    ~RNTupleProcessorColumnReader() override = default;
 
    void *GetImpl(Long64_t entry) final

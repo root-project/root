@@ -337,7 +337,7 @@ TEST_F(RNTupleProcessorTest, RequestExistingField)
          err.what(),
          testing::HasSubstr(
             "attempted to request a field with user-provided value pointer to field \"x\", which already exists in the "
-            "entry. To change the underlying value pointer, use RNTupleProcessorOptionalPtr::Bind instead."));
+            "entry. To change the underlying value pointer, use RNTupleProcessorValuePtr::Bind instead."));
    }
 }
 
