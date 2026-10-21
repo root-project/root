@@ -24,6 +24,7 @@
 #include <TColor.h>
 
 #include <map>
+#include <memory>
 #include <string>
 
 class RooDataHist ;
@@ -44,6 +45,7 @@ class RooConstVar ;
 class RooRealVar ;
 class RooAbsCategory ;
 class RooNumIntConfig ;
+class RooHist;
 
 class TH1 ;
 class TTree ;
@@ -472,6 +474,95 @@ RooConstVar& RooConst(double val) ;
  * @}
  */
 
+/**
+ * \defgroup Residuals Residuals and pulls of binned data vs. a fitted model
+ *
+ * RooFit::makeResidHist() and RooFit::makePullHist() construct per-bin
+ * residual or pull distributions of binned data with respect to a fitted
+ * model. In contrast to RooPlot::residHist() and RooPlot::pullHist(),
+ * which interpolate or average the curve of a plotted pdf, these functions
+ * integrate the model itself exactly over each bin. This avoids the
+ * biased residuals (the "residual wiggle" and inflated \f$\chi^2\f$ values)
+ * that appear when a sharply peaked pdf is compared with binned data.
+ * @{
+ */
+
+/// Creates a RooHist with the per-bin residuals `data` - `fitModel`.
+///
+/// For each bin, the model expectation is the model integrated exactly over
+/// the bin (with RooAbsReal::createIntegral()), by default normalized to the
+/// data in the used bins (see `Normalization()`). Unbinned input data is
+/// binned internally. The supported RooCmdArgs are:
+///   - `Binning(binning)` / `Binning(nbins)` / `Binning(nbins, xlo, xhi)` :
+///     the binning used to bin unbinned input data (default: the current
+///     binning of the model's observable). Entries outside of the binning
+///     range are dropped. Not supported for binned input data.
+///   - `Range(lo, hi)` / `Range("name")` : compute residuals only for the
+///     bins fully inside this range. The model expectation is normalized to
+///     the data in these bins. Multiple comma-separated range names can be
+///     specified for a union of named ranges (sidebands). Use it for sideband
+///     fits or blinded data, so that the model is normalized to the data
+///     outside of the blinded region.
+///   - `Normalization(scale, type)` : scale factor and scale type of the
+///     expectation, with the RooAbsReal::ScaleType semantics of
+///     RooAbsPdf::plotOn() (default: `Normalization(1.0, RooAbsReal::Relative)`):
+///     - `Relative` : the expectation is normalized to the data in the used
+///       bins, and multiplied by `scale`
+///     - `RelativeExpected` : the expectation is the expected number of
+///       events of the extended model, multiplied by `scale`. Use it to
+///       compare the data with the fitted yield, e.g. for blinded or
+///       sideband fits. Throws if the model is not an extendable pdf.
+///     - `NumEvent` : the expectation is normalized to `scale` events in
+///       the full range of the observable
+///     - `Raw` : the expectation is the integral of the unnormalized model
+///       over the bin, multiplied by `scale`
+///   - `DataError(RooAbsData::ErrorType)` : error model used for the point errors,
+///     one of Poisson, SumW2 or Auto
+///     (default: Auto, meaning SumW2 for weighted and Poisson for unweighted data)
+///   - `Name(const char*)`, `Title(const char*)` : name and title of the created RooHist
+///
+/// \note The residuals are computed with respect to `fitModel` itself, not
+/// with respect to the curve of a plotted pdf. Make sure that the arguments
+/// are consistent with what is plotted (same normalization and range, same
+/// error model via DataError()), or the residual/pull histogram will not
+/// match the displayed data and curve. In particular, RooAbsPdf::plotOn()
+/// normalizes an extended pdf to its expected number of events unless a
+/// range is given, which corresponds to `Normalization(1.0,
+/// RooAbsReal::RelativeExpected)` here.
+///
+/// \note If the model depends on observables beyond the data's observable
+/// (e.g. a conditional pdf), they are evaluated at their current values.
+/// There is no exact equivalent for a projection with ProjWData().
+///
+/// Only 1-dimensional data is supported, otherwise std::invalid_argument is
+/// thrown; the same exception is thrown for empty input data, unknown named
+/// ranges or binnings, ranges that don't fully contain any bin, or when the
+/// model has no support in the used bins. For higher-dimensional fits,
+/// project both the data and the model onto the observable of interest:
+/// ~~~{.cpp}
+/// std::unique_ptr<RooAbsData> projData{data.reduce(RooArgSet{x})};
+/// std::unique_ptr<RooAbsPdf> projModel{model.createProjection(RooArgSet{y})};
+/// auto pulls = RooFit::makePullHist(*projModel, *projData);
+/// ~~~
+/// For a residual/pull histogram against one component of a composite pdf,
+/// pass the component pdf itself, scaled by its coefficient:
+/// ~~~{.cpp}
+/// auto& background = static_cast<RooAbsPdf&>(*addPdf.pdfList().find("bkg"));
+/// auto pulls = RooFit::makePullHist(background, data,
+///                                   RooFit::Normalization(bkgFraction.getVal()));
+/// ~~~
+template <typename... CmdArgs_t>
+std::unique_ptr<RooHist> makeResidHist(RooAbsReal &fitModel, RooAbsData const &data, CmdArgs_t const &...cmdArgs);
+
+/// Like makeResidHist(), but the residuals are divided by the corresponding
+/// data uncertainty, creating a pull distribution.
+template <typename... CmdArgs_t>
+std::unique_ptr<RooHist> makePullHist(RooAbsReal &fitModel, RooAbsData const &data, CmdArgs_t const &...cmdArgs);
+
+/**
+ * @}
+ */
+
 namespace Detail {
 
 // Function to pack an arbitrary number of RooCmdArgs into a RooLinkedList. Implementation detail of many high-level RooFit functions.
@@ -524,7 +615,23 @@ RooCmdArg ImportFlatMap(FlatMap<std::string, TH1 *> const &args);
 RooCmdArg ImportFlatMap(FlatMap<std::string, RooDataSet *> const &args);
 RooCmdArg LinkFlatMap(FlatMap<std::string, RooAbsData *> const &args);
 
+// Implementation of RooFit::makeResidHist() and RooFit::makePullHist().
+std::unique_ptr<RooHist>
+makeResidOrPullHist(RooAbsReal &fitModel, RooAbsData const &data, bool normalize, RooLinkedList const &cmdList);
+
 } // namespace Detail
+
+template <typename... CmdArgs_t>
+std::unique_ptr<RooHist> makeResidHist(RooAbsReal &fitModel, RooAbsData const &data, CmdArgs_t const &...cmdArgs)
+{
+   return Detail::makeResidOrPullHist(fitModel, data, false, *Detail::createCmdList(&cmdArgs...));
+}
+
+template <typename... CmdArgs_t>
+std::unique_ptr<RooHist> makePullHist(RooAbsReal &fitModel, RooAbsData const &data, CmdArgs_t const &...cmdArgs)
+{
+   return Detail::makeResidOrPullHist(fitModel, data, true, *Detail::createCmdList(&cmdArgs...));
+}
 
 } // namespace RooFit
 
