@@ -899,7 +899,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
                "Means web browser will be displayed on remote X11 server which is usually very inefficient\n"
                "One can start ROOT session in server mode like \"root -b --web=server:8877\" and forward http port to display node\n"
                "Or one can use rootssh script to configure port forwarding and display web widgets automatically\n"
-               "Find more info on https://root.cern/for_developers/root7/#rbrowser\n"
+               "Find more info on https://root.cern.ch/doc/master/classROOT_1_1RBrowser.html\n"
                "This message can be disabled by setting \"" << varname << ": no\" in .rootrc file\n";
          }
       }
