@@ -67,6 +67,14 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
   std::string proto = "";
   std::string protoPair = "";
   bool skipSelf = fTI->fIsConstructor && (!fSelf || fSelf == Py_None);
+  // In an unbound call of a method of a class (as Python does for obj.f(...),
+  // calling the method with the object as first argument), the first argument
+  // is the object if it is an instance of that class.
+  const bool unboundMethodCall = (!fSelf || fSelf == Py_None) &&
+                                 !fTI->fIsConstructor &&
+                                 CPPScope_Check(fTI->fPyClass) &&
+                                 !(((CPPScope*)fTI->fPyClass)->fFlags &
+                                   CPPScope::kIsNamespace);
   if (fSelf && (fSelf != Py_None) && (!fTI->fIsConstructor)) {
     PyObject* self = (PyObject*)fSelf;
     bool addedSelf = Utility::AddTypeName(proto, (PyObject*)Py_TYPE(self), self,
@@ -86,6 +94,17 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
       PyObject* itemi = cpyrt_PyArgs_GET_ITEM(args, i);
 
       bool bArgSet = false;
+
+      // the object of an unbound method call
+      if (i == 0 && unboundMethodCall && CPPInstance_Check(itemi) &&
+          interop::IsSubclass(((CPPClass*)Py_TYPE(itemi))->fCppType,
+                              ((CPPClass*)fTI->fPyClass)->fCppType)) {
+        std::string selfname;
+        Utility::AddTypeName(selfname, (PyObject*)Py_TYPE(itemi), itemi,
+                             Utility::kNone, nullptr, /*as_object=*/true);
+        PyTuple_SET_ITEM(tpArgs, j, PyUnicode_FromString(selfname.c_str()));
+        bArgSet = true;
+      }
 
       // special case for arrays
       if (TemplateProxy_CheckExact(itemi)) {

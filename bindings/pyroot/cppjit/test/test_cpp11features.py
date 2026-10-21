@@ -723,3 +723,31 @@ class TestCPP11FEATURES:
             assert p.tget("x", 1.0) == 4
             assert ns.Obj.get(p, 1) == 1
             assert ns.Obj.tget(p, "x", 1.0) == 4
+
+    def test23_templated_method_through_smart_ptr(self):
+        """Templated methods called through smart pointers and pointer members"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace SmartPtrTemplates {
+          struct Obj {
+            template <class T> int tget(T) { return 1; }
+            int tget(const std::string&, int) { return 2; }
+          };
+          struct Holder { Obj* fPtr = new Obj{}; };
+          std::shared_ptr<std::string> make_string() { return std::make_shared<std::string>("a"); }
+          std::shared_ptr<Obj> make_obj() { return std::make_shared<Obj>(); }
+        }""")
+
+        ns = cppjit.gbl.SmartPtrTemplates
+        # Python calls methods unbound, with the object as first argument
+        for i in range(3):
+            s = ns.make_string()
+            s.__assign__("b%d" % i)
+            assert s == "b%d" % i
+        for p in (ns.make_obj(), ns.Holder().fPtr):
+            for _ in range(2):
+                assert p.tget(1.5) == 1
+                assert p.tget("x", 1) == 2
+                assert ns.Obj.tget(p, 1.5) == 1
