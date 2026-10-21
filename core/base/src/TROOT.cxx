@@ -2321,6 +2321,25 @@ void TROOT::InitInterpreter()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the CppInterOp API function `funcName` of ROOT's interpreter, starting
+/// the interpreter if needed. libCling implements this lookup but is loaded
+/// RTLD_LOCAL; exporting it from libCore lets a CppInterOp client such as cppjit
+/// pass libCore to Cpp::LoadDispatchAPI() and share ROOT's interpreter instead of
+/// loading its own LLVM.
+
+extern "C" void (*CppGetProcAddress(const char *funcName))()
+{
+   using GetProcAddress_t = void (*(const char *))();
+   static GetProcAddress_t *getProcAddress = [] {
+      TInterpreter::Instance(); // Sets gInterpreterLib.
+      auto f = reinterpret_cast<GetProcAddress_t *>(dlsym(gInterpreterLib, "CppGetProcAddress"));
+      // In rootcling gInterpreterLib is RTLD_DEFAULT, which may find this function.
+      return f == &CppGetProcAddress ? nullptr : f;
+   }();
+   return getProcAddress ? getProcAddress(funcName) : nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Helper function used by TClass::GetClass().
 /// This function attempts to load the dictionary for 'classname'
 /// either from the TClassTable or from the list of generator.
