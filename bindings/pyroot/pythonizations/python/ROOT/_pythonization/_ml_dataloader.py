@@ -163,7 +163,7 @@ class _RDataLoader:
 
     def __init__(
         self,
-        inputs: ROOT.RDF.RNode | Spec | Iterable[ROOT.RDF.RNode | Spec] | None = None,
+        inputs: ROOT.RDF.RNode | Spec | Iterable[ROOT.RDF.RNode | Spec],
         batch_size: int = 0,
         batches_in_memory: int = 1,
         columns: list[str] | None = None,
@@ -183,7 +183,7 @@ class _RDataLoader:
         """Wrapper around the C++ DataLoader
 
         Args:
-            inputs (ROOT.RDF.RNode | Spec | Iterable[ROOT.RDF.RNode | Spec] | None):
+            inputs (ROOT.RDF.RNode | Spec | Iterable[ROOT.RDF.RNode | Spec]):
                 RDataFrame or ``(dataset_name, files)`` tuple, or a list of them, to load from.
                 A tuple is used to construct a single RDataFrame to read ``dataset_name`` from one or more files.
             batch_size (int):
@@ -238,10 +238,10 @@ class _RDataLoader:
 
         from ROOT import RDF
 
-        if inputs is None:
-            inputs = []
+        rdataframes = [] if inputs is None else _open_files(inputs)
+        if not rdataframes:
+            raise ValueError("Detected empty input, at least one valid input is required.")
 
-        rdataframes = _open_files(inputs)
         self.noded_rdfs = [RDF.AsRNode(rdf) for rdf in rdataframes]
         _raise_if_implicit_mt(self.noded_rdfs)
 
