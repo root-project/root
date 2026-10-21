@@ -22,8 +22,8 @@ target = ["Type"]
 # Returns two TF.Dataset for training and validation batches.
 dl = ROOT.Experimental.ML.RDataLoader(
     rdataframe,
-    batch_size,
-    approx_batches_in_memory,
+    batch_size=batch_size,
+    batches_in_memory=approx_batches_in_memory,
     target=target,
     shuffle=True,
     drop_remainder=True,

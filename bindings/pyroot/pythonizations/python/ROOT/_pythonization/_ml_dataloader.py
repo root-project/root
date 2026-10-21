@@ -164,6 +164,7 @@ class _RDataLoader:
     def __init__(
         self,
         inputs: ROOT.RDF.RNode | Spec | Iterable[ROOT.RDF.RNode | Spec],
+        *,
         batch_size: int = 0,
         batches_in_memory: int = 1,
         columns: list[str] | None = None,
@@ -625,6 +626,7 @@ class RDataLoader:
     def __init__(
         self,
         inputs: ROOT.RDF.RNode | Spec | Iterable[ROOT.RDF.RNode | Spec],
+        *,
         batch_size: int = 64,
         batches_in_memory: int = 10,
         columns: list[str] | None = None,
