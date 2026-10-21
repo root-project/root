@@ -353,3 +353,21 @@ TEST(TRootSniffer, multi_json)
                   "  \"fTitle\" : \"title2\"\n"
                   "}]") << "return value of multi.json";
 }
+
+// Produce image object
+TEST(TRootSniffer, root_png)
+{
+   TH1F h1("h1", "title", 100, -10, 10);
+
+   TRootSnifferFull sniffer("sniffer");
+   // disable readonly to get method executed
+   sniffer.SetReadOnly(kFALSE);
+
+   sniffer.RegisterObject("/", &h1);
+
+   std::string res;
+
+   sniffer.Produce("/h1", "root.png", "w=500&h=500", res);
+   EXPECT_NE(res.length(), 0) << "image size should not be 0";
+   EXPECT_NEAR(res.length(), 5558, 2000) << "image size should be around 5K";
+}
