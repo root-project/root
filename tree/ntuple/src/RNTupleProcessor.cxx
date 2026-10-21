@@ -32,24 +32,14 @@ ROOT::Internal::LoadFullRNTupleProcessorEntry(ROOT::Experimental::RNTupleProcess
 
 //------------------------------------------------------------------------------
 
-std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Experimental::RNTupleOpenSpec::CreatePageSource() const
-{
-   if (const std::string *storagePath = std::get_if<std::string>(&fStorage))
-      return ROOT::Internal::RPageSource::Create(fNTupleName, *storagePath);
-
-   auto dir = std::get<TDirectory *>(fStorage);
-   auto ntuple = std::unique_ptr<ROOT::RNTuple>(dir->Get<ROOT::RNTuple>(fNTupleName.c_str()));
-   return ROOT::Internal::RPageSourceFile::CreateFromAnchor(*ntuple);
-}
-
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::Create(RNTupleOpenSpec ntuple, const RNTupleProcessorOptions &options)
+ROOT::Experimental::RNTupleProcessor::Create(RNTupleInputSpec ntuple, const RNTupleProcessorOptions &options)
 {
    return std::unique_ptr<RNTupleSingleProcessor>(new RNTupleSingleProcessor(std::move(ntuple), options));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<RNTupleOpenSpec> ntuples,
+ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<RNTupleInputSpec> ntuples,
                                                   const RNTupleProcessorOptions &options)
 {
    if (ntuples.empty())
@@ -76,7 +66,7 @@ ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<std::unique_ptr<RN
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::CreateRNTupleJoinProcessor(RNTupleOpenSpec primaryNTuple, RNTupleOpenSpec auxNTuple,
+ROOT::Experimental::CreateRNTupleJoinProcessor(RNTupleInputSpec primaryNTuple, RNTupleInputSpec auxNTuple,
                                                const std::vector<std::string> &joinFields,
                                                const RNTupleProcessorOptions &options)
 {
@@ -115,7 +105,7 @@ ROOT::Experimental::CreateRNTupleJoinProcessor(std::unique_ptr<RNTupleProcessor>
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(RNTupleOpenSpec ntuple,
+ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(RNTupleInputSpec ntuple,
                                                                    const RNTupleProcessorOptions &options)
    : RNTupleProcessor(options), fNTupleSpec(std::move(ntuple))
 {
@@ -123,6 +113,18 @@ ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(RNTupleOpenSp
       fOptions.SetProcessorName(fNTupleSpec.fNTupleName);
    }
 }
+
+namespace {
+std::unique_ptr<ROOT::Internal::RPageSource> CreatePageSource(const ROOT::Experimental::RNTupleInputSpec &inputSpec)
+{
+   if (const std::string *storagePath = std::get_if<std::string>(&inputSpec.GetStorage()))
+      return ROOT::Internal::RPageSource::Create(inputSpec.GetNTupleName(), *storagePath);
+
+   auto dir = std::get<TDirectory *>(inputSpec.GetStorage());
+   auto ntuple = std::unique_ptr<ROOT::RNTuple>(dir->Get<ROOT::RNTuple>(inputSpec.GetNTupleName().c_str()));
+   return ROOT::Internal::RPageSourceFile::CreateFromAnchor(*ntuple);
+}
+} // anonymous namespace
 
 void ROOT::Experimental::RNTupleSingleProcessor::Initialize(
    std::shared_ptr<ROOT::Internal::RNTupleProcessorEntry> entry)
@@ -136,7 +138,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::Initialize(
    else
       fEntry = std::move(entry);
 
-   fPageSource = fNTupleSpec.CreatePageSource();
+   fPageSource = CreatePageSource(fNTupleSpec);
    fPageSource->Attach();
 
    fNEntries = fPageSource->GetNEntries();

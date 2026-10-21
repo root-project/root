@@ -48,34 +48,6 @@ LoadFullRNTupleProcessorEntry(ROOT::Experimental::RNTupleProcessor &processor, b
 } // namespace Internal
 
 namespace Experimental {
-// clang-format off
-/**
-\class ROOT::Experimental::RNTupleOpenSpec
-\ingroup NTuple
-\brief Specification of the name and location of an RNTuple, used for creating a new RNTupleProcessor.
-
-An RNTupleOpenSpec can be created by providing either a string with a path to the ROOT file or a pointer to the
-TDirectory (or any of its subclasses) that contains the RNTuple.
-
-Note that the RNTupleOpenSpec is *write-only*, to prevent usability issues with Python.
-*/
-// clang-format on
-class RNTupleOpenSpec {
-   friend class RNTupleProcessor;
-   friend class RNTupleSingleProcessor;
-   friend class RNTupleJoinProcessor;
-
-private:
-   std::string fNTupleName;
-   std::variant<std::string, TDirectory *> fStorage;
-
-public:
-   RNTupleOpenSpec(std::string_view n, TDirectory *s) : fNTupleName(n), fStorage(s) {}
-   RNTupleOpenSpec(std::string_view n, const std::string &s) : fNTupleName(n), fStorage(s) {}
-
-   std::unique_ptr<ROOT::Internal::RPageSource> CreatePageSource() const;
-};
-
 class RNTupleProcessorOptions {
 private:
    /// By default, the processor name is the name of the underlying RNTuple for RNTupleSingleProcessor, the name of the
@@ -282,7 +254,7 @@ public:
 /// \return A pointer to the newly created RNTupleProcessor.
 // TODO(fdegeus) Move back to RNTupleProcessor::CreateJoin once RNTupleProcessor moves out of Experimental.
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-CreateRNTupleJoinProcessor(RNTupleOpenSpec primaryNTuple, RNTupleOpenSpec auxNTuple,
+CreateRNTupleJoinProcessor(RNTupleInputSpec primaryNTuple, RNTupleInputSpec auxNTuple,
                            const std::vector<std::string> &joinFields,
                            const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
 
@@ -317,9 +289,9 @@ Example usage (see ntpl012_processor_chain.C and ntpl015_processor_join.C for bi
 ~~~{.cpp}
 #include <ROOT/RNTupleProcessor.hxx>
 using ROOT::Experimental::RNTupleProcessor;
-using ROOT::Experimental::RNTupleOpenSpec;
+using ROOT::Experimental::RNTupleInputSpec;
 
-std::vector<RNTupleOpenSpec> ntuples = {{"ntuple1", "ntuple1.root"}, {"ntuple2", "ntuple2.root"}};
+std::vector<RNTupleInputSpec> ntuples = {{"ntuple1", "ntuple1.root"}, {"ntuple2", "ntuple2.root"}};
 auto processor = RNTupleProcessor::CreateChain(ntuples);
 
 auto pt = processor->RequestField<float>("pt");
@@ -331,7 +303,7 @@ for (const auto &idx : *processor) {
 ~~~
 
 An RNTupleProcessor is created either:
-1. By providing one or more RNTupleOpenSpecs, each of which contains the name and storage location of a single RNTuple;
+1. By providing one or more RNTupleInputSpecs, each of which contains the name and storage location of a single RNTuple;
 2. By providing a previously created RNTupleProcessor.
 
 The RNTupleProcessor provides an iterator which gives access to the index of the current *global* entry of the
@@ -745,7 +717,7 @@ public:
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor>
-   Create(RNTupleOpenSpec ntuple, const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
+   Create(RNTupleInputSpec ntuple, const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleProcessor for a *chain* (i.e., a vertical combination) of RNTuples.
@@ -755,7 +727,7 @@ public:
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor>
-   CreateChain(std::vector<RNTupleOpenSpec> ntuples, const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
+   CreateChain(std::vector<RNTupleInputSpec> ntuples, const RNTupleProcessorOptions &opts = RNTupleProcessorOptions());
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleProcessor for a *chain* (i.e., a vertical combination) of other RNTupleProcessors.
@@ -780,7 +752,7 @@ class RNTupleSingleProcessor : public RNTupleProcessor {
    friend class RNTupleProcessor;
 
 private:
-   RNTupleOpenSpec fNTupleSpec;
+   RNTupleInputSpec fNTupleSpec;
    std::unique_ptr<ROOT::Internal::RPageSource> fPageSource;
 
    /////////////////////////////////////////////////////////////////////////////
@@ -888,7 +860,7 @@ private:
    ///
    /// \param[in] ntuple The source specification (name and storage location) for the RNTuple to process.
    /// \param[in] opts Options for the processor.
-   RNTupleSingleProcessor(RNTupleOpenSpec ntuple, const RNTupleProcessorOptions &opts);
+   RNTupleSingleProcessor(RNTupleInputSpec ntuple, const RNTupleProcessorOptions &opts);
 
 public:
    RNTupleSingleProcessor(const RNTupleSingleProcessor &) = delete;
