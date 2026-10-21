@@ -973,8 +973,8 @@ typename ValueAndPushforwardOf<double, T>::type expm1OverX_pushforward(double x,
 inline void exponentialIntegral_pullback(double xMin, double xMax, double constant, double d_out, double *d_xMin,
                                          double *d_xMax, double *d_constant)
 {
-   *d_xMin -= d_out * std::exp(constant * xMin);
-   *d_xMax += d_out * std::exp(constant * xMax);
+   *d_xMin -= d_out * ::std::exp(constant * xMin);
+   *d_xMax += d_out * ::std::exp(constant * xMax);
    *d_constant += d_out * ::RooFit::Detail::MathFuncs::exponentialIntegralDConstant(xMin, xMax, constant);
 }
 
@@ -984,7 +984,7 @@ exponentialIntegral_pushforward(double xMin, double xMax, double constant, doubl
                                 double d_constant)
 {
    return {::RooFit::Detail::MathFuncs::exponentialIntegral(xMin, xMax, constant),
-           -std::exp(constant * xMin) * d_xMin + std::exp(constant * xMax) * d_xMax +
+           -::std::exp(constant * xMin) * d_xMin + ::std::exp(constant * xMax) * d_xMax +
               ::RooFit::Detail::MathFuncs::exponentialIntegralDConstant(xMin, xMax, constant) * d_constant};
 }
 
