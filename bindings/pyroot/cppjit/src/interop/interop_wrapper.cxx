@@ -1883,14 +1883,65 @@ bool IsTemplateParamEquivalentTypes(interop::TCppType_t typ1,
 }
 
 namespace {
+// The object of a method call is the first argument. If all method
+// candidates are declared in one class that is a base of the class of the
+// object, pass the object as that class. Clang takes the class of the object
+// as the acting context of method templates, but the class declaring the
+// method for the other methods, so that the implicit object parameter of a
+// method template of the base matched exactly while the one of a non-template
+// method needed a derived-to-base conversion, which made overloads that C++
+// ranks by the other arguments ambiguous (e.g. RDataFrame::Snapshot(), from
+// its base RInterface). A method brought into the class of the object by a
+// using-declaration is however a member of that class for the purpose of the
+// implicit object parameter, so then the object stays as it is.
+std::vector<Cpp::TemplateArgInfo>
+ObjectAsDeclaringClass(const std::vector<interop::TCppMethod_t>& candidates,
+                       const std::vector<Cpp::TemplateArgInfo>& arg_types) {
+  if (arg_types.empty())
+    return arg_types;
+  interop::TCppScope_t declaring = nullptr;
+  for (auto fn : candidates) {
+    if (!interop::IsNonStaticMethod(fn) || interop::IsConstructor(fn))
+      continue;
+    // a using-shadow is named in the class of the using-declaration
+    if (interop::GetScopedFinalName(fn.data) !=
+        interop::GetScopedFinalName(interop::GetUnderlyingScope(fn.data)))
+      return arg_types;
+    interop::TCppScope_t parent = interop::GetParentScope(fn.data);
+    if (declaring && parent != declaring)
+      return arg_types;
+    declaring = parent;
+  }
+  if (!declaring)
+    return arg_types;
+
+  interop::TCppType_t object = arg_types.front().m_Type;
+  interop::TCppScope_t object_class =
+      interop::GetScopeFromType(interop::GetNonReferenceType(object));
+  if (!object_class || object_class == declaring ||
+      !interop::IsSubclass(object_class, declaring))
+    return arg_types;
+
+  std::vector<Cpp::TemplateArgInfo> result = arg_types;
+  interop::TCppType_t type = Cpp::GetTypeFromScope(declaring);
+  if (Cpp::GetValueKind(object) != Cpp::ValueKind::None)
+    type = Cpp::GetReferencedType(
+        type, Cpp::GetValueKind(object) == Cpp::ValueKind::RValue);
+  result.front() = Cpp::TemplateArgInfo(type.data);
+  return result;
+}
+
 interop::TCppMethod_t BestOverloadFunctionMatch(
     const std::vector<interop::TCppMethod_t>& candidates,
-    const std::vector<Cpp::TemplateArgInfo>& arg_types,
+    const std::vector<Cpp::TemplateArgInfo>& given_arg_types,
     const std::vector<Cpp::TemplateArgInfo>& templ_params,
     std::vector<interop::TCppMethod_t>& ambiguous_candidates,
     interop::TCppScope_t parent_scope, bool is_operator,
     bool count_fallback = true) {
   std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
+
+  const std::vector<Cpp::TemplateArgInfo> arg_types =
+      ObjectAsDeclaringClass(candidates, given_arg_types);
 
   auto remove_duplicate_methods = [](std::vector<interop::TCppMethod_t>& methods) {
     std::set<void*> seen;

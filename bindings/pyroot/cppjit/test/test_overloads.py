@@ -722,3 +722,34 @@ class TestOVERLOADS:
         # that isn't supported, but must fail cleanly
         with raises(TypeError):
             s.f(1.0, 2.0)
+
+    def test28_base_class_templates_on_derived_object(self):
+        """Template and non-template methods of a base on a derived object"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace BaseTemplates {
+          struct Opts {};
+          template <class P, class D = void>
+          struct Base {
+            template <class... T>
+            int s(std::string_view, std::string_view, const std::vector<std::string>&,
+                  const Opts& = Opts()) { return 1; }
+            int s(std::string_view, std::string_view, const std::vector<std::string>&,
+                  const Opts& = Opts()) { return 2; }
+            int s(std::string_view, std::string_view, std::string_view = "",
+                  const Opts& = Opts()) { return 3; }
+          };
+          struct P {};
+          struct Derived : Base<P> {};
+          struct Using : Base<P> { using Base<P>::s; };
+        }""")
+
+        ns = cppjit.gbl.BaseTemplates
+        # as in C++, the object converts to Base& for all candidates, so the
+        # non-template is preferred over the equally good template
+        # (a method brought in by a using-declaration is one of Using itself)
+        for obj in (ns.Derived(), ns.Base[ns.P](), ns.Using()):
+            assert obj.s("t", "f", ("x",)) == 2
+            assert obj.s("t", "f", ("x",), ns.Opts()) == 2
