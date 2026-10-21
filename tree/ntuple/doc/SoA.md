@@ -23,7 +23,7 @@ Storing them using "SoA I/O", however, has the following advantages:
 
 An RNTuple SoA type can only exist in combination with its "underlying record type".
 The underlying record type defines the AoS layout to which the SoA type corresponds.
-During writing, the underlying record type may not be used directly by the user but its dictionary must exists.
+During writing, the underlying record type is not used directly by the user but its dictionary must exist.
 
 Concretely, an RNTuple SoA type is a user-defined class that has exactly one associated underlying record type,
 with the following constraints:
