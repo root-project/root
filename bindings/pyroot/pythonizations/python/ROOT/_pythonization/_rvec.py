@@ -137,8 +137,8 @@ def _is_numpy_array(obj):
 
 
 def _fill_from_numpy_array(self, arr):
-    """Copy the elements of the numpy array arr into the empty std::vector or
-    RVec self.
+    """Append copies of the elements of the numpy array arr to the std::vector
+    or RVec self.
 
     The overload resolution does not convert a numpy array into a container
     implicitly, as that would be a hidden deep copy. Constructing a container
@@ -158,9 +158,18 @@ def _fill_from_numpy_array(self, arr):
     if kind in ("i", "u", "f"):
         dtype = np.dtype("{}{}".format(kind, ROOT._cppyy.sizeof(value_type)))
         src = np.ascontiguousarray(flat, dtype=dtype)
-        self.resize(src.size)
+        offset = self.size()
+        self.resize(offset + src.size)
         if src.size:
-            ctypes.memmove(ROOT._cppyy.ll.addressof(self.data()), src.ctypes.data, src.nbytes)
+            try:
+                dst = ROOT._cppyy.ll.addressof(self.data()) + offset * dtype.itemsize
+            except TypeError:
+                # no address for the data, e.g. std::vector<char>::data() is
+                # converted to a Python str
+                for i, elem in enumerate(src.tolist()):
+                    self[offset + i] = elem
+            else:
+                ctypes.memmove(dst, src.ctypes.data, src.nbytes)
     else:
         for elem in flat.tolist():
             self.push_back(elem)

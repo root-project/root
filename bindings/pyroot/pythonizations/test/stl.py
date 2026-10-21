@@ -189,6 +189,10 @@ class STL_vector(unittest.TestCase):
         self.assertEqual(list(ROOT.VecOps.RVec["signed char"](np.array([1, 2], dtype=np.int8))), [1, 2])
         self.assertEqual(len(ROOT.VecOps.RVec["std::string"](np.array(["a", "b"]))), 2)
 
+        # appending with += copies too
+        v += np.array([4, 5])
+        self.assertEqual(list(v), [0.0, 1.0, 2.0, 3.0, 4.0, 5.0])
+
 class STL_set(unittest.TestCase):
     """
     Tests for the pythonizations of std::set.
