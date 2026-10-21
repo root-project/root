@@ -623,7 +623,7 @@ static PyObject* mp_vectorcall(CPPOverload* pymeth, PyObject* const* args,
     // __smartptr__()), so the object is the pointee
     [[maybe_unused]] auto res =
         AddTypeName(proto, (PyObject*)Py_TYPE(self), self, Utility::kNone,
-                    nullptr, /*smart_as_pointee=*/true);
+                    nullptr, /*as_object=*/true);
     assert(res);
   }
   // in an unbound call of non-static methods, the first argument is the object
@@ -771,7 +771,7 @@ static PyObject* mp_vectorcall(CPPOverload* pymeth, PyObject* const* args,
         proto += ", ";
       if (i == 0 && self_is_first_arg) {
         AddTypeName(proto, typ, obj, Utility::kNone, nullptr,
-                    /*smart_as_pointee=*/true);
+                    /*as_object=*/true);
         continue;
       }
       if (!AddTypeName(proto, typ, obj, Utility::kNone)) {

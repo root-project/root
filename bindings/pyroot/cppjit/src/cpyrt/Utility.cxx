@@ -712,7 +712,7 @@ bool AddNumpyTypeName(std::string& name, PyObject* tn, PyObject* arg) {
 bool cpyrt::Utility::AddTypeName(std::string& tmpl_name, PyObject* tn,
                                  PyObject* arg,
                                  cpyrt::Utility::ArgPreference pref, int* pcnt,
-                                 bool smart_as_pointee) {
+                                 bool as_object) {
   // Determine the appropriate C++ type for a given Python type; this is a
   // helper because it can recurse if the type is list or tuple and needs
   // matching on std::vector.
@@ -891,8 +891,10 @@ bool cpyrt::Utility::AddTypeName(std::string& tmpl_name, PyObject* tn,
     if (arg) {
       // try to specialize the type match for the given object
       CPPInstance* pyobj = (CPPInstance*)arg;
-      if (CPPInstance_Check(pyobj) && smart_as_pointee && pyobj->IsSmart()) {
-        // the Python type of a smart pointer proxy is the pointee class
+      if (CPPInstance_Check(pyobj) && as_object &&
+          (pyobj->IsSmart() || (pyobj->fFlags & CPPInstance::kIsReference))) {
+        // the Python type of a smart pointer or pointer proxy is the pointee
+        // class, and the object of a call through either is an lvalue
         tmpl_name.append(
             full_scope(interop::GetScopedFinalName(((CPPClass*)tn)->fCppType)));
         tmpl_name.push_back('&');

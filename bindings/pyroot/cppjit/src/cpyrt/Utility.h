@@ -38,11 +38,13 @@ PyCallable* FindBinaryOperator(
 // helper for template classes and methods
 enum ArgPreference { kNone, kPointer, kReference, kValue };
 std::string GetPyCallableAnnotation(PyObject* pyobj);
-// smart_as_pointee: spell a smart pointer proxy as (an lvalue of) the object it
-// points to rather than as the smart pointer
+// as_object: spell arg as the object of a method call, which is an lvalue of
+// its class: a smart pointer proxy as the object it points to rather than as
+// the smart pointer, and a pointer proxy (e.g. as returned by a function
+// returning a pointer) as the object it points to, as for ptr->f()
 bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
                  ArgPreference pref, int* pcnt = nullptr,
-                 bool smart_as_pointee = false);
+                 bool as_object = false);
 std::string ConstructTemplateArgs(PyObject* pyname, PyObject* tpArgs,
                                   PyObject* args = nullptr,
                                   ArgPreference = kNone, int argoff = 0,

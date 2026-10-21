@@ -673,3 +673,25 @@ class TestOVERLOADS:
         assert s.t(1.5, c=3) == 13
         assert s.t(1.5, c=3, b=2) == 23
         assert s.t("a", c=3) == -1
+
+    def test26_method_call_on_pointer_member(self):
+        """Overloaded methods called through a pointer data member"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace PtrObject {
+          struct S {
+            int f(int) { return 1; }
+            int f(double) { return 2; }
+          };
+          struct Holder { S* fPtr = new S{}; };
+        }""")
+
+        ns = cppjit.gbl.PtrObject
+        h = ns.Holder()
+        # the proxy of the data member refers to the pointer; the object of the
+        # call is the S it points to, an lvalue
+        assert h.fPtr.f(1) == 1
+        assert h.fPtr.f(1.5) == 2
+        assert ns.S.f(h.fPtr, 1) == 1

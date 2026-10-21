@@ -71,7 +71,7 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
     PyObject* self = (PyObject*)fSelf;
     bool addedSelf = Utility::AddTypeName(proto, (PyObject*)Py_TYPE(self), self,
                                           Utility::kNone, nullptr,
-                                          /*smart_as_pointee=*/true);
+                                          /*as_object=*/true);
     assert(addedSelf);
     (void)addedSelf;
   }
