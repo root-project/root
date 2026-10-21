@@ -1117,11 +1117,11 @@ protected:
 
 TEST_F(GH16805ProcessorTest, JoinReading)
 {
-   std::vector<RNTupleOpenSpec> stepOneSpecs{{"stepone", fStepOneFile}};
+   std::vector<RNTupleInputSpec> stepOneSpecs{{"stepone", fStepOneFile}};
 
-   std::vector<RNTupleOpenSpec> stepZeroSpecs{{"stepzero", fStepZeroFiles[0]}, {"stepzero", fStepZeroFiles[1]}};
+   std::vector<RNTupleInputSpec> stepZeroSpecs{{"stepzero", fStepZeroFiles[0]}, {"stepzero", fStepZeroFiles[1]}};
 
-   std::vector<RNTupleOpenSpec> joinSpecs{
+   std::vector<RNTupleInputSpec> joinSpecs{
       {"topLevelJoin", fJoinFiles[0]}, {"topLevelJoin", fJoinFiles[1]}, {"topLevelJoin", fJoinFiles[2]}};
 
    auto stepOneProc = RNTupleProcessor::CreateChain(stepOneSpecs);
@@ -1238,7 +1238,7 @@ protected:
    CreateStepProcessor(std::string_view ntupleName, std::string_view fileName, bool useChain)
    {
       if (useChain) {
-         std::vector<RNTupleOpenSpec> specs{{std::string(ntupleName), std::string(fileName)}};
+         std::vector<RNTupleInputSpec> specs{{std::string(ntupleName), std::string(fileName)}};
          return RNTupleProcessor::CreateChain(specs);
       }
 
@@ -1247,7 +1247,7 @@ protected:
 
    std::unique_ptr<RNTupleProcessor> CreateJoinedProcessor()
    {
-      std::vector<RNTupleOpenSpec> stepZeroSpecs{{"stepzero", fStepZeroFiles[0]}, {"stepzero", fStepZeroFiles[1]}};
+      std::vector<RNTupleInputSpec> stepZeroSpecs{{"stepzero", fStepZeroFiles[0]}, {"stepzero", fStepZeroFiles[1]}};
 
       auto stepZeroProc = RNTupleProcessor::CreateChain(stepZeroSpecs);
 

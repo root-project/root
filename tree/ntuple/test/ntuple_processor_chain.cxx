@@ -74,7 +74,7 @@ protected:
 TEST(RNTupleChainProcessor, EmptySpec)
 {
    try {
-      auto proc = RNTupleProcessor::CreateChain(std::vector<RNTupleOpenSpec>{});
+      auto proc = RNTupleProcessor::CreateChain(std::vector<RNTupleInputSpec>{});
       FAIL() << "creating a processor without at least one RNTuple should throw";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("at least one RNTuple must be provided"));
@@ -174,7 +174,7 @@ TEST_F(RNTupleChainProcessorTest, EmptyNTuples)
       auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleName, fileGuard.GetPath());
    }
 
-   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleName, fileGuard.GetPath()}, {fNTupleName, fFileNames[0]}};
+   std::vector<RNTupleInputSpec> ntuples = {{fNTupleName, fileGuard.GetPath()}, {fNTupleName, fFileNames[0]}};
 
    // Empty ntuples are skipped (as long as their model complies)
    auto proc = RNTupleProcessor::CreateChain({{fNTupleName, fileGuard.GetPath()},
@@ -285,7 +285,7 @@ TEST_F(RNTupleChainProcessorTest, OpenFileLimit)
 {
    // Assuming the open file limit is 1024, this should exceed that. Only one RNTuple page source at the should be
    // attached, so this should not be an issue.
-   std::vector<RNTupleOpenSpec> chain(2000, {fNTupleName, fFileNames[0]});
+   std::vector<RNTupleInputSpec> chain(2000, {fNTupleName, fFileNames[0]});
    auto proc = RNTupleProcessor::CreateChain(std::move(chain));
    auto x = proc->RequestField<float>("x");
 
