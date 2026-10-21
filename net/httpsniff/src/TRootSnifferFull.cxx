@@ -403,7 +403,7 @@ Bool_t TRootSnifferFull::ProduceImage(Int_t kind, const std::string &path, const
 
    TObject *obj = (TObject *)obj_ptr;
 
-   TImage *img = TImage::Create();
+   std::unique_ptr<TImage> img(TImage::Create());
    if (!img)
       return kFALSE;
 
@@ -412,6 +412,7 @@ Bool_t TRootSnifferFull::ProduceImage(Int_t kind, const std::string &path, const
       if (gDebug > 1)
          Info("TRootSniffer", "Crate IMAGE directly from pad");
       img->FromPad((TPad *)obj);
+
    } else if (CanDrawClass(obj->IsA())) {
 
       if (gDebug > 1)
@@ -439,26 +440,21 @@ Bool_t TRootSnifferFull::ProduceImage(Int_t kind, const std::string &path, const
       if (!isbatch)
          gROOT->SetBatch(kTRUE);
 
-      TCanvas *c1 = new TCanvas("__online_draw_canvas__", "title", width, height);
-      obj->Draw(drawopt.Data());
-      img->FromPad(c1);
-      delete c1;
+      TCanvas c1("__online_draw_canvas__", "title", width, height);
+      c1.Add(obj, drawopt.Data());
+      img->FromPad(&c1);
 
       if (!isbatch)
          gROOT->SetBatch(kFALSE);
 
    } else {
-      delete img;
       return kFALSE;
    }
 
-   TImage *im = TImage::Create();
-   im->Append(img);
-
    char *png_buffer = nullptr;
-   int size(0);
+   int size = 0;
 
-   im->GetImageBuffer(&png_buffer, &size, (TImage::EImageFileTypes)kind);
+   img->GetImageBuffer(&png_buffer, &size, (TImage::EImageFileTypes)kind);
 
    if (png_buffer && (size > 0)) {
       res.resize(size);
@@ -466,7 +462,6 @@ Bool_t TRootSnifferFull::ProduceImage(Int_t kind, const std::string &path, const
    }
 
    free(png_buffer);
-   delete im;
 
    return !res.empty();
 }
