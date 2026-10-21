@@ -497,6 +497,8 @@ else()
   set(Cling_DIR ${LLVM_BINARY_DIR}/lib/cmake/cling/)
   find_package(Cling REQUIRED CONFIG PATHS ${Cling_DIR} "${Cling_DIR}/lib/cmake/cling" "${Cling_DIR}/cmake" NO_DEFAULT_PATH)
   find_package(Clang REQUIRED CONFIG PATHS ${Cling_DIR} "${Cling_DIR}/lib/cmake/clang" "${Cling_DIR}/cmake" NO_DEFAULT_PATH)
+  set(CLING_INCLUDE_DIRS ${CLING_INCLUDE_DIRS} PARENT_SCOPE)
+  set(CLING_LIBRARIES ${CLING_LIBRARIES} PARENT_SCOPE)
 
   # We need to consider not just the direct link dependencies, but also the
   # transitive link dependencies. Do this by starting with the set of direct
