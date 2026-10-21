@@ -36,7 +36,7 @@ public:
    RNTupleProcessorColumnReader(RNTupleProcessorOptionalPtr<void> &valuePtr) : fValuePtr(std::move(valuePtr)) {}
    ~RNTupleProcessorColumnReader() override = default;
 
-   void *GetImpl(Long64_t entry) final
+   void *GetImpl(Long64_t entry [[maybe_unused]]) final
    {
       assert(entry == fLastLoadedEntry);
       return fValuePtr.GetPtr().get();
