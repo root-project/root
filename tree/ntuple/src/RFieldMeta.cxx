@@ -520,7 +520,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RClassField::BeforeConnectPageSource(ROO
          SetStagingClass(GetTypeName(), GetTypeVersion());
    } else {
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
-      const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetRef();
+      const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetConstRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
 
       if (fieldDesc.GetStructure() == ENTupleStructure::kStreamer) {
@@ -608,12 +608,13 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RClassField::BeforeConnectPageSource(ROO
    }
 
    if (nInMemoryBaseClasses != 0 && nOnDiskBaseClasses != 0 && nInMemoryBaseClasses != nOnDiskBaseClasses) {
-      throw RException(R__FAIL(std::string("incompatible number of base classes for field ") + GetFieldName() + ": " +
-                               GetTypeName() + ", " + std::to_string(nInMemoryBaseClasses) +
-                               " base classes in memory "
-                               " vs. " +
-                               std::to_string(nOnDiskBaseClasses) + " base classes on-disk\n" +
-                               Internal::GetTypeTraceReport(*this, pageSource.GetSharedDescriptorGuard().GetRef())));
+      throw RException(
+         R__FAIL(std::string("incompatible number of base classes for field ") + GetFieldName() + ": " + GetTypeName() +
+                 ", " + std::to_string(nInMemoryBaseClasses) +
+                 " base classes in memory "
+                 " vs. " +
+                 std::to_string(nOnDiskBaseClasses) + " base classes on-disk\n" +
+                 Internal::GetTypeTraceReport(*this, pageSource.GetSharedDescriptorGuard().GetConstRef())));
    }
 
    return nullptr;
@@ -911,7 +912,9 @@ ROOT::Experimental::RSoAField::RSoAField(std::string_view fieldName, TClass *clS
    } catch (ROOT::RException &e) {
       throw RException(R__FAIL("invalid record type of SoA field " + GetTypeName() + " [" + e.what() + "]"));
    }
-   R__ASSERT(fClass->GetClassVersion() >= 0);
+   if (fClass->GetClassVersion() <= 0) {
+      throw RException(R__FAIL(std::string("SoA class ") + GetTypeName() + " is transient or unversioned."));
+   }
    if (static_cast<std::uint32_t>(fClass->GetClassVersion()) != fSubfields[0]->GetTypeVersion()) {
       throw RException(R__FAIL(std::string("version mismatch between SoA type and underlying record type: ") +
                                std::to_string(fClass->GetClassVersion()) + " vs. " +

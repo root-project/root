@@ -1351,6 +1351,8 @@ TEST(RNTuple, Bitset)
    EXPECT_EQ(sizeof(std::bitset<66>), model->GetConstField("f1").GetValueSize());
    auto f2 = model->MakeField<std::bitset<8>>("f2");
    *f2 = std::bitset<8>("10101010");
+   // Test multi-chunk batching across chunk boundaries (> 256 bits)
+   auto f3 = model->MakeField<std::bitset<300>>("f3");
 
    {
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
@@ -1360,19 +1362,31 @@ TEST(RNTuple, Bitset)
       f1->set(33);
       f1->set(65);
       f2->flip();
+      f3->set(0);
+      f3->set(255);
+      f3->set(256);
+      f3->set(299);
       writer->Fill();
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(std::string("std::bitset<66>"), reader->GetModel().GetConstField("f1").GetTypeName());
+   EXPECT_EQ(std::string("std::bitset<300>"), reader->GetModel().GetConstField("f3").GetTypeName());
    auto bs1 = reader->GetModel().GetDefaultEntry().GetPtr<std::bitset<66>>("f1");
    auto bs2 = reader->GetModel().GetDefaultEntry().GetPtr<std::bitset<8>>("f2");
+   auto bs3 = reader->GetModel().GetDefaultEntry().GetPtr<std::bitset<300>>("f3");
    reader->LoadEntry(0);
    EXPECT_EQ("000000000000000000000000000000000000000000000000000000000000000000", bs1->to_string());
    EXPECT_EQ("10101010", bs2->to_string());
+   EXPECT_TRUE(bs3->none());
    reader->LoadEntry(1);
    EXPECT_EQ("100000000000000000000000000000001000000000000000000000000000001001", bs1->to_string());
    EXPECT_EQ("01010101", bs2->to_string());
+   EXPECT_TRUE(bs3->test(0));
+   EXPECT_TRUE(bs3->test(255));
+   EXPECT_TRUE(bs3->test(256));
+   EXPECT_TRUE(bs3->test(299));
+   EXPECT_EQ(4u, bs3->count());
 }
 
 TEST(RNTuple, UniquePtr)

@@ -46,6 +46,8 @@ struct RFlat2DMatrix {
       fRVec.resize(rows * cols);
    }
 
+   void Reserve(std::size_t rows, std::size_t cols) { fRVec.reserve(rows * cols); }
+
    void Reshape(std::size_t rows, std::size_t cols)
    {
       // We don't reallocate: require matching sizes

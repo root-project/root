@@ -43,10 +43,18 @@ sap.ui.define([
          // console.log('MORE DATA', EVE.$eve7tmp);
          // console.log('COMPONENT DATA', Component.getOwnerComponentFor(this.getView()).getComponentData());
 
-         this.setupManagerAndViewType(Component.getOwnerComponentFor(this.getView()).getComponentData(),
-            args.viewName, EVE.$eve7tmp);
-         this.mgr.controllers[0].setToolbarExpandedAction(this);
+         // Main's switchSingle() passes the manager in EVE.$eve7tmp. Without it
+         // (browser forward to an expanded view) take it from the main page.
+         let moredata = EVE.$eve7tmp || EveManager.FindMainPageViewer(this.getView(), args.viewName);
          delete EVE.$eve7tmp;
+
+         this.setupManagerAndViewType(Component.getOwnerComponentFor(this.getView()).getComponentData(),
+            args.viewName, moredata);
+
+         // A view opened directly by URL has no main page: it is standalone,
+         // with its own manager, and nothing to go back to.
+         if (moredata)
+            this.mgr.controllers[0].setToolbarExpandedAction(this);
 
          this.checkViewReady();
       },

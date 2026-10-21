@@ -107,11 +107,12 @@ void REveText::BuildRenderData()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute bounding-box of the data.
+/// Text has no box: its extent is known only to the client, which lays it
+/// out. It is not culled.
 
 void REveText::ComputeBBox()
 {
-   //BBoxInit();
+   BBoxNotInWorld();
 }
 
 

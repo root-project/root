@@ -35,6 +35,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <mutex>
 #include <tuple>
 #include <utility>
 #include <regex>
@@ -481,6 +482,7 @@ ROOT::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceDaos::AttachImp
 void ROOT::Experimental::Internal::RPageSourceDaos::LoadPageListImpl(const RNTupleLocator &locator,
                                                                      unsigned char *buffer)
 {
+   std::lock_guard lockGuard(fContainerLock);
    daos_obj_id_t oidPageList{kOidLowPageList, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)};
    fDaosContainer->ReadSingleAkey(buffer, locator.GetNBytesOnStorage(), oidPageList, kDistributionKeyDefault,
                                   locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
@@ -494,6 +496,7 @@ std::string ROOT::Experimental::Internal::RPageSourceDaos::GetObjectClass() cons
 void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPageImpl(const RNTupleLocator &locator,
                                                                        RSealedPage &sealedPage)
 {
+   std::lock_guard lockGuard(fContainerLock);
    RDaosKey daosKey = GetPageDaosKey(fNTupleIndex, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
    fDaosContainer->ReadSingleAkey(const_cast<void *>(sealedPage.GetBuffer()), sealedPage.GetBufferSize(), daosKey.fOid,
                                   daosKey.fDkey, daosKey.fAkey);
@@ -587,6 +590,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
 
    {
       Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
+      std::lock_guard lockGuard(fContainerLock);
       if (int err = fDaosContainer->ReadV(readRequests))
          throw ROOT::RException(R__FAIL("ReadV: error" + std::string(d_errstr(err))));
    }

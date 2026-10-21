@@ -14,15 +14,13 @@
 
 #include <ROOT/REveElement.hxx>
 
-#include <TAttBBox.h>
-
 #include <algorithm>
 #include <string>
 
 namespace ROOT {
 namespace Experimental {
 
-class REveSMorph : public REveElement, public TAttBBox {
+class REveSMorph : public REveElement {
 private:
    REveSMorph(const REveSMorph &) = delete;
    REveSMorph &operator=(const REveSMorph &) = delete;

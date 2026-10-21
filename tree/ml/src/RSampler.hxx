@@ -31,7 +31,9 @@ namespace ROOT::Experimental::Internal::ML {
 
 class RSampler {
 private:
-   std::vector<RFlat2DMatrix> &fDatasets;
+   const RFlat2DMatrix &fDataset;
+   // rows of fDataset in each class
+   std::vector<std::vector<std::size_t>> &fRows;
    std::string fSampleType;
    float fSampleRatio;
    bool fReplacement;
@@ -51,8 +53,8 @@ private:
    std::unique_ptr<RFlat2DMatrixOperators> fTensorOperators;
 
 public:
-   RSampler(std::vector<RFlat2DMatrix> &datasets, const std::string &sampleType, float sampleRatio,
-            bool replacement = false, bool shuffle = true, std::size_t setSeed = 0);
+   RSampler(const RFlat2DMatrix &dataset, std::vector<std::vector<std::size_t>> &rows, const std::string &sampleType,
+            float sampleRatio, bool replacement = false, bool shuffle = true, std::size_t setSeed = 0);
 
    ~RSampler();
 
@@ -67,6 +69,9 @@ public:
    void RandomUndersampler(RFlat2DMatrix &ShuffledTensor);
 
    void RandomOversampler(RFlat2DMatrix &ShuffledTensor);
+
+   void GatherSamples(RFlat2DMatrix &ShuffledTensor, const std::vector<std::size_t> &ResampledRows,
+                      std::size_t numResampled, const std::vector<std::size_t> &OtherRows);
 
    void SampleWithReplacement(std::size_t n_samples, std::size_t max);
 

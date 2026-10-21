@@ -29,7 +29,7 @@ coordinates, so only the parameters are streamed.
 
 The surface is generated at unit size. Radius, position and orientation are
 in the element's transformation, so changing them streams one matrix under
-kCBTransBBox and the client rebuilds nothing. Every other setter stamps
+kCBTrans and the client rebuilds nothing. Every other setter stamps
 kCBObjProps and forces a rebuild.
 
 The parametrisation, with ct = cos(theta), st = sin(theta):
@@ -64,13 +64,13 @@ REveSMorph::REveSMorph(const std::string &n, const std::string &t) : REveElement
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Uniform scale on the main transformation. Stamps kCBTransBBox only: the
+/// Uniform scale on the main transformation. Stamps kCBTrans only: the
 /// surface is built at unit size, so the client rebuilds nothing.
 
 void REveSMorph::SetRadius(Float_t r)
 {
    RefMainTrans().SetScale(r, r, r);
-   StampTransBBox();
+   StampTrans();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,12 +101,6 @@ Int_t REveSMorph::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    j["fTexYC"]    = fTexYC;
    j["fTexYOff"]  = fTexYOff;
    // clang-format on
-
-   // Bounding box as JSON, min triple then max triple, for RC.Box3. The client
-   // could measure its own geometry; the box is sent because it is known here.
-   ComputeBBox();
-   const Float_t *bb = GetBBox();
-   j["bbox"] = {bb[0], bb[2], bb[4], bb[1], bb[3], bb[5]};
 
    return ret;
 }

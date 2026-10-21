@@ -331,10 +331,10 @@ sap.ui.define([
          this.rebuild = true;
       },
 
-      /** Everything except kCBTransBBox: the tree shows structure and
+      /** Everything except kCBTrans: the tree shows structure and
         * properties, and a moving element's transform is neither. See
         * EveManager.callSceneElementChange. */
-      changeBitMask: 1 | 4 | 8 | 16,   // ColorSelection | ObjProps | Visibility | Added
+      changeBitMask: 1 | 4 | 8 | 16,   // CoreJson | ObjProps | Visibility | Added
 
       sceneElementChange: function(msg) {
 
@@ -345,8 +345,12 @@ sap.ui.define([
 
          let elem = this.mgr.GetElement(msg.fElementId);
 
-         if (newelem && elem)
+         if (newelem && elem) {
+            // createModel() copies the name and title; kCBCoreJson may change them.
+            newelem.fName = elem.fName;
+            newelem.fTitle = elem.fTitle || elem.fName;
             this.setElementsAttributes(newelem, elem);
+         }
 
          // console.log('SUMMURY: detect changed', elem.id, elem.path);
 

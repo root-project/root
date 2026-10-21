@@ -264,6 +264,8 @@ void REveJetConeProjected::BuildRenderData()
 
    REveProjection *P = GetManager()->GetProjection();
    REveJetCone    *C = dynamic_cast<REveJetCone*>(GetProjectable());
+   REveTrans mt;
+   const REveTrans *T = GetManager()->GetModelTrans(C, mt);
 
    if (P->GetType() == REveProjection::kPT_RPhi || P->GetType() == REveProjection::kPT_RhoZ)
    {
@@ -280,7 +282,7 @@ void REveJetConeProjected::BuildRenderData()
          V[2] = C->CalcBaseVec(TMath::PiOver2());
 
          for (Int_t i = 0; i < 3; ++i)
-            P->ProjectVector(V[i], fDepth);
+            P->ProjectVector(T, V[i], fDepth);
       }
       else // RhoZ
       {
@@ -304,7 +306,7 @@ void REveJetConeProjected::BuildRenderData()
          }
 
          for (auto &v : V)
-            P->ProjectVector(v, fDepth);
+            P->ProjectVector(T, v, fDepth);
 
          std::sort(V.begin() + 1, V.end(), [](const auto &a, const auto &b) -> bool { return a.Phi() < b.Phi(); });
       }
@@ -318,20 +320,22 @@ void REveJetConeProjected::BuildRenderData()
 
       fRenderData = std::make_unique<REveRenderData>("makeJet", 3 * NP);
 
-      fRenderData->PushV(C->fApex);
+      REveVector apex = C->fApex;
+      P->ProjectVector(T, apex, fDepth);
+      fRenderData->PushV(apex);
 
       Float_t angle_step = TMath::TwoPi() / C->fNDiv;
       Float_t angle = 0;
       for (Int_t i = 0; i < C->fNDiv; ++i, angle += angle_step) {
          auto tv = C->CalcBaseVec(angle);
-         P->ProjectVector(tv, fDepth);
+         P->ProjectVector(T, tv, fDepth);
          fRenderData->PushV(tv);
       }
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute bounding-box, virtual from TAttBBox.
+/// Fill the bounding box (virtual from REveElement).
 
 void REveJetConeProjected::ComputeBBox()
 {
@@ -339,12 +343,24 @@ void REveJetConeProjected::ComputeBBox()
 
    REveJetCone    *cone = dynamic_cast<REveJetCone*>(fProjectable);
    REveProjection *proj = GetManager()->GetProjection();
+   REveTrans mt;
+   const REveTrans *T = GetManager()->GetModelTrans(cone, mt);
    REveVector v;
-   v = cone->fApex;                                       proj->ProjectVector(v, fDepth); BBoxCheckPoint(v);
-   v = cone->CalcBaseVec(0);                              proj->ProjectVector(v, fDepth); BBoxCheckPoint(v);
-   v = cone->CalcBaseVec(TMath::PiOver2());               proj->ProjectVector(v, fDepth); BBoxCheckPoint(v);
-   v = cone->CalcBaseVec(TMath::Pi());                    proj->ProjectVector(v, fDepth); BBoxCheckPoint(v);
-   v = cone->CalcBaseVec(TMath::Pi() + TMath::PiOver2()); proj->ProjectVector(v, fDepth); BBoxCheckPoint(v);
+   v = cone->fApex;
+   proj->ProjectVector(T, v, fDepth);
+   BBoxCheckPoint(v);
+   v = cone->CalcBaseVec(0);
+   proj->ProjectVector(T, v, fDepth);
+   BBoxCheckPoint(v);
+   v = cone->CalcBaseVec(TMath::PiOver2());
+   proj->ProjectVector(T, v, fDepth);
+   BBoxCheckPoint(v);
+   v = cone->CalcBaseVec(TMath::Pi());
+   proj->ProjectVector(T, v, fDepth);
+   BBoxCheckPoint(v);
+   v = cone->CalcBaseVec(TMath::Pi() + TMath::PiOver2());
+   proj->ProjectVector(T, v, fDepth);
+   BBoxCheckPoint(v);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -352,7 +368,7 @@ void REveJetConeProjected::ComputeBBox()
 
 void REveJetConeProjected::SetDepthLocal(Float_t d)
 {
-   SetDepthCommon(d, this, fBBox);
+   SetDepthCommon(d, this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -885,6 +885,7 @@ void REveManager::StreamToNewConnection(unsigned connid)
    fWorld->StreamElements();
 
    printf("   sending json, len = %d\n", (int)fWorld->fOutputJson.size());
+   REveUtil::StampServerTime(fWorld->fOutputJson);
    Send(connid, fWorld->fOutputJson);
    printf("   for now assume world-scene has no render data, binary-size=%d\n", fWorld->fTotalBinarySize);
    assert(fWorld->fTotalBinarySize == 0);
@@ -901,6 +902,7 @@ void REveManager::StreamToNewConnection(unsigned connid)
       scene->StreamElements();
 
       printf("   sending json, len = %d\n", (int)scene->fOutputJson.size());
+      REveUtil::StampServerTime(scene->fOutputJson);
       Send(connid, scene->fOutputJson);
 
       if (scene->fTotalBinarySize > 0) {
@@ -1186,9 +1188,12 @@ void REveManager::SendMotionChanges()
    // clang-format on
 
    std::string data = msg.dump();
+   REveUtil::AppendServerTime(data);
 
-   for (auto &conn : fConnList)
+   for (auto &conn : fConnList) {
+      REveUtil::StampServerTime(data);
       fWebWindow->Send(conn.fId, data);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

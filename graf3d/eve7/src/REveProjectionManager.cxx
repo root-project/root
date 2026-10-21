@@ -10,15 +10,21 @@
  *************************************************************************/
 
 #include <ROOT/REveProjectionManager.hxx>
-#include <ROOT/REveProjectionAxis.hxx>
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveProjectionBases.hxx>
 #include <ROOT/REveCompound.hxx>
+#include <ROOT/REveScene.hxx>
+#include <ROOT/REveTrans.hxx>
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 
 #include "TClass.h"
+
+#include <algorithm>
+#include <cmath>
+#include <cstring>
+#include <functional>
 
 #include <list>
 
@@ -33,6 +39,66 @@ and updates projected scene accordingly.
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
+
+namespace {
+
+////////////////////////////////////////////////////////////////////////////////
+/// Warn if `el` has a transformation other than identity. The vertices of a
+/// projected element are final, so the client must not transform them again.
+/// Identity is allowed: REveStraightLineSet's constructor sets one.
+
+void WarnIfTransformed(REveElement *el)
+{
+   static const REveTrans unit;
+   if (el->HasMainTrans() && std::memcmp(el->RefMainTrans().Array(), unit.Array(), 16 * sizeof(Double_t)) != 0) {
+      ::Warning("REveProjectionManager::ImportElements",
+                "'%s' has a transformation, which the client applies to its projected vertices again.", el->GetCName());
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Warn if projected elements put under `receiver` are drawn in a frame other
+/// than that of `mng`. GetModelTrans() projects into the frame of the manager,
+/// and the client places the projected elements with the matrices of
+/// `receiver` and of its mothers, so the two products must be equal.
+
+void WarnIfFrameDiffers(REveProjectionManager *mng, REveElement *receiver)
+{
+   REveTrans wm, wr;
+   const int nm = mng->ComposeSceneTrans(wm);
+   const int nr = receiver->ComposeSceneTrans(wr);
+   if (nm == 0 && nr == 0)
+      return;
+
+   // Tolerance for the rounding of the inversion, relative to the translations.
+   Double_t scale = 1;
+   for (int i = 12; i < 15; ++i)
+      scale = std::max({scale, std::abs(wm.Array()[i]), std::abs(wr.Array()[i])});
+
+   // d = inverse(W(manager)) * W(receiver), the identity when the frames agree.
+   REveTrans d;
+   if (nm > 0) {
+      wm.Invert();
+      d = wm;
+      if (nr > 0)
+         d.MultRight(wr);
+   } else {
+      d = wr;
+   }
+
+   static const REveTrans unit;
+   for (int i = 0; i < 16; ++i) {
+      if (std::abs(d.Array()[i] - unit.Array()[i]) > 1e-6 * scale) {
+         ::Warning("REveProjectionManager::ImportElements",
+                   "'%s' places projected elements in a frame other than that of '%s', in which they are "
+                   "projected; the client draws them transformed.",
+                   receiver->GetCName(), mng->GetCName());
+         return;
+      }
+   }
+}
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -82,7 +148,8 @@ void REveProjectionManager::RemoveDependent(REveElement *el)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add `steps` * 1e-4 to the distortion of the current projection, clamped at
-/// zero, reproject, and refresh the REveProjectionAxis nieces. Called by MIR.
+/// zero, and reproject, which also refreshes the REveProjectionAxis nieces.
+/// Called by MIR.
 
 void REveProjectionManager::BumpDistortion(Int_t steps)
 {
@@ -96,14 +163,6 @@ void REveProjectionManager::BumpDistortion(Int_t steps)
 
    UpdateName();
    ProjectChildren();
-
-   // Refresh the axes among the nieces.
-   for (auto &n : fNieces) {
-      if (auto ax = dynamic_cast<REveProjectionAxis *>(n)) {
-         ax->UpdateTicks();
-         ax->UpdateDistortionLabel();
-      }
-   }
 }
 
 void REveProjectionManager::UpdateName()
@@ -207,15 +266,17 @@ Bool_t REveProjectionManager::ShouldImport(REveElement *el)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Update dependent elements' bounding boxes.
+/// Update dependent elements' bounding boxes, and tell the nieces, such as an
+/// REveProjectionAxis, that the manager changed. Called after every import and
+/// reprojection.
 
 void REveProjectionManager::UpdateDependentElements(REveElement * /*root*/)
 {
-   for (auto &d: fDependentEls) {
-      TAttBBox* bbox = dynamic_cast<TAttBBox *>(d);
-      if (bbox)
-         bbox->ComputeBBox();
-   }
+   for (auto &d : fDependentEls)
+      d->ComputeBBox();
+
+   for (auto &n : fNieces)
+      n->AuntChanged(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -255,6 +316,7 @@ REveElement* REveProjectionManager::ImportElementsRecurse(REveElement* el,
       new_el->SetPickable    (el->IsPickable());
 
       parent->AddElement(new_el);
+      WarnIfTransformed(new_el);
 
       REveCompound *cmpnd    = dynamic_cast<REveCompound*>(el);
       REveCompound *cmpnd_pr = dynamic_cast<REveCompound*>(new_el);
@@ -283,13 +345,13 @@ REveElement* REveProjectionManager::ImportElementsRecurse(REveElement* el,
 REveElement* REveProjectionManager::ImportElements(REveElement* el,
                                                    REveElement* ext_list)
 {
+   WarnIfFrameDiffers(this, ext_list ? ext_list : this);
    REveElement* new_el = ImportElementsRecurse(el, ext_list ? ext_list : this);
    if (new_el)
    {
       AssertBBox();
       ProjectChildrenRecurse(new_el);
       AssertBBoxExtents(0.1);
-      StampTransBBox();
 
       UpdateDependentElements(new_el);
 
@@ -315,13 +377,13 @@ REveElement* REveProjectionManager::ImportElements(REveElement* el,
 REveElement* REveProjectionManager::SubImportElements(REveElement* el,
                                                       REveElement* proj_parent)
 {
+   WarnIfFrameDiffers(this, proj_parent);
    REveElement* new_el = ImportElementsRecurse(el, proj_parent);
    if (new_el)
    {
       AssertBBox();
       ProjectChildrenRecurse(new_el);
       AssertBBoxExtents(0.1);
-      StampTransBBox();
 
       UpdateDependentElements(new_el);
    }
@@ -343,6 +405,7 @@ REveElement* REveProjectionManager::SubImportElements(REveElement* el,
 
 Int_t REveProjectionManager::SubImportChildren(REveElement* el, REveElement* proj_parent)
 {
+   WarnIfFrameDiffers(this, proj_parent);
    List_t new_els;
    for (auto &c: el->RefChildren()) {
       auto new_el = ImportElementsRecurse(c, proj_parent);
@@ -356,7 +419,6 @@ Int_t REveProjectionManager::SubImportChildren(REveElement* el, REveElement* pro
       for (auto &nel: new_els)
          ProjectChildrenRecurse(nel);
       AssertBBoxExtents(0.1);
-      StampTransBBox();
 
       UpdateDependentElements(proj_parent);
    }
@@ -374,14 +436,11 @@ void REveProjectionManager::ProjectChildrenRecurse(REveElement* el)
    if (pted)
    {
       pted->UpdateProjection();
-      TAttBBox* bb = dynamic_cast<TAttBBox*>(pted);
-      if (bb)
-      {
-         Float_t* b = bb->AssertBBox();
-         BBoxCheckPoint(b[0], b[2], b[4]);
-         BBoxCheckPoint(b[1], b[3], b[5]);
-      }
       el->StampObjProps();
+      if (el->AssertBBox() == kBBoxSet) {
+         BBoxCheckPoint(el->GetBBoxMin());
+         BBoxCheckPoint(el->GetBBoxMax());
+      }
    }
 
    for (auto &c : el->RefChildren())  ProjectChildrenRecurse(c);
@@ -400,22 +459,50 @@ void REveProjectionManager::ProjectChildren()
    for (auto &n : fNieces)    ProjectChildrenRecurse(n);
 
    AssertBBoxExtents(0.1);
-   StampTransBBox();
 
    UpdateDependentElements(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Virtual from TAttBBox; fill bounding-box information.
+/// Return the matrix that takes the coordinates of `model` into the frame of
+/// this manager, in which the projection is computed:
+/// inverse(W(this)) * W(model), with W(x) from x->ComposeSceneTrans(), as the
+/// client composes them for the 3D view. When the two chains do not meet, their
+/// tops are taken to be in the same frame.
 ///
-/// The bounding-box information is kept coherent during addition of
-/// projected elements and projection parameter updates. This is
-/// called only in case the manager has not been populated at all.
+/// Returns nullptr when neither chain has a matrix, and the model's own matrix
+/// when it is the only one. Otherwise fills `t` and returns it, so `t` must
+/// outlive the result.
+
+const REveTrans *REveProjectionManager::GetModelTrans(REveElement *model, REveTrans &t)
+{
+   REveTrans wm;
+   const int nm = ComposeSceneTrans(wm);
+   const int n = model->ComposeSceneTrans(t);
+
+   if (nm == 0) {
+      if (n == 0)
+         return nullptr;
+      if (n == 1 && model->PtrMainTrans(kFALSE))
+         return model->PtrMainTrans(kFALSE);
+      return &t;
+   }
+
+   wm.Invert();
+   if (n == 0)
+      t = wm;
+   else
+      t.MultLeft(wm);
+   return &t;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the bounding box (virtual from REveElement) with the union of the
+/// boxes of the projected elements below the children and the nieces.
+/// ImportElements() and ProjectChildren() also widen it as they project.
 
 void REveProjectionManager::ComputeBBox()
 {
-   static const REveException eH("REveProjectionManager::ComputeBBox ");
-
    if ( ! HasChildren() && ! HasNieces())
    {
       BBoxZero();
@@ -423,4 +510,20 @@ void REveProjectionManager::ComputeBBox()
    }
 
    BBoxInit();
+
+   std::function<void(REveElement *)> add = [&](REveElement *el) {
+      if (dynamic_cast<REveProjected *>(el) && el->AssertBBox() == kBBoxSet &&
+          el->GetBBoxMin().fX <= el->GetBBoxMax().fX) {
+         BBoxCheckPoint(el->GetBBoxMin());
+         BBoxCheckPoint(el->GetBBoxMax());
+      }
+      for (auto &c : el->RefChildren())
+         add(c);
+   };
+   for (auto &c : fChildren)
+      add(c);
+   for (auto &n : fNieces)
+      add(n);
+
+   AssertBBoxExtents(0.1);
 }

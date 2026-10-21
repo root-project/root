@@ -77,26 +77,21 @@ RDataLoaderEngine::RDataLoaderEngine(const std::vector<ROOT::RDF::RNode> &rdfs, 
    if (fLoadEager) {
       fDatasetLoader =
          std::make_unique<RDatasetLoader>(fRdfs, fTestSize, fCols, fVecSizes, vecPadding, fShuffle, fSetSeed);
-      fDatasetLoader->SplitDatasets();
+      fDatasetLoader->SplitDatasets(fSampleType == "");
+      fDataset = fDatasetLoader->ReleaseDataset();
+      fTrainingRows = fDatasetLoader->ReleaseTrainingRows();
+      fValidationRows = fDatasetLoader->ReleaseValidationRows();
 
       if (fSampleType == "") {
-         fDatasetLoader->ConcatenateDatasets();
-
-         fTrainingDataset = fDatasetLoader->ReleaseTrainingDataset();
-         fValidationDataset = fDatasetLoader->ReleaseValidationDataset();
-
          fNumTrainingEntries = fDatasetLoader->GetNumTrainingEntries();
          fNumValidationEntries = fDatasetLoader->GetNumValidationEntries();
       }
 
       else {
-         fTrainingDatasets = fDatasetLoader->ReleaseTrainingDatasets();
-         fValidationDatasets = fDatasetLoader->ReleaseValidationDatasets();
-
-         fTrainingSampler =
-            std::make_unique<RSampler>(fTrainingDatasets, fSampleType, fSampleRatio, fReplacement, fShuffle, fSetSeed);
-         fValidationSampler = std::make_unique<RSampler>(fValidationDatasets, fSampleType, fSampleRatio, fReplacement,
-                                                         fShuffle, fSetSeed);
+         fTrainingSampler = std::make_unique<RSampler>(fDataset, fTrainingRows, fSampleType, fSampleRatio, fReplacement,
+                                                       fShuffle, fSetSeed);
+         fValidationSampler = std::make_unique<RSampler>(fDataset, fValidationRows, fSampleType, fSampleRatio,
+                                                         fReplacement, fShuffle, fSetSeed);
 
          fNumTrainingEntries = fTrainingSampler->GetNumEntries();
          fNumValidationEntries = fValidationSampler->GetNumEntries();
@@ -334,7 +329,7 @@ void RDataLoaderEngine::LoadData()
             lock.unlock();
             // reserve the buffer and let the clusters be appended to it, filters can only make them smaller
             RFlat2DMatrix stagingBuffer;
-            stagingBuffer.fRVec.reserve(accumulatedEntries * fClusterLoader->GetNumChunkCols());
+            stagingBuffer.Reserve(accumulatedEntries, fClusterLoader->GetNumChunkCols());
             std::size_t rowOffset = 0;
 
             for (auto &cluster : trainClustersToLoad) {
@@ -357,9 +352,10 @@ void RDataLoaderEngine::LoadData()
 
             stagingBuffer.Resize(rowOffset, fClusterLoader->GetNumChunkCols());
 
-            RFlat2DMatrix shuffledStagingBuffer;
-            fTrainingBatchLoader->CreateBatches(fTensorOperators->ShuffleTensor(shuffledStagingBuffer, stagingBuffer),
-                                                isLastBuffer);
+            // the batches read the buffer in shuffled order, so it needs no shuffled copy
+            fTrainingBatchLoader->CreateBatches(stagingBuffer,
+                                                fTensorOperators->MakePermutation(stagingBuffer.GetRows()), 0,
+                                                stagingBuffer.GetRows(), isLastBuffer);
 
             // Re-acquire the lock before the next iteration to check conditions and update indices
             lock.lock();
@@ -408,7 +404,7 @@ void RDataLoaderEngine::LoadData()
             lock.unlock();
 
             RFlat2DMatrix stagingBuffer;
-            stagingBuffer.fRVec.reserve(accumulatedEntries * fClusterLoader->GetNumChunkCols());
+            stagingBuffer.Reserve(accumulatedEntries, fClusterLoader->GetNumChunkCols());
             std::size_t rowOffset = 0;
 
             for (const auto &cluster : valClustersToLoad) {
@@ -417,9 +413,9 @@ void RDataLoaderEngine::LoadData()
             }
             stagingBuffer.Resize(rowOffset, fClusterLoader->GetNumChunkCols());
 
-            RFlat2DMatrix shuffledStagingBuffer;
-            fValidationBatchLoader->CreateBatches(fTensorOperators->ShuffleTensor(shuffledStagingBuffer, stagingBuffer),
-                                                  isLastBuffer);
+            fValidationBatchLoader->CreateBatches(stagingBuffer,
+                                                  fTensorOperators->MakePermutation(stagingBuffer.GetRows()), 0,
+                                                  stagingBuffer.GetRows(), isLastBuffer);
 
             lock.lock();
          }
@@ -434,17 +430,16 @@ void RDataLoaderEngine::CreateTrainBatches()
    fTrainingBatchLoader->Activate();
 
    if (fLoadEager) {
-      RFlat2DMatrix *source = &fSampledTrainingDataset;
+      // the batches are created one at a time when they are requested, see GetTrainBatch()
       if (fSampleType == "") {
-         source = &fTensorOperators->ShuffleTensor(fSampledTrainingDataset, fTrainingDataset);
+         // the batches read the training rows of the dataset in shuffled order, so they need no copy
+         fTrainingEagerEpoch = MakeEagerEpoch(fTrainingRows[0]);
       }
 
       else {
          fTrainingSampler->Sampler(fSampledTrainingDataset);
+         fTrainingEagerEpoch = {&fSampledTrainingDataset, {}, 0, fSampledTrainingDataset.GetRows()};
       }
-
-      fTrainingBatchLoader->CreateBatches(*source, true);
-      fTrainingBatchLoader->MarkProducerDone();
    }
 }
 
@@ -455,23 +450,60 @@ void RDataLoaderEngine::CreateValidationBatches()
    fValidationBatchLoader->Activate();
 
    if (fLoadEager) {
-      RFlat2DMatrix *source = &fSampledValidationDataset;
+      // the batches are created one at a time when they are requested, see GetValidationBatch()
       if (fSampleType == "") {
-         source = &fTensorOperators->ShuffleTensor(fSampledValidationDataset, fValidationDataset);
+         fValidationEagerEpoch = MakeEagerEpoch(fValidationRows[0]);
       }
 
       else {
          fValidationSampler->Sampler(fSampledValidationDataset);
+         fValidationEagerEpoch = {&fSampledValidationDataset, {}, 0, fSampledValidationDataset.GetRows()};
       }
+   }
+}
 
-      fValidationBatchLoader->CreateBatches(*source, true);
-      fValidationBatchLoader->MarkProducerDone();
+/// \brief The eager epoch reading the given rows of the dataset, in shuffled order when shuffling
+RDataLoaderEngine::REagerEpoch RDataLoaderEngine::MakeEagerEpoch(const std::vector<std::size_t> &rows)
+{
+   // contiguous rows read in order are a range of the dataset, they need no permutation
+   if (!fShuffle && (rows.empty() || rows.back() - rows.front() + 1 == rows.size())) {
+      const std::size_t beginRow = rows.empty() ? 0 : rows.front();
+      return {&fDataset, {}, beginRow, beginRow + rows.size()};
+   }
+
+   // shuffling a copy of the rows gives the same order as reading them through a shuffled permutation
+   std::vector<std::size_t> permutation = rows;
+   fTensorOperators->ShuffleIndices(permutation);
+   const std::size_t numRows = permutation.size();
+   return {&fDataset, std::move(permutation), 0, numRows};
+}
+
+/// \brief Create the next batch of an eager epoch, unless one is already queued or the epoch is done
+void RDataLoaderEngine::CreateNextEagerBatch(RBatchLoader &batchLoader, REagerEpoch &epoch)
+{
+   if (!epoch.fSource) {
+      return;
+   }
+
+   // a slice of one batch size gives a full batch, the last slice also gives the leftover batch
+   while (batchLoader.GetNumBatchQueue() == 0 && !batchLoader.isProducerDone()) {
+      const std::size_t endRow =
+         std::min(epoch.fNextRow + std::max<std::size_t>(batchLoader.GetBatchSize(), 1), epoch.fEndRow);
+      batchLoader.CreateBatches(*epoch.fSource, epoch.fPermutation, epoch.fNextRow, endRow, endRow == epoch.fEndRow);
+      epoch.fNextRow = endRow;
+      if (endRow == epoch.fEndRow) {
+         batchLoader.MarkProducerDone();
+      }
    }
 }
 
 /// \brief Loads a training batch from the queue
 RFlat2DMatrix RDataLoaderEngine::GetTrainBatch()
 {
+   if (fLoadEager) {
+      CreateNextEagerBatch(*fTrainingBatchLoader, fTrainingEagerEpoch);
+   }
+
    // Get next batch if available
    return fTrainingBatchLoader->GetBatch();
 }
@@ -479,6 +511,10 @@ RFlat2DMatrix RDataLoaderEngine::GetTrainBatch()
 /// \brief Loads a validation batch from the queue
 RFlat2DMatrix RDataLoaderEngine::GetValidationBatch()
 {
+   if (fLoadEager) {
+      CreateNextEagerBatch(*fValidationBatchLoader, fValidationEagerEpoch);
+   }
+
    // Get next batch if available
    return fValidationBatchLoader->GetBatch();
 }

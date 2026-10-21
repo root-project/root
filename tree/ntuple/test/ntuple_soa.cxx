@@ -71,6 +71,13 @@ TEST(RNTuple, SoACheck)
    }
 
    try {
+      auto f = std::make_unique<RSoAField>("f", "SoAUnversioned");
+      FAIL() << "creating unversioned SoA field should fail";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), ::testing::HasSubstr("is transient or unversioned"));
+   }
+
+   try {
       auto f = std::make_unique<RSoAField>("f", "SoASimpleBadArray");
       FAIL() << "creating SoA field with arrays should fail";
    } catch (const ROOT::RException &e) {
@@ -607,6 +614,31 @@ TEST(RNTuple, SoARename)
       // use the imposed model.
 
       auto leafSoA = reader->GetModel().GetDefaultEntry().GetPtr<SoALeafNew>("leaf");
+      reader->LoadEntry(0);
+
+      EXPECT_EQ(2u, leafSoA->fBase.size());
+      EXPECT_EQ(2u, leafSoA->fNew.size());
+      EXPECT_EQ(2u, leafSoA->fIntermediate.size());
+      EXPECT_EQ(2u, leafSoA->fLeaf.size());
+      EXPECT_FLOAT_EQ(1.0, leafSoA->fBase[0]);
+      EXPECT_FLOAT_EQ(2.0, leafSoA->fBase[1]);
+      EXPECT_FLOAT_EQ(0.0, leafSoA->fNew[0]);
+      EXPECT_FLOAT_EQ(0.0, leafSoA->fNew[1]);
+      EXPECT_FLOAT_EQ(3.0, leafSoA->fIntermediate[0]);
+      EXPECT_FLOAT_EQ(4.0, leafSoA->fIntermediate[1]);
+      EXPECT_FLOAT_EQ(5.0, leafSoA->fLeaf[0]);
+      EXPECT_FLOAT_EQ(6.0, leafSoA->fLeaf[1]);
+   }
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      model->AddField(std::make_unique<RSoAField>("leaf", "SoALeafNewNoRenameRule"));
+      auto reader = ROOT::RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+
+      // We cannot use "Show()" because that will reconstruct the original model as a display model, it will not
+      // use the imposed model.
+
+      auto leafSoA = reader->GetModel().GetDefaultEntry().GetPtr<SoALeafNewNoRenameRule>("leaf");
       reader->LoadEntry(0);
 
       EXPECT_EQ(2u, leafSoA->fBase.size());

@@ -19,9 +19,21 @@ ParserFuncSignature ParseSelu = [](RModelParser_ONNX &parser, const onnx::NodePr
 
    std::unique_ptr<ROperator> op;
 
+   // default values from the ONNX specification
+   float attr_alpha = 1.67326319217681884765625;
+   float attr_gamma = 1.05070102214813232421875;
+
+   for (int_t i = 0; i < nodeproto.attribute_size(); i++) {
+      std::string attribute_name = nodeproto.attribute(i).name();
+      if (attribute_name == "alpha")
+         attr_alpha = nodeproto.attribute(i).f();
+      else if (attribute_name == "gamma")
+         attr_gamma = nodeproto.attribute(i).f();
+   }
+
    std::string output_name = nodeproto.output(0);
    switch (input_type) {
-   case ETensorType::FLOAT: op.reset(new ROperator_Selu<float>(input_name, output_name)); break;
+   case ETensorType::FLOAT: op.reset(new ROperator_Selu<float>(attr_alpha, attr_gamma, input_name, output_name)); break;
    default:
       throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Selu does not yet support input type " +
                                std::to_string(static_cast<int>(input_type)));

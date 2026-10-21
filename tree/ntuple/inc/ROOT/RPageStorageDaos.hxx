@@ -26,6 +26,7 @@
 #include <atomic>
 #include <cstdio>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <optional>
 
@@ -151,6 +152,8 @@ private:
 
    /// A container that stores object data (header/footer, pages, etc.)
    std::unique_ptr<RDaosContainer> fDaosContainer;
+   /// Protects the DAOS container
+   std::mutex fContainerLock;
    /// A URI to a DAOS pool of the form 'daos://pool-label/container-label'
    std::string fURI;
 

@@ -109,17 +109,34 @@ private:
    std::size_t fNumValidationEntries;
 
    // flattened buffers for chunks and temporary tensors (rows * cols)
-   std::vector<RFlat2DMatrix> fTrainingDatasets;
-   std::vector<RFlat2DMatrix> fValidationDatasets;
+   RFlat2DMatrix fDataset;
 
-   RFlat2DMatrix fTrainingDataset;
-   RFlat2DMatrix fValidationDataset;
+   // rows of fDataset in the training and validation sets, one set per dataframe when sampling
+   std::vector<std::vector<std::size_t>> fTrainingRows;
+   std::vector<std::vector<std::size_t>> fValidationRows;
 
    RFlat2DMatrix fSampledTrainingDataset;
    RFlat2DMatrix fSampledValidationDataset;
 
    std::size_t fTrainingEpochCount{0};
    std::size_t fValidationEpochCount{0};
+
+   /// \brief Rows of an eager epoch, turned into batches as they are requested
+   struct REagerEpoch {
+      // non-owning pointer: the data stays in the engine's own members (fDataset for the normal path,
+      // fSampledTraining/ValidationDataset for the sampler path)
+      const RFlat2DMatrix *fSource = nullptr;
+      std::vector<std::size_t> fPermutation;
+      std::size_t fNextRow = 0;
+      std::size_t fEndRow = 0;
+   };
+
+   REagerEpoch fTrainingEagerEpoch;
+   REagerEpoch fValidationEagerEpoch;
+
+   REagerEpoch MakeEagerEpoch(const std::vector<std::size_t> &rows);
+
+   void CreateNextEagerBatch(RBatchLoader &batchLoader, REagerEpoch &epoch);
 
    std::vector<RColumnLayout> MakeColumnLayout();
 

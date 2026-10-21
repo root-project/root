@@ -1048,7 +1048,7 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
 
    if (!fIsArtificial) {
       auto descGuard = pageSource.GetSharedDescriptorGuard();
-      ReconcileOnDiskField(descGuard.GetRef());
+      ReconcileOnDiskField(descGuard.GetConstRef());
    }
 
    for (auto &f : fSubfields) {
@@ -1061,7 +1061,7 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
    // Do not generate columns nor set fColumnRepresentatives for artificial fields.
    if (!fIsArtificial) {
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
-      const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetRef();
+      const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetConstRef();
       GenerateColumns(desc);
       if (fColumnRepresentatives.empty()) {
          // If we didn't get columns from the descriptor, ensure that we actually expect a field without columns
