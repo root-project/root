@@ -88,3 +88,7 @@ ROOTTEST_ADD_TEST(enumSize
 ROOTTEST_ADD_TEST(testUsingEnum.cxx
                   MACRO test_usingenum.cxx
                   OUTREF test_usingenum.ref)
+
+ROOTTEST_ADD_TEST(enumOptList
+                  MACRO execenumOptList.C
+                  OUTREF execenumOptList.ref)
