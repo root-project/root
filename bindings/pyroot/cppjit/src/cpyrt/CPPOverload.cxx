@@ -615,6 +615,36 @@ static PyObject* mp_vectorcall(CPPOverload* pymeth, PyObject* const* args,
     overloads.push_back(i->GetMethod());
   }
 
+  // In a call of a set of static and non-static methods on an object (bound,
+  // or unbound with the object as first argument, as Python makes for
+  // obj.f(...)), the object is an argument for the non-static methods only,
+  // so they can't be resolved together with the static ones. Pick the kind of
+  // methods by the object: if there is one, the non-static methods, otherwise
+  // the static ones.
+  if (is_static && !IsConstructor(ctxt.fFlags)) {
+    std::vector<interop::TCppMethod_t> non_static, static_methods;
+    for (auto m : overloads)
+      (interop::IsNonStaticMethod(m) ? non_static : static_methods)
+          .push_back(m);
+    if (!non_static.empty()) {
+      bool has_object = (bool)im_self;
+      PyObject* first = PyVectorcall_NARGS(nargsf) > 0
+                            ? cpyrt_PyArgs_GET_ITEM(args, 0)
+                            : nullptr;
+      if (!has_object && first && CPPInstance_Check(first)) {
+        interop::TCppScope_t cls = ((CPPClass*)Py_TYPE(first))->fCppType;
+        for (auto m : non_static) {
+          if (interop::IsSubclass(cls, interop::GetParentScope(m.data))) {
+            has_object = true;
+            break;
+          }
+        }
+      }
+      overloads = has_object ? non_static : static_methods;
+      is_static = !has_object;
+    }
+  }
+
   std::string proto = "";
   if (im_self && !(ctxt.fFlags & CallContext::kIsConstructor)) {
     PyObject* self = (PyObject*)im_self;

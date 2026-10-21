@@ -695,3 +695,30 @@ class TestOVERLOADS:
         assert h.fPtr.f(1) == 1
         assert h.fPtr.f(1.5) == 2
         assert ns.S.f(h.fPtr, 1) == 1
+
+    def test27_static_and_non_static_methods(self):
+        """Sets of static and non-static methods don't crash the resolution"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace MixStatic {
+          struct S {
+            int f(int) { return 1; }
+            int f(const char*, int) { return 2; }
+            static int f(S*, const char*, int) { return 3; }
+            static int f(double, double) { return 4; }
+          };
+        }""")
+
+        ns = cppjit.gbl.MixStatic
+        s = ns.S()
+        # called on an object: the non-static methods
+        assert s.f(1) == 1
+        assert s.f("a", 1) == 2
+        # called through the class without an object: the static methods
+        assert ns.S.f(1.0, 2.0) == 4
+        # a static method called on an object would get the object as well;
+        # that isn't supported, but must fail cleanly
+        with raises(TypeError):
+            s.f(1.0, 2.0)
