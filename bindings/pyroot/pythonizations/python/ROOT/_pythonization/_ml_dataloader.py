@@ -44,6 +44,16 @@ def _exclude_target_and_weights(columns: list[str], target_columns: list[str], w
     return [str(f) for f in columns if str(f) not in excluded]
 
 
+def _raise_if_implicit_mt(rdfs: list) -> None:
+    """Raise if ImplicitMT is enabled, or was when one of the RDataFrames was created."""
+    import ROOT
+
+    if ROOT.IsImplicitMTEnabled() or any(rdf.GetNSlots() > 1 for rdf in rdfs):
+        raise RuntimeError(
+            "Cannot use RDataLoader with implicit multi-threading enabled, call ROOT.DisableImplicitMT() before creating the data loader and its inputs."
+        )
+
+
 class _RDataLoader:
     def _resolve_columns(
         self,
@@ -205,6 +215,7 @@ class _RDataLoader:
         if not hasattr(rdataframes, "__iter__"):
             rdataframes = [rdataframes]
         self.noded_rdfs = [RDF.AsRNode(rdf) for rdf in rdataframes]
+        _raise_if_implicit_mt(self.noded_rdfs)
 
         self.target_columns = _normalize_target(target)
         self.weights_column = weights
@@ -272,10 +283,12 @@ class _RDataLoader:
 
     def ActivateTrainingEpoch(self):
         """Activate the training epoch of the generator"""
+        _raise_if_implicit_mt(self.noded_rdfs)
         self.engine.ActivateTrainingEpoch()
 
     def ActivateValidationEpoch(self):
         """Activate the validation epoch of the generator"""
+        _raise_if_implicit_mt(self.noded_rdfs)
         self.engine.ActivateValidationEpoch()
 
     def DeActivateTrainingEpoch(self):
@@ -493,6 +506,7 @@ class _RDataLoader:
         return batch if (batch and batch.GetSize() > 0) else None
 
     def Save(self, dataset_name: str, filename: str, is_training: bool, output_format: str) -> None:
+        _raise_if_implicit_mt(self.noded_rdfs)
         self.engine.Save(dataset_name, filename, is_training, output_format)
 
 

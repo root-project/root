@@ -8123,5 +8123,22 @@ class DataLoaderSave(unittest.TestCase):
         np.testing.assert_array_equal(w.flatten(), np.full(20, 0.5))
 
 
+class DataLoaderImplicitMT(unittest.TestCase):
+    file_name = "dataloader_imt.root"
+    tree_name = "mytree"
+
+    def tearDown(self):
+        ROOT.DisableImplicitMT()
+        os.remove(self.file_name)
+
+    def test01_implicit_mt_not_supported(self):
+        ROOT.RDataFrame(10).Define("b1", "(int) rdfentry_").Snapshot(self.tree_name, self.file_name)
+        ROOT.EnableImplicitMT(2)
+        df = ROOT.RDataFrame(self.tree_name, self.file_name)
+
+        with self.assertRaisesRegex(RuntimeError, "Cannot use RDataLoader with implicit multi-threading enabled"):
+            ROOT.Experimental.ML.RDataLoader(df, batch_size=2).as_numpy()
+
+
 if __name__ == "__main__":
     unittest.main()
