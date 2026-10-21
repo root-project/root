@@ -308,20 +308,18 @@ void TRootContextMenu::CreateMenu(TObject *object)
                TList *methodList = new TList;
                object->IsA()->GetMenuItems(methodList);
 
-               TMethod *method;
-               TClass  *classPtr = 0;
+               TClass  *classPtr = nullptr;
                TIter next(methodList);
                Bool_t needSep = kFALSE;
 
-               while ((method = (TMethod*) next())) {
+               while (auto method = (TMethod*) next()) {
                   if (classPtr != method->GetClass()) {
                      needSep = kTRUE;
                      classPtr = method->GetClass();
                   }
 
-                  TDataMember *m;
                   EMenuItemKind menuKind = method->IsMenuItem();
-                  TGPopupMenu *currentMenu = 0;
+                  TGPopupMenu *currentMenu = nullptr;
                   TString last_component;
 
                   switch (menuKind) {
@@ -335,12 +333,12 @@ void TRootContextMenu::CreateMenu(TObject *object)
                         AddEntrySorted(currentMenu,last_component.Length() ? last_component.Data() : method->GetName(), entry++, method,0,currentMenu != this);
                         break;
                      case kMenuSubMenu:
-                        if ((m = method->FindDataMember())) {
+                        if (auto member = method->FindDataMember()) {
 
                            // search for arguments to the MENU statement
                            currentMenu = FindHierarchy(method->GetCommentString(),last_component);
 
-                           if (m->GetterMethod()) {
+                           if (member->GetterMethod()) {
                               TGPopupMenu *r = new TGPopupMenu(gClient->GetDefaultRoot());
                               if (needSep && currentMenu == this) {
                                  AddSeparator();
@@ -352,18 +350,14 @@ void TRootContextMenu::CreateMenu(TObject *object)
                                  currentMenu->AddPopup(method->GetName(), r);
                               }
                               fTrash->Add(r);
-                              TIter nxt(m->GetOptions());
-                              TOptionListItem *it;
-                              while ((it = (TOptionListItem*) nxt())) {
-                                 const char *name = it->fOptName;
-                                 Long_t val = it->fValue;
-
+                              TIter nxt(member->GetOptions());
+                              while (auto it = (TOptionListItem*) nxt()) {
                                  TToggle *t = new TToggle;
-                                 t->SetToggledObject(object, method);
-                                 t->SetOnValue(val);
+                                 t->SetToggledObject(object, member);
+                                 t->SetOnValue(it->fValue);
                                  fTrash->Add(t);
 
-                                 r->AddEntry(name, togglelist++, t);
+                                 r->AddEntry(it->fOptName, togglelist++, t);
                                  if (t->GetState())
                                     r->CheckEntry(togglelist-1);
                               }
