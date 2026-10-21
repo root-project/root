@@ -71,22 +71,22 @@ public:
 namespace Experimental {
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleProcessorOptionalPtr<T>
+\class ROOT::RNTupleProcessorValuePtr<T>
 \ingroup NTuple
-\brief The RNTupleProcessorOptionalPtr provides access to values from fields present in an RNTupleProcessor, with support
+\brief The RNTupleProcessorValuePtr provides access to values from fields present in an RNTupleProcessor, with support
 and checks for missing values.
 */
 // clang-format on
 template <typename T>
-class RNTupleProcessorOptionalPtr {
+class RNTupleProcessorValuePtr {
    friend class RNTupleProcessor;
 
 private:
    ROOT::Internal::RNTupleProcessorEntry *fProcessorEntry;
    ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fFieldIndex;
 
-   RNTupleProcessorOptionalPtr(ROOT::Internal::RNTupleProcessorEntry *processorEntry,
-                               ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fieldIdx)
+   RNTupleProcessorValuePtr(ROOT::Internal::RNTupleProcessorEntry *processorEntry,
+                            ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fieldIdx)
       : fProcessorEntry(processorEntry), fFieldIndex(fieldIdx)
    {
    }
@@ -105,7 +105,7 @@ private:
    /// \warning Use this function with care! Values may not always be valid for every entry during processing, for
    /// example when a field is not present in one of the chained processors or when during a join operation, no matching
    /// entry in the auxiliary processor can be found. Reading `valuePtr` as-is therefore comes with the risk of reading
-   /// invalid data. After binding a pointer to an `RNTupleProcessorOptionalPtr`, we *strongly* recommend only accessing
+   /// invalid data. After binding a pointer to an `RNTupleProcessorValuePtr`, we *strongly* recommend only accessing
    /// its data through this interface, to ensure that only valid data can be read.
    void BindRawPtr(T *valuePtr) { fProcessorEntry->BindRawPtr(fFieldIndex, valuePtr); }
 
@@ -136,7 +136,7 @@ public:
    /// \warning Use this function with care! Values may not always be valid for every entry during processing, for
    /// example when a field is not present in one of the chained processors or when during a join operation, no matching
    /// entry in the auxiliary processor can be found. Reading `valuePtr` as-is therefore comes with the risk of reading
-   /// invalid data. After binding a pointer to an `RNTupleProcessorOptionalPtr`, we *strongly* recommend only accessing
+   /// invalid data. After binding a pointer to an `RNTupleProcessorValuePtr`, we *strongly* recommend only accessing
    /// its data through this interface, to ensure that only valid data can be read.
    void Bind(std::shared_ptr<T> valuePtr) { fProcessorEntry->Bind(fFieldIndex, std::move(valuePtr)); }
 
@@ -166,7 +166,7 @@ public:
                                   "\" because it has no value for the current entry"));
    }
 
-   friend bool operator==(const RNTupleProcessorOptionalPtr<T> &lhs, const RNTupleProcessorOptionalPtr<T> &rhs)
+   friend bool operator==(const RNTupleProcessorValuePtr<T> &lhs, const RNTupleProcessorValuePtr<T> &rhs)
    {
       return lhs.fProcessorEntry == rhs.fProcessorEntry && lhs.fFieldIndex == rhs.fFieldIndex;
    }
@@ -174,21 +174,21 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleProcessorOptionalPtr<void>
+\class ROOT::RNTupleProcessorValuePtr<void>
 \ingroup NTuple
-\brief Specialization of RNTupleProcessorOptionalPtr<T> for `void`-type pointers.
+\brief Specialization of RNTupleProcessorValuePtr<T> for `void`-type pointers.
 */
 // clang-format on
 template <>
-class RNTupleProcessorOptionalPtr<void> {
+class RNTupleProcessorValuePtr<void> {
    friend class RNTupleProcessor;
 
 private:
    ROOT::Internal::RNTupleProcessorEntry *fProcessorEntry;
    ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fFieldIndex;
 
-   RNTupleProcessorOptionalPtr(ROOT::Internal::RNTupleProcessorEntry *processorEntry,
-                               ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fieldIdx)
+   RNTupleProcessorValuePtr(ROOT::Internal::RNTupleProcessorEntry *processorEntry,
+                            ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fieldIdx)
       : fProcessorEntry(processorEntry), fFieldIndex(fieldIdx)
    {
    }
@@ -207,7 +207,7 @@ private:
    /// \warning Use this function with care! Values may not always be valid for every entry during processing, for
    /// example when a field is not present in one of the chained processors or when during a join operation, no matching
    /// entry in the auxiliary processor can be found. Reading `valuePtr` as-is therefore comes with the risk of reading
-   /// invalid data. After binding a pointer to an `RNTupleProcessorOptionalPtr`, we *strongly* recommend only accessing
+   /// invalid data. After binding a pointer to an `RNTupleProcessorValuePtr`, we *strongly* recommend only accessing
    /// its data through this interface, to ensure that only valid data can be read.
    void BindRawPtr(void *valuePtr) { fProcessorEntry->BindRawPtr(fFieldIndex, valuePtr); }
 
@@ -238,11 +238,11 @@ public:
    /// \warning Use this function with care! Values may not always be valid for every entry during processing, for
    /// example when a field is not present in one of the chained processors or when during a join operation, no matching
    /// entry in the auxiliary processor can be found. Reading `valuePtr` as-is therefore comes with the risk of reading
-   /// invalid data. After binding a pointer to an `RNTupleProcessorOptionalPtr`, we *strongly* recommend only accessing
+   /// invalid data. After binding a pointer to an `RNTupleProcessorValuePtr`, we *strongly* recommend only accessing
    /// its data through this interface, to ensure that only valid data can be read.
    void Bind(std::shared_ptr<void> valuePtr) { fProcessorEntry->Bind(fFieldIndex, std::move(valuePtr)); }
 
-   friend bool operator==(const RNTupleProcessorOptionalPtr<void> &lhs, const RNTupleProcessorOptionalPtr<void> &rhs)
+   friend bool operator==(const RNTupleProcessorValuePtr<void> &lhs, const RNTupleProcessorValuePtr<void> &rhs)
    {
       return lhs.fProcessorEntry == rhs.fProcessorEntry && lhs.fFieldIndex == rhs.fFieldIndex;
    }
@@ -319,7 +319,7 @@ processor, i.e. taking into account previously processed RNTuples.
 
 Because the schemas of each RNTuple that are part of an RNTupleProcessor may not necessarily be identical, or because
 it can occur that entries are only partially complete in a join-based processor, field values may be marked as
-"invalid", at which point their data should not be read. This is handled by the RNTupleProcessorOptionalPtr
+"invalid", at which point their data should not be read. This is handled by the RNTupleProcessorValuePtr
 that is returned by RequestField().
 */
 // clang-format on
@@ -576,15 +576,15 @@ public:
    /// \param[in] valuePtr Pointer to bind to the field's value in the entry. If this is a `nullptr`, a pointer will be
    /// created.
    ///
-   /// \return An RNTupleProcessorOptionalPtr of type `T`, which provides access to the field's value.
+   /// \return An RNTupleProcessorValuePtr of type `T`, which provides access to the field's value.
    ///
    /// \warning Provide a `valuePtr` with care! Values may not always be valid for every entry during processing, for
    /// example when a field is not present in one of the chained processors or when during a join operation, no matching
    /// entry in the auxiliary processor can be found. Reading `valuePtr` as-is therefore comes with the risk of reading
    /// invalid data. After passing a pointer to `RequestField`, we *strongly* recommend only accessing its data through
-   /// the interface of the returned `RNTupleProcessorOptionalPtr`, to ensure that only valid data can be read.
+   /// the interface of the returned `RNTupleProcessorValuePtr`, to ensure that only valid data can be read.
    template <typename T>
-   RNTupleProcessorOptionalPtr<T> RequestField(const std::string &fieldName, void *valuePtr = nullptr)
+   RNTupleProcessorValuePtr<T> RequestField(const std::string &fieldName, void *valuePtr = nullptr)
    {
       Initialize(fEntry);
       std::string typeName{};
@@ -601,13 +601,13 @@ public:
             throw RException(R__FAIL("attempted to request a field with user-provided value pointer to field \"" +
                                      fieldName +
                                      "\", which already exists in the entry. To change the underlying value pointer, "
-                                     "use RNTupleProcessorOptionalPtr::Bind instead."));
+                                     "use RNTupleProcessorValuePtr::Bind instead."));
          }
-         return RNTupleProcessorOptionalPtr<T>(fEntry.get(), *fieldIdx);
+         return RNTupleProcessorValuePtr<T>(fEntry.get(), *fieldIdx);
       }
 
       auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, ROOT::Internal::RNTupleProcessorProvenance());
-      return RNTupleProcessorOptionalPtr<T>(fEntry.get(), fieldIdx);
+      return RNTupleProcessorValuePtr<T>(fEntry.get(), fieldIdx);
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -618,19 +618,19 @@ public:
    /// \param[in] valuePtr Pointer to bind to the field's value in the entry. If this is a `nullptr`, a pointer will be
    /// created.
    ///
-   /// \return An void-type RNTupleProcessorOptionalPtr, which provides access to the field's value.
+   /// \return An void-type RNTupleProcessorValuePtr, which provides access to the field's value.
    ///
    /// \warning Provide a `valuePtr` with care! Values may not always be valid for every entry during processing, for
    /// example when a field is not present in one of the chained processors or when during a join operation, no matching
    /// entry in the auxiliary processor can be found. Reading `valuePtr` as-is therefore comes with the risk of reading
    /// invalid data. After passing a pointer to `RequestField`, we *strongly* recommend only accessing its data through
-   /// the interface of the returned `RNTupleProcessorOptionalPtr`, to ensure that only valid data can be read.
-   RNTupleProcessorOptionalPtr<void>
+   /// the interface of the returned `RNTupleProcessorValuePtr`, to ensure that only valid data can be read.
+   RNTupleProcessorValuePtr<void>
    RequestField(const std::string &fieldName, const std::string &typeName, void *valuePtr = nullptr)
    {
       Initialize(fEntry);
       auto fieldIdx = AddFieldToEntry(fieldName, typeName, valuePtr, ROOT::Internal::RNTupleProcessorProvenance());
-      return RNTupleProcessorOptionalPtr<void>(fEntry.get(), fieldIdx);
+      return RNTupleProcessorValuePtr<void>(fEntry.get(), fieldIdx);
    }
 
    /////////////////////////////////////////////////////////////////////////////
