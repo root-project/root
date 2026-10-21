@@ -197,6 +197,15 @@ The behavior for one-dimensional histograms is unchanged. Code that relied on
 the previous 2D/3D output (for example to build per-axis selection efficiency
 maps) will now obtain different, mathematically consistent values.
 
+### New histogram package
+
+The new histogram package continues development in the `ROOT::Experimental` namespace.
+This release introduces `RHistEngine::SnapshotAtomic` to obtain a consistent copy during concurrent filling.
+There is now a class [`ROOT::Experimental::RProfile`](https://root.cern/doc/v642/classROOT_1_1Experimental_1_1RProfile.html)
+for (multidimensional) profile histograms.
+`RHist` and `RHistEngine` with two or three dimensions can be converted to `TH2` or `TH3`.
+More conversion functions will continue to be added in the future (`THn`, `TProfile`).
+
 ## Math
 
 ### Skipping identically-vanishing second derivatives in numerical Hessian evaluation
