@@ -786,7 +786,8 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
 ///      WebGui.ReconnectTmout: time to reconnect for already existing connection, if negative - no reconnecting possible (default 15 s)
 ///      WebGui.BatchTimeout: time required to produce images in headless (batch) mode (default 30 s)
-///      WebGui.CefTimer: periodic time to run CEF event loop (default 10 ms)
+///      WebGui.Qt6Timer: periodic timer to run Qt6 event loop, used with 'qt6' web display (default 10 ms)
+///      WebGui.CefTimer: periodic timer to run CEF event loop, used with 'cef' web display (default 10 ms)
 ///      WebGui.CefUseViews: "yes" - enable / "no" - disable usage of CEF views frameworks (default is platform/version dependent)
 ///      WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings
 ///      WebGui.RecordData: if specified enables data recording for each web window; "yes" or "no" (default)
