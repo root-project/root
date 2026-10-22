@@ -235,11 +235,9 @@ class TFileGetOwnership(unittest.TestCase):
     def test_owned_by_directory(self):
         with TFile(self.filename) as f:
             for name in ["h", "t", "dir"]:
-                obj = f.Get(name)
-                self.assertFalse(obj.__python_owns__, name)
-                del obj
+                self.assertFalse(f.Get(name).__python_owns__, name)
                 # The object is still alive in the directory
-                self.assertTrue(f.GetList().FindObject(name), name)
+                self.assertTrue(f.GetList().FindObject(name), msg=name)
                 self.assertEqual(f.Get(name).GetName(), name)
 
     def test_owned_by_python(self):
