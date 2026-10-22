@@ -913,6 +913,14 @@ TEST(RDataFrameInterface, StressShortSyntaxForCollectionSizes)
    EXPECT_EQ(c, 42ull);
 }
 
+// make sure string literals containing # are not modified (issue #23790)
+TEST(RDataFrameInterface, ShortSyntaxRespectsStringLiterals)
+{
+   auto df = ROOT::RDataFrame(1).Define("col", "std::string(\"#a\")").Filter("col == \"#a\"");
+   EXPECT_EQ(df.Count().GetValue(), 1ull);
+   EXPECT_EQ(*df.Take<std::string>("col")->begin(), "#a");
+}
+
 TEST(RDataFrameInterface, MutableForeach)
 {
    int i = 0;

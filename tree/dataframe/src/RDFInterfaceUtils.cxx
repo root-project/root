@@ -172,15 +172,99 @@ TString ResolveAliases(const TString &expr, const ColumnNames_t &usedAliases,
    return out;
 }
 
-ParsedExpression ParseRDFExpression(std::string_view expr, const ROOT::Internal::RDF::RColumnRegister &colRegister,
-                                    const ColumnNames_t &dataSourceColNames)
+/// Transform `#var` into `R_rdf_sizeof_var` in `expr`, skipping string literals, character literals, and comments.
+TString ReplaceHashVarOutsideLiterals(std::string_view expr)
 {
-   // transform `#var` into `R_rdf_sizeof_var`
-   TString preProcessedExpr(expr);
    // match #varname at beginning of the sentence or after not-a-word, but exclude preprocessor directives like #ifdef
    TPRegexp colSizeReplacer(
       "(^|\\W)#(?!(ifdef|ifndef|if|else|elif|endif|pragma|define|undef|include|line))([a-zA-Z_][a-zA-Z0-9_]*)");
-   colSizeReplacer.Substitute(preProcessedExpr, "$1R_rdf_sizeof_$3", "g");
+
+   TString result;
+   size_t pos = 0;
+   const size_t len = expr.size();
+
+   while (pos < len) {
+      size_t litStart = pos;
+      while (litStart < len) {
+         char c = expr[litStart];
+         if (c == '"' || c == '\'') {
+            break;
+         }
+         if (c == '/' && litStart + 1 < len) {
+            if (expr[litStart + 1] == '/' || expr[litStart + 1] == '*') {
+               break;
+            }
+         }
+         ++litStart;
+      }
+
+      if (litStart > pos) {
+         TString codeChunk(expr.data() + pos, litStart - pos);
+         colSizeReplacer.Substitute(codeChunk, "$1R_rdf_sizeof_$3", "g");
+         result += codeChunk;
+      }
+
+      if (litStart >= len) {
+         break;
+      }
+
+      size_t litEnd = litStart;
+      char quote = expr[litStart];
+
+      if (quote == '"' || quote == '\'') {
+         bool isRawString = false;
+         if (quote == '"' && litStart > 0 && expr[litStart - 1] == 'R') {
+            if (litStart == 1 || (!isalnum(expr[litStart - 2]) && expr[litStart - 2] != '_')) {
+               size_t paren = expr.find('(', litStart + 1);
+               if (paren != std::string_view::npos) {
+                  std::string delim = ")" + std::string(expr.substr(litStart + 1, paren - (litStart + 1))) + "\"";
+                  size_t closePos = expr.find(delim, paren + 1);
+                  if (closePos != std::string_view::npos) {
+                     isRawString = true;
+                     litEnd = closePos + delim.size();
+                  } else {
+                     isRawString = true;
+                     litEnd = len;
+                  }
+               }
+            }
+         }
+
+         if (!isRawString) {
+            ++litEnd;
+            while (litEnd < len) {
+               if (expr[litEnd] == '\\') {
+                  litEnd += 2; // skip escape sequence
+               } else if (expr[litEnd] == quote) {
+                  ++litEnd;
+                  break;
+               } else {
+                  ++litEnd;
+               }
+            }
+         }
+      } else if (quote == '/') {
+         if (expr[litStart + 1] == '/') {
+            size_t nl = expr.find('\n', litStart + 2);
+            litEnd = (nl != std::string_view::npos) ? nl + 1 : len;
+         } else if (expr[litStart + 1] == '*') {
+            size_t closePos = expr.find("*/", litStart + 2);
+            litEnd = (closePos != std::string_view::npos) ? closePos + 2 : len;
+         }
+      }
+
+      result.Append(expr.data() + litStart, litEnd - litStart);
+      pos = litEnd;
+   }
+
+   return result;
+}
+
+ParsedExpression ParseRDFExpression(std::string_view expr, const ROOT::Internal::RDF::RColumnRegister &colRegister,
+                                    const ColumnNames_t &dataSourceColNames)
+{
+   // transform `#var` into `R_rdf_sizeof_var` while respecting string and char literals
+   const TString preProcessedExpr = ReplaceHashVarOutsideLiterals(expr);
 
    ColumnNames_t usedCols;
    ColumnNames_t usedAliases;
