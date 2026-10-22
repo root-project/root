@@ -235,20 +235,21 @@ class TFileGetOwnership(unittest.TestCase):
     def test_owned_by_directory(self):
         with TFile(self.filename) as f:
             for name in ["h", "t", "dir"]:
-                self.assertFalse(f.Get(name).__python_owns__, name)
+                self.assertFalse(f.Get(name).__python_owns__, msg=name)
                 # The object is still alive in the directory
                 self.assertTrue(f.GetList().FindObject(name), msg=name)
                 self.assertEqual(f.Get(name).GetName(), name)
 
     def test_owned_by_python(self):
         with TFile(self.filename) as f:
-            for name in ["g", "s", "v"]:
-                obj = f.Get(name)
-                self.assertTrue(obj.__python_owns__, name)
-                self.assertFalse(f.GetList().FindObject(name), name)
-            self.assertEqual(f.Get("g").GetN(), 10)
-            self.assertEqual(f.Get("s").GetString(), "s")
-            self.assertEqual(f.Get("v").size(), 10)
+            objs = {name: f.Get(name) for name in ["g", "s", "v"]}
+            for name, obj in objs.items():
+                self.assertTrue(obj.__python_owns__, msg=name)
+                self.assertFalse(f.GetList().FindObject(name), msg=name)
+        # The objects are still usable after the file is closed
+        self.assertEqual(objs["g"].GetN(), 10)
+        self.assertEqual(objs["s"].GetString(), "s")
+        self.assertEqual(objs["v"].size(), 10)
 
 
 class TFileConstructor(unittest.TestCase):
