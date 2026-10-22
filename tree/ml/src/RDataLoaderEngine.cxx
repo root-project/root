@@ -11,6 +11,23 @@
 
 namespace ROOT::Experimental::Internal::ML {
 
+namespace {
+/// \brief Merge the clusters that follow each other in the same dataframe
+std::vector<RClusterRange> MergeConsecutiveClusters(const std::vector<RClusterRange> &clusters)
+{
+   std::vector<RClusterRange> merged;
+   for (const auto &cluster : clusters) {
+      if (!merged.empty() && merged.back().rdfIdx == cluster.rdfIdx && merged.back().end == cluster.start) {
+         merged.back().end = cluster.end;
+         merged.back().SetNumEntries(merged.back().GetNumEntries() + cluster.GetNumEntries());
+      } else {
+         merged.push_back(cluster);
+      }
+   }
+   return merged;
+}
+} // namespace
+
 /// \brief Describe how the loader's columns map onto a batch-tensor row.
 std::vector<RColumnLayout> RDataLoaderEngine::MakeColumnLayout()
 {
@@ -332,6 +349,12 @@ void RDataLoaderEngine::LoadData()
             stagingBuffer.Reserve(accumulatedEntries, fClusterLoader->GetNumChunkCols());
             std::size_t rowOffset = 0;
 
+            // without shuffling, the clusters are contiguous, so we merge them to run in the same event loop;
+            // otherwise (shuffling is enabled), it is one event loop per cluster
+            if (!discovering) {
+               trainClustersToLoad = MergeConsecutiveClusters(trainClustersToLoad);
+            }
+
             for (auto &cluster : trainClustersToLoad) {
                auto loadedEntries =
                   fClusterLoader->LoadTrainingClusterInto(stagingBuffer, cluster.rdfIdx, cluster.start, cluster.end);
@@ -407,6 +430,7 @@ void RDataLoaderEngine::LoadData()
             stagingBuffer.Reserve(accumulatedEntries, fClusterLoader->GetNumChunkCols());
             std::size_t rowOffset = 0;
 
+            valClustersToLoad = MergeConsecutiveClusters(valClustersToLoad);
             for (const auto &cluster : valClustersToLoad) {
                fClusterLoader->LoadValidationClusterInto(stagingBuffer, cluster.rdfIdx, cluster.start, cluster.end);
                rowOffset += cluster.GetNumEntries();
