@@ -23,6 +23,7 @@
 #ifdef R__HAS_ROOT7
 #include <ROOT/RHist.hxx>
 #include <ROOT/RHistEngine.hxx>
+#include <ROOT/RProfile.hxx>
 #endif
 
 #include <array>
@@ -101,6 +102,13 @@ template <typename B>
 std::shared_ptr<ROOT::Experimental::RHistEngine<B>> CopyForVariations(const ROOT::Experimental::RHistEngine<B> &obj)
 {
    return std::make_shared<ROOT::Experimental::RHistEngine<B>>(obj.Clone());
+}
+
+/// \brief Specialization of CopyForVariations for ROOT::Experimental::RProfile objects, which are not copyable but
+/// clonable.
+inline std::shared_ptr<ROOT::Experimental::RProfile> CopyForVariations(const ROOT::Experimental::RProfile &obj)
+{
+   return std::make_shared<ROOT::Experimental::RProfile>(obj.Clone());
 }
 #endif
 
