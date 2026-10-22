@@ -518,22 +518,22 @@ void TRint::Run(Bool_t retrn)
 void TRint::PrintLogo(Bool_t lite)
 {
    if (!lite) {
+      const Int_t idatqq = gROOT->GetVersionDate();
+      const Int_t iday = idatqq % 100;
+      const Int_t imonth = (idatqq / 100) % 100;
+      const Int_t iyear = (idatqq / 10000);
       // Fancy formatting: the content of lines are format strings; their %s is
       // replaced by spaces needed to make all lines as long as the longest line.
       std::vector<TString> lines;
       // Here, %%s results in %s after TString::Format():
       lines.emplace_back(TString::Format("Welcome to ROOT %s%%shttps://root.cern",
                                          gROOT->GetVersion()));
-      lines.emplace_back(TString::Format("(c) 1995-2025, The ROOT Team; conception: R. Brun, F. Rademakers%%s"));
+      lines.emplace_back(TString::Format("(c) 1995-%4d, The ROOT Team; conception: R. Brun, F. Rademakers%%s", iyear));
       lines.emplace_back(TString::Format("Built for %s on %s%%s", gSystem->GetBuildArch(), gROOT->GetGitDate()));
       if (!strcmp(gROOT->GetGitBranch(), gROOT->GetGitCommit())) {
          static const char *months[] = {"January","February","March","April","May",
                                         "June","July","August","September","October",
                                         "November","December"};
-         Int_t idatqq = gROOT->GetVersionDate();
-         Int_t iday   = idatqq%100;
-         Int_t imonth = (idatqq/100)%100;
-         Int_t iyear  = (idatqq/10000);
 
          lines.emplace_back(TString::Format("From tag %s, %d %s %4d%%s",
                                             gROOT->GetGitBranch(),
