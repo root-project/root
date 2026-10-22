@@ -50,6 +50,7 @@
 #include <ROOT/RBinWithError.hxx>
 #include <ROOT/RHist.hxx>
 #include <ROOT/RHistEngine.hxx>
+#include <ROOT/RProfile.hxx>
 #endif
 
 #include <algorithm>
@@ -2356,6 +2357,234 @@ public:
 
       return CreateAction<RDFInternal::ActionTags::HistWithWeight, ColumnType, ColumnTypes...>(
          columnListWithWeights, h, h, fProxiedPtr, columnListWithWeights.size());
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a one-dimensional RProfile (*lazy action*).
+   /// \param[in] nNormalBins The returned profile histogram will be constructed using this number of normal bins.
+   /// \param[in] interval The axis interval of the constructed profile histogram (lower end inclusive, upper end
+   /// exclusive).
+   /// \param[in] xName The name of the column that will fill the profile histogram.
+   /// \param[in] vName The name of the column that will provide the values for the profile histogram.
+   /// \return the profile histogram wrapped in a RResultPtr.
+   ///
+   /// Columns can be of a container type (e.g. `std::vector` or `RVec`), in which case the profile histogram is filled
+   /// with each one of the elements of the container. In case multiple columns of container type are provided, they
+   /// must have the same length for each event (but possibly different lengths between events). Containers can be
+   /// nested, in which case their sizes must match recursively. Scalars are broadcasted to match container columns.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto myProfile = myDf.Profile(10, {5, 15}, "col0", "colV");
+   /// ~~~
+   template <typename X = RDFDetail::RInferredType, typename V = RDFDetail::RInferredType>
+   RResultPtr<ROOT::Experimental::RProfile> Profile(std::uint64_t nNormalBins, std::pair<double, double> interval,
+                                                    std::string_view xName, std::string_view vName)
+   {
+      std::shared_ptr p = std::make_shared<ROOT::Experimental::RProfile>(nNormalBins, interval);
+
+      const ColumnNames_t columnList = {std::string(xName)};
+
+      return Profile<X, V>(p, columnList, vName);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return an RProfile (*lazy action*).
+   /// \param[in] axes The returned profile histogram will be constructed using these axes.
+   /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
+   /// \param[in] vName The name of the column that will provide the values for the profile histogram.
+   /// \return the profile histogram wrapped in a RResultPtr.
+   ///
+   /// Columns can be of a container type (e.g. `std::vector` or `RVec`), in which case the profile histogram is filled
+   /// with each one of the elements of the container. In case multiple columns of container type are provided, they
+   /// must have the same length for each event (but possibly different lengths between events). Containers can be
+   /// nested, in which case their sizes must match recursively. Scalars are broadcasted to match container columns.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// ROOT::Experimental::RRegularAxis axis(10, {5.0, 15.0});
+   /// auto myProfile = myDf.Profile({axis}, {"col0"}, "colV");
+   /// ~~~
+   template <typename ColumnType = RDFDetail::RInferredType, typename... ColumnTypes>
+   RResultPtr<ROOT::Experimental::RProfile>
+   Profile(std::vector<ROOT::Experimental::RAxisVariant> axes, const ColumnNames_t &columnList, std::string_view vName)
+   {
+      if (axes.size() != columnList.size()) {
+         std::string msg = "Wrong number of columns for the specified number of histogram axes: ";
+         msg += "expected " + std::to_string(axes.size()) + ", got " + std::to_string(columnList.size());
+         throw std::invalid_argument(msg);
+      }
+
+      std::shared_ptr p = std::make_shared<ROOT::Experimental::RProfile>(std::move(axes));
+
+      return Profile<ColumnType, ColumnTypes...>(p, columnList, vName);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill the provided RProfile (*lazy action*).
+   /// \param[in] p The profile histogram that should be filled.
+   /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
+   /// \param[in] vName The name of the column that will provide the values for the profile histogram.
+   /// \return the profile histogram wrapped in a RResultPtr.
+   ///
+   /// Columns can be of a container type (e.g. `std::vector` or `RVec`), in which case the profile histogram is filled
+   /// with each one of the elements of the container. In case multiple columns of container type are provided, they
+   /// must have the same length for each event (but possibly different lengths between events). Containers can be
+   /// nested, in which case their sizes must match recursively. Scalars are broadcasted to match container columns.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   ///
+   /// During execution of the computation graph, the passed profile histogram must only be accessed with methods that
+   /// are allowed during concurrent filling.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto p = std::make_shared<ROOT::Experimental::RProfile>(10, {5.0, 15.0});
+   /// auto myProfile = myDf.Profile(h, {"col0"}, "colV");
+   /// ~~~
+   template <typename ColumnType = RDFDetail::RInferredType, typename... ColumnTypes>
+   RResultPtr<ROOT::Experimental::RProfile>
+   Profile(std::shared_ptr<ROOT::Experimental::RProfile> p, const ColumnNames_t &columnList, std::string_view vName)
+   {
+      RDFInternal::WarnProfile();
+
+      if (p->GetNDimensions() != columnList.size()) {
+         std::string msg = "Wrong number of columns for the passed profile histogram: ";
+         msg += "expected " + std::to_string(p->GetNDimensions()) + ", got " + std::to_string(columnList.size());
+         throw std::invalid_argument(msg);
+      }
+
+      // Add the value column to the list of argument columns to pass it through the infrastructure.
+      ColumnNames_t columnListWithValues(columnList);
+      columnListWithValues.push_back(std::string(vName));
+
+      return CreateAction<RDFInternal::ActionTags::Profile, ColumnType, ColumnTypes...>(
+         columnListWithValues, p, p, fProxiedPtr, columnListWithValues.size());
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a one-dimensional RProfile with weights (*lazy action*).
+   /// \param[in] nNormalBins The returned profile histogram will be constructed using this number of normal bins.
+   /// \param[in] interval The axis interval of the constructed profile histogram (lower end inclusive, upper end
+   /// exclusive).
+   /// \param[in] xName The name of the column that will fill the profile histogram.
+   /// \param[in] vName The name of the column that will provide the values for the profile histogram.
+   /// \param[in] wName The name of the column that will provide the weights.
+   /// \return the profile histogram wrapped in a RResultPtr.
+   ///
+   /// Columns can be of a container type (e.g. `std::vector` or `RVec`), in which case the profile histogram is filled
+   /// with each one of the elements of the container. In case multiple columns of container type are provided, they
+   /// must have the same length for each event (but possibly different lengths between events). Containers can be
+   /// nested, in which case their sizes must match recursively. Scalars are broadcasted to match container columns.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto myProfile = myDf.Profile(10, {5, 15}, "col0", "colV", "colW");
+   /// ~~~
+   template <typename X = RDFDetail::RInferredType, typename V = RDFDetail::RInferredType,
+             typename W = RDFDetail::RInferredType>
+   RResultPtr<ROOT::Experimental::RProfile>
+   Profile(std::uint64_t nNormalBins, std::pair<double, double> interval, std::string_view xName,
+           std::string_view vName, std::string_view wName)
+   {
+      std::shared_ptr p = std::make_shared<ROOT::Experimental::RProfile>(nNormalBins, interval);
+
+      const ColumnNames_t columnList = {std::string(xName)};
+
+      return Profile<X, V, W>(p, columnList, vName, wName);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return an RProfile with weights (*lazy action*).
+   /// \param[in] axes The returned profile histogram will be constructed using these axes.
+   /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
+   /// \param[in] vName The name of the column that will provide the values for the profile histogram.
+   /// \param[in] wName The name of the column that will provide the weights.
+   /// \return the profile histogram wrapped in a RResultPtr.
+   ///
+   /// Columns can be of a container type (e.g. `std::vector` or `RVec`), in which case the profile histogram is filled
+   /// with each one of the elements of the container. In case multiple columns of container type are provided, they
+   /// must have the same length for each event (but possibly different lengths between events). Containers can be
+   /// nested, in which case their sizes must match recursively. Scalars are broadcasted to match container columns.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// ROOT::Experimental::RRegularAxis axis(10, {5.0, 15.0});
+   /// auto myProfile = myDf.Profile({axis}, {"col0"}, "colV", "colW");
+   /// ~~~
+   template <typename ColumnType = RDFDetail::RInferredType, typename... ColumnTypes>
+   RResultPtr<ROOT::Experimental::RProfile>
+   Profile(std::vector<ROOT::Experimental::RAxisVariant> axes, const ColumnNames_t &columnList, std::string_view vName,
+           std::string_view wName)
+   {
+      if (axes.size() != columnList.size()) {
+         std::string msg = "Wrong number of columns for the specified number of histogram axes: ";
+         msg += "expected " + std::to_string(axes.size()) + ", got " + std::to_string(columnList.size());
+         throw std::invalid_argument(msg);
+      }
+
+      std::shared_ptr p = std::make_shared<ROOT::Experimental::RProfile>(std::move(axes));
+
+      return Profile<ColumnType, ColumnTypes...>(p, columnList, vName, wName);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill the provided RProfile with weights (*lazy action*).
+   /// \param[in] p The profile histogram that should be filled.
+   /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
+   /// \param[in] vName The name of the column that will provide the values for the profile histogram.
+   /// \param[in] wName The name of the column that will provide the weights.
+   /// \return the profile histogram wrapped in a RResultPtr.
+   ///
+   /// Columns can be of a container type (e.g. `std::vector` or `RVec`), in which case the profile histogram is filled
+   /// with each one of the elements of the container. In case multiple columns of container type are provided, they
+   /// must have the same length for each event (but possibly different lengths between events). Containers can be
+   /// nested, in which case their sizes must match recursively. Scalars are broadcasted to match container columns.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   ///
+   /// During execution of the computation graph, the passed profile histogram must only be accessed with methods that
+   /// are allowed during concurrent filling.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto h = std::make_shared<ROOT::Experimental::RPRofile>(10, {5.0, 15.0});
+   /// auto myProfile = myDf.Profile(h, {"col0"}, "colV", "colW");
+   /// ~~~
+   template <typename ColumnType = RDFDetail::RInferredType, typename... ColumnTypes>
+   RResultPtr<ROOT::Experimental::RProfile>
+   Profile(std::shared_ptr<ROOT::Experimental::RProfile> p, const ColumnNames_t &columnList, std::string_view vName,
+           std::string_view wName)
+   {
+      RDFInternal::WarnProfile();
+
+      if (p->GetNDimensions() != columnList.size()) {
+         std::string msg = "Wrong number of columns for the passed profile histogram: ";
+         msg += "expected " + std::to_string(p->GetNDimensions()) + ", got " + std::to_string(columnList.size());
+         throw std::invalid_argument(msg);
+      }
+
+      // Add the value and weight columns to the list of argument columns to pass it through the infrastructure.
+      ColumnNames_t columnListWithValuesAndWeights(columnList);
+      columnListWithValuesAndWeights.push_back(std::string(vName));
+      columnListWithValuesAndWeights.push_back(std::string(wName));
+
+      return CreateAction<RDFInternal::ActionTags::ProfileWithWeight, ColumnType, ColumnTypes...>(
+         columnListWithValuesAndWeights, p, p, fProxiedPtr, columnListWithValuesAndWeights.size());
    }
 #endif
 

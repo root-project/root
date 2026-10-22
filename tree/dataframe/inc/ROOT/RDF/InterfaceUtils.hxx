@@ -99,6 +99,8 @@ struct Graph{};
 struct GraphAsymmErrors{};
 struct Profile1D{};
 struct Profile2D{};
+struct Profile{};
+struct ProfileWithWeight{};
 struct Min{};
 struct Max{};
 struct Sum{};
@@ -224,6 +226,30 @@ BuildAction(const ColumnNames_t &columnList, const std::shared_ptr<ROOT::Experim
    using Helper_t = RHistEngineFillHelper<BinContentType, true>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
    return std::make_unique<Action_t>(Helper_t(h), columnList, std::move(prevNode), colRegister);
+}
+
+// Action for RProfile using RProfileConcurrentFiller without weights
+template <typename... ColTypes, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &columnList, const std::shared_ptr<ROOT::Experimental::RProfile> &p,
+            const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode, ActionTags::Profile,
+            const RColumnRegister &colRegister)
+{
+   using Helper_t = RProfileFillHelper<>;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   return std::make_unique<Action_t>(Helper_t(p, nSlots), columnList, std::move(prevNode), colRegister);
+}
+
+// Action for RProfile using RProfileConcurrentFiller with weights
+template <typename... ColTypes, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &columnList, const std::shared_ptr<ROOT::Experimental::RProfile> &p,
+            const unsigned int nSlots, std::shared_ptr<PrevNodeType> prevNode, ActionTags::ProfileWithWeight,
+            const RColumnRegister &colRegister)
+{
+   using Helper_t = RProfileFillHelper<true>;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   return std::make_unique<Action_t>(Helper_t(p, nSlots), columnList, std::move(prevNode), colRegister);
 }
 #endif
 

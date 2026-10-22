@@ -144,6 +144,7 @@ endif()
 
 if (root7)
    ROOT_ADD_GTEST(dataframe_hist dataframe_hist.cxx LIBRARIES ROOTDataFrame ROOTHist)
+   ROOT_ADD_GTEST(dataframe_profile dataframe_profile.cxx LIBRARIES ROOTDataFrame ROOTHist)
 endif()
 
 if(ARROW_FOUND)

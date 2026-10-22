@@ -58,6 +58,18 @@ void ROOT::Internal::RDF::WarnHist()
    std::call_once(once, ::WarnHist);
 }
 
+// A static function, not in an anonymous namespace, because the function name is included in the user-visible message.
+static void WarnProfile()
+{
+   R__LOG_WARNING(RDFLogChannel()) << "Filling RProfile is experimental and still under development.";
+}
+
+void ROOT::Internal::RDF::WarnProfile()
+{
+   static std::once_flag once;
+   std::call_once(once, ::WarnProfile);
+}
+
 namespace {
 using TypeInfoRef = std::reference_wrapper<const std::type_info>;
 struct TypeInfoRefHash {
