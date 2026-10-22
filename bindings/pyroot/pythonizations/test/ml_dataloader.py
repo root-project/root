@@ -1,6 +1,5 @@
 import math
 import os
-import unittest
 from random import randrange, uniform
 
 import numpy as np
@@ -8,7 +7,7 @@ import pytest
 import ROOT
 
 
-class DataLoaderMultipleFiles(unittest.TestCase):
+class TestDataLoaderMultipleFiles:
     file_name1 = "first_half.root"
     file_name2 = "second_half.root"
     file_name3 = "vector_columns.root"
@@ -82,21 +81,21 @@ class DataLoaderMultipleFiles(unittest.TestCase):
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -105,15 +104,15 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             entries_after = df.AsNumpy(["rdfentry_"])["rdfentry_"]
 
             # check if the dataframe is correctly reset
-            self.assertTrue(np.array_equal(entries_before, entries_after))
+            assert np.array_equal(entries_before, entries_after)
 
             self.teardown_file(self.file_name1)
 
@@ -148,21 +147,21 @@ class DataLoaderMultipleFiles(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -171,10 +170,10 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
             flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-            self.assertEqual(len(flat_x_train), 6)
-            self.assertEqual(len(flat_x_val), 4)
-            self.assertEqual(len(flat_y_train), 6)
-            self.assertEqual(len(flat_y_val), 4)
+            assert len(flat_x_train) == 6
+            assert len(flat_x_val) == 4
+            assert len(flat_y_train) == 6
+            assert len(flat_y_val) == 4
 
             self.teardown_file(self.file_name1)
 
@@ -203,19 +202,19 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             collected_y = []
 
             for x, y in gen_train.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x.append(x)
                 collected_y.append(y)
 
             for x, y in gen_validation.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x.append(x)
                 collected_y.append(y)
 
-            self.assertEqual(len(collected_x), 3)
-            self.assertEqual(len(collected_y), 3)
+            assert len(collected_x) == 3
+            assert len(collected_y) == 3
 
             self.teardown_file(self.file_name1)
 
@@ -252,14 +251,14 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             collected_y_val = []
 
             for x, y in gen_train.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for x, y in gen_validation.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
@@ -268,10 +267,10 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -321,26 +320,26 @@ class DataLoaderMultipleFiles(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
                 collected_z_train.append(z.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
                 collected_z_val.append(z.tolist())
 
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 2)
+            assert z.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
             collected_z_val.append(z.tolist())
@@ -352,12 +351,12 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             self.teardown_file(file_name)
 
@@ -401,21 +400,21 @@ class DataLoaderMultipleFiles(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(iter_train)
-                self.assertTrue(x.shape == (3, 2))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 2)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (3, 2))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 2)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 2))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 2)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -424,10 +423,10 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(file_name)
 
@@ -470,14 +469,14 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             val_iter = iter(gen_validation.as_numpy())
 
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (3, 1))
-            self.assertTrue(y.shape == (3, 1))
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (2, 1))
-            self.assertTrue(y.shape == (2, 1))
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -486,15 +485,15 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             filter_entries_after = dff.AsNumpy(["rdfentry_"])["rdfentry_"]
 
             # check if the dataframe is correctly reset
-            self.assertTrue(np.array_equal(filter_entries_before, filter_entries_after))
+            assert np.array_equal(filter_entries_before, filter_entries_after)
 
             self.teardown_file(self.file_name1)
 
@@ -534,22 +533,22 @@ class DataLoaderMultipleFiles(unittest.TestCase):
 
             for _ in range(3):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (1, 1))
-            self.assertTrue(y.shape == (1, 1))
+            assert x.shape == (1, 1)
+            assert y.shape == (1, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
             flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_y_train, flat_y_train)
+            assert results_x_train == flat_x_train
+            assert results_y_train == flat_y_train
 
             self.teardown_file(file_name)
 
@@ -588,21 +587,21 @@ class DataLoaderMultipleFiles(unittest.TestCase):
 
                 for _ in range(self.n_train_batch):
                     x, y = next(iter_train)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
+                    assert x.shape == (3, 1)
+                    assert y.shape == (3, 1)
                     collected_x_train.append(x.tolist())
                     collected_y_train.append(y.tolist())
 
                 for _ in range(self.n_val_batch):
                     x, y = next(iter_val)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
+                    assert x.shape == (3, 1)
+                    assert y.shape == (3, 1)
                     collected_x_val.append(x.tolist())
                     collected_y_val.append(y.tolist())
 
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (self.val_remainder, 1))
-                self.assertTrue(y.shape == (self.val_remainder, 1))
+                assert x.shape == (self.val_remainder, 1)
+                assert y.shape == (self.val_remainder, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
@@ -611,16 +610,16 @@ class DataLoaderMultipleFiles(unittest.TestCase):
                 flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
                 flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-                self.assertEqual(len(flat_x_train), 6)
-                self.assertEqual(len(flat_x_val), 4)
-                self.assertEqual(len(flat_y_train), 6)
-                self.assertEqual(len(flat_y_val), 4)
+                assert len(flat_x_train) == 6
+                assert len(flat_x_val) == 4
+                assert len(flat_y_train) == 6
+                assert len(flat_y_val) == 4
 
                 both_epochs_collected_x_val.append(collected_x_val)
                 both_epochs_collected_y_val.append(collected_y_val)
 
-            self.assertEqual(both_epochs_collected_x_val[0], both_epochs_collected_x_val[1])
-            self.assertEqual(both_epochs_collected_y_val[0], both_epochs_collected_y_val[1])
+            assert both_epochs_collected_x_val[0] == both_epochs_collected_x_val[1]
+            assert both_epochs_collected_y_val[0] == both_epochs_collected_y_val[1]
         finally:
             self.teardown_file(self.file_name1)
 
@@ -650,10 +649,10 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             for _ in gen_validation.as_numpy():
                 number_of_validation_batches += 1
 
-            self.assertEqual(gen_train.num_batches, number_of_training_batches)
-            self.assertEqual(gen_validation.num_batches, number_of_validation_batches)
-            self.assertEqual(gen_train.last_batch_no_of_rows, 0)
-            self.assertEqual(gen_validation.last_batch_no_of_rows, 1)
+            assert gen_train.num_batches == number_of_training_batches
+            assert gen_validation.num_batches == number_of_validation_batches
+            assert gen_train.last_batch_no_of_rows == 0
+            assert gen_validation.last_batch_no_of_rows == 1
 
             self.teardown_file(self.file_name1)
 
@@ -702,26 +701,26 @@ class DataLoaderMultipleFiles(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
                 collected_z_train.append(z.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
                 collected_z_val.append(z.tolist())
 
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 2)
+            assert z.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
             collected_z_val.append(z.tolist())
@@ -733,12 +732,12 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             self.teardown_file(file_name)
 
@@ -787,26 +786,26 @@ class DataLoaderMultipleFiles(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_train.append(x.numpy().tolist())
                 collected_y_train.append(y.numpy().tolist())
                 collected_z_train.append(z.numpy().tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_val.append(x.numpy().tolist())
                 collected_y_val.append(y.numpy().tolist())
                 collected_z_val.append(z.numpy().tolist())
 
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (3, 1))
-            self.assertTrue(y.shape == (3, 2))
-            self.assertTrue(z.shape == (3, 1))
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
             collected_x_val.append(x.numpy().tolist())
             collected_y_val.append(y.numpy().tolist())
             collected_z_val.append(z.numpy().tolist())
@@ -818,12 +817,12 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             self.teardown_file(file_name)
 
@@ -880,49 +879,48 @@ class DataLoaderMultipleFiles(unittest.TestCase):
                 for i in range(n_train_batches):
                     x, y, z = next(iter_train)
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
+                    assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                    assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                    assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
 
-                    self.assertTrue(np.all(x[:, 0] * (-1) == x[:, 1]), error_message + f" row: {i}")
-                    self.assertTrue(np.all(x[:, 0] + 10192 == y[:, 0]), error_message + f" row: {i}")
-                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] * 2 == z[:, 0]), error_message + f" row: {i}")
+                    assert np.all(x[:, 0] * (-1) == x[:, 1]), error_message + f" row: {i}"
+                    assert np.all(x[:, 0] + 10192 == y[:, 0]), error_message + f" row: {i}"
+                    # assert np.all(x[:,0]*(-1)-10192==y[:,1]), error_message
+                    assert np.all(x[:, 0] * 2 == z[:, 0]), error_message + f" row: {i}"
 
                     collect_x.extend(list(x[:, 0]))
 
                 if train_remainder:
                     x, y, z = next(iter_train)
-                    self.assertTrue(x.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (train_remainder, 1), error_message)
+                    assert x.shape == (train_remainder, 2), error_message
+                    assert y.shape == (train_remainder, 2), error_message
+                    assert z.shape == (train_remainder, 1), error_message
                     collect_x.extend(list(x[:, 0]))
 
                 for _ in range(n_val_batches):
                     x, y, z = next(iter_val)
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
+                    assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                    assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                    assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
 
-                    self.assertTrue(np.all(x[:, 0] * (-1) == x[:, 1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] + 10192 == y[:, 0]), error_message)
-                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] * 2 == z[:, 0]), error_message)
+                    assert np.all(x[:, 0] * (-1) == x[:, 1]), error_message
+                    assert np.all(x[:, 0] + 10192 == y[:, 0]), error_message
+                    # assert np.all(x[:,0]*(-1)-10192==y[:,1]), error_message
+                    assert np.all(x[:, 0] * 2 == z[:, 0]), error_message
 
                     collect_x.extend(list(x[:, 0]))
 
                 if val_remainder:
                     x, y, z = next(iter_val)
-                    self.assertTrue(x.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (val_remainder, 1), error_message)
+                    assert x.shape == (val_remainder, 2), error_message
+                    assert y.shape == (val_remainder, 2), error_message
+                    assert z.shape == (val_remainder, 1), error_message
                     collect_x.extend(list(x[:, 0]))
 
-                self.assertTrue(
-                    set(collect_x) == set(i for i in range(num_of_entries)),
+                assert set(collect_x) == set(i for i in range(num_of_entries)), (
                     f"collected length: {len(set(collect_x))}\
-                                 generated length {len(set(i for i in range(num_of_entries)))}",
+                                 generated length {len(set(i for i in range(num_of_entries)))}"
                 )
 
             except:
@@ -962,21 +960,21 @@ class DataLoaderMultipleFiles(unittest.TestCase):
 
                 for _ in range(self.n_train_batch):
                     x, y = next(iter_train)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
+                    assert x.shape == (3, 1)
+                    assert y.shape == (3, 1)
                     collected_x_train.append(x.tolist())
                     collected_y_train.append(y.tolist())
 
                 for _ in range(self.n_val_batch):
                     x, y = next(iter_val)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
+                    assert x.shape == (3, 1)
+                    assert y.shape == (3, 1)
                     collected_x_val.append(x.tolist())
                     collected_y_val.append(y.tolist())
 
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (self.val_remainder, 1))
-                self.assertTrue(y.shape == (self.val_remainder, 1))
+                assert x.shape == (self.val_remainder, 1)
+                assert y.shape == (self.val_remainder, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
@@ -985,15 +983,15 @@ class DataLoaderMultipleFiles(unittest.TestCase):
                 flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
                 flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-                self.assertEqual(len(flat_x_train), 6)
-                self.assertEqual(len(flat_x_val), 4)
-                self.assertEqual(len(flat_y_train), 6)
-                self.assertEqual(len(flat_y_val), 4)
+                assert len(flat_x_train) == 6
+                assert len(flat_x_val) == 4
+                assert len(flat_y_train) == 6
+                assert len(flat_y_val) == 4
 
                 both_runs_collected_x_val.append(collected_x_val)
                 both_runs_collected_y_val.append(collected_y_val)
-            self.assertEqual(both_runs_collected_x_val[0], both_runs_collected_x_val[1])
-            self.assertEqual(both_runs_collected_y_val[0], both_runs_collected_y_val[1])
+            assert both_runs_collected_x_val[0] == both_runs_collected_x_val[1]
+            assert both_runs_collected_y_val[0] == both_runs_collected_y_val[1]
         finally:
             self.teardown_file(self.file_name1)
 
@@ -1083,21 +1081,21 @@ class DataLoaderMultipleFiles(unittest.TestCase):
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 5))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 5)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 5))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 5)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 5))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 5)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -1106,10 +1104,10 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(self.file_name3)
 
@@ -1158,26 +1156,26 @@ class DataLoaderMultipleFiles(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
                 collected_z_train.append(z.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
                 collected_z_val.append(z.tolist())
 
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 2)
+            assert z.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
             collected_z_val.append(z.tolist())
@@ -1189,12 +1187,12 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
         finally:
             self.teardown_file(file_name)
@@ -1217,8 +1215,8 @@ class DataLoaderMultipleFiles(unittest.TestCase):
 
             gen_train, gen_validation = dl.train_test_split(0.4)
 
-            self.assertEqual(sum(1 for _ in gen_train.as_numpy()), 3)
-            self.assertEqual(sum(1 for _ in gen_validation.as_numpy()), 2)
+            assert sum(1 for _ in gen_train.as_numpy()) == 3
+            assert sum(1 for _ in gen_validation.as_numpy()) == 2
 
         finally:
             self.teardown_file(self.file_name1)
@@ -1253,14 +1251,14 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             y = np.concatenate([y for _, y in batches])
 
             entries = np.arange(10, dtype=np.float32)
-            self.assertTrue(np.array_equal(x, np.column_stack([entries, entries**2, entries**2 + 1])))
-            self.assertTrue(np.array_equal(y, (entries * 3).reshape(-1, 1)))
+            assert np.array_equal(x, np.column_stack([entries, entries**2, entries**2 + 1]))
+            assert np.array_equal(y, (entries * 3).reshape(-1, 1))
 
         finally:
             self.teardown_file(self.file_name1)
 
 
-class DataLoaderEagerLoading(unittest.TestCase):
+class TestDataLoaderEagerLoading:
     file_name1 = "first_half.root"
     file_name2 = "second_half.root"
     file_name3 = "vector_columns.root"
@@ -1332,21 +1330,21 @@ class DataLoaderEagerLoading(unittest.TestCase):
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -1355,10 +1353,10 @@ class DataLoaderEagerLoading(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(self.file_name1)
 
@@ -1393,21 +1391,21 @@ class DataLoaderEagerLoading(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -1416,10 +1414,10 @@ class DataLoaderEagerLoading(unittest.TestCase):
             flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
             flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-            self.assertEqual(len(flat_x_train), 6)
-            self.assertEqual(len(flat_x_val), 4)
-            self.assertEqual(len(flat_y_train), 6)
-            self.assertEqual(len(flat_y_val), 4)
+            assert len(flat_x_train) == 6
+            assert len(flat_x_val) == 4
+            assert len(flat_y_train) == 6
+            assert len(flat_y_val) == 4
 
             self.teardown_file(self.file_name1)
 
@@ -1448,19 +1446,19 @@ class DataLoaderEagerLoading(unittest.TestCase):
             collected_y = []
 
             for x, y in gen_train.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x.append(x)
                 collected_y.append(y)
 
             for x, y in gen_validation.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x.append(x)
                 collected_y.append(y)
 
-            self.assertEqual(len(collected_x), 3)
-            self.assertEqual(len(collected_y), 3)
+            assert len(collected_x) == 3
+            assert len(collected_y) == 3
 
             self.teardown_file(self.file_name1)
 
@@ -1497,14 +1495,14 @@ class DataLoaderEagerLoading(unittest.TestCase):
             collected_y_val = []
 
             for x, y in gen_train.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for x, y in gen_validation.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
@@ -1513,10 +1511,10 @@ class DataLoaderEagerLoading(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -1566,26 +1564,26 @@ class DataLoaderEagerLoading(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
                 collected_z_train.append(z.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
                 collected_z_val.append(z.tolist())
 
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 2)
+            assert z.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
             collected_z_val.append(z.tolist())
@@ -1597,12 +1595,12 @@ class DataLoaderEagerLoading(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             self.teardown_file(file_name)
 
@@ -1646,21 +1644,21 @@ class DataLoaderEagerLoading(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(iter_train)
-                self.assertTrue(x.shape == (3, 2))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 2)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (3, 2))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 2)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 2))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 2)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -1669,10 +1667,10 @@ class DataLoaderEagerLoading(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(file_name)
 
@@ -1713,14 +1711,14 @@ class DataLoaderEagerLoading(unittest.TestCase):
             val_iter = iter(gen_validation.as_numpy())
 
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (3, 1))
-            self.assertTrue(y.shape == (3, 1))
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (2, 1))
-            self.assertTrue(y.shape == (2, 1))
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -1729,10 +1727,10 @@ class DataLoaderEagerLoading(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(self.file_name1)
 
@@ -1772,22 +1770,22 @@ class DataLoaderEagerLoading(unittest.TestCase):
 
             for _ in range(3):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (1, 1))
-            self.assertTrue(y.shape == (1, 1))
+            assert x.shape == (1, 1)
+            assert y.shape == (1, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
             flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_y_train, flat_y_train)
+            assert results_x_train == flat_x_train
+            assert results_y_train == flat_y_train
 
             self.teardown_file(file_name)
 
@@ -1826,21 +1824,21 @@ class DataLoaderEagerLoading(unittest.TestCase):
 
                 for _ in range(self.n_train_batch):
                     x, y = next(iter_train)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
+                    assert x.shape == (3, 1)
+                    assert y.shape == (3, 1)
                     collected_x_train.append(x.tolist())
                     collected_y_train.append(y.tolist())
 
                 for _ in range(self.n_val_batch):
                     x, y = next(iter_val)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
+                    assert x.shape == (3, 1)
+                    assert y.shape == (3, 1)
                     collected_x_val.append(x.tolist())
                     collected_y_val.append(y.tolist())
 
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (self.val_remainder, 1))
-                self.assertTrue(y.shape == (self.val_remainder, 1))
+                assert x.shape == (self.val_remainder, 1)
+                assert y.shape == (self.val_remainder, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
@@ -1849,16 +1847,16 @@ class DataLoaderEagerLoading(unittest.TestCase):
                 flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
                 flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-                self.assertEqual(len(flat_x_train), 6)
-                self.assertEqual(len(flat_x_val), 4)
-                self.assertEqual(len(flat_y_train), 6)
-                self.assertEqual(len(flat_y_val), 4)
+                assert len(flat_x_train) == 6
+                assert len(flat_x_val) == 4
+                assert len(flat_y_train) == 6
+                assert len(flat_y_val) == 4
 
                 both_epochs_collected_x_val.append(collected_x_val)
                 both_epochs_collected_y_val.append(collected_y_val)
 
-            self.assertEqual(both_epochs_collected_x_val[0], both_epochs_collected_x_val[1])
-            self.assertEqual(both_epochs_collected_y_val[0], both_epochs_collected_y_val[1])
+            assert both_epochs_collected_x_val[0] == both_epochs_collected_x_val[1]
+            assert both_epochs_collected_y_val[0] == both_epochs_collected_y_val[1]
         finally:
             self.teardown_file(self.file_name1)
 
@@ -1888,10 +1886,10 @@ class DataLoaderEagerLoading(unittest.TestCase):
             for _ in gen_validation.as_numpy():
                 number_of_validation_batches += 1
 
-            self.assertEqual(gen_train.num_batches, number_of_training_batches)
-            self.assertEqual(gen_validation.num_batches, number_of_validation_batches)
-            self.assertEqual(gen_train.last_batch_no_of_rows, 0)
-            self.assertEqual(gen_validation.last_batch_no_of_rows, 1)
+            assert gen_train.num_batches == number_of_training_batches
+            assert gen_validation.num_batches == number_of_validation_batches
+            assert gen_train.last_batch_no_of_rows == 0
+            assert gen_validation.last_batch_no_of_rows == 1
 
             self.teardown_file(self.file_name1)
 
@@ -1940,26 +1938,26 @@ class DataLoaderEagerLoading(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
                 collected_z_train.append(z.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
                 collected_z_val.append(z.tolist())
 
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 2)
+            assert z.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
             collected_z_val.append(z.tolist())
@@ -1971,12 +1969,12 @@ class DataLoaderEagerLoading(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             self.teardown_file(file_name)
 
@@ -2025,26 +2023,26 @@ class DataLoaderEagerLoading(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_train.append(x.numpy().tolist())
                 collected_y_train.append(y.numpy().tolist())
                 collected_z_train.append(z.numpy().tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_val.append(x.numpy().tolist())
                 collected_y_val.append(y.numpy().tolist())
                 collected_z_val.append(z.numpy().tolist())
 
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (3, 1))
-            self.assertTrue(y.shape == (3, 2))
-            self.assertTrue(z.shape == (3, 1))
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
             collected_x_val.append(x.numpy().tolist())
             collected_y_val.append(y.numpy().tolist())
             collected_z_val.append(z.numpy().tolist())
@@ -2056,12 +2054,12 @@ class DataLoaderEagerLoading(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             self.teardown_file(file_name)
 
@@ -2119,49 +2117,48 @@ class DataLoaderEagerLoading(unittest.TestCase):
                 for i in range(n_train_batches):
                     x, y, z = next(iter_train)
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
+                    assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                    assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                    assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
 
-                    self.assertTrue(np.all(x[:, 0] * (-1) == x[:, 1]), error_message + f" row: {i}")
-                    self.assertTrue(np.all(x[:, 0] + 10192 == y[:, 0]), error_message + f" row: {i}")
-                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] * 2 == z[:, 0]), error_message + f" row: {i}")
+                    assert np.all(x[:, 0] * (-1) == x[:, 1]), error_message + f" row: {i}"
+                    assert np.all(x[:, 0] + 10192 == y[:, 0]), error_message + f" row: {i}"
+                    # assert np.all(x[:,0]*(-1)-10192==y[:,1]), error_message
+                    assert np.all(x[:, 0] * 2 == z[:, 0]), error_message + f" row: {i}"
 
                     collect_x.extend(list(x[:, 0]))
 
                 if train_remainder:
                     x, y, z = next(iter_train)
-                    self.assertTrue(x.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (train_remainder, 1), error_message)
+                    assert x.shape == (train_remainder, 2), error_message
+                    assert y.shape == (train_remainder, 2), error_message
+                    assert z.shape == (train_remainder, 1), error_message
                     collect_x.extend(list(x[:, 0]))
 
                 for _ in range(n_val_batches):
                     x, y, z = next(iter_val)
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
+                    assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                    assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                    assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
 
-                    self.assertTrue(np.all(x[:, 0] * (-1) == x[:, 1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] + 10192 == y[:, 0]), error_message)
-                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] * 2 == z[:, 0]), error_message)
+                    assert np.all(x[:, 0] * (-1) == x[:, 1]), error_message
+                    assert np.all(x[:, 0] + 10192 == y[:, 0]), error_message
+                    # assert np.all(x[:,0]*(-1)-10192==y[:,1]), error_message
+                    assert np.all(x[:, 0] * 2 == z[:, 0]), error_message
 
                     collect_x.extend(list(x[:, 0]))
 
                 if val_remainder:
                     x, y, z = next(iter_val)
-                    self.assertTrue(x.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (val_remainder, 1), error_message)
+                    assert x.shape == (val_remainder, 2), error_message
+                    assert y.shape == (val_remainder, 2), error_message
+                    assert z.shape == (val_remainder, 1), error_message
                     collect_x.extend(list(x[:, 0]))
 
-                self.assertTrue(
-                    set(collect_x) == set(i for i in range(num_of_entries)),
+                assert set(collect_x) == set(i for i in range(num_of_entries)), (
                     f"collected length: {len(set(collect_x))}\
-                                 generated length {len(set(i for i in range(num_of_entries)))}",
+                                 generated length {len(set(i for i in range(num_of_entries)))}"
                 )
 
             except:
@@ -2201,21 +2198,21 @@ class DataLoaderEagerLoading(unittest.TestCase):
 
                 for _ in range(self.n_train_batch):
                     x, y = next(iter_train)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
+                    assert x.shape == (3, 1)
+                    assert y.shape == (3, 1)
                     collected_x_train.append(x.tolist())
                     collected_y_train.append(y.tolist())
 
                 for _ in range(self.n_val_batch):
                     x, y = next(iter_val)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
+                    assert x.shape == (3, 1)
+                    assert y.shape == (3, 1)
                     collected_x_val.append(x.tolist())
                     collected_y_val.append(y.tolist())
 
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (self.val_remainder, 1))
-                self.assertTrue(y.shape == (self.val_remainder, 1))
+                assert x.shape == (self.val_remainder, 1)
+                assert y.shape == (self.val_remainder, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
@@ -2224,15 +2221,15 @@ class DataLoaderEagerLoading(unittest.TestCase):
                 flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
                 flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-                self.assertEqual(len(flat_x_train), 6)
-                self.assertEqual(len(flat_x_val), 4)
-                self.assertEqual(len(flat_y_train), 6)
-                self.assertEqual(len(flat_y_val), 4)
+                assert len(flat_x_train) == 6
+                assert len(flat_x_val) == 4
+                assert len(flat_y_train) == 6
+                assert len(flat_y_val) == 4
 
                 both_runs_collected_x_val.append(collected_x_val)
                 both_runs_collected_y_val.append(collected_y_val)
-            self.assertEqual(both_runs_collected_x_val[0], both_runs_collected_x_val[1])
-            self.assertEqual(both_runs_collected_y_val[0], both_runs_collected_y_val[1])
+            assert both_runs_collected_x_val[0] == both_runs_collected_x_val[1]
+            assert both_runs_collected_y_val[0] == both_runs_collected_y_val[1]
         finally:
             self.teardown_file(self.file_name1)
 
@@ -2322,21 +2319,21 @@ class DataLoaderEagerLoading(unittest.TestCase):
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 5))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 5)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 5))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 5)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 5))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 5)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -2345,10 +2342,10 @@ class DataLoaderEagerLoading(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(self.file_name3)
 
@@ -2387,14 +2384,14 @@ class DataLoaderEagerLoading(unittest.TestCase):
             y = np.concatenate([y for _, y in batches])
 
             entries = np.arange(10, dtype=np.float32)
-            self.assertTrue(np.array_equal(x, np.column_stack([entries, entries**2, entries**2 + 1])))
-            self.assertTrue(np.array_equal(y, (entries * 3).reshape(-1, 1)))
+            assert np.array_equal(x, np.column_stack([entries, entries**2, entries**2 + 1]))
+            assert np.array_equal(y, (entries * 3).reshape(-1, 1))
 
         finally:
             self.teardown_file(self.file_name1)
 
 
-class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
+class TestDataLoaderEagerLoadingMultipleDataframes:
     file_name1 = "first_half.root"
     file_name2 = "second_half.root"
     file_name3 = "second_file.root"
@@ -2490,21 +2487,21 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -2513,17 +2510,17 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             df1_entries_after = df1.AsNumpy(["rdfentry_"])["rdfentry_"]
             df2_entries_after = df2.AsNumpy(["rdfentry_"])["rdfentry_"]
 
             # check if the dataframes are correctly reset
-            self.assertTrue(np.array_equal(df1_entries_before, df1_entries_after))
-            self.assertTrue(np.array_equal(df2_entries_before, df2_entries_after))
+            assert np.array_equal(df1_entries_before, df1_entries_after)
+            assert np.array_equal(df2_entries_before, df2_entries_after)
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -2562,21 +2559,21 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -2585,10 +2582,10 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
             flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
             flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-            self.assertEqual(len(flat_x_train), 6)
-            self.assertEqual(len(flat_x_val), 4)
-            self.assertEqual(len(flat_y_train), 6)
-            self.assertEqual(len(flat_y_val), 4)
+            assert len(flat_x_train) == 6
+            assert len(flat_x_val) == 4
+            assert len(flat_y_train) == 6
+            assert len(flat_y_val) == 4
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -2621,19 +2618,19 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
             collected_y = []
 
             for x, y in gen_train.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x.append(x)
                 collected_y.append(y)
 
             for x, y in gen_validation.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x.append(x)
                 collected_y.append(y)
 
-            self.assertEqual(len(collected_x), 3)
-            self.assertEqual(len(collected_y), 3)
+            assert len(collected_x) == 3
+            assert len(collected_y) == 3
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -2674,14 +2671,14 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
             collected_y_val = []
 
             for x, y in gen_train.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for x, y in gen_validation.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
@@ -2690,10 +2687,10 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -2750,26 +2747,26 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
                 collected_z_train.append(z.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
                 collected_z_val.append(z.tolist())
 
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 2)
+            assert z.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
             collected_z_val.append(z.tolist())
@@ -2781,12 +2778,12 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -2838,21 +2835,21 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(iter_train)
-                self.assertTrue(x.shape == (3, 2))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 2)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (3, 2))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 2)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 2))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 2)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -2861,10 +2858,10 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -2913,14 +2910,14 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
             val_iter = iter(gen_validation.as_numpy())
 
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (3, 1))
-            self.assertTrue(y.shape == (3, 1))
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (2, 1))
-            self.assertTrue(y.shape == (2, 1))
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -2929,17 +2926,17 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             dff1_entries_after = dff1.AsNumpy(["rdfentry_"])["rdfentry_"]
             dff2_entries_after = dff2.AsNumpy(["rdfentry_"])["rdfentry_"]
 
             # check if the dataframes are correctly reset
-            self.assertTrue(np.array_equal(dff1_entries_before, dff1_entries_after))
-            self.assertTrue(np.array_equal(dff2_entries_before, dff2_entries_after))
+            assert np.array_equal(dff1_entries_before, dff1_entries_after)
+            assert np.array_equal(dff2_entries_before, dff2_entries_after)
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -2988,22 +2985,22 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
 
             for _ in range(3):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (1, 1))
-            self.assertTrue(y.shape == (1, 1))
+            assert x.shape == (1, 1)
+            assert y.shape == (1, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
             flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_y_train, flat_y_train)
+            assert results_x_train == flat_x_train
+            assert results_y_train == flat_y_train
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -3046,21 +3043,21 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
 
                 for _ in range(self.n_train_batch):
                     x, y = next(iter_train)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
+                    assert x.shape == (3, 1)
+                    assert y.shape == (3, 1)
                     collected_x_train.append(x.tolist())
                     collected_y_train.append(y.tolist())
 
                 for _ in range(self.n_val_batch):
                     x, y = next(iter_val)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
+                    assert x.shape == (3, 1)
+                    assert y.shape == (3, 1)
                     collected_x_val.append(x.tolist())
                     collected_y_val.append(y.tolist())
 
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (self.val_remainder, 1))
-                self.assertTrue(y.shape == (self.val_remainder, 1))
+                assert x.shape == (self.val_remainder, 1)
+                assert y.shape == (self.val_remainder, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
@@ -3069,16 +3066,16 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
                 flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
                 flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-                self.assertEqual(len(flat_x_train), 6)
-                self.assertEqual(len(flat_x_val), 4)
-                self.assertEqual(len(flat_y_train), 6)
-                self.assertEqual(len(flat_y_val), 4)
+                assert len(flat_x_train) == 6
+                assert len(flat_x_val) == 4
+                assert len(flat_y_train) == 6
+                assert len(flat_y_val) == 4
 
                 both_epochs_collected_x_val.append(collected_x_val)
                 both_epochs_collected_y_val.append(collected_y_val)
 
-            self.assertEqual(both_epochs_collected_x_val[0], both_epochs_collected_x_val[1])
-            self.assertEqual(both_epochs_collected_y_val[0], both_epochs_collected_y_val[1])
+            assert both_epochs_collected_x_val[0] == both_epochs_collected_x_val[1]
+            assert both_epochs_collected_y_val[0] == both_epochs_collected_y_val[1]
         finally:
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -3111,10 +3108,10 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
             for _ in gen_validation.as_numpy():
                 number_of_validation_batches += 1
 
-            self.assertEqual(gen_train.num_batches, number_of_training_batches)
-            self.assertEqual(gen_validation.num_batches, number_of_validation_batches)
-            self.assertEqual(gen_train.last_batch_no_of_rows, 0)
-            self.assertEqual(gen_validation.last_batch_no_of_rows, 1)
+            assert gen_train.num_batches == number_of_training_batches
+            assert gen_validation.num_batches == number_of_validation_batches
+            assert gen_train.last_batch_no_of_rows == 0
+            assert gen_validation.last_batch_no_of_rows == 1
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -3170,26 +3167,26 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
                 collected_z_train.append(z.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
                 collected_z_val.append(z.tolist())
 
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 2)
+            assert z.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
             collected_z_val.append(z.tolist())
@@ -3201,12 +3198,12 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -3262,26 +3259,26 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_train.append(x.numpy().tolist())
                 collected_y_train.append(y.numpy().tolist())
                 collected_z_train.append(z.numpy().tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_val.append(x.numpy().tolist())
                 collected_y_val.append(y.numpy().tolist())
                 collected_z_val.append(z.numpy().tolist())
 
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (3, 1))
-            self.assertTrue(y.shape == (3, 2))
-            self.assertTrue(z.shape == (3, 1))
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
             collected_x_val.append(x.numpy().tolist())
             collected_y_val.append(y.numpy().tolist())
             collected_z_val.append(z.numpy().tolist())
@@ -3293,12 +3290,12 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -3361,49 +3358,48 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
                 for i in range(n_train_batches):
                     x, y, z = next(iter_train)
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
+                    assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                    assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                    assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
 
-                    self.assertTrue(np.all(x[:, 0] * (-1) == x[:, 1]), error_message + f" row: {i}")
-                    self.assertTrue(np.all(x[:, 0] + 10192 == y[:, 0]), error_message + f" row: {i}")
-                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] * 2 == z[:, 0]), error_message + f" row: {i}")
+                    assert np.all(x[:, 0] * (-1) == x[:, 1]), error_message + f" row: {i}"
+                    assert np.all(x[:, 0] + 10192 == y[:, 0]), error_message + f" row: {i}"
+                    # assert np.all(x[:,0]*(-1)-10192==y[:,1]), error_message
+                    assert np.all(x[:, 0] * 2 == z[:, 0]), error_message + f" row: {i}"
 
                     collect_x.extend(list(x[:, 0]))
 
                 if train_remainder:
                     x, y, z = next(iter_train)
-                    self.assertTrue(x.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (train_remainder, 1), error_message)
+                    assert x.shape == (train_remainder, 2), error_message
+                    assert y.shape == (train_remainder, 2), error_message
+                    assert z.shape == (train_remainder, 1), error_message
                     collect_x.extend(list(x[:, 0]))
 
                 for _ in range(n_val_batches):
                     x, y, z = next(iter_val)
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
+                    assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                    assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                    assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
 
-                    self.assertTrue(np.all(x[:, 0] * (-1) == x[:, 1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] + 10192 == y[:, 0]), error_message)
-                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] * 2 == z[:, 0]), error_message)
+                    assert np.all(x[:, 0] * (-1) == x[:, 1]), error_message
+                    assert np.all(x[:, 0] + 10192 == y[:, 0]), error_message
+                    # assert np.all(x[:,0]*(-1)-10192==y[:,1]), error_message
+                    assert np.all(x[:, 0] * 2 == z[:, 0]), error_message
 
                     collect_x.extend(list(x[:, 0]))
 
                 if val_remainder:
                     x, y, z = next(iter_val)
-                    self.assertTrue(x.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (val_remainder, 1), error_message)
+                    assert x.shape == (val_remainder, 2), error_message
+                    assert y.shape == (val_remainder, 2), error_message
+                    assert z.shape == (val_remainder, 1), error_message
                     collect_x.extend(list(x[:, 0]))
 
-                self.assertTrue(
-                    set(collect_x) == set(i for i in range(num_of_entries)),
+                assert set(collect_x) == set(i for i in range(num_of_entries)), (
                     f"collected length: {len(set(collect_x))}\
-                                 generated length {len(set(i for i in range(num_of_entries)))}",
+                                 generated length {len(set(i for i in range(num_of_entries)))}"
                 )
 
             except:
@@ -3447,21 +3443,21 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
 
                 for _ in range(self.n_train_batch):
                     x, y = next(iter_train)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
+                    assert x.shape == (3, 1)
+                    assert y.shape == (3, 1)
                     collected_x_train.append(x.tolist())
                     collected_y_train.append(y.tolist())
 
                 for _ in range(self.n_val_batch):
                     x, y = next(iter_val)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
+                    assert x.shape == (3, 1)
+                    assert y.shape == (3, 1)
                     collected_x_val.append(x.tolist())
                     collected_y_val.append(y.tolist())
 
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (self.val_remainder, 1))
-                self.assertTrue(y.shape == (self.val_remainder, 1))
+                assert x.shape == (self.val_remainder, 1)
+                assert y.shape == (self.val_remainder, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
@@ -3470,15 +3466,15 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
                 flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
                 flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-                self.assertEqual(len(flat_x_train), 6)
-                self.assertEqual(len(flat_x_val), 4)
-                self.assertEqual(len(flat_y_train), 6)
-                self.assertEqual(len(flat_y_val), 4)
+                assert len(flat_x_train) == 6
+                assert len(flat_x_val) == 4
+                assert len(flat_y_train) == 6
+                assert len(flat_y_val) == 4
 
                 both_runs_collected_x_val.append(collected_x_val)
                 both_runs_collected_y_val.append(collected_y_val)
-            self.assertEqual(both_runs_collected_x_val[0], both_runs_collected_x_val[1])
-            self.assertEqual(both_runs_collected_y_val[0], both_runs_collected_y_val[1])
+            assert both_runs_collected_x_val[0] == both_runs_collected_x_val[1]
+            assert both_runs_collected_y_val[0] == both_runs_collected_y_val[1]
         finally:
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -3571,21 +3567,21 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 5))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 5)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 5))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 5)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 5))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 5)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -3594,10 +3590,10 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(self.file_name4)
             self.teardown_file(self.file_name5)
@@ -3621,11 +3617,11 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
 
         x_train = [v for x, _ in gen_train.as_numpy() for v in x.flatten().tolist()]
         x_val = [v for x, _ in gen_validation.as_numpy() for v in x.flatten().tolist()]
-        self.assertEqual(x_train, [0.0, 1.0, 2.0, 5.0, 6.0, 7.0])
-        self.assertEqual(x_val, [3.0, 4.0, 8.0, 9.0])
+        assert x_train == [0.0, 1.0, 2.0, 5.0, 6.0, 7.0]
+        assert x_val == [3.0, 4.0, 8.0, 9.0]
 
 
-class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
+class TestDataLoaderLazyLoadingMultipleDataframes:
     file_name1 = "first_half.root"
     file_name2 = "second_half.root"
     file_name3 = "second_file.root"
@@ -3723,21 +3719,21 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -3746,17 +3742,17 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             df1_entries_after = df1.AsNumpy(["rdfentry_"])["rdfentry_"]
             df2_entries_after = df2.AsNumpy(["rdfentry_"])["rdfentry_"]
 
             # check if the dataframes are correctly reset
-            self.assertTrue(np.array_equal(df1_entries_before, df1_entries_after))
-            self.assertTrue(np.array_equal(df2_entries_before, df2_entries_after))
+            assert np.array_equal(df1_entries_before, df1_entries_after)
+            assert np.array_equal(df2_entries_before, df2_entries_after)
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -3794,21 +3790,21 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -3817,10 +3813,10 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
             flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
             flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-            self.assertEqual(len(flat_x_train), 6)
-            self.assertEqual(len(flat_x_val), 4)
-            self.assertEqual(len(flat_y_train), 6)
-            self.assertEqual(len(flat_y_val), 4)
+            assert len(flat_x_train) == 6
+            assert len(flat_x_val) == 4
+            assert len(flat_y_train) == 6
+            assert len(flat_y_val) == 4
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -3852,19 +3848,19 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
             collected_y = []
 
             for x, y in gen_train.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x.append(x)
                 collected_y.append(y)
 
             for x, y in gen_validation.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x.append(x)
                 collected_y.append(y)
 
-            self.assertEqual(len(collected_x), 3)
-            self.assertEqual(len(collected_y), 3)
+            assert len(collected_x) == 3
+            assert len(collected_y) == 3
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -3904,14 +3900,14 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
             collected_y_val = []
 
             for x, y in gen_train.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for x, y in gen_validation.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
@@ -3920,10 +3916,10 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -3979,26 +3975,26 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
                 collected_z_train.append(z.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
                 collected_z_val.append(z.tolist())
 
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 2)
+            assert z.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
             collected_z_val.append(z.tolist())
@@ -4010,12 +4006,12 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -4079,21 +4075,21 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(iter_train)
-                self.assertTrue(x.shape == (3, 2))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 2)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (3, 2))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 2)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 2))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 2)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -4102,10 +4098,10 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -4156,22 +4152,22 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
 
             for _ in range(3):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (1, 1))
-            self.assertTrue(y.shape == (1, 1))
+            assert x.shape == (1, 1)
+            assert y.shape == (1, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
             flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_y_train, flat_y_train)
+            assert results_x_train == flat_x_train
+            assert results_y_train == flat_y_train
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -4213,21 +4209,21 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
 
                 for _ in range(self.n_train_batch):
                     x, y = next(iter_train)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
+                    assert x.shape == (3, 1)
+                    assert y.shape == (3, 1)
                     collected_x_train.append(x.tolist())
                     collected_y_train.append(y.tolist())
 
                 for _ in range(self.n_val_batch):
                     x, y = next(iter_val)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
+                    assert x.shape == (3, 1)
+                    assert y.shape == (3, 1)
                     collected_x_val.append(x.tolist())
                     collected_y_val.append(y.tolist())
 
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (self.val_remainder, 1))
-                self.assertTrue(y.shape == (self.val_remainder, 1))
+                assert x.shape == (self.val_remainder, 1)
+                assert y.shape == (self.val_remainder, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
@@ -4236,16 +4232,16 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
                 flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
                 flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-                self.assertEqual(len(flat_x_train), 6)
-                self.assertEqual(len(flat_x_val), 4)
-                self.assertEqual(len(flat_y_train), 6)
-                self.assertEqual(len(flat_y_val), 4)
+                assert len(flat_x_train) == 6
+                assert len(flat_x_val) == 4
+                assert len(flat_y_train) == 6
+                assert len(flat_y_val) == 4
 
                 both_epochs_collected_x_val.append(collected_x_val)
                 both_epochs_collected_y_val.append(collected_y_val)
 
-            self.assertEqual(both_epochs_collected_x_val[0], both_epochs_collected_x_val[1])
-            self.assertEqual(both_epochs_collected_y_val[0], both_epochs_collected_y_val[1])
+            assert both_epochs_collected_x_val[0] == both_epochs_collected_x_val[1]
+            assert both_epochs_collected_y_val[0] == both_epochs_collected_y_val[1]
         finally:
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -4277,10 +4273,10 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
             for _ in gen_validation.as_numpy():
                 number_of_validation_batches += 1
 
-            self.assertEqual(gen_train.num_batches, number_of_training_batches)
-            self.assertEqual(gen_validation.num_batches, number_of_validation_batches)
-            self.assertEqual(gen_train.last_batch_no_of_rows, 0)
-            self.assertEqual(gen_validation.last_batch_no_of_rows, 1)
+            assert gen_train.num_batches == number_of_training_batches
+            assert gen_validation.num_batches == number_of_validation_batches
+            assert gen_train.last_batch_no_of_rows == 0
+            assert gen_validation.last_batch_no_of_rows == 1
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -4335,26 +4331,26 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
                 collected_z_train.append(z.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
                 collected_z_val.append(z.tolist())
 
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 2)
+            assert z.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
             collected_z_val.append(z.tolist())
@@ -4366,12 +4362,12 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -4426,26 +4422,26 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_train.append(x.numpy().tolist())
                 collected_y_train.append(y.numpy().tolist())
                 collected_z_train.append(z.numpy().tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 2)
+                assert z.shape == (3, 1)
                 collected_x_val.append(x.numpy().tolist())
                 collected_y_val.append(y.numpy().tolist())
                 collected_z_val.append(z.numpy().tolist())
 
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (3, 1))
-            self.assertTrue(y.shape == (3, 2))
-            self.assertTrue(z.shape == (3, 1))
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
             collected_x_val.append(x.numpy().tolist())
             collected_y_val.append(y.numpy().tolist())
             collected_z_val.append(z.numpy().tolist())
@@ -4457,12 +4453,12 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -4524,49 +4520,48 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
                 for i in range(n_train_batches):
                     x, y, z = next(iter_train)
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
+                    assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                    assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                    assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
 
-                    self.assertTrue(np.all(x[:, 0] * (-1) == x[:, 1]), error_message + f" row: {i}")
-                    self.assertTrue(np.all(x[:, 0] + 10192 == y[:, 0]), error_message + f" row: {i}")
-                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] * 2 == z[:, 0]), error_message + f" row: {i}")
+                    assert np.all(x[:, 0] * (-1) == x[:, 1]), error_message + f" row: {i}"
+                    assert np.all(x[:, 0] + 10192 == y[:, 0]), error_message + f" row: {i}"
+                    # assert np.all(x[:,0]*(-1)-10192==y[:,1]), error_message
+                    assert np.all(x[:, 0] * 2 == z[:, 0]), error_message + f" row: {i}"
 
                     collect_x.extend(list(x[:, 0]))
 
                 if train_remainder:
                     x, y, z = next(iter_train)
-                    self.assertTrue(x.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (train_remainder, 1), error_message)
+                    assert x.shape == (train_remainder, 2), error_message
+                    assert y.shape == (train_remainder, 2), error_message
+                    assert z.shape == (train_remainder, 1), error_message
                     collect_x.extend(list(x[:, 0]))
 
                 for _ in range(n_val_batches):
                     x, y, z = next(iter_val)
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
+                    assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                    assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                    assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
 
-                    self.assertTrue(np.all(x[:, 0] * (-1) == x[:, 1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] + 10192 == y[:, 0]), error_message)
-                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] * 2 == z[:, 0]), error_message)
+                    assert np.all(x[:, 0] * (-1) == x[:, 1]), error_message
+                    assert np.all(x[:, 0] + 10192 == y[:, 0]), error_message
+                    # assert np.all(x[:,0]*(-1)-10192==y[:,1]), error_message
+                    assert np.all(x[:, 0] * 2 == z[:, 0]), error_message
 
                     collect_x.extend(list(x[:, 0]))
 
                 if val_remainder:
                     x, y, z = next(iter_val)
-                    self.assertTrue(x.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (val_remainder, 1), error_message)
+                    assert x.shape == (val_remainder, 2), error_message
+                    assert y.shape == (val_remainder, 2), error_message
+                    assert z.shape == (val_remainder, 1), error_message
                     collect_x.extend(list(x[:, 0]))
 
-                self.assertTrue(
-                    set(collect_x) == set(i for i in range(num_of_entries)),
+                assert set(collect_x) == set(i for i in range(num_of_entries)), (
                     f"collected length: {len(set(collect_x))}\
-                                 generated length {len(set(i for i in range(num_of_entries)))}",
+                                 generated length {len(set(i for i in range(num_of_entries)))}"
                 )
 
             except:
@@ -4609,21 +4604,21 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
 
                 for _ in range(self.n_train_batch):
                     x, y = next(iter_train)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
+                    assert x.shape == (3, 1)
+                    assert y.shape == (3, 1)
                     collected_x_train.append(x.tolist())
                     collected_y_train.append(y.tolist())
 
                 for _ in range(self.n_val_batch):
                     x, y = next(iter_val)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
+                    assert x.shape == (3, 1)
+                    assert y.shape == (3, 1)
                     collected_x_val.append(x.tolist())
                     collected_y_val.append(y.tolist())
 
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (self.val_remainder, 1))
-                self.assertTrue(y.shape == (self.val_remainder, 1))
+                assert x.shape == (self.val_remainder, 1)
+                assert y.shape == (self.val_remainder, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
@@ -4632,15 +4627,15 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
                 flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
                 flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-                self.assertEqual(len(flat_x_train), 6)
-                self.assertEqual(len(flat_x_val), 4)
-                self.assertEqual(len(flat_y_train), 6)
-                self.assertEqual(len(flat_y_val), 4)
+                assert len(flat_x_train) == 6
+                assert len(flat_x_val) == 4
+                assert len(flat_y_train) == 6
+                assert len(flat_y_val) == 4
 
                 both_runs_collected_x_val.append(collected_x_val)
                 both_runs_collected_y_val.append(collected_y_val)
-            self.assertEqual(both_runs_collected_x_val[0], both_runs_collected_x_val[1])
-            self.assertEqual(both_runs_collected_y_val[0], both_runs_collected_y_val[1])
+            assert both_runs_collected_x_val[0] == both_runs_collected_x_val[1]
+            assert both_runs_collected_y_val[0] == both_runs_collected_y_val[1]
         finally:
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -4732,21 +4727,21 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 5))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 5)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 5))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 5)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 5))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 5)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -4755,10 +4750,10 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(self.file_name4)
             self.teardown_file(self.file_name5)
@@ -4800,14 +4795,14 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
             val_1_collected = sorted([v for x, y in gen_val1.as_numpy() for v in x.flatten().tolist()])
             val_2_collected = sorted([v for x, y in gen_val2.as_numpy() for v in x.flatten().tolist()])
 
-            self.assertNotEqual(val_1_collected, val_2_collected)
+            assert val_1_collected != val_2_collected
 
         finally:
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
 
 
-class DataLoaderRandomUndersampling(unittest.TestCase):
+class TestDataLoaderRandomUndersampling:
     file_name1 = "major.root"
     file_name2 = "minor.root"
     file_name3 = "second_file.root"
@@ -4906,21 +4901,21 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 1)
+            assert y.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
@@ -4929,10 +4924,10 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             num_major_train = sum(np.array(flat_x_train) % 2 == 0)
             num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
@@ -4940,23 +4935,23 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
             # check if there are no duplicate entries (replacement=False)
-            self.assertEqual(len(set(flat_x_train)), len(flat_x_train))
-            self.assertEqual(len(set(flat_x_val)), len(flat_x_val))
-            self.assertEqual(len(set(flat_y_train)), len(flat_y_train))
-            self.assertEqual(len(set(flat_y_val)), len(flat_y_val))
+            assert len(set(flat_x_train)) == len(flat_x_train)
+            assert len(set(flat_x_val)) == len(flat_x_val)
+            assert len(set(flat_y_train)) == len(flat_y_train)
+            assert len(set(flat_y_val)) == len(flat_y_val)
 
             # check if correct sampling_ratio (0.5 = minor/major)
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+            assert num_major_train == 6
+            assert num_minor_train == 3
+            assert num_major_val == 4
+            assert num_minor_val == 2
 
             major_entries_after = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
             minor_entries_after = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
 
             # check if the dataframes are correctly reset
-            self.assertTrue(np.array_equal(major_entries_before, major_entries_after))
-            self.assertTrue(np.array_equal(minor_entries_before, minor_entries_after))
+            assert np.array_equal(major_entries_before, major_entries_after)
+            assert np.array_equal(minor_entries_before, minor_entries_after)
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -5041,15 +5036,15 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
 
             for _ in range(6):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             for _ in range(9):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
@@ -5058,10 +5053,10 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             num_major_train = sum(np.array(flat_x_train) % 2 == 0)
             num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
@@ -5069,16 +5064,16 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
             # check if there are duplicate entries (replacement=True)
-            self.assertLess(len(set(flat_x_train)), len(flat_x_train))
-            self.assertLess(len(set(flat_x_val)), len(flat_x_val))
-            self.assertLess(len(set(flat_y_train)), len(flat_y_train))
-            self.assertLess(len(set(flat_y_val)), len(flat_y_val))
+            assert len(set(flat_x_train)) < len(flat_x_train)
+            assert len(set(flat_x_val)) < len(flat_x_val)
+            assert len(set(flat_y_train)) < len(flat_y_train)
+            assert len(set(flat_y_val)) < len(flat_y_val)
 
             # check if correct sampling_ratio (0.2 = minor/major)
-            self.assertEqual(num_major_train, 15)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 10)
-            self.assertEqual(num_minor_val, 2)
+            assert num_major_train == 15
+            assert num_minor_train == 3
+            assert num_major_val == 10
+            assert num_minor_val == 2
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -5120,21 +5115,21 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 1)
+            assert y.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
@@ -5143,10 +5138,10 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(len(flat_x_train), 9)
-            self.assertEqual(len(flat_x_val), 6)
-            self.assertEqual(len(flat_y_train), 9)
-            self.assertEqual(len(flat_y_val), 6)
+            assert len(flat_x_train) == 9
+            assert len(flat_x_val) == 6
+            assert len(flat_y_train) == 9
+            assert len(flat_y_val) == 6
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -5186,20 +5181,20 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x.append(x)
                 collected_y.append(y)
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x.append(x)
                 collected_y.append(y)
 
-            self.assertEqual(len(collected_x), 7)
-            self.assertEqual(len(collected_y), 7)
+            assert len(collected_x) == 7
+            assert len(collected_y) == 7
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -5247,21 +5242,21 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(iter_train)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(iter_train)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 1)
+            assert y.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
@@ -5270,10 +5265,10 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -5352,26 +5347,26 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 2)
+                assert z.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
                 collected_z_train.append(z.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 2)
+                assert z.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
                 collected_z_val.append(z.tolist())
 
             x, y, z = next(iter_train)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 2))
-            self.assertTrue(z.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 1)
+            assert y.shape == (self.train_remainder, 2)
+            assert z.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
             collected_z_train.append(z.tolist())
@@ -5383,22 +5378,22 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             num_major_train = sum(np.array(flat_x_train) % 2 == 0)
             num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
             num_major_val = sum(np.array(flat_x_val) % 2 == 0)
             num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+            assert num_major_train == 6
+            assert num_minor_train == 3
+            assert num_major_val == 4
+            assert num_minor_val == 2
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -5472,21 +5467,21 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(iter_train)
-                self.assertTrue(x.shape == (2, 2))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 2)
+                assert y.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (2, 2))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 2)
+                assert y.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(iter_train)
-            self.assertTrue(x.shape == (self.train_remainder, 2))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 2)
+            assert y.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
@@ -5495,10 +5490,10 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -5550,21 +5545,21 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 1)
+            assert y.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
@@ -5573,27 +5568,27 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             num_major_train = np.sum((np.asarray(flat_x_train) % 2 == 0) & (np.asarray(flat_x_train) % 8 != 0))
             num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
             num_major_val = np.sum((np.asarray(flat_x_val) % 2 == 0) & (np.asarray(flat_x_val) % 8 != 0))
             num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+            assert num_major_train == 6
+            assert num_minor_train == 3
+            assert num_major_val == 4
+            assert num_minor_val == 2
 
             major_filter_entries_after = df_major_filter.AsNumpy(["rdfentry_"])["rdfentry_"]
             minor_entries_after = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
 
             # check if the dataframes are correctly reset
-            self.assertTrue(np.array_equal(major_filter_entries_before, major_filter_entries_after))
-            self.assertTrue(np.array_equal(minor_entries_before, minor_entries_after))
+            assert np.array_equal(major_filter_entries_before, major_filter_entries_after)
+            assert np.array_equal(minor_entries_before, minor_entries_after)
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -5639,21 +5634,21 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
 
                 for _ in range(self.n_train_batch):
                     x, y = next(iter_train)
-                    self.assertTrue(x.shape == (2, 1))
-                    self.assertTrue(y.shape == (2, 1))
+                    assert x.shape == (2, 1)
+                    assert y.shape == (2, 1)
                     collected_x_train.append(x.tolist())
                     collected_y_train.append(y.tolist())
 
                 for _ in range(self.n_val_batch):
                     x, y = next(iter_val)
-                    self.assertTrue(x.shape == (2, 1))
-                    self.assertTrue(y.shape == (2, 1))
+                    assert x.shape == (2, 1)
+                    assert y.shape == (2, 1)
                     collected_x_val.append(x.tolist())
                     collected_y_val.append(y.tolist())
 
                 x, y = next(iter_train)
-                self.assertTrue(x.shape == (self.train_remainder, 1))
-                self.assertTrue(y.shape == (self.train_remainder, 1))
+                assert x.shape == (self.train_remainder, 1)
+                assert y.shape == (self.train_remainder, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
@@ -5662,16 +5657,16 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
                 flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
                 flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-                self.assertEqual(len(flat_x_train), 9)
-                self.assertEqual(len(flat_x_val), 6)
-                self.assertEqual(len(flat_y_train), 9)
-                self.assertEqual(len(flat_y_val), 6)
+                assert len(flat_x_train) == 9
+                assert len(flat_x_val) == 6
+                assert len(flat_y_train) == 9
+                assert len(flat_y_val) == 6
 
                 both_epochs_collected_x_val.append(collected_x_val)
                 both_epochs_collected_y_val.append(collected_y_val)
 
-            self.assertEqual(both_epochs_collected_x_val[0], both_epochs_collected_x_val[1])
-            self.assertEqual(both_epochs_collected_y_val[0], both_epochs_collected_y_val[1])
+            assert both_epochs_collected_x_val[0] == both_epochs_collected_x_val[1]
+            assert both_epochs_collected_y_val[0] == both_epochs_collected_y_val[1]
         finally:
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -5707,10 +5702,10 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             for _ in gen_validation.as_numpy():
                 number_of_validation_batches += 1
 
-            self.assertEqual(gen_train.num_batches, number_of_training_batches)
-            self.assertEqual(gen_validation.num_batches, number_of_validation_batches)
-            self.assertEqual(gen_train.last_batch_no_of_rows, 1)
-            self.assertEqual(gen_validation.last_batch_no_of_rows, 0)
+            assert gen_train.num_batches == number_of_training_batches
+            assert gen_validation.num_batches == number_of_validation_batches
+            assert gen_train.last_batch_no_of_rows == 1
+            assert gen_validation.last_batch_no_of_rows == 0
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -5787,26 +5782,26 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 2)
+                assert z.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
                 collected_z_train.append(z.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 2)
+                assert z.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
                 collected_z_val.append(z.tolist())
 
             x, y, z = next(iter_train)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 2))
-            self.assertTrue(z.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 1)
+            assert y.shape == (self.train_remainder, 2)
+            assert z.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
             collected_z_train.append(z.tolist())
@@ -5818,22 +5813,22 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             num_major_train = sum(np.array(flat_x_train) % 2 == 0)
             num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
             num_major_val = sum(np.array(flat_x_val) % 2 == 0)
             num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+            assert num_major_train == 6
+            assert num_minor_train == 3
+            assert num_major_val == 4
+            assert num_minor_val == 2
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -5912,26 +5907,26 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 2)
+                assert z.shape == (2, 1)
                 collected_x_train.append(x.numpy().tolist())
                 collected_y_train.append(y.numpy().tolist())
                 collected_z_train.append(z.numpy().tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 2)
+                assert z.shape == (2, 1)
                 collected_x_val.append(x.numpy().tolist())
                 collected_y_val.append(y.numpy().tolist())
                 collected_z_val.append(z.numpy().tolist())
 
             x, y, z = next(iter_train)
-            self.assertTrue(x.shape == (2, 1))
-            self.assertTrue(y.shape == (2, 2))
-            self.assertTrue(z.shape == (2, 1))
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 2)
+            assert z.shape == (2, 1)
             collected_x_train.append(x.numpy().tolist())
             collected_y_train.append(y.numpy().tolist())
             collected_z_train.append(z.numpy().tolist())
@@ -5943,22 +5938,22 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             num_major_train = sum(np.array(flat_x_train) % 2 == 0)
             num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
             num_major_val = sum(np.array(flat_x_val) % 2 == 0)
             num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
-            self.assertEqual(num_major_train, 7)  # num_major_train = 6 + 1 padded 0 from the last batch
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+            assert num_major_train == 7  # num_major_train = 6 + 1 padded 0 from the last batch
+            assert num_minor_train == 3
+            assert num_major_val == 4
+            assert num_minor_val == 2
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -6035,31 +6030,31 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
                 for i in range(n_train_batches):
                     x, y, z = next(iter_train)
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
+                    assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                    assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                    assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
                     collected_z_train.append(z.tolist())
 
                 if train_remainder:
                     x, y, z = next(iter_train)
-                    self.assertTrue(x.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (train_remainder, 1), error_message)
+                    assert x.shape == (train_remainder, 2), error_message
+                    assert y.shape == (train_remainder, 2), error_message
+                    assert z.shape == (train_remainder, 1), error_message
                     collected_z_train.append(z.tolist())
 
                 for _ in range(n_val_batches):
                     x, y, z = next(iter_val)
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
+                    assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                    assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                    assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
                     collected_z_val.append(z.tolist())
 
                 if val_remainder:
                     x, y, z = next(iter_val)
-                    self.assertTrue(x.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (val_remainder, 1), error_message)
+                    assert x.shape == (val_remainder, 2), error_message
+                    assert y.shape == (val_remainder, 2), error_message
+                    assert z.shape == (val_remainder, 1), error_message
                     collected_z_val.append(z.tolist())
 
                 flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
@@ -6071,12 +6066,12 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
                 num_minor_val = sum(np.array(flat_z_val) % 2 != 0)
 
                 # check if there are no duplicate entries (replacement=False)
-                self.assertEqual(len(set(flat_z_train)), len(flat_z_train))
-                self.assertEqual(len(set(flat_z_val)), len(flat_z_val))
+                assert len(set(flat_z_train)) == len(flat_z_train)
+                assert len(set(flat_z_val)) == len(flat_z_val)
 
                 # check if the sampling stategy is correct
-                self.assertEqual(round((num_minor_train / num_major_train), 2), sampling_ratio)
-                self.assertEqual(round((num_minor_val / num_major_val), 2), sampling_ratio)
+                assert round((num_minor_train / num_major_train), 2) == sampling_ratio
+                assert round((num_minor_val / num_major_val), 2) == sampling_ratio
 
                 self.teardown_file(file_name1)
                 self.teardown_file(file_name2)
@@ -6092,8 +6087,9 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             df1 = ROOT.RDataFrame(tree_name, file_name1)
             df2 = ROOT.RDataFrame(tree_name, file_name2)
 
-            with self.assertRaisesRegex(
-                Exception, r"The sampling_ratio is too low: not enough entries in the majority class to sample from."
+            with pytest.raises(
+                Exception,
+                match=r"The sampling_ratio is too low: not enough entries in the majority class to sample from.",
             ):
                 ROOT.Experimental.ML.RDataLoader(
                     [df1, df2],
@@ -6184,31 +6180,31 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
                 for i in range(n_train_batches):
                     x, y, z = next(iter_train)
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
+                    assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                    assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                    assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
                     collected_z_train.append(z.tolist())
 
                 if train_remainder:
                     x, y, z = next(iter_train)
-                    self.assertTrue(x.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (train_remainder, 1), error_message)
+                    assert x.shape == (train_remainder, 2), error_message
+                    assert y.shape == (train_remainder, 2), error_message
+                    assert z.shape == (train_remainder, 1), error_message
                     collected_z_train.append(z.tolist())
 
                 for _ in range(n_val_batches):
                     x, y, z = next(iter_val)
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
+                    assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                    assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                    assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
                     collected_z_val.append(z.tolist())
 
                 if val_remainder:
                     x, y, z = next(iter_val)
-                    self.assertTrue(x.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (val_remainder, 1), error_message)
+                    assert x.shape == (val_remainder, 2), error_message
+                    assert y.shape == (val_remainder, 2), error_message
+                    assert z.shape == (val_remainder, 1), error_message
                     collected_z_val.append(z.tolist())
 
                 flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
@@ -6220,12 +6216,12 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
                 num_minor_val = sum(np.array(flat_z_val) % 2 != 0)
 
                 # check if there are duplicate entries (replacement=True)
-                self.assertLess(len(set(flat_z_train)), len(flat_z_train))
-                self.assertLess(len(set(flat_z_val)), len(flat_z_val))
+                assert len(set(flat_z_train)) < len(flat_z_train)
+                assert len(set(flat_z_val)) < len(flat_z_val)
 
                 # check if the sampling stategy is correct
-                self.assertEqual(round((num_minor_train / num_major_train), 2), sampling_ratio)
-                self.assertEqual(round((num_minor_val / num_major_val), 2), sampling_ratio)
+                assert round((num_minor_train / num_major_train), 2) == sampling_ratio
+                assert round((num_minor_val / num_major_val), 2) == sampling_ratio
 
                 self.teardown_file(file_name1)
                 self.teardown_file(file_name2)
@@ -6272,21 +6268,21 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
 
                 for _ in range(self.n_train_batch):
                     x, y = next(iter_train)
-                    self.assertTrue(x.shape == (2, 1))
-                    self.assertTrue(y.shape == (2, 1))
+                    assert x.shape == (2, 1)
+                    assert y.shape == (2, 1)
                     collected_x_train.append(x.tolist())
                     collected_y_train.append(y.tolist())
 
                 for _ in range(self.n_val_batch):
                     x, y = next(iter_val)
-                    self.assertTrue(x.shape == (2, 1))
-                    self.assertTrue(y.shape == (2, 1))
+                    assert x.shape == (2, 1)
+                    assert y.shape == (2, 1)
                     collected_x_val.append(x.tolist())
                     collected_y_val.append(y.tolist())
 
                 x, y = next(iter_train)
-                self.assertTrue(x.shape == (self.train_remainder, 1))
-                self.assertTrue(y.shape == (self.train_remainder, 1))
+                assert x.shape == (self.train_remainder, 1)
+                assert y.shape == (self.train_remainder, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
@@ -6295,15 +6291,15 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
                 flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
                 flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-                self.assertEqual(len(flat_x_train), 9)
-                self.assertEqual(len(flat_x_val), 6)
-                self.assertEqual(len(flat_y_train), 9)
-                self.assertEqual(len(flat_y_val), 6)
+                assert len(flat_x_train) == 9
+                assert len(flat_x_val) == 6
+                assert len(flat_y_train) == 9
+                assert len(flat_y_val) == 6
 
                 both_runs_collected_x_val.append(collected_x_val)
                 both_runs_collected_y_val.append(collected_y_val)
-            self.assertEqual(both_runs_collected_x_val[0], both_runs_collected_x_val[1])
-            self.assertEqual(both_runs_collected_y_val[0], both_runs_collected_y_val[1])
+            assert both_runs_collected_x_val[0] == both_runs_collected_x_val[1]
+            assert both_runs_collected_y_val[0] == both_runs_collected_y_val[1]
         finally:
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -6424,21 +6420,21 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 5))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 5)
+                assert y.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 5))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 5)
+                assert y.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (self.train_remainder, 5))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 5)
+            assert y.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
@@ -6447,20 +6443,20 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             num_major_train = sum(np.array(flat_y_train) < 20)
             num_minor_train = sum(np.array(flat_y_train) >= 20)
             num_major_val = sum(np.array(flat_y_val) < 20)
             num_minor_val = sum(np.array(flat_y_val) >= 20)
 
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+            assert num_major_train == 6
+            assert num_minor_train == 3
+            assert num_major_val == 4
+            assert num_minor_val == 2
 
             self.teardown_file(self.file_name4)
             self.teardown_file(self.file_name5)
@@ -6471,7 +6467,7 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             raise
 
 
-class DataLoaderRandomOversampling(unittest.TestCase):
+class TestDataLoaderRandomOversampling:
     file_name1 = "major.root"
     file_name2 = "minor.root"
     file_name3 = "second_file.root"
@@ -6569,21 +6565,21 @@ class DataLoaderRandomOversampling(unittest.TestCase):
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 1)
+            assert y.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
@@ -6592,10 +6588,10 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             num_major_train = sum(np.array(flat_x_train) % 2 == 0)
             num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
@@ -6603,23 +6599,23 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
             # check if there are no duplicate entries (oversampling)
-            self.assertLess(len(set(flat_x_train)), len(flat_x_train))
-            self.assertLess(len(set(flat_x_val)), len(flat_x_val))
-            self.assertLess(len(set(flat_y_train)), len(flat_y_train))
-            self.assertLess(len(set(flat_y_val)), len(flat_y_val))
+            assert len(set(flat_x_train)) < len(flat_x_train)
+            assert len(set(flat_x_val)) < len(flat_x_val)
+            assert len(set(flat_y_train)) < len(flat_y_train)
+            assert len(set(flat_y_val)) < len(flat_y_val)
 
             # check if correct sampling_ratio (0.5 = minor/major)
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+            assert num_major_train == 6
+            assert num_minor_train == 3
+            assert num_major_val == 4
+            assert num_minor_val == 2
 
             major_entries_after = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
             minor_entries_after = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
 
             # check if the dataframes are correctly reset
-            self.assertTrue(np.array_equal(major_entries_before, major_entries_after))
-            self.assertTrue(np.array_equal(minor_entries_before, minor_entries_after))
+            assert np.array_equal(major_entries_before, major_entries_after)
+            assert np.array_equal(minor_entries_before, minor_entries_after)
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -6660,21 +6656,21 @@ class DataLoaderRandomOversampling(unittest.TestCase):
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 1)
+            assert y.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
@@ -6684,16 +6680,16 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
             # check if there are no duplicate entries (oversampling)
-            self.assertLess(len(set(flat_x_train)), len(flat_x_train))
-            self.assertLess(len(set(flat_x_val)), len(flat_x_val))
-            self.assertLess(len(set(flat_y_train)), len(flat_y_train))
-            self.assertLess(len(set(flat_y_val)), len(flat_y_val))
+            assert len(set(flat_x_train)) < len(flat_x_train)
+            assert len(set(flat_x_val)) < len(flat_x_val)
+            assert len(set(flat_y_train)) < len(flat_y_train)
+            assert len(set(flat_y_val)) < len(flat_y_val)
 
             # check if correct sampling_ratio (0.5 = minor/major)
-            self.assertEqual(len(flat_x_train), 9)
-            self.assertEqual(len(flat_x_val), 6)
-            self.assertEqual(len(flat_y_train), 9)
-            self.assertEqual(len(flat_y_val), 6)
+            assert len(flat_x_train) == 9
+            assert len(flat_x_val) == 6
+            assert len(flat_y_train) == 9
+            assert len(flat_y_val) == 6
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -6732,20 +6728,20 @@ class DataLoaderRandomOversampling(unittest.TestCase):
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x.append(x)
                 collected_y.append(y)
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x.append(x)
                 collected_y.append(y)
 
-            self.assertEqual(len(collected_x), 7)
-            self.assertEqual(len(collected_y), 7)
+            assert len(collected_x) == 7
+            assert len(collected_y) == 7
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -6792,21 +6788,21 @@ class DataLoaderRandomOversampling(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(iter_train)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(iter_train)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 1)
+            assert y.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
@@ -6815,10 +6811,10 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -6896,26 +6892,26 @@ class DataLoaderRandomOversampling(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 2)
+                assert z.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
                 collected_z_train.append(z.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 2)
+                assert z.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
                 collected_z_val.append(z.tolist())
 
             x, y, z = next(iter_train)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 2))
-            self.assertTrue(z.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 1)
+            assert y.shape == (self.train_remainder, 2)
+            assert z.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
             collected_z_train.append(z.tolist())
@@ -6927,22 +6923,22 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             num_major_train = sum(np.array(flat_x_train) % 2 == 0)
             num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
             num_major_val = sum(np.array(flat_x_val) % 2 == 0)
             num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+            assert num_major_train == 6
+            assert num_minor_train == 3
+            assert num_major_val == 4
+            assert num_minor_val == 2
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -7015,21 +7011,21 @@ class DataLoaderRandomOversampling(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(iter_train)
-                self.assertTrue(x.shape == (2, 2))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 2)
+                assert y.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (2, 2))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 2)
+                assert y.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(iter_train)
-            self.assertTrue(x.shape == (self.train_remainder, 2))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 2)
+            assert y.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
@@ -7038,10 +7034,10 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -7092,21 +7088,21 @@ class DataLoaderRandomOversampling(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 1)
+            assert y.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
@@ -7115,27 +7111,27 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             num_major_train = sum(np.array(flat_x_train) % 2 == 0)
             num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
             num_major_val = sum(np.array(flat_x_val) % 2 == 0)
             num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+            assert num_major_train == 6
+            assert num_minor_train == 3
+            assert num_major_val == 4
+            assert num_minor_val == 2
 
             major_entries_after = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
             minor_filter_entries_after = df_minor_filter.AsNumpy(["rdfentry_"])["rdfentry_"]
 
             # check if the dataframes are correctly reset
-            self.assertTrue(np.array_equal(major_entries_before, major_entries_after))
-            self.assertTrue(np.array_equal(minor_filter_entries_before, minor_filter_entries_after))
+            assert np.array_equal(major_entries_before, major_entries_after)
+            assert np.array_equal(minor_filter_entries_before, minor_filter_entries_after)
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -7180,21 +7176,21 @@ class DataLoaderRandomOversampling(unittest.TestCase):
 
                 for _ in range(self.n_train_batch):
                     x, y = next(iter_train)
-                    self.assertTrue(x.shape == (2, 1))
-                    self.assertTrue(y.shape == (2, 1))
+                    assert x.shape == (2, 1)
+                    assert y.shape == (2, 1)
                     collected_x_train.append(x.tolist())
                     collected_y_train.append(y.tolist())
 
                 for _ in range(self.n_val_batch):
                     x, y = next(iter_val)
-                    self.assertTrue(x.shape == (2, 1))
-                    self.assertTrue(y.shape == (2, 1))
+                    assert x.shape == (2, 1)
+                    assert y.shape == (2, 1)
                     collected_x_val.append(x.tolist())
                     collected_y_val.append(y.tolist())
 
                 x, y = next(iter_train)
-                self.assertTrue(x.shape == (self.train_remainder, 1))
-                self.assertTrue(y.shape == (self.train_remainder, 1))
+                assert x.shape == (self.train_remainder, 1)
+                assert y.shape == (self.train_remainder, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
@@ -7203,16 +7199,16 @@ class DataLoaderRandomOversampling(unittest.TestCase):
                 flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
                 flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-                self.assertEqual(len(flat_x_train), 9)
-                self.assertEqual(len(flat_x_val), 6)
-                self.assertEqual(len(flat_y_train), 9)
-                self.assertEqual(len(flat_y_val), 6)
+                assert len(flat_x_train) == 9
+                assert len(flat_x_val) == 6
+                assert len(flat_y_train) == 9
+                assert len(flat_y_val) == 6
 
                 both_epochs_collected_x_val.append(collected_x_val)
                 both_epochs_collected_y_val.append(collected_y_val)
 
-            self.assertEqual(both_epochs_collected_x_val[0], both_epochs_collected_x_val[1])
-            self.assertEqual(both_epochs_collected_y_val[0], both_epochs_collected_y_val[1])
+            assert both_epochs_collected_x_val[0] == both_epochs_collected_x_val[1]
+            assert both_epochs_collected_y_val[0] == both_epochs_collected_y_val[1]
         finally:
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -7247,10 +7243,10 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             for _ in gen_validation.as_numpy():
                 number_of_validation_batches += 1
 
-            self.assertEqual(gen_train.num_batches, number_of_training_batches)
-            self.assertEqual(gen_validation.num_batches, number_of_validation_batches)
-            self.assertEqual(gen_train.last_batch_no_of_rows, 1)
-            self.assertEqual(gen_validation.last_batch_no_of_rows, 0)
+            assert gen_train.num_batches == number_of_training_batches
+            assert gen_validation.num_batches == number_of_validation_batches
+            assert gen_train.last_batch_no_of_rows == 1
+            assert gen_validation.last_batch_no_of_rows == 0
 
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -7326,26 +7322,26 @@ class DataLoaderRandomOversampling(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 2)
+                assert z.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
                 collected_z_train.append(z.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 2)
+                assert z.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
                 collected_z_val.append(z.tolist())
 
             x, y, z = next(iter_train)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 2))
-            self.assertTrue(z.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 1)
+            assert y.shape == (self.train_remainder, 2)
+            assert z.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
             collected_z_train.append(z.tolist())
@@ -7357,22 +7353,22 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             num_major_train = sum(np.array(flat_x_train) % 2 == 0)
             num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
             num_major_val = sum(np.array(flat_x_val) % 2 == 0)
             num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+            assert num_major_train == 6
+            assert num_minor_train == 3
+            assert num_major_val == 4
+            assert num_minor_val == 2
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -7450,26 +7446,26 @@ class DataLoaderRandomOversampling(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 2)
+                assert z.shape == (2, 1)
                 collected_x_train.append(x.numpy().tolist())
                 collected_y_train.append(y.numpy().tolist())
                 collected_z_train.append(z.numpy().tolist())
 
             for _ in range(self.n_val_batch):
                 x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 2)
+                assert z.shape == (2, 1)
                 collected_x_val.append(x.numpy().tolist())
                 collected_y_val.append(y.numpy().tolist())
                 collected_z_val.append(z.numpy().tolist())
 
             x, y, z = next(iter_train)
-            self.assertTrue(x.shape == (2, 1))
-            self.assertTrue(y.shape == (2, 2))
-            self.assertTrue(z.shape == (2, 1))
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 2)
+            assert z.shape == (2, 1)
             collected_x_train.append(x.numpy().tolist())
             collected_y_train.append(y.numpy().tolist())
             collected_z_train.append(z.numpy().tolist())
@@ -7481,22 +7477,22 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
             flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
+            assert results_z_train == flat_z_train
+            assert results_z_val == flat_z_val
 
             num_major_train = sum(np.array(flat_x_train) % 2 == 0)
             num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
             num_major_val = sum(np.array(flat_x_val) % 2 == 0)
             num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
-            self.assertEqual(num_major_train, 7)  # num_major_train = 6 + 1 padded 0 from the last batch
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+            assert num_major_train == 7  # num_major_train = 6 + 1 padded 0 from the last batch
+            assert num_minor_train == 3
+            assert num_major_val == 4
+            assert num_minor_val == 2
 
             self.teardown_file(file_name1)
             self.teardown_file(file_name2)
@@ -7571,31 +7567,31 @@ class DataLoaderRandomOversampling(unittest.TestCase):
                 for i in range(n_train_batches):
                     x, y, z = next(iter_train)
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
+                    assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                    assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                    assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
                     collected_z_train.append(z.tolist())
 
                 if train_remainder:
                     x, y, z = next(iter_train)
-                    self.assertTrue(x.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (train_remainder, 1), error_message)
+                    assert x.shape == (train_remainder, 2), error_message
+                    assert y.shape == (train_remainder, 2), error_message
+                    assert z.shape == (train_remainder, 1), error_message
                     collected_z_train.append(z.tolist())
 
                 for _ in range(n_val_batches):
                     x, y, z = next(iter_val)
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
+                    assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                    assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                    assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
                     collected_z_val.append(z.tolist())
 
                 if val_remainder:
                     x, y, z = next(iter_val)
-                    self.assertTrue(x.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (val_remainder, 1), error_message)
+                    assert x.shape == (val_remainder, 2), error_message
+                    assert y.shape == (val_remainder, 2), error_message
+                    assert z.shape == (val_remainder, 1), error_message
                     collected_z_val.append(z.tolist())
 
                 flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
@@ -7607,12 +7603,12 @@ class DataLoaderRandomOversampling(unittest.TestCase):
                 num_minor_val = sum(np.array(flat_z_val) % 2 != 0)
 
                 # check if there are no duplicate entries (replacement=False)
-                self.assertLessEqual(len(set(flat_z_train)), len(flat_z_train))
-                self.assertLessEqual(len(set(flat_z_val)), len(flat_z_val))
+                assert len(set(flat_z_train)) <= len(flat_z_train)
+                assert len(set(flat_z_val)) <= len(flat_z_val)
 
                 # check if the sampling stategy is correct
-                self.assertEqual(round((num_minor_train / num_major_train), 2), sampling_ratio)
-                self.assertEqual(round((num_minor_val / num_major_val), 2), sampling_ratio)
+                assert round((num_minor_train / num_major_train), 2) == sampling_ratio
+                assert round((num_minor_val / num_major_val), 2) == sampling_ratio
 
                 self.teardown_file(file_name1)
                 self.teardown_file(file_name2)
@@ -7658,21 +7654,21 @@ class DataLoaderRandomOversampling(unittest.TestCase):
 
                 for _ in range(self.n_train_batch):
                     x, y = next(iter_train)
-                    self.assertTrue(x.shape == (2, 1))
-                    self.assertTrue(y.shape == (2, 1))
+                    assert x.shape == (2, 1)
+                    assert y.shape == (2, 1)
                     collected_x_train.append(x.tolist())
                     collected_y_train.append(y.tolist())
 
                 for _ in range(self.n_val_batch):
                     x, y = next(iter_val)
-                    self.assertTrue(x.shape == (2, 1))
-                    self.assertTrue(y.shape == (2, 1))
+                    assert x.shape == (2, 1)
+                    assert y.shape == (2, 1)
                     collected_x_val.append(x.tolist())
                     collected_y_val.append(y.tolist())
 
                 x, y = next(iter_train)
-                self.assertTrue(x.shape == (self.train_remainder, 1))
-                self.assertTrue(y.shape == (self.train_remainder, 1))
+                assert x.shape == (self.train_remainder, 1)
+                assert y.shape == (self.train_remainder, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
@@ -7681,15 +7677,15 @@ class DataLoaderRandomOversampling(unittest.TestCase):
                 flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
                 flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-                self.assertEqual(len(flat_x_train), 9)
-                self.assertEqual(len(flat_x_val), 6)
-                self.assertEqual(len(flat_y_train), 9)
-                self.assertEqual(len(flat_y_val), 6)
+                assert len(flat_x_train) == 9
+                assert len(flat_x_val) == 6
+                assert len(flat_y_train) == 9
+                assert len(flat_y_val) == 6
 
                 both_runs_collected_x_val.append(collected_x_val)
                 both_runs_collected_y_val.append(collected_y_val)
-            self.assertEqual(both_runs_collected_x_val[0], both_runs_collected_x_val[1])
-            self.assertEqual(both_runs_collected_y_val[0], both_runs_collected_y_val[1])
+            assert both_runs_collected_x_val[0] == both_runs_collected_x_val[1]
+            assert both_runs_collected_y_val[0] == both_runs_collected_y_val[1]
         finally:
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
@@ -7810,21 +7806,21 @@ class DataLoaderRandomOversampling(unittest.TestCase):
 
             for _ in range(self.n_val_batch):
                 x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 5))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 5)
+                assert y.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             for _ in range(self.n_train_batch):
                 x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 5))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 5)
+                assert y.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (self.train_remainder, 5))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 5)
+            assert y.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
@@ -7833,20 +7829,20 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert results_x_train == flat_x_train
+            assert results_x_val == flat_x_val
+            assert results_y_train == flat_y_train
+            assert results_y_val == flat_y_val
 
             num_major_train = sum(np.array(flat_y_train) < 10)
             num_minor_train = sum(np.array(flat_y_train) >= 10)
             num_major_val = sum(np.array(flat_y_val) < 10)
             num_minor_val = sum(np.array(flat_y_val) >= 10)
 
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+            assert num_major_train == 6
+            assert num_minor_train == 3
+            assert num_major_val == 4
+            assert num_minor_val == 2
 
             self.teardown_file(self.file_name4)
             self.teardown_file(self.file_name5)
@@ -7880,15 +7876,15 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             x = np.concatenate([x for x, _ in dl.as_numpy()]).flatten()
             minor = x[x % 2 == 1]
 
-            self.assertEqual(len(minor), 10)
-            self.assertGreater(len(np.unique(minor)), 1)
+            assert len(minor) == 10
+            assert len(np.unique(minor)) > 1
 
         finally:
             self.teardown_file(self.file_name1)
             self.teardown_file(self.file_name2)
 
 
-class DataLoaderSave(unittest.TestCase):
+class TestDataLoaderSave:
     file_name = "dataloader_save_input.root"
     file_name2 = "dataloader_save_input2.root"
     tree_name = "mytree"
@@ -7906,7 +7902,7 @@ class DataLoaderSave(unittest.TestCase):
             .Snapshot(self.tree_name, file_name or self.file_name)
         )
 
-    def tearDown(self):
+    def teardown_method(self):
         for file in (self.file_name, self.file_name2, self.out_name, self.out_name2):
             if os.path.exists(file):
                 os.remove(file)
@@ -7939,7 +7935,7 @@ class DataLoaderSave(unittest.TestCase):
         dl.save(self.tree_name, self.out_name)
 
         # check all features, target and weights
-        self.assertEqual(self.saved_columns(self.out_name), {"b1", "b2", "w"})
+        assert self.saved_columns(self.out_name) == {"b1", "b2", "w"}
         np.testing.assert_array_equal(self.read_back(self.out_name, "b1"), np.arange(20))
         np.testing.assert_array_equal(self.read_back(self.out_name, "b2"), np.arange(1, 21))
         np.testing.assert_array_equal(self.read_back(self.out_name, "w"), np.full(20, 0.5))
@@ -7972,7 +7968,7 @@ class DataLoaderSave(unittest.TestCase):
         np.testing.assert_array_equal(np.sort(all_b1), np.arange(20))
 
         # and the entries are not written in their original order
-        self.assertTrue((train_b1 != np.sort(train_b1)).any())
+        assert (train_b1 != np.sort(train_b1)).any()
 
     def test03_vector_columns(self):
         self.create_file()
@@ -7993,10 +7989,10 @@ class DataLoaderSave(unittest.TestCase):
         dl.save(self.tree_name, self.out_name)
 
         # v1 is saved as a vector column, not exploded into v1_0...
-        self.assertEqual(self.saved_columns(self.out_name), {"b1", "v1"})
+        assert self.saved_columns(self.out_name) == {"b1", "v1"}
 
         v1 = self.read_back(self.out_name, "v1")
-        self.assertEqual(v1.shape, (20, 3))
+        assert v1.shape == (20, 3)
         # v1 contains 2 elements padded up to max_vec_sizes["v1"] (3) with vec_padding (42)
         np.testing.assert_array_equal(v1[3], [3.0, 30.0, 42.0])
 
@@ -8124,11 +8120,11 @@ class DataLoaderSave(unittest.TestCase):
         np.testing.assert_array_equal(w.flatten(), np.full(20, 0.5))
 
 
-class DataLoaderImplicitMT(unittest.TestCase):
+class TestDataLoaderImplicitMT:
     file_name = "dataloader_imt.root"
     tree_name = "mytree"
 
-    def tearDown(self):
+    def teardown_method(self):
         ROOT.DisableImplicitMT()
         os.remove(self.file_name)
 
@@ -8137,7 +8133,7 @@ class DataLoaderImplicitMT(unittest.TestCase):
         ROOT.EnableImplicitMT(2)
         df = ROOT.RDataFrame(self.tree_name, self.file_name)
 
-        with self.assertRaisesRegex(RuntimeError, "Cannot use RDataLoader with implicit multi-threading enabled"):
+        with pytest.raises(RuntimeError, match="Cannot use RDataLoader with implicit multi-threading enabled"):
             ROOT.Experimental.ML.RDataLoader(df, batch_size=2).as_numpy()
 
 
