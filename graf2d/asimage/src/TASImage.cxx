@@ -2694,37 +2694,11 @@ void TASImage::Blur(Double_t hr, Double_t vr)
 
 TObject *TASImage::Clone(const char *newname) const
 {
-   if (!InitVisual() || !fImage) {
-      Warning("Clone", "Image not initiated");
-      return nullptr;
-   }
-
-   TASImage *im = static_cast<TASImage *>(TImage::Create());
-
-   if (!im) {
-      Warning("Clone", "Failed to create image");
-      return nullptr;
-   }
-
-   im->SetName(newname);
-
-   im->fImage = clone_asimage(fImage, SCL_DO_ALL);
-   im->fMaxValue = fMaxValue;
-   im->fMinValue = fMinValue;
-   im->fZoomOffX = fZoomOffX;
-   im->fZoomOffY = fZoomOffY;
-   im->fZoomWidth = fZoomWidth;
-   im->fZoomHeight = fZoomHeight;
-   im->fZoomUpdate = fZoomUpdate;
-   im->fScaledImage = fScaledImage ? static_cast<TASImage *>(fScaledImage->Clone()) : nullptr;
-
-   if (fImage->alt.argb32) {
-      UInt_t sz = fImage->width * fImage->height;
-      im->fImage->alt.argb32 = (ARGB32*)safemalloc(sz*sizeof(ARGB32));
-      memcpy(im->fImage->alt.argb32, fImage->alt.argb32, sz * sizeof(ARGB32));
-   }
-
-   return im;
+   auto newimg = new TASImage();
+   if (newname)
+      newimg->SetName(newname);
+   newimg->CloneImageData(*this);
+   return newimg;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
