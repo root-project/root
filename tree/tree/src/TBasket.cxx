@@ -1297,9 +1297,10 @@ Int_t TBasket::WriteBuffer()
    ROOT::RCompressionSetting::EAlgorithm::EValues cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(fBranch->GetCompressionAlgorithm());
    if (cxAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kInherit)
       cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(file->GetCompressionAlgorithm());
-   if (cxlevel > 0) {
-      Int_t nbuffers = 1 + (fObjlen - 1) / kMAXZIPBUF;
-      const Int_t blockSize = ROOT::Internal::GetZipBlockSize(fObjlen);
+   if (cxlevel > 0 && fObjlen > 0) {
+      const auto blocks = ROOT::Internal::GetZipBlocks(fObjlen);
+      const Int_t nbuffers = blocks.fNBlocks;
+      const Int_t blockSize = blocks.fBlockSize;
       Int_t buflen = fKeylen + fObjlen + 9 * nbuffers + 28; //add 28 bytes in case object is placed in a deleted gap
       InitializeCompressedBuffer(buflen, file);
       if (!fCompressedBufferRef) {
@@ -1313,7 +1314,8 @@ Int_t TBasket::WriteBuffer()
       noutot = 0;
       nzip   = 0;
       for (Int_t i = 0; i < nbuffers; ++i) {
-         if (i == nbuffers - 1) bufmax = fObjlen - nzip;
+         if (i == nbuffers - 1)
+            bufmax = fObjlen - nzip;
          else
             bufmax = blockSize;
          // Compress the buffer.  Note that we allow multiple TBasket compressions to occur at once
