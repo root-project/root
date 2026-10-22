@@ -764,6 +764,17 @@ interop::TCppScope_t interop::GetUnderlyingScope(TCppScope_t scope) {
 interop::TCppScope_t interop::GetScope(const std::string& name,
                                        TCppScope_t parent_scope) {
   std::unique_lock<RInterOpMutex> Lock(InterOpMutex);
+  // Cpp::GetScope fails on a templated name, which makes ROOT try to autoload
+  // it, parsing the name again, and AppendTypesSlow below declares a new
+  // variable to resolve it. Both keep memory that is never freed, so remember
+  // the result instead of repeating this on every lookup of the same name.
+  static std::map<std::pair<void*, std::string>, TCppScope_t> template_scopes;
+  const bool is_template = name.find('<') != std::string::npos;
+  const auto key = std::make_pair(parent_scope.data, name);
+  if (is_template)
+    if (auto it = template_scopes.find(key); it != template_scopes.end())
+      return it->second;
+
   // CppInterOp directly looks at the AST which is not enough.
   // We require lazy module loading that ROOT relies on, so we do it here
   // first. Use TClass::GetClass to trigger auto-loading of dictionaries and
@@ -792,7 +803,7 @@ interop::TCppScope_t interop::GetScope(const std::string& name,
   }
 
   // FIXME: avoid string parsing here
-  if (name.find('<') != std::string::npos) {
+  if (is_template) {
     // Templated type; may need instantiation. Resolve the whole type
     // expression (e.g. "std::array<float, 3>") and read back its scope.
     // Splitting off the argument list and resolving it directly cannot
@@ -815,8 +826,10 @@ interop::TCppScope_t interop::GetScope(const std::string& name,
       // it, so the specialization may still be declared-but-undefined.
       // Force its definition: callers expect a complete scope, e.g. to
       // walk its base classes.
-      if (scope)
+      if (scope) {
         Cpp::IsComplete(scope);
+        template_scopes[key] = scope;
+      }
       return scope;
     }
   }

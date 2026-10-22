@@ -1733,3 +1733,24 @@ class TestREGRESSION:
 
         assert ns.pick(ns.S.A) == 1
         assert ns.pick(ns.S.B) == 5
+
+    def test57_repeated_template_scope_lookup(self):
+        """Binding to a templated class by name does not grow the memory"""
+
+        from pytest import importorskip
+
+        psutil = importorskip("psutil")
+
+        import cppjit
+
+        v = cppjit.gbl.std.vector[int]()
+        addr = cppjit.addressof(v)
+        process = psutil.Process()
+        for name in ["std::vector<int>", "vector<int>"]:
+            cppjit.bind_object(addr, name)
+            before = process.memory_info().rss
+            for _ in range(2000):
+                cppjit.bind_object(addr, name)
+            # resolving the name used to declare code in the interpreter on
+            # every call, growing the memory by about 10 kB each time
+            assert process.memory_info().rss - before < 8 * 1024 * 1024, name
