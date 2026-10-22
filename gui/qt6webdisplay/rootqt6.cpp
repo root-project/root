@@ -83,12 +83,16 @@ protected:
 
       ~Qt6Creator() override
       {
-         /** Code executed during exit and sometime crashes.
-          *  Disable it, while not clear if defaultProfile can be still used - seems to be not */
-         // if (fHandler)
-         //   QWebEngineProfile::defaultProfile()->removeUrlSchemeHandler(fHandler.get());
+         /** Code executed during program exit and sometime crashes.
+          * It can be that ROOT libraries already partially unloaded
+          * Therefore disable objects cleanup when gSystem already vansihed */
 
-         R__LOG_DEBUG(0, QtWebDisplayLog()) << "Deleting Qt6Creator";
+         if (!gSystem) {
+            fHandler.release();
+            fTimer.release();
+         } else  if (fHandler && QWebEngineProfile::defaultProfile()) {
+            QWebEngineProfile::defaultProfile()->removeUrlSchemeHandler(fHandler.get());
+         }
       }
 
       std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override
