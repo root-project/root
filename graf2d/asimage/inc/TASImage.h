@@ -55,6 +55,8 @@ private:
    void DestroyScaledImage();
    const char *TypeFromMagicNumber(const char *file);
 
+   void CloneImageData(const TASImage &src);
+
 protected:
    ASImage  *fImage;                ///<! pointer to image structure of original image
    TASImage *fScaledImage;          ///<! temporary scaled and zoomed image produced from original image

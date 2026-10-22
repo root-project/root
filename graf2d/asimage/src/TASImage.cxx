@@ -302,25 +302,8 @@ TASImage::TASImage(const TASImage &img) : TImage(img)
 {
    SetDefaults();
 
-   if (img.IsValid()) {
-      fImage = clone_asimage(img.fImage, SCL_DO_ALL);
-      fScaledImage   = img.fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
-      fGrayImage     = img.fGrayImage ? clone_asimage(img.fGrayImage, SCL_DO_ALL) : nullptr;
-
-      if (img.fImage->alt.vector) {
-         Int_t size = img.fImage->width * img.fImage->height * sizeof(double);
-         fImage->alt.vector = (double*)malloc(size);
-         memcpy(fImage->alt.vector, img.fImage->alt.vector, size);
-      }
-
-      fZoomUpdate = kNoZoom;
-      fZoomOffX   = img.fZoomOffX;
-      fZoomOffY   = img.fZoomOffY;
-      fZoomWidth  = img.fZoomWidth;
-      fZoomHeight = img.fZoomHeight;
-      fEditable   = img.fEditable;
-      fIsGray     = img.fIsGray;
-   }
+   if (img.IsValid())
+      CloneImageData(img);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -334,24 +317,7 @@ TASImage &TASImage::operator=(const TASImage &img)
       DestroyImage();
       DestroyScaledImage();
 
-      fImage = clone_asimage(img.fImage, SCL_DO_ALL);
-      fScaledImage = img.fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
-      fGrayImage = img.fGrayImage ? clone_asimage(img.fGrayImage, SCL_DO_ALL) : nullptr;
-
-      if (img.fImage->alt.vector) {
-         Int_t size = img.fImage->width * img.fImage->height * sizeof(double);
-         fImage->alt.vector = (double*)malloc(size);
-         memcpy(fImage->alt.vector, img.fImage->alt.vector, size);
-      }
-
-      fZoomUpdate = kNoZoom;
-      fZoomOffX   = img.fZoomOffX;
-      fZoomOffY   = img.fZoomOffY;
-      fZoomWidth  = img.fZoomWidth;
-      fZoomHeight = img.fZoomHeight;
-      fEditable   = img.fEditable;
-      fIsGray     = img.fIsGray;
-      fPaintMode  = 1;
+      CloneImageData(img);
    }
 
    return *this;
@@ -365,6 +331,42 @@ TASImage::~TASImage()
    DestroyImage();
    DestroyScaledImage();
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Clone image data
+/// Used for clones and assign operator
+
+void TASImage::CloneImageData(const TASImage &img)
+{
+   fImage = img.fImage ? clone_asimage(img.fImage, SCL_DO_ALL) : nullptr;
+   fScaledImage = img.fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
+   fGrayImage = img.fGrayImage ? clone_asimage(img.fGrayImage, SCL_DO_ALL) : nullptr;
+
+   if (img.fImage && img.fImage->alt.vector) {
+      Int_t size = img.fImage->width * img.fImage->height * sizeof(double);
+      fImage->alt.vector = (double*)malloc(size);
+      memcpy(fImage->alt.vector, img.fImage->alt.vector, size);
+   }
+
+   if (img.fImage && img.fImage->alt.argb32) {
+      Int_t size = img.fImage->width * img.fImage->height * sizeof(ARGB32);
+      fImage->alt.argb32 = (ARGB32*)safemalloc(size);
+      memcpy(fImage->alt.argb32, img.fImage->alt.argb32, size);
+   }
+
+   fPaintMode  = img.fPaintMode;
+   fZoomOffX   = img.fZoomOffX;
+   fZoomOffY   = img.fZoomOffY;
+   fZoomWidth  = img.fZoomWidth;
+   fZoomHeight = img.fZoomHeight;
+   fZoomUpdate = img.fZoomUpdate;
+   fEditable   = img.fEditable;
+   fIsGray     = img.fIsGray;
+   fMaxValue   = img.fMaxValue;
+   fMinValue   = img.fMinValue;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set icons paths.
