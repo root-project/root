@@ -4,15 +4,10 @@ from random import randrange, uniform
 import numpy as np
 import pytest
 import ROOT
-from conftest import from_files, squares, weighted
+from conftest import big_data, from_files, squares, vectors, weighted
 
 
 class TestDataLoaderMultipleFiles:
-    file_name1 = "first_half.root"
-    file_name2 = "second_half.root"
-    file_name3 = "vector_columns.root"
-    tree_name = "mytree"
-
     # default constants
     n_train_batch = 2
     n_val_batch = 1
@@ -35,37 +30,7 @@ class TestDataLoaderMultipleFiles:
             .Define("b4", "(double) b3 * 10")
         )
 
-    # Helpers
-    def define_rdf(self, num_of_entries=10):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_").Define("b2", "(double) b1*b1")
-
-        return df
-
-    def create_file(self, num_of_entries=10):
-        self.define_rdf(num_of_entries).Snapshot(self.tree_name, self.file_name1)
-
-    def create_5_entries_file(self):
-        (
-            ROOT.RDataFrame(5)
-            .Define("b1", "(int) rdfentry_ + 10")
-            .Define("b2", "(double) b1 * b1")
-            .Snapshot(self.tree_name, self.file_name2)
-        )
-
-    def create_vector_file(self, num_of_entries=10):
-        (
-            ROOT.RDataFrame(10)
-            .Define("b1", "(int) rdfentry_")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name3)
-        )
-
-    def test01_each_element_is_generated_unshuffled(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
+    def test01_each_element_is_generated_unshuffled(self, df):
         entries_before = df.AsNumpy(["rdfentry_"])["rdfentry_"]
 
         dl = ROOT.Experimental.ML.RDataLoader(
@@ -127,11 +92,7 @@ class TestDataLoaderMultipleFiles:
         # check if the dataframe is correctly reset
         assert np.array_equal(entries_before, entries_after)
 
-    def test02_each_element_is_generated_shuffled(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
+    def test02_each_element_is_generated_shuffled(self, df):
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
             batch_size=3,
@@ -181,11 +142,7 @@ class TestDataLoaderMultipleFiles:
         assert len(flat_y_train) == 6
         assert len(flat_y_val) == 4
 
-    def test04_dropping_remainder(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
+    def test04_dropping_remainder(self, df):
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
             batch_size=3,
@@ -216,10 +173,7 @@ class TestDataLoaderMultipleFiles:
         assert len(collected_y) == 3
 
     def test05_more_than_one_file(self):
-        self.create_file()
-        self.create_5_entries_file()
-
-        df = ROOT.RDataFrame(self.tree_name, [self.file_name1, self.file_name2])
+        df = from_files(squares(10), squares(5, "(int) rdfentry_ + 10"))
 
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
@@ -264,16 +218,9 @@ class TestDataLoaderMultipleFiles:
         assert results_y_train == flat_y_train
         assert results_y_val == flat_y_val
 
-    def test06_multiple_target_columns(self):
-        file_name = "multiple_target_columns.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name)
-        df = ROOT.RDataFrame("myTree", file_name)
-
+    def test06_multiple_target_columns(self, weighted_df):
         dl = ROOT.Experimental.ML.RDataLoader(
-            df,
+            weighted_df,
             batch_size=3,
             batches_in_memory=2,
             target=["b2", "b4"],
@@ -342,13 +289,13 @@ class TestDataLoaderMultipleFiles:
         assert results_z_val == flat_z_val
 
     def test07_multiple_input_columns(self):
-        file_name = "multiple_input_columns.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Snapshot("myTree", file_name)
-
-        df = ROOT.RDataFrame("myTree", file_name)
+        df = from_files(
+            ROOT
+            .RDataFrame(10)
+            .Define("b1", "(Short_t) rdfentry_")
+            .Define("b2", "(UShort_t) b1 * b1")
+            .Define("b3", "(double) rdfentry_ * 10")
+        )
 
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
@@ -404,11 +351,7 @@ class TestDataLoaderMultipleFiles:
         assert results_y_train == flat_y_train
         assert results_y_val == flat_y_val
 
-    def test08_filtered(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
+    def test08_filtered(self, df):
         dff = df.Filter("b1 % 2 == 0", "name")
 
         filter_entries_before = dff.AsNumpy(["rdfentry_"])["rdfentry_"]
@@ -465,14 +408,7 @@ class TestDataLoaderMultipleFiles:
         assert np.array_equal(filter_entries_before, filter_entries_after)
 
     def test09_filtered_last_chunk(self):
-        file_name = "filtered_last_chunk.root"
-        tree_name = "myTree"
-
-        ROOT.RDataFrame(20).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Snapshot(
-            tree_name, file_name
-        )
-
-        df = ROOT.RDataFrame(tree_name, file_name)
+        df = from_files(ROOT.RDataFrame(20).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1"))
 
         dff = df.Filter("b1 % 2 == 0", "name")
 
@@ -512,11 +448,7 @@ class TestDataLoaderMultipleFiles:
         assert results_x_train == flat_x_train
         assert results_y_train == flat_y_train
 
-    def test10_two_epochs_shuffled(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
+    def test10_two_epochs_shuffled(self, df):
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
             batch_size=3,
@@ -576,11 +508,7 @@ class TestDataLoaderMultipleFiles:
         assert both_epochs_collected_x_val[0] == both_epochs_collected_x_val[1]
         assert both_epochs_collected_y_val[0] == both_epochs_collected_y_val[1]
 
-    def test11_number_of_training_and_validation_batches_remainder(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
+    def test11_number_of_training_and_validation_batches_remainder(self, df):
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
             batch_size=3,
@@ -606,17 +534,9 @@ class TestDataLoaderMultipleFiles:
         assert gen_train.last_batch_no_of_rows == 0
         assert gen_validation.last_batch_no_of_rows == 1
 
-    def test12_PyTorch(self):
-        file_name = "multiple_target_columns.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name)
-
-        df = ROOT.RDataFrame("myTree", file_name)
-
+    def test12_PyTorch(self, weighted_df):
         dl = ROOT.Experimental.ML.RDataLoader(
-            df,
+            weighted_df,
             batch_size=3,
             batches_in_memory=2,
             target=["b2", "b4"],
@@ -684,17 +604,9 @@ class TestDataLoaderMultipleFiles:
         assert results_z_train == flat_z_train
         assert results_z_val == flat_z_val
 
-    def test13_TensorFlow(self):
-        file_name = "multiple_target_columns.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name)
-
-        df = ROOT.RDataFrame("myTree", file_name)
-
+    def test13_TensorFlow(self, weighted_df):
         dl = ROOT.Experimental.ML.RDataLoader(
-            df,
+            weighted_df,
             batch_size=3,
             batches_in_memory=2,
             target=["b2", "b4"],
@@ -763,26 +675,14 @@ class TestDataLoaderMultipleFiles:
         assert results_z_val == flat_z_val
 
     def test14_big_data(self):
-        file_name = "big_data.root"
-        tree_name = "myTree"
-
         entries_in_rdf = randrange(10000, 30000)
         batch_size = randrange(100, 501)
         batches_in_memory = randrange(5, 20)
 
         error_message = f"\n batch_size={batch_size} batches_in_memory={batches_in_memory} entries={entries_in_rdf}"
 
-        def define_rdf(num_of_entries):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
         def test(size_of_batch, batches_in_memory, num_of_entries):
-            define_rdf(num_of_entries)
-
-            df = ROOT.RDataFrame(tree_name, file_name)
+            df = from_files(big_data(num_of_entries))
 
             dl = ROOT.Experimental.ML.RDataLoader(
                 df,
@@ -856,13 +756,10 @@ class TestDataLoaderMultipleFiles:
 
         test(batch_size, batches_in_memory, entries_in_rdf)
 
-    def test15_two_runs_set_seed(self):
-        self.create_file()
-
+    def test15_two_runs_set_seed(self, df):
         both_runs_collected_x_val = []
         both_runs_collected_y_val = []
 
-        df = ROOT.RDataFrame(self.tree_name, self.file_name1)
         for _ in range(2):
             dl = ROOT.Experimental.ML.RDataLoader(
                 df,
@@ -920,9 +817,7 @@ class TestDataLoaderMultipleFiles:
         assert both_runs_collected_y_val[0] == both_runs_collected_y_val[1]
 
     def test16_vector_padding(self):
-        self.create_vector_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name3)
+        df = from_files(vectors(10))
         max_vec_sizes = {"v1": 3, "v2": 2}
 
         dl = ROOT.Experimental.ML.RDataLoader(
@@ -1032,17 +927,9 @@ class TestDataLoaderMultipleFiles:
         assert results_y_train == flat_y_train
         assert results_y_val == flat_y_val
 
-    def test17_JAX(self):
-        file_name = "multiple_target_columns.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name)
-
-        df = ROOT.RDataFrame("myTree", file_name)
-
+    def test17_JAX(self, weighted_df):
         dl = ROOT.Experimental.ML.RDataLoader(
-            df,
+            weighted_df,
             batch_size=3,
             batches_in_memory=2,
             target=["b2", "b4"],
@@ -1110,11 +997,8 @@ class TestDataLoaderMultipleFiles:
         assert results_z_train == flat_z_train
         assert results_z_val == flat_z_val
 
-    def test18_one_batch_in_memory(self):
+    def test18_one_batch_in_memory(self, df):
         # batches_in_memory=1 used to deadlock before delivering the first batch
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name1)
 
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
@@ -1130,16 +1014,10 @@ class TestDataLoaderMultipleFiles:
         assert sum(1 for _ in gen_train.as_numpy()) == 3
         assert sum(1 for _ in gen_validation.as_numpy()) == 2
 
-    def test19_defined_columns(self):
+    def test19_defined_columns(self, df):
         # columns defined after reading the file are loaded like the stored ones
-        self.create_file()
 
-        df = (
-            ROOT
-            .RDataFrame(self.tree_name, self.file_name1)
-            .Define("b3", "b1 * 3")
-            .Define("v1", "ROOT::RVecD{b2, b2 + 1}")
-        )
+        df = df.Define("b3", "b1 * 3").Define("v1", "ROOT::RVecD{b2, b2 + 1}")
 
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
@@ -1164,11 +1042,6 @@ class TestDataLoaderMultipleFiles:
 
 
 class TestDataLoaderEagerLoading:
-    file_name1 = "first_half.root"
-    file_name2 = "second_half.root"
-    file_name3 = "vector_columns.root"
-    tree_name = "mytree"
-
     # default constants
     n_train_batch = 2
     n_val_batch = 1
@@ -1191,37 +1064,7 @@ class TestDataLoaderEagerLoading:
             .Define("b4", "(double) b3 * 10")
         )
 
-    # Helpers
-    def define_rdf(self, num_of_entries=10):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_").Define("b2", "(double) b1*b1")
-
-        return df
-
-    def create_file(self, num_of_entries=10):
-        self.define_rdf(num_of_entries).Snapshot(self.tree_name, self.file_name1)
-
-    def create_5_entries_file(self):
-        (
-            ROOT.RDataFrame(5)
-            .Define("b1", "(int) rdfentry_ + 10")
-            .Define("b2", "(double) b1 * b1")
-            .Snapshot(self.tree_name, self.file_name2)
-        )
-
-    def create_vector_file(self, num_of_entries=10):
-        (
-            ROOT.RDataFrame(10)
-            .Define("b1", "(int) rdfentry_")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name3)
-        )
-
-    def test01_each_element_is_generated_unshuffled(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
+    def test01_each_element_is_generated_unshuffled(self, df):
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
             batch_size=3,
@@ -1276,11 +1119,7 @@ class TestDataLoaderEagerLoading:
         assert results_y_train == flat_y_train
         assert results_y_val == flat_y_val
 
-    def test02_each_element_is_generated_shuffled(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
+    def test02_each_element_is_generated_shuffled(self, df):
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
             batch_size=3,
@@ -1330,11 +1169,7 @@ class TestDataLoaderEagerLoading:
         assert len(flat_y_train) == 6
         assert len(flat_y_val) == 4
 
-    def test04_dropping_remainder(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
+    def test04_dropping_remainder(self, df):
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
             batch_size=3,
@@ -1365,10 +1200,7 @@ class TestDataLoaderEagerLoading:
         assert len(collected_y) == 3
 
     def test05_more_than_one_file(self):
-        self.create_file()
-        self.create_5_entries_file()
-
-        df = ROOT.RDataFrame(self.tree_name, [self.file_name1, self.file_name2])
+        df = from_files(squares(10), squares(5, "(int) rdfentry_ + 10"))
 
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
@@ -1413,16 +1245,9 @@ class TestDataLoaderEagerLoading:
         assert results_y_train == flat_y_train
         assert results_y_val == flat_y_val
 
-    def test06_multiple_target_columns(self):
-        file_name = "multiple_target_columns.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name)
-        df = ROOT.RDataFrame("myTree", file_name)
-
+    def test06_multiple_target_columns(self, weighted_df):
         dl = ROOT.Experimental.ML.RDataLoader(
-            df,
+            weighted_df,
             batch_size=3,
             target=["b2", "b4"],
             weights="b3",
@@ -1491,13 +1316,13 @@ class TestDataLoaderEagerLoading:
         assert results_z_val == flat_z_val
 
     def test07_multiple_input_columns(self):
-        file_name = "multiple_input_columns.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Snapshot("myTree", file_name)
-
-        df = ROOT.RDataFrame("myTree", file_name)
+        df = from_files(
+            ROOT
+            .RDataFrame(10)
+            .Define("b1", "(Short_t) rdfentry_")
+            .Define("b2", "(UShort_t) b1 * b1")
+            .Define("b3", "(double) rdfentry_ * 10")
+        )
 
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
@@ -1553,11 +1378,7 @@ class TestDataLoaderEagerLoading:
         assert results_y_train == flat_y_train
         assert results_y_val == flat_y_val
 
-    def test08_filtered(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
+    def test08_filtered(self, df):
         dff = df.Filter("b1 % 2 == 0", "name")
 
         dl = ROOT.Experimental.ML.RDataLoader(
@@ -1607,14 +1428,7 @@ class TestDataLoaderEagerLoading:
         assert results_y_val == flat_y_val
 
     def test09_filtered_last_chunk(self):
-        file_name = "filtered_last_chunk.root"
-        tree_name = "myTree"
-
-        ROOT.RDataFrame(20).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Snapshot(
-            tree_name, file_name
-        )
-
-        df = ROOT.RDataFrame(tree_name, file_name)
+        df = from_files(ROOT.RDataFrame(20).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1"))
 
         dff = df.Filter("b1 % 2 == 0", "name")
 
@@ -1654,11 +1468,7 @@ class TestDataLoaderEagerLoading:
         assert results_x_train == flat_x_train
         assert results_y_train == flat_y_train
 
-    def test10_two_epochs_shuffled(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
+    def test10_two_epochs_shuffled(self, df):
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
             batch_size=3,
@@ -1718,11 +1528,7 @@ class TestDataLoaderEagerLoading:
         assert both_epochs_collected_x_val[0] == both_epochs_collected_x_val[1]
         assert both_epochs_collected_y_val[0] == both_epochs_collected_y_val[1]
 
-    def test11_number_of_training_and_validation_batches_remainder(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
+    def test11_number_of_training_and_validation_batches_remainder(self, df):
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
             batch_size=3,
@@ -1748,17 +1554,9 @@ class TestDataLoaderEagerLoading:
         assert gen_train.last_batch_no_of_rows == 0
         assert gen_validation.last_batch_no_of_rows == 1
 
-    def test12_PyTorch(self):
-        file_name = "multiple_target_columns.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name)
-
-        df = ROOT.RDataFrame("myTree", file_name)
-
+    def test12_PyTorch(self, weighted_df):
         dl = ROOT.Experimental.ML.RDataLoader(
-            df,
+            weighted_df,
             batch_size=3,
             target=["b2", "b4"],
             weights="b3",
@@ -1826,17 +1624,9 @@ class TestDataLoaderEagerLoading:
         assert results_z_train == flat_z_train
         assert results_z_val == flat_z_val
 
-    def test13_TensorFlow(self):
-        file_name = "multiple_target_columns.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name)
-
-        df = ROOT.RDataFrame("myTree", file_name)
-
+    def test13_TensorFlow(self, weighted_df):
         dl = ROOT.Experimental.ML.RDataLoader(
-            df,
+            weighted_df,
             batch_size=3,
             target=["b2", "b4"],
             weights="b3",
@@ -1905,26 +1695,14 @@ class TestDataLoaderEagerLoading:
         assert results_z_val == flat_z_val
 
     def test14_big_data(self):
-        file_name = "big_data.root"
-        tree_name = "myTree"
-
         entries_in_rdf = randrange(10000, 30000)
         batch_size = randrange(100, 501)
         batches_in_memory = randrange(5, 20)
 
         error_message = f"\n batch_size={batch_size} batches_in_memory={batches_in_memory} entries={entries_in_rdf}"
 
-        def define_rdf(num_of_entries):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
         def test(size_of_batch, batches_in_memory, num_of_entries):
-            define_rdf(num_of_entries)
-
-            df = ROOT.RDataFrame(tree_name, file_name)
+            df = from_files(big_data(num_of_entries))
 
             dl = ROOT.Experimental.ML.RDataLoader(
                 df,
@@ -1999,13 +1777,10 @@ class TestDataLoaderEagerLoading:
 
         test(batch_size, batches_in_memory, entries_in_rdf)
 
-    def test15_two_runs_set_seed(self):
-        self.create_file()
-
+    def test15_two_runs_set_seed(self, df):
         both_runs_collected_x_val = []
         both_runs_collected_y_val = []
 
-        df = ROOT.RDataFrame(self.tree_name, self.file_name1)
         for _ in range(2):
             dl = ROOT.Experimental.ML.RDataLoader(
                 df,
@@ -2063,9 +1838,7 @@ class TestDataLoaderEagerLoading:
         assert both_runs_collected_y_val[0] == both_runs_collected_y_val[1]
 
     def test16_vector_padding(self):
-        self.create_vector_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name3)
+        df = from_files(vectors(10))
         max_vec_sizes = {"v1": 3, "v2": 2}
 
         dl = ROOT.Experimental.ML.RDataLoader(
@@ -2175,16 +1948,10 @@ class TestDataLoaderEagerLoading:
         assert results_y_train == flat_y_train
         assert results_y_val == flat_y_val
 
-    def test17_defined_columns(self):
+    def test17_defined_columns(self, df):
         # columns defined after reading the file are loaded like the stored ones
-        self.create_file()
 
-        df = (
-            ROOT
-            .RDataFrame(self.tree_name, self.file_name1)
-            .Define("b3", "b1 * 3")
-            .Define("v1", "ROOT::RVecD{b2, b2 + 1}")
-        )
+        df = df.Define("b3", "b1 * 3").Define("v1", "ROOT::RVecD{b2, b2 + 1}")
 
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
@@ -2210,13 +1977,6 @@ class TestDataLoaderEagerLoading:
 
 
 class TestDataLoaderEagerLoadingMultipleDataframes:
-    file_name1 = "first_half.root"
-    file_name2 = "second_half.root"
-    file_name3 = "second_file.root"
-    file_name4 = "vector_columns_1.root"
-    file_name5 = "vector_columns_2.root"
-    tree_name = "mytree"
-
     # default constants
     n_train_batch = 2
     n_val_batch = 1
@@ -2242,56 +2002,7 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
         """5 entries: b1 = 5, ..., 9, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
         return from_files(weighted(5, "(int) rdfentry_ + 5"))
 
-    # Helpers
-    def define_rdf1(self, num_of_entries=5):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_").Define("b2", "(double) b1*b1")
-
-        return df
-
-    def define_rdf2(self, num_of_entries=5):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(double) b1*b1")
-
-        return df
-
-    def create_file1(self, num_of_entries=5):
-        self.define_rdf1(num_of_entries).Snapshot(self.tree_name, self.file_name1)
-
-    def create_file2(self, num_of_entries=5):
-        self.define_rdf2(num_of_entries).Snapshot(self.tree_name, self.file_name2)
-
-    def create_5_entries_file(self):
-        (
-            ROOT.RDataFrame(5)
-            .Define("b1", "(int) rdfentry_ + 10")
-            .Define("b2", "(double) b1 * b1")
-            .Snapshot(self.tree_name, self.file_name3)
-        )
-
-    def create_vector_file1(self, num_of_entries=5):
-        (
-            ROOT.RDataFrame(5)
-            .Define("b1", "(int) rdfentry_")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name4)
-        )
-
-    def create_vector_file2(self, num_of_entries=5):
-        (
-            ROOT.RDataFrame(5)
-            .Define("b1", "(int) rdfentry_ + 5")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name5)
-        )
-
-    def test01_each_element_is_generated_unshuffled(self):
-        self.create_file1()
-        self.create_file2()
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test01_each_element_is_generated_unshuffled(self, df1, df2):
         df1_entries_before = df1.AsNumpy(["rdfentry_"])["rdfentry_"]
         df2_entries_before = df2.AsNumpy(["rdfentry_"])["rdfentry_"]
 
@@ -2356,13 +2067,7 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
         assert np.array_equal(df1_entries_before, df1_entries_after)
         assert np.array_equal(df2_entries_before, df2_entries_after)
 
-    def test02_each_element_is_generated_shuffled(self):
-        self.create_file1()
-        self.create_file2()
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test02_each_element_is_generated_shuffled(self, df1, df2):
         dl = ROOT.Experimental.ML.RDataLoader(
             [df1, df2],
             batch_size=3,
@@ -2412,13 +2117,7 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
         assert len(flat_y_train) == 6
         assert len(flat_y_val) == 4
 
-    def test04_dropping_remainder(self):
-        self.create_file1()
-        self.create_file2()
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test04_dropping_remainder(self, df1, df2):
         dl = ROOT.Experimental.ML.RDataLoader(
             [df1, df2],
             batch_size=3,
@@ -2449,12 +2148,8 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
         assert len(collected_y) == 3
 
     def test05_more_than_one_file(self):
-        self.create_file1()
-        self.create_file2()
-        self.create_5_entries_file()
-
-        df1 = ROOT.RDataFrame(self.tree_name, [self.file_name1, self.file_name2])
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name3)
+        df1 = from_files(squares(5), squares(5, "(int) rdfentry_ + 5"))
+        df2 = from_files(squares(5, "(int) rdfentry_ + 10"))
 
         dl = ROOT.Experimental.ML.RDataLoader(
             [df1, df2],
@@ -2499,21 +2194,9 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
         assert results_y_train == flat_y_train
         assert results_y_val == flat_y_val
 
-    def test06_multiple_target_columns(self):
-        file_name1 = "multiple_target_columns_1.root"
-        file_name2 = "multiple_target_columns_2.root"
-
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-        df1 = ROOT.RDataFrame("myTree", file_name1)
-        df2 = ROOT.RDataFrame("myTree", file_name2)
-
+    def test06_multiple_target_columns(self, weighted_df1, weighted_df2):
         dl = ROOT.Experimental.ML.RDataLoader(
-            [df1, df2],
+            [weighted_df1, weighted_df2],
             batch_size=3,
             target=["b2", "b4"],
             weights="b3",
@@ -2582,19 +2265,20 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
         assert results_z_val == flat_z_val
 
     def test07_multiple_input_columns(self):
-        file_name1 = "multiple_target_columns_1.root"
-        file_name2 = "multiple_target_columns_2.root"
-
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Snapshot("myTree", file_name1)
-
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Snapshot("myTree", file_name2)
-
-        df1 = ROOT.RDataFrame("myTree", file_name1)
-        df2 = ROOT.RDataFrame("myTree", file_name2)
+        df1 = from_files(
+            ROOT
+            .RDataFrame(5)
+            .Define("b1", "(int) rdfentry_")
+            .Define("b2", "(int) b1 * b1")
+            .Define("b3", "(double) b1 * 10")
+        )
+        df2 = from_files(
+            ROOT
+            .RDataFrame(5)
+            .Define("b1", "(int) rdfentry_ + 5")
+            .Define("b2", "(int) b1 * b1")
+            .Define("b3", "(double) b1 * 10")
+        )
 
         dl = ROOT.Experimental.ML.RDataLoader(
             [df1, df2],
@@ -2650,13 +2334,7 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
         assert results_y_train == flat_y_train
         assert results_y_val == flat_y_val
 
-    def test08_filtered(self):
-        self.create_file1()
-        self.create_file2()
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test08_filtered(self, df1, df2):
         dff1 = df1.Filter("b1 % 2 == 0", "name")
         dff2 = df2.Filter("b1 % 2 != 0", "name")
 
@@ -2717,20 +2395,8 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
         assert np.array_equal(dff2_entries_before, dff2_entries_after)
 
     def test09_filtered_last_chunk(self):
-        file_name1 = "filtered_last_chunk_1.root"
-        file_name2 = "filtered_last_chunk_2.root"
-        tree_name = "myTree"
-
-        ROOT.RDataFrame(10).Define("b1", "(int) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Snapshot(
-            tree_name, file_name1
-        )
-
-        ROOT.RDataFrame(10).Define("b1", "(int) rdfentry_ + 10").Define("b2", "(UShort_t) b1 * b1").Snapshot(
-            tree_name, file_name2
-        )
-
-        df1 = ROOT.RDataFrame(tree_name, file_name1)
-        df2 = ROOT.RDataFrame(tree_name, file_name2)
+        df1 = from_files(ROOT.RDataFrame(10).Define("b1", "(int) rdfentry_").Define("b2", "(UShort_t) b1 * b1"))
+        df2 = from_files(ROOT.RDataFrame(10).Define("b1", "(int) rdfentry_ + 10").Define("b2", "(UShort_t) b1 * b1"))
 
         dff1 = df1.Filter("b1 % 2 == 0", "name")
         dff2 = df2.Filter("b1 % 2 == 0", "name")
@@ -2771,13 +2437,7 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
         assert results_x_train == flat_x_train
         assert results_y_train == flat_y_train
 
-    def test10_two_epochs_shuffled(self):
-        self.create_file1()
-        self.create_file2()
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test10_two_epochs_shuffled(self, df1, df2):
         dl = ROOT.Experimental.ML.RDataLoader(
             [df1, df2],
             batch_size=3,
@@ -2837,13 +2497,7 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
         assert both_epochs_collected_x_val[0] == both_epochs_collected_x_val[1]
         assert both_epochs_collected_y_val[0] == both_epochs_collected_y_val[1]
 
-    def test11_number_of_training_and_validation_batches_remainder(self):
-        self.create_file1()
-        self.create_file2()
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test11_number_of_training_and_validation_batches_remainder(self, df1, df2):
         dl = ROOT.Experimental.ML.RDataLoader(
             [df1, df2],
             batch_size=3,
@@ -2869,22 +2523,9 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
         assert gen_train.last_batch_no_of_rows == 0
         assert gen_validation.last_batch_no_of_rows == 1
 
-    def test12_PyTorch(self):
-        file_name1 = "multiple_target_columns_1.root"
-        file_name2 = "multiple_target_columns_2.root"
-
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-
-        df1 = ROOT.RDataFrame("myTree", file_name1)
-        df2 = ROOT.RDataFrame("myTree", file_name2)
-
+    def test12_PyTorch(self, weighted_df1, weighted_df2):
         dl = ROOT.Experimental.ML.RDataLoader(
-            [df1, df2],
+            [weighted_df1, weighted_df2],
             batch_size=3,
             target=["b2", "b4"],
             weights="b3",
@@ -2952,22 +2593,9 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
         assert results_z_train == flat_z_train
         assert results_z_val == flat_z_val
 
-    def test13_TensorFlow(self):
-        file_name1 = "multiple_target_columns_1.root"
-        file_name2 = "multiple_target_columns_2.root"
-
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-
-        df1 = ROOT.RDataFrame("myTree", file_name1)
-        df2 = ROOT.RDataFrame("myTree", file_name2)
-
+    def test13_TensorFlow(self, weighted_df1, weighted_df2):
         dl = ROOT.Experimental.ML.RDataLoader(
-            [df1, df2],
+            [weighted_df1, weighted_df2],
             batch_size=3,
             target=["b2", "b4"],
             weights="b3",
@@ -3036,29 +2664,15 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
         assert results_z_val == flat_z_val
 
     def test14_big_data(self):
-        file_name1 = "big_data_1.root"
-        file_name2 = "big_data_2.root"
-        tree_name = "myTree"
-
         entries_in_rdf = randrange(10000, 30000)
         batch_size = randrange(100, 501)
         batches_in_memory = randrange(5, 20)
 
         error_message = f"\n batch_size={batch_size} batches_in_memory={batches_in_memory} entries={entries_in_rdf}"
 
-        def define_rdf(num_of_entries, file_name):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
         def test(size_of_batch, batches_in_memory, num_of_entries):
-            define_rdf(num_of_entries, file_name1)
-            define_rdf(num_of_entries, file_name2)
-
-            df1 = ROOT.RDataFrame(tree_name, file_name1)
-            df2 = ROOT.RDataFrame(tree_name, file_name2)
+            df1 = from_files(big_data(num_of_entries))
+            df2 = from_files(big_data(num_of_entries))
 
             dl = ROOT.Experimental.ML.RDataLoader(
                 [df1, df2],
@@ -3133,15 +2747,9 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
 
         test(batch_size, batches_in_memory, entries_in_rdf)
 
-    def test15_two_runs_set_seed(self):
-        self.create_file1()
-        self.create_file2()
-
+    def test15_two_runs_set_seed(self, df1, df2):
         both_runs_collected_x_val = []
         both_runs_collected_y_val = []
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
         for _ in range(2):
             dl = ROOT.Experimental.ML.RDataLoader(
@@ -3200,11 +2808,8 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
         assert both_runs_collected_y_val[0] == both_runs_collected_y_val[1]
 
     def test16_vector_padding(self):
-        self.create_vector_file1()
-        self.create_vector_file2()
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name4)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name5)
+        df1 = from_files(vectors(5))
+        df2 = from_files(vectors(5, "(int) rdfentry_ + 5"))
         max_vec_sizes = {"v1": 3, "v2": 2}
 
         dl = ROOT.Experimental.ML.RDataLoader(
@@ -3317,7 +2922,7 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
     def test17_dataframes_without_cluster_metadata(self):
         # the dataframes are not read from a file, so their entries are counted with Count()
         dl = ROOT.Experimental.ML.RDataLoader(
-            [self.define_rdf1(), self.define_rdf2()],
+            [squares(5), squares(5, "(int) rdfentry_ + 5")],
             batch_size=3,
             target="b2",
             shuffle=False,
@@ -3333,13 +2938,6 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
 
 
 class TestDataLoaderLazyLoadingMultipleDataframes:
-    file_name1 = "first_half.root"
-    file_name2 = "second_half.root"
-    file_name3 = "second_file.root"
-    file_name4 = "vector_columns_1.root"
-    file_name5 = "vector_columns_2.root"
-    tree_name = "mytree"
-
     # default constants
     n_train_batch = 2
     n_val_batch = 1
@@ -3365,59 +2963,7 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
         """5 entries: b1 = 5, ..., 9, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
         return from_files(weighted(5, "(int) rdfentry_ + 5"))
 
-    # Helpers
-    def define_rdf1(self, num_of_entries=5):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_").Define("b2", "(double) b1*b1")
-
-        return df
-
-    def define_rdf2(self, num_of_entries=5):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(double) b1*b1")
-
-        return df
-
-    def create_file1(self, num_of_entries=5):
-        self.define_rdf1(num_of_entries).Snapshot(self.tree_name, self.file_name1)
-
-    def create_file2(self, num_of_entries=5):
-        self.define_rdf2(num_of_entries).Snapshot(self.tree_name, self.file_name2)
-
-    def create_5_entries_file(self):
-        (
-            ROOT
-            .RDataFrame(5)
-            .Define("b1", "(int) rdfentry_ + 10")
-            .Define("b2", "(double) b1 * b1")
-            .Snapshot(self.tree_name, self.file_name3)
-        )
-
-    def create_vector_file1(self, num_of_entries=5):
-        (
-            ROOT
-            .RDataFrame(5)
-            .Define("b1", "(int) rdfentry_")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name4)
-        )
-
-    def create_vector_file2(self, num_of_entries=5):
-        (
-            ROOT
-            .RDataFrame(5)
-            .Define("b1", "(int) rdfentry_ + 5")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name5)
-        )
-
-    def test01_each_element_is_generated_unshuffled(self):
-        self.create_file1()
-        self.create_file2()
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test01_each_element_is_generated_unshuffled(self, df1, df2):
         df1_entries_before = df1.AsNumpy(["rdfentry_"])["rdfentry_"]
         df2_entries_before = df2.AsNumpy(["rdfentry_"])["rdfentry_"]
 
@@ -3481,13 +3027,7 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
         assert np.array_equal(df1_entries_before, df1_entries_after)
         assert np.array_equal(df2_entries_before, df2_entries_after)
 
-    def test02_each_element_is_generated_shuffled(self):
-        self.create_file1()
-        self.create_file2()
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test02_each_element_is_generated_shuffled(self, df1, df2):
         dl = ROOT.Experimental.ML.RDataLoader(
             [df1, df2],
             batch_size=3,
@@ -3536,13 +3076,7 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
         assert len(flat_y_train) == 6
         assert len(flat_y_val) == 4
 
-    def test04_dropping_remainder(self):
-        self.create_file1()
-        self.create_file2()
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test04_dropping_remainder(self, df1, df2):
         dl = ROOT.Experimental.ML.RDataLoader(
             [df1, df2],
             batch_size=3,
@@ -3572,12 +3106,8 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
         assert len(collected_y) == 3
 
     def test05_more_than_one_file(self):
-        self.create_file1()
-        self.create_file2()
-        self.create_5_entries_file()
-
-        df1 = ROOT.RDataFrame(self.tree_name, [self.file_name1, self.file_name2])
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name3)
+        df1 = from_files(squares(5), squares(5, "(int) rdfentry_ + 5"))
+        df2 = from_files(squares(5, "(int) rdfentry_ + 10"))
 
         dl = ROOT.Experimental.ML.RDataLoader(
             [df1, df2],
@@ -3621,21 +3151,9 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
         assert results_y_train == flat_y_train
         assert results_y_val == flat_y_val
 
-    def test06_multiple_target_columns(self):
-        file_name1 = "multiple_target_columns_1.root"
-        file_name2 = "multiple_target_columns_2.root"
-
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-        df1 = ROOT.RDataFrame("myTree", file_name1)
-        df2 = ROOT.RDataFrame("myTree", file_name2)
-
+    def test06_multiple_target_columns(self, weighted_df1, weighted_df2):
         dl = ROOT.Experimental.ML.RDataLoader(
-            [df1, df2],
+            [weighted_df1, weighted_df2],
             batch_size=3,
             target=["b2", "b4"],
             weights="b3",
@@ -3703,19 +3221,20 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
         assert results_z_val == flat_z_val
 
     def test07_multiple_input_columns(self):
-        file_name1 = "multiple_target_columns_1.root"
-        file_name2 = "multiple_target_columns_2.root"
-
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Snapshot("myTree", file_name1)
-
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Snapshot("myTree", file_name2)
-
-        df1 = ROOT.RDataFrame("myTree", file_name1)
-        df2 = ROOT.RDataFrame("myTree", file_name2)
+        df1 = from_files(
+            ROOT
+            .RDataFrame(5)
+            .Define("b1", "(int) rdfentry_")
+            .Define("b2", "(int) b1 * b1")
+            .Define("b3", "(double) b1 * 10")
+        )
+        df2 = from_files(
+            ROOT
+            .RDataFrame(5)
+            .Define("b1", "(int) rdfentry_ + 5")
+            .Define("b2", "(int) b1 * b1")
+            .Define("b3", "(double) b1 * 10")
+        )
 
         dl = ROOT.Experimental.ML.RDataLoader(
             [df1, df2],
@@ -3783,13 +3302,7 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
         assert results_y_train == flat_y_train
         assert results_y_val == flat_y_val
 
-    def test08_filtered(self):
-        self.create_file1()
-        self.create_file2()
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test08_filtered(self, df1, df2):
         dff1 = df1.Filter("b1 % 2 == 0", "name")
         dff2 = df2.Filter("b1 % 2 != 0", "name")
 
@@ -3852,20 +3365,8 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
         assert np.array_equal(dff2_entries_before, dff2_entries_after)
 
     def test09_filtered_last_chunk(self):
-        file_name1 = "filtered_last_chunk_1.root"
-        file_name2 = "filtered_last_chunk_2.root"
-        tree_name = "myTree"
-
-        ROOT.RDataFrame(10).Define("b1", "(int) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Snapshot(
-            tree_name, file_name1
-        )
-
-        ROOT.RDataFrame(10).Define("b1", "(int) rdfentry_ + 10").Define("b2", "(UShort_t) b1 * b1").Snapshot(
-            tree_name, file_name2
-        )
-
-        df1 = ROOT.RDataFrame(tree_name, file_name1)
-        df2 = ROOT.RDataFrame(tree_name, file_name2)
+        df1 = from_files(ROOT.RDataFrame(10).Define("b1", "(int) rdfentry_").Define("b2", "(UShort_t) b1 * b1"))
+        df2 = from_files(ROOT.RDataFrame(10).Define("b1", "(int) rdfentry_ + 10").Define("b2", "(UShort_t) b1 * b1"))
 
         dff1 = df1.Filter("b1 % 2 == 0", "name")
         dff2 = df2.Filter("b1 % 2 == 0", "name")
@@ -3905,13 +3406,7 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
         assert results_x_train == flat_x_train
         assert results_y_train == flat_y_train
 
-    def test10_two_epochs_shuffled(self):
-        self.create_file1()
-        self.create_file2()
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test10_two_epochs_shuffled(self, df1, df2):
         dl = ROOT.Experimental.ML.RDataLoader(
             [df1, df2],
             batch_size=3,
@@ -3970,13 +3465,7 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
         assert both_epochs_collected_x_val[0] == both_epochs_collected_x_val[1]
         assert both_epochs_collected_y_val[0] == both_epochs_collected_y_val[1]
 
-    def test11_number_of_training_and_validation_batches_remainder(self):
-        self.create_file1()
-        self.create_file2()
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test11_number_of_training_and_validation_batches_remainder(self, df1, df2):
         dl = ROOT.Experimental.ML.RDataLoader(
             [df1, df2],
             batch_size=3,
@@ -4001,22 +3490,9 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
         assert gen_train.last_batch_no_of_rows == 0
         assert gen_validation.last_batch_no_of_rows == 1
 
-    def test12_PyTorch(self):
-        file_name1 = "multiple_target_columns_1.root"
-        file_name2 = "multiple_target_columns_2.root"
-
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-
-        df1 = ROOT.RDataFrame("myTree", file_name1)
-        df2 = ROOT.RDataFrame("myTree", file_name2)
-
+    def test12_PyTorch(self, weighted_df1, weighted_df2):
         dl = ROOT.Experimental.ML.RDataLoader(
-            [df1, df2],
+            [weighted_df1, weighted_df2],
             batch_size=3,
             target=["b2", "b4"],
             weights="b3",
@@ -4083,22 +3559,9 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
         assert results_z_train == flat_z_train
         assert results_z_val == flat_z_val
 
-    def test13_TensorFlow(self):
-        file_name1 = "multiple_target_columns_1.root"
-        file_name2 = "multiple_target_columns_2.root"
-
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-
-        df1 = ROOT.RDataFrame("myTree", file_name1)
-        df2 = ROOT.RDataFrame("myTree", file_name2)
-
+    def test13_TensorFlow(self, weighted_df1, weighted_df2):
         dl = ROOT.Experimental.ML.RDataLoader(
-            [df1, df2],
+            [weighted_df1, weighted_df2],
             batch_size=3,
             target=["b2", "b4"],
             weights="b3",
@@ -4166,29 +3629,15 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
         assert results_z_val == flat_z_val
 
     def test14_big_data(self):
-        file_name1 = "big_data_1.root"
-        file_name2 = "big_data_2.root"
-        tree_name = "myTree"
-
         entries_in_rdf = randrange(10000, 30000)
         batch_size = randrange(100, 501)
         batches_in_memory = randrange(5, 20)
 
         error_message = f"\n batch_size={batch_size} batches_in_memory={batches_in_memory} entries={entries_in_rdf}"
 
-        def define_rdf(num_of_entries, file_name):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
         def test(size_of_batch, batches_in_memory, num_of_entries):
-            define_rdf(num_of_entries, file_name1)
-            define_rdf(num_of_entries, file_name2)
-
-            df1 = ROOT.RDataFrame(tree_name, file_name1)
-            df2 = ROOT.RDataFrame(tree_name, file_name2)
+            df1 = from_files(big_data(num_of_entries))
+            df2 = from_files(big_data(num_of_entries))
 
             dl = ROOT.Experimental.ML.RDataLoader(
                 [df1, df2],
@@ -4262,15 +3711,9 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
 
         test(batch_size, batches_in_memory, entries_in_rdf)
 
-    def test15_two_runs_set_seed(self):
-        self.create_file1()
-        self.create_file2()
-
+    def test15_two_runs_set_seed(self, df1, df2):
         both_runs_collected_x_val = []
         both_runs_collected_y_val = []
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
         for _ in range(2):
             dl = ROOT.Experimental.ML.RDataLoader(
@@ -4328,11 +3771,8 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
         assert both_runs_collected_y_val[0] == both_runs_collected_y_val[1]
 
     def test16_vector_padding(self):
-        self.create_vector_file1()
-        self.create_vector_file2()
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name4)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name5)
+        df1 = from_files(vectors(5))
+        df2 = from_files(vectors(5, "(int) rdfentry_ + 5"))
         max_vec_sizes = {"v1": 3, "v2": 2}
 
         dl = ROOT.Experimental.ML.RDataLoader(
@@ -4441,13 +3881,7 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
         assert results_y_train == flat_y_train
         assert results_y_val == flat_y_val
 
-    def test17_shuffled_split_varies_with_seed(self):
-        self.create_file1()
-        self.create_file2()
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test17_shuffled_split_varies_with_seed(self, df1, df2):
         dl1 = ROOT.Experimental.ML.RDataLoader(
             [df1, df2],
             batch_size=3,
@@ -4476,13 +3910,6 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
 
 
 class TestDataLoaderRandomUndersampling:
-    file_name1 = "major.root"
-    file_name2 = "minor.root"
-    file_name3 = "second_file.root"
-    file_name4 = "vector_columns_major.root"
-    file_name5 = "vector_columns_minor.root"
-    tree_name = "mytree"
-
     # default constants
     n_train_batch = 4
     n_val_batch = 3
@@ -4508,56 +3935,7 @@ class TestDataLoaderRandomUndersampling:
         """The minority class, 5 entries: b1 = 1, 3, ..., 9, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
         return from_files(weighted(5, "(int) 2 * rdfentry_ + 1"))
 
-    # Helpers
-    def define_rdf_even(self, num_of_entries=20):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(double) b1*b1")
-
-        return df
-
-    def define_rdf_odd(self, num_of_entries=5):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(double) b1*b1")
-
-        return df
-
-    def create_file_major(self, num_of_entries=20):
-        self.define_rdf_even(num_of_entries).Snapshot(self.tree_name, self.file_name1)
-
-    def create_file_minor(self, num_of_entries=5):
-        self.define_rdf_odd(num_of_entries).Snapshot(self.tree_name, self.file_name2)
-
-    def create_5_entries_file(self):
-        (
-            ROOT.RDataFrame(5)
-            .Define("b1", "(int) 2 * (rdfentry_ + 20)")
-            .Define("b2", "(double) b1 * b1")
-            .Snapshot(self.tree_name, self.file_name3)
-        )
-
-    def create_vector_file_major(self, num_of_entries=20):
-        (
-            ROOT.RDataFrame(20)
-            .Define("b1", "(int) rdfentry_")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name4)
-        )
-
-    def create_vector_file_minor(self, num_of_entries=5):
-        (
-            ROOT.RDataFrame(5)
-            .Define("b1", "(int) rdfentry_ + 20")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name5)
-        )
-
-    def test01_each_element_is_generated_unshuffled(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test01_each_element_is_generated_unshuffled(self, df_major, df_minor):
         major_entries_before = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
         minor_entries_before = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
 
@@ -4642,13 +4020,7 @@ class TestDataLoaderRandomUndersampling:
         assert np.array_equal(major_entries_before, major_entries_after)
         assert np.array_equal(minor_entries_before, minor_entries_after)
 
-    def test01_each_element_is_generated_unshuffled_replacement(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test01_each_element_is_generated_unshuffled_replacement(self, df_major, df_minor):
         dl = ROOT.Experimental.ML.RDataLoader(
             [df_major, df_minor],
             batch_size=2,
@@ -4755,13 +4127,7 @@ class TestDataLoaderRandomUndersampling:
         assert num_major_val == 10
         assert num_minor_val == 2
 
-    def test02_each_element_is_generated_shuffled(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test02_each_element_is_generated_shuffled(self, df_major, df_minor):
         dl = ROOT.Experimental.ML.RDataLoader(
             [df_major, df_minor],
             batch_size=2,
@@ -4814,13 +4180,7 @@ class TestDataLoaderRandomUndersampling:
         assert len(flat_y_train) == 9
         assert len(flat_y_val) == 6
 
-    def test04_dropping_remainder(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test04_dropping_remainder(self, df_major, df_minor):
         dl = ROOT.Experimental.ML.RDataLoader(
             [df_major, df_minor],
             batch_size=2,
@@ -4858,13 +4218,8 @@ class TestDataLoaderRandomUndersampling:
         assert len(collected_x) == 7
         assert len(collected_y) == 7
 
-    def test05_more_than_one_file(self):
-        self.create_file_major()
-        self.create_file_minor()
-        self.create_5_entries_file()
-
-        df_major = ROOT.RDataFrame(self.tree_name, [self.file_name1, self.file_name3])
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
+    def test05_more_than_one_file(self, df_minor):
+        df_major = from_files(squares(20, "(int) 2 * rdfentry_"), squares(5, "(int) 2 * (rdfentry_ + 20)"))
 
         dl = ROOT.Experimental.ML.RDataLoader(
             [df_major, df_minor],
@@ -4923,21 +4278,9 @@ class TestDataLoaderRandomUndersampling:
         assert results_y_train == flat_y_train
         assert results_y_val == flat_y_val
 
-    def test06_multiple_target_columns(self):
-        file_name1 = "multiple_target_columns_major.root"
-        file_name2 = "multiple_target_columns_minor.root"
-
-        ROOT.RDataFrame(20).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-        df_major = ROOT.RDataFrame("myTree", file_name1)
-        df_minor = ROOT.RDataFrame("myTree", file_name2)
-
+    def test06_multiple_target_columns(self, weighted_df_major, weighted_df_minor):
         dl = ROOT.Experimental.ML.RDataLoader(
-            [df_minor, df_major],
+            [weighted_df_minor, weighted_df_major],
             batch_size=2,
             target=["b2", "b4"],
             weights="b3",
@@ -5038,19 +4381,20 @@ class TestDataLoaderRandomUndersampling:
         assert num_minor_val == 2
 
     def test07_multiple_input_columns(self):
-        file_name1 = "multiple_target_columns_major.root"
-        file_name2 = "multiple_target_columns_minor.root"
-
-        ROOT.RDataFrame(20).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Snapshot("myTree", file_name1)
-
-        ROOT.RDataFrame(5).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Snapshot("myTree", file_name2)
-
-        df_major = ROOT.RDataFrame("myTree", file_name1)
-        df_minor = ROOT.RDataFrame("myTree", file_name2)
+        df_major = from_files(
+            ROOT
+            .RDataFrame(20)
+            .Define("b1", "(int) 2 * rdfentry_")
+            .Define("b2", "(int) b1 * b1")
+            .Define("b3", "(double) b1 * 10")
+        )
+        df_minor = from_files(
+            ROOT
+            .RDataFrame(5)
+            .Define("b1", "(int) 2 * rdfentry_ + 1")
+            .Define("b2", "(int) b1 * b1")
+            .Define("b3", "(double) b1 * 10")
+        )
 
         dl = ROOT.Experimental.ML.RDataLoader(
             [df_major, df_minor],
@@ -5128,13 +4472,7 @@ class TestDataLoaderRandomUndersampling:
         assert results_y_train == flat_y_train
         assert results_y_val == flat_y_val
 
-    def test08_filtered(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test08_filtered(self, df_major, df_minor):
         df_major_filter = df_major.Filter("b1 % 8 != 0", "name")
 
         major_filter_entries_before = df_major_filter.AsNumpy(["rdfentry_"])["rdfentry_"]
@@ -5214,13 +4552,7 @@ class TestDataLoaderRandomUndersampling:
         assert np.array_equal(major_filter_entries_before, major_filter_entries_after)
         assert np.array_equal(minor_entries_before, minor_entries_after)
 
-    def test10_two_epochs_shuffled(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test10_two_epochs_shuffled(self, df_major, df_minor):
         dl = ROOT.Experimental.ML.RDataLoader(
             [df_major, df_minor],
             batch_size=2,
@@ -5283,13 +4615,7 @@ class TestDataLoaderRandomUndersampling:
         assert both_epochs_collected_x_val[0] == both_epochs_collected_x_val[1]
         assert both_epochs_collected_y_val[0] == both_epochs_collected_y_val[1]
 
-    def test11_number_of_training_and_validation_batches_remainder(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test11_number_of_training_and_validation_batches_remainder(self, df_major, df_minor):
         dl = ROOT.Experimental.ML.RDataLoader(
             [df_major, df_minor],
             batch_size=2,
@@ -5318,21 +4644,9 @@ class TestDataLoaderRandomUndersampling:
         assert gen_train.last_batch_no_of_rows == 1
         assert gen_validation.last_batch_no_of_rows == 0
 
-    def test12_PyTorch(self):
-        file_name1 = "multiple_target_columns_major.root"
-        file_name2 = "multiple_target_columns_minor.root"
-
-        ROOT.RDataFrame(20).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-        df_minor = ROOT.RDataFrame("myTree", file_name1)
-        df_major = ROOT.RDataFrame("myTree", file_name2)
-
+    def test12_PyTorch(self, weighted_df_major, weighted_df_minor):
         dl = ROOT.Experimental.ML.RDataLoader(
-            [df_minor, df_major],
+            [weighted_df_major, weighted_df_minor],
             batch_size=2,
             target=["b2", "b4"],
             weights="b3",
@@ -5432,21 +4746,9 @@ class TestDataLoaderRandomUndersampling:
         assert num_major_val == 4
         assert num_minor_val == 2
 
-    def test13_TensorFlow(self):
-        file_name1 = "multiple_target_columns_major.root"
-        file_name2 = "multiple_target_columns_minor.root"
-
-        ROOT.RDataFrame(20).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-        df_minor = ROOT.RDataFrame("myTree", file_name1)
-        df_major = ROOT.RDataFrame("myTree", file_name2)
-
+    def test13_TensorFlow(self, weighted_df_major, weighted_df_minor):
         dl = ROOT.Experimental.ML.RDataLoader(
-            [df_minor, df_major],
+            [weighted_df_major, weighted_df_minor],
             batch_size=2,
             target=["b2", "b4"],
             weights="b3",
@@ -5549,10 +4851,6 @@ class TestDataLoaderRandomUndersampling:
         assert num_minor_val == 2
 
     def test14_big_data_replacement_false(self):
-        file_name1 = "big_data_major.root"
-        file_name2 = "big_data_minor.root"
-        tree_name = "myTree"
-
         entries_in_rdf_major = randrange(10000, 30000)
         entries_in_rdf_minor = randrange(8000, 9999)
         batch_size = randrange(100, 501)
@@ -5563,26 +4861,9 @@ class TestDataLoaderRandomUndersampling:
             Number of major entries: {entries_in_rdf_major} \
             Number of minor entries: {entries_in_rdf_minor}"
 
-        def define_rdf_major(num_of_entries, file_name):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
-        def define_rdf_minor(num_of_entries, file_name):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_ + 1").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
         def test(size_of_batch, num_of_entries_major, num_of_entries_minor, sampling_ratio):
-            define_rdf_major(num_of_entries_major, file_name1)
-            define_rdf_minor(num_of_entries_minor, file_name2)
-
-            df1 = ROOT.RDataFrame(tree_name, file_name1)
-            df2 = ROOT.RDataFrame(tree_name, file_name2)
+            df1 = from_files(big_data(num_of_entries_major, "(int) 2 * rdfentry_"))
+            df2 = from_files(big_data(num_of_entries_minor, "(int) 2 * rdfentry_ + 1"))
 
             dl = ROOT.Experimental.ML.RDataLoader(
                 [df1, df2],
@@ -5658,11 +4939,8 @@ class TestDataLoaderRandomUndersampling:
             assert round((num_minor_val / num_major_val), 2) == sampling_ratio
 
         def test_raises(size_of_batch, num_of_entries_major, num_of_entries_minor, sampling_ratio):
-            define_rdf_major(num_of_entries_major, file_name1)
-            define_rdf_minor(num_of_entries_minor, file_name2)
-
-            df1 = ROOT.RDataFrame(tree_name, file_name1)
-            df2 = ROOT.RDataFrame(tree_name, file_name2)
+            df1 = from_files(big_data(num_of_entries_major, "(int) 2 * rdfentry_"))
+            df2 = from_files(big_data(num_of_entries_minor, "(int) 2 * rdfentry_ + 1"))
 
             with pytest.raises(
                 Exception,
@@ -5689,10 +4967,6 @@ class TestDataLoaderRandomUndersampling:
         test_raises(batch_size, entries_in_rdf_major, entries_in_rdf_minor, bad_sampling_ratio)
 
     def test14_big_data_replacement_true(self):
-        file_name1 = "big_data_major.root"
-        file_name2 = "big_data_minor.root"
-        tree_name = "myTree"
-
         entries_in_rdf_major = randrange(10000, 30000)
         entries_in_rdf_minor = randrange(8000, 9999)
         batch_size = randrange(100, 501)
@@ -5705,26 +4979,9 @@ class TestDataLoaderRandomUndersampling:
             Number of major entries: {entries_in_rdf_major} \
             Number of minor entries: {entries_in_rdf_minor}"
 
-        def define_rdf_major(num_of_entries, file_name):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
-        def define_rdf_minor(num_of_entries, file_name):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_ + 1").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
         def test(size_of_batch, num_of_entries_major, num_of_entries_minor, sampling_ratio):
-            define_rdf_major(num_of_entries_major, file_name1)
-            define_rdf_minor(num_of_entries_minor, file_name2)
-
-            df1 = ROOT.RDataFrame(tree_name, file_name1)
-            df2 = ROOT.RDataFrame(tree_name, file_name2)
+            df1 = from_files(big_data(num_of_entries_major, "(int) 2 * rdfentry_"))
+            df2 = from_files(big_data(num_of_entries_minor, "(int) 2 * rdfentry_ + 1"))
 
             dl = ROOT.Experimental.ML.RDataLoader(
                 [df1, df2],
@@ -5801,15 +5058,9 @@ class TestDataLoaderRandomUndersampling:
 
         test(batch_size, entries_in_rdf_major, entries_in_rdf_minor, sampling_ratio)
 
-    def test15_two_runs_set_seed(self):
-        self.create_file_major()
-        self.create_file_minor()
-
+    def test15_two_runs_set_seed(self, df_major, df_minor):
         both_runs_collected_x_val = []
         both_runs_collected_y_val = []
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
         for _ in range(2):
             dl = ROOT.Experimental.ML.RDataLoader(
@@ -5870,11 +5121,8 @@ class TestDataLoaderRandomUndersampling:
         assert both_runs_collected_y_val[0] == both_runs_collected_y_val[1]
 
     def test16_vector_padding(self):
-        self.create_vector_file_major()
-        self.create_vector_file_minor()
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name4)
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name5)
+        df_major = from_files(vectors(20))
+        df_minor = from_files(vectors(5, "(int) rdfentry_ + 20"))
         max_vec_sizes = {"v1": 3, "v2": 2}
 
         dl = ROOT.Experimental.ML.RDataLoader(
@@ -6024,13 +5272,6 @@ class TestDataLoaderRandomUndersampling:
 
 
 class TestDataLoaderRandomOversampling:
-    file_name1 = "major.root"
-    file_name2 = "minor.root"
-    file_name3 = "second_file.root"
-    file_name4 = "vector_columns_major.root"
-    file_name5 = "vector_columns_minor.root"
-    tree_name = "mytree"
-
     # default constants
     n_train_batch = 4
     n_val_batch = 3
@@ -6056,56 +5297,7 @@ class TestDataLoaderRandomOversampling:
         """The minority class, 3 entries: b1 = 1, 3, ..., 5, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
         return from_files(weighted(3, "(int) 2 * rdfentry_ + 1"))
 
-    # Helpers
-    def define_rdf_even(self, num_of_entries=20):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(double) b1*b1")
-
-        return df
-
-    def define_rdf_odd(self, num_of_entries=5):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(double) b1*b1")
-
-        return df
-
-    def create_file_major(self, num_of_entries=10):
-        self.define_rdf_even(num_of_entries).Snapshot(self.tree_name, self.file_name1)
-
-    def create_file_minor(self, num_of_entries=3):
-        self.define_rdf_odd(num_of_entries).Snapshot(self.tree_name, self.file_name2)
-
-    def create_extra_entry_file(self):
-        (
-            ROOT.RDataFrame(1)
-            .Define("b1", "(int) 2 * (rdfentry_ + 3) + 1")
-            .Define("b2", "(double) b1 * b1")
-            .Snapshot(self.tree_name, self.file_name3)
-        )
-
-    def create_vector_file_major(self, num_of_entries=10):
-        (
-            ROOT.RDataFrame(10)
-            .Define("b1", "(int) rdfentry_")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name4)
-        )
-
-    def create_vector_file_minor(self, num_of_entries=3):
-        (
-            ROOT.RDataFrame(3)
-            .Define("b1", "(int) rdfentry_ + 10")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name5)
-        )
-
-    def test01_each_element_is_generated_unshuffled(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test01_each_element_is_generated_unshuffled(self, df_major, df_minor):
         major_entries_before = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
         minor_entries_before = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
 
@@ -6189,13 +5381,7 @@ class TestDataLoaderRandomOversampling:
         assert np.array_equal(major_entries_before, major_entries_after)
         assert np.array_equal(minor_entries_before, minor_entries_after)
 
-    def test02_each_element_is_generated_shuffled(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test02_each_element_is_generated_shuffled(self, df_major, df_minor):
         dl = ROOT.Experimental.ML.RDataLoader(
             [df_major, df_minor],
             batch_size=2,
@@ -6254,13 +5440,7 @@ class TestDataLoaderRandomOversampling:
         assert len(flat_y_train) == 9
         assert len(flat_y_val) == 6
 
-    def test04_dropping_remainder(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test04_dropping_remainder(self, df_major, df_minor):
         dl = ROOT.Experimental.ML.RDataLoader(
             [df_major, df_minor],
             batch_size=2,
@@ -6297,13 +5477,8 @@ class TestDataLoaderRandomOversampling:
         assert len(collected_x) == 7
         assert len(collected_y) == 7
 
-    def test05_more_than_one_file(self):
-        self.create_file_major()
-        self.create_file_minor()
-        self.create_extra_entry_file()
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df_minor = ROOT.RDataFrame(self.tree_name, [self.file_name2, self.file_name3])
+    def test05_more_than_one_file(self, df_major):
+        df_minor = from_files(squares(3, "(int) 2 * rdfentry_ + 1"), squares(1, "(int) 2 * (rdfentry_ + 3) + 1"))
 
         dl = ROOT.Experimental.ML.RDataLoader(
             [df_major, df_minor],
@@ -6361,21 +5536,9 @@ class TestDataLoaderRandomOversampling:
         assert results_y_train == flat_y_train
         assert results_y_val == flat_y_val
 
-    def test06_multiple_target_columns(self):
-        file_name1 = "multiple_target_columns_major.root"
-        file_name2 = "multiple_target_columns_minor.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(3).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-        df_major = ROOT.RDataFrame("myTree", file_name1)
-        df_minor = ROOT.RDataFrame("myTree", file_name2)
-
+    def test06_multiple_target_columns(self, weighted_df_major, weighted_df_minor):
         dl = ROOT.Experimental.ML.RDataLoader(
-            [df_minor, df_major],
+            [weighted_df_minor, weighted_df_major],
             batch_size=2,
             target=["b2", "b4"],
             weights="b3",
@@ -6475,19 +5638,20 @@ class TestDataLoaderRandomOversampling:
         assert num_minor_val == 2
 
     def test07_multiple_input_columns(self):
-        file_name1 = "multiple_target_columns_major.root"
-        file_name2 = "multiple_target_columns_minor.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Snapshot("myTree", file_name1)
-
-        ROOT.RDataFrame(3).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Snapshot("myTree", file_name2)
-
-        df_major = ROOT.RDataFrame("myTree", file_name1)
-        df_minor = ROOT.RDataFrame("myTree", file_name2)
+        df_major = from_files(
+            ROOT
+            .RDataFrame(10)
+            .Define("b1", "(int) 2 * rdfentry_")
+            .Define("b2", "(int) b1 * b1")
+            .Define("b3", "(double) b1 * 10")
+        )
+        df_minor = from_files(
+            ROOT
+            .RDataFrame(3)
+            .Define("b1", "(int) 2 * rdfentry_ + 1")
+            .Define("b2", "(int) b1 * b1")
+            .Define("b3", "(double) b1 * 10")
+        )
 
         dl = ROOT.Experimental.ML.RDataLoader(
             [df_major, df_minor],
@@ -6564,12 +5728,9 @@ class TestDataLoaderRandomOversampling:
         assert results_y_train == flat_y_train
         assert results_y_val == flat_y_val
 
-    def test08_filtered(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df_minor_duplicate = ROOT.RDataFrame(self.tree_name, [self.file_name2, self.file_name2, self.file_name2])
+    def test08_filtered(self, df_major):
+        minor = squares(3, "(int) 2 * rdfentry_ + 1")
+        df_minor_duplicate = from_files(minor, minor, minor)
 
         df_minor_filter = df_minor_duplicate.Filter("rdfentry_ < 3", "name")
 
@@ -6649,13 +5810,7 @@ class TestDataLoaderRandomOversampling:
         assert np.array_equal(major_entries_before, major_entries_after)
         assert np.array_equal(minor_filter_entries_before, minor_filter_entries_after)
 
-    def test10_two_epochs_shuffled(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test10_two_epochs_shuffled(self, df_major, df_minor):
         dl = ROOT.Experimental.ML.RDataLoader(
             [df_major, df_minor],
             batch_size=2,
@@ -6717,13 +5872,7 @@ class TestDataLoaderRandomOversampling:
         assert both_epochs_collected_x_val[0] == both_epochs_collected_x_val[1]
         assert both_epochs_collected_y_val[0] == both_epochs_collected_y_val[1]
 
-    def test11_number_of_training_and_validation_batches_remainder(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
+    def test11_number_of_training_and_validation_batches_remainder(self, df_major, df_minor):
         dl = ROOT.Experimental.ML.RDataLoader(
             [df_major, df_minor],
             batch_size=2,
@@ -6751,21 +5900,9 @@ class TestDataLoaderRandomOversampling:
         assert gen_train.last_batch_no_of_rows == 1
         assert gen_validation.last_batch_no_of_rows == 0
 
-    def test12_PyTorch(self):
-        file_name1 = "multiple_target_columns_major.root"
-        file_name2 = "multiple_target_columns_minor.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(3).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-        df_minor = ROOT.RDataFrame("myTree", file_name1)
-        df_major = ROOT.RDataFrame("myTree", file_name2)
-
+    def test12_PyTorch(self, weighted_df_major, weighted_df_minor):
         dl = ROOT.Experimental.ML.RDataLoader(
-            [df_minor, df_major],
+            [weighted_df_major, weighted_df_minor],
             batch_size=2,
             target=["b2", "b4"],
             weights="b3",
@@ -6864,21 +6001,9 @@ class TestDataLoaderRandomOversampling:
         assert num_major_val == 4
         assert num_minor_val == 2
 
-    def test13_TensorFlow(self):
-        file_name1 = "multiple_target_columns_major.root"
-        file_name2 = "multiple_target_columns_minor.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(3).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-        df_minor = ROOT.RDataFrame("myTree", file_name1)
-        df_major = ROOT.RDataFrame("myTree", file_name2)
-
+    def test13_TensorFlow(self, weighted_df_major, weighted_df_minor):
         dl = ROOT.Experimental.ML.RDataLoader(
-            [df_minor, df_major],
+            [weighted_df_major, weighted_df_minor],
             batch_size=2,
             target=["b2", "b4"],
             weights="b3",
@@ -6980,10 +6105,6 @@ class TestDataLoaderRandomOversampling:
         assert num_minor_val == 2
 
     def test14_big_data_replacement_false(self):
-        file_name1 = "big_data_major.root"
-        file_name2 = "big_data_minor.root"
-        tree_name = "myTree"
-
         entries_in_rdf_major = randrange(10000, 30000)
         entries_in_rdf_minor = randrange(8000, 9999)
         batch_size = randrange(100, 501)
@@ -6993,26 +6114,9 @@ class TestDataLoaderRandomOversampling:
             Number of major entries: {entries_in_rdf_major} \
             Number of minor entries: {entries_in_rdf_minor}"
 
-        def define_rdf_major(num_of_entries, file_name):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
-        def define_rdf_minor(num_of_entries, file_name):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_ + 1").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
         def test(size_of_batch, num_of_entries_major, num_of_entries_minor, sampling_ratio):
-            define_rdf_major(num_of_entries_major, file_name1)
-            define_rdf_minor(num_of_entries_minor, file_name2)
-
-            df1 = ROOT.RDataFrame(tree_name, file_name1)
-            df2 = ROOT.RDataFrame(tree_name, file_name2)
+            df1 = from_files(big_data(num_of_entries_major, "(int) 2 * rdfentry_"))
+            df2 = from_files(big_data(num_of_entries_minor, "(int) 2 * rdfentry_ + 1"))
 
             dl = ROOT.Experimental.ML.RDataLoader(
                 [df1, df2],
@@ -7088,15 +6192,9 @@ class TestDataLoaderRandomOversampling:
 
         test(batch_size, entries_in_rdf_major, entries_in_rdf_minor, sampling_ratio)
 
-    def test15_two_runs_set_seed(self):
-        self.create_file_major()
-        self.create_file_minor()
-
+    def test15_two_runs_set_seed(self, df_major, df_minor):
         both_runs_collected_x_val = []
         both_runs_collected_y_val = []
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
         for _ in range(2):
             dl = ROOT.Experimental.ML.RDataLoader(
@@ -7156,11 +6254,8 @@ class TestDataLoaderRandomOversampling:
         assert both_runs_collected_y_val[0] == both_runs_collected_y_val[1]
 
     def test16_vector_padding(self):
-        self.create_vector_file_major()
-        self.create_vector_file_minor()
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name4)
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name5)
+        df_major = from_files(vectors(10))
+        df_minor = from_files(vectors(3, "(int) rdfentry_ + 10"))
         max_vec_sizes = {"v1": 3, "v2": 2}
 
         dl = ROOT.Experimental.ML.RDataLoader(
@@ -7308,13 +6403,8 @@ class TestDataLoaderRandomOversampling:
         assert num_major_val == 4
         assert num_minor_val == 2
 
-    def test17_set_seed_resamples_different_entries(self):
+    def test17_set_seed_resamples_different_entries(self, df_major, df_minor):
         # with a fixed seed, the resampled minority entries used to all be the same one
-        self.create_file_major()
-        self.create_file_minor()
-
-        df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-        df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
 
         dl = ROOT.Experimental.ML.RDataLoader(
             [df_major, df_minor],
@@ -7336,8 +6426,6 @@ class TestDataLoaderRandomOversampling:
 
 
 class TestDataLoaderSave:
-    file_name = "dataloader_save_input.root"
-    file_name2 = "dataloader_save_input2.root"
     tree_name = "mytree"
 
     out_name = "dataloader_save_output.root"
@@ -7352,15 +6440,6 @@ class TestDataLoaderSave:
     def define_rdf(self, num_of_entries=20, offset=0):
         return ROOT.RDataFrame(num_of_entries).Define("b1", f"(int) rdfentry_ + {offset}").Define("b2", "b1 + 1")
 
-    def create_file(self, file_name=None, num_of_entries=20, offset=0):
-        (
-            ROOT
-            .RDataFrame(num_of_entries)
-            .Define("b1", f"(int) rdfentry_ + {offset}")
-            .Define("b2", "b1 + 1")
-            .Snapshot(self.tree_name, file_name or self.file_name)
-        )
-
     def read_back(self, file_name, column):
         """Read back one column of a saved file: a 1D array, or a 2D array for a vector column."""
         values = ROOT.RDataFrame(self.tree_name, file_name).AsNumpy([column])[column]
@@ -7370,10 +6449,8 @@ class TestDataLoaderSave:
     def saved_columns(self, file_name):
         return {str(c) for c in ROOT.RDataFrame(self.tree_name, file_name).GetColumnNames()}
 
-    def test01_unshuffled(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name).Define("w", "(double) 0.5")
+    def test01_unshuffled(self, df):
+        df = df.Define("w", "(double) 0.5")
 
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
@@ -7394,11 +6471,7 @@ class TestDataLoaderSave:
         np.testing.assert_array_equal(self.read_back(self.out_name, "b2"), np.arange(1, 21))
         np.testing.assert_array_equal(self.read_back(self.out_name, "w"), np.full(20, 0.5))
 
-    def test02_shuffled(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name)
-
+    def test02_shuffled(self, df):
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
             batch_size=4,
@@ -7424,10 +6497,8 @@ class TestDataLoaderSave:
         # and the entries are not written in their original order
         assert (train_b1 != np.sort(train_b1)).any()
 
-    def test03_vector_columns(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name).Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
+    def test03_vector_columns(self, df):
+        df = df.Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
 
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
@@ -7451,10 +6522,8 @@ class TestDataLoaderSave:
         np.testing.assert_array_equal(v1[3], [3.0, 30.0, 42.0])
 
     def test04_ttree_and_rntuple_agree(self):
-        self.create_file()
-
         def save_as(file_name, output_format):
-            df = ROOT.RDataFrame(self.tree_name, self.file_name).Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
+            df = from_files(self.define_rdf()).Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
 
             dl = ROOT.Experimental.ML.RDataLoader(
                 df,
@@ -7477,10 +6546,8 @@ class TestDataLoaderSave:
                 self.read_back(self.out_name2, column),
             )
 
-    def test05_filtered(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name).Filter("b1 % 2 == 0", "even")
+    def test05_filtered(self, df):
+        df = df.Filter("b1 % 2 == 0", "even")
 
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
@@ -7497,11 +6564,8 @@ class TestDataLoaderSave:
         np.testing.assert_array_equal(np.sort(saved_b1), np.arange(0, 20, 2))
 
     def test06_multiple_dataframes(self):
-        self.create_file(self.file_name, num_of_entries=10)
-        self.create_file(self.file_name2, num_of_entries=10, offset=100)
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
+        df1 = from_files(self.define_rdf(num_of_entries=10))
+        df2 = from_files(self.define_rdf(num_of_entries=10, offset=100))
 
         dl = ROOT.Experimental.ML.RDataLoader(
             [df1, df2],
@@ -7518,11 +6582,7 @@ class TestDataLoaderSave:
         expected = np.concatenate([np.arange(10), np.arange(100, 110)])
         np.testing.assert_array_equal(np.sort(saved_b1), expected)
 
-    def test07_eager_loading(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name)
-
+    def test07_eager_loading(self, df):
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
             batch_size=5,
@@ -7537,15 +6597,8 @@ class TestDataLoaderSave:
         np.testing.assert_array_equal(self.read_back(self.out_name, "b1"), np.arange(20))
         np.testing.assert_array_equal(self.read_back(self.out_name, "b2"), np.arange(1, 21))
 
-    def test08_round_trip(self):
-        self.create_file()
-
-        df = (
-            ROOT
-            .RDataFrame(self.tree_name, self.file_name)
-            .Define("w", "(double) 0.5")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1, b1 * 10 }")
-        )
+    def test08_round_trip(self, df):
+        df = df.Define("w", "(double) 0.5").Define("v1", "ROOT::VecOps::RVec<int>{ b1, b1 * 10 }")
 
         loader_args = dict(
             batch_size=5,
