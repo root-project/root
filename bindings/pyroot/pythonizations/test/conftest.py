@@ -66,6 +66,12 @@ def in_tmp_path(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
 
+@pytest.fixture(params=[False, True], ids=["lazy", "eager"])
+def load_eager(request):
+    """Run a test twice with the data loader's 2 loading modes."""
+    return request.param
+
+
 def from_files(*dfs):
     """Write each RDataFrame to its own file and return an RDataFrame reading these files."""
     file_names = [f"input_{next(_file_ids)}.root" for _ in dfs]
