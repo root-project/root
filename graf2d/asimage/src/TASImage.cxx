@@ -3381,7 +3381,9 @@ void TASImage::Append(const TImage *im, const char *option, const char *color )
    }
 
    if (!fImage) {
-      fImage = ((TASImage*)im)->fImage;
+      // if image not exists - just clone data from source image
+      if (auto asimg = dynamic_cast<const TASImage *>(im))
+         CloneImageData(*asimg);
       return;
    }
 
