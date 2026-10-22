@@ -4,6 +4,7 @@ import unittest
 from random import randrange, uniform
 
 import numpy as np
+import pytest
 import ROOT
 
 
@@ -8338,4 +8339,4 @@ class DataLoaderFromFiles(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    raise SystemExit(pytest.main(args=[__file__]))
