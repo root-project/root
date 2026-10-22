@@ -543,6 +543,8 @@ ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFi
 
    if (emulatedFrom && !emulatedFrom->GetTypeName().empty()) {
       fTraits |= kTraitEmulatedField;
+      if (emulatedFrom->IsSoACollection())
+         fTraits |= kTraitSoACollection;
       fEmulatedTypeVersion = emulatedFrom->GetTypeVersion();
       fEmulatedTypeChecksum = emulatedFrom->GetTypeChecksum().value_or(0);
    }

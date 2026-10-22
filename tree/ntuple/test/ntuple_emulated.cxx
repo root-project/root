@@ -980,6 +980,7 @@ TEST(RNTupleEmulated, EmulatedFields_SoA)
       const auto &soa = model->GetConstField("f");
       EXPECT_EQ(soa.GetTypeName(), "EmulatedSoA");
       EXPECT_TRUE(soa.GetTraits() & ROOT::RFieldBase::kTraitEmulatedField);
+      EXPECT_TRUE(soa.GetTraits() & ROOT::RFieldBase::kTraitSoACollection);
       EXPECT_EQ(soa.GetStructure(), ROOT::ENTupleStructure::kCollection);
 
       const auto children = soa.GetConstSubfields();
