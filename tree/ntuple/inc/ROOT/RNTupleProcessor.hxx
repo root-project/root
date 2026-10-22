@@ -68,7 +68,6 @@ public:
    void SetProcessorName(std::string_view name) { fProcessorName = name; }
 };
 
-namespace Experimental {
 // clang-format off
 /**
 \class ROOT::RNTupleProcessorValuePtr<T>
@@ -79,7 +78,7 @@ and checks for missing values.
 // clang-format on
 template <typename T>
 class RNTupleProcessorValuePtr {
-   friend class RNTupleProcessor;
+   friend class Experimental::RNTupleProcessor;
 
 private:
    ROOT::Internal::RNTupleProcessorEntry *fProcessorEntry;
@@ -181,7 +180,7 @@ public:
 // clang-format on
 template <>
 class RNTupleProcessorValuePtr<void> {
-   friend class RNTupleProcessor;
+   friend class Experimental::RNTupleProcessor;
 
 private:
    ROOT::Internal::RNTupleProcessorEntry *fProcessorEntry;
@@ -248,6 +247,7 @@ public:
    }
 };
 
+namespace Experimental {
 /////////////////////////////////////////////////////////////////////////////
 /// \brief Create an RNTupleProcessor for a *join* (i.e., a horizontal combination) of RNTuples.
 ///
