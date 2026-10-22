@@ -22,6 +22,13 @@ ParserFuncSignature ParseBatchNormalization = [](RModelParser_ONNX &parser, cons
    float fepsilon = 1e-05;
    float fmomentum = 0.9;
    std::size_t ftraining_mode = 0;
+   for (int_t i = 0; i < nodeproto.attribute_size(); i++) {
+      const std::string &attribute_name = nodeproto.attribute(i).name();
+      if (attribute_name == "epsilon")
+         fepsilon = nodeproto.attribute(i).f();
+      else if (attribute_name == "momentum")
+         fmomentum = nodeproto.attribute(i).f();
+   }
 
    switch (input_type) {
    case ETensorType::FLOAT:

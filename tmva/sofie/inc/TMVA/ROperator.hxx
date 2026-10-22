@@ -18,8 +18,6 @@ class ROperator {
 public:
    virtual std::vector<std::string> GetBlasRoutines() { return {}; }
    virtual std::vector<std::string> GetStdLibs() { return {}; }
-   virtual std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>>) { return {}; };
-   virtual std::vector<ETensorType> TypeInference(std::vector<ETensorType>) { return {}; };
    virtual void Initialize(RModel&) = 0;
    virtual std::string Generate(std::string OpName) = 0;  //expect unique opName for each operator within the same RModel
    // generate initialization code for session constructor
@@ -40,7 +38,6 @@ public:
 protected:
 
    const std::string SP = "   ";    ///< space used to correctly indent the generated C++ code
-   bool fUseSession = false;        ///< flag to identify if using the session class
    bool fIsOutputConstant = false;  ///< flag to identify if operator has a constant output (no need to generate code)
    bool fIsOutputParamShape = false;     ///< flag to identify of the output represents a parametric shape (can be known at compile time)
 

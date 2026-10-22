@@ -4,5 +4,11 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-add_subdirectory(cppyy)
+# The vendored cppjit tree builds through ROOT-owned CMake files inside it
+# (src/, python/, test/); upstream's own top-level CMakeLists.txt is vendored
+# but unreferenced.
+add_subdirectory(cppjit/src)
+add_subdirectory(cppjit/python)
+ROOT_ADD_TEST_SUBDIRECTORY(cppjit/test)
+
 add_subdirectory(pythonizations)

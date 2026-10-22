@@ -53,7 +53,7 @@ namespace Experimental {
 ///
 /// Since the on-disk representation is a collection of record type, the class version and checksum of the SoA type
 /// itself is ignored.
-class RSoAField : public RFieldBase {
+class RSoAField : public RRuleField {
    class RSoADeleter : public RDeleter {
    private:
       TClass *fSoAClass;
@@ -63,7 +63,13 @@ class RSoAField : public RFieldBase {
       void operator()(void *objPtr, bool dtorOnly) final;
    };
 
-   TClass *fSoAClass = nullptr;
+   // A rule of the SoA type itself or one of its nested SoA types or base classes, togther with the offset
+   // of the nested object in the SoA type.
+   struct RRule {
+      const TSchemaRule *fRule = nullptr;
+      std::size_t fOffset = 0;
+   };
+
    /// Direct access to the member fields of the underlying record. In case of a nested SoA type, this vector
    /// contains the contents of the inner fRecordMemberFields, too. Effectively, this record will contain all the
    /// fields of the underlying record type that correspond to terminal RVec members in a nested SoA type.
@@ -74,6 +80,10 @@ class RSoAField : public RFieldBase {
    ///< A deleter returned by each record member's GetDeleter()
    std::vector<std::unique_ptr<RDeleter>> fRecordMemberDeleters;
    ROOT::Internal::RColumnIndex fNWritten;
+
+   /// Contains the I/O customization rules for fClass and all nested SoA classes and base classes,
+   /// and the relative offset at which the rule needs to be applied.
+   std::vector<RRule> fRules;
 
    /// For reading and writing, the RVecs of the SoA class do not have a dedicated field. The in-memory RVecs of the
    /// SoA object are used directly with the subfields of the underlying record type. For splitting a SoA class object
@@ -90,7 +100,7 @@ class RSoAField : public RFieldBase {
    RSoAField(std::string_view fieldName, TClass *clSoA);
 
    /// Called during construction, picks up the (nested) member fields of the underlying record type(s) and its
-   /// base classes.
+   /// base classes. Also fills fRules.
    void CollectRecordMemberFields();
    /// For a nested SoA struct (either as a member of as a base class), use their fRecordMemberFields in this class,
    /// i.e. "unroll" the vectors in the nested SoA struct into the SoA base class.
@@ -107,13 +117,14 @@ protected:
    void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final;
 
    void ConstructValue(void *where) const final;
-   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RSoADeleter>(fSoAClass); }
+   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RSoADeleter>(fClass); }
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
    void CommitClusterImpl() final { fNWritten = 0; }
 
+   std::unique_ptr<RFieldBase> BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
@@ -133,7 +144,7 @@ public:
    const std::type_info *GetPolymorphicTypeInfo() const;
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 
-   TClass *GetSoAClass() const { return fSoAClass; }
+   TClass *GetSoAClass() const { return fClass; }
 };
 
 } // namespace Experimental

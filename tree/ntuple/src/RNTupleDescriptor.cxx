@@ -83,6 +83,10 @@ ROOT::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, const ROO
 {
    if (GetStructure() == ROOT::ENTupleStructure::kStreamer) {
       auto streamerField = std::make_unique<ROOT::RStreamerField>(GetFieldName(), GetTypeName());
+      if ((streamerField->GetTraits() & RFieldBase::kTraitEmulatedField) && !options.GetEmulateUnknownTypes()) {
+         throw RException(
+            R__FAIL("streamer field " + GetFieldName() + " has an emulated class but emulation is turned off"));
+      }
       streamerField->SetOnDiskId(fFieldId);
       return streamerField;
    }

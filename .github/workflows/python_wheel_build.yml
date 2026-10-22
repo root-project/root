@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [cp311, cp312, cp313, cp314]
+        python: [cp311, cp312, cp313, cp314, cp315]
         config:
           # `label` is a unique artifact name for each build
           - runner: macos-15
@@ -39,6 +39,10 @@ jobs:
             platform: macosx_arm64
             label: macosx_arm64
             deployment_target: "26.0"
+          - runner: xcode-27
+            platform: macosx_arm64
+            label: macosx_arm64
+            deployment_target: "27.0"
           - runner: ubuntu-latest
             platform: manylinux_x86_64
             label: manylinux_2_28_x86_64
@@ -75,12 +79,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.11", "3.12", "3.13", "3.14"]
+        python: ["3.11", "3.12", "3.13", "3.14", "3.15"]
         test_config:
           # each runner tests the wheel built on it
           - runner: macos-15
             build_label: macosx_arm64
           - runner: macos-26
+            build_label: macosx_arm64
+          - runner: xcode-27
             build_label: macosx_arm64
           - runner: ubuntu-latest
             build_label: manylinux_2_28_x86_64

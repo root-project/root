@@ -47,25 +47,13 @@ std::unique_ptr<ROperator> ParseBasicNary(RModelParser_ONNX& parser, const onnx:
    return op;
 }
 
-// Max
-ParserFuncSignature ParseMax = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseBasicNary<EBasicNaryOperator::Max>(parser, nodeproto);
-};
-
-// Min
-ParserFuncSignature ParseMin= [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseBasicNary<EBasicNaryOperator::Min>(parser, nodeproto);
-};
-
-//Mean
-ParserFuncSignature ParseMean = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseBasicNary<EBasicNaryOperator::Mean>(parser, nodeproto);
-};
-
-// Sum
-ParserFuncSignature ParseSum = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseBasicNary<EBasicNaryOperator::Sum>(parser, nodeproto);
-};
+void RegisterBasicNaryParsers(RModelParser_ONNX &parser)
+{
+   parser.RegisterOperator("Max", ParseBasicNary<EBasicNaryOperator::Max>);
+   parser.RegisterOperator("Min", ParseBasicNary<EBasicNaryOperator::Min>);
+   parser.RegisterOperator("Mean", ParseBasicNary<EBasicNaryOperator::Mean>);
+   parser.RegisterOperator("Sum", ParseBasicNary<EBasicNaryOperator::Sum>);
+}
 
 } // namespace SOFIE
 } // namespace Experimental

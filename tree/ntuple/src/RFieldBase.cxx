@@ -514,54 +514,57 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
                }
             }
          }
-
-         // If we get here then we failed to meet all the conditions to create a "properly typed" field.
-         // Resort to field emulation if the user asked us to.
-         if (!result && options.GetEmulateUnknownTypes()) {
-            assert(desc);
-            const auto &fieldDesc = desc->GetFieldDescriptor(fieldId);
-            if (fieldDesc.GetStructure() == ENTupleStructure::kRecord) {
-               std::vector<std::unique_ptr<RFieldBase>> memberFields;
-               memberFields.reserve(fieldDesc.GetLinkIds().size());
-               for (auto id : fieldDesc.GetLinkIds()) {
-                  const auto &memberDesc = desc->GetFieldDescriptor(id);
-                  auto field = Create(memberDesc.GetFieldName(), memberDesc.GetTypeName(), options, desc, id).Unwrap();
-                  memberFields.emplace_back(std::move(field));
-               }
-               R__ASSERT(typeName == fieldDesc.GetTypeName());
-               auto recordField =
-                  Internal::CreateEmulatedRecordField(fieldName, std::move(memberFields), fieldDesc.GetTypeName());
-               recordField->fTypeAlias = fieldDesc.GetTypeAlias();
-               return recordField;
-            } else if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
-               if (fieldDesc.GetLinkIds().size() != 1)
-                  throw ROOT::RException(R__FAIL("invalid structure for collection field " + fieldName));
-
-               auto itemFieldId = fieldDesc.GetLinkIds()[0];
-               const auto &itemFieldDesc = desc->GetFieldDescriptor(itemFieldId);
-               auto itemField =
-                  Create(itemFieldDesc.GetFieldName(), itemFieldDesc.GetTypeName(), options, desc, itemFieldId)
-                     .Unwrap();
-               auto vecField =
-                  ROOT::Internal::CreateEmulatedVectorField(fieldName, std::move(itemField), fieldDesc.GetTypeName());
-               vecField->fTypeAlias = fieldDesc.GetTypeAlias();
-               return vecField;
-            } else if (ROOT::Internal::IsCustomEnumFieldDesc(*desc, fieldDesc)) {
-               R__ASSERT(!fieldDesc.GetLinkIds().empty());
-               auto underlyingIntFieldId = fieldDesc.GetLinkIds()[0];
-               const auto &underlyingIntFieldDesc = desc->GetFieldDescriptor(underlyingIntFieldId);
-               auto enumField = ROOT::Internal::CreateEmulatedEnumField(fieldName, fieldDesc.GetTypeName(),
-                                                                        underlyingIntFieldDesc.GetTypeName());
-               enumField->fTypeAlias = fieldDesc.GetTypeAlias();
-               return enumField;
-            }
-         }
       }
 
       if (!result) {
          auto e = TEnum::GetEnum(resolvedType.c_str());
          if (e != nullptr) {
             result = std::make_unique<REnumField>(fieldName, typeName);
+         }
+      }
+
+      // If we get here then we failed to meet all the conditions to create a "properly typed" field.
+      // Resort to field emulation if the user asked us to.
+      if (!result && options.GetEmulateUnknownTypes()) {
+         assert(desc);
+         const auto &fieldDesc = desc->GetFieldDescriptor(fieldId);
+         if (fieldDesc.GetStructure() == ENTupleStructure::kStreamer) {
+            auto streamerField = std::unique_ptr<RFieldBase>(new RStreamerField(fieldName, typeName));
+            streamerField->fTypeAlias = fieldDesc.GetTypeAlias();
+            return streamerField;
+         } else if (fieldDesc.GetStructure() == ENTupleStructure::kRecord) {
+            std::vector<std::unique_ptr<RFieldBase>> memberFields;
+            memberFields.reserve(fieldDesc.GetLinkIds().size());
+            for (auto id : fieldDesc.GetLinkIds()) {
+               const auto &memberDesc = desc->GetFieldDescriptor(id);
+               auto field = Create(memberDesc.GetFieldName(), memberDesc.GetTypeName(), options, desc, id).Unwrap();
+               memberFields.emplace_back(std::move(field));
+            }
+            R__ASSERT(typeName == fieldDesc.GetTypeName());
+            auto recordField =
+               Internal::CreateEmulatedRecordField(fieldName, std::move(memberFields), fieldDesc.GetTypeName());
+            recordField->fTypeAlias = fieldDesc.GetTypeAlias();
+            return recordField;
+         } else if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
+            if (fieldDesc.GetLinkIds().size() != 1)
+               throw ROOT::RException(R__FAIL("invalid structure for collection field " + fieldName));
+
+            auto itemFieldId = fieldDesc.GetLinkIds()[0];
+            const auto &itemFieldDesc = desc->GetFieldDescriptor(itemFieldId);
+            auto itemField =
+               Create(itemFieldDesc.GetFieldName(), itemFieldDesc.GetTypeName(), options, desc, itemFieldId).Unwrap();
+            auto vecField =
+               ROOT::Internal::CreateEmulatedVectorField(fieldName, std::move(itemField), fieldDesc.GetTypeName());
+            vecField->fTypeAlias = fieldDesc.GetTypeAlias();
+            return vecField;
+         } else if (ROOT::Internal::IsCustomEnumFieldDesc(*desc, fieldDesc)) {
+            R__ASSERT(!fieldDesc.GetLinkIds().empty());
+            auto underlyingIntFieldId = fieldDesc.GetLinkIds()[0];
+            const auto &underlyingIntFieldDesc = desc->GetFieldDescriptor(underlyingIntFieldId);
+            auto enumField = ROOT::Internal::CreateEmulatedEnumField(fieldName, fieldDesc.GetTypeName(),
+                                                                     underlyingIntFieldDesc.GetTypeName());
+            enumField->fTypeAlias = fieldDesc.GetTypeAlias();
+            return enumField;
          }
       }
    } catch (const RException &e) {
@@ -913,7 +916,9 @@ void ROOT::RFieldBase::RemoveReadCallback(size_t idx)
 
 void ROOT::RFieldBase::AutoAdjustColumnTypes(const ROOT::RNTupleWriteOptions &options)
 {
-   if ((options.GetCompression() == 0) && HasDefaultColumnRepresentative()) {
+   // Sampled upfront: the block below sets representatives, which would clear the "default" state.
+   const bool hadDefaultRepresentative = HasDefaultColumnRepresentative();
+   if ((options.GetCompression() == 0) && hadDefaultRepresentative) {
       ColumnRepresentation_t rep = GetColumnRepresentations().GetSerializationDefault();
       for (auto &colType : rep) {
          switch (colType) {
@@ -933,11 +938,35 @@ void ROOT::RFieldBase::AutoAdjustColumnTypes(const ROOT::RNTupleWriteOptions &op
       SetColumnRepresentatives({rep});
    }
 
-   if (fTypeAlias == "Double32_t") {
+   // Only adjust Double32_t when the user did not pin a representation: an explicit representative must
+   // survive (see RNTupleMerger::ExtendDestinationModel), otherwise merging would silently reinterpret the
+   // raw copies of the source pages under a different encoding.
+   if ((fTypeAlias == "Double32_t") && hadDefaultRepresentative) {
       if (options.GetCompression() != 0)
          SetColumnRepresentatives({{ROOT::ENTupleColumnType::kSplitReal32}});
       else
          SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}});
+   }
+
+   // An explicit representation pinned on a Double32_t field must contain a reduced-precision encoding:
+   // a 64-bit-only selection would store full doubles while the field promises Double32_t precision.
+   // A multi-column selection that also includes a reduced-precision representative stays legal.
+   if ((fTypeAlias == "Double32_t") && !hadDefaultRepresentative) {
+      bool hasSubDoubleRep = false;
+      for (const auto &rep : GetColumnRepresentatives()) {
+         for (const auto colType : rep) {
+            if ((colType != ROOT::ENTupleColumnType::kReal64) && (colType != ROOT::ENTupleColumnType::kSplitReal64)) {
+               hasSubDoubleRep = true;
+               break;
+            }
+         }
+         if (hasSubDoubleRep)
+            break;
+      }
+      if (!hasSubDoubleRep) {
+         throw RException(R__FAIL("explicit column representations of Double32_t field `" + GetFieldName() +
+                                  "` must include a reduced-precision representation"));
+      }
    }
 }
 
@@ -1019,7 +1048,7 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
 
    if (!fIsArtificial) {
       auto descGuard = pageSource.GetSharedDescriptorGuard();
-      ReconcileOnDiskField(descGuard.GetRef());
+      ReconcileOnDiskField(descGuard.GetConstRef());
    }
 
    for (auto &f : fSubfields) {
@@ -1032,7 +1061,7 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
    // Do not generate columns nor set fColumnRepresentatives for artificial fields.
    if (!fIsArtificial) {
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
-      const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetRef();
+      const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetConstRef();
       GenerateColumns(desc);
       if (fColumnRepresentatives.empty()) {
          // If we didn't get columns from the descriptor, ensure that we actually expect a field without columns

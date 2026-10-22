@@ -104,7 +104,13 @@ public:
    void StreamJsonRecurse(REveElement *el, nlohmann::json &jobj);
 
    void StreamRepresentationChanges();
+
+   void StreamMotionChanges(nlohmann::json &arr);
    void SendChangesToSubscribers();
+
+   /// Output of the last StreamElements() or StreamRepresentationChanges().
+   const std::string &GetOutputJson() const { return fOutputJson; }
+   const std::vector<char> &GetOutputBinary() const { return fOutputBinary; }
 
    Bool_t HasSubscribers() const { return !fSubscribers.empty(); }
    void AddSubscriber(std::unique_ptr<REveClient> &&sub);

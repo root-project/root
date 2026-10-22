@@ -7,6 +7,7 @@
 #define CPPINTEROP_INTERPRETER_H
 
 #include "Compatibility.h"
+#include "CompatibilityGLIBC.h"
 #include "DynamicLibraryManager.h"
 #include "Paths.h"
 
@@ -18,6 +19,7 @@
 #include "clang/AST/GlobalDecl.h"
 #include "clang/Basic/LangOptions.h"
 #include "clang/Basic/TargetOptions.h"
+#include "clang/Basic/Version.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendOptions.h"
 #include "clang/Lex/Preprocessor.h"
@@ -29,8 +31,16 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringSet.h"
+#include "llvm/ExecutionEngine/JITSymbol.h"
+#include "llvm/ExecutionEngine/Orc/AbsoluteSymbols.h"
+#include "llvm/ExecutionEngine/Orc/Core.h"
+#include "llvm/ExecutionEngine/Orc/CoreContainers.h"
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
+#include "llvm/ExecutionEngine/Orc/Shared/ExecutorAddress.h"
+#include "llvm/ExecutionEngine/Orc/Shared/ExecutorSymbolDef.h"
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/TargetSelect.h"
@@ -42,7 +52,6 @@
 #include <unistd.h>
 #endif
 #if defined(_WIN32) && (defined(_M_IX86) || defined(__i386__))
-#include "llvm/ExecutionEngine/Orc/AbsoluteSymbols.h"
 #include "llvm/Support/DynamicLibrary.h"
 #include <deque>
 #endif
@@ -205,6 +214,62 @@ private:
 };
 #endif // _WIN32 && i386
 
+#ifdef __GLIBC__
+/// Resolves the pure-code libc_nonshared.a symbols (per-module copies
+/// invisible to dlsym) to this library's own. The registration functions
+/// (at_quick_exit, pthread_atfork) resolve to JIT-side shims instead; see
+/// compat::glibcNonsharedSymbols and compat::addGlibcNonsharedShims.
+class GlibcNonsharedSymbolGenerator : public llvm::orc::DefinitionGenerator {
+public:
+  llvm::Error
+  tryToGenerate(llvm::orc::LookupState& LS, llvm::orc::LookupKind K,
+                llvm::orc::JITDylib& JD,
+                llvm::orc::JITDylibLookupFlags JDLookupFlags,
+                const llvm::orc::SymbolLookupSet& LookupSet) override {
+    const llvm::StringMap<void*>& Known = compat::glibcNonsharedSymbols();
+    llvm::orc::SymbolMap NewSymbols;
+    for (const auto& KV : LookupSet) {
+      auto It = Known.find(*KV.first);
+      if (It == Known.end())
+        continue;
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-avoid-unchecked-container-access)
+      NewSymbols[KV.first] = {llvm::orc::ExecutorAddr::fromPtr(It->second),
+                              llvm::JITSymbolFlags::Exported |
+                                  llvm::JITSymbolFlags::Callable};
+    }
+    if (NewSymbols.empty())
+      return llvm::Error::success();
+    return JD.define(llvm::orc::absoluteSymbols(std::move(NewSymbols)));
+  }
+};
+
+/// Installs the libc_nonshared.a support on the main JITDylib: the fallback
+/// generator for pure-code symbols, the host registration entry points, and
+/// the at_quick_exit/pthread_atfork shims scoped to \p Owner (see
+/// compat::JitGlibcHandlerRegistry).
+inline void installGlibcNonsharedSupport(llvm::orc::LLJIT& J, void* Owner) {
+  J.getMainJITDylib().addGenerator(
+      std::make_unique<GlibcNonsharedSymbolGenerator>());
+
+  llvm::orc::SymbolMap Syms;
+  Syms[J.mangleAndIntern("__cppinterop_at_quick_exit")] =
+      llvm::orc::ExecutorSymbolDef(
+          llvm::orc::ExecutorAddr::fromPtr(&compat::jitAtQuickExit),
+          llvm::JITSymbolFlags::Exported | llvm::JITSymbolFlags::Callable);
+  Syms[J.mangleAndIntern("__cppinterop_pthread_atfork")] =
+      llvm::orc::ExecutorSymbolDef(
+          llvm::orc::ExecutorAddr::fromPtr(&compat::jitPthreadAtfork),
+          llvm::JITSymbolFlags::Exported | llvm::JITSymbolFlags::Callable);
+  llvm::Error Err =
+      J.getMainJITDylib().define(llvm::orc::absoluteSymbols(std::move(Syms)));
+  if (!Err)
+    Err = compat::addGlibcNonsharedShims(J, Owner);
+  if (Err)
+    llvm::logAllUnhandledErrors(std::move(Err), llvm::errs(),
+                                "Failed to install the glibc shims:");
+}
+#endif // __GLIBC__
+
 /// CppInterOp Interpreter
 ///
 class Interpreter {
@@ -261,6 +326,12 @@ private:
   mutable std::once_flag sDLMInit;
   bool outOfProcess;
 
+#if CLANG_VERSION_MAJOR < 24
+  // Weak thread_local definitions already handed to the JIT, so later modules
+  // demote their duplicates. See compat::dedupeWeakEmulatedTLS.
+  llvm::StringSet<> DedupedWeakTLS;
+#endif
+
 public:
   Interpreter(std::unique_ptr<clang::Interpreter> CI,
               std::unique_ptr<IOContext> ctx = nullptr, bool oop = false)
@@ -313,11 +384,26 @@ public:
         std::make_unique<COFFi386SymbolGenerator>());
 #endif
 
+#ifdef __GLIBC__
+    // In-process only (the shims and the generator hand out this process's
+    // addresses); the generator is appended last so it is consulted only
+    // when the process-symbol generator fails. The inner interpreter keys
+    // the handler registry; ~Interpreter flushes it.
+    if (!outOfProcess)
+      installGlibcNonsharedSupport(*compat::getExecutionEngine(*CI), CI.get());
+#endif
+
     return std::make_unique<Interpreter>(std::move(CI), std::move(io_ctx),
                                          outOfProcess);
   }
 
-  ~Interpreter() {}
+  ~Interpreter() {
+#ifdef __GLIBC__
+    // Run jitted quick-exit handlers while their code is still mapped and
+    // drop this interpreter's atfork entries.
+    compat::JitGlibcHandlerRegistry::instance().flushOwner(inner.get());
+#endif
+  }
 
   operator const clang::Interpreter&() const { return *inner; }
   operator clang::Interpreter&() { return *inner; }
@@ -368,7 +454,28 @@ public:
   }
 
   llvm::Error ParseAndExecute(llvm::StringRef Code, clang::Value* V = nullptr) {
-    return inner->ParseAndExecute(Code, V);
+    // Value-returning execution keeps clang's LastValue handling (private to
+    // clang::Interpreter), so delegate. The no-value path -- used by wrapper
+    // compilation -- is split so the module can be sanitized before Execute.
+    if (V)
+      return inner->ParseAndExecute(Code, V);
+    auto PTU = inner->Parse(Code);
+    if (!PTU)
+      return PTU.takeError();
+    if (PTU->TheModule) {
+#if CLANG_VERSION_MAJOR < 24
+      compat::dedupeWeakEmulatedTLS(*PTU->TheModule, DedupedWeakTLS);
+#endif
+      // WORKAROUND: see bindProcessWeakGlobals in Compatibility.h -- remove
+      // with the pass once the clang JIT fix lands.
+#if !defined(_WIN32) && CPPINTEROP_WORKAROUND_BIND_PROCESS_WEAK_GLOBALS
+      if (!outOfProcess)
+        compat::bindProcessWeakGlobals(*PTU->TheModule);
+#endif
+      if (llvm::Error Err = inner->Execute(*PTU))
+        return Err;
+    }
+    return llvm::Error::success();
   }
 
   llvm::Error Undo(unsigned N = 1) { return compat::Undo(*inner, N); }
@@ -462,6 +569,17 @@ public:
 
     if (PTU)
       *PTU = &*PTUOrErr;
+
+#if CLANG_VERSION_MAJOR < 24
+    if (PTUOrErr->TheModule)
+      compat::dedupeWeakEmulatedTLS(*PTUOrErr->TheModule, DedupedWeakTLS);
+#endif
+      // WORKAROUND: see bindProcessWeakGlobals in Compatibility.h -- remove
+      // with the pass once the clang JIT fix lands.
+#if !defined(_WIN32) && CPPINTEROP_WORKAROUND_BIND_PROCESS_WEAK_GLOBALS
+    if (PTUOrErr->TheModule && !outOfProcess)
+      compat::bindProcessWeakGlobals(*PTUOrErr->TheModule);
+#endif
 
     if (auto Err = Execute(*PTUOrErr)) {
       llvm::logAllUnhandledErrors(std::move(Err), llvm::errs(),
@@ -586,16 +704,22 @@ public:
                                          incpaths, withSystem, withFlags);
   }
 
-  CompilationResult loadLibrary(const std::string& filename, bool lookup) {
+  CompilationResult loadLibrary(const std::string& filename, bool lookup,
+                                std::string* error = nullptr) {
     llvm::Triple triple(getCompilerInstance()->getTargetOpts().Triple);
     if (triple.isWasm()) {
+      // LCOV_EXCL_START -- no coverage lane runs the wasm path.
       // On WASM, dlopen-style canonical lookup has no effect.
       if (auto Err = inner->LoadDynamicLibrary(filename.c_str())) {
-        llvm::logAllUnhandledErrors(std::move(Err), llvm::errs(),
-                                    "loadLibrary: ");
+        std::string Msg = llvm::toString(std::move(Err));
+        if (error)
+          *error = std::move(Msg);
+        else
+          llvm::errs() << "loadLibrary: " << Msg << '\n';
         return kFailure;
       }
       return kSuccess;
+      // LCOV_EXCL_STOP
     }
 
     DynamicLibraryManager* DLM = getDynamicLibraryManager();
@@ -604,9 +728,14 @@ public:
       canonicalLib = DLM->lookupLibrary(filename);
 
     const std::string& library = lookup ? canonicalLib : filename;
-    if (!library.empty()) {
-      switch (
-          DLM->loadLibrary(library, /*permanent*/ false, /*resolved*/ true)) {
+    if (library.empty()) {
+      if (error)
+        *error = filename + ": library not found";
+      return kMoreInputExpected;
+    }
+    {
+      switch (DLM->loadLibrary(library, /*permanent*/ false, /*resolved*/ true,
+                               error)) {
       case DynamicLibraryManager::kLoadLibSuccess: // Intentional fall through
       case DynamicLibraryManager::kLoadLibAlreadyLoaded:
         return kSuccess;
@@ -618,7 +747,6 @@ public:
         return kFailure;
       }
     }
-    return kMoreInputExpected;
   }
 
   std::string toString(const char* type, void* obj) {

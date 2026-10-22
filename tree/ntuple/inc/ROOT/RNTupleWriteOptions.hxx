@@ -79,10 +79,10 @@ on how large the I/O buffer can grow during writing.
 <tr>
 <td>`InitialUnzippedPageSize`</td>
 <td>`std::size_t`</td>
-<td>256</td>
+<td>16</td>
 <td>
-Initially, columns start with a page of this size. The default value is chosen to accommodate at least 32 elements
-of 64 bits, or 64 elements of 32 bits. If more elements are needed, pages are increased up until the byte limit
+Initially, columns start with a page of this size. The default value is chosen for low memory footprint
+(two 64bit values). If more elements are needed, pages are increased up until the byte limit
 given by the option `MaxUnzippedPageSize` or until the total page buffer limit is reached (as a sum of all page buffers).
 The total write buffer limit needs to be large enough to hold the initial pages of all columns.
 </td>
@@ -196,7 +196,7 @@ protected:
    std::uint32_t fCompression{RCompressionSetting::EDefaults::kUseGeneralPurpose};
    std::size_t fApproxZippedClusterSize = 128 * 1024 * 1024;
    std::size_t fMaxUnzippedClusterSize = 10 * fApproxZippedClusterSize;
-   std::size_t fInitialUnzippedPageSize = 256;
+   std::size_t fInitialUnzippedPageSize = 16;
    std::size_t fMaxUnzippedPageSize = 1024 * 1024;
    std::size_t fPageBufferBudget = 0;
    bool fUseBufferedWrite = true;

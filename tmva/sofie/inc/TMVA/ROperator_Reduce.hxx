@@ -104,8 +104,6 @@ private:
    }
    void Initialize(RModel& model) override {
 
-      fUseSession = model.UseSession();
-
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          // input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA SOFIE Reduce Op Input Tensor " + fNX + " is not found in model");

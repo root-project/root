@@ -311,6 +311,18 @@ cc_library(
     includes = ["include"],
 )
 
+# Tests resolve repo files against CPPINTEROP_SRC_DIR / CPPINTEROP_BIN_DIR,
+# which here is the runfiles root (the test's cwd). repo_rloc self-corrects
+# between the standalone build (main repo -> ".") and use as an external dep
+# (-> "../<canon>"). This BUILD is always @cppinterop, so is_main_repo() marks
+# the self-reference.
+_CPPINTEROP_RUNFILES_DIR = repo_rloc(
+    "@cppinterop",
+    is_main_repo(repository_name()),
+)
+
+_CPPINTEROP_SRC_DIR_COPT = "-DCPPINTEROP_SRC_DIR=\\\"" + _CPPINTEROP_RUNFILES_DIR + "\\\""
+
 # CppInterOpTests: the main gtest suite. Source list = CMake's
 # add_cppinterop_unittest(CppInterOpTests ...) plus the non-EMSCRIPTEN
 # target_sources additions (CUDATest, VTableOverlayTest) plus main.cpp.
@@ -335,8 +347,13 @@ cppinterop_cc_test(
         "unittests/CppInterOp/VariableReflectionTest.cpp",
         "unittests/CppInterOp/main.cpp",
     ],
+    # The APINotes check builds an -I into the checkout, so ship that directory.
+    data = glob(["unittests/CppInterOp/APINotes/**"]),
     # CMake sets -Wno-pedantic on VariableReflectionTest.cpp; applied suite-wide.
-    extra_copts = ["-Wno-pedantic"],
+    extra_copts = [
+        "-Wno-pedantic",
+        _CPPINTEROP_SRC_DIR_COPT,
+    ],
     extra_deps = [":CAPITestC"],
 )
 
@@ -352,20 +369,11 @@ cppinterop_cc_test(
     ],
 )
 
-# TracingTests reads CppInterOp.h, the generated .inc, and lib/*.cpp at runtime,
-# relative to CPPINTEROP_DIR / CPPINTEROP_BINARY_DIR (the repo's runfiles root,
-# which is the test's cwd). repo_rloc self-corrects between the standalone build
-# (cppinterop is the main repo -> ".") and being an external dep (-> "../<canon>").
-# This BUILD is always @cppinterop, so is_main_repo() marks the self-reference.
-# No test-source changes needed.
-_CPPINTEROP_RUNFILES_DIR = repo_rloc(
-    "@cppinterop",
-    is_main_repo(repository_name()),
-)
-
+# TracingTests reads CppInterOp.h, the generated .inc, and lib/*.cpp at runtime.
 cppinterop_cc_test(
     name = "TracingTests",
     srcs = [
+        "unittests/CppInterOp/TestPaths.h",
         "unittests/CppInterOp/TracingTests.cpp",
         "unittests/CppInterOp/Utils.cpp",
         "unittests/CppInterOp/Utils.h",
@@ -373,8 +381,8 @@ cppinterop_cc_test(
     ],
     data = glob(["lib/CppInterOp/*.cpp"]),
     extra_copts = [
-        "-DCPPINTEROP_DIR=\\\"" + _CPPINTEROP_RUNFILES_DIR + "\\\"",
-        "-DCPPINTEROP_BINARY_DIR=\\\"" + _CPPINTEROP_RUNFILES_DIR + "\\\"",
+        _CPPINTEROP_SRC_DIR_COPT,
+        "-DCPPINTEROP_BIN_DIR=\\\"" + _CPPINTEROP_RUNFILES_DIR + "\\\"",
     ],
 )
 
@@ -385,6 +393,7 @@ cppinterop_dispatch_cc_test(
         "unittests/CppInterOp/DispatchInit.cpp",
         "unittests/CppInterOp/DispatchSmokeTest.cpp",
         "unittests/CppInterOp/DispatchTest.cpp",
+        "unittests/CppInterOp/TestPaths.h",
         "unittests/CppInterOp/main.cpp",
     ],
 )

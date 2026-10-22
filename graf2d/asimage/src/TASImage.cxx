@@ -1076,10 +1076,27 @@ void TASImage::SetImage(const TVectorD &imageData, UInt_t width, TImagePalette *
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create an image from the given X11 window
+/// Can only be used on platforms where X11 is supported
+
+void TASImage::FromX11Window(Window_t win, Int_t x, Int_t y, Int_t width, Int_t height)
+{
+   DestroyImage();
+   DestroyScaledImage();
+
+   if (!InitVisual()) {
+      Warning("FromX11Window", "Visual not initiated");
+      return;
+   }
+
+   fImage = pixmap2asimage(fgVisual, win, x, y, width, height, kAllPlanes, 0, 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Create an image from the given pad, afterwards this image can be
 /// saved in any of the supported image formats.
 
-void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
+void TASImage::FromPad(TVirtualPad *pad, Int_t /* x */, Int_t /* y */, UInt_t /* w */, UInt_t  /* h */)
 {
    if (!pad) {
       Error("FromPad", "pad cannot be 0");
@@ -1096,7 +1113,7 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
    DestroyImage();
    DestroyScaledImage();
 
-   if (gROOT->IsBatch()) { // in batch mode
+   if (gROOT->IsBatch() || pad->IsBatch() || pad->IsWeb()) { // in batch mode
       TVirtualPS *psave = gVirtualPS;
       gVirtualPS = new TImageDump();
       gVirtualPS->Open(pad->GetName(), 114); // in memory
@@ -1126,39 +1143,9 @@ void TASImage::FromPad(TVirtualPad *pad, Int_t x, Int_t y, UInt_t w, UInt_t h)
       return;
    }
 
-   // X11 Synchronization
-   gVirtualX->Update(1);
-   if (!gThreadXAR) {
-      gSystem->Sleep(100);
-      gSystem->ProcessEvents();
-      gSystem->Sleep(10);
-      gSystem->ProcessEvents();
-   }
-
-   TVirtualPad *canvas = (TVirtualPad*)pad->GetCanvas();
-   Int_t wid = (pad == canvas) ? pad->GetCanvasID() : pad->GetPixmapID();
-   gVirtualX->SelectWindow(wid);
-
-   Window_t wd = (Window_t)gVirtualX->GetCurrentWindow();
-   if (!wd) return;
-
-   if (w == 0) w = TMath::Abs(pad->UtoPixel(1.));
-   if (h == 0) h = pad->VtoPixel(0.);
-
-   static int x11 = -1;
-   if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
-
-   if (x11) { //use built-in optimized version
-      fImage = pixmap2asimage(fgVisual, wd, x, y, w, h, kAllPlanes, 0, 0);
-   } else {
-      unsigned char *bits = gVirtualX->GetColorBits(wd, 0, 0, w, h);
-
-      if (!bits) { // error
-         return;
-      }
-      fImage = bitmap2asimage(bits, w, h, 0, nullptr);
-      delete [] bits;
-   }
+   auto pp = pad->GetPainter();
+   if (pp)
+      pp->FillImageFromPad(this, pad);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1592,113 +1579,113 @@ Int_t TASImage::DistancetoPrimitive(Int_t px, Int_t py)
    return 999999;
 }
 
+class TASImageInteractive : public TVirtualPad::TInteractive {
+   Int_t px1, py1, px2, py2;                                     // pad coordinates
+   Int_t zoom_px1 = 0, zoom_py1 = 0, zoom_px2 = 0, zoom_py2 = 0; // zoom start/stop coordinates
+public:
+
+   Int_t zx1, zy1, zx2, zy2; // pixel coordinates of zoom area
+
+   TASImageInteractive(TVirtualPad &parent, Int_t px, Int_t py)
+   {
+      px1 = parent.XtoAbsPixel(parent.GetX1());
+      py1 = parent.YtoAbsPixel(parent.GetY1());
+      px2 = parent.XtoAbsPixel(parent.GetX2());
+      py2 = parent.YtoAbsPixel(parent.GetY2());
+      zoom_px2 = zoom_px1 = px;
+      zoom_py2 = zoom_py1 = py;
+   }
+
+   void PerformMove(Int_t px, Int_t py)
+   {
+      zoom_px2 = px;
+      zoom_py2 = py;
+      zx1 = TMath::Max(px1, TMath::Min(zoom_px1, zoom_px2));
+      zx2 = TMath::Min(px2, TMath::Max(zoom_px1, zoom_px2));
+      zy1 = TMath::Min(py1, TMath::Max(zoom_py1, zoom_py2));
+      zy2 = TMath::Max(py2, TMath::Min(zoom_py1, zoom_py2));
+   }
+
+   void PaintBox(TVirtualPad &parent)
+   {
+      TAttLine{kBlack, 1, 2}.ModifyOn(parent);
+      parent.PaintBox(parent.AbsPixeltoX(zx1), parent.AbsPixeltoY(zy1), parent.AbsPixeltoX(zx2),
+                        parent.AbsPixeltoY(zy2), "ilasimage");
+      parent.UpdateAsync();
+   }
+
+
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute mouse events.
 
 void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   static std::unique_ptr<TBox> ZoomBox;
-
    if (!gPad) return;
 
+   auto &parent = *gPad;
+
    if (IsEditable()) {
-      gPad->ExecuteEvent(event, px, py);
+      parent.ExecuteEvent(event, px, py);
       return;
    }
 
-   gPad->SetCursor(kCross);
+   parent.SetCursor(kCross);
 
-   static Int_t px1old, py1old, px2old, py2old;
-   static Int_t px1, py1, px2, py2, pxl, pyl, pxt, pyt;
+   if (event != kButton1Motion && event != kButton1Down  && event != kButton1Up)
+      return;
 
-   if (!IsValid()) return;
+   if (!IsValid())
+      return;
 
-   if (event == kButton1Motion || event == kButton1Down  ||
-       event == kButton1Up) {
+   switch (event) {
 
-      // convert to image pixel on screen
-      Int_t imgX = px - gPad->XtoAbsPixel(0);
-      Int_t imgY = py - gPad->YtoAbsPixel(1);
+      case kButton1Down:
+         parent.MakeInteractive<TASImageInteractive>(this, parent, px, py);
+         break;
 
-      if (imgX < 0)  px = px - imgX;
-      if (imgY < 0)  py = py - imgY;
+      case kButton1Motion:
+         if (auto inter = parent.GetInteractive<TASImageInteractive>(this)) {
+            inter->PerformMove(px, py);
+            inter->PaintBox(parent);
+         }
+         break;
 
-      ASImage *image = fImage;
-      if (fScaledImage && fScaledImage->fImage) image = fScaledImage->fImage;
+      case kButton1Up: {
 
-      if (imgX >= (int)image->width)  px = px - imgX + image->width - 1;
-      if (imgY >= (int)image->height) py = py - imgY + image->height - 1;
+         Int_t imgX1 = 0, imgY1 = 0, imgW = 0, imgH = 0;
 
-      switch (event) {
+         ASImage *image = fScaledImage ? fScaledImage->fImage : fImage;
 
-         case kButton1Down:
-            px1 = gPad->XtoAbsPixel(gPad->GetX1());
-            py1 = gPad->YtoAbsPixel(gPad->GetY1());
-            px2 = gPad->XtoAbsPixel(gPad->GetX2());
-            py2 = gPad->YtoAbsPixel(gPad->GetY2());
-            px1old = px; py1old = py;
-            break;
-
-         case kButton1Motion:
-            px2old = px;
-            px2old = TMath::Max(px2old, px1);
-            px2old = TMath::Min(px2old, px2);
-            py2old = py;
-            py2old = TMath::Max(py2old, py2);
-            py2old = TMath::Min(py2old, py1);
-            pxl = TMath::Min(px1old, px2old);
-            pxt = TMath::Max(px1old, px2old);
-            pyl = TMath::Max(py1old, py2old);
-            pyt = TMath::Min(py1old, py2old);
-
-            if (ZoomBox) {
-               ZoomBox->SetX1(gPad->AbsPixeltoX(pxl));
-               ZoomBox->SetY1(gPad->AbsPixeltoY(pyl));
-               ZoomBox->SetX2(gPad->AbsPixeltoX(pxt));
-               ZoomBox->SetY2(gPad->AbsPixeltoY(pyt));
-            } else {
-               ZoomBox = std::make_unique<TBox>(pxl, pyl, pxt, pyt);
-               ZoomBox->SetFillStyle(0);
-               ZoomBox->Draw("l*");
+         if (auto inter = parent.GetInteractive<TASImageInteractive>(this)) {
+            inter->PerformMove(px, py);
+            if (image) {
+               imgX1 = inter->zx1 - parent.XtoAbsPixel(0);
+               imgY1 = image->height - 1 - inter->zy1 + parent.YtoAbsPixel(1);
+               imgW = inter->zx2 - inter->zx1;
+               imgH = inter->zy1 - inter->zy2;
             }
-            gPad->Modified(kTRUE);
-            gPad->Update();
-            break;
+            parent.FreeInteractive(this);
+         }
 
-         case kButton1Up:
-            // do nothing if zoom area is too small
-            if ( TMath::Abs(pxl - pxt) < 5 || TMath::Abs(pyl - pyt) < 5)
-               return;
+         if ((imgW >= 5) && (imgH >= 5)) {
+            // do somthing if zoom area big enough
+            Double_t xfact = fScaledImage ? (Double_t)image->width  / fZoomWidth  : 1;
+            Double_t yfact = fScaledImage ? (Double_t)image->height / fZoomHeight : 1;
 
-            pxl = 0;
-            pxt = 0;
-            pyl = 0;
-            pyt = 0;
-
-            Double_t xfact = (fScaledImage) ? (Double_t)fScaledImage->fImage->width  / fZoomWidth  : 1;
-            Double_t yfact = (fScaledImage) ? (Double_t)fScaledImage->fImage->height / fZoomHeight : 1;
-
-            Int_t imgX1 = px1old - gPad->XtoAbsPixel(0);
-            Int_t imgY1 = py1old - gPad->YtoAbsPixel(1);
-            Int_t imgX2 = px  - gPad->XtoAbsPixel(0);
-            Int_t imgY2 = py  - gPad->YtoAbsPixel(1);
-
-            imgY1 = image->height - 1 - imgY1;
-            imgY2 = image->height - 1 - imgY2;
             imgX1 = (Int_t)(imgX1 / xfact) + fZoomOffX;
             imgY1 = (Int_t)(imgY1 / yfact) + fZoomOffY;
-            imgX2 = (Int_t)(imgX2 / xfact) + fZoomOffX;
-            imgY2 = (Int_t)(imgY2 / yfact) + fZoomOffY;
+            imgW = (Int_t)(imgW / xfact);
+            imgH = (Int_t)(imgH / yfact);
 
-            Zoom((imgX1 < imgX2) ? imgX1 : imgX2, (imgY1 < imgY2) ? imgY1 : imgY2,
-                 TMath::Abs(imgX1 - imgX2) + 1, TMath::Abs(imgY1 - imgY2) + 1);
+            Zoom(imgX1, imgY1, imgW + 1, imgH + 1);
 
-            if (ZoomBox)
-               ZoomBox.reset();
+            parent.Modified();
+            parent.Update();
+         }
 
-            gPad->Modified(kTRUE);
-            gPad->Update();
-            break;
+         break;
       }
    }
 }
@@ -2172,75 +2159,81 @@ void TASImage::StartPaletteEditor()
    TAttImage::StartPaletteEditor();
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns image X11 pixmap.
+/// Workrs only on the platforms with support of X11
+/// The pixmap must deleted by user.
+
+Pixmap_t TASImage::GetX11Pixmap(Window_t root_window)
+{
+   if (!InitVisual()) {
+      Warning("GetX11Pixmap", "Visual not initiated");
+      return 0;
+   }
+
+   ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
+
+   return (Pixmap_t)asimage2pixmap(fgVisual, root_window, img, nullptr, kTRUE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// DEPRECATED. Method left for backward compatibility and will be removed in ROOT7!
 /// Returns image pixmap.
 /// The pixmap must deleted by user.
 
 Pixmap_t TASImage::GetPixmap()
 {
-   if (!InitVisual()) {
-      Warning("GetPixmap", "Visual not initiated");
+   static Bool_t x11 = gVirtualX->InheritsFrom("TGX11");
+
+   if (x11)
+      return GetX11Pixmap(gVirtualX->GetDefaultRootWindow());
+
+   auto argb = GetArgbArray();
+   if (!argb) {
+      Error("GetPixmap", "ARGB array is not exists");
       return 0;
    }
 
-   Pixmap_t ret;
-
-   ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
-
-   static int x11 = -1;
-   if (x11 < 0) x11 = gVirtualX->InheritsFrom("TGX11");
-
-   if (x11) {   // use builtin version
-      ret = (Pixmap_t)asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(),
-                                       img, nullptr, kTRUE);
-   } else {
-      if (!fImage->alt.argb32) {
-         BeginPaint();
-      }
-      ret = gVirtualX->CreatePixmapFromData((unsigned char*)fImage->alt.argb32,
-                                             fImage->width, fImage->height);
-   }
-
-   return ret;
+   return gVirtualX->CreatePixmapFromData((unsigned char*) argb, GetScaledWidth(), GetScaledHeight());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns image mask pixmap (alpha channel).
-/// The pixmap must deleted by user.
+/// Returns image mask bits - only alpha channel of the image.
+/// Also provides width and height which is aligned to 8 bits
+/// Returns kTRUE if operation was successful
 
-Pixmap_t TASImage::GetMask()
+Bool_t TASImage::GetMaskBits(UInt_t &width, UInt_t &height, std::vector<char> &bits)
 {
-   Pixmap_t pxmap = 0;
-
    if (!InitVisual()) {
-      Warning("GetMask", "Visual not initiated");
-      return pxmap;
+      Warning("GetMaskBits", "Visual not initiated");
+      return kFALSE;
    }
 
    ASImage *img = fScaledImage ? fScaledImage->fImage : fImage;
 
    if (!img) {
-      Warning("GetMask", "No image");
-      return pxmap;
+      Warning("GetMaskBits", "No image");
+      return kFALSE;
    }
 
-   UInt_t hh = img->height;
-   UInt_t ow = img->width%8;
-   UInt_t ww = img->width - ow + (ow ? 8 : 0);
+   height = img->height;
+   UInt_t ow = img->width % 8;
+   width = img->width - ow + (ow ? 8 : 0);
 
    ASImageDecoder *imdec = start_image_decoding(fgVisual, img, SCL_DO_ALPHA,
-                                                0, 0, ww, 0, nullptr);
+                                                0, 0, width, 0, nullptr);
    if (!imdec)
-      return pxmap;
+      return kFALSE;
 
-   std::vector<char> bits(ww * hh / 8); //an array of bits
+   bits.resize(height * width / 8); //an array of bits
 
    UInt_t bit = 0, i = 0;
-   for (UInt_t y = 0; y < hh; y++) {
+   for (UInt_t y = 0; y < height; y++) {
       imdec->decode_image_scanline(imdec);
       CARD32 *a = imdec->buffer.alpha;
 
-      for (UInt_t x = 0; x < ww; x++) {
+      for (UInt_t x = 0; x < width; x++) {
          if (a[x]) {
             SETBIT(bits[i], bit);
          } else {
@@ -2254,8 +2247,25 @@ Pixmap_t TASImage::GetMask()
    }
 
    stop_image_decoding(&imdec);
-   pxmap = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), bits.data(), ww, hh);
-   return pxmap;
+
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// DEPRECATED! Method left for backward compatibility and will be removed in ROOT7!
+/// Returns image mask pixmap (alpha channel).
+/// The pixmap must deleted by user.
+
+Pixmap_t TASImage::GetMask()
+{
+   Pixmap_t pixmap = 0;
+
+   UInt_t ww = 0, hh = 0;
+   std::vector<char> bits;
+   if (GetMaskBits(ww, hh, bits))
+      pixmap = gVirtualX->CreateBitmap(gVirtualX->GetDefaultRootWindow(), bits.data(), ww, hh);
+
+   return pixmap;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6360,22 +6370,30 @@ void TASImage::FromWindow(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Creates an image (screenshot) from a RGBA buffer.
+/// Creates an image (screenshot) from a RGBA buffer provided by GL.
 
 void TASImage::FromGLBuffer(UChar_t* buf, UInt_t w, UInt_t h)
+{
+   // swap lines in the buffer provided by GL
+   std::vector<UChar_t> xx(4 * w);
+   for (UInt_t i = 0; i < h / 2; ++i) {
+      memcpy(xx.data(), buf + 4*w*i, 4*w);
+      memcpy(buf + 4*w*i, buf + 4*w*(h-i-1), 4*w);
+      memcpy(buf + 4*w*(h-i-1), xx.data(), 4*w);
+   }
+
+   FromBitmap(buf, w, h);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Creates an image from a RGBA buffer
+
+void TASImage::FromBitmap(const UChar_t *buf, UInt_t width, UInt_t height)
 {
    DestroyImage();
    DestroyScaledImage();
 
-   UChar_t* xx = new UChar_t[4*w];
-   for (UInt_t i = 0; i < h/2; ++i) {
-      memcpy(xx, buf + 4*w*i, 4*w);
-      memcpy(buf + 4*w*i, buf + 4*w*(h-i-1), 4*w);
-      memcpy(buf + 4*w*(h-i-1), xx, 4*w);
-   }
-   delete [] xx;
-
-   fImage = bitmap2asimage(buf, w, h, 0, nullptr);
+   fImage = bitmap2asimage(const_cast<unsigned char *>(buf), width, height, 0, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

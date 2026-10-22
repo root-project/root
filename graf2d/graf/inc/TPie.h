@@ -2,7 +2,7 @@
 // Author: Guido Volpi, Olivier Couet  03/11/2006
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,21 +12,36 @@
 #ifndef ROOT_TPie
 #define ROOT_TPie
 
-#include <TNamed.h>
-#include <TAttText.h>
-#include <TString.h>
+#include "TNamed.h"
+#include "TAttText.h"
+#include "TString.h"
+
+#include <vector>
 
 class TH1;
 class TPieSlice;
 class TLegend;
+class TPieInteractive;
 
 class TPie : public TNamed , public TAttText {
 private:
-   void Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r);
-   void DrawGhost();
 
-   Float_t  fSum;             ///<!Sum for the slice values
-   Float_t *fSlices{nullptr}; ///<!Subdivisions of the slices
+   friend class TPieSlice;
+
+   void Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r);
+   void DrawGhost(TVirtualPad &);
+
+   struct SliceInfo_t {
+      Int_t num = 0;
+      Double_t ang = 0; // angle to mouse position
+      Double_t cphi = 0; // central angle of the slice
+      Double_t rad = 0; // relative radius
+   };
+
+   SliceInfo_t FindSlice(TVirtualPad &, Int_t, Int_t);
+
+   std::vector<Float_t> GetSlicesAngles() const;
+
    TLegend *fLegend{nullptr}; ///<!Legend for this piechart
 
 protected:
@@ -55,33 +70,34 @@ public:
    ~TPie() override;
 
    Int_t          DistancetoPrimitive(Int_t px, Int_t py) override;
-   Int_t          DistancetoSlice(Int_t,Int_t);
+   Int_t          DistancetoSlice(Int_t,Int_t) R__DEPRECATED(6, 46, "No longer used.");
    void           Draw(Option_t *option="l") override; // *MENU*
    void           ExecuteEvent(Int_t,Int_t,Int_t) override;
-   Float_t        GetAngle3D() { return fAngle3D; }
-   Double_t       GetAngularOffset() { return fAngularOffset; }
-   Int_t          GetEntryFillColor(Int_t);
-   Int_t          GetEntryFillStyle(Int_t);
-   const char*    GetEntryLabel(Int_t);
-   Int_t          GetEntryLineColor(Int_t);
-   Int_t          GetEntryLineStyle(Int_t);
-   Int_t          GetEntryLineWidth(Int_t);
-   Double_t       GetEntryRadiusOffset(Int_t);
-   Double_t       GetEntryVal(Int_t);
-   const char    *GetFractionFormat() { return fFractionFormat.Data(); }
-   Double_t       GetHeight() { return fHeight; }
-   const char    *GetLabelFormat() { return fLabelFormat.Data(); }
-   Float_t        GetLabelsOffset() { return fLabelsOffset; }
-   TLegend       *GetLegend();
-   Int_t          GetEntries() { return fNvals; }
-   const char    *GetPercentFormat() { return fPercentFormat.Data(); }
-   Double_t       GetRadius() { return fRadius;}
-   TPieSlice     *GetSlice(Int_t i);
-   const char    *GetValueFormat() { return fValueFormat.Data(); }
-   Double_t       GetX() { return fX; }
-   Double_t       GetY() { return fY; }
+   Float_t        GetAngle3D() const { return fAngle3D; }
+   Double_t       GetAngularOffset() const { return fAngularOffset; }
+   Int_t          GetEntryFillColor(Int_t) const;
+   Int_t          GetEntryFillStyle(Int_t) const;
+   const char*    GetEntryLabel(Int_t) const;
+   Int_t          GetEntryLineColor(Int_t) const;
+   Int_t          GetEntryLineStyle(Int_t) const;
+   Int_t          GetEntryLineWidth(Int_t) const;
+   Double_t       GetEntryRadiusOffset(Int_t) const;
+   Double_t       GetEntryVal(Int_t) const;
+   Double_t       GetSumOfEntriesValues() const;
+   const char    *GetFractionFormat() const { return fFractionFormat.Data(); }
+   Double_t       GetHeight() const { return fHeight; }
+   const char    *GetLabelFormat() const { return fLabelFormat.Data(); }
+   Float_t        GetLabelsOffset() const { return fLabelsOffset; }
+   TLegend       *GetLegend() const;
+   Int_t          GetEntries() const { return fNvals; }
+   const char    *GetPercentFormat() const { return fPercentFormat.Data(); }
+   Double_t       GetRadius() const { return fRadius;}
+   TPieSlice     *GetSlice(Int_t i) const;
+   const char    *GetValueFormat() const { return fValueFormat.Data(); }
+   Double_t       GetX() const { return fX; }
+   Double_t       GetY() const { return fY; }
    TLegend       *MakeLegend(Double_t x1=.65,Double_t y1=.65,Double_t x2=.95, Double_t y2=.95, const char *leg_header="");
-   void           MakeSlices(Bool_t force=kFALSE);
+   void           MakeSlices(Bool_t force = kFALSE) R__DEPRECATED(6, 46, "No longer necessary.");
    void           Paint(Option_t *) override;
    void           SavePrimitive(std::ostream &out, Option_t *opts="") override;
    void           SetAngle3D(Float_t val = 30.); // *MENU*

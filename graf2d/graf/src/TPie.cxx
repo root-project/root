@@ -1,8 +1,9 @@
 // @(#)root/graf:$Id$
 // Author: Guido Volpi, Olivier Couet 03/11/2006
+// Author: Sergey Linev 09/2026
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2026, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -14,7 +15,6 @@
 
 #include "TROOT.h"
 #include "TVirtualPad.h"
-#include "TVirtualPadPainter.h"
 #include "TCanvasImp.h"
 #include "TArc.h"
 #include "TLegend.h"
@@ -96,23 +96,6 @@ Begin_Macro(source)
 End_Macro
 
 */
-
-Double_t gX             = 0; // Temporary pie X position.
-Double_t gY             = 0; // Temporary pie Y position.
-Double_t gRadius        = 0; // Temporary pie Radius of the TPie.
-Double_t gRadiusOffset  = 0; // Temporary slice's radial offset.
-Double_t gAngularOffset = 0; // Temporary slice's angular offset.
-Bool_t   gIsUptSlice    = kFALSE; // True if a slice in the TPie should
-                                  // be updated.
-Int_t    gCurrent_slice = -1;// Current slice under mouse.
-Double_t gCurrent_phi1  = 0; // Phimin of the current slice.
-Double_t gCurrent_phi2  = 0; // Phimax of the current slice.
-Double_t gCurrent_rad   = 0; // Current distance from the vertex of the
-                             // current slice.
-Double_t gCurrent_x     = 0; // Current x in the pad metric.
-Double_t gCurrent_y     = 0; // Current y in the pad metric.
-Double_t gCurrent_ang   = 0; // Current angular, within current_phi1
-                                    // and current_phi2.
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -216,7 +199,6 @@ TPie::~TPie()
       delete [] fPieSlices;
    }
 
-   if (fSlices) delete [] fSlices;
    if (fLegend) delete fLegend;
 }
 
@@ -226,104 +208,84 @@ TPie::~TPie()
 Int_t TPie::DistancetoPrimitive(Int_t px, Int_t py)
 {
    Int_t dist = 9999;
-
-   gCurrent_slice = DistancetoSlice(px,py);
-   if ( gCurrent_slice>=0 ) {
-      if (gCurrent_rad<=fRadius) {
+   if (gPad) {
+      auto info = FindSlice(*gPad, px, py);
+      if ((info.num >= 0) && (info.rad <= fRadius))
          dist = 0;
-      }
    }
 
    return dist;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the slice number at the pixel position (px,py).
-/// Returns -1 if no slice is picked.
-///
-/// Used by DistancetoPrimitive.
+/// Find slice at given position
 
-Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
+TPie::SliceInfo_t TPie::FindSlice(TVirtualPad &parent, Int_t px, Int_t py)
 {
-   if (!gPad) return 9999;
-   MakeSlices();
-
-   Int_t result(-1);
+   SliceInfo_t res;
+   res.num = -1;
 
    // coordinates
-   Double_t xx = gPad->AbsPixeltoX(px); //gPad->PadtoX(gPad->AbsPixeltoX(px));
-   Double_t yy = gPad->AbsPixeltoY(py); //gPad->PadtoY(gPad->AbsPixeltoY(py));
+   Double_t xx = parent.AbsPixeltoX(px);
+   Double_t yy = parent.AbsPixeltoY(py);
 
    // XY metric
-   Double_t radX  = fRadius;
-   Double_t radY  = fRadius;
+   Double_t radX = GetRadius();
+   Double_t radY = GetRadius();
    Double_t radXY = 1.;
    if (fIs3D) {
-      radXY = TMath::Sin(fAngle3D/180.*TMath::Pi());
-      radY  = radXY*radX;
+      radXY = TMath::Sin(fAngle3D / 180. * TMath::Pi());
+      radY = radXY * radX;
    }
 
-   Double_t phimin;
-   Double_t cphi;
-   Double_t phimax;
+   auto angles = GetSlicesAngles();
 
-   Float_t dPxl = (gPad->PixeltoY(0)-gPad->PixeltoY(1))/radY;
-   for (Int_t i=0;i<fNvals;++i) {
-      fPieSlices[i]->SetIsActive(kFALSE);
-
-      if (gIsUptSlice && gCurrent_slice!=i) continue;
+   Float_t dPxl = (parent.PixeltoY(0) - parent.PixeltoY(1)) / radY;
+   for (Int_t i = 0; i < fNvals; ++i) {
 
       // Angles' values for this slice
-      phimin = fSlices[2*i  ]*TMath::Pi()/180.;
-      cphi   = fSlices[2*i+1]*TMath::Pi()/180.;
-      phimax = fSlices[2*i+2]*TMath::Pi()/180.;
+      Double_t phimin = angles[2 * i];
+      Double_t cphi = angles[2 * i + 1];
+      Double_t phimax = angles[2 * i + 2];
 
       Double_t radOffset = fPieSlices[i]->GetRadiusOffset();
 
-      Double_t dx  = (xx-fX-radOffset*TMath::Cos(cphi))/radX;
-      Double_t dy  = (yy-fY-radOffset*TMath::Sin(cphi)*radXY)/radY;
+      Double_t dx = (xx - GetX() - radOffset * TMath::Cos(cphi)) / radX;
+      Double_t dy = (yy - GetY() - radOffset * TMath::Sin(cphi) * radXY) / radY;
 
-      if (TMath::Abs(dy)<dPxl) dy = dPxl;
+      if (TMath::Abs(dy) < dPxl)
+         dy = dPxl;
 
-      Double_t ang = TMath::ATan2(dy,dx);
-      if (ang<0) ang += TMath::TwoPi();
+      Double_t ang = TMath::ATan2(dy, dx);
+      if (ang < 0)
+         ang += TMath::TwoPi();
 
-      Double_t dist = TMath::Sqrt(dx*dx+dy*dy);
+      Double_t dist = TMath::Sqrt(dx * dx + dy * dy);
 
-      if ( ((ang>=phimin && ang <= phimax) || (phimax>TMath::TwoPi() &&
-            ang+TMath::TwoPi()>=phimin && ang+TMath::TwoPi()<phimax)) &&
-            dist<=1.) { // if true the pointer is in the slice region
-
-         gCurrent_x    = dx;
-         gCurrent_y    = dy;
-         gCurrent_ang  = ang;
-         gCurrent_phi1 = phimin;
-         gCurrent_phi2 = phimax;
-         gCurrent_rad  = dist*fRadius;
-
-         if (dist<.95 && dist>.65) {
-            Double_t range = phimax-phimin;
-            Double_t lang = ang-phimin;
-            Double_t rang = phimax-ang;
-            if (lang<0) lang += TMath::TwoPi();
-            else if (lang>=TMath::TwoPi()) lang -= TMath::TwoPi();
-            if (rang<0) rang += TMath::TwoPi();
-            else if (rang>=TMath::TwoPi()) rang -= TMath::TwoPi();
-
-            if (lang/range<.25 || rang/range<.25) {
-               fPieSlices[i]->SetIsActive(kTRUE);
-               result = -1;
-            }
-            else result  = i;
-         } else {
-            result = i;
-         }
-
+      if (((ang >= phimin && ang <= phimax) || (ang + TMath::TwoPi() >= phimin && ang + TMath::TwoPi() <= phimax)) &&
+          dist <= 1.) {
+         res.num = i;
+         res.ang = ang;
+         res.cphi = cphi;
+         res.rad = dist;
          break;
       }
    }
-   return result;
+   return res;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the slice number at the pixel position (px,py).
+/// Returns -1 if no slice is picked.
+
+Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
+{
+   if (!gPad)
+      return -1;
+   auto res = FindSlice(*gPad, px, py);
+   return res.num;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw the pie chart.
@@ -335,77 +297,105 @@ void TPie::Draw(Option_t *option)
    TString soption(option);
    soption.ToLower();
 
-   if (soption.Length()==0) soption = "l";
+   if (soption.Length() == 0)
+      soption = "l";
 
-   if (gPad) {
-      if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
-      if (!soption.Contains("same")) {
-         gPad->Clear();
-         gPad->Range(0.,0.,1.,1.);
-      }
+   if (!gPad || !gPad->IsEditable())
+      gROOT->MakeDefCanvas();
+
+   if (!soption.Contains("same")) {
+      gPad->Clear();
+      gPad->Range(0.,0.,1.,1.);
    }
 
-   for (Int_t i=0;i<fNvals;++i) fPieSlices[i]->AppendPad();
+   for (Int_t i = 0; i < fNvals; ++i)
+      fPieSlices[i]->AppendPad();
    AppendPad(soption.Data());
 }
+
+class TPieInteractive : public TVirtualPad::TInteractive {
+   public:
+
+   enum EMode { pNone = 0, pMovingPie, pMovingSlice, pResizing, pRotating } fMode = pNone;
+
+   Int_t oldpx = 0, oldpy = 0;
+
+   Double_t angularOffset0  = 0; // Reference angular offset
+
+   Int_t    currentSlice = -1; // Current slice under mouse.
+   Double_t sliceAngle = 0.;  // angle for moving slice
+   Double_t sliceOffset = 0; // offset for moving slice
+   Double_t angle0 = 0;  // previous angle to mouse when rotating
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This method is for internal use. It is used by Execute event to draw the
 /// outline of "this" TPie. Used when the opaque movements are not permitted.
 
-void TPie::DrawGhost()
+void TPie::DrawGhost(TVirtualPad &parent)
 {
-   MakeSlices();
+   TAttLine(kBlack, 1, 2).ModifyOn(parent);
 
-   auto &parent = *gPad;
-   auto pp = parent.GetPainter();
-   pp->SetAttLine({ kBlack, 1, 2 });
+   std::vector<Double_t> xx, yy;
 
    // XY metric
    Double_t radXY = !fIs3D ? 1. : TMath::Sin(fAngle3D/180.*TMath::Pi()), x0 = 0, y0 = 0;
 
-   auto drawLine = [pp, &parent, &x0, &y0](double x1, double y1, double x2, double y2) {
-      x1 = parent.XtoPad(x0 + x1);
-      x2 = parent.XtoPad(x0 + x2);
-      y1 = parent.YtoPad(y0 + y1);
-      y2 = parent.YtoPad(y0 + y2);
-      pp->DrawLine(x1, y1, x2, y2);
-
+   auto addPoint = [&parent, &xx, &yy, &x0, &y0](double x1, double y1) {
+      xx.emplace_back(parent.XtoPad(x0 + x1));
+      yy.emplace_back(parent.YtoPad(y0 + y1));
    };
 
-   for(Int_t loop3d = fIs3D ? 1 : 0; loop3d >= 0; loop3d--)
-   for (Int_t i = 0; i < fNvals; ++i) {
-      Float_t minphi = (fSlices[i*2]+gAngularOffset+.5)*TMath::Pi()/180.;
-      Float_t avgphi = (fSlices[i*2+1]+gAngularOffset)*TMath::Pi()/180.;
-      Float_t maxphi = (fSlices[i*2+2]+gAngularOffset-.5)*TMath::Pi()/180.;
+   auto angles = GetSlicesAngles();
 
-      Double_t radOffset = (i == gCurrent_slice ? gRadiusOffset : fPieSlices[i]->GetRadiusOffset());
-      x0 = gX + radOffset*TMath::Cos(avgphi);
-      y0 = gY + radOffset*TMath::Sin(avgphi)*radXY - loop3d * fHeight; // draw layer beyond
+   for (Int_t loop3d = fIs3D ? 1 : 0; loop3d >= 0; loop3d--)
+      for (Int_t i = 0; i < fNvals; ++i) {
+         xx.clear();
+         yy.clear();
+         Float_t minphi = angles[i * 2];
+         Float_t avgphi = angles[i * 2 + 1];
+         Float_t maxphi = angles[i * 2 + 2];
 
-      drawLine(0, 0, gRadius*TMath::Cos(minphi), gRadius*TMath::Sin(minphi)*radXY);
+         Double_t radOffset = fPieSlices[i]->GetRadiusOffset();
+         x0 = fX + radOffset * TMath::Cos(avgphi);
+         y0 = fY + radOffset * TMath::Sin(avgphi) * radXY - loop3d * fHeight; // draw layer beyond
 
-      Double_t dphi = (maxphi - minphi);
-      Int_t ndiv = dphi > 1.5 ? (Int_t) (dphi/.15) : 10;
-      dphi = dphi /ndiv;
+         addPoint(0, 0);
 
-      // Loop to draw the arc
-      for (Int_t j = 0; j < ndiv; ++j) {
-         Double_t phi = minphi + dphi * j;
-         drawLine(gRadius*TMath::Cos(phi), gRadius*TMath::Sin(phi)*radXY,
-                  gRadius*TMath::Cos(phi+dphi), gRadius*TMath::Sin(phi+dphi)*radXY);
+         Double_t dphi = (maxphi - minphi);
+         Int_t ndiv = dphi > 1.5 ? (Int_t)(dphi / .15) : 10;
+         dphi /= ndiv;
+
+         // Loop to draw the arc
+         for (Int_t j = 0; j <= ndiv; ++j) {
+            Double_t phi = minphi + dphi * j;
+            addPoint(fRadius * TMath::Cos(phi), fRadius * TMath::Sin(phi) * radXY);
+         }
+
+         addPoint(0, 0);
+
+         if (loop3d)
+            addPoint(0, fHeight);
+
+         parent.PaintPolyLine(xx.size(), xx.data(), yy.data(),
+                              TString::Format("ipiechart_slice%d_loop%d", i, loop3d).Data());
+
+         if (loop3d) {
+            xx.clear();
+            yy.clear();
+            addPoint(fRadius * TMath::Cos(minphi), fRadius * TMath::Sin(minphi) * radXY);
+            addPoint(fRadius * TMath::Cos(minphi), fRadius * TMath::Sin(minphi) * radXY + fHeight);
+            parent.PaintPolyLine(xx.size(), xx.data(), yy.data(),
+                                 TString::Format("ipiechart_slice%d_bindmin", i).Data());
+            xx.clear();
+            yy.clear();
+            addPoint(fRadius * TMath::Cos(maxphi), fRadius * TMath::Sin(maxphi) * radXY);
+            addPoint(fRadius * TMath::Cos(maxphi), fRadius * TMath::Sin(maxphi) * radXY + fHeight);
+            parent.PaintPolyLine(xx.size(), xx.data(), yy.data(),
+                                 TString::Format("ipiechart_slice%d_bindmax", i).Data());
+         }
       }
-
-      drawLine(gRadius*TMath::Cos(maxphi), gRadius*TMath::Sin(maxphi)*radXY, 0, 0);
-
-      if (loop3d) {
-         drawLine(0, 0, 0, fHeight);
-         drawLine(gRadius*TMath::Cos(minphi), gRadius*TMath::Sin(minphi)*radXY,
-                  gRadius*TMath::Cos(minphi), gRadius*TMath::Sin(minphi)*radXY+fHeight);
-         drawLine(gRadius*TMath::Cos(maxphi), gRadius*TMath::Sin(maxphi)*radXY,
-                  gRadius*TMath::Cos(maxphi), gRadius*TMath::Sin(maxphi)*radXY+fHeight);
-      }
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -417,27 +407,11 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    auto &parent = *gPad;
 
-   Bool_t opaque  = parent.OpaqueMoving();
-
-   if (gCurrent_slice<=-10) {
-      parent.SetCursor(kCross);
-      return;
-   }
-
-   MakeSlices();
-
-   static bool isMovingPie = kFALSE;
-   static bool isMovingSlice = kFALSE;
-   static bool isResizing = kFALSE;
-   static bool isRotating = kFALSE;
-   static bool onBorder = kFALSE;
-   bool isRedrawing = kFALSE;
-   static Int_t prev_event = -1;
-   static Int_t oldpx, oldpy;
+   Bool_t opaque = parent.OpaqueMoving();
 
    // Portion of pie considered as "border"
-   const Double_t dr     = gPad->PixeltoX(3);
-   const Double_t minRad = gPad->PixeltoX(10);
+   const Double_t dr     = parent.PixeltoX(4) / GetRadius();
+   const Double_t minRad = parent.PixeltoX(10);
 
    // Angular divisions in radial direction
    const Double_t angstep1 = 0.5*TMath::PiOver4();
@@ -450,188 +424,132 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    const Double_t angstep8 = 7.5*TMath::PiOver4();
 
    // XY metric
-   Double_t radXY = 1.;
-   if (fIs3D) {
-      radXY = TMath::Sin(fAngle3D/180.*TMath::Pi());
-   }
+   Double_t radXY = fIs3D ? TMath::Sin(fAngle3D/180.*TMath::Pi()) : 1.;
 
-   Int_t dx, dy;
-   Double_t mdx, mdy;
+   auto inter = parent.GetInteractive<TPieInteractive>(this);
+
+   auto calcAngle = [this, &parent,px,py]() {
+      Double_t xx = parent.AbsPixeltoX(px);
+      Double_t yy = parent.AbsPixeltoY(py);
+
+      Double_t dx1  = xx - GetX();
+      Double_t dy1  = yy - GetY();
+
+      return TMath::ATan2(dy1, dx1) / TMath::Pi() * 180.;
+   };
+
+   auto info = FindSlice(parent, px, py);
+   if (info.num < 0)
+      info.rad = 100; // far away to exclude any selection
 
    switch(event) {
       case kArrowKeyPress:
       case kButton1Down:
+         inter = parent.MakeInteractive<TPieInteractive>(this);
+
          // Current center and radius.
-         gX             = fX;
-         gY             = fY;
-         gRadius        = fRadius;
-         gRadiusOffset  = fPieSlices[gCurrent_slice]->GetRadiusOffset();
-         gAngularOffset = 0;
-         gIsUptSlice    = kTRUE;
+         inter->angularOffset0 = fAngularOffset;
+         // no break
 
-         prev_event = kButton1Down;
+      case kMouseMotion: {
+         TPieInteractive dummy;
+         if (!inter) inter = &dummy; //
 
-      case kMouseMotion:
-         if (gCurrent_rad>=fRadius-2.*dr && gCurrent_rad<=fRadius+dr
-               && !isMovingPie && !isMovingSlice && !isResizing) {
-            if (gCurrent_ang>=angstep8 || gCurrent_ang<angstep1)
+         if ((info.rad >= 1 - dr) && (info.rad <= 1 + dr)) {
+            if (info.ang >= angstep8 || info.ang < angstep1)
                parent.SetCursor(kRightSide);
-            else if (gCurrent_ang>=angstep1 && gCurrent_ang<angstep2)
+            else if (info.ang >= angstep1 && info.ang < angstep2)
                parent.SetCursor(kTopRight);
-            else if (gCurrent_ang>=angstep2 && gCurrent_ang<angstep3)
+            else if (info.ang >= angstep2 && info.ang < angstep3)
                parent.SetCursor(kTopSide);
-            else if (gCurrent_ang>=angstep3 && gCurrent_ang<angstep4)
+            else if (info.ang >= angstep3 && info.ang < angstep4)
                parent.SetCursor(kTopLeft);
-            else if (gCurrent_ang>=angstep4 && gCurrent_ang<=angstep5)
+            else if (info.ang >= angstep4 && info.ang <= angstep5)
                parent.SetCursor(kLeftSide);
-            else if (gCurrent_ang>=angstep5 && gCurrent_ang<angstep6)
+            else if (info.ang >= angstep5 && info.ang < angstep6)
                parent.SetCursor(kBottomLeft);
-            else if (gCurrent_ang>=angstep6 && gCurrent_ang<angstep7)
+            else if (info.ang >= angstep6 && info.ang < angstep7)
                parent.SetCursor(kBottomSide);
-            else if (gCurrent_ang>=angstep7 && gCurrent_ang<angstep8)
+            else if (info.ang >= angstep7 && info.ang < angstep8)
                parent.SetCursor(kBottomRight);
-            onBorder = kTRUE;
-         } else {
-            onBorder = kFALSE;
-            if (gCurrent_rad>fRadius*.6) {
+            inter->fMode = TPieInteractive::pResizing;
+         } else if ((info.rad > 0.6) && (info.rad < 1.)) {
+            if (info.num >= 0) {
                parent.SetCursor(kPointer);
-            } else if (gCurrent_rad<=fRadius*.3) {
-               parent.SetCursor(kHand);
-            } else if (gCurrent_rad<=fRadius*.6 && gCurrent_rad>=fRadius*.3) {
-               parent.SetCursor(kRotate);
-            }
+               inter->currentSlice = info.num;
+               inter->sliceAngle = info.cphi;
+               inter->sliceOffset = fPieSlices[inter->currentSlice]->GetRadiusOffset();
+               inter->fMode = TPieInteractive::pMovingSlice;
+            } else
+               parent.FreeInteractive(this); // reject interactive
+         } else if ((info.rad >= 0.3) && (info.rad <= 0.6)) {
+            parent.SetCursor(kRotate);
+            inter->fMode = TPieInteractive::pRotating;
+            inter->angle0 = calcAngle();
+         } else if (info.rad <= 0.3) {
+            parent.SetCursor(kHand);
+            inter->fMode = TPieInteractive::pMovingPie;
          }
-         oldpx = px;
-         oldpy = py;
-         if (isMovingPie || isMovingSlice)
-            parent.SetCursor(kMove);
+         inter->oldpx = px;
+         inter->oldpy = py;
          break;
+      }
 
       case kArrowKeyRelease:
-      case kButton1Motion:
-         if (!isMovingSlice || !isMovingPie || !isResizing || !isRotating) {
-            if (prev_event==kButton1Down) {
-               if (onBorder) {
-                  isResizing = kTRUE;
-               } else if (gCurrent_rad>=fRadius*.6 && gCurrent_slice>=0) {
-                  isMovingSlice = kTRUE;
-               } else if (gCurrent_rad<=fRadius*.3) {
-                  isMovingPie = kTRUE;
-               } else if (gCurrent_rad<fRadius*.6 && gCurrent_rad>fRadius*.3) {
-                  isRotating = kTRUE;
-               }
-            }
-         }
-
-         dx = px-oldpx;
-         dy = py-oldpy;
-
-         mdx = gPad->PixeltoX(dx);
-         mdy = gPad->PixeltoY(dy);
-
-         if (isMovingPie || isMovingSlice) {
-            parent.SetCursor(kMove);
-            if (isMovingSlice) {
-               Float_t avgphi = fSlices[gCurrent_slice*2+1]*TMath::Pi()/180.;
-
-               if (!opaque)
-                  DrawGhost();
-
-               gRadiusOffset += TMath::Cos(avgphi)*mdx +TMath::Sin(avgphi)*mdy/radXY;
-               if (gRadiusOffset<0) gRadiusOffset = .0;
-               gIsUptSlice         = kTRUE;
-
-               if (!opaque)
-                  DrawGhost();
-            } else {
-               if (!opaque)
-                  DrawGhost();
-
-               gX += mdx;
-               gY += mdy;
-
-               if (!opaque)
-                  DrawGhost();
-            }
-         } else if (isResizing) {
-            if (!opaque)
-               DrawGhost();
-
-            Float_t dr1 = mdx*TMath::Cos(gCurrent_ang)+mdy*TMath::Sin(gCurrent_ang)/radXY;
-            if (gRadius+dr1>=minRad) {
-               gRadius += dr1;
-            } else {
-               gRadius = minRad;
-            }
-
-            if (!opaque)
-               DrawGhost();
-         } else if (isRotating) {
-            if (!opaque)
-               DrawGhost();
-
-            Double_t xx = gPad->AbsPixeltoX(px);
-            Double_t yy = gPad->AbsPixeltoY(py);
-
-            Double_t dx1  = xx-gX;
-            Double_t dy1  = yy-gY;
-
-            Double_t ang = TMath::ATan2(dy1,dx1);
-            if (ang < 0)
-               ang += TMath::TwoPi();
-
-            gAngularOffset = (ang-gCurrent_ang)*180/TMath::Pi();
-
-            if (!opaque)
-               DrawGhost();
-         }
-
-         oldpx = px;
-         oldpy = py;
-
-         if ( ((isMovingPie || isMovingSlice || isRotating) && opaque) ||
-               (isResizing && gPad->OpaqueResizing()) ) {
-            isRedrawing = kTRUE;
-            // event = kButton1Up;
-            // intentionally no break to continue with kButton1Up handling
-         }
-         else break;
-
-      case kButton1Up:
-         if (!isRedrawing) {
-            prev_event = kButton1Up;
-            gIsUptSlice = kFALSE;
-         }
-
-         if (gROOT->IsEscaped()) {
-            gROOT->SetEscape(kFALSE);
-            gIsUptSlice = kFALSE;
+      case kButton1Motion: {
+         if (!inter)
             break;
-         }
 
-         fX      = gX;
-         fY      = gY;
-         fRadius = gRadius;
-         fPieSlices[gCurrent_slice]->SetRadiusOffset(gRadiusOffset);
-         SetAngularOffset(fAngularOffset+gAngularOffset);
+         Int_t dx = px - inter->oldpx;
+         Int_t dy = py - inter->oldpy;
 
-         if (isRedrawing && (isMovingPie || isMovingSlice))
+         Double_t mdx = parent.PixeltoX(dx);
+         Double_t mdy = parent.PixeltoY(dy);
+
+         if (inter->fMode == TPieInteractive::pMovingPie) {
             parent.SetCursor(kMove);
-
-         if (isMovingPie)   isMovingPie   = kFALSE;
-         if (isMovingSlice) isMovingSlice = kFALSE;
-         if (isResizing)    isResizing    = kFALSE;
-         if (isRotating)    {
-            isRotating = kFALSE;
-            // this is important mainly when OpaqueMoving == kTRUE
-            gCurrent_ang += gAngularOffset/180.*TMath::Pi();
+            fX += mdx;
+            fY += mdy;
+         } else if (inter->fMode == TPieInteractive::pMovingSlice) {
+            parent.SetCursor(kMove);
+            inter->sliceOffset += TMath::Cos(inter->sliceAngle)*mdx + TMath::Sin(inter->sliceAngle)*mdy/radXY;
+            fPieSlices[inter->currentSlice]->SetRadiusOffset(TMath::Max(0., inter->sliceOffset));
+         } else if (inter->fMode == TPieInteractive::pResizing) {
+            Float_t dr1 = mdx*TMath::Cos(info.ang) + mdy*TMath::Sin(info.ang)/radXY;
+            fRadius = TMath::Max(fRadius + dr1, minRad);
+         } else if (inter->fMode == TPieInteractive::pRotating) {
+            Double_t angle1 = calcAngle();
+            SetAngularOffset(GetAngularOffset() + angle1 - inter->angle0);
+            inter->angle0 = angle1;
          }
 
-         parent.Modified(kTRUE);
+         if (!opaque)
+            DrawGhost(parent);
+         else
+            parent.Modified();
 
-         gIsUptSlice = kFALSE;
+         parent.UpdateAsync();
+
+         inter->oldpx = px;
+         inter->oldpy = py;
 
          break;
+      }
+
+      case kButton1Up:
+         if (gROOT->IsEscaped()) {
+            gROOT->SetEscape(kFALSE);
+            fAngularOffset = inter->angularOffset0;
+            parent.Modified();
+         } else if (!opaque) {
+            parent.Modified();
+         }
+
+         parent.FreeInteractive(this);
+         parent.UpdateAsync();
+
+         break;
+
       case kButton1Locate:
 
          ExecuteEvent(kButton1Down, px, py);
@@ -661,7 +579,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the label of the entry number "i".
 
-const char* TPie::GetEntryLabel(Int_t i)
+const char* TPie::GetEntryLabel(Int_t i) const
 {
    return GetSlice(i)->GetTitle();
 }
@@ -669,7 +587,7 @@ const char* TPie::GetEntryLabel(Int_t i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the color of the slice number "i".
 
-Int_t TPie::GetEntryFillColor(Int_t i)
+Int_t TPie::GetEntryFillColor(Int_t i) const
 {
    return GetSlice(i)->GetFillColor();
 }
@@ -677,7 +595,7 @@ Int_t TPie::GetEntryFillColor(Int_t i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the style use to fill the slice number "i".
 
-Int_t TPie::GetEntryFillStyle(Int_t i)
+Int_t TPie::GetEntryFillStyle(Int_t i) const
 {
    return GetSlice(i)->GetFillStyle();
 }
@@ -685,7 +603,7 @@ Int_t TPie::GetEntryFillStyle(Int_t i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the line color used to outline thi "i" slice
 
-Int_t TPie::GetEntryLineColor(Int_t i)
+Int_t TPie::GetEntryLineColor(Int_t i) const
 {
    return GetSlice(i)->GetLineColor();
 }
@@ -693,7 +611,7 @@ Int_t TPie::GetEntryLineColor(Int_t i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the style used to outline thi "i" slice
 
-Int_t TPie::GetEntryLineStyle(Int_t i)
+Int_t TPie::GetEntryLineStyle(Int_t i) const
 {
    return GetSlice(i)->GetLineStyle();
 }
@@ -701,7 +619,7 @@ Int_t TPie::GetEntryLineStyle(Int_t i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the line width used to outline thi "i" slice
 
-Int_t TPie::GetEntryLineWidth(Int_t i)
+Int_t TPie::GetEntryLineWidth(Int_t i) const
 {
    return GetSlice(i)->GetLineWidth();
 }
@@ -709,7 +627,7 @@ Int_t TPie::GetEntryLineWidth(Int_t i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the radial offset's value for the slice number "i".
 
-Double_t TPie::GetEntryRadiusOffset(Int_t i)
+Double_t TPie::GetEntryRadiusOffset(Int_t i) const
 {
    return GetSlice(i)->GetRadiusOffset();
 }
@@ -717,27 +635,39 @@ Double_t TPie::GetEntryRadiusOffset(Int_t i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the value associated with the slice number "i".
 
-Double_t TPie::GetEntryVal(Int_t i)
+Double_t TPie::GetEntryVal(Int_t i) const
 {
    return GetSlice(i)->GetValue();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return sum of all entries.
+/// Absolute value for each entry will be used
+
+Double_t TPie::GetSumOfEntriesValues() const
+{
+   Double_t sum = 0;
+   for (Int_t i = 0; i < fNvals; ++i)
+      sum += TMath::Abs(fPieSlices[i]->GetValue());
+   return sum;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// If created before by Paint option or by MakeLegend method return
 /// the pointer to the legend, otherwise return 0;
 
-TLegend* TPie::GetLegend()
+TLegend* TPie::GetLegend() const
 {
    return fLegend;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the reference to the slice of index 'id'. There are no controls
-/// of memory corruption, be carefull.
+/// Return the reference to the slice of index 'id'.
 
-TPieSlice* TPie::GetSlice(Int_t id)
+TPieSlice* TPie::GetSlice(Int_t id) const
 {
-   return fPieSlices[id];
+   return (id >= 0) && (id < fNvals) ? fPieSlices[id] : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -746,15 +676,11 @@ TPieSlice* TPie::GetSlice(Int_t id)
 
 void TPie::Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r)
 {
-   gIsUptSlice = kFALSE;
-
    fAngularOffset = ao;
    fX             = x;
    fY             = y;
    fRadius        = r;
    fNvals         = np;
-   fSum           = 0.;
-   fSlices        = nullptr;
    fLegend        = nullptr;
    fHeight        = 0.08;
    fAngle3D       = 30;
@@ -814,8 +740,6 @@ TLegend* TPie::MakeLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2, co
 
 void TPie::Paint(Option_t *option)
 {
-   MakeSlices();
-
    TString soption(option);
 
    Bool_t optionSame = kFALSE;
@@ -910,6 +834,8 @@ void TPie::Paint(Option_t *option)
       radY = fRadius*radXY;
    }
 
+   auto angles = GetSlicesAngles();
+
    // Draw the slices.
    Int_t pixelHeight = gPad->YtoPixel(0)-gPad->YtoPixel(fHeight);
    for (Int_t pi = 0; pi < pixelHeight && fIs3D; ++pi) { // loop for pseudo-3d effect
@@ -931,13 +857,12 @@ void TPie::Paint(Option_t *option)
             }
          }
          // Paint the slice
-         Float_t aphi = fSlices[2*i+1]*TMath::Pi()/180.;
+         Float_t aphi = angles[2*i+1];
 
          Double_t ax = fX+TMath::Cos(aphi)*fPieSlices[i]->GetRadiusOffset();
          Double_t ay = fY+TMath::Sin(aphi)*fPieSlices[i]->GetRadiusOffset()*radXY+gPad->PixeltoY(pixelHeight-pi);
 
-         arc.PaintEllipse(ax, ay, radX, radY, fSlices[2*i],
-                                               fSlices[2*i+2], 0.);
+         arc.PaintEllipse(ax, ay, radX, radY, angles[2 * i] / TMath::Pi() * 180, angles[2 * i + 2]/ TMath::Pi() * 180, 0.);
 
          if (optionLine) {
             line.SetLineColor(fPieSlices[i]->GetLineColor());
@@ -946,12 +871,12 @@ void TPie::Paint(Option_t *option)
             line.PaintLine(ax,ay,ax,ay);
 
             Double_t x0, y0;
-            x0 = ax+radX*TMath::Cos(fSlices[2*i]/180.*TMath::Pi());
-            y0 = ay+radY*TMath::Sin(fSlices[2*i]/180.*TMath::Pi());
+            x0 = ax+radX*TMath::Cos(angles[2*i]);
+            y0 = ay+radY*TMath::Sin(angles[2*i]);
             line.PaintLine(x0,y0,x0,y0);
 
-            x0 = ax+radX*TMath::Cos(fSlices[2*i+2]/180.*TMath::Pi());
-            y0 = ay+radY*TMath::Sin(fSlices[2*i+2]/180.*TMath::Pi());
+            x0 = ax+radX*TMath::Cos(angles[2*i+2]);
+            y0 = ay+radY*TMath::Sin(angles[2*i+2]);
             line.PaintLine(x0,y0,x0,y0);
          }
       }
@@ -971,12 +896,11 @@ void TPie::Paint(Option_t *option)
       }
 
       // Paint the slice
-      Float_t aphi = fSlices[2*i+1]*TMath::Pi()/180.;
+      Float_t aphi = angles[2*i+1];
 
       Double_t ax = fX+TMath::Cos(aphi)*fPieSlices[i]->GetRadiusOffset();
       Double_t ay = fY+TMath::Sin(aphi)*fPieSlices[i]->GetRadiusOffset()*radXY;
-      arc.PaintEllipse(ax, ay, radX, radY, fSlices[2*i],
-                                            fSlices[2*i+2], 0.);
+      arc.PaintEllipse(ax, ay, radX, radY, angles[2*i] / TMath::Pi() * 180, angles[2*i+2] / TMath::Pi() * 180, 0.);
 
    } // end loop to draw the slices
 
@@ -986,21 +910,22 @@ void TPie::Paint(Option_t *option)
    textlabel.SetTextSize(GetTextSize());
    textlabel.SetTextColor(GetTextColor());
 
+   Double_t sum = GetSumOfEntriesValues();
+   if (sum <= 0) sum = 1.; // just to avoid zero division
+
    // Loop to place the labels.
    for (Int_t i=0;i<fNvals;++i) {
-      Float_t aphi = fSlices[2*i+1]*TMath::Pi()/180.;
-      //aphi = TMath::ATan2(TMath::Sin(aphi)*radXY,TMath::Cos(aphi));
+      Float_t aphi = angles[2*i+1];
 
       Float_t label_off = fLabelsOffset;
-
 
       // Paint the text in the pad
       TString tmptxt  = fLabelFormat;
 
       tmptxt.ReplaceAll("%txt",fPieSlices[i]->GetTitle());
       tmptxt.ReplaceAll("%val",TString::Format(fValueFormat.Data(),fPieSlices[i]->GetValue()));
-      tmptxt.ReplaceAll("%frac",TString::Format(fFractionFormat.Data(),fPieSlices[i]->GetValue()/fSum));
-      tmptxt.ReplaceAll("%perc",TString::Format(TString::Format("%s %s",fPercentFormat.Data(),"%s").Data(),(fPieSlices[i]->GetValue()/fSum)*100,"%"));
+      tmptxt.ReplaceAll("%frac",TString::Format(fFractionFormat.Data(),fPieSlices[i]->GetValue()/sum));
+      tmptxt.ReplaceAll("%perc",TString::Format(TString::Format("%s %s",fPercentFormat.Data(),"%s").Data(),(fPieSlices[i]->GetValue()/sum)*100,"%"));
 
       textlabel.SetTitle(tmptxt.Data());
       Double_t h = textlabel.GetYsize();
@@ -1171,10 +1096,10 @@ void TPie::SetAngularOffset(Double_t offset)
 {
    fAngularOffset = offset;
 
-   while (fAngularOffset>=360.) fAngularOffset -= 360.;
-   while (fAngularOffset<0.)    fAngularOffset += 360.;
-
-   MakeSlices(kTRUE);
+   while (fAngularOffset >= 360.)
+      fAngularOffset -= 360.;
+   while (fAngularOffset < 0.)
+      fAngularOffset += 360.;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1255,8 +1180,6 @@ void TPie::SetEntryRadiusOffset(Int_t i, Double_t shift)
 void TPie::SetEntryVal(Int_t i, Double_t val)
 {
    if (i>=0 && i<fNvals) fPieSlices[i]->SetValue(val);
-
-   MakeSlices(kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1372,36 +1295,42 @@ void TPie::SetY(Double_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Make the slices.
-/// If they already exist it does nothing unless force=kTRUE.
+/// Return calculated angle for all slices
+/// Only for internal use
 
-void TPie::MakeSlices(Bool_t force)
+std::vector<Float_t> TPie::GetSlicesAngles() const
 {
-   if (fSlices && !force) return;
+   std::vector<Float_t> angles(2 * fNvals + 1, 0.);
 
-   fSum = .0;
+   Double_t sum = GetSumOfEntriesValues();
 
-   for (Int_t i=0;i<fNvals;++i) {
-      if (fPieSlices[i]->GetValue()<0) {
-         Warning("MakeSlices",
-                 "Negative values in TPie, absolute value will be used");
-         fPieSlices[i]->SetValue(-1.*fPieSlices[i]->GetValue());
-      }
-      fSum += fPieSlices[i]->GetValue();
+   if (sum > 0)
+      sum = 360. / sum;
+   else
+      sum = 1.;
+
+   angles[0] = GetAngularOffset();
+   for (Int_t i = 0; i < fNvals; ++i) {
+      Float_t dphi = TMath::Abs(fPieSlices[i]->GetValue()) * sum;
+      angles[2 * i + 1] = angles[2 * i] + dphi / 2.;
+      angles[2 * i + 2] = angles[2 * i] + dphi;
    }
 
-   if (fSum<=.0) return;
+   // convert in radians
+   for (auto &v : angles)
+      v *= TMath::Pi() / 180.;
 
-   if (!fSlices) fSlices = new Float_t[2*fNvals+1];
-
-   // Compute the slices size and position (2 angles for each slice)
-   fSlices[0] = fAngularOffset;
-   for (Int_t i=0;i<fNvals;++i) {
-      Float_t dphi   = fPieSlices[i]->GetValue()/fSum*360.;
-      fSlices[2*i+1] = fSlices[2*i]+dphi/2.;
-      fSlices[2*i+2] = fSlices[2*i]+dphi;
-   }
+   return angles;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Make the slices.
+/// Deprecated, no longer necessary
+
+void TPie::MakeSlices(Bool_t)
+{
+ }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This method, mainly intended for internal use, ordered the  slices according their values.
@@ -1494,7 +1423,5 @@ void TPie::SortSlices(Bool_t amode, Float_t merge_threshold)
 
       }
    }
-
-   MakeSlices(kTRUE);
 }
 

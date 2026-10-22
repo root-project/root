@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
+import subprocess
 import sys
 
-from common import printError, printWarning, printInfo, execCommand
+from common import printWarning, printInfo, execCommand
 
 # Parameters
 CLING_TAG_ROOT_HASH_PREFIX = "__internal-root-"
@@ -50,11 +51,30 @@ def getStartingRootHash(rootTag):
     prefixLen = len(CLING_TAG_ROOT_HASH_PREFIX)
     defHashLen = len(DEFAULT_STARTING_ROOT_HASH)
     hash = rootTag[prefixLen : prefixLen + defHashLen]
+    # A tag made from a local ROOT branch names a commit that is not in ROOT's history.
+    # Then start from the ROOT commit that cling's last commit came from.
+    if subprocess.run(["git", "merge-base", "--is-ancestor", hash, "HEAD"], cwd=ROOT_REPO_DIR_NAME).returncode != 0:
+        printWarning(f"The sync tag names {hash}, which is not in ROOT's history")
+        hash = findRootCommit(execCommand("git log -1 --format=%ae%x09%ad --date=raw HEAD", CLING_REPO_DIR_NAME))
     return hash
 
 
+def findRootCommit(identity):
+    """
+    Find the ROOT commit with the given author identity. git am keeps the author
+    and the author date, so they identify a ROOT commit in cling.
+    """
+    out = execCommand(f"git log --format=%h%x09%ae%x09%ad --date=raw HEAD -- {INTERP_DIR_NAME}", ROOT_REPO_DIR_NAME)
+    for line in out.split("\n"):
+        hash, commitIdentity = line.split("\t", 1)
+        if commitIdentity == identity:
+            printInfo(f"Cling's last commit comes from ROOT's {hash}")
+            return hash
+    raise ValueError(f"No ROOT commit matches cling's last commit ({identity})")
+
+
 def getHashes(repoDirName, startingHash, dirInRepoName=""):
-    out = execCommand(f"git log --oneline {startingHash}..HEAD {dirInRepoName}", thisCwd=repoDirName)
+    out = execCommand(f"git log --oneline {startingHash}..HEAD -- {dirInRepoName}", thisCwd=repoDirName)
     hashes = []
     if not out:
         return hashes
@@ -75,12 +95,19 @@ def createPatches(rootHashes, interpHashes):
     # We loop on ROOT hashes to sync, from oldest to newest
     # to return a list of triples [dirInRepo, hash, patchAsSting], where dirInRepo is the
     # directory and hash is there for debugging purposes.
+    # Commits that cling already has, e.g. because the sync tag names an older ROOT
+    # commit than the one cling was synchronized to, are skipped.
+    syncedIdentities = set(execCommand("git log -n 1000 --format=%ae%x09%ad --date=raw HEAD", CLING_REPO_DIR_NAME).split("\n"))
     for rootHashtoSync in reversed(rootHashesToSync):
+        identity = execCommand(f"git log -1 --format=%ae%x09%ad --date=raw {rootHashtoSync}", ROOT_REPO_DIR_NAME)
+        if identity in syncedIdentities:
+            printWarning(f"Skipping {rootHashtoSync}: cling already has it")
+            continue
         keys = []
         if rootHashtoSync in interpHashesSet:
             keys.append(INTERP_DIR_NAME)
         for key in keys:
-            patchAsStr = execCommand(f"git format-patch -1 {rootHashtoSync} {key} --stdout", ROOT_REPO_DIR_NAME)
+            patchAsStr = execCommand(f"git format-patch -1 {rootHashtoSync} --stdout -- {key}", ROOT_REPO_DIR_NAME)
             patches.append([key, rootHashtoSync, patchAsStr])
     return patches
 
@@ -99,27 +126,20 @@ def syncTagAndPush(oldSyncTag, rootSyncHash):
     Replace the tag mentioning the previous root commit to which the repo was synchronized.
     Push the changes and tags upstream.
     """
-    # We fetch the remote and local tags to make the following operations more resilient
-    remoteTags = execCommand("git ls-remote --tags origin", CLING_REPO_DIR_NAME)
-    localTags = execCommand("git tag", CLING_REPO_DIR_NAME)
-
-    # Clean the old tag
-    printInfo(f"Found a sync tag ({oldSyncTag}): deleting it.")
-    if oldSyncTag in localTags:
-        execCommand(f"git tag -d {oldSyncTag}", CLING_REPO_DIR_NAME)
-    if oldSyncTag in remoteTags:
-        execCommand(f"git push --delete origin  {oldSyncTag}", CLING_REPO_DIR_NAME)
-    else:
-        printWarning(f"Tag {oldSyncTag} was not found in the upstream repository.")
-
-    # Time to push the sync commits!
-    execCommand("git push", CLING_REPO_DIR_NAME)
-
-    # And finally we tag and push the tag
+    # Push the commits and the new tag together, so that cling never has the
+    # commits without a tag that names them. Only then remove the old tag.
     newTag = CLING_TAG_ROOT_HASH_PREFIX + rootSyncHash
     printInfo(f"Creating a new tag ({newTag}).")
     execCommand(f"git tag {newTag}", CLING_REPO_DIR_NAME)
-    execCommand(f"git push origin tag {newTag}", CLING_REPO_DIR_NAME)
+    execCommand(f"git push --atomic origin HEAD tag {newTag}", CLING_REPO_DIR_NAME)
+
+    printInfo(f"Deleting the previous sync tag ({oldSyncTag}).")
+    execCommand(f"git tag -d {oldSyncTag}", CLING_REPO_DIR_NAME)
+    remoteTags = execCommand("git ls-remote --tags origin", CLING_REPO_DIR_NAME)
+    if f"refs/tags/{oldSyncTag}" in remoteTags:
+        execCommand(f"git push --delete origin tag {oldSyncTag}", CLING_REPO_DIR_NAME)
+    else:
+        printWarning(f"Tag {oldSyncTag} was not found in the upstream repository.")
 
 
 def principal():
@@ -146,8 +166,7 @@ def principal():
 
     # We now apply the patches
     if not patches:
-        printError("No patch was distilled: this status should not be reachable")
-        return 1
+        printInfo("Cling already has all these commits: only moving the sync tag.")
 
     # We now need to apply patches, update the tag that mentions the ROOT commit
     # to which the cling repo was synchronised and push everything.

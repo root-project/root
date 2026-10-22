@@ -72,11 +72,6 @@ namespace SOFIE{
          fOutputTensorNames = { fNY };
       }
 
-      std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-         ETensorType out = input[0];
-         return {out};
-      }
-
       template <typename U>
       std::vector<U> DoShapeInference(const std::vector<std::vector<U>> & input){
          if (input.size() > 3) throw std::runtime_error("TMVA SOFIE Gemm Op Shape Inference only need 2 or 3 input tensor");
@@ -148,11 +143,6 @@ namespace SOFIE{
          return s_y;
       }
 
-      std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-         std::vector<std::vector<size_t>> ret;
-         ret.push_back(DoShapeInference<size_t>(input));
-         return ret;
-      }
       std::vector<Dim> DynamicShapeInference(const std::vector<std::vector<Dim>> & input){
          return DoShapeInference<Dim>(input);
       }

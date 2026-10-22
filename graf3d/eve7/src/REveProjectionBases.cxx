@@ -134,7 +134,7 @@ void REveProjectable::PropagateMainColor(Color_t color, Color_t old_color)
       auto p_as_el = proj->GetProjectedAsElement();
       if (p_as_el->GetMainColor() == old_color) {
          p_as_el->SetMainColor(color);
-         p_as_el->StampColorSelection();
+         p_as_el->StampCoreJson();
       }
    }
 }
@@ -149,7 +149,7 @@ void REveProjectable::PropagateMainTransparency(Char_t t, Char_t old_t)
       auto p_as_el = proj->GetProjectedAsElement();
       if (p_as_el->GetMainTransparency() == old_t) {
          p_as_el->SetMainTransparency(t);
-         p_as_el->StampColorSelection();
+         p_as_el->StampCoreJson();
       }
    }
 }
@@ -224,19 +224,13 @@ void REveProjected::SetDepth(Float_t d)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Utility function to update the z-values of the bounding-box.
-/// As this is an abstract interface, the element and bbox pointers
-/// must be passed from outside.
+/// Set the depth and stamp `el` for a rebuild. The caller moves the vertices of
+/// `el` to the new depth, which changes its render data and its bounding box.
 
-void REveProjected::SetDepthCommon(Float_t d, REveElement* el, Float_t* bbox)
+void REveProjected::SetDepthCommon(Float_t d, REveElement *el)
 {
-   Float_t delta = d - fDepth;
    fDepth = d;
-   if (bbox) {
-      bbox[4] += delta;
-      bbox[5] += delta;
-      el->StampTransBBox();
-   }
+   el->StampObjProps();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

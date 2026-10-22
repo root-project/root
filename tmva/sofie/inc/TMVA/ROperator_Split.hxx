@@ -41,15 +41,6 @@ public:
                    [](const std::string& s) -> std::string_view { return s; });
       }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-      return input;
-   }
-
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-      auto ret = input; //suggest copy to compiler
-      return ret;
-   }
-
    void Initialize(RModel& model) override {
       if (model.CheckIfTensorAlreadyExist(fNX) == false){   //input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA SOFIE Split Op Input Tensor is not found in model");

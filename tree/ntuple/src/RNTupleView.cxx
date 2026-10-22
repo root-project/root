@@ -26,7 +26,7 @@ ROOT::Internal::GetFieldRange(const ROOT::RFieldBase &field, ROOT::Internal::RPa
 
    {
       auto descGuard = pageSource.GetSharedDescriptorGuard();
-      const auto &desc = descGuard.GetRef();
+      const auto &desc = descGuard.GetConstRef();
 
       auto parentId = desc.GetFieldDescriptor(field.GetOnDiskId()).GetParentId();
       while (parentId != desc.GetFieldZeroId()) {

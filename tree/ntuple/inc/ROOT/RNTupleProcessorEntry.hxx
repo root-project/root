@@ -76,8 +76,10 @@ public:
    /// \param[in] fieldName Field name to check.
    bool IsPresentInFieldName(std::string_view fieldName) const
    {
-      return !fProvenance.empty() && fieldName.find(fProvenance + ".") == 0;
+      return !fProvenance.empty() && fieldName.find(fProvenance) == 0;
    }
+
+   bool Empty() const { return fProvenance.empty(); }
 };
 
 // clang-format off
@@ -100,6 +102,10 @@ private:
       ROOT::RFieldBase::RValue fValue;
       bool fIsValid;
       RNTupleProcessorProvenance fProcessorProvenance;
+
+      // If the field is artificial (i.e., not actually present on disk), this holds the entry index of the field it
+      // should get the on-disk ID from.
+      ROOT::DescriptorId_t fFieldOriginIdx = ROOT::kInvalidDescriptorId;
 
       RProcessorValue(std::unique_ptr<ROOT::RFieldBase> field, std::string_view qualifiedFieldName,
                       ROOT::RFieldBase::RValue &&value, bool isValid, RNTupleProcessorProvenance provenance)
@@ -126,6 +132,18 @@ public:
    }
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Reset the specified fields to a proto field, disconnected from any physical storage.
+   ///
+   /// \param[in] fieldIdx Fields to reset.
+   void ResetFields(const std::unordered_set<FieldIndex_t> &fieldIdxs)
+   {
+      for (auto fieldIdx : fieldIdxs) {
+         auto &value = fProcessorValues[fieldIdx];
+         UpdateField(fieldIdx, value.fField->Clone(value.fField->GetFieldName()));
+      }
+   }
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Set the validity of a field, i.e. whether it is possible to read its value in the current entry.
    ///
    /// \param[in] fieldIdx The index of the field in the entry.
@@ -147,6 +165,32 @@ public:
    }
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Set a field's origin index
+   ///
+   /// \param[in] fieldIdx The index of the field in the entry to set.
+   /// \param[in] fieldOriginIdx The index of the field in the entry the field identified by `fieldIdx` should
+   /// point to.
+   ///
+   /// Setting the origin index should be used for articifial fields.
+   void SetFieldOriginIdx(FieldIndex_t fieldIdx, FieldIndex_t fieldOriginIdx)
+   {
+      assert(fieldIdx < fProcessorValues.size());
+      fProcessorValues[fieldIdx].fFieldOriginIdx = fieldOriginIdx;
+   }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a field's origin field index.
+   ///
+   /// \param[in] fieldIdx The index of the field in the entry to set.
+   ///
+   /// \return The index of the field's origin field.
+   FieldIndex_t GetFieldOriginIdx(FieldIndex_t fieldIdx)
+   {
+      assert(fieldIdx < fProcessorValues.size());
+      return fProcessorValues[fieldIdx].fFieldOriginIdx;
+   }
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Find the name of a field from its field index.
    ///
    /// \param[in] fieldIdx The index of the field in the entry.
@@ -159,9 +203,12 @@ public:
    ///
    /// \param[in] canonicalFieldName The name of the field in the entry, including its processor name prefixes and
    /// parent field names, if applicable.
+   /// \param[in] typeName Type of the field, if relevant. If no type name is provided, the first field corresponding to
+   /// the provided name is returned.
    ///
    /// \return A `std::optional` containing the field index if it was found.
-   std::optional<FieldIndex_t> FindFieldIndex(std::string_view canonicalFieldName, std::string_view typeName) const;
+   std::optional<FieldIndex_t>
+   FindFieldIndex(std::string_view canonicalFieldName, std::string_view typeName = "") const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add a new field to the entry.
@@ -182,6 +229,14 @@ public:
    /// \param[in] fieldIdx Index of the field to update.
    /// \param[in] field The new field to use in the entry.
    void UpdateField(FieldIndex_t fieldIdx, std::unique_ptr<ROOT::RFieldBase> field);
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a field by its index.
+   ///
+   /// \param[in] fieldIdx Index of the field.
+   ///
+   /// \return A constref to the field.
+   const ROOT::RFieldBase &GetField(FieldIndex_t fieldIdx) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Bind a new value pointer to a field in the entry.

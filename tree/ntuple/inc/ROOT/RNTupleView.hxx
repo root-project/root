@@ -93,7 +93,7 @@ protected:
       std::unique_ptr<ROOT::RFieldBase> field;
       {
          auto descGuard = pageSource.GetSharedDescriptorGuard();
-         const auto &desc = descGuard.GetRef();
+         const auto &desc = descGuard.GetConstRef();
          const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
          if constexpr (std::is_void_v<T>) {
             if (typeName.empty())
@@ -275,7 +275,7 @@ protected:
    static ROOT::RField<T> CreateField(ROOT::DescriptorId_t fieldId, ROOT::Internal::RPageSource &pageSource)
    {
       auto descGuard = pageSource.GetSharedDescriptorGuard();
-      const auto &desc = descGuard.GetRef();
+      const auto &desc = descGuard.GetConstRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
       if (!Internal::IsMatchingFieldType<T>(fieldDesc.GetTypeName())) {
          throw RException(R__FAIL("type mismatch for field " + fieldDesc.GetFieldName() + ": " +
@@ -340,7 +340,7 @@ private:
       std::string fieldName;
       {
          auto descGuard = source->GetSharedDescriptorGuard();
-         const auto &desc = descGuard.GetRef();
+         const auto &desc = descGuard.GetConstRef();
          const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
          if (fieldDesc.GetStructure() != ROOT::ENTupleStructure::kCollection) {
             throw RException(

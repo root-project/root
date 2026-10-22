@@ -1599,12 +1599,9 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
    TGMdiFrame *savfr = fMain->GetCurrent();
    if (!savfr) return kFALSE;
 
-   static TImage *img = 0;
+   static std::unique_ptr<TImage> img;
 
-   if (!img) {
-      img = TImage::Create();
-   }
-   img->FromWindow(savfr->GetParent()->GetId());
+   img = TGWindow::CreateImageFromWindow(savfr->GetParent()->GetId());
 
    TGWindow *root = (TGWindow*)fClient->GetRoot();
    TGFileInfo fi;
@@ -1656,7 +1653,7 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
 
       savfr->SetName(name.Data());
 
-      AddMacro(fname.Data(), img);
+      AddMacro(fname.Data(), img.get());
       delete main;
    } else {
       Int_t retval;
@@ -1693,7 +1690,7 @@ void TRootGuiBuilder::AddMacro(const char *macro, TImage *img)
    static int i = 0;
    const TGPicture *pic = fClient->GetPicturePool()->GetPicture(
                                        TString::Format("%s;%d", macro, i++),
-                                       img->GetPixmap(),img->GetMask());
+                                       GetImagePixmap(img), GetImageMask(img));
    const char *name = gSystem->BaseName(macro);
 
    TGButton *btn = FindActionButton(name, "User's Macros");

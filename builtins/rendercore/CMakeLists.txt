@@ -1,7 +1,7 @@
 ExternalProject_Add(
   RENDERCORE
-  URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore-2.1.tar.gz
-  URL_HASH SHA256=fee8250baf8e5e1946170dd91e312d2f4a86f8dedd7f8c4e744c6671587114ab
+  URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore-2.3.tar.gz
+  URL_HASH SHA256=1f5ff8f33e0c381e00a0472a51d6232a4bbcede1e5cfd167889e185079b57ab9
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
   INSTALL_COMMAND ""

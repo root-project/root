@@ -11,6 +11,9 @@
 #include "Unwrap.h"
 #include "CppInterOp/Error.h"
 
+// Generated at configure time; defines CPPINTEROP_BAKED_INTERPRETER_ARGS
+// and CPPINTEROP_CLANG_RESOURCE_DIR when the build baked them in.
+#include "BakedArgs.h"
 #include "Compatibility.h"
 #include "ErrorInternal.h"
 #include "InterpreterInfo.h"
@@ -76,9 +79,12 @@
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/TemplateDeduction.h"
 
+#include "llvm/ADT/APInt.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Demangle/Demangle.h"
 #include "llvm/ExecutionEngine/JITSymbol.h"
@@ -112,9 +118,9 @@
 #include <deque>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <set>
 #include <sstream>
@@ -656,13 +662,8 @@ static void InstantiateFunctionDefinition(Decl* D) {
     getSema().InstantiateFunctionDefinition(SourceLocation(), FD,
                                             /*Recursive=*/true,
                                             /*DefinitionRequired=*/true);
-    // FIXME: this can go into a RAII object
-    clang::DiagnosticsEngine& Diags = getSema().getDiagnostics();
-    if (!FD->isDefined() && Diags.hasErrorOccurred()) {
-      // instantiation failed, need to reset DiagnosticsEngine
-      Diags.Reset(/*soft=*/true);
-      Diags.getClient()->clear();
-    }
+    compat::DiagnosticsEngineRAII diagsRAII(getSema().getDiagnostics(),
+                                            !FD->isDefined());
   }
 }
 
@@ -720,6 +721,28 @@ static SourceLocation GetValidSLoc(Sema& semaRef) {
   return SM.getLocForStartOfFile(SM.getMainFileID());
 }
 
+namespace {
+class clangSilent {
+public:
+  explicit clangSilent(clang::DiagnosticsEngine& diag)
+      : fDiagEngine(&diag),
+        fOldDiagValue(fDiagEngine->getSuppressAllDiagnostics()) {
+    fDiagEngine->setSuppressAllDiagnostics(true);
+  }
+
+  ~clangSilent() { fDiagEngine->setSuppressAllDiagnostics(fOldDiagValue); }
+
+  clangSilent(const clangSilent&) = delete;
+  clangSilent& operator=(const clangSilent&) = delete;
+  clangSilent(clangSilent&&) = delete;
+  clangSilent& operator=(clangSilent&&) = delete;
+
+private:
+  clang::DiagnosticsEngine* fDiagEngine;
+  bool fOldDiagValue;
+};
+} // namespace
+
 // See TClingClassInfo::IsLoaded
 bool IsComplete(ConstDeclRef DRef) {
   INTEROP_TRACE(DRef);
@@ -733,7 +756,21 @@ bool IsComplete(ConstDeclRef DRef) {
     clang::Sema& S = getSema();
     SourceLocation fakeLoc = GetValidSLoc(S);
     compat::SynthesizingCodeRAII RAII(&getInterp());
-    return INTEROP_RETURN(S.isCompleteType(fakeLoc, QT));
+    // Query only: attempting the implicit instantiation of a specialization
+    // that can never be defined (its template is only declared) must neither
+    // print an error nor leave the diagnostics engine in an error state that
+    // poisons the next translation unit. Suppressed diagnostics still bump
+    // the engine's trap counters (DiagnosticsEngine::ProcessDiag increments
+    // TrapNumErrorsOccurred before the suppression check), and a prior
+    // operation may already have flagged an error, so carry a trap over the
+    // query and reset on any sign of diagnostics.
+    clangSilent Silence(S.getDiagnostics());
+    bool HadError = S.getDiagnostics().hasErrorOccurred();
+    clang::DiagnosticErrorTrap Trap(S.getDiagnostics());
+    bool complete = S.isCompleteType(fakeLoc, QT);
+    if (HadError || Trap.hasErrorOccurred())
+      S.getDiagnostics().Reset(/*soft=*/true);
+    return INTEROP_RETURN(complete);
   }
 
   if (const auto* CXXRD = dyn_cast<CXXRecordDecl>(D))
@@ -783,6 +820,7 @@ size_t SizeOf(ConstDeclRef DRef) {
 
   if (const auto* RD = dyn_cast<RecordDecl>(unwrap<Decl>(DRef))) {
     ASTContext& Context = RD->getASTContext();
+    compat::SynthesizingCodeRAII RAII(&getInterp());
     const ASTRecordLayout& Layout = Context.getASTRecordLayout(RD);
     return INTEROP_RETURN(Layout.getSize().getQuantity());
   }
@@ -1018,6 +1056,15 @@ static std::string GetCompleteNameImpl(ConstDeclRef DRef, bool qualified) {
   if (const auto* ND = llvm::dyn_cast_or_null<NamedDecl>(D)) {
     PrintingPolicy Policy = C.getPrintingPolicy();
     Policy.SuppressUnwrittenScope = true;
+    // Keep scope and type names platform-independent: always drop inline
+    // namespaces (libc++'s std::__1, libstdc++'s std::__cxx11) instead of
+    // relying on the lookup-based "redundant qualifier" heuristic, and do
+    // not substitute preferred names (libc++ tags basic_string<char> with
+    // preferred_name(string)). cppyy matches these names against string
+    // keys and uses them as Python scope paths.
+    Policy.SuppressInlineNamespace =
+        llvm::to_underlying(PrintingPolicy::SuppressInlineNamespaceMode::All);
+    Policy.UsePreferredNames = false;
     if (qualified) {
       Policy.FullyQualifiedName = true;
       Policy.Suppress_Elab = true;
@@ -1031,6 +1078,23 @@ static std::string GetCompleteNameImpl(ConstDeclRef DRef, bool qualified) {
 
     if (const auto* TD = llvm::dyn_cast<TagDecl>(ND)) {
       std::string type_name;
+      if (!qualified && TD->getIdentifier()) {
+        // The name must be unqualified only for the tag itself; template
+        // arguments have to keep their scopes (SuppressScope would strip
+        // those too). getNameForDiagnostic prints the bare name and the
+        // template arguments under the policy, dropping defaulted ones.
+        Policy.SuppressScope = false;
+        Policy.FullyQualifiedName = true;
+        Policy.Suppress_Elab = true;
+        Policy.SuppressDefaultTemplateArgs = true;
+        // no literal suffixes on non-type arguments ("array<unsigned int,3>",
+        // not "...3UL>"), matching the names ROOT and cppyy always exposed
+        Policy.AlwaysIncludeTypeForTemplateArgument = false;
+        llvm::raw_string_ostream name_stream(type_name);
+        TD->getNameForDiagnostic(name_stream, Policy, /*Qualified=*/false);
+        name_stream.flush();
+        return type_name;
+      }
       QualType QT = compat::GetTypeFromDecl(TD);
       QT.getAsStringInternal(type_name, Policy);
       return type_name;
@@ -1043,7 +1107,14 @@ static std::string GetCompleteNameImpl(ConstDeclRef DRef, bool qualified) {
       return func_name;
     }
 
-    return qualified ? ND->getQualifiedNameAsString() : ND->getNameAsString();
+    if (qualified) {
+      std::string qual_name;
+      llvm::raw_string_ostream OS(qual_name);
+      ND->printQualifiedName(OS, Policy);
+      OS.flush();
+      return qual_name;
+    }
+    return ND->getNameAsString();
   }
 
   if (llvm::isa_and_nonnull<TranslationUnitDecl>(D)) {
@@ -1125,6 +1196,9 @@ static Decl* GetScopeFromType(QualType QT) {
   if (auto* Type = QT.getCanonicalType().getTypePtrOrNull()) {
     Type = Type->getPointeeOrArrayElementType();
     Type = Type->getUnqualifiedDesugaredType();
+    // getDecl() and getAsCXXRecordDecl() walk the redecl chain, which may
+    // deserialize it.
+    compat::SynthesizingCodeRAII RAII(&getInterp());
     if (auto* ET = llvm::dyn_cast<EnumType>(Type))
       return ET->getDecl();
     CXXRecordDecl* CXXRD = Type->getAsCXXRecordDecl();
@@ -1182,6 +1256,20 @@ DeclRef GetUnderlyingScope(ConstDeclRef DRef) {
   // for further operations).
   return INTEROP_RETURN(const_cast<clang::Decl*>(
       GetUnderlyingScopeImpl(unwrap<clang::Decl>(DRef))));
+}
+
+DeclRef GetTemplatedDecl(DeclRef DRef) {
+  INTEROP_TRACE(DRef);
+  auto* D = unwrap<clang::Decl>(DRef);
+  if (auto* CTSD =
+          llvm::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(D))
+    return INTEROP_RETURN(
+        CTSD->getSpecializedTemplate()->getTemplatedDecl()->getCanonicalDecl());
+  if (auto* CTD = llvm::dyn_cast_or_null<clang::ClassTemplateDecl>(D))
+    return INTEROP_RETURN(CTD->getTemplatedDecl()->getCanonicalDecl());
+  if (auto* FTD = llvm::dyn_cast_or_null<clang::FunctionTemplateDecl>(D))
+    return INTEROP_RETURN(FTD->getTemplatedDecl()->getCanonicalDecl());
+  return INTEROP_RETURN(DRef);
 }
 
 DeclRef GetScope(const std::string& name, ConstDeclRef parent) {
@@ -1328,7 +1416,7 @@ bool HasReachableUsingDirective(const clang::DeclContext* DC) {
 
 DeclRef GetNamed(const std::string& name, ConstDeclRef parent /*= nullptr*/) {
   INTEROP_TRACE(name, parent);
-  clang::DeclContext* Within = 0;
+  clang::DeclContext* Within = nullptr;
   if (parent) {
     auto* D = unwrap<clang::Decl>(GetUnderlyingScope(parent));
     Within = llvm::dyn_cast<clang::DeclContext>(D);
@@ -1405,6 +1493,15 @@ DeclRef GetParentScope(ConstDeclRef DRef) {
   D = UnwrapUsingShadowToFunction(D);
   auto* ParentDC = D->getDeclContext();
 
+  // A linkage spec (`extern "C++" { ... }`) or C++20 `export` block is not a
+  // scope, skip to the enclosing scope. E.g. on Windows the canonical
+  // declaration of namespace std comes from an `extern "C++"` block in the
+  // MSVC CRT headers, which would otherwise become an "<unnamed>" parent of
+  // std.
+  while (ParentDC && (llvm::isa<LinkageSpecDecl>(ParentDC) ||
+                      llvm::isa<ExportDecl>(ParentDC)))
+    ParentDC = ParentDC->getParent();
+
   if (!ParentDC)
     return INTEROP_RETURN(nullptr);
 
@@ -1418,16 +1515,25 @@ DeclRef GetParentScope(ConstDeclRef DRef) {
 
 size_t GetNumBases(ConstDeclRef DRef) {
   INTEROP_TRACE(DRef);
-  const auto* D = unwrap<Decl>(DRef);
+  // const_cast: completing the definition mutates the AST, but the base list
+  // is logically a read-only property of the class. Taking a mutable DeclRef
+  // would make unqualified calls in downstream wrappers ambiguous via ADL.
+  auto* D = const_cast<Decl*>(unwrap<Decl>(DRef));
 
-  if (const auto* CTSD =
-          llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(D))
+  // hasDefinition() completes the redecl chain (dataPtr), which may
+  // deserialize it; so does getNumBases() below.
+  compat::SynthesizingCodeRAII RAII(&getInterp());
+  if (auto* CTSD = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(D))
     if (!CTSD->hasDefinition())
-      compat::InstantiateClassTemplateSpecialization(
-          getInterp(), const_cast<ClassTemplateSpecializationDecl*>(CTSD));
-  if (const auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D)) {
-    if (CXXRD->hasDefinition())
-      return INTEROP_RETURN(CXXRD->getNumBases());
+      compat::InstantiateClassTemplateSpecialization(getInterp(), CTSD);
+  if (llvm::isa_and_nonnull<CXXRecordDecl>(D)) {
+    // A class known only as an autoload-annotated forward declaration
+    // (e.g., injected by a runtime ROOT dictionary) is not completed by
+    // hasDefinition(); resolve its definition through Sema first, or the
+    // base list is silently empty.
+    if (const auto* Def = llvm::dyn_cast_or_null<CXXRecordDecl>(
+            unwrap<Decl>(GetOrForceDefinition(D))))
+      return INTEROP_RETURN(Def->getNumBases());
   }
 
   return INTEROP_RETURN(0);
@@ -1435,8 +1541,16 @@ size_t GetNumBases(ConstDeclRef DRef) {
 
 DeclRef GetBaseClass(ConstDeclRef DRef, size_t ibase) {
   INTEROP_TRACE(DRef, ibase);
-  const auto* D = unwrap<Decl>(DRef);
-  const auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(D);
+  // const_cast: see GetNumBases.
+  auto* D = const_cast<Decl*>(unwrap<Decl>(DRef));
+  if (!llvm::isa_and_nonnull<CXXRecordDecl>(D))
+    return INTEROP_RETURN(nullptr);
+
+  compat::SynthesizingCodeRAII RAII(&getInterp());
+  // See GetNumBases: autoload-annotated forward declarations need Sema to
+  // resolve their definition before bases are visible.
+  const auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(
+      unwrap<Decl>(GetOrForceDefinition(D)));
   if (!CXXRD || CXXRD->getNumBases() <= ibase)
     return INTEROP_RETURN(nullptr);
 
@@ -1465,8 +1579,45 @@ bool IsSubclass(ConstDeclRef derived, ConstDeclRef base) {
 
   const auto* Derived = cast<CXXRecordDecl>(derived_D);
   const auto* Base = cast<CXXRecordDecl>(base_D);
-  return INTEROP_RETURN(
-      IsTypeDerivedFrom(GetTypeFromScope(Derived), GetTypeFromScope(Base)));
+
+  // This interface historically ignores access specifiers: interactive and
+  // binding use cases pass derived objects where a base is expected also
+  // for non-public bases. The exception is when both classes are
+  // instantiations of the same class template: there, non-public
+  // derivation is a recursive implementation detail (e.g. MSVC's
+  // std::tuple derives privately from the tuple of its tail elements) and
+  // accepting the derived instantiation for its base instantiation would
+  // silently reinterpret the object - a tuple must never be passed as its
+  // own tail. Require a public path in that case only.
+  if (!IsTypeDerivedFrom(GetTypeFromScope(Derived), GetTypeFromScope(Base)))
+    return INTEROP_RETURN(false);
+
+  const auto* DerivedCTSD = llvm::dyn_cast<ClassTemplateSpecializationDecl>(Derived);
+  const auto* BaseCTSD = llvm::dyn_cast<ClassTemplateSpecializationDecl>(Base);
+  if (!DerivedCTSD || !BaseCTSD ||
+      DerivedCTSD->getSpecializedTemplate()->getCanonicalDecl() !=
+          BaseCTSD->getSpecializedTemplate()->getCanonicalDecl())
+    return INTEROP_RETURN(true);
+
+  // distinct handles may refer to the same class (Sema::IsDerivedFrom above
+  // accepts identical types, the base-path walk below would not)
+  if (Derived->getCanonicalDecl() == Base->getCanonicalDecl())
+    return INTEROP_RETURN(true);
+
+  const CXXRecordDecl* Def = Derived->getDefinition();
+  if (!Def)
+    return INTEROP_RETURN(false);
+
+  CXXBasePaths Paths(/*FindAmbiguities=*/true, /*RecordPaths=*/true,
+                     /*DetectVirtual=*/false);
+  if (!Def->isDerivedFrom(Base, Paths))
+    return INTEROP_RETURN(false);
+
+  for (const CXXBasePath& Path : Paths)
+    if (Path.Access == AS_public)
+      return INTEROP_RETURN(true);
+
+  return INTEROP_RETURN(false);
 }
 
 // Copied from VTableBuilder.cpp
@@ -1607,6 +1758,15 @@ static void GetClassDecls(ConstDeclRef DRef, std::vector<HandleType>& methods) {
       }
       if (CXXCD->isDeleted())
         continue;
+      // Do not expose the base's parameterless default/copy/move
+      // constructors: callers (e.g. cppyy) treat the class' own special
+      // members as authoritative, and the call layer refuses to invoke
+      // special members injected by a using declaration (see
+      // make_narg_call_with_return). Note that a constructor with defaulted
+      // parameters, e.g. Base(int n = 0), must stay: its non-default form is
+      // a genuinely inherited constructor.
+      if (CXXCD->getNumParams() == 0 || CXXCD->isCopyOrMoveConstructor())
+        continue;
 
       // Result is appended to the decls, i.e. CXXRD, iterator
       // non-shadowed decl will be push_back later
@@ -1716,8 +1876,11 @@ std::vector<FuncRef> GetFunctionsUsingName(ConstDeclRef DRef,
   clang::LookupResult R(S, DName, SourceLocation(), Sema::LookupOrdinaryName,
                         RedeclarationKind::ForVisibleRedeclaration);
 
+  auto* Within = Decl::castToDeclContext(D);
   compat::SynthesizingCodeRAII RAII(&getInterp());
-  CppInternal::utils::Lookup::Named(&S, R, Decl::castToDeclContext(D));
+  if (Within)
+    Within->getPrimaryContext()->buildLookup();
+  CppInternal::utils::Lookup::Named(&S, R, Within);
 
   if (R.empty())
     return INTEROP_RETURN(funcs);
@@ -1750,6 +1913,14 @@ TypeRef GetFunctionReturnType(ConstFuncRef func) {
           needInstantiation = true;
       }
 
+      if (needInstantiation && FD->getTrailingRequiresClause()) {
+        compat::SynthesizingCodeRAII RAII(&getInterp());
+        clang::ConstraintSatisfaction Satisfaction;
+        if (getSema().CheckFunctionConstraints(FD, Satisfaction) ||
+            !Satisfaction.IsSatisfied)
+          needInstantiation = false;
+      }
+
       if (needInstantiation) {
         // Lazy AST instantiation — logically const for the caller.
         InstantiateFunctionDefinition(
@@ -1767,31 +1938,125 @@ TypeRef GetFunctionReturnType(ConstFuncRef func) {
   return INTEROP_RETURN(nullptr);
 }
 
-bool IsAllocator(ConstFuncRef Fn) {
+OwnershipBehaviour GetOwnershipBehaviour(ConstFuncRef Fn) {
   INTEROP_TRACE(Fn);
   if (!Fn)
-    return INTEROP_RETURN(false);
-  const auto* D = unwrap<clang::Decl>(Fn);
+    return INTEROP_RETURN(OwnershipBehaviour::Unknown);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(Fn));
+  if (const auto* FTD = dyn_cast<FunctionTemplateDecl>(D))
+    D = FTD->getTemplatedDecl();
+  const auto* FD = dyn_cast<FunctionDecl>(D);
+  if (!FD)
+    return INTEROP_RETURN(OwnershipBehaviour::Unknown);
+
+  OwnershipBehaviour result = OwnershipBehaviour::Unknown;
+  for (const auto* FDA : FD->specific_attrs<OwnershipAttr>()) {
+    switch (FDA->getOwnKind()) {
+    case OwnershipAttr::Returns:
+      result = result | OwnershipBehaviour::OwnershipReturns;
+      break;
+    case OwnershipAttr::Takes:
+      result = result | OwnershipBehaviour::OwnershipTakes;
+      break;
+    case OwnershipAttr::Holds:
+      result = result | OwnershipBehaviour::OwnershipHolds;
+      break;
+    }
+  }
+  return INTEROP_RETURN(result);
+}
+
+uint64_t GetDeallocationIndexes(ConstFuncRef Fn) {
+  INTEROP_TRACE(Fn);
+  if (!Fn)
+    return INTEROP_RETURN(uint64_t{0});
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(Fn));
+  if (const auto* FTD = dyn_cast<FunctionTemplateDecl>(D))
+    D = FTD->getTemplatedDecl();
+  const auto* FD = dyn_cast<FunctionDecl>(D);
+  if (!FD)
+    return INTEROP_RETURN(uint64_t{0});
+  uint64_t result = 0;
+  for (const auto* attr : FD->specific_attrs<OwnershipAttr>()) {
+    if (attr->getOwnKind() == OwnershipAttr::Returns)
+      continue;
+    for (const auto& Idx : attr->args()) {
+      unsigned index = Idx.getASTIndex();
+      if (index < 64)
+        result |= (uint64_t{1} << index);
+    }
+  }
+  return INTEROP_RETURN(result);
+}
+
+int GetAllocationSizeParamIndex(ConstFuncRef Fn) {
+  INTEROP_TRACE(Fn);
+  if (!Fn)
+    return INTEROP_RETURN(-1);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(Fn));
+  if (const auto* FTD = dyn_cast<FunctionTemplateDecl>(D))
+    D = FTD->getTemplatedDecl();
+  const auto* FD = dyn_cast<FunctionDecl>(D);
+  if (!FD)
+    return INTEROP_RETURN(-1);
+  for (const auto* attr : FD->specific_attrs<OwnershipAttr>()) {
+    if (attr->getOwnKind() != OwnershipAttr::Returns || attr->args().empty())
+      continue;
+    return INTEROP_RETURN(static_cast<int>(attr->args_begin()->getASTIndex()));
+  }
+  return INTEROP_RETURN(-1);
+}
+
+AllocType IsAllocator(ConstFuncRef Fn) {
+  INTEROP_TRACE(Fn);
+  if (!Fn)
+    return INTEROP_RETURN(AllocType::Unknown);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(Fn));
+  if (const auto* FTD = dyn_cast<FunctionTemplateDecl>(D))
+    D = FTD->getTemplatedDecl();
   if (const auto* FD = dyn_cast<FunctionDecl>(D)) {
     if (FD->getBuiltinID() == Builtin::ID::BImalloc)
-      return INTEROP_RETURN(true);
+      return INTEROP_RETURN(AllocType::Malloc);
     if (const auto* FDA = FD->getAttr<RestrictAttr>()) {
       if (FDA->getSemanticSpelling() != RestrictAttr::Declspec_restrict)
-        return INTEROP_RETURN(true);
+        return INTEROP_RETURN(AllocType::Malloc);
     }
 
     if (const auto* FDA = FD->getAttr<OwnershipAttr>()) {
       if (FDA->getOwnKind() == OwnershipAttr::Returns)
-        return INTEROP_RETURN(true);
+        return INTEROP_RETURN(AllocType::Malloc);
     }
 
     if (FD->hasAttr<CFReturnsRetainedAttr>() ||
         FD->hasAttr<NSReturnsRetainedAttr>() ||
         FD->hasAttr<OSReturnsRetainedAttr>())
-      return INTEROP_RETURN(true);
+      return INTEROP_RETURN(AllocType::Malloc);
+
+    for (const auto* attr : FD->attrs()) {
+      llvm::StringRef attrName;
+      if (const auto* swiftAttr = dyn_cast<clang::SwiftAttrAttr>(attr))
+        attrName = swiftAttr->getAttribute();
+      else if (const auto* annotateAttr = dyn_cast<clang::AnnotateAttr>(attr))
+        attrName = annotateAttr->getAnnotation();
+      else
+        continue;
+      attrName.consume_front("returns_");
+      if (attrName == "cppAllocNone")
+        return INTEROP_RETURN(AllocType::None);
+      if (attrName == "cppAllocNew")
+        return INTEROP_RETURN(AllocType::New);
+      if (attrName == "cppAllocNewArr")
+        return INTEROP_RETURN(AllocType::NewArr);
+      if (attrName == "cppAllocMalloc")
+        return INTEROP_RETURN(AllocType::Malloc);
+      if (attrName == "cppAllocOperatorNew")
+        return INTEROP_RETURN(AllocType::OperatorNew);
+      if (attrName == "cppAllocOperatorNewArr")
+        return INTEROP_RETURN(AllocType::OperatorNewArr);
+    }
   }
 
-  return INTEROP_RETURN(false);
+  return INTEROP_RETURN(AllocType::Unknown);
 }
 
 bool IsDeallocator(ConstFuncRef Fn) {
@@ -2007,7 +2272,10 @@ struct AllocationTraverser : RecursiveASTVisitor<AllocationTraverser> {
       }
       auto it = visitedFuncs.find(FD);
       if (it == visitedFuncs.end()) {
-        visitedFuncs[FD] = std::nullopt;
+        auto storedResult = IsAllocator(wrap<ConstFuncRef>(FD));
+        visitedFuncs[FD] = storedResult;
+        if (storedResult != AllocType::Unknown)
+          return storedResult;
         return AnalyzeAllocType(FD, visitedFuncs);
       }
       return it->second;
@@ -2471,6 +2739,8 @@ bool ExistsFunctionTemplate(const std::string& name, ConstDeclRef parent) {
   }
 
   compat::SynthesizingCodeRAII RAII(&getInterp());
+  if (Within)
+    const_cast<DeclContext*>(Within->getPrimaryContext())->buildLookup();
   auto* ND = CppInternal::utils::Lookup::Named(&getSema(), name, Within);
 
   if ((intptr_t)ND == (intptr_t)0)
@@ -2541,6 +2811,8 @@ bool GetClassTemplatedMethods(const std::string& name, ConstDeclRef parent,
   auto* DC = clang::Decl::castToDeclContext(DU);
 
   compat::SynthesizingCodeRAII RAII(&getInterp());
+  if (DC)
+    DC->getPrimaryContext()->buildLookup();
   CppInternal::utils::Lookup::Named(&S, R, DC);
 
   if (R.getResultKind() == clang_LookupResult_Not_Found && funcs.empty())
@@ -2674,6 +2946,34 @@ BestOverloadFunctionMatch(const std::vector<FuncRef>& candidates,
   Overloads.BestViableFunction(S, Loc, Best);
 
   FunctionDecl* Result = Best != Overloads.end() ? Best->Function : nullptr;
+
+  // If the winner is a not-yet-instantiated template specialization, force
+  // the instantiation of its body now, with diagnostics suppressed, and
+  // reject the match if the body turns out to be ill-formed. Callers use
+  // this function to probe whether a valid instantiation exists (e.g.
+  // CPyCppyy's __cppyy_internal::is_equal fallback for comparison
+  // operators), so an ill-formed body must surface as "no viable function"
+  // here rather than as a hard error when the wrapper is compiled at call
+  // time. This mirrors cling's LookupHelper::overloadFunctionSelector. Note
+  // that probing with an expression-SFINAE helper instead is not equivalent:
+  // C++20 rewritten (reversed) operator candidates make comparisons like a
+  // member operator==(const Base&) ambiguous, which is a hard substitution
+  // failure in a SFINAE context but only a warning in a function body.
+  // DefinitionRequired stays false: a pattern without a body (defined in a
+  // library) is still a valid match.
+  if (Result && Result->isTemplateInstantiation() && !Result->isDefined()) {
+    DiagnosticsEngine& Diags = S.getDiagnostics();
+    bool OldSuppress = Diags.getSuppressAllDiagnostics();
+    Diags.setSuppressAllDiagnostics(true);
+    S.InstantiateFunctionDefinition(Loc, Result, /*Recursive=*/true);
+    Diags.setSuppressAllDiagnostics(OldSuppress);
+    if (Result->isInvalidDecl()) {
+      Diags.Reset(/*soft=*/true);
+      Diags.getClient()->clear();
+      Result = nullptr;
+    }
+  }
+
   delete[] Exprs;
   return INTEROP_RETURN(Result);
 }
@@ -3209,6 +3509,8 @@ void GetEnumConstantDatamembers(ConstDeclRef DRef,
   INTEROP_TRACE(DRef, INTEROP_OUT(datamembers), include_enum_class);
   std::vector<DeclRef> EDs;
   GetClassDecls<EnumDecl>(DRef, EDs);
+  // enumerator_begin() loads the enumerators, which may deserialize them.
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   for (DeclRef i : EDs) {
     auto* ED = unwrap<EnumDecl>(i);
 
@@ -3231,6 +3533,8 @@ DeclRef LookupDatamember(const std::string& name, ConstDeclRef parent) {
   }
 
   compat::SynthesizingCodeRAII RAII(&getInterp());
+  if (Within)
+    const_cast<clang::DeclContext*>(Within->getPrimaryContext())->buildLookup();
   auto* ND = CppInternal::utils::Lookup::Named(&getSema(), name, Within);
   if (ND && ND != (clang::NamedDecl*)-1) {
     if (llvm::isa_and_nonnull<clang::FieldDecl>(ND)) {
@@ -3244,6 +3548,7 @@ DeclRef LookupDatamember(const std::string& name, ConstDeclRef parent) {
 bool IsLambdaClass(ConstTypeRef TyRef) {
   INTEROP_TRACE(TyRef);
   QualType QT = QualType::getFromOpaquePtr(TyRef.data);
+  compat::SynthesizingCodeRAII RAII(&getInterp());
   if (auto* CXXRD = QT->getAsCXXRecordDecl()) {
     return INTEROP_RETURN(CXXRD->isLambda());
   }
@@ -3281,6 +3586,56 @@ TypeRef GetVariableType(ConstDeclRef var) {
     return INTEROP_RETURN(ECD->getType().getAsOpaquePtr());
 
   return INTEROP_RETURN(nullptr);
+}
+
+// Lay an evaluated constant array initializer out contiguously in
+// ASTContext-owned memory (stable for the interpreter's lifetime) and return
+// its address. Integral element types only; anything else returns 0 so the
+// caller falls back to the regular JIT lookup/codegen path. Cache is the
+// per-interpreter ConstArrayValueStore, so repeated queries return the same
+// address instead of re-evaluating and re-allocating on every call.
+static intptr_t
+MaterializeConstArrayValue(ASTContext& C, const VarDecl* VD, const APValue& Val,
+                           llvm::DenseMap<const VarDecl*, intptr_t>& Cache) {
+  const clang::ArrayType* AT =
+      Val.isArray() ? C.getAsArrayType(VD->getType()) : nullptr;
+  const uint64_t EltBytes =
+      AT ? C.getTypeSizeInChars(AT->getElementType()).getQuantity() : 0;
+  const size_t Count = AT ? Val.getArraySize() : 0;
+  if (!EltBytes || !Count ||
+      Count > std::numeric_limits<uint32_t>::max() / EltBytes)
+    return 0;
+  QualType EltTy = AT->getElementType();
+
+  // The buffer lives in the ASTContext bump allocator for the interpreter's
+  // lifetime, so re-laying out on every call would hand out unstable
+  // addresses (unlike the scalar path, which returns the cached APValue
+  // storage) and grow the allocator unboundedly.
+  auto [It, Inserted] = Cache.try_emplace(VD->getCanonicalDecl(), 0);
+  if (!Inserted)
+    return It->second;
+
+  uint8_t* Buf = static_cast<uint8_t*>(C.Allocate(
+      EltBytes * Count, (unsigned)C.getTypeAlignInChars(EltTy).getQuantity()));
+  for (size_t I = 0; I < Count; ++I) {
+    const APValue* Elt = nullptr;
+    if (I < Val.getArrayInitializedElts())
+      Elt = &Val.getArrayInitializedElt(I);
+    else if (Val.hasArrayFiller())
+      Elt = &Val.getArrayFiller();
+    if (!Elt || !Elt->isInt())
+      return 0; // cached 0: not fully evaluable, fall back to the JIT path
+    const llvm::APInt& Int = Elt->getInt();
+    // The raw layout only works if the APInt fills the element exactly;
+    // padded storage like _BitInt(24) (4-byte storage, 3-byte APInt) would
+    // trip StoreIntToMemory's width assert in assertions-enabled builds.
+    if (Int.getBitWidth() != EltBytes * 8)
+      return 0;
+    llvm::StoreIntToMemory(Int, Buf + (I * EltBytes), (unsigned)EltBytes);
+  }
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  It->second = reinterpret_cast<intptr_t>(Buf);
+  return It->second;
 }
 
 intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
@@ -3356,54 +3711,150 @@ intptr_t GetVariableOffset(compat::Interpreter& I, Decl* D,
     auto GD = GlobalDecl(VD);
     std::string mangledName;
     compat::maybeMangleDeclName(GD, mangledName);
-    void* address = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(
-        mangledName.c_str());
+    void* address = nullptr;
+    {
+      // scoped: the final symbol lookup and the evaluate fallback below must
+      // run outside of any nested transaction, or execution is deferred; the
+      // initializer reads (getInit/evaluateValue) may lazily deserialize and
+      // so need an open transaction
+      compat::SynthesizingCodeRAII RAII(&getInterp());
 
-    if (!address)
-      address = I.getAddressOfGlobal(GD);
-    if (!address) {
-      if (!VD->hasInit()) {
-        // The initializer feeding the constexpr fast path below may live on
-        // an already-parsed out-of-line definition (a non-template class's
-        // static data member, e.g. std::partial_ordering::less): prefer it,
-        // with no Sema work at all. Only a variable instantiated from a
-        // template can need Sema::InstantiateVariableDefinition — and
-        // without an instantiation pattern that call dereferences a null
-        // VarDecl in release builds.
-        if (VarDecl* Def = VD->getDefinition()) {
-          VD = Def;
-        } else if (VD->getTemplateInstantiationPattern()) {
-          compat::SynthesizingCodeRAII RAII(&getInterp());
-          getSema().InstantiateVariableDefinition(SourceLocation(), VD);
-          if (VarDecl* Inst = VD->getDefinition())
-            VD = Inst;
+      // A name without external linkage is module-local: no library symbol
+      // can legitimately be this entity, and a missed JIT lookup falls
+      // through to the symbol autoloader, which loads any library on the
+      // dynamic path exporting the name (a REPL "constexpr int S" pulled in
+      // msys-2.0.dll on Windows). Serve the evaluated value directly.
+      if (!VD->hasExternalFormalLinkage()) {
+        if (!VD->hasInit()) {
+          if (VarDecl* Def = VD->getDefinition()) {
+            VD = Def;
+          } else if (VD->getTemplateInstantiationPattern()) {
+            getSema().InstantiateVariableDefinition(SourceLocation(), VD);
+            if (VarDecl* Inst = VD->getDefinition())
+              VD = Inst;
+          }
         }
-      }
-      if (VD->hasInit() &&
-          (VD->isConstexpr() || VD->getType().isConstQualified())) {
-        if (const APValue* val = VD->evaluateValue()) {
-          if (VD->getType()->isIntegralType(C)) {
-            return (intptr_t)val->getInt().getRawData();
+        if (VD->hasInit() &&
+            (VD->isConstexpr() || VD->getType().isConstQualified())) {
+          if (const APValue* val = VD->evaluateValue()) {
+            if (VD->getType()->isIntegralOrEnumerationType())
+              return (intptr_t)val->getInt().getRawData();
+            if (intptr_t ArrAddr = MaterializeConstArrayValue(
+                    C, VD, *val, getInterpInfo(&I).ConstArrayValueStore))
+              return ArrAddr;
           }
         }
       }
-    }
-    if (!address) {
-      auto Linkage = C.GetGVALinkageForVariable(VD);
-      // Odr-use emission only for discardable-ODR entities (inline/constexpr
-      // statics) — the class the used-list crash traced to. Internal-linkage
-      // variables cannot be odr-used from a later PTU (module-local symbol:
-      // the reference duplicates or misses the entity), and an
-      // available-externally definition would not be emitted by a mere
-      // reference; both stay on the stock UsedAttr path.
-      if (isDiscardableGVALinkage(Linkage) &&
-          (Linkage != GVA_DiscardableODR || !EmitVariableViaOdrUse(I, VD)))
-        ForceCodeGen(VD, I);
+
+      address = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(
+          mangledName.c_str());
+
+      // A const variable whose constant initializer is in the AST: serve the
+      // evaluated value before the JIT lookup. This must stay *after* the
+      // search in the loaded binaries above: a symbol that a binary does
+      // export keeps its real address. A missed lookup falls through to the
+      // symbol autoloader, which scans and parses every library on the
+      // search path (over a thousand file opens with ROOT, ~0.5 s), only to
+      // end up in the evaluate fallback below anyway: in-class initialized
+      // static members like TString::kNPOS are exported by no binary. Unlike
+      // that fallback, don't instantiate templates here, so no Sema work is
+      // added for variables the lookup would have found.
+      if (!address) {
+        const VarDecl* InitVD = VD->hasInit() ? VD : VD->getDefinition();
+        if (InitVD && InitVD->hasInit() &&
+            !InitVD->getType().isVolatileQualified() &&
+            (InitVD->isConstexpr() || InitVD->getType().isConstQualified())) {
+          if (const APValue* val = InitVD->evaluateValue()) {
+            if (InitVD->getType()->isIntegralOrEnumerationType())
+              // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+              return reinterpret_cast<intptr_t>(val->getInt().getRawData());
+            if (intptr_t ArrAddr = MaterializeConstArrayValue(
+                    C, InitVD, *val, getInterpInfo(&I).ConstArrayValueStore))
+              return ArrAddr;
+          }
+        }
+      }
+
+      if (!address)
+        address = I.getAddressOfGlobal(GD);
+      if (!address) {
+        if (!VD->hasInit()) {
+          // The initializer feeding the constexpr fast path below may live on
+          // an already-parsed out-of-line definition (a non-template class's
+          // static data member, e.g. std::partial_ordering::less): prefer it,
+          // with no Sema work at all. Only a variable instantiated from a
+          // template can need Sema::InstantiateVariableDefinition — and
+          // without an instantiation pattern that call dereferences a null
+          // VarDecl in release builds.
+          if (VarDecl* Def = VD->getDefinition()) {
+            VD = Def;
+          } else if (VD->getTemplateInstantiationPattern()) {
+            getSema().InstantiateVariableDefinition(SourceLocation(), VD);
+            if (VarDecl* Inst = VD->getDefinition())
+              VD = Inst;
+          }
+        }
+        if (VD->hasInit() &&
+            (VD->isConstexpr() || VD->getType().isConstQualified())) {
+          if (const APValue* val = VD->evaluateValue()) {
+            if (VD->getType()->isIntegralOrEnumerationType()) {
+              return (intptr_t)val->getInt().getRawData();
+            }
+            if (intptr_t ArrAddr = MaterializeConstArrayValue(
+                    C, VD, *val, getInterpInfo(&I).ConstArrayValueStore))
+              return ArrAddr;
+          }
+        }
+      }
+      if (!address) {
+        auto Linkage = C.GetGVALinkageForVariable(VD);
+        // Odr-use emission only for discardable-ODR entities (inline/constexpr
+        // statics) — the class the used-list crash traced to. Internal-linkage
+        // variables cannot be odr-used from a later PTU (module-local symbol:
+        // the reference duplicates or misses the entity), and an
+        // available-externally definition would not be emitted by a mere
+        // reference; both stay on the stock UsedAttr path.
+        // Also emit non-discardable strong definitions whose initializer is
+        // available in the AST but whose home binary does not export the
+        // symbol: e.g. on Windows, bindexplib deliberately does not export
+        // read-only data from DLLs, but the dictionary provides the
+        // initializer, so an emitted copy has the same value. Writable
+        // globals are exported and found above, so they cannot end up with a
+        // diverging JIT copy here. A discardable entity already emitted via
+        // odr-use must never also take the UsedAttr route: the attr sticks on
+        // the AST decl and grows used-list residue in every later PTU.
+        bool discardable = isDiscardableGVALinkage(Linkage);
+        if ((discardable &&
+             (Linkage != GVA_DiscardableODR || !EmitVariableViaOdrUse(I, VD))) ||
+            (!discardable && VD->isThisDeclarationADefinition() &&
+             VD->hasInit()))
+          ForceCodeGen(VD, I);
+      }
     }
     auto VDAorErr = compat::getSymbolAddress(I, StringRef(mangledName));
     if (!VDAorErr) {
-      llvm::logAllUnhandledErrors(VDAorErr.takeError(), llvm::errs(),
-                                  "Failed to GetVariableOffset:");
+      // Last resort: ODR-use the variable in an interpreter-evaluated
+      // expression. This forces CodeGen to emit inline/constexpr variables
+      // that exist in no loaded library (e.g. std::nullopt) and that the
+      // deferred-decl handling above did not emit. Mirrors what
+      // TClingDataMemberInfo::Offset does in ROOT.
+      // This can only work when CodeGen can emit the variable, i.e. when its
+      // definition or at least an initializer is available in the AST (e.g.
+      // std::ios_base::__noreplace, a static const member initialized in the
+      // class). For a variable defined in a binary that does not export it,
+      // the emitted reference could never be resolved, and executing the
+      // expression would be undefined behavior.
+      llvm::consumeError(VDAorErr.takeError());
+      if (VD->getDefinition() || VD->hasInit()) {
+        compat::Value V;
+        const std::string addr_of =
+            "&::" + VD->getQualifiedNameAsString() + ";";
+        if (I.evaluate(addr_of.c_str(), V) == compat::Interpreter::kSuccess &&
+            V.hasValue())
+          return (intptr_t)compat::convertTo<void*>(V);
+      }
+      llvm::errs() << "Failed to GetVariableOffset: symbol '" << mangledName
+                   << "' not found and its definition is not available\n";
       return 0;
     }
     return (intptr_t)jitTargetAddressToPointer<void*>(VDAorErr.get());
@@ -3557,6 +4008,8 @@ TypeRef GetPointerType(ConstTypeRef TyRef) {
 
 TypeRef GetReferencedType(ConstTypeRef TyRef, bool rvalue) {
   INTEROP_TRACE(TyRef, rvalue);
+  if (!TyRef.data)
+    return INTEROP_RETURN(nullptr);
   QualType QT = QualType::getFromOpaquePtr(TyRef.data);
   if (rvalue)
     return INTEROP_RETURN(
@@ -3597,11 +4050,21 @@ TypeRef GetUnderlyingType(ConstTypeRef TyRef) {
 std::string GetTypeAsString(ConstTypeRef var) {
   INTEROP_TRACE(var);
   QualType QT = QualType::getFromOpaquePtr(var.data);
-  PrintingPolicy Policy(getASTContext().getPrintingPolicy());
+  // FIXME: Get the default printing policy from the ASTContext.
+  PrintingPolicy Policy((LangOptions()));
   Policy.Bool = true;               // Print bool instead of _Bool.
   Policy.SuppressTagKeyword = true; // Do not print `class std::string`.
   Policy.Suppress_Elab = true;
   Policy.FullyQualifiedName = true;
+  // Type names are matched against string keys on the cppyy side (e.g. the
+  // std::string return-value executor), so their spelling must not depend on
+  // the platform: always drop inline namespaces (libc++'s std::__1,
+  // libstdc++'s std::__cxx11) instead of relying on the lookup-based
+  // "redundant qualifier" heuristic, and do not substitute preferred names
+  // (libc++ tags basic_string<char> with preferred_name(string)).
+  Policy.SuppressInlineNamespace =
+      llvm::to_underlying(PrintingPolicy::SuppressInlineNamespaceMode::All);
+  Policy.UsePreferredNames = false;
   return INTEROP_RETURN(QT.getAsString(Policy));
 }
 
@@ -4169,8 +4632,6 @@ void make_narg_call(const FunctionDecl* FD, const std::string& return_type,
     else
       callbuf << "((" << class_name << "*)obj)->";
 
-    if (op_flag)
-      callbuf << class_name << "::";
   } else if (isa<NamedDecl>(get_non_transparent_decl_context(FD))) {
     // This is a namespace member.
     if (op_flag || N <= 1)
@@ -4367,6 +4828,52 @@ void make_narg_ctor_with_return(const FunctionDecl* FD, const unsigned N,
   }
 }
 
+// A wrapper can only name a type whose spelling is reachable from file
+// scope: the head of the sugared name and every record enclosing it must be
+// public, and decltype/typeof sugar is spelled as its expression, whose
+// names may only resolve in the declaring scope. Builtins and compound types
+// keep the status quo.
+bool isWrapperSpellable(QualType QT) {
+  for (const clang::Type* T = QT.getTypePtr();;) {
+    if (isa<DecltypeType, TypeOfExprType>(T))
+      return false;
+    if (isa<TypedefType, RecordType>(T))
+      break;
+    QualType Next = T->getLocallyUnqualifiedSingleStepDesugaredType();
+    if (Next.getTypePtr() == T)
+      break;
+    T = Next.getTypePtr();
+  }
+  const NamedDecl* D = nullptr;
+  if (const auto* TT = QT->getAs<TypedefType>())
+    D = TT->getDecl();
+  else if (const auto* RD = QT->getAsRecordDecl())
+    D = RD;
+  while (D) {
+    if (D->getAccess() != AS_public && D->getAccess() != AS_none)
+      return false;
+    D = llvm::dyn_cast<NamedDecl>(D->getDeclContext());
+  }
+  return true;
+}
+
+// The type the wrapper spells for QT: the first reachable spelling when
+// desugaring QT one step at a time, or QT unchanged when there is none. A
+// typedef nested in a private helper class desugars to the type it names;
+// a public typedef of a private class is reachable as written and stays,
+// and its canonical type could not be spelled at all.
+QualType getWrapperSpellableType(QualType QT) {
+  const ASTContext& C = getASTContext();
+  for (QualType T = QT;;) {
+    if (isWrapperSpellable(T))
+      return T;
+    QualType Next = T.getSingleStepDesugaredType(C);
+    if (Next == T)
+      return QT;
+    T = Next;
+  }
+}
+
 void make_narg_call_with_return(compat::Interpreter& I, const FunctionDecl* FD,
                                 const unsigned N, const std::string& class_name,
                                 std::ostringstream& buf, int indent_level) {
@@ -4395,7 +4902,7 @@ void make_narg_call_with_return(compat::Interpreter& I, const FunctionDecl* FD,
     make_narg_ctor_with_return(FD, N, class_name, buf, indent_level);
     return;
   }
-  QualType QT = FD->getReturnType();
+  QualType QT = getWrapperSpellableType(FD->getReturnType());
   if (QT->isVoidType()) {
     std::ostringstream typedefbuf;
     std::ostringstream callbuf;
@@ -4953,18 +5460,14 @@ JitCall::GenericCall make_wrapper(compat::Interpreter& I,
   //
   //   Compile the wrapper code.
   //
-  bool withAccessControl = true;
-  // We should be able to call private default constructors.
-  if (auto Ctor = dyn_cast<CXXConstructorDecl>(FD))
-    withAccessControl = !Ctor->isDefaultConstructor();
-  // Members introduced into a derived class with a public using-declaration
-  // are reachable through the derived class, but the generated wrapper still
-  // calls the target through its original (e.g. protected) qualified name.
-  // Disable access control for this specific case so the wrapper compiles.
-  if (relaxAccessControl)
-    withAccessControl = false;
-  void* wrapper =
-      compile_wrapper(I, wrapper_name, wrapper_code, withAccessControl);
+  // Access control must be off, matching cppyy-backend's TClingCallFunc: the
+  // callee was already selected (and public-filtered) by the caller, and
+  // compiling the call may lazily instantiate template bodies that are only
+  // valid with checks relaxed (e.g. a member template accessing a private
+  // member of another specialization of its own class template). This
+  // subsumes the narrower relaxAccessControl escape hatch for using-shadows.
+  void* wrapper = compile_wrapper(I, wrapper_name, wrapper_code,
+                                  /*withAccessControl=*/false);
   if (wrapper) {
     WrapperStore.insert(std::make_pair(FD, wrapper));
   } else {
@@ -5247,6 +5750,13 @@ bool DefineAbsoluteSymbol(compat::Interpreter& I, const char* unmangled_name,
 #endif
 
 static std::string MakeResourcesPath() {
+#ifdef CPPINTEROP_CLANG_RESOURCE_DIR
+  // Recorded at configure time from the clang this library links against;
+  // the LLVM_BINARY_DIR derivation below misses whenever clang's headers
+  // are installed under a different prefix than LLVM's libraries.
+  if (sys::fs::is_directory(CPPINTEROP_CLANG_RESOURCE_DIR))
+    return CPPINTEROP_CLANG_RESOURCE_DIR;
+#endif
   StringRef Dir;
 #ifdef LLVM_BINARY_DIR
   Dir = LLVM_BINARY_DIR;
@@ -5339,13 +5849,37 @@ InterpRef CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
   // copies and move them into the interpreter's InterpreterInfo entry.
   std::vector<std::string> ArgvStorage;
   ArgvStorage.push_back(sys::fs::getMainExecutable(nullptr, nullptr));
+  // Arguments compiled in at configure time, e.g. a packager recording the
+  // toolchain header paths the in-process clang cannot probe for. They
+  // precede the embedder's arguments so they act as defaults: conflicts in
+  // the clang invocation are resolved later-wins, and the embedder's
+  // -resource-dir stays ahead of the baked one (ExtractArgument below).
+  // CPPINTEROP_EXTRA_INTERPRETER_ARGS from the environment follows both.
+  std::vector<const char*> AllArgs;
+#ifdef CPPINTEROP_BAKED_INTERPRETER_ARGS
+  // Storage for the split arguments; must outlive the pointers in AllArgs.
+  std::vector<std::string> BakedStorage;
+  StringRef Baked(CPPINTEROP_BAKED_INTERPRETER_ARGS);
+  while (!Baked.empty()) {
+    StringRef Arg;
+    std::tie(Arg, Baked) = Baked.split(' ');
+    if (!Arg.empty())
+      BakedStorage.push_back(Arg.str());
+  }
+  for (const std::string& Arg : BakedStorage)
+    AllArgs.push_back(Arg.c_str());
+#endif
+  AllArgs.insert(AllArgs.end(), Args.begin(), Args.end());
   // In some systems, CppInterOp cannot manually detect the correct resource.
   // Then the -resource-dir passed by the user is assumed to be the correct
   // location. Prioritising it over detecting it within CppInterOp. Extracting
   // the resource-dir from the arguments is required because we set the
   // necessary library search location explicitly below. Because by default,
   // linker flags are ignored in repl (issue #748)
+  // The embedder's -resource-dir wins over any baked one.
   std::string ResourceDir = ExtractArgument(Args, "-resource-dir");
+  if (ResourceDir.empty())
+    ResourceDir = ExtractArgument(AllArgs, "-resource-dir");
   if (ResourceDir.empty())
     ResourceDir = MakeResourcesPath();
   llvm::Triple T(llvm::sys::getProcessTriple());
@@ -5387,7 +5921,7 @@ InterpRef CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
     }
   }
 #endif
-  ArgvStorage.insert(ArgvStorage.end(), Args.begin(), Args.end());
+  ArgvStorage.insert(ArgvStorage.end(), AllArgs.begin(), AllArgs.end());
   // To keep the Interpreter creation interface between cling and clang-repl
   // to some extent compatible we should put Args and GpuArgs together. On the
   // receiving end we should check for -xcuda to know.
@@ -5614,22 +6148,6 @@ void GetIncludePaths(std::vector<std::string>& IncludePaths, bool withSystem,
   return INTEROP_VOID_RETURN();
 }
 
-namespace {
-class clangSilent {
-public:
-  clangSilent(clang::DiagnosticsEngine& diag) : fDiagEngine(diag) {
-    fOldDiagValue = fDiagEngine.getSuppressAllDiagnostics();
-    fDiagEngine.setSuppressAllDiagnostics(true);
-  }
-
-  ~clangSilent() { fDiagEngine.setSuppressAllDiagnostics(fOldDiagValue); }
-
-protected:
-  clang::DiagnosticsEngine& fDiagEngine;
-  bool fOldDiagValue;
-};
-} // namespace
-
 static int Declare(compat::Interpreter& I, const char* code, bool silent) {
   // Trap diagnostics on both paths: I.declare's rc is 0 even when
   // Parse recovered from emitted errors, so callers need the trap to
@@ -5656,7 +6174,14 @@ int Declare(const char* code, bool silent) {
 
 int Process(const char* code) {
   INTEROP_TRACE(code);
-  return INTEROP_RETURN(getInterp().process(code));
+  // Trap diagnostics like Declare: process's rc is kSuccess even when the
+  // parse recovered from emitted errors or a wrapped expression failed at
+  // run time, so callers cannot rely on it alone.
+  clang::DiagnosticsEngine& Diag = getSema().getDiagnostics();
+  clang::DiagnosticErrorTrap Trap(Diag);
+  if (getInterp().process(code) != compat::Interpreter::kSuccess)
+    return INTEROP_RETURN(1);
+  return INTEROP_RETURN(Trap.hasErrorOccurred() ? 1 : 0);
 }
 
 // Classify the QualType of a successfully-evaluated value into a
@@ -5746,10 +6271,26 @@ std::string LookupLibrary(const char* lib_name) {
       getInterp().getDynamicLibraryManager()->lookupLibrary(lib_name));
 }
 
-bool LoadLibrary(const char* lib_stem, bool lookup) {
-  INTEROP_TRACE(lib_stem, lookup);
+bool LoadLibrary(const char* lib_stem, bool lookup, std::string* error) {
+  INTEROP_TRACE(lib_stem, lookup, error);
+  if (error)
+    error->clear();
+#ifdef CPPINTEROP_USE_CLING
+  // cling::Interpreter::loadLibrary has no reason channel; report what the
+  // lookup alone can tell.
   compat::Interpreter::CompilationResult res =
       getInterp().loadLibrary(lib_stem, lookup);
+  if (res != compat::Interpreter::kSuccess && error) {
+    bool NotFound =
+        lookup &&
+        getInterp().getDynamicLibraryManager()->lookupLibrary(lib_stem).empty();
+    *error = std::string(lib_stem) +
+             (NotFound ? ": library not found" : ": failed to load");
+  }
+#else
+  compat::Interpreter::CompilationResult res =
+      getInterp().loadLibrary(lib_stem, lookup, error);
+#endif
 
   return INTEROP_RETURN(res == compat::Interpreter::kSuccess);
 }
@@ -5875,6 +6416,11 @@ static Decl* InstantiateTemplate(TemplateDecl* TemplateD,
       // FIXME: Diagnose what happened.
       (void)Result;
     }
+    // Never hand out a specialization whose (attempted) instantiation turned
+    // out to be ill-formed, e.g. one rejected by BestOverloadFunctionMatch:
+    // any use of it, such as compiling a call wrapper, can only fail.
+    if (Specialization && Specialization->isInvalidDecl())
+      return nullptr;
     if (instantiate_body)
       InstantiateFunctionDefinition(Specialization);
     return Specialization;
@@ -6141,6 +6687,11 @@ std::string GetFunctionArgDefault(ConstFuncRef func, size_t param_index) {
     PI = (FD->getTemplatedDecl())->getNonObjectParameter(param_index);
 
   if (PI->hasDefaultArg()) {
+    // Print the AST with ConstantsAsWritten and the interpreter's ASTContext:
+    // literal leaves with valid source ranges then render from source text
+    // ("3.14", not the representation-precision "3.1400000000000001"). The
+    // previous std::stod normalization terminated the exception-free build on
+    // symbolic defaults such as `double ratio = kDefaultRatio`.
     std::string Result;
     llvm::raw_string_ostream OS(Result);
     const Expr* DefaultArgExpr = nullptr;
@@ -6149,20 +6700,30 @@ std::string GetFunctionArgDefault(ConstFuncRef func, size_t param_index) {
       DefaultArgExpr = PI->getUninstantiatedDefaultArg();
     else
       DefaultArgExpr = PI->getDefaultArg();
-    DefaultArgExpr->printPretty(OS, nullptr, PrintingPolicy(LangOptions()));
+    ASTContext& Ctx = getASTContext();
+    PrintingPolicy Policy(Ctx.getLangOpts());
+    Policy.ConstantsAsWritten = true;
+    DefaultArgExpr->printPretty(OS, nullptr, Policy, /*Indentation=*/0,
+                                /*NewlineSymbol=*/"\n", &Ctx);
 
-    // FIXME: Floats are printed in clang with the precision of their underlying
-    // representation and not as written. This is a deficiency in the printing
-    // mechanism of clang which we require extra work to mitigate. For example
-    // float PI = 3.14 is printed as 3.1400000000000001
-    if (PI->getType()->isFloatingType()) {
-      if (!Result.empty() && Result.back() == '.')
-        return INTEROP_RETURN(Result);
-      auto DefaultArgValue = std::stod(Result);
-      std::ostringstream oss;
-      oss << DefaultArgValue;
-      Result = oss.str();
-    }
+    // CPyCppyy evaluates numeric defaults in Python after stripping
+    // uppercase literal suffixes, so print the suffix in its canonical
+    // uppercase form ("5.f" -> "5.F"). The per-kind alphabets keep hex
+    // digits safe: 'f' in 0x1f is a digit of an IntegerLiteral, whose
+    // suffix alphabet has no 'f'.
+    const Expr* Leaf = DefaultArgExpr->IgnoreImpCasts();
+    if (const auto* UO = llvm::dyn_cast<clang::UnaryOperator>(Leaf))
+      Leaf = UO->getSubExpr()->IgnoreImpCasts();
+    const char* SuffixAlphabet = nullptr;
+    if (llvm::isa<IntegerLiteral>(Leaf))
+      SuffixAlphabet = "uUlLzZ";
+    else if (llvm::isa<FloatingLiteral>(Leaf))
+      SuffixAlphabet = "fFlL";
+    if (SuffixAlphabet)
+      for (size_t I = Result.find_last_not_of(SuffixAlphabet) + 1;
+           I < Result.size(); ++I)
+        Result[I] = llvm::toUpper(Result[I]);
+
     return INTEROP_RETURN(Result);
   }
   return INTEROP_RETURN("");

@@ -25,6 +25,7 @@ private:
    bool fVerbose = false;
    bool fDimInput = false;
    bool fDynamicShape = false;
+   bool fIsAlias = false;             // output shares the memory of the input
    ReshapeOpMode fOpMode = Reshape;   // type of Reshape operator
 
    int fAllowZero = 0; // (for Reshape) zero in tensor shape makes output shape equal to input tensor shape
@@ -342,8 +343,12 @@ public:
       else {
          // non-constant case
          model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
+         // the data are not changed, so the output can share the memory of the input
+         fIsAlias = model.AddAliasTensor(fNOutput, fNData);
          if (model.Verbose())
-            std::cout << Name() << " : " << fNData << " " << ConvertDimShapeToString(fShapeInput) << " -->  "<< fNOutput << "  " << ConvertDimShapeToString(fShapeOutput)  << std::endl;
+            std::cout << Name() << " : " << fNData << " " << ConvertDimShapeToString(fShapeInput) << " -->  "
+                      << fNOutput << "  " << ConvertDimShapeToString(fShapeOutput) << (fIsAlias ? " (alias)" : "")
+                      << std::endl;
       }
    }
 
@@ -394,9 +399,12 @@ public:
              << lengthOut << " is different than input one " << lengthIn << "\");\n";
       }
 
-
-      out << SP << "std::copy( tensor_" << fNData << ", tensor_" << fNData << " + " << lengthIn << ", " << "tensor_" << fNOutput
-          << ");\n";
+      if (fIsAlias) {
+         out << SP << "auto * tensor_" << fNOutput << " = tensor_" << fNData << ";\n";
+      } else {
+         out << SP << "std::copy( tensor_" << fNData << ", tensor_" << fNData << " + " << lengthIn << ", " << "tensor_"
+             << fNOutput << ");\n";
+      }
       return out.str();
    }
 };

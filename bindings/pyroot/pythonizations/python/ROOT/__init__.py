@@ -42,12 +42,6 @@ if _major_minor(_runtime_version) != _major_minor(_root_python_version):
     """
     raise ImportError(textwrap.dedent(message))
 
-# Prevent cppyy's check for extra header directory
-os.environ["CPPYY_API_PATH"] = "none"
-
-# Prevent cppyy from filtering ROOT libraries
-os.environ["CPPYY_NO_ROOT_FILTER"] = "1"
-
 # The libROOTPythonizations CPython extension is in the same directory as the
 # ROOT Python module, but to find the other ROOT libraries we need to also add
 # the path of the ROOT library directory (only needed on Windows). For example,

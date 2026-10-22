@@ -15,6 +15,7 @@
 #include <ROOT/REveTrans.hxx>
 #include <ROOT/REveRenderData.hxx>
 #include <ROOT/REveClient.hxx>
+#include <ROOT/REveUtil.hxx>
 #include <ROOT/RWebWindow.hxx>
 
 #include <cassert>
@@ -181,6 +182,7 @@ void REveScene::StreamElements()
    jarr.front()["fTotalBinarySize"] = fTotalBinarySize;
 
    fOutputJson = jarr.dump();
+   REveUtil::AppendServerTime(fOutputJson); // stamped again just before each send
 }
 
 void REveScene::StreamJsonRecurse(REveElement *el, nlohmann::json &jarr)
@@ -225,6 +227,38 @@ void REveScene::StreamJsonRecurse(REveElement *el, nlohmann::json &jarr)
          StreamJsonRecurse(c, jarr);
       }
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Move every element whose only pending change is kCBTrans from the change
+/// list into `arr`, for REveManager::SendMotionChanges(). The remaining
+/// elements are streamed as ordinary, acknowledged scene changes.
+
+void REveScene::StreamMotionChanges(nlohmann::json &arr)
+{
+   if (fChangedElements.empty())
+      return;
+
+   List_t keep;
+
+   for (auto &el : fChangedElements) {
+      if (el->GetChangeBits() != REveElement::kCBTrans) {
+         keep.push_back(el);
+         continue;
+      }
+
+      nlohmann::json jobj = {};
+      // clang-format off
+      jobj["fElementId"] = el->GetElementId();
+      jobj["fSceneId"]   = GetElementId();
+      // clang-format on
+      el->WriteTransJson(jobj);
+      arr.push_back(jobj);
+
+      el->ClearStamps();
+   }
+
+   fChangedElements.swap(keep);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -283,13 +317,12 @@ void REveScene::StreamRepresentationChanges()
           jobj["fRnrChildren"] = el->GetRnrChildren();
         }
 
-        if (bits & kCBColorSelection)
-        {
-          el->WriteCoreJson(jobj, -1);
+        if (bits & kCBCoreJson) {
+           el->WriteCoreJson(jobj, -1);
         }
 
-        if (bits & kCBTransBBox)
-        {
+        if (bits & kCBTrans) {
+           el->WriteTransJson(jobj);
         }
       }
 
@@ -316,6 +349,7 @@ void REveScene::StreamRepresentationChanges()
 
    nlohmann::json msg = { {"header", jhdr}, {"arr", jarr}};
    fOutputJson = msg.dump();
+   REveUtil::AppendServerTime(fOutputJson); // stamped again just before each send
 
    if (gDebug > 0)
       Info("REveScene::StreamRepresentationChanges", "class: %s  changes %s ...", GetCName(),  msg.dump(1).c_str() );
@@ -325,6 +359,7 @@ void REveScene::SendChangesToSubscribers()
 {
    for (auto && client : fSubscribers) {
       if (!fOutputJson.empty()) {
+         REveUtil::StampServerTime(fOutputJson);
          if (gDebug > 0)
             printf("   sending json, len = %d --> to conn_id = %d\n", (int) fOutputJson.size(), client->fId);
          client->fWebWindow->Send(client->fId, fOutputJson);

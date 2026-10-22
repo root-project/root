@@ -48,9 +48,8 @@ Int_t exec_macro(const char *macro, Bool_t comp = kFALSE, Bool_t save = kTRUE)
 
    UInt_t nMainFrames = 0;
    TClass *clGMainFrame = TClass::GetClass("TGMainFrame");
-   TGWindow *win = nullptr;
    TIter iWin(gClient->GetListOfWindows());
-   while ((win = (TGWindow *)iWin())) {
+   while (auto win = (TGWindow *)iWin()) {
       const TObject *winGetParent = win->GetParent();
       Bool_t winIsMapped = kFALSE;
       if (winGetParent == gClient->GetDefaultRoot())
@@ -60,11 +59,11 @@ Int_t exec_macro(const char *macro, Bool_t comp = kFALSE, Bool_t save = kTRUE)
          if (save) {
             TString outfile = gSystem->BaseName(macro);
             outfile.ReplaceAll(".C", TString::Format("_%d.png", ++nMainFrames));
-            TImage *img = TImage::Create();
             win->RaiseWindow();
-            img->FromWindow(win->GetId());
-            img->WriteImage(outfile.Data());
-            delete img;
+
+            auto img = TGWindow::CreateImageFromWindow(win->GetId());
+            if (img)
+               img->WriteImage(outfile.Data());
          }
       }
    }

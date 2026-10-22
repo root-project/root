@@ -65,7 +65,6 @@ then all keys with names = "uv*" in a second pass, etc.
 #include "TLeaf.h"
 #include "TMath.h"
 #include "TVirtualPad.h"
-#include "TVirtualX.h"
 #include "TH2.h"
 #include "TBox.h"
 #include "TKey.h"
@@ -221,9 +220,6 @@ void  TFileDrawMap::AnimateTree(const char *branches)
    Int_t stime = (Int_t)(100./(nentries*fractionRead));
    if (stime < 10) {stime=1; sleep = nentries/400;}
 
-   // turn off double buffer and draw in invert mode
-   gPad->FeedbackMode(kTRUE);
-
    for (Int_t entry=0;entry<nentries;entry++) {
       for (Int_t ib=0;ib<nbranches;ib++) {
          branch = (TBranch*)list.At(ib);
@@ -234,11 +230,13 @@ void  TFileDrawMap::AnimateTree(const char *branches)
          Int_t entry0 = branch->GetBasketEntry()[basket];
          Int_t entryn = branch->GetBasketEntry()[basket+1];
          Int_t eseek  = (Int_t)(bseek + nbytes*Double_t(entry-entry0)/Double_t(entryn-entry0));
-         DrawMarker(ib,branch->GetUniqueID());
-         DrawMarker(ib,eseek);
+         DrawMarker(ib, branch->GetUniqueID(), "ifilemap1");
+         DrawMarker(ib, eseek, "ifilemap2");
+         gPad->UpdateAsync();
          branch->SetUniqueID(eseek);
          gSystem->ProcessEvents();
-         if (entry%sleep == 0) gSystem->Sleep(stime);
+         if (entry%sleep == 0)
+            gSystem->Sleep(stime);
       }
    }
 }
@@ -263,39 +261,50 @@ Int_t TFileDrawMap::DistancetoPrimitive(Int_t px, Int_t py)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw marker.
 
-void TFileDrawMap::DrawMarker(Int_t marker, Long64_t eseek)
+void TFileDrawMap::DrawMarker(Int_t marker, Long64_t eseek, const char *id)
 {
-   Int_t iy = gPad->YtoAbsPixel(eseek/fXsize);
-   Int_t ix = gPad->XtoAbsPixel(eseek%fXsize);
-   Int_t d;
-   Int_t mark = marker%4;
+   Double_t py = eseek / fXsize;
+   Double_t px = eseek % fXsize;
+   Double_t d = fXsize * 0.01;
+   Int_t mark = marker % 4;
+
+   Double_t xx[5], yy[5];
+   Int_t np = 0;
+
    switch (mark) {
-      case 0 :
-         d = 6; //arrow
-         gVirtualX->DrawLine(ix-3*d,iy,ix,iy);
-         gVirtualX->DrawLine(ix-d,iy+d,ix,iy);
-         gVirtualX->DrawLine(ix-d,iy-d,ix,iy);
-         gVirtualX->DrawLine(ix-d,iy-d,ix-d,iy+d);
+      case 0:
+         np = 4; //down tringle
+         xx[0] = px;      yy[0] = py - d;
+         xx[1] = px - d;  yy[1] = py + d;
+         xx[2] = px + d;  yy[2] = py + d;
+         xx[3] = px;      yy[3] = py - d;
          break;
       case 1 :
-         d = 5; //up triangle
-         gVirtualX->DrawLine(ix-d,iy-d,ix+d,iy-d);
-         gVirtualX->DrawLine(ix+d,iy-d,ix,iy+d);
-         gVirtualX->DrawLine(ix,iy+d,ix-d,iy-d);
+         np = 4; //up triangle
+         xx[0] = px;      yy[0] = py + d;
+         xx[1] = px - d;  yy[1] = py - d;
+         xx[2] = px + d;  yy[2] = py - d;
+         xx[3] = px;      yy[3] = py + d;
          break;
       case 2 :
-         d = 5; //open square
-         gVirtualX->DrawLine(ix-d,iy-d,ix+d,iy-d);
-         gVirtualX->DrawLine(ix+d,iy-d,ix+d,iy+d);
-         gVirtualX->DrawLine(ix+d,iy+d,ix-d,iy+d);
-         gVirtualX->DrawLine(ix-d,iy+d,ix-d,iy-d);
+         np = 5; //open square
+         xx[0] = px - d;  yy[0] = py - d;
+         xx[1] = px + d;  yy[1] = py - d;
+         xx[2] = px + d;  yy[2] = py + d;
+         xx[3] = px - d;  yy[3] = py + d;
+         xx[4] = px - d;  yy[4] = py - d;
          break;
       case 3 :
-         d = 8; //cross
-         gVirtualX->DrawLine(ix-d,iy,ix+d,iy);
-         gVirtualX->DrawLine(ix,iy-d,ix,iy+d);
+         np = 5; // sandclock
+         xx[0] = px - d;  yy[0] = py - d;
+         xx[1] = px + d;  yy[1] = py + d;
+         xx[2] = px - d;  yy[2] = py + d;
+         xx[3] = px + d;  yy[3] = py - d;
+         xx[4] = px - d;  yy[4] = py - d;
          break;
    }
+   if (np > 1)
+      gPad->PaintPolyLine(np, xx, yy, id);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

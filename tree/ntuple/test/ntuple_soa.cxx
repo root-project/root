@@ -71,6 +71,13 @@ TEST(RNTuple, SoACheck)
    }
 
    try {
+      auto f = std::make_unique<RSoAField>("f", "SoAUnversioned");
+      FAIL() << "creating unversioned SoA field should fail";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), ::testing::HasSubstr("is transient or unversioned"));
+   }
+
+   try {
       auto f = std::make_unique<RSoAField>("f", "SoASimpleBadArray");
       FAIL() << "creating SoA field with arrays should fail";
    } catch (const ROOT::RException &e) {
@@ -385,6 +392,7 @@ TEST(RNTuple, SoAFromVector)
 
       auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       v->emplace_back(RecordSimple{1.0, 2.0});
+      v->emplace_back(RecordSimple{3.0, 4.0});
 
       writer->Fill();
    }
@@ -392,14 +400,16 @@ TEST(RNTuple, SoAFromVector)
    auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
    SoASimple soa;
 
-   // Until SoA schema evolution is implemented, the reading the vector as SoA will
-   try {
-      reader->GetView("simple", &soa, "SoASimple");
-      FAIL() << "reading a vector with a SoA field should fail";
-   } catch (const ROOT::RException &e) {
-      EXPECT_THAT(e.what(), testing::HasSubstr(
-                               "in-memory field simple of type SoASimple is incompatible with on-disk field simple"));
-   }
+   std::ostringstream os;
+   reader->Show(0, os);
+   // clang-format off
+   std::string expected{
+R"({
+  "simple": [{"fX": 1, "fY": 2}, {"fX": 3, "fY": 4}]
+}
+)"};
+   // clang-format on
+   EXPECT_EQ(expected, os.str());
 }
 
 TEST(RNTuple, SoAShow)
@@ -570,6 +580,151 @@ R"({
       }
     },
     "fMulti": [17, 18]
+  }
+}
+)" };
+   // clang-format on
+   EXPECT_EQ(expected, os.str());
+}
+
+TEST(RNTuple, SoARename)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_rntuple_soa_rename.root");
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+
+      model->AddField(std::make_unique<RSoAField>("leaf", "SoALeafOld"));
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      auto leafSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoALeafOld>("leaf");
+      leafSoA->fBase = {1.0, 2.0};
+      leafSoA->fIntermediate = {3.0, 4.0};
+      leafSoA->fLeaf = {5.0, 6.0};
+
+      writer->Fill();
+   }
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      model->AddField(std::make_unique<RSoAField>("leaf", "SoALeafNew"));
+      auto reader = ROOT::RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+
+      // We cannot use "Show()" because that will reconstruct the original model as a display model, it will not
+      // use the imposed model.
+
+      auto leafSoA = reader->GetModel().GetDefaultEntry().GetPtr<SoALeafNew>("leaf");
+      reader->LoadEntry(0);
+
+      EXPECT_EQ(2u, leafSoA->fBase.size());
+      EXPECT_EQ(2u, leafSoA->fNew.size());
+      EXPECT_EQ(2u, leafSoA->fIntermediate.size());
+      EXPECT_EQ(2u, leafSoA->fLeaf.size());
+      EXPECT_FLOAT_EQ(1.0, leafSoA->fBase[0]);
+      EXPECT_FLOAT_EQ(2.0, leafSoA->fBase[1]);
+      EXPECT_FLOAT_EQ(0.0, leafSoA->fNew[0]);
+      EXPECT_FLOAT_EQ(0.0, leafSoA->fNew[1]);
+      EXPECT_FLOAT_EQ(3.0, leafSoA->fIntermediate[0]);
+      EXPECT_FLOAT_EQ(4.0, leafSoA->fIntermediate[1]);
+      EXPECT_FLOAT_EQ(5.0, leafSoA->fLeaf[0]);
+      EXPECT_FLOAT_EQ(6.0, leafSoA->fLeaf[1]);
+   }
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      model->AddField(std::make_unique<RSoAField>("leaf", "SoALeafNewNoRenameRule"));
+      auto reader = ROOT::RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+
+      // We cannot use "Show()" because that will reconstruct the original model as a display model, it will not
+      // use the imposed model.
+
+      auto leafSoA = reader->GetModel().GetDefaultEntry().GetPtr<SoALeafNewNoRenameRule>("leaf");
+      reader->LoadEntry(0);
+
+      EXPECT_EQ(2u, leafSoA->fBase.size());
+      EXPECT_EQ(2u, leafSoA->fNew.size());
+      EXPECT_EQ(2u, leafSoA->fIntermediate.size());
+      EXPECT_EQ(2u, leafSoA->fLeaf.size());
+      EXPECT_FLOAT_EQ(1.0, leafSoA->fBase[0]);
+      EXPECT_FLOAT_EQ(2.0, leafSoA->fBase[1]);
+      EXPECT_FLOAT_EQ(0.0, leafSoA->fNew[0]);
+      EXPECT_FLOAT_EQ(0.0, leafSoA->fNew[1]);
+      EXPECT_FLOAT_EQ(3.0, leafSoA->fIntermediate[0]);
+      EXPECT_FLOAT_EQ(4.0, leafSoA->fIntermediate[1]);
+      EXPECT_FLOAT_EQ(5.0, leafSoA->fLeaf[0]);
+      EXPECT_FLOAT_EQ(6.0, leafSoA->fLeaf[1]);
+   }
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      model->AddField(std::make_unique<RSoAField>("leaf", "SoALeafLikeNew"));
+      try {
+         auto reader = ROOT::RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+         FAIL() << "mismatch in underlying record field should fail";
+      } catch (const ROOT::RException &e) {
+         EXPECT_THAT(e.what(), testing::HasSubstr("RecordLeafLikeNew vs. RecordLeafOld"));
+      }
+   }
+}
+
+TEST(RNTuple, SoARuleFailures)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_rntuple_soa_whole_object_rule.root");
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+
+      model->AddField(std::make_unique<RSoAField>("source", "SoARuleFailSource"));
+      model->AddField(std::make_unique<RSoAField>("target", "SoARuleFailSource"));
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   SoARuleFailSource source;
+   try {
+      auto viewSoASource = reader->GetView("source", &source, "SoARuleFailSource");
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("rules with sources are currently unsupported for SoA fields"));
+   }
+
+   SoARuleFailTarget target;
+   try {
+      auto viewSoASource = reader->GetView("target", &target, "SoARuleFailTarget");
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("rules with targets are currently unsupported for SoA fields"));
+   }
+}
+
+TEST(RNTuple, SoAWholeObjectRule)
+{
+   ROOT::TestSupport::FileRaii fileGuard("test_rntuple_soa_whole_object_rule.root");
+
+   {
+      auto model = ROOT::RNTupleModel::Create();
+
+      model->AddField(std::make_unique<RSoAField>("outer", "SoAOuter"));
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      auto outerSoA = writer->GetModel().GetDefaultEntry().GetPtr<SoAOuter>("outer");
+      outerSoA->fNested.fInner = {1.0, 2.0};
+      outerSoA->fOuter = {3.0, 4.0};
+
+      writer->Fill();
+   }
+
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   std::ostringstream os;
+   reader->Show(0, os);
+   // clang-format off
+   std::string expected{
+R"({
+  "outer": {
+    "fOuter": [12, 16],
+    "fNested": {
+      "fInner": [2, 4]
+    }
   }
 }
 )" };

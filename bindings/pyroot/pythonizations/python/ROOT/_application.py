@@ -8,6 +8,8 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+import ctypes
+import os
 import sys
 import time
 
@@ -16,15 +18,74 @@ class PyROOTApplication(object):
     """
     Application class for PyROOT.
     Configures the interactive usage of ROOT from Python.
+
+    It is created while the ROOT module is set up, so it reaches C++ through
+    cppyy.gbl, as attribute lookups on the ROOT module would restart the setup.
     """
 
     def __init__(self, config, is_ipython):
-        from ROOT.libROOTPythonizations import InitApplication
+        import cppyy
 
-        # Construct a TApplication for PyROOT
-        InitApplication(config.IgnoreCommandLineOptions)
+        if not cppyy.gbl.gApplication:
+            from ROOT.libROOTPythonizations import InstallWarningHandler
+
+            self._create_application(config.IgnoreCommandLineOptions)
+            self._init_root_globals()
+            InstallWarningHandler()
 
         self._is_ipython = is_ipython
+
+    @staticmethod
+    def _create_application(ignore_cmd_line_opts):
+        """
+        Create the TApplication. Unless ignore_cmd_line_opts is set, it gets
+        the command line options in sys.argv, up to a "-" or "--" that
+        separates them from the options for the Python script. For example,
+        to enable batch mode from the command line:
+
+            python script_name.py -b -- user_arg1 ... user_argn
+
+        or, if the script takes no options:
+
+            python script_name.py -b
+        """
+        import cppyy
+
+        gbl = cppyy.gbl
+
+        args = ["python"]
+        if not ignore_cmd_line_opts:
+            for arg in getattr(sys, "argv", [])[1:]:
+                if arg in ("-", "--"):
+                    break
+                args.append(arg)
+
+        # Bytes as given on the command line, and argv[argc] null like for main()
+        args = [os.fsencode(arg) for arg in args]
+        argc = ctypes.c_int(len(args))
+        argv = (ctypes.c_char_p * (len(args) + 1))(*args, None)
+        app = gbl.TApplication("PyROOT", argc, ctypes.cast(argv, ctypes.POINTER(ctypes.c_char_p)))
+        # It is gApplication from now on
+        cppyy._backend.SetOwnership(app, False)
+
+        # Prevent crashes on accessing history
+        gbl.Gl_histinit("-")
+
+        # Prevent ROOT from exiting Python
+        app.SetReturnFromRun(True)
+
+    @staticmethod
+    def _init_root_globals():
+        """Set up gBenchmark, the one ROOT global that neither TROOT nor TApplication sets"""
+        import cppyy
+
+        gbl = cppyy.gbl
+
+        if not gbl.gBenchmark:
+            # The global owns the object, so Python must not delete it
+            benchmark = gbl.TBenchmark()
+            cppyy._backend.SetOwnership(benchmark, False)
+            gbl.gBenchmark = benchmark
 
     @staticmethod
     def _ipython_config():

@@ -13,6 +13,8 @@
 #ifndef ROOT_RNTupleReadOptions
 #define ROOT_RNTupleReadOptions
 
+#include <cstdint>
+
 namespace ROOT {
 
 class RNTupleReadOptions;
@@ -23,6 +25,8 @@ class RNTupleReadOptionsManip final {
 public:
    static unsigned int GetClusterBunchSize(const RNTupleReadOptions &options);
    static void SetClusterBunchSize(RNTupleReadOptions &options, unsigned int val);
+   static std::uint64_t GetMaxEnvelopeSize(const RNTupleReadOptions &options);
+   static void SetMaxEnvelopeSize(RNTupleReadOptions &options, std::uint64_t val);
 };
 
 } // namespace Internal
@@ -63,6 +67,16 @@ This is useful, e.g., in the context of RDataFrame where the threads are fully m
 </tr>
 
 <tr>
+<td>`EMetadataMode`</td>
+<td>EMetadataMode</td>
+<td>EMetadataMode::kDefault</td>
+<td>
+Set whether cluster metadata (page locations) are loaded entirely on open or on demand during entry iteration.
+By default, the RNTuple reader loads metadata on demand.
+</td>
+</tr>
+
+<tr>
 <td>`EnableMetrics`</td>
 <td>`bool`</td>
 <td>`false`</td>
@@ -89,13 +103,23 @@ public:
       kDefault,
    };
 
+   enum class EMetadataMode {
+      kEager,
+      kOnDemand,
+      kDefault = kOnDemand,
+   };
+
 private:
    EClusterCache fClusterCache = EClusterCache::kDefault;
    /// The number of cluster to be prefetched in a single batch; this option is transitional and will be replaced
    /// by an option that allows to control the amount of memory that the prefetcher uses.
    unsigned int fClusterBunchSize = 1;
    EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
+   EMetadataMode fMetadataMode = EMetadataMode::kDefault;
    bool fEnableMetrics = false;
+   /// Largest header or footer envelope a page source will accept from an anchor it does not fully trust,
+   /// such as the S3 anchor, which is a separately stored object. Guards the allocation made from those sizes.
+   std::uint64_t fMaxEnvelopeSize = 1024 * 1024 * 1024;
 
 public:
    EClusterCache GetClusterCache() const { return fClusterCache; }
@@ -103,6 +127,9 @@ public:
 
    EImplicitMT GetUseImplicitMT() const { return fUseImplicitMT; }
    void SetUseImplicitMT(EImplicitMT val) { fUseImplicitMT = val; }
+
+   EMetadataMode GetMetadataMode() const { return fMetadataMode; }
+   void SetMetadataMode(EMetadataMode val) { fMetadataMode = val; }
 
    bool GetEnableMetrics() const { return fEnableMetrics; }
    void SetEnableMetrics(bool val) { fEnableMetrics = val; }
@@ -118,6 +145,16 @@ inline unsigned int RNTupleReadOptionsManip::GetClusterBunchSize(const RNTupleRe
 inline void RNTupleReadOptionsManip::SetClusterBunchSize(RNTupleReadOptions &options, unsigned int val)
 {
    options.fClusterBunchSize = val;
+}
+
+inline std::uint64_t RNTupleReadOptionsManip::GetMaxEnvelopeSize(const RNTupleReadOptions &options)
+{
+   return options.fMaxEnvelopeSize;
+}
+
+inline void RNTupleReadOptionsManip::SetMaxEnvelopeSize(RNTupleReadOptions &options, std::uint64_t val)
+{
+   options.fMaxEnvelopeSize = val;
 }
 
 } // namespace Internal

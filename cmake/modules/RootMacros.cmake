@@ -358,7 +358,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     list(INSERT incdirs 0 ${CMAKE_BINARY_DIR}/include)
 
     # this instruct rootcling do not store such paths in dictionary
-    set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/ginclude ${CMAKE_BINARY_DIR}/externals ${CMAKE_BINARY_DIR}/builtins)
+    set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
 
     set(headerfiles)
     set(_list_of_header_dependencies)
@@ -620,48 +620,82 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
   endif()
 
-  #---Get the library and module dependencies-----------------
-  if(ARG_DEPENDENCIES)
-    foreach(dep ${ARG_DEPENDENCIES})
-      # Whether <dep> provides a dictionary/pcm is decided at generation time
-      # via $<TARGET_EXISTS:G__<dep>>, so the '-m' flag and the module-file
-      # dependency below are independent of configuration order and expand to
-      # nothing for a dictionary-less library.
-      set(dep_has_dict "$<TARGET_EXISTS:G__${dep}>")
-      set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
-      if (runtime_cxxmodules AND NOT dep IN_LIST local_no_cxxmodules)
-        set(dependent_pcm ${dep}.pcm)
-        list(APPEND pcm_dependencies "$<${dep_has_dict}:$<TARGET_PROPERTY:${dep},ROOT_PCM_FILENAME>>")
-      endif()
-      set(newargs ${newargs} "$<${dep_has_dict}:-m>" "$<${dep_has_dict}:${dependent_pcm}>")
-    endforeach()
+  # With single-configuration Ninja, all build edges are in one graph, so ROOT's
+  # dictionaries can depend on rootcling and the upstream pcms at file level.
+  # Target-level dependencies would make all sources of this and of downstream
+  # libraries wait for those links, serializing the build (issue #6432).
+  set(file_level_dependencies FALSE)
+  if(CMAKE_PROJECT_NAME STREQUAL ROOT AND CMAKE_GENERATOR STREQUAL "Ninja" AND NOT CMAKE_ROOTTEST_DICT)
+    set(file_level_dependencies TRUE)
   endif()
+
+  #---Get the library and module dependencies-----------------
+  # Every dictionary implicitly depends on Core's pcm, except the one for Core itself.
+  # Only when building ROOT itself: downstream projects have no plain 'Core' target
+  # (only ROOT::Core), and a bare 'Core' in DEPENDS would be treated as a file.
+  if(ARG_MODULE AND NOT ARG_MODULE STREQUAL "Core")
+    if(TARGET ROOT::Core)
+      list(INSERT ARG_DEPENDENCIES 0 ROOT::Core)
+    elseif(TARGET Core)
+      list(INSERT ARG_DEPENDENCIES 0 Core)
+    endif()
+    list(REMOVE_DUPLICATES ARG_DEPENDENCIES)
+  endif()
+  foreach(dep ${ARG_DEPENDENCIES})
+    # Whether <dep> provides a dictionary/pcm is decided at generation time
+    # via $<TARGET_EXISTS:G__<dep>>, so the '-m' flag and the module-file
+    # dependency below are independent of configuration order and expand to
+    # nothing for a dictionary-less library.
+    set(dep_has_dict "$<TARGET_EXISTS:G__${dep}>")
+    set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
+    if (runtime_cxxmodules AND NOT dep IN_LIST local_no_cxxmodules)
+      set(dependent_pcm ${dep}.pcm)
+      list(APPEND pcm_dependencies "$<${dep_has_dict}:$<TARGET_PROPERTY:G__${dep},ROOT_PCM_FILENAME>>")
+    endif()
+    set(newargs ${newargs} "$<${dep_has_dict}:-m>" "$<${dep_has_dict}:${dependent_pcm}>")
+  endforeach()
 
   if(cpp_module_file)
     set(newargs -cxxmodule ${newargs})
   endif()
 
   #---what rootcling command to use--------------------------
+  # For file-level dependencies, reference rootcling by path and depend on the
+  # stamp written when it is linked: any target reference would imply a
+  # target-level dependency.
   if(ARG_STAGE1)
-    if(APPLE)
-      set(command ${CMAKE_COMMAND} -E env SDKROOT=${CMAKE_OSX_SYSROOT} $<TARGET_FILE:rootcling_stage1>)
+    if(file_level_dependencies)
+      get_target_property(rootcling_dir rootcling_stage1 RUNTIME_OUTPUT_DIRECTORY)
+      set(rootcling_exe ${rootcling_dir}/rootcling_stage1${CMAKE_EXECUTABLE_SUFFIX})
+      set(ROOTCLINGDEP ${ROOTCLING_STAGE1_STAMP} rconfigure)
     else()
-      set(command $<TARGET_FILE:rootcling_stage1>)
+      set(rootcling_exe $<TARGET_FILE:rootcling_stage1>)
+      set(ROOTCLINGDEP rconfigure)
     endif()
-    set(ROOTCLINGDEP rconfigure)
+    if(APPLE)
+      set(command ${CMAKE_COMMAND} -E env SDKROOT=${CMAKE_OSX_SYSROOT} ${rootcling_exe})
+    else()
+      set(command ${rootcling_exe})
+    endif()
     set(pcm_name)
   else()
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       if(MSVC AND CMAKE_ROOTTEST_DICT)
         set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${CMAKE_BINARY_DIR}/bin/rootcling.exe -rootbuild)
       else()
-        if(APPLE)
-          set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" SDKROOT=${CMAKE_OSX_SYSROOT} $<TARGET_FILE:rootcling> -rootbuild)
-        else()
-          set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
-        endif()
         # Modules need RConfigure.h copied into include/.
-        set(ROOTCLINGDEP rootcling rconfigure)
+        if(file_level_dependencies)
+          set(rootcling_exe ${CMAKE_BINARY_DIR}/bin/rootcling${CMAKE_EXECUTABLE_SUFFIX})
+          set(ROOTCLINGDEP ${ROOTCLING_STAMP} rconfigure)
+        else()
+          set(rootcling_exe $<TARGET_FILE:rootcling>)
+          set(ROOTCLINGDEP rootcling rconfigure)
+        endif()
+        if(APPLE)
+          set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" SDKROOT=${CMAKE_OSX_SYSROOT} ${rootcling_exe} -rootbuild)
+        else()
+          set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${rootcling_exe} -rootbuild)
+        endif()
       endif()
     elseif(TARGET ROOT::rootcling)
       if(APPLE)
@@ -680,7 +714,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   #---build the path exclusion switches----------------------
   set(excludepathsargs "")
-  foreach(excludepath ${excludepaths})
+  foreach(excludepath ${excludepaths} ${ROOT_DICTIONARY_EXCLUDE_PATHS})
     set(excludepathsargs ${excludepathsargs} -excludePath ${excludepath})
   endforeach()
 
@@ -690,9 +724,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   # DEPFILE works with all generators (Ninja, Unix Makefiles, etc.)
   set(depfile_path ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.depfile)
 
-  if(ARG_MODULE)
+  if(ARG_MODULE AND NOT file_level_dependencies)
+    # rootcling only needs the upstream pcms, this ensures they exist first.
     set(MODULE_LIB_DEPENDENCY ${ARG_DEPENDENCIES})
+  endif()
 
+  if(ARG_MODULE)
     # get target properties added after call to ROOT_GENERATE_DICTIONARY()
     if(TARGET ${ARG_MODULE})
       # NOTE that module_sysincs is already part of ${module_sysincs}. But -isystem "wins",
@@ -721,11 +758,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   foreach(implinc IN LISTS CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES)
     list(APPEND compIncPaths "-compilerI${implinc}")
   endforeach()
-
-  if(cpp_module_file AND TARGET ${ARG_MODULE})
-    set_target_properties(${ARG_MODULE} PROPERTIES
-      ROOT_PCM_FILENAME "${cpp_module_file}")
-  endif()
 
   # Keep the byproducts (rdict pcm, rootmap, C++ module) newer than the
   # generated .cxx.  The Makefile generator models secondary outputs of a
@@ -772,7 +804,18 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   # the generated source at the same scope level as its owning target, something that
   # would not happen if we used target_sources() directly with the dictionary source.
   if(TARGET "${ARG_MODULE}" AND NOT "${ARG_MODULE}" STREQUAL "${dictionary}")
-    add_library(${dictionary} OBJECT ${dictionary}.cxx)
+    # Generated files might be headers, so the sources of the module and its
+    # dependents would wait for the dictionary. With CMP0154 (CMake 3.28), they
+    # are private in targets with file sets, and an empty one is enough.
+    if(file_level_dependencies AND POLICY CMP0154)
+      cmake_policy(PUSH)
+      cmake_policy(SET CMP0154 NEW)
+      add_library(${dictionary} OBJECT ${dictionary}.cxx)
+      target_sources(${dictionary} PRIVATE FILE_SET HEADERS)
+      cmake_policy(POP)
+    else()
+      add_library(${dictionary} OBJECT ${dictionary}.cxx)
+    endif()
     set_target_properties(${dictionary} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
     target_link_libraries(${ARG_MODULE} PRIVATE ${dictionary})
 
@@ -798,6 +841,13 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   else()
     get_filename_component(dictionary_name ${dictionary} NAME)
     add_custom_target(${dictionary_name} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
+  endif()
+
+  # The C++ module that downstream dictionaries load with '-m'. Set on the
+  # dictionary target, as the module target might only be created later.
+  if(cpp_module_file)
+    get_filename_component(dictionary_target ${dictionary} NAME)
+    set_target_properties(${dictionary_target} PROPERTIES ROOT_PCM_FILENAME "${cpp_module_file}")
   endif()
 
   if(PROJECT_NAME STREQUAL "ROOT")
@@ -2143,9 +2193,12 @@ function(ROOT_ADD_PYUNITTEST name file)
   endif()
 
   set(test_name pyunittests${clean_name_with_path})
+  # Don't write Python bytecode or pytest caches into the source directory,
+  # also for GENERIC tests, which don't run Python with -B.
   ROOT_ADD_TEST(${test_name}
               ${test_cmd}
-              ENVIRONMENT PYTHONPATH=${pythonpaths_native} ${ARG_ENVIRONMENT}
+              ENVIRONMENT PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS=-pno:cacheprovider
+                          PYTHONPATH=${pythonpaths_native} ${ARG_ENVIRONMENT}
               LABELS ${labels}
               ${copy_to_builddir}
               ${will_fail}
@@ -2978,39 +3031,6 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
 endmacro()
 
 #-------------------------------------------------------------------------------
-#
-# function ROOTTEST_ADD_OLDTEST()
-#
-# This function defines a single tests in the current directory that calls the legacy
-# make system to run the defined tests.
-#
-#-------------------------------------------------------------------------------
-
-find_program(ROOT_GMAKE_PROGRAM gmake)
-if (${ROOT_GMAKE_PROGRAM} MATCHES NOTFOUND)
-  set(ROOT_GMAKE_PROGRAM make)
-endif()
-
-function(ROOTTEST_ADD_OLDTEST)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "LABELS;TIMEOUT" ${ARGN})
-
-  ROOTTEST_ADD_TEST( make
-                     COMMAND ${ROOT_GMAKE_PROGRAM} cleantest ${ROOTTEST_PARALLEL_MAKE}
-                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                     DEPENDS roottest-root-io-event
-                     FIXTURES_REQUIRED UtilsLibraryBuild
-                     # The Makefile breaks if these two variables are in the environment by accident:
-                     # If they are unset, root-config --arch --platform is invoked correctly
-                     ENVIRONMENT ARCH=;PLATFORM=
-                     LABELS ${ARG_LABELS} TIMEOUT ${ARG_TIMEOUT})
-  if(MSVC)
-    ROOTTEST_TARGETNAME_FROM_FILE(testprefix .)
-    set(fulltestname "${testprefix}-make")
-    set_property(TEST ${fulltestname} PROPERTY DISABLED true)
-  endif()
-endfunction()
-
-#-------------------------------------------------------------------------------
 # macro ROOTTEST_SETUP_MACROTEST()
 #
 # A helper macro to define the command to run a ROOT macro (.C, .C+ or .py)
@@ -3359,7 +3379,11 @@ function(ROOTTEST_ADD_TEST testname)
   set(pythonpaths ${localruntimedir} $ENV{PYTHONPATH})
   cmake_path(CONVERT "${pythonpaths}" TO_NATIVE_PATH_LIST pythonpaths_native)
 
+  # Python (also when embedded in root.exe) and pytest must not write caches
+  # next to the test sources in the source directory.
   set(environment ENVIRONMENT
+                  PYTHONDONTWRITEBYTECODE=1
+                  PYTEST_ADDOPTS=-pno:cacheprovider
                   ${ROOTTEST_ENV_EXTRA}
                   ${ARG_ENVIRONMENT}
                   PYTHONPATH=${pythonpaths_native})

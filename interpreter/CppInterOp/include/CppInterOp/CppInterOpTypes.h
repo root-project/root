@@ -26,6 +26,39 @@
 #endif
 #endif
 
+// Visibility of friend redeclarations of API functions. MSVC treats a friend
+// declaration without the dllimport/dllexport attribute as a
+// different-linkage redeclaration, so it needs CPPINTEROP_API. Elsewhere the
+// visibility comes from the API declaration itself; leaving it off here lets
+// Dispatch.h define these functions with hidden visibility (Clang rejects a
+// visibility that differs from a previous declaration).
+#if defined _WIN32 || defined __CYGWIN__
+#define CPPINTEROP_FRIEND_API CPPINTEROP_API
+#else
+#define CPPINTEROP_FRIEND_API
+#endif
+
+// Storage class for the dispatch-table slots (CppInternal::DispatchRaw).
+// Consumers spread across several shared libraries must share ONE table: on
+// ELF the extern pointers resolve across module boundaries by default, but
+// on Windows data symbols need explicit annotations (unlike CPPINTEROP_API,
+// which is unconditionally dllexport, promising a same-module definition).
+// The module that compiles a table definition defines
+// CPPINTEROP_DISPATCH_EXPORTS for all of its TUs; every other module imports.
+#ifndef CPPINTEROP_DISPATCH_STORAGE
+#if defined(_WIN32)
+#if defined(CPPINTEROP_DISPATCH_EXPORTS)
+#define CPPINTEROP_DISPATCH_STORAGE __declspec(dllexport)
+#else
+#define CPPINTEROP_DISPATCH_STORAGE __declspec(dllimport)
+#endif
+#elif defined(__GNUC__)
+#define CPPINTEROP_DISPATCH_STORAGE __attribute__((__visibility__("default")))
+#else
+#define CPPINTEROP_DISPATCH_STORAGE
+#endif
+#endif
+
 // Cross-platform deprecation attribute. Older Clang versions (Cling)
 // mis-parse C++11 `[[deprecated]]` near the return type, so we use
 // the vendor-specific spelling on each compiler.
@@ -225,13 +258,17 @@ namespace DispatchRaw {
 // Trace-hook slot forward decls; the X-macro expansion of
 // CppInterOpAPI.inc re-declares these with identical types. They're
 // here so JitCall::Invoke's inline body below can reference them.
-extern CPPINTEROP_API void (*CppInterOpTraceJitCallInvokeImpl)(
+extern CPPINTEROP_DISPATCH_STORAGE void (*CppInterOpTraceJitCallInvokeImpl)(
     const Cpp::JitCall* JC, void* result, void** args, std::size_t nargs,
     void* self);
-extern CPPINTEROP_API void (*CppInterOpTraceJitCallInvokeDestructorImpl)(
-    const Cpp::JitCall* JC, void* object, unsigned long nary, int withFree);
-extern CPPINTEROP_API void (*CppInterOpTraceJitCallInvokeReturnImpl)(
-    const Cpp::JitCall* JC, void* result);
+extern CPPINTEROP_DISPATCH_STORAGE void (
+    *CppInterOpTraceJitCallInvokeDestructorImpl)(const Cpp::JitCall* JC,
+                                                 void* object,
+                                                 unsigned long nary,
+                                                 int withFree);
+extern CPPINTEROP_DISPATCH_STORAGE void (
+    *CppInterOpTraceJitCallInvokeReturnImpl)(const Cpp::JitCall* JC,
+                                             void* result);
 } // namespace DispatchRaw
 } // namespace CppInternal
 
@@ -411,11 +448,10 @@ enum class AllocType : unsigned char {
   New,
   NewArr,
   Malloc,
-  Unknown,
-  CustomAlloc,
-  Null,
   OperatorNew,
-  OperatorNewArr
+  OperatorNewArr,
+  Null,
+  Unknown
 };
 
 enum class DeallocType : unsigned char {
@@ -432,6 +468,20 @@ inline QualKind operator|(QualKind a, QualKind b) {
                                static_cast<unsigned char>(b));
 }
 
+enum class OwnershipBehaviour : unsigned char {
+  Unknown = 0, // If function does not have any ownership attribute, it is
+               // assumed to be Unknown, not None
+  OwnershipReturns = 1 << 0,
+  OwnershipHolds = 1 << 1,
+  OwnershipTakes = 1 << 2
+};
+
+inline OwnershipBehaviour operator|(OwnershipBehaviour A,
+                                    OwnershipBehaviour B) {
+  return static_cast<OwnershipBehaviour>(static_cast<unsigned char>(A) |
+                                         static_cast<unsigned char>(B));
+}
+
 enum class ValueKind : std::uint8_t {
   None,
   LValue,
@@ -443,8 +493,8 @@ enum class ValueKind : std::uint8_t {
 /// function, constructor or destructor.
 class JitCall {
 public:
-  friend CPPINTEROP_API JitCall MakeFunctionCallable(InterpRef I,
-                                                     ConstFuncRef func);
+  friend CPPINTEROP_FRIEND_API JitCall MakeFunctionCallable(InterpRef I,
+                                                            ConstFuncRef func);
   enum Kind : char {
     kUnknown = 0,
     kGenericCall,
@@ -485,16 +535,13 @@ private:
       : m_DestructorCall(C), m_Kind(K), m_FD(Dtor) {}
 
   // Trace-hook impls need private m_FD for the function-name lookup.
-  // CPPINTEROP_API matches the X-macro-generated decl in CppInterOpDecl.inc;
-  // MSVC treats a friend decl without the dllimport/dllexport attribute as
-  // a different-linkage redeclaration.
-  friend CPPINTEROP_API void
+  friend CPPINTEROP_FRIEND_API void
   CppInterOpTraceJitCallInvokeImpl(const JitCall*, void* result, void** args,
                                    std::size_t nargs, void* self);
-  friend CPPINTEROP_API void
+  friend CPPINTEROP_FRIEND_API void
   CppInterOpTraceJitCallInvokeDestructorImpl(const JitCall*, void* object,
                                              unsigned long nary, int withFree);
-  friend CPPINTEROP_API void
+  friend CPPINTEROP_FRIEND_API void
   CppInterOpTraceJitCallInvokeReturnImpl(const JitCall*, void* result);
 
   /// Checks if the passed arguments are valid for the given function.

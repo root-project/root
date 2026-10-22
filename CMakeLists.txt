@@ -5,6 +5,18 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
+if("${CMAKE_VERSION}" VERSION_LESS "3.26.0")
+  message(WARNING
+    "Your CMake version is ${CMAKE_VERSION}. Starting with ROOT 6.44, the "
+    "minimum version of CMake required to build ROOT will become 3.26.0, and "
+    "using an older CMake will raise an error. After ROOT 6.44, the CMake version "
+    "may rise to 3.31.0 if an upgrade to LLVM 24 or later is performed.")
+elseif("${CMAKE_VERSION}" VERSION_LESS "3.31.0")
+  message(STATUS
+    "Your CMake version is ${CMAKE_VERSION}. After ROOT 6.44, the "
+    "minimum version of CMake required to build ROOT may become 3.31.0 if "
+    "an upgrade to LLVM 24 or later is performed.")
+endif()
 
 if(WIN32)
   # Set CMP0091 (MSVC runtime library flags are selected by an abstraction) to OLD
@@ -66,6 +78,10 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/lib) # prevent mkdir races
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# Written when rootcling_stage1 and rootcling are linked, see ROOT_GENERATE_DICTIONARY().
+set(ROOTCLING_STAGE1_STAMP ${CMAKE_BINARY_DIR}/CMakeFiles/rootcling_stage1.stamp)
+set(ROOTCLING_STAMP ${CMAKE_BINARY_DIR}/CMakeFiles/rootcling.stamp)
 
 # Set permissions for installed folders and subfolders that come from the source tree in case
 # the permissions in the source tree are wrong since the install command will preserve them
@@ -387,8 +403,11 @@ install(FILES ${CMAKE_BINARY_DIR}/etc/gitinfo.txt DESTINATION ${CMAKE_INSTALL_SY
 
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.
+add_subdirectory (builtins/libtextinput) # hard coded builtin for core
 add_subdirectory (core)
 add_subdirectory (builtins/zip) # hard coded builtin for core/zip
+add_subdirectory (builtins/clib) # hard coded builtin for core
+add_subdirectory (builtins/mixmax) # hard coded builtin for math/mathcore
 add_subdirectory (math)
 if (fortran AND CMAKE_Fortran_COMPILER)
   add_subdirectory(builtins/cernlib) # hard coded builtin for hist and main
@@ -483,9 +502,9 @@ else()
 
   if(WIN32)
     list(APPEND incdirs
-      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src
-      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/gdk
-      ${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/glib
+      ${CMAKE_SOURCE_DIR}/builtins/win32gdk/
+      ${CMAKE_SOURCE_DIR}/builtins/win32gdk/gdk
+      ${CMAKE_SOURCE_DIR}/builtins/win32gdk/glib
     )
   endif()
 

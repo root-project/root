@@ -23,6 +23,15 @@
 
 #include <iomanip>
 
+const ROOT::Experimental::Internal::RNTupleProcessorEntry *
+ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(RNTupleProcessor &processor, bool includeSubfields)
+{
+   processor.AddAllFieldsToEntry(RNTupleProcessorProvenance(), includeSubfields);
+   return processor.fEntry.get();
+}
+
+//------------------------------------------------------------------------------
+
 std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Experimental::RNTupleOpenSpec::CreatePageSource() const
 {
    if (const std::string *storagePath = std::get_if<std::string>(&fStorage))
@@ -67,9 +76,9 @@ ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<std::unique_ptr<RN
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::CreateJoin(RNTupleOpenSpec primaryNTuple, RNTupleOpenSpec auxNTuple,
-                                                 const std::vector<std::string> &joinFields,
-                                                 const RNTupleProcessorOptions &options)
+ROOT::Experimental::CreateRNTupleJoinProcessor(RNTupleOpenSpec primaryNTuple, RNTupleOpenSpec auxNTuple,
+                                               const std::vector<std::string> &joinFields,
+                                               const RNTupleProcessorOptions &options)
 {
    if (joinFields.size() > 4) {
       throw RException(R__FAIL("a maximum of four join fields is allowed"));
@@ -79,18 +88,18 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(RNTupleOpenSpec primaryNTuple, 
       throw RException(R__FAIL("join fields must be unique"));
    }
 
-   std::unique_ptr<RNTupleProcessor> primaryProcessor = Create(std::move(primaryNTuple), options);
+   std::unique_ptr<RNTupleProcessor> primaryProcessor = RNTupleProcessor::Create(std::move(primaryNTuple), options);
 
-   std::unique_ptr<RNTupleProcessor> auxProcessor = Create(std::move(auxNTuple));
+   std::unique_ptr<RNTupleProcessor> auxProcessor = RNTupleProcessor::Create(std::move(auxNTuple));
 
-   return CreateJoin(std::move(primaryProcessor), std::move(auxProcessor), joinFields, options);
+   return CreateRNTupleJoinProcessor(std::move(primaryProcessor), std::move(auxProcessor), joinFields, options);
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::CreateJoin(std::unique_ptr<RNTupleProcessor> primaryProcessor,
-                                                 std::unique_ptr<RNTupleProcessor> auxProcessor,
-                                                 const std::vector<std::string> &joinFields,
-                                                 const RNTupleProcessorOptions &options)
+ROOT::Experimental::CreateRNTupleJoinProcessor(std::unique_ptr<RNTupleProcessor> primaryProcessor,
+                                               std::unique_ptr<RNTupleProcessor> auxProcessor,
+                                               const std::vector<std::string> &joinFields,
+                                               const RNTupleProcessorOptions &options)
 {
    if (joinFields.size() > 4) {
       throw RException(R__FAIL("a maximum of four join fields is allowed"));
@@ -119,7 +128,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::Initialize(
    std::shared_ptr<ROOT::Experimental::Internal::RNTupleProcessorEntry> entry)
 {
    // The processor has already been initialized.
-   if (IsInitialized())
+   if (IsInitialized() && fPageSource)
       return;
 
    if (!entry)
@@ -154,9 +163,7 @@ ROOT::Experimental::RNTupleSingleProcessor::CreateAndConnectField(const std::str
       qualifiedFieldName.find("R_rntproc_join_") == 0 ? qualifiedFieldName.substr(15) : qualifiedFieldName;
 
    auto descGuard = fPageSource->GetSharedDescriptorGuard();
-   const auto &desc = descGuard.GetRef();
-   ROOT::RFieldZero fieldZero;
-   ROOT::Internal::SetAllowFieldSubstitutions(fieldZero, true);
+   const auto &desc = descGuard.GetConstRef();
 
    const auto onDiskFieldId = desc.FindFieldId(onDiskFieldName);
 
@@ -179,20 +186,28 @@ ROOT::Experimental::RNTupleSingleProcessor::CreateAndConnectField(const std::str
    }
 
    field->SetOnDiskId(onDiskFieldId);
+   return ConnectField(std::move(field));
+}
+
+std::unique_ptr<ROOT::RFieldBase>
+ROOT::Experimental::RNTupleSingleProcessor::ConnectField(std::unique_ptr<ROOT::RFieldBase> field)
+{
+   ROOT::RFieldZero fieldZero;
+   ROOT::Internal::SetAllowFieldSubstitutions(fieldZero, true);
    fieldZero.Attach(std::move(field));
    ROOT::Internal::CallConnectPageSourceOnField(fieldZero, *fPageSource);
    return std::move(fieldZero.ReleaseSubfields()[0]);
 }
 
 ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
-ROOT::Experimental::RNTupleSingleProcessor::AddFieldToEntry(const std::string &fieldName, const std::string &typeName,
-                                                            void *valuePtr,
+ROOT::Experimental::RNTupleSingleProcessor::AddFieldToEntry(const std::string &canonicalFieldName,
+                                                            const std::string &typeName, void *valuePtr,
                                                             const Internal::RNTupleProcessorProvenance &provenance)
 {
-   auto fieldIdx = fEntry->FindFieldIndex(fieldName, typeName);
+   auto fieldIdx = fEntry->FindFieldIndex(canonicalFieldName, typeName);
    if (!fieldIdx) {
       // Strip the processor name prefix(es), if present.
-      std::string qualifiedFieldName = fieldName;
+      std::string qualifiedFieldName = canonicalFieldName;
       if (provenance.IsPresentInFieldName(qualifiedFieldName)) {
          qualifiedFieldName = qualifiedFieldName.substr(provenance.Get().size() + 1);
       }
@@ -211,34 +226,153 @@ ROOT::Experimental::RNTupleSingleProcessor::AddFieldToEntry(const std::string &f
    return *fieldIdx;
 }
 
-ROOT::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::LoadEntry(ROOT::NTupleSize_t entryNumber)
+ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
+ROOT::Experimental::RNTupleSingleProcessor::AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field,
+                                                            const std::string &canonicalFieldName, void *valuePtr,
+                                                            const Internal::RNTupleProcessorProvenance &provenance)
 {
-   if (entryNumber >= fNEntries || !fEntry)
-      return kInvalidNTupleIndex;
+   auto fieldIdx = fEntry->FindFieldIndex(canonicalFieldName, field->GetTypeName());
+   if (!fieldIdx) {
+      // Strip the processor name prefix(es), if present.
+      std::string qualifiedFieldName = canonicalFieldName;
+      if (provenance.IsPresentInFieldName(qualifiedFieldName)) {
+         qualifiedFieldName = qualifiedFieldName.substr(provenance.Get().size() + 1);
+      }
+
+      field = ConnectField(std::move(field));
+
+      if (!field) {
+         throw RException(R__FAIL("cannot register field with name \"" + qualifiedFieldName +
+                                  "\" because it is not present in the on-disk information of the RNTuple(s) this "
+                                  "processor is created from"));
+      }
+
+      fieldIdx = fEntry->AddField(qualifiedFieldName, std::move(field), valuePtr, provenance);
+   }
+
+   return *fieldIdx;
+}
+
+void ROOT::Experimental::RNTupleSingleProcessor::AddAllFieldsToEntry(
+   const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields)
+{
+   Initialize();
+   auto descGuard = fPageSource->GetSharedDescriptorGuard();
+   const auto &desc = descGuard.GetConstRef();
+   auto fnAddSubfields = [this, &desc, &provenance](const ROOT::RFieldDescriptor &field, auto &fn) -> void {
+      std::string fieldName = desc.GetQualifiedFieldName(field.GetId());
+      if (auto prefix = provenance.Get(); !prefix.empty())
+         fieldName = prefix + "." + fieldName;
+
+      AddFieldToEntry(fieldName, field.GetTypeName(), nullptr, provenance);
+      for (const auto &subfield : desc.GetFieldIterable(field.GetId())) {
+         fn(subfield, fn);
+      }
+   };
+
+   for (const auto &field : desc.GetTopLevelFields()) {
+      if (includeSubfields) {
+         fnAddSubfields(field, fnAddSubfields);
+      } else {
+         std::string fieldName = desc.GetQualifiedFieldName(field.GetId());
+         if (auto prefix = provenance.Get(); !prefix.empty())
+            fieldName = prefix + "." + fieldName;
+
+         AddFieldToEntry(fieldName, field.GetTypeName(), nullptr, provenance);
+      }
+   }
+}
+
+void ROOT::Experimental::RNTupleSingleProcessor::SetEntryMapping(ROOT::NTupleSize_t globalEntryNumber,
+                                                                 REntryMapping &mapping)
+{
+   if (globalEntryNumber >= fNEntries || !fEntry)
+      mapping.SetEntryNumber(kInvalidNTupleIndex);
+   else
+      mapping.SetEntryNumber(globalEntryNumber);
+}
+
+void ROOT::Experimental::RNTupleSingleProcessor::LoadEntryImpl(const REntryMapping &mapping)
+{
+   assert(mapping.GetEntryNumber() != kInvalidNTupleIndex);
 
    for (auto fieldIdx : fFieldIdxs) {
-      fEntry->ReadValue(fieldIdx, entryNumber);
+      fEntry->ReadValue(fieldIdx, mapping.GetEntryNumber());
    }
 
    fNEntriesProcessed++;
-   return entryNumber;
 }
+
+namespace {
+void ResetColumnRepresentative(ROOT::RFieldBase &field)
+{
+   field.SetColumnRepresentatives(ROOT::RFieldBase::RColumnRepresentations::Selection_t{});
+   for (auto &subfield : field.GetMutableSubfields()) {
+      ResetColumnRepresentative(*subfield);
+   }
+}
+
+void SetOnDiskId(ROOT::RFieldBase &field, ROOT::DescriptorId_t onDiskId, const ROOT::RNTupleDescriptor &desc)
+{
+   field.SetOnDiskId(onDiskId);
+
+   for (auto &subfield : field.GetMutableSubfields()) {
+      onDiskId = desc.FindFieldId(subfield->GetQualifiedFieldName());
+      SetOnDiskId(*subfield, onDiskId, desc);
+   }
+}
+} // anonymous namespace
 
 void ROOT::Experimental::RNTupleSingleProcessor::Connect(
    const std::unordered_set<ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
    const Internal::RNTupleProcessorProvenance & /* provenance */, bool updateFields)
 {
-   Initialize();
+   Initialize(fEntry);
 
    fFieldIdxs = fieldIdxs;
 
    if (updateFields) {
+      auto descGuard = fPageSource->GetSharedDescriptorGuard();
+      const auto &desc = descGuard.GetConstRef();
+
       for (const auto &fieldIdx : fFieldIdxs) {
          const auto &currField = fEntry->GetValue(fieldIdx).GetField();
-         auto newField = CreateAndConnectField(fEntry->GetQualifiedFieldName(fieldIdx), currField.GetTypeName());
+
+         auto onDiskId = desc.FindFieldId(currField.GetQualifiedFieldName());
+         bool needsClone = onDiskId != ROOT::kInvalidDescriptorId &&
+                           currField.GetTypeName() == desc.GetFieldDescriptor(onDiskId).GetTypeName();
+         if (const auto fieldOriginIdx = fEntry->GetFieldOriginIdx(fieldIdx);
+             fieldOriginIdx != ROOT::kInvalidDescriptorId) {
+            const auto &originField = fEntry->GetField(fieldOriginIdx);
+            onDiskId = desc.FindFieldId(originField.GetQualifiedFieldName());
+            needsClone = true;
+         }
+
+         std::unique_ptr<ROOT::RFieldBase> newField;
+         if (needsClone) {
+            // We have enough information to clone the existing field.
+            newField = currField.Clone(currField.GetFieldName());
+            // The clone's column representatives (+ its subfields') need to be reset before it can be connected to the
+            // new page source.
+            ResetColumnRepresentative(*newField);
+            SetOnDiskId(*newField, onDiskId, desc);
+            newField = ConnectField(std::move(newField));
+         } else {
+            // We need to create the new field from scratch (e.g. because it is a subfield without a parent field
+            // attached).
+            newField = CreateAndConnectField(fEntry->GetQualifiedFieldName(fieldIdx), currField.GetTypeName());
+         }
 
          fEntry->UpdateField(fieldIdx, std::move(newField));
       }
+   }
+}
+
+void ROOT::Experimental::RNTupleSingleProcessor::Disconnect()
+{
+   if (fPageSource) {
+      fEntry->ResetFields(fFieldIdxs);
+      fPageSource.reset();
    }
 }
 
@@ -308,6 +442,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::GetNEntries()
 
       for (unsigned i = 0; i < fInnerProcessors.size(); ++i) {
          if (fInnerNEntries[i] == kInvalidNTupleIndex) {
+            fInnerProcessors[i]->Initialize(fEntry);
             fInnerNEntries[i] = fInnerProcessors[i]->GetNEntries();
          }
 
@@ -328,8 +463,20 @@ void ROOT::Experimental::RNTupleChainProcessor::Connect(
    ConnectInnerProcessor(fCurrentProcessorNumber);
 }
 
+void ROOT::Experimental::RNTupleChainProcessor::Disconnect()
+{
+   for (const auto &innerProc : fInnerProcessors) {
+      innerProc->Disconnect();
+   }
+}
+
 void ROOT::Experimental::RNTupleChainProcessor::ConnectInnerProcessor(std::size_t processorNumber)
 {
+   if (fCurrentProcessorNumber != processorNumber) {
+      fInnerProcessors[fCurrentProcessorNumber]->Disconnect();
+      fCurrentProcessorNumber = processorNumber;
+   }
+
    auto &innerProc = fInnerProcessors[processorNumber];
    innerProc->Initialize(fEntry);
    innerProc->Connect(fFieldIdxs, fProvenance, /*updateFields=*/true);
@@ -343,46 +490,83 @@ ROOT::Experimental::RNTupleChainProcessor::AddFieldToEntry(const std::string &fi
    return fInnerProcessors[fCurrentProcessorNumber]->AddFieldToEntry(fieldName, typeName, valuePtr, provenance);
 }
 
-ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NTupleSize_t entryNumber)
+ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
+ROOT::Experimental::RNTupleChainProcessor::AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field,
+                                                           const std::string &fieldName, void *valuePtr,
+                                                           const Internal::RNTupleProcessorProvenance &provenance)
 {
+   return fInnerProcessors[fCurrentProcessorNumber]->AddFieldToEntry(std::move(field), fieldName, valuePtr, provenance);
+}
+
+void ROOT::Experimental::RNTupleChainProcessor::AddAllFieldsToEntry(
+   const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields)
+{
+   Initialize();
+   fInnerProcessors[0]->AddAllFieldsToEntry(provenance, includeSubfields);
+}
+
+void ROOT::Experimental::RNTupleChainProcessor::SetEntryMapping(ROOT::NTupleSize_t globalEntryNumber,
+                                                                REntryMapping &mapping)
+{
+   std::size_t currProcessorIdx = mapping.GetInnerProcessorIdx();
+
    // If the requested entry number is lower than the current entry number, we have to again localise the correct local
    // entry number starting from the first processor in the chain. Otherwise, we can continue looking from the inner
    // processor that is currently connected, which is much faster when the chain consists of many inner processors.
-   if (entryNumber < fLastLoadedEntry) {
-      fCurrentProcessorNumber = 0;
-      ConnectInnerProcessor(fCurrentProcessorNumber);
+   if (fLastLoadedEntry != ROOT::kInvalidNTupleIndex && globalEntryNumber < fLastLoadedEntry) {
+      currProcessorIdx = 0;
+      ConnectInnerProcessor(currProcessorIdx);
    }
 
-   std::size_t currProcessorNumber = fCurrentProcessorNumber;
    ROOT::NTupleSize_t entriesSeen = 0;
-   for (unsigned i = 0; i < currProcessorNumber; ++i) {
+   for (unsigned i = 0; i < currProcessorIdx; ++i) {
       if (fInnerNEntries[i] == kInvalidNTupleIndex) {
          fInnerNEntries[i] = fInnerProcessors[i]->GetNEntries();
       }
+
+      if (fInnerNEntries[i] >= globalEntryNumber) {
+         currProcessorIdx = 0;
+         ConnectInnerProcessor(currProcessorIdx);
+         break;
+      }
       entriesSeen += fInnerNEntries[i];
    }
-   ROOT::NTupleSize_t localEntryNumber = entryNumber - entriesSeen;
+
+   ROOT::NTupleSize_t localEntryNumber = globalEntryNumber - entriesSeen;
+   fInnerProcessors[currProcessorIdx]->SetEntryMapping(localEntryNumber, mapping.GetInnerProcessorMapping());
 
    // As long as the entry fails to load from the current processor, we decrement the local entry number with the number
    // of entries in this processor and try with the next processor until we find the correct local entry number.
-   while (fInnerProcessors[currProcessorNumber]->LoadEntry(localEntryNumber) == kInvalidNTupleIndex) {
-      if (fInnerNEntries[currProcessorNumber] == kInvalidNTupleIndex) {
-         fInnerNEntries[currProcessorNumber] = fInnerProcessors[currProcessorNumber]->GetNEntries();
+   while (mapping.GetInnerProcessorMapping().GetEntryNumber() == kInvalidNTupleIndex) {
+      if (fInnerNEntries[currProcessorIdx] == kInvalidNTupleIndex) {
+         fInnerNEntries[currProcessorIdx] = fInnerProcessors[currProcessorIdx]->GetNEntries();
       }
 
-      localEntryNumber -= fInnerNEntries[currProcessorNumber];
+      localEntryNumber -= fInnerNEntries[currProcessorIdx];
 
       // The provided global entry number is larger than the number of available entries.
-      if (++currProcessorNumber >= fInnerProcessors.size())
-         return kInvalidNTupleIndex;
+      if (++currProcessorIdx >= fInnerProcessors.size()) {
+         mapping.SetEntryNumber(kInvalidNTupleIndex);
+         return;
+      }
 
-      ConnectInnerProcessor(currProcessorNumber);
+      ConnectInnerProcessor(currProcessorIdx);
+      fInnerProcessors[currProcessorIdx]->SetEntryMapping(localEntryNumber, mapping.GetInnerProcessorMapping());
    }
 
-   fCurrentProcessorNumber = currProcessorNumber;
+   mapping.SetEntryNumber(globalEntryNumber);
+   mapping.SetInnerProcessorIdx(currProcessorIdx);
+}
+
+void ROOT::Experimental::RNTupleChainProcessor::LoadEntryImpl(const REntryMapping &mapping)
+{
+   assert(mapping.GetEntryNumber() != kInvalidNTupleIndex);
+
+   if (fCurrentProcessorNumber != mapping.GetInnerProcessorIdx())
+      ConnectInnerProcessor(mapping.GetInnerProcessorIdx());
+   fInnerProcessors[mapping.GetInnerProcessorIdx()]->LoadEntry(mapping.GetInnerProcessorMapping());
+   fLastLoadedEntry = mapping.GetEntryNumber();
    fNEntriesProcessed++;
-   fLastLoadedEntry = entryNumber;
-   return entryNumber;
 }
 
 void ROOT::Experimental::RNTupleChainProcessor::AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable,
@@ -475,6 +659,12 @@ void ROOT::Experimental::RNTupleJoinProcessor::Connect(
    fAuxiliaryProcessor->Connect(fAuxiliaryFieldIdxs, auxProvenance, updateFields);
 }
 
+void ROOT::Experimental::RNTupleJoinProcessor::Disconnect()
+{
+   fPrimaryProcessor->Disconnect();
+   fAuxiliaryProcessor->Disconnect();
+}
+
 ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
 ROOT::Experimental::RNTupleJoinProcessor::AddFieldToEntry(const std::string &fieldName, const std::string &typeName,
                                                           void *valuePtr,
@@ -506,6 +696,45 @@ ROOT::Experimental::RNTupleJoinProcessor::AddFieldToEntry(const std::string &fie
    }
 }
 
+ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t
+ROOT::Experimental::RNTupleJoinProcessor::AddFieldToEntry(std::unique_ptr<ROOT::RFieldBase> field,
+                                                          const std::string &fieldName, void *valuePtr,
+                                                          const Internal::RNTupleProcessorProvenance &provenance)
+{
+   auto auxProvenance = provenance.Evolve(fAuxiliaryProcessor->GetOptions().GetProcessorName());
+   if (auxProvenance.IsPresentInFieldName(fieldName)) {
+      // If the primaryProcessor has a field with the name of the auxProcessor (either as a "proper" field or because
+      // the primary processor itself is a join where its auxProcessor bears the same name as the current auxProcessor),
+      // there will be name conflicts, so error out.
+      if (fPrimaryProcessor->CanReadFieldFromDisk(fieldName)) {
+         throw RException(R__FAIL("ambiguous field name: \"" + fieldName +
+                                  "\" is present in the primary RNTupleProcessor \"" +
+                                  fPrimaryProcessor->GetOptions().GetProcessorName() +
+                                  "\", but may also refer to a field in the auxiliary RNTupleProcessor named \"" +
+                                  fAuxiliaryProcessor->GetOptions().GetProcessorName() +
+                                  "\". To avoid this ambiguity, rename the auxiliary RNTupleProcessor."));
+      }
+
+      auto fieldIdx = fAuxiliaryProcessor->AddFieldToEntry(std::move(field), fieldName, valuePtr, auxProvenance);
+      fAuxiliaryFieldIdxs.insert(fieldIdx);
+      return fieldIdx;
+   } else {
+      auto fieldIdx = fPrimaryProcessor->AddFieldToEntry(std::move(field), fieldName, valuePtr, provenance);
+      if (fieldIdx)
+         fFieldIdxs.insert(fieldIdx);
+      return fieldIdx;
+   }
+}
+
+void ROOT::Experimental::RNTupleJoinProcessor::AddAllFieldsToEntry(
+   const Internal::RNTupleProcessorProvenance &provenance, bool includeSubfields)
+{
+   Initialize();
+   fPrimaryProcessor->AddAllFieldsToEntry(provenance, includeSubfields);
+   auto auxProvenance = provenance.Evolve(fAuxiliaryProcessor->GetOptions().GetProcessorName());
+   fAuxiliaryProcessor->AddAllFieldsToEntry(auxProvenance, includeSubfields);
+}
+
 void ROOT::Experimental::RNTupleJoinProcessor::SetAuxiliaryFieldValidity(bool isValid)
 {
    for (const auto &fieldIdx : fAuxiliaryFieldIdxs) {
@@ -513,22 +742,38 @@ void ROOT::Experimental::RNTupleJoinProcessor::SetAuxiliaryFieldValidity(bool is
    }
 }
 
-ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTupleSize_t entryNumber)
+void ROOT::Experimental::RNTupleJoinProcessor::SetEntryMapping(ROOT::NTupleSize_t globalEntryNumber,
+                                                               REntryMapping &mapping)
 {
-   if (fPrimaryProcessor->LoadEntry(entryNumber) == kInvalidNTupleIndex) {
+   fPrimaryProcessor->SetEntryMapping(globalEntryNumber, mapping.GetPrimaryProcessorMapping());
+   if (mapping.GetPrimaryProcessorMapping().GetEntryNumber() == kInvalidNTupleIndex) {
+      mapping.SetEntryNumber(kInvalidNTupleIndex);
       for (auto fieldIdx : fFieldIdxs) {
          fEntry->SetFieldValidity(fieldIdx, false);
       }
       SetAuxiliaryFieldValidity(false);
-      return kInvalidNTupleIndex;
+      return;
    }
+   // We only set the entry mapping of the auxiliary ntuple here if the join is aligned. For unaligne joins, we need to
+   // first get the correct entry number from the join table, which requires reading join field data from disk. Because
+   // we want to do this only when the entry is actually loaded to avoid unnecessary reads, we postpone this to the
+   // actual `LoadEntry` call.
+   if (!fJoinTable) {
+      fAuxiliaryProcessor->SetEntryMapping(globalEntryNumber, mapping.GetAuxiliaryProcessorMapping());
+   }
+   mapping.SetEntryNumber(globalEntryNumber);
+}
 
+void ROOT::Experimental::RNTupleJoinProcessor::LoadEntryImpl(const REntryMapping &mapping)
+{
+   assert(mapping.GetEntryNumber() != kInvalidNTupleIndex);
+
+   fPrimaryProcessor->LoadEntry(mapping.GetPrimaryProcessorMapping());
    fNEntriesProcessed++;
 
    if (!fJoinTable) {
-      // The auxiliary processor's fields are valid if the entry could be loaded.
-      fAuxiliaryProcessor->LoadEntry(entryNumber);
-      return entryNumber;
+      fAuxiliaryProcessor->LoadEntry(mapping.GetAuxiliaryProcessorMapping());
+      return;
    }
 
    if (!fJoinTableIsBuilt) {
@@ -547,15 +792,15 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
    // Find the entry index corresponding to the join field values for each auxiliary processor and load the
    // corresponding entry.
    const auto entryIdx = fJoinTable->GetEntryIndex(values);
+   REntryMapping auxMapping;
+   fAuxiliaryProcessor->SetEntryMapping(entryIdx, auxMapping);
 
    if (entryIdx == kInvalidNTupleIndex) {
       SetAuxiliaryFieldValidity(false);
    } else {
       SetAuxiliaryFieldValidity(true);
-      fAuxiliaryProcessor->LoadEntry(entryIdx);
+      fAuxiliaryProcessor->LoadEntry(auxMapping);
    }
-
-   return entryNumber;
 }
 
 ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::GetNEntries()

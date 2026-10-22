@@ -46,12 +46,12 @@ add_definitions(
 
 set(ClingWorkAroundMissingDynamicScope              TRUE)
 set(ClingWorkAroundUnnamedInclude                   TRUE)      # See https://sft.its.cern.ch/jira/browse/ROOT-4763
-set(ClingWorkAroundMissingSmartInclude              TRUE)      # disabled in Makefile-based?
+set(ClingWorkAroundMissingSmartInclude              TRUE)
 set(ClingWorkAroundNoDotInclude                     TRUE)      # See trello card about .include
 set(ClingWorkAroundMissingAutoLoadingForTemplates   TRUE)      # See: https://sft.its.cern.ch/jira/browse/ROOT-4786
 set(ClingWorkAroundTClassUpdateDouble32             TRUE)      # See https://sft.its.cern.ch/jira/browse/ROOT-5857
 set(ClingWorkAroundAutoParseDeclaration             TRUE)      # See https://sft.its.cern.ch/jira/browse/ROOT-6320
-set(ClingWorkAroundMissingUnloading                 TRUE)      # disabled in Makefile-based?
+set(ClingWorkAroundMissingUnloading                 TRUE)
 set(ClingWorkAroundBrokenUnnamedReturn              TRUE)      # See https://sft.its.cern.ch/jira/browse/ROOT-4719
 set(ClingWorkAroundNoPrivateClassIO                 TRUE)      # See https://sft.its.cern.ch/jira/browse/ROOT-4865
 set(ClingWorkAroundUnnamedDetection2                TRUE)      # See https://sft.its.cern.ch/jira/browse/ROOT-8025

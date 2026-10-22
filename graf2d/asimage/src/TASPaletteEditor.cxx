@@ -61,15 +61,17 @@ static const char *gFileTypes[] = {
    nullptr,              nullptr
 };
 
-static UShort_t gRedRainbow[12] = {
+constexpr size_t kNRainbowElems = 10;
+
+static UShort_t gRedRainbow[kNRainbowElems] = {
    0x0000, 0x7000, 0x0000, 0x0000, 0x0000,
    0xffff, 0xffff, 0x7000, 0x8000, 0xffff
 };
-static UShort_t gGreenRainbow[12] = {
+static UShort_t gGreenRainbow[kNRainbowElems] = {
    0x0000, 0x0000, 0x0000, 0xffff, 0xffff,
    0xffff, 0x0000, 0x0000, 0x8000, 0xffff
 };
-static UShort_t gBlueRainbow[12] = {
+static UShort_t gBlueRainbow[kNRainbowElems] = {
    0x0000, 0x7000, 0xffff, 0xffff, 0x0000,
    0x0000, 0x0000, 0x0000, 0xa000, 0xffff
 };
@@ -672,13 +674,11 @@ void TASPaletteEditor::NewPalette(Long_t id)
    if (id == 5) // empty entry
       return;
 
-   TImagePalette *newPalette;
-
    Double_t delta = fPalette->fPoints[fPalette->fNumPoints-2] - fPalette->fPoints[1];
-   UInt_t   numPt;
 
-   numPt = id == 0 ? 12 : 13;
-   newPalette = new TImagePalette(numPt);
+   UInt_t numPt = id == 0 ? kNRainbowElems + 2 : 13;
+   TImagePalette *newPalette = new TImagePalette(numPt);
+
    Int_t pt;
    for (pt = 1; pt < Int_t(numPt - 1); pt++) {
       newPalette->fPoints[pt] = fPalette->fPoints[1] + (pt - 1) * delta / (numPt - 3);
@@ -687,9 +687,9 @@ void TASPaletteEditor::NewPalette(Long_t id)
 
    switch (id) {
       case 0:  // rainbow
-         memcpy(newPalette->fColorRed + 1,   gRedRainbow,   12 * sizeof(UShort_t));
-         memcpy(newPalette->fColorGreen + 1, gGreenRainbow, 12 * sizeof(UShort_t));
-         memcpy(newPalette->fColorBlue + 1,  gBlueRainbow,  12 * sizeof(UShort_t));
+         memcpy(newPalette->fColorRed + 1,   gRedRainbow,   kNRainbowElems * sizeof(UShort_t));
+         memcpy(newPalette->fColorGreen + 1, gGreenRainbow, kNRainbowElems * sizeof(UShort_t));
+         memcpy(newPalette->fColorBlue + 1,  gBlueRainbow,  kNRainbowElems * sizeof(UShort_t));
          break;
 
       case 1:  // gray
@@ -948,41 +948,31 @@ void TASPaletteEditor::LimitLine::Paint(Option_t *option)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TASPaletteEditor::LimitLine::ExecuteEvent(Int_t event,
-                                               Int_t px, Int_t /*py*/)
+void TASPaletteEditor::LimitLine::ExecuteEvent(Int_t event, Int_t px, Int_t)
 {
-   static Int_t oldX;
-
    if (!gPad) return;
+
+   auto &parent = *gPad;
 
    switch(event) {
       case kMouseMotion:
-         gPad->SetCursor(kMove);
+         parent.SetCursor(kMove);
          break;
 
-      case kButton1Down:
-         gVirtualX->SetLineColor(-1);
-         TAttLine::Modify();  //Change line attributes only if necessary
-         oldX = gPad->XtoAbsPixel(fX1);
+      case kButton1Motion: {
+         Double_t xx[2], yy[2] = { GetY1(), GetY2() };
+         xx[0] = xx[1] = parent.AbsPixeltoX(px);
+         parent.PaintPolyLine(2, xx, yy, "iaspaletteline");
+         parent.UpdateAsync();
          break;
-
-      case kButton1Motion:
-         gVirtualX->DrawLine(oldX, gPad->YtoPixel(fY1), oldX, gPad->YtoPixel(fY2));
-         oldX = px;
-         gVirtualX->DrawLine(oldX, gPad->YtoPixel(fY1), oldX, gPad->YtoPixel(fY2));
-         gVirtualX->Update();
-         break;
-
+      }
       case kButton1Up:
-         gVirtualX->SetLineColor(-1);
-         TAttLine::Modify();  //Change line attributes only if necessary
-         fX1 = fX2 = gPad->AbsPixeltoX(oldX);
+         fX1 = fX2 = parent.AbsPixeltoX(px);
+         fY1 = parent.GetUymin();
+         fY2 = parent.GetUymax();
          fGui->UpdateRange();
-         gPad->Modified(kTRUE);
-         gPad->Update();
-         break;
-
-      default:
+         parent.Modified();
+         parent.UpdateAsync();
          break;
    }
 }

@@ -68,6 +68,7 @@ class TPrincipal;
 class TFriendElement;
 class TCut;
 class TVirtualIndex;
+class TBranchElement;
 class TBranchRef;
 class TBasket;
 class TStreamerInfo;
@@ -84,6 +85,11 @@ TBranch *CallBranchImpRef(TTree &tree, const char *branchname, TClass *ptrClass,
                           Int_t bufsize = 32000, Int_t splitlevel = 99);
 TBranch *CallBranchImp(TTree &tree, const char *branchname, TClass *ptrClass, void *addobj, Int_t bufsize = 32000,
                        Int_t splitlevel = 99);
+
+// For the Python bindings, which see the char* that TBranch::GetAddress() and
+// TBranchElement::GetObject() return as a string.
+Longptr_t GetBranchAddress(TBranch *branch);
+Longptr_t GetBranchElementObject(TBranchElement *branch);
 }
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
@@ -764,6 +770,17 @@ public:
 
    ClassDefOverride(TTree, 20) // Tree descriptor (the main ROOT I/O class)
 };
+
+namespace ROOT::Internal::TreeUtils {
+/// For the Python bindings: call the TTree::Branch() overload that takes the
+/// address of a pointer, with that address worked out by cppyy from a T**.
+template <class T>
+TBranch *BranchPtrToPtr(TTree &tree, const char *name, const char *className, T **obj, Int_t bufsize = 32000,
+                        Int_t splitlevel = 99)
+{
+   return tree.Branch(name, className, reinterpret_cast<void **>(obj), bufsize, splitlevel);
+}
+} // namespace ROOT::Internal::TreeUtils
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

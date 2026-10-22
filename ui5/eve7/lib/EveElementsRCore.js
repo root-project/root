@@ -154,7 +154,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
 
    class Calo3DControl extends EveElemControl {
       DrawForSelection(sec_idcs, res, extra) {
-         console.log("CALO 3d draw for selection ", extra);
          let eve_el = this.invoke_obj.eve_el;
          // locate REveCaloData cells for this object
          let cells;
@@ -588,6 +587,17 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
          return mat;
       }
 
+      /** Give `geo` the element's box, `el.bbox` (min, then max, in the
+        * element's own frame, computed on the server). Returns false for an
+        * element without one. */
+      RcSetElementBBox(geo, el) {
+         let bb = el.bbox;
+         if (!bb || bb.length !== 6) return false;
+         geo.setExternalBoundingBox(new RC.Box3(new RC.Vector3(bb[0], bb[1], bb[2]),
+                                                new RC.Vector3(bb[3], bb[4], bb[5])));
+         return true;
+      }
+
       RcMakeZSprite(colIdx, sSize, nInstance, vbuff, instX, instY, textureName) {
          let col = RcCol(colIdx);
          sSize *= this.POINT_SIZE_FAC;
@@ -724,14 +734,22 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
          );
       }
 
-      GetRgbaTexture(name, callback) {
+      // `repeat` selects RepeatWrapping instead of ClampToEdge, for tiling
+      // coefficients such as REveSMorph's fTexXC.
+      //
+      // The texture cache is keyed on the URL. The "#repeat" fragment gives the
+      // repeating variant its own key; the browser strips it, so both variants
+      // fetch the same file.
+      GetRgbaTexture(name, callback, repeat) {
          let url = this.viewer.eve_path + 'textures/' + name;
+         let wrap = repeat ? RC.Texture.WRAPPING.RepeatWrapping
+                           : RC.Texture.WRAPPING.ClampToEdgeWrapping;
 
-         this.tex_cache.deliver(url,
+         this.tex_cache.deliver(repeat ? url + '#repeat' : url,
             callback,
             (image) => {
                return new RC.Texture
-                  (image, RC.Texture.WRAPPING.ClampToEdgeWrapping, RC.Texture.WRAPPING.ClampToEdgeWrapping,
+                  (image, wrap, wrap,
                      RC.Texture.FILTER.LinearFilter, RC.Texture.FILTER.LinearFilter,
                      RC.Texture.FORMAT.RGBA, RC.Texture.FORMAT.RGBA,
                      RC.Texture.TYPE.UNSIGNED_BYTE,
@@ -777,9 +795,9 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
             rnr_data.vtxBuff, hit.fTexX, hit.fTexY,
             txName);
 
-         // bounding box
-         let bb = rnr_data.nrmBuff;
-         s.geometry.setExternalBoundingBox(new RC.Box3(new RC.Vector3(bb[0], bb[2], bb[4]), new RC.Vector3(bb[1], bb[3], bb[5])));
+         // The instances are placed from a texture, so only the server's box
+         // bounds them; with it the object can be culled.
+         if (this.RcSetElementBBox(s.geometry, hit)) s.frustumCulled = true;
 
          this.RcPickable(hit, s);
 
@@ -852,7 +870,10 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
             fontSize: el.fFontSize,
             mode: el.fMode,
             fontHinting: el.fFontHinting,
+            fontWeight: el.fFontWeight || 0.0,
             color: RcCol(el.fTextColor),
+            alignH: el.fAlignH || 0,
+            alignV: el.fAlignV || 0,
          });
          let url_base = this.viewer.top_path + 'sdf-fonts/' + el.fFont;
          this.tex_cache.deliver_font(url_base,
@@ -868,9 +889,229 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
             () => this.viewer.request_render()
          );
 
-         text.position.copy(new RC.Vector3(el.fPosX, el.fPosY, el.fPosZ));
+         // No position here: EveScene sets the element's matrix on its node.
+         // Movable if pickable; resizable unless the element turns it off.
+         text.resizable = (el.fResizable === undefined) ? true : !!el.fResizable;
          if (el.fPickable) this.RcPickable(el, text);
          return text;
+      }
+
+      //==============================================================================
+      // makeLogo
+      //
+      // A screen-space image for an overlay scene, drawn as an RC.ZLogo (a
+      // ZSprite): constant pixel size, shape from the image alpha. It implements
+      // the ZText interaction interface, so Overlay moves and resizes it as is.
+      //==============================================================================
+
+      makeLogo(el, rnr_data)
+      {
+         let logo = new RC.ZLogo({
+            x:         el.fPosX,
+            y:         el.fPosY,
+            size:      el.fSize,
+            opacity:   el.fOpacity,
+            resizable: el.fResizable
+         });
+
+         // fSource is REveLogo::EImageSource_e: kImageDir (0) is the directory
+         // registered with REveLogo::SetImageDir, kTextures (1) is ui5/eve7/textures,
+         // kRemote (2) is an absolute URL. See REveLogo::GetFile for CORS caveats.
+         let url;
+         switch (el.fSource) {
+            case 2:  url = el.fFile; break;
+            case 1:  url = this.viewer.eve_path + 'textures/' + el.fFile; break;
+            default: url = this.viewer.top_path + 'eve-images/' + el.fFile;
+         }
+         let iw = 0, ih = 0;
+
+         this.tex_cache.deliver(url,
+            (texture) => { logo.setLogoTexture(texture, iw, ih); },
+            (img) => {
+               iw = img.width; ih = img.height;
+               // RGBA, unlike ZText's single-channel SDF atlas: the logo carries
+               // its own colour and its outline comes from the alpha.
+               return new RC.Texture(img,
+                  RC.Texture.WRAPPING.ClampToEdgeWrapping, RC.Texture.WRAPPING.ClampToEdgeWrapping,
+                  RC.Texture.FILTER.LinearFilter, RC.Texture.FILTER.LinearFilter,
+                  RC.Texture.FORMAT.RGBA, RC.Texture.FORMAT.RGBA,
+                  RC.Texture.TYPE.UNSIGNED_BYTE, img.width, img.height);
+            },
+            () => this.viewer.request_render()
+         );
+
+         if (el.fPickable) this.RcPickable(el, logo);
+         return logo;
+      }
+
+      //==============================================================================
+      // makeSMorph
+      //
+      // Generates the REveSMorph surface from its parameters, at unit size; the
+      // element's transformation carries size, position and orientation. See the
+      // REveSMorph class doc for why the geometry is built on the client.
+      //==============================================================================
+
+      makeSMorph(el, rnr_data)
+      {
+         const TWO_PI = 2 * Math.PI;
+
+         const tl = Math.max(2, el.fTLevel);
+         const pl = Math.max(3, el.fPLevel);
+
+         // A closed sweep repeats the first column at the seam, at phi + 2pi,
+         // so the texture can run to its right-hand edge instead of wrapping
+         // back across the last quad. Same position, different u.
+         const full  = (el.fPhiRange >= 1);
+         const nPhi  = pl + (full ? 1 : 0);
+         const nRing = tl + 1;
+
+         let pos = new Float32Array(nRing * nPhi * 3);
+         let nrm = new Float32Array(nRing * nPhi * 3);
+         let uv  = new Float32Array(nRing * nPhi * 2);
+
+         const dt = Math.PI * (el.fThetaMax - el.fThetaMin) / tl;
+         const phi0 = TWO_PI * (el.fPhiMean - 0.5 * el.fPhiRange);
+         // As in the original: the step divides by pl even on an open sweep,
+         // so a patch falls one step short of its nominal range. Kept for
+         // parity rather than corrected, since the two must agree.
+         const dphi = TWO_PI * el.fPhiRange / pl;
+
+         let t = Math.PI * el.fThetaMin;
+         let last_ct = Math.cos(t) + 2.0 / tl;
+         let vi = 0, ui = 0;
+
+         for (let i = 0; i < nRing; ++i) {
+            let ct, st;
+            if (el.fEquiSurf) {
+               // Equal surface area per ring rather than equal angle: cos(theta)
+               // steps uniformly, which stops the quads collapsing at the poles.
+               ct = last_ct - 2.0 / tl;
+               if (ct < -1) ct = -1;
+               st = Math.sin(Math.acos(ct));
+            } else {
+               ct = Math.cos(t);
+               st = Math.sin(t);
+               t += dt;
+            }
+
+            const twist = ct * el.fTx;
+            const conv  = ct * el.fCx;
+            let phi = phi0;
+
+            for (let j = 0; j < nPhi; ++j, phi += dphi) {
+               const x = ct;
+               const y = (1 + conv) * st * Math.cos(phi + twist);
+               const z = (1 + conv) * st * Math.sin(phi + twist);
+
+               // Rotate about z by an angle proportional to x, which is the
+               // polar axis here, as in SMorph.
+               const a = x * el.fRz, ca = Math.cos(a), sa = Math.sin(a);
+               const X = x * ca - y * sa;
+               const Y = x * sa + y * ca;
+               const Z = z;
+
+               pos[vi] = X; pos[vi + 1] = Y; pos[vi + 2] = Z;
+
+               // The position doubles as the normal. Exact on the unmorphed
+               // sphere and good enough for modest fTx / fCx / fRz; the original
+               // made the same trade.
+               const l = Math.sqrt(X * X + Y * Y + Z * Z) || 1;
+               nrm[vi] = X / l; nrm[vi + 1] = Y / l; nrm[vi + 2] = Z / l;
+               vi += 3;
+
+               let u = el.fTexX0 + el.fTexXC * phi / TWO_PI;
+               const v = el.fTexY0 + el.fTexYC * Math.acos(Math.max(-1, Math.min(1, ct))) / Math.PI;
+               // Offset successive wraps against each other -- a brick bond.
+               if (el.fTexYOff != 0) u += Math.trunc(v) * el.fTexYOff;
+               uv[ui] = u; uv[ui + 1] = v; ui += 2;
+            }
+            last_ct = ct;
+         }
+
+         let idx = new Uint32Array(tl * (nPhi - 1) * 6);
+         let ii = 0;
+         for (let i = 0; i < tl; ++i) {
+            for (let j = 0; j < nPhi - 1; ++j) {
+               const a = i * nPhi + j, b = a + nPhi;
+               idx[ii++] = a; idx[ii++] = b; idx[ii++] = a + 1;
+               idx[ii++] = b; idx[ii++] = b + 1; idx[ii++] = a + 1;
+            }
+         }
+
+         let geo = new RC.Geometry();
+         geo.vertices = new RC.BufferAttribute(pos, 3);
+         geo.normals  = new RC.BufferAttribute(nrm, 3);
+         geo.uv       = new RC.BufferAttribute(uv, 2);
+         geo.indices  = new RC.BufferAttribute(idx, 1);
+
+         let mop = 1 - el.fMainTransparency / 100;
+         let mat = this.RcFancyMaterial(RcCol(el.fMainColor), mop);
+         // Two-sided: a partial sweep in theta or phi is an open shell.
+         mat.side = RC.FRONT_AND_BACK_SIDE;
+
+         // RcFancyMaterial's specular is a green-tinted (0.3, 0.4, 0.3), which
+         // tints a texture. Use a weaker neutral one.
+         mat._specular = new RC.Color(0.12, 0.12, 0.12);
+         mat._shininess = 24;
+
+         this.RcSetElementBBox(geo, el);
+
+         let mesh = new RC.Mesh(geo, mat);
+
+         if (el.fTexture) {
+            this.GetRgbaTexture(el.fTexture,
+                                (tex) => { this.AddMapToAllMaterials(mesh, tex); },
+                                true);
+         }
+
+         this.RcPickable(el, mesh);
+         return mesh;
+      }
+
+      //==============================================================================
+      // makeProjectionAxis
+      //
+      // Ticks arrive in projected coordinates, over a wider range and at a finer
+      // subdivision than any one view needs. Under the orthographic camera of a
+      // 2D view the map to screen is affine, so Overlay.updateProjectionAxes()
+      // re-lays them on zoom and pan without a round trip to the server.
+      //==============================================================================
+
+      makeProjectionAxis(el, rnr_data)
+      {
+         // Unless fUseFgColor is false, the axis takes the viewer's foreground
+         // colour, so it stays legible when the background changes.
+         let use_fg = (el.fUseFgColor === undefined) ? true : !!el.fUseFgColor;
+         let txt_col = use_fg ? this.viewer.fgCol : RcCol(el.fTextColor);
+
+         let axis = new RC.ZTextAxis({
+            fontSize:  el.fFontSize,
+            color:     txt_col,
+            axesMode:  el.fAxesMode,
+            fontHinting: el.fFontHinting,
+            fontWeight:  el.fFontWeight
+         });
+
+         // Ticks use the frame line colour; no plate behind an axis.
+         axis.setupFrameStuff(1.0, false,
+                              RcCol(el.fFillColor), 0.0,
+                              use_fg ? this.viewer.fgCol : RcCol(el.fLineColor),
+                              1.0, 0.0, 0.0);
+         axis.use_fg_color = use_fg;   // so a later background flip can recolour it
+
+         axis.setTicks({ pos: el.fTickPosH, lab: el.fTickLabH, maj: el.fTickMajH },
+                       { pos: el.fTickPosV, lab: el.fTickLabV, maj: el.fTickMajV },
+                       el.fAxesMode);
+
+         let url_base = this.viewer.top_path + 'sdf-fonts/' + el.fFont;
+         this.tex_cache.deliver_font(url_base,
+            (texture, font_metrics) => { axis.setTextureAndFont(texture, font_metrics); },
+            (img) => RC.ZText.createDefaultTexture(img),
+            () => this.viewer.request_render()
+         );
+
+         return axis;
       }
 
       //==============================================================================
@@ -1137,9 +1378,9 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
          else
             mesh = this.makeFreeBoxSet(boxset, rnr_data);
 
-         // bounding box
-         let bb = rnr_data.nrmBuff;
-         mesh.geometry.setExternalBoundingBox(new RC.Box3(new RC.Vector3(bb[0], bb[2], bb[4]), new RC.Vector3(bb[1], bb[3], bb[5])));
+         // Instanced boxes are placed from a texture, so only the server's box
+         // bounds them; with it the object can be culled.
+         if (this.RcSetElementBBox(mesh.geometry, boxset)) mesh.frustumCulled = true;
 
          return mesh;
       }
@@ -1475,9 +1716,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
 
          let g = new RC.Geometry();
 
-         // bounding box
-         let bb = topNode.bbox;
-         g.setExternalBoundingBox(new RC.Box3(new RC.Vector3(bb[0], bb[2], bb[4]), new RC.Vector3(bb[1], bb[3], bb[5])));
+         this.RcSetElementBBox(g, topNode);
 
          // let vatt = new RC.BufferAttribute(topNode.shapeVertices, 3);
          // g.vertices = new RC.BufferAttribute(topNode.shapeVertices, 3);
@@ -1635,12 +1874,9 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
 
             let pthis = this;
             obj3d.get_ctrl = function (iobj, tobj) {
-               console.log("get crtl ", iobj, tobj);
                let octrl = new EveElemControl(iobj, tobj);
 
                octrl.extractIndex = function (instance) {
-                  console.log("AMT extreact index ", instance);
-                  console.log("objs: invoke type ", this.invoke_obj.type, "top obj ", this.top_obj.type);
                   return instance;
                }
 

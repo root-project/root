@@ -52,6 +52,10 @@ RFile is a simpler alternative to TFile that makes operations and object ownersh
 |------|-----------------|
 | rfile001_basics.C | Basic reading and writing from/to RFile (C++) |
 | rfile001_basics.py | Basic reading and writing from/to RFile (Python) |
+| rfile002_rntuple.C | Basic reading and writing of RNTuple from/to RFile (C++) |
+| rfile002_rntuple.py | Basic reading and writing of RNTuple from/to RFile (Python) |
+| rfile003_ttree.C | Basic reading of TTree from RFile (C++) |
+| rfile003_ttree.py | Basic reading of TTree from RFile (Python) |
 @}
 
 \defgroup tutorial_ntuple RNTuple tutorials

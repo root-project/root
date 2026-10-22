@@ -64,26 +64,7 @@ std::unique_ptr<RooDataHist> generateBinnedAsimov(RooAbsPdf const &pdf, RooRealV
 
 } // namespace
 
-class TestStatisticTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
-public:
-   TestStatisticTest() : _evalBackend{RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy)} {}
-
-private:
-   void SetUp() override
-   {
-      RooRandom::randomGenerator()->SetSeed(1337ul);
-      _evalBackend = std::get<0>(GetParam());
-      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
-   }
-
-   void TearDown() override { _changeMsgLvl.reset(); }
-
-protected:
-   RooFit::EvalBackend _evalBackend;
-
-private:
-   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
-};
+using TestStatisticTest = RooFitEvalBackendTest;
 
 TEST_P(TestStatisticTest, IntegrateBins)
 {
@@ -877,12 +858,19 @@ TEST_P(TestStatisticTest, ConstantPdf)
    EXPECT_FLOAT_EQ(nllDs->getVal(), nllRef);
 }
 
-INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values(ROOFIT_EVAL_BACKENDS),
-                         [](testing::TestParamInfo<TestStatisticTest::ParamType> const &paramInfo) {
-                            std::stringstream ss;
-                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
-                            return ss.str();
-                         });
+INSTANTIATE_TEST_SUITE_P(RooNLLVar, TestStatisticTest, testing::Values(ROOFIT_EVAL_BACKENDS), EvalBackendParamName{});
+
+std::string offsetBinTestName(testing::TestParamInfo<OffsetBinTest::ParamType> const &paramInfo)
+{
+   std::stringstream ss;
+   ss << EvalBackendParamName{}(paramInfo);
+   ss << (std::get<1>(paramInfo.param) ? "Binned" : "Unbinned");
+   ss << (std::get<2>(paramInfo.param) ? "Extended" : "");
+   ss << (std::get<3>(paramInfo.param) ? "SumW2" : "");
+   ss << (std::get<4>(paramInfo.param) ? "SimPdf" : "");
+   ss << (std::get<5>(paramInfo.param) ? "BinnedL" : "");
+   return ss.str();
+}
 
 INSTANTIATE_TEST_SUITE_P(RooNLLVar, OffsetBinTest,
                          testing::Combine(testing::Values(ROOFIT_EVAL_BACKENDS), // EvalBackend
@@ -892,16 +880,7 @@ INSTANTIATE_TEST_SUITE_P(RooNLLVar, OffsetBinTest,
                                           testing::Values(false, true),          // wrap in a RooSimultaneous
                                           testing::Values(false)                 // binned likelihood code path
                                           ),
-                         [](testing::TestParamInfo<OffsetBinTest::ParamType> const &paramInfo) {
-                            std::stringstream ss;
-                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
-                            ss << (std::get<1>(paramInfo.param) ? "Binned" : "Unbinned");
-                            ss << (std::get<2>(paramInfo.param) ? "Extended" : "");
-                            ss << (std::get<3>(paramInfo.param) ? "SumW2" : "");
-                            ss << (std::get<4>(paramInfo.param) ? "SimPdf" : "");
-                            ss << (std::get<5>(paramInfo.param) ? "BinnedL" : "");
-                            return ss.str();
-                         });
+                         offsetBinTestName);
 
 INSTANTIATE_TEST_SUITE_P(RooNLLVarBinnedL, OffsetBinTest,
                          testing::Combine(testing::Values(ROOFIT_EVAL_BACKENDS), // EvalBackend
@@ -911,16 +890,7 @@ INSTANTIATE_TEST_SUITE_P(RooNLLVarBinnedL, OffsetBinTest,
                                           testing::Values(false, true),          // wrap in a RooSimultaneous
                                           testing::Values(true)                  // binned likelihood code path
                                           ),
-                         [](testing::TestParamInfo<OffsetBinTest::ParamType> const &paramInfo) {
-                            std::stringstream ss;
-                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
-                            ss << (std::get<1>(paramInfo.param) ? "Binned" : "Unbinned");
-                            ss << (std::get<2>(paramInfo.param) ? "Extended" : "");
-                            ss << (std::get<3>(paramInfo.param) ? "SumW2" : "");
-                            ss << (std::get<4>(paramInfo.param) ? "SimPdf" : "");
-                            ss << (std::get<5>(paramInfo.param) ? "BinnedL" : "");
-                            return ss.str();
-                         });
+                         offsetBinTestName);
 
 // Test if the data can be correctly reset for both individual and simultaneous
 // pdfs.

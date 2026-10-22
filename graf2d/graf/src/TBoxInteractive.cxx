@@ -318,3 +318,13 @@ char TBoxInteractive::GetGuideChar() const
    default: return 0; // not involved
    }
 }
+
+///////////////////////////////////////////////////////////////////////////////
+/// Paint diamond corners outline
+
+void TBoxInteractive::PaintDiamondCorners(TVirtualPad &parent, const char *id)
+{
+   Double_t xd[4] = { (newX1+newX2)/2, newX1, (newX1+newX2)/2, newX2 };
+   Double_t yd[4] = { newY2, (newY1+newY2)/2, newY1, (newY1+newY2)/2 };
+   parent.PaintPolyMarker(4, xd, yd, id);
+}

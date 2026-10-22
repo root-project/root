@@ -61,6 +61,11 @@ CPPINTEROP_API intptr_t cppinterop_Evaluate(const char* code, bool* HadError) {
   return Cpp::Evaluate(code, HadError);
 }
 
+// The std::string* reason argument of Cpp::LoadLibrary is C++-only.
+CPPINTEROP_API bool cppinterop_LoadLibrary(const char* lib_stem, bool lookup) {
+  return Cpp::LoadLibrary(lib_stem, lookup);
+}
+
 // GetClassTemplatedMethods returns bool AND fills a vector out-param.
 // The C wrapper drops the bool (caller checks arr.size > 0 instead).
 CPPINTEROP_API Cpp::CppInterOpArray

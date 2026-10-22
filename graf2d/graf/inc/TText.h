@@ -62,7 +62,7 @@ public:
 
    void             ls(Option_t *option="") const override;
    void             Paint(Option_t *option="") override;
-   virtual void     PaintControlBox(Int_t x, Int_t y, Double_t theta);
+   virtual void     PaintControlBox(Int_t x, Int_t y, Double_t theta) R__DEPRECATED(6, 46, "Will be removed");
    virtual void     PaintText(Double_t x, Double_t y, const char *text);
    virtual void     PaintText(Double_t x, Double_t y, const wchar_t *text);
    virtual void     PaintTextNDC(Double_t u, Double_t v, const char *text);

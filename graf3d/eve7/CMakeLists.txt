@@ -39,15 +39,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     ROOT/REveGeoPolyShape.hxx
     ROOT/REveGeoShapeExtract.hxx
     ROOT/REveGeoShape.hxx
+    ROOT/REveGeoOverlaps.hxx
     ROOT/REveGeoTopNode.hxx
     ROOT/REveGluTess.hxx
     ROOT/REveJetCone.hxx
     ROOT/REveEllipsoid.hxx
     ROOT/REveLine.hxx
+    ROOT/REveLogo.hxx
     ROOT/REveManager.hxx
     ROOT/REvePathMark.hxx
     ROOT/REvePointSet.hxx
     ROOT/REvePolygonSetProjected.hxx
+    ROOT/REveProjectionAxis.hxx
     ROOT/REveProjectionBases.hxx
     ROOT/REveProjectionManager.hxx
     ROOT/REveProjections.hxx
@@ -59,6 +62,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     ROOT/REveSecondarySelectable.hxx
     ROOT/REveSelection.hxx
     ROOT/REveShape.hxx
+    ROOT/REveSMorph.hxx
     ROOT/REveStraightLineSet.hxx
     ROOT/REveSystem.hxx
     ROOT/REveTableInfo.hxx
@@ -94,15 +98,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     src/REveGeoPolyShape.cxx
     src/REveGeoShape.cxx
     src/REveGeoShapeExtract.cxx
+    src/REveGeoOverlaps.cxx
     src/REveGeoTopNode.cxx
     src/REveGluTess.cxx
     src/REveJetCone.cxx
     src/REveEllipsoid.cxx
     src/REveLine.cxx
+    src/REveLogo.cxx
     src/REveManager.cxx
     src/REvePathMark.cxx
     src/REvePointSet.cxx
     src/REvePolygonSetProjected.cxx
+    src/REveProjectionAxis.cxx
     src/REveProjectionBases.cxx
     src/REveProjectionManager.cxx
     src/REveProjections.cxx
@@ -114,6 +121,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     src/REveSecondarySelectable.cxx
     src/REveSelection.cxx
     src/REveShape.cxx
+    src/REveSMorph.cxx
     src/REveStraightLineSet.cxx
     src/REveTableInfo.cxx
     src/REveTableProxyBuilder.cxx

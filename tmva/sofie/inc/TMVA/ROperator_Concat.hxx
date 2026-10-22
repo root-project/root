@@ -42,12 +42,8 @@
          fOutputTensorNames = { fOutput };
          }
 
-         std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-             return input;
-         }
-
          // get shape of output given inputs. It is going to be called after initialized
-         std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> inputs) override {
+         std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> inputs) {
              std::vector<std::vector<size_t>> ret(1);
             // treat negative axis case
             if (fAxis<0) {

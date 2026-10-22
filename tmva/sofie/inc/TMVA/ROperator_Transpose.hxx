@@ -36,25 +36,6 @@ public:
    }
 
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-      return input;
-   }
-
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-      if (input.size() > 1) throw std::runtime_error("TMVA SOFIE Tranpose Op Shape Inference only need 1 input tensor");
-      auto& data = input[0];
-      if (fAttrPerm.size() != data.size() )
-         throw std::runtime_error("TMVA SOFIE Tranpose Op - Invalid axes attributes");
-
-      std::vector<size_t> output_shape(fAttrPerm.size());
-      for (size_t i = 0; i < fAttrPerm.size(); i++){
-         output_shape[i] = data[fAttrPerm[i]];
-      }
-      std::vector<std::vector<size_t>> ret;
-      ret.push_back(output_shape);
-      return ret;
-   }
-
    template<class T>
    void ProcessInitializedTensor(RModel& model) {
       // case input is a constant or initialized tensor we perform here the transpose

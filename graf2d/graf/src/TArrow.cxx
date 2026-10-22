@@ -13,7 +13,6 @@
 #include "TMath.h"
 #include "TArrow.h"
 #include "TVirtualPad.h"
-#include "TVirtualPadPainter.h"
 
 Float_t TArrow::fgDefaultAngle      = 60;
 Float_t TArrow::fgDefaultArrowSize  = 0.05;
@@ -183,7 +182,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    opt.ToLower();
    TAttLine::ModifyOn(parent);
    TAttFill::ModifyOn(parent);
-
+   TAttLine attarrow(GetLineColor(), 1, GetLineWidth());
 
    Double_t wndc  = TMath::Min(1.,(Double_t)iw/(Double_t)ih);
    Double_t hndc  = TMath::Min(1.,(Double_t)ih/(Double_t)iw);
@@ -289,7 +288,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
          y2ar[i] = (1/ry)*(y2ar[i]-y1ndc)+ry1;
       }
       if (opt.Contains("|>")) {
-         parent.GetPainter()->SetLineStyle(1);
+         attarrow.ModifyOn(parent);
          if (GetFillColor()) {
             parent.PaintFillArea(3,x2ar,y2ar);
             parent.PaintPolyLine(4,x2ar,y2ar);
@@ -318,7 +317,7 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
          y1ar[i] = (1/ry)*(y1ar[i]-y1ndc)+ry1;
       }
       if (opt.Contains("<|")) {
-         parent.GetPainter()->SetLineStyle(1);
+         attarrow.ModifyOn(parent);
          if (GetFillColor()) {
             parent.PaintFillArea(3,x1ar,y1ar);
             parent.PaintPolyLine(4,x1ar,y1ar);

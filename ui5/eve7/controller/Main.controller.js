@@ -181,6 +181,8 @@ sap.ui.define(['sap/ui/core/Component',
             vtype = "rootui5.eve7.view.Lego";
          else if (elem.fName === "GeoTable")
                vtype = "rootui5.eve7.view.GeoTable";
+         else if (elem.fName === "GeoOverlapTable")
+               vtype = "rootui5.eve7.view.GeoOverlapTable";
 
          let oOwnerComponent = Component.getOwnerComponentFor(this.getView());
          let view = oOwnerComponent.runAsOwner(function() {

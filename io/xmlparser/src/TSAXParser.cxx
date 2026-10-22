@@ -235,7 +235,7 @@ Int_t TSAXParser::Parse()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// It creates the parse context of the xml file, where the xml file name is
-/// filename. If context is created sucessfully, it will call Parse()
+/// filename. If context is created successfully, it will call Parse()
 /// It returns parse error code, see TXMLParser.
 
 Int_t TSAXParser::ParseFile(const char *filename)

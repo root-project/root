@@ -262,7 +262,9 @@ TEST(RNTupleParallelWriter, StagedMultiColumn)
       c->CommitStagedClusters();
    }
 
-   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), opts);
    EXPECT_EQ(3u, reader->GetView<float>("px").GetFieldRange().size());
 
    const auto &desc = reader->GetDescriptor();
@@ -417,7 +419,9 @@ TEST(RNTupleFillContext, FlushColumns)
    }
 
    // If FlushColumns() worked, there will be two pages with one element each.
-   auto reader = RNTupleReader::Open("f", fileGuard.GetPath());
+   RNTupleReadOptions opts;
+   opts.SetMetadataMode(RNTupleReadOptions::EMetadataMode::kEager);
+   auto reader = RNTupleReader::Open("f", fileGuard.GetPath(), opts);
    const auto &descriptor = reader->GetDescriptor();
 
    auto fieldId = descriptor.FindFieldId("pt");

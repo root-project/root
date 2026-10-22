@@ -36,26 +36,7 @@
 #include <utility>
 #include <vector>
 
-class FitTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
-public:
-   FitTest() : _evalBackend{RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy)} {}
-
-private:
-   void SetUp() override
-   {
-      RooRandom::randomGenerator()->SetSeed(1337ul);
-      _evalBackend = std::get<0>(GetParam());
-      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
-   }
-
-   void TearDown() override { _changeMsgLvl.reset(); }
-
-protected:
-   RooFit::EvalBackend _evalBackend;
-
-private:
-   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
-};
+using FitTest = RooFitEvalBackendTest;
 
 // ROOT-10668: Asympt. correct errors don't work when title and name differ
 TEST_P(FitTest, AsymptoticallyCorrectErrors)
@@ -690,9 +671,4 @@ TEST_P(FitTest, ParameterizedRangeFit)
    expectParamNear(*res, "tau", -1.54);
 }
 
-INSTANTIATE_TEST_SUITE_P(RooAbsPdf, FitTest, testing::Values(ROOFIT_EVAL_BACKENDS),
-                         [](testing::TestParamInfo<FitTest::ParamType> const &paramInfo) {
-                            std::stringstream ss;
-                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
-                            return ss.str();
-                         });
+INSTANTIATE_TEST_SUITE_P(RooAbsPdf, FitTest, testing::Values(ROOFIT_EVAL_BACKENDS), EvalBackendParamName{});

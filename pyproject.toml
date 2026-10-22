@@ -5,7 +5,7 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "root"
 dynamic = ["version"]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 maintainers = [
   {name = "Vincenzo Eduardo Padulano", email = "vincenzo.eduardo.padulano@cern.ch"}
 ]
@@ -66,6 +66,7 @@ asimage="ON"
 opengl="OFF"
 runtime_cxxmodules="OFF"
 fail-on-missing="ON"
+CMAKE_CXX_STANDARD="20"
 
 # Prevent CMake from producing its own .dist-info metadata
 _wheel_build="ON"
@@ -114,3 +115,7 @@ manylinux-aarch64-image = "manylinux_2_28"
 repair-wheel-command = "auditwheel repair --disable-isa-ext-check -w {dest_dir} {wheel}"
 before-all = "dnf install -y epel-release && /usr/bin/crb enable && dnf install -y openssl-devel libX11-devel libXpm-devel libXft-devel libXext-devel libuuid-devel libjpeg-devel giflib-devel libtiff-devel"
 
+[tool.cibuildwheel.macos]
+# The macOS runner images now ship OpenSSL 4, which the builtin XRootD 5.9.x does not
+# compile against, see https://github.com/actions/runner-images/issues/14856
+environment = "OPENSSL_ROOT_DIR=$(brew --prefix openssl@3)"

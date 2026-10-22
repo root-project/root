@@ -116,7 +116,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
       return nullptr;
    }
 
-   pic = new TGPicture(pname, img->GetPixmap(), img->GetMask());
+   pic = new TGPicture(pname, TGWindow::GetImagePixmap(img), TGWindow::GetImageMask(img));
    delete img;
    fPicList->Add(pic);
    return pic;
@@ -192,7 +192,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
 
    img->Scale(new_width, new_height);
 
-   pic = new TGPicture(hname, img->GetPixmap(), img->GetMask());
+   pic = new TGPicture(hname, TGWindow::GetImagePixmap(img), TGWindow::GetImageMask(img));
    delete [] picnam;
    delete img;
    fPicList->Add(pic);
@@ -271,7 +271,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name, char **xpm)
       return 0;
    }
 
-   pic = new TGPicture(hname, img->GetPixmap(), img->GetMask());
+   pic = new TGPicture(hname, TGWindow::GetImagePixmap(img), TGWindow::GetImageMask(img));
    delete img;
    return pic;
 }

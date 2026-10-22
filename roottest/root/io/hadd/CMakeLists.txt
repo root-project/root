@@ -176,9 +176,12 @@ ROOTTEST_ADD_TEST(test_hadd_args_minusminus
 ROOTTEST_ADD_TEST(test_hadd_args_minusminus2
                   FIXTURES_REQUIRED root-io-hadd-test_hadd_args_gen_input-fixture
                   PRECMD ${CMAKE_COMMAND} -E rm -f -- --hadd_args2_out.root
+                  # Here we pass a filename that gets interpreted as a flag, hence -f doesn't receive an argument
+                  # and hadd fails to run.
                   COMMAND ${ROOT_hadd_CMD} -f --hadd_args2_out.root -- hadd_args_in.root
-                  PASSREGEX "Warning in <hadd>: unknown flag: --hadd_args2_out.root"
-                  PASSRC 1
+                  PASSREGEX "missing input file"
+                  # File should not exist
+                  PASSRC 2
                   POSTCMD ${ROOT_root_CMD} -q -b "hadd_args_verify.C(\"--hadd_args2_out.root\")"
 )
 

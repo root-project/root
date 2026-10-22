@@ -62,31 +62,6 @@ std::unique_ptr<ROperator> ParseBasicBinary(RModelParser_ONNX &parser, const onn
 };
 
 
-// Parse Add
-ParserFuncSignature ParseAdd = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseBasicBinary<EBasicBinaryOperator::Add>(parser, nodeproto);
-};
-
-// Parse Sub
-ParserFuncSignature ParseSub = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseBasicBinary<EBasicBinaryOperator::Sub>(parser, nodeproto);
-};
-
-// Parse Mul
-ParserFuncSignature ParseMul = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseBasicBinary<EBasicBinaryOperator::Mul>(parser, nodeproto);
-};
-
-// Parse Div
-ParserFuncSignature ParseDiv = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseBasicBinary<EBasicBinaryOperator::Div>(parser, nodeproto);
-};
-
-// Parse Pow
-ParserFuncSignature ParsePow = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   return ParseBasicBinary<EBasicBinaryOperator::Pow>(parser, nodeproto);
-};
-
 // Mod (and fmod) is a special case di BasicBinary
 
 ParserFuncSignature ParseMod = [] (RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
@@ -152,6 +127,15 @@ ParserFuncSignature ParseMod = [] (RModelParser_ONNX &parser, const onnx::NodePr
    return op;
 };
 
+void RegisterBasicBinaryParsers(RModelParser_ONNX &parser)
+{
+   parser.RegisterOperator("Add", ParseBasicBinary<EBasicBinaryOperator::Add>);
+   parser.RegisterOperator("Sub", ParseBasicBinary<EBasicBinaryOperator::Sub>);
+   parser.RegisterOperator("Mul", ParseBasicBinary<EBasicBinaryOperator::Mul>);
+   parser.RegisterOperator("Div", ParseBasicBinary<EBasicBinaryOperator::Div>);
+   parser.RegisterOperator("Pow", ParseBasicBinary<EBasicBinaryOperator::Pow>);
+   parser.RegisterOperator("Mod", ParseMod);
+}
 
 } // namespace SOFIE
 } // namespace Experimental

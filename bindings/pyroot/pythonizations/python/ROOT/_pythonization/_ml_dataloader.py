@@ -52,10 +52,9 @@ class _RDataLoader:
         target_columns: list[str],
         weights_column: str,
         max_vec_sizes: dict[str, int] | None = None,
-    ) -> Tuple[str, list[int]]:
+    ) -> list[int]:
         """
-        Generate a template for the DataLoader based on the given
-        RDataFrame and columns.
+        Resolve the columns to load based on the given RDataFrame and columns.
 
         Args:
             x_rdf (RNode): RDataFrame or RNode object.
@@ -70,7 +69,7 @@ class _RDataLoader:
                                  Required when using vector based columns.
 
         Returns:
-            Tuple[str, list[int]]: Template string for the DataLoader and list of max vector sizes
+            list[int]: List of max vector sizes
         """
         if max_vec_sizes is None:
             max_vec_sizes = {}
@@ -83,8 +82,6 @@ class _RDataLoader:
 
         ordered_columns = columns + target_columns + ([weights_column] if weights_column else [])
 
-        template_string = ""
-
         self.given_columns = []
         self.all_columns = []
 
@@ -96,7 +93,6 @@ class _RDataLoader:
             name_str = str(name)
             self.given_columns.append(name_str)
             column_type = x_rdf.GetColumnType(name_str)
-            template_string = f"{template_string}{column_type},"
 
             if "RVec" in column_type:
                 # Add column for each element if column is a vector
@@ -125,7 +121,7 @@ class _RDataLoader:
         self.target_slice = slice(num_feature_expanded, num_feature_expanded + num_target_expanded)
         self.feature_columns = self.all_columns[self.train_slice]
 
-        return template_string[:-1], max_vec_sizes_list
+        return max_vec_sizes_list
 
     def __init__(
         self,
@@ -218,7 +214,7 @@ class _RDataLoader:
         if self.weights_given and not self.target_given:
             raise ValueError("Weights can only be used when a target is provided")
 
-        template, max_vec_sizes_list = self._resolve_columns(
+        max_vec_sizes_list = self._resolve_columns(
             self.noded_rdfs[0], columns, self.target_columns, self.weights_column, max_vec_sizes
         )
 
@@ -237,7 +233,7 @@ class _RDataLoader:
         # cling via cppyy) and the I/O thread.
         ROOT.EnableThreadSafety()
 
-        self.engine = ROOT.Experimental.Internal.ML.RDataLoaderEngine(template)(
+        self.engine = ROOT.Experimental.Internal.ML.RDataLoaderEngine(
             self.noded_rdfs,
             batch_size,
             batches_in_memory,

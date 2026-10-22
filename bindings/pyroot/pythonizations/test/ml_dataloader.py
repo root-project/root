@@ -1222,6 +1222,42 @@ class DataLoaderMultipleFiles(unittest.TestCase):
         finally:
             self.teardown_file(self.file_name1)
 
+    def test19_defined_columns(self):
+        # columns defined after reading the file are loaded like the stored ones
+        self.create_file()
+
+        try:
+            df = (
+                ROOT
+                .RDataFrame(self.tree_name, self.file_name1)
+                .Define("b3", "b1 * 3")
+                .Define("v1", "ROOT::RVecD{b2, b2 + 1}")
+            )
+
+            dl = ROOT.Experimental.ML.RDataLoader(
+                df,
+                batch_size=3,
+                batches_in_memory=2,
+                columns=["b1", "v1", "b3"],
+                max_vec_sizes={"v1": 2},
+                target="b3",
+                shuffle=False,
+                drop_remainder=False,
+            )
+
+            gen_train, gen_validation = dl.train_test_split(0.4)
+
+            batches = list(gen_train.as_numpy()) + list(gen_validation.as_numpy())
+            x = np.concatenate([x for x, _ in batches])
+            y = np.concatenate([y for _, y in batches])
+
+            entries = np.arange(10, dtype=np.float32)
+            self.assertTrue(np.array_equal(x, np.column_stack([entries, entries**2, entries**2 + 1])))
+            self.assertTrue(np.array_equal(y, (entries * 3).reshape(-1, 1)))
+
+        finally:
+            self.teardown_file(self.file_name1)
+
 
 class DataLoaderEagerLoading(unittest.TestCase):
     file_name1 = "first_half.root"
@@ -2318,6 +2354,43 @@ class DataLoaderEagerLoading(unittest.TestCase):
         except:
             self.teardown_file(self.file_name3)
             raise
+
+    def test17_defined_columns(self):
+        # columns defined after reading the file are loaded like the stored ones
+        self.create_file()
+
+        try:
+            df = (
+                ROOT
+                .RDataFrame(self.tree_name, self.file_name1)
+                .Define("b3", "b1 * 3")
+                .Define("v1", "ROOT::RVecD{b2, b2 + 1}")
+            )
+
+            dl = ROOT.Experimental.ML.RDataLoader(
+                df,
+                batch_size=3,
+                batches_in_memory=2,
+                columns=["b1", "v1", "b3"],
+                max_vec_sizes={"v1": 2},
+                target="b3",
+                shuffle=False,
+                drop_remainder=False,
+                load_eager=True,
+            )
+
+            gen_train, gen_validation = dl.train_test_split(0.4)
+
+            batches = list(gen_train.as_numpy()) + list(gen_validation.as_numpy())
+            x = np.concatenate([x for x, _ in batches])
+            y = np.concatenate([y for _, y in batches])
+
+            entries = np.arange(10, dtype=np.float32)
+            self.assertTrue(np.array_equal(x, np.column_stack([entries, entries**2, entries**2 + 1])))
+            self.assertTrue(np.array_equal(y, (entries * 3).reshape(-1, 1)))
+
+        finally:
+            self.teardown_file(self.file_name1)
 
 
 class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
@@ -3532,6 +3605,23 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
             self.teardown_file(self.file_name4)
             self.teardown_file(self.file_name5)
             raise
+
+    def test17_dataframes_without_cluster_metadata(self):
+        # the dataframes are not read from a file, so their entries are counted with Count()
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [self.define_rdf1(), self.define_rdf2()],
+            batch_size=3,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+        )
+        gen_train, gen_validation = dl.train_test_split(0.4)
+
+        x_train = [v for x, _ in gen_train.as_numpy() for v in x.flatten().tolist()]
+        x_val = [v for x, _ in gen_validation.as_numpy() for v in x.flatten().tolist()]
+        self.assertEqual(x_train, [0.0, 1.0, 2.0, 5.0, 6.0, 7.0])
+        self.assertEqual(x_val, [3.0, 4.0, 8.0, 9.0])
 
 
 class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
@@ -7764,6 +7854,37 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             self.teardown_file(self.file_name4)
             self.teardown_file(self.file_name5)
             raise
+
+    def test17_set_seed_resamples_different_entries(self):
+        # with a fixed seed, the resampled minority entries used to all be the same one
+        self.create_file_major()
+        self.create_file_minor()
+
+        try:
+            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
+            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
+
+            dl = ROOT.Experimental.ML.RDataLoader(
+                [df_major, df_minor],
+                batch_size=2,
+                target="b2",
+                shuffle=True,
+                drop_remainder=False,
+                set_seed=42,
+                load_eager=True,
+                sampling_type="oversampling",
+                sampling_ratio=1.0,
+            )
+
+            x = np.concatenate([x for x, _ in dl.as_numpy()]).flatten()
+            minor = x[x % 2 == 1]
+
+            self.assertEqual(len(minor), 10)
+            self.assertGreater(len(np.unique(minor)), 1)
+
+        finally:
+            self.teardown_file(self.file_name1)
+            self.teardown_file(self.file_name2)
 
 
 class DataLoaderSave(unittest.TestCase):

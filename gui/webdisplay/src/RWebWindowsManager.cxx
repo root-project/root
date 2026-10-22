@@ -797,7 +797,7 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.Debug: "no" (default), "yes" - enable more debug output on JSROOT side
 ///      WebGui.ConnCredits: 10 - number of packets which can be send by server or client without acknowledge from receiving side
 ///      WebGui.QueueLength: 10 - maximal number of entires in window send queue
-///      WebGui.openui5src: alternative location for openui5 like https://openui5.hana.ondemand.com/1.135.0/
+///      WebGui.openui5src: alternative location for openui5 like https://openui5.hana.ondemand.com/1.152.0/
 ///      WebGui.openui5libs: list of pre-loaded ui5 libs like sap.m, sap.ui.layout, sap.ui.unified
 ///      WebGui.openui5theme: openui5 theme like sap_fiori_3 (default) or sap_horizon
 ///      WebGui.DarkMode: "no" (default), "yes" - switch to JSROOT dark mode and will use sap_fiori_3_dark theme
@@ -899,7 +899,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
                "Means web browser will be displayed on remote X11 server which is usually very inefficient\n"
                "One can start ROOT session in server mode like \"root -b --web=server:8877\" and forward http port to display node\n"
                "Or one can use rootssh script to configure port forwarding and display web widgets automatically\n"
-               "Find more info on https://root.cern/for_developers/root7/#rbrowser\n"
+               "Find more info on https://root.cern/doc/master/classROOT_1_1RBrowser.html\n"
                "This message can be disabled by setting \"" << varname << ": no\" in .rootrc file\n";
          }
       }

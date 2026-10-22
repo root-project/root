@@ -97,12 +97,13 @@ class FactoryTestParams {
 public:
    FactoryTestParams() = default;
    FactoryTestParams(std::string const &name, WorkspaceSetupFunc setupWorkspace, CreateNLLFunc createNLL,
-                     double fitResultTolerance, bool randomizeParameters)
+                     double fitResultTolerance, bool randomizeParameters, std::size_t nEvents = 100)
       : _name{name},
         _setupWorkspace{setupWorkspace},
         _createNLL{createNLL},
         _fitResultTolerance{fitResultTolerance},
-        _randomizeParameters{randomizeParameters}
+        _randomizeParameters{randomizeParameters},
+        _nEvents{nEvents}
    {
    }
 
@@ -111,6 +112,7 @@ public:
    CreateNLLFunc _createNLL;
    double _fitResultTolerance = 1e-4;
    bool _randomizeParameters = true;
+   std::size_t _nEvents = 100;
 };
 
 class FactoryTest : public testing::TestWithParam<FactoryTestParams> {
@@ -151,7 +153,7 @@ TEST_P(FactoryTest, NLLFit)
    RooAbsData *data = ws.data("data");
    RooAbsPdf &model = *ws.pdf("model");
 
-   std::size_t nEvents = 100;
+   std::size_t nEvents = _params._nEvents;
    if (!data) {
       std::unique_ptr<RooDataSet> data0{model.generate(observables, nEvents)};
       ownedData = std::unique_ptr<RooAbsData>{data0->binnedClone()};
@@ -580,7 +582,7 @@ FactoryTestParams param13{"RooFunctor",
                           /*randomizeParameters=*/true};
 
 FactoryTestParams makeTestParams(const char *name, std::vector<std::string> const &expressions,
-                                 double fitResultTolerance, bool randomizeParameters = true)
+                                 double fitResultTolerance, bool randomizeParameters = true, std::size_t nEvents = 100)
 {
    return {name,
            [=](RooWorkspace &ws) {
@@ -593,7 +595,9 @@ FactoryTestParams makeTestParams(const char *name, std::vector<std::string> cons
               using namespace RooFit;
               return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
            },
-           fitResultTolerance, randomizeParameters};
+           fitResultTolerance,
+           randomizeParameters,
+           nEvents};
 }
 
 auto testValues = testing::Values(
@@ -603,7 +607,7 @@ auto testValues = testing::Values(
       {"x[0, -10, 10]", "mu[0, -10, 10]", "BifurGauss::model(x, mu, sigmaL[3.0, 0.01, 10], sigmaR[2.0, 0.01, 10])"},
       1e-4, false),
    makeTestParams("RooFormulaVar",
-                  {"expr::mu_shifted('mu+shift',{mu[0, -10, 10], shift[1.0, -10, 10]})",
+                  {"expr::mu_shifted('mu+shift',{mu[0, -10, 10], shift[1.0]})",
                    "expr::sigma_scaled('sigma*1.5',{sigma[3.0, 0.01, 10]})",
                    "Gaussian::model(x[0, -10, 10], mu_shifted, sigma_scaled)"},
                   1e-4, false),
@@ -633,13 +637,28 @@ auto testValues = testing::Values(
    // all possible code paths in the pullback.
    makeTestParams("RooLandau1", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[1., 0.01, 50.])"}, 7e-3, false),
    makeTestParams("RooLandau2", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[2.1, 0.01, 50.])"}, 7e-3, false),
-   makeTestParams("RooLandau3", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[10., 0.01, 50.])"}, 7e-3, false),
+   // With sl = 10, the Landau is nearly uniform over the observable window, so
+   // with only 100 events the fit is unidentifiable: the minimizers stop at
+   // arbitrary points in an almost flat valley, and the fitted values can't be
+   // meaningfully compared. Generate more events to make the minimum
+   // well-defined.
+   makeTestParams("RooLandau3", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[10., 0.01, 50.])"}, 7e-3, false,
+                  10000),
    makeTestParams("RooLandau4", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.3, 0.01, 50.])"}, 7e-3, false),
    makeTestParams("RooLandau5", {"Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.07, 0.01, 50.])"}, 7e-3, false),
    makeTestParams(
       "RooRealSumPdf1",
       {"Gaussian::gx(x[-10,10],m[0],1.0)", "Chebychev::ch(x,{0.1,0.2,-0.3})", "RealSumPdf::model({gx, ch}, {f[0,1]})"},
       6e-3, false),
+   // Extended RooRealSumPdf (one coefficient per function, like in HistFactory
+   // models). The expected number of events is the integral of the sum, which
+   // the NLL reads after the event loop. Here, the same integral is also the
+   // normalization of the pdf inside the loop, so this checks that the
+   // generated integral code is placed outside the loop.
+   makeTestParams("RooRealSumPdfExtended",
+                  {"Gaussian::gx(x[-10,10],m[0,-3,3],1.5)", "Exponential::ex(x,-0.1)",
+                   "ASUM::model(n1[100,0,1000]*gx, n2[100,0,1000]*ex)"},
+                  6e-3, true),
    // Express a Gaussian as a RooFormulaVar/expr and put in a RooWrapper pdf to
    // get test coverage for RooWrapperPdf.
    makeTestParams("RooWrapperPdf",
@@ -661,3 +680,51 @@ INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testValues,
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
                             return paramInfo.param._name;
                          });
+
+// https://github.com/root-project/root/issues/23724: the slope derivative of
+// the RooExponential normalization integral was inaccurate for small slopes
+// and zero at exactly zero slope. References from 80-digit arithmetic: for
+// uniform data, the NLL gradient is 50 * I'(c) / I(c) - sum(x) and the Hessian
+// 50 * (I''(c) / I(c) - (I'(c) / I(c))^2), with I(c) the integral of exp(c * x)
+// over the observable range.
+TEST(RooFuncWrapper, ExponentialGradientNearZeroSlope)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl{RooFit::WARNING};
+
+   RooRealVar x{"x", "x", 140., 100., 180.};
+   RooRealVar slope{"slope", "slope", -0.01, -0.1, 0.1};
+   RooExponential pdf{"exponential", "exponential", x, slope};
+
+   RooArgSet observables{x};
+   RooDataSet data{"uniform_data", "uniform_data", observables};
+   for (int i = 0; i < 50; ++i) {
+      x.setVal(100. + (i + 0.5) * 80. / 50);
+      data.add(observables);
+   }
+
+   std::unique_ptr<RooAbsReal> nll{pdf.createNLL(data, RooFit::EvalBackend::Codegen())};
+   auto &nllWrapper = static_cast<RooFit::Experimental::RooEvaluatorWrapper &>(*nll);
+   nllWrapper.generateGradient();
+   nllWrapper.generateHessian();
+
+   struct Reference {
+      double slope;
+      double gradient;
+      double hessian;
+   };
+
+   const std::vector<Reference> refs{{-0.001, -26.663822655592037, 26658.135500043750},
+                                     {-1.497412393733355e-11, -3.9930997166222800e-7, 26666.666666666667},
+                                     {0.0, 0.0, 26666.666666666667}};
+
+   for (auto const &ref : refs) {
+      slope.setVal(ref.slope);
+      nll->getVal();
+      double gradient = 0.;
+      nll->gradient(&gradient);
+      EXPECT_NEAR(gradient, ref.gradient, 1e-9) << "gradient at slope " << ref.slope;
+      double hessian = 0.;
+      nll->hessian(&hessian);
+      EXPECT_NEAR(hessian, ref.hessian, 1e-9 * ref.hessian) << "Hessian at slope " << ref.slope;
+   }
+}

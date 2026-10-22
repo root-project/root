@@ -251,7 +251,7 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       event = event % 10000;
    }
 
-   auto inter = dynamic_cast<TBoxInteractive *>(parent.Interactive(this));
+   auto inter = parent.GetInteractive<TBoxInteractive>(this);
 
    auto setNewValues = [&inter, this, canX, canY]() {
       if (canX) {
@@ -275,8 +275,7 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kArrowKeyPress:
    case kButton1Down:
-      inter = new TBoxInteractive(isBox, GetX1(), GetY1(), GetX2(), GetY2());
-      parent.Interactive(this, inter);
+      inter = parent.MakeInteractive<TBoxInteractive>(this, isBox, GetX1(), GetY1(), GetX2(), GetY2());
       // No break !!!
 
    case kMouseMotion: {
@@ -287,7 +286,7 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       if (!inter->SelectCorner(px, py, canX, canY)) {
          // refuse interactive changes
-         parent.Interactive();
+         parent.FreeInteractive(this);
       } else {
          inter->SetCursor(parent, event == kButton1Down);
          fResizing = inter->IsResizing() && (event != kMouseMotion);
@@ -335,7 +334,7 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
 
       parent.Modified();
-      parent.Interactive(); // delete interactive object
+      parent.FreeInteractive(this);
       fResizing = kFALSE;
 
       break;

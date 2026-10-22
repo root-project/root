@@ -97,6 +97,21 @@ if (ONNX_MODELS_DIR)
     FIXTURES_SETUP sofie-compile-models-onnx
   )
 
+  # Tests of the alias tensors. They assert on the RModel itself rather than on
+  # the code it generates, so they need the ONNX models but none of the headers
+  # emitted from them.
+  set(alias_test_fixtures "")
+  if (generate_onnx_models)
+    set(alias_test_fixtures sofie-generate-models-onnx)
+  endif()
+  ROOT_EXECUTABLE(TestSofieAlias TestSofieAlias.cxx
+    LIBRARIES ROOTTMVASofie ROOTTMVASofieParser GTest::gtest GTest::gtest_main
+  )
+  target_compile_definitions(TestSofieAlias PRIVATE SOFIE_ONNX_MODELS_DIR="${ONNX_MODELS_DIR}")
+  ROOTTEST_ADD_TEST(TestSofieAlias
+                    EXEC ./TestSofieAlias
+                    FIXTURES_REQUIRED ${alias_test_fixtures})
+
   # Creating a Google Test
   if (BLAS_FOUND)  # we need BLAS for compiling the models
     ROOT_EXECUTABLE(TestCustomModelsFromONNX TestCustomModelsFromONNX.cxx
@@ -128,6 +143,11 @@ endif()
 # themselves as hand-crafted protobuf wire format, so they need no Python
 ROOT_ADD_GTEST(TestSofieParser TestSofieParser.cxx
   LIBRARIES Core ROOTTMVASofie ROOTTMVASofieParser)
+
+# Unit tests for the safetensors weight file format. nlohmann_json is used by
+# the test itself to validate the structure of the generated file.
+ROOT_ADD_GTEST(TestSafetensorsWeights TestSafetensorsWeights.cxx
+  LIBRARIES Core ROOTTMVASofie ROOTTMVASofieParser nlohmann_json::nlohmann_json)
 
 if (ROOT_TORCH_FOUND AND ROOT_ONNX_FOUND AND NOT broken_onnx)
   # ModelGeneratorUtils.py holds the code shared by the generators below, so it

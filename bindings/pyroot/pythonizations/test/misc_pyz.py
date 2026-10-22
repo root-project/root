@@ -28,6 +28,34 @@ class TClassDynamicCast(unittest.TestCase):
         o_downcast = tobjstr_class.DynamicCast(tobj_class, o_upcast, False)
         self.assertEqual(type(o_downcast), TObjString)
 
+    def test_dynamiccast_offset(self):
+        # The second base of a class with multiple inheritance is at a non-zero
+        # offset, which the cast has to apply in both directions.
+        ROOT.gInterpreter.Declare("""
+        struct DynamicCastBase1 { virtual ~DynamicCastBase1() {} int fBase1 = 1; };
+        struct DynamicCastBase2 { virtual ~DynamicCastBase2() {} int fBase2 = 2; };
+        struct DynamicCastDerived : DynamicCastBase1, DynamicCastBase2 {};
+        """)
+        base_class = TClass.GetClass("DynamicCastBase2")
+        derived_class = TClass.GetClass("DynamicCastDerived")
+
+        o = ROOT.DynamicCastDerived()
+
+        # Upcast: DynamicCastBase2 <- DynamicCastDerived
+        o_upcast = derived_class.DynamicCast(base_class, o)
+        self.assertEqual(type(o_upcast), ROOT.DynamicCastBase2)
+        self.assertNotEqual(ROOT.addressof(o_upcast), ROOT.addressof(o))
+        self.assertEqual(o_upcast.fBase2, 2)
+
+        # Downcast: DynamicCastBase2 -> DynamicCastDerived
+        o_downcast = derived_class.DynamicCast(base_class, o_upcast, False)
+        self.assertEqual(type(o_downcast), ROOT.DynamicCastDerived)
+        self.assertEqual(ROOT.addressof(o_downcast), ROOT.addressof(o))
+
+        # The object can also be given by its address
+        o_upcast = derived_class.DynamicCast(base_class, ROOT.addressof(o))
+        self.assertEqual(o_upcast.fBase2, 2)
+
 
 class TContextContextManager(unittest.TestCase):
     """
@@ -370,6 +398,111 @@ class TGraphGetters(unittest.TestCase):
         self.assertEqual(list(eylow), list(aeyl))
         self.assertEqual(list(exhigh), list(aexh))
         self.assertEqual(list(eyhigh), list(aeyh))
+
+
+class TParameterTemplateInstantiations(unittest.TestCase):
+    """
+    Instantiating TParameter<T> for a type without a dictionary (e.g. char)
+    from the interpreter used to fail with unresolved
+    TParameter<T>::Class() and TParameter<T>::Streamer(TBuffer&) symbols,
+    see https://github.com/root-project/root/issues/10724. Check that all
+    standard arithmetic types can be constructed, printed and serialized
+    from the interpreter.
+    """
+
+    # (type name, value passed to the constructor, value expected from GetVal())
+    # cppyy maps the character types to Python str, so 42 comes back as "*"
+    instantiations = [
+        ("bool", True, True),
+        ("char", 42, "*"),
+        ("signed char", 42, "*"),
+        ("unsigned char", 42, "*"),
+        ("short", 42, 42),
+        ("unsigned short", 42, 42),
+        ("int", 42, 42),
+        ("unsigned int", 42, 42),
+        ("long", 42, 42),
+        ("unsigned long", 42, 42),
+        ("long long", 42, 42),
+        ("unsigned long long", 42, 42),
+        ("float", 0.5, 0.5),
+        ("double", 0.5, 0.5),
+    ]
+
+    def test_construct_and_print(self):
+        for typename, val, expected in self.instantiations:
+            with self.subTest(typename=typename):
+                param = ROOT.TParameter[typename]("p", val)
+                self.assertEqual(param.GetVal(), expected)
+                # Print and ls write to std::cout; exercise the code path
+                # (they used to be uncallable without arguments)
+                param.Print()
+                param.ls()
+
+    def test_has_dictionary(self):
+        for typename, _, _ in self.instantiations:
+            with self.subTest(typename=typename):
+                tclass = ROOT.TClass.GetClass(f"TParameter<{typename}>")
+                self.assertIsNotNone(tclass)
+                self.assertTrue(tclass.HasDictionary())
+
+    def test_io_roundtrip(self):
+        for typename, val, expected in self.instantiations:
+            with self.subTest(typename=typename):
+                param = ROOT.TParameter[typename]("p", val)
+                memfile = ROOT.TMemFile("TParameterTemplateInstantiations.root", "recreate")
+                memfile.WriteObject(param, "p")
+                param_read = memfile.Get("p")
+                self.assertEqual(param_read.GetVal(), expected)
+                memfile.Close()
+
+
+class Float16Double32Conversions(unittest.TestCase):
+    """
+    Float16_t and Double32_t are typedefs to float and double that only
+    differ in how ROOT I/O stores them. They have to convert to and from
+    Python like the types they alias, by value and by reference.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        ROOT.gInterpreter.Declare("""
+        struct Float16Double32Holder {
+           Float16_t fF = 0.5f;
+           Double32_t fD = 1.5;
+           Float16_t GetF() { return fF; }
+           Double32_t GetD() { return fD; }
+           Float16_t &RefF() { return fF; }
+           Double32_t &RefD() { return fD; }
+           float TakeF(Float16_t x) { return x; }
+           double TakeD(Double32_t x) { return x; }
+           float TakeConstRefF(const Float16_t &x) { return x; }
+           double TakeConstRefD(const Double32_t &x) { return x; }
+        };
+        """)
+
+    def test_conversions(self):
+        h = ROOT.Float16Double32Holder()
+        self.assertAlmostEqual(h.fF, 0.5)
+        self.assertAlmostEqual(h.fD, 1.5)
+        self.assertAlmostEqual(h.GetF(), 0.5)
+        self.assertAlmostEqual(h.GetD(), 1.5)
+        self.assertAlmostEqual(h.RefF(), 0.5)
+        self.assertAlmostEqual(h.RefD(), 1.5)
+        self.assertAlmostEqual(h.TakeF(2.5), 2.5)
+        self.assertAlmostEqual(h.TakeD(3.5), 3.5)
+        self.assertAlmostEqual(h.TakeConstRefF(4.5), 4.5)
+        self.assertAlmostEqual(h.TakeConstRefD(5.5), 5.5)
+
+    def test_vector(self):
+        # Spell the template argument both as a string and as the Python
+        # proxy of the typedef, which may resolve through different code paths
+        for tp in ["Float16_t", "Double32_t", ROOT.Float16_t, ROOT.Double32_t]:
+            with self.subTest(tp=tp):
+                v = ROOT.std.vector[tp]([0.5, 1.5])
+                self.assertEqual(len(v), 2)
+                self.assertAlmostEqual(v[0], 0.5)
+                self.assertAlmostEqual(v[1], 1.5)
 
 
 if __name__ == '__main__':

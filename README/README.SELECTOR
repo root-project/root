@@ -147,7 +147,7 @@ Signature:
 The SetInputList() member function
 ----------------------------------
 
-The input list is transfered after the execution
+The input list is transferred after the execution
 of the Begin() function, so objects can still be added in Begin() to
 this list. These objects are then available during the selection process
 (e.g. predefined histograms, etc.). Does not transfer ownership.
@@ -160,8 +160,8 @@ Signature:
 The GetOutputList() member function
 -----------------------------------
 
-Getter for the output list of objects to be transfered back to the
-client. The output list on each slave is transfered back to the client
+Getter for the output list of objects to be transferred back to the
+client. The output list on each slave is transferred back to the client
 session after the execution of the SlaveTerminate() function.
 Ownership remains with the selector. Each query will clear this list.
 

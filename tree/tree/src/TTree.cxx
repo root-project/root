@@ -455,6 +455,8 @@ End_Macro
 #include "TBranchIMTHelper.h"
 #include "TNotifyLink.h"
 
+#include <ROOT/StringUtils.hxx>
+
 #include <chrono>
 #include <cstddef>
 #include <iostream>
@@ -8776,11 +8778,26 @@ Int_t TTree::SetBranchAddressImp(const char *bname, void *addr, TBranch **ptr, T
    }
 
    // Check friends
+   // The next code section is going to look for the branch name "bname" in the friends. This could in principle be
+   // achieved by simply calling GetBranchFromFriends, or collapse this whole function to just searching for the branch
+   // with GetBranch. This may sometimes not be enough, for example when dealing with friendships with TChain, where
+   // a certain amount of information may not be propagated correctly by simply calling GetBranch.
    if (fFriends) {
       int status{kMissingBranch};
       for (auto *fe : TRangeDynCast<TFriendElement>(fFriends)) {
          if (auto *tree = fe->GetTree()) {
             status = tree->SetBranchAddress(bname, addr, ptr, ptrClass, datatype, isptr, true);
+            if (status != kMatch) {
+               // Try again, the branch name may be prefixed by the tree name
+               std::string_view bnameView{bname};
+               if (ROOT::StartsWith(bnameView, fe->GetName())) {
+                  bnameView.remove_prefix(strlen(fe->GetName()));
+                  if (!bnameView.empty() && bnameView.front() == '.') {
+                     bnameView.remove_prefix(1);
+                     status = tree->SetBranchAddress(bnameView.data(), addr, ptr, ptrClass, datatype, isptr, true);
+                  }
+               }
+            }
             // We exit early from visiting all friends only if a perfect match was found
             if (status == kMatch)
                return status;
@@ -10278,4 +10295,14 @@ TBranch *ROOT::Internal::TreeUtils::CallBranchImp(TTree &tree, const char *branc
                                                   Int_t bufsize, Int_t splitlevel)
 {
    return tree.BranchImp(branchname, ptrClass, addobj, bufsize, splitlevel);
+}
+
+Longptr_t ROOT::Internal::TreeUtils::GetBranchAddress(TBranch *branch)
+{
+   return reinterpret_cast<Longptr_t>(branch->GetAddress());
+}
+
+Longptr_t ROOT::Internal::TreeUtils::GetBranchElementObject(TBranchElement *branch)
+{
+   return reinterpret_cast<Longptr_t>(branch->GetObject());
 }

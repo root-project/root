@@ -24,6 +24,7 @@
 #endif
 
 #include <fstream>
+#include <iostream>
 #include <sys/stat.h>
 #include <system_error>
 
@@ -343,7 +344,7 @@ std::string DynamicLibraryManager::lookupLibrary(
 
 DynamicLibraryManager::LoadLibResult
 DynamicLibraryManager::loadLibrary(StringRef libStem, bool permanent,
-                                   bool resolved) {
+                                   bool resolved, std::string* errMsg) {
 #define DEBUG_TYPE "Dyld::loadLibrary:"
   LLVM_DEBUG(dbgs() << "Dyld::loadLibrary: " << libStem.str() << ", "
                     << (permanent ? "permanent" : "not-permanent") << ", "
@@ -363,14 +364,19 @@ DynamicLibraryManager::loadLibrary(StringRef libStem, bool permanent,
 
   // TODO: !permanent case
 
-  std::string errMsg;
-  DyLibHandle dyLibHandle = platform::DLOpen(canonicalLoadedLib, &errMsg);
+  std::string loadErr;
+  DyLibHandle dyLibHandle = platform::DLOpen(canonicalLoadedLib, &loadErr);
   if (!dyLibHandle) {
     // We emit callback to LibraryLoadingFailed when we get error with error
     // message.
     // TODO: Implement callbacks
 
-    LLVM_DEBUG(dbgs() << "DynamicLibraryManager::loadLibrary(): " << errMsg);
+    if (errMsg)
+      *errMsg = loadErr;
+    else if (!loadErr.empty())
+      std::cerr << loadErr << '\n';
+
+    LLVM_DEBUG(dbgs() << "DynamicLibraryManager::loadLibrary(): " << loadErr);
 
     return kLoadLibLoadError;
   }

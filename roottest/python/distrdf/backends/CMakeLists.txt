@@ -35,6 +35,21 @@ endif()
 string(REPLACE ";" "," DISTRDF_BACKENDS_IN_USE "${DISTRDF_BACKENDS_IN_USE}")
 list(APPEND DISTRDF_ENVIRONMENT_VARS DISTRDF_BACKENDS_IN_USE=${DISTRDF_BACKENDS_IN_USE})
 
+# Disable the XRootD client's fork handlers in the test processes. Some tests
+# read files from root://eospublic.cern.ch, which leaves an idle XrdCl
+# connection in the driver process. The driver later forks (the PySpark JVM is
+# launched through Popen with a preexec_fn, which runs the pthread_atfork
+# handlers), and with XRootD 6.0.x and 6.1.0 the fork handling confuses the
+# client's poller: when the idle connection is then closed (TTL expiry or a
+# server-side disconnect) the poller thread deadlocks and the process never
+# exits, so the test times out even though all tests passed. This is XRootD
+# issue https://github.com/xrootd/xrootd/issues/2879, fixed in XRootD 6.1.1.
+# The handlers are only needed by children that keep using inherited XrdCl
+# connections, which none of the processes spawned here do.
+# TODO: Remove once no CI platform ships an affected XRootD, most likely when
+# Ubuntu 26.10 is end-of-life.
+list(APPEND DISTRDF_ENVIRONMENT_VARS XRD_RUNFORKHANDLER=0)
+
 # We use the PROCESSORS property to tell cmake how many cores we will be
 # using in the following test. In this folder, mock cluster connections will be
 # created, each using 2 cores with multiprocessing, we give it more room by

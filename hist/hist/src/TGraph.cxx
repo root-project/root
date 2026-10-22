@@ -2544,11 +2544,9 @@ void TGraph::Sort(Bool_t (*greaterfunc)(const TGraph *, Int_t, Int_t) /*=TGraph:
    std::iota(sorting_indices.begin(), sorting_indices.end(), 0);
 
    // Sort the indices using the provided comparison function
-   // We use std::stable_sort here because the libc++ implementation of std::sort
-   // is not standard-compliant until LLVM 14 which caused errors on the mac nodes
-   // of our CI, related issue: https://github.com/llvm/llvm-project/issues/21211
    std::stable_sort(sorting_indices.begin() + low, sorting_indices.begin() + high + 1,
-             [&](int left, int right) { return left != right && greaterfunc(this, left, right) != ascending; });
+             [&](int left, int right) { return ascending ? greaterfunc(this, right, left) :
+                                        greaterfunc(this, left, right); });
 
    Int_t numSortedPoints = high - low + 1;
    UpdateArrays(sorting_indices, numSortedPoints, low);

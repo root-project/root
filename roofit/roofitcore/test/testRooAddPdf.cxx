@@ -5,14 +5,18 @@
 #include <RooChebychev.h>
 #include <RooConstVar.h>
 #include <RooDataHist.h>
+#include <RooDataSet.h>
 #include <RooFit/Evaluator.h>
+#include <RooFitResult.h>
 #include <RooGaussian.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
 #include <RooHistPdf.h>
 #include <RooMsgService.h>
 #include <RooProdPdf.h>
+#include <RooRandom.h>
 #include <RooRealIntegral.h>
+#include <RooRealVar.h>
 #include <RooUniform.h>
 #include <RooWorkspace.h>
 
@@ -20,7 +24,10 @@
 
 #include "gtest_wrapper.h"
 
+#include <cmath>
 #include <memory>
+#include <string>
+#include <vector>
 
 /// Verify that sPlot does work with a RooAddPdf. This reproduces GitHub issue
 /// #10869, where creating an SPlot from a RooAdPdf unreasonably changed the
@@ -452,4 +459,111 @@ TEST(RooAddPdf, NLLWithRecursiveFractions)
     std::unique_ptr<RooDataSet> data{model.generate(RooArgSet(x), 1000)};
 
     std::unique_ptr<RooAbsReal> nll{model.createNLL(*data)};
+}
+
+/// Extended fit over multiple disjoint 2D ranges with the new backend.
+///
+/// Regression test for a bug reported on the ROOT forum ("Possible bug in 2D
+/// multi-range extended fit with EvalBackend(\"cpu\")"): the extended term
+/// used the reciprocal of the full-range component integral, which is not
+/// the fraction inside the fit ranges for components whose normalization
+/// doesn't trivially factor over the observable union, like the RooProdPdf
+/// of two Gaussians here (union of sideband boxes spans the full axes).
+///
+/// Reference NLL values and yields are computed with plain math from the
+/// analytic model: fractions and shape normalization follow from erf() and
+/// logarithms only, without RooFit likelihood machinery.
+TEST(RooAddPdf, MultiRangeExtendedFit)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl{RooFit::WARNING};
+
+   using namespace RooFit;
+
+   RooRealVar x{"x", "x", -5.0, 5.0};
+   RooRealVar y{"y", "y", -5.0, 5.0};
+   RooArgSet obs{x, y};
+
+   // Signal: product of two unit Gaussians, narrow compared to range.
+   RooRealVar mu{"mu", "mu", 0.0};
+   RooRealVar sigma{"sigma", "sigma", 1.0};
+   RooGaussian gx{"gx", "gx", x, mu, sigma};
+   RooGaussian gy{"gy", "gy", y, mu, sigma};
+   RooProdPdf g{"g", "g", {gx, gy}};
+   RooUniform u{"u", "u", obs};
+
+   const double nGTrue = 12000.0;
+   const double nUTrue = 3000.0;
+   RooRealVar ng{"ng", "ng", nGTrue, 0.0, 30000.0};
+   RooRealVar nu{"nu", "nu", nUTrue, 0.0, 30000.0};
+   RooAddPdf model{"model", "model", {g, u}, {ng, nu}};
+
+   // Eight "sideband" boxes of a 3x3 grid, excluding the central box.
+   const double bounds[4] = {-5.0, -2.0, 2.0, 5.0};
+   std::string rangeArg;
+   for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 3; ++j) {
+         if (i == 1 && j == 1)
+            continue;
+         std::string name = "sb" + std::to_string(i) + std::to_string(j);
+         x.setRange(name.c_str(), bounds[i], bounds[i + 1]);
+         y.setRange(name.c_str(), bounds[j], bounds[j + 1]);
+         if (!rangeArg.empty())
+            rangeArg += ",";
+         rangeArg += name;
+      }
+   }
+
+   RooRandom::randomGenerator()->SetSeed(12345);
+   std::unique_ptr<RooDataSet> data{model.generate(obs, 15000)};
+
+   // Closed-form reference values. Gaussian truncated to [-5, 5].
+   const double truncation = std::erf(5.0 / std::sqrt(2.0));
+
+   // Component fractions inside the union of sideband ranges. 1D central-box
+   // probability for the Gaussian: erf(2/sqrt(2))/truncation; the uniform
+   // fraction is the area ratio.
+   const double probCentral1D = std::erf(2.0 / std::sqrt(2.0)) / truncation;
+   const double fG = 1.0 - probCentral1D * probCentral1D;
+   const double fU = 1.0 - (4.0 * 4.0) / (10.0 * 10.0);
+   const double sqrtTwoPi = std::sqrt(8.0 * std::atan(1.0));
+   auto gaussVal = [&](double v) { return std::exp(-0.5 * v * v) / (sqrtTwoPi * truncation); };
+   const double uVal = 1.0 / (10.0 * 10.0);
+
+   // Shape part of the reference NLL at the true parameter values.
+   const double nExpTrue = nGTrue * fG + nUTrue * fU;
+   double nSB = 0.0;
+   double nllShapeRef = 0.0;
+   for (int i = 0; i < data->numEntries(); ++i) {
+      const RooArgSet *row = data->get(i);
+      const double xv = row->getRealValue("x");
+      const double yv = row->getRealValue("y");
+      if (std::abs(xv) <= 2.0 && std::abs(yv) <= 2.0)
+         continue;
+      nSB += 1.0;
+      const double modelVal = (nGTrue * gaussVal(xv) * gaussVal(yv) + nUTrue * uVal) / nExpTrue;
+      nllShapeRef -= std::log(modelVal);
+   }
+   // Extended term without offsetting: nExpected - nObserved * ln(nExpected).
+   const double nllExtendedRef = nllShapeRef + nExpTrue - nSB * std::log(nExpTrue);
+
+   // With the bug, the extended term used fractions (1.0, 0.84) instead of
+   // (fG, fU), shifting the NLL by ~2500 units.
+   std::unique_ptr<RooAbsReal> nllExtended{
+      model.createNLL(*data, Range(rangeArg.c_str()), Extended(true), EvalBackend("cpu"), Offset(false))};
+   EXPECT_NEAR(nllExtended->getVal(), nllExtendedRef, 1e-8 * std::abs(nllExtendedRef));
+
+   // Also verify the fitted yields: expected sideband events must match the
+   // actual count, and yields must be close to the truth. With the bug, the
+   // expected count was a factor ~4 too low.
+   std::unique_ptr<RooFitResult> res{
+      model.fitTo(*data, Range(rangeArg.c_str()), Extended(true), EvalBackend("cpu"), Save(), PrintLevel(-1))};
+   const double nGFit = ng.getVal();
+   const double nUFit = nu.getVal();
+   const double expectedSB = nGFit * fG + nUFit * fU;
+
+   // Tolerances far above the statistical fluctuation scale: the bug caused
+   // a factor ~4 deviation, so these clearly discriminate.
+   EXPECT_NEAR(expectedSB, nSB, 0.1 * nSB);
+   EXPECT_NEAR(nGFit, nGTrue, 0.1 * nGTrue);
+   EXPECT_NEAR(nUFit, nUTrue, 0.1 * nUTrue);
 }

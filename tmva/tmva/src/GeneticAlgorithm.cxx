@@ -203,7 +203,7 @@ void TMVA::GeneticAlgorithm::Evolution()
 /// Parameters:
 ///
 ///  - int ofSteps :  = if OF the number of STEPS given in this variable (ofSteps)
-///  - int successSteps : >sucessSteps Generations could improve the result
+///  - int successSteps : >successSteps Generations could improve the result
 ///  - double factor : than multiply the stepSize ( spread ) by this factor
 ///
 /// (if ofSteps == successSteps nothing is changed, if ofSteps < successSteps, the spread

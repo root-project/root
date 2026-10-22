@@ -33,6 +33,7 @@
 #include "TMap.h"
 #include "TExMap.h"
 #include "TEnv.h"
+#include "TError.h"
 #include "TColor.h"
 #include "TPRegexp.h"
 #include "TClass.h"
@@ -42,11 +43,18 @@
 #include "TTimer.h"
 #include "TApplication.h"
 
+#include <exception>
 #include <fstream>
 #include <memory>
 #include <sstream>
 #include <iostream>
 #include <regex>
+#include <system_error>
+#include <thread>
+
+#if defined(R__LINUX) || defined(R__MACOSX)
+#include <pthread.h>
+#endif
 
 #include <nlohmann/json.hpp>
 
@@ -68,6 +76,28 @@ struct MIR_TL_Data_t
 
 thread_local std::vector<ROOT::RLogEntry> gEveLogEntries;
 thread_local MIR_TL_Data_t gMIRData;
+
+namespace {
+
+/// Stack size of the calling thread in bytes, or 0 if it cannot be determined.
+size_t CurrentThreadStackSize()
+{
+#if defined(R__LINUX)
+   size_t size = 0;
+   pthread_attr_t attr;
+   if (pthread_getattr_np(pthread_self(), &attr) == 0) {
+      pthread_attr_getstacksize(&attr, &size);
+      pthread_attr_destroy(&attr);
+   }
+   return size;
+#elif defined(R__MACOSX)
+   return pthread_get_stacksize_np(pthread_self());
+#else
+   return 0;
+#endif
+}
+
+} // namespace
 
 /** \class REveManager
 \ingroup REve
@@ -365,6 +395,43 @@ void REveManager::BrowseElement(ElementId_t id)
    nlohmann::json msg = {};
    msg["content"] = "BrowseElement";
    msg["id"] = id;
+
+   fWebWindow->Send(0, msg.dump());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Ask every connected client to grab its GL viewers and POST each image to an
+/// image collector. Each client posts the views it shows, all tagged with the
+/// same `event_id`.
+///
+/// The body is `application/octet-stream`, width*height*4 bytes of RGBA8 with
+/// straight alpha and no background, so it composites onto any backdrop.
+/// Headers X-Width, X-Height, X-Event-ID and X-View-Type describe it; X-Flip-Y
+/// is 1 when the rows are in WebGL bottom-up order. RenderCore's
+/// util/image-gator.js is a reference receiver. The default collector is on
+/// loopback; a remote one needs TLS and authentication.
+///
+/// \param event_id  tag recorded with the image, e.g. run/lumi/event
+/// \param url       collector endpoint; empty takes rootrc `WebEve.ImageGatorUrl`,
+///                  which defaults to http://localhost:3000/capture
+/// \param scale     multiplier on the viewer viewport; 1 is what the operator sees
+/// \param viewers   restrict to these viewer names; empty means all of them
+
+void REveManager::GrabImages(std::string_view event_id, std::string_view url, int scale,
+                             const std::vector<std::string> &viewers)
+{
+   std::string dest(url);
+   if (dest.empty())
+      dest = gEnv->GetValue("WebEve.ImageGatorUrl", "http://localhost:3000/capture");
+
+   nlohmann::json msg = {};
+   // clang-format off
+   msg["content"]  = "GrabImage";
+   msg["event_id"] = std::string(event_id);
+   msg["url"]      = dest;
+   msg["scale"]    = scale;
+   msg["viewers"]  = viewers;
+   // clang-format on
 
    fWebWindow->Send(0, msg.dump());
 }
@@ -746,9 +813,55 @@ void REveManager::QuitRoot()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Process new connection from web window
+/// Process new connection from web window.
+///
+/// This is called in a web-server thread, which can have a small stack (the
+/// builtin civetweb uses 100 KB unless configured otherwise). Streaming the
+/// scenes can need much more: the first IsA() of an element class makes cling
+/// load declarations, which recurses deeply. If the current thread's stack is
+/// small, the streaming runs in a thread with the default stack size instead,
+/// and this thread waits for it.
 
 void REveManager::WindowConnect(unsigned connid)
+{
+   static constexpr size_t kMinStackSize = 1024 * 1024;
+
+   size_t stack_size = CurrentThreadStackSize();
+   if (stack_size == 0 || stack_size >= kMinStackSize) {
+      StreamToNewConnection(connid);
+      return;
+   }
+
+   // An exception is passed back to this thread, where it would have appeared before.
+   std::exception_ptr exc;
+   std::thread thrd;
+   try {
+      thrd = std::thread([this, connid, &exc] {
+#if defined(R__LINUX)
+         pthread_setname_np(pthread_self(), "eve_connect");
+#endif
+         try {
+            StreamToNewConnection(connid);
+         } catch (...) {
+            exc = std::current_exception();
+         }
+      });
+   } catch (const std::system_error &e) {
+      ::Warning("REveManager::WindowConnect",
+                "could not start streaming thread (%s), streaming in the web-server thread with stack size %zu",
+                e.what(), stack_size);
+      StreamToNewConnection(connid);
+      return;
+   }
+   thrd.join();
+   if (exc)
+      std::rethrow_exception(exc);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Register new connection and stream the world and the mandatory scenes to it.
+
+void REveManager::StreamToNewConnection(unsigned connid)
 {
    std::unique_lock<std::mutex> lock(fServerState.fMutex);
 
@@ -772,6 +885,7 @@ void REveManager::WindowConnect(unsigned connid)
    fWorld->StreamElements();
 
    printf("   sending json, len = %d\n", (int)fWorld->fOutputJson.size());
+   REveUtil::StampServerTime(fWorld->fOutputJson);
    Send(connid, fWorld->fOutputJson);
    printf("   for now assume world-scene has no render data, binary-size=%d\n", fWorld->fTotalBinarySize);
    assert(fWorld->fTotalBinarySize == 0);
@@ -788,6 +902,7 @@ void REveManager::WindowConnect(unsigned connid)
       scene->StreamElements();
 
       printf("   sending json, len = %d\n", (int)scene->fOutputJson.size());
+      REveUtil::StampServerTime(scene->fOutputJson);
       Send(connid, scene->fOutputJson);
 
       if (scene->fTotalBinarySize > 0) {
@@ -831,7 +946,18 @@ void REveManager::WindowDisconnect(unsigned connid)
    // note if scene changes are in progess the new serverstate will be changes after finish those
    if (fServerState.fVal == ServerState::UpdatingClients && ClientConnectionsFree())
    {
-      fServerState.fVal = ServerState::Waiting;
+      if (fPendingSceneChanges && !fConnList.empty()) {
+         // The closed connection was the last one busy: send the changes held
+         // back for it, as its acknowledgement would have.
+         fPendingSceneChanges = false;
+         StreamSceneChangesToJson();
+         SendSceneChanges();
+      } else {
+         // No one left to send to; the stamps stay for the next EndChange().
+         fPendingSceneChanges = false;
+         fServerState.fVal = ServerState::Waiting;
+      }
+      fServerState.fCV.notify_all();
    }
 
    fServerStatus.fTLastDisconnect = std::time(nullptr);
@@ -876,7 +1002,15 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
       }
 
       if (fServerState.fVal == ServerState::UpdatingClients && ClientConnectionsFree()) {
-         fServerState.fVal = ServerState::Waiting;
+         if (fPendingSceneChanges) {
+            // Changes stamped while the previous ones were in flight. Sending
+            // them leaves the clients busy again.
+            fPendingSceneChanges = false;
+            StreamSceneChangesToJson();
+            SendSceneChanges();
+         } else {
+            fServerState.fVal = ServerState::Waiting;
+         }
          fServerState.fCV.notify_all();
       }
 
@@ -1017,6 +1151,52 @@ void REveManager::StreamSceneChangesToJson()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Send transformation-only changes on the motion channel: the same websocket,
+/// outside the BeginChanges/EndChanges cycle, with no acknowledgement. The
+/// message is sent directly, so it goes only when every connection can take a
+/// direct send. Otherwise the elements stay stamped and go out with the
+/// regular changes, which carry the same matrix and motion. The motion's t0 is
+/// stamped by REveTrans::SetMotion(), so the delay does not shift the
+/// trajectory.
+
+void REveManager::SendMotionChanges()
+{
+   if (fConnList.empty())
+      return;
+
+   for (auto &conn : fConnList)
+      if (!fWebWindow->CanSend(conn.fId, true))
+         return;
+
+   nlohmann::json arr = nlohmann::json::array();
+
+   fWorld->StreamMotionChanges(arr);
+   for (auto &el : fScenes->RefChildren()) {
+      auto s = dynamic_cast<REveScene *>(el);
+      if (s)
+         s->StreamMotionChanges(arr);
+   }
+
+   if (arr.empty())
+      return;
+
+   nlohmann::json msg = {};
+   // clang-format off
+   msg["content"] = "Motion";
+   msg["els"]     = arr;
+   // clang-format on
+
+   std::string data = msg.dump();
+   REveUtil::AppendServerTime(data);
+
+   for (auto &conn : fConnList) {
+      REveUtil::StampServerTime(data);
+      fWebWindow->Send(conn.fId, data);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Send json and binary data to scene's connections
 void REveManager::SendSceneChanges()
 {
@@ -1170,6 +1350,24 @@ void REveManager::SendBinary(unsigned connid, const void *data, std::size_t len)
    fWebWindow->SendBinary(connid, data, len);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Is there anything stamped and not yet streamed?
+
+bool REveManager::AnySceneChanged() const
+{
+   if (fWorld->IsChanged())
+      return true;
+
+   for (auto &el : fScenes->RefChildren()) {
+      auto s = dynamic_cast<REveScene *>(el);
+      if (s && s->IsChanged())
+         return true;
+   }
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool REveManager::ClientConnectionsFree() const
 {
    for (auto &conn : fConnList) {
@@ -1225,17 +1423,39 @@ void REveManager::BeginChange()
 }
 
 //____________________________________________________________________
+/// Stop accepting changes and stream them. If the clients have not yet
+/// acknowledged the previous changes, keep the stamps and let the last
+/// acknowledgement in WindowData() flush them. Stamps coalesce per element.
+/// Motion changes are sent in either case when the connections can take a
+/// direct send, see SendMotionChanges(). Changes made by a MIR are not held
+/// back.
+
 void REveManager::EndChange()
 {
    // tag scene to disable accepting chages, write the change json
    GetScenes()->EndAcceptingChanges();
    GetWorld()->EndAcceptingChanges();
 
-   StreamSceneChangesToJson();
-
-   // set new server state under lock
    std::unique_lock<std::mutex> lock(fServerState.fMutex);
+
+   // Motion is outside the change cycle, so it is sent even when changes
+   // are held. What cannot be sent now stays stamped and goes with them.
+   SendMotionChanges();
+
+   if (!fConnList.empty() && !ClientConnectionsFree()) {
+      // Previous changes not yet acknowledged. Leave everything stamped.
+      if (AnySceneChanged())
+         fPendingSceneChanges = true;
+
+      fServerState.fVal = ServerState::UpdatingClients;
+      fServerState.fCV.notify_all();
+      return;
+   }
+
+   StreamSceneChangesToJson();
    SendSceneChanges();
+   fPendingSceneChanges = false;
+
    fServerState.fVal = fConnList.empty() ? ServerState::Waiting : ServerState::UpdatingClients;
    fServerState.fCV.notify_all();
 }

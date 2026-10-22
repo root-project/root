@@ -8,6 +8,40 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+r"""
+\pythondoc RNTupleWriter
+
+RNTupleWriter is an interface to write RNTuples to storage.
+
+A simple way to write an RNTuple in python is by:
+- creating a model and adding fields to it
+- opening an RNTupleWriter 
+- creating entries and filling them with data
+- committing entries to the RNTuple via writer.Fill(entry)
+
+\code{.py}
+import ROOT
+
+# Create the model
+model = ROOT.RNTupleModel.Create()
+
+# Define the schema by adding fields to the model.
+model.MakeField['int']("foo")
+
+# Create a writer as a context manager
+with ROOT.RNTupleWriter.Recreate(model, "myNtuple", "file.root") as writer:
+    # create an entry and use it to write data to the RNTuple
+    entry = writer.CreateEntry()
+    for i in range(0,10):
+        entry['foo'] = i
+        writer.Fill(entry)
+# On destruction, the writer will flush the written data to disk
+
+\endcode
+
+\endpythondoc
+"""
+
 from . import pythonization
 from ._pyz_utils import MethodTemplateGetter, MethodTemplateWrapper
 
@@ -199,6 +233,9 @@ def _RNTupleWriter_Append(model, *args):
     # In Python, the user cannot create REntries directly from a model, so we can safely clone it and avoid destructively passing the user argument.
     model = model.Clone()
     import ROOT
+
+    if len(args) > 1 and isinstance(args[1], ROOT.Experimental.RFile):
+        return RNTupleContextWrapper(ROOT.Experimental.RNTupleWriter_Append(model, *args), "RNTupleWriter", on_ctx_exit = _RNTupleWriter_exit)
 
     return RNTupleContextWrapper(ROOT.RNTupleWriter._Append(model, *args), "RNTupleWriter", on_ctx_exit = _RNTupleWriter_exit)
 

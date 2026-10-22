@@ -30,8 +30,17 @@
 #include "clang/Sema/Sema.h"
 
 #include "llvm/ADT/IntrusiveRefCntPtr.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringSet.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/GlobalValue.h"
+#include "llvm/IR/GlobalVariable.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/Value.h"
 #include "llvm/Support/FileSystem.h"
+#include "llvm/TargetParser/Triple.h"
 
 #include "CppInterOp/Box.h"
 
@@ -243,8 +252,11 @@ inline void codeComplete(std::vector<std::string>& Results,
 #endif
 
 #if LLVM_VERSION_MAJOR > 21 && !defined(_WIN32)
-#include <dlfcn.h>
 #include <unistd.h>
+#endif
+
+#ifndef _WIN32
+#include <dlfcn.h>
 #endif
 
 #include <algorithm>
@@ -593,6 +605,186 @@ inline void maybeMangleDeclName(const clang::GlobalDecl& GD,
   RawStr.flush();
 }
 
+#ifndef _WIN32
+// ===========================================================================
+// Bind weak globals the process already defines (in-process JIT).
+//
+// WORKAROUND: this compensates for a deficiency in clang's in-process JIT
+// (clang-repl / ORC in clang::Interpreter), which does not demote weak
+// definitions the surrounding process already exports and so ends up with a
+// second copy. The demotion policy belongs in clang's Interpreter, where it
+// covers every embedder rather than only CppInterOp; that is tracked upstream
+// by llvm/llvm-project#211786. This pass and its guarded call sites are a
+// stopgap and should be deleted once the upstream fix lands and the minimum
+// supported clang carries it -- at which point the toggle below becomes a
+// `CLANG_VERSION_MAJOR` guard that compiles the workaround out, and then it
+// is removed entirely.
+//
+// A singleton *defined* in a header -- a function-local static in an inline
+// function (Meyers) or a C++17 inline static data member -- compiles to a
+// weak/linkonce_odr global variable. When jitted code includes such a header,
+// the ORC JIT materializes its own copy: JITDylib definitions win over the
+// process-symbol generator, which is only consulted for symbols the JITDylib
+// lacks. The result is two instances of one singleton (and a double
+// destruction at teardown) where a dynamic linker would have unified them.
+//
+// Mitigation: before a module reaches the JIT, demote every mutable weak
+// global-variable definition whose symbol the dynamic linker already
+// resolves to an external declaration; the JIT then binds the process copy.
+// A dynamically initialized static's guard variable (_ZGV<...>) moves with
+// its data, and only when the process exports both: sharing the data but not
+// the guard would re-run initialization on the process copy, sharing the
+// guard but not the data would leave the jitted copy uninitialized.
+//
+// Only mutable variables are demoted: duplicated constants are harmless
+// under ODR (and folding them keeps jitted code fast); duplicated mutable
+// state is the singleton bug. thread_locals are excluded (the JIT's
+// emulated-TLS storage regime is separate), and functions are never demoted
+// -- jitted code may legitimately carry its own copies of inline functions.
+// ELF and in-process only (the probe is the process's own dlsym).
+// ===========================================================================
+//
+// Single toggle for the whole workaround (definition + call sites).
+// TODO: remove once ORC uniques globals across the process (ETA LLVM 25).
+#if LLVM_VERSION_MAJOR >= 25
+#error "ORC uniques globals now: remove bindProcessWeakGlobals"
+#endif
+#define CPPINTEROP_WORKAROUND_BIND_PROCESS_WEAK_GLOBALS 1
+#if CPPINTEROP_WORKAROUND_BIND_PROCESS_WEAK_GLOBALS
+inline bool bindProcessWeakGlobals(llvm::Module& M) {
+  if (!llvm::Triple(M.getTargetTriple()).isOSBinFormatELF())
+    return false;
+
+  auto ProcessHas = [](llvm::StringRef Name) {
+    return ::dlsym(RTLD_DEFAULT, Name.str().c_str()) != nullptr;
+  };
+
+  llvm::SmallVector<llvm::GlobalVariable*, 8> Demoted;
+  for (llvm::GlobalVariable& GV : M.globals()) {
+    if (GV.isDeclaration() || !GV.isWeakForLinker() || GV.isThreadLocal() ||
+        GV.isConstant())
+      continue;
+
+    llvm::StringRef Name = GV.getName();
+    // Guards are only ever demoted together with their variable, below.
+    if (Name.starts_with("_ZGV"))
+      continue;
+    if (!ProcessHas(Name))
+      continue;
+
+    llvm::GlobalVariable* Guard = nullptr;
+    if (Name.starts_with("_Z")) {
+      llvm::GlobalVariable* G =
+          M.getNamedGlobal(("_ZGV" + Name.drop_front(2)).str());
+      if (G && !G->isDeclaration()) {
+        if (!ProcessHas(G->getName()))
+          continue;
+        Guard = G;
+      }
+    }
+
+    Demoted.push_back(&GV);
+    if (Guard)
+      Demoted.push_back(Guard);
+  }
+  if (Demoted.empty())
+    return false;
+
+  for (llvm::GlobalVariable* GV : Demoted) {
+    GV->setInitializer(nullptr);
+    GV->setLinkage(llvm::GlobalValue::ExternalLinkage);
+    GV->setComdat(nullptr);
+    GV->setVisibility(llvm::GlobalValue::DefaultVisibility);
+    GV->setDSOLocal(false);
+  }
+
+  // Declarations may not appear in the used lists; drop demoted entries.
+  for (const char* ListName : {"llvm.used", "llvm.compiler.used"}) {
+    llvm::GlobalVariable* Used = M.getNamedGlobal(ListName);
+    if (!Used || !Used->hasInitializer())
+      continue;
+    auto* Init = llvm::cast<llvm::ConstantArray>(Used->getInitializer());
+    llvm::SmallVector<llvm::Constant*, 8> Kept;
+    for (llvm::Value* Op : Init->operand_values()) {
+      auto* C = llvm::cast<llvm::Constant>(Op);
+      if (!llvm::is_contained(Demoted, C->stripPointerCasts()))
+        Kept.push_back(C);
+    }
+    if (Kept.size() == Init->getNumOperands())
+      continue;
+    Used->eraseFromParent();
+    if (!Kept.empty()) {
+      auto* ATy = llvm::ArrayType::get(Kept.front()->getType(), Kept.size());
+      auto* NewUsed = new llvm::GlobalVariable(
+          M, ATy, /*isConstant=*/false, llvm::GlobalValue::AppendingLinkage,
+          llvm::ConstantArray::get(ATy, Kept), ListName);
+      NewUsed->setSection("llvm.metadata");
+    }
+  }
+  return true;
+}
+#endif // CPPINTEROP_WORKAROUND_BIND_PROCESS_WEAK_GLOBALS
+#endif // !_WIN32
+
+// ===========================================================================
+// Workaround for an LLVM ORC emulated-TLS discard crash (in-process JIT).
+//
+// Fixed upstream by llvm/llvm-project#208413 (reland of #207161, which was
+// reverted in #207775 over a Darwin test failure): IRMaterializationUnit's ctor
+// registered a thread_local's emulated-TLS companion (`__emutls_t.<var>` /
+// `__emutls_v.<var>`) in SymbolFlags but not SymbolToDefinition, so discarding
+// a *duplicated* weak thread_local dereferenced end() -- an assertion in
+// +Asserts builds, heap corruption otherwise. The trigger is two incremental
+// modules that each define the same weak/linkonce_odr thread_local (an inline
+// function or template static odr-used from two PTUs, as MakeFunctionCallable
+// and repeated process() do).
+//
+// Mitigation: before a module reaches the JIT, demote every *duplicate* weak
+// thread_local definition to available_externally. The IRMaterializationUnit
+// ctor skips available_externally globals, so the duplicate contributes no
+// symbol and the buggy discard is never reached; the first module stays the
+// sole definition and later modules resolve to it within the JITDylib.
+//
+// Every weak thread_local is covered regardless of initializer: a thread_local
+// with a non-trivial ctor (e.g. one holding a std::unique_ptr) is a
+// zeroinitializer in IR -- its real init runs in a __tls_init function -- yet
+// still emits the companion that trips discard, so the initializer must not be
+// used to filter. Only weak thread_locals are demoted; demoting other weak
+// globals or functions mis-resolves references/calls at runtime in the
+// incremental JIT.
+//
+// ELF only: that is where the interpreter's emulated TLS makes the buggy
+// discard reachable. On COFF the demotion orphans the comdat group's
+// associated members ("Associative COMDAT symbol ... is not a key for its
+// COMDAT"), and on Mach-O (native TLS, no comdats) it breaks the paired
+// _ZTH/_ZTW thread_local init emission -- and on both, the JIT fails to
+// resolve __emutls_get_address before the discard bug is even reachable.
+//
+// DEPRECATION: exists only for clang < 24 -- the upstream fix
+// (llvm/llvm-project#208413) ships in clang 24, and every use site carries the
+// same guard. Delete the workaround and its guarded call sites once clang-23
+// support is dropped from CppInterOp.
+// ===========================================================================
+#if CLANG_VERSION_MAJOR < 24
+inline void dedupeWeakEmulatedTLS(llvm::Module& M, llvm::StringSet<>& Defined) {
+  if (!llvm::Triple(M.getTargetTriple()).isOSBinFormatELF())
+    return;
+
+  for (llvm::GlobalVariable& GV : M.globals()) {
+    if (!GV.isThreadLocal() || GV.isDeclaration() || !GV.isWeakForLinker())
+      continue;
+
+    // First definer wins; later duplicates become references, mirroring what
+    // discard() would have done (available_externally + no comdat) but without
+    // hitting the crashing code path.
+    if (!Defined.insert(GV.getName()).second) {
+      GV.setLinkage(llvm::GlobalValue::AvailableExternallyLinkage);
+      GV.setComdat(nullptr);
+    }
+  }
+}
+#endif
+
 // Clang 18 - Add new Interpreter methods: CodeComplete
 
 inline llvm::orc::LLJIT* getExecutionEngine(clang::Interpreter& I) {
@@ -690,6 +882,7 @@ public:
   SynthesizingCodeRAII(Interpreter* i) : m_Interpreter(i) {}
   // ~SynthesizingCodeRAII() {} // TODO: implement
 };
+
 } // namespace compat
 
 #endif // CPPINTEROP_USE_REPL
@@ -767,6 +960,25 @@ inline void InstantiateClassTemplateSpecialization(
       /*Complain=*/true,
       /*PrimaryHasMatchedPackOnParmToNonPackOnArg=*/false);
 }
+
+class DiagnosticsEngineRAII {
+private:
+  clang::DiagnosticsEngine& diags;
+
+public:
+  bool reset_condition; // additional condition to reset diagnostics
+
+  DiagnosticsEngineRAII(clang::DiagnosticsEngine& d, bool c = true)
+      : diags(d), reset_condition(c) {}
+  ~DiagnosticsEngineRAII() {
+    if (diags.hasErrorOccurred() && reset_condition) {
+      // instantiation failed, need to reset DiagnosticsEngine
+      diags.Reset(/*soft=*/true);
+      diags.getClient()->clear();
+    }
+  }
+};
+
 } // namespace compat
 
 #endif // CPPINTEROP_COMPATIBILITY_H

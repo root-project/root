@@ -245,12 +245,20 @@ GetResourceDir() function.}];
 def LoadLibrary : CppInterOpAPI {
   let Doc = [{Finds \c lib_stem considering the list of search paths and loads it by
 calling dlopen.
+\param[out] error - if non-null, receives the reason a load failed (the
+           dlerror() text, or a not-found note when lookup fails). When it
+           is set the reason is not also written to stderr. The Cling
+           backend only reports a generic note.
 \returns true on success.}];
 
+  // std::string* cannot cross the C ABI; CXCppInterOp.cpp keeps the
+  // two-argument cppinterop_LoadLibrary wrapper by hand.
+  let NoCWrapper = true;
   let ReturnType = "bool";
   let Args = [
     Arg<"const char*", "lib_stem">,
-    Arg<"bool", "lookup", "true">
+    Arg<"bool", "lookup", "true">,
+    Arg<"std::string*", "error", "nullptr">
   ];
 }
 
@@ -440,6 +448,16 @@ underlying decl is not a class it returns the input unchanged.}];
   let ReturnType = "DeclRef";
   let Args = [
     Arg<"ConstDeclRef", "DRef">
+  ];
+}
+
+def GetTemplatedDecl : CppInterOpAPI {
+  let Doc = [{Returns the templated (pattern) declaration of the
+template the given declaration belongs to.}];
+
+  let ReturnType = "DeclRef";
+  let Args = [
+    Arg<"DeclRef", "DRef">
   ];
 }
 
@@ -695,7 +713,9 @@ def IsVirtualMethod : CppInterOpAPI {
 
 def GetNumBases : CppInterOpAPI {
   let Doc = [{Gets the number of Base Classes for the Derived Class that
-is passed as a parameter.}];
+is passed as a parameter. Bases are a property of the class definition: if
+only a declaration is loaded, the definition is first forced into the AST
+(see GetOrForceDefinition).}];
 
   let ReturnType = "size_t";
   let Args = [
@@ -717,7 +737,8 @@ def GetBaseClass : CppInterOpAPI {
   let Doc = [{Gets a specific Base Class using its index. Typically GetNumBases()
 is used to get the number of Base Classes, and then that number
 can be used to iterate through the index value to get each specific
-base class.}];
+base class. As for GetNumBases(), the definition is forced into the AST if
+only a declaration is loaded.}];
 
   let ReturnType = "DeclRef";
   let Args = [
@@ -780,6 +801,39 @@ def IsFunctionProtoType : CppInterOpAPI {
   let ReturnType = "bool";
   let Args = [
     Arg<"ConstTypeRef", "TyRef">
+  ];
+}
+
+def GetOwnershipBehaviour : CppInterOpAPI {
+  let Doc = [{Returns the ownership behaviour the function declares, as a
+bitmask of OwnershipBehaviour flags read off its ownership_returns,
+ownership_takes and ownership_holds attributes.}];
+
+  let ReturnType = "OwnershipBehaviour";
+  let Args = [
+    Arg<"ConstFuncRef", "func">
+  ];
+}
+
+def GetDeallocationIndexes : CppInterOpAPI {
+  let Doc = [{Returns a bitmask of the parameters whose ownership the function
+takes or holds, as annotated by ownership_takes/ownership_holds: The mask is meaningful only when
+GetOwnershipBehaviour reports OwnershipTakes or OwnershipHolds.}];
+
+  let ReturnType = "uint64_t";
+  let Args = [
+    Arg<"ConstFuncRef", "func">
+  ];
+}
+
+def GetAllocationSizeParamIndex : CppInterOpAPI {
+  let Doc = [{Returns the 0-based index of the parameter carrying the allocation
+size for a function annotated with ownership_returns, or -1 if the function is
+not so annotated or the size argument was omitted.}];
+
+  let ReturnType = "int";
+  let Args = [
+    Arg<"ConstFuncRef", "func">
   ];
 }
 
@@ -1304,7 +1358,7 @@ def GetFunctionReturnType : CppInterOpAPI {
 
 def IsAllocator : CppInterOpAPI {
   let Doc = "Checks if the provided function is an allocator function";
-  let ReturnType = "bool";
+  let ReturnType = "AllocType";
   let Args = [
     Arg<"ConstFuncRef", "func">
   ];

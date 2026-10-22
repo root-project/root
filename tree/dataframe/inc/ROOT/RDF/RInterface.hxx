@@ -104,6 +104,8 @@ std::vector<std::pair<std::uint64_t, std::uint64_t>> GetDatasetGlobalClusterBoun
 void TriggerRun(ROOT::RDF::RNode node);
 std::string GetDataSourceLabel(const ROOT::RDF::RNode &node);
 void SetTTreeLifeline(ROOT::RDF::RNode &node, std::any lifeline);
+void LoadCustomValues(ROOT::RDF::RNode &node, const std::vector<std::string> &cols,
+                      const std::vector<std::size_t> &vecSizes, float vecPadding, ROOT::RVecF &dest);
 } // namespace RDF
 } // namespace Internal
 
@@ -139,7 +141,39 @@ class RInterface : public RInterfaceBase {
    RDFInternal::GetDatasetGlobalClusterBoundaries(const RNode &node);
    friend std::string ROOT::Internal::RDF::GetDataSourceLabel(const RNode &node);
    friend void ROOT::Internal::RDF::SetTTreeLifeline(ROOT::RDF::RNode &node, std::any lifeline);
+   friend void ROOT::Internal::RDF::LoadCustomValues(ROOT::RDF::RNode &node, const std::vector<std::string> &cols,
+                                                     const std::vector<std::size_t> &vecSizes, float vecPadding,
+                                                     ROOT::RVecF &dest);
+
    std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this RInterface.
+
+   void LoadValuesCustom(const ColumnNames_t &columnList, const std::vector<std::size_t> &vecSizes, float vecPadding,
+                         ROOT::RVecF &dest)
+   {
+      const auto validColumnNames = GetValidatedColumnNames(columnList.size(), columnList);
+
+      auto nColumns = columnList.size();
+      std::vector<const std::type_info *> colTypeIDs;
+      colTypeIDs.reserve(nColumns);
+      for (decltype(nColumns) i{}; i < nColumns; i++) {
+         const auto &colName = validColumnNames[i];
+         const auto colTypeName = ROOT::Internal::RDF::ColumnName2ColumnTypeName(
+            colName, /*tree*/ nullptr, GetDataSource(), fColRegister.GetDefine(colName), /*vector2RVec*/ true);
+         const std::type_info *colTypeID = &ROOT::Internal::RDF::TypeName2TypeID(colTypeName);
+         colTypeIDs.push_back(colTypeID);
+      }
+      // Crucial e.g. if the column names do not correspond to already-available column readers created by the data
+      // source
+      CheckAndFillDSColumns(validColumnNames, colTypeIDs);
+
+      // the values are appended to the caller's buffer, which outlives the event loop run below
+      auto location = std::shared_ptr<ROOT::RVecF>(&dest, [](ROOT::RVecF *) {});
+      auto action = RDFInternal::BuildAction(validColumnNames, colTypeIDs, location, vecSizes, vecPadding, fProxiedPtr,
+                                             fColRegister);
+      auto resPtr = MakeResultPtr(location, *GetLoopManager(), std::move(action));
+
+      *resPtr;
+   }
 
 public:
    ////////////////////////////////////////////////////////////////////////////
@@ -355,7 +389,7 @@ public:
       const auto columns = ColumnNames_t{column.data()};
       // For now disable this functionality in case of an empty data source and
       // the column name was not defined previously.
-      if (ROOT::Internal::RDF::GetDataSourceLabel(*this).compare("EmptyDS") == 0)
+      if (ROOT::Internal::RDF::GetDataSourceLabel(*this) == "EmptyDS")
          throw std::runtime_error("Unknown column: \"" + std::string(column) + "\"");
       using F_t = RDFDetail::RFilterWithMissingValues<Proxied>;
       auto filterPtr = std::make_shared<F_t>(/*discardEntry*/ true, fProxiedPtr, fColRegister, columns);
@@ -406,7 +440,7 @@ public:
       const auto columns = ColumnNames_t{column.data()};
       // For now disable this functionality in case of an empty data source and
       // the column name was not defined previously.
-      if (ROOT::Internal::RDF::GetDataSourceLabel(*this).compare("EmptyDS") == 0)
+      if (ROOT::Internal::RDF::GetDataSourceLabel(*this) == "EmptyDS")
          throw std::runtime_error("Unknown column: \"" + std::string(column) + "\"");
       using F_t = RDFDetail::RFilterWithMissingValues<Proxied>;
       auto filterPtr = std::make_shared<F_t>(/*discardEntry*/ false, fProxiedPtr, fColRegister, columns);
@@ -690,7 +724,7 @@ public:
       RDFInternal::CheckForNoVariations(where, column, fColRegister);
       // For now disable this functionality in case of an empty data source and
       // the column name was not defined previously.
-      if (ROOT::Internal::RDF::GetDataSourceLabel(*this).compare("EmptyDS") == 0)
+      if (ROOT::Internal::RDF::GetDataSourceLabel(*this) == "EmptyDS")
          RDFInternal::CheckForDefinition(where, column, fColRegister,
                                          GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
 
@@ -3261,7 +3295,7 @@ public:
             RDFInternal::BuildAction(validColumnNames, snapHelperArgs, nSlots, fProxiedPtr, fColRegister, colTypeIDs);
          resPtr = MakeResultPtr(newRDF, *GetLoopManager(), std::move(action));
       } else {
-         if (RDFInternal::GetDataSourceLabel(*this).compare("RNTupleDS") == 0 &&
+         if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS" &&
              options.fOutputFormat == ESnapshotOutputFormat::kDefault) {
             Warning("Snapshot",
                     "The default Snapshot output data format is TTree, but the input data format is RNTuple. If you "
@@ -3350,7 +3384,7 @@ public:
             throw e;
       }
 
-      if (RDFInternal::GetDataSourceLabel(*this).compare("RNTupleDS") == 0) {
+      if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS") {
          RDFInternal::RemoveRNTupleSubfields(selectedColumns);
       }
 

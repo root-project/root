@@ -16,11 +16,13 @@
 #include <memory>
 #include <string_view>
 #include <typeinfo>
+#include <type_traits>
 #include <variant>
 
 class TFile;
 class TIterator;
 class TKey;
+class TTree;
 
 namespace ROOT {
 namespace Experimental {
@@ -297,8 +299,27 @@ public:
       /// See core/zip/inc/Compression.h for the meaning of the `compression` argument.
       /// Default compression is 505 (ZSTD level 10).
       int fCompressionSettings = ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose;
+      /// If true the RFile will show up in the TBrowser window. This causes the file to also be added
+      /// to the list of global files. Set to false to prevent this global registration.
+      bool fEnableBrowsability = true;
 
       RRecreateOptions();
+   };
+
+   struct ROpenOptions {
+      /// If true the RFile will show up in the TBrowser window. This causes the file to also be added
+      /// to the list of global files. Set to false to prevent this global registration.
+      bool fEnableBrowsability = true;
+
+      ROpenOptions();
+   };
+
+   struct RUpdateOptions {
+      /// If true the RFile will show up in the TBrowser window. This causes the file to also be added
+      /// to the list of global files. Set to false to prevent this global registration.
+      bool fEnableBrowsability = true;
+
+      RUpdateOptions();
    };
 
    // This is arbitrary, but it's useful to avoid pathological cases
@@ -308,7 +329,7 @@ public:
 
    /// Opens the file for reading. `path` may be a regular file path or a remote URL.
    /// \throw ROOT::RException if the file at `path` could not be opened.
-   static std::unique_ptr<RFile> Open(std::string_view path);
+   static std::unique_ptr<RFile> Open(std::string_view path, const ROpenOptions &opts = ROpenOptions());
 
    /// Opens the file for reading/writing, overwriting it if it already exists.
    /// \throw ROOT::RException if a file could not be created at `path` (e.g. if the specified
@@ -318,7 +339,7 @@ public:
    /// Opens the file for updating, creating a new one if it doesn't exist.
    /// \throw ROOT::RException if the file at `path` could neither be read nor created
    /// (e.g. if the specified directory tree does not exist).
-   static std::unique_ptr<RFile> Update(std::string_view path);
+   static std::unique_ptr<RFile> Update(std::string_view path, const RUpdateOptions &opts = RUpdateOptions());
 
    ///// Instance methods /////
 
@@ -346,6 +367,7 @@ public:
    template <typename T>
    void Put(std::string_view path, const T &obj)
    {
+      static_assert(!std::is_base_of_v<TTree, T>, "Writing TTree with RFile is unsupported.");
       PutInternal(path, obj, /* flags = */ 0);
    }
 
@@ -360,6 +382,7 @@ public:
    template <typename T>
    void Overwrite(std::string_view path, const T &obj, bool backupPrevious = true)
    {
+      static_assert(!std::is_base_of_v<TTree, T>, "Writing TTree with RFile is unsupported.");
       std::uint32_t flags = kPutAllowOverwrite;
       flags |= backupPrevious * kPutOverwriteKeepCycle;
       PutInternal(path, obj, flags);

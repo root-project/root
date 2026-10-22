@@ -162,6 +162,23 @@ void testPoints(T x, T y)
    cout << "Point(" << x << "," << y << ") IsInside?: " << TMath::IsInside(x, y, n, dx, dy) << endl;
 }
 
+void testIsInsideInt()
+{
+   const Int_t n = 4;
+   Int_t x[n] = {299, 41, 299, 558};
+   Int_t y[n] = {531, 678, 825, 678};
+
+   Double_t xd[n] = {299., 41., 299., 558.};
+   Double_t yd[n] = {531., 678., 825., 678.};
+
+   for (Int_t xp = 0; xp <= 600; ++xp) {
+      for (Int_t yp = 500; yp <= 850; ++yp) {
+         R__ASSERT(TMath::IsInside(xp, yp, n, x, y) ==
+                   TMath::IsInside(static_cast<Double_t>(xp), static_cast<Double_t>(yp), n, xd, yd));
+      }
+   }
+}
+
 template <typename T>
 void testPlane()
 {
@@ -299,6 +316,7 @@ int main()
    testPoints<Double_t>(1.3, 0.5);
    testPoints<Float_t>(-0.2, 1.7);
    testPoints<Int_t>(1, 1);
+   testIsInsideInt();
 
    cout << "\nPLane functions tests: " << endl;
 

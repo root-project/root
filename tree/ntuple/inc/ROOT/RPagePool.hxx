@@ -17,6 +17,7 @@
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RSpan.hxx>
 
 #include <cstddef>
 #include <map>
@@ -25,6 +26,7 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace ROOT {
@@ -170,6 +172,7 @@ public:
    /// Like RegisterPage() but the reference counter is initialized to 0. In addition, the page is added
    /// to the set of unused pages of the page's cluster (see Evict()).
    void PreloadPage(RPage page, RKey key);
+   void PreloadPageV(std::span<std::pair<RPage, RKey>> pages);
    /// Removes unused pages (pages with reference counter 0) from the page pool. Users of PreloadPage() should
    /// use Evict() appropriately to avoid accumulation of unused pages.
    void Evict(ROOT::DescriptorId_t clusterId);

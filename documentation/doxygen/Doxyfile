@@ -1081,11 +1081,9 @@ EXCLUDE                = ../../interpreter/ \
     ../../cmake \
     ../../etc \
     ../../js \
-    ../../core/clib/ \
     ../../core/lzma/ \
     ../../core/lz4/ \
     ../../core/newdelete/ \
-    ../../core/textinput/ \
     ../../builtins/ \
     ../../documentation/doxygen/html
 
@@ -1107,7 +1105,6 @@ EXCLUDE_PATTERNS       = */G__* \
                          */test/* \
                          */doc/v6* \
                          */doc/v5* \
-                         */win32gdk/gdk/* \
                          */bindings/pyroot/*.py \
                          *CsgOps* \
                          LinkDef*.h \

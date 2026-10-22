@@ -56,7 +56,7 @@ ROOT::Experimental::Detail::RNTuplePerfCounter::~RNTuplePerfCounter()
 
 std::string ROOT::Experimental::Detail::RNTuplePerfCounter::ToString() const
 {
-   return fName + kFieldSeperator + fUnit + kFieldSeperator + fDescription + kFieldSeperator + GetValueAsString();
+   return fName + kFieldSeparator + fUnit + kFieldSeparator + fDescription + kFieldSeparator + GetValueAsString();
 }
 
 bool ROOT::Experimental::Detail::RNTupleMetrics::Contains(const std::string &name) const
@@ -102,7 +102,7 @@ void ROOT::Experimental::Detail::RNTupleMetrics::Print(std::ostream &output, con
    }
 
    for (const auto &c : fCounters) {
-      output << prefix << fName << kNamespaceSeperator << c->ToString() << '\n';
+      output << prefix << fName << kNamespaceSeparator << c->ToString() << '\n';
    }
    for (const auto c : fObservedMetrics) {
       c->Print(output, prefix + fName + ".");

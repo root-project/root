@@ -380,7 +380,8 @@ namespace {
     if(arvIt != args.end() && ++arvIt != args.end())
       cling_osx_sysroot_directory = *arvIt;
     if (!llvm::sys::fs::exists(cling_osx_sysroot_directory)) {
-      if (!::getenv("SDKROOT")) {
+      auto env = std::getenv("SDKROOT");
+      if (!env || !*env) {
         std::array<char, 128> buffer;
         const auto xcrun_cmd = "xcrun  --show-sdk-path";
         std::unique_ptr<FILE, decltype(&pclose)> pipe(
@@ -910,9 +911,6 @@ namespace {
     PPOpts.addMacroDef("__CLING__GNUC_MINOR__=" ClingStringify(__GNUC_MINOR__));
 #elif defined(_MSC_VER)
     PPOpts.addMacroDef("__CLING__MSVC__=" ClingStringify(_MSC_VER));
-#if defined(_WIN64) && defined(_DEBUG)
-    PPOpts.addMacroDef("_ITERATOR_DEBUG_LEVEL=0");
-#endif
 #endif
 
 // https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html
@@ -1357,6 +1355,10 @@ namespace {
 
     bool profilingEnabled =
         cling::utils::ConvertEnvValueToBool(std::getenv("CLING_PROFILE"));
+
+    // Make sure clang's driver mode is not influenced by the executable name
+    // https://github.com/llvm/llvm-project/issues/225385
+    argvCompile.push_back("--driver-mode=g++");
 
 #if __APPLE__ && __arm64__
     argvCompile.push_back("--target=arm64-apple-darwin20.3.0");

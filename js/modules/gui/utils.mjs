@@ -151,7 +151,7 @@ async function loadOpenui5(args) {
    }
 
    const openui5_sources = [];
-   let openui5_dflt = 'https://openui5.hana.ondemand.com/1.135.0/',
+   let openui5_dflt = 'https://openui5.hana.ondemand.com/1.152.0/',
        openui5_root = rootui5sys ? rootui5sys + 'distribution/' : '';
 
    if (isStr(args.openui5src)) {
@@ -495,7 +495,7 @@ function setStoragePrefix(prefix) {
 /** @summary Save object in local storage
   * @private */
 function saveLocalStorage(obj, expires, name) {
-   if (typeof localStorage === 'undefined')
+   if (isNodeJs() || (typeof localStorage === 'undefined'))
       return;
    if (Number.isFinite(expires) && (expires < 0))
       localStorage.removeItem(_storage_prefix + name);
@@ -506,7 +506,7 @@ function saveLocalStorage(obj, expires, name) {
 /** @summary Read object from storage with specified name
   * @private */
 function readLocalStorage(name) {
-   if (typeof localStorage === 'undefined')
+   if (isNodeJs() || (typeof localStorage === 'undefined'))
       return null;
    const v = localStorage.getItem(_storage_prefix + name),
          s = v ? JSON.parse(atob_func(v)) : null;

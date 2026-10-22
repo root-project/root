@@ -57,16 +57,16 @@ public:
    ~TParallelCoordVar() override;
 
    void           AddRange(TParallelCoordRange* range);
-   void           AddRange() {AddRange(nullptr);} // *MENU*
+   void           AddRange() { AddRange(nullptr); } // *MENU*
    void           DeleteVariable(); // *MENU*
-   Int_t  DistancetoPrimitive(Int_t px, Int_t py) override;
-   void   Draw(Option_t *option="") override;
+   Int_t          DistancetoPrimitive(Int_t px, Int_t py) override;
+   void           Draw(Option_t *option="") override;
    bool           Eval(Long64_t evtidx, TParallelCoordSelect *select); // Check an entry is within its ranges owned by a given TParallelSelect.
-   void   ExecuteEvent(Int_t entry, Int_t px, Int_t py) override;
-   bool           GetBarHisto() {return TestBit(kShowBarHisto);}
-   bool           GetBoxPlot() {return TestBit(kShowBox);}
+   void           ExecuteEvent(Int_t entry, Int_t px, Int_t py) override;
+   bool           GetBarHisto() const { return TestBit(kShowBarHisto); }
+   bool           GetBoxPlot() const { return TestBit(kShowBox); }
    TH1F          *GetHistogram();
-   Int_t          GetId() {return fId;}
+   Int_t          GetId() const { return fId; }
    bool           GetLogScale() const {return TestBit (kLogScale);}
    Int_t          GetHistBinning() const {return fNbins;}
    Double_t       GetCurrentMin() const {return fMinCurrent;}
@@ -74,27 +74,27 @@ public:
    Double_t       GetCurrentAverage() const {return fMean;}
    void           GetEntryXY(Long64_t n, Double_t & x, Double_t & y);
    Int_t          GetEntryWeight(Long64_t evtidx);
-   Double_t       GetHistHeight() {return fHistoHeight;}
-   Int_t          GetHistLineWidth() {return fHistoLW;}
+   Double_t       GetHistHeight() const { return fHistoHeight; }
+   Int_t          GetHistLineWidth() const { return fHistoLW; }
    void           GetMinMaxMean();
    void           GetQuantiles();
-   Double_t       GetX() {return fX1;}
-   Double_t       GetY() {return fY1;}
-   Int_t          GetNbins() {return fNbins;}
-   Long64_t       GetNentries() const {return fNentries;}
-   char  *GetObjectInfo(Int_t px, Int_t py) const override;
-   TParallelCoord* GetParallel() {return fParallel;}
-   TList         *GetRanges() {return fRanges;}
-   Double_t      *GetValues() {return fVal;}
+   Double_t       GetX() const { return fX1; }
+   Double_t       GetY() const { return fY1; }
+   Int_t          GetNbins() const { return fNbins; }
+   Long64_t       GetNentries() const { return fNentries; }
+   char          *GetObjectInfo(Int_t px, Int_t py) const override;
+   TParallelCoord *GetParallel() const { return fParallel; }
+   TList         *GetRanges() const { return fRanges; }
+   Double_t      *GetValues() const { return fVal; }
    Double_t       GetValuefromXY(Double_t x,Double_t y);
-   bool           GetVert() {return fX1 == fX2;} // Tells if the axis is vertical or not.
+   bool           GetVert() const;
    void           GetXYfromValue(Double_t value, Double_t & x, Double_t & y);
    void           Init();
-   void   Paint(Option_t* option="") override;
+   void           Paint(Option_t* option="") override;
    void           PaintBoxPlot();
    void           PaintHistogram();
    void           PaintLabels();
-   void   Print(Option_t* option="") const override; // *MENU*
+   void           Print(Option_t* option="") const override; // *MENU*
    void           SavePrimitive(std::ostream & out, Option_t *options) override;
    void           SetBoxPlot(bool box); // *TOGGLE* *GETTER=GetBoxPlot
    void           SetBarHisto(bool h) {SetBit(kShowBarHisto,h);} // *TOGGLE* *GETTER=GetBarHisto

@@ -142,6 +142,9 @@ def CMap_InterpLangStd  : CTypeMap<"InterpreterLanguageStandard", "unsigned char
 def CMap_ValueKind      : CTypeMap<"ValueKind", "unsigned char",
     /*ArgConv=*/"",
     /*RetConv=*/"static_cast<unsigned char>($result)">;
+def CMap_OwnershipBehaviour : CTypeMap<"OwnershipBehaviour", "unsigned char",
+    /*ArgConv=*/"",
+    /*RetConv=*/"static_cast<unsigned char>($result)">;
 def CMap_Signedness     : CTypeMap<"Signedness*", "unsigned*",
     /*ArgConv=*/"reinterpret_cast<Cpp::Signedness*>($name)">;
 

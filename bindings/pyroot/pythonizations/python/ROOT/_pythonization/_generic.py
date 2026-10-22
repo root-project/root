@@ -46,8 +46,15 @@ def pythonize_generic(klass, name):
     m = getattr(klass, "__str__", None)
     has_cpp_str = True if m is not None and type(m).__name__ == "CPPOverload" else False
 
-    # Exclude std::string with its own pythonization from cppyy
-    exclude = ["std::string"]
+    # Exclude std::string with its own pythonization from cppyy. With the
+    # CppInterOp-based backend the class name is the canonical form rather
+    # than the "std::string" typedef, so list both shapes.
+    exclude = [
+        "std::string",
+        "std::basic_string<char>",
+        "std::basic_string<char,std::char_traits<char>,std::allocator<char> >",
+        "std::basic_string<char, std::char_traits<char>, std::allocator<char> >",
+    ]
 
     if name not in exclude and not has_cpp_str:
         AddPrettyPrintingPyz(klass)

@@ -137,18 +137,12 @@ template <typename T> class ROperator_LSTM final : public ROperator {
       }
    }
 
-   /*! \brief Infers the type of the output tensors
-    *
-    * \param input type of the input tensors
-    */
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override;
-
    /*! \brief Infers the shape of the output tensors
     *
     * \param input shape of the input tensors
     */
    std::vector<std::vector<size_t>>
-   ShapeInference(std::vector<std::vector<size_t>> input) override;
+   ShapeInference(std::vector<std::vector<size_t>> input);
 
    /*! \brief Initialize the model
     *
@@ -172,13 +166,6 @@ template <typename T> class ROperator_LSTM final : public ROperator {
     */
    std::vector<std::string> GetBlasRoutines() override { return { std::string("Gemm"), std::string("Axpy") }; }
 };
-
-template <typename T>
-auto ROperator_LSTM<T>::TypeInference(std::vector<ETensorType> input) -> std::vector<ETensorType>
-{
-   ETensorType out = input[0];
-   return {out, out};
-}
 
 template <typename T>
 auto ROperator_LSTM<T>::ShapeInference(std::vector<std::vector<size_t>> input) -> std::vector<std::vector<size_t>>
@@ -205,7 +192,6 @@ auto ROperator_LSTM<T>::ShapeInference(std::vector<std::vector<size_t>> input) -
 template <typename T>
 auto ROperator_LSTM<T>::Initialize(RModel &model) -> void
 {
-   fUseSession = model.UseSession();
    // Check the input and output tensors
    if (!model.CheckIfTensorAlreadyExist(fNX)) {
       throw std::runtime_error("TMVA SOFIE LSTM Op input tensor " + fNX + "  is not found in model.");
@@ -468,10 +454,7 @@ auto ROperator_LSTM<T>::Generate(std::string OpName) -> std::string
    if (fAttrLayout == 0) {
       out << SP << fType << " const *" << OpName << "_input = tensor_" << fNX << ";\n";
    } else {
-      if (fUseSession)
-         out << SP << fType << " * " << OpName << "_input = this->fVec_" << OpName << "_input;\n";
-      else
-         out << SP << fType << "  " << OpName << "_input[" << seq_length * batch_size * input_size << "] = {0};\n";
+      out << SP << fType << " * " << OpName << "_input = this->fVec_" << OpName << "_input;\n";
 
       out << SP << "for(size_t seq = 0; seq < " << seq_length << "; seq++) {\n";
       out << SP << SP << "for(size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
@@ -489,12 +472,8 @@ auto ROperator_LSTM<T>::Generate(std::string OpName) -> std::string
       if (fAttrLayout == 0) {
          out << SP << fType << " const*" << OpName << "_initial_hidden_state = " << " tensor_" << fNInitial_h << ";\n";
       } else {
-         if (fUseSession)
-            out << SP << fType << " const* " << OpName << "_initial_hidden_state = this->fVec_" << OpName
-                << "_initial_hidden_state;\n";
-         else
-            out << SP << fType << "  " << OpName << "_initial_hidden_state["
-                << num_directions * batch_size * fAttrHiddenSize << "] = {0};\n";
+         out << SP << fType << " const* " << OpName << "_initial_hidden_state = this->fVec_" << OpName
+             << "_initial_hidden_state;\n";
 
          for (size_t direction = 0; direction < num_directions; direction++) {
             out << SP << "for(size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
@@ -513,12 +492,8 @@ auto ROperator_LSTM<T>::Generate(std::string OpName) -> std::string
       if (fAttrLayout == 0) {
          out << SP << fType << " const*" << OpName << "_initial_cell_state = " << " tensor_" << fNInitial_c << ";\n";
       } else {
-         if (fUseSession)
-            out << SP << fType << " const* " << OpName << "_initial_cell_state = this->fVec_" << OpName
-                << "_initial_cell_state;\n";
-         else
-            out << SP << fType << "  " << OpName << "_initial_cell_state["
-                << num_directions * batch_size * fAttrHiddenSize << "] = {0};\n";
+         out << SP << fType << " const* " << OpName << "_initial_cell_state = this->fVec_" << OpName
+             << "_initial_cell_state;\n";
 
          for (size_t direction = 0; direction < num_directions; direction++) {
             out << SP << "for(size_t batch = 0; batch < " << batch_size << "; batch++) {\n";
@@ -533,58 +508,28 @@ auto ROperator_LSTM<T>::Generate(std::string OpName) -> std::string
    }
 
    // Set the feedforward
-   size_t ff_size = seq_length * batch_size * fAttrHiddenSize;
-   if (fUseSession) {
-      out << SP << fType << " * " << OpName << "_ff_input_gate = this->fVec_" << OpName << "_ff_input_gate;\n";
-      out << SP << fType << " * " << OpName << "_ff_output_gate = this->fVec_" << OpName << "_ff_output_gate;\n";
-      out << SP << fType << " * " << OpName << "_ff_cell_gate = this->fVec_" << OpName << "_ff_cell_gate;\n";
-      if (fAttrInputForget == 0) {
-         out << SP << fType << " * " << OpName << "_ff_forget_gate = this->fVec_" << OpName
-             << "_ff_forget_gate;\n";
-      }
-   } else {
-      out << SP << fType << "  " << OpName << "_ff_input_gate[" << ff_size << "] = {0};\n";
-      out << SP << fType << "  " << OpName << "_ff_output_gate[" << ff_size << "] = {0};\n";
-      out << SP << fType << "  " << OpName << "_ff_cell_gate[" << ff_size << "] = {0};\n";
-      if (fAttrInputForget == 0) {
-         out << SP << fType << "  " << OpName << "_ff_forget_gate[" << ff_size << "] = {0};\n";
-      }
+   out << SP << fType << " * " << OpName << "_ff_input_gate = this->fVec_" << OpName << "_ff_input_gate;\n";
+   out << SP << fType << " * " << OpName << "_ff_output_gate = this->fVec_" << OpName << "_ff_output_gate;\n";
+   out << SP << fType << " * " << OpName << "_ff_cell_gate = this->fVec_" << OpName << "_ff_cell_gate;\n";
+   if (fAttrInputForget == 0) {
+      out << SP << fType << " * " << OpName << "_ff_forget_gate = this->fVec_" << OpName << "_ff_forget_gate;\n";
    }
    // Set the gates
-   size_t hidden_state_size = seq_length * num_directions * batch_size * fAttrHiddenSize;
-   if (fUseSession) {
-      out << SP << fType << " * " << OpName << "_input_gate = this->fVec_" << OpName << "_input_gate;\n";
-      out << SP << fType << " * " << OpName << "_output_gate = this->fVec_" << OpName << "_output_gate;\n";
-      out << SP << fType << " * " << OpName << "_cell_gate = this->fVec_" << OpName << "_cell_gate;\n";
-      if (fAttrInputForget == 0) {
-         out << SP << fType << " * " << OpName << "_forget_gate = this->fVec_" << OpName << "_forget_gate;\n";
-      }
-   } else {
-      out << SP << fType << "  " << OpName << "_input_gate[" << hidden_state_size << "] = {0};\n";
-      out << SP << fType << "  " << OpName << "_output_gate[" << hidden_state_size << "] = {0};\n";
-      out << SP << fType << "  " << OpName << "_cell_gate[" << hidden_state_size << "] = {0};\n";
-      if (fAttrInputForget == 0) {
-         out << SP << fType << "  " << OpName << "_forget_gate[" << hidden_state_size << "] = {0};\n";
-      }
+   out << SP << fType << " * " << OpName << "_input_gate = this->fVec_" << OpName << "_input_gate;\n";
+   out << SP << fType << " * " << OpName << "_output_gate = this->fVec_" << OpName << "_output_gate;\n";
+   out << SP << fType << " * " << OpName << "_cell_gate = this->fVec_" << OpName << "_cell_gate;\n";
+   if (fAttrInputForget == 0) {
+      out << SP << fType << " * " << OpName << "_forget_gate = this->fVec_" << OpName << "_forget_gate;\n";
    }
    // Set the cell state and the new cell state = h(cell state)
-   if (fUseSession) {
-      out << SP << fType << " * " << OpName << "_cell_state = this->fVec_" << OpName << "_cell_state;\n";
-      out << SP << fType << " * " << OpName << "_new_cell_state = this->fVec_" << OpName << "_new_cell_state;\n";
-   } else {
-      out << SP << fType << "  " << OpName << "_cell_state[" << hidden_state_size << "] = {0};\n";
-      out << SP << fType << "  " << OpName << "_new_cell_state[" << hidden_state_size << "] = {0};\n";
-   }
+   out << SP << fType << " * " << OpName << "_cell_state = this->fVec_" << OpName << "_cell_state;\n";
+   out << SP << fType << " * " << OpName << "_new_cell_state = this->fVec_" << OpName << "_new_cell_state;\n";
 
    // Set the hidden state
    if (fAttrLayout == 0 && !fNY.empty()) {
       out << SP << fType << " *" << OpName << "_hidden_state = tensor_" << fNY << ";\n";
    } else {
-      if (fUseSession) {
-         out << SP << fType << " * " << OpName << "_hidden_state = this->fVec_" << OpName << "_hidden_state;\n";
-      } else {
-         out << SP << fType << "  " << OpName << "_hidden_state[" << hidden_state_size << "] = {0};\n";
-      }
+      out << SP << fType << " * " << OpName << "_hidden_state = this->fVec_" << OpName << "_hidden_state;\n";
    }
 
    out << SP << "char " << OpName << "_transA = 'N';\n";

@@ -480,6 +480,19 @@ TEST_F(TClingTests, DeclareAutoloadsSymbolsForStaticInit)
    EXPECT_EQ(3L, gInterpreter->ProcessLine("gROOT16601vec.GetNrows();"));
 }
 
+// A failed static initializer rolls the transaction back: Declare reports it and later initializers still run.
+TEST_F(TClingTests, DeclareReportsFailedStaticInit)
+{
+   EXPECT_FALSE(gInterpreter->Declare("extern \"C\" int TClingTests_unresolved();"
+                                      "int TClingTests_v = TClingTests_unresolved();"));
+   EXPECT_EQ(nullptr, gInterpreter->GetDataMember(nullptr, "TClingTests_v"));
+   EXPECT_TRUE(gInterpreter->Declare("int TClingTests_src() { return 7; }"
+                                     "int TClingTests_w = TClingTests_src();"));
+   EXPECT_EQ(7L, gInterpreter->ProcessLine("TClingTests_w;"));
+   EXPECT_TRUE(gInterpreter->Declare("int TClingTests_v = 2;"));
+   EXPECT_EQ(2L, gInterpreter->ProcessLine("TClingTests_v;"));
+}
+
 // https://github.com/root-project/root/issues/15818
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 TEST_F(TClingTests, VeryLongExpression)

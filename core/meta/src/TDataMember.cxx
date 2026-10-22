@@ -773,6 +773,8 @@ void TDataMember::ExtractOptionsFromComment()
    //having all options extracted and put into list, we finally can parse
    //them to create a list of options...
 
+   auto enumDict = IsEnum() ? TEnum::GetEnum(GetTypeName()) : nullptr;
+
    fOptions = new TList();                //create the list
 
    TIter next(optionlist.get());                //we'll iterate through all
@@ -802,11 +804,10 @@ void TDataMember::ExtractOptionsFromComment()
                // We'll try to find global enum existing in ROOT...
                l = (Long_t)(*value);
             } else if (IsEnum()) {
-               TObject *obj = fClass->GetListOfDataMembers(false)->FindObject(ptr1);
-               if (obj)
-                  l = ((TEnumConstant *)obj)->GetValue();
+               if (auto enumConst = enumDict ? (TEnumConstant*) enumDict->GetConstants()->FindObject(ptr1) : nullptr)
+                  l = enumConst->GetValue();
                else
-                  l = gInterpreter->Calc(Form("%s;", ptr1));
+                  l = gInterpreter->Calc(TString::Format("%s;", ptr1));
             } else {
                Fatal("TDataMember", "Internal error, couldn't recognize enum/global value %s.", ptr1);
             }

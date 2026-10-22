@@ -2570,6 +2570,18 @@ def make_LinearWithSelu():
     return _model(graph, opset=9, ir_version=6, producer_name='pytorch', producer_version='1.9')
 
 
+def make_SeluAttributes():
+    """Ops: Selu with non-default alpha and gamma."""
+    nodes = [helper.make_node("Selu", ["x"], ["y"], name="selu_0", alpha=2.0, gamma=3.0)]
+    graph = helper.make_graph(
+        nodes,
+        "selu_attributes",
+        inputs=[_vi("x", FLOAT, [1, 4])],
+        outputs=[_vi("y", FLOAT, [1, 4])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
 def make_LinearWithSigmoid():
     """Ops: Gemm, Sigmoid, Gemm, Sigmoid"""
     nodes = [
@@ -5318,6 +5330,36 @@ def make_Softmax4d():
     return _model(graph, opset=17, ir_version=8)
 
 
+def make_LogSoftmaxLargeRange():
+    """Ops: LogSoftmax over the last axis, with inputs that differ by up to 200 so that
+    exp(x - max) underflows to 0 in float."""
+    nodes = [
+        helper.make_node("LogSoftmax", ["X"], ["Y"], axis=-1),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "LogSoftmax",
+        inputs=[_vi("X", FLOAT, [2, 3])],
+        outputs=[_vi("Y", FLOAT, [2, 3])],
+    )
+    return _model(graph, opset=17, ir_version=8)
+
+
+def make_LogSoftmaxLargeRangeAxis0():
+    """Ops: LogSoftmax over axis 0 (the generic, non-last-axis code path), with inputs
+    that differ by up to 200."""
+    nodes = [
+        helper.make_node("LogSoftmax", ["X"], ["Y"], axis=0),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "LogSoftmax",
+        inputs=[_vi("X", FLOAT, [3, 2])],
+        outputs=[_vi("Y", FLOAT, [3, 2])],
+    )
+    return _model(graph, opset=17, ir_version=8)
+
+
 def make_Softplus():
     """Ops: Softplus"""
     nodes = [
@@ -5573,6 +5615,74 @@ def make_Where():
     return _model(graph, opset=21, ir_version=10, producer_name='onnx-example')
 
 
+def make_WhereMultidirectionalBroadcast():
+    """Ops: Where. Regression test for issue #23523: cond, X, and Y have
+    different shapes and ranks that only agree via full multidirectional
+    broadcasting (cond (2,1), X (1,3), Y (1) -> output (2,3)), which is
+    larger than every individual input."""
+    nodes = [
+        helper.make_node("Where", ["cond", "inputA", "inputB"], ["output"]),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "WhereMultidirectionalBroadcastGraph",
+        inputs=[
+            _vi("inputA", FLOAT, [1, 3]),
+            _vi("inputB", FLOAT, [1]),
+            _vi("cond", BOOL, [2, 1]),
+        ],
+        outputs=[
+            _vi("output", FLOAT, [2, 3]),
+        ],
+    )
+    return _model(graph, opset=21, ir_version=10, producer_name="onnx-example")
+
+
+def make_WhereBroadcastHighRankCond():
+    """Ops: Where. Regression test for issue #23523: cond (2,1,1) has a
+    higher rank than X (4,) and Y (1), and X has more elements than cond
+    or Y, forcing the broadcast to (2,1,4)."""
+    nodes = [
+        helper.make_node("Where", ["cond", "inputA", "inputB"], ["output"]),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "WhereBroadcastHighRankCondGraph",
+        inputs=[
+            _vi("inputA", FLOAT, [4]),
+            _vi("inputB", FLOAT, [1]),
+            _vi("cond", BOOL, [2, 1, 1]),
+        ],
+        outputs=[
+            _vi("output", FLOAT, [2, 1, 4]),
+        ],
+    )
+    return _model(graph, opset=21, ir_version=10, producer_name="onnx-example")
+
+
+def make_WhereBroadcastEqualElementCount():
+    """Ops: Where. Regression test for issue #23523: cond (2,1), X (1,2) and
+    Y (1,2) all have the same number of elements but different shapes, so they
+    only agree via multidirectional broadcasting to (2,2), which is larger than
+    every individual input."""
+    nodes = [
+        helper.make_node("Where", ["cond", "inputA", "inputB"], ["output"]),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "WhereBroadcastEqualElementCountGraph",
+        inputs=[
+            _vi("inputA", FLOAT, [1, 2]),
+            _vi("inputB", FLOAT, [1, 2]),
+            _vi("cond", BOOL, [2, 1]),
+        ],
+        outputs=[
+            _vi("output", FLOAT, [2, 2]),
+        ],
+    )
+    return _model(graph, opset=21, ir_version=10, producer_name="onnx-example")
+
+
 def make_ConvSharedInput():
     """Ops: Conv, Add. Two convolutions read the same input tensor, each with
     its own reshaped-kernel and im2col workspaces."""
@@ -5704,6 +5814,51 @@ def make_IdentityWeightBatchNorm():
     return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
 
 
+def make_BatchNormEpsilon():
+    """Ops: BatchNormalization with a non-default epsilon (1e-3, the Keras default).
+    The variances are small so that epsilon visibly changes the output."""
+    nodes = [
+        helper.make_node("BatchNormalization", ["x", "scale", "bias", "mean", "var"], ["y"], name="bn_0", epsilon=1e-3),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "batchnorm_epsilon",
+        inputs=[_vi("x", FLOAT, [1, 3, 2, 2])],
+        outputs=[_vi("y", FLOAT, [1, 3, 2, 2])],
+        initializer=[
+            _tensor("scale", FLOAT, [3], [1.5, 0.5, 2.0]),
+            _tensor("bias", FLOAT, [3], [0.1, -0.2, 0.3]),
+            _tensor("mean", FLOAT, [3], [0.0, 1.0, -1.0]),
+            _tensor("var", FLOAT, [3], [0.1, 0.2, 0.05]),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_BatchNormReluEpsilon():
+    """Ops: BatchNormalization, Relu. BatchNormEpsilon followed by a Relu, which SOFIE
+    fuses into the batch normalization."""
+    nodes = [
+        helper.make_node(
+            "BatchNormalization", ["x", "scale", "bias", "mean", "var"], ["bn"], name="bn_0", epsilon=1e-3
+        ),
+        helper.make_node("Relu", ["bn"], ["y"], name="relu_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "batchnorm_relu_epsilon",
+        inputs=[_vi("x", FLOAT, [1, 3, 2, 2])],
+        outputs=[_vi("y", FLOAT, [1, 3, 2, 2])],
+        initializer=[
+            _tensor("scale", FLOAT, [3], [1.5, 0.5, 2.0]),
+            _tensor("bias", FLOAT, [3], [0.1, -0.2, 0.3]),
+            _tensor("mean", FLOAT, [3], [0.0, 1.0, -1.0]),
+            _tensor("var", FLOAT, [3], [0.1, 0.2, 0.05]),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
 def make_ClipInt():
     """Ops: Clip on an integer tensor, whose bounds must be written with the type
     of the tensor."""
@@ -5789,6 +5944,211 @@ def make_IdentityWeightOutput():
         inputs=[_vi("x", FLOAT, [3])],
         outputs=[_vi("s", FLOAT, [3]), _vi("y", FLOAT, [3])],
         initializer=[_tensor("scale_source", FLOAT, [3], [1.5, 0.5, 2.0])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_ReshapeAlias():
+    """Ops: Mul, Reshape, Mul. The Reshape only reinterprets the shape of an
+    intermediate tensor, so its output can share that tensor's memory. The
+    multiplications keep the input and the output intermediate tensors rather
+    than graph inputs and outputs."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Reshape", ["prod", "newshape"], ["reshaped"], name="reshape_0"),
+        helper.make_node("Mul", ["reshaped", "reshaped"], ["out"], name="mul_1"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "reshape_alias",
+        inputs=[_vi("x", FLOAT, [2, 3])],
+        outputs=[_vi("out", FLOAT, [3, 2])],
+        initializer=[_tensor("newshape", INT64, [2], [3, 2])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_ReshapeAliasGraphOutput():
+    """Ops: Mul, Reshape. The output of the Reshape is a graph output, written
+    into the buffer the caller provides, so the alias has to be refused."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Reshape", ["prod", "newshape"], ["out"], name="reshape_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "reshape_alias_graph_output",
+        inputs=[_vi("x", FLOAT, [2, 3])],
+        outputs=[_vi("out", FLOAT, [3, 2])],
+        initializer=[_tensor("newshape", INT64, [2], [3, 2])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_SliceIdentityAlias():
+    """Ops: Mul, Slice, Mul. The slice selects the whole tensor, so it does not
+    change the data and its output can share the input's memory."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Slice", ["prod", "starts", "ends", "axes"], ["sliced"], name="slice_0"),
+        helper.make_node("Mul", ["sliced", "sliced"], ["out"], name="mul_1"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "slice_identity_alias",
+        inputs=[_vi("x", FLOAT, [2, 3])],
+        outputs=[_vi("out", FLOAT, [2, 3])],
+        initializer=[
+            _tensor("starts", INT64, [2], [0, 0]),
+            _tensor("ends", INT64, [2], [2, 3]),
+            _tensor("axes", INT64, [2], [0, 1]),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_IdentityAlias():
+    """Ops: Mul, Identity, Mul. Identity of an intermediate tensor: the output
+    is the same data under another name and can share its memory."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Identity", ["prod"], ["ident"], name="identity_0"),
+        helper.make_node("Mul", ["ident", "ident"], ["out"], name="mul_1"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "identity_alias",
+        inputs=[_vi("x", FLOAT, [2, 3])],
+        outputs=[_vi("out", FLOAT, [2, 3])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_AliasAcrossNewTensor():
+    """Ops: Mul, Reshape, Mul, Add. The alias is read after another intermediate
+    tensor of the same size has been created: the memory of the aliased tensor
+    must not be handed out to it while the alias is still live."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Reshape", ["prod", "newshape"], ["reshaped"], name="reshape_0"),
+        helper.make_node("Mul", ["y", "y"], ["other"], name="mul_1"),
+        helper.make_node("Add", ["reshaped", "other"], ["out"], name="add_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "alias_across_new_tensor",
+        inputs=[_vi("x", FLOAT, [2, 3]), _vi("y", FLOAT, [3, 2])],
+        outputs=[_vi("out", FLOAT, [3, 2])],
+        initializer=[_tensor("newshape", INT64, [2], [3, 2])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_AliasOwnerReadAfterAlias():
+    """Ops: Mul, Reshape, Mul, Mul, Add. The tensor the alias refers to is read
+    again after the last use of the alias, with another tensor created in
+    between: the memory the two share has to live until the later of the two,
+    or `other` is given it and overwrites what `prod` still holds."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Reshape", ["prod", "newshape"], ["reshaped"], name="reshape_0"),
+        helper.make_node("Mul", ["reshaped", "reshaped"], ["alias_out"], name="mul_1"),
+        helper.make_node("Mul", ["y", "y"], ["other"], name="mul_2"),
+        helper.make_node("Add", ["prod", "other"], ["owner_out"], name="add_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "alias_owner_read_after_alias",
+        inputs=[_vi("x", FLOAT, [2, 3]), _vi("y", FLOAT, [2, 3])],
+        outputs=[_vi("alias_out", FLOAT, [3, 2]), _vi("owner_out", FLOAT, [2, 3])],
+        initializer=[_tensor("newshape", INT64, [2], [3, 2])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_AliasChain():
+    """Ops: Mul, Squeeze, Unsqueeze, Flatten, Reshape, Mul, Mul, Add. Four shape-only
+    operators in a row: each alias refers to the previous one, and all of them
+    have to resolve to the single tensor that owns the memory: a resolution
+    stopping at the previous alias never releases the memory of `prod`, which
+    `sq` should be given once the chain has been read for the last time."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Squeeze", ["prod", "axis0"], ["squeezed"], name="squeeze_0"),
+        helper.make_node("Unsqueeze", ["squeezed", "axis0"], ["unsqueezed"], name="unsqueeze_0"),
+        helper.make_node("Flatten", ["unsqueezed"], ["flattened"], axis=1, name="flatten_0"),
+        helper.make_node("Reshape", ["flattened", "newshape"], ["reshaped"], name="reshape_0"),
+        helper.make_node("Mul", ["reshaped", "reshaped"], ["sum"], name="mul_1"),
+        helper.make_node("Mul", ["sum", "sum"], ["sq"], name="mul_2"),
+        helper.make_node("Add", ["sq", "sq"], ["out"], name="add_1"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "alias_chain",
+        inputs=[_vi("x", FLOAT, [1, 2, 3])],
+        outputs=[_vi("out", FLOAT, [2, 3])],
+        initializer=[
+            _tensor("axis0", INT64, [1], [0]),
+            _tensor("newshape", INT64, [2], [2, 3]),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_AliasChainSingle():
+    """The graph of AliasChain with the four shape-only operators replaced by the
+    single Reshape they amount to. It is the yardstick for the memory of
+    AliasChain: a chain of aliases has to cost exactly what one alias costs."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Reshape", ["prod", "newshape"], ["reshaped"], name="reshape_0"),
+        helper.make_node("Mul", ["reshaped", "reshaped"], ["sum"], name="mul_1"),
+        helper.make_node("Mul", ["sum", "sum"], ["sq"], name="mul_2"),
+        helper.make_node("Add", ["sq", "sq"], ["out"], name="add_1"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "alias_chain_single",
+        inputs=[_vi("x", FLOAT, [1, 2, 3])],
+        outputs=[_vi("out", FLOAT, [2, 3])],
+        initializer=[_tensor("newshape", INT64, [2], [2, 3])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_AliasDynShape():
+    """Ops: Mul, Identity, Mul. The aliased tensor is a dynamic one, whose shape
+    is only known at run time, so it comes from the dynamic memory pool."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Identity", ["prod"], ["ident"], name="identity_0"),
+        helper.make_node("Mul", ["ident", "ident"], ["out"], name="mul_1"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "alias_dyn_shape",
+        inputs=[_vi("x", FLOAT, ["N", 3])],
+        outputs=[_vi("out", FLOAT, ["N", 3])],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_AliasDynShapeAcrossNewTensor():
+    """Ops: Mul, Identity, Mul, Add. AliasAcrossNewTensor with a dynamic shape:
+    the lifetimes in the dynamic memory pool are computed separately from the
+    ones of the static pool, and the tensor the alias refers to has to stay
+    reserved there until the alias is read, or `other` is given its memory."""
+    nodes = [
+        helper.make_node("Mul", ["x", "x"], ["prod"], name="mul_0"),
+        helper.make_node("Identity", ["prod"], ["ident"], name="identity_0"),
+        helper.make_node("Mul", ["y", "y"], ["other"], name="mul_1"),
+        helper.make_node("Add", ["ident", "other"], ["out"], name="add_0"),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "alias_dyn_shape_across_new_tensor",
+        inputs=[_vi("x", FLOAT, ["N", 3]), _vi("y", FLOAT, ["N", 3])],
+        outputs=[_vi("out", FLOAT, ["N", 3])],
     )
     return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
 
@@ -5896,7 +6256,16 @@ MODELS = {
     "LSTMInitialBias": make_LSTMInitialBias,
     "LSTMPeepholes": make_LSTMPeepholes,
     "IdentityWeightBatchNorm": make_IdentityWeightBatchNorm,
+    "BatchNormEpsilon": make_BatchNormEpsilon,
+    "BatchNormReluEpsilon": make_BatchNormReluEpsilon,
+    "AliasAcrossNewTensor": make_AliasAcrossNewTensor,
+    "AliasChain": make_AliasChain,
+    "AliasChainSingle": make_AliasChainSingle,
+    "AliasDynShape": make_AliasDynShape,
+    "AliasDynShapeAcrossNewTensor": make_AliasDynShapeAcrossNewTensor,
+    "AliasOwnerReadAfterAlias": make_AliasOwnerReadAfterAlias,
     "IdentityWeightOutput": make_IdentityWeightOutput,
+    "IdentityAlias": make_IdentityAlias,
     "LayerNormalization2d": make_LayerNormalization2d,
     "LayerNormalization4d": make_LayerNormalization4d,
     "Less": make_Less,
@@ -5951,6 +6320,8 @@ MODELS = {
     "RangeWithDynShapeStart": make_RangeWithDynShapeStart,
     "RangeWithDynShapeStartDelta": make_RangeWithDynShapeStartDelta,
     "Range_ConstantFolding": make_Range_ConstantFolding,
+    "ReshapeAlias": make_ReshapeAlias,
+    "ReshapeAliasGraphOutput": make_ReshapeAliasGraphOutput,
     "Reciprocal": make_Reciprocal,
     "ReduceMax": make_ReduceMax,
     "ReduceMean": make_ReduceMean,
@@ -5964,16 +6335,20 @@ MODELS = {
     "ScatterND_1": make_ScatterND_1,
     "ScatterND_2": make_ScatterND_2,
     "ScatterND_3": make_ScatterND_3,
+    "SeluAttributes": make_SeluAttributes,
     "Shape": make_Shape,
     "Sin": make_Sin,
     "Slice": make_Slice,
     "Slice_Default_Axis": make_Slice_Default_Axis,
     "Slice_Default_Steps": make_Slice_Default_Steps,
     "Slice_Neg": make_Slice_Neg,
+    "SliceIdentityAlias": make_SliceIdentityAlias,
     "Softmax1d": make_Softmax1d,
     "Softmax2d": make_Softmax2d,
     "Softmax3d": make_Softmax3d,
     "Softmax4d": make_Softmax4d,
+    "LogSoftmaxLargeRange": make_LogSoftmaxLargeRange,
+    "LogSoftmaxLargeRangeAxis0": make_LogSoftmaxLargeRangeAxis0,
     "Softplus": make_Softplus,
     "Split_0": make_Split_0,
     "Split_1": make_Split_1,
@@ -5989,6 +6364,9 @@ MODELS = {
     "TopKLargestUnsorted": make_TopKLargestUnsorted,
     "TopKWithDynShapeK": make_TopKWithDynShapeK,
     "Where": make_Where,
+    "WhereMultidirectionalBroadcast": make_WhereMultidirectionalBroadcast,
+    "WhereBroadcastHighRankCond": make_WhereBroadcastHighRankCond,
+    "WhereBroadcastEqualElementCount": make_WhereBroadcastEqualElementCount,
 }
 
 
@@ -6717,7 +7095,16 @@ TEST_INPUTS = {
     ],
     "HardSigmoid": [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
     "HardSwish": [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
+    "AliasAcrossNewTensor": [rand_f32(45, (2, 3)), rand_f32(46, (3, 2))],
+    "AliasChain": [rand_f32(47, (1, 2, 3))],
+    "AliasChainSingle": [rand_f32(47, (1, 2, 3))],
+    "AliasDynShape": [rand_f32(48, (2, 3))],
+    "AliasDynShapeAcrossNewTensor": [rand_f32(51, (2, 3)), rand_f32(52, (2, 3))],
+    "AliasOwnerReadAfterAlias": [rand_f32(49, (2, 3)), rand_f32(50, (2, 3))],
+    "IdentityAlias": [rand_f32(41, (2, 3))],
     "IdentityWeightBatchNorm": [rand_f32(38, (1, 3, 2, 2))],
+    "BatchNormEpsilon": [rand_f32(40, (1, 3, 2, 2))],
+    "BatchNormReluEpsilon": [rand_f32(41, (1, 3, 2, 2))],
     "IdentityWeightOutput": [rand_f32(39, (3,))],
     # Per (n, c) slice a different mean and variance, so that a normalization
     # that mixed up instances or channels would not cancel out.
@@ -7192,8 +7579,12 @@ TEST_INPUTS = {
     ],
     "ReduceMean": [f32([5.0, 2.0, 3.0, 5.0, 5.0, 4.0], (1, 2, 3))],
     "ReduceProd": [f32([5.0, 2.0, 3.0, 5.0, 5.0, 4.0], (1, 2, 3))],
+    "ReshapeAlias": [rand_f32(42, (2, 3))],
+    "ReshapeAliasGraphOutput": [rand_f32(43, (2, 3))],
+    "SeluAttributes": [f32([-2.0, -0.5, 0.5, 2.0], (1, 4))],
     "Shape": [f32([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], (1, 2, 3))],
     "Slice": [rand_f32(1, (20, 10, 5))],
+    "SliceIdentityAlias": [rand_f32(44, (2, 3))],
     "Slice_Default_Axis": [rand_f32(2, (20, 10, 5))],
     "Slice_Default_Steps": [rand_f32(3, (20, 10, 5))],
     "Slice_Neg": [rand_f32(4, (20, 10, 5))],
@@ -7285,6 +7676,8 @@ TEST_INPUTS = {
             (2, 3, 4, 2),
         )
     ],
+    "LogSoftmaxLargeRange": [f32([0.0, 100.0, 200.0, 1.0, 2.0, 3.0], (2, 3))],
+    "LogSoftmaxLargeRangeAxis0": [f32([0.0, 1.0, 100.0, 2.0, 200.0, 3.0], (3, 2))],
     "Sqrt": [
         f32(
             [
@@ -7642,7 +8035,24 @@ def _batchnorm_reference(model, feeds):
     scale, bias, mean, var = (resolve(n) for n in node.input[1:5])
     shape = (1, -1) + (1,) * (x.ndim - 2)
     y = scale.reshape(shape) * (x - mean.reshape(shape)) / np.sqrt(var.reshape(shape) + eps)
-    return [(y + bias.reshape(shape)).astype(np.float32)]
+    y = y + bias.reshape(shape)
+    if any(n.op_type == "Relu" for n in model.graph.node):
+        # BatchNormalization followed by a Relu, which SOFIE fuses
+        y = np.maximum(y, 0)
+    return [y.astype(np.float32)]
+
+
+def _logsoftmax_reference(model, feeds):
+    """LogSoftmax computed as (x - max) - log(sum(exp(x - max))).
+
+    The ReferenceEvaluator takes the log of the softmax, which gives -inf where
+    exp(x - max) underflows to 0."""
+    node = next(n for n in model.graph.node if n.op_type == "LogSoftmax")
+    axis = next((a.i for a in node.attribute if a.name == "axis"), -1)
+    x = np.asarray(feeds[node.input[0]], dtype=np.float64)
+    shifted = x - x.max(axis=axis, keepdims=True)
+    y = shifted - np.log(np.exp(shifted).sum(axis=axis, keepdims=True))
+    return [y.astype(np.float32)]
 
 
 EXPECTED_OVERRIDES = {
@@ -7657,6 +8067,10 @@ EXPECTED_OVERRIDES = {
     "MeanMultidirectionalBroadcast": _mean_reference,
     "ConvTranspose2dOutputShape": _convtranspose_outputshape_reference,
     "IdentityWeightBatchNorm": _batchnorm_reference,
+    "BatchNormEpsilon": _batchnorm_reference,
+    "BatchNormReluEpsilon": _batchnorm_reference,
+    "LogSoftmaxLargeRange": _logsoftmax_reference,
+    "LogSoftmaxLargeRangeAxis0": _logsoftmax_reference,
 }
 
 

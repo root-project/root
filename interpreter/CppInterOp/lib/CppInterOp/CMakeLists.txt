@@ -67,6 +67,17 @@ if (LLVM_LINK_LLVM_DYLIB)
     )
   set(new_libs ${link_libs})
   set(libs ${new_libs})
+  # LLVM component libraries behind libLLVM.so that static clang archives
+  # reference without declaring them in their link interfaces (the dylib
+  # umbrella covered them). Substituted for the LLVM shared target below.
+  # Do NOT expand to every LLVM library: some (e.g. LLVMInterpreter) require
+  # optional dependencies (libffi) that may not be installed.
+  set(llvm_component_libs LLVMFrontendDriver)
+  foreach(component_lib ${llvm_component_libs})
+    if(NOT TARGET ${component_lib})
+      list(REMOVE_ITEM llvm_component_libs ${component_lib})
+    endif()
+  endforeach()
   while(NOT "${new_libs}" STREQUAL "")
     foreach(lib ${new_libs})
       if(TARGET ${lib})
@@ -75,22 +86,36 @@ if (LLVM_LINK_LLVM_DYLIB)
           continue()
         endif()
         foreach(transitive_lib ${transitive_libs})
-          if(NOT TARGET ${transitive_lib})
-            continue()
+          # Replace the LLVM shared library (libLLVM.so) that packages like
+          # Debian's declare as the link interface of the static clang archives
+          # with the static LLVM component libraries: some LLVM libs are only
+          # reachable through that umbrella (e.g. LLVMFrontendDriver for
+          # llvm::driver::createTLII in clangCodeGen), so dropping it outright
+          # produces unresolved symbols at link time.
+          # Everything else must be kept verbatim: plain items (rt, dl, m) and
+          # non-LLVM targets (e.g. ZLIB::ZLIB) are LLVM's system dependencies
+          # that the static archives still need.
+          if(TARGET ${transitive_lib}
+             AND "${transitive_lib}" MATCHES "^LLVM")
+            get_target_property(lib_type ${transitive_lib} TYPE)
+            if("${lib_type}" STREQUAL "SHARED_LIBRARY"
+               OR "${lib_type}" STREQUAL "MODULE_LIBRARY")
+              foreach(component_lib ${llvm_component_libs})
+                if(TARGET ${component_lib} AND NOT ${component_lib} IN_LIST static_transitive_libs)
+                  list(APPEND static_transitive_libs ${component_lib})
+                endif()
+              endforeach()
+              continue()
+            endif()
           endif()
-          get_target_property(lib_type ${transitive_lib} TYPE)
-          if("${lib_type}" STREQUAL "STATIC_LIBRARY")
-            list(APPEND static_transitive_libs ${transitive_lib})
-          else()
-            # Filter our libLLVM.so and friends.
-            continue()
-          endif()
-          if(NOT ${transitive_lib} IN_LIST libs)
+          list(APPEND static_transitive_libs ${transitive_lib})
+          if(TARGET ${transitive_lib} AND NOT ${transitive_lib} IN_LIST libs)
             list(APPEND newer_libs ${transitive_lib})
             list(APPEND libs ${transitive_lib})
           endif()
         endforeach(transitive_lib)
-        # Update the target properties with the list of only static libraries.
+        # Update the target properties with the filtered dependency list
+        # (shared LLVM umbrella replaced by static component libraries).
         set_target_properties(${lib} PROPERTIES INTERFACE_LINK_LIBRARIES "${static_transitive_libs}")
         set(static_transitive_libs "")
       endif()
@@ -277,8 +302,58 @@ if(TARGET CppInterOpTableGen)
   add_dependencies(clangCppInterOp CppInterOpTableGen)
 endif()
 target_compile_definitions(clangCppInterOp PUBLIC "_CINDEX_LIB_") # workaround for the use of `CINDEX_LINKAGE`
+# The library defines its own dispatch trace-hook slots (Tracing.cpp): mark
+# them dllexport on Windows via the CPPINTEROP_DISPATCH_STORAGE declarations.
+target_compile_definitions(clangCppInterOp PRIVATE CPPINTEROP_DISPATCH_EXPORTS)
+
+# Where clang keeps its builtin headers. MakeResourcesPath() derives this
+# from LLVM_BINARY_DIR at runtime, which misses wherever clang's headers are
+# installed under a different prefix than LLVM's libraries, leaving a probe
+# for a `clang` on PATH as the only fallback. Ask the clang this build links
+# against instead, while the answer is still knowable. The cache entry is
+# the override; the detected value stays local so it cannot outlive a
+# reconfigure against a different Clang_DIR.
+set(CPPINTEROP_CLANG_RESOURCE_DIR "" CACHE PATH
+  "Clang resource directory compiled into the library; detected when empty")
+
+set(_clang_resource_dir "${CPPINTEROP_CLANG_RESOURCE_DIR}")
+# Auto-detection is skipped for coverage-instrumented builds: a baked-in
+# directory makes MakeResourcesPath() return early at runtime, leaving the
+# runtime fallback paths below it uncovered. An explicit
+# CPPINTEROP_CLANG_RESOURCE_DIR override is always honored.
+if(NOT _clang_resource_dir AND NOT CODE_COVERAGE
+   AND EXISTS "${CLANG_INSTALL_PREFIX}/bin/clang")
+  execute_process(
+    COMMAND "${CLANG_INSTALL_PREFIX}/bin/clang" -print-resource-dir
+    OUTPUT_VARIABLE _detected_resource_dir OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET)
+  if(EXISTS "${_detected_resource_dir}/include")
+    set(_clang_resource_dir "${_detected_resource_dir}")
+  endif()
+endif()
+message(STATUS "Clang resource directory: ${_clang_resource_dir}")
 
 string(REPLACE ";" "\;" _VER CPPINTEROP_VERSION)
 set_source_files_properties(CppInterOp.cpp PROPERTIES COMPILE_DEFINITIONS
   "LLVM_BINARY_DIR=\"${LLVM_BINARY_DIR}\";CPPINTEROP_VERSION=\"${_VAR}\""
 )
+
+# The values land in C string literals, so escape for exactly that layer.
+# They are delivered through a generated header (see BakedArgs.h.in) instead
+# of -D definitions: with -D, the shell would apply another unescape layer
+# and corrupt literal backslashes on the way to the preprocessor.
+function(_baked_string_define OUT NAME VALUE)
+  string(REPLACE "\\" "\\\\" _v "${VALUE}")
+  string(REPLACE "\"" "\\\"" _v "${_v}")
+  set(${OUT} "${${OUT}}#define ${NAME} \"${_v}\"\n" PARENT_SCOPE)
+endfunction()
+set(_baked_defines "")
+if(CPPINTEROP_BAKED_INTERPRETER_ARGS)
+  _baked_string_define(_baked_defines CPPINTEROP_BAKED_INTERPRETER_ARGS
+    "${CPPINTEROP_BAKED_INTERPRETER_ARGS}")
+endif()
+if(_clang_resource_dir)
+  _baked_string_define(_baked_defines CPPINTEROP_CLANG_RESOURCE_DIR
+    "${_clang_resource_dir}")
+endif()
+configure_file(BakedArgs.h.in ${CMAKE_CURRENT_BINARY_DIR}/BakedArgs.h @ONLY)

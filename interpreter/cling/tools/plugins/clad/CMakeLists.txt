@@ -13,17 +13,29 @@ set(clad_install_dir ${CMAKE_BINARY_DIR}/etc/cling/)
 set(CLAD_INCLUDE_DIRS ${clad_install_dir})
 # Clad Libraries
 set(CLAD_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+# Build clad in the configuration ROOT is being built in, whatever that is.
+# A fixed one is wrong against ROOT's own LLVM, because that is a build tree:
+# a build tree exports an IMPORTED_LOCATION for every entry of
+# CMAKE_CONFIGURATION_TYPES whether or not it compiled them, so cmake's
+# fallback to an available configuration never fires. It finds the location
+# for the configuration being built and hands the linker a path to a file that
+# was never produced.
+#
+# Nothing in the clad sub-build linked an LLVM library until clad 2.5 added
+# clad-tblgen, so a RelWithDebInfo ROOT asking for a Release clad went
+# unnoticed. It now fails as
+#   LNK1181: cannot open input file '...\llvm\Release\lib\LLVMTableGen.lib'
+#
+# winrtdebug needs no case of its own. It selects the debug runtime through
+# CMAKE_CXX_FLAGS, which is forwarded below, and is used with a Debug ROOT --
+# which is what $<CONFIG> then reports anyway.
 set(_clad_build_type ${CMAKE_CFG_INTDIR})
-if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-  if (winrtdebug)
-    set(_clad_build_type Debug)
-  else()
-    set(_clad_build_type Release)
-  endif()
-  set(EXTRA_BUILD_ARGS --config ${_clad_build_type})
-endif()
 if(NOT _clad_build_type STREQUAL "" AND NOT _clad_build_type STREQUAL ".")
-  set(EXTRA_BUILD_ARGS --config ${_clad_build_type})
+  # $<CONFIG> rather than ${_clad_build_type}: LOG_BUILD runs the build step
+  # from a script through `cmake -P`, which never expands MSBuild's
+  # $(Configuration). The library path below is read by MSBuild itself, where
+  # it is expanded.
+  set(EXTRA_BUILD_ARGS --config $<CONFIG>)
 endif()
 
 if(NOT MSVC AND CMAKE_VERSION VERSION_LESS 3.31.1)
@@ -54,6 +66,17 @@ if (LLVM_FORCE_USE_OLD_TOOLCHAIN)
   list(APPEND _clad_extra_cmake_args -DLLVM_FORCE_USE_OLD_TOOLCHAIN=${LLVM_FORCE_USE_OLD_TOOLCHAIN})
 endif(LLVM_FORCE_USE_OLD_TOOLCHAIN)
 
+# LLVMConfig.cmake re-finds zstd for LLVMSupport with a bare find_package(zstd),
+# unlike zlib (set(ZLIB_ROOT @ZLIB_ROOT@) in llvm/cmake/modules/LLVMConfig.cmake.in).
+# clad's cmake has none of ROOT's search paths, so pass the zstd LLVM found.
+if(zstd_INCLUDE_DIR AND zstd_LIBRARY)
+  list(APPEND _clad_extra_cmake_args
+       -Dzstd_INCLUDE_DIR:PATH=${zstd_INCLUDE_DIR}
+       -Dzstd_LIBRARY:FILEPATH=${zstd_LIBRARY})
+endif()
+
+list(APPEND _clad_extra_cmake_args -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=${CMAKE_INSTALL_RPATH_USE_LINK_PATH})
+
 list(APPEND _clad_extra_cmake_args -DCLAD_BUILD_STATIC_ONLY=ON)
 
 # Wrap download, configure and build steps in a script to log output
@@ -71,17 +94,20 @@ if (DEFINED CLAD_SOURCE_DIR)
   list(APPEND _clad_extra_settings SOURCE_DIR ${CLAD_SOURCE_DIR})
 else()
   list(APPEND _clad_extra_settings GIT_REPOSITORY https://github.com/vgvassilev/clad.git)
-  list(APPEND _clad_extra_settings GIT_TAG v2.4)
+  list(APPEND _clad_extra_settings GIT_TAG v2.5)
 endif()
 
 # list(APPEND _clad_patches_list "patch1.patch" "patch2.patch")
-list(APPEND _clad_patches_list "nullptr_dereference_fix.patch" "windows_build_fix.patch")
-set(_clad_patch_command
+#list(APPEND _clad_patches_list "nullptr_dereference_fix.patch" "windows_build_fix.patch")
+list(APPEND _clad_patches_list "lld_lookup_no_default_path.patch")
+if (_clad_patches_list)
+  set(_clad_patch_command
       ${CMAKE_COMMAND} -E copy_directory
       ${CMAKE_SOURCE_DIR}/interpreter/cling/tools/plugins/clad/patches <SOURCE_DIR>
       && git checkout -q <SOURCE_DIR>
       && git apply --ignore-space-change --ignore-whitespace ${_clad_patches_list}
       )
+endif(_clad_patches_list)
 
 ExternalProject_Add(
   clad

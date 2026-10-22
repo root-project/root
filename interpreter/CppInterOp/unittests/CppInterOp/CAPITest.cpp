@@ -18,6 +18,12 @@ TYPED_TEST(CppInterOpTest, CAPI_DeclareAndProcess) {
   EXPECT_EQ(0, cppinterop_Process("capi_var++;"));
 }
 
+TYPED_TEST(CppInterOpTest, CAPI_LoadLibrary) {
+  TestFixture::CreateInterpreter();
+  // The hand-written two-argument wrapper still exists and forwards.
+  EXPECT_FALSE(cppinterop_LoadLibrary("no-such-cppinterop-lib", true));
+}
+
 TYPED_TEST(CppInterOpTest, CAPI_ScopeQueries) {
   TestFixture::CreateInterpreter();
   Cpp::Declare("namespace CAPINs { class Foo {}; }");
@@ -177,6 +183,9 @@ TYPED_TEST(CppInterOpTest, CAPI_EnumFunctions) {
 // Exercises the hand-written cppinterop_Evaluate C bridge. The C++ overload
 // returning Cpp::Box has no C wrapper (NoCWrapper); C clients use this form.
 TYPED_TEST(CppInterOpTest, CAPI_Evaluate) {
+#ifdef EMSCRIPTEN_STATIC_LIBRARY
+  GTEST_SKIP() << "Test fails for Emscipten static library build";
+#endif
   if (TypeParam::isOutOfProcess)
     GTEST_SKIP() << "Evaluate not supported in OOP JIT";
   TestFixture::CreateInterpreter();

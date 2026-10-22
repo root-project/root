@@ -57,6 +57,6 @@ stress.cxx         - Important ROOT stress testing program.
 
 bench.cxx          - STL and ROOT container test and benchmarking program.
 
-DrawTest.sh        - Entry script to extensive TTree query test suite.
-
-dt_*               - Scripts used by DrawTest.sh.
+DrawTest           - The extensive TTree query test suite lives in
+                     roottest (root/treeformula/event,
+                     root/tree/fastcloningeventtree, ...).

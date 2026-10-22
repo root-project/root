@@ -427,7 +427,7 @@ public:
    {
       Update();
    }
-   void PrintStatsFinal() const;
+   void PrintStatsFinal(std::size_t exactTotalEvents) const;
 };
 } // namespace Experimental
 } // namespace RDF

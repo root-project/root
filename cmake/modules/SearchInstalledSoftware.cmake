@@ -153,6 +153,14 @@ if(webgui AND root7 AND geom)
     list(APPEND HOTFIX_BUILD_FLAGS '-Dbuiltin_glu=ON')
   endif()
 endif()
+if (geom)
+  ROOT_FIND_REQUIRED_DEP(bvh builtin_bvh)
+  if (bvh_FOUND AND CMAKE_CXX_STANDARD LESS 20 AND NOT builtin_bvh)
+    message(SEND_ERROR "'bvh' found but needs C++20, either bump CXX standard or fall back to -Dbuiltin_bvh=ON")
+    list(APPEND MISSING_PACKAGES 'bvh')
+    list(APPEND HOTFIX_BUILD_FLAGS '-Dbuiltin_bvh=ON')
+  endif()
+endif()
 foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES VERSION)
   unset(OPENSSL_${suffix} CACHE)
 endforeach()
@@ -284,6 +292,7 @@ if(mathmore OR (tmva-cpu AND use_gsl_cblas))
   endif()
 endif()
 ROOT_FIND_REQUIRED_DEP(mathtext builtin_mathtext)
+ROOT_FIND_REQUIRED_DEP(CDT builtin_cdt)
 
 if(NOT "${MISSING_PACKAGES}" STREQUAL "")
   list(REMOVE_DUPLICATES MISSING_PACKAGES)
@@ -683,16 +692,6 @@ if(fitsio OR builtin_cfitsio)
   endif()
 endif()
 
-#---Check Shadow password support----------------------------------------------------
-if(shadowpw)
-  if(NOT EXISTS /etc/shadow)  #---TODO--The test always succeeds because the actual file is protected
-    if(NOT CMAKE_SYSTEM_NAME MATCHES Linux)
-      message(STATUS "Support Shadow password not found. Switching off shadowpw option")
-      set(shadowpw OFF CACHE BOOL "Disabled because /etc/shadow not found (${shadowpw_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Configure Xrootd support---------------------------------------------------------
 if(xrootd AND NOT builtin_xrootd)
   if(XRootD_VERSION VERSION_LESS 5.8.4)
@@ -758,6 +757,10 @@ endif()
 
 if (builtin_mathtext)
   add_subdirectory (builtins/libmathtext) # hard coded builtin for graf2d
+endif()
+
+if (builtin_cdt)
+  add_subdirectory (builtins/CDT) # hard coded builtin for math/mathcore
 endif()
 
 #---Check for Davix library-----------------------------------------------------------
@@ -876,6 +879,11 @@ if(vdt OR builtin_vdt)
   if(builtin_vdt)
     add_subdirectory(builtins/vdt)
   endif()
+endif()
+
+#---Check for bvh--------------------------------------------------------------------
+if(geom AND builtin_bvh)
+  add_subdirectory (builtins/bvh) # hard coded builtin for geom/geom TODO mv to full builtin ROOT build option
 endif()
 
 #---Check for VecGeom--------------------------------------------------------------------
@@ -1137,7 +1145,8 @@ if(webgui)
       endif()
       add_subdirectory(builtins/openui5)
     else()
-      message(WARNING "Without builtin_openui5 option most of webgui components will not work")
+      message(SEND_ERROR "Without builtin_openui5 option most of webgui components will not work, either disable webgui or enable builtin_openui5")
+      list(APPEND HOTFIX_BUILD_FLAGS -Dbuiltin_openui5=ON)
     endif()
   endif()
   add_subdirectory(builtins/rendercore)

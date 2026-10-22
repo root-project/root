@@ -389,7 +389,7 @@ bool TClingCallbacks::findInGlobalModuleIndex(DeclarationName Name, bool loadFir
    // and we should not load more modules which could find an implicit template
    // instantiation that is lazily loaded.
    Sema &SemaR = m_Interpreter->getSema();
-   if (SemaR.InstantiatingSpecializations.size() > 0)
+   if (SemaR.inTemplateInstantiation())
       return false;
 
    GlobalModuleIndex *Index = CI->getASTReader()->getGlobalIndex();

@@ -84,6 +84,24 @@ TRootContextMenu::~TRootContextMenu()
    delete fTrash;
 }
 
+thread_local TRootContextMenu *gBuildingContextMenu = nullptr;
+
+
+void TRootContextMenu::Resize(UInt_t w, UInt_t h)
+{
+   if (gBuildingContextMenu != this) {
+      TGPopupMenu::Resize(w, h);
+   } else if (w != fWidth || h != fHeight) {
+      // Mirror TGFrame::Resize's bookkeeping and layout, omitting only the
+      // native window resize. Entries still see the correct intermediate size.
+      const auto size = GetDefaultSize();
+      fWidth = w ? w : size.fWidth;
+      fHeight = h ? h : size.fHeight;
+      Layout();
+   }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Display context popup menu for currently selected object.
 
@@ -104,8 +122,26 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
       fDialog = 0;
    }
 
+   Bool_t use_mac_x11_workaroud = kFALSE;
    // add menu items to popup menu
-   CreateMenu(fContextMenu->GetSelectedObject());
+#ifdef R__MACOSX
+   use_mac_x11_workaroud = gVirtualX->InheritsFrom("TGX11");
+#endif
+   if (use_mac_x11_workaroud) {
+      // special workaround for X11 on MacOS
+      gBuildingContextMenu = this;
+      CreateMenu(fContextMenu->GetSelectedObject());
+      gBuildingContextMenu = nullptr;
+
+      // Include the help column before mapping; submit only the final size.
+      fMenuWidth += 5;
+      fWidth = GetDefaultWidth() + 5;
+      fHeight = GetDefaultHeight();
+      TGWindow::Resize(fWidth, fHeight);
+      Layout();
+   } else {
+      CreateMenu(fContextMenu->GetSelectedObject());
+   }
 
    int    xx, yy, topx = 0, topy = 0;
    UInt_t w, h;

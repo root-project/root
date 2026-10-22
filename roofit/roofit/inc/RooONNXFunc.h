@@ -16,7 +16,7 @@
 #include <RooAbsReal.h>
 #include <RooListProxy.h>
 
-#include <any>
+#include <memory>
 
 class RooONNXFunc : public RooAbsReal {
 public:
@@ -60,14 +60,15 @@ private:
 namespace RooFit::Detail {
 
 struct AnyWithVoidPtr {
-   std::any any;
+   std::shared_ptr<void> any;
    void *ptr = nullptr;
 
    template <class T>
    void emplace()
    {
-      any = std::make_any<T>();
-      ptr = std::any_cast<T>(&any);
+      auto obj = std::make_shared<T>();
+      ptr = obj.get();
+      any = std::move(obj);
    }
 
    void emplace(std::string const &typeName);

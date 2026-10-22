@@ -13,6 +13,7 @@
 #define ROOT7_REveVector
 
 #include "TMath.h"
+#include <algorithm>
 #include <cstddef>
 
 class TVector3;
@@ -87,6 +88,23 @@ public:
 
    void NegateXYZ() { fX = - fX; fY = -fY; fZ = -fZ; }
    TT   Normalize(TT length=1);
+
+   /// Set each component to the smaller of its own and that of `v`.
+   REveVectorT &SetMin(const REveVectorT &v)
+   {
+      fX = std::min(fX, v.fX);
+      fY = std::min(fY, v.fY);
+      fZ = std::min(fZ, v.fZ);
+      return *this;
+   }
+   /// Set each component to the larger of its own and that of `v`.
+   REveVectorT &SetMax(const REveVectorT &v)
+   {
+      fX = std::max(fX, v.fX);
+      fY = std::max(fY, v.fY);
+      fZ = std::max(fZ, v.fZ);
+      return *this;
+   }
 
    TT   Phi()      const;
    TT   Theta()    const;

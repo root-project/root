@@ -87,9 +87,10 @@ TEST_F(RNTupleChainProcessorTest, SingleNTuple)
 
    auto x = proc->RequestField<float>("x");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_FLOAT_EQ(static_cast<float>(*idx), *x);
    }
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
@@ -111,11 +112,12 @@ TEST_F(RNTupleChainProcessorTest, Basic)
    auto x = proc->RequestField<float>("x");
    auto y = proc->RequestField<std::vector<float>>("y");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(static_cast<float>(idx), *x);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(static_cast<float>(*idx), *x);
 
-      std::vector<float> yExp = {static_cast<float>(idx), static_cast<float>((idx) * 2)};
+      std::vector<float> yExp = {static_cast<float>(*idx), static_cast<float>(*idx * 2)};
       EXPECT_EQ(yExp, *y);
    }
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
@@ -129,16 +131,37 @@ TEST_F(RNTupleChainProcessorTest, MissingFields)
    auto x = proc->RequestField<float>("x");
    auto y = proc->RequestField<std::vector<float>>("y");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx % 5, static_cast<int>(*x) % 5);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx % 5, static_cast<int>(*x) % 5);
 
-      if (idx < 5 || idx >= 10) {
+      if (*idx < 5 || *idx >= 10) {
          EXPECT_TRUE(y.HasValue());
       } else {
          EXPECT_FALSE(y.HasValue());
       }
    }
    EXPECT_EQ(15, proc->GetNEntriesProcessed());
+}
+
+TEST_F(RNTupleChainProcessorTest, AddAllFields)
+{
+   auto proc = RNTupleProcessor::CreateChain(
+      {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[2]}, {fNTupleName, fFileNames[1]}});
+   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/false);
+   auto fieldIdxs = entry->GetFieldIndices();
+
+   EXPECT_EQ(fieldIdxs.size(), 2);
+}
+
+TEST_F(RNTupleChainProcessorTest, AddAllFieldsAndSubfields)
+{
+   auto proc = RNTupleProcessor::CreateChain(
+      {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[2]}, {fNTupleName, fFileNames[1]}});
+   auto entry = ROOT::Experimental::Internal::LoadFullRNTupleProcessorEntry(*proc, /*includeSubfields=*/true);
+   auto fieldIdxs = entry->GetFieldIndices();
+
+   EXPECT_EQ(fieldIdxs.size(), 3);
 }
 
 TEST_F(RNTupleChainProcessorTest, EmptyNTuples)
@@ -161,23 +184,24 @@ TEST_F(RNTupleChainProcessorTest, EmptyNTuples)
 
    auto x = proc->RequestField<float>("x");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(static_cast<float>(idx), *x);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(static_cast<float>(*idx), *x);
    }
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
 
 namespace ROOT::Experimental::Internal {
 struct RNTupleProcessorEntryLoader {
-   static ROOT::NTupleSize_t LoadEntry(RNTupleProcessor &processor, ROOT::NTupleSize_t entryNumber)
+   static ROOT::RResult<void> LoadEntry(RNTupleProcessor &processor, ROOT::NTupleSize_t entryNumber)
    {
       processor.Connect(processor.fEntry->GetFieldIndices(), RNTupleProcessorProvenance(), /*updateFields=*/false);
-      return processor.LoadEntry(entryNumber);
-   }
-
-   static void LoadUnfrozenEntry(RNTupleProcessor &processor, ROOT::NTupleSize_t entryNumber)
-   {
-      processor.LoadEntry(entryNumber);
+      RNTupleProcessor::REntryMapping entryMapping;
+      processor.SetEntryMapping(entryNumber, entryMapping);
+      if (entryMapping.GetEntryNumber() == kInvalidNTupleIndex)
+         return R__FAIL("entry does not exist");
+      processor.LoadEntry(entryMapping);
+      return RResult<void>::Success();
    }
 };
 } // namespace ROOT::Experimental::Internal
@@ -202,7 +226,8 @@ TEST_F(RNTupleChainProcessorTest, LoadRandomEntry)
    RNTupleProcessorEntryLoader::LoadEntry(*proc, 2);
    EXPECT_EQ(2.f, *x);
 
-   EXPECT_EQ(ROOT::kInvalidNTupleIndex, RNTupleProcessorEntryLoader::LoadEntry(*proc, 10));
+   auto res = RNTupleProcessorEntryLoader::LoadEntry(*proc, 10);
+   EXPECT_FALSE(res);
 }
 
 TEST_F(RNTupleChainProcessorTest, TMemFile)
@@ -225,9 +250,10 @@ TEST_F(RNTupleChainProcessorTest, TMemFile)
 
    auto x = proc->RequestField<float>("x");
 
-   for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
-      EXPECT_EQ(static_cast<float>(idx), *x);
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(static_cast<float>(*idx), *x);
    }
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
@@ -253,4 +279,38 @@ TEST_F(RNTupleChainProcessorTest, PrintStructure)
                            "| test_ntuple_chain_proces... |\n"
                            "+-----------------------------+\n";
    EXPECT_EQ(exp, os.str());
+}
+
+TEST_F(RNTupleChainProcessorTest, OpenFileLimit)
+{
+   // Assuming the open file limit is 1024, this should exceed that. Only one RNTuple page source at the should be
+   // attached, so this should not be an issue.
+   std::vector<RNTupleOpenSpec> chain(2000, {fNTupleName, fFileNames[0]});
+   auto proc = RNTupleProcessor::CreateChain(std::move(chain));
+   auto x = proc->RequestField<float>("x");
+
+   for (const auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(static_cast<float>(*idx % 5), *x);
+   }
+
+   EXPECT_EQ(proc->GetNEntriesProcessed(), 2000 * 5);
+}
+
+TEST_F(RNTupleChainProcessorTest, IterateTwice)
+{
+   auto proc = RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}});
+   auto x = proc->RequestField<float>("x");
+
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(static_cast<float>(*idx), *x);
+   }
+   EXPECT_EQ(10, proc->GetNEntriesProcessed());
+
+   for (auto &idx : *proc) {
+      proc->LoadEntry(idx);
+      EXPECT_EQ(static_cast<float>(*idx), *x);
+   }
+   EXPECT_EQ(20, proc->GetNEntriesProcessed());
 }

@@ -51,7 +51,7 @@ Derived classes decide on the counter type and implement printing of the value.
 class RNTuplePerfCounter {
 private:
    /// Symbol to split name, unit, description, and value when printing
-   static constexpr char kFieldSeperator = '|';
+   static constexpr char kFieldSeparator = '|';
 
    std::string fName;
    std::string fUnit;
@@ -290,7 +290,7 @@ on construction, and any counter added afterwards through MakeCounter() is enabl
 class RNTupleMetrics {
 private:
    /// Symbol to split metrics name from counter / sub metrics name
-   static constexpr char kNamespaceSeperator = '.';
+   static constexpr char kNamespaceSeparator = '.';
 
    std::vector<std::unique_ptr<RNTuplePerfCounter>> fCounters;
    std::vector<RNTupleMetrics *> fObservedMetrics;

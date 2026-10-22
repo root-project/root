@@ -556,8 +556,7 @@ namespace cling {
 
   llvm::Module* IncrementalParser::StartModule() {
     return m_Interpreter->withLLVMContextDo([&](llvm::LLVMContext* Ctx) {
-      return getCodeGenerator()->StartModule(makeModuleName(), *Ctx,
-                                             getCI()->getCodeGenOpts());
+      return getCodeGenerator()->StartModule(makeModuleName(), *Ctx);
     });
   }
 
@@ -682,6 +681,8 @@ namespace cling {
           // Interpreter::unload
           //   IncrementalParser::deregisterTransaction
           //     TransactionPool::releaseTransaction
+          PRT.setPointer(nullptr);
+          PRT.setInt(kFailed);
           m_Interpreter->unload(*T);
           return;
         }

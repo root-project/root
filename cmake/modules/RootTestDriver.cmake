@@ -148,6 +148,15 @@ if(CMD)
 
   if(IN)
     set(_input INPUT_FILE ${IN})
+  elseif(UNIX)
+    # Don't let the test inherit the terminal that ctest might run in as
+    # stdin. Tests are wrapped in coreutils timeout, which moves them to a
+    # background process group, so any terminal access (like the tcsetattr()
+    # in the pdb.Pdb constructor since Python 3.15, which doctest triggers)
+    # would stop them with SIGTTOU until the test times out.
+    set(_input INPUT_FILE /dev/null)
+  else()
+    set(_input INPUT_FILE NUL)
   endif()
 
   if(OUT)

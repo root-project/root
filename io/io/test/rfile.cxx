@@ -69,11 +69,38 @@ TEST(RFile, Open)
    EXPECT_FALSE(file->Get<TH1F>("hist"));
    EXPECT_TRUE(file->Get<TH1>("hist"));
 
-   // We do NOT want to globally register RFiles ever.
-   EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 0);
+   std::string foo = "foo";
+   EXPECT_THROW(file->Put("foo", foo), ROOT::RException);
+
+   EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 1);
+}
+
+TEST(RFile, OpenWithoutGlobalRegistration)
+{
+   FileRaii fileGuard("test_rfile_read.root");
+
+   // Create a root file to open
+   {
+      auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      TH1D hist("hist", "", 100, -10, 10);
+      hist.FillRandom("gaus", 1000);
+      tfile->WriteObject(&hist, "hist");
+   }
+
+   auto openOpts = RFile::ROpenOptions();
+   openOpts.fEnableBrowsability = false;
+   auto file = RFile::Open(fileGuard.GetPath(), openOpts);
+   auto hist = file->Get<TH1D>("hist");
+   EXPECT_TRUE(hist);
+
+   EXPECT_FALSE(file->Get<TH1D>("inexistent"));
+   EXPECT_FALSE(file->Get<TH1F>("hist"));
+   EXPECT_TRUE(file->Get<TH1>("hist"));
 
    std::string foo = "foo";
    EXPECT_THROW(file->Put("foo", foo), ROOT::RException);
+
+   EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 0);
 }
 
 TEST(RFile, OpenInexistent)
@@ -118,6 +145,22 @@ TEST(RFile, OpenForWriting)
    hist->FillRandom("gaus", 1000);
 
    auto file = RFile::Recreate(fileGuard.GetPath());
+   file->Put("hist", *hist);
+   EXPECT_TRUE(file->Get<TH1D>("hist"));
+
+   EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 1);
+}
+
+TEST(RFile, OpenForWritingWithoutGlobalRegistration)
+{
+   FileRaii fileGuard("test_rfile_write.root");
+
+   auto hist = std::make_unique<TH1D>("hist", "", 100, -10, 10);
+   hist->FillRandom("gaus", 1000);
+
+   auto rOpts = RFile::RRecreateOptions();
+   rOpts.fEnableBrowsability = false;
+   auto file = RFile::Recreate(fileGuard.GetPath(), rOpts);
    file->Put("hist", *hist);
    EXPECT_TRUE(file->Get<TH1D>("hist"));
 
@@ -218,7 +261,29 @@ TEST(RFile, OpenForUpdating)
       file->Put("hist2", *hist2);
    }
    EXPECT_TRUE(file->Get<TH1D>("hist2"));
+   EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 1);
+}
 
+TEST(RFile, OpenForUpdatingWithoutGlobalRegistration)
+{
+   FileRaii fileGuard("test_rfile_update.root");
+
+   {
+      TH1D hist("hist", "", 100, -10, 10);
+      hist.FillRandom("gaus", 1000);
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      file->Put("hist", hist);
+   }
+
+   auto uOpts = RFile::RUpdateOptions();
+   uOpts.fEnableBrowsability = false;
+   auto file = RFile::Update(fileGuard.GetPath(), uOpts);
+   EXPECT_TRUE(file->Get<TH1D>("hist"));
+   {
+      auto hist2 = std::make_unique<TH1D>("hist2", "a different hist", 10, -1, 1);
+      file->Put("hist2", *hist2);
+   }
+   EXPECT_TRUE(file->Get<TH1D>("hist2"));
    EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 0);
 }
 

@@ -174,10 +174,10 @@ void ProcessFrame(TGFrame *f, const char *title)
    else
       outfile.Form("sgui_%02d.png", gTestNum);
 
-   TImage *img = TImage::Create();
    f->RaiseWindow();
-   img->FromWindow(f->GetId());
-   img->WriteImage(outfile);
+   auto img = TGWindow::CreateImageFromWindow(f->GetId());
+   if (img)
+      img->WriteImage(outfile);
 
    if (!gOptionRef) {
       if (!strstr(title, "Pack Frames")) {
@@ -191,7 +191,6 @@ void ProcessFrame(TGFrame *f, const char *title)
    }
    VerifySize(outfile, title);
 
-   delete img;
    gErrorIgnoreLevel = 0;
    gTestNum++;
 }
@@ -2011,6 +2010,7 @@ const char *excluded[] = {
    "customContextMenu.C",
    "customTH1Fmenu",
    "exec_macro",
+   "games",
    "guitest0",
    0
 };

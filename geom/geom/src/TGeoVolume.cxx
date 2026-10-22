@@ -1547,12 +1547,10 @@ void TGeoVolume::Raytrace(Bool_t flag)
       gGeoManager = fGeoManager;
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
    Bool_t drawn = (painter->GetDrawnVolume() == this) ? kTRUE : kFALSE;
-   if (!drawn) {
+   if (!drawn)
       painter->DrawVolume(this, "");
-      TGeoAtt::SetVisRaytrace(flag);
-      painter->ModifiedPad();
-      return;
-   }
+   if (!flag)
+      painter->Raytrace("cleanup");
    TGeoAtt::SetVisRaytrace(flag);
    painter->ModifiedPad();
 }

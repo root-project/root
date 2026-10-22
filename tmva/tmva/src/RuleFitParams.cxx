@@ -1505,7 +1505,7 @@ void TMVA::RuleFitParams::CalcTstAverageResponse()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// calculate the average response - TODO : rewrite bad dependancy on EvaluateAverage() !
+/// calculate the average response - TODO : rewrite bad dependency on EvaluateAverage() !
 ///
 /// note that 0 offset is used
 

@@ -185,6 +185,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
   DEPENDENCIES
     Core
   LIBRARIES
+    mixmax::mixmax
+    CDT::CDT
     ${MATHCORE_LIBRARIES}
 )
 

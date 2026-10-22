@@ -262,10 +262,18 @@
 
 #pragma extra_include "Rtypes.h";
 #pragma link C++ class TParameter<Bool_t>+;
+#pragma link C++ class TParameter<Char_t>+;
+#pragma link C++ class TParameter<signed char>+;
+#pragma link C++ class TParameter<UChar_t>+;
+#pragma link C++ class TParameter<Short_t>+;
+#pragma link C++ class TParameter<UShort_t>+;
 #pragma link C++ class TParameter<Float_t>+;
 #pragma link C++ class TParameter<Double_t>+;
 #pragma link C++ class TParameter<Int_t>+;
+#pragma link C++ class TParameter<UInt_t>+;
 #pragma link C++ class TParameter<Long_t>+;
+#pragma link C++ class TParameter<ULong_t>+;
 #pragma link C++ class TParameter<Long64_t>+;
+#pragma link C++ class TParameter<ULong64_t>+;
 
 #endif

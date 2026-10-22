@@ -21,7 +21,7 @@
 // For debug tracing
 #include "TClass.h"
 #include "TError.h"
-
+#define ROOT_CsgOps_cxx
 #include "CsgOps.h"
 
 #include <stdexcept>

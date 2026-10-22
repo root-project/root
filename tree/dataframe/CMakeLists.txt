@@ -58,6 +58,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/InterfaceUtils.hxx
     ROOT/RDF/RActionBase.hxx
     ROOT/RDF/RAction.hxx
+    ROOT/RDF/RActionCustomLoader.hxx
     ROOT/RDF/RActionSnapshot.hxx
     ROOT/RDF/RActionImpl.hxx
     ROOT/RDF/RColumnRegister.hxx
@@ -98,10 +99,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RVariationsDescription.hxx
     ROOT/RDF/RVariedAction.hxx
     ROOT/RDF/SnapshotHelpers.hxx
+    ROOT/RDF/CustomLoaderHelpers.hxx
     ROOT/RDF/Utils.hxx
     ROOT/RDF/PyROOTHelpers.hxx
     ROOT/RDF/RDFDescription.hxx
     ROOT/RNTupleDS.hxx
+    ROOT/RNTupleProcessorDS.hxx
     ${RDATAFRAME_EXTRA_HEADERS}
   SOURCES
     src/RActionBase.cxx
@@ -115,6 +118,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDFActionHelpers.cxx
     src/RDFColumnReaderUtils.cxx
     src/RDFColumnRegister.cxx
+    src/RDFCustomLoaderHelpers.cxx
     src/RDFColumnReaderUtils.cxx
     src/RDFDisplay.cxx
     src/RDFGraphUtils.cxx
@@ -144,6 +148,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RTrivialDS.cxx
     src/RDFDescription.cxx
     src/RNTupleDS.cxx
+    src/RNTupleProcessorDS.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
     ${RDATAFRAME_EXTRA_INCLUDES}

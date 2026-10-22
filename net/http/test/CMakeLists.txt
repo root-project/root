@@ -34,7 +34,22 @@ execute_process(
 if(ssl)
   find_program(OPENSSL_EXECUTABLE openssl)
   if(OPENSSL_EXECUTABLE)
-    ROOT_ADD_GTEST(testHttpsServer test_ssl_server.cxx LIBRARIES RHTTP RHTTPSniff Hist)
+    execute_process(
+        COMMAND ${OPENSSL_EXECUTABLE} version
+        OUTPUT_VARIABLE OPENSSL_OUTPUT
+        ERROR_QUIET
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(OPENSSL_OUTPUT MATCHES "OpenSSL ([0-9]+\\.[0-9]+\\.[0-9]+[a-z]*)")
+      set(OPENSSL_VERSION "${CMAKE_MATCH_1}")
+    endif()
+    # openssl 4.0 fails to accept self-signed certificate, to be investigated later
+    if(OPENSSL_VERSION VERSION_GREATER_EQUAL "1.1.0" AND OPENSSL_VERSION VERSION_LESS "4.0.0")
+      message(STATUS "Detect OpenSSL ${OPENSSL_VERSION} for http server tests")
+      ROOT_ADD_GTEST(testHttpsServer test_ssl_server.cxx LIBRARIES RHTTP RHTTPSniff Hist)
+    else()
+      message(STATUS "Detected OpenSSL ${OPENSSL_VERSION} cannot be used for http server tests")
+    endif()
   endif()
 endif()
 

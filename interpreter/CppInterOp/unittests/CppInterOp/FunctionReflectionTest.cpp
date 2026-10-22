@@ -1,8 +1,10 @@
 #include "Utils.h"
 
 #include "CppInterOp/CppInterOp.h"
+#include "../../lib/CppInterOp/Unwrap.h"
 
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/PrettyPrinter.h"
 #include "clang/Basic/Version.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Sema.h"
@@ -10,6 +12,7 @@
 #include <CppInterOp/CppInterOpTypes.h>
 #include <cstdint>
 #include <llvm/ADT/ArrayRef.h>
+#include <llvm/Support/raw_ostream.h>
 
 #include "gtest/gtest.h"
 
@@ -101,7 +104,11 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetClassMethods) {
   std::vector<Cpp::FuncRef> methods3;
   Cpp::GetClassMethods(Decls[4], methods3);
 
-  EXPECT_EQ(methods3.size(), 9);
+  // the parameterless default/copy/move constructors of B, though nominally
+  // inherited by the using declaration, are not exposed: C's own special
+  // members are authoritative (and the call layer refuses to invoke special
+  // members injected by a using declaration)
+  EXPECT_EQ(methods3.size(), 7);
   EXPECT_EQ(get_method_name(methods3[0]), "inline C::C()");
   EXPECT_EQ(get_method_name(methods3[1]), "inline constexpr C::C(const C &)");
   EXPECT_EQ(get_method_name(methods3[2]), "inline constexpr C::C(C &&)");
@@ -109,7 +116,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetClassMethods) {
   EXPECT_EQ(get_method_name(methods3[4]), "inline C &C::operator=(C &&)");
   EXPECT_EQ(get_method_name(methods3[5]), "inline C::~C()");
   EXPECT_EQ(get_method_name(methods3[6]), "inline C::B(int)");
-  EXPECT_EQ(get_method_name(methods3[7]), "inline constexpr C::B(const B &)");
 
   // Should not crash.
   std::vector<Cpp::FuncRef> methods4;
@@ -312,6 +318,43 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   Call.Invoke(&result, {args.data(), /*args_size=*/2}, object);
   EXPECT_EQ(result, (a * 100) + b);
 
+  Cpp::Destruct(object, Decls[1]);
+}
+
+// The wrapper spells the callee's return type. When that spelling runs through
+// a private member template, as RResultPtr<std::vector<T>>::begin() does with
+// RIterationHelper<T, true>::Iterator_t, the wrapper only compiles with access
+// control off, as cppyy-backend's TClingCallFunc always compiled it.
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           FunctionReflection_MakeFunctionCallable_PrivateReturnSpelling) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscripten builds";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    struct Value { int v; };
+    class Holder {
+      template <class V, bool B = true> struct Helper { using Value_t = void; };
+      template <class V> struct Helper<V, true> { using Value_t = V; };
+    public:
+      Helper<Value>::Value_t get() { return Value{42}; }
+    };
+    )";
+  GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
+                      /*interpreter_args=*/{"-include", "new"});
+
+  Cpp::JitCall Call = Cpp::MakeFunctionCallable(
+      Cpp::ConstFuncRef{Cpp::GetNamed("get", Decls[1]).data});
+  ASSERT_EQ(Call.getKind(), Cpp::JitCall::kGenericCall);
+
+  Cpp::ObjectRef object = Cpp::Construct(Decls[1]);
+  ASSERT_TRUE(object);
+  int result = 0;
+  Call.Invoke(&result, {}, object.data);
+  EXPECT_EQ(result, 42);
   Cpp::Destruct(object, Decls[1]);
 }
 
@@ -840,11 +883,58 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionReturnType) {
       "double");
 }
 
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           FunctionReflection_GetFunctionReturnTypeUnsatisfiedConstraint) {
+  TestFixture::CreateInterpreter({"-std=c++20"});
+  Cpp::Declare(R"(
+    template <typename T> struct ConstrainedAuto {
+      T m_value;
+      auto size() const requires requires { m_value.size(); } {
+        return m_value.size();
+      }
+      decltype(auto) key() const requires requires { m_value.key(); } {
+        return m_value.key();
+      }
+    };
+    struct WithKey { int key() const { return 1; } };
+  )");
+
+  ASTContext& C = Interp->getCI()->getASTContext();
+  std::vector<Cpp::TemplateArgInfo> int_arg = {C.IntTy.getAsOpaquePtr()};
+  Cpp::DeclRef inst =
+      Cpp::InstantiateTemplate(Cpp::GetNamed("ConstrainedAuto"), int_arg);
+  ASSERT_TRUE(inst);
+
+  testing::internal::CaptureStderr();
+  Cpp::DeclRef size = Cpp::GetNamed("size", inst);
+  Cpp::DeclRef key = Cpp::GetNamed("key", inst);
+  ASSERT_TRUE(size);
+  ASSERT_TRUE(key);
+  Cpp::GetFunctionReturnType(Cpp::FuncRef{size.data});
+  Cpp::GetFunctionReturnType(Cpp::FuncRef{key.data});
+  std::string err = testing::internal::GetCapturedStderr();
+  EXPECT_EQ(err, "");
+  EXPECT_FALSE(Cpp::unwrap<Decl>(size)->isInvalidDecl());
+  EXPECT_FALSE(Cpp::unwrap<Decl>(key)->isInvalidDecl());
+
+  std::vector<Cpp::TemplateArgInfo> with_key_arg = {
+      Cpp::GetTypeFromScope(Cpp::GetNamed("WithKey")).data};
+  Cpp::DeclRef inst2 =
+      Cpp::InstantiateTemplate(Cpp::GetNamed("ConstrainedAuto"), with_key_arg);
+  ASSERT_TRUE(inst2);
+  EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetFunctionReturnType(
+                Cpp::FuncRef{Cpp::GetNamed("key", inst2).data})),
+            "int");
+}
+
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsAllocator) {
   std::vector<Decl*> Decls;
   std::string code = R"(
     class Klass{
-      int val;
+      int val = 0;
+      int* __attribute__((annotate("cppAllocNone"))) getValAdress(){
+        return &val;
+      }
     };
     __attribute__((ownership_returns(malloc)))
     Klass* Allocator(){
@@ -856,25 +946,75 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsAllocator) {
       return obj;
     }
     void foo();
-    )";
-  GetAllTopLevelDecls(code, Decls, true);
-  EXPECT_TRUE(Cpp::IsAllocator(Decls[1]));
-  EXPECT_TRUE(Cpp::IsAllocator(Decls[2]));
-  EXPECT_FALSE(Cpp::IsAllocator(Decls[3]));
-  // Builtin check
-  code = R"(
-  //There is nothing lstdlib.h is included at args
-  )";
-  TestFixture::CreateInterpreter({"-include", "stdlib.h"});
-  Interp->process(code);
-  auto mallocDecl = Cpp::GetNamed("malloc");
-  EXPECT_TRUE(Cpp::IsAllocator(Cpp::ConstFuncRef{mallocDecl.data}));
-  Cpp::DeleteInterpreter();
 
+    void __attribute__((ownership_takes(malloc, 1))) Deallocator(void* p);
+    void* __attribute__((cf_returns_retained)) CFAllocFunc();
+
+    int* __attribute__((annotate("cppAllocNone"))) NoneFunc();
+    int* __attribute__((annotate("cppAllocNew"))) NewFunc();
+    int* __attribute__((annotate("cppAllocNewArr"))) NewArrFunc();
+    int* __attribute__((annotate("cppAllocMalloc"))) MallocFunc();
+    int* __attribute__((annotate("cppAllocOperatorNew"))) OpNewFunc();
+    int* __attribute__((annotate("cppAllocOperatorNewArr"))) OpNewArrFunc();
+    int* __attribute__((annotate("unrelatedAttr"))) UnrelatedFunc();
+    __declspec(restrict) int* DeclspecRestrictFunc();
+    template <typename T>
+    __attribute__((annotate("cppAllocNew"))) T* TemplatedFunc(){
+      return new T;
+    }
+    template <> int* TemplatedFunc();
+    template char* TemplatedFunc<char>();
+  )";
+  GetAllTopLevelDecls(code, Decls, true,
+                      {"-std=c++17", "-include", "stdlib.h", "-fdeclspec"});
+#define TESTIA(N, EXP)                                                         \
+  EXPECT_EQ(Cpp::IsAllocator(Cpp::ConstFuncRef { Cpp::GetNamed(#N).data }), EXP)
+
+  TESTIA(malloc, Cpp::AllocType::Malloc);
+  TESTIA(Allocator, Cpp::AllocType::Malloc);
+  TESTIA(Allocator2, Cpp::AllocType::Malloc);
+  TESTIA(foo, Cpp::AllocType::Unknown);
+  TESTIA(Deallocator, Cpp::AllocType::Unknown);
+  TESTIA(CFAllocFunc, Cpp::AllocType::Malloc);
+  TESTIA(NoneFunc, Cpp::AllocType::None);
+  TESTIA(NewFunc, Cpp::AllocType::New);
+  TESTIA(NewArrFunc, Cpp::AllocType::NewArr);
+  TESTIA(MallocFunc, Cpp::AllocType::Malloc);
+  TESTIA(OpNewFunc, Cpp::AllocType::OperatorNew);
+  TESTIA(OpNewArrFunc, Cpp::AllocType::OperatorNewArr);
+  TESTIA(UnrelatedFunc, Cpp::AllocType::Unknown);
+  TESTIA(DeclspecRestrictFunc, Cpp::AllocType::Unknown);
+
+  EXPECT_EQ(Cpp::IsAllocator(Cpp::ConstFuncRef{Decls[14]}),
+            Cpp::AllocType::New);
+  EXPECT_EQ(Cpp::IsAllocator(Cpp::ConstFuncRef{Decls[15]}),
+            Cpp::AllocType::New);
+  ASTContext& C = Interp->getCI()->getASTContext();
+  std::vector<Cpp::TemplateArgInfo> charArg = {C.CharTy.getAsOpaquePtr()};
+  EXPECT_EQ(Cpp::IsAllocator(Cpp::ConstFuncRef{
+                Cpp::InstantiateTemplate(Decls[14], charArg).data}),
+            Cpp::AllocType::New);
+
+  EXPECT_EQ(Cpp::IsAllocator(Cpp::ConstFuncRef{
+                Cpp::GetNamed("getValAdress", Cpp::GetNamed("Klass")).data}),
+            Cpp::AllocType::None);
+
+  //! Fn coverage
+  EXPECT_EQ(Cpp::IsAllocator(Cpp::ConstFuncRef{nullptr}),
+            Cpp::AllocType::Unknown);
+  // casting coverage
+  EXPECT_EQ(Cpp::IsAllocator(Cpp::ConstFuncRef{Cpp::GetNamed("Klass").data}),
+            Cpp::AllocType::Unknown);
+
+  Cpp::DeleteInterpreter();
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
+  std::string include_flag;
   // APINotes check
-#if !defined(CPPINTEROP_USE_CLING) && !defined(__EMSCRIPTEN__)
-  std::string include_flag =
-      "-I" + std::string(CPPINTEROP_DIR) + "unittests/CppInterOp/APINotes";
+#ifndef CPPINTEROP_USE_CLING
+  include_flag =
+      "-I" + std::string(CPPINTEROP_SRC_DIR) + "/unittests/CppInterOp/APINotes";
   std::vector<const char*> interpreter_args = {
       "-fmodules", "-fimplicit-module-maps", "-fapinotes-modules",
       include_flag.c_str()};
@@ -883,13 +1023,48 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsAllocator) {
   #include "TestHeader.h"
   )";
   Interp->process(code);
-  auto testAllocDecl = Cpp::GetNamed("testAlloc");
-  EXPECT_TRUE(Cpp::IsAllocator(Cpp::ConstFuncRef{testAllocDecl.data}));
 
-  auto testNotAllocDecl = Cpp::GetNamed("testNotAlloc");
-  EXPECT_FALSE(Cpp::IsAllocator(Cpp::ConstFuncRef{testNotAllocDecl.data}));
+  TESTIA(testAlloc, Cpp::AllocType::Malloc);
+  TESTIA(testNotAlloc, Cpp::AllocType::Unknown);
+  TESTIA(testMalloc, Cpp::AllocType::Malloc);
+  TESTIA(testNew, Cpp::AllocType::New);
+  TESTIA(testNewArr, Cpp::AllocType::NewArr);
+  TESTIA(testOperatorNew, Cpp::AllocType::OperatorNew);
+  TESTIA(testOperatorNewArr, Cpp::AllocType::OperatorNewArr);
+  TESTIA(testNone, Cpp::AllocType::None);
+  TESTIA(testWeirdAttr, Cpp::AllocType::Unknown);
+
   Cpp::DeleteInterpreter();
 #endif
+#undef TESTIA
+  include_flag =
+      "-I" + std::string(CPPINTEROP_SRC_DIR) + "/unittests/CppInterOp/APINotes";
+  Decls.clear();
+  code = R"(
+    void* mergeFunc() {
+      return malloc(sizeof(int));
+    }
+  )";
+  GetAllTopLevelDecls(code, Decls, true,
+                      {"-std=c++17", include_flag.c_str(), "-include",
+                       "stdlib.h", "-include", "TestAttributeMerge.h"});
+  EXPECT_EQ(Cpp::IsAllocator(Decls[0]), Cpp::AllocType::Malloc);
+
+  Decls.clear();
+  code = R"(
+    int* overloadFunc(){
+      return new int;
+    }
+
+    int* overloadFunc(int n){
+      return new int(n);
+    }
+  )";
+  GetAllTopLevelDecls(
+      code, Decls, true,
+      {"-std=c++17", include_flag.c_str(), "-include", "TestAttributeMerge.h"});
+  EXPECT_EQ(Cpp::IsAllocator(Decls[0]), Cpp::AllocType::New);
+  EXPECT_EQ(Cpp::IsAllocator(Decls[1]), Cpp::AllocType::New);
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsDeallocator) {
@@ -1092,6 +1267,82 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_FunctionTypes) {
   EXPECT_EQ(Cpp::GetTypeAsString(sig[2]), "double");
 
   EXPECT_TRUE(Cpp::IsSameType(typ1, typ2));
+}
+TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_OwnershipAttributes) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    class Klass {
+      int val;
+    };
+
+    __attribute__((ownership_returns(malloc)))
+    void* alloc_no_size(unsigned long sz);
+
+    __attribute__((ownership_returns(malloc, 1)))
+    void* alloc_sized(unsigned long sz);
+
+    __attribute__((ownership_returns(malloc, 2)))
+    void* alloc_sized2(void* hint, unsigned long sz);
+
+    __attribute__((ownership_takes(malloc, 1)))
+    void dealloc(void* p);
+
+    __attribute__((ownership_holds(malloc, 1, 2)))
+    void hold_two(void* p, void* q);
+
+    __attribute__((ownership_returns(malloc)))
+    __attribute__((ownership_takes(malloc, 1)))
+    void* realloc_like(void* p, unsigned long sz);
+
+    void plain(void* p);
+
+    template <typename T>
+    __attribute__((ownership_returns(malloc, 2)))
+    __attribute__((ownership_takes(malloc, 1)))
+    T* templated_alloc(void* p, unsigned long sz);
+    )";
+  GetAllTopLevelDecls(code, Decls, true);
+
+  Cpp::ConstFuncRef Klass{Decls[0]};
+  Cpp::ConstFuncRef AllocNoSize{Decls[1]};
+  Cpp::ConstFuncRef AllocSized{Decls[2]};
+  Cpp::ConstFuncRef AllocSized2{Decls[3]};
+  Cpp::ConstFuncRef Dealloc{Decls[4]};
+  Cpp::ConstFuncRef HoldTwo{Decls[5]};
+  Cpp::ConstFuncRef ReallocLike{Decls[6]};
+  Cpp::ConstFuncRef Plain{Decls[7]};
+  Cpp::ConstFuncRef TemplatedAlloc{Decls[8]};
+
+  using OB = Cpp::OwnershipBehaviour;
+  EXPECT_EQ(Cpp::GetOwnershipBehaviour(AllocNoSize), OB::OwnershipReturns);
+  EXPECT_EQ(Cpp::GetOwnershipBehaviour(Dealloc), OB::OwnershipTakes);
+  EXPECT_EQ(Cpp::GetOwnershipBehaviour(HoldTwo), OB::OwnershipHolds);
+  EXPECT_EQ(Cpp::GetOwnershipBehaviour(ReallocLike),
+            OB::OwnershipReturns | OB::OwnershipTakes);
+  EXPECT_EQ(Cpp::GetOwnershipBehaviour(Plain), OB::Unknown);
+  EXPECT_EQ(Cpp::GetOwnershipBehaviour(Klass), OB::Unknown);
+  EXPECT_EQ(Cpp::GetOwnershipBehaviour({nullptr}), OB::Unknown);
+
+  EXPECT_EQ(Cpp::GetOwnershipBehaviour(TemplatedAlloc),
+            OB::OwnershipReturns | OB::OwnershipTakes);
+  EXPECT_EQ(Cpp::GetDeallocationIndexes(TemplatedAlloc), uint64_t{0b1});
+  EXPECT_EQ(Cpp::GetAllocationSizeParamIndex(TemplatedAlloc), 1);
+
+  EXPECT_EQ(Cpp::GetDeallocationIndexes(Dealloc), uint64_t{0b1});
+  EXPECT_EQ(Cpp::GetDeallocationIndexes(HoldTwo), uint64_t{0b11});
+  EXPECT_EQ(Cpp::GetDeallocationIndexes(ReallocLike), uint64_t{0b1});
+  EXPECT_EQ(Cpp::GetDeallocationIndexes(AllocNoSize), uint64_t{0});
+  EXPECT_EQ(Cpp::GetDeallocationIndexes(Plain), uint64_t{0});
+  EXPECT_EQ(Cpp::GetDeallocationIndexes(Klass), uint64_t{0});
+  EXPECT_EQ(Cpp::GetDeallocationIndexes({nullptr}), uint64_t{0});
+
+  EXPECT_EQ(Cpp::GetAllocationSizeParamIndex(AllocSized), 0);
+  EXPECT_EQ(Cpp::GetAllocationSizeParamIndex(AllocSized2), 1);
+  EXPECT_EQ(Cpp::GetAllocationSizeParamIndex(AllocNoSize), -1);
+  EXPECT_EQ(Cpp::GetAllocationSizeParamIndex(Dealloc), -1);
+  EXPECT_EQ(Cpp::GetAllocationSizeParamIndex(Plain), -1);
+  EXPECT_EQ(Cpp::GetAllocationSizeParamIndex(Klass), -1);
+  EXPECT_EQ(Cpp::GetAllocationSizeParamIndex({nullptr}), -1);
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetDeallocType) {
@@ -1749,10 +2000,24 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetAllocType) {
       a = new int;
       return a;
     }
-    )";
-  TestFixture::CreateInterpreter({"-std=c++17"});
-  Interp->declare(code);
 
+    //Not analyzed, attribute is merged in header
+    void* func71_helper();
+
+    void* func71(){
+      return func71_helper();
+    }
+    )";
+  std::string include_flag =
+      "-I" + std::string(CPPINTEROP_SRC_DIR) + "/unittests/CppInterOp/APINotes";
+#ifndef EMSCRIPTEN
+  TestFixture::CreateInterpreter(
+      {"-std=c++17", include_flag.c_str(), "-include", "TestAttributeMerge.h"});
+#else
+  TestFixture::CreateInterpreter({"-std=c++17"});
+#endif
+
+  Interp->declare(code);
 #define TESTAC(N, EXP)                                                         \
   EXPECT_EQ(                                                                   \
       Cpp::GetAllocType(Cpp::ConstFuncRef { Cpp::GetNamed("func" #N).data }),  \
@@ -1819,10 +2084,14 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetAllocType) {
   TESTAC(58, OperatorNew);
   TESTAC(59, Malloc);
   TESTAC(70, Unknown);
+#ifndef EMSCRIPTEN
+  TESTAC(71, Malloc);
+#endif
 #undef TESTAC
 
   Cpp::DeleteInterpreter();
 }
+
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionSignature) {
   std::vector<Decl*> Decls;
   std::string code = R"(
@@ -2509,6 +2778,40 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 
   EXPECT_EQ(Cpp::GetFunctionSignature(func4),
             "template<> A<int> A<int>::operator-<int>(A<int> rhs)");
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           FunctionReflection_TemplatedOperatorArrow) {
+  // Model of MSVC's std::shared_ptr::operator->, which is a member template
+  // with a defaulted template parameter (SFINAE-constrained on the element
+  // type). Smart-pointer detection has to instantiate it with no call
+  // arguments to determine the pointee type.
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    struct TheData { int fData; };
+    template <class T> struct SmartLike {
+      T* ptr;
+      template <class U = T> U* operator->() { return ptr; }
+    };
+    SmartLike<TheData> gSmart{nullptr};
+  )";
+  GetAllTopLevelDecls(code, Decls);
+
+  Cpp::DeclRef Scope =
+      Cpp::GetScopeFromType(Cpp::GetVariableType(Cpp::GetNamed("gSmart")));
+  ASSERT_TRUE(Scope.data);
+
+  std::vector<Cpp::FuncRef> ops;
+  Cpp::GetOperator(Scope, Cpp::Operator::OP_Arrow, ops);
+  ASSERT_EQ(ops.size(), 1);
+  EXPECT_TRUE(Cpp::IsTemplatedFunction(ops[0]));
+
+  Cpp::FuncRef Deref = Cpp::BestOverloadFunctionMatch(ops, {}, {});
+  ASSERT_TRUE(Deref);
+  // The match is an instantiation with the defaulted template parameter, not
+  // the template pattern itself: its return type is concrete.
+  EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetFunctionReturnType(Deref)),
+            "TheData *");
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE,
@@ -3588,10 +3891,11 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
            FunctionReflection_WrapAliasTemplateReturnType) {
   // Regression test for cppyy issue
   // https://github.com/compiler-research/cppyy/issues/218 (original reproducer:
-  // `std::make_any<...>`, return type `std::enable_if_t<is_constructible_v<...>,
-  // std::any>`). Building a wrapper for a function template whose return type is
-  // a type-alias-template specialisation used to fail to compile; the snippet
-  // below is a stdlib-free distillation. It needs three ingredients: an alias
+  // `std::make_any<...>`, return type
+  // `std::enable_if_t<is_constructible_v<...>, std::any>`). Building a wrapper
+  // for a function template whose return type is a type-alias-template
+  // specialisation used to fail to compile; the snippet below is a stdlib-free
+  // distillation. It needs three ingredients: an alias
   // (`enable_if_t`) whose sugar carries a non-type argument that prints as an
   // *expression* (`trait_v<int>`, which FullyQualifiedName does not qualify); a
   // predicate in a namespace, so unqualified `trait_v` does not resolve in the
@@ -3721,10 +4025,10 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionArgDefault) {
   GetAllTopLevelDecls(code, Decls);
 
   EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[0], 0), "");
-  EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[0], 1), "4.");
+  EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[0], 1), "4.0");
   EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[0], 2), "\"default\"");
   EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[0], 3), "\'c\'");
-  EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[1], 0), "0.");
+  EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[1], 0), "0.0");
   EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[1], 1), "3.123");
   EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[1], 2), "34126");
 
@@ -3739,7 +4043,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionArgDefault) {
   EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[4], 0), "");
   EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[4], 1), "");
   EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[4], 2), "\'a\'");
-  EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[4], 3), "0.");
+  EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[4], 3), "0.0");
 
   ASTContext& C = Interp->getCI()->getASTContext();
   std::vector<Cpp::TemplateArgInfo> template_args = {C.IntTy.getAsOpaquePtr()};
@@ -3752,6 +4056,71 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionArgDefault) {
   Cpp::FuncRef fn = fns[0];
   EXPECT_EQ(Cpp::GetFunctionArgDefault(fn, 0), "");
   EXPECT_EQ(Cpp::GetFunctionArgDefault(fn, 1), "S()");
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           FunctionReflection_GetFunctionArgDefaultSymbolic) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    constexpr double kDefaultRatio = 0.5;
+    double default_ratio();
+    double scaled(double ratio = kDefaultRatio);
+    double rescaled(double ratio = default_ratio());
+    double inverted(double ratio = 2.0 / kDefaultRatio);
+    double pi_ish(double p = 3.14);
+    float take_float(float a = 5.f);
+    long take_long(long a = -5l);
+    unsigned long take_ulong(unsigned long a = 5ul);
+    int take_hex(int a = 0x1f);
+    )";
+
+  GetAllTopLevelDecls(code, Decls);
+
+  // A floating-typed default need not be a numeric literal. Formatting a
+  // symbolic default must not crash (the removed std::stod normalization
+  // terminated the exception-free build) and must render it as written.
+  EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[2], 0), "kDefaultRatio");
+  EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[3], 0), "default_ratio()");
+  EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[4], 0), "2.0 / kDefaultRatio");
+  // Literals render exactly as written, not at representation precision.
+  EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[5], 0), "3.14");
+  // Numeric-literal suffixes render uppercase: cppyy strips only that form
+  // before it evaluates the default in Python ("5.f" is a Python syntax
+  // error, "5.F" strips to "5."). Hex digits are not suffixes.
+  EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[6], 0), "5.F");
+  EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[7], 0), "-5L");
+  EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[8], 0), "5UL");
+  EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[9], 0), "0x1f");
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           FunctionReflection_FloatingDefaultPrinterCanary) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "The wasm test binary does not link the raw clang printer "
+                  "symbols (printPretty, getDefaultArg) this test needs.";
+#else
+  std::vector<Decl*> Decls;
+  GetAllTopLevelDecls("void canary(double x = 3.14);", Decls);
+
+  // Before clang 24 the raw printer expands floats to maximum precision;
+  // UDL and invalid-range defaults hit it. llvm/llvm-project#218471 fixes
+  // the printer for clang 24. Each branch failing is a signal: see its
+  // message.
+  const auto* PD = cast<FunctionDecl>(Decls[0])->getParamDecl(0);
+  std::string Raw;
+  llvm::raw_string_ostream OS(Raw);
+  PD->getDefaultArg()->printPretty(OS, nullptr, PrintingPolicy(LangOptions()));
+#if CLANG_VERSION_MAJOR < 24
+  EXPECT_EQ(Raw, "3.1400000000000001")
+      << "clang's pretty-printer round-trips floating literals earlier than "
+         "expected (llvm/llvm-project#218471 cherry-picked?). Re-check UDL "
+         "and invalid-range defaults, then move this guard.";
+#else
+  EXPECT_EQ(Raw, "3.14")
+      << "llvm/llvm-project#218471 did not land in clang 24. Raise the "
+         "version in this guard.";
+#endif
+#endif // EMSCRIPTEN
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_Construct) {
@@ -5052,4 +5421,239 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_MoveOnlyByValueArgs) {
   EXPECT_EQ(Cpp::MakeFunctionCallable(Decls[5]).getKind(),
             Cpp::JitCall::kUnknown);
   EXPECT_FALSE(testing::internal::GetCapturedStderr().empty());
+}
+
+// A weak (linkonce_odr) thread_local with a non-zero initializer, materialized
+// in two MaterializationUnits, drives llvm::orc::IRMaterializationUnit::discard
+// over the duplicate. On the buggy LLVM path that dereferences end(): the
+// emulated-TLS branch of the IRMaterializationUnit constructor registers
+// __emutls_t.<var> in SymbolFlags but not SymbolToDefinition, so discarding the
+// duplicate crashes (assertion in +Asserts builds, heap corruption otherwise).
+//
+// Shape: an `inline` worker() odr-uses HeavyThing<1>::tls (a non-zero-init
+// thread_local template static). Two functions are process()'d into separate
+// TUs/modules and each call worker(), so each module re-emits worker() and the
+// tls as linkonce_odr; defining the second module runs discard over the
+// duplicate emulated-TLS symbol.
+//
+// This always passes: on LLVM < 24 the CppInterOp-side workaround
+// (compat::dedupeWeakEmulatedTLS) defuses the crash, and on LLVM >= 24 the
+// upstream fix (llvm/llvm-project#208413) does. It guards against regressions
+// in either. Kept deliberately minimal and heap-free so it is portable and
+// clean under ASan/LSan.
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           FunctionReflection_DiscardDuplicateWeakEmulatedTLS) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscripten builds";
+#endif
+#ifdef CPPINTEROP_USE_CLING
+  GTEST_SKIP() << "dedupeWeakEmulatedTLS is wired into the clang-repl "
+                  "CppInternal::Interpreter path, not cling's interpreter";
+#endif
+#if defined(_WIN32) || defined(__APPLE__)
+  GTEST_SKIP() << "weak thread_local in JITted code fails to resolve "
+                  "__emutls_get_address on COFF/Mach-O; the discard "
+                  "workaround targets ELF emulated TLS";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test targets the in-process JIT discard path";
+
+  std::vector<Decl*> Decls;
+  std::string header = R"(
+    template <int Tag> struct HeavyThing { static thread_local int tls; };
+    template <int Tag> thread_local int HeavyThing<Tag>::tls = Tag + 1;
+    inline int worker() { return HeavyThing<1>::tls; }
+  )";
+  // -include new: MakeFunctionCallable's wrapper uses placement new.
+  GetAllTopLevelDecls(header, Decls, /*filter_implicitGenerated=*/false,
+                      /*interpreter_args=*/{"-std=c++23", "-include", "new"});
+
+  // Two distinct modules, each odr-using worker() -> each re-emits worker() and
+  // the non-zero-init thread_local as linkonce_odr.
+  Interp->process("int callA() { return worker(); }");
+  Interp->process("int callB() { return worker(); }");
+
+  Cpp::DeclRef A = Cpp::GetNamed("callA");
+  Cpp::DeclRef B = Cpp::GetNamed("callB");
+  ASSERT_TRUE(A);
+  ASSERT_TRUE(B);
+
+  Cpp::JitCall JA = Cpp::MakeFunctionCallable(Cpp::FuncRef{A.data});
+  Cpp::JitCall JB = Cpp::MakeFunctionCallable(Cpp::FuncRef{B.data});
+  ASSERT_EQ(JA.getKind(), Cpp::JitCall::kGenericCall);
+  ASSERT_EQ(JB.getKind(), Cpp::JitCall::kGenericCall);
+
+  int ra = 0;
+  int rb = 0;
+  JA.Invoke(&ra, {}); // materialize module A's copy of the weak set
+  JB.Invoke(&rb, {}); // ... and module B's; discard ran over the duplicate
+
+  EXPECT_EQ(ra, 2); // HeavyThing<1>::tls == Tag + 1
+  EXPECT_EQ(rb, 2);
+}
+
+// Companion to the above for a *zero-init* weak thread_local: one whose C++
+// initializer is non-trivial (a ctor that runs in a __tls_init function), so
+// its IR initializer is zeroinitializer. The earlier "non-zero initializer
+// only" filter skipped these, yet they still emit the emulated-TLS companion
+// that trips discard -- so dedupeWeakEmulatedTLS must cover every weak
+// thread_local regardless of initializer. Same two-module materialization as
+// above.
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           FunctionReflection_DiscardDuplicateWeakEmulatedTLSZeroInit) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscripten builds";
+#endif
+#ifdef CPPINTEROP_USE_CLING
+  GTEST_SKIP() << "dedupeWeakEmulatedTLS is wired into the clang-repl "
+                  "CppInternal::Interpreter path, not cling's interpreter";
+#endif
+#if defined(_WIN32) || defined(__APPLE__)
+  GTEST_SKIP() << "weak thread_local in JITted code fails to resolve "
+                  "__emutls_get_address on COFF/Mach-O; the discard "
+                  "workaround targets ELF emulated TLS";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test targets the in-process JIT discard path";
+
+  std::vector<Decl*> Decls;
+  std::string header = R"(
+    struct NonTrivial { int id; NonTrivial() : id(7) {} };
+    template <int Tag> struct HeavyZero { static thread_local NonTrivial tls; };
+    template <int Tag> thread_local NonTrivial HeavyZero<Tag>::tls{};
+    inline int workerZero() { return HeavyZero<1>::tls.id; }
+  )";
+  // -include new: MakeFunctionCallable's wrapper uses placement new.
+  GetAllTopLevelDecls(header, Decls, /*filter_implicitGenerated=*/false,
+                      /*interpreter_args=*/{"-std=c++23", "-include", "new"});
+
+  // Two distinct modules, each odr-using workerZero() -> each re-emits it and
+  // the zero-init thread_local as linkonce_odr; defining the second runs
+  // discard over the duplicate emulated-TLS symbol.
+  Interp->process("int callZeroA() { return workerZero(); }");
+  Interp->process("int callZeroB() { return workerZero(); }");
+
+  Cpp::DeclRef A = Cpp::GetNamed("callZeroA");
+  Cpp::DeclRef B = Cpp::GetNamed("callZeroB");
+  ASSERT_TRUE(A);
+  ASSERT_TRUE(B);
+
+  Cpp::JitCall JA = Cpp::MakeFunctionCallable(Cpp::FuncRef{A.data});
+  Cpp::JitCall JB = Cpp::MakeFunctionCallable(Cpp::FuncRef{B.data});
+  ASSERT_EQ(JA.getKind(), Cpp::JitCall::kGenericCall);
+  ASSERT_EQ(JB.getKind(), Cpp::JitCall::kGenericCall);
+
+  int ra = 0;
+  int rb = 0;
+  JA.Invoke(&ra, {});
+  JB.Invoke(&rb, {});
+
+  EXPECT_EQ(ra, 7); // HeavyZero<1>::tls.id set by the NonTrivial ctor
+  EXPECT_EQ(rb, 7);
+}
+
+// The wrapper spells the return type in its placement-new; a typedef nested
+// in a private member class is not spellable there (and, unlike a typedef of
+// a builtin, is not desugared by get_type_as_string), the canonical type is.
+TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_PrivateTypedefReturn) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscripten builds";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    struct Obj {};
+    struct Res {
+    private:
+      struct Helper { typedef Obj Iterator_t; };
+    public:
+      Helper::Iterator_t get() { return {}; }
+    };
+  )";
+
+  GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
+                      /*interpreter_args=*/{"-include", "new"});
+  ASSERT_EQ(Decls.size(), 2);
+  auto Fns = Cpp::GetFunctionsUsingName(Decls[1], "get");
+  ASSERT_EQ(Fns.size(), 1);
+  EXPECT_EQ(Cpp::MakeFunctionCallable(Fns[0]).getKind(),
+            Cpp::JitCall::kGenericCall);
+}
+
+// The private path desugars to a public typedef of a private class: that
+// typedef is spellable, the canonical type is not.
+TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_PrivateTypedefChainReturn) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscripten builds";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    struct Res {
+    private:
+      struct PC { int v = 5; };
+    public:
+      typedef PC PP;
+    private:
+      struct Helper { typedef PP Iterator_t; };
+    public:
+      Helper::Iterator_t get() { return {}; }
+    };
+  )";
+
+  GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
+                      /*interpreter_args=*/{"-include", "new"});
+  ASSERT_EQ(Decls.size(), 1);
+  auto Fns = Cpp::GetFunctionsUsingName(Decls[0], "get");
+  ASSERT_EQ(Fns.size(), 1);
+  Cpp::JitCall JC = Cpp::MakeFunctionCallable(Fns[0]);
+  ASSERT_EQ(JC.getKind(), Cpp::JitCall::kGenericCall);
+
+  Cpp::ObjectRef obj = Cpp::Construct(Decls[0]);
+  struct {
+    int v;
+  } result = {0};
+  JC.Invoke(&result, {}, obj.data);
+  EXPECT_EQ(result.v, 5);
+  Cpp::Destruct(obj, Decls[0]);
+}
+
+// decltype sugar is spelled as its expression: a call in it keeps its
+// qualifier as written (detail::helper), which does not resolve at file scope;
+// the canonical type is spellable. A typedef of a class type underneath keeps
+// the sugar from being desugared when the type is printed (a builtin would be).
+TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_DecltypeReturn) {
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscripten builds";
+#endif
+  if (TypeParam::isOutOfProcess)
+    GTEST_SKIP() << "Test fails for OOP JIT builds";
+
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    namespace ns {
+      namespace detail { inline int helper() { return 0; } }
+      struct Obj { int v; };
+      typedef Obj Res;
+      auto get(int i) -> decltype(detail::helper(), Res()) { return Res{7 * i}; }
+    }
+  )";
+
+  GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
+                      /*interpreter_args=*/{"-include", "new"});
+  ASSERT_EQ(Decls.size(), 1);
+  auto Fns = Cpp::GetFunctionsUsingName(Decls[0], "get");
+  ASSERT_EQ(Fns.size(), 1);
+  Cpp::JitCall JC = Cpp::MakeFunctionCallable(Fns[0]);
+  ASSERT_EQ(JC.getKind(), Cpp::JitCall::kGenericCall);
+
+  int i = 3;
+  struct { int v; } result = {0};
+  std::array<void*, 1> args = {(void*)&i};
+  JC.Invoke(&result, {args.data(), /*args_size=*/1}, /*self=*/nullptr);
+  EXPECT_EQ(result.v, 21);
 }

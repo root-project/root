@@ -56,7 +56,6 @@ private:
    std::string fType;
 
    size_t fDim;   // dimension of the MaxPool
-   bool fUseSession = false;
 
 public:
 
@@ -84,14 +83,8 @@ public:
       fOutputTensorNames = { fNY };
    }
 
-   // return input type (defined abstract in ROperator class )
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-      // only one input in Pool operators
-      return input;
-   }
-
    // function returning output shape given input
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) {
       // shape of pooling input has to be (according to ONNX): NxCxHxW
       // Where N is batch size, C : input  channels, H : input height, W = input width
       // or it can be [N, C, F1,F2,....FN] . Minimum dimension is 3
@@ -205,8 +198,6 @@ public:
    }
 
    void Initialize(RModel& model) override {
-
-      fUseSession = model.UseSession();
 
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw

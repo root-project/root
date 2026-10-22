@@ -81,17 +81,6 @@ public:
          fOutputTensorNames = { fNY };
       }
 
-   // type of output given input
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
-      return input;
-   }
-
-   // shape of output tensors given input tensors
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-      auto ret = input; // return vector size 1 with first input
-      return ret;
-   }
-
    void Initialize(RModel& model) override {
       // input must be a graph input, or already initialized intermediate tensor
       if (!model.CheckIfTensorAlreadyExist(fNX1)){

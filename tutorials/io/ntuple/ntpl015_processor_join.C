@@ -21,8 +21,8 @@
 #include <TRandom.h>
 
 // Import classes from the `Experimental` namespace for the time being.
+using ROOT::Experimental::CreateRNTupleJoinProcessor;
 using ROOT::Experimental::RNTupleOpenSpec;
-using ROOT::Experimental::RNTupleProcessor;
 
 const std::string kPrimaryNTupleName = "mainNTuple";
 const std::string kMainNTuplePath = "main_ntuple.root";
@@ -84,7 +84,7 @@ void Read()
    // combination of field values is used. It is possible to specify up to 4 join fields. Providing an empty list of
    // join fields signals to the processor that all entries are aligned.
    auto processor =
-      RNTupleProcessor::CreateJoin({kPrimaryNTupleName, kMainNTuplePath}, {kAuxNTupleName, kAuxNTuplePath}, {"i"});
+      CreateRNTupleJoinProcessor({kPrimaryNTupleName, kMainNTuplePath}, {kAuxNTupleName, kAuxNTuplePath}, {"i"});
 
    // Access to the processor's fields is done by first requesting them through RNTupleProcessor::RequestField(). The
    // returned value can be used to read the current entry's value for that particular field. Fields from the primary
@@ -93,8 +93,10 @@ void Read()
    // Fields from auxiliary ntuples are requested by prepending the name of the auxiliary ntuple.
    auto py = processor->RequestField<float>(kAuxNTupleName + ".vpy");
 
-   // The iterator value is the index of the current entry being processed. In this example, we don't use it.
-   for (auto _ : *processor) {
+   // The iterator value gives access to the the current entry to process.
+   for (const auto &idx : *processor) {
+      // Load the entry.
+      processor->LoadEntry(idx);
       hPy.Fill(*px + *py);
    }
 

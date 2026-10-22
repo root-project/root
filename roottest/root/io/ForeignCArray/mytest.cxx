@@ -4,11 +4,8 @@
 #include <TTree.h>
 #include <iostream>
 
-#include "TApplication.h"
-
-int main(int argc, char** argv)
+int main()
  {
-   TApplication theApp("App", &argc, argv);
    {
     CArray<ForeignData> array(3) ;
     array[0] = 1 ;

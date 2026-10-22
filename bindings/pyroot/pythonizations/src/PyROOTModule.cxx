@@ -11,15 +11,16 @@
 
 // Bindings
 #include "PyROOTPythonize.h"
-#include "RPyROOTApplication.h"
 
 // Cppyy
-#include "CPyCppyy/API.h"
+#include "cpyrt/API.h"
 
 // ROOT
+#include "TError.h"
 #include "TInterpreter.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TVirtualPad.h"
 #include "RConfigure.h"
 
 // Standard
@@ -34,54 +35,6 @@
 namespace PyROOT {
 
 PyObject *gRootModule = nullptr;
-
-PyObject *RegisterConverterAlias(PyObject * /*self*/, PyObject *args)
-{
-   PyObject *name = nullptr;
-   PyObject *target = nullptr;
-
-   if (!PyArg_ParseTuple(args, "UU:RegisterConverterAlias", &name, &target)) {
-      return nullptr;
-   }
-
-   const char *nameStr = PyUnicode_AsUTF8AndSize(name, nullptr);
-   if (!nameStr) {
-      return nullptr;
-   }
-
-   const char *targetStr = PyUnicode_AsUTF8AndSize(target, nullptr);
-   if (!targetStr) {
-      return nullptr;
-   }
-
-   CPyCppyy::RegisterConverterAlias(nameStr, targetStr);
-
-   Py_RETURN_NONE;
-}
-
-PyObject *RegisterExecutorAlias(PyObject * /*self*/, PyObject *args)
-{
-   PyObject *name = nullptr;
-   PyObject *target = nullptr;
-
-   if (!PyArg_ParseTuple(args, "UU:RegisterExecutorAlias", &name, &target)) {
-      return nullptr;
-   }
-
-   const char *nameStr = PyUnicode_AsUTF8AndSize(name, nullptr);
-   if (!nameStr) {
-      return nullptr;
-   }
-
-   const char *targetStr = PyUnicode_AsUTF8AndSize(target, nullptr);
-   if (!targetStr) {
-      return nullptr;
-   }
-
-   CPyCppyy::RegisterExecutorAlias(nameStr, targetStr);
-
-   Py_RETURN_NONE;
-}
 
 /// \brief A PyObject wrapper to track reference counting of external objects
 ///
@@ -140,60 +93,74 @@ PyObject *PyObjRefCounterAsStdAny(PyObject * /*self*/, PyObject *args)
    PyArg_ParseTuple(args, "O:PyObjRefCounterAsStdAny", &object);
 
    // The std::any is managed by Python
-   return CPyCppyy::Instance_FromVoidPtr(new std::any{std::in_place_type<PyObjRefCounter>, object}, "std::any",
+   return cppjit::cpyrt::Instance_FromVoidPtr(new std::any{std::in_place_type<PyObjRefCounter>, object}, "std::any",
                                          /*python_owns=*/true);
 }
 
-// Helper function to get the pointer to a buffer (heavily simplified copy of
-// CPyCppyy::Utility::GetBuffer).
-void GetBuffer(PyObject *pyobject, void *&buf)
+} // namespace PyROOT
+
+namespace {
+
+/// Turns a ROOT warning into a Python warning, see ROOT::Internal::SetWarningHandler().
+bool WarningHandler(const char *location, const char *msg)
 {
-   buf = nullptr;
-
-   // Exclude text-like objects (policy decision)
-   if (PyBytes_Check(pyobject) || PyUnicode_Check(pyobject))
-      return;
-
-   // Fast path: bytearray
-   if (PyByteArray_CheckExact(pyobject)) {
-      buf = PyByteArray_AsString(pyobject);
-      return;
+   PyGILState_STATE state = PyGILState_Ensure();
+   // Python code can't run while an exception is pending, e.g. a previous
+   // warning turned into an error: decline, and ROOT prints the warning.
+   bool handled = !PyErr_Occurred();
+   if (handled) {
+      // Prints or, per the warnings filters, raises: the exception stays
+      // pending until the call into C++ returns to Python.
+      PyErr_WarnExplicit(nullptr, msg, location, 0, "ROOT", nullptr);
    }
-
-   // Buffer protocol
-   if (PyObject_CheckBuffer(pyobject)) {
-      // Avoid potential issues with empty sequences
-      if (PySequence_Check(pyobject) && PySequence_Size(pyobject) == 0)
-         return;
-
-      Py_buffer view;
-      if (PyObject_GetBuffer(pyobject, &view, PyBUF_SIMPLE) == 0) {
-         if (view.buf && view.len > 0)
-            buf = view.buf;
-         PyBuffer_Release(&view);
-      } else {
-         PyErr_Clear();
-      }
-   }
+   PyGILState_Release(state);
+   return handled;
 }
 
-} // namespace PyROOT
+int (*gPreviousInputHook)() = nullptr;
+
+/// Processes GUI events while the Python prompt waits for input. Runs no
+/// Python code, so a Ctrl-C arriving meanwhile stays pending for the prompt.
+int GUIEventInputHook()
+{
+   PyGILState_STATE state = PyGILState_Ensure();
+   if (gPad && gPad->IsWeb())
+      gPad->UpdateAsync();
+   gSystem->ProcessEvents();
+   PyGILState_Release(state);
+
+   return gPreviousInputHook ? gPreviousInputHook() : 0;
+}
+
+/// Turn ROOT warnings into Python warnings.
+PyObject *InstallWarningHandler(PyObject * /*self*/, PyObject * /*args*/)
+{
+   ROOT::Internal::SetWarningHandler(&WarningHandler);
+   Py_RETURN_NONE;
+}
+
+/// Install the PyOS_InputHook that processes GUI events, chaining to the
+/// previous hook.
+PyObject *InstallGUIEventInputHook(PyObject * /*self*/, PyObject * /*args*/)
+{
+   if (PyOS_InputHook != &GUIEventInputHook) {
+      gPreviousInputHook = PyOS_InputHook;
+      PyOS_InputHook = &GUIEventInputHook;
+   }
+   Py_RETURN_NONE;
+}
+
+} // namespace
 
 // Methods offered by the interface
 static PyMethodDef gPyROOTMethods[] = {
    {"AddCPPInstancePickling", (PyCFunction)PyROOT::AddCPPInstancePickling, METH_NOARGS,
     "Add a custom pickling mechanism for Cppyy Python proxy objects"},
-   {"GetBranchAttr", (PyCFunction)PyROOT::GetBranchAttr, METH_VARARGS,
-    "Allow to access branches as tree attributes"},
-   {"AddTClassDynamicCastPyz", (PyCFunction)PyROOT::AddTClassDynamicCastPyz, METH_VARARGS,
-    "Cast the void* returned by TClass::DynamicCast to the right type"},
-   {"BranchPyz", (PyCFunction)PyROOT::BranchPyz, METH_VARARGS,
-    "Fully enable the use of TTree::Branch from Python"},
    {"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,
     "Add pretty printing pythonization"},
-   {"InitApplication", (PyCFunction)PyROOT::RPyROOTApplication::InitApplication, METH_VARARGS,
-    "Initialize interactive ROOT use from Python"},
-   {"InstallGUIEventInputHook", (PyCFunction)PyROOT::RPyROOTApplication::InstallGUIEventInputHook, METH_NOARGS,
+   {"InstallWarningHandler", (PyCFunction)InstallWarningHandler, METH_NOARGS,
+    "Turn ROOT warnings into Python warnings"},
+   {"InstallGUIEventInputHook", (PyCFunction)InstallGUIEventInputHook, METH_NOARGS,
     "Install an input hook to process GUI events"},
    {"_CPPInstance__expand__", (PyCFunction)PyROOT::CPPInstanceExpand, METH_VARARGS,
     "Deserialize a pickled object"},
@@ -215,10 +182,6 @@ static PyMethodDef gPyROOTMethods[] = {
     "Get stderr JupyROOTExecutorHandler"},
    {"JupyROOTExecutorHandler_Dtor", (PyCFunction)JupyROOTExecutorHandler_Dtor, METH_NOARGS,
     "Destruct JupyROOTExecutorHandler"},
-   {"CPyCppyyRegisterConverterAlias", (PyCFunction)PyROOT::RegisterConverterAlias, METH_VARARGS,
-    "Register a custom converter that is a reference to an existing converter"},
-   {"CPyCppyyRegisterExecutorAlias", (PyCFunction)PyROOT::RegisterExecutorAlias, METH_VARARGS,
-    "Register a custom executor that is a reference to an existing executor"},
    {"PyObjRefCounterAsStdAny", (PyCFunction)PyROOT::PyObjRefCounterAsStdAny, METH_VARARGS,
     "Wrap a reference count to any Python object in a std::any for resource management in C++"},
    {NULL, NULL, 0, NULL}};

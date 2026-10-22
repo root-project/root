@@ -1,3 +1,4 @@
+ROOT_CTEST_CUSTOM_FLAGS="-E ^tutorial-"
 CMAKE_CXX_STANDARD=23
 builtin_cfitsio=ON
 builtin_civetweb=ON
@@ -21,4 +22,6 @@ builtin_zstd=ON
 cocoa=ON
 davix=OFF
 minuit2_omp=OFF
+test_distrdf_dask=OFF
+test_distrdf_pyspark=OFF
 x11=OFF

@@ -159,8 +159,6 @@ with ROOT.TFile('outfile.root') as infile:
 \endpythondoc
 """
 
-from ROOT.libROOTPythonizations import BranchPyz, GetBranchAttr
-
 from . import pythonization
 from ._memory_utils import (
     _constructor_releasing_ownership,
@@ -168,6 +166,46 @@ from ._memory_utils import (
     _should_give_up_ownership,
 )
 from ._rvec import _get_cpp_type_from_numpy_type
+
+
+_branch_lookups = None
+
+
+class _BranchLookups(object):
+    """The entities that reading a branch needs, resolved once.
+
+    Every resolution through the ROOT module goes through the facade's
+    __getattr__, which dominated the cost of `tree.branch` when done inline;
+    none of these can change over the lifetime of a session.
+    """
+
+    __slots__ = ("helpers", "branch_element", "branch_object", "leaf_element", "leaf_object", "ll")
+
+
+def _lookups():
+    """Return the cached branch lookups, resolving them on first use.
+
+    The helpers in ROOT::Internal::TreeUtils exist because
+    TBranch::GetAddress() and TBranchElement::GetObject() return char* and so
+    reach Python as str, with the pointer value gone. Two threads racing here
+    resolve the same entities, so no lock is needed.
+    """
+    global _branch_lookups
+
+    if _branch_lookups is None:
+        import ROOT
+        from cppyy import ll
+
+        lookups = _BranchLookups()
+        lookups.helpers = ROOT.Internal.TreeUtils
+        lookups.branch_element = ROOT.TBranchElement.Class()
+        lookups.branch_object = ROOT.TBranchObject.Class()
+        lookups.leaf_element = ROOT.TLeafElement.Class()
+        lookups.leaf_object = ROOT.TLeafObject.Class()
+        lookups.ll = ll
+        _branch_lookups = lookups
+
+    return _branch_lookups
 
 
 # TTree iterator
@@ -305,18 +343,224 @@ def _SetBranchAddress(self, bname, addr, *args, **kwargs):
     return self._OriginalSetBranchAddress(bname, addr, ptr=tbranch_ptr, realClass=cl, datatype=tp, isptr=False)
 
 
+def _get_address_of(obj):
+    """Return the address of the buffer or proxied object `obj` points at.
+
+    Returns None for anything that does not carry an address, and deliberately
+    also for text-like objects, which do but are never meant as a branch buffer.
+    """
+    import ROOT
+
+    if isinstance(obj, ROOT._cppyy.types.Instance):
+        return ROOT._cppyy.addressof(instance=obj, byref=False)
+
+    if isinstance(obj, (str, bytes)):
+        return None
+
+    # A plain integer address is left to the original overloads. It must not
+    # reach ll.addressof, which converts it to a C long: that overflows where
+    # long is 32 bits (Windows) and raises OverflowError instead of TypeError.
+    if isinstance(obj, int):
+        return None
+
+    try:
+        return ROOT._cppyy.ll.addressof(obj)
+    except TypeError:
+        return None
+
+
+def _try_branch_leaf_list_overload(self, args):
+    """Try to match TTree::Branch(const char*, void*, const char*, Int_t = 32000)."""
+    if not (3 <= len(args) <= 4):
+        return None
+    name, address, leaflist = args[0], args[1], args[2]
+    if not isinstance(name, str) or not isinstance(leaflist, str):
+        return None
+    if len(args) == 4 and not isinstance(args[3], int):
+        return None
+
+    import ctypes
+
+    buf = _get_address_of(address)
+    if not buf:
+        return None
+
+    return self._OriginalBranch(name, ctypes.c_void_p(buf), leaflist, *args[3:])
+
+
+def _try_branch_ptr_to_ptr_overloads(self, args):
+    """Try to match one of the TTree::Branch overloads taking a T**:
+
+    - ( const char*, const char*, T**, Int_t = 32000, Int_t = 99 )
+    - ( const char*,              T**, Int_t = 32000, Int_t = 99 )
+    """
+    import ROOT
+
+    if len(args) < 2 or not isinstance(args[0], str):
+        return None
+
+    name = args[0]
+    if isinstance(args[1], str):
+        # the class name is given explicitly
+        class_name, address, rest = args[1], args[2] if len(args) > 2 else None, args[3:]
+    else:
+        class_name, address, rest = None, args[1], args[2:]
+
+    if address is None or any(not isinstance(arg, int) for arg in rest) or len(rest) > 2:
+        return None
+
+    if isinstance(address, ROOT._cppyy.types.Instance):
+        # Hand the proxy to a helper taking a T** and let cppyy work out which
+        # address that is: where it lives (the proxy itself, or the caller's
+        # pointer behind a reference proxy) is a rule only the bindings know.
+        # T is the proxied type, not class_name, which the caller is free to
+        # give as a base or equivalent spelling of it.
+        proxy_type = type(address).__cpp_name__
+        brancher = _lookups().helpers.BranchPtrToPtr[proxy_type]
+        return brancher(self, name, class_name or proxy_type, address, *rest)
+
+    buf = _get_address_of(address)
+    if not buf or not class_name:
+        return None
+
+    import ctypes
+
+    return self._OriginalBranch(name, class_name, ctypes.c_void_p(buf), *rest)
+
+
 def _Branch(self, *args):
-    # Modify the behaviour if args is one of:
-    # ( const char*, void*, const char*, Int_t = 32000 )
-    # ( const char*, const char*, T**, Int_t = 32000, Int_t = 99 )
-    # ( const char*, T**, Int_t = 32000, Int_t = 99 )
-    res = BranchPyz(self, *args)
+    """
+    Pythonization for TTree::Branch.
 
-    if res is None:
-        # Fall back to the original implementation for the rest of overloads
-        res = self._OriginalBranch(*args)
+    Modify the behaviour of Branch so that proxy references can be passed as
+    arguments from the Python side, more precisely in cases where the C++
+    implementation of the method expects the address of a pointer.
 
-    return res
+    For example:
+    ```
+    v = ROOT.std.vector('int')()
+    t.Branch('my_vector_branch', v)
+    ```
+
+    The following signatures are treated in this pythonization:
+    - ( const char*, void*, const char*, Int_t = 32000 )
+    - ( const char*, const char*, T**, Int_t = 32000, Int_t = 99 )
+    - ( const char*, T**, Int_t = 32000, Int_t = 99 )
+    """
+    if len(args) >= 2:
+        res = _try_branch_leaf_list_overload(self, args)
+        if res is not None:
+            return res
+
+        res = _try_branch_ptr_to_ptr_overloads(self, args)
+        if res is not None:
+            return res
+
+    # Fall back to the original implementation for the rest of overloads
+    return self._OriginalBranch(*args)
+
+
+def _search_for_branch(tree, name):
+    branch = tree.GetBranch(name)
+    if not branch:
+        # for benefit of naming of sub-branches, the actual name may have a
+        # trailing '.'
+        branch = tree.GetBranch(name + ".")
+    return branch
+
+
+def _has_single_leaf(branch):
+    leaves = branch.GetListOfLeaves()
+    # i.e. if unambiguously only this one
+    return bool(leaves.GetSize()) and leaves.First() == leaves.Last()
+
+
+def _search_for_leaf(tree, name, branch):
+    leaf = tree.GetLeaf(name)
+    if branch and not leaf:
+        leaf = branch.GetLeaf(name)
+        if not leaf and _has_single_leaf(branch):
+            leaf = branch.GetListOfLeaves().At(0)
+    return leaf
+
+
+def _resolve_branch(tree, name, branch):
+    """Return the address and type name of the object held by a branch.
+
+    (None, "") means the branch holds no object (the caller should look for a
+    leaf instead); address 0 with a non-empty type name means failure, reported
+    to the user as a typed null object.
+    """
+    lookups = _lookups()
+    helpers = lookups.helpers
+
+    # for partial return of a split object
+    if branch.InheritsFrom(lookups.branch_element):
+        current_class = branch.GetCurrentClass()
+        if current_class and current_class != branch.GetTargetClass() and branch.GetID() >= 0:
+            offset = branch.GetInfo().GetElements().At(branch.GetID()).GetOffset()
+            return helpers.GetBranchElementObject(branch) + offset, current_class.GetName()
+
+    # for return of a full object
+    if branch.IsA() in (lookups.branch_element, lookups.branch_object):
+        address = helpers.GetBranchAddress(branch)
+        if address:
+            # the branch address is that of the pointer to the object
+            return lookups.ll.bind_value("intptr_t", address), branch.GetClassName()
+
+        # try leaf, otherwise indicate failure by returning a typed null object
+        if not tree.GetLeaf(name) and not _has_single_leaf(branch):
+            return 0, branch.GetClassName()
+
+    return None, ""
+
+
+def _get_multi_dims(title):
+    """Extract the static dimensions from the title of a TLeaf.
+
+    The title carries them as `name[dim1][dim2]...`; TLeaf offers no other
+    way to get at them.
+    """
+    import re
+
+    return [int(dim) for dim in re.findall(r"\[([^\]]*)\]", title) if dim]
+
+
+def _wrap_leaf(leaf):
+    """Read the value of a leaf for the entry the tree is currently on."""
+    lookups = _lookups()
+    ll = lookups.ll
+
+    if leaf.GetLenStatic() > 1 or leaf.GetLeafCount():
+        # array types
+        is_static = leaf.GetLenStatic() > 1
+        type_name = leaf.GetTypeName()
+
+        dims = [leaf.GetNdata()]
+        title = leaf.GetTitle()
+        if title.count("[") >= 2:
+            # multidimensional array case
+            dims = _get_multi_dims(title)
+
+        address = 0
+        branch = leaf.GetBranch()
+        if branch:
+            address = lookups.helpers.GetBranchAddress(branch)
+        if not address:
+            address = ll.addressof(leaf.GetValuePointer())
+
+        return ll.bind_value(type_name + ("[]" if is_static else "*"), address, dims)
+
+    value_pointer = leaf.GetValuePointer()
+    if value_pointer:
+        # value types
+        address = ll.addressof(value_pointer)
+        if leaf.IsA() in (lookups.leaf_element, lookups.leaf_object):
+            # the leaf holds a pointer to the value, rather than the value
+            address = ll.bind_value("intptr_t", address)
+        return ll.bind_value(leaf.GetTypeName(), address)
+
+    return None
 
 
 def _TTree__getattr__(self, key):
@@ -326,21 +570,35 @@ def _TTree__getattr__(self, key):
     Allow access to branches/leaves as if they were Python data attributes of
     the tree (e.g. mytree.branch).
 
-    To avoid using the CPyCppyy API, any necessary cast is done here on the
-    Python side. The GetBranchAttr() function encodes a necessary cast in the
-    second element of the output tuple, which is a string with the required
-    type name.
-
     Parameters:
     self (TTree): The instance of the TTree object from which the attribute is being retrieved.
     key (str): The name of the branch to retrieve from the TTree object.
     """
-    import ROOT
+    ll = _lookups().ll
 
-    out, cast_type = GetBranchAttr(self, key)
-    if cast_type:
-        out = ROOT._cppyy.ll.cast[cast_type](out)
-    return out
+    # deal with possible aliasing
+    name = self.GetAlias(key) or key
+
+    # search for branch first (typical for objects)
+    branch = _search_for_branch(self, name)
+
+    if branch:
+        # found a branched object, wrap its address for the object it represents
+        address, type_name = _resolve_branch(self, name, branch)
+        if type_name:
+            return ll.cast[type_name + "*"](address)
+
+    # if not, try leaf
+    leaf = _search_for_leaf(self, name, branch)
+    if leaf:
+        # found a leaf, extract value and wrap with a Python object
+        # according to its type
+        value = _wrap_leaf(leaf)
+        if value is not None:
+            return value
+
+    # confused
+    raise AttributeError("'{}' object has no attribute '{}'".format(self.IsA().GetName(), name))
 
 
 def _TTree_CloneTree(self, *args, **kwargs):

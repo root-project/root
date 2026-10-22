@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/ML/RBatchSink.hxx"
+#include "RBatchSink.hxx"
 
 #include <algorithm>
 #include <stdexcept>

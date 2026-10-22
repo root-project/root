@@ -1,0 +1,53 @@
+<mvc:View
+    controllerName="rootui5.eve7.controller.GeoOverlapTable"
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:t="sap.ui.table"
+    height="100%">
+   <Toolbar id="tbar">
+      <content>
+         <Label text="Overlaps" id="titleLabel" width="100%" textAlign="Center"/>
+         <Button icon="sap-icon://move" press="switchSingle" tooltip="single view"/>
+         <Button icon="sap-icon://arrow-right" press="swap" tooltip="swap"/>
+         <Button icon="sap-icon://decline" press="detachViewer" tooltip="destroy"/>
+      </content>
+   </Toolbar>
+   <FlexBox height="100%" direction="Column">
+      <Toolbar>
+         <layoutData>
+            <FlexItemData baseSize="35px"/>
+         </layoutData>
+         <Label id="summaryLabel" text=""/>
+         <ToolbarSpacer/>
+         <Label text="Precision [cm]" labelFor="precisionInput"/>
+         <Input id="precisionInput" type="Number" width="6rem" value="{/precision}"
+                tooltip="Overlap/extrusion check precision, in cm. Changing this re-runs the check over the whole geometry and rebuilds the table and 3D view"
+                change="onPrecisionChange"/>
+         <CheckBox id="resetCameraCheck" text="Reset camera" selected="true"
+                   tooltip="Re-frame the 3D view on every selection. Turn off to keep a manually-picked viewing angle across rows"
+                   select="onToggleResetCamera"/>
+         <ToggleButton id="uniqueToggle" text="Unique" type="Transparent"
+                       tooltip="Collapse repeats of the same flaw into one row, and draw every instance of it at once"
+                       press="onToggleUnique"/>
+         <Button icon="sap-icon://decline" type="Transparent" tooltip="Clear the 3D view" press="onClear"/>
+      </Toolbar>
+      <t:Table
+         id="overlapTable"
+         selectionMode="Single"
+         selectionBehavior="RowOnly"
+         visibleRowCountMode="Auto"
+         enableSelectAll="false"
+         rowSelectionChange="onRowSelect"
+         rows="{/overlaps}">
+         <t:contextMenu>
+            <Menu>
+               <MenuItem text="Print to server console" icon="sap-icon://write-new" press="onPrintOverlap"/>
+            </Menu>
+         </t:contextMenu>
+         <t:layoutData>
+            <FlexItemData growFactor="1"/>
+         </t:layoutData>
+      </t:Table>
+   </FlexBox>
+</mvc:View>

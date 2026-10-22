@@ -442,7 +442,7 @@ void CheckValidCppVarName(std::string_view var, const std::string &where)
          isValid = false;
 
    if (!isValid) {
-      const auto objName = where == "Define" ? "column" : "variation";
+      const auto objName = where == "Define" ? "column" : (where == "Alias" ? "alias" : "variation");
       const auto error = "RDataFrame::" + where + ": cannot define " + objName + " \"" + std::string(var) +
                          "\". Not a valid C++ variable name.";
       throw std::runtime_error(error);

@@ -3,10 +3,14 @@
 
 #include <RooFit/CodegenContext.h>
 
+#include <RooArgList.h>
 #include <RooChebychev.h>
 #include <RooConstVar.h>
 #include <RooGaussian.h>
+#include <RooLognormal.h>
 #include <RooRealVar.h>
+
+#include <TInterpreter.h>
 
 #include <gtest/gtest.h>
 
@@ -48,6 +52,26 @@ std::string codeUnderLocale(RooAbsArg &arg, std::locale const &loc)
 std::string normalized(std::string const &code)
 {
    return std::regex_replace(code, std::regex{"roo_codegen_[0-9]+"}, "roo_codegen_N");
+}
+
+/// Generate the code for `arg` as a standalone function of `params`, compile
+/// it with the interpreter like RooFuncWrapper does, and return a pointer to
+/// it. The signature is the one that CodegenContext::buildFunction() emits.
+using CodegenFunc = double (*)(double *params, double const *obs, double const *xlArr);
+
+CodegenFunc compileFunction(RooAbsArg &arg, RooArgList const &params)
+{
+   RooFit::Experimental::CodegenContext ctx;
+   for (std::size_t i = 0; i < params.size(); ++i) {
+      ctx.addResult(&params[i], "params[" + std::to_string(i) + "]");
+   }
+   const std::string funcName = ctx.buildFunction(arg);
+   gInterpreter->Declare("#include <RooFit/CodegenImpl.h>\n");
+   if (!gInterpreter->Declare(ctx.collectedCode().c_str())) {
+      ADD_FAILURE() << "generated code does not compile:\n" << ctx.collectedCode();
+      return nullptr;
+   }
+   return reinterpret_cast<CodegenFunc>(gInterpreter->ProcessLine((funcName + ";").c_str()));
 }
 
 /// How a plain stream formats 0.5 under `loc`, to verify that the facet is
@@ -110,5 +134,26 @@ TEST(RooFitCodegen, CallArgumentsAreLocaleIndependent)
    }
    for (const char *corrupted : {"0,5", "2,25", "0,375"}) {
       EXPECT_EQ(code.find(corrupted), std::string::npos) << corrupted << " emitted in:\n" << code;
+   }
+}
+
+// The code generated for a RooLognormal with the standard parametrization
+// called a RooFit::Detail::MathFuncs function that does not exist, so it did
+// not compile. Check both parametrizations against the reference evaluation.
+TEST(RooFitCodegen, LognormalParametrizations)
+{
+   RooRealVar x{"x", "x", 1.5, 0.1, 10.0};
+   RooRealVar m0{"m0", "m0", 0.7, 0.1, 2.3};
+   RooRealVar k{"k", "k", 0.7, 0.1, 0.95};
+   RooArgList params{x, m0, k};
+
+   for (bool useStandardParametrization : {false, true}) {
+      RooLognormal pdf{"pdf", "pdf", x, m0, k, useStandardParametrization};
+      CodegenFunc func = compileFunction(pdf, params);
+      ASSERT_NE(func, nullptr) << "useStandardParametrization = " << useStandardParametrization;
+
+      double paramVals[] = {x.getVal(), m0.getVal(), k.getVal()};
+      EXPECT_DOUBLE_EQ(func(paramVals, nullptr, nullptr), pdf.getVal())
+         << "useStandardParametrization = " << useStandardParametrization;
    }
 }

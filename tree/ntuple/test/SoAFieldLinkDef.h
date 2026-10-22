@@ -6,6 +6,9 @@
 #pragma link C++ options=rntupleSoARecord(xyz) class SoAUnknownRecord+;
 #pragma link C++ options=rntupleSoARecord(Record) class SoAVersionMismatch+;
 
+#pragma link C++ class RecordUnversioned+;
+#pragma link C++ options=rntupleSoARecord(RecordUnversioned) class SoAUnversioned+;
+
 #pragma link C++ class RecordSimple+;
 #pragma link C++ options=rntupleSoARecord(RecordSimple) class SoASimple+;
 #pragma link C++ options=rntupleSoARecord(RecordSimple) class SoASimpleSwapped+;
@@ -33,5 +36,47 @@
 #pragma link C++ options=rntupleSoARecord(RecordDerivedMulti) class SoADerivedMulti+;
 #pragma link C++ options=rntupleSoARecord(RecordDerived) class SoADerivedFail1+;
 #pragma link C++ options=rntupleSoARecord(RecordDerived) class SoADerivedFail2+;
+
+#pragma link C++ class RecordBaseOld+;
+#pragma link C++ class RecordIntermediateOld+;
+#pragma link C++ class RecordLeafOld+;
+#pragma link C++ options=rntupleSoARecord(RecordBaseOld) class SoABaseOld+;
+#pragma link C++ options=rntupleSoARecord(RecordIntermediateOld) class SoAIntermediateOld+;
+#pragma link C++ options=rntupleSoARecord(RecordLeafOld) class SoALeafOld+;
+#pragma link C++ class RecordBaseNew+;
+#pragma link C++ class RecordIntermediateNew+;
+#pragma link C++ class RecordLeafNew+;
+#pragma link C++ class RecordLeafLikeNew+;
+#pragma link C++ options=rntupleSoARecord(RecordBaseNew) class SoABaseNew+;
+#pragma link C++ options=rntupleSoARecord(RecordIntermediateNew) class SoAIntermediateNew+;
+#pragma link C++ options=rntupleSoARecord(RecordLeafNew) class SoALeafNew+;
+#pragma link C++ options=rntupleSoARecord(RecordLeafNew) class SoALeafNewNoRenameRule+;
+#pragma link C++ options=rntupleSoARecord(RecordLeafLikeNew) class SoALeafLikeNew+;
+
+#pragma read sourceClass = "RecordBaseOld" targetClass = "RecordBaseNew" version = "[1-]";
+#pragma read sourceClass = "RecordIntermediateOld" targetClass = "RecordIntermediateNew" version = "[1-]";
+#pragma read sourceClass = "RecordLeafOld" targetClass = "RecordLeafNew" version = "[1-]";
+#pragma read sourceClass = "SoABaseOld" targetClass = "SoABaseNew" version = "[1-]";
+#pragma read sourceClass = "SoAIntermediateOld" targetClass = "SoAIntermediateNew" version = "[1-]";
+#pragma read sourceClass = "SoALeafOld" targetClass = "SoALeafNew" version = "[1-]";
+
+#pragma link C++ class RecordNested+;
+#pragma link C++ class RecordOuter+;
+#pragma link C++ options=rntupleSoARecord(RecordNested) class SoANested+;
+#pragma link C++ options=rntupleSoARecord(RecordOuter) class SoAOuter+;
+
+#pragma read sourceClass="SoANested" version="[1-]" targetClass="SoANested" source="" target="" \
+   code="{ newObj->fInner *= 2.; }"
+#pragma read sourceClass="SoAOuter" version="[1-]" targetClass="SoAOuter" source="" target="" \
+   code="{ newObj->fOuter *= 4.; }"
+
+#pragma link C++ class RecordRuleFail+;
+#pragma link C++ options=rntupleSoARecord(RecordRuleFail) class SoARuleFailSource+;
+#pragma link C++ options=rntupleSoARecord(RecordRuleFail) class SoARuleFailTarget+;
+
+#pragma read sourceClass="SoARuleFailSource" version="[1-]" targetClass="SoARuleFailSource" \
+   source="ROOT::RVec<float> fX" target="" code="{ }";
+#pragma read sourceClass="SoARuleFailTarget" version="[1-]" targetClass="SoARuleFailTarget" \
+   source="" target="fX" code="{ (void)fX; }";
 
 #endif // __CLING__

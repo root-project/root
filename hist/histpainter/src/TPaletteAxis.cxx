@@ -12,7 +12,6 @@
 #include "TROOT.h"
 #include "TPaletteAxis.h"
 #include "TVirtualPad.h"
-#include "TVirtualX.h"
 #include "TStyle.h"
 #include "TMath.h"
 #include "TView.h"
@@ -22,6 +21,7 @@
 
 #include <cstdio>
 #include <iostream>
+#include <memory>
 
 
 
@@ -205,21 +205,57 @@ void TPaletteAxis::Copy(TObject &obj) const
    ((TPaletteAxis&)obj).fH    = fH;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if mouse on the axis region.
 
 Int_t TPaletteAxis::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   Int_t plxmax = gPad->XtoAbsPixel(fX2);
-   Int_t plymin = gPad->YtoAbsPixel(fY1);
-   Int_t plymax = gPad->YtoAbsPixel(fY2);
-   if (px > plxmax && px < plxmax + 30 && py >= plymax && py <= plymin) return px - plxmax;
+   Bool_t isHorizontal = GetX2NDC() - GetX1NDC() > GetY2NDC() - GetY1NDC();
+   Int_t plxmin = gPad->XtoAbsPixel(GetX1());
+   Int_t plxmax = gPad->XtoAbsPixel(GetX2());
+   Int_t plymin = gPad->YtoAbsPixel(GetY1());
+   Int_t plymax = gPad->YtoAbsPixel(GetY2());
+
+   if (isHorizontal) {
+      if (px >= plxmin && px <= plxmax && py > plymin && py <= plymin + 30)
+         return py - plymin;
+   } else {
+      if (px > plxmax && px < plxmax + 30 && py >= plymax && py <= plymin)
+         return px - plxmax;
+   }
 
    //otherwise check if inside the box
    return TPave::DistancetoPrimitive(px, py);
 }
 
+class TPaletteAxisInteractive : public TVirtualPad::TInteractive {
+   public:
+      Double_t ratio1 = 0, ratio2 = 1;
+      Bool_t fHorizontal = kFALSE;
+      TPaletteAxisInteractive(Bool_t h) { fHorizontal = h; }
+      void SetPosition(TVirtualPad &parent, Int_t px, Int_t py, Double_t x1, Double_t y1, Double_t x2, Double_t y2, Bool_t first = kFALSE)
+      {
+         Double_t r = 0;
+         if (fHorizontal)
+            r = (parent.AbsPixeltoX(px) - x1) / (x2 - x1);
+         else
+            r = (parent.AbsPixeltoY(py) - y1) / (y2 - y1);
+
+         ratio2 = r;
+         if (first)
+            ratio1 = r;
+      }
+
+      void Paint(TVirtualPad &parent, Double_t x1, Double_t y1, Double_t x2, Double_t y2)
+      {
+         if (fHorizontal)
+            parent.PaintBox(x1 + ratio1 * (x2 - x1), y1, x1 + ratio2 * (x2 - x1), y2, "ilpaletteaxis");
+         else
+            parent.PaintBox(x1, y1 + ratio1 * (y2 - y1), x2, y1 + ratio2 * (y2 - y1), "ilpaletteaxis");
+      }
+
+
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if mouse on the axis region.
@@ -228,46 +264,35 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    if (!gPad) return;
 
-   static Int_t kmode = 0;
-   Int_t plxmin = gPad->XtoAbsPixel(fX1);
-   Int_t plxmax = gPad->XtoAbsPixel(fX2);
-   if (kmode != 0 || px <= plxmax) {
-      if (event == kButton1Down) kmode = 1;
+   auto &parent = *gPad;
+
+   auto inter0 = parent.GetInteractive<TVirtualPad::TInteractive>(this);
+   auto inter = parent.GetInteractive<TPaletteAxisInteractive>(this);
+
+   Bool_t isHorizontal = GetX2NDC() - GetX1NDC() > GetY2NDC() - GetY1NDC();
+
+   // when mouse pointer over palette itself - use TBox interactivity
+   Bool_t useBoxHandler = isHorizontal ? (py <= parent.YtoAbsPixel(GetY1())) : (px <= parent.XtoAbsPixel(GetX2()));
+
+   if (!inter && (inter0 || useBoxHandler)) {
       TBox::ExecuteEvent(event, px, py);
-      if (event == kButton1Up) kmode = 0;
-      // In case palette coordinates have been modified, recompute NDC coordinates
-      Double_t dpx  = gPad->GetX2() - gPad->GetX1();
-      Double_t dpy  = gPad->GetY2() - gPad->GetY1();
-      Double_t xp1  = gPad->GetX1();
-      Double_t yp1  = gPad->GetY1();
-      fX1NDC = (fX1 - xp1) / dpx;
-      fY1NDC = (fY1 - yp1) / dpy;
-      fX2NDC = (fX2 - xp1) / dpx;
-      fY2NDC = (fY2 - yp1) / dpy;
       return;
    }
-   gPad->SetCursor(kHand);
-   static Double_t ratio1, ratio2;
-   static Int_t px1old, py1old, px2old, py2old;
-   Double_t temp, xmin, xmax;
+
+   parent.SetCursor(kHand);
 
    switch (event) {
 
       case kButton1Down:
-         ratio1 = (gPad->AbsPixeltoY(py) - fY1) / (fY2 - fY1);
-         py1old = gPad->YtoAbsPixel(fY1 + ratio1 * (fY2 - fY1));
-         px1old = plxmin;
-         px2old = plxmax;
-         py2old = py1old;
-         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
-         gVirtualX->SetLineColor(-1);
+         inter = parent.MakeInteractive<TPaletteAxisInteractive>(this, isHorizontal);
          // No break !!!
 
       case kButton1Motion:
-         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
-         ratio2 = (gPad->AbsPixeltoY(py) - fY1) / (fY2 - fY1);
-         py2old = gPad->YtoAbsPixel(fY1 + ratio2 * (fY2 - fY1));
-         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
+         if (inter) {
+            inter->SetPosition(parent, px, py, GetX1(), GetY1(), GetX2(), GetY2(), event == kButton1Down);
+            inter->Paint(parent, GetX1(), GetY1(), GetX2(), GetY2());
+            parent.UpdateAsync();
+         }
          break;
 
       case kButton1Up:
@@ -275,46 +300,37 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             gROOT->SetEscape(kFALSE);
             break;
          }
+         if (!inter)
+            break;
 
-         ratio2 = (gPad->AbsPixeltoY(py) - fY1) / (fY2 - fY1);
-         xmin = ratio1;
-         xmax = ratio2;
-         if (xmin > xmax) {
-            temp   = xmin;
-            xmin   = xmax;
-            xmax   = temp;
-            temp   = ratio1;
-            ratio1 = ratio2;
-            ratio2 = temp;
-         }
-         if (ratio2 - ratio1 > 0.05) {
-            if (fH) {
-               if (fH->GetDimension() == 2) {
-                  Double_t zmin = fH->GetMinimum();
-                  Double_t zmax = fH->GetMaximum();
-                  if (GetLog()) {
-                     if (zmin <= 0 && zmax > 0) zmin = TMath::Min((Double_t)1,
-                                                                     (Double_t)0.001 * zmax);
-                     zmin = TMath::Log10(zmin);
-                     zmax = TMath::Log10(zmax);
-                  }
-                  Double_t newmin = zmin + (zmax - zmin) * ratio1;
-                  Double_t newmax = zmin + (zmax - zmin) * ratio2;
-                  if (newmin < zmin)newmin = fH->GetBinContent(fH->GetMinimumBin());
-                  if (newmax > zmax)newmax = fH->GetBinContent(fH->GetMaximumBin());
-                  if (GetLog()) {
-                     newmin = TMath::Exp(2.302585092994 * newmin);
-                     newmax = TMath::Exp(2.302585092994 * newmax);
-                  }
-                  fH->SetMinimum(newmin);
-                  fH->SetMaximum(newmax);
-                  fH->SetBit(TH1::kIsZoomed);
-               }
+         inter->SetPosition(parent, px, py, GetX1(), GetY1(), GetX2(), GetY2());
+         if (inter->ratio1 > inter->ratio2)
+            std::swap(inter->ratio1, inter->ratio2);
+         if ((inter->ratio2 - inter->ratio1 > 0.05) && fH && (fH->GetDimension() == 2)) {
+            Double_t zmin = fH->GetMinimum();
+            Double_t zmax = fH->GetMaximum();
+            if (GetLog()) {
+               if (zmin <= 0 && zmax > 0)
+                  zmin = TMath::Min((Double_t)1, (Double_t)0.001 * zmax);
+               zmin = TMath::Log10(zmin);
+               zmax = TMath::Log10(zmax);
             }
-            gPad->Modified(kTRUE);
+            Double_t newmin = zmin + (zmax - zmin) * inter->ratio1;
+            Double_t newmax = zmin + (zmax - zmin) * inter->ratio2;
+            if (newmin < zmin)
+               newmin = fH->GetBinContent(fH->GetMinimumBin());
+            if (newmax > zmax)
+               newmax = fH->GetBinContent(fH->GetMaximumBin());
+            if (GetLog()) {
+               newmin = TMath::Exp(2.302585092994 * newmin);
+               newmax = TMath::Exp(2.302585092994 * newmax);
+            }
+            fH->SetMinimum(newmin);
+            fH->SetMaximum(newmax);
+            fH->SetBit(TH1::kIsZoomed);
+            parent.Modified(kTRUE);
          }
-         gVirtualX->SetLineColor(-1);
-         kmode = 0;
+         parent.FreeInteractive(this);
          break;
    }
 }
@@ -453,10 +469,10 @@ void TPaletteAxis::Paint(Option_t *)
    ConvertNDCtoPad();
 
    SetFillStyle(1001);
-   Double_t ymin = fY1;
-   Double_t ymax = fY2;
-   Double_t xmin = fX1;
-   Double_t xmax = fX2;
+   Double_t ymin = GetY1();
+   Double_t ymax = GetY2();
+   Double_t xmin = GetX1();
+   Double_t xmax = GetX2();
    Double_t wmin, wmax;
    if (fH) {
       wmin = fH->GetMinimum();
@@ -468,7 +484,6 @@ void TPaletteAxis::Paint(Option_t *)
    Double_t wlmin = wmin;
    Double_t wlmax = wmax;
    Double_t b1, b2, w1, w2, zc;
-   Bool_t   kHorizontal = false;
 
    if ((wlmax - wlmin) <= 0) {
       Double_t mz = wlmin * 0.1;
@@ -479,7 +494,7 @@ void TPaletteAxis::Paint(Option_t *)
       wmax  = wlmax;
    }
 
-   if (GetX2NDC()-GetX1NDC() > GetY2NDC()-GetY1NDC()) kHorizontal = true;
+   Bool_t isHorizontal = GetX2NDC() - GetX1NDC() > GetY2NDC() - GetY1NDC();
 
    if (GetLog()) {
       if (wmin <= 0 && wmax > 0) wmin = TMath::Min((Double_t)1, (Double_t)0.001 * wmax);
@@ -489,17 +504,20 @@ void TPaletteAxis::Paint(Option_t *)
    Double_t ws    = wlmax - wlmin;
    Int_t ncolors = gStyle->GetNumberOfColors();
    Int_t ndivz;
-   if (fH) ndivz = fH->GetContour();
-   else    ndivz = ncolors;
-   if (ndivz == 0) return;
+   if (fH)
+      ndivz = fH->GetContour();
+   else
+      ndivz = ncolors;
+   if (ndivz == 0)
+      return;
    ndivz = TMath::Abs(ndivz);
    Int_t theColor, color;
    // import Attributes already here since we might need them for CJUST
    if (fH && fH->GetDimension() == 2) {
       fAxis.ImportAxisAttributes(fH->GetZaxis());
       TString ztit = fAxis.GetTitle();
-      if (ztit.Index(";")>0) {
-         ztit.Remove(ztit.Index(";"),ztit.Length());
+      if (ztit.Index(";") > 0) {
+         ztit.Remove(ztit.Index(";"), ztit.Length());
          fAxis.SetTitle(ztit.Data());
       }
    }
@@ -513,21 +531,25 @@ void TPaletteAxis::Paint(Option_t *)
       }
    }
    // case option "CJUST": put labels directly at color boundaries
-   TLatex *label = nullptr;
-   TLine *line = nullptr;
+   std::unique_ptr<TLatex> label;
+   std::unique_ptr<TLine> line;
    Double_t prevlab = 0;
    if (fH) {
       TString opt(fH->GetDrawOption());
       if (opt.Contains("CJUST", TString::kIgnoreCase)) {
-         label = new TLatex();
+         label = std::make_unique<TLatex>();
          label->SetTextFont(fAxis.GetLabelFont());
          label->SetTextColor(fAxis.GetLabelColor());
-         if (kHorizontal) label->SetTextAlign(kHAlignCenter+kVAlignTop);
-         else             label->SetTextAlign(kHAlignLeft+kVAlignCenter);
-         line = new TLine();
+         if (isHorizontal)
+            label->SetTextAlign(kHAlignCenter + kVAlignTop);
+         else
+            label->SetTextAlign(kHAlignLeft + kVAlignCenter);
+         line = std::make_unique<TLine>();
          line->SetLineColor(fAxis.GetLineColor());
-         if (kHorizontal) line->PaintLine(xmin, ymin, xmax, ymin);
-         else             line->PaintLine(xmax, ymin, xmax, ymax);
+         if (isHorizontal)
+            line->PaintLine(xmin, ymin, xmax, ymin);
+         else
+            line->PaintLine(xmax, ymin, xmax, ymax);
       }
    }
    Double_t scale = ndivz / (wlmax - wlmin);
@@ -551,7 +573,7 @@ void TPaletteAxis::Paint(Option_t *)
       }
 
       if (w2 <= wlmin) continue;
-      if (kHorizontal) {
+      if (isHorizontal) {
          b1 = xmin + (w1 - wlmin) * (xmax - xmin) / ws;
          b2 = xmin + (w2 - wlmin) * (xmax - xmin) / ws;
       } else {
@@ -568,8 +590,10 @@ void TPaletteAxis::Paint(Option_t *)
       theColor = Int_t((color + 0.99) * Double_t(ncolors) / Double_t(ndivz));
       SetFillColor(gStyle->GetColorPalette(theColor));
       TAttFill::Modify();
-      if (kHorizontal) gPad->PaintBox(b1, ymin, b2, ymax);
-      else             gPad->PaintBox(xmin, b1, xmax, b2);
+      if (isHorizontal)
+         gPad->PaintBox(b1, ymin, b2, ymax);
+      else
+         gPad->PaintBox(xmin, b1, xmax, b2);
       // case option "CJUST": put labels directly
       if (fH && label) {
          Double_t lof = fAxis.GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin());
@@ -578,60 +602,64 @@ void TPaletteAxis::Paint(Option_t *)
          Double_t lsize = fAxis.GetLabelSize();
          Double_t lsize_user = lsize*(gPad->GetUymax()-gPad->GetUymin());
          Double_t zlab = fH->GetContourLevel(i);
-         if (GetLog()&& !fH->TestBit(TH1::kUserContour)) {
+         if (GetLog() && !fH->TestBit(TH1::kUserContour)) {
             zlab = TMath::Power(10, zlab);
          }
          // make sure labels dont overlap
          if (i == 0 || (b1 - prevlab) > 1.5*lsize_user) {
-            if (kHorizontal) label->PaintLatex(b1, ymin - lof, 0, lsize, TString::Format("%g", zlab));
-            else             label->PaintLatex(xmax + lof, b1, 0, lsize, TString::Format("%g", zlab));
+            if (isHorizontal)
+               label->PaintLatex(b1, ymin - lof, 0, lsize, TString::Format("%g", zlab));
+            else
+               label->PaintLatex(xmax + lof, b1, 0, lsize, TString::Format("%g", zlab));
             prevlab = b1;
          }
-         if (kHorizontal) line->PaintLine(b2, ymin+tlength, b2, ymin);
-         else             line->PaintLine(xmax-tlength, b1, xmax, b1);
-         if (i == ndivz-1) {
+         if (isHorizontal)
+            line->PaintLine(b2, ymin + tlength, b2, ymin);
+         else
+            line->PaintLine(xmax - tlength, b1, xmax, b1);
+         if (i == ndivz - 1) {
             // label + tick at top of axis
             if (fH && (b2 - prevlab > 1.5*lsize_user)) {
-               if (kHorizontal) label->PaintLatex(b2, ymin - lof, 0, lsize, TString::Format("%g",fH->GetMaximum()));
-               else             label->PaintLatex(xmax + lof, b2, 0, lsize, TString::Format("%g",fH->GetMaximum()));
+               if (isHorizontal)
+                  label->PaintLatex(b2, ymin - lof, 0, lsize, TString::Format("%g", fH->GetMaximum()));
+               else
+                  label->PaintLatex(xmax + lof, b2, 0, lsize, TString::Format("%g", fH->GetMaximum()));
             }
-            if (kHorizontal) line->PaintLine(b1, ymin+tlength, b1, ymin);
-            else             line->PaintLine(xmax-tlength, b2, xmax, b2);
+            if (isHorizontal)
+               line->PaintLine(b1, ymin + tlength, b1, ymin);
+            else
+               line->PaintLine(xmax - tlength, b2, xmax, b2);
          }
       }
    }
 
+   // case option "CJUST" - just cleanup
+   if (label)
+      return;
+
    // Take primary divisions only
    Int_t ndiv;
-   if (fH) ndiv = fH->GetZaxis()->GetNdivisions();
-   else    ndiv = fAxis.GetNdiv();
-   Bool_t isOptimized = ndiv>0;
-   Int_t absDiv = abs(ndiv);
-   Int_t maxD = absDiv/1000000;
-   ndiv = absDiv%100 + maxD*1000000;
-   if (!isOptimized) ndiv  = -ndiv;
+   if (fH)
+      ndiv = fH->GetZaxis()->GetNdivisions();
+   else
+      ndiv = fAxis.GetNdiv();
+   Bool_t isOptimized = ndiv > 0;
+   Int_t absDiv = TMath::Abs(ndiv);
+   Int_t maxD = absDiv / 1000000;
+   ndiv = absDiv % 100 + maxD * 1000000;
 
-   char chopt[6] = "S   ";
-   chopt[1] = 0;
-   strncat(chopt, "+L", 3);
-   if (ndiv < 0) {
-      ndiv = TMath::Abs(ndiv);
-      strncat(chopt, "N", 2);
-   }
+   TString chopt = "S+L";
+   if (!isOptimized)
+      chopt.Append("N");
    if (GetLog()) {
       wmin = TMath::Power(10., wlmin);
       wmax = TMath::Power(10., wlmax);
-      strncat(chopt, "G", 2);
+      chopt.Append("G");
    }
-   if (label) {
-   // case option "CJUST", cleanup
-      delete label;
-      delete line;
-   } else {
-      // default
-      if (kHorizontal) fAxis.PaintAxis(xmin, ymin, xmax, ymin, wmin, wmax, ndiv, chopt);
-      else             fAxis.PaintAxis(xmax, ymin, xmax, ymax, wmin, wmax, ndiv, chopt);
-   }
+   if (isHorizontal)
+      fAxis.PaintAxis(xmin, ymin, xmax, ymin, wmin, wmax, ndiv, chopt);
+   else
+      fAxis.PaintAxis(xmax, ymin, xmax, ymax, wmin, wmax, ndiv, chopt);
 }
 
 

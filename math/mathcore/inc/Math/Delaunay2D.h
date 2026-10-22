@@ -14,40 +14,10 @@
 #ifndef ROOT_Math_Delaunay2D
 #define ROOT_Math_Delaunay2D
 
-//for testing purposes HAS_CGAL can be [un]defined here
-//#define HAS_CGAL
-
-//for testing purposes THREAD_SAFE can [un]defined here
-//#define THREAD_SAFE
-
-
-//#include "RtypesCore.h"
-
 #include <map>
 #include <vector>
 #include <set>
 #include <functional>
-
-#ifdef HAS_CGAL
-   /* CGAL uses the name PTR as member name in its Handle class
-    * but its a macro defined in mmalloc.h of ROOT
-    * Safe it, disable it and then re-enable it later on*/
-   #pragma push_macro("PTR")
-   #undef PTR
-
-   #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-   #include <CGAL/Delaunay_triangulation_2.h>
-   #include <CGAL/Triangulation_vertex_base_with_info_2.h>
-   #include <CGAL/Interpolation_traits_2.h>
-   #include <CGAL/natural_neighbor_coordinates_2.h>
-   #include <CGAL/interpolation_functions.h>
-
-   #pragma pop_macro("PTR")
-#endif
-
-#ifdef THREAD_SAFE
-   #include<atomic> //atomic operations for thread safety
-#endif
 
 
 namespace ROOT {
@@ -103,9 +73,6 @@ namespace ROOT {
    A reference to triangle ABC is added to _all_ grid cells that include ABC's bounding box.
    The size of the grid is defined to be 25x25
 
-   Optionally (if the compiler macro `HAS_GCAL` is defined ) the triangle findings and interpolation can be computed
-   using the GCAL library. This is however not supported when using the class within ROOT
-
    \ingroup MathCore
  */
 
@@ -118,10 +85,7 @@ public:
       double x[3];           // x of triangle vertices
       double y[3];           // y of triangle vertices
       unsigned int idx[3];   // point corresponding to vertices
-
-      #ifndef HAS_CGAL
-      double invDenom; // cached inv denominator for computing barycentric coordinates (see above)
-      #endif
+      double invDenom;       // cached inv denominator for computing barycentric coordinates (see above)
    };
 
    typedef std::vector<Triangle> Triangles;
@@ -176,7 +140,6 @@ private:
    void DoNormalizePoints();
 
    /// internal function to find the triangle
-   /// use Triangle or CGAL if flag is set
    void DoFindTriangles();
 
    /// internal method to compute the interpolation
@@ -216,10 +179,6 @@ protected:
 
    Triangles   fTriangles;     ///<! Triangles of Triangulation
 
-#ifndef HAS_CGAL
-
-   //using triangle library
-
    std::vector<double> fXN; ///<! normalized X
    std::vector<double> fYN; ///<! normalized Y
 
@@ -239,45 +198,6 @@ protected:
    inline int CellY(double y) const {
       return (y - fYNmin) * fYCellStep;
    }
-
-#else // HAS_CGAL
-      // case of using GCAL
-      //Functor class for accessing the function values/gradients
-      template< class PointWithInfoMap, typename ValueType >
-      struct Data_access : public std::unary_function< typename PointWithInfoMap::key_type,
-                std::pair<ValueType, bool> >
-      {
-
-        Data_access(const PointWithInfoMap& points, const ValueType * values)
-              : _points(points), _values(values){};
-
-        std::pair< ValueType, bool>
-        operator()(const typename PointWithInfoMap::key_type& p) const {
-         typename PointWithInfoMap::const_iterator mit = _points.find(p);
-         if(mit!= _points.end())
-           return std::make_pair(_values[mit->second], true);
-         return std::make_pair(ValueType(), false);
-        };
-
-        const PointWithInfoMap& _points;
-        const ValueType * _values;
-      };
-
-      typedef CGAL::Exact_predicates_inexact_constructions_kernel  K;
-      typedef CGAL::Triangulation_vertex_base_with_info_2<uint, K> Vb;
-      typedef CGAL::Triangulation_data_structure_2<Vb>             Tds;
-      typedef CGAL::Delaunay_triangulation_2<K, Tds>               Delaunay;
-      typedef CGAL::Interpolation_traits_2<K>                      Traits;
-      typedef K::FT                                                Coord_type;
-      typedef K::Point_2                                           Point;
-      typedef std::map<Point, Vb::Info, K::Less_xy_2>              PointWithInfoMap;
-      typedef Data_access< PointWithInfoMap, double >              Value_access;
-
-   Delaunay fCGALdelaunay; ///<! CGAL delaunay triangulation object
-   PointWithInfoMap fNormalizedPoints; ///<! Normalized function values
-
-#endif //HAS_CGAL
-
 
 };
 

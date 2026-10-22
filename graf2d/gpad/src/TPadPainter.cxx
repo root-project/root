@@ -16,6 +16,7 @@
 
 #include "TPadPainter.h"
 #include "TVirtualX.h"
+#include "TSystem.h"
 #include "TCanvas.h"
 #include "TPoint.h"
 #include "TError.h"
@@ -47,13 +48,13 @@ void ConvertPointsAndMergePassX(TVirtualPad *pad, unsigned nPoints, const T *x, 
 void ConvertPointsAndMergeInplacePassY(std::vector<TPoint> &dst);
 
 template<class T>
-void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T *xs, const T *ys, Bool_t add_first_point);
+void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Bool_t absCoord, Int_t nPoints, const T *xs, const T *ys, Bool_t add_first_point);
 
 template<typename T>
 void DrawPolyLineAux(TVirtualPad *pad, WinContext_t cont, Bool_t absCoord, unsigned nPoints, const T *xs, const T *ys);
 
 template<class T>
-void DrawPolyMarkerAux(TVirtualPad *pad, WinContext_t cont, Bool_t double_buffer, unsigned nPoints, const T *xs, const T *ys);
+void DrawPolyMarkerAux(TVirtualPad *pad, WinContext_t cont, Bool_t absCoord, unsigned nPoints, const T *xs, const T *ys);
 
 
 }
@@ -114,6 +115,13 @@ Int_t TPadPainter::ResizeDrawable(Int_t device, UInt_t w, UInt_t h)
    return gVirtualX->ResizePixmap(device, w, h);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true when X11 backend is used
+
+Bool_t TPadPainter::IsX11() const
+{
+   return gVirtualX->InheritsFrom("TGX11");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns true when cocoa backend is used
@@ -350,7 +358,7 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Double_t
    }
 
    // if fully transparent, add first point to draw line
-   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys, fFullyTransparent);
+   DrawFillAreaAux(gPad, fWinContext, !fDoubleBuffer, nPoints, xs, ys, fFullyTransparent);
 }
 
 
@@ -365,7 +373,7 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t *
    }
 
    // if fully transparent, add first point to draw line
-   DrawFillAreaAux(gPad, fWinContext, nPoints, xs, ys, fFullyTransparent);
+   DrawFillAreaAux(gPad, fWinContext, !fDoubleBuffer, nPoints, xs, ys, fFullyTransparent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -499,7 +507,7 @@ void TPadPainter::DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y)
       return;
    }
 
-   DrawPolyMarkerAux(gPad, fWinContext, fDoubleBuffer, n, x, y);
+   DrawPolyMarkerAux(gPad, fWinContext, !fDoubleBuffer, n, x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -512,7 +520,7 @@ void TPadPainter::DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y)
       return;
    }
 
-   DrawPolyMarkerAux(gPad, fWinContext, fDoubleBuffer, n, x, y);
+   DrawPolyMarkerAux(gPad, fWinContext, !fDoubleBuffer, n, x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -524,68 +532,82 @@ void TPadPainter::DrawTTFglyphs(Int_t x, Int_t y, TTFhandle &ttf, ETextMode mode
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Helper method to check if TImage is present in list of primitives
+
+static Bool_t ContainsTImage(const TVirtualPad *pad)
+{
+   TIter next(pad->GetListOfPrimitives());
+
+   while (auto obj = next()) {
+      if (obj->InheritsFrom(TImage::Class()))
+         return kTRUE;
+      if (auto subpad = dynamic_cast<TPad *>(obj))
+         if (ContainsTImage(subpad))
+            return kTRUE;
+   }
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Save the image displayed in the canvas pointed by "pad" into a binary file.
 
-void TPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const
+TVirtualPadPainter::ESaveImageResult TPadPainter::SaveAsImage(TVirtualPad *pad, const char *fileName, Int_t type) const
 {
-   if (gVirtualX->InheritsFrom("TGCocoa") && !gROOT->IsBatch() &&
-      pad->GetCanvas() && pad->GetCanvas()->GetCanvasID() != -1) {
+   // for X11 and Winows there is special GIF, which works only with maximal 256-colors
+   // Do not try to use it for pads with TImage inside - it most probably fails
+   if ((type == TImage::kGif) && pad && !IsCocoa() && !ContainsTImage(pad)) {
+      gVirtualX->Update(1);
+      gSystem->Sleep(30);
+      gSystem->ProcessEvents();
 
-      TCanvas * const canvas = pad->GetCanvas();
-      //Force TCanvas::CopyPixmaps.
-      canvas->Flush();
-
-      const UInt_t w = canvas->GetWw();
-      const UInt_t h = canvas->GetWh();
-
-      const std::unique_ptr<unsigned char[]>
-               pixelData(gVirtualX->GetColorBits(canvas->GetCanvasID(), 0, 0, w, h));
-
-      if (pixelData.get()) {
-         const std::unique_ptr<TImage> image(TImage::Create());
-         if (image.get()) {
-            image->DrawRectangle(0, 0, w, h);
-            if (unsigned char *argb = (unsigned char *)image->GetArgbArray()) {
-               //Ohhh.
-               if (sizeof(UInt_t) == 4) {
-                  //For sure the data returned from TGCocoa::GetColorBits,
-                  //it's 4 * w * h bytes with what TASImage considers to be argb.
-                  std::copy(pixelData.get(), pixelData.get() + 4 * w * h, argb);
-               } else {
-                  //A bit paranoid, don't you think so?
-                  //Will Quartz/TASImage work at all on such a fancy platform? ;)
-                  const unsigned shift = std::numeric_limits<unsigned char>::digits;
-                  //
-                  unsigned *dstPixel = (unsigned *)argb, *end = dstPixel + w * h;
-                  const unsigned char *srcPixel = pixelData.get();
-                  for (;dstPixel != end; ++dstPixel, srcPixel += 4) {
-                     //Looks fishy but should work, trust me :)
-                     *dstPixel = srcPixel[0] & (srcPixel[1] << shift) &
-                                               (srcPixel[2] << 2 * shift) &
-                                               (srcPixel[3] << 3 * shift);
-                  }
-               }
-
-               image->WriteImage(fileName, (TImage::EImageFileTypes)type);
-               //Success.
-               return;
-            }
-         }
-      }
-   }
-
-   if (type == TImage::kGif) {
       Int_t wid = (pad == pad->GetCanvas()) ? pad->GetCanvasID() : pad->GetPixmapID();
       auto ctxt = gVirtualX->GetWindowContext(wid);
-      // TODO: if fail, one can use TImage functionality instead
-      gVirtualX->WriteGIFW(ctxt, fileName);
-   } else {
-      const std::unique_ptr<TImage> img(TImage::Create());
-      if (img.get()) {
-         img->FromPad(pad);
-         img->WriteImage(fileName, (TImage::EImageFileTypes)type);
-      }
+      // TODO: GIF image is special, if fail - try use TImage functionality
+      Int_t res = gVirtualX->WriteGIFW(ctxt, fileName);
+      if (res > 0)
+         return kSaveOk;
    }
+
+   return TPadPainterBase::SaveAsImage(pad, fileName, type);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill image object with the pixel data from the pad
+/// Implements special handling for X11 where ASImage has native implementation
+
+Bool_t TPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
+{
+   if (!image || !pad)
+      return kFALSE;
+
+   gVirtualX->Update(1);
+   if (!gThreadXAR) {
+      gSystem->Sleep(10);
+      gSystem->ProcessEvents();
+      gSystem->Sleep(10);
+      gSystem->ProcessEvents();
+   }
+
+   auto width = pad->GetPadWidth();
+   auto height = pad->GetPadHeight();
+
+   Int_t wid = (pad == pad->GetCanvas()) ? pad->GetCanvasID() : pad->GetPixmapID();
+   gVirtualX->SelectWindow(wid);
+
+   Window_t wd = (Window_t)gVirtualX->GetCurrentWindow();
+
+   if (IsX11()) { //use built-in optimized version
+      image->FromX11Window(wd, 0, 0, width, height);
+   } else {
+      unsigned char *bits = gVirtualX->GetColorBits(wd, 0, 0, width, height);
+      if (!bits)
+         return kFALSE;
+
+      image->FromBitmap(bits, width, height);
+      delete [] bits;
+   }
+
+   return image->IsValid();
 }
 
 
@@ -796,7 +818,7 @@ void ConvertPointsAndMerge(TVirtualPad *pad, unsigned threshold, unsigned nPoint
 ////////////////////////////////////////////////////////////////////////////////
 
 template<class T>
-void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T *xs, const T *ys, Bool_t add_first_point)
+void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Bool_t absCoord, Int_t nPoints, const T *xs, const T *ys, Bool_t add_first_point)
 {
    std::vector<TPoint> xy;
 
@@ -809,8 +831,8 @@ void DrawFillAreaAux(TVirtualPad *pad, WinContext_t cont, Int_t nPoints, const T
       return;
    }
 
-   if (nPoints < threshold)
-      ConvertPoints(pad, nPoints, xs, ys, xy);
+   if (absCoord || (nPoints < threshold))
+      ConvertPoints(pad, nPoints, xs, ys, xy, absCoord);
    else
       ConvertPointsAndMerge(pad, threshold, nPoints, xs, ys, xy);
 
@@ -842,22 +864,19 @@ void DrawPolyLineAux(TVirtualPad *pad, WinContext_t cont, Bool_t absCoord, unsig
       ConvertPointsAndMerge(pad, threshold, nPoints, xs, ys, xy);
 
    if (xy.size() > 1)
-      gVirtualX->DrawPolyLineW(cont, xy.size(), &xy[0]);
+      gVirtualX->DrawPolyLineW(cont, xy.size(), xy.data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 template<class T>
-void DrawPolyMarkerAux(TVirtualPad *pad, WinContext_t cont, Bool_t double_buffer, unsigned nPoints, const T *xs, const T *ys)
+void DrawPolyMarkerAux(TVirtualPad *pad, WinContext_t cont, Bool_t absCoord, unsigned nPoints, const T *xs, const T *ys)
 {
-   std::vector<TPoint> xy(nPoints);
+   std::vector<TPoint> xy;
 
-   for (unsigned i = 0; i < nPoints; ++i) {
-      xy[i].fX = (SCoord_t) (double_buffer ? pad->XtoPixel(xs[i]) : pad->XtoAbsPixel(xs[i]));
-      xy[i].fY = (SCoord_t) (double_buffer ? pad->YtoPixel(ys[i]) : pad->YtoAbsPixel(ys[i]));
-   }
+   ConvertPoints(pad, nPoints, xs, ys, xy, absCoord);
 
-   gVirtualX->DrawPolyMarkerW(cont, nPoints, &xy[0]);
+   gVirtualX->DrawPolyMarkerW(cont, nPoints, xy.data());
 }
 
 }

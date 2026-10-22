@@ -23,49 +23,18 @@ namespace SOFIE {
 
 // Declaration of operators
 // Unary operators
-extern ParserFuncSignature ParseSqrt;
-extern ParserFuncSignature ParseReciprocal;
-extern ParserFuncSignature ParseNeg;
-extern ParserFuncSignature ParseExp;
-extern ParserFuncSignature ParseLog;
-extern ParserFuncSignature ParseSin;
-extern ParserFuncSignature ParseCos;
-extern ParserFuncSignature ParseAbs;
-extern ParserFuncSignature ParseSoftplus;
-extern ParserFuncSignature ParseAtan;
-extern ParserFuncSignature ParseAsinh;
-extern ParserFuncSignature ParseAcosh;
-extern ParserFuncSignature ParseAtanh;
-extern ParserFuncSignature ParseFloor;
+void RegisterBasicUnaryParsers(RModelParser_ONNX &parser);
 // Binary operators
-extern ParserFuncSignature ParseAdd;
-extern ParserFuncSignature ParseSub;
-extern ParserFuncSignature ParseMul;
-extern ParserFuncSignature ParseDiv;
-extern ParserFuncSignature ParsePow;
-extern ParserFuncSignature ParseMod;
+void RegisterBasicBinaryParsers(RModelParser_ONNX &parser);
 // Nary operators
-extern ParserFuncSignature ParseMax;
-extern ParserFuncSignature ParseMin;
-extern ParserFuncSignature ParseMean;
-extern ParserFuncSignature ParseSum;
+void RegisterBasicNaryParsers(RModelParser_ONNX &parser);
 //Comparision Operators
-extern ParserFuncSignature ParseEq;
-extern ParserFuncSignature ParseLess;
-extern ParserFuncSignature ParseLessEq;
-extern ParserFuncSignature ParseGreater;
-extern ParserFuncSignature ParseGreaterEq;
+void RegisterComparisionParsers(RModelParser_ONNX &parser);
 //Is Operators
-extern ParserFuncSignature ParseIsInf;
-extern ParserFuncSignature ParseIsNaN;
+void RegisterBasicIsParsers(RModelParser_ONNX &parser);
 extern ParserFuncSignature ParseNot;
 // Reduce operators
-extern ParserFuncSignature ParseReduceMean;
-extern ParserFuncSignature ParseReduceSum;
-extern ParserFuncSignature ParseReduceSumSquare;
-extern ParserFuncSignature ParseReduceProd;
-extern ParserFuncSignature ParseReduceMax;
-extern ParserFuncSignature ParseReduceMin;
+void RegisterReduceParsers(RModelParser_ONNX &parser);
 // Others
 extern ParserFuncSignature ParseBatchNormalization;
 extern ParserFuncSignature ParseConstant;
@@ -317,49 +286,18 @@ std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorPr
 RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_unique<OperatorsMapImpl>()) {
    // Register operators
    // Unary operators
-   RegisterOperator("Sqrt", ParseSqrt);
-   RegisterOperator("Reciprocal", ParseReciprocal);
-   RegisterOperator("Neg", ParseNeg);
-   RegisterOperator("Exp", ParseExp);
-   RegisterOperator("Log", ParseLog);
-   RegisterOperator("Sin", ParseSin);
-   RegisterOperator("Cos", ParseCos);
-   RegisterOperator("Abs", ParseAbs);
-   RegisterOperator("Softplus", ParseSoftplus);
-   RegisterOperator("Atan", ParseAtan);
-   RegisterOperator("Asinh", ParseAsinh);
-   RegisterOperator("Acosh", ParseAcosh);
-   RegisterOperator("Atanh", ParseAtanh);
-   RegisterOperator("Floor", ParseFloor);
+   RegisterBasicUnaryParsers(*this);
    // Binary operators
-   RegisterOperator("Add", ParseAdd);
-   RegisterOperator("Sub", ParseSub);
-   RegisterOperator("Mul", ParseMul);
-   RegisterOperator("Div", ParseDiv);
-   RegisterOperator("Pow", ParsePow);
-   RegisterOperator("Mod", ParseMod);
+   RegisterBasicBinaryParsers(*this);
    // Nary operators
-   RegisterOperator("Max", ParseMax);
-   RegisterOperator("Min", ParseMin);
-   RegisterOperator("Mean", ParseMean);
-   RegisterOperator("Sum", ParseSum);
+   RegisterBasicNaryParsers(*this);
    //Comparision Operators
-   RegisterOperator("Equal", ParseEq);
-   RegisterOperator("Less", ParseLess);
-   RegisterOperator("LessOrEqual", ParseLessEq);
-   RegisterOperator("Greater", ParseGreater);
-   RegisterOperator("GreaterOrEqual", ParseGreaterEq);
+   RegisterComparisionParsers(*this);
    // Is If operators
-   RegisterOperator("IsInf", ParseIsInf);
-   RegisterOperator("IsNaN", ParseIsNaN);
+   RegisterBasicIsParsers(*this);
    RegisterOperator("Not", ParseNot);
    // Reduce operators
-   RegisterOperator("ReduceMean", ParseReduceMean);
-   RegisterOperator("ReduceSum", ParseReduceSum);
-   RegisterOperator("ReduceSumSquare", ParseReduceSumSquare);
-   RegisterOperator("ReduceProd", ParseReduceProd);
-   RegisterOperator("ReduceMax", ParseReduceMax);
-   RegisterOperator("ReduceMin", ParseReduceMin);
+   RegisterReduceParsers(*this);
    // Others
    RegisterOperator("BatchNormalization", ParseBatchNormalization);
    RegisterOperator("Constant", ParseConstant);

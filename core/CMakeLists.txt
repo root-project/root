@@ -61,7 +61,6 @@ add_subdirectory(sanitizer)
 add_subdirectory(rootcling_stage1)
 
 add_subdirectory(base)
-add_subdirectory(clib)
 add_subdirectory(clingutils)
 add_subdirectory(cont)
 add_subdirectory(dictgen)

@@ -70,6 +70,7 @@ public:
   ExtendMode extendMode() const override ;
 
   double expectedEvents(const RooArgSet* nset) const override ;
+  std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet *nset) const override;
 
   bool forceAnalyticalInt(const RooAbsArg&) const override { return true ; }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
@@ -118,6 +119,7 @@ protected:
   createAsymmetryComponent(const RooAbsCategoryLValue &asymCat, const RooAbsCategoryLValue &asymCatState) const override;
 
   RooArgSet const& flattenedCatList() const;
+  bool indexCatIsInNormSet(RooArgSet const *nset) const;
 
   mutable RooSetProxy _plotCoefNormSet ;
   const TNamed* _plotCoefNormRange = nullptr;

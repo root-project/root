@@ -2087,7 +2087,14 @@ RooProdPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileC
       pdf->setNormRange(oldRange.empty() ? nullptr : oldRange.c_str());
    }
 
-   auto fixedProdPdf = std::make_unique<RooFit::Detail::RooFixedProdPdf>(std::move(prodPdfClone), normSet);
+   // The RooFixedProdPdf keeps the normalization set around to create its
+   // cache elements and to evaluate the expected number of events. It must
+   // refer to the observables in the compiled computation graph, because the
+   // original ones can get out of sync with it: RooSimultaneous prefixes the
+   // observable names of each channel after compilation, and the stale
+   // observables would then not be found anymore by name.
+   auto fixedProdPdf =
+      std::make_unique<RooFit::Detail::RooFixedProdPdf>(std::move(prodPdfClone), ctx.mapToCompiled(normSet));
    ctx.markAsCompiled(*fixedProdPdf);
 
    return fixedProdPdf;

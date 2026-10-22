@@ -167,12 +167,12 @@ void TGScrollBarElement::SetEnabled(Bool_t on)
          TString back = gEnv->GetValue("Gui.BackgroundColor", "#c0c0c0");
          img2->FillRectangle(back.Data(), 0, 0, fPic->GetWidth(), fPic->GetHeight());
          img->SetImage(fPicN->GetPicture(), fPicN->GetMask());
-         Pixmap_t mask = img->GetMask();
+         Pixmap_t mask = GetImageMask(img);
          img2->Merge(img, "overlay");
 
          TString name = "disbl_";
          name += fPic->GetName();
-         fPicD = fClient->GetPicturePool()->GetPicture(name.Data(), img2->GetPixmap(),
+         fPicD = fClient->GetPicturePool()->GetPicture(name.Data(), GetImagePixmap(img2),
                                                        mask);
          delete img;
          delete img2;

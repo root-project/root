@@ -195,7 +195,7 @@ DNDMainFrame::DNDMainFrame(const TGWindow *p, int w, int h) : TGMainFrame(p, w, 
       if (img) {
          // create a 16x16 icon from the original picture
          img->Scale(16, 16);
-         pic = gClient->GetPicturePool()->GetPicture("rose512", img->GetPixmap(), img->GetMask());
+         pic = gClient->GetPicturePool()->GetPicture("rose512", TGWindow::GetImagePixmap(img), TGWindow::GetImageMask(img));
          delete img;
       } else
          pic = gClient->GetPicture("psp_t.xpm");
@@ -284,7 +284,7 @@ void DNDMainFrame::DataDropped(TGListTreeItem *, TDNDData *data)
          TImage *img2 = TImage::Open("slink_t.xpm");
          if (img1 && img2) {
             img1->Merge(img2);
-            pic = gClient->GetPicturePool()->GetPicture("doc_lnk", img1->GetPixmap(), img1->GetMask());
+            pic = gClient->GetPicturePool()->GetPicture("doc_lnk", TGWindow::GetImagePixmap(img1), TGWindow::GetImageMask(img1));
             delete img2;
             delete img1;
          } else

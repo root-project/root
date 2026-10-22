@@ -1160,19 +1160,17 @@ static Bool_t IsTextFile(const char *candidate)
 
 static const TGPicture *MakeLinkPic(const TGPicture *pic)
 {
-   const TGPicture *merged;
-   TImage *img1, *img2;
    if (pic) {
-      img1 = TImage::Create();
-      if (img1 == 0) return pic;
+      auto img1 = TImage::Create();
+      if (!img1) return pic;
       img1->SetImage(((const TGPicture *)pic)->GetPicture(),
                      ((const TGPicture *)pic)->GetMask());
-      img2 = TImage::Open("slink_t.xpm");
+      auto img2 = TImage::Open("slink_t.xpm");
       if (img2) img1->Merge(img2);
       TString lnk_name = ((const TGPicture *)pic)->GetName();
       lnk_name.Prepend("lnk_");
-      merged = gClient->GetPicturePool()->GetPicture(lnk_name.Data(),
-                                          img1->GetPixmap(), img1->GetMask());
+      auto merged = gClient->GetPicturePool()->GetPicture(lnk_name.Data(),
+                                          TGWindow::GetImagePixmap(img1), TGWindow::GetImageMask(img1));
       if (img2) delete img2;
       delete img1;
       return merged;
@@ -1565,9 +1563,9 @@ char *TGFileBrowser::FormatFileInfo(const char *fname, Long64_t size, Long_t mod
 
 void TGFileBrowser::GetObjPicture(const TGPicture **pic, TObject *obj)
 {
-   const char *clname = 0;
-   TClass *objClass = 0;
-   static TImage *im = 0;
+   const char *clname = nullptr;
+   TClass *objClass = nullptr;
+   static TImage *im = nullptr;
    if (!im) {
       im = TImage::Create();
    }
@@ -1616,8 +1614,7 @@ void TGFileBrowser::GetObjPicture(const TGPicture **pic, TObject *obj)
    if (!(*pic) && xpm) {
       if (im && im->SetImageBuffer((char**)&name, TImage::kXpm)) {
          im->Scale(im->GetWidth()/4, im->GetHeight()/4);
-         *pic = gClient->GetPicturePool()->GetPicture(iconname, im->GetPixmap(),
-                                                      im->GetMask());
+         *pic = gClient->GetPicturePool()->GetPicture(iconname, TGWindow::GetImagePixmap(im), TGWindow::GetImageMask(im));
       }
       gClient->GetMimeTypeList()->AddType("[thumbnail]", iconname, iconname, iconname, "->Browse()");
       return;

@@ -1826,8 +1826,11 @@ Bool_t TRootCanvas::HandleContainerButton(Event_t *event)
    if (event->fType == kButtonPress) {
       if (fToolTip && fCanvas->GetShowToolTips()) {
          fToolTip->Hide();
-         gVirtualX->UpdateWindowW(gVirtualX->GetWindowContext(fCanvasID), 0);
-         gSystem->ProcessEvents();
+         // do not sync GL canvas - avoid flicking
+         if (!fCanvas->UseGL() && (fCanvasID != -1)) {
+            gVirtualX->UpdateWindowW(gVirtualX->GetWindowContext(fCanvasID), 0);
+            gSystem->ProcessEvents();
+         }
       }
       fButton = button;
       if (button == kButton1) {
@@ -2192,6 +2195,28 @@ void TRootCanvas::UpdateViewWithMenu()
       fViewWithMenu->EnableEntry(kViewX3D);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update canvas display
+
+void TRootCanvas::UpdateDisplay(Int_t mode, Bool_t sleep)
+{
+   if (gVirtualX)
+      gVirtualX->Update(mode % 100);
+
+   if (mode == 101) {
+      // used by TGLPadPainter
+      // when requesting window atributes sync works better
+      // workaround for issue #22157
+      WindowAttributes_t attributes;
+      gVirtualX->GetWindowAttributes(GetMainFrame()->GetId(), attributes);
+   }
+
+   if (sleep)
+      gSystem->Sleep(30);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Save a canvas container as a C++ statement(s) on output stream out.
 
@@ -2204,3 +2229,5 @@ void TRootContainer::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out << "   TGCompositeFrame *" << GetName() << " = new TGCompositeFrame(gClient, winC, " << GetParent()->GetName()
        << ");\n";
 }
+
+

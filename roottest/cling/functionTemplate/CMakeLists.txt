@@ -13,9 +13,8 @@ ROOTTEST_ADD_TEST(runreferenceuse
 if(pyroot)
   ROOTTEST_ADD_TEST(testcint
                     MACRO testcint.py
-                    PRECMD ${ROOT_root_CMD} -b -q -e .L\ t.h+
                     OUTREF pythoncintrun.ref
                     OUTCNVCMD grep -v "just a comment"
-                    WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+                    DEPENDS t-build
                     LABELS roottest regression cling)
 endif()

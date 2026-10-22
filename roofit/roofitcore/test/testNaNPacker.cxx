@@ -169,26 +169,7 @@ TEST(RooNaNPacker, FitSimpleLinear)
    EXPECT_NEAR(a1.getVal(), 12., a1.getError());
 }
 
-class TestForDifferentBackends : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
-public:
-   TestForDifferentBackends() : _evalBackend{RooFit::EvalBackend(RooFit::EvalBackend::Value::Legacy)} {}
-
-private:
-   void SetUp() override
-   {
-      RooRandom::randomGenerator()->SetSeed(1337ul);
-      _evalBackend = std::get<0>(GetParam());
-      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
-   }
-
-   void TearDown() override { _changeMsgLvl.reset(); }
-
-protected:
-   RooFit::EvalBackend _evalBackend;
-
-private:
-   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
-};
+using TestForDifferentBackends = RooFitEvalBackendTest;
 
 /// Fit a parabola, where parameters are set up such that negative function values are obtained.
 /// The minimiser needs to recover from that.
@@ -253,11 +234,7 @@ TEST_P(TestForDifferentBackends, FitParabola)
 }
 
 INSTANTIATE_TEST_SUITE_P(RooNaNPacker, TestForDifferentBackends, testing::Values(ROOFIT_EVAL_BACKENDS),
-                         [](testing::TestParamInfo<TestForDifferentBackends::ParamType> const &paramInfo) {
-                            std::stringstream ss;
-                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
-                            return ss.str();
-                         });
+                         EvalBackendParamName{});
 
 #undef BATCH_MODE_VALS
 

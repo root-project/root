@@ -29,6 +29,7 @@ using TBuffer3D mechanism.
 #include "TCanvasImp.h"
 #include "TF1.h"
 #include "TGraph.h"
+#include "TImage.h"
 #include "TPluginManager.h"
 #include "TVirtualPadEditor.h"
 
@@ -52,7 +53,6 @@ using TBuffer3D mechanism.
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"
-#include "TVirtualX.h"
 
 #include <cstring>
 
@@ -1600,21 +1600,30 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Raytrace current drawn geometry
 
-void TGeoPainter::Raytrace(Option_t *)
+void TGeoPainter::Raytrace(Option_t *opt)
 {
-   if (!gPad || gPad->IsBatch())
-      return;
-   TView *view = gPad->GetView();
+   TView *view = gPad ? gPad->GetView() : nullptr;
    if (!view)
       return;
+
+   auto &parent = *gPad;
+
+   auto img = dynamic_cast<TImage *>(parent.GetListOfPrimitives()->FindObject("RayTrace"));
+   if (img) {
+      parent.GetListOfPrimitives()->Remove(img);
+      delete img;
+   }
+
+   // only cleanup image
+   if (opt && !strcmp(opt, "cleanup"))
+      return;
+
    Int_t rtMode = fGeoManager->GetRTmode();
    TGeoVolume *top = fGeoManager->GetTopVolume();
    if (top != fTopVolume)
       fGeoManager->SetTopVolume(fTopVolume);
    if (!view->IsPerspective())
       view->SetPerspective();
-   gVirtualX->SetMarkerSize(1);
-   gVirtualX->SetMarkerStyle(1);
    Bool_t inclipst = kFALSE;
    Double_t krad = TMath::DegToRad();
    Double_t lat = view->GetLatitude();
@@ -1657,13 +1666,11 @@ void TGeoPainter::Raytrace(Option_t *)
    fGeoManager->DoBackupState();
    if (fClippingShape)
       inclipst = fClippingShape->Contains(cop);
-   Int_t px, py;
    Double_t xloc, yloc, modloc;
-   Int_t pxmin, pxmax, pymin, pymax;
-   pxmin = gPad->UtoAbsPixel(0);
-   pxmax = gPad->UtoAbsPixel(1);
-   pymin = gPad->VtoAbsPixel(1);
-   pymax = gPad->VtoAbsPixel(0);
+   Int_t pxmin = parent.UtoAbsPixel(0);
+   Int_t pxmax = parent.UtoAbsPixel(1);
+   Int_t pymin = parent.VtoAbsPixel(1);
+   Int_t pymax = parent.VtoAbsPixel(0);
    TGeoNode *next = nullptr;
    TGeoNode *nextnode = nullptr;
    Double_t step, steptot;
@@ -1671,7 +1678,6 @@ void TGeoPainter::Raytrace(Option_t *)
    const Double_t *point = fGeoManager->GetCurrentPoint();
    Double_t *ppoint = (Double_t *)point;
    Double_t tosource[3];
-   Double_t calf;
    Double_t phi = 45. * krad;
    tosource[0] = -dir[0] * TMath::Cos(phi) + dir[1] * TMath::Sin(phi);
    tosource[1] = -dir[0] * TMath::Sin(phi) - dir[1] * TMath::Cos(phi);
@@ -1679,29 +1685,64 @@ void TGeoPainter::Raytrace(Option_t *)
 
    auto checker = fGeoManager->GetGeomChecker();
 
+   img = TImage::Create();
+   if (!img) {
+      Error("Raytrace", "Fail to create TImage instance for painting");
+      return;
+   }
+
+   img->SetName("RayTrace");
+
+   Int_t image_width = pxmax - pxmin;
+   Int_t image_height = pymax - pymin;
+
+   std::vector<Double_t> arr(image_width * image_height, 0);
+   img->SetImage(arr.data(), image_width, image_height);
+
+   img->SetPaletteEnabled(kFALSE);
+   img->SetEditable(kTRUE); // suppress zooming
+   img->BeginPaint(kTRUE);
+
+   auto argb = img->GetArgbArray();
+   if (!argb) {
+      Error("Raytrace", "ARGB array of image is not present");
+      delete img;
+      return;
+   }
+
+   Int_t root_color_index = parent.GetFillColor();
+   TColor *rootcolor = gROOT->GetColor(root_color_index);
+
+   for (Int_t px = 0; px < image_width; px++)
+      for (Int_t py = 0; py < image_height; py++) {
+         argb[py * image_width + px] =
+            0xFF << 24 |
+            ((UInt_t) (rootcolor->GetRed() * 255) << 16) |
+            ((UInt_t) (rootcolor->GetGreen() * 255) << 8) |
+            ((UInt_t) (rootcolor->GetBlue() * 255));
+      }
+
    Bool_t done;
    //   Int_t istep;
-   Int_t base_color, color;
-   Double_t light;
+   Int_t base_color;
    Double_t stemin = 0, stemax = TGeoShape::Big();
-   TPoint *pxy = new TPoint[1];
    TGeoVolume *nextvol;
    Int_t up;
    Int_t ntotal = pxmax * pymax;
    Int_t nrays = 0;
-   TStopwatch *timer = new TStopwatch();
-   timer->Start();
-   for (px = pxmin; px < pxmax; px++) {
-      for (py = pymin; py < pymax; py++) {
+   TStopwatch timer;
+   timer.Start();
+   for (Int_t px = pxmin; px < pxmax; px++) {
+      for (Int_t py = pymin; py < pymax; py++) {
          if ((nrays % 100) == 0)
-            checker->OpProgress("Raytracing", nrays, ntotal, timer, kFALSE);
+            checker->OpProgress("Raytracing", nrays, ntotal, &timer, kFALSE);
          nrays++;
          base_color = 1;
          steptot = 0;
          Bool_t inclip = inclipst;
-         xloc = gPad->AbsPixeltoX(pxmin + pxmax - px);
+         xloc = parent.AbsPixeltoX(pxmin + pxmax - px);
          xloc = xloc * du - u0;
-         yloc = gPad->AbsPixeltoY(pymin + pymax - py);
+         yloc = parent.AbsPixeltoY(pymin + pymax - py);
          yloc = yloc * dv - v0;
          modloc = TMath::Sqrt(xloc * xloc + yloc * yloc + dproj * dproj);
          local[0] = xloc / modloc;
@@ -1813,20 +1854,32 @@ void TGeoPainter::Raytrace(Option_t *)
             if (!norm)
                continue;
          }
-         calf = norm[0] * tosource[0] + norm[1] * tosource[1] + norm[2] * tosource[2];
-         light = TMath::Abs(calf);
-         color = GetColor(base_color, light);
-         // Now we know the color of the pixel, just draw it
-         gVirtualX->SetMarkerColor(color);
-         pxy[0].fX = px;
-         pxy[0].fY = py;
-         gVirtualX->DrawPolyMarker(1, pxy);
+         Double_t calf = norm[0] * tosource[0] + norm[1] * tosource[1] + norm[2] * tosource[2];
+
+         Double_t light = TMath::Abs(calf);
+         Int_t color = GetColor(base_color, light);
+
+         if (color != root_color_index) {
+            rootcolor = gROOT->GetColor(color);
+            root_color_index = color;
+         }
+         if (rootcolor)
+            argb[(py - pymin) * image_width + (px - pxmin)] =
+               0xFF << 24 |
+               ((UInt_t) (rootcolor->GetRed() * 255) << 16) |
+               ((UInt_t) (rootcolor->GetGreen() * 255) << 8) |
+               ((UInt_t) (rootcolor->GetBlue() * 255));
       }
    }
-   delete[] pxy;
-   timer->Stop();
-   checker->OpProgress("Raytracing", nrays, ntotal, timer, kTRUE);
-   delete timer;
+   timer.Stop();
+   checker->OpProgress("Raytracing", nrays, ntotal, &timer, kTRUE);
+
+   img->EndPaint();
+
+   img->SetBit(kCanDelete);
+
+   parent.Add(img, "x");
+   parent.Modified();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

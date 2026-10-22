@@ -111,10 +111,25 @@ void rooHistTranslateImpl(RooAbsArg const &arg, CodegenContext &ctx, int intOrde
    ctx.addResult(&arg, "(" + weightArr + ")[" + offset + "]");
 }
 
-std::string realSumPdfTranslateImpl(CodegenContext &ctx, RooAbsArg const &arg, RooArgList const &funcList,
-                                    RooArgList const &coefList, bool normalize)
+std::string
+realSumPdfTranslateImpl(CodegenContext &ctx, RooArgList const &funcList, RooArgList const &coefList, bool normalize)
 {
    bool noLastCoeff = funcList.size() != coefList.size();
+
+   // Decide the scope from the inputs rather than from the RooRealSumPdf
+   // itself: this function is also used for the integral of the sum, whose
+   // inputs are the integrals of the components. Those usually don't depend
+   // on the data even though the sum does, and then the code must not end up
+   // inside the event loop, because the integral is also the expected number
+   // of events that the extended likelihood uses after the loop.
+   bool scopeIndependent = true;
+   for (RooAbsArg const *func : funcList) {
+      scopeIndependent = scopeIndependent && ctx.isScopeIndependent(func);
+   }
+   for (RooAbsArg const *coef : coefList) {
+      scopeIndependent = scopeIndependent && ctx.isScopeIndependent(coef);
+   }
+   auto addCode = [&](std::string const &code) { ctx.addToCodeBody(code, scopeIndependent); };
 
    std::string const &funcName = ctx.buildArg(funcList);
    std::string const &coeffName = ctx.buildArg(coefList);
@@ -122,7 +137,7 @@ std::string realSumPdfTranslateImpl(CodegenContext &ctx, RooAbsArg const &arg, R
 
    std::string sum = ctx.getTmpVarName();
    std::string coeffSum = ctx.getTmpVarName();
-   ctx.addToCodeBody(&arg, "double " + sum + " = 0;\ndouble " + coeffSum + "= 0;\n");
+   addCode("double " + sum + " = 0;\ndouble " + coeffSum + "= 0;\n");
 
    std::string iterator = "i_" + ctx.getTmpVarName();
    std::string subscriptExpr = "[" + iterator + "]";
@@ -137,7 +152,7 @@ std::string realSumPdfTranslateImpl(CodegenContext &ctx, RooAbsArg const &arg, R
    } else if (normalize) {
       code += sum + " /= " + coeffSum + ";\n";
    }
-   ctx.addToCodeBody(&arg, code);
+   addCode(code);
 
    return sum;
 }
@@ -249,7 +264,7 @@ void codegenImpl(RooAbsArg &arg, CodegenContext &ctx)
 
 void codegenImpl(RooAddPdf &arg, CodegenContext &ctx)
 {
-   ctx.addResult(&arg, realSumPdfTranslateImpl(ctx, arg, arg.pdfList(), arg.coefList(), true));
+   ctx.addResult(&arg, realSumPdfTranslateImpl(ctx, arg.pdfList(), arg.coefList(), true));
 }
 
 void codegenImpl(RooMultiVarGaussian &arg, CodegenContext &ctx)
@@ -304,14 +319,6 @@ void codegenImpl(RooSimultaneous &arg, CodegenContext &ctx)
    // component selected by the current category state, like for RooMultiPdf.
    // With an observable index category, the likelihood is decomposed into
    // per-channel terms and the RooSimultaneous itself is never translated.
-   if (arg.canBeExtended()) {
-      std::stringstream errorMsg;
-      errorMsg << "RooSimultaneous \"" << arg.GetName()
-               << "\" with extendable components and a non-observable index category can't be translated, because the "
-                  "scalar evaluation applies a relative yield weight that code generation does not implement yet.";
-      oocoutE(&arg, Minimization) << errorMsg.str() << std::endl;
-      throw std::runtime_error(errorMsg.str());
-   }
    if (!arg.indexCat().isFundamental()) {
       std::stringstream errorMsg;
       errorMsg << "RooSimultaneous \"" << arg.GetName()
@@ -590,7 +597,7 @@ void codegenImpl(RooLandau &arg, CodegenContext &ctx)
 
 void codegenImpl(RooLognormal &arg, CodegenContext &ctx)
 {
-   std::string funcName = arg.useStandardParametrization() ? "logNormalEvaluateStandard" : "logNormal";
+   std::string funcName = arg.useStandardParametrization() ? "logNormalStandard" : "logNormal";
    ctx.addResult(&arg, ctx.buildCall(mathFunc(funcName), arg.getX(), arg.getShapeK(), arg.getMedian()));
 }
 
@@ -840,12 +847,12 @@ void codegenImpl(RooRealIntegral &arg, CodegenContext &ctx)
 
 void codegenImpl(RooRealSumFunc &arg, CodegenContext &ctx)
 {
-   ctx.addResult(&arg, realSumPdfTranslateImpl(ctx, arg, arg.funcList(), arg.coefList(), false));
+   ctx.addResult(&arg, realSumPdfTranslateImpl(ctx, arg.funcList(), arg.coefList(), false));
 }
 
 void codegenImpl(RooRealSumPdf &arg, CodegenContext &ctx)
 {
-   ctx.addResult(&arg, realSumPdfTranslateImpl(ctx, arg, arg.funcList(), arg.coefList(), false));
+   ctx.addResult(&arg, realSumPdfTranslateImpl(ctx, arg.funcList(), arg.coefList(), false));
 }
 
 void codegenImpl(RooRealVar &arg, CodegenContext &ctx)
@@ -1108,7 +1115,7 @@ std::string codegenIntegralImpl(RooPolynomial &arg, int, const char *rangeName, 
 std::string codegenIntegralImpl(RooRealSumPdf &arg, int code, const char *rangeName, CodegenContext &ctx)
 {
    // Re-use translate, since integration is linear.
-   return realSumPdfTranslateImpl(ctx, arg, arg.funcIntListFromCache(code, rangeName), arg.coefList(), false);
+   return realSumPdfTranslateImpl(ctx, arg.funcIntListFromCache(code, rangeName), arg.coefList(), false);
 }
 
 std::string codegenIntegralImpl(RooUniform &arg, int code, const char *rangeName, CodegenContext &)
