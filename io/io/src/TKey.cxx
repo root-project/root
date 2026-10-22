@@ -262,8 +262,9 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
    Int_t cxlevel = GetFile() ? GetFile()->GetCompressionLevel() : 0;
    ROOT::RCompressionSetting::EAlgorithm::EValues cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(GetFile() ? GetFile()->GetCompressionAlgorithm() : 0);
    if (cxlevel > 0 && fObjlen > 256) {
-      Int_t nbuffers = 1 + (fObjlen - 1)/kMAXZIPBUF;
-      const Int_t blockSize = ROOT::Internal::GetZipBlockSize(fObjlen);
+      const auto blocks = ROOT::Internal::GetZipBlocks(fObjlen);
+      const Int_t nbuffers = blocks.fNBlocks;
+      const Int_t blockSize = blocks.fBlockSize;
       Int_t buflen = std::max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
       fBuffer = new char[buflen];
       char *objbuf = fBufferRef->Buffer() + fKeylen;
@@ -271,7 +272,8 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
       noutot = 0;
       nzip   = 0;
       for (Int_t i = 0; i < nbuffers; ++i) {
-         if (i == nbuffers - 1) bufmax = fObjlen - nzip;
+         if (i == nbuffers - 1)
+            bufmax = fObjlen - nzip;
          else
             bufmax = blockSize;
          R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
@@ -359,8 +361,9 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
    Int_t cxlevel = GetFile() ? GetFile()->GetCompressionLevel() : 0;
    ROOT::RCompressionSetting::EAlgorithm::EValues cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(GetFile() ? GetFile()->GetCompressionAlgorithm() : 0);
    if (cxlevel > 0 && fObjlen > 256) {
-      Int_t nbuffers = 1 + (fObjlen - 1)/kMAXZIPBUF;
-      const Int_t blockSize = ROOT::Internal::GetZipBlockSize(fObjlen);
+      const auto blocks = ROOT::Internal::GetZipBlocks(fObjlen);
+      const Int_t nbuffers = blocks.fNBlocks;
+      const Int_t blockSize = blocks.fBlockSize;
       Int_t buflen = std::max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
       fBuffer = new char[buflen];
       char *objbuf = fBufferRef->Buffer() + fKeylen;
@@ -368,7 +371,8 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
       noutot = 0;
       nzip   = 0;
       for (Int_t i = 0; i < nbuffers; ++i) {
-         if (i == nbuffers - 1) bufmax = fObjlen - nzip;
+         if (i == nbuffers - 1)
+            bufmax = fObjlen - nzip;
          else
             bufmax = blockSize;
          R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
