@@ -135,9 +135,6 @@ template <typename T> class ROperator_RNN final : public ROperator {
    // generate code for Session data members (e.g. internal vectors)
    std::string GenerateSessionMembersCode(std::string opName) override;
 
-   /*! \brief Returns the blas routines needed to compile the generated code
-    */
-   std::vector<std::string> GetBlasRoutines() override { return { std::string("Gemm"), std::string("Axpy") }; }
 };
 
 template <typename T>
@@ -163,6 +160,10 @@ auto ROperator_RNN<T>::ShapeInference(std::vector<std::vector<size_t>> input) ->
 template <typename T>
 auto ROperator_RNN<T>::Initialize(RModel &model) -> void
 {
+   // the gate updates emitted in Generate() use Gemm_Ref and Axpy_Ref
+   model.AddNeededHelperFunction("Gemm_Ref");
+   model.AddNeededHelperFunction("Axpy_Ref");
+
    // Check the input and output tensors
    if (!model.CheckIfTensorAlreadyExist(fNX)) {
       throw std::runtime_error("TMVA SOFIE RNN Op input tensor " + fNX + "  is not found in model.");
@@ -411,13 +412,13 @@ auto ROperator_RNN<T>::Generate(std::string OpName) -> std::string
       // feedforward = input * W^T + bias
       if (fType == "float") {
          if (direction == 0) {
-            out << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
+            out << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
                 << OpName << "_m, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fNW << ", &" << OpName
                 << "_k, " << OpName << "_input, &" << OpName << "_k, &" << OpName << "_beta, " << OpName
                 << "_feedforward, &" << OpName << "_n);\n";
          } else {
             out << SP << "size_t " << OpName << "_w_offset = " << fAttrHiddenSize * input_size << ";\n";
-            out << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
+            out << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName << "_n, &"
                 << OpName << "_m, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fNW << " + " << OpName
                 << "_w_offset, &" << OpName << "_k, " << OpName << "_input, &" << OpName << "_k, &" << OpName
                 << "_beta, " << OpName << "_feedforward, &" << OpName << "_n);\n";
@@ -427,12 +428,12 @@ auto ROperator_RNN<T>::Generate(std::string OpName) -> std::string
       if (!fNB.empty()) {
          if (fType == "float") {
             if (direction == 0) {
-               out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << ", &"
+               out << SP << "Axpy_Ref(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << ", &"
                    << OpName << "_incx, " << OpName << "_feedforward, &" << OpName << "_incy);\n";
             } else {
                out << SP << "size_t " << OpName << "_bias_offset = " << seq_length * batch_size * fAttrHiddenSize
                    << ";\n";
-               out << SP << "BLAS::saxpy_(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
+               out << SP << "Axpy_Ref(&" << OpName << "_bias_size, &" << OpName << "_alpha, tensor_" << fNB << " + "
                    << OpName << "_bias_offset, &" << OpName << "_incx, " << OpName << "_feedforward, &" << OpName
                    << "_incy);\n";
             }
@@ -467,7 +468,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName) -> std::string
          out << SP << SP << SP << "size_t initial_hidden_state_offset = " << direction * batch_size * fAttrHiddenSize
              << ";\n";
          if (fType == "float") {
-            out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
+            out << SP << SP << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
                 << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + r_offset, &" << OpName
                 << "_n, " << OpName << "_initial_hidden_state + initial_hidden_state_offset, &" << OpName << "_n, &"
                 << OpName << "_alpha, " << OpName << "_hidden_state + offset, &" << OpName << "_n);\n";
@@ -486,7 +487,7 @@ auto ROperator_RNN<T>::Generate(std::string OpName) -> std::string
              << ";\n";
       }
       if (fType == "float") {
-         out << SP << SP << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
+         out << SP << SP << SP << "Gemm_Ref(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
              << "_n, &m2, &" << OpName << "_n, &" << OpName << "_alpha, tensor_" << fNR << " + r_offset, &" << OpName
              << "_n, " << OpName << "_hidden_state + previous_offset, &" << OpName << "_n, &" << OpName << "_alpha, "
              << OpName << "_hidden_state + offset, &" << OpName << "_n);\n";
