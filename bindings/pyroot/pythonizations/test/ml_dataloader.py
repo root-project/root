@@ -597,6 +597,8 @@ class TestDataLoaderMultipleFiles:
         assert gen_validation.last_batch_no_of_rows == 1
 
     def test12_PyTorch(self, weighted_df):
+        pytest.importorskip("torch")
+
         dl = ROOT.Experimental.ML.RDataLoader(
             weighted_df,
             batch_size=3,
@@ -667,6 +669,8 @@ class TestDataLoaderMultipleFiles:
         assert results_z_val == flat_z_val
 
     def test13_TensorFlow(self, weighted_df):
+        pytest.importorskip("tensorflow")
+
         dl = ROOT.Experimental.ML.RDataLoader(
             weighted_df,
             batch_size=3,
@@ -990,6 +994,8 @@ class TestDataLoaderMultipleFiles:
         assert results_y_val == flat_y_val
 
     def test17_JAX(self, weighted_df):
+        pytest.importorskip("jax")
+
         dl = ROOT.Experimental.ML.RDataLoader(
             weighted_df,
             batch_size=3,
@@ -1617,6 +1623,8 @@ class TestDataLoaderEagerLoading:
         assert gen_validation.last_batch_no_of_rows == 1
 
     def test12_PyTorch(self, weighted_df):
+        pytest.importorskip("torch")
+
         dl = ROOT.Experimental.ML.RDataLoader(
             weighted_df,
             batch_size=3,
@@ -1687,6 +1695,8 @@ class TestDataLoaderEagerLoading:
         assert results_z_val == flat_z_val
 
     def test13_TensorFlow(self, weighted_df):
+        pytest.importorskip("tensorflow")
+
         dl = ROOT.Experimental.ML.RDataLoader(
             weighted_df,
             batch_size=3,
@@ -2586,6 +2596,8 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
         assert gen_validation.last_batch_no_of_rows == 1
 
     def test12_PyTorch(self, weighted_df1, weighted_df2):
+        pytest.importorskip("torch")
+
         dl = ROOT.Experimental.ML.RDataLoader(
             [weighted_df1, weighted_df2],
             batch_size=3,
@@ -2656,6 +2668,8 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
         assert results_z_val == flat_z_val
 
     def test13_TensorFlow(self, weighted_df1, weighted_df2):
+        pytest.importorskip("tensorflow")
+
         dl = ROOT.Experimental.ML.RDataLoader(
             [weighted_df1, weighted_df2],
             batch_size=3,
@@ -3494,6 +3508,8 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
         assert gen_validation.last_batch_no_of_rows == 1
 
     def test12_PyTorch(self, weighted_df1, weighted_df2):
+        pytest.importorskip("torch")
+
         dl = ROOT.Experimental.ML.RDataLoader(
             [weighted_df1, weighted_df2],
             batch_size=3,
@@ -3563,6 +3579,8 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
         assert results_z_val == flat_z_val
 
     def test13_TensorFlow(self, weighted_df1, weighted_df2):
+        pytest.importorskip("tensorflow")
+
         dl = ROOT.Experimental.ML.RDataLoader(
             [weighted_df1, weighted_df2],
             batch_size=3,
@@ -4648,6 +4666,8 @@ class TestDataLoaderRandomUndersampling:
         assert gen_validation.last_batch_no_of_rows == 0
 
     def test12_PyTorch(self, weighted_df_major, weighted_df_minor):
+        pytest.importorskip("torch")
+
         dl = ROOT.Experimental.ML.RDataLoader(
             [weighted_df_major, weighted_df_minor],
             batch_size=2,
@@ -4750,6 +4770,8 @@ class TestDataLoaderRandomUndersampling:
         assert num_minor_val == 2
 
     def test13_TensorFlow(self, weighted_df_major, weighted_df_minor):
+        pytest.importorskip("tensorflow")
+
         dl = ROOT.Experimental.ML.RDataLoader(
             [weighted_df_major, weighted_df_minor],
             batch_size=2,
@@ -5904,6 +5926,8 @@ class TestDataLoaderRandomOversampling:
         assert gen_validation.last_batch_no_of_rows == 0
 
     def test12_PyTorch(self, weighted_df_major, weighted_df_minor):
+        pytest.importorskip("torch")
+
         dl = ROOT.Experimental.ML.RDataLoader(
             [weighted_df_major, weighted_df_minor],
             batch_size=2,
@@ -6005,6 +6029,8 @@ class TestDataLoaderRandomOversampling:
         assert num_minor_val == 2
 
     def test13_TensorFlow(self, weighted_df_major, weighted_df_minor):
+        pytest.importorskip("tensorflow")
+
         dl = ROOT.Experimental.ML.RDataLoader(
             [weighted_df_major, weighted_df_minor],
             batch_size=2,
