@@ -5,6 +5,7 @@ from random import randrange, uniform
 import numpy as np
 import pytest
 import ROOT
+from conftest import from_files, squares, weighted
 
 
 class TestDataLoaderMultipleFiles:
@@ -17,6 +18,23 @@ class TestDataLoaderMultipleFiles:
     n_train_batch = 2
     n_val_batch = 1
     val_remainder = 1
+
+    @pytest.fixture
+    def df(self):
+        """10 entries: b1 = 0, ..., 9 and b2 = b1 * b1."""
+        return from_files(squares(10))
+
+    @pytest.fixture
+    def weighted_df(self):
+        """10 entries: the Short_t b1 = 0, ..., 9, the UShort_t b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+        return from_files(
+            ROOT
+            .RDataFrame(10)
+            .Define("b1", "(Short_t) rdfentry_")
+            .Define("b2", "(UShort_t) b1 * b1")
+            .Define("b3", "(double) rdfentry_ * 10")
+            .Define("b4", "(double) b3 * 10")
+        )
 
     # Helpers
     def define_rdf(self, num_of_entries=10):
@@ -1269,6 +1287,23 @@ class TestDataLoaderEagerLoading:
     n_val_batch = 1
     val_remainder = 1
 
+    @pytest.fixture
+    def df(self):
+        """10 entries: b1 = 0, ..., 9 and b2 = b1 * b1."""
+        return from_files(squares(10))
+
+    @pytest.fixture
+    def weighted_df(self):
+        """10 entries: the Short_t b1 = 0, ..., 9, the UShort_t b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+        return from_files(
+            ROOT
+            .RDataFrame(10)
+            .Define("b1", "(Short_t) rdfentry_")
+            .Define("b2", "(UShort_t) b1 * b1")
+            .Define("b3", "(double) rdfentry_ * 10")
+            .Define("b4", "(double) b3 * 10")
+        )
+
     # Helpers
     def define_rdf(self, num_of_entries=10):
         df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_").Define("b2", "(double) b1*b1")
@@ -2403,6 +2438,26 @@ class TestDataLoaderEagerLoadingMultipleDataframes:
     n_train_batch = 2
     n_val_batch = 1
     val_remainder = 1
+
+    @pytest.fixture
+    def df1(self):
+        """5 entries: b1 = 0, ..., 4 and b2 = b1 * b1."""
+        return from_files(squares(5))
+
+    @pytest.fixture
+    def df2(self):
+        """5 entries: b1 = 5, ..., 9 and b2 = b1 * b1."""
+        return from_files(squares(5, "(int) rdfentry_ + 5"))
+
+    @pytest.fixture
+    def weighted_df1(self):
+        """5 entries: b1 = 0, ..., 4, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+        return from_files(weighted(5))
+
+    @pytest.fixture
+    def weighted_df2(self):
+        """5 entries: b1 = 5, ..., 9, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+        return from_files(weighted(5, "(int) rdfentry_ + 5"))
 
     # Helpers
     def define_rdf1(self, num_of_entries=5):
@@ -3633,6 +3688,26 @@ class TestDataLoaderLazyLoadingMultipleDataframes:
     n_train_batch = 2
     n_val_batch = 1
     val_remainder = 1
+
+    @pytest.fixture
+    def df1(self):
+        """5 entries: b1 = 0, ..., 4 and b2 = b1 * b1."""
+        return from_files(squares(5))
+
+    @pytest.fixture
+    def df2(self):
+        """5 entries: b1 = 5, ..., 9 and b2 = b1 * b1."""
+        return from_files(squares(5, "(int) rdfentry_ + 5"))
+
+    @pytest.fixture
+    def weighted_df1(self):
+        """5 entries: b1 = 0, ..., 4, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+        return from_files(weighted(5))
+
+    @pytest.fixture
+    def weighted_df2(self):
+        """5 entries: b1 = 5, ..., 9, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+        return from_files(weighted(5, "(int) rdfentry_ + 5"))
 
     # Helpers
     def define_rdf1(self, num_of_entries=5):
@@ -4884,6 +4959,26 @@ class TestDataLoaderRandomUndersampling:
     n_train_batch = 4
     n_val_batch = 3
     train_remainder = 1
+
+    @pytest.fixture
+    def df_major(self):
+        """The majority class, 20 entries: b1 = 0, 2, ..., 38 and b2 = b1 * b1."""
+        return from_files(squares(20, "(int) 2 * rdfentry_"))
+
+    @pytest.fixture
+    def df_minor(self):
+        """The minority class, 5 entries: b1 = 1, 3, ..., 9 and b2 = b1 * b1."""
+        return from_files(squares(5, "(int) 2 * rdfentry_ + 1"))
+
+    @pytest.fixture
+    def weighted_df_major(self):
+        """The majority class, 20 entries: b1 = 0, 2, ..., 38, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+        return from_files(weighted(20, "(int) 2 * rdfentry_"))
+
+    @pytest.fixture
+    def weighted_df_minor(self):
+        """The minority class, 5 entries: b1 = 1, 3, ..., 9, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+        return from_files(weighted(5, "(int) 2 * rdfentry_ + 1"))
 
     # Helpers
     def define_rdf_even(self, num_of_entries=20):
@@ -6550,6 +6645,26 @@ class TestDataLoaderRandomOversampling:
     n_val_batch = 3
     train_remainder = 1
 
+    @pytest.fixture
+    def df_major(self):
+        """The majority class, 10 entries: b1 = 0, 2, ..., 18 and b2 = b1 * b1."""
+        return from_files(squares(10, "(int) 2 * rdfentry_"))
+
+    @pytest.fixture
+    def df_minor(self):
+        """The minority class, 3 entries: b1 = 1, 3, ..., 5 and b2 = b1 * b1."""
+        return from_files(squares(3, "(int) 2 * rdfentry_ + 1"))
+
+    @pytest.fixture
+    def weighted_df_major(self):
+        """The majority class, 10 entries: b1 = 0, 2, ..., 18, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+        return from_files(weighted(10, "(int) 2 * rdfentry_"))
+
+    @pytest.fixture
+    def weighted_df_minor(self):
+        """The minority class, 3 entries: b1 = 1, 3, ..., 5, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+        return from_files(weighted(3, "(int) 2 * rdfentry_ + 1"))
+
     # Helpers
     def define_rdf_even(self, num_of_entries=20):
         df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(double) b1*b1")
@@ -7962,7 +8077,15 @@ class TestDataLoaderSave:
     out_name = "dataloader_save_output.root"
     out_name2 = "dataloader_save_output2.root"
 
+    @pytest.fixture
+    def df(self):
+        """20 entries: b1 = 0, ..., 19 and b2 = b1 + 1."""
+        return from_files(self.define_rdf())
+
     # Helpers
+    def define_rdf(self, num_of_entries=20, offset=0):
+        return ROOT.RDataFrame(num_of_entries).Define("b1", f"(int) rdfentry_ + {offset}").Define("b2", "b1 + 1")
+
     def create_file(self, file_name=None, num_of_entries=20, offset=0):
         (
             ROOT
