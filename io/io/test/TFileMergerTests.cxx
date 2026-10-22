@@ -478,3 +478,89 @@ TEST(TFileMerger, TypeMismatchErrorTObjectWithNonTObject)
       fm.PartialMerge();
    }
 }
+
+// https://github.com/root-project/root/issues/23666
+TEST(TFileMerger, NestedDirMaxOpenedFiles)
+{
+   struct CleanupRAII {
+      std::vector<std::string> fFiles;
+      ~CleanupRAII()
+      {
+         for (const auto &file : fFiles) {
+            gSystem->Unlink(file.c_str());
+         }
+      }
+   } cleanup;
+
+   const std::string file1 = "test_nested_merge_in1.root";
+   const std::string file2 = "test_nested_merge_in2.root";
+   const std::string file3 = "test_nested_merge_in3.root";
+   const std::string fileOut = "test_nested_merge_out.root";
+
+   cleanup.fFiles.push_back(file1);
+   cleanup.fFiles.push_back(file2);
+   cleanup.fFiles.push_back(file3);
+   cleanup.fFiles.push_back(fileOut);
+
+   const std::vector<std::pair<std::string, int>> inputs = {
+      {file1, 5},
+      {file2, 7},
+      {file3, 11}
+   };
+
+   // Create 3 input files with objects inside a nested directory (depth >= 2)
+   for (const auto &input : inputs) {
+      TFile f(input.first.c_str(), "RECREATE");
+      ASSERT_FALSE(f.IsZombie());
+      auto topDir = f.mkdir("nested");
+      ASSERT_NE(topDir, nullptr);
+      auto subDir = topDir->mkdir("dir");
+      ASSERT_NE(subDir, nullptr);
+      subDir->cd();
+
+      TTree tree("tree", "Test Tree");
+      int val = 0;
+      tree.Branch("val", &val, "val/I");
+      for (int i = 0; i < input.second; ++i) {
+         val = i;
+         tree.Fill();
+      }
+
+      TH1F hist("hist", "Test Hist", 10, 0, 10);
+      for (int i = 0; i < input.second; ++i) {
+         hist.Fill(i % 10);
+      }
+
+      f.Write();
+   }
+
+   // Merge using TFileMerger with SetMaxOpenedFiles(3) to force incremental batching across multiple batches
+   {
+      TFileMerger merger(false);
+      EXPECT_TRUE(merger.OutputFile(fileOut.c_str()));
+      merger.SetMaxOpenedFiles(3);
+      merger.AddFile(file1.c_str(), false);
+      merger.AddFile(file2.c_str(), false);
+      merger.AddFile(file3.c_str(), false);
+      EXPECT_TRUE(merger.Merge());
+   }
+
+   // Verify that all entries from all files (including the final incremental batch) are present
+   {
+      TFile fOut(fileOut.c_str(), "READ");
+      ASSERT_FALSE(fOut.IsZombie());
+
+      auto topDir = fOut.Get<TDirectory>("nested");
+      ASSERT_NE(topDir, nullptr);
+      auto subDir = topDir->Get<TDirectory>("dir");
+      ASSERT_NE(subDir, nullptr);
+
+      auto tree = subDir->Get<TTree>("tree");
+      ASSERT_NE(tree, nullptr);
+      EXPECT_EQ(tree->GetEntries(), 5 + 7 + 11);
+
+      auto hist = subDir->Get<TH1F>("hist");
+      ASSERT_NE(hist, nullptr);
+      EXPECT_EQ(hist->GetEntries(), 5 + 7 + 11);
+   }
+}
