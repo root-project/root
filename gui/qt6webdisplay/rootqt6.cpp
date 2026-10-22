@@ -71,10 +71,10 @@ protected:
    bool fDeleteView = true;       ///< is view must be deleted
 
    class Qt6Creator : public Creator {
-      QApplication *qapp{nullptr};  ///< created QApplication
-      int qargc{1};                 ///< arg counter
-      char *qargv[2];               ///< arg values
-      std::unique_ptr<TQt6Timer> fTimer; ///< timer to process ROOT events
+      QApplication *qapp = nullptr;        ///< created QApplication
+      int qargc = 1;                       ///< arg counter
+      char *qargv[2] = {nullptr, nullptr}; ///< arg values
+      std::unique_ptr<TQt6Timer> fTimer;   ///< timer to process ROOT events
       std::unique_ptr<RootUrlSchemeHandler> fHandler; ///< specialized handler
    public:
 
@@ -115,7 +115,7 @@ protected:
          // create timer to process Qt events from inside ROOT process events
          // very much improve performance, even when Qt even loop runs by QApplication normally
          if (!fTimer && !args.IsHeadless()) {
-            Int_t interval = gEnv->GetValue("WebGui.Qt5Timer", 1);
+            Int_t interval = gEnv->GetValue("WebGui.Qt6Timer", 10);
             if (interval > 0) {
                fTimer = std::make_unique<TQt6Timer>(interval, kTRUE);
                fTimer->TurnOn();
