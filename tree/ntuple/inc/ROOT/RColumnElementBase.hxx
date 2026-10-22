@@ -83,9 +83,11 @@ public:
    RColumnElementBase &operator=(RColumnElementBase &&other) = default;
    virtual ~RColumnElementBase() = default;
 
-   /// If CppT == void, use the default C++ type for the given column type
-   template <typename CppT = void>
-   static std::unique_ptr<RColumnElementBase> Generate(ROOT::ENTupleColumnType type);
+   template <typename CppT>
+   static std::unique_ptr<RColumnElementBase> Generate(ENTupleColumnType onDiskType);
+   /// Use the default C++ type for the given column type
+   static std::unique_ptr<RColumnElementBase> Generate(const ROOT::RColumnDescriptor &type);
+
    static const char *GetColumnTypeName(ROOT::ENTupleColumnType type);
    /// Most types have a fixed on-disk bit width. Some low-precision column types
    /// have a range of possible bit widths. Return the minimum and maximum allowed
@@ -102,12 +104,12 @@ public:
    virtual void SetBitsOnStorage(std::size_t bitsOnStorage)
    {
       if (bitsOnStorage != fBitsOnStorage)
-         throw RException(R__FAIL(std::string("internal error: cannot change bit width of this column type")));
+         throw RException(R__FAIL("internal error: cannot change bit width of this column type"));
    }
 
    virtual void SetValueRange(double, double)
    {
-      throw RException(R__FAIL(std::string("internal error: cannot change value range of this column type")));
+      throw RException(R__FAIL("internal error: cannot change value range of this column type"));
    }
 
    /// If the on-storage layout and the in-memory layout differ, packing creates an on-disk page from an in-memory page
@@ -137,16 +139,17 @@ struct RTestFutureColumn {
 std::unique_ptr<RColumnElementBase>
 GenerateColumnElement(std::type_index inMemoryType, ROOT::ENTupleColumnType onDiskType);
 
+std::unique_ptr<RColumnElementBase>
+GenerateColumnElement(std::type_index inMemoryType, const ROOT::RColumnDescriptor &onDisk);
+
 std::unique_ptr<RColumnElementBase> GenerateColumnElement(const RColumnElementBase::RIdentifier &elementId);
 
 template <typename CppT>
-std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(ROOT::ENTupleColumnType onDiskType)
+std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(ENTupleColumnType onDiskType)
 {
+   static_assert(!std::is_same_v<CppT, void>, "Generate<void> is invalid: use non-templated Generate instead.");
    return GenerateColumnElement(std::type_index(typeid(CppT)), onDiskType);
 }
-
-template <>
-std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate<void>(ROOT::ENTupleColumnType onDiskType);
 
 struct RColumnFormat {
    ENTupleColumnType fType = ENTupleColumnType::kUnknown;
