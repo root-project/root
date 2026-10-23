@@ -204,11 +204,7 @@ inline llvm::Error addGlibcNonsharedShims(llvm::orc::LLJIT& J, void* Owner) {
   auto M =
       std::make_unique<llvm::Module>("<cppinterop-glibc-nonshared>", *TSCtx);
   M->setDataLayout(J.getDataLayout());
-#if LLVM_VERSION_MAJOR < 21
-  M->setTargetTriple(J.getTargetTriple().str());
-#else
   M->setTargetTriple(J.getTargetTriple());
-#endif
 
   llvm::Type* IntTy = llvm::Type::getInt32Ty(*TSCtx);
   llvm::PointerType* PtrTy = llvm::PointerType::getUnqual(*TSCtx);

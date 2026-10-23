@@ -17,8 +17,10 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <utility>
+#include <vector>
 
 using namespace TestUtils;
 using namespace llvm;
@@ -122,10 +124,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_GetDatamembers) {
 CODE
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_DatamembersWithAnonymousStructOrUnion) {
-#if CLANG_VERSION_MAJOR == 20 && defined(CPPINTEROP_USE_CLING) && defined(_WIN32)
-  GTEST_SKIP() << "Test fails with Cling on Windows";
-#endif
-
   std::vector<Decl*> Decls;
 #define Stringify(s) Stringifyx(s)
 #define Stringifyx(...) #__VA_ARGS__
@@ -724,10 +722,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_VariableOffsetsWithInheritan
 #ifdef __EMSCRIPTEN__
   GTEST_SKIP() << "This test crashes for Emscripten builds of CppInterOp";
 #endif
-#if CLANG_VERSION_MAJOR == 20 && defined(CPPINTEROP_USE_CLING) && defined(_WIN32)
-  GTEST_SKIP() << "Test fails with Cling on Windows";
-#endif
-
   std::vector<const char*> interpreter_args = {"-include", "new"};
   TestFixture::CreateInterpreter(interpreter_args);
 
@@ -1003,6 +997,57 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   EXPECT_EQ(datamembers2.size(), 6);
   EXPECT_EQ(Cpp::GetName(datamembers2[5]), "THREE");
   EXPECT_EQ(Cpp::GetEnumConstantValue(datamembers2[5]), 2);
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE,
+           VariableReflection_EnumConstantsOfClassTemplateFromAST) {
+  // Bindings query every enumerator of a class when they build its proxy, so
+  // these queries must be answered from the AST. Evaluating e.g.
+  // "EnumHolder<char>::kA;" in the interpreter instead costs a parse and JIT
+  // round trip per enumerator (root-project/root#10724).
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    template <class T> struct EnumHolder {
+      enum EBits { kA = 1 << 16, kB };
+      enum { kAnon = -7 };
+      virtual ~EnumHolder(); // never defined, so the vtable can't be emitted
+    };
+  )";
+  GetAllTopLevelDecls(code, Decls);
+
+  ASTContext& C = Interp->getCI()->getASTContext();
+  std::vector<Cpp::TemplateArgInfo> args = {C.CharTy.getAsOpaquePtr()};
+  Cpp::DeclRef Holder = Cpp::InstantiateTemplate(Decls[0], args);
+  ASSERT_TRUE(Holder);
+
+  // Any code handed to the interpreter adds a top-level decl (cling's wrapper
+  // function, clang-repl's TopLevelStmtDecl). clang-repl starts a new
+  // TranslationUnitDecl for each input, so count over all of them.
+  auto CountTopLevelDecls = [&C]() {
+    size_t N = 0;
+    for (const auto* TU : C.getTranslationUnitDecl()->redecls())
+      for (auto I = TU->noload_decls_begin(), E = TU->noload_decls_end();
+           I != E; ++I)
+        ++N;
+    return N;
+  };
+  const size_t NumTopLevelDecls = CountTopLevelDecls();
+
+  std::vector<Cpp::DeclRef> datamembers;
+  Cpp::GetEnumConstantDatamembers(Holder, datamembers);
+  const std::vector<std::pair<std::string, int64_t>> Expected = {
+      {"kA", 1 << 16}, {"kB", (1 << 16) + 1}, {"kAnon", -7}};
+  ASSERT_EQ(datamembers.size(), Expected.size());
+  for (size_t i = 0; i < datamembers.size(); ++i) {
+    EXPECT_TRUE(Cpp::IsEnumConstant(datamembers[i]));
+    EXPECT_EQ(Cpp::GetName(datamembers[i]), Expected[i].first);
+    EXPECT_EQ(Cpp::GetEnumConstantValue(datamembers[i]), Expected[i].second);
+    EXPECT_TRUE(Cpp::GetEnumConstantType(datamembers[i]));
+    // Enumerators have no storage, hence no offset.
+    EXPECT_EQ(Cpp::GetVariableOffset(datamembers[i], Holder), 0);
+  }
+
+  EXPECT_EQ(CountTopLevelDecls(), NumTopLevelDecls);
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, VariableReflection_Is_Get_Pointer) {

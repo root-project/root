@@ -8,6 +8,7 @@
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
 
+#include "llvm/Support/FileSystem.h"
 #include "llvm/TargetParser/Triple.h"
 
 #include <algorithm>
@@ -27,6 +28,19 @@ std::vector<const char*> GetInterpreterArgs(
     args.push_back("--use-oop-jit");
   }
   return args;
+}
+
+bool HasRuntimeModulemaps() {
+#ifdef CPPINTEROP_USE_CLING
+  std::vector<std::string> include_paths;
+  Cpp::GetIncludePaths(include_paths, /*withSystem=*/true);
+  for (const std::string& dir : include_paths)
+    if (llvm::sys::fs::exists(dir + "/cling/Interpreter/RuntimeUniverse.h"))
+      return llvm::sys::fs::exists(dir + "/cling/std.modulemap");
+  return false;
+#else
+  return true;
+#endif
 }
 }
 

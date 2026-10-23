@@ -47,12 +47,7 @@ Cpp::DeclRef ReflectOverlayBase() {
 }
 
 Cpp::FuncRef Frob(Cpp::DeclRef scope) {
-  std::vector<Cpp::FuncRef> methods;
-  Cpp::GetClassMethods(scope, methods);
-  for (auto m : methods)
-    if (Cpp::GetName(Cpp::DeclRef{m.data}) == "frob")
-      return m;
-  return nullptr;
+  return TestUtils::FindMethod(scope, "frob");
 }
 
 Cpp::UniqueVTableOverlay OverlayFrob(void* inst, Cpp::DeclRef base) {

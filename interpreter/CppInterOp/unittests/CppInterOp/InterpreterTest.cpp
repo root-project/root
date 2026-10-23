@@ -347,7 +347,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_StaticDtorsRunOnDelete) {
 // ShutdownDoesNotMaterializeAgainstDestroyedGlobals at the CppInterOp
 // wrapper level: two interpreters each register a static with a
 // non-trivial dtor, then std::exit drives the C++ static-dtor phase.
-// On LLVM 23+ our InterpreterShutdown calls llvm_shutdown which fires
+// On LLVM 24+ our InterpreterShutdown calls llvm_shutdown which fires
 // ~InterpreterInfo -> ~Interpreter -> JIT deinit; the deinit lookup
 // skips lazy materialization (Platform::lookupResolvedInitSymbols,
 // llvm/llvm-project#196874) and the process exits cleanly.
@@ -365,8 +365,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 #endif
   if (TypeParam::isOutOfProcess)
     GTEST_SKIP() << "Test fails for OOP JIT builds";
-#if LLVM_VERSION_MAJOR <= 22
-  GTEST_SKIP() << "Requires LLVM 23+ (lookupResolvedInitSymbols)";
+#if LLVM_VERSION_MAJOR <= 23
+  GTEST_SKIP() << "Requires LLVM 24+ (lookupResolvedInitSymbols)";
 #else
   EXPECT_EXIT(
       {

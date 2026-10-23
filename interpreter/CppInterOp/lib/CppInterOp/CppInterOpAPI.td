@@ -89,6 +89,7 @@ def CMap_bool      : CTypeMap<"bool", "bool">;
 def CMap_int       : CTypeMap<"int", "int">;
 def CMap_void      : CTypeMap<"void", "void">;
 def CMap_voidp     : CTypeMap<"void*", "void*">;
+def CMap_constvoidp: CTypeMap<"const void*", "const void*">;
 def CMap_constcharp: CTypeMap<"const char*", "const char*">;
 def CMap_size_t    : CTypeMap<"size_t", "size_t">;
 def CMap_unsigned  : CTypeMap<"unsigned", "unsigned">;

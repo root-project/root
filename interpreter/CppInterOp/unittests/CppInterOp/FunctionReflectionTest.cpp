@@ -194,25 +194,13 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 
   GetAllTopLevelDecls(code, Decls);
 
-  std::vector<Cpp::FuncRef> derived_methods;
-  Cpp::GetClassMethods(Decls[1], derived_methods);
-
-  // Find the using-promoted foo (the two-argument overload).
-  bool found_using_promoted = false;
-  Cpp::FuncRef using_promoted;
-  for (auto m : derived_methods) {
-    if (Cpp::GetName(Cpp::DeclRef{m.data}) != "foo")
-      continue;
-    if (Cpp::GetFunctionNumArgs(m) == 2) {
-      found_using_promoted = true;
-      using_promoted = m;
-      EXPECT_TRUE(Cpp::IsPublicMethod(m));
-      EXPECT_FALSE(Cpp::IsProtectedMethod(m));
-      EXPECT_FALSE(Cpp::IsConstructor(m));
-    }
-  }
-  EXPECT_TRUE(found_using_promoted)
+  // The using-promoted foo (the two-argument overload).
+  Cpp::FuncRef using_promoted = FindMethod(Decls[1], "foo", 2);
+  ASSERT_TRUE(using_promoted)
       << "using-promoted base method missing from GetClassMethods";
+  EXPECT_TRUE(Cpp::IsPublicMethod(using_promoted));
+  EXPECT_FALSE(Cpp::IsProtectedMethod(using_promoted));
+  EXPECT_FALSE(Cpp::IsConstructor(using_promoted));
 
   // Resolving the address of the using-promoted overload must transparently
   // unwrap the using-shadow to its target before emitting code. This is the
@@ -220,15 +208,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   // (the reflection-only APIs above all go through the const overload), and the
   // resolved address must match the one obtained directly from the base method.
 #ifndef _WIN32 // GetFunctionAddress is disabled on Windows; see its own test.
-  if (!TypeParam::isOutOfProcess && found_using_promoted) {
-    std::vector<Cpp::FuncRef> base_methods;
-    Cpp::GetClassMethods(Decls[0], base_methods);
-    Cpp::FuncRef base_foo;
-    for (auto m : base_methods) {
-      if (Cpp::GetName(Cpp::DeclRef{m.data}) == "foo" &&
-          Cpp::GetFunctionNumArgs(m) == 2)
-        base_foo = m;
-    }
+  if (!TypeParam::isOutOfProcess) {
+    Cpp::FuncRef base_foo = FindMethod(Decls[0], "foo", 2);
     ASSERT_TRUE(base_foo);
 
     void* shadow_addr = Cpp::GetFunctionAddress(using_promoted);
@@ -237,19 +218,10 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   }
 #endif
 
-  std::vector<Cpp::FuncRef> hidden_methods;
-  Cpp::GetClassMethods(Decls[2], hidden_methods);
-
-  bool found_hidden = false;
-  for (auto m : hidden_methods) {
-    if (Cpp::GetName(Cpp::DeclRef{m.data}) == "foo" &&
-        Cpp::GetFunctionNumArgs(m) == 2) {
-      found_hidden = true;
-      EXPECT_FALSE(Cpp::IsPublicMethod(m));
-      EXPECT_TRUE(Cpp::IsProtectedMethod(m));
-    }
-  }
-  EXPECT_TRUE(found_hidden);
+  Cpp::FuncRef hidden = FindMethod(Decls[2], "foo", 2);
+  ASSERT_TRUE(hidden);
+  EXPECT_FALSE(Cpp::IsPublicMethod(hidden));
+  EXPECT_TRUE(Cpp::IsProtectedMethod(hidden));
 }
 
 // Companion to the access test above, covering the *call* path: a method
@@ -287,16 +259,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
                       /*interpreter_args=*/{"-include", "new"});
 
-  std::vector<Cpp::FuncRef> derived_methods;
-  Cpp::GetClassMethods(Decls[1], derived_methods);
-
-  // Locate the using-promoted foo (the two-argument overload from the base).
-  Cpp::FuncRef using_promoted;
-  for (auto m : derived_methods) {
-    if (Cpp::GetName(Cpp::DeclRef{m.data}) == "foo" &&
-        Cpp::GetFunctionNumArgs(m) == 2)
-      using_promoted = m;
-  }
+  // The using-promoted foo (the two-argument overload from the base).
+  Cpp::FuncRef using_promoted = FindMethod(Decls[1], "foo", 2);
   ASSERT_TRUE(using_promoted);
 
   // Compiling this wrapper exercises the relaxAccessControl path: the generated
@@ -403,16 +367,8 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   GetAllTopLevelDecls(code, Decls, /*filter_implicitGenerated=*/false,
                       /*interpreter_args=*/{"-include", "new"});
 
-  std::vector<Cpp::FuncRef> derived_methods;
-  Cpp::GetClassMethods(Decls[2], derived_methods);
-
-  // Locate the using-imported set_value (the one-argument overload).
-  Cpp::FuncRef imported;
-  for (auto m : derived_methods) {
-    if (Cpp::GetName(Cpp::DeclRef{m.data}) == "set_value" &&
-        Cpp::GetFunctionNumArgs(m) == 1)
-      imported = m;
-  }
+  // The using-imported set_value (the one-argument overload).
+  Cpp::FuncRef imported = FindMethod(Decls[2], "set_value", 1);
   ASSERT_TRUE(imported);
 
   // The declaring scope of the imported method is SecondBase, not Derived.
@@ -440,13 +396,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   std::array<void*, 1> args = {(void*)&v};
   SetValue.Invoke(nullptr, {args.data(), /*args_size=*/1}, second_base);
 
-  std::vector<Cpp::FuncRef> second_base_methods;
-  Cpp::GetClassMethods(Decls[1], second_base_methods);
-  Cpp::FuncRef get_value;
-  for (auto m : second_base_methods) {
-    if (Cpp::GetName(Cpp::DeclRef{m.data}) == "get_value")
-      get_value = m;
-  }
+  Cpp::FuncRef get_value = FindMethod(Decls[1], "get_value");
   ASSERT_TRUE(get_value);
 
   int result = 0;
@@ -455,13 +405,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 
   // The FirstBase subobject must be untouched (no write through an
   // unadjusted pointer).
-  std::vector<Cpp::FuncRef> first_base_methods;
-  Cpp::GetClassMethods(Decls[0], first_base_methods);
-  Cpp::FuncRef get_a;
-  for (auto m : first_base_methods) {
-    if (Cpp::GetName(Cpp::DeclRef{m.data}) == "get_a")
-      get_a = m;
-  }
+  Cpp::FuncRef get_a = FindMethod(Decls[0], "get_a");
   ASSERT_TRUE(get_a);
 
   long long a = 0;
@@ -1006,18 +950,32 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsAllocator) {
   EXPECT_EQ(Cpp::IsAllocator(Cpp::ConstFuncRef{Cpp::GetNamed("Klass").data}),
             Cpp::AllocType::Unknown);
 
+  const bool has_modulemaps = TestUtils::HasRuntimeModulemaps();
+
   Cpp::DeleteInterpreter();
 #ifdef EMSCRIPTEN
   GTEST_SKIP() << "Test fails for Emscipten builds";
 #endif
   std::string include_flag;
   // APINotes check
-#ifndef CPPINTEROP_USE_CLING
+#if defined(CPPINTEROP_USE_CLING) && !defined(__linux__)
+  // We support modules with cling on Linux only
+  GTEST_SKIP() << "Test runs only on Linux in cling";
+#endif
+  if (!has_modulemaps)
+    GTEST_SKIP() << "cling was built without its runtime modulemaps";
   include_flag =
       "-I" + std::string(CPPINTEROP_SRC_DIR) + "/unittests/CppInterOp/APINotes";
   std::vector<const char*> interpreter_args = {
       "-fmodules", "-fimplicit-module-maps", "-fapinotes-modules",
       include_flag.c_str()};
+#ifdef CPPINTEROP_USE_CLING
+  // cling looks up module.modulemap next to cling/Interpreter/
+  // RuntimeUniverse.h. This include path makes that header reachable.
+  std::string cling_include_flag =
+      "-I" + std::string(CPPINTEROP_CLING_INCLUDE_DIR);
+  interpreter_args.push_back(cling_include_flag.c_str());
+#endif
   TestFixture::CreateInterpreter(interpreter_args);
   code = R"(
   #include "TestHeader.h"
@@ -1035,7 +993,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsAllocator) {
   TESTIA(testWeirdAttr, Cpp::AllocType::Unknown);
 
   Cpp::DeleteInterpreter();
-#endif
 #undef TESTIA
   include_flag =
       "-I" + std::string(CPPINTEROP_SRC_DIR) + "/unittests/CppInterOp/APINotes";
@@ -1071,28 +1028,295 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsDeallocator) {
   std::vector<Decl*> Decls;
   std::string code = R"(
     class Klass{
-      int val;
-    };
-    __attribute__((ownership_takes(malloc, 1)))
-    void Deallocator(Klass* arg){
-      delete arg;
-    }
-    void foo();
-    )";
-  GetAllTopLevelDecls(code, Decls, true);
-  EXPECT_TRUE(Cpp::IsDeallocator(Decls[1]));
-  EXPECT_FALSE(Cpp::IsDeallocator(Decls[2]));
+    public:
+      int val = 0;
 
-  code = R"(
-  #include <stdlib.h>
-    void test(){
-      //Do Nothing
+      // `this` is the only slot of a method without parameters.
+      __attribute__((annotate("cppDeallocNone")))
+      int* getValAdress(){
+        return &val;
+      }
+
+      // `this` occupies source index 1 and labelling it is ignored.
+      __attribute__((annotate("cppDeallocDelete", 1)))
+      void releaseSelf(){
+        delete this;
+      }
+
+      // The label on `this` is dropped, `p` is source index 2.
+      __attribute__((annotate("cppDeallocDelete", 1),
+                     annotate("cppDeallocFree", 2)))
+      void releaseBoth(void* p);
+
+      // Clang rejects index 1 for the implicit object parameter, so `p` is
+      // source index 3.
+      void __attribute__((ownership_takes(malloc, 3)))
+      methodTakes(int n, void* p);
+
+      // Labelling `this` is ignored on the swift_attr channel as well.
+      __attribute__((swift_attr("cppDeallocDelete_1")))
+      void swiftSelf(void* p);
+
+      // Static methods have no implicit object parameter, so they are counted
+      // like free functions and index 0 is never valid.
+      static void __attribute__((ownership_takes(malloc, 2)))
+      staticTakes(int n, void* p);
+
+      static void __attribute__((annotate("cppDeallocFree", 1)))
+      staticFree(void* p);
+
+      static void __attribute__((annotate("cppDeallocDelete", 0)))
+      staticZeroIndex(void* p);
+
+      static void __attribute__((swift_attr("cppDeallocDeleteArr_1")))
+      staticSwift(void* p);
+    };
+
+    void Plain();
+
+    void __attribute__((ownership_takes(malloc, 1)))
+    Deallocator(void* p);
+
+    void __attribute__((ownership_takes(malloc, 1, 3)))
+    TakesMulti(void* a, int n, void* b);
+
+    void __attribute__((ownership_holds(malloc, 2)))
+    HoldsFunc(int n, void* p);
+
+    void* __attribute__((ownership_returns(malloc, 1)))
+    ReturnsFunc(int size);
+
+    void __attribute__((annotate("cppDeallocFree", 1)))
+    FreeFunc(void* p);
+
+    void __attribute__((annotate("cppDeallocDelete", 1)))
+    DeleteFunc(Klass* p);
+
+    void __attribute__((annotate("cppDeallocDeleteArr", 1)))
+    DeleteArrFunc(Klass* p);
+
+    void __attribute__((annotate("cppDeallocNone", 1)))
+    NoneDeallocFunc(void* p);
+
+    void __attribute__((annotate("cppDeallocFree", 1, 3)))
+    MultiFunc(void* a, int n, void* b);
+
+    // Without an index the first parameter is labelled.
+    void __attribute__((annotate("cppDeallocFree")))
+    BareFunc(void* p, int n);
+
+    void __attribute__((annotate("unrelatedAttr", 1)))
+    UnrelatedFunc(void* p);
+
+    void __attribute__((annotate("cppDeallocFree", 99)))
+    OutOfRangeFunc(void* p);
+
+    void __attribute__((annotate("cppDeallocFree", 0)))
+    ZeroIndexFunc(void* p);
+
+    void __attribute__((annotate("cppDeallocFree", -1)))
+    NegativeFunc(void* p);
+
+    void __attribute__((annotate("cppDeallocFree", "self")))
+    NotIntFunc(void* p);
+
+    void __attribute__((annotate("cppDeallocFree", 1),
+                        annotate("cppDeallocDelete", 1)))
+    LastWinsFunc(void* p);
+
+    void __attribute__((swift_attr("cppDeallocFree_1")))
+    SwiftFreeFunc(void* p);
+
+    void __attribute__((
+        swift_attr("returns_cppDeallocDelete_1 cppDeallocFree_2")))
+    SwiftMultiFunc(Klass* a, void* b);
+
+    void __attribute__((swift_attr("cppDeallocDeleteArr_1")))
+    SwiftDeleteArrFunc(Klass* p);
+
+    void __attribute__((swift_attr("cppDeallocNone_1")))
+    SwiftNoneFunc(void* p);
+
+    void __attribute__((swift_attr("cppDeallocFree_xyz")))
+    SwiftBadIndexFunc(void* p);
+
+    void __attribute__((swift_attr("cppDeallocFree_0")))
+    SwiftZeroIndexFunc(void* p);
+
+    void __attribute__((swift_attr("cppDeallocFree_99")))
+    SwiftOutOfRangeFunc(void* p);
+
+    void __attribute__((swift_attr("unrelatedSwiftAttr")))
+    SwiftUnrelatedFunc(void* p);
+
+    template <typename T>
+    void __attribute__((annotate("cppDeallocDelete", 1)))
+    TemplatedFunc(T* p){
+      delete p;
     }
+
+    template <int N>
+    void __attribute__((annotate("cppDeallocFree", N)))
+    DependentFunc(void* p){}
+    )";
+  GetAllTopLevelDecls(code, Decls, true,
+                      {"-std=c++17", "-include", "stdlib.h"});
+
+  using DT = Cpp::DeallocType;
+  // A slot carries the value of the source index one above it: for a function
+  // with an implicit object parameter slot 0 is `this` and the first real
+  // parameter is slot 1, otherwise the first parameter is slot 0.
+  // IsDeallocator appends its slots, so the vector starts out empty. A
+  // parameter without a deallocation attribute is reported as Opaque, which is
+  // what tells it apart from one labelled cppDeallocNone.
+#define TESTIDD(DECL, ...)                                                     \
+  {                                                                            \
+    std::vector<DT> expected{__VA_ARGS__};                                     \
+    std::vector<DT> result;                                                    \
+    EXPECT_TRUE(Cpp::IsDeallocator(Cpp::ConstFuncRef{DECL}, result));          \
+    EXPECT_EQ(result, expected);                                               \
+  }
+#define TESTID(N, ...) TESTIDD(Cpp::GetNamed(#N).data, __VA_ARGS__)
+#define TESTIDM(SCOPE, N, ...)                                                 \
+  TESTIDD(Cpp::GetNamed(#N, Cpp::GetNamed(#SCOPE)).data, __VA_ARGS__)
+
+  // The builtin deallocator.
+  TESTID(free, DT::Free);
+
+  // GCC's ownership attributes, whose indexes need no translation.
+  TESTID(Deallocator, DT::Free);
+  TESTID(TakesMulti, DT::Free, DT::Opaque, DT::Free);
+  TESTID(HoldsFunc, DT::Opaque, DT::Free);
+  TESTID(ReturnsFunc, DT::Opaque);
+
+  // CppInterOp's own annotate spelling.
+  TESTID(FreeFunc, DT::Free);
+  TESTID(DeleteFunc, DT::Delete);
+  TESTID(DeleteArrFunc, DT::DeleteArr);
+  // A slot labelled cppDeallocNone is None, not Opaque.
+  TESTID(NoneDeallocFunc, DT::None);
+  TESTID(MultiFunc, DT::Free, DT::Opaque, DT::Free);
+  TESTID(BareFunc, DT::Free, DT::Opaque);
+
+  // Malformed or unrelated annotations label nothing.
+  TESTID(UnrelatedFunc, DT::Opaque);
+  TESTID(OutOfRangeFunc, DT::Opaque);
+  TESTID(ZeroIndexFunc, DT::Opaque);
+  TESTID(NegativeFunc, DT::Opaque);
+  TESTID(NotIntFunc, DT::Opaque);
+  // On a repeated index the last matching attribute wins.
+  TESTID(LastWinsFunc, DT::Delete);
+
+  // swift_attr spelling, the channel API Notes feeds.
+  TESTID(SwiftFreeFunc, DT::Free);
+  TESTID(SwiftMultiFunc, DT::Delete, DT::Free);
+  TESTID(SwiftDeleteArrFunc, DT::DeleteArr);
+  TESTID(SwiftNoneFunc, DT::None);
+  TESTID(SwiftBadIndexFunc, DT::Opaque);
+  TESTID(SwiftZeroIndexFunc, DT::Opaque);
+  TESTID(SwiftOutOfRangeFunc, DT::Opaque);
+  TESTID(SwiftUnrelatedFunc, DT::Opaque);
+
+  // Methods: slot 0 is `this` and cannot be labelled.
+  TESTIDM(Klass, getValAdress, DT::Opaque);
+  TESTIDM(Klass, releaseSelf, DT::Opaque);
+  TESTIDM(Klass, releaseBoth, DT::Opaque, DT::Free);
+  TESTIDM(Klass, methodTakes, DT::Opaque, DT::Opaque, DT::Free);
+  TESTIDM(Klass, swiftSelf, DT::Opaque, DT::Opaque);
+
+  // Static methods are counted like free functions.
+  TESTIDM(Klass, staticTakes, DT::Opaque, DT::Free);
+  TESTIDM(Klass, staticFree, DT::Free);
+  TESTIDM(Klass, staticZeroIndex, DT::Opaque);
+  TESTIDM(Klass, staticSwift, DT::DeleteArr);
+
+  // Templates are unwrapped to their pattern; a value-dependent index cannot
+  // be folded, therefore it is ignored. GetNamed does not resolve function
+  // template names, so the two trailing top level decls of the fixture are
+  // used.
+  Decl* templatedFunc = Decls[Decls.size() - 2];
+  Decl* dependentFunc = Decls[Decls.size() - 1];
+  TESTIDD(templatedFunc, DT::Delete);
+  TESTIDD(dependentFunc, DT::Opaque);
+
+  ASTContext& C = Interp->getCI()->getASTContext();
+  std::vector<Cpp::TemplateArgInfo> charArg = {C.CharTy.getAsOpaquePtr()};
+  TESTIDD(Cpp::InstantiateTemplate(templatedFunc, charArg).data, DT::Delete);
+
+  // After instantiation the index is no longer value-dependent, so it folds.
+  std::vector<Cpp::TemplateArgInfo> oneArg = {{C.IntTy.getAsOpaquePtr(), "1"}};
+  TESTIDD(Cpp::InstantiateTemplate(dependentFunc, oneArg).data, DT::Free);
+
+  // A function without parameters contributes no slot at all.
+  {
+    std::vector<DT> result;
+    EXPECT_TRUE(Cpp::IsDeallocator(
+        Cpp::ConstFuncRef{Cpp::GetNamed("Plain").data}, result));
+    EXPECT_TRUE(result.empty());
+  }
+
+  // The slots are appended, so what the vector already holds is left alone.
+  // Unknown is used as the marker because Opaque is what the function itself
+  // writes into an unlabelled slot.
+  {
+    std::vector<DT> result(2, DT::Unknown);
+    EXPECT_TRUE(Cpp::IsDeallocator(
+        Cpp::ConstFuncRef{Cpp::GetNamed("MultiFunc").data}, result));
+    EXPECT_EQ(result, (std::vector<DT>{DT::Unknown, DT::Unknown, DT::Free,
+                                       DT::Opaque, DT::Free}));
+
+    // Appending again grows the vector by the next function's slot count.
+    EXPECT_TRUE(Cpp::IsDeallocator(
+        Cpp::ConstFuncRef{Cpp::GetNamed("FreeFunc").data}, result));
+    EXPECT_EQ(result, (std::vector<DT>{DT::Unknown, DT::Unknown, DT::Free,
+                                       DT::Opaque, DT::Free, DT::Free}));
+  }
+
+  // Casting coverage: a non-function declaration cannot be analyzed, and the
+  // vector is left untouched.
+  {
+    std::vector<DT> result{DT::Unknown};
+    EXPECT_FALSE(Cpp::IsDeallocator(
+        Cpp::ConstFuncRef{Cpp::GetNamed("Klass").data}, result));
+    EXPECT_EQ(result, (std::vector<DT>{DT::Unknown}));
+  }
+
+  Cpp::DeleteInterpreter();
+#ifdef EMSCRIPTEN
+  GTEST_SKIP() << "Test fails for Emscipten builds";
+#endif
+  // APINotes check
+#ifndef CPPINTEROP_USE_CLING
+  std::string include_flag =
+      "-I" + std::string(CPPINTEROP_SRC_DIR) + "/unittests/CppInterOp/APINotes";
+  std::vector<const char*> interpreter_args = {
+      "-fmodules", "-fimplicit-module-maps", "-fapinotes-modules",
+      include_flag.c_str()};
+  TestFixture::CreateInterpreter(interpreter_args);
+  code = R"(
+  #include "TestHeader.h"
   )";
-  TestFixture::CreateInterpreter();
   Interp->process(code);
-  auto freeDecl = Cpp::GetNamed("free");
-  EXPECT_TRUE(Cpp::IsDeallocator(Cpp::ConstFuncRef{freeDecl.data}));
+
+  TESTID(testDeallocFree, DT::Free);
+  TESTID(testDeallocDelete, DT::Delete);
+  TESTID(testDeallocDeleteArr, DT::DeleteArr);
+  TESTID(testDeallocNone, DT::None);
+  TESTID(testDeallocMulti, DT::Delete, DT::Free);
+  TESTID(testDeallocWeirdAttr, DT::Opaque);
+
+  // Methods carried through API Notes; `this` stays unlabellable there too.
+  TESTIDM(KlassNotes, releaseArg, DT::Opaque, DT::Free);
+  TESTIDM(KlassNotes, releaseSelf, DT::Opaque);
+  TESTIDM(KlassNotes, releaseBoth, DT::Opaque, DT::Free);
+  // Without an index `this` is skipped and the first parameter is labelled.
+  TESTIDM(KlassNotes, releaseBare, DT::Opaque, DT::Delete);
+
+  Cpp::DeleteInterpreter();
+#endif
+#undef TESTIDM
+#undef TESTID
+#undef TESTIDD
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_GetFunctionNumArgs) {
@@ -3169,9 +3393,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsVirtualMethod) {
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_JitCallAdvanced) {
-#if CLANG_VERSION_MAJOR == 20 && defined(CPPINTEROP_USE_CLING) && defined(_WIN32)
-  GTEST_SKIP() << "Test fails with Cling on Windows";
-#endif
 #ifdef EMSCRIPTEN
 #if CLANG_VERSION_MAJOR > 21
   GTEST_SKIP() << "Test fails for Emscipten builds using LLVM 22";
@@ -4200,7 +4421,12 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_Construct) {
 // The wrappers behind Construct and by-value returns placement-new into a
 // caller-provided buffer. A class-scope operator new with no placement form
 // hides the global `operator new(size_t, void*)`, so those wrappers only
-// compile if they spell it `::new (buf) C(...)`.
+// compile if they spell it `::new (buf) C(...)`. That is also the standard
+// library's construct-at contract ([specialized.construct]): construction into
+// a caller-provided buffer never routes through a class-scope *placement*
+// operator new (which unqualified `new (buf)` would pick), while plain heap
+// construction still goes through the user's class-scope allocator. The
+// counters in WithPlacementNew make the choice observable.
 TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_ConstructClassScopeNew) {
 #ifdef _WIN32
   GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
@@ -4212,7 +4438,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_ConstructClassScopeNew) {
 #endif
   if (TypeParam::isOutOfProcess)
     GTEST_SKIP() << "Test fails for OOP JIT builds";
-  std::vector<const char*> interpreter_args = {"-include", "new"};
   std::vector<Decl*> Decls;
 
   std::string code = R"(
@@ -4228,9 +4453,28 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_ConstructClassScopeNew) {
       static void operator delete[](void* p) { ::operator delete[](p); }
     };
     WithClassNew MakeWithClassNew() { return WithClassNew(); }
+
+    int heap_news = 0;      // calls to the class-scope operator new(size_t)
+    int placement_news = 0; // calls to the class-scope placement form
+    class WithPlacementNew {
+    public:
+      int x;
+      WithPlacementNew() : x(7) {}
+      WithPlacementNew Clone() { return WithPlacementNew(); }
+      static void* operator new(__SIZE_TYPE__ sz) {
+        ++heap_news;
+        return ::operator new(sz);
+      }
+      static void* operator new(__SIZE_TYPE__, void* where) {
+        ++placement_news;
+        return where;
+      }
+      static void operator delete(void* p) { ::operator delete(p); }
+      static void operator delete(void*, void*) {}
+    };
     )";
 
-  GetAllTopLevelDecls(code, Decls, false, interpreter_args);
+  GetAllTopLevelDecls(code, Decls, false, {"-include", "new"});
   Cpp::DeclRef scope = Cpp::GetNamed("WithClassNew");
   ASSERT_TRUE(scope);
 
@@ -4270,59 +4514,13 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_ConstructClassScopeNew) {
   int result = 0; // WithClassNew's layout is a single int
   JC.Invoke(&result);
   EXPECT_EQ(result, 42);
-}
 
-// Pins down which operator new the wrappers pick when the class-scope forms
-// are all accessible, including a class-scope *placement* operator new. The
-// contract is the standard library's construct-at contract
-// ([specialized.construct]): construction into a caller-provided buffer is
-// spelled `::new (buf) C(...)`, so it constructs at `buf` directly and never
-// routes through a class-scope placement operator new (which unqualified
-// `new (buf)` would pick). Plain heap construction still goes through the
-// user's class-scope allocator. The counters make the choice observable.
-TYPED_TEST(CPPINTEROP_TEST_MODE,
-           FunctionReflection_ConstructClassScopePlacementNew) {
-#ifdef _WIN32
-  GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
-#endif
-#ifdef EMSCRIPTEN
-#if CLANG_VERSION_MAJOR > 21
-  GTEST_SKIP() << "Test fails for Emscipten builds using LLVM 22";
-#endif
-#endif
-  if (TypeParam::isOutOfProcess)
-    GTEST_SKIP() << "Test fails for OOP JIT builds";
-  std::vector<const char*> interpreter_args = {"-include", "new"};
-  std::vector<Decl*> Decls;
-
-  std::string code = R"(
-    int heap_news = 0;      // calls to the class-scope operator new(size_t)
-    int placement_news = 0; // calls to the class-scope placement form
-    class WithPlacementNew {
-    public:
-      int x;
-      WithPlacementNew() : x(7) {}
-      WithPlacementNew Clone() { return WithPlacementNew(); }
-      static void* operator new(__SIZE_TYPE__ sz) {
-        ++heap_news;
-        return ::operator new(sz);
-      }
-      static void* operator new(__SIZE_TYPE__, void* where) {
-        ++placement_news;
-        return where;
-      }
-      static void operator delete(void* p) { ::operator delete(p); }
-      static void operator delete(void*, void*) {}
-    };
-    )";
-
-  GetAllTopLevelDecls(code, Decls, false, interpreter_args);
-  Cpp::DeclRef scope = Cpp::GetNamed("WithPlacementNew");
+  scope = Cpp::GetNamed("WithPlacementNew");
   ASSERT_TRUE(scope);
 
   // Heap construction (the wrapper's non-arena `new C(...)`) must keep
   // honoring the user's class-scope allocator.
-  Cpp::ObjectRef object = Cpp::Construct(scope);
+  object = Cpp::Construct(scope);
   ASSERT_TRUE(object);
   EXPECT_EQ(*static_cast<int*>(object.data), 7);
   EXPECT_EQ(Cpp::Evaluate("heap_news").unbox<int>(), 1);
@@ -4330,7 +4528,7 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 
   // Construction into a caller-provided buffer bypasses the class-scope
   // placement operator new, like std::construct_at does.
-  void* where = Cpp::Allocate(scope).data;
+  where = Cpp::Allocate(scope).data;
   ASSERT_TRUE(where);
   EXPECT_TRUE(where == Cpp::Construct(scope, where).data);
   EXPECT_EQ(*static_cast<int*>(where), 7);
@@ -4341,10 +4539,10 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
   // A JitCall to a method of the class with a by-value result: the wrapper
   // stores the result into the caller's buffer with `::new (ret)`, so the
   // class-scope placement operator new stays out of the call path here too.
-  Cpp::JitCall JC = Cpp::MakeFunctionCallable(
+  JC = Cpp::MakeFunctionCallable(
       Cpp::FuncRef{Cpp::GetNamed("Clone", scope).data});
   ASSERT_TRUE(JC.getKind() == Cpp::JitCall::kGenericCall);
-  int result = 0; // WithPlacementNew's layout is a single int
+  result = 0; // WithPlacementNew's layout is a single int
   JC.Invoke(&result, {}, object.data);
   EXPECT_EQ(result, 7);
   EXPECT_EQ(Cpp::Evaluate("heap_news").unbox<int>(), 1);
@@ -4657,10 +4855,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_UndoTest) {
 #ifdef _WIN32
   GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
 #endif
-#if CLANG_VERSION_MAJOR == 20 && defined(CPPINTEROP_USE_CLING) &&           \
-    defined(__APPLE__)
-  GTEST_SKIP() << "Disabled on osx for cling based on llvm 20. Needs fixing.";
-#endif
 #if defined(CPPINTEROP_USE_CLING)
   GTEST_SKIP() << "cling unload walks a module already freed by ORC "
                   "clone-on-emit; skip until the cling-side fix lands.";
@@ -4856,6 +5050,92 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsExplicitDeductionGuide) {
             "explicit Wrapper(T *) -> Wrapper<T *>");
   EXPECT_EQ(Cpp::GetTypeAsString(Cpp::GetFunctionReturnType(guide)),
             "Wrapper<T *>");
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsOperator) {
+  std::vector<Decl*> Decls, BaseDecls, DerivedDecls;
+  std::string code = R"(
+    struct OpBase {
+      OpBase& operator+=(const OpBase&) { return *this; }
+      operator int() const { return 0; }
+      void method() {}
+    };
+    struct OpDerived : OpBase {
+      using OpBase::operator+=;
+    };
+    bool operator==(const OpBase&, const OpBase&) { return true; }
+    template <typename T> bool operator<(const T&, const OpBase&) {
+      return true;
+    }
+    template <typename T> void free_template(T) {}
+    void free_function() {}
+    )";
+
+  GetAllTopLevelDecls(code, Decls);
+  ASSERT_EQ(Decls.size(), 6U);
+  GetAllSubDecls(Decls[0], BaseDecls, /*filter_implicitGenerated=*/true);
+  ASSERT_EQ(BaseDecls.size(), 3U);
+  GetAllSubDecls(Decls[1], DerivedDecls);
+
+  EXPECT_TRUE(Cpp::IsOperator(BaseDecls[0]));  // operator+=
+  EXPECT_FALSE(Cpp::IsOperator(BaseDecls[1])); // operator int
+  EXPECT_FALSE(Cpp::IsOperator(BaseDecls[2])); // method
+
+  // using OpBase::operator+=;
+  Decl* Shadow = nullptr;
+  for (auto* D : DerivedDecls)
+    if (llvm::isa<UsingShadowDecl>(D))
+      Shadow = D;
+  ASSERT_TRUE(Shadow);
+  EXPECT_TRUE(Cpp::IsOperator(Shadow));
+
+  EXPECT_FALSE(Cpp::IsOperator(Decls[0])); // not a function
+  EXPECT_TRUE(Cpp::IsOperator(Decls[2]));  // operator==
+  EXPECT_TRUE(Cpp::IsOperator(Decls[3]));  // template operator<
+  EXPECT_FALSE(Cpp::IsOperator(Decls[4])); // free_template
+  EXPECT_FALSE(Cpp::IsOperator(Decls[5])); // free_function
+  EXPECT_FALSE(Cpp::IsOperator(nullptr));
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, FunctionReflection_IsConversionOperator) {
+  std::vector<Decl*> Decls, BaseDecls, DerivedDecls;
+  std::string code = R"(
+    struct ConvBase {
+      operator int() const { return 0; }
+      explicit operator bool() const { return true; }
+      template <typename T> operator T*() const { return nullptr; }
+      bool operator!() const { return false; }
+      void method() {}
+    };
+    struct ConvDerived : ConvBase {
+      using ConvBase::operator int;
+    };
+    void free_function() {}
+    )";
+
+  GetAllTopLevelDecls(code, Decls);
+  ASSERT_EQ(Decls.size(), 3U);
+  GetAllSubDecls(Decls[0], BaseDecls, /*filter_implicitGenerated=*/true);
+  ASSERT_EQ(BaseDecls.size(), 5U);
+  GetAllSubDecls(Decls[1], DerivedDecls);
+
+  EXPECT_TRUE(Cpp::IsConversionOperator(BaseDecls[0]));  // operator int
+  EXPECT_TRUE(Cpp::IsConversionOperator(BaseDecls[1]));  // operator bool
+  EXPECT_TRUE(Cpp::IsConversionOperator(BaseDecls[2]));  // operator T*
+  EXPECT_FALSE(Cpp::IsConversionOperator(BaseDecls[3])); // operator!
+  EXPECT_FALSE(Cpp::IsConversionOperator(BaseDecls[4])); // method
+
+  // using ConvBase::operator int;
+  Decl* Shadow = nullptr;
+  for (auto* D : DerivedDecls)
+    if (llvm::isa<UsingShadowDecl>(D))
+      Shadow = D;
+  ASSERT_TRUE(Shadow);
+  EXPECT_TRUE(Cpp::IsConversionOperator(Shadow));
+
+  EXPECT_FALSE(Cpp::IsConversionOperator(Decls[0])); // not a function
+  EXPECT_FALSE(Cpp::IsConversionOperator(Decls[2])); // free_function
+  EXPECT_FALSE(Cpp::IsConversionOperator(nullptr));
 }
 
 // C++23 "deducing this" (explicit object parameters, P0847R7): the object

@@ -8,12 +8,12 @@
 #include "clang/AST/ASTDumper.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
+#include "clang/AST/ExternalASTSource.h"
 #include "clang/AST/GlobalDecl.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/Version.h"
 #include "clang/Frontend/CompilerInstance.h"
-#include "clang/Sema/ExternalSemaSource.h"
 #include "clang/Sema/Sema.h"
 
 #include "llvm/ADT/IntrusiveRefCntPtr.h"
@@ -21,6 +21,8 @@
 #include "gtest/gtest.h"
 
 #include <CppInterOp/CppInterOpTypes.h>
+#include <array>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <string>
@@ -1035,6 +1037,46 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetNamedWithUsing) {
       << "anonymous-namespace member should be visible at TU scope";
 }
 
+TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_IsVisibleName) {
+  std::string code = R"(
+    namespace N {
+      int x;
+      void f(int);
+      void f(double);
+    }
+    namespace P { using namespace N; }
+    namespace Q { int y; }
+    using namespace P;
+    int z;
+  )";
+
+  TestFixture::CreateInterpreter();
+  Interp->declare(code);
+
+  Cpp::DeclRef ns_N = Cpp::GetNamed("N");
+  Cpp::DeclRef ns_P = Cpp::GetNamed("P");
+  Cpp::DeclRef ns_Q = Cpp::GetNamed("Q");
+  ASSERT_TRUE(ns_N);
+  ASSERT_TRUE(ns_P);
+  ASSERT_TRUE(ns_Q);
+
+  // Direct members, including overload sets.
+  EXPECT_TRUE(Cpp::IsVisibleName("x", ns_N));
+  EXPECT_TRUE(Cpp::IsVisibleName("f", ns_N));
+  // Through a using-directive, also from the global scope, where the
+  // directive is transitive (global -> P -> N).
+  EXPECT_TRUE(Cpp::IsVisibleName("x", ns_P));
+  EXPECT_TRUE(Cpp::IsVisibleName("x"));
+  EXPECT_TRUE(Cpp::IsVisibleName("f", Cpp::GetGlobalScope()));
+  // Enclosing scopes are searched too.
+  EXPECT_TRUE(Cpp::IsVisibleName("z", ns_Q));
+  // Names not reachable by unqualified lookup.
+  EXPECT_FALSE(Cpp::IsVisibleName("y"));
+  EXPECT_FALSE(Cpp::IsVisibleName("y", ns_N));
+  EXPECT_FALSE(Cpp::IsVisibleName("does_not_exist"));
+  EXPECT_FALSE(Cpp::IsVisibleName("does_not_exist", ns_P));
+}
+
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetParentScope) {
   std::string code = R"(namespace N1 {
                         namespace N2 {
@@ -1216,7 +1258,7 @@ namespace {
 // https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit/issues/1289,
 // where cppjit built the Python proxy from the incomplete declaration and
 // silently dropped the entire base hierarchy.
-class LazyDefinitionSource : public clang::ExternalSemaSource {
+class LazyDefinitionSource : public clang::ExternalASTSource {
 public:
   explicit LazyDefinitionSource(std::map<std::string, std::string> Defs)
       : Pending(std::move(Defs)) {}
@@ -1431,6 +1473,103 @@ CODE;
   std::unique_ptr<G> g(new G());
   EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[6], Decls[0]),
             (char*)(A*)g.get() - (char*)g.get());
+}
+
+TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetBaseClassOffsetWithAddress) {
+  std::vector<Decl*> Decls;
+  // Layout fixtures own no resources and do not need custom copy/move members.
+  // NOLINTBEGIN(cppcoreguidelines-special-member-functions)
+#define Stringify(s) Stringifyx(s)
+#define Stringifyx(...) #__VA_ARGS__
+#define CODE                                                                   \
+  struct VB {                                                                  \
+    int m_vb;                                                                  \
+  };                                                                           \
+  struct IC {                                                                  \
+    int m_ic;                                                                  \
+  };                                                                           \
+  struct Pad {                                                                 \
+    std::array<int, 2> padding;                                                \
+  };                                                                           \
+  struct M : Pad, IC {                                                         \
+    int m_m;                                                                   \
+  };                                                                           \
+  struct Lead {                                                                \
+    virtual ~Lead() = default;                                                 \
+    std::array<long, 2> padding;                                               \
+  };                                                                           \
+  struct VD2 : Lead, virtual VB {                                              \
+    int m_vd2;                                                                 \
+  };                                                                           \
+  struct ID3 : Lead, virtual M {                                               \
+    int m_id3;                                                                 \
+  };                                                                           \
+  struct NearlyEmpty {                                                         \
+    virtual ~NearlyEmpty() = default;                                          \
+    virtual int id() const { return 42; }                                      \
+  };                                                                           \
+  struct WithVCalls : virtual NearlyEmpty {                                    \
+    int value;                                                                 \
+    int id() const override { return 7; }                                      \
+  };
+
+  CODE;
+  // NOLINTEND(cppcoreguidelines-special-member-functions)
+  GetAllTopLevelDecls(Stringify(CODE), Decls, false, {"-include", "array"});
+#undef Stringifyx
+#undef Stringify
+#undef CODE
+
+  // These complete types exist only in the host, not in the interpreter.
+  // Other also exists solely for its layout and owns no resources.
+  struct Other { // NOLINT(cppcoreguidelines-special-member-functions)
+    virtual ~Other() = default;
+    std::array<long, 100> padding;
+  };
+  struct Hidden : Other, VD2 {
+    long value;
+  };
+  struct Hidden3 : Other, ID3 {
+    long value;
+  };
+  struct First : virtual NearlyEmpty {};
+  struct HiddenCalls : First, WithVCalls {
+    long value;
+    [[nodiscard]] int id() const override { return WithVCalls::id(); }
+  };
+
+  Hidden hidden;
+  VD2* p = &hidden;
+  int64_t expected = (char*)(VB*)p - (char*)p;
+  ASSERT_NE(Cpp::GetBaseClassOffset(Decls[5], Decls[0]), expected);
+  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[5], Decls[0], p), expected);
+
+  // The last part of ID3 -> virtual M -> IC has a nonzero non-virtual offset.
+  Hidden3 hidden3;
+  ID3* p3 = &hidden3;
+  int64_t expected_ic = (char*)(IC*)p3 - (char*)p3;
+  ASSERT_NE(Cpp::GetBaseClassOffset(Decls[6], Decls[1]), expected_ic);
+  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[6], Decls[1], p3), expected_ic);
+
+  // Preserve the static behavior for ordinary bases and the same class.
+  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[5], Decls[4], p),
+            (char*)(Lead*)p - (char*)p);
+  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[5], Decls[5], p), 0);
+
+  // A complete VD2 has a nonzero vbptr offset on Microsoft targets.
+  VD2 complete;
+  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[5], Decls[0], &complete),
+            Cpp::GetBaseClassOffset(Decls[5], Decls[0]));
+  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[5], Decls[0], &complete),
+            (char*)(VB*)&complete - (char*)&complete);
+
+  // A nearly-empty virtual base introduces vcall slots on Itanium targets.
+  // It can precede the WithVCalls subobject, requiring a signed offset.
+  HiddenCalls hidden_calls;
+  WithVCalls* pc = &hidden_calls;
+  EXPECT_EQ(pc->id(), 7);
+  EXPECT_EQ(Cpp::GetBaseClassOffset(Decls[8], Decls[7], pc),
+            (char*)(NearlyEmpty*)pc - (char*)pc);
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, ScopeReflection_GetAllCppNames) {
