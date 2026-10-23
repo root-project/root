@@ -49,13 +49,15 @@ public:
       R__ASSERT(from != nullptr);
       R__ASSERT(to != nullptr);
       auto cxLevel = compression % 100;
-      if (cxLevel == 0) {
+      if (cxLevel == 0 || nbytes == 0) {
          memcpy(to, from, nbytes);
          return nbytes;
       }
 
       auto cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compression / 100);
-      unsigned int nZipBlocks = 1 + (nbytes - 1) / kMAXZIPBUF;
+      const auto blocks = ROOT::Internal::GetZipBlocks(nbytes);
+      const unsigned int nZipBlocks = blocks.fNBlocks;
+      const int szBlock = blocks.fBlockSize;
       const char *source = static_cast<const char *>(from);
       int szTarget = nbytes;
       char *target = reinterpret_cast<char *>(to);
@@ -63,7 +65,7 @@ public:
       int szRemaining = nbytes;
       size_t szZipData = 0;
       for (unsigned int i = 0; i < nZipBlocks; ++i) {
-         int szSource = std::min(static_cast<int>(kMAXZIPBUF), szRemaining);
+         int szSource = std::min(szBlock, szRemaining);
          R__zipMultipleAlgorithm(cxLevel, &szSource, source, &szTarget, target, &szOutBlock, cxAlgorithm);
          R__ASSERT(szOutBlock >= 0);
          if ((szOutBlock == 0) || (szOutBlock >= szSource)) {

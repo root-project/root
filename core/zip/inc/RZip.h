@@ -10,6 +10,9 @@
  *************************************************************************/
 #include "Compression.h"
 
+#include <cassert>
+#include <cstdint>
+
 /**
  * These are definitions of various free functions for the C-style compression routines in ROOT.
  */
@@ -38,5 +41,27 @@ extern "C" void R__unzip(int *srcsize, const unsigned char *src, int *tgtsize, u
 extern "C" int R__unzip_header(int *srcsize, const unsigned char *src, int *tgtsize);
 
 enum { kMAXZIPBUF = 0xffffff }; // 16 MB
+
+namespace ROOT::Internal {
+
+/// Number and size of the blocks in which a buffer is compressed.
+struct RZipBlocks {
+   int fNBlocks;
+   int fBlockSize;
+};
+
+/// Number of blocks and the size of the blocks in which a buffer of `nbytes` > 0 bytes is compressed.
+/// The buffer is cut into the fewest blocks of at most kMAXZIPBUF bytes, `1 + (nbytes - 1) / kMAXZIPBUF`, all
+/// of the same size but the last, which is smaller by less than the number of blocks. Full blocks followed by
+/// the remainder would end a buffer just above a multiple of kMAXZIPBUF in a block of a few bytes, which cannot
+/// be compressed, so that the whole buffer would be stored uncompressed.
+constexpr RZipBlocks GetZipBlocks(std::uint64_t nbytes)
+{
+   assert(nbytes > 0);
+   const std::uint64_t nblocks = 1 + (nbytes - 1) / kMAXZIPBUF;
+   return RZipBlocks{static_cast<int>(nblocks), static_cast<int>((nbytes + nblocks - 1) / nblocks)};
+}
+
+} // namespace ROOT::Internal
 
 #endif

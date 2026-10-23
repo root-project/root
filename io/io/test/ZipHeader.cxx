@@ -280,3 +280,96 @@ TEST(RZip, CorruptHeaderMessage)
 
    EXPECT_EQ(0, msg.Uncompress());
 }
+
+// Buffers one byte larger than the largest compression block (kMAXZIPBUF) are compressed in two blocks of about the
+// same size. With a full block followed by the remainder, the 1-byte trailing block could not be compressed and the
+// entire buffer was stored uncompressed.
+TEST(RZip, JustAboveBlockSizeTKey)
+{
+   TMemFile writableFile("memfile.root", "RECREATE");
+   writableFile.SetCompressionSettings(505);
+
+   // The streamed std::string is its characters plus a fixed overhead: measure it, then size the string such that
+   // the key's object is kMAXZIPBUF + 1 bytes long
+   std::string probe(1000, 'x');
+   writableFile.WriteObject(&probe, "probe");
+   int overhead = -1;
+   for (const auto &ki : writableFile.WalkTKeys()) {
+      if (ki.fKeyName == "probe")
+         overhead = ki.fObjLen - 1000;
+   }
+   ASSERT_GT(overhead, 0);
+   std::string large(kMAXZIPBUF + 1 - overhead, 'x');
+   writableFile.WriteObject(&large, "large");
+
+   bool found = false;
+   for (const auto &ki : writableFile.WalkTKeys()) {
+      if (ki.fKeyName != "large")
+         continue;
+      found = true;
+      EXPECT_EQ(kMAXZIPBUF + 1, ki.fObjLen);
+      EXPECT_LT(ki.fLen, ki.fObjLen); // compressed
+   }
+   EXPECT_TRUE(found);
+
+   auto readBack = writableFile.Get<std::string>("large");
+   ASSERT_TRUE(readBack);
+   EXPECT_EQ(large, *readBack);
+   delete readBack;
+}
+
+TEST(RZip, JustAboveBlockSizeTTree)
+{
+   TMemFile writableFile("memfile.root", "RECREATE");
+   writableFile.SetCompressionSettings(505);
+   auto tree = new TTree("t", "");
+   tree->SetAutoFlush(0);
+   Char_t val = 'x';
+   tree->Branch("val", &val, "val/B", 64 * 1024 * 1024);
+   const Long64_t nEntries = Long64_t(kMAXZIPBUF) + 1; // one basket of kMAXZIPBUF + 1 bytes
+   for (Long64_t i = 0; i < nEntries; ++i)
+      tree->Fill();
+   tree->Write();
+
+   int nBaskets = 0;
+   for (const auto &ki : writableFile.WalkTKeys()) {
+      if (ki.fClassName != "TBasket")
+         continue;
+      ++nBaskets;
+      EXPECT_EQ(kMAXZIPBUF + 1, ki.fObjLen);
+      EXPECT_LT(ki.fLen, ki.fObjLen); // compressed
+   }
+   EXPECT_EQ(1, nBaskets);
+
+   tree->SetBranchAddress("val", &val);
+   val = 0;
+   EXPECT_EQ(1, tree->GetEntry(nEntries - 1));
+   EXPECT_EQ('x', val);
+}
+
+TEST(RZip, JustAboveBlockSizeMessage)
+{
+   // The message length is the name plus a fixed overhead: measure it, then size the name such that the compressed
+   // part of the message (all but its 8-byte header) is kMAXZIPBUF + 1 bytes long
+   int overhead = 0;
+   {
+      TNamed probe;
+      probe.SetName(std::string(1000, 'x').c_str());
+      TMessage msg(kMESS_OBJECT | kMESS_ZIP);
+      msg.WriteObject(&probe);
+      overhead = msg.Length() - 2 * sizeof(UInt_t) - 1000;
+   }
+   ASSERT_GT(overhead, 0);
+
+   TNamed named;
+   named.SetName(std::string(kMAXZIPBUF + 1 - overhead, 'x').c_str());
+   TMessage msg(kMESS_OBJECT | kMESS_ZIP);
+   msg.SetCompressionSettings(505);
+   msg.WriteObject(&named);
+   EXPECT_EQ(kMAXZIPBUF + 1, msg.Length() - 2 * static_cast<int>(sizeof(UInt_t)));
+
+   EXPECT_EQ(0, msg.Compress());
+   EXPECT_TRUE(msg.CompBuffer());
+   EXPECT_LT(msg.CompLength(), msg.Length()); // compressed
+   EXPECT_EQ(0, msg.Uncompress());
+}
