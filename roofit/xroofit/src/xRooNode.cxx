@@ -4248,6 +4248,19 @@ void xRooNode::_fit_(const char *constParValues, const char *options)
       for (unsigned int i = 0; i < fr->numStatusHistory(); i++) {
          statusCodes += TString::Format("\n%s = %d", fr->statusLabelHistory(i), fr->statusCodeHistory(i));
       }
+      // add poi to list of statusCodes too if was good fit
+      if(fr->status() == 0) {
+         auto _poi = poi();
+         if (!_poi.empty()) {
+            statusCodes += "\n\nPOI Post Fit Values\n-------------";
+            for (auto p : _poi) {
+               auto arg = dynamic_cast<RooRealVar *>(fr->floatParsFinal().find(p->GetName()));
+               if (!arg)
+                  continue; // must have been held constant
+               statusCodes += TString::Format("\n%s : %g +/- %g", arg->GetName(), arg->getVal(), arg->getError());
+            }
+         }
+      }
       const TGWindow *w =
          (gROOT->GetListOfBrowsers()->At(0))
             ? dynamic_cast<TGWindow *>(static_cast<TBrowser *>(gROOT->GetListOfBrowsers()->At(0))->GetBrowserImp())
@@ -8262,24 +8275,26 @@ std::vector<double> new_getPropagatedErrors(const RooAbsReal &f, const RooFitRes
 
    std::vector<double> plusVar(nBins), minusVar(nBins);
 
+   double ERROR_FACTOR = 1.;
    for (size_t ivar = 0; ivar < nPars; ivar++) {
 
       auto &rrv = static_cast<RooRealVar &>((*_pars)[ivar]);
       auto *frrrv = static_cast<RooRealVar *>(fr.floatParsFinal().find(rrv));
 
       double cenVal = rrv.getVal();
+      ERROR_FACTOR = 1;//(1e-2)*std::max(1.,std::abs(cenVal));
 
       if (asymHi || asymLo) {
          double errValHi = frrrv->getErrorHi();
-         rrv.setVal(errValHi > 0 ? std::min(cenVal + errValHi, rrv.getMax())
-                                 : std::max(cenVal + errValHi, rrv.getMin()));
+         rrv.setVal(errValHi > 0 ? std::min(cenVal + errValHi*ERROR_FACTOR, rrv.getMax())
+                                 : std::max(cenVal + errValHi*ERROR_FACTOR, rrv.getMin()));
          for (size_t k = 0; k < nBins; k++) {
             setBin(bins[k]);
             plusVar[k] = f.getVal(nset);
          }
          double errValLo = frrrv->getErrorLo();
-         rrv.setVal(errValLo > 0 ? std::min(cenVal + errValLo, rrv.getMax())
-                                 : std::max(cenVal + errValLo, rrv.getMin()));
+         rrv.setVal(errValLo > 0 ? std::min(cenVal + errValLo*ERROR_FACTOR, rrv.getMax())
+                                 : std::max(cenVal + errValLo*ERROR_FACTOR, rrv.getMin()));
          for (size_t k = 0; k < nBins; k++) {
             setBin(bins[k]);
             minusVar[k] = f.getVal(nset);
@@ -8297,25 +8312,25 @@ std::vector<double> new_getPropagatedErrors(const RooAbsReal &f, const RooFitRes
                lo = std::min(plusVar[k], minusVar[k]);
                hi = 2 * nomVals[k] - lo; // symmetrizes
             }
-            F[k][ivar] = (hi - lo) * 0.5;
+            F[k][ivar] = (hi - lo) * 0.5 / ERROR_FACTOR;
          }
       } else {
-         double errVal = sqrt(V(ivar, ivar));
+         double errVal = sqrt(V(ivar, ivar));//frrrv->getError(); //sqrt(V(ivar, ivar));
          // Make Plus variation
-         rrv.setVal(std::min(cenVal + errVal, rrv.getMax()));
+         rrv.setVal(std::min(cenVal + errVal*ERROR_FACTOR, rrv.getMax()));
          for (size_t k = 0; k < nBins; k++) {
             setBin(bins[k]);
             plusVar[k] = f.getVal(nset);
          }
          // Make Minus variation
-         rrv.setVal(std::max(cenVal - errVal, rrv.getMin()));
+         rrv.setVal(std::max(cenVal - errVal*ERROR_FACTOR, rrv.getMin()));
          for (size_t k = 0; k < nBins; k++) {
             setBin(bins[k]);
             minusVar[k] = f.getVal(nset);
          }
          rrv.setVal(cenVal);
          for (size_t k = 0; k < nBins; k++) {
-            F[k][ivar] = (plusVar[k] - minusVar[k]) * 0.5;
+            F[k][ivar] = (plusVar[k] - minusVar[k]) * 0.5 / ERROR_FACTOR;
          }
       }
    }
@@ -8691,7 +8706,7 @@ xRooNode xRooNode::histo(const xRooNode &vars, const xRooNode &fr, bool content,
 {
 
    if (!vars.fComp && strlen(vars.GetName())) {
-      return histo(xRooNode::vars().reduced(vars.GetName()), fr, content, errors);
+      return histo(xRooNode::vars().reduced(vars.GetName()), fr, content, errors,stack,errorsHi,errorsLo,nErrorToys);
    }
 
    xRooNode out(TString::Format("%s.histo", GetName()), nullptr, *this);
@@ -9354,7 +9369,7 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
          h->SetBinError(i, (upVal - downVal) * 0.5);
       }
    }
-
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 41, 00)
    // We evaluated the above with `normSet`, which lives on this function's stack.
    // RooFit proxies only cache a bare pointer to the last normSet and re-use it
    // later (e.g. RooProduct::evaluate reads back _compRSet.nset()), so before it
@@ -9362,6 +9377,8 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
    // otherwise a later evaluation dereferences freed stack ("use of uninitialised
    // value" in valgrind). sterilize() only walks clients, but getVal() propagates
    // the normSet to the servers of the evaluated function, so reset those here.
+   // setProxyNormSet made public in 6.41
+
    {
       RooArgSet evaluatedNodes;
       for (RooAbsArg *treeRoot : {static_cast<RooAbsArg *>(rar), static_cast<RooAbsArg *>(p),
@@ -9373,7 +9390,7 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
          node->setProxyNormSet(nullptr);
       }
    }
-
+#endif
    if (oldrar) {
       std::vector<RooAbsArg *> extra;
       if (auto s = dynamic_cast<RooSimultaneous *>(rar)) {
