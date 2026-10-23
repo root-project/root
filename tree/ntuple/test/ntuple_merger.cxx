@@ -20,7 +20,9 @@
 #include <TRandom3.h>
 #include <TTree.h>
 
+#include <bitset>
 #include <string_view>
+#include <type_traits>
 #include <unordered_map>
 
 using ROOT::TestSupport::CheckDiagsRAII;
@@ -2452,6 +2454,223 @@ TEST(RNTupleMerger, SkipMissing)
    bool ok = merger.PartialMerge();
    EXPECT_TRUE(ok);
 }
+
+struct RNTupleMergerZeroPages : public ::testing::TestWithParam<std::string> {};
+
+TEST_P(RNTupleMergerZeroPages, MissingField)
+{
+   const auto encoding = GetParam();
+   auto check = [&](auto sample) {
+      using T = decltype(sample);
+      FileRaii first("test_ntuple_merge_zero_pages_first.root");
+      FileRaii middle("test_ntuple_merge_zero_pages_middle.root");
+      FileRaii last("test_ntuple_merge_zero_pages_last.root");
+      FileRaii output("test_ntuple_merge_zero_pages_output.root");
+      const std::array<const FileRaii *, 3> files{&first, &middle, &last};
+      constexpr unsigned int nEntriesPerSource = 20;
+      for (unsigned int source = 0; source < files.size(); ++source) {
+         auto model = RNTupleModel::Create();
+         auto entry = model->MakeField<unsigned int>("entry");
+         if (source != 1) {
+            auto field = std::make_unique<RField<T>>("value");
+            if constexpr (std::is_same_v<T, float>) {
+               if (encoding == "Real16")
+                  field->SetHalfPrecision();
+               else if (encoding == "Real32Trunc")
+                  field->SetTruncated(20);
+               else
+                  field->SetQuantized(20, {0., 64.});
+            }
+            model->AddField(std::move(field));
+         }
+         auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", files[source]->GetPath());
+         std::shared_ptr<T> value;
+         if (source != 1)
+            value = writer->GetModel().GetDefaultEntry().template GetPtr<T>("value");
+         for (unsigned int i = 0; i < nEntriesPerSource; ++i) {
+            *entry = source * nEntriesPerSource + i;
+            if (value)
+               *value = T(*entry + 1);
+            writer->Fill();
+         }
+      }
+
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto *file : files) {
+         sources.push_back(RPageSource::Create("ntuple", file->GetPath()));
+         sourcePtrs.push_back(sources.back().get());
+      }
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", output.GetPath(), RNTupleWriteOptions());
+      RNTupleMerger merger{std::move(destination)};
+      RNTupleMergeOptions options;
+      options.fMergingMode = ENTupleMergingMode::kUnion;
+      auto result = merger.Merge(sourcePtrs, options);
+      ASSERT_TRUE(bool(result)) << result.GetError()->GetReport();
+
+      auto reader = RNTupleReader::Open("ntuple", output.GetPath());
+      ASSERT_EQ(3 * nEntriesPerSource, reader->GetNEntries());
+      const auto &descriptor = reader->GetDescriptor();
+      const auto &field = descriptor.GetFieldDescriptor(descriptor.FindFieldId("value"));
+      ASSERT_EQ(1u, field.GetLogicalColumnIds().size());
+      const auto columnId = field.GetLogicalColumnIds()[0];
+      const auto repetitions = std::max<std::uint64_t>(field.GetNRepetitions(), 1);
+      ASSERT_EQ(3u, descriptor.GetNActiveClusters());
+      for (const auto &cluster : descriptor.GetActiveClusterIterable()) {
+         ASSERT_EQ(cluster.GetNEntries() * repetitions, cluster.GetColumnRange(columnId).GetNElements());
+      }
+      auto value = reader->GetModel().GetDefaultEntry().template GetPtr<T>("value");
+      for (auto i : reader->GetEntryRange()) {
+         SCOPED_TRACE(i);
+         reader->LoadEntry(i);
+         const auto expected = (i >= nEntriesPerSource && i < 2 * nEntriesPerSource) ? T{} : T(i + 1);
+         if constexpr (std::is_same_v<T, float>)
+            EXPECT_NEAR(expected, *value, 0.001f);
+         else
+            EXPECT_EQ(expected, *value);
+      }
+   };
+   if (encoding == "Bool")
+      check(bool{});
+   else if (encoding == "Bitset8")
+      check(std::bitset<8>{});
+   else
+      check(float{});
+}
+
+INSTANTIATE_TEST_SUITE_P(Encoded, RNTupleMergerZeroPages,
+                         ::testing::Values("Bool", "Bitset8", "Real16", "Real32Trunc", "Real32Quant"),
+                         [](const auto &testParam) { return testParam.param; });
+
+TEST(RNTupleMerger, MissingQuantizedFieldOutsideZeroRange)
+{
+   FileRaii first("test_ntuple_merge_zero_quant_first.root");
+   FileRaii middle("test_ntuple_merge_zero_quant_middle.root");
+   FileRaii last("test_ntuple_merge_zero_quant_last.root");
+   FileRaii output("test_ntuple_merge_zero_quant_output.root");
+   const std::array<const FileRaii *, 3> files{&first, &middle, &last};
+   for (unsigned int source = 0; source < files.size(); ++source) {
+      auto model = RNTupleModel::Create();
+      model->MakeField<int>("entry");
+      if (source != 1) {
+         auto field = std::make_unique<RField<float>>("value");
+         field->SetQuantized(20, {1., 64.});
+         model->AddField(std::move(field));
+      }
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", files[source]->GetPath());
+      if (source != 1)
+         *writer->GetModel().GetDefaultEntry().GetPtr<float>("value") = 10.;
+      writer->Fill();
+   }
+   std::vector<std::unique_ptr<RPageSource>> sources;
+   std::vector<RPageSource *> sourcePtrs;
+   for (const auto *file : files) {
+      sources.push_back(RPageSource::Create("ntuple", file->GetPath()));
+      sourcePtrs.push_back(sources.back().get());
+   }
+   auto destination = std::make_unique<RPageSinkFile>("ntuple", output.GetPath(), RNTupleWriteOptions());
+   RNTupleMerger merger{std::move(destination)};
+   RNTupleMergeOptions options;
+   options.fMergingMode = ENTupleMergingMode::kUnion;
+   auto result = merger.Merge(sourcePtrs, options);
+   ASSERT_FALSE(bool(result));
+   EXPECT_THAT(result.GetError()->GetReport(), testing::HasSubstr("cannot generate default values for field `value`"));
+   EXPECT_THAT(result.GetError()->GetReport(), testing::HasSubstr("quantization"));
+}
+
+struct RNTupleMergerDeferredZeroPages : public ::testing::TestWithParam<std::tuple<std::string, bool>> {};
+
+TEST_P(RNTupleMergerDeferredZeroPages, SecondSource)
+{
+   const auto [type, twoClusters] = GetParam();
+   auto check = [&](auto sample) {
+      using T = decltype(sample);
+      auto setValue = [](T &value, unsigned int entry) {
+         if constexpr (std::is_same_v<T, std::array<float, 3>>)
+            value = {float(entry + 1), float(entry + 2), float(entry + 3)};
+         else
+            value = T(entry + 1);
+      };
+      FileRaii first("test_ntuple_merge_deferred_zero_first.root");
+      FileRaii second("test_ntuple_merge_deferred_zero_second.root");
+      FileRaii output("test_ntuple_merge_deferred_zero_output.root");
+      constexpr unsigned int nEntriesPerSource = 10;
+      constexpr unsigned int firstDeferredEntry = 5;
+      {
+         auto model = RNTupleModel::Create();
+         model->MakeField<int>("entry");
+         auto value = model->MakeField<T>("value");
+         auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", first.GetPath());
+         for (unsigned int i = 0; i < nEntriesPerSource; ++i) {
+            setValue(*value, i);
+            writer->Fill();
+         }
+      }
+      {
+         auto model = RNTupleModel::Create();
+         model->MakeField<int>("entry");
+         auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", second.GetPath());
+         for (unsigned int i = 0; i < firstDeferredEntry; ++i)
+            writer->Fill();
+         if (twoClusters)
+            writer->CommitCluster();
+         auto updater = writer->CreateModelUpdater();
+         updater->BeginUpdate();
+         updater->AddField(std::make_unique<RField<T>>("value"));
+         updater->CommitUpdate();
+         auto value = writer->GetModel().GetDefaultEntry().template GetPtr<T>("value");
+         for (unsigned int i = firstDeferredEntry; i < nEntriesPerSource; ++i) {
+            setValue(*value, nEntriesPerSource + i);
+            writer->Fill();
+         }
+      }
+
+      auto firstSource = RPageSource::Create("ntuple", first.GetPath());
+      auto secondSource = RPageSource::Create("ntuple", second.GetPath());
+      std::vector<RPageSource *> sources{firstSource.get(), secondSource.get()};
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", output.GetPath(), RNTupleWriteOptions());
+      RNTupleMerger merger{std::move(destination)};
+      RNTupleMergeOptions options;
+      options.fMergingMode = ENTupleMergingMode::kUnion;
+      auto result = merger.Merge(sources, options);
+      ASSERT_TRUE(bool(result)) << result.GetError()->GetReport();
+
+      auto reader = RNTupleReader::Open("ntuple", output.GetPath());
+      ASSERT_EQ(2 * nEntriesPerSource, reader->GetNEntries());
+      const auto &descriptor = reader->GetDescriptor();
+      const auto fieldId = descriptor.FindFieldId(type == "Array3" ? "value._0" : "value");
+      const auto &field = descriptor.GetFieldDescriptor(fieldId);
+      ASSERT_EQ(1u, field.GetLogicalColumnIds().size());
+      const auto columnId = field.GetLogicalColumnIds()[0];
+      const auto repetitions = type == "Array3" ? 3u : (type == "Bitset8" ? 8u : 1u);
+      ASSERT_EQ(twoClusters ? 3u : 2u, descriptor.GetNActiveClusters());
+      for (const auto &cluster : descriptor.GetActiveClusterIterable()) {
+         ASSERT_EQ(cluster.GetNEntries() * repetitions, cluster.GetColumnRange(columnId).GetNElements());
+      }
+      auto value = reader->GetModel().GetDefaultEntry().template GetPtr<T>("value");
+      for (auto i : reader->GetEntryRange()) {
+         SCOPED_TRACE(i);
+         T expected{};
+         if (i < nEntriesPerSource || i >= nEntriesPerSource + firstDeferredEntry)
+            setValue(expected, i);
+         reader->LoadEntry(i);
+         EXPECT_EQ(expected, *value);
+      }
+   };
+   if (type == "Array3")
+      check(std::array<float, 3>{});
+   else if (type == "Bitset8")
+      check(std::bitset<8>{});
+   else
+      check(bool{});
+}
+
+INSTANTIATE_TEST_SUITE_P(Repeated, RNTupleMergerDeferredZeroPages,
+                         ::testing::Combine(::testing::Values("Array3", "Bitset8", "Bool"), ::testing::Bool()),
+                         [](const auto &testParam) {
+                            return std::get<0>(testParam.param) +
+                                   (std::get<1>(testParam.param) ? "TwoClusters" : "OneCluster");
+                         });
 
 struct RNTupleMergerDeferred : public ::testing::TestWithParam<std::tuple<int, int>> {};
 
