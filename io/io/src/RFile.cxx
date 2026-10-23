@@ -576,7 +576,8 @@ std::optional<ROOT::RKeyInfo> RFile::GetKeyInfo(std::string_view path) const
 
 void *ROOT::Internal::RFile_GetObjectFromKey(RFile &file, const RKeyInfo &key)
 {
-   void *obj = file.GetUntyped(key.GetPath(), key.GetClassName().c_str());
+   const auto nameCycle = std::string(key.GetPath()) + ";" + std::to_string(key.GetCycle());
+   void *obj = file.GetUntyped(nameCycle, key.GetClassName().c_str());
    return obj;
 }
 
