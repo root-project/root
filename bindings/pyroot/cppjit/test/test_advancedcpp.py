@@ -1034,6 +1034,74 @@ class TestADVANCEDCPP:
         for norm in [ns.norm_cr, ns.norm_m, ns.norm_v]:
             assert round(norm(p3) - pynorm, 8) == 0
 
+    def test30_virtual_base_of_hidden_type(self):
+        """Offset to a virtual base taken from the actual object"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace vbase_hidden {
+        struct IB { virtual ~IB() {} virtual long id() const { return 42; } };
+        struct ID1 : virtual IB {};
+        struct Lead { virtual ~Lead() {} long padding[2] = {}; };
+        struct ID2 : Lead, virtual IB {};
+        struct IC { virtual ~IC() {} long z = 7; };
+        struct M : Lead, IC {};
+        struct ID3 : virtual M {};
+        long call(IB* p) { return p->id(); }
+        long call_c(IC* p) { return p->z; }
+        }
+        namespace {
+        struct Other { virtual ~Other() {} long x[100] = {}; };
+        struct Hidden : Other, vbase_hidden::ID1, vbase_hidden::ID2 {};
+        struct Hidden3 : Other, vbase_hidden::ID1, vbase_hidden::ID3 { long y = 3; };
+        }
+        namespace vbase_hidden {
+        void* make2() { return static_cast<ID2*>(new Hidden); }
+        void* make3() { return static_cast<ID3*>(new Hidden3); }
+        }""")
+
+        ns = cppjit.gbl.vbase_hidden
+
+        d2 = cppjit.bind_object(ns.make2(), ns.ID2)
+        assert ns.call(d2) == 42
+        assert d2.id() == 42
+
+        d3 = cppjit.bind_object(ns.make3(), ns.ID3)
+        assert ns.call_c(d3) == 7
+        assert d3.z == 7
+
+    def test31_virtual_base_downcast(self):
+        """GetActualClass supplies the complete type for virtual-base downcasts"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace vbase_downcast {
+        struct IB { virtual ~IB() {} virtual long id() const { return 42; } };
+        struct ID1 : virtual IB {};
+        struct ID2 : virtual IB {};
+        struct IC { virtual ~IC() {} long z = 7; };
+        struct Pad { virtual ~Pad() {} long padding[2] = {}; };
+        struct M : Pad, IC {};
+        struct ID3 : virtual M {};
+        struct Visible : ID1, ID2 { long value = 19; };
+        struct Visible3 : ID1, ID3 { long value = 23; };
+        IB* make() { return new Visible; }
+        IC* make3() { return new Visible3; }
+        }""")
+
+        ns = cppjit.gbl.vbase_downcast
+        obj = ns.make()
+        assert isinstance(obj, ns.Visible)
+        assert obj.value == 19
+        assert obj.id() == 42
+
+        obj3 = ns.make3()
+        assert isinstance(obj3, ns.Visible3)
+        assert obj3.value == 23
+        assert obj3.z == 7
+
 
 class TestQUALIFIEDLOOKUP:
     def test01_qualified_name_in_namespace(self):

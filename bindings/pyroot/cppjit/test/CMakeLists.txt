@@ -14,7 +14,11 @@ cmake_path(CONVERT "${pythonpaths}" TO_NATIVE_PATH_LIST pythonpaths_native)
 
 set(common_env PYTHONPATH=${pythonpaths_native} CPPJIT_TEST_SKIP_MAKE=1)
 if(NOT MSVC)
-  list(APPEND common_env ${ld_library_path}=${CMAKE_CURRENT_BINARY_DIR})
+  # Keep the library path of the environment, which may be needed to find,
+  # for example, the C++ standard library of the compiler that built ROOT.
+  set(ld_library_paths ${CMAKE_CURRENT_BINARY_DIR} $ENV{${ld_library_path}})
+  cmake_path(CONVERT "${ld_library_paths}" TO_NATIVE_PATH_LIST ld_library_paths_native)
+  list(APPEND common_env ${ld_library_path}=${ld_library_paths_native})
 endif()
 
 # Some dictionary sources include Python.h (e.g. pythonizables.cxx), which

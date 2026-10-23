@@ -5,6 +5,7 @@ using namespace cppjit;
 #include "CPPFunction.h"
 #include "CPPInstance.h"
 #include "CPPOverload.h"
+#include "Compatibility.h"
 #include "Converters.h"
 #include "CustomPyTypes.h"
 #include "LowLevelViews.h"
@@ -686,10 +687,10 @@ static PyObject* vector_iter(PyObject* v) {
   if (!vi)
     return nullptr;
 
-  Py_INCREF(v);
   vi->ii_container = v;
 
   // tell the iterator code to set a life line if this container is a temporary
+  // (checked before taking the iterator's own reference)
   vi->vi_flags = vectoriterobject::kDefault;
 #if PY_VERSION_HEX >= 0x030e0000
   if (PyUnstable_Object_IsUniqueReferencedTemporary(v) ||
@@ -2337,21 +2338,19 @@ bool cpyrt::Pythonize(PyObject* pyclass, interop::TCppScope_t scope) {
   //   preferred if present
   //   - normal pythonization: only called if explicit isn't present, falls
   //   through to base classes
+  // The lookups live in Compatibility.h because they also accept the old
+  // cppyy names of these hooks.
   bool bUserOk = true;
   PyObject* res = nullptr;
   PyObject* pyname = PyUnicode_FromString(name.c_str());
-  if (HasAttrDirect(pyclass, PyStrings::gExPythonize)) {
-    res = PyObject_CallMethodObjArgs(pyclass, PyStrings::gExPythonize, pyclass,
-                                     pyname, nullptr);
+  if (PyObject* exPythonize = compat::ExplicitPythonizeHookName(pyclass)) {
+    res = PyObject_CallMethodObjArgs(pyclass, exPythonize, pyclass, pyname,
+                                     nullptr);
     bUserOk = (bool)res;
-  } else {
-    PyObject* func = PyObject_GetAttr(pyclass, PyStrings::gPythonize);
-    if (func) {
-      res = PyObject_CallFunctionObjArgs(func, pyclass, pyname, nullptr);
-      Py_DECREF(func);
-      bUserOk = (bool)res;
-    } else
-      PyErr_Clear();
+  } else if (PyObject* func = compat::GetPythonizeHook(pyclass)) {
+    res = PyObject_CallFunctionObjArgs(func, pyclass, pyname, nullptr);
+    Py_DECREF(func);
+    bUserOk = (bool)res;
   }
   if (!bUserOk) {
     Py_DECREF(pyname);

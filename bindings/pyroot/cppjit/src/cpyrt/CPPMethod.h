@@ -80,6 +80,8 @@ public:
   PyObject* Call(CPPInstance*& self, cpyrt_PyArgs_t args, size_t nargsf,
                  PyObject* kwds, CallContext* ctxt = nullptr) override;
 
+  interop::TCppMethod_t GetMethod() const { return fMethod; }
+
 protected:
   virtual bool ProcessArgs(PyCallArgs& args);
 
@@ -89,7 +91,6 @@ protected:
                          CallContext* ctxt = nullptr);
   PyObject* Execute(void* self, ptrdiff_t offset, CallContext* ctxt = nullptr);
 
-  interop::TCppMethod_t GetMethod() { return fMethod; }
   interop::TCppScope_t GetScope() { return fScope; }
   Executor* GetExecutor() { return fExecutor; }
   std::string GetSignatureString(bool show_formalargs = true);

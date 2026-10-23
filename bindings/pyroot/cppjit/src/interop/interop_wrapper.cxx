@@ -574,6 +574,36 @@ bool interop::AppendTypesSlow(const std::string& name,
 
   std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
 
+  // Every lookup below declares code through the interpreter, which parses,
+  // commits a transaction and leaves a new declaration in the AST, so each one
+  // costs more than the last. The same names come back constantly (overload
+  // ranking resolves every argument type of every candidate on each call that
+  // is not memoized), so remember what a name resolved to. A name that fails
+  // may still resolve once more declarations are available, so only successes
+  // are cached.
+  using SlowTypesKey = std::pair<std::string, const void*>;
+  static std::map<SlowTypesKey, std::vector<Cpp::TemplateArgInfo>> s_cache;
+  const SlowTypesKey cache_key{name, parent.data};
+  // the integral values are strings whose ownership passes to the caller
+  // (which frees them), so the cache keeps and hands out copies of its own
+  auto copy_of = [](const Cpp::TemplateArgInfo& info) {
+    return Cpp::TemplateArgInfo(info.m_Type, info.m_IntegralValue
+                                                 ? strdup(info.m_IntegralValue)
+                                                 : nullptr);
+  };
+  if (auto cached = s_cache.find(cache_key); cached != s_cache.end()) {
+    for (const Cpp::TemplateArgInfo& info : cached->second)
+      types.push_back(copy_of(info));
+    return false;
+  }
+  const size_t n_types_before = types.size();
+  auto remember = [&] {
+    std::vector<Cpp::TemplateArgInfo> resolved;
+    for (size_t i = n_types_before; i < types.size(); ++i)
+      resolved.push_back(copy_of(types[i]));
+    s_cache.emplace(cache_key, std::move(resolved));
+  };
+
   // We might have an entire expression such as int, double.
   static unsigned long long struct_count = 0;
   std::string code =
@@ -628,7 +658,10 @@ bool interop::AppendTypesSlow(const std::string& name,
         continue; // recovered-but-broken decl; try next candidate or split path
       size_t oldSize = types.size();
       Cpp::GetClassTemplateInstantiationArgs(instance_class, types);
-      return oldSize == types.size();
+      if (oldSize == types.size())
+        return true;
+      remember();
+      return false;
     }
   }
 
@@ -679,6 +712,7 @@ bool interop::AppendTypesSlow(const std::string& name,
             strdup(std::to_string(Cpp::GetEnumConstantValue(scope)).c_str());
     types.emplace_back(type.data, integral_value);
   }
+  remember();
   return false;
 }
 
@@ -764,12 +798,30 @@ interop::TCppScope_t interop::GetUnderlyingScope(TCppScope_t scope) {
 interop::TCppScope_t interop::GetScope(const std::string& name,
                                        TCppScope_t parent_scope) {
   std::unique_lock<RInterOpMutex> Lock(InterOpMutex);
+  // Resolving a templated name below declares a new variable in the
+  // interpreter (see AppendTypesSlow), so remember the result to not declare
+  // one, and grow the memory, on every lookup of the same name.
+  static std::map<std::pair<void*, std::string>, TCppScope_t> template_scopes;
+  const bool is_template = name.find('<') != std::string::npos;
+  const auto key = std::make_pair(parent_scope.data, name);
+  if (is_template)
+    if (auto it = template_scopes.find(key); it != template_scopes.end())
+      return it->second;
+
   // CppInterOp directly looks at the AST which is not enough.
   // We require lazy module loading that ROOT relies on, so we do it here
   // first. Use TClass::GetClass to trigger auto-loading of dictionaries and
   // modules.
+  // This also covers nested names: declarations come from the C++ modules,
+  // so e.g. ROOT::RDF can be used before its libraries are loaded, and the
+  // JIT then finds their symbols only by scanning every library on the
+  // search path (about half a second).
   if (!parent_scope || parent_scope == Cpp::GetGlobalScope())
     TClass::GetClass(name.c_str(), true /* load */, true /* silent */);
+  else if (Cpp::IsNamespace(parent_scope) || Cpp::IsClass(parent_scope))
+    TClass::GetClass(
+        (Cpp::GetQualifiedCompleteName(parent_scope) + "::" + name).c_str(),
+        true /* load */, true /* silent */);
 
   if (interop::TCppScope_t scope = Cpp::GetScope(name, parent_scope))
     return scope;
@@ -792,7 +844,7 @@ interop::TCppScope_t interop::GetScope(const std::string& name,
   }
 
   // FIXME: avoid string parsing here
-  if (name.find('<') != std::string::npos) {
+  if (is_template) {
     // Templated type; may need instantiation. Resolve the whole type
     // expression (e.g. "std::array<float, 3>") and read back its scope.
     // Splitting off the argument list and resolving it directly cannot
@@ -815,8 +867,10 @@ interop::TCppScope_t interop::GetScope(const std::string& name,
       // it, so the specialization may still be declared-but-undefined.
       // Force its definition: callers expect a complete scope, e.g. to
       // walk its base classes.
-      if (scope)
+      if (scope) {
         Cpp::IsComplete(scope);
+        template_scopes[key] = scope;
+      }
       return scope;
     }
   }
@@ -851,6 +905,11 @@ interop::TCppScope_t interop::GetNamed(const std::string& name,
   }
 
   return nullptr;
+}
+
+bool interop::IsVisibleName(const std::string& name, TCppScope_t parent_scope) {
+  std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
+  return Cpp::IsVisibleName(name, parent_scope);
 }
 
 interop::TCppScope_t interop::GetParentScope(TCppScope_t scope) {
@@ -1338,6 +1397,12 @@ interop::TCppIndex_t interop::GetNumBases(TCppScope_t klass) {
   // Autoloading may have registered only a forward declaration of the class;
   // complete it, or the proxy is built without its bases.
   Cpp::GetOrForceDefinition(klass);
+  // Cpp::GetNumBases() instantiates a class template specialization with
+  // diagnostics, printing an error for one that can't be defined, e.g. a
+  // specialization of a template that is only declared. IsComplete()
+  // instantiates it silently.
+  if (!Cpp::IsComplete(klass))
+    return 0;
   return Cpp::GetNumBases(klass);
 }
 
@@ -1411,23 +1476,21 @@ bool interop::IsSmartPtr(TCppScope_t klass) {
   return false;
 }
 
-bool interop::GetSmartPtrInfo(const std::string& tname, TCppScope_t* raw,
+bool interop::GetSmartPtrInfo(TCppScope_t klass, TCppScope_t* raw,
                               TCppMethod_t* deref) {
-  // TODO: We can directly accept scope instead of name
-  const std::string& rn = ResolveName(tname);
-  if (gSmartPtrTypes.find(rn.substr(0, rn.find("<"))) == gSmartPtrTypes.end())
+  TCppScope_t scope = interop::GetUnderlyingScope(klass);
+  if (!scope || !interop::IsSmartPtr(scope))
     return false;
 
   if (!raw && !deref)
     return true;
 
-  TCppScope_t scope = interop::GetScope(rn);
-  if (!scope)
-    return false;
-
   std::vector<TCppMethod_t> ops;
   {
     std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
+    // the operator can only be found once the specialization is instantiated
+    if (!Cpp::IsComplete(scope))
+      return false;
     Cpp::GetOperator(scope, Cpp::Operator::OP_Arrow, ops,
                      /*kind=*/Cpp::OperatorArity::kBoth);
     if (ops.size() != 1)
@@ -1453,17 +1516,24 @@ bool interop::GetSmartPtrInfo(const std::string& tname, TCppScope_t* raw,
 
 // type offsets --------------------------------------------------------------
 ptrdiff_t interop::GetBaseOffset(TCppScope_t derived, TCppScope_t base,
-                                 TCppObject_t /*address*/, int direction,
+                                 TCppObject_t address, int direction,
                                  bool rerror) {
   std::lock_guard<RInterOpMutex> Lock(InterOpMutex);
 
+  // Up-casts may start from a subobject whose complete type is unknown. For
+  // down-casts, callers obtain the complete type with GetActualClass, so use
+  // its static layout; address points to the base rather than the derived type.
+  const void* object = direction > 0 ? address.data : nullptr;
+
   // Queried for every downcast object handed to Python; computing it walks
-  // the inheritance paths, so memoize per class pair. The object address is
-  // not used, so the offset is fixed per pair once both records are complete.
+  // the inheritance paths, so memoize per class pair. Only the static layout
+  // (no object address) is fixed per pair once both records are complete; an
+  // offset read from the object's vtable is not cached.
   static std::map<std::pair<const void*, const void*>, intptr_t>
       s_base_offset_cache;
   const auto cacheKey = std::make_pair(derived.data, base.data);
-  auto cached = s_base_offset_cache.find(cacheKey);
+  auto cached =
+      object ? s_base_offset_cache.end() : s_base_offset_cache.find(cacheKey);
   intptr_t offset = 0;
   if (cached != s_base_offset_cache.end()) {
     offset = cached->second;
@@ -1475,12 +1545,13 @@ ptrdiff_t interop::GetBaseOffset(TCppScope_t derived, TCppScope_t base,
     if (!Cpp::IsComplete(derived) || !Cpp::IsComplete(base))
       return rerror ? (ptrdiff_t)-1 : 0;
 
-    offset = Cpp::GetBaseClassOffset(derived, base);
+    offset = Cpp::GetBaseClassOffset(derived, base, object);
 
     if (offset == -1) // Cling error, treat silently
       return rerror ? (ptrdiff_t)offset : 0;
 
-    s_base_offset_cache.emplace(cacheKey, offset);
+    if (!object)
+      s_base_offset_cache.emplace(cacheKey, offset);
   }
 
   return (ptrdiff_t)(direction < 0 ? -offset : offset);
@@ -1666,11 +1737,39 @@ interop::TCppType_t interop::GetFnTypeFromStdFn(TCppType_t fn_type) {
 
 void interop::GetFnTypeSig(TCppType_t fn_type,
                            std::vector<TCppType_t>& arg_types) {
+  if (!fn_type)
+    return;
   fn_type = Cpp::IsReferenceType(fn_type) ? Cpp::GetNonReferenceType(fn_type)
                                           : fn_type;
   fn_type =
       Cpp::IsPointerType(fn_type) ? Cpp::GetPointeeType(fn_type) : fn_type;
+  // Cpp::GetFnTypeSignature() requires a function prototype: anything else
+  // (e.g. a member function pointer, or a plain object type) yields nothing
+  if (!Cpp::IsFunctionProtoType(fn_type))
+    return;
   Cpp::GetFnTypeSignature(fn_type, arg_types);
+}
+
+bool interop::GetFnTypeSigAsString(TCppType_t fn_type, std::string& ret_type,
+                                   std::string& signature) {
+  // the first entry is the return type, followed by the argument types
+  std::vector<TCppType_t> types;
+  GetFnTypeSig(fn_type, types);
+  if (types.empty())
+    return false;
+
+  ret_type = GetTypeAsString(types[0]);
+
+  std::ostringstream sig;
+  sig << "(";
+  for (std::size_t iarg = 1; iarg < types.size(); ++iarg) {
+    if (iarg != 1)
+      sig << ", ";
+    sig << GetTypeAsString(types[iarg]);
+  }
+  sig << ")";
+  signature = sig.str();
+  return true;
 }
 
 bool interop::IsSameType(TCppType_t typ1, TCppType_t typ2) {

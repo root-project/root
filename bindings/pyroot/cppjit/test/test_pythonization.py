@@ -275,6 +275,9 @@ class TestClassPYTHONIZATION:
         for kls in [
             cppjit.gbl.pyzables.WithCallback1,
             cppjit.gbl.pyzables.WithCallback2,
+            # backwards compatibility with the old cppyy names
+            cppjit.gbl.pyzables.WithCppyyCallback1,
+            cppjit.gbl.pyzables.WithCppyyCallback2,
         ]:
             w = kls(42)
             assert hasattr(w, "GetInt")

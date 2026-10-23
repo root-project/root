@@ -18,6 +18,7 @@ using namespace cppjit;
 
 // Standard
 #include <algorithm> // for for_each
+#include <cctype>
 #include <set>
 #include <string.h>
 #include <string>
@@ -207,16 +208,11 @@ static PyObject* pt_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds) {
   // creation of the python-side class; extend the size if this is a smart ptr
   //
   // A namespace can never be a smart pointer, so skip the check for namespaces.
-  // This matters beyond performance: GetSmartPtrInfo() resolves the scope name
-  // through a slow interpreter lookup that triggers autoloading of the library
-  // providing the scope, which we don't want to do unnecessarily.
   interop::TCppScope_t raw;
   interop::TCppMethod_t deref;
   if (CPPScope_CheckExact(subtype) &&
       !interop::IsNamespace(((CPPScope*)subtype)->fCppType)) {
-    if (interop::GetSmartPtrInfo(
-            interop::GetScopedFinalName(((CPPScope*)subtype)->fCppType), &raw,
-            &deref))
+    if (interop::GetSmartPtrInfo(((CPPScope*)subtype)->fCppType, &raw, &deref))
       subtype->tp_basicsize = sizeof(CPPSmartClass);
   }
 
@@ -325,6 +321,74 @@ static PyObject* pt_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds) {
 }
 
 //----------------------------------------------------------------------------
+static bool IsPlainIdentifier(const std::string& name) {
+  if (name.empty() || std::isdigit((unsigned char)name[0]))
+    return false;
+  for (char c : name) {
+    if (!std::isalnum((unsigned char)c) && c != '_')
+      return false;
+  }
+  return true;
+}
+
+// Returns weak references to the proxies of the namespaces that the namespace
+// \c pyclass pulls in with "using namespace", refreshing the list as needed.
+static const std::vector<PyObject*>& GetUsingScopes(PyObject* pyclass) {
+  CPPScope* klass = (CPPScope*)pyclass;
+  const std::vector<interop::TCppScope_t>& uv =
+      interop::GetUsingNamespaces(klass->fCppType);
+  if (!klass->fImp.fUsing || uv.size() != klass->fImp.fUsing->size()) {
+    if (klass->fImp.fUsing) {
+      for (auto pyref : *klass->fImp.fUsing)
+        Py_DECREF(pyref);
+      klass->fImp.fUsing->clear();
+    } else
+      klass->fImp.fUsing = new std::vector<PyObject*>;
+
+    // reload and reset weak refs
+    for (auto uid : uv) {
+      std::string uname = interop::GetScopedFinalName(uid);
+      PyObject* pyuscope = CreateScopeProxy(uname);
+      if (pyuscope) {
+        klass->fImp.fUsing->push_back(PyWeakref_NewRef(pyuscope, nullptr));
+        // the namespace may not otherwise be held, so tie the lifetimes
+        PyObject* llname =
+            PyUnicode_FromString(("__lifeline_" + uname).c_str());
+        PyType_Type.tp_setattro(pyclass, llname, pyuscope);
+        Py_DECREF(llname);
+        Py_DECREF(pyuscope);
+      } else {
+        PyErr_Clear();
+      }
+    }
+  }
+  return *klass->fImp.fUsing;
+}
+
+// Checks whether \c pyname is set as a Python attribute on any namespace that
+// \c pyclass pulls in with "using namespace", directly or transitively.
+static bool HasPythonAttrInUsing(PyObject* pyclass, PyObject* pyname,
+                                 std::set<PyObject*>& visited) {
+  for (auto pyref : GetUsingScopes(pyclass)) {
+    PyObject* pyuscope = cpyrt_GetWeakRef(pyref);
+    if (!pyuscope)
+      continue;
+    bool found = false;
+    if (visited.insert(pyuscope).second) {
+      found = _PyType_Lookup((PyTypeObject*)pyuscope, pyname) ||
+              _PyType_Lookup(Py_TYPE(pyuscope), pyname) ||
+              (CPPScope_Check(pyuscope) &&
+               (((CPPScope*)pyuscope)->fFlags & CPPScope::kIsNamespace) &&
+               HasPythonAttrInUsing(pyuscope, pyname, visited));
+    }
+    Py_DECREF(pyuscope);
+    if (found)
+      return true;
+  }
+  return false;
+}
+
+//----------------------------------------------------------------------------
 static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname) {
   // normal type-based lookup
   PyObject* attr = PyType_Type.tp_getattro(pyclass, pyname);
@@ -411,8 +475,9 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname) {
       }
     }
 
+    interop::TCppScope_t lookup_result = nullptr;
     if (!attr) {
-      interop::TCppScope_t lookup_result = interop::GetNamed(name, scope);
+      lookup_result = interop::GetNamed(name, scope);
       if (interop::IsVariable(lookup_result) ||
           interop::IsEnumConstant(lookup_result)) {
         attr = (PyObject*)CPPDataMember_New(scope, lookup_result);
@@ -450,7 +515,7 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname) {
     // enums types requested as type (rather than the constants)
     if (!attr) {
       interop::TCppScope_t enumerator =
-          interop::GetUnderlyingScope(interop::GetNamed(name, scope));
+          interop::GetUnderlyingScope(lookup_result);
       if (interop::IsEnumScope(enumerator)) {
         // enum types (incl. named and class enums)
         attr = (PyObject*)CPPEnum_New(name, enumerator);
@@ -481,38 +546,25 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname) {
   }
 
   if (!attr && (klass->fFlags & CPPScope::kIsNamespace)) {
-    // refresh using list as necessary
-    const std::vector<interop::TCppScope_t>& uv =
-        interop::GetUsingNamespaces(klass->fCppType);
-    if (!klass->fImp.fUsing || uv.size() != klass->fImp.fUsing->size()) {
-      if (klass->fImp.fUsing) {
-        for (auto pyref : *klass->fImp.fUsing)
-          Py_DECREF(pyref);
-        klass->fImp.fUsing->clear();
-      } else
-        klass->fImp.fUsing = new std::vector<PyObject*>;
+    const std::vector<PyObject*>& using_scopes = GetUsingScopes(pyclass);
 
-      // reload and reset weak refs
-      for (auto uid : uv) {
-        std::string uname = interop::GetScopedFinalName(uid);
-        PyObject* pyuscope = CreateScopeProxy(uname);
-        if (pyuscope) {
-          klass->fImp.fUsing->push_back(PyWeakref_NewRef(pyuscope, nullptr));
-          // the namespace may not otherwise be held, so tie the lifetimes
-          PyObject* llname =
-              PyUnicode_FromString(("__lifeline_" + uname).c_str());
-          PyType_Type.tp_setattro(pyclass, llname, pyuscope);
-          Py_DECREF(llname);
-          Py_DECREF(pyuscope);
-        } else {
-          PyErr_Clear();
-        }
-      }
+    // Searching the using namespaces repeats the full attribute lookup in each
+    // of them, which is expensive for names that don't exist. Anything C++ it
+    // can find is also found by a single unqualified lookup from within this
+    // namespace, which follows the using-directives. If that finds nothing,
+    // only attributes set on the Python proxies of the using namespaces remain.
+    bool search_using = !using_scopes.empty();
+    if (search_using && IsPlainIdentifier(name) && !interop::IsBuiltin(name) &&
+        !interop::IsVisibleName(name, klass->fCppType)) {
+      std::set<PyObject*> visited{pyclass};
+      search_using = HasPythonAttrInUsing(pyclass, pyname, visited);
     }
 
     // try all outstanding using namespaces in turn to find the attribute (will
     // cache locally later; TODO: doing so may cause pathological cases)
-    for (auto pyref : *klass->fImp.fUsing) {
+    for (auto pyref : using_scopes) {
+      if (!search_using)
+        break;
       PyObject* pyuscope = cpyrt_GetWeakRef(pyref);
       if (pyuscope) {
         attr = PyObject_GetAttr(pyuscope, pyname);

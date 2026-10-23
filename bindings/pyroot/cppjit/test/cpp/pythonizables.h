@@ -161,4 +161,37 @@ public:
   void set_int(int i);
 };
 
+// same as WithCallback1 and WithCallback2, but with the old cppyy names
+class WithCppyyCallback1 {
+public:
+  WithCppyyCallback1(int i);
+
+public:
+  int get_int();
+  void set_int(int i);
+
+private:
+  int m_int;
+
+public:
+  static void __cppyy_explicit_pythonize__(PyObject* klass, const std::string&);
+  static std::string klass_name;
+};
+
+class WithCppyyCallback2 {
+public:
+  WithCppyyCallback2(int i);
+
+public:
+  int get_int();
+  void set_int(int i);
+
+private:
+  int m_int;
+
+public:
+  static void __cppyy_pythonize__(PyObject* klass, const std::string&);
+  static std::string klass_name;
+};
+
 } // namespace pyzables
