@@ -1,13 +1,66 @@
 # Author: Giacomo Parolini CERN 04/2025
 
 r"""
-\pythondoc RFile
+\pythondoc ROOT::Experimental::RFile
 
-TODO: document RFile
+`ROOT::Experimental::RFile` is a modern, minimalistic interface to read and write ROOT files.
+PyROOT enhances `RFile` with pythonic interfaces:
 
-\code{.py}
-# TODO code example
-\endcode
+- **Factory methods & construction**: `RFile` cannot be instantiated directly via `RFile()`.
+  Use one of the factory methods:
+  - `ROOT.Experimental.RFile.Open(filename)` to open an existing file for reading.
+  - `ROOT.Experimental.RFile.Recreate(filename)` to create a new file (or overwrite an existing one).
+  - `ROOT.Experimental.RFile.Update(filename)` to open an existing file for reading and writing.
+
+- **Context Manager**: `RFile` instances can be used in a Python `with` statement. The file
+  will be automatically flushed and closed when exiting the context:
+  \code{.py}
+  import ROOT
+
+  with ROOT.Experimental.RFile.Recreate("example.root") as f:
+      hist = ROOT.TH1D("h", "Example", 10, 0, 10)
+      hist.FillRandom("gaus", 1000)
+      f.Put("hist", hist)
+  # The file is flushed and closed here
+  \endcode
+
+- **Writing Objects (`Put`)**:
+  - `file.Put(name, obj)` automatically detects the C++ type of `obj` via its `__cpp_name__`.
+    Python `str` instances are automatically converted to `std::string`.
+  - `file.Put[type](name, obj)` allows explicit template specialization when needed (e.g. for
+    `std::vector` or custom types):
+    \code{.py}
+    f.Put["std::vector<int>"]("my_vec", [1, 2, 3])
+    \endcode
+
+- **Reading Objects (`Get`)**:
+  - `file.Get(name)` reads the object with its concrete type automatically inferred from
+    the key metadata. Returns `None` if no object exists with that name.
+  - `file.Get[type](name)` reads the object explicitly cast to the specified type.
+  - Objects retrieved via `Get()` are independently owned by the caller and survive after
+    the file is closed:
+    \code{.py}
+    with ROOT.Experimental.RFile.Open("example.root") as f:
+        hist = f.Get("hist")
+
+    # hist remains valid outside the context
+    print(hist.GetEntries())
+    \endcode
+
+- **Inspecting Keys (`GetKeyInfo`)**:
+  - `file.GetKeyInfo(path)` returns the `RKeyInfo` metadata object (containing `GetPath()`,
+    `GetClassName()`, `GetCycle()`) or `None` if the path does not exist.
+
+- **Listing Keys (`ListKeys`)**:
+  - `file.ListKeys(basePath="", **kwargs)` returns an iterable of `RKeyInfo` objects:
+    - `listObjects`: Include leaf objects (default `True`).
+    - `listDirs`: Include directory keys (default `False`).
+    - `listRecursive`: Search subdirectories recursively (default `True`).
+  \code{.py}
+  with ROOT.Experimental.RFile.Open("example.root") as f:
+      for key in f.ListKeys():
+          print(f"{key.GetPath()} ({key.GetClassName()})")
+  \endcode
 
 \endpythondoc
 """
@@ -16,17 +69,26 @@ from . import pythonization
 
 
 class _RFile_Get:
-    """
-    Allow access to objects through the method Get().
-    This is pythonized to allow Get() to be called both with and without a template argument.
+    r"""
+    \ingroup Py_RFile
+    \brief Wrapper allowing access to objects in an RFile via the `Get()` method.
+
+    Supports both non-templated calls `rfile.Get("name")` and templated calls
+    `rfile.Get[CppType]("name")`.
     """
 
     def __init__(self, rfile):
         self._rfile = rfile
 
     def __call__(self, namecycle):
-        """
-        Non-templated Get()
+        r"""
+        \ingroup Py_RFile
+        \brief Retrieve an object from the RFile by name or namecycle.
+
+        The concrete C++ type is automatically deduced from key metadata.
+
+        \param namecycle Path/namecycle of the object inside the RFile.
+        \return The deserialized ROOT object, or None if the key does not exist.
         """
         import ROOT
 
@@ -38,8 +100,12 @@ class _RFile_Get:
         return None
 
     def __getitem__(self, template_arg):
-        """
-        Templated Get()
+        r"""
+        \ingroup Py_RFile
+        \brief Access templated `Get` overload with explicit C++ type specialization.
+
+        \param template_arg C++ class or type name to cast the retrieved object to.
+        \return Callable wrapper accepting the object path.
         """
 
         def getitem_wrapper(namecycle):
@@ -50,17 +116,28 @@ class _RFile_Get:
 
 
 class _RFile_Put:
-    """
-    Allow writing objects through the method Put().
-    This is pythonized to allow Put() to be called both with and without a template argument.
+    r"""
+    \ingroup Py_RFile
+    \brief Wrapper allowing writing objects to an RFile via the `Put()` method.
+
+    Supports both non-templated calls `rfile.Put("name", obj)` and templated calls
+    `rfile.Put[CppType]("name", obj)`.
     """
 
     def __init__(self, rfile):
         self._rfile = rfile
 
     def __call__(self, name, obj):
-        """
-        Non-templated Put()
+        r"""
+        \ingroup Py_RFile
+        \brief Write an object into the RFile under the given path.
+
+        Automatically determines the C++ class name from `obj.__cpp_name__`.
+        Python `str` instances are automatically converted to `std::string`.
+
+        \param name Path in the RFile where the object should be stored.
+        \param obj The object to write.
+        \exception TypeError If the type of `obj` is not supported by ROOT I/O.
         """
         objType = type(obj)
         if isinstance(obj, str):
@@ -73,25 +150,41 @@ class _RFile_Put:
         self._rfile.Put[className](name, obj)
 
     def __getitem__(self, template_arg):
-        """
-        Templated Put()
+        r"""
+        \ingroup Py_RFile
+        \brief Access templated `Put` overload with explicit C++ type specialization.
+
+        \param template_arg Explicit C++ type name string or type object.
+        \return The original templated Put method bound with `template_arg`.
         """
         return self._rfile._OriginalPut[template_arg]
 
 
 def _RFileExit(obj, exc_type, exc_val, exc_tb):
-    """
-    Close the RFile object.
-    Signature and return value are imposed by Python, see
-    https://docs.python.org/3/library/stdtypes.html#typecontextmanager.
+    r"""
+    \ingroup Py_RFile
+    \brief Context manager exit callback that closes the RFile.
+
+    Signature and return value conform to Python context manager specification
+    (see https://docs.python.org/3/library/stdtypes.html#typecontextmanager).
+
+    \param obj The RFile instance being closed.
+    \param exc_type Exception type if an exception occurred in the with-block, else None.
+    \param exc_val Exception value, else None.
+    \param exc_tb Traceback, else None.
+    \return False to propagate any raised exceptions.
     """
     obj.Close()
     return False
 
 
 def _RFileOpen(original):
-    """
-    Pythonization for the factory methods (Recreate, Open, Update)
+    r"""
+    \ingroup Py_RFile
+    \brief Decorator for factory methods (Recreate, Open, Update) to inject pythonized methods.
+
+    \param original The original C++ factory method.
+    \return A wrapper that installs pythonized `Get` and `Put` on the returned instance.
     """
 
     def rfile_open_wrapper(klass, *args):
@@ -106,13 +199,25 @@ def _RFileOpen(original):
 
 
 def _RFileInit(rfile):
-    """
-    Prevent the creation of RFile through constructor (must use a factory method)
+    r"""
+    \ingroup Py_RFile
+    \brief Prevent direct instantiation of RFile via constructor.
+
+    \param rfile The uninitialized RFile instance.
+    \exception NotImplementedError Direct construction is disallowed; use Open, Recreate, or Update.
     """
     raise NotImplementedError("RFile can only be created via Recreate, Open or Update")
 
 
 def _GetKeyInfo(rfile, path):
+    r"""
+    \ingroup Py_RFile
+    \brief Retrieve metadata about a key at the specified path.
+
+    \param rfile The RFile instance.
+    \param path Path of the object inside the RFile.
+    \return An RKeyInfo instance if the key exists, otherwise None.
+    """
     key = rfile._OriginalGetKeyInfo(path)
     if key.has_value():
         return key.value()
@@ -120,42 +225,38 @@ def _GetKeyInfo(rfile, path):
 
 
 def _ListKeys(rfile, basePath="", **kwargs):
-    """
-    Returns an iterable over all keys of objects and/or directories written into this RFile starting at path
-    `basePath` (defaulting to include the content of all subdirectories).
-    By default, keys referring to directories are not returned: only those referring to leaf objects are.
-    If `basePath` is the path of a leaf object, only `basePath` itself will be returned.
-    If it is the path of a directory, it will not be included in the listing.
+    r"""
+    \ingroup Py_RFile
+    \brief Return an iterable over keys of objects and/or directories in the RFile.
 
-    You can specify what to list via the keyword arguments:
-    - if `listObjects == True`, the listing will include keys of non-directory objects (default);
-    - if `listDirs == True`, the listing will include keys of directory objects;
-    - if `listRecursive == True`, the listing will recurse on all subdirectories of `basePath` (default),
-    otherwise it will only list immediate children of `basePath`.
-        Example usage:
-    ~~~{.py}
+    \param rfile The RFile instance.
+    \param basePath Path in the file to start listing from (default: root of file).
+    \param kwargs Keyword arguments:
+                  - `listObjects` (bool): Include keys of non-directory objects (default: True).
+                  - `listDirs` (bool): Include keys of directory objects (default: False).
+                  - `listRecursive` (bool): Recurse into subdirectories (default: True).
+    \return An iterable yielding `RKeyInfo` instances.
+
+    Example:
+    \code{.py}
+    # Iterate over all objects in the RFile
     for key in file.ListKeys():
-        # iterate over all objects in the RFile
         print(f"{key.GetPath()};{key.GetCycle()} of type {key.GetClassName()}")
 
+    # Iterate over all objects and directories
     for key in file.ListKeys("", listDirs=True):
-        # iterate over all objects and directories in the RFile
-        print(f"{key.GetPath()};{key.GetCycle()} of type {key.GetClassName()}")
+        print(f"{key.GetPath()} ({key.GetClassName()})")
 
+    # Iterate non-recursively inside a subdirectory
     for key in file.ListKeys("a/b", listRecursive=False):
-        # iterate over all objects that are immediate children of directory "a/b"
-        print(f"{key.GetPath()};{key.GetCycle()} of type {key.GetClassName()}")
-
-    for key in file.ListKeys("foo", listDirs=True, listObjects=False):
-        # iterate over all directories under directory "foo", recursively
         print(key.GetPath())
-    ~~~
+    \endcode
     """
     from ROOT.Experimental import RFile
 
-    listObjects = kwargs['listObjects'] if 'listObjects' in kwargs else True
-    listDirs = kwargs['listDirs'] if 'listDirs' in kwargs else False
-    listRecursive = kwargs['listRecursive'] if 'listRecursive' in kwargs else True
+    listObjects = kwargs.get('listObjects', True)
+    listDirs = kwargs.get('listDirs', False)
+    listRecursive = kwargs.get('listRecursive', True)
 
     flags = (listObjects * RFile.kListObjects) | (listDirs * RFile.kListDirs) | (listRecursive * RFile.kListRecursive)
     iter = rfile._OriginalListKeys(basePath, flags)
@@ -164,6 +265,12 @@ def _ListKeys(rfile, basePath="", **kwargs):
 
 @pythonization("RFile", ns="ROOT::Experimental")
 def pythonize_rfile(klass):
+    r"""
+    \ingroup Py_RFile
+    \brief Register Pythonization behaviors for ROOT::Experimental::RFile.
+
+    \param klass The ROOT::Experimental::RFile class proxy.
+    """
     # Explicitly prevent to create a RFile via ctor
     klass.__init__ = _RFileInit
 

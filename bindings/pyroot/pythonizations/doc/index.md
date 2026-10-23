@@ -6,7 +6,7 @@
 ROOT is a C++ framework used across HEP for data storage, analysis and visualisation. Its full API is available directly in Python through dynamic bindings powered by [cppyy](https://cppyy.readthedocs.io/). Every ROOT class you see in the
 C++ documentation is accessible from Python under the `ROOT` module.
 
-On top of that, a set of @ref Pythonizations adapt selected classes to feel more natively Pythonic: operator overloading, iterators, NumPy interoperability, and more.
+On top of that, a set of @ref Pythonizations adapt selected classes to feel more natively Pythonic: operator overloading, iterators, NumPy interoperability, and more. For modern file I/O with value semantics, see @ref Py_RFile.
 
 
 # Installation
@@ -101,6 +101,14 @@ h.Fill(data)
 # Write it to a ROOT file
 with ROOT.TFile.Open("output.root", "RECREATE") as f:
     f.WriteObject(h, "my_histogram")
+~~~
+
+Alternatively, ROOT provides the modern @ref Py_RFile interface with value semantics:
+
+~~~{.py}
+# Write using ROOT::Experimental::RFile
+with ROOT.Experimental.RFile.Recreate("output.root") as f:
+    f.Put("my_histogram", h)
 ~~~
 
 Now we create an @ref dataframe  - ROOT's high-level interface for columnar data analysis - from scratch, define a new column and draw a histogram:
