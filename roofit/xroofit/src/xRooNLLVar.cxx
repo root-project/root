@@ -34,6 +34,8 @@ This xRooNLLVar object has several special methods, e.g. for fitting and toy dat
 #endif
 
 #include "xRooFit/xRooFit.h"
+#include "xRooFit/xRooNLLVar.h"
+#include "xRooFit/xRooNode.h"
 
 #include "RooCmdArg.h"
 #include "RooAbsPdf.h"

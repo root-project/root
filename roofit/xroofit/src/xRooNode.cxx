@@ -139,6 +139,8 @@ auto GETLISTTREE(TGFileBrowser *b)
 
 #include "xRooFit/xRooNode.h"
 #include "xRooFit/xRooFit.h"
+#include "xRooFit/xRooNLLVar.h"
+#include "xRooFit/xRooHypoSpace.h"
 
 #include "TH1.h"
 #include "TBrowser.h"
