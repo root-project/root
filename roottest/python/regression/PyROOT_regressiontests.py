@@ -522,6 +522,157 @@ class Regression27ImplicitSmartPtrOverload(MyTestCase):
         c = ROOT.regression27.Derived(123)
         self.assertEqual(ROOT.regression27.foo(ROOT.std.move(c)), 2)  # we expect the second overload
 
+class Regression28EnumResolution(MyTestCase):
+   def test01EnumResolution(self):
+      """Test that enums are correctly resolved when using an alias within a class/struct"""
+      # 9246
+      
+      cppyy.cppdef('''
+         enum Enum { a,b,c };
+         ''')
+
+      ea = cppyy.gbl.Enum.a
+      eb = cppyy.gbl.Enum.b
+      self.assertEqual(ea, 0)
+      self.assertEqual(eb, 1)
+
+      cppyy.cppdef('''
+              struct Track { using Type = Enum; };
+              ''')
+      trackea = cppyy.gbl.Track.Type.a
+      trackeb = cppyy.gbl.Track.Type.b
+
+      self.assertEqual(trackea, 0)
+      self.assertEqual(trackeb, 1)
+
+class Regression29TemplateFunctionOverloadSFINAE(MyTestCase):
+   def test01TemplateFunctionsOverloadWithSFINAE(self):
+      """Test template functions overload with SFINAE """
+      # 15085
+      
+      cppyy.cppdef('''
+#include <type_traits> 
+#include <string> 
+template <unsigned int  N>
+class A
+{
+public:
+//
+template <unsigned int K,
+typename std::enable_if<(K<N),int>::type = 0 >
+std::string fun_1 () { return "ququ" ;} 
+//
+template <unsigned int K,
+typename std::enable_if<(N<=K),int>::type = 0 >
+int         fun_1 () { return K ;} 
+};
+// the same with functions
+template <unsigned int K,unsigned int N, 
+typename std::enable_if<(K<N),int>::type = 0 >
+inline std::string fun_2 ( A<N>& ) { return "ququ" ;} 
+//
+template <unsigned int K,unsigned int N,
+typename std::enable_if<(N<=K),int>::type = 0 >
+inline int         fun_2 ( A<N>& ) { return K ;} 
+         ''')
+
+
+      output = ['ququ', 'ququ', 'ququ', 'ququ', 4, 5, 6, 7, 8]
+      N = 4 
+      a = cppyy.gbl.A [ N ]()
+
+      for k in range ( 2 * N + 1 ) : 
+         self.assertEqual(a.fun_1[k](), output[k])
+
+      for k in range( 2 * N + 1  ) :
+         func = cppyy.gbl.fun_2[k,N]
+         self.assertEqual(func(a), output[k])
+
+class Regression30TemplatedBinaryOperatorImplementations(MyTestCase):
+   def test01TemplatedBinaryOperatorImplementations(self):
+      """Test templated binary operator implementations like operator+"""
+      # 15378
+
+      cppyy.cppdef("""
+
+template<class T>
+struct Foo {
+    Foo(T v) : val{v} {}
+    T val;
+};
+
+template <class T>
+Foo<T> operator+(Foo<T> const &a, Foo<T> const &b)
+{
+   return Foo<T>{a.val + b.val};
+}
+
+      """)
+
+      klass = cppyy.gbl.Foo["int"]
+
+      a = klass(4)
+      b = klass(7)
+
+      c = a + b
+      self.assertEqual(c.val, 11)
+
+class Regression31AccessingProtectedDataMember(MyTestCase):
+   def test01AccessingProtectedDataMember(self):
+      """Test accessibility of protected data members"""
+      # 16852
+
+      cppyy.cppdef("""
+class MyBaseClass {
+public:
+   virtual ~MyBaseClass() = default;
+protected:
+   int protectedFunc() { return 5; }
+   int _protectedData = 4;
+};
+""")
+
+      class MyDerivedClass(cppyy.gbl.MyBaseClass):
+         pass
+
+      my_obj = MyDerivedClass()
+
+      self.assertEqual(my_obj.protectedFunc(), 5)
+      self.assertEqual(my_obj._protectedData, 4)  
+
+
+class Regression32StdFunctionForTemplates(MyTestCase):
+   def test01StdFunctionForTemplates(self):
+      """Test cppyy.gbl.std.function(...) for template types like std::vector<int>, ROOT::RVec<int>"""
+      # 19358
+
+      cppyy.gbl.std.function("bool(int)")
+      cppyy.gbl.std.function("bool()")
+      cppyy.gbl.std.function("bool(std::vector<int>)")
+      cppyy.gbl.std.function("bool(ROOT::RVec<int>)")
+
+class Regression33NameSpaceDroppedBinding(MyTestCase):
+   def test01NameSpaceDroppedBinding(self):
+      """Test that the namespace is not dropped in std::function cppyy binding"""
+      # 10680
+
+      cppyy.cppdef("""
+#include <functional>
+
+namespace foo {
+class Foo {
+  public:
+    Foo() : bar(0) {};
+    int bar;
+};
+}
+
+void apply(std::function<void(foo::Foo*)> f) {
+    foo::Foo x;
+    f(&x);
+}
+   """)
+      cppyy.gbl.apply(lambda x: print(x.bar))
 
 ## actual test run
 if __name__ == '__main__':
