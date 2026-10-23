@@ -154,26 +154,22 @@ void QRootContextMenu::DisplayPopup(Int_t x, Int_t y)
                      addMenuAction(&menu, &map, method->GetName(), entry++, method);
                      break;
                   case kMenuSubMenu:
-                     if (auto m = method->FindDataMember()) {
+                     if (auto member = method->FindDataMember()) {
                         if (needSep) {
                            menu.addSeparator();
                            needSep = kFALSE;
                         }
 
-                        if (m->GetterMethod()) {
-
+                        if (member->GetterMethod()) {
                            QMenu *r = menu.addMenu(method->GetName());
-                           TIter nxt(m->GetOptions());
+                           TIter nxt(member->GetOptions());
                            while (auto it = (TOptionListItem*) nxt()) {
-                              const char *name = it->fOptName;
-                              Long_t val = it->fValue;
-
                               TToggle *t = new TToggle;
-                              t->SetToggledObject(object, method);
-                              t->SetOnValue(val);
+                              t->SetToggledObject(object, member);
+                              t->SetOnValue(it->fValue);
                               fTrash.Add(t);
 
-                              auto act = addMenuAction(r, &map, name, togglelist++, t);
+                              auto act = addMenuAction(r, &map, it->fOptName.Data(), togglelist++, t);
                               act->setCheckable(true);
                               if (t->GetState())
                                  act->setChecked(true);

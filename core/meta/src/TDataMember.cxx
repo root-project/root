@@ -151,6 +151,7 @@ but also in Dump() and Inspect() methods and by the THtml class.
 #include "TList.h"
 #include "TListOfDataMembers.h"
 #include "TMethod.h"
+#include "TMethodArg.h"
 #include "TMethodCall.h"
 #include "TRealData.h"
 #include "TROOT.h"
@@ -727,9 +728,16 @@ void TDataMember::ExtractOptionsFromComment()
             Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",GetTitle());
             return;
          }
+         // setter method may accept enum data type - therefore check if it exists at all
          if (GetClass()->GetMethod(ptr1,"1"))
             // FIXME: wrong in case called derives via multiple inheritance from this class
-            fValueSetter = new TMethodCall(GetClass(),ptr1,"1");
+            fValueSetter = new TMethodCall(GetClass(), ptr1, "1");
+         else if (auto method = IsEnum() ? GetClass()->GetMethodAny(ptr1) : nullptr) {
+            // if data member is enum, take setter and cast 1 to argument data type
+            auto arg = dynamic_cast<TMethodArg *>(method->GetListOfMethodArgs()->First());
+            auto sarg = TString::Format("(%s) 1", arg ? arg->GetFullTypeName() : "int");
+            fValueSetter = new TMethodCall(GetClass(), ptr1, sarg.Data());
+         }
       }
    }
 
