@@ -13,6 +13,10 @@
 #include "TROOT.h"
 #include "TScatter2D.h"
 #include "TH1.h"
+#include "TPad.h"
+#include "TView.h"
+#include "TMath.h"
+#include "TString.h"
 #include "TVirtualGraphPainter.h"
 
 #include <iostream>
@@ -126,8 +130,116 @@ TScatter2D::~TScatter2D()
 Int_t TScatter2D::DistancetoPrimitive(Int_t px, Int_t py)
 {
    Int_t distance = 9999;
-   if (fGraph) distance = fGraph->DistancetoPrimitive(px, py);
+
+   // Check distance to 3D scatter markers
+   if (fGraph && gPad) {
+      TView *view = gPad->GetView();
+      if (view) {
+         const Double_t *fX = fGraph->GetX();
+         const Double_t *fY = fGraph->GetY();
+         const Double_t *fZ = fGraph->GetZ();
+         for (Int_t i = 0; i < fNpoints; i++) {
+            Double_t p3[3] = {fX[i], fY[i], fZ[i]};
+            if (gPad->GetLogx()) {
+               if (p3[0] > 0) p3[0] = TMath::Log10(p3[0]);
+               else continue;
+            }
+            if (gPad->GetLogy()) {
+               if (p3[1] > 0) p3[1] = TMath::Log10(p3[1]);
+               else continue;
+            }
+            if (gPad->GetLogz()) {
+               if (p3[2] > 0) p3[2] = TMath::Log10(p3[2]);
+               else continue;
+            }
+            Double_t pndc[3];
+            view->WCtoNDC(p3, pndc);
+            Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(pndc[0]));
+            Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(pndc[1]));
+            Int_t d = TMath::Nint(TMath::Sqrt(dpx * dpx + dpy * dpy));
+            if (d < distance) distance = d;
+            if (distance <= 5) return distance;
+         }
+      }
+   }
+
+   if (fGraph) {
+      Int_t gdist = fGraph->DistancetoPrimitive(px, py);
+      if (gdist < distance) distance = gdist;
+   }
    return distance;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get information on point of 2D/3D scatter plot at cursor position (px, py).
+/// Shows x, y, point index, x, y, z values, color value, and size value.
+
+char *TScatter2D::GetObjectInfo(Int_t px, Int_t py) const
+{
+   if (!gPad) {
+      Error("GetObjectInfo", "Cannot be used without gPad");
+      return nullptr;
+   }
+
+   if (!fGraph) return (char *)"";
+
+   Int_t ipoint = -2;
+   const Double_t *fX = fGraph->GetX();
+   const Double_t *fY = fGraph->GetY();
+   const Double_t *fZ = fGraph->GetZ();
+
+   TView *view = gPad->GetView();
+   if (view) {
+      Double_t min_dist2 = 25; // 5 pixel radius
+      for (Int_t i = 0; i < fNpoints; i++) {
+         Double_t p3[3] = {fX[i], fY[i], fZ[i]};
+         if (gPad->GetLogx()) {
+            if (p3[0] > 0) p3[0] = TMath::Log10(p3[0]);
+            else continue;
+         }
+         if (gPad->GetLogy()) {
+            if (p3[1] > 0) p3[1] = TMath::Log10(p3[1]);
+            else continue;
+         }
+         if (gPad->GetLogz()) {
+            if (p3[2] > 0) p3[2] = TMath::Log10(p3[2]);
+            else continue;
+         }
+         Double_t pndc[3];
+         view->WCtoNDC(p3, pndc);
+         Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(pndc[0]));
+         Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(pndc[1]));
+
+         Double_t dist2 = dpx * dpx + dpy * dpy;
+         if (dist2 < min_dist2) {
+            min_dist2 = dist2;
+            ipoint = i;
+         }
+      }
+   }
+
+   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
+
+   static TString info;
+
+   if (ipoint == -2) {
+      info = TString::Format("x=%g, y=%g", x, y);
+      return (char *) info.Data();
+   }
+
+   Double_t xval = fX[ipoint];
+   Double_t yval = fY[ipoint];
+   Double_t zval = fZ[ipoint];
+
+   info = TString::Format("point=%d, xval=%g, yval=%g, zval=%g", ipoint, xval, yval, zval);
+   if (fColor)
+      info += TString::Format(", col=%g", fColor[ipoint]);
+   if (fSize)
+      info += TString::Format(", size=%g", fSize[ipoint]);
+
+   return (char *) info.Data();
 }
 
 
@@ -185,6 +297,44 @@ TAxis *TScatter2D::GetZaxis() const
 {
    if (fGraph) return fGraph->GetZaxis();
    else return nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set minimum value for the z axis / vertical scale.
+
+void TScatter2D::SetMinimum(Double_t min)
+{
+   if (fGraph) fGraph->SetMinimum(min);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set maximum value for the z axis / vertical scale.
+
+void TScatter2D::SetMaximum(Double_t max)
+{
+   if (fGraph) fGraph->SetMaximum(max);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get minimum value for the z axis / vertical scale.
+
+Double_t TScatter2D::GetMinimum() const
+{
+   if (fGraph) return fGraph->GetMinimum();
+   return -1111;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get maximum value for the z axis / vertical scale.
+
+Double_t TScatter2D::GetMaximum() const
+{
+   if (fGraph) return fGraph->GetMaximum();
+   return -1111;
 }
 
 

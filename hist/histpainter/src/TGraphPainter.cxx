@@ -4596,6 +4596,13 @@ void TGraphPainter::PaintScatter2D(TScatter2D *theScatter, Option_t* chopt)
 
    theGraph->SetTitle(theScatter->GetTitle());
 
+   if (theGraph->GetZaxis() && theGraph->GetZaxis()->TestBit(TAxis::kAxisRange)) {
+      Double_t uzmin = theGraph->GetZaxis()->GetBinLowEdge(theGraph->GetZaxis()->GetFirst());
+      Double_t uzmax = theGraph->GetZaxis()->GetBinUpEdge(theGraph->GetZaxis()->GetLast());
+      theGraph->SetMinimum(uzmin);
+      theGraph->SetMaximum(uzmax);
+   }
+
    if (!optionSAME) {
       theGraph->Paint(opt.Data());
 
@@ -4729,21 +4736,26 @@ void TGraphPainter::PaintScatter2D(TScatter2D *theScatter, Option_t* chopt)
          theScatter->SetMarkerSize(ms);
       }
       theScatter->TAttMarker::Modify();
+      if (theGraph->GetHistogram()) {
+         Double_t hzmin = theGraph->GetHistogram()->GetMinimum();
+         Double_t hzmax = theGraph->GetHistogram()->GetMaximum();
+         if (theZ[i] < hzmin || theZ[i] > hzmax) continue;
+      }
       if (logx) {
         if (theX[i]>0) x = log10(theX[i]);
-        else break;
+        else continue;
       } else {
         x = theX[i];
       }
       if (logy) {
         if (theY[i]>0) y = log10(theY[i]);
-        else break;
+        else continue;
       } else {
         y = theY[i];
       }
       if (logz) {
         if (theZ[i]>0) z = log10(theZ[i]);
-        else break;
+        else continue;
       } else {
         z = theZ[i];
       }
