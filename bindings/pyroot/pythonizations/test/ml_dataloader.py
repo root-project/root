@@ -8131,6 +8131,7 @@ class DataLoaderImplicitMT(unittest.TestCase):
         ROOT.DisableImplicitMT()
         os.remove(self.file_name)
 
+    @unittest.skipUnless("imt" in ROOT.gROOT.GetConfigFeatures(), "ROOT was built without implicit multi-threading")
     def test01_implicit_mt_not_supported(self):
         ROOT.RDataFrame(10).Define("b1", "(int) rdfentry_").Snapshot(self.tree_name, self.file_name)
         ROOT.EnableImplicitMT(2)
