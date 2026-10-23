@@ -1220,7 +1220,9 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager) {
 
       makeFlatBox(ebox, rnrData, idxBegin, idxEnd) {
          let fcol = RcCol(ebox.fMainColor);
-         let boxMaterial = this.RcFancyMaterial(fcol, 0.5, { side: RC.FRONT_AND_BACK_SIDE });
+         // the box's own transparency, as in makeBox(); opaque when it is 0
+         let opacity = (100 - (ebox.fMainTransparency || 0)) / 100.0;
+         let boxMaterial = this.RcFancyMaterial(fcol, opacity, { side: RC.FRONT_AND_BACK_SIDE });
 
          // console.log("EveElements.prototype.makeFlatBox triangulate", idxBegin, idxEnd);
          let nTriang = (idxEnd - idxBegin) - 2;
