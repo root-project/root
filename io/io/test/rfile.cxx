@@ -326,7 +326,7 @@ TEST(RFile, PutOverwrite)
 
    // Now try overwriting without preserving the existing object
    std::string s;
-   file->Overwrite("hist", s, false);
+   file->Overwrite("hist", s, ROOT::RFile::kOverwrite_NoNewCycle);
    {
       // the previous cycle should be gone...
       auto hist = file->Get<TH1D>("hist;2");
@@ -648,7 +648,7 @@ TEST(RFile, GetAfterOverwriteNoBackup)
    std::string s = "foo";
    file->Put("s", s);
    s = "bar";
-   file->Overwrite("s", s, false);
+   file->Overwrite("s", s, ROOT::RFile::kOverwrite_NoNewCycle);
    auto ss = file->Get<std::string>("s");
    EXPECT_EQ(*ss, s);
 
