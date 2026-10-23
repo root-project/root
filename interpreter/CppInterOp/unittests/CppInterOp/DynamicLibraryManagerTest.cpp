@@ -67,10 +67,6 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, DynamicLibraryManager_Sanity) {
   GTEST_SKIP() << "Test fails for Emscipten builds";
 #endif
 
-#if CLANG_VERSION_MAJOR == 20 && defined(CPPINTEROP_USE_CLING) &&              \
-    defined(_WIN32)
-  GTEST_SKIP() << "Test fails with Cling on Windows";
-#endif
   if (TypeParam::isOutOfProcess)
     GTEST_SKIP() << "Test fails for OOP JIT builds";
 
@@ -517,11 +513,7 @@ constexpr const char* kProcessGuard =
 static std::unique_ptr<llvm::Module> MakeElfModule(llvm::LLVMContext& Ctx) {
   auto M = std::make_unique<llvm::Module>("bindProcessWeakGlobals", Ctx);
   llvm::Triple HostTriple(llvm::sys::getProcessTriple());
-#if CLANG_VERSION_MAJOR < 21
-  M->setTargetTriple(HostTriple.str());
-#else
   M->setTargetTriple(HostTriple);
-#endif
   return M;
 }
 

@@ -32,6 +32,7 @@
 #include "llvm/Support/WithColor.h"
 
 #include <algorithm>
+#include <cmath>
 #include <list>
 #include <string>
 #include <unordered_set>

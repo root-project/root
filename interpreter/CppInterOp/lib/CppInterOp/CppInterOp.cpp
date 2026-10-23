@@ -20,13 +20,13 @@
 #include "Sins.h" // for access to private members
 #include "Tracing.h"
 
-// MSan workaround for clang-repl <= 22: __clang_Interpreter_SetValueNoAlloc
+// MSan workaround for clang-repl <= 23: __clang_Interpreter_SetValueNoAlloc
 // receives JIT-emitted values through varargs, and MSan cannot track shadow
 // across that JIT/native boundary -- the returned Value carries correct bits
 // but an uninit shadow, which trips downstream reads (convertTo, ~Value).
-// Fixed upstream in llvm/llvm-project#196894; unpoison locally for older LLVM.
+// Waiting for llvm/llvm-project#196894; unpoison locally until it lands.
 #if defined(__has_feature)
-#if __has_feature(memory_sanitizer) && LLVM_VERSION_MAJOR <= 22
+#if __has_feature(memory_sanitizer) && LLVM_VERSION_MAJOR <= 23
 #include <sanitizer/msan_interface.h>
 #define CPPINTEROP_MSAN_UNPOISON_VALUE(v) __msan_unpoison(&(v), sizeof(v))
 #else
@@ -86,6 +86,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Config/llvm-config.h"
 #include "llvm/Demangle/Demangle.h"
 #include "llvm/ExecutionEngine/JITSymbol.h"
 #include "llvm/ExecutionEngine/Orc/AbsoluteSymbols.h"
@@ -191,15 +192,15 @@ static bool SkipShutDown = false;
 /// Constructed as a function-local static AFTER sInterpreters, so its dtor
 /// fires FIRST (reverse-of-construction); llvm_shutdown then drains the
 /// ManagedStatic registry, including sInterpreters, deterministically.
-/// The llvm_shutdown call itself is gated on LLVM 23+, where
-/// Platform::lookupResolvedInitSymbols (llvm/llvm-project#196874) makes
+/// The llvm_shutdown call itself is gated on LLVM 24+. Waiting for
+/// Platform::lookupResolvedInitSymbols (llvm/llvm-project#196874) which makes
 /// ~Interpreter's JIT deinit skip lazy materialization. On older LLVM
 /// the same chain SEGFAULTs in cleanUp against destroyed function-local
 /// statics, so the dtor is a no-op and sInterpreters leaks instead.
 struct InterpreterShutdown {
   ~InterpreterShutdown() {
     if (!SkipShutDown) {
-#if LLVM_VERSION_MAJOR > 22
+#if LLVM_VERSION_MAJOR > 23
       llvm::llvm_shutdown();
 #endif
     }
@@ -724,22 +725,42 @@ static SourceLocation GetValidSLoc(Sema& semaRef) {
 namespace {
 class clangSilent {
 public:
-  explicit clangSilent(clang::DiagnosticsEngine& diag)
-      : fDiagEngine(&diag),
-        fOldDiagValue(fDiagEngine->getSuppressAllDiagnostics()) {
-    fDiagEngine->setSuppressAllDiagnostics(true);
+  clangSilent(clang::DiagnosticsEngine& diag)
+#if LLVM_VERSION_MAJOR < 23
+      : fDiagEngine(diag),
+        fOldDiagValue(fDiagEngine.getSuppressAllDiagnostics()) {
+#else
+      : fDiagEngine(diag), fOldClient(diag.getClient()),
+        fOldOwnedClient(diag.takeClient()) {
+#endif
+#if LLVM_VERSION_MAJOR < 23
+    fDiagEngine.setSuppressAllDiagnostics(true);
+#else
+    fDiagEngine.setClient(&fIgnoringClient, /*ShouldOwnClient=*/false);
+#endif
   }
 
-  ~clangSilent() { fDiagEngine->setSuppressAllDiagnostics(fOldDiagValue); }
+  ~clangSilent() {
+#if LLVM_VERSION_MAJOR < 23
+    fDiagEngine.setSuppressAllDiagnostics(fOldDiagValue);
+#else
+    if (fOldOwnedClient)
+      fDiagEngine.setClient(fOldOwnedClient.release(),
+                            /*ShouldOwnClient=*/true);
+    else
+      fDiagEngine.setClient(fOldClient, /*ShouldOwnClient=*/false);
+#endif
+  }
 
-  clangSilent(const clangSilent&) = delete;
-  clangSilent& operator=(const clangSilent&) = delete;
-  clangSilent(clangSilent&&) = delete;
-  clangSilent& operator=(clangSilent&&) = delete;
-
-private:
-  clang::DiagnosticsEngine* fDiagEngine;
+protected:
+  clang::DiagnosticsEngine& fDiagEngine;
+#if LLVM_VERSION_MAJOR < 23
   bool fOldDiagValue;
+#else
+  clang::DiagnosticConsumer* fOldClient;
+  std::unique_ptr<clang::DiagnosticConsumer> fOldOwnedClient;
+  clang::IgnoringDiagConsumer fIgnoringClient;
+#endif
 };
 } // namespace
 
@@ -812,6 +833,21 @@ DeclRef GetOrForceDefinition(DeclRef DRef) {
   return INTEROP_RETURN(nullptr);
 }
 
+// The definition of D if D is a class, forced into the AST if only a
+// declaration is loaded (e.g. an autoload-annotated forward declaration
+// injected by a runtime ROOT dictionary, which hasDefinition() does not
+// complete). const_cast: completing the definition mutates the AST, but the
+// definition is logically a read-only property of the class. Taking a mutable
+// DeclRef in the public API would make unqualified calls in downstream
+// wrappers ambiguous via ADL.
+static CXXRecordDecl* GetCXXRecordDefinition(const Decl* D) {
+  if (!isa_and_nonnull<CXXRecordDecl>(D))
+    return nullptr;
+  return dyn_cast_or_null<CXXRecordDecl>(unwrap<Decl>(
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+      GetOrForceDefinition(DeclRef(const_cast<Decl*>(D)))));
+}
+
 size_t SizeOf(ConstDeclRef DRef) {
   INTEROP_TRACE(DRef);
   assert(DRef);
@@ -866,14 +902,8 @@ bool IsTypedefed(ConstDeclRef DRef) {
 
 bool IsAbstract(DeclRef DRef) {
   INTEROP_TRACE(DRef);
-  const auto* D = unwrap<clang::Decl>(DRef);
-  if (llvm::isa_and_nonnull<clang::CXXRecordDecl>(D)) {
-    const auto* Def = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(
-        unwrap<clang::Decl>(GetOrForceDefinition(DRef)));
-    return INTEROP_RETURN(Def && Def->isAbstract());
-  }
-
-  return INTEROP_RETURN(false);
+  const auto* Def = GetCXXRecordDefinition(unwrap<clang::Decl>(DRef));
+  return INTEROP_RETURN(Def && Def->isAbstract());
 }
 
 bool IsEnumScope(ConstDeclRef DRef) {
@@ -1070,7 +1100,7 @@ static std::string GetCompleteNameImpl(ConstDeclRef DRef, bool qualified) {
       Policy.Suppress_Elab = true;
     } else {
       Policy.SuppressScope = true;
-      Policy.AnonymousTagLocations = false;
+      compat::SuppressAnonymousTagLocations(Policy);
       Policy.SuppressTemplateArgsInCXXConstructors = false;
       Policy.SuppressDefaultTemplateArgs = false;
       Policy.AlwaysIncludeTypeForTemplateArgument = true;
@@ -1230,21 +1260,22 @@ static const clang::Decl* GetUnderlyingScopeImpl(const clang::Decl* D) {
 // return that target; otherwise return D unchanged. The using-shadow
 // is the only carrier of the "effective access" introduced into the
 // derived class, so callers that need access info should consult D
-// before unwrapping.
-static clang::Decl* UnwrapUsingShadowToFunction(clang::Decl* D) {
-  if (auto* USD = dyn_cast_or_null<UsingShadowDecl>(D))
+// before unwrapping. DeclT is Decl or const Decl.
+template <typename DeclT> static DeclT* UnwrapUsingShadowToFunction(DeclT* D) {
+  if (const auto* USD = dyn_cast_or_null<UsingShadowDecl>(D))
     if (auto* Target = USD->getTargetDecl())
-      if (isa<FunctionDecl>(Target) || isa<FunctionTemplateDecl>(Target))
+      if (isa<FunctionDecl, FunctionTemplateDecl>(Target))
         return Target;
   return D;
 }
 
-static const clang::Decl* UnwrapUsingShadowToFunction(const clang::Decl* D) {
-  if (const auto* USD = dyn_cast_or_null<UsingShadowDecl>(D))
-    if (const auto* Target = USD->getTargetDecl())
-      if (isa<FunctionDecl>(Target) || isa<FunctionTemplateDecl>(Target))
-        return Target;
-  return D;
+// Resolves the FunctionDecl a decl names, looking through a using-shadow and
+// a template pattern. Null when the decl does not name a function.
+static const clang::FunctionDecl* UnwrapToFunctionDecl(const clang::Decl* D) {
+  D = UnwrapUsingShadowToFunction(D);
+  if (const auto* FTD = dyn_cast_or_null<FunctionTemplateDecl>(D))
+    D = FTD->getTemplatedDecl();
+  return dyn_cast_or_null<FunctionDecl>(D);
 }
 
 DeclRef GetUnderlyingScope(ConstDeclRef DRef) {
@@ -1441,8 +1472,7 @@ DeclRef GetNamed(const std::string& name, ConstDeclRef parent /*= nullptr*/) {
   // pick the semantics they want, instead of GetNamed approximating both.
   if (!ND && Within) {
     if (auto* RD = llvm::dyn_cast<clang::CXXRecordDecl>(Within)) {
-      auto* Def = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(
-          unwrap<clang::Decl>(GetOrForceDefinition(DeclRef(RD))));
+      auto* Def = GetCXXRecordDefinition(RD);
       if (!Def)
         return INTEROP_RETURN(nullptr);
       auto& S = getSema();
@@ -1474,6 +1504,23 @@ DeclRef GetNamed(const std::string& name, ConstDeclRef parent /*= nullptr*/) {
     return INTEROP_RETURN(ND->getCanonicalDecl());
 
   return INTEROP_RETURN(nullptr);
+}
+
+bool IsVisibleName(const std::string& name, ConstDeclRef parent /*= nullptr*/) {
+  INTEROP_TRACE(name, parent);
+  clang::DeclContext* Within = nullptr;
+  if (parent) {
+    auto* D = unwrap<clang::Decl>(GetUnderlyingScope(parent));
+    Within = llvm::dyn_cast<clang::DeclContext>(D);
+  }
+  compat::SynthesizingCodeRAII RAII(&getInterp());
+  if (Within)
+    Within->getPrimaryContext()->buildLookup();
+
+  // LookupUnqualified returns the (D*)-1 sentinel for overload sets and
+  // ambiguous results, which still means the name exists.
+  clang::DeclarationName DName = &getSema().Context.Idents.get(name);
+  return INTEROP_RETURN(LookupUnqualified(getSema(), DName, Within) != nullptr);
 }
 
 DeclRef GetParentScope(ConstDeclRef DRef) {
@@ -1515,42 +1562,26 @@ DeclRef GetParentScope(ConstDeclRef DRef) {
 
 size_t GetNumBases(ConstDeclRef DRef) {
   INTEROP_TRACE(DRef);
-  // const_cast: completing the definition mutates the AST, but the base list
-  // is logically a read-only property of the class. Taking a mutable DeclRef
-  // would make unqualified calls in downstream wrappers ambiguous via ADL.
-  auto* D = const_cast<Decl*>(unwrap<Decl>(DRef));
+  const auto* D = unwrap<Decl>(DRef);
 
   // hasDefinition() completes the redecl chain (dataPtr), which may
   // deserialize it; so does getNumBases() below.
   compat::SynthesizingCodeRAII RAII(&getInterp());
-  if (auto* CTSD = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(D))
+  if (const auto* CTSD =
+          llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(D))
     if (!CTSD->hasDefinition())
-      compat::InstantiateClassTemplateSpecialization(getInterp(), CTSD);
-  if (llvm::isa_and_nonnull<CXXRecordDecl>(D)) {
-    // A class known only as an autoload-annotated forward declaration
-    // (e.g., injected by a runtime ROOT dictionary) is not completed by
-    // hasDefinition(); resolve its definition through Sema first, or the
-    // base list is silently empty.
-    if (const auto* Def = llvm::dyn_cast_or_null<CXXRecordDecl>(
-            unwrap<Decl>(GetOrForceDefinition(D))))
-      return INTEROP_RETURN(Def->getNumBases());
-  }
-
-  return INTEROP_RETURN(0);
+      // const_cast: see GetCXXRecordDefinition.
+      compat::InstantiateClassTemplateSpecialization(
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+          getInterp(), const_cast<ClassTemplateSpecializationDecl*>(CTSD));
+  const auto* Def = GetCXXRecordDefinition(D);
+  return INTEROP_RETURN(Def ? Def->getNumBases() : 0);
 }
 
 DeclRef GetBaseClass(ConstDeclRef DRef, size_t ibase) {
   INTEROP_TRACE(DRef, ibase);
-  // const_cast: see GetNumBases.
-  auto* D = const_cast<Decl*>(unwrap<Decl>(DRef));
-  if (!llvm::isa_and_nonnull<CXXRecordDecl>(D))
-    return INTEROP_RETURN(nullptr);
-
   compat::SynthesizingCodeRAII RAII(&getInterp());
-  // See GetNumBases: autoload-annotated forward declarations need Sema to
-  // resolve their definition before bases are visible.
-  const auto* CXXRD = llvm::dyn_cast_or_null<CXXRecordDecl>(
-      unwrap<Decl>(GetOrForceDefinition(D)));
+  const auto* CXXRD = GetCXXRecordDefinition(unwrap<Decl>(DRef));
   if (!CXXRD || CXXRD->getNumBases() <= ibase)
     return INTEROP_RETURN(nullptr);
 
@@ -1624,9 +1655,9 @@ bool IsSubclass(ConstDeclRef derived, ConstDeclRef base) {
 // This is an internal helper function for the CppInterOp library (as evident
 // by the 'static' declaration), while the similar GetBaseClassOffset()
 // function below is exposed to library users.
-static unsigned ComputeBaseOffset(const ASTContext& Context,
-                                  const CXXRecordDecl* DerivedRD,
-                                  const CXXBasePath& Path) {
+static int64_t ComputeBaseOffset(ASTContext& Context,
+                                 const CXXRecordDecl* DerivedRD,
+                                 const CXXBasePath& Path, const void* address) {
   CharUnits NonVirtualOffset = CharUnits::Zero();
 
   unsigned NonVirtualStart = 0;
@@ -1661,15 +1692,55 @@ static unsigned ComputeBaseOffset(const ASTContext& Context,
   // CharUnits.
   // return BaseOffset(DerivedRD, VirtuaBose, aBlnVirtualOffset);
   if (VirtualBase) {
-    const ASTRecordLayout& Layout = Context.getASTRecordLayout(DerivedRD);
-    CharUnits VirtualOffset = Layout.getVBaseClassOffset(VirtualBase);
+    CharUnits VirtualOffset;
+
+    if (address) {
+      const char* Object = static_cast<const char*>(address);
+      if (Context.getTargetInfo().getCXXABI().isMicrosoft()) {
+        const ASTRecordLayout& Layout = Context.getASTRecordLayout(DerivedRD);
+        CharUnits VBPtrOffset = Layout.getVBPtrOffset();
+        auto& VTContext =
+            *cast<MicrosoftVTableContext>(Context.getVTableContext());
+        unsigned VBTableIndex =
+            VTContext.getVBTableIndex(DerivedRD, VirtualBase);
+        const char* VBTable = nullptr;
+        std::memcpy(static_cast<void*>(&VBTable),
+                    Object + VBPtrOffset.getQuantity(), sizeof(VBTable));
+        int32_t Offset = 0;
+        std::memcpy(&Offset, VBTable + (VBTableIndex * sizeof(Offset)),
+                    sizeof(Offset));
+
+        // Microsoft vbtable entries are relative to the vbptr, not the object.
+        VirtualOffset = VBPtrOffset + CharUnits::fromQuantity(Offset);
+      } else {
+        auto& VTContext =
+            *cast<ItaniumVTableContext>(Context.getVTableContext());
+        CharUnits VBaseOffsetOffset =
+            VTContext.getVirtualBaseOffsetOffset(DerivedRD, VirtualBase);
+        const char* VTable = nullptr;
+        std::memcpy(static_cast<void*>(&VTable), Object, sizeof(VTable));
+
+        // Itanium virtual base offsets are relative to this subobject. The
+        // slot is relative to the vtable address point and can follow vcall
+        // offsets, so obtain it from the vtable context.
+        ptrdiff_t Offset = 0;
+        std::memcpy(&Offset, VTable + VBaseOffsetOffset.getQuantity(),
+                    sizeof(Offset));
+        VirtualOffset = CharUnits::fromQuantity(Offset);
+      }
+    } else {
+      const ASTRecordLayout& Layout = Context.getASTRecordLayout(DerivedRD);
+      VirtualOffset = Layout.getVBaseClassOffset(VirtualBase);
+    }
+
     return (NonVirtualOffset + VirtualOffset).getQuantity();
   }
   return NonVirtualOffset.getQuantity();
 }
 
-int64_t GetBaseClassOffset(ConstDeclRef derived, ConstDeclRef base) {
-  INTEROP_TRACE(derived, base);
+int64_t GetBaseClassOffset(ConstDeclRef derived, ConstDeclRef base,
+                           const void* address) {
+  INTEROP_TRACE(derived, base, address);
   if (base == derived)
     return INTEROP_RETURN(0);
 
@@ -1702,8 +1773,8 @@ int64_t GetBaseClassOffset(ConstDeclRef derived, ConstDeclRef base) {
   DCXXRD->isDerivedFrom(BCXXRD, Paths);
 
   // FIXME: We might want to cache these requests as they seem expensive.
-  return INTEROP_RETURN(
-      ComputeBaseOffset(getSema().getASTContext(), DCXXRD, Paths.front()));
+  return INTEROP_RETURN(ComputeBaseOffset(getSema().getASTContext(), DCXXRD,
+                                          Paths.front(), address));
 }
 
 template <typename DeclType, typename HandleType>
@@ -1942,10 +2013,7 @@ OwnershipBehaviour GetOwnershipBehaviour(ConstFuncRef Fn) {
   INTEROP_TRACE(Fn);
   if (!Fn)
     return INTEROP_RETURN(OwnershipBehaviour::Unknown);
-  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(Fn));
-  if (const auto* FTD = dyn_cast<FunctionTemplateDecl>(D))
-    D = FTD->getTemplatedDecl();
-  const auto* FD = dyn_cast<FunctionDecl>(D);
+  const auto* FD = UnwrapToFunctionDecl(unwrap<clang::Decl>(Fn));
   if (!FD)
     return INTEROP_RETURN(OwnershipBehaviour::Unknown);
 
@@ -1970,10 +2038,7 @@ uint64_t GetDeallocationIndexes(ConstFuncRef Fn) {
   INTEROP_TRACE(Fn);
   if (!Fn)
     return INTEROP_RETURN(uint64_t{0});
-  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(Fn));
-  if (const auto* FTD = dyn_cast<FunctionTemplateDecl>(D))
-    D = FTD->getTemplatedDecl();
-  const auto* FD = dyn_cast<FunctionDecl>(D);
+  const auto* FD = UnwrapToFunctionDecl(unwrap<clang::Decl>(Fn));
   if (!FD)
     return INTEROP_RETURN(uint64_t{0});
   uint64_t result = 0;
@@ -1993,10 +2058,7 @@ int GetAllocationSizeParamIndex(ConstFuncRef Fn) {
   INTEROP_TRACE(Fn);
   if (!Fn)
     return INTEROP_RETURN(-1);
-  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(Fn));
-  if (const auto* FTD = dyn_cast<FunctionTemplateDecl>(D))
-    D = FTD->getTemplatedDecl();
-  const auto* FD = dyn_cast<FunctionDecl>(D);
+  const auto* FD = UnwrapToFunctionDecl(unwrap<clang::Decl>(Fn));
   if (!FD)
     return INTEROP_RETURN(-1);
   for (const auto* attr : FD->specific_attrs<OwnershipAttr>()) {
@@ -2011,10 +2073,7 @@ AllocType IsAllocator(ConstFuncRef Fn) {
   INTEROP_TRACE(Fn);
   if (!Fn)
     return INTEROP_RETURN(AllocType::Unknown);
-  const auto* D = UnwrapUsingShadowToFunction(unwrap<clang::Decl>(Fn));
-  if (const auto* FTD = dyn_cast<FunctionTemplateDecl>(D))
-    D = FTD->getTemplatedDecl();
-  if (const auto* FD = dyn_cast<FunctionDecl>(D)) {
+  if (const auto* FD = UnwrapToFunctionDecl(unwrap<clang::Decl>(Fn))) {
     if (FD->getBuiltinID() == Builtin::ID::BImalloc)
       return INTEROP_RETURN(AllocType::Malloc);
     if (const auto* FDA = FD->getAttr<RestrictAttr>()) {
@@ -2059,21 +2118,108 @@ AllocType IsAllocator(ConstFuncRef Fn) {
   return INTEROP_RETURN(AllocType::Unknown);
 }
 
-bool IsDeallocator(ConstFuncRef Fn) {
-  INTEROP_TRACE(Fn);
-  if (!Fn)
-    INTEROP_RETURN(false);
-  const auto* D = unwrap<clang::Decl>(Fn);
-  if (const auto* FD = dyn_cast<FunctionDecl>(D)) {
-    if (FD->getBuiltinID() == Builtin::ID::BIfree)
-      return INTEROP_RETURN(true);
-    if (const auto* FDA = FD->getAttr<OwnershipAttr>()) {
-      if (FDA->getOwnKind() == OwnershipAttr::Takes)
-        return INTEROP_RETURN(true);
+// We follow Clang's convention for ownership attributes, parameters are 1
+// indexed. Therefore if a function has an implicit this, you should use
+// cppDeallocDelete_2 to labeling first actual parameter, also it is not allowed
+// to label implicit `this`.
+// Function appends a DeallocType to the vector taken, for every argument in
+// the function including implicit this. If an argument does not have an
+// deallocation ownership, Opaque value is added.
+bool IsDeallocator(ConstFuncRef Fn, std::vector<DeallocType>& VPP) {
+  INTEROP_TRACE(Fn, INTEROP_OUT(VPP));
+  const auto* FD = UnwrapToFunctionDecl(unwrap<clang::Decl>(Fn));
+  if (!FD)
+    return INTEROP_RETURN(false);
+  const auto* MD = dyn_cast<CXXMethodDecl>(FD);
+  const bool hasImplicitThis = MD && MD->isImplicitObjectMemberFunction();
+  const unsigned numParam = FD->getNumParams();
+  std::vector<DeallocType> newVPP(numParam + hasImplicitThis,
+                                  DeallocType::Opaque);
+  if (FD->getBuiltinID() == Builtin::ID::BIfree) {
+    VPP.push_back(DeallocType::Free);
+    return INTEROP_RETURN(true);
+  }
+  for (const auto* FDA : FD->specific_attrs<OwnershipAttr>()) {
+    // If it does not return, either holds or takes
+    if (FDA->getOwnKind() == OwnershipAttr::Returns)
+      continue;
+    // If GCC's ownership attrs are used, it is assumed to be free
+    for (const ParamIdx index : FDA->args())
+      // Self can not be attributed with ownership_attr
+      newVPP[index.getLLVMIndex()] = DeallocType::Free;
+  }
+  // Traverse annotate_attrs
+  for (const auto* FDA : FD->specific_attrs<AnnotateAttr>()) {
+    llvm::StringRef attrName = FDA->getAnnotation();
+    DeallocType kind;
+    if (attrName == "cppDeallocFree")
+      kind = DeallocType::Free;
+    else if (attrName == "cppDeallocDelete")
+      kind = DeallocType::Delete;
+    else if (attrName == "cppDeallocDeleteArr")
+      kind = DeallocType::DeleteArr;
+    else if (attrName == "cppDeallocNone")
+      kind = DeallocType::None;
+    // If annotate_attr is any other thing continue
+    else
+      continue;
+    // If attribute has no argument, it is assumed to attribute
+    // for first index (after implicit this)
+    if (FDA->args_size() == 0) {
+      if (numParam >= 1)
+        newVPP[hasImplicitThis] = kind;
+      continue;
+    }
+    // Traverse all args of annotate_attr
+    for (const auto* E : FDA->args()) {
+      // Since we support FTDs, we must do that check
+      if (E->isValueDependent())
+        continue;
+      Expr::EvalResult evalRes;
+      // Not int
+      if (!E->EvaluateAsInt(evalRes, FD->getASTContext()))
+        continue;
+      const int64_t index = evalRes.Val.getInt().getSExtValue();
+      if (index < 1 || (uint64_t)index > newVPP.size() ||
+          (index == 1 && hasImplicitThis))
+        continue;
+      newVPP[index - 1] = kind;
     }
   }
-
-  return INTEROP_RETURN(false);
+  // Traverse APINotes attrs
+  for (const auto* FDA : FD->specific_attrs<SwiftAttrAttr>()) {
+    llvm::StringRef attrName = FDA->getAttribute();
+    attrName.consume_front("returns_");
+    llvm::SmallVector<llvm::StringRef, 8> tokens;
+    attrName.split(tokens, ' ', -1, false);
+    for (llvm::StringRef token : tokens) {
+      DeallocType kind;
+      if (token.consume_front("cppDeallocDeleteArr"))
+        kind = DeallocType::DeleteArr;
+      else if (token.consume_front("cppDeallocDelete"))
+        kind = DeallocType::Delete;
+      else if (token.consume_front("cppDeallocFree"))
+        kind = DeallocType::Free;
+      else if (token.consume_front("cppDeallocNone"))
+        kind = DeallocType::None;
+      else
+        continue;
+      // If attribute is cppDealloc`DeallocType` without index,
+      // it is assumed to be attribute for first index (after implicit this)
+      if (token.empty()) {
+        if (numParam >= 1)
+          newVPP[hasImplicitThis] = kind;
+        continue;
+      }
+      unsigned index;
+      if (!token.consume_front("_") || token.getAsInteger(10, index) ||
+          index < 1 || index > newVPP.size() || (hasImplicitThis && index == 1))
+        continue;
+      newVPP[index - 1] = kind;
+    }
+  }
+  VPP.insert(VPP.end(), newVPP.begin(), newVPP.end());
+  return INTEROP_RETURN(true);
 }
 
 bool IsFunctionProtoType(ConstTypeRef TyRef) {
@@ -2665,6 +2811,13 @@ bool IsTemplateParmType(ConstTypeRef TyRef) {
   return INTEROP_RETURN(QT->isTemplateTypeParmType());
 }
 
+bool IsPackExpansionType(ConstTypeRef TyRef) {
+  INTEROP_TRACE(TyRef);
+  clang::QualType QT = clang::QualType::getFromOpaquePtr(TyRef.data);
+  return INTEROP_RETURN(
+      llvm::isa_and_nonnull<clang::PackExpansionType>(QT.getTypePtrOrNull()));
+}
+
 std::string GetFunctionSignature(ConstFuncRef func) {
   INTEROP_TRACE(func);
   if (!func)
@@ -2815,16 +2968,16 @@ bool GetClassTemplatedMethods(const std::string& name, ConstDeclRef parent,
     DC->getPrimaryContext()->buildLookup();
   CppInternal::utils::Lookup::Named(&S, R, DC);
 
-  if (R.getResultKind() == clang_LookupResult_Not_Found && funcs.empty())
+  if (R.getResultKind() == clang::LookupResultKind::NotFound && funcs.empty())
     return INTEROP_RETURN(false);
 
   // Distinct match, single Decl
-  else if (R.getResultKind() == clang_LookupResult_Found) {
+  else if (R.getResultKind() == clang::LookupResultKind::Found) {
     if (IsTemplatedFunction(R.getFoundDecl()))
       funcs.push_back(R.getFoundDecl());
   }
   // Loop over overload set
-  else if (R.getResultKind() == clang_LookupResult_Found_Overloaded) {
+  else if (R.getResultKind() == clang::LookupResultKind::FoundOverloaded) {
     for (auto* Found : R) {
       if (IsTemplatedFunction(Found))
         funcs.push_back(Found);
@@ -3067,6 +3220,24 @@ bool IsExplicit(ConstFuncRef method) {
     return INTEROP_RETURN(DGD->isExplicit());
 
   return INTEROP_RETURN(false);
+}
+
+bool IsOperator(ConstFuncRef func) {
+  INTEROP_TRACE(func);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<Decl>(func));
+  if (const auto* FTD = llvm::dyn_cast_or_null<FunctionTemplateDecl>(D))
+    D = FTD->getTemplatedDecl();
+  if (const auto* FD = llvm::dyn_cast_or_null<FunctionDecl>(D))
+    return INTEROP_RETURN(FD->isOverloadedOperator());
+  return INTEROP_RETURN(false);
+}
+
+bool IsConversionOperator(ConstFuncRef func) {
+  INTEROP_TRACE(func);
+  const auto* D = UnwrapUsingShadowToFunction(unwrap<Decl>(func));
+  if (const auto* FTD = llvm::dyn_cast_or_null<FunctionTemplateDecl>(D))
+    D = FTD->getTemplatedDecl();
+  return INTEROP_RETURN(llvm::isa_and_nonnull<CXXConversionDecl>(D));
 }
 
 void* GetFunctionAddress(const char* mangled_name) {
@@ -4339,7 +4510,7 @@ static void GetDeclName(const clang::Decl* D, ASTContext& Context,
   PrintingPolicy Policy(Context.getPrintingPolicy());
   Policy.SuppressTagKeyword = true;
   Policy.SuppressUnwrittenScope = true;
-  Policy.Print_Canonical_Types = true;
+  Policy.PrintAsCanonical = true;
   if (const auto* TD = dyn_cast<TypeDecl>(D)) {
     // This is a class, struct, or union member.
     QualType QT;
@@ -4463,7 +4634,7 @@ bool IsCopyConstructorDeleted(QualType QT) {
     return false;
   }
 
-  RD = unwrap<CXXRecordDecl>(GetOrForceDefinition(DeclRef(RD)));
+  RD = GetCXXRecordDefinition(RD);
   if (!RD)
     return false;
 
@@ -5858,14 +6029,10 @@ InterpRef CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
   std::vector<const char*> AllArgs;
 #ifdef CPPINTEROP_BAKED_INTERPRETER_ARGS
   // Storage for the split arguments; must outlive the pointers in AllArgs.
-  std::vector<std::string> BakedStorage;
-  StringRef Baked(CPPINTEROP_BAKED_INTERPRETER_ARGS);
-  while (!Baked.empty()) {
-    StringRef Arg;
-    std::tie(Arg, Baked) = Baked.split(' ');
-    if (!Arg.empty())
-      BakedStorage.push_back(Arg.str());
-  }
+  SmallVector<StringRef, 8> BakedParts;
+  StringRef(CPPINTEROP_BAKED_INTERPRETER_ARGS)
+      .split(BakedParts, ' ', /*MaxSplit=*/-1, /*KeepEmpty=*/false);
+  std::vector<std::string> BakedStorage(BakedParts.begin(), BakedParts.end());
   for (const std::string& Arg : BakedStorage)
     AllArgs.push_back(Arg.c_str());
 #endif
@@ -6030,24 +6197,10 @@ InterpRef CreateInterpreter(const std::vector<const char*>& Args /*={}*/,
 #if !defined(CPPINTEROP_USE_CLING) && !defined(EMSCRIPTEN)
   DefineAbsoluteSymbol(*I, "__ci_newtag",
                        reinterpret_cast<uint64_t>(&__ci_newtag));
-// llvm >= 21 has this defined as a C symbol that does not require mangling
-#if CLANG_VERSION_MAJOR >= 21
+  // A C symbol since LLVM 21, so it needs no mangling.
   DefineAbsoluteSymbol(
       *I, "__clang_Interpreter_SetValueWithAlloc",
       reinterpret_cast<uint64_t>(&__clang_Interpreter_SetValueWithAlloc));
-#else
-  // obtain mangled name
-  auto* D =
-      unwrap<Decl>(Cpp::GetNamed("__clang_Interpreter_SetValueWithAlloc"));
-  if (auto* FD = llvm::dyn_cast_or_null<FunctionDecl>(D)) {
-    auto GD = GlobalDecl(FD);
-    std::string mangledName;
-    compat::maybeMangleDeclName(GD, mangledName);
-    DefineAbsoluteSymbol(
-        *I, mangledName.c_str(),
-        reinterpret_cast<uint64_t>(&__clang_Interpreter_SetValueWithAlloc));
-  }
-#endif
 
   DefineAbsoluteSymbol(
       *I, "__clang_Interpreter_SetValueNoAlloc",
@@ -6154,17 +6307,11 @@ static int Declare(compat::Interpreter& I, const char* code, bool silent) {
   // distinguish "parsed cleanly" from "parsed with errors".
   clang::DiagnosticsEngine& Diag = I.getSema().getDiagnostics();
   clang::DiagnosticErrorTrap Trap(Diag);
-  if (silent) {
-    clangSilent diagSuppr(Diag);
-    auto result = I.declare(code);
-    if (Trap.hasErrorOccurred())
-      return 1;
-    return result;
-  }
+  std::optional<clangSilent> diagSuppr;
+  if (silent)
+    diagSuppr.emplace(Diag);
   auto result = I.declare(code);
-  if (Trap.hasErrorOccurred())
-    return 1;
-  return result;
+  return Trap.hasErrorOccurred() ? 1 : result;
 }
 
 int Declare(const char* code, bool silent) {

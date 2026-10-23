@@ -89,6 +89,15 @@ target_compile_definitions(CppInterOpTests PRIVATE
   "CPPINTEROP_SRC_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/../..\""
 )
 
+# cling reads its runtime modulemaps from the directory that holds
+# cling/Interpreter/RuntimeUniverse.h. A test that runs with -fmodules
+# passes this prefix as an include path.
+if (CPPINTEROP_USE_CLING)
+  target_compile_definitions(CppInterOpTests PRIVATE
+    "CPPINTEROP_CLING_INCLUDE_DIR=\"${CLING_INSTALL_PREFIX}/include\""
+  )
+endif()
+
 set_source_files_properties(InterpreterTest.cpp PROPERTIES COMPILE_DEFINITIONS
   "LLVM_BINARY_DIR=\"${LLVM_BINARY_DIR}\""
 )
