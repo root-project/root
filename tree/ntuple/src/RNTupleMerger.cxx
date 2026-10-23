@@ -269,6 +269,11 @@ try {
    return -1;
 }
 
+// =========================================================================================
+//
+// Local types and functions
+//
+// =========================================================================================
 namespace {
 // Functor used to change the compression of a page to `fCompressionSettings`.
 struct RChangeCompressionFunc {
@@ -366,6 +371,9 @@ struct RColumnOutInfo {
    ROOT::DescriptorId_t fColumnId = ROOT::kInvalidDescriptorId;
 };
 
+// { ".fully.qualified.fieldName.colInputIndex.colOutputReprIndex" => colOutputInfo }
+using ColumnIdMap_t = std::unordered_map<std::string, RColumnOutInfo>;
+
 struct RColumnMergeInfo {
    // This column name is built as a dot-separated concatenation of the ancestry of
    // the columns' parent fields' names plus the index of the column itself.
@@ -382,14 +390,6 @@ struct RColumnMergeInfo {
    const ROOT::RNTupleDescriptor *fParentNTupleDescriptor = nullptr;
 };
 
-// { ".fully.qualified.fieldName.colInputIndex.colOutputReprIndex" => colOutputInfo }
-using ColumnIdMap_t = std::unordered_map<std::string, RColumnOutInfo>;
-
-struct RColumnInfoGroup {
-   std::vector<RColumnMergeInfo> fExtraDstColumns;
-   std::vector<RColumnMergeInfo> fCommonColumns;
-};
-
 struct RSealedPageMergeData {
    // We use a std::deque so that references to the contained SealedPageSequence_t, and its iterators, are
    // never invalidated.
@@ -398,6 +398,15 @@ struct RSealedPageMergeData {
    std::vector<std::unique_ptr<std::byte[]>> fBuffers;
 };
 
+struct RColumnInfoGroup {
+   std::vector<RColumnMergeInfo> fExtraDstColumns;
+   std::vector<RColumnMergeInfo> fCommonColumns;
+};
+
+} // namespace
+
+// These structs cannot be in the anon namespace becase they're used in RNTupleMerger's private interface.
+namespace ROOT::Experimental::Internal {
 template <typename T>
 using FieldCollectionMap_t = std::unordered_map<const ROOT::RFieldDescriptor *, std::vector<T>>;
 
@@ -405,14 +414,17 @@ struct RDescriptorsComparison {
    std::vector<const ROOT::RFieldDescriptor *> fExtraDstFields;
    std::vector<const ROOT::RFieldDescriptor *> fExtraSrcFields;
    std::vector<RCommonField> fCommonFields;
+
+   // Empty if and only if the source can be fast merged.
+   std::string fFastMergeErrors;
+
    // For each field that has more than 1 column representation in the output model,
    // maps the column representatives of the source field with those of the destination.
    // The key is the destination field.
    FieldCollectionMap_t<RColReprMapping> fColReprMappings;
    FieldCollectionMap_t<RColReprExtension> fColReprExtensions;
 };
-
-} // namespace
+} // namespace ROOT::Experimental::Internal
 
 // Subprocedure of CompareDescriptorStructure, extracted for readability.
 // Given two fields, attempts to match their column representations and schedules column extensions if necessary.
@@ -542,6 +554,31 @@ FillCommonAndExtraFields(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTuple
    return res;
 }
 
+static void VerifyProjectedFieldsCompatibility(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTupleDescriptor &src,
+                                               const ROOT::RFieldDescriptor &dstField,
+                                               const ROOT::RFieldDescriptor &srcField, std::vector<std::string> &errors)
+{
+   bool projCompatible = srcField.IsProjectedField() == dstField.IsProjectedField();
+   if (!projCompatible) {
+      std::stringstream ss;
+      ss << "Field `" << dstField.GetFieldName()
+         << "` is incompatible with previously-seen field with that name because the "
+         << (srcField.IsProjectedField() ? "new" : "old") << " one is projected and the other isn't";
+      errors.push_back(ss.str());
+   } else if (srcField.IsProjectedField()) {
+      // if both fields are projected, verify that they point to the same real field
+      const auto srcName = src.GetQualifiedFieldName(srcField.GetProjectionSourceId());
+      const auto dstName = dst.GetQualifiedFieldName(dstField.GetProjectionSourceId());
+      if (srcName != dstName) {
+         std::stringstream ss;
+         ss << "Field `" << dstField.GetFieldName()
+            << "` is projected to a different field than a previously-seen field with the same name (old: " << dstName
+            << ", new: " << srcName << ")";
+         errors.push_back(ss.str());
+      }
+   }
+}
+
 /// Compares the top level fields of `dst` and `src` and determines whether they can be merged or not.
 /// In addition, returns the differences between `dst` and `src`'s structures
 static ROOT::RResult<RDescriptorsComparison>
@@ -554,10 +591,13 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
    // 4. dst and src have fields that differ (compatible or incompatible)
 
    RDescriptorsComparison res = FillCommonAndExtraFields(dst, src);
+   std::vector<std::string> slowMergeErrors;
    std::vector<std::string> errors;
 
    // Check compatibility of common fields
    auto fieldsToCheck = res.fCommonFields;
+   const auto nTopLevelFields = fieldsToCheck.size();
+
    // NOTE: using index-based for loop because the collection may get extended by the iteration
    for (std::size_t fieldIdx = 0; fieldIdx < fieldsToCheck.size(); ++fieldIdx) {
       const auto &field = fieldsToCheck[fieldIdx];
@@ -566,24 +606,8 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
       const auto &fieldName = field.fSrc->GetFieldName();
 
       // Require that fields are both projected or both not projected
-      bool projCompatible = field.fSrc->IsProjectedField() == field.fDst->IsProjectedField();
-      if (!projCompatible) {
-         std::stringstream ss;
-         ss << "Field `" << fieldName << "` is incompatible with previously-seen field with that name because the "
-            << (field.fSrc->IsProjectedField() ? "new" : "old") << " one is projected and the other isn't";
-         errors.push_back(ss.str());
-      } else if (field.fSrc->IsProjectedField()) {
-         // if both fields are projected, verify that they point to the same real field
-         const auto srcName = src.GetQualifiedFieldName(field.fSrc->GetProjectionSourceId());
-         const auto dstName = dst.GetQualifiedFieldName(field.fDst->GetProjectionSourceId());
-         if (srcName != dstName) {
-            std::stringstream ss;
-            ss << "Field `" << fieldName
-               << "` is projected to a different field than a previously-seen field with the same name (old: "
-               << dstName << ", new: " << srcName << ")";
-            errors.push_back(ss.str());
-         }
-      }
+      auto &errs = (fieldIdx < nTopLevelFields) ? slowMergeErrors : errors;
+      VerifyProjectedFieldsCompatibility(dst, src, *field.fDst, *field.fSrc, errs);
 
       // Require that fields types match
       // TODO(gparolini): allow non-identical but compatible types
@@ -664,14 +688,22 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
    }
 
    std::string errMsg;
-   for (const auto &err : errors)
-      errMsg += std::string("\n  * ") + err;
+   if (!slowMergeErrors.empty()) {
+      // If there are slow merge errors, the source cannot be merged at all.
+      for (const auto &err : slowMergeErrors)
+         errMsg += std::string("\n  * ") + err;
 
-   if (!errMsg.empty())
       errMsg = errMsg.substr(1); // strip initial newline
-
-   if (errMsg.length())
       return R__FAIL(errMsg);
+   }
+
+   // Source can only be slow merged.
+   if (!errors.empty()) {
+      for (const auto &err : errors)
+         errMsg += std::string("\n  * ") + err;
+      errMsg = errMsg.substr(1); // strip initial newline
+      res.fFastMergeErrors = errMsg;
+   }
 
    return ROOT::RResult(res);
 }
@@ -739,7 +771,8 @@ static ROOT::RResult<void> RestoreRealFieldParams(ROOT::RFieldBase &field, const
 [[nodiscard]]
 static ROOT::RResult<void>
 ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstModel,
-                       ROOT::Internal::RPageSink &destination, const ROOT::RNTupleDescriptor &srcDesc, bool verbose)
+                       ROOT::Internal::RPageSink &destination, const ROOT::RNTupleDescriptor &srcDesc,
+                       ROOT::NTupleSize_t nEntries, bool verbose, bool forSlowMerge)
 {
    const auto &newFields = descCmp.fExtraSrcFields;
    auto &commonFields = descCmp.fCommonFields;
@@ -768,19 +801,21 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
       ROOT::RCreateFieldOptions cfOpts;
       cfOpts.SetEmulateUnknownTypes(true);
       auto field = fieldDesc->CreateField(srcDesc, cfOpts);
-      // Explicitly set the field representatives. This prevents UpdateSchema() from changing our column
-      // representations via AutoAdjustColumnTypes.
-      ROOT::RFieldBase::ColumnRepresentation_t representatives;
-      for (const auto &colId : fieldDesc->GetLogicalColumnIds()) {
-         const auto &column = srcDesc.GetColumnDescriptor(colId);
-         representatives.push_back(column.GetType());
+      if (!forSlowMerge) {
+         // Explicitly set the field representatives. This prevents UpdateSchema() from changing our column
+         // representations via AutoAdjustColumnTypes.
+         ROOT::RFieldBase::ColumnRepresentation_t representatives;
+         for (const auto &colId : fieldDesc->GetLogicalColumnIds()) {
+            const auto &column = srcDesc.GetColumnDescriptor(colId);
+            representatives.push_back(column.GetType());
+         }
+         field->SetColumnRepresentatives({representatives});
+         // Pinning the representative is not enough for truncated/quantized columns: their parameters
+         // are stored in the in-memory field, which CreateField() leaves at defaults.
+         auto restored = RestoreRealFieldParams(*field, *fieldDesc, srcDesc);
+         if (!restored)
+            return R__FORWARD_ERROR(restored);
       }
-      field->SetColumnRepresentatives({representatives});
-      // Pinning the representative is not enough for truncated/quantized columns: their parameters
-      // are stored in the in-memory field, which CreateField() leaves at defaults.
-      auto restored = RestoreRealFieldParams(*field, *fieldDesc, srcDesc);
-      if (!restored)
-         return R__FORWARD_ERROR(restored);
       changeset.AddField(std::move(field));
    }
    // ...then add all projected fields.
@@ -812,7 +847,7 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
       // need to connect these either in principle).
       // NOTE: this calls AutoAdjustColumnTypes, but we have set the column representations of all fields
       // explicitly, so it will not change it under the hood.
-      destination.UpdateSchema(changeset, destination.GetNEntries());
+      destination.UpdateSchema(changeset, nEntries);
    } catch (const ROOT::RException &ex) {
       return R__FAIL(ex.what());
    }
@@ -924,15 +959,16 @@ static void AddColumnExtensionsInFieldOrder(
 }
 
 namespace {
+// Collection of common methods and data to be used for any kind of RNTuples merging.
 class RNTupleMergeStrategy {
 protected:
-   // Fixed during the whole merging
+   // Fixed during the whole merging. Note that these references are owned by the RNTupleMerger and share its lifetime.
    std::unique_ptr<ROOT::RNTupleModel> &fDstModel;
    ROOT::Internal::RPagePersistentSink &fDestination;
    const ROOT::RNTupleDescriptor &fDstDescriptor;
    RNTupleMergeOptions fMergeOpts;
 
-   // Changes at every source
+   // Changes at every source. InitSource() is supposed to update this right after Attaching the source.
    const ROOT::RNTupleDescriptor *fSrcDescriptor = nullptr;
 
 public:
@@ -944,13 +980,26 @@ public:
 
    virtual ~RNTupleMergeStrategy() = default;
 
+   // Invoked as the first thing when we start processing a new source
    virtual void InitSource(RPageSource &source) = 0;
-   [[nodiscard]] virtual ROOT::RResult<RDescriptorsComparison> CompareSrcAndDstDescriptors() = 0;
+
+   // Invoked when the destination model must be late model extended (only invoked in case of union merging)
    [[nodiscard]] virtual ROOT::RResult<void> ExtendDestinationModel(RDescriptorsComparison &descCmp) = 0;
+
+   // Invoked when merging one source
    [[nodiscard]] virtual ROOT::RResult<void> MergeSource(RPageSource &source, RDescriptorsComparison &descCmp) = 0;
+
+   // Invoked at the end of the whole process, just before committing the dataset
    virtual void BeforeCommit() = 0;
 };
 
+// =========================================================================================
+//
+// MergeStrategyDefault
+//
+// =========================================================================================
+// Strategy used for L1, L2 and L3 merging
+// (https://github.com/root-project/root/blob/master/tree/ntuple/doc/Merging.md#glossary).
 class RNTupleMergeStrategyDefault final : public RNTupleMergeStrategy {
    std::unique_ptr<ROOT::Internal::RPageAllocator> fPageAlloc = std::make_unique<ROOT::Internal::RPageAllocatorHeap>();
    std::optional<ROOT::Experimental::TTaskGroup> fTaskGroup;
@@ -1009,15 +1058,12 @@ public:
       }
    }
 
-   ROOT::RResult<RDescriptorsComparison> CompareSrcAndDstDescriptors() final
-   {
-      return CompareDescriptorStructure(fDstDescriptor, *fSrcDescriptor);
-   }
-
    [[nodiscard]] ROOT::RResult<void> ExtendDestinationModel(RDescriptorsComparison &descCmp) final
    {
       // late model extension for all fExtraSrcFields in Union mode
-      auto res = ::ExtendDestinationModel(descCmp, *fDstModel, fDestination, *fSrcDescriptor, fMergeOpts.fExtraVerbose);
+      auto res = ::ExtendDestinationModel(descCmp, *fDstModel, fDestination, *fSrcDescriptor,
+                                          fDestination.GetNEntries(), fMergeOpts.fExtraVerbose,
+                                          /*forSlowMerge=*/false);
       return res;
    }
 
@@ -1025,7 +1071,6 @@ public:
 
    [[nodiscard]] ROOT::RResult<void> MergeSource(RPageSource &source, RDescriptorsComparison &descCmp) final;
 };
-
 } // namespace
 
 // Given a field, fill `columns` and `mergeData.fColumnIdMap` with information about all columns belonging to it and
@@ -1516,6 +1561,178 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeSource(RPageSource &source
    return res;
 }
 
+// =========================================================================================
+//
+// MergeStrategySlow
+//
+// =========================================================================================
+namespace ROOT::Experimental::Internal {
+// Strategy used for L4 merging (https://github.com/root-project/root/blob/master/tree/ntuple/doc/Merging.md#glossary).
+// This class must be in ROOT::Experimental::Internal because it befriends ROOT::REntry
+class RNTupleMergeStrategySlow final : public RNTupleMergeStrategy {
+   std::unique_ptr<ROOT::REntry> fDstEntry;
+   std::unique_ptr<RNTupleMergeActions> fActions = std::make_unique<RNTupleMergeActions>();
+   RNTupleMergeActionContext fMergeContext;
+
+public:
+   RNTupleMergeStrategySlow(std::unique_ptr<RNTupleModel> &dstModel, ROOT::Internal::RPagePersistentSink &dst,
+                            const RNTupleMergeOptions &mergeOpts)
+      : RNTupleMergeStrategy(dstModel, dst, mergeOpts)
+   {
+      // dstModel is non null iff we are doing an incremental merge. Currently we don't support it.
+      assert(!dstModel);
+   }
+
+   void InitSource(RPageSource &source) final
+   {
+      source.Attach();
+      fSrcDescriptor = &source.GetSharedDescriptorGuard().GetConstRef();
+
+      if (!fDstModel) {
+         ROOT::RNTupleDescriptor::RCreateModelOptions cmOpts;
+         cmOpts.SetCreateBare(true);
+         cmOpts.SetReconstructProjections(true);
+         fDstModel = source.GetSharedDescriptorGuard()->CreateModel(cmOpts);
+         fDestination.Init(*fDstModel);
+         fDstEntry = fDstModel->CreateEntry();
+      }
+   }
+
+   [[nodiscard]] ROOT::RResult<void> ExtendDestinationModel(RDescriptorsComparison &descCmp) final
+   {
+      // late model extension for all fExtraSrcFields in Union mode
+      auto res = ::ExtendDestinationModel(descCmp, *fDstModel, fDestination, *fSrcDescriptor,
+                                          fMergeContext.fDestinationEntryIndex, fMergeOpts.fExtraVerbose,
+                                          /*forSlowMerge=*/true);
+      // recreate the entry since the model has changed
+      fDstEntry = fDstModel->CreateEntry();
+      return res;
+   }
+
+   [[nodiscard]] ROOT::RResult<void> MergeSource(RPageSource &source, RDescriptorsComparison &descCmp) final;
+
+   void BeforeCommit() final
+   {
+      while (true) {
+         auto res = fActions->BeforeCommit(*fDstEntry, fMergeContext);
+         if (res == ENTupleMergeActionResult::kDrop)
+            break;
+         fMergeContext.fDestinationEntryIndex += 1;
+         fDstEntry->Append();
+         if (res == ENTupleMergeActionResult::kEmit)
+            break;
+      }
+
+      // TODO: this should happen more often than once at the end and it should depend on the target cluster size...
+      if (fMergeContext.fDestinationEntryIndex > 0) {
+         fDestination.CommitCluster(fMergeContext.fDestinationEntryIndex);
+      }
+   }
+};
+} // namespace ROOT::Experimental::Internal
+
+ROOT::RResult<void> RNTupleMergeStrategySlow::MergeSource(RPageSource &source, RDescriptorsComparison &descCmp)
+{
+   const auto &dstDesc = fDestination.GetDescriptor();
+
+   // Make sure that types of common fields match
+   for (const auto &[srcField, dstField] : descCmp.fCommonFields) {
+      const auto srcType = fSrcDescriptor->GetTypeNameForComparison(*srcField);
+      const auto dstType = dstDesc.GetTypeNameForComparison(*dstField);
+      if (srcType != dstType) {
+         return R__FAIL("Field `" + fSrcDescriptor->GetQualifiedFieldName(srcField->GetId()) +
+                        "` has a type incompatible with a previously-seen field with the same name: (old: " + srcType +
+                        ", new: " + dstType + ")");
+      }
+   }
+
+   // Impose the destination model on the source. This will ensure we properly schema-evolve the fields if
+   // necessary (e.g. if this source has fewer/reordered fields than the destination)
+   auto srcModel = fDstModel->Clone();
+
+   // NOTE: this code is almost the same as RNTupleReader::ConnectModel().
+   // Perhaps it can be made common?
+   {
+      auto &fieldZero = ROOT::Internal::GetFieldZeroOfModel(*srcModel);
+      ROOT::Internal::SetAllowFieldSubstitutions(fieldZero, true);
+      // We must not use the descriptor guard to prevent recursive locking in field.ConnectPageSource
+      ROOT::DescriptorId_t fieldZeroId = fSrcDescriptor->GetFieldZeroId();
+      fieldZero.SetOnDiskId(fieldZeroId);
+      const auto resetFieldIdAndColumnRepresentatives = [](ROOT::RFieldBase &field,
+                                                           const auto &recursiveCall) -> void {
+         field.SetOnDiskId(ROOT::kInvalidDescriptorId);
+         field.SetColumnRepresentatives({});
+         for (auto *f : field.GetMutableSubfields()) {
+            recursiveCall(*f, recursiveCall);
+         }
+      };
+      // Iterate only over fieldZero's direct subfields; their descendants are recursively handled in
+      // RFieldBase::ConnectPageSource
+      for (auto *field : fieldZero.GetMutableSubfields()) {
+         // We need to reset column reprs otherwise ConnectPageSource fails in case we are changing the column reprs
+         // due to AutoAdjustColumnRepresentatives.
+         // We also need to reset on disk ids otherwise fields get matched with the wrong ones using the writer's ids
+         // (which differ from the reader's)
+         resetFieldIdAndColumnRepresentatives(*field, resetFieldIdAndColumnRepresentatives);
+
+         if (field->GetOnDiskId() == ROOT::kInvalidDescriptorId)
+            field->SetOnDiskId(fSrcDescriptor->FindFieldId(field->GetFieldName(), fieldZeroId));
+
+         // If the OnDiskId is still invalid at this point it means this is an extraDstField
+         // and we shouldn't/cannot connect it.
+         if (field->GetOnDiskId() != ROOT::kInvalidDescriptorId)
+            ROOT::Internal::CallConnectPageSourceOnField(*field, source);
+         else
+            ROOT::Internal::CallSetArtificialOnField(*field);
+      }
+      ROOT::Internal::SetAllowFieldSubstitutions(fieldZero, false);
+   }
+
+   auto srcEntry = srcModel->CreateBareEntry();
+
+   // Create and connect fields to source and sink and bind them together.
+   // This causes a read on the src entry to populate the same memory used by the dst entry to write.
+   for (const auto &[srcFieldDesc, _dstFieldDesc] : descCmp.fCommonFields) {
+      if (!srcFieldDesc->IsProjectedField())
+         srcEntry->BindValue(srcFieldDesc->GetFieldName(), fDstEntry->GetPtr<void>(srcFieldDesc->GetFieldName()));
+   }
+   // reset the extraDstfields, to make sure any subfield that's missing from the current source
+   // is default-initialized (rather than keeping its previous value).
+   for (const auto *field : descCmp.fExtraDstFields) {
+      if (!field->IsProjectedField()) {
+         fDstEntry->EmplaceNewValue(field->GetFieldName());
+      }
+   }
+
+   // Do the actual data reading/writing
+   for (auto idx = 0u; idx < fSrcDescriptor->GetNEntries(); ++idx) {
+      srcEntry->Read(idx);
+      fMergeContext.fSourceEntryIndex = idx;
+      while (true) {
+         auto res = fActions->OnFill(*fDstEntry, fMergeContext);
+         if (res == ENTupleMergeActionResult::kDrop)
+            break;
+         fMergeContext.fDestinationEntryIndex += 1;
+         fDstEntry->Append();
+         if (res == ENTupleMergeActionResult::kEmit)
+            break;
+      }
+   }
+
+   if (fMergeContext.fDestinationEntryIndex > 0) {
+      for (auto &field : ROOT::Internal::GetFieldZeroOfModel(*fDstModel)) {
+         ROOT::Internal::CallFlushColumnsOnField(field);
+      }
+   }
+
+   return ROOT::RResult<void>::Success();
+}
+
+// =========================================================================================
+//
+// RNTupleMerger
+//
+// =========================================================================================
 RNTupleMerger::RNTupleMerger(std::unique_ptr<ROOT::Internal::RPagePersistentSink> destination,
                              std::unique_ptr<ROOT::RNTupleModel> model)
    : fDestination(std::move(destination)), fModel(std::move(model))
@@ -1533,6 +1750,9 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
    RNTupleMergeOptions mergeOpts = mergeOptsIn;
 
    assert(fDestination);
+
+   // TODO(gparolini): this is here to allow testing of the slow merging path, it will disappear in the future.
+   constexpr bool doSlowMerge = false;
 
    // Set compression settings if unset and verify it's compatible with the sink
    {
@@ -1554,6 +1774,10 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
          "merging) can only be done by providing a valid ROOT::RNTupleModel when constructing the RNTupleMerger.");
    }
 
+   if (doSlowMerge && fModel) {
+      return R__FAIL("incremental slow merging is currently unsupported.");
+   }
+
    // NOTE: don't wrap this in a do {} while (0)! It uses continue!
 #define SKIP_OR_ABORT(errMsg)                                                      \
    if (mergeOpts.fErrBehavior == ENTupleMergeErrBehavior::kSkip) {                 \
@@ -1564,12 +1788,13 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
    }
 
    auto strat =
-      std::unique_ptr<RNTupleMergeStrategy>(new RNTupleMergeStrategyDefault(fModel, *fDestination, mergeOpts));
+      doSlowMerge
+         ? std::unique_ptr<RNTupleMergeStrategy>(new RNTupleMergeStrategySlow(fModel, *fDestination, mergeOpts))
+         : std::unique_ptr<RNTupleMergeStrategy>(new RNTupleMergeStrategyDefault(fModel, *fDestination, mergeOpts));
 
    // Merge main loop
    for (RPageSource *source : sources) {
       strat->InitSource(*source);
-
       {
          auto srcDescriptor = source->GetSharedDescriptorGuard();
          if (srcDescriptor->GetVersion() > ROOT::RNTuple::GetCurrentVersion()) {
@@ -1589,12 +1814,18 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
             fDestination->UpdateExtraTypeInfo(extraTypeInfoDesc);
       }
 
-      auto descCmpRes = strat->CompareSrcAndDstDescriptors();
+      auto descCmpRes =
+         CompareDescriptorStructure(fDestination->GetDescriptor(), source->GetSharedDescriptorGuard().GetConstRef());
       if (!descCmpRes) {
          SKIP_OR_ABORT(std::string("Source RNTuple has an incompatible schema with the destination:\n") +
                        descCmpRes.GetError()->GetReport())
       }
       auto descCmp = descCmpRes.Unwrap();
+      // TODO: switch to slow merge if we cannot "fast" merge
+      if (!doSlowMerge && !descCmp.fFastMergeErrors.empty()) {
+         SKIP_OR_ABORT(std::string("Source RNTuple has an incompatible schema with the destination:\n") +
+                       descCmp.fFastMergeErrors)
+      }
 
       // If the current source is missing some fields and we're not in Union mode, error
       // (if we are in Union mode, MergeSourceClusters will fill the missing fields with default values).
