@@ -120,7 +120,7 @@ class _RFile_Put:
     def __init__(self, rfile):
         self._rfile = rfile
 
-    def __call__(self, name, obj):
+    def __call__(self, name, obj, title = ""):
         """
         Non-templated Put()
         """
@@ -132,13 +132,51 @@ class _RFile_Put:
             raise TypeError(f"type {objType} is not supported by ROOT I/O")
         else:
             className = objType.__cpp_name__
-        self._rfile.Put[className](name, obj)
+        self._rfile.Put[className](name, obj, title)
 
     def __getitem__(self, template_arg):
         """
         Templated Put()
         """
         return self._rfile._OriginalPut[template_arg]
+
+
+class _RFile_Overwrite:
+    """
+    Allow overwriting objects through the method Overwrite().
+    This is pythonized to allow Overwrite() to be called both with and without a template argument.
+    It also changes Overwrite's bitmask argument with keyword arguments.
+    """
+
+    def __init__(self, rfile):
+        self._rfile = rfile
+
+    def __call__(self, path, obj = None, **kwargs):
+        """
+        Non-templated Overwrite()
+        """
+
+        title = kwargs['title'] if 'title' in kwargs else ""
+        createNewCycle = kwargs['createNewCycle'] if 'createNewCycle' in kwargs else True
+
+        objType = type(obj)
+        if isinstance(obj, str):
+            # special case: automatically convert python str to std::string
+            className = "std::string"
+        elif not hasattr(objType, "__cpp_name__"):
+            raise TypeError(f"type {objType} is not supported by ROOT I/O")
+        else:
+            className = objType.__cpp_name__
+
+        from ROOT import RFile
+        flags = (0 if createNewCycle else 1) * RFile.kOverwrite_NoNewCycle
+        self._rfile.Overwrite[className](path, obj, title, flags)
+
+    def __getitem__(self, template_arg):
+        """
+        Templated Overwrite()
+        """
+        return self._rfile._OriginalOverwrite[template_arg]
 
 
 def _RFileExit(obj, exc_type, exc_val, exc_tb):
@@ -162,6 +200,8 @@ def _RFileOpen(original):
         rfile.Get = _RFile_Get(rfile)
         rfile._OriginalPut = rfile.Put
         rfile.Put = _RFile_Put(rfile)
+        rfile._OriginalOverwrite = rfile.Overwrite
+        rfile.Overwrite = _RFile_Overwrite(rfile)
         return rfile
 
     return rfile_open_wrapper
