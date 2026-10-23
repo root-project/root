@@ -107,12 +107,41 @@ def _TF1_EvalPar(self, vars, params):
     return numpy.frombuffer(out, dtype=numpy.float64, count=nrows)
 
 
+def _is_python_callable(obj):
+    """Check if obj is a callable defined in Python (not a C++ one)."""
+    import ROOT
+
+    if not callable(obj) or isinstance(obj, (str, type, ROOT._cppyy.types.Instance)):
+        return False
+    return not type(obj).__module__.startswith(("cppyy", "cppjit"))
+
+
+def _annotate_python_callable(args):
+    """
+    Give a Python callable passed as the function of a TF1, TF2 or TF3 the
+    signature `double (*)(double*, double*)` that ROOT expects.
+
+    Without annotations the overload resolution can't know the C++ type of a
+    Python callable, and the constructor template taking an arbitrary
+    function object would be selected (and then fail to convert it).
+    """
+    if len(args) < 2 or not _is_python_callable(args[1]) or getattr(args[1], "__annotations__", None):
+        return args
+
+    pycallable = args[1]
+
+    def annotated(x: "double*", params: "double*") -> "double":
+        return pycallable(x, params)
+
+    return (args[0], annotated) + tuple(args[2:])
+
+
 def _TF1_Constructor(self, *args, **kwargs):
     """
     Forward the arguments to the C++ constructor and retain ownership. This
     helps avoiding double deletes due to ROOT automatic memory management.
     """
-    self._cpp_constructor(*args, **kwargs)
+    self._cpp_constructor(*_annotate_python_callable(args), **kwargs)
     import ROOT
     ROOT.SetOwnership(self, False)
 

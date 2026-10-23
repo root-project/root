@@ -110,7 +110,7 @@ globalChi2Functor = ROOT.Math.Functor(globalChi2, 6)
 
 # fit FCN function
 # (specify optionally data size and flag to indicate that is a chi2 fit)
-fitter.FitFCN(globalChi2Functor, 0, dataB.Size() + dataSB.Size(), True)
+fitter.FitFCN(globalChi2Functor, ROOT.nullptr, dataB.Size() + dataSB.Size(), True)
 result = fitter.Result()
 result.Print(ROOT.std.cout)
 

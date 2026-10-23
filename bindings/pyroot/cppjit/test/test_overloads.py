@@ -89,7 +89,7 @@ class TestOVERLOADS:
         assert more_overloads().call(bb) == "bb_ol"
         assert more_overloads().call(cc_ol()) == "cc_ol"
         dd = cppjit.bind_object(cppjit.nullptr, dd_ol)
-        with raises(TypeError):
+        with raises(ReferenceError):
             more_overloads().call(dd)
         dd = cppjit.gbl.get_dd_ol()
         assert more_overloads().call(dd) == "dd_ol"
@@ -102,10 +102,12 @@ class TestOVERLOADS:
         more_overloads2 = cppjit.gbl.more_overloads2
 
         bb = cppjit.bind_object(cppjit.nullptr, cppjit.gbl.bb_ol)
-        assert more_overloads2().call(bb) == "bb_olptr"
+        with raises(ReferenceError):
+            more_overloads2().call(bb)
 
         dd = cppjit.bind_object(cppjit.nullptr, cppjit.gbl.dd_ol)
-        assert more_overloads2().call(dd, 1) == "dd_olptr"
+        with raises(ReferenceError):
+            more_overloads2().call(dd, 1)
 
     def test05_array_overloads(self):
         """Test functions overloaded on different arrays"""
@@ -260,10 +262,10 @@ class TestOVERLOADS:
         with raises(ns.ConfigFileNotFoundError):
             ns.MyClass1("some_file")
 
-        with raises(TypeError):
+        with raises(ns.ConfigFileNotFoundError):
             ns.MyClass2("some_file")
 
-        with raises(TypeError):
+        with raises(cppjit.OverloadResolutionException):
             ns.MyClass3("some_file")
 
     def test11_deep_inheritance(self):
@@ -475,3 +477,279 @@ class TestOVERLOADS:
         assert constness("static_fn") == {
             "static int OverloadConstness::Probe::static_fn(int x)": False
         }
+
+    def test18_promote_multiple_arguments(self):
+        """Verify that an overload needing several argument promotions resolves."""
+
+        import cppjit
+
+        cppjit.cppdef("""
+        namespace MultiPromotion {
+        std::string join(char* a, char* b) { return std::string(a) + b; }
+        std::string join(int a, int b) { return std::to_string(a + b); }
+        std::string join_mixed(char* a, int b) { return a + std::to_string(b); }
+        std::string join_mixed(int a, char* b) { return std::to_string(a) + b; }
+        }""")
+
+        ns = cppjit.gbl.MultiPromotion
+
+        # both str arguments have to be promoted to char* at the same time
+        assert ns.join("ab", "cd") == "abcd"
+        assert ns.join(1, 2) == "3"
+        # a single promotion
+        assert ns.join_mixed("ab", 1) == "ab1"
+        assert ns.join_mixed(1, "ab") == "1ab"
+
+    def test19_ambiguous_set_has_no_duplicates(self):
+        """Verify that an ambiguous call reports each candidate only once."""
+
+        import cppjit
+
+        cppjit.cppdef("""
+        namespace DupAmbiguity {
+        int f(char* a, double b) { return 1; }
+        int f(char* a, float b) { return 2; }
+        }""")
+
+        # the str argument needs a promotion to char*, which is retried for
+        # each candidate, and every retry is ambiguous on the int argument
+        with raises(cppjit.OverloadAmbiguityException) as exc:
+            cppjit.gbl.DupAmbiguity.f("x", 1)
+
+        msg = str(exc.value)
+        assert msg.count("double b)") == 1
+        assert msg.count("float b)") == 1
+
+    def test20_empty_list_argument(self):
+        """An empty list selects an initializer_list overload"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace EmptyListArg {
+          int f(const std::string&, std::initializer_list<std::string> l) { return (int)l.size(); }
+          int f(const std::string&, const std::string&) { return -1; }
+          int g(std::initializer_list<int> l) { return (int)l.size(); }
+          int g(double) { return -1; }
+        }""")
+
+        ns = cppjit.gbl.EmptyListArg
+        assert ns.f("t", []) == 0
+        assert ns.f("t", ["a"]) == 1
+        assert ns.g([]) == 0
+        assert ns.g(()) == 0
+
+    def test21_overload_by_signature_on_method_set(self):
+        """__overload__ on a set of templated and non-templated methods"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace OverloadBySignature {
+          typedef int Int_type;
+          struct Tree {
+            template <class U> int Branch(const char* name, U* obj, Int_type bufsize = 32000) { return 1; }
+            int Branch(const char* folder, Int_type bufsize = 32000, Int_type split = 99) { return 3; }
+            static int Branch(double) { return 4; }
+          };
+        }""")
+
+        t = cppjit.gbl.OverloadBySignature.Tree()
+        # the signature doesn't match the declaration textually (typedef), so
+        # it goes through the overload resolution
+        m = t.Branch.__overload__("const char*, int, int")
+        assert m(t, "a", 0, 99) == 3
+        # a static method doesn't take the object
+        assert t.Branch.__overload__("double")(1.0) == 4
+        with raises(LookupError):
+            t.Branch.__overload__("double, double, double, double")
+
+    def test22_rvalue_reference_from_other_class(self):
+        """An object of another class binds to T&& through a temporary"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace RvalueFromOther {
+          struct Axis { int n = 3; };
+          struct Variant { Variant(const Axis& a) : n(a.n) {} int n; };
+          int take(Variant&& v) { return v.n; }
+        }""")
+
+        ns = cppjit.gbl.RvalueFromOther
+        a = ns.Axis()
+        assert ns.take(a) == 3
+        v = cppjit.gbl.std.vector[ns.Variant]()
+        v.push_back(a)
+        assert len(v) == 1 and v[0].n == 3
+
+    def test23_enum_data_member_argument(self):
+        """Enum data members keep their type when passed on"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace EnumDataMembers {
+          enum E { A = 1, B = 2 };
+          enum class EC { X = 1, Y = 2 };
+          struct S { static const E e = B; static constexpr EC ec = EC::Y; E m = A; };
+          int f(E) { return 1; }
+          int f(const char*) { return 2; }
+          int g(EC) { return 3; }
+          int g(const char*) { return 4; }
+        }""")
+
+        ns = cppjit.gbl.EnumDataMembers
+        assert type(ns.S.e) is ns.E and ns.S.e == 2
+        assert type(ns.S().m) is ns.E and ns.S().m == 1
+        assert ns.f(ns.S.e) == 1
+        assert ns.f(ns.S().m) == 1
+        assert ns.g(ns.S.ec) == 3
+
+        s = ns.S()
+        s.m = ns.B
+        assert s.m == 2
+
+    def test24_unknown_explicit_template_argument(self):
+        """An unresolvable explicit template argument is an error"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace UnknownTemplateArg {
+          struct Entry {
+            template <class T> int size(int) { return (int)sizeof(T); }
+          };
+        }""")
+
+        e = cppjit.gbl.UnknownTemplateArg.Entry()
+        assert e.size["double"](1) == 8
+        with raises(TypeError):
+            e.size["NoSuchType<int>"](1)
+
+    def test25_keyword_arguments(self):
+        """Keyword arguments are matched to the parameters by name"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace KwArgs {
+          int f(int a, int b = 5, int c = 7) { return 100*a + 10*b + c; }
+          int f(const std::string&) { return -1; }
+          int g(int x) { return 1; }
+          int g(double y) { return 2; }
+          int h(int a, double b = 0., const char* c = "") { return 1; }
+          int h(int a, const char* c) { return 2; }
+          struct S {
+            template <class T> int g(const char*, T* add, void* p = nullptr) { return 1; }
+            int g(const char*, void* add, void* p, int x, bool y) { return 2; }
+            template <class T> int t(T a, int b = 1, int c = 2) { return 10*b + c; }
+            int t(const std::string&, int c) { return -1; }
+          };
+        }""")
+
+        ns = cppjit.gbl.KwArgs
+        # in and out of order, and skipping a defaulted parameter
+        assert ns.f(1, b=2, c=3) == 123
+        assert ns.f(1, c=3, b=2) == 123
+        assert ns.f(1, c=3) == 153
+        assert ns.f(c=3, a=1) == 153
+        # the name selects the overload
+        assert ns.g(x=1) == 1
+        assert ns.g(y=1) == 2
+        # the overload that skips fewer defaulted parameters wins
+        assert ns.h(1, c="x") == 2
+        assert ns.h(1, b=2.0, c="x") == 1
+        # unknown names and arguments given twice
+        with raises(TypeError, match="unexpected keyword argument"):
+            ns.f(1, d=3)
+        with raises(TypeError, match="multiple values"):
+            ns.f(1, a=3)
+
+        # sets of templated and non-templated methods
+        s = ns.S()
+        assert s.g("n", cppjit.nullptr, p=cppjit.nullptr, x=1, y=True) == 2
+        assert s.g("n", cppjit.nullptr, y=True, x=1, p=cppjit.nullptr) == 2
+        assert s.t(1.5, c=3) == 13
+        assert s.t(1.5, c=3, b=2) == 23
+        assert s.t("a", c=3) == -1
+
+    def test26_method_call_on_pointer_member(self):
+        """Overloaded methods called through a pointer data member"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace PtrObject {
+          struct S {
+            int f(int) { return 1; }
+            int f(double) { return 2; }
+          };
+          struct Holder { S* fPtr = new S{}; };
+        }""")
+
+        ns = cppjit.gbl.PtrObject
+        h = ns.Holder()
+        # the proxy of the data member refers to the pointer; the object of the
+        # call is the S it points to, an lvalue
+        assert h.fPtr.f(1) == 1
+        assert h.fPtr.f(1.5) == 2
+        assert ns.S.f(h.fPtr, 1) == 1
+
+    def test27_static_and_non_static_methods(self):
+        """Sets of static and non-static methods don't crash the resolution"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace MixStatic {
+          struct S {
+            int f(int) { return 1; }
+            int f(const char*, int) { return 2; }
+            static int f(S*, const char*, int) { return 3; }
+            static int f(double, double) { return 4; }
+          };
+        }""")
+
+        ns = cppjit.gbl.MixStatic
+        s = ns.S()
+        # called on an object: the non-static methods
+        assert s.f(1) == 1
+        assert s.f("a", 1) == 2
+        # called through the class without an object: the static methods
+        assert ns.S.f(1.0, 2.0) == 4
+        # a static method called on an object would get the object as well;
+        # that isn't supported, but must fail cleanly
+        with raises(TypeError):
+            s.f(1.0, 2.0)
+
+    def test28_base_class_templates_on_derived_object(self):
+        """Template and non-template methods of a base on a derived object"""
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace BaseTemplates {
+          struct Opts {};
+          template <class P, class D = void>
+          struct Base {
+            template <class... T>
+            int s(std::string_view, std::string_view, const std::vector<std::string>&,
+                  const Opts& = Opts()) { return 1; }
+            int s(std::string_view, std::string_view, const std::vector<std::string>&,
+                  const Opts& = Opts()) { return 2; }
+            int s(std::string_view, std::string_view, std::string_view = "",
+                  const Opts& = Opts()) { return 3; }
+          };
+          struct P {};
+          struct Derived : Base<P> {};
+          struct Using : Base<P> { using Base<P>::s; };
+        }""")
+
+        ns = cppjit.gbl.BaseTemplates
+        # as in C++, the object converts to Base& for all candidates, so the
+        # non-template is preferred over the equally good template
+        # (a method brought in by a using-declaration is one of Using itself)
+        for obj in (ns.Derived(), ns.Base[ns.P](), ns.Using()):
+            assert obj.s("t", "f", ("x",)) == 2
+            assert obj.s("t", "f", ("x",), ns.Opts()) == 2

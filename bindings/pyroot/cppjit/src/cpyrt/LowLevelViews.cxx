@@ -864,18 +864,15 @@ static PyObject* ll_array(cpyrt::LowLevelView* self, PyObject* args,
     Py_DECREF(npfrombuf);
 
     return view;
-
-  } else { // copy requested
-    PyObject* npcopy = PyObject_GetAttr(npmod, cpyrt::PyStrings::gCopy);
-    PyObject* newarr =
-        PyObject_CallFunctionObjArgs(npcopy, (PyObject*)self, nullptr);
-    Py_DECREF(npcopy);
-
-    return newarr;
   }
 
-  // never get here
-  return nullptr;
+  // copy requested
+  PyObject* npcopy = PyObject_GetAttr(npmod, cpyrt::PyStrings::gCopy);
+  PyObject* newarr =
+      PyObject_CallFunctionObjArgs(npcopy, (PyObject*)self, nullptr);
+  Py_DECREF(npcopy);
+
+  return newarr;
 }
 
 //---------------------------------------------------------------------------
@@ -1067,6 +1064,16 @@ template <> struct typecode_traits<std::complex<long>> {
   static constexpr const char* name = "std::complex<long>";
 };
 
+// C++ spelling of the element type
+template <typename T> const char* cpp_type_name() {
+  return typecode_traits<T>::name;
+}
+template <> const char* cpp_type_name<signed char>() { return "signed char"; }
+template <> const char* cpp_type_name<unsigned char>() {
+  return "unsigned char";
+}
+template <> const char* cpp_type_name<std::byte>() { return "std::byte"; }
+
 } // unnamed namespace
 
 //---------------------------------------------------------------------------
@@ -1095,6 +1102,7 @@ CreateLowLevelViewT(T* address, cpyrt::cdims_t shape,
   PyObject* args = PyTuple_New(0);
   LowLevelView* llp = (LowLevelView*)LowLevelView_Type.tp_new(
       &LowLevelView_Type, args, nullptr);
+  llp->fCppTypeName = (format ? "void" : cpp_type_name<T>());
   Py_DECREF(args);
 
   Py_buffer& view = llp->fBufInfo;

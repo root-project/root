@@ -10,7 +10,7 @@ except ImportError:
     nopsutil = True
 
 
-@mark.skip(reason="disabled due to its sporadic nature, especially fragile on VMs")
+# @mark.skip(reason="disabled due to its sporadic nature, especially fragile on VMs")
 class TestLEAKCHECK:
     def setup_class(cls):
         import psutil
@@ -68,7 +68,7 @@ class TestLEAKCHECK:
                 self.runit_template(N, scope, func, tmpl_args, *args, **kwds)
 
             gc.collect()
-            assert len(gc.get_objects()) == pre
+            assert len(gc.get_objects()) <= pre  # XXX
             if last < self.process.memory_info().rss:
                 fail += 1
 

@@ -5,82 +5,89 @@ namespace cppjit::cpyrt {
 
 // python strings kept for performance reasons
 
+// X(variable, string): each entry declares PyStrings::variable, holding the
+// interned python string for "string"
+#define CPYRT_PYSTRINGS(X)                                                     \
+  X(gAssign, "__assign__")                                                     \
+  X(gBases, "__bases__")                                                       \
+  X(gBase, "__base__")                                                         \
+  X(gContains, "contains")                                                     \
+  X(gCopy, "copy")                                                             \
+  X(gCppBool, "__cpp_bool__")                                                  \
+  X(gCppName, "__cpp_name__")                                                  \
+  X(gAnnotations, "__annotations__")                                           \
+  X(gCastCpp, "__cast_cpp__")                                                  \
+  X(gCType, "__ctype__")                                                       \
+  X(gDeref, "__deref__")                                                       \
+  X(gPreInc, "__preinc__")                                                     \
+  X(gPostInc, "__postinc__")                                                   \
+  X(gDict, "__dict__")                                                         \
+  X(gEmptyString, "")                                                          \
+  X(gEq, "__eq__")                                                             \
+  X(gFollow, "__follow__")                                                     \
+  X(gHasValue, "has_value")                                                    \
+  X(gGetItem, "__getitem__")                                                   \
+  X(gGetNoCheck, "_getitem__unchecked")                                        \
+  X(gSetItem, "__setitem__")                                                   \
+  X(gInit, "__init__")                                                         \
+  X(gIter, "__iter__")                                                         \
+  X(gLen, "__len__")                                                           \
+  X(gLifeLine, "__lifeline")                                                   \
+  X(gModule, "__module__")                                                     \
+  X(gMRO, "__mro__")                                                           \
+  X(gName, "__name__")                                                         \
+  X(gNe, "__ne__")                                                             \
+  X(gRepr, "__repr__")                                                         \
+  X(gCppRepr, "__cpp_repr")                                                    \
+  X(gStr, "__str__")                                                           \
+  X(gCppStr, "__cpp_str")                                                      \
+  X(gTypeCode, "typecode")                                                     \
+  X(gCTypesType, "_type_")                                                     \
+                                                                               \
+  X(gUnderlying, "__underlying")                                               \
+  X(gRealInit, "__real_init")                                                  \
+                                                                               \
+  X(gAdd, "__add__")                                                           \
+  X(gSub, "__sub__")                                                           \
+  X(gMul, "__mul__")                                                           \
+  X(gDiv, "__truediv__")                                                       \
+                                                                               \
+  X(gLShift, "__lshift__")                                                     \
+  X(gLShiftC, "__lshiftc__")                                                   \
+                                                                               \
+  X(gAt, "at")                                                                 \
+  X(gBegin, "begin")                                                           \
+  X(gEnd, "end")                                                               \
+  X(gFirst, "first")                                                           \
+  X(gSecond, "second")                                                         \
+  X(gSize, "size")                                                             \
+  X(gTemplate, "Template")                                                     \
+  X(gVectorAt, "_vector__at")                                                  \
+  X(gInsert, "insert")                                                         \
+  X(gValueType, "value_type")                                                  \
+  X(gValueTypePtr, "_value_type")                                              \
+  X(gValueSize, "value_size")                                                  \
+                                                                               \
+  X(gCppReal, "__cpp_real")                                                    \
+  X(gCppImag, "__cpp_imag")                                                    \
+                                                                               \
+  X(gThisModule, "cppjit")                                                     \
+                                                                               \
+  X(gDispInit, "_init_dispatchptr")                                            \
+  X(gDispGet, "_get_dispatch")                                                 \
+                                                                               \
+  X(gExPythonize, "__cppjit_explicit_pythonize__")                             \
+  X(gPythonize, "__cppjit_pythonize__")                                        \
+                                                                               \
+  X(gArray, "__array__")                                                       \
+  X(gDType, "dtype")                                                           \
+  X(gFromBuffer, "frombuffer")
+
 namespace PyStrings {
 
-extern PyObject* gAssign;
-extern PyObject* gBases;
-extern PyObject* gBase;
-extern PyObject* gContains;
-extern PyObject* gCopy;
-extern PyObject* gCppBool;
-extern PyObject* gCppName;
-extern PyObject* gAnnotations;
-extern PyObject* gCastCpp;
-extern PyObject* gCType;
-extern PyObject* gDeref;
-extern PyObject* gPreInc;
-extern PyObject* gPostInc;
-extern PyObject* gDict;
-extern PyObject* gEmptyString;
-extern PyObject* gEq;
-extern PyObject* gFollow;
-extern PyObject* gHasValue;
-extern PyObject* gGetItem;
-extern PyObject* gGetNoCheck;
-extern PyObject* gSetItem;
-extern PyObject* gInit;
-extern PyObject* gIter;
-extern PyObject* gLen;
-extern PyObject* gLifeLine;
-extern PyObject* gModule;
-extern PyObject* gMRO;
-extern PyObject* gName;
-extern PyObject* gNe;
-extern PyObject* gRepr;
-extern PyObject* gCppRepr;
-extern PyObject* gStr;
-extern PyObject* gCppStr;
-extern PyObject* gTypeCode;
-extern PyObject* gCTypesType;
-
-extern PyObject* gUnderlying;
-extern PyObject* gRealInit;
-
-extern PyObject* gAdd;
-extern PyObject* gSub;
-extern PyObject* gMul;
-extern PyObject* gDiv;
-
-extern PyObject* gLShift;
-extern PyObject* gLShiftC;
-
-extern PyObject* gAt;
-extern PyObject* gBegin;
-extern PyObject* gEnd;
-extern PyObject* gFirst;
-extern PyObject* gSecond;
-extern PyObject* gSize;
-extern PyObject* gTemplate;
-extern PyObject* gVectorAt;
-extern PyObject* gInsert;
-extern PyObject* gValueType;
-extern PyObject* gValueTypePtr;
-extern PyObject* gValueSize;
-
-extern PyObject* gCppReal;
-extern PyObject* gCppImag;
-
-extern PyObject* gThisModule;
-
-extern PyObject* gDispInit;
-extern PyObject* gDispGet;
-
-extern PyObject* gExPythonize;
-extern PyObject* gPythonize;
-
-extern PyObject* gArray;
-extern PyObject* gDType;
-extern PyObject* gFromBuffer;
+#define CPYRT_DECLARE_PYSTRING(var, str) extern PyObject* var;
+CPYRT_PYSTRINGS(CPYRT_DECLARE_PYSTRING)
+#undef CPYRT_DECLARE_PYSTRING
 
 } // namespace PyStrings
 

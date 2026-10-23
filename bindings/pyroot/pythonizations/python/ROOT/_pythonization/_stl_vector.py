@@ -11,7 +11,7 @@
 import sys
 
 from . import pythonization
-from ._rvec import _array_interface_dtype_map
+from ._rvec import _add_numpy_array_constructor, _array_interface_dtype_map, _fill_from_numpy_array, _is_numpy_array
 
 
 def _data_vec_char(self):
@@ -50,6 +50,42 @@ def _get_array_interface(self):
         }
 
 
+def _is_python_buffer(obj):
+    """Check if obj is a Python object exposing a buffer (e.g. array.array or a
+    numpy array), other than strings and C++ objects."""
+    import ROOT
+
+    if isinstance(obj, (str, bytes, bytearray)) or isinstance(obj, ROOT._cppyy.types.Instance):
+        return False
+    try:
+        memoryview(obj).release()
+    except TypeError:
+        return False
+    return True
+
+
+def _vector_iadd(self, other):
+    """vec += buffer: append copies of the elements of a Python buffer.
+
+    The overload resolution of the bindings does not convert a buffer into a
+    container (or an initializer list) implicitly, as that would be a hidden
+    deep copy, so std::vector::insert() can't take it. Appending with += is
+    explicit, so the elements are copied here.
+    """
+    if not _is_python_buffer(other):
+        return self._original_iadd(other)
+    if not _is_numpy_array(other):
+        try:
+            import numpy as np
+        except ImportError:
+            for elem in memoryview(other).tolist():
+                self.push_back(elem)
+            return self
+        other = np.asarray(other)
+    _fill_from_numpy_array(self, other)
+    return self
+
+
 def _add_array_interface_property(klass):
     value_type = getattr(klass, "value_type", None)
     if value_type in _array_interface_dtype_map:
@@ -63,6 +99,14 @@ def pythonize_stl_vector(klass, name):
 
     # Add numpy array interface
     _add_array_interface_property(klass)
+
+    # Allow the construction from a numpy array (by copy)
+    _add_numpy_array_constructor(klass)
+
+    # Allow appending the elements of a Python buffer (by copy) with +=
+    if hasattr(klass, "__iadd__"):
+        klass._original_iadd = klass.__iadd__
+        klass.__iadd__ = _vector_iadd
 
     # Inject custom vector<char>::data()
     value_type = getattr(klass, 'value_type', None)

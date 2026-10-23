@@ -67,6 +67,8 @@ TCppType_t ResolveEnumReferenceType(TCppType_t type);
 RPY_EXPORTED
 TCppType_t ResolveEnumPointerType(TCppType_t type);
 RPY_EXPORTED
+TCppType_t GetNonReferenceType(TCppType_t type);
+RPY_EXPORTED
 TCppType_t GetRealType(TCppType_t type);
 RPY_EXPORTED
 TCppType_t GetPointerType(TCppType_t type);
@@ -93,7 +95,7 @@ TCppType_t GetType(const std::string& name, bool enable_slow_lookup = false);
 RPY_EXPORTED
 bool AppendTypesSlow(const std::string& name,
                      std::vector<Cpp::TemplateArgInfo>& types,
-                     TCppScope_t parent = nullptr);
+                     TCppScope_t parent = nullptr, bool append_unknown = false);
 RPY_EXPORTED
 TCppType_t GetComplexType(const std::string& element_type);
 RPY_EXPORTED
@@ -249,6 +251,8 @@ RPY_EXPORTED
 bool IsSmartPtr(TCppScope_t klass);
 RPY_EXPORTED
 bool GetSmartPtrInfo(const std::string&, TCppScope_t* raw, TCppMethod_t* deref);
+RPY_EXPORTED
+bool GetSmartPtrInfo(TCppScope_t, TCppScope_t* raw, TCppMethod_t* deref);
 // calculate offsets between declared and actual type, up-cast: direction > 0;
 // down-cast: direction < 0
 RPY_EXPORTED
@@ -321,14 +325,41 @@ bool IsTemplatedMethod(TCppMethod_t method);
 RPY_EXPORTED
 bool IsStaticTemplate(TCppScope_t scope, const std::string& name);
 RPY_EXPORTED
+// The arguments in proto end with the values of the keyword arguments named
+// kw_names (if any), which are matched to the parameters by name.
 TCppMethod_t GetMethodTemplate(TCppScope_t scope, const std::string& name,
-                               const std::string& proto);
+                               const std::string& proto,
+                               std::vector<TCppMethod_t>& ambiguous_candidates,
+                               bool include_non_templated = false,
+                               const std::vector<std::string>& kw_names = {});
+// Select the overload of the (templated) method set name of scope that takes
+// the parameters in the comma-separated signature sig (without the object of
+// non-static methods), instantiating it as necessary.
+RPY_EXPORTED
+TCppMethod_t
+GetMethodBySignature(TCppScope_t scope, const std::string& name,
+                     const std::string& sig,
+                     std::vector<TCppMethod_t>& ambiguous_candidates,
+                     bool include_non_templated = false);
+RPY_EXPORTED
+bool IsNonStaticMethod(TCppMethod_t func);
+RPY_EXPORTED
+TCppMethod_t BestOverloadFunctionMatch(
+    const std::vector<TCppMethod_t>& candidates, const std::string& proto,
+    std::vector<TCppMethod_t>& ambiguous_candidates,
+    TCppScope_t parent_scope = nullptr, bool is_operator = false,
+    const std::vector<std::string>& kw_names = {});
+RPY_EXPORTED
+bool IsOperator(TCppScope_t scope);
+RPY_EXPORTED
+bool IsConversionOperator(TCppScope_t scope);
 RPY_EXPORTED
 void GetClassOperators(TCppScope_t klass, const std::string& opname,
                        std::vector<TCppMethod_t>& operators);
 RPY_EXPORTED
 TCppMethod_t GetGlobalOperator(TCppScope_t scope, const std::string& lc,
-                               const std::string& rc, const std::string& op);
+                               const std::string& rc, const std::string& op,
+                               std::vector<TCppMethod_t>& ambiguous_candidates);
 
 // method properties ---------------------------------------------------------
 RPY_EXPORTED

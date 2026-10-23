@@ -289,6 +289,26 @@ def _function_pointer_type(func):
     return f"{ret} (*)({', '.join(_cpp_type_name(func, p) for p in params)})"
 
 
+def _column_names(cols):
+    """
+    Convert a Python list of column names to the std::vector<std::string> of
+    the RDataFrame interfaces. The overload resolution doesn't treat a list
+    like a C++ braced-init-list (for an empty one in particular), so for
+    templated methods like Define it couldn't select the overload taking the
+    column names.
+    """
+    import ROOT
+
+    names = ROOT.std.vector["std::string"]()
+    for name in cols:
+        names.push_back(name)
+    return names
+
+
+def _column_lists_to_vectors(args):
+    return tuple(_column_names(arg) if isinstance(arg, list) else arg for arg in args)
+
+
 def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     """
     Filters the entries of RDF according to a given condition.
@@ -368,10 +388,10 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     import ROOT
 
     if isinstance(func, (ROOT._cppyy.types.Function, ROOT._cppyy.types.Template)):
-        return rdf._OriginalFilter(_resolve_overload_based_on_cols(func, rdf, col_list), *args)
+        return rdf._OriginalFilter(_resolve_overload_based_on_cols(func, rdf, col_list), *_column_lists_to_vectors(args))
 
     if isinstance(func, ROOT._cppyy.types.Instance):
-        return rdf._OriginalFilter(func, *args)
+        return rdf._OriginalFilter(func, *_column_lists_to_vectors(args))
 
     if not hasattr(func, "__cpp_wrapper__"):  # not decorated with ROOT.Numba.Declare
         if extra_args:
@@ -450,9 +470,9 @@ def _PyDefine(rdf, col_name, callable_or_str, cols=[], extra_args={}):
     import ROOT
 
     if isinstance(func, (ROOT._cppyy.types.Function, ROOT._cppyy.types.Template)):
-        return rdf._OriginalDefine(col_name, _resolve_overload_based_on_cols(func, rdf, cols), cols)
+        return rdf._OriginalDefine(col_name, _resolve_overload_based_on_cols(func, rdf, cols), _column_names(cols))
     if isinstance(func, ROOT._cppyy.types.Instance):
-        return rdf._OriginalDefine(col_name, func, cols)
+        return rdf._OriginalDefine(col_name, func, _column_names(cols))
 
     if not hasattr(func, "__cpp_wrapper__"):  # not decorated with ROOT.Numba.Declare
         if extra_args:

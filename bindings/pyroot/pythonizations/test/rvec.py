@@ -35,6 +35,10 @@ class RVec(unittest.TestCase):
         v1 = ROOT.VecOps.RVec['float']()
         v2 = ROOT.RVec['float']()
 
+    def test_construction_from_generator(self):
+        """An RVec can be constructed from a generator of its elements"""
+        v = ROOT.VecOps.RVec["int"](i * i for i in range(4))
+        self.assertEqual(list(v), [0, 1, 4, 9])
 
 if __name__ == '__main__':
     unittest.main()

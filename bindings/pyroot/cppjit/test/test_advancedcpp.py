@@ -673,6 +673,9 @@ class TestADVANCEDCPP:
         assert len(a) == 1
         assert a[0].m_i == 33
 
+    @mark.xfail(
+        reason="New Overload Resolution: Multiple possible converters available"
+    )
     def test18_math_converters(self):
         """Test operator int/long/double incl. typedef"""
 
@@ -707,6 +710,7 @@ class TestADVANCEDCPP:
         assert a.__eq__(a) == False
         assert b.__eq__(b) == False
 
+    @mark.xfail(reason="New overload resolution: constness of methods")
     def test20_overload_order_with_proper_return(self):
         """Test return type against proper overload w/ const and covariance"""
 

@@ -359,8 +359,7 @@ void cpyrt::CPPDataMember::Set(interop::TCppScope_t scope,
     type = interop::GetDatamemberType(fScope);
     fFullType = interop::GetTypeAsString(type);
 
-    // Get the integer type if it's an enum
-    if (interop::IsEnumType(type))
+    if (interop::IsEnumType(type) && fFullType == "std::byte")
       type = interop::ResolveType(type);
 
     if (interop::IsConstVar(fScope))
@@ -380,17 +379,6 @@ void cpyrt::CPPDataMember::Set(interop::TCppScope_t scope,
 
   if (!(fFlags & kIsEnumPrep))
     fDescription = PyUnicode_FromString(name.c_str());
-}
-
-//-----------------------------------------------------------------------------
-void cpyrt::CPPDataMember::Set(interop::TCppScope_t scope,
-                               const std::string& name, void* address) {
-  fEnclosingScope = scope;
-  fDescription = PyUnicode_FromString(name.c_str());
-  fOffset = (intptr_t)address;
-  fFlags = kIsStaticData | kIsConstData;
-  fConverter = CreateConverter("internal_enum_type_t");
-  fFullType = "unsigned int";
 }
 
 //-----------------------------------------------------------------------------

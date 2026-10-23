@@ -130,6 +130,76 @@ _array_interface_dtype_map = {
 }
 
 
+def _is_numpy_array(obj):
+    """Check if obj is a numpy array, without importing numpy."""
+    np = sys.modules.get("numpy")
+    return np is not None and isinstance(obj, np.ndarray)
+
+
+def _fill_from_numpy_array(self, arr):
+    """Append copies of the elements of the numpy array arr to the std::vector
+    or RVec self.
+
+    The overload resolution does not convert a numpy array into a container
+    implicitly, as that would be a hidden deep copy. Constructing a container
+    from an array is explicit though, so the copy is done here: with a single
+    memory copy if the element type is a numerical one, converting the array
+    to that type first if needed, and element-wise otherwise.
+    """
+    import ctypes
+
+    import numpy as np
+
+    import ROOT
+
+    flat = arr.ravel()
+    value_type = getattr(type(self), "value_type", None)
+    kind = _array_interface_dtype_map.get(value_type)
+    if kind in ("i", "u", "f"):
+        dtype = np.dtype("{}{}".format(kind, ROOT._cppyy.sizeof(value_type)))
+        src = np.ascontiguousarray(flat, dtype=dtype)
+        offset = self.size()
+        self.resize(offset + src.size)
+        if src.size:
+            try:
+                dst = ROOT._cppyy.ll.addressof(self.data()) + offset * dtype.itemsize
+            except TypeError:
+                # no address for the data, e.g. std::vector<char>::data() is
+                # converted to a Python str
+                for i, elem in enumerate(src.tolist()):
+                    self[offset + i] = elem
+            else:
+                ctypes.memmove(dst, src.ctypes.data, src.nbytes)
+    else:
+        for elem in flat.tolist():
+            self.push_back(elem)
+
+
+def _container_init(self, *args, **kwargs):
+    """Constructor of std::vector and RVec that also accepts a numpy array or
+    an iterator (e.g. a generator) of elements."""
+    import collections.abc
+
+    import ROOT
+
+    if len(args) == 1 and not kwargs:
+        if _is_numpy_array(args[0]):
+            self._original_init()
+            _fill_from_numpy_array(self, args[0])
+            return
+        if isinstance(args[0], collections.abc.Iterator) and not isinstance(args[0], ROOT._cppyy.types.Instance):
+            # an iterator has no C++ type in the overload resolution, unlike
+            # a list of its elements
+            self._original_init(list(args[0]))
+            return
+    self._original_init(*args, **kwargs)
+
+
+def _add_numpy_array_constructor(klass):
+    klass._original_init = klass.__init__
+    klass.__init__ = _container_init
+
+
 def _get_cpp_type_from_numpy_type(dtype):
     cpptypes = {
         "i1": "signed char",
@@ -258,3 +328,6 @@ def pythonize_rvec(klass, name):
 
     # Add numpy array interface
     add_array_interface_property(klass, name)
+
+    # Allow the construction from a numpy array (by copy)
+    _add_numpy_array_constructor(klass)

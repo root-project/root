@@ -53,18 +53,16 @@ class RDataFrameMisc(unittest.TestCase):
         """
         # LLVM JIT fails to catch exceptions on Windows, so we disable their testing
         if not platform.system() == "Windows":
-            # With implicit conversions, cppyy also needs to try dispatching to the various
-            # constructor overloads. The C++ exception will be thrown, but will be incapsulated
-            # in a more generic TypeError telling the user that none of the overloads worked
-            with self.assertRaisesRegex(TypeError, "RDataFrame: empty list of input files."):
+            # The overload resolution selects a single constructor, so the real C++
+            # exception surfaces, whether the list of files is given as a Python
+            # sequence or as an explicit vector of strings
+            with self.assertRaisesRegex(ROOT.std.invalid_argument, "RDataFrame: empty list of input files."):
                 ROOT.RDataFrame("events", [])
 
-            # When passing explicitly the vector of strings, type dispatching will not be necessary
-            # and the real C++ exception will immediately surface
             with self.assertRaisesRegex(ROOT.std.invalid_argument, "RDataFrame: empty list of input files."):
                 ROOT.RDataFrame("events", ROOT.std.vector[ROOT.std.string]())
 
-            with self.assertRaisesRegex(TypeError, "RDataFrame: empty list of input files."):
+            with self.assertRaisesRegex(ROOT.std.invalid_argument, "RDataFrame: empty list of input files."):
                 ROOT.RDataFrame("events", ())
 
     def _get_rdf(self, dataset):
@@ -85,6 +83,36 @@ class RDataFrameMisc(unittest.TestCase):
 
     def _filter_x(self, rdf):
         return rdf.Filter("x > 2")
+
+    def test_filenames_from_generator(self):
+        """
+        The list of input files can be given as a generator
+        """
+        filename = "rdataframe_misc_generator.root"
+        ROOT.RDataFrame(5).Define("x", "1.").Snapshot("events", filename)
+        try:
+            rdf = ROOT.RDataFrame("events", (f for f in [filename, filename]))
+            self.assertEqual(rdf.Count().GetValue(), 10)
+        finally:
+            os.remove(filename)
+
+    def test_rungraphs_with_list(self):
+        """
+        RunGraphs accepts a Python list of result pointers
+        """
+        rdf = ROOT.RDataFrame(10).Define("x", "1.")
+        h = rdf.Histo1D("x")
+        s = rdf.Sum("x")
+        self.assertEqual(ROOT.RDF.RunGraphs([h, s]), 1)
+        self.assertEqual(s.GetValue(), 10.0)
+
+    def test_histond_model_from_tuple(self):
+        """
+        The model of HistoND can be given as a tuple of constructor arguments
+        """
+        rdf = ROOT.RDataFrame(10).Define("x0", "1.").Define("x1", "2.")
+        h = rdf.HistoND(("name", "title", 2, [4, 4], [0.0, 0.0], [5.0, 5.0]), ("x0", "x1"))
+        self.assertEqual(h.GetEntries(), 10)
 
     def _test_rdf_in_function(self, chain):
         rdf = ROOT.RDataFrame(chain)

@@ -27,6 +27,7 @@ public:
   void** fBuf;
   Converter* fConverter;
   Converter* fElemCnv;
+  const char* fCppTypeName;
 
   typedef LowLevelView* (*Creator_t)(void*, cdims_t);
   Creator_t fCreator; // for slicing, which requires copying

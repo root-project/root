@@ -11,7 +11,7 @@ class RDataFrameMergeResults(unittest.TestCase):
     """Various tests for the RMergeableValue family of classes."""
 
     def test_wrong_merge(self):
-        """Merging results of different operations raises `TypeError`"""
+        """Merging results of different operations raises `std::invalid_argument`"""
         df = ROOT.RDataFrame(100)
 
         min = df.Min("rdfentry_")
@@ -20,7 +20,7 @@ class RDataFrameMergeResults(unittest.TestCase):
         mmin = GetMergeableValue(min)
         mmax = GetMergeableValue(max)
 
-        self.assertRaises(TypeError, MergeValues, mmin, mmax)
+        self.assertRaises(ROOT.std.invalid_argument, MergeValues, mmin, mmax)
 
     def test_pickle_mean(self):
         """Merge two averages, pickle and merge again."""

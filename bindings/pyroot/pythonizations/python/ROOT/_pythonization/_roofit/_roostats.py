@@ -11,7 +11,7 @@
 ################################################################################
 
 from .. import pythonization
-from ._utils import _kwargs_to_roocmdargs, cpp_signature
+from ._utils import _kwargs_to_roocmdargs, _sequences_to_roo_collections, cpp_signature
 
 
 class SPlot(object):
@@ -90,3 +90,34 @@ class SPlot(object):
 
         klass._AddSWeight = klass.AddSWeight
         klass.AddSWeight = SPlot._SPlot_AddSWeight
+
+
+_modelconfig_set_methods = [
+    "SetParameters",
+    "SetParametersOfInterest",
+    "SetNuisanceParameters",
+    "SetConstraintParameters",
+    "SetObservables",
+    "SetConditionalObservables",
+    "SetGlobalObservables",
+    "SetExternalConstraints",
+    "SetSnapshot",
+]
+
+
+def _modelconfig_set_method(cpp_method):
+    def set_method(self, *args, **kwargs):
+        r"""Convert a Python sequence of RooFit objects to the RooArgSet of the
+        C++ method, which the overload resolution doesn't do for a Python list.
+        """
+        return cpp_method(self, *_sequences_to_roo_collections(args), **kwargs)
+
+    set_method.__doc__ = cpp_method.__doc__
+    return set_method
+
+
+@pythonization("ModelConfig", ns="RooStats")
+def pythonize_modelconfig(klass):
+    for name in _modelconfig_set_methods:
+        if hasattr(klass, name):
+            setattr(klass, name, _modelconfig_set_method(getattr(klass, name)))

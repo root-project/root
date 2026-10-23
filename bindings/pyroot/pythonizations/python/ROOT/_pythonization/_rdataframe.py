@@ -525,6 +525,8 @@ def pythonize_rdataframe(klass):
         "Histo3D": RDF.TH3DModel,
         "Profile1D": RDF.TProfile1DModel,
         "Profile2D": RDF.TProfile2DModel,
+        "HistoND": RDF.THnDModel,
+        "HistoNSparseD": RDF.THnSparseDModel,
     }
 
     for method_name, model_class in methods_with_TModel.items():

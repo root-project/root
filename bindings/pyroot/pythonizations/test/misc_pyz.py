@@ -129,6 +129,56 @@ class TContextContextManager(unittest.TestCase):
         self.constructor_twoargs()
 
 
+class TLegendAddEntry(unittest.TestCase):
+    """
+    Test the pythonization of TLegend::AddEntry
+    """
+
+    def test_entry_without_object(self):
+        leg = ROOT.TLegend(0.1, 0.1, 0.3, 0.3)
+        for null in (0, None, ROOT.nullptr):
+            entry = leg.AddEntry(null, "header", "")
+            self.assertEqual(entry.GetLabel(), "header")
+            self.assertFalse(entry.GetObject())
+
+    def test_entry_with_object(self):
+        leg = ROOT.TLegend(0.1, 0.1, 0.3, 0.3)
+        h = ROOT.TH1F("h_tlegend_addentry", "", 1, 0, 1)
+        entry = leg.AddEntry(h, "histogram", "l")
+        self.assertEqual(entry.GetLabel(), "histogram")
+        self.assertEqual(entry.GetObject(), h)
+
+class TColorGetColor(unittest.TestCase):
+    """
+    Test the pythonization of TColor::GetColor
+    """
+
+    def test_float_and_int_components(self):
+        c_float = ROOT.TColor.GetColor(1.0, 0.25, 0.0)
+        color = ROOT.gROOT.GetColor(c_float)
+        self.assertAlmostEqual(color.GetGreen(), 0.25, places=2)
+        self.assertEqual(ROOT.TColor.GetColor(1.0, 0.25, 0.0, 1.0), c_float)
+
+        c_int = ROOT.TColor.GetColor(255, 128, 0)
+        self.assertEqual(ROOT.TColor.GetColor("#ff8000"), c_int)
+
+class TTextStringOverloads(unittest.TestCase):
+    """
+    A Python string selects the `const char*` overloads of TText, which also
+    has `const wchar_t*` ones
+    """
+
+    def test_text(self):
+        t = ROOT.TText(0.5, 0.5, "Signal")
+        self.assertEqual(t.GetTitle(), "Signal")
+        t.SetText(0.1, 0.2, "Background")
+        self.assertEqual(t.GetTitle(), "Background")
+        self.assertEqual(t.GetX(), 0.1)
+
+    def test_latex(self):
+        latex = ROOT.TLatex(0.5, 0.5, "#alpha")
+        self.assertEqual(latex.GetTitle(), "#alpha")
+
 class TestTComplexOperators(unittest.TestCase):
     """
     Test for the operators of TComplex:

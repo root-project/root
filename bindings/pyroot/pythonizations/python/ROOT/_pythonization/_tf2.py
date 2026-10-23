@@ -8,6 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 from . import pythonization
+from ._tf1 import _annotate_python_callable
 
 
 def _TF2_constructor(self, *args, **kwargs):
@@ -15,7 +16,7 @@ def _TF2_constructor(self, *args, **kwargs):
     Forward the arguments to the C++ constructor and retain ownership. This
     helps avoiding double deletes due to ROOT automatic memory management.
     """
-    self._cpp_constructor(*args, **kwargs)
+    self._cpp_constructor(*_annotate_python_callable(args), **kwargs)
     import ROOT
     ROOT.SetOwnership(self, False)
 

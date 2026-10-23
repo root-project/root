@@ -17,6 +17,8 @@
 #include "CommonDefs.h"
 #include "cppjit_interop.h"
 
+#include "cpyrt/DispatchPtr.h"
+
 // Standard
 #include <utility>
 #include <vector>
@@ -145,5 +147,50 @@ template <typename T> inline bool CPPInstance_CheckExact(T* object) {
 void op_dealloc_nofree(CPPInstance*);
 
 } // namespace cppjit::cpyrt
+
+//- private helpers ----------------------------------------------------------
+namespace {
+
+// Several specific use cases require extra data in a CPPInstance, but can not
+// be a new type. E.g. cross-inheritance derived types are by definition added
+// a posterio, and caching of datamembers is up to the datamember, not the
+// instance type. To not have normal use of CPPInstance take extra memory, this
+// extended data can slot in place of fObject for those use cases.
+
+struct ExtendedData {
+  ExtendedData()
+      : fObject(nullptr), fSmartClass(nullptr), fDispatchPtr(nullptr),
+        fArraySize(0) {}
+  ~ExtendedData() {
+    for (auto& pc : fDatamemberCache)
+      Py_XDECREF(pc.second);
+    fDatamemberCache.clear();
+  }
+
+  // the original object reference it replaces (Note: has to be first data
+  // member, see usage in GetObjectRaw(), e.g. for ptr-ptr passing)
+  void* fObject;
+
+  // for caching expensive-to-create data member representations
+  cppjit::cpyrt::CI_DatamemberCache_t fDatamemberCache;
+
+  // for smart pointer types
+  cppjit::cpyrt::CPPSmartClass* fSmartClass;
+
+  // for back-referencing from Python-derived instances
+  cppjit::cpyrt::DispatchPtr* fDispatchPtr;
+
+  // for representing T* as a low-level array
+  Py_ssize_t fArraySize;
+};
+
+} // unnamed namespace
+
+#define EXT_OBJECT(pyobj) ((ExtendedData*)((pyobj)->fObject))->fObject
+#define DATA_CACHE(pyobj) ((ExtendedData*)((pyobj)->fObject))->fDatamemberCache
+#define SMART_CLS(pyobj) ((ExtendedData*)((pyobj)->fObject))->fSmartClass
+#define SMART_TYPE(pyobj) SMART_CLS(pyobj)->fCppType
+#define DISPATCHPTR(pyobj) ((ExtendedData*)((pyobj)->fObject))->fDispatchPtr
+#define ARRAY_SIZE(pyobj) ((ExtendedData*)((pyobj)->fObject))->fArraySize
 
 #endif // !CPYRT_CPPINSTANCE_H

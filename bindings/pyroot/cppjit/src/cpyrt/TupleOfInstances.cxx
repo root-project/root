@@ -204,9 +204,6 @@ PyObject* TupleOfInstances_New(interop::TCppObject_t address,
 
     return arr;
   }
-
-  // never get here
-  return nullptr;
 }
 
 //= cpyrt custom tuple-like array type ====================================

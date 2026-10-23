@@ -779,6 +779,81 @@ class TestLOWLEVEL:
             ctypes.cast(ctypes.c_void_p(addr), ctypes.POINTER(ctypes.c_int))
         )
 
+    def test19_ctypes_overloads(self):
+        """ctypes objects select the matching overload or template"""
+
+        import ctypes
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace CTypesOverloads {
+          int  f(int& i)         { i = 42; return 1; }
+          int  f(double& d)      { d = 4.2; return 2; }
+          int  f(signed char& c) { c = 7; return 3; }
+          int  p(int* i)         { *i = 43; return 1; }
+          int  p(double* d)      { *d = 4.3; return 2; }
+          int  pp(int** i)       { static int v = 5; *i = &v; return 1; }
+          int  pp(double** d)    { return 2; }
+          template <class T> int t(T*) { return (int)sizeof(T); }
+          long v(void* x)        { return (long)x; }
+          long v(double)         { return -1; }
+          int  a(int* x)         { return x[1]; }
+          int  a(double* x)      { return -1; }
+          int  s(char* c)        { return c[0]; }
+          int  s(int)            { return -1; }
+        }""")
+
+        ns = cppjit.gbl.CTypesOverloads
+
+        i = ctypes.c_int(0)
+        assert ns.f(i) == 1 and i.value == 42
+        d = ctypes.c_double(0)
+        assert ns.f(d) == 2 and d.value == 4.2
+        b = ctypes.c_byte(0)
+        assert ns.f(b) == 3 and b.value == 7
+
+        i = ctypes.c_int(0)
+        assert ns.p(i) == 1 and i.value == 43
+        d = ctypes.c_double(0)
+        assert ns.p(ctypes.byref(d)) == 2 and d.value == 4.3
+
+        ip = ctypes.POINTER(ctypes.c_int)()
+        assert ns.pp(ip) == 1 and ip[0] == 5
+
+        assert ns.t(ctypes.c_double(0)) == 8
+        assert ns.v(ctypes.c_void_p(0x1234)) == 0x1234
+        assert ns.a((ctypes.c_int * 3)(1, 2, 3)) == 2
+        assert ns.s(ctypes.c_char_p(b"A")) == ord("A")
+
+    def test20_numpy_overloads(self):
+        """numpy scalars and arrays select the matching overload"""
+
+        try:
+            import numpy as np
+        except ImportError:
+            skip("numpy is not installed")
+
+        import cppjit
+
+        cppjit.cppdef("""\
+        namespace NumpyOverloads {
+          int f(double, double) { return 1; }
+          int f(const char*, double) { return 2; }
+          double a(int n, const double* x) { double s = 0; for (int i = 0; i < n; ++i) s += x[i]; return s; }
+          double a(int n, const float* x) { return -1.; }
+          int v(const std::vector<double>& v) { return (int)v.size(); }
+          int v(int) { return -1; }
+        }""")
+
+        ns = cppjit.gbl.NumpyOverloads
+        assert ns.f(np.float64(1.0), np.float64(2.0)) == 1
+        assert ns.a(3, np.array([1.0, 2.0, 3.0])) == 6.0
+        assert ns.a(2, np.array([1.0, 2.0], dtype=np.float32)) == -1.0
+        # no implicit copy of an array into a std::vector
+        with raises(cppjit.OverloadResolutionException):
+            ns.v(np.array([1.0, 2.0]))
+
 
 class TestMULTIDIMARRAYS:
     def setup_class(cls):

@@ -205,6 +205,16 @@ class RNTupleContextWrapper:
         return False
    
 
+def _entry_ref(entry):
+    # CreateEntry() returns a std::unique_ptr<REntry>, which (as in C++) doesn't
+    # bind to the REntry& parameters of Fill() and LoadEntry(): pass the entry
+    # it points to
+    smartptr = getattr(entry, "__smartptr__", None)
+    if smartptr is not None and smartptr() is not None:
+        return smartptr().get()
+    return entry
+
+
 def _RNTupleReader_Open(maybe_model, *args):
     if hasattr(type(maybe_model), "__cpp_name__") and type(maybe_model).__cpp_name__ == "ROOT::RNTupleModel":
         # In Python, the user cannot create REntries directly from a model, so we can safely clone it and avoid destructively passing the user argument.
@@ -217,7 +227,7 @@ def _RNTupleReader_Open(maybe_model, *args):
 def _RNTupleReader_LoadEntry(self, *args):
     if len(args) < 2:
         raise ValueError("default entries are not supported in Python, pass explicit entry")
-    return self._LoadEntry(*args)
+    return self._LoadEntry(args[0], _entry_ref(args[1]), *args[2:])
 
 
 @pythonization("RNTupleReader", ns="ROOT")
@@ -249,7 +259,7 @@ def _RNTupleWriter_Recreate(model_or_fields, *args):
 def _RNTupleWriter_Fill(self, *args):
     if len(args) < 1:
         raise ValueError("default entries are not supported in Python, pass explicit entry")
-    return self._Fill(*args)
+    return self._Fill(_entry_ref(args[0]), *args[1:])
 
 
 def _RNTupleWriter_exit(self):

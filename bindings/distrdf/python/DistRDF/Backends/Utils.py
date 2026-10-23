@@ -257,7 +257,17 @@ def merge_values(mergeable_out, mergeable_in):
     Generally the arguments are `RMergeableValue` instances that can be directly
     passed to the C++ function responsible for merging them.
     """
-    ROOT.Detail.RDF.MergeValues(mergeable_out, mergeable_in)
+    # The mergeables are usually held by std::unique_ptrs: pass the objects
+    # themselves, as passing the smart pointers would select the MergeValues
+    # overload that takes (and thus moves) them by value.
+    ROOT.Detail.RDF.MergeValues(_pointee(mergeable_out), _pointee(mergeable_in))
+
+
+def _pointee(obj):
+    """Return the object a smart pointer proxy points to, or the object itself."""
+    smartptr = getattr(obj, "__smartptr__", None)
+    smartptr = smartptr() if smartptr is not None else None
+    return smartptr.get() if smartptr else obj
 
 
 @merge_values.register(AsNumpyResult)

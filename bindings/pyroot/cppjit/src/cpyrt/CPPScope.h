@@ -23,6 +23,8 @@ typedef struct {
 #endif
 
 // Standard
+#include "Python.h"
+#include "cppjit_interop.h"
 #include <map>
 #include <vector>
 

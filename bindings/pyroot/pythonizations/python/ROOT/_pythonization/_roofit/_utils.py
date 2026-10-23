@@ -40,7 +40,7 @@ def _kwargs_to_roocmdargs(*args, **kwargs):
             # function. If this doesn't succeed, the tuple, list, or dict,
             # will be passed directly to the function as it's only argument.
             if isinstance(v, (tuple, list, set)):
-                return func(*v)
+                return func(*_sequences_to_roo_collections(v))
             elif isinstance(v, (dict,)):
                 return func(**v)
         except Exception:
@@ -50,7 +50,45 @@ def _kwargs_to_roocmdargs(*args, **kwargs):
 
     if kwargs:
         args = args + tuple((getter(k, v) for k, v in kwargs.items()))
-    return args, {}
+    return _sequences_to_roo_collections(args), {}
+
+
+def _roo_collection_elements(seq):
+    """Helper function to prepare the elements of a Python sequence for the
+    variadic constructors of RooArgList and RooArgSet.
+
+    Numbers are replaced by RooFit::RooConst(), which is what the C++
+    collections do for doubles. This is needed because the constructor taking
+    a double first is explicit and therefore not usable in implicit
+    conversions, e.g. of a list of coefficients to a `const RooArgList&`.
+    """
+    import numbers
+
+    import ROOT
+
+    return tuple(
+        ROOT.RooFit.RooConst(float(e)) if isinstance(e, numbers.Real) and not isinstance(e, bool) else e for e in seq
+    )
+
+
+def _sequences_to_roo_collections(args):
+    """Helper function to convert Python sequences of RooFit objects to RooFit collections.
+
+    The overload resolution does not treat a Python list like a C++ braced
+    initializer list, so it can't pick an overload taking e.g. a
+    `const RooArgSet&` for it if there are other candidates with the same
+    number of arguments. Convert lists and tuples of RooAbsArgs to a
+    RooArgList and sets to a RooArgSet, which convert to the other collection
+    types like in C++.
+    """
+    import ROOT
+
+    def convert(arg):
+        if isinstance(arg, (list, tuple, set)) and arg and all(isinstance(a, ROOT.RooAbsArg) for a in arg):
+            return ROOT.RooArgSet(arg) if isinstance(arg, set) else ROOT.RooArgList(arg)
+        return arg
+
+    return tuple(convert(arg) for arg in args)
 
 
 def _pack_cmd_args(*args, **kwargs):

@@ -340,7 +340,14 @@ def _SetBranchAddress(self, bname, addr, *args, **kwargs):
     elif "ptr" in kwargs:
         tbranch_ptr = kwargs["ptr"]
 
-    return self._OriginalSetBranchAddress(bname, addr, ptr=tbranch_ptr, realClass=cl, datatype=tp, isptr=False)
+    # Pass the buffer as the void* the non-template overload takes: as a typed
+    # pointer, the array would select the template overloads instead. The
+    # arguments are passed positionally, as the overload resolution doesn't
+    # match keyword arguments to parameters.
+    import ctypes
+
+    buf = ctypes.c_void_p(_get_address_of(addr))
+    return self._OriginalSetBranchAddress(bname, buf, tbranch_ptr, cl, tp, False)
 
 
 def _get_address_of(obj):
@@ -417,7 +424,15 @@ def _try_branch_ptr_to_ptr_overloads(self, args):
         # give as a base or equivalent spelling of it.
         proxy_type = type(address).__cpp_name__
         brancher = _lookups().helpers.BranchPtrToPtr[proxy_type]
-        return brancher(self, name, class_name or proxy_type, address, *rest)
+        try:
+            # a reference proxy (to the caller's pointer) is taken as a T*
+            # and promoted to the T** by the overload resolution
+            return brancher(self, name, class_name or proxy_type, address, *rest)
+        except TypeError:
+            # a proxy owning its pointer doesn't convert to T** in the overload
+            # resolution, so pass the address of that pointer explicitly
+            ptr_to_ptr = ROOT._cppyy.ll.cast[proxy_type + "**"](ROOT._cppyy.addressof(address, byref=True))
+            return brancher(self, name, class_name or proxy_type, ptr_to_ptr, *rest)
 
     buf = _get_address_of(address)
     if not buf or not class_name:
@@ -426,6 +441,21 @@ def _try_branch_ptr_to_ptr_overloads(self, args):
     import ctypes
 
     return self._OriginalBranch(name, class_name, ctypes.c_void_p(buf), *rest)
+
+
+def _try_branch_folder_overload(self, args):
+    """Try to match TTree::Branch(const char* folder, Int_t = 32000, Int_t = 99).
+
+    The overload resolution of cppjit considers this call ambiguous with the
+    `Branch(const char*, T*, ...)` templates, which C++ doesn't (an int can't
+    deduce a T*), so select the overload explicitly.
+    """
+    if not (2 <= len(args) <= 3) or not isinstance(args[0], str):
+        return None
+    if any(not isinstance(arg, int) or isinstance(arg, bool) for arg in args[1:]):
+        return None
+
+    return self._OriginalBranch.__overload__("const char*, Int_t, Int_t")(self, *args)
 
 
 def _Branch(self, *args):
@@ -446,6 +476,7 @@ def _Branch(self, *args):
     - ( const char*, void*, const char*, Int_t = 32000 )
     - ( const char*, const char*, T**, Int_t = 32000, Int_t = 99 )
     - ( const char*, T**, Int_t = 32000, Int_t = 99 )
+    - ( const char*, Int_t = 32000, Int_t = 99 )
     """
     if len(args) >= 2:
         res = _try_branch_leaf_list_overload(self, args)
@@ -453,6 +484,10 @@ def _Branch(self, *args):
             return res
 
         res = _try_branch_ptr_to_ptr_overloads(self, args)
+        if res is not None:
+            return res
+
+        res = _try_branch_folder_overload(self, args)
         if res is not None:
             return res
 

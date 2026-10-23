@@ -291,6 +291,83 @@ class TestRooArgList(unittest.TestCase):
         l3 = ROOT.RooArgList([1.0, 2.0, 2.0])
         self.assertEqual(len(l3), 3)
 
+    def test_implicit_conversion_from_python_collection(self):
+        # Lists of RooFit objects or of numbers passed where a RooFit
+        # collection is expected.
+        x = ROOT.RooRealVar("x", "x", 0.0, 10.0)
+        a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0.0, 1.0)
+        frac = ROOT.RooRealVar("frac", "frac", 0.5, 0.0, 1.0)
+
+        poly = ROOT.RooPolynomial("poly", "poly", x, [-0.1, 0.004])
+        self.assertEqual(len(poly.coefList()), 2)
+
+        cheb = ROOT.RooChebychev("cheb", "cheb", x, [a0])
+        model = ROOT.RooAddPdf("model", "model", [poly, cheb], [frac])
+        self.assertEqual(len(model.pdfList()), 2)
+
+        self.assertEqual(len(ROOT.RooArgSet([x, a0])), 2)
+
+    def test_python_collection_in_constructor(self):
+        # RooAddPdf has several constructors with five parameters, so the
+        # lists need to be converted up-front.
+        x = ROOT.RooRealVar("x", "x", 0.0, 10.0)
+        g1 = ROOT.RooGaussian("g1", "g1", x, ROOT.RooFit.RooConst(3.0), ROOT.RooFit.RooConst(1.0))
+        g2 = ROOT.RooGaussian("g2", "g2", x, ROOT.RooFit.RooConst(6.0), ROOT.RooFit.RooConst(1.0))
+        frac = ROOT.RooRealVar("frac", "frac", 0.5, 0.0, 1.0)
+        model = ROOT.RooAddPdf("model", "model", [g1, g2], [frac], True)
+        self.assertEqual(len(model.pdfList()), 2)
+
+    def test_python_collection_in_keyword_argument(self):
+        # The tuple given as a keyword argument is unpacked into the arguments
+        # of the RooCmdArg function, which can include a list of RooFit objects.
+        x = ROOT.RooRealVar("x", "x", 0.0, 10.0)
+        mean = ROOT.RooRealVar("mean", "mean", 5.0, 0.0, 10.0)
+        gauss = ROOT.RooGaussian("gauss", "gauss", x, mean, ROOT.RooFit.RooConst(1.0))
+        data = gauss.generate([x], 100)
+        res = gauss.fitTo(data, Save=True, PrintLevel=-1)
+        frame = x.frame()
+        gauss.plotOn(frame, VisualizeError=(res, [mean], 1))
+        self.assertEqual(frame.numItems(), 1)
+
+    def test_workspace_import_python_collection(self):
+        # A list of objects is imported as a RooArgSet of objects, not as a
+        # generic TObject.
+        x = ROOT.RooRealVar("x", "x", 0.0, 10.0)
+        gauss = ROOT.RooGaussian("gauss", "gauss", x, ROOT.RooFit.RooConst(5.0), ROOT.RooFit.RooConst(1.0))
+        cat = ROOT.RooCategory("cat", "cat")
+        ws = ROOT.RooWorkspace("ws", "ws")
+        ws.Import([gauss, cat])
+        self.assertEqual(ws.pdf("gauss").GetName(), "gauss")
+        self.assertEqual(ws.cat("cat").GetName(), "cat")
+
+    def test_python_collection_in_methods(self):
+        # Methods taking a `const RooArgSet&` that are overloaded with other
+        # signatures of the same arity.
+        x = ROOT.RooRealVar("x", "x", 0.0, 10.0)
+        cat = ROOT.RooCategory("cat", "cat")
+        cat.defineType("a")
+        cat.defineType("b")
+        data = ROOT.RooDataSet("data", "data", [x, cat])
+        data.add([x, cat])
+        self.assertIsInstance(data.table([cat]), ROOT.Roo1DTable)
+
+        hist = ROOT.RooDataHist("hist", "hist", [x])
+        self.assertEqual(hist.get([x]).size(), 1)
+
+        mc = ROOT.RooStats.ModelConfig("mc")
+        ws = ROOT.RooWorkspace("ws_modelconfig", "ws_modelconfig")
+        mc.SetWorkspace(ws)
+        mc.SetParametersOfInterest([x])
+        self.assertEqual(mc.GetParametersOfInterest().size(), 1)
+
+    def test_python_collection_in_pythonized_function(self):
+        # RooAbsPdf::generate() has several overloads taking a RooArgSet and a
+        # second argument, so the list needs to be converted up-front.
+        x = ROOT.RooRealVar("x", "x", 0.0, 10.0)
+        gauss = ROOT.RooGaussian("gauss", "gauss", x, ROOT.RooFit.RooConst(5.0), ROOT.RooFit.RooConst(1.0))
+        data = gauss.generate([x], 10)
+        self.assertEqual(data.numEntries(), 10)
+
 
 # Necessary inside the "eval" call
 RooArgSet = ROOT.RooArgSet
@@ -712,6 +789,16 @@ class TestRooGlobalFunc(unittest.TestCase):
         """C++ object returned by RooFit::Minimizer should not be double deleted"""
         # ROOT-9516
         minimizer = ROOT.RooFit.Minimizer("Minuit2", "migrad")  # noqa: F841
+
+    def test_components(self):
+        """RooFit::Components() with a component name and with RooFit objects"""
+        cmd = ROOT.RooFit.Components("bkg")
+        self.assertEqual(str(cmd.getString(0)), "bkg")
+
+        x = ROOT.RooRealVar("x", "x", 0.0, 1.0)
+        gauss = ROOT.RooGaussian("gauss", "gauss", x, ROOT.RooFit.RooConst(0.5), ROOT.RooFit.RooConst(0.1))
+        cmd = ROOT.RooFit.Components(gauss)
+        self.assertEqual(cmd.getSet(0).size(), 1)
 
 
 class TestRooJSONFactoryWSTool(unittest.TestCase):

@@ -192,6 +192,20 @@ def Link(*args, **kwargs):
     return RooFit._Link(*args, **kwargs)
 
 
+@cpp_signature("RooFit::Components(const char* compSpec) ;")
+def Components(*args, **kwargs):
+    r"""The Components function is pythonized to always pick the
+    `Components(const char*)` overload for a Python string, like a string
+    literal does in C++, and not the variadic template.
+    """
+    from ROOT import RooFit
+
+    if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], str):
+        return RooFit._Components.__overload__("const char*")(args[0])
+
+    return RooFit._Components(*args, **kwargs)
+
+
 @cpp_signature("RooFit::DataError(Int_t) ;")
 def DataError(etype):
     r"""If you want to use the `"None"` enum value to disable error plotting, you

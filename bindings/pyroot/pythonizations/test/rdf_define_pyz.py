@@ -160,6 +160,15 @@ class PyDefine(unittest.TestCase):
         """
 
         test_cases = [
+            # Free function without arguments (no column list given)
+            {
+                "name": "no_arguments",
+                "decl": "double my_free_function_no_args() { return 42.; }",
+                "coltype": "double",
+                "callable": lambda: ROOT.my_free_function_no_args,
+                "extract_fn": lambda x: x,
+                "expected_fn": lambda i: 42.0,
+            },
             # Free function with arguments
             {
                 "name": "input_ULong64_t",

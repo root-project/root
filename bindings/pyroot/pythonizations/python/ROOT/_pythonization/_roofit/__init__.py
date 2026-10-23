@@ -25,6 +25,7 @@ from ._roodataset import RooDataSet
 from ._roodecays import RooBCPEffDecay, RooBCPGenDecay, RooBDecay, RooBMixDecay, RooDecay
 from ._roogenfitstudy import RooGenFitStudy
 from ._rooglobalfunc import (
+    Components,
     DataError,
     FitOptions,
     Format,
@@ -82,6 +83,7 @@ python_classes = [
 
 # list of python functions that are used to pythonize RooGlobalFunc function in RooFit
 python_roofit_functions = [
+    Components,
     DataError,
     FitOptions,
     Format,
@@ -173,11 +175,34 @@ def make_func_name_orig(func_name):
     return "_" + func_name
 
 
+def _convert_collections_in_constructor(klass):
+    """Make the constructor of a RooFit class accept Python sequences of
+    RooFit objects for RooFit collection parameters.
+
+    A Python list is not treated like a C++ braced-init-list by the overload
+    resolution, so e.g. `RooAddPdf(name, title, [pdf1, pdf2], [frac], True)`
+    would not find the constructor taking two `const RooArgList&`.
+    """
+    from ._utils import _sequences_to_roo_collections
+
+    cpp_init = klass.__init__
+
+    def __init__(self, *args, **kwargs):
+        cpp_init(self, *_sequences_to_roo_collections(args), **kwargs)
+
+    __init__.__doc__ = cpp_init.__doc__
+    klass.__init__ = __init__
+
+
 @pythonization("Roo", is_prefix=True)
 def pythonize_roofit_class(klass, name):
     # Parameters:
     # klass: class to pythonize
     # name: string containing the name of the class
+
+    python_klass = python_classes_dict.get(name)
+    if python_klass is None or "__init__" not in get_defined_attributes(python_klass):
+        _convert_collections_in_constructor(klass)
 
     if name not in python_classes_dict:
         return

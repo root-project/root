@@ -91,6 +91,7 @@ set(py_sources
   ROOT/_pythonization/_memory_utils.py
   ROOT/_pythonization/_pyz_utils.py
   ROOT/_pythonization/_rfile.py
+  ROOT/_pythonization/_rhist.py
   ROOT/_pythonization/_rntuple.py
   ROOT/_pythonization/_runtime_error.py
   ROOT/_pythonization/_rvec.py
@@ -122,6 +123,7 @@ set(py_sources
   ROOT/_pythonization/_th3.py
   ROOT/_pythonization/_thistpainter.py
   ROOT/_pythonization/_titer.py
+  ROOT/_pythonization/_tlegend.py
   ROOT/_pythonization/_tobject.py
   ROOT/_pythonization/_tobjstring.py
   ROOT/_pythonization/_tqobject.py
@@ -129,6 +131,7 @@ set(py_sources
   ROOT/_pythonization/_tseqcollection.py
   ROOT/_pythonization/_tstring.py
   ROOT/_pythonization/_tstyle.py
+  ROOT/_pythonization/_ttext.py
   ROOT/_pythonization/_ttree.py
   ROOT/_pythonization/_tvector3.py
   ROOT/_pythonization/_tvectort.py
