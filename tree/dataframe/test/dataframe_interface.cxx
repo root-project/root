@@ -861,6 +861,14 @@ TEST(RDataFrameInterface, ShortSyntaxForCollectionSizesMultipleStringsAndVars)
    EXPECT_EQ(*sum, 8);
 }
 
+// Regression test for https://github.com/root-project/root/issues/23790
+TEST(RDataFrameInterface, StringWithPotentialAmbiguityWithSortSyntaxForCollectionSizes)
+{
+   auto df = ROOT::RDataFrame(1).Define("col", "std::string(\"#a\")").Filter("col == \"#a\"");
+   EXPECT_EQ(df.Count().GetValue(), 1ull);
+   EXPECT_EQ(*df.Take<std::string>("col")->begin(), "#a");
+}
+
 TEST(RDataFrameInterface, MutableForeach)
 {
    int i = 0;
