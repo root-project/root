@@ -281,3 +281,28 @@ ROOTTEST_ADD_TEST(test_hadd_merge_rntuple_634,
                   COMMAND ${ROOT_hadd_CMD} -f test_hadd_merge_rntuple_634_merged.root test_hadd_merge_rntuple_634_1.root test_hadd_merge_rntuple_634_2.root
                   POSTCMD ${ROOT_root_CMD} -q check_merge_rntuple_634.C
                   PASSRC 0)
+
+
+# Regression test for https://github.com/root-project/root/issues/23666.
+# "test_hadd_nested_objects_23666.root" contains a TTree in a nested directory
+# "A/B/tree" with one branch "x", and one entry where "x" is 42.
+configure_file(test_hadd_nested_objects_23666.root . COPYONLY)
+configure_file(hadd_check_nested_objects_argn_23666.C . COPYONLY)
+ROOTTEST_ADD_TEST(test_hadd_nested_objects_argn_23666,
+                  PRECMD ${CMAKE_COMMAND} -E rm -f test_hadd_nested_objects_argn_23666_merged.root
+                  COMMAND ${ROOT_hadd_CMD} -f -n 3 test_hadd_nested_objects_argn_23666_merged.root test_hadd_nested_objects_23666.root test_hadd_nested_objects_23666.root test_hadd_nested_objects_23666.root
+                  POSTCMD ${ROOT_root_CMD} -q hadd_check_nested_objects_argn_23666.C
+                  PASSRC 0)
+
+configure_file(hadd_check_nested_objects_128files_23666.C . COPYONLY)
+configure_file(test_hadd_nested_objects_128files_23666.txt . COPYONLY)
+ROOTTEST_ADD_TEST(test_hadd_nested_objects_128files_23666,
+                  PRECMD ${CMAKE_COMMAND} -E rm -f test_hadd_nested_objects_128files_23666_merged.root
+                  COMMAND ${ROOT_hadd_CMD} -f test_hadd_nested_objects_128files_23666_merged.root @test_hadd_nested_objects_128files_23666.txt
+                  POSTCMD ${ROOT_root_CMD} -q hadd_check_nested_objects_128files_23666.C
+                  PASSRC 0)
+ROOTTEST_ADD_TEST(test_hadd_nested_objects_128files_n16_23666,
+                  PRECMD ${CMAKE_COMMAND} -E rm -f test_hadd_nested_objects_128files_23666_merged.root
+                  COMMAND ${ROOT_hadd_CMD} -f -n 16 test_hadd_nested_objects_128files_23666_merged.root @test_hadd_nested_objects_128files_23666.txt
+                  POSTCMD ${ROOT_root_CMD} -q hadd_check_nested_objects_128files_23666.C
+                  PASSRC 0)
