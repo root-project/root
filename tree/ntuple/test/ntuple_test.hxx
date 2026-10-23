@@ -6,6 +6,8 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RMiniFile.hxx>
+#include <ROOT/RNTupleAttrReading.hxx>
+#include <ROOT/RNTupleAttrWriting.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleFillStatus.hxx>
 #include <ROOT/RNTupleJoinTable.hxx>
