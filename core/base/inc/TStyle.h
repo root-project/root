@@ -96,6 +96,7 @@ private:
    Float_t       fPadTopMargin;      ///< Pad top margin
    Float_t       fPadLeftMargin;     ///< Pad left margin
    Float_t       fPadRightMargin;    ///< Pad right margin
+   Bool_t        fPadMarginInDivide; ///< Use pad margins in the TPad::Divide()
    Bool_t        fPadGridX;          ///< True to get the grid along X
    Bool_t        fPadGridY;          ///< True to get the grid along Y
    Int_t         fPadTickX;          ///< True to set special pad ticks along X
@@ -214,6 +215,7 @@ public:
    Float_t          GetPadTopMargin() const    {return fPadTopMargin;}
    Float_t          GetPadLeftMargin() const   {return fPadLeftMargin;}
    Float_t          GetPadRightMargin() const  {return fPadRightMargin;}
+   Bool_t           GetUseMarginsForPadDivide() const {return fPadMarginInDivide;}  ///< Return enable status of pad division with respecting pad margins.
    Bool_t           GetPadGridX() const        {return fPadGridX;}
    Bool_t           GetPadGridY() const        {return fPadGridY;}
    Int_t            GetPadTickX() const        {return fPadTickX;}
@@ -363,6 +365,7 @@ public:
    void             SetPadTopMargin(Float_t margin=0.1)    {fPadTopMargin=margin;}
    void             SetPadLeftMargin(Float_t margin=0.1)   {fPadLeftMargin=margin;}
    void             SetPadRightMargin(Float_t margin=0.1)  {fPadRightMargin=margin;}
+   void             SetUseMarginsForPadDivide(Bool_t use)  {fPadMarginInDivide = use;}  ///< Enables Pad division with respecting pad margins.
    void             SetPadGridX(Bool_t gridx) {fPadGridX = gridx;}
    void             SetPadGridY(Bool_t gridy) {fPadGridY = gridy;}
    void             SetPadTickX(Int_t tickx)  {fPadTickX = tickx;}
