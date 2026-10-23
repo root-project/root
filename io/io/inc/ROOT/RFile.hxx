@@ -290,9 +290,12 @@ class RFile final {
 
 public:
    enum EListKeyFlags {
-      kListObjects = 1 << 0,
-      kListDirs = 1 << 1,
-      kListRecursive = 1 << 2,
+      kListObjects = BIT(0),
+      kListDirs = BIT(1),
+      kListRecursive = BIT(2),
+   };
+   enum EOverwriteFlags {
+      kOverwrite_NoNewCycle = BIT(0)
    };
 
    struct RRecreateOptions {
@@ -382,25 +385,27 @@ public:
    /// Puts an object into the file, overwriting any previously-existing object at that path.
    /// See Put for more details.
    ///
+   /// `overwriteFlags` must contain values from the `EOverwriteFlags` enum.
    /// If an object already exists at that path,AND it has type `T`, it is kept as a backup cycle
-   /// unless `createNewCycle` is false.
+   /// unless `overwriteFlags` contains `kOverwrite_NoNewCycle`.
    /// If the existing object's type differs from `T`, an exception is thrown.
-   /// Note that even if `createNewCycle` is false only the *latest* cycle will be deleted.
+   /// Note that even if no new cycle is created, only the *latest* cycle will be deleted.
    ///
    /// \throws ROOT::RException if `path` is already the path of a directory.
    /// \throws ROOT::RException if the file was opened in read-only mode.
    template <typename T>
-   void Overwrite(std::string_view path, const T &obj, bool createNewCycle = true)
+   void Overwrite(std::string_view path, const T &obj, std::uint32_t overwriteFlags = 0)
    {
       static_assert(!std::is_base_of_v<TTree, T>, "Writing TTree with RFile is unsupported.");
-      Overwrite(path, obj, "", createNewCycle);
+      Overwrite(path, obj, "", overwriteFlags);
    }
 
    /// Like Overwrite(std::string_view, const T&, bool) but allows giving a title to the object.
    template <typename T>
-   void Overwrite(std::string_view path, const T &obj, std::string_view title, bool createNewCycle = true)
+   void Overwrite(std::string_view path, const T &obj, std::string_view title, std::uint32_t overwriteFlags = 0)
    {
       std::uint32_t flags = kPutFlag_AllowOverwrite;
+      const bool createNewCycle = !(overwriteFlags & kOverwrite_NoNewCycle);
       flags |= createNewCycle * kPutFlag_OverwriteKeepCycle;
       PutInternal(path, obj, flags, title);
    }
