@@ -6614,6 +6614,9 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
          // The case strchr(cls, '<') != 0 but still not a template instance can
          // happens 'just' for string (GetSplit replaces the template by the short name
          // and then use that for thew splitting)
+
+         // The lookups below can deserialize decls, which needs a transaction.
+         cling::Interpreter::PushTransactionRAII RAII(GetInterpreterImpl());
          TString templateName(autoparseKeys[0]);
          auto tokens = templateName.Tokenize("::");
          clang::NamedDecl* previousScopeAsNamedDecl = nullptr;
