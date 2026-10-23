@@ -414,6 +414,10 @@ struct RDescriptorsComparison {
    std::vector<const ROOT::RFieldDescriptor *> fExtraDstFields;
    std::vector<const ROOT::RFieldDescriptor *> fExtraSrcFields;
    std::vector<RCommonField> fCommonFields;
+
+   // Empty if and only if the source can be fast merged.
+   std::string fFastMergeErrors;
+
    // For each field that has more than 1 column representation in the output model,
    // maps the column representatives of the source field with those of the destination.
    // The key is the destination field.
@@ -587,10 +591,13 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
    // 4. dst and src have fields that differ (compatible or incompatible)
 
    RDescriptorsComparison res = FillCommonAndExtraFields(dst, src);
+   std::vector<std::string> slowMergeErrors;
    std::vector<std::string> errors;
 
    // Check compatibility of common fields
    auto fieldsToCheck = res.fCommonFields;
+   const auto nTopLevelFields = fieldsToCheck.size();
+
    // NOTE: using index-based for loop because the collection may get extended by the iteration
    for (std::size_t fieldIdx = 0; fieldIdx < fieldsToCheck.size(); ++fieldIdx) {
       const auto &field = fieldsToCheck[fieldIdx];
@@ -599,7 +606,8 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
       const auto &fieldName = field.fSrc->GetFieldName();
 
       // Require that fields are both projected or both not projected
-      VerifyProjectedFieldsCompatibility(dst, src, *field.fDst, *field.fSrc, errors);
+      auto &errs = (fieldIdx < nTopLevelFields) ? slowMergeErrors : errors;
+      VerifyProjectedFieldsCompatibility(dst, src, *field.fDst, *field.fSrc, errs);
 
       // Require that fields types match
       // TODO(gparolini): allow non-identical but compatible types
@@ -680,14 +688,22 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
    }
 
    std::string errMsg;
-   for (const auto &err : errors)
-      errMsg += std::string("\n  * ") + err;
+   if (!slowMergeErrors.empty()) {
+      // If there are slow merge errors, the source cannot be merged at all.
+      for (const auto &err : slowMergeErrors)
+         errMsg += std::string("\n  * ") + err;
 
-   if (!errMsg.empty())
       errMsg = errMsg.substr(1); // strip initial newline
-
-   if (errMsg.length())
       return R__FAIL(errMsg);
+   }
+
+   // Source can only be slow merged.
+   if (!errors.empty()) {
+      for (const auto &err : errors)
+         errMsg += std::string("\n  * ") + err;
+      errMsg = errMsg.substr(1); // strip initial newline
+      res.fFastMergeErrors = errMsg;
+   }
 
    return ROOT::RResult(res);
 }
@@ -967,10 +983,6 @@ public:
    // Invoked as the first thing when we start processing a new source
    virtual void InitSource(RPageSource &source) = 0;
 
-   // Invoked before merging starts, right after initting the source. Determines whether the current source's schema is
-   // compatible with the destination's.
-   [[nodiscard]] virtual ROOT::RResult<RDescriptorsComparison> CompareSrcAndDstDescriptors() = 0;
-
    // Invoked when the destination model must be late model extended (only invoked in case of union merging)
    [[nodiscard]] virtual ROOT::RResult<void> ExtendDestinationModel(RDescriptorsComparison &descCmp) = 0;
 
@@ -1044,11 +1056,6 @@ public:
          constexpr bool copyClusters = false;
          fDstModel = fDestination.InitFromDescriptor(*fSrcDescriptor, copyClusters);
       }
-   }
-
-   ROOT::RResult<RDescriptorsComparison> CompareSrcAndDstDescriptors() final
-   {
-      return CompareDescriptorStructure(fDstDescriptor, *fSrcDescriptor);
    }
 
    [[nodiscard]] ROOT::RResult<void> ExtendDestinationModel(RDescriptorsComparison &descCmp) final
@@ -1591,26 +1598,6 @@ public:
       }
    }
 
-   ROOT::RResult<RDescriptorsComparison> CompareSrcAndDstDescriptors() final
-   {
-      auto res = FillCommonAndExtraFields(fDstDescriptor, *fSrcDescriptor);
-
-      // Verify that projected fields are consistent
-      std::vector<std::string> errors;
-      for (const auto &[srcF, dstF] : res.fCommonFields) {
-         VerifyProjectedFieldsCompatibility(fDstDescriptor, *fSrcDescriptor, *dstF, *srcF, errors);
-      }
-      if (!errors.empty()) {
-         std::string errMsg = "Schemas of merged RNTuples is incompatible:";
-         for (const auto &err : errors) {
-            errMsg += std::string("\n  * ") + err;
-         }
-         return R__FAIL(errMsg);
-      }
-
-      return res;
-   }
-
    [[nodiscard]] ROOT::RResult<void> ExtendDestinationModel(RDescriptorsComparison &descCmp) final
    {
       // late model extension for all fExtraSrcFields in Union mode
@@ -1764,8 +1751,8 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
 
    assert(fDestination);
 
-   // TEMP
-   constexpr bool doSlowMerge = true;
+   // TODO(gparolini): this is here to allow testing of the slow merging path, it will disappear in the future.
+   constexpr bool doSlowMerge = false;
 
    // Set compression settings if unset and verify it's compatible with the sink
    {
@@ -1808,7 +1795,6 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
    // Merge main loop
    for (RPageSource *source : sources) {
       strat->InitSource(*source);
-
       {
          auto srcDescriptor = source->GetSharedDescriptorGuard();
          if (srcDescriptor->GetVersion() > ROOT::RNTuple::GetCurrentVersion()) {
@@ -1828,12 +1814,18 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
             fDestination->UpdateExtraTypeInfo(extraTypeInfoDesc);
       }
 
-      auto descCmpRes = strat->CompareSrcAndDstDescriptors();
+      auto descCmpRes =
+         CompareDescriptorStructure(fDestination->GetDescriptor(), source->GetSharedDescriptorGuard().GetConstRef());
       if (!descCmpRes) {
          SKIP_OR_ABORT(std::string("Source RNTuple has an incompatible schema with the destination:\n") +
                        descCmpRes.GetError()->GetReport())
       }
       auto descCmp = descCmpRes.Unwrap();
+      // TODO: switch to slow merge if we cannot "fast" merge
+      if (!doSlowMerge && !descCmp.fFastMergeErrors.empty()) {
+         SKIP_OR_ABORT(std::string("Source RNTuple has an incompatible schema with the destination:\n") +
+                       descCmp.fFastMergeErrors)
+      }
 
       // If the current source is missing some fields and we're not in Union mode, error
       // (if we are in Union mode, MergeSourceClusters will fill the missing fields with default values).
