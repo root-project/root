@@ -171,5 +171,43 @@ class RFileTests(unittest.TestCase):
             os.remove(fileName)
 
 
+    def test_overwrite(self):
+        """Objects can be overwritten through the Overwrite method"""
+
+        fileName = "test_rfile_overwrite_py.root"
+        try:
+            with ROOT.RFile.Recreate(fileName) as rfile:
+                hist = ROOT.TH1F("hist", "h1", 100, -10, 10)
+                hist.FillRandom("gaus", 10)
+                # We can use Overwrite even if it's the first time we write an object.
+                rfile.Overwrite("hist", hist, title=hist.GetTitle())
+
+                hist = ROOT.TH1F("hist", "h2", 200, 0, 10)
+                hist.FillRandom("gaus", 100)
+                rfile.Overwrite("hist", hist, title=hist.GetTitle())
+
+                hist = ROOT.TH1F("hist", "h3", 200, 0, 10)
+                hist.FillRandom("gaus", 1000)
+                rfile.Overwrite("hist", hist, title=hist.GetTitle(), createNewCycle=False)
+
+            with ROOT.RFile.Open(fileName) as rfile:
+                hist = rfile.Get("hist")
+                self.assertNotEqual(hist, None)
+                self.assertEqual(hist.GetTitle(), "h3")
+                self.assertEqual(hist.GetEntries(), 1000)
+                self.assertTrue(isinstance(hist, ROOT.TH1F))
+
+                # We should have preserved the backup cycle
+                hist = rfile.Get("hist;1")
+                self.assertNotEqual(hist, None)
+                self.assertEqual(hist.GetTitle(), "h1")
+                self.assertEqual(hist.GetEntries(), 10)
+                self.assertTrue(isinstance(hist, ROOT.TH1F))
+
+        finally:
+            # os.remove(fileName)
+            pass
+
+
 if __name__ == "__main__":
     unittest.main()

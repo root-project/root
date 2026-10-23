@@ -31,6 +31,13 @@ existing object use the Overwrite method instead:
 file.Overwrite("myHisto", myOtherHisto)
 \endcode
 
+When overwriting, you may specify a title and whether to keep a backup cycle of a potentially-overwritten object.
+Note that Overwrite will work just like Put if there is no object to overwrite.
+\code{.py}
+# Overwrite object without preserving it as a backup cycle
+file.Overwrite("myHisto", myOtherHisto, "my new histo", createNewCycle = False)
+\endcode
+
 You can iterate the metadata of all objects inside an RFile using the ListKeys method:
 \code{.py}
 for key in file.ListKeys():
@@ -141,6 +148,41 @@ class _RFile_Put:
         return self._rfile._OriginalPut[template_arg]
 
 
+class _RFile_Overwrite:
+    """
+    Allow overwriting objects through the method Overwrite().
+    This is pythonized to allow Overwrite() to be called both with and without a template argument.
+    It also changes Overwrite's bitmask argument with keyword arguments.
+    """
+
+    def __init__(self, rfile):
+        self._rfile = rfile
+
+    def __call__(self, path, obj = None, title = "", *, createNewCycle = True):
+        """
+        Non-templated Overwrite()
+        """
+
+        objType = type(obj)
+        if isinstance(obj, str):
+            # special case: automatically convert python str to std::string
+            className = "std::string"
+        elif not hasattr(objType, "__cpp_name__"):
+            raise TypeError(f"type {objType} is not supported by ROOT I/O")
+        else:
+            className = objType.__cpp_name__
+
+        from ROOT import RFile
+        flags = (0 if createNewCycle else 1) * RFile.kOverwrite_NoNewCycle
+        self._rfile.Overwrite[className](path, obj, title, flags)
+
+    def __getitem__(self, template_arg):
+        """
+        Templated Overwrite()
+        """
+        return self._rfile._OriginalOverwrite[template_arg]
+
+
 def _RFileExit(obj, exc_type, exc_val, exc_tb):
     """
     Close the RFile object.
@@ -162,6 +204,8 @@ def _RFileOpen(original):
         rfile.Get = _RFile_Get(rfile)
         rfile._OriginalPut = rfile.Put
         rfile.Put = _RFile_Put(rfile)
+        rfile._OriginalOverwrite = rfile.Overwrite
+        rfile.Overwrite = _RFile_Overwrite(rfile)
         return rfile
 
     return rfile_open_wrapper
