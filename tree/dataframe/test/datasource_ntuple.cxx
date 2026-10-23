@@ -338,6 +338,89 @@ TEST_F(RNTupleDSTest, ChainTailScheduling)
    EXPECT_EQ(56, sumX.GetValue());
 }
 
+TEST_F(RNTupleDSTest, SingleFileTailScheduling)
+{
+   IMTRAII _;
+
+   FileRAII guardFile("RNTupleDS_test_single_file_tail_scheduling.root");
+   constexpr unsigned nClusters = 64;
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrX = model->MakeField<unsigned>("x");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "tail", guardFile.GetPath());
+      for (unsigned i = 0; i < nClusters; ++i) {
+         *ptrX = i;
+         writer->Fill();
+         writer->CommitCluster();
+      }
+   }
+
+   auto df = ROOT::RDataFrame(
+      std::make_unique<RNTupleDS>("tail", std::vector<std::string>{guardFile.GetPath()}));
+   std::vector<unsigned> expected;
+   expected.reserve(nClusters);
+   for (unsigned i = 0; i < nClusters; ++i)
+      expected.push_back(i);
+
+   auto values = df.Take<unsigned>("x");
+   EXPECT_THAT(*values, testing::UnorderedElementsAreArray(expected));
+   // Run the event loop a second time to exercise re-initialization of the staging area.
+   EXPECT_EQ(nClusters, df.Count().GetValue());
+}
+
+TEST_F(RNTupleDSTest, GlobalEntryRangeMT)
+{
+   IMTRAII _;
+
+   FileRAII guardFile1("RNTupleDS_test_global_range_1.root");
+   FileRAII guardFile2("RNTupleDS_test_global_range_2.root");
+   FileRAII guardFile3("RNTupleDS_test_global_range_3.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrX = model->MakeField<unsigned>("x");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "range", guardFile1.GetPath());
+      for (unsigned i = 0; i < 5; ++i) {
+         *ptrX = i;
+         writer->Fill();
+         if (i % 2 == 1)
+            writer->CommitCluster();
+      }
+   }
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrX = model->MakeField<unsigned>("x");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "range", guardFile2.GetPath());
+      for (unsigned i = 5; i < 15; ++i) {
+         *ptrX = i;
+         writer->Fill();
+         if (i % 3 == 0)
+            writer->CommitCluster();
+      }
+   }
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrX = model->MakeField<unsigned>("x");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "range", guardFile3.GetPath());
+      for (unsigned i = 15; i < 20; ++i) {
+         *ptrX = i;
+         writer->Fill();
+      }
+   }
+
+   auto ds = std::make_unique<RNTupleDS>(
+      "range", std::vector<std::string>{guardFile1.GetPath(), guardFile2.GetPath(), guardFile3.GetPath()});
+   ds->SetGlobalEntryRange({3, 18});
+   auto df = ROOT::RDataFrame(std::move(ds));
+
+   std::vector<unsigned> expected;
+   for (unsigned i = 3; i < 18; ++i)
+      expected.push_back(i);
+
+   auto values = df.Take<unsigned>("x");
+   EXPECT_THAT(*values, testing::UnorderedElementsAreArray(expected));
+}
+
 TEST(RNTupleDS, MoreFilesThanFileDescriptorLimit)
 {
    // Test that MT runs keep a limited number of open page sources at the same time
@@ -373,6 +456,14 @@ TEST(RNTupleDS, MoreFilesThanFileDescriptorLimit)
       // Run with the number of threads decided by the RAII struct
       IMTRAII _;
       test_fn(10000);
+   }
+
+   for (unsigned nSlots : {8u, 16u}) {
+      // This exercises the sliding staging window and the tail-scheduling path with more slots than
+      // physical cores. The bound on open page sources is 2 * nSlots.
+      ROOT::EnableImplicitMT(nSlots);
+      test_fn(512);
+      ROOT::DisableImplicitMT();
    }
 
    {

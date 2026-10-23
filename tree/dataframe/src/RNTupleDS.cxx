@@ -29,6 +29,7 @@
 #include <TError.h>
 #include <TSystem.h>
 
+#include <algorithm>
 #include <cassert>
 #include <limits>
 #include <memory>
@@ -40,10 +41,9 @@
 #include <type_traits>
 #include <utility>
 #ifdef R__USE_IMT
-#include <ROOT/RSpan.hxx>
 #include <ROOT/RSlotStack.hxx>
-#include <ROOT/InternalIMTUtils.hxx>
 #include <ROOT/TThreadExecutor.hxx>
+#include <tbb/task_group.h>
 #endif
 
 // clang-format off
@@ -311,9 +311,9 @@ ROOT::RDF::RNTupleDS::RNTupleDS(std::unique_ptr<ROOT::Internal::RPageSource> pag
 {
    pageSource->Attach();
    fPrincipalDescriptor = pageSource->GetSharedDescriptorGuard()->Clone();
-   // TODO(vpadulan): file staging is disabled with the current MT strategy, but it would be good to re-enable it.
-   if (!ROOT::IsImplicitMTEnabled())
-      fStagingArea.emplace_back(std::move(pageSource));
+   // The first file is used to read the schema and is also the first entry in the staging area. Keeping it
+   // avoids reopening the file at the start of every event loop.
+   fStagingArea.emplace_back(std::move(pageSource));
 
    AddField(fPrincipalDescriptor, "", fPrincipalDescriptor.GetFieldZeroId(),
             std::vector<ROOT::RDF::RNTupleDS::RFieldInfo>());
@@ -511,6 +511,66 @@ void ROOT::RDF::RNTupleDS::StageNextSources()
       }
    }
 }
+
+#ifdef R__USE_IMT
+void ROOT::RDF::RNTupleDS::ExecStagingMT()
+{
+   const auto nFiles = fFileNames.empty() ? std::size_t{1} : fFileNames.size();
+   std::unique_lock lock(fMutexStaging);
+
+   while (!fStagingThreadShouldTerminate) {
+      const auto nextFile = fNextFileToClaim.load(std::memory_order_acquire);
+      const auto windowEnd = std::min(nFiles, nextFile + fNSlots);
+
+      if (fNextFileToStage >= nFiles)
+         return;
+
+      if (fNextFileToStage >= windowEnd) {
+         fCvStaging.wait(lock, [&] {
+            return fStagingThreadShouldTerminate ||
+                   fNextFileToStage < std::min(nFiles, fNextFileToClaim.load(std::memory_order_acquire) + fNSlots);
+         });
+         continue;
+      }
+
+      const auto fileIdx = fNextFileToStage++;
+      lock.unlock();
+      try {
+         if (fFileNames.empty())
+            throw std::runtime_error("RNTupleDS: cannot stage a file without a file name");
+         auto source = CreatePageSource(fNTupleName, fFileNames[fileIdx]);
+         source->LoadStructure();
+         lock.lock();
+         fStagingArea[fileIdx] = std::move(source);
+      } catch (...) {
+         lock.lock();
+         fStagingError = std::current_exception();
+         fCvStaging.notify_all();
+         return;
+      }
+      fCvStaging.notify_all();
+   }
+}
+
+std::shared_ptr<ROOT::Internal::RPageSource> ROOT::RDF::RNTupleDS::TakeStagedPageSource(std::size_t fileIdx)
+{
+   std::unique_lock lock(fMutexStaging);
+   fCvStaging.wait(lock, [&] {
+      return fStagingArea[fileIdx] || fStagingError || fStagingThreadShouldTerminate;
+   });
+
+   if (fStagingError)
+      std::rethrow_exception(fStagingError);
+   if (!fStagingArea[fileIdx])
+      throw std::runtime_error("RNTupleDS: background staging stopped before the requested file was available");
+
+   auto source = std::move(fStagingArea[fileIdx]);
+   lock.unlock();
+   // Wake the staging thread so that it can advance its sliding window.
+   fCvStaging.notify_all();
+   return source;
+}
+#endif
 
 void ROOT::RDF::RNTupleDS::PrepareNextRanges()
 {
@@ -729,10 +789,26 @@ void ROOT::RDF::RNTupleDS::Initialize()
    fSeenEntriesNoGlobalRange = 0;
    fNextFileIndex = 0;
    fIsReadyForStaging = fHasNextSources = fStagingThreadShouldTerminate = false;
-   // TODO(vpadulan): file staging is disabled with the current MT strategy, but it would be good to re-enable it.
-   if (!ROOT::IsImplicitMTEnabled())
-      fThreadStaging = std::thread(&RNTupleDS::ExecStaging, this);
    assert(fNextRanges.empty());
+
+#ifdef R__USE_IMT
+   fIsMT = ROOT::IsImplicitMTEnabled();
+   if (fIsMT) {
+      const auto nFiles = fFileNames.empty() ? std::size_t{1} : fFileNames.size();
+      if (fStagingArea.size() != nFiles)
+         fStagingArea.resize(nFiles);
+      {
+         std::lock_guard lock(fMutexStaging);
+         fNextFileToClaim.store(0, std::memory_order_relaxed);
+         fNextFileToStage = fStagingArea[0] ? 1 : 0;
+         fStagingError = nullptr;
+      }
+      fThreadStaging = std::thread(&RNTupleDS::ExecStagingMT, this);
+      return;
+   }
+#endif
+
+   fThreadStaging = std::thread(&RNTupleDS::ExecStaging, this);
 
    if (fCurrentRanges.empty() || (fFileNames.size() > fNSlots)) {
       // First event loop or large number of files: start the staging process.
@@ -759,9 +835,30 @@ void ROOT::RDF::RNTupleDS::Finalize()
       std::lock_guard _(fMutexStaging);
       fStagingThreadShouldTerminate = true;
    }
-   fCvStaging.notify_one();
-   // TODO(vpadulan): file staging is disabled with the current MT strategy, but it would be good to re-enable it.
-   if (!ROOT::IsImplicitMTEnabled())
+   fCvStaging.notify_all();
+
+#ifdef R__USE_IMT
+   if (fIsMT) {
+      if (fThreadStaging.joinable())
+         fThreadStaging.join();
+
+      std::lock_guard lock(fMutexStaging);
+      // Drop all page sources opened by the staging thread. The next event loop starts with a clean
+      // staging area and re-opens the first file in the background as needed.
+      fStagingArea.clear();
+      fStagingArea.resize(fFileNames.empty() ? std::size_t{1} : fFileNames.size());
+      fNextFileToClaim.store(0, std::memory_order_relaxed);
+      fNextFileToStage = 0;
+      fStagingError = nullptr;
+      for (auto &range : fActiveRangesPerSlot)
+         range = {};
+      fCurrentRanges.clear();
+      fNextRanges.clear();
+      return;
+   }
+#endif
+
+   if (fThreadStaging.joinable())
       fThreadStaging.join();
    // If we have a chain with more files than the number of slots, the files opened at the end of the
    // event loop won't be reused when the event loop restarts, so we can close them.
@@ -847,66 +944,7 @@ ROOT::Internal::RDF::GetClustersAndEntries(std::string_view ntupleName, std::str
 }
 
 #ifdef R__USE_IMT
-namespace {
 
-/// \brief Implementation of the Range type to be used in a parallel_for when processing RNTuple data with RDataFrame.
-///
-/// The class represents one range of entries (N consecutive clusters) tied to a specific page source to be processed.
-/// The current MT strategy launches an outer parallel_for with exactly one task per page source, then within each of
-/// these launches another parallel_for that will take an instance of this class. The initial state of the class is to
-/// include the whole list of clusters of the corresponding page source. TBB will eagerly split this range in as many
-/// ranges as possible, until there is a full set of non-splittable ranges (based on IsDivisible). The split ranges
-/// only have a different begin and end cluster, there is no page source copying or cloning done by this range, instead
-/// that happens in the ParallelForBody so that it can be limited by the number of RDF slots used.
-class RSplittableRangeOfClusterBoundaries final : public ROOT::Internal::IMTUtils::RAbstractTBBRangeImpl {
-   // A view of all the cluster boundaries in the page source
-   std::span<const ROOT::Internal::RNTupleClusterBoundaries> fClusters;
-   std::size_t fClusterIdxBegin; // inclusive
-   std::size_t fClusterIdxEnd;   // exclusive
-
-public:
-   RSplittableRangeOfClusterBoundaries(std::span<const ROOT::Internal::RNTupleClusterBoundaries> clusters,
-                                       std::size_t clusterIdxBegin, std::size_t clusterIdxEnd)
-      : fClusters(clusters), fClusterIdxBegin(clusterIdxBegin), fClusterIdxEnd(clusterIdxEnd)
-   {
-      assert(fClusterIdxEnd > fClusterIdxBegin);
-   }
-
-   std::unique_ptr<ROOT::Internal::IMTUtils::RAbstractTBBRangeImpl> SplitWork() final
-   {
-      // Split the cluster range in half
-      auto clusterIdxMid = fClusterIdxBegin + (fClusterIdxEnd - fClusterIdxBegin) / 2;
-      auto newClusterIdxBegin = clusterIdxMid;
-      auto newClusterIdxEnd = fClusterIdxEnd;
-      fClusterIdxEnd = clusterIdxMid;
-
-      return std::make_unique<RSplittableRangeOfClusterBoundaries>(fClusters, newClusterIdxBegin, newClusterIdxEnd);
-   }
-
-   bool IsDivisible() const final
-   {
-      // We choose two because the page source prefetches one cluster ahead of the current one.
-      return fClusterIdxEnd - fClusterIdxBegin > 2;
-   }
-
-   bool Empty() const final
-   {
-      // empty is called once at the beginning of the parallel_for, to guard against empty tasks. We only pass tasks
-      // with actual work by construction
-      return false;
-   }
-
-   std::uint64_t GetCurrentBeginEntry() const { return fClusters[fClusterIdxBegin].fFirstEntry; }
-
-   std::uint64_t GetCurrentEndEntry() const { return fClusters[fClusterIdxEnd - 1].fLastEntryPlusOne; }
-
-   bool IsProcessingFirstCluster() const { return fClusterIdxBegin == 0; }
-};
-} // namespace
-
-// For now we need this function as a pass-through for the information contained in a
-// RSplittableRangeOfClusterBoundaries to be available to the rest of the computation graph (e.g. to connect the column
-// readers and update the sample info)
 void ROOT::RDF::RNTupleDS::InsertActiveEntryRange(unsigned int slot, std::string_view fileName,
                                                   std::shared_ptr<ROOT::Internal::RPageSource> pageSource,
                                                   std::uint64_t beginEntry, std::uint64_t endEntry,
@@ -921,102 +959,53 @@ void ROOT::RDF::RNTupleDS::InsertActiveEntryRange(unsigned int slot, std::string
    fActiveRangesPerSlot.at(slot * ROOT::Internal::RDF::CacheLineStep<REntryRangeDS>()) = std::move(entryRangeDS);
 }
 
-/// \brief Apply the computation graph to an input range.
-/// \param pageSource The page source to read data from.
-/// \param rangeImpl A Range type carrying information on the range of entries to process.
-/// \param lm The RLoopManager which will run the computation graph.
-/// \param fileName Path to the storage location of the page source.
-/// \param slotStack A stack of slots, each thread needs to request one before running the computation graph.
-/// \param processedEntries Cumulating number of processed entries by this computation graph run.
-/// \param columnReaderOffset Offset value to pass to column readers used in this task. The column reader will request
-/// entries from the page source receiving a global entry number, this offset is subtracted so that the column reader
-/// requests the local entry from the page source.
-void ROOT::RDF::RNTupleDS::ParallelForBody(std::shared_ptr<ROOT::Internal::RPageSource> pageSource,
-                                           const ROOT::Internal::IMTUtils::RAbstractTBBRangeImpl &rangeImpl,
-                                           ROOT::Detail::RDF::RLoopManager &lm, std::string_view fileName,
-                                           ROOT::Internal::RSlotStack &slotStack,
-                                           std::atomic<ULong64_t> &processedEntries, ULong64_t columnReaderOffset)
-{
-   ROOT::Internal::RSlotStackRAII slotRAII{slotStack};
-   const auto &slot = slotRAII.fSlot;
+namespace {
 
-   const auto &range = static_cast<const RSplittableRangeOfClusterBoundaries &>(rangeImpl);
-   const auto &beginEntry = range.GetCurrentBeginEntry();
-   const auto &endEntry = range.GetCurrentEndEntry();
-
-   // We clone the page source only within this function scope, to limit the number of open page sources to 2*fNSlots
-   auto localPageSource = [&]() -> std::shared_ptr<ROOT::Internal::RPageSource> {
-      // In order to avoid an extra Clone, we need to choose one of the ranges that will take the original page source,
-      // we choose it to be the one processing the first valid cluster
-      if (range.IsProcessingFirstCluster())
-         return pageSource;
-
-      auto newPageSource = pageSource->Clone();
-      newPageSource->Attach();
-      return newPageSource;
-   }();
-
-   // Notify the current page source about the current entry range
-   localPageSource->SetEntryRange({beginEntry, endEntry - beginEntry});
-
-   processedEntries.fetch_add(endEntry - beginEntry);
-
-   // At this point we let the RNTupleDS know about the range being processed by this task. This is used for relevant
-   // operations e.g. connecting the column readers as well as populating sample information.
-   InsertActiveEntryRange(slot, fileName, std::move(localPageSource), beginEntry, endEntry, columnReaderOffset);
-
-   lm.RNTupleThreadTask({beginEntry + columnReaderOffset, endEntry + columnReaderOffset}, slot, columnReaderOffset);
-
-   // Clear the active range after having processed it, to avoid keeping around the page source for longer than intended
-   fActiveRangesPerSlot.at(slot * ROOT::Internal::RDF::CacheLineStep<REntryRangeDS>()) = {};
-}
-
-/// \brief Call parallel_for to schedule a splittable task for a page source
-/// \param pool The pool of threads used to schedule the task.
-/// \param pageSource The RNTuple page source for the task.
-/// \param fileName Path to the storage location of the page source.
-/// \param clusterBoundaries A list of cluster boundaries valid for the page source. This may be computed differently,
-/// see ProcessMT.
-/// \param nEntries Number of entries in the page source.
-/// \param lm The RLoopManager which will run the computation graph.
-/// \param slotStack A stack of slots, each thread needs to request one before running the computation graph.
-/// \param processedEntries Cumulating number of processed entries by this computation graph run.
-/// \param globalEntries Cumulating total number of entries in the input dataset.
+/// \brief Return the cluster boundaries that should be processed for one file.
 ///
-/// This function calls the parallel_for overload that takes two arguments, one respecting the Range and the other
-/// respecting the Body requirements. The Range argument is a RSplittableRangeOfClusterBoundaries, a struct with a range
-/// of N cluster boundaries to process (initialised to the whole list of clusters). Immediately when calling
-/// parallel_for, TBB will recursively ask the RSplittableRangeOfClusterBoundaries to split itself into two roughly
-/// equal sub-tasks, until there are only leaf tasks that cannot be split further. This helps balancing cases where some
-/// tasks may end up running much longer than others.
-void ROOT::RDF::RNTupleDS::ScheduleTaskForPageSource(
-   ROOT::TThreadExecutor &pool, std::unique_ptr<ROOT::Internal::RPageSource> pageSource, std::string_view fileName,
-   std::span<const ROOT::Internal::RNTupleClusterBoundaries> clusterBoundaries, std::uint64_t nEntries,
-   ROOT::Detail::RDF::RLoopManager &lm, ROOT::Internal::RSlotStack &slotStack, std::atomic<ULong64_t> &processedEntries,
-   std::atomic<ULong64_t> &globalEntries)
+/// Without a global entry range this is simply the full list of clusters. With a global range, the
+/// clusters are trimmed to the intersection of the file and the requested range. Clusters that do not
+/// contain any requested entry are dropped.
+std::vector<ROOT::Internal::RNTupleClusterBoundaries>
+GetClustersToProcess(const ROOT::RNTupleDescriptor &desc, std::uint64_t fileOffset,
+                     const std::optional<std::pair<ULong64_t, ULong64_t>> &globalRange, std::uint64_t nEntries)
 {
+   auto clusters = ROOT::Internal::GetClusterBoundaries(desc);
+   if (!globalRange)
+      return clusters;
 
-   const auto columnReaderOffset{globalEntries.fetch_add(nEntries)};
+   const auto [globalBegin, globalEnd] = *globalRange;
+   if (nEntries == 0 || (fileOffset + nEntries) < globalBegin || fileOffset > globalEnd)
+      return {};
 
-   // We need to share the same page source pointer across all splitted tasks, to decide if we clone it (in most cases)
-   // or not (one task will take the original page source).
-   std::shared_ptr<ROOT::Internal::RPageSource> sharedPageSource{std::move(pageSource)};
+   if (globalBegin >= fileOffset || globalEnd < (fileOffset + nEntries)) {
+      std::vector<ROOT::Internal::RNTupleClusterBoundaries> adjustedClusters;
+      adjustedClusters.reserve(clusters.size());
 
-   auto parallelForBody = [this, &sharedPageSource, &lm, &fileName, &slotStack, &processedEntries,
-                           &columnReaderOffset](const ROOT::Internal::IMTUtils::RAbstractTBBRangeImpl &rangeImpl) {
-      this->ParallelForBody(sharedPageSource, rangeImpl, lm, fileName, slotStack, processedEntries, columnReaderOffset);
-   };
+      const std::uint64_t localBegin = globalBegin < fileOffset ? 0 : globalBegin - fileOffset;
+      const std::uint64_t localEnd = globalEnd > fileOffset + nEntries ? nEntries : globalEnd - fileOffset;
+      for (const auto &cluster : clusters) {
+         const auto currentBegin = std::max(cluster.fFirstEntry, localBegin);
+         const auto currentEnd = std::min(cluster.fLastEntryPlusOne, localEnd);
+         if (currentBegin < currentEnd)
+            adjustedClusters.push_back(ROOT::Internal::RNTupleClusterBoundaries{currentBegin, currentEnd});
+      }
+      return adjustedClusters;
+   }
 
-   ROOT::Internal::IMTUtils::ParallelFor(
-      pool, std::make_unique<RSplittableRangeOfClusterBoundaries>(clusterBoundaries, 0, clusterBoundaries.size()),
-      parallelForBody);
+   return clusters;
 }
+
+} // namespace
 
 /// \brief Computes global entry offsets for the dataset
 ///
 /// Used in MT scheduling when the user selects a global entry range to restrict processing to.
 std::vector<std::uint64_t> ROOT::RDF::RNTupleDS::ComputeGlobalEntryOffsets(ROOT::TThreadExecutor &pool) const
 {
+   if (fFileNames.empty())
+      return {0};
+
    std::vector<std::uint64_t> fileEntries(fFileNames.size());
    auto getEntries = [](std::string_view ntupleName, std::string_view fileName) {
       auto source = ROOT::Internal::RPageSource::Create(ntupleName, fileName);
@@ -1041,129 +1030,129 @@ std::vector<std::uint64_t> ROOT::RDF::RNTupleDS::ComputeGlobalEntryOffsets(ROOT:
    return ret;
 }
 
-/// \brief Launch the task(s) for the input file index, taking into account dataset global entry offsets.
+/// \brief Run the computation graph with file-level tasks and cluster-level tail scheduling.
 ///
-/// This function is used in MT scheduling to launch a task processing one input file. It is selected when
-/// the user specifies a global entry range to restrict processing to. In this scenario we have precomputed the global
-/// entry offsets of each file upfront so we can then adjust the range of entries in each file accordingly. The task may
-/// be split into smaller tasks based on entry ranges aligned to cluster boundaries, see ScheduleTaskForPageSource.
-void ROOT::RDF::RNTupleDS::ScheduleTasksForFileWithGlobalOffset(
-   std::size_t fileIdx, const std::vector<std::uint64_t> &globalFileOffsets, ROOT::TThreadExecutor &pool,
-   ROOT::Detail::RDF::RLoopManager &lm, ROOT::Internal::RSlotStack &slotStack, std::atomic<ULong64_t> &processedEntries,
-   std::atomic<ULong64_t> &globalEntries)
-{
-   const auto &fileName = fFileNames[fileIdx];
-   auto source = CreatePageSource(fNTupleName, fileName);
-   source->Attach();
-   // TODO: improve MT scheduling such that not all page lists are required right away
-   source->LoadAllPageLists();
-
-   const std::uint64_t globalFileOffset = globalFileOffsets[fileIdx];
-   const auto [globalBegin, globalEnd] = fGlobalEntryRange.value();
-
-   const auto clustersAndEntries =
-      [&]() -> std::pair<std::vector<ROOT::Internal::RNTupleClusterBoundaries>, ROOT::NTupleSize_t> {
-      const auto descGuard = source->GetSharedDescriptorGuard();
-      const auto nEntries = descGuard->GetNEntries();
-      // Early return:
-      // - There are no entries in the file
-      // - The boundaries of this file are not touched by the global entry range
-      if (nEntries == 0 || (globalFileOffset + nEntries) < globalBegin || globalFileOffset > globalEnd)
-         return {{}, ROOT::kInvalidNTupleIndex};
-
-      const auto clustersInFile = ROOT::Internal::GetClusterBoundaries(descGuard.GetConstRef());
-
-      // The list of cluster boundaries in this file needs to be adjusted if either the beginning or the end of the
-      // global entry range fall within the boundaries of the entries of this file.
-      if ((globalBegin >= globalFileOffset) || (globalEnd < (globalFileOffset + nEntries))) {
-         std::vector<ROOT::Internal::RNTupleClusterBoundaries> adjustedClusters;
-         for (const auto &cluster : clustersInFile) {
-            const std::uint64_t localBegin = globalBegin < globalFileOffset ? 0 : globalBegin - globalFileOffset;
-            const std::uint64_t localEnd =
-               globalEnd > globalFileOffset + nEntries ? globalFileOffset + nEntries : globalEnd - globalFileOffset;
-            const auto currentBegin = std::max(cluster.fFirstEntry, localBegin);
-            const auto currentEnd = std::min(cluster.fLastEntryPlusOne, localEnd);
-            // This is not satified if the desired begin is larger than the last entry of some cluster
-            // In this case, this cluster is not going to be processed further
-            if (currentBegin < currentEnd)
-               adjustedClusters.push_back(ROOT::Internal::RNTupleClusterBoundaries{currentBegin, currentEnd});
-         }
-         return std::make_pair(adjustedClusters, nEntries);
-      }
-
-      return std::make_pair(clustersInFile, nEntries);
-   }();
-   const ROOT::NTupleSize_t nEntries = clustersAndEntries.second;
-   if (nEntries == ROOT::kInvalidNTupleIndex)
-      return;
-   const auto &clusters = clustersAndEntries.first;
-   ScheduleTaskForPageSource(pool, std::move(source), fileName, clusters, nEntries, lm, slotStack, processedEntries,
-                             globalEntries);
-}
-
-/// \brief Launch the task(s) for the input file index
-///
-/// This function is used in MT scheduling to launch a task processing one input file. It is selected when
-/// there is no global entry range. The task may be split into smaller tasks based on entry ranges aligned to cluster
-/// boundaries, see ScheduleTaskForPageSource.
-void ROOT::RDF::RNTupleDS::ScheduleTasksForFile(std::size_t fileIdx, ROOT::TThreadExecutor &pool,
-                                                ROOT::Detail::RDF::RLoopManager &lm,
-                                                ROOT::Internal::RSlotStack &slotStack,
-                                                std::atomic<ULong64_t> &processedEntries,
-                                                std::atomic<ULong64_t> &globalEntries)
-{
-   // Evaluate clusters (with local entry numbers) and number of entries for this file
-   const auto &fileName = fFileNames[fileIdx];
-   auto source = CreatePageSource(fNTupleName, fFileNames[fileIdx]);
-   source->Attach();
-   // TODO: improve MT scheduling such that not all page lists are required right away
-   source->LoadAllPageLists();
-   const auto clustersAndEntries = [&]() {
-      const auto descGuard = source->GetSharedDescriptorGuard();
-      return std::make_pair(ROOT::Internal::GetClusterBoundaries(descGuard.GetConstRef()), descGuard->GetNEntries());
-   }();
-   const ROOT::NTupleSize_t nEntries = clustersAndEntries.second;
-   if (nEntries == 0)
-      return;
-   const auto &clusters = clustersAndEntries.first;
-   ScheduleTaskForPageSource(pool, std::move(source), fileName, clusters, nEntries, lm, slotStack, processedEntries,
-                             globalEntries);
-}
-
-/// \brief Run the computation graph by scheduling MT tasks
-///
-/// The data source interacts with the loop manager and with a pool of threads (via TThreadExecutor) at the same time.
-/// The function schedules one MT task per input file, eventually calling the parallel_for overload taking two input
-/// arguments respectively respecting the Range and Body requirements. This means that each of the file-based tasks
-/// can be split into various sub-tasks, each processing a set of consecutive clusters of the same file. Before
-/// launching the file-based tasks, the function checks if the user has selected a global range of entries to restrict
-/// processing to. If so, the function first computes the global entry offsets of all the input files, so they can be
-/// matched against the user-provided global range. These will be used to adjust the list of clusters of the file before
-/// spawning the corresponding task.
+/// One file task is launched per input file. A file task claims the next file, waits for the background
+/// staging thread to make its page source available, and then iterates over its clusters sequentially so
+/// that the page source can prefetch across cluster boundaries. Once the last file has been claimed, all
+/// file tasks switch to tail-scheduling mode: the remaining clusters are enqueued as individual tasks in
+/// the shared task group, and each of those tasks clones the parent file's page source.
 void ROOT::RDF::RNTupleDS::ProcessMT(ROOT::Detail::RDF::RLoopManager &lm)
 {
+   const std::size_t nFiles = fFileNames.empty() ? std::size_t{1} : fFileNames.size();
    ROOT::TThreadExecutor pool;
    ROOT::Internal::RSlotStack slotStack(fNSlots);
    std::atomic<ULong64_t> processedEntries(0ull);
    std::atomic<ULong64_t> globalEntries(0ull);
 
-   if (fGlobalEntryRange.has_value()) {
-      const auto globalFileOffsets = ComputeGlobalEntryOffsets(pool);
-      pool.Foreach(
-         [&](std::size_t fileIdx) {
-            ScheduleTasksForFileWithGlobalOffset(fileIdx, globalFileOffsets, pool, lm, slotStack, processedEntries,
-                                                 globalEntries);
-         },
-         ROOT::TSeq<std::size_t>(fFileNames.size()));
-   } else {
-      pool.Foreach(
-         [&](std::size_t fileIdx) {
-            ScheduleTasksForFile(fileIdx, pool, lm, slotStack, processedEntries, globalEntries);
-         },
-         ROOT::TSeq<std::size_t>(fFileNames.size()));
+   std::vector<std::uint64_t> globalFileOffsets;
+   if (fGlobalEntryRange) {
+      globalFileOffsets = ComputeGlobalEntryOffsets(pool);
+      assert(globalFileOffsets.size() == nFiles);
    }
 
-   if (fGlobalEntryRange.has_value()) {
+   std::atomic<bool> tailMode(false);
+   std::mutex taskGroupMutex;
+
+   // Process one cluster with an already connected page source. The caller is responsible for setting
+   // the page source entry range and, for cluster tasks, for cloning the parent source.
+   auto runCluster = [&](std::uint64_t offset, std::string_view fileName,
+                         const std::shared_ptr<ROOT::Internal::RPageSource> &source,
+                         const ROOT::Internal::RNTupleClusterBoundaries &cluster, unsigned int slot) {
+      const auto begin = cluster.fFirstEntry;
+      const auto end = cluster.fLastEntryPlusOne;
+      InsertActiveEntryRange(slot, fileName, source, begin, end, offset);
+      processedEntries.fetch_add(end - begin, std::memory_order_relaxed);
+
+      auto &activeRange =
+         fActiveRangesPerSlot.at(slot * ROOT::Internal::RDF::CacheLineStep<REntryRangeDS>());
+      try {
+         lm.RNTupleThreadTask({begin + offset, end + offset}, slot, offset);
+      } catch (...) {
+         activeRange = {};
+         throw;
+      }
+      activeRange = {};
+   };
+
+   // Enqueue one remaining cluster as a tail task. The task acquires a processing slot before cloning
+   // the parent page source, which bounds the number of concurrently open files.
+   auto scheduleCluster = [&](tbb::task_group &taskGroup, const std::shared_ptr<ROOT::Internal::RPageSource> &parent,
+                              std::string_view fileName,
+                              const ROOT::Internal::RNTupleClusterBoundaries &cluster, std::uint64_t offset) {
+      {
+         std::lock_guard<std::mutex> lock(taskGroupMutex);
+         taskGroup.run([&runCluster, &slotStack, parent, fileName, cluster, offset] {
+            ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
+            auto source = std::shared_ptr<ROOT::Internal::RPageSource>(parent->Clone());
+            source->Attach();
+            source->SetEntryRange(
+               {cluster.fFirstEntry, cluster.fLastEntryPlusOne - cluster.fFirstEntry});
+            runCluster(offset, fileName, source, cluster, slotRAII.fSlot);
+         });
+      }
+   };
+
+   // A file-level task: claim a file, stage it, and process its clusters sequentially until tail
+   // scheduling is enabled. At that point the remaining clusters are handed over to cluster tasks.
+   auto processFile = [&](tbb::task_group &taskGroup) {
+      ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
+      const auto slot = slotRAII.fSlot;
+
+      const auto fileIdx = fNextFileToClaim.fetch_add(1, std::memory_order_acq_rel);
+      if (fileIdx >= nFiles)
+         return;
+      if (fileIdx + 1 == nFiles)
+         tailMode.store(true, std::memory_order_release);
+      // Wake the staging thread so it can advance its sliding window after the claim.
+      fCvStaging.notify_all();
+
+      auto source = TakeStagedPageSource(fileIdx);
+      source->Attach();
+      source->LoadAllPageLists();
+
+      std::uint64_t nEntries = 0;
+      std::vector<ROOT::Internal::RNTupleClusterBoundaries> clusters;
+      {
+         auto descGuard = source->GetSharedDescriptorGuard();
+         nEntries = descGuard->GetNEntries();
+         if (nEntries > 0)
+            clusters = GetClustersToProcess(descGuard.GetConstRef(), fGlobalEntryRange ? globalFileOffsets[fileIdx] : 0,
+                                            fGlobalEntryRange, nEntries);
+      }
+      if (clusters.empty())
+         return;
+
+      const std::uint64_t offset =
+         fGlobalEntryRange ? globalFileOffsets[fileIdx] : globalEntries.fetch_add(nEntries);
+      source->SetEntryRange(
+         {clusters.front().fFirstEntry, clusters.back().fLastEntryPlusOne - clusters.front().fFirstEntry});
+
+      const std::string_view fileName = fFileNames.empty() ? std::string_view{} : std::string_view{fFileNames[fileIdx]};
+
+      for (std::size_t i = 0; i < clusters.size(); ++i) {
+         if (tailMode.load(std::memory_order_acquire)) {
+            for (std::size_t j = i + 1; j < clusters.size(); ++j)
+               scheduleCluster(taskGroup, source, fileName, clusters[j], offset);
+            runCluster(offset, fileName, source, clusters[i], slot);
+            return;
+         }
+         runCluster(offset, fileName, source, clusters[i], slot);
+      }
+   };
+
+   // Run the file and tail tasks in ROOT's task arena. The single Foreach task only serves to enter
+   // the arena; all actual work is scheduled through the task group below.
+   pool.Foreach(
+      [&](std::size_t) {
+         tbb::task_group taskGroup;
+         for (std::size_t i = 0; i < nFiles; ++i)
+            taskGroup.run([&processFile, &taskGroup] { processFile(taskGroup); });
+         taskGroup.wait();
+      },
+      ROOT::TSeq<std::size_t>(1));
+
+   if (fGlobalEntryRange) {
       const auto [begin, end] = fGlobalEntryRange.value();
       ULong64_t finalProcessedEntries = processedEntries.load();
       // This check serves two purposes:

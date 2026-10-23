@@ -21,8 +21,10 @@
 #include <ROOT/RNTupleTypes.hxx>
 #include <string_view>
 
+#include <atomic>
 #include <condition_variable>
 #include <cstdint>
+#include <exception>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -90,9 +92,6 @@ GetClustersAndEntries(std::string_view ntupleName, std::string_view location);
 #ifdef R__USE_IMT
 namespace ROOT {
 class TThreadExecutor;
-}
-namespace ROOT::Internal::IMTUtils {
-class RAbstractTBBRangeImpl;
 }
 #endif
 
@@ -199,6 +198,16 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    bool fHasNextSources = false;
    /// Is true when the I/O thread should quit
    bool fStagingThreadShouldTerminate = false;
+#ifdef R__USE_IMT
+   /// True when the current event loop uses the multi-threaded scheduler
+   bool fIsMT = false;
+   /// Index of the next file to be claimed by a file-level MT task
+   std::atomic<std::size_t> fNextFileToClaim{0};
+   /// Index of the next file to be staged by the background MT staging thread
+   std::size_t fNextFileToStage = 0;
+   /// Exception raised by the background MT staging thread, if any
+   std::exception_ptr fStagingError;
+#endif
 
    /// \brief Holds useful information about fields added to the RNTupleDS
    struct RFieldInfo {
@@ -236,6 +245,13 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// Starting from `fNextFileIndex`, opens the next `fNSlots` files. Calls `LoadStructure()` on the opened files.
    /// The very first file is already available from the constructor.
    void StageNextSources();
+#ifdef R__USE_IMT
+   /// The main function of the background staging thread used by the multi-threaded scheduler.
+   /// It stages files ahead of the next file to be claimed, keeping at most fNSlots files in the window.
+   void ExecStagingMT();
+   /// Waits until the page source for fileIdx is staged and moves it out of the staging area.
+   std::shared_ptr<ROOT::Internal::RPageSource> TakeStagedPageSource(std::size_t fileIdx);
+#endif
    /// Populates fNextRanges with the next set of entry ranges. Moves files from the staging area as necessary
    /// and aligns ranges with cluster boundaries for scheduling the tail of files.
    /// Upon return, the fNextRanges list is ordered.  It has usually fNSlots elements; fewer if there
@@ -263,26 +279,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    void InsertActiveEntryRange(unsigned int slot, std::string_view fileName,
                                std::shared_ptr<ROOT::Internal::RPageSource> pageSource, std::uint64_t beginEntry,
                                std::uint64_t endEntry, std::uint64_t offset);
-   void ParallelForBody(std::shared_ptr<ROOT::Internal::RPageSource> pageSource,
-                        const ROOT::Internal::IMTUtils::RAbstractTBBRangeImpl &rangeImpl,
-                        ROOT::Detail::RDF::RLoopManager &lm, std::string_view fileName,
-                        ROOT::Internal::RSlotStack &slotStack, std::atomic<ULong64_t> &processedEntries,
-                        ULong64_t columnReaderOffset);
-   void ScheduleTaskForPageSource(ROOT::TThreadExecutor &pool, std::unique_ptr<ROOT::Internal::RPageSource> pageSource,
-                                  std::string_view fileName,
-                                  std::span<const ROOT::Internal::RNTupleClusterBoundaries> clusterBoundaries,
-                                  std::uint64_t nEntries, ROOT::Detail::RDF::RLoopManager &lm,
-                                  ROOT::Internal::RSlotStack &slotStack, std::atomic<ULong64_t> &processedEntries,
-                                  std::atomic<ULong64_t> &globalEntries);
    std::vector<std::uint64_t> ComputeGlobalEntryOffsets(ROOT::TThreadExecutor &pool) const;
-   void ScheduleTasksForFileWithGlobalOffset(std::size_t fileIdx, const std::vector<std::uint64_t> &globalFileOffsets,
-                                             ROOT::TThreadExecutor &pool, ROOT::Detail::RDF::RLoopManager &lm,
-                                             ROOT::Internal::RSlotStack &slotStack,
-                                             std::atomic<ULong64_t> &processedEntries,
-                                             std::atomic<ULong64_t> &globalEntries);
-   void ScheduleTasksForFile(std::size_t fileIdx, ROOT::TThreadExecutor &pool, ROOT::Detail::RDF::RLoopManager &lm,
-                             ROOT::Internal::RSlotStack &slotStack, std::atomic<ULong64_t> &processedEntries,
-                             std::atomic<ULong64_t> &globalEntries);
    void ProcessMT(ROOT::Detail::RDF::RLoopManager &lm) final;
 
 #endif

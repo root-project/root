@@ -183,4 +183,8 @@ target_include_directories(ROOTDataFrame PRIVATE ../../builtins/exprtk) # hard-c
 
 target_link_libraries(ROOTDataFrame PRIVATE nlohmann_json::nlohmann_json)
 
+if(imt)
+  target_link_libraries(ROOTDataFrame PRIVATE TBB::tbb)
+endif()
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
