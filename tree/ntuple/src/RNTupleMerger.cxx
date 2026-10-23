@@ -27,6 +27,7 @@
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RColumnElementBase.hxx>
+#include <ROOT/RNTupleAttrUtils.hxx>
 #include <TROOT.h>
 #include <TFileMergeInfo.h>
 #include <TFile.h>
@@ -997,6 +998,41 @@ public:
    virtual void BeforeCommit() = 0;
 };
 
+/// Merge Actions used internally to merge attributes.
+class RNTupleAttrMergeActions final : public RNTupleMergeActions {
+   /// How much do we need to shift the _rangeStart field by. This changes on each new source (and is equal to the
+   /// total number of entries committed at the end of the previous source).
+   ROOT::NTupleSize_t fAttrEntryStartOffset = 0;
+   const RNTupleMergeStrategy &fParentStrategy;
+   std::shared_ptr<ROOT::NTupleSize_t> fRangeStartPtr;
+
+public:
+   RNTupleAttrMergeActions(const RNTupleMergeStrategy &parentStrategy, ROOT::NTupleSize_t initialStartOffset)
+      : fAttrEntryStartOffset(initialStartOffset), fParentStrategy(parentStrategy)
+   {
+   }
+
+   ENTupleMergeActionResult OnFill(ROOT::REntry &entry, const RNTupleMergeActionContext &) final
+   {
+      using namespace ROOT::Experimental::Internal::RNTupleAttributes;
+
+      // Cache pointer per source
+      if (!fRangeStartPtr)
+         fRangeStartPtr = entry.GetPtr<ROOT::NTupleSize_t>(kMetaFieldNames[kMetaFieldIndex_RangeStart]);
+
+      // Shift _rangeStart field by the number of main entries we already written in the destination
+      *fRangeStartPtr += fAttrEntryStartOffset;
+      return ENTupleMergeActionResult::kEmit;
+   }
+
+   ENTupleMergeActionResult OnSourceEnd(ROOT::REntry &, const RNTupleMergeActionContext &) final
+   {
+      fAttrEntryStartOffset = fParentStrategy.GetNDstEntries();
+      fRangeStartPtr = nullptr; // invalidate cached ptr every time we switch source
+      return ENTupleMergeActionResult::kDrop;
+   }
+};
+
 // =========================================================================================
 //
 // MergeStrategyDefault
@@ -1677,8 +1713,7 @@ ROOT::RResult<void> RNTupleMergeStrategySlow::MergeSource(RPageSource &source, R
       // We must not use the descriptor guard to prevent recursive locking in field.ConnectPageSource
       ROOT::DescriptorId_t fieldZeroId = fSrcDescriptor->GetFieldZeroId();
       fieldZero.SetOnDiskId(fieldZeroId);
-      const auto resetFieldIdAndColumnRepresentatives = [](ROOT::RFieldBase &field,
-                                                           const auto &recursiveCall) -> void {
+      const auto resetFieldIdAndColumnRepresentatives = [](ROOT::RFieldBase &field, const auto &recursiveCall) -> void {
          field.SetOnDiskId(ROOT::kInvalidDescriptorId);
          field.SetColumnRepresentatives({});
          for (auto *f : field.GetMutableSubfields()) {
@@ -1712,8 +1747,12 @@ ROOT::RResult<void> RNTupleMergeStrategySlow::MergeSource(RPageSource &source, R
    // Create and connect fields to source and sink and bind them together.
    // This causes a read on the src entry to populate the same memory used by the dst entry to write.
    for (const auto &[srcFieldDesc, _dstFieldDesc] : descCmp.fCommonFields) {
-      if (!srcFieldDesc->IsProjectedField())
+      if (!srcFieldDesc->IsProjectedField()) {
+         // Reset even common fields to their default value, since they may be Record fields with missing subfields
+         // in the source (in which case we won't overwrite them with new values and they'd keep the old ones)
+         fDstEntry->EmplaceNewValue(srcFieldDesc->GetFieldName());
          srcEntry->BindValue(srcFieldDesc->GetFieldName(), fDstEntry->GetPtr<void>(srcFieldDesc->GetFieldName()));
+      }
    }
    // reset the extraDstfields, to make sure any subfield that's missing from the current source
    // is default-initialized (rather than keeping its previous value).
@@ -1820,6 +1859,21 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
                                  new RNTupleMergeStrategySlow(std::move(fModel), *fDestination, mergeOpts))
                             : std::unique_ptr<RNTupleMergeStrategy>(
                                  new RNTupleMergeStrategyDefault(std::move(fModel), *fDestination, mergeOpts));
+   struct RAttrSetMergeData {
+      std::unique_ptr<ROOT::Internal::RPagePersistentSink> fSink;
+      RNTupleMergeStrategySlow fStrategy;
+
+      RAttrSetMergeData(std::unique_ptr<ROOT::Internal::RPagePersistentSink> attrSink,
+                        const RNTupleMergeStrategy &parentStrategy, const RNTupleMergeOptions &mergeOpts,
+                        ROOT::NTupleSize_t initialStartOffset)
+         : fSink(std::move(attrSink)),
+           fStrategy(nullptr, *fSink, mergeOpts,
+                     std::make_unique<RNTupleAttrMergeActions>(parentStrategy, initialStartOffset))
+      {
+      }
+   };
+   // Map { attrSetName => mergeData }
+   std::unordered_map<std::string, RAttrSetMergeData> attrSetsData;
 
    // Merge main loop
    for (RPageSource *source : sources) {
@@ -1883,14 +1937,68 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
          }
       }
 
+      const auto prevNEntries = strat->GetNDstEntries();
+
       auto res = strat->MergeSource(*source, descCmp);
       if (!res)
          return R__FORWARD_ERROR(res);
+
+      // Slow-merge attributes
+      for (const auto &attrSetDesc : source->GetSharedDescriptorGuard()->GetAttrSetIterable()) {
+         // Initialize output sink and strategy if it's the first time we encounter this attribute set name
+         auto attrSetDataIt = attrSetsData.find(attrSetDesc.GetName());
+         if (attrSetDataIt == attrSetsData.end()) {
+            auto sinkOpts = RNTupleWriteOptions();
+            sinkOpts.SetCompression(mergeOpts.fCompressionSettings.value());
+            auto sink =
+               std::unique_ptr<ROOT::Internal::RPagePersistentSink>(static_cast<ROOT::Internal::RPagePersistentSink *>(
+                  fDestination->CloneAsHidden(attrSetDesc.GetName(), sinkOpts).release()));
+            auto [insertedIt, inserted] =
+               attrSetsData.try_emplace(attrSetDesc.GetName(), std::move(sink), *strat, mergeOpts, prevNEntries);
+            assert(inserted);
+            attrSetDataIt = insertedIt;
+         }
+         auto &attrSetData = attrSetDataIt->second;
+
+         const auto attrLink =
+            ROOT::Internal::RNTupleLink{attrSetDesc.GetAnchorLocator(), attrSetDesc.GetAnchorLength()};
+         auto attrSource = source->OpenWithDifferentAnchor(attrLink);
+         auto &attrStrat = attrSetData.fStrategy;
+         attrStrat.InitSource(*attrSource);
+
+         descCmpRes = CompareDescriptorStructure(attrSetData.fSink->GetDescriptor(),
+                                                 attrSource->GetSharedDescriptorGuard().GetConstRef());
+         if (!descCmpRes) {
+            SKIP_OR_ABORT(std::string("Source RNTuple has an incompatible schema with the destination:\n") +
+                          descCmpRes.GetError()->GetReport())
+         }
+         descCmp = descCmpRes.Unwrap();
+
+         if (!descCmp.fExtraSrcFields.empty()) {
+            auto res = attrStrat.ExtendDestinationModel(descCmp);
+            if (!res)
+               return R__FORWARD_ERROR(res);
+         }
+
+         auto res = attrStrat.MergeSource(*attrSource, descCmp);
+         if (!res)
+            return R__FORWARD_ERROR(res);
+      }
    } // end loop over sources
 
    // Commit the output
+   for (auto &[attrSetName, attrSetData] : attrSetsData) {
+      attrSetData.fStrategy.BeforeCommit();
+      if (attrSetData.fSink->GetNEntries() > 0) {
+         attrSetData.fSink->CommitClusterGroup();
+      }
+      auto anchorLink = attrSetData.fSink->CommitDataset();
+      fDestination->CommitAttributeSet(attrSetName, anchorLink);
+   }
+
    strat->BeforeCommit();
 
+   // Commit the output
    if (fDestination->GetNEntries() == 0)
       R__LOG_WARNING(NTupleMergeLog()) << "Output RNTuple '" << fDestination->GetNTupleName() << "' has no entries.";
    else
