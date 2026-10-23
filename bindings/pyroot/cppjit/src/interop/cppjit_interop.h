@@ -109,6 +109,9 @@ RPY_EXPORTED
 TCppScope_t GetNamed(const std::string& scope_name,
                      TCppScope_t parent_scope = TCppScope_t{});
 RPY_EXPORTED
+bool IsVisibleName(const std::string& name,
+                   TCppScope_t parent_scope = TCppScope_t{});
+RPY_EXPORTED
 TCppScope_t GetParentScope(TCppScope_t scope);
 RPY_EXPORTED
 TCppScope_t GetScopeFromType(TCppType_t type);
@@ -248,7 +251,7 @@ bool IsSubclass(TCppScope_t derived, TCppScope_t base);
 RPY_EXPORTED
 bool IsSmartPtr(TCppScope_t klass);
 RPY_EXPORTED
-bool GetSmartPtrInfo(const std::string&, TCppScope_t* raw, TCppMethod_t* deref);
+bool GetSmartPtrInfo(TCppScope_t klass, TCppScope_t* raw, TCppMethod_t* deref);
 // calculate offsets between declared and actual type, up-cast: direction > 0;
 // down-cast: direction < 0
 RPY_EXPORTED
@@ -297,6 +300,15 @@ RPY_EXPORTED
 TCppType_t GetFnTypeFromStdFn(TCppType_t fn_type);
 RPY_EXPORTED
 void GetFnTypeSig(TCppType_t fn_type, std::vector<TCppType_t>& arg_types);
+/// Spells out a function type, or a pointer or reference to one, as the
+/// return type and the parenthesized argument list, e.g. "int" and
+/// "(double, const char *)"; the argument list is formatted as by
+/// GetMethodSignature(). Member function pointers are not function pointers
+/// and are rejected.
+/// \returns false if \p fn_type is not a function (pointer) type.
+RPY_EXPORTED
+bool GetFnTypeSigAsString(TCppType_t fn_type, std::string& ret_type,
+                          std::string& signature);
 RPY_EXPORTED
 bool IsSameType(TCppType_t typ1, TCppType_t typ2);
 RPY_EXPORTED

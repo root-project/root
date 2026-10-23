@@ -241,8 +241,10 @@ def _interpreter_lock():
 def cppdef(src, verbose=True):
     """Declare C++ source <src> to Cling."""
     with _stderr_capture() as err, _interpreter_lock():
-        errcode = gbl.Cpp.Declare(src, not verbose)
-    if not errcode == 0 or err.err:
+        ok = gbl.gInterpreter.Declare(src)
+    if not verbose:
+        err.err = ""
+    if not ok or err.err:
         if "warning" in err.err.lower() and "error" not in err.err.lower():
             warnings.warn(err.err, SyntaxWarning)
             return True
@@ -326,8 +328,8 @@ def load_library(name):
 def include(header):
     """Load (and JIT) header file <header> into Cling."""
     with _stderr_capture() as err, _interpreter_lock():
-        errcode = gbl.Cpp.Declare('#include "%s"' % header, False)
-    if not errcode == 0:
+        ok = gbl.gInterpreter.Declare('#include "%s"' % header)
+    if not ok:
         raise ImportError('Failed to load header file "%s"%s' % (header, err.err))
     return True
 
@@ -335,14 +337,13 @@ def include(header):
 def c_include(header):
     """Load (and JIT) header file <header> into Cling."""
     with _stderr_capture() as err, _interpreter_lock():
-        errcode = gbl.Cpp.Declare(
+        ok = gbl.gInterpreter.Declare(
             """extern "C" {
                                     #include "%s"
                                     }"""
-            % header,
-            False,
+            % header
         )
-    if not errcode == 0:
+    if not ok:
         raise ImportError('Failed to load header file "%s"%s' % (header, err.err))
     return True
 

@@ -341,9 +341,23 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
     // Case 3/4: pre-existing method that was either not found b/c the full
     // templated name was constructed in this call or it failed as overload
     else if (bIsCppOL) {
-      // TODO: see above, since the call hasn't happened yet, this overload may
-      // already exist and fail again.
-      ((CPPOverload*)pyol)->AdoptMethod(meth); // takes ownership
+      // The lookup is cached before the call, so when the call then fails
+      // (e.g. an implicit conversion attempt that is not allowed to nest), the
+      // next call instantiates the same method again. Adopting it again would
+      // grow the overload set with duplicates and force the whole set to be
+      // ranked anew on every call.
+      bool known = false;
+      for (PyCallable* pc : ((CPPOverload*)pyol)->fMethodInfo->fMethods) {
+        auto* existing = dynamic_cast<CPPMethod*>(pc);
+        if (existing && existing->GetMethod() == cppmeth) {
+          known = true;
+          break;
+        }
+      }
+      if (known)
+        delete meth;
+      else
+        ((CPPOverload*)pyol)->AdoptMethod(meth); // takes ownership
     }
 
     // Case 5: must be a template proxy, meaning that current template name is

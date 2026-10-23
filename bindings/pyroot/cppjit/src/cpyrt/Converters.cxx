@@ -26,7 +26,6 @@ using namespace cppjit;
 #include <cstddef>
 #include <limits.h>
 #include <locale> // for wstring_convert
-#include <regex>
 #include <sstream>
 #include <stddef.h> // for ptrdiff_t
 #include <string.h>
@@ -457,7 +456,7 @@ static inline bool CArraySetArg(PyObject* pyobject, cpyrt::Parameter& para,
   if (cpyrt::LowLevelView_Check(pyobject)) {
     auto llview = ((cpyrt::LowLevelView*)pyobject);
     if (llview->fBufInfo.itemsize != size ||
-        !strchr(llview->fBufInfo.format, tc)) {
+        !cpyrt::Utility::BufferFormatCompatible(tc, llview->fBufInfo.format)) {
       PyErr_Format(PyExc_TypeError,
                    "could not convert argument to buffer or nullptr");
       return false;
@@ -1787,7 +1786,7 @@ bool cpyrt::StdSpanConverter::SetArg(PyObject* pyobject, Parameter& para,
   memset(&fBufinfo, 0, sizeof(Py_buffer));
 
   if (PyObject_GetBuffer(pyobject, &fBufinfo, PyBUF_FORMAT) == 0) {
-    if (!strchr(fBufinfo.format, typecode)) {
+    if (!Utility::BufferFormatCompatible(typecode, fBufinfo.format)) {
       PyErr_Format(PyExc_TypeError,
                    "buffer has incompatible type: expected '%c' for C++ type "
                    "'%s', but got format '%s'",
@@ -1878,7 +1877,8 @@ bool ToArrayFromBuffer(PyObject* owner, void* address, PyObject* ctxt,
         convOk = true;                                                         \
       } else if (LowLevelView_Check(pyobject) &&                               \
                  ((LowLevelView*)pyobject)->fBufInfo.ndim == 2 &&              \
-                 strchr(((LowLevelView*)pyobject)->fBufInfo.format, code)) {   \
+                 Utility::BufferFormatCompatible(                              \
+                     code, ((LowLevelView*)pyobject)->fBufInfo.format)) {      \
         para.fValue.fVoidp = ((LowLevelView*)pyobject)->get_buf();             \
         para.fTypeCode = 'p';                                                  \
         convOk = true;                                                         \
@@ -1905,7 +1905,8 @@ bool ToArrayFromBuffer(PyObject* owner, void* address, PyObject* ctxt,
           convOk = true;                                                       \
         }                                                                      \
       } else if (LowLevelView_Check(pyobject) &&                               \
-                 strchr(((LowLevelView*)pyobject)->fBufInfo.format, code)) {   \
+                 Utility::BufferFormatCompatible(                              \
+                     code, ((LowLevelView*)pyobject)->fBufInfo.format)) {      \
         para.fValue.fVoidp = ((LowLevelView*)pyobject)->get_buf();             \
         para.fTypeCode = 'p';                                                  \
         convOk = true;                                                         \
@@ -3493,8 +3494,11 @@ cppjit::cpyrt::CreateConverter(const std::string& fullType, cdims_t dims) {
     return (h->second)(dims);
   }
 
-  // resolve typedefs etc.
-  const std::string& resolvedType = interop::ResolveName(fullType);
+  // resolve typedefs etc. (the type itself is kept for function pointers)
+  interop::TCppType_t type =
+      interop::GetType(fullType, /*enable_slow_lookup=*/true);
+  const std::string resolvedType =
+      type ? interop::GetTypeAsString(interop::ResolveType(type)) : fullType;
 
   // a full, qualified matching converter is preferred
   if (resolvedType != fullType) {
@@ -3639,7 +3643,7 @@ cppjit::cpyrt::CreateConverter(const std::string& fullType, cdims_t dims) {
   Converter* result = nullptr;
   if (interop::TCppScope_t klass = interop::GetFullScope(realType)) {
     interop::TCppScope_t raw;
-    if (interop::GetSmartPtrInfo(realType, &raw, nullptr)) {
+    if (interop::GetSmartPtrInfo(klass, &raw, nullptr)) {
       if (cpd == "") {
         result = new SmartPtrConverter(klass, raw, control);
       } else if (cpd == "&") {
@@ -3658,12 +3662,9 @@ cppjit::cpyrt::CreateConverter(const std::string& fullType, cdims_t dims) {
         // -- Cling WORKAROUND
         result = selectInstanceCnv(klass, cpd, dims, isConst, control);
     }
-  } else {
-    interop::TCppType_t typ = interop::GetType(fullType);
-    if (interop::IsFunctionType(typ)) {
-      // this is a function pointer or reference
-      result = new FunctionPointerConverter(typ);
-    }
+  } else if (interop::IsFunctionType(type)) {
+    // this is a function pointer or reference
+    result = new FunctionPointerConverter(type);
   }
   const std::string failure_msg("Failed to convert type: " + fullType +
                                 "; resolved: " + resolvedType +
@@ -3902,7 +3903,7 @@ cppjit::cpyrt::CreateConverter(interop::TCppType_t type, cdims_t dims) {
              (klass || (klass = interop::GetFullScope(realTypeStr)))) {
     // std::byte is a special enum class used to access raw memory
     interop::TCppScope_t raw;
-    if (interop::GetSmartPtrInfo(realTypeStr, &raw, nullptr)) {
+    if (interop::GetSmartPtrInfo(klass, &raw, nullptr)) {
       if (cpd == "") {
         result = new SmartPtrConverter(klass, raw, control);
       } else if (cpd == "&") {
@@ -3982,23 +3983,6 @@ bool cpyrt::RegisterConverter(const std::string& name, cf_t fac) {
     return false;
 
   gConvFactories[name] = fac;
-  return true;
-}
-
-//----------------------------------------------------------------------------
-CPYRT_EXPORT
-bool cpyrt::RegisterConverterAlias(const std::string& name,
-                                   const std::string& target) {
-  // register a custom converter that is a reference to an existing converter
-  auto f = gConvFactories.find(name);
-  if (f != gConvFactories.end())
-    return false;
-
-  auto t = gConvFactories.find(target);
-  if (t == gConvFactories.end())
-    return false;
-
-  gConvFactories[name] = t->second;
   return true;
 }
 
