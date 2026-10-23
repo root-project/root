@@ -8123,6 +8123,7 @@ class DataLoaderSave(unittest.TestCase):
         np.testing.assert_array_equal(w.flatten(), np.full(20, 0.5))
 
 
+@unittest.skipUnless("imt" in ROOT.gROOT.GetConfigFeatures().split(), "ROOT was built without implicit multi-threading")
 class DataLoaderImplicitMT(unittest.TestCase):
     file_name = "dataloader_imt.root"
     tree_name = "mytree"
