@@ -235,9 +235,14 @@ class TFileGetOwnership(unittest.TestCase):
     def test_owned_by_directory(self):
         with TFile(self.filename) as f:
             for name in ["h", "t", "dir"]:
-                self.assertFalse(f.Get(name).__python_owns__, msg=name)
-                # The object is still alive in the directory
-                self.assertTrue(f.GetList().FindObject(name), msg=name)
+                obj = f.Get(name)
+                # Whether these objects are registered in the directory may
+                # depend on ROOT::Experimental::ObjectAutoRegistrationEnabled()
+                # in the future, so check the ownership against the actual
+                # registration
+                registered = bool(f.GetList().FindObject(name))
+                self.assertEqual(obj.__python_owns__, not registered, msg=name)
+                # The object is still alive
                 self.assertEqual(f.Get(name).GetName(), name)
 
     def test_owned_by_python(self):
