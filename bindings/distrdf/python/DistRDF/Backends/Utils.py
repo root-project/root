@@ -248,7 +248,13 @@ def _(resultptr):
     of the dataset and the path to the partial snapshot. We can directly return
     the object, no extra work needed.
     """
-    return SnapshotResult(resultptr.treename, resultptr.filenames)
+    return SnapshotResult(
+        resultptr.treename,
+        resultptr.filenames,
+        return_filenames=resultptr.return_filenames,
+        merge=resultptr.merge,
+        target_file=resultptr.target_file,
+    )
 
 
 @singledispatch
@@ -333,4 +339,11 @@ def _(snap, range_id: int):
     # Actually clone the RDF C++ Snapshot node with the new file name
     resptr = ROOT.Internal.RDF.CloneResultAndAction(snap._resultptr, path_with_range)
 
-    return SnapshotResult(snap.treename, [path_with_range], resptr)
+    return SnapshotResult(
+        snap.treename,
+        [path_with_range],
+        resptr,
+        return_filenames=snap.return_filenames,
+        merge=snap.merge,
+        target_file=snap.target_file,
+    )
