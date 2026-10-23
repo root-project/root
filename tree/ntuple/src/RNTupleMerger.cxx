@@ -789,7 +789,7 @@ ExtendDestinationModel(RDescriptorsComparison &descCmp, ROOT::RNTupleModel &dstM
          return acc + (acc.length() ? ", " : "") + '`' + field->GetFieldName() + '`';
       });
       R__LOG_INFO(NTupleMergeLog()) << msg << ": adding " << (newFields.size() > 1 ? "them" : "it")
-                                    << " to the destination model (entry #" << destination.GetNEntries() << ").";
+                                    << " to the destination model (entry #" << nEntries << ").";
    }
 
    changeset.fAddedFields.reserve(newFields.size());
@@ -980,6 +980,10 @@ public:
 
    virtual ~RNTupleMergeStrategy() = default;
 
+   // Returns the number of entries currently written to the destination.
+   // This is only accurate before or after a call to MergeSource(), not during it.
+   virtual ROOT::NTupleSize_t GetNDstEntries() const = 0;
+
    // Invoked as the first thing when we start processing a new source
    virtual void InitSource(RPageSource &source) = 0;
 
@@ -1046,6 +1050,13 @@ public:
       }
    }
 
+   ROOT::NTupleSize_t GetNDstEntries() const final
+   {
+      // Since with default merging we always commit clusters at source boundary, we can simply rely on
+      // the sink's internal counter.
+      return fDestination.GetNEntries();
+   }
+
    void InitSource(RPageSource &source) final
    {
       source.Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
@@ -1061,8 +1072,8 @@ public:
    [[nodiscard]] ROOT::RResult<void> ExtendDestinationModel(RDescriptorsComparison &descCmp) final
    {
       // late model extension for all fExtraSrcFields in Union mode
-      auto res = ::ExtendDestinationModel(descCmp, *fDstModel, fDestination, *fSrcDescriptor,
-                                          fDestination.GetNEntries(), fMergeOpts.fExtraVerbose,
+      auto res = ::ExtendDestinationModel(descCmp, *fDstModel, fDestination, *fSrcDescriptor, GetNDstEntries(),
+                                          fMergeOpts.fExtraVerbose,
                                           /*forSlowMerge=*/false);
       return res;
    }
@@ -1583,6 +1594,13 @@ public:
       assert(!dstModel);
    }
 
+   ROOT::NTupleSize_t GetNDstEntries() const final
+   {
+      // During slow merging clusters are not necessarily committed at source boundary, so we need to
+      // manually track this number.
+      return fMergeContext.fDestinationEntryIndex;
+   }
+
    void InitSource(RPageSource &source) final
    {
       source.Attach();
@@ -1718,6 +1736,16 @@ ROOT::RResult<void> RNTupleMergeStrategySlow::MergeSource(RPageSource &source, R
          if (res == ENTupleMergeActionResult::kEmit)
             break;
       }
+   }
+
+   while (true) {
+      auto res = fActions->OnSourceEnd(*fDstEntry, fMergeContext);
+      if (res == ENTupleMergeActionResult::kDrop)
+         break;
+      fMergeContext.fDestinationEntryIndex += 1;
+      fDstEntry->Append();
+      if (res == ENTupleMergeActionResult::kEmit)
+         break;
    }
 
    if (fMergeContext.fDestinationEntryIndex > 0) {
