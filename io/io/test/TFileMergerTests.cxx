@@ -479,7 +479,7 @@ TEST(TFileMerger, TypeMismatchErrorTObjectWithNonTObject)
    }
 }
 
-// https://github.com/root-project/root/issues/23666
+// Regression test for https://github.com/root-project/root/issues/23666
 TEST(TFileMerger, NestedDirMaxOpenedFiles)
 {
    struct CleanupRAII {
@@ -502,28 +502,24 @@ TEST(TFileMerger, NestedDirMaxOpenedFiles)
    cleanup.fFiles.push_back(file3);
    cleanup.fFiles.push_back(fileOut);
 
-   const std::vector<std::pair<std::string, int>> inputs = {
-      {file1, 5},
-      {file2, 7},
-      {file3, 11}
-   };
+   const std::vector<std::pair<std::string, int>> inputs = {{file1, 5}, {file2, 7}, {file3, 11}};
 
    // Create 3 input files with objects inside a nested directory (depth >= 2)
    for (const auto &input : inputs) {
-      TFile f(input.first.c_str(), "RECREATE");
-      ASSERT_FALSE(f.IsZombie());
-      auto topDir = f.mkdir("nested");
+      auto f = std::make_unique<TFile>(input.first.c_str(), "RECREATE");
+      ASSERT_FALSE(f->IsZombie());
+      auto topDir = f->mkdir("nested");
       ASSERT_NE(topDir, nullptr);
       auto subDir = topDir->mkdir("dir");
       ASSERT_NE(subDir, nullptr);
       subDir->cd();
 
-      TTree tree("tree", "Test Tree");
+      auto tree = std::make_unique<TTree>("tree", "Test Tree");
       int val = 0;
-      tree.Branch("val", &val, "val/I");
+      tree->Branch("val", &val, "val/I");
       for (int i = 0; i < input.second; ++i) {
          val = i;
-         tree.Fill();
+         tree->Fill();
       }
 
       TH1F hist("hist", "Test Hist", 10, 0, 10);
@@ -531,26 +527,28 @@ TEST(TFileMerger, NestedDirMaxOpenedFiles)
          hist.Fill(i % 10);
       }
 
-      f.Write();
+      f->Write();
    }
 
-   // Merge using TFileMerger with SetMaxOpenedFiles(3) to force incremental batching across multiple batches
+   // Merge the input files into the output file. The original issue was triggered by the use of the `-n` parameter in
+   // `hadd`, which opens at most `N` files at once, set to the same number of input files (3). The merger used to only
+   // merge data from the first two files leaving out data from the third.
    {
-      TFileMerger merger(false);
+      TFileMerger merger{false};
       EXPECT_TRUE(merger.OutputFile(fileOut.c_str()));
       merger.SetMaxOpenedFiles(3);
-      merger.AddFile(file1.c_str(), false);
-      merger.AddFile(file2.c_str(), false);
-      merger.AddFile(file3.c_str(), false);
+      merger.AddFile(file1.c_str(), /*cpProgress*/ false);
+      merger.AddFile(file2.c_str(), /*cpProgress*/ false);
+      merger.AddFile(file3.c_str(), /*cpProgress*/ false);
       EXPECT_TRUE(merger.Merge());
    }
 
-   // Verify that all entries from all files (including the final incremental batch) are present
+   // Verify correct values for merged objects in the output file
    {
-      TFile fOut(fileOut.c_str(), "READ");
-      ASSERT_FALSE(fOut.IsZombie());
+      auto fOut = std::make_unique<TFile>(fileOut.c_str(), "READ");
+      ASSERT_FALSE(fOut->IsZombie());
 
-      auto topDir = fOut.Get<TDirectory>("nested");
+      auto topDir = fOut->Get<TDirectory>("nested");
       ASSERT_NE(topDir, nullptr);
       auto subDir = topDir->Get<TDirectory>("dir");
       ASSERT_NE(subDir, nullptr);
@@ -558,6 +556,16 @@ TEST(TFileMerger, NestedDirMaxOpenedFiles)
       auto tree = subDir->Get<TTree>("tree");
       ASSERT_NE(tree, nullptr);
       EXPECT_EQ(tree->GetEntries(), 5 + 7 + 11);
+      int val = 0;
+      tree->SetBranchAddress("val", &val);
+      int entryCursor{};
+      for (const auto &input : inputs) {
+         for (int i = 0; i < input.second; ++i) {
+            tree->GetEntry(entryCursor);
+            EXPECT_EQ(val, i);
+            entryCursor++;
+         }
+      }
 
       auto hist = subDir->Get<TH1F>("hist");
       ASSERT_NE(hist, nullptr);
