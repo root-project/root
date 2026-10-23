@@ -128,7 +128,7 @@ ROOT_ADD_PYUNITTEST(pyroot_memory memory.py)
 
 # ML dataloader tests
 if (dataframe)
-  ROOT_ADD_PYUNITTEST(ml_dataloader ml_dataloader.py PYTHON_DEPS numpy tensorflow torch)
+  ROOT_ADD_PYUNITTEST(ml_dataloader ml_dataloader.py PYTHON_DEPS jax numpy tensorflow torch)
 endif()
 
 ROOT_ADD_PYUNITTEST(regression_18441 regression_18441.py)
