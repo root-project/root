@@ -19,6 +19,8 @@
 #include <mutex>
 #include <sstream>
 #include <string>
+#include <string_view>
+#include <unordered_map>
 #include <utility>
 
 namespace ROOT {
@@ -132,13 +134,12 @@ public:
 class RLogManager : public RLogChannel, public RLogHandler {
    std::mutex fMutex;
    std::list<std::unique_ptr<RLogHandler>> fHandlers;
+   mutable std::mutex fChannelVerbosityMutex;
+   std::unordered_map<std::string, ELogLevel> fChannelVerbosity;
 
 public:
    /// Initialize taking a RLogHandler.
-   RLogManager(std::unique_ptr<RLogHandler> lh) : RLogChannel(ELogLevel::kWarning)
-   {
-      fHandlers.emplace_back(std::move(lh));
-   }
+   RLogManager(std::unique_ptr<RLogHandler> lh);
 
    static RLogManager &Get();
 
@@ -150,6 +151,28 @@ public:
 
    /// Remove and return the given log handler. Returns `nullptr` if not found.
    std::unique_ptr<RLogHandler> Remove(RLogHandler *handler);
+
+   /// Get the verbosity configured for a specific channel name. Returns ELogLevel::kUnset if not configured.
+   ELogLevel GetChannelVerbosity(const std::string &name) const;
+
+   /// Set the verbosity for a specific channel name.
+   void SetChannelVerbosity(const std::string &name, ELogLevel level);
+
+   /// Reset the verbosity for a specific channel name (reverting to unconfigured).
+   void ResetChannelVerbosity(const std::string &name);
+
+   /// Reset all channel-specific verbosities.
+   void ResetAllChannelVerbosities();
+
+   /// Configure channel and global verbosities from the ROOT_LOG (or ROOT_LOGGERS) environment variable.
+   void ConfigureFromEnv();
+
+   /// Configure channel and global verbosities from a configuration string.
+   /// Format: "Channel1=Level1,Channel2=Level2" (e.g. "ROOT.InterpreterPerf=Debug(3),ROOT.RBrowser=Error")
+   void ConfigureFromString(std::string_view config);
+
+   /// Parse a string representing a log level (e.g. "Debug(3)", "Debug+3", "Error", "Warning", "Info", "Fatal", "Unset").
+   static ELogLevel ParseLogLevel(std::string_view str);
 
    // Emit a `RLogEntry` to the RLogHandlers.
    // Returns false if further emission of this Log should be suppressed.
@@ -308,9 +331,14 @@ inline RLogChannel &GetChannelOrManager(RLogChannel &channel)
 
 inline ELogLevel RLogChannel::GetEffectiveVerbosity(const RLogManager &mgr) const
 {
-   if (fVerbosity == ELogLevel::kUnset)
-      return mgr.GetVerbosity();
-   return fVerbosity;
+   if (fVerbosity != ELogLevel::kUnset)
+      return fVerbosity;
+   if (!fName.empty()) {
+      auto channelLevel = mgr.GetChannelVerbosity(fName);
+      if (channelLevel != ELogLevel::kUnset)
+         return channelLevel;
+   }
+   return mgr.GetVerbosity();
 }
 
 } // namespace ROOT

@@ -305,3 +305,101 @@ TEST(Logger, ROOTErrorHandlerDiagString)
 
    SetErrorHandler(prevErrorHandler);
 }
+
+TEST(Logger, ParseLogLevel)
+{
+   EXPECT_EQ(ROOT::RLogManager::ParseLogLevel("Debug(3)"), ROOT::ELogLevel::kDebug + 3);
+   EXPECT_EQ(ROOT::RLogManager::ParseLogLevel("Debug+5"), ROOT::ELogLevel::kDebug + 5);
+   EXPECT_EQ(ROOT::RLogManager::ParseLogLevel("Debug:2"), ROOT::ELogLevel::kDebug + 2);
+   EXPECT_EQ(ROOT::RLogManager::ParseLogLevel("Debug"), ROOT::ELogLevel::kDebug);
+   EXPECT_EQ(ROOT::RLogManager::ParseLogLevel("kDebug"), ROOT::ELogLevel::kDebug);
+   EXPECT_EQ(ROOT::RLogManager::ParseLogLevel("Error"), ROOT::ELogLevel::kError);
+   EXPECT_EQ(ROOT::RLogManager::ParseLogLevel("kError"), ROOT::ELogLevel::kError);
+   EXPECT_EQ(ROOT::RLogManager::ParseLogLevel("Warning"), ROOT::ELogLevel::kWarning);
+   EXPECT_EQ(ROOT::RLogManager::ParseLogLevel("warn"), ROOT::ELogLevel::kWarning);
+   EXPECT_EQ(ROOT::RLogManager::ParseLogLevel("Info"), ROOT::ELogLevel::kInfo);
+   EXPECT_EQ(ROOT::RLogManager::ParseLogLevel("FATAL"), ROOT::ELogLevel::kFatal);
+   EXPECT_EQ(ROOT::RLogManager::ParseLogLevel("Unset"), ROOT::ELogLevel::kUnset);
+   EXPECT_EQ(ROOT::RLogManager::ParseLogLevel("  kInfo  "), ROOT::ELogLevel::kInfo);
+   EXPECT_EQ(ROOT::RLogManager::ParseLogLevel(""), ROOT::ELogLevel::kUnset);
+   EXPECT_EQ(ROOT::RLogManager::ParseLogLevel("invalid_level"), ROOT::ELogLevel::kUnset);
+}
+
+TEST(Logger, ConfigureFromString)
+{
+   auto &mgr = ROOT::RLogManager::Get();
+   auto initialGlobal = mgr.GetVerbosity();
+
+   mgr.ConfigureFromString("ROOT.InterpreterPerf=Debug(3), ROOT.RBrowser=Error, default=Info");
+
+   ROOT::RLogChannel perf("ROOT.InterpreterPerf");
+   ROOT::RLogChannel browser("ROOT.RBrowser");
+   ROOT::RLogChannel other("ROOT.UnspecifiedChannel");
+
+   EXPECT_EQ(perf.GetEffectiveVerbosity(mgr), ROOT::ELogLevel::kDebug + 3);
+   EXPECT_EQ(browser.GetEffectiveVerbosity(mgr), ROOT::ELogLevel::kError);
+   EXPECT_EQ(other.GetEffectiveVerbosity(mgr), ROOT::ELogLevel::kInfo);
+
+   // Clean up
+   mgr.ResetAllChannelVerbosities();
+   mgr.SetVerbosity(initialGlobal);
+}
+
+TEST(Logger, ConfigureFromEnv)
+{
+   auto &mgr = ROOT::RLogManager::Get();
+   auto initialGlobal = mgr.GetVerbosity();
+
+   const char *prevEnv = std::getenv("ROOT_LOG");
+   std::string savedEnv = prevEnv ? prevEnv : "";
+
+#if defined(_WIN32)
+   _putenv("ROOT_LOG=ROOT.InterpreterPerf=Debug(3),ROOT.RBrowser=Error");
+#else
+   setenv("ROOT_LOG", "ROOT.InterpreterPerf=Debug(3),ROOT.RBrowser=Error", 1);
+#endif
+
+   mgr.ConfigureFromEnv();
+
+   ROOT::RLogChannel perf("ROOT.InterpreterPerf");
+   ROOT::RLogChannel browser("ROOT.RBrowser");
+
+   EXPECT_EQ(perf.GetEffectiveVerbosity(mgr), ROOT::ELogLevel::kDebug + 3);
+   EXPECT_EQ(browser.GetEffectiveVerbosity(mgr), ROOT::ELogLevel::kError);
+
+   {
+      TestLogger testLogger;
+
+      // Debug(2) should be emitted for perf (effective level is Debug(3))
+      R__LOG_DEBUG(2, perf) << "perf debug 2 emitted";
+      EXPECT_EQ(testLogger.size(), 1);
+
+      // Debug(4) should be suppressed for perf
+      R__LOG_DEBUG(4, perf) << "perf debug 4 suppressed";
+      EXPECT_EQ(testLogger.size(), 1);
+
+      // Warning should be suppressed for browser (effective level is Error)
+      R__LOG_WARNING(browser) << "browser warning suppressed";
+      EXPECT_EQ(testLogger.size(), 1);
+
+      // Error should be emitted for browser
+      R__LOG_ERROR(browser) << "browser error emitted";
+      EXPECT_EQ(testLogger.size(), 2);
+   }
+
+   // Restore environment and manager state
+#if defined(_WIN32)
+   if (prevEnv)
+      _putenv(("ROOT_LOG=" + savedEnv).c_str());
+   else
+      _putenv("ROOT_LOG=");
+#else
+   if (prevEnv)
+      setenv("ROOT_LOG", savedEnv.c_str(), 1);
+   else
+      unsetenv("ROOT_LOG");
+#endif
+
+   mgr.ResetAllChannelVerbosities();
+   mgr.SetVerbosity(initialGlobal);
+}
