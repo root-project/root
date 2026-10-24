@@ -814,7 +814,8 @@ void TProfile3D::GetStats(Double_t *stats) const
    if (fBuffer) ((TProfile3D*)this)->BufferEmpty();
 
    // Loop on bins
-   if ( (fTsumw == 0 /* && fEntries > 0 */) || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange)) {
+   if ((fTsumw == 0 /* && fEntries > 0 */) || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange) ||
+       fZaxis.TestBit(TAxis::kAxisRange)) {
 
       // check for labels axis . In that case corresponding statistics do not make sense and it is set to zero
       Bool_t labelXaxis = ((const_cast<TAxis &>(fXaxis)).GetLabels() && fXaxis.CanExtend());

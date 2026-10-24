@@ -75,6 +75,18 @@ TEST(TProfile2D, Chi2Test)
    runTest(reference, sameDistr, differentDistr);
 }
 
+TEST(TProfile3D, GetStatsHonoursZRange)
+{
+   TProfile3D profile("profile", "", 4, 0, 4, 5, 0, 10, 3, 0, 30);
+   profile.Fill(0.5, 1., 5., 1.);
+   profile.Fill(3.5, 9., 25., 1.);
+   profile.GetZaxis()->SetRange(1, 1);
+
+   EXPECT_DOUBLE_EQ(0.5, profile.GetMean(1));
+   EXPECT_DOUBLE_EQ(1., profile.GetMean(2));
+   EXPECT_DOUBLE_EQ(5., profile.GetMean(3));
+}
+
 TEST(TProfile3D, Chi2Test)
 {
    TProfile3D reference("reference", "reference", 10, 0, 10, 11, 0, 11, 12, 0, 12);
