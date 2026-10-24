@@ -827,11 +827,38 @@ void TProfile3D::GetStats(Double_t *stats) const
       Double_t x,y,z;
       for (bin=0;bin<kNstat;bin++) stats[bin] = 0;
       if (!fBinEntries.fArray) return;
-      for (binz=fZaxis.GetFirst();binz<=fZaxis.GetLast();binz++) {
+      Int_t firstBinX = fXaxis.GetFirst();
+      Int_t lastBinX = fXaxis.GetLast();
+      Int_t firstBinY = fYaxis.GetFirst();
+      Int_t lastBinY = fYaxis.GetLast();
+      Int_t firstBinZ = fZaxis.GetFirst();
+      Int_t lastBinZ = fZaxis.GetLast();
+      // Include flow bins only on axes without an explicit range.
+      if (GetStatOverflowsBehaviour()) {
+         if (!fXaxis.TestBit(TAxis::kAxisRange)) {
+            if (firstBinX == 1)
+               firstBinX = 0;
+            if (lastBinX == fXaxis.GetNbins())
+               lastBinX += 1;
+         }
+         if (!fYaxis.TestBit(TAxis::kAxisRange)) {
+            if (firstBinY == 1)
+               firstBinY = 0;
+            if (lastBinY == fYaxis.GetNbins())
+               lastBinY += 1;
+         }
+         if (!fZaxis.TestBit(TAxis::kAxisRange)) {
+            if (firstBinZ == 1)
+               firstBinZ = 0;
+            if (lastBinZ == fZaxis.GetNbins())
+               lastBinZ += 1;
+         }
+      }
+      for (binz = firstBinZ; binz <= lastBinZ; binz++) {
          z = (!labelZaxis) ? fZaxis.GetBinCenter(binz) : 0;
-         for (biny=fYaxis.GetFirst();biny<=fYaxis.GetLast();biny++) {
+         for (biny = firstBinY; biny <= lastBinY; biny++) {
             y = (!labelYaxis) ? fYaxis.GetBinCenter(biny) : 0;
-            for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
+            for (binx = firstBinX; binx <= lastBinX; binx++) {
                bin = GetBin(binx,biny,binz);
                w         = fBinEntries.fArray[bin];
                w2        = (fBinSumw2.fN ? fBinSumw2.fArray[bin] : w );

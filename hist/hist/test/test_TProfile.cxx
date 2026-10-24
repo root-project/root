@@ -87,6 +87,20 @@ TEST(TProfile3D, GetStatsHonoursZRange)
    EXPECT_DOUBLE_EQ(5., profile.GetMean(3));
 }
 
+TEST(TProfile3D, GetStatsHonoursStatOverflowsWithZRange)
+{
+   TProfile3D profile("profile", "", 2, 0, 4, 3, 0, 12, 4, 0, 40);
+   profile.SetStatOverflows(TH1::kConsider);
+   profile.Fill(-1., 2., 5., 4.);
+   profile.Fill(1., 2., 5., 8.);
+   profile.GetZaxis()->SetRange(1, 1);
+
+   double stats[13] = {};
+   profile.GetStats(stats);
+   EXPECT_DOUBLE_EQ(2., stats[0]);
+   EXPECT_DOUBLE_EQ(0., profile.GetMean(1));
+}
+
 TEST(TProfile3D, Chi2Test)
 {
    TProfile3D reference("reference", "reference", 10, 0, 10, 11, 0, 11, 12, 0, 12);
