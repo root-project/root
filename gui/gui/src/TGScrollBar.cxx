@@ -51,6 +51,7 @@ kC_VSCROLL, kSB_SLIDERTRACK, position, 0
 #include "TGResourcePool.h"
 #include "TGPicture.h"
 #include "TImage.h"
+#include "TASUtils.h"
 #include "TSystem.h"
 #include "TTimer.h"
 #include "TEnv.h"
@@ -157,25 +158,21 @@ void TGScrollBarElement::SetEnabled(Bool_t on)
       SetState(kButtonDisabled);
 
       if (!fPicD) {
-         TImage *img = TImage::Create();
-         if (!img) return;
-         TImage *img2 = TImage::Create();
-         if (!img2) {
-            if (img) delete img;
+         std::unique_ptr<TImage> img2(TImage::Create());
+         if (!img2)
             return;
-         }
          TString back = gEnv->GetValue("Gui.BackgroundColor", "#c0c0c0");
          img2->FillRectangle(back.Data(), 0, 0, fPic->GetWidth(), fPic->GetHeight());
-         img->SetImage(fPicN->GetPicture(), fPicN->GetMask());
-         Pixmap_t mask = GetImageMask(img);
-         img2->Merge(img, "overlay");
+         auto img = TASUtils::FromPixmap(fPicN->GetPicture(), fPicN->GetMask());
+         if (!img)
+            return;
+         Pixmap_t mask = TASUtils::GetMask(img.get());
+         img2->Merge(img.get(), "overlay");
 
          TString name = "disbl_";
          name += fPic->GetName();
-         fPicD = fClient->GetPicturePool()->GetPicture(name.Data(), GetImagePixmap(img2),
+         fPicD = fClient->GetPicturePool()->GetPicture(name.Data(), TASUtils::GetPixmap(img2.get()),
                                                        mask);
-         delete img;
-         delete img2;
       }
       fPic = fPicD;
    }

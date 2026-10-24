@@ -31,6 +31,7 @@ Two signals are available:
 #include "TSystem.h"
 #include "TGResourcePool.h"
 #include "TImage.h"
+#include "TASUtils.h"
 #include "TMath.h"
 #include "TVirtualX.h"
 #include "TGSpeedo.h"
@@ -136,7 +137,7 @@ void TGSpeedo::Build()
 
    if (fImage && fImage->IsValid()) {
       fBase = fClient->GetPicturePool()->GetPicture(gSystem->BaseName(fPicName.Data()),
-              GetImagePixmap(fImage), GetImageMask(fImage));
+              TASUtils::GetPixmap(fImage), TASUtils::GetMask(fImage));
       // center of the image
       Float_t xc = (Float_t)(fBase ? (fBase->GetWidth() + 1) / 2 : 96.0);
       Float_t yc = (Float_t)(fBase ? (fBase->GetHeight() + 1) / 2 : 96.0);
@@ -527,8 +528,9 @@ void TGSpeedo::DrawNeedle()
 
    if (fImage2 && fImage2->IsValid()) {
       // First clone original image.
-      TImage *img = (TImage*)fImage2->Clone("img");
-      if (!img || !img->IsValid()) return;
+      std::unique_ptr<TImage> img((TImage*)fImage2->Clone("img"));
+      if (!img || !img->IsValid())
+         return;
       if (fPeakMark) {
          img->DrawLine(xpk0, ypk0, xpk1, ypk1, "#00ff00", 3);
          img->DrawLine(xpk0, ypk0, xpk1, ypk1, "#ffffff", 1);
@@ -539,10 +541,9 @@ void TGSpeedo::DrawNeedle()
       }
       // draw line (used to render the needle) directly on the image
       img->DrawLine(xch0, ych0, xch1, ych1, "#ff0000", 2);
+
       // finally paint image to the widget
-      img->PaintImage(fId, 0, 0, 0, 0, 0, 0, "opaque");
-      // and finally, to avoid memory leaks
-      delete img;
+      TASUtils::PaintImage(img.get(), fId, 0, 0, kTRUE);
    }
    gVirtualX->Update();
 }
@@ -645,7 +646,8 @@ void TGSpeedo::DoRedraw()
       if (fImage2 && fImage2->IsValid())
          delete fImage2;
       fImage2 = (TImage*)fImage->Clone("fImage2");
-      if (!fImage2 || !fImage2->IsValid()) return;
+      if (!fImage2 || !fImage2->IsValid())
+         return;
       TString ar = "arialbd.ttf";
       // format counter value
       Int_t nexe = 0;
@@ -678,8 +680,9 @@ void TGSpeedo::DoRedraw()
       // second line
       strSize = gVirtualX->TextWidth(fTextFS, fDisplay2.Data(), fDisplay2.Length()) - 6;
       fImage2->DrawText((Int_t)xc - (strSize / 2), (Int_t)yc + 38, fDisplay2.Data(), 8, "#ffffff", ar);
-      TImage *img = (TImage*)fImage2->Clone("img");
-      if (!img || !img->IsValid()) return;
+      std::unique_ptr<TImage> img((TImage*)fImage2->Clone("img"));
+      if (!img || !img->IsValid())
+         return;
       if (fPeakMark) {
          img->DrawLine(xpk0, ypk0, xpk1, ypk1, "#00ff00", 3);
          img->DrawLine(xpk0, ypk0, xpk1, ypk1, "#ffffff", 1);
@@ -690,9 +693,8 @@ void TGSpeedo::DoRedraw()
       }
       // draw line (used to render the needle) directly on the image
       img->DrawLine(xch0, ych0, xch1, ych1, "#ff0000", 2);
+
       // finally paint image to the widget
-      img->PaintImage(fId, 0, 0, 0, 0, 0, 0, "opaque");
-      // and finally, to avoid memory leaks
-      delete img;
+      TASUtils::PaintImage(img.get(), fId, 0, 0, kTRUE);
    }
 }

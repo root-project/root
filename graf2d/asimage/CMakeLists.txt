@@ -34,6 +34,23 @@ if (x11)
   target_link_libraries(ASImage PRIVATE X11::X11)
 endif()
 
+ROOT_STANDARD_LIBRARY_PACKAGE(ASImageUtils
+  NO_INSTALL_HEADERS
+  HEADERS
+    TASUtils.h
+  SOURCES
+    TASUtils.cxx
+  LINKDEF
+    LinkDefUtils.h
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+  LIBRARIES
+    libAfterImage
+  DEPENDENCIES
+    ASImage
+    Gpad
+)
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ASImageGui
   NO_INSTALL_HEADERS
   HEADERS

@@ -35,6 +35,7 @@
 #include "TRootHelpDialog.h"
 #include "TGListTree.h"
 #include "TImage.h"
+#include "TASUtils.h"
 #include "TGTextEdit.h"
 #include "TGTab.h"
 #include "TGListBox.h"
@@ -1601,7 +1602,7 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
 
    static std::unique_ptr<TImage> img;
 
-   img = TGWindow::CreateImageFromWindow(savfr->GetParent()->GetId());
+   img = TASUtils::FromWindow(savfr->GetParent()->GetId());
 
    TGWindow *root = (TGWindow*)fClient->GetRoot();
    TGFileInfo fi;
@@ -1690,7 +1691,7 @@ void TRootGuiBuilder::AddMacro(const char *macro, TImage *img)
    static int i = 0;
    const TGPicture *pic = fClient->GetPicturePool()->GetPicture(
                                        TString::Format("%s;%d", macro, i++),
-                                       GetImagePixmap(img), GetImageMask(img));
+                                       TASUtils::GetPixmap(img), TASUtils::GetMask(img));
    const char *name = gSystem->BaseName(macro);
 
    TGButton *btn = FindActionButton(name, "User's Macros");

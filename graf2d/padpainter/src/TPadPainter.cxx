@@ -25,6 +25,10 @@
 #include "TMath.h"
 #include "TPad.h"
 
+#ifdef USE_ASIMAGEUTILS
+#include "TASUtils.h"
+#endif
+
 namespace {
 
 //Typedef is fine, but let's pretend we look cool and modern:
@@ -226,9 +230,21 @@ Bool_t TPadPainter::HasTTFonts() const
 
 void TPadPainter::DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags)
 {
-   Window_t wid = (Window_t)gVirtualX->GetWindowID(fPad->GetPixmapID());
+   Window_t wid = gVirtualX->GetWindowID(fPad->GetPixmapID());
+
    // use old API to draw image on gVirtualX window
-   img->PaintImage(wid, x, y, 0, 0, 0, 0, flags ? "" : "opaque");
+   // img->PaintImage(wid, x, y, 0, 0, 0, 0, flags ? "" : "opaque");
+#ifdef USE_ASIMAGEUTILS
+   // new API invokes
+   TASUtils::PaintImage(img, wid, x, y, !flags);
+#else
+   ::Error("TPadPainter::DrawImage", "TASImage not compiled, image painting is not possible");
+   (void) wid;
+   (void) img;
+   (void) x;
+   (void) y;
+   (void) flags;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -573,43 +589,30 @@ TVirtualPadPainter::ESaveImageResult TPadPainter::SaveAsImage(TVirtualPad *pad, 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill image object with the pixel data from the pad
-/// Implements special handling for X11 where ASImage has native implementation
+/// Use TASUtils::FillImageFromWindow method which provides native X11 handling
 
 Bool_t TPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
 {
    if (!image || !pad)
       return kFALSE;
 
-   gVirtualX->Update(1);
-   if (!gThreadXAR) {
-      gSystem->Sleep(10);
-      gSystem->ProcessEvents();
-      gSystem->Sleep(10);
-      gSystem->ProcessEvents();
-   }
-
+#ifdef USE_ASIMAGEUTILS
    auto width = pad->GetPadWidth();
    auto height = pad->GetPadHeight();
 
    Int_t wid = (pad == pad->GetCanvas()) ? pad->GetCanvasID() : pad->GetPixmapID();
    gVirtualX->SelectWindow(wid);
 
-   Window_t wd = (Window_t)gVirtualX->GetCurrentWindow();
+   Window_t wd = gVirtualX->GetCurrentWindow();
 
-   if (IsX11()) { //use built-in optimized version
-      image->FromX11Window(wd, 0, 0, width, height);
-   } else {
-      unsigned char *bits = gVirtualX->GetColorBits(wd, 0, 0, width, height);
-      if (!bits)
-         return kFALSE;
-
-      image->FromBitmap(bits, width, height);
-      delete [] bits;
-   }
-
-   return image->IsValid();
+   return TASUtils::FillImageFromWindow(image, wd, width, height);
+#else
+   ::Error("TPadPainter::FillImageFromPad", "Cannot work without TASImage class");
+   (void) image;
+   (void) pad;
+   return kFALSE;
+#endif
 }
-
 
 //Aux. private functions.
 namespace {

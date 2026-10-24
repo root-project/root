@@ -102,6 +102,7 @@ in a list view. Used to have resizable column headers.
 #include "TGSplitter.h"
 #include "TGDNDManager.h"
 #include "TImage.h"
+#include "TASUtils.h"
 #include "TObjectSpy.h"
 #include "TVirtualX.h"
 
@@ -1579,7 +1580,7 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage(const TString &fileName)
          Int_t saver = gErrorIgnoreLevel;
          gErrorIgnoreLevel = kFatal;
          RaiseWindow();
-         auto img = TGWindow::CreateImageFromWindow(GetId());
+         auto img = TASUtils::FromWindow(GetId());
          if (img)
             img->WriteImage(fname, gtype);
          gErrorIgnoreLevel = saver;
@@ -1833,7 +1834,7 @@ void TGMainFrame::SetIconPixmap(char **xpm_array)
    TImage *img = TImage::Create();
    if (!img) return;
    img->SetImageBuffer(xpm_array, TImage::kXpm);
-   Pixmap_t pic = GetImagePixmap(img);
+   Pixmap_t pic = TASUtils::GetPixmap(img);
    if (pic) {
       gVirtualX->SetIconPixmap(fId, pic);
    } else {

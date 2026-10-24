@@ -29,4 +29,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GuiBld
     Gui
     Graf
     MathCore
+    ASImageUtils
 )

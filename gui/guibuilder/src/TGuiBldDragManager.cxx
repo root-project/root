@@ -21,6 +21,7 @@
 #include "TROOT.h"
 #include "TColor.h"
 #include "TImage.h"
+#include "TASUtils.h"
 
 #include "TError.h"
 #include "TClassMenuItem.h"
@@ -3296,7 +3297,7 @@ Bool_t TGuiBldDragManager::Save(const char *file)
 
    static std::unique_ptr<TImage> img;
 
-   img = TGWindow::CreateImageFromWindow(main->GetId());
+   img = TASUtils::FromWindow(main->GetId());
 
    if (!file || !file[0]) {
       static TString dir(".");
@@ -3362,7 +3363,7 @@ Bool_t TGuiBldDragManager::SaveFrame(const char *file)
 
    static std::unique_ptr<TImage> img;
 
-   img = TGWindow::CreateImageFromWindow(frame->GetId());
+   img = TASUtils::FromWindow(frame->GetId());
 
    static TString dir(".");
    static Bool_t overwr = kFALSE;

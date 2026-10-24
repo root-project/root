@@ -99,6 +99,8 @@ private:
    Atom_t   HandleDNDEnter(Atom_t * typelist) override;
    Bool_t   HandleDNDLeave() override;
 
+   TVirtualPadPainter *CreatePadPainter() override;
+
 public:
    TRootCanvas(TCanvas *c = nullptr, const char *name = "ROOT Canvas", UInt_t width = 500, UInt_t height = 300);
    TRootCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);

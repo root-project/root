@@ -143,6 +143,7 @@ by calling the SetSplit(Bool_t) method.
 #include "TGResourcePool.h"
 #include "TSystem.h"
 #include "TImage.h"
+#include "TASUtils.h"
 #include "TEnv.h"
 #include "TClass.h"
 #include "TGMenu.h"
@@ -1101,26 +1102,22 @@ void TGPictureButton::DoRedraw()
 
 void TGPictureButton::CreateDisabledPicture()
 {
-   TImage *img = TImage::Create();
-   if (!img) return;
-   TImage *img2 = TImage::Create();
-   if (!img2) {
-      if (img) delete img;
+   std::unique_ptr<TImage> img2(TImage::Create());
+   if (!img2)
       return;
-   }
    TString back = gEnv->GetValue("Gui.BackgroundColor", "#c0c0c0");
    img2->FillRectangle(back.Data(), 0, 0, fPic->GetWidth(), fPic->GetHeight());
-   img->SetImage(fPic->GetPicture(), fPic->GetMask());
-   Pixmap_t mask = GetImageMask(img);
-   img2->Merge(img, "overlay");
+   auto img = TASUtils::FromPixmap(fPic->GetPicture(), fPic->GetMask());
+   if (img) {
+      Pixmap_t mask = TASUtils::GetMask(img.get());
+      img2->Merge(img.get(), "overlay");
 
-   TString name = "disbl_";
-   name += fPic->GetName();
-   fPicD = fClient->GetPicturePool()->GetPicture(name.Data(), GetImagePixmap(img2),
-                                                 mask);
-   fOwnDisabledPic = kTRUE;
-   delete img;
-   delete img2;
+      TString name = "disbl_";
+      name += fPic->GetName();
+      fPicD = fClient->GetPicturePool()->GetPicture(name.Data(), TASUtils::GetPixmap(img2.get()),
+                                                    mask);
+      fOwnDisabledPic = kTRUE;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

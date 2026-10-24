@@ -38,6 +38,7 @@
 
 #include "TGHtml.h"
 #include "TImage.h"
+#include "TASUtils.h"
 #include "TVirtualX.h"
 #include "strlcpy.h"
 
@@ -572,12 +573,23 @@ void TGHtml::DrawImage(TGHtmlImageMarkup *image, Drawable_t drawable,
       imageX = 0;
    }
 
+   // no need to paint if any visisble dimension is not-positive
+   // this happens when image is not shown on currently painted region
+   if ((imageH <= 0) || (imageW <= 0))
+      return;
+
    TImage *img = image->fPImage->fImage;
+   if (!img)
+      return;
 
-   imageH = imageH < 0 ? -imageH : imageH;
-   imageW = imageW < 0 ? -imageW : imageW;
+   if ((imageX == 0) && (imageY == 0) && (imageW == image->fW) && (imageH == image->fH)) {
+      TASUtils::PaintImage(img, drawable, x, y);
+   } else {
+      std::unique_ptr<TImage> cloned((TImage *) img->Clone("crop_img"));
+      cloned->Crop(imageX, imageY, imageW, imageH);
+      TASUtils::PaintImage(cloned.get(), drawable, x, y);
+   }
 
-   img->PaintImage(drawable, x, y, imageX, imageY, imageW, imageH);
    //gVirtualX->Update(kFALSE);
 
    image->fRedrawNeeded = 0;
@@ -891,7 +903,7 @@ void TGHtml::DrawTableBgnd(int l, int t, int w, int h,
       w -= sw;
    }
 #else
-   auto img_pixmap = TGWindow::GetImagePixmap(image);
+   auto img_pixmap = TASUtils::GetPixmap(image);
    if (!img_pixmap) return;
    GContext_t gc = GetAnyGC();
    GCValues_t gcv;

@@ -49,6 +49,7 @@ drawing area. The widgets used are the new native ROOT GUI widgets.
 #include "TMath.h"
 #include <iostream>
 #include "TGDockableFrame.h"
+#include "TPadPainter.h"
 
 #include "TG3DLine.h"
 #include "TGToolBar.h"
@@ -57,6 +58,7 @@ drawing area. The widgets used are the new native ROOT GUI widgets.
 #include "TRootControlBar.h"
 #include "TGuiBuilder.h"
 #include "TImage.h"
+#include "TASUtils.h"
 #include "TError.h"
 #include "TGDNDManager.h"
 #include "TBufferFile.h"
@@ -2216,7 +2218,6 @@ void TRootCanvas::UpdateDisplay(Int_t mode, Bool_t sleep)
       gSystem->Sleep(30);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Save a canvas container as a C++ statement(s) on output stream out.
 
@@ -2230,4 +2231,12 @@ void TRootContainer::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
        << ");\n";
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create pad painter instance
+
+TVirtualPadPainter *TRootCanvas::CreatePadPainter()
+{
+   return new TPadPainter();
+}
 

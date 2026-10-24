@@ -299,7 +299,8 @@ void TGShapedToolTip::Refresh()
       nlines++;
       img->DrawText(fTextX, fTextY + (nlines * size), s, size, fTextCol, ar);
    }
-   img->PaintImage(fId, 0, 0, 0, 0, 0, 0, "opaque");
+   // use instead deprecated img->PaintImage()
+   TASUtils::PaintImage(img, fId, 0, 0, kTRUE);
    free(string);
    delete img;
    gVirtualX->Update();

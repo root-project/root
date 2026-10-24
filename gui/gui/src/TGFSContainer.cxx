@@ -54,6 +54,7 @@ Utility class used by the file selection dialog (TGFSDialog).
 #include "TRemoteObject.h"
 #include "TBufferFile.h"
 #include "TImage.h"
+#include "TASUtils.h"
 
 #include <cstdio>
 #include <ctime>
@@ -692,36 +693,28 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
       }
    }
    if (is_link) {
-      TImage *img1, *img2;
       if (*pic && *lpic) {
-         TString lnk_name;
-         img1 = TImage::Create();
+         auto img1 = TASUtils::FromPixmap((*pic)->GetPicture(), (*pic)->GetMask());
          if (img1) {
-            img1->SetImage(((const TGPicture *)*pic)->GetPicture(),
-                           ((const TGPicture *)*pic)->GetMask());
-            img2 = TImage::Open("slink_t.xpm");
-            if (img2) img1->Merge(img2);
-            lnk_name = ((const TGPicture *)*pic)->GetName();
+            std::unique_ptr<TImage> img2(TImage::Open("slink_t.xpm"));
+            if (img2)
+               img1->Merge(img2.get());
+            TString lnk_name = (*pic)->GetName();
             lnk_name.Prepend("lnk_");
             *pic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(),
-                                 GetImagePixmap(img1), GetImageMask(img1));
+                                 TASUtils::GetPixmap(img1.get()), TASUtils::GetMask(img1.get()));
             fCleanups->Add(((TObject *)*pic));
-            if (img2) delete img2;
-            delete img1;
          }
-         img1 = TImage::Create();
+         img1 = TASUtils::FromPixmap((*lpic)->GetPicture(), (*lpic)->GetMask());
          if (img1) {
-            img1->SetImage(((const TGPicture *)*lpic)->GetPicture(),
-                           ((const TGPicture *)*lpic)->GetMask());
-            img2 = TImage::Open("slink_s.xpm");
-            if (img2) img1->Merge(img2);
-            lnk_name = ((const TGPicture *)*lpic)->GetName();
+            std::unique_ptr<TImage> img2(TImage::Open("slink_s.xpm"));
+            if (img2)
+               img1->Merge(img2.get());
+            TString lnk_name = (*lpic)->GetName();
             lnk_name.Prepend("lnk_");
             *lpic = fClient->GetPicturePool()->GetPicture(lnk_name.Data(),
-                                 GetImagePixmap(img1), GetImageMask(img1));
+                                 TASUtils::GetPixmap(img1.get()), TASUtils::GetMask(img1.get()));
             fCleanups->Add(((TObject *)*lpic));
-            if (img2) delete img2;
-            delete img1;
          }
       }
       else {

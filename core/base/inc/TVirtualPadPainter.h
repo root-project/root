@@ -109,8 +109,8 @@ public:
 
 
    //TASImage support.
-   virtual void     DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
-                               Int_t dstX, Int_t dstY, Bool_t enableAlphaBlending) = 0;
+   virtual void     R__DEPRECATED(7,00, "Use DrawImage instead") DrawPixels(const unsigned char * /* pixelData */, UInt_t /* width */, UInt_t /* height */,
+                               Int_t /* dstX */, Int_t /* dstY */, Bool_t /* enableAlphaBlending */) {}
    //
    //These functions are not required by X11/GDI.
    virtual void     InitPainter();
