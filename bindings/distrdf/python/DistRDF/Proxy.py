@@ -295,16 +295,23 @@ def _(operation: Operation.InstantAction, node: Node) -> Any:
 
 @get_proxy_for.register
 def _(operation: Operation.Snapshot, node: Node) -> Union[ResultPtrProxy, Any]:
-    if len(operation.args) == 4:
-        # An RSnapshotOptions instance was passed as fourth argument
+    opts = None
+    if len(operation.args) == 4 and hasattr(operation.args[3], "fLazy"):
+        opts = operation.args[3]
+    elif len(operation.args) == 3 and hasattr(operation.args[2], "fLazy"):
+        opts = operation.args[2]
 
-        if str(operation.args[3].fMode).lower() == "update":
-            # UPDATE mode is not supported since it would required synchronised access to the same file from the
+    if opts is not None:
+        if str(opts.fMode).lower() == "update":
+            # UPDATE mode is not supported since it would require synchronised access to the same file from the
             # distributed workers
             raise ValueError("Opening a file in UPDATE mode is not supported in distributed Snapshot.")
 
-        if operation.args[3].fLazy:
+        if opts.fLazy:
             return get_proxy_for.dispatch(Operation.Action)(operation, node)
+
+    if getattr(operation, "lazy", False):
+        return get_proxy_for.dispatch(Operation.Action)(operation, node)
 
     return get_proxy_for.dispatch(Operation.InstantAction)(operation, node)
 

@@ -122,3 +122,48 @@ class HistoModelTests(unittest.TestCase):
         """Creating a histogram without model raises ValueError."""
         with self.assertRaises(ValueError):
             _ = Operation.create_op("HistoNSparseD", ["a", "b", "c", "d"])
+
+
+class SnapshotTests(unittest.TestCase):
+    """
+    Test Snapshot operation construction with different options.
+    """
+
+    def test_snapshot_default_options(self):
+        """Snapshot creates with default return_filenames=False and merge=False."""
+        op = Operation.create_op("Snapshot", "tree", "output.root")
+        self.assertIsInstance(op, Operation.Snapshot)
+        self.assertEqual(op.target_file, "output.root")
+        self.assertFalse(op.return_filenames)
+        self.assertFalse(op.merge)
+        self.assertNotIn("return_filenames", op.kwargs)
+        self.assertNotIn("merge", op.kwargs)
+
+    def test_snapshot_with_return_filenames(self):
+        """Snapshot handles return_filenames keyword argument."""
+        op = Operation.create_op("Snapshot", "tree", "output.root", return_filenames=True)
+        self.assertIsInstance(op, Operation.Snapshot)
+        self.assertEqual(op.target_file, "output.root")
+        self.assertTrue(op.return_filenames)
+        self.assertFalse(op.merge)
+        self.assertNotIn("return_filenames", op.kwargs)
+
+    def test_snapshot_with_merge(self):
+        """Snapshot handles merge keyword argument."""
+        op = Operation.create_op("Snapshot", "tree", "output.root", merge=True)
+        self.assertIsInstance(op, Operation.Snapshot)
+        self.assertEqual(op.target_file, "output.root")
+        self.assertFalse(op.return_filenames)
+        self.assertTrue(op.merge)
+        self.assertNotIn("merge", op.kwargs)
+
+    def test_snapshot_with_both_options(self):
+        """Snapshot handles both return_filenames and merge keyword arguments."""
+        op = Operation.create_op("Snapshot", "tree", "output.root", return_filenames=True, merge=True)
+        self.assertIsInstance(op, Operation.Snapshot)
+        self.assertEqual(op.target_file, "output.root")
+        self.assertTrue(op.return_filenames)
+        self.assertTrue(op.merge)
+        self.assertNotIn("return_filenames", op.kwargs)
+        self.assertNotIn("merge", op.kwargs)
+
