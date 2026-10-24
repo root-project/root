@@ -124,14 +124,16 @@ TEST(TProfile3D, DivideStatistics)
    TProfile3D target("target", "", 4, 0, 4, 5, 0, 10, 3, 0, 30);
    TProfile3D denominator("denominator", "", 4, 0, 4, 5, 0, 10, 3, 0, 30);
    target.Fill(0.5, 1., 25., 2.);
+   target.Fill(0.5, 1., 5., 2.);
    target.Fill(3.5, 9., 5., 1.);
    denominator.Fill(0.5, 1., 25., 1.);
+   denominator.Fill(0.5, 1., 5., 1.);
 
    ASSERT_TRUE(target.Divide(&denominator));
    EXPECT_DOUBLE_EQ(0.5, target.GetMean(1));
    EXPECT_DOUBLE_EQ(1., target.GetMean(2));
-   EXPECT_DOUBLE_EQ(25., target.GetMean(3));
-   EXPECT_DOUBLE_EQ(0., target.GetStdDev(3));
+   EXPECT_DOUBLE_EQ(15., target.GetMean(3));
+   EXPECT_DOUBLE_EQ(10., target.GetStdDev(3));
 }
 
 TEST(TProfile3D, DivideTwoProfilesStatistics)
