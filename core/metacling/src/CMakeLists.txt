@@ -151,7 +151,7 @@ if(MSVC)
     _Smtx_lock_shared
     _Smtx_unlock_shared
   )
-  if(MSVC_VERSION GREATER_EQUAL 1941)
+  if(MSVC_VERSION GREATER_EQUAL 1951)
     set(cling_exports ${cling_exports}
       __std_replace_copy_2
     )
