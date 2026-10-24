@@ -256,28 +256,45 @@ Int_t TProfile3D::BufferEmpty(Int_t action)
       Reset("ICES"); // reset without deleting the functions
       fBuffer = buffer;
    }
-   if (CanExtendAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin() ||
-       fZaxis.GetXmax() <= fZaxis.GetXmin()) {
+   const bool xbinAuto = fXaxis.GetXmax() <= fXaxis.GetXmin();
+   const bool ybinAuto = fYaxis.GetXmax() <= fYaxis.GetXmin();
+   const bool zbinAuto = fZaxis.GetXmax() <= fZaxis.GetXmin();
+   const bool extend = CanExtendAllAxes();
+   if (extend || xbinAuto || ybinAuto || zbinAuto) {
       //find min, max of entries in buffer
-      Double_t xmin = fBuffer[2];
-      Double_t xmax = xmin;
-      Double_t ymin = fBuffer[3];
-      Double_t ymax = ymin;
-      Double_t zmin = fBuffer[4];
-      Double_t zmax = zmin;
-      for (Int_t i=1;i<nbentries;i++) {
-         Double_t x = fBuffer[5*i+2];
-         if (x < xmin) xmin = x;
-         if (x > xmax) xmax = x;
-         Double_t y = fBuffer[5*i+3];
-         if (y < ymin) ymin = y;
-         if (y > ymax) ymax = y;
-         Double_t z = fBuffer[5*i+4];
-         if (z < zmin) zmin = z;
-         if (z > zmax) zmax = z;
-     }
-      if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin() || fZaxis.GetXmax() <= fZaxis.GetXmin()) {
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXYZ(this, xmin, xmax, ymin, ymax, zmin, zmax);
+      Double_t xmin = xbinAuto || extend ? fBuffer[2] : fXaxis.GetXmin();
+      Double_t xmax = xbinAuto || extend ? xmin : fXaxis.GetXmax();
+      Double_t ymin = ybinAuto || extend ? fBuffer[3] : fYaxis.GetXmin();
+      Double_t ymax = ybinAuto || extend ? ymin : fYaxis.GetXmax();
+      Double_t zmin = zbinAuto || extend ? fBuffer[4] : fZaxis.GetXmin();
+      Double_t zmax = zbinAuto || extend ? zmin : fZaxis.GetXmax();
+      for (Int_t i = 1; i < nbentries; i++) {
+         if (extend || xbinAuto) {
+            Double_t x = fBuffer[5 * i + 2];
+            if (x < xmin)
+               xmin = x;
+            if (x > xmax)
+               xmax = x;
+         }
+         if (extend || ybinAuto) {
+            Double_t y = fBuffer[5 * i + 3];
+            if (y < ymin)
+               ymin = y;
+            if (y > ymax)
+               ymax = y;
+         }
+         if (extend || zbinAuto) {
+            Double_t z = fBuffer[5 * i + 4];
+            if (z < zmin)
+               zmin = z;
+            if (z > zmax)
+               zmax = z;
+         }
+      }
+      if (xbinAuto || ybinAuto || zbinAuto) {
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimitsXYZ(
+            this, xmin, xmax, ymin, ymax, zmin, zmax, xbinAuto ? 0 : fXaxis.GetNbins(),
+            ybinAuto ? 0 : fYaxis.GetNbins(), zbinAuto ? 0 : fZaxis.GetNbins());
       } else {
          fBuffer = nullptr;
          Int_t keep = fBufferSize; fBufferSize = 0;
