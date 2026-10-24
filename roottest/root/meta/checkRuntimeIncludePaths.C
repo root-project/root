@@ -13,20 +13,14 @@
 // of external dependencies that are installed outside of the system prefixes
 // (e.g. with Nix, LCG views or conda), so how many of them there are depends
 // on the system ROOT was built on.
-//
-// This macro is interpreted, so it must not use <filesystem> or <regex>: on
-// Windows, parts of their implementation are only in the static part of the
-// MSVC runtime library, and the interpreter fails to resolve them.
-// This can be revised if https://github.com/root-project/root/issues/23664
-// is resolved.
 
 #include "TInterpreter.h"
 #include "TROOT.h"
 #include "TSystem.h"
 
 #include <algorithm>
-#include <cctype>
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -34,56 +28,24 @@
 namespace {
 
 // Removes redundant and trailing slashes as well as "." and ".." components,
-// but keeps symlinks as they are. This is what lexically_normal() does, except
-// for trailing slashes, but <filesystem> can't be used here (see above).
-std::string lexicalPath(std::string path)
+// but keeps symlinks as they are.
+std::string lexicalPath(const std::string &path)
 {
-   std::replace(path.begin(), path.end(), '\\', '/');
-   const bool absolute = !path.empty() && path[0] == '/';
-   std::vector<std::string> components;
-   for (std::size_t begin = 0; begin <= path.size();) {
-      std::size_t end = path.find('/', begin);
-      if (end == std::string::npos)
-         end = path.size();
-      const std::string component = path.substr(begin, end - begin);
-      if (component == ".." && !components.empty() && components.back() != "..")
-         components.pop_back();
-      else if (!component.empty() && component != ".")
-         components.push_back(component);
-      begin = end + 1;
-   }
-   std::string result = absolute ? "/" : "";
-   for (std::size_t i = 0; i < components.size(); ++i)
-      result += (i ? "/" : "") + components[i];
-   return result.empty() ? "." : result;
+   std::string result = std::filesystem::path(path).lexically_normal().generic_string();
+   if (result.size() > 1 && result.back() == '/')
+      result.pop_back();
+   return result;
 }
 
-// Normalizes `path` so that two spellings of the same directory compare equal,
-// like std::filesystem::weakly_canonical() would (see above for why it is not
-// used). Beyond lexicalPath(), this requires one platform-dependent step:
-//
-// - On Linux and macOS, symlinks are resolved with realpath(), so that a
-//   directory of ROOT's trees is recognized however it is spelled. The case is
-//   left as it is: on macOS, whether paths are case-sensitive depends on the
-//   volume, so folding the case could merge distinct directories.
-// - On Windows, there is no realpath(). Instead, the path is converted to lower
-//   case, because paths are case-insensitive there. This is also what the
-//   Cling interpreter does when it drops duplicate include paths.
+// Normalizes `path` so that two spellings of the same directory compare equal:
+// symlinks are resolved and, on Windows, the case is taken from the file
+// system, so that a directory of ROOT's trees is recognized however it is
+// spelled.
 std::string canonicalPath(const std::string &path)
 {
-#ifdef _WIN32
-   std::string result = lexicalPath(path);
-   for (auto &c : result)
-      c = std::tolower(static_cast<unsigned char>(c));
-   return result;
-#else
-   char *resolved = realpath(path.c_str(), nullptr);
-   if (!resolved)
-      return lexicalPath(path);
-   std::string result = lexicalPath(resolved);
-   free(resolved);
-   return result;
-#endif
+   std::error_code ec;
+   const auto canonical = std::filesystem::weakly_canonical(path, ec);
+   return ec ? lexicalPath(path) : lexicalPath(canonical.generic_string());
 }
 
 bool isInside(const std::string &path, const std::string &dir)
