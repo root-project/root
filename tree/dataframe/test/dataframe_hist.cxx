@@ -721,11 +721,11 @@ TEST_P(RDFHist, EngineWeightContainer)
 TEST_P(RDFHist, Variations)
 {
    RDataFrame df(10);
-   auto dfX = df.Define("x", [](ULong64_t e) -> Float_t { return e + 5.5f; }, {"rdfentry_"})
-                 .Vary("x", [](Float_t x) { return ROOT::RVecF{x - 1.0f, x + 1.0f}; }, {"x"}, 2);
+   auto dfX = df.Define("x", [](ULong64_t e) { return e + 5.5; }, {"rdfentry_"})
+                 .Vary("x", [](double x) { return ROOT::RVecD{x - 1.0, x + 1.0}; }, {"x"}, 2);
 
    const RRegularAxis axis(10, {5.0, 15.0});
-   auto hist = dfX.Hist</*BinContentType=*/double, Float_t>({axis}, {"x"});
+   auto hist = dfX.Hist</*BinContentType=*/double, double>({axis}, {"x"});
    auto vars = ROOT::RDF::Experimental::VariationsFor(hist);
 
    // Check nominal
@@ -756,12 +756,12 @@ TEST_P(RDFHist, Variations)
 TEST_P(RDFHist, VariationsEngine)
 {
    RDataFrame df(10);
-   auto dfX = df.Define("x", [](ULong64_t e) -> Float_t { return e + 5.5f; }, {"rdfentry_"})
-                 .Vary("x", [](Float_t x) { return ROOT::RVecF{x - 1.0f, x + 1.0f}; }, {"x"}, 2);
+   auto dfX = df.Define("x", [](ULong64_t e) { return e + 5.5; }, {"rdfentry_"})
+                 .Vary("x", [](double x) { return ROOT::RVecD{x - 1.0, x + 1.0}; }, {"x"}, 2);
 
    const RRegularAxis axis(10, {5.0, 15.0});
    auto hist = std::make_shared<RHistEngine<double>>(axis);
-   auto resPtr = dfX.Hist<Float_t>(hist, {"x"});
+   auto resPtr = dfX.Hist<double>(hist, {"x"});
    auto vars = ROOT::RDF::Experimental::VariationsFor(resPtr);
 
    // Trigger the run
