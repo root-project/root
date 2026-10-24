@@ -1194,8 +1194,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                            TVirtualCollectionProxy::TPushPop helper( newProxy, cont );
                            Int_t nobjects;
                            b >> nobjects;
-                           nobjects = ROOT::Internal::CheckCollectionSize(b, nobjects, "TStreamerInfo::ReadBuffer",
-                                                                          cle->GetName());
+                           nobjects = ROOT::Internal::CheckCollectionSize(
+                              b, nobjects, "TStreamerInfo::ReadBuffer", cle->GetName(),
+                              [&] { return ROOT::Internal::MemberWiseElementsUseBytes(subinfo); });
                            env = newProxy->Allocate(nobjects,true);
                            if (!nobjects && (vers>=7)) {
                               // Do nothing but in version 6 of TStreamerInfo and below,
@@ -1306,8 +1307,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                            TVirtualCollectionProxy::TPushPop helper( newProxy, obj );
                            Int_t nobjects;
                            b >> nobjects;
-                           nobjects = ROOT::Internal::CheckCollectionSize(b, nobjects, "TStreamerInfo::ReadBuffer",
-                                                                          cle->GetName());
+                           nobjects = ROOT::Internal::CheckCollectionSize(
+                              b, nobjects, "TStreamerInfo::ReadBuffer", cle->GetName(),
+                              [&] { return ROOT::Internal::MemberWiseElementsUseBytes(subinfo); });
                            void* env = newProxy->Allocate(nobjects,true);
                            if (!nobjects && (vers>=7)) {
                               // Do nothing but in version 6 of TStreamerInfo and below,
