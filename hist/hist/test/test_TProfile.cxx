@@ -58,6 +58,26 @@ TEST(TProfile, Chi2TestWithWrongErrors)
    }
 }
 
+TEST(TProfile3D, BufferEmptyFindsAutomaticZLimits)
+{
+   TProfile3D profile("profile", "", 4, 0, 4, 5, 0, 10, 3, 0, 0);
+   for (double z : {101., 115., 139.})
+      profile.Fill(0.5, 1., z, 2.);
+   profile.BufferEmpty();
+
+   const auto *zaxis = profile.GetZaxis();
+   EXPECT_LT(zaxis->GetXmin(), zaxis->GetXmax());
+   for (double z : {101., 139.}) {
+      EXPECT_GE(zaxis->FindFixBin(z), 1);
+      EXPECT_LE(zaxis->FindFixBin(z), zaxis->GetNbins());
+   }
+   for (int zbin : {0, zaxis->GetNbins() + 1})
+      for (int xbin = 0; xbin <= profile.GetNbinsX() + 1; ++xbin)
+         for (int ybin = 0; ybin <= profile.GetNbinsY() + 1; ++ybin)
+            EXPECT_DOUBLE_EQ(0., profile.GetBinEntries(profile.GetBin(xbin, ybin, zbin)));
+   EXPECT_NEAR((101. + 115. + 139.) / 3., profile.GetMean(3), 1e-9);
+}
+
 TEST(TProfile2D, Chi2Test)
 {
    TProfile2D reference("reference", "reference", 10, 0, 10, 10, 0, 10);
