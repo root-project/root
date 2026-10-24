@@ -787,7 +787,8 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, bool 
    }
 
    res = 0;
-   if (!ReadBufferExt(fCompBuffer, pos, len, loc)) {
+   // Read the buffer from the file unless it was found in the cache, including when reading the cache failed
+   if (ReadBufferExt(fCompBuffer, pos, len, loc) != 1) {
       // Cache is invalidated and we need to wait for all unzipping tasks to be finished before fill new baskets in cache.
 #ifdef R__USE_IMT
       if(ROOT::IsImplicitMTEnabled() && fUnzipTaskGroup) {
