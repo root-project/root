@@ -1,167 +1,571 @@
 import math
-import os
-import unittest
+from itertools import count
 from random import randrange, uniform
 
 import numpy as np
+import pytest
 import ROOT
 
+TREE_NAME = "mytree"
 
-class DataLoaderMultipleFiles(unittest.TestCase):
-    file_name1 = "first_half.root"
-    file_name2 = "second_half.root"
-    file_name3 = "vector_columns.root"
-    tree_name = "mytree"
+_file_ids = count()
 
+
+@pytest.fixture(autouse=True)
+def in_tmp_path(tmp_path, monkeypatch):
+    """Run each test in its own temporary directory, created and cleaned up by pytest, so that the files written by
+    a test never clash with those of another test and don't need to be removed by the test itself."""
+    monkeypatch.chdir(tmp_path)
+
+
+@pytest.fixture(params=[False, True], ids=["lazy", "eager"])
+def load_eager(request):
+    """Run a test twice: with the lazy loading of the RDataLoader, and with its eager loading."""
+    return request.param
+
+
+def from_files(*dfs):
+    """Write each RDataFrame to its own file and return an RDataFrame reading these files one after the other."""
+    file_names = [f"input_{next(_file_ids)}.root" for _ in dfs]
+    for df, file_name in zip(dfs, file_names):
+        df.Snapshot(TREE_NAME, file_name)
+    return ROOT.RDataFrame(TREE_NAME, file_names if len(file_names) > 1 else file_names[0])
+
+
+def squares(num_of_entries, b1="(int) rdfentry_"):
+    """RDataFrame with the column b1, defined by the given expression, and b2 = b1 * b1."""
+    return ROOT.RDataFrame(num_of_entries).Define("b1", b1).Define("b2", "(double) b1 * b1")
+
+
+def weighted(num_of_entries, b1="(int) rdfentry_"):
+    """RDataFrame with the column b1, defined by the given expression, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+    return (
+        ROOT
+        .RDataFrame(num_of_entries)
+        .Define("b1", b1)
+        .Define("b2", "(int) b1 * b1")
+        .Define("b3", "(double) b1 * 10")
+        .Define("b4", "(double) b3 * 10")
+    )
+
+
+def vectors(num_of_entries, b1="(int) rdfentry_"):
+    """RDataFrame with the column b1, defined by the given expression, and the vector columns v1 = {b1, b1 * 10} and
+    v2 = {b1 * 100, b1 * 1000}."""
+    return (
+        ROOT
+        .RDataFrame(num_of_entries)
+        .Define("b1", b1)
+        .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
+        .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
+    )
+
+
+def big_data(num_of_entries, b1="(int) rdfentry_"):
+    """RDataFrame with the column b1, defined by the given expression, and columns computed from the entry number:
+    b2 = entry * 2, b3 = entry + 10192, b4 = -entry and b5 = -entry - 10192."""
+    return (
+        ROOT
+        .RDataFrame(num_of_entries)
+        .Define("b1", b1)
+        .Define("b2", "(double) rdfentry_ * 2")
+        .Define("b3", "(int) rdfentry_ + 10192")
+        .Define("b4", "(int) -rdfentry_")
+        .Define("b5", "(double) -rdfentry_ - 10192")
+    )
+
+
+class TestDataLoaderSingleDataframe:
     # default constants
     n_train_batch = 2
     n_val_batch = 1
     val_remainder = 1
 
-    # Helpers
-    def define_rdf(self, num_of_entries=10):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_").Define("b2", "(double) b1*b1")
+    @pytest.fixture
+    def df(self):
+        """10 entries: b1 = 0, ..., 9 and b2 = b1 * b1."""
+        return from_files(squares(10))
 
-        return df
-
-    def create_file(self, num_of_entries=10):
-        self.define_rdf(num_of_entries).Snapshot(self.tree_name, self.file_name1)
-
-    def create_5_entries_file(self):
-        (
-            ROOT.RDataFrame(5)
-            .Define("b1", "(int) rdfentry_ + 10")
-            .Define("b2", "(double) b1 * b1")
-            .Snapshot(self.tree_name, self.file_name2)
+    @pytest.fixture
+    def weighted_df(self):
+        """10 entries: the Short_t b1 = 0, ..., 9, the UShort_t b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+        return from_files(
+            ROOT
+            .RDataFrame(10)
+            .Define("b1", "(Short_t) rdfentry_")
+            .Define("b2", "(UShort_t) b1 * b1")
+            .Define("b3", "(double) rdfentry_ * 10")
+            .Define("b4", "(double) b3 * 10")
         )
 
-    def create_vector_file(self, num_of_entries=10):
-        (
-            ROOT.RDataFrame(10)
-            .Define("b1", "(int) rdfentry_")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name3)
+    def test01_each_element_is_generated_unshuffled(self, df, load_eager):
+        entries_before = df.AsNumpy(["rdfentry_"])["rdfentry_"]
+
+        dl = ROOT.Experimental.ML.RDataLoader(
+            df,
+            batch_size=3,
+            batches_in_memory=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
         )
 
-    def teardown_file(self, file):
-        os.remove(file)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-    def test01_each_element_is_generated_unshuffled(self):
-        self.create_file()
+        results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+        results_x_val = [6.0, 7.0, 8.0, 9.0]
+        results_y_train = [0.0, 1.0, 4.0, 9.0, 16.0, 25.0]
+        results_y_val = [36.0, 49.0, 64.0, 81.0]
 
-        try:
-            df = ROOT.RDataFrame(self.tree_name, self.file_name1)
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
 
-            entries_before = df.AsNumpy(["rdfentry_"])["rdfentry_"]
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                batches_in_memory=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-            results_x_val = [6.0, 7.0, 8.0, 9.0]
-            results_y_train = [0.0, 1.0, 4.0, 9.0, 16.0, 25.0]
-            results_y_val = [36.0, 49.0, 64.0, 81.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
+        for _ in range(self.n_val_batch):
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        for _ in range(self.n_train_batch):
+            x, y = next(train_iter)
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+        x, y = next(val_iter)
+        assert x.shape == (self.val_remainder, 1)
+        assert y.shape == (self.val_remainder, 1)
+        collected_x_val.append(x.tolist())
+        collected_y_val.append(y.tolist())
 
-            entries_after = df.AsNumpy(["rdfentry_"])["rdfentry_"]
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            # check if the dataframe is correctly reset
-            self.assertTrue(np.array_equal(entries_before, entries_after))
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
 
-            self.teardown_file(self.file_name1)
+        entries_after = df.AsNumpy(["rdfentry_"])["rdfentry_"]
 
-        except:
-            self.teardown_file(self.file_name1)
-            raise
+        # check if the dataframe is correctly reset
+        assert np.array_equal(entries_before, entries_after)
 
-    def test02_each_element_is_generated_shuffled(self):
-        self.create_file()
+    def test02_each_element_is_generated_shuffled(self, df, load_eager):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            df,
+            batch_size=3,
+            batches_in_memory=2,
+            target="b2",
+            shuffle=True,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
 
-        try:
-            df = ROOT.RDataFrame(self.tree_name, self.file_name1)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                batches_in_memory=2,
-                target="b2",
-                shuffle=True,
-                drop_remainder=False,
-            )
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
 
+        for _ in range(self.n_train_batch):
+            x, y = next(train_iter)
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+
+        for _ in range(self.n_val_batch):
+            x, y = next(val_iter)
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+
+        x, y = next(val_iter)
+        assert x.shape == (self.val_remainder, 1)
+        assert y.shape == (self.val_remainder, 1)
+        collected_x_val.append(x.tolist())
+        collected_y_val.append(y.tolist())
+
+        flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
+        flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
+        flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
+        flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
+
+        assert len(flat_x_train) == 6
+        assert len(flat_x_val) == 4
+        assert len(flat_y_train) == 6
+        assert len(flat_y_val) == 4
+
+    def test04_dropping_remainder(self, df, load_eager):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            df,
+            batch_size=3,
+            batches_in_memory=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=True,
+            load_eager=load_eager,
+        )
+
+        gen_train, gen_validation = dl.train_test_split(0.4)
+
+        collected_x = []
+        collected_y = []
+
+        for x, y in gen_train.as_numpy():
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
+            collected_x.append(x)
+            collected_y.append(y)
+
+        for x, y in gen_validation.as_numpy():
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
+            collected_x.append(x)
+            collected_y.append(y)
+
+        assert len(collected_x) == 3
+        assert len(collected_y) == 3
+
+    def test05_more_than_one_file(self, load_eager):
+        df = from_files(squares(10), squares(5, "(int) rdfentry_ + 10"))
+
+        dl = ROOT.Experimental.ML.RDataLoader(
+            df,
+            batch_size=3,
+            batches_in_memory=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
+
+        gen_train, gen_validation = dl.train_test_split(0.4)
+
+        results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+        results_x_val = [9.0, 10.0, 11.0, 12.0, 13.0, 14.0]
+        results_y_train = [0.0, 1.0, 4.0, 9.0, 16.0, 25.0, 36.0, 49.0, 64.0]
+        results_y_val = [81.0, 100.0, 121.0, 144.0, 169.0, 196.0]
+
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+
+        for x, y in gen_train.as_numpy():
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+
+        for x, y in gen_validation.as_numpy():
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+
+    def test06_multiple_target_columns(self, weighted_df, load_eager):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            weighted_df,
+            batch_size=3,
+            batches_in_memory=2,
+            target=["b2", "b4"],
+            weights="b3",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
+
+        gen_train, gen_validation = dl.train_test_split(0.4)
+
+        results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+        results_x_val = [6.0, 7.0, 8.0, 9.0]
+        results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
+        results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0]
+        results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
+        results_z_val = [60.0, 70.0, 80.0, 90.0]
+
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+        collected_z_train = []
+        collected_z_val = []
+
+        iter_train = iter(gen_train.as_numpy())
+        iter_val = iter(gen_validation.as_numpy())
+
+        for _ in range(self.n_train_batch):
+            x, y, z = next(iter_train)
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+            collected_z_train.append(z.tolist())
+
+        for _ in range(self.n_val_batch):
+            x, y, z = next(iter_val)
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+            collected_z_val.append(z.tolist())
+
+        x, y, z = next(iter_val)
+        assert x.shape == (self.val_remainder, 1)
+        assert y.shape == (self.val_remainder, 2)
+        assert z.shape == (self.val_remainder, 1)
+        collected_x_val.append(x.tolist())
+        collected_y_val.append(y.tolist())
+        collected_z_val.append(z.tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+        flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+        assert results_z_train == flat_z_train
+        assert results_z_val == flat_z_val
+
+    def test07_multiple_input_columns(self, load_eager):
+        df = from_files(
+            ROOT
+            .RDataFrame(10)
+            .Define("b1", "(Short_t) rdfentry_")
+            .Define("b2", "(UShort_t) b1 * b1")
+            .Define("b3", "(double) rdfentry_ * 10")
+        )
+
+        dl = ROOT.Experimental.ML.RDataLoader(
+            df,
+            batch_size=3,
+            batches_in_memory=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
+
+        gen_train, gen_validation = dl.train_test_split(0.4)
+
+        results_x_train = [0.0, 0.0, 1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 5.0, 50.0]
+        results_x_val = [6.0, 60.0, 7.0, 70.0, 8.0, 80.0, 9.0, 90.0]
+        results_y_train = [0.0, 1.0, 4.0, 9.0, 16.0, 25.0]
+        results_y_val = [36.0, 49.0, 64.0, 81.0]
+
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+
+        iter_train = iter(gen_train.as_numpy())
+        iter_val = iter(gen_validation.as_numpy())
+
+        for _ in range(self.n_train_batch):
+            x, y = next(iter_train)
+            assert x.shape == (3, 2)
+            assert y.shape == (3, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+
+        for _ in range(self.n_val_batch):
+            x, y = next(iter_val)
+            assert x.shape == (3, 2)
+            assert y.shape == (3, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+
+        x, y = next(iter_val)
+        assert x.shape == (self.val_remainder, 2)
+        assert y.shape == (self.val_remainder, 1)
+        collected_x_val.append(x.tolist())
+        collected_y_val.append(y.tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+
+    def test08_filtered(self, df, load_eager):
+        dff = df.Filter("b1 % 2 == 0", "name")
+
+        filter_entries_before = dff.AsNumpy(["rdfentry_"])["rdfentry_"]
+
+        dl = ROOT.Experimental.ML.RDataLoader(
+            dff,
+            batch_size=3,
+            batches_in_memory=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
+
+        gen_train, gen_validation = dl.train_test_split(0.4)
+
+        results_x_train = [0.0, 2.0, 4.0]
+        results_x_val = [6.0, 8.0]
+        results_y_train = [0.0, 4.0, 16.0]
+        results_y_val = [36.0, 64.0]
+
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
+
+        x, y = next(train_iter)
+        assert x.shape == (3, 1)
+        assert y.shape == (3, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
+
+        x, y = next(val_iter)
+        assert x.shape == (2, 1)
+        assert y.shape == (2, 1)
+        collected_x_val.append(x.tolist())
+        collected_y_val.append(y.tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+
+        filter_entries_after = dff.AsNumpy(["rdfentry_"])["rdfentry_"]
+
+        # check if the dataframe is correctly reset
+        assert np.array_equal(filter_entries_before, filter_entries_after)
+
+    def test09_filtered_last_chunk(self, load_eager):
+        df = from_files(ROOT.RDataFrame(20).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1"))
+
+        dff = df.Filter("b1 % 2 == 0", "name")
+
+        gen_train = ROOT.Experimental.ML.RDataLoader(
+            dff,
+            batch_size=3,
+            batches_in_memory=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
+
+        results_x_train = [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0]
+        results_y_train = [0.0, 4.0, 16.0, 36.0, 64.0, 100.0, 144.0, 196.0, 256.0, 324.0]
+
+        collected_x_train = []
+        collected_y_train = []
+
+        train_iter = iter(gen_train.as_numpy())
+
+        for _ in range(3):
+            x, y = next(train_iter)
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+
+        x, y = next(train_iter)
+        assert x.shape == (1, 1)
+        assert y.shape == (1, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+
+        assert results_x_train == flat_x_train
+        assert results_y_train == flat_y_train
+
+    def test10_two_epochs_shuffled(self, df, load_eager):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            df,
+            batch_size=3,
+            batches_in_memory=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
+
+        gen_train, gen_validation = dl.train_test_split(0.4)
+
+        both_epochs_collected_x_val = []
+        both_epochs_collected_y_val = []
+
+        for _ in range(2):
             collected_x_train = []
             collected_x_val = []
             collected_y_train = []
             collected_y_val = []
 
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
+            iter_train = iter(gen_train.as_numpy())
+            iter_val = iter(gen_validation.as_numpy())
 
             for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                x, y = next(iter_train)
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
+                x, y = next(iter_val)
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
-            x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            x, y = next(iter_val)
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -170,225 +574,290 @@ class DataLoaderMultipleFiles(unittest.TestCase):
             flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
             flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-            self.assertEqual(len(flat_x_train), 6)
-            self.assertEqual(len(flat_x_val), 4)
-            self.assertEqual(len(flat_y_train), 6)
-            self.assertEqual(len(flat_y_val), 4)
+            assert len(flat_x_train) == 6
+            assert len(flat_x_val) == 4
+            assert len(flat_y_train) == 6
+            assert len(flat_y_val) == 4
 
-            self.teardown_file(self.file_name1)
+            both_epochs_collected_x_val.append(collected_x_val)
+            both_epochs_collected_y_val.append(collected_y_val)
 
-        except:
-            self.teardown_file(self.file_name1)
-            raise
+        assert both_epochs_collected_x_val[0] == both_epochs_collected_x_val[1]
+        assert both_epochs_collected_y_val[0] == both_epochs_collected_y_val[1]
 
-    def test04_dropping_remainder(self):
-        self.create_file()
+    def test11_number_of_training_and_validation_batches_remainder(self, df, load_eager):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            df,
+            batch_size=3,
+            batches_in_memory=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
 
-        try:
-            df = ROOT.RDataFrame(self.tree_name, self.file_name1)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                batches_in_memory=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=True,
-            )
+        number_of_training_batches = 0
+        number_of_validation_batches = 0
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        for _ in gen_train.as_numpy():
+            number_of_training_batches += 1
 
-            collected_x = []
-            collected_y = []
+        for _ in gen_validation.as_numpy():
+            number_of_validation_batches += 1
 
-            for x, y in gen_train.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x.append(x)
-                collected_y.append(y)
+        assert gen_train.num_batches == number_of_training_batches
+        assert gen_validation.num_batches == number_of_validation_batches
+        assert gen_train.last_batch_no_of_rows == 0
+        assert gen_validation.last_batch_no_of_rows == 1
 
-            for x, y in gen_validation.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x.append(x)
-                collected_y.append(y)
+    def test12_PyTorch(self, weighted_df, load_eager):
+        pytest.importorskip("torch")
 
-            self.assertEqual(len(collected_x), 3)
-            self.assertEqual(len(collected_y), 3)
+        dl = ROOT.Experimental.ML.RDataLoader(
+            weighted_df,
+            batch_size=3,
+            batches_in_memory=2,
+            target=["b2", "b4"],
+            weights="b3",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
 
-            self.teardown_file(self.file_name1)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-        except:
-            self.teardown_file(self.file_name1)
-            raise
+        results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+        results_x_val = [6.0, 7.0, 8.0, 9.0]
+        results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
+        results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0]
+        results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
+        results_z_val = [60.0, 70.0, 80.0, 90.0]
 
-    def test05_more_than_one_file(self):
-        self.create_file()
-        self.create_5_entries_file()
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+        collected_z_train = []
+        collected_z_val = []
 
-        try:
-            df = ROOT.RDataFrame(self.tree_name, [self.file_name1, self.file_name2])
+        iter_train = iter(gen_train.as_torch(device="cpu"))
+        iter_val = iter(gen_validation.as_torch())
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                batches_in_memory=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-            )
+        for _ in range(self.n_train_batch):
+            x, y, z = next(iter_train)
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+            collected_z_train.append(z.tolist())
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
-            results_x_val = [9.0, 10.0, 11.0, 12.0, 13.0, 14.0]
-            results_y_train = [0.0, 1.0, 4.0, 9.0, 16.0, 25.0, 36.0, 49.0, 64.0]
-            results_y_val = [81.0, 100.0, 121.0, 144.0, 169.0, 196.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            for x, y in gen_train.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            for x, y in gen_validation.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
-
-    def test06_multiple_target_columns(self):
-        file_name = "multiple_target_columns.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name)
-        try:
-            df = ROOT.RDataFrame("myTree", file_name)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                batches_in_memory=2,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-            results_x_val = [6.0, 7.0, 8.0, 9.0]
-            results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
-            results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0]
-            results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
-            results_z_val = [60.0, 70.0, 80.0, 90.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
-
-            iter_train = iter(gen_train.as_numpy())
-            iter_val = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-                collected_z_train.append(z.tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-                collected_z_val.append(z.tolist())
-
+        for _ in range(self.n_val_batch):
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
             collected_z_val.append(z.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+        x, y, z = next(iter_val)
+        assert x.shape == (self.val_remainder, 1)
+        assert y.shape == (self.val_remainder, 2)
+        assert z.shape == (self.val_remainder, 1)
+        collected_x_val.append(x.tolist())
+        collected_y_val.append(y.tolist())
+        collected_z_val.append(z.tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+        flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.teardown_file(file_name)
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+        assert results_z_train == flat_z_train
+        assert results_z_val == flat_z_val
 
-        except:
-            self.teardown_file(file_name)
-            raise
+    def test13_TensorFlow(self, weighted_df, load_eager):
+        pytest.importorskip("tensorflow")
 
-    def test07_multiple_input_columns(self):
-        file_name = "multiple_input_columns.root"
+        dl = ROOT.Experimental.ML.RDataLoader(
+            weighted_df,
+            batch_size=3,
+            batches_in_memory=2,
+            target=["b2", "b4"],
+            weights="b3",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
 
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Snapshot("myTree", file_name)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-        try:
-            df = ROOT.RDataFrame("myTree", file_name)
+        results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+        results_x_val = [6.0, 7.0, 8.0, 9.0, 0.0, 0.0]
+        results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
+        results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0, 0.0, 0.0, 0.0, 0.0]
+        results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
+        results_z_val = [60.0, 70.0, 80.0, 90.0, 0.0, 0.0]
 
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+        collected_z_train = []
+        collected_z_val = []
+
+        iter_train = iter(gen_train.as_tensorflow())
+        iter_val = iter(gen_validation.as_tensorflow())
+
+        for _ in range(self.n_train_batch):
+            x, y, z = next(iter_train)
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
+            collected_x_train.append(x.numpy().tolist())
+            collected_y_train.append(y.numpy().tolist())
+            collected_z_train.append(z.numpy().tolist())
+
+        for _ in range(self.n_val_batch):
+            x, y, z = next(iter_val)
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
+            collected_x_val.append(x.numpy().tolist())
+            collected_y_val.append(y.numpy().tolist())
+            collected_z_val.append(z.numpy().tolist())
+
+        x, y, z = next(iter_val)
+        assert x.shape == (3, 1)
+        assert y.shape == (3, 2)
+        assert z.shape == (3, 1)
+        collected_x_val.append(x.numpy().tolist())
+        collected_y_val.append(y.numpy().tolist())
+        collected_z_val.append(z.numpy().tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+        flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+        assert results_z_train == flat_z_train
+        assert results_z_val == flat_z_val
+
+    def test14_big_data(self, load_eager):
+        entries_in_rdf = randrange(10000, 30000)
+        batch_size = randrange(100, 501)
+        batches_in_memory = randrange(5, 20)
+
+        error_message = f"\n batch_size={batch_size} batches_in_memory={batches_in_memory} entries={entries_in_rdf}"
+
+        def test(size_of_batch, batches_in_memory, num_of_entries):
+            df = from_files(big_data(num_of_entries))
+
+            dl = ROOT.Experimental.ML.RDataLoader(
+                df,
+                batch_size=size_of_batch,
+                batches_in_memory=batches_in_memory,
+                target=["b3", "b5"],
+                weights="b2",
+                shuffle=False,
+                drop_remainder=False,
+                load_eager=load_eager,
+            )
+
+            gen_train, gen_validation = dl.train_test_split(0.3)
+
+            collect_x = []
+
+            train_remainder = gen_train.last_batch_no_of_rows
+            val_remainder = gen_validation.last_batch_no_of_rows
+
+            n_train_batches = gen_train.num_batches - 1 if train_remainder else gen_train.num_batches
+            n_val_batches = gen_validation.num_batches - 1 if val_remainder else gen_validation.num_batches
+
+            iter_train = iter(gen_train.as_numpy())
+            iter_val = iter(gen_validation.as_numpy())
+
+            for i in range(n_train_batches):
+                x, y, z = next(iter_train)
+
+                assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
+
+                assert np.all(x[:, 0] * (-1) == x[:, 1]), error_message + f" row: {i}"
+                assert np.all(x[:, 0] + 10192 == y[:, 0]), error_message + f" row: {i}"
+                # assert np.all(x[:,0]*(-1)-10192==y[:,1]), error_message
+                assert np.all(x[:, 0] * 2 == z[:, 0]), error_message + f" row: {i}"
+
+                collect_x.extend(list(x[:, 0]))
+
+            if train_remainder:
+                x, y, z = next(iter_train)
+                assert x.shape == (train_remainder, 2), error_message
+                assert y.shape == (train_remainder, 2), error_message
+                assert z.shape == (train_remainder, 1), error_message
+                collect_x.extend(list(x[:, 0]))
+
+            for _ in range(n_val_batches):
+                x, y, z = next(iter_val)
+
+                assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
+
+                assert np.all(x[:, 0] * (-1) == x[:, 1]), error_message
+                assert np.all(x[:, 0] + 10192 == y[:, 0]), error_message
+                # assert np.all(x[:,0]*(-1)-10192==y[:,1]), error_message
+                assert np.all(x[:, 0] * 2 == z[:, 0]), error_message
+
+                collect_x.extend(list(x[:, 0]))
+
+            if val_remainder:
+                x, y, z = next(iter_val)
+                assert x.shape == (val_remainder, 2), error_message
+                assert y.shape == (val_remainder, 2), error_message
+                assert z.shape == (val_remainder, 1), error_message
+                collect_x.extend(list(x[:, 0]))
+
+            assert set(collect_x) == set(i for i in range(num_of_entries)), (
+                f"collected length: {len(set(collect_x))}\
+                                 generated length {len(set(i for i in range(num_of_entries)))}"
+            )
+
+        test(batch_size, batches_in_memory, entries_in_rdf)
+
+    def test15_two_runs_set_seed(self, df, load_eager):
+        both_runs_collected_x_val = []
+        both_runs_collected_y_val = []
+
+        for _ in range(2):
             dl = ROOT.Experimental.ML.RDataLoader(
                 df,
                 batch_size=3,
                 batches_in_memory=2,
                 target="b2",
-                shuffle=False,
+                shuffle=True,
                 drop_remainder=False,
+                set_seed=42,
+                load_eager=load_eager,
             )
 
             gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 0.0, 1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 5.0, 50.0]
-            results_x_val = [6.0, 60.0, 7.0, 70.0, 8.0, 80.0, 9.0, 90.0]
-            results_y_train = [0.0, 1.0, 4.0, 9.0, 16.0, 25.0]
-            results_y_val = [36.0, 49.0, 64.0, 81.0]
 
             collected_x_train = []
             collected_x_val = []
@@ -400,2433 +869,788 @@ class DataLoaderMultipleFiles(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(iter_train)
-                self.assertTrue(x.shape == (3, 2))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (3, 2))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 2))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+            flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
+            flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
+            flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
+            flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert len(flat_x_train) == 6
+            assert len(flat_x_val) == 4
+            assert len(flat_y_train) == 6
+            assert len(flat_y_val) == 4
 
-            self.teardown_file(file_name)
+            both_runs_collected_x_val.append(collected_x_val)
+            both_runs_collected_y_val.append(collected_y_val)
+        assert both_runs_collected_x_val[0] == both_runs_collected_x_val[1]
+        assert both_runs_collected_y_val[0] == both_runs_collected_y_val[1]
 
-        except:
-            self.teardown_file(file_name)
-            raise
+    def test16_vector_padding(self, load_eager):
+        df = from_files(vectors(10))
+        max_vec_sizes = {"v1": 3, "v2": 2}
 
-    def test08_filtered(self):
-        self.create_file()
-
-        try:
-            df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
-            dff = df.Filter("b1 % 2 == 0", "name")
-
-            filter_entries_before = dff.AsNumpy(["rdfentry_"])["rdfentry_"]
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                dff,
-                batch_size=3,
-                batches_in_memory=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 2.0, 4.0]
-            results_x_val = [6.0, 8.0]
-            results_y_train = [0.0, 4.0, 16.0]
-            results_y_val = [36.0, 64.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            x, y = next(train_iter)
-            self.assertTrue(x.shape == (3, 1))
-            self.assertTrue(y.shape == (3, 1))
-            collected_x_train.append(x.tolist())
-            collected_y_train.append(y.tolist())
-
-            x, y = next(val_iter)
-            self.assertTrue(x.shape == (2, 1))
-            self.assertTrue(y.shape == (2, 1))
-            collected_x_val.append(x.tolist())
-            collected_y_val.append(y.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-
-            filter_entries_after = dff.AsNumpy(["rdfentry_"])["rdfentry_"]
-
-            # check if the dataframe is correctly reset
-            self.assertTrue(np.array_equal(filter_entries_before, filter_entries_after))
-
-            self.teardown_file(self.file_name1)
-
-        except:
-            self.teardown_file(self.file_name1)
-            raise
-
-    def test09_filtered_last_chunk(self):
-        file_name = "filtered_last_chunk.root"
-        tree_name = "myTree"
-
-        ROOT.RDataFrame(20).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Snapshot(
-            tree_name, file_name
+        dl = ROOT.Experimental.ML.RDataLoader(
+            df,
+            batch_size=3,
+            batches_in_memory=2,
+            target="b1",
+            max_vec_sizes=max_vec_sizes,
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
         )
 
-        try:
-            df = ROOT.RDataFrame(tree_name, file_name)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            dff = df.Filter("b1 % 2 == 0", "name")
+        results_x_train = [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            10.0,
+            0,
+            100.0,
+            1000.0,
+            2.0,
+            20.0,
+            0,
+            200.0,
+            2000.0,
+            3.0,
+            30.0,
+            0,
+            300.0,
+            3000.0,
+            4.0,
+            40.0,
+            0,
+            400.0,
+            4000.0,
+            5.0,
+            50.0,
+            0,
+            500.0,
+            5000.0,
+        ]
+        results_y_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+        results_x_val = [
+            6.0,
+            60.0,
+            0.0,
+            600.0,
+            6000.0,
+            7.0,
+            70.0,
+            0.0,
+            700.0,
+            7000.0,
+            8.0,
+            80.0,
+            0.0,
+            800.0,
+            8000.0,
+            9.0,
+            90.0,
+            0.0,
+            900.0,
+            9000.0,
+        ]
+        results_y_val = [6.0, 7.0, 8.0, 9.0]
 
-            gen_train = ROOT.Experimental.ML.RDataLoader(
-                dff,
-                batch_size=3,
-                batches_in_memory=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-            )
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
 
-            results_x_train = [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0]
-            results_y_train = [0.0, 4.0, 16.0, 36.0, 64.0, 100.0, 144.0, 196.0, 256.0, 324.0]
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
 
-            collected_x_train = []
-            collected_y_train = []
+        for _ in range(self.n_val_batch):
+            x, y = next(val_iter)
+            assert x.shape == (3, 5)
+            assert y.shape == (3, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
 
-            train_iter = iter(gen_train.as_numpy())
-
-            for _ in range(3):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
+        for _ in range(self.n_train_batch):
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (1, 1))
-            self.assertTrue(y.shape == (1, 1))
+            assert x.shape == (3, 5)
+            assert y.shape == (3, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        x, y = next(val_iter)
+        assert x.shape == (self.val_remainder, 5)
+        assert y.shape == (self.val_remainder, 1)
+        collected_x_val.append(x.tolist())
+        collected_y_val.append(y.tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_y_train, flat_y_train)
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.teardown_file(file_name)
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
 
-        except:
-            self.teardown_file(file_name)
-            raise
+    def test17_JAX(self, weighted_df):
+        pytest.importorskip("jax")
 
-    def test10_two_epochs_shuffled(self):
-        self.create_file()
+        dl = ROOT.Experimental.ML.RDataLoader(
+            weighted_df,
+            batch_size=3,
+            batches_in_memory=2,
+            target=["b2", "b4"],
+            weights="b3",
+            shuffle=False,
+            drop_remainder=False,
+        )
 
-        try:
-            df = ROOT.RDataFrame(self.tree_name, self.file_name1)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                batches_in_memory=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-            )
+        results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+        results_x_val = [6.0, 7.0, 8.0, 9.0]
+        results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
+        results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0]
+        results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
+        results_z_val = [60.0, 70.0, 80.0, 90.0]
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+        collected_z_train = []
+        collected_z_val = []
 
-            both_epochs_collected_x_val = []
-            both_epochs_collected_y_val = []
+        iter_train = iter(gen_train.as_jax(device="cpu"))
+        iter_val = iter(gen_validation.as_jax())
 
-            for _ in range(2):
-                collected_x_train = []
-                collected_x_val = []
-                collected_y_train = []
-                collected_y_val = []
+        for _ in range(self.n_train_batch):
+            x, y, z = next(iter_train)
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+            collected_z_train.append(z.tolist())
 
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
-
-                for _ in range(self.n_train_batch):
-                    x, y = next(iter_train)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
-                    collected_x_train.append(x.tolist())
-                    collected_y_train.append(y.tolist())
-
-                for _ in range(self.n_val_batch):
-                    x, y = next(iter_val)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
-                    collected_x_val.append(x.tolist())
-                    collected_y_val.append(y.tolist())
-
-                x, y = next(iter_val)
-                self.assertTrue(x.shape == (self.val_remainder, 1))
-                self.assertTrue(y.shape == (self.val_remainder, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-                flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
-                flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
-                flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
-                flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
-
-                self.assertEqual(len(flat_x_train), 6)
-                self.assertEqual(len(flat_x_val), 4)
-                self.assertEqual(len(flat_y_train), 6)
-                self.assertEqual(len(flat_y_val), 4)
-
-                both_epochs_collected_x_val.append(collected_x_val)
-                both_epochs_collected_y_val.append(collected_y_val)
-
-            self.assertEqual(both_epochs_collected_x_val[0], both_epochs_collected_x_val[1])
-            self.assertEqual(both_epochs_collected_y_val[0], both_epochs_collected_y_val[1])
-        finally:
-            self.teardown_file(self.file_name1)
-
-    def test11_number_of_training_and_validation_batches_remainder(self):
-        self.create_file()
-
-        try:
-            df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                batches_in_memory=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            number_of_training_batches = 0
-            number_of_validation_batches = 0
-
-            for _ in gen_train.as_numpy():
-                number_of_training_batches += 1
-
-            for _ in gen_validation.as_numpy():
-                number_of_validation_batches += 1
-
-            self.assertEqual(gen_train.num_batches, number_of_training_batches)
-            self.assertEqual(gen_validation.num_batches, number_of_validation_batches)
-            self.assertEqual(gen_train.last_batch_no_of_rows, 0)
-            self.assertEqual(gen_validation.last_batch_no_of_rows, 1)
-
-            self.teardown_file(self.file_name1)
-
-        except:
-            self.teardown_file(self.file_name1)
-            raise
-
-    def test12_PyTorch(self):
-        file_name = "multiple_target_columns.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name)
-
-        try:
-            df = ROOT.RDataFrame("myTree", file_name)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                batches_in_memory=2,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-            results_x_val = [6.0, 7.0, 8.0, 9.0]
-            results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
-            results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0]
-            results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
-            results_z_val = [60.0, 70.0, 80.0, 90.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
-
-            iter_train = iter(gen_train.as_torch(device="cpu"))
-            iter_val = iter(gen_validation.as_torch())
-
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-                collected_z_train.append(z.tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-                collected_z_val.append(z.tolist())
-
+        for _ in range(self.n_val_batch):
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
             collected_z_val.append(z.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
-
-            self.teardown_file(file_name)
-
-        except:
-            self.teardown_file(file_name)
-            raise
-
-    def test13_TensorFlow(self):
-        file_name = "multiple_target_columns.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name)
-
-        try:
-            df = ROOT.RDataFrame("myTree", file_name)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                batches_in_memory=2,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-            results_x_val = [6.0, 7.0, 8.0, 9.0, 0.0, 0.0]
-            results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
-            results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0, 0.0, 0.0, 0.0, 0.0]
-            results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
-            results_z_val = [60.0, 70.0, 80.0, 90.0, 0.0, 0.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
-
-            iter_train = iter(gen_train.as_tensorflow())
-            iter_val = iter(gen_validation.as_tensorflow())
-
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_train.append(x.numpy().tolist())
-                collected_y_train.append(y.numpy().tolist())
-                collected_z_train.append(z.numpy().tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_val.append(x.numpy().tolist())
-                collected_y_val.append(y.numpy().tolist())
-                collected_z_val.append(z.numpy().tolist())
-
-            x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (3, 1))
-            self.assertTrue(y.shape == (3, 2))
-            self.assertTrue(z.shape == (3, 1))
-            collected_x_val.append(x.numpy().tolist())
-            collected_y_val.append(y.numpy().tolist())
-            collected_z_val.append(z.numpy().tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
-
-            self.teardown_file(file_name)
-
-        except:
-            self.teardown_file(file_name)
-            raise
-
-    def test14_big_data(self):
-        file_name = "big_data.root"
-        tree_name = "myTree"
-
-        entries_in_rdf = randrange(10000, 30000)
-        batch_size = randrange(100, 501)
-        batches_in_memory = randrange(5, 20)
-
-        error_message = f"\n batch_size={batch_size} batches_in_memory={batches_in_memory} entries={entries_in_rdf}"
-
-        def define_rdf(num_of_entries):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
-        def test(size_of_batch, batches_in_memory, num_of_entries):
-            define_rdf(num_of_entries)
-
-            try:
-                df = ROOT.RDataFrame(tree_name, file_name)
-
-                dl = ROOT.Experimental.ML.RDataLoader(
-                    df,
-                    batch_size=size_of_batch,
-                    batches_in_memory=batches_in_memory,
-                    target=["b3", "b5"],
-                    weights="b2",
-                    shuffle=False,
-                    drop_remainder=False,
-                )
-
-                gen_train, gen_validation = dl.train_test_split(0.3)
-
-                collect_x = []
-
-                train_remainder = gen_train.last_batch_no_of_rows
-                val_remainder = gen_validation.last_batch_no_of_rows
-
-                n_train_batches = gen_train.num_batches - 1 if train_remainder else gen_train.num_batches
-                n_val_batches = gen_validation.num_batches - 1 if val_remainder else gen_validation.num_batches
-
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
-
-                for i in range(n_train_batches):
-                    x, y, z = next(iter_train)
-
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
-
-                    self.assertTrue(np.all(x[:, 0] * (-1) == x[:, 1]), error_message + f" row: {i}")
-                    self.assertTrue(np.all(x[:, 0] + 10192 == y[:, 0]), error_message + f" row: {i}")
-                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] * 2 == z[:, 0]), error_message + f" row: {i}")
-
-                    collect_x.extend(list(x[:, 0]))
-
-                if train_remainder:
-                    x, y, z = next(iter_train)
-                    self.assertTrue(x.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (train_remainder, 1), error_message)
-                    collect_x.extend(list(x[:, 0]))
-
-                for _ in range(n_val_batches):
-                    x, y, z = next(iter_val)
-
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
-
-                    self.assertTrue(np.all(x[:, 0] * (-1) == x[:, 1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] + 10192 == y[:, 0]), error_message)
-                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] * 2 == z[:, 0]), error_message)
-
-                    collect_x.extend(list(x[:, 0]))
-
-                if val_remainder:
-                    x, y, z = next(iter_val)
-                    self.assertTrue(x.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (val_remainder, 1), error_message)
-                    collect_x.extend(list(x[:, 0]))
-
-                self.assertTrue(
-                    set(collect_x) == set(i for i in range(num_of_entries)),
-                    f"collected length: {len(set(collect_x))}\
-                                 generated length {len(set(i for i in range(num_of_entries)))}",
-                )
-
-            except:
-                self.teardown_file(file_name)
-                raise
-
-        test(batch_size, batches_in_memory, entries_in_rdf)
-
-    def test15_two_runs_set_seed(self):
-        self.create_file()
-
-        try:
-            both_runs_collected_x_val = []
-            both_runs_collected_y_val = []
-
-            df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            for _ in range(2):
-                dl = ROOT.Experimental.ML.RDataLoader(
-                    df,
-                    batch_size=3,
-                    batches_in_memory=2,
-                    target="b2",
-                    shuffle=True,
-                    drop_remainder=False,
-                    set_seed=42,
-                )
-
-                gen_train, gen_validation = dl.train_test_split(0.4)
-
-                collected_x_train = []
-                collected_x_val = []
-                collected_y_train = []
-                collected_y_val = []
-
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
-
-                for _ in range(self.n_train_batch):
-                    x, y = next(iter_train)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
-                    collected_x_train.append(x.tolist())
-                    collected_y_train.append(y.tolist())
-
-                for _ in range(self.n_val_batch):
-                    x, y = next(iter_val)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
-                    collected_x_val.append(x.tolist())
-                    collected_y_val.append(y.tolist())
-
-                x, y = next(iter_val)
-                self.assertTrue(x.shape == (self.val_remainder, 1))
-                self.assertTrue(y.shape == (self.val_remainder, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-                flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
-                flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
-                flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
-                flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
-
-                self.assertEqual(len(flat_x_train), 6)
-                self.assertEqual(len(flat_x_val), 4)
-                self.assertEqual(len(flat_y_train), 6)
-                self.assertEqual(len(flat_y_val), 4)
-
-                both_runs_collected_x_val.append(collected_x_val)
-                both_runs_collected_y_val.append(collected_y_val)
-            self.assertEqual(both_runs_collected_x_val[0], both_runs_collected_x_val[1])
-            self.assertEqual(both_runs_collected_y_val[0], both_runs_collected_y_val[1])
-        finally:
-            self.teardown_file(self.file_name1)
-
-    def test16_vector_padding(self):
-        self.create_vector_file()
-
-        try:
-            df = ROOT.RDataFrame(self.tree_name, self.file_name3)
-            max_vec_sizes = {"v1": 3, "v2": 2}
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                batches_in_memory=2,
-                target="b1",
-                max_vec_sizes=max_vec_sizes,
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                1.0,
-                10.0,
-                0,
-                100.0,
-                1000.0,
-                2.0,
-                20.0,
-                0,
-                200.0,
-                2000.0,
-                3.0,
-                30.0,
-                0,
-                300.0,
-                3000.0,
-                4.0,
-                40.0,
-                0,
-                400.0,
-                4000.0,
-                5.0,
-                50.0,
-                0,
-                500.0,
-                5000.0,
-            ]
-            results_y_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-            results_x_val = [
-                6.0,
-                60.0,
-                0.0,
-                600.0,
-                6000.0,
-                7.0,
-                70.0,
-                0.0,
-                700.0,
-                7000.0,
-                8.0,
-                80.0,
-                0.0,
-                800.0,
-                8000.0,
-                9.0,
-                90.0,
-                0.0,
-                900.0,
-                9000.0,
-            ]
-            results_y_val = [6.0, 7.0, 8.0, 9.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 5))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 5))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 5))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
-            collected_x_val.append(x.tolist())
-            collected_y_val.append(y.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-
-            self.teardown_file(self.file_name3)
-
-        except:
-            self.teardown_file(self.file_name3)
-            raise
-
-    def test17_JAX(self):
-        file_name = "multiple_target_columns.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name)
-
-        try:
-            df = ROOT.RDataFrame("myTree", file_name)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                batches_in_memory=2,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-            results_x_val = [6.0, 7.0, 8.0, 9.0]
-            results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
-            results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0]
-            results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
-            results_z_val = [60.0, 70.0, 80.0, 90.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
-
-            iter_train = iter(gen_train.as_jax(device="cpu"))
-            iter_val = iter(gen_validation.as_jax())
-
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-                collected_z_train.append(z.tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-                collected_z_val.append(z.tolist())
-
-            x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
-            collected_x_val.append(x.tolist())
-            collected_y_val.append(y.tolist())
-            collected_z_val.append(z.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
-
-        finally:
-            self.teardown_file(file_name)
-
-    def test18_one_batch_in_memory(self):
+        x, y, z = next(iter_val)
+        assert x.shape == (self.val_remainder, 1)
+        assert y.shape == (self.val_remainder, 2)
+        assert z.shape == (self.val_remainder, 1)
+        collected_x_val.append(x.tolist())
+        collected_y_val.append(y.tolist())
+        collected_z_val.append(z.tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+        flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+        assert results_z_train == flat_z_train
+        assert results_z_val == flat_z_val
+
+    def test18_one_batch_in_memory(self, df):
         # batches_in_memory=1 used to deadlock before delivering the first batch
-        self.create_file()
 
-        try:
-            df = ROOT.RDataFrame(self.tree_name, self.file_name1)
+        dl = ROOT.Experimental.ML.RDataLoader(
+            df,
+            batch_size=2,
+            batches_in_memory=1,
+            target="b2",
+            shuffle=False,
+            drop_remainder=True,
+        )
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=2,
-                batches_in_memory=1,
-                target="b2",
-                shuffle=False,
-                drop_remainder=True,
-            )
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        assert sum(1 for _ in gen_train.as_numpy()) == 3
+        assert sum(1 for _ in gen_validation.as_numpy()) == 2
 
-            self.assertEqual(sum(1 for _ in gen_train.as_numpy()), 3)
-            self.assertEqual(sum(1 for _ in gen_validation.as_numpy()), 2)
-
-        finally:
-            self.teardown_file(self.file_name1)
-
-    def test19_defined_columns(self):
+    def test19_defined_columns(self, df, load_eager):
         # columns defined after reading the file are loaded like the stored ones
-        self.create_file()
 
-        try:
-            df = (
-                ROOT
-                .RDataFrame(self.tree_name, self.file_name1)
-                .Define("b3", "b1 * 3")
-                .Define("v1", "ROOT::RVecD{b2, b2 + 1}")
-            )
+        df = df.Define("b3", "b1 * 3").Define("v1", "ROOT::RVecD{b2, b2 + 1}")
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                batches_in_memory=2,
-                columns=["b1", "v1", "b3"],
-                max_vec_sizes={"v1": 2},
-                target="b3",
-                shuffle=False,
-                drop_remainder=False,
-            )
+        dl = ROOT.Experimental.ML.RDataLoader(
+            df,
+            batch_size=3,
+            batches_in_memory=2,
+            columns=["b1", "v1", "b3"],
+            max_vec_sizes={"v1": 2},
+            target="b3",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            batches = list(gen_train.as_numpy()) + list(gen_validation.as_numpy())
-            x = np.concatenate([x for x, _ in batches])
-            y = np.concatenate([y for _, y in batches])
+        batches = list(gen_train.as_numpy()) + list(gen_validation.as_numpy())
+        x = np.concatenate([x for x, _ in batches])
+        y = np.concatenate([y for _, y in batches])
 
-            entries = np.arange(10, dtype=np.float32)
-            self.assertTrue(np.array_equal(x, np.column_stack([entries, entries**2, entries**2 + 1])))
-            self.assertTrue(np.array_equal(y, (entries * 3).reshape(-1, 1)))
-
-        finally:
-            self.teardown_file(self.file_name1)
+        entries = np.arange(10, dtype=np.float32)
+        assert np.array_equal(x, np.column_stack([entries, entries**2, entries**2 + 1]))
+        assert np.array_equal(y, (entries * 3).reshape(-1, 1))
 
 
-class DataLoaderEagerLoading(unittest.TestCase):
-    file_name1 = "first_half.root"
-    file_name2 = "second_half.root"
-    file_name3 = "vector_columns.root"
-    tree_name = "mytree"
-
+class TestDataLoaderMultipleDataframes:
     # default constants
     n_train_batch = 2
     n_val_batch = 1
     val_remainder = 1
 
-    # Helpers
-    def define_rdf(self, num_of_entries=10):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_").Define("b2", "(double) b1*b1")
+    @pytest.fixture
+    def df1(self):
+        """5 entries: b1 = 0, ..., 4 and b2 = b1 * b1."""
+        return from_files(squares(5))
 
-        return df
+    @pytest.fixture
+    def df2(self):
+        """5 entries: b1 = 5, ..., 9 and b2 = b1 * b1."""
+        return from_files(squares(5, "(int) rdfentry_ + 5"))
 
-    def create_file(self, num_of_entries=10):
-        self.define_rdf(num_of_entries).Snapshot(self.tree_name, self.file_name1)
+    @pytest.fixture
+    def weighted_df1(self):
+        """5 entries: b1 = 0, ..., 4, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+        return from_files(weighted(5))
 
-    def create_5_entries_file(self):
-        (
-            ROOT.RDataFrame(5)
-            .Define("b1", "(int) rdfentry_ + 10")
-            .Define("b2", "(double) b1 * b1")
-            .Snapshot(self.tree_name, self.file_name2)
+    @pytest.fixture
+    def weighted_df2(self):
+        """5 entries: b1 = 5, ..., 9, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+        return from_files(weighted(5, "(int) rdfentry_ + 5"))
+
+    def test01_each_element_is_generated_unshuffled(self, df1, df2, load_eager):
+        df1_entries_before = df1.AsNumpy(["rdfentry_"])["rdfentry_"]
+        df2_entries_before = df2.AsNumpy(["rdfentry_"])["rdfentry_"]
+
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df1, df2],
+            batch_size=3,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
         )
 
-    def create_vector_file(self, num_of_entries=10):
-        (
-            ROOT.RDataFrame(10)
-            .Define("b1", "(int) rdfentry_")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name3)
-        )
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-    def teardown_file(self, file):
-        os.remove(file)
-
-    def test01_each_element_is_generated_unshuffled(self):
-        self.create_file()
-
-        try:
-            df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-            results_x_val = [6.0, 7.0, 8.0, 9.0]
-            results_y_train = [0.0, 1.0, 4.0, 9.0, 16.0, 25.0]
-            results_y_val = [36.0, 49.0, 64.0, 81.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
-            collected_x_val.append(x.tolist())
-            collected_y_val.append(y.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-
-            self.teardown_file(self.file_name1)
-
-        except:
-            self.teardown_file(self.file_name1)
-            raise
-
-    def test02_each_element_is_generated_shuffled(self):
-        self.create_file()
-
-        try:
-            df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                target="b2",
-                shuffle=True,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
-            collected_x_val.append(x.tolist())
-            collected_y_val.append(y.tolist())
-
-            flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
-            flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
-            flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
-            flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
-
-            self.assertEqual(len(flat_x_train), 6)
-            self.assertEqual(len(flat_x_val), 4)
-            self.assertEqual(len(flat_y_train), 6)
-            self.assertEqual(len(flat_y_val), 4)
-
-            self.teardown_file(self.file_name1)
-
-        except:
-            self.teardown_file(self.file_name1)
-            raise
-
-    def test04_dropping_remainder(self):
-        self.create_file()
-
-        try:
-            df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=True,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            collected_x = []
-            collected_y = []
-
-            for x, y in gen_train.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x.append(x)
-                collected_y.append(y)
-
-            for x, y in gen_validation.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x.append(x)
-                collected_y.append(y)
-
-            self.assertEqual(len(collected_x), 3)
-            self.assertEqual(len(collected_y), 3)
-
-            self.teardown_file(self.file_name1)
-
-        except:
-            self.teardown_file(self.file_name1)
-            raise
-
-    def test05_more_than_one_file(self):
-        self.create_file()
-        self.create_5_entries_file()
-
-        try:
-            df = ROOT.RDataFrame(self.tree_name, [self.file_name1, self.file_name2])
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
-            results_x_val = [9.0, 10.0, 11.0, 12.0, 13.0, 14.0]
-            results_y_train = [0.0, 1.0, 4.0, 9.0, 16.0, 25.0, 36.0, 49.0, 64.0]
-            results_y_val = [81.0, 100.0, 121.0, 144.0, 169.0, 196.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            for x, y in gen_train.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            for x, y in gen_validation.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
-
-    def test06_multiple_target_columns(self):
-        file_name = "multiple_target_columns.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name)
-        try:
-            df = ROOT.RDataFrame("myTree", file_name)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-            results_x_val = [6.0, 7.0, 8.0, 9.0]
-            results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
-            results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0]
-            results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
-            results_z_val = [60.0, 70.0, 80.0, 90.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
-
-            iter_train = iter(gen_train.as_numpy())
-            iter_val = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-                collected_z_train.append(z.tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-                collected_z_val.append(z.tolist())
-
-            x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
-            collected_x_val.append(x.tolist())
-            collected_y_val.append(y.tolist())
-            collected_z_val.append(z.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
-
-            self.teardown_file(file_name)
-
-        except:
-            self.teardown_file(file_name)
-            raise
-
-    def test07_multiple_input_columns(self):
-        file_name = "multiple_input_columns.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Snapshot("myTree", file_name)
-
-        try:
-            df = ROOT.RDataFrame("myTree", file_name)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 0.0, 1.0, 10.0, 2.0, 20.0, 3.0, 30.0, 4.0, 40.0, 5.0, 50.0]
-            results_x_val = [6.0, 60.0, 7.0, 70.0, 8.0, 80.0, 9.0, 90.0]
-            results_y_train = [0.0, 1.0, 4.0, 9.0, 16.0, 25.0]
-            results_y_val = [36.0, 49.0, 64.0, 81.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            iter_train = iter(gen_train.as_numpy())
-            iter_val = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(iter_train)
-                self.assertTrue(x.shape == (3, 2))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(iter_val)
-                self.assertTrue(x.shape == (3, 2))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            x, y = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 2))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
-            collected_x_val.append(x.tolist())
-            collected_y_val.append(y.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-
-            self.teardown_file(file_name)
-
-        except:
-            self.teardown_file(file_name)
-            raise
-
-    def test08_filtered(self):
-        self.create_file()
-
-        try:
-            df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
-            dff = df.Filter("b1 % 2 == 0", "name")
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                dff,
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 2.0, 4.0]
-            results_x_val = [6.0, 8.0]
-            results_y_train = [0.0, 4.0, 16.0]
-            results_y_val = [36.0, 64.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            x, y = next(train_iter)
-            self.assertTrue(x.shape == (3, 1))
-            self.assertTrue(y.shape == (3, 1))
-            collected_x_train.append(x.tolist())
-            collected_y_train.append(y.tolist())
-
-            x, y = next(val_iter)
-            self.assertTrue(x.shape == (2, 1))
-            self.assertTrue(y.shape == (2, 1))
-            collected_x_val.append(x.tolist())
-            collected_y_val.append(y.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-
-            self.teardown_file(self.file_name1)
-
-        except:
-            self.teardown_file(self.file_name1)
-            raise
-
-    def test09_filtered_last_chunk(self):
-        file_name = "filtered_last_chunk.root"
-        tree_name = "myTree"
-
-        ROOT.RDataFrame(20).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Snapshot(
-            tree_name, file_name
-        )
-
-        try:
-            df = ROOT.RDataFrame(tree_name, file_name)
-
-            dff = df.Filter("b1 % 2 == 0", "name")
-
-            gen_train = ROOT.Experimental.ML.RDataLoader(
-                dff,
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            results_x_train = [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0]
-            results_y_train = [0.0, 4.0, 16.0, 36.0, 64.0, 100.0, 144.0, 196.0, 256.0, 324.0]
-
-            collected_x_train = []
-            collected_y_train = []
-
-            train_iter = iter(gen_train.as_numpy())
-
-            for _ in range(3):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            x, y = next(train_iter)
-            self.assertTrue(x.shape == (1, 1))
-            self.assertTrue(y.shape == (1, 1))
-            collected_x_train.append(x.tolist())
-            collected_y_train.append(y.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_y_train, flat_y_train)
-
-            self.teardown_file(file_name)
-
-        except:
-            self.teardown_file(file_name)
-            raise
-
-    def test10_two_epochs_shuffled(self):
-        self.create_file()
-
-        try:
-            df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            both_epochs_collected_x_val = []
-            both_epochs_collected_y_val = []
-
-            for _ in range(2):
-                collected_x_train = []
-                collected_x_val = []
-                collected_y_train = []
-                collected_y_val = []
-
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
-
-                for _ in range(self.n_train_batch):
-                    x, y = next(iter_train)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
-                    collected_x_train.append(x.tolist())
-                    collected_y_train.append(y.tolist())
-
-                for _ in range(self.n_val_batch):
-                    x, y = next(iter_val)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
-                    collected_x_val.append(x.tolist())
-                    collected_y_val.append(y.tolist())
-
-                x, y = next(iter_val)
-                self.assertTrue(x.shape == (self.val_remainder, 1))
-                self.assertTrue(y.shape == (self.val_remainder, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-                flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
-                flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
-                flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
-                flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
-
-                self.assertEqual(len(flat_x_train), 6)
-                self.assertEqual(len(flat_x_val), 4)
-                self.assertEqual(len(flat_y_train), 6)
-                self.assertEqual(len(flat_y_val), 4)
-
-                both_epochs_collected_x_val.append(collected_x_val)
-                both_epochs_collected_y_val.append(collected_y_val)
-
-            self.assertEqual(both_epochs_collected_x_val[0], both_epochs_collected_x_val[1])
-            self.assertEqual(both_epochs_collected_y_val[0], both_epochs_collected_y_val[1])
-        finally:
-            self.teardown_file(self.file_name1)
-
-    def test11_number_of_training_and_validation_batches_remainder(self):
-        self.create_file()
-
-        try:
-            df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            number_of_training_batches = 0
-            number_of_validation_batches = 0
-
-            for _ in gen_train.as_numpy():
-                number_of_training_batches += 1
-
-            for _ in gen_validation.as_numpy():
-                number_of_validation_batches += 1
-
-            self.assertEqual(gen_train.num_batches, number_of_training_batches)
-            self.assertEqual(gen_validation.num_batches, number_of_validation_batches)
-            self.assertEqual(gen_train.last_batch_no_of_rows, 0)
-            self.assertEqual(gen_validation.last_batch_no_of_rows, 1)
-
-            self.teardown_file(self.file_name1)
-
-        except:
-            self.teardown_file(self.file_name1)
-            raise
-
-    def test12_PyTorch(self):
-        file_name = "multiple_target_columns.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name)
-
-        try:
-            df = ROOT.RDataFrame("myTree", file_name)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-            results_x_val = [6.0, 7.0, 8.0, 9.0]
-            results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
-            results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0]
-            results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
-            results_z_val = [60.0, 70.0, 80.0, 90.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
-
-            iter_train = iter(gen_train.as_torch())
-            iter_val = iter(gen_validation.as_torch(device="cpu"))
-
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-                collected_z_train.append(z.tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-                collected_z_val.append(z.tolist())
-
-            x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
-            collected_x_val.append(x.tolist())
-            collected_y_val.append(y.tolist())
-            collected_z_val.append(z.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
-
-            self.teardown_file(file_name)
-
-        except:
-            self.teardown_file(file_name)
-            raise
-
-    def test13_TensorFlow(self):
-        file_name = "multiple_target_columns.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(Short_t) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Define(
-            "b3", "(double) rdfentry_ * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name)
-
-        try:
-            df = ROOT.RDataFrame("myTree", file_name)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-            results_x_val = [6.0, 7.0, 8.0, 9.0, 0.0, 0.0]
-            results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
-            results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0, 0.0, 0.0, 0.0, 0.0]
-            results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
-            results_z_val = [60.0, 70.0, 80.0, 90.0, 0.0, 0.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
-
-            iter_train = iter(gen_train.as_tensorflow())
-            iter_val = iter(gen_validation.as_tensorflow())
-
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_train.append(x.numpy().tolist())
-                collected_y_train.append(y.numpy().tolist())
-                collected_z_train.append(z.numpy().tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_val.append(x.numpy().tolist())
-                collected_y_val.append(y.numpy().tolist())
-                collected_z_val.append(z.numpy().tolist())
-
-            x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (3, 1))
-            self.assertTrue(y.shape == (3, 2))
-            self.assertTrue(z.shape == (3, 1))
-            collected_x_val.append(x.numpy().tolist())
-            collected_y_val.append(y.numpy().tolist())
-            collected_z_val.append(z.numpy().tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
-
-            self.teardown_file(file_name)
-
-        except:
-            self.teardown_file(file_name)
-            raise
-
-    def test14_big_data(self):
-        file_name = "big_data.root"
-        tree_name = "myTree"
-
-        entries_in_rdf = randrange(10000, 30000)
-        batch_size = randrange(100, 501)
-        batches_in_memory = randrange(5, 20)
-
-        error_message = f"\n batch_size={batch_size} batches_in_memory={batches_in_memory} entries={entries_in_rdf}"
-
-        def define_rdf(num_of_entries):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
-        def test(size_of_batch, batches_in_memory, num_of_entries):
-            define_rdf(num_of_entries)
-
-            try:
-                df = ROOT.RDataFrame(tree_name, file_name)
-
-                dl = ROOT.Experimental.ML.RDataLoader(
-                    df,
-                    batch_size=size_of_batch,
-                    batches_in_memory=batches_in_memory,
-                    target=["b3", "b5"],
-                    weights="b2",
-                    shuffle=False,
-                    drop_remainder=False,
-                    load_eager=True,
-                )
-
-                gen_train, gen_validation = dl.train_test_split(0.3)
-
-                collect_x = []
-
-                train_remainder = gen_train.last_batch_no_of_rows
-                val_remainder = gen_validation.last_batch_no_of_rows
-
-                n_train_batches = gen_train.num_batches - 1 if train_remainder else gen_train.num_batches
-                n_val_batches = gen_validation.num_batches - 1 if val_remainder else gen_validation.num_batches
-
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
-
-                for i in range(n_train_batches):
-                    x, y, z = next(iter_train)
-
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
-
-                    self.assertTrue(np.all(x[:, 0] * (-1) == x[:, 1]), error_message + f" row: {i}")
-                    self.assertTrue(np.all(x[:, 0] + 10192 == y[:, 0]), error_message + f" row: {i}")
-                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] * 2 == z[:, 0]), error_message + f" row: {i}")
-
-                    collect_x.extend(list(x[:, 0]))
-
-                if train_remainder:
-                    x, y, z = next(iter_train)
-                    self.assertTrue(x.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (train_remainder, 1), error_message)
-                    collect_x.extend(list(x[:, 0]))
-
-                for _ in range(n_val_batches):
-                    x, y, z = next(iter_val)
-
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
-
-                    self.assertTrue(np.all(x[:, 0] * (-1) == x[:, 1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] + 10192 == y[:, 0]), error_message)
-                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] * 2 == z[:, 0]), error_message)
-
-                    collect_x.extend(list(x[:, 0]))
-
-                if val_remainder:
-                    x, y, z = next(iter_val)
-                    self.assertTrue(x.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (val_remainder, 1), error_message)
-                    collect_x.extend(list(x[:, 0]))
-
-                self.assertTrue(
-                    set(collect_x) == set(i for i in range(num_of_entries)),
-                    f"collected length: {len(set(collect_x))}\
-                                 generated length {len(set(i for i in range(num_of_entries)))}",
-                )
-
-            except:
-                self.teardown_file(file_name)
-                raise
-
-        test(batch_size, batches_in_memory, entries_in_rdf)
-
-    def test15_two_runs_set_seed(self):
-        self.create_file()
-
-        try:
-            both_runs_collected_x_val = []
-            both_runs_collected_y_val = []
-
-            df = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            for _ in range(2):
-                dl = ROOT.Experimental.ML.RDataLoader(
-                    df,
-                    batch_size=3,
-                    target="b2",
-                    shuffle=True,
-                    drop_remainder=False,
-                    set_seed=42,
-                    load_eager=True,
-                )
-
-                gen_train, gen_validation = dl.train_test_split(0.4)
-
-                collected_x_train = []
-                collected_x_val = []
-                collected_y_train = []
-                collected_y_val = []
-
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
-
-                for _ in range(self.n_train_batch):
-                    x, y = next(iter_train)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
-                    collected_x_train.append(x.tolist())
-                    collected_y_train.append(y.tolist())
-
-                for _ in range(self.n_val_batch):
-                    x, y = next(iter_val)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
-                    collected_x_val.append(x.tolist())
-                    collected_y_val.append(y.tolist())
-
-                x, y = next(iter_val)
-                self.assertTrue(x.shape == (self.val_remainder, 1))
-                self.assertTrue(y.shape == (self.val_remainder, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-                flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
-                flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
-                flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
-                flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
-
-                self.assertEqual(len(flat_x_train), 6)
-                self.assertEqual(len(flat_x_val), 4)
-                self.assertEqual(len(flat_y_train), 6)
-                self.assertEqual(len(flat_y_val), 4)
-
-                both_runs_collected_x_val.append(collected_x_val)
-                both_runs_collected_y_val.append(collected_y_val)
-            self.assertEqual(both_runs_collected_x_val[0], both_runs_collected_x_val[1])
-            self.assertEqual(both_runs_collected_y_val[0], both_runs_collected_y_val[1])
-        finally:
-            self.teardown_file(self.file_name1)
-
-    def test16_vector_padding(self):
-        self.create_vector_file()
-
-        try:
-            df = ROOT.RDataFrame(self.tree_name, self.file_name3)
-            max_vec_sizes = {"v1": 3, "v2": 2}
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                target="b1",
-                max_vec_sizes=max_vec_sizes,
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                1.0,
-                10.0,
-                0,
-                100.0,
-                1000.0,
-                2.0,
-                20.0,
-                0,
-                200.0,
-                2000.0,
-                3.0,
-                30.0,
-                0,
-                300.0,
-                3000.0,
-                4.0,
-                40.0,
-                0,
-                400.0,
-                4000.0,
-                5.0,
-                50.0,
-                0,
-                500.0,
-                5000.0,
-            ]
-            results_y_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-            results_x_val = [
-                6.0,
-                60.0,
-                0.0,
-                600.0,
-                6000.0,
-                7.0,
-                70.0,
-                0.0,
-                700.0,
-                7000.0,
-                8.0,
-                80.0,
-                0.0,
-                800.0,
-                8000.0,
-                9.0,
-                90.0,
-                0.0,
-                900.0,
-                9000.0,
-            ]
-            results_y_val = [6.0, 7.0, 8.0, 9.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 5))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 5))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 5))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
-            collected_x_val.append(x.tolist())
-            collected_y_val.append(y.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-
-            self.teardown_file(self.file_name3)
-
-        except:
-            self.teardown_file(self.file_name3)
-            raise
-
-    def test17_defined_columns(self):
-        # columns defined after reading the file are loaded like the stored ones
-        self.create_file()
-
-        try:
-            df = (
-                ROOT
-                .RDataFrame(self.tree_name, self.file_name1)
-                .Define("b3", "b1 * 3")
-                .Define("v1", "ROOT::RVecD{b2, b2 + 1}")
-            )
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                df,
-                batch_size=3,
-                batches_in_memory=2,
-                columns=["b1", "v1", "b3"],
-                max_vec_sizes={"v1": 2},
-                target="b3",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            batches = list(gen_train.as_numpy()) + list(gen_validation.as_numpy())
-            x = np.concatenate([x for x, _ in batches])
-            y = np.concatenate([y for _, y in batches])
-
-            entries = np.arange(10, dtype=np.float32)
-            self.assertTrue(np.array_equal(x, np.column_stack([entries, entries**2, entries**2 + 1])))
-            self.assertTrue(np.array_equal(y, (entries * 3).reshape(-1, 1)))
-
-        finally:
-            self.teardown_file(self.file_name1)
-
-
-class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
-    file_name1 = "first_half.root"
-    file_name2 = "second_half.root"
-    file_name3 = "second_file.root"
-    file_name4 = "vector_columns_1.root"
-    file_name5 = "vector_columns_2.root"
-    tree_name = "mytree"
-
-    # default constants
-    n_train_batch = 2
-    n_val_batch = 1
-    val_remainder = 1
-
-    # Helpers
-    def define_rdf1(self, num_of_entries=5):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_").Define("b2", "(double) b1*b1")
-
-        return df
-
-    def define_rdf2(self, num_of_entries=5):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(double) b1*b1")
-
-        return df
-
-    def create_file1(self, num_of_entries=5):
-        self.define_rdf1(num_of_entries).Snapshot(self.tree_name, self.file_name1)
-
-    def create_file2(self, num_of_entries=5):
-        self.define_rdf2(num_of_entries).Snapshot(self.tree_name, self.file_name2)
-
-    def create_5_entries_file(self):
-        (
-            ROOT.RDataFrame(5)
-            .Define("b1", "(int) rdfentry_ + 10")
-            .Define("b2", "(double) b1 * b1")
-            .Snapshot(self.tree_name, self.file_name3)
-        )
-
-    def create_vector_file1(self, num_of_entries=5):
-        (
-            ROOT.RDataFrame(5)
-            .Define("b1", "(int) rdfentry_")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name4)
-        )
-
-    def create_vector_file2(self, num_of_entries=5):
-        (
-            ROOT.RDataFrame(5)
-            .Define("b1", "(int) rdfentry_ + 5")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name5)
-        )
-
-    def teardown_file(self, file):
-        os.remove(file)
-
-    def test01_each_element_is_generated_unshuffled(self):
-        self.create_file1()
-        self.create_file2()
-
-        try:
-            df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            df1_entries_before = df1.AsNumpy(["rdfentry_"])["rdfentry_"]
-            df2_entries_before = df2.AsNumpy(["rdfentry_"])["rdfentry_"]
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
+        if load_eager:
             results_x_train = [0.0, 1.0, 2.0, 5.0, 6.0, 7.0]
             results_x_val = [3.0, 4.0, 8.0, 9.0]
             results_y_train = [0.0, 1.0, 4.0, 25.0, 36.0, 49.0]
             results_y_val = [9.0, 16.0, 64.0, 81.0]
+        else:
+            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+            results_x_val = [6.0, 7.0, 8.0, 9.0]
+            results_y_train = [0.0, 1.0, 4.0, 9.0, 16.0, 25.0]
+            results_y_val = [36.0, 49.0, 64.0, 81.0]
 
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
 
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
 
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
+        for _ in range(self.n_val_batch):
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        for _ in range(self.n_train_batch):
+            x, y = next(train_iter)
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+        x, y = next(val_iter)
+        assert x.shape == (self.val_remainder, 1)
+        assert y.shape == (self.val_remainder, 1)
+        collected_x_val.append(x.tolist())
+        collected_y_val.append(y.tolist())
 
-            df1_entries_after = df1.AsNumpy(["rdfentry_"])["rdfentry_"]
-            df2_entries_after = df2.AsNumpy(["rdfentry_"])["rdfentry_"]
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            # check if the dataframes are correctly reset
-            self.assertTrue(np.array_equal(df1_entries_before, df1_entries_after))
-            self.assertTrue(np.array_equal(df2_entries_before, df2_entries_after))
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
 
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
+        df1_entries_after = df1.AsNumpy(["rdfentry_"])["rdfentry_"]
+        df2_entries_after = df2.AsNumpy(["rdfentry_"])["rdfentry_"]
 
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
+        # check if the dataframes are correctly reset
+        assert np.array_equal(df1_entries_before, df1_entries_after)
+        assert np.array_equal(df2_entries_before, df2_entries_after)
 
-    def test02_each_element_is_generated_shuffled(self):
-        self.create_file1()
-        self.create_file2()
+    def test02_each_element_is_generated_shuffled(self, df1, df2, load_eager):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df1, df2],
+            batch_size=3,
+            target="b2",
+            shuffle=True,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
 
-        try:
-            df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target="b2",
-                shuffle=True,
-                drop_remainder=False,
-                load_eager=True,
-            )
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
 
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
+        for _ in range(self.n_train_batch):
+            x, y = next(train_iter)
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
 
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
+        for _ in range(self.n_val_batch):
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
-            flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
-            flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
-            flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
-            flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
+        x, y = next(val_iter)
+        assert x.shape == (self.val_remainder, 1)
+        assert y.shape == (self.val_remainder, 1)
+        collected_x_val.append(x.tolist())
+        collected_y_val.append(y.tolist())
 
-            self.assertEqual(len(flat_x_train), 6)
-            self.assertEqual(len(flat_x_val), 4)
-            self.assertEqual(len(flat_y_train), 6)
-            self.assertEqual(len(flat_y_val), 4)
+        flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
+        flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
+        flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
+        flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
+        assert len(flat_x_train) == 6
+        assert len(flat_x_val) == 4
+        assert len(flat_y_train) == 6
+        assert len(flat_y_val) == 4
 
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
+    def test04_dropping_remainder(self, df1, df2, load_eager):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df1, df2],
+            batch_size=3,
+            target="b2",
+            shuffle=False,
+            drop_remainder=True,
+            load_eager=load_eager,
+        )
 
-    def test04_dropping_remainder(self):
-        self.create_file1()
-        self.create_file2()
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-        try:
-            df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
+        collected_x = []
+        collected_y = []
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=True,
-                load_eager=True,
-            )
+        for x, y in gen_train.as_numpy():
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
+            collected_x.append(x)
+            collected_y.append(y)
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        for x, y in gen_validation.as_numpy():
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
+            collected_x.append(x)
+            collected_y.append(y)
 
-            collected_x = []
-            collected_y = []
+        assert len(collected_x) == 3
+        assert len(collected_y) == 3
 
-            for x, y in gen_train.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x.append(x)
-                collected_y.append(y)
+    def test05_more_than_one_file(self, load_eager):
+        df1 = from_files(squares(5), squares(5, "(int) rdfentry_ + 5"))
+        df2 = from_files(squares(5, "(int) rdfentry_ + 10"))
 
-            for x, y in gen_validation.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x.append(x)
-                collected_y.append(y)
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df1, df2],
+            batch_size=3,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
 
-            self.assertEqual(len(collected_x), 3)
-            self.assertEqual(len(collected_y), 3)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
-
-    def test05_more_than_one_file(self):
-        self.create_file1()
-        self.create_file2()
-        self.create_5_entries_file()
-
-        try:
-            df1 = ROOT.RDataFrame(self.tree_name, [self.file_name1, self.file_name2])
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name3)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
+        if load_eager:
             results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 11.0, 12.0]
             results_x_val = [6.0, 7.0, 8.0, 9.0, 13.0, 14.0]
             results_y_train = [0.0, 1.0, 4.0, 9.0, 16.0, 25.0, 100.0, 121.0, 144.0]
             results_y_val = [36.0, 49.0, 64.0, 81.0, 169.0, 196.0]
+        else:
+            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+            results_x_val = [9.0, 10.0, 11.0, 12.0, 13.0, 14.0]
+            results_y_train = [0.0, 1.0, 4.0, 9.0, 16.0, 25.0, 36.0, 49.0, 64.0]
+            results_y_val = [81.0, 100.0, 121.0, 144.0, 169.0, 196.0]
 
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
 
-            for x, y in gen_train.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
+        for x, y in gen_train.as_numpy():
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
 
-            for x, y in gen_validation.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
+        for x, y in gen_validation.as_numpy():
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
 
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            self.teardown_file(self.file_name3)
+    def test06_multiple_target_columns(self, weighted_df1, weighted_df2, load_eager):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [weighted_df1, weighted_df2],
+            batch_size=3,
+            target=["b2", "b4"],
+            weights="b3",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
 
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            self.teardown_file(self.file_name3)
-            raise
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-    def test06_multiple_target_columns(self):
-        file_name1 = "multiple_target_columns_1.root"
-        file_name2 = "multiple_target_columns_2.root"
-
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-        try:
-            df1 = ROOT.RDataFrame("myTree", file_name1)
-            df2 = ROOT.RDataFrame("myTree", file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
+        if load_eager:
             results_x_train = [0.0, 1.0, 2.0, 5.0, 6.0, 7.0]
             results_x_val = [3.0, 4.0, 8.0, 9.0]
             results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 25.0, 500.0, 36.0, 600.0, 49.0, 700.0]
             results_y_val = [9.0, 300.0, 16.0, 400.0, 64.0, 800.0, 81.0, 900.0]
             results_z_train = [0.0, 10.0, 20.0, 50.0, 60.0, 70.0]
             results_z_val = [30.0, 40.0, 80.0, 90.0]
+        else:
+            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+            results_x_val = [6.0, 7.0, 8.0, 9.0]
+            results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
+            results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0]
+            results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
+            results_z_val = [60.0, 70.0, 80.0, 90.0]
 
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+        collected_z_train = []
+        collected_z_val = []
 
-            iter_train = iter(gen_train.as_numpy())
-            iter_val = iter(gen_validation.as_numpy())
+        iter_train = iter(gen_train.as_numpy())
+        iter_val = iter(gen_validation.as_numpy())
 
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-                collected_z_train.append(z.tolist())
+        for _ in range(self.n_train_batch):
+            x, y, z = next(iter_train)
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+            collected_z_train.append(z.tolist())
 
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-                collected_z_val.append(z.tolist())
-
+        for _ in range(self.n_val_batch):
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
             collected_z_val.append(z.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+        x, y, z = next(iter_val)
+        assert x.shape == (self.val_remainder, 1)
+        assert y.shape == (self.val_remainder, 2)
+        assert z.shape == (self.val_remainder, 1)
+        collected_x_val.append(x.tolist())
+        collected_y_val.append(y.tolist())
+        collected_z_val.append(z.tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+        flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+        assert results_z_train == flat_z_train
+        assert results_z_val == flat_z_val
 
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
+    def test07_multiple_input_columns(self, load_eager):
+        df1 = from_files(
+            ROOT
+            .RDataFrame(5)
+            .Define("b1", "(int) rdfentry_")
+            .Define("b2", "(int) b1 * b1")
+            .Define("b3", "(double) b1 * 10")
+        )
+        df2 = from_files(
+            ROOT
+            .RDataFrame(5)
+            .Define("b1", "(int) rdfentry_ + 5")
+            .Define("b2", "(int) b1 * b1")
+            .Define("b3", "(double) b1 * 10")
+        )
 
-    def test07_multiple_input_columns(self):
-        file_name1 = "multiple_target_columns_1.root"
-        file_name2 = "multiple_target_columns_2.root"
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df1, df2],
+            batch_size=3,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
 
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Snapshot("myTree", file_name1)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Snapshot("myTree", file_name2)
-
-        try:
-            df1 = ROOT.RDataFrame("myTree", file_name1)
-            df2 = ROOT.RDataFrame("myTree", file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
+        if load_eager:
             results_x_train = [0.0, 0.0, 1.0, 10.0, 2.0, 20.0, 5.0, 50.0, 6.0, 60.0, 7.0, 70.0]
             results_x_val = [3.0, 30.0, 4.0, 40.0, 8.0, 80.0, 9.0, 90.0]
             results_y_train = [0.0, 1.0, 4.0, 25.0, 36.0, 49.0]
             results_y_val = [9.0, 16.0, 64.0, 81.0]
+        else:
+            results_x_train = [
+                0.0,
+                0.0,
+                1.0,
+                10.0,
+                2.0,
+                20.0,
+                3.0,
+                30.0,
+                4.0,
+                40.0,
+                5.0,
+                50.0,
+            ]
+            results_x_val = [6.0, 60.0, 7.0, 70.0, 8.0, 80.0, 9.0, 90.0]
+            results_y_train = [0.0, 1.0, 4.0, 9.0, 16.0, 25.0]
+            results_y_val = [36.0, 49.0, 64.0, 81.0]
 
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+
+        iter_train = iter(gen_train.as_numpy())
+        iter_val = iter(gen_validation.as_numpy())
+
+        for _ in range(self.n_train_batch):
+            x, y = next(iter_train)
+            assert x.shape == (3, 2)
+            assert y.shape == (3, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+
+        for _ in range(self.n_val_batch):
+            x, y = next(iter_val)
+            assert x.shape == (3, 2)
+            assert y.shape == (3, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+
+        x, y = next(iter_val)
+        assert x.shape == (self.val_remainder, 2)
+        assert y.shape == (self.val_remainder, 1)
+        collected_x_val.append(x.tolist())
+        collected_y_val.append(y.tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+
+    def test08_filtered(self, df1, df2):
+        dff1 = df1.Filter("b1 % 2 == 0", "name")
+        dff2 = df2.Filter("b1 % 2 != 0", "name")
+
+        dff1_entries_before = dff1.AsNumpy(["rdfentry_"])["rdfentry_"]
+        dff2_entries_before = dff2.AsNumpy(["rdfentry_"])["rdfentry_"]
+
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [dff1, dff2],
+            batch_size=3,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+        )
+
+        gen_train, gen_validation = dl.train_test_split(0.4)
+
+        results_x_train = [0.0, 2.0, 5.0]
+        results_x_val = [4.0, 9.0]
+        results_y_train = [0.0, 4.0, 25.0]
+        results_y_val = [16.0, 81.0]
+
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
+
+        x, y = next(train_iter)
+        assert x.shape == (3, 1)
+        assert y.shape == (3, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
+
+        x, y = next(val_iter)
+        assert x.shape == (2, 1)
+        assert y.shape == (2, 1)
+        collected_x_val.append(x.tolist())
+        collected_y_val.append(y.tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+
+        dff1_entries_after = dff1.AsNumpy(["rdfentry_"])["rdfentry_"]
+        dff2_entries_after = dff2.AsNumpy(["rdfentry_"])["rdfentry_"]
+
+        # check if the dataframes are correctly reset
+        assert np.array_equal(dff1_entries_before, dff1_entries_after)
+        assert np.array_equal(dff2_entries_before, dff2_entries_after)
+
+    def test09_filtered_last_chunk(self, load_eager):
+        df1 = from_files(ROOT.RDataFrame(10).Define("b1", "(int) rdfentry_").Define("b2", "(UShort_t) b1 * b1"))
+        df2 = from_files(ROOT.RDataFrame(10).Define("b1", "(int) rdfentry_ + 10").Define("b2", "(UShort_t) b1 * b1"))
+
+        dff1 = df1.Filter("b1 % 2 == 0", "name")
+        dff2 = df2.Filter("b1 % 2 == 0", "name")
+
+        gen_train = ROOT.Experimental.ML.RDataLoader(
+            [dff1, dff2],
+            batch_size=3,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
+
+        if load_eager:
+            results_x_train = [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0]
+            results_y_train = [0.0, 4.0, 16.0, 36.0, 64.0, 100.0, 144.0, 196.0, 256.0, 324.0]
+        else:
+            results_x_train = [0.0, 2.0, 4.0, 10.0, 12.0, 14.0, 6.0, 8.0, 16.0, 18.0]
+            results_y_train = [0.0, 4.0, 16.0, 100.0, 144.0, 196.0, 36.0, 64.0, 256.0, 324.0]
+
+        collected_x_train = []
+        collected_y_train = []
+
+        train_iter = iter(gen_train.as_numpy())
+
+        for _ in range(3):
+            x, y = next(train_iter)
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+
+        x, y = next(train_iter)
+        assert x.shape == (1, 1)
+        assert y.shape == (1, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+
+        assert results_x_train == flat_x_train
+        assert results_y_train == flat_y_train
+
+    def test10_two_epochs_shuffled(self, df1, df2, load_eager):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df1, df2],
+            batch_size=3,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
+
+        gen_train, gen_validation = dl.train_test_split(0.4)
+
+        both_epochs_collected_x_val = []
+        both_epochs_collected_y_val = []
+
+        for _ in range(2):
             collected_x_train = []
             collected_x_val = []
             collected_y_train = []
@@ -2837,672 +1661,388 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(iter_train)
-                self.assertTrue(x.shape == (3, 2))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (3, 2))
-                self.assertTrue(y.shape == (3, 1))
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 2))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+            flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
+            flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
+            flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
+            flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert len(flat_x_train) == 6
+            assert len(flat_x_val) == 4
+            assert len(flat_y_train) == 6
+            assert len(flat_y_val) == 4
 
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
+            both_epochs_collected_x_val.append(collected_x_val)
+            both_epochs_collected_y_val.append(collected_y_val)
 
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
+        assert both_epochs_collected_x_val[0] == both_epochs_collected_x_val[1]
+        assert both_epochs_collected_y_val[0] == both_epochs_collected_y_val[1]
 
-    def test08_filtered(self):
-        self.create_file1()
-        self.create_file2()
-
-        try:
-            df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            dff1 = df1.Filter("b1 % 2 == 0", "name")
-            dff2 = df2.Filter("b1 % 2 != 0", "name")
-
-            dff1_entries_before = dff1.AsNumpy(["rdfentry_"])["rdfentry_"]
-            dff2_entries_before = dff2.AsNumpy(["rdfentry_"])["rdfentry_"]
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [dff1, dff2],
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 2.0, 5.0]
-            results_x_val = [4.0, 9.0]
-            results_y_train = [0.0, 4.0, 25.0]
-            results_y_val = [16.0, 81.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            x, y = next(train_iter)
-            self.assertTrue(x.shape == (3, 1))
-            self.assertTrue(y.shape == (3, 1))
-            collected_x_train.append(x.tolist())
-            collected_y_train.append(y.tolist())
-
-            x, y = next(val_iter)
-            self.assertTrue(x.shape == (2, 1))
-            self.assertTrue(y.shape == (2, 1))
-            collected_x_val.append(x.tolist())
-            collected_y_val.append(y.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-
-            dff1_entries_after = dff1.AsNumpy(["rdfentry_"])["rdfentry_"]
-            dff2_entries_after = dff2.AsNumpy(["rdfentry_"])["rdfentry_"]
-
-            # check if the dataframes are correctly reset
-            self.assertTrue(np.array_equal(dff1_entries_before, dff1_entries_after))
-            self.assertTrue(np.array_equal(dff2_entries_before, dff2_entries_after))
-
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
-
-    def test09_filtered_last_chunk(self):
-        file_name1 = "filtered_last_chunk_1.root"
-        file_name2 = "filtered_last_chunk_2.root"
-        tree_name = "myTree"
-
-        ROOT.RDataFrame(10).Define("b1", "(int) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Snapshot(
-            tree_name, file_name1
+    def test11_number_of_training_and_validation_batches_remainder(self, df1, df2, load_eager):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df1, df2],
+            batch_size=3,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
         )
 
-        ROOT.RDataFrame(10).Define("b1", "(int) rdfentry_ + 10").Define("b2", "(UShort_t) b1 * b1").Snapshot(
-            tree_name, file_name2
+        gen_train, gen_validation = dl.train_test_split(0.4)
+
+        number_of_training_batches = 0
+        number_of_validation_batches = 0
+
+        for _ in gen_train.as_numpy():
+            number_of_training_batches += 1
+
+        for _ in gen_validation.as_numpy():
+            number_of_validation_batches += 1
+
+        assert gen_train.num_batches == number_of_training_batches
+        assert gen_validation.num_batches == number_of_validation_batches
+        assert gen_train.last_batch_no_of_rows == 0
+        assert gen_validation.last_batch_no_of_rows == 1
+
+    def test12_PyTorch(self, weighted_df1, weighted_df2, load_eager):
+        pytest.importorskip("torch")
+
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [weighted_df1, weighted_df2],
+            batch_size=3,
+            target=["b2", "b4"],
+            weights="b3",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
         )
 
-        try:
-            df1 = ROOT.RDataFrame(tree_name, file_name1)
-            df2 = ROOT.RDataFrame(tree_name, file_name2)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            dff1 = df1.Filter("b1 % 2 == 0", "name")
-            dff2 = df2.Filter("b1 % 2 == 0", "name")
-
-            gen_train = ROOT.Experimental.ML.RDataLoader(
-                [dff1, dff2],
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            results_x_train = [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0]
-            results_y_train = [0.0, 4.0, 16.0, 36.0, 64.0, 100.0, 144.0, 196.0, 256.0, 324.0]
-
-            collected_x_train = []
-            collected_y_train = []
-
-            train_iter = iter(gen_train.as_numpy())
-
-            for _ in range(3):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            x, y = next(train_iter)
-            self.assertTrue(x.shape == (1, 1))
-            self.assertTrue(y.shape == (1, 1))
-            collected_x_train.append(x.tolist())
-            collected_y_train.append(y.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_y_train, flat_y_train)
-
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
-
-    def test10_two_epochs_shuffled(self):
-        self.create_file1()
-        self.create_file2()
-
-        try:
-            df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            both_epochs_collected_x_val = []
-            both_epochs_collected_y_val = []
-
-            for _ in range(2):
-                collected_x_train = []
-                collected_x_val = []
-                collected_y_train = []
-                collected_y_val = []
-
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
-
-                for _ in range(self.n_train_batch):
-                    x, y = next(iter_train)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
-                    collected_x_train.append(x.tolist())
-                    collected_y_train.append(y.tolist())
-
-                for _ in range(self.n_val_batch):
-                    x, y = next(iter_val)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
-                    collected_x_val.append(x.tolist())
-                    collected_y_val.append(y.tolist())
-
-                x, y = next(iter_val)
-                self.assertTrue(x.shape == (self.val_remainder, 1))
-                self.assertTrue(y.shape == (self.val_remainder, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-                flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
-                flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
-                flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
-                flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
-
-                self.assertEqual(len(flat_x_train), 6)
-                self.assertEqual(len(flat_x_val), 4)
-                self.assertEqual(len(flat_y_train), 6)
-                self.assertEqual(len(flat_y_val), 4)
-
-                both_epochs_collected_x_val.append(collected_x_val)
-                both_epochs_collected_y_val.append(collected_y_val)
-
-            self.assertEqual(both_epochs_collected_x_val[0], both_epochs_collected_x_val[1])
-            self.assertEqual(both_epochs_collected_y_val[0], both_epochs_collected_y_val[1])
-        finally:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-    def test11_number_of_training_and_validation_batches_remainder(self):
-        self.create_file1()
-        self.create_file2()
-
-        try:
-            df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            number_of_training_batches = 0
-            number_of_validation_batches = 0
-
-            for _ in gen_train.as_numpy():
-                number_of_training_batches += 1
-
-            for _ in gen_validation.as_numpy():
-                number_of_validation_batches += 1
-
-            self.assertEqual(gen_train.num_batches, number_of_training_batches)
-            self.assertEqual(gen_validation.num_batches, number_of_validation_batches)
-            self.assertEqual(gen_train.last_batch_no_of_rows, 0)
-            self.assertEqual(gen_validation.last_batch_no_of_rows, 1)
-
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
-
-    def test12_PyTorch(self):
-        file_name1 = "multiple_target_columns_1.root"
-        file_name2 = "multiple_target_columns_2.root"
-
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-
-        try:
-            df1 = ROOT.RDataFrame("myTree", file_name1)
-            df2 = ROOT.RDataFrame("myTree", file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
+        if load_eager:
             results_x_train = [0.0, 1.0, 2.0, 5.0, 6.0, 7.0]
             results_x_val = [3.0, 4.0, 8.0, 9.0]
             results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 25.0, 500.0, 36.0, 600.0, 49.0, 700.0]
             results_y_val = [9.0, 300.0, 16.0, 400.0, 64.0, 800.0, 81.0, 900.0]
             results_z_train = [0.0, 10.0, 20.0, 50.0, 60.0, 70.0]
             results_z_val = [30.0, 40.0, 80.0, 90.0]
+        else:
+            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+            results_x_val = [6.0, 7.0, 8.0, 9.0]
+            results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
+            results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0]
+            results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
+            results_z_val = [60.0, 70.0, 80.0, 90.0]
 
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+        collected_z_train = []
+        collected_z_val = []
 
-            iter_train = iter(gen_train.as_torch(device="cpu"))
-            iter_val = iter(gen_validation.as_torch())
+        iter_train = iter(gen_train.as_torch())
+        iter_val = iter(gen_validation.as_torch(device="cpu"))
 
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-                collected_z_train.append(z.tolist())
+        for _ in range(self.n_train_batch):
+            x, y, z = next(iter_train)
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+            collected_z_train.append(z.tolist())
 
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-                collected_z_val.append(z.tolist())
-
+        for _ in range(self.n_val_batch):
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
             collected_z_val.append(z.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+        x, y, z = next(iter_val)
+        assert x.shape == (self.val_remainder, 1)
+        assert y.shape == (self.val_remainder, 2)
+        assert z.shape == (self.val_remainder, 1)
+        collected_x_val.append(x.tolist())
+        collected_y_val.append(y.tolist())
+        collected_z_val.append(z.tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+        flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+        assert results_z_train == flat_z_train
+        assert results_z_val == flat_z_val
 
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
+    def test13_TensorFlow(self, weighted_df1, weighted_df2, load_eager):
+        pytest.importorskip("tensorflow")
 
-    def test13_TensorFlow(self):
-        file_name1 = "multiple_target_columns_1.root"
-        file_name2 = "multiple_target_columns_2.root"
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [weighted_df1, weighted_df2],
+            batch_size=3,
+            target=["b2", "b4"],
+            weights="b3",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
 
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-        try:
-            df1 = ROOT.RDataFrame("myTree", file_name1)
-            df2 = ROOT.RDataFrame("myTree", file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
+        if load_eager:
             results_x_train = [0.0, 1.0, 2.0, 5.0, 6.0, 7.0]
             results_x_val = [3.0, 4.0, 8.0, 9.0, 0.0, 0.0]
             results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 25.0, 500.0, 36.0, 600.0, 49.0, 700.0]
             results_y_val = [9.0, 300.0, 16.0, 400.0, 64.0, 800.0, 81.0, 900.0, 0.0, 0.0, 0.0, 0.0]
             results_z_train = [0.0, 10.0, 20.0, 50.0, 60.0, 70.0]
             results_z_val = [30.0, 40.0, 80.0, 90.0, 0.0, 0.0]
+        else:
+            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+            results_x_val = [6.0, 7.0, 8.0, 9.0, 0.0, 0.0]
+            results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
+            results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0, 0.0, 0.0, 0.0, 0.0]
+            results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
+            results_z_val = [60.0, 70.0, 80.0, 90.0, 0.0, 0.0]
 
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+        collected_z_train = []
+        collected_z_val = []
 
-            iter_train = iter(gen_train.as_tensorflow())
-            iter_val = iter(gen_validation.as_tensorflow())
+        iter_train = iter(gen_train.as_tensorflow())
+        iter_val = iter(gen_validation.as_tensorflow())
 
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_train.append(x.numpy().tolist())
-                collected_y_train.append(y.numpy().tolist())
-                collected_z_train.append(z.numpy().tolist())
+        for _ in range(self.n_train_batch):
+            x, y, z = next(iter_train)
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
+            collected_x_train.append(x.numpy().tolist())
+            collected_y_train.append(y.numpy().tolist())
+            collected_z_train.append(z.numpy().tolist())
 
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_val.append(x.numpy().tolist())
-                collected_y_val.append(y.numpy().tolist())
-                collected_z_val.append(z.numpy().tolist())
-
+        for _ in range(self.n_val_batch):
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (3, 1))
-            self.assertTrue(y.shape == (3, 2))
-            self.assertTrue(z.shape == (3, 1))
+            assert x.shape == (3, 1)
+            assert y.shape == (3, 2)
+            assert z.shape == (3, 1)
             collected_x_val.append(x.numpy().tolist())
             collected_y_val.append(y.numpy().tolist())
             collected_z_val.append(z.numpy().tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+        x, y, z = next(iter_val)
+        assert x.shape == (3, 1)
+        assert y.shape == (3, 2)
+        assert z.shape == (3, 1)
+        collected_x_val.append(x.numpy().tolist())
+        collected_y_val.append(y.numpy().tolist())
+        collected_z_val.append(z.numpy().tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+        flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+        assert results_z_train == flat_z_train
+        assert results_z_val == flat_z_val
 
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
-
-    def test14_big_data(self):
-        file_name1 = "big_data_1.root"
-        file_name2 = "big_data_2.root"
-        tree_name = "myTree"
-
+    def test14_big_data(self, load_eager):
         entries_in_rdf = randrange(10000, 30000)
         batch_size = randrange(100, 501)
         batches_in_memory = randrange(5, 20)
 
         error_message = f"\n batch_size={batch_size} batches_in_memory={batches_in_memory} entries={entries_in_rdf}"
 
-        def define_rdf(num_of_entries, file_name):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
         def test(size_of_batch, batches_in_memory, num_of_entries):
-            define_rdf(num_of_entries, file_name1)
-            define_rdf(num_of_entries, file_name2)
-
-            try:
-                df1 = ROOT.RDataFrame(tree_name, file_name1)
-                df2 = ROOT.RDataFrame(tree_name, file_name2)
-
-                dl = ROOT.Experimental.ML.RDataLoader(
-                    [df1, df2],
-                    batch_size=size_of_batch,
-                    batches_in_memory=batches_in_memory,
-                    target=["b3", "b5"],
-                    weights="b2",
-                    shuffle=False,
-                    drop_remainder=False,
-                    load_eager=True,
-                )
-
-                gen_train, gen_validation = dl.train_test_split(0.3)
-
-                collect_x = []
-
-                train_remainder = gen_train.last_batch_no_of_rows
-                val_remainder = gen_validation.last_batch_no_of_rows
-
-                n_train_batches = gen_train.num_batches - 1 if train_remainder else gen_train.num_batches
-                n_val_batches = gen_validation.num_batches - 1 if val_remainder else gen_validation.num_batches
-
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
-
-                for i in range(n_train_batches):
-                    x, y, z = next(iter_train)
-
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
-
-                    self.assertTrue(np.all(x[:, 0] * (-1) == x[:, 1]), error_message + f" row: {i}")
-                    self.assertTrue(np.all(x[:, 0] + 10192 == y[:, 0]), error_message + f" row: {i}")
-                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] * 2 == z[:, 0]), error_message + f" row: {i}")
-
-                    collect_x.extend(list(x[:, 0]))
-
-                if train_remainder:
-                    x, y, z = next(iter_train)
-                    self.assertTrue(x.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (train_remainder, 1), error_message)
-                    collect_x.extend(list(x[:, 0]))
-
-                for _ in range(n_val_batches):
-                    x, y, z = next(iter_val)
-
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
-
-                    self.assertTrue(np.all(x[:, 0] * (-1) == x[:, 1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] + 10192 == y[:, 0]), error_message)
-                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] * 2 == z[:, 0]), error_message)
-
-                    collect_x.extend(list(x[:, 0]))
-
-                if val_remainder:
-                    x, y, z = next(iter_val)
-                    self.assertTrue(x.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (val_remainder, 1), error_message)
-                    collect_x.extend(list(x[:, 0]))
-
-                self.assertTrue(
-                    set(collect_x) == set(i for i in range(num_of_entries)),
-                    f"collected length: {len(set(collect_x))}\
-                                 generated length {len(set(i for i in range(num_of_entries)))}",
-                )
-
-            except:
-                self.teardown_file(file_name1)
-                self.teardown_file(file_name2)
-                raise
-
-        test(batch_size, batches_in_memory, entries_in_rdf)
-
-    def test15_two_runs_set_seed(self):
-        self.create_file1()
-        self.create_file2()
-
-        try:
-            both_runs_collected_x_val = []
-            both_runs_collected_y_val = []
-
-            df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            for _ in range(2):
-                dl = ROOT.Experimental.ML.RDataLoader(
-                    [df1, df2],
-                    batch_size=3,
-                    target="b2",
-                    shuffle=True,
-                    drop_remainder=False,
-                    set_seed=42,
-                    load_eager=True,
-                )
-
-                gen_train, gen_validation = dl.train_test_split(0.4)
-
-                collected_x_train = []
-                collected_x_val = []
-                collected_y_train = []
-                collected_y_val = []
-
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
-
-                for _ in range(self.n_train_batch):
-                    x, y = next(iter_train)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
-                    collected_x_train.append(x.tolist())
-                    collected_y_train.append(y.tolist())
-
-                for _ in range(self.n_val_batch):
-                    x, y = next(iter_val)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
-                    collected_x_val.append(x.tolist())
-                    collected_y_val.append(y.tolist())
-
-                x, y = next(iter_val)
-                self.assertTrue(x.shape == (self.val_remainder, 1))
-                self.assertTrue(y.shape == (self.val_remainder, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-                flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
-                flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
-                flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
-                flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
-
-                self.assertEqual(len(flat_x_train), 6)
-                self.assertEqual(len(flat_x_val), 4)
-                self.assertEqual(len(flat_y_train), 6)
-                self.assertEqual(len(flat_y_val), 4)
-
-                both_runs_collected_x_val.append(collected_x_val)
-                both_runs_collected_y_val.append(collected_y_val)
-            self.assertEqual(both_runs_collected_x_val[0], both_runs_collected_x_val[1])
-            self.assertEqual(both_runs_collected_y_val[0], both_runs_collected_y_val[1])
-        finally:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-    def test16_vector_padding(self):
-        self.create_vector_file1()
-        self.create_vector_file2()
-
-        try:
-            df1 = ROOT.RDataFrame(self.tree_name, self.file_name4)
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name5)
-            max_vec_sizes = {"v1": 3, "v2": 2}
+            df1 = from_files(big_data(num_of_entries))
+            df2 = from_files(big_data(num_of_entries))
 
             dl = ROOT.Experimental.ML.RDataLoader(
                 [df1, df2],
-                batch_size=3,
-                target="b1",
-                max_vec_sizes=max_vec_sizes,
+                batch_size=size_of_batch,
+                batches_in_memory=batches_in_memory,
+                target=["b3", "b5"],
+                weights="b2",
                 shuffle=False,
                 drop_remainder=False,
-                load_eager=True,
+                load_eager=load_eager,
+            )
+
+            gen_train, gen_validation = dl.train_test_split(0.3)
+
+            collect_x = []
+
+            train_remainder = gen_train.last_batch_no_of_rows
+            val_remainder = gen_validation.last_batch_no_of_rows
+
+            n_train_batches = gen_train.num_batches - 1 if train_remainder else gen_train.num_batches
+            n_val_batches = gen_validation.num_batches - 1 if val_remainder else gen_validation.num_batches
+
+            iter_train = iter(gen_train.as_numpy())
+            iter_val = iter(gen_validation.as_numpy())
+
+            for i in range(n_train_batches):
+                x, y, z = next(iter_train)
+
+                assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
+
+                assert np.all(x[:, 0] * (-1) == x[:, 1]), error_message + f" row: {i}"
+                assert np.all(x[:, 0] + 10192 == y[:, 0]), error_message + f" row: {i}"
+                # assert np.all(x[:,0]*(-1)-10192==y[:,1]), error_message
+                assert np.all(x[:, 0] * 2 == z[:, 0]), error_message + f" row: {i}"
+
+                collect_x.extend(list(x[:, 0]))
+
+            if train_remainder:
+                x, y, z = next(iter_train)
+                assert x.shape == (train_remainder, 2), error_message
+                assert y.shape == (train_remainder, 2), error_message
+                assert z.shape == (train_remainder, 1), error_message
+                collect_x.extend(list(x[:, 0]))
+
+            for _ in range(n_val_batches):
+                x, y, z = next(iter_val)
+
+                assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
+
+                assert np.all(x[:, 0] * (-1) == x[:, 1]), error_message
+                assert np.all(x[:, 0] + 10192 == y[:, 0]), error_message
+                # assert np.all(x[:,0]*(-1)-10192==y[:,1]), error_message
+                assert np.all(x[:, 0] * 2 == z[:, 0]), error_message
+
+                collect_x.extend(list(x[:, 0]))
+
+            if val_remainder:
+                x, y, z = next(iter_val)
+                assert x.shape == (val_remainder, 2), error_message
+                assert y.shape == (val_remainder, 2), error_message
+                assert z.shape == (val_remainder, 1), error_message
+                collect_x.extend(list(x[:, 0]))
+
+            assert set(collect_x) == set(i for i in range(num_of_entries)), (
+                f"collected length: {len(set(collect_x))}\
+                                 generated length {len(set(i for i in range(num_of_entries)))}"
+            )
+
+        test(batch_size, batches_in_memory, entries_in_rdf)
+
+    def test15_two_runs_set_seed(self, df1, df2, load_eager):
+        both_runs_collected_x_val = []
+        both_runs_collected_y_val = []
+
+        for _ in range(2):
+            dl = ROOT.Experimental.ML.RDataLoader(
+                [df1, df2],
+                batch_size=3,
+                target="b2",
+                shuffle=True,
+                drop_remainder=False,
+                set_seed=42,
+                load_eager=load_eager,
             )
 
             gen_train, gen_validation = dl.train_test_split(0.4)
 
+            collected_x_train = []
+            collected_x_val = []
+            collected_y_train = []
+            collected_y_val = []
+
+            iter_train = iter(gen_train.as_numpy())
+            iter_val = iter(gen_validation.as_numpy())
+
+            for _ in range(self.n_train_batch):
+                x, y = next(iter_train)
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
+                collected_x_train.append(x.tolist())
+                collected_y_train.append(y.tolist())
+
+            for _ in range(self.n_val_batch):
+                x, y = next(iter_val)
+                assert x.shape == (3, 1)
+                assert y.shape == (3, 1)
+                collected_x_val.append(x.tolist())
+                collected_y_val.append(y.tolist())
+
+            x, y = next(iter_val)
+            assert x.shape == (self.val_remainder, 1)
+            assert y.shape == (self.val_remainder, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+
+            flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
+            flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
+            flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
+            flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
+
+            assert len(flat_x_train) == 6
+            assert len(flat_x_val) == 4
+            assert len(flat_y_train) == 6
+            assert len(flat_y_val) == 4
+
+            both_runs_collected_x_val.append(collected_x_val)
+            both_runs_collected_y_val.append(collected_y_val)
+        assert both_runs_collected_x_val[0] == both_runs_collected_x_val[1]
+        assert both_runs_collected_y_val[0] == both_runs_collected_y_val[1]
+
+    def test16_vector_padding(self, load_eager):
+        df1 = from_files(vectors(5))
+        df2 = from_files(vectors(5, "(int) rdfentry_ + 5"))
+        max_vec_sizes = {"v1": 3, "v2": 2}
+
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df1, df2],
+            batch_size=3,
+            target="b1",
+            max_vec_sizes=max_vec_sizes,
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=load_eager,
+        )
+
+        gen_train, gen_validation = dl.train_test_split(0.4)
+
+        if load_eager:
             results_x_train = [
                 0.0,
                 0.0,
@@ -3559,1111 +2099,7 @@ class DataLoaderEagerLoadingMultipleDataframes(unittest.TestCase):
                 9000.0,
             ]
             results_y_val = [3.0, 4.0, 8.0, 9.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 5))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 5))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 5))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
-            collected_x_val.append(x.tolist())
-            collected_y_val.append(y.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-
-            self.teardown_file(self.file_name4)
-            self.teardown_file(self.file_name5)
-
-        except:
-            self.teardown_file(self.file_name4)
-            self.teardown_file(self.file_name5)
-            raise
-
-    def test17_dataframes_without_cluster_metadata(self):
-        # the dataframes are not read from a file, so their entries are counted with Count()
-        dl = ROOT.Experimental.ML.RDataLoader(
-            [self.define_rdf1(), self.define_rdf2()],
-            batch_size=3,
-            target="b2",
-            shuffle=False,
-            drop_remainder=False,
-            load_eager=True,
-        )
-        gen_train, gen_validation = dl.train_test_split(0.4)
-
-        x_train = [v for x, _ in gen_train.as_numpy() for v in x.flatten().tolist()]
-        x_val = [v for x, _ in gen_validation.as_numpy() for v in x.flatten().tolist()]
-        self.assertEqual(x_train, [0.0, 1.0, 2.0, 5.0, 6.0, 7.0])
-        self.assertEqual(x_val, [3.0, 4.0, 8.0, 9.0])
-
-
-class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
-    file_name1 = "first_half.root"
-    file_name2 = "second_half.root"
-    file_name3 = "second_file.root"
-    file_name4 = "vector_columns_1.root"
-    file_name5 = "vector_columns_2.root"
-    tree_name = "mytree"
-
-    # default constants
-    n_train_batch = 2
-    n_val_batch = 1
-    val_remainder = 1
-
-    # Helpers
-    def define_rdf1(self, num_of_entries=5):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_").Define("b2", "(double) b1*b1")
-
-        return df
-
-    def define_rdf2(self, num_of_entries=5):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(double) b1*b1")
-
-        return df
-
-    def create_file1(self, num_of_entries=5):
-        self.define_rdf1(num_of_entries).Snapshot(self.tree_name, self.file_name1)
-
-    def create_file2(self, num_of_entries=5):
-        self.define_rdf2(num_of_entries).Snapshot(self.tree_name, self.file_name2)
-
-    def create_5_entries_file(self):
-        (
-            ROOT
-            .RDataFrame(5)
-            .Define("b1", "(int) rdfentry_ + 10")
-            .Define("b2", "(double) b1 * b1")
-            .Snapshot(self.tree_name, self.file_name3)
-        )
-
-    def create_vector_file1(self, num_of_entries=5):
-        (
-            ROOT
-            .RDataFrame(5)
-            .Define("b1", "(int) rdfentry_")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name4)
-        )
-
-    def create_vector_file2(self, num_of_entries=5):
-        (
-            ROOT
-            .RDataFrame(5)
-            .Define("b1", "(int) rdfentry_ + 5")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name5)
-        )
-
-    def teardown_file(self, file):
-        os.remove(file)
-
-    def test01_each_element_is_generated_unshuffled(self):
-        self.create_file1()
-        self.create_file2()
-
-        try:
-            df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            df1_entries_before = df1.AsNumpy(["rdfentry_"])["rdfentry_"]
-            df2_entries_before = df2.AsNumpy(["rdfentry_"])["rdfentry_"]
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-            results_x_val = [6.0, 7.0, 8.0, 9.0]
-            results_y_train = [0.0, 1.0, 4.0, 9.0, 16.0, 25.0]
-            results_y_val = [36.0, 49.0, 64.0, 81.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
-            collected_x_val.append(x.tolist())
-            collected_y_val.append(y.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-
-            df1_entries_after = df1.AsNumpy(["rdfentry_"])["rdfentry_"]
-            df2_entries_after = df2.AsNumpy(["rdfentry_"])["rdfentry_"]
-
-            # check if the dataframes are correctly reset
-            self.assertTrue(np.array_equal(df1_entries_before, df1_entries_after))
-            self.assertTrue(np.array_equal(df2_entries_before, df2_entries_after))
-
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
-
-    def test02_each_element_is_generated_shuffled(self):
-        self.create_file1()
-        self.create_file2()
-
-        try:
-            df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target="b2",
-                shuffle=True,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
-            collected_x_val.append(x.tolist())
-            collected_y_val.append(y.tolist())
-
-            flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
-            flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
-            flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
-            flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
-
-            self.assertEqual(len(flat_x_train), 6)
-            self.assertEqual(len(flat_x_val), 4)
-            self.assertEqual(len(flat_y_train), 6)
-            self.assertEqual(len(flat_y_val), 4)
-
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
-
-    def test04_dropping_remainder(self):
-        self.create_file1()
-        self.create_file2()
-
-        try:
-            df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=True,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            collected_x = []
-            collected_y = []
-
-            for x, y in gen_train.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x.append(x)
-                collected_y.append(y)
-
-            for x, y in gen_validation.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x.append(x)
-                collected_y.append(y)
-
-            self.assertEqual(len(collected_x), 3)
-            self.assertEqual(len(collected_y), 3)
-
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
-
-    def test05_more_than_one_file(self):
-        self.create_file1()
-        self.create_file2()
-        self.create_5_entries_file()
-
-        try:
-            df1 = ROOT.RDataFrame(self.tree_name, [self.file_name1, self.file_name2])
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name3)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
-            results_x_val = [9.0, 10.0, 11.0, 12.0, 13.0, 14.0]
-            results_y_train = [0.0, 1.0, 4.0, 9.0, 16.0, 25.0, 36.0, 49.0, 64.0]
-            results_y_val = [81.0, 100.0, 121.0, 144.0, 169.0, 196.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            for x, y in gen_train.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            for x, y in gen_validation.as_numpy():
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            self.teardown_file(self.file_name3)
-
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            self.teardown_file(self.file_name3)
-            raise
-
-    def test06_multiple_target_columns(self):
-        file_name1 = "multiple_target_columns_1.root"
-        file_name2 = "multiple_target_columns_2.root"
-
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-        try:
-            df1 = ROOT.RDataFrame("myTree", file_name1)
-            df2 = ROOT.RDataFrame("myTree", file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-            results_x_val = [6.0, 7.0, 8.0, 9.0]
-            results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
-            results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0]
-            results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
-            results_z_val = [60.0, 70.0, 80.0, 90.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
-
-            iter_train = iter(gen_train.as_numpy())
-            iter_val = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-                collected_z_train.append(z.tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-                collected_z_val.append(z.tolist())
-
-            x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
-            collected_x_val.append(x.tolist())
-            collected_y_val.append(y.tolist())
-            collected_z_val.append(z.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
-
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
-
-    def test07_multiple_input_columns(self):
-        file_name1 = "multiple_target_columns_1.root"
-        file_name2 = "multiple_target_columns_2.root"
-
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Snapshot("myTree", file_name1)
-
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Snapshot("myTree", file_name2)
-
-        try:
-            df1 = ROOT.RDataFrame("myTree", file_name1)
-            df2 = ROOT.RDataFrame("myTree", file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [
-                0.0,
-                0.0,
-                1.0,
-                10.0,
-                2.0,
-                20.0,
-                3.0,
-                30.0,
-                4.0,
-                40.0,
-                5.0,
-                50.0,
-            ]
-            results_x_val = [6.0, 60.0, 7.0, 70.0, 8.0, 80.0, 9.0, 90.0]
-            results_y_train = [0.0, 1.0, 4.0, 9.0, 16.0, 25.0]
-            results_y_val = [36.0, 49.0, 64.0, 81.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            iter_train = iter(gen_train.as_numpy())
-            iter_val = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(iter_train)
-                self.assertTrue(x.shape == (3, 2))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(iter_val)
-                self.assertTrue(x.shape == (3, 2))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            x, y = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 2))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
-            collected_x_val.append(x.tolist())
-            collected_y_val.append(y.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
-
-    # TODO(staider) Fix the implementation to support multiple filtered dataframes
-    def test08_filtered(self): ...
-
-    def test09_filtered_last_chunk(self):
-        file_name1 = "filtered_last_chunk_1.root"
-        file_name2 = "filtered_last_chunk_2.root"
-        tree_name = "myTree"
-
-        ROOT.RDataFrame(10).Define("b1", "(int) rdfentry_").Define("b2", "(UShort_t) b1 * b1").Snapshot(
-            tree_name, file_name1
-        )
-
-        ROOT.RDataFrame(10).Define("b1", "(int) rdfentry_ + 10").Define("b2", "(UShort_t) b1 * b1").Snapshot(
-            tree_name, file_name2
-        )
-
-        try:
-            df1 = ROOT.RDataFrame(tree_name, file_name1)
-            df2 = ROOT.RDataFrame(tree_name, file_name2)
-
-            dff1 = df1.Filter("b1 % 2 == 0", "name")
-            dff2 = df2.Filter("b1 % 2 == 0", "name")
-
-            gen_train = ROOT.Experimental.ML.RDataLoader(
-                [dff1, dff2],
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            results_x_train = [0.0, 2.0, 4.0, 10.0, 12.0, 14.0, 6.0, 8.0, 16.0, 18.0]
-            results_y_train = [0.0, 4.0, 16.0, 100.0, 144.0, 196.0, 36.0, 64.0, 256.0, 324.0]
-
-            collected_x_train = []
-            collected_y_train = []
-
-            train_iter = iter(gen_train.as_numpy())
-
-            for _ in range(3):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            x, y = next(train_iter)
-            self.assertTrue(x.shape == (1, 1))
-            self.assertTrue(y.shape == (1, 1))
-            collected_x_train.append(x.tolist())
-            collected_y_train.append(y.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_y_train, flat_y_train)
-
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
-
-    def test10_two_epochs_shuffled(self):
-        self.create_file1()
-        self.create_file2()
-
-        try:
-            df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            both_epochs_collected_x_val = []
-            both_epochs_collected_y_val = []
-
-            for _ in range(2):
-                collected_x_train = []
-                collected_x_val = []
-                collected_y_train = []
-                collected_y_val = []
-
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
-
-                for _ in range(self.n_train_batch):
-                    x, y = next(iter_train)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
-                    collected_x_train.append(x.tolist())
-                    collected_y_train.append(y.tolist())
-
-                for _ in range(self.n_val_batch):
-                    x, y = next(iter_val)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
-                    collected_x_val.append(x.tolist())
-                    collected_y_val.append(y.tolist())
-
-                x, y = next(iter_val)
-                self.assertTrue(x.shape == (self.val_remainder, 1))
-                self.assertTrue(y.shape == (self.val_remainder, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-                flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
-                flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
-                flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
-                flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
-
-                self.assertEqual(len(flat_x_train), 6)
-                self.assertEqual(len(flat_x_val), 4)
-                self.assertEqual(len(flat_y_train), 6)
-                self.assertEqual(len(flat_y_val), 4)
-
-                both_epochs_collected_x_val.append(collected_x_val)
-                both_epochs_collected_y_val.append(collected_y_val)
-
-            self.assertEqual(both_epochs_collected_x_val[0], both_epochs_collected_x_val[1])
-            self.assertEqual(both_epochs_collected_y_val[0], both_epochs_collected_y_val[1])
-        finally:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-    def test11_number_of_training_and_validation_batches_remainder(self):
-        self.create_file1()
-        self.create_file2()
-
-        try:
-            df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            number_of_training_batches = 0
-            number_of_validation_batches = 0
-
-            for _ in gen_train.as_numpy():
-                number_of_training_batches += 1
-
-            for _ in gen_validation.as_numpy():
-                number_of_validation_batches += 1
-
-            self.assertEqual(gen_train.num_batches, number_of_training_batches)
-            self.assertEqual(gen_validation.num_batches, number_of_validation_batches)
-            self.assertEqual(gen_train.last_batch_no_of_rows, 0)
-            self.assertEqual(gen_validation.last_batch_no_of_rows, 1)
-
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
-
-    def test12_PyTorch(self):
-        file_name1 = "multiple_target_columns_1.root"
-        file_name2 = "multiple_target_columns_2.root"
-
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-
-        try:
-            df1 = ROOT.RDataFrame("myTree", file_name1)
-            df2 = ROOT.RDataFrame("myTree", file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-            results_x_val = [6.0, 7.0, 8.0, 9.0]
-            results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
-            results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0]
-            results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
-            results_z_val = [60.0, 70.0, 80.0, 90.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
-
-            iter_train = iter(gen_train.as_torch())
-            iter_val = iter(gen_validation.as_torch(device="cpu"))
-
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-                collected_z_train.append(z.tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-                collected_z_val.append(z.tolist())
-
-            x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (self.val_remainder, 1))
-            self.assertTrue(y.shape == (self.val_remainder, 2))
-            self.assertTrue(z.shape == (self.val_remainder, 1))
-            collected_x_val.append(x.tolist())
-            collected_y_val.append(y.tolist())
-            collected_z_val.append(z.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
-
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
-
-    def test13_TensorFlow(self):
-        file_name1 = "multiple_target_columns_1.root"
-        file_name2 = "multiple_target_columns_2.root"
-
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) rdfentry_ + 5").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-
-        try:
-            df1 = ROOT.RDataFrame("myTree", file_name1)
-            df2 = ROOT.RDataFrame("myTree", file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-            results_x_val = [6.0, 7.0, 8.0, 9.0, 0.0, 0.0]
-            results_y_train = [0.0, 0.0, 1.0, 100.0, 4.0, 200.0, 9.0, 300.0, 16.0, 400.0, 25.0, 500.0]
-            results_y_val = [36.0, 600.0, 49.0, 700.0, 64.0, 800.0, 81.0, 900.0, 0.0, 0.0, 0.0, 0.0]
-            results_z_train = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
-            results_z_val = [60.0, 70.0, 80.0, 90.0, 0.0, 0.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
-
-            iter_train = iter(gen_train.as_tensorflow())
-            iter_val = iter(gen_validation.as_tensorflow())
-
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_train.append(x.numpy().tolist())
-                collected_y_train.append(y.numpy().tolist())
-                collected_z_train.append(z.numpy().tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (3, 1))
-                self.assertTrue(y.shape == (3, 2))
-                self.assertTrue(z.shape == (3, 1))
-                collected_x_val.append(x.numpy().tolist())
-                collected_y_val.append(y.numpy().tolist())
-                collected_z_val.append(z.numpy().tolist())
-
-            x, y, z = next(iter_val)
-            self.assertTrue(x.shape == (3, 1))
-            self.assertTrue(y.shape == (3, 2))
-            self.assertTrue(z.shape == (3, 1))
-            collected_x_val.append(x.numpy().tolist())
-            collected_y_val.append(y.numpy().tolist())
-            collected_z_val.append(z.numpy().tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
-
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
-
-    def test14_big_data(self):
-        file_name1 = "big_data_1.root"
-        file_name2 = "big_data_2.root"
-        tree_name = "myTree"
-
-        entries_in_rdf = randrange(10000, 30000)
-        batch_size = randrange(100, 501)
-        batches_in_memory = randrange(5, 20)
-
-        error_message = f"\n batch_size={batch_size} batches_in_memory={batches_in_memory} entries={entries_in_rdf}"
-
-        def define_rdf(num_of_entries, file_name):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) rdfentry_").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
-        def test(size_of_batch, batches_in_memory, num_of_entries):
-            define_rdf(num_of_entries, file_name1)
-            define_rdf(num_of_entries, file_name2)
-
-            try:
-                df1 = ROOT.RDataFrame(tree_name, file_name1)
-                df2 = ROOT.RDataFrame(tree_name, file_name2)
-
-                dl = ROOT.Experimental.ML.RDataLoader(
-                    [df1, df2],
-                    batch_size=size_of_batch,
-                    batches_in_memory=batches_in_memory,
-                    target=["b3", "b5"],
-                    weights="b2",
-                    shuffle=False,
-                    drop_remainder=False,
-                )
-
-                gen_train, gen_validation = dl.train_test_split(0.3)
-
-                collect_x = []
-
-                train_remainder = gen_train.last_batch_no_of_rows
-                val_remainder = gen_validation.last_batch_no_of_rows
-
-                n_train_batches = gen_train.num_batches - 1 if train_remainder else gen_train.num_batches
-                n_val_batches = gen_validation.num_batches - 1 if val_remainder else gen_validation.num_batches
-
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
-
-                for i in range(n_train_batches):
-                    x, y, z = next(iter_train)
-
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
-
-                    self.assertTrue(np.all(x[:, 0] * (-1) == x[:, 1]), error_message + f" row: {i}")
-                    self.assertTrue(np.all(x[:, 0] + 10192 == y[:, 0]), error_message + f" row: {i}")
-                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] * 2 == z[:, 0]), error_message + f" row: {i}")
-
-                    collect_x.extend(list(x[:, 0]))
-
-                if train_remainder:
-                    x, y, z = next(iter_train)
-                    self.assertTrue(x.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (train_remainder, 1), error_message)
-                    collect_x.extend(list(x[:, 0]))
-
-                for _ in range(n_val_batches):
-                    x, y, z = next(iter_val)
-
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
-
-                    self.assertTrue(np.all(x[:, 0] * (-1) == x[:, 1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] + 10192 == y[:, 0]), error_message)
-                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
-                    self.assertTrue(np.all(x[:, 0] * 2 == z[:, 0]), error_message)
-
-                    collect_x.extend(list(x[:, 0]))
-
-                if val_remainder:
-                    x, y, z = next(iter_val)
-                    self.assertTrue(x.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (val_remainder, 1), error_message)
-                    collect_x.extend(list(x[:, 0]))
-
-                self.assertTrue(
-                    set(collect_x) == set(i for i in range(num_of_entries)),
-                    f"collected length: {len(set(collect_x))}\
-                                 generated length {len(set(i for i in range(num_of_entries)))}",
-                )
-
-            except:
-                self.teardown_file(file_name1)
-                self.teardown_file(file_name2)
-                raise
-
-        test(batch_size, batches_in_memory, entries_in_rdf)
-
-    def test15_two_runs_set_seed(self):
-        self.create_file1()
-        self.create_file2()
-
-        try:
-            both_runs_collected_x_val = []
-            both_runs_collected_y_val = []
-
-            df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            for _ in range(2):
-                dl = ROOT.Experimental.ML.RDataLoader(
-                    [df1, df2],
-                    batch_size=3,
-                    target="b2",
-                    shuffle=True,
-                    drop_remainder=False,
-                    set_seed=42,
-                )
-
-                gen_train, gen_validation = dl.train_test_split(0.4)
-
-                collected_x_train = []
-                collected_x_val = []
-                collected_y_train = []
-                collected_y_val = []
-
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
-
-                for _ in range(self.n_train_batch):
-                    x, y = next(iter_train)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
-                    collected_x_train.append(x.tolist())
-                    collected_y_train.append(y.tolist())
-
-                for _ in range(self.n_val_batch):
-                    x, y = next(iter_val)
-                    self.assertTrue(x.shape == (3, 1))
-                    self.assertTrue(y.shape == (3, 1))
-                    collected_x_val.append(x.tolist())
-                    collected_y_val.append(y.tolist())
-
-                x, y = next(iter_val)
-                self.assertTrue(x.shape == (self.val_remainder, 1))
-                self.assertTrue(y.shape == (self.val_remainder, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-                flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
-                flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
-                flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
-                flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
-
-                self.assertEqual(len(flat_x_train), 6)
-                self.assertEqual(len(flat_x_val), 4)
-                self.assertEqual(len(flat_y_train), 6)
-                self.assertEqual(len(flat_y_val), 4)
-
-                both_runs_collected_x_val.append(collected_x_val)
-                both_runs_collected_y_val.append(collected_y_val)
-            self.assertEqual(both_runs_collected_x_val[0], both_runs_collected_x_val[1])
-            self.assertEqual(both_runs_collected_y_val[0], both_runs_collected_y_val[1])
-        finally:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-    def test16_vector_padding(self):
-        self.create_vector_file1()
-        self.create_vector_file2()
-
-        try:
-            df1 = ROOT.RDataFrame(self.tree_name, self.file_name4)
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name5)
-            max_vec_sizes = {"v1": 3, "v2": 2}
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target="b1",
-                max_vec_sizes=max_vec_sizes,
-                shuffle=False,
-                drop_remainder=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
+        else:
             results_x_train = [
                 0.0,
                 0.0,
@@ -4721,746 +2157,751 @@ class DataLoaderLazyLoadingMultipleDataframes(unittest.TestCase):
             ]
             results_y_val = [6.0, 7.0, 8.0, 9.0]
 
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
 
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
 
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (3, 5))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (3, 5))
-                self.assertTrue(y.shape == (3, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
+        for _ in range(self.n_val_batch):
             x, y = next(val_iter)
-            self.assertTrue(x.shape == (self.val_remainder, 5))
-            self.assertTrue(y.shape == (self.val_remainder, 1))
+            assert x.shape == (3, 5)
+            assert y.shape == (3, 1)
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        for _ in range(self.n_train_batch):
+            x, y = next(train_iter)
+            assert x.shape == (3, 5)
+            assert y.shape == (3, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+        x, y = next(val_iter)
+        assert x.shape == (self.val_remainder, 5)
+        assert y.shape == (self.val_remainder, 1)
+        collected_x_val.append(x.tolist())
+        collected_y_val.append(y.tolist())
 
-            self.teardown_file(self.file_name4)
-            self.teardown_file(self.file_name5)
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-        except:
-            self.teardown_file(self.file_name4)
-            self.teardown_file(self.file_name5)
-            raise
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
 
-    def test17_shuffled_split_varies_with_seed(self):
-        self.create_file1()
-        self.create_file2()
+    def test17_shuffled_split_varies_with_seed(self, df1, df2):
+        dl1 = ROOT.Experimental.ML.RDataLoader(
+            [df1, df2],
+            batch_size=3,
+            target="b2",
+            shuffle=True,
+            drop_remainder=False,
+            set_seed=42,
+        )
 
-        try:
-            df1 = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
+        dl2 = ROOT.Experimental.ML.RDataLoader(
+            [df1, df2],
+            batch_size=3,
+            target="b2",
+            shuffle=True,
+            drop_remainder=False,
+            set_seed=43,
+        )
 
-            dl1 = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target="b2",
-                shuffle=True,
-                drop_remainder=False,
-                set_seed=42,
-            )
+        _, gen_val1 = dl1.train_test_split(0.4)
+        _, gen_val2 = dl2.train_test_split(0.4)
 
-            dl2 = ROOT.Experimental.ML.RDataLoader(
-                [df1, df2],
-                batch_size=3,
-                target="b2",
-                shuffle=True,
-                drop_remainder=False,
-                set_seed=43,
-            )
+        val_1_collected = sorted([v for x, y in gen_val1.as_numpy() for v in x.flatten().tolist()])
+        val_2_collected = sorted([v for x, y in gen_val2.as_numpy() for v in x.flatten().tolist()])
 
-            _, gen_val1 = dl1.train_test_split(0.4)
-            _, gen_val2 = dl2.train_test_split(0.4)
+        assert val_1_collected != val_2_collected
 
-            val_1_collected = sorted([v for x, y in gen_val1.as_numpy() for v in x.flatten().tolist()])
-            val_2_collected = sorted([v for x, y in gen_val2.as_numpy() for v in x.flatten().tolist()])
+    def test17_dataframes_without_cluster_metadata(self):
+        # the dataframes are not read from a file, so their entries are counted with Count()
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [squares(5), squares(5, "(int) rdfentry_ + 5")],
+            batch_size=3,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+        )
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            self.assertNotEqual(val_1_collected, val_2_collected)
-
-        finally:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
+        x_train = [v for x, _ in gen_train.as_numpy() for v in x.flatten().tolist()]
+        x_val = [v for x, _ in gen_validation.as_numpy() for v in x.flatten().tolist()]
+        assert x_train == [0.0, 1.0, 2.0, 5.0, 6.0, 7.0]
+        assert x_val == [3.0, 4.0, 8.0, 9.0]
 
 
-class DataLoaderRandomUndersampling(unittest.TestCase):
-    file_name1 = "major.root"
-    file_name2 = "minor.root"
-    file_name3 = "second_file.root"
-    file_name4 = "vector_columns_major.root"
-    file_name5 = "vector_columns_minor.root"
-    tree_name = "mytree"
-
+class TestDataLoaderRandomUndersampling:
     # default constants
     n_train_batch = 4
     n_val_batch = 3
     train_remainder = 1
 
-    # Helpers
-    def define_rdf_even(self, num_of_entries=20):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(double) b1*b1")
+    @pytest.fixture
+    def df_major(self):
+        """The majority class, 20 entries: b1 = 0, 2, ..., 38 and b2 = b1 * b1."""
+        return from_files(squares(20, "(int) 2 * rdfentry_"))
 
-        return df
+    @pytest.fixture
+    def df_minor(self):
+        """The minority class, 5 entries: b1 = 1, 3, ..., 9 and b2 = b1 * b1."""
+        return from_files(squares(5, "(int) 2 * rdfentry_ + 1"))
 
-    def define_rdf_odd(self, num_of_entries=5):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(double) b1*b1")
+    @pytest.fixture
+    def weighted_df_major(self):
+        """The majority class, 20 entries: b1 = 0, 2, ..., 38, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+        return from_files(weighted(20, "(int) 2 * rdfentry_"))
 
-        return df
+    @pytest.fixture
+    def weighted_df_minor(self):
+        """The minority class, 5 entries: b1 = 1, 3, ..., 9, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+        return from_files(weighted(5, "(int) 2 * rdfentry_ + 1"))
 
-    def create_file_major(self, num_of_entries=20):
-        self.define_rdf_even(num_of_entries).Snapshot(self.tree_name, self.file_name1)
+    def test01_each_element_is_generated_unshuffled(self, df_major, df_minor):
+        major_entries_before = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
+        minor_entries_before = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
 
-    def create_file_minor(self, num_of_entries=5):
-        self.define_rdf_odd(num_of_entries).Snapshot(self.tree_name, self.file_name2)
-
-    def create_5_entries_file(self):
-        (
-            ROOT.RDataFrame(5)
-            .Define("b1", "(int) 2 * (rdfentry_ + 20)")
-            .Define("b2", "(double) b1 * b1")
-            .Snapshot(self.tree_name, self.file_name3)
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="undersampling",
+            sampling_ratio=0.5,
+            replacement=False,
         )
 
-    def create_vector_file_major(self, num_of_entries=20):
-        (
-            ROOT.RDataFrame(20)
-            .Define("b1", "(int) rdfentry_")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name4)
-        )
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-    def create_vector_file_minor(self, num_of_entries=5):
-        (
-            ROOT.RDataFrame(5)
-            .Define("b1", "(int) rdfentry_ + 20")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name5)
-        )
+        results_x_train = [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 1.0, 3.0, 5.0]
+        results_x_val = [24.0, 26.0, 28.0, 30.0, 7.0, 9.0]
+        results_y_train = [0.0, 4.0, 16.0, 36.0, 64.0, 100.0, 1.0, 9.0, 25.0]
+        results_y_val = [576.0, 676.0, 784.0, 900.0, 49.0, 81.0]
 
-    def teardown_file(self, file):
-        os.remove(file)
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
 
-    def test01_each_element_is_generated_unshuffled(self):
-        self.create_file_major()
-        self.create_file_minor()
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
 
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
+        for _ in range(self.n_val_batch):
+            x, y = next(val_iter)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
 
-            major_entries_before = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
-            minor_entries_before = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major, df_minor],
-                batch_size=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="undersampling",
-                sampling_ratio=0.5,
-                replacement=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 1.0, 3.0, 5.0]
-            results_x_val = [24.0, 26.0, 28.0, 30.0, 7.0, 9.0]
-            results_y_train = [0.0, 4.0, 16.0, 36.0, 64.0, 100.0, 1.0, 9.0, 25.0]
-            results_y_val = [576.0, 676.0, 784.0, 900.0, 49.0, 81.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
+        for _ in range(self.n_train_batch):
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        x, y = next(train_iter)
+        assert x.shape == (self.train_remainder, 1)
+        assert y.shape == (self.train_remainder, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            num_major_train = sum(np.array(flat_x_train) % 2 == 0)
-            num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
-            num_major_val = sum(np.array(flat_x_val) % 2 == 0)
-            num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
 
-            # check if there are no duplicate entries (replacement=False)
-            self.assertEqual(len(set(flat_x_train)), len(flat_x_train))
-            self.assertEqual(len(set(flat_x_val)), len(flat_x_val))
-            self.assertEqual(len(set(flat_y_train)), len(flat_y_train))
-            self.assertEqual(len(set(flat_y_val)), len(flat_y_val))
+        num_major_train = sum(np.array(flat_x_train) % 2 == 0)
+        num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
+        num_major_val = sum(np.array(flat_x_val) % 2 == 0)
+        num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
-            # check if correct sampling_ratio (0.5 = minor/major)
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+        # check if there are no duplicate entries (replacement=False)
+        assert len(set(flat_x_train)) == len(flat_x_train)
+        assert len(set(flat_x_val)) == len(flat_x_val)
+        assert len(set(flat_y_train)) == len(flat_y_train)
+        assert len(set(flat_y_val)) == len(flat_y_val)
 
-            major_entries_after = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
-            minor_entries_after = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
+        # check if correct sampling_ratio (0.5 = minor/major)
+        assert num_major_train == 6
+        assert num_minor_train == 3
+        assert num_major_val == 4
+        assert num_minor_val == 2
 
-            # check if the dataframes are correctly reset
-            self.assertTrue(np.array_equal(major_entries_before, major_entries_after))
-            self.assertTrue(np.array_equal(minor_entries_before, minor_entries_after))
+        major_entries_after = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
+        minor_entries_after = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
 
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
+        # check if the dataframes are correctly reset
+        assert np.array_equal(major_entries_before, major_entries_after)
+        assert np.array_equal(minor_entries_before, minor_entries_after)
 
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
+    def test01_each_element_is_generated_unshuffled_replacement(self, df_major, df_minor):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="undersampling",
+            sampling_ratio=0.2,
+            replacement=True,
+        )
 
-    def test01_each_element_is_generated_unshuffled_replacement(self):
-        self.create_file_major()
-        self.create_file_minor()
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
+        results_x_train = [
+            0.0,
+            2.0,
+            4.0,
+            6.0,
+            8.0,
+            10.0,
+            12.0,
+            14.0,
+            16.0,
+            18.0,
+            20.0,
+            22.0,
+            0.0,
+            2.0,
+            4.0,
+            1.0,
+            3.0,
+            5.0,
+        ]
+        results_x_val = [24.0, 26.0, 28.0, 30.0, 32.0, 34.0, 36.0, 38.0, 24.0, 26.0, 7.0, 9.0]
+        results_y_train = [
+            0.0,
+            4.0,
+            16.0,
+            36.0,
+            64.0,
+            100.0,
+            144.0,
+            196.0,
+            256.0,
+            324.0,
+            400.0,
+            484.0,
+            0.0,
+            4.0,
+            16.0,
+            1.0,
+            9.0,
+            25.0,
+        ]
+        results_y_val = [576.0, 676.0, 784.0, 900.0, 1024.0, 1156.0, 1296.0, 1444.0, 576.0, 676.0, 49.0, 81.0]
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major, df_minor],
-                batch_size=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="undersampling",
-                sampling_ratio=0.2,
-                replacement=True,
-            )
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
 
-            results_x_train = [
-                0.0,
-                2.0,
-                4.0,
-                6.0,
-                8.0,
-                10.0,
-                12.0,
-                14.0,
-                16.0,
-                18.0,
-                20.0,
-                22.0,
-                0.0,
-                2.0,
-                4.0,
-                1.0,
-                3.0,
-                5.0,
-            ]
-            results_x_val = [24.0, 26.0, 28.0, 30.0, 32.0, 34.0, 36.0, 38.0, 24.0, 26.0, 7.0, 9.0]
-            results_y_train = [
-                0.0,
-                4.0,
-                16.0,
-                36.0,
-                64.0,
-                100.0,
-                144.0,
-                196.0,
-                256.0,
-                324.0,
-                400.0,
-                484.0,
-                0.0,
-                4.0,
-                16.0,
-                1.0,
-                9.0,
-                25.0,
-            ]
-            results_y_val = [576.0, 676.0, 784.0, 900.0, 1024.0, 1156.0, 1296.0, 1444.0, 576.0, 676.0, 49.0, 81.0]
+        for _ in range(6):
+            x, y = next(val_iter)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
 
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            for _ in range(6):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            for _ in range(9):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-
-            num_major_train = sum(np.array(flat_x_train) % 2 == 0)
-            num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
-            num_major_val = sum(np.array(flat_x_val) % 2 == 0)
-            num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
-
-            # check if there are duplicate entries (replacement=True)
-            self.assertLess(len(set(flat_x_train)), len(flat_x_train))
-            self.assertLess(len(set(flat_x_val)), len(flat_x_val))
-            self.assertLess(len(set(flat_y_train)), len(flat_y_train))
-            self.assertLess(len(set(flat_y_val)), len(flat_y_val))
-
-            # check if correct sampling_ratio (0.2 = minor/major)
-            self.assertEqual(num_major_train, 15)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 10)
-            self.assertEqual(num_minor_val, 2)
-
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
-
-    def test02_each_element_is_generated_shuffled(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major, df_minor],
-                batch_size=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="undersampling",
-                sampling_ratio=0.5,
-                replacement=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
+        for _ in range(9):
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(len(flat_x_train), 9)
-            self.assertEqual(len(flat_x_val), 6)
-            self.assertEqual(len(flat_y_train), 9)
-            self.assertEqual(len(flat_y_val), 6)
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
 
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
+        num_major_train = sum(np.array(flat_x_train) % 2 == 0)
+        num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
+        num_major_val = sum(np.array(flat_x_val) % 2 == 0)
+        num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
+        # check if there are duplicate entries (replacement=True)
+        assert len(set(flat_x_train)) < len(flat_x_train)
+        assert len(set(flat_x_val)) < len(flat_x_val)
+        assert len(set(flat_y_train)) < len(flat_y_train)
+        assert len(set(flat_y_val)) < len(flat_y_val)
 
-    def test04_dropping_remainder(self):
-        self.create_file_major()
-        self.create_file_minor()
+        # check if correct sampling_ratio (0.2 = minor/major)
+        assert num_major_train == 15
+        assert num_minor_train == 3
+        assert num_major_val == 10
+        assert num_minor_val == 2
 
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
+    def test02_each_element_is_generated_shuffled(self, df_major, df_minor):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="undersampling",
+            sampling_ratio=0.5,
+            replacement=False,
+        )
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major, df_minor],
-                batch_size=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="undersampling",
-                sampling_ratio=0.5,
-                replacement=False,
-            )
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
 
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
 
-            collected_x = []
-            collected_y = []
+        for _ in range(self.n_val_batch):
+            x, y = next(val_iter)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
 
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x.append(x)
-                collected_y.append(y)
+        for _ in range(self.n_train_batch):
+            x, y = next(train_iter)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
 
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x.append(x)
-                collected_y.append(y)
+        x, y = next(train_iter)
+        assert x.shape == (self.train_remainder, 1)
+        assert y.shape == (self.train_remainder, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
 
-            self.assertEqual(len(collected_x), 7)
-            self.assertEqual(len(collected_y), 7)
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
+        assert len(flat_x_train) == 9
+        assert len(flat_x_val) == 6
+        assert len(flat_y_train) == 9
+        assert len(flat_y_val) == 6
 
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
+    def test04_dropping_remainder(self, df_major, df_minor):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="undersampling",
+            sampling_ratio=0.5,
+            replacement=False,
+        )
 
-    def test05_more_than_one_file(self):
-        self.create_file_major()
-        self.create_file_minor()
-        self.create_5_entries_file()
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, [self.file_name1, self.file_name3])
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major, df_minor],
-                batch_size=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="undersampling",
-                sampling_ratio=0.5,
-                replacement=False,
-            )
+        collected_x = []
+        collected_y = []
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        for _ in range(self.n_val_batch):
+            x, y = next(val_iter)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
+            collected_x.append(x)
+            collected_y.append(y)
 
-            results_x_train = [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 1.0, 3.0, 5.0]
-            results_x_val = [30.0, 32.0, 34.0, 36.0, 7.0, 9.0]
-            results_y_train = [0.0, 4.0, 16.0, 36.0, 64.0, 100.0, 1.0, 9.0, 25.0]
-            results_y_val = [900.0, 1024.0, 1156.0, 1296.0, 49.0, 81.0]
+        for _ in range(self.n_train_batch):
+            x, y = next(train_iter)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
+            collected_x.append(x)
+            collected_y.append(y)
 
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
+        assert len(collected_x) == 7
+        assert len(collected_y) == 7
 
-            iter_train = iter(gen_train.as_numpy())
-            iter_val = iter(gen_validation.as_numpy())
+    def test05_more_than_one_file(self, df_minor):
+        df_major = from_files(squares(20, "(int) 2 * rdfentry_"), squares(5, "(int) 2 * (rdfentry_ + 20)"))
 
-            for _ in range(self.n_train_batch):
-                x, y = next(iter_train)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="undersampling",
+            sampling_ratio=0.5,
+            replacement=False,
+        )
 
-            for _ in range(self.n_val_batch):
-                x, y = next(iter_val)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
+        results_x_train = [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 1.0, 3.0, 5.0]
+        results_x_val = [30.0, 32.0, 34.0, 36.0, 7.0, 9.0]
+        results_y_train = [0.0, 4.0, 16.0, 36.0, 64.0, 100.0, 1.0, 9.0, 25.0]
+        results_y_val = [900.0, 1024.0, 1156.0, 1296.0, 49.0, 81.0]
+
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+
+        iter_train = iter(gen_train.as_numpy())
+        iter_val = iter(gen_validation.as_numpy())
+
+        for _ in range(self.n_train_batch):
             x, y = next(iter_train)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        for _ in range(self.n_val_batch):
+            x, y = next(iter_val)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+        x, y = next(iter_train)
+        assert x.shape == (self.train_remainder, 1)
+        assert y.shape == (self.train_remainder, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
 
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            self.teardown_file(self.file_name3)
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            self.teardown_file(self.file_name3)
-            raise
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
 
-    def test06_multiple_target_columns(self):
-        file_name1 = "multiple_target_columns_major.root"
-        file_name2 = "multiple_target_columns_minor.root"
+    def test06_multiple_target_columns(self, weighted_df_major, weighted_df_minor):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [weighted_df_minor, weighted_df_major],
+            batch_size=2,
+            target=["b2", "b4"],
+            weights="b3",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="undersampling",
+            sampling_ratio=0.5,
+            replacement=False,
+        )
 
-        ROOT.RDataFrame(20).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-        try:
-            df_major = ROOT.RDataFrame("myTree", file_name1)
-            df_minor = ROOT.RDataFrame("myTree", file_name2)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_minor, df_major],
-                batch_size=2,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="undersampling",
-                sampling_ratio=0.5,
-                replacement=False,
-            )
+        results_x_train = [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 1.0, 3.0, 5.0]
+        results_x_val = [24.0, 26.0, 28.0, 30.0, 7.0, 9.0]
+        results_y_train = [
+            0.0,
+            0.0,
+            4.0,
+            200.0,
+            16.0,
+            400.0,
+            36.0,
+            600.0,
+            64.0,
+            800.0,
+            100.0,
+            1000.0,
+            1.0,
+            100.0,
+            9.0,
+            300.0,
+            25.0,
+            500.0,
+        ]
+        results_y_val = [576.0, 2400.0, 676.0, 2600.0, 784.0, 2800.0, 900.0, 3000.0, 49.0, 700.0, 81.0, 900.0]
+        results_z_train = [0.0, 20.0, 40.0, 60.0, 80.0, 100.0, 10.0, 30.0, 50.0]
+        results_z_val = [240.0, 260.0, 280.0, 300.0, 70.0, 90.0]
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+        collected_z_train = []
+        collected_z_val = []
 
-            results_x_train = [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 1.0, 3.0, 5.0]
-            results_x_val = [24.0, 26.0, 28.0, 30.0, 7.0, 9.0]
-            results_y_train = [
-                0.0,
-                0.0,
-                4.0,
-                200.0,
-                16.0,
-                400.0,
-                36.0,
-                600.0,
-                64.0,
-                800.0,
-                100.0,
-                1000.0,
-                1.0,
-                100.0,
-                9.0,
-                300.0,
-                25.0,
-                500.0,
-            ]
-            results_y_val = [576.0, 2400.0, 676.0, 2600.0, 784.0, 2800.0, 900.0, 3000.0, 49.0, 700.0, 81.0, 900.0]
-            results_z_train = [0.0, 20.0, 40.0, 60.0, 80.0, 100.0, 10.0, 30.0, 50.0]
-            results_z_val = [240.0, 260.0, 280.0, 300.0, 70.0, 90.0]
+        iter_train = iter(gen_train.as_numpy())
+        iter_val = iter(gen_validation.as_numpy())
 
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
-
-            iter_train = iter(gen_train.as_numpy())
-            iter_val = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-                collected_z_train.append(z.tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-                collected_z_val.append(z.tolist())
-
+        for _ in range(self.n_train_batch):
             x, y, z = next(iter_train)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 2))
-            self.assertTrue(z.shape == (self.train_remainder, 1))
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 2)
+            assert z.shape == (2, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
             collected_z_train.append(z.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+        for _ in range(self.n_val_batch):
+            x, y, z = next(iter_val)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 2)
+            assert z.shape == (2, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+            collected_z_val.append(z.tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+        x, y, z = next(iter_train)
+        assert x.shape == (self.train_remainder, 1)
+        assert y.shape == (self.train_remainder, 2)
+        assert z.shape == (self.train_remainder, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
+        collected_z_train.append(z.tolist())
 
-            num_major_train = sum(np.array(flat_x_train) % 2 == 0)
-            num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
-            num_major_val = sum(np.array(flat_x_val) % 2 == 0)
-            num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+        flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+        assert results_z_train == flat_z_train
+        assert results_z_val == flat_z_val
 
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
+        num_major_train = sum(np.array(flat_x_train) % 2 == 0)
+        num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
+        num_major_val = sum(np.array(flat_x_val) % 2 == 0)
+        num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
+        assert num_major_train == 6
+        assert num_minor_train == 3
+        assert num_major_val == 4
+        assert num_minor_val == 2
 
     def test07_multiple_input_columns(self):
-        file_name1 = "multiple_target_columns_major.root"
-        file_name2 = "multiple_target_columns_minor.root"
+        df_major = from_files(
+            ROOT
+            .RDataFrame(20)
+            .Define("b1", "(int) 2 * rdfentry_")
+            .Define("b2", "(int) b1 * b1")
+            .Define("b3", "(double) b1 * 10")
+        )
+        df_minor = from_files(
+            ROOT
+            .RDataFrame(5)
+            .Define("b1", "(int) 2 * rdfentry_ + 1")
+            .Define("b2", "(int) b1 * b1")
+            .Define("b3", "(double) b1 * 10")
+        )
 
-        ROOT.RDataFrame(20).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Snapshot("myTree", file_name1)
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="undersampling",
+            sampling_ratio=0.5,
+            replacement=False,
+        )
 
-        ROOT.RDataFrame(5).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Snapshot("myTree", file_name2)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-        try:
-            df_major = ROOT.RDataFrame("myTree", file_name1)
-            df_minor = ROOT.RDataFrame("myTree", file_name2)
+        results_x_train = [
+            0.0,
+            0.0,
+            2.0,
+            20.0,
+            4.0,
+            40.0,
+            6.0,
+            60.0,
+            8.0,
+            80.0,
+            10.0,
+            100.0,
+            1.0,
+            10.0,
+            3.0,
+            30.0,
+            5.0,
+            50.0,
+        ]
+        results_x_val = [24.0, 240.0, 26.0, 260.0, 28.0, 280.0, 30.0, 300.0, 7.0, 70.0, 9.0, 90.0]
+        results_y_train = [0.0, 4.0, 16.0, 36.0, 64.0, 100.0, 1.0, 9.0, 25.0]
+        results_y_val = [576.0, 676.0, 784.0, 900.0, 49.0, 81.0]
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major, df_minor],
-                batch_size=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="undersampling",
-                sampling_ratio=0.5,
-                replacement=False,
-            )
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        iter_train = iter(gen_train.as_numpy())
+        iter_val = iter(gen_validation.as_numpy())
 
-            results_x_train = [
-                0.0,
-                0.0,
-                2.0,
-                20.0,
-                4.0,
-                40.0,
-                6.0,
-                60.0,
-                8.0,
-                80.0,
-                10.0,
-                100.0,
-                1.0,
-                10.0,
-                3.0,
-                30.0,
-                5.0,
-                50.0,
-            ]
-            results_x_val = [24.0, 240.0, 26.0, 260.0, 28.0, 280.0, 30.0, 300.0, 7.0, 70.0, 9.0, 90.0]
-            results_y_train = [0.0, 4.0, 16.0, 36.0, 64.0, 100.0, 1.0, 9.0, 25.0]
-            results_y_val = [576.0, 676.0, 784.0, 900.0, 49.0, 81.0]
+        for _ in range(self.n_train_batch):
+            x, y = next(iter_train)
+            assert x.shape == (2, 2)
+            assert y.shape == (2, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
 
+        for _ in range(self.n_val_batch):
+            x, y = next(iter_val)
+            assert x.shape == (2, 2)
+            assert y.shape == (2, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+
+        x, y = next(iter_train)
+        assert x.shape == (self.train_remainder, 2)
+        assert y.shape == (self.train_remainder, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+
+    def test08_filtered(self, df_major, df_minor):
+        df_major_filter = df_major.Filter("b1 % 8 != 0", "name")
+
+        major_filter_entries_before = df_major_filter.AsNumpy(["rdfentry_"])["rdfentry_"]
+        minor_entries_before = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
+
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major_filter, df_minor],
+            batch_size=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="undersampling",
+            sampling_ratio=0.5,
+            replacement=False,
+        )
+
+        gen_train, gen_validation = dl.train_test_split(0.4)
+
+        results_x_train = [2.0, 4.0, 6.0, 10.0, 12.0, 14.0, 1.0, 3.0, 5.0]
+        results_x_val = [26.0, 28.0, 30.0, 34.0, 7.0, 9.0]
+        results_y_train = [4.0, 16.0, 36.0, 100.0, 144.0, 196.0, 1.0, 9.0, 25.0]
+        results_y_val = [676.0, 784.0, 900.0, 1156.0, 49.0, 81.0]
+
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
+
+        for _ in range(self.n_train_batch):
+            x, y = next(train_iter)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+
+        for _ in range(self.n_val_batch):
+            x, y = next(val_iter)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+
+        x, y = next(train_iter)
+        assert x.shape == (self.train_remainder, 1)
+        assert y.shape == (self.train_remainder, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+
+        num_major_train = np.sum((np.asarray(flat_x_train) % 2 == 0) & (np.asarray(flat_x_train) % 8 != 0))
+        num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
+        num_major_val = np.sum((np.asarray(flat_x_val) % 2 == 0) & (np.asarray(flat_x_val) % 8 != 0))
+        num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
+
+        assert num_major_train == 6
+        assert num_minor_train == 3
+        assert num_major_val == 4
+        assert num_minor_val == 2
+
+        major_filter_entries_after = df_major_filter.AsNumpy(["rdfentry_"])["rdfentry_"]
+        minor_entries_after = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
+
+        # check if the dataframes are correctly reset
+        assert np.array_equal(major_filter_entries_before, major_filter_entries_after)
+        assert np.array_equal(minor_entries_before, minor_entries_after)
+
+    def test10_two_epochs_shuffled(self, df_major, df_minor):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="undersampling",
+            sampling_ratio=0.5,
+            replacement=False,
+        )
+
+        gen_train, gen_validation = dl.train_test_split(0.4)
+
+        both_epochs_collected_x_val = []
+        both_epochs_collected_y_val = []
+
+        for _ in range(2):
             collected_x_train = []
             collected_x_val = []
             collected_y_train = []
@@ -5471,507 +2912,280 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(iter_train)
-                self.assertTrue(x.shape == (2, 2))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (2, 2))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(iter_train)
-            self.assertTrue(x.shape == (self.train_remainder, 2))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 1)
+            assert y.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+            flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
+            flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
+            flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
+            flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert len(flat_x_train) == 9
+            assert len(flat_x_val) == 6
+            assert len(flat_y_train) == 9
+            assert len(flat_y_val) == 6
 
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
+            both_epochs_collected_x_val.append(collected_x_val)
+            both_epochs_collected_y_val.append(collected_y_val)
 
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
+        assert both_epochs_collected_x_val[0] == both_epochs_collected_x_val[1]
+        assert both_epochs_collected_y_val[0] == both_epochs_collected_y_val[1]
 
-    def test08_filtered(self):
-        self.create_file_major()
-        self.create_file_minor()
+    def test11_number_of_training_and_validation_batches_remainder(self, df_major, df_minor):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="undersampling",
+            sampling_ratio=0.5,
+            replacement=False,
+        )
 
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            df_major_filter = df_major.Filter("b1 % 8 != 0", "name")
+        number_of_training_batches = 0
+        number_of_validation_batches = 0
 
-            major_filter_entries_before = df_major_filter.AsNumpy(["rdfentry_"])["rdfentry_"]
-            minor_entries_before = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
+        for _ in gen_train.as_numpy():
+            number_of_training_batches += 1
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major_filter, df_minor],
-                batch_size=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="undersampling",
-                sampling_ratio=0.5,
-                replacement=False,
-            )
+        for _ in gen_validation.as_numpy():
+            number_of_validation_batches += 1
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        assert gen_train.num_batches == number_of_training_batches
+        assert gen_validation.num_batches == number_of_validation_batches
+        assert gen_train.last_batch_no_of_rows == 1
+        assert gen_validation.last_batch_no_of_rows == 0
 
-            results_x_train = [2.0, 4.0, 6.0, 10.0, 12.0, 14.0, 1.0, 3.0, 5.0]
-            results_x_val = [26.0, 28.0, 30.0, 34.0, 7.0, 9.0]
-            results_y_train = [4.0, 16.0, 36.0, 100.0, 144.0, 196.0, 1.0, 9.0, 25.0]
-            results_y_val = [676.0, 784.0, 900.0, 1156.0, 49.0, 81.0]
+    def test12_PyTorch(self, weighted_df_major, weighted_df_minor):
+        pytest.importorskip("torch")
 
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [weighted_df_major, weighted_df_minor],
+            batch_size=2,
+            target=["b2", "b4"],
+            weights="b3",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="undersampling",
+            sampling_ratio=0.5,
+            replacement=False,
+        )
 
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
+        results_x_train = [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 1.0, 3.0, 5.0]
+        results_x_val = [24.0, 26.0, 28.0, 30.0, 7.0, 9.0]
+        results_y_train = [
+            0.0,
+            0.0,
+            4.0,
+            200.0,
+            16.0,
+            400.0,
+            36.0,
+            600.0,
+            64.0,
+            800.0,
+            100.0,
+            1000.0,
+            1.0,
+            100.0,
+            9.0,
+            300.0,
+            25.0,
+            500.0,
+        ]
+        results_y_val = [576.0, 2400.0, 676.0, 2600.0, 784.0, 2800.0, 900.0, 3000.0, 49.0, 700.0, 81.0, 900.0]
+        results_z_train = [0.0, 20.0, 40.0, 60.0, 80.0, 100.0, 10.0, 30.0, 50.0]
+        results_z_val = [240.0, 260.0, 280.0, 300.0, 70.0, 90.0]
 
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+        collected_z_train = []
+        collected_z_val = []
 
-            x, y = next(train_iter)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
-            collected_x_train.append(x.tolist())
-            collected_y_train.append(y.tolist())
+        iter_train = iter(gen_train.as_torch(device="cpu"))
+        iter_val = iter(gen_validation.as_torch())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-
-            num_major_train = np.sum((np.asarray(flat_x_train) % 2 == 0) & (np.asarray(flat_x_train) % 8 != 0))
-            num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
-            num_major_val = np.sum((np.asarray(flat_x_val) % 2 == 0) & (np.asarray(flat_x_val) % 8 != 0))
-            num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
-
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
-
-            major_filter_entries_after = df_major_filter.AsNumpy(["rdfentry_"])["rdfentry_"]
-            minor_entries_after = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
-
-            # check if the dataframes are correctly reset
-            self.assertTrue(np.array_equal(major_filter_entries_before, major_filter_entries_after))
-            self.assertTrue(np.array_equal(minor_entries_before, minor_entries_after))
-
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
-
-    def test10_two_epochs_shuffled(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major, df_minor],
-                batch_size=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="undersampling",
-                sampling_ratio=0.5,
-                replacement=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            both_epochs_collected_x_val = []
-            both_epochs_collected_y_val = []
-
-            for _ in range(2):
-                collected_x_train = []
-                collected_x_val = []
-                collected_y_train = []
-                collected_y_val = []
-
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
-
-                for _ in range(self.n_train_batch):
-                    x, y = next(iter_train)
-                    self.assertTrue(x.shape == (2, 1))
-                    self.assertTrue(y.shape == (2, 1))
-                    collected_x_train.append(x.tolist())
-                    collected_y_train.append(y.tolist())
-
-                for _ in range(self.n_val_batch):
-                    x, y = next(iter_val)
-                    self.assertTrue(x.shape == (2, 1))
-                    self.assertTrue(y.shape == (2, 1))
-                    collected_x_val.append(x.tolist())
-                    collected_y_val.append(y.tolist())
-
-                x, y = next(iter_train)
-                self.assertTrue(x.shape == (self.train_remainder, 1))
-                self.assertTrue(y.shape == (self.train_remainder, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-                flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
-                flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
-                flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
-                flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
-
-                self.assertEqual(len(flat_x_train), 9)
-                self.assertEqual(len(flat_x_val), 6)
-                self.assertEqual(len(flat_y_train), 9)
-                self.assertEqual(len(flat_y_val), 6)
-
-                both_epochs_collected_x_val.append(collected_x_val)
-                both_epochs_collected_y_val.append(collected_y_val)
-
-            self.assertEqual(both_epochs_collected_x_val[0], both_epochs_collected_x_val[1])
-            self.assertEqual(both_epochs_collected_y_val[0], both_epochs_collected_y_val[1])
-        finally:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-    def test11_number_of_training_and_validation_batches_remainder(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major, df_minor],
-                batch_size=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="undersampling",
-                sampling_ratio=0.5,
-                replacement=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            number_of_training_batches = 0
-            number_of_validation_batches = 0
-
-            for _ in gen_train.as_numpy():
-                number_of_training_batches += 1
-
-            for _ in gen_validation.as_numpy():
-                number_of_validation_batches += 1
-
-            self.assertEqual(gen_train.num_batches, number_of_training_batches)
-            self.assertEqual(gen_validation.num_batches, number_of_validation_batches)
-            self.assertEqual(gen_train.last_batch_no_of_rows, 1)
-            self.assertEqual(gen_validation.last_batch_no_of_rows, 0)
-
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
-
-    def test12_PyTorch(self):
-        file_name1 = "multiple_target_columns_major.root"
-        file_name2 = "multiple_target_columns_minor.root"
-
-        ROOT.RDataFrame(20).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-        try:
-            df_minor = ROOT.RDataFrame("myTree", file_name1)
-            df_major = ROOT.RDataFrame("myTree", file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_minor, df_major],
-                batch_size=2,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="undersampling",
-                sampling_ratio=0.5,
-                replacement=False,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 1.0, 3.0, 5.0]
-            results_x_val = [24.0, 26.0, 28.0, 30.0, 7.0, 9.0]
-            results_y_train = [
-                0.0,
-                0.0,
-                4.0,
-                200.0,
-                16.0,
-                400.0,
-                36.0,
-                600.0,
-                64.0,
-                800.0,
-                100.0,
-                1000.0,
-                1.0,
-                100.0,
-                9.0,
-                300.0,
-                25.0,
-                500.0,
-            ]
-            results_y_val = [576.0, 2400.0, 676.0, 2600.0, 784.0, 2800.0, 900.0, 3000.0, 49.0, 700.0, 81.0, 900.0]
-            results_z_train = [0.0, 20.0, 40.0, 60.0, 80.0, 100.0, 10.0, 30.0, 50.0]
-            results_z_val = [240.0, 260.0, 280.0, 300.0, 70.0, 90.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
-
-            iter_train = iter(gen_train.as_torch(device="cpu"))
-            iter_val = iter(gen_validation.as_torch())
-
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-                collected_z_train.append(z.tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-                collected_z_val.append(z.tolist())
-
+        for _ in range(self.n_train_batch):
             x, y, z = next(iter_train)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 2))
-            self.assertTrue(z.shape == (self.train_remainder, 1))
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 2)
+            assert z.shape == (2, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
             collected_z_train.append(z.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+        for _ in range(self.n_val_batch):
+            x, y, z = next(iter_val)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 2)
+            assert z.shape == (2, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+            collected_z_val.append(z.tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+        x, y, z = next(iter_train)
+        assert x.shape == (self.train_remainder, 1)
+        assert y.shape == (self.train_remainder, 2)
+        assert z.shape == (self.train_remainder, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
+        collected_z_train.append(z.tolist())
 
-            num_major_train = sum(np.array(flat_x_train) % 2 == 0)
-            num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
-            num_major_val = sum(np.array(flat_x_val) % 2 == 0)
-            num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+        flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+        assert results_z_train == flat_z_train
+        assert results_z_val == flat_z_val
 
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
+        num_major_train = sum(np.array(flat_x_train) % 2 == 0)
+        num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
+        num_major_val = sum(np.array(flat_x_val) % 2 == 0)
+        num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
+        assert num_major_train == 6
+        assert num_minor_train == 3
+        assert num_major_val == 4
+        assert num_minor_val == 2
 
-    def test13_TensorFlow(self):
-        file_name1 = "multiple_target_columns_major.root"
-        file_name2 = "multiple_target_columns_minor.root"
+    def test13_TensorFlow(self, weighted_df_major, weighted_df_minor):
+        pytest.importorskip("tensorflow")
 
-        ROOT.RDataFrame(20).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(5).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-        try:
-            df_minor = ROOT.RDataFrame("myTree", file_name1)
-            df_major = ROOT.RDataFrame("myTree", file_name2)
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [weighted_df_major, weighted_df_minor],
+            batch_size=2,
+            target=["b2", "b4"],
+            weights="b3",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="undersampling",
+            sampling_ratio=0.5,
+            replacement=False,
+        )
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_minor, df_major],
-                batch_size=2,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="undersampling",
-                sampling_ratio=0.5,
-                replacement=False,
-            )
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        results_x_train = [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 1.0, 3.0, 5.0, 0.0]
+        results_x_val = [24.0, 26.0, 28.0, 30.0, 7.0, 9.0]
+        results_y_train = [
+            0.0,
+            0.0,
+            4.0,
+            200.0,
+            16.0,
+            400.0,
+            36.0,
+            600.0,
+            64.0,
+            800.0,
+            100.0,
+            1000.0,
+            1.0,
+            100.0,
+            9.0,
+            300.0,
+            25.0,
+            500.0,
+            0.0,
+            0.0,
+        ]
+        results_y_val = [576.0, 2400.0, 676.0, 2600.0, 784.0, 2800.0, 900.0, 3000.0, 49.0, 700.0, 81.0, 900.0]
+        results_z_train = [0.0, 20.0, 40.0, 60.0, 80.0, 100.0, 10.0, 30.0, 50.0, 0.0]
+        results_z_val = [240.0, 260.0, 280.0, 300.0, 70.0, 90.0]
 
-            results_x_train = [0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 1.0, 3.0, 5.0, 0.0]
-            results_x_val = [24.0, 26.0, 28.0, 30.0, 7.0, 9.0]
-            results_y_train = [
-                0.0,
-                0.0,
-                4.0,
-                200.0,
-                16.0,
-                400.0,
-                36.0,
-                600.0,
-                64.0,
-                800.0,
-                100.0,
-                1000.0,
-                1.0,
-                100.0,
-                9.0,
-                300.0,
-                25.0,
-                500.0,
-                0.0,
-                0.0,
-            ]
-            results_y_val = [576.0, 2400.0, 676.0, 2600.0, 784.0, 2800.0, 900.0, 3000.0, 49.0, 700.0, 81.0, 900.0]
-            results_z_train = [0.0, 20.0, 40.0, 60.0, 80.0, 100.0, 10.0, 30.0, 50.0, 0.0]
-            results_z_val = [240.0, 260.0, 280.0, 300.0, 70.0, 90.0]
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+        collected_z_train = []
+        collected_z_val = []
 
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
+        iter_train = iter(gen_train.as_tensorflow())
+        iter_val = iter(gen_validation.as_tensorflow())
 
-            iter_train = iter(gen_train.as_tensorflow())
-            iter_val = iter(gen_validation.as_tensorflow())
-
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
-                collected_x_train.append(x.numpy().tolist())
-                collected_y_train.append(y.numpy().tolist())
-                collected_z_train.append(z.numpy().tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
-                collected_x_val.append(x.numpy().tolist())
-                collected_y_val.append(y.numpy().tolist())
-                collected_z_val.append(z.numpy().tolist())
-
+        for _ in range(self.n_train_batch):
             x, y, z = next(iter_train)
-            self.assertTrue(x.shape == (2, 1))
-            self.assertTrue(y.shape == (2, 2))
-            self.assertTrue(z.shape == (2, 1))
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 2)
+            assert z.shape == (2, 1)
             collected_x_train.append(x.numpy().tolist())
             collected_y_train.append(y.numpy().tolist())
             collected_z_train.append(z.numpy().tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+        for _ in range(self.n_val_batch):
+            x, y, z = next(iter_val)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 2)
+            assert z.shape == (2, 1)
+            collected_x_val.append(x.numpy().tolist())
+            collected_y_val.append(y.numpy().tolist())
+            collected_z_val.append(z.numpy().tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+        x, y, z = next(iter_train)
+        assert x.shape == (2, 1)
+        assert y.shape == (2, 2)
+        assert z.shape == (2, 1)
+        collected_x_train.append(x.numpy().tolist())
+        collected_y_train.append(y.numpy().tolist())
+        collected_z_train.append(z.numpy().tolist())
 
-            num_major_train = sum(np.array(flat_x_train) % 2 == 0)
-            num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
-            num_major_val = sum(np.array(flat_x_val) % 2 == 0)
-            num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+        flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(num_major_train, 7)  # num_major_train = 6 + 1 padded 0 from the last batch
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+        assert results_z_train == flat_z_train
+        assert results_z_val == flat_z_val
 
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
+        num_major_train = sum(np.array(flat_x_train) % 2 == 0)
+        num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
+        num_major_val = sum(np.array(flat_x_val) % 2 == 0)
+        num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
+        assert num_major_train == 7  # num_major_train = 6 + 1 padded 0 from the last batch
+        assert num_minor_train == 3
+        assert num_major_val == 4
+        assert num_minor_val == 2
 
     def test14_big_data_replacement_false(self):
-        file_name1 = "big_data_major.root"
-        file_name2 = "big_data_minor.root"
-        tree_name = "myTree"
-
         entries_in_rdf_major = randrange(10000, 30000)
         entries_in_rdf_minor = randrange(8000, 9999)
         batch_size = randrange(100, 501)
@@ -5982,117 +3196,90 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             Number of major entries: {entries_in_rdf_major} \
             Number of minor entries: {entries_in_rdf_minor}"
 
-        def define_rdf_major(num_of_entries, file_name):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
-        def define_rdf_minor(num_of_entries, file_name):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_ + 1").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
         def test(size_of_batch, num_of_entries_major, num_of_entries_minor, sampling_ratio):
-            define_rdf_major(num_of_entries_major, file_name1)
-            define_rdf_minor(num_of_entries_minor, file_name2)
+            df1 = from_files(big_data(num_of_entries_major, "(int) 2 * rdfentry_"))
+            df2 = from_files(big_data(num_of_entries_minor, "(int) 2 * rdfentry_ + 1"))
 
-            try:
-                df1 = ROOT.RDataFrame(tree_name, file_name1)
-                df2 = ROOT.RDataFrame(tree_name, file_name2)
+            dl = ROOT.Experimental.ML.RDataLoader(
+                [df1, df2],
+                batch_size=size_of_batch,
+                target=["b3", "b5"],
+                weights="b1",
+                shuffle=False,
+                drop_remainder=False,
+                load_eager=True,
+                sampling_type="undersampling",
+                sampling_ratio=sampling_ratio,
+                replacement=False,
+            )
 
-                dl = ROOT.Experimental.ML.RDataLoader(
-                    [df1, df2],
-                    batch_size=size_of_batch,
-                    target=["b3", "b5"],
-                    weights="b1",
-                    shuffle=False,
-                    drop_remainder=False,
-                    load_eager=True,
-                    sampling_type="undersampling",
-                    sampling_ratio=sampling_ratio,
-                    replacement=False,
-                )
+            gen_train, gen_validation = dl.train_test_split(0.3)
 
-                gen_train, gen_validation = dl.train_test_split(0.3)
+            collected_z_train = []
+            collected_z_val = []
 
-                collected_z_train = []
-                collected_z_val = []
+            train_remainder = gen_train.last_batch_no_of_rows
+            val_remainder = gen_validation.last_batch_no_of_rows
 
-                train_remainder = gen_train.last_batch_no_of_rows
-                val_remainder = gen_validation.last_batch_no_of_rows
+            n_train_batches = gen_train.num_batches - 1 if train_remainder else gen_train.num_batches
+            n_val_batches = gen_validation.num_batches - 1 if val_remainder else gen_validation.num_batches
 
-                n_train_batches = gen_train.num_batches - 1 if train_remainder else gen_train.num_batches
-                n_val_batches = gen_validation.num_batches - 1 if val_remainder else gen_validation.num_batches
+            iter_train = iter(gen_train.as_numpy())
+            iter_val = iter(gen_validation.as_numpy())
 
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
+            for i in range(n_train_batches):
+                x, y, z = next(iter_train)
 
-                for i in range(n_train_batches):
-                    x, y, z = next(iter_train)
+                assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
+                collected_z_train.append(z.tolist())
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
-                    collected_z_train.append(z.tolist())
+            if train_remainder:
+                x, y, z = next(iter_train)
+                assert x.shape == (train_remainder, 2), error_message
+                assert y.shape == (train_remainder, 2), error_message
+                assert z.shape == (train_remainder, 1), error_message
+                collected_z_train.append(z.tolist())
 
-                if train_remainder:
-                    x, y, z = next(iter_train)
-                    self.assertTrue(x.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (train_remainder, 1), error_message)
-                    collected_z_train.append(z.tolist())
+            for _ in range(n_val_batches):
+                x, y, z = next(iter_val)
 
-                for _ in range(n_val_batches):
-                    x, y, z = next(iter_val)
+                assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
+                collected_z_val.append(z.tolist())
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
-                    collected_z_val.append(z.tolist())
+            if val_remainder:
+                x, y, z = next(iter_val)
+                assert x.shape == (val_remainder, 2), error_message
+                assert y.shape == (val_remainder, 2), error_message
+                assert z.shape == (val_remainder, 1), error_message
+                collected_z_val.append(z.tolist())
 
-                if val_remainder:
-                    x, y, z = next(iter_val)
-                    self.assertTrue(x.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (val_remainder, 1), error_message)
-                    collected_z_val.append(z.tolist())
+            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-                flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-                flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+            num_major_train = sum(np.array(flat_z_train) % 2 == 0)
+            num_minor_train = sum(np.array(flat_z_train) % 2 != 0)
+            num_major_val = sum(np.array(flat_z_val) % 2 == 0)
+            num_minor_val = sum(np.array(flat_z_val) % 2 != 0)
 
-                num_major_train = sum(np.array(flat_z_train) % 2 == 0)
-                num_minor_train = sum(np.array(flat_z_train) % 2 != 0)
-                num_major_val = sum(np.array(flat_z_val) % 2 == 0)
-                num_minor_val = sum(np.array(flat_z_val) % 2 != 0)
+            # check if there are no duplicate entries (replacement=False)
+            assert len(set(flat_z_train)) == len(flat_z_train)
+            assert len(set(flat_z_val)) == len(flat_z_val)
 
-                # check if there are no duplicate entries (replacement=False)
-                self.assertEqual(len(set(flat_z_train)), len(flat_z_train))
-                self.assertEqual(len(set(flat_z_val)), len(flat_z_val))
-
-                # check if the sampling stategy is correct
-                self.assertEqual(round((num_minor_train / num_major_train), 2), sampling_ratio)
-                self.assertEqual(round((num_minor_val / num_major_val), 2), sampling_ratio)
-
-                self.teardown_file(file_name1)
-                self.teardown_file(file_name2)
-            except:
-                self.teardown_file(file_name1)
-                self.teardown_file(file_name2)
-                raise
+            # check if the sampling stategy is correct
+            assert round((num_minor_train / num_major_train), 2) == sampling_ratio
+            assert round((num_minor_val / num_major_val), 2) == sampling_ratio
 
         def test_raises(size_of_batch, num_of_entries_major, num_of_entries_minor, sampling_ratio):
-            define_rdf_major(num_of_entries_major, file_name1)
-            define_rdf_minor(num_of_entries_minor, file_name2)
+            df1 = from_files(big_data(num_of_entries_major, "(int) 2 * rdfentry_"))
+            df2 = from_files(big_data(num_of_entries_minor, "(int) 2 * rdfentry_ + 1"))
 
-            df1 = ROOT.RDataFrame(tree_name, file_name1)
-            df2 = ROOT.RDataFrame(tree_name, file_name2)
-
-            with self.assertRaisesRegex(
-                Exception, r"The sampling_ratio is too low: not enough entries in the majority class to sample from."
+            with pytest.raises(
+                Exception,
+                match=r"The sampling_ratio is too low: not enough entries in the majority class to sample from.",
             ):
                 ROOT.Experimental.ML.RDataLoader(
                     [df1, df2],
@@ -6115,10 +3302,6 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
         test_raises(batch_size, entries_in_rdf_major, entries_in_rdf_minor, bad_sampling_ratio)
 
     def test14_big_data_replacement_true(self):
-        file_name1 = "big_data_major.root"
-        file_name2 = "big_data_minor.root"
-        tree_name = "myTree"
-
         entries_in_rdf_major = randrange(10000, 30000)
         entries_in_rdf_minor = randrange(8000, 9999)
         batch_size = randrange(100, 501)
@@ -6131,196 +3314,94 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
             Number of major entries: {entries_in_rdf_major} \
             Number of minor entries: {entries_in_rdf_minor}"
 
-        def define_rdf_major(num_of_entries, file_name):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
-        def define_rdf_minor(num_of_entries, file_name):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_ + 1").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
         def test(size_of_batch, num_of_entries_major, num_of_entries_minor, sampling_ratio):
-            define_rdf_major(num_of_entries_major, file_name1)
-            define_rdf_minor(num_of_entries_minor, file_name2)
+            df1 = from_files(big_data(num_of_entries_major, "(int) 2 * rdfentry_"))
+            df2 = from_files(big_data(num_of_entries_minor, "(int) 2 * rdfentry_ + 1"))
 
-            try:
-                df1 = ROOT.RDataFrame(tree_name, file_name1)
-                df2 = ROOT.RDataFrame(tree_name, file_name2)
+            dl = ROOT.Experimental.ML.RDataLoader(
+                [df1, df2],
+                batch_size=size_of_batch,
+                target=["b3", "b5"],
+                weights="b1",
+                shuffle=False,
+                drop_remainder=False,
+                load_eager=True,
+                sampling_type="undersampling",
+                sampling_ratio=sampling_ratio,
+                replacement=True,
+            )
 
-                dl = ROOT.Experimental.ML.RDataLoader(
-                    [df1, df2],
-                    batch_size=size_of_batch,
-                    target=["b3", "b5"],
-                    weights="b1",
-                    shuffle=False,
-                    drop_remainder=False,
-                    load_eager=True,
-                    sampling_type="undersampling",
-                    sampling_ratio=sampling_ratio,
-                    replacement=True,
-                )
+            gen_train, gen_validation = dl.train_test_split(0.3)
 
-                gen_train, gen_validation = dl.train_test_split(0.3)
+            collected_z_train = []
+            collected_z_val = []
 
-                collected_z_train = []
-                collected_z_val = []
+            train_remainder = gen_train.last_batch_no_of_rows
+            val_remainder = gen_validation.last_batch_no_of_rows
 
-                train_remainder = gen_train.last_batch_no_of_rows
-                val_remainder = gen_validation.last_batch_no_of_rows
+            n_train_batches = gen_train.num_batches - 1 if train_remainder else gen_train.num_batches
+            n_val_batches = gen_validation.num_batches - 1 if val_remainder else gen_validation.num_batches
 
-                n_train_batches = gen_train.num_batches - 1 if train_remainder else gen_train.num_batches
-                n_val_batches = gen_validation.num_batches - 1 if val_remainder else gen_validation.num_batches
+            iter_train = iter(gen_train.as_numpy())
+            iter_val = iter(gen_validation.as_numpy())
 
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
+            for i in range(n_train_batches):
+                x, y, z = next(iter_train)
 
-                for i in range(n_train_batches):
-                    x, y, z = next(iter_train)
+                assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
+                collected_z_train.append(z.tolist())
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
-                    collected_z_train.append(z.tolist())
+            if train_remainder:
+                x, y, z = next(iter_train)
+                assert x.shape == (train_remainder, 2), error_message
+                assert y.shape == (train_remainder, 2), error_message
+                assert z.shape == (train_remainder, 1), error_message
+                collected_z_train.append(z.tolist())
 
-                if train_remainder:
-                    x, y, z = next(iter_train)
-                    self.assertTrue(x.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (train_remainder, 1), error_message)
-                    collected_z_train.append(z.tolist())
+            for _ in range(n_val_batches):
+                x, y, z = next(iter_val)
 
-                for _ in range(n_val_batches):
-                    x, y, z = next(iter_val)
+                assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
+                collected_z_val.append(z.tolist())
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
-                    collected_z_val.append(z.tolist())
+            if val_remainder:
+                x, y, z = next(iter_val)
+                assert x.shape == (val_remainder, 2), error_message
+                assert y.shape == (val_remainder, 2), error_message
+                assert z.shape == (val_remainder, 1), error_message
+                collected_z_val.append(z.tolist())
 
-                if val_remainder:
-                    x, y, z = next(iter_val)
-                    self.assertTrue(x.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (val_remainder, 1), error_message)
-                    collected_z_val.append(z.tolist())
+            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-                flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-                flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+            num_major_train = sum(np.array(flat_z_train) % 2 == 0)
+            num_minor_train = sum(np.array(flat_z_train) % 2 != 0)
+            num_major_val = sum(np.array(flat_z_val) % 2 == 0)
+            num_minor_val = sum(np.array(flat_z_val) % 2 != 0)
 
-                num_major_train = sum(np.array(flat_z_train) % 2 == 0)
-                num_minor_train = sum(np.array(flat_z_train) % 2 != 0)
-                num_major_val = sum(np.array(flat_z_val) % 2 == 0)
-                num_minor_val = sum(np.array(flat_z_val) % 2 != 0)
+            # check if there are duplicate entries (replacement=True)
+            assert len(set(flat_z_train)) < len(flat_z_train)
+            assert len(set(flat_z_val)) < len(flat_z_val)
 
-                # check if there are duplicate entries (replacement=True)
-                self.assertLess(len(set(flat_z_train)), len(flat_z_train))
-                self.assertLess(len(set(flat_z_val)), len(flat_z_val))
-
-                # check if the sampling stategy is correct
-                self.assertEqual(round((num_minor_train / num_major_train), 2), sampling_ratio)
-                self.assertEqual(round((num_minor_val / num_major_val), 2), sampling_ratio)
-
-                self.teardown_file(file_name1)
-                self.teardown_file(file_name2)
-            except:
-                self.teardown_file(file_name1)
-                self.teardown_file(file_name2)
-                raise
+            # check if the sampling stategy is correct
+            assert round((num_minor_train / num_major_train), 2) == sampling_ratio
+            assert round((num_minor_val / num_major_val), 2) == sampling_ratio
 
         test(batch_size, entries_in_rdf_major, entries_in_rdf_minor, sampling_ratio)
 
-    def test15_two_runs_set_seed(self):
-        self.create_file_major()
-        self.create_file_minor()
+    def test15_two_runs_set_seed(self, df_major, df_minor):
+        both_runs_collected_x_val = []
+        both_runs_collected_y_val = []
 
-        try:
-            both_runs_collected_x_val = []
-            both_runs_collected_y_val = []
-
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            for _ in range(2):
-                dl = ROOT.Experimental.ML.RDataLoader(
-                    [df_major, df_minor],
-                    batch_size=2,
-                    target="b2",
-                    shuffle=False,
-                    drop_remainder=False,
-                    load_eager=True,
-                    sampling_type="undersampling",
-                    sampling_ratio=0.5,
-                    replacement=False,
-                )
-
-                gen_train, gen_validation = dl.train_test_split(0.4)
-
-                collected_x_train = []
-                collected_x_val = []
-                collected_y_train = []
-                collected_y_val = []
-
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
-
-                for _ in range(self.n_train_batch):
-                    x, y = next(iter_train)
-                    self.assertTrue(x.shape == (2, 1))
-                    self.assertTrue(y.shape == (2, 1))
-                    collected_x_train.append(x.tolist())
-                    collected_y_train.append(y.tolist())
-
-                for _ in range(self.n_val_batch):
-                    x, y = next(iter_val)
-                    self.assertTrue(x.shape == (2, 1))
-                    self.assertTrue(y.shape == (2, 1))
-                    collected_x_val.append(x.tolist())
-                    collected_y_val.append(y.tolist())
-
-                x, y = next(iter_train)
-                self.assertTrue(x.shape == (self.train_remainder, 1))
-                self.assertTrue(y.shape == (self.train_remainder, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-                flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
-                flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
-                flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
-                flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
-
-                self.assertEqual(len(flat_x_train), 9)
-                self.assertEqual(len(flat_x_val), 6)
-                self.assertEqual(len(flat_y_train), 9)
-                self.assertEqual(len(flat_y_val), 6)
-
-                both_runs_collected_x_val.append(collected_x_val)
-                both_runs_collected_y_val.append(collected_y_val)
-            self.assertEqual(both_runs_collected_x_val[0], both_runs_collected_x_val[1])
-            self.assertEqual(both_runs_collected_y_val[0], both_runs_collected_y_val[1])
-        finally:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-    def test16_vector_padding(self):
-        self.create_vector_file_major()
-        self.create_vector_file_minor()
-
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name4)
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name5)
-            max_vec_sizes = {"v1": 3, "v2": 2}
-
+        for _ in range(2):
             dl = ROOT.Experimental.ML.RDataLoader(
                 [df_major, df_minor],
                 batch_size=2,
-                target="b1",
-                max_vec_sizes=max_vec_sizes,
+                target="b2",
                 shuffle=False,
                 drop_remainder=False,
                 load_eager=True,
@@ -6331,679 +3412,757 @@ class DataLoaderRandomUndersampling(unittest.TestCase):
 
             gen_train, gen_validation = dl.train_test_split(0.4)
 
-            results_x_train = [
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                1.0,
-                10.0,
-                0.0,
-                100.0,
-                1000.0,
-                2.0,
-                20.0,
-                0.0,
-                200.0,
-                2000.0,
-                3.0,
-                30.0,
-                0.0,
-                300.0,
-                3000.0,
-                4.0,
-                40.0,
-                0.0,
-                400.0,
-                4000.0,
-                5.0,
-                50.0,
-                0.0,
-                500.0,
-                5000.0,
-                20.0,
-                200.0,
-                0.0,
-                2000.0,
-                20000.0,
-                21.0,
-                210.0,
-                0.0,
-                2100.0,
-                21000.0,
-                22.0,
-                220.0,
-                0.0,
-                2200.0,
-                22000.0,
-            ]
-            results_y_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 20.0, 21.0, 22.0]
-            results_x_val = [
-                12.0,
-                120.0,
-                0.0,
-                1200.0,
-                12000.0,
-                13.0,
-                130.0,
-                0.0,
-                1300.0,
-                13000.0,
-                14.0,
-                140.0,
-                0.0,
-                1400.0,
-                14000.0,
-                15.0,
-                150.0,
-                0.0,
-                1500.0,
-                15000.0,
-                23.0,
-                230.0,
-                0.0,
-                2300.0,
-                23000.0,
-                24.0,
-                240.0,
-                0.0,
-                2400.0,
-                24000.0,
-            ]
-            results_y_val = [12.0, 13.0, 14.0, 15.0, 23.0, 24.0]
-
             collected_x_train = []
             collected_x_val = []
             collected_y_train = []
             collected_y_val = []
 
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 5))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
+            iter_train = iter(gen_train.as_numpy())
+            iter_val = iter(gen_validation.as_numpy())
 
             for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 5))
-                self.assertTrue(y.shape == (2, 1))
+                x, y = next(iter_train)
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
-            x, y = next(train_iter)
-            self.assertTrue(x.shape == (self.train_remainder, 5))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            for _ in range(self.n_val_batch):
+                x, y = next(iter_val)
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
+                collected_x_val.append(x.tolist())
+                collected_y_val.append(y.tolist())
+
+            x, y = next(iter_train)
+            assert x.shape == (self.train_remainder, 1)
+            assert y.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+            flat_x_train = {x for xl in collected_x_train for xs in xl for x in xs}
+            flat_x_val = {x for xl in collected_x_val for xs in xl for x in xs}
+            flat_y_train = {y for yl in collected_y_train for ys in yl for y in ys}
+            flat_y_val = {y for yl in collected_y_val for ys in yl for y in ys}
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert len(flat_x_train) == 9
+            assert len(flat_x_val) == 6
+            assert len(flat_y_train) == 9
+            assert len(flat_y_val) == 6
 
-            num_major_train = sum(np.array(flat_y_train) < 20)
-            num_minor_train = sum(np.array(flat_y_train) >= 20)
-            num_major_val = sum(np.array(flat_y_val) < 20)
-            num_minor_val = sum(np.array(flat_y_val) >= 20)
+            both_runs_collected_x_val.append(collected_x_val)
+            both_runs_collected_y_val.append(collected_y_val)
+        assert both_runs_collected_x_val[0] == both_runs_collected_x_val[1]
+        assert both_runs_collected_y_val[0] == both_runs_collected_y_val[1]
 
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+    def test16_vector_padding(self):
+        df_major = from_files(vectors(20))
+        df_minor = from_files(vectors(5, "(int) rdfentry_ + 20"))
+        max_vec_sizes = {"v1": 3, "v2": 2}
 
-            self.teardown_file(self.file_name4)
-            self.teardown_file(self.file_name5)
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b1",
+            max_vec_sizes=max_vec_sizes,
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="undersampling",
+            sampling_ratio=0.5,
+            replacement=False,
+        )
 
-        except:
-            self.teardown_file(self.file_name4)
-            self.teardown_file(self.file_name5)
-            raise
+        gen_train, gen_validation = dl.train_test_split(0.4)
+
+        results_x_train = [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            10.0,
+            0.0,
+            100.0,
+            1000.0,
+            2.0,
+            20.0,
+            0.0,
+            200.0,
+            2000.0,
+            3.0,
+            30.0,
+            0.0,
+            300.0,
+            3000.0,
+            4.0,
+            40.0,
+            0.0,
+            400.0,
+            4000.0,
+            5.0,
+            50.0,
+            0.0,
+            500.0,
+            5000.0,
+            20.0,
+            200.0,
+            0.0,
+            2000.0,
+            20000.0,
+            21.0,
+            210.0,
+            0.0,
+            2100.0,
+            21000.0,
+            22.0,
+            220.0,
+            0.0,
+            2200.0,
+            22000.0,
+        ]
+        results_y_train = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 20.0, 21.0, 22.0]
+        results_x_val = [
+            12.0,
+            120.0,
+            0.0,
+            1200.0,
+            12000.0,
+            13.0,
+            130.0,
+            0.0,
+            1300.0,
+            13000.0,
+            14.0,
+            140.0,
+            0.0,
+            1400.0,
+            14000.0,
+            15.0,
+            150.0,
+            0.0,
+            1500.0,
+            15000.0,
+            23.0,
+            230.0,
+            0.0,
+            2300.0,
+            23000.0,
+            24.0,
+            240.0,
+            0.0,
+            2400.0,
+            24000.0,
+        ]
+        results_y_val = [12.0, 13.0, 14.0, 15.0, 23.0, 24.0]
+
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
+
+        for _ in range(self.n_val_batch):
+            x, y = next(val_iter)
+            assert x.shape == (2, 5)
+            assert y.shape == (2, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+
+        for _ in range(self.n_train_batch):
+            x, y = next(train_iter)
+            assert x.shape == (2, 5)
+            assert y.shape == (2, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+
+        x, y = next(train_iter)
+        assert x.shape == (self.train_remainder, 5)
+        assert y.shape == (self.train_remainder, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+
+        num_major_train = sum(np.array(flat_y_train) < 20)
+        num_minor_train = sum(np.array(flat_y_train) >= 20)
+        num_major_val = sum(np.array(flat_y_val) < 20)
+        num_minor_val = sum(np.array(flat_y_val) >= 20)
+
+        assert num_major_train == 6
+        assert num_minor_train == 3
+        assert num_major_val == 4
+        assert num_minor_val == 2
 
 
-class DataLoaderRandomOversampling(unittest.TestCase):
-    file_name1 = "major.root"
-    file_name2 = "minor.root"
-    file_name3 = "second_file.root"
-    file_name4 = "vector_columns_major.root"
-    file_name5 = "vector_columns_minor.root"
-    tree_name = "mytree"
-
+class TestDataLoaderRandomOversampling:
     # default constants
     n_train_batch = 4
     n_val_batch = 3
     train_remainder = 1
 
-    # Helpers
-    def define_rdf_even(self, num_of_entries=20):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(double) b1*b1")
+    @pytest.fixture
+    def df_major(self):
+        """The majority class, 10 entries: b1 = 0, 2, ..., 18 and b2 = b1 * b1."""
+        return from_files(squares(10, "(int) 2 * rdfentry_"))
 
-        return df
+    @pytest.fixture
+    def df_minor(self):
+        """The minority class, 3 entries: b1 = 1, 3, ..., 5 and b2 = b1 * b1."""
+        return from_files(squares(3, "(int) 2 * rdfentry_ + 1"))
 
-    def define_rdf_odd(self, num_of_entries=5):
-        df = ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(double) b1*b1")
+    @pytest.fixture
+    def weighted_df_major(self):
+        """The majority class, 10 entries: b1 = 0, 2, ..., 18, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+        return from_files(weighted(10, "(int) 2 * rdfentry_"))
 
-        return df
+    @pytest.fixture
+    def weighted_df_minor(self):
+        """The minority class, 3 entries: b1 = 1, 3, ..., 5, b2 = b1 * b1, b3 = b1 * 10 and b4 = b3 * 10."""
+        return from_files(weighted(3, "(int) 2 * rdfentry_ + 1"))
 
-    def create_file_major(self, num_of_entries=10):
-        self.define_rdf_even(num_of_entries).Snapshot(self.tree_name, self.file_name1)
+    def test01_each_element_is_generated_unshuffled(self, df_major, df_minor):
+        major_entries_before = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
+        minor_entries_before = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
 
-    def create_file_minor(self, num_of_entries=3):
-        self.define_rdf_odd(num_of_entries).Snapshot(self.tree_name, self.file_name2)
-
-    def create_extra_entry_file(self):
-        (
-            ROOT.RDataFrame(1)
-            .Define("b1", "(int) 2 * (rdfentry_ + 3) + 1")
-            .Define("b2", "(double) b1 * b1")
-            .Snapshot(self.tree_name, self.file_name3)
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="oversampling",
+            sampling_ratio=0.5,
         )
 
-    def create_vector_file_major(self, num_of_entries=10):
-        (
-            ROOT.RDataFrame(10)
-            .Define("b1", "(int) rdfentry_")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name4)
-        )
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-    def create_vector_file_minor(self, num_of_entries=3):
-        (
-            ROOT.RDataFrame(3)
-            .Define("b1", "(int) rdfentry_ + 10")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
-            .Define("v2", "ROOT::VecOps::RVec<int>{ b1 * 100,  b1 * 1000}")
-            .Snapshot(self.tree_name, self.file_name5)
-        )
+        results_x_train = [1.0, 3.0, 1.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0]
+        results_x_val = [5.0, 5.0, 12.0, 14.0, 16.0, 18.0]
+        results_y_train = [1.0, 9.0, 1.0, 0.0, 4.0, 16.0, 36.0, 64.0, 100.0]
+        results_y_val = [25.0, 25.0, 144.0, 196.0, 256.0, 324.0]
 
-    def teardown_file(self, file):
-        os.remove(file)
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
 
-    def test01_each_element_is_generated_unshuffled(self):
-        self.create_file_major()
-        self.create_file_minor()
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
 
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
+        for _ in range(self.n_val_batch):
+            x, y = next(val_iter)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
 
-            major_entries_before = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
-            minor_entries_before = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major, df_minor],
-                batch_size=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="oversampling",
-                sampling_ratio=0.5,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [1.0, 3.0, 1.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0]
-            results_x_val = [5.0, 5.0, 12.0, 14.0, 16.0, 18.0]
-            results_y_train = [1.0, 9.0, 1.0, 0.0, 4.0, 16.0, 36.0, 64.0, 100.0]
-            results_y_val = [25.0, 25.0, 144.0, 196.0, 256.0, 324.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
+        for _ in range(self.n_train_batch):
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        x, y = next(train_iter)
+        assert x.shape == (self.train_remainder, 1)
+        assert y.shape == (self.train_remainder, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            num_major_train = sum(np.array(flat_x_train) % 2 == 0)
-            num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
-            num_major_val = sum(np.array(flat_x_val) % 2 == 0)
-            num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
 
-            # check if there are no duplicate entries (oversampling)
-            self.assertLess(len(set(flat_x_train)), len(flat_x_train))
-            self.assertLess(len(set(flat_x_val)), len(flat_x_val))
-            self.assertLess(len(set(flat_y_train)), len(flat_y_train))
-            self.assertLess(len(set(flat_y_val)), len(flat_y_val))
+        num_major_train = sum(np.array(flat_x_train) % 2 == 0)
+        num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
+        num_major_val = sum(np.array(flat_x_val) % 2 == 0)
+        num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
-            # check if correct sampling_ratio (0.5 = minor/major)
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+        # check if there are no duplicate entries (oversampling)
+        assert len(set(flat_x_train)) < len(flat_x_train)
+        assert len(set(flat_x_val)) < len(flat_x_val)
+        assert len(set(flat_y_train)) < len(flat_y_train)
+        assert len(set(flat_y_val)) < len(flat_y_val)
 
-            major_entries_after = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
-            minor_entries_after = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
+        # check if correct sampling_ratio (0.5 = minor/major)
+        assert num_major_train == 6
+        assert num_minor_train == 3
+        assert num_major_val == 4
+        assert num_minor_val == 2
 
-            # check if the dataframes are correctly reset
-            self.assertTrue(np.array_equal(major_entries_before, major_entries_after))
-            self.assertTrue(np.array_equal(minor_entries_before, minor_entries_after))
+        major_entries_after = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
+        minor_entries_after = df_minor.AsNumpy(["rdfentry_"])["rdfentry_"]
 
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
+        # check if the dataframes are correctly reset
+        assert np.array_equal(major_entries_before, major_entries_after)
+        assert np.array_equal(minor_entries_before, minor_entries_after)
 
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
+    def test02_each_element_is_generated_shuffled(self, df_major, df_minor):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="oversampling",
+            sampling_ratio=0.5,
+        )
 
-    def test02_each_element_is_generated_shuffled(self):
-        self.create_file_major()
-        self.create_file_minor()
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major, df_minor],
-                batch_size=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="oversampling",
-                sampling_ratio=0.5,
-            )
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        for _ in range(self.n_val_batch):
+            x, y = next(val_iter)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
 
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
+        for _ in range(self.n_train_batch):
             x, y = next(train_iter)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        x, y = next(train_iter)
+        assert x.shape == (self.train_remainder, 1)
+        assert y.shape == (self.train_remainder, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
 
-            # check if there are no duplicate entries (oversampling)
-            self.assertLess(len(set(flat_x_train)), len(flat_x_train))
-            self.assertLess(len(set(flat_x_val)), len(flat_x_val))
-            self.assertLess(len(set(flat_y_train)), len(flat_y_train))
-            self.assertLess(len(set(flat_y_val)), len(flat_y_val))
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            # check if correct sampling_ratio (0.5 = minor/major)
-            self.assertEqual(len(flat_x_train), 9)
-            self.assertEqual(len(flat_x_val), 6)
-            self.assertEqual(len(flat_y_train), 9)
-            self.assertEqual(len(flat_y_val), 6)
+        # check if there are no duplicate entries (oversampling)
+        assert len(set(flat_x_train)) < len(flat_x_train)
+        assert len(set(flat_x_val)) < len(flat_x_val)
+        assert len(set(flat_y_train)) < len(flat_y_train)
+        assert len(set(flat_y_val)) < len(flat_y_val)
 
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
+        # check if correct sampling_ratio (0.5 = minor/major)
+        assert len(flat_x_train) == 9
+        assert len(flat_x_val) == 6
+        assert len(flat_y_train) == 9
+        assert len(flat_y_val) == 6
 
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
+    def test04_dropping_remainder(self, df_major, df_minor):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="oversampling",
+            sampling_ratio=0.5,
+        )
 
-    def test04_dropping_remainder(self):
-        self.create_file_major()
-        self.create_file_minor()
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major, df_minor],
-                batch_size=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="oversampling",
-                sampling_ratio=0.5,
-            )
+        collected_x = []
+        collected_y = []
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        for _ in range(self.n_val_batch):
+            x, y = next(val_iter)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
+            collected_x.append(x)
+            collected_y.append(y)
 
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
+        for _ in range(self.n_train_batch):
+            x, y = next(train_iter)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
+            collected_x.append(x)
+            collected_y.append(y)
 
-            collected_x = []
-            collected_y = []
+        assert len(collected_x) == 7
+        assert len(collected_y) == 7
 
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x.append(x)
-                collected_y.append(y)
+    def test05_more_than_one_file(self, df_major):
+        df_minor = from_files(squares(3, "(int) 2 * rdfentry_ + 1"), squares(1, "(int) 2 * (rdfentry_ + 3) + 1"))
 
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x.append(x)
-                collected_y.append(y)
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="oversampling",
+            sampling_ratio=0.5,
+        )
 
-            self.assertEqual(len(collected_x), 7)
-            self.assertEqual(len(collected_y), 7)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
+        results_x_train = [1.0, 3.0, 5.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0]
+        results_x_val = [7.0, 7.0, 12.0, 14.0, 16.0, 18.0]
+        results_y_train = [1.0, 9.0, 25.0, 0.0, 4.0, 16.0, 36.0, 64.0, 100.0]
+        results_y_val = [49.0, 49.0, 144.0, 196.0, 256.0, 324.0]
 
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
 
-    def test05_more_than_one_file(self):
-        self.create_file_major()
-        self.create_file_minor()
-        self.create_extra_entry_file()
+        iter_train = iter(gen_train.as_numpy())
+        iter_val = iter(gen_validation.as_numpy())
 
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df_minor = ROOT.RDataFrame(self.tree_name, [self.file_name2, self.file_name3])
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major, df_minor],
-                batch_size=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="oversampling",
-                sampling_ratio=0.5,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [1.0, 3.0, 5.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0]
-            results_x_val = [7.0, 7.0, 12.0, 14.0, 16.0, 18.0]
-            results_y_train = [1.0, 9.0, 25.0, 0.0, 4.0, 16.0, 36.0, 64.0, 100.0]
-            results_y_val = [49.0, 49.0, 144.0, 196.0, 256.0, 324.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-
-            iter_train = iter(gen_train.as_numpy())
-            iter_val = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_train_batch):
-                x, y = next(iter_train)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(iter_val)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-
+        for _ in range(self.n_train_batch):
             x, y = next(iter_train)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        for _ in range(self.n_val_batch):
+            x, y = next(iter_val)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+        x, y = next(iter_train)
+        assert x.shape == (self.train_remainder, 1)
+        assert y.shape == (self.train_remainder, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
 
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            self.teardown_file(self.file_name3)
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            self.teardown_file(self.file_name3)
-            raise
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
 
-    def test06_multiple_target_columns(self):
-        file_name1 = "multiple_target_columns_major.root"
-        file_name2 = "multiple_target_columns_minor.root"
+    def test06_multiple_target_columns(self, weighted_df_major, weighted_df_minor):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [weighted_df_minor, weighted_df_major],
+            batch_size=2,
+            target=["b2", "b4"],
+            weights="b3",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="oversampling",
+            sampling_ratio=0.5,
+        )
 
-        ROOT.RDataFrame(10).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(3).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-        try:
-            df_major = ROOT.RDataFrame("myTree", file_name1)
-            df_minor = ROOT.RDataFrame("myTree", file_name2)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_minor, df_major],
-                batch_size=2,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="oversampling",
-                sampling_ratio=0.5,
-            )
+        results_x_train = [1.0, 3.0, 1.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0]
+        results_x_val = [5.0, 5.0, 12.0, 14.0, 16.0, 18.0]
+        results_y_train = [
+            1.0,
+            100.0,
+            9.0,
+            300.0,
+            1.0,
+            100.0,
+            0.0,
+            0.0,
+            4.0,
+            200.0,
+            16.0,
+            400.0,
+            36.0,
+            600.0,
+            64.0,
+            800.0,
+            100.0,
+            1000.0,
+        ]
+        results_y_val = [25.0, 500.0, 25.0, 500.0, 144.0, 1200.0, 196.0, 1400.0, 256.0, 1600.0, 324.0, 1800.0]
+        results_z_train = [10.0, 30.0, 10.0, 0.0, 20.0, 40.0, 60.0, 80.0, 100.0]
+        results_z_val = [50.0, 50.0, 120.0, 140.0, 160.0, 180.0]
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+        collected_z_train = []
+        collected_z_val = []
 
-            results_x_train = [1.0, 3.0, 1.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0]
-            results_x_val = [5.0, 5.0, 12.0, 14.0, 16.0, 18.0]
-            results_y_train = [
-                1.0,
-                100.0,
-                9.0,
-                300.0,
-                1.0,
-                100.0,
-                0.0,
-                0.0,
-                4.0,
-                200.0,
-                16.0,
-                400.0,
-                36.0,
-                600.0,
-                64.0,
-                800.0,
-                100.0,
-                1000.0,
-            ]
-            results_y_val = [25.0, 500.0, 25.0, 500.0, 144.0, 1200.0, 196.0, 1400.0, 256.0, 1600.0, 324.0, 1800.0]
-            results_z_train = [10.0, 30.0, 10.0, 0.0, 20.0, 40.0, 60.0, 80.0, 100.0]
-            results_z_val = [50.0, 50.0, 120.0, 140.0, 160.0, 180.0]
+        iter_train = iter(gen_train.as_numpy())
+        iter_val = iter(gen_validation.as_numpy())
 
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
-
-            iter_train = iter(gen_train.as_numpy())
-            iter_val = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-                collected_z_train.append(z.tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-                collected_z_val.append(z.tolist())
-
+        for _ in range(self.n_train_batch):
             x, y, z = next(iter_train)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 2))
-            self.assertTrue(z.shape == (self.train_remainder, 1))
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 2)
+            assert z.shape == (2, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
             collected_z_train.append(z.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+        for _ in range(self.n_val_batch):
+            x, y, z = next(iter_val)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 2)
+            assert z.shape == (2, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+            collected_z_val.append(z.tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+        x, y, z = next(iter_train)
+        assert x.shape == (self.train_remainder, 1)
+        assert y.shape == (self.train_remainder, 2)
+        assert z.shape == (self.train_remainder, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
+        collected_z_train.append(z.tolist())
 
-            num_major_train = sum(np.array(flat_x_train) % 2 == 0)
-            num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
-            num_major_val = sum(np.array(flat_x_val) % 2 == 0)
-            num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+        flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+        assert results_z_train == flat_z_train
+        assert results_z_val == flat_z_val
 
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
+        num_major_train = sum(np.array(flat_x_train) % 2 == 0)
+        num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
+        num_major_val = sum(np.array(flat_x_val) % 2 == 0)
+        num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
+        assert num_major_train == 6
+        assert num_minor_train == 3
+        assert num_major_val == 4
+        assert num_minor_val == 2
 
     def test07_multiple_input_columns(self):
-        file_name1 = "multiple_target_columns_major.root"
-        file_name2 = "multiple_target_columns_minor.root"
+        df_major = from_files(
+            ROOT
+            .RDataFrame(10)
+            .Define("b1", "(int) 2 * rdfentry_")
+            .Define("b2", "(int) b1 * b1")
+            .Define("b3", "(double) b1 * 10")
+        )
+        df_minor = from_files(
+            ROOT
+            .RDataFrame(3)
+            .Define("b1", "(int) 2 * rdfentry_ + 1")
+            .Define("b2", "(int) b1 * b1")
+            .Define("b3", "(double) b1 * 10")
+        )
 
-        ROOT.RDataFrame(10).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Snapshot("myTree", file_name1)
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="oversampling",
+            sampling_ratio=0.5,
+        )
 
-        ROOT.RDataFrame(3).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Snapshot("myTree", file_name2)
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-        try:
-            df_major = ROOT.RDataFrame("myTree", file_name1)
-            df_minor = ROOT.RDataFrame("myTree", file_name2)
+        results_x_train = [
+            1.0,
+            10.0,
+            3.0,
+            30.0,
+            1.0,
+            10.0,
+            0.0,
+            0.0,
+            2.0,
+            20.0,
+            4.0,
+            40.0,
+            6.0,
+            60.0,
+            8.0,
+            80.0,
+            10.0,
+            100.0,
+        ]
+        results_x_val = [5.0, 50.0, 5.0, 50.0, 12.0, 120.0, 14.0, 140.0, 16.0, 160.0, 18.0, 180.0]
+        results_y_train = [1.0, 9.0, 1.0, 0.0, 4.0, 16.0, 36.0, 64.0, 100.0]
+        results_y_val = [25.0, 25.0, 144.0, 196.0, 256.0, 324.0]
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major, df_minor],
-                batch_size=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="oversampling",
-                sampling_ratio=0.5,
-            )
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        iter_train = iter(gen_train.as_numpy())
+        iter_val = iter(gen_validation.as_numpy())
 
-            results_x_train = [
-                1.0,
-                10.0,
-                3.0,
-                30.0,
-                1.0,
-                10.0,
-                0.0,
-                0.0,
-                2.0,
-                20.0,
-                4.0,
-                40.0,
-                6.0,
-                60.0,
-                8.0,
-                80.0,
-                10.0,
-                100.0,
-            ]
-            results_x_val = [5.0, 50.0, 5.0, 50.0, 12.0, 120.0, 14.0, 140.0, 16.0, 160.0, 18.0, 180.0]
-            results_y_train = [1.0, 9.0, 1.0, 0.0, 4.0, 16.0, 36.0, 64.0, 100.0]
-            results_y_val = [25.0, 25.0, 144.0, 196.0, 256.0, 324.0]
+        for _ in range(self.n_train_batch):
+            x, y = next(iter_train)
+            assert x.shape == (2, 2)
+            assert y.shape == (2, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
 
+        for _ in range(self.n_val_batch):
+            x, y = next(iter_val)
+            assert x.shape == (2, 2)
+            assert y.shape == (2, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+
+        x, y = next(iter_train)
+        assert x.shape == (self.train_remainder, 2)
+        assert y.shape == (self.train_remainder, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+
+    def test08_filtered(self, df_major):
+        minor = squares(3, "(int) 2 * rdfentry_ + 1")
+        df_minor_duplicate = from_files(minor, minor, minor)
+
+        df_minor_filter = df_minor_duplicate.Filter("rdfentry_ < 3", "name")
+
+        major_entries_before = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
+        minor_filter_entries_before = df_minor_filter.AsNumpy(["rdfentry_"])["rdfentry_"]
+
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor_filter],
+            batch_size=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="oversampling",
+            sampling_ratio=0.5,
+        )
+
+        gen_train, gen_validation = dl.train_test_split(0.4)
+
+        results_x_train = [1.0, 3.0, 1.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0]
+        results_x_val = [5.0, 5.0, 12.0, 14.0, 16.0, 18.0]
+        results_y_train = [1.0, 9.0, 1.0, 0.0, 4.0, 16.0, 36.0, 64.0, 100.0]
+        results_y_val = [25.0, 25.0, 144.0, 196.0, 256.0, 324.0]
+
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
+
+        for _ in range(self.n_train_batch):
+            x, y = next(train_iter)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+
+        for _ in range(self.n_val_batch):
+            x, y = next(val_iter)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+
+        x, y = next(train_iter)
+        assert x.shape == (self.train_remainder, 1)
+        assert y.shape == (self.train_remainder, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+
+        num_major_train = sum(np.array(flat_x_train) % 2 == 0)
+        num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
+        num_major_val = sum(np.array(flat_x_val) % 2 == 0)
+        num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
+
+        assert num_major_train == 6
+        assert num_minor_train == 3
+        assert num_major_val == 4
+        assert num_minor_val == 2
+
+        major_entries_after = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
+        minor_filter_entries_after = df_minor_filter.AsNumpy(["rdfentry_"])["rdfentry_"]
+
+        # check if the dataframes are correctly reset
+        assert np.array_equal(major_entries_before, major_entries_after)
+        assert np.array_equal(minor_filter_entries_before, minor_filter_entries_after)
+
+    def test10_two_epochs_shuffled(self, df_major, df_minor):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="oversampling",
+            sampling_ratio=0.5,
+        )
+
+        gen_train, gen_validation = dl.train_test_split(0.4)
+
+        both_epochs_collected_x_val = []
+        both_epochs_collected_y_val = []
+
+        for _ in range(2):
             collected_x_train = []
             collected_x_val = []
             collected_y_train = []
@@ -7014,21 +4173,21 @@ class DataLoaderRandomOversampling(unittest.TestCase):
 
             for _ in range(self.n_train_batch):
                 x, y = next(iter_train)
-                self.assertTrue(x.shape == (2, 2))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
                 x, y = next(iter_val)
-                self.assertTrue(x.shape == (2, 2))
-                self.assertTrue(y.shape == (2, 1))
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
 
             x, y = next(iter_train)
-            self.assertTrue(x.shape == (self.train_remainder, 2))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            assert x.shape == (self.train_remainder, 1)
+            assert y.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
@@ -7037,479 +4196,254 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert len(flat_x_train) == 9
+            assert len(flat_x_val) == 6
+            assert len(flat_y_train) == 9
+            assert len(flat_y_val) == 6
 
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
+            both_epochs_collected_x_val.append(collected_x_val)
+            both_epochs_collected_y_val.append(collected_y_val)
 
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
+        assert both_epochs_collected_x_val[0] == both_epochs_collected_x_val[1]
+        assert both_epochs_collected_y_val[0] == both_epochs_collected_y_val[1]
 
-    def test08_filtered(self):
-        self.create_file_major()
-        self.create_file_minor()
+    def test11_number_of_training_and_validation_batches_remainder(self, df_major, df_minor):
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b2",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="oversampling",
+            sampling_ratio=0.5,
+        )
 
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df_minor_duplicate = ROOT.RDataFrame(self.tree_name, [self.file_name2, self.file_name2, self.file_name2])
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            df_minor_filter = df_minor_duplicate.Filter("rdfentry_ < 3", "name")
+        number_of_training_batches = 0
+        number_of_validation_batches = 0
 
-            major_entries_before = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
-            minor_filter_entries_before = df_minor_filter.AsNumpy(["rdfentry_"])["rdfentry_"]
+        for _ in gen_train.as_numpy():
+            number_of_training_batches += 1
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major, df_minor_filter],
-                batch_size=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="oversampling",
-                sampling_ratio=0.5,
-            )
+        for _ in gen_validation.as_numpy():
+            number_of_validation_batches += 1
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        assert gen_train.num_batches == number_of_training_batches
+        assert gen_validation.num_batches == number_of_validation_batches
+        assert gen_train.last_batch_no_of_rows == 1
+        assert gen_validation.last_batch_no_of_rows == 0
 
-            results_x_train = [1.0, 3.0, 1.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0]
-            results_x_val = [5.0, 5.0, 12.0, 14.0, 16.0, 18.0]
-            results_y_train = [1.0, 9.0, 1.0, 0.0, 4.0, 16.0, 36.0, 64.0, 100.0]
-            results_y_val = [25.0, 25.0, 144.0, 196.0, 256.0, 324.0]
+    def test12_PyTorch(self, weighted_df_major, weighted_df_minor):
+        pytest.importorskip("torch")
 
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [weighted_df_major, weighted_df_minor],
+            batch_size=2,
+            target=["b2", "b4"],
+            weights="b3",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="oversampling",
+            sampling_ratio=0.5,
+        )
 
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
+        results_x_train = [1.0, 3.0, 1.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0]
+        results_x_val = [5.0, 5.0, 12.0, 14.0, 16.0, 18.0]
+        results_y_train = [
+            1.0,
+            100.0,
+            9.0,
+            300.0,
+            1.0,
+            100.0,
+            0.0,
+            0.0,
+            4.0,
+            200.0,
+            16.0,
+            400.0,
+            36.0,
+            600.0,
+            64.0,
+            800.0,
+            100.0,
+            1000.0,
+        ]
+        results_y_val = [25.0, 500.0, 25.0, 500.0, 144.0, 1200.0, 196.0, 1400.0, 256.0, 1600.0, 324.0, 1800.0]
+        results_z_train = [10.0, 30.0, 10.0, 0.0, 20.0, 40.0, 60.0, 80.0, 100.0]
+        results_z_val = [50.0, 50.0, 120.0, 140.0, 160.0, 180.0]
 
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+        collected_z_train = []
+        collected_z_val = []
 
-            x, y = next(train_iter)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
-            collected_x_train.append(x.tolist())
-            collected_y_train.append(y.tolist())
+        iter_train = iter(gen_train.as_torch())
+        iter_val = iter(gen_validation.as_torch(device="cpu"))
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-
-            num_major_train = sum(np.array(flat_x_train) % 2 == 0)
-            num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
-            num_major_val = sum(np.array(flat_x_val) % 2 == 0)
-            num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
-
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
-
-            major_entries_after = df_major.AsNumpy(["rdfentry_"])["rdfentry_"]
-            minor_filter_entries_after = df_minor_filter.AsNumpy(["rdfentry_"])["rdfentry_"]
-
-            # check if the dataframes are correctly reset
-            self.assertTrue(np.array_equal(major_entries_before, major_entries_after))
-            self.assertTrue(np.array_equal(minor_filter_entries_before, minor_filter_entries_after))
-
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
-
-    def test10_two_epochs_shuffled(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major, df_minor],
-                batch_size=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="oversampling",
-                sampling_ratio=0.5,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            both_epochs_collected_x_val = []
-            both_epochs_collected_y_val = []
-
-            for _ in range(2):
-                collected_x_train = []
-                collected_x_val = []
-                collected_y_train = []
-                collected_y_val = []
-
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
-
-                for _ in range(self.n_train_batch):
-                    x, y = next(iter_train)
-                    self.assertTrue(x.shape == (2, 1))
-                    self.assertTrue(y.shape == (2, 1))
-                    collected_x_train.append(x.tolist())
-                    collected_y_train.append(y.tolist())
-
-                for _ in range(self.n_val_batch):
-                    x, y = next(iter_val)
-                    self.assertTrue(x.shape == (2, 1))
-                    self.assertTrue(y.shape == (2, 1))
-                    collected_x_val.append(x.tolist())
-                    collected_y_val.append(y.tolist())
-
-                x, y = next(iter_train)
-                self.assertTrue(x.shape == (self.train_remainder, 1))
-                self.assertTrue(y.shape == (self.train_remainder, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-                flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-                flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-                flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-                flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-                self.assertEqual(len(flat_x_train), 9)
-                self.assertEqual(len(flat_x_val), 6)
-                self.assertEqual(len(flat_y_train), 9)
-                self.assertEqual(len(flat_y_val), 6)
-
-                both_epochs_collected_x_val.append(collected_x_val)
-                both_epochs_collected_y_val.append(collected_y_val)
-
-            self.assertEqual(both_epochs_collected_x_val[0], both_epochs_collected_x_val[1])
-            self.assertEqual(both_epochs_collected_y_val[0], both_epochs_collected_y_val[1])
-        finally:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-    def test11_number_of_training_and_validation_batches_remainder(self):
-        self.create_file_major()
-        self.create_file_minor()
-
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major, df_minor],
-                batch_size=2,
-                target="b2",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="oversampling",
-                sampling_ratio=0.5,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            number_of_training_batches = 0
-            number_of_validation_batches = 0
-
-            for _ in gen_train.as_numpy():
-                number_of_training_batches += 1
-
-            for _ in gen_validation.as_numpy():
-                number_of_validation_batches += 1
-
-            self.assertEqual(gen_train.num_batches, number_of_training_batches)
-            self.assertEqual(gen_validation.num_batches, number_of_validation_batches)
-            self.assertEqual(gen_train.last_batch_no_of_rows, 1)
-            self.assertEqual(gen_validation.last_batch_no_of_rows, 0)
-
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-        except:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-            raise
-
-    def test12_PyTorch(self):
-        file_name1 = "multiple_target_columns_major.root"
-        file_name2 = "multiple_target_columns_minor.root"
-
-        ROOT.RDataFrame(10).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(3).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-        try:
-            df_minor = ROOT.RDataFrame("myTree", file_name1)
-            df_major = ROOT.RDataFrame("myTree", file_name2)
-
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_minor, df_major],
-                batch_size=2,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="oversampling",
-                sampling_ratio=0.5,
-            )
-
-            gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [1.0, 3.0, 1.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0]
-            results_x_val = [5.0, 5.0, 12.0, 14.0, 16.0, 18.0]
-            results_y_train = [
-                1.0,
-                100.0,
-                9.0,
-                300.0,
-                1.0,
-                100.0,
-                0.0,
-                0.0,
-                4.0,
-                200.0,
-                16.0,
-                400.0,
-                36.0,
-                600.0,
-                64.0,
-                800.0,
-                100.0,
-                1000.0,
-            ]
-            results_y_val = [25.0, 500.0, 25.0, 500.0, 144.0, 1200.0, 196.0, 1400.0, 256.0, 1600.0, 324.0, 1800.0]
-            results_z_train = [10.0, 30.0, 10.0, 0.0, 20.0, 40.0, 60.0, 80.0, 100.0]
-            results_z_val = [50.0, 50.0, 120.0, 140.0, 160.0, 180.0]
-
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
-
-            iter_train = iter(gen_train.as_torch())
-            iter_val = iter(gen_validation.as_torch(device="cpu"))
-
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-                collected_z_train.append(z.tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
-                collected_z_val.append(z.tolist())
-
+        for _ in range(self.n_train_batch):
             x, y, z = next(iter_train)
-            self.assertTrue(x.shape == (self.train_remainder, 1))
-            self.assertTrue(y.shape == (self.train_remainder, 2))
-            self.assertTrue(z.shape == (self.train_remainder, 1))
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 2)
+            assert z.shape == (2, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
             collected_z_train.append(z.tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+        for _ in range(self.n_val_batch):
+            x, y, z = next(iter_val)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 2)
+            assert z.shape == (2, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+            collected_z_val.append(z.tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+        x, y, z = next(iter_train)
+        assert x.shape == (self.train_remainder, 1)
+        assert y.shape == (self.train_remainder, 2)
+        assert z.shape == (self.train_remainder, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
+        collected_z_train.append(z.tolist())
 
-            num_major_train = sum(np.array(flat_x_train) % 2 == 0)
-            num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
-            num_major_val = sum(np.array(flat_x_val) % 2 == 0)
-            num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+        flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+        assert results_z_train == flat_z_train
+        assert results_z_val == flat_z_val
 
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
+        num_major_train = sum(np.array(flat_x_train) % 2 == 0)
+        num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
+        num_major_val = sum(np.array(flat_x_val) % 2 == 0)
+        num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
+        assert num_major_train == 6
+        assert num_minor_train == 3
+        assert num_major_val == 4
+        assert num_minor_val == 2
 
-    def test13_TensorFlow(self):
-        file_name1 = "multiple_target_columns_major.root"
-        file_name2 = "multiple_target_columns_minor.root"
+    def test13_TensorFlow(self, weighted_df_major, weighted_df_minor):
+        pytest.importorskip("tensorflow")
 
-        ROOT.RDataFrame(10).Define("b1", "(int) 2 * rdfentry_").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name1)
-        ROOT.RDataFrame(3).Define("b1", "(int) 2 * rdfentry_ + 1").Define("b2", "(int) b1 * b1").Define(
-            "b3", "(double) b1 * 10"
-        ).Define("b4", "(double) b3 * 10").Snapshot("myTree", file_name2)
-        try:
-            df_minor = ROOT.RDataFrame("myTree", file_name1)
-            df_major = ROOT.RDataFrame("myTree", file_name2)
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [weighted_df_major, weighted_df_minor],
+            batch_size=2,
+            target=["b2", "b4"],
+            weights="b3",
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="oversampling",
+            sampling_ratio=0.5,
+        )
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_minor, df_major],
-                batch_size=2,
-                target=["b2", "b4"],
-                weights="b3",
-                shuffle=False,
-                drop_remainder=False,
-                load_eager=True,
-                sampling_type="oversampling",
-                sampling_ratio=0.5,
-            )
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-            gen_train, gen_validation = dl.train_test_split(0.4)
+        results_x_train = [1.0, 3.0, 1.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 0.0]
+        results_x_val = [5.0, 5.0, 12.0, 14.0, 16.0, 18.0]
+        results_y_train = [
+            1.0,
+            100.0,
+            9.0,
+            300.0,
+            1.0,
+            100.0,
+            0.0,
+            0.0,
+            4.0,
+            200.0,
+            16.0,
+            400.0,
+            36.0,
+            600.0,
+            64.0,
+            800.0,
+            100.0,
+            1000.0,
+            0.0,
+            0.0,
+        ]
+        results_y_val = [25.0, 500.0, 25.0, 500.0, 144.0, 1200.0, 196.0, 1400.0, 256.0, 1600.0, 324.0, 1800.0]
+        results_z_train = [10.0, 30.0, 10.0, 0.0, 20.0, 40.0, 60.0, 80.0, 100.0, 0.0]
+        results_z_val = [50.0, 50.0, 120.0, 140.0, 160.0, 180.0]
 
-            results_x_train = [1.0, 3.0, 1.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 0.0]
-            results_x_val = [5.0, 5.0, 12.0, 14.0, 16.0, 18.0]
-            results_y_train = [
-                1.0,
-                100.0,
-                9.0,
-                300.0,
-                1.0,
-                100.0,
-                0.0,
-                0.0,
-                4.0,
-                200.0,
-                16.0,
-                400.0,
-                36.0,
-                600.0,
-                64.0,
-                800.0,
-                100.0,
-                1000.0,
-                0.0,
-                0.0,
-            ]
-            results_y_val = [25.0, 500.0, 25.0, 500.0, 144.0, 1200.0, 196.0, 1400.0, 256.0, 1600.0, 324.0, 1800.0]
-            results_z_train = [10.0, 30.0, 10.0, 0.0, 20.0, 40.0, 60.0, 80.0, 100.0, 0.0]
-            results_z_val = [50.0, 50.0, 120.0, 140.0, 160.0, 180.0]
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+        collected_z_train = []
+        collected_z_val = []
 
-            collected_x_train = []
-            collected_x_val = []
-            collected_y_train = []
-            collected_y_val = []
-            collected_z_train = []
-            collected_z_val = []
+        iter_train = iter(gen_train.as_tensorflow())
+        iter_val = iter(gen_validation.as_tensorflow())
 
-            iter_train = iter(gen_train.as_tensorflow())
-            iter_val = iter(gen_validation.as_tensorflow())
-
-            for _ in range(self.n_train_batch):
-                x, y, z = next(iter_train)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
-                collected_x_train.append(x.numpy().tolist())
-                collected_y_train.append(y.numpy().tolist())
-                collected_z_train.append(z.numpy().tolist())
-
-            for _ in range(self.n_val_batch):
-                x, y, z = next(iter_val)
-                self.assertTrue(x.shape == (2, 1))
-                self.assertTrue(y.shape == (2, 2))
-                self.assertTrue(z.shape == (2, 1))
-                collected_x_val.append(x.numpy().tolist())
-                collected_y_val.append(y.numpy().tolist())
-                collected_z_val.append(z.numpy().tolist())
-
+        for _ in range(self.n_train_batch):
             x, y, z = next(iter_train)
-            self.assertTrue(x.shape == (2, 1))
-            self.assertTrue(y.shape == (2, 2))
-            self.assertTrue(z.shape == (2, 1))
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 2)
+            assert z.shape == (2, 1)
             collected_x_train.append(x.numpy().tolist())
             collected_y_train.append(y.numpy().tolist())
             collected_z_train.append(z.numpy().tolist())
 
-            flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-            flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-            flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-            flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+        for _ in range(self.n_val_batch):
+            x, y, z = next(iter_val)
+            assert x.shape == (2, 1)
+            assert y.shape == (2, 2)
+            assert z.shape == (2, 1)
+            collected_x_val.append(x.numpy().tolist())
+            collected_y_val.append(y.numpy().tolist())
+            collected_z_val.append(z.numpy().tolist())
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
-            self.assertEqual(results_z_train, flat_z_train)
-            self.assertEqual(results_z_val, flat_z_val)
+        x, y, z = next(iter_train)
+        assert x.shape == (2, 1)
+        assert y.shape == (2, 2)
+        assert z.shape == (2, 1)
+        collected_x_train.append(x.numpy().tolist())
+        collected_y_train.append(y.numpy().tolist())
+        collected_z_train.append(z.numpy().tolist())
 
-            num_major_train = sum(np.array(flat_x_train) % 2 == 0)
-            num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
-            num_major_val = sum(np.array(flat_x_val) % 2 == 0)
-            num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+        flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+        flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-            self.assertEqual(num_major_train, 7)  # num_major_train = 6 + 1 padded 0 from the last batch
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+        assert results_z_train == flat_z_train
+        assert results_z_val == flat_z_val
 
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
+        num_major_train = sum(np.array(flat_x_train) % 2 == 0)
+        num_minor_train = sum(np.array(flat_x_train) % 2 != 0)
+        num_major_val = sum(np.array(flat_x_val) % 2 == 0)
+        num_minor_val = sum(np.array(flat_x_val) % 2 != 0)
 
-        except:
-            self.teardown_file(file_name1)
-            self.teardown_file(file_name2)
-            raise
+        assert num_major_train == 7  # num_major_train = 6 + 1 padded 0 from the last batch
+        assert num_minor_train == 3
+        assert num_major_val == 4
+        assert num_minor_val == 2
 
     def test14_big_data_replacement_false(self):
-        file_name1 = "big_data_major.root"
-        file_name2 = "big_data_minor.root"
-        tree_name = "myTree"
-
         entries_in_rdf_major = randrange(10000, 30000)
         entries_in_rdf_minor = randrange(8000, 9999)
         batch_size = randrange(100, 501)
@@ -7519,311 +4453,127 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             Number of major entries: {entries_in_rdf_major} \
             Number of minor entries: {entries_in_rdf_minor}"
 
-        def define_rdf_major(num_of_entries, file_name):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
-        def define_rdf_minor(num_of_entries, file_name):
-            ROOT.RDataFrame(num_of_entries).Define("b1", "(int) 2 * rdfentry_ + 1").Define(
-                "b2", "(double) rdfentry_ * 2"
-            ).Define("b3", "(int) rdfentry_ + 10192").Define("b4", "(int) -rdfentry_").Define(
-                "b5", "(double) -rdfentry_ - 10192"
-            ).Snapshot(tree_name, file_name)
-
         def test(size_of_batch, num_of_entries_major, num_of_entries_minor, sampling_ratio):
-            define_rdf_major(num_of_entries_major, file_name1)
-            define_rdf_minor(num_of_entries_minor, file_name2)
+            df1 = from_files(big_data(num_of_entries_major, "(int) 2 * rdfentry_"))
+            df2 = from_files(big_data(num_of_entries_minor, "(int) 2 * rdfentry_ + 1"))
 
-            try:
-                df1 = ROOT.RDataFrame(tree_name, file_name1)
-                df2 = ROOT.RDataFrame(tree_name, file_name2)
+            dl = ROOT.Experimental.ML.RDataLoader(
+                [df1, df2],
+                batch_size=size_of_batch,
+                target=["b3", "b5"],
+                weights="b1",
+                shuffle=False,
+                drop_remainder=False,
+                load_eager=True,
+                sampling_type="oversampling",
+                sampling_ratio=sampling_ratio,
+            )
 
-                dl = ROOT.Experimental.ML.RDataLoader(
-                    [df1, df2],
-                    batch_size=size_of_batch,
-                    target=["b3", "b5"],
-                    weights="b1",
-                    shuffle=False,
-                    drop_remainder=False,
-                    load_eager=True,
-                    sampling_type="oversampling",
-                    sampling_ratio=sampling_ratio,
-                )
+            gen_train, gen_validation = dl.train_test_split(0.3)
 
-                gen_train, gen_validation = dl.train_test_split(0.3)
+            collected_z_train = []
+            collected_z_val = []
 
-                collected_z_train = []
-                collected_z_val = []
+            train_remainder = gen_train.last_batch_no_of_rows
+            val_remainder = gen_validation.last_batch_no_of_rows
 
-                train_remainder = gen_train.last_batch_no_of_rows
-                val_remainder = gen_validation.last_batch_no_of_rows
+            n_train_batches = gen_train.num_batches - 1 if train_remainder else gen_train.num_batches
+            n_val_batches = gen_validation.num_batches - 1 if val_remainder else gen_validation.num_batches
 
-                n_train_batches = gen_train.num_batches - 1 if train_remainder else gen_train.num_batches
-                n_val_batches = gen_validation.num_batches - 1 if val_remainder else gen_validation.num_batches
+            iter_train = iter(gen_train.as_numpy())
+            iter_val = iter(gen_validation.as_numpy())
 
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
+            for i in range(n_train_batches):
+                x, y, z = next(iter_train)
 
-                for i in range(n_train_batches):
-                    x, y, z = next(iter_train)
+                assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
+                collected_z_train.append(z.tolist())
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
-                    collected_z_train.append(z.tolist())
+            if train_remainder:
+                x, y, z = next(iter_train)
+                assert x.shape == (train_remainder, 2), error_message
+                assert y.shape == (train_remainder, 2), error_message
+                assert z.shape == (train_remainder, 1), error_message
+                collected_z_train.append(z.tolist())
 
-                if train_remainder:
-                    x, y, z = next(iter_train)
-                    self.assertTrue(x.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (train_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (train_remainder, 1), error_message)
-                    collected_z_train.append(z.tolist())
+            for _ in range(n_val_batches):
+                x, y, z = next(iter_val)
 
-                for _ in range(n_val_batches):
-                    x, y, z = next(iter_val)
+                assert x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}"
+                assert y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}"
+                assert z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}"
+                collected_z_val.append(z.tolist())
 
-                    self.assertTrue(x.shape == (size_of_batch, 2), error_message + f" row: {i} x shape: {x.shape}")
-                    self.assertTrue(y.shape == (size_of_batch, 2), error_message + f" row: {i} y shape: {y.shape}")
-                    self.assertTrue(z.shape == (size_of_batch, 1), error_message + f" row: {i} z shape: {z.shape}")
-                    collected_z_val.append(z.tolist())
+            if val_remainder:
+                x, y, z = next(iter_val)
+                assert x.shape == (val_remainder, 2), error_message
+                assert y.shape == (val_remainder, 2), error_message
+                assert z.shape == (val_remainder, 1), error_message
+                collected_z_val.append(z.tolist())
 
-                if val_remainder:
-                    x, y, z = next(iter_val)
-                    self.assertTrue(x.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(y.shape == (val_remainder, 2), error_message)
-                    self.assertTrue(z.shape == (val_remainder, 1), error_message)
-                    collected_z_val.append(z.tolist())
+            flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
+            flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
 
-                flat_z_train = [z for zl in collected_z_train for zs in zl for z in zs]
-                flat_z_val = [z for zl in collected_z_val for zs in zl for z in zs]
+            num_major_train = sum(np.array(flat_z_train) % 2 == 0)
+            num_minor_train = sum(np.array(flat_z_train) % 2 != 0)
+            num_major_val = sum(np.array(flat_z_val) % 2 == 0)
+            num_minor_val = sum(np.array(flat_z_val) % 2 != 0)
 
-                num_major_train = sum(np.array(flat_z_train) % 2 == 0)
-                num_minor_train = sum(np.array(flat_z_train) % 2 != 0)
-                num_major_val = sum(np.array(flat_z_val) % 2 == 0)
-                num_minor_val = sum(np.array(flat_z_val) % 2 != 0)
+            # check if there are no duplicate entries (replacement=False)
+            assert len(set(flat_z_train)) <= len(flat_z_train)
+            assert len(set(flat_z_val)) <= len(flat_z_val)
 
-                # check if there are no duplicate entries (replacement=False)
-                self.assertLessEqual(len(set(flat_z_train)), len(flat_z_train))
-                self.assertLessEqual(len(set(flat_z_val)), len(flat_z_val))
-
-                # check if the sampling stategy is correct
-                self.assertEqual(round((num_minor_train / num_major_train), 2), sampling_ratio)
-                self.assertEqual(round((num_minor_val / num_major_val), 2), sampling_ratio)
-
-                self.teardown_file(file_name1)
-                self.teardown_file(file_name2)
-            except:
-                self.teardown_file(file_name1)
-                self.teardown_file(file_name2)
-                raise
+            # check if the sampling stategy is correct
+            assert round((num_minor_train / num_major_train), 2) == sampling_ratio
+            assert round((num_minor_val / num_major_val), 2) == sampling_ratio
 
         test(batch_size, entries_in_rdf_major, entries_in_rdf_minor, sampling_ratio)
 
-    def test15_two_runs_set_seed(self):
-        self.create_file_major()
-        self.create_file_minor()
+    def test15_two_runs_set_seed(self, df_major, df_minor):
+        both_runs_collected_x_val = []
+        both_runs_collected_y_val = []
 
-        try:
-            both_runs_collected_x_val = []
-            both_runs_collected_y_val = []
-
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
-
-            for _ in range(2):
-                dl = ROOT.Experimental.ML.RDataLoader(
-                    [df_major, df_minor],
-                    batch_size=2,
-                    target="b2",
-                    shuffle=False,
-                    drop_remainder=False,
-                    load_eager=True,
-                    sampling_type="oversampling",
-                    sampling_ratio=0.5,
-                )
-
-                gen_train, gen_validation = dl.train_test_split(0.4)
-
-                collected_x_train = []
-                collected_x_val = []
-                collected_y_train = []
-                collected_y_val = []
-
-                iter_train = iter(gen_train.as_numpy())
-                iter_val = iter(gen_validation.as_numpy())
-
-                for _ in range(self.n_train_batch):
-                    x, y = next(iter_train)
-                    self.assertTrue(x.shape == (2, 1))
-                    self.assertTrue(y.shape == (2, 1))
-                    collected_x_train.append(x.tolist())
-                    collected_y_train.append(y.tolist())
-
-                for _ in range(self.n_val_batch):
-                    x, y = next(iter_val)
-                    self.assertTrue(x.shape == (2, 1))
-                    self.assertTrue(y.shape == (2, 1))
-                    collected_x_val.append(x.tolist())
-                    collected_y_val.append(y.tolist())
-
-                x, y = next(iter_train)
-                self.assertTrue(x.shape == (self.train_remainder, 1))
-                self.assertTrue(y.shape == (self.train_remainder, 1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-
-                flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
-                flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
-                flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
-                flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
-
-                self.assertEqual(len(flat_x_train), 9)
-                self.assertEqual(len(flat_x_val), 6)
-                self.assertEqual(len(flat_y_train), 9)
-                self.assertEqual(len(flat_y_val), 6)
-
-                both_runs_collected_x_val.append(collected_x_val)
-                both_runs_collected_y_val.append(collected_y_val)
-            self.assertEqual(both_runs_collected_x_val[0], both_runs_collected_x_val[1])
-            self.assertEqual(both_runs_collected_y_val[0], both_runs_collected_y_val[1])
-        finally:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
-
-    def test16_vector_padding(self):
-        self.create_vector_file_major()
-        self.create_vector_file_minor()
-
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name4)
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name5)
-            max_vec_sizes = {"v1": 3, "v2": 2}
-
+        for _ in range(2):
             dl = ROOT.Experimental.ML.RDataLoader(
                 [df_major, df_minor],
                 batch_size=2,
-                target="b1",
-                max_vec_sizes=max_vec_sizes,
+                target="b2",
                 shuffle=False,
                 drop_remainder=False,
                 load_eager=True,
                 sampling_type="oversampling",
                 sampling_ratio=0.5,
-                replacement=False,
             )
 
             gen_train, gen_validation = dl.train_test_split(0.4)
-
-            results_x_train = [
-                10.0,
-                100.0,
-                0.0,
-                1000.0,
-                10000.0,
-                11.0,
-                110.0,
-                0.0,
-                1100.0,
-                11000.0,
-                10.0,
-                100.0,
-                0.0,
-                1000.0,
-                10000.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                1.0,
-                10.0,
-                0.0,
-                100.0,
-                1000.0,
-                2.0,
-                20.0,
-                0.0,
-                200.0,
-                2000.0,
-                3.0,
-                30.0,
-                0.0,
-                300.0,
-                3000.0,
-                4.0,
-                40.0,
-                0.0,
-                400.0,
-                4000.0,
-                5.0,
-                50.0,
-                0.0,
-                500.0,
-                5000.0,
-            ]
-            results_x_val = [
-                12.0,
-                120.0,
-                0.0,
-                1200.0,
-                12000.0,
-                12.0,
-                120.0,
-                0.0,
-                1200.0,
-                12000.0,
-                6.0,
-                60.0,
-                0.0,
-                600.0,
-                6000.0,
-                7.0,
-                70.0,
-                0.0,
-                700.0,
-                7000.0,
-                8.0,
-                80.0,
-                0.0,
-                800.0,
-                8000.0,
-                9.0,
-                90.0,
-                0.0,
-                900.0,
-                9000.0,
-            ]
-            results_y_train = [10.0, 11.0, 10.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-            results_y_val = [12.0, 12.0, 6.0, 7.0, 8.0, 9.0]
 
             collected_x_train = []
             collected_x_val = []
             collected_y_train = []
             collected_y_val = []
 
-            train_iter = iter(gen_train.as_numpy())
-            val_iter = iter(gen_validation.as_numpy())
-
-            for _ in range(self.n_val_batch):
-                x, y = next(val_iter)
-                self.assertTrue(x.shape == (2, 5))
-                self.assertTrue(y.shape == (2, 1))
-                collected_x_val.append(x.tolist())
-                collected_y_val.append(y.tolist())
+            iter_train = iter(gen_train.as_numpy())
+            iter_val = iter(gen_validation.as_numpy())
 
             for _ in range(self.n_train_batch):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape == (2, 5))
-                self.assertTrue(y.shape == (2, 1))
+                x, y = next(iter_train)
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
-            x, y = next(train_iter)
-            self.assertTrue(x.shape == (self.train_remainder, 5))
-            self.assertTrue(y.shape == (self.train_remainder, 1))
+            for _ in range(self.n_val_batch):
+                x, y = next(iter_val)
+                assert x.shape == (2, 1)
+                assert y.shape == (2, 1)
+                collected_x_val.append(x.tolist())
+                collected_y_val.append(y.tolist())
+
+            x, y = next(iter_train)
+            assert x.shape == (self.train_remainder, 1)
+            assert y.shape == (self.train_remainder, 1)
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
 
@@ -7832,83 +4582,202 @@ class DataLoaderRandomOversampling(unittest.TestCase):
             flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
             flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
 
-            self.assertEqual(results_x_train, flat_x_train)
-            self.assertEqual(results_x_val, flat_x_val)
-            self.assertEqual(results_y_train, flat_y_train)
-            self.assertEqual(results_y_val, flat_y_val)
+            assert len(flat_x_train) == 9
+            assert len(flat_x_val) == 6
+            assert len(flat_y_train) == 9
+            assert len(flat_y_val) == 6
 
-            num_major_train = sum(np.array(flat_y_train) < 10)
-            num_minor_train = sum(np.array(flat_y_train) >= 10)
-            num_major_val = sum(np.array(flat_y_val) < 10)
-            num_minor_val = sum(np.array(flat_y_val) >= 10)
+            both_runs_collected_x_val.append(collected_x_val)
+            both_runs_collected_y_val.append(collected_y_val)
+        assert both_runs_collected_x_val[0] == both_runs_collected_x_val[1]
+        assert both_runs_collected_y_val[0] == both_runs_collected_y_val[1]
 
-            self.assertEqual(num_major_train, 6)
-            self.assertEqual(num_minor_train, 3)
-            self.assertEqual(num_major_val, 4)
-            self.assertEqual(num_minor_val, 2)
+    def test16_vector_padding(self):
+        df_major = from_files(vectors(10))
+        df_minor = from_files(vectors(3, "(int) rdfentry_ + 10"))
+        max_vec_sizes = {"v1": 3, "v2": 2}
 
-            self.teardown_file(self.file_name4)
-            self.teardown_file(self.file_name5)
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b1",
+            max_vec_sizes=max_vec_sizes,
+            shuffle=False,
+            drop_remainder=False,
+            load_eager=True,
+            sampling_type="oversampling",
+            sampling_ratio=0.5,
+            replacement=False,
+        )
 
-        except:
-            self.teardown_file(self.file_name4)
-            self.teardown_file(self.file_name5)
-            raise
+        gen_train, gen_validation = dl.train_test_split(0.4)
 
-    def test17_set_seed_resamples_different_entries(self):
+        results_x_train = [
+            10.0,
+            100.0,
+            0.0,
+            1000.0,
+            10000.0,
+            11.0,
+            110.0,
+            0.0,
+            1100.0,
+            11000.0,
+            10.0,
+            100.0,
+            0.0,
+            1000.0,
+            10000.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            10.0,
+            0.0,
+            100.0,
+            1000.0,
+            2.0,
+            20.0,
+            0.0,
+            200.0,
+            2000.0,
+            3.0,
+            30.0,
+            0.0,
+            300.0,
+            3000.0,
+            4.0,
+            40.0,
+            0.0,
+            400.0,
+            4000.0,
+            5.0,
+            50.0,
+            0.0,
+            500.0,
+            5000.0,
+        ]
+        results_x_val = [
+            12.0,
+            120.0,
+            0.0,
+            1200.0,
+            12000.0,
+            12.0,
+            120.0,
+            0.0,
+            1200.0,
+            12000.0,
+            6.0,
+            60.0,
+            0.0,
+            600.0,
+            6000.0,
+            7.0,
+            70.0,
+            0.0,
+            700.0,
+            7000.0,
+            8.0,
+            80.0,
+            0.0,
+            800.0,
+            8000.0,
+            9.0,
+            90.0,
+            0.0,
+            900.0,
+            9000.0,
+        ]
+        results_y_train = [10.0, 11.0, 10.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+        results_y_val = [12.0, 12.0, 6.0, 7.0, 8.0, 9.0]
+
+        collected_x_train = []
+        collected_x_val = []
+        collected_y_train = []
+        collected_y_val = []
+
+        train_iter = iter(gen_train.as_numpy())
+        val_iter = iter(gen_validation.as_numpy())
+
+        for _ in range(self.n_val_batch):
+            x, y = next(val_iter)
+            assert x.shape == (2, 5)
+            assert y.shape == (2, 1)
+            collected_x_val.append(x.tolist())
+            collected_y_val.append(y.tolist())
+
+        for _ in range(self.n_train_batch):
+            x, y = next(train_iter)
+            assert x.shape == (2, 5)
+            assert y.shape == (2, 1)
+            collected_x_train.append(x.tolist())
+            collected_y_train.append(y.tolist())
+
+        x, y = next(train_iter)
+        assert x.shape == (self.train_remainder, 5)
+        assert y.shape == (self.train_remainder, 1)
+        collected_x_train.append(x.tolist())
+        collected_y_train.append(y.tolist())
+
+        flat_x_train = [x for xl in collected_x_train for xs in xl for x in xs]
+        flat_x_val = [x for xl in collected_x_val for xs in xl for x in xs]
+        flat_y_train = [y for yl in collected_y_train for ys in yl for y in ys]
+        flat_y_val = [y for yl in collected_y_val for ys in yl for y in ys]
+
+        assert results_x_train == flat_x_train
+        assert results_x_val == flat_x_val
+        assert results_y_train == flat_y_train
+        assert results_y_val == flat_y_val
+
+        num_major_train = sum(np.array(flat_y_train) < 10)
+        num_minor_train = sum(np.array(flat_y_train) >= 10)
+        num_major_val = sum(np.array(flat_y_val) < 10)
+        num_minor_val = sum(np.array(flat_y_val) >= 10)
+
+        assert num_major_train == 6
+        assert num_minor_train == 3
+        assert num_major_val == 4
+        assert num_minor_val == 2
+
+    def test17_set_seed_resamples_different_entries(self, df_major, df_minor):
         # with a fixed seed, the resampled minority entries used to all be the same one
-        self.create_file_major()
-        self.create_file_minor()
 
-        try:
-            df_major = ROOT.RDataFrame(self.tree_name, self.file_name1)
-            df_minor = ROOT.RDataFrame(self.tree_name, self.file_name2)
+        dl = ROOT.Experimental.ML.RDataLoader(
+            [df_major, df_minor],
+            batch_size=2,
+            target="b2",
+            shuffle=True,
+            drop_remainder=False,
+            set_seed=42,
+            load_eager=True,
+            sampling_type="oversampling",
+            sampling_ratio=1.0,
+        )
 
-            dl = ROOT.Experimental.ML.RDataLoader(
-                [df_major, df_minor],
-                batch_size=2,
-                target="b2",
-                shuffle=True,
-                drop_remainder=False,
-                set_seed=42,
-                load_eager=True,
-                sampling_type="oversampling",
-                sampling_ratio=1.0,
-            )
+        x = np.concatenate([x for x, _ in dl.as_numpy()]).flatten()
+        minor = x[x % 2 == 1]
 
-            x = np.concatenate([x for x, _ in dl.as_numpy()]).flatten()
-            minor = x[x % 2 == 1]
-
-            self.assertEqual(len(minor), 10)
-            self.assertGreater(len(np.unique(minor)), 1)
-
-        finally:
-            self.teardown_file(self.file_name1)
-            self.teardown_file(self.file_name2)
+        assert len(minor) == 10
+        assert len(np.unique(minor)) > 1
 
 
-class DataLoaderSave(unittest.TestCase):
-    file_name = "dataloader_save_input.root"
-    file_name2 = "dataloader_save_input2.root"
+class TestDataLoaderSave:
     tree_name = "mytree"
 
     out_name = "dataloader_save_output.root"
     out_name2 = "dataloader_save_output2.root"
 
-    # Helpers
-    def create_file(self, file_name=None, num_of_entries=20, offset=0):
-        (
-            ROOT
-            .RDataFrame(num_of_entries)
-            .Define("b1", f"(int) rdfentry_ + {offset}")
-            .Define("b2", "b1 + 1")
-            .Snapshot(self.tree_name, file_name or self.file_name)
-        )
+    @pytest.fixture
+    def df(self):
+        """20 entries: b1 = 0, ..., 19 and b2 = b1 + 1."""
+        return from_files(self.define_rdf())
 
-    def tearDown(self):
-        for file in (self.file_name, self.file_name2, self.out_name, self.out_name2):
-            if os.path.exists(file):
-                os.remove(file)
+    # Helpers
+    def define_rdf(self, num_of_entries=20, offset=0):
+        return ROOT.RDataFrame(num_of_entries).Define("b1", f"(int) rdfentry_ + {offset}").Define("b2", "b1 + 1")
 
     def read_back(self, file_name, column):
         """Read back one column of a saved file: a 1D array, or a 2D array for a vector column."""
@@ -7919,10 +4788,8 @@ class DataLoaderSave(unittest.TestCase):
     def saved_columns(self, file_name):
         return {str(c) for c in ROOT.RDataFrame(self.tree_name, file_name).GetColumnNames()}
 
-    def test01_unshuffled(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name).Define("w", "(double) 0.5")
+    def test01_unshuffled(self, df):
+        df = df.Define("w", "(double) 0.5")
 
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
@@ -7938,16 +4805,12 @@ class DataLoaderSave(unittest.TestCase):
         dl.save(self.tree_name, self.out_name)
 
         # check all features, target and weights
-        self.assertEqual(self.saved_columns(self.out_name), {"b1", "b2", "w"})
+        assert self.saved_columns(self.out_name) == {"b1", "b2", "w"}
         np.testing.assert_array_equal(self.read_back(self.out_name, "b1"), np.arange(20))
         np.testing.assert_array_equal(self.read_back(self.out_name, "b2"), np.arange(1, 21))
         np.testing.assert_array_equal(self.read_back(self.out_name, "w"), np.full(20, 0.5))
 
-    def test02_shuffled(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name)
-
+    def test02_shuffled(self, df):
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
             batch_size=4,
@@ -7971,12 +4834,10 @@ class DataLoaderSave(unittest.TestCase):
         np.testing.assert_array_equal(np.sort(all_b1), np.arange(20))
 
         # and the entries are not written in their original order
-        self.assertTrue((train_b1 != np.sort(train_b1)).any())
+        assert (train_b1 != np.sort(train_b1)).any()
 
-    def test03_vector_columns(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name).Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
+    def test03_vector_columns(self, df):
+        df = df.Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
 
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
@@ -7992,18 +4853,16 @@ class DataLoaderSave(unittest.TestCase):
         dl.save(self.tree_name, self.out_name)
 
         # v1 is saved as a vector column, not exploded into v1_0...
-        self.assertEqual(self.saved_columns(self.out_name), {"b1", "v1"})
+        assert self.saved_columns(self.out_name) == {"b1", "v1"}
 
         v1 = self.read_back(self.out_name, "v1")
-        self.assertEqual(v1.shape, (20, 3))
+        assert v1.shape == (20, 3)
         # v1 contains 2 elements padded up to max_vec_sizes["v1"] (3) with vec_padding (42)
         np.testing.assert_array_equal(v1[3], [3.0, 30.0, 42.0])
 
     def test04_ttree_and_rntuple_agree(self):
-        self.create_file()
-
         def save_as(file_name, output_format):
-            df = ROOT.RDataFrame(self.tree_name, self.file_name).Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
+            df = from_files(self.define_rdf()).Define("v1", "ROOT::VecOps::RVec<int>{ b1,  b1 * 10}")
 
             dl = ROOT.Experimental.ML.RDataLoader(
                 df,
@@ -8026,10 +4885,8 @@ class DataLoaderSave(unittest.TestCase):
                 self.read_back(self.out_name2, column),
             )
 
-    def test05_filtered(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name).Filter("b1 % 2 == 0", "even")
+    def test05_filtered(self, df):
+        df = df.Filter("b1 % 2 == 0", "even")
 
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
@@ -8046,11 +4903,8 @@ class DataLoaderSave(unittest.TestCase):
         np.testing.assert_array_equal(np.sort(saved_b1), np.arange(0, 20, 2))
 
     def test06_multiple_dataframes(self):
-        self.create_file(self.file_name, num_of_entries=10)
-        self.create_file(self.file_name2, num_of_entries=10, offset=100)
-
-        df1 = ROOT.RDataFrame(self.tree_name, self.file_name)
-        df2 = ROOT.RDataFrame(self.tree_name, self.file_name2)
+        df1 = from_files(self.define_rdf(num_of_entries=10))
+        df2 = from_files(self.define_rdf(num_of_entries=10, offset=100))
 
         dl = ROOT.Experimental.ML.RDataLoader(
             [df1, df2],
@@ -8067,11 +4921,7 @@ class DataLoaderSave(unittest.TestCase):
         expected = np.concatenate([np.arange(10), np.arange(100, 110)])
         np.testing.assert_array_equal(np.sort(saved_b1), expected)
 
-    def test07_eager_loading(self):
-        self.create_file()
-
-        df = ROOT.RDataFrame(self.tree_name, self.file_name)
-
+    def test07_eager_loading(self, df):
         dl = ROOT.Experimental.ML.RDataLoader(
             df,
             batch_size=5,
@@ -8086,15 +4936,8 @@ class DataLoaderSave(unittest.TestCase):
         np.testing.assert_array_equal(self.read_back(self.out_name, "b1"), np.arange(20))
         np.testing.assert_array_equal(self.read_back(self.out_name, "b2"), np.arange(1, 21))
 
-    def test08_round_trip(self):
-        self.create_file()
-
-        df = (
-            ROOT
-            .RDataFrame(self.tree_name, self.file_name)
-            .Define("w", "(double) 0.5")
-            .Define("v1", "ROOT::VecOps::RVec<int>{ b1, b1 * 10 }")
-        )
+    def test08_round_trip(self, df):
+        df = df.Define("w", "(double) 0.5").Define("v1", "ROOT::VecOps::RVec<int>{ b1, b1 * 10 }")
 
         loader_args = dict(
             batch_size=5,
@@ -8123,13 +4966,12 @@ class DataLoaderSave(unittest.TestCase):
         np.testing.assert_array_equal(w.flatten(), np.full(20, 0.5))
 
 
-class DataLoaderImplicitMT(unittest.TestCase):
+class TestDataLoaderImplicitMT:
     file_name = "dataloader_imt.root"
     tree_name = "mytree"
 
-    def tearDown(self):
+    def teardown_method(self):
         ROOT.DisableImplicitMT()
-        os.remove(self.file_name)
 
     @unittest.skipUnless("imt" in ROOT.gROOT.GetConfigFeatures(), "ROOT was built without implicit multi-threading")
     def test01_implicit_mt_not_supported(self):
@@ -8137,9 +4979,9 @@ class DataLoaderImplicitMT(unittest.TestCase):
         ROOT.EnableImplicitMT(2)
         df = ROOT.RDataFrame(self.tree_name, self.file_name)
 
-        with self.assertRaisesRegex(RuntimeError, "Cannot use RDataLoader with implicit multi-threading enabled"):
+        with pytest.raises(RuntimeError, match="Cannot use RDataLoader with implicit multi-threading enabled"):
             ROOT.Experimental.ML.RDataLoader(df, batch_size=2).as_numpy()
 
 
 if __name__ == "__main__":
-    unittest.main()
+    raise SystemExit(pytest.main(args=[__file__]))
