@@ -60,7 +60,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy() :
    fClassName(""), fClass(nullptr), fElement(nullptr), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(nullptr), fBranchCount(nullptr),
    fNotify(this),
-   fRead(-1), fWhere(nullptr),fCollection(nullptr)
+   fRead(-1), fWhere(nullptr)
 {
 };
 
@@ -74,7 +74,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char*
    fClassName(""), fClass(nullptr), fElement(nullptr), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(nullptr), fBranchCount(nullptr),
    fNotify(this),
-   fRead(-1),  fWhere(nullptr),fCollection(nullptr)
+   fRead(-1),  fWhere(nullptr)
 {
    if (fBranchName.Length() && fBranchName[fBranchName.Length()-1]!='.' && name) {
       ((TString&)fBranchName).Append(".");
@@ -92,7 +92,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char 
    fClassName(""), fClass(nullptr), fElement(nullptr), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(nullptr), fBranchCount(nullptr),
    fNotify(this),
-   fRead(-1), fWhere(nullptr),fCollection(nullptr)
+   fRead(-1), fWhere(nullptr)
 {
    if (name && strlen(name)) {
       if (fBranchName.Length() && fBranchName[fBranchName.Length()-1]!='.') {
@@ -113,7 +113,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, Detail::TBr
    fClassName(""), fClass(nullptr), fElement(nullptr), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(nullptr), fBranchCount(nullptr),
    fNotify(this),
-   fRead(-1), fWhere(nullptr),fCollection(nullptr)
+   fRead(-1), fWhere(nullptr)
 {
    if (name && strlen(name)) {
       if (fBranchName.Length() && fBranchName[fBranchName.Length()-1]!='.') {
@@ -133,7 +133,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranch* br
    fClassName(""), fClass(nullptr), fElement(nullptr), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(nullptr), fBranchCount(nullptr),
    fNotify(this),
-   fRead(-1), fWhere(nullptr),fCollection(nullptr)
+   fRead(-1), fWhere(nullptr)
 {
    boss->Attach(this);
 }
@@ -186,8 +186,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector *boss, const char 
      fBranchCount(nullptr),
      fNotify(this),
      fRead(-1),
-     fWhere(nullptr),
-     fCollection(nullptr)
+     fWhere(nullptr)
 {
    // Constructor.
 
@@ -220,8 +219,7 @@ void ROOT::Detail::TBranchProxy::Reset()
    fIsClone = false;
    fInitialized = false;
    fHasLeafCount = false;
-   delete fCollection;
-   fCollection = nullptr;
+   fCollection.reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -277,8 +275,7 @@ bool ROOT::Detail::TBranchProxy::Setup()
       } else if (pcl->GetCollectionProxy()) {
          // We always skip the collections.
 
-         if (fCollection) delete fCollection;
-         fCollection = pcl->GetCollectionProxy()->Generate();
+         fCollection.reset(pcl->GetCollectionProxy()->Generate(), CollectionDeleter{});
          pcl = fCollection->GetValueClass();
          if (pcl == nullptr) {
             // coverity[dereference] fparent is checked jus a bit earlier and can not be null here
@@ -414,8 +411,7 @@ bool ROOT::Detail::TBranchProxy::Setup()
                   if (!fIsMember) fIsClone = true;
                   fClass = clones->GetClass();
                } else if (fClass && fClass->GetCollectionProxy()) {
-                  delete fCollection;
-                  fCollection = fClass->GetCollectionProxy()->Generate();
+                  fCollection.reset(fClass->GetCollectionProxy()->Generate(), CollectionDeleter{});
                   fClass = fCollection->GetValueClass();
                }
 
@@ -437,7 +433,7 @@ bool ROOT::Detail::TBranchProxy::Setup()
          } else if (be->GetType()==4) {
             // top level TClonesArray
 
-            fCollection = be->GetCollectionProxy()->Generate();
+            fCollection.reset(be->GetCollectionProxy()->Generate(), CollectionDeleter{});
             fIsaPointer = false;
             fWhere = be->GetObject();
 
@@ -449,7 +445,7 @@ bool ROOT::Detail::TBranchProxy::Setup()
 
          } else if (be->GetType()==41) {
 
-            fCollection = be->GetCollectionProxy()->Generate();
+            fCollection.reset(be->GetCollectionProxy()->Generate(), CollectionDeleter{});
             fWhere   = be->GetObject();
             fOffset += be->GetOffset();
 
