@@ -29,7 +29,7 @@ max_vec_sizes = {"f4": 3, "f5": 2, "f6": 1}
 
 dl = ROOT.Experimental.ML.RDataLoader(
     filteredrdf,
-    batch_size,
+    batch_size=batch_size,
     max_vec_sizes=max_vec_sizes,
     shuffle=False,
 )

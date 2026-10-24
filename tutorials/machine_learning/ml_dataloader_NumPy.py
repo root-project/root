@@ -23,7 +23,7 @@ num_of_epochs = 2
 
 dl = ROOT.Experimental.ML.RDataLoader(
     rdataframe,
-    batch_size,
+    batch_size=batch_size,
     target=target,
     shuffle=True,
     drop_remainder=True,

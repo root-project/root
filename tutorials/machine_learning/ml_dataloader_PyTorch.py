@@ -24,7 +24,7 @@ target = "Type"
 # as PyTorch tensors.
 dl = ROOT.Experimental.ML.RDataLoader(
     rdataframe,
-    batch_size,
+    batch_size=batch_size,
     target=target,
     shuffle=True,
     drop_remainder=True,
