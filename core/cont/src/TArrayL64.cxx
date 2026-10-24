@@ -15,6 +15,7 @@ Array of long64s (64 bits per element).
 */
 
 #include "TArrayL64.h"
+#include "ROOT/CheckCollectionSize.hxx"
 #include "TBuffer.h"
 
 
@@ -149,6 +150,8 @@ void TArrayL64::Streamer(TBuffer &b)
    if (b.IsReading()) {
       Int_t n;
       b >> n;
+      // Each element occupies at least one byte on file.
+      n = ROOT::Internal::CheckCollectionSize(b, n, "TArrayL64::Streamer", "TArrayL64", [] { return true; });
       Set(n);
       b.ReadFastArray(fArray,n);
    } else {

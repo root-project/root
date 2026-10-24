@@ -91,6 +91,8 @@ target_sources(Core PRIVATE
 target_include_directories(Core
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+  PRIVATE
+    res
 )
 
 ROOT_INSTALL_HEADERS()

@@ -29,6 +29,8 @@ size(), clear(), resize(). resize() may be a void operation.
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TVirtualCollectionIterators.h"
+#include "ROOT/CheckCollectionSize.hxx"
+#include "ObjectWiseElementsUseBytes.h"
 
 #include <memory>
 
@@ -1183,6 +1185,8 @@ void TGenCollectionStreamer::ReadBufferVectorPrimitives(TBuffer &b, void *obj, c
 {
    int nElements = 0;
    b >> nElements;
+   nElements = ROOT::Internal::CheckCollectionSize(b, nElements, "TGenCollectionStreamer::ReadBufferVectorPrimitives",
+                                                   fName.c_str(), [] { return true; });
    fResize(obj,nElements);
 
    if (onFileClass) {
@@ -1198,6 +1202,8 @@ void TGenCollectionStreamer::ReadBufferVectorPrimitivesFloat16(TBuffer &b, void 
 {
    int nElements = 0;
    b >> nElements;
+   nElements = ROOT::Internal::CheckCollectionSize(
+      b, nElements, "TGenCollectionStreamer::ReadBufferVectorPrimitivesFloat16", fName.c_str(), [] { return true; });
    fResize(obj,nElements);
 
    if (onFileClass) {
@@ -1213,6 +1219,8 @@ void TGenCollectionStreamer::ReadBufferVectorPrimitivesDouble32(TBuffer &b, void
 {
    int nElements = 0;
    b >> nElements;
+   nElements = ROOT::Internal::CheckCollectionSize(
+      b, nElements, "TGenCollectionStreamer::ReadBufferVectorPrimitivesDouble32", fName.c_str(), [] { return true; });
    fResize(obj,nElements);
 
    if (onFileClass) {
@@ -1318,6 +1326,9 @@ void TGenCollectionStreamer::ReadBufferGeneric(TBuffer &b, void *obj, const TCla
 
    int nElements = 0;
    b >> nElements;
+   nElements =
+      ROOT::Internal::CheckCollectionSize(b, nElements, "TGenCollectionStreamer::ReadBufferGeneric", fName.c_str(),
+                                          [&] { return ROOT::Internal::ObjectWiseElementsUseBytes(fKey, fVal); });
 
    if (nElements == 0) {
       if (obj) {
@@ -1402,6 +1413,9 @@ void TGenCollectionStreamer::Streamer(TBuffer &b)
    if (b.IsReading()) {    //Read mode
       int nElements = 0;
       b >> nElements;
+      nElements =
+         ROOT::Internal::CheckCollectionSize(b, nElements, "TGenCollectionStreamer::Streamer", fName.c_str(),
+                                             [&] { return ROOT::Internal::ObjectWiseElementsUseBytes(fKey, fVal); });
       if (fEnv->fObject)   {
          TGenCollectionProxy::Clear("force");
       }
@@ -1480,6 +1494,9 @@ void TGenCollectionStreamer::StreamerAsMap(TBuffer &b)
    if (b.IsReading()) {    //Read mode
       int nElements = 0;
       b >> nElements;
+      nElements =
+         ROOT::Internal::CheckCollectionSize(b, nElements, "TGenCollectionStreamer::StreamerAsMap", fName.c_str(),
+                                             [&] { return ROOT::Internal::ObjectWiseElementsUseBytes(fKey, fVal); });
       if (fEnv->fObject)   {
          TGenCollectionProxy::Clear("force");
       }

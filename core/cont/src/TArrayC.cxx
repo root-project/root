@@ -15,6 +15,7 @@ Array of chars or bytes (8 bits per element).
 */
 
 #include "TArrayC.h"
+#include "ROOT/CheckCollectionSize.hxx"
 #include "TBuffer.h"
 
 
@@ -149,6 +150,8 @@ void TArrayC::Streamer(TBuffer &b)
    if (b.IsReading()) {
       Int_t n;
       b >> n;
+      // Each element occupies at least one byte on file.
+      n = ROOT::Internal::CheckCollectionSize(b, n, "TArrayC::Streamer", "TArrayC", [] { return true; });
       Set(n);
       b.ReadFastArray(fArray,n);
    } else {

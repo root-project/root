@@ -15,6 +15,7 @@ Array of floats (32 bits per element).
 */
 
 #include "TArrayF.h"
+#include "ROOT/CheckCollectionSize.hxx"
 #include "TBuffer.h"
 
 
@@ -149,6 +150,8 @@ void TArrayF::Streamer(TBuffer &b)
    if (b.IsReading()) {
       Int_t n;
       b >> n;
+      // Each element occupies at least one byte on file.
+      n = ROOT::Internal::CheckCollectionSize(b, n, "TArrayF::Streamer", "TArrayF", [] { return true; });
       Set(n);
       b.ReadFastArray(fArray,n);
    } else {
