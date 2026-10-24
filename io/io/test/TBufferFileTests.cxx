@@ -12,6 +12,7 @@
 #include "TKey.h"
 #include "TMemberStreamer.h"
 #include "TNamed.h"
+#include "TString.h"
 #include "TVirtualCollectionProxy.h"
 #include <algorithm>
 #include <limits>
@@ -155,12 +156,18 @@ void ResizeCollection(TClass *cl, void *obj, UInt_t n)
    cl->GetCollectionProxy()->Commit(cl->GetCollectionProxy()->Allocate(n, true));
 }
 
-/// Write a CorruptEvoA with `nFloats` floats and twice `nElems` elements that occupy no space to a file, and rename
-/// its classes to CorruptEvoB and CorruptEvoBElem, so that reading it back goes through schema evolution.
+constexpr int kTextLength = 0x135;
+
+/// Write a CorruptEvoA with a text of kTextLength characters, `nFloats` floats and twice `nElems` elements that occupy
+/// no space to a file, and rename its classes to CorruptEvoB and CorruptEvoBElem, so that reading it back goes through
+/// schema evolution.
 std::vector<char> WriteEvolvedFile(int nFloats, int nElems)
 {
    TClass *cl = TClass::GetClass("CorruptEvoA");
    void *obj = cl->New();
+   std::string text(kTextLength, 'x');
+   auto *textPtr = reinterpret_cast<char **>(static_cast<char *>(obj) + cl->GetDataMemberOffset("fText"));
+   *textPtr = text.data();
    auto *floats = reinterpret_cast<std::vector<float> *>(static_cast<char *>(obj) + cl->GetDataMemberOffset("fFloats"));
    floats->assign(nFloats, 1.5f);
    ResizeCollection(TClass::GetClass("vector<CorruptEvoAElem>"),
@@ -175,6 +182,7 @@ std::vector<char> WriteEvolvedFile(int nFloats, int nElems)
       data.resize(file.GetSize());
       file.CopyTo(data.data(), data.size());
    }
+   *textPtr = nullptr;
    cl->Destructor(obj);
    const std::string from = "CorruptEvoA", to = "CorruptEvoB";
    for (auto it = data.begin(); (it = std::search(it, data.end(), from.begin(), from.end())) != data.end();)
@@ -243,6 +251,7 @@ protected:
             std::vector<float> fFloats;
             std::vector<CorruptEvoAElem> fElems;
             std::vector<CorruptOldElem> fRenamed;
+            char *fText = nullptr; // Removed in version 2
             virtual ~CorruptEvoA() = default;
             ClassDef(CorruptEvoA, 1);
          };
@@ -555,6 +564,7 @@ TEST_F(CorruptCollectionSize, SchemaEvolution)
    constexpr int kNElems = 1000;
    auto data = WriteEvolvedFile(kNFloats, kNElems);
    TClass *cl = TClass::GetClass("CorruptEvoB");
+   ROOT::TestSupport::CheckDiagsRAII diags;
    auto *read = static_cast<char *>(ReadEvolvedFile(data));
    ASSERT_NE(read, nullptr);
    auto *doubles = reinterpret_cast<std::vector<double> *>(read + cl->GetDataMemberOffset("fFloats"));
@@ -588,5 +598,69 @@ TEST_F(CorruptCollectionSize, SchemaEvolutionOversized)
    auto *read = static_cast<char *>(ReadEvolvedFile(data));
    ASSERT_NE(read, nullptr);
    EXPECT_TRUE(reinterpret_cast<std::vector<double> *>(read + cl->GetDataMemberOffset("fFloats"))->empty());
+   cl->Destructor(read);
+}
+
+// Strings longer than 254 characters store their length as an Int_t.
+TEST_F(CorruptCollectionSize, String)
+{
+   constexpr unsigned int kLength = 0x1234;
+   const auto checkCorruptLength = [](auto str, const char *location, bool negative) {
+      auto data = Write(str);
+      CorruptInt(data, kLength, negative ? kCorruptSize : BytesAfterInt(data, kLength) + 1);
+
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, location, negative ? "negative length" : "bytes are left in the buffer",
+                         /*matchFullMessage=*/false);
+      diags.optionalDiag(kError, "TBufferFile::CheckByteCount", "read too few bytes", /*matchFullMessage=*/false);
+      auto read = Read<decltype(str)>(data);
+      ASSERT_NE(read, nullptr);
+      EXPECT_TRUE(*read == decltype(str)());
+   };
+   for (bool negative : {true, false}) {
+      SCOPED_TRACE(negative ? "negative" : "oversized");
+      checkCorruptLength(std::string(kLength, 'a'), "TBufferFile::ReadStdString", negative);
+      checkCorruptLength(TString('a', kLength), "TBufferFile::ReadTString", negative);
+   }
+}
+
+TEST_F(CorruptCollectionSize, CharStar)
+{
+   constexpr unsigned int kLength = 0x1234;
+   const std::string str(kLength, 'a');
+   TBufferFile wbuf(TBuffer::kWrite);
+   wbuf.WriteCharStar(const_cast<char *>(str.c_str()));
+   std::vector<char> data(wbuf.Buffer(), wbuf.Buffer() + wbuf.Length());
+   CorruptInt(data, kLength, BytesAfterInt(data, kLength) + 1);
+
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TBufferFile::ReadCharStar", "bytes are left in the buffer", /*matchFullMessage=*/false);
+   TBufferFile rbuf(TBuffer::kRead, data.size(), data.data(), /*adopt=*/false);
+   char *read = nullptr;
+   rbuf.ReadCharStar(read);
+   EXPECT_EQ(read, nullptr);
+   delete[] read;
+}
+
+// A char* data member that was removed is skipped with ReadCharStar.
+TEST_F(CorruptCollectionSize, SkippedCharStar)
+{
+   auto data = WriteEvolvedFile(kNFloats, 1);
+   // The rest of the file may contain the same 4 bytes, so look for the length followed by the first characters.
+   const char pattern[8] = {
+      char(kTextLength >> 24), char(kTextLength >> 16), char(kTextLength >> 8), char(kTextLength), 'x', 'x', 'x', 'x'};
+   const auto pos = std::search(data.begin(), data.end(), pattern, pattern + 8);
+   ASSERT_NE(pos, data.end());
+   // One more than the bytes left after the length.
+   const unsigned int size = data.end() - (pos + 4) + 1;
+   for (int i = 0; i < 4; ++i)
+      pos[i] = char(size >> (8 * (3 - i)));
+
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TBufferFile::ReadCharStar", "bytes are left in the buffer", /*matchFullMessage=*/false);
+   diags.optionalDiag(kError, "TBufferFile::CheckByteCount", "read too few bytes", /*matchFullMessage=*/false);
+   TClass *cl = TClass::GetClass("CorruptEvoB");
+   auto *read = static_cast<char *>(ReadEvolvedFile(data));
+   ASSERT_NE(read, nullptr);
    cl->Destructor(read);
 }

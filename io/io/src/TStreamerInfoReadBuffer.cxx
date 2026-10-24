@@ -259,12 +259,9 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, const TCompInfo *c
       // skip char*
       case TStreamerInfo::kSkip + TStreamerInfo::kCharStar: {
          DOLOOP {
-            Int_t nch; b >> nch;
-            if (nch>0) {
-               char* readbuf = new char[nch];
-               b.ReadFastArray(readbuf,nch);
-               delete[] readbuf;
-            }
+            char *readbuf = nullptr;
+            b.ReadCharStar(readbuf);
+            delete[] readbuf;
          }
          break;
       }
