@@ -424,16 +424,18 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
             }
          }
       } else if (sType.Contains("ts")) {
-         // add a point at the current poi value
-         // use that to determine ufit value and use uncertainty to set an approx range
-         AddPoint(TString::Format("%s=%g", poi().first()->GetName(), poi().getRealValue(poi().first()->GetName())));
-         graphs(sType); // triggers computation
+         if(size()==0) {
+            // add a point at the current poi value
+            // use that to determine ufit value and use uncertainty to set an approx range
+            AddPoint(TString::Format("%s=%g", poi().first()->GetName(), poi().getRealValue(poi().first()->GetName())));
+            graphs(sType); // triggers computation
+         }
          if (back().status() != 0) {
             out += 1;
          } else {
             // fit was ok, so use the values to determine an appropriate range
-            low = std::max(low, back().mu_hat().getVal() - back().mu_hat().getError() * 3);
-            high = std::min(high, back().mu_hat().getVal() + back().mu_hat().getError() * 3);
+            low = std::max(std::isnan(low) ? p->getMin() : low, back().mu_hat().getVal() - back().mu_hat().getError() * 3);
+            high = std::min(std::isnan(high) ? p->getMax() : high, back().mu_hat().getVal() + back().mu_hat().getError() * 3);
             nPoints = 20;
             double step = (high - low) / (nPoints - 1);
             for (size_t i = 0; i < nPoints; i++) {
@@ -938,6 +940,27 @@ std::shared_ptr<TGraphErrors> xRooNLLVar::xRooHypoSpace::graph(
    TStopwatch s;
    s.Start();
    size_t nDone = 0;
+
+   size_t nToys = 0;
+   size_t nToysAlt = 0;
+   if(sOpt.Contains("toys")) {
+      if (sOpt.Contains("toys=")) {
+         // extract number of toys required ... format is "nullToys.altToysFraction" if altToysFraction=0 then use
+         // same for both, unless explicitly set (i.e. N.0) then means we want no alt toys
+         // e.g. if doing just pnull significance
+         TString toyNum = sOpt(sOpt.Index("toys=") + 5, sOpt.Length());
+         nToys = toyNum.Atoi();
+         nToysAlt = (toyNum.Atof() - nToys) * nToys;
+         if (nToysAlt == 0 && !toyNum.Contains('.') && !sOpt.Contains("pnull"))
+            nToysAlt = nToys;
+      } else {
+         nToys = gEnv->GetValue("XRooFit.MaxToys",10000);
+         nToysAlt = 100;
+         // should really also set nToysAlt??
+      }
+   }
+
+
    for (auto &p : *this) {
       if (s.RealTime() > 5) {
          if (visualize) {
@@ -967,7 +990,11 @@ std::shared_ptr<TGraphErrors> xRooNLLVar::xRooHypoSpace::graph(
       auto pval = const_cast<xRooHypoPoint &>(p).getVal(sOpt);
       auto idx = out->GetN() - nPointsDown;
 
-      if (std::isnan(pval.first)) {
+      double target=0.05; double relErrThreshold = 2;
+      double diff = (target < 0) ? pval.first : std::abs(pval.first - target);
+      // need logic that will treat points as bad where if running not readonly would get more toys
+
+      if (std::isnan(pval.first) || (pval.second != 0 && (p.nullToys.size() < nToys || p.altToys.size() < nToysAlt) && (sOpt.Contains("toys=") ||   (sOpt.Contains("toys") && !sOpt.Contains("toys=") && doCLs && pval.second > 1e-4 && diff <= relErrThreshold * pval.second))) ) {
          if (p.status() != 0) { // if status is 0 then bad pval is really just absence of fits, not bad fits
             badPoints()->SetPoint(badPoints()->GetN(), _x, 0);
          }
@@ -980,7 +1007,8 @@ std::shared_ptr<TGraphErrors> xRooNLLVar::xRooHypoSpace::graph(
          TString sOpt2 = sOpt;
          sOpt2.ReplaceAll("exp", "exp-");
          pval = const_cast<xRooHypoPoint &>(p).getVal(sOpt2);
-         if (std::isnan(pval.first)) {
+         diff = (target < 0) ? pval.first : std::abs(pval.first - target);
+         if (std::isnan(pval.first) || (pval.second != 0 && (p.nullToys.size() < nToys || p.altToys.size() < nToysAlt) && (sOpt.Contains("toys=") ||  (sOpt.Contains("toys") && !sOpt.Contains("toys=") && doCLs && pval.second > 1e-4 && diff <= relErrThreshold * pval.second))) ) {
             if (p.status() != 0) { // if status is 0 then bad pval is really just absence of fits, not bad fits
                badPoints()->SetPoint(badPoints()->GetN(), _x, 0);
             }
@@ -1248,12 +1276,15 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoSpace::GetLimit(const TGraph &pV
        (!above && gr->GetPointY(gr->GetN() - 1) >= gr->GetPointY(0))) {
       // extrapolating above based on last two points
       // in fact, if 2nd last point is a p=1 (log(p)=0) then go back
+      // also go back if m <= 0
       int offset = 2;
-      while (offset < gr->GetN() && gr->GetPointY(gr->GetN() - offset) == 0)
+      double x1,y1,m;
+      do {
+         x1 = gr->GetPointX(gr->GetN() - offset);
+         y1 = gr->GetPointY(gr->GetN() - offset);
+         m = (gr->GetPointY(gr->GetN() - 1) - y1) / (gr->GetPointX(gr->GetN() - 1) - x1);
          offset++;
-      double x1 = gr->GetPointX(gr->GetN() - offset);
-      double y1 = gr->GetPointY(gr->GetN() - offset);
-      double m = (gr->GetPointY(gr->GetN() - 1) - y1) / (gr->GetPointX(gr->GetN() - 1) - x1);
+      } while(offset < gr->GetN() && (y1==0 || m<=0) );
       if (m == 0.)
          return std::pair(std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity());
       return std::pair((alpha - y1) / m + x1, std::numeric_limits<double>::infinity());
@@ -1287,7 +1318,8 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
    sOpt.ReplaceAll("visualize", "");
    std::shared_ptr<TGraphErrors> gr = graph(sOpt + " readonly");
    if (visualize) {
-      auto gra = graphs(sOpt.Contains("toys") ? "pcls readonly toys" : "pcls readonly");
+      TString toyConf = sOpt.Contains("toys") ? sOpt(sOpt.Index("toys"),(sOpt.Index(" ",sOpt.Index("toys"))==-1 ? sOpt.Length() : sOpt.Index(" ",sOpt.Index("toys")))-sOpt.Index("toys")) : TString("");
+      auto gra = graphs(TString("pcls readonly") + toyConf);
       if (gra) {
          if (!gPad)
             gra->Draw(); // in 6.28 DrawClone wont make the gPad defined :( ... so Draw then clear and Draw Clone
@@ -1324,7 +1356,7 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
       if (!gr || gr->GetN() < 1) {
          if (maxTries == 0 || std::isnan(AddPoint(TString::Format("%s=%g", v->GetName(), muMin)).getVal(sOpt).first)) {
             // first point failed ... give up
-            ::Error("findlimit", "Problem evaluating First Point %s @ %s=%g", sOpt.Data(), v->GetName(), muMin);
+            ::Error("findlimit", "Problem evaluating First Point %s @ %s=%g (maxTries=%d)", sOpt.Data(), v->GetName(), muMin,maxTries);
             return std::pair(std::numeric_limits<double>::quiet_NaN(), 0.);
          }
          gr.reset();

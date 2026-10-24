@@ -98,6 +98,7 @@ This xRooNLLVar object has several special methods, e.g. for fitting and toy dat
 #include "TKey.h"
 #include "TRegexp.h"
 #include "TStopwatch.h"
+#include "TEnv.h"
 
 BEGIN_XROOFIT_NAMESPACE
 
@@ -336,7 +337,7 @@ void xRooNLLVar::Print(Option_t *)
       std::cout << "  MinimizerOptions: " << std::endl;
       fFitConfig->MinimizerOptions().Print();
    }
-   std::cout << "Last Rebuild Log Output: " << fFuncCreationLog << std::endl;
+   std::cout << "Last Rebuild Log Output: " << std::endl << fFuncCreationLog << std::endl;
 }
 
 void xRooNLLVar::reinitialize()
@@ -1268,10 +1269,17 @@ std::shared_ptr<RooAbsReal> xRooNLLVar::func() const
    if (!(*this)) {
       const_cast<xRooNLLVar *>(this)->reinitialize();
    } else if (auto f = std::unique_ptr<RooAbsCollection>(fConstVars->selectByAttrib("Constant", false)); !f->empty()) {
-      // have to reinitialize if const par values have changed
+      // have to reinitialize if const par values have changed - const optimization forces this
       // TODO: currently changes to globs also triggers this since the vars includes globs (vars are the non-obs pars)
       // std::cout << "Reinitializing because of change of const parameters:" << f->contentsString() << std::endl;
       const_cast<xRooNLLVar *>(this)->reinitialize();
+
+      // note ... it may be sufficient here to do:
+      // nll.constOptimizeTestStatistic(RooAbsArg::ConfigChange, constOptimize>1 /* do tracking too if >1 */); //
+      // trigger a re-evaluate of which nodes to cache-and-track nll.constOptimizeTestStatistic(RooAbsArg::ValueChange,
+      // constOptimize>1); // update the cache values -- is this needed??
+      // this forces the optimization to be redone
+      // for now leave as a reinitialize though, until had a chance to test this properly
    }
    if (fGlobs && fFuncGlobs) {
       *fFuncGlobs = *fGlobs;
@@ -1300,6 +1308,13 @@ void xRooNLLVar::SetOption(const RooCmdArg &opt)
    } else if (strcmp(opt.GetName(), "PrintLevel") == 0) {
       fitConfig()->MinimizerOptions().SetPrintLevel(opt.getInt(0));
    } else {
+#if ROOT_VERSION_CODE < ROOT_VERSION(6, 41, 00)
+      if (strcmp(opt.GetName(), "Optimize") == 0) {
+         // this flag will trigger constOptimizeTestStatistic to be called on the nll in createNLL method
+         // we should ensure that the fitconfig setting is consistent with it ...
+         fitConfigOptions()->SetValue("OptimizeConst", opt.getInt(0));
+      }
+#endif
       if (auto prevObject = fOpts->FindObject(opt.GetName()); prevObject) {
          // replace previous option
          fOpts->Replace(prevObject, opt.Clone(nullptr));
@@ -1446,35 +1461,48 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::getVal(const char *what)
 
    bool readOnly = sWhat.Contains("readonly");
 
-   if (!readOnly) {
-      if (toys) {
-         sigma_mu(); // means we will be able to evaluate the asymptotic values too
-      }
+   if (toys && !readOnly) {
+      sigma_mu(); // means we will be able to evaluate the asymptotic values too
       // only add toys if actually required
-      if (getVal(sWhat + " readonly").second != 0) {
-         if (sWhat.Contains("toys=")) {
-            // extract number of toys required ... format is "nullToys.altToysFraction" if altToysFraction=0 then use
-            // same for both, unless explicitly set (i.e. N.0) then means we want no alt toys
-            // e.g. if doing just pnull significance
-            TString toyNum = sWhat(sWhat.Index("toys=") + 5, sWhat.Length());
-            size_t nToys = toyNum.Atoi();
-            size_t nToysAlt = (toyNum.Atof() - nToys) * nToys;
-            if (nToysAlt == 0 && !toyNum.Contains('.') && !doNull)
-               nToysAlt = nToys;
-            if (nullToys.size() < nToys) {
-               addNullToys(nToys - nullToys.size());
+
+      size_t nToys = 0;
+      size_t nToysAlt = 0;
+      bool autoToys = !sWhat.Contains("toys=");
+      if(!autoToys) {
+         // extract number of toys required ... format is "nullToys.altToysFraction" if altToysFraction=0 then use
+         // same for both, unless explicitly set (i.e. N.0) then means we want no alt toys
+         // e.g. if doing just pnull significance
+         TString toyNum = sWhat(sWhat.Index("toys=") + 5, sWhat.Length());
+         nToys = toyNum.Atoi();
+         nToysAlt = (toyNum.Atof() - nToys) * nToys;
+         if (nToysAlt == 0 && !toyNum.Contains('.') && !doNull)
+            nToysAlt = nToys;
+         if (nullToys.size() < nToys) {
+            addNullToys(nToys - nullToys.size());
+         }
+         if (altToys.size() < nToysAlt) {
+            addAltToys(nToysAlt - altToys.size());
+         }
+      } else {
+         // auto toys
+         if(doCLs) {
+            auto obs = getVal(sWhat + " readonly");
+            double target=0.05; double relErrThreshold = 2;
+            double diff = (target < 0) ? obs.first : std::abs(obs.first - target);
+            double err = obs.second;
+            size_t maxToys = gEnv->GetValue("XRooFit.MaxToys",10000);
+            size_t nAltToys = 100;
+            // target mode is only used in auto toy generation
+            if((nullToys.size() < maxToys || altToys.size()<nAltToys) && (std::isnan(err) || (err > 1e-4 && diff <= relErrThreshold * err))) {
+               // auto toy-generating for limits .. do in blocks of 100
+               addCLsToys(nAltToys, 0/*seed*/, 0.05, nSigma);
             }
-            if (altToys.size() < nToysAlt) {
-               addAltToys(nToysAlt - altToys.size());
-            }
-         } else if (doCLs && toys) {
-            // auto toy-generating for limits .. do in blocks of 100
-            addCLsToys(100, 0, 0.05, nSigma);
-         } else if (toys) {
+         } else {
             throw std::runtime_error("Auto-generating toys for anything other than CLs not yet supported, please "
                                      "specify number of toys with 'toys=N' ");
          }
       }
+
    }
 
    struct RestoreNll {
@@ -1768,8 +1796,8 @@ std::shared_ptr<xRooNLLVar::xRooHypoPoint> xRooNLLVar::xRooHypoPoint::asimov(boo
                // at some value of mu. Normally we would use mu=0 but if we have a bin
                // with only signal contribution (no bkg) will get asimov data in that bin
                // and no prediction ... the cfit(mu=0) will never succeed on this
-               // so lets move to half the alt value instead (the value used to generate)
-               v->setVal(theFit->constPars().getRealValue(v->GetName()) * 0.5);
+               // so lets move to 0.1% the alt value instead (the value used to generate)
+               v->setVal(theFit->constPars().getRealValue(v->GetName()) * gEnv->GetValue("XRooFit.AsimovNullValFactor",1e-3));
             }
          }
       }
@@ -2369,6 +2397,8 @@ size_t xRooNLLVar::xRooHypoPoint::addToys(bool alt, int nToys, int initialSeed, 
       throw std::runtime_error("Cannot add toys, invalid conditional fit");
    }
 
+   maxToys = std::min(maxToys,(size_t)gEnv->GetValue("XRooFit.MaxToys",10000));
+
    auto condition = [&]() { // returns true if need more toys
       if (std::isnan(target))
          return false;
@@ -2387,6 +2417,8 @@ size_t xRooNLLVar::xRooHypoPoint::addToys(bool alt, int nToys, int initialSeed, 
                alt = (pAlt.second * pNull.first > pNull.second * pAlt.first);
                if ((alt ? pAlt.second : pNull.second) < 1e-4)
                   return false; // stop if error gets too small
+               if( ((alt) ? altToys.size() : nullToys.size()) >= maxToys )
+                  return false; // stop if hit maxToys
             }
             return true;
          }
@@ -2555,52 +2587,6 @@ void xRooNLLVar::xRooHypoPoint::addCLsToys(int nToys, int seed, double target, d
 {
    addToys(false, nToys, seed, target, target_nSigma, true);
    return;
-   //
-   //   auto condition = [&](bool doingAlt=false) { // returns true if need more toys
-   //      if(std::isnan(target)) return false;
-   //      auto pval = pCLs_toys(target_nSigma);
-   //      if (!std::isnan(pval.first)) {
-   //         double diff = std::abs(pval.first - target);
-   //         double err = pval.second;
-   //         if (err > 1e-4 && diff <= 2 * pval.second) {
-   //            return true; // more toys needed
-   //            // decide which type we'd want to generate
-   //            // if it matches the type we are generating, then return true
-   //            auto pNull = pNull_toys(target_nSigma);
-   //            auto pAlt = pAlt_toys(target_nSigma);
-   //            if ((doingAlt ? pAlt.second : pNull.second) < 1e-4) return false; // stop if error gets too small
-   //            bool doAlt = (pAlt.second * pNull.first > pNull.second * pAlt.first);
-   //            return doAlt == doingAlt;
-   //         }
-   //      }
-   //      return false;
-   //   };
-   //   while(condition()) {
-   //      bool doAlt = false;
-   //      double relErrThreshold = 2;
-   //      if(nullToys.size()<size_t(nToys)) {
-   //         addToys(false,nToys);continue;
-   //      } else if(altToys.size()<size_t(nToys)) {
-   //         addToys(true,nToys);continue;
-   //      } else {
-   //         // see which have bigger errors ... generate more of that ...
-   //         auto pNull = pNull_toys(target_nSigma);
-   //         auto pAlt = pAlt_toys(target_nSigma);
-   //         doAlt = (pAlt.second*pNull.first > pNull.second*pAlt.first);
-   //         if( (doAlt ? pAlt.second : pNull.second) < 1e-4 ) break; // stop if error gets too small
-   //         auto pCLs = pCLs_toys(target_nSigma);
-   //         relErrThreshold = (doAlt) ? (pNull.second/pNull.first) : (pAlt.second/pAlt.first);
-   //         relErrThreshold = std::min(2.,std::abs(relErrThreshold));
-   //         std::cout << "Current pCLs = " << pCLs.first << " +/- " << pCLs.second
-   //                   << " (pNull = " << pNull.first << " +/- " << pNull.second
-   //                  << " , pAlt = " << pAlt.first << " +/- " << pAlt.second << ") ... generating more " << (doAlt ?
-   //                  "alt" : "null") << " toys " << relErrThreshold  << std::endl;
-   //
-   //      }
-   //      if( addToys(doAlt, nToys/*, seed, -1, target_nSigma,relErrThreshold*/) == 0) {
-   //         break; // no toys got added, so stop looping
-   //      }
-   //   }
 }
 
 xRooNLLVar::xRooHypoPoint
@@ -2855,6 +2841,7 @@ void xRooNLLVar::xRooHypoPoint::Draw(Option_t *opt)
       h->SetLineColor(isAlt ? kRed : kBlue);
       h->SetLineWidth(2);
       h->SetMarkerSize(0);
+      h->SetStats(false);
       h->SetBit(kCanDelete);
       return h;
    };
