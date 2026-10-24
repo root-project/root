@@ -85,9 +85,11 @@ private:
    template <typename T>
    std::shared_ptr<T> AddValue(ROOT::RField<T> &field)
    {
+      // Create the value first: if construction fails, the entry must not be
+      // left with a field name/type that has no corresponding value.
+      auto value = field.CreateValue();
       fFieldName2Token[field.GetQualifiedFieldName()] = fValues.size();
       fFieldTypes.push_back(field.GetTypeName());
-      auto value = field.CreateValue();
       fValues.emplace_back(value);
       // We know that the created RValue has the right type, skip the unnecessary check.
       return std::static_pointer_cast<T>(value.template GetPtr<void>());

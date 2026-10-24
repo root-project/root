@@ -658,7 +658,15 @@ void *ROOT::RFieldBase::CreateObjectRawPtr() const
       where = operator new(GetValueSize(), std::align_val_t(GetAlignment()));
    }
    R__ASSERT(where != nullptr);
-   ConstructValue(where);
+   try {
+      ConstructValue(where);
+   } catch (...) {
+      if (align <= sizeof(std::max_align_t))
+         operator delete(where);
+      else
+         operator delete(where, std::align_val_t(align));
+      throw;
+   }
    return where;
 }
 
