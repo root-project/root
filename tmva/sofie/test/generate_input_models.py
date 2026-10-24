@@ -245,6 +245,39 @@ def make_AddBroadcast7():
     return _model(graph, opset=17, ir_version=8)
 
 
+def _argmax_model(name, out_shape, **attrs):
+    """ArgMax on a [2, 3] float tensor with the given attributes."""
+    nodes = [
+        helper.make_node("ArgMax", ["input"], ["output"], **attrs),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        name,
+        inputs=[
+            _vi("input", FLOAT, [2, 3]),
+        ],
+        outputs=[
+            _vi("output", INT64, out_shape),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=8)
+
+
+def make_ArgMax():
+    """Ops: ArgMax (default attributes: axis=0, keepdims=1)"""
+    return _argmax_model("argmax_test", [1, 3])
+
+
+def make_ArgMax_Axis1_NoKeepdims():
+    """Ops: ArgMax"""
+    return _argmax_model("argmax_axis1_test", [2], axis=1, keepdims=0)
+
+
+def make_ArgMax_NegAxis_SelectLast():
+    """Ops: ArgMax"""
+    return _argmax_model("argmax_select_last_test", [2, 1], axis=-1, keepdims=1, select_last_index=1)
+
+
 def make_AveragePool1d_CeilMode_Overhang():
     """Ops: AveragePool"""
     nodes = [
@@ -6164,6 +6197,9 @@ MODELS = {
     "AddBroadcast5": make_AddBroadcast5,
     "AddBroadcast6": make_AddBroadcast6,
     "AddBroadcast7": make_AddBroadcast7,
+    "ArgMax": make_ArgMax,
+    "ArgMax_Axis1_NoKeepdims": make_ArgMax_Axis1_NoKeepdims,
+    "ArgMax_NegAxis_SelectLast": make_ArgMax_NegAxis_SelectLast,
     "Asinh": make_Asinh,
     "Atanh": make_Atanh,
     "AveragePool1d_CeilMode": make_AveragePool1d_CeilMode,

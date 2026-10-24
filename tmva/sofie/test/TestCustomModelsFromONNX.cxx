@@ -615,6 +615,38 @@ TEST(ONNX, ReduceMin)
    expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
+TEST(ONNX, ArgMax)
+{
+   // default attributes: axis=0, keepdims=1 on a [2,3] tensor
+   std::vector<float> input({1, 9, 3, 7, 2, 8});
+   std::vector<int64_t> correct_output({1, 0, 1});
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<int64_t>, "ArgMax", input);
+
+   expectEqual(output, correct_output);
+}
+
+TEST(ONNX, ArgMax_Axis1_NoKeepdims)
+{
+   std::vector<float> input({1, 9, 3, 7, 2, 8});
+   std::vector<int64_t> correct_output({1, 2});
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<int64_t>, "ArgMax_Axis1_NoKeepdims", input);
+
+   expectEqual(output, correct_output);
+}
+
+TEST(ONNX, ArgMax_NegAxis_SelectLast)
+{
+   // axis=-1 with ties: select_last_index=1 picks the last maximum
+   std::vector<float> input({5, 5, 1, 2, 7, 7});
+   std::vector<int64_t> correct_output({1, 2});
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<int64_t>, "ArgMax_NegAxis_SelectLast", input);
+
+   expectEqual(output, correct_output);
+}
+
 // Elu on a tensor whose first dimension is only known at run time.
 TEST(ONNX, EluDynShape)
 {

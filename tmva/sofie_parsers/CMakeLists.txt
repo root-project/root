@@ -78,6 +78,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseGelu.cxx
     src/ParseHardSigmoid.cxx
     src/ParseHardSwish.cxx
+    src/ParseArgMax.cxx
   DEPENDENCIES
     ROOTTMVASofie
 )
