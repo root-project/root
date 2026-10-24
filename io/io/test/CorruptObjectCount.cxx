@@ -2,6 +2,13 @@
 
 #include "ROOT/TestSupport.hxx"
 
+#include "TArrayC.h"
+#include "TArrayD.h"
+#include "TArrayF.h"
+#include "TArrayI.h"
+#include "TArrayL.h"
+#include "TArrayL64.h"
+#include "TArrayS.h"
 #include "TBufferFile.h"
 #include "TClass.h"
 #include "TClonesArray.h"
@@ -93,6 +100,29 @@ void CheckNegative(T &array, bool firstOccurrence = false)
    EXPECT_EQ(read->GetEntriesFast(), 0);
 }
 
+template <typename T>
+void CheckArray(const char *location)
+{
+   for (bool negative : {true, false}) {
+      SCOPED_TRACE(negative ? "negative" : "oversized");
+      T array(kN);
+      TBufferFile wbuf(TBuffer::kWrite);
+      array.Streamer(wbuf);
+      std::vector<char> data(wbuf.Buffer(), wbuf.Buffer() + wbuf.Length());
+      const auto it = FindInt(data, kN, /*firstOccurrence=*/false);
+      ASSERT_NE(it, data.end());
+      SetInt(it, negative ? std::numeric_limits<Int_t>::min() : data.end() - (it + 4) + 1);
+
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, location, negative ? "negative number of elements" : "bytes are left in the buffer",
+                         /*matchFullMessage=*/false);
+      T read;
+      TBufferFile rbuf(TBuffer::kRead, data.size(), data.data(), /*adopt=*/false);
+      read.Streamer(rbuf);
+      EXPECT_EQ(read.GetSize(), 0);
+   }
+}
+
 } // namespace
 
 TEST(CorruptObjectCount, TObjArray)
@@ -170,4 +200,15 @@ TEST(CorruptObjectCount, TClonesArrayZeroByteObjects)
    auto read = Read<TClonesArray>(data);
    ASSERT_NE(read, nullptr);
    EXPECT_EQ(read->GetEntriesFast(), kMany);
+}
+
+TEST(CorruptObjectCount, TArray)
+{
+   CheckArray<TArrayC>("TArrayC::Streamer");
+   CheckArray<TArrayS>("TArrayS::Streamer");
+   CheckArray<TArrayI>("TArrayI::Streamer");
+   CheckArray<TArrayL>("TArrayL::Streamer");
+   CheckArray<TArrayL64>("TArrayL64::Streamer");
+   CheckArray<TArrayF>("TArrayF::Streamer");
+   CheckArray<TArrayD>("TArrayD::Streamer");
 }
