@@ -67,6 +67,8 @@ namespace RDF {
 
 /// Warn once about experimental filling of RHist.
 void WarnHist();
+/// Warn once about experimental filling of RProfile.
+void WarnProfile();
 
 using namespace ROOT::TypeTraits;
 using namespace ROOT::Detail::RDF;

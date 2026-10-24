@@ -39,6 +39,10 @@
 #include <ROOT/RHist.hxx>
 #include <ROOT/RHistConcurrentFiller.hxx>
 #include <ROOT/RHistEngine.hxx>
+#include <ROOT/RHistFillContext.hxx>
+#include <ROOT/RProfile.hxx>
+#include <ROOT/RProfileConcurrentFiller.hxx>
+#include <ROOT/RProfileFillContext.hxx>
 #include <ROOT/RWeight.hxx>
 #endif
 
@@ -550,8 +554,6 @@ public:
    RHistFillHelper &operator=(RHistFillHelper &&) = default;
    ~RHistFillHelper() = default;
 
-   std::shared_ptr<Result_t> GetResultPtr() const { return fFiller.GetHist(); }
-
    void Initialize() {}
    void InitTask(TTreeReader *, unsigned int) {}
 
@@ -611,8 +613,6 @@ public:
    RHistEngineFillHelper &operator=(RHistEngineFillHelper &&) = default;
    ~RHistEngineFillHelper() = default;
 
-   std::shared_ptr<Result_t> GetResultPtr() const { return fHist; }
-
    void Initialize() {}
    void InitTask(TTreeReader *, unsigned int) {}
 
@@ -646,6 +646,83 @@ public:
    }
 
    std::string GetActionName() { return "Hist"; }
+};
+
+template <bool WithWeight = false>
+class R__CLING_PTRCHECK(off) RProfileFillHelper : public RActionImpl<RProfileFillHelper<WithWeight>>,
+                                                  public ExecLoopTrait<RProfileFillHelper<WithWeight>> {
+public:
+   using Result_t = ROOT::Experimental::RProfile;
+
+private:
+   std::unique_ptr<ROOT::Experimental::RProfileConcurrentFiller> fFiller;
+   std::vector<std::shared_ptr<ROOT::Experimental::RProfileFillContext>> fContexts;
+
+public:
+   RProfileFillHelper(std::shared_ptr<ROOT::Experimental::RProfile> p, unsigned int nSlots)
+      : fFiller(new ROOT::Experimental::RProfileConcurrentFiller(p)), fContexts(nSlots)
+   {
+      for (unsigned int i = 0; i < nSlots; i++) {
+         fContexts[i] = fFiller->CreateFillContext();
+      }
+   }
+   RProfileFillHelper(const RProfileFillHelper &) = delete;
+   RProfileFillHelper(RProfileFillHelper &&) = default;
+   RProfileFillHelper &operator=(const RProfileFillHelper &) = delete;
+   RProfileFillHelper &operator=(RProfileFillHelper &&) = default;
+   ~RProfileFillHelper() = default;
+
+   void Initialize() {}
+   void InitTask(TTreeReader *, unsigned int) {}
+
+   template <typename... ColumnTypes, const std::size_t... I>
+   void ExecWithValueAndWeight(unsigned int slot, const std::tuple<const ColumnTypes &...> &columnValues,
+                               std::index_sequence<I...>)
+   {
+      // Build a tuple of const references with the actual arguments, stripping the value and weight and avoiding
+      // copies.
+      std::tuple<const std::tuple_element_t<I, std::tuple<ColumnTypes...>> &...> args(std::get<I>(columnValues)...);
+      const auto &value = std::get<sizeof...(ColumnTypes) - 2>(columnValues);
+      ROOT::Experimental::RWeight weight(std::get<sizeof...(ColumnTypes) - 1>(columnValues));
+      fContexts[slot]->Fill(args, value, weight);
+   }
+
+   template <typename... ColumnTypes, const std::size_t... I>
+   void
+   ExecWithValue(unsigned int slot, const std::tuple<const ColumnTypes &...> &columnValues, std::index_sequence<I...>)
+   {
+      // Build a tuple of const references with the actual arguments, stripping the value and avoiding copies.
+      std::tuple<const std::tuple_element_t<I, std::tuple<ColumnTypes...>> &...> args(std::get<I>(columnValues)...);
+      const auto &value = std::get<sizeof...(ColumnTypes) - 1>(columnValues);
+      fContexts[slot]->Fill(args, value);
+   }
+
+   template <typename... ColumnTypes>
+   void ExecSingle(unsigned int slot, const ColumnTypes &...columnValues)
+   {
+      auto t = std::forward_as_tuple(columnValues...);
+      if constexpr (WithWeight) {
+         ExecWithValueAndWeight(slot, t, std::make_index_sequence<sizeof...(ColumnTypes) - 2>());
+      } else {
+         ExecWithValue(slot, t, std::make_index_sequence<sizeof...(ColumnTypes) - 1>());
+      }
+   }
+
+   void Finalize()
+   {
+      for (auto &&context : fContexts) {
+         context->Flush();
+      }
+   }
+
+   RProfileFillHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
+   {
+      auto &result = *static_cast<std::shared_ptr<Result_t> *>(newResult);
+      result->Clear();
+      return RProfileFillHelper(result, fContexts.size());
+   }
+
+   std::string GetActionName() { return "Profile"; }
 };
 #endif
 
@@ -1521,8 +1598,6 @@ public:
    void Finalize();
 
    std::string GetActionName() { return "Median"; }
-
-   std::shared_ptr<double> GetResultPtr() const { return fResult; }
 
    MedianHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
