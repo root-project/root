@@ -121,3 +121,17 @@ TEST_F(TTreeCacheReadError, FailedReadBuffersUnzip)
    EXPECT_EQ(ReadAll(*t), 0);
    EXPECT_GT(f.GetCalls(), 3);
 }
+
+// When prefilling the cache during learning, the first basket is requested from TTreeCacheUnzip before its blocks are
+// read; a failure to read them must not unzip whatever its buffer for compressed data holds.
+TEST_F(TTreeCacheReadError, FailedReadBuffersUnzipLearnPrefill)
+{
+   FailingReadBuffersFile f(kFileName, /*failAt=*/1);
+   auto t = f.Get<TTree>("t");
+   ASSERT_NE(t, nullptr);
+   UnzipCacheRAII unzip(*t, kCacheSize);
+   t->GetReadCache(&f)->SetLearnPrefill(TTreeCache::kAllBranches);
+
+   EXPECT_EQ(ReadAll(*t), 0);
+   EXPECT_GT(f.GetCalls(), 1);
+}
