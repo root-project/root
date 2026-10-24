@@ -13,9 +13,11 @@
 #include "TROOT.h"
 #include "TScatter.h"
 #include "TH2.h"
+#include "TPad.h"
+#include "TString.h"
 #include "TVirtualGraphPainter.h"
 
- #include <iostream>
+#include <iostream>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -147,6 +149,56 @@ void TScatter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
    if (painter) painter->ExecuteEventHelper(this->GetGraph(), event, px, py);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get information on point of scatter plot at cursor position (px, py).
+/// Shows x, y, point index, x value, y value, color value, and size value.
+
+char *TScatter::GetObjectInfo(Int_t px, Int_t py) const
+{
+   if (!gPad) {
+      Error("GetObjectInfo", "Cannot be used without gPad");
+      return nullptr;
+   }
+
+   if (!fGraph) return (char *)"";
+
+   Int_t ipoint = -2;
+   const Double_t *fX = fGraph->GetX();
+   const Double_t *fY = fGraph->GetY();
+
+   for (Int_t i = 0; i < fNpoints; i++) {
+      Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
+      Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
+
+      if (dpx * dpx + dpy * dpy < 25) {
+         ipoint = i;
+         break;
+      }
+   }
+
+   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
+
+   static TString info;
+
+   if (ipoint == -2) {
+      info = TString::Format("x=%g, y=%g", x, y);
+      return (char *) info.Data();
+   }
+
+   Double_t xval = fX[ipoint];
+   Double_t yval = fY[ipoint];
+
+   info = TString::Format("x=%g, y=%g, point=%d, xval=%g, yval=%g", x, y, ipoint, xval, yval);
+   if (fColor)
+      info += TString::Format(", col=%g", fColor[ipoint]);
+   if (fSize)
+      info += TString::Format(", size=%g", fSize[ipoint]);
+
+   return (char *) info.Data();
 }
 
 
