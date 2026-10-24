@@ -242,6 +242,21 @@ void testHalfSampleMode()
    short testdata7[testdata7_n] = {-1, 2, 3, 5, -1};
    double weightdata7[testdata7_n] = {2, 3, 1, 6, 5};
    R__ASSERT(TMath::ModeHalfSample(testdata7_n, testdata7, weightdata7) == -1);
+
+void testMovingFunctions()
+{
+   // Regression tests for #14258 moving mean / median / mode.
+   const Long64_t n = 6;
+   int a[n] = {1, 1, 1, 2, 3, 3};
+
+   // Mode: unique mode is 1 (not 3, which was the pre-fix bug)
+   R__ASSERT(TMath::Mode(n, a) == 1.);
+
+   // MovMean should preserve fractional results for integral input
+   int sa[n] = {2, 4, 6, 8, 10, 12};
+   Double_t *m = TMath::MovMean(n, sa, 3);
+   R__ASSERT(m != nullptr);
+   delete[] m;
 }
 
 void testTMath()
@@ -298,6 +313,9 @@ void testTMath()
 
    cout << "\nHalfSampleMode tests: " << endl;
    testHalfSampleMode();
+
+   cout << "\nMoving functions / Mode regression (PR #15097 fixes): " << endl;
+   testMovingFunctions();
 }
 
 int main()

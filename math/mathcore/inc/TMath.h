@@ -538,6 +538,11 @@ struct Limits {
    template <typename T> Double_t Median(Long64_t n, const T *a, const Double_t *w=nullptr, Long64_t *work=nullptr);
    template <typename T> Double_t ModeHalfSample(Long64_t n, const T *a, const Double_t *w = nullptr);
 
+   // Moving mean, moving median and moving mode over a sliding window of length k.
+   template <typename T> Double_t *MovMean(Long64_t n, T *a, const Long64_t k, Double_t *w = nullptr);
+   template <typename T> Double_t *MovMedian(Long64_t n, T *a, const Long64_t k, Double_t *w = nullptr, Long64_t *work = nullptr);
+   template <typename T> Double_t Mode(Long64_t n, T *a);
+
    //k-th order statistic
    template <class Element, typename Size> Element KOrdStat(Size n, const Element *a, Size k, Size *work = 0);
 
@@ -1180,6 +1185,128 @@ Double_t TMath::Mean(Long64_t n, const T *a, const Double_t *w)
    } else {
       return TMath::Mean(a, a+n);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the moving mean of an array using a sliding window of length k.
+///
+/// \param[in] n     number of array elements
+/// \param[in] *a     array
+/// \param[in]  k     window size
+/// \param[in] *w     weight of the array values
+///
+/// The mean is calculated over each window a[i-kr .. i+kl] for every
+/// entry a[i], where kr = k//2 and kl = (k%2 ? k//2 : k//2 - 1).
+///
+/// If w is supplied, a weighted mean is computed; otherwise an unweighted
+/// mean is computed. Results are stored in a dynamically allocated array
+/// of Double_t so that fractional means are preserved regardless of the
+/// element type of the input array.
+template <typename T>
+Double_t *TMath::MovMean(Long64_t n, T *a, const Long64_t k, Double_t *w)
+{
+   if (!a) Fatal("MovMean", "the array is empty");
+   if (n <= 1) Fatal("MovMean", "the length of the array must be >1");
+   if (k > n) Fatal("MovMean", "the window length k is larger than the length of the array");
+   if (k == 1) Fatal("MovMean", "the window length k must be >1");
+
+   const Long64_t kl = k / 2;
+   const Long64_t kr = (k % 2) ? k / 2 : k / 2 - 1;
+   Double_t *result = new Double_t[n];
+
+   for (Long64_t i = 0; i != n; ++i) {
+      Long64_t l, r;
+      if (i == 0) {
+         l = 0;
+         r = (kr >= n) ? n - 1 : kr;
+      } else if (i == n - 1) {
+         l = (i - kl > 0) ? i - kl : 0;
+         r = i;
+      } else {
+         l = i - kl;
+         r = i + kr;
+      }
+      result[i] = TMath::Mean(r - l + 1, a + l, w ? w + l : nullptr);
+   }
+   return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the moving median of an array using a sliding window of length k.
+///
+/// \param[in] n     number of array elements
+/// \param[in] *a     array
+/// \param[in]  k     window size
+/// \param[in] *w     weight of the array values
+/// \param[in] *work  internal work buffer (must be >= n)
+///
+/// The median is calculated over each window a[i-kr .. i+kl]. If w is supplied,
+/// a weighted median is computed; otherwise an unweighted median is computed.
+/// Results are stored in a dynamically allocated array of Double_t so that
+/// fractional medians are preserved regardless of the element type.
+template <typename T>
+Double_t *TMath::MovMedian(Long64_t n, T *a, const Long64_t k, Double_t *w, Long64_t *work)
+{
+   if (!a) Fatal("MovMedian", "the array is empty");
+   if (n <= 1) Fatal("MovMedian", "the length of the array must be >1");
+   if (k > n) Fatal("MovMedian", "the window length k is larger than the length of the array");
+   if (k == 1) Fatal("MovMedian", "the window length k must be >1");
+
+   const Long64_t kl = k / 2;
+   const Long64_t kr = (k % 2) ? k / 2 : k / 2 - 1;
+   Double_t *result = new Double_t[n];
+
+   for (Long64_t i = 0; i != n; ++i) {
+      Long64_t l, r;
+      if (i == 0) {
+         l = 0;
+         r = (kr >= n) ? n - 1 : kr;
+      } else if (i == n - 1) {
+         l = (i - kl > 0) ? i - kl : 0;
+         r = i;
+      } else {
+         l = i - kl;
+         r = i + kr;
+      }
+      result[i] = TMath::Median(r - l + 1, a + l, w ? w + l : nullptr, work);
+   }
+   return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the mode of an array. If there are an equal number of different
+/// values, the smallest value will be returned.
+///
+/// \param[in] n     number of array elements
+/// \param[in] *a    array
+///
+/// The algorithm sorts the array and then counts consecutive equal elements.
+/// The element with the maximum count is returned; ties break in favor of the
+/// first occurrence in the sorted order (i.e., the smallest value).
+template <typename T>
+Double_t TMath::Mode(Long64_t n, T *a)
+{
+   if (!a) Fatal("Mode", "the array is empty");
+   if (n < 1) Fatal("Mode", "the length of the array must be >0");
+
+   std::sort(a, a + n);
+
+   Long64_t N1 = 0; // current run length
+   Long64_t Nmax = 0; // longest run found so far
+   Double_t mode = TMath::QuietNaN();
+
+   Long64_t i = 0;
+   while (i < n) {
+      Long64_t j = i + 1;
+      while (j < n && a[j] == a[i]) ++j;
+      const Long64_t run = j - i; // length of this run
+      if (run > Nmax) {
+         Nmax = run;
+         mode = a[i];
+      }
+      i = j;
+   }
+   return mode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
