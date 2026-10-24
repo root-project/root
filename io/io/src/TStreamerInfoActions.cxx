@@ -22,6 +22,7 @@
 #include "TMemberStreamer.h"
 #include "TClassEdit.h"
 #include "TVirtualCollectionIterators.h"
+#include "ROOT/CheckCollectionSize.hxx"
 #include "TProcessID.h"
 #include "TFile.h"
 
@@ -784,6 +785,8 @@ namespace TStreamerInfoActions
          TVirtualCollectionProxy::TPushPop helper( oldProxy, (char*)addr );
          Int_t nobjects;
          buf.ReadInt(nobjects);
+         nobjects = ROOT::Internal::CheckCollectionSize(
+            buf, nobjects, "TStreamerInfoActions::ReadSTLMemberWiseSameClass", config->fTypeName);
          void* alternative = oldProxy->Allocate(nobjects,true);
          if (nobjects) {
             TActionSequence *actions = oldProxy->GetReadMemberWiseActions( vClVersion );
@@ -816,6 +819,8 @@ namespace TStreamerInfoActions
          TVirtualCollectionProxy::TPushPop helper( oldProxy, (char*)addr );
          Int_t nobjects;
          buf.ReadInt(nobjects);
+         nobjects = ROOT::Internal::CheckCollectionSize(
+            buf, nobjects, "TStreamerInfoActions::ReadSTLMemberWiseSameClass", config->fTypeName);
          void* env = oldProxy->Allocate(nobjects,true);
 
          if (nobjects || vers < 7 ) {
@@ -856,6 +861,8 @@ namespace TStreamerInfoActions
          for(; obj<endobj; obj+=objectSize) {
             Int_t nobjects;
             buf.ReadInt(nobjects);
+            nobjects = ROOT::Internal::CheckCollectionSize(
+               buf, nobjects, "TStreamerInfoActions::ReadArraySTLMemberWiseSameClass", config->fTypeName);
             TVirtualCollectionProxy::TPushPop helper( oldProxy, (char*)obj );
             void* alternative = oldProxy->Allocate(nobjects,true);
             if (nobjects) {
@@ -893,6 +900,8 @@ namespace TStreamerInfoActions
             TVirtualCollectionProxy::TPushPop helper( oldProxy, (char*)obj );
             Int_t nobjects;
             buf.ReadInt(nobjects);
+            nobjects = ROOT::Internal::CheckCollectionSize(
+               buf, nobjects, "TStreamerInfoActions::ReadArraySTLMemberWiseSameClass", config->fTypeName);
             void* env = oldProxy->Allocate(nobjects,true);
 
             if (nobjects || vers < 7 ) {
@@ -930,6 +939,8 @@ namespace TStreamerInfoActions
          TVirtualCollectionProxy::TPushPop helper( newProxy, (char*)addr );
          Int_t nobjects;
          buf.ReadInt(nobjects);
+         nobjects = ROOT::Internal::CheckCollectionSize(
+            buf, nobjects, "TStreamerInfoActions::ReadSTLMemberWiseChangedClass", config->fTypeName);
          void* alternative = newProxy->Allocate(nobjects,true);
          if (nobjects) {
             TActionSequence *actions = newProxy->GetConversionReadMemberWiseActions( oldProxy->GetValueClass(), vClVersion );
@@ -979,6 +990,8 @@ namespace TStreamerInfoActions
             TVirtualCollectionProxy::TPushPop helper( newProxy, (char*)obj );
             Int_t nobjects;
             buf.ReadInt(nobjects);
+            nobjects = ROOT::Internal::CheckCollectionSize(
+               buf, nobjects, "TStreamerInfoActions::ReadArraySTLMemberWiseChangedClass", config->fTypeName);
             void* alternative = newProxy->Allocate(nobjects,true);
             if (nobjects) {
                TActionSequence *actions = newProxy->GetConversionReadMemberWiseActions( oldProxy->GetValueClass(), vClVersion );
@@ -2232,6 +2245,8 @@ namespace TStreamerInfoActions
          std::vector<T> *const vec = (std::vector<T>*)(((char*)addr)+config->fOffset);
          Int_t nvalues;
          buf.ReadInt(nvalues);
+         nvalues = ROOT::Internal::CheckCollectionSize(buf, nvalues, "TStreamerInfoActions::ReadCollectionBasicType",
+                                                       config->fTypeName);
          vec->resize(nvalues);
 
 #ifdef R__VISUAL_CPLUSPLUS
@@ -2277,6 +2292,8 @@ namespace TStreamerInfoActions
          std::vector<float> *const vec = (std::vector<float>*)(((char*)addr)+config->fOffset);
          Int_t nvalues;
          buf.ReadInt(nvalues);
+         nvalues = ROOT::Internal::CheckCollectionSize(buf, nvalues, "TStreamerInfoActions::ReadCollectionFloat16",
+                                                       config->fTypeName);
          vec->resize(nvalues);
 
 #ifdef R__VISUAL_CPLUSPLUS
@@ -2321,6 +2338,8 @@ namespace TStreamerInfoActions
          std::vector<double> *const vec = (std::vector<double>*)(((char*)addr)+config->fOffset);
          Int_t nvalues;
          buf.ReadInt(nvalues);
+         nvalues = ROOT::Internal::CheckCollectionSize(buf, nvalues, "TStreamerInfoActions::ReadCollectionDouble32",
+                                                       config->fTypeName);
          vec->resize(nvalues);
 
 #ifdef R__VISUAL_CPLUSPLUS
@@ -2367,6 +2386,8 @@ namespace TStreamerInfoActions
             std::vector<To> *const vec = (std::vector<To>*)(((char*)addr)+config->fOffset);
             Int_t nvalues;
             buf.ReadInt(nvalues);
+            nvalues = ROOT::Internal::CheckCollectionSize(
+               buf, nvalues, "TStreamerInfoActions::ConvertCollectionBasicType", config->fTypeName);
             vec->resize(nvalues);
 
             From *temp = new From[nvalues];
@@ -2394,6 +2415,8 @@ namespace TStreamerInfoActions
             std::vector<To> *const vec = (std::vector<To>*)(((char*)addr)+config->fOffset);
             Int_t nvalues;
             buf.ReadInt(nvalues);
+            nvalues = ROOT::Internal::CheckCollectionSize(
+               buf, nvalues, "TStreamerInfoActions::ConvertCollectionBasicType", config->fTypeName);
             vec->resize(nvalues);
 
             From *temp = new From[nvalues];
@@ -2420,6 +2443,8 @@ namespace TStreamerInfoActions
          std::vector<To> *const vec = (std::vector<To>*)(((char*)addr)+config->fOffset);
          Int_t nvalues;
          buf.ReadInt(nvalues);
+         nvalues = ROOT::Internal::CheckCollectionSize(buf, nvalues, "TStreamerInfoActions::ConvertCollectionDouble32",
+                                                       config->fTypeName);
          vec->resize(nvalues);
 
          Double32_t *temp = new Double32_t[nvalues];
@@ -2766,6 +2791,8 @@ protected:
 
          Int_t nvalues;
          buf.ReadInt(nvalues);
+         nvalues = ROOT::Internal::CheckCollectionSize(buf, nvalues, "TStreamerInfoActions::ReadNumericalCollection",
+                                                       config->fTypeName);
          void* alternative = newProxy->Allocate(nvalues,true);
          if (nvalues) {
             char startbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
@@ -3364,6 +3391,8 @@ public:
 
          Int_t nvalues;
          buf.ReadInt(nvalues);
+         nvalues = ROOT::Internal::CheckCollectionSize(buf, nvalues, "TStreamerInfoActions::ReadNumericalCollection",
+                                                       config->fTypeName);
          void* alternative = newProxy->Allocate(nvalues,true);
          if (nvalues) {
             char startbuf[TVirtualCollectionProxy::fgIteratorArenaSize];

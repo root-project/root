@@ -31,7 +31,9 @@
 #include "TError.h"
 #include "TGenCollectionStreamer.h"
 #include "TClassStreamer.h"
+#include "ROOT/CheckCollectionSize.hxx"
 #include <cstdlib>
+#include <limits>
 
 namespace {
    const Int_t  kMapOffset = 2;
@@ -201,7 +203,10 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
       }
 
       b >> nobjects;
-      if (nobjects < 0) nobjects = -nobjects;  // still there for backward compatibility
+      if (nobjects < 0 && nobjects != std::numeric_limits<Int_t>::min())
+         nobjects = -nobjects; // still there for backward compatibility
+      nobjects = ROOT::Internal::CheckCollectionSize(b, nobjects, "TConvertClonesArrayToProxy::operator()",
+                                                     fCollectionClass->GetName());
       b >> dummy; // fLowerBound is ignored
       if (cl != subinfo->GetClass()) {
          Error("TClonesArray::Conversion to vector","Bad class");

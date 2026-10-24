@@ -25,6 +25,7 @@
 #include "TVirtualArray.h"
 #include "TVirtualObject.h"
 #include "ThreadLocalStorage.h"
+#include "ROOT/CheckCollectionSize.hxx"
 
 // GetCurrentElement.
 // Currently only used by TRef::Streamer.
@@ -1193,6 +1194,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                            TVirtualCollectionProxy::TPushPop helper( newProxy, cont );
                            Int_t nobjects;
                            b >> nobjects;
+                           nobjects = ROOT::Internal::CheckCollectionSize(b, nobjects, "TStreamerInfo::ReadBuffer",
+                                                                          cle->GetName());
                            env = newProxy->Allocate(nobjects,true);
                            if (!nobjects && (vers>=7)) {
                               // Do nothing but in version 6 of TStreamerInfo and below,
@@ -1303,6 +1306,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                            TVirtualCollectionProxy::TPushPop helper( newProxy, obj );
                            Int_t nobjects;
                            b >> nobjects;
+                           nobjects = ROOT::Internal::CheckCollectionSize(b, nobjects, "TStreamerInfo::ReadBuffer",
+                                                                          cle->GetName());
                            void* env = newProxy->Allocate(nobjects,true);
                            if (!nobjects && (vers>=7)) {
                               // Do nothing but in version 6 of TStreamerInfo and below,

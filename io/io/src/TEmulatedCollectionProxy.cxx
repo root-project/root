@@ -35,6 +35,7 @@ the class TEmulatedMapProxy.
 
 #include "TVirtualMutex.h" // For R__LOCKGUARD
 #include "TInterpreter.h"  // For gInterpreterMutex
+#include "ROOT/CheckCollectionSize.hxx"
 
 //
 // Utility function to allow the creation of a TClass for a std::pair without
@@ -665,6 +666,7 @@ void TEmulatedCollectionProxy::ReadBuffer(TBuffer &b, void *obj)
    TPushPop env(this,obj);
    int nElements = 0;
    b >> nElements;
+   nElements = ROOT::Internal::CheckCollectionSize(b, nElements, "TEmulatedCollectionProxy::ReadBuffer", fName.c_str());
    if ( fEnv->fObject )  {
       Resize(nElements,true);
    }
@@ -679,6 +681,8 @@ void TEmulatedCollectionProxy::Streamer(TBuffer &b)
    if ( b.IsReading() ) {  //Read mode
       int nElements = 0;
       b >> nElements;
+      nElements =
+         ROOT::Internal::CheckCollectionSize(b, nElements, "TEmulatedCollectionProxy::Streamer", fName.c_str());
       if ( fEnv->fObject )  {
          Resize(nElements,true);
       }
