@@ -296,13 +296,15 @@ TEST(RFile, PutOverwrite)
    {
       TH1D hist("hist", "", 100, -10, 10);
       hist.FillRandom("gaus", 1000);
-      file->Put("hist", hist);
+      file->Put("hist", hist, "My Histo");
    }
 
    {
       auto hist = file->Get<TH1D>("hist");
       ASSERT_TRUE(hist);
       EXPECT_EQ(static_cast<int>(hist->GetEntries()), 1000);
+      auto key = file->GetKeyInfo("hist").value();
+      EXPECT_EQ(key.GetTitle(), "My Histo");
    }
 
    // Try putting another object at the same path, should fail
@@ -324,7 +326,7 @@ TEST(RFile, PutOverwrite)
 
    // Now try overwriting without preserving the existing object
    std::string s;
-   file->Overwrite("hist", s, false);
+   file->Overwrite("hist", s, ROOT::RFile::kOverwrite_NoNewCycle);
    {
       // the previous cycle should be gone...
       auto hist = file->Get<TH1D>("hist;2");
@@ -332,6 +334,8 @@ TEST(RFile, PutOverwrite)
       // ...but any cycle before the latest should still be there!
       hist = file->Get<TH1D>("hist;1");
       EXPECT_NE(hist, nullptr);
+      auto key = file->GetKeyInfo("hist;1").value();
+      EXPECT_EQ(key.GetTitle(), "My Histo");
    }
 }
 
@@ -644,7 +648,7 @@ TEST(RFile, GetAfterOverwriteNoBackup)
    std::string s = "foo";
    file->Put("s", s);
    s = "bar";
-   file->Overwrite("s", s, false);
+   file->Overwrite("s", s, ROOT::RFile::kOverwrite_NoNewCycle);
    auto ss = file->Get<std::string>("s");
    EXPECT_EQ(*ss, s);
 
@@ -900,5 +904,30 @@ TEST(RFile, Compression)
    {
       auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
       EXPECT_EQ(file->GetCompressionSettings(), 0);
+   }
+}
+
+TEST(RFile, PutTNamed)
+{
+   FileRaii fileGuard("test_rfile_put_tnamed.root");
+
+   {
+      TNamed named1("named1", "title 1"), named2("named2", "title 2");
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      file->Put(named1);
+      // Put named2 under a dir
+      file->Put(named2, "my");
+   }
+
+   {
+      auto file = RFile::Open(fileGuard.GetPath());
+      auto named1 = file->Get<TNamed>("named1");
+      auto named2 = file->Get<TNamed>("my/named2");
+      EXPECT_STREQ(named1->GetTitle(), "title 1");
+      EXPECT_STREQ(named2->GetTitle(), "title 2");
+      auto key1 = file->GetKeyInfo("named1").value();
+      auto key2 = file->GetKeyInfo("my/named2").value();
+      EXPECT_EQ(key1.GetTitle(), "title 1");
+      EXPECT_EQ(key2.GetTitle(), "title 2");
    }
 }
