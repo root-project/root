@@ -140,7 +140,6 @@ if(MSVC)
   set(cling_exports ${cling_exports}
       ??_7type_info@@6B@
       ?nothrow@std@@3Unothrow_t@1@B
-      __std_replace_copy_2
       __std_reverse_trivially_swappable_1
       __std_reverse_trivially_swappable_2
       __std_reverse_trivially_swappable_4
@@ -152,6 +151,11 @@ if(MSVC)
     _Smtx_lock_shared
     _Smtx_unlock_shared
   )
+  if(MSVC_VERSION GREATER_EQUAL 1941)
+    set(cling_exports ${cling_exports}
+      __std_replace_copy_2
+    )
+  endif()
   # Export the missing std::filesystem symbols (not exposed by MSVCP140.dll)
   set(cling_exports ${cling_exports}
     __std_fs_change_permissions
