@@ -175,8 +175,6 @@ if(pyroot)
   endif()
 endif()
 
-configure_file(.rootrc . COPYONLY)
-
 # This test writes a column of an interpreted type to disk and checks its contents
 ROOT_ADD_GTEST(
   dataframe_snapshot_interpreted_class_write
