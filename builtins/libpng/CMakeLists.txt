@@ -5,9 +5,9 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 # **PLEASE UPDATE ALSO THE FOLLOWING LINE WHEN UPDATING THE VERSION**
-# Feb 2026, https://github.com/pnggroup/libpng/releases/tag/v1.6.55
-set(ROOT_LIBPNG_VERSION 1.6.55)
-set(ROOT_LIBPNG_HASH "4b0abab6d219e95690ebe4db7fc9aa95f4006c83baaa022373c0c8442271283d")
+# Sep 2026, https://github.com/pnggroup/libpng/releases/tag/v1.6.59
+set(ROOT_LIBPNG_VERSION 1.6.59)
+set(ROOT_LIBPNG_HASH "86a3e4b501f7f50e392c4e456ea158893e9a595b1c63eb88c7bb9f6cf8772dad")
 
 set(ROOT_LIBPNG_PREFIX ${CMAKE_BINARY_DIR}/builtins/LIBPNG-prefix)
 
@@ -44,7 +44,7 @@ endif()
 ExternalProject_Add(
     BUILTIN_LIBPNG
     PREFIX ${ROOT_LIBPNG_PREFIX}
-    URL ${lcgpackages}/libpng-${ROOT_LIBPNG_VERSION}.tar.gz
+    URL https://root.cern/download/libpng-${ROOT_LIBPNG_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_LIBPNG_HASH}
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
     -DCMAKE_POLICY_VERSION_MINIMUM=3.5
