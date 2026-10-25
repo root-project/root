@@ -1557,10 +1557,7 @@ RooArgSet RooJSONFactoryWSTool::readAxes(const JSONNode &topNode)
 
    for (JSONNode const &node : topNode["axes"].children()) {
       if (node.has_child("edges")) {
-         std::vector<double> edges;
-         for (auto const &bound : node["edges"].children()) {
-            edges.push_back(bound.val_double());
-         }
+         std::vector<double> edges = readEdges(node["edges"], "axis '" + node["name"].val() + "'");
          auto obs = std::make_unique<RooRealVar>(node["name"].val().c_str(), node["name"].val().c_str(), edges[0],
                                                  edges[edges.size() - 1]);
          RooBinning bins(obs->getMin(), obs->getMax());
@@ -1607,6 +1604,11 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
       errors = &n["errors"];
       if (!errors->is_seq())
          RooJSONFactoryWSTool::error("errors are not in list form");
+      if (errors->num_children() != contents.num_children()) {
+         RooJSONFactoryWSTool::error("inconsistent number of errors and contents in '" + name +
+                                     "': errors=" + std::to_string(errors->num_children()) +
+                                     ", contents=" + std::to_string(contents.num_children()));
+      }
    }
 
    auto bins = generateBinIndices(vars);
