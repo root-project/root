@@ -5,10 +5,10 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 # **PLEASE UPDATE ALSO THE FOLLOWING LINE WHEN UPDATING THE VERSION**
-# 19 Feb 2024, https://sourceforge.net/projects/giflib/files/giflib-5.x/
-set(ROOT_LIBGIF_VERSION 5.2.2)
-set(ROOT_LIBGIF_HASH "302b2758bbdb8b5c63eafad21b15a53bb7aef7e5d4d278fce170c160364082b5")
-# The sources come w/o CMakeList.txt as of version 5.2.2. We add ours, it's very simple.
+# 12 Mar 2026, https://sourceforge.net/projects/giflib/files/giflib-6.x/
+set(ROOT_LIBGIF_VERSION 6.1.3)
+set(ROOT_LIBGIF_HASH "b65b66b99f0424b93525f987386f22fc5efb9da2bfc92ad4a532249aaffbab0e")
+# The sources come w/o CMakeList.txt as of version 6.1.3. We add ours, it's very simple.
 set(ROOT_LIBGIF_PATCH_FILE ${CMAKE_CURRENT_SOURCE_DIR}/libgif_add_cmakelists.patch)
 
 set(ROOT_LIBGIF_PREFIX ${CMAKE_BINARY_DIR}/builtins/LIBGIF-prefix)
@@ -36,7 +36,7 @@ endif()
 ExternalProject_Add(
     BUILTIN_LIBGIF
     PREFIX ${ROOT_LIBGIF_PREFIX}
-    URL ${lcgpackages}/giflib-${ROOT_LIBGIF_VERSION}.tar.gz
+    URL https://root.cern/download/giflib-${ROOT_LIBGIF_VERSION}.tar.gz
     URL_HASH SHA256=${ROOT_LIBGIF_HASH}
     ${LIBGIF_PATCH_COMMAND}
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
