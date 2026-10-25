@@ -1141,6 +1141,21 @@ RColumnInfoGroup RNTupleMergeStrategyDefault::GatherColumnInfos(const RDescripto
    return res;
 }
 
+// Collection and variant children have no default elements for a missing entry.
+static std::uint64_t GetElementsPerEntry(const ROOT::RFieldDescriptor &field, const ROOT::RNTupleDescriptor &descriptor)
+{
+   auto nElements = std::max<std::uint64_t>(field.GetNRepetitions(), 1);
+   for (auto parentId = field.GetParentId(); parentId != ROOT::kInvalidDescriptorId;) {
+      const auto &parent = descriptor.GetFieldDescriptor(parentId);
+      if (parent.GetStructure() == ROOT::ENTupleStructure::kCollection ||
+          parent.GetStructure() == ROOT::ENTupleStructure::kVariant)
+         return 0;
+      nElements *= std::max<std::uint64_t>(parent.GetNRepetitions(), 1);
+      parentId = parent.GetParentId();
+   }
+   return nElements;
+}
+
 // Generates default (zero) values for the given columns
 ROOT::RResult<void> RNTupleMergeStrategyDefault::GenerateZeroPagesForColumns(size_t nEntriesToGenerate,
                                                                              std::span<const RColumnMergeInfo> columns,
@@ -1157,21 +1172,8 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::GenerateZeroPagesForColumns(siz
       if (field->GetLogicalColumnIds()[0] != column.fInputId)
          continue;
 
-      // Check if this column is a child of a Collection or a Variant. If so, it has no data
-      // and can be skipped.
-      bool skipColumn = false;
-      auto nRepetitions = std::max<std::uint64_t>(field->GetNRepetitions(), 1);
-      for (auto parentId = field->GetParentId(); parentId != ROOT::kInvalidDescriptorId;) {
-         const ROOT::RFieldDescriptor &parent = column.fParentNTupleDescriptor->GetFieldDescriptor(parentId);
-         if (parent.GetStructure() == ROOT::ENTupleStructure::kCollection ||
-             parent.GetStructure() == ROOT::ENTupleStructure::kVariant) {
-            skipColumn = true;
-            break;
-         }
-         nRepetitions *= std::max<std::uint64_t>(parent.GetNRepetitions(), 1);
-         parentId = parent.GetParentId();
-      }
-      if (skipColumn)
+      const auto nElementsPerEntry = GetElementsPerEntry(*field, *column.fParentNTupleDescriptor);
+      if (!nElementsPerEntry)
          continue;
 
       const auto structure = field->GetStructure();
@@ -1188,35 +1190,40 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::GenerateZeroPagesForColumns(siz
                 structure == ROOT::ENTupleStructure::kPlain);
 
       const auto &columnDesc = fDstDescriptor.GetColumnDescriptor(column.fOutputId);
-      const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
-      const auto nElements = nEntriesToGenerate * nRepetitions;
-      const auto nBytesOnStorage = colElement->GetPackedSize(nElements);
-      // TODO(gparolini): make this configurable
-      constexpr auto kPageSizeLimit = 256 * 1024;
-      // TODO(gparolini): consider coalescing the last page if its size is less than some threshold
-      const size_t nPages = nBytesOnStorage / kPageSizeLimit + !!(nBytesOnStorage % kPageSizeLimit);
-      for (size_t i = 0; i < nPages; ++i) {
-         const auto pageSize = (i < nPages - 1) ? kPageSizeLimit : nBytesOnStorage - kPageSizeLimit * (nPages - 1);
-         const auto checksumSize = RPageStorage::kNBytesPageChecksum;
-         const auto bufSize = pageSize + checksumSize;
-         assert(pageSize % colElement->GetSize() == 0);
-         const auto nElementsPerPage = pageSize / colElement->GetSize();
-         auto page = fPageAlloc->NewPage(colElement->GetSize(), nElementsPerPage);
-         page.GrowUnchecked(nElementsPerPage);
-         memset(page.GetBuffer(), 0, page.GetNBytes());
+      try {
+         const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
+         colElement->SetBitsOnStorage(columnDesc.GetBitsOnStorage());
+         if (const auto &range = columnDesc.GetValueRange(); range)
+            colElement->SetValueRange(range->fMin, range->fMax);
+         const auto nElements = nEntriesToGenerate * nElementsPerEntry;
+         // TODO(gparolini): make this configurable
+         constexpr auto kPageSizeLimit = 256 * 1024;
+         const auto maxElementsPerPage = std::max<std::size_t>(kPageSizeLimit * 8 / colElement->GetBitsOnStorage(), 1);
+         // TODO(gparolini): consider coalescing the last page if its size is less than some threshold
+         for (std::size_t nRemaining = nElements; nRemaining > 0;) {
+            const auto nElementsPerPage = std::min(nRemaining, maxElementsPerPage);
+            const auto bufSize = colElement->GetPackedSize(nElementsPerPage) + RPageStorage::kNBytesPageChecksum;
+            auto page = fPageAlloc->NewPage(colElement->GetSize(), nElementsPerPage);
+            page.GrowUnchecked(nElementsPerPage);
+            memset(page.GetBuffer(), 0, page.GetNBytes());
 
-         auto &buffer = sealedPageData.fBuffers.emplace_back(new std::byte[bufSize]);
-         RPageSink::RSealPageConfig sealConf;
-         sealConf.fElement = colElement.get();
-         sealConf.fPage = &page;
-         sealConf.fBuffer = buffer.get();
-         sealConf.fCompressionSettings = fMergeOpts.fCompressionSettings.value();
-         sealConf.fWriteChecksum = fDestination.GetWriteOptions().GetEnablePageChecksums();
-         auto sealedPage = RPageSink::SealPage(sealConf);
+            auto &buffer = sealedPageData.fBuffers.emplace_back(new std::byte[bufSize]);
+            RPageSink::RSealPageConfig sealConf;
+            sealConf.fElement = colElement.get();
+            sealConf.fPage = &page;
+            sealConf.fBuffer = buffer.get();
+            sealConf.fCompressionSettings = fMergeOpts.fCompressionSettings.value();
+            sealConf.fWriteChecksum = fDestination.GetWriteOptions().GetEnablePageChecksums();
+            auto sealedPage = RPageSink::SealPage(sealConf);
 
-         sealedPageData.fPagesV.push_back({sealedPage});
-         sealedPageData.fGroups.emplace_back(column.fOutputId, sealedPageData.fPagesV.back().cbegin(),
-                                             sealedPageData.fPagesV.back().cend());
+            sealedPageData.fPagesV.push_back({sealedPage});
+            sealedPageData.fGroups.emplace_back(column.fOutputId, sealedPageData.fPagesV.back().cbegin(),
+                                                sealedPageData.fPagesV.back().cend());
+            nRemaining -= nElementsPerPage;
+         }
+      } catch (const ROOT::RException &ex) {
+         return R__FAIL("cannot generate default values for field `" +
+                        column.fParentNTupleDescriptor->GetQualifiedFieldName(field->GetId()) + "`: " + ex.what());
       }
    }
    return ROOT::RResult<void>::Success();
@@ -1291,11 +1298,15 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeCommonColumns(ROOT::Intern
       // As an optimization, we don't do this for the first source (since we can rely on the FirstElementIndex and
       // deferred column mechanism in that case).
       // TODO: also avoid doing this if we added no real page of this column to the destination yet.
-      if (columnDesc.GetFirstElementIndex() > clusterDesc.GetFirstEntryIndex() && fDestination.GetNEntries() > 0) {
-         const auto nMissingEntries = columnDesc.GetFirstElementIndex() - clusterDesc.GetFirstEntryIndex();
-         auto res = GenerateZeroPagesForColumns(nMissingEntries, {&column, 1}, sealedPageData);
-         if (!res)
-            return R__FORWARD_ERROR(res);
+      if (const auto nElementsPerEntry =
+             GetElementsPerEntry(*column.fParentFieldDescriptor, *column.fParentNTupleDescriptor)) {
+         const auto firstEntry = columnDesc.GetFirstElementIndex() / nElementsPerEntry;
+         if (firstEntry > clusterDesc.GetFirstEntryIndex() && fDestination.GetNEntries() > 0) {
+            const auto nMissingEntries = firstEntry - clusterDesc.GetFirstEntryIndex();
+            auto res = GenerateZeroPagesForColumns(nMissingEntries, {&column, 1}, sealedPageData);
+            if (!res)
+               return R__FORWARD_ERROR(res);
+         }
       }
 
       // Loop over the pages
