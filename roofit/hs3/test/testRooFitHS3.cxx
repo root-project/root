@@ -3067,3 +3067,61 @@ TEST(RooFitHS3, UnbinnedDatasetAxesHaveNoBinning)
       EXPECT_FALSE(axis.has_child("edges")) << json;
    }
 }
+
+// The snapshot of a ModelConfig is exported as the "init" parameter point of
+// the analysis, and restored on import.
+TEST(RooFitHS3, AnalysisInitRoundTrip)
+{
+   RooWorkspace ws1;
+   ws1.factory("Gaussian::pdf(x[0, -5, 5], mu[0, -5, 5], 1.0)");
+   RooFit::ModelConfig mc1{"ModelConfig", &ws1};
+   mc1.SetPdf("pdf");
+   mc1.SetParametersOfInterest("mu");
+   mc1.SetObservables("x");
+   ws1.var("mu")->setVal(1.5);
+   RooArgSet initSet{*ws1.var("mu")};
+   initSet.setName("POI");
+   mc1.SetSnapshot(initSet);
+   ws1.var("mu")->setVal(0.0);
+   ws1.import(mc1);
+
+   const std::string json1 = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
+   EXPECT_NE(json1.find(R"("init":"ModelConfig_POI_snapshot")"), std::string::npos) << json1;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json1));
+   auto *mc2 = dynamic_cast<RooFit::ModelConfig *>(ws2.obj("ModelConfig"));
+   ASSERT_NE(mc2, nullptr);
+   std::unique_ptr<const RooArgSet> snapshot{mc2->GetSnapshot()};
+   ASSERT_NE(snapshot, nullptr);
+   auto *mu = dynamic_cast<RooRealVar *>(snapshot->find("mu"));
+   ASSERT_NE(mu, nullptr);
+   EXPECT_DOUBLE_EQ(mu->getVal(), 1.5);
+
+   // The snapshot name must be stable under repeated round trips.
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), json1);
+
+   // An "init" that refers to a missing parameter point is reported.
+   std::string missingInit = json1;
+   missingInit.replace(missingInit.find(R"("init":"ModelConfig_POI_snapshot")"),
+                       std::string(R"("init":"ModelConfig_POI_snapshot")").size(), R"("init":"does_not_exist")");
+   RooWorkspace ws3;
+   const std::string warnings = captureMessages(
+      RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(missingInit)); });
+   EXPECT_NE(warnings.find("'does_not_exist' used as \"init\""), std::string::npos) << warnings;
+
+   // The snapshot of an unnamed set is called "<mc name>__snapshot", which must be stable as well.
+   RooWorkspace ws4;
+   ws4.factory("Gaussian::pdf(x[0, -5, 5], mu[0, -5, 5], 1.0)");
+   RooFit::ModelConfig mc4{"ModelConfig", &ws4};
+   mc4.SetPdf("pdf");
+   mc4.SetParametersOfInterest("mu");
+   mc4.SetObservables("x");
+   mc4.SetSnapshot(RooArgSet{*ws4.var("mu")});
+   ws4.import(mc4);
+   const std::string json4 = RooJSONFactoryWSTool{ws4}.exportJSONtoString();
+   EXPECT_NE(json4.find(R"("init":"ModelConfig__snapshot")"), std::string::npos) << json4;
+   RooWorkspace ws5;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws5}.importJSONfromString(json4));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws5}.exportJSONtoString(), json4);
+}
