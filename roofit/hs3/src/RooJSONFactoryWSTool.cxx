@@ -1368,6 +1368,11 @@ void RooJSONFactoryWSTool::exportAxis(JSONNode &obsNode, RooRealVar const &var)
    obsNode["name"] << name;
 
    writeAxisBinning(obsNode, var.getBinning());
+   // Binned axes always carry their range, also if it is redundant with the "edges" of an irregular binning.
+   if (!obsNode.has_child("min")) {
+      obsNode["min"] << var.getBinning().lowBound();
+      obsNode["max"] << var.getBinning().highBound();
+   }
 }
 
 /**

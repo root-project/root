@@ -3662,3 +3662,27 @@ TEST(RooFitHS3, HistFactoryConstraintsByName)
    ASSERT_NE(model3, nullptr);
    EXPECT_EQ(model3->pdfList().size(), 2u); // the sum and alpha_a_constraint
 }
+
+// Binned axes with an irregular binning carry "min" and "max" in addition to the "edges".
+TEST(RooFitHS3, IrregularBinnedAxesHaveRange)
+{
+   RooRealVar x{"x", "x", 0.0, 3.0};
+   std::vector<double> edges{0.0, 1.0, 3.0};
+   x.setBinning(RooBinning{2, edges.data()});
+   RooDataHist dh{"dh", "dh", RooArgSet{x}};
+   RooWorkspace ws;
+   ws.import(dh, RooFit::Silence());
+
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json);
+   const auto *dataNode = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["data"], "dh");
+   ASSERT_NE(dataNode, nullptr) << json;
+   const auto &axis = (*dataNode)["axes"].child(0);
+   EXPECT_TRUE(axis.has_child("edges")) << json;
+   EXPECT_DOUBLE_EQ(axis["min"].val_double(), 0.0) << json;
+   EXPECT_DOUBLE_EQ(axis["max"].val_double(), 3.0) << json;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), json);
+}
