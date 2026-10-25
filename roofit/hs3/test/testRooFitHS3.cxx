@@ -10,8 +10,10 @@
 #include <RooBinWidthFunction.h>
 #include <RooBinning.h>
 #include <RooCategory.h>
+#include <RooBinSamplingPdf.h>
 #include <RooConstVar.h>
 #include <RooDataSet.h>
+#include <RooExtendPdf.h>
 #include <RooExponential.h>
 #include <RooFit/ModelConfig.h>
 #include <RooFitResult.h>
@@ -3137,4 +3139,63 @@ TEST(RooFitHS3, AnalysisInitRoundTrip)
    RooWorkspace ws5;
    ASSERT_TRUE(RooJSONFactoryWSTool{ws5}.importJSONfromString(json4));
    EXPECT_EQ(RooJSONFactoryWSTool{ws5}.exportJSONtoString(), json4);
+}
+
+// Type keys follow the HS3 catalog. The old RooFit-specific keys are still accepted on import.
+TEST(RooFitHS3, TypeKeysMatchTheCatalog)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x{"x", "x", 0.0, 10.0};
+   x.setBins(10);
+   RooRealVar mean{"mean", "mean", 5.0, 0.0, 10.0};
+   RooRealVar sigma{"sigma", "sigma", 1.0, 0.1, 5.0};
+
+   // Import a single distribution from an HS3 document.
+   auto importPdf = [](std::string const &distribution) {
+      auto ws = std::make_unique<RooWorkspace>();
+      RooJSONFactoryWSTool{*ws}.importJSONfromString(R"({
+         "metadata": {"hs3_version": "0.2"},
+         "domains": [{"name": "default_domain", "type": "product_domain", "axes": [{"name": "m", "min": 0, "max": 10}]}],
+         "distributions": [)" + distribution +
+                                                     R"(]
+      })");
+      return ws;
+   };
+
+   // argus_dist is the HS3 key, ARGUS_dist is deprecated.
+   {
+      RooWorkspace ws;
+      ws.factory("ArgusBG::argus(x[0, 10], 9.0, -1.0, 0.5)");
+      const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      EXPECT_NE(json.find(R"("type":"argus_dist")"), std::string::npos) << json;
+   }
+   std::unique_ptr<RooWorkspace> argus;
+   const std::string argusWarnings = captureMessages(RooFit::WARNING, RooFit::IO, [&] {
+      argus = importPdf(
+         R"({"name": "argus", "type": "ARGUS_dist", "mass": "m", "resonance": 9.0, "slope": -1.0, "power": 0.5})");
+   });
+   EXPECT_NE(argus->pdf("argus"), nullptr);
+   EXPECT_NE(argusWarnings.find(R"(the type "ARGUS_dist" is deprecated)"), std::string::npos) << argusWarnings;
+
+   // RooBinSamplingPdf is exported and imported with the same key.
+   RooGaussian gauss{"gauss", "", x, mean, sigma};
+   RooBinSamplingPdf binSampling{"binSampling", "", x, gauss, 1e-3};
+   EXPECT_EQ(validate(binSampling), 0);
+
+   // rate_extended_dist uses the HS3 field names "rate" and "dist".
+   RooRealVar nEvents{"nEvents", "nEvents", 100.0, 0.0, 1000.0};
+   RooExtendPdf extended{"extended", "", gauss, nEvents};
+   EXPECT_EQ(validate(extended), 0);
+   {
+      RooWorkspace ws;
+      ws.import(extended, RooFit::Silence());
+      const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      EXPECT_NE(json.find(R"("dist":"gauss")"), std::string::npos) << json;
+      EXPECT_NE(json.find(R"("rate":"nEvents")"), std::string::npos) << json;
+      EXPECT_EQ(json.find(R"("range")"), std::string::npos) << json;
+   }
+   auto legacyExtended = importPdf(R"({"name": "ext", "type": "rate_extended_dist", "pdf": "g", "norm": 10.0},
+                                      {"name": "g", "type": "gaussian_dist", "x": "m", "mean": 5.0, "sigma": 1.0})");
+   EXPECT_NE(dynamic_cast<RooExtendPdf *>(legacyExtended->pdf("ext")), nullptr);
 }

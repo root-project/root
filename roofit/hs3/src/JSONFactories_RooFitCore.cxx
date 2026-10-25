@@ -515,8 +515,9 @@ bool importFFTConvPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 bool importExtendPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
-   RooAbsPdf *pdf = tool->requestArg<RooAbsPdf>(p, "pdf");
-   RooAbsReal *norm = tool->requestArg<RooAbsReal>(p, "norm");
+   // HS3 calls the fields "dist" and "rate". RooFit used to write "pdf" and "norm", which are still accepted.
+   RooAbsPdf *pdf = tool->requestArg<RooAbsPdf>(p, p.has_child("pdf") && !p.has_child("dist") ? "pdf" : "dist");
+   RooAbsReal *norm = tool->requestArg<RooAbsReal>(p, p.has_child("norm") && !p.has_child("rate") ? "norm" : "rate");
    if (p.has_child("range")) {
       std::string rangeName = p["range"].val();
       tool->wsEmplace<RooExtendPdf>(name, *pdf, *norm, rangeName.c_str());
@@ -714,6 +715,30 @@ bool importSpline(RooJSONFactoryWSTool *tool, const JSONNode &p)
 
    return true;
 }
+
+// Importer that is registered with top priority for a deprecated type key. It warns once, and then lets the importers
+// or the factory expression that are registered for the deprecated key do the actual work.
+class DeprecatedKeyImporter : public RooFit::JSONIO::Importer {
+public:
+   DeprecatedKeyImporter(std::string key, std::string replacement)
+      : _key{std::move(key)}, _replacement{std::move(replacement)}
+   {
+   }
+   bool importArg(RooJSONFactoryWSTool *, const JSONNode &) const override
+   {
+      if (!_warned) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: the type \"" + _key + "\" is deprecated, please use \"" +
+                                       _replacement + "\" instead.");
+         _warned = true;
+      }
+      return false;
+   }
+
+private:
+   const std::string _key;
+   const std::string _replacement;
+   mutable bool _warned = false;
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // specialized exporter implementations
@@ -1038,8 +1063,8 @@ bool exportExtendPdf(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &el
    if (auto rangeName = pdf->getRangeName()) {
       elem["range"] << rangeName->GetName();
    }
-   elem["pdf"] << pdf->pdf().GetName();
-   elem["norm"] << pdf->getN().GetName();
+   elem["dist"] << pdf->pdf().GetName();
+   elem["rate"] << pdf->getN().GetName();
    return true;
 }
 
@@ -1178,12 +1203,16 @@ void registerExporter(TClass const *cl, std::string key, bool topPriority = true
 STATIC_EXECUTE([]() {
    registerImporter<importWrapperPdf>("density_function_dist");
    registerImporter<importExtendPdf>("rate_extended_dist");
+   RooFit::JSONIO::registerImporter("ARGUS_dist", std::make_unique<DeprecatedKeyImporter>("ARGUS_dist", "argus_dist"));
+   RooFit::JSONIO::registerImporter("binsampling",
+                                    std::make_unique<DeprecatedKeyImporter>("binsampling", "binsampling_dist"));
    registerImporter<importProduct>("product", false);
    registerImporter<importProdPdf>("product_dist", false);
    registerImporter<importAddition>("sum", false);
    registerImporter<importAddPdf>("mixture_dist", false);
    registerImporter<importAddModel>("mixture_resolution_model", false);
    registerImporter<importBinSamplingPdf>("binsampling_dist", false);
+   registerImporter<importBinSamplingPdf>("binsampling", false);
    registerImporter<importBinWidthFunction<false>>("binvolume", false);
    registerImporter<importBinWidthFunction<true>>("inverse_binvolume", false);
    registerImporter<importPolynomial<RooLegacyExpPoly>>("legacy_exp_poly_dist", false);
@@ -1214,7 +1243,7 @@ STATIC_EXECUTE([]() {
    registerExporter<exportWrapperPdf>(RooWrapperPdf::Class(), "density_function_dist");
    registerExporter<exportAddPdf<RooAddPdf>>(RooAddPdf::Class(), "mixture_dist", false);
    registerExporter<exportAddPdf<RooAddModel>>(RooAddModel::Class(), "mixture_resolution_model", false);
-   registerExporter<exportBinSamplingPdf>(RooBinSamplingPdf::Class(), "binsampling", false);
+   registerExporter<exportBinSamplingPdf>(RooBinSamplingPdf::Class(), "binsampling_dist", false);
    registerExporter<exportBinWidthFunction>(RooBinWidthFunction::Class(), "binvolume", false);
    registerExporter<exportPolynomial<RooLegacyExpPoly>>(RooLegacyExpPoly::Class(), "legacy_exp_poly_dist", false);
    registerExporter<exportExponential>(RooExponential::Class(), "exponential_dist", false);
