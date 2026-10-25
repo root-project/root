@@ -755,6 +755,26 @@ RooAbsCategory *findCategoryObservable(RooAbsData const &data)
    return cat;
 }
 
+/// Warn if the HS3 version of an imported document is not understood or newer than what RooFit writes.
+void checkHS3Version(std::string const &version)
+{
+   int major = 0;
+   int minor = 0;
+   int supportedMajor = 0;
+   int supportedMinor = 0;
+   parseHS3Version(hs3VersionTag, supportedMajor, supportedMinor);
+   if (!parseHS3Version(version, major, minor)) {
+      RooJSONFactoryWSTool::warning("RooFitHS3: cannot parse hs3_version '" + version +
+                                    "', expected a string of the form \"MAJOR.MINOR\".");
+      return;
+   }
+   if (std::make_pair(major, minor) > std::make_pair(supportedMajor, supportedMinor)) {
+      RooJSONFactoryWSTool::warning("RooFitHS3: the document has hs3_version '" + version +
+                                    "', which is newer than the version supported by this RooFit ('" + hs3VersionTag +
+                                    "'). Some content might not be imported correctly.");
+   }
+}
+
 } // namespace
 
 RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
@@ -1939,12 +1959,11 @@ void RooJSONFactoryWSTool::setStringAttribute(const std::string &obj, const std:
 void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
 {
    // Per HS3 standard, the hs3_version in the metadata is required. So we
-   // error out if it is missing. TODO: now we are only checking if the
-   // hs3_version tag exists, but in the future when the HS3 specification
-   // versions are actually frozen, we should also check if the hs3_version is
-   // one that RooFit can actually read.
+   // error out if it is missing or not a string, and warn if the document is
+   // newer than what this version of RooFit was written for.
    auto metadata = n.find("metadata");
-   if (!metadata || !metadata->find("hs3_version")) {
+   auto versionNode = metadata ? metadata->find("hs3_version") : nullptr;
+   if (!versionNode) {
       std::stringstream ss;
       ss << "The HS3 version is missing in the JSON!\n"
          << "Please include the HS3 version in the metadata field, e.g.:\n"
@@ -1954,6 +1973,11 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
          << "    }";
       error(ss.str());
    }
+   if (versionNode->is_container() || versionNode->is_null() || versionNode->is_number()) {
+      error(std::string("The HS3 version in the metadata must be a string, e.g. \"") + hs3VersionTag + "\"");
+   }
+   _hs3VersionInput = versionNode->val();
+   checkHS3Version(_hs3VersionInput);
 
    _rootnodeInput = &n;
 
@@ -2047,6 +2071,7 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
    }
 
    _rootnodeInput = nullptr;
+   _hs3VersionInput.clear();
    _domains.reset();
    _functionsByName.clear();
    _distributionsByName.clear();

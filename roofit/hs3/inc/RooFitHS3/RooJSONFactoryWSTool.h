@@ -206,6 +206,9 @@ public:
    std::string getStringAttribute(const std::string &obj, const std::string &attrib);
    void setStringAttribute(const std::string &obj, const std::string &attrib, const std::string &value);
 
+   /// The "hs3_version" of the document that is currently being imported, or an empty string outside of an import.
+   std::string const &hs3VersionInput() const { return _hs3VersionInput; }
+
 private:
    template <class T>
    T *requestImpl(const std::string &objname);
@@ -251,6 +254,7 @@ private:
    const RooFit::Detail::JSONNode *_attributesNode = nullptr;
    RooFit::Detail::JSONNode *_rootnodeOutput = nullptr;
    RooFit::Detail::JSONNode *_varsNode = nullptr;
+   std::string _hs3VersionInput;
    RooWorkspace &_workspace;
 
    // objects to represent intermediate information

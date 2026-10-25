@@ -2892,3 +2892,26 @@ TEST(RooFitHS3, GenericTypeNames)
    EXPECT_NE(json.find("\"name\":\"c_exponential_inverted\",\"type\":\"generic\""), std::string::npos) << json;
    EXPECT_EQ(json.find("\"type\":\"generic_function\""), std::string::npos) << json;
 }
+
+// The hs3_version must be a string. Documents that are newer than what RooFit
+// writes are imported with a warning.
+TEST(RooFitHS3, VersionStringHandling)
+{
+   auto importWithVersion = [](std::string const &version) {
+      RooWorkspace ws;
+      return RooJSONFactoryWSTool{ws}.importJSONfromString(R"({"metadata": {"hs3_version": )" + version + "}}");
+   };
+
+   expectImportThrowsWithError(R"({"metadata": {}})", "The HS3 version is missing");
+   expectImportThrowsWithError(R"({"metadata": {"hs3_version": 0.2}})", "must be a string");
+
+   std::string warnings =
+      captureMessages(RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(importWithVersion("\"0.2\"")); });
+   EXPECT_EQ(warnings.find("hs3_version"), std::string::npos) << warnings;
+
+   warnings = captureMessages(RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(importWithVersion("\"99.1.4\"")); });
+   EXPECT_NE(warnings.find("'99.1.4', which is newer"), std::string::npos) << warnings;
+
+   warnings = captureMessages(RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(importWithVersion("\"latest\"")); });
+   EXPECT_NE(warnings.find("cannot parse hs3_version 'latest'"), std::string::npos) << warnings;
+}
