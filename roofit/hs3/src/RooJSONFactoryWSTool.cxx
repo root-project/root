@@ -442,8 +442,36 @@ void getObservables(RooWorkspace const &ws, const JSONNode &node, RooAbsCollecti
    }
 }
 
+// Make the ranges of the observables of unbinned data consistent with the "min" and "max" of the axes. Variables that
+// didn't get their range from a domain take it from the axis. If `domains` is null, all ranges are considered explicit.
+void applyUnbinnedAxisRanges(const JSONNode &p, RooWorkspace &workspace, RooFit::JSONIO::Detail::Domains const *domains)
+{
+   for (const auto &axis : p["axes"].children()) {
+      if (!axis.has_child("min") || !axis.has_child("max")) {
+         continue;
+      }
+      const std::string name = RooJSONFactoryWSTool::name(axis);
+      RooRealVar *var = workspace.var(name);
+      if (!var) {
+         continue; // reported by getObservables()
+      }
+      const double min = axis["min"].val_double();
+      const double max = axis["max"].val_double();
+      if (domains && !domains->hasVariable(name.c_str())) {
+         var->setRange(min, max);
+      } else if (var->getMin() != min || var->getMax() != max) {
+         std::stringstream ss;
+         ss << "RooFitHS3: the range [" << min << ", " << max << "] of the axis '" << name << "' of the dataset '"
+            << RooJSONFactoryWSTool::name(p) << "' differs from the range [" << var->getMin() << ", " << var->getMax()
+            << "] of the variable.";
+         RooJSONFactoryWSTool::warning(ss.str());
+      }
+   }
+}
+
 // Create a RooAbsData (binned or unbinned) from the JSON node `p`.
-std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
+std::unique_ptr<RooAbsData>
+loadData(const JSONNode &p, RooWorkspace &workspace, RooFit::JSONIO::Detail::Domains const *domains)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
 
@@ -457,6 +485,7 @@ std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
       // unbinned
       RooArgList varlist;
       getObservables(workspace, p, varlist);
+      applyUnbinnedAxisRanges(p, workspace, domains);
       RooArgSet vars(varlist);
       auto data = std::make_unique<RooDataSet>(name, name, vars, RooFit::WeightVar());
       auto &coords = p["entries"];
@@ -2155,7 +2184,7 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
    std::vector<std::unique_ptr<RooAbsData>> datasets;
    if (auto dataNode = n.find("data")) {
       for (const auto &p : dataNode->children()) {
-         datasets.push_back(loadData(p, _workspace));
+         datasets.push_back(loadData(p, _workspace, _domains.get()));
       }
    }
 
@@ -2258,7 +2287,7 @@ void RooJSONFactoryWSTool::importJSONElement(const std::string &name, const std:
    if (isVariable) {
       this->importVariableElement(n);
    } else if (isData) {
-      auto absData = loadData(n, _workspace);
+      auto absData = loadData(n, _workspace, nullptr);
       _workspace.import(*absData);
    } else {
       this->importFunction(n, false);
