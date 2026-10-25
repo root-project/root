@@ -2056,8 +2056,36 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
 
          RooArgSet vars;
          for (const auto &var : snsh["parameters"].children()) {
-            if (RooRealVar *rrv = _workspace.var(RooJSONFactoryWSTool::name(var))) {
+            const std::string varName = RooJSONFactoryWSTool::name(var);
+            JSONNode const *valueNode = var.find("value");
+            const bool hasStringValue = valueNode && !valueNode->is_number();
+            if (RooCategory *cat = _workspace.cat(varName)) {
+               if (hasStringValue) {
+                  cat->setLabel(valueNode->val().c_str());
+               } else if (valueNode) {
+                  cat->setIndex(valueNode->val_int());
+               }
+               vars.add(*cat);
+               continue;
+            }
+            if (hasStringValue) {
+               warning("RooFitHS3: ignoring the string value of parameter '" + varName + "' in parameter point '" +
+                       name + "', because there is no category with that name.");
+               continue;
+            }
+            RooRealVar *rrv = _workspace.var(varName);
+            if (!rrv && !_workspace.arg(varName)) {
+               // The parameter is not used by any other component: create it, constant unless a domain lists it.
+               testValidName(varName, true);
+               rrv = &wsEmplace<RooRealVar>(varName, 1.);
                configureVariable(*_domains, var, *rrv);
+               if (!var.has_child("const")) {
+                  rrv->setConstant(!_domains->hasVariable(varName.c_str()));
+               }
+            } else if (rrv) {
+               configureVariable(*_domains, var, *rrv);
+            }
+            if (rrv) {
                vars.add(*rrv);
             }
          }
