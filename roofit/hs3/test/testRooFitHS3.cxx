@@ -3219,3 +3219,40 @@ TEST(RooFitHS3, TypeKeysMatchTheCatalog)
                                       {"name": "g", "type": "gaussian_dist", "x": "m", "mean": 5.0, "sigma": 1.0})");
    EXPECT_NE(dynamic_cast<RooExtendPdf *>(legacyExtended->pdf("ext")), nullptr);
 }
+
+// TFormula ternaries are exported as the HS3 conditional ifelse(), and ifelse()
+// is translated back on import.
+TEST(RooFitHS3, TernaryIsExportedAsIfElse)
+{
+   RooRealVar x{"x", "x", 0.5, -2.0, 2.0};
+   RooRealVar y{"y", "y", -0.5, -2.0, 2.0};
+   RooFormulaVar formula{"formula", "2 * (x > 0 ? (y > 0 ? x * y : -x) : 3 * x) + 1", RooArgList{x, y}};
+
+   RooWorkspace ws1;
+   ws1.import(formula, RooFit::Silence());
+   const std::string json1 = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
+   EXPECT_NE(json1.find(R"("expression":"2 * ifelse(x > 0,ifelse(y > 0,x * y,-x),3 * x) + 1")"), std::string::npos)
+      << json1;
+   EXPECT_EQ(json1.find('?'), std::string::npos) << json1;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json1));
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), json1);
+   for (double xVal : {-1.0, 0.5}) {
+      for (double yVal : {-1.0, 0.5}) {
+         ws1.var("x")->setVal(xVal);
+         ws1.var("y")->setVal(yVal);
+         ws2.var("x")->setVal(xVal);
+         ws2.var("y")->setVal(yVal);
+         EXPECT_DOUBLE_EQ(ws2.function("formula")->getVal(), ws1.function("formula")->getVal())
+            << "x=" << xVal << ", y=" << yVal;
+      }
+   }
+
+   // Expressions without ternaries are not changed.
+   RooFormulaVar plain{"plain", "(x + y) * (x - y)", RooArgList{x, y}};
+   RooWorkspace ws3;
+   ws3.import(plain, RooFit::Silence());
+   const std::string json3 = RooJSONFactoryWSTool{ws3}.exportJSONtoString();
+   EXPECT_NE(json3.find(R"json("expression":"(x + y) * (x - y)")json"), std::string::npos) << json3;
+}

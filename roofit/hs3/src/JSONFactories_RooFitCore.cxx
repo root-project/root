@@ -164,10 +164,102 @@ void replaceIdentifier(TString &expr, std::string_view identifier, std::string_v
    expr = out.c_str();
 }
 
+bool isIdentifierChar(char c)
+{
+   return std::isalnum(static_cast<unsigned char>(c)) || c == '_';
+}
+
+std::string trimmed(std::string const &str)
+{
+   const auto begin = str.find_first_not_of(" \t\n");
+   if (begin == std::string::npos) {
+      return "";
+   }
+   return str.substr(begin, str.find_last_not_of(" \t\n") - begin + 1);
+}
+
+// Index of the bracket that closes the one at `open`, or std::string::npos if it is not closed.
+std::size_t findClosingBracket(std::string const &str, std::size_t open)
+{
+   int depth = 0;
+   for (std::size_t i = open; i < str.size(); ++i) {
+      if (str[i] == '(' || str[i] == '[') {
+         ++depth;
+      } else if ((str[i] == ')' || str[i] == ']') && --depth == 0) {
+         return i;
+      }
+   }
+   return std::string::npos;
+}
+
+// Split `str` at the commas that are not enclosed in brackets.
+std::vector<std::string> splitTopLevelCommas(std::string const &str)
+{
+   std::vector<std::string> parts;
+   int depth = 0;
+   std::size_t start = 0;
+   for (std::size_t i = 0; i < str.size(); ++i) {
+      if (str[i] == '(' || str[i] == '[') {
+         ++depth;
+      } else if (str[i] == ')' || str[i] == ']') {
+         --depth;
+      } else if (str[i] == ',' && depth == 0) {
+         parts.push_back(str.substr(start, i - start));
+         start = i + 1;
+      }
+   }
+   parts.push_back(str.substr(start));
+   return parts;
+}
+
+// Remove parentheses that enclose the whole string, e.g. "((a+b))" becomes "a+b".
+std::string stripEnclosingParentheses(std::string str)
+{
+   str = trimmed(str);
+   while (str.size() >= 2 && str.front() == '(' && findClosingBracket(str, 0) == str.size() - 1) {
+      str = trimmed(str.substr(1, str.size() - 2));
+   }
+   return str;
+}
+
+// Rewrite the HS3 conditional "ifelse(c,a,b)" into the C-style ternary "((c)?(a):(b))" that TFormula understands.
+// Malformed calls are left unchanged, so that TFormula reports them.
+std::string ifElseToTernary(std::string const &expr)
+{
+   static const std::string keyword = "ifelse";
+   std::string out;
+   std::size_t pos = 0;
+   while (pos < expr.size()) {
+      const std::size_t found = expr.find(keyword, pos);
+      if (found == std::string::npos) {
+         break;
+      }
+      const std::size_t open = expr.find_first_not_of(" \t", found + keyword.size());
+      const bool isCall =
+         (found == 0 || !isIdentifierChar(expr[found - 1])) && open != std::string::npos && expr[open] == '(';
+      const std::size_t close = isCall ? findClosingBracket(expr, open) : std::string::npos;
+      const auto args = close != std::string::npos ? splitTopLevelCommas(expr.substr(open + 1, close - open - 1))
+                                                   : std::vector<std::string>{};
+      if (args.size() != 3) {
+         out += expr.substr(pos, found + keyword.size() - pos);
+         pos = found + keyword.size();
+         continue;
+      }
+      out += expr.substr(pos, found - pos);
+      out += "((" + ifElseToTernary(trimmed(args[0])) + ")?(" + ifElseToTernary(trimmed(args[1])) + "):(" +
+             ifElseToTernary(trimmed(args[2])) + "))";
+      pos = close + 1;
+   }
+   return out + expr.substr(pos);
+}
+
 void translateImportedExpression(TString &expr)
 {
    replaceIdentifier(expr, "PI", "TMath::Pi()");
    replaceIdentifier(expr, "EULER", "TMath::E()");
+   if (std::string(expr.Data()).find("ifelse") != std::string::npos) {
+      expr = ifElseToTernary(expr.Data()).c_str();
+   }
 }
 
 int readPositiveInteger(const JSONNode &node, const std::string &context)
@@ -915,6 +1007,123 @@ void cleanExpression(TString &expr)
    replaceIdentifier(expr, "TMath::E()", "EULER");
 }
 
+bool ternariesToIfElse(std::string const &in, std::string &out);
+
+// Rewrite one comma-free part of an expression, see ternariesToIfElse().
+bool ternaryPartToIfElse(std::string const &in, std::string &out)
+{
+   // Find the first '?' that is not enclosed in brackets. A ':' that is not part of "::" can only follow a '?'.
+   std::size_t question = std::string::npos;
+   int depth = 0;
+   for (std::size_t i = 0; i < in.size() && question == std::string::npos; ++i) {
+      const char c = in[i];
+      if (c == '(' || c == '[') {
+         ++depth;
+      } else if (c == ')' || c == ']') {
+         --depth;
+      } else if (c == ':' && i + 1 < in.size() && in[i + 1] == ':') {
+         ++i;
+      } else if (depth == 0 && c == ':') {
+         return false;
+      } else if (depth == 0 && c == '?') {
+         question = i;
+      } else if (depth == 0 && c == ',') {
+         return false;
+      }
+   }
+
+   if (question == std::string::npos) {
+      // No ternary on this level: copy the expression and rewrite the ternaries inside of brackets.
+      out.clear();
+      for (std::size_t i = 0; i < in.size(); ++i) {
+         if (in[i] == ')' || in[i] == ']') {
+            return false;
+         }
+         if (in[i] != '(' && in[i] != '[') {
+            out += in[i];
+            continue;
+         }
+         const std::size_t close = findClosingBracket(in, i);
+         if (close == std::string::npos) {
+            return false;
+         }
+         const std::string inner = in.substr(i + 1, close - i - 1);
+         std::string innerOut;
+         if (!ternariesToIfElse(inner, innerOut)) {
+            return false;
+         }
+         // Parentheses that only group a ternary are redundant around the ifelse() function call.
+         const std::string before = trimmed(in.substr(0, i));
+         const bool isGrouping = in[i] == '(' && (before.empty() || !isIdentifierChar(before.back()));
+         if (isGrouping && innerOut != trimmed(inner) && startsWith(innerOut, "ifelse(") &&
+             findClosingBracket(innerOut, std::string("ifelse").size()) == innerOut.size() - 1) {
+            out += innerOut;
+         } else {
+            out += in[i] + innerOut + in[close];
+         }
+         i = close;
+      }
+      return true;
+   }
+
+   // Find the ':' that belongs to this '?', taking nested ternaries into account.
+   std::size_t colon = std::string::npos;
+   int nested = 0;
+   depth = 0;
+   for (std::size_t i = question + 1; i < in.size() && colon == std::string::npos; ++i) {
+      const char c = in[i];
+      if (c == '(' || c == '[') {
+         ++depth;
+      } else if (c == ')' || c == ']') {
+         --depth;
+      } else if (c == ':' && i + 1 < in.size() && in[i + 1] == ':') {
+         ++i;
+      } else if (depth == 0 && c == '?') {
+         ++nested;
+      } else if (depth == 0 && c == ':') {
+         if (nested == 0) {
+            colon = i;
+         } else {
+            --nested;
+         }
+      }
+   }
+   if (colon == std::string::npos) {
+      return false;
+   }
+
+   std::string condition;
+   std::string ifTrue;
+   std::string ifFalse;
+   if (!ternaryPartToIfElse(stripEnclosingParentheses(in.substr(0, question)), condition) ||
+       !ternaryPartToIfElse(stripEnclosingParentheses(in.substr(question + 1, colon - question - 1)), ifTrue) ||
+       !ternaryPartToIfElse(stripEnclosingParentheses(in.substr(colon + 1)), ifFalse)) {
+      return false;
+   }
+   if (condition.empty() || ifTrue.empty() || ifFalse.empty()) {
+      return false;
+   }
+   out = "ifelse(" + condition + "," + ifTrue + "," + ifFalse + ")";
+   return true;
+}
+
+// Rewrite the C-style ternaries "c ? a : b" in a TFormula expression into the HS3 conditional "ifelse(c,a,b)". Returns
+// false if this is not safely possible, e.g. because of unbalanced brackets.
+bool ternariesToIfElse(std::string const &in, std::string &out)
+{
+   out.clear();
+   bool first = true;
+   for (std::string const &part : splitTopLevelCommas(in)) {
+      std::string partOut;
+      if (!ternaryPartToIfElse(part, partOut)) {
+         return false;
+      }
+      out += (first ? "" : ",") + partOut;
+      first = false;
+   }
+   return true;
+}
+
 template <class RooArg_t>
 bool exportFormulaArg(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
 {
@@ -932,6 +1141,16 @@ bool exportFormulaArg(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &e
       const RooAbsArg *par = pdf->getParameter(idx);
       expression.ReplaceAll(("x[" + std::to_string(idx) + "]").c_str(), par->GetName());
       expression.ReplaceAll(("@" + std::to_string(idx)).c_str(), par->GetName());
+   }
+   if (expression.Contains("?")) {
+      std::string rewritten;
+      if (ternariesToIfElse(expression.Data(), rewritten)) {
+         expression = rewritten.c_str();
+      } else {
+         RooJSONFactoryWSTool::warning(std::string("RooFitHS3: could not translate the ternary operators in the "
+                                                   "expression of '") +
+                                       func->GetName() + "' to ifelse(), exporting the expression unchanged.");
+      }
    }
    elem["expression"] << expression.Data();
 
