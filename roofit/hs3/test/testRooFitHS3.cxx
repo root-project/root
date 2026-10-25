@@ -2964,3 +2964,30 @@ TEST(RooFitHS3, DuplicateNamesAreRejected)
       << legacyWarnings << legacyJson;
    EXPECT_NE(ws3.obj("ModelConfig"), nullptr);
 }
+
+// The RooFit-specific "default_domain" is optional on import. Variables then
+// take the range of the domain that mentions them.
+TEST(RooFitHS3, DefaultDomainIsOptional)
+{
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.2"},
+      "domains": [
+         {"name": "my_domain", "type": "product_domain", "axes": [{"name": "mu", "min": -3.0, "max": 4.0}]}
+      ],
+      "parameter_points": [{"name": "default_values", "parameters": [{"name": "mu", "value": 0.5}]}],
+      "distributions": [{"name": "pdf", "type": "gaussian_dist", "x": "mu", "mean": 0.0, "sigma": 1.0}]
+   })";
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+   RooRealVar *mu = ws.var("mu");
+   ASSERT_NE(mu, nullptr);
+   EXPECT_DOUBLE_EQ(mu->getMin(), -3.0);
+   EXPECT_DOUBLE_EQ(mu->getMax(), 4.0);
+   EXPECT_DOUBLE_EQ(mu->getVal(), 0.5);
+   EXPECT_FALSE(mu->isConstant());
+
+   // On export, the "default_domain" is still written.
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_NE(exported.find(R"("name":"default_domain")"), std::string::npos) << exported;
+}
