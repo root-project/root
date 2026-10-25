@@ -3349,3 +3349,76 @@ TEST(RooFitHS3, HistFactoryModifierWithoutConstraintIsUnconstrained)
    EXPECT_EQ(ws2.pdf("alpha_normConstraint"), nullptr);
    EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), json1);
 }
+
+// The constraint type of the staterror is read from the modifier, with the
+// channel-level setting as fallback, and written to both places.
+TEST(RooFitHS3, HistFactoryStatErrorConstraint)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto makeJSON = [](std::string const &modifierConstraint, std::string const &channelConstraint) {
+      return R"({
+         "metadata": {"hs3_version": "0.2"},
+         "distributions": [
+            {
+               "name": "model_channel0",
+               "type": "histfactory_dist",
+               "axes": [{"name": "x", "min": 0.0, "max": 2.0, "nbins": 2}],)" +
+             (channelConstraint.empty() ? "" : R"("staterror": {"constraint_type": ")" + channelConstraint + R"("},)") +
+             R"(
+               "samples": [
+                  {
+                     "name": "sig",
+                     "data": {"contents": [10.0, 20.0], "errors": [1.0, 2.0]},
+                     "modifiers": [{"name": "mcstat", "type": "staterror")" +
+             (modifierConstraint.empty() ? "" : R"(, "constraint": ")" + modifierConstraint + R"(")") + R"(}]
+                  }
+               ]
+            }
+         ]
+      })";
+   };
+   auto hasGaussianStatConstraints = [](RooWorkspace &ws) {
+      bool foundGauss = false;
+      bool foundPoisson = false;
+      for (RooAbsArg *pdf : ws.allPdfs()) {
+         if (std::string(pdf->GetName()).find("gamma_stat_channel0") == std::string::npos)
+            continue;
+         foundGauss |= dynamic_cast<RooGaussian *>(pdf) != nullptr;
+         foundPoisson |= dynamic_cast<RooPoisson *>(pdf) != nullptr;
+      }
+      EXPECT_NE(foundGauss, foundPoisson);
+      return foundGauss;
+   };
+
+   {
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON("Gauss", "Poisson")));
+      EXPECT_TRUE(hasGaussianStatConstraints(ws));
+
+      const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+      auto tree = RooFit::Detail::JSONTree::create(json);
+      const auto *channel = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "model_channel0");
+      ASSERT_NE(channel, nullptr) << json;
+      EXPECT_EQ((*channel)["staterror"]["constraint_type"].val(), "Gauss") << json;
+      const auto *modifier = findModifier(*channel, "staterror");
+      ASSERT_NE(modifier, nullptr) << json;
+      EXPECT_EQ((*modifier)["constraint"].val(), "Gauss") << json;
+
+      RooWorkspace ws2;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json));
+      EXPECT_TRUE(hasGaussianStatConstraints(ws2));
+      EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), json);
+   }
+   {
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON("", "Gauss")));
+      EXPECT_TRUE(hasGaussianStatConstraints(ws));
+   }
+   {
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON("", "")));
+      EXPECT_FALSE(hasGaussianStatConstraints(ws));
+   }
+   expectImportThrowsWithError(makeJSON("LogNormal", ""), "unsupported constraint 'LogNormal' of the staterror");
+}
