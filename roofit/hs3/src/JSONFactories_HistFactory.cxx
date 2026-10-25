@@ -868,6 +868,7 @@ public:
       std::vector<double> sumW;
       std::vector<double> sumW2;
       std::vector<std::string> gammaParnames;
+      std::string modifierStatErrType;
       RooArgSet observables = RooJSONFactoryWSTool::readAxes(p);
 
       std::string fprefix = name;
@@ -894,8 +895,23 @@ public:
                   }
                }
             }
+            // The constraint type given on the staterror modifier takes precedence over the channel-level setting.
+            if (modifierStatErrType.empty()) {
+               if (auto constraint = staterror->find("constraint")) {
+                  modifierStatErrType = constraint->val();
+                  if (modifierStatErrType != "Poisson" && modifierStatErrType != "Gauss") {
+                     RooJSONFactoryWSTool::error("unsupported constraint '" + modifierStatErrType +
+                                                 "' of the staterror modifier in channel '" + name +
+                                                 "', supported are \"Poisson\" and \"Gauss\"");
+                  }
+               }
+            }
          }
          data.emplace_back(std::move(dh));
+      }
+
+      if (!modifierStatErrType.empty()) {
+         statErrType = modifierStatErrType;
       }
 
       RooAbsArg *mcStatObject = nullptr;
@@ -1288,6 +1304,7 @@ struct Channel {
    std::map<int, double> tot_yield;
    std::map<int, double> tot_yield2;
    std::map<int, double> rel_errors;
+   std::string statErrorConstraintType;
    RooArgSet const *varSet = nullptr;
    long unsigned int nBins = 0;
 };
@@ -1455,6 +1472,7 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                channel.tot_yield2[idx] += (sample.hist[idx - 1] * sample.hist[idx - 1]);
                if (constraint) {
                   channel.rel_errors[idx] = constraintRelError(*constraint, *g);
+                  channel.statErrorConstraintType = dynamic_cast<RooPoisson *>(constraint) ? "Poisson" : "Gauss";
                }
             }
             sample.useBarlowBeestonLight = true;
@@ -1707,6 +1725,10 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
    };
 
    elem["type"] << "histfactory_dist";
+   // The constraint type of the staterror is also written on the channel level, where older RooFit versions read it.
+   if (!channel.statErrorConstraintType.empty()) {
+      elem[::Literals::staterror].set_map()["constraint_type"] << channel.statErrorConstraintType;
+   }
    const auto channelDefaultInterpolation = defaultInterpolation(channel);
    if (channelDefaultInterpolation) {
       writeInterpolation(elem["default_interpolation"], *channelDefaultInterpolation);
@@ -1788,6 +1810,9 @@ bool exportChannel(RooJSONFactoryWSTool *tool, const Channel &channel, JSONNode 
       if (sample.useBarlowBeestonLight) {
          auto &mod = addModifier(modifiers, ::Literals::staterror, ::Literals::staterror);
          exportGammaParameters(mod, sample.staterrorParameters);
+         if (!channel.statErrorConstraintType.empty()) {
+            mod["constraint"] << channel.statErrorConstraintType;
+         }
       }
 
       if (!observablesWritten) {
