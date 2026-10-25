@@ -397,8 +397,24 @@ installation it was configured against, which is where RooFit looks for it. See
 ROOT build: `-Dcuda=ON` still builds the CUDA backend together with everything
 else.
 
-## Versions of built-in packages
+## Built-in packages
 
+**It is strongly recommended to rely on sytem packages, and not built-in ones.**
+All the built-in packages are now collected in the builtins directory.
 The version of the following packages has been updated:
 
- - xrootd: 5.9.5
+ - CDT: 2.0.0
+ - civetweb: 1.16.git588860
+ - bvh: 2.0.gitad9f7e
+ - ftgl: 2.4.0
+ - giflib: 6.1.3
+ - gl2ps: 1.4.2
+ - libmathtext: 2016
+ - libpng: 1.6.59
+ - libtiff: 4.7.26
+ - openssl: 3.5.9
+ - openui5: 1.152.0
+ - pcre: now pcre2, version 10.47
+ - rendercore: 2.3
+ - xrootd: 6.2.0
+ - xxhash: 0.8.3
