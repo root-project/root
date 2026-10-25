@@ -3422,3 +3422,40 @@ TEST(RooFitHS3, HistFactoryStatErrorConstraint)
    }
    expectImportThrowsWithError(makeJSON("LogNormal", ""), "unsupported constraint 'LogNormal' of the staterror");
 }
+
+// HS3 forbids implementation-specific default interpolations. Documents from
+// before HS3 v0.3 still get the implicit default of older RooFit versions.
+TEST(RooFitHS3, HistFactoryMissingInterpolation)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string modifiers = R"(
+      {"name": "norm", "parameter": "alpha_norm", "type": "normsys", "data": {"lo": 0.8, "hi": 1.2}},
+      {"name": "norm2", "parameter": "alpha_norm2", "type": "normsys", "data": {"lo": 0.9, "hi": 1.1}})";
+
+   std::string json = makeHistFactoryJSON(modifiers);
+   const std::string legacyVersion = R"("hs3_version": "0.2")";
+   std::string currentJson = json;
+   currentJson.replace(currentJson.find(legacyVersion), legacyVersion.size(), R"("hs3_version": "0.3")");
+   expectImportThrowsWithError(currentJson,
+                               "interpolation for normsys modifier 'norm' in sample 'sig' of channel "
+                               "'channel0' is not given, and the channel has no \"default_interpolation\"");
+
+   RooWorkspace ws;
+   const std::string warnings = captureMessages(
+      RooFit::WARNING, RooFit::IO, [&] { ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json)); });
+   EXPECT_EQ(countOccurrences(warnings, "implicit default of older RooFit versions"), 1u) << warnings;
+   auto *norm = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(ws.function("sig_channel0_epsilon"));
+   ASSERT_NE(norm, nullptr);
+   EXPECT_EQ(norm->interpolationCodes()[0], 4);
+
+   // RooFit always writes a "default_interpolation" if a modifier relies on it.
+   const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_NE(exported.find("default_interpolation"), std::string::npos) << exported;
+   RooWorkspace ws2;
+   std::string exportedCurrent = exported;
+   const std::string exportedVersion = R"("hs3_version":"0.2")";
+   ASSERT_NE(exportedCurrent.find(exportedVersion), std::string::npos) << exported;
+   exportedCurrent.replace(exportedCurrent.find(exportedVersion), exportedVersion.size(), R"("hs3_version":"0.3")");
+   EXPECT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exportedCurrent));
+}

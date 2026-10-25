@@ -337,8 +337,27 @@ std::vector<int> readInterpolations(const JSONNode &object, std::size_t nParamet
    return codes;
 }
 
+// Whether an imported document predates HS3 v0.3. Before that, RooFit did not write the interpolation of modifiers
+// that used its implicit default.
+bool isLegacyHS3Version(std::string const &version)
+{
+   int major = 0;
+   int minor = 0;
+   if (!parseHS3Version(version, major, minor)) {
+      return true;
+   }
+   return std::make_pair(major, minor) <= std::make_pair(0, 2);
+}
+
+// The fallback for modifiers without interpolation in documents that predate HS3 v0.3, see interpolationCode().
+struct LegacyInterpolationDefault {
+   bool allowed = false;
+   bool warned = false;
+};
+
 int interpolationCode(const JSONNode &modifier, const std::optional<Interpolation> &defaultInterpolation,
-                      InterpolationClass interpolationClass, const std::string &context)
+                      InterpolationClass interpolationClass, const std::string &context,
+                      LegacyInterpolationDefault &legacyDefault)
 {
    const auto toCode = [&](const Interpolation &interpolation) {
       return codeFromInterpolation(interpolation, interpolationClass, context);
@@ -356,9 +375,20 @@ int interpolationCode(const JSONNode &modifier, const std::optional<Interpolatio
       return toCode(*defaultInterpolation);
    }
 
+   // HS3 forbids implementation-specific default interpolations.
+   if (!legacyDefault.allowed) {
+      RooJSONFactoryWSTool::error(context + " is not given, and the channel has no \"default_interpolation\"");
+   }
+
    // Before structured interpolation was introduced, both modifier classes
    // used the integer code 4 as their implicit default. The meaning of code 4
-   // is class-dependent.
+   // is class-dependent. Files written by these ROOT versions are still read.
+   if (!legacyDefault.warned) {
+      RooJSONFactoryWSTool::warning("RooFitHS3: " + context +
+                                    " is not given, and the channel has no \"default_interpolation\". Using the "
+                                    "implicit default of older RooFit versions (code 4), which is deprecated.");
+      legacyDefault.warned = true;
+   }
    return 4;
 }
 
@@ -641,7 +671,8 @@ double constraintRelError(RooAbsPdf const &constraint, RooAbsArg const &gamma)
 
 bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet const &varlist,
                       RooAbsArg const *mcStatObject, const std::string &fprefix, const JSONNode &p,
-                      const std::optional<Interpolation> &defaultInterpolation, RooArgSet &constraints)
+                      const std::optional<Interpolation> &defaultInterpolation,
+                      LegacyInterpolationDefault &legacyInterpolationDefault, RooArgSet &constraints)
 {
    RooWorkspace &ws = *tool.workspace();
 
@@ -706,7 +737,8 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             auto &data = mod["data"];
             const std::string context = "interpolation for normsys modifier '" + sysname + "' in sample '" +
                                         sampleName + "' of channel '" + channelName + "'";
-            const int interp = interpolationCode(mod, defaultInterpolation, InterpolationClass::Flexible, context);
+            const int interp = interpolationCode(mod, defaultInterpolation, InterpolationClass::Flexible, context,
+                                                 legacyInterpolationDefault);
             double low = data["lo"].val_double();
             double high = data["hi"].val_double();
 
@@ -738,7 +770,8 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
                RooJSONFactoryWSTool::readBinnedData(data["hi"], sysname + "High_" + prefixedName, varlist)));
             const std::string context = "interpolation for histosys modifier '" + sysname + "' in sample '" +
                                         sampleName + "' of channel '" + channelName + "'";
-            histoInterp.push_back(interpolationCode(mod, defaultInterpolation, InterpolationClass::Piecewise, context));
+            histoInterp.push_back(interpolationCode(mod, defaultInterpolation, InterpolationClass::Piecewise, context,
+                                                    legacyInterpolationDefault));
             addSysConstraint(tool, mod, par, sysname, sampleName, constraints);
          } else if (modtype == "shapesys" || modtype == "shapefactor") {
             std::string funcName = channelName + "_" + sysname + "_ShapeSys";
@@ -936,12 +969,15 @@ public:
                        observables, statErrType, defaultGammaMin, defaultStatErrorGammaMax, statErrThresh);
       }
 
+      LegacyInterpolationDefault legacyInterpolationDefault;
+      legacyInterpolationDefault.allowed = isLegacyHS3Version(tool->hs3VersionInput());
+
       int idx = 0;
       RooArgList funcs;
       RooArgList coefs;
       for (const auto &comp : p["samples"].children()) {
          importHistSample(*tool, *data[idx], observables, mcStatObject, fprefix, comp, defaultInterpolation,
-                          constraints);
+                          legacyInterpolationDefault, constraints);
          ++idx;
 
          std::string const &compName = RooJSONFactoryWSTool::name(comp);

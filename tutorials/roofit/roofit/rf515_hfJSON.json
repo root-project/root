@@ -52,6 +52,7 @@
                     "nbins": 2
                 }
             ],
+            "default_interpolation": {"type": "mult", "in": "poly6", "out": "exp"},
             "samples": [
                 {
                     "data": {
