@@ -2915,3 +2915,52 @@ TEST(RooFitHS3, VersionStringHandling)
    warnings = captureMessages(RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(importWithVersion("\"latest\"")); });
    EXPECT_NE(warnings.find("cannot parse hs3_version 'latest'"), std::string::npos) << warnings;
 }
+
+// Names of top-level objects must be unique across the whole HS3 document.
+TEST(RooFitHS3, DuplicateNamesAreRejected)
+{
+   // The same name used for a distribution and a function.
+   expectImportThrowsWithError(R"({
+      "metadata": {"hs3_version": "0.2"},
+      "distributions": [{"name": "dup", "type": "gaussian_dist", "x": "x", "mean": 0.0, "sigma": 1.0}],
+      "functions": [{"name": "dup", "type": "sum", "summands": ["x"]}]
+   })",
+                               "duplicate name 'dup'");
+
+   // The same name used twice within one section.
+   expectImportThrowsWithError(R"({
+      "metadata": {"hs3_version": "0.2"},
+      "parameter_points": [{"name": "pp", "parameters": []}, {"name": "pp", "parameters": []}]
+   })",
+                               "duplicate name 'pp'");
+
+   // Exported likelihoods don't share their name with the analysis anymore.
+   RooWorkspace ws;
+   ws.factory("Gaussian::pdf(x[0, -5, 5], mu[0, -5, 5], 1.0)");
+   RooFit::ModelConfig mc{"ModelConfig", &ws};
+   mc.SetPdf("pdf");
+   mc.SetParametersOfInterest("mu");
+   mc.SetObservables("x");
+   ws.import(mc);
+   const std::string json = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   EXPECT_NE(json.find(R"("likelihood":"ModelConfig_likelihood")"), std::string::npos) << json;
+   RooWorkspace ws2;
+   const std::string warnings = captureMessages(
+      RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json)); });
+   EXPECT_EQ(warnings.find("not allowed by the HS3 standard"), std::string::npos) << warnings;
+
+   // Files written by older ROOT versions named the likelihood (and the analysis) after the pdf. They can still be
+   // read.
+   std::string legacyJson = json;
+   const std::string likelihoodName = "ModelConfig_likelihood";
+   for (std::size_t pos = 0; (pos = legacyJson.find(likelihoodName, pos)) != std::string::npos;) {
+      legacyJson.replace(pos, likelihoodName.size(), "pdf");
+   }
+   RooWorkspace ws3;
+   const std::string legacyWarnings = captureMessages(
+      RooFit::WARNING, RooFit::IO, [&] { EXPECT_TRUE(RooJSONFactoryWSTool{ws3}.importJSONfromString(legacyJson)); });
+   EXPECT_NE(legacyWarnings.find(R"(the name 'pdf' is used in "distributions" and in "likelihoods")"),
+             std::string::npos)
+      << legacyWarnings << legacyJson;
+   EXPECT_NE(ws3.obj("ModelConfig"), nullptr);
+}

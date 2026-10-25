@@ -775,6 +775,41 @@ void checkHS3Version(std::string const &version)
    }
 }
 
+/// HS3 requires the names of all top-level objects to be unique within a document. Throw if a name is used twice.
+void checkUniqueNames(JSONNode const &rootnode)
+{
+   std::map<std::string, std::string> sectionOfName;
+   for (const char *section :
+        {"distributions", "functions", "data", "domains", "parameter_points", "likelihoods", "analyses"}) {
+      auto seq = rootnode.find(section);
+      if (!seq || !seq->is_seq()) {
+         continue;
+      }
+      for (JSONNode const &child : seq->children()) {
+         if (!child.is_map() || !child.has_child("name")) {
+            continue; // malformed entries are reported when they are imported
+         }
+         std::string const name = child["name"].val();
+         auto inserted = sectionOfName.emplace(name, section);
+         if (inserted.second) {
+            continue;
+         }
+         std::string const &firstSection = inserted.first->second;
+         // RooFit used to give analyses and likelihoods the name of the pdf or the analysis. Accept this for backwards
+         // compatibility: analyses are not referenced by name, and likelihoods only from analyses, so there is no
+         // ambiguity.
+         auto isLegacyNamed = [](std::string const &s) { return s == "likelihoods" || s == "analyses"; };
+         if (isLegacyNamed(firstSection) || isLegacyNamed(section)) {
+            RooJSONFactoryWSTool::warning("RooFitHS3: the name '" + name + "' is used in \"" + firstSection +
+                                          "\" and in \"" + section + "\", which is not allowed by the HS3 standard.");
+            continue;
+         }
+         RooJSONFactoryWSTool::error("duplicate name '" + name + "': it is defined in \"" + firstSection +
+                                     "\" and in \"" + section + "\", but names must be unique within the document");
+      }
+   }
+}
+
 } // namespace
 
 RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
@@ -1649,7 +1684,8 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooFit::ModelCo
          }
       }
       if (founddata == 0) {
-         exportSingleModelConfig(rootnode, mc, pdf->GetName(), nullptr);
+         // Named after the ModelConfig, because the name of the pdf is already taken by the distribution.
+         exportSingleModelConfig(rootnode, mc, mc.GetName(), nullptr);
       }
    }
 }
@@ -1664,9 +1700,11 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooFit::M
 
    auto &domains = analysisNode["domains"].set_seq();
 
-   analysisNode["likelihood"] << analysisName;
+   // HS3 names must be unique across all top-level components, so the likelihood can't have the analysis name.
+   const std::string likelihoodName = analysisName + "_likelihood";
+   analysisNode["likelihood"] << likelihoodName;
 
-   auto &nllNode = appendNamedChild(rootnode["likelihoods"], analysisName);
+   auto &nllNode = appendNamedChild(rootnode["likelihoods"], likelihoodName);
    nllNode["distributions"].set_seq();
    nllNode["data"].set_seq();
 
@@ -1978,6 +2016,7 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
    }
    _hs3VersionInput = versionNode->val();
    checkHS3Version(_hs3VersionInput);
+   checkUniqueNames(n);
 
    _rootnodeInput = &n;
 
