@@ -2501,11 +2501,11 @@ INSTANTIATE_TEST_SUITE_P(
                    IncompatibleModifierCase{"Constraint",
                                             R"(
             {
-               "name": "input_1", "parameter": "alpha_dup", "type": "normsys",
+               "name": "input_1", "parameter": "alpha_dup", "type": "normsys", "constraint": "Gauss",
                "interpolation": 1, "data": {"lo": 0.8, "hi": 1.2}
             },
             {
-               "name": "input_2", "parameter": "dup", "type": "normsys",
+               "name": "input_2", "parameter": "dup", "type": "normsys", "constraint": "Gauss",
                "interpolation": 1, "data": {"lo": 0.9, "hi": 1.1}
             })",
                                             "", "constraint metadata differs"},
@@ -3313,4 +3313,39 @@ TEST(RooFitHS3, HistFactoryNormFactorParameterAndLogNormal)
       makeHistFactoryJSON(
          R"({"name": "sys", "parameter": "alpha_sys", "type": "normsys", "constraint": "LogNormal", "data": {"lo": 0.9, "hi": 1.1}})"),
       "legacy constraint value 'LogNormal' for modifier 'sys' is a known constraint type");
+}
+
+// A normsys or histosys modifier without "constraint" is unconstrained, and
+// it is exported without constraint.
+TEST(RooFitHS3, HistFactoryModifierWithoutConstraintIsUnconstrained)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string modifiers = R"(
+      {"name": "norm", "parameter": "alpha_norm", "type": "normsys", "data": {"lo": 0.8, "hi": 1.2}},
+      {"name": "shape", "parameter": "alpha_shape", "type": "histosys",
+       "data": {"lo": {"contents": [8.0, 18.0]}, "hi": {"contents": [12.0, 22.0]}}},
+      {"name": "constrained", "parameter": "alpha_constrained", "type": "normsys", "constraint": "Gauss",
+       "data": {"lo": 0.9, "hi": 1.1}})";
+   const std::string defaultInterpolation = R"({"type": "mult", "in": "poly6", "out": "exp"})";
+
+   RooWorkspace ws1;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws1}.importJSONfromString(makeHistFactoryJSON(modifiers, defaultInterpolation)));
+   EXPECT_EQ(ws1.pdf("alpha_normConstraint"), nullptr);
+   EXPECT_EQ(ws1.pdf("alpha_shapeConstraint"), nullptr);
+   EXPECT_NE(ws1.pdf("alpha_constrainedConstraint"), nullptr);
+   EXPECT_EQ(ws1.var("nom_alpha_norm"), nullptr);
+
+   const std::string json1 = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
+   auto tree = RooFit::Detail::JSONTree::create(json1);
+   const auto *channel = RooJSONFactoryWSTool::findNamedChild(tree->rootnode()["distributions"], "model_channel0");
+   ASSERT_NE(channel, nullptr) << json1;
+   EXPECT_FALSE(findModifier(*channel, "norm")->has_child("constraint")) << json1;
+   EXPECT_FALSE(findModifier(*channel, "shape")->has_child("constraint")) << json1;
+   EXPECT_TRUE(findModifier(*channel, "constrained")->has_child("constraint")) << json1;
+
+   RooWorkspace ws2;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(json1));
+   EXPECT_EQ(ws2.pdf("alpha_normConstraint"), nullptr);
+   EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), json1);
 }

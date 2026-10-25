@@ -32,6 +32,7 @@
 #include <RooProduct.h>
 #include <RooWorkspace.h>
 #include <RooFitImplHelpers.h>
+#include <RooMsgService.h>
 
 #include <charconv>
 #include <iterator>
@@ -574,6 +575,25 @@ getOrCreateConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVa
    }
    RooJSONFactoryWSTool::error("unknown or invalid constraint for modifier '" + RooJSONFactoryWSTool::name(mod) + "'");
 }
+bool hasConstraint(const JSONNode &mod)
+{
+   return mod.has_child("constraint") || mod.has_child("constraint_name") || mod.has_child("constraint_type");
+}
+
+// Create the constraint of a normsys or histosys modifier. Without a constraint, the parameter is unconstrained.
+void addSysConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVar &param, std::string const &sysname,
+                      std::string const &sample, RooArgSet &constraints)
+{
+   if (!hasConstraint(mod)) {
+      oocoutI(nullptr, IO) << "RooFitHS3: modifier '" << sysname << "' of sample '" << sample
+                           << "' has no constraint, so its parameter '" << param.GetName() << "' is unconstrained"
+                           << std::endl;
+      return;
+   }
+   createNominal(*tool.workspace(), param.GetName(), 0.0, -10, 10);
+   constraints.add(getOrCreateConstraint(tool, mod, param, sample));
+}
+
 double poissonTau(RooPoisson const &constraint, RooAbsArg const &gamma)
 {
    auto const *mean = dynamic_cast<RooProduct const *>(&constraint.getMean());
@@ -674,14 +694,13 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             RooRealVar &constrParam = getOrCreate<RooRealVar>(ws, parameter ? parameter->val() : sysname, 1., -3, 5);
             constrParam.setError(0.0);
             normElems.add(constrParam);
-            if (mod.has_child("constraint") || mod.has_child("constraint_name") || mod.has_child("constraint_type")) {
+            if (hasConstraint(mod)) {
                // for norm factors, constraints are optional
                constraints.add(getOrCreateConstraint(tool, mod, constrParam, sampleName));
             }
          } else if (modtype == "normsys") {
             auto *parameter = mod.find("parameter");
             std::string parname(parameter ? parameter->val() : "alpha_" + sysname);
-            createNominal(ws, parname, 0.0, -10, 10);
             auto &par = getOrCreate<RooRealVar>(ws, parname, 0., -5, 5);
             overall_nps.add(par);
             auto &data = mod["data"];
@@ -704,11 +723,10 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             overall_high.push_back(high);
             overall_interp.push_back(interp);
 
-            constraints.add(getOrCreateConstraint(tool, mod, par, sampleName));
+            addSysConstraint(tool, mod, par, sysname, sampleName, constraints);
          } else if (modtype == "histosys") {
             auto *parameter = mod.find("parameter");
             std::string parname(parameter ? parameter->val() : "alpha_" + sysname);
-            createNominal(ws, parname, 0.0, -10, 10);
             auto &par = getOrCreate<RooRealVar>(ws, parname, 0., -5, 5);
             histNps.add(par);
             auto &data = mod["data"];
@@ -721,7 +739,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             const std::string context = "interpolation for histosys modifier '" + sysname + "' in sample '" +
                                         sampleName + "' of channel '" + channelName + "'";
             histoInterp.push_back(interpolationCode(mod, defaultInterpolation, InterpolationClass::Piecewise, context));
-            constraints.add(getOrCreateConstraint(tool, mod, par, sampleName));
+            addSysConstraint(tool, mod, par, sysname, sampleName, constraints);
          } else if (modtype == "shapesys" || modtype == "shapefactor") {
             std::string funcName = channelName + "_" + sysname + "_ShapeSys";
             // funcName should be "<channel_name>_<sysname>_ShapeSys"
@@ -1332,17 +1350,14 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                   RooAbsReal *var = static_cast<RooAbsReal *>(fip->variables().at(i));
                   std::string sysname(var->GetName());
                   erasePrefix(sysname, "alpha_");
+                  // A parameter without constraint is unconstrained, see checkUnconstrainedModifiers().
                   const auto *constraint = findConstraint(var);
-                  if (!constraint && !var->isConstant()) {
-                     RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(var->GetName()));
-                  } else {
-                     const std::string context = "normsys modifier '" + sysname + "' in sample '" + sample.name +
-                                                 "' of channel '" + channel.name + "'";
-                     sample.normsys.emplace_back(
-                        sysname, var, fip->high()[i], fip->low()[i],
-                        interpolationFromCode(fip->interpolationCodes()[i], InterpolationClass::Flexible, context),
-                        constraint);
-                  }
+                  const std::string context = "normsys modifier '" + sysname + "' in sample '" + sample.name +
+                                              "' of channel '" + channel.name + "'";
+                  sample.normsys.emplace_back(
+                     sysname, var, fip->high()[i], fip->low()[i],
+                     interpolationFromCode(fip->interpolationCodes()[i], InterpolationClass::Flexible, context),
+                     constraint);
                }
             } else if (!pip && (pip = dynamic_cast<PiecewiseInterpolation *>(e))) {
                // nothing to do here, already assigned
@@ -1415,17 +1430,14 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
             erasePrefix(sysname, "alpha_");
             if (auto lo = dynamic_cast<RooHistFunc *>(pip->lowList().at(i))) {
                if (auto hi = dynamic_cast<RooHistFunc *>(pip->highList().at(i))) {
+                  // A parameter without constraint is unconstrained, see checkUnconstrainedModifiers().
                   const auto *constraint = findConstraint(var);
-                  if (!constraint && !var->isConstant()) {
-                     RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(var->GetName()));
-                  } else {
-                     const std::string context = "histosys modifier '" + sysname + "' in sample '" + sample.name +
-                                                 "' of channel '" + channel.name + "'";
-                     sample.histosys.emplace_back(
-                        sysname, var, lo, hi,
-                        interpolationFromCode(pip->interpolationCodes()[i], InterpolationClass::Piecewise, context),
-                        constraint);
-                  }
+                  const std::string context = "histosys modifier '" + sysname + "' in sample '" + sample.name +
+                                              "' of channel '" + channel.name + "'";
+                  sample.histosys.emplace_back(
+                     sysname, var, lo, hi,
+                     interpolationFromCode(pip->interpolationCodes()[i], InterpolationClass::Piecewise, context),
+                     constraint);
                }
             }
          }
@@ -1848,6 +1860,29 @@ std::vector<RooAbsPdf *> findLostConstraints(const Channel &channel, const std::
    return lostConstraints;
 }
 
+// A normsys or histosys modifier without a recognized constraint is exported as unconstrained. That is only correct if
+// none of the other constraint terms of the channel depends on its parameter.
+void checkUnconstrainedModifiers(const Channel &channel, const std::vector<RooAbsPdf *> &constraints)
+{
+   auto check = [&](auto const &modifiers) {
+      for (auto const &sys : modifiers) {
+         if (sys.constraint || sys.param->isConstant()) {
+            continue;
+         }
+         for (RooAbsPdf const *pdf : constraints) {
+            if (pdf->dependsOn(*sys.param)) {
+               RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(sys.param->GetName()) +
+                                           ": the constraint term '" + pdf->GetName() + "' is not supported");
+            }
+         }
+      }
+   };
+   for (const auto &sample : channel.samples) {
+      check(sample.normsys);
+      check(sample.histosys);
+   }
+}
+
 bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname, const RooRealSumPdf *sumpdf,
                           std::vector<RooAbsPdf *> constraints, JSONNode &elem)
 {
@@ -1874,6 +1909,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    }
 
    canonicalizeModifiers(channel);
+   checkUnconstrainedModifiers(channel, constraints);
 
    // stat error handling
    configureStatError(channel);
