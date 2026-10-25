@@ -106,7 +106,7 @@ tool.writedoc("hs3.tex")
 ~~~
 */
 
-constexpr auto hs3VersionTag = "0.2";
+constexpr auto hs3VersionTag = "0.3";
 
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;
@@ -825,8 +825,10 @@ void checkHS3Version(std::string const &version)
    }
 }
 
-/// HS3 requires the names of all top-level objects to be unique within a document. Throw if a name is used twice, or
-/// only warn if not `strict`: RooFit wrote such documents before HS3 v0.3, e.g. for a range and a pdf of one name.
+/// HS3 requires the names of all top-level objects to be unique within a document. If `strict`, throw if a name is
+/// used twice within one section or by a distribution and a function. Other clashes, and all clashes if not
+/// `strict`, only warn: RooFit's own export still produces them, e.g. for a range and a pdf of one name, and it
+/// must be able to read its own output.
 void checkUniqueNames(JSONNode const &rootnode, bool strict)
 {
    std::map<std::string, std::string> sectionOfName;
@@ -850,7 +852,11 @@ void checkUniqueNames(JSONNode const &rootnode, bool strict)
          // compatibility: analyses are not referenced by name, and likelihoods only from analyses, so there is no
          // ambiguity.
          auto isLegacyNamed = [](std::string const &s) { return s == "likelihoods" || s == "analyses"; };
-         if (!strict || isLegacyNamed(firstSection) || isLegacyNamed(section)) {
+         // Within one section, and between distributions and functions (both can be referenced by name), a clash is
+         // ambiguous. Other clashes are produced by RooFit itself (a range, snapshot or data set named like a pdf).
+         auto isReferable = [](std::string const &s) { return s == "distributions" || s == "functions"; };
+         const bool ambiguous = firstSection == section || (isReferable(firstSection) && isReferable(section));
+         if (!strict || !ambiguous || isLegacyNamed(firstSection) || isLegacyNamed(section)) {
             RooJSONFactoryWSTool::warning("RooFitHS3: the name '" + name + "' is used in \"" + firstSection +
                                           "\" and in \"" + section + "\", which is not allowed by the HS3 standard.");
             continue;
