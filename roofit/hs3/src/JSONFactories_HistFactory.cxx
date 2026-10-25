@@ -441,7 +441,8 @@ std::string constraintName(std::string const &paramName)
 
 bool isLegacyConstraintType(std::string const &value)
 {
-   return value == "Gauss" || value == "Poisson" || value == "Const" || value == "Lognormal";
+   // HS3 spells "LogNormal", older RooFit versions used "Lognormal".
+   return value == "Gauss" || value == "Poisson" || value == "Const" || value == "LogNormal" || value == "Lognormal";
 }
 
 RooAbsPdf *findNamedConstraint(RooJSONFactoryWSTool &tool, std::string const &constraintName, std::string const &sample)
@@ -668,7 +669,9 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
          if (modtype == "staterror") {
             // this is dealt with at a different place, ignore it for now
          } else if (modtype == "normfactor") {
-            RooRealVar &constrParam = getOrCreate<RooRealVar>(ws, sysname, 1., -3, 5);
+            // The "name" is only a label of the modifier, the parameter is given by "parameter" if present.
+            auto *parameter = mod.find("parameter");
+            RooRealVar &constrParam = getOrCreate<RooRealVar>(ws, parameter ? parameter->val() : sysname, 1., -3, 5);
             constrParam.setError(0.0);
             normElems.add(constrParam);
             if (mod.has_child("constraint") || mod.has_child("constraint_name") || mod.has_child("constraint_type")) {

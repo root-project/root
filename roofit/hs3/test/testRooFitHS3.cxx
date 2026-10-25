@@ -3296,3 +3296,21 @@ TEST(RooFitHS3, MixtureDistExtendedFlag)
    });
    EXPECT_NE(warnings.find("is declared as not extended"), std::string::npos) << warnings;
 }
+
+// The parameter of a normfactor is given by "parameter", the "name" is only a label.
+// The HS3 spelling of the log-normal constraint type is recognized.
+TEST(RooFitHS3, HistFactoryNormFactorParameterAndLogNormal)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(
+      makeHistFactoryJSON(R"({"name": "lumi_modifier", "parameter": "lumi", "type": "normfactor"})")));
+   EXPECT_NE(ws.var("lumi"), nullptr);
+   EXPECT_EQ(ws.var("lumi_modifier"), nullptr);
+
+   expectImportThrowsWithError(
+      makeHistFactoryJSON(
+         R"({"name": "sys", "parameter": "alpha_sys", "type": "normsys", "constraint": "LogNormal", "data": {"lo": 0.9, "hi": 1.1}})"),
+      "legacy constraint value 'LogNormal' for modifier 'sys' is a known constraint type");
+}
