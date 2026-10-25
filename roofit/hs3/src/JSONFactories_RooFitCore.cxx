@@ -720,8 +720,22 @@ bool importMultiVarGaussian(RooJSONFactoryWSTool *tool, const JSONNode &p)
 
    TMatrixDSym covmat;
 
+   // The matrix must be square, otherwise the entries would be written out of bounds.
+   auto checkSquare = [&](const char *key, std::size_t n) {
+      if (p[key].num_children() != n) {
+         RooJSONFactoryWSTool::error("\"" + std::string(key) + "\" in '" + name + "' must have " + std::to_string(n) +
+                                     " rows");
+      }
+      for (const auto &row : p[key].children()) {
+         if (!row.is_seq() || row.num_children() != n) {
+            RooJSONFactoryWSTool::error("\"" + std::string(key) + "\" in '" + name + "' must be a square matrix");
+         }
+      }
+   };
+
    if (has_cov) {
       int n = p["covariances"].num_children();
+      checkSquare("covariances", n);
       int i = 0;
       covmat.ResizeTo(n, n);
       for (const auto &row : p["covariances"].children()) {
@@ -735,6 +749,7 @@ bool importMultiVarGaussian(RooJSONFactoryWSTool *tool, const JSONNode &p)
    } else {
       std::vector<double> variances;
       variances << p["standard_deviations"];
+      checkSquare("correlations", variances.size());
       covmat.ResizeTo(variances.size(), variances.size());
       int i = 0;
       for (const auto &row : p["correlations"].children()) {

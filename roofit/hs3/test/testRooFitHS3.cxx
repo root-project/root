@@ -3459,3 +3459,30 @@ TEST(RooFitHS3, HistFactoryMissingInterpolation)
    exportedCurrent.replace(exportedCurrent.find(exportedVersion), exportedVersion.size(), R"("hs3_version":"0.3")");
    EXPECT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exportedCurrent));
 }
+
+// Malformed matrices, error arrays and bin edges are rejected instead of being read out of bounds.
+TEST(RooFitHS3, MalformedArraysAreRejected)
+{
+   auto binnedData = [](std::string const &axis, std::string const &extra) {
+      return R"({
+         "metadata": {"hs3_version": "0.2"},
+         "data": [{"name": "data", "type": "binned", "axes": [)" +
+             axis + R"(], "contents": [1.0, 2.0])" + extra + R"(}]
+      })";
+   };
+   const std::string goodAxis = R"({"name": "x", "min": 0.0, "max": 2.0, "nbins": 2})";
+
+   expectImportThrowsWithError(binnedData(goodAxis, R"(, "errors": [1.0])"),
+                               "inconsistent number of errors and contents in 'data'");
+   expectImportThrowsWithError(binnedData(R"({"name": "x", "edges": [0.0, 2.0, 1.0]})", ""),
+                               "\"edges\" of axis 'x' must be strictly ascending");
+   expectImportThrowsWithError(binnedData(R"({"name": "x", "edges": []})", ""),
+                               "\"edges\" of axis 'x' must contain at least two values");
+
+   expectImportThrowsWithError(R"({
+      "metadata": {"hs3_version": "0.2"},
+      "distributions": [{"name": "mvn", "type": "multivariate_normal_dist", "x": ["x1", "x2"], "mean": [0.0, 0.0],
+                         "covariances": [[1.0, 0.0, 0.0], [0.0, 1.0]]}]
+   })",
+                               "\"covariances\" in 'mvn' must be a square matrix");
+}

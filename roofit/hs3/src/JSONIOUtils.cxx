@@ -1,6 +1,7 @@
 #include "JSONIOUtils.h"
 
 #include <RooAbsBinning.h>
+#include <RooFitHS3/RooJSONFactoryWSTool.h>
 
 #include <cctype>
 #include <string>
@@ -123,4 +124,23 @@ bool parseHS3Version(std::string const &version, int &major, int &minor)
    }
    ++pos;
    return readNumber(minor);
+}
+
+// Read the bin edges of an axis, which must be at least two strictly ascending numbers.
+std::vector<double> readEdges(const JSONNode &node, std::string const &context)
+{
+   if (!node.is_seq()) {
+      RooJSONFactoryWSTool::error("\"edges\" of " + context + " must be a list");
+   }
+   std::vector<double> edges;
+   for (auto const &edge : node.children()) {
+      edges.push_back(edge.val_double());
+      if (edges.size() > 1 && !(edges.back() > edges[edges.size() - 2])) {
+         RooJSONFactoryWSTool::error("\"edges\" of " + context + " must be strictly ascending");
+      }
+   }
+   if (edges.size() < 2) {
+      RooJSONFactoryWSTool::error("\"edges\" of " + context + " must contain at least two values");
+   }
+   return edges;
 }
