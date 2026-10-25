@@ -3256,3 +3256,43 @@ TEST(RooFitHS3, TernaryIsExportedAsIfElse)
    const std::string json3 = RooJSONFactoryWSTool{ws3}.exportJSONtoString();
    EXPECT_NE(json3.find(R"json("expression":"(x + y) * (x - y)")json"), std::string::npos) << json3;
 }
+
+// The explicit "extended" flag of a mixture_dist has to be consistent with the number of coefficients.
+TEST(RooFitHS3, MixtureDistExtendedFlag)
+{
+   auto makeJSON = [](std::string const &coefficients, std::string const &extended) {
+      return R"({
+         "metadata": {"hs3_version": "0.2"},
+         "domains": [{"name": "default_domain", "type": "product_domain", "axes": [{"name": "x", "min": -5, "max": 5}]}],
+         "parameter_points": [{"name": "default_values", "parameters": [{"name": "f", "value": 0.3},
+                                                                        {"name": "n1", "value": 30},
+                                                                        {"name": "n2", "value": 70}]}],
+         "distributions": [
+            {"name": "g1", "type": "gaussian_dist", "x": "x", "mean": -1.0, "sigma": 1.0},
+            {"name": "g2", "type": "gaussian_dist", "x": "x", "mean": 1.0, "sigma": 1.0},
+            {"name": "mix", "type": "mixture_dist", "summands": ["g1", "g2"], "coefficients": )" +
+             coefficients + R"(, "extended": )" + extended + R"(}
+         ]
+      })";
+   };
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   {
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON(R"(["f"])", "false")));
+      EXPECT_EQ(ws.pdf("mix")->extendMode(), RooAbsPdf::CanNotBeExtended);
+   }
+   {
+      RooWorkspace ws;
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON(R"(["n1", "n2"])", "true")));
+      EXPECT_NE(ws.pdf("mix")->extendMode(), RooAbsPdf::CanNotBeExtended);
+   }
+   expectImportThrowsWithError(makeJSON(R"(["f"])", "true"), "is declared as extended, but it has 1 coefficients");
+
+   RooWorkspace ws;
+   const std::string warnings = captureMessages(RooFit::WARNING, RooFit::IO, [&] {
+      EXPECT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON(R"(["n1", "n2"])", "false")));
+   });
+   EXPECT_NE(warnings.find("is declared as not extended"), std::string::npos) << warnings;
+}

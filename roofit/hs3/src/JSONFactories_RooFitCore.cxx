@@ -415,6 +415,28 @@ bool importAddition(RooJSONFactoryWSTool *tool, const JSONNode &p)
 bool importAddPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
+   if (p.has_child("extended")) {
+      // Check the explicit "extended" flag against the number of coefficients, which determines the extended mode of
+      // the RooAddPdf.
+      const bool extended = p["extended"].val_bool();
+      const std::size_t nSummands = p.has_child("summands") ? p["summands"].num_children() : 0;
+      const std::size_t nCoefficients = p.has_child("coefficients") ? p["coefficients"].num_children() : 0;
+      const std::string counts =
+         std::to_string(nCoefficients) + " coefficients for " + std::to_string(nSummands) + " summands";
+      if (extended && nCoefficients + 1 == nSummands) {
+         RooJSONFactoryWSTool::error("mixture_dist '" + name + "' is declared as extended, but it has " + counts +
+                                     ", which defines a non-extended mixture");
+      }
+      if (!extended && nCoefficients == 0 && nSummands > 0) {
+         RooJSONFactoryWSTool::error("mixture_dist '" + name + "' is declared as not extended, but it has " + counts +
+                                     ", which defines an extended mixture of extended distributions");
+      }
+      if (!extended && nCoefficients == nSummands) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: mixture_dist '" + name + "' is declared as not extended, but " +
+                                       "RooFit can use it as extended because it has one coefficient per summand. " +
+                                       "Don't use the extended likelihood term when fitting it.");
+      }
+   }
    if (!tool->requestArgList<RooAbsReal>(p, "coefficients").empty()) {
       tool->wsEmplace<RooAddPdf>(name, tool->requestArgList<RooAbsPdf>(p, "summands"),
                                  tool->requestArgList<RooAbsReal>(p, "coefficients"));
