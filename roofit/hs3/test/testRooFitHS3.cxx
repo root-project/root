@@ -2991,3 +2991,59 @@ TEST(RooFitHS3, DefaultDomainIsOptional)
    const std::string exported = RooJSONFactoryWSTool{ws}.exportJSONtoString();
    EXPECT_NE(exported.find(R"("name":"default_domain")"), std::string::npos) << exported;
 }
+
+// Parameters that only appear in a parameter point are created on import, and
+// categorical parameters can be set with a string value.
+TEST(RooFitHS3, ParametersOnlyInParameterPoints)
+{
+   const std::string json = R"({
+      "metadata": {"hs3_version": "0.2"},
+      "domains": [
+         {"name": "default_domain", "type": "product_domain", "axes": [
+            {"name": "free", "min": -1.0, "max": 1.0}, {"name": "freeButConst", "min": -1.0, "max": 1.0}]}
+      ],
+      "parameter_points": [
+         {
+            "name": "point",
+            "parameters": [
+               {"name": "fixed", "value": 2.5},
+               {"name": "fixedExplicitFalse", "value": 1.5, "const": false},
+               {"name": "free", "value": 0.25},
+               {"name": "freeButConst", "value": 0.5, "const": true},
+               {"name": "channel", "value": "CR"}
+            ]
+         }
+      ]
+   })";
+
+   RooWorkspace ws;
+   RooCategory channel{"channel", "channel", {{"SR", 0}, {"CR", 1}}};
+   ws.import(channel);
+   ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(json));
+
+   RooRealVar *fixed = ws.var("fixed");
+   ASSERT_NE(fixed, nullptr);
+   EXPECT_DOUBLE_EQ(fixed->getVal(), 2.5);
+   EXPECT_TRUE(fixed->isConstant());
+
+   RooRealVar *free = ws.var("free");
+   ASSERT_NE(free, nullptr);
+   EXPECT_DOUBLE_EQ(free->getVal(), 0.25);
+   EXPECT_FALSE(free->isConstant());
+
+   // "const": false is the same as no "const": without a domain, the parameter stays constant.
+   RooRealVar *fixedExplicitFalse = ws.var("fixedExplicitFalse");
+   ASSERT_NE(fixedExplicitFalse, nullptr);
+   EXPECT_TRUE(fixedExplicitFalse->isConstant());
+
+   // "const": true makes a parameter constant also if a domain lists it.
+   RooRealVar *freeButConst = ws.var("freeButConst");
+   ASSERT_NE(freeButConst, nullptr);
+   EXPECT_TRUE(freeButConst->isConstant());
+
+   const RooArgSet *snapshot = ws.getSnapshot("point");
+   ASSERT_NE(snapshot, nullptr);
+   auto *channelInSnapshot = dynamic_cast<RooCategory *>(snapshot->find("channel"));
+   ASSERT_NE(channelInSnapshot, nullptr);
+   EXPECT_EQ(channelInSnapshot->getCurrentLabel(), std::string("CR"));
+}
