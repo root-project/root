@@ -3486,3 +3486,41 @@ TEST(RooFitHS3, MalformedArraysAreRejected)
    })",
                                "\"covariances\" in 'mvn' must be a square matrix");
 }
+
+// The observables of unbinned data take their range from the axes, unless a domain defines it.
+TEST(RooFitHS3, UnbinnedAxisRangesOnImport)
+{
+   auto makeJSON = [](std::string const &domainAxes) {
+      return R"({
+         "metadata": {"hs3_version": "0.2"},
+         "domains": [{"name": "default_domain", "type": "product_domain", "axes": [)" +
+             domainAxes + R"(]}],
+         "parameter_points": [{"name": "default_values", "parameters": [{"name": "x", "value": 0.0}]}],
+         "distributions": [{"name": "pdf", "type": "gaussian_dist", "x": "x", "mean": 0.0, "sigma": 1.0}],
+         "data": [{"name": "data", "type": "unbinned", "axes": [{"name": "x", "min": -3.0, "max": 8.0}],
+                   "entries": [[-2.5], [7.5]]}]
+      })";
+   };
+
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+   {
+      // "x" is not in any domain, so it gets the range of the axis and no entry is clipped.
+      RooWorkspace ws;
+      ScopedNoDomainConstVarImportFlag noConstVars{false};
+      ASSERT_TRUE(RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON(R"({"name": "other", "min": 0, "max": 1})")));
+      EXPECT_DOUBLE_EQ(ws.var("x")->getMin(), -3.0);
+      EXPECT_DOUBLE_EQ(ws.var("x")->getMax(), 8.0);
+      const RooArgSet *row = ws.data("data")->get(1);
+      EXPECT_DOUBLE_EQ(static_cast<RooRealVar *>(row->find("x"))->getVal(), 7.5);
+   }
+   {
+      // A disagreeing domain range is kept, with a warning.
+      RooWorkspace ws;
+      const std::string warnings = captureMessages(RooFit::WARNING, RooFit::IO, [&] {
+         EXPECT_TRUE(
+            RooJSONFactoryWSTool{ws}.importJSONfromString(makeJSON(R"({"name": "x", "min": -10, "max": 10})")));
+      });
+      EXPECT_DOUBLE_EQ(ws.var("x")->getMin(), -10.0);
+      EXPECT_NE(warnings.find("of the axis 'x' of the dataset 'data' differs"), std::string::npos) << warnings;
+   }
+}
