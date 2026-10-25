@@ -17,6 +17,8 @@
 #include <RooBinning.h>
 #include <RooBinSamplingPdf.h>
 #include <RooBinWidthFunction.h>
+#include <RooConstVar.h>
+#include <RooCrystalBall.h>
 #include <RooDataHist.h>
 #include <RooDecay.h>
 #include <RooDerivative.h>
@@ -67,6 +69,7 @@
 #include <limits>
 #include <memory>
 #include <set>
+#include <sstream>
 #include <string_view>
 #include <vector>
 
@@ -515,8 +518,9 @@ bool importFFTConvPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 bool importExtendPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
-   RooAbsPdf *pdf = tool->requestArg<RooAbsPdf>(p, "pdf");
-   RooAbsReal *norm = tool->requestArg<RooAbsReal>(p, "norm");
+   // HS3 calls the fields "dist" and "rate". RooFit used to write "pdf" and "norm", which are still accepted.
+   RooAbsPdf *pdf = tool->requestArg<RooAbsPdf>(p, p.has_child("pdf") && !p.has_child("dist") ? "pdf" : "dist");
+   RooAbsReal *norm = tool->requestArg<RooAbsReal>(p, p.has_child("norm") && !p.has_child("rate") ? "norm" : "rate");
    if (p.has_child("range")) {
       std::string rangeName = p["range"].val();
       tool->wsEmplace<RooExtendPdf>(name, *pdf, *norm, rangeName.c_str());
@@ -715,9 +719,105 @@ bool importSpline(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
+// Import a crystalball_dist that uses the asymmetric tail parameters or the asymmetric widths. The fully symmetric
+// variant ("sigma", "alpha" and "n") is left to the factory expression, which creates a RooCBShape as RooFit always
+// did.
+bool importCrystalBall(RooJSONFactoryWSTool *tool, const JSONNode &p)
+{
+   const bool asymmetricTails =
+      p.has_child("alpha_L") || p.has_child("n_L") || p.has_child("alpha_R") || p.has_child("n_R");
+   const bool asymmetricWidths = p.has_child("sigma_L") || p.has_child("sigma_R");
+   if (!asymmetricTails && !asymmetricWidths) {
+      return false;
+   }
+
+   const std::string name(RooJSONFactoryWSTool::name(p));
+   if (asymmetricTails && (p.has_child("alpha") || p.has_child("n"))) {
+      RooJSONFactoryWSTool::error("crystalball_dist '" + name +
+                                  "' must not combine \"alpha\"/\"n\" with \"alpha_L\"/\"n_L\"/\"alpha_R\"/\"n_R\"");
+   }
+   if (asymmetricWidths && p.has_child("sigma")) {
+      RooJSONFactoryWSTool::error("crystalball_dist '" + name +
+                                  "' must not combine \"sigma\" with \"sigma_L\"/\"sigma_R\"");
+   }
+
+   RooAbsReal *m = tool->requestArg<RooAbsReal>(p, "m");
+   RooAbsReal *m0 = tool->requestArg<RooAbsReal>(p, "m0");
+   RooAbsReal *sigmaL = tool->requestArg<RooAbsReal>(p, asymmetricWidths ? "sigma_L" : "sigma");
+   RooAbsReal *sigmaR = tool->requestArg<RooAbsReal>(p, asymmetricWidths ? "sigma_R" : "sigma");
+   RooAbsReal *alphaL = tool->requestArg<RooAbsReal>(p, asymmetricTails ? "alpha_L" : "alpha");
+   RooAbsReal *nL = tool->requestArg<RooAbsReal>(p, asymmetricTails ? "n_L" : "n");
+   RooAbsReal *alphaR = tool->requestArg<RooAbsReal>(p, asymmetricTails ? "alpha_R" : "alpha");
+   RooAbsReal *nR = tool->requestArg<RooAbsReal>(p, asymmetricTails ? "n_R" : "n");
+   tool->wsEmplace<RooCrystalBall>(name, *m, *m0, *sigmaL, *sigmaR, *alphaL, *nL, *alphaR, *nR);
+   return true;
+}
+
+// Importer that is registered with top priority for a deprecated type key. It warns once, and then lets the importers
+// or the factory expression that are registered for the deprecated key do the actual work.
+class DeprecatedKeyImporter : public RooFit::JSONIO::Importer {
+public:
+   DeprecatedKeyImporter(std::string key, std::string replacement)
+      : _key{std::move(key)}, _replacement{std::move(replacement)}
+   {
+   }
+   bool importArg(RooJSONFactoryWSTool *, const JSONNode &) const override
+   {
+      if (!_warned) {
+         RooJSONFactoryWSTool::warning("RooFitHS3: the type \"" + _key + "\" is deprecated, please use \"" +
+                                       _replacement + "\" instead.");
+         _warned = true;
+      }
+      return false;
+   }
+
+private:
+   const std::string _key;
+   const std::string _replacement;
+   mutable bool _warned = false;
+};
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // specialized exporter implementations
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Write a reference to `arg`: the value if it is a literal constant, and the name otherwise.
+void writeReference(JSONNode &node, RooAbsArg const &arg)
+{
+   auto const *constVar = dynamic_cast<RooConstVar const *>(&arg);
+   std::istringstream stream(arg.GetName());
+   double value = 0.0;
+   if (constVar && (stream >> value) && stream.eof()) {
+      node << constVar->getVal();
+   } else {
+      node << arg.GetName();
+   }
+}
+
+bool exportCrystalBall(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
+{
+   auto const *pdf = static_cast<const RooCrystalBall *>(func);
+   // A single-sided RooCrystalBall can't be represented by crystalball_dist. It is exported with the export keys.
+   if (!pdf->alphaR() || !pdf->nR()) {
+      return false;
+   }
+   elem["type"] << key;
+   writeReference(elem["m"], pdf->x());
+   writeReference(elem["m0"], pdf->x0());
+   if (&pdf->sigmaL() == &pdf->sigmaR()) {
+      writeReference(elem["sigma"], pdf->sigmaL());
+   } else {
+      writeReference(elem["sigma_L"], pdf->sigmaL());
+      writeReference(elem["sigma_R"], pdf->sigmaR());
+   }
+   // The tails are always written in the asymmetric form, also if both sides share their parameters: the symmetric
+   // form with "alpha" and "n" is read back by RooFit as a single-sided RooCBShape.
+   writeReference(elem["alpha_L"], pdf->alphaL());
+   writeReference(elem["n_L"], pdf->nL());
+   writeReference(elem["alpha_R"], *pdf->alphaR());
+   writeReference(elem["n_R"], *pdf->nR());
+   return true;
+}
 template <class RooArg_t>
 bool exportAddPdf(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem, std::string const &key)
 {
@@ -1038,8 +1138,8 @@ bool exportExtendPdf(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &el
    if (auto rangeName = pdf->getRangeName()) {
       elem["range"] << rangeName->GetName();
    }
-   elem["pdf"] << pdf->pdf().GetName();
-   elem["norm"] << pdf->getN().GetName();
+   elem["dist"] << pdf->pdf().GetName();
+   elem["rate"] << pdf->getN().GetName();
    return true;
 }
 
@@ -1178,12 +1278,17 @@ void registerExporter(TClass const *cl, std::string key, bool topPriority = true
 STATIC_EXECUTE([]() {
    registerImporter<importWrapperPdf>("density_function_dist");
    registerImporter<importExtendPdf>("rate_extended_dist");
+   registerImporter<importCrystalBall>("crystalball_dist");
+   RooFit::JSONIO::registerImporter("ARGUS_dist", std::make_unique<DeprecatedKeyImporter>("ARGUS_dist", "argus_dist"));
+   RooFit::JSONIO::registerImporter("binsampling",
+                                    std::make_unique<DeprecatedKeyImporter>("binsampling", "binsampling_dist"));
    registerImporter<importProduct>("product", false);
    registerImporter<importProdPdf>("product_dist", false);
    registerImporter<importAddition>("sum", false);
    registerImporter<importAddPdf>("mixture_dist", false);
    registerImporter<importAddModel>("mixture_resolution_model", false);
    registerImporter<importBinSamplingPdf>("binsampling_dist", false);
+   registerImporter<importBinSamplingPdf>("binsampling", false);
    registerImporter<importBinWidthFunction<false>>("binvolume", false);
    registerImporter<importBinWidthFunction<true>>("inverse_binvolume", false);
    registerImporter<importPolynomial<RooLegacyExpPoly>>("legacy_exp_poly_dist", false);
@@ -1214,7 +1319,8 @@ STATIC_EXECUTE([]() {
    registerExporter<exportWrapperPdf>(RooWrapperPdf::Class(), "density_function_dist");
    registerExporter<exportAddPdf<RooAddPdf>>(RooAddPdf::Class(), "mixture_dist", false);
    registerExporter<exportAddPdf<RooAddModel>>(RooAddModel::Class(), "mixture_resolution_model", false);
-   registerExporter<exportBinSamplingPdf>(RooBinSamplingPdf::Class(), "binsampling", false);
+   registerExporter<exportBinSamplingPdf>(RooBinSamplingPdf::Class(), "binsampling_dist", false);
+   registerExporter<exportCrystalBall>(RooCrystalBall::Class(), "crystalball_dist", false);
    registerExporter<exportBinWidthFunction>(RooBinWidthFunction::Class(), "binvolume", false);
    registerExporter<exportPolynomial<RooLegacyExpPoly>>(RooLegacyExpPoly::Class(), "legacy_exp_poly_dist", false);
    registerExporter<exportExponential>(RooExponential::Class(), "exponential_dist", false);

@@ -1,6 +1,15 @@
 namespace {
 
 auto RooFitHS3_wsfactoryexpressions = R"({
+    "argus_dist": {
+        "class": "RooArgusBG",
+        "arguments": [
+            "mass",
+            "resonance",
+            "slope",
+            "power"
+        ]
+    },
     "ARGUS_dist": {
         "class": "RooArgusBG",
         "arguments": [

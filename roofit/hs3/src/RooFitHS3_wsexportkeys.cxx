@@ -8,7 +8,7 @@ auto RooFitHS3_wsexportkeys = R"({
         }
     },
     "RooArgusBG": {
-        "type": "ARGUS_dist",
+        "type": "argus_dist",
         "proxies": {
             "m": "mass",
             "m0": "resonance",
